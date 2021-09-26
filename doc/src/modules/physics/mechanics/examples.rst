@@ -14,3 +14,4 @@ consider adding it here!
     examples/rollingdisc_example.rst
     examples/bicycle_example.rst
     examples/lin_pend_nonmin_example.rst
+    examples/multi_degree_freedom_holonomic_system.rst

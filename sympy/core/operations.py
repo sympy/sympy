@@ -175,7 +175,7 @@ class AssocOp(Basic):
         # c_part, nc_part, order_symbols
         return [], new_seq, None
 
-    def _matches_commutative(self, expr, repl_dict={}, old=False):
+    def _matches_commutative(self, expr, repl_dict=None, old=False):
         """
         Matches Add/Mul "pattern" to an expression "expr".
 
@@ -217,9 +217,11 @@ class AssocOp(Basic):
         # make sure expr is Expr if pattern is Expr
         from .expr import Add, Expr
         from sympy import Mul
-        repl_dict = repl_dict.copy()
         if isinstance(self, Expr) and not isinstance(expr, Expr):
             return None
+
+        if repl_dict is None:
+            repl_dict = dict()
 
         # handle simple patterns
         if self == expr:
@@ -496,7 +498,7 @@ class LatticeOp(AssocOp):
         else:
             # XXX in almost every other case for __new__, *_args is
             # passed along, but the expectation here is for _args
-            obj = super(AssocOp, cls).__new__(cls, _args)
+            obj = super(AssocOp, cls).__new__(cls, *ordered(_args))
             obj._argset = _args
             return obj
 
@@ -523,13 +525,6 @@ class LatticeOp(AssocOp):
             return expr._argset
         else:
             return frozenset([sympify(expr)])
-
-    # XXX: This should be cached on the object rather than using cacheit
-    # Maybe _argset can just be sorted in the constructor?
-    @property  # type: ignore
-    @cacheit
-    def args(self):
-        return tuple(ordered(self._argset))
 
     @staticmethod
     def _compare_pretty(a, b):

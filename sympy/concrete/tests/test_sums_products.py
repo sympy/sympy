@@ -4,9 +4,10 @@ from sympy import (
     nan, oo, pi, Piecewise, Product, product, Rational, S, simplify, Identity,
     sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma,
     Indexed, Idx, IndexedBase, prod, Dummy, lowergamma, Range, floor,
-    rf, MatrixSymbol)
+    rf, MatrixSymbol, tanh, sinh)
 from sympy.abc import a, b, c, d, k, m, x, y, z
-from sympy.concrete.summations import telescopic, _dummy_with_inherited_properties_concrete
+from sympy.concrete.summations import (
+    telescopic, _dummy_with_inherited_properties_concrete, eval_sum_residue)
 from sympy.concrete.expr_with_intlimits import ReorderError
 from sympy.core.facts import InconsistentAssumptions
 from sympy.testing.pytest import XFAIL, raises, slow
@@ -638,7 +639,6 @@ def test_diff():
 
 
 def test_hypersum():
-    from sympy import sin
     assert simplify(summation(x**n/fac(n), (n, 1, oo))) == -1 + exp(x)
     assert summation((-1)**n * x**(2*n) / fac(2*n), (n, 0, oo)) == cos(x)
     assert simplify(summation((-1)**n*x**(2*n + 1) /
@@ -987,6 +987,7 @@ def test_indexed_idx_sum():
     raises(ValueError, lambda: Product(A[k], (k, 2, oo)))
 
 
+@slow
 def test_is_convergent():
     # divergence tests --
     assert Sum(n/(2*n + 1), (n, 1, oo)).is_convergent() is S.false
@@ -1126,7 +1127,7 @@ def test_issue_14111():
 
 
 def test_issue_14484():
-    raises(NotImplementedError, lambda: Sum(sin(n)/log(log(n)), (n, 22, oo)).is_convergent())
+    assert Sum(sin(n)/log(log(n)), (n, 22, oo)).is_convergent() is S.false
 
 
 def test_issue_14640():
@@ -1326,9 +1327,13 @@ def test_issue_8016():
         cos(pi*n/2)*gamma(m + 1)/gamma(n/2 + 1)/gamma(m - n/2 + 1)
 
 
-@XFAIL
 def test_issue_14313():
     assert Sum(S.Half**floor(n/2), (n, 1, oo)).is_convergent()
+
+
+def test_issue_14563():
+    # The assertion was failing due to no assumptions methods in Sums and Product
+    assert 1 % Sum(1, (x, 0, 1)) == 1
 
 
 def test_issue_16735():
@@ -1352,6 +1357,10 @@ def test_issue_17165():
 
 def test_issue_19379():
     assert Sum(factorial(n)/factorial(n + 2), (n, 1, oo)).is_convergent() is S.true
+
+
+def test_issue_20777():
+    assert Sum(exp(x*sin(n/m)), (n, 1, m)).doit() == Sum(exp(x*sin(n/m)), (n, 1, m))
 
 
 def test__dummy_with_inherited_properties_concrete():
@@ -1419,6 +1428,12 @@ def test_matrixsymbol_summation_numerical_limits():
     assert Sum(A**n*B**n, (n, 1, 3)).doit() == ans
 
 
+def test_issue_21651():
+    i = Symbol('i')
+    a = Sum(floor(2*2**(-i)), (i, S.One, 2))
+    assert a.doit() == S.One
+
+
 @XFAIL
 def test_matrixsymbol_summation_symbolic_limits():
     N = Symbol('N', integer=True, positive=True)
@@ -1427,3 +1442,64 @@ def test_matrixsymbol_summation_symbolic_limits():
     n = Symbol('n', integer=True)
     assert Sum(A, (n, 0, N)).doit() == (N+1)*A
     assert Sum(n*A, (n, 0, N)).doit() == (N**2/2+N/2)*A
+
+
+def test_summation_by_residues():
+    x = Symbol('x')
+
+    # Examples from Nakhle H. Asmar, Loukas Grafakos,
+    # Complex Analysis with Applications
+    assert eval_sum_residue(1 / (x**2 + 1), (x, -oo, oo)) == pi/tanh(pi)
+    assert eval_sum_residue(1 / x**6, (x, S(1), oo)) == pi**6/945
+    assert eval_sum_residue(1 / (x**2 + 9), (x, -oo, oo)) == pi/(3*tanh(3*pi))
+    assert eval_sum_residue(1 / (x**2 + 1)**2, (x, -oo, oo)).cancel() == \
+        (-pi**2*tanh(pi)**2 + pi*tanh(pi) + pi**2)/(2*tanh(pi)**2)
+    assert eval_sum_residue(x**2 / (x**2 + 1)**2, (x, -oo, oo)).cancel() == \
+        (-pi**2 + pi*tanh(pi) + pi**2*tanh(pi)**2)/(2*tanh(pi)**2)
+    assert eval_sum_residue(1 / (4*x**2 - 1), (x, -oo, oo)) == 0
+    assert eval_sum_residue(x**2 / (x**2 - S(1)/4)**2, (x, -oo, oo)) == pi**2/2
+    assert eval_sum_residue(1 / (4*x**2 - 1)**2, (x, -oo, oo)) == pi**2/8
+    assert eval_sum_residue(1 / ((x - S(1)/2)**2 + 1), (x, -oo, oo)) == pi*tanh(pi)
+    assert eval_sum_residue(1 / x**2, (x, S(1), oo)) == pi**2/6
+    assert eval_sum_residue(1 / x**4, (x, S(1), oo)) == pi**4/90
+    assert eval_sum_residue(1 / x**2 / (x**2 + 4), (x, S(1), oo)) == \
+        -pi*(-pi/12 - 1/(16*pi) + 1/(8*tanh(2*pi)))/2
+
+    # Some examples made from 1 / (x**2 + 1)
+    assert eval_sum_residue(1 / (x**2 + 1), (x, S(0), oo)) == \
+        S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (x**2 + 1), (x, S(1), oo)) == \
+        -S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (x**2 + 1), (x, S(-1), oo)) == \
+        1 + pi/(2*tanh(pi))
+    assert eval_sum_residue((-1)**x / (x**2 + 1), (x, -oo, oo)) == \
+        pi/sinh(pi)
+    assert eval_sum_residue((-1)**x / (x**2 + 1), (x, S(0), oo)) == \
+        pi/(2*sinh(pi)) + S(1)/2
+    assert eval_sum_residue((-1)**x / (x**2 + 1), (x, S(1), oo)) == \
+        -S(1)/2 + pi/(2*sinh(pi))
+    assert eval_sum_residue((-1)**x / (x**2 + 1), (x, S(-1), oo)) == \
+        pi/(2*sinh(pi))
+
+    # Some examples made from shifting of 1 / (x**2 + 1)
+    assert eval_sum_residue(1 / (x**2 + 2*x + 2), (x, S(-1), oo)) == S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (x**2 + 4*x + 5), (x, S(-2), oo)) == S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (x**2 - 2*x + 2), (x, S(1), oo)) == S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (x**2 - 4*x + 5), (x, S(2), oo)) == S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue((-1)**x * -1 / (x**2 + 2*x + 2), (x, S(-1), oo)) ==  S(1)/2 + pi/(2*sinh(pi))
+    assert eval_sum_residue((-1)**x * -1 / (x**2 -2*x + 2), (x, S(1), oo)) == S(1)/2 + pi/(2*sinh(pi))
+
+    # Some examples made from 1 / x**2
+    assert eval_sum_residue(1 / x**2, (x, S(2), oo)) == -1 + pi**2/6
+    assert eval_sum_residue(1 / x**2, (x, S(3), oo)) == -S(5)/4 + pi**2/6
+    assert eval_sum_residue((-1)**x / x**2, (x, S(1), oo)) == -pi**2/12
+    assert eval_sum_residue((-1)**x / x**2, (x, S(2), oo)) == 1 - pi**2/12
+
+
+@slow
+def test_summation_by_residues_failing():
+    x = Symbol('x')
+
+    # Failing because of the bug in residue computation
+    assert eval_sum_residue(x**2 / (x**4 + 1), (x, S(1), oo))
+    assert eval_sum_residue(1 / ((x - 1)*(x - 2) + 1), (x, -oo, oo)) != 0

@@ -8,6 +8,7 @@ from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
 from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy.testing.randtest import verify_numerically
+from sympy.functions.elementary.trigonometric import asin
 
 
 a, c, x, y, z = symbols('a,c,x,y,z')
@@ -510,6 +511,12 @@ def test_Mul_is_even_odd():
     assert (x*x).is_odd is None
     assert (x*(x + k)).is_odd is False
     assert (x*(x + m)).is_odd is None
+
+    # issue 8648
+    assert (m**2/2).is_even
+    assert (m**2/3).is_even is False
+    assert (2/m**2).is_odd is False
+    assert (2/m).is_odd is None
 
 
 @XFAIL
@@ -1050,6 +1057,18 @@ def test_Pow_is_integer():
     assert (1/(x + 1)).is_integer is False
     assert (1/(-x - 1)).is_integer is False
 
+    # issue 8648-like
+    k = Symbol('k', even=True)
+    assert (k**3/2).is_integer
+    assert (k**3/8).is_integer
+    assert (k**3/16).is_integer is None
+    assert (2/k).is_integer is None
+    assert (2/k**2).is_integer is False
+    o = Symbol('o', odd=True)
+    assert (k/o).is_integer is None
+    o = Symbol('o', odd=True, prime=True)
+    assert (k/o).is_integer is False
+
 
 def test_Pow_is_real():
     x = Symbol('x', real=True)
@@ -1104,6 +1123,15 @@ def test_Pow_is_real():
     assert (1/(i-1)).is_real is None
     assert (1/(i-1)).is_extended_real is None
 
+    # test issue 20715
+    from sympy.core.parameters import evaluate
+    x = S(-1)
+    with evaluate(False):
+        assert x.is_negative is True
+
+    f = Pow(x, -1)
+    with evaluate(False):
+        assert f.is_imaginary is False
 
 def test_real_Pow():
     k = Symbol('k', integer=True, nonzero=True)
@@ -1736,7 +1764,6 @@ def test_issue_5460():
 
 
 def test_product_irrational():
-    from sympy import I, pi
     assert (I*pi).is_irrational is False
     # The following used to be deduced from the above bug:
     assert (I*pi).is_positive is False
@@ -1902,6 +1929,16 @@ def test_Mod():
     # rewrite
     assert Mod(x, y).rewrite(floor) == x - y*floor(x/y)
     assert ((x - Mod(x, y))/y).rewrite(floor) == floor(x/y)
+
+    # issue 21373
+    from sympy.functions.elementary.trigonometric import sinh
+    from sympy.functions.elementary.piecewise import Piecewise
+
+    x_r, y_r = symbols('x_r y_r', real=True)
+    (Piecewise((x_r, y_r > x_r), (y_r, True)) / z) % 1
+    expr = exp(sinh(Piecewise((x_r, y_r > x_r), (y_r, True)) / z))
+    expr.subs({1: 1.0})
+    sinh(Piecewise((x_r, y_r > x_r), (y_r, True)) * z ** -1.0).is_zero
 
 
 def test_Mod_Pow():
@@ -2307,3 +2344,34 @@ def test__neg__():
 
 def test_issue_18507():
     assert Mul(zoo, zoo, 0) is nan
+
+
+def test_issue_17130():
+    e = Add(b, -b, I, -I, evaluate=False)
+    assert e.is_zero is None # ideally this would be True
+
+
+def test_issue_21034():
+    e = -I*log((re(asin(5)) + I*im(asin(5)))/sqrt(re(asin(5))**2 + im(asin(5))**2))/pi
+    assert e.round(2)
+
+
+def test_issue_22021():
+    from sympy.calculus.util import AccumBounds
+    from sympy.utilities.iterables import permutations
+    # these objects are special cases in Mul
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
+    L = TensorIndexType("L")
+    i = tensor_indices("i", L)
+    A, B = tensor_heads("A B", [L])
+    e = A(i) + B(i)
+    assert -e == -1*e
+    e = zoo + x
+    assert -e == -1*e
+    a = AccumBounds(1, 2)
+    e = a + x
+    assert -e == -1*e
+    for args in permutations((zoo, a, x)):
+        e = Add(*args, evaluate=False)
+        assert -e == -1*e
+    assert 2*Add(1, x, x, evaluate=False) == 4*x + 2

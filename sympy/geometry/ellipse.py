@@ -8,6 +8,7 @@ Contains
 
 from sympy import Expr, Eq
 from sympy.core import S, pi, sympify
+from sympy.core.evalf import prec_to_dps
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
@@ -761,7 +762,7 @@ class Ellipse(GeometrySet):
                 intersect = self.intersection(segment)
                 if len(intersect) == 1:
                     if not any(intersect[0] in i for i in segment.points) \
-                        and all(not self.encloses_point(i) for i in segment.points):
+                        and not any(self.encloses_point(i) for i in segment.points):
                         all_tangents = True
                         continue
                     else:
@@ -1130,7 +1131,6 @@ class Ellipse(GeometrySet):
         sympy.geometry.point.Point
         arbitrary_point : Returns parameterized point on ellipse
         """
-        from sympy import sin, cos, Rational
         t = _symbol('t', real=True)
         x, y = self.arbitrary_point(t).args
         # get a random value in [-1, 1) corresponding to cos(t)
@@ -1307,9 +1307,11 @@ class Ellipse(GeometrySet):
 
             # handle horizontal and vertical tangent lines
             if len(tangent_points) == 1:
-                assert tangent_points[0][
-                           0] == p.x or tangent_points[0][1] == p.y
-                return [Line(p, p + Point(1, 0)), Line(p, p + Point(0, 1))]
+                if tangent_points[0][
+                           0] == p.x or tangent_points[0][1] == p.y:
+                    return [Line(p, p + Point(1, 0)), Line(p, p + Point(0, 1))]
+                else:
+                    return [Line(p, p + Point(0, 1)), Line(p, tangent_points[0])]
 
             # others
             return [Line(p, tangent_points[0]), Line(p, tangent_points[1])]
@@ -1602,6 +1604,13 @@ class Circle(Ellipse):
                 return GeometryEntity.__new__(cls, c, r, **kwargs)
 
             raise GeometryError("Circle.__new__ received unknown arguments")
+
+    def _eval_evalf(self, prec=15, **options):
+        pt, r = self.args
+        dps = prec_to_dps(prec)
+        pt = pt.evalf(n=dps, **options)
+        r = r.evalf(n=dps, **options)
+        return self.func(pt, r, evaluate=False)
 
     @property
     def circumference(self):

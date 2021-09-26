@@ -1,5 +1,5 @@
-from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros,
-    ImmutableMatrix as Matrix)
+from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros, acos,
+    ImmutableMatrix as Matrix, _simplify_matrix)
 from sympy import trigsimp
 from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
@@ -653,7 +653,7 @@ class Vector(Printable, EvalfMixin):
         """Returns a simplified Vector."""
         d = {}
         for v in self.args:
-            d[v[1]] = v[0].simplify()
+            d[v[1]] = _simplify_matrix(v[0])
         return Vector(d)
 
     def subs(self, *args, **kwargs):
@@ -678,7 +678,17 @@ class Vector(Printable, EvalfMixin):
         return Vector(d)
 
     def magnitude(self):
-        """Returns the magnitude (Euclidean norm) of self."""
+        """Returns the magnitude (Euclidean norm) of self.
+
+        Warnings
+        ========
+
+        Python ignores the leading negative sign so that might
+        give wrong results.
+        ``-A.x.magnitude()`` would be treated as ``-(A.x.magnitude())``,
+        instead of ``(-A.x).magnitude()``.
+
+        """
         return sqrt(self & self)
 
     def normalize(self):
@@ -694,6 +704,45 @@ class Vector(Printable, EvalfMixin):
         for v in self.args:
             d[v[1]] = v[0].applyfunc(f)
         return Vector(d)
+
+    def angle_between(self, vec):
+        """
+        Returns the smallest angle between Vector 'vec' and self.
+
+        Parameter
+        =========
+
+        vec : Vector
+            The Vector between which angle is needed.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> A = ReferenceFrame("A")
+        >>> v1 = A.x
+        >>> v2 = A.y
+        >>> v1.angle_between(v2)
+        pi/2
+
+        >>> v3 = A.x + A.y + A.z
+        >>> v1.angle_between(v3)
+        acos(sqrt(3)/3)
+
+        Warnings
+        ========
+
+        Python ignores the leading negative sign so that might
+        give wrong results.
+        ``-A.x.angle_between()`` would be treated as ``-(A.x.angle_between())``,
+        instead of ``(-A.x).angle_between()``.
+
+        """
+
+        vec1 = self.normalize()
+        vec2 = vec.normalize()
+        angle = acos(vec1.dot(vec2))
+        return angle
 
     def free_symbols(self, reference_frame):
         """
@@ -719,6 +768,49 @@ class Vector(Printable, EvalfMixin):
             new_args.append([mat.evalf(n=prec_to_dps(prec)), frame])
         return Vector(new_args)
 
+    def xreplace(self, rule):
+        """
+        Replace occurrences of objects within the measure numbers of the vector.
+
+        Parameters
+        ==========
+
+        rule : dict-like
+            Expresses a replacement rule.
+
+        Returns
+        =======
+
+        Vector
+            Result of the replacement.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, pi
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> A = ReferenceFrame('A')
+        >>> x, y, z = symbols('x y z')
+        >>> ((1 + x*y) * A.x).xreplace({x: pi})
+        (pi*y + 1)*A.x
+        >>> ((1 + x*y) * A.x).xreplace({x: pi, y: 2})
+        (1 + 2*pi)*A.x
+
+        Replacements occur only if an entire node in the expression tree is
+        matched:
+
+        >>> ((x*y + z) * A.x).xreplace({x*y: pi})
+        (z + pi)*A.x
+        >>> ((x*y*z) * A.x).xreplace({x*y: pi})
+        x*y*z*A.x
+
+        """
+
+        new_args = []
+        for mat, frame in self.args:
+            mat = mat.xreplace(rule)
+            new_args.append([mat, frame])
+        return Vector(new_args)
 
 class VectorTypeError(TypeError):
 

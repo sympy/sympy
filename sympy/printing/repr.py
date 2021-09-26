@@ -100,6 +100,13 @@ class ReprPrinter(Printer):
         r += '(%s)' % ', '.join([self._print(a) for a in expr.args])
         return r
 
+    def _print_Heaviside(self, expr):
+        # Same as _print_Function but uses pargs to suppress default value for
+        # 2nd arg.
+        r = self._print(expr.func)
+        r += '(%s)' % ', '.join([self._print(a) for a in expr.pargs])
+        return r
+
     def _print_FunctionClass(self, expr):
         if issubclass(expr, AppliedUndef):
             return 'Function(%r)' % (expr.__name__)
@@ -228,23 +235,25 @@ class ReprPrinter(Printer):
         if d == {}:
             return "%s(%s, %s)" % (
                 expr.__class__.__name__,
-                self._print(expr.coordinate_system),
+                self._print(expr.coord_sys),
                 self._print(expr.index)
             )
         else:
             attr = ['%s=%s' % (k, v) for k, v in d.items()]
             return "%s(%s, %s, %s)" % (
                 expr.__class__.__name__,
-                self._print(expr.coordinate_system),
+                self._print(expr.coord_sys),
                 self._print(expr.index),
                 ', '.join(attr)
             )
 
     def _print_Predicate(self, expr):
-        return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+        return "Q.%s" % expr.name
 
     def _print_AppliedPredicate(self, expr):
-        return "%s(%s, %s)" % (expr.__class__.__name__, expr.func, expr.arg)
+        # will be changed to just expr.args when args overriding is removed
+        args = expr._args
+        return "%s(%s)" % (expr.__class__.__name__, self.reprify(args, ", "))
 
     def _print_str(self, expr):
         return repr(expr)

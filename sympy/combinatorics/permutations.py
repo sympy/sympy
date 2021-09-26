@@ -983,7 +983,7 @@ class Permutation(Atom):
         temp = set(temp)
 
         if not is_cycle:
-            if any(i not in temp for i in range(len(temp))):
+            if temp != set(range(len(temp))):
                 raise ValueError('Integers 0 through %s must be present.' %
                 max(temp))
             if size is not None and temp and max(temp) + 1 > size:
@@ -1152,8 +1152,7 @@ class Permutation(Atom):
         [[0], [1, 2]]
         """
         need = set(range(self.size)) - set(flatten(self.cyclic_form))
-        rv = self.cyclic_form
-        rv.extend([[i] for i in need])
+        rv = self.cyclic_form + [[i] for i in need]
         rv.sort()
         return rv
 

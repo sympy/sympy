@@ -49,6 +49,11 @@ def test_solve_poly_system():
         [z, -2*x*y**2 + x + y**2*z, y**2*(-z - 4) + 2]))
     raises(PolynomialError, lambda: solve_poly_system([1/x], x))
 
+    raises(NotImplementedError, lambda: solve_poly_system(
+          [x-1,], (x, y)))
+    raises(NotImplementedError, lambda: solve_poly_system(
+          [y-1,], (x, y)))
+
 
 def test_solve_biquadratic():
     x0, y0, x1, y1, r = symbols('x0 y0 x1 y1 r')

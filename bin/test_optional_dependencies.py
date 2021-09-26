@@ -1,3 +1,16 @@
+#!/usr/bin/env python
+"""
+Run tests for specific packages that use optional dependencies.
+
+The optional dependencies need to be installed before running this.
+"""
+
+
+# Add the local sympy to sys.path (needed for CI)
+from get_sympy import path_hack
+path_hack()
+
+
 class TestsFailedError(Exception):
     pass
 
@@ -18,8 +31,8 @@ test_list = [
     # llvmlite
     '*llvm*',
 
-    # theano
-    '*theano*',
+    # aesara
+    '*aesara*',
 
     # gmpy
     'polys',
@@ -68,8 +81,8 @@ doctest_list = [
     # llvmlite
     '*llvm*',
 
-    # theano
-    '*theano*',
+    # aesara
+    '*aesara*',
 
     # gmpy
     'polys',
@@ -98,7 +111,7 @@ doctest_list = [
 
 ]
 
-if not (sympy.test(*test_list, blacklist=blacklist) and sympy.doctest(*doctest_list)):
+if not (sympy.test(*test_list, verbose=True, blacklist=blacklist) and sympy.doctest(*doctest_list)):
     raise TestsFailedError('Tests failed')
 
 
@@ -113,12 +126,4 @@ import sympy
 # applied, so no hash randomization here.
 if not (sympy.test('sympy/plotting', 'sympy/physics/quantum/tests/test_circuitplot.py',
     subprocess=False) and sympy.doctest('sympy/plotting', subprocess=False)):
-    raise TestsFailedError('Tests failed')
-
-
-print('Testing SYMENGINE')
-import sympy
-if not sympy.test('sympy/physics/mechanics'):
-    raise TestsFailedError('Tests failed')
-if not sympy.test('sympy/liealgebras'):
     raise TestsFailedError('Tests failed')

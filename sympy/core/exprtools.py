@@ -363,7 +363,7 @@ class Factors:
                     factors[q] = (factors[q] if q in factors else S.Zero) - factors[f]
                     factors.pop(f)
             if i:
-                factors[I] = S.One*i
+                factors[I] = factors.get(I, S.Zero) + i
             if nc:
                 factors[Mul(*nc, evaluate=False)] = S.One
         else:
@@ -388,9 +388,7 @@ class Factors:
                         elif a is I:
                             factors[I] = S.One
                         elif a.is_Pow:
-                            if S.NegativeOne not in factors:
-                                factors[S.NegativeOne] = S.Zero
-                            factors[S.NegativeOne] += a.exp
+                            factors[a.base] = factors.get(a.base, S.Zero) + a.exp
                         elif a == 1:
                             factors[a] = S.One
                         elif a == -1:
@@ -1103,6 +1101,8 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
         # don't treat internal args like terms of an Add
         if not isinstance(a, Expr):
             if isinstance(a, Basic):
+                if not a.args:
+                    return a
                 return a.func(*[handle(i) for i in a.args])
             return type(a)([handle(i) for i in a])
         return gcd_terms(a, isprimitive, clear, fraction)
@@ -1248,8 +1248,8 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
         if p.is_Add:
             list_args = [do(a) for a in Add.make_args(p)]
             # get a common negative (if there) which gcd_terms does not remove
-            if all(a.as_coeff_Mul()[0].extract_multiplicatively(-1) is not None
-                   for a in list_args):
+            if not any(a.as_coeff_Mul()[0].extract_multiplicatively(-1) is None
+                       for a in list_args):
                 cont = -cont
                 list_args = [-a for a in list_args]
             # watch out for exp(-(x+2)) which gcd_terms will change to exp(-x-2)

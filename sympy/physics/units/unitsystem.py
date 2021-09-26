@@ -139,8 +139,6 @@ class UnitSystem(_QuantityMapper):
         return self.get_dimension_system().is_consistent
 
     def get_dimensional_expr(self, expr):
-        from sympy import Mul, Add, Pow, Derivative
-        from sympy import Function
         from sympy.physics.units import Quantity
         if isinstance(expr, Mul):
             return Mul(*[self.get_dimensional_expr(i) for i in expr.args])

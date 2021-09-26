@@ -119,7 +119,8 @@ def convert_add(add):
     elif add.SUB():
         lh = convert_add(add.additive(0))
         rh = convert_add(add.additive(1))
-        return sympy.Add(lh, -1 * rh, evaluate=False)
+        return sympy.Add(lh, sympy.Mul(-1, rh, evaluate=False),
+                         evaluate=False)
     else:
         return convert_mp(add.mp())
 
@@ -163,11 +164,8 @@ def convert_unary(unary):
         return convert_unary(nested_unary)
     elif unary.SUB():
         numabs = convert_unary(nested_unary)
-        if numabs == 1:
-            # Use Integer(-1) instead of Mul(-1, 1)
-            return -numabs
-        else:
-            return sympy.Mul(-1, convert_unary(nested_unary), evaluate=False)
+        # Use Integer(-n) instead of Mul(-1, n)
+        return -numabs
     elif postfix:
         return convert_postfix_list(postfix)
 
@@ -427,7 +425,10 @@ def convert_func(func):
 
         if (name == "log" or name == "ln"):
             if func.subexpr():
-                base = convert_expr(func.subexpr().expr())
+                if func.subexpr().expr():
+                    base = convert_expr(func.subexpr().expr())
+                else:
+                    base = convert_atom(func.subexpr().atom())
             elif name == "log":
                 base = 10
             elif name == "ln":
@@ -485,6 +486,9 @@ def convert_func(func):
             return sympy.root(expr, r, evaluate=False)
         else:
             return sympy.sqrt(expr, evaluate=False)
+    elif func.FUNC_OVERLINE():
+        expr = convert_expr(func.base)
+        return sympy.conjugate(expr, evaluate=False)
     elif func.FUNC_SUM():
         return handle_sum_or_prod(func, "summation")
     elif func.FUNC_PROD():

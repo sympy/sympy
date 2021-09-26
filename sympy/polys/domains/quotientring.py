@@ -135,21 +135,22 @@ class QuotientRing(Ring):
         return hash((self.__class__.__name__, self.dtype, self.ring, self.base_ideal))
 
     def new(self, a):
-        """Construct an element of `self` domain from `a`. """
+        """Construct an element of ``self`` domain from ``a``. """
         if not isinstance(a, self.ring.dtype):
             a = self.ring(a)
         # TODO optionally disable reduction?
         return self.dtype(self, self.base_ideal.reduce_element(a))
 
     def __eq__(self, other):
-        """Returns `True` if two domains are equivalent. """
+        """Returns ``True`` if two domains are equivalent. """
         return isinstance(other, QuotientRing) and \
             self.ring == other.ring and self.base_ideal == other.base_ideal
 
-    def from_ZZ_python(K1, a, K0):
-        """Convert a Python `int` object to `dtype`. """
+    def from_ZZ(K1, a, K0):
+        """Convert a Python ``int`` object to ``dtype``. """
         return K1(K1.ring.convert(a, K0))
 
+    from_ZZ_python = from_ZZ
     from_QQ_python = from_ZZ_python
     from_ZZ_gmpy = from_ZZ_python
     from_QQ_gmpy = from_ZZ_python
@@ -168,11 +169,11 @@ class QuotientRing(Ring):
             return a
 
     def poly_ring(self, *gens):
-        """Returns a polynomial ring, i.e. `K[X]`. """
+        """Returns a polynomial ring, i.e. ``K[X]``. """
         raise NotImplementedError('nested domains not allowed')
 
     def frac_field(self, *gens):
-        """Returns a fraction field, i.e. `K(X)`. """
+        """Returns a fraction field, i.e. ``K(X)``. """
         raise NotImplementedError('nested domains not allowed')
 
     def revert(self, a):

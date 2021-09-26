@@ -82,7 +82,7 @@ def convert_to(expr, target_units, unit_system="SI"):
     Conversion to Planck units:
 
     >>> convert_to(atomic_mass_constant, [gravitational_constant, speed_of_light, hbar]).n()
-    7.62963085040767e-20*gravitational_constant**(-0.5)*hbar**0.5*speed_of_light**0.5
+    7.62963087839509e-20*hbar**0.5*speed_of_light**0.5/gravitational_constant**0.5
 
     """
     from sympy.physics.units import UnitSystem

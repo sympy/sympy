@@ -26,7 +26,7 @@ __all__ = ['refraction_angle',
            ]
 
 from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit, atan2, asin,\
-cos, sin, tan, I, cancel, pi, Float
+cos, sin, tan, I, cancel, pi, Float, S, zoo
 from sympy.core.compatibility import is_sequence
 from sympy.geometry.line import Ray3D
 from sympy.geometry.util import intersection
@@ -136,9 +136,6 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
         if critical_angle_ and angle_of_incidence > critical_angle_:
             raise ValueError('Ray undergoes total internal reflection')
         return asin(n1*sin(angle_of_incidence)/n2)
-
-    if angle_of_incidence and not 0 <= angle_of_incidence < pi*0.5:
-        raise ValueError
 
     # Treat the incident as ray below
     # A flag to check whether to return Ray3D or not
@@ -272,7 +269,7 @@ def fresnel_coefficients(angle_of_incidence, medium1, medium2):
     except ValueError:
         angle_of_total_internal_reflection_onset = None
 
-    if angle_of_total_internal_reflection_onset == None or\
+    if angle_of_total_internal_reflection_onset is None or\
     angle_of_total_internal_reflection_onset > angle_of_incidence:
         R_s = -sin(angle_of_incidence - angle_of_refraction)\
                 /sin(angle_of_incidence + angle_of_refraction)
@@ -448,9 +445,9 @@ def critical_angle(medium1, medium2):
 
 
 
-def lens_makers_formula(n_lens, n_surr, r1, r2):
+def lens_makers_formula(n_lens, n_surr, r1, r2, d=0):
     """
-    This function calculates focal length of a thin lens.
+    This function calculates focal length of a lens.
     It follows cartesian sign convention.
 
     Parameters
@@ -464,15 +461,23 @@ def lens_makers_formula(n_lens, n_surr, r1, r2):
         Radius of curvature of first surface.
     r2 : sympifiable
         Radius of curvature of second surface.
+    d : sympifiable, optional
+        Thickness of lens, default value is 0.
 
     Examples
     ========
 
     >>> from sympy.physics.optics import lens_makers_formula
+    >>> from sympy import S
     >>> lens_makers_formula(1.33, 1, 10, -10)
     15.1515151515151
+    >>> lens_makers_formula(1.2, 1, 10, S.Infinity)
+    50.0000000000000
+    >>> lens_makers_formula(1.33, 1, 10, -10, d=1)
+    15.3418463277618
 
     """
+
     if isinstance(n_lens, Medium):
         n_lens = n_lens.refractive_index
     else:
@@ -481,11 +486,13 @@ def lens_makers_formula(n_lens, n_surr, r1, r2):
         n_surr = n_surr.refractive_index
     else:
         n_surr = sympify(n_surr)
+    d = sympify(d)
 
-    r1 = sympify(r1)
-    r2 = sympify(r2)
+    focal_length = 1/((n_lens - n_surr) / n_surr*(1/r1 - 1/r2 + (((n_lens - n_surr) * d) / (n_lens * r1 * r2))))
 
-    return 1/((n_lens - n_surr)/n_surr*(1/r1 - 1/r2))
+    if focal_length == zoo:
+        return S.Infinity
+    return focal_length
 
 
 def mirror_formula(focal_length=None, u=None, v=None):

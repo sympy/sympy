@@ -136,10 +136,6 @@ class re(Function):
         if self.args[0].is_finite:
             return True
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.real_part(self.args[0]._sage_())
-
 
 class im(Function):
     """
@@ -241,10 +237,6 @@ class im(Function):
             return -S.ImaginaryUnit \
                 * re(Derivative(self.args[0], x, evaluate=True))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.imag_part(self.args[0]._sage_())
-
     def _eval_rewrite_as_re(self, arg, **kwargs):
         return -S.ImaginaryUnit*(self.args[0] - re(self.args[0]))
 
@@ -326,9 +318,10 @@ class sign(Function):
     _singularities = True
 
     def doit(self, **hints):
-        if self.args[0].is_zero is False:
+        s = super().doit()
+        if s == self and self.args[0].is_zero is False:
             return self.args[0] / Abs(self.args[0])
-        return self
+        return s
 
     @classmethod
     def eval(cls, arg):
@@ -422,9 +415,14 @@ class sign(Function):
         ):
             return S.One
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.sgn(self.args[0]._sage_())
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        arg0 = self.args[0]
+        x0 = arg0.subs(x, 0)
+        if x0 != 0:
+            return self.func(x0)
+        if cdir != 0:
+            cdir = arg0.dir(x, cdir)
+        return -S.One if re(cdir) < 0 else S.One
 
     def _eval_rewrite_as_Piecewise(self, arg, **kwargs):
         if arg.is_extended_real:
@@ -433,7 +431,7 @@ class sign(Function):
     def _eval_rewrite_as_Heaviside(self, arg, **kwargs):
         from sympy.functions.special.delta_functions import Heaviside
         if arg.is_extended_real:
-            return Heaviside(arg, H0=S(1)/2) * 2 - 1
+            return Heaviside(arg) * 2 - 1
 
     def _eval_rewrite_as_Abs(self, arg, **kwargs):
         return Piecewise((0, Eq(arg, 0)), (arg / Abs(arg), True))
@@ -528,6 +526,7 @@ class Abs(Function):
                 return obj
         if not isinstance(arg, Expr):
             raise TypeError("Bad argument type for Abs(): %s" % type(arg))
+
         # handle what we can
         arg = signsimp(arg, evaluate=False)
         n, d = arg.as_numer_denom()
@@ -579,6 +578,10 @@ class Abs(Function):
         if isinstance(arg, exp):
             return exp(re(arg.args[0]))
         if isinstance(arg, AppliedUndef):
+            if arg.is_positive:
+                return arg
+            elif arg.is_negative:
+                return -arg
             return
         if arg.is_Add and arg.has(S.Infinity, S.NegativeInfinity):
             if any(a.is_infinite for a in arg.as_real_imag()):
@@ -593,6 +596,8 @@ class Abs(Function):
             arg2 = -S.ImaginaryUnit * arg
             if arg2.is_extended_nonnegative:
                 return arg2
+        if arg.is_extended_real:
+            return
         # reject result if all new conjugates are just wrappers around
         # an expression that was already in the arg
         conj = signsimp(arg.conjugate(), evaluate=False)
@@ -653,15 +658,7 @@ class Abs(Function):
         if direction.has(log(x)):
             direction = direction.subs(log(x), logx)
         s = self.args[0]._eval_nseries(x, n=n, logx=logx)
-        when = Eq(direction, 0)
-        return Piecewise(
-            ((s.subs(direction, 0)), when),
-            (sign(direction)*s, True),
-        )
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.abs_symbolic(self.args[0]._sage_())
+        return (sign(direction)*s).expand()
 
     def _eval_derivative(self, x):
         if self.args[0].is_extended_real or self.args[0].is_imaginary:
@@ -694,8 +691,10 @@ class Abs(Function):
 
 class arg(Function):
     """
-    Returns the argument (in radians) of a complex number. For a positive
-    number, the argument is always 0.
+    returns the argument (in radians) of a complex number.  The argument is
+    evaluated in consistent convention with atan2 where the branch-cut is
+    taken along the negative real axis and arg(z) is in the interval
+    (-pi,pi].  For a positive number, the argument is always 0.
 
     Examples
     ========
@@ -746,7 +745,7 @@ class arg(Function):
             arg_ = sign(c)*arg_
         else:
             arg_ = arg
-        if arg_.atoms(AppliedUndef):
+        if any(i.is_extended_positive is None for i in arg_.atoms(AppliedUndef)):
             return
         x, y = arg_.as_real_imag()
         rv = atan2(y, x)
@@ -1218,7 +1217,6 @@ class principal_branch(Function):
 
     @classmethod
     def eval(self, x, period):
-        from sympy import oo, exp_polar, I, Mul, polar_lift, Symbol
         if isinstance(x, polar_lift):
             return principal_branch(x.args[0], period)
         if period == oo:
@@ -1269,7 +1267,6 @@ class principal_branch(Function):
             return exp_polar(arg*I)*abs(c)
 
     def _eval_evalf(self, prec):
-        from sympy import exp, pi, I
         z, period = self.args
         p = periodic_argument(z, period)._eval_evalf(prec)
         if abs(p) > pi or p == -pi:
@@ -1292,6 +1289,8 @@ def _polarify(eq, lift, pause=False):
         if lift:
             return polar_lift(r)
         return r
+    elif eq.is_Pow and eq.base == S.Exp1:
+        return eq.func(S.Exp1, _polarify(eq.exp, lift, pause=False))
     elif eq.is_Function:
         return eq.func(*[_polarify(arg, lift, pause=False) for arg in eq.args])
     elif isinstance(eq, Integral):
@@ -1390,7 +1389,7 @@ def _unpolarify(eq, exponents_only, pause=False):
     return eq.func(*[_unpolarify(x, exponents_only, True) for x in eq.args])
 
 
-def unpolarify(eq, subs={}, exponents_only=False):
+def unpolarify(eq, subs=None, exponents_only=False):
     """
     If p denotes the projection from the Riemann surface of the logarithm to
     the complex line, return a simplified version eq' of `eq` such that
@@ -1411,7 +1410,7 @@ def unpolarify(eq, subs={}, exponents_only=False):
         return eq
 
     eq = sympify(eq)
-    if subs != {}:
+    if subs is not None:
         return unpolarify(eq.subs(subs))
     changed = True
     pause = False

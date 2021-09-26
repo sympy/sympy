@@ -30,6 +30,7 @@ from sympy.matrices import Matrix
 from sympy.core.numbers import Float
 from sympy.core.parameters import global_parameters
 from sympy.core.add import Add
+from sympy.core.evalf import prec_to_dps
 from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import filldedent, func_name, Undecidable
 
@@ -446,7 +447,7 @@ class Point(GeometryEntity):
             return False
         return all(a.equals(b) for a, b in zip(self, other))
 
-    def evalf(self, prec=None, **options):
+    def _eval_evalf(self, prec=15, **options):
         """Evaluate the coordinates of the point.
 
         This method will, where possible, create and return a new Point
@@ -474,7 +475,7 @@ class Point(GeometryEntity):
         Point2D(0.5, 1.5)
 
         """
-        coords = [x.evalf(prec, **options) for x in self.args]
+        coords = [x.evalf(n=prec_to_dps(prec), **options) for x in self.args]
         return Point(*coords, evaluate=False)
 
     def intersection(self, other):
@@ -852,7 +853,6 @@ class Point(GeometryEntity):
         and a distance of 1 from the origin"""
         return self / abs(self)
 
-    n = evalf
 
 class Point2D(Point):
     """A point in a 2-dimensional Euclidean space.
@@ -997,8 +997,6 @@ class Point2D(Point):
         """
         if not (matrix.is_Matrix and matrix.shape == (3, 3)):
             raise ValueError("matrix must be a 3x3 matrix")
-
-        col, row = matrix.shape
         x, y = self.args
         return Point(*(Matrix(1, 3, [x, y, 1])*matrix).tolist()[0][:2])
 
@@ -1289,8 +1287,6 @@ class Point3D(Point):
         """
         if not (matrix.is_Matrix and matrix.shape == (4, 4)):
             raise ValueError("matrix must be a 4x4 matrix")
-
-        col, row = matrix.shape
         from sympy.matrices.expressions import Transpose
         x, y, z = self.args
         m = Transpose(matrix)

@@ -286,8 +286,7 @@ def run_all_tests(test_args=(), test_kwargs=None,
     Run all tests.
 
     Right now, this runs the regular tests (bin/test), the doctests
-    (bin/doctest), the examples (examples/all.py), and the sage tests (see
-    sympy/external/tests/test_sage.py).
+    (bin/doctest), and the examples (examples/all.py).
 
     This is what ``setup.py test`` uses.
 
@@ -302,7 +301,6 @@ def run_all_tests(test_args=(), test_kwargs=None,
     ... test_kwargs={"colors:False"}) # doctest: +SKIP
 
     """
-    cwd = get_sympy_dir()
     tests_successful = True
 
     test_kwargs = test_kwargs or {}
@@ -327,20 +325,6 @@ def run_all_tests(test_args=(), test_kwargs=None,
         from all import run_examples  # type: ignore
         if not run_examples(*examples_args, **examples_kwargs):
             tests_successful = False
-
-        # Sage tests
-        if sys.platform != "win32" and not PY3 and os.path.exists("bin/test"):
-            # run Sage tests; Sage currently doesn't support Windows or Python 3
-            # Only run Sage tests if 'bin/test' is present (it is missing from
-            # our release because everything in the 'bin' directory gets
-            # installed).
-            dev_null = open(os.devnull, 'w')
-            if subprocess.call("sage -v", shell=True, stdout=dev_null,
-                               stderr=dev_null) == 0:
-                if subprocess.call("sage -python bin/test "
-                                   "sympy/external/tests/test_sage.py",
-                    shell=True, cwd=cwd) != 0:
-                    tests_successful = False
 
         if tests_successful:
             return
@@ -721,9 +705,14 @@ def _get_doctest_blacklist():
     if ON_TRAVIS or import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
 
-    if import_module('theano') is None:
+    if import_module('aesara') is None:
         blacklist.extend([
-            "sympy/printing/theanocode.py",
+            "sympy/printing/aesaracode.py",
+            "doc/src/modules/numeric-computation.rst",
+        ])
+
+    if import_module('cupy') is None:
+        blacklist.extend([
             "doc/src/modules/numeric-computation.rst",
         ])
 
@@ -2196,7 +2185,7 @@ class PyTestReporter(Reporter):
         self.write("architecture:       %s\n" % ARCH)
         from sympy.core.cache import USE_CACHE
         self.write("cache:              %s\n" % USE_CACHE)
-        from sympy.core.compatibility import GROUND_TYPES, HAS_GMPY
+        from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
         version = ''
         if GROUND_TYPES =='gmpy':
             if HAS_GMPY == 1:

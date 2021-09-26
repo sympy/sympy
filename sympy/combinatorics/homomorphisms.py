@@ -116,7 +116,6 @@ class GroupHomomorphism:
         return self._kernel
 
     def _compute_kernel(self):
-        from sympy import S
         G = self.domain
         G_order = G.order()
         if G_order is S.Infinity:
@@ -199,7 +198,6 @@ class GroupHomomorphism:
         Check if the homomorphism is surjective
 
         '''
-        from sympy import S
         im = self.image().order()
         oth = self.codomain.order()
         if im is S.Infinity and oth is S.Infinity:
@@ -268,7 +266,7 @@ class GroupHomomorphism:
                     P = PermutationGroup(gens)
         return P
 
-def homomorphism(domain, codomain, gens, images=[], check=True):
+def homomorphism(domain, codomain, gens, images=(), check=True):
     '''
     Create (if possible) a group homomorphism from the group ``domain``
     to the group ``codomain`` defined by the images of the domain's
@@ -290,9 +288,9 @@ def homomorphism(domain, codomain, gens, images=[], check=True):
         raise TypeError("The codomain must be a group")
 
     generators = domain.generators
-    if any([g not in generators for g in gens]):
+    if not all(g in generators for g in gens):
         raise ValueError("The supplied generators must be a subset of the domain's generators")
-    if any([g not in codomain for g in images]):
+    if not all(g in codomain for g in images):
         raise ValueError("The images must be elements of the codomain")
 
     if images and len(images) != len(gens):

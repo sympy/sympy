@@ -410,7 +410,7 @@ class Point:
         ==========
 
         otherpoint : Point
-            The first point of the 2-point theory (O)
+            The first point of the 1-point theory (O)
         outframe : ReferenceFrame
             The frame we want this point's velocity defined in (N)
         interframe : ReferenceFrame
@@ -554,7 +554,15 @@ class Point:
                             continue
                         candidate_neighbor.append(neighbor)
                         if not valid_neighbor_found:
-                            self.set_vel(frame, self.pos_from(neighbor).dt(frame) + neighbor_velocity)
+                            vel = None
+                            for f in self.pos_from(neighbor).args:
+                                if f[1] in self._vel_dict.keys():
+                                    if self._vel_dict[f[1]] != 0:
+                                        vel = self._vel_dict[f[1]]
+                                        break
+                            if vel is None:
+                                vel = self.pos_from(neighbor).dt(frame)
+                            self.set_vel(frame, vel + neighbor_velocity)
                             valid_neighbor_found = True
             if is_cyclic:
                 warn('Kinematic loops are defined among the positions of points. This is likely not desired and may cause errors in your calculations.')

@@ -10,17 +10,19 @@ from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
 from sympy.printing.pycode import (
-    MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter,
-    SymPyPrinter
+    MpmathPrinter, PythonCodePrinter, pycode, SymPyPrinter
 )
-from sympy.testing.pytest import raises
+from sympy.printing.numpy import NumPyPrinter, SciPyPrinter
+from sympy.testing.pytest import raises, skip
 from sympy.tensor import IndexedBase
-from sympy.testing.pytest import skip
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import loggamma
+from sympy.parsing.latex import parse_latex
+
 
 x, y, z = symbols('x y z')
 p = IndexedBase("p")
+
 
 def test_PythonCodePrinter():
     prntr = PythonCodePrinter()
@@ -29,6 +31,8 @@ def test_PythonCodePrinter():
 
     assert prntr.doprint(x**y) == 'x**y'
     assert prntr.doprint(Mod(x, 2)) == 'x % 2'
+    assert prntr.doprint(-Mod(x, y)) == '-(x % y)'
+    assert prntr.doprint(Mod(-x, y)) == '(-x) % y'
     assert prntr.doprint(And(x, y)) == 'x and y'
     assert prntr.doprint(Or(x, y)) == 'x or y'
     assert not prntr.module_imports
@@ -50,6 +54,9 @@ def test_PythonCodePrinter():
     assert prntr.doprint(sign(x)) == '(0.0 if x == 0 else math.copysign(1, x))'
     assert prntr.doprint(p[0, 1]) == 'p[0, 1]'
     assert prntr.doprint(KroneckerDelta(x,y)) == '(1 if x == y else 0)'
+
+    assert prntr.doprint((2,3)) == "(2, 3)"
+    assert prntr.doprint([2,3]) == "[2, 3]"
 
 
 def test_PythonCodePrinter_standard():
@@ -167,6 +174,17 @@ def test_pycode_reserved_words():
     assert py_str in ('else_ + if_', 'if_ + else_')
 
 
+def test_issue_20762():
+    antlr4 = import_module("antlr4")
+    if not antlr4:
+        skip('antlr not installed.')
+    # Make sure pycode removes curly braces from subscripted variables
+    expr = parse_latex(r'a_b \cdot b')
+    assert pycode(expr) == 'a_b*b'
+    expr = parse_latex(r'a_{11} \cdot b')
+    assert pycode(expr) == 'a_11*b'
+
+
 def test_sqrt():
     prntr = PythonCodePrinter()
     assert prntr._print_Pow(sqrt(x), rational=False) == 'math.sqrt(x)'
@@ -261,12 +279,12 @@ def test_issue_16535_16536():
     assert prntr.doprint(expr2) == 'scipy.special.gamma(a)*scipy.special.gammaincc(a, x)'
 
     prntr = NumPyPrinter()
-    assert prntr.doprint(expr1) == '  # Not supported in Python with NumPy:\n  # lowergamma\nlowergamma(a, x)'
-    assert prntr.doprint(expr2) == '  # Not supported in Python with NumPy:\n  # uppergamma\nuppergamma(a, x)'
+    assert "Not supported" in prntr.doprint(expr1)
+    assert "Not supported" in prntr.doprint(expr2)
 
     prntr = PythonCodePrinter()
-    assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # lowergamma\nlowergamma(a, x)'
-    assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # uppergamma\nuppergamma(a, x)'
+    assert "Not supported" in prntr.doprint(expr1)
+    assert "Not supported" in prntr.doprint(expr2)
 
 
 def test_Integral():
@@ -301,12 +319,12 @@ def test_fresnel_integrals():
     assert prntr.doprint(expr2) == 'scipy.special.fresnel(x)[0]'
 
     prntr = NumPyPrinter()
-    assert prntr.doprint(expr1) == '  # Not supported in Python with NumPy:\n  # fresnelc\nfresnelc(x)'
-    assert prntr.doprint(expr2) == '  # Not supported in Python with NumPy:\n  # fresnels\nfresnels(x)'
+    assert "Not supported" in prntr.doprint(expr1)
+    assert "Not supported" in prntr.doprint(expr2)
 
     prntr = PythonCodePrinter()
-    assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # fresnelc\nfresnelc(x)'
-    assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # fresnels\nfresnels(x)'
+    assert "Not supported" in prntr.doprint(expr1)
+    assert "Not supported" in prntr.doprint(expr2)
 
     prntr = MpmathPrinter()
     assert prntr.doprint(expr1) == 'mpmath.fresnelc(x)'
@@ -344,12 +362,12 @@ def test_airy():
     assert prntr.doprint(expr2) == 'scipy.special.airy(x)[2]'
 
     prntr = NumPyPrinter()
-    assert prntr.doprint(expr1) == '  # Not supported in Python with NumPy:\n  # airyai\nairyai(x)'
-    assert prntr.doprint(expr2) == '  # Not supported in Python with NumPy:\n  # airybi\nairybi(x)'
+    assert "Not supported" in prntr.doprint(expr1)
+    assert "Not supported" in prntr.doprint(expr2)
 
     prntr = PythonCodePrinter()
-    assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # airyai\nairyai(x)'
-    assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # airybi\nairybi(x)'
+    assert "Not supported" in prntr.doprint(expr1)
+    assert "Not supported" in prntr.doprint(expr2)
 
 def test_airy_prime():
     from sympy import airyaiprime, airybiprime
@@ -362,12 +380,12 @@ def test_airy_prime():
     assert prntr.doprint(expr2) == 'scipy.special.airy(x)[3]'
 
     prntr = NumPyPrinter()
-    assert prntr.doprint(expr1) == '  # Not supported in Python with NumPy:\n  # airyaiprime\nairyaiprime(x)'
-    assert prntr.doprint(expr2) == '  # Not supported in Python with NumPy:\n  # airybiprime\nairybiprime(x)'
+    assert "Not supported" in prntr.doprint(expr1)
+    assert "Not supported" in prntr.doprint(expr2)
 
     prntr = PythonCodePrinter()
-    assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # airyaiprime\nairyaiprime(x)'
-    assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # airybiprime\nairybiprime(x)'
+    assert "Not supported" in prntr.doprint(expr1)
+    assert "Not supported" in prntr.doprint(expr2)
 
 
 def test_numerical_accuracy_functions():

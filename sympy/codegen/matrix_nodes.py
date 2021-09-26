@@ -49,7 +49,7 @@ class MatrixSolve(Token, MatrixExpr):
     >>> n = symbols('n', integer=True)
     >>> A = MatrixSymbol('A', n, n)
     >>> x = MatrixSymbol('x', n, 1)
-    >>> from sympy.printing.pycode import NumPyPrinter
+    >>> from sympy.printing.numpy import NumPyPrinter
     >>> NumPyPrinter().doprint(MatrixSolve(A, x))
     'numpy.linalg.solve(A, x)'
     >>> from sympy.printing import octave_code

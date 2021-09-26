@@ -65,7 +65,7 @@ def AZ(s=None):
     """
     if not s:
         return uppercase
-    t = type(s) is str
+    t = isinstance(s, str)
     if t:
         s = [s]
     rv = [check_and_join(i.upper().split(), uppercase, filter=True)
@@ -1534,7 +1534,7 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
 
     primes, e = args[:-1], args[-1]
 
-    if any(not isprime(p) for p in primes):
+    if not all(isprime(p) for p in primes):
         new_primes = []
         for i in primes:
             new_primes.extend(factorint(i, multiple=True))

@@ -419,6 +419,7 @@ class BinomialDistribution(SingleFiniteDistribution):
         return {k*self.succ + (self.n-k)*self.fail: self.pmf(k)
                     for k in range(0, self.n + 1)}
 
+
 def Binomial(name, n, p, succ=1, fail=0):
     r"""
     Create a Finite Random Variable representing a binomial distribution.
@@ -557,7 +558,7 @@ class HypergeometricDistribution(SingleFiniteDistribution):
 
     @property
     def is_symbolic(self):
-        return any(not x.is_number for x in (self.N, self.m, self.n))
+        return not all(x.is_number for x in (self.N, self.m, self.n))
 
     @property
     def high(self):
@@ -784,7 +785,7 @@ class RobustSolitonDistribution(SingleFiniteDistribution):
 
     @property
     def is_symbolic(self):
-        return not all([self.k.is_number, self.c.is_number, self.delta.is_number])
+        return not (self.k.is_number and self.c.is_number and self.delta.is_number)
 
     def pmf(self, x):
         x = sympify(x)

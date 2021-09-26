@@ -72,6 +72,12 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
         else:
             raise CoercionFailed("expected complex number, got %s" % expr)
 
+    def from_ZZ(self, element, base):
+        return self.dtype(element)
+
+    def from_QQ(self, element, base):
+        return self.dtype(int(element.numerator)) / int(element.denominator)
+
     def from_ZZ_python(self, element, base):
         return self.dtype(element)
 
@@ -83,6 +89,18 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
 
     def from_QQ_gmpy(self, element, base):
         return self.dtype(int(element.numerator)) / int(element.denominator)
+
+    def from_GaussianIntegerRing(self, element, base):
+        return self.dtype(int(element.x), int(element.y))
+
+    def from_GaussianRationalField(self, element, base):
+        x = element.x
+        y = element.y
+        return (self.dtype(int(x.numerator)) / int(x.denominator) +
+                self.dtype(0, int(y.numerator)) / int(y.denominator))
+
+    def from_AlgebraicField(self, element, base):
+        return self.from_sympy(base.to_sympy(element).evalf(self.dps))
 
     def from_RealField(self, element, base):
         return self.dtype(element)
@@ -101,6 +119,22 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
         """Returns an exact domain associated with ``self``. """
         raise DomainError("there is no exact domain associated with %s" % self)
 
+    def is_negative(self, element):
+        """Returns ``False`` for any ``ComplexElement``. """
+        return False
+
+    def is_positive(self, element):
+        """Returns ``False`` for any ``ComplexElement``. """
+        return False
+
+    def is_nonnegative(self, element):
+        """Returns ``False`` for any ``ComplexElement``. """
+        return False
+
+    def is_nonpositive(self, element):
+        """Returns ``False`` for any ``ComplexElement``. """
+        return False
+
     def gcd(self, a, b):
         """Returns GCD of ``a`` and ``b``. """
         return self.one
@@ -112,3 +146,6 @@ class ComplexField(Field, CharacteristicZero, SimpleDomain):
     def almosteq(self, a, b, tolerance=None):
         """Check if ``a`` and ``b`` are almost equal. """
         return self._context.almosteq(a, b, tolerance)
+
+
+CC = ComplexField()

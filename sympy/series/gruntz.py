@@ -119,10 +119,11 @@ debug this function to figure out the exact problem.
 from functools import reduce
 
 from sympy import cacheit
-from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul
+from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul, PoleError
 
 from sympy.functions import log, exp
 from sympy.series.order import Order
+from sympy.simplify import logcombine
 from sympy.simplify.powsimp import powsimp, powdenest
 
 from sympy.utilities.misc import debug_decorator as debug
@@ -130,15 +131,14 @@ from sympy.utilities.timeutils import timethis
 timeit = timethis('gruntz')
 
 
-
 def compare(a, b, x):
     """Returns "<" if a<b, "=" for a == b, ">" for a>b"""
     # log(exp(...)) must always be simplified here for termination
     la, lb = log(a), log(b)
-    if isinstance(a, Basic) and isinstance(a, exp):
-        la = a.args[0]
-    if isinstance(b, Basic) and isinstance(b, exp):
-        lb = b.args[0]
+    if isinstance(a, Basic) and (isinstance(a, exp) or (a.is_Pow and a.base == S.Exp1)):
+        la = a.exp
+    if isinstance(b, Basic) and (isinstance(b, exp) or (b.is_Pow and b.base == S.Exp1)):
+        lb = b.exp
 
     c = limitinf(la/lb, x)
     if c == 0:
@@ -262,7 +262,7 @@ def mrv(e, x):
         s1, e1 = mrv(a, x)
         s2, e2 = mrv(b, x)
         return mrv_max1(s1, s2, e.func(i, e1, e2), x)
-    elif e.is_Pow:
+    elif e.is_Pow and e.base != S.Exp1:
         e1 = S.One
         while e.is_Pow:
             b1 = e.base
@@ -281,24 +281,24 @@ def mrv(e, x):
     elif isinstance(e, log):
         s, expr = mrv(e.args[0], x)
         return s, log(expr)
-    elif isinstance(e, exp):
+    elif isinstance(e, exp) or (e.is_Pow and e.base == S.Exp1):
         # We know from the theory of this algorithm that exp(log(...)) may always
         # be simplified here, and doing so is vital for termination.
-        if isinstance(e.args[0], log):
-            return mrv(e.args[0].args[0], x)
+        if isinstance(e.exp, log):
+            return mrv(e.exp.args[0], x)
         # if a product has an infinite factor the result will be
         # infinite if there is no zero, otherwise NaN; here, we
         # consider the result infinite if any factor is infinite
-        li = limitinf(e.args[0], x)
+        li = limitinf(e.exp, x)
         if any(_.is_infinite for _ in Mul.make_args(li)):
             s1 = SubsSet()
             e1 = s1[e]
-            s2, e2 = mrv(e.args[0], x)
+            s2, e2 = mrv(e.exp, x)
             su = s1.union(s2)[0]
             su.rewrites[e1] = exp(e2)
             return mrv_max3(s1, e1, s2, exp(e2), su, e1, x)
         else:
-            s, expr = mrv(e.args[0], x)
+            s, expr = mrv(e.exp, x)
             return s, exp(expr)
     elif e.is_Function:
         l = [mrv(a, x) for a in e.args]
@@ -313,7 +313,6 @@ def mrv(e, x):
     elif e.is_Derivative:
         raise NotImplementedError("MRV set computation for derviatives"
                                   " not implemented yet.")
-        return mrv(e.args[0], x)
     raise NotImplementedError(
         "Don't know how to calculate the mrv of '%s'" % e)
 
@@ -391,6 +390,7 @@ def sign(e, x):
         return 0
 
     elif not e.has(x):
+        e = logcombine(e)
         return _sign(e)
     elif e == x:
         return 1
@@ -403,6 +403,8 @@ def sign(e, x):
     elif isinstance(e, exp):
         return 1
     elif e.is_Pow:
+        if e.base == S.Exp1:
+            return 1
         s = sign(e.base, x)
         if s == 1:
             return 1
@@ -485,14 +487,19 @@ def calculate_series(e, x, logx=None):
     This is a place that fails most often, so it is in its own function.
     """
     from sympy.polys import cancel
+    from sympy.simplify import bottom_up
 
     for t in e.lseries(x, logx=logx):
-        t = cancel(t)
+        # bottom_up function is required for a specific case - when e is
+        # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p). No current simplification
+        # methods reduce this to 0 while not expanding polynomials.
+        t = bottom_up(t, lambda w: getattr(w, 'normal', lambda: w)())
+        t = cancel(t, expand=False).factor()
 
         if t.has(exp) and t.has(log):
             t = powdenest(t)
 
-        if t.simplify():
+        if not t.is_zero:
             break
 
     return t
@@ -514,10 +521,8 @@ def mrv_leadterm(e, x):
     if x in Omega:
         # move the whole omega up (exponentiate each term):
         Omega_up = moveup2(Omega, x)
-        e_up = moveup([e], x)[0]
         exps_up = moveup([exps], x)[0]
         # NOTE: there is no need to move this down!
-        e = e_up
         Omega = Omega_up
         exps = exps_up
     #
@@ -530,7 +535,18 @@ def mrv_leadterm(e, x):
     w = Dummy("w", real=True, positive=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
-    return series.leadterm(w)
+    try:
+        lt = series.leadterm(w, logx=logw)
+    except (ValueError, PoleError):
+        lt = f.as_coeff_exponent(w)
+        # as_coeff_exponent won't always split in required form. It may simply
+        # return (f, 0) when a better form may be obtained. Example (-x)**(-pi)
+        # can be written as (-1**(-pi), -pi) which as_coeff_exponent does not return
+        if lt[0].has(w):
+            base = f.as_base_exp()[0].as_coeff_exponent(w)
+            ex = f.as_base_exp()[1]
+            lt = (base[0]**ex, base[1]*ex)
+    return (lt[0].subs(log(w), logw), lt[1])
 
 
 def build_expression_tree(Omega, rewrites):
@@ -549,13 +565,16 @@ def build_expression_tree(Omega, rewrites):
     This function builds the tree, rewrites then sorts the nodes.
     """
     class Node:
+        def __init__(self):
+            self.before = []
+            self.expr = None
+            self.var = None
         def ht(self):
             return reduce(lambda x, y: x + y,
                           [x.ht() for x in self.before], 1)
     nodes = {}
     for expr, v in Omega:
         n = Node()
-        n.before = []
         n.var = v
         n.expr = expr
         nodes[v] = n
@@ -598,7 +617,7 @@ def rewrite(e, Omega, x, wsym):
     # make sure we know the sign of each exp() term; after the loop,
     # g is going to be the "w" - the simplest one in the mrv set
     for g, _ in Omega:
-        sig = sign(g.args[0], x)
+        sig = sign(g.exp, x)
         if sig != 1 and sig != -1:
             raise NotImplementedError('Result depends on the sign of %s' % sig)
     if sig == 1:
@@ -607,15 +626,15 @@ def rewrite(e, Omega, x, wsym):
     O2 = []
     denominators = []
     for f, var in Omega:
-        c = limitinf(f.args[0]/g.args[0], x)
+        c = limitinf(f.exp/g.exp, x)
         if c.is_Rational:
             denominators.append(c.q)
-        arg = f.args[0]
+        arg = f.exp
         if var in rewrites:
             if not isinstance(rewrites[var], exp):
                 raise ValueError("Value should be exp")
             arg = rewrites[var].args[0]
-        O2.append((var, exp((arg - c*g.args[0]).expand())*wsym**c))
+        O2.append((var, exp((arg - c*g.exp).expand())*wsym**c))
 
     # Remember that Omega contains subexpressions of "e". So now we find
     # them in "e" and substitute them for our rewriting, stored in O2
@@ -631,7 +650,7 @@ def rewrite(e, Omega, x, wsym):
         assert not f.has(var)
 
     # finally compute the logarithm of w (logw).
-    logw = g.args[0]
+    logw = g.exp
     if sig == 1:
         logw = -logw  # log(w)->log(1/w)=-log(w)
 

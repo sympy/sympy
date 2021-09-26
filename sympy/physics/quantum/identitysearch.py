@@ -79,7 +79,7 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
         corrected_real = np.where(bool_real, 0.0, dense_matrix.real)
         corrected_imag = np.where(bool_imag, 0.0, dense_matrix.imag)
         # Convert the matrix with real values into imaginary values
-        corrected_imag = corrected_imag * np.complex(1j)
+        corrected_imag = corrected_imag * complex(1j)
         # Recombine the real and imaginary components
         corrected_dense = corrected_real + corrected_imag
 

@@ -330,7 +330,6 @@ def test_cse_MatrixSymbol():
     assert cse(B) == ([], [B])
 
 def test_cse_MatrixExpr():
-    from sympy import MatrixSymbol
     A = MatrixSymbol('A', 3, 3)
     y = MatrixSymbol('y', 3, 1)
 
@@ -546,6 +545,36 @@ def test_unevaluated_mul():
     eq = Mul(x + y, x + y, evaluate=False)
     assert cse(eq) == ([(x0, x + y)], [x0**2])
 
+def test_cse_release_variables():
+    from sympy.simplify.cse_main import cse_release_variables
+    _0, _1, _2, _3, _4 = symbols('_:5')
+    eqs = [(x + y - 1)**2, x,
+        x + y, (x + y)/(2*x + 1) + (x + y - 1)**2,
+        (2*x + 1)**(x + y)]
+    r, e = cse(eqs, postprocess=cse_release_variables)
+    # this can change in keeping with the intention of the function
+    assert r, e == ([
+    (x0, x + y), (x1, (x0 - 1)**2), (x2, 2*x + 1),
+    (_3, x0/x2 + x1), (_4, x2**x0), (x2, None), (_0, x1),
+    (x1, None), (_2, x0), (x0, None), (_1, x)], (_0, _1, _2, _3, _4))
+    r.reverse()
+    assert eqs == [i.subs(r) for i in e]
+
+def test_cse_list():
+    _cse = lambda x: cse(x, list=False)
+    assert _cse(x) == ([], x)
+    assert _cse('x') == ([], 'x')
+    it = [x]
+    for c in (list, tuple, set, Tuple):
+        assert _cse(c(it)) == ([], c(it))
+    d = {x: 1}
+    assert _cse(d) == ([], d)
+
 def test_issue_18991():
     A = MatrixSymbol('A', 2, 2)
     assert signsimp(-A * A - A) == -A * A - A
+
+
+def test_unevaluated_Mul():
+    m = [Mul(1, 2, evaluate=False)]
+    assert cse(m) == ([], m)

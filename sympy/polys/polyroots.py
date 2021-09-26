@@ -122,7 +122,7 @@ def roots_cubic(f, trig=False):
     """
     if trig:
         a, b, c, d = f.all_coeffs()
-        p = (3*a*c - b**2)/3/a**2
+        p = (3*a*c - b**2)/(3*a**2)
         q = (2*b**3 - 9*a*b*c + 27*a**2*d)/(27*a**3)
         D = 18*a*b*c*d - 4*b**3*d + b**2*c**2 - 4*a*c**3 - 27*a**2*d**2
         if (D > 0) == True:
@@ -131,12 +131,14 @@ def roots_cubic(f, trig=False):
                 rv.append(2*sqrt(-p/3)*cos(acos(q/p*sqrt(-3/p)*Rational(3, 2))/3 - k*pi*Rational(2, 3)))
             return [i - b/3/a for i in rv]
 
+    # a*x**3 + b*x**2 + c*x + d -> x**3 + a*x**2 + b*x + c
     _, a, b, c = f.monic().all_coeffs()
 
     if c is S.Zero:
         x1, x2 = roots([1, a, b], multiple=True)
         return [x1, S.Zero, x2]
 
+    # x**3 + a*x**2 + b*x + c -> u**3 + p*u + q
     p = b - a**2/3
     q = c - a*b/3 + 2*a**3/27
 
@@ -147,11 +149,7 @@ def roots_cubic(f, trig=False):
     if p is S.Zero:
         if q is S.Zero:
             return [-aon3]*3
-        if q.is_real:
-            if q.is_positive:
-                u1 = -root(q, 3)
-            elif q.is_negative:
-                u1 = root(-q, 3)
+        u1 = -root(q, 3) if q.is_positive else root(-q, 3)
     elif q is S.Zero:
         y1, y2 = roots([1, 0, p], multiple=True)
         return [tmp - aon3 for tmp in [y1, S.Zero, y2]]
@@ -163,11 +161,11 @@ def roots_cubic(f, trig=False):
         u1 = S.One
         u2 = Rational(-1, 2) + coeff
         u3 = Rational(-1, 2) - coeff
-        a, b, c, d = S(1), a, b, c
-        D0 = b**2 - 3*a*c
-        D1 = 2*b**3 - 9*a*b*c + 27*a**2*d
+        b, c, d = a, b, c  # a, b, c, d = S.One, a, b, c
+        D0 = b**2 - 3*c  # b**2 - 3*a*c
+        D1 = 2*b**3 - 9*b*c + 27*d  # 2*b**3 - 9*a*b*c + 27*a**2*d
         C = root((D1 + sqrt(D1**2 - 4*D0**3))/2, 3)
-        return [-(b + uk*C + D0/C/uk)/3/a for uk in [u1, u2, u3]]
+        return [-(b + uk*C + D0/C/uk)/3 for uk in [u1, u2, u3]]  # -(b + uk*C + D0/C/uk)/3/a
 
     u2 = u1*(Rational(-1, 2) + coeff)
     u3 = u1*(Rational(-1, 2) - coeff)
@@ -308,14 +306,14 @@ def roots_quartic(f):
         a2 = a**2
         e = b - 3*a2/8
         f = _mexpand(c + a*(a2/8 - b/2))
-        g = _mexpand(d - a*(a*(3*a2/256 - b/16) + c/4))
         aon4 = a/4
+        g = _mexpand(d - aon4*(a*(3*a2/64 - b/4) + c))
 
-        if f is S.Zero:
+        if f.is_zero:
             y1, y2 = [sqrt(tmp) for tmp in
                       roots([1, e, g], multiple=True)]
             return [tmp - aon4 for tmp in [-y1, -y2, y1, y2]]
-        if g is S.Zero:
+        if g.is_zero:
             y = [S.Zero] + roots([1, 0, e, f], multiple=True)
             return [tmp - aon4 for tmp in y]
         else:
@@ -324,10 +322,6 @@ def roots_quartic(f):
             if sols:
                 return sols
             # Ferrari method, see [1, 2]
-            a2 = a**2
-            e = b - 3*a2/8
-            f = c + a*(a2/8 - b/2)
-            g = d - a*(a*(3*a2/256 - b/16) + c/4)
             p = -e**2/12 - g
             q = -e**3/108 + e*g/3 - f**2/8
             TH = Rational(1, 3)
@@ -342,6 +336,12 @@ def roots_quartic(f):
                     for t in [-1, 1]:
                         ans.append((s*w - t*root)/2 - aon4)
                 return ans
+
+            # whether a Piecewise is returned or not
+            # depends on knowing p, so try to put
+            # in a simple form
+            p = _mexpand(p)
+
 
             # p == 0 case
             y1 = e*Rational(-5, 6) - q**TH
@@ -358,7 +358,7 @@ def roots_quartic(f):
 
             # sort it out once they know the values of the coefficients
             return [Piecewise((a1, Eq(p, 0)), (a2, True))
-                for a1, a2 in zip(_ans(y1), _ans(y2))]
+                    for a1, a2 in zip(_ans(y1), _ans(y2))]
 
 
 def roots_binomial(f):
@@ -512,6 +512,8 @@ def roots_quintic(f):
         if not all(coeff.is_Rational for coeff in l):
             return result
         f = Poly(f/coeff_5)
+    elif not all(coeff.is_Rational for coeff in (p, q, r, s)):
+        return result
     quintic = PolyQuintic(f)
 
     # Eqn standardized. Algo for solving starts here
@@ -543,12 +545,12 @@ def roots_quintic(f):
     disc_bar = alpha_bar**2 - 4*beta_bar
 
     l0 = quintic.l0(theta)
+    Stwo = S(2)
+    l1 = _quintic_simplify((-alpha + sqrt(disc)) / Stwo)
+    l4 = _quintic_simplify((-alpha - sqrt(disc)) / Stwo)
 
-    l1 = _quintic_simplify((-alpha + sqrt(disc)) / S(2))
-    l4 = _quintic_simplify((-alpha - sqrt(disc)) / S(2))
-
-    l2 = _quintic_simplify((-alpha_bar + sqrt(disc_bar)) / S(2))
-    l3 = _quintic_simplify((-alpha_bar - sqrt(disc_bar)) / S(2))
+    l2 = _quintic_simplify((-alpha_bar + sqrt(disc_bar)) / Stwo)
+    l3 = _quintic_simplify((-alpha_bar - sqrt(disc_bar)) / Stwo)
 
     order = quintic.order(theta, d)
     test = (order*delta.n()) - ( (l1.n() - l4.n())*(l2.n() - l3.n()) )
@@ -909,7 +911,12 @@ def roots(f, *gens,
         if f.is_multivariate:
             raise PolynomialError('multivariate polynomials are not supported')
 
-    def _update_dict(result, currentroot, k):
+    def _update_dict(result, zeros, currentroot, k):
+        if currentroot == S.Zero:
+            if S.Zero in zeros:
+                zeros[S.Zero] += k
+            else:
+                zeros[S.Zero] = k
         if currentroot in result:
             result[currentroot] += k
         else:
@@ -1000,18 +1007,18 @@ def roots(f, *gens,
         dom = f.get_domain()
         if not dom.is_Exact and dom.is_Numerical:
             for r in f.nroots():
-                _update_dict(result, r, 1)
+                _update_dict(result, zeros, r, 1)
         elif f.degree() == 1:
-            result[roots_linear(f)[0]] = 1
+            _update_dict(result, zeros, roots_linear(f)[0], 1)
         elif f.length() == 2:
             roots_fun = roots_quadratic if f.degree() == 2 else roots_binomial
             for r in roots_fun(f):
-                _update_dict(result, r, 1)
+                _update_dict(result, zeros, r, 1)
         else:
             _, factors = Poly(f.as_expr()).factor_list()
             if len(factors) == 1 and f.degree() == 2:
                 for r in roots_quadratic(f):
-                    _update_dict(result, r, 1)
+                    _update_dict(result, zeros, r, 1)
             else:
                 if len(factors) == 1 and factors[0][1] == 1:
                     if f.get_domain().is_EX:
@@ -1024,17 +1031,17 @@ def roots(f, *gens,
                             result = roots(f)
                             if not result:
                                 for currentroot in _try_decompose(f):
-                                    _update_dict(result, currentroot, 1)
+                                    _update_dict(result, zeros, currentroot, 1)
                         else:
                             for r in _try_heuristics(f):
-                                _update_dict(result, r, 1)
+                                _update_dict(result, zeros, r, 1)
                     else:
                         for currentroot in _try_decompose(f):
-                            _update_dict(result, currentroot, 1)
+                            _update_dict(result, zeros, currentroot, 1)
                 else:
                     for currentfactor, k in factors:
                         for r in _try_heuristics(Poly(currentfactor, f.gen, field=True)):
-                            _update_dict(result, r, k)
+                            _update_dict(result, zeros, r, k)
 
     if coeff is not S.One:
         _result, result, = result, {}

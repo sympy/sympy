@@ -1,3 +1,4 @@
+from __future__ import print_function, division
 import random
 
 import itertools
@@ -19,7 +20,8 @@ from sympy.stats.joint_rv import JointDistribution
 from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.rv import (RandomIndexedSymbol, random_symbols, RandomSymbol,
                             _symbol_converter, _value_check, pspace, given,
-                           dependent, is_random, sample_iter)
+                           dependent, is_random, sample_iter, Distribution,
+                           Density)
 from sympy.stats.stochastic_process import StochasticPSpace
 from sympy.stats.symbolic_probability import Probability, Expectation
 from sympy.stats.frv_types import Bernoulli, BernoulliDistribution, FiniteRV
@@ -94,7 +96,7 @@ def _state_converter(itr: tSequence) -> tUnion[Tuple, Range]:
         # try to convert to tuple
         try:
             itr = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
-        except ValueError:
+        except (TypeError, ValueError):
             pass
 
     else:
@@ -169,9 +171,21 @@ class StochasticProcess(Basic):
             return FiniteSet(*self.args[1])
         return self.args[1]
 
-    @property
-    def distribution(self):
-        return None
+    def _deprecation_warn_distribution(self):
+        SymPyDeprecationWarning(
+            feature="Calling distribution with RandomIndexedSymbol",
+            useinstead="distribution with just timestamp as argument",
+            issue=20078,
+            deprecated_since_version="1.7.1"
+        ).warn()
+
+    def distribution(self, key=None):
+        if key is None:
+            self._deprecation_warn_distribution()
+        return Distribution()
+
+    def density(self, x):
+        return Density()
 
     def __call__(self, time):
         """
@@ -224,12 +238,11 @@ class StochasticProcess(Basic):
                 raise ValueError("Expected a RandomIndexedSymbol or "
                                 "key not  %s"%(type(arg)))
 
-        if args[0].pspace.distribution == None: # checks if there is any distribution available
+        if args[0].pspace.distribution == Distribution():
             return JointDistribution(*args)
-
-        pdf = Lambda(tuple(args),
-                expr=Mul.fromiter(arg.pspace.process.density(arg) for arg in args))
-        return JointDistributionHandmade(pdf)
+        density = Lambda(tuple(args),
+                         expr=Mul.fromiter(arg.pspace.process.density(arg) for arg in args))
+        return JointDistributionHandmade(density)
 
     def expectation(self, condition, given_condition):
         raise NotImplementedError("Abstract method for expectation queries.")
@@ -254,7 +267,7 @@ class DiscreteTimeStochasticProcess(StochasticProcess):
         if not time.is_symbol and time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         idx_obj = Indexed(self.symbol, time)
-        pspace_obj = StochasticPSpace(self.symbol, self, self.distribution)
+        pspace_obj = StochasticPSpace(self.symbol, self, self.distribution(time))
         return RandomIndexedSymbol(idx_obj, pspace_obj)
 
 class ContinuousTimeStochasticProcess(StochasticProcess):
@@ -274,7 +287,7 @@ class ContinuousTimeStochasticProcess(StochasticProcess):
         if not time.is_symbol and time not in self.index_set:
             raise IndexError("%s is not in the index set of %s"%(time, self.symbol))
         func_obj = Function(self.symbol)(time)
-        pspace_obj = StochasticPSpace(self.symbol, self, self.distribution)
+        pspace_obj = StochasticPSpace(self.symbol, self, self.distribution(time))
         return RandomIndexedSymbol(func_obj, pspace_obj)
 
 class TransitionMatrixOf(Boolean):
@@ -435,7 +448,7 @@ class MarkovProcess(StochasticProcess):
 
         # `not None` is `True`. So the old test fails for symbolic sizes.
         # Need to build the statement differently.
-        sym_cond = not isinstance(self.number_of_states, (int, Integer))
+        sym_cond = not self.number_of_states.is_Integer
         cond1 = not sym_cond and len(state_index) != trans_probs.shape[0]
         if cond1:
             raise ValueError("state space is not compatible with the transition probabilities.")
@@ -458,8 +471,8 @@ class MarkovProcess(StochasticProcess):
 
         # given_condition does not have sufficient information
         # for computations
-        if trans_probs == None or \
-            given_condition == None:
+        if trans_probs is None or \
+            given_condition is None:
             is_insufficient = True
         else:
             # checking transition probabilities
@@ -566,16 +579,16 @@ class MarkovProcess(StochasticProcess):
                 s = Rational(0, 1)
                 n = len(self.state_space)
 
-                if isinstance(condition, Eq) or isinstance(condition, Ne):
+                if isinstance(condition, (Eq, Ne)):
                     for i in range(0, n):
                         s += self.probability(Eq(rv[0], i), Eq(rv[1], i)) * self.probability(Eq(rv[1], i), new_given_condition)
                     return s if isinstance(condition, Eq) else 1 - s
                 else:
                     upper = 0
                     greater = False
-                    if isinstance(condition, Ge) or isinstance(condition, Lt):
+                    if isinstance(condition, (Ge, Lt)):
                         upper = 1
-                    if isinstance(condition, Gt) or isinstance(condition, Ge):
+                    if isinstance(condition, (Ge, Gt)):
                         greater = True
 
                     for i in range(0, n):
@@ -604,11 +617,11 @@ class MarkovProcess(StochasticProcess):
                         _, gstate = (gc.lhs.key, gc.rhs) if isinstance(gc.lhs, RandomIndexedSymbol) \
                                     else (gc.rhs.key, gc.lhs)
 
-            if any((k not in self.index_set) for k in (rv.key, min_key_rv.key)):
+            if not all(k in self.index_set for k in (rv.key, min_key_rv.key)):
                 raise IndexError("The timestamps of the process are not in it's index set.")
             states = Intersection(states, state_index) if not isinstance(self.number_of_states, Symbol) else states
             for state in Union(states, FiniteSet(gstate)):
-                if not isinstance(state, (int, Integer)) or Ge(state, mat.shape[0]) is True:
+                if not state.is_Integer or Ge(state, mat.shape[0]) is True:
                     raise IndexError("No information is available for (%s, %s) in "
                         "transition probabilities of shape, (%s, %s). "
                         "State space is zero indexed."
@@ -688,7 +701,7 @@ class MarkovProcess(StochasticProcess):
             next_state = condition.rhs if isinstance(condition.lhs, RandomIndexedSymbol) \
                 else condition.lhs
 
-            if isinstance(condition, Eq) or isinstance(condition, Ne):
+            if isinstance(condition, (Eq, Ne)):
                 if isinstance(self, DiscreteMarkovChain):
                     P = self.transition_probabilities**(rv[0].key - min_key_rv.key)
                 else:
@@ -698,9 +711,9 @@ class MarkovProcess(StochasticProcess):
             else:
                 upper = 1
                 greater = False
-                if isinstance(condition, Ge) or isinstance(condition, Lt):
+                if isinstance(condition, (Ge, Lt)):
                     upper = 0
-                if isinstance(condition, Gt) or isinstance(condition, Ge):
+                if isinstance(condition, (Ge, Gt)):
                     greater = True
                 k = Dummy('k')
                 condition = Eq(condition.lhs, k) if isinstance(condition.lhs, RandomIndexedSymbol)\
@@ -803,7 +816,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> YS = DiscreteMarkovChain("Y")
 
     >>> Y.state_space
-    FiniteSet(0, 1, 2)
+    {0, 1, 2}
     >>> Y.transition_probabilities
     Matrix([
     [0.5, 0.2, 0.3],
@@ -1190,7 +1203,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         See Also
         ========
 
-        sympy.stats.stochastic_process_types.DiscreteMarkovChain.limiting_distribution
+        sympy.stats.DiscreteMarkovChain.limiting_distribution
         """
         trans_probs = self.transition_probabilities
         n = self.number_of_states
@@ -1296,8 +1309,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         See Also
         ========
 
-        sympy.stats.stochastic_process_types.DiscreteMarkovChain.communication_classes
-        sympy.stats.stochastic_process_types.DiscreteMarkovChain.canonical_form
+        sympy.stats.DiscreteMarkovChain.communication_classes
+        sympy.stats.DiscreteMarkovChain.canonical_form
 
         References
         ==========
@@ -1415,8 +1428,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         See Also
         ========
 
-        sympy.stats.stochastic_process_types.DiscreteMarkovChain.communication_classes
-        sympy.stats.stochastic_process_types.DiscreteMarkovChain.decompose
+        sympy.stats.DiscreteMarkovChain.communication_classes
+        sympy.stats.DiscreteMarkovChain.decompose
 
         References
         ==========
@@ -1449,7 +1462,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             densities[state] = {states[i]: Tlist[state][i]
                         for i in range(len(states))}
         while time < S.Infinity:
-            samps.append(next(sample_iter(FiniteRV("_", densities[samps[time - 1]]))))
+            samps.append((next(sample_iter(FiniteRV("_", densities[samps[time - 1]])))))
             yield samps[time]
             time += 1
 
@@ -1476,7 +1489,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     >>> C.limiting_distribution()
     Matrix([[1/2, 1/2]])
     >>> C.state_space
-    FiniteSet(0, 1)
+    {0, 1}
     >>> C.generator_matrix
     Matrix([
     [-1,  1],
@@ -1559,7 +1572,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
 
     def limiting_distribution(self):
         gen_mat = self.generator_matrix
-        if gen_mat == None:
+        if gen_mat is None:
             return None
         if isinstance(gen_mat, MatrixSymbol):
             wm = MatrixSymbol('wm', 1, gen_mat.shape[0])
@@ -1600,7 +1613,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     >>> from sympy import Eq, Gt
     >>> B = BernoulliProcess("B", p=0.7, success=1, failure=0)
     >>> B.state_space
-    FiniteSet(0, 1)
+    {0, 1}
     >>> (B.p).round(2)
     0.70
     >>> B.success
@@ -1665,9 +1678,11 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     def state_space(self):
         return _set_converter([self.success, self.failure])
 
-    @property
-    def distribution(self):
-        return BernoulliDistribution(self.p)
+    def distribution(self, key=None):
+        if key is None:
+            self._deprecation_warn_distribution()
+            return BernoulliDistribution(self.p)
+        return BernoulliDistribution(self.p, self.success, self.failure)
 
     def simple_rv(self, rv):
         return Bernoulli(rv.name, p=self.p,
@@ -1824,7 +1839,7 @@ class _SubstituteRV:
             if len(condrv) == 1 and condrv[0] == new_givencondition:
                 return BernoulliDistribution(self._probability(new_condition), 0, 1)
 
-            if any([dependent(rv, new_givencondition) for rv in condrv]):
+            if any(dependent(rv, new_givencondition) for rv in condrv):
                 return Probability(new_condition, new_givencondition)
             else:
                 return self._probability(new_condition)
@@ -2031,7 +2046,7 @@ class CountingProcess(ContinuousTimeStochasticProcess):
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         """
-        Computes probability
+        Computes probability.
 
         Parameters
         ==========
@@ -2181,8 +2196,11 @@ class PoissonProcess(CountingProcess):
     def state_space(self):
         return S.Naturals0
 
-    def distribution(self, rv):
-        return PoissonDistribution(self.lamda*rv.key)
+    def distribution(self, key):
+        if isinstance(key, RandomIndexedSymbol):
+            self._deprecation_warn_distribution()
+            return PoissonDistribution(self.lamda*key.key)
+        return PoissonDistribution(self.lamda*key)
 
     def density(self, x):
         return (self.lamda*x.key)**x / factorial(x) * exp(-(self.lamda*x.key))
@@ -2246,8 +2264,11 @@ class WienerProcess(CountingProcess):
     def state_space(self):
         return S.Reals
 
-    def distribution(self, rv):
-        return NormalDistribution(0, sqrt(rv.key))
+    def distribution(self, key):
+        if isinstance(key, RandomIndexedSymbol):
+            self._deprecation_warn_distribution()
+            return NormalDistribution(0, sqrt(key.key))
+        return NormalDistribution(0, sqrt(key))
 
     def density(self, x):
         return exp(-x**2/(2*x.key)) / (sqrt(2*pi)*sqrt(x.key))
@@ -2316,8 +2337,11 @@ class GammaProcess(CountingProcess):
     def state_space(self):
         return _set_converter(Interval(0, oo))
 
-    def distribution(self, rv):
-        return GammaDistribution(self.gamma*rv.key, 1/self.lamda)
+    def distribution(self, key):
+        if isinstance(key, RandomIndexedSymbol):
+            self._deprecation_warn_distribution()
+            return GammaDistribution(self.gamma*key.key, 1/self.lamda)
+        return GammaDistribution(self.gamma*key, 1/self.lamda)
 
     def density(self, x):
         k = self.gamma*x.key

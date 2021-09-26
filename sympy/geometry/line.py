@@ -455,7 +455,7 @@ class LinearEntity(GeometrySet):
                 return [seg]
             elif st1 >= 0:  # st2 < 0:
                 return [Segment(ray.p1, seg.p1)]
-            elif st2 >= 0:  # st1 < 0:
+            else:  # st1 < 0 and st2 >= 0:
                 return [Segment(ray.p1, seg.p2)]
 
         def intersect_parallel_segments(seg1, seg2):
@@ -2177,7 +2177,6 @@ class Ray2D(LinearEntity2D, Ray):
             try:
                 p2 = Point(pt, dim=2)
             except (NotImplementedError, TypeError, ValueError):
-                from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent('''
                     The 2nd argument was not a valid Point; if
                     it was meant to be an angle it should be
@@ -2502,7 +2501,7 @@ class Line3D(LinearEntity3D, Line):
     >>> L.points
     (Point3D(2, 3, 4), Point3D(3, 5, 1))
     """
-    def __new__(cls, p1, pt=None, direction_ratio=[], **kwargs):
+    def __new__(cls, p1, pt=None, direction_ratio=(), **kwargs):
         if isinstance(p1, LinearEntity3D):
             if pt is not None:
                 raise ValueError('if p1 is a LinearEntity, pt must be None.')
@@ -2618,8 +2617,7 @@ class Ray3D(LinearEntity3D, Ray):
     [1, 2, -4]
 
     """
-    def __new__(cls, p1, pt=None, direction_ratio=[], **kwargs):
-        from sympy.utilities.misc import filldedent
+    def __new__(cls, p1, pt=None, direction_ratio=(), **kwargs):
         if isinstance(p1, LinearEntity3D):
             if pt is not None:
                 raise ValueError('If p1 is a LinearEntity, pt must be None')

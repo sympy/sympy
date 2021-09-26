@@ -5,11 +5,13 @@ from functools import wraps
 from sympy.core import Add, Expr, Mul, Pow, S, sympify, Float
 from sympy.core.basic import Basic
 from sympy.core.compatibility import default_sort_key
+from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
 from sympy.core.symbol import Symbol
+from sympy.functions.elementary.complexes import re
 from sympy.printing.str import StrPrinter
-from sympy.printing.precedence import precedence
+from sympy.printing.precedence import precedence, PRECEDENCE
 
 
 class requires:
@@ -30,6 +32,14 @@ class AssignmentError(Exception):
     Raised if an assignment variable for a loop is missing.
     """
     pass
+
+
+def _convert_python_lists(arg):
+    if isinstance(arg, list):
+        from sympy.codegen.pynodes import List
+        return List(*(_convert_python_lists(e) for e in arg))
+    else:
+        return arg
 
 
 class CodePrinter(StrPrinter):
@@ -67,6 +77,10 @@ class CodePrinter(StrPrinter):
         if not hasattr(self, 'reserved_words'):
             self.reserved_words = set()
 
+    def _handle_UnevaluatedExpr(self, expr):
+        return expr.replace(re, lambda arg: arg if isinstance(
+            arg, UnevaluatedExpr) and arg.args[0].is_real else re(arg))
+
     def doprint(self, expr, assign_to=None):
         """
         Print the expression as code.
@@ -76,27 +90,34 @@ class CodePrinter(StrPrinter):
         expr : Expression
             The expression to be printed.
 
-        assign_to : Symbol, MatrixSymbol, or string (optional)
-            If provided, the printed code will set the expression to a
-            variable with name ``assign_to``.
+        assign_to : Symbol, string, MatrixSymbol, list of strings or Symbols (optional)
+            If provided, the printed code will set the expression to a variable or multiple variables
+            with the name or names given in ``assign_to``.
         """
-        from sympy.codegen.ast import Assignment
         from sympy.matrices.expressions.matexpr import MatrixSymbol
+        from sympy.codegen.ast import CodeBlock, Assignment
 
-        if isinstance(assign_to, str):
-            if expr.is_Matrix:
-                assign_to = MatrixSymbol(assign_to, *expr.shape)
-            else:
-                assign_to = Symbol(assign_to)
-        elif not isinstance(assign_to, (Basic, type(None))):
-            raise TypeError("{} cannot assign to object of type {}".format(
-                    type(self).__name__, type(assign_to)))
+        def _handle_assign_to(expr, assign_to):
+            if assign_to is None:
+                return sympify(expr)
+            if isinstance(assign_to, (list, tuple)):
+                if len(expr) != len(assign_to):
+                    raise ValueError('Failed to assign an expression of length {} to {} variables'.format(len(expr), len(assign_to)))
+                return CodeBlock(*[_handle_assign_to(lhs, rhs) for lhs, rhs in zip(expr, assign_to)])
+            if isinstance(assign_to, str):
+                if expr.is_Matrix:
+                    assign_to = MatrixSymbol(assign_to, *expr.shape)
+                else:
+                    assign_to = Symbol(assign_to)
+            elif not isinstance(assign_to, Basic):
+                raise TypeError("{} cannot assign to object of type {}".format(
+                        type(self).__name__, type(assign_to)))
+            return Assignment(assign_to, expr)
 
-        if assign_to:
-            expr = Assignment(assign_to, expr)
-        else:
-            # _sympify is not enough b/c it errors on iterables
-            expr = sympify(expr)
+        expr = _handle_assign_to(expr, assign_to)
+        expr = _convert_python_lists(expr)
+        # Remove re(...) nodes due to UnevaluatedExpr.is_real always is None:
+        expr = self._handle_UnevaluatedExpr(expr)
 
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized
@@ -396,6 +417,9 @@ class CodePrinter(StrPrinter):
 
     _print_Expr = _print_Function
 
+    # Don't inherit the str-printer method for Heaviside to the code printers
+    _print_Heaviside = None
+
     def _print_NumberSymbol(self, expr):
         if self._settings.get("inline", False):
             return self._print(Float(expr.evalf(self._settings["precision"])))
@@ -483,7 +507,14 @@ class CodePrinter(StrPrinter):
 
         a = a or [S.One]
 
-        a_str = [self.parenthesize(x, prec) for x in a]
+        if len(a) == 1 and sign == "-":
+            # Unary minus does not have a SymPy class, and hence there's no
+            # precedence weight associated with it, Python's unary minus has
+            # an operator precedence between multiplication and exponentiation,
+            # so we use this to compute a weight.
+            a_str = [self.parenthesize(a[0], 0.5*(PRECEDENCE["Pow"]+PRECEDENCE["Mul"]))]
+        else:
+            a_str = [self.parenthesize(x, prec) for x in a]
         b_str = [self.parenthesize(x, prec) for x in b]
 
         # To parenthesize Pow with exp = -1 and having more than one Symbol

@@ -62,6 +62,7 @@ diagrams.
    :members:
 
 .. autoclass:: ArrowStringDescription
+   :members:
 
 .. autoclass:: XypicDiagramDrawer
    :members:

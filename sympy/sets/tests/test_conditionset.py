@@ -2,7 +2,7 @@ from sympy.core.expr import unchanged
 from sympy.sets import (ConditionSet, Intersection, FiniteSet,
     EmptySet, Union, Contains, ImageSet)
 from sympy import (Symbol, Eq, Ne, S, Abs, sin, asin, pi, Interval,
-    And, Mod, oo, Function, Lambda, symbols)
+    And, Mod, oo, Function, Lambda, symbols, Matrix, MatrixSymbol)
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
@@ -19,6 +19,7 @@ def test_CondSet():
     assert pi in sin_sols_principal
     assert pi/2 not in sin_sols_principal
     assert 3*pi not in sin_sols_principal
+    assert oo not in sin_sols_principal
     assert 5 in ConditionSet(x, x**2 > 4, S.Reals)
     assert 1 not in ConditionSet(x, x**2 > 4, S.Reals)
     # in this case, 0 is not part of the base set so
@@ -32,6 +33,13 @@ def test_CondSet():
     # Piecewise((Interval(1, 7), y > 5), (S.EmptySet, True)).
     raises(TypeError, lambda: 6 in ConditionSet(x, y > 5,
         Interval(1, 7)))
+
+    X = MatrixSymbol('X', 2, 2)
+    matrix_set = ConditionSet(X, Eq(X*Matrix([[1, 1], [1, 1]]), X))
+    Y = Matrix([[0, 0], [0, 0]])
+    assert matrix_set.contains(Y).doit() is S.true
+    Z = Matrix([[1, 2], [3, 4]])
+    assert matrix_set.contains(Z).doit() is S.false
 
     assert isinstance(ConditionSet(x, x < 1, {x, y}).base_set,
         FiniteSet)
@@ -245,3 +253,23 @@ def test_as_relational():
         ) == (x > 1) & Contains((x, y), S.Integers**2)
     assert ConditionSet(x, x > 1, S.Integers).as_relational(x
         ) == Contains(x, S.Integers) & (x > 1)
+
+def test_flatten():
+    """Tests whether there is basic denesting functionality"""
+    inner = ConditionSet(x, sin(x) + x > 0)
+    outer = ConditionSet(x, Contains(x, inner), S.Reals)
+    assert outer == ConditionSet(x, sin(x) + x > 0, S.Reals)
+
+    inner = ConditionSet(y, sin(y) + y > 0)
+    outer = ConditionSet(x, Contains(y, inner), S.Reals)
+    assert outer != ConditionSet(x, sin(x) + x > 0, S.Reals)
+
+    inner = ConditionSet(x, sin(x) + x > 0).intersect(Interval(-1, 1))
+    outer = ConditionSet(x, Contains(x, inner), S.Reals)
+    assert outer == ConditionSet(x, sin(x) + x > 0, Interval(-1, 1))
+
+def test_duplicate():
+    from sympy.core.function import BadSignatureError
+    # test coverage for line 95 in conditionset.py, check for duplicates in symbols
+    dup = symbols('a,a')
+    raises(BadSignatureError, lambda: ConditionSet(dup, x < 0))

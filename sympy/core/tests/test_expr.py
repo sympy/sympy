@@ -349,7 +349,7 @@ def test_relational():
 
 
 def test_relational_assumptions():
-    from sympy import Lt, Gt, Le, Ge
+    from sympy import Lt, Le, Ge
     m1 = Symbol("m1", nonnegative=False)
     m2 = Symbol("m2", positive=False)
     m3 = Symbol("m3", nonpositive=False)
@@ -441,6 +441,19 @@ def test_as_leading_term():
 
     raises(ValueError, lambda: (x + 1).as_leading_term(1))
 
+    # https://github.com/sympy/sympy/issues/21177
+    f = -3*x + (x + Rational(3, 2) - sqrt(3)*S.ImaginaryUnit/2)**2\
+        - Rational(3, 2) + 3*sqrt(3)*S.ImaginaryUnit/2
+    assert f.as_leading_term(x) == \
+        (12*sqrt(3)*x - 12*S.ImaginaryUnit*x)/(4*sqrt(3) + 12*S.ImaginaryUnit)
+
+    # https://github.com/sympy/sympy/issues/21245
+    f = 1 - x - x**2
+    fi = (1 + sqrt(5))/2
+    assert f.subs(x, y + 1/fi).as_leading_term(y) == \
+        (-576*sqrt(5)*y - 1280*y)/(256*sqrt(5) + 576)
+
+
 def test_leadterm2():
     assert (x*cos(1)*cos(1 + sin(1)) + sin(1 + sin(1))).leadterm(x) == \
            (sin(1 + sin(1)), 0)
@@ -457,7 +470,7 @@ def test_as_leading_term2():
 
 def test_as_leading_term3():
     assert (2 + pi + x).as_leading_term(x) == 2 + pi
-    assert (2*x + pi*x + x**2).as_leading_term(x) == (2 + pi)*x
+    assert (2*x + pi*x + x**2).as_leading_term(x) == 2*x + pi*x
 
 
 def test_as_leading_term4():
@@ -1399,10 +1412,17 @@ def test_coeff():
     assert (n*m + m*n*m).coeff(n, right=True) == m  # = (1 + m)*n*m
     assert (n*m + m*n).coeff(n) == 0
     assert (n*m + o*m*n).coeff(m*n) == o
-    assert (n*m + o*m*n).coeff(m*n, right=1) == 1
-    assert (n*m + n*m*n).coeff(n*m, right=1) == 1 + n  # = n*m*(n + 1)
+    assert (n*m + o*m*n).coeff(m*n, right=True) == 1
+    assert (n*m + n*m*n).coeff(n*m, right=True) == 1 + n  # = n*m*(n + 1)
 
     assert (x*y).coeff(z, 0) == x*y
+
+    assert (x*n + y*n + z*m).coeff(n) == x + y
+    assert (n*m + n*o + o*l).coeff(n, right=True) == m + o
+    assert (x*n*m*n + y*n*m*o + z*l).coeff(m, right=True) == x*n + y*o
+    assert (x*n*m*n + x*n*m*o + z*l).coeff(m, right=True) == n + o
+    assert (x*n*m*n + x*n*m*o + z*l).coeff(m) == x*n
+
 
 def test_coeff2():
     r, kappa = symbols('r, kappa')
@@ -1701,14 +1721,11 @@ def test_eval_interval():
     assert exp(x)._eval_interval(*Tuple(x, 0, 1)) == exp(1) - exp(0)
 
     # issue 4199
-    # first subs and limit gives NaN
     a = x/y
-    assert a._eval_interval(x, S.Zero, oo)._eval_interval(y, oo, S.Zero) is S.NaN
-    # second subs and limit gives NaN
-    assert a._eval_interval(x, S.Zero, oo)._eval_interval(y, S.Zero, oo) is S.NaN
-    # difference gives S.NaN
+    raises(NotImplementedError, lambda: a._eval_interval(x, S.Zero, oo)._eval_interval(y, oo, S.Zero))
+    raises(NotImplementedError, lambda: a._eval_interval(x, S.Zero, oo)._eval_interval(y, S.Zero, oo))
     a = x - y
-    assert a._eval_interval(x, S.One, oo)._eval_interval(y, oo, S.One) is S.NaN
+    raises(NotImplementedError, lambda: a._eval_interval(x, S.One, oo)._eval_interval(y, oo, S.One))
     raises(ValueError, lambda: x._eval_interval(x, None, None))
     a = -y*Heaviside(x - y)
     assert a._eval_interval(x, -oo, oo) == -y
@@ -1853,8 +1870,6 @@ def test_random():
 
 
 def test_round():
-    from sympy.abc import x
-
     assert str(Float('0.1249999').round(2)) == '0.12'
     d20 = 12345678901234567890
     ans = S(d20).round(2)
@@ -2102,6 +2117,14 @@ def test_ExprBuilder():
     eb.args.extend([x, x])
     assert eb.build() == x**2
 
+
+def test_issue_22020():
+    from sympy.parsing.sympy_parser import parse_expr
+    x = parse_expr("log((2*V/3-V)/C)/-(R+r)*C")
+    y = parse_expr("log((2*V/3-V)/C)/-(R+r)*2")
+    assert x.equals(y) is False
+
+
 def test_non_string_equality():
     # Expressions should not compare equal to strings
     x = symbols('x')
@@ -2122,3 +2145,9 @@ def test_non_string_equality():
 
     assert (x == BadRepr()) is False
     assert (x != BadRepr()) is True
+
+
+def test_21494():
+    from sympy.testing.pytest import warns_deprecated_sympy
+    with warns_deprecated_sympy():
+        assert x.expr_free_symbols == {x}

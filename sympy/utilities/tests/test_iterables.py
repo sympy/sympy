@@ -411,6 +411,7 @@ def test_multiset_combinations():
     assert len(list(multiset_combinations('a', 3))) == 0
     assert len(list(multiset_combinations('a', 0))) == 1
     assert list(multiset_combinations('abc', 1)) == [['a'], ['b'], ['c']]
+    raises(ValueError, lambda: list(multiset_combinations({0: 3, 1: -1}, 2)))
 
 
 def test_multiset_permutations():
@@ -423,6 +424,12 @@ def test_multiset_permutations():
         [0, 1], [0, 2], [1, 0], [1, 2], [2, 0], [2, 1]]
     assert len(list(multiset_permutations('a', 0))) == 1
     assert len(list(multiset_permutations('a', 3))) == 0
+    for nul in ([], {}, ''):
+        assert list(multiset_permutations(nul)) == [[]]
+    assert list(multiset_permutations(nul, 0)) == [[]]
+    # impossible requests give no result
+    assert list(multiset_permutations(nul, 1)) == []
+    assert list(multiset_permutations(nul, -1)) == []
 
     def test():
         for i in range(1, 7):
@@ -469,6 +476,7 @@ def test_multiset_permutations():
         [1, 0, 1, 0, 0]
         [1, 1, 0, 0, 0]
         6\n''')
+    raises(ValueError, lambda: list(multiset_permutations({0: 3, 1: -1})))
 
 
 def test_partitions():

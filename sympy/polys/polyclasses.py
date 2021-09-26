@@ -26,8 +26,6 @@ class GenericPoly(PicklableWithSlots):
     def _perify_factors(per, result, include):
         if include:
             coeff, factors = result
-        else:
-            coeff = result
 
         factors = [ (per(g), k) for g, k in factors ]
 
@@ -148,6 +146,7 @@ class DMP(PicklableWithSlots, CantSympify):
 
     def __init__(self, rep, dom, lev=None, ring=None):
         if lev is not None:
+            # Not possible to check with isinstance
             if type(rep) is dict:
                 rep = dmp_from_dict(rep, lev, dom)
             elif type(rep) is not list:
@@ -1313,8 +1312,11 @@ class DMF(PicklableWithSlots, CantSympify):
     def pow(f, n):
         """Raise ``f`` to a non-negative power ``n``. """
         if isinstance(n, int):
-            return f.per(dmp_pow(f.num, n, f.lev, f.dom),
-                         dmp_pow(f.den, n, f.lev, f.dom), cancel=False)
+            num, den = f.num, f.den
+            if n < 0:
+                num, den, n = den, num, -n
+            return f.per(dmp_pow(num, n, f.lev, f.dom),
+                         dmp_pow(den, n, f.lev, f.dom), cancel=False)
         else:
             raise TypeError("``int`` expected, got %s" % type(n))
 
@@ -1669,6 +1671,9 @@ class ANP(PicklableWithSlots, CantSympify):
     def is_ground(f):
         """Returns ``True`` if ``f`` is an element of the ground domain. """
         return not f.rep or len(f.rep) == 1
+
+    def __pos__(f):
+        return f
 
     def __neg__(f):
         return f.neg()

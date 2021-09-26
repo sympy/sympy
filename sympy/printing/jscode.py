@@ -111,6 +111,18 @@ class JavascriptCodePrinter(CodePrinter):
         p, q = int(expr.p), int(expr.q)
         return '%d/%d' % (p, q)
 
+    def _print_Mod(self, expr):
+        num, den = expr.args
+        PREC = precedence(expr)
+        snum, sden = [self.parenthesize(arg, PREC) for arg in expr.args]
+        # % is remainder (same sign as numerator), not modulo (same sign as
+        # denominator), in js. Hence, % only works as modulo if both numbers
+        # have the same sign
+        if (num.is_nonnegative and den.is_nonnegative or
+            num.is_nonpositive and den.is_nonpositive):
+            return f"{snum} % {sden}"
+        return f"(({snum} % {sden}) + {sden}) % {sden}"
+
     def _print_Relational(self, expr):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)

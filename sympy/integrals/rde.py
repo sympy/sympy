@@ -211,7 +211,7 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
         p = Poly(DE.t, DE.t)
     elif case == 'tan':
         p = Poly(DE.t**2 + 1, DE.t)
-    elif case in ['primitive', 'base']:
+    elif case in ('primitive', 'base'):
         B = ba.to_field().quo(bd)
         C = ca.to_field().quo(cd)
         return (a, B, C, Poly(1, DE.t))
@@ -350,7 +350,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                         else:
                             if len(m) != 1:
                                 raise ValueError("Length of m should be 1")
-                            n = max(n, m[0])
+                            n = max(n, m[0].as_expr())
 
     elif case == 'exp':
         n = max(0, dc - max(db, da))
@@ -366,7 +366,7 @@ def bound_degree(a, b, cQ, DE, case='auto', parametric=False):
                     if a == 1:
                         n = max(n, m)
 
-    elif case in ['tan', 'other_nonlinear']:
+    elif case in ('tan', 'other_nonlinear'):
         delta = DE.d.degree(DE.t)
         lam = DE.d.LC()
         alpha = cancel(alpha/lam)

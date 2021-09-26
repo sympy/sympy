@@ -1,6 +1,8 @@
 from sympy.core import Function, S, sympify
+from sympy.utilities.iterables import sift
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
+from sympy.core.compatibility import ordered
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import (Application, Lambda,
     ArgumentIndexError)
@@ -42,17 +44,16 @@ class IdentityFunction(Lambda, metaclass=Singleton):
 
     """
 
-    def __new__(cls):
-        x = Dummy('x')
-        #construct "by hand" to avoid infinite loop
-        return Expr.__new__(cls, Tuple(x), x)
+    _symbol = Dummy('x')
 
     @property
-    def args(self):
-        return ()
+    def signature(self):
+        return Tuple(self._symbol)
 
-    def __getnewargs__(self):
-        return ()
+    @property
+    def expr(self):
+        return self._symbol
+
 
 Id = S.IdentityFunction
 
@@ -405,7 +406,7 @@ class MinMaxBase(Expr, LatticeOp):
 
         # base creation
         _args = frozenset(args)
-        obj = Expr.__new__(cls, _args, **assumptions)
+        obj = Expr.__new__(cls, *ordered(_args), **assumptions)
         obj._argset = _args
         return obj
 
@@ -432,9 +433,7 @@ class MinMaxBase(Expr, LatticeOp):
 
         >>> Min(a, Max(b, Min(c, d, Max(a, e))))
         Min(a, Max(b, Min(a, c, d)))
-
         """
-        from sympy.utilities.iterables import ordered
         from sympy.simplify.simplify import walk
 
         if not args:
@@ -518,28 +517,33 @@ class MinMaxBase(Expr, LatticeOp):
         # easy case where all functions contain something in common;
         # trying to find some optimal subset of args to modify takes
         # too long
+
+        def factor_minmax(args):
+            is_other = lambda arg: isinstance(arg, other)
+            other_args, remaining_args = sift(args, is_other, binary=True)
+            if not other_args:
+                return args
+
+            # Min(Max(x, y, z), Max(x, y, u, v)) -> {x,y}, ({z}, {u,v})
+            arg_sets = [set(arg.args) for arg in other_args]
+            common = set.intersection(*arg_sets)
+            if not common:
+                return args
+
+            new_other_args = list(common)
+            arg_sets_diff = [arg_set - common for arg_set in arg_sets]
+
+            # If any set is empty after removing common then all can be
+            # discarded e.g. Min(Max(a, b, c), Max(a, b)) -> Max(a, b)
+            if all(arg_sets_diff):
+                other_args_diff = [other(*s, evaluate=False) for s in arg_sets_diff]
+                new_other_args.append(cls(*other_args_diff, evaluate=False))
+
+            other_args_factored = other(*new_other_args, evaluate=False)
+            return remaining_args + [other_args_factored]
+
         if len(args) > 1:
-            common = None
-            remove = []
-            sets = []
-            for i in range(len(args)):
-                a = args[i]
-                if not isinstance(a, other):
-                    continue
-                s = set(a.args)
-                common = s if common is None else (common & s)
-                if not common:
-                    break
-                sets.append(s)
-                remove.append(i)
-            if common:
-                sets = filter(None, [s - common for s in sets])
-                sets = [other(*s, evaluate=False) for s in sets]
-                for i in reversed(remove):
-                    args.pop(i)
-                oargs = [cls(*sets)] if sets else []
-                oargs.extend(common)
-                args.append(other(*oargs, evaluate=False))
+            args = factor_minmax(args)
 
         return args
 

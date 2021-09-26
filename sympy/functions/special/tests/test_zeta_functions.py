@@ -1,11 +1,11 @@
 from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
                    zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I,
-                   exp_polar, polar_lift, O, stieltjes, Abs, Sum, oo)
+                   exp_polar, polar_lift, O, stieltjes, Abs, Sum, oo, riemann_xi)
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial
 from sympy.testing.pytest import raises
 from sympy.testing.randtest import (test_derivative_numerically as td,
-                      random_complex_number as randcplx, verify_numerically as tn)
+                      random_complex_number as randcplx, verify_numerically)
 
 x = Symbol('x')
 a = Symbol('a')
@@ -82,12 +82,20 @@ def test_dirichlet_eta_eval():
     assert dirichlet_eta(4) == pi**4*Rational(7, 720)
 
 
+def test_riemann_xi_eval():
+    assert riemann_xi(2) == pi/6
+    assert riemann_xi(0) == Rational(1, 2)
+    assert riemann_xi(1) == Rational(1, 2)
+    assert riemann_xi(3).rewrite(zeta) == 3*zeta(3)/(2*pi)
+    assert riemann_xi(4) == pi**2/15
+
+
 def test_rewriting():
     assert dirichlet_eta(x).rewrite(zeta) == (1 - 2**(1 - x))*zeta(x)
     assert zeta(x).rewrite(dirichlet_eta) == dirichlet_eta(x)/(1 - 2**(1 - x))
     assert zeta(x).rewrite(dirichlet_eta, a=2) == zeta(x)
-    assert tn(dirichlet_eta(x), dirichlet_eta(x).rewrite(zeta), x)
-    assert tn(zeta(x), zeta(x).rewrite(dirichlet_eta), x)
+    assert verify_numerically(dirichlet_eta(x), dirichlet_eta(x).rewrite(zeta), x)
+    assert verify_numerically(zeta(x), zeta(x).rewrite(dirichlet_eta), x)
 
     assert zeta(x, a).rewrite(lerchphi) == lerchphi(1, x, a)
     assert polylog(s, z).rewrite(lerchphi) == lerchphi(z, s, 1)*z
@@ -133,7 +141,6 @@ def myexpand(func, target):
 
 
 def test_polylog_expansion():
-    from sympy import log
     assert polylog(s, 0) == 0
     assert polylog(s, 1) == zeta(s)
     assert polylog(s, -1) == -dirichlet_eta(s)
@@ -147,6 +154,16 @@ def test_polylog_expansion():
     assert myexpand(polylog(-5, z), None)
 
 
+def test_polylog_series():
+    assert polylog(1, z).series(z, n=5) == z + z**2/2 + z**3/3 + z**4/4 + O(z**5)
+    assert polylog(1, sqrt(z)).series(z, n=3) == z/2 + z**2/4 + sqrt(z)\
+        + z**(S(3)/2)/3 + z**(S(5)/2)/5 + O(z**3)
+
+    # https://github.com/sympy/sympy/issues/9497
+    assert polylog(S(3)/2, -z).series(z, 0, 5) == -z + sqrt(2)*z**2/4\
+        - sqrt(3)*z**3/9 + z**4/8 + O(z**5)
+
+
 def test_issue_8404():
     i = Symbol('i', integer=True)
     assert Abs(Sum(1/(3*i + 1)**2, (i, 0, S.Infinity)).doit().n(4)
@@ -154,7 +171,6 @@ def test_issue_8404():
 
 
 def test_polylog_values():
-    from sympy.testing.randtest import verify_numerically as tn
     assert polylog(2, 2) == pi**2/4 - I*pi*log(2)
     assert polylog(2, S.Half) == pi**2/12 - log(2)**2/2
     for z in [S.Half, 2, (sqrt(5)-1)/2, -(sqrt(5)-1)/2, -(sqrt(5)+1)/2, (3-sqrt(5))/2]:
@@ -162,10 +178,10 @@ def test_polylog_values():
     z = Symbol("z")
     for s in [-1, 0]:
         for _ in range(10):
-            assert tn(polylog(s, z), polylog(s, z, evaluate=False), z,
-                a=-3, b=-2, c=S.Half, d=2)
-            assert tn(polylog(s, z), polylog(s, z, evaluate=False), z,
-                a=2, b=-2, c=5, d=2)
+            assert verify_numerically(polylog(s, z), polylog(s, z, evaluate=False),
+                                      z, a=-3, b=-2, c=S.Half, d=2)
+            assert verify_numerically(polylog(s, z), polylog(s, z, evaluate=False),
+                                      z, a=2, b=-2, c=5, d=2)
 
     from sympy import Integral
     assert polylog(0, Integral(1, (x, 0, 1))) == -S.Half
