@@ -3846,8 +3846,8 @@ class RicianDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(alpha, beta):
-        _value_check(alpha >= 0, "Shape parameter alpha must be positive.")
-        _value_check(beta >= 0, "Shape parameter beta must be positive.")
+        _value_check(alpha >= 0, "Shape parameter alpha must be non-negative.")
+        _value_check(beta >= 0, "Shape parameter beta must be non-negative.")
 
     def cdf(self, x):
         alpha, beta = self.alpha, self.beta
