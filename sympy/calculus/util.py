@@ -4,8 +4,9 @@ from sympy.core.basic import Basic
 from sympy.core.compatibility import iterable
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import expand_mul
+from sympy.core.kind import NumberKind
 from sympy.core.numbers import _sympifyit, oo, zoo
-from sympy.core.relational import is_le, is_lt, is_ge, is_gt
+from sympy.core.relational import is_le, is_lt, is_ge, is_gt, Relational
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import And
@@ -392,7 +393,6 @@ def periodicity(f, symbol, check=False):
     >>> periodicity(exp(x), x)
     """
     from sympy.core.mod import Mod
-    from sympy.core.relational import Relational
     from sympy.functions.elementary.exponential import exp
     from sympy.functions.elementary.complexes import Abs
     from sympy.functions.elementary.trigonometric import (
@@ -401,6 +401,8 @@ def periodicity(f, symbol, check=False):
     from sympy.solvers.decompogen import decompogen
     from sympy.polys.polytools import degree
 
+    if symbol.kind is not NumberKind:
+        raise NotImplementedError("Cannot use symbol of kind %s" % symbol.kind)
     temp = Dummy('x', real=True)
     f = f.subs(symbol, temp)
     symbol = temp
