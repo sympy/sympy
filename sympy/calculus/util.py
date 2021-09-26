@@ -520,7 +520,7 @@ def periodicity(f, symbol, check=False):
             for index, g in enumerate(reversed(g_s)):
                 start_index = num_of_gs - 1 - index
                 g = compogen(g_s[start_index:], symbol)
-                if g != orig_f and g != f: # Fix for issue 12620
+                if g not in (orig_f, f): # Fix for issue 12620
                     period = periodicity(g, symbol)
                     if period is not None:
                         break

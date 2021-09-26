@@ -1317,7 +1317,7 @@ class Implies(BooleanFunction):
             raise ValueError(
                 "%d operand(s) used for an Implies "
                 "(pairs are required): %s" % (len(args), str(args)))
-        if A == True or A == False or B == True or B == False:
+        if A in (True, False) or B in (True, False):
             return Or(Not(A), B)
         elif A == B:
             return S.true

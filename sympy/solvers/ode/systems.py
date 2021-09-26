@@ -958,7 +958,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
         type = system_info["type_of_equation"]
         B = system_info["antiderivative"]
 
-    if type == "type5" or type == "type6":
+    if type in ("type5", "type6"):
         is_transformed = True
         if passed_type != "auto":
             if tau is None:
@@ -973,11 +973,11 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
                 A = system_info['A']
                 b = system_info['b']
 
-    if type in ["type1", "type2", "type5", "type6"]:
+    if type in ("type1", "type2", "type5", "type6"):
         P, J = matrix_exp_jordan_form(A, t)
         P = simplify(P)
 
-        if type == "type1" or type == "type5":
+        if type in ("type1", "type5"):
             sol_vector = P * (J * Cvect)
         else:
             sol_vector = P * J * ((J.inv() * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
@@ -1163,7 +1163,7 @@ def _is_second_order_type2(A, t):
         poly = Poly(term.expand(), t)
         monoms = poly.monoms()
 
-        if monoms[0][0] == 4 or monoms[0][0] == 2:
+        if monoms[0][0] in (2, 4):
             cs = _get_poly_coeffs(poly, 4)
             a, b, c, d, e = cs
 

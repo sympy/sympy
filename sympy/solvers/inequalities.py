@@ -509,13 +509,13 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             frange = function_range(e, gen, domain)
 
             rel = expr.rel_op
-            if rel == '<' or rel == '<=':
+            if rel in ('<', '<='):
                 if expr.func(frange.sup, 0):
                     rv = domain
                 elif not expr.func(frange.inf, 0):
                     rv = S.EmptySet
 
-            elif rel == '>' or rel == '>=':
+            elif rel in ('>', '>='):
                 if expr.func(frange.inf, 0):
                     rv = domain
                 elif not expr.func(frange.sup, 0):

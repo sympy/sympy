@@ -994,12 +994,12 @@ def _simplifyconds(expr, s, a):
 
     def replue(x, y):
         b = bigger(x, y)
-        if b == True or b == False:
+        if b in (True, False):
             return True
         return Unequality(x, y)
 
     def repl(ex, *args):
-        if ex == True or ex == False:
+        if ex in (True, False):
             return bool(ex)
         return ex.replace(*args)
     from sympy.simplify.radsimp import collect_abs
@@ -1123,7 +1123,7 @@ def _laplace_transform(f, t, s_, simplify=True):
     conds = list(ordered(conds2))
 
     def cnt(expr):
-        if expr == True or expr == False:
+        if expr in (True, False):
             return 0
         return expr.count_ops()
     conds.sort(key=lambda x: (-x[0], cnt(x[1])))

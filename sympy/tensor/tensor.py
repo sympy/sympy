@@ -379,7 +379,7 @@ def components_canon_args(components):
             numtyp.append([prev, 1])
     v = []
     for h, n in numtyp:
-        if h.comm == 0 or h.comm == 1:
+        if h.comm in (0, 1):
             comm = h.comm
         else:
             comm = TensorManager.get_comm(h.comm, h.comm)

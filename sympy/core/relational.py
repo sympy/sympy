@@ -258,7 +258,7 @@ class Relational(Boolean, EvalfMixin):
         If failing_expression is True, return the expression whose truth value
         was unknown."""
         if isinstance(other, Relational):
-            if self == other or self.reversed == other:
+            if other in (self, self.reversed):
                 return True
             a, b = self, other
             if a.func in (Eq, Ne) or b.func in (Eq, Ne):

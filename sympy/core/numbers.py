@@ -1259,12 +1259,12 @@ class Float(Number):
         return self._mpf_ == fzero
 
     def _eval_is_negative(self):
-        if self._mpf_ == _mpf_ninf or self._mpf_ == _mpf_inf:
+        if self._mpf_ in (_mpf_ninf, _mpf_inf):
             return False
         return self.num < 0
 
     def _eval_is_positive(self):
-        if self._mpf_ == _mpf_ninf or self._mpf_ == _mpf_inf:
+        if self._mpf_ in (_mpf_ninf, _mpf_inf):
             return False
         return self.num > 0
 

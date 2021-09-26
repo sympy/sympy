@@ -3715,7 +3715,7 @@ def sum_of_three_squares(n):
                 return _sorted_tuple(2**v*x, 2**v*(y + z), 2**v*abs(y - z))
         return
 
-    if n % 8 == 2 or n % 8 == 6:
+    if n % 8 in (2, 6):
         s = s if _odd(s) else s - 1
     else:
         s = s - 1 if _odd(s) else s
@@ -3767,7 +3767,7 @@ def sum_of_four_squares(n):
     if n % 8 == 7:
         d = 2
         n = n - 4
-    elif n % 8 == 6 or n % 8 == 2:
+    elif n % 8 in (2, 6):
         d = 1
         n = n - 1
     else:

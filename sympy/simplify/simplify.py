@@ -1624,7 +1624,7 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
             if fl and not r:
                 r = Rational(fl)
             elif not r.is_Rational:
-                if fl == inf or fl == -inf:
+                if fl in (inf, -inf):
                     r = S.ComplexInfinity
                 elif fl < 0:
                     fl = -fl

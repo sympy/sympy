@@ -649,7 +649,7 @@ class meijerg(TupleParametersBase):
         alpha = compute(self.an)
         p, q = len(self.ap), len(self.bq)
         if p == q:
-            if beta == oo or alpha == oo:
+            if oo in (alpha, beta):
                 return oo
             return 2*pi*ilcm(alpha, beta)
         elif p < q:

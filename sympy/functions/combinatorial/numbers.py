@@ -1884,7 +1884,7 @@ def _nT(n, k):
     # really quick exits
     if k > n or k < 0:
         return 0
-    if k == n or k == 1:
+    if k in (1, n):
         return 1
     if k == 0:
         return 0
@@ -2095,7 +2095,7 @@ class motzkin(Function):
         except ValueError:
             return False
         if n > 0:
-             if n == 1 or n == 2:
+             if n in (1, 2):
                 return True
 
              tn1 = 1

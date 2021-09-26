@@ -300,7 +300,7 @@ class FreeGroup(DefaultPrinting):
         False
 
         """
-        if self.rank == 0 or self.rank == 1:
+        if self.rank in (0, 1):
             return True
         else:
             return False

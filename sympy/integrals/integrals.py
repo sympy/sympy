@@ -1370,7 +1370,7 @@ class Integral(AddWithLimits):
         f = self.function
         singularities_list = [s for s in singularities(f, x) if s.is_comparable and a <= s <= b]
         for i in singularities_list:
-            if (i == b) or (i == a):
+            if i in (a, b):
                 raise ValueError(
                     'The principal value is not defined in the given interval due to singularity at %d.' % (i))
         F = integrate(f, x, **kwargs)

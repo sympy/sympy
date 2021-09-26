@@ -112,7 +112,7 @@ def _monotonic_sign(self):
             from sympy.polys.polyerrors import PolynomialError
             x = free.pop()
             x0 = _monotonic_sign(x)
-            if x0 == _eps or x0 == -_eps:
+            if x0 in (_eps, -_eps):
                 x0 = S.Zero
             if x0 is not None:
                 d = self.diff(x)
