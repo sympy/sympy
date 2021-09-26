@@ -1,6 +1,6 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    cot, sec, csc, Abs, symbols, I, re, simplify,
-                   expint, Rational, Piecewise)
+                   expint, Rational, Piecewise, MatrixSymbol)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds, is_convex,
                                  stationary_points, minimum, maximum)
@@ -177,6 +177,12 @@ def test_periodicity():
     # returning `None` for any Piecewise
     p = Piecewise((0, x < -1), (x**2, x <= 1), (log(x), True))
     assert periodicity(p, x) is None
+
+    m = MatrixSymbol('m', 3, 3)
+    raises(NotImplementedError, lambda: periodicity(sin(m), m))
+    raises(NotImplementedError, lambda: periodicity(sin(m[0, 0]), m))
+    raises(NotImplementedError, lambda: periodicity(sin(m), m[0, 0]))
+    raises(NotImplementedError, lambda: periodicity(sin(m[0, 0]), m[0, 0]))
 
 
 def test_periodicity_check():
@@ -636,6 +642,7 @@ def test_issue_16469():
     x = Symbol("x", real=True)
     f = abs(x)
     assert function_range(f, x, S.Reals) == Interval(0, oo, False, True)
+
 
 @_both_exp_pow
 def test_issue_18747():
