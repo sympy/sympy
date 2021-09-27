@@ -17,6 +17,7 @@ on:
 env:
   release_branch: 1.9
   release_version: 1.9rc1
+  previous_version: 1.8
 
 jobs:
 
@@ -37,7 +38,7 @@ jobs:
           python-version: 3.9
 
       - name: Build release files
-        run: release/ci_release_script.sh ${{ env.release_version }}
+        run: release/ci_release_script.sh ${{ env.release_version }} ${{ env.previous_version }}
 
       - name: Store release files
         uses: actions/upload-artifact@v2

@@ -3,7 +3,7 @@
 from os.path import join, basename, normpath
 from subprocess import check_call
 
-def main(version, outdir):
+def main(version, prevversion, outdir):
     check_version(version, outdir)
     run_stage(['bin/mailmap_update.py'])
     run_stage(['bin/authors_update.py'])
@@ -14,7 +14,7 @@ def main(version, outdir):
     run_stage(['release/test_install.py', version, outdir])
     run_stage(['release/build_docs.py', version, outdir])
     run_stage(['release/sha256.py', version, outdir])
-    run_stage(['release/authors.py', version, outdir])
+    run_stage(['release/authors.py', version, prevversion, outdir])
 
 
 def green(text):
