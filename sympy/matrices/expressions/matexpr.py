@@ -312,6 +312,10 @@ class MatrixExpr(Expr):
                 with a single index.'''))
         raise IndexError("Invalid index, wanted %s[i,j]" % self)
 
+    def _is_shape_symbolic(self) -> bool:
+        return (not isinstance(self.rows, (SYMPY_INTS, Integer))
+            or not isinstance(self.cols, (SYMPY_INTS, Integer)))
+
     def as_explicit(self):
         """
         Returns a dense Matrix with elements represented explicitly
@@ -336,8 +340,7 @@ class MatrixExpr(Expr):
         as_mutable: returns mutable Matrix type
 
         """
-        if (not isinstance(self.rows, (SYMPY_INTS, Integer))
-            or not isinstance(self.cols, (SYMPY_INTS, Integer))):
+        if self._is_shape_symbolic():
             raise ValueError(
                 'Matrix with symbolic shape '
                 'cannot be represented explicitly.')

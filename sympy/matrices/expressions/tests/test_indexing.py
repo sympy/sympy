@@ -1,6 +1,6 @@
 from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix, KroneckerDelta,
         Identity, ZeroMatrix, ImmutableMatrix, eye, Sum, Dummy, trace,
-        Symbol)
+        Symbol, sqrt)
 from sympy.testing.pytest import raises, XFAIL
 from sympy.matrices.expressions.matexpr import MatrixElement, MatrixExpr
 
@@ -51,7 +51,22 @@ def test_pow_index():
     assert Q[0, 0] == A[0, 0]**2 + A[0, 1]*A[1, 0]
     n = symbols("n")
     Q2 = A**n
-    assert Q2[0, 0] == MatrixElement(Q2, 0, 0)
+    assert Q2[0, 0] == 2*(
+            -sqrt((A[0, 0] + A[1, 1])**2 - 4*A[0, 0]*A[1, 1] +
+            4*A[0, 1]*A[1, 0])/2 + A[0, 0]/2 + A[1, 1]/2
+        )**n * \
+        A[0, 1]*A[1, 0]/(
+            (sqrt(A[0, 0]**2 - 2*A[0, 0]*A[1, 1] + 4*A[0, 1]*A[1, 0] +
+                  A[1, 1]**2) + A[0, 0] - A[1, 1])*
+            sqrt(A[0, 0]**2 - 2*A[0, 0]*A[1, 1] + 4*A[0, 1]*A[1, 0] + A[1, 1]**2)
+        ) - 2*(
+            sqrt((A[0, 0] + A[1, 1])**2 - 4*A[0, 0]*A[1, 1] +
+            4*A[0, 1]*A[1, 0])/2 + A[0, 0]/2 + A[1, 1]/2
+        )**n * A[0, 1]*A[1, 0]/(
+            (-sqrt(A[0, 0]**2 - 2*A[0, 0]*A[1, 1] + 4*A[0, 1]*A[1, 0] +
+            A[1, 1]**2) + A[0, 0] - A[1, 1])*
+            sqrt(A[0, 0]**2 - 2*A[0, 0]*A[1, 1] + 4*A[0, 1]*A[1, 0] + A[1, 1]**2)
+        )
 
 
 def test_transpose_index():
