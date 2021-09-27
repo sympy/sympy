@@ -458,6 +458,44 @@ def test_piecewise_simplify():
     expr = Piecewise((-d + 2*n, Eq(1/t, 1)), (t**(1 - 4*n)*t**(4*n - 1)*(-d + 2*n), True))
     assert expr.simplify() == -d + 2*n
 
+
+def test_piecewise_simplify_infinities():
+    from sympy.functions.elementary.piecewise import piecewise_simplify_arguments as f
+    # unsimplifying
+    assert f(Piecewise((x, (x > -oo) & (x < 3)))
+        ) == Piecewise((x, (x > -oo) & (x < 3)))
+    assert f(Piecewise((x, (x > -oo) & (x < oo)))
+        ) == Piecewise((x, (x > -oo) & (x < oo)))
+    assert f(Piecewise((x, (x > -3) & (x < 3)))
+        ) == Piecewise((x, (x > -3) & (x < 3)))
+    assert f(Piecewise((x, (x > -3) & (x < oo)))
+        ) == Piecewise((x, (x > -3) & (x < oo)))
+    assert f(Piecewise((x, (x <= 3) & (x > -oo)))
+        ) == Piecewise((x, (x <= 3) & (x > -oo)))
+    assert f(Piecewise((x, (x <= 3) & (x > -3)))
+        ) == Piecewise((x, (x <= 3) & (x > -3)))
+    assert f(Piecewise((x, (x >= -3) & (x < 3)))
+        ) == Piecewise((x, (x >= -3) & (x < 3)))
+    assert f(Piecewise((x, (x >= -3) & (x < oo)))
+        ) == Piecewise((x, (x >= -3) & (x < oo)))
+    assert f(Piecewise((x, (x >= -3) & (x <= 3)))
+        ) == Piecewise((x, (x >= -3) & (x <= 3)))
+    # simplify
+    assert f(Piecewise((x, (x <= oo) & (x > -oo)))
+        ) == Piecewise((x, x > -oo))
+    assert f(Piecewise((x, (x <= oo) & (x > -3)))
+        ) == Piecewise((x, x > -3))
+    assert f(Piecewise((x, (x >= -oo) & (x < 3)))
+        ) == Piecewise((x, x < 3))
+    assert f(Piecewise((x, (x >= -oo) & (x < oo)))
+        ) == Piecewise((x, x < oo))
+    assert f(Piecewise((x, (x >= -oo) & (x <= 3)))
+        ) == Piecewise((x, x <= 3))
+    assert f(Piecewise((x, (x >= -oo) & (x <= oo)))
+        ) == Piecewise((x, x <= oo))
+    assert f(Piecewise((x, (x >= -3) & (x <= oo)))
+        ) == Piecewise((x, x >= -3))
+
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
     f = abs2.subs(x, x - 2)
@@ -1150,7 +1188,7 @@ def test_unevaluated_integrals():
     # solve_univariate_inequality fails
     assert p.integrate(y) == Piecewise(
         (y, Eq(f(x), 1) | ((x < 10) & Eq(f(x), 1))),
-        (2*y, (x >= -oo) & (x < 10)), (0, True))
+        (2*y, (-oo < x) & (x < 10)), (0, True))
 
 
 def test_conditions_as_alternate_booleans():
