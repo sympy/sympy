@@ -3,7 +3,7 @@ from sympy import (
     Integral, integrate, Interval, KroneckerDelta, lambdify, log, Max, Min,
     oo, Or, pi, Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
     cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Sum, Tuple, zoo, Float,
-    DiracDelta, Heaviside, Add, Mul, factorial, Ge, Contains)
+    DiracDelta, Heaviside, Add, Mul, factorial, Ge, Contains, MatrixSymbol)
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.piecewise import Undefined, ExprCondPair
 from sympy.printing import srepr
@@ -1353,8 +1353,21 @@ def test_issue_7370():
     v = integrate(f, (x, 0, Float("252.4", 30)))
     assert str(v) == '252.400000000000000000000000000'
 
+
+def test_issue_14933():
+    x = Symbol('x')
+    y = Symbol('y')
+
+    inp = MatrixSymbol('inp', 1, 1)
+    rep_dict = {y: inp[0, 0], x: inp[0, 0]}
+
+    p = Piecewise((1, ITE(y > 0, x < 0, True)))
+    assert p.xreplace(rep_dict) == Piecewise((1, ITE(inp[0, 0] > 0, inp[0, 0] < 0, True)))
+
+
 def test_issue_16715():
     raises(NotImplementedError, lambda: Piecewise((x, x<0), (0, y>1)).as_expr_set_pairs())
+
 
 def test_issue_20360():
     t, tau = symbols("t tau", real=True)
