@@ -9,14 +9,27 @@ from sympy.functions.combinatorial.factorials import factorial, subfactorial
 
 
 def test_determinant():
+    M = Matrix()
 
-    for M in [Matrix(), Matrix([[1]])]:
-        assert (
-            M.det() ==
-            M._eval_det_bareiss() ==
-            M._eval_det_berkowitz() ==
-            M._eval_det_lu() ==
-            1)
+    assert M.det() == 1
+    # Evaluating these directly because they are never reached via M.det()
+    assert M._eval_det_bareiss() == 1
+    assert M._eval_det_berkowitz() == 1
+    assert M._eval_det_lu() == 1
+
+    M = Matrix([ [0] ])
+
+    assert M.det() == 0
+    assert M._eval_det_bareiss() == 0
+    assert M._eval_det_berkowitz() == 0
+    assert M._eval_det_lu() == 0
+
+    M = Matrix([ [5] ])
+
+    assert M.det() == 5
+    assert M._eval_det_bareiss() == 5
+    assert M._eval_det_berkowitz() == 5
+    assert M._eval_det_lu() == 5
 
     M = Matrix(( (-3,  2),
                  ( 8, -5) ))
