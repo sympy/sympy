@@ -5,7 +5,7 @@ from sympy import (
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
     root, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
-    E, cbrt, denom, Add, Piecewise, GoldenRatio, TribonacciConstant)
+    E, cbrt, denom, Add, Piecewise, GoldenRatio, TribonacciConstant, conjugate)
 
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -299,6 +299,10 @@ def test_solve_rational():
     """Test solve for rational functions"""
     assert solve( ( x - y**3 )/( (y**2)*sqrt(1 - y**2) ), x) == [y**3]
 
+
+def test_solve_conjugate():
+    """Test solve for simple conjugate functions"""
+    assert solve(conjugate(x) -3 + I) == [3 + I]
 
 def test_solve_nonlinear():
     assert solve(x**2 - y**2, x, y, dict=True) == [{x: -y}, {x: y}]

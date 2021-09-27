@@ -6,7 +6,7 @@ from sympy.core.numbers import (E, I, Rational, oo, pi, Integer)
 from sympy.core.relational import (Eq, Gt, Ne, Ge)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
-from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign)
+from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign, conjugate)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (HyperbolicFunction,
     sinh, tanh, cosh, sech, coth)
@@ -2843,6 +2843,9 @@ def test_issue_10426():
         Intersection(S.Complexes, ImageSet(Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*x))) + 2*im(x))),
         S.Integers)))).dummy_eq(Dummy('x,n'))
 
+def test_solveset_conjugate():
+    """Test solveset for simple conjugate functions"""
+    assert solveset(conjugate(x) -3 + I) == FiniteSet(3 + I)
 
 def test_issue_18208():
     variables = symbols('x0:16') + symbols('y0:12')
