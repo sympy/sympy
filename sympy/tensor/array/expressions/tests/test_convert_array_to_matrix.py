@@ -3,7 +3,7 @@ from sympy import (
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 from sympy.tensor.array.expressions.conv_array_to_matrix import _support_function_tp1_recognize, \
     _array_diag2contr_diagmatrix, convert_array_to_matrix, _remove_trivial_dims, _array2matrix, \
-    _combine_removed, identify_removable_identity_matrices
+    _combine_removed, identify_removable_identity_matrices, _array_contraction_to_diagonal_multiple_identity
 from sympy import MatrixSymbol
 from sympy.combinatorics import Permutation
 from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
@@ -361,7 +361,7 @@ def test_arrayexpr_convert_array_to_matrix_remove_trivial_dims():
 
     expr = ArrayDiagonal(ArrayContraction(ArrayTensorProduct(A, x, I, I1), (1, 2, 5)), (1, 4))
     rexpr, removed = _remove_trivial_dims(expr)
-    assert removed == [1, 2]
+    assert removed == [2, 3]
 
     cg = ArrayDiagonal(ArrayTensorProduct(PermuteDims(ArrayTensorProduct(x, I1), Permutation(1, 2, 3)), (x.T*x).applyfunc(sqrt)), (2, 4), (3, 5))
     rexpr, removed = _remove_trivial_dims(cg)
@@ -572,3 +572,20 @@ def test_combine_removed():
     assert _combine_removed(6, [0, 1, 2], [0, 1, 2]) == [0, 1, 2, 3, 4, 5]
     assert _combine_removed(8, [2, 5], [1, 3, 4]) == [1, 2, 4, 5, 6]
     assert _combine_removed(8, [7], []) == [7]
+
+
+def test_array_contraction_to_diagonal_multiple_identities():
+
+    expr = ArrayContraction(ArrayTensorProduct(A, B, I, C), (1, 2, 4), (5, 6))
+    assert _array_contraction_to_diagonal_multiple_identity(expr) == (expr, [])
+    assert convert_array_to_matrix(expr) == ArrayContraction(ArrayTensorProduct(A, B, C), (1, 2, 4))
+
+    expr = ArrayContraction(ArrayTensorProduct(A, I, I), (1, 2, 4))
+    assert _array_contraction_to_diagonal_multiple_identity(expr) == (A, [2])
+    assert convert_array_to_matrix(expr) == A
+
+    expr = ArrayContraction(ArrayTensorProduct(A, I, I, B), (1, 2, 4), (3, 6))
+    assert _array_contraction_to_diagonal_multiple_identity(expr) == (expr, [])
+
+    expr = ArrayContraction(ArrayTensorProduct(A, I, I, B), (1, 2, 3, 4, 6))
+    assert _array_contraction_to_diagonal_multiple_identity(expr) == (expr, [])

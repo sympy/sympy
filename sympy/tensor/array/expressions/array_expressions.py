@@ -1357,7 +1357,7 @@ class _EditArrayContraction:
     by calling the ``.to_array_contraction()`` method.
     """
 
-    def __init__(self, base_array: typing.Union[ArrayContraction, ArrayDiagonal]):
+    def __init__(self, base_array: typing.Union[ArrayContraction, ArrayDiagonal, ArrayTensorProduct]):
 
         expr: Expr
         diagonalized: List[int]
@@ -1384,6 +1384,13 @@ class _EditArrayContraction:
                 expr = base_array.expr
                 diagonalized = base_array.diagonal_indices
                 contraction_indices = []
+
+        elif isinstance(base_array, ArrayTensorProduct):
+            expr = base_array
+            contraction_indices = []
+            diagonalized = []
+        else:
+            raise NotImplementedError()
 
         if isinstance(expr, ArrayTensorProduct):
             args = list(expr.args)
@@ -1498,11 +1505,11 @@ class _EditArrayContraction:
         args = [arg.element for arg in self.args_with_ind]
         contraction_indices = self.get_contraction_indices()
         expr = ArrayContraction(ArrayTensorProduct(*args), *contraction_indices)
+        expr2 = ArrayDiagonal(expr, *diag_indices_filtered)
         if self._track_permutation is not None:
             permutation2 = _af_invert([j for i in self._track_permutation for j in i])
-            expr = PermuteDims(expr, permutation2)
+            expr2 = PermuteDims(expr2, permutation2)
 
-        expr2 = ArrayDiagonal(expr, *diag_indices_filtered)
         expr3 = PermuteDims(expr2, permutation)
         return expr3
 
@@ -1551,17 +1558,32 @@ class _EditArrayContraction:
         ret: List[_ArgE] = [i for i in self.args_with_ind if index in i.indices]
         return ret
 
+    @property
+    def number_of_diagonal_indices(self):
+        data = set([])
+        for arg in self.args_with_ind:
+            data.update({i for i in arg.indices if i is not None and i < 0})
+        return len(data)
+
     def track_permutation_start(self):
-        self._track_permutation = []
+        permutation = []
+        perm_diag = []
         counter: int = 0
+        counter2: int = -1
         for arg_with_ind in self.args_with_ind:
             perm = []
             for i in arg_with_ind.indices:
                 if i is not None:
+                    if i < 0:
+                        perm_diag.append(counter2)
+                        counter2 -= 1
                     continue
                 perm.append(counter)
                 counter += 1
-            self._track_permutation.append(perm)
+            permutation.append(perm)
+        max_ind = max([max(i) if i else -1 for i in permutation]) if permutation else -1
+        perm_diag = [max_ind - i for i in perm_diag]
+        self._track_permutation = permutation + [perm_diag]
 
     def track_permutation_merge(self, destination: _ArgE, from_element: _ArgE):
         index_destination = self.args_with_ind.index(destination)
