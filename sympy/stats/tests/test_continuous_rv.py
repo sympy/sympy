@@ -4,7 +4,7 @@ from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erf
                    gamma, beta, Piecewise, Integral, sin, cos, tan, atan, sinh, cosh,
                    besseli, floor, expand_func, Rational, I, re, Lambda, asin,
                    im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
-                   factorial, binomial, erfi, besselj, besselk)
+                   factorial, binomial, erfi, besselj, besselk, marcumq)
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
 from sympy.sets.sets import FiniteSet, Complement, Intersection
@@ -18,7 +18,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness, k
                          Pareto, PowerFunction, QuadraticU, RaisedCosine, Rayleigh, Reciprocal, ShiftedGompertz, StudentT,
                          Trapezoidal, Triangular, Uniform, UniformSum, VonMises, Weibull, coskewness,
                          WignerSemicircle, Wald, correlation, moment, cmoment, smoment, quantile,
-                         Lomax, BoundedPareto)
+                         Lomax, BoundedPareto, Rician)
 
 from sympy.stats.crv_types import NormalDistribution, ExponentialDistribution, ContinuousDistributionHandmade
 from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution, MultivariateNormalDistribution
@@ -1113,6 +1113,14 @@ def test_reciprocal():
     a = symbols('a', positive=True)
     b = symbols('b', positive=True)
     raises(ValueError, lambda: Reciprocal('x', a + b, a))
+
+def test_rician():
+    alpha = Symbol("alpha", real=True)
+    beta = Symbol("beta", real=True)
+
+    X = Rician('x', alpha, beta)
+    assert cdf(X)(x) == marcumq(1, alpha/beta, x/beta)
+    assert density(X)(x) == x*exp((-alpha**2 - x**2)/(2*beta**2))*besseli(0, alpha*x/beta**2)/beta**2
 
 def test_shiftedgompertz():
     b = Symbol("b", positive=True)
