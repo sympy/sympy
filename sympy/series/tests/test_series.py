@@ -1,19 +1,33 @@
 from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, PoleError, log, sqrt, N, Symbol, Subs, pi, symbols, atan, LambertW, Rational
+    Function, PoleError, log, sqrt, N, Symbol, Subs, pi, symbols, atan, LambertW, Rational, tan, cot, sec, csc
 from sympy.abc import x, y, n, k
 from sympy.testing.pytest import raises
 from sympy.series.gruntz import calculate_series
 
 
-def test_sin():
+def test_trigonometric():
     e1 = sin(x).series(x, 0)
     e2 = series(sin(x), x, 0)
     assert e1 == e2
 
-
-def test_cos():
     e1 = cos(x).series(x, 0)
     e2 = series(cos(x), x, 0)
+    assert e1 == e2
+
+    e1 = tan(x).series(x, 0)
+    e2 = series(tan(x), x, 0)
+    assert e1 == e2
+
+    e1 = cot(x).series(x, 0)
+    e2 = series(cot(x), x, 0)
+    assert e1 == e2
+
+    e1 = sec(x).series(x, 0)
+    e2 = series(sec(x), x, 0)
+    assert e1 == e2
+
+    e1 = csc(x).series(x, 0)
+    e2 = series(csc(x), x, 0)
     assert e1 == e2
 
 
@@ -22,10 +36,28 @@ def test_exp():
     e2 = series(exp(x), x, 0)
     assert e1 == e2
 
-
-def test_exp2():
     e1 = exp(cos(x)).series(x, 0)
     e2 = series(exp(cos(x)), x, 0)
+    assert e1 == e2
+
+    e1 = exp(sin(x)).series(x, 0)
+    e2 = series(exp(sin(x)), x, 0)
+    assert e1 == e2
+
+    e1 = exp(tan(x)).series(x, 0)
+    e2 = series(exp(tan(x)), x, 0)
+    assert e1 == e2
+
+    e1 = exp(cot(x)).series(x, 0)
+    e2 = series(exp(cot(x)), x, 0)
+    assert e1 == e2
+
+    e1 = exp(sec(x)).series(x, 0)
+    e2 = series(exp(sec(x)), x, 0)
+    assert e1 == e2
+
+    e1 = exp(csc(x)).series(x, 0)
+    e2 = series(exp(csc(x)), x, 0)
     assert e1 == e2
 
 
