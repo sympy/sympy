@@ -3,7 +3,7 @@ from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
         Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
         conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn,
-        AccumBounds, Interval, ImageSet, Lambda, besselj, Add)
+        AccumBounds, Interval, ImageSet, Lambda, besselj, Add, limit)
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.core.relational import Ne, Eq
@@ -196,6 +196,16 @@ def test_sin_rewrite():
     assert sin(cos(x)).rewrite(Pow) == sin(cos(x))
 
 
+def _test_extrig(f, i, e):
+    from sympy.core.function import expand_trig
+    assert unchanged(f, i)
+    assert expand_trig(f(i)) == f(i)
+    # testing directly instead of with .expand(trig=True)
+    # because the other expansions undo the unevaluated Mul
+    assert expand_trig(f(Mul(i, 1, evaluate=False))) == e
+    assert abs(f(i) - e).n() < 1e-10
+
+
 def test_sin_expansion():
     # Note: these formulas are not unique.  The ones here come from the
     # Chebyshev formulas.
@@ -205,8 +215,8 @@ def test_sin_expansion():
     assert sin(2*x).expand(trig=True) == 2*sin(x)*cos(x)
     assert sin(3*x).expand(trig=True) == -4*sin(x)**3 + 3*sin(x)
     assert sin(4*x).expand(trig=True) == -8*sin(x)**3*cos(x) + 4*sin(x)*cos(x)
-    assert sin(2).expand(trig=True) == 2*sin(1)*cos(1)
-    assert sin(3).expand(trig=True) == -4*sin(1)**3 + 3*sin(1)
+    _test_extrig(sin, 2, 2*sin(1)*cos(1))
+    _test_extrig(sin, 3, -4*sin(1)**3 + 3*sin(1))
 
 
 def test_sin_AccumBounds():
@@ -410,8 +420,8 @@ def test_cos_expansion():
     assert cos(2*x).expand(trig=True) == 2*cos(x)**2 - 1
     assert cos(3*x).expand(trig=True) == 4*cos(x)**3 - 3*cos(x)
     assert cos(4*x).expand(trig=True) == 8*cos(x)**4 - 8*cos(x)**2 + 1
-    assert cos(2).expand(trig=True) == 2*cos(1)**2 - 1
-    assert cos(3).expand(trig=True) == 4*cos(1)**3 - 3*cos(1)
+    _test_extrig(cos, 2, 2*cos(1)**2 - 1)
+    _test_extrig(cos, 3, 4*cos(1)**3 - 3*cos(1))
 
 
 def test_cos_AccumBounds():
@@ -529,6 +539,10 @@ def test_tan():
     assert tan(r).is_finite is None
     assert tan(I*r).is_finite is True
 
+    # https://github.com/sympy/sympy/issues/21177
+    f = tan(pi*(x + S(3)/2))/(3*x)
+    assert f.as_leading_term(x) == -1/(3*pi*x**2)
+
 
 def test_tan_series():
     assert tan(x).series(x, 0, 9) == \
@@ -585,6 +599,8 @@ def test_tan_expansion():
     assert 0 == tan(2*x).expand(trig=True).rewrite(tan).subs([(tan(x), Rational(1, 7))])*24 - 7
     assert 0 == tan(3*x).expand(trig=True).rewrite(tan).subs([(tan(x), Rational(1, 5))])*55 - 37
     assert 0 == tan(4*x - pi/4).expand(trig=True).rewrite(tan).subs([(tan(x), Rational(1, 5))])*239 - 1
+    _test_extrig(tan, 2, 2*tan(1)/(1 - tan(1)**2))
+    _test_extrig(tan, 3, (-tan(1)**3 + 3*tan(1))/(1 - 3*tan(1)**2))
 
 
 def test_tan_AccumBounds():
@@ -684,6 +700,10 @@ def test_cot():
 
     assert cot(x).subs(x, 3*pi) is zoo
 
+    # https://github.com/sympy/sympy/issues/21177
+    f = cot(pi*(x + 4))/(3*x)
+    assert f.as_leading_term(x) == 1/(3*pi*x**2)
+
 
 def test_tan_cot_sin_cos_evalf():
     assert abs((tan(pi*Rational(8, 15))*cos(pi*Rational(8, 15))/sin(pi*Rational(8, 15)) - 1).evalf()) < 1e-14
@@ -745,15 +765,23 @@ def test_cot_subs():
 
 
 def test_cot_expansion():
-    assert cot(x + y).expand(trig=True) == ((cot(x)*cot(y) - 1)/(cot(x) + cot(y))).expand()
-    assert cot(x - y).expand(trig=True) == (-(cot(x)*cot(y) + 1)/(cot(x) - cot(y))).expand()
-    assert cot(x + y + z).expand(trig=True) == (
+    assert cot(x + y).expand(trig=True).together() == (
+        (cot(x)*cot(y) - 1)/(cot(x) + cot(y)))
+    assert cot(x - y).expand(trig=True).together() == (
+        cot(x)*cot(-y) - 1)/(cot(x) + cot(-y))
+    assert cot(x + y + z).expand(trig=True).together() == (
         (cot(x)*cot(y)*cot(z) - cot(x) - cot(y) - cot(z))/
-        (-1 + cot(x)*cot(y) + cot(x)*cot(z) + cot(y)*cot(z))).expand()
-    assert cot(3*x).expand(trig=True) == ((cot(x)**3 - 3*cot(x))/(3*cot(x)**2 - 1)).expand()
-    assert 0 == cot(2*x).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 3))])*3 + 4
-    assert 0 == cot(3*x).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 5))])*55 - 37
-    assert 0 == cot(4*x - pi/4).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 7))])*863 + 191
+        (-1 + cot(x)*cot(y) + cot(x)*cot(z) + cot(y)*cot(z)))
+    assert cot(3*x).expand(trig=True).together() == (
+        (cot(x)**2 - 3)*cot(x)/(3*cot(x)**2 - 1))
+    assert cot(2*x).expand(trig=True) == cot(x)/2 - 1/(2*cot(x))
+    assert cot(3*x).expand(trig=True).together() == (
+        cot(x)**2 - 3)*cot(x)/(3*cot(x)**2 - 1)
+    assert cot(4*x - pi/4).expand(trig=True).cancel() == (
+        -tan(x)**4 + 4*tan(x)**3 + 6*tan(x)**2 - 4*tan(x) - 1
+        )/(tan(x)**4 + 4*tan(x)**3 - 6*tan(x)**2 - 4*tan(x) + 1)
+    _test_extrig(cot, 2, (-1 + cot(1)**2)/(2*cot(1)))
+    _test_extrig(cot, 3, (-3*cot(1) + cot(1)**3)/(-1 + 3*cot(1)**2))
 
 
 def test_cot_AccumBounds():
@@ -787,11 +815,20 @@ def test_sinc():
 
     assert sinc(-x) == sinc(x)
 
-    assert sinc(x).diff() == Piecewise(((x*cos(x) - sin(x)) / x**2, Ne(x, 0)), (0, True))
+    assert sinc(x).diff(x) == cos(x)/x - sin(x)/x**2
+    assert sinc(x).diff(x) == (sin(x)/x).diff(x)
+    assert sinc(x).diff(x, x) == (-sin(x) - 2*cos(x)/x + 2*sin(x)/x**2)/x
+    assert sinc(x).diff(x, x) == (sin(x)/x).diff(x, x)
+    assert limit(sinc(x).diff(x), x, 0) == 0
+    assert limit(sinc(x).diff(x, x), x, 0) == -S(1)/3
 
-    assert sinc(x).diff(x).equals(sinc(x).rewrite(sin).diff(x))
-
-    assert sinc(x).diff().subs(x, 0) is S.Zero
+    # https://github.com/sympy/sympy/issues/11402
+    #
+    # assert sinc(x).diff(x) == Piecewise(((x*cos(x) - sin(x)) / x**2, Ne(x, 0)), (0, True))
+    #
+    # assert sinc(x).diff(x).equals(sinc(x).rewrite(sin).diff(x))
+    #
+    # assert sinc(x).diff(x).subs(x, 0) is S.Zero
 
     assert sinc(x).series() == 1 - x**2/6 + x**4/120 + O(x**6)
 
@@ -1049,7 +1086,7 @@ def test_atan2():
     assert atan2(0, u) == pi
 
     assert atan2(y, oo) ==  0
-    assert atan2(y, -oo)==  2*pi*Heaviside(re(y)) - pi
+    assert atan2(y, -oo)==  2*pi*Heaviside(re(y), S.Half) - pi
 
     assert atan2(y, x).rewrite(log) == -I*log((x + I*y)/sqrt(x**2 + y**2))
     assert atan2(0, 0) is S.NaN
@@ -1217,7 +1254,12 @@ def test_as_leading_term_issue_5272():
 
 
 def test_leading_terms():
-    for func in [sin, cos, tan, cot]:
+    assert sin(1/x).as_leading_term(x) == AccumBounds(-1 , 1)
+    assert sin(S.Half).as_leading_term(x) == sin(S.Half)
+    assert cos(1/x).as_leading_term(x) == AccumBounds(-1 , 1)
+    assert cos(S.Half).as_leading_term(x) == cos(S.Half)
+
+    for func in [tan, cot]:
         for a in (1/x, S.Half):
             eq = func(a)
             assert eq.as_leading_term(x) == eq

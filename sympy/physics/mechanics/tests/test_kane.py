@@ -24,6 +24,9 @@ def test_one_dof():
     KM = KanesMethod(N, [q], [u], kd)
     KM.kanes_equations(BL, FL)
 
+    assert KM.bodies == BL
+    assert KM.loads == FL
+
     MM = KM.mass_matrix
     forcing = KM.forcing
     rhs = MM.inv() * forcing
@@ -303,9 +306,15 @@ def test_input_format():
     assert KM.kanes_equations(BL, loads=None)[0] == Matrix([0])
     # test for input format kane.kanes_equations(bodies=(body1, body 2))
     assert KM.kanes_equations(BL)[0] == Matrix([0])
+    # test for input format kane.kanes_equations(bodies=(body1, body2), loads=[])
+    assert KM.kanes_equations(BL, [])[0] == Matrix([0])
     # test for error raised when a wrong force list (in this case a string) is provided
     from sympy.testing.pytest import raises
     raises(ValueError, lambda: KM._form_fr('bad input'))
+
+    # 1 dof problem from test_one_dof with FL & BL in instance
+    KM = KanesMethod(N, [q], [u], kd, bodies=BL, forcelist=FL)
+    assert KM.kanes_equations()[0] == Matrix([-c*u - k*q])
 
     # 2 dof problem from test_two_dof
     q1, q2, u1, u2 = dynamicsymbols('q1 q2 u1 u2')

@@ -173,7 +173,7 @@ def scaled_zero(mag, sign=1):
     >>> Float(scaled_zero(ok), p)
     -0.e+30
     """
-    if type(mag) is tuple and len(mag) == 4 and iszero(mag, scaled=True):
+    if isinstance(mag, tuple) and len(mag) == 4 and iszero(mag, scaled=True):
         return (mag[0][0],) + mag[1:]
     elif isinstance(mag, SYMPY_INTS):
         if sign not in [-1, 1]:
@@ -189,7 +189,7 @@ def scaled_zero(mag, sign=1):
 def iszero(mpf, scaled=False):
     if not scaled:
         return not mpf or not mpf[1] and not mpf[-1]
-    return mpf and type(mpf[0]) is list and mpf[1] == mpf[-1] == 1
+    return mpf and isinstance(mpf[0], list) and mpf[1] == mpf[-1] == 1
 
 
 def complex_accuracy(result):
@@ -915,9 +915,9 @@ def evalf_piecewise(expr, prec, options):
         del newopts['subs']
         if hasattr(expr, 'func'):
             return evalf(expr, prec, newopts)
-        if type(expr) == float:
+        if isinstance(expr, float):
             return evalf(Float(expr), prec, newopts)
-        if type(expr) == int:
+        if isinstance(expr, int):
             return evalf(Integer(expr), prec, newopts)
 
     # We still have undefined symbols

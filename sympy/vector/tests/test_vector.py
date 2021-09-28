@@ -1,4 +1,4 @@
-from sympy.core import Rational
+from sympy.core import Rational, S
 from sympy.simplify import simplify, trigsimp
 from sympy import pi, sqrt, symbols, ImmutableMatrix as Matrix, \
      sin, cos, Function, Integral, Derivative, diff
@@ -220,9 +220,10 @@ def test_projection():
     v3 = 0*i + 0*j
     assert v1.projection(v1) == i + j + k
     assert v1.projection(v2) == Rational(7, 3)*C.i + Rational(7, 3)*C.j + Rational(7, 3)*C.k
-    assert v1.projection(v1, scalar=True) == 1
+    assert v1.projection(v1, scalar=True) == S.One
     assert v1.projection(v2, scalar=True) == Rational(7, 3)
     assert v3.projection(v1) == Vector.zero
+    assert v3.projection(v1, scalar=True) == S.Zero
 
 
 def test_vector_diff_integrate():

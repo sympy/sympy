@@ -121,11 +121,12 @@ def _process_limits(*symbols):
                         orientation *= -1
                     V = [newsymbol] + [i for i in V[1:] if i is not None]
 
-                if not isinstance(newsymbol, Idx) or len(V) == 3:
-                    if len(V) == 4:
+                lenV = len(V)
+                if not isinstance(newsymbol, Idx) or lenV == 3:
+                    if lenV == 4:
                         limits.append(Tuple(*V))
                         continue
-                    if len(V) == 3:
+                    if lenV == 3:
                         if isinstance(newsymbol, Idx):
                             # Idx represents an integer which may have
                             # specified values it can take on; if it is
@@ -146,10 +147,10 @@ def _process_limits(*symbols):
                                 pass
                         limits.append(Tuple(*V))
                         continue
-                    if len(V) == 1 or (len(V) == 2 and V[1] is None):
+                    if lenV == 1 or (lenV == 2 and V[1] is None):
                         limits.append(Tuple(newsymbol))
                         continue
-                    elif len(V) == 2:
+                    elif lenV == 2:
                         limits.append(Tuple(newsymbol, V[1]))
                         continue
 
@@ -163,7 +164,7 @@ class ExprWithLimits(Expr):
 
     def __new__(cls, function, *symbols, **assumptions):
         pre = _common_new(cls, function, *symbols, **assumptions)
-        if type(pre) is tuple:
+        if isinstance(pre, tuple):
             function, limits, _ = pre
         else:
             return pre
@@ -357,7 +358,7 @@ class ExprWithLimits(Expr):
                 if len(xab[0].free_symbols.intersection(old.free_symbols)) != 0:
                     sub_into_func = False
                     break
-            if isinstance(old, AppliedUndef) or isinstance(old, UndefinedFunction):
+            if isinstance(old, (AppliedUndef, UndefinedFunction)):
                 sy2 = set(self.variables).intersection(set(new.atoms(Symbol)))
                 sy1 = set(self.variables).intersection(set(old.args))
                 if not sy2.issubset(sy1):
@@ -496,7 +497,7 @@ class AddWithLimits(ExprWithLimits):
 
     def __new__(cls, function, *symbols, **assumptions):
         pre = _common_new(cls, function, *symbols, **assumptions)
-        if type(pre) is tuple:
+        if isinstance(pre, tuple):
             function, limits, orientation = pre
         else:
             return pre
@@ -510,17 +511,17 @@ class AddWithLimits(ExprWithLimits):
         return obj
 
     def _eval_adjoint(self):
-        if all([x.is_real for x in flatten(self.limits)]):
+        if all(x.is_real for x in flatten(self.limits)):
             return self.func(self.function.adjoint(), *self.limits)
         return None
 
     def _eval_conjugate(self):
-        if all([x.is_real for x in flatten(self.limits)]):
+        if all(x.is_real for x in flatten(self.limits)):
             return self.func(self.function.conjugate(), *self.limits)
         return None
 
     def _eval_transpose(self):
-        if all([x.is_real for x in flatten(self.limits)]):
+        if all(x.is_real for x in flatten(self.limits)):
             return self.func(self.function.transpose(), *self.limits)
         return None
 

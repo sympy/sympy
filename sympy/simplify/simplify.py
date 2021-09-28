@@ -803,7 +803,7 @@ def sum_combine(s_t):
                 for j, s_term2 in enumerate(s_t):
                     if not used[j] and i != j:
                         temp = sum_add(s_term1, s_term2, method)
-                        if isinstance(temp, Sum) or isinstance(temp, Mul):
+                        if isinstance(temp, (Sum, Mul)):
                             s_t[i] = temp
                             s_term1 = s_t[i]
                             used[j] = True
@@ -845,7 +845,6 @@ def factor_sum(self, limits=None, radical=False, clear=False, fraction=False, si
 def sum_add(self, other, method=0):
     """Helper function for Sum simplification"""
     from sympy.concrete.summations import Sum
-    from sympy import Mul
 
     #we know this is something in terms of a constant * a sum
     #so we temporarily put the constants inside for simplification

@@ -134,8 +134,8 @@ def test_contains_3():
 
 
 def test_contains_4():
-    assert Order(sin(1/x**2)).contains(Order(cos(1/x**2))) is None
-    assert Order(cos(1/x**2)).contains(Order(sin(1/x**2))) is None
+    assert Order(sin(1/x**2)).contains(Order(cos(1/x**2))) is True
+    assert Order(cos(1/x**2)).contains(Order(sin(1/x**2))) is True
 
 
 def test_contains():
@@ -168,11 +168,11 @@ def test_multivar_0():
     assert Order(x*y*z).expr == x*y*z
     assert Order(x/y).expr == x/y
     assert Order(x*exp(1/y)).expr == x*exp(1/y)
-    assert Order(exp(x)*exp(1/y)).expr == exp(1/y)
+    assert Order(exp(x)*exp(1/y)).expr == exp(x)*exp(1/y)
 
 
 def test_multivar_0a():
-    assert Order(exp(1/x)*exp(1/y)).expr == exp(1/x + 1/y)
+    assert Order(exp(1/x)*exp(1/y)).expr == exp(1/x)*exp(1/y)
 
 
 def test_multivar_1():
@@ -446,3 +446,7 @@ def test_issue_15539():
 
 def test_issue_18606():
     assert unchanged(Order, 0)
+
+
+def test_issue_22165():
+    assert O(log(x)).contains(2)

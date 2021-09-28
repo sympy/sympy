@@ -95,12 +95,12 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         GMPYFiniteField, PythonIntegerRing, GMPYIntegerRing, PythonRational,
         GMPYRationalField, AlgebraicField, PolynomialRing, FractionField,
         ExpressionDomain, FF_python, FF_gmpy, ZZ_python, ZZ_gmpy, QQ_python,
-        QQ_gmpy, GF, FF, ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX, construct_domain,
-        swinnerton_dyer_poly, cyclotomic_poly, symmetric_poly, random_poly,
-        interpolating_poly, jacobi_poly, chebyshevt_poly, chebyshevu_poly,
-        hermite_poly, legendre_poly, laguerre_poly, apart, apart_list,
-        assemble_partfrac_list, Options, ring, xring, vring, sring, field,
-        xfield, vfield, sfield)
+        QQ_gmpy, GF, FF, ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX, EXRAW,
+        construct_domain, swinnerton_dyer_poly, cyclotomic_poly,
+        symmetric_poly, random_poly, interpolating_poly, jacobi_poly,
+        chebyshevt_poly, chebyshevu_poly, hermite_poly, legendre_poly,
+        laguerre_poly, apart, apart_list, assemble_partfrac_list, Options,
+        ring, xring, vring, sring, field, xfield, vfield, sfield)
 
 from .series import (Order, O, limit, Limit, gruntz, series, approximants,
         residue, EmptySequence, SeqPer, SeqFormula, sequence, SeqAdd, SeqMul,
@@ -309,12 +309,13 @@ __all__ = [
     'GMPYIntegerRing', 'PythonRational', 'GMPYRationalField',
     'AlgebraicField', 'PolynomialRing', 'FractionField', 'ExpressionDomain',
     'FF_python', 'FF_gmpy', 'ZZ_python', 'ZZ_gmpy', 'QQ_python', 'QQ_gmpy',
-    'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR', 'CC', 'EX', 'construct_domain',
-    'swinnerton_dyer_poly', 'cyclotomic_poly', 'symmetric_poly',
-    'random_poly', 'interpolating_poly', 'jacobi_poly', 'chebyshevt_poly',
-    'chebyshevu_poly', 'hermite_poly', 'legendre_poly', 'laguerre_poly',
-    'apart', 'apart_list', 'assemble_partfrac_list', 'Options', 'ring',
-    'xring', 'vring', 'sring', 'field', 'xfield', 'vfield', 'sfield',
+    'GF', 'FF', 'ZZ', 'QQ', 'ZZ_I', 'QQ_I', 'RR', 'CC', 'EX', 'EXRAW',
+    'construct_domain', 'swinnerton_dyer_poly', 'cyclotomic_poly',
+    'symmetric_poly', 'random_poly', 'interpolating_poly', 'jacobi_poly',
+    'chebyshevt_poly', 'chebyshevu_poly', 'hermite_poly', 'legendre_poly',
+    'laguerre_poly', 'apart', 'apart_list', 'assemble_partfrac_list',
+    'Options', 'ring', 'xring', 'vring', 'sring', 'field', 'xfield', 'vfield',
+    'sfield',
 
     # sympy.series
     'Order', 'O', 'limit', 'Limit', 'gruntz', 'series', 'approximants',
@@ -505,7 +506,7 @@ __all__ = [
 #===========================================================================#
 
 
-__all__.extend([
+__all__.extend((
     'algebras',
     'assumptions',
     'calculus',
@@ -525,4 +526,4 @@ __all__.extend([
     'strategies',
     'tensor',
     'utilities',
-])
+))

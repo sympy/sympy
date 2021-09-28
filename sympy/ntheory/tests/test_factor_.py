@@ -13,7 +13,7 @@ from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
     is_deficient, is_amicable, dra, drm)
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 
 from sympy.utilities.iterables import capture
 
@@ -152,6 +152,7 @@ def test_perfect_power():
         assert m and m[1] == 2 or d == 1 or d == 3, (d, m)
 
 
+@slow
 def test_factorint():
     assert primefactors(123456) == [2, 3, 643]
     assert factorint(0) == {0: 1}
@@ -522,7 +523,7 @@ def test_factorrat():
     assert str(factorrat(Rational(1, 1), visual=True)) == '1'
     assert str(factorrat(S(25)/14, visual=True)) == '5**2/(2*7)'
     assert str(factorrat(Rational(25, 14), visual=True)) == '5**2/(2*7)'
-    assert str(factorrat(S(-25)/14/9, visual=True)) == '-5**2/(2*3**2*7)'
+    assert str(factorrat(S(-25)/14/9, visual=True)) == '-1*5**2/(2*3**2*7)'
 
     assert factorrat(S(12)/1, multiple=True) == [2, 2, 3]
     assert factorrat(Rational(1, 1), multiple=True) == []

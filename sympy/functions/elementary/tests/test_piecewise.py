@@ -3,7 +3,7 @@ from sympy import (
     Integral, integrate, Interval, KroneckerDelta, lambdify, log, Max, Min,
     oo, Or, pi, Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
     cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Sum, Tuple, zoo, Float,
-    DiracDelta, Heaviside, Add, Mul, factorial, Ge, Contains)
+    DiracDelta, Heaviside, Add, Mul, factorial, Ge, Contains, MatrixSymbol)
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.piecewise import Undefined, ExprCondPair
 from sympy.printing import srepr
@@ -233,10 +233,8 @@ def test_piecewise_integrate1ca():
     assert g.integrate((x, 1, -2)) == g1y.subs(y, -2)
     assert g.integrate((x, 0, 1)) == gy1.subs(y, 0)
     assert g.integrate((x, 1, 0)) == g1y.subs(y, 0)
-    # XXX Make test pass without simplify
-    assert g.integrate((x, 2, 1)) == gy1.subs(y, 2).simplify()
-    assert g.integrate((x, 1, 2)) == g1y.subs(y, 2).simplify()
-
+    assert g.integrate((x, 2, 1)) == gy1.subs(y, 2)
+    assert g.integrate((x, 1, 2)) == g1y.subs(y, 2)
     assert piecewise_fold(gy1.rewrite(Piecewise)) == \
         Piecewise(
             (1, y <= -1),
@@ -249,21 +247,18 @@ def test_piecewise_integrate1ca():
             (y**2/2 + y - S.Half, y <= 0),
             (-y**2/2 + y - S.Half, y < 1),
             (0, True))
-
-    # g1y and gy1 should simplify if the condition that y < 1
-    # is applied, e.g. Min(1, Max(-1, y)) --> Max(-1, y)
-    # XXX Make test pass without simplify
-    assert gy1.simplify() == Piecewise(
+    assert gy1 == Piecewise(
         (
             -Min(1, Max(-1, y))**2/2 - Min(1, Max(-1, y)) +
             Min(1, Max(0, y))**2 + S.Half, y < 1),
         (0, True)
         )
-    assert g1y.simplify() == Piecewise(
+    assert g1y == Piecewise(
         (
             Min(1, Max(-1, y))**2/2 + Min(1, Max(-1, y)) -
             Min(1, Max(0, y))**2 - S.Half, y < 1),
         (0, True))
+
 
 @slow
 def test_piecewise_integrate1cb():
@@ -688,7 +683,7 @@ def test_piecewise_lambdify():
 
 
 def test_piecewise_series():
-    from sympy import sin, cos, O
+    from sympy import O
     p1 = Piecewise((sin(x), x < 0), (cos(x), x > 0))
     p2 = Piecewise((x + O(x**2), x < 0), (1 + O(x**2), x > 0))
     assert p1.nseries(x, n=2) == p2
@@ -1358,8 +1353,21 @@ def test_issue_7370():
     v = integrate(f, (x, 0, Float("252.4", 30)))
     assert str(v) == '252.400000000000000000000000000'
 
+
+def test_issue_14933():
+    x = Symbol('x')
+    y = Symbol('y')
+
+    inp = MatrixSymbol('inp', 1, 1)
+    rep_dict = {y: inp[0, 0], x: inp[0, 0]}
+
+    p = Piecewise((1, ITE(y > 0, x < 0, True)))
+    assert p.xreplace(rep_dict) == Piecewise((1, ITE(inp[0, 0] > 0, inp[0, 0] < 0, True)))
+
+
 def test_issue_16715():
     raises(NotImplementedError, lambda: Piecewise((x, x<0), (0, y>1)).as_expr_set_pairs())
+
 
 def test_issue_20360():
     t, tau = symbols("t tau", real=True)

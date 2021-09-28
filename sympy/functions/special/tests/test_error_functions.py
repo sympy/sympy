@@ -12,7 +12,7 @@ from sympy import (
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.special.error_functions import _erfs, _eis
-from sympy.testing.pytest import raises, slow
+from sympy.testing.pytest import raises
 
 x, y, z = symbols('x,y,z')
 w = Symbol("w", real=True)
@@ -48,7 +48,7 @@ def test_erf():
     assert erf(x).as_leading_term(x) == 2*x/sqrt(pi)
     assert erf(x*y).as_leading_term(y) == 2*x*y/sqrt(pi)
     assert (erf(x*y)/erf(y)).as_leading_term(y) == x
-    assert erf(1/x).as_leading_term(x) == erf(1/x)
+    assert erf(1/x).as_leading_term(x) == S.One
 
     assert erf(z).rewrite('uppergamma') == sqrt(z**2)*(1 - erfc(sqrt(z**2)))/z
     assert erf(z).rewrite('erfc') == S.One - erfc(z)
@@ -93,6 +93,10 @@ def test_erf_series():
 
     assert erf(x).series(x, oo) == \
         -exp(-x**2)*(3/(4*x**5) - 1/(2*x**3) + 1/x + O(x**(-6), (x, oo)))/sqrt(pi) + 1
+    assert erf(x**2).series(x, oo, n=8) == \
+        (-1/(2*x**6) + x**(-2) + O(x**(-8), (x, oo)))*exp(-x**4)/sqrt(pi)*-1 + 1
+    assert erf(sqrt(x)).series(x, oo, n=3) == (sqrt(1/x) - (1/x)**(S(3)/2)/2\
+        + 3*(1/x)**(S(5)/2)/4 + O(x**(-3), (x, oo)))*exp(-x)/sqrt(pi)*-1 + 1
 
 
 def test_erf_evalf():
@@ -133,7 +137,7 @@ def test_erfc():
     assert conjugate(erfc(z)) == erfc(conjugate(z))
 
     assert erfc(x).as_leading_term(x) is S.One
-    assert erfc(1/x).as_leading_term(x) == erfc(1/x)
+    assert erfc(1/x).as_leading_term(x) == S.Zero
 
     assert erfc(z).rewrite('erf') == 1 - erf(z)
     assert erfc(z).rewrite('erfi') == 1 + I*erfi(I*z)
@@ -197,6 +201,11 @@ def test_erfi():
     assert erfi(0).is_real is True
 
     assert conjugate(erfi(z)) == erfi(conjugate(z))
+
+    assert erfi(x).as_leading_term(x) == 2*x/sqrt(pi)
+    assert erfi(x*y).as_leading_term(y) == 2*x*y/sqrt(pi)
+    assert (erfi(x*y)/erfi(y)).as_leading_term(y) == x
+    assert erfi(1/x).as_leading_term(x) == erfi(1/x)
 
     assert erfi(z).rewrite('erf') == -I*erf(I*z)
     assert erfi(z).rewrite('erfc') == I*erfc(I*z) - I
@@ -480,7 +489,8 @@ def test__eis():
         == Ei(z).diff(z)
 
     assert _eis(z).series(z, n=3) == EulerGamma + log(z) + z*(-log(z) - \
-        EulerGamma + 1) + z**2*(log(z)/2 - Rational(3, 4) + EulerGamma/2) + O(z**3*log(z))
+        EulerGamma + 1) + z**2*(log(z)/2 - Rational(3, 4) + EulerGamma/2)\
+        + O(z**3*log(z))
     raises(ArgumentIndexError, lambda: _eis(z).fdiff(2))
 
 
@@ -604,6 +614,8 @@ def test_si():
 
     t = Symbol('t', Dummy=True)
     assert Si(x).rewrite(sinc) == Integral(sinc(t), (t, 0, x))
+
+    assert limit(Shi(x), x, S.NegativeInfinity) == -I*pi/2
 
 
 def test_ci():
@@ -772,7 +784,6 @@ def test_fresnel():
     assert fresnelc(x).taylor_term(1, x) == -pi**2*x**5/40
 
 
-@slow
 def test_fresnel_series():
     assert fresnelc(z).series(z, n=15) == \
         z - pi**2*z**5/40 + pi**4*z**9/3456 - pi**6*z**13/599040 + O(z**15)

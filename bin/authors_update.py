@@ -19,7 +19,7 @@ if sys.version_info < (3, 6):
     sys.exit("This script requires Python 3.6 or newer")
 
 from subprocess import run, PIPE
-from distutils.version import LooseVersion
+from sympy.external.importtools import version_tuple
 from collections import OrderedDict
 
 def red(text):
@@ -44,7 +44,7 @@ from sympy.utilities.misc import filldedent
 # check git version
 minimal = '1.8.4.2'
 git_ver = run(['git', '--version'], stdout=PIPE, encoding='utf-8').stdout[12:]
-if LooseVersion(git_ver) < LooseVersion(minimal):
+if version_tuple(git_ver) < version_tuple(minimal):
     print(yellow("Please use a git version >= %s" % minimal))
 
 def author_name(line):
@@ -163,4 +163,5 @@ else:
     print(yellow("The AUTHORS file was updated."))
 
 print(red("Changes were made in the authors file"))
+run(['git', 'diff']) # Show the changes
 sys.exit(1)

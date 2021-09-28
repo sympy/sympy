@@ -7,7 +7,7 @@ import random
 rgen = random.Random()
 
 class SievePolynomial:
-    def __init__(self, modified_coeff=[], a=None, b=None):
+    def __init__(self, modified_coeff=(), a=None, b=None):
         """This class denotes the seive polynomial.
         If ``g(x) = (a*x + b)**2 - N``. `g(x)` can be expanded
         to ``a*x**2 + 2*a*b*x + b**2 - N``, so the coefficient

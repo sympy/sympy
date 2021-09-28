@@ -20,7 +20,7 @@ def _(x):
     atoms = x.free_symbols
     if len(atoms) == 1 and next(iter(atoms)) == x:
         return False
-    return any([is_random(i) for i in atoms])
+    return any(is_random(i) for i in atoms)
 
 @is_random.register(RandomSymbol)  # type: ignore
 def _(x):
@@ -80,7 +80,7 @@ class Probability(Expr):
             if len(condrv) == 1 and condrv[0] == given_condition:
                 from sympy.stats.frv_types import BernoulliDistribution
                 return BernoulliDistribution(self.func(condition).doit(**hints), 0, 1)
-            if any([dependent(rv, given_condition) for rv in condrv]):
+            if any(dependent(rv, given_condition) for rv in condrv):
                 return Probability(condition, given_condition)
             else:
                 return Probability(condition).doit()
@@ -604,11 +604,11 @@ class Moment(Expr):
         c = _sympify(c)
         if condition is not None:
             condition = _sympify(condition)
-        return Expr.__new__(cls, X, n, c, condition)
+            return super().__new__(cls, X, n, c, condition)
+        else:
+            return super().__new__(cls, X, n, c)
 
     def doit(self, **hints):
-        if not is_random(self.args[0]):
-            return self.args[0]
         return self.rewrite(Expectation).doit(**hints)
 
     def _eval_rewrite_as_Expectation(self, X, n, c=0, condition=None, **kwargs):
@@ -661,11 +661,11 @@ class CentralMoment(Expr):
         n = _sympify(n)
         if condition is not None:
             condition = _sympify(condition)
-        return Expr.__new__(cls, X, n, condition)
+            return super().__new__(cls, X, n, condition)
+        else:
+            return super().__new__(cls, X, n)
 
     def doit(self, **hints):
-        if not is_random(self.args[0]):
-            return self.args[0]
         return self.rewrite(Expectation).doit(**hints)
 
     def _eval_rewrite_as_Expectation(self, X, n, condition=None, **kwargs):

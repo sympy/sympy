@@ -86,8 +86,16 @@ def test_arrayexpr_convert_matrix_to_array():
     result = ArrayDiagonal(ArrayTensorProduct(M, N), (0, 2), (1, 3))
     assert convert_matrix_to_array(expr) == result
 
+    expr = HadamardProduct(M*N, N*M)
+    result = ArrayDiagonal(ArrayContraction(ArrayTensorProduct(M, N, N, M), (1, 2), (5, 6)), (0, 2), (1, 3))
+    assert convert_matrix_to_array(expr) == result
+
     expr = HadamardPower(M, 2)
     result = ArrayDiagonal(ArrayTensorProduct(M, M), (0, 2), (1, 3))
+    assert convert_matrix_to_array(expr) == result
+
+    expr = HadamardPower(M*N, 2)
+    result = ArrayDiagonal(ArrayContraction(ArrayTensorProduct(M, N, M, N), (1, 2), (5, 6)), (0, 2), (1, 3))
     assert convert_matrix_to_array(expr) == result
 
     expr = M**2

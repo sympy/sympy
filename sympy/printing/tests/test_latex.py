@@ -7,7 +7,7 @@ from sympy import (
     Interval, InverseCosineTransform, InverseFourierTransform, Derivative,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
-    Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
+    Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational, Integer,
     RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, ImageSet, Tuple, Ynm, Znm, arg, asin, acsc, asinh, Mod,
     assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling,
@@ -40,7 +40,8 @@ from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
     fibonacci, tribonacci
 from sympy.logic import Implies
 from sympy.logic.boolalg import And, Or, Xor
-from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback
+from sympy.physics.control.lti import TransferFunction, Series, Parallel, \
+    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
 from sympy.core.trace import Tr
@@ -187,6 +188,10 @@ def test_latex_basic():
         r"z_i \vee \left(x_i \wedge y_i\right)"
     assert latex(Implies(x, y), symbol_names={x: "x_i", y: "y_i"}) == \
         r"x_i \Rightarrow y_i"
+    assert latex(Pow(Rational(1, 3), -1, evaluate=False)) == r"\frac{1}{\frac{1}{3}}"
+    assert latex(Pow(Rational(1, 3), -2, evaluate=False)) == r"\frac{1}{(\frac{1}{3})^{2}}"
+    assert latex(Pow(Integer(1)/100, -1, evaluate=False)) == r"\frac{1}{\frac{1}{100}}"
+
 
     p = Symbol('p', positive=True)
     assert latex(exp(-p)*log(p)) == r"e^{- p} \log{\left(p \right)}"
@@ -213,6 +218,19 @@ def test_latex_SingularityFunction():
         r"{\left\langle x - 4 \right\rangle}^{-2}"
     assert latex(SingularityFunction(x, 4, -1)) == \
         r"{\left\langle x - 4 \right\rangle}^{-1}"
+
+    assert latex(SingularityFunction(x, 4, 5)**3) == \
+        r"{\left({\langle x - 4 \rangle}^{5}\right)}^{3}"
+    assert latex(SingularityFunction(x, -3, 4)**3) == \
+        r"{\left({\langle x + 3 \rangle}^{4}\right)}^{3}"
+    assert latex(SingularityFunction(x, 0, 4)**3) == \
+        r"{\left({\langle x \rangle}^{4}\right)}^{3}"
+    assert latex(SingularityFunction(x, a, n)**3) == \
+        r"{\left({\langle - a + x \rangle}^{n}\right)}^{3}"
+    assert latex(SingularityFunction(x, 4, -2)**3) == \
+        r"{\left({\langle x - 4 \rangle}^{-2}\right)}^{3}"
+    assert latex((SingularityFunction(x, 4, -1)**3)**3) == \
+        r"{\left({\langle x - 4 \rangle}^{-1}\right)}^{9}"
 
 
 def test_latex_cycle():
@@ -580,12 +598,19 @@ def test_latex_functions():
     assert latex(LambertW(n)) == r'W\left(n\right)'
     assert latex(LambertW(n, -1)) == r'W_{-1}\left(n\right)'
     assert latex(LambertW(n, k)) == r'W_{k}\left(n\right)'
+    assert latex(LambertW(n) * LambertW(n)) == r"W^{2}\left(n\right)"
+    assert latex(Pow(LambertW(n), 2)) == r"W^{2}\left(n\right)"
+    assert latex(LambertW(n)**k) == r"W^{k}\left(n\right)"
+    assert latex(LambertW(n, k)**p) == r"W^{p}_{k}\left(n\right)"
 
-    assert latex(Mod(x, 7)) == r'x\bmod{7}'
-    assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right)\bmod{7}'
-    assert latex(Mod(2 * x, 7)) == r'2 x\bmod{7}'
-    assert latex(Mod(x, 7) + 1) == r'\left(x\bmod{7}\right) + 1'
-    assert latex(2 * Mod(x, 7)) == r'2 \left(x\bmod{7}\right)'
+    assert latex(Mod(x, 7)) == r'x \bmod 7'
+    assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right) \bmod 7'
+    assert latex(Mod(7, x + 1)) == r'7 \bmod \left(x + 1\right)'
+    assert latex(Mod(2 * x, 7)) == r'2 x \bmod 7'
+    assert latex(Mod(7, 2 * x)) == r'7 \bmod 2 x'
+    assert latex(Mod(x, 7) + 1) == r'\left(x \bmod 7\right) + 1'
+    assert latex(2 * Mod(x, 7)) == r'2 \left(x \bmod 7\right)'
+    assert latex(Mod(7, 2 * x)**n) == r'\left(7 \bmod 2 x\right)^{n}'
 
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')
@@ -603,7 +628,6 @@ def test_function_subclass_different_name():
 
 
 def test_hyper_printing():
-    from sympy import pi
     from sympy.abc import x, z
 
     assert latex(meijerg(Tuple(pi, pi, x), Tuple(1),
@@ -801,10 +825,22 @@ def test_latex_Range():
     assert latex(Range(oo, -oo, -1)) == r'\left\{\ldots, 1, 0, -1, \ldots\right\}'
 
     a, b, c = symbols('a:c')
-    assert latex(Range(a, b, c)) == r'Range\left(a, b, c\right)'
-    assert latex(Range(a, 10, 1)) == r'Range\left(a, 10, 1\right)'
-    assert latex(Range(0, b, 1)) == r'Range\left(0, b, 1\right)'
-    assert latex(Range(0, 10, c)) == r'Range\left(0, 10, c\right)'
+    assert latex(Range(a, b, c)) == r'\text{Range}\left(a, b, c\right)'
+    assert latex(Range(a, 10, 1)) == r'\text{Range}\left(a, 10\right)'
+    assert latex(Range(0, b, 1)) == r'\text{Range}\left(b\right)'
+    assert latex(Range(0, 10, c)) == r'\text{Range}\left(0, 10, c\right)'
+
+    i = Symbol('i', integer=True)
+    n = Symbol('n', negative=True, integer=True)
+    p = Symbol('p', positive=True, integer=True)
+
+    assert latex(Range(i, i + 3)) == r'\left\{i, i + 1, i + 2\right\}'
+    assert latex(Range(-oo, n, 2)) == r'\left\{\ldots, n - 4, n - 2\right\}'
+    assert latex(Range(p, oo)) == r'\left\{p, p + 1, \ldots\right\}'
+    # The following will work if __iter__ is improved
+    # assert latex(Range(-3, p + 7)) == r'\left\{-3, -2,  \ldots, p + 6\right\}'
+    # Must have integer assumptions
+    assert latex(Range(a, a + 3)) == r'\text{Range}\left(a, a + 3\right)'
 
 
 def test_latex_sequences():
@@ -1582,8 +1618,6 @@ def test_custom_symbol_names():
 
 
 def test_matAdd():
-    from sympy import MatrixSymbol
-    from sympy.printing.latex import LatexPrinter
     C = MatrixSymbol('C', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     l = LatexPrinter()
@@ -1594,8 +1628,6 @@ def test_matAdd():
 
 
 def test_matMul():
-    from sympy import MatrixSymbol
-    from sympy.printing.latex import LatexPrinter
     A = MatrixSymbol('A', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     x = Symbol('x')
@@ -1820,7 +1852,7 @@ def test_Tr():
 
 
 def test_Adjoint():
-    from sympy.matrices import MatrixSymbol, Adjoint, Inverse, Transpose
+    from sympy.matrices import Adjoint, Inverse, Transpose
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
     assert latex(Adjoint(X)) == r'X^{\dagger}'
@@ -1851,7 +1883,7 @@ def test_Transpose():
 
 
 def test_Hadamard():
-    from sympy.matrices import MatrixSymbol, HadamardProduct, HadamardPower
+    from sympy.matrices import HadamardProduct, HadamardPower
     from sympy.matrices.expressions import MatAdd, MatMul, MatPow
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
@@ -1875,7 +1907,6 @@ def test_Hadamard():
 
 
 def test_ElementwiseApplyFunction():
-    from sympy.matrices import MatrixSymbol
     X = MatrixSymbol('X', 2, 2)
     expr = (X.T*X).applyfunc(sin)
     assert latex(expr) == r"{\left( d \mapsto \sin{\left(d \right)} \right)}_{\circ}\left({X^{T} X}\right)"
@@ -1885,13 +1916,13 @@ def test_ElementwiseApplyFunction():
 
 def test_ZeroMatrix():
     from sympy import ZeroMatrix
-    assert latex(ZeroMatrix(1, 1), mat_symbol_style='plain') == r"\mathbb{0}"
+    assert latex(ZeroMatrix(1, 1), mat_symbol_style='plain') == r"0"
     assert latex(ZeroMatrix(1, 1), mat_symbol_style='bold') == r"\mathbf{0}"
 
 
 def test_OneMatrix():
     from sympy import OneMatrix
-    assert latex(OneMatrix(3, 4), mat_symbol_style='plain') == r"\mathbb{1}"
+    assert latex(OneMatrix(3, 4), mat_symbol_style='plain') == r"1"
     assert latex(OneMatrix(3, 4), mat_symbol_style='bold') == r"\mathbf{1}"
 
 
@@ -2255,6 +2286,22 @@ def test_Series_printing():
     assert latex(Series(-tf2, tf1)) == \
         r'\left(\frac{- x + y}{x + y}\right) \left(\frac{x y^{2} - z}{- t^{3} + y^{3}}\right)'
 
+    M_1 = Matrix([[5/s], [5/(2*s)]])
+    T_1 = TransferFunctionMatrix.from_Matrix(M_1, s)
+    M_2 = Matrix([[5, 6*s**3]])
+    T_2 = TransferFunctionMatrix.from_Matrix(M_2, s)
+    # Brackets
+    assert latex(T_1*(T_2 + T_2)) == \
+        r'\left[\begin{matrix}\frac{5}{s}\\\frac{5}{2 s}\end{matrix}\right]_\tau\cdot\left(\left[\begin{matrix}\frac{5}{1} &' \
+        r' \frac{6 s^{3}}{1}\end{matrix}\right]_\tau + \left[\begin{matrix}\frac{5}{1} & \frac{6 s^{3}}{1}\end{matrix}\right]_\tau\right)' \
+            == latex(MIMOSeries(MIMOParallel(T_2, T_2), T_1))
+    # No Brackets
+    M_3 = Matrix([[5, 6], [6, 5/s]])
+    T_3 = TransferFunctionMatrix.from_Matrix(M_3, s)
+    assert latex(T_1*T_2 + T_3) == r'\left[\begin{matrix}\frac{5}{s}\\\frac{5}{2 s}\end{matrix}\right]_\tau\cdot\left[\begin{matrix}' \
+        r'\frac{5}{1} & \frac{6 s^{3}}{1}\end{matrix}\right]_\tau + \left[\begin{matrix}\frac{5}{1} & \frac{6}{1}\\\frac{6}{1} & ' \
+            r'\frac{5}{s}\end{matrix}\right]_\tau' == latex(MIMOParallel(MIMOSeries(T_2, T_1), T_3))
+
 
 def test_TransferFunction_printing():
     tf1 = TransferFunction(x - 1, x + 1, x)
@@ -2269,18 +2316,69 @@ def test_Parallel_printing():
     tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
     tf2 = TransferFunction(x - y, x + y, y)
     assert latex(Parallel(tf1, tf2)) == \
-        r'\left(\frac{x y^{2} - z}{- t^{3} + y^{3}}\right) \left(\frac{x - y}{x + y}\right)'
+        r'\frac{x y^{2} - z}{- t^{3} + y^{3}} + \frac{x - y}{x + y}'
     assert latex(Parallel(-tf2, tf1)) == \
-        r'\left(\frac{- x + y}{x + y}\right) \left(\frac{x y^{2} - z}{- t^{3} + y^{3}}\right)'
+        r'\frac{- x + y}{x + y} + \frac{x y^{2} - z}{- t^{3} + y^{3}}'
+
+    M_1 = Matrix([[5, 6], [6, 5/s]])
+    T_1 = TransferFunctionMatrix.from_Matrix(M_1, s)
+    M_2 = Matrix([[5/s, 6], [6, 5/(s - 1)]])
+    T_2 = TransferFunctionMatrix.from_Matrix(M_2, s)
+    M_3 = Matrix([[6, 5/(s*(s - 1))], [5, 6]])
+    T_3 = TransferFunctionMatrix.from_Matrix(M_3, s)
+    assert latex(T_1 + T_2 + T_3) == r'\left[\begin{matrix}\frac{5}{1} & \frac{6}{1}\\\frac{6}{1} & \frac{5}{s}\end{matrix}\right]' \
+        r'_\tau + \left[\begin{matrix}\frac{5}{s} & \frac{6}{1}\\\frac{6}{1} & \frac{5}{s - 1}\end{matrix}\right]_\tau + \left[\begin{matrix}' \
+            r'\frac{6}{1} & \frac{5}{s \left(s - 1\right)}\\\frac{5}{1} & \frac{6}{1}\end{matrix}\right]_\tau' \
+                == latex(MIMOParallel(T_1, T_2, T_3)) == latex(MIMOParallel(T_1, MIMOParallel(T_2, T_3))) == latex(MIMOParallel(MIMOParallel(T_1, T_2), T_3))
+
+
+def test_TransferFunctionMatrix_printing():
+    tf1 = TransferFunction(p, p + x, p)
+    tf2 = TransferFunction(-s + p, p + s, p)
+    tf3 = TransferFunction(p, y**2 + 2*y + 3, p)
+    assert latex(TransferFunctionMatrix([[tf1], [tf2]])) == \
+        r'\left[\begin{matrix}\frac{p}{p + x}\\\frac{p - s}{p + s}\end{matrix}\right]_\tau'
+    assert latex(TransferFunctionMatrix([[tf1, tf2], [tf3, -tf1]])) == \
+        r'\left[\begin{matrix}\frac{p}{p + x} & \frac{p - s}{p + s}\\\frac{p}{y^{2} + 2 y + 3} & \frac{\left(-1\right) p}{p + x}\end{matrix}\right]_\tau'
 
 
 def test_Feedback_printing():
     tf1 = TransferFunction(p, p + x, p)
     tf2 = TransferFunction(-s + p, p + s, p)
+    # Negative Feedback (Default)
     assert latex(Feedback(tf1, tf2)) == \
-        r'\frac{\frac{p}{p + x}}{\left(1 \cdot 1^{-1}\right) \left(\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)\right)}'
+        r'\frac{\frac{p}{p + x}}{\frac{1}{1} + \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
     assert latex(Feedback(tf1*tf2, TransferFunction(1, 1, p))) == \
-        r'\frac{\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}{\left(1 \cdot 1^{-1}\right) \left(\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)\right)}'
+        r'\frac{\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}{\frac{1}{1} + \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
+    # Positive Feedback
+    assert latex(Feedback(tf1, tf2, 1)) == \
+        r'\frac{\frac{p}{p + x}}{\frac{1}{1} - \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
+    assert latex(Feedback(tf1*tf2, sign=1)) == \
+        r'\frac{\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}{\frac{1}{1} - \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
+
+
+def test_MIMOFeedback_printing():
+    tf1 = TransferFunction(1, s, s)
+    tf2 = TransferFunction(s, s**2 - 1, s)
+    tf3 = TransferFunction(s, s - 1, s)
+    tf4 = TransferFunction(s**2, s**2 - 1, s)
+
+    tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
+    tfm_2 = TransferFunctionMatrix([[tf4, tf3], [tf2, tf1]])
+
+    # Negative Feedback (Default)
+    assert latex(MIMOFeedback(tfm_1, tfm_2)) == \
+        r'\left(I_{\tau} + \left[\begin{matrix}\frac{1}{s} & \frac{s}{s^{2} - 1}\\\frac{s}{s - 1} & \frac{s^{2}}{s^{2} - 1}\end{matrix}\right]_\tau\cdot\left[' \
+        r'\begin{matrix}\frac{s^{2}}{s^{2} - 1} & \frac{s}{s - 1}\\\frac{s}{s^{2} - 1} & \frac{1}{s}\end{matrix}\right]_\tau\right)^{-1} \cdot \left[\begin{matrix}' \
+        r'\frac{1}{s} & \frac{s}{s^{2} - 1}\\\frac{s}{s - 1} & \frac{s^{2}}{s^{2} - 1}\end{matrix}\right]_\tau'
+
+    # Positive Feedback
+    assert latex(MIMOFeedback(tfm_1*tfm_2, tfm_1, 1)) == \
+        r'\left(I_{\tau} - \left[\begin{matrix}\frac{1}{s} & \frac{s}{s^{2} - 1}\\\frac{s}{s - 1} & \frac{s^{2}}{s^{2} - 1}\end{matrix}\right]_\tau\cdot\left' \
+        r'[\begin{matrix}\frac{s^{2}}{s^{2} - 1} & \frac{s}{s - 1}\\\frac{s}{s^{2} - 1} & \frac{1}{s}\end{matrix}\right]_\tau\cdot\left[\begin{matrix}\frac{1}{s} & \frac{s}{s^{2} - 1}' \
+        r'\\\frac{s}{s - 1} & \frac{s^{2}}{s^{2} - 1}\end{matrix}\right]_\tau\right)^{-1} \cdot \left[\begin{matrix}\frac{1}{s} & \frac{s}{s^{2} - 1}' \
+        r'\\\frac{s}{s - 1} & \frac{s^{2}}{s^{2} - 1}\end{matrix}\right]_\tau\cdot\left[\begin{matrix}\frac{s^{2}}{s^{2} - 1} & \frac{s}{s - 1}\\\frac{s}{s^{2} - 1}' \
+        r' & \frac{1}{s}\end{matrix}\right]_\tau'
 
 
 def test_Quaternion_latex_printing():
@@ -2464,7 +2562,6 @@ def test_multiline_latex():
     raises(ValueError, lambda: multiline_latex(f, expr, environment="foo"))
 
 def test_issue_15353():
-    from sympy import ConditionSet, Tuple, S, sin, cos
     a, x = symbols('a x')
     # Obtained from nonlinsolve([(sin(a*x)),cos(a*x)],[x,a])
     sol = ConditionSet(

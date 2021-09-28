@@ -126,10 +126,12 @@ when available.
 
 .. autoclass:: IntegerRing
    :members:
+   :exclude-members: dtype, tp
 
 .. autoclass:: PythonIntegerRing
 .. autoclass:: GMPYIntegerRing
    :members:
+   :exclude-members: dtype, tp
 
 .. _QQ:
 
@@ -180,12 +182,24 @@ preferred because it is significantly faster.
 
 .. autoclass:: RationalField
    :members:
+   :exclude-members: dtype, tp
 
 .. autoclass:: PythonRationalField
 .. autoclass:: GMPYRationalField
    :members:
+   :exclude-members: dtype, tp
 
-.. autoclass:: PythonRational
+.. autoclass:: sympy.external.pythonmpq.PythonMPQ
+
+
+.. _MPQ:
+
+
+MPQ
+===
+
+The ``MPQ`` type is either :py:class:`~.PythonMPQ` or otherwise the ``mpq``
+type from ``gmpy2``.
 
 
 Gaussian domains

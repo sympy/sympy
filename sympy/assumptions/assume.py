@@ -66,7 +66,7 @@ class AssumptionsContext(set):
     """
 
     def add(self, *assumptions):
-        """Add an assumption."""
+        """Add assumptions."""
         for a in assumptions:
             super().add(a)
 
@@ -138,16 +138,6 @@ class AppliedPredicate(Boolean):
         raise TypeError("'arg' property is allowed only for unary predicates.")
 
     @property
-    def args(self):
-        # Will be deprecated and return normal Basic.func
-        return self._args[1:]
-
-    @property
-    def func(self):
-        # Will be deprecated and return normal Basic.func
-        return self._args[0]
-
-    @property
     def function(self):
         """
         Return the predicate.
@@ -168,11 +158,10 @@ class AppliedPredicate(Boolean):
 
     @property
     def binary_symbols(self):
-        from sympy.core.relational import Eq, Ne
         from .ask import Q
         if self.function == Q.is_true:
             i = self.arguments[0]
-            if i.is_Boolean or i.is_Symbol or isinstance(i, (Eq, Ne)):
+            if i.is_Boolean or i.is_Symbol:
                 return i.binary_symbols
         if self.function in (Q.eq, Q.ne):
             if true in self.arguments or false in self.arguments:
@@ -271,7 +260,6 @@ class Predicate(Boolean, metaclass=PredicateMeta):
     Applying and evaluating to boolean value:
 
     >>> from sympy import Q, ask
-    >>> from sympy.abc import x
     >>> ask(Q.prime(7))
     True
 
@@ -304,11 +292,6 @@ class Predicate(Boolean, metaclass=PredicateMeta):
     Traceback (most recent call last):
       ...
     TypeError: <class 'sympy.assumptions.assume.UndefinedPredicate'> cannot be dispatched.
-
-    The tautological predicate ``Q.is_true`` can be used to wrap other objects.
-
-    >>> Q.is_true(x > 1)
-    Q.is_true(x > 1)
 
     References
     ==========
@@ -367,6 +350,10 @@ class Predicate(Boolean, metaclass=PredicateMeta):
         except NotImplementedError:
             pass
         return result
+
+    def _eval_refine(self, assumptions):
+        # When Predicate is no longer Boolean, delete this method
+        return self
 
 
 class UndefinedPredicate(Predicate):
@@ -458,9 +445,6 @@ class UndefinedPredicate(Predicate):
                     continue
                 if _res is None:
                     _res = res
-                elif res is None:
-                    # since first resolutor was conclusive, we keep that value
-                    res = _res
                 else:
                     # only check consistency if both resolutors have concluded
                     if _res != res:

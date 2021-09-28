@@ -5,16 +5,16 @@ from functools import wraps, reduce
 from operator import mul
 
 from sympy.core import (
-    S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple
+    S, Expr, I, Integer, Add, Tuple
 )
-from sympy.core.basic import preorder_traversal
+from sympy.core.basic import Basic, preorder_traversal
 from sympy.core.compatibility import iterable, ordered
 from sympy.core.decorators import _sympifyit
 from sympy.core.evalf import pure_complex
 from sympy.core.function import Derivative
-from sympy.core.mul import _keep_coeff
+from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.relational import Relational
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
@@ -3687,9 +3687,16 @@ class Poly(Basic):
             roots = list(map(sympify,
                 sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag)))))
         except NoConvergence:
-            raise NoConvergence(
-                'convergence to root failed; try n < %s or maxsteps > %s' % (
-                n, maxsteps))
+            try:
+                # If roots did not converge try again with more extra precision.
+                roots = mpmath.polyroots(coeffs, maxsteps=maxsteps,
+                    cleanup=cleanup, error=False, extraprec=f.degree()*15)
+                roots = list(map(sympify,
+                    sorted(roots, key=lambda r: (1 if r.imag else 0, r.real, abs(r.imag), sign(r.imag)))))
+            except NoConvergence:
+                raise NoConvergence(
+                    'convergence to root failed; try n < %s or maxsteps > %s' % (
+                    n, maxsteps))
         finally:
             mpmath.mp.dps = dps
 
@@ -6110,7 +6117,6 @@ def to_rational_coeffs(f):
         ``alpha`` is the rescaling factor, and ``f`` is the rescaled
         polynomial; else ``alpha`` is ``None``.
         """
-        from sympy.core.add import Add
         if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
             return None, f
         n = f.degree()
@@ -6118,7 +6124,7 @@ def to_rational_coeffs(f):
         f1 = f1 or f1.monic()
         coeffs = f1.all_coeffs()[1:]
         coeffs = [simplify(coeffx) for coeffx in coeffs]
-        if coeffs[-2]:
+        if len(coeffs) > 1 and coeffs[-2]:
             rescale1_x = simplify(coeffs[-2]/coeffs[-1])
             coeffs1 = []
             for i in range(len(coeffs)):
@@ -6145,22 +6151,16 @@ def to_rational_coeffs(f):
         ``alpha`` is the translating factor, and ``f`` is the shifted
         polynomial; else ``alpha`` is ``None``.
         """
-        from sympy.core.add import Add
         if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
             return None, f
         n = f.degree()
         f1 = f1 or f1.monic()
         coeffs = f1.all_coeffs()[1:]
         c = simplify(coeffs[0])
-        if c and not c.is_rational:
-            func = Add
-            if c.is_Add:
-                args = c.args
-                func = c.func
-            else:
-                args = [c]
-            c1, c2 = sift(args, lambda z: z.is_rational, binary=True)
-            alpha = -func(*c2)/n
+        if c.is_Add and not c.is_rational:
+            rat, nonrat = sift(c.args,
+                lambda z: z.is_rational is True, binary=True)
+            alpha = -c.func(*nonrat)/n
             f2 = f1.shift(alpha)
             return alpha, f2
         return None

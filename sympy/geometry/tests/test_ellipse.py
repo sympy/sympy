@@ -157,6 +157,12 @@ def test_ellipse_geom():
     assert Circle(Point(5, 5), 2).tangent_lines(Point(5 - 2*sqrt(2), 5)) == \
         [Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2))),
      Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))), ]
+    assert Circle(Point(5, 5), 5).tangent_lines(Point(4, 0)) == \
+        [Line(Point(4, 0), Point(Rational(40, 13), Rational(5, 13))),
+     Line(Point(4, 0), Point(5, 0))]
+    assert Circle(Point(5, 5), 5).tangent_lines(Point(0, 6)) == \
+        [Line(Point(0, 6), Point(0, 7)),
+        Line(Point(0, 6), Point(Rational(5, 13), Rational(90, 13)))]
 
     # for numerical calculations, we shouldn't demand exact equality,
     # so only test up to the desired precision

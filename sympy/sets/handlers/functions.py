@@ -1,6 +1,11 @@
-from sympy import Set, symbols, exp, log, S, Wild, Dummy, oo
+from sympy import Set, S
+from sympy.calculus.singularities import singularities
 from sympy.core import Expr, Add
-from sympy.core.function import Lambda, _coeff_isneg, FunctionClass
+from sympy.core.function import Lambda, _coeff_isneg, FunctionClass, diff
+from sympy.core.numbers import Float, oo
+from sympy.core.symbol import Dummy, symbols, Wild
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import true
 from sympy.multipledispatch import dispatch
 from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
@@ -24,11 +29,8 @@ def _set_function(f, x): # noqa:F811
 
 @dispatch(Lambda, Interval)  # type: ignore # noqa:F811
 def _set_function(f, x): # noqa:F811
-    from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.solvers.solveset import solveset
-    from sympy.core.function import diff, Lambda
     from sympy.series import limit
-    from sympy.calculus.singularities import singularities
     from sympy.sets import Complement
     # TODO: handle functions with infinitely many solutions (eg, sin, tan)
     # TODO: handle multivariate functions
@@ -192,7 +194,9 @@ def _set_function(f, self): # noqa:F811
     a = Wild('a', exclude=[n])
     b = Wild('b', exclude=[n])
     match = expr.match(a*n + b)
-    if match and match[a]:
+    if match and match[a] and (
+            not match[a].atoms(Float) and
+            not match[b].atoms(Float)):
         # canonical shift
         a, b = match[a], match[b]
         if a in [1, -1]:

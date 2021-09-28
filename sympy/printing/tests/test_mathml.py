@@ -1530,7 +1530,7 @@ def test_print_different_functions():
     assert mpp.doprint(primeomega(x)) == '<mrow><mi>&#x3A9;</mi><mfenced><mi>x</mi></mfenced></mrow>'
     assert mpp.doprint(fresnels(x)) == '<mrow><mi>S</mi><mfenced><mi>x</mi></mfenced></mrow>'
     assert mpp.doprint(fresnelc(x)) ==  '<mrow><mi>C</mi><mfenced><mi>x</mi></mfenced></mrow>'
-    assert mpp.doprint(Heaviside(x)) == '<mrow><mi>&#x398;</mi><mfenced><mi>x</mi></mfenced></mrow>'
+    assert mpp.doprint(Heaviside(x)) == '<mrow><mi>&#x398;</mi><mfenced><mi>x</mi><mfrac><mn>1</mn><mn>2</mn></mfrac></mfenced></mrow>'
 
 
 def test_mathml_builtins():
@@ -1948,7 +1948,7 @@ def test_mathml_SingularityFunction():
 
 
 def test_mathml_matrix_functions():
-    from sympy.matrices import MatrixSymbol, Adjoint, Inverse, Transpose
+    from sympy.matrices import Adjoint, Inverse, Transpose
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
     assert mathml(Adjoint(X), printer='presentation') == \

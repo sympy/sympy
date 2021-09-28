@@ -59,10 +59,10 @@ except ImportError:
     extra_kwargs['scripts'] = ['bin/isympy']
 
     # handle mpmath deps in the hard way:
-    from distutils.version import LooseVersion
+    from sympy.external.importtools import version_tuple
     try:
         import mpmath
-        if mpmath.__version__ < LooseVersion(min_mpmath_version):
+        if version_tuple(mpmath.__version__) < version_tuple(min_mpmath_version):
             raise ImportError
     except ImportError:
         print("Please install the mpmath package with a version >= %s"
@@ -187,7 +187,6 @@ class audit(Command):
         pass
 
     def run(self):
-        import os
         try:
             import pyflakes.scripts.pyflakes as flakes
         except ImportError:

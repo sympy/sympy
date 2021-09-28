@@ -1,105 +1,102 @@
 """
-Module for mathematical equality [1] and inequation [2].
+Module for mathematical equality [1] and inequalities [2].
+
+The purpose of this module is to provide the instances which represent the
+binary predicates in order to combine the relationals into logical inference
+system. Objects such as ``Q.eq``, ``Q.lt`` should remain internal to
+assumptions module, and user must use the classes such as :obj:`~.Eq()`,
+:obj:`~.Lt()` instead to construct the relational expressions.
 
 References
 ==========
 
 .. [1] https://en.wikipedia.org/wiki/Equality_(mathematics)
-.. [2] https://en.wikipedia.org/wiki/Inequation
+.. [2] https://en.wikipedia.org/wiki/Inequality_(mathematics)
 """
-from sympy import S
 from sympy.assumptions import Q
-from sympy.core.relational import is_eq, is_neq, _eval_is_eq
+from sympy.core.relational import is_eq, is_neq, is_gt, is_ge, is_lt, is_le
 
 from .binrel import BinaryRelation
 
-__all__ = ['EqualityPredicate', 'UnequalityPredicate']
+__all__ = ['EqualityPredicate', 'UnequalityPredicate', 'StrictGreaterThanPredicate',
+    'GreaterThanPredicate', 'StrictLessThanPredicate', 'LessThanPredicate']
 
 
 class EqualityPredicate(BinaryRelation):
     """
     Binary predicate for $=$.
 
-    This uses :func:`sympy.core.relational.is_eq()` for evaluation. Dispatching
-    the handler via ``Q.eq`` is supported.
+    The purpose of this class is to provide the instance which represent
+    the equality predicate in order to allow the logical inference.
+    This class must remain internal to assumptions module and user must
+    use :obj:`~.Eq()` instead to construct the equality expression.
+
+    Evaluating this predicate to ``True`` or ``False`` is done by
+    :func:`~.core.relational.is_eq()`
 
     Examples
     ========
 
     >>> from sympy import ask, Q
     >>> Q.eq(0, 0)
-    0 = 0
+    Q.eq(0, 0)
     >>> ask(_)
     True
 
-    New types can be supported by registration.
+    See Also
+    ========
 
-    >>> from sympy import Basic
-    >>> class MyBasic(Basic):
-    ...     def __new__(cls, arg):
-    ...         return super().__new__(cls, arg)
-    >>> @Q.eq.register(MyBasic, MyBasic)
-    ... def _(lhs, rhs):
-    ...     return ask(Q.eq(lhs.args[0], rhs.args[0]))
-
-    >>> ask(Q.eq(MyBasic(1), MyBasic(1)))
-    True
-    >>> ask(Q.eq(MyBasic(2), MyBasic(1)))
-    False
-
-    By dispatching to ``Q.eq``, ``MyBasic`` is supported by ``Q.ne`` as well.
-
-    >>> ask(Q.ne(MyBasic(1), MyBasic(1)))
-    False
-    >>> ask(Q.ne(MyBasic(2), MyBasic(1)))
-    True
+    sympy.core.relational.Eq
 
     """
-
     is_reflexive = True
     is_symmetric = True
 
     name = 'eq'
-    str_name = latex_name = "="
-    handler = _eval_is_eq   # this allows registering via Q.eq
+    handler = None  # Do not allow dispatching by this predicate
 
     @property
     def negated(self):
         return Q.ne
 
     def eval(self, args, assumptions=True):
-        return is_eq(*args)
-
-    def _simplify_applied(self, lhs, rhs, **kwargs):
-        return eqsimp(self(lhs, rhs), **kwargs)
-
-    def _eval_binary_symbols(self, lhs, rhs):
-        args = (lhs, rhs)
-        if S.true in args or S.false in args:
-            if lhs.is_Symbol:
-                return {lhs}
-            elif rhs.is_Symbol:
-                return {rhs}
-        return set()
+        if assumptions == True:
+            # default assumptions for is_eq is None
+            assumptions = None
+        return is_eq(*args, assumptions)
 
 
 class UnequalityPredicate(BinaryRelation):
     r"""
     Binary predicate for $\neq$.
 
-    This predicate delegates evaluation logic to ``Q.eq`` and does not support
-    multipledispatch handler. To support new types, dispatch them to ``Q.eq``.
-    See the docstring of :obj:`sympy.assumptions.relation.equality.EqualityPredicate`.
+    The purpose of this class is to provide the instance which represent
+    the inequation predicate in order to allow the logical inference.
+    This class must remain internal to assumptions module and user must
+    use :obj:`~.Ne()` instead to construct the inequation expression.
+
+    Evaluating this predicate to ``True`` or ``False`` is done by
+    :func:`~.core.relational.is_neq()`
+
+    Examples
+    ========
+
+    >>> from sympy import ask, Q
+    >>> Q.ne(0, 0)
+    Q.ne(0, 0)
+    >>> ask(_)
+    False
+
+    See Also
+    ========
+
+    sympy.core.relational.Ne
 
     """
-    # TODO: Add examples
-
     is_reflexive = False
     is_symmetric = True
 
     name = 'ne'
-    str_name = "!="
-    latex_name = r"\neq"
     handler = None
 
     @property
@@ -107,19 +104,199 @@ class UnequalityPredicate(BinaryRelation):
         return Q.eq
 
     def eval(self, args, assumptions=True):
-        return is_neq(*args)
+        if assumptions == True:
+            # default assumptions for is_neq is None
+            assumptions = None
+        return is_neq(*args, assumptions)
 
-    def _simplify_applied(self, lhs, rhs, **kwargs):
-        eq = Q.eq(lhs, rhs).simplify(**kwargs)
-        return self(*eq.arguments)
 
-    def _eval_binary_symbols(self, lhs, rhs):
-        args = (lhs, rhs)
-        if S.true in args or S.false in args:
-            if lhs.is_Symbol:
-                return {lhs}
-            elif rhs.is_Symbol:
-                return {rhs}
-        return set()
+class StrictGreaterThanPredicate(BinaryRelation):
+    """
+    Binary predicate for $>$.
 
-from .simplify import eqsimp
+    The purpose of this class is to provide the instance which represent
+    the ">" predicate in order to allow the logical inference.
+    This class must remain internal to assumptions module and user must
+    use :obj:`~.Gt()` instead to construct the equality expression.
+
+    Evaluating this predicate to ``True`` or ``False`` is done by
+    :func:`~.core.relational.is_gt()`
+
+    Examples
+    ========
+
+    >>> from sympy import ask, Q
+    >>> Q.gt(0, 0)
+    Q.gt(0, 0)
+    >>> ask(_)
+    False
+
+    See Also
+    ========
+
+    sympy.core.relational.Gt
+
+    """
+    is_reflexive = False
+    is_symmetric = False
+
+    name = 'gt'
+    handler = None
+
+    @property
+    def reversed(self):
+        return Q.lt
+
+    @property
+    def negated(self):
+        return Q.le
+
+    def eval(self, args, assumptions=True):
+        if assumptions == True:
+            # default assumptions for is_gt is None
+            assumptions = None
+        return is_gt(*args, assumptions)
+
+
+class GreaterThanPredicate(BinaryRelation):
+    """
+    Binary predicate for $>=$.
+
+    The purpose of this class is to provide the instance which represent
+    the ">=" predicate in order to allow the logical inference.
+    This class must remain internal to assumptions module and user must
+    use :obj:`~.Ge()` instead to construct the equality expression.
+
+    Evaluating this predicate to ``True`` or ``False`` is done by
+    :func:`~.core.relational.is_ge()`
+
+    Examples
+    ========
+
+    >>> from sympy import ask, Q
+    >>> Q.ge(0, 0)
+    Q.ge(0, 0)
+    >>> ask(_)
+    True
+
+    See Also
+    ========
+
+    sympy.core.relational.Ge
+
+    """
+    is_reflexive = True
+    is_symmetric = False
+
+    name = 'ge'
+    handler = None
+
+    @property
+    def reversed(self):
+        return Q.le
+
+    @property
+    def negated(self):
+        return Q.lt
+
+    def eval(self, args, assumptions=True):
+        if assumptions == True:
+            # default assumptions for is_ge is None
+            assumptions = None
+        return is_ge(*args, assumptions)
+
+
+class StrictLessThanPredicate(BinaryRelation):
+    """
+    Binary predicate for $<$.
+
+    The purpose of this class is to provide the instance which represent
+    the "<" predicate in order to allow the logical inference.
+    This class must remain internal to assumptions module and user must
+    use :obj:`~.Lt()` instead to construct the equality expression.
+
+    Evaluating this predicate to ``True`` or ``False`` is done by
+    :func:`~.core.relational.is_lt()`
+
+    Examples
+    ========
+
+    >>> from sympy import ask, Q
+    >>> Q.lt(0, 0)
+    Q.lt(0, 0)
+    >>> ask(_)
+    False
+
+    See Also
+    ========
+
+    sympy.core.relational.Lt
+
+    """
+    is_reflexive = False
+    is_symmetric = False
+
+    name = 'lt'
+    handler = None
+
+    @property
+    def reversed(self):
+        return Q.gt
+
+    @property
+    def negated(self):
+        return Q.ge
+
+    def eval(self, args, assumptions=True):
+        if assumptions == True:
+            # default assumptions for is_lt is None
+            assumptions = None
+        return is_lt(*args, assumptions)
+
+
+class LessThanPredicate(BinaryRelation):
+    """
+    Binary predicate for $<=$.
+
+    The purpose of this class is to provide the instance which represent
+    the "<=" predicate in order to allow the logical inference.
+    This class must remain internal to assumptions module and user must
+    use :obj:`~.Le()` instead to construct the equality expression.
+
+    Evaluating this predicate to ``True`` or ``False`` is done by
+    :func:`~.core.relational.is_le()`
+
+    Examples
+    ========
+
+    >>> from sympy import ask, Q
+    >>> Q.le(0, 0)
+    Q.le(0, 0)
+    >>> ask(_)
+    True
+
+    See Also
+    ========
+
+    sympy.core.relational.Le
+
+    """
+    is_reflexive = True
+    is_symmetric = False
+
+    name = 'le'
+    handler = None
+
+    @property
+    def reversed(self):
+        return Q.ge
+
+    @property
+    def negated(self):
+        return Q.gt
+
+    def eval(self, args, assumptions=True):
+        if assumptions == True:
+            # default assumptions for is_le is None
+            assumptions = None
+        return is_le(*args, assumptions)

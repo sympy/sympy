@@ -7,11 +7,11 @@ from sympy.solvers.ode import (classify_ode,
     homogeneous_order, dsolve)
 
 from sympy.solvers.ode.subscheck import checkodesol
-from sympy.solvers.ode.ode import (_linear_coeff_match,
-    _undetermined_coefficients_match, classify_sysode,
+from sympy.solvers.ode.ode import (classify_sysode,
     constant_renumber, constantsimp, get_numbered_constants, solve_ics)
 
-
+from sympy.solvers.ode.nonhomogeneous import _undetermined_coefficients_match
+from sympy.solvers.ode.single import LinearCoefficients
 from sympy.solvers.deutils import ode_order
 from sympy.testing.pytest import XFAIL, raises, slow
 
@@ -60,6 +60,8 @@ def test_dsolve_all_hint():
         'nth_algebraic_Integral': Eq(f(x), C1),
         '1st_linear': Eq(f(x), C1),
         '1st_linear_Integral': Eq(f(x), C1 + Integral(0, x)),
+        '1st_exact': Eq(f(x), C1),
+        '1st_exact_Integral': Eq(Subs(Integral(0, x) + Integral(1, _y), _y, f(x)), C1),
         'lie_group': Eq(f(x), C1),
         '1st_homogeneous_coeff_subs_dep_div_indep': Eq(f(x), C1),
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral': Eq(log(x), C1 + Integral(-1/_u1, (_u1, f(x)/x))),
@@ -168,6 +170,7 @@ def test_classify_ode():
     assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == (
         'nth_algebraic',
         'separable',
+        '1st_exact',
         '1st_linear',
         'Bernoulli',
         '1st_homogeneous_coeff_best',
@@ -178,6 +181,7 @@ def test_classify_ode():
         'nth_linear_euler_eq_homogeneous',
         'nth_algebraic_Integral',
         'separable_Integral',
+        '1st_exact_Integral',
         '1st_linear_Integral',
         'Bernoulli_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
@@ -185,6 +189,7 @@ def test_classify_ode():
     assert classify_ode(f(x).diff(x)**2, f(x)) == ('factorable',
          'nth_algebraic',
          'separable',
+         '1st_exact',
          '1st_linear',
          'Bernoulli',
          '1st_homogeneous_coeff_best',
@@ -192,10 +197,10 @@ def test_classify_ode():
          '1st_homogeneous_coeff_subs_dep_div_indep',
          '1st_power_series',
          'lie_group',
-         'nth_linear_constant_coeff_homogeneous',
          'nth_linear_euler_eq_homogeneous',
          'nth_algebraic_Integral',
          'separable_Integral',
+         '1st_exact_Integral',
          '1st_linear_Integral',
          'Bernoulli_Integral',
          '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
@@ -204,12 +209,14 @@ def test_classify_ode():
     a = classify_ode(Eq(f(x).diff(x) + f(x), x), f(x))
     b = classify_ode(f(x).diff(x)*f(x) + f(x)*f(x) - x*f(x), f(x))
     c = classify_ode(f(x).diff(x)/f(x) + f(x)/f(x) - x/f(x), f(x))
-    assert a == ('1st_linear',
+    assert a == ('1st_exact',
+        '1st_linear',
         'Bernoulli',
         'almost_linear',
         '1st_power_series', "lie_group",
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
+        '1st_exact_Integral',
         '1st_linear_Integral',
         'Bernoulli_Integral',
         'almost_linear_Integral',
@@ -236,8 +243,8 @@ def test_classify_ode():
 
     assert classify_ode(
         2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)
-    ) == ('Bernoulli', 'almost_linear', 'lie_group',
-        'Bernoulli_Integral', 'almost_linear_Integral')
+    ) == ('1st_exact', 'Bernoulli', 'almost_linear', 'lie_group',
+        '1st_exact_Integral', 'Bernoulli_Integral', 'almost_linear_Integral')
     assert 'Riccati_special_minus2' in \
         classify_ode(2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2), f(x))
     raises(ValueError, lambda: classify_ode(x + f(x, y).diff(x).diff(
@@ -274,21 +281,29 @@ def test_classify_ode():
                         prep=True) == ans
 
     assert classify_ode(Eq(2*x**3*f(x).diff(x), 0), f(x)) == \
-        ('factorable', 'nth_algebraic', 'separable', '1st_linear',
-         'Bernoulli', '1st_power_series',
+        ('factorable', 'nth_algebraic', 'separable', '1st_exact',
+         '1st_linear', 'Bernoulli', '1st_power_series',
          'lie_group', 'nth_linear_euler_eq_homogeneous',
-         'nth_algebraic_Integral', 'separable_Integral',
+         'nth_algebraic_Integral', 'separable_Integral', '1st_exact_Integral',
          '1st_linear_Integral', 'Bernoulli_Integral')
 
 
     assert classify_ode(Eq(2*f(x)**3*f(x).diff(x), 0), f(x)) == \
-        ('factorable', 'nth_algebraic', 'separable', '1st_linear', 'Bernoulli',
-         '1st_power_series', 'lie_group', 'nth_algebraic_Integral',
-         'separable_Integral', '1st_linear_Integral', 'Bernoulli_Integral')
+        ('factorable', 'nth_algebraic', 'separable', '1st_exact', '1st_linear',
+         'Bernoulli', '1st_power_series', 'lie_group', 'nth_algebraic_Integral',
+         'separable_Integral', '1st_exact_Integral', '1st_linear_Integral',
+         'Bernoulli_Integral')
     # test issue 13864
     assert classify_ode(Eq(diff(f(x), x) - f(x)**x, 0), f(x)) == \
         ('1st_power_series', 'lie_group')
     assert isinstance(classify_ode(Eq(f(x), 5), f(x), dict=True), dict)
+
+    #This is for new behavior of classify_ode when called internally with default, It should
+    # return the first hint which matches therefore, 'ordered_hints' key will not be there.
+    assert sorted(classify_ode(Eq(f(x).diff(x), 0), f(x), dict=True).keys()) == \
+        ['default', 'nth_linear_constant_coeff_homogeneous', 'order']
+    a = classify_ode(2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x), dict=True, hint='Bernoulli')
+    assert sorted(a.keys()) == ['Bernoulli', 'Bernoulli_Integral', 'default', 'order', 'ordered_hints']
 
 
 def test_classify_ode_ics():
@@ -706,15 +721,14 @@ def test_undetermined_coefficients_match():
     assert _undetermined_coefficients_match(cos(x**2), x) == {'test': False}
     assert _undetermined_coefficients_match(2**(x**2), x) == {'test': False}
 
-
 def test_issue_4785():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
-    assert classify_ode(eq, f(x)) == ('1st_linear', 'almost_linear',
-        '1st_power_series', 'lie_group',
+    assert classify_ode(eq, f(x)) == ('1st_exact', '1st_linear',
+        'almost_linear', '1st_power_series', 'lie_group',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
-        '1st_linear_Integral', 'almost_linear_Integral',
+        '1st_exact_Integral', '1st_linear_Integral', 'almost_linear_Integral',
         'nth_linear_constant_coeff_variation_of_parameters_Integral')
     # issue 4864
     eq = (x**2 + f(x)**2)*f(x).diff(x) - 2*x*f(x)
@@ -806,25 +820,32 @@ def test_linear_coeff_match():
     n, d = z*(2*x + 3*f(x) + 5), z*(7*x + 9*f(x) + 11)
     rat = n/d
     eq1 = sin(rat) + cos(rat.expand())
+    obj1 = LinearCoefficients(eq1)
     eq2 = rat
+    obj2 = LinearCoefficients(eq2)
     eq3 = log(sin(rat))
+    obj3 = LinearCoefficients(eq3)
     ans = (4, Rational(-13, 3))
-    assert _linear_coeff_match(eq1, f(x)) == ans
-    assert _linear_coeff_match(eq2, f(x)) == ans
-    assert _linear_coeff_match(eq3, f(x)) == ans
+    assert obj1._linear_coeff_match(eq1, f(x)) == ans
+    assert obj2._linear_coeff_match(eq2, f(x)) == ans
+    assert obj3._linear_coeff_match(eq3, f(x)) == ans
 
     # no c
     eq4 = (3*x)/f(x)
+    obj4 = LinearCoefficients(eq4)
     # not x and f(x)
     eq5 = (3*x + 2)/x
+    obj5 = LinearCoefficients(eq5)
     # denom will be zero
     eq6 = (3*x + 2*f(x) + 1)/(3*x + 2*f(x) + 5)
+    obj6 = LinearCoefficients(eq6)
     # not rational coefficient
     eq7 = (3*x + 2*f(x) + sqrt(2))/(3*x + 2*f(x) + 5)
-    assert _linear_coeff_match(eq4, f(x)) is None
-    assert _linear_coeff_match(eq5, f(x)) is None
-    assert _linear_coeff_match(eq6, f(x)) is None
-    assert _linear_coeff_match(eq7, f(x)) is None
+    obj7 = LinearCoefficients(eq7)
+    assert obj4._linear_coeff_match(eq4, f(x)) is None
+    assert obj5._linear_coeff_match(eq5, f(x)) is None
+    assert obj6._linear_coeff_match(eq6, f(x)) is None
+    assert obj7._linear_coeff_match(eq7, f(x)) is None
 
 
 def test_constantsimp_take_problem():
@@ -874,9 +895,11 @@ def test_2nd_power_series_ordinary():
     assert checkodesol(eq, sol) == (True, 0)
 
     eq = (1 + x**2)*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) -2*f(x)
-    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert classify_ode(eq) == ('2nd_hypergeometric', '2nd_hypergeometric_Integral',
+    '2nd_power_series_ordinary')
+
     sol = Eq(f(x), C2*(-x**4/3 + x**2 + 1) + C1*x + O(x**6))
-    assert dsolve(eq) == sol
+    assert dsolve(eq, hint='2nd_power_series_ordinary') == sol
     assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) + x*(f(x).diff(x)) + f(x)
@@ -902,7 +925,7 @@ def test_2nd_power_series_ordinary():
 
 
 def test_2nd_power_series_regular():
-    C1, C2 = symbols("C1 C2")
+    C1, C2, a = symbols("C1 C2 a")
     eq = x**2*(f(x).diff(x, 2)) - 3*x*(f(x).diff(x)) + (4*x + 4)*f(x)
     sol = Eq(f(x), C1*x**2*(-16*x**3/9 + 4*x**2 - 4*x + 1) + O(x**6))
     assert dsolve(eq, hint='2nd_power_series_regular') == sol
@@ -925,6 +948,18 @@ def test_2nd_power_series_regular():
     sol = Eq(f(x), C1*(x**4/24 - x**2/2 + 1)/sqrt(x) +
         C2*sqrt(x)*(x**4/120 - x**2/6 + 1) + O(x**6))
     assert dsolve(eq, hint='2nd_power_series_regular') == sol
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = x*f(x).diff(x, 2) + f(x).diff(x) - a*x*f(x)
+    sol = Eq(f(x), C1*(a**2*x**4/64 + a*x**2/4 + 1) + O(x**6))
+    assert dsolve(eq, f(x), hint="2nd_power_series_regular") == sol
+    assert checkodesol(eq, sol) == (True, 0)
+
+    eq = f(x).diff(x, 2) + ((1 - x)/x)*f(x).diff(x) + (a/x)*f(x)
+    sol = Eq(f(x), C1*(-a*x**5*(a - 4)*(a - 3)*(a - 2)*(a - 1)/14400 + \
+        a*x**4*(a - 3)*(a - 2)*(a - 1)/576 - a*x**3*(a - 2)*(a - 1)/36 + \
+        a*x**2*(a - 1)/4 - a*x + 1) + O(x**6))
+    assert dsolve(eq, f(x), hint="2nd_power_series_regular") == sol
     assert checkodesol(eq, sol) == (True, 0)
 
 

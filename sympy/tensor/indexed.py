@@ -159,7 +159,7 @@ class Indexed(Expr):
                 items (i.e. an object with a `__getitem__` method).
                 """))
         args = list(map(sympify, args))
-        if isinstance(base, (NDimArray, Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
+        if isinstance(base, (NDimArray, Iterable, Tuple, MatrixBase)) and all(i.is_number for i in args):
             if len(args) == 1:
                 return base[args[0]]
             else:
@@ -350,6 +350,10 @@ class Indexed(Expr):
 
     @property
     def expr_free_symbols(self):
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        SymPyDeprecationWarning(feature="expr_free_symbols method",
+                                issue=21494,
+                                deprecated_since_version="1.9").warn()
         return {self}
 
 

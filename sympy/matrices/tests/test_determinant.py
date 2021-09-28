@@ -4,22 +4,32 @@ from sympy import symbols, Symbol, Rational, sqrt, Poly
 from sympy.matrices import Matrix, eye, ones
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
-from sympy.matrices.matrices import MatrixDeterminant
-from sympy.matrices.common import NonSquareMatrixError, _MinimalMatrix,  _CastableMatrix
+from sympy.matrices.common import NonSquareMatrixError
 from sympy.functions.combinatorial.factorials import factorial, subfactorial
 
-class DeterminantOnlyMatrix(_MinimalMatrix, _CastableMatrix, MatrixDeterminant):
-    pass
 
 def test_determinant():
+    M = Matrix()
 
-    for M in [Matrix(), Matrix([[1]])]:
-        assert (
-            M.det() ==
-            M._eval_det_bareiss() ==
-            M._eval_det_berkowitz() ==
-            M._eval_det_lu() ==
-            1)
+    assert M.det() == 1
+    # Evaluating these directly because they are never reached via M.det()
+    assert M._eval_det_bareiss() == 1
+    assert M._eval_det_berkowitz() == 1
+    assert M._eval_det_lu() == 1
+
+    M = Matrix([ [0] ])
+
+    assert M.det() == 0
+    assert M._eval_det_bareiss() == 0
+    assert M._eval_det_berkowitz() == 0
+    assert M._eval_det_lu() == 0
+
+    M = Matrix([ [5] ])
+
+    assert M.det() == 5
+    assert M._eval_det_bareiss() == 5
+    assert M._eval_det_berkowitz() == 5
+    assert M._eval_det_lu() == 5
 
     M = Matrix(( (-3,  2),
                  ( 8, -5) ))
@@ -251,13 +261,13 @@ def test_legacy_det():
     assert M.det(method="LU") == 123
 
 def eye_Determinant(n):
-    return DeterminantOnlyMatrix(n, n, lambda i, j: int(i == j))
+    return Matrix(n, n, lambda i, j: int(i == j))
 
 def zeros_Determinant(n):
-    return DeterminantOnlyMatrix(n, n, lambda i, j: 0)
+    return Matrix(n, n, lambda i, j: 0)
 
 def test_det():
-    a = DeterminantOnlyMatrix(2, 3, [1, 2, 3, 4, 5, 6])
+    a = Matrix(2, 3, [1, 2, 3, 4, 5, 6])
     raises(NonSquareMatrixError, lambda: a.det())
 
     z = zeros_Determinant(2)
@@ -266,16 +276,16 @@ def test_det():
     assert ey.det() == 1
 
     x = Symbol('x')
-    a = DeterminantOnlyMatrix(0, 0, [])
-    b = DeterminantOnlyMatrix(1, 1, [5])
-    c = DeterminantOnlyMatrix(2, 2, [1, 2, 3, 4])
-    d = DeterminantOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 8])
-    e = DeterminantOnlyMatrix(4, 4,
+    a = Matrix(0, 0, [])
+    b = Matrix(1, 1, [5])
+    c = Matrix(2, 2, [1, 2, 3, 4])
+    d = Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 8])
+    e = Matrix(4, 4,
         [x, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
     from sympy.abc import i, j, k, l, m, n
-    f = DeterminantOnlyMatrix(3, 3, [i, l, m, 0, j, n, 0, 0, k])
-    g = DeterminantOnlyMatrix(3, 3, [i, 0, 0, l, j, 0, m, n, k])
-    h = DeterminantOnlyMatrix(3, 3, [x**3, 0, 0, i, x**-1, 0, j, k, x**-2])
+    f = Matrix(3, 3, [i, l, m, 0, j, n, 0, 0, k])
+    g = Matrix(3, 3, [i, 0, 0, l, j, 0, m, n, k])
+    h = Matrix(3, 3, [x**3, 0, 0, i, x**-1, 0, j, k, x**-2])
     # the method keyword for `det` doesn't kick in until 4x4 matrices,
     # so there is no need to test all methods on smaller ones
 
@@ -305,7 +315,7 @@ def test_permanent():
 
 def test_adjugate():
     x = Symbol('x')
-    e = DeterminantOnlyMatrix(4, 4,
+    e = Matrix(4, 4,
         [x, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
 
     adj = Matrix([
@@ -317,7 +327,7 @@ def test_adjugate():
     assert e.adjugate(method='bareiss') == adj
     assert e.adjugate(method='berkowitz') == adj
 
-    a = DeterminantOnlyMatrix(2, 3, [1, 2, 3, 4, 5, 6])
+    a = Matrix(2, 3, [1, 2, 3, 4, 5, 6])
     raises(NonSquareMatrixError, lambda: a.adjugate())
 
 def test_util():
@@ -341,7 +351,7 @@ def test_util():
 
 def test_cofactor_and_minors():
     x = Symbol('x')
-    e = DeterminantOnlyMatrix(4, 4,
+    e = Matrix(4, 4,
         [x, 1, 2, 3, 4, 5, 6, 7, 2, 9, 10, 11, 12, 13, 14, 14])
 
     m = Matrix([
@@ -370,11 +380,11 @@ def test_cofactor_and_minors():
     raises(ValueError, lambda: e.minor(4, 5))
     raises(ValueError, lambda: e.minor_submatrix(4, 5))
 
-    a = DeterminantOnlyMatrix(2, 3, [1, 2, 3, 4, 5, 6])
+    a = Matrix(2, 3, [1, 2, 3, 4, 5, 6])
     assert a.minor_submatrix(0, 0) == Matrix([[5, 6]])
 
     raises(ValueError, lambda:
-        DeterminantOnlyMatrix(0, 0, []).minor_submatrix(0, 0))
+        Matrix(0, 0, []).minor_submatrix(0, 0))
     raises(NonSquareMatrixError, lambda: a.cofactor(0, 0))
     raises(NonSquareMatrixError, lambda: a.minor(0, 0))
     raises(NonSquareMatrixError, lambda: a.cofactor_matrix())
@@ -385,17 +395,17 @@ def test_charpoly():
 
     from sympy.abc import a,b,c
 
-    m = DeterminantOnlyMatrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
+    m = Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])
 
     assert eye_Determinant(3).charpoly(x) == Poly((x - 1)**3, x)
     assert eye_Determinant(3).charpoly(y) == Poly((y - 1)**3, y)
     assert m.charpoly() == Poly(x**3 - 15*x**2 - 18*x, x)
     raises(NonSquareMatrixError, lambda: Matrix([[1], [2]]).charpoly())
-    n = DeterminantOnlyMatrix(4, 4, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    n = Matrix(4, 4, [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
     assert n.charpoly() == Poly(x**4, x)
 
-    n = DeterminantOnlyMatrix(4, 4, [45, 0, 0, 0, 0, 23, 0, 0, 0, 0, 87, 0, 0, 0, 0, 12])
+    n = Matrix(4, 4, [45, 0, 0, 0, 0, 23, 0, 0, 0, 0, 87, 0, 0, 0, 0, 12])
     assert n.charpoly() == Poly(x**4 - 167*x**3 + 8811*x**2 - 173457*x + 1080540, x)
 
-    n = DeterminantOnlyMatrix(3, 3, [x, 0, 0, a, y, 0, b, c, z])
+    n = Matrix(3, 3, [x, 0, 0, a, y, 0, b, c, z])
     assert n.charpoly() == Poly(t**3 - (x+y+z)*t**2 + t*(x*y+y*z+x*z) - x*y*z , t)

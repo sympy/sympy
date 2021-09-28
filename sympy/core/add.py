@@ -493,6 +493,7 @@ class Add(Expr, AssocOp):
                     c = [sign(i) if i in bigs else i/big for i in c]
                     addpow = Add(*[c*m for c, m in zip(c, m)])**e
                     return big**e*addpow
+
     @cacheit
     def _eval_derivative(self, s):
         return self.func(*[a.diff(s) for a in self.args])
@@ -508,7 +509,7 @@ class Add(Expr, AssocOp):
             return terms[0].matches(expr - coeff, repl_dict)
         return
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict=None, old=False):
         return self._matches_commutative(expr, repl_dict, old)
 
     @staticmethod
@@ -526,14 +527,16 @@ class Add(Expr, AssocOp):
                 S.Infinity: oo,
                 S.NegativeInfinity: -oo}
             ireps = {v: k for k, v in reps.items()}
-            eq = signsimp(lhs.xreplace(reps) - rhs.xreplace(reps))
+            eq = lhs.xreplace(reps) - rhs.xreplace(reps)
             if eq.has(oo):
                 eq = eq.replace(
                     lambda x: x.is_Pow and x.base is oo,
                     lambda x: x.base)
-            return eq.xreplace(ireps)
+            rv = eq.xreplace(ireps)
         else:
-            return signsimp(lhs - rhs)
+            rv = lhs - rhs
+        srv = signsimp(rv)
+        return srv if srv.is_Number else rv
 
     @cacheit
     def as_two_terms(self):
@@ -977,18 +980,29 @@ class Add(Expr, AssocOp):
             im_part.append(im)
         return (self.func(*re_part), self.func(*im_part))
 
-    def _eval_as_leading_term(self, x, cdir=0):
-        from sympy import expand_mul, Order
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy import expand_mul, Order, Piecewise, piecewise_fold, log
 
         old = self
 
-        expr = expand_mul(self)
+        if old.has(Piecewise):
+            old = piecewise_fold(old)
+
+        # This expansion is the last part of expand_log. expand_log also calls
+        # expand_mul with factor=True, which would be more expensive
+        if any(isinstance(a, log) for a in self.args):
+            logflags = dict(deep=True, log=True, mul=False, power_exp=False,
+                power_base=False, multinomial=False, basic=False, force=False,
+                factor=False)
+            old = old.expand(**logflags)
+        expr = expand_mul(old)
+
         if not expr.is_Add:
-            return expr.as_leading_term(x, cdir=cdir)
+            return expr.as_leading_term(x, logx=logx, cdir=cdir)
 
         infinite = [t for t in expr.args if t.is_infinite]
 
-        leading_terms = [t.as_leading_term(x, cdir=cdir) for t in expr.args]
+        leading_terms = [t.as_leading_term(x, logx=logx, cdir=cdir) for t in expr.args]
 
         min, new_expr = Order(0), 0
 
@@ -1004,11 +1018,11 @@ class Add(Expr, AssocOp):
         except TypeError:
             return expr
 
-        new_expr=new_expr.together()
-        if new_expr.is_Add:
-            new_expr = new_expr.simplify()
-
-        if not new_expr:
+        is_zero = new_expr.is_zero
+        if is_zero is None:
+            new_expr = new_expr.trigsimp().cancel()
+            is_zero = new_expr.is_zero
+        if is_zero is True:
             # simple leading term analysis gave us cancelled terms but we have to send
             # back a term, so compute the leading term (via series)
             n0 = min.getn()
@@ -1017,7 +1031,7 @@ class Add(Expr, AssocOp):
             while res.is_Order:
                 res = old._eval_nseries(x, n=n0+incr, logx=None, cdir=cdir).cancel().powsimp().trigsimp()
                 incr *= 2
-            return res.as_leading_term(x, cdir=cdir)
+            return res.as_leading_term(x, logx=logx, cdir=cdir)
 
         elif new_expr is S.NaN:
             return old.func._from_args(infinite)
@@ -1033,12 +1047,6 @@ class Add(Expr, AssocOp):
 
     def _eval_transpose(self):
         return self.func(*[t.transpose() for t in self.args])
-
-    def _sage_(self):
-        s = 0
-        for x in self.args:
-            s += x._sage_()
-        return s
 
     def primitive(self):
         """

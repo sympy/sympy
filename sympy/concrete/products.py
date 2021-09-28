@@ -98,7 +98,7 @@ class Product(ExprWithIntLimits):
     Product(4*i**2/((2*i - 1)*(2*i + 1)), (i, 1, n))
     >>> W2e = W2.doit()
     >>> W2e
-    2**(-2*n)*4**n*factorial(n)**2/(RisingFactorial(1/2, n)*RisingFactorial(3/2, n))
+    4**n*factorial(n)**2/(2**(2*n)*RisingFactorial(1/2, n)*RisingFactorial(3/2, n))
     >>> limit(W2e, n, oo)
     pi/2
 
@@ -255,7 +255,7 @@ class Product(ExprWithIntLimits):
         if reps:
             undo = {v: k for k, v in reps.items()}
             did = self.xreplace(reps).doit(**hints)
-            if type(did) is tuple:  # when separate=True
+            if isinstance(did, tuple):  # when separate=True
                 did = tuple([i.xreplace(undo) for i in did])
             else:
                 did = did.xreplace(undo)

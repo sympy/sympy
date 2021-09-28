@@ -27,6 +27,9 @@ def test_construct_domain():
     assert isinstance(result[0], ComplexField)
     assert result[1] == [CC(3.14), CC(1.0j), CC(0.5)]
 
+    assert construct_domain([1.0+I]) == (CC, [CC(1.0, 1.0)])
+    assert construct_domain([2.0+3.0*I]) == (CC, [CC(2.0, 3.0)])
+
     assert construct_domain([1, I]) == (ZZ_I, [ZZ_I(1, 0), ZZ_I(0, 1)])
     assert construct_domain([1, I/2]) == (QQ_I, [QQ_I(1, 0), QQ_I(0, S.Half)])
 

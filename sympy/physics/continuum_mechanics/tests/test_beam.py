@@ -5,6 +5,7 @@ from sympy.testing.pytest import raises
 from sympy.physics.units import meter, newton, kilo, giga, milli
 from sympy.physics.continuum_mechanics.beam import Beam3D
 from sympy.geometry import Circle, Polygon, Point2D, Triangle
+from sympy import sympify
 
 x = Symbol('x')
 y = Symbol('y')
@@ -582,9 +583,9 @@ def test_Beam3D():
     assert b2.reaction_loads == {R1: -750, R2: -750}
 
     b2.solve_slope_deflection()
-    assert b2.slope() == [0, 0, x**2*(50*x - 2250)/(6*E*I) + 3750*x/(E*I)]
-    expected_deflection = (x*(25*A*G*x**3/2 - 750*A*G*x**2 + 4500*E*I +
-        15*x*(750*A*G - 10*E*I))/(6*A*E*G*I))
+    assert b2.slope() == [0, 0, 25*x**3/(3*E*I) - 375*x**2/(E*I) + 3750*x/(E*I)]
+    expected_deflection = 25*x**4/(12*E*I) - 125*x**3/(E*I) + 1875*x**2/(E*I) - \
+        25*x**2/(A*G) + 750*x/(A*G)
     dx, dy, dz = b2.deflection()
     assert dx == dz == 0
     assert dy == expected_deflection
@@ -733,3 +734,31 @@ def test_cross_section():
     assert b.slope().subs(x, 7) == 8400/(E*a*c**3)
     assert b.slope().subs(x, 25) == 52200/(E*g*h**3) + 39600/(E*a*c**3)
     assert b.deflection().subs(x, 30) == -537000/(E*g*h**3) - 712000/(E*a*c**3)
+
+def test_max_shear_force_Beam3D():
+    x = symbols('x')
+    b = Beam3D(20, 40, 21, 100, 25)
+    b.apply_load(15, start=0, order=0, dir="z")
+    b.apply_load(12*x, start=0, order=0, dir="y")
+    b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+    assert b.max_shear_force() == [(0, 0), (20, 2400), (20, 300)]
+
+def test_max_bending_moment_Beam3D():
+    x = symbols('x')
+    b = Beam3D(20, 40, 21, 100, 25)
+    b.apply_load(15, start=0, order=0, dir="z")
+    b.apply_load(12*x, start=0, order=0, dir="y")
+    b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+    assert b.max_bmoment() == [(0, 0), (20, 3000), (20, 16000)]
+
+def test_max_deflection_Beam3D():
+    x = symbols('x')
+    b = Beam3D(20, 40, 21, 100, 25)
+    b.apply_load(15, start=0, order=0, dir="z")
+    b.apply_load(12*x, start=0, order=0, dir="y")
+    b.bc_deflection = [(0, [0, 0, 0]), (20, [0, 0, 0])]
+    b.solve_slope_deflection()
+    c = sympify("495/14")
+    p = sympify("-10 + 10*sqrt(10793)/43")
+    q = sympify("(10 - 10*sqrt(10793)/43)**3/160 - 20/7 + (10 - 10*sqrt(10793)/43)**4/6400 + 20*sqrt(10793)/301 + 27*(10 - 10*sqrt(10793)/43)**2/560")
+    assert b.max_deflection() == [(0, 0), (10, c), (p, q)]

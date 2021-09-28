@@ -1,6 +1,6 @@
 """Tests for efficient functions for generating orthogonal polynomials. """
 
-from sympy import Poly, S, Rational as Q
+from sympy import Poly, S, Rational as Q, symbols
 from sympy.testing.pytest import raises
 
 from sympy.polys.orthopolys import (
@@ -11,6 +11,7 @@ from sympy.polys.orthopolys import (
     hermite_poly,
     legendre_poly,
     laguerre_poly,
+    spherical_bessel_fn,
 )
 
 from sympy.abc import x, a, b
@@ -141,3 +142,11 @@ def test_laguerre_poly():
 
     assert laguerre_poly(1).dummy_eq(-x + 1)
     assert laguerre_poly(1, polys=True) == Poly(-x + 1)
+
+
+def test_spherical_bessel_fn():
+    x, z = symbols("x z")
+    assert spherical_bessel_fn(1, z) == 1/z**2
+    assert spherical_bessel_fn(2, z) == -1/z + 3/z**3
+    assert spherical_bessel_fn(3, z) == -6/z**2 + 15/z**4
+    assert spherical_bessel_fn(4, z) == 1/z - 45/z**3 + 105/z**5

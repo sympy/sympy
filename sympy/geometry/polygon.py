@@ -1,5 +1,6 @@
 from sympy.core import Expr, S, Symbol, oo, pi, sympify
 from sympy.core.compatibility import as_int, ordered
+from sympy.core.evalf import prec_to_dps
 from sympy.core.symbol import _symbol, Dummy, symbols
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
@@ -498,8 +499,6 @@ class Polygon(GeometrySet):
 
         h_poly = self.cut_section(h_line)
         v_poly = self.cut_section(v_line)
-
-        x_min, y_min, x_max, y_max = self.bounds
 
         poly_1 = h_poly[0] if h_poly[0].area <= h_poly[1].area else h_poly[1]
         poly_2 = v_poly[0] if v_poly[0].area <= v_poly[1].area else v_poly[1]
@@ -1487,6 +1486,12 @@ class RegularPolygon(Polygon):
         obj._radius = r
         obj._rot = rot % (2*S.Pi/n) if rot.is_number else rot
         return obj
+
+    def _eval_evalf(self, prec=15, **options):
+        c, r, n, a = self.args
+        dps = prec_to_dps(prec)
+        c, r, a = [i.evalf(n=dps, **options) for i in (c, r, a)]
+        return self.func(c, r, n, a)
 
     @property
     def args(self):

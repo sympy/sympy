@@ -119,16 +119,16 @@ debug this function to figure out the exact problem.
 from functools import reduce
 
 from sympy import cacheit
-from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul
+from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul, PoleError
 
 from sympy.functions import log, exp
 from sympy.series.order import Order
+from sympy.simplify import logcombine
 from sympy.simplify.powsimp import powsimp, powdenest
 
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
 timeit = timethis('gruntz')
-
 
 
 def compare(a, b, x):
@@ -313,7 +313,6 @@ def mrv(e, x):
     elif e.is_Derivative:
         raise NotImplementedError("MRV set computation for derviatives"
                                   " not implemented yet.")
-        return mrv(e.args[0], x)
     raise NotImplementedError(
         "Don't know how to calculate the mrv of '%s'" % e)
 
@@ -391,6 +390,7 @@ def sign(e, x):
         return 0
 
     elif not e.has(x):
+        e = logcombine(e)
         return _sign(e)
     elif e == x:
         return 1
@@ -487,14 +487,19 @@ def calculate_series(e, x, logx=None):
     This is a place that fails most often, so it is in its own function.
     """
     from sympy.polys import cancel
+    from sympy.simplify import bottom_up
 
     for t in e.lseries(x, logx=logx):
-        t = cancel(t)
+        # bottom_up function is required for a specific case - when e is
+        # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p). No current simplification
+        # methods reduce this to 0 while not expanding polynomials.
+        t = bottom_up(t, lambda w: getattr(w, 'normal', lambda: w)())
+        t = cancel(t, expand=False).factor()
 
         if t.has(exp) and t.has(log):
             t = powdenest(t)
 
-        if t.simplify():
+        if not t.is_zero:
             break
 
     return t
@@ -516,10 +521,8 @@ def mrv_leadterm(e, x):
     if x in Omega:
         # move the whole omega up (exponentiate each term):
         Omega_up = moveup2(Omega, x)
-        e_up = moveup([e], x)[0]
         exps_up = moveup([exps], x)[0]
         # NOTE: there is no need to move this down!
-        e = e_up
         Omega = Omega_up
         exps = exps_up
     #
@@ -532,7 +535,18 @@ def mrv_leadterm(e, x):
     w = Dummy("w", real=True, positive=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
-    return series.leadterm(w)
+    try:
+        lt = series.leadterm(w, logx=logw)
+    except (ValueError, PoleError):
+        lt = f.as_coeff_exponent(w)
+        # as_coeff_exponent won't always split in required form. It may simply
+        # return (f, 0) when a better form may be obtained. Example (-x)**(-pi)
+        # can be written as (-1**(-pi), -pi) which as_coeff_exponent does not return
+        if lt[0].has(w):
+            base = f.as_base_exp()[0].as_coeff_exponent(w)
+            ex = f.as_base_exp()[1]
+            lt = (base[0]**ex, base[1]*ex)
+    return (lt[0].subs(log(w), logw), lt[1])
 
 
 def build_expression_tree(Omega, rewrites):
@@ -551,13 +565,16 @@ def build_expression_tree(Omega, rewrites):
     This function builds the tree, rewrites then sorts the nodes.
     """
     class Node:
+        def __init__(self):
+            self.before = []
+            self.expr = None
+            self.var = None
         def ht(self):
             return reduce(lambda x, y: x + y,
                           [x.ht() for x in self.before], 1)
     nodes = {}
     for expr, v in Omega:
         n = Node()
-        n.before = []
         n.var = v
         n.expr = expr
         nodes[v] = n

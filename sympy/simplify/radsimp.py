@@ -9,7 +9,7 @@ from sympy.core.parameters import global_parameters
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.function import _mexpand
 from sympy.core.mul import _keep_coeff, _unevaluated_Mul
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, zoo, nan
 from sympy.functions import exp, sqrt, log
 from sympy.functions.elementary.complexes import Abs
 from sympy.polys import gcd
@@ -32,7 +32,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     will be searched for in the expression's terms.
 
     The input expression is not expanded by :func:`collect`, so user is
-    expected to provide an expression is an appropriate form. This makes
+    expected to provide an expression in an appropriate form. This makes
     :func:`collect` more predictable as there is no magic happening behind the
     scenes. However, it is important to note, that powers of products are
     converted to products of powers using the :func:`~.expand_power_base`
@@ -952,7 +952,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
                 # in general, only 4 terms can be removed with repeated squaring
                 # but other considerations can guide selection of radical terms
                 # so that radicals are removed
-                if all([x.is_Integer and (y**2).is_Rational for x, y in rterms]):
+                if all(x.is_Integer and (y**2).is_Rational for x, y in rterms):
                     nd, d = rad_rationalize(S.One, Add._from_args(
                         [sqrt(x)*y for x, y in rterms]))
                     n *= nd
@@ -966,6 +966,8 @@ def radsimp(expr, symbolic=True, max_terms=4):
             n *= num
             d *= num
             d = powdenest(_mexpand(d), force=symbolic)
+            if d.has(S.Zero, nan, zoo):
+                return expr
             if d.is_Atom:
                 break
 

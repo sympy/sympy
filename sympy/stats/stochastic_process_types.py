@@ -96,7 +96,7 @@ def _state_converter(itr: tSequence) -> tUnion[Tuple, Range]:
         # try to convert to tuple
         try:
             itr = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
-        except ValueError:
+        except (TypeError, ValueError):
             pass
 
     else:
@@ -448,7 +448,7 @@ class MarkovProcess(StochasticProcess):
 
         # `not None` is `True`. So the old test fails for symbolic sizes.
         # Need to build the statement differently.
-        sym_cond = not isinstance(self.number_of_states, (int, Integer))
+        sym_cond = not self.number_of_states.is_Integer
         cond1 = not sym_cond and len(state_index) != trans_probs.shape[0]
         if cond1:
             raise ValueError("state space is not compatible with the transition probabilities.")
@@ -471,8 +471,8 @@ class MarkovProcess(StochasticProcess):
 
         # given_condition does not have sufficient information
         # for computations
-        if trans_probs == None or \
-            given_condition == None:
+        if trans_probs is None or \
+            given_condition is None:
             is_insufficient = True
         else:
             # checking transition probabilities
@@ -579,16 +579,16 @@ class MarkovProcess(StochasticProcess):
                 s = Rational(0, 1)
                 n = len(self.state_space)
 
-                if isinstance(condition, Eq) or isinstance(condition, Ne):
+                if isinstance(condition, (Eq, Ne)):
                     for i in range(0, n):
                         s += self.probability(Eq(rv[0], i), Eq(rv[1], i)) * self.probability(Eq(rv[1], i), new_given_condition)
                     return s if isinstance(condition, Eq) else 1 - s
                 else:
                     upper = 0
                     greater = False
-                    if isinstance(condition, Ge) or isinstance(condition, Lt):
+                    if isinstance(condition, (Ge, Lt)):
                         upper = 1
-                    if isinstance(condition, Gt) or isinstance(condition, Ge):
+                    if isinstance(condition, (Ge, Gt)):
                         greater = True
 
                     for i in range(0, n):
@@ -617,11 +617,11 @@ class MarkovProcess(StochasticProcess):
                         _, gstate = (gc.lhs.key, gc.rhs) if isinstance(gc.lhs, RandomIndexedSymbol) \
                                     else (gc.rhs.key, gc.lhs)
 
-            if any((k not in self.index_set) for k in (rv.key, min_key_rv.key)):
+            if not all(k in self.index_set for k in (rv.key, min_key_rv.key)):
                 raise IndexError("The timestamps of the process are not in it's index set.")
             states = Intersection(states, state_index) if not isinstance(self.number_of_states, Symbol) else states
             for state in Union(states, FiniteSet(gstate)):
-                if not isinstance(state, (int, Integer)) or Ge(state, mat.shape[0]) is True:
+                if not state.is_Integer or Ge(state, mat.shape[0]) is True:
                     raise IndexError("No information is available for (%s, %s) in "
                         "transition probabilities of shape, (%s, %s). "
                         "State space is zero indexed."
@@ -701,7 +701,7 @@ class MarkovProcess(StochasticProcess):
             next_state = condition.rhs if isinstance(condition.lhs, RandomIndexedSymbol) \
                 else condition.lhs
 
-            if isinstance(condition, Eq) or isinstance(condition, Ne):
+            if isinstance(condition, (Eq, Ne)):
                 if isinstance(self, DiscreteMarkovChain):
                     P = self.transition_probabilities**(rv[0].key - min_key_rv.key)
                 else:
@@ -711,9 +711,9 @@ class MarkovProcess(StochasticProcess):
             else:
                 upper = 1
                 greater = False
-                if isinstance(condition, Ge) or isinstance(condition, Lt):
+                if isinstance(condition, (Ge, Lt)):
                     upper = 0
-                if isinstance(condition, Gt) or isinstance(condition, Ge):
+                if isinstance(condition, (Ge, Gt)):
                     greater = True
                 k = Dummy('k')
                 condition = Eq(condition.lhs, k) if isinstance(condition.lhs, RandomIndexedSymbol)\
@@ -816,7 +816,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> YS = DiscreteMarkovChain("Y")
 
     >>> Y.state_space
-    FiniteSet(0, 1, 2)
+    {0, 1, 2}
     >>> Y.transition_probabilities
     Matrix([
     [0.5, 0.2, 0.3],
@@ -1489,7 +1489,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     >>> C.limiting_distribution()
     Matrix([[1/2, 1/2]])
     >>> C.state_space
-    FiniteSet(0, 1)
+    {0, 1}
     >>> C.generator_matrix
     Matrix([
     [-1,  1],
@@ -1572,7 +1572,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
 
     def limiting_distribution(self):
         gen_mat = self.generator_matrix
-        if gen_mat == None:
+        if gen_mat is None:
             return None
         if isinstance(gen_mat, MatrixSymbol):
             wm = MatrixSymbol('wm', 1, gen_mat.shape[0])
@@ -1613,7 +1613,7 @@ class BernoulliProcess(DiscreteTimeStochasticProcess):
     >>> from sympy import Eq, Gt
     >>> B = BernoulliProcess("B", p=0.7, success=1, failure=0)
     >>> B.state_space
-    FiniteSet(0, 1)
+    {0, 1}
     >>> (B.p).round(2)
     0.70
     >>> B.success
@@ -1839,7 +1839,7 @@ class _SubstituteRV:
             if len(condrv) == 1 and condrv[0] == new_givencondition:
                 return BernoulliDistribution(self._probability(new_condition), 0, 1)
 
-            if any([dependent(rv, new_givencondition) for rv in condrv]):
+            if any(dependent(rv, new_givencondition) for rv in condrv):
                 return Probability(new_condition, new_givencondition)
             else:
                 return self._probability(new_condition)
@@ -2046,7 +2046,7 @@ class CountingProcess(ContinuousTimeStochasticProcess):
 
     def probability(self, condition, given_condition=None, evaluate=True, **kwargs):
         """
-        Computes probability
+        Computes probability.
 
         Parameters
         ==========

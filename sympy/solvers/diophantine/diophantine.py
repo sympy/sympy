@@ -470,7 +470,7 @@ class BinaryQuadratic(DiophantineEquationType):
     .. [1] Methods to solve Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0, [online],
           Available: http://www.alpertron.com.ar/METHODS.HTM
     .. [2] Solving the equation ax^2+ bxy + cy^2 + dx + ey + f= 0, [online],
-          Available: http://www.jpr2718.org/ax2p.pdf
+          Available: https://web.archive.org/web/20160323033111/http://www.jpr2718.org/ax2p.pdf
 
     """
 
@@ -570,7 +570,7 @@ class BinaryQuadratic(DiophantineEquationType):
 
         # (3) Method used when B**2 - 4*A*C is a square, is described in p. 6 of the below paper
         # by John P. Robertson.
-        # http://www.jpr2718.org/ax2p.pdf
+        # https://web.archive.org/web/20160323033111/http://www.jpr2718.org/ax2p.pdf
 
         elif is_square(discr):
             if A != 0:
@@ -1430,7 +1430,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                         except KeyError:
                             coeff = 0
                         x_coeff = bool(x_coeff) and bool(coeff)
-                    if not any([xy_coeff, x_coeff]):
+                    if not any((xy_coeff, x_coeff)):
                         # means only x**2, y**2, z**2, const is present
                         do_permute_signs = True
                     elif not x_coeff:
@@ -1455,7 +1455,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
                         except KeyError:
                             coeff = 0
                         x_coeff = bool(x_coeff) and bool(coeff)
-                    if not any([xy_coeff, x_coeff]):
+                    if not any((xy_coeff, x_coeff)):
                         # means only x**2, y**2 and const is present
                         # so we can get more soln by permuting this soln.
                         do_permute_signs = True
@@ -1923,7 +1923,7 @@ def diop_quadratic(eq, param=symbols("t", integer=True)):
     .. [1] Methods to solve Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0, [online],
           Available: http://www.alpertron.com.ar/METHODS.HTM
     .. [2] Solving the equation ax^2+ bxy + cy^2 + dx + ey + f= 0, [online],
-          Available: http://www.jpr2718.org/ax2p.pdf
+          Available: https://web.archive.org/web/20160323033111/http://www.jpr2718.org/ax2p.pdf
 
     See Also
     ========
@@ -2006,7 +2006,7 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
 
     .. [1] Solving the generalized Pell equation x**2 - D*y**2 = N, John P.
         Robertson, July 31, 2004, Pages 16 - 17. [online], Available:
-        http://www.jpr2718.org/pell.pdf
+        https://web.archive.org/web/20160323033128/http://www.jpr2718.org/pell.pdf
     """
     if D < 0:
         if N == 0:
@@ -2349,7 +2349,7 @@ def PQa(P_0, Q_0, D):
     ==========
 
     .. [1] Solving the generalized Pell equation x^2 - Dy^2 = N, John P.
-        Robertson, July 31, 2004, Pages 4 - 8. http://www.jpr2718.org/pell.pdf
+        Robertson, July 31, 2004, Pages 4 - 8. https://web.archive.org/web/20160323033128/http://www.jpr2718.org/pell.pdf
     """
     A_i_2 = B_i_1 = 0
     A_i_1 = B_i_2 = 1
@@ -2420,7 +2420,7 @@ def diop_bf_DN(D, N, t=symbols("t", integer=True)):
     ==========
 
     .. [1] Solving the generalized Pell equation x**2 - D*y**2 = N, John P.
-        Robertson, July 31, 2004, Page 15. http://www.jpr2718.org/pell.pdf
+        Robertson, July 31, 2004, Page 15. https://web.archive.org/web/20160323033128/http://www.jpr2718.org/pell.pdf
     """
     D = as_int(D)
     N = as_int(N)
@@ -2501,7 +2501,7 @@ def equivalent(u, v, r, s, D, N):
     ==========
 
     .. [1] Solving the generalized Pell equation x**2 - D*y**2 = N, John P.
-        Robertson, July 31, 2004, Page 12. http://www.jpr2718.org/pell.pdf
+        Robertson, July 31, 2004, Page 12. https://web.archive.org/web/20160323033128/http://www.jpr2718.org/pell.pdf
 
     """
     return divisible(u*r - D*v*s, N) and divisible(u*s - v*r, N)
@@ -2627,7 +2627,7 @@ def transformation_to_DN(eq):
 
     .. [1] Solving the equation ax^2 + bxy + cy^2 + dx + ey + f = 0,
            John P.Robertson, May 8, 2003, Page 7 - 11.
-           http://www.jpr2718.org/ax2p.pdf
+           https://web.archive.org/web/20160323033111/http://www.jpr2718.org/ax2p.pdf
     """
 
     var, coeff, diop_type = classify_diop(eq, _dict=False)
@@ -2723,7 +2723,7 @@ def find_DN(eq):
 
     .. [1] Solving the equation ax^2 + bxy + cy^2 + dx + ey + f = 0,
            John P.Robertson, May 8, 2003, Page 7 - 11.
-           http://www.jpr2718.org/ax2p.pdf
+           https://web.archive.org/web/20160323033111/http://www.jpr2718.org/ax2p.pdf
     """
     var, coeff, diop_type = classify_diop(eq, _dict=False)
     if diop_type == BinaryQuadratic.name:

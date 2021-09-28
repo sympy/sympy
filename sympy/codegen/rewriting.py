@@ -12,8 +12,8 @@ expressions for this purpose::
     >>> x = Symbol('x')
     >>> optimize(3*exp(2*x) - 3, optims_c99)
     3*expm1(2*x)
-    >>> optimize(exp(2*x) - 3, optims_c99)
-    exp(2*x) - 3
+    >>> optimize(exp(2*x) - 1 - exp(-33), optims_c99)
+    expm1(2*x) - exp(-33)
     >>> optimize(log(3*x + 3), optims_c99)
     log1p(x) + log(3)
     >>> optimize(log(2*x + 3), optims_c99)
@@ -30,8 +30,7 @@ The ``optims_c99`` imported above is tuple containing the following instances
 
 
 """
-from itertools import chain
-from sympy import cos, exp, log, Max, Min, Wild, expand_log, Dummy, sin, sinc
+from sympy import cos, exp, log, Max, Min, Wild, expand_log, sign, sin, sinc, S
 from sympy.assumptions import Q, ask
 from sympy.codegen.cfunctions import log1p, log2, exp2, expm1
 from sympy.codegen.matrix_nodes import MatrixSolve
@@ -59,6 +58,9 @@ class Optimization:
     def __init__(self, cost_function=None, priority=1):
         self.cost_function = cost_function
         self.priority=priority
+
+    def cheapest(self, *args):
+        return sorted(args, key=self.cost_function)[0]
 
 
 class ReplaceOptim(Optimization):
@@ -128,9 +130,7 @@ def optimize(expr, optimizations):
         if optim.cost_function is None:
             expr = new_expr
         else:
-            before, after = map(lambda x: optim.cost_function(x), (expr, new_expr))
-            if before > after:
-                expr = new_expr
+            expr = optim.cheapest(expr, new_expr)
     return expr
 
 
@@ -175,41 +175,99 @@ logsumexp_2terms_opt = ReplaceOptim(
 )
 
 
-class _FuncMinusOne:
-    def __init__(self, func, func_m_1):
+class FuncMinusOneOptim(ReplaceOptim):
+    """Specialization of ReplaceOptim for functions evaluating "f(x) - 1".
+
+    Explanation
+    ===========
+
+    Numerical functions which go toward one as x go toward zero is often best
+    implemented by a dedicated function in order to avoid catastrophic
+    cancellation. One such example is ``expm1(x)`` in the C standard library
+    which evaluates ``exp(x) - 1``. Such functions preserves many more
+    significant digits when its argument is much smaller than one, compared
+    to subtracting one afterwards.
+
+    Parameters
+    ==========
+
+    func :
+        The function which is subtracted by one.
+    func_m_1 :
+        The specialized function evaluating ``func(x) - 1``.
+    opportunistic : bool
+        When ``True``, apply the transformation as long as the magnitude of the
+        remaining number terms decreases. When ``False``, only apply the
+        transformation if it completely eliminates the number term.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, exp
+    >>> from sympy.codegen.rewriting import FuncMinusOneOptim
+    >>> from sympy.codegen.cfunctions import expm1
+    >>> x, y = symbols('x y')
+    >>> expm1_opt = FuncMinusOneOptim(exp, expm1)
+    >>> expm1_opt(exp(x) + 2*exp(5*y) - 3)
+    expm1(x) + 2*expm1(5*y)
+
+
+    """
+
+    def __init__(self, func, func_m_1, opportunistic=True):
+        weight = 10  # <-- this is an arbitrary number (heuristic)
+        super().__init__(lambda e: e.is_Add, self.replace_in_Add,
+                         cost_function=lambda expr: expr.count_ops() - weight*expr.count(func_m_1))
         self.func = func
         self.func_m_1 = func_m_1
+        self.opportunistic = opportunistic
 
-    def _try_func_m_1(self, expr):
-        protected, old_new =  expr.replace(self.func, lambda arg: Dummy(), map=True)
-        factored = protected.factor()
-        new_old = {v: k for k, v in old_new.items()}
-        return factored.replace(_d - 1, lambda d: self.func_m_1(new_old[d].args[0])).xreplace(new_old)
-
-    def __call__(self, e):
-        numbers, non_num = sift(e.args, lambda arg: arg.is_number, binary=True)
-        non_num_func, non_num_other = sift(non_num, lambda arg: arg.has(self.func),
-            binary=True)
+    def _group_Add_terms(self, add):
+        numbers, non_num = sift(add.args, lambda arg: arg.is_number, binary=True)
         numsum = sum(numbers)
-        new_func_terms, done = [], False
-        for func_term in non_num_func:
-            if done:
-                new_func_terms.append(func_term)
-            else:
-                looking_at = func_term + numsum
-                attempt = self._try_func_m_1(looking_at)
-                if looking_at == attempt:
-                    new_func_terms.append(func_term)
+        terms_with_func, other = sift(non_num, lambda arg: arg.has(self.func), binary=True)
+        return numsum, terms_with_func, other
+
+    def replace_in_Add(self, e):
+        """ passed as second argument to Basic.replace(...) """
+        numsum, terms_with_func, other_non_num_terms = self._group_Add_terms(e)
+        if numsum == 0:
+            return e
+        substituted, untouched = [], []
+        for with_func in terms_with_func:
+            if with_func.is_Mul:
+                func, coeff = sift(with_func.args, lambda arg: arg.func == self.func, binary=True)
+                if len(func) == 1 and len(coeff) == 1:
+                    func, coeff = func[0], coeff[0]
                 else:
-                    done = True
-                    new_func_terms.append(attempt)
-        if not done:
-            new_func_terms.append(numsum)
-        return e.func(*chain(new_func_terms, non_num_other))
+                    coeff = None
+            elif with_func.func == self.func:
+                func, coeff = with_func, S.One
+            else:
+                coeff = None
+
+            if coeff is not None and coeff.is_number and sign(coeff) == -sign(numsum):
+                if self.opportunistic:
+                    do_substitute = abs(coeff+numsum) < abs(numsum)
+                else:
+                    do_substitute = coeff+numsum == 0
+
+                if do_substitute:  # advantageous substitution
+                    numsum += coeff
+                    substituted.append(coeff*self.func_m_1(*func.args))
+                    continue
+            untouched.append(with_func)
+
+        return e.func(numsum, *substituted, *untouched, *other_non_num_terms)
+
+    def __call__(self, expr):
+        alt1 = super().__call__(expr)
+        alt2 = super().__call__(expr.factor())
+        return self.cheapest(alt1, alt2)
 
 
-expm1_opt = ReplaceOptim(lambda e: e.is_Add, _FuncMinusOne(exp, expm1))
-cosm1_opt = ReplaceOptim(lambda e: e.is_Add, _FuncMinusOne(cos, cosm1))
+expm1_opt = FuncMinusOneOptim(exp, expm1)
+cosm1_opt = FuncMinusOneOptim(cos, cosm1)
 
 log1p_opt = ReplaceOptim(
     lambda e: isinstance(e, log),

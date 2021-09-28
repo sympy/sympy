@@ -558,7 +558,7 @@ class HypergeometricDistribution(SingleFiniteDistribution):
 
     @property
     def is_symbolic(self):
-        return any(not x.is_number for x in (self.N, self.m, self.n))
+        return not all(x.is_number for x in (self.N, self.m, self.n))
 
     @property
     def high(self):
@@ -785,7 +785,7 @@ class RobustSolitonDistribution(SingleFiniteDistribution):
 
     @property
     def is_symbolic(self):
-        return not all([self.k.is_number, self.c.is_number, self.delta.is_number])
+        return not (self.k.is_number and self.c.is_number and self.delta.is_number)
 
     def pmf(self, x):
         x = sympify(x)

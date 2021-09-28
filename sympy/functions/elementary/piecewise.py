@@ -318,7 +318,7 @@ class Piecewise(Function):
     def _eval_simplify(self, **kwargs):
         return piecewise_simplify(self, **kwargs)
 
-    def _eval_as_leading_term(self, x, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
         for e, c in self.args:
             if c == True or c.subs(x, 0) == True:
                 return e.as_leading_term(x)
@@ -534,7 +534,6 @@ class Piecewise(Function):
         # following papers;
         #     http://portal.acm.org/citation.cfm?id=281649
         #     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4127&rep=rep1&type=pdf
-        from sympy.core.symbol import Dummy
 
         if a is None or b is None:
             # In this case, it is just simple substitution
@@ -590,7 +589,12 @@ class Piecewise(Function):
                 elif hi.is_Symbol:
                     pos = pos.xreplace({hi: lo + p}).xreplace({p: hi - lo})
                     neg = neg.xreplace({hi: lo - p}).xreplace({p: lo - hi})
-
+                # evaluate limits that may have unevaluate Min/Max
+                touch = lambda _: _.replace(
+                    lambda x: isinstance(x, (Min, Max)),
+                    lambda x: x.func(*x.args))
+                neg = touch(neg)
+                pos = touch(pos)
                 # assemble return expression; make the first condition be Lt
                 # b/c then the first expression will look the same whether
                 # the lo or hi limit is symbolic
@@ -742,16 +746,39 @@ class Piecewise(Function):
             if isinstance(cond, And):
                 lower = S.NegativeInfinity
                 upper = S.Infinity
+                exclude = []
                 for cond2 in cond.args:
                     if isinstance(cond2, Equality):
                         lower = upper  # ignore
                         break
+                    elif isinstance(cond2, Unequality):
+                        l, r = cond2.args
+                        if l == sym:
+                            exclude.append(r)
+                        elif r == sym:
+                            exclude.append(l)
+                        else:
+                            nonsymfail(cond2)
+                        continue
                     elif cond2.lts == sym:
                         upper = Min(cond2.gts, upper)
                     elif cond2.gts == sym:
                         lower = Max(cond2.lts, lower)
                     else:
                         nonsymfail(cond2)  # should never get here
+                if exclude:
+                    exclude = list(ordered(exclude))
+                    newcond = []
+                    for i, e in enumerate(exclude):
+                        if e < lower == True or e > upper == True:
+                            continue
+                        if not newcond:
+                            newcond.append((None, lower))  # add a primer
+                        newcond.append((newcond[-1][1], e))
+                    newcond.append((newcond[-1][1], upper))
+                    newcond.pop(0)  # remove the primer
+                    expr_cond.extend([(iarg, expr, And(i[0] < sym, sym < i[1])) for i in newcond])
+                    continue
             elif isinstance(cond, Relational):
                 lower, upper = cond.lts, cond.gts  # part 1: initialize with givens
                 if cond.lts == sym:                # part 1a: expand the side ...
@@ -864,7 +891,7 @@ class Piecewise(Function):
             except TypeError:
                 pass
 
-    def as_expr_set_pairs(self, domain=S.Reals):
+    def as_expr_set_pairs(self, domain=None):
         """Return tuples for each argument of self that give
         the expression and the interval in which it is valid
         which is contained within the given domain.
@@ -889,6 +916,8 @@ class Piecewise(Function):
         [(1, Interval.Ropen(0, 2)),
          (2, Interval(2, 3))]
         """
+        if domain is None:
+            domain = S.Reals
         exp_sets = []
         U = domain
         complex = not domain.is_subset(S.Reals)
@@ -1057,7 +1086,7 @@ def piecewise_fold(expr):
             else:
                 new_args.append((e, c))
     else:
-        from sympy.utilities.iterables import cartes, sift, common_prefix
+        from sympy.utilities.iterables import cartes, common_prefix
         # Given
         #     P1 = Piecewise((e11, c1), (e12, c2), A)
         #     P2 = Piecewise((e21, c1), (e22, c2), B)

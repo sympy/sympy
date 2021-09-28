@@ -66,6 +66,10 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
 
         return self((num, den)).cancel()
 
+    def from_ZZ(K1, a, K0):
+        """Convert a Python ``int`` object to ``dtype``. """
+        return K1(K1.dom.convert(a, K0))
+
     def from_ZZ_python(K1, a, K0):
         """Convert a Python ``int`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))

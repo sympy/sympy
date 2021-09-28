@@ -18,8 +18,8 @@ def refine(expr, assumptions=True):
     the form which is only valid under certain assumptions. Note that
     ``simplify()`` is generally not done in refining process.
 
-    Refining boolean expression involves reducing it to ``True`` or
-    ``False``. Unlike :func:~.`ask()`, the expression will not be reduced
+    Refining boolean expression involves reducing it to ``S.true`` or
+    ``S.false``. Unlike :func:`~.ask()`, the expression will not be reduced
     if the truth value cannot be determined.
 
     Examples
@@ -147,7 +147,7 @@ def refine_Pow(expr, assumptions):
             if ask(Q.odd(expr.exp), assumptions):
                 return sign(expr.base) * abs(expr.base) ** expr.exp
         if isinstance(expr.exp, Rational):
-            if type(expr.base) is Pow:
+            if isinstance(expr.base, Pow):
                 return abs(expr.base.base) ** (expr.base.exp * expr.exp)
 
         if expr.base is S.NegativeOne:
@@ -232,7 +232,6 @@ def refine_atan2(expr, assumptions):
     nan
     """
     from sympy.functions.elementary.trigonometric import atan
-    from sympy.core import S
     y, x = expr.args
     if ask(Q.real(y) & Q.positive(x), assumptions):
         return atan(y / x)

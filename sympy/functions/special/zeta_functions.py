@@ -1,8 +1,10 @@
 """ Riemann zeta and related function. """
 
+from sympy import Add
 from sympy.core import Function, S, sympify, pi, I
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
+from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import log, exp_polar
 from sympy.functions.elementary.miscellaneous import sqrt
 
@@ -76,7 +78,7 @@ class lerchphi(Function):
     reduces to a sum of Hurwitz zeta functions:
 
     >>> expand_func(lerchphi(-1, s, a))
-    2**(-s)*zeta(s, a/2) - 2**(-s)*zeta(s, a/2 + 1/2)
+    zeta(s, a/2)/2**s - zeta(s, a/2 + 1/2)/2**s
 
     If $a=1$, the Lerch transcendent reduces to the polylogarithm:
 
@@ -118,7 +120,7 @@ class lerchphi(Function):
     """
 
     def _eval_expand_func(self, **hints):
-        from sympy import exp, I, floor, Add, Poly, Dummy, exp_polar, unpolarify
+        from sympy import exp, floor, Poly, Dummy, unpolarify
         z, s, a = self.args
         if z == 1:
             return zeta(s, a)
@@ -335,7 +337,7 @@ class polylog(Function):
         return z*lerchphi(z, s, 1)
 
     def _eval_expand_func(self, **hints):
-        from sympy import log, expand_mul, Dummy
+        from sympy import expand_mul, Dummy
         s, z = self.args
         if s == 1:
             return -log(1 - z)
@@ -351,6 +353,38 @@ class polylog(Function):
         z = self.args[1]
         if z.is_zero:
             return True
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy import ceiling, Order
+        nu, z = self.args
+
+        z0 = z.subs(x, 0)
+        if z0 is S.NaN:
+            z0 = z.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+
+        if z0.is_zero:
+            # In case of powers less than 1, number of terms need to be computed
+            # separately to avoid repeated callings of _eval_nseries with wrong n
+            try:
+                _, exp = z.leadterm(x)
+            except (ValueError, NotImplementedError):
+                return self
+
+            if exp.is_positive:
+                newn = ceiling(n/exp)
+                o = Order(x**n, x)
+                r = z._eval_nseries(x, n, logx, cdir).removeO()
+                if r is S.Zero:
+                    return o
+
+                term = r
+                s = [term]
+                for k in range(2, newn):
+                    term *= r
+                    s.append(term/k**nu)
+                return Add(*s) + o
+
+        return super(polylog, self)._eval_nseries(x, n, logx, cdir)
 
 ###############################################################################
 ###################### HURWITZ GENERALIZED ZETA FUNCTION ######################
@@ -595,7 +629,7 @@ class riemann_xi(Function):
     >>> from sympy import riemann_xi, zeta
     >>> from sympy.abc import s
     >>> riemann_xi(s).rewrite(zeta)
-    pi**(-s/2)*s*(s - 1)*gamma(s/2)*zeta(s)/2
+    s*(s - 1)*gamma(s/2)*zeta(s)/(2*pi**(s/2))
 
     References
     ==========

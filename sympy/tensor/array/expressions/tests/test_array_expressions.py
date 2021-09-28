@@ -5,7 +5,7 @@ from sympy import symbols, ImmutableDenseNDimArray, tensorproduct, tensorcontrac
 from sympy.combinatorics import Permutation
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol, ArrayElement, \
     PermuteDims, ArrayContraction, ArrayTensorProduct, ArrayDiagonal, \
-    ArrayAdd, nest_permutation, ArrayElementwiseApplyFunc
+    ArrayAdd, nest_permutation, ArrayElementwiseApplyFunc, _EditArrayContraction, _ArgE
 from sympy.testing.pytest import raises
 
 i, j, k, l, m, n = symbols("i j k l m n")
@@ -173,6 +173,21 @@ def test_arrayexpr_array_flatten():
     assert cg2.args == (M, N, P)
     assert cg2.shape == (k, k)
 
+    expr = ArrayTensorProduct(ArrayDiagonal(X, (0, 1)), ArrayDiagonal(A, (0, 1)))
+    assert expr == ArrayDiagonal(ArrayTensorProduct(X, A), (0, 1), (2, 3))
+
+    expr1 = ArrayDiagonal(ArrayTensorProduct(X, A), (1, 2))
+    expr2 = ArrayTensorProduct(expr1, a)
+    assert expr2 == PermuteDims(ArrayDiagonal(ArrayTensorProduct(X, A, a), (1, 2)), [0, 1, 4, 2, 3])
+
+    expr1 = ArrayContraction(ArrayTensorProduct(X, A), (1, 2))
+    expr2 = ArrayTensorProduct(expr1, a)
+    assert isinstance(expr2, ArrayContraction)
+    assert isinstance(expr2.expr, ArrayTensorProduct)
+
+    cg = ArrayTensorProduct(ArrayDiagonal(ArrayTensorProduct(A, X, Y), (0, 3), (1, 5)), a, b)
+    assert cg == PermuteDims(ArrayDiagonal(ArrayTensorProduct(A, X, Y, a, b), (0, 3), (1, 5)), [0, 1, 6, 7, 2, 3, 4, 5])
+
 
 def test_arrayexpr_array_diagonal():
     cg = ArrayDiagonal(M, (1, 0))
@@ -261,8 +276,8 @@ def test_arrayexpr_split_multiple_contractions():
     X = MatrixSymbol("X", k, k)
 
     cg = ArrayContraction(ArrayTensorProduct(A.T, a, b, b.T, (A*X*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
-    assert cg.split_multiple_contractions().dummy_eq(ArrayContraction(ArrayTensorProduct(DiagMatrix(a), (A*X*b).applyfunc(cos), A.T, b, b.T), (0, 2), (1, 5), (3, 7, 8)))
-    # assert recognize_matrix_expression(cg)
+    expected = ArrayContraction(ArrayTensorProduct(A.T, DiagMatrix(a), OneArray(1), b, b.T, (A*X*b).applyfunc(cos)), (1, 3), (2, 9), (6, 7, 10))
+    assert cg.split_multiple_contractions().dummy_eq(expected)
 
     # Check no overlap of lines:
 
@@ -514,3 +529,34 @@ def test_arrayexpr_array_expr_applyfunc():
     A = ArraySymbol("A", 3, k, 2)
     aaf = ArrayElementwiseApplyFunc(sin, A)
     assert aaf.shape == (3, k, 2)
+
+
+def test_edit_array_contraction():
+    cg = ArrayContraction(ArrayTensorProduct(A, B, C, D), (1, 2, 5))
+    ecg = _EditArrayContraction(cg)
+    assert ecg.to_array_contraction() == cg
+
+    ecg.args_with_ind[1], ecg.args_with_ind[2] = ecg.args_with_ind[2], ecg.args_with_ind[1]
+    assert ecg.to_array_contraction() == ArrayContraction(ArrayTensorProduct(A, C, B, D), (1, 3, 4))
+
+    ci = ecg.get_new_contraction_index()
+    new_arg = _ArgE(X)
+    new_arg.indices = [ci, ci]
+    ecg.args_with_ind.insert(2, new_arg)
+    assert ecg.to_array_contraction() == ArrayContraction(ArrayTensorProduct(A, C, X, B, D), (1, 3, 6), (4, 5))
+
+    assert ecg.get_contraction_indices() == [[1, 3, 6], [4, 5]]
+    assert [[tuple(j) for j in i] for i in ecg.get_contraction_indices_to_ind_rel_pos()] == [[(0, 1), (1, 1), (3, 0)], [(2, 0), (2, 1)]]
+    assert [list(i) for i in ecg.get_mapping_for_index(0)] == [[0, 1], [1, 1], [3, 0]]
+    assert [list(i) for i in ecg.get_mapping_for_index(1)] == [[2, 0], [2, 1]]
+    raises(ValueError, lambda: ecg.get_mapping_for_index(2))
+
+    ecg.args_with_ind.pop(1)
+    assert ecg.to_array_contraction() == ArrayContraction(ArrayTensorProduct(A, X, B, D), (1, 4), (2, 3))
+
+    ecg.args_with_ind[0].indices[1] = ecg.args_with_ind[1].indices[0]
+    ecg.args_with_ind[1].indices[1] = ecg.args_with_ind[2].indices[0]
+    assert ecg.to_array_contraction() == ArrayContraction(ArrayTensorProduct(A, X, B, D), (1, 2), (3, 4))
+
+    ecg.insert_after(ecg.args_with_ind[1], _ArgE(C))
+    assert ecg.to_array_contraction() == ArrayContraction(ArrayTensorProduct(A, X, C, B, D), (1, 2), (3, 6))

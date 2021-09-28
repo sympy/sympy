@@ -23,6 +23,7 @@ R3 are currently the only ambient spaces implemented.
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
+from sympy.core.evalf import EvalfMixin
 from sympy.core.sympify import sympify
 from sympy.functions import cos, sin
 from sympy.matrices import eye
@@ -58,7 +59,7 @@ ordering_of_classes = [
 ]
 
 
-class GeometryEntity(Basic):
+class GeometryEntity(Basic, EvalfMixin):
     """The base class for all geometrical entities.
 
     This class doesn't represent any particular geometric entity, it only
@@ -171,7 +172,7 @@ class GeometryEntity(Basic):
             # will fall back to the next representation
             return None
 
-        if any([not x.is_number or not x.is_finite for x in bounds]):
+        if not all(x.is_number and x.is_finite for x in bounds):
             return None
 
         svg_top = '''<svg xmlns="http://www.w3.org/2000/svg"
@@ -293,7 +294,7 @@ class GeometryEntity(Basic):
             return self.encloses_point(o)
         elif isinstance(o, Segment):
             return all(self.encloses_point(x) for x in o.points)
-        elif isinstance(o, Ray) or isinstance(o, Line):
+        elif isinstance(o, (Ray, Line)):
             return False
         elif isinstance(o, Ellipse):
             return self.encloses_point(o.center) and \

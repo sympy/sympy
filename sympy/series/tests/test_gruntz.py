@@ -129,12 +129,12 @@ def test_grunts_eval_special_slow_sometimes_fail():
     assert gruntz(exp(gamma(x - exp(-x))*exp(1/x)) - exp(gamma(x)), x, oo) is oo
 
 
+def test_gruntz_Ei():
+    assert gruntz((Ei(x - exp(-exp(x))) - Ei(x)) *exp(-x)*exp(exp(x))*x, x, oo) == -1
+
+
 @XFAIL
 def test_gruntz_eval_special_fail():
-    # TODO exponential integral Ei
-    assert gruntz(
-        (Ei(x - exp(-exp(x))) - Ei(x)) *exp(-x)*exp(exp(x))*x, x, oo) == -1
-
     # TODO zeta function series
     assert gruntz(
         exp((log(2) + 1)*x) * (zeta(x + exp(-x)) - zeta(x)), x, oo) == -log(2)
@@ -390,12 +390,11 @@ def test_MrvTestCase_page47_ex3_21():
 
 
 def test_I():
-    from sympy import sign
     y = Symbol("y")
     assert gruntz(I*x, x, oo) == I*oo
     assert gruntz(y*I*x, x, oo) == y*I*oo
     assert gruntz(y*3*I*x, x, oo) == y*I*oo
-    assert gruntz(y*3*sin(I)*x, x, oo).simplify().rewrite(sign) == sign(y)*I*oo
+    assert gruntz(y*3*sin(I)*x, x, oo).simplify().rewrite(sign) == y*I*oo
 
 
 def test_issue_4814():

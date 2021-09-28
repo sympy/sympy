@@ -174,7 +174,7 @@ class NDimArray(Printable):
     def _check_symbolic_index(self, index):
         # Check if any index is symbolic:
         tuple_index = (index if isinstance(index, tuple) else (index,))
-        if any([(isinstance(i, Expr) and (not i.is_number)) for i in tuple_index]):
+        if any((isinstance(i, Expr) and (not i.is_number)) for i in tuple_index):
             for i, nth_dim in zip(tuple_index, self.shape):
                 if ((i < 0) == True) or ((i >= nth_dim) == True):
                     raise ValueError("index out of range")
@@ -217,16 +217,16 @@ class NDimArray(Printable):
             elif isinstance(iterable, SparseNDimArray):
                 return iterable._shape, iterable._sparse_array
 
+            # Construct N-dim array from another N-dim array:
+            elif isinstance(iterable, NDimArray):
+                shape = iterable.shape
+
             # Construct N-dim array from an iterable (numpy arrays included):
             elif isinstance(iterable, Iterable):
                 iterable, shape = cls._scan_iterable_shape(iterable)
 
             # Construct N-dim array from a Matrix:
             elif isinstance(iterable, MatrixBase):
-                shape = iterable.shape
-
-            # Construct N-dim array from another N-dim array:
-            elif isinstance(iterable, NDimArray):
                 shape = iterable.shape
 
             else:
@@ -246,7 +246,7 @@ class NDimArray(Printable):
         if isinstance(shape, (SYMPY_INTS, Integer)):
             shape = (shape,)
 
-        if any([not isinstance(dim, (SYMPY_INTS, Integer)) for dim in shape]):
+        if not all(isinstance(dim, (SYMPY_INTS, Integer)) for dim in shape):
             raise TypeError("Shape should contain integers only.")
 
         return tuple(shape), iterable

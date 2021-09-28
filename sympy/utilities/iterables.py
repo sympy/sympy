@@ -1,8 +1,9 @@
 from collections import defaultdict, OrderedDict
 from itertools import (
     combinations, combinations_with_replacement, permutations,
-    product, product as cartes
+    product
 )
+from itertools import product as cartes # noqa: F401
 import random
 from operator import gt
 
@@ -11,8 +12,6 @@ from sympy.core import Basic
 # this is the logical location of these functions
 from sympy.core.compatibility import (as_int, is_sequence, iterable, ordered)
 from sympy.core.compatibility import default_sort_key  # noqa: F401
-
-import sympy
 
 from sympy.utilities.enumerative import (
     multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
@@ -446,7 +445,7 @@ def interactive_traversal(expr):
                 cprint(RED, "d - done\n")
 
                 result = _interactive_traversal(expr, stage)
-            elif choice in ['d', '']:
+            elif choice in ('d', ''):
                 result = expr
             elif choice == 'f':
                 result = _interactive_traversal(args[0], stage + 1)
@@ -525,7 +524,7 @@ def ibin(n, bits=None, str=False):
         bits = 0
     else:
         try:
-             bits = as_int(bits)
+            bits = as_int(bits)
         except ValueError:
             bits = -1
         else:
@@ -664,7 +663,7 @@ def filter_symbols(iterator, exclude):
         if s not in exclude:
             yield s
 
-def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumptions):
+def numbered_symbols(prefix='x', cls=None, start=0, exclude=(), *args, **assumptions):
     """
     Generate an infinite stream of Symbols consisting of a prefix and
     increasing subscripts provided that they do not occur in ``exclude``.
@@ -692,7 +691,7 @@ def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumpt
     if cls is None:
         # We can't just make the default cls=Symbol because it isn't
         # imported yet.
-        from sympy import Symbol
+        from sympy.core import Symbol
         cls = Symbol
 
     while True:
@@ -848,7 +847,7 @@ def common_prefix(*seqs):
     >>> common_prefix([1, 2, 3], [1, 3, 5])
     [1]
     """
-    if any(not s for s in seqs):
+    if not all(seqs):
         return []
     elif len(seqs) == 1:
         return seqs[0]
@@ -875,7 +874,7 @@ def common_suffix(*seqs):
     [3]
     """
 
-    if any(not s for s in seqs):
+    if not all(seqs):
         return []
     elif len(seqs) == 1:
         return seqs[0]
@@ -1119,6 +1118,27 @@ def strongly_connected_components(G):
     Gmap = {vi: [] for vi in V}
     for v1, v2 in E:
         Gmap[v1].append(v2)
+    return _strongly_connected_components(V, Gmap)
+
+
+def _strongly_connected_components(V, Gmap):
+    """More efficient internal routine for strongly_connected_components"""
+    #
+    # Here V is an iterable of vertices and Gmap is a dict mapping each vertex
+    # to a list of neighbours e.g.:
+    #
+    #   V = [0, 1, 2, 3]
+    #   Gmap = {0: [2, 3], 1: [0]}
+    #
+    # For a large graph these data structures can often be created more
+    # efficiently then those expected by strongly_connected_components() which
+    # in this case would be
+    #
+    #   V = [0, 1, 2, 3]
+    #   Gmap = [(0, 2), (0, 3), (1, 0)]
+    #
+    # XXX: Maybe this should be the recommended function to use instead...
+    #
 
     # Non-recursive Tarjan's algorithm:
     lowlink = {}
@@ -1296,7 +1316,8 @@ def least_rotation(x, key=None):
     .. [1] https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
 
     '''
-    if key is None: key = sympy.Id
+    from sympy import Id
+    if key is None: key = Id
     S = x + x      # Concatenate string to it self to avoid modular arithmetic
     f = [-1] * len(S)     # Failure function
     k = 0       # Least rotation of string found so far
@@ -1344,12 +1365,16 @@ def multiset_combinations(m, n, g=None):
     """
     if g is None:
         if type(m) is dict:
-            if n > sum(m.values()):
+            if any(as_int(v) < 0 for v in m.values()):
+                raise ValueError('counts cannot be negative')
+            N = sum(m.values())
+            if n > N:
                 return
             g = [[k, m[k]] for k in ordered(m)]
         else:
             m = list(m)
-            if n > len(m):
+            N = len(m)
+            if n > N:
                 return
             try:
                 m = multiset(m)
@@ -1358,7 +1383,10 @@ def multiset_combinations(m, n, g=None):
                 m = list(ordered(m))
                 g = [list(i) for i in group(m, multiple=False)]
         del m
-    if sum(v for k, v in g) < n or not n:
+    else:
+        # not checking counts since g is intended for internal use
+        N = sum(v for k, v in g)
+    if n > N or not n:
         yield []
     else:
         for i, (k, v) in enumerate(g):
@@ -1370,7 +1398,6 @@ def multiset_combinations(m, n, g=None):
                     rv = [k]*v + j
                     if len(rv) == n:
                         yield rv
-
 
 def multiset_permutations(m, size=None, g=None):
     """
@@ -1390,6 +1417,8 @@ def multiset_permutations(m, size=None, g=None):
     """
     if g is None:
         if type(m) is dict:
+            if any(as_int(v) < 0 for v in m.values()):
+                raise ValueError('counts cannot be negative')
             g = [[k, m[k]] for k in ordered(m)]
         else:
             m = list(ordered(m))
@@ -1398,7 +1427,7 @@ def multiset_permutations(m, size=None, g=None):
     do = [gi for gi in g if gi[1] > 0]
     SUM = sum([gi[1] for gi in do])
     if not do or size is not None and (size > SUM or size < 1):
-        if size < 1:
+        if not do and size is None or size == 0:
             yield []
         return
     elif size == 1:
@@ -1770,14 +1799,6 @@ def partitions(n, m=None, k=None, size=False):
         m = n
     else:
         m = min(m, n)
-
-    if n == 0:
-        if size:
-            yield 1, {0: 1}
-        else:
-            yield {0: 1}
-        return
-
     k = min(k or n, n)
 
     n, m, k = as_int(n), as_int(m), as_int(k)
@@ -1997,14 +2018,14 @@ def binary_partitions(n):
 
     """
     from math import ceil, log
-    pow = int(2**(ceil(log(n, 2))))
-    sum = 0
+    power = int(2**(ceil(log(n, 2))))
+    acc = 0
     partition = []
-    while pow:
-        if sum + pow <= n:
-            partition.append(pow)
-            sum += pow
-        pow >>= 1
+    while power:
+        if acc + power <= n:
+            partition.append(power)
+            acc += power
+        power >>= 1
 
     last_num = len(partition) - 1 - (n & 1)
     while last_num >= 0:
@@ -2048,8 +2069,8 @@ def has_dups(seq):
     from sympy.sets.sets import Set
     if isinstance(seq, (dict, set, Dict, Set)):
         return False
-    uniq = set()
-    return any(True for s in seq if s in uniq or uniq.add(s))
+    unique = set()
+    return any(True for s in seq if s in unique or unique.add(s))
 
 
 def has_variety(seq):
@@ -2435,8 +2456,8 @@ def minlex(seq, directed=True, key=None):
     ('c', 'a', 'bb', 'aaa')
 
     """
-
-    if key is None: key = sympy.Id
+    from sympy import Id
+    if key is None: key = Id
     best = rotate_left(seq, least_rotation(seq, key=key))
     if not directed:
         rseq = seq[::-1]
@@ -2621,7 +2642,7 @@ def permute_signs(t):
     >>> list(permute_signs((0, 1, 2)))
     [(0, 1, 2), (0, -1, 2), (0, 1, -2), (0, -1, -2)]
     """
-    for signs in cartes(*[(1, -1)]*(len(t) - t.count(0))):
+    for signs in product(*[(1, -1)]*(len(t) - t.count(0))):
         signs = list(signs)
         yield type(t)([i*signs.pop() if i else i for i in t])
 
@@ -2680,8 +2701,8 @@ def roundrobin(*iterables):
     pending = len(iterables)
     while pending:
         try:
-            for next in nexts:
-                yield next()
+            for nxt in nexts:
+                yield nxt()
         except StopIteration:
             pending -= 1
             nexts = itertools.cycle(itertools.islice(nexts, pending))

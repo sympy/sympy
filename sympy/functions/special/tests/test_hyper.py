@@ -55,7 +55,7 @@ def test_hyper():
 def test_expand_func():
     # evaluation at 1 of Gauss' hypergeometric function:
     from sympy.abc import a, b, c
-    from sympy import gamma, expand_func
+    from sympy import expand_func
     a1, b1, c1 = randcplx(), randcplx(), randcplx() + 5
     assert expand_func(hyper([a, b], [c], 1)) == \
         gamma(c)*gamma(-a - b + c)/(gamma(-a + c)*gamma(-b + c))
@@ -344,6 +344,10 @@ def test_limits():
            1 + 9*k**2/20 + 81*k**4/1120 + O(k**6) # issue 6350
     assert limit(meijerg((), (), (1,), (0,), -x), x, 0) == \
             meijerg(((), ()), ((1,), (0,)), 0) # issue 6052
+
+    # https://github.com/sympy/sympy/issues/11465
+    assert limit(1/hyper((1, ), (1, ), x), x, 0) == 1
+
 
 def test_appellf1():
     a, b1, b2, c, x, y = symbols('a b1 b2 c x y')
