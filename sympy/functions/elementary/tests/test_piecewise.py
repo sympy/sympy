@@ -460,7 +460,8 @@ def test_piecewise_simplify():
 
 
 def test_piecewise_simplify_infinities():
-    from sympy.functions.elementary.piecewise import piecewise_simplify_arguments as f
+    from sympy.functions.elementary.piecewise import (
+        piecewise_canonical_conditions as f)
     # unsimplifying
     assert f(Piecewise((x, (x > -oo) & (x < 3)))
         ) == Piecewise((x, (x > -oo) & (x < 3)))
@@ -482,7 +483,8 @@ def test_piecewise_simplify_infinities():
         ) == Piecewise((x, (x >= -3) & (x <= 3)))
     # simplify
     assert f(Piecewise((x, (x <= oo) & (x > -oo)))
-        ) == Piecewise((x, x > -oo))
+        ) == Piecewise((x, x > -oo)), f(Piecewise((x, (x <= oo) & (x > -oo)))
+        )
     assert f(Piecewise((x, (x <= oo) & (x > -3)))
         ) == Piecewise((x, x > -3))
     assert f(Piecewise((x, (x >= -oo) & (x < 3)))
@@ -495,6 +497,7 @@ def test_piecewise_simplify_infinities():
         ) == Piecewise((x, x <= oo))
     assert f(Piecewise((x, (x >= -3) & (x <= oo)))
         ) == Piecewise((x, x >= -3))
+
 
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))

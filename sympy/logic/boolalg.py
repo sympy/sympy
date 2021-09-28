@@ -443,6 +443,58 @@ class BooleanFunction(Application, Boolean):
     """
     is_Boolean = True
 
+    def canonical(self):
+        from sympy import Interval, oo
+        from sympy.core.relational import _canonical
+        from sympy.functions.elementary.complexes import im, re
+        c = self
+        if not c.has(im, re):
+            free = c.free_symbols
+            if len(free) == 1:
+                x = free.pop()
+                try:
+                    s = c.as_set()
+                except NotImplementedError:
+                    pass
+                else:
+                    if s is S.Reals or isinstance(s, Interval) and (
+                            s.inf is -oo or s.sup is oo
+                            ) and (c.has(oo) or c.has(-oo)):
+                        if s.inf is -oo and s.sup is oo:
+                            if c.xreplace({x: oo}) == True:
+                                if c.xreplace({x: s.inf}) == True:
+                                    c = x <= s.sup
+                                else:
+                                    c = x > s.inf
+                            elif c.xreplace({x: -oo}) == True:
+                                c = x < s.sup
+                            else:
+                                c = And(x > -oo, x < oo)
+                        elif s.inf is -oo:
+                            if c.xreplace({x: -oo}) == True:
+                                if c.xreplace({x: s.sup}) == True:
+                                    c = x <= s.sup
+                                else:
+                                    c = x < s.sup
+                            else:
+                                if c.xreplace({x: s.sup}) == True:
+                                    c = And(x > -oo, x <= s.sup)
+                                else:
+                                    c = And(x > -oo, x < s.sup)
+                        else:  # s.sup == oo
+                            if c.xreplace({x: oo}) == True:
+                                if c.xreplace({x: s.inf}) == True:
+                                    c = x >= s.inf
+                                else:
+                                    c = x > s.inf
+                            elif c.xreplace({x: s.inf}) == True:
+                                c = And(x >= s.inf, x < s.sup)
+                            else:
+                                c = And(x > s.inf, x < s.sup)
+                    else:
+                        c = s.as_relational(x)
+        return _canonical(c)
+
     def _eval_simplify(self, **kwargs):
         rv = self.func(*[a.simplify(**kwargs) for a in self.args])
         return simplify_logic(rv)
