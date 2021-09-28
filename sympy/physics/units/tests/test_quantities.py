@@ -1,3 +1,5 @@
+import warnings
+
 from sympy import (Abs, Add, Function, Number, Rational, S, Symbol,
                    diff, exp, integrate, log, sin, sqrt, symbols)
 from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
@@ -484,3 +486,17 @@ def test_deprecated_quantity_methods():
         step.set_scale_factor(2*meter)
         assert convert_to(step, centimeter) == 200*centimeter
         assert convert_to(1000*step/second, kilometer/second) == 2*kilometer/second
+
+def test_issue_22164():
+    warnings.simplefilter("error")
+    dm = Quantity("dm")
+    SI.set_quantity_dimension(dm, length)
+    SI.set_quantity_scale_factor(dm, 1)
+
+    bad_exp = Quantity("bad_exp")
+    SI.set_quantity_dimension(bad_exp, length)
+    SI.set_quantity_scale_factor(bad_exp, 1)
+
+    expr = dm ** bad_exp
+
+    SI._collect_factor_and_dimension(expr)
