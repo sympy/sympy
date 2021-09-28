@@ -6,7 +6,15 @@ __all__ = [
     'field_isomorphism',
 
     'to_number_field', 'isolate',
+
+    'nilradical_mod_p', 'round_two',
+
+    'prime_valuation', 'prime_decomp',
 ]
+
+from .basis import nilradical_mod_p, round_two
+
+from .primes import prime_valuation, prime_decomp
 
 # Before `sympy.polys.numberfields` was a package, it was a module, containing
 # what is now defined in the `minpoly`, `isomorphism` and `numbers` modules.
