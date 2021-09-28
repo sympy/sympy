@@ -371,6 +371,7 @@ class Order(Expr):
         (e.g. when self and expr have different symbols).
         """
         from sympy import powsimp
+        expr = sympify(expr)
         if expr.is_zero:
             return True
         if expr is S.NaN:
