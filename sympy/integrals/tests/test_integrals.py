@@ -6,7 +6,7 @@ from sympy import (
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol, summation,
     symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper,
-    Float
+    Float, arg
 )
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.complexes import periodic_argument
@@ -1344,37 +1344,37 @@ def test_issue_2884():
 
 
 def test_issue_8368():
-    assert integrate(exp(-s*x)*cosh(x), (x, 0, oo)) == \
-        Piecewise(
-            (   pi*Piecewise(
-                    (   -s/(pi*(-s**2 + 1)),
-                        Abs(s**2) < 1),
-                    (   1/(pi*s*(1 - 1/s**2)),
-                        Abs(s**(-2)) < 1),
-                    (   meijerg(
-                            ((S.Half,), (0, 0)),
-                            ((0, S.Half), (0,)),
-                            polar_lift(s)**2),
-                        True)
-                ),
-                And(
-                    Abs(periodic_argument(polar_lift(s)**2, oo)) < pi,
-                    cos(Abs(periodic_argument(polar_lift(s)**2, oo))/2)*sqrt(Abs(s**2)) - 1 > 0,
-                    Ne(s**2, 1))
-            ),
-            (
-                Integral(exp(-s*x)*cosh(x), (x, 0, oo)),
-                True))
-    assert integrate(exp(-s*x)*sinh(x), (x, 0, oo)) == \
-        Piecewise(
-            (   -1/(s + 1)/2 - 1/(-s + 1)/2,
-                And(
-                    Ne(1/s, 1),
-                    Abs(periodic_argument(s, oo)) < pi/2,
-                    Abs(periodic_argument(s, oo)) <= pi/2,
-                    cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1 > 0)),
-            (   Integral(exp(-s*x)*sinh(x), (x, 0, oo)),
-                True))
+    got = integrate(exp(-s*x)*cosh(x), (x, 0, oo))
+    x0 = 1/pi
+    x1 = s**2
+    x2 = Abs(x1)
+    x3 = s > -oo
+    x4 = s < oo
+    x5 = Abs(arg(s))
+    x6 = 2*x5 < pi
+    x7 = sqrt(x2)*cos(x5) - 1 > 0
+    cse_ans = [
+    Piecewise((pi*Piecewise((-s*x0/(1 - x1), x2 < 1), (x0/(s*(1 - 1/x1)),
+    1/x2 < 1), (meijerg(((S.Half,), (0, 0)), ((0, S.Half), (0,)),
+    polar_lift(s)**2), True)), (x3 & x4 & x6 & x7 & (s > 1)) | (x3 & x4 &
+    x6 & x7 & (s < -1)) | (x3 & x4 & x6 & x7 & (s > -1) & (s < 1))),
+    (Integral(exp(-s*x)*cosh(x), (x, 0, oo)), True))]
+    assert got == cse_ans[0]
+
+    got = integrate(exp(-s*x)*sinh(x), (x, 0, oo))
+    x0 = s > -oo
+    x1 = s < oo
+    x2 = Abs(arg(s))
+    x3 = pi/2
+    x4 = x2 <= x3
+    x5 = x2 < x3
+    x6 = cos(x2)*Abs(s) - 1 > 0
+    cse_ans = [
+    Piecewise((-1/(s + 1)/2 - 1/(1 - s)/2, (x0 & x1 & x4 & x5 & x6 &
+    (s > 1)) | (x0 & x1 & x4 & x5 & x6 & (s < 0)) | (x0 & x1 & x4 & x5 &
+    x6 & (s > 0) & (s < 1))), (Integral(exp(-s*x)*sinh(x), (x, 0, oo)),
+    True))]
+    assert got == cse_ans[0]
 
 
 def test_issue_8901():
