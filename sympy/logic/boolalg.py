@@ -444,7 +444,6 @@ class BooleanFunction(Application, Boolean):
     is_Boolean = True
 
     def canonical(self):
-        from sympy import Interval, oo
         from sympy.core.relational import _canonical, Relational
         from sympy.core.function import Function
         from sympy.core.symbol import Dummy
@@ -469,77 +468,29 @@ class BooleanFunction(Application, Boolean):
                 except NotImplementedError:
                     pass
                 else:
-                    # it is important to retain assertions about x being
-                    # real in a relationship, so it is not ok to let
-                    # x <= oo turn into True
-                    if s is S.Reals or isinstance(s, Interval) and (
-                            s.inf is -oo or s.sup is oo
-                            ) and (c.has(oo) or c.has(-oo)):
-                        if s.inf is -oo and s.sup is oo:
-                            if c.xreplace({x: oo}) == True:
-                                if c.xreplace({x: -oo}) == True:
-                                    c = x <= oo
-                                else:
-                                    assert c.xreplace({x: -oo}) == False
-                                    c = x > -oo
-                            elif c.xreplace({x: -oo}) == True:
-                                c = x < oo
-                            else:
-                                assert c.xreplace({x: -oo}) == False and c.xreplace({x: oo}) == False
-                                c = And(x > -oo, x < oo)
-                        elif s.inf is -oo:
-                            if c.xreplace({x: -oo}) == True:
-                                if c.xreplace({x: s.sup}) == True:
-                                    c = x <= s.sup
-                                else:
-                                    assert c.xreplace({x: s.sup}) == False
-                                    c = x < s.sup
-                            else:
-                                assert c.xreplace({x: -oo}) == False
-                                if c.xreplace({x: s.sup}) == True:
-                                    c = And(x > -oo, x <= s.sup)
-                                else:
-                                    assert c.xreplace({x: s.sup}) == False
-                                    c = And(x > -oo, x < s.sup)
-                        else:  # s.sup == oo
-                            if c.xreplace({x: oo}) == True:
-                                if c.xreplace({x: s.inf}) == True:
-                                    c = x >= s.inf
-                                else:
-                                    assert c.xreplace({x: s.inf}) == False
-                                    c = x > s.inf
-                            elif c.xreplace({x: s.inf}) == True:
-                                c = And(x >= s.inf, x < s.sup)
-                            else:
-                                assert c.xreplace({x: oo}) == False and c.xreplace({x: s.inf}) == False
-                                c = And(x > s.inf, x < s.sup)
-                    else:
-                        c = s.as_relational(x)
-                        reps = {}
-                        for i in c.atoms(Relational):
-                            ic = i.canonical
-                            if ic.rhs in (S.Infinity, S.NegativeInfinity):
-                                inf = ic.rhs
-                                if not _c.has(inf):
-                                    # /!\ don't accept introduction of
-                                    # new Relationals with +/-oo. Even though
-                                    # this means that And(x > 3, x > 0) and And(x > 3, x <= oo)
-                                    # will return x > 3 and And(x > 3, x <= oo) there are
-                                    # deeper expectations, especially in integration, that
-                                    # don't handle the two cases the same
-                                    reps[i] = S.true
-                                elif ('=' not in ic.rel_op and
-                                        c.xreplace({x: inf}) !=
-                                        _c.xreplace({x: inf})):
-                                    # hack around inability of Interval to
-                                    # contain +/-oo
-                                    # >>> And(x>=-oo,x<=3).as_set()
-                                    # Interval(-oo, 3)
-                                    # >>> _.as_relational(x)
-                                    # (x <= 3) & (-oo < x)
-                                    reps[i] = Relational(
-                                        i.lhs, i.rhs, i.rel_op + '=')
-                        c = c.xreplace(reps)
+                    c = s.as_relational(x)
+                    reps = {}
+                    for i in c.atoms(Relational):
+                        ic = i.canonical
+                        if ic.rhs in (S.Infinity, S.NegativeInfinity):
+                            inf = ic.rhs
+                            if _c.xreplace({x: inf}):
+                                # it was a redundant inf
+                                reps[i] = True
+                            elif ('=' not in ic.rel_op and
+                                    c.xreplace({x: inf}) !=
+                                    _c.xreplace({x: inf})):
+                                # hack around inability of Interval to
+                                # contain +/-oo
+                                # >>> And(x >= -oo, x <= 3).as_set()
+                                # Interval(-oo, 3)
+                                # >>> _.as_relational(x)
+                                # (x <= 3) & (-oo < x)
+                                reps[i] = Relational(
+                                    i.lhs, i.rhs, i.rel_op + '=')
+                    c = c.xreplace(reps)
+                    if c == True:
+                        c = x <= S.Infinity
         return _canonical(c)
 
     def _eval_simplify(self, **kwargs):

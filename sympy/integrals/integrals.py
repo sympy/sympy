@@ -17,7 +17,6 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
-from sympy.functions.elementary.piecewise import piecewise_canonical_conditions
 from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
@@ -573,12 +572,16 @@ class Integral(AddWithLimits):
                                 from sympy.logic.boolalg import BooleanFunction
                                 if isinstance(cond, BooleanFunction):
                                     cond = cond.canonical()
-                                    if cond.rhs is S.Infinity and '=' in cond.rel_op:
+                                    if (cond == True or
+                                            cond.is_Relational and
+                                            cond.rhs is S.Infinity and
+                                            '=' in cond.rel_op):
+                                        # assuming cond.lhs is real then
+                                        # this is equivalent to being True;
+                                        # is_real is not False or else the
+                                        # relational would have evaluated
                                         return f
                                 return Piecewise((f, cond), (u, True))
-                                if isinstance(rv, Piecewise):
-                                    rv = piecewise_canonical_conditions(rv)
-                                return rv
                             elif conds == 'separate':
                                 if len(self.limits) != 1:
                                     raise ValueError(filldedent('''
