@@ -436,7 +436,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     >>> x = Symbol('x')
 
     >>> solve_univariate_inequality(x**2 >= 4, x)
-    ((2 <= x) & (x < oo)) | ((x <= -2) & (-oo < x))
+    ((2 <= x) & (x < oo)) | ((-oo < x) & (x <= -2))
 
     >>> solve_univariate_inequality(x**2 >= 4, x, relational=False)
     Union(Interval(-oo, -2), Interval(2, oo))

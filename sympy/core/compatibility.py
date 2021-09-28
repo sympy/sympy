@@ -473,8 +473,15 @@ def default_sort_key(item, order=None):
     return (cls_index, 0, item.__class__.__name__
             ), args, S.One.sort_key(), S.One
 
+
 def _node_count(e):
+    # this not only counts nodes, it affirms that the
+    # args are Basic (i.e. have an args property). If
+    # some object has a non-Basic arg, it needs to be
+    # fixed since it is intended that all Basic args
+    # are of Basic type (though this is not easy to enforce).
     return 1 + sum(map(_node_count, e.args))
+
 
 def _nodes(e):
     """
