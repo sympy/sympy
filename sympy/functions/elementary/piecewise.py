@@ -1157,9 +1157,9 @@ def _clip(A, B, k):
     return p
 
 
-def piecewise_simplify_arguments(expr, **kwargs):
+def piecewise_canonical_conditions(expr, evaluate=False):
     from sympy.functions.elementary.complexes import im, re
-    from sympy import simplify, Interval, oo
+    from sympy import Interval, oo
     # make conditions canonical
     args = []
     for e, c in expr.args:
@@ -1210,7 +1210,15 @@ def piecewise_simplify_arguments(expr, **kwargs):
                                 c = And(x > s.inf, x < s.sup)
                     else:
                         c = s.as_relational(x)
-        # simplify e and c
+        args.append((e, _canonical(c)))
+
+    return Piecewise(*args, evaluate=evaluate)
+
+
+def piecewise_simplify_arguments(expr, **kwargs):
+    from sympy import simplify
+    args = []
+    for e, c in piecewise_canonical_conditions(expr).args:
         if isinstance(e, Basic):
             doit = kwargs.pop('doit', None)
             # Skip doit to avoid growth at every call for some integrals

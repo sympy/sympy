@@ -95,6 +95,7 @@ def standard_deviation(X, condition=None, **kwargs):
     return sqrt(variance(X, condition, **kwargs))
 std = standard_deviation
 
+
 def entropy(expr, condition=None, **kwargs):
     """
     Calculuates entropy of a probability distribution.
@@ -136,6 +137,7 @@ def entropy(expr, condition=None, **kwargs):
     if isinstance(pdf, dict):
             return sum([-prob*log(prob, base) for prob in pdf.values()])
     return expectation(-log(pdf(expr), base))
+
 
 def covariance(X, Y, condition=None, **kwargs):
     """
@@ -260,6 +262,7 @@ def smoment(X, n, condition=None, **kwargs):
     sigma = std(X, condition, **kwargs)
     return (1/sigma)**n*cmoment(X, n, condition, **kwargs)
 
+
 def skewness(X, condition=None, **kwargs):
     r"""
     Measure of the asymmetry of the probability distribution.
@@ -296,6 +299,7 @@ def skewness(X, condition=None, **kwargs):
     2
     """
     return smoment(X, 3, condition=condition, **kwargs)
+
 
 def kurtosis(X, condition=None, **kwargs):
     r"""
@@ -380,6 +384,7 @@ def factorial_moment(X, n, condition=None, **kwargs):
     .. [2] http://mathworld.wolfram.com/FactorialMoment.html
     """
     return expectation(FallingFactorial(X, n), condition=condition, **kwargs)
+
 
 def median(X, evaluate=True, **kwargs):
     r"""

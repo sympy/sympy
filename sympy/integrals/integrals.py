@@ -17,6 +17,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.functions.elementary.piecewise import piecewise_canonical_conditions
 from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
@@ -468,6 +469,13 @@ class Integral(AddWithLimits):
         reps = {}
         for xab in self.limits:
             if len(xab) != 3:
+                # it makes sense to just make
+                # all x real but in practice with the
+                # current state of integration...this
+                # doesn't work out well
+                # x = xab[0]
+                # if x not in reps and not x.is_real:
+                #     reps[x] = Dummy(real=True)
                 continue
             x, a, b = xab
             l = (a, b)
@@ -559,10 +567,13 @@ class Integral(AddWithLimits):
                         if res is not None:
                             f, cond = res
                             if conds == 'piecewise':
-                                ret = Piecewise(
-                                    (f, cond),
-                                    (self.func(
-                                    function, (x, a, b)), True))
+                                u = self.func(function, (x, a, b))
+                                # XXX there is a fragile relationship
+                                # with simplification here
+                                rv = Piecewise((f, cond), (u, True))
+                                if isinstance(rv, Piecewise):
+                                    rv = piecewise_canonical_conditions(rv)
+                                return rv
                             elif conds == 'separate':
                                 if len(self.limits) != 1:
                                     raise ValueError(filldedent('''
