@@ -3147,6 +3147,10 @@ def count_ops(expr, visual=False):
         while args:
             a = args.pop()
 
+            # if the following fails because the object is
+            # not Basic type, then the object should be fixed
+            # since it is the intention that all args of Basic
+            # should themselves be Basic
             if a.is_Rational:
                 #-1/3 = NEG + DIV
                 if a is not S.One:
