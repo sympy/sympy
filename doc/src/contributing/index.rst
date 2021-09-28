@@ -6,7 +6,7 @@ Contributing to SymPy
 
 This section discusses the necessary steps and guidelines required to contribute to the SymPy project. The TOC has links to the detailed development process.
 
-Content
+**Content**
 
 .. toctree::
    :maxdepth: 2
