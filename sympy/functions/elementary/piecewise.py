@@ -191,8 +191,7 @@ class Piecewise(Function):
                             ic = i.canonical
                             if ic.rhs in (S.Infinity, S.NegativeInfinity):
                                 inf = ic.rhs
-                                if newc.xreplace({i: True}
-                                        ).xreplace({x: inf}) == True:
+                                if c.xreplace({x: inf}) == True:
                                     # it was a redundant inf
                                     reps[i] = True
                                 elif ('=' not in ic.rel_op and
@@ -207,6 +206,10 @@ class Piecewise(Function):
                                     reps[i] = Relational(
                                         i.lhs, i.rhs, i.rel_op + '=')
                         c = newc.xreplace(reps)
+                        if c == True:
+                            # a BooleanFunction cannot lose its ability
+                            # to assert that x is real
+                            c = x <= S.Infinity
             args.append((e, _canonical(c)))
 
         for expr, cond in args:

@@ -568,7 +568,20 @@ class Integral(AddWithLimits):
                             if conds == 'piecewise':
                                 u = self.func(function, (x, a, b))
                                 # XXX there is a fragile relationship
-                                # with simplification here
+                                # with simplification here; check to
+                                # see how the condition simplifies
+                                s = Piecewise((1, cond))
+                                if s == 1:
+                                    # condition was True
+                                    return f
+                                c = s.args[0].cond
+                                if (c.is_Relational and
+                                        c.rhs == S.Infinity and
+                                        '=' in c.rel_op):
+                                    # cond gave foo <= oo so in our
+                                    # context of integration, this is
+                                    # like True
+                                    return f
                                 return Piecewise((f, cond), (u, True))
                             elif conds == 'separate':
                                 if len(self.limits) != 1:
