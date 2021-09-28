@@ -1348,31 +1348,28 @@ def test_issue_8368():
     x1 = s**2
     x2 = Abs(x1)
     x3 = s > -oo
-    x4 = s < oo
-    x5 = Abs(arg(s))
-    x6 = 2*x5 < pi
-    x7 = sqrt(x2)*cos(x5) - 1 > 0
+    x4 = Abs(arg(s))
+    x5 = 2*x4 < pi
+    x6 = sqrt(x2)*cos(x4) - 1 > 0
     cse_ans = [
     Piecewise((pi*Piecewise((-s*x0/(1 - x1), x2 < 1), (x0/(s*(1 - 1/x1)),
-    1/x2 < 1), (meijerg(((S.Half,), (0, 0)), ((0, S.Half), (0,)),
-    polar_lift(s)**2), True)), (x3 & x4 & x6 & x7 & (s > 1)) | (x3 & x4 &
-    x6 & x7 & (s < -1)) | (x3 & x4 & x6 & x7 & (s > -1) & (s < 1))),
+    1/x2 < 1), (meijerg(((1/2,), (0, 0)), ((0, 1/2), (0,)),
+    polar_lift(s)**2), True)), (x3 & x5 & x6 & (s > 1)) | (x3 & x5 & x6 &
+    (s < -1)) | (x3 & x5 & x6 & (s > -1) & (s < 1))),
     (Integral(exp(-s*x)*cosh(x), (x, 0, oo)), True))]
     assert got == cse_ans[0]
 
     got = integrate(exp(-s*x)*sinh(x), (x, 0, oo))
     x0 = s > -oo
-    x1 = s < oo
-    x2 = Abs(arg(s))
-    x3 = pi/2
-    x4 = x2 <= x3
-    x5 = x2 < x3
-    x6 = cos(x2)*Abs(s) - 1 > 0
+    x1 = Abs(arg(s))
+    x2 = pi/2
+    x3 = x1 <= x2
+    x4 = x1 < x2
+    x5 = cos(x1)*Abs(s) - 1 > 0
     cse_ans = [
-    Piecewise((-1/(s + 1)/2 - 1/(1 - s)/2, (x0 & x1 & x4 & x5 & x6 &
-    (s > 1)) | (x0 & x1 & x4 & x5 & x6 & (s < 0)) | (x0 & x1 & x4 & x5 &
-    x6 & (s > 0) & (s < 1))), (Integral(exp(-s*x)*sinh(x), (x, 0, oo)),
-    True))]
+    Piecewise((-1/(s + 1)/2 - 1/(1 - s)/2, (x0 & x3 & x4 & x5 & (s >
+    1)) | (x0 & x3 & x4 & x5 & (s < 0)) | (x0 & x3 & x4 & x5 & (s > 0) &
+    (s < 1))), (Integral(exp(-s*x)*sinh(x), (x, 0, oo)), True))]
     assert got == cse_ans[0]
 
 

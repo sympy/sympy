@@ -12,7 +12,8 @@ from sympy import (
     cos, S, Abs, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
     exp_polar, unpolarify, Function, expint, expand_mul, Rational,
-    gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2)
+    gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument,
+    atan2, arg)
 from sympy.testing.pytest import XFAIL, slow, skip, raises, warns_deprecated_sympy
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
@@ -470,7 +471,8 @@ def test_laplace_transform():
     assert LT(t**a, t, s) == (s**(-a - 1)*gamma(a + 1), 0, True)
     assert LT(Heaviside(t), t, s) == (1/s, 0, True)
     assert LT(Heaviside(t - a), t, s) == (exp(-a*s)/s, 0, True)
-    assert LT(1 - exp(-a*t), t, s) == (a/(s*(a + s)), 0, True)
+    assert LT(1 - exp(-a*t), t, s) == (a/(s*(a + s)), -oo,
+        (arg(s) > -pi/2) & (arg(s) < pi/2))
 
     assert LT((exp(2*t) - 1)*exp(-b - t)*Heaviside(t)/2, t, s, noconds=True) \
         == exp(-b)/(s**2 - 1)
@@ -479,7 +481,7 @@ def test_laplace_transform():
     assert LT(exp(2*t), t, s)[:2] == (1/(s - 2), 2)
     assert LT(exp(a*t), t, s)[:2] == (1/(s - a), a)
 
-    assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, 0, True)
+    assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, 0, Eq(arg(a), 0) & Ne(1/a, 0))
 
     assert LT(erf(t), t, s) == (erfc(s/2)*exp(s**2/4)/s, 0, True)
 
@@ -490,17 +492,15 @@ def test_laplace_transform():
     assert LT(exp(-a*t)*cos(b*t), t, s) == \
         ((a + s)/(b**2 + (a + s)**2), -a, True)
 
-    assert LT(besselj(0, t), t, s) == (1/sqrt(1 + s**2), 0, True)
-    assert LT(besselj(1, t), t, s) == (1 - 1/sqrt(1 + 1/s**2), 0, True)
+    assert LT(besselj(0, t), t, s) == (1/sqrt(1 + s**2), 0, s > -oo)
+    assert LT(besselj(1, t), t, s) == (1 - 1/sqrt(1 + 1/s**2), 0, s > -oo)
     # TODO general order works, but is a *mess*
     # TODO besseli also works, but is an even greater mess
 
     # test a bug in conditions processing
     # TODO the auxiliary condition should be recognised/simplified
-    assert LT(exp(t)*cos(t), t, s)[:-1] in [
-        ((s - 1)/(s**2 - 2*s + 2), -oo),
-        ((s - 1)/((s - 1)**2 + 1), -oo),
-    ]
+    assert LT(exp(t)*cos(t), t, s) == ((s - 1)/((s - 1)**2 + 1), -oo,
+        Abs(2*arg(1 - s) + 2*pi) < pi)
 
     # DiracDelta function: standard cases
     assert LT(DiracDelta(t), t, s) == (1, -oo, True)
@@ -532,9 +532,6 @@ def test_laplace_transform():
         ((2*sin(s**2/(2*pi))*fresnelc(s/pi) - 2*cos(s**2/(2*pi))*fresnels(s/pi)
         + sqrt(2)*cos(s**2/(2*pi) + pi/4))/(2*s), 0, True))
 
-    # What is this testing:
-    Ne(1/s, 1) & (0 < cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1)
-
     Mt = Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]])
     Ms = Matrix([[    1/(s - 1), (s + 1)**(-2)],
                  [(s + 1)**(-2),     1/(s - 1)]])
@@ -542,14 +539,17 @@ def test_laplace_transform():
     # The default behaviour for Laplace tranform of a Matrix returns a Matrix
     # of Tuples and is deprecated:
     with warns_deprecated_sympy():
-        Ms_conds = Matrix([[(1/(s - 1), 1, s > 1), ((s + 1)**(-2), 0, True)],
-                           [((s + 1)**(-2), 0, True), (1/(s - 1), 1, s > 1)]])
+        Ms_conds = Matrix([
+            [(1/(s - 1), 1, (s > -oo) & (s < 0)),
+            ((s + 1)**(-2), 0, True)],
+            [((s + 1)**(-2), 0, True),
+            (1/(s - 1), 1, (s > -oo) & (s < 0))]])
     with warns_deprecated_sympy():
         assert LT(Mt, t, s) == Ms_conds
 
     # The new behavior is to return a tuple of a Matrix and the convergence
     # conditions for the matrix as a whole:
-    assert LT(Mt, t, s, legacy_matrix=False) == (Ms, 1, s > 1)
+    assert LT(Mt, t, s, legacy_matrix=False) == (Ms, 1, (s > -oo) & (s < 0))
 
     # With noconds=True the transformed matrix is returned without conditions
     # either way:
@@ -561,12 +561,12 @@ def test_laplace_transform():
 def test_issue_8368_7173():
     LT = laplace_transform
     # hyperbolic
-    assert LT(sinh(x), x, s) == (1/(s**2 - 1), 1, s > 1)
-    assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, s > 1)
+    assert LT(sinh(x), x, s) == (1/(s**2 - 1), 1, (s > -oo) & (s < 0))
+    assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, (s > -oo) & (s < -1))
     assert LT(sinh(x + 3), x, s) == (
-        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, s > 1)
+        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, (s > -oo) & (s < 0))
     assert LT(sinh(x)*cosh(x), x, s) == (
-        1/(s**2 - 4), 2, s > 2)
+        1/(s**2 - 4), 2, (s > -oo) & (s < 2))
     # trig (make sure they are not being rewritten in terms of exp)
     assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), 0, True)
 
