@@ -6,8 +6,7 @@ from sympy.concrete.gosper import gosper_sum
 from sympy.core.add import Add
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul
-from sympy.core.numbers import Infinity
-from sympy.core.numbers import Zero
+from sympy.core.numbers import Infinity, Zero
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -673,25 +672,17 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Sum.is_convergent()
         """
         return Sum(abs(self.function), self.limits).is_convergent()
+    
     @staticmethod
     def is_expr_convergent(expr):
         """
         Checks for convergence of an expression based on properties of convergence and divergence.
-        Parameters
-        ----------
-        expr : TYPE
-            DESCRIPTION.
-
-        Raises
-        ------
-        TypeError
-            DESCRIPTION.
-
-        Returns
-        -------
-        bool
-            DESCRIPTION.
-
+        
+        Explanation
+        ===========
+        
+        This function returns True if the expression passed into it converges ,
+        False if the expression diverges and most importantly None in cases where nothing can be commented on.
         """
         if isinstance(expr, (Mul, Add, Pow, Zero, Infinity)):
             args = expr.args
