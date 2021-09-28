@@ -78,15 +78,23 @@ def test_Normal():
 
     assert density_X_at_obs == expected_density
 
+
+@XFAIL
+def test_MultivariateTDist_1():
+    t1 = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
+    assert integrate(density(t1)(x, y), (x, -oo, oo), (y, -oo, oo)).evalf() == 1
+
+
 def test_MultivariateTDist():
     t1 = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     assert(density(t1))(1, 1) == 1/(8*pi)
     assert t1.pspace.distribution.set == ProductSet(S.Reals, S.Reals)
-    assert integrate(density(t1)(x, y), (x, -oo, oo), \
-        (y, -oo, oo)).evalf() == 1
+    i1 = integrate(density(t1)(x, y), (x, -oo, oo)).simplify()
+    assert integrate(i1, (y, -oo, oo)).evalf() == 1
     raises(ValueError, lambda: MultivariateT('T', [1, 2], [[1, 1], [1, -1]], 1))
     t2 = MultivariateT('t2', [1, 2], [[x, 0], [0, y]], 1)
     assert density(t2)(1, 2) == 1/(2*pi*sqrt(x*y))
+
 
 def test_multivariate_laplace():
     raises(ValueError, lambda: Laplace('T', [1, 2], [[1, 2], [2, 1]]))
@@ -247,14 +255,17 @@ def test_NegativeMultinomial():
     assert N.pspace.distribution.set == ProductSet(Range(0, oo, 1),
                     Range(0, oo, 1), Range(0, oo, 1), Range(0, oo, 1))
 
+
 def test_JointPSpace_marginal_distribution():
     T = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
+    x = symbols('x', real=1)
     assert marginal_distribution(T, T[1])(x) == sqrt(2)*(x**2 + 2)/(
         8*polar_lift(x**2/2 + 1)**Rational(5, 2))
     assert integrate(marginal_distribution(T, 1)(x), (x, -oo, oo)) == 1
 
     t = MultivariateT('T', [0, 0, 0], [[1, 0, 0], [0, 1, 0], [0, 0, 1]], 3)
     assert comp(marginal_distribution(t, 0)(1).evalf(), 0.2, .01)
+
 
 def test_JointRV():
     x1, x2 = (Indexed('x', i) for i in (1, 2))
