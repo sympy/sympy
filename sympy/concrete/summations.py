@@ -672,15 +672,15 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Sum.is_convergent()
         """
         return Sum(abs(self.function), self.limits).is_convergent()
-    
+
     @staticmethod
     def is_expr_convergent(expr):
         """
         Checks for convergence of an expression based on properties of convergence and divergence.
-        
+
         Explanation
         ===========
-        
+
         This function returns True if the expression passed into it converges ,
         False if the expression diverges and most importantly None in cases where nothing can be commented on.
         """
