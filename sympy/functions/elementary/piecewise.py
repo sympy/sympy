@@ -165,10 +165,7 @@ class Piecewise(Function):
             return args[0][0]
 
         # make Relationals in conditions canonical
-        _args = [i.args for i in args]
-        for i in range(len(_args)):
-            e, c = _args[i]
-            _args[i] = (e, _canonical(c))
+        _args = [(e, _canonical(c)) for e, c in args]
 
         newargs = []
         current_cond = set()  # the conditions up to a given e, c pair
@@ -1160,14 +1157,9 @@ def _clip(A, B, k):
 def piecewise_canonical_conditions(expr, evaluate=False):
     from sympy.logic.boolalg import BooleanFunction
     # make conditions canonical
-    args = []
-    for e, c in expr.args:
-        # make c canonical
-        if isinstance(c, BooleanFunction):
-            c = c.canonical()
-        c = _canonical(c)
-        args.append((e, c))
-
+    can = lambda c: c.canonical() if isinstance(
+        c, BooleanFunction) else _canonical(c)
+    args = [(e, can(c)) for e, c in expr.args]
     return Piecewise(*args, evaluate=evaluate)
 
 

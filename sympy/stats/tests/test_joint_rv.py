@@ -81,6 +81,8 @@ def test_Normal():
 
 @XFAIL
 def test_MultivariateTDist_1():
+    # same as in the test below but no simplify applied
+    # before integrating by y
     t1 = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     assert integrate(density(t1)(x, y), (x, -oo, oo), (y, -oo, oo)).evalf() == 1
 

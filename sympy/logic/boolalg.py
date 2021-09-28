@@ -462,34 +462,41 @@ class BooleanFunction(Application, Boolean):
                             ) and (c.has(oo) or c.has(-oo)):
                         if s.inf is -oo and s.sup is oo:
                             if c.xreplace({x: oo}) == True:
-                                if c.xreplace({x: s.inf}) == True:
+                                if c.xreplace({x: -oo}) == True:
                                     c = x <= s.sup
                                 else:
+                                    assert c.xreplace({x: -oo}) == False
                                     c = x > s.inf
                             elif c.xreplace({x: -oo}) == True:
                                 c = x < s.sup
                             else:
+                                assert c.xreplace({x: -oo}) == False and c.xreplace({x: oo}) == False
                                 c = And(x > -oo, x < oo)
                         elif s.inf is -oo:
                             if c.xreplace({x: -oo}) == True:
                                 if c.xreplace({x: s.sup}) == True:
                                     c = x <= s.sup
                                 else:
+                                    assert c.xreplace({x: s.sup}) == False
                                     c = x < s.sup
                             else:
+                                assert c.xreplace({x: -oo}) == False
                                 if c.xreplace({x: s.sup}) == True:
                                     c = And(x > -oo, x <= s.sup)
                                 else:
+                                    assert c.xreplace({x: s.sup}) == False
                                     c = And(x > -oo, x < s.sup)
                         else:  # s.sup == oo
                             if c.xreplace({x: oo}) == True:
                                 if c.xreplace({x: s.inf}) == True:
                                     c = x >= s.inf
                                 else:
+                                    assert c.xreplace({x: s.inf}) == False
                                     c = x > s.inf
                             elif c.xreplace({x: s.inf}) == True:
                                 c = And(x >= s.inf, x < s.sup)
                             else:
+                                assert c.xreplace({x: oo}) == False and c.xreplace({x: s.inf}) == False
                                 c = And(x > s.inf, x < s.sup)
                     else:
                         c = s.as_relational(x)
