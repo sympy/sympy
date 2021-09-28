@@ -182,24 +182,31 @@ class Piecewise(Function):
                         d = x
                     _c = c
                     try:
-                        c = c.xreplace({x: d}).as_set().as_relational(x)
+                        newc = c.xreplace({x: d}).as_set().as_relational(x)
                     except NotImplementedError:
                         pass
                     else:
                         reps = {}
-                        for i in c.atoms(Relational):
+                        for i in newc.atoms(Relational):
                             ic = i.canonical
                             if ic.rhs in (S.Infinity, S.NegativeInfinity):
-                                if not _c.has(ic.rhs):
-                                    # don't accept introduction of
-                                    # new Relationals with +/-oo
-                                    reps[i] = S.true
+                                inf = ic.rhs
+                                if newc.xreplace({i: True}
+                                        ).xreplace({x: inf}) == True:
+                                    # it was a redundant inf
+                                    reps[i] = True
                                 elif ('=' not in ic.rel_op and
-                                        c.xreplace({x: i.rhs}) !=
-                                        _c.xreplace({x: i.rhs})):
+                                        c.xreplace({x: inf}) !=
+                                        newc.xreplace({x: inf})):
+                                    # hack around inability of Interval to
+                                    # contain +/-oo
+                                    # >>> And(x >= -oo, x <= 3).as_set()
+                                    # Interval(-oo, 3)
+                                    # >>> _.as_relational(x)
+                                    # (x <= 3) & (-oo < x)
                                     reps[i] = Relational(
                                         i.lhs, i.rhs, i.rel_op + '=')
-                        c = c.xreplace(reps)
+                        c = newc.xreplace(reps)
             args.append((e, _canonical(c)))
 
         for expr, cond in args:

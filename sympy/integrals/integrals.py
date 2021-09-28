@@ -468,6 +468,13 @@ class Integral(AddWithLimits):
         reps = {}
         for xab in self.limits:
             if len(xab) != 3:
+                # it makes sense to just make
+                # all x real but in practice with the
+                # current state of integration...this
+                # doesn't work out well
+                # x = xab[0]
+                # if x not in reps and not x.is_real:
+                #     reps[x] = Dummy(real=True)
                 continue
             x, a, b = xab
             l = (a, b)
@@ -559,10 +566,10 @@ class Integral(AddWithLimits):
                         if res is not None:
                             f, cond = res
                             if conds == 'piecewise':
-                                ret = Piecewise(
-                                    (f, cond),
-                                    (self.func(
-                                    function, (x, a, b)), True))
+                                u = self.func(function, (x, a, b))
+                                # XXX there is a fragile relationship
+                                # with simplification here
+                                return Piecewise((f, cond), (u, True))
                             elif conds == 'separate':
                                 if len(self.limits) != 1:
                                     raise ValueError(filldedent('''
