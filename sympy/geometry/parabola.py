@@ -5,7 +5,7 @@ Contains
 
 """
 
-from sympy.core import S
+from sympy.core import S, Integer
 from sympy.core.compatibility import ordered
 from sympy.core.symbol import _symbol
 from sympy import symbols, simplify, solve  # type:ignore
@@ -96,7 +96,7 @@ class Parabola(GeometrySet):
         2
 
         """
-        return S(2)
+        return Integer(2)
 
     @property
     def axis_of_symmetry(self):

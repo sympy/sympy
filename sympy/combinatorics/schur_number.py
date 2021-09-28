@@ -42,7 +42,7 @@ class SchurNumber(Function):
             if k is S.Infinity:
                 return S.Infinity
             if k.is_zero:
-                return 0
+                return S.Zero
             if not k.is_integer or k.is_negative:
                 raise ValueError("k should be a positive integer")
             first_known_schur_numbers = {1: 1, 2: 4, 3: 13, 4: 44}
@@ -51,7 +51,7 @@ class SchurNumber(Function):
 
     def lower_bound(self):
         f_ = self.args[0]
-        return (3**f_ - 1)/2
+        return (Integer(3)**f_ - S.One)/Integer(2)
 
 
 def _schur_subsets_number(n):

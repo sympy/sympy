@@ -219,7 +219,7 @@ class factorial(CombinatorialFunction):
                     # its inverse (if n > 4 is a composite number, then
                     # (n-1)! = 0 mod n)
                     if isprime:
-                        return S(-1 % q)
+                        return S.NegativeOne % q
                     elif isprime is False and (aq - 6).is_nonnegative:
                         return S.Zero
                 elif n.is_Integer and q.is_Integer:

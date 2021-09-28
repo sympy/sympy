@@ -890,10 +890,10 @@ class harmonic(Function):
                 p = p - u * q
                 if u.is_nonnegative and p.is_positive and q.is_positive and p < q:
                     k = Dummy("k")
-                    t1 = q * Sum(1 / (q * k + p), (k, 0, u))
-                    t2 = 2 * Sum(cos((2 * pi * p * k) / S(q)) *
-                                   log(sin((pi * k) / S(q))),
-                                   (k, 1, floor((q - 1) / S(2))))
+                    t1 = q * Sum(S.One / (q * k + p), (k, S.Zero, u))
+                    t2 = 2 * Sum(cos((2 * pi * p * k) / q) *
+                                   log(sin((pi * k) / q)),
+                                   (k, S.One, floor((q - S.One) / Integer(2))))
                     t3 = (pi / 2) * cot((pi * p) / q) + log(2 * q)
                     return t1 + t2 - t3
 
@@ -1252,7 +1252,7 @@ class genocchi(Function):
             if (not n.is_Integer) or n.is_nonpositive:
                 raise ValueError("Genocchi numbers are defined only for " +
                                  "positive integers")
-            return 2 * (1 - S(2) ** n) * bernoulli(n)
+            return 2 * (S.One - Integer(2) ** n) * bernoulli(n)
 
         if n.is_odd and (n - 1).is_positive:
             return S.Zero
@@ -1262,7 +1262,7 @@ class genocchi(Function):
 
     def _eval_rewrite_as_bernoulli(self, n, **kwargs):
         if n.is_integer and n.is_nonnegative:
-            return (1 - S(2) ** n) * bernoulli(n) * 2
+            return (S.One - Integer(2) ** n) * bernoulli(n) * 2
 
     def _eval_is_integer(self):
         if self.args[0].is_integer and self.args[0].is_positive:

@@ -6,7 +6,7 @@ combinatorial polynomials.
 
 """
 
-from sympy.core import Rational
+from sympy.core import Rational, Integer
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
@@ -278,7 +278,7 @@ def jacobi_normalized(n, a, b, x):
     .. [3] http://functions.wolfram.com/Polynomials/JacobiP/
 
     """
-    nfactor = (S(2)**(a + b + 1) * (gamma(n + a + 1) * gamma(n + b + 1))
+    nfactor = (Integer(2)**(a + b + 1) * (gamma(n + a + 1) * gamma(n + b + 1))
                / (2*n + a + b + 1) / (factorial(n) * gamma(n + a + b + 1)))
 
     return jacobi(n, a, b, x) / sqrt(nfactor)

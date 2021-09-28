@@ -7,7 +7,7 @@ as a SymPy function for symbolic manipulation.
 
 """
 from sympy.core.function import ArgumentIndexError, Function
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, Integer
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp, log
@@ -160,7 +160,7 @@ class log1p(Function):
     def _eval_is_nonnegative(self):
         return self.args[0].is_nonnegative
 
-_Two = S(2)
+_Two = Integer(2)
 
 def _exp2(x):
     return Pow(_Two, x)
@@ -326,7 +326,7 @@ class fma(Function):
         return _fma(arg)
 
 
-_Ten = S(10)
+_Ten = Integer(10)
 
 
 def _log10(x):

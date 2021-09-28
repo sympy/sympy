@@ -449,7 +449,7 @@ class exp(ExpBase, metaclass=ExpMeta):
         if self.args[0].is_extended_real:
             return True
         elif self.args[0].is_imaginary:
-            arg2 = -S(2) * S.ImaginaryUnit * self.args[0] / S.Pi
+            arg2 = -Integer(2) * S.ImaginaryUnit * self.args[0] / S.Pi
             return arg2.is_even
 
     def _eval_is_complex(self):

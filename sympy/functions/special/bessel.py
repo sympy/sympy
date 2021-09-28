@@ -5,7 +5,7 @@ from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.function import Function, ArgumentIndexError, _mexpand
 from sympy.core.logic import fuzzy_or, fuzzy_not
-from sympy.core.numbers import Rational, pi, I
+from sympy.core.numbers import Rational, pi, I, Integer
 from sympy.core.power import Pow
 from sympy.core.symbol import Dummy, Wild
 from sympy.core.sympify import sympify
@@ -1275,7 +1275,7 @@ class airyai(AiryBase):
                 return ((3**Rational(1, 3)*x)**(-n)*(3**Rational(1, 3)*x)**(n + 1)*sin(pi*(n*Rational(2, 3) + Rational(4, 3)))*factorial(n) *
                         gamma(n/3 + Rational(2, 3))/(sin(pi*(n*Rational(2, 3) + Rational(2, 3)))*factorial(n + 1)*gamma(n/3 + Rational(1, 3))) * p)
             else:
-                return (S.One/(3**Rational(2, 3)*pi) * gamma((n+S.One)/S(3)) * sin(2*pi*(n+S.One)/S(3)) /
+                return (S.One/(3**Rational(2, 3)*pi) * gamma((n+S.One)/Integer(3)) * sin(2*pi*(n+S.One)/Integer(3)) /
                         factorial(n) * (root(3, 3)*x)**n)
 
     def _eval_rewrite_as_besselj(self, z, **kwargs):
@@ -1447,10 +1447,10 @@ class airybi(AiryBase):
             x = sympify(x)
             if len(previous_terms) > 1:
                 p = previous_terms[-1]
-                return (3**Rational(1, 3)*x * Abs(sin(2*pi*(n + S.One)/S(3))) * factorial((n - S.One)/S(3)) /
-                        ((n + S.One) * Abs(cos(2*pi*(n + S.Half)/S(3))) * factorial((n - 2)/S(3))) * p)
+                return (3**Rational(1, 3)*x * Abs(sin(2*pi*(n + S.One)/Integer(3))) * factorial((n - S.One)/Integer(3)) /
+                        ((n + S.One) * Abs(cos(2*pi*(n + S.Half)/Integer(3))) * factorial((n - 2)/Integer(3))) * p)
             else:
-                return (S.One/(root(3, 6)*pi) * gamma((n + S.One)/S(3)) * Abs(sin(2*pi*(n + S.One)/S(3))) /
+                return (S.One/(root(3, 6)*pi) * gamma((n + S.One)/Integer(3)) * Abs(sin(2*pi*(n + S.One)/Integer(3))) /
                         factorial(n) * (root(3, 3)*x)**n)
 
     def _eval_rewrite_as_besselj(self, z, **kwargs):

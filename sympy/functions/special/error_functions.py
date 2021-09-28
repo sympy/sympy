@@ -1,7 +1,7 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 
-from sympy.core import Add, S, sympify, cacheit, pi, I, Rational
+from sympy.core import Add, S, sympify, cacheit, pi, I, Rational, Integer
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial, factorial2, RisingFactorial
@@ -173,7 +173,7 @@ class erf(Function):
             return S.Zero
         else:
             x = sympify(x)
-            k = floor((n - 1)/S(2))
+            k = floor((n - 1)/Integer(2))
             if len(previous_terms) > 2:
                 return -previous_terms[-2] * x**2 * (n - 2)/(n*k)
             else:
@@ -384,7 +384,7 @@ class erfc(Function):
 
         # Try to pull out factors of -1
         if arg.could_extract_minus_sign():
-            return S(2) - cls(-arg)
+            return Integer(2) - cls(-arg)
 
     @staticmethod
     @cacheit
@@ -395,7 +395,7 @@ class erfc(Function):
             return S.Zero
         else:
             x = sympify(x)
-            k = floor((n - 1)/S(2))
+            k = floor((n - 1)/Integer(2))
             if len(previous_terms) > 2:
                 return -previous_terms[-2] * x**2 * (n - 2)/(n*k)
             else:
@@ -576,7 +576,7 @@ class erfi(Function):
             return S.Zero
         else:
             x = sympify(x)
-            k = floor((n - 1)/S(2))
+            k = floor((n - 1)/Integer(2))
             if len(previous_terms) > 2:
                 return previous_terms[-2] * x**2 * (n - 2)/(n*k)
             else:
@@ -1694,7 +1694,7 @@ class Li(Function):
     def eval(cls, z):
         if z is S.Infinity:
             return S.Infinity
-        elif z == S(2):
+        elif z is Integer(2):
             return S.Zero
 
     def fdiff(self, argindex=1):
@@ -2422,7 +2422,7 @@ class fresnels(FresnelIntegral):
                 p = previous_terms[-1]
                 return (-pi**2*x**4*(4*n - 1)/(8*n*(2*n + 1)*(4*n + 3))) * p
             else:
-                return x**3 * (-x**4)**n * (S(2)**(-2*n - 1)*pi**(2*n + 1)) / ((4*n + 3)*factorial(2*n + 1))
+                return x**3 * (-x**4)**n * (Integer(2)**(-2*n - 1)*pi**(2*n + 1)) / ((4*n + 3)*factorial(2*n + 1))
 
     def _eval_rewrite_as_erf(self, z, **kwargs):
         return (S.One + I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) - I*erf((S.One - I)/2*sqrt(pi)*z))
@@ -2578,7 +2578,7 @@ class fresnelc(FresnelIntegral):
                 p = previous_terms[-1]
                 return (-pi**2*x**4*(4*n - 3)/(8*n*(2*n - 1)*(4*n + 1))) * p
             else:
-                return x * (-x**4)**n * (S(2)**(-2*n)*pi**(2*n)) / ((4*n + 1)*factorial(2*n))
+                return x * (-x**4)**n * (Integer(2)**(-2*n)*pi**(2*n)) / ((4*n + 1)*factorial(2*n))
 
     def _eval_rewrite_as_erf(self, z, **kwargs):
         return (S.One - I)/4 * (erf((S.One + I)/2*sqrt(pi)*z) + I*erf((S.One - I)/2*sqrt(pi)*z))

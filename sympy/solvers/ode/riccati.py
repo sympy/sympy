@@ -409,7 +409,7 @@ def construct_c_case_1(num, den, x, pole):
     # in the c-vector is c = (1 +- sqrt(1 + 4*r))/2
     if r != -S(1)/4:
         return [[(1 + sqrt(1 + 4*r))/2], [(1 - sqrt(1 + 4*r))/2]]
-    return [[S(1)/2]]
+    return [[S.Half]]
 
 
 def construct_c_case_2(num, den, x, pole, mul):
@@ -540,7 +540,7 @@ def construct_d_case_6(num, den, x):
     # d_(-1) = (1 +- sqrt(1 + 4*s_oo))/2
     if s_inf != -S(1)/4:
         return [[(1 + sqrt(1 + 4*s_inf))/2], [(1 - sqrt(1 + 4*s_inf))/2]]
-    return [[S(1)/2]]
+    return [[S.Half]]
 
 
 def construct_d(num, den, x, val_inf):

@@ -1,4 +1,4 @@
-from sympy.core import S, Dummy, pi
+from sympy.core import S, Dummy, pi, Integer
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -612,6 +612,6 @@ def gauss_lobatto(n, n_digits):
 
     xi.insert(0, -1)
     xi.append(1)
-    w.insert(0, (S(2)/(n*(n-1))).n(n_digits))
-    w.append((S(2)/(n*(n-1))).n(n_digits))
+    w.insert(0, (Integer(2)/(n*(n-1))).n(n_digits))
+    w.append((Integer(2)/(n*(n-1))).n(n_digits))
     return xi, w

@@ -74,20 +74,20 @@ def _monotonic_sign(self):
         s = self
         if s.is_prime:
             if s.is_odd:
-                return S(3)
+                return Integer(3)
             else:
-                return S(2)
+                return Integer(2)
         elif s.is_composite:
             if s.is_odd:
-                return S(9)
+                return Integer(9)
             else:
-                return S(4)
+                return Integer(4)
         elif s.is_positive:
             if s.is_even:
                 if s.is_prime is False:
-                    return S(4)
+                    return Integer(4)
                 else:
-                    return S(2)
+                    return Integer(2)
             elif s.is_integer:
                 return S.One
             else:

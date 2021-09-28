@@ -333,7 +333,7 @@ class betainc_regularized(Function):
         return Function.__new__(cls, a, b, x1, x2)
 
     def _eval_mpmath(self):
-        return betainc_mpmath_fix, (*self.args, S(1))
+        return betainc_mpmath_fix, (*self.args, S.One)
 
     def fdiff(self, argindex):
         a, b, x1, x2 = self.args
