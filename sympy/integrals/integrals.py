@@ -570,7 +570,12 @@ class Integral(AddWithLimits):
                                 u = self.func(function, (x, a, b))
                                 # XXX there is a fragile relationship
                                 # with simplification here
-                                rv = Piecewise((f, cond), (u, True))
+                                from sympy.logic.boolalg import BooleanFunction
+                                if isinstance(cond, BooleanFunction):
+                                    cond = cond.canonical()
+                                    if cond.rhs is S.Infinity and '=' in cond.rel_op:
+                                        return f
+                                return Piecewise((f, cond), (u, True))
                                 if isinstance(rv, Piecewise):
                                     rv = piecewise_canonical_conditions(rv)
                                 return rv

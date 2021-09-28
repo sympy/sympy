@@ -79,19 +79,11 @@ def test_Normal():
     assert density_X_at_obs == expected_density
 
 
-@XFAIL
-def test_MultivariateTDist_1():
-    # same as in the test below but no simplify applied
-    # before integrating by y
-    t1 = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
-    assert integrate(density(t1)(x, y), (x, -oo, oo), (y, -oo, oo)).evalf() == 1
-
-
 def test_MultivariateTDist():
     t1 = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     assert(density(t1))(1, 1) == 1/(8*pi)
     assert t1.pspace.distribution.set == ProductSet(S.Reals, S.Reals)
-    i1 = integrate(density(t1)(x, y), (x, -oo, oo)).simplify()
+    i1 = integrate(density(t1)(x, y), (x, -oo, oo))
     assert integrate(i1, (y, -oo, oo)).evalf() == 1
     raises(ValueError, lambda: MultivariateT('T', [1, 2], [[1, 1], [1, -1]], 1))
     t2 = MultivariateT('t2', [1, 2], [[x, 0], [0, y]], 1)
