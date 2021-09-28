@@ -66,6 +66,7 @@ from .inverse import (
     _pinv, _inv_mod, _inv_ADJ, _inv_GE, _inv_LU, _inv_CH, _inv_LDL, _inv_QR,
     _inv, _inv_block)
 
+from .normalforms import _to_domain
 
 class DeferredVector(Symbol, NotIterable):
     """A vector whose components are deferred (e.g. for use with lambdify)
@@ -2235,6 +2236,9 @@ class MatrixBase(MatrixDeprecated,
     def strongly_connected_components_decomposition(self, lower=True):
         return _strongly_connected_components_decomposition(self, lower=lower)
 
+    def to_domain(self, domain=None):
+        return _to_domain(self, domain=domain)
+
     _sage_ = Basic._sage_
 
     rank_decomposition.__doc__     = _rank_decomposition.__doc__
@@ -2277,6 +2281,8 @@ class MatrixBase(MatrixDeprecated,
         _strongly_connected_components.__doc__
     strongly_connected_components_decomposition.__doc__ = \
         _strongly_connected_components_decomposition.__doc__
+
+    to_domain.__doc__              = _to_domain.__doc__
 
 
 @deprecated(

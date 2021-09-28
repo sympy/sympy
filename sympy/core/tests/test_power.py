@@ -13,8 +13,8 @@ from sympy.polys import Poly
 from sympy.series.order import O
 from sympy.sets import FiniteSet
 from sympy.core.expr import unchanged
-from sympy.core.power import power
-from sympy.testing.pytest import warns_deprecated_sympy, _both_exp_pow
+from sympy.core.power import power, binpow
+from sympy.testing.pytest import warns_deprecated_sympy, _both_exp_pow, raises
 
 
 def test_rational():
@@ -630,3 +630,11 @@ def test_powers_of_I():
         1, sqrt(I), I, sqrt(I)**3, -1, -sqrt(I), -I, -sqrt(I)**3,
         1, sqrt(I), I, sqrt(I)**3, -1]
     assert sqrt(I)**(S(9)/2) == -I**(S(1)/4)
+
+
+def test_bin_pow():
+    raises(ValueError, lambda: binpow(3, 1))
+    raises(ValueError, lambda: binpow(3, 1/2))
+
+    for e in range(2, 10):
+        assert binpow(3, e) == 3**e

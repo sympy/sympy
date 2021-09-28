@@ -181,6 +181,35 @@ def integer_log(y, x):
     return e, r == 0 and y == 1
 
 
+def binpow(b, e):
+    """
+    Raise base b to integer exponent e > 1 efficiently, using binary
+    representation of e.
+
+    (The reason for not supporting e == 1 is that in that case b itself would
+    be returned, while in all other cases a new instance is computed. Callers
+    should handle the case e == 1 separately, so they can return a clone of b,
+    rather than b itself.)
+    """
+    e = _sympify(e)
+    if not e.is_integer or e < 2:
+        raise ValueError('Exponent must be integer greater than 1.')
+    bits = [int(d) for d in reversed(bin(e)[2:])]
+    m = len(bits)
+    p = b
+    first = True
+    for i in range(m):
+        if bits[i]:
+            if first:
+                r = p
+                first = False
+            else:
+                r *= p
+        if i < m - 1:
+            p *= p
+    return r
+
+
 class Pow(Expr):
     """
     Defines the expression x**y as "x raised to a power y"

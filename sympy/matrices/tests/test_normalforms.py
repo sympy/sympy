@@ -2,7 +2,11 @@ from sympy.testing.pytest import warns_deprecated_sympy
 
 from sympy import Symbol, Poly
 from sympy.matrices import Matrix
-from sympy.matrices.normalforms import invariant_factors, smith_normal_form
+from sympy.matrices.normalforms import (
+    invariant_factors,
+    smith_normal_form,
+    hermite_normal_form,
+)
 from sympy.polys.domains import ZZ, QQ
 
 
@@ -49,3 +53,14 @@ def test_smith_normal_deprecated():
     with warns_deprecated_sympy():
         smf = Matrix([[2, 0]])
     assert smith_normal_form(m) == smf
+
+
+def test_hermite_normal_form():
+    A = Matrix(3, 5, [2, 7, 17, 29, 41, 3, 11, 19, 31, 43, 5, 13, 23, 37, 47])
+    W_exp = Matrix([[1, 0, 0], [0, 2, 1], [0, 0, 1]])
+    W = hermite_normal_form(A)
+    assert W == W_exp
+
+    WT_exp = Matrix([[0, 0, 0], [0, 0, 0], [1, 0, 0], [0, 2, 0], [0, 0, 1]])
+    WT = hermite_normal_form(A.T)
+    assert WT == WT_exp

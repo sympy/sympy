@@ -172,3 +172,35 @@ def _orthogonalize(cls, *vecs, normalize=False, rankcheck=False):
             col = cls(Q[:, i])
         ret.append(col)
     return ret
+
+
+def supplementary_space(M, domain=None):
+    """
+    Given an n x r matrix M of rank r (so r <= n), find an invertible n x n
+    matrix B such that the first r columns of B equal M.
+
+    Parameters
+    ----------
+    M: the Matrix to be supplemented
+    domain: domain over which to work
+
+    Returns
+    -------
+    the Matrix B
+
+    Raises
+    ------
+    ValueError if M was not of rank r
+
+    """
+    n, r = M.shape
+    M = M.row_join(M.eye(n))
+
+    dM = M.to_domain(domain)
+    dR, pivots = dM.rref()
+    if pivots[:r] != tuple(range(r)):
+        raise ValueError('M was not of maximal rank')
+
+    R = dR.to_Matrix()
+    A = R[:, r:]
+    return A.to_domain(domain).inv().to_Matrix()

@@ -438,6 +438,36 @@ def test_DomainMatrix_rref():
     raises(ValueError, lambda: Az.rref())
 
 
+def test_DomainMatrix_columnspace():
+    A = DomainMatrix([[QQ(1), QQ(-1)], [QQ(2), QQ(-2)]], (2, 2), QQ)
+    Acol = DomainMatrix([[QQ(1)], [QQ(2)]], (2, 1), QQ)
+    assert A.columnspace() == Acol
+
+    Az = DomainMatrix([[ZZ(1), ZZ(-1)], [ZZ(2), ZZ(-2)]], (2, 2), ZZ)
+    raises(ValueError, lambda: Az.columnspace())
+
+
+def test_DomainMatrix_columnspace_sparse():
+    A = DomainMatrix([[QQ(1), QQ(-1)], [QQ(2), QQ(-2)]], (2, 2), QQ, fmt='sparse')
+    Acol = DomainMatrix({0: {0: QQ(1)}, 1: {0: QQ(2)}}, (2, 1), QQ)
+    assert A.columnspace() == Acol
+
+
+def test_DomainMatrix_rowspace():
+    A = DomainMatrix([[QQ(1), QQ(-1)], [QQ(2), QQ(-2)]], (2, 2), QQ)
+    Arow = DomainMatrix([[QQ(1), QQ(-1)]], (1, 2), QQ)
+    assert A.rowspace() == Arow
+
+    Az = DomainMatrix([[ZZ(1), ZZ(-1)], [ZZ(2), ZZ(-2)]], (2, 2), ZZ)
+    raises(ValueError, lambda: Az.rowspace())
+
+
+def test_DomainMatrix_rowspace_sparse():
+    A = DomainMatrix([[QQ(1), QQ(-1)], [QQ(2), QQ(-2)]], (2, 2), QQ, fmt='sparse')
+    Arow = DomainMatrix({0: {0: QQ(1), 1: QQ(-1)}}, (1, 2), QQ)
+    assert A.rowspace() == Arow
+
+
 def test_DomainMatrix_nullspace():
     A = DomainMatrix([[QQ(1), QQ(1)], [QQ(1), QQ(1)]], (2, 2), QQ)
     Anull = DomainMatrix([[QQ(-1), QQ(1)]], (1, 2), QQ)

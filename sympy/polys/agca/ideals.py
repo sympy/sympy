@@ -2,6 +2,7 @@
 
 from functools import reduce
 
+from sympy.core.power import binpow
 from sympy.polys.polyerrors import CoercionFailed
 
 
@@ -266,8 +267,12 @@ class Ideal:
     def __pow__(self, exp):
         if exp < 0:
             raise NotImplementedError
-        # TODO exponentiate by squaring
-        return reduce(lambda x, y: x*y, [self]*exp, self.ring.ideal(1))
+        elif exp == 0:
+            return self.ring.ideal(1)
+        elif exp == 1:
+            return self * 1
+        else:
+            return binpow(self, exp)
 
     def __eq__(self, e):
         if not isinstance(e, Ideal) or e.ring != self.ring:

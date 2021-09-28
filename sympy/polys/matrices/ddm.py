@@ -100,6 +100,13 @@ class DDM(list):
     def getitem(self, i, j):
         return self[i][j]
 
+    def setitem(self, i, j, value):
+        m, n = self.shape
+        if not (-m <= i < m and -n <= j < n):
+            raise IndexError("index out of range")
+        i, j = i % m, j % n
+        self[i][j] = value
+
     def extract_slice(self, slice1, slice2):
         ddm = [row[slice2] for row in self[slice1]]
         rows = len(ddm)

@@ -1,5 +1,6 @@
 from sympy.matrices.common import _MinimalMatrix, _CastableMatrix
 from sympy.matrices.matrices import MatrixSubspaces
+from sympy.matrices.subspaces import supplementary_space
 from sympy.matrices import Matrix
 from sympy.core.numbers import Rational
 from sympy.core.symbol import symbols
@@ -112,3 +113,32 @@ def test_columnspace_second():
     #check if rank-nullity theorem holds
     assert M.rank() == len(basis)
     assert len(M.nullspace()) + len(M.columnspace()) == M.cols
+
+
+def test_supplementary_space_one():
+    from sympy import GF, QQ
+    M = Matrix([[1, 7, 0], [2, 3, 4]]).T
+    # First supplement over QQ:
+    B = supplementary_space(M, domain=QQ)
+    assert B[:, :2] == M
+    assert B.col(2) == Matrix.eye(3).col(0)
+    # Now supplement over GF(7):
+    B = supplementary_space(M, domain=GF(7))
+    # Entries will be congruent mod 7, but might not be equal as rationals.
+    assert all((B[i, j] - M[i, j]) % 7 == 0 for i in range(3) for j in range(2))
+    # When we work mod 7, first col of M goes to [1, 0, 0],
+    # so the supplementary vector cannot equal this, as it did
+    # when we worked over QQ. Instead, we get the second elt basis vector.
+    assert B.col(2) == Matrix.eye(3).col(1)
+
+
+def test_supplementary_space_second():
+    from sympy import QQ
+    M = Matrix([[1, 0, 0], [2, 0, 0]]).T
+    try:
+        supplementary_space(M, domain=QQ)
+    except ValueError as e:
+        # Should raise value error, since M was not of maximal rank.
+        assert str(e).find("maximal rank") > 0
+    else:
+        assert False
