@@ -499,4 +499,5 @@ def test_issue_22164():
 
     expr = dm ** bad_exp
 
+    # deprecation warning is not expected here
     SI._collect_factor_and_dimension(expr)
