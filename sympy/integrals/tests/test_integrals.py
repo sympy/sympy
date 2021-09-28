@@ -9,7 +9,6 @@ from sympy import (
     Float, arg
 )
 from sympy.core.expr import unchanged
-from sympy.functions.elementary.complexes import periodic_argument
 from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
