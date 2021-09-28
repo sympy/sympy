@@ -3,7 +3,8 @@ from sympy import (
     Integral, integrate, Interval, KroneckerDelta, lambdify, log, Max, Min,
     oo, Or, pi, Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
     cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Sum, Tuple, zoo, Float,
-    DiracDelta, Heaviside, Add, Mul, factorial, Ge, Contains, MatrixSymbol)
+    DiracDelta, Heaviside, Add, Mul, factorial, Ge, Contains, MatrixSymbol,
+    arg)
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.piecewise import Undefined, ExprCondPair
 from sympy.printing import srepr
@@ -1383,3 +1384,44 @@ def test_generators():
     for x in [a, IndexedBase("X")[a], Function('f')(a, b),
             MatrixSymbol("M", 1, 1)[0, 0]]:
         assert unchanged(Piecewise, (1, x + 1 < 0), (2, True))
+
+
+def test_piecewise_eval():
+    f = lambda x: x.args[0].cond
+    # unsimplified
+    assert f(Piecewise((x, (x > -oo) & (x < 3)))
+        ) == ((x > -oo) & (x < 3))
+    assert f(Piecewise((x, (x > -oo) & (x < oo)))
+        ) == ((x > -oo) & (x < oo))
+    assert f(Piecewise((x, (x > -3) & (x < 3)))
+        ) == ((x > -3) & (x < 3))
+    assert f(Piecewise((x, (x > -3) & (x < oo)))
+        ) == ((x > -3) & (x < oo))
+    assert f(Piecewise((x, (x <= 3) & (x > -oo)))
+        ) == ((x <= 3) & (x > -oo))
+    assert f(Piecewise((x, (x <= 3) & (x > -3)))
+        ) == ((x <= 3) & (x > -3))
+    assert f(Piecewise((x, (x >= -3) & (x < 3)))
+        ) == ((x >= -3) & (x < 3))
+    assert f(Piecewise((x, (x >= -3) & (x < oo)))
+        ) == ((x >= -3) & (x < oo))
+    assert f(Piecewise((x, (x >= -3) & (x <= 3)))
+        ) == ((x >= -3) & (x <= 3))
+    # simplify
+    assert f(Piecewise((x, (x <= oo) & (x > -oo)))
+        ) == (x > -oo)
+    assert f(Piecewise((x, (x <= oo) & (x > -3)))
+        ) == (x > -3)
+    assert f(Piecewise((x, (x >= -oo) & (x < 3)))
+        ) == (x < 3)
+    assert f(Piecewise((x, (x >= -oo) & (x < oo)))
+        ) == (x < oo)
+    assert f(Piecewise((x, (x >= -oo) & (x <= 3)))
+        ) == (x <= 3)
+    assert f(Piecewise((x, (x >= -oo) & (x <= oo)))
+        ) == (x <= oo)
+    assert f(Piecewise((x, (x >= -3) & (x <= oo)))
+        ) == (x >= -3)
+    assert f(Piecewise((x, (Abs(arg(a)) <= 1) | (Abs(arg(a)) < 1)))
+        ) == ((arg(a) >= -1) & (arg(a) <= 1))
+>>>>>>> 107bfea8c5... piecewise tests with oo

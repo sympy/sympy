@@ -174,6 +174,7 @@ class Piecewise(Function):
         for e, c in _args:
             if (not c.is_Atom and not isinstance(c, Relational) and
                     not c.has(im, re)):
+                orig_c = c
                 x = unigen(c)
                 if x is not None:
                     if not isinstance(x, Symbol):
@@ -187,16 +188,16 @@ class Piecewise(Function):
                         pass
                     else:
                         reps = {}
-                        for i in newc.atoms(Relational):
+                        for i in c.atoms(Relational):
                             ic = i.canonical
                             if ic.rhs in (S.Infinity, S.NegativeInfinity):
                                 inf = ic.rhs
-                                if c.xreplace({x: inf}) == True:
+                                if orig_c.xreplace({x: inf}) == True:
                                     # it was a redundant inf
                                     reps[i] = True
                                 elif ('=' not in ic.rel_op and
-                                        c.xreplace({x: inf}) !=
-                                        newc.xreplace({x: inf})):
+                                        orig_c.xreplace({x: inf}) !=
+                                        c.xreplace({x: inf})):
                                     # hack around inability of Interval to
                                     # contain +/-oo
                                     # >>> And(x >= -oo, x <= 3).as_set()
@@ -205,7 +206,7 @@ class Piecewise(Function):
                                     # (x <= 3) & (-oo < x)
                                     reps[i] = Relational(
                                         i.lhs, i.rhs, i.rel_op + '=')
-                        c = newc.xreplace(reps)
+                        c = c.xreplace(reps)
                         if c == True:
                             # a BooleanFunction cannot lose its ability
                             # to assert that x is real
