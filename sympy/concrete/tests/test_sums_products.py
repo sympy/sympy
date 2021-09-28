@@ -1068,6 +1068,14 @@ def test_is_absolutely_convergent():
     assert Sum((-1)**n, (n, 1, oo)).is_absolutely_convergent() is S.false
     assert Sum((-1)**n/n**2, (n, 1, oo)).is_absolutely_convergent() is S.true
 
+def test_is_expr_convergent():
+    assert Sum.is_expr_convergent(Sum(1/(x**2), (x, 1, oo)) + Sum(1/(3**x), (x, 1, oo))) is True
+    assert Sum.is_expr_convergent(Sum(1/(x**2), (x, 1, oo)) + Sum(1/(x), (x, 1, oo))) is False
+    assert Sum.is_expr_convergent(Sum(1/(x**2), (x, 1, oo)) * Sum(1/(3**x), (x, 1, oo))) is True
+    assert Sum.is_expr_convergent(Sum(1/(x**2), (x, 1, oo)) * Sum(1/(x), (x, 1, oo))) is False
+    assert Sum.is_expr_convergent(Sum(1/(x**2), (x, 1, oo)) * Sum(1/(3**x), (x, 1, oo)) * Sum((-1)**x/(x), (x, 1, oo))) is True
+    assert Sum.is_expr_convergent(Sum(1/(x), (x, 1, oo)) * 0) is True
+    assert Sum.is_expr_convergent((Sum(1/(x**2), (x, 1, oo)))**4) is True
 
 @XFAIL
 def test_convergent_failing():

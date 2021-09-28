@@ -676,7 +676,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     @staticmethod
     def is_expr_convergent(expr):
         """
-        Checks for convergence of an expression.
+        Checks for convergence of an expression based on properties of convergence and divergence.
         Parameters
         ----------
         expr : TYPE
@@ -693,44 +693,48 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             DESCRIPTION.
 
         """
-        if isinstance(expr, (Mul,Add,Pow,Zero,Infinity)):
+        if isinstance(expr, (Mul, Add, Pow, Zero, Infinity)):
             args = expr.args
-            a,b,c=0,0,0
-            if isinstance(expr ,Add):
+            a, b, c, d = 0, 0, 0, 0
+            # variable 'a' stands for arguments(series) which are not absolutely convergent but are conditionally convergent by nature
+            # variable 'b' stands for arguments(series) which are absolutely convergent by nature
+            # variable 'c' stands for arguments(finite constants)
+            # variable 'd' stands for arguments(series) which are divergent by nature
+            if isinstance(expr, Add):
                 for i in range(len(args)):
-                    if(isinstance(args[i],Sum)):
+                    if isinstance(args[i], Sum):
                         if(args[i].is_convergent() == False):
-                            a+=1
-                    elif(isinstance(args[i], (int,float))):
+                            d += 1
+                    elif isinstance(args[i], (int, float)):
                          pass
-                    elif(isinstance(args[i], Infinity)):
+                    elif isinstance(args[i], Infinity):
                         return False
                     else:
                         pass
-                if(a == len(args)):
+                if(d == len(args)):
                     return None
-                elif(a == 0):
+                elif(d == 0):
                     return True
                 else:
                     return False
-            if isinstance(expr ,(Mul,Zero,Infinity)):
+            if isinstance(expr ,(Mul, Zero, Infinity)):
                 if(args == () or expr.doit() == 0):
                     return True
                 for i in range(len(args)):
-                    if(isinstance(args[i],Sum)):
+                    if isinstance(args[i], Sum):
                         if(args[i].is_absolutely_convergent() == False and args[i].is_convergent() == True):
-                            a+=1
+                            a += 1
                         elif(args[i].is_absolutely_convergent()):
-                            b+=1
+                            b += 1
                         else:
                             return False
-                    elif(isinstance(args[i], (int,float))):
+                    elif isinstance(args[i], (int,float)):
                         c+=1
-                    elif(isinstance(args[i], Infinity)):
+                    elif isinstance(args[i], Infinity):
                         return False
                     else:
                         pass
-                if(a>=2):
+                if(a >= 2):
                     return None
                 elif((b + c) == len(args)-1 and a == 1):
                     return True
@@ -738,25 +742,25 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     return True
                 else:
                     return None
-            if isinstance(expr ,(Pow,Infinity)):
+            if isinstance(expr ,(Pow, Infinity)):
                 if(len(args) == 1):
                     if(args.is_convergent()):
                         return True
                 for i in range(len(args)):
-                    if(isinstance(args[i],Sum)):
+                    if isinstance(args[i],Sum):
                         if(args[i].is_absolutely_convergent() == False and args[i].is_convergent() == True):
-                            a+=1
+                            a += 1
                         elif(args[i].is_absolutely_convergent()):
-                            b+=1
+                            b += 1
                         else:
                             return False
-                    elif(isinstance(args[i], Infinity)):
+                    elif isinstance(args[i], Infinity):
                         return False
                     else:
                         pass
-                if(a>0):
+                if(a > 0):
                     return None
-                elif(b>0):
+                elif(b > 0):
                     return True
                 else:
                     return None
