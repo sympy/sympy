@@ -235,13 +235,15 @@ def test_piecewise_integrate1ca():
     assert g.integrate((x, 1, 0)) == g1y.subs(y, 0)
     assert g.integrate((x, 2, 1)) == gy1.subs(y, 2)
     assert g.integrate((x, 1, 2)) == g1y.subs(y, 2)
-    assert piecewise_fold(gy1.rewrite(Piecewise)) == \
+    assert piecewise_fold(gy1.rewrite(Piecewise)
+        ).simplify() == \
         Piecewise(
             (1, y <= -1),
             (-y**2/2 - y + S.Half, y <= 0),
             (y**2/2 - y + S.Half, y < 1),
-            (0, True))
-    assert piecewise_fold(g1y.rewrite(Piecewise)) == \
+            (0, True)),piecewise_fold(gy1.rewrite(Piecewise))
+    assert piecewise_fold(g1y.rewrite(Piecewise)
+        ).simplify() == \
         Piecewise(
             (-1, y <= -1),
             (y**2/2 + y - S.Half, y <= 0),
@@ -278,13 +280,15 @@ def test_piecewise_integrate1cb():
     assert g.integrate((x, 2, 1)) == gy1.subs(y, 2)
     assert g.integrate((x, 1, 2)) == g1y.subs(y, 2)
 
-    assert piecewise_fold(gy1.rewrite(Piecewise)) == \
+    assert piecewise_fold(gy1.rewrite(Piecewise)
+        ).simplify() == \
         Piecewise(
             (1, y <= -1),
             (-y**2/2 - y + S.Half, y <= 0),
             (y**2/2 - y + S.Half, y < 1),
             (0, True))
-    assert piecewise_fold(g1y.rewrite(Piecewise)) == \
+    assert piecewise_fold(g1y.rewrite(Piecewise)
+        ).simplify() == \
         Piecewise(
             (-1, y <= -1),
             (y**2/2 + y - S.Half, y <= 0),

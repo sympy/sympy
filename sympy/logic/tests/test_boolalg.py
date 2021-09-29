@@ -1277,8 +1277,6 @@ def test_refine():
 def test_BooleanFunction_canonical():
     q = (abs(arg(a)) <= 1) | (abs(arg(a)) < 1)
     assert q.canonical() == (arg(a) >= -1) & (arg(a) <= 1)
-    from sympy.functions.elementary.piecewise import (
-        piecewise_canonical_conditions as f)
     # unsimplifying
     assert ((x > -oo) & (x < 3)
         ).canonical() == ((x > -oo) & (x < 3))

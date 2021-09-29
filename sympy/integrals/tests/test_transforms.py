@@ -12,7 +12,7 @@ from sympy import (
     cos, S, Abs, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
     exp_polar, unpolarify, Function, expint, expand_mul, Rational,
-    gammasimp, trigsimp, atan, sinh, cosh, Ne, Eq, atan2)
+    gammasimp, trigsimp, atan, sinh, cosh, atan2)
 from sympy.testing.pytest import XFAIL, slow, skip, raises, warns_deprecated_sympy
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
@@ -295,7 +295,7 @@ def test_expint():
         s, u, (0, 1)).expand() == Ci(sqrt(u))
 
     # TODO LT of Si, Shi, Chi is a mess ...
-    assert laplace_transform(Ci(x), x, s) == (-log(1 + s**2)/2/s, 0, True)
+    assert laplace_transform(Ci(x), x, s) == (-log(1 + s**2)/2/s, 0, s > -oo)
     assert laplace_transform(expint(a, x), x, s) == \
         (lerchphi(s*exp_polar(I*pi), 1, a), 0, re(a) > S.Zero)
     assert laplace_transform(expint(1, x), x, s) == (log(s + 1)/s, 0, True)
@@ -480,7 +480,7 @@ def test_laplace_transform():
     assert LT(exp(2*t), t, s)[:2] == (1/(s - 2), 2)
     assert LT(exp(a*t), t, s)[:2] == (1/(s - a), a)
 
-    assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, 0, Eq(arg(a), 0) & Ne(1/a, 0))
+    assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, -oo, (arg(s) > -pi/2) & (arg(s) < pi/2))
 
     assert LT(erf(t), t, s) == (erfc(s/2)*exp(s**2/4)/s, 0, True)
 
@@ -498,8 +498,14 @@ def test_laplace_transform():
 
     # test a bug in conditions processing
     # TODO the auxiliary condition should be recognised/simplified
-    assert LT(exp(t)*cos(t), t, s) == ((s - 1)/((s - 1)**2 + 1), -oo,
-        Abs(2*arg(1 - s) + 2*pi) < pi)
+    # XXX why is this non-deterministic?
+    args = LT(exp(t)*cos(t), t, s)
+    assert args[:2] in [
+        ((s - 1)/((s - 1)**2 + 1), -oo),
+        ((s - 1)/(s**2 - 2*s + 2), -oo)]
+    assert args[-1] in [
+        Abs(2*arg(1 - 1/s) + 2*arg(s)) < pi,
+        Abs(2*arg(1 - s) + 2*pi) < pi]
 
     # DiracDelta function: standard cases
     assert LT(DiracDelta(t), t, s) == (1, -oo, True)
