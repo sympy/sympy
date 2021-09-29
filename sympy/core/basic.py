@@ -334,6 +334,9 @@ class Basic(Printable, metaclass=ManagedProperties):
         if self is other:
             return True
 
+        if isinstance(other, int):
+            return False
+
         tself = type(self)
         tother = type(other)
         if tself is not tother:

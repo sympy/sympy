@@ -143,6 +143,8 @@ class Expr(Basic, EvalfMixin):
         return self._args
 
     def __eq__(self, other):
+        if isinstance(other, int):
+            return False
         try:
             other = _sympify(other)
             if not isinstance(other, Expr):
