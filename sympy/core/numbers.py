@@ -696,7 +696,7 @@ class Number(AtomicExpr):
         return Order(S.One, *symbols)
 
     def _eval_subs(self, old, new):
-        if old == -self:
+        if old == -self and old.__class__ == self.__class__:
             return -new
         return self  # there is no other possibility
 
