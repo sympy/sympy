@@ -273,12 +273,16 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     def __init__(self, *args, **kwargs):
         """Instantiates a Cython code wrapper.
 
+        Explanation
+        ===========
+
         The following optional parameters get passed to ``distutils.Extension``
         for building the Python extension module. Read its documentation to
         learn more.
 
         Parameters
         ==========
+
         include_dirs : [list of strings]
             A list of directories to search for C/C++ header files (in Unix
             form for portability).
@@ -356,13 +360,14 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         return getattr(mod, name + '_c')
 
     def dump_pyx(self, routines, f, prefix):
-        """Write a Cython file with python wrappers
+        """Write a Cython file with python wrappers.
 
         This file contains all the definitions of the routines in c code and
         refers to the header file.
 
         Arguments
         ---------
+
         routines
             List of Routine instances
         f
@@ -552,7 +557,7 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     Parameters
     ==========
 
-    expr
+    expr :
         The SymPy expression that should be wrapped as a binary routine.
     language : string, optional
         If supplied, (options: 'C' or 'F95'), specifies the language of the
@@ -663,7 +668,10 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
 
 @doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def binary_function(symfunc, expr, **kwargs):
-    """Returns a sympy function with expr as binary implementation
+    """Returns a sympy function with expr as binary implementation.
+
+    Explanation
+    ===========
 
     This is a convenience function that automates the steps needed to
     autowrap the SymPy expression and attaching it to a Function object
@@ -881,12 +889,13 @@ class UfuncifyCodeWrapper(CodeWrapper):
         f.write(setup)
 
     def dump_c(self, routines, f, prefix, funcname=None):
-        """Write a C file with python wrappers
+        """Write a C file with python wrappers.
 
         This file contains all the definitions of the routines in c code.
 
         Arguments
         ---------
+
         routines
             List of Routine instances
         f
@@ -1006,7 +1015,7 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     args : iterable
         Either a Symbol or an iterable of symbols. Specifies the argument
         sequence for the function.
-    expr
+    expr :
         A SymPy expression that defines the element wise operation.
     language : string, optional
         If supplied, (options: 'C' or 'F95'), specifies the language of the

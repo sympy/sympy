@@ -93,6 +93,9 @@ class PartComponent:
     """Internal class used in support of the multiset partitions
     enumerators and the associated visitor functions.
 
+    Explanation
+    ===========
+
     Represents one component of one part of the current partition.
 
     A stack of these, plus an auxiliary frame array, f, represents a
@@ -371,6 +374,9 @@ class MultisetPartitionTraverser():
     """
     Has methods to ``enumerate`` and ``count`` the partitions of a multiset.
 
+    Explanation
+    ===========
+
     This implements a refactored and extended version of Knuth's algorithm
     7.1.2.5M [AOCP]_."
 
@@ -597,6 +603,9 @@ class MultisetPartitionTraverser():
     def decrement_part_large(self, part, amt, lb):
         """Decrements part, while respecting size constraint.
 
+        Explanation
+        ===========
+
         A part can have no children which are of sufficient size (as
         indicated by ``lb``) unless that part has sufficient
         unallocated multiplicity.  When enforcing the size constraint,
@@ -668,7 +677,7 @@ class MultisetPartitionTraverser():
         Parameters
         ==========
 
-         part
+        part
             part to be decremented (topmost part on the stack)
 
         ub
@@ -933,6 +942,9 @@ class MultisetPartitionTraverser():
         """Enumerate the partitions of a multiset with
         ``lb < num(parts) <= ub``.
 
+        Explanation
+        ===========
+
         In particular, if partitions with exactly ``k`` parts are
         desired, call with ``(multiplicities, k - 1, k)``.  This
         method generalizes enum_all, enum_small, and enum_large.
@@ -1024,6 +1036,9 @@ class MultisetPartitionTraverser():
     def count_partitions(self, multiplicities):
         """Returns the number of partitions of a multiset whose components
         have the multiplicities given in ``multiplicities``.
+
+        Explanation
+        ===========
 
         For larger counts, this method is much faster than calling one
         of the enumerators and counting the result.  Uses dynamic
