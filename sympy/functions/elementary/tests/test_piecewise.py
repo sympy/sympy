@@ -462,41 +462,10 @@ def test_piecewise_simplify():
 def test_piecewise_simplify_infinities():
     from sympy.functions.elementary.piecewise import (
         piecewise_canonical_conditions as f)
-    # unsimplifying
-    assert f(Piecewise((x, (x > -oo) & (x < 3)))
-        ) == Piecewise((x, (x > -oo) & (x < 3)))
-    assert f(Piecewise((x, (x > -oo) & (x < oo)))
-        ) == Piecewise((x, (x > -oo) & (x < oo)))
-    assert f(Piecewise((x, (x > -3) & (x < 3)))
-        ) == Piecewise((x, (x > -3) & (x < 3)))
-    assert f(Piecewise((x, (x > -3) & (x < oo)))
-        ) == Piecewise((x, (x > -3) & (x < oo)))
-    assert f(Piecewise((x, (x <= 3) & (x > -oo)))
-        ) == Piecewise((x, (x <= 3) & (x > -oo)))
-    assert f(Piecewise((x, (x <= 3) & (x > -3)))
-        ) == Piecewise((x, (x <= 3) & (x > -3)))
-    assert f(Piecewise((x, (x >= -3) & (x < 3)))
-        ) == Piecewise((x, (x >= -3) & (x < 3)))
-    assert f(Piecewise((x, (x >= -3) & (x < oo)))
-        ) == Piecewise((x, (x >= -3) & (x < oo)))
-    assert f(Piecewise((x, (x >= -3) & (x <= 3)))
-        ) == Piecewise((x, (x >= -3) & (x <= 3)))
-    # simplify
+    # this is a light test of the functionality since
+    # the canonical_conditions is calling BooleanFunction.canonical()
     assert f(Piecewise((x, (x <= oo) & (x > -oo)))
-        ) == Piecewise((x, x > -oo)), f(Piecewise((x, (x <= oo) & (x > -oo)))
-        )
-    assert f(Piecewise((x, (x <= oo) & (x > -3)))
-        ) == Piecewise((x, x > -3))
-    assert f(Piecewise((x, (x >= -oo) & (x < 3)))
-        ) == Piecewise((x, x < 3))
-    assert f(Piecewise((x, (x >= -oo) & (x < oo)))
-        ) == Piecewise((x, x < oo))
-    assert f(Piecewise((x, (x >= -oo) & (x <= 3)))
-        ) == Piecewise((x, x <= 3))
-    assert f(Piecewise((x, (x >= -oo) & (x <= oo)))
-        ) == Piecewise((x, x <= oo))
-    assert f(Piecewise((x, (x >= -3) & (x <= oo)))
-        ) == Piecewise((x, x >= -3))
+        ) == Piecewise((x, x > -oo))
 
 
 def test_piecewise_solve():
