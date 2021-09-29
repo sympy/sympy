@@ -8,6 +8,7 @@ from inspect import getmro
 
 from .compatibility import iterable
 from .parameters import global_parameters
+from .basic import Basic
 
 
 class SympifyError(ValueError):
