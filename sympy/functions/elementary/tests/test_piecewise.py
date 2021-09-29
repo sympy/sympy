@@ -1432,4 +1432,4 @@ def test_piecewise_eval():
     assert f(Piecewise((x, (x >= -3) & (x <= oo)))
         ) == (x >= -3)
     assert f(Piecewise((x, (Abs(arg(a)) <= 1) | (Abs(arg(a)) < 1)))
-        ) == ((arg(a) >= -1) & (arg(a) <= 1))
+        ) == ((a > -oo) & (abs(arg(a)) <= 1)) | ((a > -oo) & (abs(arg(a)) < 1))

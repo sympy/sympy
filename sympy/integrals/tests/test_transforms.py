@@ -470,7 +470,7 @@ def test_laplace_transform():
     assert LT(t**a, t, s) == (s**(-a - 1)*gamma(a + 1), 0, True)
     assert LT(Heaviside(t), t, s) == (1/s, 0, True)
     assert LT(Heaviside(t - a), t, s) == (exp(-a*s)/s, 0, True)
-    assert LT(1 - exp(-a*t), t, s) == (a/(s*(a + s)), -oo, (arg(s) > -pi/2) & (arg(s) < pi/2))
+    assert LT(1 - exp(-a*t), t, s) == (a/(s*(a + s)), 0, s > -oo)
 
     assert LT((exp(2*t) - 1)*exp(-b - t)*Heaviside(t)/2, t, s, noconds=True) \
         == exp(-b)/(s**2 - 1)
@@ -479,7 +479,7 @@ def test_laplace_transform():
     assert LT(exp(2*t), t, s) == (1/(s - 2), 2, (s > -oo) & (s < 2))
     assert LT(exp(a*t), t, s) == (1/(s - a), a, Ne(s/a, 1))
 
-    assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, -oo, (arg(s) > -pi/2) & (arg(s) < pi/2))
+    assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, 0, s > -oo)
 
     assert LT(erf(t), t, s) == (erfc(s/2)*exp(s**2/4)/s, 0, True)
 
