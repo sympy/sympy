@@ -79,6 +79,8 @@ def unigen(expr):
     gens = list(reversed(list(ordered(gens))))
     D = Dummy()
     for i, g in enumerate(gens):
+        if isinstance(g, Symbol):
+            return  # it wasn't selected by larger expr
         d = expr.xreplace({g: D})
         if not any(d.has(_) for _ in gens[i + 1:]):
             return g
