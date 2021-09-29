@@ -445,32 +445,20 @@ class BooleanFunction(Application, Boolean):
 
     def canonical(self):
         from sympy.core.relational import _canonical, Relational
-        from sympy.core.function import Function
-        from sympy.core.symbol import Dummy
+        from sympy.core.symbol import Dummy, Symbol
+        from sympy.core.exprtools import unigen
         from sympy.functions.elementary.complexes import im, re
         c = self
         if not self.has(im, re):
             orig_c = c
-            free = c.free_symbols
-            if len(free) == 1:
-                # in case we have something like f(x) < 1 appearing, we
-                # will replace f(x) with a symbols
-                funcs = list(ordered([i for i in c.atoms(Function)
-                         if not isinstance(i, Boolean)]))
-                x = None
-                if funcs:
-                    cd = c.xreplace({funcs[0]: Dummy()})
-                    if len(cd.free_symbols) == 1:
-                        # we can treat function like a symbol
-                        # and this is necessary in some cases
-                        # for a round-trip with
-                        # `foo.as_set().as_relational(x)`
-                        x = funcs[0]
-                        c = cd
-                if x is None:
-                    x = free.pop()
+            x = unigen(c)
+            if x is not None:
+                if not isinstance(x, Symbol):
+                    d = Dummy()
+                else:
+                    d = x
                 try:
-                    s = c.as_set()
+                    s = c.xreplace({x: d}).as_set()
                 except NotImplementedError:
                     pass
                 else:
