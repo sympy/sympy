@@ -13,6 +13,7 @@ This module contain solvers for all kinds of equations:
 """
 
 from sympy import divisors, binomial, expand_func
+from sympy.core.basic import Basic
 from sympy.core.assumptions import check_assumptions
 from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key)
@@ -62,6 +63,7 @@ from sympy.solvers.inequalities import reduce_inequalities
 from types import GeneratorType
 from collections import defaultdict
 from itertools import product
+from typing import Any, Union, List
 
 import warnings
 
@@ -378,7 +380,8 @@ def checksol(f, symbol, sol=None, **flags):
     # TODO: improve solution testing
 
 
-def solve(f, *symbols, **flags):
+def solve(f, *symbols, **flags) -> Union[Basic, dict, List[Union[dict, Any]],
+                                         Any]:
     r"""
     Algebraically solves equations and systems of equations.
 
