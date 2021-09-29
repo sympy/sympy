@@ -1010,3 +1010,7 @@ def test_issue_21756():
 def test_issue_21785():
     a = Symbol('a')
     assert sqrt((-a**2 + x**2)/(1 - x**2)).limit(a, 1, '-') == I
+
+
+def test_issue_22181():
+    assert limit((-1)**x * 2**(-x), x, oo) == 0

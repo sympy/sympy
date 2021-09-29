@@ -175,20 +175,20 @@ class Limit(Expr):
         return isyms
 
 
-    def pow_heuristics(self):
+    def pow_heuristics(self, e):
         from sympy import exp, log
-        expr, z, z0, _ = self.args
-        b, e = expr.base, expr.exp
-        if not b.has(z):
-            res = limit(e*log(b), z, z0)
+        _, z, z0, _ = self.args
+        b1, e1 = e.base, e.exp
+        if not b1.has(z):
+            res = limit(e1*log(b1), z, z0)
             return exp(res)
 
-        ex_lim = limit(e, z, z0)
-        base_lim = limit(b, z, z0)
+        ex_lim = limit(e1, z, z0)
+        base_lim = limit(b1, z, z0)
 
         if base_lim is S.One:
             if ex_lim in (S.Infinity, S.NegativeInfinity):
-                res = limit(e*(b - 1), z, z0)
+                res = limit(e1*(b1 - 1), z, z0)
                 return exp(res)
         if base_lim is S.NegativeInfinity and ex_lim is S.Infinity:
             return S.ComplexInfinity
@@ -207,7 +207,7 @@ class Limit(Expr):
         hints : optional keyword arguments
             To be passed to ``doit`` methods; only used if deep is True.
         """
-        from sympy import Abs, sign
+        from sympy import Abs, powsimp, sign
 
         e, z, z0, dir = self.args
 
@@ -295,8 +295,9 @@ class Limit(Expr):
             coeff, ex = newe.leadterm(z, cdir=cdir)
         except (ValueError, NotImplementedError, PoleError):
             # The NotImplementedError catching is for custom functions
+            e = powsimp(e)
             if e.is_Pow:
-                r = self.pow_heuristics()
+                r = self.pow_heuristics(e)
                 if r is not None:
                     return r
         else:
