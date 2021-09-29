@@ -2422,7 +2422,7 @@ class Subs(Expr):
         return self.expr.as_leading_term(x)
 
 
-def diff(f, *symbols, **kwargs):
+def diff(f, *symbols, **kwargs) -> Basic:
     """
     Differentiate f with respect to symbols.
 

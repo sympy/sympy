@@ -1386,7 +1386,7 @@ class Integral(AddWithLimits):
 
 
 
-def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None, manual=None, **kwargs):
+def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None, manual=None, **kwargs) -> Basic:
     """integrate(f, var, ...)
 
     Explanation

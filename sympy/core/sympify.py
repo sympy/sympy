@@ -90,7 +90,7 @@ def _convert_numpy_types(a, **sympify_args):
 
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
-        evaluate=None):
+        evaluate=None) -> Basic:
     """
     Converts an arbitrary expression to a type that can be used inside SymPy.
 
