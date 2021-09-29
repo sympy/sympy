@@ -1433,4 +1433,3 @@ def test_piecewise_eval():
         ) == (x >= -3)
     assert f(Piecewise((x, (Abs(arg(a)) <= 1) | (Abs(arg(a)) < 1)))
         ) == ((arg(a) >= -1) & (arg(a) <= 1))
->>>>>>> 107bfea8c5... piecewise tests with oo

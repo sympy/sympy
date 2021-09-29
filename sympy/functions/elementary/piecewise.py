@@ -181,9 +181,8 @@ class Piecewise(Function):
                         d = Dummy()
                     else:
                         d = x
-                    _c = c
                     try:
-                        newc = c.xreplace({x: d}).as_set().as_relational(x)
+                        c = c.xreplace({x: d}).as_set().as_relational(x)
                     except NotImplementedError:
                         pass
                     else:
