@@ -3073,3 +3073,7 @@ def test_issue_22058():
     sol = solveset(-sqrt(t)*x**2 + 2*x + sqrt(t), x, S.Reals)
     # doesn't fail (and following numerical check)
     assert sol.xreplace({t: 1}) == {1 - sqrt(2), 1 + sqrt(2)}, sol.xreplace({t: 1})
+
+
+def test_issue_11184():
+    assert solveset(20*sqrt(y**2 + (sqrt(-(y - 10)*(y + 10)) + 10)**2) - 60, y, S.Reals) is S.EmptySet
