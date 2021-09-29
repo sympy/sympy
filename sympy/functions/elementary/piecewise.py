@@ -1014,11 +1014,16 @@ class Piecewise(Function):
             return result
 
 
-def piecewise_fold(expr):
+def piecewise_fold(expr, evaluate=True):
     """
     Takes an expression containing a piecewise function and returns the
     expression in piecewise form. In addition, any ITE conditions are
     rewritten in negation normal form and simplified.
+
+    The final Piecewise is evaluated (default) but if the raw form i
+    desired, send ``evaluate=False``; if trivial evaluation is
+    desired, send ``evaluate=None`` and duplicate conditions and
+    processing of True and False will be handled.
 
     Examples
     ========
@@ -1108,7 +1113,14 @@ def piecewise_fold(expr):
             e, c = zip(*ec)
             new_args.append((expr.func(*e), And(*c)))
 
-    return Piecewise(*new_args)
+    if evaluate is None:
+        # don't return duplicate conditions, otherwise don't evaluate
+        new_args = list(reversed([(e, c) for c, e in {
+            c: e for e, c in reversed(new_args)}.items()]))
+    rv = Piecewise(*new_args, evaluate=evaluate)
+    if evaluate is None and len(rv.args) == 1 and rv.args[0].cond == True:
+        return rv.args[0].expr
+    return rv
 
 
 def _clip(A, B, k):
