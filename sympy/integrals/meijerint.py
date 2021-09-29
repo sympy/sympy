@@ -1751,9 +1751,9 @@ def _meijerint_indefinite_1(f, x):
     res = piecewise_fold(res)
     if res.is_Piecewise:
         newargs = []
-        for expr, cond in res.args:
-            expr = _my_unpolarify(_clean(expr))
-            newargs += [(expr, cond)]
+        for e, c in res.args:
+            e = _my_unpolarify(_clean(e))
+            newargs += [(e, c)]
         res = Piecewise(*newargs)
     else:
         res = _my_unpolarify(_clean(res))
