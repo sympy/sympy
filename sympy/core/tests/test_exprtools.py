@@ -479,3 +479,4 @@ def test_unigen():
     for x in [a, IndexedBase("X")[a], Function('f')(a, b),
             MatrixSymbol("M", 1, 1)[0, 0]]:
         assert unigen(x + 1) == x, x
+    assert unigen(a + b) is None
