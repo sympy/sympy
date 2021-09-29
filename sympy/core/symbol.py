@@ -16,6 +16,7 @@ import string
 import re as _re
 import random
 from itertools import product
+from typing import Union, Any
 
 class Str(Atom):
     """
@@ -549,7 +550,7 @@ class Wild(Symbol):
 
 _range = _re.compile('([0-9]*:[0-9]+|[a-zA-Z]?:[a-zA-Z])')
 
-def symbols(names, *, cls=Symbol, **args):
+def symbols(names, *, cls=Symbol, **args) -> Union[Symbol, tuple, Any]:
     r"""
     Transform strings into instances of :class:`Symbol` class.
 
