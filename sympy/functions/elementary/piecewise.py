@@ -157,10 +157,6 @@ class Piecewise(Function):
         If there is a single arg with a True condition, its
         corresponding expression will be returned.
         """
-        from sympy.core.symbol import Symbol
-        from sympy.core.exprtools import unigen
-        from sympy.functions.elementary.complexes import im, re
-
         if not args:
             return Undefined
 
