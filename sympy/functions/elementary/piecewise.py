@@ -157,6 +157,8 @@ class Piecewise(Function):
         If there is a single arg with a True condition, its
         corresponding expression will be returned.
         """
+        from sympy.core.symbol import Symbol
+        from sympy.core.exprtools import unigen
         from sympy.functions.elementary.complexes import im, re
 
         if not _args:
@@ -171,20 +173,16 @@ class Piecewise(Function):
         args = []
         for e, c in _args:
             if (not c.is_Atom and not isinstance(c, Relational) and
-                not c.has(im, re)):
-                free = c.free_symbols
-                if len(free) == 1:
-                    funcs = [i for i in c.atoms(Function)
-                             if not isinstance(i, Boolean)]
-                    if len(funcs) == 1 and len(
-                            c.xreplace({list(funcs)[0]: Dummy()}
-                            ).free_symbols) == 1:
-                        # we can treat function like a symbol
-                        free = funcs
+                    not c.has(im, re)):
+                x = unigen(c)
+                if x is not None:
+                    if not isinstance(x, Symbol):
+                        d = Dummy()
+                    else:
+                        d = x
                     _c = c
-                    x = free.pop()
                     try:
-                        c = c.as_set().as_relational(x)
+                        c = c.xreplace({x: d}).as_set().as_relational(x)
                     except NotImplementedError:
                         pass
                     else:

@@ -401,9 +401,12 @@ class Relational(Boolean, EvalfMixin):
         # self is univariate and periodicity(self, x) in (0, None)
         from sympy.solvers.inequalities import solve_univariate_inequality
         from sympy.sets.conditionset import ConditionSet
-        syms = self.free_symbols
-        assert len(syms) == 1
-        x = syms.pop()
+        from sympy.core.exprtools import unigen
+        from sympy.core.symbol import Dummy, Symbol
+        x = unigen(self)
+        assert x
+        if not isinstance(x, Symbol):
+            return self.xreplace({x: Dummy()})._eval_as_set()
         try:
             xset = solve_univariate_inequality(self, x, relational=False)
         except NotImplementedError:

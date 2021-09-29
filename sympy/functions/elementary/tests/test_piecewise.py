@@ -1375,3 +1375,11 @@ def test_issue_20360():
     lam = pi * (n - S.Half)
     eq = integrate(exp(lam * tau), (tau, 0, t))
     assert simplify(eq) == (2*exp(pi*t*(2*n - 1)/2) - 2)/(pi*(2*n - 1))
+
+
+def test_generators():
+    from sympy import IndexedBase, Function, MatrixSymbol
+    x = IndexedBase("X")[a]
+    for x in [a, IndexedBase("X")[a], Function('f')(a, b),
+            MatrixSymbol("M", 1, 1)[0, 0]]:
+        assert unchanged(Piecewise, (1, x + 1 < 0), (2, True))

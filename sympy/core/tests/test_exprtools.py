@@ -5,7 +5,7 @@ from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, I,
                    Basic, Dict, root, exp, cos, Dummy, log, Rational)
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
                                   gcd_terms, factor_terms, factor_nc, _mask_nc,
-                                  _monotonic_sign)
+                                  _monotonic_sign, unigen)
 from sympy.core.mul import _keep_coeff as _keep_coeff
 from sympy.simplify.cse_opts import sub_pre
 from sympy.testing.pytest import raises
@@ -448,6 +448,7 @@ def test_monotonic_sign():
     assert F((p - 1)*q + 1).is_positive
     assert F(-(p - 1)*q - 1).is_negative
 
+
 def test_issue_17256():
     from sympy import Range
     x = Symbol('x')
@@ -465,7 +466,16 @@ def test_issue_17256():
     r2 = s2.xreplace({x:a})
     assert r1 == r2
 
+
 def test_issue_21623():
     from sympy import MatrixSymbol
     M = MatrixSymbol('X', 2, 2)
     assert gcd_terms(M[0,0], 1) == M[0,0]
+
+
+def test_unigen():
+    from sympy import IndexedBase, Function, MatrixSymbol
+    x = IndexedBase("X")[a]
+    for x in [a, IndexedBase("X")[a], Function('f')(a, b),
+            MatrixSymbol("M", 1, 1)[0, 0]]:
+        assert unigen(x + 1) == x, x
