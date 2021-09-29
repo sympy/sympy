@@ -1,6 +1,6 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    cot, sec, csc, Abs, symbols, I, re, simplify,
-                   expint, Rational, Piecewise, MatrixSymbol)
+                   expint, Rational, Piecewise, MatrixSymbol, Min, Max)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds, is_convex,
                                  stationary_points, minimum, maximum)
@@ -473,7 +473,7 @@ def test_AccumBounds_pow():
     assert B(nn, nn + 1)**nn == B(nn**nn, (nn + 1)**nn)
     assert unchanged(Pow, B(nn, nn + 1), x)
     i = Symbol('i', integer=True)
-    assert unchanged(Pow, B(1, 2), i)
+    assert B(1, 2)**i == B(Min(1, 2**i), Max(1, 2**i))
     i = Symbol('i', integer=True, nonnegative=True)
     assert B(1, 2)**i == B(1, 2**i)
     assert B(0, 1)**i == B(0**i, 1)
