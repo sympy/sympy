@@ -2,13 +2,13 @@
 
 import typing
 if typing.TYPE_CHECKING:
-    from typing import Any, Callable, Dict, Type
+    from typing import Callable, Dict, Type
+from typing import Union, Any
 
 from inspect import getmro
 
 from .compatibility import iterable
 from .parameters import global_parameters
-from .basic import Basic
 
 
 class SympifyError(ValueError):
@@ -91,7 +91,7 @@ def _convert_numpy_types(a, **sympify_args):
 
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
-        evaluate=None) -> Basic:
+        evaluate=None) -> Union['Basic', Any]:
     """
     Converts an arbitrary expression to a type that can be used inside SymPy.
 
