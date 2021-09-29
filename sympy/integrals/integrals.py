@@ -570,10 +570,13 @@ class Integral(AddWithLimits):
                                 # XXX there is a fragile relationship
                                 # with simplification here; check to
                                 # see how the condition simplifies
-                                s = Piecewise((1, cond))
+                                s = Piecewise((1, cond), (2, True))
                                 if s == 1:
                                     # condition was True
                                     return f
+                                if s == 2:
+                                    # condition was False
+                                    return u
                                 c = s.args[0].cond
                                 if (c.is_Relational and
                                         c.rhs == S.Infinity and
