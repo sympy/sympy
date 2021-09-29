@@ -12,8 +12,7 @@ from sympy import (
     cos, S, Abs, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
     exp_polar, unpolarify, Function, expint, expand_mul, Rational,
-    gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument,
-    atan2, arg)
+    gammasimp, trigsimp, atan, sinh, cosh, Ne, Eq, atan2)
 from sympy.testing.pytest import XFAIL, slow, skip, raises, warns_deprecated_sympy
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d

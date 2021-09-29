@@ -449,20 +449,26 @@ class BooleanFunction(Application, Boolean):
         from sympy.core.symbol import Dummy
         from sympy.functions.elementary.complexes import im, re
         c = self
-        if not c.has(im, re):
+        if not self.has(im, re):
+            orig_c = c
             free = c.free_symbols
             if len(free) == 1:
                 # in case we have something like f(x) < 1 appearing, we
                 # will replace f(x) with a symbols
                 funcs = list(ordered([i for i in c.atoms(Function)
                          if not isinstance(i, Boolean)]))
-                d = Dummy()
-                if funcs and len(c.xreplace({funcs[0]: d}).free_symbols) == 1:
-                    # we can treat function like a symbol
-                    x = funcs[0]
-                else:
+                x = None
+                if funcs:
+                    cd = c.xreplace({funcs[0]: Dummy()})
+                    if len(cd.free_symbols) == 1:
+                        # we can treat function like a symbol
+                        # and this is necessary in some cases
+                        # for a round-trip with
+                        # `foo.as_set().as_relational(x)`
+                        x = funcs[0]
+                        c = cd
+                if x is None:
                     x = free.pop()
-                _c = c
                 try:
                     s = c.as_set()
                 except NotImplementedError:
@@ -474,12 +480,12 @@ class BooleanFunction(Application, Boolean):
                         ic = i.canonical
                         if ic.rhs in (S.Infinity, S.NegativeInfinity):
                             inf = ic.rhs
-                            if _c.xreplace({x: inf}):
+                            if orig_c.xreplace({x: inf}):
                                 # it was a redundant inf
                                 reps[i] = True
                             elif ('=' not in ic.rel_op and
                                     c.xreplace({x: inf}) !=
-                                    _c.xreplace({x: inf})):
+                                    orig_c.xreplace({x: inf})):
                                 # hack around inability of Interval to
                                 # contain +/-oo
                                 # >>> And(x >= -oo, x <= 3).as_set()

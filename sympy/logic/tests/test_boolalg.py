@@ -6,6 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise
 from sympy.functions.elementary.trigonometric import sin
+from sympy.functions.elementary.complexes import arg
 from sympy.sets.sets import (EmptySet, Interval, Union)
 from sympy.simplify.simplify import simplify
 from sympy.logic.boolalg import (
@@ -1271,3 +1272,8 @@ def test_refine():
     assert refine(Q.positive(x), Q.positive(x)) is S.true
     assert refine(Q.positive(x), Q.negative(x)) is S.false
     assert refine(Q.positive(x), Q.real(x)) == Q.positive(x)
+
+
+def test_BooleanFunction_canonical():
+    q = (abs(arg(a)) <= 1) | (abs(arg(a)) < 1)
+    assert q.canonical() == (arg(a) >= -1) & (arg(a) <= 1)
