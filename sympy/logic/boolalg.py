@@ -154,23 +154,24 @@ class Boolean(Basic):
         from sympy.core.numbers import oo
         from sympy.core.relational import Relational
         from sympy.sets.sets import Union
-        from sympy.core.symbol import Symbol, Dummy
         free = self.free_symbols
         if len(free) == 1:
             x = free.pop()
-            reps = {}
-            for r in self.atoms(Relational):
-                if periodicity(r, x) not in (0, None):
-                    s = r._eval_as_set()
-                    if s in (S.EmptySet, S.UniversalSet, S.Reals
-                            ) or s == Union({-oo, oo}, S.Reals):
-                        reps[r] = s.as_relational(x)
-                        continue
-                    raise NotImplementedError(filldedent('''
-                        as_set is not implemented for relationals
-                        with periodic solutions
-                        '''))
-            return self.subs(reps)._eval_as_set()
+            if x.kind is NumberKind:
+                reps = {}
+                for r in self.atoms(Relational):
+                    if periodicity(r, x) not in (0, None):
+                        s = r._eval_as_set()
+                        if s in (S.EmptySet, S.UniversalSet, S.Reals
+                                ) or s == Union({-oo, oo}, S.Reals)):
+                            reps[r] = s.as_relational(x)
+                            continue
+                        raise NotImplementedError(filldedent('''
+                            as_set is not implemented for relationals
+                            with periodic solutions
+                            '''))
+                return self.subs(reps)._eval_as_set()
+            return self._eval_as_set()
         else:
             raise NotImplementedError("non-univariate expression")
 
