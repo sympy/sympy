@@ -1192,9 +1192,6 @@ class Union(Set, LatticeOp):
         # flatten inputs to merge intersections and iterables
         args = _sympify(args)
 
-        # replace Interval(-oo, oo) with S.Reals
-        args = [S.Reals if i == S.Reals else i for i in args]
-
         # Reduce sets using known rules
         if evaluate:
             args = list(cls._new_args_filter(args))
@@ -1300,14 +1297,14 @@ class Union(Set, LatticeOp):
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
         from sympy.core.relational import Relational
-        oo = S.Infinity
-        if self == Union({-oo, oo}, S.Reals):
+        # make Interval(-oo, oo) -> Reals
+        args = [S.Reals if i == S.Reals else i for i in self.args]
+        if self == Union({S.NegativeInfinity, S.Infinity}, S.Reals):
             return symbol <= S.Infinity
-        elif self == Union({-oo}, S.Reals):
+        elif self == Union({S.NegativeInfinity}, S.Reals):
             return symbol < S.Infinity
-        elif self == Union({oo}, S.Reals):
+        elif self == Union({S.Infinity}, S.Reals):
             return symbol > S.NegativeInfinity
-        args = list(self.args)
         inf = set()
         for ix, i in enumerate(args):
             if isinstance(i, FiniteSet):
@@ -1327,6 +1324,7 @@ class Union(Set, LatticeOp):
             if (a.sup == b.inf and
                     not any(a.sup in i for i in args)):
                 return And(Ne(x, a.sup), x < b.sup, x > a.inf)
+        # handle semi-infinite relationships
         if len(inf) == 1 and len(args) == 1 and isinstance(args[0], Interval):
             i = args[0]
             if i.sup in inf:
@@ -1338,6 +1336,9 @@ class Union(Set, LatticeOp):
         r = []
         for i in args:
             if isinstance(i, Interval):
+                # see if there are semi-infinite Intervals on which
+                # to place the infinities; since the results go in
+                # an Or, we only need to apply it once
                 ri = None
                 if i.inf in inf and i.sup in inf:
                     assert None, 'unexpected case'
@@ -1348,9 +1349,11 @@ class Union(Set, LatticeOp):
                     ri = (x >= i.inf) if i.inf in i else (x > i.inf)
                     inf.remove(i.sup)
             if ri is None:
+                # just take the relational form
                 ri = i.as_relational(x)
             r.append(ri)
         if inf:
+            # maybe one or both of the infinite values remain
             r.append(FiniteSet(*inf).as_relational(x))
         return Or(*r)
 
