@@ -157,6 +157,7 @@ class Piecewise(Function):
         If there is a single arg with a True condition, its
         corresponding expression will be returned.
         """
+        from sympy.core.exprtools import unigen
         from sympy.functions.elementary.complexes import im, re
 
         if not _args:
@@ -172,8 +173,8 @@ class Piecewise(Function):
         for e, c in _args:
             if (not c.is_Atom and not isinstance(c, Relational) and
                 not c.has(im, re)):
-                free = c.free_symbols
-                if len(free) == 1:
+                x = unigen(c)
+                if x is not None:
                     funcs = [i for i in c.atoms(Function)
                              if not isinstance(i, Boolean)]
                     if len(funcs) == 1 and len(
@@ -182,26 +183,10 @@ class Piecewise(Function):
                         # we can treat function like a symbol
                         free = funcs
                     _c = c
-                    x = free.pop()
                     try:
                         c = c.as_set().as_relational(x)
                     except NotImplementedError:
                         pass
-                    else:
-                        reps = {}
-                        for i in c.atoms(Relational):
-                            ic = i.canonical
-                            if ic.rhs in (S.Infinity, S.NegativeInfinity):
-                                if not _c.has(ic.rhs):
-                                    # don't accept introduction of
-                                    # new Relationals with +/-oo
-                                    reps[i] = S.true
-                                elif ('=' not in ic.rel_op and
-                                        c.xreplace({x: i.rhs}) !=
-                                        _c.xreplace({x: i.rhs})):
-                                    reps[i] = Relational(
-                                        i.lhs, i.rhs, i.rel_op + '=')
-                        c = c.xreplace(reps)
             args.append((e, _canonical(c)))
 
         for expr, cond in args:
@@ -956,8 +941,7 @@ class Piecewise(Function):
                 free = c.free_symbols
                 x = free.pop()
                 try:
-                    byfree[x] = byfree.setdefault(
-                        x, S.EmptySet).union(c.as_set())
+                    cs = c.as_set()
                 except NotImplementedError:
                     if not default:
                         raise NotImplementedError(filldedent('''
@@ -968,6 +952,13 @@ class Piecewise(Function):
                             This error would not occur if a default expression
                             like `(foo, True)` were given.
                             ''' % c))
+                else:
+                    # remove extraneous infinities
+                    cs -= {S.Infinity, S.NegativeInfinity}
+                    # update x
+                    byfree[x] = byfree.setdefault(
+                        x, S.EmptySet).union(cs)
+
                 if byfree[x] in (S.UniversalSet, S.Reals):
                     # collapse the ith condition to True and break
                     args[i] = list(args[i])
