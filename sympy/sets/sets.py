@@ -1192,6 +1192,9 @@ class Union(Set, LatticeOp):
         # flatten inputs to merge intersections and iterables
         args = _sympify(args)
 
+        # replace Interval(-oo, oo) with S.Reals
+        args = [S.Reals if i == S.Reals else i for i in args]
+
         # Reduce sets using known rules
         if evaluate:
             args = list(cls._new_args_filter(args))
@@ -1296,15 +1299,60 @@ class Union(Set, LatticeOp):
 
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
-        if (len(self.args) == 2 and
-                all(isinstance(i, Interval) for i in self.args)):
+        from sympy.core.relational import Relational
+        oo = S.Infinity
+        if self == Union({-oo, oo}, S.Reals):
+            return symbol <= S.Infinity
+        elif self == Union({-oo}, S.Reals):
+            return symbol < S.Infinity
+        elif self == Union({oo}, S.Reals):
+            return symbol > S.NegativeInfinity
+        args = list(self.args)
+        inf = set()
+        for ix, i in enumerate(args):
+            if isinstance(i, FiniteSet):
+                if S.Infinity in i:
+                    inf.add(S.Infinity)
+                    args[ix] -= {S.Infinity}
+                if S.NegativeInfinity in i:
+                    inf.add(S.NegativeInfinity)
+                    args[ix] -= {S.NegativeInfinity}
+        x = symbol
+        args = list(filter(None, args))
+        if not inf and (len(args) == 2 and
+                all(isinstance(i, Interval) for i in args)):
             # optimization to give 3 args as (x > 1) & (x < 5) & Ne(x, 3)
             # instead of as 4, ((1 <= x) & (x < 3)) | ((x <= 5) & (3 < x))
-            a, b = self.args
+            a, b = args
             if (a.sup == b.inf and
-                    not any(a.sup in i for i in self.args)):
-                return And(Ne(symbol, a.sup), symbol < b.sup, symbol > a.inf)
-        return Or(*[i.as_relational(symbol) for i in self.args])
+                    not any(a.sup in i for i in args)):
+                return And(Ne(x, a.sup), x < b.sup, x > a.inf)
+        if len(inf) == 1 and len(args) == 1 and isinstance(args[0], Interval):
+            i = args[0]
+            if i.sup in inf:
+                return (x >= i.inf) if i.inf in i else (x > i.inf)
+            if i.inf in inf:
+                return (x <= i.sup) if i.sup in i else (x < i.sup)
+        if not inf:
+            return Or(*[i.as_relational(x) for i in args])
+        r = []
+        for i in args:
+            if isinstance(i, Interval):
+                ri = None
+                if i.inf in inf and i.sup in inf:
+                    assert None, 'unexpected case'
+                elif i.inf in inf:
+                    ri = (x <= i.sup) if i.sup in i else (x < i.sup)
+                    inf.remove(i.inf)
+                elif i.sup in inf:
+                    ri = (x >= i.inf) if i.inf in i else (x > i.inf)
+                    inf.remove(i.sup)
+            if ri is None:
+                ri = i.as_relational(x)
+            r.append(ri)
+        if inf:
+            r.append(FiniteSet(*inf).as_relational(x))
+        return Or(*r)
 
     @property
     def is_iterable(self):

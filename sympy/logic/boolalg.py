@@ -10,7 +10,6 @@ from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, as_int
 from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.function import Application, Derivative
-from sympy.core.kind import NumberKind
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
@@ -152,28 +151,31 @@ class Boolean(Basic):
 
         """
         from sympy.calculus.util import periodicity
+        from sympy.core.exprtools import unigen
+        from sympy.core.numbers import oo
         from sympy.core.relational import Relational
-        free = self.free_symbols
-        if len(free) == 1:
-            x = free.pop()
-            if x.kind is NumberKind:
-                reps = {}
-                for r in self.atoms(Relational):
-                    if periodicity(r, x) not in (0, None):
-                        s = r._eval_as_set()
-                        if s in (S.EmptySet, S.UniversalSet, S.Reals):
-                            reps[r] = s.as_relational(x)
-                            continue
-                        raise NotImplementedError(filldedent('''
-                            as_set is not implemented for relationals
-                            with periodic solutions
-                            '''))
-                return self.subs(reps)._eval_as_set()
-            return self._eval_as_set()
+        from sympy.sets.sets import Union
+        from sympy.core.symbol import Symbol, Dummy
+        x = unigen(self)
+        if x is not None:
+            if not isinstance(x, Symbol):
+                d = Dummy()
+                return self.xreplace({x: d}).as_set().xreplace({d: x})
+            reps = {}
+            for r in self.atoms(Relational):
+                if periodicity(r, x) not in (0, None):
+                    s = r._eval_as_set()
+                    if s in (S.EmptySet, S.UniversalSet, S.Reals
+                            ) or s == Union({-oo, oo}, S.Reals):
+                        reps[r] = s.as_relational(x)
+                        continue
+                    raise NotImplementedError(filldedent('''
+                        as_set is not implemented for relationals
+                        with periodic solutions
+                        '''))
+            return self.subs(reps)._eval_as_set()
         else:
-            raise NotImplementedError("Sorry, as_set has not yet been"
-                                      " implemented for multivariate"
-                                      " expressions")
+            raise NotImplementedError("non-univariate expression")
 
     @property
     def binary_symbols(self):
