@@ -143,11 +143,11 @@ class Boolean(Basic):
         >>> Eq(x, 0).as_set()
         {0}
         >>> (x > 0).as_set()
-        Interval.open(0, oo)
+        Union({oo}, Interval.open(0, oo))
         >>> And(-2 < x, x < 2).as_set()
         Interval.open(-2, 2)
         >>> Or(x < -2, 2 < x).as_set()
-        Union(Interval.open(-oo, -2), Interval.open(2, oo))
+        Union({-oo, oo}, Interval.open(-oo, -2), Interval.open(2, oo))
 
         """
         from sympy.calculus.util import periodicity
@@ -984,7 +984,7 @@ class Not(BooleanFunction):
         >>> from sympy import Not, Symbol
         >>> x = Symbol('x')
         >>> Not(x > 0).as_set()
-        Interval(-oo, 0)
+        Union({-oo}, Interval(-oo, 0))
         """
         return self.args[0].as_set().complement(S.Reals)
 
