@@ -338,12 +338,14 @@ def test_new_relational():
     assert (x <= 0) != Relational(x, 1, 'le')
     assert (x <= 0) != LessThan(x, 1)
 
+    assert Gt(x, oo) is S.false
     assert Gt(x, 0) == Relational(x, 0, '>')
     assert Gt(x, 0) == Relational(x, 0, 'gt')
     assert Gt(x, 0) == StrictGreaterThan(x, 0)
     assert Gt(x, 1) != Relational(x, 0, '>')
     assert Gt(x, 1) != Relational(x, 0, 'gt')
     assert Gt(x, 1) != StrictGreaterThan(x, 0)
+    assert (x > oo) is S.false
     assert (x > 1) == Relational(x, 1, '>')
     assert (x > 1) == Relational(x, 1, 'gt')
     assert (x > 1) == StrictGreaterThan(x, 1)
@@ -351,12 +353,14 @@ def test_new_relational():
     assert (x > 0) != Relational(x, 1, 'gt')
     assert (x > 0) != StrictGreaterThan(x, 1)
 
+    assert Lt(x, -oo) is S.false
     assert Lt(x, 0) == Relational(x, 0, '<')
     assert Lt(x, 0) == Relational(x, 0, 'lt')
     assert Lt(x, 0) == StrictLessThan(x, 0)
     assert Lt(x, 1) != Relational(x, 0, '<')
     assert Lt(x, 1) != Relational(x, 0, 'lt')
     assert Lt(x, 1) != StrictLessThan(x, 0)
+    assert (x < -oo) is S.false
     assert (x < 1) == Relational(x, 1, '<')
     assert (x < 1) == Relational(x, 1, 'lt')
     assert (x < 1) == StrictLessThan(x, 1)
@@ -611,17 +615,19 @@ def test_inequalities_symbol_name_same():
             assert Ge(a, b) == (a >= b)
             assert Le(a, b) == (a <= b)
 
+    def ok(op, l, r):
+        u = op(l, r, evaluate=False)
+        assert u.func == op
+        assert u.lhs == l
+        assert u.rhs == r
+    v = x
     for b in (y, S.Zero, S.One/3, pi, oo, -oo):
-        assert Gt(x, b, evaluate=False) == (x > b)
-        assert Lt(x, b, evaluate=False) == (x < b)
-        assert Ge(x, b, evaluate=False) == (x >= b)
-        assert Le(x, b, evaluate=False) == (x <= b)
-
-    for b in (y, S.Zero, S.One/3, pi, oo, -oo):
-        assert Gt(b, x, evaluate=False) == (b > x)
-        assert Lt(b, x, evaluate=False) == (b < x)
-        assert Ge(b, x, evaluate=False) == (b >= x)
-        assert Le(b, x, evaluate=False) == (b <= x)
+        for i in range(2):
+            ok(Gt, v, b)
+            ok(Lt, v, b)
+            ok(Ge, v, b)
+            ok(Le, v, b)
+            v, b = b, v
 
 
 def test_inequalities_symbol_name_same_complex():

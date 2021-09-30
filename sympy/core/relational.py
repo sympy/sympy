@@ -1028,7 +1028,7 @@ class StrictGreaterThan(_Greater):
 
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
-        if rhs is S.Infinity:
+        if rhs is S.Infinity or lhs is S.NegativeInfinity:
             return S.false
         return is_gt(lhs, rhs)
 
@@ -1044,7 +1044,7 @@ class StrictLessThan(_Less):
 
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
-        if rhs is S.NegativeInfinity:
+        if rhs is S.NegativeInfinity or lhs is S.Infinity:
             return S.false
         return is_lt(lhs, rhs)
 
