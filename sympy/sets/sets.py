@@ -912,7 +912,7 @@ class Interval(Set):
     """
     is_Interval = True
 
-    def __new__(cls, start, end, left_open=False, right_open=False):
+    def __new__(cls, start, end, left_open=False, right_open=False, extended=False):
 
         start = _sympify(start)
         end = _sympify(end)
@@ -935,18 +935,20 @@ class Interval(Set):
         elif (end - start).is_negative:
             return S.EmptySet
 
-        if end == start and (left_open or right_open):
-            return S.EmptySet
-        if end == start and not (left_open or right_open):
-            if start is S.Infinity or start is S.NegativeInfinity:
+        if end == start:
+            if left_open or right_open:
                 return S.EmptySet
-            return FiniteSet(end)
+            else:
+                if start is S.Infinity or start is S.NegativeInfinity:
+                    return S.EmptySet
+                return FiniteSet(end)
 
         # Make sure infinite interval end points are open.
-        if start is S.NegativeInfinity:
-            left_open = true
-        if end is S.Infinity:
-            right_open = true
+        if not extended:
+            if start is S.NegativeInfinity:
+                left_open = true
+            if end is S.Infinity:
+                right_open = true
         if start == S.Infinity or end == S.NegativeInfinity:
             return S.EmptySet
 
@@ -1034,6 +1036,56 @@ class Interval(Set):
     def Ropen(cls, a, b):
         """Return an interval not including the right boundary."""
         return cls(a, b, False, True)
+
+    @classmethod
+    def xx(cls, a, b):
+        """Return an closed interval."""
+        return cls(a, b, False, False, extended=True)
+
+    @classmethod
+    def xo(cls, a, b):
+        """Return an interval open on the rigth."""
+        return cls(a, b, False, True, extended=True)
+
+    @classmethod
+    def ox(cls, a, b):
+        """Return an interval open on the left."""
+        return cls(a, b, True, False, extended=True)
+
+    @classmethod
+    def xx(cls, a, b):
+        """Return an closed interval."""
+        return cls(a, b, False, False, extended=True)
+
+    @classmethod
+    def xo(cls, a, b):
+        """Return an interval open on the rigth."""
+        return cls(a, b, False, True, extended=True)
+
+    @classmethod
+    def ox(cls, a, b):
+        """Return an interval open on the left."""
+        return cls(a, b, True, False, extended=True)
+
+    @classmethod
+    def le(cls, v):
+        """Return interval for x <= v."""
+        return cls(S.NegativeInfinity, v, extended=True)
+
+    @classmethod
+    def lt(cls, v):
+        """Return interval for x < v."""
+        return cls(S.NegativeInfinity, v, False, True, extended=True)
+
+    @classmethod
+    def ge(cls, v):
+        """Return interval for x >= v."""
+        return cls(v, S.Infinity, extended=True)
+
+    @classmethod
+    def gt(cls, v):
+        """Return interval for x > v."""
+        return cls(v, S.Infinity, True, False, extended=True)
 
     @property
     def _inf(self):
