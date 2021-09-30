@@ -178,7 +178,7 @@ class UnitSystem(_QuantityMapper):
         elif isinstance(expr, Pow):
             factor, dim = self._collect_factor_and_dimension(expr.base)
             exp_factor, exp_dim = self._collect_factor_and_dimension(expr.exp)
-            if exp_dim.is_dimensionless:
+            if self.get_dimension_system().is_dimensionless(exp_dim):
                 exp_dim = 1
             return factor ** exp_factor, dim ** (exp_factor * exp_dim)
         elif isinstance(expr, Add):
