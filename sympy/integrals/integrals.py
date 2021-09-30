@@ -1539,7 +1539,7 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
     in interactive sessions and should be avoided in library code.
 
     >>> integrate(x**a*exp(-x), (x, 0, oo)) # same as conds='piecewise'
-    Piecewise((gamma(a + 1), re(a) > -1),
+    Piecewise((gamma(a + 1), a > -1),
         (Integral(x**a*exp(-x), (x, 0, oo)), True))
 
     >>> integrate(x**a*exp(-x), (x, 0, oo), conds='none')
