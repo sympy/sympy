@@ -163,7 +163,7 @@ class Boolean(Basic):
                     if periodicity(r, x) not in (0, None):
                         s = r._eval_as_set()
                         if s in (S.EmptySet, S.UniversalSet, S.Reals
-                                ) or s == Union({-oo, oo}, S.Reals)):
+                                ) or s == Union({-oo, oo}, S.Reals):
                             reps[r] = s.as_relational(x)
                             continue
                         raise NotImplementedError(filldedent('''
