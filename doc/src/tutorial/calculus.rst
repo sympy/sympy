@@ -211,7 +211,7 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     ⌡
     0
     >>> integ.doit()
-    ⎧ Γ(y + 1)    for re(y) > -1
+    ⎧ Γ(y + 1)    for y > -1
     ⎪
     ⎪∞
     ⎪⌠
@@ -222,7 +222,7 @@ definite integrals.  Here is a sampling of some of the power of ``integrate``.
     ⎩
 
 This last example returned a ``Piecewise`` expression because the integral
-does not converge unless `\Re(y) > 1.`
+does not converge unless `y > -1` (and real).
 
 Limits
 ======
