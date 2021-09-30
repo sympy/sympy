@@ -448,6 +448,7 @@ def test_monotonic_sign():
     assert F((p - 1)*q + 1).is_positive
     assert F(-(p - 1)*q - 1).is_negative
 
+
 def test_issue_17256():
     from sympy import Range
     x = Symbol('x')
@@ -465,7 +466,19 @@ def test_issue_17256():
     r2 = s2.xreplace({x:a})
     assert r1 == r2
 
+
 def test_issue_21623():
     from sympy import MatrixSymbol
     M = MatrixSymbol('X', 2, 2)
     assert gcd_terms(M[0,0], 1) == M[0,0]
+
+
+def test_unigen():
+    from sympy import IndexedBase, Function, MatrixSymbol
+    from sympy.core.exprtools import unigen
+    f = Function('f')
+    for x in [a, IndexedBase("X")[a], f(a, b),
+            MatrixSymbol("M", 1, 1)[0, 0]]:
+        assert unigen(x + 1) == x, x
+    assert unigen(a + b) is None
+    assert unigen(f(a) + b) is None

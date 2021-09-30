@@ -26,6 +26,66 @@ def _isnumber(i):
     return isinstance(i, (SYMPY_INTS, float)) or i.is_Number
 
 
+def unigen(expr):
+    """return the smallest univariate generator in the expression
+    that makes the expression univariate.
+
+    EXAMPLES
+    ========
+
+    >>> from sympy.core.exprtools import unigen
+    >>> from sympy.abc import x, y
+    >>> from sympy import Function
+    >>> unigen(x - 1)
+    x
+    >>> unigen(x + y) is None
+    True
+    >>> f = Function('f')
+    >>> unigen(f(x) + 1/(f(x) - 1) < 0)
+    x
+    """
+    from sympy.core.basic import preorder_traversal
+    from sympy.core.symbol import Symbol
+    from sympy.core.function import AppliedUndef
+    if not isinstance(expr, Basic):
+        return
+    free = expr.free_symbols
+    if not free:
+        return
+    elif len(free) == 1:
+        x = free.pop()
+        if isinstance(x, Symbol):
+            return x
+    else:
+        from sympy.utilities.iterables import sift
+        elem, cmpd = sift(free,
+            lambda x: len(x.free_symbols) == 1, binary=True)
+        if len(cmpd) == 1 and cmpd[0].free_symbols == set(elem):
+            return cmpd[0]
+    gens = set()
+    pot = preorder_traversal(expr)
+    for i in pot:
+        if (i.is_Add or i.is_Mul or i.is_Pow or
+                i.is_Function and not isinstance(i, AppliedUndef)):
+            continue
+        free = i.free_symbols
+        if not free:
+            pot.skip()
+            continue
+        try:
+            gens.add(i.as_independent(free.pop())[1])
+        except AttributeError:
+            pass
+    gens = list(reversed(list(ordered(gens))))
+    D = Dummy()
+    for i, g in enumerate(gens):
+        if isinstance(g, Symbol):
+            return  # it wasn't selected by larger expr
+        d = expr.xreplace({g: D})
+        if not any(d.has(_) for _ in gens[i + 1:]):
+            return g
+
+
 def _monotonic_sign(self):
     """Return the value closest to 0 that ``self`` may have if all symbols
     are signed and the result is uniformly the same sign for all values of symbols.
