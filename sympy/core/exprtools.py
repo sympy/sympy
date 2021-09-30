@@ -184,7 +184,8 @@ def _monotonic_sign(self):
                     except (PolynomialError, NotImplementedError):
                         currentroots = [r for r in roots(d, x) if r.is_extended_real]
                 y = self.subs(x, x0)
-                if x.is_nonnegative and all(r <= x0 for r in currentroots):
+                if x.is_nonnegative and all(
+                        (r - x0).is_nonpositive for r in currentroots):
                     if y.is_nonnegative and d.is_positive:
                         if y:
                             return y if y.is_positive else Dummy('pos', positive=True)
@@ -195,7 +196,8 @@ def _monotonic_sign(self):
                             return y if y.is_negative else Dummy('neg', negative=True)
                         else:
                             return Dummy('npos', nonpositive=True)
-                elif x.is_nonpositive and all(r >= x0 for r in currentroots):
+                elif x.is_nonpositive and all(
+                        (r - x0).is_nonnegative for r in currentroots):
                     if y.is_nonnegative and d.is_negative:
                         if y:
                             return Dummy('pos', positive=True)
