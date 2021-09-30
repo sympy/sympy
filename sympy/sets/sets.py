@@ -1296,7 +1296,6 @@ class Union(Set, LatticeOp):
 
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
-        from sympy.core.relational import Relational
         # make Interval(-oo, oo) -> Reals
         args = [S.Reals if i == S.Reals else i for i in self.args]
         if self == Union({S.NegativeInfinity, S.Infinity}, S.Reals):

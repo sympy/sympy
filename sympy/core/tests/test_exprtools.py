@@ -477,8 +477,8 @@ def test_unigen():
     from sympy import IndexedBase, Function, MatrixSymbol
     from sympy.core.exprtools import unigen
     f = Function('f')
-    for x in [a, IndexedBase("X")[a], f(a, b),
+    for i in [a, IndexedBase("X")[a], f(a, b),
             MatrixSymbol("M", 1, 1)[0, 0]]:
-        assert unigen(x + 1) == x, x
+        assert unigen(i + 1) == i, i
     assert unigen(a + b) is None
     assert unigen(f(a) + b) is None

@@ -172,17 +172,9 @@ class Piecewise(Function):
         args = []
         for e, c in _args:
             if (not c.is_Atom and not isinstance(c, Relational) and
-                not c.has(im, re)):
+                    not c.has(im, re)):
                 x = unigen(c)
                 if x is not None:
-                    funcs = [i for i in c.atoms(Function)
-                             if not isinstance(i, Boolean)]
-                    if len(funcs) == 1 and len(
-                            c.xreplace({list(funcs)[0]: Dummy()}
-                            ).free_symbols) == 1:
-                        # we can treat function like a symbol
-                        free = funcs
-                    _c = c
                     try:
                         c = c.as_set().as_relational(x)
                     except NotImplementedError:
