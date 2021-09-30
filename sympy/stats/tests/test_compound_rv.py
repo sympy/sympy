@@ -61,7 +61,8 @@ def test_unevaluated_CompoundDist():
     exprd = Piecewise((exp(S(3)/4 - x/4)/8, 2*Abs(arg(x - 3)) <= pi/2),
     (sqrt(2)*Integral(exp(-(_k**4 + 16*(x - 3)**2)/(32*_k**2)),
     (_k, 0, oo))/(32*sqrt(pi)), True))
-    assert (density(X)(x).simplify()).dummy_eq(exprd.simplify())
+    ans = density(X)(x)
+    assert ans.simplify().dummy_eq(exprd.simplify()), ('\n',ans,'\n',ans.simplify())
 
     expre = Integral(_k*Integral(sqrt(2)*exp(-_k**2/32)*exp(-(_k - 3)**2/(2*_k**2)
     )/(32*sqrt(pi)), (_k, 0, oo)), (_k, -oo, oo))
