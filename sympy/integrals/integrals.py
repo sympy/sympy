@@ -569,16 +569,16 @@ class Integral(AddWithLimits):
                                 free = cond.free_symbols
                                 d = None
                                 if len(free) == 1:
-                                    x = free.pop()
-                                    if not x.is_real:
+                                    cx = free.pop()
+                                    if not cx.is_real:
                                         d = Dummy(real=True)
-                                        cond = cond.xreplace({x: d})
+                                        cond = cond.xreplace({cx: d})
                                 ret = Piecewise(
                                     (f, cond),
                                     (self.func(
                                     function, (x, a, b)), True))
                                 if d:
-                                    ret = ret.xreplace({d: x})
+                                    ret = ret.xreplace({d: cx})
                             elif conds == 'separate':
                                 if len(self.limits) != 1:
                                     raise ValueError(filldedent('''
