@@ -918,10 +918,40 @@ def test_Union_as_relational():
         Or(And(Le(0, x), Le(x, 1)), Eq(x, 2))
     assert (Interval(0, 1, True, True) + FiniteSet(1)).as_relational(x) == \
         And(Lt(0, x), Le(x, 1))
-    assert Or(x < 0, x > 0).as_set().as_relational(x) == \
-        And((x > -oo), (x < oo), Ne(x, 0))
+    assert Or(x < 0, x > 0).as_set().as_relational(x) == (x > 0) | (x < 0)
     assert (Interval.Ropen(1, 3) + Interval.Lopen(3, 5)
         ).as_relational(x) == And((x > 1), (x < 5), Ne(x, 3))
+    for r in (S.Reals, Interval(-oo, oo)):
+        assert Union({-oo, oo}, r).as_relational(x) == (x <= oo)
+        assert Union({-oo}, r).as_relational(x) == (x < oo)
+        assert Union({oo}, r).as_relational(x) == (x > -oo)
+    # these Ands generate a Union with +/-oo
+    assert And(Ne(x, 1), x < 0).as_set().as_relational(x
+        ) == (x < 0)
+    assert And(Ne(x, 1), x < 1).as_set().as_relational(x
+        ) == (x < 1)
+    assert And(Ne(x, 1), x < 2).as_set().as_relational(x
+        ) == ((x < 1) | ((S(1) < x) & (x < 2)))
+    assert And(Ne(x, 1), x <= 0).as_set().as_relational(x
+        ) == (x <= 0)
+    assert And(Ne(x, 1), x <= 1).as_set().as_relational(x
+        ) == (x < 1)
+    assert And(Ne(x, 1), x <= 2).as_set().as_relational(x
+        ) == ((x < 1) | ((x <= 2) & (S(1) < x)))
+    assert And(Ne(x, 1), x >= 0).as_set().as_relational(x
+        ) == ((x > 1) | ((S(0) <= x) & (x < 1)))
+    assert And(Ne(x, 1), x >= 1).as_set().as_relational(x
+        ) == (x > 1)
+    assert And(Ne(x, 1), x >= 2).as_set().as_relational(x
+        ) == (x >= 2)
+    assert And(Ne(x, 1), x > 0).as_set().as_relational(x
+        ) == ((x > 1) | ((S(0) < x) & (x < 1)))
+    assert And(Ne(x, 1), x > 1).as_set().as_relational(x
+        ) == (x > 1)
+    assert And(Ne(x, 1), x > 2).as_set().as_relational(x
+        ) == (x > 2)
+    assert Union({oo}, Interval(1, 2)).as_relational(x
+        ) == Eq(x, oo) | ((S(1) <= x) & (x <= 2))
 
 
 def test_Intersection_as_relational():

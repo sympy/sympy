@@ -1296,15 +1296,60 @@ class Union(Set, LatticeOp):
 
     def as_relational(self, symbol):
         """Rewrite a Union in terms of equalities and logic operators. """
-        if (len(self.args) == 2 and
-                all(isinstance(i, Interval) for i in self.args)):
+        # make Interval(-oo, oo) -> Reals
+        args = [Interval(S.NegativeInfinity, S.Infinity) if i == S.Reals else i for i in self.args]
+        inf = set()
+        for ix, i in enumerate(args):
+            if isinstance(i, FiniteSet):
+                if S.Infinity in i:
+                    inf.add(S.Infinity)
+                    args[ix] -= {S.Infinity}
+                if S.NegativeInfinity in i:
+                    inf.add(S.NegativeInfinity)
+                    args[ix] -= {S.NegativeInfinity}
+        x = symbol
+        args = list(filter(None, args))
+        if not inf and (len(args) == 2 and
+                all(isinstance(i, Interval) for i in args)):
             # optimization to give 3 args as (x > 1) & (x < 5) & Ne(x, 3)
             # instead of as 4, ((1 <= x) & (x < 3)) | ((x <= 5) & (3 < x))
-            a, b = self.args
+            a, b = args
             if (a.sup == b.inf and
-                    not any(a.sup in i for i in self.args)):
-                return And(Ne(symbol, a.sup), symbol < b.sup, symbol > a.inf)
-        return Or(*[i.as_relational(symbol) for i in self.args])
+                    not any(a.sup in i for i in args)):
+                return And(Ne(x, a.sup), x < b.sup, x > a.inf)
+        # handle semi-infinite relationships
+        if len(inf) == 1 and len(args) == 1 and isinstance(args[0], Interval):
+            i = args[0]
+            if i.sup in inf:
+                return (x >= i.inf) if i.inf in i else (x > i.inf)
+            if i.inf in inf:
+                return (x <= i.sup) if i.sup in i else (x < i.sup)
+        if not inf:
+            return Or(*[i.as_relational(x) for i in args])
+        r = []
+        for i in args:
+            if isinstance(i, Interval):
+                # see if there are semi-infinite Intervals on which
+                # to place the infinities; since the results go in
+                # an Or, we only need to apply it once
+                ri = None
+                if i.inf in inf and i.sup in inf:
+                    inf = []
+                    ri = (x <= S.Infinity)
+                elif i.inf in inf:
+                    ri = (x <= i.sup) if i.sup in i else (x < i.sup)
+                    inf.remove(i.inf)
+                elif i.sup in inf:
+                    ri = (x >= i.inf) if i.inf in i else (x > i.inf)
+                    inf.remove(i.sup)
+            if ri is None:
+                # just take the relational form
+                ri = i.as_relational(x)
+            r.append(ri)
+        if inf:
+            # maybe one or both of the infinite values remain
+            r.append(FiniteSet(*inf).as_relational(x))
+        return Or(*r)
 
     @property
     def is_iterable(self):

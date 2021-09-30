@@ -956,8 +956,7 @@ class Piecewise(Function):
                 free = c.free_symbols
                 x = free.pop()
                 try:
-                    byfree[x] = byfree.setdefault(
-                        x, S.EmptySet).union(c.as_set())
+                    cs = c.as_set()
                 except NotImplementedError:
                     if not default:
                         raise NotImplementedError(filldedent('''
@@ -968,6 +967,13 @@ class Piecewise(Function):
                             This error would not occur if a default expression
                             like `(foo, True)` were given.
                             ''' % c))
+                else:
+                    # remove extraneous infinities
+                    cs -= {S.Infinity, S.NegativeInfinity}
+                    # update x
+                    byfree[x] = byfree.setdefault(
+                        x, S.EmptySet).union(cs)
+
                 if byfree[x] in (S.UniversalSet, S.Reals):
                     # collapse the ith condition to True and break
                     args[i] = list(args[i])

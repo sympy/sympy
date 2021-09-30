@@ -406,6 +406,11 @@ class Relational(Boolean, EvalfMixin):
         x = syms.pop()
         try:
             xset = solve_univariate_inequality(self, x, relational=False)
+            # check infinities
+            if self.xreplace({x: S.Infinity}) == True:
+                xset |= {S.Infinity}
+            if self.xreplace({x: S.NegativeInfinity}) == True:
+                xset |= {S.NegativeInfinity}
         except NotImplementedError:
             # solve_univariate_inequality raises NotImplementedError for
             # unsolvable equations/inequalities.
@@ -1023,6 +1028,8 @@ class StrictGreaterThan(_Greater):
 
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
+        if rhs is S.Infinity:
+            return S.false
         return is_gt(lhs, rhs)
 
 
@@ -1037,6 +1044,8 @@ class StrictLessThan(_Less):
 
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
+        if rhs is S.NegativeInfinity:
+            return S.false
         return is_lt(lhs, rhs)
 
 
