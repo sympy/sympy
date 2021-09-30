@@ -959,11 +959,11 @@ class Piecewise(Function):
                     byfree[x] = byfree.setdefault(
                         x, S.EmptySet).union(cs)
 
-                if byfree[x] in (S.UniversalSet, S.Reals):
-                    # collapse the ith condition to True and break
-                    args[i] = list(args[i])
-                    c = args[i][1] = True
-                    break
+                    if byfree[x] in (S.UniversalSet, S.Reals):
+                        # collapse the ith condition to True and break
+                        args[i] = list(args[i])
+                        c = args[i][1] = True
+                        break
             if c == True:
                 break
         if c != True:

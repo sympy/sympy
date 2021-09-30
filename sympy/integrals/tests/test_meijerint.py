@@ -624,11 +624,13 @@ def test_messy():
                        fourier_transform)
     assert laplace_transform(Si(x), x, s) == ((-atan(s) + pi/2)/s, 0, True)
 
-    assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, s > 1)
+    # condition should be simpler
+    assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, (s > -oo) & (s < -1) & (s < oo))
 
     # where should the logs be simplified?
+    # condition should be simpler
     assert laplace_transform(Chi(x), x, s) == \
-        ((log(s**(-2)) - log(1 - 1/s**2))/(2*s), 1, s > 1)
+        ((log(s**(-2)) - log(1 - 1/s**2))/(2*s), 1, (s > -oo) & (s < -1) & (s < oo))
 
     # TODO maybe simplify the inequalities?
     assert laplace_transform(besselj(a, x), x, s)[1:] == \

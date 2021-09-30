@@ -11,7 +11,7 @@ from sympy.functions.elementary.piecewise import (piecewise_fold,
     Piecewise)
 from sympy.logic.boolalg import BooleanFunction
 from sympy.tensor.indexed import Idx
-from sympy.sets.sets import Interval
+from sympy.sets.sets import Interval, Union
 from sympy.sets.fancysets import Range
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift
@@ -92,7 +92,11 @@ def _process_limits(*symbols):
     for V in symbols:
         if isinstance(V, (Relational, BooleanFunction)):
             variable = V.atoms(Symbol).pop()
-            V = (variable, V.as_set())
+            s = V.as_set()
+            if isinstance(s, Union):
+                # remove extraneous infinities
+                s -= {S.NegativeInfinity, S.Infinity}
+            V = (variable, s)
 
         if isinstance(V, Symbol) or getattr(V, '_diff_wrt', False):
             if isinstance(V, Idx):

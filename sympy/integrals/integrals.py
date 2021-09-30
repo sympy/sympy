@@ -8,7 +8,7 @@ from sympy.core.function import diff
 from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
 from sympy.core.numbers import oo, pi
-from sympy.core.relational import Ne
+from sympy.core.relational import Ne, Relational
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
 from sympy.core.sympify import sympify
@@ -476,6 +476,8 @@ class Integral(AddWithLimits):
             elif all(i.is_nonpositive for i in l) and not x.is_nonpositive:
                 d = Dummy(negative=True)
             elif all(i.is_real for i in l) and not x.is_real:
+                # tempting to make it i.is_extended_real, but that
+                # creates deep failures
                 d = Dummy(real=True)
             else:
                 d = None
@@ -559,10 +561,24 @@ class Integral(AddWithLimits):
                         if res is not None:
                             f, cond = res
                             if conds == 'piecewise':
+                                # adding real assumptions to integration
+                                # variables creates deeper issues and
+                                # not having them in Piecewise doesn't allow
+                                # x < oo to evaluate, so we handle it here
+                                # before creating the Piecewise
+                                free = cond.free_symbols
+                                d = None
+                                if len(free) == 1:
+                                    x = free.pop()
+                                    if not x.is_real:
+                                        d = Dummy(real=True)
+                                        cond = cond.xreplace({x: d})
                                 ret = Piecewise(
                                     (f, cond),
                                     (self.func(
                                     function, (x, a, b)), True))
+                                if d:
+                                    ret = ret.xreplace({d: x})
                             elif conds == 'separate':
                                 if len(self.limits) != 1:
                                     raise ValueError(filldedent('''

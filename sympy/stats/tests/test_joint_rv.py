@@ -247,6 +247,7 @@ def test_NegativeMultinomial():
     assert N.pspace.distribution.set == ProductSet(Range(0, oo, 1),
                     Range(0, oo, 1), Range(0, oo, 1), Range(0, oo, 1))
 
+
 def test_JointPSpace_marginal_distribution():
     T = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     assert marginal_distribution(T, T[1])(x) == sqrt(2)*(x**2 + 2)/(
@@ -255,6 +256,7 @@ def test_JointPSpace_marginal_distribution():
 
     t = MultivariateT('T', [0, 0, 0], [[1, 0, 0], [0, 1, 0], [0, 0, 1]], 3)
     assert comp(marginal_distribution(t, 0)(1).evalf(), 0.2, .01)
+
 
 def test_JointRV():
     x1, x2 = (Indexed('x', i) for i in (1, 2))

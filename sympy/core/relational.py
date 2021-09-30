@@ -406,11 +406,15 @@ class Relational(Boolean, EvalfMixin):
         x = syms.pop()
         try:
             xset = solve_univariate_inequality(self, x, relational=False)
-            # check infinities
-            if self.xreplace({x: S.Infinity}) == True:
-                xset |= {S.Infinity}
-            if self.xreplace({x: S.NegativeInfinity}) == True:
-                xset |= {S.NegativeInfinity}
+            def include(inf):
+                try:
+                    if self.xreplace({x: inf}) == True:
+                        return {inf}
+                except TypeError:
+                    pass
+                return set()
+            xset |= include(S.NegativeInfinity)
+            xset |= include(S.Infinity)
         except NotImplementedError:
             # solve_univariate_inequality raises NotImplementedError for
             # unsolvable equations/inequalities.
