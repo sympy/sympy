@@ -16,7 +16,7 @@ on:
       - 1.9
 env:
   release_branch: 1.9
-  release_version: 1.9rc1
+  release_version: 1.9
   previous_version: 1.8
 
 jobs:
