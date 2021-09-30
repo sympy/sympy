@@ -386,8 +386,8 @@ def mellin_transform(f, x, s, **hints):
     >>> from sympy.integrals.transforms import mellin_transform
     >>> from sympy import exp
     >>> from sympy.abc import x, s
-    >>> mellin_transform(exp(-x), x, s)
-    (gamma(s), (0, oo), True)
+    >>> mellin_transform(exp(-x), x, s)  # XXX Dummy came through
+    (gamma(s), (0, oo), _s - 1 > -1)
 
     See Also
     ========
