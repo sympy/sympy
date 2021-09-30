@@ -10,6 +10,7 @@ from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, as_int
 from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.function import Application, Derivative
+from sympy.core.kind import NumberKind
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
