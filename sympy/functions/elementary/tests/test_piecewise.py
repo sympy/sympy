@@ -1149,8 +1149,9 @@ def test_unevaluated_integrals():
     # this is a test of using _solve_inequality when
     # solve_univariate_inequality fails
     assert p.integrate(y) == Piecewise(
-        (y, Eq(f(x), 1) | ((x < 10) & Eq(f(x), 1))),
-        (2*y, (x >= -oo) & (x < 10)), (0, True))
+         (y, ((x > -oo) & (x < 10) & Eq(f(x), 1)) |
+             ((x > -oo) & (x < oo) & Eq(f(x), 1))),
+         (2*y, (x > -oo) & (x < 10)), (0, True))
 
 
 def test_conditions_as_alternate_booleans():
