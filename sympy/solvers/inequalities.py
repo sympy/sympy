@@ -54,6 +54,7 @@ def solve_poly_inequality(poly, rel):
                 "could not determine truth value of %s" % t)
 
     reals, intervals = poly.real_roots(multiple=False), []
+    isinf = lambda x: x in (S.Infinity, S.NegativeInfinity)
 
     if rel == '==':
         for root, _ in reals:
@@ -61,9 +62,8 @@ def solve_poly_inequality(poly, rel):
             intervals.append(interval)
     elif rel == '!=':
         left = S.NegativeInfinity
-
         for right, _ in reals + [(S.Infinity, 1)]:
-            interval = Interval(left, right, True, True)
+            interval = Interval(left, right, isinf(left), isinf(right), extended=True)
             intervals.append(interval)
             left = right
     else:
@@ -85,26 +85,26 @@ def solve_poly_inequality(poly, rel):
         else:
             raise ValueError("'%s' is not a valid relation" % rel)
 
-        right, right_open = S.Infinity, True
+        right, right_open = S.Infinity, False
 
         for left, multiplicity in reversed(reals):
             if multiplicity % 2:
                 if sign == eq_sign:
                     intervals.insert(
-                        0, Interval(left, right, not equal, right_open))
+                        0, Interval(left, right, not equal, right_open, extended=True))
 
                 sign, right, right_open = -sign, left, not equal
             else:
                 if sign == eq_sign and not equal:
                     intervals.insert(
-                        0, Interval(left, right, True, right_open))
+                        0, Interval(left, right, True, right_open, extended=True))
                     right, right_open = left, True
                 elif sign != eq_sign and equal:
                     intervals.insert(0, Interval(left, left))
 
         if sign == eq_sign:
             intervals.insert(
-                0, Interval(S.NegativeInfinity, right, True, right_open))
+                0, Interval(S.NegativeInfinity, right, False, right_open, extended=True))
 
     return intervals
 
@@ -523,7 +523,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
 
             inf, sup = domain.inf, domain.sup
             if sup - inf is S.Infinity:
-                domain = Interval(0, period, False, True).intersect(_domain)
+                domain = Interval(0, period, False, False, extended=True).intersect(_domain)
                 _domain = domain
 
         if rv is None:
@@ -588,7 +588,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 critical_points = FiniteSet(*(solns + singularities + list(
                     discontinuities))).intersection(
                     Interval(domain.inf, domain.sup,
-                    domain.inf not in domain, domain.sup not in domain))
+                    domain.inf not in domain, domain.sup not in domain, extended=True))
                 if all(r.is_number for r in critical_points):
                     reals = _nsort(critical_points, separated=True)[0]
                 else:
@@ -627,11 +627,11 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                                 pt = _pt(start, z)
                                 if pt not in singularities and pt.is_extended_real and valid(pt):
                                     if valid_start and valid_z:
-                                        im_sol += Interval(start, z)
+                                        im_sol += Interval(start, z, extended=True)
                                     elif valid_start:
-                                        im_sol += Interval.Ropen(start, z)
+                                        im_sol += Interval.xo(start, z)
                                     elif valid_z:
-                                        im_sol += Interval.Lopen(start, z)
+                                        im_sol += Interval.ox(start, z)
                                     else:
                                         im_sol += Interval.open(start, z)
                             start = z
@@ -653,14 +653,14 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             sol_sets = [S.EmptySet]
 
             start = domain.inf
-            if start in domain and valid(start) and start.is_finite:
+            if start in domain and valid(start):# and start.is_finite:
                 sol_sets.append(FiniteSet(start))
 
             for x in reals:
                 end = x
 
                 if valid(_pt(start, end)):
-                    sol_sets.append(Interval(start, end, True, True))
+                    sol_sets.append(Interval.open(start, end))
 
                 if x in singularities:
                     singularities.remove(x)
@@ -676,7 +676,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                 start = end
 
             end = domain.sup
-            if end in domain and valid(end) and end.is_finite:
+            if end in domain and valid(end):# and end.is_finite:
                 sol_sets.append(FiniteSet(end))
 
             if valid(_pt(start, end)):
