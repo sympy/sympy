@@ -181,7 +181,6 @@ class Piecewise(Function):
                             ).free_symbols) == 1:
                         # we can treat function like a symbol
                         free = funcs
-                    _c = c
                     x = free.pop()
                     try:
                         c = c.as_set().as_relational(x)
