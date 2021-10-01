@@ -561,7 +561,7 @@ class Pow(Expr):
                 return log(self.base).is_imaginary
 
     def _eval_is_extended_negative(self):
-        if self.exp is S(1)/2:
+        if self.exp is S.Half:
             if self.base.is_complex or self.base.is_extended_real:
                 return False
         if self.base.is_extended_negative:

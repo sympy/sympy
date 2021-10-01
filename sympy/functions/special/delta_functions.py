@@ -649,7 +649,7 @@ class Heaviside(Function):
                 ((sign(arg) + 1)/2, Ne(arg, 0)),
                 (Heaviside(0, H0=H0), True))
             pw2 = Piecewise(
-                ((sign(arg) + 1)/2, Eq(Heaviside(0, H0=H0), S(1)/2)),
+                ((sign(arg) + 1)/2, Eq(Heaviside(0, H0=H0), S.Half)),
                 (pw1, True))
             return pw2
 
