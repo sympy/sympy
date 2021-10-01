@@ -171,7 +171,7 @@ class Piecewise(Function):
         args = []
         for e, c in _args:
             if (not c.is_Atom and not isinstance(c, Relational) and
-                not c.has(im, re)):
+                    not c.has(im, re)):
                 free = c.free_symbols
                 if len(free) == 1:
                     funcs = [i for i in c.atoms(Function)
@@ -190,15 +190,15 @@ class Piecewise(Function):
                     else:
                         reps = {}
                         for i in c.atoms(Relational):
-                            ic = i.canonical
-                            if ic.rhs in (S.Infinity, S.NegativeInfinity):
-                                if not _c.has(ic.rhs):
+                            inf = i.canonical.rhs
+                            if inf in (S.Infinity, S.NegativeInfinity):
+                                if not _c.has(inf):
                                     # don't accept introduction of
                                     # new Relationals with +/-oo
                                     reps[i] = S.true
-                                elif ('=' not in ic.rel_op and
-                                        c.xreplace({x: i.rhs}) !=
-                                        _c.xreplace({x: i.rhs})):
+                                elif ('=' not in i.rel_op and
+                                        c.xreplace({x: inf}) !=
+                                        _c.xreplace({x: inf})):
                                     reps[i] = Relational(
                                         i.lhs, i.rhs, i.rel_op + '=')
                         c = c.xreplace(reps)
