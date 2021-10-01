@@ -1039,27 +1039,12 @@ class Interval(Set):
 
     @classmethod
     def xx(cls, a, b):
-        """Return an closed interval."""
+        """Return a closed interval."""
         return cls(a, b, False, False, extended=True)
 
     @classmethod
     def xo(cls, a, b):
-        """Return an interval open on the rigth."""
-        return cls(a, b, False, True, extended=True)
-
-    @classmethod
-    def ox(cls, a, b):
-        """Return an interval open on the left."""
-        return cls(a, b, True, False, extended=True)
-
-    @classmethod
-    def xx(cls, a, b):
-        """Return an closed interval."""
-        return cls(a, b, False, False, extended=True)
-
-    @classmethod
-    def xo(cls, a, b):
-        """Return an interval open on the rigth."""
+        """Return an interval open on the right."""
         return cls(a, b, False, True, extended=True)
 
     @classmethod
