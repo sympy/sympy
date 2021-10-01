@@ -1,6 +1,6 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    cot, sec, csc, Abs, symbols, I, re, simplify,
-                   expint, Rational, Piecewise, MatrixSymbol)
+                   expint, Rational, Piecewise, MatrixSymbol, Min, Max)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds, is_convex,
                                  stationary_points, minimum, maximum)
@@ -467,13 +467,13 @@ def test_AccumBounds_pow():
     assert B(0, 2)**S.Half == B(0, sqrt(2))
 
     neg = Symbol('neg', negative=True)
-    unchanged(Pow, B(neg, 1), S.Half)
+    assert unchanged(Pow, B(neg, 1), S.Half)
     nn = Symbol('nn', nonnegative=True)
     assert B(nn, nn + 1)**S.Half == B(sqrt(nn), sqrt(nn + 1))
     assert B(nn, nn + 1)**nn == B(nn**nn, (nn + 1)**nn)
-    unchanged(Pow, B(nn, nn + 1), x)
+    assert unchanged(Pow, B(nn, nn + 1), x)
     i = Symbol('i', integer=True)
-    unchanged(Pow, B(1, 2), i)
+    assert B(1, 2)**i == B(Min(1, 2**i), Max(1, 2**i))
     i = Symbol('i', integer=True, nonnegative=True)
     assert B(1, 2)**i == B(1, 2**i)
     assert B(0, 1)**i == B(0**i, 1)
@@ -544,7 +544,7 @@ def test_AccumBounds_exponent():
     assert B(2, 3)**B(-3, 2) == B(S(1)/27, 9)
 
     # bounds generating imaginary parts unevaluated
-    unchanged(Pow, B(-1, 1), B(1, 2))
+    assert unchanged(Pow, B(-1, 1), B(1, 2))
     assert B(0, S(1)/2)**B(1, oo) == B(0, S(1)/2)
     assert B(0, 1)**B(1, oo) == B(0, oo)
     assert B(0, 2)**B(1, oo) == B(0, oo)
