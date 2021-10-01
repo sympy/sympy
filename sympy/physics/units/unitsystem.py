@@ -206,6 +206,6 @@ class UnitSystem(_QuantityMapper):
             return (expr.func(*(f[0] for f in fds)),
                     expr.func(*(d[1] for d in fds)))
         elif isinstance(expr, Dimension):
-            return 1, expr
+            return S.One, expr
         else:
             return expr, Dimension(1)

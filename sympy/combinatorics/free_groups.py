@@ -250,7 +250,7 @@ class FreeGroup(DefaultPrinting):
 
         """
         if self.rank == 0:
-            return 1
+            return S.One
         else:
             return S.Infinity
 
@@ -582,7 +582,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         if self.is_identity:
-            return 1
+            return S.One
         else:
             return S.Infinity
 

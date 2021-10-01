@@ -940,7 +940,7 @@ class Expr(Basic, EvalfMixin):
         def _eval_endpoint(left):
             c = a if left else b
             if c is None:
-                return 0
+                return S.Zero
             else:
                 C = self.subs(x, c)
                 if C.has(S.NaN, S.Infinity, S.NegativeInfinity,
@@ -955,7 +955,7 @@ class Expr(Basic, EvalfMixin):
             return C
 
         if a == b:
-            return 0
+            return S.Zero
 
         A = _eval_endpoint(left=True)
         if A is S.NaN:

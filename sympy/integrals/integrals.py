@@ -1365,7 +1365,7 @@ class Integral(AddWithLimits):
             raise ValueError("The lower_limit must be smaller than or equal to the upper_limit to calculate "
                              "cauchy's principal value. Also, a and b need to be comparable.")
         if a == b:
-            return 0
+            return S.Zero
         r = Dummy('r')
         f = self.function
         singularities_list = [s for s in singularities(f, x) if s.is_comparable and a <= s <= b]
