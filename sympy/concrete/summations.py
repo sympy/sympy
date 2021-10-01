@@ -1137,9 +1137,16 @@ def eval_sum_symbolic(f, limits):
         if without_i != 0:
             s = eval_sum_symbolic(with_i, (i, a, b))
             if s:
-                r = without_i*(b - a + 1) + s
-                if r is not S.NaN:
-                    return r
+                if((s == S.NegativeInfinity and (b - a + 1) == S.Infinity) or (s == S.Infinity and (b - a + 1) == S.Infinity)):
+                    Max = max(abs(f.subs(i, a)), abs(f.subs(i, S.Infinity)))
+                    if(Max > abs(without_i)):
+                        return s
+                    else:
+                        return without_i * S.Infinity
+                else:
+                    r = without_i*(b - a + 1) + s
+                    if r is not S.NaN:
+                        return r
         else:
             # Try term by term
             lsum = eval_sum_symbolic(L, (i, a, b))
@@ -1158,7 +1165,7 @@ def eval_sum_symbolic(f, limits):
     if result is not None:
         n = result[n]
 
-        if n.is_Integer:
+        if n.is_Integer or n.is_real:
             if n >= 0:
                 if (b is S.Infinity and not a is S.NegativeInfinity) or \
                    (a is S.NegativeInfinity and not b is S.Infinity):
