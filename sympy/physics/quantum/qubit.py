@@ -9,7 +9,7 @@ Todo:
 
 import math
 
-from sympy import Integer, log, Mul, Add, Pow, conjugate
+from sympy import Integer, log, Mul, Add, Pow, conjugate, S
 from sympy.core.basic import sympify
 from sympy.core.compatibility import SYMPY_INTS
 from sympy.matrices import Matrix, zeros
@@ -511,7 +511,7 @@ def matrix_to_density(mat):
     args = [[matrix_to_qubit(Matrix(
         [vector, ])), x[0]] for x in eigen for vector in x[2] if x[0] != 0]
     if (len(args) == 0):
-        return 0
+        return S.Zero
     else:
         return Density(*args)
 

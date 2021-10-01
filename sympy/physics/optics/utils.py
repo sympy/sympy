@@ -198,7 +198,7 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     c1 = -_incident.dot(_normal)  # cos(angle_of_incidence)
     cs2 = 1 - eta**2*(1 - c1**2)  # cos(angle_of_refraction)**2
     if cs2.is_negative:  # This is the case of total internal reflection(TIR).
-        return 0
+        return S.Zero
     drs = eta*_incident + (eta*c1 - sqrt(cs2))*_normal
     # Multiplying unit vector by its magnitude
     drs = drs*mag_incident

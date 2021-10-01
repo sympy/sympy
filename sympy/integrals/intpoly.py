@@ -137,12 +137,12 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
 
 def strip(monom):
     if monom.is_zero:
-        return 0, 0
+        return S.Zero, S.Zero
     elif monom.is_number:
-        return monom, 1
+        return monom, S.One
     else:
         coeff = LC(monom)
-        return coeff, S(monom) / coeff
+        return coeff, monom / coeff
 
 
 def main_integrate3d(expr, facets, vertices, hp_params, max_degree=None):

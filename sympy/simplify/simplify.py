@@ -1241,7 +1241,7 @@ def kroneckersimp(expr):
             args1 = delta1.args
             args2 = delta2.args
             if args_cancel(args1, args2):
-                return 0*m
+                return S.Zero * m # In case of oo etc
         return m
 
     if not expr.has(KroneckerDelta):

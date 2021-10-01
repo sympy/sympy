@@ -7,7 +7,7 @@ from sympy import (
     Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, Poly, posify, rad,
     Rational, S, separatevars, signsimp, simplify, sign, sin,
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan,
-    zoo, And, Gt, Ge, Le, Or)
+    zoo, And, Gt, Ge, Le, Or, eye)
 from sympy.core.mul import _keep_coeff
 from sympy.core.expr import unchanged
 from sympy.simplify.simplify import nthroot, inversecombine
@@ -938,6 +938,11 @@ def test_simplify_kroneckerdelta():
                                      [0, K(0, n), 0, K(1, n)],
                                      [0, 0, K(0, n), 0],
                                      [0, 0, 0, K(0, n)]])
+    assert simplify(eye(1) * KroneckerDelta(0, n) *
+                    KroneckerDelta(1, n)) == Matrix([[0]])
+
+    assert simplify(S.Infinity * KroneckerDelta(0, n) *
+                    KroneckerDelta(1, n)) is S.NaN
 
 
 def test_issue_17292():

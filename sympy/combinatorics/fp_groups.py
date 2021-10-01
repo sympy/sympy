@@ -687,7 +687,7 @@ class FpSubgroup(DefaultPrinting):
 
     def order(self):
         if not self.generators:
-            return 1
+            return S.One
         if isinstance(self.parent, FreeGroup):
             return S.Infinity
         if self.C is None:
