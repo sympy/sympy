@@ -85,6 +85,7 @@ def test_sinh_series():
     x = Symbol('x')
     assert sinh(x).series(x, 0, 10) == \
         x + x**3/6 + x**5/120 + x**7/5040 + x**9/362880 + O(x**10)
+    assert sinh(x**2 + 2*x).taylor_term(4, x) == 2 * x**4
 
 
 def test_sinh_fdiff():
@@ -167,6 +168,7 @@ def test_cosh_series():
     x = Symbol('x')
     assert cosh(x).series(x, 0, 10) == \
         1 + x**2/2 + x**4/24 + x**6/720 + x**8/40320 + O(x**10)
+    assert cosh(x**2 + 2*x).taylor_term(4, x) == 7 * x**4/6
 
 
 def test_cosh_fdiff():
@@ -250,6 +252,7 @@ def test_tanh_series():
     x = Symbol('x')
     assert tanh(x).series(x, 0, 10) == \
         x - x**3/3 + 2*x**5/15 - 17*x**7/315 + 62*x**9/2835 + O(x**10)
+    assert tanh(x**2 + 2*x).taylor_term(4, x) == -4 * x**4
 
 
 def test_tanh_fdiff():
@@ -479,6 +482,7 @@ def test_sech_series():
     x = Symbol('x')
     assert sech(x).series(x, 0, 10) == \
         1 - x**2/2 + 5*x**4/24 - 61*x**6/720 + 277*x**8/8064 + O(x**10)
+    assert sech(x**2 + 2*x).taylor_term(4, x) == 17 * x**4 / 6
 
 
 def test_sech_fdiff():
@@ -551,6 +555,7 @@ def test_asinh_series():
     t5 = asinh(x).taylor_term(5, x)
     assert t5 == 3*x**5/40
     assert asinh(x).taylor_term(7, x, t5, 0) == -5*x**7/112
+    assert asinh(x**2 + 2*x).taylor_term(4, x) == -2 * x ** 4
 
 
 def test_asinh_fdiff():
@@ -629,6 +634,7 @@ def test_acosh_series():
     t5 = acosh(x).taylor_term(5, x)
     assert t5 == - 3*I*x**5/40
     assert acosh(x).taylor_term(7, x, t5, 0) == - 5*I*x**7/112
+    assert acosh(x**2 + 2*x).taylor_term(4, x) == -2 * I * x**4
 
 
 def test_acosh_fdiff():
@@ -853,6 +859,7 @@ def test_atanh_series():
     x = Symbol('x')
     assert atanh(x).series(x, 0, 10) == \
         x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
+    assert atanh(x**2 + 2*x).taylor_term(4, x) == 4 * x**4
 
 
 def test_atanh_fdiff():
@@ -909,6 +916,7 @@ def test_acoth_series():
     x = Symbol('x')
     assert acoth(x).series(x, 0, 10) == \
         I*pi/2 + x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
+    assert acoth(x**2 + 2*x).taylor_term(4, x) == 4 * x**4
 
 
 def test_acoth_fdiff():
