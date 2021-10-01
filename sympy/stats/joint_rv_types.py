@@ -39,7 +39,7 @@ def marginal_distribution(rv, *indices):
 
     rv: A random variable with a joint probability distribution.
     indices: component indices or the indexed random symbol
-        for whom the joint distribution is to be calculated
+        for which the joint distribution is to be calculated
 
     Returns
     =======
