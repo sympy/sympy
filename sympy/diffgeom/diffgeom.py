@@ -15,7 +15,6 @@ from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.functions import factorial
 from sympy.matrices import ImmutableDenseMatrix as Matrix
-from sympy.simplify import simplify
 from sympy.solvers import solve
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -969,6 +968,7 @@ class BaseScalarField(Expr):
         coords = point.coords(self._coord_sys)
         # XXX Calling doit  is necessary with all the Subs expressions
         # XXX Calling simplify is necessary with all the trig expressions
+        from sympy.simplify.simplify import simplify
         return simplify(coords[self._index]).doit()
 
     # XXX Workaround for limitations on the content of args
@@ -1856,6 +1856,8 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
     intcurve_series
 
     """
+    from sympy.simplify import simplify
+
     if contravariant_order(vector_field) != 1 or covariant_order(vector_field):
         raise ValueError('The supplied field was not a vector field.')
     coord_sys = coord_sys if coord_sys else start_point._coord_sys

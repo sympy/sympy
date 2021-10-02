@@ -4,35 +4,36 @@ from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify,
                         expand_func, Function, Dummy, Expr, factor_terms,
                         expand_power_exp, Eq)
 from sympy.core.compatibility import iterable, ordered, as_int
+from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand, _coeff_isneg,
-    nfloat, expand_mul)
+    nfloat, expand_mul, expand)
 from sympy.core.numbers import Float, I, pi, Rational, Integer
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
 from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
-from sympy.functions.elementary.complexes import unpolarify, Abs
+from sympy.functions.elementary.complexes import unpolarify, Abs, sign
 from sympy.functions.elementary.exponential import ExpBase
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.integers import ceiling
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
-from sympy.functions.special.bessel import besselj, besseli, besselk, jn, bessely
+from sympy.functions.special.bessel import (BesselBase, besselj, besseli,
+                                            besselk, bessely, jn)
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import together, cancel, factor
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.cse_opts import sub_pre, sub_post
+from sympy.simplify.hyperexpand import hyperexpand
 from sympy.simplify.powsimp import powsimp
 from sympy.simplify.radsimp import radsimp, fraction, collect_abs
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
-from sympy.utilities.iterables import has_variety, sift
-
+from sympy.utilities.iterables import has_variety, sift, subsets
 
 import mpmath
-
 
 
 def separatevars(expr, symbols=[], dict=False, force=False):
@@ -645,11 +646,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
 
     expr = factor_terms(expr, sign=False)
 
-    from sympy.simplify.hyperexpand import hyperexpand
-    from sympy.functions.special.bessel import BesselBase
-    from sympy import Sum, Product, Integral
-    from sympy.functions.elementary.complexes import sign
-
     # must come before `Piecewise` since this introduces more `Piecewise` terms
     if expr.has(sign):
         expr = expr.rewrite(Abs)
@@ -703,6 +699,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         # automatically passed to gammasimp
         expr = combsimp(expr)
 
+    from sympy import Sum, Product, Integral
+
     if expr.has(Sum):
         expr = sum_simplify(expr, **kwargs)
 
@@ -714,9 +712,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         expr = product_simplify(expr)
 
     from sympy.physics.units import Quantity
-    from sympy.physics.units.util import quantity_simplify
 
     if expr.has(Quantity):
+        from sympy.physics.units.util import quantity_simplify
         expr = quantity_simplify(expr)
 
     short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
@@ -760,7 +758,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
 def sum_simplify(s, **kwargs):
     """Main function for Sum simplification"""
     from sympy.concrete.summations import Sum
-    from sympy.core.function import expand
 
     if not isinstance(s, Add):
         s = s.xreplace({a: sum_simplify(a, **kwargs)
@@ -1233,8 +1230,6 @@ def kroneckersimp(expr):
         return False
 
     def cancel_kronecker_mul(m):
-        from sympy.utilities.iterables import subsets
-
         args = m.args
         deltas = [a for a in args if isinstance(a, KroneckerDelta)]
         for delta1, delta2 in subsets(deltas, 2):
@@ -1728,7 +1723,6 @@ def nc_simplify(expr, deep=True):
     '''
     from sympy.matrices.expressions import (MatrixExpr, MatAdd, MatMul,
                                                 MatPow, MatrixSymbol)
-    from sympy.core.exprtools import factor_nc
 
     if isinstance(expr, MatrixExpr):
         expr = expr.doit(inv_expand=False)
