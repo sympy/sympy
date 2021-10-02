@@ -259,9 +259,10 @@ class MultivariateLaplaceDistribution(JointDistribution):
         x = (mu_T*sigma_inv*mu)[0]
         y = (args_T*sigma_inv*args)[0]
         v = 1 - k/2
-        return S(2)/((2*pi)**(S(k)/2)*sqrt(det(sigma)))\
-        *(y/(2 + x))**(S(v)/2)*besselk(v, sqrt((2 + x)*(y)))\
-        *exp((args_T*sigma_inv*mu)[0])
+        return (2 * (y/(2 + x))**(v/2) * besselk(v, sqrt((2 + x)*y)) *
+                exp((args_T * sigma_inv * mu)[0]) /
+                ((2 * pi)**(k/2) * sqrt(det(sigma))))
+
 
 def MultivariateLaplace(name, mu, sigma):
     """

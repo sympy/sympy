@@ -384,7 +384,7 @@ class erfc(Function):
 
         # Try to pull out factors of -1
         if arg.could_extract_minus_sign():
-            return S(2) - cls(-arg)
+            return 2 - cls(-arg)
 
     @staticmethod
     @cacheit

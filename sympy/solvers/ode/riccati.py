@@ -698,7 +698,7 @@ def solve_aux_eq(numa, dena, numy, deny, x, m):
         return psol, linsolve_dict(auxeq.all_coeffs(), psyms), True
     else:
         # m == 0 . Check if 1 (x**0) is a solution to the auxiliary equation
-        return S(1), auxeq, auxeq == 0
+        return S.One, auxeq, auxeq == 0
 
 
 def remove_redundant_sols(sol1, sol2, x):
