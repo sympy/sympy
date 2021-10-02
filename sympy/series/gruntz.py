@@ -121,7 +121,7 @@ from functools import reduce
 from sympy import cacheit
 from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul, PoleError
 
-from sympy.functions import log, exp
+from sympy.functions import log, exp, sign as _sign
 from sympy.series.order import Order
 from sympy.simplify import logcombine
 from sympy.simplify.powsimp import powsimp, powdenest
@@ -378,7 +378,6 @@ def sign(e, x):
     for x sufficiently large. [If e is constant, of course, this is just
     the same thing as the sign of e.]
     """
-    from sympy import sign as _sign
     if not isinstance(e, Basic):
         raise TypeError("e should be an instance of Basic")
 
