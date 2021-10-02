@@ -2284,15 +2284,21 @@ class Expr(Basic, EvalfMixin):
         elif self.is_Add:
             cs, ps = self.primitive()
             # assert cs >= 1
-            if c.is_Number and c is not S.NegativeOne:
-                # assert c != 1 (handled at top)
-                if cs is not S.One:
-                    if c.is_negative:
-                        xc = -(cs.extract_multiplicatively(-c))
-                    else:
-                        xc = cs.extract_multiplicatively(c)
-                    if xc is not None:
-                        return xc*ps  # rely on 2-arg Mul to restore Add
+            if c.is_Number:
+                if c is S.NegativeOne:
+                    from sympy.core.function import _coeff_isneg
+                    neg_args = sum(1 for _ in self.args if _coeff_isneg(_))
+                    xs = 2*neg_args - len(self.args)  # excess of negatives if positive
+                    return xs > 0 if xs else bool(self.sort_key() < (-self).sort_key())
+                else:
+                    # assert c != 1 (handled at top)
+                    if cs is not S.One:
+                        if c.is_negative:
+                            xc = -(cs.extract_multiplicatively(-c))
+                        else:
+                            xc = cs.extract_multiplicatively(c)
+                        if xc is not None:
+                            return xc*ps  # rely on 2-arg Mul to restore Add
                 return  # |c| != 1 can only be extracted from cs
             if c == ps:
                 return cs
@@ -2479,6 +2485,12 @@ class Expr(Basic, EvalfMixin):
         >>> {i.could_extract_minus_sign() for i in (e, -e)}
         {False, True}
 
+        TO BE REMOVED
+        >>> from sympy import signsimp, sqrt
+        >>> a = sqrt(1 -x) - 2
+        >>> a.could_extract_minus_sign() != (-a).could_extract_minus_sign()
+        True
+        >>> assert abs(a) == abs(-a)
         """
         negative_self = -self
         if self == negative_self:
@@ -2492,12 +2504,14 @@ class Expr(Basic, EvalfMixin):
             if self.is_Add:
                 # We choose the one with less arguments with minus signs
                 all_args = len(self.args)
-                negative_args = len([False for arg in self.args if arg.could_extract_minus_sign()])
+                negative_args = sum(1 for _ in self.args if _.could_extract_minus_sign())
                 positive_args = all_args - negative_args
                 if positive_args > negative_args:
                     return False
                 elif positive_args < negative_args:
                     return True
+                # tie selects the one with greater value of .sort_key()
+                return bool(self.sort_key() < negative_self.sort_key())
             elif self.is_Mul:
                 # We choose the one with an odd number of minus signs
                 num, den = self.as_numer_denom()
@@ -2505,9 +2519,6 @@ class Expr(Basic, EvalfMixin):
                 arg_signs = [arg.could_extract_minus_sign() for arg in args]
                 negative_args = list(filter(None, arg_signs))
                 return len(negative_args) % 2 == 1
-
-            # As a last resort, we choose the one with greater value of .sort_key()
-            return bool(self.sort_key() < negative_self.sort_key())
 
     def extract_branch_factor(self, allow_half=False):
         """
