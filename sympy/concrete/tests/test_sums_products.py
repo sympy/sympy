@@ -1,7 +1,7 @@
 from sympy import (
     Abs, And, binomial, Catalan, combsimp, cos, Derivative, E, Eq, exp, EulerGamma,
     factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
-    nan, oo, pi, Piecewise, Product, product, Rational, S, simplify, Identity,
+    nan, oo, pi, Piecewise, Product, product, Rational, S, sec, simplify, Identity,
     sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma,
     Indexed, Idx, IndexedBase, prod, Dummy, lowergamma, Range, floor,
     rf, MatrixSymbol, tanh, sinh)
@@ -608,6 +608,10 @@ def test_Sum_doit():
     assert summation(1/n**2, (n, 1, oo)) == zeta(2)
     assert summation(1/n**s, (n, 0, oo)) == Sum(n**(-s), (n, 0, oo))
 
+    # issue 14103
+    assert Sum(sin(n)**2 + cos(n)**2 - 1, (n, 1, oo)).doit() == 0
+    assert Sum(cos(n) * sec(n) - 1, (n, 1, oo)).doit() == 0
+
 
 def test_Product_doit():
     assert Product(n*Integral(a**2), (n, 1, 3)).doit() == 2 * a**9 / 9
@@ -1002,6 +1006,8 @@ def test_is_convergent():
 
     # root test --
     assert Sum((-12)**n/n, (n, 1, oo)).is_convergent() is S.false
+    assert Sum(sin(n)**2 + cos(n)**2 - 1, (n, 1, oo)).is_convergent() is S.true
+    assert Sum(sin(pi*n), (n, 1, oo)).is_convergent() is S.true
 
     # integral test --
 
