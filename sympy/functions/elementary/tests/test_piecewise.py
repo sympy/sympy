@@ -1150,7 +1150,7 @@ def test_unevaluated_integrals():
     # solve_univariate_inequality fails
     assert p.integrate(y) == Piecewise(
         (y, Eq(f(x), 1) | ((x < 10) & Eq(f(x), 1))),
-        (2*y, (x >= -oo) & (x < 10)), (0, True))
+        (2*y, (x > -oo) & (x < 10)), (0, True))
 
 
 def test_conditions_as_alternate_booleans():
@@ -1375,3 +1375,48 @@ def test_issue_20360():
     lam = pi * (n - S.Half)
     eq = integrate(exp(lam * tau), (tau, 0, t))
     assert simplify(eq) == (2*exp(pi*t*(2*n - 1)/2) - 2)/(pi*(2*n - 1))
+
+
+def test_piecewise_eval():
+    # XXX these tests might need modification if this
+    # simplification is moved out of eval and into
+    # boolalg or Piecewise simplification functions
+    from sympy.functions.elementary.complexes import arg
+    f = lambda x: x.args[0].cond
+    # unsimplified
+    assert f(Piecewise((x, (x > -oo) & (x < 3)))
+        ) == ((x > -oo) & (x < 3))
+    assert f(Piecewise((x, (x > -oo) & (x < oo)))
+        ) == ((x > -oo) & (x < oo))
+    assert f(Piecewise((x, (x > -3) & (x < 3)))
+        ) == ((x > -3) & (x < 3))
+    assert f(Piecewise((x, (x > -3) & (x < oo)))
+        ) == ((x > -3) & (x < oo))
+    assert f(Piecewise((x, (x <= 3) & (x > -oo)))
+        ) == ((x <= 3) & (x > -oo))
+    assert f(Piecewise((x, (x <= 3) & (x > -3)))
+        ) == ((x <= 3) & (x > -3))
+    assert f(Piecewise((x, (x >= -3) & (x < 3)))
+        ) == ((x >= -3) & (x < 3))
+    assert f(Piecewise((x, (x >= -3) & (x < oo)))
+        ) == ((x >= -3) & (x < oo))
+    assert f(Piecewise((x, (x >= -3) & (x <= 3)))
+        ) == ((x >= -3) & (x <= 3))
+    # could simplify by keeping only the first
+    # arg of result
+    assert f(Piecewise((x, (x <= oo) & (x > -oo)))
+        ) == (x > -oo) & (x <= oo)
+    assert f(Piecewise((x, (x <= oo) & (x > -3)))
+        ) == (x > -3) & (x <= oo)
+    assert f(Piecewise((x, (x >= -oo) & (x < 3)))
+        ) == (x < 3) & (x >= -oo)
+    assert f(Piecewise((x, (x >= -oo) & (x < oo)))
+        ) == (x < oo) & (x >= -oo)
+    assert f(Piecewise((x, (x >= -oo) & (x <= 3)))
+        ) == (x <= 3) & (x >= -oo)
+    assert f(Piecewise((x, (x >= -oo) & (x <= oo)))
+        ) == (x <= oo) & (x >= -oo)  # but cannot be True unless x is real
+    assert f(Piecewise((x, (x >= -3) & (x <= oo)))
+        ) == (x >= -3) & (x <= oo)
+    assert f(Piecewise((x, (Abs(arg(a)) <= 1) | (Abs(arg(a)) < 1)))
+        ) == (Abs(arg(a)) <= 1) | (Abs(arg(a)) < 1)
