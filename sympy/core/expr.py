@@ -2486,7 +2486,7 @@ class Expr(Basic, EvalfMixin):
         {False, True}
 
         TO BE REMOVED
-        >>> from sympy import signsimp, sqrt
+        >>> from sympy import sqrt
         >>> a = sqrt(1 -x) - 2
         >>> a.could_extract_minus_sign() != (-a).could_extract_minus_sign()
         True
