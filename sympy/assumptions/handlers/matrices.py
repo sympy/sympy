@@ -31,14 +31,14 @@ def _Factorization(predicate, expr, assumptions):
 
 # SquarePredicate
 
-@SquarePredicate.register(MatrixExpr)
+@SquarePredicate.register(MatrixExpr) # type: ignore
 def _(expr, assumptions):
     return expr.shape[0] == expr.shape[1]
 
 
 # SymmetricPredicate
 
-@SymmetricPredicate.register(MatMul)
+@SymmetricPredicate.register(MatMul) # type: ignore
 def _(expr, assumptions):
     factor, mmul = expr.as_coeff_mmul()
     if all(ask(Q.symmetric(arg), assumptions) for arg in mmul.args):
@@ -52,7 +52,7 @@ def _(expr, assumptions):
             return True
         return ask(Q.symmetric(MatMul(*mmul.args[1:-1])), assumptions)
 
-@SymmetricPredicate.register(MatPow)
+@SymmetricPredicate.register(MatPow) # type: ignore
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
@@ -65,11 +65,11 @@ def _(expr, assumptions):
         return ask(Q.symmetric(base), assumptions)
     return None
 
-@SymmetricPredicate.register(MatAdd)
+@SymmetricPredicate.register(MatAdd) # type: ignore
 def _(expr, assumptions):
     return all(ask(Q.symmetric(arg), assumptions) for arg in expr.args)
 
-@SymmetricPredicate.register(MatrixSymbol)
+@SymmetricPredicate.register(MatrixSymbol) # type: ignore
 def _(expr, assumptions):
     if not expr.is_square:
         return False
@@ -80,15 +80,15 @@ def _(expr, assumptions):
     if Q.symmetric(expr) in conjuncts(assumptions):
         return True
 
-@SymmetricPredicate.register_many(OneMatrix, ZeroMatrix)
+@SymmetricPredicate.register_many(OneMatrix, ZeroMatrix) # type: ignore
 def _(expr, assumptions):
     return ask(Q.square(expr), assumptions)
 
-@SymmetricPredicate.register_many(Inverse, Transpose)
+@SymmetricPredicate.register_many(Inverse, Transpose) # type: ignore
 def _(expr, assumptions):
     return ask(Q.symmetric(expr.arg), assumptions)
 
-@SymmetricPredicate.register(MatrixSlice)
+@SymmetricPredicate.register(MatrixSlice) # type: ignore
 def _(expr, assumptions):
     # TODO: implement sathandlers system for the matrices.
     # Now it duplicates the general fact: Implies(Q.diagonal, Q.symmetric).
@@ -99,14 +99,14 @@ def _(expr, assumptions):
     else:
         return ask(Q.symmetric(expr.parent), assumptions)
 
-@SymmetricPredicate.register(Identity)
+@SymmetricPredicate.register(Identity) # type: ignore
 def _(expr, assumptions):
     return True
 
 
 # InvertiblePredicate
 
-@InvertiblePredicate.register(MatMul)
+@InvertiblePredicate.register(MatMul) # type: ignore
 def _(expr, assumptions):
     factor, mmul = expr.as_coeff_mmul()
     if all(ask(Q.invertible(arg), assumptions) for arg in mmul.args):
@@ -115,7 +115,7 @@ def _(expr, assumptions):
             for arg in mmul.args):
         return False
 
-@InvertiblePredicate.register(MatPow)
+@InvertiblePredicate.register(MatPow) # type: ignore
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
@@ -126,53 +126,53 @@ def _(expr, assumptions):
         return ask(Q.invertible(base), assumptions)
     return None
 
-@InvertiblePredicate.register(MatAdd)
+@InvertiblePredicate.register(MatAdd) # type: ignore
 def _(expr, assumptions):
     return None
 
-@InvertiblePredicate.register(MatrixSymbol)
+@InvertiblePredicate.register(MatrixSymbol) # type: ignore
 def _(expr, assumptions):
     if not expr.is_square:
         return False
     if Q.invertible(expr) in conjuncts(assumptions):
         return True
 
-@InvertiblePredicate.register_many(Identity, Inverse)
+@InvertiblePredicate.register_many(Identity, Inverse) # type: ignore
 def _(expr, assumptions):
     return True
 
-@InvertiblePredicate.register(ZeroMatrix)
+@InvertiblePredicate.register(ZeroMatrix) # type: ignore
 def _(expr, assumptions):
     return False
 
-@InvertiblePredicate.register(OneMatrix)
+@InvertiblePredicate.register(OneMatrix) # type: ignore
 def _(expr, assumptions):
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
-@InvertiblePredicate.register(Transpose)
+@InvertiblePredicate.register(Transpose) # type: ignore
 def _(expr, assumptions):
     return ask(Q.invertible(expr.arg), assumptions)
 
-@InvertiblePredicate.register(MatrixSlice)
+@InvertiblePredicate.register(MatrixSlice) # type: ignore
 def _(expr, assumptions):
     if not expr.on_diag:
         return None
     else:
         return ask(Q.invertible(expr.parent), assumptions)
 
-@InvertiblePredicate.register(MatrixBase)
+@InvertiblePredicate.register(MatrixBase) # type: ignore
 def _(expr, assumptions):
     if not expr.is_square:
         return False
     return expr.rank() == expr.rows
 
-@InvertiblePredicate.register(MatrixExpr)
+@InvertiblePredicate.register(MatrixExpr) # type: ignore
 def _(expr, assumptions):
     if not expr.is_square:
         return False
     return None
 
-@InvertiblePredicate.register(BlockMatrix)
+@InvertiblePredicate.register(BlockMatrix) # type: ignore
 def _(expr, assumptions):
     from sympy.matrices.expressions.blockmatrix import reblock_2x2
     if not expr.is_square:
@@ -200,7 +200,7 @@ def _(expr, assumptions):
                 return invertible
     return None
 
-@InvertiblePredicate.register(BlockDiagMatrix)
+@InvertiblePredicate.register(BlockDiagMatrix) # type: ignore
 def _(expr, assumptions):
     if expr.rowblocksizes != expr.colblocksizes:
         return None
@@ -209,7 +209,7 @@ def _(expr, assumptions):
 
 # OrthogonalPredicate
 
-@OrthogonalPredicate.register(MatMul)
+@OrthogonalPredicate.register(MatMul) # type: ignore
 def _(expr, assumptions):
     factor, mmul = expr.as_coeff_mmul()
     if (all(ask(Q.orthogonal(arg), assumptions) for arg in mmul.args) and
@@ -219,7 +219,7 @@ def _(expr, assumptions):
             for arg in mmul.args):
         return False
 
-@OrthogonalPredicate.register(MatPow)
+@OrthogonalPredicate.register(MatPow) # type: ignore
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
@@ -228,13 +228,13 @@ def _(expr, assumptions):
         return ask(Q.orthogonal(base), assumptions)
     return None
 
-@OrthogonalPredicate.register(MatAdd)
+@OrthogonalPredicate.register(MatAdd) # type: ignore
 def _(expr, assumptions):
     if (len(expr.args) == 1 and
             ask(Q.orthogonal(expr.args[0]), assumptions)):
         return True
 
-@OrthogonalPredicate.register(MatrixSymbol)
+@OrthogonalPredicate.register(MatrixSymbol) # type: ignore
 def _(expr, assumptions):
     if (not expr.is_square or
                     ask(Q.invertible(expr), assumptions) is False):
@@ -242,33 +242,33 @@ def _(expr, assumptions):
     if Q.orthogonal(expr) in conjuncts(assumptions):
         return True
 
-@OrthogonalPredicate.register(Identity)
+@OrthogonalPredicate.register(Identity) # type: ignore
 def _(expr, assumptions):
     return True
 
-@OrthogonalPredicate.register(ZeroMatrix)
+@OrthogonalPredicate.register(ZeroMatrix) # type: ignore
 def _(expr, assumptions):
     return False
 
-@OrthogonalPredicate.register_many(Inverse, Transpose)
+@OrthogonalPredicate.register_many(Inverse, Transpose) # type: ignore
 def _(expr, assumptions):
     return ask(Q.orthogonal(expr.arg), assumptions)
 
-@OrthogonalPredicate.register(MatrixSlice)
+@OrthogonalPredicate.register(MatrixSlice) # type: ignore
 def _(expr, assumptions):
     if not expr.on_diag:
         return None
     else:
         return ask(Q.orthogonal(expr.parent), assumptions)
 
-@OrthogonalPredicate.register(Factorization)
+@OrthogonalPredicate.register(Factorization) # type: ignore
 def _(expr, assumptions):
     return _Factorization(Q.orthogonal, expr, assumptions)
 
 
 # UnitaryPredicate
 
-@UnitaryPredicate.register(MatMul)
+@UnitaryPredicate.register(MatMul) # type: ignore
 def _(expr, assumptions):
     factor, mmul = expr.as_coeff_mmul()
     if (all(ask(Q.unitary(arg), assumptions) for arg in mmul.args) and
@@ -278,7 +278,7 @@ def _(expr, assumptions):
             for arg in mmul.args):
         return False
 
-@UnitaryPredicate.register(MatPow)
+@UnitaryPredicate.register(MatPow) # type: ignore
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
@@ -287,7 +287,7 @@ def _(expr, assumptions):
         return ask(Q.unitary(base), assumptions)
     return None
 
-@UnitaryPredicate.register(MatrixSymbol)
+@UnitaryPredicate.register(MatrixSymbol) # type: ignore
 def _(expr, assumptions):
     if (not expr.is_square or
                     ask(Q.invertible(expr), assumptions) is False):
@@ -295,38 +295,38 @@ def _(expr, assumptions):
     if Q.unitary(expr) in conjuncts(assumptions):
         return True
 
-@UnitaryPredicate.register_many(Inverse, Transpose)
+@UnitaryPredicate.register_many(Inverse, Transpose) # type: ignore
 def _(expr, assumptions):
     return ask(Q.unitary(expr.arg), assumptions)
 
-@UnitaryPredicate.register(MatrixSlice)
+@UnitaryPredicate.register(MatrixSlice) # type: ignore
 def _(expr, assumptions):
     if not expr.on_diag:
         return None
     else:
         return ask(Q.unitary(expr.parent), assumptions)
 
-@UnitaryPredicate.register_many(DFT, Identity)
+@UnitaryPredicate.register_many(DFT, Identity) # type: ignore
 def _(expr, assumptions):
     return True
 
-@UnitaryPredicate.register(ZeroMatrix)
+@UnitaryPredicate.register(ZeroMatrix) # type: ignore
 def _(expr, assumptions):
     return False
 
-@UnitaryPredicate.register(Factorization)
+@UnitaryPredicate.register(Factorization) # type: ignore
 def _(expr, assumptions):
     return _Factorization(Q.unitary, expr, assumptions)
 
 
 # FullRankPredicate
 
-@FullRankPredicate.register(MatMul)
+@FullRankPredicate.register(MatMul) # type: ignore
 def _(expr, assumptions):
     if all(ask(Q.fullrank(arg), assumptions) for arg in expr.args):
         return True
 
-@FullRankPredicate.register(MatPow)
+@FullRankPredicate.register(MatPow) # type: ignore
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
@@ -335,23 +335,23 @@ def _(expr, assumptions):
         return ask(Q.fullrank(base), assumptions)
     return None
 
-@FullRankPredicate.register(Identity)
+@FullRankPredicate.register(Identity) # type: ignore
 def _(expr, assumptions):
     return True
 
-@FullRankPredicate.register(ZeroMatrix)
+@FullRankPredicate.register(ZeroMatrix) # type: ignore
 def _(expr, assumptions):
     return False
 
-@FullRankPredicate.register(OneMatrix)
+@FullRankPredicate.register(OneMatrix) # type: ignore
 def _(expr, assumptions):
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
-@FullRankPredicate.register_many(Inverse, Transpose)
+@FullRankPredicate.register_many(Inverse, Transpose) # type: ignore
 def _(expr, assumptions):
     return ask(Q.fullrank(expr.arg), assumptions)
 
-@FullRankPredicate.register(MatrixSlice)
+@FullRankPredicate.register(MatrixSlice) # type: ignore
 def _(expr, assumptions):
     if ask(Q.orthogonal(expr.parent), assumptions):
         return True
@@ -359,7 +359,7 @@ def _(expr, assumptions):
 
 # PositiveDefinitePredicate
 
-@PositiveDefinitePredicate.register(MatMul)
+@PositiveDefinitePredicate.register(MatMul) # type: ignore
 def _(expr, assumptions):
     factor, mmul = expr.as_coeff_mmul()
     if (all(ask(Q.positive_definite(arg), assumptions)
@@ -371,42 +371,42 @@ def _(expr, assumptions):
         return ask(Q.positive_definite(
             MatMul(*mmul.args[1:-1])), assumptions)
 
-@PositiveDefinitePredicate.register(MatPow)
+@PositiveDefinitePredicate.register(MatPow) # type: ignore
 def _(expr, assumptions):
     # a power of a positive definite matrix is positive definite
     if ask(Q.positive_definite(expr.args[0]), assumptions):
         return True
 
-@PositiveDefinitePredicate.register(MatAdd)
+@PositiveDefinitePredicate.register(MatAdd) # type: ignore
 def _(expr, assumptions):
     if all(ask(Q.positive_definite(arg), assumptions)
             for arg in expr.args):
         return True
 
-@PositiveDefinitePredicate.register(MatrixSymbol)
+@PositiveDefinitePredicate.register(MatrixSymbol) # type: ignore
 def _(expr, assumptions):
     if not expr.is_square:
         return False
     if Q.positive_definite(expr) in conjuncts(assumptions):
         return True
 
-@PositiveDefinitePredicate.register(Identity)
+@PositiveDefinitePredicate.register(Identity) # type: ignore
 def _(expr, assumptions):
     return True
 
-@PositiveDefinitePredicate.register(ZeroMatrix)
+@PositiveDefinitePredicate.register(ZeroMatrix) # type: ignore
 def _(expr, assumptions):
     return False
 
-@PositiveDefinitePredicate.register(OneMatrix)
+@PositiveDefinitePredicate.register(OneMatrix) # type: ignore
 def _(expr, assumptions):
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
-@PositiveDefinitePredicate.register_many(Inverse, Transpose)
+@PositiveDefinitePredicate.register_many(Inverse, Transpose) # type: ignore
 def _(expr, assumptions):
     return ask(Q.positive_definite(expr.arg), assumptions)
 
-@PositiveDefinitePredicate.register(MatrixSlice)
+@PositiveDefinitePredicate.register(MatrixSlice) # type: ignore
 def _(expr, assumptions):
     if not expr.on_diag:
         return None
@@ -416,18 +416,18 @@ def _(expr, assumptions):
 
 # UpperTriangularPredicate
 
-@UpperTriangularPredicate.register(MatMul)
+@UpperTriangularPredicate.register(MatMul) # type: ignore
 def _(expr, assumptions):
     factor, matrices = expr.as_coeff_matrices()
     if all(ask(Q.upper_triangular(m), assumptions) for m in matrices):
         return True
 
-@UpperTriangularPredicate.register(MatAdd)
+@UpperTriangularPredicate.register(MatAdd) # type: ignore
 def _(expr, assumptions):
     if all(ask(Q.upper_triangular(arg), assumptions) for arg in expr.args):
         return True
 
-@UpperTriangularPredicate.register(MatPow)
+@UpperTriangularPredicate.register(MatPow) # type: ignore
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
@@ -440,52 +440,52 @@ def _(expr, assumptions):
         return ask(Q.upper_triangular(base), assumptions)
     return None
 
-@UpperTriangularPredicate.register(MatrixSymbol)
+@UpperTriangularPredicate.register(MatrixSymbol) # type: ignore
 def _(expr, assumptions):
     if Q.upper_triangular(expr) in conjuncts(assumptions):
         return True
 
-@UpperTriangularPredicate.register_many(Identity, ZeroMatrix)
+@UpperTriangularPredicate.register_many(Identity, ZeroMatrix) # type: ignore
 def _(expr, assumptions):
     return True
 
-@UpperTriangularPredicate.register(OneMatrix)
+@UpperTriangularPredicate.register(OneMatrix) # type: ignore
 def _(expr, assumptions):
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
-@UpperTriangularPredicate.register(Transpose)
+@UpperTriangularPredicate.register(Transpose) # type: ignore
 def _(expr, assumptions):
     return ask(Q.lower_triangular(expr.arg), assumptions)
 
-@UpperTriangularPredicate.register(Inverse)
+@UpperTriangularPredicate.register(Inverse) # type: ignore
 def _(expr, assumptions):
     return ask(Q.upper_triangular(expr.arg), assumptions)
 
-@UpperTriangularPredicate.register(MatrixSlice)
+@UpperTriangularPredicate.register(MatrixSlice) # type: ignore
 def _(expr, assumptions):
     if not expr.on_diag:
         return None
     else:
         return ask(Q.upper_triangular(expr.parent), assumptions)
 
-@UpperTriangularPredicate.register(Factorization)
+@UpperTriangularPredicate.register(Factorization) # type: ignore
 def _(expr, assumptions):
     return _Factorization(Q.upper_triangular, expr, assumptions)
 
 # LowerTriangularPredicate
 
-@LowerTriangularPredicate.register(MatMul)
+@LowerTriangularPredicate.register(MatMul) # type: ignore
 def _(expr, assumptions):
     factor, matrices = expr.as_coeff_matrices()
     if all(ask(Q.lower_triangular(m), assumptions) for m in matrices):
         return True
 
-@LowerTriangularPredicate.register(MatAdd)
+@LowerTriangularPredicate.register(MatAdd) # type: ignore
 def _(expr, assumptions):
     if all(ask(Q.lower_triangular(arg), assumptions) for arg in expr.args):
         return True
 
-@LowerTriangularPredicate.register(MatPow)
+@LowerTriangularPredicate.register(MatPow) # type: ignore
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
@@ -498,35 +498,35 @@ def _(expr, assumptions):
         return ask(Q.lower_triangular(base), assumptions)
     return None
 
-@LowerTriangularPredicate.register(MatrixSymbol)
+@LowerTriangularPredicate.register(MatrixSymbol) # type: ignore
 def _(expr, assumptions):
     if Q.lower_triangular(expr) in conjuncts(assumptions):
         return True
 
-@LowerTriangularPredicate.register_many(Identity, ZeroMatrix)
+@LowerTriangularPredicate.register_many(Identity, ZeroMatrix) # type: ignore
 def _(expr, assumptions):
     return True
 
-@LowerTriangularPredicate.register(OneMatrix)
+@LowerTriangularPredicate.register(OneMatrix) # type: ignore
 def _(expr, assumptions):
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
-@LowerTriangularPredicate.register(Transpose)
+@LowerTriangularPredicate.register(Transpose) # type: ignore
 def _(expr, assumptions):
     return ask(Q.upper_triangular(expr.arg), assumptions)
 
-@LowerTriangularPredicate.register(Inverse)
+@LowerTriangularPredicate.register(Inverse) # type: ignore
 def _(expr, assumptions):
     return ask(Q.lower_triangular(expr.arg), assumptions)
 
-@LowerTriangularPredicate.register(MatrixSlice)
+@LowerTriangularPredicate.register(MatrixSlice) # type: ignore
 def _(expr, assumptions):
     if not expr.on_diag:
         return None
     else:
         return ask(Q.lower_triangular(expr.parent), assumptions)
 
-@LowerTriangularPredicate.register(Factorization)
+@LowerTriangularPredicate.register(Factorization) # type: ignore
 def _(expr, assumptions):
     return _Factorization(Q.lower_triangular, expr, assumptions)
 
@@ -536,7 +536,7 @@ def _(expr, assumptions):
 def _is_empty_or_1x1(expr):
     return expr.shape == (0, 0) or expr.shape == (1, 1)
 
-@DiagonalPredicate.register(MatMul)
+@DiagonalPredicate.register(MatMul) # type: ignore
 def _(expr, assumptions):
     if _is_empty_or_1x1(expr):
         return True
@@ -544,7 +544,7 @@ def _(expr, assumptions):
     if all(ask(Q.diagonal(m), assumptions) for m in matrices):
         return True
 
-@DiagonalPredicate.register(MatPow)
+@DiagonalPredicate.register(MatPow) # type: ignore
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
@@ -557,27 +557,27 @@ def _(expr, assumptions):
         return ask(Q.diagonal(base), assumptions)
     return None
 
-@DiagonalPredicate.register(MatAdd)
+@DiagonalPredicate.register(MatAdd) # type: ignore
 def _(expr, assumptions):
     if all(ask(Q.diagonal(arg), assumptions) for arg in expr.args):
         return True
 
-@DiagonalPredicate.register(MatrixSymbol)
+@DiagonalPredicate.register(MatrixSymbol) # type: ignore
 def _(expr, assumptions):
     if _is_empty_or_1x1(expr):
         return True
     if Q.diagonal(expr) in conjuncts(assumptions):
         return True
 
-@DiagonalPredicate.register(OneMatrix)
+@DiagonalPredicate.register(OneMatrix) # type: ignore
 def _(expr, assumptions):
     return expr.shape[0] == 1 and expr.shape[1] == 1
 
-@DiagonalPredicate.register_many(Inverse, Transpose)
+@DiagonalPredicate.register_many(Inverse, Transpose) # type: ignore
 def _(expr, assumptions):
     return ask(Q.diagonal(expr.arg), assumptions)
 
-@DiagonalPredicate.register(MatrixSlice)
+@DiagonalPredicate.register(MatrixSlice) # type: ignore
 def _(expr, assumptions):
     if _is_empty_or_1x1(expr):
         return True
@@ -586,11 +586,11 @@ def _(expr, assumptions):
     else:
         return ask(Q.diagonal(expr.parent), assumptions)
 
-@DiagonalPredicate.register_many(DiagonalMatrix, DiagMatrix, Identity, ZeroMatrix)
+@DiagonalPredicate.register_many(DiagonalMatrix, DiagMatrix, Identity, ZeroMatrix) # type: ignore
 def _(expr, assumptions):
     return True
 
-@DiagonalPredicate.register(Factorization)
+@DiagonalPredicate.register(Factorization) # type: ignore
 def _(expr, assumptions):
     return _Factorization(Q.diagonal, expr, assumptions)
 
@@ -613,12 +613,12 @@ def MatMul_elements(matrix_predicate, scalar_predicate, expr, assumptions):
         test_closed_group(Basic(*matrices), assumptions, matrix_predicate)])
 
 
-@IntegerElementsPredicate.register_many(Determinant, HadamardProduct, MatAdd,
+@IntegerElementsPredicate.register_many(Determinant, HadamardProduct, MatAdd, # type: ignore
     Trace, Transpose)
 def _(expr, assumptions):
     return test_closed_group(expr, assumptions, Q.integer_elements)
 
-@IntegerElementsPredicate.register(MatPow)
+@IntegerElementsPredicate.register(MatPow) # type: ignore
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
@@ -629,31 +629,31 @@ def _(expr, assumptions):
         return ask(Q.integer_elements(base), assumptions)
     return None
 
-@IntegerElementsPredicate.register_many(Identity, OneMatrix, ZeroMatrix)
+@IntegerElementsPredicate.register_many(Identity, OneMatrix, ZeroMatrix) # type: ignore
 def _(expr, assumptions):
     return True
 
-@IntegerElementsPredicate.register(MatMul)
+@IntegerElementsPredicate.register(MatMul) # type: ignore
 def _(expr, assumptions):
     return MatMul_elements(Q.integer_elements, Q.integer, expr, assumptions)
 
-@IntegerElementsPredicate.register(MatrixSlice)
+@IntegerElementsPredicate.register(MatrixSlice) # type: ignore
 def _(expr, assumptions):
     return MS_elements(Q.integer_elements, expr, assumptions)
 
-@IntegerElementsPredicate.register(BlockMatrix)
+@IntegerElementsPredicate.register(BlockMatrix) # type: ignore
 def _(expr, assumptions):
     return BM_elements(Q.integer_elements, expr, assumptions)
 
 
 # RealElementsPredicate
 
-@RealElementsPredicate.register_many(Determinant, Factorization, HadamardProduct,
+@RealElementsPredicate.register_many(Determinant, Factorization, HadamardProduct, # type: ignore
     MatAdd, Trace, Transpose)
 def _(expr, assumptions):
     return test_closed_group(expr, assumptions, Q.real_elements)
 
-@RealElementsPredicate.register(MatPow)
+@RealElementsPredicate.register(MatPow) # type: ignore
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
@@ -666,27 +666,27 @@ def _(expr, assumptions):
         return ask(Q.real_elements(base), assumptions)
     return None
 
-@RealElementsPredicate.register(MatMul)
+@RealElementsPredicate.register(MatMul) # type: ignore
 def _(expr, assumptions):
     return MatMul_elements(Q.real_elements, Q.real, expr, assumptions)
 
-@RealElementsPredicate.register(MatrixSlice)
+@RealElementsPredicate.register(MatrixSlice) # type: ignore
 def _(expr, assumptions):
     return MS_elements(Q.real_elements, expr, assumptions)
 
-@RealElementsPredicate.register(BlockMatrix)
+@RealElementsPredicate.register(BlockMatrix) # type: ignore
 def _(expr, assumptions):
     return BM_elements(Q.real_elements, expr, assumptions)
 
 
 # ComplexElementsPredicate
 
-@ComplexElementsPredicate.register_many(Determinant, Factorization, HadamardProduct,
+@ComplexElementsPredicate.register_many(Determinant, Factorization, HadamardProduct, # type: ignore
     Inverse, MatAdd, Trace, Transpose)
 def _(expr, assumptions):
     return test_closed_group(expr, assumptions, Q.complex_elements)
 
-@ComplexElementsPredicate.register(MatPow)
+@ComplexElementsPredicate.register(MatPow) # type: ignore
 def _(expr, assumptions):
     # only for integer powers
     base, exp = expr.args
@@ -699,18 +699,18 @@ def _(expr, assumptions):
         return ask(Q.complex_elements(base), assumptions)
     return None
 
-@ComplexElementsPredicate.register(MatMul)
+@ComplexElementsPredicate.register(MatMul) # type: ignore
 def _(expr, assumptions):
     return MatMul_elements(Q.complex_elements, Q.complex, expr, assumptions)
 
-@ComplexElementsPredicate.register(MatrixSlice)
+@ComplexElementsPredicate.register(MatrixSlice) # type: ignore
 def _(expr, assumptions):
     return MS_elements(Q.complex_elements, expr, assumptions)
 
-@ComplexElementsPredicate.register(BlockMatrix)
+@ComplexElementsPredicate.register(BlockMatrix) # type: ignore
 def _(expr, assumptions):
     return BM_elements(Q.complex_elements, expr, assumptions)
 
-@ComplexElementsPredicate.register(DFT)
+@ComplexElementsPredicate.register(DFT) # type: ignore
 def _(expr, assumptions):
     return True

@@ -124,7 +124,7 @@ def _array2matrix(expr):
     return expr
 
 
-@_array2matrix.register(ZeroArray)
+@_array2matrix.register(ZeroArray) # type: ignore
 def _(expr: ZeroArray):
     if get_rank(expr) == 2:
         return ZeroMatrix(*expr.shape)
@@ -132,12 +132,12 @@ def _(expr: ZeroArray):
         return expr
 
 
-@_array2matrix.register(ArrayTensorProduct)
+@_array2matrix.register(ArrayTensorProduct) # type: ignore
 def _(expr: ArrayTensorProduct):
     return _a2m_tensor_product(*[_array2matrix(arg) for arg in expr.args])
 
 
-@_array2matrix.register(ArrayContraction)
+@_array2matrix.register(ArrayContraction) # type: ignore
 def _(expr: ArrayContraction):
     expr = expr.flatten_contraction_of_diagonal()
     expr = identify_removable_identity_matrices(expr)
@@ -169,7 +169,7 @@ def _(expr: ArrayContraction):
             return ArrayContraction(ret, *expr.contraction_indices)
 
 
-@_array2matrix.register(ArrayDiagonal)
+@_array2matrix.register(ArrayDiagonal) # type: ignore
 def _(expr: ArrayDiagonal):
     pexpr = ArrayDiagonal(_array2matrix(expr.expr), *expr.diagonal_indices)
     pexpr = identify_hadamard_products(pexpr)
@@ -180,7 +180,7 @@ def _(expr: ArrayDiagonal):
     return _array2matrix(pexpr)
 
 
-@_array2matrix.register(PermuteDims)
+@_array2matrix.register(PermuteDims) # type: ignore
 def _(expr: PermuteDims):
     if expr.permutation.array_form == [1, 0]:
         return _a2m_transpose(_array2matrix(expr.expr))
@@ -236,13 +236,13 @@ def _(expr: PermuteDims):
         return expr
 
 
-@_array2matrix.register(ArrayAdd)
+@_array2matrix.register(ArrayAdd) # type: ignore
 def _(expr: ArrayAdd):
     addends = [_array2matrix(arg) for arg in expr.args]
     return _a2m_add(*addends)
 
 
-@_array2matrix.register(ArrayElementwiseApplyFunc)
+@_array2matrix.register(ArrayElementwiseApplyFunc) # type: ignore
 def _(expr: ArrayElementwiseApplyFunc):
     subexpr = _array2matrix(expr.expr)
     if isinstance(subexpr, MatrixExpr):
@@ -256,7 +256,7 @@ def _remove_trivial_dims(expr):
     return expr, []
 
 
-@_remove_trivial_dims.register(ArrayTensorProduct)
+@_remove_trivial_dims.register(ArrayTensorProduct) # type: ignore
 def _(expr: ArrayTensorProduct):
     # Recognize expressions like [x, y] with shape (k, 1, k, 1) as `x*y.T`.
     # The matrix expression has to be equivalent to the tensor product of the
@@ -345,7 +345,7 @@ def _(expr: ArrayTensorProduct):
     return _a2m_tensor_product(*newargs), sorted(removed)
 
 
-@_remove_trivial_dims.register(ArrayAdd)
+@_remove_trivial_dims.register(ArrayAdd) # type: ignore
 def _(expr: ArrayAdd):
     rec = [_remove_trivial_dims(arg) for arg in expr.args]
     newargs, removed = zip(*rec)
@@ -354,7 +354,7 @@ def _(expr: ArrayAdd):
     return _a2m_add(*newargs), removed[0]
 
 
-@_remove_trivial_dims.register(PermuteDims)
+@_remove_trivial_dims.register(PermuteDims) # type: ignore
 def _(expr: PermuteDims):
     subexpr, subremoved = _remove_trivial_dims(expr.expr)
     p = expr.permutation.array_form
@@ -371,7 +371,7 @@ def _(expr: PermuteDims):
     return newexpr, premoved
 
 
-@_remove_trivial_dims.register(ArrayContraction)
+@_remove_trivial_dims.register(ArrayContraction) # type: ignore
 def _(expr: ArrayContraction):
     new_expr, removed0 = _array_contraction_to_diagonal_multiple_identity(expr)
     if new_expr != expr:
@@ -397,7 +397,7 @@ def _(expr: ArrayContraction):
     return ArrayContraction(newexpr, *new_contraction_indices), list(removed)
 
 
-@_remove_trivial_dims.register(ArrayDiagonal)
+@_remove_trivial_dims.register(ArrayDiagonal) # type: ignore
 def _(expr: ArrayDiagonal):
     newexpr, removed = _remove_trivial_dims(expr.expr)
     shifts = list(accumulate([0] + [1 if i in removed else 0 for i in range(get_rank(expr.expr))]))
@@ -415,7 +415,7 @@ def _(expr: ArrayDiagonal):
     return ArrayDiagonal(newexpr, *new_diag_indices), removed
 
 
-@_remove_trivial_dims.register(ElementwiseApplyFunction)
+@_remove_trivial_dims.register(ElementwiseApplyFunction) # type: ignore
 def _(expr: ElementwiseApplyFunction):
     subexpr, removed = _remove_trivial_dims(expr.expr)
     if subexpr.shape == (1, 1):
@@ -424,7 +424,7 @@ def _(expr: ElementwiseApplyFunction):
     return ElementwiseApplyFunction(expr.function, subexpr)
 
 
-@_remove_trivial_dims.register(ArrayElementwiseApplyFunc)
+@_remove_trivial_dims.register(ArrayElementwiseApplyFunc) # type: ignore
 def _(expr: ArrayElementwiseApplyFunc):
     subexpr, removed = _remove_trivial_dims(expr.expr)
     return ArrayElementwiseApplyFunc(expr.function, subexpr), removed
