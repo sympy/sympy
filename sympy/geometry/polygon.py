@@ -1,22 +1,22 @@
-from sympy.core import Expr, S, Symbol, oo, pi, sympify
+from sympy.core import Expr, S, oo, pi, sympify
 from sympy.core.compatibility import as_int, ordered
-from sympy.core.evalf import prec_to_dps
-from sympy.core.symbol import _symbol, Dummy, symbols
+from sympy.core.evalf import N, prec_to_dps
+from sympy.core.symbol import _symbol, Dummy, symbols, Symbol
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
-from sympy.geometry.exceptions import GeometryError
+from .ellipse import Circle
+from .entity import GeometryEntity, GeometrySet
+from .exceptions import GeometryError
+from .line import Line, Segment, Ray
+from .point import Point
 from sympy.logic import And
 from sympy.matrices import Matrix
-from sympy.simplify import simplify
+from sympy.simplify.simplify import simplify
+from sympy.solvers.solvers import solve
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import has_dups, has_variety, uniq, rotate_left, least_rotation
 from sympy.utilities.misc import func_name
-
-from .entity import GeometryEntity, GeometrySet
-from .point import Point
-from .ellipse import Circle
-from .line import Line, Segment, Ray
 
 import warnings
 
@@ -836,7 +836,6 @@ class Polygon(GeometrySet):
         return Piecewise(*sides)
 
     def parameter_value(self, other, t):
-        from sympy.solvers.solvers import solve
         if not isinstance(other,GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other,Point):
@@ -1287,9 +1286,6 @@ class Polygon(GeometrySet):
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
         """
-
-        from sympy.core.evalf import N
-
         verts = map(N, self.vertices)
         coords = ["{},{}".format(p.x, p.y) for p in verts]
         path = "M {} L {} z".format(coords[0], " L ".join(coords[1:]))
