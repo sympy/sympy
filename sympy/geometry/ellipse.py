@@ -8,7 +8,7 @@ Contains
 
 from sympy import Expr, Eq
 from sympy.core import S, pi, sympify
-from sympy.core.evalf import prec_to_dps
+from sympy.core.evalf import prec_to_dps, N
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
@@ -18,18 +18,16 @@ from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.elliptic_integrals import elliptic_e
-from sympy.geometry.exceptions import GeometryError
-from sympy.geometry.line import Ray2D, Segment2D, Line2D, LinearEntity3D
+from .entity import GeometryEntity, GeometrySet
+from .exceptions import GeometryError
+from .line import Line, Segment, Ray2D, Segment2D, Line2D, LinearEntity3D
+from .point import Point, Point2D, Point3D
+from .util import idiff, find
 from sympy.polys import DomainError, Poly, PolynomialError
 from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.misc import filldedent, func_name
-
-from .entity import GeometryEntity, GeometrySet
-from .point import Point, Point2D, Point3D
-from .line import Line, Segment
-from .util import idiff
 
 import random
 
@@ -170,8 +168,6 @@ class Ellipse(GeometrySet):
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
         """
-
-        from sympy.core.evalf import N
 
         c = N(self.center)
         h, v = N(self.hradius), N(self.vradius)
@@ -1553,8 +1549,6 @@ class Circle(Ellipse):
     """
 
     def __new__(cls, *args, **kwargs):
-        from sympy.geometry.util import find
-        from .polygon import Triangle
         evaluate = kwargs.get('evaluate', global_parameters.evaluate)
         if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
             x = kwargs.get('x', 'x')
@@ -1781,4 +1775,4 @@ class Circle(Ellipse):
         return abs(self.radius)
 
 
-from .polygon import Polygon
+from .polygon import Polygon, Triangle

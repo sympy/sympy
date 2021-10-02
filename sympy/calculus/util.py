@@ -1,21 +1,31 @@
-from sympy import Order, S, log, limit, lcm_list, im, re, Dummy, Piecewise
-from sympy.core import Add, Mul, Pow
+from sympy import Order, limit, lcm_list, Piecewise
+from sympy.core import Add, Mul, Pow, S
 from sympy.core.basic import Basic
 from sympy.core.compatibility import iterable
 from sympy.core.expr import AtomicExpr, Expr
-from sympy.core.function import expand_mul
+from sympy.core.function import diff, expand_mul
 from sympy.core.kind import NumberKind
+from sympy.core.mod import Mod
 from sympy.core.numbers import _sympifyit, oo, zoo
 from sympy.core.relational import is_le, is_lt, is_ge, is_gt, Relational
+from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import _sympify
+from sympy.functions.elementary.complexes import Abs, im, re
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.trigonometric import (
+    TrigonometricFunction, sin, cos, csc, sec)
 from sympy.logic.boolalg import And
+from sympy.polys.polytools import degree
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement, EmptySet)
 from sympy.sets.fancysets import ImageSet
+from sympy.simplify.simplify import simplify
+from sympy.solvers.decompogen import compogen, decompogen
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
 from sympy.multipledispatch import dispatch
+
 
 def continuous_domain(f, symbol, domain):
     """
@@ -392,15 +402,6 @@ def periodicity(f, symbol, check=False):
     pi
     >>> periodicity(exp(x), x)
     """
-    from sympy.core.mod import Mod
-    from sympy.functions.elementary.exponential import exp
-    from sympy.functions.elementary.complexes import Abs
-    from sympy.functions.elementary.trigonometric import (
-        TrigonometricFunction, sin, cos, csc, sec)
-    from sympy.simplify.simplify import simplify
-    from sympy.solvers.decompogen import decompogen
-    from sympy.polys.polytools import degree
-
     if symbol.kind is not NumberKind:
         raise NotImplementedError("Cannot use symbol of kind %s" % symbol.kind)
     temp = Dummy('x', real=True)
@@ -515,7 +516,6 @@ def periodicity(f, symbol, check=False):
         pass  # not handling Piecewise yet as the return type is not favorable
 
     elif period is None:
-        from sympy.solvers.decompogen import compogen
         g_s = decompogen(f, symbol)
         num_of_gs = len(g_s)
         if num_of_gs > 1:
@@ -739,7 +739,7 @@ def stationary_points(f, symbol, domain=S.Reals):
     {pi/2, 3*pi/2, 5*pi/2, 7*pi/2}
 
     """
-    from sympy import solveset, diff
+    from sympy.solvers.solveset import solveset
 
     if isinstance(domain, EmptySet):
         return S.EmptySet
@@ -789,8 +789,6 @@ def maximum(f, symbol, domain=S.Reals):
     1/2
 
     """
-    from sympy import Symbol
-
     if isinstance(symbol, Symbol):
         if isinstance(domain, EmptySet):
             raise ValueError("Maximum value not defined for empty domain.")
@@ -839,8 +837,6 @@ def minimum(f, symbol, domain=S.Reals):
     -1/2
 
     """
-    from sympy import Symbol
-
     if isinstance(symbol, Symbol):
         if isinstance(domain, EmptySet):
             raise ValueError("Minimum value not defined for empty domain.")
