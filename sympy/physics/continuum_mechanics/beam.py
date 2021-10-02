@@ -27,8 +27,8 @@ class Beam:
     and their material.
 
     .. note::
-       While solving a beam bending problem, a user should choose its
-       own sign convention and should stick to it. The results will
+       A consistent sign convention must be used while solving a beam
+       bending problem; the results will
        automatically follow the chosen sign convention. However, the
        chosen sign convention must respect the rule that, on the positive
        side of beam's axis (in respect to current section), a loading force
@@ -2304,8 +2304,8 @@ class Beam3D(Beam):
     with unequal values of Second moment along different axes.
 
     .. note::
-       While solving a beam bending problem, a user should choose its
-       own sign convention and should stick to it. The results will
+       A consistent sign convention must be used while solving a beam
+       bending problem; the results will
        automatically follow the chosen sign convention.
        This class assumes that any kind of distributed load/moment is
        applied through out the span of a beam.
