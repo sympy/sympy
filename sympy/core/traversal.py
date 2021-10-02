@@ -167,7 +167,7 @@ def walk(e, *target):
             yield from walk(i, *target)
 
 
-def bottom_up(rv, F, atoms=False, nonbasic=False, simultaneous=True):
+def bottom_up(rv, F, atoms=False, nonbasic=False):
     """Apply ``F`` to all expressions in an expression tree from the
     bottom up. If ``atoms`` is True, apply ``F`` even if there are no args;
     if ``nonbasic`` is True, try to apply ``F`` to non-Basic objects.
@@ -175,16 +175,9 @@ def bottom_up(rv, F, atoms=False, nonbasic=False, simultaneous=True):
     args = getattr(rv, 'args', None)
     if args is not None:
         if args:
-            newargs = tuple([bottom_up(a, F, atoms, nonbasic, simultaneous) for a in args])
-            if args != newargs:
-                rv = rv.func(*newargs)
-                if simultaneous:
-                    # if rv is something that was already
-                    # matched (that was changed) then skip
-                    # applying F again
-                    for i, e in enumerate(args):
-                        if rv == e and e != newargs[i]:
-                            return rv
+            args = tuple([bottom_up(a, F, atoms, nonbasic) for a in args])
+            if args != rv.args:
+                rv = rv.func(*args)
             rv = F(rv)
         elif atoms:
             rv = F(rv)

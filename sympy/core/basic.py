@@ -1463,6 +1463,25 @@ class Basic(Printable, metaclass=ManagedProperties):
                 "first argument to replace() must be a "
                 "type, an expression or a callable")
 
+        def walk(rv, F):
+            """Apply ``F`` to args and then to result.
+            """
+            args = getattr(rv, 'args', None)
+            if args is not None:
+                if args:
+                    newargs = tuple([walk(a, F) for a in args])
+                    if args != newargs:
+                        rv = rv.func(*newargs)
+                        if simultaneous:
+                            # if rv is something that was already
+                            # matched (that was changed) then skip
+                            # applying F again
+                            for i, e in enumerate(args):
+                                if rv == e and e != newargs[i]:
+                                    return rv
+                rv = F(rv)
+            return rv
+
         mapping = {}  # changes that took place
 
         def rec_replace(expr):
@@ -1475,7 +1494,7 @@ class Basic(Printable, metaclass=ManagedProperties):
                     expr = v
             return expr
 
-        rv = bottom_up(self, rec_replace, simultaneous=simultaneous)
+        rv = walk(self, rec_replace)
         return (rv, mapping) if map else rv
 
     def find(self, query, group=False):
@@ -2019,4 +2038,4 @@ def _make_find_query(query):
 
 # Delayed to avoid cyclic import
 from .singleton import S
-from .traversal import bottom_up, preorder_traversal
+from .traversal import preorder_traversal
