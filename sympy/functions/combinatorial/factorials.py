@@ -219,7 +219,7 @@ class factorial(CombinatorialFunction):
                     # its inverse (if n > 4 is a composite number, then
                     # (n-1)! = 0 mod n)
                     if isprime:
-                        return S(-1 % q)
+                        return -1 % q
                     elif isprime is False and (aq - 6).is_nonnegative:
                         return S.Zero
                 elif n.is_Integer and q.is_Integer:
@@ -232,7 +232,7 @@ class factorial(CombinatorialFunction):
                     else:
                         fc = self._facmod(n, aq)
 
-                    return S(fc % q)
+                    return fc % q
 
     def _eval_rewrite_as_gamma(self, n, piecewise=True, **kwargs):
         from sympy import gamma

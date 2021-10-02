@@ -5,7 +5,7 @@ from sympy.core.basic import sympify, cacheit
 from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, PoleError, expand_mul
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool
-from sympy.core.numbers import igcdex, Rational, pi
+from sympy.core.numbers import igcdex, Rational, pi, Integer
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
@@ -198,7 +198,7 @@ def _pi_coeff(arg, cycles=1):
                 elif not c2:
                     if x.is_even is not None:  # known parity
                         return S.Zero
-                    return S(2)
+                    return Integer(2)
                 else:
                     return c2*x
             return cx

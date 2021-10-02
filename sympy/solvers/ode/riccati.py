@@ -409,7 +409,7 @@ def construct_c_case_1(num, den, x, pole):
     # in the c-vector is c = (1 +- sqrt(1 + 4*r))/2
     if r != -S(1)/4:
         return [[(1 + sqrt(1 + 4*r))/2], [(1 - sqrt(1 + 4*r))/2]]
-    return [[S(1)/2]]
+    return [[S.Half]]
 
 
 def construct_c_case_2(num, den, x, pole, mul):
@@ -540,7 +540,7 @@ def construct_d_case_6(num, den, x):
     # d_(-1) = (1 +- sqrt(1 + 4*s_oo))/2
     if s_inf != -S(1)/4:
         return [[(1 + sqrt(1 + 4*s_inf))/2], [(1 - sqrt(1 + 4*s_inf))/2]]
-    return [[S(1)/2]]
+    return [[S.Half]]
 
 
 def construct_d(num, den, x, val_inf):
@@ -698,7 +698,7 @@ def solve_aux_eq(numa, dena, numy, deny, x, m):
         return psol, linsolve_dict(auxeq.all_coeffs(), psyms), True
     else:
         # m == 0 . Check if 1 (x**0) is a solution to the auxiliary equation
-        return S(1), auxeq, auxeq == 0
+        return S.One, auxeq, auxeq == 0
 
 
 def remove_redundant_sols(sol1, sol2, x):
