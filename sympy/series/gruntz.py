@@ -119,7 +119,7 @@ debug this function to figure out the exact problem.
 from functools import reduce
 
 from sympy import cacheit
-from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul, PoleError
+from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul, PoleError, bottom_up
 
 from sympy.functions import log, exp, sign as _sign
 from sympy.series.order import Order
@@ -128,6 +128,7 @@ from sympy.simplify.powsimp import powsimp, powdenest
 
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
+
 timeit = timethis('gruntz')
 
 
@@ -486,7 +487,6 @@ def calculate_series(e, x, logx=None):
     This is a place that fails most often, so it is in its own function.
     """
     from sympy.polys import cancel
-    from sympy.simplify import bottom_up
 
     for t in e.lseries(x, logx=logx):
         # bottom_up function is required for a specific case - when e is

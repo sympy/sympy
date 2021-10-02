@@ -1463,26 +1463,6 @@ class Basic(Printable, metaclass=ManagedProperties):
                 "first argument to replace() must be a "
                 "type, an expression or a callable")
 
-        def walk(rv, F):
-            """Apply ``F`` to args and then to result.
-            """
-            args = getattr(rv, 'args', None)
-            if args is not None:
-                if args:
-                    newargs = tuple([walk(a, F) for a in args])
-                    if args != newargs:
-                        rv = rv.func(*newargs)
-                        if simultaneous:
-                            # if rv is something that was already
-                            # matched (that was changed) then skip
-                            # applying F again
-                            for i, e in enumerate(args):
-                                if rv == e and e != newargs[i]:
-                                    return rv
-                rv = F(rv)
-            return rv
-
-
         mapping = {}  # changes that took place
 
         def rec_replace(expr):
@@ -1495,7 +1475,7 @@ class Basic(Printable, metaclass=ManagedProperties):
                     expr = v
             return expr
 
-        rv = walk(self, rec_replace)
+        rv = bottom_up(self, rec_replace, simultaneous=simultaneous)
         return (rv, mapping) if map else rv
 
     def find(self, query, group=False):
@@ -2136,6 +2116,100 @@ def _make_find_query(query):
     elif isinstance(query, Basic):
         return lambda expr: expr.match(query) is not None
     return query
+
+
+def use(expr, func, level=0, args=(), kwargs={}):
+    """
+    Use ``func`` to transform ``expr`` at the given level.
+
+    Examples
+    ========
+
+    >>> from sympy import use, expand
+    >>> from sympy.abc import x, y
+
+    >>> f = (x + y)**2*x + 1
+
+    >>> use(f, expand, level=2)
+    x*(x**2 + 2*x*y + y**2) + 1
+    >>> expand(f)
+    x**3 + 2*x**2*y + x*y**2 + 1
+
+    """
+    def _use(expr, level):
+        if not level:
+            return func(expr, *args, **kwargs)
+        else:
+            if expr.is_Atom:
+                return expr
+            else:
+                level -= 1
+                _args = []
+
+                for arg in expr.args:
+                    _args.append(_use(arg, level))
+
+                return expr.__class__(*_args)
+
+    return _use(sympify(expr), level)
+
+
+def walk(e, *target):
+    """Iterate through the args that are the given types (target) and
+    return a list of the args that were traversed; arguments
+    that are not of the specified types are not traversed.
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.simplify import walk
+    >>> from sympy import Min, Max
+    >>> from sympy.abc import x, y, z
+    >>> list(walk(Min(x, Max(y, Min(1, z))), Min))
+    [Min(x, Max(y, Min(1, z)))]
+    >>> list(walk(Min(x, Max(y, Min(1, z))), Min, Max))
+    [Min(x, Max(y, Min(1, z))), Max(y, Min(1, z)), Min(1, z)]
+
+    See Also
+    ========
+
+    bottom_up
+    """
+    if isinstance(e, target):
+        yield e
+        for i in e.args:
+            yield from walk(i, *target)
+
+
+def bottom_up(rv, F, atoms=False, nonbasic=False, simultaneous=True):
+    """Apply ``F`` to all expressions in an expression tree from the
+    bottom up. If ``atoms`` is True, apply ``F`` even if there are no args;
+    if ``nonbasic`` is True, try to apply ``F`` to non-Basic objects.
+    """
+    args = getattr(rv, 'args', None)
+    if args is not None:
+        if args:
+            newargs = tuple([bottom_up(a, F, atoms, nonbasic, simultaneous) for a in args])
+            if args != newargs:
+                rv = rv.func(*newargs)
+                if simultaneous:
+                    # if rv is something that was already
+                    # matched (that was changed) then skip
+                    # applying F again
+                    for i, e in enumerate(args):
+                        if rv == e and e != newargs[i]:
+                            return rv
+            rv = F(rv)
+        elif atoms:
+            rv = F(rv)
+    else:
+        if nonbasic:
+            try:
+                rv = F(rv)
+            except TypeError:
+                pass
+
+    return rv
 
 
 # Delayed to avoid cyclic import

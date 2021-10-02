@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 from sympy.core.add import Add
-from sympy.core.basic import S
+from sympy.core.basic import bottom_up
 from sympy.core.compatibility import ordered
 from sympy.core.expr import Expr
 from sympy.core.exprtools import Factors, gcd_terms, factor_terms
@@ -9,6 +9,7 @@ from sympy.core.function import expand_mul
 from sympy.core.mul import Mul
 from sympy.core.numbers import pi, I
 from sympy.core.power import Pow
+from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import binomial
@@ -18,7 +19,6 @@ from sympy.functions.elementary.trigonometric import (
     cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
 from sympy.ntheory.factor_ import perfect_power
 from sympy.polys.polytools import factor
-from sympy.simplify.simplify import bottom_up
 from sympy.strategies.tree import greedy
 from sympy.strategies.core import identity, debug
 

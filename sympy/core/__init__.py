@@ -4,7 +4,7 @@
 from .sympify import sympify, SympifyError
 from .cache import cacheit
 from .assumptions import assumptions, check_assumptions, failing_assumptions, common_assumptions
-from .basic import Basic, Atom, preorder_traversal
+from .basic import Basic, Atom, preorder_traversal, bottom_up, use
 from .singleton import S
 from .expr import Expr, AtomicExpr, UnevaluatedExpr
 from .symbol import Symbol, Wild, Dummy, symbols, var
@@ -44,7 +44,7 @@ __all__ = [
     'assumptions', 'check_assumptions', 'failing_assumptions',
     'common_assumptions',
 
-    'Basic', 'Atom', 'preorder_traversal',
+    'Basic', 'Atom', 'preorder_traversal', 'bottom_up', 'use',
 
     'S',
 

@@ -4,14 +4,14 @@ of Basic or Atom."""
 import collections
 
 from sympy.core.basic import (Basic, Atom, preorder_traversal, as_Basic,
-    _atomic, _aresame)
+    _atomic, _aresame, use)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Symbol, Dummy
 from sympy.core.sympify import SympifyError
 from sympy.core.function import Function, Lambda
 from sympy.core.compatibility import default_sort_key
 
-from sympy import sin, Q, cos, gamma, Tuple, Integral, Sum
+from sympy import sin, Q, cos, gamma, Tuple, Integral, Sum, expand, factor
 from sympy.functions.elementary.exponential import exp
 from sympy.testing.pytest import raises
 from sympy.core import I, pi
@@ -315,3 +315,24 @@ def test_replace_exceptions():
     raises(TypeError, lambda: e.replace(b*c, c.is_real))
     raises(TypeError, lambda: e.replace(b.is_real, 1))
     raises(TypeError, lambda: e.replace(lambda d: d.is_Number, 1))
+
+
+def test_use():
+    x, y = symbols('x y')
+
+    assert use(0, expand) == 0
+
+    f = (x + y)**2*x + 1
+
+    assert use(f, expand, level=0) == x**3 + 2*x**2*y + x*y**2 + + 1
+    assert use(f, expand, level=1) == x**3 + 2*x**2*y + x*y**2 + + 1
+    assert use(f, expand, level=2) == 1 + x*(2*x*y + x**2 + y**2)
+    assert use(f, expand, level=3) == (x + y)**2*x + 1
+
+    f = (x**2 + 1)**2 - 1
+    kwargs = {'gaussian': True}
+
+    assert use(f, factor, level=0, kwargs=kwargs) == x**2*(x**2 + 2)
+    assert use(f, factor, level=1, kwargs=kwargs) == (x + I)**2*(x - I)**2 - 1
+    assert use(f, factor, level=2, kwargs=kwargs) == (x + I)**2*(x - I)**2 - 1
+    assert use(f, factor, level=3, kwargs=kwargs) == (x**2 + 1)**2 - 1

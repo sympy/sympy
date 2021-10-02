@@ -3,7 +3,7 @@ from functools import cmp_to_key, reduce
 import operator
 
 from .sympify import sympify
-from .basic import Basic
+from .basic import Basic, bottom_up
 from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
@@ -2131,7 +2131,6 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
         return m
 
 def expand_2arg(e):
-    from sympy.simplify.simplify import bottom_up
     def do(e):
         if e.is_Mul:
             c, r = e.as_coeff_Mul()

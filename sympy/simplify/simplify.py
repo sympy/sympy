@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify,
                         expand_func, Function, Dummy, Expr, factor_terms,
-                        expand_power_exp, Eq)
+                        expand_power_exp, Eq, bottom_up)
 from sympy.core.compatibility import iterable, ordered, as_int
 from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
@@ -1151,57 +1151,6 @@ def inversecombine(expr):
         return rv
 
     return bottom_up(expr, f)
-
-
-def walk(e, *target):
-    """Iterate through the args that are the given types (target) and
-    return a list of the args that were traversed; arguments
-    that are not of the specified types are not traversed.
-
-    Examples
-    ========
-
-    >>> from sympy.simplify.simplify import walk
-    >>> from sympy import Min, Max
-    >>> from sympy.abc import x, y, z
-    >>> list(walk(Min(x, Max(y, Min(1, z))), Min))
-    [Min(x, Max(y, Min(1, z)))]
-    >>> list(walk(Min(x, Max(y, Min(1, z))), Min, Max))
-    [Min(x, Max(y, Min(1, z))), Max(y, Min(1, z)), Min(1, z)]
-
-    See Also
-    ========
-
-    bottom_up
-    """
-    if isinstance(e, target):
-        yield e
-        for i in e.args:
-            yield from walk(i, *target)
-
-
-def bottom_up(rv, F, atoms=False, nonbasic=False):
-    """Apply ``F`` to all expressions in an expression tree from the
-    bottom up. If ``atoms`` is True, apply ``F`` even if there are no args;
-    if ``nonbasic`` is True, try to apply ``F`` to non-Basic objects.
-    """
-    args = getattr(rv, 'args', None)
-    if args is not None:
-        if args:
-            args = tuple([bottom_up(a, F, atoms, nonbasic) for a in args])
-            if args != rv.args:
-                rv = rv.func(*args)
-            rv = F(rv)
-        elif atoms:
-            rv = F(rv)
-    else:
-        if nonbasic:
-            try:
-                rv = F(rv)
-            except TypeError:
-                pass
-
-    return rv
 
 
 def kroneckersimp(expr):
