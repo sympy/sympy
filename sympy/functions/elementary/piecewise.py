@@ -1,11 +1,10 @@
-from sympy.core import Basic, S, Function, diff, Tuple, Dummy
-from sympy.core.basic import as_Basic
+from sympy.core import S, Function, diff, Tuple, Dummy
+from sympy.core.basic import Basic, as_Basic
 from sympy.core.numbers import Rational, NumberSymbol
-from sympy.core.relational import (Equality, Unequality, Relational,
-    _canonical)
+from sympy.core.relational import Eq, Ne, Relational, _canonical
 from sympy.functions.elementary.miscellaneous import Max, Min
-from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or,
-    true, false, Or, ITE, simplify_logic)
+from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
+    true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
 from sympy.utilities.iterables import uniq, ordered, product, sift
 from sympy.utilities.misc import filldedent, func_name
 
@@ -675,7 +674,6 @@ class Piecewise(Function):
         True will be returned as the last tuple with a, b = -oo, oo.
         """
         from sympy.solvers.inequalities import _solve_inequality
-        from sympy.logic.boolalg import to_cnf, distribute_or_over_and
 
         assert isinstance(self, Piecewise)
 
@@ -736,7 +734,7 @@ class Piecewise(Function):
             if isinstance(cond, Or):
                 expr_cond.extend(
                     [(i, expr, o) for o in cond.args
-                    if not isinstance(o, Equality)])
+                    if not isinstance(o, Eq)])
             elif cond is not S.false:
                 expr_cond.append((i, expr, cond))
 
@@ -748,10 +746,10 @@ class Piecewise(Function):
                 upper = S.Infinity
                 exclude = []
                 for cond2 in cond.args:
-                    if isinstance(cond2, Equality):
+                    if isinstance(cond2, Eq):
                         lower = upper  # ignore
                         break
-                    elif isinstance(cond2, Unequality):
+                    elif isinstance(cond2, Ne):
                         l, r = cond2.args
                         if l == sym:
                             exclude.append(r)
@@ -883,7 +881,7 @@ class Piecewise(Function):
         """Return the truth value of the condition."""
         if cond == True:
             return True
-        if isinstance(cond, Equality):
+        if isinstance(cond, Eq):
             try:
                 diff = cond.lhs - cond.rhs
                 if diff.is_commutative:
@@ -929,7 +927,7 @@ class Piecewise(Function):
                     multivariate conditions are not handled.'''))
             if complex:
                 for i in cond.atoms(Relational):
-                    if not isinstance(i, (Equality, Unequality)):
+                    if not isinstance(i, (Eq, Ne)):
                         raise ValueError(filldedent('''
                             Inequalities in the complex domain are
                             not supported. Try the real domain by
@@ -986,7 +984,7 @@ class Piecewise(Function):
         return _canonical(last)
 
     def _eval_rewrite_as_KroneckerDelta(self, *args):
-        from sympy import Ne, Eq, Not, KroneckerDelta
+        from sympy import KroneckerDelta
 
         rules = {
             And: [False, False],
@@ -1233,8 +1231,8 @@ def piecewise_simplify(expr, **kwargs):
         # -> Piecewise((0, And(Eq(n, 0), Eq(m, 0))), (1, True))
         if isinstance(cond, And):
             eqs, other = sift(cond.args,
-                lambda i: isinstance(i, Equality), binary=True)
-        elif isinstance(cond, Equality):
+                lambda i: isinstance(i, Eq), binary=True)
+        elif isinstance(cond, Eq):
             eqs, other = [cond], []
         else:
             eqs = other = []
@@ -1257,8 +1255,8 @@ def piecewise_simplify(expr, **kwargs):
         if prevexpr is not None:
             if isinstance(cond, And):
                 eqs, other = sift(cond.args,
-                    lambda i: isinstance(i, Equality), binary=True)
-            elif isinstance(cond, Equality):
+                    lambda i: isinstance(i, Eq), binary=True)
+            elif isinstance(cond, Eq):
                 eqs, other = [cond], []
             else:
                 eqs = other = []
