@@ -2289,9 +2289,9 @@ class Expr(Basic, EvalfMixin):
                     from sympy.core.function import _coeff_isneg
                     neg_args = sum(1 for _ in self.args if _coeff_isneg(_))
                     xs = 2*neg_args - len(self.args)  # excess of negatives if positive
-                   neg = (xs > 0) if xs else bool(self.sort_key() < (-self).sort_key())
-                   if neg:
-                       return -self
+                    neg = (xs > 0) if xs else bool(self.sort_key() < (-self).sort_key())
+                    if neg:
+                        return -self
                 else:
                     # assert c != 1 (handled at top)
                     if cs is not S.One:
