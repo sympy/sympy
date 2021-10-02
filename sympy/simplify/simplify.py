@@ -345,18 +345,14 @@ def hypersimilar(f, g, k):
 
 def signsimp(expr, evaluate=None):
     """Make all Add sub-expressions canonical wrt sign.
-
     Explanation
     ===========
-
     If an Add subexpression, ``a``, can have a sign extracted,
     as determined by could_extract_minus_sign, it is replaced
     with Mul(-1, a, evaluate=False). This allows signs to be
     extracted from powers and products.
-
     Examples
     ========
-
     >>> from sympy import signsimp, exp, symbols
     >>> from sympy.abc import x, y
     >>> i = symbols('i', odd=True)
@@ -369,29 +365,22 @@ def signsimp(expr, evaluate=None):
     x*(-1 + 1/x) + x*(1 - 1/x)
     >>> signsimp(_)
     0
-
     Since powers automatically handle leading signs
-
     >>> (-2)**i
     -2**i
-
     signsimp can be used to put the base of a power with an integer
     exponent into canonical form:
-
     >>> n**i
     (-1 + 1/x)**i
-
     By default, signsimp doesn't leave behind any hollow simplification:
     if making an Add canonical wrt sign didn't change the expression, the
     original Add is restored. If this is not desired then the keyword
     ``evaluate`` can be set to False:
-
     >>> e = exp(y - x)
     >>> signsimp(e) == e
     True
     >>> signsimp(e, evaluate=False)
     exp(-(x - y))
-
     """
     if evaluate is None:
         evaluate = global_parameters.evaluate
@@ -402,7 +391,15 @@ def signsimp(expr, evaluate=None):
     if not isinstance(e, (Expr, Relational)) or e.is_Atom:
         return e
     if e.is_Add:
-        return e.func(*[signsimp(a, evaluate) for a in e.args])
+        if e.could_extract_minus_sign():
+            neg = True
+            e = -e
+        else:
+            neg = False
+        rv = e.func(*[signsimp(a, evaluate) for a in e.args])
+        if evaluate:
+            return -rv if neg else rv
+        return Mul(-1, rv, evaluate=False) if neg else rv
     if evaluate:
         e = e.xreplace({m: -(-m) for m in e.atoms(Mul) if -(-m) != m})
     return e
