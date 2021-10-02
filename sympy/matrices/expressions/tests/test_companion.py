@@ -13,7 +13,7 @@ def test_creation():
     raises(ValueError, lambda: CompanionMatrix(Poly([1], x)))
     raises(ValueError, lambda: CompanionMatrix(Poly([2, 1], x)))
     raises(ValueError, lambda: CompanionMatrix(Poly(x*y, [x, y])))
-    unchanged(CompanionMatrix, Poly([1, 2, 3], x))
+    assert unchanged(CompanionMatrix, Poly([1, 2, 3], x))
 
 
 def test_shape():

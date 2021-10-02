@@ -724,3 +724,9 @@ def test_issue_6462():
     # exception
     assert integrate(cos(x**n)/x**n, x, meijerg=True).subs(n, 2).equals(
             integrate(cos(x**2)/x**2, x, meijerg=True))
+
+
+def test_indefinite_1_bug():
+    assert integrate((b + t)**(-a), t, meijerg=True
+        ) == -b/(b**a*(1 + t/b)**a*(a - 1)
+        ) - t/(b**a*(1 + t/b)**a*(a - 1))

@@ -1748,13 +1748,13 @@ def _meijerint_indefinite_1(f, x):
         res = expand_mul(cancel(res), deep=False)
         return Add._from_args(res.as_coeff_add(x)[1])
 
-    res = piecewise_fold(res)
+    res = piecewise_fold(res, evaluate=None)
     if res.is_Piecewise:
         newargs = []
-        for expr, cond in res.args:
-            expr = _my_unpolarify(_clean(expr))
-            newargs += [(expr, cond)]
-        res = Piecewise(*newargs)
+        for e, c in res.args:
+            e = _my_unpolarify(_clean(e))
+            newargs += [(e, c)]
+        res = Piecewise(*newargs, evaluate=False)
     else:
         res = _my_unpolarify(_clean(res))
     return Piecewise((res, _my_unpolarify(cond)), (Integral(f, x), True))
