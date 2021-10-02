@@ -1,7 +1,6 @@
 from collections import defaultdict
 
 from sympy.core.add import Add
-from sympy.core.basic import bottom_up
 from sympy.core.compatibility import ordered
 from sympy.core.expr import Expr
 from sympy.core.exprtools import Factors, gcd_terms, factor_terms
@@ -12,6 +11,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
+from sympy.core.traversal import bottom_up
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.hyperbolic import (
     cosh, sinh, tanh, coth, sech, csch, HyperbolicFunction)

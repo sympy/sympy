@@ -3,7 +3,7 @@ from functools import cmp_to_key, reduce
 import operator
 
 from .sympify import sympify
-from .basic import Basic, bottom_up
+from .basic import Basic
 from .singleton import S
 from .operations import AssocOp, AssocOpDispatcher
 from .cache import cacheit
@@ -11,6 +11,7 @@ from .logic import fuzzy_not, _fuzzy_group
 from .expr import Expr
 from .parameters import global_parameters
 from .kind import KindDispatcher
+from .traversal import bottom_up
 
 
 # internal marker to indicate:

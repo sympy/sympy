@@ -7,7 +7,7 @@ from operator import mul
 from sympy.core import (
     S, Expr, I, Integer, Add, Tuple
 )
-from sympy.core.basic import Basic, preorder_traversal, bottom_up
+from sympy.core.basic import Basic
 from sympy.core.compatibility import iterable, ordered
 from sympy.core.decorators import _sympifyit
 from sympy.core.evalf import pure_complex
@@ -16,6 +16,7 @@ from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.relational import Relational
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
+from sympy.core.traversal import preorder_traversal, bottom_up
 from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain

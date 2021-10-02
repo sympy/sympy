@@ -239,6 +239,7 @@ from sympy.core.numbers import NaN, zoo, Number
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
+from sympy.core.traversal import preorder_traversal
 
 from sympy.logic.boolalg import (BooleanAtom, BooleanTrue,
                                 BooleanFalse)
@@ -1821,8 +1822,6 @@ def ode_sol_simplicity(sol, func, trysolving=True):
 
 
 def _extract_funcs(eqs):
-    from sympy.core.basic import preorder_traversal
-
     funcs = []
     for eq in eqs:
         derivs = [node for node in preorder_traversal(eq) if isinstance(node, Derivative)]

@@ -4,12 +4,13 @@ from sympy.core.add import Add
 from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
-from sympy.core.basic import Basic, preorder_traversal
+from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, Integer, Number, I
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
+from sympy.core.traversal import preorder_traversal
 from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
