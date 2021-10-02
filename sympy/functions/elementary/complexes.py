@@ -528,9 +528,6 @@ class Abs(Function):
             raise TypeError("Bad argument type for Abs(): %s" % type(arg))
 
         # handle what we can
-        if arg.could_extract_minus_sign():
-            return cls(-arg)
-
         arg = signsimp(arg, evaluate=False)
         n, d = arg.as_numer_denom()
         if d.free_symbols and not n.free_symbols:

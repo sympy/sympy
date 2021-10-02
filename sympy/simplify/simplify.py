@@ -403,7 +403,15 @@ def signsimp(expr, evaluate=None):
     if not isinstance(e, (Expr, Relational)) or e.is_Atom:
         return e
     if e.is_Add:
-        return e.func(*[signsimp(a, evaluate) for a in e.args])
+        if e.could_extract_minus_sign():
+            neg = True
+            e = -e
+        else:
+            neg = False
+        rv = e.func(*[signsimp(a, evaluate) for a in e.args])
+        if evaluate:
+            return -rv if neg else rv
+        return Mul(-1, rv, evaluate=False) if neg else rv
     if evaluate:
         e = e.xreplace({m: -(-m) for m in e.atoms(Mul) if -(-m) != m})
     return e
