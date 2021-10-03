@@ -204,6 +204,8 @@ class Symbol(AtomicExpr, Boolean):
 
     __slots__ = ('name',)
 
+    name: str
+
     is_Symbol = True
     is_symbol = True
 

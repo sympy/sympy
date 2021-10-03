@@ -17,7 +17,7 @@ from sympy.functions import exp, cos, cosh, im, log, re, sin, sinh, \
     atan2, conjugate
 from sympy.integrals import Integral
 from sympy.polys import (Poly, RootOf, rootof, roots)
-from sympy.simplify import collect, simplify, separatevars, powsimp, trigsimp
+from sympy.simplify import collect, simplify, separatevars, powsimp, trigsimp # type: ignore
 from sympy.utilities import numbered_symbols, default_sort_key
 from sympy.solvers.solvers import solve
 from sympy.matrices import wronskian

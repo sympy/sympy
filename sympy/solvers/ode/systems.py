@@ -12,7 +12,7 @@ from sympy.functions import (exp, im, cos, sin, re, Piecewise,
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase, eye
 from sympy.polys import Poly, together
-from sympy.simplify import collect, radsimp, signsimp
+from sympy.simplify import collect, radsimp, signsimp # type: ignore
 from sympy.simplify.powsimp import powdenest, powsimp
 from sympy.simplify.ratsimp import ratsimp
 from sympy.simplify.simplify import simplify
