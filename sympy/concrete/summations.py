@@ -517,12 +517,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         ratio = combsimp(powsimp(next_sequence_term/sequence_term))
         try:
             lim_ratio = limit_seq(ratio, sym)
-            if not isinstance(lim_ratio, type(S.NaN)):
-                if lim_ratio is not None and lim_ratio.is_number:
-                    if abs(lim_ratio) > 1:
-                        return S.false
-                    if abs(lim_ratio) < 1:
-                        return S.true
+            if lim_ratio is not None and lim_ratio.is_number and lim_ratio is not S.NaN:
+                if abs(lim_ratio) > 1:
+                    return S.false
+                if abs(lim_ratio) < 1:
+                    return S.true
         except NotImplementedError:
             lim_ratio = None
 
@@ -986,7 +985,7 @@ def eval_sum(f, limits):
     from sympy.functions import KroneckerDelta
 
     (i, a, b) = limits
-    if f.is_zero or f.simplify().is_zero:
+    if f.is_zero:
         return S.Zero
     if i not in f.free_symbols:
         return f*(b - a + 1)

@@ -608,10 +608,6 @@ def test_Sum_doit():
     assert summation(1/n**2, (n, 1, oo)) == zeta(2)
     assert summation(1/n**s, (n, 0, oo)) == Sum(n**(-s), (n, 0, oo))
 
-    # issue 14103
-    assert Sum(sin(n)**2 + cos(n)**2 - 1, (n, 1, oo)).doit() == 0
-    assert Sum(cos(n) * sec(n) - 1, (n, 1, oo)).doit() == 0
-
 
 def test_Product_doit():
     assert Product(n*Integral(a**2), (n, 1, 3)).doit() == 2 * a**9 / 9
@@ -1000,6 +996,7 @@ def test_is_convergent():
     assert Sum((-1)**n*n, (n, 3, oo)).is_convergent() is S.false
     assert Sum((-1)**n, (n, 1, oo)).is_convergent() is S.false
     assert Sum(log(1/n), (n, 2, oo)).is_convergent() is S.false
+    assert Sum(sin(n), (n, 1, oo)).is_convergent() is S.false
 
     # Raabe's test --
     assert Sum(Product((3*m),(m,1,n))/Product((3*m+4),(m,1,n)),(n,1,oo)).is_convergent() is S.true
