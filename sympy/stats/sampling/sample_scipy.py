@@ -12,9 +12,7 @@ from sympy.stats.drv_types import GeometricDistribution, LogarithmicDistribution
 from sympy.stats.frv import SingleFiniteDistribution
 
 
-scipy = import_module("scipy")
-if scipy is not None:
-    import scipy.stats
+scipy = import_module("scipy", import_kwargs={'fromlist':['stats']})
 
 
 @singledispatch

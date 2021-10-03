@@ -2,7 +2,8 @@ from __future__ import print_function, division
 import random
 
 import itertools
-from typing import Sequence as tSequence, Union as tUnion, List as tList, Tuple as tTuple
+from typing import (Sequence as tSequence, Union as tUnion, List as tList,
+        Tuple as tTuple, Set as tSet)
 
 from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    Set, And, Eq, FiniteSet, ImmutableMatrix, Integer, igcd,
@@ -11,7 +12,7 @@ from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
                    Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
                    Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet,
                    ceiling, MatrixBase, ConditionSet, ones, zeros, Identity,
-                   Rational, Lt, Gt, Le, Ne, BlockMatrix, Sum)
+                   Rational, Lt, Gt, Le, Ne, BlockMatrix, Sum, MatrixExpr)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -82,26 +83,28 @@ def _state_converter(itr: tSequence) -> tUnion[Tuple, Range]:
     Helper function for converting list/tuple/set/Range/Tuple/FiniteSet
     to tuple/Range.
     """
+    itr_ret: tUnion[Tuple, Range]
+
     if isinstance(itr, (Tuple, set, FiniteSet)):
-        itr = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
+        itr_ret = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
 
     elif isinstance(itr, (list, tuple)):
         # check if states are unique
         if len(set(itr)) != len(itr):
             raise ValueError('The state space must have unique elements.')
-        itr = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
+        itr_ret = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
 
     elif isinstance(itr, Range):
         # the only ordered set in sympy I know of
         # try to convert to tuple
         try:
-            itr = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
+            itr_ret = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
         except (TypeError, ValueError):
-            pass
+            itr_ret = itr
 
     else:
         raise TypeError("%s is not an instance of list/tuple/set/Range/Tuple/FiniteSet." % (itr))
-    return itr
+    return itr_ret
 
 def _sym_sympify(arg):
     """
@@ -168,6 +171,7 @@ class StochasticProcess(Basic):
     @property
     def state_space(self) -> tUnion[FiniteSet, Range]:
         if not isinstance(self.args[1], (FiniteSet, Range)):
+            assert isinstance(self.args[1], Tuple)
             return FiniteSet(*self.args[1])
         return self.args[1]
 
@@ -343,14 +347,7 @@ class MarkovProcess(StochasticProcess):
     """
 
     @property
-    def number_of_states(self) -> tUnion[Integer, Symbol]:
-        """
-        The number of states in the Markov Chain.
-        """
-        return _sympify(self.args[2].shape[0])
-
-    @property
-    def _state_index(self) -> Range:
+    def _state_index(self):
         """
         Returns state index as Range.
         """
@@ -910,12 +907,11 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     index_set = S.Naturals0
 
     def __new__(cls, sym, state_space=None, trans_probs=None):
-        # type: (Basic, tUnion[str, Symbol], tSequence, tUnion[MatrixBase, MatrixSymbol]) -> DiscreteMarkovChain
         sym = _symbol_converter(sym)
 
         state_space, trans_probs = MarkovProcess._sanity_checks(state_space, trans_probs)
 
-        obj = Basic.__new__(cls, sym, state_space, trans_probs)
+        obj = Basic.__new__(cls, sym, state_space, trans_probs) # type: ignore
         indices = dict()
         if isinstance(obj.number_of_states, Integer):
             for index, state in enumerate(obj._state_index):
@@ -924,7 +920,14 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return obj
 
     @property
-    def transition_probabilities(self) -> tUnion[MatrixBase, MatrixSymbol]:
+    def number_of_states(self) -> tUnion[Integer, Symbol]:
+        """
+        The number of states in the Markov Chain.
+        """
+        return _sympify(self.args[2].shape[0]) # type: ignore
+
+    @property
+    def transition_probabilities(self):
         """
         Transition probabilities of discrete Markov chain,
         either an instance of Matrix or MatrixSymbol.
@@ -1024,7 +1027,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             # end recurrent check
 
             # begin breadth-first search
-            non_tree_edge_values = set()
+            non_tree_edge_values: tSet[int] = set()
             visited = {class_[0]}
             newly_visited = {class_[0]}
             level = {class_[0]: 0}
@@ -1221,7 +1224,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         # numeric matrix version
         a = Matrix(trans_probs - Identity(n)).T
-        a[0, 0:n] = ones(1, n)
+        a[0, 0:n] = ones(1, n) # type: ignore
         b = zeros(n, 1)
         b[0, 0] = 1
 
@@ -1331,7 +1334,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
                 t_states += states
 
         states = r_states + t_states
-        indexes = [self.index_of[state] for state in states]
+        indexes = [self.index_of[state] for state in states] # type: ignore
 
         A = Matrix(len(r_states), len(r_states),
                    lambda i, j: trans_probs[indexes[i], indexes[j]])
