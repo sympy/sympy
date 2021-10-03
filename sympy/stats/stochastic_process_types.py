@@ -347,6 +347,13 @@ class MarkovProcess(StochasticProcess):
     """
 
     @property
+    def number_of_states(self) -> tUnion[Integer, Symbol]:
+        """
+        The number of states in the Markov Chain.
+        """
+        return _sympify(self.args[2].shape[0]) # type: ignore
+
+    @property
     def _state_index(self):
         """
         Returns state index as Range.
@@ -918,13 +925,6 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
                 indices[state] = index
         obj.index_of = indices
         return obj
-
-    @property
-    def number_of_states(self) -> tUnion[Integer, Symbol]:
-        """
-        The number of states in the Markov Chain.
-        """
-        return _sympify(self.args[2].shape[0]) # type: ignore
 
     @property
     def transition_probabilities(self):
