@@ -7,7 +7,7 @@ installed run the same tests for both.
 from fractions import Fraction
 from decimal import Decimal
 import pickle
-from typing import Callable, List, Tuple, Type, Union
+from typing import Callable, List, Tuple, Type
 
 from sympy.testing.pytest import raises
 
