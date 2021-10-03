@@ -1005,6 +1005,7 @@ def test_is_convergent():
     assert Sum((-12)**n/n, (n, 1, oo)).is_convergent() is S.false
     assert Sum(sin(n)**2 + cos(n)**2 - 1, (n, 1, oo)).is_convergent() is S.true
     assert Sum(sin(pi*n), (n, 1, oo)).is_convergent() is S.true
+    assert Sum(sec(n) * cos(n) -1, (n, 1, oo)).is_convergent() is S.true
 
     # integral test --
 
