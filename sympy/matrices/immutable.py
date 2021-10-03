@@ -27,7 +27,7 @@ def sympify_mpmath_matrix(arg):
 sympify_converter[_matrix] = sympify_mpmath_matrix
 
 
-class ImmutableRepMatrix(RepMatrix, MatrixExpr):
+class ImmutableRepMatrix(RepMatrix, MatrixExpr): # type: ignore
     """Immutable matrix based on RepMatrix
 
     Uses DomainMAtrix as the internal representation.

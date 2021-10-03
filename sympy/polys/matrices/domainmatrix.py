@@ -10,7 +10,11 @@ as unifying matrices with different domains.
 
 """
 from functools import reduce
+from typing import Union, Tuple
+
 from sympy.core.sympify import _sympify
+
+from ..domains import Domain
 
 from ..constructor import construct_domain
 
@@ -74,6 +78,9 @@ class DomainMatrix:
     Poly
 
     """
+    rep: Union[SDM, DDM]
+    shape: Tuple[int, int]
+    domain: Domain
 
     def __new__(cls, rows, shape, domain, *, fmt=None):
         """
