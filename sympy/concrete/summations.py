@@ -1137,9 +1137,9 @@ def eval_sum_symbolic(f, limits):
         if without_i != 0:
             s = eval_sum_symbolic(with_i, (i, a, b))
             if s:
-                if((s == S.NegativeInfinity and (b - a + 1) == S.Infinity) or (s == S.Infinity and (b - a + 1) == S.Infinity)):
+                if s in (S.NegativeInfinity, S.Infinity) and (b - a + 1) is S.Infinity:
                     Max = max(abs(f.subs(i, a)), abs(f.subs(i, S.Infinity)))
-                    if(Max > abs(without_i)):
+                    if Max > abs(without_i):
                         return s
                     else:
                         return without_i * S.Infinity

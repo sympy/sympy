@@ -608,6 +608,13 @@ def test_Sum_doit():
     assert summation(1/n**2, (n, 1, oo)) == zeta(2)
     assert summation(1/n**s, (n, 0, oo)) == Sum(n**(-s), (n, 0, oo))
 
+    # issue 22178, 14579, 14410
+    assert Sum(sqrt(x) , (x, 1, oo)).doit() == oo
+    assert Sum(3 - x**2 , (x, 1, oo)).doit() == -oo
+    assert Sum(3 - sqrt(x) , (x, 1, oo)).doit() == -oo
+    assert Sum(1/(sqrt(x)) - 3, (x, 1, oo)).doit() == -oo
+    assert Sum(x**3 - x**2, (x, 1, oo)).doit() == oo
+    assert Sum(sqrt(x), (x, 1, 3)).doit() == 1 + sqrt(2) + sqrt(3)
 
 def test_Product_doit():
     assert Product(n*Integral(a**2), (n, 1, 3)).doit() == 2 * a**9 / 9
