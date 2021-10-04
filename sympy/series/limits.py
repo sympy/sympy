@@ -207,7 +207,7 @@ class Limit(Expr):
         hints : optional keyword arguments
             To be passed to ``doit`` methods; only used if deep is True.
         """
-        from sympy import Abs, powsimp, sign
+        from sympy import Abs, Float, nsimplify, powsimp, sign
 
         e, z, z0, dir = self.args
 
@@ -260,6 +260,12 @@ class Limit(Expr):
                         return expr.args[0] if abs_flag else S.One
             return expr
 
+        if e.has(Float):
+            # Convert floats like 0.5 to exact sympy numbers like S.Half, to
+            # prevent rounding errors which can lead to unexpected execution
+            # of conditional blocks that work on comparisons
+            # Also see comments in https://github.com/sympy/sympy/issues/19453
+            e = nsimplify(e)
         e = set_signs(e)
 
         if e.is_meromorphic(z, z0):
