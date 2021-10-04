@@ -3400,7 +3400,7 @@ def test_Poly_precision():
 def test_issue_12400():
     # Correction of check for negative exponents
     assert poly(1/(1+sqrt(2)), x) == \
-            Poly(1/(1+sqrt(2)), x , domain='EX')
+            Poly(1/(1+sqrt(2)), x, domain='EX')
 
 def test_issue_14364():
     assert gcd(S(6)*(1 + sqrt(3))/5, S(3)*(1 + sqrt(3))/10) == Rational(3, 10) * (1 + sqrt(3))

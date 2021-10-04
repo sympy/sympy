@@ -218,7 +218,7 @@ class CrossCovarianceMatrix(Covariance, MatrixExpr):
 
     >>> CrossCovarianceMatrix(X + Y, Z).expand()
     CrossCovarianceMatrix(X, Z) + CrossCovarianceMatrix(Y, Z)
-    >>> CrossCovarianceMatrix(A*X , Y).expand()
+    >>> CrossCovarianceMatrix(A*X, Y).expand()
     A*CrossCovarianceMatrix(X, Y)
     >>> CrossCovarianceMatrix(A*X, B.T*Y).expand()
     A*CrossCovarianceMatrix(X, Y)*B

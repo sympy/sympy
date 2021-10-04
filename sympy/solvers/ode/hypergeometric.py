@@ -214,7 +214,7 @@ def equivalence(max_num_pow, dem_pow):
         if dem_pow in [[1, 2, 2], [2, 2, 2], [1, 2], [2, 2]]:
             return "2F1"
     elif max_num_pow == 0:
-        if dem_pow in [[1, 1, 2], [2, 2], [1 ,2, 2], [1, 1], [2], [1, 2], [2, 2]]:
+        if dem_pow in [[1, 1, 2], [2, 2], [1, 2, 2], [1, 1], [2], [1, 2], [2, 2]]:
             return "2F1"
 
     return None

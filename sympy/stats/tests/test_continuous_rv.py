@@ -574,7 +574,7 @@ def test_dagum():
     b = Symbol("b", positive=True)
     a = Symbol("a", nonpositive=True)
     raises(ValueError, lambda: Dagum('x', p, a, b))
-    X = Dagum('x', 1 , 1, 1)
+    X = Dagum('x', 1, 1, 1)
     assert median(X) == FiniteSet(1)
 
 def test_erlang():
@@ -824,8 +824,8 @@ def test_levy():
     raises(ValueError, lambda: Levy('x',mu,c))
 
 def test_logcauchy():
-    mu = Symbol("mu" , positive=True)
-    sigma = Symbol("sigma" , positive=True)
+    mu = Symbol("mu", positive=True)
+    sigma = Symbol("sigma", positive=True)
 
     X = LogCauchy("x", mu, sigma)
 
@@ -911,9 +911,9 @@ def test_lognormal():
 
 def test_Lomax():
     a, l = symbols('a, l', negative=True)
-    raises(ValueError, lambda: Lomax('X', a , l))
+    raises(ValueError, lambda: Lomax('X', a, l))
     a, l = symbols('a, l', real=False)
-    raises(ValueError, lambda: Lomax('X', a , l))
+    raises(ValueError, lambda: Lomax('X', a, l))
 
     a, l = symbols('a, l', positive=True)
     X = Lomax('X', a, l)
@@ -974,7 +974,7 @@ def test_nakagami():
     assert cdf(X)(x) == Piecewise(
                                 (lowergamma(mu, mu*x**2/omega)/gamma(mu), x > 0),
                                 (0, True))
-    X = Nakagami('x',1 ,1)
+    X = Nakagami('x', 1, 1)
     assert median(X) == FiniteSet(sqrt(log(2)))
 
 def test_gaussian_inverse():

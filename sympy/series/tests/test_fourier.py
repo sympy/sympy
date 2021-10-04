@@ -155,5 +155,5 @@ def test_FourierSeries_finite():
            + cos(4)*cos(3*x) + sin(3)*cos(4*x)
     assert fourier_series(sin(x)+cos(x)*tan(x)).truncate(oo) == 2*sin(x)
     assert fourier_series(cos(pi*x), (x, -1, 1)).truncate(oo) == cos(pi*x)
-    assert fourier_series(cos(3*pi*x + 4) - sin(4*pi*x)*log(pi*y) , (x, -1, 1)).truncate(oo) == -log(pi*y)*sin(4*pi*x)\
+    assert fourier_series(cos(3*pi*x + 4) - sin(4*pi*x)*log(pi*y), (x, -1, 1)).truncate(oo) == -log(pi*y)*sin(4*pi*x)\
            - sin(4)*sin(3*pi*x) + cos(4)*cos(3*pi*x)

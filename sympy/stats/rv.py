@@ -1032,7 +1032,7 @@ def where(condition, given_condition=None, **kwargs):
     >>> where(X**2<1).set
     Interval.open(-1, 1)
 
-    >>> where(And(D1<=D2 , D2<3))
+    >>> where(And(D1<=D2, D2<3))
     Domain: (Eq(a, 1) & Eq(b, 1)) | (Eq(a, 1) & Eq(b, 2)) | (Eq(a, 2) & Eq(b, 2))
     """
     if given_condition is not None:  # If there is a condition

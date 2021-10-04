@@ -862,7 +862,7 @@ def nthroot_mod(a, n, p, all_roots=False):
         else:
             res = a
     elif pa == 2:
-        return sqrt_mod(a, p , all_roots)
+        return sqrt_mod(a, p, all_roots)
     else:
         res = _nthroot_mod1(a, pa, p, all_roots)
     return res
@@ -1402,7 +1402,7 @@ def quadratic_congruence(a, b, c, p):
         for i in y:
             res.add((i - b // 2) % p)
         return sorted(res)
-    y = sqrt_mod(b * b - 4 * a * c , 4 * a * p, all_roots=True)
+    y = sqrt_mod(b * b - 4 * a * c, 4 * a * p, all_roots=True)
     res = set()
     for i in y:
         root = linear_congruence(2 * a, i - b, 4 * a * p)

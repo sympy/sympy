@@ -579,8 +579,8 @@ def test_Domain_convert():
 
     def check_domains(K1, K2):
         K3 = K1.unify(K2)
-        check_element(K3.convert_from(K1.one,  K1), K3.one , K1, K2, K3)
-        check_element(K3.convert_from(K2.one,  K2), K3.one , K1, K2, K3)
+        check_element(K3.convert_from( K1.one, K1),  K3.one, K1, K2, K3)
+        check_element(K3.convert_from( K2.one, K2),  K3.one, K1, K2, K3)
         check_element(K3.convert_from(K1.zero, K1), K3.zero, K1, K2, K3)
         check_element(K3.convert_from(K2.zero, K2), K3.zero, K1, K2, K3)
 

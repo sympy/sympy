@@ -91,7 +91,7 @@ def dup_root_upper_bound(f, K):
                 continue
 
             q = t[j] + a - K.log(f[j], 2)
-            QL.append([q // (j - i) , j])
+            QL.append([q // (j - i), j])
 
         if not QL:
             continue

@@ -438,7 +438,7 @@ def test_piecewise_simplify():
             (2*x, And(Eq(a, 0), Eq(y, 0))),
             (2, And(Eq(a, 1), Eq(y, 0))),
             (0, True))
-    args = (2, And(Eq(x, 2), Ge(y ,0))), (x, True)
+    args = (2, And(Eq(x, 2), Ge(y, 0))), (x, True)
     assert Piecewise(*args).simplify() == Piecewise(*args)
     args = (1, Eq(x, 0)), (sin(x)/x, True)
     assert Piecewise(*args).simplify() == Piecewise(*args)
@@ -934,7 +934,7 @@ def test_issue_10137():
 
 
 def test_stackoverflow_43852159():
-    f = lambda x: Piecewise((1 , (x >= -1) & (x <= 1)) , (0, True))
+    f = lambda x: Piecewise((1, (x >= -1) & (x <= 1)), (0, True))
     Conv = lambda x: integrate(f(x - y)*f(y), (y, -oo, +oo))
     cx = Conv(x)
     assert cx.subs(x, -1.5) == cx.subs(x, 1.5)
@@ -1084,7 +1084,7 @@ def test_piecewise_with_DiracDelta():
         (Heaviside(x - 1), x < 2), (1, True))
     # TODO raise error if function is discontinuous at limit of
     # integration, e.g. integrate(d1, (x, -2, 1)) or Piecewise(
-    # (d1, Eq(x ,1)
+    # (d1, Eq(x, 1)
 
 
 def test_issue_10258():

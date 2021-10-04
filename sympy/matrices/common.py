@@ -1467,7 +1467,7 @@ class MatrixProperties(MatrixRequired):
 
         >>> from sympy.abc import x, y
         >>> m = Matrix(3, 3, [0, x**2 + 2*x + 1, y,
-        ...                   -(x + 1)**2 , 0, x*y,
+        ...                   -(x + 1)**2, 0, x*y,
         ...                   -y, -x*y, 0])
 
         Simplification of matrix elements is done by default so even
@@ -1733,7 +1733,7 @@ class MatrixProperties(MatrixRequired):
         >>> m.is_lower
         True
 
-        >>> m = Matrix(4, 3, [0, 0, 0, 2, 0, 0, 1, 4 , 0, 6, 6, 5])
+        >>> m = Matrix(4, 3, [0, 0, 0, 2, 0, 0, 1, 4, 0, 6, 6, 5])
         >>> m
         Matrix([
         [0, 0, 0],
@@ -1837,7 +1837,7 @@ class MatrixProperties(MatrixRequired):
         False
 
         >>> from sympy.abc import x, y
-        >>> m = Matrix(3, 3, [1, x**2 + 2*x + 1, y, (x + 1)**2 , 2, 0, y, 0, 3])
+        >>> m = Matrix(3, 3, [1, x**2 + 2*x + 1, y, (x + 1)**2, 2, 0, y, 0, 3])
         >>> m
         Matrix([
         [         1, x**2 + 2*x + 1, y],
@@ -1910,7 +1910,7 @@ class MatrixProperties(MatrixRequired):
         >>> m.is_upper
         True
 
-        >>> m = Matrix(4, 3, [5, 1, 9, 0, 4 , 6, 0, 0, 5, 0, 0, 0])
+        >>> m = Matrix(4, 3, [5, 1, 9, 0, 4, 6, 0, 0, 5, 0, 0, 0])
         >>> m
         Matrix([
         [5, 1, 9],

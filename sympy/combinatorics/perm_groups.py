@@ -3189,10 +3189,10 @@ class PermutationGroup(Basic):
         =====
 
         If the order of a group $n$ can be factored into the distinct
-        primes $p_1, p_2, ... , p_s$ and if
+        primes $p_1, p_2, \dots , p_s$ and if
 
         .. math::
-            \forall i, j \in \{1, 2, \ldots, s \}:
+            \forall i, j \in \{1, 2, \dots, s \}:
             p_i \not \equiv 1 \pmod {p_j}
 
         holds true, there is only one group of the order $n$ which

@@ -129,7 +129,7 @@ def function_range(f, symbol, domain):
     Interval.open(0, oo)
     >>> function_range(log(x), x, S.Reals)
     Interval(-oo, oo)
-    >>> function_range(sqrt(x), x , Interval(-5, 9))
+    >>> function_range(sqrt(x), x, Interval(-5, 9))
     Interval(0, 3)
 
     Returns

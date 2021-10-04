@@ -1915,7 +1915,7 @@ def test_Mod():
     assert (x**6000%400).args[1] == 400
 
     #issue 13543
-    assert Mod(Mod(x + 1, 2) + 1 , 2) == Mod(x,2)
+    assert Mod(Mod(x + 1, 2) + 1, 2) == Mod(x, 2)
 
     assert Mod(Mod(x + 2, 4)*(x + 4), 4) == Mod(x*(x + 2), 4)
     assert Mod(Mod(x + 2, 4)*4, 4) == 0

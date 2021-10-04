@@ -1947,7 +1947,7 @@ class Lambda(Expr):
 
     It is also possible to unpack tuple arguments:
 
-    >>> f = Lambda( ((x, y), z) , x + y + z)
+    >>> f = Lambda(((x, y), z), x + y + z)
     >>> f((1, 2), 3)
     6
 
