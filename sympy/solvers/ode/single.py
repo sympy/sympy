@@ -12,7 +12,7 @@ from sympy.core import Add, S, Pow, Rational
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, _mexpand
-from sympy.core.numbers import Float, zoo
+from sympy.core.numbers import zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.core.mul import Mul
@@ -878,7 +878,6 @@ class Factorable(SingleODESolver):
         eq_orig = self.ode_problem.eq
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
-        order =self.ode_problem.order
         df = f(x).diff(x)
         self.eqs = []
         eq = eq_orig.collect(f(x), func = cancel)
