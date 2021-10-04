@@ -1688,7 +1688,7 @@ class Permutation(Atom):
         =====
 
         Any permutation can be defined as a bijective function
-        $\sigma : \{ 0, 1, ..., n-1 \} \rightarrow \{ 0, 1, ..., n-1 \}$
+        $\sigma : \{ 0, 1, \dots, n-1 \} \rightarrow \{ 0, 1, \dots, n-1 \}$
         where $n$ denotes the size of the permutation.
 
         The definition may even be extended for any set with distinctive

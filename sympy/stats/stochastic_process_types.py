@@ -1143,11 +1143,11 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return And(r > 0, A == Identity(r).as_explicit())
 
     def stationary_distribution(self, condition_set=False) -> tUnion[ImmutableMatrix, ConditionSet, Lambda]:
-        """
+        r"""
         The stationary distribution is any row vector, p, that solves p = pP,
         is row stochastic and each element in p must be nonnegative.
         That means in matrix form: :math:`(P-I)^T p^T = 0` and
-        :math:`(1, ..., 1) p = 1`
+        :math:`(1, \dots, 1) p = 1`
         where ``P`` is the one-step transition matrix.
 
         All time-homogeneous Markov Chains with a finite state space

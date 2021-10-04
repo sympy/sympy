@@ -113,10 +113,10 @@ the equation. `y(x)` must have the form -
 
 .. math:: y(x) = \sum_{i=1}^{n} \sum_{j=1}^{r_i} \frac{c_{ij}}{(x - x_i)^j} + \sum_{i=1}^{m} \frac{1}{x - \chi_i} + \sum_{i=0}^{N} d_i x^i
 
-where `x_1, x_2, ..., x_n` are non-movable poles of `a(x)`,
-`\chi_1, \chi_2, ..., \chi_m` are movable poles of `a(x)`, and the values
-of `N, n, r_1, r_2, ..., r_n` can be determined from `a(x)`. The
-coefficient vectors `(d_0, d_1, ..., d_N)` and `(c_{i1}, c_{i2}, ..., c_{i r_i})`
+where `x_1, x_2, \dots, x_n` are non-movable poles of `a(x)`,
+`\chi_1, \chi_2, \dots, \chi_m` are movable poles of `a(x)`, and the values
+of `N, n, r_1, r_2, \dots, r_n` can be determined from `a(x)`. The
+coefficient vectors `(d_0, d_1, \dots, d_N)` and `(c_{i1}, c_{i2}, \dots, c_{i r_i})`
 can be determined from `a(x)`. We will have 2 choices each of these vectors
 and part of the procedure is figuring out which of the 2 should be used
 to get the solution correctly.

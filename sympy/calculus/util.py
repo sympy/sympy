@@ -866,18 +866,18 @@ class AccumulationBounds(AtomicExpr):
 
     `\left\langle -\infty, \infty \right\rangle = \mathbb{R} \cup \{-\infty, \infty\}`
 
-    `oo` and `-oo` are added to the second and third definition respectively,
-    since if either `-oo` or `oo` is an argument, then the other one should
+    ``oo`` and ``-oo`` are added to the second and third definition respectively,
+    since if either ``-oo`` or ``oo`` is an argument, then the other one should
     be included (though not as an end point). This is forced, since we have,
-    for example, `1/AccumBounds(0, 1) = AccumBounds(1, oo)`, and the limit at
-    `0` is not one-sided. As x tends to `0-`, then `1/x -> -oo`, so `-oo`
-    should be interpreted as belonging to `AccumBounds(1, oo)` though it need
+    for example, ``1/AccumBounds(0, 1) = AccumBounds(1, oo)``, and the limit at
+    `0` is not one-sided. As `x` tends to `0-`, then `1/x \rightarrow -\infty`, so `-\infty`
+    should be interpreted as belonging to ``AccumBounds(1, oo)`` though it need
     not appear explicitly.
 
     In many cases it suffices to know that the limit set is bounded.
     However, in some other cases more exact information could be useful.
-    For example, all accumulation values of cos(x) + 1 are non-negative.
-    (AccumBounds(-1, 1) + 1 = AccumBounds(0, 2))
+    For example, all accumulation values of `\cos(x) + 1` are non-negative.
+    (``AccumBounds(-1, 1) + 1 = AccumBounds(0, 2)``)
 
     A AccumulationBounds object is defined to be real AccumulationBounds,
     if its end points are finite reals.
