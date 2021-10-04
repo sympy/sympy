@@ -57,7 +57,7 @@ def test_simplify_expr():
     assert simplify(e) == 1 + y
 
     e = (2 * (1/n - cos(n * pi)/n))/pi
-    assert simplify(e) == (-cos(pi*n) + 1)/(pi*n)*2
+    assert simplify(e) == 2*(-cos(pi*n) + 1)/(pi*n)
 
     e = integrate(1/(x**3 + 1), x).diff(x)
     assert simplify(e) == 1/(x**3 + 1)
@@ -661,7 +661,7 @@ def test_polymorphism():
 
 
 def test_issue_from_PR1599():
-    n1, n2, n3, n4 = symbols('n1 n2 n3 n4', negative=True)
+    n1 = symbols('n1', negative=True)
     assert simplify(I*sqrt(n1)) == -sqrt(-n1)
 
 

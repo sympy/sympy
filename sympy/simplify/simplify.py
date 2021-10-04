@@ -563,6 +563,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     sympy.assumptions.refine.refine : Simplification using assumptions.
     sympy.assumptions.ask.ask : Query for boolean expressions using assumptions.
     """
+    from sympy.core.mul import hide_sign
 
     def shorter(*choices):
         """
@@ -575,7 +576,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
 
     def done(e):
         rv = e.doit() if doit else e
-        return shorter(rv, collect_abs(rv))
+        rv = shorter(rv, collect_abs(rv))
+        return shorter(rv, hide_sign(rv, force=True))
 
     expr = sympify(expr, rational=rational)
     kwargs = dict(
@@ -592,7 +594,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     if _eval_simplify is not None:
         return _eval_simplify(**kwargs)
 
-    original_expr = expr = collect_abs(signsimp(expr))
+    original_expr = expr = hide_sign(collect_abs(signsimp(expr)), force=True)
 
     if not isinstance(expr, Basic) or not expr.args:  # XXX: temporary hack
         return expr
@@ -673,7 +675,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
                 # Still a Piecewise?
                 if expr.has(Piecewise):
                     # Try factor common terms
-                    expr = shorter(expr, factor_terms(expr))
+                    expr = shorter(expr, factor_terms(expr, sign=False))
                     # As all expressions have been simplified above with the
                     # complete simplify, nothing more needs to be done here
                     return expr
@@ -745,6 +747,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         if d != 0:
             expr = signsimp(-n/(-d))
 
+    expr = hide_sign(expr)
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
 

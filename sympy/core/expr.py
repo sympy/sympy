@@ -1156,7 +1156,7 @@ class Expr(Basic, EvalfMixin):
 
         if order is None and self.is_Add:
             # Spot the special case of Add(Number, Mul(Number, expr)) with the
-            # first number positive and thhe second number nagative
+            # first number positive and the second number negative
             key = lambda x:not isinstance(x, (Number, NumberSymbol))
             add_args = sorted(Add.make_args(self), key=key)
             if (len(add_args) == 2
@@ -2284,16 +2284,23 @@ class Expr(Basic, EvalfMixin):
         elif self.is_Add:
             cs, ps = self.primitive()
             # assert cs >= 1
-            if c.is_Number and c is not S.NegativeOne:
-                # assert c != 1 (handled at top)
-                if cs is not S.One:
-                    if c.is_negative:
-                        xc = -(cs.extract_multiplicatively(-c))
-                    else:
-                        xc = cs.extract_multiplicatively(c)
-                    if xc is not None:
-                        return xc*ps  # rely on 2-arg Mul to restore Add
-                return  # |c| != 1 can only be extracted from cs
+            if c.is_Number:
+                if c is S.NegativeOne:
+                    neg_args = sum(1 for _ in self.args if _coeff_isneg(_))
+                    xs = 2*neg_args - len(self.args)  # excess negatives
+                    neg = (xs > 0) if xs else bool(
+                        self.sort_key() < (-self).sort_key())
+                    if neg:
+                        return -self
+                else:
+                    # assert c != 1 (handled at top)
+                    if cs is not S.One:
+                        if c.is_negative:
+                            xc = -(cs.extract_multiplicatively(-c))
+                        else:
+                            xc = cs.extract_multiplicatively(c)
+                        if xc is not None:
+                            return xc*ps  # rely on 2-arg Mul to restore Add
             if c == ps:
                 return cs
             # check args of ps
@@ -2483,31 +2490,28 @@ class Expr(Basic, EvalfMixin):
         negative_self = -self
         if self == negative_self:
             return False  # e.g. zoo*x == -zoo*x
-        self_has_minus = (self.extract_multiplicatively(-1) is not None)
-        negative_self_has_minus = (
-            (negative_self).extract_multiplicatively(-1) is not None)
-        if self_has_minus != negative_self_has_minus:
-            return self_has_minus
-        else:
-            if self.is_Add:
-                # We choose the one with less arguments with minus signs
-                all_args = len(self.args)
-                negative_args = len([False for arg in self.args if arg.could_extract_minus_sign()])
-                positive_args = all_args - negative_args
-                if positive_args > negative_args:
-                    return False
-                elif positive_args < negative_args:
-                    return True
-            elif self.is_Mul:
-                # We choose the one with an odd number of minus signs
-                num, den = self.as_numer_denom()
-                args = Mul.make_args(num) + Mul.make_args(den)
+        if self.is_Add:
+            rv = self._excess_neg_args
+            if rv is not None:
+                return rv
+            # in case of tie, use canonical first arg, not self.args[0]
+            # since arg sorting will affect that
+            return bool(self.sort_key() < negative_self.sort_key())
+        elif self.is_Mul:
+            # choose the one with an odd number of minus signs
+            def can(args):
                 arg_signs = [arg.could_extract_minus_sign() for arg in args]
                 negative_args = list(filter(None, arg_signs))
                 return len(negative_args) % 2 == 1
-
-            # As a last resort, we choose the one with greater value of .sort_key()
-            return bool(self.sort_key() < negative_self.sort_key())
+            n, d = self.as_numer_denom()
+            if n == 1:
+                return can(Mul.make_args(d))
+            elif d == 1:
+                return can(Mul.make_args(n))
+            return can(Mul.make_args(n) + Mul.make_args(d))
+        elif self.is_Number:
+            return bool(self < 0)
+        return False
 
     def extract_branch_factor(self, allow_half=False):
         """
@@ -4108,7 +4112,7 @@ class ExprBuilder:
 from .mul import Mul
 from .add import Add
 from .power import Pow
-from .function import Function, _derivative_dispatch
+from .function import Function, _derivative_dispatch, _coeff_isneg
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Integer, Rational

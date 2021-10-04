@@ -163,8 +163,9 @@ class erf(Function):
             return arg
 
         # Try to pull out factors of -1
-        if arg.could_extract_minus_sign():
-            return -cls(-arg)
+        xm = arg.extract_multiplicatively(S.NegativeOne)
+        if xm is not None:
+            return -cls(xm)
 
     @staticmethod
     @cacheit
@@ -383,8 +384,9 @@ class erfc(Function):
             return -arg
 
         # Try to pull out factors of -1
-        if arg.could_extract_minus_sign():
-            return 2 - cls(-arg)
+        xm = arg.extract_multiplicatively(S.NegativeOne)
+        if xm is not None:
+            return 2 - cls(xm)
 
     @staticmethod
     @cacheit

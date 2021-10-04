@@ -1383,7 +1383,7 @@ def test_issue_20360():
     n = symbols("n", integer=True)
     lam = pi * (n - S.Half)
     eq = integrate(exp(lam * tau), (tau, 0, t))
-    assert simplify(eq) == (2*exp(pi*t*(2*n - 1)/2) - 2)/(pi*(2*n - 1))
+    assert simplify(eq) == (1 - exp(pi*t*(2*n - 1)/2))/(pi*(2*n - 1))*-2
 
 
 def test_piecewise_eval():

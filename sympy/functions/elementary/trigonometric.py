@@ -3,7 +3,8 @@ from typing import Tuple
 from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
 from sympy.core.expr import Expr
-from sympy.core.function import Function, ArgumentIndexError, PoleError, expand_mul
+from sympy.core.function import (Function, ArgumentIndexError, PoleError,
+    expand_mul, _more_minus)
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool
 from sympy.core.numbers import igcdex, Rational, pi, Integer
 from sympy.core.relational import Ne
@@ -302,7 +303,7 @@ class sin(TrigonometricFunction):
         elif isinstance(arg, SetExpr):
             return arg._eval_func(cls)
 
-        if arg.could_extract_minus_sign():
+        if _more_minus(arg):
             return -cls(-arg)
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
@@ -592,7 +593,7 @@ class cos(TrigonometricFunction):
         if arg.is_extended_real and arg.is_finite is False:
             return AccumBounds(-1, 1)
 
-        if arg.could_extract_minus_sign():
+        if _more_minus(arg):
             return cls(-arg)
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
@@ -1043,7 +1044,7 @@ class tan(TrigonometricFunction):
             else:
                 return AccumBounds(tan(min), tan(max))
 
-        if arg.could_extract_minus_sign():
+        if _more_minus(arg):
             return -cls(-arg)
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
@@ -1368,7 +1369,7 @@ class cot(TrigonometricFunction):
         if isinstance(arg, AccumBounds):
             return -tan(arg + S.Pi/2)
 
-        if arg.could_extract_minus_sign():
+        if _more_minus(arg):
             return -cls(-arg)
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
@@ -1624,7 +1625,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
 
     @classmethod
     def eval(cls, arg):
-        if arg.could_extract_minus_sign():
+        if _more_minus(arg):
             if cls._is_even:
                 return cls(-arg)
             if cls._is_odd:
@@ -1991,7 +1992,7 @@ class sinc(Function):
         if arg is S.ComplexInfinity:
             return S.NaN
 
-        if arg.could_extract_minus_sign():
+        if _more_minus(arg):
             return cls(-arg)
 
         pi_coeff = _pi_coeff(arg)
@@ -2178,13 +2179,15 @@ class asin(InverseTrigonometricFunction):
         if arg is S.ComplexInfinity:
             return S.ComplexInfinity
 
-        if arg.could_extract_minus_sign():
+        if _more_minus(arg):
             return -cls(-arg)
 
         if arg.is_number:
             asin_table = cls._asin_table()
             if arg in asin_table:
                 return asin_table[arg]
+            if -arg in asin_table:
+                return -asin_table[-arg]
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
@@ -2613,13 +2616,15 @@ class atan(InverseTrigonometricFunction):
             from sympy.calculus.util import AccumBounds
             return AccumBounds(-S.Pi/2, S.Pi/2)
 
-        if arg.could_extract_minus_sign():
+        if _more_minus(arg):
             return -cls(-arg)
 
         if arg.is_number:
             atan_table = cls._atan_table()
             if arg in atan_table:
                 return atan_table[arg]
+            if -arg in atan_table:
+                return -atan_table[-arg]
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
         if i_coeff is not None:
@@ -2806,13 +2811,17 @@ class acot(InverseTrigonometricFunction):
         if arg is S.ComplexInfinity:
             return S.Zero
 
-        if arg.could_extract_minus_sign():
+        if _more_minus(arg):
             return -cls(-arg)
 
         if arg.is_number:
             atan_table = cls._atan_table()
+            ang = None
             if arg in atan_table:
                 ang = pi/2 - atan_table[arg]
+            elif -arg in atan_table:
+                ang = pi/2 + atan_table[-arg]
+            if ang is not None:
                 if ang > pi/2: # restrict to (-pi/2,pi/2]
                     ang -= pi
                 return ang
@@ -3161,13 +3170,15 @@ class acsc(InverseTrigonometricFunction):
         if arg in [S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
             return S.Zero
 
-        if arg.could_extract_minus_sign():
+        if _more_minus(arg):
             return -cls(-arg)
 
         if arg.is_number:
             acsc_table = cls._acsc_table()
             if arg in acsc_table:
                 return acsc_table[arg]
+            if -arg in acsc_table:
+                return -acsc_table[-arg]
 
         if isinstance(arg, csc):
             ang = arg.args[0]

@@ -1319,8 +1319,8 @@ def test_issue_4492():
     assert simplify(integrate(x**2 * sqrt(5 - x**2), x)) == Piecewise(
         (I*(2*x**5 - 15*x**3 + 25*x - 25*sqrt(x**2 - 5)*acosh(sqrt(5)*x/5)) /
             (8*sqrt(x**2 - 5)), 1 < Abs(x**2)/5),
-        ((-2*x**5 + 15*x**3 - 25*x + 25*sqrt(-x**2 + 5)*asin(sqrt(5)*x/5)) /
-            (8*sqrt(-x**2 + 5)), True))
+        ((2*x**5 - 15*x**3 + 25*x - 25*sqrt(5 - x**2)*asin(sqrt(5)*x/5)) /
+            (8*sqrt(5 - x**2))/-1, True))
 
 
 def test_issue_2708():

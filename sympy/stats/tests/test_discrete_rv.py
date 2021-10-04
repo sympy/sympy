@@ -146,8 +146,8 @@ def test_zeta():
     s = S(5)
     x = Zeta('x', s)
     assert E(x) == zeta(s-1) / zeta(s)
-    assert simplify(variance(x)) == (
-        zeta(s) * zeta(s-2) - zeta(s-1)**2) / zeta(s)**2
+    assert simplify(variance(x)) == 8100*(
+        zeta(s) * zeta(s-2) - zeta(s-1)**2) / (8100*zeta(s)**2)
 
 
 def test_discrete_probability():

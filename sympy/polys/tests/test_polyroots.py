@@ -170,12 +170,12 @@ def test_roots_cubic():
     assert roots_cubic(Poly(2*x**3 - 3*x**2 - 3*x - 1, x))[0] == \
          S.Half + 3**Rational(1, 3)/2 + 3**Rational(2, 3)/2
     eq = -x**3 + 2*x**2 + 3*x - 2
-    assert roots(eq, trig=True, multiple=True) == \
-           roots_cubic(Poly(eq, x), trig=True) == [
-        Rational(2, 3) + 2*sqrt(13)*cos(acos(8*sqrt(13)/169)/3)/3,
-        -2*sqrt(13)*sin(-acos(8*sqrt(13)/169)/3 + pi/6)/3 + Rational(2, 3),
-        -2*sqrt(13)*cos(-acos(8*sqrt(13)/169)/3 + pi/3)/3 + Rational(2, 3),
-        ]
+    r23 = Rational(2, 3)
+    assert set(roots(eq, trig=True, multiple=True)) == \
+           set(roots_cubic(Poly(eq, x), trig=True)) == set([
+        r23 + 2*sqrt(13)*cos(acos(8*sqrt(13)/169)/3)/3,
+        -2*sqrt(13)*sin(acos(8*sqrt(13)/169)/3 + pi/6)/3 + r23,
+        -2*sqrt(13)*cos(acos(8*sqrt(13)/169)/3 + pi/3)/3 + r23])
 
 
 def test_roots_quartic():

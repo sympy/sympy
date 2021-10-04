@@ -59,6 +59,49 @@ import mpmath.libmp as mlib
 import inspect
 from collections import Counter
 
+
+
+def _more_minus(expr):
+    """return True if there is a leading negative sign or
+    if there are more negated terms than positive. In case of
+    a tie, the form ``expr`` will return True if its first
+    ordered argument is negative.
+
+    EXAMPLES
+    ========
+
+    >>> from sympy.core.function import _more_minus as f
+    >>> from sympy import Dummy
+    >>> from sympy.abc import x
+    >>> f(x)
+    False
+    >>> f(-x)
+    True
+    >>> f(Dummy(negative=True))
+    False
+    >>> f(-x - 1)
+    True
+    >>> f(x - 1)
+    True
+    >>> f(1 - x)
+    False
+    """
+    # internal use -- expects Basic expr
+    if isinstance(expr, Add):
+        rv = expr._excess_neg_args
+        if rv is None:
+            e = expr.as_ordered_terms(None)[0]
+            n = (-expr).as_ordered_terms(None)[0]
+            t = [_coeff_isneg(i) for i in (e, n)]
+            if len(set(t)) == 1:
+                small = next(ordered((e, n)))
+                return small not in expr.args
+            return t[0] > t[1]
+        else:
+            return rv
+    return _coeff_isneg(expr)
+
+
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
 
@@ -85,7 +128,7 @@ def _coeff_isneg(a):
     >>> _coeff_isneg(sqrt(2)*A)
     False
     """
-
+    # internal use -- expects Basic expr
     if a.is_MatMul:
         a = a.args[0]
     if a.is_Mul:

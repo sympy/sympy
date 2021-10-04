@@ -149,8 +149,8 @@ change/remain the same.
   >>> time_derivative(electric_potential, R)
   0
   >>> time_derivative(electric_potential, R1).simplify()
-  2*(R1_x*cos(q(t)) - R1_y*sin(q(t)))*(3*R1_x**2*cos(2*q(t))/2 -
-  R1_x**2/2 - 3*R1_x*R1_y*sin(2*q(t)) - 3*R1_y**2*cos(2*q(t))/2 -
+  -2*(R1_x*cos(q(t)) - R1_y*sin(q(t)))*(-3*R1_x**2*cos(2*q(t))/2 +
+  R1_x**2/2 + 3*R1_x*R1_y*sin(2*q(t)) + 3*R1_y**2*cos(2*q(t))/2 +
   R1_y**2/2)*Derivative(q(t), t)
 
 Field operators and other related functions

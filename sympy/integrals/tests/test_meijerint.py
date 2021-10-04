@@ -112,7 +112,7 @@ def test_recursive():
     assert simplify(integrate(exp(-(x - a - b - c)**2), (x, 0, oo), meijerg=True)) == \
         sqrt(pi)/2*(1 + erf(a + b + c))
     assert simplify(integrate(exp(-(x + a + b + c)**2), (x, 0, oo), meijerg=True)) == \
-        sqrt(pi)/2*(1 - erf(a + b + c))
+        -sqrt(pi)/2*(erf(a + b + c) - 1)
 
 
 @slow
@@ -622,7 +622,7 @@ def test_messy():
     from sympy import (laplace_transform, Si, Shi, Chi, atan, Piecewise,
                        acoth, E1, besselj, acosh, asin, And, re,
                        fourier_transform)
-    assert laplace_transform(Si(x), x, s) == ((-atan(s) + pi/2)/s, 0, True)
+    assert laplace_transform(Si(x), x, s) == ((pi - 2*atan(s))/s/2, 0, True)
 
     assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, s > 1)
 

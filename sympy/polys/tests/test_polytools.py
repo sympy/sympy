@@ -61,7 +61,7 @@ from sympy import (
 from sympy.core.add import Add
 from sympy.core.basic import _aresame
 from sympy.core.compatibility import iterable
-from sympy.core.mul import _keep_coeff
+from sympy.core.mul import _keep_coeff, _negate
 from sympy.core.power import Pow
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
@@ -3337,6 +3337,9 @@ def test_keep_coeff():
         ) == Mul(S.Half, a, evaluate=False)
     assert _keep_coeff(S.Half, a, clear=False
         ) == Add(1, Mul(S.Half, p, evaluate=False), evaluate=False)
+    assert _keep_coeff(S.NegativeOne, (1 - x)/x, clear=False
+        ) == (1 - x)/x*-1
+    assert _negate((1 - x)/x) == (x - 1)/x
 
 
 def test_poly_matching_consistency():

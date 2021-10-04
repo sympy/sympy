@@ -2068,6 +2068,18 @@ def prod(a, start=1):
     return reduce(operator.mul, a, start)
 
 
+def hide_sign(expr, force=False):
+    if isinstance(expr, Mul):
+        c, e = expr.as_coeff_Mul()
+        if c is S.NegativeOne:
+            if force:
+                return _negate(e)
+            n, d = e.as_numer_denom()
+            if isinstance(n, Add):
+                return -n/d
+    return expr
+
+
 def _keep_coeff(coeff, factors, clear=True, sign=False):
     """Return ``coeff*factors`` unevaluated if necessary.
 
@@ -2104,10 +2116,10 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
         return coeff
     if coeff is S.One:
         return factors
-    elif coeff is S.NegativeOne and not sign:
-        return -factors
-    elif factors.is_Add:
-        if not clear and coeff.is_Rational and coeff.q != 1:
+    if factors.is_Add:
+        if coeff is S.NegativeOne and sign == False:
+            return -factors
+        elif not clear and coeff.is_Rational and coeff.q != 1:
             args = [i.as_coeff_Mul() for i in factors.args]
             args = [(_keep_coeff(c, coeff), m) for c, m in args]
             if any(c.is_Integer for c, _ in args):
@@ -2128,6 +2140,25 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
         if m.is_Number and not factors.is_Number:
             m = Mul._from_args((coeff, factors))
         return m
+
+def _negate(e):
+    # negate by pushing sign on an Add factor of e
+    if isinstance(e, Mul):
+        margs = list(e.args)
+        for i, a in enumerate(margs):
+            if isinstance(a, Add):
+                margs[i] = -a
+                break
+        else:
+            if margs[0].is_Number:
+                margs[0] *= S.NegativeOne
+                if margs[0] == 1:
+                    margs.pop(0)
+            else:
+                margs.insert(0, S.NegativeOne)
+        return Mul._from_args(margs)
+    return -e
+
 
 def expand_2arg(e):
     from sympy.simplify.simplify import bottom_up

@@ -493,8 +493,8 @@ def test_solve_ics():
         {Eq(f(x), 0), Eq(f(x), C2*x + x**3/6)}
 
     K, r, f0 = symbols('K r f0')
-    sol = Eq(f(x), K*f0*exp(r*x)/((-K + f0)*(f0*exp(r*x)/(-K + f0) - 1)))
-    assert (dsolve(Eq(f(x).diff(x), r * f(x) * (1 - f(x) / K)), f(x), ics={f(0): f0})) == sol
+    sol = Eq(f(x), K*f0*exp(r*x)/((K - f0)*(f0*exp(r*x)/(K - f0) + 1)))
+    assert dsolve(Eq(f(x).diff(x), r * f(x) * (1 - f(x) / K)), f(x), ics={f(0): f0}) == sol
 
 
     #Order dependent issues Refer to PR #16098
@@ -652,7 +652,7 @@ def test_undetermined_coefficients_match():
         exp(x)*sin(x), sin(x), x*exp(x)*sin(x), x*cos(x), x*cos(x)*exp(x),
         x*sin(x), cos(x)*exp(x), x**2*exp(x)*sin(x)}}
     assert _undetermined_coefficients_match(4*x*sin(x - 2), x) == {
-        'trialset': {x*cos(x - 2), x*sin(x - 2), cos(x - 2), sin(x - 2)},
+        'trialset': {x*cos(2 - x), x*sin(2 - x), cos(2 - x), sin(2 - x)},
         'test': True,
     }
     assert _undetermined_coefficients_match(2**x*x, x) == \
@@ -720,6 +720,7 @@ def test_undetermined_coefficients_match():
         {'test': True, 'trialset': {cos(x), cos(3*x), sin(x), sin(3*x)}}
     assert _undetermined_coefficients_match(cos(x**2), x) == {'test': False}
     assert _undetermined_coefficients_match(2**(x**2), x) == {'test': False}
+
 
 def test_issue_4785():
     from sympy.abc import A

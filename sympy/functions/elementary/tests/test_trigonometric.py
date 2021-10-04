@@ -136,9 +136,6 @@ def test_sin():
     assert sin(qn).is_rational is False
     assert sin(q).is_rational is None  # issue 8653
 
-    assert isinstance(sin( re(x) - im(y)), sin) is True
-    assert isinstance(sin(-re(x) + im(y)), sin) is False
-
     assert sin(SetExpr(Interval(0, 1))) == SetExpr(ImageSet(Lambda(x, sin(x)),
                        Interval(0, 1)))
 
@@ -768,7 +765,7 @@ def test_cot_expansion():
     assert cot(x + y).expand(trig=True).together() == (
         (cot(x)*cot(y) - 1)/(cot(x) + cot(y)))
     assert cot(x - y).expand(trig=True).together() == (
-        cot(x)*cot(-y) - 1)/(cot(x) + cot(-y))
+        -cot(x)*cot(y) - 1)/(cot(x) - cot(y))
     assert cot(x + y + z).expand(trig=True).together() == (
         (cot(x)*cot(y)*cot(z) - cot(x) - cot(y) - cot(z))/
         (-1 + cot(x)*cot(y) + cot(x)*cot(z) + cot(y)*cot(z)))
@@ -1909,7 +1906,7 @@ def test_trig_period():
     assert sec(x).period() == 2*pi
     assert csc(x).period() == 2*pi
     assert sin(2*x).period() == pi
-    assert cot(4*x - 6).period() == pi/4
+    assert cot(6 - 4*x).period() == pi/4
     assert cos((-3)*x).period() == pi*Rational(2, 3)
     assert cos(x*y).period(x) == 2*pi/abs(y)
     assert sin(3*x*y + 2*pi).period(y) == 2*pi/abs(3*x)

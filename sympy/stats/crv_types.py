@@ -1258,7 +1258,7 @@ def ExGaussian(name, mean, std, rate):
                                          2
 
     >>> cdf(X)(z)
-    -(erf(sqrt(2)*(-lamda**2*sigma**2 + lamda*(-mu + z))/(2*lamda*sigma))/2 + 1/2)*exp(lamda**2*sigma**2/2 - lamda*(-mu + z)) + erf(sqrt(2)*(-mu + z)/(2*sigma))/2 + 1/2
+    -(1/2 - erf(sqrt(2)*(lamda**2*sigma**2 - lamda*(-mu + z))/(2*lamda*sigma))/2)*exp(lamda**2*sigma**2/2 - lamda*(-mu + z)) - erf(sqrt(2)*(mu - z)/(2*sigma))/2 + 1/2
 
     >>> E(X)
     (lamda*mu + 1)/lamda
@@ -2414,7 +2414,7 @@ def LogCauchy(name, mu, sigma):
     1/(5*pi*z*((log(z) - 2)**2 + 1/25))
 
     >>> cdf(X)(z)
-    atan(5*log(z) - 10)/pi + 1/2
+    -atan(10 - 5*log(z))/pi + 1/2
 
     References
     ==========
@@ -2675,7 +2675,7 @@ def LogitNormal(name, mu, s):
     sqrt(2)*exp(-(-mu + log(z/(1 - z)))**2/(2*s**2))/(2*sqrt(pi)*s*z*(1 - z))
 
     >>> cdf(X)(z)
-    erf(sqrt(2)*(-mu + log(z/(1 - z)))/(2*s))/2 + 1/2
+    1/2 - erf(sqrt(2)*(mu - log(z/(1 - z)))/(2*s))/2
 
 
     References
@@ -3176,13 +3176,14 @@ def Normal(name, mean, std):
     sqrt(2)*exp(-(-mu + z)**2/(2*sigma**2))/(2*sqrt(pi)*sigma)
 
     >>> C = simplify(cdf(X))(z) # it needs a little more help...
-    >>> pprint(C, use_unicode=False)
-       /  ___          \
-       |\/ 2 *(-mu + z)|
-    erf|---------------|
-       \    2*sigma    /   1
-    -------------------- + -
-             2             2
+    >>> from sympy import signsimp
+    >>> pprint(signsimp(C), use_unicode=False)
+            /  ___         \
+            |\/ 2 *(mu - z)|
+         erf|--------------|
+     1      \   2*sigma    /
+     - - -------------------
+     2            2
 
     >>> quantile(X)(p)
     mu + sqrt(2)*sigma*erfinv(2*p - 1)

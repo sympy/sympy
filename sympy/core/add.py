@@ -375,6 +375,20 @@ class Add(Expr, AssocOp):
         return 3, 1, cls.__name__
 
     @property
+    def _excess_neg_args(self):
+        from sympy.core.function import _coeff_isneg
+        # choose the one with more terms with extractable -1s
+        all_args = len(self.args)
+        negative_args = sum(1 for _ in self.args
+            if _coeff_isneg(_))#_.could_extract_minus_sign())
+        positive_args = all_args - negative_args
+        if positive_args > negative_args:
+            return False
+        elif positive_args < negative_args:
+            return True
+
+
+    @property
     def kind(self):
         k = attrgetter('kind')
         kinds = map(k, self.args)

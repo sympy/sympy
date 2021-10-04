@@ -1290,6 +1290,10 @@ class acosh(InverseHyperbolicFunction):
                 if arg.is_extended_real:
                     return cst_table[arg]*S.ImaginaryUnit
                 return cst_table[arg]
+            if -arg in cst_table:
+                if arg.is_extended_real:
+                    return cst_table[-arg]*S.ImaginaryUnit
+                return cst_table[-arg]
 
         if arg is S.ComplexInfinity:
             return S.ComplexInfinity

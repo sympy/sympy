@@ -311,8 +311,8 @@ class SeqBase(Basic):
         Returns list of coefficients ``[b(1), b(2), ...]`` corresponding to the
         recurrence relation ``x(n) = b(1)*x(n-1) + b(2)*x(n-2) + ...``
         Returns ``[]`` if no recurrence is found.
-        If gfvar is specified, also returns ordinary generating function as a
-        function of gfvar.
+        If ``gfvar`` is specified, also returns ordinary generating function as a
+        function of ``gfvar``.
 
         Examples
         ========
@@ -331,9 +331,9 @@ class SeqBase(Basic):
         [1, 1]
         >>> sequence(x+y*(-2)**(-n), (n, 0, oo)).find_linear_recurrence(30)
         [1/2, 1/2]
-        >>> sequence(3*5**n + 12).find_linear_recurrence(20,gfvar=x)
-        ([6, -5], 3*(5 - 21*x)/((x - 1)*(5*x - 1)))
-        >>> sequence(lucas(n)).find_linear_recurrence(15,gfvar=x)
+        >>> sequence(3*5**n + 12).find_linear_recurrence(20, gfvar=x)
+        ([6, -5], (15 - 63*x)/((x - 1)*(5*x - 1)))
+        >>> sequence(lucas(n)).find_linear_recurrence(15, gfvar=x)
         ([1, 1], (x - 2)/(x**2 + x - 1))
         """
         from sympy.matrices import Matrix

@@ -1557,7 +1557,7 @@ def test_exclude():
     assert solve(eqs, exclude=[Vplus, s, C]) in [[{
         Vminus: Vplus,
         V1: Vout/2 + Vplus/2 + sqrt((Vout - 5*Vplus)*(Vout - Vplus))/2,
-        R: (Vout - 3*Vplus - sqrt(Vout**2 - 6*Vout*Vplus + 5*Vplus**2))/(2*C*Vplus*s),
+        R: -(Vout - 3*Vplus - sqrt(Vout**2 - 6*Vout*Vplus + 5*Vplus**2))/(-2*C*Vplus*s),
         Rf: Ri*(Vout - Vplus)/Vplus,
     }, {
         Vminus: Vplus,

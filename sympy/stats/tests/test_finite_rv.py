@@ -275,7 +275,7 @@ def test_binomial_symbolic():
     t = Symbol('t')
 
     assert simplify(E(X)) == n*p == simplify(moment(X, 1))
-    assert simplify(variance(X)) == n*p*(1 - p) == simplify(cmoment(X, 2))
+    assert simplify(variance(X)) == -n*p*(p - 1) == simplify(cmoment(X, 2))
     assert cancel(skewness(X) - (1 - 2*p)/sqrt(n*p*(1 - p))) == 0
     assert cancel((kurtosis(X)) - (3 + (1 - 6*p*(1 - p))/(n*p*(1 - p)))) == 0
     assert characteristic_function(X)(t) == p ** 2 * exp(2 * I * t) + 2 * p * (-p + 1) * exp(I * t) + (-p + 1) ** 2

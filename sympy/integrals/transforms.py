@@ -1218,7 +1218,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     >>> from sympy.functions import DiracDelta, exp
     >>> laplace_transform(t**a, t, s)
     (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
-    >>> laplace_transform(DiracDelta(t)-a*exp(-a*t),t,s)
+    >>> laplace_transform(DiracDelta(t) - a*exp(-a*t),t,s)
     (-a/(a + s) + 1, 0, Abs(arg(a)) <= pi/2)
 
     See Also

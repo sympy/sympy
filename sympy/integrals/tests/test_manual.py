@@ -233,16 +233,16 @@ def test_manualintegrate_special():
     f, F = exp(1 + 2*x - x**2), sqrt(pi)*exp(2)*erf(x - 1)/2
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
     f = sin(x**2 + 4*x + 1)
-    F = (sqrt(2)*sqrt(pi)*(-sin(3)*fresnelc(sqrt(2)*(2*x + 4)/(2*sqrt(pi))) +
-        cos(3)*fresnels(sqrt(2)*(2*x + 4)/(2*sqrt(pi))))/2)
-    assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+    F = sqrt(2)*sqrt(pi)*(-sin(3)*fresnelc(sqrt(2)*(2*x + 4)/(
+    2*sqrt(pi))) + cos(3)*fresnels(sqrt(2)*(2*x + 4)/(2*sqrt(pi))))/2
+    assert manualintegrate(f, x) == F and F.diff(x).simplify().equals(f)
     f, F = cos(4*x**2), sqrt(2)*sqrt(pi)*fresnelc(2*sqrt(2)*x/sqrt(pi))/4
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
     f, F = sin(3*x + 2)/x, sin(2)*Ci(3*x) + cos(2)*Si(3*x)
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
     f, F = sinh(3*x - 2)/x, -sinh(2)*Chi(3*x) + cosh(2)*Shi(3*x)
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
-    f, F = 5*cos(2*x - 3)/x, 5*cos(3)*Ci(2*x) + 5*sin(3)*Si(2*x)
+    f, F = 5*cos(2*x - 3)/x, 5*cos(3)*Ci(-2*x) + 5*sin(3)*Si(2*x)
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
     f, F = cosh(x/2)/x, Chi(x/2)
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
