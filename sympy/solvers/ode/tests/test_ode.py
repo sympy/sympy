@@ -96,21 +96,21 @@ def test_dsolve_options():
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear',
         '1st_linear_Integral', 'Bernoulli', 'Bernoulli_Integral',
         'almost_linear', 'almost_linear_Integral', 'best', 'best_hint',
-        'default', 'lie_group',
+        'default', 'factorable', 'lie_group',
         'nth_linear_euler_eq_homogeneous', 'order',
         'separable', 'separable_Integral']
     Integral_keys = ['1st_exact_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear_Integral',
         'Bernoulli_Integral', 'almost_linear_Integral', 'best', 'best_hint', 'default',
-        'nth_linear_euler_eq_homogeneous',
+        'factorable', 'nth_linear_euler_eq_homogeneous',
         'order', 'separable_Integral']
     assert sorted(a.keys()) == keys
     assert a['order'] == ode_order(eq, f(x))
     assert a['best'] == Eq(f(x), C1/x)
     assert dsolve(eq, hint='best') == Eq(f(x), C1/x)
-    assert a['default'] == 'separable'
-    assert a['best_hint'] == 'separable'
+    assert a['default'] == 'factorable'
+    assert a['best_hint'] == 'factorable'
     assert not a['1st_exact'].has(Integral)
     assert not a['separable'].has(Integral)
     assert not a['1st_homogeneous_coeff_best'].has(Integral)
@@ -126,8 +126,8 @@ def test_dsolve_options():
     assert b['order'] == ode_order(eq, f(x))
     assert b['best'] == Eq(f(x), C1/x)
     assert dsolve(eq, hint='best', simplify=False) == Eq(f(x), C1/x)
-    assert b['default'] == 'separable'
-    assert b['best_hint'] == '1st_linear'
+    assert b['default'] == 'factorable'
+    assert b['best_hint'] == 'factorable'
     assert a['separable'] != b['separable']
     assert a['1st_homogeneous_coeff_subs_dep_div_indep'] != \
         b['1st_homogeneous_coeff_subs_dep_div_indep']
@@ -896,7 +896,7 @@ def test_2nd_power_series_ordinary():
     assert checkodesol(eq, sol) == (True, 0)
 
     eq = (1 + x**2)*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) -2*f(x)
-    assert classify_ode(eq) == ('2nd_hypergeometric', '2nd_hypergeometric_Integral',
+    assert classify_ode(eq) == ('factorable', '2nd_hypergeometric', '2nd_hypergeometric_Integral',
     '2nd_power_series_ordinary')
 
     sol = Eq(f(x), C2*(-x**4/3 + x**2 + 1) + C1*x + O(x**6))
@@ -904,7 +904,7 @@ def test_2nd_power_series_ordinary():
     assert checkodesol(eq, sol) == (True, 0)
 
     eq = f(x).diff(x, 2) + x*(f(x).diff(x)) + f(x)
-    assert classify_ode(eq) == ('2nd_power_series_ordinary',)
+    assert classify_ode(eq) == ('factorable', '2nd_power_series_ordinary',)
     sol = Eq(f(x), C2*(x**4/8 - x**2/2 + 1) + C1*x*(-x**2/3 + 1) + O(x**6))
     assert dsolve(eq) == sol
     # FIXME: checkodesol fails for this solution...
