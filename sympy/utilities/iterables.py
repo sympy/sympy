@@ -2422,15 +2422,15 @@ def generate_oriented_forest(n):
 
 
 def minlex(seq, directed=True, key=None):
-    """
+    r"""
     Return the rotation of the sequence in which the lexically smallest
-    elements appear first, e.g. `cba ->acb`.
+    elements appear first, e.g. `cba \rightarrow acb`.
 
     The sequence returned is a tuple, unless the input sequence is a string
     in which case a string is returned.
 
     If ``directed`` is False then the smaller of the sequence and the
-    reversed sequence is returned, e.g. `cba -> abc`.
+    reversed sequence is returned, e.g. `cba \rightarrow abc`.
 
     If ``key`` is not None then it is used to extract a comparison key from each element in iterable.
 

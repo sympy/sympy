@@ -1781,11 +1781,11 @@ class HolonomicFunction:
         Explanation
         ===========
 
-        The path should be given as a list :math:`[x_1, x_2, ... x_n]`. The numerical
+        The path should be given as a list :math:`[x_1, x_2, \dots x_n]`. The numerical
         values will be computed at each point in this order
-        :math:`x_1 --> x_2 --> x_3 ... --> x_n`.
+        :math:`x_1 \rightarrow x_2 \rightarrow x_3 \dots \rightarrow x_n`.
 
-        Returns values of the function at :math:`x_1, x_2, ... x_n` in a list.
+        Returns values of the function at :math:`x_1, x_2, \dots x_n` in a list.
 
         Examples
         ========
@@ -1887,7 +1887,7 @@ class HolonomicFunction:
         ===========
 
         Returns an answer of the form:
-        `a_1 \cdot x^{b_1} \cdot{hyper()} + a_2 \cdot x^{b_2} \cdot{hyper()} ...`
+        `a_1 \cdot x^{b_1} \cdot{hyper()} + a_2 \cdot x^{b_2} \cdot{hyper()} \dots`
 
         This is very useful as one can now use ``hyperexpand`` to find the
         symbolic expressions/functions.

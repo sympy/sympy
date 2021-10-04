@@ -541,9 +541,9 @@ class CosetTable(DefaultPrinting):
 
         The unfortunate situation when the scan completes but not correctly,
         then ``coincidence`` routine is run. i.e when for some `i` with
-        `1 \le i \le r+1`, we have `w=st` with `s=x_1*x_2 ... x_{i-1}`,
-        `t=x_i*x_{i+1} ... x_r`, and `\beta = \alpha^s` and
-        `\gamma = \alph^{t-1}` are defined but unequal. This means that
+        `1 \le i \le r+1`, we have `w=st` with `s = x_1 x_2 \dots x_{i-1}`,
+        `t = x_i x_{i+1} \dots x_r`, and `\beta = \alpha^s` and
+        `\gamma = \alpha^{t-1}` are defined but unequal. This means that
         `\beta` and `\gamma` represent the same coset of `H` in `G`. Described
         on Pg. 156 [1]. ``rep``
 
