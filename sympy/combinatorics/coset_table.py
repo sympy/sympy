@@ -755,7 +755,7 @@ class CosetTable(DefaultPrinting):
         A coset table is standardized if when running through the cosets and
         within each coset through the generator images (ignoring generator
         inverses), the cosets appear in order of the integers
-        `0, 1, , \ldots, n`. "Standardize" reorders the elements of `\Omega`
+        `0, 1, \dots, n`. "Standardize" reorders the elements of `\Omega`
         such that, if we scan the coset table first by elements of `\Omega`
         and then by elements of A, then the cosets occur in ascending order.
         ``standardize()`` is used at the end of an enumeration to permute the

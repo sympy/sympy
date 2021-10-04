@@ -629,8 +629,8 @@ class DifferentialExtension:
             self.backsubs, self.exts, self.extargs)
 
     # NOTE: this printing doesn't follow the Python's standard
-    # eval(repr(DE)) == DE, where DE is the DifferentialExtension object
-    # , also this printing is supposed to contain all the important
+    # eval(repr(DE)) == DE, where DE is the DifferentialExtension object,
+    # also this printing is supposed to contain all the important
     # attributes of a DifferentialExtension object
     def __repr__(self):
         # no need to have GeneratorType object printed in it

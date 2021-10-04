@@ -356,7 +356,7 @@ class PlotGrid:
        :format: doctest
        :include-source: True
 
-        >>> PlotGrid(2, 1 , p1, p2)
+        >>> PlotGrid(2, 1, p1, p2)
         PlotGrid object containing:
         Plot[0]:Plot object containing:
         [0]: cartesian line: x for x over (-5.0, 5.0)
@@ -373,7 +373,7 @@ class PlotGrid:
        :format: doctest
        :include-source: True
 
-        >>> PlotGrid(1, 3 , p2, p3, p4)
+        >>> PlotGrid(1, 3, p2, p3, p4)
         PlotGrid object containing:
         Plot[0]:Plot object containing:
         [0]: cartesian line: x**2 for x over (-6.0, 6.0)
@@ -390,7 +390,7 @@ class PlotGrid:
        :format: doctest
        :include-source: True
 
-        >>> PlotGrid(2, 2, p1, p2 ,p3, p4)
+        >>> PlotGrid(2, 2, p1, p2, p3, p4)
         PlotGrid object containing:
         Plot[0]:Plot object containing:
         [0]: cartesian line: x for x over (-5.0, 5.0)

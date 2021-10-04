@@ -2230,7 +2230,7 @@ class LatexPrinter(Printer):
         expr = s.lamda.expr
         sig = s.lamda.signature
         xys = ((self._print(x), self._print(y)) for x, y in zip(sig, s.base_sets))
-        xinys = r" , ".join(r"%s \in %s" % xy for xy in xys)
+        xinys = r", ".join(r"%s \in %s" % xy for xy in xys)
         return r"\left\{%s\; \middle|\; %s\right\}" % (self._print(expr), xinys)
 
     def _print_ConditionSet(self, s):

@@ -659,8 +659,8 @@ class Beam:
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
         >>> l=symbols('l', positive=True)
-        >>> b1=Beam(l ,E,I)
-        >>> b2=Beam(2*l ,E,I)
+        >>> b1=Beam(l, E, I)
+        >>> b2=Beam(2*l, E, I)
         >>> b=b1.join(b2,"hinge")
         >>> M1, A1, M2, A2, P = symbols('M1 A1 M2 A2 P')
         >>> b.apply_load(A1,0,-1)
@@ -1989,7 +1989,7 @@ class Beam:
         x = self.variable
         l = self.length
 
-        _ , moment = self._solve_for_ild_equations()
+        _, moment = self._solve_for_ild_equations()
 
         moment_curve1 = value*(distance-x) - limit(moment, x, distance)
         moment_curve2= (limit(moment, x, l)-limit(moment, x, distance))-value*(l-x)
@@ -2268,7 +2268,7 @@ class Beam:
                 elif(plus == 1):
                     fill = {'x': y, 'y1': y1(y), 'y2': y2, 'color':'darkkhaki'}
                 else:
-                    fill = {'x': y, 'y1': y1_(y), 'y2': y2 , 'color':'darkkhaki'}
+                    fill = {'x': y, 'y1': y1_(y), 'y2': y2, 'color':'darkkhaki'}
         return annotations, markers, load_eq, load_eq1, fill
 
 
@@ -2352,7 +2352,8 @@ class Beam3D(Beam):
 
     """
 
-    def __init__(self, length, elastic_modulus, shear_modulus , second_moment, area, variable=Symbol('x')):
+    def __init__(self, length, elastic_modulus, shear_modulus, second_moment,
+                 area, variable=Symbol('x')):
         """Initializes the class.
 
         Parameters

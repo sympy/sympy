@@ -1585,7 +1585,7 @@ def odesimp(ode, eq, func, hint):
 
     >>> from sympy import sin, symbols, dsolve, pprint, Function
     >>> from sympy.solvers.ode.ode import odesimp
-    >>> x , u2, C1= symbols('x,u2,C1')
+    >>> x, u2, C1= symbols('x,u2,C1')
     >>> f = Function('f')
 
     >>> eq = dsolve(x*f(x).diff(x) - f(x) - x*sin(f(x)/x), f(x),
@@ -2991,7 +2991,7 @@ def _linear_2eq_order1_type7(x, y, t, r, eq):
 
     where C1 and C2 are arbitrary constants and
 
-    .. math:: F(t) = e^{\int f(t) \,dt} , P(t) = e^{\int p(t) \,dt}
+    .. math:: F(t) = e^{\int f(t) \,dt}, P(t) = e^{\int p(t) \,dt}
 
     """
     C1, C2, C3, C4 = get_numbered_constants(eq, num=4)

@@ -699,11 +699,11 @@ def test_issue_13382():
 
 
 def test_issue_13403():
-    assert limit(x*(-1 + (x + log(x + 1) + 1)/(x + log(x))), x ,oo) == 1
+    assert limit(x*(-1 + (x + log(x + 1) + 1)/(x + log(x))), x, oo) == 1
 
 
 def test_issue_13416():
-    assert limit((-x**3*log(x)**3 + (x - 1)*(x + 1)**2*log(x + 1)**3)/(x**2*log(x)**3), x ,oo) == 1
+    assert limit((-x**3*log(x)**3 + (x - 1)*(x + 1)**2*log(x + 1)**3)/(x**2*log(x)**3), x, oo) == 1
 
 
 def test_issue_13462():

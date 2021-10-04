@@ -93,7 +93,7 @@ def schur_partition(n):
 
     It is possible for some n to make the partition into less
     subsets since the only known Schur numbers are:
-    S(1) = 1, S(2) = 4 , S(3) = 13, S(4) = 44.
+    S(1) = 1, S(2) = 4, S(3) = 13, S(4) = 44.
     e.g for n = 44 the lower bound from the function above is 5 subsets but it has been proven
     that can be done with 4 subsets.
 

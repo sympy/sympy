@@ -95,7 +95,7 @@ def simpsol(sol, wrt1, wrt2, doit=True):
     # We split each term into two multiplicative factors dep and coeff where
     # all factors that involve wrt1 are in dep and any constant factors are in
     # coeff e.g.
-    #         sqrt(2)*C1*exp(t) -> ( exp(t) , sqrt(2)*C1 )
+    #         sqrt(2)*C1*exp(t) -> ( exp(t), sqrt(2)*C1 )
     #
     # The dep factors are simplified using powsimp to combine expanded
     # exponential factors e.g.

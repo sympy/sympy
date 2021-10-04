@@ -3282,10 +3282,10 @@ class atan2(InverseTrigonometricFunction):
         \operatorname{atan2}(y, x) =
         \begin{cases}
           \arctan\left(\frac y x\right) & \qquad x > 0 \\
-          \arctan\left(\frac y x\right) + \pi& \qquad y \ge 0 , x < 0 \\
-          \arctan\left(\frac y x\right) - \pi& \qquad y < 0 , x < 0 \\
-          +\frac{\pi}{2} & \qquad y > 0 , x = 0 \\
-          -\frac{\pi}{2} & \qquad y < 0 , x = 0 \\
+          \arctan\left(\frac y x\right) + \pi& \qquad y \ge 0, x < 0 \\
+          \arctan\left(\frac y x\right) - \pi& \qquad y < 0, x < 0 \\
+          +\frac{\pi}{2} & \qquad y > 0, x = 0 \\
+          -\frac{\pi}{2} & \qquad y < 0, x = 0 \\
           \text{undefined} & \qquad y = 0, x = 0
         \end{cases}
 

@@ -1823,7 +1823,7 @@ def base_solution_linear(c, a, b, t=None):
         if t is not None:
             if b < 0:
                 t = -t
-            return (b*t , -a*t)
+            return (b*t, -a*t)
         else:
             return (0, 0)
     else:
@@ -2532,7 +2532,7 @@ def length(P, Q, D):
     ========
 
     >>> from sympy.solvers.diophantine.diophantine import length
-    >>> length(-2 , 4, 5) # (-2 + sqrt(5))/4
+    >>> length(-2, 4, 5) # (-2 + sqrt(5))/4
     3
     >>> length(-5, 4, 17) # (-5 + sqrt(17))/4
     4

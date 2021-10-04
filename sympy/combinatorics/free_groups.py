@@ -385,7 +385,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         The structure in ``array_form`` of ``FreeGroupElement`` is of form:
 
-        ``( ( symbol_of_gen , exponent ), ( , ), ... ( , ) )``
+        ``( ( symbol_of_gen, exponent ), ( , ), ... ( , ) )``
 
         Examples
         ========

@@ -66,7 +66,7 @@ class Ordinal(Basic):
     >>> w = omega
     >>> w.is_limit_ordinal
     True
-    >>> Ordinal(OmegaPower(w + 1 ,1), OmegaPower(3, 2))
+    >>> Ordinal(OmegaPower(w + 1, 1), OmegaPower(3, 2))
     w**(w + 1) + w**3*2
     >>> 3 + w
     w

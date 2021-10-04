@@ -3260,7 +3260,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             soln_new += soln.args[1]
                         soln = soln_new if soln_new else soln
                         if index > 0 and solver == solveset_real:
-                            # one symbol's real soln , another symbol may have
+                            # one symbol's real soln, another symbol may have
                             # corresponding complex soln.
                             if not isinstance(soln, (ImageSet, ConditionSet)):
                                 soln += solveset_complex(eq2, sym)
@@ -3378,7 +3378,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 
     if result_infinite:
         # we have general soln
-        # eg : [{x: -1, y : 1}, {x : -y , y: y}] then
+        # eg : [{x: -1, y : 1}, {x : -y, y: y}] then
         # return [{x : -y, y : y}]
         result_all_variables = result_infinite
     if intersections or complements:
@@ -3571,7 +3571,7 @@ def nonlinsolve(system, *symbols):
     new `system`). But it is not recommended to solve linear system using
     `nonlinsolve`, because `linsolve` is better for general linear systems.
 
-    >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9 , y + z - 4], [x, y, z])
+    >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9, y + z - 4], [x, y, z])
     {(3*z - 5, 4 - z, z)}
 
     5. System having polynomial equations and only real solution is
@@ -3618,7 +3618,7 @@ def nonlinsolve(system, *symbols):
     3. Complement and Intersection will be added if any : nonlinsolve maintains
     dict for complements and Intersections. If solveset find complements or/and
     Intersection with any Interval or set during the execution of
-    `substitution` function ,then complement or/and Intersection for that
+    `substitution` function, then complement or/and Intersection for that
     variable is added before returning final solution.
 
     """

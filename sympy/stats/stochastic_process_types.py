@@ -880,7 +880,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> T = Matrix([[Rational(1, 10), Rational(4, 10), Rational(5, 10)], [Rational(3, 10), Rational(4, 10), Rational(3, 10)], [Rational(7, 10), Rational(2, 10), Rational(1, 10)]])
     >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     >>> query = P(Eq(Y[a], b), Eq(Y[c], d))
-    >>> query.subs({a:10 ,b:2, c:5, d:1}).round(4)
+    >>> query.subs({a:10, b:2, c:5, d:1}).round(4)
     0.3096
     >>> P(Eq(Y[10], 2), Eq(Y[5], 1)).evalf().round(4)
     0.3096
@@ -1526,12 +1526,12 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     >>> G = Matrix([[-S(1), Rational(1, 10), Rational(9, 10)], [Rational(2, 5), -S(1), Rational(3, 5)], [Rational(1, 2), Rational(1, 2), -S(1)]])
     >>> C = ContinuousMarkovChain('C', state_space=[0, 1, 2], gen_mat=G)
     >>> query = P(Eq(C(a), b), Eq(C(c), d))
-    >>> query.subs({a:3.65 ,b:2, c:1.78, d:1}).evalf().round(10)
+    >>> query.subs({a:3.65, b:2, c:1.78, d:1}).evalf().round(10)
     0.4002723175
     >>> P(Eq(C(3.65), 2), Eq(C(1.78), 1)).round(10)
     0.4002723175
     >>> query_gt = P(Gt(C(a), b), Eq(C(c), d))
-    >>> query_gt.subs({a:43.2 ,b:0, c:3.29, d:2}).evalf().round(10)
+    >>> query_gt.subs({a:43.2, b:0, c:3.29, d:2}).evalf().round(10)
     0.6832579186
     >>> P(Gt(C(43.2), 0), Eq(C(3.29), 2)).round(10)
     0.6832579186

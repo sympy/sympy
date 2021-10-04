@@ -546,10 +546,10 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     ========
 
     >>> from sympy.physics.wigner import wigner_9j
-    >>> wigner_9j(1,1,1, 1,1,1, 1,1,0 ,prec=64) # ==1/18
+    >>> wigner_9j(1,1,1, 1,1,1, 1,1,0, prec=64) # ==1/18
     0.05555555...
 
-    >>> wigner_9j(1/2,1/2,0, 1/2,3/2,1, 0,1,1 ,prec=64) # ==1/6
+    >>> wigner_9j(1/2,1/2,0, 1/2,3/2,1, 0,1,1, prec=64) # ==1/6
     0.1666666...
 
     It is an error to have arguments that are not integer or half

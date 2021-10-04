@@ -31,7 +31,7 @@ class BlockMatrix(MatrixExpr):
     ...     Identity, ZeroMatrix, block_collapse)
     >>> n,m,l = symbols('n m l')
     >>> X = MatrixSymbol('X', n, n)
-    >>> Y = MatrixSymbol('Y', m ,m)
+    >>> Y = MatrixSymbol('Y', m, m)
     >>> Z = MatrixSymbol('Z', n, m)
     >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
     >>> print(B)
@@ -222,7 +222,7 @@ class BlockMatrix(MatrixExpr):
         >>> from sympy import MatrixSymbol, BlockMatrix, ZeroMatrix
         >>> from sympy.abc import m, n
         >>> X = MatrixSymbol('X', n, n)
-        >>> Y = MatrixSymbol('Y', m ,m)
+        >>> Y = MatrixSymbol('Y', m, m)
         >>> Z = MatrixSymbol('Z', n, m)
         >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
         >>> B.transpose()
@@ -560,7 +560,7 @@ class BlockDiagMatrix(BlockMatrix):
     >>> from sympy import MatrixSymbol, BlockDiagMatrix, symbols
     >>> n, m, l = symbols('n m l')
     >>> X = MatrixSymbol('X', n, n)
-    >>> Y = MatrixSymbol('Y', m ,m)
+    >>> Y = MatrixSymbol('Y', m, m)
     >>> BlockDiagMatrix(X, Y)
     Matrix([
     [X, 0],
@@ -681,7 +681,7 @@ def block_collapse(expr):
                           Identity, ZeroMatrix, block_collapse
     >>> n,m,l = symbols('n m l')
     >>> X = MatrixSymbol('X', n, n)
-    >>> Y = MatrixSymbol('Y', m ,m)
+    >>> Y = MatrixSymbol('Y', m, m)
     >>> Z = MatrixSymbol('Z', n, m)
     >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m, n), Y]])
     >>> print(B)
