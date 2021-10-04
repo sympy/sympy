@@ -934,7 +934,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     ('factorable', 'nth_linear_constant_coeff_undetermined_coefficients',
     'nth_linear_constant_coeff_variation_of_parameters',
     'nth_linear_constant_coeff_variation_of_parameters_Integral')
-    
+
     """
     ics = sympify(ics)
 
