@@ -1812,6 +1812,12 @@ def _get_examples_ode_sol_separable():
         'sol': [Eq(v(t), -68.585712797928991/tanh(C1 - 0.14288690166235204*t))],
         'func': v(t),
         'checkodesol_XFAIL': True,
+    },
+
+    #https://github.com/sympy/sympy/issues/22155
+    'separable_27': {
+        'eq': f(x).diff(x) - exp(f(x) - x),
+        'sol': [Eq(f(x), log(-exp(x)/(C1*exp(x) - 1)))],
     }
     }
     }
