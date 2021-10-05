@@ -112,7 +112,7 @@ def _sym_sympify(arg):
     Parameters
     =========
 
-    arg: The parameter to be converted to be used in Sympy.
+    arg: The parameter to be converted to be used in SymPy.
 
     Returns
     =======
@@ -1875,7 +1875,7 @@ def get_timerv_swaps(expr, condition):
     Parameters
     ==========
 
-    expr: Sympy Expression
+    expr: SymPy Expression
         Expression containing Random Indexed Symbols with variable time stamps
     condition: Relational/Boolean Expression
         Expression containing time bounds of variable time stamps in expr

@@ -7,7 +7,7 @@ cin = import_module('clang.cindex', import_kwargs = {'fromlist': ['cindex']})
 This module contains all the necessary Classes and Function used to Parse C and
 C++ code into SymPy expression
 The module serves as a backend for SymPyExpression to parse C code
-It is also dependent on Clang's AST and Sympy's Codegen AST.
+It is also dependent on Clang's AST and SymPy's Codegen AST.
 The module only supports the features currently supported by the Clang and
 codegen AST which will be updated as the development of codegen AST and this
 module progresses.

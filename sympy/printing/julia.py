@@ -30,7 +30,7 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "airyai", "airyaiprime", "airybi", "airybiprime",
                    "besselj", "bessely", "besseli", "besselk",
                    "erfinv", "erfcinv"]
-# These functions have different names ("Sympy": "Julia"), more
+# These functions have different names ("SymPy": "Julia"), more
 # generally a mapping to (argument_conditions, julia_function).
 known_fcns_src2 = {
     "Abs": "abs",

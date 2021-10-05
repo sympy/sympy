@@ -65,7 +65,7 @@ def fgraph_of(*exprs):
     Parameters
     ==========
     exprs
-        Sympy expressions
+        SymPy expressions
 
     Returns
     =======
