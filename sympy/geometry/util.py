@@ -554,7 +554,7 @@ def idiff(eq, y, x, n=1):
     >>> idiff(circ, y, x)
     -x/y
     >>> idiff(circ, y, x, 2).simplify()
-    (-x**2 - y**2)/y**3
+    -(x**2 + y**2)/y**3
 
     Here, ``a`` is assumed to be independent of ``x``:
 

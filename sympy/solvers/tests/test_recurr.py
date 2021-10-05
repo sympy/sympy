@@ -180,9 +180,9 @@ def test_rsolve():
     sol = 2**(2*n)*n*(2*n - 1)**2*(2*n + 1)/12
     assert factor(expand(yn, func=True)) == sol
 
-    assert rsolve(y(n) + a*(y(n + 1) + y(n - 1))/2, y(n)) == (
-            C0*((-sqrt(1 - a**2) - 1)/a)**n +
-            C1*((sqrt(1 - a**2) - 1)/a)**n)
+    assert (rsolve(y(n) + a*(y(n + 1) + y(n - 1))/2, y(n)) -
+            (C0*((sqrt(-a**2 + 1) - 1)/a)**n +
+             C1*((-sqrt(-a**2 + 1) - 1)/a)**n)).simplify() == 0
 
     assert rsolve((k + 1)*y(k), y(k)) is None
     assert (rsolve((k + 1)*y(k) + (k + 3)*y(k + 1) + (k + 5)*y(k + 2), y(k))

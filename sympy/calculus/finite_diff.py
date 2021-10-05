@@ -140,7 +140,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     (-sqrt(2)*h**3 - 4*h**2*x + 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,
     (6*h**2*x - 8*x**3)/h**4,
     (sqrt(2)*h**3 - 4*h**2*x - 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,
-    (-h**3 + 2*h**2*x + 6*h*x**2 - 8*x**3)/(2*h**4)]
+    (-h**3/2 + h**2*x + 3*h*x**2 - 4*x**3)/h**4]
 
     Notes
     =====

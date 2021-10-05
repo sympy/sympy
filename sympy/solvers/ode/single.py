@@ -2901,11 +2901,11 @@ class LieGroup(SingleODESolver):
     >>> f = Function('f')
     >>> pprint(dsolve(f(x).diff(x) + 2*x*f(x) - x*exp(-x**2), f(x),
     ... hint='lie_group'))
-                        2
-           /      2\  -x
-           \C1 + x /*e
-    f(x) = --------------
-                 2
+           /      2\    2
+           |     x |  -x
+    f(x) = |C1 + --|*e
+           \     2 /
+
 
     References
     ==========

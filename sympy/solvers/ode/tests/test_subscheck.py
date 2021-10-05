@@ -35,8 +35,8 @@ def test_checkodesol():
     assert checkodesol(diff(sol1.lhs, x, 3), sol1) == (True, 0)
     assert checkodesol(diff(sol1.lhs, x, 3)*exp(f(x)), sol1) == (True, 0)
     assert checkodesol(diff(sol1.lhs, x, 3), Eq(f(x), x*log(x))) == \
-        (False, 60*x**4*((log(x) + 1)**2 + log(x))*(
-        log(x) + 1)*log(x)**2 - 5*x**4*log(x)**4 - 9)
+        (False, -60*x**4*((log(x) + 1)**2 + log(x))*(
+        log(x) + 1)*log(x)**2 + 5*x**4*log(x)**4 + 9)
     assert checkodesol(diff(exp(f(x)) + x, x)*x, Eq(exp(f(x)) + x, 0)) == \
         (True, 0)
     assert checkodesol(diff(exp(f(x)) + x, x)*x, Eq(exp(f(x)) + x, 0),

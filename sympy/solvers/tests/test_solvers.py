@@ -1787,7 +1787,7 @@ def test_lambert_bivariate():
     x3 = x2*LambertW(1/x2)/a**5
     x4 = x3**Rational(1, 3)/2
     assert ans == [
-        x0*log(x4*(x1 - 1)),
+        x0*log(-x4*(1 - x1)),
         x0*log(-x4*(x1 + 1)),
         x0*log(x3)/3]
     x1 = LambertW(Rational(1, 3))
@@ -1798,7 +1798,7 @@ def test_lambert_bivariate():
     ans = solve(3*log(ax) + ax, x)
     assert ans == [
         x0*log(3*x1*x2)/3,
-        x0*log(x5*(-x3 + x4)),
+        x0*log(-x5*(x3 - x4)),
         x0*log(-x5*(x3 + x4))]
     # coverage
     p = symbols('p', positive=True)
