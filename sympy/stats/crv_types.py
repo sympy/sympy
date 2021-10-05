@@ -2414,7 +2414,7 @@ def LogCauchy(name, mu, sigma):
     1/(5*pi*z*((log(z) - 2)**2 + 1/25))
 
     >>> cdf(X)(z)
-    -atan(10 - 5*log(z))/pi + 1/2
+    atan(5*log(z) - 10)/pi + 1/2
 
     References
     ==========

@@ -2816,12 +2816,8 @@ class acot(InverseTrigonometricFunction):
 
         if arg.is_number:
             atan_table = cls._atan_table()
-            ang = None
             if arg in atan_table:
                 ang = pi/2 - atan_table[arg]
-            elif -arg in atan_table:
-                ang = pi/2 + atan_table[-arg]
-            if ang is not None:
                 if ang > pi/2: # restrict to (-pi/2,pi/2]
                     ang -= pi
                 return ang

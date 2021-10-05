@@ -652,7 +652,7 @@ def test_undetermined_coefficients_match():
         exp(x)*sin(x), sin(x), x*exp(x)*sin(x), x*cos(x), x*cos(x)*exp(x),
         x*sin(x), cos(x)*exp(x), x**2*exp(x)*sin(x)}}
     assert _undetermined_coefficients_match(4*x*sin(x - 2), x) == {
-        'trialset': {x*cos(2 - x), x*sin(2 - x), cos(2 - x), sin(2 - x)},
+        'trialset': {x*cos(x - 2), x*sin(x - 2), cos(x - 2), sin(x - 2)},
         'test': True,
     }
     assert _undetermined_coefficients_match(2**x*x, x) == \

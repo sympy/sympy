@@ -675,7 +675,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
                 # Still a Piecewise?
                 if expr.has(Piecewise):
                     # Try factor common terms
-                    expr = shorter(expr, factor_terms(expr, sign=False))
+                    expr = shorter(expr, factor_terms(expr))
                     # As all expressions have been simplified above with the
                     # complete simplify, nothing more needs to be done here
                     return expr
@@ -747,7 +747,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         if d != 0:
             expr = signsimp(-n/(-d))
 
-    expr = hide_sign(expr)
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
 

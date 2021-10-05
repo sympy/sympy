@@ -206,7 +206,7 @@ class Integral(AddWithLimits):
         transform can change the variable of integration
 
         >>> i.transform(x, u)
-        Integral(u*cos(1 - u**2), (u, 0, 1))
+        Integral(u*cos(u**2 - 1), (u, 0, 1))
 
         transform can perform u-substitution as long as a unique
         integrand is obtained:

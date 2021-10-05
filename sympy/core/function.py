@@ -82,9 +82,9 @@ def _more_minus(expr):
     >>> f(-x - 1)
     True
     >>> f(x - 1)
-    True
-    >>> f(1 - x)
     False
+    >>> f(1 - x)
+    True
     """
     # internal use -- expects Basic expr
     if isinstance(expr, Add):
@@ -95,7 +95,7 @@ def _more_minus(expr):
             t = [_coeff_isneg(i) for i in (e, n)]
             if len(set(t)) == 1:
                 small = next(ordered((e, n)))
-                return small not in expr.args
+                return small in expr.args
             return t[0] > t[1]
         else:
             return rv

@@ -242,7 +242,7 @@ def test_manualintegrate_special():
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
     f, F = sinh(3*x - 2)/x, -sinh(2)*Chi(3*x) + cosh(2)*Shi(3*x)
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
-    f, F = 5*cos(2*x - 3)/x, 5*cos(3)*Ci(-2*x) + 5*sin(3)*Si(2*x)
+    f, F = 5*cos(2*x - 3)/x, 5*cos(3)*Ci(2*x) + 5*sin(3)*Si(2*x)
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
     f, F = cosh(x/2)/x, Chi(x/2)
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)

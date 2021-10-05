@@ -1906,7 +1906,7 @@ def test_trig_period():
     assert sec(x).period() == 2*pi
     assert csc(x).period() == 2*pi
     assert sin(2*x).period() == pi
-    assert cot(6 - 4*x).period() == pi/4
+    assert cot(4*x - 6).period() == pi/4
     assert cos((-3)*x).period() == pi*Rational(2, 3)
     assert cos(x*y).period(x) == 2*pi/abs(y)
     assert sin(3*x*y + 2*pi).period(y) == 2*pi/abs(3*x)
