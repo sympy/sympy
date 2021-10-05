@@ -3,6 +3,7 @@ from sympy.core.backend import Symbol, symbols, sin, cos, sqrt, Matrix
 from sympy.physics.vector import Point, ReferenceFrame, dynamicsymbols
 from sympy.physics.mechanics import inertia, Body
 from sympy.testing.pytest import raises
+from sympy.testing.pytest import XFAIL
 
 def test_default():
     body = Body('body')
@@ -297,6 +298,7 @@ def test_orient_explicit():
     B.orient_explicit(A, dcm)
     assert A.dcm(B) == N.dcm(A.frame) == dcm
 
+@XFAIL
 def test_orient_body_fixed():
     A = Body('A')
     B = Body('B')
@@ -308,6 +310,7 @@ def test_orient_body_fixed():
                   [sin(1), -sin(1)*cos(1), cos(1)**2]])
     assert A.dcm(N) == B.dcm(A) == dcm
 
+@XFAIL
 def test_orient_space_fixed():
     A = Body('A')
     B = Body('B')
