@@ -37,11 +37,11 @@ def continuous_domain(f, symbol, domain):
     Parameters
     ==========
 
-    f : Expr
+    f : :py:class:`~.Expr`
         The concerned function.
-    symbol : Symbol
+    symbol : :py:class:`~.Symbol`
         The variable for which the intervals are to be determined.
-    domain : Interval
+    domain : :py:class:`~.Interval`
         The domain over which the continuity of the symbol has to be checked.
 
     Examples
@@ -63,7 +63,7 @@ def continuous_domain(f, symbol, domain):
     Returns
     =======
 
-    Interval
+    :py:class:`~.Interval`
         Union of all intervals where the function is continuous.
 
     Raises
@@ -105,11 +105,11 @@ def function_range(f, symbol, domain):
     Parameters
     ==========
 
-    f : Expr
+    f : :py:class:`~.Expr`
         The concerned function.
-    symbol : Symbol
+    symbol : :py:class:`~.Symbol`
         The variable for which the range of function is to be determined.
-    domain : Interval
+    domain : :py:class:`~.Interval`
         The domain under which the range of the function has to be found.
 
     Examples
@@ -135,7 +135,7 @@ def function_range(f, symbol, domain):
     Returns
     =======
 
-    Interval
+    :py:class:`~.Interval`
         Union of all ranges for all intervals under domain where function is
         continuous.
 
@@ -350,11 +350,11 @@ def periodicity(f, symbol, check=False):
     Parameters
     ==========
 
-    f : Expr.
+    f : :py:class:`~.Expr`.
         The concerned function.
-    symbol : Symbol
+    symbol : :py:class:`~.Symbol`
         The variable for which the period is to be determined.
-    check : Boolean, optional
+    check : bool, optional
         The flag to verify whether the value being returned is a period or not.
 
     Returns
@@ -377,14 +377,14 @@ def periodicity(f, symbol, check=False):
 
     Currently, we do not support functions with a complex period.
     The period of functions having complex periodic values such
-    as `exp`, `sinh` is evaluated to `None`.
+    as ``exp``, ``sinh`` is evaluated to ``None``.
 
     The value returned might not be the "fundamental" period of the given
     function i.e. it may not be the smallest periodic value of the function.
 
-    The verification of the period through the `check` flag is not reliable
+    The verification of the period through the ``check`` flag is not reliable
     due to internal simplification of the given expression. Hence, it is set
-    to `False` by default.
+    to ``False`` by default.
 
     Examples
     ========
@@ -545,10 +545,10 @@ def _periodicity(args, symbol):
     Parameters
     ==========
 
-    args : Tuple of Symbol
+    args : Tuple of :py:class:`~.Symbol`
         All the symbols present in a function.
 
-    symbol : Symbol
+    symbol : :py:class:`~.Symbol`
         The symbol over which the function is to be evaluated.
 
     Returns
@@ -557,7 +557,7 @@ def _periodicity(args, symbol):
     period
         The least common period of the function for all the symbols
         of the function.
-        None if for at least one of the symbols the function is aperiodic
+        ``None`` if for at least one of the symbols the function is aperiodic.
 
     """
     periods = []
@@ -592,7 +592,7 @@ def lcim(numbers):
     =======
 
     number
-        lcim if it exists, otherwise `None` for incommensurable numbers.
+        lcim if it exists, otherwise ``None`` for incommensurable numbers.
 
     Examples
     ========
@@ -626,25 +626,25 @@ def lcim(numbers):
     return result
 
 def is_convex(f, *syms, domain=S.Reals):
-    """Determines the  convexity of the function passed in the argument.
+    r"""Determines the  convexity of the function passed in the argument.
 
     Parameters
     ==========
 
-    f : Expr
+    f : :py:class:`~.Expr`
         The concerned function.
-    syms : Tuple of symbols
+    syms : Tuple of :py:class:`~.Symbol`
         The variables with respect to which the convexity is to be determined.
-    domain : Interval, optional
+    domain : :py:class:`~.Interval`, optional
         The domain over which the convexity of the function has to be checked.
         If unspecified, S.Reals will be the default domain.
 
     Returns
     =======
 
-    Boolean
-        The method returns `True` if the function is convex otherwise it
-        returns `False`.
+    bool
+        The method returns ``True`` if the function is convex otherwise it
+        returns ``False``.
 
     Raises
     ======
@@ -656,9 +656,9 @@ def is_convex(f, *syms, domain=S.Reals):
     =====
 
     To determine concavity of a function pass `-f` as the concerned function.
-    To determine logarithmic convexity of a function pass log(f) as
+    To determine logarithmic convexity of a function pass `\log(f)` as
     concerned function.
-    To determine logartihmic concavity of a function pass -log(f) as
+    To determine logartihmic concavity of a function pass `-\log(f)` as
     concerned function.
 
     Currently, convexity check of multivariate functions is not handled.
@@ -705,20 +705,20 @@ def stationary_points(f, symbol, domain=S.Reals):
     Parameters
     ==========
 
-    f : Expr
+    f : :py:class:`~.Expr`
         The concerned function.
-    symbol : Symbol
+    symbol : :py:class:`~.Symbol`
         The variable for which the stationary points are to be determined.
-    domain : Interval
+    domain : :py:class:`~.Interval`
         The domain over which the stationary points have to be checked.
-        If unspecified, S.Reals will be the default domain.
+        If unspecified, ``S.Reals`` will be the default domain.
 
     Returns
     =======
 
     Set
         A set of stationary points for the function. If there are no
-        stationary point, an EmptySet is returned.
+        stationary point, an :py:class:`~.Empty` is returned.
 
     Examples
     ========
@@ -757,13 +757,13 @@ def maximum(f, symbol, domain=S.Reals):
     Parameters
     ==========
 
-    f : Expr
+    f : :py:class:`~.Expr`
         The concerned function.
-    symbol : Symbol
+    symbol : :py:class:`~.Symboll`
         The variable for maximum value needs to be determined.
-    domain : Interval
+    domain : :py:class:`~.Interval`
         The domain over which the maximum have to be checked.
-        If unspecified, then Global maximum is returned.
+        If unspecified, then the global maximum is returned.
 
     Returns
     =======
@@ -805,13 +805,13 @@ def minimum(f, symbol, domain=S.Reals):
     Parameters
     ==========
 
-    f : Expr
+    f : :py:class:`~.Expr`
         The concerned function.
-    symbol : Symbol
+    symbol : :py:class:`~.Symbol`
         The variable for minimum value needs to be determined.
-    domain : Interval
+    domain : :py:class:`~.Interval`
         The domain over which the minimum have to be checked.
-        If unspecified, then Global minimum is returned.
+        If unspecified, then the global minimum is returned.
 
     Returns
     =======
@@ -856,7 +856,7 @@ class AccumulationBounds(AtomicExpr):
     The intended meaning of AccummulationBounds is to give an approximate
     location of the accumulation points of a real function at a limit point.
 
-    Let `a` and `b` be reals such that a <= b.
+    Let `a` and `b` be reals such that `a \le b`.
 
     `\left\langle a, b\right\rangle = \{x \in \mathbb{R} \mid a \le x \le b\}`
 
@@ -889,7 +889,7 @@ class AccumulationBounds(AtomicExpr):
 
     `X - Y = \{ x-y \mid x \in X \cap y \in Y\}`
 
-    `X * Y = \{ x*y \mid x \in X \cap y \in Y\}`
+    `X \times Y = \{ x \times y \mid x \in X \cap y \in Y\}`
 
     When an AccumBounds is raised to a negative power, if 0 is contained
     between the bounds then an infinite range is returned, otherwise if an
@@ -963,7 +963,7 @@ class AccumulationBounds(AtomicExpr):
     >>> AccumBounds(-2, -1)**(S(1)/2)
     sqrt(AccumBounds(-2, -1))
 
-    Note: `<a, b>^2` is not same as `<a, b>*<a, b>`
+    Note: `\left\langle a, b\right\rangle^2` is not same as `\left\langle a, b\right\rangle \times \left\langle a, b\right\rangle`
 
     >>> AccumBounds(-1, 1)**2
     AccumBounds(0, 1)
@@ -975,7 +975,7 @@ class AccumulationBounds(AtomicExpr):
     False
 
     Some elementary functions can also take AccumulationBounds as input.
-    A function `f` evaluated for some real AccumulationBounds `<a, b>`
+    A function `f` evaluated for some real AccumulationBounds `\left\langle a, b \right\rangle`
     is defined as `f(\left\langle a, b\right\rangle) = \{ f(x) \mid a \le x \le b \}`
 
     >>> sin(AccumBounds(pi/6, pi/3))
@@ -1428,8 +1428,8 @@ class AccumulationBounds(AtomicExpr):
 
     def __contains__(self, other):
         """
-        Returns True if other is contained in self, where other
-        belongs to extended real numbers, False if not contained,
+        Returns ``True`` if other is contained in self, where other
+        belongs to extended real numbers, ``False`` if not contained,
         otherwise TypeError is raised.
 
         Examples
@@ -1463,7 +1463,7 @@ class AccumulationBounds(AtomicExpr):
     def intersection(self, other):
         """
         Returns the intersection of 'self' and 'other'.
-        Here other can be an instance of FiniteSet or AccumulationBounds.
+        Here other can be an instance of :py:class:`~.FiniteSet` or AccumulationBounds.
 
         Parameters
         ==========
@@ -1476,7 +1476,7 @@ class AccumulationBounds(AtomicExpr):
         =======
 
         AccumulationBounds
-            Intersection of 'self' and 'other'.
+            Intersection of ``self`` and ``other``.
 
         Examples
         ========
@@ -1545,11 +1545,11 @@ def _eval_is_le(lhs, rhs): # noqa:F811
 def _eval_is_le(lhs, rhs): # noqa: F811
 
     """
-    Returns True if range of values attained by `self` AccumulationBounds
-    object is greater than the range of values attained by `other`,
-    where other may be any value of type AccumulationBounds object or
-    extended real number value, False if `other` satisfies
-    the same property, else an unevaluated Relational.
+    Returns ``True `` if range of values attained by ``lhs`` AccumulationBounds
+    object is greater than the range of values attained by ``rhs``,
+    where ``rhs`` may be any value of type AccumulationBounds object or
+    extended real number value, ``False`` if ``rhs`` satisfies
+    the same property, else an unevaluated :py:class:`~.Relational`.
 
     Examples
     ========
@@ -1583,11 +1583,11 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
 @dispatch(AccumulationBounds, Expr)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa: F811
     """
-    Returns True if range of values attained by `lhs` AccumulationBounds
-    object is less that the range of values attained by `rhs`, where
+    Returns ``True`` if range of values attained by ``lhs`` AccumulationBounds
+    object is less that the range of values attained by ``rhs``, where
     other may be any value of type AccumulationBounds object or extended
-    real number value, False if `rhs` satisfies the same
-    property, else an unevaluated Relational.
+    real number value, ``False`` if ``rhs`` satisfies the same
+    property, else an unevaluated :py:class:`~.Relational`.
 
     Examples
     ========
