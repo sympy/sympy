@@ -307,7 +307,7 @@ def test_classify_ode():
     assert sorted(a.keys()) == ['Bernoulli', 'Bernoulli_Integral', 'default', 'order', 'ordered_hints']
 
     # test issue 22155
-    a = classify_ode(f(x).diff(x) - exp(f(x) - x),f(x))
+    a = classify_ode(f(x).diff(x) - exp(f(x) - x), f(x))
     assert a == ('separable',
         '1st_exact', '1st_power_series',
         'lie_group', 'separable_Integral',
