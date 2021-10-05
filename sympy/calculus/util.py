@@ -718,7 +718,7 @@ def stationary_points(f, symbol, domain=S.Reals):
 
     Set
         A set of stationary points for the function. If there are no
-        stationary point, an :py:class:`~.Empty` is returned.
+        stationary point, an :py:class:`~.EmptySet` is returned.
 
     Examples
     ========
@@ -759,7 +759,7 @@ def maximum(f, symbol, domain=S.Reals):
 
     f : :py:class:`~.Expr`
         The concerned function.
-    symbol : :py:class:`~.Symboll`
+    symbol : :py:class:`~.Symbol`
         The variable for maximum value needs to be determined.
     domain : :py:class:`~.Interval`
         The domain over which the maximum have to be checked.

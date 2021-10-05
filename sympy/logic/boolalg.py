@@ -2171,7 +2171,7 @@ def truth_table(expr, variables, input=True):
     >>> list(table)
     [([0, 0], False), ([0, 1], True), ([1, 0], True), ([1, 1], True)]
 
-    If input is false, truth_table returns only a list of truth values.
+    If ``input`` is ``False``, ``truth_table`` returns only a list of truth values.
     In this case, the corresponding input values of variables can be
     deduced from the index of a given output.
 
@@ -2637,7 +2637,7 @@ def ANFform(variables, truthvalues):
     References
     ==========
 
-    .. [2] https://en.wikipedia.org/wiki/Zhegalkin_polynomial
+    .. [1] https://en.wikipedia.org/wiki/Zhegalkin_polynomial
 
     """
 
@@ -2668,7 +2668,7 @@ def anf_coeffs(truthvalues):
     disjunction) representing the boolean expression in ANF
     (i.e., the "Zhegalkin polynomial").
 
-    There are `2^n` possible Zhegalkin monomials in n variables, since
+    There are `2^n` possible Zhegalkin monomials in `n` variables, since
     each monomial is fully specified by the presence or absence of
     each variable.
 
@@ -2732,6 +2732,7 @@ def bool_minterm(k, variables):
 
     Examples
     ========
+
     >>> from sympy.logic.boolalg import bool_minterm
     >>> from sympy.abc import x, y, z
     >>> bool_minterm([1, 0, 1], [x, y, z])
@@ -2742,7 +2743,7 @@ def bool_minterm(k, variables):
     References
     ==========
 
-    .. [3] https://en.wikipedia.org/wiki/Canonical_normal_form#Indexing_minterms
+    .. [1] https://en.wikipedia.org/wiki/Canonical_normal_form#Indexing_minterms
 
     """
     if isinstance(k, int):
@@ -2778,7 +2779,7 @@ def bool_maxterm(k, variables):
     References
     ==========
 
-    .. [4] https://en.wikipedia.org/wiki/Canonical_normal_form#Indexing_maxterms
+    .. [1] https://en.wikipedia.org/wiki/Canonical_normal_form#Indexing_maxterms
 
     """
     if isinstance(k, int):
@@ -2999,8 +3000,8 @@ def _finger(eq):
 
 def bool_map(bool1, bool2):
     """
-    Return the simplified version of ``bool1``, and the mapping of variables
-    that makes the two expressions ``bool1`` and ``bool2`` represent the same
+    Return the simplified version of *bool1*, and the mapping of variables
+    that makes the two expressions *bool1* and *bool2* represent the same
     logical behaviour for some correspondence between the variables
     of each.
     If more than one mappings of this sort exist, one of them
@@ -3041,7 +3042,7 @@ def bool_map(bool1, bool2):
         and is either an And (or an Or) whose arguments are either
         symbols (x), negated symbols (Not(x)), or Or (or an And) whose
         arguments are only symbols or negated symbols. For example,
-        And(x, Not(y), Or(w, Not(z))).
+        ``And(x, Not(y), Or(w, Not(z)))``.
 
         Basic.match is not robust enough (see issue 4835) so this is
         a workaround that is valid for simplified boolean expressions

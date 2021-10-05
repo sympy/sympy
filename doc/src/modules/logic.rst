@@ -117,7 +117,7 @@ Simplification and equivalence-testing
 
 .. autofunction:: sympy.logic.boolalg::simplify_logic
 
-SymPy's ``simplify()`` function can also be used to simplify logic expressions to their
+SymPy's :py:func:`~.simplify()` function can also be used to simplify logic expressions to their
 simplest forms.
 
 .. autofunction:: sympy.logic.boolalg::bool_map
@@ -168,7 +168,7 @@ Inference
 This module implements some inference routines in propositional logic.
 
 The function satisfiable will test that a given Boolean expression is satisfiable,
-that is, you can assign values to the variables to make the sentence `True`.
+that is, you can assign values to the variables to make the sentence ``True``.
 
 For example, the expression ``x & ~x`` is not satisfiable, since there are no
 values for ``x`` that make this sentence ``True``. On the other hand, ``(x
