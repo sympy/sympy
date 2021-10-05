@@ -306,6 +306,13 @@ def test_classify_ode():
     a = classify_ode(2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x), dict=True, hint='Bernoulli')
     assert sorted(a.keys()) == ['Bernoulli', 'Bernoulli_Integral', 'default', 'order', 'ordered_hints']
 
+    # test issue 22155
+    a = classify_ode(f(x).diff(x) - exp(f(x) - x),f(x))
+    assert a == ('separable',
+        '1st_exact', '1st_power_series',
+        'lie_group', 'separable_Integral',
+        '1st_exact_Integral')
+
 
 def test_classify_ode_ics():
     # Dummy

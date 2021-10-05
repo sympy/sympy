@@ -231,4 +231,4 @@ def test_pdsolve_variable_coeff():
 
     eq = exp(2*x)*(u.diff(y)) + y*u - u
     sol = pdsolve(eq, hint='1st_linear_variable_coeff')
-    assert sol == Eq(f(x, y), F(x)*exp(-y*(y - 2)*exp(-2*x)/2))
+    assert sol == Eq(u, F(x)*exp(-y*(y - 2)*exp(-2*x)/2))
