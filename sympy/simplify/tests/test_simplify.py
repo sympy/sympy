@@ -7,7 +7,7 @@ from sympy import (
     Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, Poly, posify, rad,
     Rational, S, separatevars, signsimp, simplify, sign, sin,
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan,
-    zoo, And, Gt, Ge, Le, Or, eye)
+    zoo, And, Gt, Ge, Le, Or, eye, Derivative)
 from sympy.core.mul import _keep_coeff
 from sympy.core.expr import unchanged
 from sympy.simplify.simplify import nthroot, inversecombine
@@ -1007,6 +1007,13 @@ def test_issue_19484():
     e = x + sign(x + f(x)**3)
     assert simplify(Abs(x + f(x)**3) * e) == x*Abs(x + f(x)**3) + x + f(x)**3
 
+
 def test_issue_19161():
     polynomial = Poly('x**2').simplify()
     assert (polynomial-x**2).simplify() == 0
+
+
+def test_issue_22210():
+    d = Symbol('d', integer=True)
+    expr = 2*Derivative(sin(x), (x, d))
+    assert expr.simplify() == expr

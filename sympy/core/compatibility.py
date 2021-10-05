@@ -495,7 +495,8 @@ def _nodes(e):
 
     if isinstance(e, Basic):
         if isinstance(e, Derivative):
-            return _nodes(e.expr) + len(e.variables)
+            return _nodes(e.expr) + sum(i[1] if i[1].is_Number else
+                _nodes(i[1]) for i in e.variable_count)
         return _node_count(e)
     elif iterable(e):
         return 1 + sum(_nodes(ei) for ei in e)
