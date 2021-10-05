@@ -70,7 +70,7 @@ class FactorBaseElem:
 
 def _generate_factor_base(prime_bound, n):
     """Generate `factor_base` for Quadratic Sieve. The `factor_base`
-    consists of all the the points whose ``legendre_symbol(n, p) == 1``
+    consists of all the points whose ``legendre_symbol(n, p) == 1``
     and ``p < num_primes``. Along with the prime `factor_base` also stores
     natural logarithm of prime and the residue n modulo p.
     It also returns the of primes numbers in the `factor_base` which are

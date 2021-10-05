@@ -94,7 +94,7 @@ class Polygon(GeometrySet):
     >>> Polygon((0, 2), (2, 2), (0, 0), (2, 0)).area
     0
 
-    When the the keyword `n` is used to define the number of sides of the
+    When the keyword `n` is used to define the number of sides of the
     Polygon then a RegularPolygon is created and the other arguments are
     interpreted as center, radius and rotation. The unrotated RegularPolygon
     will always have a vertex at Point(r, 0) where `r` is the radius of the

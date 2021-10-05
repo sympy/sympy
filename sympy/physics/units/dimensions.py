@@ -299,7 +299,7 @@ class Dimension(Expr):
         return all(dpow.is_Integer for dpow in dim_sys.get_dimensional_dependencies(self).values())
 
 
-# Create dimensions according the the base units in MKSA.
+# Create dimensions according to the base units in MKSA.
 # For other unit systems, they can be derived by transforming the base
 # dimensional dependency dictionary.
 

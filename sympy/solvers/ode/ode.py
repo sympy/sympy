@@ -885,7 +885,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
 
     ``subs``
 
-        If a hints has the word ``subs`` in it, it means the the ODE is solved
+        If a hints has the word ``subs`` in it, it means that the ODE is solved
         by substituting the expression given after the word ``subs`` for a
         single dummy variable.  This is usually in terms of ``indep`` and
         ``dep`` as above.  The substituted expression will be written only in

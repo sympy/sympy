@@ -273,7 +273,7 @@ class FreeGroup(DefaultPrinting):
             return {self.identity}
         else:
             raise ValueError("Group contains infinitely many elements"
-                            ", hence can't be represented")
+                            ", hence cannot be represented")
 
     @property
     def rank(self):
