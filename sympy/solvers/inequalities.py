@@ -306,7 +306,7 @@ def reduce_abs_inequality(expr, rel, gen):
     """
     if gen.is_extended_real is False:
          raise TypeError(filldedent('''
-            can't solve inequalities with absolute values containing
+            Cannot solve inequalities with absolute values containing
             non-real variables.
             '''))
 
@@ -733,7 +733,7 @@ def _solve_inequality(ie, s, linear=False):
     If `linear` is True (default is False) an `s`-dependent expression
     will be isolated on the left, if possible
     but it will not be solved for `s` unless the expression is linear
-    in `s`. Furthermore, only "safe" operations which don't change the
+    in `s`. Furthermore, only "safe" operations which do not change the
     sense of the relationship are applied: no division by an unsigned
     value is attempted unless the relationship involves Eq or Ne and
     no division by a value not known to be nonzero is ever attempted.

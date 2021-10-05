@@ -275,7 +275,7 @@ class TransferFunction(SISOLinearTimeInvariant):
             raise TypeError("Variable input must be a Symbol.")
 
         if den == 0:
-            raise ValueError("TransferFunction can't have a zero denominator.")
+            raise ValueError("TransferFunction cannot have a zero denominator.")
 
         if (((isinstance(num, Expr) and num.has(Symbol)) or num.is_number) and
             ((isinstance(den, Expr) and den.has(Symbol)) or den.is_number)):
@@ -363,7 +363,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         _num, _den = expr.as_numer_denom()
         if _den == 0 or _num.has(ComplexInfinity):
-            raise ZeroDivisionError("TransferFunction can't have a zero denominator.")
+            raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
         return cls(_num, _den, var)
 
     @property
@@ -1492,7 +1492,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
 
         ``var`` attribute is not same for every system.
 
-        All MIMO systems passed don't have same shape.
+        All MIMO systems passed do not have same shape.
     TypeError
         Any of the passed ``*args`` has unsupported type
 

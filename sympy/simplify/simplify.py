@@ -423,7 +423,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     function directly, because those are well defined and thus your algorithm
     will be robust.
 
-    Nonetheless, especially for interactive use, or when you don't know
+    Nonetheless, especially for interactive use, or when you do not know
     anything about the structure of the expression, simplify() tries to apply
     intelligent heuristics to make the input expression "simpler".  For
     example:
@@ -456,7 +456,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     :func:`~.count_ops`, which returns the total number of operations in the
     expression.
 
-    For example, if ``ratio=1``, ``simplify`` output can't be longer
+    For example, if ``ratio=1``, ``simplify`` output cannot be longer
     than input.
 
     ::
@@ -484,7 +484,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     should represent the "size" or "complexity" of the input expression.  Note
     that some choices, such as ``lambda expr: len(str(expr))`` may appear to be
     good metrics, but have other problems (in this case, the measure function
-    may slow down simplify too much for very large expressions).  If you don't
+    may slow down simplify too much for very large expressions).  If you do not
     know what a good metric would be, the default, ``count_ops``, is a good
     one.
 
@@ -1693,7 +1693,7 @@ def nc_simplify(expr, deep=True):
     Keyword argument ``deep`` controls whether or not subexpressions
     nested deeper inside the main expression are simplified. See examples
     below. Setting `deep` to `False` can save time on nested expressions
-    that don't need simplifying on all levels.
+    that do not need simplifying on all levels.
 
     Examples
     ========

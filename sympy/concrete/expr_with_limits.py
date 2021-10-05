@@ -363,7 +363,7 @@ class ExprWithLimits(Expr):
                 sy1 = set(self.variables).intersection(set(old.args))
                 if not sy2.issubset(sy1):
                     raise ValueError(
-                        "substitution can not create dummy dependencies")
+                        "substitution cannot create dummy dependencies")
                 sub_into_func = True
             if sub_into_func:
                 func = func.subs(old, new)

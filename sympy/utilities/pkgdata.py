@@ -25,7 +25,7 @@ from io import StringIO
 def get_resource(identifier, pkgname=__name__):
     """
     Acquire a readable object for a given package name and identifier.
-    An IOError will be raised if the resource can not be found.
+    An IOError will be raised if the resource cannot be found.
 
     For example::
 

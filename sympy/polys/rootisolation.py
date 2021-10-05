@@ -51,7 +51,7 @@ def dup_sturm(f, K):
 
     """
     if not K.is_Field:
-        raise DomainError("can't compute Sturm sequence over %s" % K)
+        raise DomainError("Cannot compute Sturm sequence over %s" % K)
 
     f = dup_sqf_part(f, K)
 
@@ -263,7 +263,7 @@ def dup_refine_real_root(f, s, t, K, eps=None, steps=None, disjoint=None, fast=F
         if t <= 0:
             f, s, t, negative = dup_mirror(f, K), -t, -s, True
         else:
-            raise ValueError("can't refine a real root in (%s, %s)" % (s, t))
+            raise ValueError("Cannot refine a real root in (%s, %s)" % (s, t))
 
     if negative and disjoint is not None:
         if disjoint < 0:
@@ -1670,7 +1670,7 @@ class RealInterval:
                 if t <= 0:
                     f, s, t, self.neg = dup_mirror(f, dom), -t, -s, True
                 else:
-                    raise ValueError("can't refine a real root in (%s, %s)" % (s, t))
+                    raise ValueError("Cannot refine a real root in (%s, %s)" % (s, t))
 
             a, b, c, d = _mobius_from_interval((s, t), dom.get_field())
 
@@ -1909,7 +1909,7 @@ class ComplexInterval:
     the roots have been resolved as distinct. Intervals are disjoint
     when either the real or imaginary component of the intervals is
     distinct. In the case above, the real components have not been
-    resolved (so we don't know, yet, which root has the smaller real
+    resolved (so we do not know, yet, which root has the smaller real
     part) but the imaginary part of ``close`` is larger than ``root``:
 
     >>> close.n(3)

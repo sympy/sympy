@@ -747,7 +747,7 @@ def fcode(expr, assign_to=None, **settings):
     name_mangling : bool, optional
         If True, then the variables that would become identical in
         case-insensitive Fortran are mangled by appending different number
-        of ``_`` at the end. If False, SymPy won't interfere with naming of
+        of ``_`` at the end. If False, SymPy Will not interfere with naming of
         variables. [default=True]
 
     Examples

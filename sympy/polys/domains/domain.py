@@ -64,7 +64,7 @@ class Domain:
     operations ``+,-,*,**`` and depending on the domain some combination of
     ``/,//,%`` might be usable. For example in :ref:`ZZ` both ``//`` (floor
     division) and ``%`` (modulo division) can be used but ``/`` (true
-    division) can not. Since :ref:`QQ` is a :py:class:`~.Field` its elements
+    division) cannot. Since :ref:`QQ` is a :py:class:`~.Field` its elements
     can be used with ``/`` but ``//`` and ``%`` should not be used. Some
     domains have a :py:meth:`~.Domain.gcd` method.
 
@@ -405,7 +405,7 @@ class Domain:
             if result is not None:
                 return result
 
-        raise CoercionFailed("can't convert %s of type %s from %s to %s" % (element, type(element), base, self))
+        raise CoercionFailed("Cannot convert %s of type %s from %s to %s" % (element, type(element), base, self))
 
     def convert(self, element, base=None):
         """Convert ``element`` to ``self.dtype``. """
@@ -464,7 +464,7 @@ class Domain:
                 except (TypeError, ValueError):
                     pass
 
-        raise CoercionFailed("can't convert %s of type %s to %s" % (element, type(element), self))
+        raise CoercionFailed("Cannot convert %s of type %s to %s" % (element, type(element), self))
 
     def of_type(self, element):
         """Check if ``a`` is of type ``dtype``. """
@@ -676,7 +676,7 @@ class Domain:
 
     def unify_with_symbols(K0, K1, symbols):
         if (K0.is_Composite and (set(K0.symbols) & set(symbols))) or (K1.is_Composite and (set(K1.symbols) & set(symbols))):
-            raise UnificationFailed("can't unify %s with %s, given %s generators" % (K0, K1, tuple(symbols)))
+            raise UnificationFailed("Cannot unify %s with %s, given %s generators" % (K0, K1, tuple(symbols)))
 
         return K0.unify(K1)
 
@@ -883,7 +883,7 @@ class Domain:
 
     def algebraic_field(self, *extension):
         r"""Returns an algebraic field, i.e. `K(\alpha, \ldots)`. """
-        raise DomainError("can't create algebraic field over %s" % self)
+        raise DomainError("Cannot create algebraic field over %s" % self)
 
     def inject(self, *symbols):
         """Inject generators into this domain. """

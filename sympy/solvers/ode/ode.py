@@ -210,7 +210,7 @@ hint=your_hint)``, and also test the solution using
 :py:meth:`~sympy.solvers.ode.checkodesol` (you can put these in a separate
 tests and skip/XFAIL if it runs too slow/doesn't work).  Be sure to call your
 hint specifically in :py:meth:`~sympy.solvers.ode.dsolve`, that way the test
-won't be broken simply by the introduction of another matching hint.  If your
+will not be broken simply by the introduction of another matching hint.  If your
 method works for higher order (>1) ODEs, you will need to run ``sol =
 constant_renumber(sol, 'C', 1, order)`` for each solution, where ``order`` is
 the order of the ODE.  This is because ``constant_renumber`` renumbers the
@@ -2609,7 +2609,7 @@ def _remove_redundant_solutions(eq, solns, order, var):
     There are two ways to find solutions to eq. The first is to solve f(x).diff(x, 2) = 0
     leading to solution f(x)=C1 + C2*x. The second is to solve the equation f(x).diff(x) = 0
     leading to the solution f(x) = C1. In this particular case we then see
-    that the second solution is a special case of the first and we don't
+    that the second solution is a special case of the first and we do not
     want to return it.
 
     This does not always happen. If we have

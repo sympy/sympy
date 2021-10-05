@@ -727,7 +727,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     Examples
     ========
 
-    With the default smoothness bound, this number can't be cracked:
+    With the default smoothness bound, this number cannot be cracked:
 
         >>> from sympy.ntheory import pollard_pm1
         >>> pollard_pm1(21477639576571)
@@ -764,7 +764,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     conditions apply then the power-smoothness will be about p/2 or p. The more
     realistic is that there will be a large prime factor next to p requiring
     a B value on the order of p/2. Although primes may have been searched for
-    up to this level, the p/2 is a factor of p - 1, something that we don't
+    up to this level, the p/2 is a factor of p - 1, something that we do not
     know. The modular.math reference below states that 15% of numbers in the
     range of 10**15 to 15**15 + 10**4 are 10**6 power smooth so a B of 10**6
     will fail 85% of the time in that range. From 10**8 to 10**8 + 10**3 the

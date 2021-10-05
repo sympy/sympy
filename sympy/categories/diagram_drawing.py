@@ -341,7 +341,7 @@ class DiagramGrid:
         returns an edge which would form a triangle with ``edge1`` and
         ``edge2``.
 
-        If ``edge1`` and ``edge2`` don't have a common endpoint,
+        If ``edge1`` and ``edge2`` do not have a common endpoint,
         returns ``None``.
 
         If ``edge1`` and ``edge`` are the same edge, returns ``None``.

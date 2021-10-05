@@ -3276,7 +3276,7 @@ def count_ops(expr, visual=False):
 def nfloat(expr, n=15, exponent=False, dkeys=False):
     """Make all Rationals in expr Floats except those in exponents
     (unless the exponents flag is set to True). When processing
-    dictionaries, don't modify the keys unless ``dkeys=True``.
+    dictionaries, do not modify the keys unless ``dkeys=True``.
 
     Examples
     ========

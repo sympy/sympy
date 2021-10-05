@@ -412,6 +412,6 @@ def dispatch_method(self, basename, arg, **options):
         if result is not None:
             return result
     raise NotImplementedError(
-        "%s.%s can't handle: %r" %
+        "%s.%s cannot handle: %r" %
         (self.__class__.__name__, basename, arg)
     )

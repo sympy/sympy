@@ -136,7 +136,7 @@ class Add(Expr, AssocOp):
     >>> type(expr)
     <class 'sympy.matrices.expressions.matadd.MatAdd'>
 
-    Note that the printers don't display in args order.
+    Note that the printers do not display in args order.
 
     >>> Add(x, 1)
     x + 1

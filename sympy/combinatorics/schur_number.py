@@ -10,9 +10,9 @@ from sympy.core.numbers import Integer
 
 
 class SchurNumber(Function):
-    """
+    r"""
     This function creates a SchurNumber object
-    which is evaluated for k <= 4 otherwise only
+    which is evaluated for `k \le 4` otherwise only
     the lower bound information can be retrieved.
 
     Examples
@@ -24,7 +24,7 @@ class SchurNumber(Function):
     >>> SchurNumber(3)
     13
 
-    We don't know the schur number for values greater than 4, hence
+    We do not know the Schur number for values greater than 4, hence
     only the object is returned
     >>> SchurNumber(6)
     SchurNumber(6)

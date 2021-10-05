@@ -712,7 +712,7 @@ class DifferentialExtension:
         ===========
 
         This makes the working differential extension larger.  self.level is
-        given relative to the end of the list (-1, -2, etc.), so we don't need
+        given relative to the end of the list (-1, -2, etc.), so we do not need
         do worry about it when building the extension.
         """
         if self.level >= -1:
@@ -733,7 +733,7 @@ class DifferentialExtension:
         ===========
 
         This makes the working differential extension smaller.  self.level is
-        given relative to the end of the list (-1, -2, etc.), so we don't need
+        given relative to the end of the list (-1, -2, etc.), so we do not need
         do worry about it when building the extension.
         """
         if self.level <= -len(self.T):

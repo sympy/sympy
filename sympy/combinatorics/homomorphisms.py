@@ -278,7 +278,7 @@ def homomorphism(domain, codomain, gens, images=(), check=True):
     If the given images of the generators do not define a homomorphism,
     an exception is raised.
 
-    If ``check`` is ``False``, don't check whether the given images actually
+    If ``check`` is ``False``, do not check whether the given images actually
     define a homomorphism.
 
     '''

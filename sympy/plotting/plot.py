@@ -1290,7 +1290,7 @@ class MatplotlibBackend(BaseBackend):
             are_3D = [s.is_3D for s in series]
 
             if any(are_3D) and not all(are_3D):
-                raise ValueError('The matplotlib backend can not mix 2D and 3D.')
+                raise ValueError('The matplotlib backend cannot mix 2D and 3D.')
             elif all(are_3D):
                 # mpl_toolkits.mplot3d is necessary for
                 # projection='3d'

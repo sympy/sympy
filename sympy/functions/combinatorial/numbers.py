@@ -789,7 +789,7 @@ class harmonic(Function):
     >>> limit(harmonic(n, 3), n, oo)
     -polygamma(2, 1)/2
 
-    However we can not compute the general relation yet:
+    However we cannot compute the general relation yet:
 
     >>> limit(harmonic(n, m), n, oo)
     harmonic(oo, m)

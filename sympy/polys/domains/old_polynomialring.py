@@ -268,7 +268,7 @@ class GlobalPolynomialRing(PolynomialRingBase):
         try:
             rep, _ = dict_from_basic(a, gens=self.gens)
         except PolynomialError:
-            raise CoercionFailed("can't convert %s to type %s" % (a, self))
+            raise CoercionFailed("Cannot convert %s to type %s" % (a, self))
 
         for k, v in rep.items():
             rep[k] = self.dom.from_sympy(v)

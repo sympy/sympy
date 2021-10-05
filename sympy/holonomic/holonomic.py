@@ -1172,7 +1172,7 @@ class HolonomicFunction:
     def composition(self, expr, *args, **kwargs):
         """
         Returns function after composition of a holonomic
-        function with an algebraic function. The method can't compute
+        function with an algebraic function. The method cannot compute
         initial conditions for the result by itself, so they can be also be
         provided.
 
@@ -2337,7 +2337,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
         Ground domain for the polynomials in ``x`` appearing as coefficients
         in the annihilator.
     initcond:
-        Set it false if you don't want the initial conditions to be computed.
+        Set it false if you do not want the initial conditions to be computed.
 
     Examples
     ========

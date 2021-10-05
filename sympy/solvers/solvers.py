@@ -1240,7 +1240,7 @@ def solve(f, *symbols, **flags):
         if warn and got_None:
             warnings.warn(filldedent("""
                 \tWarning: assumptions concerning following solution(s)
-                can't be checked:""" + '\n\t' +
+                cannot be checked:""" + '\n\t' +
                 ', '.join(str(s) for s in got_None)))
 
     #
