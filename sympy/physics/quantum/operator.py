@@ -67,7 +67,7 @@ class Operator(QExpr):
         >>> C
         2*A**2 + I*B
 
-    Operators don't commute::
+    Operators do not commute::
 
         >>> A.is_commutative
         False

@@ -88,7 +88,7 @@ def JointRV(symbol, pdf, _set=None):
     as the first argument
 
     NOTE: As of now, the set for each component for a `JointRV` is
-    equal to the set of all integers, which can not be changed.
+    equal to the set of all integers, which cannot be changed.
 
     Examples
     ========

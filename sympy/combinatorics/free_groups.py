@@ -273,7 +273,7 @@ class FreeGroup(DefaultPrinting):
             return {self.identity}
         else:
             raise ValueError("Group contains infinitely many elements"
-                            ", hence can't be represented")
+                            ", hence cannot be represented")
 
     @property
     def rank(self):
@@ -343,7 +343,7 @@ class FreeGroup(DefaultPrinting):
 
 
 class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
-    """Used to create elements of FreeGroup. It can not be used directly to
+    """Used to create elements of FreeGroup. It cannot be used directly to
     create a free group element. It is called by the `dtype` method of the
     `FreeGroup` class.
 
@@ -380,7 +380,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         size of each tuple is two. At the first position the tuple
         contains the `symbol-generator`, while at the second position
         of tuple contains the exponent of that generator at the position.
-        Since elements (i.e. words) don't commute, the indexing of tuple
+        Since elements (i.e. words) do not commute, the indexing of tuple
         makes that property to stay.
 
         The structure in ``array_form`` of ``FreeGroupElement`` is of form:

@@ -582,7 +582,7 @@ def measure_all(qubit, format='sympy', normalize=True):
         return results
     else:
         raise NotImplementedError(
-            "This function can't handle non-sympy matrix formats yet"
+            "This function cannot handle non-sympy matrix formats yet"
         )
 
 
@@ -657,7 +657,7 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
         return output
     else:
         raise NotImplementedError(
-            "This function can't handle non-sympy matrix formats yet"
+            "This function cannot handle non-sympy matrix formats yet"
         )
 
 
@@ -705,7 +705,7 @@ def measure_partial_oneshot(qubit, bits, format='sympy'):
                 return matrix_to_qubit(outcome.normalized())
     else:
         raise NotImplementedError(
-            "This function can't handle non-sympy matrix formats yet"
+            "This function cannot handle non-sympy matrix formats yet"
         )
 
 
@@ -800,5 +800,5 @@ def measure_all_oneshot(qubit, format='sympy'):
         return Qubit(IntQubit(result, int(math.log(max(m.shape), 2) + .1)))
     else:
         raise NotImplementedError(
-            "This function can't handle non-sympy matrix formats yet"
+            "This function cannot handle non-sympy matrix formats yet"
         )

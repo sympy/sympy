@@ -401,7 +401,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         There are various tests employed to check the convergence like
         divergence test, root test, integral test, alternating series test,
         comparison tests, Dirichlet tests. It returns true if Sum is convergent
-        and false if divergent and NotImplementedError if it can not be checked.
+        and false if divergent and NotImplementedError if it cannot be checked.
 
         References
         ==========

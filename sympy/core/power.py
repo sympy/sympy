@@ -281,7 +281,7 @@ class Pow(Expr):
         # than deprecated.
         from sympy.core.relational import Relational
         if isinstance(b, Relational) or isinstance(e, Relational):
-            raise TypeError('Relational can not be used in Pow')
+            raise TypeError('Relational cannot be used in Pow')
 
         # XXX: This should raise TypeError once deprecation period is over:
         if not (isinstance(b, Expr) and isinstance(e, Expr)):

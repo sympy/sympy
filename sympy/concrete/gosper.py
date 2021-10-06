@@ -174,7 +174,7 @@ def gosper_sum(f, k):
         s_n = \sum_{k=0}^{n-1} f_k
 
     and `f(n)` doesn't depend on `n`, returns `g_{n} - g(0)` where
-    `g_{n+1} - g_n = f_n`, or ``None`` if `s_n` can not be expressed
+    `g_{n+1} - g_n = f_n`, or ``None`` if `s_n` cannot be expressed
     in closed form as a sum of hypergeometric terms.
 
     Examples

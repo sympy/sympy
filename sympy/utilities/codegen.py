@@ -64,7 +64,7 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 - Test other C compilers and libraries: gcc, tcc, libtcc, gcc+gsl, ...
 - Contiguous array arguments (sympy matrices)
 - Non-contiguous array arguments (sympy matrices)
-- ccode must raise an error when it encounters something that can not be
+- ccode must raise an error when it encounters something that cannot be
   translated into c. ccode(integrate(sin(x)/x, x)) does not make sense.
 - Complex numbers as input and output
 - A default complex datatype

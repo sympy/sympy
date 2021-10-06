@@ -604,7 +604,7 @@ def encipher_vigenere(msg, key, symbols=None):
     'QRGKKTHRZQEBPR'
 
     Section 1 of the Kryptos sculpture at the CIA headquarters
-    uses this cipher and also changes the order of the the
+    uses this cipher and also changes the order of the
     alphabet [2]_. Here is the first line of that section of
     the sculpture:
 

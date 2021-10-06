@@ -360,7 +360,7 @@ def viete(f, roots=None, *gens, **args):
 
     if n < 1:
         raise ValueError(
-            "can't derive Viete's formulas for a constant polynomial")
+            "Cannot derive Viete's formulas for a constant polynomial")
 
     if roots is None:
         roots = numbered_symbols('r', start=1)

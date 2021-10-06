@@ -459,7 +459,7 @@ def test_issue_14932():
 
 def test_issue_14547():
     # the root issue is that an argument with dimensions should
-    # not raise an error when the the `arg - 1` calculation is
+    # not raise an error when the `arg - 1` calculation is
     # performed in the assumptions system
     from sympy.physics.units import foot, inch
     from sympy import Eq

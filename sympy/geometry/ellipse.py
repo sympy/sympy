@@ -979,7 +979,7 @@ class Ellipse(GeometrySet):
         """
         Calculates the semi-latus rectum of the Ellipse.
 
-        Semi-latus rectum is defined as one half of the the chord through a
+        Semi-latus rectum is defined as one half of the chord through a
         focus parallel to the conic section directrix of a conic section.
 
         Returns

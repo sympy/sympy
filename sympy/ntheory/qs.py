@@ -70,7 +70,7 @@ class FactorBaseElem:
 
 def _generate_factor_base(prime_bound, n):
     """Generate `factor_base` for Quadratic Sieve. The `factor_base`
-    consists of all the the points whose ``legendre_symbol(n, p) == 1``
+    consists of all the points whose ``legendre_symbol(n, p) == 1``
     and ``p < num_primes``. Along with the prime `factor_base` also stores
     natural logarithm of prime and the residue n modulo p.
     It also returns the of primes numbers in the `factor_base` which are
@@ -103,7 +103,7 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
     such that `a` is about to ``sqrt(2*N) / M``. Other initial values of
     factor_base elem are also intialized which includes a_inv, b_ainv, soln1,
     soln2 which are used when the sieve polynomial is changed. The b_ainv
-    is required for fast polynomial change as we don't have to calculate
+    is required for fast polynomial change as we do not have to calculate
     `2*b*mod_inverse(a, prime)` every time.
     We also ensure that the `factor_base` primes which make `a` are between
     1000 and 5000.

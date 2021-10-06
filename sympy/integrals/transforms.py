@@ -137,7 +137,7 @@ class IntegralTransform(Function):
         Standard hints are the following:
 
         - ``simplify``: whether or not to simplify the result
-        - ``noconds``: if True, don't return convergence conditions
+        - ``noconds``: if True, do not return convergence conditions
         - ``needeval``: if True, raise IntegralTransformError instead of
                         returning IntegralTransform objects
 

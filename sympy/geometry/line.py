@@ -90,7 +90,7 @@ class LinearEntity(GeometrySet):
             return result
         else:
             raise Undecidable(
-                "can't decide whether '%s' contains '%s'" % (self, other))
+                "Cannot decide whether '%s' contains '%s'" % (self, other))
 
     def _span_test(self, other):
         """Test whether the point `other` lies in the positive span of `self`.

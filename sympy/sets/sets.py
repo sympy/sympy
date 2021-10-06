@@ -2193,7 +2193,7 @@ def imageset(*args):
     Explanation
     ===========
 
-    If this function can't compute the image, it returns an
+    If this function cannot compute the image, it returns an
     unevaluated ImageSet object.
 
     .. math::

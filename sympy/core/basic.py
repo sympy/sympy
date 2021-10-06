@@ -416,7 +416,7 @@ class Basic(Printable, metaclass=ManagedProperties):
     def atoms(self, *types):
         """Returns the atoms that form the current object.
 
-        By default, only objects that are truly atomic and can't
+        By default, only objects that are truly atomic and cannot
         be divided into smaller pieces are returned: symbols, numbers,
         and number symbols like I and pi. It is possible to request
         atoms of any type, however, as demonstrated below.
@@ -596,11 +596,11 @@ class Basic(Printable, metaclass=ManagedProperties):
         """Apply on the argument recursively through the expression tree.
 
         This method is used to simulate a common abuse of notation for
-        operators. For instance in SymPy the the following will not work:
+        operators. For instance, in SymPy the following will not work:
 
         ``(x+Lambda(y, 2*y))(z) == x+2*z``,
 
-        however you can use
+        however, you can use:
 
         >>> from sympy import Lambda
         >>> from sympy.abc import x, y, z
@@ -745,7 +745,7 @@ class Basic(Printable, metaclass=ManagedProperties):
     @property
     def _sorted_args(self):
         """
-        The same as ``args``.  Derived classes which don't fix an
+        The same as ``args``.  Derived classes which do not fix an
         order on their arguments should override this method to
         produce the sorted representation.
         """

@@ -445,7 +445,7 @@ def add_terms(terms, prec, target_prec):
     - scaled_zero if the sum of the terms produces a zero by cancellation
       e.g. mpfs representing 1 and -1 would produce a scaled zero which need
       special handling since they are not actually zero and they are purposely
-      malformed to ensure that they can't be used in anything but accuracy
+      malformed to ensure that they cannot be used in anything but accuracy
       calculations;
     - a tuple that is scaled to target_prec that corresponds to the
       sum of the terms.
@@ -453,7 +453,7 @@ def add_terms(terms, prec, target_prec):
     The returned mpf tuple will be normalized to target_prec; the input
     prec is used to define the working precision.
 
-    XXX explain why this is needed and why one can't just loop using mpf_add
+    XXX explain why this is needed and why one cannot just loop using mpf_add
     """
 
     terms = [t for t in terms if not iszero(t[0])]

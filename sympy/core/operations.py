@@ -57,7 +57,7 @@ class AssocOp(Basic):
         if typ is not None:
             from sympy.core.relational import Relational
             if any(isinstance(arg, Relational) for arg in args):
-                raise TypeError("Relational can not be used in %s" % cls.__name__)
+                raise TypeError("Relational cannot be used in %s" % cls.__name__)
 
             # This should raise TypeError once deprecation period is over:
             if not all(isinstance(arg, typ) for arg in args):

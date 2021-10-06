@@ -93,7 +93,7 @@ class KroneckerProduct(MatrixExpr):
 
     This is a symbolic object that simply stores its argument without
     evaluating it. To actually compute the product, use the function
-    ``kronecker_product()`` or call the the ``.doit()`` or  ``.as_explicit()``
+    ``kronecker_product()`` or call the ``.doit()`` or  ``.as_explicit()``
     methods.
 
     >>> from sympy.matrices import KroneckerProduct, MatrixSymbol

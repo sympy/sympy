@@ -211,7 +211,7 @@ class Replacer:
     >>> replacer.replace(Equality(3*x + 4, 0))
     -4/3
 
-    Notice that it won't match equations expressed with other patterns:
+    Notice that it will not match equations expressed with other patterns:
 
     >>> eq = Equality(3*x, 4)
     >>> replacer.replace(eq)
@@ -219,7 +219,7 @@ class Replacer:
 
     In order to extend the matching patterns, define another one (we also need
     to clear the cache, because the previous result has already been memorized
-    and the pattern matcher won't iterate again if given the same expression)
+    and the pattern matcher will not iterate again if given the same expression)
 
     >>> replacer.add(Equality(a_*x, b_), b_/a_)
     >>> replacer._replacer.matcher.clear()

@@ -270,7 +270,7 @@ def linodesolve_type(A, t, b=None):
     Traceback (most recent call last):
     ...
     NotImplementedError:
-    The system doesn't have a commutative antiderivative, it can't be
+    The system does not have a commutative antiderivative, it cannot be
     solved by linodesolve.
 
     Returns
@@ -303,7 +303,7 @@ def linodesolve_type(A, t, b=None):
         B, is_commuting = _is_commutative_anti_derivative(A, t)
         if not is_commuting:
             raise NotImplementedError(filldedent('''
-                The system doesn't have a commutative antiderivative, it can't be solved
+                The system does not have a commutative antiderivative, it cannot be solved
                 by linodesolve.
             '''))
 
@@ -849,7 +849,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
 
     >>> eqs = [Eq(f(x).diff(x), f(x) + x*g(x)), Eq(g(x).diff(x), -x*f(x) + g(x))]
 
-    The system defined above is already in the desired form, so we don't have to convert it.
+    The system defined above is already in the desired form, so we do not have to convert it.
 
     >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, x, 1)
     >>> A = A0
@@ -883,7 +883,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
     ValueError
         This error is raised when the coefficient matrix, non-homogeneous term
         or the antiderivative, if passed, aren't a matrix or
-        don't have correct dimensions
+        do not have correct dimensions
     NonSquareMatrixError
         When the coefficient matrix or its antiderivative, if passed isn't a square
         matrix
@@ -1356,7 +1356,7 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
     t: Symbol
         Independent variable of the equations in eqs
     is_canon: Boolean
-        If True, then this function won't try to get the
+        If True, then this function will not try to get the
         system in canonical form. Default value is False
 
     Returns
@@ -2092,7 +2092,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
 
     if len(eqs) != len(funcs):
         raise ValueError(filldedent('''
-            Number of equations and number of functions don't match
+            Number of equations and number of functions do not match
         '''))
 
     if t is not None and not isinstance(t, Symbol):

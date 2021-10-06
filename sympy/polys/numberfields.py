@@ -873,7 +873,7 @@ def _linsolve(p):
 def primitive_element(extension, x=None, *, ex=False, polys=False):
     """Construct a common number field for all extensions. """
     if not extension:
-        raise ValueError("can't compute primitive element for empty extension")
+        raise ValueError("Cannot compute primitive element for empty extension")
 
     if x is not None:
         x, cls = sympify(x), Poly

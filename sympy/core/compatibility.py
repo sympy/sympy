@@ -401,7 +401,7 @@ def default_sort_key(item, order=None):
     [1/x, x]
 
     But since the keys for each of these terms are independent of ``order``'s
-    value, they don't sort differently when they appear separately in a list:
+    value, they do not sort differently when they appear separately in a list:
 
     >>> sorted(eq.args, key=default_sort_key)
     [1/x, x]
@@ -512,7 +512,7 @@ def ordered(seq, keys=None, default=True, warn=False):
     then no other keys will be computed.
 
     Two default keys will be applied if 1) keys are not provided or 2) the
-    given keys don't resolve all ties (but only if ``default`` is True). The
+    given keys do not resolve all ties (but only if ``default`` is True). The
     two keys are ``_nodes`` (which places smaller expressions before large) and
     ``default_sort_key`` which (if the ``sort_key`` for an object is defined
     properly) should resolve any ties.

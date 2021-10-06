@@ -494,8 +494,8 @@ def _domain_check(f, symbol, p):
 def _is_finite_with_finite_vars(f, domain=S.Complexes):
     """
     Return True if the given expression is finite. For symbols that
-    don't assign a value for `complex` and/or `real`, the domain will
-    be used to assign a value; symbols that don't assign a value
+    do not assign a value for `complex` and/or `real`, the domain will
+    be used to assign a value; symbols that do not assign a value
     for `finite` will be made finite. All other assumptions are
     left unmodified.
     """
@@ -610,7 +610,7 @@ def _solve_trig1(f, symbol, domain):
 
     Returns either the solution set as a ConditionSet (auto-evaluated to a
     union of ImageSets if no variables besides 'symbol' are involved) or
-    raises _SolveTrig1Error if f == 0 can't be solved.
+    raises _SolveTrig1Error if f == 0 cannot be solved.
 
     Notes
     =====
@@ -729,7 +729,7 @@ def _solve_trig2(f, symbol, domain):
         try:
             poly_ar = Poly(ar, symbol)
         except PolynomialError:
-            raise ValueError("give up, we can't solve if this is not a polynomial in x")
+            raise ValueError("give up, we cannot solve if this is not a polynomial in x")
         if poly_ar.degree() > 1:  # degree >1 still bad
             raise ValueError("degree of variable inside polynomial should not exceed one")
         if poly_ar.degree() == 0:  # degree 0, don't care

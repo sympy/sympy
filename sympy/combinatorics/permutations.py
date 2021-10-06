@@ -2989,7 +2989,7 @@ class Permutation(Atom):
         >>> p.resize(2)
         Traceback (most recent call last):
         ...
-        ValueError: The permutation can not be resized to 2 because the
+        ValueError: The permutation cannot be resized to 2 because the
         cycle (0, 1, 2) may break.
         """
         aform = self.array_form
@@ -3007,7 +3007,7 @@ class Permutation(Atom):
                 if cycle_min <= n-1:
                     if cycle_max > n-1:
                         raise ValueError(
-                            "The permutation can not be resized to {} "
+                            "The permutation cannot be resized to {} "
                             "because the cycle {} may break."
                             .format(n, tuple(cycle)))
 

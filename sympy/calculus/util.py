@@ -145,7 +145,7 @@ def function_range(f, symbol, domain):
     NotImplementedError
         If any of the intervals, in the given domain, for which function
         is continuous are not finite or real,
-        OR if the critical points of the function on the domain can't be found.
+        OR if the critical points of the function on the domain cannot be found.
     """
     from sympy.solvers.solveset import solveset
 

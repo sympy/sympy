@@ -45,7 +45,7 @@ Examples
 So we can divide all the functions into comparability classes (x and x^2
 belong to one class, exp(x) and exp(-x) belong to some other class). In
 principle, we could compare any two functions, but in our algorithm, we
-don't compare anything below the class 2~3~-5 (for example log(x) is
+do not compare anything below the class 2~3~-5 (for example log(x) is
 below this), so we set 2~3~-5 as the lowest comparability class.
 
 Given the function f, we find the list of most rapidly varying (mrv set)
@@ -602,7 +602,7 @@ def rewrite(e, Omega, x, wsym):
     if not isinstance(Omega, SubsSet):
         raise TypeError("Omega should be an instance of SubsSet")
     if len(Omega) == 0:
-        raise ValueError("Length can not be 0")
+        raise ValueError("Length cannot be 0")
     # all items in Omega must be exponentials
     for t in Omega.keys():
         if not isinstance(t, exp):

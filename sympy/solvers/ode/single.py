@@ -291,7 +291,7 @@ class SingleODESolver:
 
     def get_general_solution(self, *, simplify: bool = True) -> List[Equality]:
         if not self.matches():
-            msg = "%s solver can not solve:\n%s"
+            msg = "%s solver cannot solve:\n%s"
             raise ODEMatchError(msg % (self.hint, self.ode_problem.eq))
         return self._get_general_solution(simplify_flag=simplify)
 
