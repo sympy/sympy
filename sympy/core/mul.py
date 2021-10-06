@@ -765,6 +765,7 @@ class Mul(Expr, AssocOp):
         if legacy:
             # choose the one with an odd number of minus signs
             def can(args):
+                assert not any(a.is_Mul for a in args), args
                 arg_signs = [arg.could_extract_minus_sign(legacy) for arg in args]
                 negative_args = list(filter(None, arg_signs))
                 return len(negative_args) % 2 == 1
