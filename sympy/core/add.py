@@ -376,17 +376,15 @@ class Add(Expr, AssocOp):
 
     @property
     def _excess_neg_args(self):
-        from sympy.core.function import _coeff_isneg
         # choose the one with more terms with extractable -1s
         all_args = len(self.args)
         negative_args = sum(1 for _ in self.args
-            if _coeff_isneg(_))#_.could_extract_minus_sign())
+            if _.could_extract_minus_sign(0))
         positive_args = all_args - negative_args
         if positive_args > negative_args:
             return False
         elif positive_args < negative_args:
             return True
-
 
     @property
     def kind(self):
@@ -400,6 +398,21 @@ class Add(Expr, AssocOp):
         else:
             result, = kinds
         return result
+
+    def could_extract_minus_sign(self, legacy=True):
+        from sympy.core.compatibility import ordered
+        rv = self._excess_neg_args
+        if rv is None:
+            e = self.as_ordered_terms(None)[0]
+            n = (-self).as_ordered_terms(None)[0]
+            t = [i.could_extract_minus_sign(legacy) for i in (e, n)]
+            if len(set(t)) == 1:
+                small = next(ordered((e, n)))
+                # /!\ this controls whether 1 - x or x - 1 is canonical
+                return small in self.args
+            return t[0] > t[1]
+        else:
+            return rv
 
     def as_coefficients_dict(a):
         """Return a dictionary mapping terms to their Rational coefficient.

@@ -761,6 +761,22 @@ class Mul(Expr, AssocOp):
 
         return (Float(0)._mpf_, Float(im_part)._mpf_)
 
+    def could_extract_minus_sign(self, legacy=True):
+        if legacy:
+            # choose the one with an odd number of minus signs
+            def can(args):
+                arg_signs = [arg.could_extract_minus_sign(legacy) for arg in args]
+                negative_args = list(filter(None, arg_signs))
+                return len(negative_args) % 2 == 1
+            n, d = self.as_numer_denom()
+            if n == 1:
+                return can(Mul.make_args(d))
+            elif d == 1:
+                return can(Mul.make_args(n))
+            return can(Mul.make_args(n) + Mul.make_args(d))
+        a = self.args[0]
+        return a.is_Number and a.is_extended_negative
+
     @cacheit
     def as_two_terms(self):
         """Return head and tail of self.
@@ -2068,6 +2084,25 @@ def prod(a, start=1):
     return reduce(operator.mul, a, start)
 
 
+def _negate(e):
+    # negate by pushing sign on an Add factor of e
+    if isinstance(e, Mul):
+        margs = list(e.args)
+        for i, a in enumerate(margs):
+            if isinstance(a, Add):
+                margs[i] = -a
+                break
+        else:
+            if margs[0].is_Number:
+                margs[0] *= S.NegativeOne
+                if margs[0] == 1:
+                    margs.pop(0)
+            else:
+                margs.insert(0, S.NegativeOne)
+        return Mul._from_args(margs)
+    return -e
+
+
 def hide_sign(expr, force=False):
     if isinstance(expr, Mul):
         c, e = expr.as_coeff_Mul()
@@ -2140,25 +2175,6 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
         if m.is_Number and not factors.is_Number:
             m = Mul._from_args((coeff, factors))
         return m
-
-def _negate(e):
-    # negate by pushing sign on an Add factor of e
-    if isinstance(e, Mul):
-        margs = list(e.args)
-        for i, a in enumerate(margs):
-            if isinstance(a, Add):
-                margs[i] = -a
-                break
-        else:
-            if margs[0].is_Number:
-                margs[0] *= S.NegativeOne
-                if margs[0] == 1:
-                    margs.pop(0)
-            else:
-                margs.insert(0, S.NegativeOne)
-        return Mul._from_args(margs)
-    return -e
-
 
 def expand_2arg(e):
     from sympy.simplify.simplify import bottom_up

@@ -3203,7 +3203,7 @@ def count_ops(expr, visual=False):
                         ops.append(DIV)
                     continue
             elif a.is_Mul or a.is_MatMul:
-                if _coeff_isneg(a):
+                if a.could_extract_minus_sign(0):
                     ops.append(NEG)
                     if a.args[0] is S.NegativeOne:
                         a = a.as_two_terms()[1]
@@ -3226,7 +3226,7 @@ def count_ops(expr, visual=False):
                 aargs = list(a.args)
                 negs = 0
                 for i, ai in enumerate(aargs):
-                    if _coeff_isneg(ai):
+                    if ai.could_extract_minus_sign(0):
                         negs += 1
                         args.append(-ai)
                         if i > 0:
@@ -3237,7 +3237,7 @@ def count_ops(expr, visual=False):
                             ops.append(ADD)
                 if negs == len(aargs):  # -x - y = NEG + SUB
                     ops.append(NEG)
-                elif _coeff_isneg(aargs[0]):  # -x + y = SUB, but already recorded ADD
+                elif aargs[0].could_extract_minus_sign(0):  # -x + y = SUB, but already recorded ADD
                     ops.append(SUB - ADD)
                 continue
             if a.is_Pow and a.exp is S.NegativeOne:

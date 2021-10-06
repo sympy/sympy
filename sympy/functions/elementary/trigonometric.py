@@ -4,7 +4,7 @@ from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
 from sympy.core.expr import Expr
 from sympy.core.function import (Function, ArgumentIndexError, PoleError,
-    expand_mul, _more_minus)
+    expand_mul)
 from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool
 from sympy.core.numbers import igcdex, Rational, pi, Integer
 from sympy.core.relational import Ne
@@ -303,7 +303,7 @@ class sin(TrigonometricFunction):
         elif isinstance(arg, SetExpr):
             return arg._eval_func(cls)
 
-        if _more_minus(arg):
+        if arg.could_extract_minus_sign():
             return -cls(-arg)
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
@@ -593,7 +593,7 @@ class cos(TrigonometricFunction):
         if arg.is_extended_real and arg.is_finite is False:
             return AccumBounds(-1, 1)
 
-        if _more_minus(arg):
+        if arg.could_extract_minus_sign():
             return cls(-arg)
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
@@ -1044,7 +1044,7 @@ class tan(TrigonometricFunction):
             else:
                 return AccumBounds(tan(min), tan(max))
 
-        if _more_minus(arg):
+        if arg.could_extract_minus_sign():
             return -cls(-arg)
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
@@ -1369,7 +1369,7 @@ class cot(TrigonometricFunction):
         if isinstance(arg, AccumBounds):
             return -tan(arg + S.Pi/2)
 
-        if _more_minus(arg):
+        if arg.could_extract_minus_sign():
             return -cls(-arg)
 
         i_coeff = arg.as_coefficient(S.ImaginaryUnit)
@@ -1625,7 +1625,7 @@ class ReciprocalTrigonometricFunction(TrigonometricFunction):
 
     @classmethod
     def eval(cls, arg):
-        if _more_minus(arg):
+        if arg.could_extract_minus_sign():
             if cls._is_even:
                 return cls(-arg)
             if cls._is_odd:
@@ -1992,7 +1992,7 @@ class sinc(Function):
         if arg is S.ComplexInfinity:
             return S.NaN
 
-        if _more_minus(arg):
+        if arg.could_extract_minus_sign():
             return cls(-arg)
 
         pi_coeff = _pi_coeff(arg)
@@ -2179,7 +2179,7 @@ class asin(InverseTrigonometricFunction):
         if arg is S.ComplexInfinity:
             return S.ComplexInfinity
 
-        if _more_minus(arg):
+        if arg.could_extract_minus_sign():
             return -cls(-arg)
 
         if arg.is_number:
@@ -2616,7 +2616,7 @@ class atan(InverseTrigonometricFunction):
             from sympy.calculus.util import AccumBounds
             return AccumBounds(-S.Pi/2, S.Pi/2)
 
-        if _more_minus(arg):
+        if arg.could_extract_minus_sign():
             return -cls(-arg)
 
         if arg.is_number:
@@ -2811,7 +2811,7 @@ class acot(InverseTrigonometricFunction):
         if arg is S.ComplexInfinity:
             return S.Zero
 
-        if _more_minus(arg):
+        if arg.could_extract_minus_sign():
             return -cls(-arg)
 
         if arg.is_number:
@@ -3166,7 +3166,7 @@ class acsc(InverseTrigonometricFunction):
         if arg in [S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
             return S.Zero
 
-        if _more_minus(arg):
+        if arg.could_extract_minus_sign():
             return -cls(-arg)
 
         if arg.is_number:

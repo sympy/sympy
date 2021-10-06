@@ -6,7 +6,6 @@ from typing import Any, Dict
 
 from sympy import sympify, S, Mul
 from sympy.core.compatibility import default_sort_key
-from sympy.core.function import _coeff_isneg
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import \
     precedence_traditional, PRECEDENCE, PRECEDENCE_TRADITIONAL
@@ -199,7 +198,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
     def _print_Mul(self, expr):
 
-        if _coeff_isneg(expr):
+        if expr.could_extract_minus_sign(0):
             x = self.dom.createElement('apply')
             x.appendChild(self.dom.createElement('minus'))
             x.appendChild(self._print_Mul(-expr))
@@ -237,7 +236,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
         lastProcessed = self._print(args[0])
         plusNodes = []
         for arg in args[1:]:
-            if _coeff_isneg(arg):
+            if arg.could_extract_minus_sign(0):
                 # use minus
                 x = self.dom.createElement('apply')
                 x.appendChild(self.dom.createElement('minus'))
@@ -705,7 +704,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                     mrow.appendChild(y)
             return mrow
         mrow = self.dom.createElement('mrow')
-        if _coeff_isneg(expr):
+        if expr.could_extract_minus_sign(0):
             x = self.dom.createElement('mo')
             x.appendChild(self.dom.createTextNode('-'))
             mrow.appendChild(x)
@@ -720,7 +719,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         args = self._as_ordered_terms(expr, order=order)
         mrow.appendChild(self._print(args[0]))
         for arg in args[1:]:
-            if _coeff_isneg(arg):
+            if arg.could_extract_minus_sign(0):
                 # use minus
                 x = self.dom.createElement('mo')
                 x.appendChild(self.dom.createTextNode('-'))
@@ -1788,7 +1787,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         else:
             args = list(args)
 
-        if isinstance(expr, MatMul) and _coeff_isneg(expr):
+        if isinstance(expr, MatMul) and expr.could_extract_minus_sign(0):
             if args[0] == -1:
                 args = args[1:]
             else:

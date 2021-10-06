@@ -684,6 +684,26 @@ class Basic(Printable, metaclass=ManagedProperties):
         else:
             return n._prec != 1
 
+    def could_extract_minus_sign(self, legacy=True):
+        """Return True if self has a leading negative Rational factor
+        or is an Add with more negative signs that positive (or, in
+        case of a tie, a canonical True/False based on comparison of
+        ``self`` and ``-self``.
+
+        For most expressions, e, there will be a difference in e and -e.
+        When there is, True will be returned for one and False for the
+        other; False will be returned if there is no difference.
+
+        Examples
+        ========
+
+        >>> from sympy.abc import x, y
+        >>> e = x - y
+        >>> {i.could_extract_minus_sign() for i in (e, -e)}
+        {False, True}
+        """
+        return False  # override in subclasses
+
     @property
     def func(self):
         """

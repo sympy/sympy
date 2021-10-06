@@ -188,6 +188,9 @@ class MatMul(MatrixExpr, Mul):
         coeff_nc = [x for x in self.args if not x.is_commutative]
         return [coeff_c, coeff_nc]
 
+    def could_extract_minus_sign(self, legacy=True):
+        return self.args[0].could_extract_minus_sign(legacy)
+
     def _eval_derivative_matrix_lines(self, x):
         from .transpose import Transpose
         with_x_ind = [i for i, arg in enumerate(self.args) if arg.has(x)]

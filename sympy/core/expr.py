@@ -2286,9 +2286,8 @@ class Expr(Basic, EvalfMixin):
             # assert cs >= 1
             if c.is_Number:
                 if c is S.NegativeOne:
-                    neg_args = sum(1 for _ in self.args if _coeff_isneg(_))
-                    xs = 2*neg_args - len(self.args)  # excess negatives
-                    neg = (xs > 0) if xs else bool(
+                    xs = ps._excess_neg_args
+                    neg = xs if xs is not None else bool(
                         self.sort_key() < (-self).sort_key())
                     if neg:
                         return -self
@@ -2470,48 +2469,6 @@ class Expr(Basic, EvalfMixin):
                                 deprecated_since_version="1.9").warn()
         return {j for i in self.args for j in i.expr_free_symbols}
 
-    def could_extract_minus_sign(self):
-        """Return True if self is not in a canonical form with respect
-        to its sign.
-
-        For most expressions, e, there will be a difference in e and -e.
-        When there is, True will be returned for one and False for the
-        other; False will be returned if there is no difference.
-
-        Examples
-        ========
-
-        >>> from sympy.abc import x, y
-        >>> e = x - y
-        >>> {i.could_extract_minus_sign() for i in (e, -e)}
-        {False, True}
-
-        """
-        negative_self = -self
-        if self == negative_self:
-            return False  # e.g. zoo*x == -zoo*x
-        if self.is_Add:
-            rv = self._excess_neg_args
-            if rv is not None:
-                return rv
-            # in case of tie, use canonical first arg, not self.args[0]
-            # since arg sorting will affect that
-            return bool(self.sort_key() < negative_self.sort_key())
-        elif self.is_Mul:
-            # choose the one with an odd number of minus signs
-            def can(args):
-                arg_signs = [arg.could_extract_minus_sign() for arg in args]
-                negative_args = list(filter(None, arg_signs))
-                return len(negative_args) % 2 == 1
-            n, d = self.as_numer_denom()
-            if n == 1:
-                return can(Mul.make_args(d))
-            elif d == 1:
-                return can(Mul.make_args(n))
-            return can(Mul.make_args(n) + Mul.make_args(d))
-        elif self.is_Number:
-            return bool(self < 0)
-        return False
 
     def extract_branch_factor(self, allow_half=False):
         """
@@ -4112,7 +4069,7 @@ class ExprBuilder:
 from .mul import Mul
 from .add import Add
 from .power import Pow
-from .function import Function, _derivative_dispatch, _coeff_isneg
+from .function import Function, _derivative_dispatch
 from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Integer, Rational
