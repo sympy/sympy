@@ -403,7 +403,14 @@ def signsimp(expr, evaluate=None):
     if not isinstance(e, (Expr, Relational)) or e.is_Atom:
         return e
     if e.is_Add:
-        return e.func(*[signsimp(a, evaluate) for a in e.args])
+        # if the double negation is not done then
+        # you can get into a recursion with Abs(1 - x)
+        e = e.func(*[-signsimp(-a) for a in e.args])
+        if not isinstance(e, Add):
+            return e
+        if not evaluate and e.could_extract_minus_sign():
+            return Mul(S.NegativeOne, -e, evaluate=False)
+        return e
     if evaluate:
         e = e.xreplace({m: -(-m) for m in e.atoms(Mul) if -(-m) != m})
     return e

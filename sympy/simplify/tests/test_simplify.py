@@ -600,9 +600,14 @@ def test_as_content_primitive():
 def test_signsimp():
     e = x*(-x + 1) + x*(x - 1)
     assert signsimp(Eq(e, 0)) is S.true
-    assert Abs(x - 1) == Abs(1 - x)
+    assert Abs(x - 1) == Abs(1 - x)  # this is an important test to keep
     assert signsimp(y - x) == y - x
     assert signsimp(y - x, evaluate=False) == Mul(-1, x - y, evaluate=False)
+    # issue 22189
+    a = sqrt(7 - 2*x) - 2
+    ans = p, m = [signsimp(i, evaluate=False) for i in (a, -a)]
+    assert set([i.func for i in ans]) == set([Add, Mul])
+    assert abs(a) == abs(-a)
 
 
 def test_besselsimp():
