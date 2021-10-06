@@ -3217,7 +3217,10 @@ def count_ops(expr, visual=False):
                 # if it's not in the list above we don't
                 # consider a.func something to count, e.g.
                 # Tuple, MatrixSymbol, etc...
-                o = Symbol(a.func.__name__.upper())
+                if isinstance(a.func,UndefinedFunction):
+                    o = Symbol("FUNC_" + a.func.__name__.upper())
+                else:
+                    o = Symbol(a.func.__name__.upper())
                 ops.append(o)
 
             if not a.is_Symbol:
