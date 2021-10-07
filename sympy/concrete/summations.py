@@ -985,7 +985,7 @@ def eval_sum(f, limits):
     from sympy.functions import KroneckerDelta
 
     (i, a, b) = limits
-    if f.is_zero:
+    if f.is_zero or f.simplify().is_zero:
         return S.Zero
     if i not in f.free_symbols:
         return f*(b - a + 1)
