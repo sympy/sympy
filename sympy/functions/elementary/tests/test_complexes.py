@@ -967,9 +967,8 @@ def test_issue_14238():
 
 def test_issue_22189():
     x = Symbol('x')
-    a = Abs(sqrt(7 - 2*x) - 2)
-    b = Abs(2 - sqrt(7 - 2*x))
-    assert a - b == S.Zero
+    for a in (sqrt(7 - 2*x) - 2, 1 - x):
+        assert Abs(a) - Abs(-a) == 0, a
 
 
 def test_zero_assumptions():
