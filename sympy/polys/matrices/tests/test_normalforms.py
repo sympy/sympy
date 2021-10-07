@@ -1,17 +1,18 @@
 from sympy.testing.pytest import raises
 
 from sympy import Symbol, sympify
-from sympy.polys.matrices.normalforms import invariant_factors, smith_normal_form
+from sympy.polys.matrices.normalforms import (
+    invariant_factors, smith_normal_form, hermite_normal_form)
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.matrices import DomainMatrix
 
 
-def test_smith_normal():
+def DM(elems, domain):
+    conv = lambda e: domain.from_sympy(sympify(e))
+    elems = [[conv(e) for e in row] for row in elems]
+    return DomainMatrix(elems, (len(elems), len(elems[0])), domain)
 
-    def DM(elems, domain):
-        conv = lambda e: domain.from_sympy(sympify(e))
-        elems = [[conv(e) for e in row] for row in elems]
-        return DomainMatrix(elems, (len(elems), len(elems[0])), domain)
+def test_smith_normal():
 
     m = DM([[12, 6, 4, 8], [3, 9, 6, 12], [2, 16, 14, 28], [20, 10, 10, 20]], ZZ)
     smf = DM([[1, 0, 0, 0], [0, 10, 0, 0], [0, 0, -30, 0], [0, 0, 0, 0]], ZZ)
@@ -38,3 +39,28 @@ def test_smith_normal():
     assert smith_normal_form(m).to_dense() == snf
 
     raises(ValueError, lambda: smith_normal_form(DM([[1]], ZZ[x])))
+
+
+def test_hermite_normal():
+    m = DM([[2, 7, 17, 29, 41], [3, 11, 19, 31, 43], [5, 13, 23, 37, 47]], ZZ)
+    hnf = DM([[1, 0, 0], [0, 2, 1], [0, 0, 1]], ZZ)
+    assert hermite_normal_form(m) == hnf
+    assert hermite_normal_form(m, D=2) == hnf
+    assert hermite_normal_form(m, D=2, check_rank=True) == hnf
+
+    tr_hnf = DM([[37, 0, 19], [222, -6, 113], [48, 0, 25], [0, 2, 1], [0, 0, 1]], ZZ)
+    assert hermite_normal_form(m.transpose()) == tr_hnf
+
+    m = DM([[8, 28, 68, 116, 164], [3, 11, 19, 31, 43], [5, 13, 23, 37, 47]], ZZ)
+    hnf = DM([[4, 0, 0], [0, 2, 1], [0, 0, 1]], ZZ)
+    assert hermite_normal_form(m) == hnf
+    assert hermite_normal_form(m, D=8) == hnf
+    assert hermite_normal_form(m, D=8, check_rank=True) == hnf
+
+    m = DM([[10, 8, 6, 30, 2], [45, 36, 27, 18, 9], [5, 4, 3, 2, 1]], ZZ)
+    hnf = DM([[26, 2], [0, 9], [0, 1]], ZZ)
+    assert hermite_normal_form(m) == hnf
+
+    m = DM([[2, 7], [0, 0], [0, 0]], ZZ)
+    hnf = DM([[], [], []], ZZ)
+    assert hermite_normal_form(m) == hnf

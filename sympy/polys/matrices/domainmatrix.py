@@ -608,6 +608,23 @@ class DomainMatrix:
     def is_zero_matrix(self):
         return all(self[i, j].element == self.domain.zero for i in range(self.shape[0]) for j in range(self.shape[1]))
 
+    @property
+    def is_upper(self):
+        return all(self[i, j].element == self.domain.zero for i in range(1, self.shape[0]) for j in range(min(i, self.shape[1])))
+
+    @property
+    def is_lower(self):
+        return all(self[i, j].element == self.domain.zero for i in range(self.shape[0]) for j in range(i + 1, self.shape[1]))
+
+    @property
+    def is_square(self):
+        return self.shape[0] == self.shape[1]
+
+    @property
+    def rank(self):
+        rref, pivots = self.rref()
+        return len(pivots)
+
     def hstack(A, *B):
         r"""Horizontally stack the given matrices.
 
@@ -1170,15 +1187,71 @@ class DomainMatrix:
         rref_ddm, pivots = self.rep.rref()
         return self.from_rep(rref_ddm), tuple(pivots)
 
-    def nullspace(self):
+    def columnspace(self):
         r"""
-        Returns the Null Space for the DomainMatrix
+        Returns the columnspace for the DomainMatrix
 
         Returns
         =======
 
         DomainMatrix
-            Null Space of the DomainMatrix
+            The columns of this matrix form a basis for the columnspace.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([
+        ...    [QQ(1), QQ(-1)],
+        ...    [QQ(2), QQ(-2)]], (2, 2), QQ)
+        >>> A.columnspace()
+        DomainMatrix([[1], [2]], (2, 1), QQ)
+
+        """
+        if not self.domain.is_Field:
+            raise ValueError('Not a field')
+        rref, pivots = self.rref()
+        rows, cols = self.shape
+        return self.extract(range(rows), pivots)
+
+    def rowspace(self):
+        r"""
+        Returns the rowspace for the DomainMatrix
+
+        Returns
+        =======
+
+        DomainMatrix
+            The rows of this matrix form a basis for the rowspace.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([
+        ...    [QQ(1), QQ(-1)],
+        ...    [QQ(2), QQ(-2)]], (2, 2), QQ)
+        >>> A.rowspace()
+        DomainMatrix([[1, -1]], (1, 2), QQ)
+
+        """
+        if not self.domain.is_Field:
+            raise ValueError('Not a field')
+        rref, pivots = self.rref()
+        rows, cols = self.shape
+        return self.extract(range(len(pivots)), range(cols))
+
+    def nullspace(self):
+        r"""
+        Returns the nullspace for the DomainMatrix
+
+        Returns
+        =======
+
+        DomainMatrix
+            The rows of this matrix form a basis for the nullspace.
 
         Examples
         ========
@@ -1470,7 +1543,7 @@ class DomainMatrix:
 
     @classmethod
     def ones(cls, shape, domain):
-        """Returns a zero DomainMatrix of size shape, belonging to the specified domain
+        """Returns a DomainMatrix of 1s, of size shape, belonging to the specified domain
 
         Examples
         ========

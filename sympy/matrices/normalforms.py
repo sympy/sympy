@@ -5,6 +5,7 @@ from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.normalforms import (
         smith_normal_form as _snf,
         invariant_factors as _invf,
+        hermite_normal_form as _hnf,
     )
 
 
@@ -63,3 +64,17 @@ def invariant_factors(m, domain=None):
             to_poly = lambda f: Poly(f, K.symbols, domain=K.domain)
             factors = tuple(to_poly(f) for f in factors)
     return factors
+
+
+def hermite_normal_form(A, D=None):
+    '''
+    Return the Hermite Normal Form of a Matrix `A` with integer entries.
+
+    If known in advance, a positive integer `D` being any multiple of `det(W)`
+    may be provided. In this case, if `A` also has rank equal to its number of
+    rows, then we may use an alternative algorithm that works mod `D` in order
+    to prevent coefficient explosion.
+    '''
+    from sympy.polys.domains import ZZ
+    dA = _to_domain(A, ZZ)
+    return _hnf(dA, D=D).to_Matrix()
