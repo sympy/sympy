@@ -5,6 +5,7 @@ from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.concrete.gosper import gosper_sum
 from sympy.core.add import Add
 from sympy.core.function import Derivative
+from sympy.core.numbers import Float, Rational
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -1164,13 +1165,16 @@ def eval_sum_symbolic(f, limits):
 
     if result is not None:
         n = result[n]
+        if isinstance(n, Float):
+            n = Rational(n)
 
-        if n.is_Integer or n.is_real:
+        if n.is_Integer or n.is_Rational:
             if n >= 0:
                 if (b is S.Infinity and not a is S.NegativeInfinity) or \
                    (a is S.NegativeInfinity and not b is S.Infinity):
                     return S.Infinity
-                return ((bernoulli(n + 1, b + 1) - bernoulli(n + 1, a))/(n + 1)).expand()
+                if n.is_Integer:
+                    return ((bernoulli(n + 1, b + 1) - bernoulli(n + 1, a))/(n + 1)).expand()
             elif a.is_Integer and a >= 1:
                 if n == -1:
                     return harmonic(b) - harmonic(a - 1)
