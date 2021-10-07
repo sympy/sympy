@@ -11,7 +11,7 @@ from sympy.core.core import BasicMeta
 from sympy.core.singleton import SingletonRegistry
 from sympy.core.symbol import Str, Dummy, Symbol, Wild
 from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer,
-        Rational, Float)
+        Rational, Float, AlgebraicNumber)
 from sympy.core.relational import (Equality, GreaterThan, LessThan, Relational,
         StrictGreaterThan, StrictLessThan, Unequality)
 from sympy.core.add import Add
@@ -115,6 +115,8 @@ def test_core_symbol():
 def test_core_numbers():
     for c in (Integer(2), Rational(2, 3), Float("1.2")):
         check(c)
+    for c in (AlgebraicNumber, AlgebraicNumber(sqrt(3))):
+        check(c, check_attr=False)
 
 
 def test_core_float_copy():
@@ -493,11 +495,6 @@ def test_pickling_polys_domains():
     for c in (ExpressionDomain, ExpressionDomain()):
         check(c, check_attr=False)
 
-def test_pickling_polys_numberfields():
-    from sympy.polys.numberfields import AlgebraicNumber
-
-    for c in (AlgebraicNumber, AlgebraicNumber(sqrt(3))):
-        check(c, check_attr=False)
 
 def test_pickling_polys_orderings():
     from sympy.polys.orderings import (LexOrder, GradedLexOrder,
