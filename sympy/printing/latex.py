@@ -1778,7 +1778,6 @@ class LatexPrinter(Printer):
         return "P_{%s}" % perm_str
 
     def _print_NDimArray(self, expr):
-
         if expr.rank() == 0:
             return self._print(expr[()])
 
@@ -1802,6 +1801,9 @@ class LatexPrinter(Printer):
         if expr.rank() == 0:
             return block_str % ""
 
+        if mat_str == 'array':
+            block_str = block_str.replace('%s', '%s%s')
+
         level_str = [[]] + [[] for i in range(expr.rank())]
         shape_ranges = [list(range(i)) for i in expr.shape]
         for outer_i in itertools.product(*shape_ranges):
@@ -1814,8 +1816,12 @@ class LatexPrinter(Printer):
                     level_str[back_outer_i].append(
                         r" & ".join(level_str[back_outer_i+1]))
                 else:
-                    level_str[back_outer_i].append(
-                        block_str % (r"\\".join(level_str[back_outer_i+1])))
+                    str2 = r"\\".join(level_str[back_outer_i+1])
+                    if mat_str == 'array':
+                        str1 = '{' + 'c'*expr.shape[back_outer_i+1] + '}'
+                        level_str[back_outer_i].append(block_str % (str1, str2))
+                    else:
+                        level_str[back_outer_i].append(block_str % str2)
                     if len(level_str[back_outer_i+1]) == 1:
                         level_str[back_outer_i][-1] = r"\left[" + \
                             level_str[back_outer_i][-1] + r"\right]"
@@ -1825,8 +1831,10 @@ class LatexPrinter(Printer):
         out_str = level_str[0][0]
 
         if expr.rank() % 2 == 1:
-            out_str = block_str % out_str
-
+            if mat_str == 'array':
+                out_str = block_str % ('{' + 'c'*expr.shape[0] + '}', out_str)
+            else:
+                out_str = block_str % out_str
         return out_str
 
     def _printer_tensor_indices(self, name, indices, index_map={}):

@@ -29,7 +29,8 @@ from sympy.abc import mu, tau
 from sympy.printing.latex import (latex, translate, greek_letters_set,
                                   tex_greek_dictionary, multiline_latex,
                                   latex_escape, LatexPrinter)
-from sympy.tensor.array import (ImmutableDenseNDimArray,
+from sympy.tensor.array import (Array,
+                                ImmutableDenseNDimArray,
                                 ImmutableSparseNDimArray,
                                 MutableSparseNDimArray,
                                 MutableDenseNDimArray,
@@ -1418,6 +1419,17 @@ def test_latex_NDimArray():
             r"\left[\begin{matrix}x\\y\\\frac{1}{z}\end{matrix}\right]"
         assert latex(Mcol2) == \
             r'\left[\begin{matrix}\left[\begin{matrix}x\\y\\\frac{1}{z}\end{matrix}\right]\end{matrix}\right]'
+    # Issue 19381
+    assert latex(Array([[[1]]]), mat_str='array') == \
+        r'\left[\begin{array}{c}\left[\left[\begin{array}{c}1\end{array}\right]\right]\end{array}\right]'
+    assert latex(Array([[[1, 2], [3, 4], [5, 6]],
+                        [[7, 8], [9, 10], [11, 12]]]),
+                 mat_str='array') == \
+        r'\left[\begin{array}{cc}\left[\begin{array}{cc}1 & 2\\3 & 4\\5 & 6\end{array}\right] & \left[\begin{array}{cc}7 & 8\\9 & 10\\11 & 12\end{array}\right]\end{array}\right]'
+    assert latex(Array([[[1, 2], [3, 4], [5, 6]],
+                        [[7, 8], [9, 10], [11, 12]],
+                        [[1, 2], [3, 4], [5, 6]]]), mat_str='array') == \
+        r'\left[\begin{array}{ccc}\left[\begin{array}{cc}1 & 2\\3 & 4\\5 & 6\end{array}\right] & \left[\begin{array}{cc}7 & 8\\9 & 10\\11 & 12\end{array}\right] & \left[\begin{array}{cc}1 & 2\\3 & 4\\5 & 6\end{array}\right]\end{array}\right]'
 
 
 def test_latex_mul_symbol():
