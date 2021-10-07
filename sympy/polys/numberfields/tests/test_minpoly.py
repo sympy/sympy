@@ -2,19 +2,27 @@
 
 from sympy import (S, Rational, AlgebraicNumber, Poly, sqrt, I, oo, expand,
     pi, cos, sin, tan, exp, GoldenRatio, TribonacciConstant, cbrt)
-from sympy.testing.pytest import raises
+from sympy.solvers.solveset import nonlinsolve
+from sympy.geometry import Circle, intersection
+from sympy.testing.pytest import raises, slow
+from sympy.sets.sets import FiniteSet
+from sympy import Point2D
 from sympy.polys.numberfields.minpoly import (
     minimal_polynomial,
     primitive_element,
     _choose_factor,
 )
-from sympy.polys.polyerrors import NotAlgebraic
+from sympy.polys.partfrac import apart
+from sympy.polys.polyerrors import (
+    NotAlgebraic,
+    GeneratorsError,
+)
 
 from sympy.polys.domains import QQ
 from sympy.polys.rootoftools import rootof
 from sympy.polys.polytools import degree
 
-from sympy.abc import x, y
+from sympy.abc import x, y, z
 
 Q = Rational
 
@@ -337,3 +345,95 @@ def test_primitive_element():
     # Issue 14117
     a, b = I*sqrt(2*sqrt(2) + 3), I*sqrt(-2*sqrt(2) + 3)
     assert primitive_element([a, b, I], x) == (x**4 + 6*x**2 + 1, [1, 0, 0])
+
+
+def test_minpoly_fraction_field():
+    assert minimal_polynomial(1/x, y) == -x*y + 1
+    assert minimal_polynomial(1 / (x + 1), y) == (x + 1)*y - 1
+
+    assert minimal_polynomial(sqrt(x), y) == y**2 - x
+    assert minimal_polynomial(sqrt(x + 1), y) == y**2 - x - 1
+    assert minimal_polynomial(sqrt(x) / x, y) == x*y**2 - 1
+    assert minimal_polynomial(sqrt(2) * sqrt(x), y) == y**2 - 2 * x
+    assert minimal_polynomial(sqrt(2) + sqrt(x), y) == \
+        y**4 + (-2*x - 4)*y**2 + x**2 - 4*x + 4
+
+    assert minimal_polynomial(x**Rational(1,3), y) == y**3 - x
+    assert minimal_polynomial(x**Rational(1,3) + sqrt(x), y) == \
+        y**6 - 3*x*y**4 - 2*x*y**3 + 3*x**2*y**2 - 6*x**2*y - x**3 + x**2
+
+    assert minimal_polynomial(sqrt(x) / z, y) == z**2*y**2 - x
+    assert minimal_polynomial(sqrt(x) / (z + 1), y) == (z**2 + 2*z + 1)*y**2 - x
+
+    assert minimal_polynomial(1/x, y, polys=True) == Poly(-x*y + 1, y, domain='ZZ(x)')
+    assert minimal_polynomial(1 / (x + 1), y, polys=True) == \
+        Poly((x + 1)*y - 1, y, domain='ZZ(x)')
+    assert minimal_polynomial(sqrt(x), y, polys=True) == Poly(y**2 - x, y, domain='ZZ(x)')
+    assert minimal_polynomial(sqrt(x) / z, y, polys=True) == \
+        Poly(z**2*y**2 - x, y, domain='ZZ(x, z)')
+
+    # this is (sqrt(1 + x**3)/x).integrate(x).diff(x) - sqrt(1 + x**3)/x
+    a = sqrt(x)/sqrt(1 + x**(-3)) - sqrt(x**3 + 1)/x + 1/(x**Rational(5, 2)* \
+        (1 + x**(-3))**Rational(3, 2)) + 1/(x**Rational(11, 2)*(1 + x**(-3))**Rational(3, 2))
+
+    assert minimal_polynomial(a, y) == y
+
+    raises(NotAlgebraic, lambda: minimal_polynomial(exp(x), y))
+    raises(GeneratorsError, lambda: minimal_polynomial(sqrt(x), x))
+    raises(GeneratorsError, lambda: minimal_polynomial(sqrt(x) - y, x))
+    raises(NotImplementedError, lambda: minimal_polynomial(sqrt(x), y, compose=False))
+
+@slow
+def test_minpoly_fraction_field_slow():
+    assert minimal_polynomial(minimal_polynomial(sqrt(x**Rational(1,5) - 1),
+        y).subs(y, sqrt(x**Rational(1,5) - 1)), z) == z
+
+def test_minpoly_domain():
+    assert minimal_polynomial(sqrt(2), x, domain=QQ.algebraic_field(sqrt(2))) == \
+        x - sqrt(2)
+    assert minimal_polynomial(sqrt(8), x, domain=QQ.algebraic_field(sqrt(2))) == \
+        x - 2*sqrt(2)
+    assert minimal_polynomial(sqrt(Rational(3,2)), x,
+        domain=QQ.algebraic_field(sqrt(2))) == 2*x**2 - 3
+
+    raises(NotAlgebraic, lambda: minimal_polynomial(y, x, domain=QQ))
+
+
+def test_issue_14831():
+    a = -2*sqrt(2)*sqrt(12*sqrt(2) + 17)
+    assert minimal_polynomial(a, x) == x**2 + 16*x - 8
+    e = (-3*sqrt(12*sqrt(2) + 17) + 12*sqrt(2) +
+         17 - 2*sqrt(2)*sqrt(12*sqrt(2) + 17))
+    assert minimal_polynomial(e, x) == x
+
+
+def test_issue_18248():
+    assert nonlinsolve([x*y**3-sqrt(2)/3, x*y**6-4/(9*(sqrt(3)))],x,y) == \
+            FiniteSet((sqrt(3)/2, sqrt(6)/3), (sqrt(3)/2, -sqrt(6)/6 - sqrt(2)*I/2),
+            (sqrt(3)/2, -sqrt(6)/6 + sqrt(2)*I/2))
+
+
+def test_issue_13230():
+    c1 = Circle(Point2D(3, sqrt(5)), 5)
+    c2 = Circle(Point2D(4, sqrt(7)), 6)
+    assert intersection(c1, c2) == [Point2D(-1 + (-sqrt(7) + sqrt(5))*(-2*sqrt(7)/29
+    + 9*sqrt(5)/29 + sqrt(196*sqrt(35) + 1941)/29), -2*sqrt(7)/29 + 9*sqrt(5)/29
+    + sqrt(196*sqrt(35) + 1941)/29), Point2D(-1 + (-sqrt(7) + sqrt(5))*(-sqrt(196*sqrt(35)
+    + 1941)/29 - 2*sqrt(7)/29 + 9*sqrt(5)/29), -sqrt(196*sqrt(35) + 1941)/29 - 2*sqrt(7)/29 + 9*sqrt(5)/29)]
+
+def test_issue_19760():
+    e = 1/(sqrt(1 + sqrt(2)) - sqrt(2)*sqrt(1 + sqrt(2))) + 1
+    mp_expected = x**4 - 4*x**3 + 4*x**2 - 2
+
+    for comp in (True, False):
+        mp = Poly(minimal_polynomial(e, compose=comp))
+        assert mp(x) == mp_expected, "minimal_polynomial(e, compose=%s) = %s; %s expected" % (comp, mp(x), mp_expected)
+
+
+def test_issue_20163():
+    assert apart(1/(x**6+1), extension=[sqrt(3), I]) == \
+        (sqrt(3) + I)/(2*x + sqrt(3) + I)/6 + \
+        (sqrt(3) - I)/(2*x + sqrt(3) - I)/6 - \
+        (sqrt(3) - I)/(2*x - sqrt(3) + I)/6 - \
+        (sqrt(3) + I)/(2*x - sqrt(3) - I)/6 + \
+        I/(x + I)/6 - I/(x - I)/6
