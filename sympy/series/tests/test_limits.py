@@ -1037,3 +1037,8 @@ def test_issue_21785():
 
 def test_issue_22181():
     assert limit((-1)**x * 2**(-x), x, oo) == 0
+
+def test_issue_8635():
+    assert limit(x**n-x**(n-0), x, oo) == 0
+    assert limit(x**n-x**(n-5), x, oo) == oo
+    assert limit(x**n-x**(n-2.5), x, oo) == oo
