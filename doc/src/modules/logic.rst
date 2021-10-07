@@ -117,7 +117,7 @@ Simplification and equivalence-testing
 
 .. autofunction:: sympy.logic.boolalg::simplify_logic
 
-SymPy's :py:func:`~.simplify()` function can also be used to simplify logic expressions to their
+SymPy's :py:func:`~.simplify` function can also be used to simplify logic expressions to their
 simplest forms.
 
 .. autofunction:: sympy.logic.boolalg::bool_map
