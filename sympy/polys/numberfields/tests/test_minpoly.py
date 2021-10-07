@@ -163,7 +163,7 @@ def test_minimal_polynomial():
     # AlgebraicNumber with an alias.
     # Wester H24
     phi = AlgebraicNumber(S.GoldenRatio.expand(func=True), alias='phi')
-    minimal_polynomial(phi, x) == x**2 - x - 1
+    assert minimal_polynomial(phi, x) == x**2 - x - 1
 
 
 def test_minimal_polynomial_issue_19732():
