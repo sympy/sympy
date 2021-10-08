@@ -6,6 +6,9 @@ DomainMatrices.
 """
 
 
+from .exceptions import DDMRankError
+
+
 def invertible_supplement(M):
     """
     Given an n x r matrix M of rank r (so r <= n), find an invertible n x n
@@ -33,7 +36,7 @@ def invertible_supplement(M):
 
     R, pivots = M.rref()
     if pivots[:r] != tuple(range(r)):
-        raise ValueError('M was not of maximal rank')
+        raise DDMRankError('M was not of maximal rank')
 
     A = R[:, r:]
     B = A.inv()

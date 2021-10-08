@@ -28,18 +28,24 @@ class DDMDomainError(DDMError):
     pass
 
 
-class DDMShapeError(DDMError):
-    """shapes are inconsistent"""
-    pass
-
-
 class DDMFormatError(DDMError):
     """mixed dense/sparse not supported"""
     pass
 
 
+class DDMRankError(DDMError):
+    """matrix does not have expected rank"""
+    pass
+
+
+class DDMShapeError(DDMError):
+    """shapes are inconsistent"""
+    pass
+
+
 __all__ = [
-    'DDMError', 'DDMShapeError', 'DDMDomainError', 'DDMFormatError',
+    'DDMError', 'DDMBadInputError', 'DDMDomainError', 'DDMFormatError',
+    'DDMRankError', 'DDMShapeError',
 
     'NonSquareMatrixError', 'NonInvertibleMatrixError', 'ShapeError',
 ]
