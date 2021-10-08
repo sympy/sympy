@@ -441,18 +441,21 @@ class prettyForm(stringPict):
         }
 
         if len(others) == 0:
-            return self # We aren't actually multiplying... So nothing to do here.
-        args = self
-        if args.binding > prettyForm.MUL:
-            arg = stringPict(*args.parens())
-        result = [args]
+            return self  # We aren't actually multiplying... So nothing to do here.
+
+        # add parens on args that need them
+        arg = self
+        if arg.binding > prettyForm.MUL and arg.binding != prettyForm.NEG:
+            arg = stringPict(*arg.parens())
+        result = [arg]
         for arg in others:
             if arg.picture[0] not in quantity.values():
                 result.append(xsym('*'))
             #add parentheses for weak binders
-            if arg.binding > prettyForm.MUL:
+            if arg.binding > prettyForm.MUL and arg.binding != prettyForm.NEG:
                 arg = stringPict(*arg.parens())
             result.append(arg)
+
         len_res = len(result)
         for i in range(len_res):
             if i < len_res - 1 and result[i] == '-1' and result[i + 1] == xsym('*'):
