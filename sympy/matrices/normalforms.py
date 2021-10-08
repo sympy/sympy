@@ -75,6 +75,4 @@ def hermite_normal_form(A, D=None):
     rows, then we may use an alternative algorithm that works mod `D` in order
     to prevent coefficient explosion.
     '''
-    from sympy.polys.domains import ZZ
-    dA = _to_domain(A, ZZ)
-    return _hnf(dA, D=D).to_Matrix()
+    return _hnf(A._rep, D=D).to_Matrix()
