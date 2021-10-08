@@ -66,13 +66,31 @@ def invariant_factors(m, domain=None):
     return factors
 
 
-def hermite_normal_form(A, D=None):
+def hermite_normal_form(A, D=None, check_rank=False):
     '''
-    Return the Hermite Normal Form of a Matrix `A` with integer entries.
+    Return the Hermite Normal Form `W` of a Matrix `A` with integer entries.
 
     If known in advance, a positive integer `D` being any multiple of `det(W)`
     may be provided. In this case, if `A` also has rank equal to its number of
     rows, then we may use an alternative algorithm that works mod `D` in order
     to prevent coefficient explosion.
+
+    Parameters
+    ==========
+
+    A: Matrix with all integer entries
+    D: (optional) positive integer (see above)
+    check_rank: The basic assumption is that, if you pass a value for D, then
+      you already believe that rank(A) == #rows(A), so we do not waste time
+      checking it for you. If you do want this to be checked (and the ordinary,
+      non-modulo-D algorithm to be used if the check fails), then set
+      `check_rank` to `True`.
+
+    Returns
+    =======
+
+    Matrix
+        The HNF of matrix A.
+
     '''
-    return _hnf(A._rep, D=D).to_Matrix()
+    return _hnf(A._rep, D=D, check_rank=check_rank).to_Matrix()
