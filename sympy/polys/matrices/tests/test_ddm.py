@@ -467,3 +467,40 @@ def test_DDM_extract():
     raises(IndexError, lambda: dm2.extract([0], [2]))
     raises(IndexError, lambda: dm2.extract([-3], [0]))
     raises(IndexError, lambda: dm2.extract([0], [-3]))
+
+
+def test_DDM_is_zero_matrix():
+    A = DDM([[QQ(1), QQ(0)], [QQ(0), QQ(0)]], (2, 2), QQ)
+    Azero = DDM.zeros((1, 2), QQ)
+    assert A.is_zero_matrix() is False
+    assert Azero.is_zero_matrix() is True
+
+
+def test_DDM_is_upper():
+    A = DDM([
+        [QQ(1), QQ(2), QQ(3), QQ(4)],
+        [QQ(0), QQ(5), QQ(6), QQ(7)],
+        [QQ(0), QQ(0), QQ(8), QQ(9)]
+    ], (3, 4), QQ)
+    B = DDM([
+        [QQ(1), QQ(2), QQ(3), QQ(4)],
+        [QQ(0), QQ(5), QQ(6), QQ(7)],
+        [QQ(0), QQ(7), QQ(8), QQ(9)]
+    ], (3, 4), QQ)
+    assert A.is_upper() is True
+    assert B.is_upper() is False
+
+
+def test_DDM_is_lower():
+    A = DDM([
+        [QQ(1), QQ(2), QQ(3), QQ(4)],
+        [QQ(0), QQ(5), QQ(6), QQ(7)],
+        [QQ(0), QQ(0), QQ(8), QQ(9)]
+    ], (3, 4), QQ).transpose()
+    B = DDM([
+        [QQ(1), QQ(2), QQ(3), QQ(4)],
+        [QQ(0), QQ(5), QQ(6), QQ(7)],
+        [QQ(0), QQ(7), QQ(8), QQ(9)]
+    ], (3, 4), QQ).transpose()
+    assert A.is_lower() is True
+    assert B.is_lower() is False

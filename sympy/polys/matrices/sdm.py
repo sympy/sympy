@@ -831,6 +831,26 @@ class SDM(dict):
         """
         return A.to_ddm().charpoly()
 
+    def is_zero_matrix(self):
+        """
+        Says whether this matrix has all zero entries.
+        """
+        return not self
+
+    def is_upper(self):
+        """
+        Says whether this matrix is upper-triangular. True can be returned
+        even if the matrix is not square.
+        """
+        return all(i <= j for i, row in self.items() for j in row)
+
+    def is_lower(self):
+        """
+        Says whether this matrix is lower-triangular. True can be returned
+        even if the matrix is not square.
+        """
+        return all(i >= j for i, row in self.items() for j in row)
+
 
 def binop_dict(A, B, fab, fa, fb):
     Anz, Bnz = set(A), set(B)

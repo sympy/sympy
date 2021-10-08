@@ -257,15 +257,15 @@ def test_DomainMatrix_is_zero_matrix():
 def test_DomainMatrix_is_upper():
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(0), ZZ(4)]], (2, 2), ZZ)
     B = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    assert A.is_upper is True
-    assert B.is_upper is False
+    assert A.is_upper() is True
+    assert B.is_upper() is False
 
 
 def test_DomainMatrix_is_lower():
     A = DomainMatrix([[ZZ(1), ZZ(0)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     B = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    assert A.is_lower is True
-    assert B.is_lower is False
+    assert A.is_lower() is True
+    assert B.is_lower() is False
 
 
 def test_DomainMatrix_is_square():
@@ -277,7 +277,7 @@ def test_DomainMatrix_is_square():
 
 def test_DomainMatrix_rank():
     A = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(4)], [QQ(6), QQ(8)]], (3, 2), QQ)
-    assert A.rank == 2
+    assert A.rank() == 2
 
 
 def test_DomainMatrix_add():

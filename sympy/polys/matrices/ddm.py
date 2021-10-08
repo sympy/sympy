@@ -449,5 +449,25 @@ class DDM(list):
         coeffs = [vec[i][0] for i in range(n+1)]
         return coeffs
 
+    def is_zero_matrix(self):
+        """
+        Says whether this matrix has all zero entries.
+        """
+        return all(self[i][j] == self.domain.zero for i in range(self.shape[0]) for j in range(self.shape[1]))
+
+    def is_upper(self):
+        """
+        Says whether this matrix is upper-triangular. True can be returned
+        even if the matrix is not square.
+        """
+        return all(self[i][j] == self.domain.zero for i in range(1, self.shape[0]) for j in range(min(i, self.shape[1])))
+
+    def is_lower(self):
+        """
+        Says whether this matrix is lower-triangular. True can be returned
+        even if the matrix is not square.
+        """
+        return all(self[i][j] == self.domain.zero for i in range(self.shape[0]) for j in range(i + 1, self.shape[1]))
+
 
 from .sdm import SDM

@@ -606,21 +606,26 @@ class DomainMatrix:
 
     @property
     def is_zero_matrix(self):
-        return all(self[i, j].element == self.domain.zero for i in range(self.shape[0]) for j in range(self.shape[1]))
+        return self.rep.is_zero_matrix()
 
-    @property
     def is_upper(self):
-        return all(self[i, j].element == self.domain.zero for i in range(1, self.shape[0]) for j in range(min(i, self.shape[1])))
+        """
+        Says whether this matrix is upper-triangular. True can be returned
+        even if the matrix is not square.
+        """
+        return self.rep.is_upper()
 
-    @property
     def is_lower(self):
-        return all(self[i, j].element == self.domain.zero for i in range(self.shape[0]) for j in range(i + 1, self.shape[1]))
+        """
+        Says whether this matrix is lower-triangular. True can be returned
+        even if the matrix is not square.
+        """
+        return self.rep.is_lower()
 
     @property
     def is_square(self):
         return self.shape[0] == self.shape[1]
 
-    @property
     def rank(self):
         rref, pivots = self.rref()
         return len(pivots)
