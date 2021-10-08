@@ -30,7 +30,10 @@ def test_logaddexp2():
         assert (
             lae2_xy.diff(wrt, deriv_order) -
             ref2_xy.diff(wrt, deriv_order)
-        ).rewrite(log).simplify() == 0
+        ).rewrite(log).simplify() == 0, (
+            lae2_xy.diff(wrt, deriv_order) -
+            ref2_xy.diff(wrt, deriv_order)
+        ).rewrite(log).simplify()
 
     def lb(x):
         return log(x)/log(2)
