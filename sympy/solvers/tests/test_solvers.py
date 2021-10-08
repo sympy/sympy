@@ -503,16 +503,23 @@ def test_solve_transcendental():
 
     eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
     result = solve(eq, x)
-    ans = [(log(2401) + 5*LambertW((-1 + sqrt(5) + sqrt(2)*I*sqrt(sqrt(5) + \
-        5))*log(7**(7*3**Rational(1, 5)/20))* -1))/(-3*log(7)), \
-        (log(2401) + 5*LambertW((1 + sqrt(5) - sqrt(2)*I*sqrt(5 - \
-        sqrt(5)))*log(7**(7*3**Rational(1, 5)/20))))/(-3*log(7)), \
-        (log(2401) + 5*LambertW((1 + sqrt(5) + sqrt(2)*I*sqrt(5 - \
-        sqrt(5)))*log(7**(7*3**Rational(1, 5)/20))))/(-3*log(7)), \
-        (log(2401) + 5*LambertW((-sqrt(5) + 1 + sqrt(2)*I*sqrt(sqrt(5) + \
-        5))*log(7**(7*3**Rational(1, 5)/20))))/(-3*log(7)), \
-        (log(2401) + 5*LambertW(-log(7**(7*3**Rational(1, 5)/5))))/(-3*log(7))]
-    assert result == ans
+    x0 = -log(2401)
+    x1 = 3**Rational(1, 5)
+    x2 = log(7**(7*x1/20))
+    x3 = sqrt(2)
+    x4 = sqrt(5)
+    x5 = x3*sqrt(x4 - 5)
+    x6 = x4 + 1
+    x7 = 1/(3*log(7))
+    x8 = -x4
+    x9 = x3*sqrt(x8 - 5)
+    x10 = x8 + 1
+    ans = [x7*(x0 - 5*LambertW(x2*(-x5 + x6))),
+           x7*(x0 - 5*LambertW(x2*(x5 + x6))),
+           x7*(x0 - 5*LambertW(x2*(x10 - x9))),
+           x7*(x0 - 5*LambertW(x2*(x10 + x9))),
+           x7*(x0 - 5*LambertW(-log(7**(7*x1/5))))]
+    assert result == ans, result
     # it works if expanded, too
     assert solve(eq.expand(), x) == result
 
@@ -1787,19 +1794,19 @@ def test_lambert_bivariate():
     x3 = x2*LambertW(1/x2)/a**5
     x4 = x3**Rational(1, 3)/2
     assert ans == [
+        x0*log(x4*(-x1 - 1)),
         x0*log(x4*(x1 - 1)),
-        x0*log(-x4*(x1 + 1)),
         x0*log(x3)/3]
     x1 = LambertW(Rational(1, 3))
     x2 = a**(-5)
-    x3 = 3**Rational(1, 3)
+    x3 = -3**Rational(1, 3)
     x4 = 3**Rational(5, 6)*I
     x5 = x1**Rational(1, 3)*x2**Rational(1, 3)/2
     ans = solve(3*log(ax) + ax, x)
     assert ans == [
         x0*log(3*x1*x2)/3,
-        x0*log(x5*(-x3 + x4)),
-        x0*log(-x5*(x3 + x4))]
+        x0*log(x5*(x3 - x4)),
+        x0*log(x5*(x3 + x4))]
     # coverage
     p = symbols('p', positive=True)
     eq = 4*2**(2*p + 3) - 2*p - 3
@@ -1818,8 +1825,8 @@ def test_lambert_bivariate():
     x2 = x0/6
     assert ans == [
         6*LambertW(x0/3),
-        6*LambertW(x2*(x1 - 1)),
-        6*LambertW(-x2*(x1 + 1))]
+        6*LambertW(x2*(-x1 - 1)),
+        6*LambertW(x2*(x1 - 1))]
     assert solve((1/x + exp(x/2)).diff(x, 2), x) == \
                 [6*LambertW(Rational(-1, 3)), 6*LambertW(Rational(1, 6) - sqrt(3)*I/6), \
                 6*LambertW(Rational(1, 6) + sqrt(3)*I/6), 6*LambertW(Rational(-1, 3), -1)]
