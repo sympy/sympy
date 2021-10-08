@@ -950,6 +950,8 @@ y   \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
+
+def test_Mul():
     expr = Mul(0, 1, evaluate=False)
     assert pretty(expr) == "0*1"
     assert upretty(expr) == "0⋅1"
@@ -975,8 +977,8 @@ y   \
     assert pretty(expr) == "0 + 0 + 1"
     assert upretty(expr) == "0 + 0 + 1"
     expr = Mul(1, -1, evaluate=False)
-    assert pretty(expr) == "1*(-1)"
-    assert upretty(expr) == "1⋅(-1)"
+    assert pretty(expr) == "1*-1"
+    assert upretty(expr) == "1⋅-1"
     expr = Mul(1.0, x, evaluate=False)
     assert pretty(expr) == "1.0*x"
     assert upretty(expr) == "1.0⋅x"
