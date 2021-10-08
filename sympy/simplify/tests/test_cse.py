@@ -90,6 +90,7 @@ def test_cse_single2():
     subst_half, (red_half,) = cse(0.5)  # issue 15082
     assert len(subst_half) == 0 and red_half == 0.5
 
+
 def test_cse_not_possible():
     # No substitution possible.
     e = Add(x, y)
@@ -127,6 +128,8 @@ def test_subtraction_opt():
     e = n/x/(-n)**2 - 1/n/x
     assert cse(e, optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)]) == \
         ([], [0])
+    assert cse(((w + x + y + z)*(w - y - z))/(w + x)**3) == \
+        ([(x0, w + x), (x1, y + z)], [(w - x1)*(x0 + x1)/x0**3])
 
 
 def test_multiple_expressions():
