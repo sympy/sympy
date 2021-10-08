@@ -3197,8 +3197,8 @@ class PermutationGroup(Basic):
             p_i \not \equiv 1 \pmod {p_j}
 
         holds true, there is only one group of the order $n$ which
-        is a cyclic group. [1]_ This is a generalization of the lemma
-        that the group of order $15, 35, ...$ are cyclic.
+        is a cyclic group [1]_. This is a generalization of the lemma
+        that the group of order $15, 35, \dots$ are cyclic.
 
         And also, these additional lemmas can be used to test if a
         group is cyclic if the order of the group is already found.

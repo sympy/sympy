@@ -39,14 +39,14 @@ _LOG2 = math.log(2)
 
 
 def comp(z1, z2, tol=None):
-    """Return a bool indicating whether the error between z1 and z2
-    is <= tol.
+    r"""Return a bool indicating whether the error between z1 and z2
+    is $\le$ ``tol``.
 
     Examples
     ========
 
-    If ``tol`` is None then True will be returned if
-    ``abs(z1 - z2)*10**p <= 5`` where ``p`` is minimum value of the
+    If ``tol`` is ``None`` then ``True`` will be returned if
+    :math:`|z1 - z2|\times 10^p \le 5` where $p$ is minimum value of the
     decimal precision of each value.
 
     >>> from sympy import comp, pi
@@ -67,8 +67,8 @@ def comp(z1, z2, tol=None):
     >>> comp(pi4, 3.1415, '')
     False
 
-    When ``tol`` is provided and ``z2`` is non-zero and
-    ``|z1| > 1`` the error is normalized by ``|z1|``:
+    When ``tol`` is provided and $z2$ is non-zero and
+    :math:`|z1| > 1` the error is normalized by :math:`|z1|`:
 
     >>> abs(pi4 - 3.14)/pi4
     0.000509791731426756
@@ -77,7 +77,7 @@ def comp(z1, z2, tol=None):
     >>> comp(pi4, 3.14, .0005)  # difference less than 0.1%
     False
 
-    When ``|z1| <= 1`` the absolute error is used:
+    When :math:`|z1| \le 1` the absolute error is used:
 
     >>> 1/pi4
     0.3183
@@ -234,8 +234,8 @@ def igcd(*args):
     Explanation
     ===========
 
-    The algorithm is based on the well known Euclid's algorithm. To
-    improve speed, igcd() has its own caching mechanism implemented.
+    The algorithm is based on the well known Euclid's algorithm [1]_. To
+    improve speed, ``igcd()`` has its own caching mechanism.
 
     Examples
     ========
@@ -245,6 +245,11 @@ def igcd(*args):
     2
     >>> igcd(5, 10, 15)
     5
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euclidean_algorithm
 
     """
     if len(args) < 2:
@@ -267,30 +272,30 @@ igcd2 = math.gcd
 
 
 def igcd_lehmer(a, b):
-    """Computes greatest common divisor of two integers.
+    r"""Computes greatest common divisor of two integers.
 
     Explanation
     ===========
 
     Euclid's algorithm for the computation of the greatest
-    common divisor  gcd(a, b)  of two (positive) integers
-    a and b is based on the division identity
-        a = q*b + r,
-    where the quotient  q  and the remainder  r  are integers
-    and  0 <= r < b. Then each common divisor of  a  and  b
-    divides  r, and it follows that  gcd(a, b) == gcd(b, r).
+    common divisor ``gcd(a, b)``  of two (positive) integers
+    $a$ and $b$ is based on the division identity
+       $$ a = q \times b + r$$,
+    where the quotient  $q$  and the remainder  $r$  are integers
+    and  $0 \le r < b$. Then each common divisor of  $a$  and  $b$
+    divides  $r$, and it follows that  ``gcd(a, b) == gcd(b, r)``.
     The algorithm works by constructing the sequence
     r0, r1, r2, ..., where  r0 = a, r1 = b,  and each  rn
     is the remainder from the division of the two preceding
     elements.
 
-    In Python, q = a // b  and  r = a % b  are obtained by the
+    In Python, ``q = a // b``  and  ``r = a % b``  are obtained by the
     floor division and the remainder operations, respectively.
     These are the most expensive arithmetic operations, especially
     for large  a  and  b.
 
-    Lehmer's algorithm is based on the observation that the quotients
-    qn = r(n-1) // rn  are in general small integers even
+    Lehmer's algorithm [1]_ is based on the observation that the quotients
+    ``qn = r(n-1) // rn``  are in general small integers even
     when  a  and  b  are very large. Hence the quotients can be
     usually determined from a relatively small number of most
     significant bits.
