@@ -101,10 +101,6 @@ class DDM(list):
         return self[i][j]
 
     def setitem(self, i, j, value):
-        m, n = self.shape
-        if not (-m <= i < m and -n <= j < n):
-            raise IndexError("index out of range")
-        i, j = i % m, j % n
         self[i][j] = value
 
     def extract_slice(self, slice1, slice2):
