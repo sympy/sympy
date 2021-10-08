@@ -4,7 +4,6 @@ from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol
 from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple, OrderedSet
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import _coeff_isneg
 from sympy.core.singleton import S
 from sympy.utilities.iterables import numbered_symbols, sift, \
         topological_sort, ordered
@@ -506,7 +505,7 @@ def opt_cse(exprs, order='canonical'):
 
         list(map(_find_opts, expr.args))
 
-        if _coeff_isneg(expr):
+        if expr.could_extract_minus_sign():
             neg_expr = -expr
             if not neg_expr.is_Atom:
                 opt_subs[expr] = Unevaluated(Mul, (S.NegativeOne, neg_expr))
@@ -521,7 +520,7 @@ def opt_cse(exprs, order='canonical'):
 
         elif isinstance(expr, (Pow, MatPow)):
             base, exp = expr.base, expr.exp
-            if _coeff_isneg(exp):
+            if exp.could_extract_minus_sign():
                 opt_subs[expr] = Unevaluated(Pow, (Pow(base, -exp), -1))
 
     for e in exprs:
@@ -747,10 +746,6 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     >>> cse(((w + x + y + z)*(w + y + z))/(w + x)**3)
     ([(x0, y + z), (x1, w + x)], [(w + x0)*(x0 + x1)/x1**3])
 
-    Note that currently, y + z will not get substituted if -y - z is used.
-
-    >>> cse(((w + x + y + z)*(w - y - z))/(w + x)**3)
-     ([(x0, w + x)], [(w - y - z)*(x0 + y + z)/x0**3])
 
     List of expressions with recursive substitutions:
 
