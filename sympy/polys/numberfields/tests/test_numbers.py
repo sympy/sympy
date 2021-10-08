@@ -5,11 +5,11 @@ from sympy.testing.pytest import raises
 from sympy.polys.numberfields.numbers import (
     to_number_field,
     isolate,
-    IntervalPrinter,
 )
 from sympy.polys.polyerrors import IsomorphismFailed
 from sympy.polys.polyclasses import DMP
 from sympy.polys.domains import QQ
+from sympy.printing.lambdarepr import IntervalPrinter
 from sympy.abc import x, y
 
 Q = Rational

@@ -918,7 +918,7 @@ def test_lambdify_docstring():
 
 
 def test_special_printers():
-    from sympy.polys.numberfields.numbers import IntervalPrinter
+    from sympy.printing.lambdarepr import IntervalPrinter
 
     def intervalrepr(expr):
         return IntervalPrinter().doprint(expr)

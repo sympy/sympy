@@ -4,8 +4,7 @@ from sympy import AlgebraicNumber, sympify
 from sympy.polys.numberfields.isomorphism import field_isomorphism
 from sympy.polys.numberfields.minpoly import minpoly, primitive_element
 from sympy.polys.polyerrors import IsomorphismFailed
-from sympy.printing.lambdarepr import LambdaPrinter
-from sympy.printing.pycode import PythonCodePrinter, MpmathPrinter
+from sympy.printing.lambdarepr import IntervalPrinter
 from sympy.utilities import (
     lambdify, public
 )
@@ -43,21 +42,6 @@ def to_number_field(extension, theta=None, *, gen=None):
             raise IsomorphismFailed(
                 "%s is not in a subfield of %s" % (root, theta.root))
 
-
-class IntervalPrinter(MpmathPrinter, LambdaPrinter):
-    """Use ``lambda`` printer but print numbers as ``mpi`` intervals. """
-
-    def _print_Integer(self, expr):
-        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Integer(expr)
-
-    def _print_Rational(self, expr):
-        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Rational(expr)
-
-    def _print_Half(self, expr):
-        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Rational(expr)
-
-    def _print_Pow(self, expr):
-        return super(MpmathPrinter, self)._print_Pow(expr, rational=True)
 
 @public
 def isolate(alg, eps=None, fast=False):
