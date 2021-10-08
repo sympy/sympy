@@ -13,39 +13,39 @@ from sympy.matrices.common import (NonInvertibleMatrixError,
     NonSquareMatrixError, ShapeError)
 
 
-class DDMError(Exception):
+class DMError(Exception):
     """Base class for errors raised by DDM"""
     pass
 
 
-class DDMBadInputError(DDMError):
+class DMBadInputError(DMError):
     """list of lists is inconsistent with shape"""
     pass
 
 
-class DDMDomainError(DDMError):
+class DMDomainError(DMError):
     """domains do not match"""
     pass
 
 
-class DDMFormatError(DDMError):
+class DMFormatError(DMError):
     """mixed dense/sparse not supported"""
     pass
 
 
-class DDMRankError(DDMError):
+class DMRankError(DMError):
     """matrix does not have expected rank"""
     pass
 
 
-class DDMShapeError(DDMError):
+class DMShapeError(DMError):
     """shapes are inconsistent"""
     pass
 
 
 __all__ = [
-    'DDMError', 'DDMBadInputError', 'DDMDomainError', 'DDMFormatError',
-    'DDMRankError', 'DDMShapeError',
+    'DMError', 'DMBadInputError', 'DMDomainError', 'DMFormatError',
+    'DMRankError', 'DMShapeError',
 
     'NonSquareMatrixError', 'NonInvertibleMatrixError', 'ShapeError',
 ]

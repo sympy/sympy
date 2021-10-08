@@ -5,7 +5,7 @@ from sympy.polys.matrices.normalforms import (
     invariant_factors, smith_normal_form, hermite_normal_form)
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.matrices import DomainMatrix
-from sympy.polys.matrices.exceptions import DDMDomainError
+from sympy.polys.matrices.exceptions import DMDomainError
 
 
 def DM(elems, domain):
@@ -71,4 +71,4 @@ def test_hermite_normal():
     assert hermite_normal_form(m) == hnf
 
     m = DomainMatrix([[QQ(1)]], (1, 1), QQ)
-    raises(DDMDomainError, lambda: hermite_normal_form(m))
+    raises(DMDomainError, lambda: hermite_normal_form(m))

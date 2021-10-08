@@ -1,6 +1,6 @@
 from sympy.polys.domains import GF, QQ
 from sympy.polys.matrices import DomainMatrix
-from sympy.polys.matrices.exceptions import DDMRankError
+from sympy.polys.matrices.exceptions import DMRankError
 from sympy.polys.matrices.noninvertible import invertible_supplement
 from sympy.testing.pytest import raises
 
@@ -25,5 +25,5 @@ def test_invertible_supplement_1():
 
 def test_invertible_supplement_2():
     M = DomainMatrix([[QQ(1), QQ(0), QQ(0)], [QQ(2), QQ(0), QQ(0)]], (2, 3), QQ).transpose()
-    with raises(DDMRankError):
+    with raises(DMRankError):
         invertible_supplement(M)

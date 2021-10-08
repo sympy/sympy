@@ -6,7 +6,7 @@ DomainMatrices.
 """
 
 
-from .exceptions import DDMRankError
+from .exceptions import DMRankError
 
 
 def invertible_supplement(M):
@@ -36,7 +36,7 @@ def invertible_supplement(M):
 
     R, pivots = M.rref()
     if pivots[:r] != tuple(range(r)):
-        raise DDMRankError('M was not of maximal rank')
+        raise DMRankError('M was not of maximal rank')
 
     A = R[:, r:]
     B = A.inv()

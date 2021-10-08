@@ -1,7 +1,7 @@
 '''Functions returning normal forms of matrices'''
 
 from .domainmatrix import DomainMatrix
-from .exceptions import DDMDomainError
+from .exceptions import DMDomainError
 from sympy.polys.domains import QQ, ZZ
 
 
@@ -318,7 +318,7 @@ def hermite_normal_form(A, D=None, check_rank=False):
 
     '''
     if not A.domain.is_ZZ:
-        raise DDMDomainError('Matrix must be over ZZ for HNF.')
+        raise DMDomainError('Matrix must be over ZZ for HNF.')
     if D is not None and (not check_rank or A.convert_to(QQ).rank == A.shape[0]):
         return _hermite_normal_form_modulo_D(A, D)
     else:

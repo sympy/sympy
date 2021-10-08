@@ -61,7 +61,7 @@ domain checking and also shape checking so that the list of lists
 representation is friendlier.
 
 """
-from .exceptions import DDMBadInputError, DDMShapeError, DDMDomainError
+from .exceptions import DMBadInputError, DMShapeError, DMDomainError
 
 from .dense import (
         ddm_transpose,
@@ -95,7 +95,7 @@ class DDM(list):
         self.domain = domain
 
         if not (len(self) == m and all(len(row) == n for row in self)):
-            raise DDMBadInputError("Inconsistent row-list/shape")
+            raise DMBadInputError("Inconsistent row-list/shape")
 
     def getitem(self, i, j):
         return self[i][j]
@@ -227,10 +227,10 @@ class DDM(list):
     def _check(cls, a, op, b, ashape, bshape):
         if a.domain != b.domain:
             msg = "Domain mismatch: %s %s %s" % (a.domain, op, b.domain)
-            raise DDMDomainError(msg)
+            raise DMDomainError(msg)
         if ashape != bshape:
             msg = "Shape mismatch: %s %s %s" % (a.shape, op, b.shape)
-            raise DDMShapeError(msg)
+            raise DMShapeError(msg)
 
     def add(a, b):
         """a + b"""
@@ -401,7 +401,7 @@ class DDM(list):
         """Determinant of a"""
         m, n = a.shape
         if m != n:
-            raise DDMShapeError("Determinant of non-square matrix")
+            raise DMShapeError("Determinant of non-square matrix")
         b = a.copy()
         K = b.domain
         deta = ddm_idet(b, K)
@@ -411,7 +411,7 @@ class DDM(list):
         """Inverse of a"""
         m, n = a.shape
         if m != n:
-            raise DDMShapeError("Determinant of non-square matrix")
+            raise DMShapeError("Determinant of non-square matrix")
         ainv = a.copy()
         K = a.domain
         ddm_iinv(ainv, a, K)
@@ -444,7 +444,7 @@ class DDM(list):
         K = a.domain
         m, n = a.shape
         if m != n:
-            raise DDMShapeError("Charpoly of non-square matrix")
+            raise DMShapeError("Charpoly of non-square matrix")
         vec = ddm_berk(a, K)
         coeffs = [vec[i][0] for i in range(n+1)]
         return coeffs

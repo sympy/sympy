@@ -11,8 +11,8 @@ from sympy.testing.pytest import raises
 from sympy.polys.domains import QQ, ZZ, EXRAW
 from sympy.polys.matrices.sdm import SDM
 from sympy.polys.matrices.ddm import DDM
-from sympy.polys.matrices.exceptions import (DDMBadInputError, DDMDomainError,
-        DDMShapeError)
+from sympy.polys.matrices.exceptions import (DMBadInputError, DMDomainError,
+                                             DMShapeError)
 
 
 def test_SDM():
@@ -21,8 +21,8 @@ def test_SDM():
     assert A.shape == (2, 2)
     assert dict(A) == {0:{0:ZZ(1)}}
 
-    raises(DDMBadInputError, lambda: SDM({5:{1:ZZ(0)}}, (2, 2), ZZ))
-    raises(DDMBadInputError, lambda: SDM({0:{5:ZZ(0)}}, (2, 2), ZZ))
+    raises(DMBadInputError, lambda: SDM({5:{1:ZZ(0)}}, (2, 2), ZZ))
+    raises(DMBadInputError, lambda: SDM({0:{5:ZZ(0)}}, (2, 2), ZZ))
 
 
 def test_DDM_str():
@@ -52,8 +52,8 @@ def test_SDM_from_list():
     A = SDM.from_list([[ZZ(0), ZZ(1)], [ZZ(1), ZZ(0)]], (2, 2), ZZ)
     assert A == SDM({0:{1:ZZ(1)}, 1:{0:ZZ(1)}}, (2, 2), ZZ)
 
-    raises(DDMBadInputError, lambda: SDM.from_list([[ZZ(0)], [ZZ(0), ZZ(1)]], (2, 2), ZZ))
-    raises(DDMBadInputError, lambda: SDM.from_list([[ZZ(0), ZZ(1)]], (2, 2), ZZ))
+    raises(DMBadInputError, lambda: SDM.from_list([[ZZ(0)], [ZZ(0), ZZ(1)]], (2, 2), ZZ))
+    raises(DMBadInputError, lambda: SDM.from_list([[ZZ(0), ZZ(1)]], (2, 2), ZZ))
 
 
 def test_SDM_to_list():
@@ -218,8 +218,8 @@ def test_SDM_mul_elementwise():
     Aq = A.convert_to(QQ)
     A1 = SDM({0:{0:ZZ(1)}}, (1, 1), ZZ)
 
-    raises(DDMDomainError, lambda: Aq.mul_elementwise(B))
-    raises(DDMShapeError, lambda: A1.mul_elementwise(B))
+    raises(DMDomainError, lambda: Aq.mul_elementwise(B))
+    raises(DMShapeError, lambda: A1.mul_elementwise(B))
 
 
 def test_SDM_matmul():
@@ -228,7 +228,7 @@ def test_SDM_matmul():
     assert A.matmul(A) == A*A == B
 
     C = SDM({0:{0:ZZ(2)}}, (2, 2), QQ)
-    raises(DDMDomainError, lambda: A.matmul(C))
+    raises(DMDomainError, lambda: A.matmul(C))
 
     A = SDM({0:{0:ZZ(1), 1:ZZ(2)}, 1:{0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
     B = SDM({0:{0:ZZ(7), 1:ZZ(10)}, 1:{0:ZZ(15), 1:ZZ(22)}}, (2, 2), ZZ)
@@ -244,8 +244,8 @@ def test_SDM_matmul():
     # XXX: @ not supported by SDM...
     #assert A32.matmul(A23) == A32 @ A23 == A33
     #assert A23.matmul(A32) == A23 @ A32 == A22
-    #raises(DDMShapeError, lambda: A23 @ A22)
-    raises(DDMShapeError, lambda: A23.matmul(A22))
+    #raises(DMShapeError, lambda: A23 @ A22)
+    raises(DMShapeError, lambda: A23.matmul(A22))
 
     A = SDM({0: {0: ZZ(-1), 1: ZZ(1)}}, (1, 2), ZZ)
     B = SDM({0: {0: ZZ(-1)}, 1: {0: ZZ(-1)}}, (2, 1), ZZ)

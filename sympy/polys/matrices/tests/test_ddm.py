@@ -5,8 +5,8 @@ from sympy.polys import ZZ, QQ
 
 from sympy.polys.matrices.ddm import DDM
 from sympy.polys.matrices.exceptions import (
-        DDMShapeError, NonInvertibleMatrixError, DDMDomainError,
-        DDMBadInputError)
+    DMShapeError, NonInvertibleMatrixError, DMDomainError,
+    DMBadInputError)
 
 
 def test_DDM_init():
@@ -18,8 +18,8 @@ def test_DDM_init():
     assert ddm.cols == 3
     assert ddm.domain == ZZ
 
-    raises(DDMBadInputError, lambda: DDM([[ZZ(2), ZZ(3)]], (2, 2), ZZ))
-    raises(DDMBadInputError, lambda: DDM([[ZZ(1)], [ZZ(2), ZZ(3)]], (2, 2), ZZ))
+    raises(DMBadInputError, lambda: DDM([[ZZ(2), ZZ(3)]], (2, 2), ZZ))
+    raises(DMBadInputError, lambda: DDM([[ZZ(1)], [ZZ(2), ZZ(3)]], (2, 2), ZZ))
 
 
 def test_DDM_getsetitem():
@@ -129,11 +129,11 @@ def test_DDM_add():
     AQ = DDM([[QQ(1)], [QQ(2)]], (2, 1), QQ)
     assert A + B == A.add(B) == C
 
-    raises(DDMShapeError, lambda: A + DDM([[ZZ(5)]], (1, 1), ZZ))
+    raises(DMShapeError, lambda: A + DDM([[ZZ(5)]], (1, 1), ZZ))
     raises(TypeError, lambda: A + ZZ(1))
     raises(TypeError, lambda: ZZ(1) + A)
-    raises(DDMDomainError, lambda: A + AQ)
-    raises(DDMDomainError, lambda: AQ + A)
+    raises(DMDomainError, lambda: A + AQ)
+    raises(DMDomainError, lambda: AQ + A)
 
 
 def test_DDM_sub():
@@ -146,14 +146,14 @@ def test_DDM_sub():
 
     raises(TypeError, lambda: A - ZZ(1))
     raises(TypeError, lambda: ZZ(1) - A)
-    raises(DDMShapeError, lambda: A - D)
-    raises(DDMShapeError, lambda: D - A)
-    raises(DDMShapeError, lambda: A.sub(D))
-    raises(DDMShapeError, lambda: D.sub(A))
-    raises(DDMDomainError, lambda: A - AQ)
-    raises(DDMDomainError, lambda: AQ - A)
-    raises(DDMDomainError, lambda: A.sub(AQ))
-    raises(DDMDomainError, lambda: AQ.sub(A))
+    raises(DMShapeError, lambda: A - D)
+    raises(DMShapeError, lambda: D - A)
+    raises(DMShapeError, lambda: A.sub(D))
+    raises(DMShapeError, lambda: D.sub(A))
+    raises(DMDomainError, lambda: A - AQ)
+    raises(DMDomainError, lambda: AQ - A)
+    raises(DMDomainError, lambda: A.sub(AQ))
+    raises(DMDomainError, lambda: AQ.sub(A))
 
 
 def test_DDM_neg():
@@ -186,15 +186,15 @@ def test_DDM_matmul():
 
     Bq = DDM([[QQ(3), QQ(4)]], (1, 2), QQ)
 
-    raises(DDMDomainError, lambda: A @ Bq)
-    raises(DDMDomainError, lambda: Bq @ A)
+    raises(DMDomainError, lambda: A @ Bq)
+    raises(DMDomainError, lambda: Bq @ A)
 
     C = DDM([[ZZ(1)]], (1, 1), ZZ)
 
     assert A @ C == A.matmul(C) == A
 
-    raises(DDMShapeError, lambda: C @ A)
-    raises(DDMShapeError, lambda: C.matmul(A))
+    raises(DMShapeError, lambda: C @ A)
+    raises(DMShapeError, lambda: C.matmul(A))
 
     Z04 = DDM([], (0, 4), ZZ)
     Z40 = DDM([[]]*4, (4, 0), ZZ)
@@ -211,8 +211,8 @@ def test_DDM_matmul():
     assert Z00 @ Z00 == Z00.matmul(Z00) == Z00
     assert Z50 @ Z04 == Z50.matmul(Z04) == Z54
 
-    raises(DDMShapeError, lambda: Z05 @ Z40)
-    raises(DDMShapeError, lambda: Z05.matmul(Z40))
+    raises(DMShapeError, lambda: Z05 @ Z40)
+    raises(DMShapeError, lambda: Z05.matmul(Z40))
 
 
 def test_DDM_hstack():
@@ -318,11 +318,11 @@ def test_DDM_det():
 
     # Nonsquare error
     A = DDM([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
-    raises(DDMShapeError, lambda: A.det())
+    raises(DMShapeError, lambda: A.det())
 
     # Nonsquare error with empty matrix
     A = DDM([], (0, 1), ZZ)
-    raises(DDMShapeError, lambda: A.det())
+    raises(DMShapeError, lambda: A.det())
 
 
 def test_DDM_inv():
@@ -331,7 +331,7 @@ def test_DDM_inv():
     assert A.inv() == Ainv
 
     A = DDM([[QQ(1), QQ(2)]], (1, 2), QQ)
-    raises(DDMShapeError, lambda: A.inv())
+    raises(DMShapeError, lambda: A.inv())
 
     A = DDM([[ZZ(2)]], (1, 1), ZZ)
     raises(ValueError, lambda: A.inv())
@@ -395,11 +395,11 @@ def test_DDM_lu_solve():
 
     # Domain mismatch
     bz = DDM([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
-    raises(DDMDomainError, lambda: A.lu_solve(bz))
+    raises(DMDomainError, lambda: A.lu_solve(bz))
 
     # Shape mismatch
     b3 = DDM([[QQ(1)], [QQ(2)], [QQ(3)]], (3, 1), QQ)
-    raises(DDMShapeError, lambda: A.lu_solve(b3))
+    raises(DMShapeError, lambda: A.lu_solve(b3))
 
 
 def test_DDM_charpoly():
@@ -414,7 +414,7 @@ def test_DDM_charpoly():
     assert A.charpoly() == Avec
 
     A = DDM([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
-    raises(DDMShapeError, lambda: A.charpoly())
+    raises(DMShapeError, lambda: A.charpoly())
 
 
 def test_DDM_getitem():

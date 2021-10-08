@@ -14,8 +14,8 @@ from sympy.core.sympify import _sympify
 
 from ..constructor import construct_domain
 
-from .exceptions import (NonSquareMatrixError, ShapeError, DDMShapeError,
-        DDMDomainError, DDMFormatError, DDMBadInputError)
+from .exceptions import (NonSquareMatrixError, ShapeError, DMShapeError,
+                         DMDomainError, DMFormatError, DMBadInputError)
 
 from .ddm import DDM
 
@@ -291,9 +291,9 @@ class DomainMatrix:
 
         """
         if not all(0 <= r < nrows for r in elemsdict):
-            raise DDMBadInputError("Row out of range")
+            raise DMBadInputError("Row out of range")
         if not all(0 <= c < ncols for row in elemsdict.values() for c in row):
-            raise DDMBadInputError("Column out of range")
+            raise DMBadInputError("Column out of range")
 
         items_sympy = [_sympify(item) for row in elemsdict.values() for item in row.values()]
         domain, items_domain = cls.get_domain(items_sympy, **kwargs)
@@ -756,13 +756,13 @@ class DomainMatrix:
     def _check(a, op, b, ashape, bshape):
         if a.domain != b.domain:
             msg = "Domain mismatch: %s %s %s" % (a.domain, op, b.domain)
-            raise DDMDomainError(msg)
+            raise DMDomainError(msg)
         if ashape != bshape:
             msg = "Shape mismatch: %s %s %s" % (a.shape, op, b.shape)
-            raise DDMShapeError(msg)
+            raise DMShapeError(msg)
         if a.rep.fmt != b.rep.fmt:
             msg = "Format mismatch: %s %s %s" % (a.rep.fmt, op, b.rep.fmt)
-            raise DDMFormatError(msg)
+            raise DMFormatError(msg)
 
     def add(A, B):
         r"""
