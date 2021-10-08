@@ -2491,13 +2491,13 @@ class Expr(Basic, EvalfMixin):
         >>> _.could_extract_minus_sign()
         True
         """
-        from sympy.core.function import _coeff_isneg
         negative_self = -self
         if self == negative_self:
             return False  # e.g. zoo*x == -zoo*x
         if self.is_Add or self.is_MatAdd:
             # We choose the one with less arguments with minus signs
-            negative_args = sum(1 for i in self.args if _coeff_isneg(i))
+            negative_args = sum(1 for i in self.args
+                if i.could_extract_minus_sign())
             positive_args = len(self.args) - negative_args
             if positive_args > negative_args:
                 return False
@@ -2507,7 +2507,13 @@ class Expr(Basic, EvalfMixin):
             # x - 1 instead of 1 - x and
             # 3 - sqrt(2) instead of -3 + sqrt(2)
             return bool(self.sort_key() < negative_self.sort_key())
-        return _coeff_isneg(self)
+
+        c = self
+        if c.is_MatMul:
+            c = c.args[0]  # might be Mul
+        if c.is_Mul:
+            c = c.args[0]  # if this is a Mul, it's the caller's concern; this func is literal
+        return c.is_Number and c.is_extended_negative
 
     def extract_branch_factor(self, allow_half=False):
         """
