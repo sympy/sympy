@@ -6,8 +6,6 @@ TODO:
 * Document default basis functionality.
 """
 
-from __future__ import print_function, division
-
 from sympy import Add, Expr, I, integrate, Mul, Pow
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
@@ -171,7 +169,14 @@ def represent(expr, **options):
         base, exp = expr.as_base_exp()
         if format == 'numpy' or format == 'scipy.sparse':
             exp = _sympy_to_scalar(exp)
-        return represent(base, **options)**exp
+        base = represent(base, **options)
+        # scipy.sparse doesn't support negative exponents
+        # and warns when inverting a matrix in csr format.
+        if format == 'scipy.sparse' and exp < 0:
+            from scipy.sparse.linalg import inv
+            exp = - exp
+            base = inv(base.tocsc()).tocsr()
+        return base ** exp
     elif isinstance(expr, TensorProduct):
         new_args = [represent(arg, **options) for arg in expr.args]
         return TensorProduct(*new_args)
@@ -299,7 +304,7 @@ def rep_expectation(expr, **options):
     Examples
     ========
 
-    >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
+    >>> from sympy.physics.quantum.cartesian import XOp, PxOp, PxKet
     >>> from sympy.physics.quantum.represent import rep_expectation
     >>> rep_expectation(XOp())
     x_1*DiracDelta(x_1 - x_2)
@@ -404,7 +409,7 @@ def integrate_result(orig_expr, result, **options):
     return result
 
 
-def get_basis(expr, **options):
+def get_basis(expr, *, basis=None, replace_none=True, **options):
     """
     Returns a basis state instance corresponding to the basis specified in
     options=s. If no basis is specified, the function tries to form a default
@@ -455,9 +460,6 @@ def get_basis(expr, **options):
 
     """
 
-    basis = options.pop("basis", None)
-    replace_none = options.pop("replace_none", True)
-
     if basis is None and not replace_none:
         return None
 
@@ -465,7 +467,7 @@ def get_basis(expr, **options):
         if isinstance(expr, KetBase):
             return _make_default(expr.__class__)
         elif isinstance(expr, BraBase):
-            return _make_default((expr.dual_class()))
+            return _make_default(expr.dual_class())
         elif isinstance(expr, Operator):
             state_inst = operators_to_state(expr)
             return (state_inst if state_inst is not None else None)
@@ -489,9 +491,12 @@ def get_basis(expr, **options):
 
 
 def _make_default(expr):
+    # XXX: Catching TypeError like this is a bad way of distinguishing
+    # instances from classes. The logic using this function should be
+    # rewritten somehow.
     try:
         expr = expr()
-    except Exception:
+    except TypeError:
         return expr
 
     return expr

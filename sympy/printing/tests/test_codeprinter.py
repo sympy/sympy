@@ -1,8 +1,7 @@
 from sympy.printing.codeprinter import CodePrinter
-from sympy.printing.str import StrPrinter
 from sympy.core import symbols
 from sympy.core.symbol import Dummy
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def setup_test_printer(**kwargs):
@@ -38,11 +37,19 @@ def test_print_Symbol():
     assert p._print(y) == 'if_He_Man'
 
 def test_issue_15791():
-    assert (CodePrinter._print_MutableSparseMatrix.__name__ ==
-    CodePrinter._print_not_supported.__name__)
-    assert (CodePrinter._print_ImmutableSparseMatrix.__name__ ==
-    CodePrinter._print_not_supported.__name__)
-    assert (CodePrinter._print_MutableSparseMatrix.__name__ !=
-    StrPrinter._print_MatrixBase.__name__)
-    assert (CodePrinter._print_ImmutableSparseMatrix.__name__ !=
-    StrPrinter._print_MatrixBase.__name__)
+    class CrashingCodePrinter(CodePrinter):
+        def emptyPrinter(self, obj):
+            raise NotImplementedError
+
+    from sympy.matrices import (
+        MutableSparseMatrix,
+        ImmutableSparseMatrix,
+    )
+
+    c = CrashingCodePrinter()
+
+    # these should not silently succeed
+    with raises(NotImplementedError):
+        c.doprint(ImmutableSparseMatrix(2, 2, {}))
+    with raises(NotImplementedError):
+        c.doprint(MutableSparseMatrix(2, 2, {}))

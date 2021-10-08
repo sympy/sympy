@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 try:
     from ctypes import c_float, c_int, c_double
 except ImportError:
@@ -7,7 +5,6 @@ except ImportError:
 
 import pyglet.gl as pgl
 from sympy.core import S
-from sympy.core.compatibility import range, string_types
 
 
 def get_model_matrix(array_type=c_float, glGetMethod=pgl.glGetFloatv):
@@ -164,7 +161,7 @@ def strided_range(r_min, r_max, stride, max_steps=50):
 
 
 def parse_option_string(s):
-    if not isinstance(s, string_types):
+    if not isinstance(s, str):
         return None
     options = {}
     for token in s.split(';'):

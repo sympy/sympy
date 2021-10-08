@@ -1,10 +1,7 @@
 """Known matrices related to physics"""
 
-from __future__ import print_function, division
-
 from sympy import Matrix, I, pi, sqrt
 from sympy.functions import exp
-from sympy.core.compatibility import range
 
 
 def msigma(i):

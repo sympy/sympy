@@ -1,11 +1,8 @@
-from __future__ import print_function, division
-
 from sympy import Symbol, sympify
-from sympy.core.compatibility import range, string_types
 from sympy.core.numbers import Integer
 
 
-class PlotInterval(object):
+class PlotInterval:
     """
     """
     _v, _v_min, _v_max, _v_steps = None, None, None, None
@@ -23,7 +20,7 @@ class PlotInterval(object):
             if isinstance(args[0], PlotInterval):
                 self.fill_from(args[0])
                 return
-            elif isinstance(args[0], string_types):
+            elif isinstance(args[0], str):
                 try:
                     args = eval(args[0])
                 except TypeError:

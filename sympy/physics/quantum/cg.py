@@ -4,11 +4,8 @@
 # -Implement new simpifications
 """Clebsch-Gordon Coefficients."""
 
-from __future__ import print_function, division
-
 from sympy import (Add, expand, Eq, Expr, Mul, Piecewise, Pow, sqrt, Sum,
                    symbols, sympify, Wild)
-from sympy.core.compatibility import range
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -28,7 +25,10 @@ __all__ = [
 
 
 class Wigner3j(Expr):
-    """Class for the Wigner-3j symbols
+    """Class for the Wigner-3j symbols.
+
+    Explanation
+    ===========
 
     Wigner 3j-symbols are coefficients determined by the coupling of
     two angular momenta. When created, they are expressed as symbolic
@@ -106,7 +106,7 @@ class Wigner3j(Expr):
             (printer._print(self.j3), printer._print(self.m3)))
         hsep = 2
         vsep = 1
-        maxw = [-1] * 3
+        maxw = [-1]*3
         for j in range(3):
             maxw[j] = max([ m[j][i].width() for i in range(2) ])
         D = None
@@ -148,7 +148,10 @@ class Wigner3j(Expr):
 
 
 class CG(Wigner3j):
-    r"""Class for Clebsch-Gordan coefficient
+    r"""Class for Clebsch-Gordan coefficient.
+
+    Explanation
+    ===========
 
     Clebsch-Gordan coefficients describe the angular momentum coupling between
     two systems. The coefficients give the expansion of a coupled total angular
@@ -204,9 +207,9 @@ class CG(Wigner3j):
         top = prettyForm(*top.left(' '))
 
         if not pad == bot.width():
-            bot = prettyForm(*bot.right(' ' * (pad - bot.width())))
+            bot = prettyForm(*bot.right(' '*(pad - bot.width())))
         if not pad == top.width():
-            top = prettyForm(*top.right(' ' * (pad - top.width())))
+            top = prettyForm(*top.right(' '*(pad - top.width())))
         s = stringPict('C' + ' '*pad)
         s = prettyForm(*s.below(bot))
         s = prettyForm(*s.above(top))
@@ -266,7 +269,7 @@ class Wigner6j(Expr):
             (printer._print(self.j12), printer._print(self.j23)))
         hsep = 2
         vsep = 1
-        maxw = [-1] * 3
+        maxw = [-1]*3
         for j in range(3):
             maxw[j] = max([ m[j][i].width() for i in range(2) ])
         D = None
@@ -370,7 +373,7 @@ class Wigner9j(Expr):
             (printer._print(self.j12), printer._print(self.j34), printer._print(self.j)))
         hsep = 2
         vsep = 1
-        maxw = [-1] * 3
+        maxw = [-1]*3
         for j in range(3):
             maxw[j] = max([ m[j][i].width() for i in range(3) ])
         D = None
@@ -412,7 +415,10 @@ class Wigner9j(Expr):
 
 
 def cg_simp(e):
-    """Simplify and combine CG coefficients
+    """Simplify and combine CG coefficients.
+
+    Explanation
+    ===========
 
     This function uses various symmetry and properties of sums and
     products of Clebsch-Gordan coefficients to simplify statements
@@ -457,6 +463,9 @@ def _cg_simp_add(e):
     #TODO: Improve simplification method
     """Takes a sum of terms involving Clebsch-Gordan coefficients and
     simplifies the terms.
+
+    Explanation
+    ===========
 
     First, we create two lists, cg_part, which is all the terms involving CG
     coefficients, and other_part, which is all other terms. The cg_part list
@@ -615,7 +624,7 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
             i += 1
             continue
         sub_dep = [(x, sub_1[x]) for x in dep_variables]
-        cg_index = [None] * build_index_expr.subs(sub_1)
+        cg_index = [None]*build_index_expr.subs(sub_1)
         for j in range(i, len(term_list)):
             sub_2 = _check_cg(term_list[j], expr.subs(sub_dep), len(variables) - len(dep_variables), sign=(sign.subs(sub_1), sign.subs(sub_dep)))
             if sub_2 is None:
@@ -631,8 +640,8 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
             [ term_list.pop(j) for j in indices ]
             for term in cg_index:
                 if abs(term[2]) > min_lt:
-                    term_list.append( (term[2] - min_lt*term[3]) * term[1] )
-            other_part += min_lt * (sign*simp).subs(sub_1)
+                    term_list.append( (term[2] - min_lt*term[3])*term[1] )
+            other_part += min_lt*(sign*simp).subs(sub_1)
         else:
             i += 1
     return term_list, other_part
@@ -682,21 +691,21 @@ def _check_varsh_sum_871_2(e):
 
 
 def _check_varsh_sum_872_4(e):
+    alpha = symbols('alpha')
+    beta = symbols('beta')
     a = Wild('a')
-    alpha = Wild('alpha')
     b = Wild('b')
-    beta = Wild('beta')
     c = Wild('c')
     cp = Wild('cp')
     gamma = Wild('gamma')
     gammap = Wild('gammap')
-    match1 = e.match(Sum(CG(a, alpha, b, beta, c, gamma)*CG(
-        a, alpha, b, beta, cp, gammap), (alpha, -a, a), (beta, -b, b)))
-    if match1 is not None and len(match1) == 8:
+    cg1 = CG(a, alpha, b, beta, c, gamma)
+    cg2 = CG(a, alpha, b, beta, cp, gammap)
+    match1 = e.match(Sum(cg1*cg2, (alpha, -a, a), (beta, -b, b)))
+    if match1 is not None and len(match1) == 6:
         return (KroneckerDelta(c, cp)*KroneckerDelta(gamma, gammap)).subs(match1)
-    match2 = e.match(Sum(
-        CG(a, alpha, b, beta, c, gamma)**2, (alpha, -a, a), (beta, -b, b)))
-    if match2 is not None and len(match2) == 6:
+    match2 = e.match(Sum(cg1**2, (alpha, -a, a), (beta, -b, b)))
+    if match2 is not None and len(match2) == 4:
         return 1
     return e
 

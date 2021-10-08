@@ -1,7 +1,5 @@
 """ Functions to support rewriting of SymPy expressions """
 
-from __future__ import print_function, division
-
 from sympy import Expr
 from sympy.assumptions import ask
 from sympy.strategies.tools import subs

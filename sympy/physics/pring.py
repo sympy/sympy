@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 from sympy import sqrt, exp, S, pi, I
 from sympy.physics.quantum.constants import hbar
 
@@ -14,7 +13,7 @@ def wavefunction(n, x):
     Examples
     ========
 
-    >>> from sympy.physics.pring import wavefunction, energy
+    >>> from sympy.physics.pring import wavefunction
     >>> from sympy import Symbol, integrate, pi
     >>> x=Symbol("x")
     >>> wavefunction(1, x)

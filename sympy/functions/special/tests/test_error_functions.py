@@ -12,7 +12,7 @@ from sympy import (
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.special.error_functions import _erfs, _eis
-from sympy.utilities.pytest import raises, slow
+from sympy.testing.pytest import raises, slow
 
 x, y, z = symbols('x,y,z')
 w = Symbol("w", real=True)
@@ -46,6 +46,8 @@ def test_erf():
     assert conjugate(erf(z)) == erf(conjugate(z))
 
     assert erf(x).as_leading_term(x) == 2*x/sqrt(pi)
+    assert erf(x*y).as_leading_term(y) == 2*x*y/sqrt(pi)
+    assert (erf(x*y)/erf(y)).as_leading_term(y) == x
     assert erf(1/x).as_leading_term(x) == erf(1/x)
 
     assert erf(z).rewrite('uppergamma') == sqrt(z**2)*(1 - erfc(sqrt(z**2)))/z
@@ -64,6 +66,8 @@ def test_erf():
     assert limit((1 - erf(z))*exp(z**2)*z, z, oo) == 1/sqrt(pi)
     assert limit((1 - erf(x))*exp(x**2)*sqrt(pi)*x, x, oo) == 1
     assert limit(((1 - erf(x))*exp(x**2)*sqrt(pi)*x - 1)*2*x**2, x, oo) == -1
+    assert limit(erf(x)/x, x, 0) == 2/sqrt(pi)
+    assert limit(x**(-4) - sqrt(pi)*erf(x**2) / (2*x**6), x, 0) == S(1)/3
 
     assert erf(x).as_real_imag() == \
         (erf(re(x) - I*im(x))/2 + erf(re(x) + I*im(x))/2,
@@ -321,7 +325,7 @@ def test_erf2inv():
 
 
 def mytn(expr1, expr2, expr3, x, d=0):
-    from sympy.utilities.randtest import verify_numerically, random_complex_number
+    from sympy.testing.randtest import verify_numerically, random_complex_number
     subs = {}
     for a in expr1.free_symbols:
         if a != x:
@@ -331,7 +335,7 @@ def mytn(expr1, expr2, expr3, x, d=0):
 
 
 def mytd(expr1, expr2, x):
-    from sympy.utilities.randtest import test_derivative_numerically, \
+    from sympy.testing.randtest import test_derivative_numerically, \
         random_complex_number
     subs = {}
     for a in expr1.free_symbols:
@@ -723,7 +727,7 @@ def test_fresnel():
         meijerg(((), (1,)), ((Rational(1, 4),),
         (Rational(3, 4), 0)), -pi**2*z**4/16)/(2*(-z)**Rational(1, 4)*(z**2)**Rational(1, 4))
 
-    from sympy.utilities.randtest import verify_numerically
+    from sympy.testing.randtest import verify_numerically
 
     verify_numerically(re(fresnels(z)), fresnels(z).as_real_imag()[0], z)
     verify_numerically(im(fresnels(z)), fresnels(z).as_real_imag()[1], z)

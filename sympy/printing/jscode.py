@@ -7,11 +7,9 @@ Math object where possible.
 
 """
 
-from __future__ import print_function, division
+from typing import Any, Dict
 
-from sympy.codegen.ast import Assignment
 from sympy.core import S
-from sympy.core.compatibility import string_types, range
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -56,8 +54,8 @@ class JavascriptCodePrinter(CodePrinter):
         'user_functions': {},
         'human': True,
         'allow_unknown_functions': False,
-        'contract': True
-    }
+        'contract': True,
+    }  # type: Dict[str, Any]
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
@@ -72,10 +70,10 @@ class JavascriptCodePrinter(CodePrinter):
         return "%s;" % codestring
 
     def _get_comment(self, text):
-        return "// {0}".format(text)
+        return "// {}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "var {0} = {1};".format(name, value.evalf(self._settings['precision']))
+        return "var {} = {};".format(name, value.evalf(self._settings['precision']))
 
     def _format_code(self, lines):
         return self.indent_code(lines)
@@ -117,7 +115,7 @@ class JavascriptCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array
@@ -145,6 +143,7 @@ class JavascriptCodePrinter(CodePrinter):
         return 'Number.NEGATIVE_INFINITY'
 
     def _print_Piecewise(self, expr):
+        from sympy.codegen.ast import Assignment
         if expr.args[-1].cond != True:
             # We need the last conditional to be a True, otherwise the resulting
             # function may not return a result.
@@ -177,14 +176,14 @@ class JavascriptCodePrinter(CodePrinter):
             return ": ".join(ecpairs) + last_line + " ".join([")"*len(ecpairs)])
 
     def _print_MatrixElement(self, expr):
-        return "{0}[{1}]".format(self.parenthesize(expr.parent,
+        return "{}[{}]".format(self.parenthesize(expr.parent,
             PRECEDENCE["Atom"], strict=True),
             expr.j + expr.i*expr.parent.shape[1])
 
     def indent_code(self, code):
         """Accepts a string of code or a list of code lines"""
 
-        if isinstance(code, string_types):
+        if isinstance(code, str):
             code_lines = self.indent_code(code.splitlines(True))
             return ''.join(code_lines)
 

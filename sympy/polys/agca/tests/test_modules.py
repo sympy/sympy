@@ -3,7 +3,7 @@
 from sympy.polys.agca.modules import FreeModule, ModuleOrder, FreeModulePolyRing
 from sympy.polys import CoercionFailed, QQ, lex, grlex, ilex, ZZ
 from sympy.abc import x, y, z
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy import Rational
 
 

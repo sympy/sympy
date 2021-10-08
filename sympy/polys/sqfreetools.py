@@ -1,6 +1,5 @@
 """Square-free decomposition algorithms and related tools. """
 
-from __future__ import print_function, division
 
 from sympy.polys.densearith import (
     dup_neg, dmp_neg,
@@ -17,7 +16,7 @@ from sympy.polys.densebasic import (
     dmp_raise, dmp_inject,
     dup_convert)
 from sympy.polys.densetools import (
-    dup_diff, dmp_diff,
+    dup_diff, dmp_diff, dmp_diff_in,
     dup_shift, dmp_compose,
     dup_monic, dmp_ground_monic,
     dup_primitive, dmp_ground_primitive)
@@ -252,7 +251,9 @@ def dmp_sqf_part(f, u, K):
     if K.is_negative(dmp_ground_LC(f, u, K)):
         f = dmp_neg(f, u, K)
 
-    gcd = dmp_gcd(f, dmp_diff(f, 1, u, K), u, K)
+    gcd = f
+    for i in range(u+1):
+        gcd = dmp_gcd(gcd, dmp_diff_in(f, 1, i, u, K), u, K)
     sqf = dmp_quo(f, gcd, u, K)
 
     if K.is_Field:

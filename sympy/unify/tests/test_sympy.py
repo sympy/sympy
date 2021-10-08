@@ -1,9 +1,9 @@
 from sympy import Add, Basic, symbols, Symbol, And
+from sympy.core.symbol import Str
 from sympy.unify.core import Compound, Variable
 from sympy.unify.usympy import (deconstruct, construct, unify, is_associative,
         is_commutative)
 from sympy.abc import x, y, z, n
-from sympy.utilities.pytest import XFAIL
 
 def test_deconstruct():
     expr     = Basic(1, 2, 3)
@@ -101,8 +101,8 @@ def test_matrix():
     X = MatrixSymbol('X', n, n)
     Y = MatrixSymbol('Y', 2, 2)
     Z = MatrixSymbol('Z', 2, 3)
-    assert list(unify(X, Y, {}, variables=[n, Symbol('X')])) == [{Symbol('X'): Symbol('Y'), n: 2}]
-    assert list(unify(X, Z, {}, variables=[n, Symbol('X')])) == []
+    assert list(unify(X, Y, {}, variables=[n, Str('X')])) == [{Str('X'): Str('Y'), n: 2}]
+    assert list(unify(X, Z, {}, variables=[n, Str('X')])) == []
 
 def test_non_frankenAdds():
     # the is_commutative property used to fail because of Basic.__new__

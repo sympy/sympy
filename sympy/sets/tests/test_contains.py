@@ -1,6 +1,6 @@
 from sympy import Symbol, Contains, S, Interval, FiniteSet, oo, Eq
 from sympy.core.expr import unchanged
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 def test_contains_basic():
     raises(TypeError, lambda: Contains(S.Integers, 1))
@@ -30,7 +30,7 @@ def test_binary_symbols():
     y = Symbol('y')
     z = Symbol('z')
     assert Contains(x, FiniteSet(y, Eq(z, True))
-        ).binary_symbols == set([y, z])
+        ).binary_symbols == {y, z}
 
 
 def test_as_set():

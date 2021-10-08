@@ -1,5 +1,4 @@
 from sympy import Dummy
-from sympy.core.compatibility import range
 from sympy.ntheory import nextprime
 from sympy.ntheory.modular import crt
 from sympy.polys.domains import PolynomialRing
@@ -1010,7 +1009,7 @@ def _modgcd_multivariate_p(f, g, p, degbound, contbound):
     d = 0
     evalpoints = []
     heval = []
-    points = set(range(p))
+    points = list(range(p))
 
     while points:
         a = random.sample(points, 1)[0]
@@ -1606,7 +1605,7 @@ def _func_field_modgcd_p(f, g, minpoly, p):
     evalpoints = []
     heval = []
     LMlist = []
-    points = set(range(p))
+    points = list(range(p))
 
     while points:
         a = random.sample(points, 1)[0]

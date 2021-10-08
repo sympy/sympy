@@ -1,11 +1,9 @@
-from __future__ import print_function, division
-
 from sympy.matrices.expressions import MatrixExpr
 from sympy import Q
 
 class Factorization(MatrixExpr):
     arg = property(lambda self: self.args[0])
-    shape = property(lambda self: self.arg.shape)
+    shape = property(lambda self: self.arg.shape)  # type: ignore
 
 class LofLU(Factorization):
     predicates = Q.lower_triangular,

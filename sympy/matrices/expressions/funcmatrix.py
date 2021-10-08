@@ -1,7 +1,6 @@
-from __future__ import print_function, division
-
 from .matexpr import MatrixExpr
 from sympy.core.function import FunctionClass, Lambda
+from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify, sympify
 from sympy.matrices import Matrix
 from sympy.functions.elementary.complexes import re, im
@@ -32,7 +31,7 @@ class FunctionMatrix(MatrixExpr):
 
     Creating a ``FunctionMatrix`` from ``Lambda``:
 
-    >>> from sympy import FunctionMatrix, symbols, Lambda, MatPow, Matrix
+    >>> from sympy import FunctionMatrix, symbols, Lambda, MatPow
     >>> i, j, n, m = symbols('i,j,n,m')
     >>> FunctionMatrix(n, m, Lambda((i, j), i + j))
     FunctionMatrix(n, m, Lambda((i, j), i + j))
@@ -93,7 +92,11 @@ class FunctionMatrix(MatrixExpr):
             raise ValueError(
                 '{} should be able to accept 2 arguments.'.format(lamda))
 
-        return super(FunctionMatrix, cls).__new__(cls, rows, cols, lamda)
+        if not isinstance(lamda, Lambda):
+            i, j = Dummy('i'), Dummy('j')
+            lamda = Lambda((i, j), lamda(i, j))
+
+        return super().__new__(cls, rows, cols, lamda)
 
     @property
     def shape(self):

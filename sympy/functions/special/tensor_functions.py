@@ -1,7 +1,5 @@
-from __future__ import print_function, division
-
 from sympy.core import S, Integer
-from sympy.core.compatibility import range, SYMPY_INTS
+from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import prod
@@ -191,7 +189,7 @@ class KroneckerDelta(Function):
         # to make KroneckerDelta canonical
         # following lines will check if inputs are in order
         # if not, will return KroneckerDelta with correct order
-        if i is not min(i, j, key=default_sort_key):
+        if i != min(i, j, key=default_sort_key):
             if delta_range:
                 return cls(j, i, delta_range)
             else:

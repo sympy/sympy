@@ -6,10 +6,7 @@ TODO:
 
 """
 
-from __future__ import print_function, division
-
 from sympy import DiracDelta, exp, I, Interval, pi, S, sqrt
-from sympy.core.compatibility import range
 
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import L2
@@ -59,9 +56,7 @@ class XOp(HermitianOperator):
     def _apply_operator_PositionKet3D(self, ket):
         return ket.position_x*ket
 
-    def _represent_PxKet(self, basis, **options):
-        index = options.pop("index", 1)
-
+    def _represent_PxKet(self, basis, *, index=1, **options):
         states = basis._enumerate_state(2, start_index=index)
         coord1 = states[0].momentum
         coord2 = states[1].momentum
@@ -119,9 +114,7 @@ class PxOp(HermitianOperator):
     def _apply_operator_PxKet(self, ket):
         return ket.momentum*ket
 
-    def _represent_XKet(self, basis, **options):
-        index = options.pop("index", 1)
-
+    def _represent_XKet(self, basis, *, index=1, **options):
         states = basis._enumerate_state(2, start_index=index)
         coord1 = states[0].position
         coord2 = states[1].position
@@ -237,7 +230,10 @@ class PositionKet3D(Ket, PositionState3D):
         return PositionBra3D
 
 
-class PositionBra3D(Bra, PositionState3D):
+# XXX: The type:ignore here is because mypy gives Definition of
+# "_state_to_operators" in base class "PositionState3D" is incompatible with
+# definition in base class "BraBase"
+class PositionBra3D(Bra, PositionState3D):  # type: ignore
     """ 3D cartesian position eigenbra """
 
     @classmethod

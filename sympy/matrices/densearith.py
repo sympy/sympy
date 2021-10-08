@@ -3,7 +3,6 @@ Fundamental arithmetic of dense matrices. The dense matrix is stored
 as a list of lists.
 
 """
-from sympy.core.compatibility import range
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 

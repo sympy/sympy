@@ -57,9 +57,10 @@ class MatrixSolve(Token, MatrixExpr):
     'A \\\\ x'
 
     """
-    __slots__ = ['matrix', 'vector']
+    __slots__ = ('matrix', 'vector')
 
     _construct_matrix = staticmethod(sympify)
 
-    def __init__(self, matrix, vector):
-        self.shape = self.vector.shape
+    @property
+    def shape(self):
+        return self.vector.shape

@@ -1,4 +1,4 @@
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.parsing.sym_expr import SymPyExpression
 from sympy.external import import_module
 

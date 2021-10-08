@@ -1,7 +1,7 @@
 from sympy.core import (pi, symbols, Rational, Integer, GoldenRatio, EulerGamma,
                         Catalan, Lambda, Dummy, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.printing.glsl import GLSLPrinter
 from sympy.printing.str import StrPrinter
 from sympy.utilities.lambdify import implemented_function

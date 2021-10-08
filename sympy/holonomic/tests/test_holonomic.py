@@ -193,7 +193,7 @@ def test_from_hyper():
     assert r == q
     p = from_hyper(hyper([1], [Rational(3, 2)], x**2/4))
     q = HolonomicFunction(-x + (-x**2/2 + 2)*Dx + x*Dx**2, x)
-    x0 = 1
+    # x0 = 1
     y0 = '[sqrt(pi)*exp(1/4)*erf(1/2), -sqrt(pi)*exp(1/4)*erf(1/2)/2 + 1]'
     assert sstr(p.y0) == y0
     assert q.annihilator == p.annihilator
@@ -296,7 +296,7 @@ def test_series():
     assert expr_to_holonomic((2*x - 3*x**2)**Rational(1, 3)).series() == ((2*x - 3*x**2)**Rational(1, 3)).series()
     assert  expr_to_holonomic(sqrt(x**2-x)).series() == (sqrt(x**2-x)).series()
     assert expr_to_holonomic(cos(x)**2/x**2, y0={-2: [1, 0, -1]}).series(n=10) == (cos(x)**2/x**2).series(n=10)
-    assert expr_to_holonomic(cos(x)**2/x**2, x0=1).series(n=10) == (cos(x)**2/x**2).series(n=10, x0=1)
+    assert expr_to_holonomic(cos(x)**2/x**2, x0=1).series(n=10).together() == (cos(x)**2/x**2).series(n=10, x0=1).together()
     assert expr_to_holonomic(cos(x-1)**2/(x-1)**2, x0=1, y0={-2: [1, 0, -1]}).series(n=10) \
         == (cos(x-1)**2/(x-1)**2).series(x0=1, n=10)
 
@@ -673,7 +673,7 @@ def test_diff():
     C_0, C_1, C_2, C_3 = symbols('C_0, C_1, C_2, C_3')
     q = Si(x)
     assert p.diff(x).to_expr() == q.diff()
-    assert p.diff(x, 2).to_expr().subs(C_0, Rational(-1, 3)) == q.diff(x, 2).simplify()
+    assert p.diff(x, 2).to_expr().subs(C_0, Rational(-1, 3)).cancel() == q.diff(x, 2).cancel()
     assert p.diff(x, 3).series().subs({C_3: Rational(-1, 3), C_0: 0}) == q.diff(x, 3).series()
 
 

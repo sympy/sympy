@@ -1,8 +1,5 @@
-from __future__ import print_function, division
-
 from sympy import Integer
 from sympy.core import Symbol
-from sympy.core.compatibility import range
 from sympy.utilities import public
 
 @public

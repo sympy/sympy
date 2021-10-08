@@ -482,7 +482,7 @@ What will you do with the old solve?
 ------------------------------------
 
  There are still a few things ``solveset`` can't do, which the old ``solve``
- can, such as solving non linear multivariate & LambertW type equations.
+ can, such as solving nonlinear multivariate & LambertW type equations.
  Hence, it's not yet a perfect replacement for old ``solve``. The ultimate
  goal is to:
 
@@ -562,50 +562,50 @@ Or one may manually rewrite the equation as an expression equal to 0::
 The first argument for :func:`solveset` is an expression (equal to zero) or an equation and the second argument
 is the symbol that we want to solve the equation for.
 
-.. autofunction:: sympy.solvers.solveset.solveset
+.. autofunction:: sympy.solvers.solveset::solveset
 
-.. autofunction:: sympy.solvers.solveset.solveset_real
+.. autofunction:: sympy.solvers.solveset::solveset_real
 
-.. autofunction:: sympy.solvers.solveset.solveset_complex
+.. autofunction:: sympy.solvers.solveset::solveset_complex
 
-.. autofunction:: sympy.solvers.solveset.invert_real
+.. autofunction:: sympy.solvers.solveset::invert_real
 
-.. autofunction:: sympy.solvers.solveset.invert_complex
+.. autofunction:: sympy.solvers.solveset::invert_complex
 
-.. autofunction:: sympy.solvers.solveset.domain_check
+.. autofunction:: sympy.solvers.solveset::domain_check
 
-.. autofunction:: sympy.solvers.solveset.solvify
+.. autofunction:: sympy.solvers.solveset::solvify
 
 linear_eq_to_matrix
 -------------------
 
-.. autofunction:: sympy.solvers.solveset.linear_eq_to_matrix
+.. autofunction:: sympy.solvers.solveset::linear_eq_to_matrix
 
 
 linsolve
 --------
 
-.. autofunction:: sympy.solvers.solveset.linsolve
+.. autofunction:: sympy.solvers.solveset::linsolve
 
 
 nonlinsolve
 -----------
 
-.. autofunction:: sympy.solvers.solveset.nonlinsolve
+.. autofunction:: sympy.solvers.solveset::nonlinsolve
 
 
 transolve
 ---------
 
-.. autofunction:: sympy.solvers.solveset._transolve
+.. autofunction:: sympy.solvers.solveset::_transolve
 
-.. autofunction:: sympy.solvers.solveset._is_exponential
+.. autofunction:: sympy.solvers.solveset::_is_exponential
 
-.. autofunction:: sympy.solvers.solveset._solve_exponential
+.. autofunction:: sympy.solvers.solveset::_solve_exponential
 
-.. autofunction:: sympy.solvers.solveset._solve_logarithm
+.. autofunction:: sympy.solvers.solveset::_solve_logarithm
 
-.. autofunction:: sympy.solvers.solveset._is_logarithmic
+.. autofunction:: sympy.solvers.solveset::_is_logarithmic
 
 
 Diophantine Equations (DEs)

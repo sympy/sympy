@@ -4,7 +4,7 @@ from sympy import Piecewise
 from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.utilities.codegen import JuliaCodeGen, codegen, make_routine
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 import sympy
 
 

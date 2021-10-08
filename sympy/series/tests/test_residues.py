@@ -1,6 +1,6 @@
-from sympy import (residue, Symbol, Function, sin, S, I, exp, log, pi,
+from sympy import (residue, Symbol, Function, sin, I, exp, log, pi,
                    factorial, sqrt, Rational)
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.testing.pytest import XFAIL, raises
 from sympy.abc import x, z, a, s
 
 
@@ -71,3 +71,7 @@ def test_issue_5654():
 
 def test_issue_6499():
     assert residue(1/(exp(z) - 1), z, 0) == 1
+
+
+def test_issue_14037():
+    assert residue(sin(x**50)/x**51, x, 0) == 1

@@ -5,7 +5,7 @@ from sympy.ntheory.continued_fraction import \
      continued_fraction_convergents as cf_c,
      continued_fraction_reduce as cf_r,
      continued_fraction as cf)
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_continued_fraction():

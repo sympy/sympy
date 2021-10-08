@@ -1,7 +1,5 @@
-from __future__ import print_function, division
-
 from sympy.core.decorators import _sympifyit
-from sympy.core.evaluate import global_evaluate
+from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
@@ -71,13 +69,16 @@ class PowerSet(Set):
 
     .. [2] https://en.wikipedia.org/wiki/Axiom_of_power_set
     """
-    def __new__(cls, arg, evaluate=global_evaluate[0]):
+    def __new__(cls, arg, evaluate=None):
+        if evaluate is None:
+            evaluate=global_parameters.evaluate
+
         arg = _sympify(arg)
 
         if not isinstance(arg, Set):
             raise ValueError('{} must be a set.'.format(arg))
 
-        return super(PowerSet, cls).__new__(cls, arg)
+        return super().__new__(cls, arg)
 
     @property
     def arg(self):

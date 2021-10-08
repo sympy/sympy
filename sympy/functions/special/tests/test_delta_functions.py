@@ -4,7 +4,7 @@ from sympy import (
     SingularityFunction, signsimp
 )
 
-from sympy.utilities.pytest import raises, warns_deprecated_sympy
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 from sympy.core.function import ArgumentIndexError
 

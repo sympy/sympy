@@ -1,12 +1,10 @@
-from __future__ import print_function, division
-
 import pyglet.gl as pgl
 from sympy.plotting.pygletplot.plot_rotation import get_spherical_rotatation
 from sympy.plotting.pygletplot.util import get_model_matrix, model_to_screen, \
                                             screen_to_model, vec_subs
 
 
-class PlotCamera(object):
+class PlotCamera:
 
     min_dist = 0.05
     max_dist = 500.0

@@ -239,7 +239,7 @@ Install these packages with either pip or conda::
 
 Or::
 
-   conda install -c conda-forge mpmpath matplotlib sphinx sphinx-math-dollar
+   conda install -c conda-forge mpmath matplotlib sphinx sphinx-math-dollar
 
 **Windows 10**
 

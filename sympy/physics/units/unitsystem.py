@@ -2,11 +2,9 @@
 Unit system for physical quantities; include definition of constants.
 """
 
-from __future__ import division
+from typing import Dict
 
-from sympy.core.sympify import _sympify, sympify
-
-from sympy import S, Number, Mul, Pow, Add, Function, Derivative
+from sympy import S, Mul, Pow, Add, Function, Derivative
 from sympy.physics.units.dimensions import _QuantityMapper
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -24,7 +22,7 @@ class UnitSystem(_QuantityMapper):
     It is much better if all base units have a symbol.
     """
 
-    _unit_systems = {}
+    _unit_systems = {}  # type: Dict[str, UnitSystem]
 
     def __init__(self, base_units, units=(), name="", descr="", dimension_system=None):
 
@@ -38,7 +36,7 @@ class UnitSystem(_QuantityMapper):
         self._units = tuple(set(base_units) | set(units))
         self._base_units = tuple(base_units)
 
-        super(UnitSystem, self).__init__()
+        super().__init__()
 
     def __str__(self):
         """
@@ -96,13 +94,13 @@ class UnitSystem(_QuantityMapper):
         qdm = self.get_dimension_system()._quantity_dimension_map
         if unit in qdm:
             return qdm[unit]
-        return super(UnitSystem, self).get_quantity_dimension(unit)
+        return super().get_quantity_dimension(unit)
 
     def get_quantity_scale_factor(self, unit):
         qsfm = self.get_dimension_system()._quantity_scale_factors
         if unit in qsfm:
             return qsfm[unit]
-        return super(UnitSystem, self).get_quantity_scale_factor(unit)
+        return super().get_quantity_scale_factor(unit)
 
     @staticmethod
     def get_unit_system(unit_system):
@@ -131,9 +129,6 @@ class UnitSystem(_QuantityMapper):
         That is return the number of units forming the basis.
         """
         return len(self._base_units)
-
-    def get_dimension_system(self):
-        return self._dimension_system
 
     @property
     def is_consistent(self):
@@ -195,8 +190,8 @@ class UnitSystem(_QuantityMapper):
                     self._collect_factor_and_dimension(addend)
                 if dim != addend_dim:
                     raise ValueError(
-                        'Dimension of "{0}" is {1}, '
-                        'but it should be {2}'.format(
+                        'Dimension of "{}" is {}, '
+                        'but it should be {}'.format(
                             addend, addend_dim, dim))
                 factor += addend_factor
             return factor, dim

@@ -2,9 +2,11 @@
 AST nodes specific to the C family of languages
 """
 
-from sympy.codegen.ast import Attribute, Declaration, Node, String, Token, Type, none, FunctionCall
+from sympy.codegen.ast import (
+    Attribute, Declaration, Node, String, Token, Type, none,
+    FunctionCall, CodeBlock
+    )
 from sympy.core.basic import Basic
-from sympy.core.compatibility import string_types
 from sympy.core.containers import Tuple
 from sympy.core.sympify import sympify
 
@@ -17,7 +19,7 @@ static = Attribute('static')
 
 def alignof(arg):
     """ Generate of FunctionCall instance for calling 'alignof' """
-    return FunctionCall('alignof', [String(arg) if isinstance(arg, string_types) else arg])
+    return FunctionCall('alignof', [String(arg) if isinstance(arg, str) else arg])
 
 
 def sizeof(arg):
@@ -28,11 +30,11 @@ def sizeof(arg):
 
     >>> from sympy.codegen.ast import real
     >>> from sympy.codegen.cnodes import sizeof
-    >>> from sympy.printing.ccode import ccode
+    >>> from sympy.printing import ccode
     >>> ccode(sizeof(real))
     'sizeof(double)'
     """
-    return FunctionCall('sizeof', [String(arg) if isinstance(arg, string_types) else arg])
+    return FunctionCall('sizeof', [String(arg) if isinstance(arg, str) else arg])
 
 
 class CommaOperator(Basic):
@@ -41,22 +43,37 @@ class CommaOperator(Basic):
         return Basic.__new__(cls, *[sympify(arg) for arg in args])
 
 
-class Label(String):
+class Label(Node):
     """ Label for use with e.g. goto statement.
 
     Examples
     ========
 
-    >>> from sympy.codegen.cnodes import Label
-    >>> from sympy.printing.ccode import ccode
+    >>> from sympy import Symbol
+    >>> from sympy.codegen.cnodes import Label, PreIncrement
+    >>> from sympy.printing import ccode
     >>> print(ccode(Label('foo')))
     foo:
+    >>> print(ccode(Label('bar', [PreIncrement(Symbol('a'))])))
+    bar:
+    ++(a);
 
     """
+    __slots__ = ('name', 'body')
+    defaults = {'body': none}
+    _construct_name = String
+
+    @classmethod
+    def _construct_body(cls, itr):
+        if isinstance(itr, CodeBlock):
+            return itr
+        else:
+            return CodeBlock(*itr)
+
 
 class goto(Token):
     """ Represents goto in C """
-    __slots__ = ['label']
+    __slots__ = ('label',)
     _construct_label = Label
 
 
@@ -68,7 +85,7 @@ class PreDecrement(Basic):
 
     >>> from sympy.abc import x
     >>> from sympy.codegen.cnodes import PreDecrement
-    >>> from sympy.printing.ccode import ccode
+    >>> from sympy.printing import ccode
     >>> ccode(PreDecrement(x))
     '--(x)'
 
@@ -93,7 +110,7 @@ class PostIncrement(Basic):
 
 class struct(Node):
     """ Represents a struct in C """
-    __slots__ = ['name', 'declarations']
+    __slots__ = ('name', 'declarations')
     defaults = {'name': none}
     _construct_name = String
 

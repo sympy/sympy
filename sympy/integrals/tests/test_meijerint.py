@@ -5,10 +5,9 @@ from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
         meijerint_indefinite, _inflate_g, _create_lookup_table,
         meijerint_definite, meijerint_inversion)
 from sympy.utilities import default_sort_key
-from sympy.utilities.pytest import slow
-from sympy.utilities.randtest import (verify_numerically,
+from sympy.testing.pytest import slow
+from sympy.testing.randtest import (verify_numerically,
         random_complex_number as randcplx)
-from sympy.core.compatibility import range
 from sympy.abc import x, y, a, b, c, d, s, t, z
 
 
@@ -330,12 +329,12 @@ def test_lookup_table():
     for _, l in sorted(table.items()):
         for formula, terms, cond, hint in sorted(l, key=default_sort_key):
             subs = {}
-            for a in list(formula.free_symbols) + [z_dummy]:
-                if hasattr(a, 'properties') and a.properties:
+            for ai in list(formula.free_symbols) + [z_dummy]:
+                if hasattr(ai, 'properties') and ai.properties:
                     # these Wilds match positive integers
-                    subs[a] = randrange(1, 10)
+                    subs[ai] = randrange(1, 10)
                 else:
-                    subs[a] = uniform(1.5, 2.0)
+                    subs[ai] = uniform(1.5, 2.0)
             if not isinstance(terms, list):
                 terms = terms(subs)
 
@@ -630,7 +629,7 @@ def test_messy():
 
     # where should the logs be simplified?
     assert laplace_transform(Chi(x), x, s) == \
-        ((log(s**(-2)) - log((s**2 - 1)/s**2))/(2*s), 1, True)
+        ((log(s**(-2)) - log(1 - 1/s**2))/(2*s), 1, True)
 
     # TODO maybe simplify the inequalities?
     assert laplace_transform(besselj(a, x), x, s)[1:] == \
@@ -694,7 +693,7 @@ def test_issue_8368():
 
 def test_issue_10211():
     from sympy.abc import h, w
-    assert integrate((1/sqrt(((y-x)**2 + h**2))**3), (x,0,w), (y,0,w)) == \
+    assert integrate((1/sqrt((y-x)**2 + h**2)**3), (x,0,w), (y,0,w)) == \
         2*sqrt(1 + w**2/h**2)/h - 2/h
 
 

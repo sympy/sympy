@@ -4,10 +4,7 @@ Todo:
 * Sometimes the final result needs to be expanded, we should do this by hand.
 """
 
-from __future__ import print_function, division
-
 from sympy import Add, Mul, Pow, sympify, S
-from sympy.core.compatibility import range
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator

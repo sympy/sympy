@@ -1,11 +1,10 @@
-import warnings
 from sympy import (plot_implicit, cos, Symbol, symbols, Eq, sin, re, And, Or, exp, I,
                    tan, pi)
 from sympy.plotting.plot import unset_show
 from tempfile import NamedTemporaryFile, mkdtemp
-from sympy.utilities.pytest import skip, warns
+from sympy.testing.pytest import skip, warns
 from sympy.external import import_module
-from sympy.utilities.tmpfiles import TmpFileManager, cleanup_tmp_files
+from sympy.testing.tmpfiles import TmpFileManager
 
 import os
 
@@ -16,9 +15,7 @@ def tmp_file(dir=None, name=''):
     return NamedTemporaryFile(
     suffix='.png', dir=dir, delete=False).name
 
-def plot_and_save(expr, *args, **kwargs):
-    name = kwargs.pop('name', '')
-    dir = kwargs.pop('dir', None)
+def plot_and_save(expr, *args, name='', dir=None, **kwargs):
     p = plot_implicit(expr, *args, **kwargs)
     p.save(tmp_file(dir=dir, name=name))
     # Close the plot to avoid a warning from matplotlib
@@ -29,7 +26,6 @@ def plot_implicit_tests(name):
     TmpFileManager.tmp_folder(temp_dir)
     x = Symbol('x')
     y = Symbol('y')
-    z = Symbol('z')
     #implicit plot tests
     plot_and_save(Eq(y, cos(x)), (x, -5, 5), (y, -2, 2), name=name, dir=temp_dir)
     plot_and_save(Eq(y**2, x**3 - x), (x, -5, 5),

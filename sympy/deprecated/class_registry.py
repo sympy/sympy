@@ -12,7 +12,7 @@ class ClassRegistry(Registry):
     For performance reasons, this is coupled with a set `all_classes` holding
     the classes, which should not be modified directly.
     """
-    __slots__ = []
+    __slots__ = ()
 
     def __setattr__(self, name, cls):
         Registry.__setattr__(self, name, cls)

@@ -8,6 +8,7 @@ Benini
 Beta
 BetaNoncentral
 BetaPrime
+BoundedPareto
 Cauchy
 Chi
 ChiNoncentral
@@ -26,16 +27,21 @@ Gumbel
 Gompertz
 Kumaraswamy
 Laplace
+Levy
 Logistic
 LogLogistic
 LogNormal
+Lomax
 Maxwell
+Moyal
 Nakagami
 Normal
 Pareto
+PowerFunction
 QuadraticU
 RaisedCosine
 Rayleigh
+Reciprocal
 ShiftedGompertz
 StudentT
 Trapezoidal
@@ -43,27 +49,22 @@ Triangular
 Uniform
 UniformSum
 VonMises
+Wald
 Weibull
 WignerSemicircle
 """
 
-from __future__ import print_function, division
 
-import random
 
 from sympy import beta as beta_fn
 from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
 from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma, sign,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfc, erfi, erfinv, I,
-                   hyper, uppergamma, sinh, Ne, expint, Rational)
-from sympy.external import import_module
+                   Lambda, Basic, lowergamma, erf, erfc, erfi, erfinv, I, asin,
+                   hyper, uppergamma, sinh, Ne, expint, Rational, integrate)
 from sympy.matrices import MatrixBase, MatrixExpr
-from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
-                             ContinuousDistributionHandmade)
-from sympy.stats.joint_rv import JointPSpace, CompoundDistribution
-from sympy.stats.joint_rv_types import multivariate_rv
-from sympy.stats.rv import _value_check, RandomSymbol
+from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDistribution
+from sympy.stats.rv import _value_check, is_random
 
 oo = S.Infinity
 
@@ -73,6 +74,7 @@ __all__ = ['ContinuousRV',
 'Beta',
 'BetaNoncentral',
 'BetaPrime',
+'BoundedPareto',
 'Cauchy',
 'Chi',
 'ChiNoncentral',
@@ -91,17 +93,22 @@ __all__ = ['ContinuousRV',
 'Gumbel',
 'Kumaraswamy',
 'Laplace',
+'Levy',
 'Logistic',
 'LogLogistic',
 'LogNormal',
+'Lomax',
 'Maxwell',
+'Moyal',
 'Nakagami',
 'Normal',
 'GaussianInverse',
 'Pareto',
+'PowerFunction',
 'QuadraticU',
 'RaisedCosine',
 'Rayleigh',
+'Reciprocal',
 'StudentT',
 'ShiftedGompertz',
 'Trapezoidal',
@@ -109,24 +116,72 @@ __all__ = ['ContinuousRV',
 'Uniform',
 'UniformSum',
 'VonMises',
+'Wald',
 'Weibull',
-'WignerSemicircle'
+'WignerSemicircle',
 ]
 
 
+@is_random.register(MatrixBase)
+def _(x):
+    return any([is_random(i) for i in x])
 
-def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
+def rv(symbol, cls, args, **kwargs):
+    args = list(map(sympify, args))
+    dist = cls(*args)
+    if kwargs.pop('check', True):
+        dist.check(*args)
+    pspace = SingleContinuousPSpace(symbol, dist)
+    if any(is_random(arg) for arg in args):
+        from sympy.stats.compound_rv import CompoundPSpace, CompoundDistribution
+        pspace = CompoundPSpace(symbol, CompoundDistribution(dist))
+    return pspace.value
+
+
+class ContinuousDistributionHandmade(SingleContinuousDistribution):
+    _argnames = ('pdf',)
+
+    def __new__(cls, pdf, set=Interval(-oo, oo)):
+        return Basic.__new__(cls, pdf, set)
+
+    @property
+    def set(self):
+        return self.args[1]
+
+    @staticmethod
+    def check(pdf, set):
+        x = Dummy('x')
+        val = integrate(pdf(x), (x, set))
+        _value_check(Eq(val, 1) != S.false, "The pdf on the given set is incorrect.")
+
+
+def ContinuousRV(symbol, density, set=Interval(-oo, oo), **kwargs):
     """
     Create a Continuous Random Variable given the following:
 
-    -- a symbol
-    -- a probability density function
-    -- set on which the pdf is valid (defaults to entire real line)
+    Parameters
+    ==========
 
-    Returns a RandomSymbol.
+    symbol : Symbol
+        Represents name of the random variable.
+    density : Expression containing symbol
+        Represents probability density function.
+    set : set/Interval
+        Represents the region where the pdf is valid, by default is real line.
+    check : bool
+        If True, it will check whether the given density
+        integrates to 1 over the given set. If False, it
+        will not perform this check. Default is False.
+
+
+    Returns
+    =======
+
+    RandomSymbol
 
     Many common continuous random variable types are already implemented.
     This function should be necessary only very rarely.
+
 
     Examples
     ========
@@ -146,18 +201,9 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
     pdf = Piecewise((density, set.as_relational(symbol)), (0, True))
     pdf = Lambda(symbol, pdf)
-    dist = ContinuousDistributionHandmade(pdf, set)
-    return SingleContinuousPSpace(symbol, dist).value
-
-
-def rv(symbol, cls, args):
-    args = list(map(sympify, args))
-    dist = cls(*args)
-    dist.check(*args)
-    pspace = SingleContinuousPSpace(symbol, dist)
-    if any(isinstance(arg, RandomSymbol) for arg in args):
-        pspace = JointPSpace(symbol, CompoundDistribution(dist))
-    return pspace.value
+    # have a default of False while `rv` should have a default of True
+    kwargs['check'] = kwargs.pop('check', False)
+    return rv(symbol.name, ContinuousDistributionHandmade, (pdf, set), **kwargs)
 
 ########################################
 # Continuous Probability Distributions #
@@ -170,14 +216,15 @@ def rv(symbol, cls, args):
 class ArcsinDistribution(SingleContinuousDistribution):
     _argnames = ('a', 'b')
 
+    @property
     def set(self):
         return Interval(self.a, self.b)
 
     def pdf(self, x):
-        return 1/(pi*sqrt((x - self.a)*(self.b - x)))
+        a, b = self.a, self.b
+        return 1/(pi*sqrt((x - a)*(b - x)))
 
     def _cdf(self, x):
-        from sympy import asin
         a, b = self.a, self.b
         return Piecewise(
             (S.Zero, x < a),
@@ -205,13 +252,13 @@ def Arcsin(name, a=0, b=1):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
     >>> from sympy.stats import Arcsin, density, cdf
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol
 
     >>> a = Symbol("a", real=True)
     >>> b = Symbol("b", real=True)
@@ -287,13 +334,13 @@ def Benini(name, alpha, beta, sigma):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
     >>> from sympy.stats import Benini, density, cdf
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy import Symbol, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
@@ -343,9 +390,6 @@ class BetaDistribution(SingleContinuousDistribution):
         alpha, beta = self.alpha, self.beta
         return x**(alpha - 1) * (1 - x)**(beta - 1) / beta_fn(alpha, beta)
 
-    def sample(self):
-        return random.betavariate(self.alpha, self.beta)
-
     def _characteristic_function(self, t):
         return hyper((self.alpha,), (self.alpha + self.beta,), I*t)
 
@@ -372,7 +416,7 @@ def Beta(name, alpha, beta):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -452,7 +496,7 @@ def BetaNoncentral(name, alpha, beta, lamda):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -538,7 +582,7 @@ def BetaPrime(name, alpha, beta):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -570,6 +614,74 @@ def BetaPrime(name, alpha, beta):
     return rv(name, BetaPrimeDistribution, (alpha, beta))
 
 #-------------------------------------------------------------------------------
+# Bounded Pareto Distribution --------------------------------------------------
+class BoundedParetoDistribution(SingleContinuousDistribution):
+    _argnames = ('alpha', 'left', 'right')
+
+    @property
+    def set(self):
+        return Interval(self.left , self.right)
+
+    @staticmethod
+    def check(alpha, left, right):
+        _value_check (alpha.is_positive, "Shape must be positive.")
+        _value_check (left.is_positive, "Left value should be positive.")
+        _value_check (right > left, "Right should be greater than left.")
+
+    def pdf(self, x):
+        alpha, left, right = self.alpha, self.left, self.right
+        num = alpha * (left**alpha) * x**(- alpha -1)
+        den = 1 - (left/right)**alpha
+        return num/den
+
+def BoundedPareto(name, alpha, left, right):
+    r"""
+    Create a continuous random variable with a Bounded Pareto distribution.
+
+    The density of the Bounded Pareto distribution is given by
+
+    .. math::
+        f(x) := \frac{\alpha L^{\alpha}x^{-\alpha-1}}{1-(\frac{L}{H})^{\alpha}}
+
+    Parameters
+    ==========
+
+    alpha : Real Number, `alpha > 0`
+        Shape parameter
+    left : Real Number, `left > 0`
+        Location parameter
+    right : Real Number, `right > left`
+        Location parameter
+
+    Examples
+    ========
+
+    >>> from sympy.stats import BoundedPareto, density, cdf, E
+    >>> from sympy import symbols
+    >>> L, H = symbols('L, H', positive=True)
+    >>> X = BoundedPareto('X', 2, L, H)
+    >>> x = symbols('x')
+    >>> density(X)(x)
+    2*L**2/(x**3*(1 - L**2/H**2))
+    >>> cdf(X)(x)
+    Piecewise((-H**2*L**2/(x**2*(H**2 - L**2)) + H**2/(H**2 - L**2), L <= x), (0, True))
+    >>> E(X).simplify()
+    2*H*L/(H + L)
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Pareto_distribution#Bounded_Pareto_distribution
+
+    """
+    return rv (name, BoundedParetoDistribution, (alpha, left, right))
+
+# ------------------------------------------------------------------------------
 # Cauchy distribution ----------------------------------------------------------
 
 
@@ -579,6 +691,7 @@ class CauchyDistribution(SingleContinuousDistribution):
     @staticmethod
     def check(x0, gamma):
         _value_check(gamma > 0, "Scale parameter Gamma must be positive.")
+        _value_check(x0.is_real, "Location parameter must be real.")
 
     def pdf(self, x):
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
@@ -615,7 +728,7 @@ def Cauchy(name, x0, gamma):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -694,7 +807,7 @@ def Chi(name, k):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -764,7 +877,7 @@ def ChiNoncentral(name, k, l):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -840,7 +953,7 @@ def ChiSquared(name, k):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -920,7 +1033,7 @@ def Dagum(name, p, a, b):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -975,7 +1088,7 @@ def Erlang(name, k, l):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -1091,7 +1204,7 @@ def ExGaussian(name, mean, std, rate):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -1151,9 +1264,6 @@ class ExponentialDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return self.rate * exp(-self.rate*x)
 
-    def sample(self):
-        return random.expovariate(self.rate)
-
     def _cdf(self, x):
         return Piecewise(
                 (S.One - exp(-self.rate*x), x >= 0),
@@ -1190,7 +1300,7 @@ def Exponential(name, rate):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -1294,13 +1404,13 @@ def ExponentialPower(name, mu, alpha, beta):
     Returns
     =======
 
-    A RandomSymbol
+    RandomSymbol
 
     Examples
     ========
 
-    >>> from sympy.stats import ExponentialPower, density, E, variance, cdf
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy.stats import ExponentialPower, density, cdf
+    >>> from sympy import Symbol, pprint
     >>> z = Symbol("z")
     >>> mu = Symbol("mu")
     >>> alpha = Symbol("alpha", positive=True)
@@ -1376,13 +1486,13 @@ def FDistribution(name, d1, d2):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
     >>> from sympy.stats import FDistribution, density
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy import Symbol, pprint
 
     >>> d1 = Symbol("d1", positive=True)
     >>> d2 = Symbol("d2", positive=True)
@@ -1451,13 +1561,13 @@ def FisherZ(name, d1, d2):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
     >>> from sympy.stats import FisherZ, density
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy import Symbol, pprint
 
     >>> d1 = Symbol("d1", positive=True)
     >>> d2 = Symbol("d2", positive=True)
@@ -1535,13 +1645,13 @@ def Frechet(name, a, s=1, m=0):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
-    >>> from sympy.stats import Frechet, density, E, std, cdf
-    >>> from sympy import Symbol, simplify
+    >>> from sympy.stats import Frechet, density, cdf
+    >>> from sympy import Symbol
 
     >>> a = Symbol("a", positive=True)
     >>> s = Symbol("s", positive=True)
@@ -1583,9 +1693,6 @@ class GammaDistribution(SingleContinuousDistribution):
         k, theta = self.k, self.theta
         return x**(k - 1) * exp(-x/theta) / (gamma(k)*theta**k)
 
-    def sample(self):
-        return random.gammavariate(self.k, self.theta)
-
     def _cdf(self, x):
         k, theta = self.k, self.theta
         return Piecewise(
@@ -1618,7 +1725,7 @@ def Gamma(name, k, theta):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -1693,17 +1800,9 @@ class GammaInverseDistribution(SingleContinuousDistribution):
         return Piecewise((uppergamma(a,b/x)/gamma(a), x > 0),
                         (S.Zero, True))
 
-    def sample(self):
-        scipy = import_module('scipy')
-        if scipy:
-            from scipy.stats import invgamma
-            return invgamma.rvs(float(self.a), 0, float(self.b))
-        else:
-            raise NotImplementedError('Sampling the Inverse Gamma Distribution requires Scipy.')
-
     def _characteristic_function(self, t):
         a, b = self.a, self.b
-        return 2 * (-I*b*t)**(a/2) * besselk(sqrt(-4*I*b*t)) / gamma(a)
+        return 2 * (-I*b*t)**(a/2) * besselk(a, sqrt(-4*I*b*t)) / gamma(a)
 
     def _moment_generating_function(self, t):
         raise NotImplementedError('The moment generating function for the '
@@ -1730,12 +1829,12 @@ def GammaInverse(name, a, b):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
-    >>> from sympy.stats import GammaInverse, density, cdf, E, variance
+    >>> from sympy.stats import GammaInverse, density, cdf
     >>> from sympy import Symbol, pprint
 
     >>> a = Symbol("a", positive=True)
@@ -1835,13 +1934,13 @@ def Gumbel(name, beta, mu, minimum=False):
     Returns
     =======
 
-    A RandomSymbol
+    RandomSymbol
 
     Examples
     ========
 
-    >>> from sympy.stats import Gumbel, density, E, variance, cdf
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy.stats import Gumbel, density, cdf
+    >>> from sympy import Symbol
     >>> x = Symbol("x")
     >>> mu = Symbol("mu")
     >>> beta = Symbol("beta", positive=True)
@@ -1907,13 +2006,13 @@ def Gompertz(name, b, eta):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
-    >>> from sympy.stats import Gompertz, density, E, variance
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy.stats import Gompertz, density
+    >>> from sympy import Symbol
 
     >>> b = Symbol("b", positive=True)
     >>> eta = Symbol("eta", positive=True)
@@ -1977,13 +2076,13 @@ def Kumaraswamy(name, a, b):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
-    >>> from sympy.stats import Kumaraswamy, density, E, variance, cdf
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy.stats import Kumaraswamy, density, cdf
+    >>> from sympy import Symbol, pprint
 
     >>> a = Symbol("a", positive=True)
     >>> b = Symbol("b", positive=True)
@@ -2060,7 +2159,7 @@ def Laplace(name, mu, b):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -2097,11 +2196,87 @@ def Laplace(name, mu, b):
 
     if isinstance(mu, (list, MatrixBase)) and\
         isinstance(b, (list, MatrixBase)):
-        from sympy.stats.joint_rv_types import MultivariateLaplaceDistribution
-        return multivariate_rv(
-            MultivariateLaplaceDistribution, name, mu, b)
+        from sympy.stats.joint_rv_types import MultivariateLaplace
+        return MultivariateLaplace(name, mu, b)
 
     return rv(name, LaplaceDistribution, (mu, b))
+
+#-------------------------------------------------------------------------------
+# Levy distribution ---------------------------------------------------------
+
+
+class LevyDistribution(SingleContinuousDistribution):
+    _argnames = ('mu', 'c')
+
+    @property
+    def set(self):
+        return Interval(self.mu, oo)
+
+    @staticmethod
+    def check(mu, c):
+        _value_check(c > 0, "c (scale parameter) must be positive")
+        _value_check(mu.is_real, "mu (location paramater) must be real")
+
+    def pdf(self, x):
+        mu, c = self.mu, self.c
+        return sqrt(c/(2*pi))*exp(-c/(2*(x - mu)))/((x - mu)**(S.One + S.Half))
+
+    def _cdf(self, x):
+        mu, c = self.mu, self.c
+        return erfc(sqrt(c/(2*(x - mu))))
+
+    def _characteristic_function(self, t):
+        mu, c = self.mu, self.c
+        return exp(I * mu * t - sqrt(-2 * I * c * t))
+
+    def _moment_generating_function(self, t):
+        raise NotImplementedError('The moment generating function of Levy distribution does not exist.')
+
+def Levy(name, mu, c):
+    r"""
+    Create a continuous random variable with a Levy distribution.
+
+    The density of the Levy distribution is given by
+
+    .. math::
+        f(x) := \sqrt(\frac{c}{2 \pi}) \frac{\exp -\frac{c}{2 (x - \mu)}}{(x - \mu)^{3/2}}
+
+    Parameters
+    ==========
+
+    mu : Real number, the location parameter
+    c : Real number, `c > 0`, a scale parameter
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Levy, density, cdf
+    >>> from sympy import Symbol
+
+    >>> mu = Symbol("mu", real=True)
+    >>> c = Symbol("c", positive=True)
+    >>> z = Symbol("z")
+
+    >>> X = Levy("x", mu, c)
+
+    >>> density(X)(z)
+    sqrt(2)*sqrt(c)*exp(-c/(-2*mu + 2*z))/(2*sqrt(pi)*(-mu + z)**(3/2))
+
+    >>> cdf(X)(z)
+    erfc(sqrt(c)*sqrt(1/(-2*mu + 2*z)))
+
+    References
+    ==========
+    .. [1] https://en.wikipedia.org/wiki/L%C3%A9vy_distribution
+    .. [2] http://mathworld.wolfram.com/LevyDistribution.html
+    """
+
+    return rv(name, LevyDistribution, (mu, c))
 
 #-------------------------------------------------------------------------------
 # Logistic distribution --------------------------------------------------------
@@ -2151,7 +2326,7 @@ def Logistic(name, mu, s):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -2231,7 +2406,7 @@ def LogLogistic(name, alpha, beta):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -2291,9 +2466,6 @@ class LogNormalDistribution(SingleContinuousDistribution):
         mean, std = self.mean, self.std
         return exp(-(log(x) - mean)**2 / (2*std**2)) / (x*sqrt(2*pi)*std)
 
-    def sample(self):
-        return random.lognormvariate(self.mean, self.std)
-
     def _cdf(self, x):
         mean, std = self.mean, self.std
         return Piecewise(
@@ -2325,13 +2497,13 @@ def LogNormal(name, mean, std):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
     >>> from sympy.stats import LogNormal, density
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy import Symbol, pprint
 
     >>> mu = Symbol("mu", real=True)
     >>> sigma = Symbol("sigma", positive=True)
@@ -2366,6 +2538,71 @@ def LogNormal(name, mean, std):
     """
 
     return rv(name, LogNormalDistribution, (mean, std))
+
+#-------------------------------------------------------------------------------
+# Lomax Distribution -----------------------------------------------------------
+
+class LomaxDistribution(SingleContinuousDistribution):
+    _argnames = ('alpha', 'lamda',)
+    set = Interval(0, oo)
+
+    @staticmethod
+    def check(alpha, lamda):
+        _value_check(alpha.is_real, "Shape parameter should be real.")
+        _value_check(lamda.is_real, "Scale parameter should be real.")
+        _value_check(alpha.is_positive, "Shape parameter should be positive.")
+        _value_check(lamda.is_positive, "Scale parameter should be positive.")
+
+    def pdf(self, x):
+        lamba, alpha = self.lamda, self.alpha
+        return (alpha/lamba) * (S.One + x/lamba)**(-alpha-1)
+
+def Lomax(name, alpha, lamda):
+    r"""
+    Create a continuous random variable with a Lomax distribution.
+
+    The density of the Lomax distribution is given by
+
+    .. math::
+        f(x) := \frac{\alpha}{\lambda}\left[1+\frac{x}{\lambda}\right]^{-(\alpha+1)}
+
+    Parameters
+    ==========
+
+    alpha : Real Number, `alpha > 0`
+        Shape parameter
+    lamda : Real Number, `lamda > 0`
+        Scale parameter
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Lomax, density, cdf, E
+    >>> from sympy import symbols
+    >>> a, l = symbols('a, l', positive=True)
+    >>> X = Lomax('X', a, l)
+    >>> x = symbols('x')
+    >>> density(X)(x)
+    a*(1 + x/l)**(-a - 1)/l
+    >>> cdf(X)(x)
+    Piecewise((1 - (1 + x/l)**(-a), x >= 0), (0, True))
+    >>> a = 2
+    >>> X = Lomax('X', a, l)
+    >>> E(X)
+    l
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Lomax_distribution
+
+    """
+    return rv(name, LomaxDistribution, (alpha, lamda))
 
 #-------------------------------------------------------------------------------
 # Maxwell distribution ---------------------------------------------------------
@@ -2409,7 +2646,7 @@ def Maxwell(name, a):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -2440,6 +2677,82 @@ def Maxwell(name, a):
     """
 
     return rv(name, MaxwellDistribution, (a, ))
+
+#-------------------------------------------------------------------------------
+# Moyal Distribution -----------------------------------------------------------
+class MoyalDistribution(SingleContinuousDistribution):
+    _argnames = ('mu', 'sigma')
+
+    @staticmethod
+    def check(mu, sigma):
+        _value_check(mu.is_real, "Location parameter must be real.")
+        _value_check(sigma.is_real and sigma > 0, "Scale parameter must be real\
+        and positive.")
+
+    def pdf(self, x):
+        mu, sigma = self.mu, self.sigma
+        num = exp(-(exp(-(x - mu)/sigma) + (x - mu)/(sigma))/2)
+        den = (sqrt(2*pi) * sigma)
+        return num/den
+
+    def _characteristic_function(self, t):
+        mu, sigma = self.mu, self.sigma
+        term1 = exp(I*t*mu)
+        term2 = (2**(-I*sigma*t) * gamma(Rational(1, 2) - I*t*sigma))
+        return (term1 * term2)/sqrt(pi)
+
+    def _moment_generating_function(self, t):
+        mu, sigma = self.mu, self.sigma
+        term1 = exp(t*mu)
+        term2 = (2**(-1*sigma*t) * gamma(Rational(1, 2) - t*sigma))
+        return (term1 * term2)/sqrt(pi)
+
+def Moyal(name, mu, sigma):
+    r"""
+    Create a continuous random variable with a Moyal distribution.
+    The density of the Moyal distribution is given by
+
+    .. math::
+        f(x) := \frac{\exp-\frac{1}{2}\exp-\frac{x-\mu}{\sigma}-\frac{x-\mu}{2\sigma}}{\sqrt{2\pi}\sigma}
+
+    with :math:`x \in \mathbb{R}`.
+
+    Parameters
+    ==========
+
+    mu : Real number
+        Location parameter
+    sigma : Real positive number
+        Scale parameter
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Moyal, density, cdf
+    >>> from sympy import Symbol, simplify
+    >>> mu = Symbol("mu", real=True)
+    >>> sigma = Symbol("sigma", positive=True, real=True)
+    >>> z = Symbol("z")
+    >>> X = Moyal("x", mu, sigma)
+    >>> density(X)(z)
+    sqrt(2)*exp(-exp((mu - z)/sigma)/2 - (-mu + z)/(2*sigma))/(2*sqrt(pi)*sigma)
+    >>> simplify(cdf(X)(z))
+    1 - erf(sqrt(2)*exp((mu - z)/(2*sigma))/2)
+
+    References
+    ==========
+
+    .. [1] https://reference.wolfram.com/language/ref/MoyalDistribution.html
+    .. [2] http://www.stat.rice.edu/~dobelman/textfiles/DistributionsHandbook.pdf
+
+    """
+
+    return rv(name, MoyalDistribution, (mu, sigma))
 
 #-------------------------------------------------------------------------------
 # Nakagami distribution --------------------------------------------------------
@@ -2486,7 +2799,7 @@ def Nakagami(name, mu, omega):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -2548,9 +2861,6 @@ class NormalDistribution(SingleContinuousDistribution):
     def pdf(self, x):
         return exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi)*self.std)
 
-    def sample(self):
-        return random.normalvariate(self.mean, self.std)
-
     def _cdf(self, x):
         mean, std = self.mean, self.std
         return erf(sqrt(2)*(-mean + x)/(2*std))/2 + S.Half
@@ -2586,13 +2896,13 @@ def Normal(name, mean, std):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
-    >>> from sympy.stats import Normal, density, E, std, cdf, skewness, quantile
-    >>> from sympy import Symbol, simplify, pprint, factor, together, factor_terms
+    >>> from sympy.stats import Normal, density, E, std, cdf, skewness, quantile, marginal_distribution
+    >>> from sympy import Symbol, simplify, pprint
 
     >>> mu = Symbol("mu")
     >>> sigma = Symbol("sigma", positive=True)
@@ -2630,7 +2940,6 @@ def Normal(name, mean, std):
     2
 
     >>> m = Normal('X', [1, 2], [[2, 1], [1, 2]])
-    >>> from sympy.stats.joint_rv import marginal_distribution
     >>> pprint(density(m)(y, z), use_unicode=False)
            /1   y\ /2*y   z\   /    z\ /  y   2*z    \
            |- - -|*|--- - -| + |1 - -|*|- - + --- - 1|
@@ -2653,9 +2962,8 @@ def Normal(name, mean, std):
 
     if isinstance(mean, (list, MatrixBase, MatrixExpr)) and\
         isinstance(std, (list, MatrixBase, MatrixExpr)):
-        from sympy.stats.joint_rv_types import MultivariateNormalDistribution
-        return multivariate_rv(
-            MultivariateNormalDistribution, name, mean, std)
+        from sympy.stats.joint_rv_types import MultivariateNormal
+        return MultivariateNormal(name, mean, std)
     return rv(name, NormalDistribution, (mean, std))
 
 
@@ -2677,16 +2985,7 @@ class GaussianInverseDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         mu, s = self.mean, self.shape
-        return exp(-s*(x - mu)**2 / (2*x*mu**2)) * sqrt(s/((2*pi*x**3)))
-
-    def sample(self):
-        scipy = import_module('scipy')
-        if scipy:
-            from scipy.stats import invgauss
-            return invgauss.rvs(float(self.mean/self.shape), 0, float(self.shape))
-        else:
-            raise NotImplementedError(
-                'Sampling the Inverse Gaussian Distribution requires Scipy.')
+        return exp(-s*(x - mu)**2 / (2*x*mu**2)) * sqrt(s/(2*pi*x**3))
 
     def _cdf(self, x):
         from sympy.stats import cdf
@@ -2726,12 +3025,12 @@ def GaussianInverse(name, mean, shape):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
-    >>> from sympy.stats import GaussianInverse, density, cdf, E, std, skewness
+    >>> from sympy.stats import GaussianInverse, density, E, std, skewness
     >>> from sympy import Symbol, pprint
 
     >>> mu = Symbol("mu", positive=True)
@@ -2792,9 +3091,6 @@ class ParetoDistribution(SingleContinuousDistribution):
         xm, alpha = self.xm, self.alpha
         return alpha * xm**alpha / x**(alpha + 1)
 
-    def sample(self):
-        return random.paretovariate(self.alpha)
-
     def _cdf(self, x):
         xm, alpha = self.xm, self.alpha
         return Piecewise(
@@ -2831,7 +3127,7 @@ def Pareto(name, xm, alpha):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -2859,6 +3155,91 @@ def Pareto(name, xm, alpha):
     return rv(name, ParetoDistribution, (xm, alpha))
 
 #-------------------------------------------------------------------------------
+# PowerFunction distribution ---------------------------------------------------
+
+
+class PowerFunctionDistribution(SingleContinuousDistribution):
+    _argnames=('alpha','a','b')
+
+    @property
+    def set(self):
+        return Interval(self.a, self.b)
+
+    @staticmethod
+    def check(alpha, a, b):
+        _value_check(a.is_real, "Continuous Boundary parameter should be real.")
+        _value_check(b.is_real, "Continuous Boundary parameter should be real.")
+        _value_check(a < b, " 'a' the left Boundary must be smaller than 'b' the right Boundary." )
+        _value_check(alpha.is_positive, "Continuous Shape parameter should be positive.")
+
+    def pdf(self, x):
+        alpha, a, b = self.alpha, self.a, self.b
+        num = alpha*(x - a)**(alpha - 1)
+        den = (b - a)**alpha
+        return num/den
+
+def PowerFunction(name, alpha, a, b):
+    r"""
+    Creates a continuous random variable with a Power Function Distribution
+
+    The density of PowerFunction distribution is given by
+
+    .. math::
+        f(x) := \frac{{\alpha}(x - a)^{\alpha - 1}}{(b - a)^{\alpha}}
+
+    with :math:`x \in [a,b]`.
+
+    Parameters
+    ==========
+
+    alpha: Positive number, `0 < alpha` the shape paramater
+    a : Real number, :math:`-\infty < a` the left boundary
+    b : Real number, :math:`a < b < \infty` the right boundary
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import PowerFunction, density, cdf, E, variance
+    >>> from sympy import Symbol
+    >>> alpha = Symbol("alpha", positive=True)
+    >>> a = Symbol("a", real=True)
+    >>> b = Symbol("b", real=True)
+    >>> z = Symbol("z")
+
+    >>> X = PowerFunction("X", 2, a, b)
+
+    >>> density(X)(z)
+    (-2*a + 2*z)/(-a + b)**2
+
+    >>> cdf(X)(z)
+    Piecewise((a**2/(a**2 - 2*a*b + b**2) - 2*a*z/(a**2 - 2*a*b + b**2) +
+    z**2/(a**2 - 2*a*b + b**2), a <= z), (0, True))
+
+    >>> alpha = 2
+    >>> a = 0
+    >>> b = 1
+    >>> Y = PowerFunction("Y", alpha, a, b)
+
+    >>> E(Y)
+    2/3
+
+    >>> variance(Y)
+    1/18
+
+    References
+    ==========
+
+    .. [1] http://www.mathwave.com/help/easyfit/html/analyses/distributions/power_func.html
+
+    """
+    return rv(name, PowerFunctionDistribution, (alpha, a, b))
+
+#-------------------------------------------------------------------------------
 # QuadraticU distribution ------------------------------------------------------
 
 
@@ -2883,14 +3264,13 @@ class QuadraticUDistribution(SingleContinuousDistribution):
 
     def _moment_generating_function(self, t):
         a, b = self.a, self.b
-
-        return -3 * (exp(a*t) * (4  + (a**2 + 2*a*(-2 + b) + b**2) * t) - exp(b*t) * (4 + (-4*b + (a + b)**2) * t)) / ((a-b)**3 * t**2)
+        return -3 * (exp(a*t) * (4  + (a**2 + 2*a*(-2 + b) + b**2) * t) \
+        - exp(b*t) * (4 + (-4*b + (a + b)**2) * t)) / ((a-b)**3 * t**2)
 
     def _characteristic_function(self, t):
-        def _moment_generating_function(self, t):
-            a, b = self.a, self.b
-
-            return -3*I*(exp(I*a*t*exp(I*b*t)) * (4*I - (-4*b + (a+b)**2)*t)) / ((a-b)**3 * t**2)
+        a, b = self.a, self.b
+        return -3*I*(exp(I*a*t*exp(I*b*t)) * (4*I - (-4*b + (a+b)**2)*t)) \
+                / ((a-b)**3 * t**2)
 
 
 def QuadraticU(name, a, b):
@@ -2913,13 +3293,13 @@ def QuadraticU(name, a, b):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
-    >>> from sympy.stats import QuadraticU, density, E, variance
-    >>> from sympy import Symbol, simplify, factor, pprint
+    >>> from sympy.stats import QuadraticU, density
+    >>> from sympy import Symbol, pprint
 
     >>> a = Symbol("a", real=True)
     >>> b = Symbol("b", real=True)
@@ -2999,13 +3379,13 @@ def RaisedCosine(name, mu, s):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
-    >>> from sympy.stats import RaisedCosine, density, E, variance
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy.stats import RaisedCosine, density
+    >>> from sympy import Symbol, pprint
 
     >>> mu = Symbol("mu", real=True)
     >>> s = Symbol("s", positive=True)
@@ -3081,13 +3461,13 @@ def Rayleigh(name, sigma):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
     >>> from sympy.stats import Rayleigh, density, E, variance
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol
 
     >>> sigma = Symbol("sigma", positive=True)
     >>> z = Symbol("z")
@@ -3112,6 +3492,64 @@ def Rayleigh(name, sigma):
     """
 
     return rv(name, RayleighDistribution, (sigma, ))
+
+#-------------------------------------------------------------------------------
+# Reciprocal distribution --------------------------------------------------------
+
+class ReciprocalDistribution(SingleContinuousDistribution):
+    _argnames = ('a', 'b')
+
+    @property
+    def set(self):
+        return Interval(self.a, self.b)
+
+    @staticmethod
+    def check(a, b):
+        _value_check(a > 0, "Parameter > 0. a = %s"%a)
+        _value_check((a < b),
+        "Parameter b must be in range (%s, +oo]. b = %s"%(a, b))
+
+    def pdf(self, x):
+        a, b = self.a, self.b
+        return 1/(x*(log(b) - log(a)))
+
+
+def Reciprocal(name, a, b):
+    r"""Creates a continuous random variable with a reciprocal distribution.
+
+
+    Parameters
+    ==========
+
+    a : Real number, :math:`0 < a`
+    b : Real number, :math:`a < b`
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Reciprocal, density, cdf
+    >>> from sympy import symbols
+    >>> a, b, x = symbols('a, b, x', positive=True)
+    >>> R = Reciprocal('R', a, b)
+
+    >>> density(R)(x)
+    1/(x*(-log(a) + log(b)))
+    >>> cdf(R)(x)
+    Piecewise((log(a)/(log(a) - log(b)) - log(x)/(log(a) - log(b)), a <= x), (0, True))
+
+    Reference
+    =========
+
+    .. [1] https://en.wikipedia.org/wiki/Reciprocal_distribution
+
+    """
+    return rv(name, ReciprocalDistribution, (a, b))
+
 
 #-------------------------------------------------------------------------------
 # Shifted Gompertz distribution ------------------------------------------------
@@ -3151,11 +3589,11 @@ def ShiftedGompertz(name, b, eta):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
-    >>> from sympy.stats import ShiftedGompertz, density, E, variance
+    >>> from sympy.stats import ShiftedGompertz, density
     >>> from sympy import Symbol
 
     >>> b = Symbol("b", positive=True)
@@ -3219,13 +3657,13 @@ def StudentT(name, nu):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
-    >>> from sympy.stats import StudentT, density, E, variance, cdf
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy.stats import StudentT, density, cdf
+    >>> from sympy import Symbol, pprint
 
     >>> nu = Symbol("nu", positive=True)
     >>> z = Symbol("z")
@@ -3315,12 +3753,12 @@ def Trapezoidal(name, a, b, c, d):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
-    >>> from sympy.stats import Trapezoidal, density, E
+    >>> from sympy.stats import Trapezoidal, density
     >>> from sympy import Symbol, pprint
 
     >>> a = Symbol("a")
@@ -3414,12 +3852,12 @@ def Triangular(name, a, b, c):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
-    >>> from sympy.stats import Triangular, density, E
+    >>> from sympy.stats import Triangular, density
     >>> from sympy import Symbol, pprint
 
     >>> a = Symbol("a")
@@ -3502,9 +3940,6 @@ class UniformDistribution(SingleContinuousDistribution):
                               Min(self.left, self.right): self.left})
         return result
 
-    def sample(self):
-        return random.uniform(self.left, self.right)
-
 
 def Uniform(name, left, right):
     r"""
@@ -3529,12 +3964,12 @@ def Uniform(name, left, right):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
-    >>> from sympy.stats import Uniform, density, cdf, E, variance, skewness
+    >>> from sympy.stats import Uniform, density, cdf, E, variance
     >>> from sympy import Symbol, simplify
 
     >>> a = Symbol("a", negative=True)
@@ -3622,7 +4057,7 @@ def UniformSum(name, n):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -3707,13 +4142,13 @@ def VonMises(name, mu, k):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
 
-    >>> from sympy.stats import VonMises, density, E, variance
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy.stats import VonMises, density
+    >>> from sympy import Symbol, pprint
 
     >>> mu = Symbol("mu")
     >>> k = Symbol("k", positive=True)
@@ -3757,8 +4192,6 @@ class WeibullDistribution(SingleContinuousDistribution):
         alpha, beta = self.alpha, self.beta
         return beta * (x/alpha)**(beta - 1) * exp(-(x/alpha)**beta) / alpha
 
-    def sample(self):
-        return random.weibullvariate(self.alpha, self.beta)
 
 def Weibull(name, alpha, beta):
     r"""
@@ -3782,7 +4215,7 @@ def Weibull(name, alpha, beta):
     Returns
     =======
 
-    A RandomSymbol.
+    RandomSymbol
 
     Examples
     ========
@@ -3867,7 +4300,7 @@ def WignerSemicircle(name, R):
     ========
 
     >>> from sympy.stats import WignerSemicircle, density, E
-    >>> from sympy import Symbol, simplify
+    >>> from sympy import Symbol
 
     >>> R = Symbol("R", positive=True)
     >>> z = Symbol("z")

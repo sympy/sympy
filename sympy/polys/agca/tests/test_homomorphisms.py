@@ -3,7 +3,7 @@
 from sympy import QQ, S
 from sympy.abc import x, y
 from sympy.polys.agca import homomorphism
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 
 
 def test_printing():
@@ -77,11 +77,11 @@ def test_creation():
     assert Q.quotient_hom() == homomorphism(F, Q, im)
     assert SQ.quotient_hom() == homomorphism(SQ.base, SQ, im)
 
-    class conv(object):
+    class conv:
         def convert(x, y=None):
             return x
 
-    class dummy(object):
+    class dummy:
         container = conv()
 
         def submodule(*args):

@@ -21,7 +21,7 @@ cache
 
 cacheit
 ^^^^^^^
-.. autofunction:: cacheit
+.. autofunction:: __cacheit
 
 basic
 -----

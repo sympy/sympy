@@ -7,7 +7,6 @@ Demonstrates matrix computations using the Vandermonde matrix.
 """
 
 from sympy import Matrix, pprint, Rational, symbols, Symbol, zeros
-from sympy.core.compatibility import range
 
 
 def symbol_gen(sym_str):
@@ -118,21 +117,21 @@ def main():
     pprint(V)
 
     print('-'*79)
-    print("Computing the determinant and comparing to \sum_{0<i<j<=3}(a_j - a_i)")
+    print(r"Computing the determinant and comparing to \sum_{0<i<j<=3}(a_j - a_i)")
 
     det_sum = 1
     for j in range(order + 1):
         for i in range(j):
             det_sum *= (tmp_syms[j][0] - tmp_syms[i][0])
 
-    print("""
-    det(V) = %(det)s
-    \sum   = %(sum)s
-           = %(sum_expand)s
-    """ % {"det": V.det(),
-            "sum": det_sum,
-            "sum_expand": det_sum.expand(),
-          })
+    print(r"""
+    det(V) = {det}
+    \sum   = {sum}
+           = {sum_expand}
+    """.format(det=V.det(),
+            sum=det_sum,
+            sum_expand=det_sum.expand(),
+          ))
 
     print('-'*79)
     print("Polynomial fitting with a Vandermonde Matrix:")
@@ -141,30 +140,30 @@ def main():
     points = [(0, 3), (1, 2), (2, 3)]
     print("""
     Quadratic function, represented by 3 points:
-       points = %(pts)s
-       f = %(f)s
-    """ % {"pts": points,
-            "f": gen_poly(points, 2, [x]),
-          })
+       points = {pts}
+       f = {f}
+    """.format(pts=points,
+            f=gen_poly(points, 2, [x]),
+          ))
 
     points = [(0, 1, 1), (1, 0, 0), (1, 1, 0), (Rational(1, 2), 0, 0),
               (0, Rational(1, 2), 0), (Rational(1, 2), Rational(1, 2), 0)]
     print("""
     2D Quadratic function, represented by 6 points:
-       points = %(pts)s
-       f = %(f)s
-    """ % {"pts": points,
-            "f": gen_poly(points, 2, [x, y]),
-          })
+       points = {pts}
+       f = {f}
+    """.format(pts=points,
+            f=gen_poly(points, 2, [x, y]),
+          ))
 
     points = [(0, 1, 1, 1), (1, 1, 0, 0), (1, 0, 1, 0), (1, 1, 1, 1)]
     print("""
     3D linear function, represented by 4 points:
-       points = %(pts)s
-       f = %(f)s
-    """ % {"pts": points,
-            "f": gen_poly(points, 1, [x, y, z]),
-          })
+       points = {pts}
+       f = {f}
+    """.format(pts=points,
+            f=gen_poly(points, 1, [x, y, z]),
+          ))
 
 
 if __name__ == "__main__":

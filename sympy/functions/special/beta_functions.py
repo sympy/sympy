@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from sympy.core import S
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.special.gamma_functions import gamma, digamma
@@ -118,5 +116,5 @@ class beta(Function):
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate(), self.args[1].conjugate())
 
-    def _eval_rewrite_as_gamma(self, x, y, **kwargs):
+    def _eval_rewrite_as_gamma(self, x, y, piecewise=True, **kwargs):
         return self._eval_expand_func(**kwargs)

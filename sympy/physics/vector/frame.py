@@ -1,7 +1,6 @@
 from sympy.core.backend import (diff, expand, sin, cos, sympify,
                    eye, symbols, ImmutableMatrix as Matrix, MatrixBase)
 from sympy import (trigsimp, solve, Symbol, Dummy)
-from sympy.core.compatibility import string_types, range
 from sympy.physics.vector.vector import Vector, _check_vector
 from sympy.utilities.misc import translate
 
@@ -50,8 +49,8 @@ class CoordinateSym(Symbol):
         # We can't use the cached Symbol.__new__ because this class depends on
         # frame and index, which are not passed to Symbol.__xnew__.
         assumptions = {}
-        super(CoordinateSym, cls)._sanitize(assumptions, cls)
-        obj = super(CoordinateSym, cls).__xnew__(cls, name, **assumptions)
+        super()._sanitize(assumptions, cls)
+        obj = super().__xnew__(cls, name, **assumptions)
         _check_frame(frame)
         if index not in range(0, 3):
             raise ValueError("Invalid index specified")
@@ -77,7 +76,7 @@ class CoordinateSym(Symbol):
         return tuple((self._id[0].__hash__(), self._id[1])).__hash__()
 
 
-class ReferenceFrame(object):
+class ReferenceFrame:
     """A reference frame in classical mechanics.
 
     ReferenceFrame is a class used to represent a reference frame in classical
@@ -144,7 +143,7 @@ class ReferenceFrame(object):
 
         """
 
-        if not isinstance(name, string_types):
+        if not isinstance(name, str):
             raise TypeError('Need to supply a valid name')
         # The if statements below are for custom printing of basis-vectors for
         # each frame.
@@ -155,14 +154,14 @@ class ReferenceFrame(object):
             if len(indices) != 3:
                 raise ValueError('Supply 3 indices')
             for i in indices:
-                if not isinstance(i, string_types):
+                if not isinstance(i, str):
                     raise TypeError('Indices must be strings')
             self.str_vecs = [(name + '[\'' + indices[0] + '\']'),
                              (name + '[\'' + indices[1] + '\']'),
                              (name + '[\'' + indices[2] + '\']')]
-            self.pretty_vecs = [(name.lower() + u"_" + indices[0]),
-                                (name.lower() + u"_" + indices[1]),
-                                (name.lower() + u"_" + indices[2])]
+            self.pretty_vecs = [(name.lower() + "_" + indices[0]),
+                                (name.lower() + "_" + indices[1]),
+                                (name.lower() + "_" + indices[2])]
             self.latex_vecs = [(r"\mathbf{\hat{%s}_{%s}}" % (name.lower(),
                                indices[0])), (r"\mathbf{\hat{%s}_{%s}}" %
                                (name.lower(), indices[1])),
@@ -172,9 +171,9 @@ class ReferenceFrame(object):
         # Second case, when no custom indices are supplied
         else:
             self.str_vecs = [(name + '.x'), (name + '.y'), (name + '.z')]
-            self.pretty_vecs = [name.lower() + u"_x",
-                                name.lower() + u"_y",
-                                name.lower() + u"_z"]
+            self.pretty_vecs = [name.lower() + "_x",
+                                name.lower() + "_y",
+                                name.lower() + "_z"]
             self.latex_vecs = [(r"\mathbf{\hat{%s}_x}" % name.lower()),
                                (r"\mathbf{\hat{%s}_y}" % name.lower()),
                                (r"\mathbf{\hat{%s}_z}" % name.lower())]
@@ -186,7 +185,7 @@ class ReferenceFrame(object):
             if len(latexs) != 3:
                 raise ValueError('Supply 3 indices')
             for i in latexs:
-                if not isinstance(i, string_types):
+                if not isinstance(i, str):
                     raise TypeError('Latex entries must be strings')
             self.latex_vecs = latexs
         self.name = name
@@ -210,7 +209,7 @@ class ReferenceFrame(object):
             if len(variables) != 3:
                 raise ValueError('Supply 3 variable names')
             for i in variables:
-                if not isinstance(i, string_types):
+                if not isinstance(i, str):
                     raise TypeError('Variable names must be strings')
         else:
             variables = [name + '_x', name + '_y', name + '_z']
@@ -227,7 +226,7 @@ class ReferenceFrame(object):
         If the index is a number, returns the coordinate variable correspon-
         -ding to that index.
         """
-        if not isinstance(ind, string_types):
+        if not isinstance(ind, str):
             if ind < 3:
                 return self.varlist[ind]
             else:
@@ -342,7 +341,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector
+        >>> from sympy.physics.vector import ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x
@@ -375,7 +374,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector
+        >>> from sympy.physics.vector import ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x
@@ -393,44 +392,86 @@ class ReferenceFrame(object):
         return outvec
 
     def dcm(self, otherframe):
-        """The direction cosine matrix between frames.
+        r"""Returns the direction cosine matrix relative to the provided
+        reference frame.
 
-        This gives the DCM between this frame and the otherframe.
-        The format is N.xyz = N.dcm(B) * B.xyz
-        A SymPy Matrix is returned.
+        The returned matrix can be used to express the orthogonal unit vectors
+        of this frame in terms of the orthogonal unit vectors of
+        ``otherframe``.
 
         Parameters
         ==========
 
         otherframe : ReferenceFrame
-            The otherframe which the DCM is generated to.
+            The reference frame which the direction cosine matrix of this frame
+            is formed relative to.
 
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector
-        >>> from sympy import symbols
+        The following example rotates the reference frame A relative to N by a
+        simple rotation and then calculates the direction cosine matrix of N
+        relative to A.
+
+        >>> from sympy import symbols, sin, cos
+        >>> from sympy.physics.vector import ReferenceFrame
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
-        >>> A = N.orientnew('A', 'Axis', [q1, N.x])
+        >>> A = N.orientnew('A', 'Axis', (q1, N.x))
         >>> N.dcm(A)
         Matrix([
         [1,       0,        0],
         [0, cos(q1), -sin(q1)],
         [0, sin(q1),  cos(q1)]])
 
+        The second row of the above direction cosine matrix represents the
+        ``N.y`` unit vector in N expressed in A. Like so:
+
+        >>> Ny = 0*A.x + cos(q1)*A.y - sin(q1)*A.z
+
+        Thus, expressing ``N.y`` in A should return the same result:
+
+        >>> N.y.express(A)
+        cos(q1)*A.y - sin(q1)*A.z
+
+        Notes
+        =====
+
+        It is import to know what form of the direction cosine matrix is
+        returned. If ``B.dcm(A)`` is called, it means the "direction cosine
+        matrix of B relative to A". This is the matrix :math:`^{\mathbf{A}} \mathbf{R} ^{\mathbf{B}}`
+        shown in the following relationship:
+
+        .. math::
+
+           \begin{bmatrix}
+             \hat{\mathbf{b}}_1 \\
+             \hat{\mathbf{b}}_2 \\
+             \hat{\mathbf{b}}_3
+           \end{bmatrix}
+           =
+           {}^A\mathbf{R}^B
+           \begin{bmatrix}
+             \hat{\mathbf{a}}_1 \\
+             \hat{\mathbf{a}}_2 \\
+             \hat{\mathbf{a}}_3
+           \end{bmatrix}.
+
+        :math:`^{}A\mathbf{R}^B` is the matrix that expresses the B unit
+        vectors in terms of the A unit vectors.
+
         """
 
         _check_frame(otherframe)
-        #Check if the dcm wrt that frame has already been calculated
+        # Check if the dcm wrt that frame has already been calculated
         if otherframe in self._dcm_cache:
             return self._dcm_cache[otherframe]
         flist = self._dict_list(otherframe, 0)
         outdcm = eye(3)
         for i in range(len(flist) - 1):
             outdcm = outdcm * flist[i]._dcm_dict[flist[i + 1]]
-        #After calculation, store the dcm in dcm cache for faster
-        #future retrieval
+        # After calculation, store the dcm in dcm cache for faster future
+        # retrieval
         self._dcm_cache[otherframe] = outdcm
         otherframe._dcm_cache[self] = outdcm.T
         return outdcm
@@ -901,7 +942,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector
+        >>> from sympy.physics.vector import ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x
@@ -937,7 +978,7 @@ class ReferenceFrame(object):
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame, Vector
+        >>> from sympy.physics.vector import ReferenceFrame
         >>> N = ReferenceFrame('N')
         >>> A = ReferenceFrame('A')
         >>> V = 10 * N.x

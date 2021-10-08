@@ -1,5 +1,7 @@
 from sympy.polys.polytools import Poly
+from sympy.polys.polyerrors import NotInvertible
 from sympy.polys.agca.extensions import FiniteExtension
+from sympy.testing.pytest import raises
 from sympy.abc import x, t
 
 def test_FiniteExtension():
@@ -14,6 +16,7 @@ def test_FiniteExtension():
     assert i**2 != -1  # no coercion
     assert (2 + i)*(1 - i) == 3 - i
     assert (1 + i)**8 == A(16)
+    raises(NotImplementedError, lambda: A(1).inverse())
 
     # Finite field of order 27
     F = FiniteExtension(Poly(x**3 - x + 1, x, modulus=3))
@@ -26,6 +29,14 @@ def test_FiniteExtension():
     assert a**9 == a + 1
     assert a**3 == a - 1
     assert a**6 == a**2 + a + 1
+    assert F(x**2 + x).inverse() == 1 - a
+    assert F(x + 2)**(-1) == F(x + 2).inverse()
+    assert a**19 * a**(-19) == F(1)
+    assert (a - 1) / (2*a**2 - 1) == a**2 + 1
+    assert (a - 1) // (2*a**2 - 1) == a**2 + 1
+    assert 2/(a**2 + 1) == a**2 - a + 1
+    assert (a**2 + 1)/2 == -a**2 - 1
+    raises(NotInvertible, lambda: F(0).inverse())
 
     # Function field of an elliptic curve
     K = FiniteExtension(Poly(t**2 - x**3 - x + 1, t, field=True))
@@ -33,4 +44,5 @@ def test_FiniteExtension():
     assert str(K) == 'ZZ(x)[t]/(t**2 - x**3 - x + 1)'
     y = K.generator
     c = 1/(x**3 - x**2 + x - 1)
+    assert ((y + x)*(y - x)).inverse() == K(c)
     assert (y + x)*(y - x)*c == K(1)  # explicit inverse of y + x

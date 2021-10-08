@@ -13,7 +13,7 @@ from sympy.physics.quantum.spin import (
     Rotation, WignerD
 )
 
-from sympy.utilities.pytest import raises, slow
+from sympy.testing.pytest import raises, slow
 
 j1, j2, j3, j4, m1, m2, m3, m4 = symbols('j1:5 m1:5')
 j12, j13, j24, j34, j123, j134, mi, mi1, mp = symbols(

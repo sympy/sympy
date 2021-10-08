@@ -13,8 +13,6 @@
 * transverse_magnification
 """
 
-from __future__ import division
-
 __all__ = ['refraction_angle',
            'deviation',
            'fresnel_coefficients',
@@ -30,7 +28,7 @@ __all__ = ['refraction_angle',
 from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit, atan2, asin,\
 cos, sin, tan, I, cancel, pi, Float
 from sympy.core.compatibility import is_sequence
-from sympy.geometry.line import Ray3D, Point3D
+from sympy.geometry.line import Ray3D
 from sympy.geometry.util import intersection
 from sympy.geometry.plane import Plane
 from .medium import Medium
@@ -638,7 +636,6 @@ def hyperfocal_distance(f, N, c):
     Example
     =======
     >>> from sympy.physics.optics import hyperfocal_distance
-    >>> from sympy.abc import f, N, c
     >>> round(hyperfocal_distance(f = 0.5, N = 8, c = 0.0033), 2)
     9.47
     """

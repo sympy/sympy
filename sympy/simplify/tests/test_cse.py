@@ -5,19 +5,17 @@ from operator import add
 from sympy import (
     Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
     Matrix, S, cos, sin, Eq, Function, Tuple, CRootOf,
-    IndexedBase, Idx, Piecewise, O
+    IndexedBase, Idx, Piecewise, O, signsimp
 )
 from sympy.core.function import count_ops
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.iterables import subsets
-from sympy.utilities.pytest import XFAIL, raises
-from sympy.matrices import (eye, SparseMatrix, MutableDenseMatrix,
-    MutableSparseMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix)
+from sympy.testing.pytest import XFAIL, raises
+from sympy.matrices import (MutableDenseMatrix, MutableSparseMatrix,
+        ImmutableDenseMatrix, ImmutableSparseMatrix)
 from sympy.matrices.expressions import MatrixSymbol
-
-from sympy.core.compatibility import range
 
 
 w, x, y, z = symbols('w,x,y,z')
@@ -379,7 +377,7 @@ def test_name_conflict_cust_symbols():
 def test_symbols_exhausted_error():
     l = cos(x+y)+x+y+cos(w+y)+sin(w+y)
     sym = [x, y, z]
-    with raises(ValueError) as excinfo:
+    with raises(ValueError):
         cse(l, symbols=sym)
 
 
@@ -455,7 +453,7 @@ def test_issue_11230():
     ex = [Add(*[choice(s[:7]) for i in range(5)]) for i in range(7)]
     for p in subsets(ex, 3):
         p = list(p)
-        was = R, C = cse(p)
+        R, C = cse(p)
         assert not any(i.is_Add for a in C for i in a.args)
         for ri in reversed(R):
             for i in range(len(C)):
@@ -513,7 +511,6 @@ def test_cse_ignore_issue_15002():
     assert rl == l
 
 def test_cse__performance():
-    import time
     nexprs, nterms = 3, 20
     x = symbols('x:%d' % nterms)
     exprs = [
@@ -540,6 +537,15 @@ def test_issue_13000():
     assert cse_eq == eq
 
 
+def test_issue_18203():
+    eq = CRootOf(x**5 + 11*x - 2, 0) + CRootOf(x**5 + 11*x - 2, 1)
+    assert cse(eq) == ([], [eq])
+
+
 def test_unevaluated_mul():
     eq = Mul(x + y, x + y, evaluate=False)
     assert cse(eq) == ([(x0, x + y)], [x0**2])
+
+def test_issue_18991():
+    A = MatrixSymbol('A', 2, 2)
+    assert signsimp(-A * A - A) == -A * A - A

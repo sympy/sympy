@@ -1,13 +1,11 @@
-# coding=utf-8
-
 from sympy.printing.tree import tree
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 
 # Remove this flag after making _assumptions cache deterministic.
 @XFAIL
 def test_print_tree_MatAdd():
-    from sympy.matrices.expressions import MatrixSymbol, MatAdd
+    from sympy.matrices.expressions import MatrixSymbol
     A = MatrixSymbol('A', 3, 3)
     B = MatrixSymbol('B', 3, 3)
 
@@ -179,18 +177,18 @@ def test_print_tree_MatAdd():
 
 
 def test_print_tree_MatAdd_noassumptions():
-    from sympy.matrices.expressions import MatrixSymbol, MatAdd
+    from sympy.matrices.expressions import MatrixSymbol
     A = MatrixSymbol('A', 3, 3)
     B = MatrixSymbol('B', 3, 3)
 
     test_str = \
 """MatAdd: A + B
 +-MatrixSymbol: A
-| +-Symbol: A
+| +-Str: A
 | +-Integer: 3
 | +-Integer: 3
 +-MatrixSymbol: B
-  +-Symbol: B
+  +-Str: B
   +-Integer: 3
   +-Integer: 3
 """

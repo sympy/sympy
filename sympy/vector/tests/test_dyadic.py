@@ -62,11 +62,18 @@ def test_dyadic():
     q = symbols('q')
     B = A.orient_new_axis('B', q, A.k)
     assert express(d1, B) == express(d1, B, B)
-    assert express(d1, B) == ((cos(q)**2) * (B.i | B.i) + (-sin(q) * cos(q)) *
+
+    expr1 = ((cos(q)**2) * (B.i | B.i) + (-sin(q) * cos(q)) *
             (B.i | B.j) + (-sin(q) * cos(q)) * (B.j | B.i) + (sin(q)**2) *
             (B.j | B.j))
-    assert express(d1, B, A) == (cos(q)) * (B.i | A.i) + (-sin(q)) * (B.j | A.i)
-    assert express(d1, A, B) == (cos(q)) * (A.i | B.i) + (-sin(q)) * (A.i | B.j)
+    assert (express(d1, B) - expr1).simplify() == Dyadic.zero
+
+    expr2 = (cos(q)) * (B.i | A.i) + (-sin(q)) * (B.j | A.i)
+    assert (express(d1, B, A) - expr2).simplify() == Dyadic.zero
+
+    expr3 = (cos(q)) * (A.i | B.i) + (-sin(q)) * (A.i | B.j)
+    assert (express(d1, A, B) - expr3).simplify() == Dyadic.zero
+
     assert d1.to_matrix(A) == Matrix([[1, 0, 0], [0, 0, 0], [0, 0, 0]])
     assert d1.to_matrix(A, B) == Matrix([[cos(q), -sin(q), 0],
                                          [0, 0, 0],

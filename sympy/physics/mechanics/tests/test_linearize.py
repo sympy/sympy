@@ -1,9 +1,9 @@
-from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt, S, Rational
+from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt, Rational
 from sympy import solve, simplify, sympify
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
     LagrangesMethod
-from sympy.utilities.pytest import slow, warns_deprecated_sympy
+from sympy.testing.pytest import slow
 
 
 @slow
@@ -74,14 +74,13 @@ def test_linearize_rolling_disc_kane():
     KM = KanesMethod(N, [q1, q2, q3, q4, q5], [u1, u2, u3], kd_eqs=kindiffs,
             q_dependent=[q6], configuration_constraints=f_c,
             u_dependent=[u4, u5, u6], velocity_constraints=f_v)
-    with warns_deprecated_sympy():
-        (fr, fr_star) = KM.kanes_equations(FL, BL)
+    (fr, fr_star) = KM.kanes_equations(BL, FL)
 
     # Test generalized form equations
     linearizer = KM.to_linearizer()
     assert linearizer.f_c == f_c
     assert linearizer.f_v == f_v
-    assert linearizer.f_a == f_v.diff(t)
+    assert linearizer.f_a == f_v.diff(t).subs(KM.kindiffdict())
     sol = solve(linearizer.f_0 + linearizer.f_1, qd)
     for qi in qdots.keys():
         assert sol[qi] == qdots[qi]
@@ -158,8 +157,7 @@ def test_linearize_pendulum_kane_minimal():
 
     # Solve for eom with kanes method
     KM = KanesMethod(N, q_ind=[q1], u_ind=[u1], kd_eqs=kde)
-    with warns_deprecated_sympy():
-        (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
+    (fr, frstar) = KM.kanes_equations([pP], [(P, R)])
 
     # Linearize
     A, B, inp_vec = KM.linearize(A_and_B=True, simplify=True)
@@ -218,8 +216,7 @@ def test_linearize_pendulum_kane_nonminimal():
     KM = KanesMethod(N, q_ind=[q2], u_ind=[u2], q_dependent=[q1],
             u_dependent=[u1], configuration_constraints=f_c,
             velocity_constraints=f_v, acceleration_constraints=f_a, kd_eqs=kde)
-    with warns_deprecated_sympy():
-        (fr, frstar) = KM.kanes_equations([(P, R)], [pP])
+    (fr, frstar) = KM.kanes_equations([pP], [(P, R)])
 
     # Set the operating point to be straight down, and non-moving
     q_op = {q1: L, q2: 0}

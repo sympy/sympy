@@ -7,11 +7,11 @@ Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
 
-from __future__ import print_function, division
+from typing import Callable, Dict
 
 from sympy.core import S, Symbol, Rational, Integer, Add, Dummy
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import as_int, SYMPY_INTS, range
+from sympy.core.compatibility import as_int, SYMPY_INTS
 from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import E, pi
@@ -813,7 +813,7 @@ class harmonic(Function):
 
     # Generate one memoized Harmonic number-generating function for each
     # order and store it in a dictionary
-    _functions = {}
+    _functions = {}  # type: Dict[Integer, Callable[[int], Rational]]
 
     @classmethod
     def eval(cls, n, m=None):
@@ -900,7 +900,7 @@ class harmonic(Function):
 
         return self
 
-    def _eval_rewrite_as_tractable(self, n, m=1, **kwargs):
+    def _eval_rewrite_as_tractable(self, n, m=1, limitvar=None, **kwargs):
         from sympy import polygamma
         return self.rewrite(polygamma).rewrite("tractable", deep=True)
 
@@ -1081,8 +1081,8 @@ class catalan(Function):
     Examples
     ========
 
-    >>> from sympy import (Symbol, binomial, gamma, hyper, polygamma,
-    ...             catalan, diff, combsimp, Rational, I)
+    >>> from sympy import (Symbol, binomial, gamma, hyper, catalan,
+    ...                    diff, combsimp, Rational, I)
 
     >>> [catalan(i) for i in range(1,10)]
     [1, 2, 5, 14, 42, 132, 429, 1430, 4862]
@@ -1172,7 +1172,7 @@ class catalan(Function):
     def _eval_rewrite_as_factorial(self, n, **kwargs):
         return factorial(2*n) / (factorial(n+1) * factorial(n))
 
-    def _eval_rewrite_as_gamma(self, n, **kwargs):
+    def _eval_rewrite_as_gamma(self, n, piecewise=True, **kwargs):
         from sympy import gamma
         # The gamma function allows to generalize Catalan numbers to complex n
         return 4**n*gamma(n + S.Half)/(gamma(S.Half)*gamma(n + 2))

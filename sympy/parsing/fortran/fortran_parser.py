@@ -55,7 +55,7 @@ if lfortran:
     """
 
 
-    class ASR2PyVisitor(asr.ASTVisitor):
+    class ASR2PyVisitor(asr.ASTVisitor):  # type: ignore
         """
         Visitor Class for LFortran ASR
 
@@ -301,7 +301,7 @@ if lfortran:
             """Returns the AST nodes"""
             return self._py_ast
 else:
-    class ASR2PyVisitor():
+    class ASR2PyVisitor():  # type: ignore
         def __init__(self, *args, **kwargs):
             raise ImportError('lfortran not available')
 

@@ -1,6 +1,5 @@
 """Implementation of :class:`PolynomialRing` class. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.compositedomain import CompositeDomain
@@ -90,6 +89,14 @@ class PolynomialRing(Ring, CompositeDomain):
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
+        return K1(K1.domain.convert(a, K0))
+
+    def from_GaussianIntegerRing(K1, a, K0):
+        """Convert a `GaussianInteger` object to `dtype`. """
+        return K1(K1.domain.convert(a, K0))
+
+    def from_GaussianRationalField(K1, a, K0):
+        """Convert a `GaussianRational` object to `dtype`. """
         return K1(K1.domain.convert(a, K0))
 
     def from_RealField(K1, a, K0):

@@ -1,12 +1,9 @@
-from __future__ import print_function, division
 import functools, itertools
 from sympy.core.sympify import sympify
 from sympy.core.expr import Expr
 from sympy.core import Basic
-from sympy.core.compatibility import Iterable
-from sympy.tensor.array import MutableDenseNDimArray, ImmutableDenseNDimArray
+from sympy.tensor.array import ImmutableDenseNDimArray
 from sympy import Symbol
-from sympy.core.sympify import sympify
 from sympy.core.numbers import Integer
 
 

@@ -23,3 +23,11 @@ from .baseclasses import (Object, Morphism, IdentityMorphism,
 
 from .diagram_drawing import (DiagramGrid, XypicDiagramDrawer,
                              xypic_draw_diagram, preview_diagram)
+
+__all__ = [
+    'Object', 'Morphism', 'IdentityMorphism', 'NamedMorphism',
+    'CompositeMorphism', 'Category', 'Diagram',
+
+    'DiagramGrid', 'XypicDiagramDrawer', 'xypic_draw_diagram',
+    'preview_diagram',
+]

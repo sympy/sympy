@@ -1,7 +1,7 @@
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 
-@doctest_depends_on(modules=('antlr',))
+@doctest_depends_on(modules=('antlr4',))
 def parse_autolev(autolev_code, include_numeric=False):
     """Parses Autolev code (version 4.1) to SymPy code.
 
@@ -91,7 +91,7 @@ def parse_autolev(autolev_code, include_numeric=False):
 
     _autolev = import_module(
         'sympy.parsing.autolev._parse_autolev_antlr',
-        __import__kwargs={'fromlist': ['X']})
+        import_kwargs={'fromlist': ['X']})
 
     if _autolev is not None:
         return _autolev.parse_autolev(autolev_code, include_numeric)

@@ -1,11 +1,10 @@
 from sympy import (
-    symbols, sin, simplify, cos, trigsimp, rad, tan, exptrigsimp,sinh,
-    cosh, diff, cot, Subs, exp, tanh, exp, S, integrate, I,Matrix,
+    symbols, sin, simplify, cos, trigsimp, tan, exptrigsimp,sinh,
+    cosh, diff, cot, Subs, exp, tanh, S, integrate, I,Matrix,
     Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise , Rational
     )
 
-from sympy.core.compatibility import long
-from sympy.utilities.pytest import XFAIL
+from sympy.testing.pytest import XFAIL
 
 from sympy.abc import x, y
 
@@ -285,6 +284,9 @@ def test_hyperbolic_simp():
     e = 2*cosh(x)**2 - 2*sinh(x)**2
     assert trigsimp(log(e)) == log(2)
 
+    # issue 19535:
+    assert trigsimp(sqrt(cosh(x)**2 - 1)) == sqrt(sinh(x)**2)
+
     assert trigsimp(cosh(x)**2*cosh(y)**2 - cosh(x)**2*sinh(y)**2 - sinh(x)**2,
             recursive=True) == 1
     assert trigsimp(sinh(x)**2*sinh(y)**2 - sinh(x)**2*cosh(y)**2 + cosh(x)**2,
@@ -330,7 +332,7 @@ def test_trigsimp_groebner():
 
     # Test quick=False works
     assert trigsimp_groebner(ex, hints=[2]) in results
-    assert trigsimp_groebner(ex, hints=[long(2)]) in results
+    assert trigsimp_groebner(ex, hints=[int(2)]) in results
 
     # test "I"
     assert trigsimp_groebner(sin(I*x)/cos(I*x), hints=[tanh]) == I*tanh(x)
@@ -369,7 +371,7 @@ def test_issue_15129_trigsimp_methods():
 
 def test_exptrigsimp():
     def valid(a, b):
-        from sympy.utilities.randtest import verify_numerically as tn
+        from sympy.testing.randtest import verify_numerically as tn
         if not (tn(a, b) and a == b):
             return False
         return True
@@ -436,9 +438,9 @@ def test_Piecewise():
     e1 = x*(x + y) - y*(x + y)
     e2 = sin(x)**2 + cos(x)**2
     e3 = expand((x + y)*y/x)
-    s1 = simplify(e1)
+    # s1 = simplify(e1)
     s2 = simplify(e2)
-    s3 = simplify(e3)
+    # s3 = simplify(e3)
 
     # trigsimp tries not to touch non-trig containing args
     assert trigsimp(Piecewise((e1, e3 < e2), (e3, True))) == \

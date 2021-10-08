@@ -1,21 +1,23 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-
 from sympy.codegen import Assignment
 from sympy.codegen.ast import none
+from sympy.codegen.cfunctions import expm1, log1p
+from sympy.codegen.scipy_nodes import cosm1
 from sympy.codegen.matrix_nodes import MatrixSolve
-from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational
+from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
-from sympy.functions import acos, Piecewise, sign, sqrt
+from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
 from sympy.printing.pycode import (
     MpmathPrinter, NumPyPrinter, PythonCodePrinter, pycode, SciPyPrinter,
     SymPyPrinter
 )
-from sympy.utilities.pytest import raises
+from sympy.testing.pytest import raises
 from sympy.tensor import IndexedBase
+from sympy.testing.pytest import skip
+from sympy.external import import_module
+from sympy.functions.special.gamma_functions import loggamma
 
 x, y, z = symbols('x y z')
 p = IndexedBase("p")
@@ -47,6 +49,7 @@ def test_PythonCodePrinter():
                                                         ' (3) if (x > 0) else None)'
     assert prntr.doprint(sign(x)) == '(0.0 if x == 0 else math.copysign(1, x))'
     assert prntr.doprint(p[0, 1]) == 'p[0, 1]'
+    assert prntr.doprint(KroneckerDelta(x,y)) == '(1 if x == y else 0)'
 
 
 def test_PythonCodePrinter_standard():
@@ -73,12 +76,20 @@ def test_MpmathPrinter():
     assert p.doprint(S.NaN) == 'mpmath.nan'
     assert p.doprint(S.Infinity) == 'mpmath.inf'
     assert p.doprint(S.NegativeInfinity) == 'mpmath.ninf'
+    assert p.doprint(loggamma(x)) == 'mpmath.loggamma(x)'
 
 
 def test_NumPyPrinter():
+    from sympy import (Lambda, ZeroMatrix, OneMatrix, FunctionMatrix,
+        HadamardProduct, KroneckerProduct, Adjoint, DiagonalOf,
+        DiagMatrix, DiagonalMatrix)
+    from sympy.abc import a, b
     p = NumPyPrinter()
     assert p.doprint(sign(x)) == 'numpy.sign(x)'
     A = MatrixSymbol("A", 2, 2)
+    B = MatrixSymbol("B", 2, 2)
+    C = MatrixSymbol("C", 1, 5)
+    D = MatrixSymbol("D", 3, 4)
     assert p.doprint(A**(-1)) == "numpy.linalg.inv(A)"
     assert p.doprint(A**5) == "numpy.linalg.matrix_power(A, 5)"
     assert p.doprint(Identity(3)) == "numpy.eye(3)"
@@ -87,9 +98,24 @@ def test_NumPyPrinter():
     v = MatrixSymbol('y', 2, 1)
     assert p.doprint(MatrixSolve(A, u)) == 'numpy.linalg.solve(A, x)'
     assert p.doprint(MatrixSolve(A, u) + v) == 'numpy.linalg.solve(A, x) + y'
+
+    assert p.doprint(ZeroMatrix(2, 3)) == "numpy.zeros((2, 3))"
+    assert p.doprint(OneMatrix(2, 3)) == "numpy.ones((2, 3))"
+    assert p.doprint(FunctionMatrix(4, 5, Lambda((a, b), a + b))) == \
+        "numpy.fromfunction(lambda a, b: a + b, (4, 5))"
+    assert p.doprint(HadamardProduct(A, B)) == "numpy.multiply(A, B)"
+    assert p.doprint(KroneckerProduct(A, B)) == "numpy.kron(A, B)"
+    assert p.doprint(Adjoint(A)) == "numpy.conjugate(numpy.transpose(A))"
+    assert p.doprint(DiagonalOf(A)) == "numpy.reshape(numpy.diag(A), (-1, 1))"
+    assert p.doprint(DiagMatrix(C)) == "numpy.diagflat(C)"
+    assert p.doprint(DiagonalMatrix(D)) == "numpy.multiply(D, numpy.eye(3, 4))"
+
     # Workaround for numpy negative integer power errors
     assert p.doprint(x**-1) == 'x**(-1.0)'
     assert p.doprint(x**-2) == 'x**(-2.0)'
+
+    expr = Pow(2, -1, evaluate=False)
+    assert p.doprint(expr) == "2**(-1.0)"
 
     assert p.doprint(S.Exp1) == 'numpy.e'
     assert p.doprint(S.Pi) == 'numpy.pi'
@@ -97,6 +123,24 @@ def test_NumPyPrinter():
     assert p.doprint(S.NaN) == 'numpy.nan'
     assert p.doprint(S.Infinity) == 'numpy.PINF'
     assert p.doprint(S.NegativeInfinity) == 'numpy.NINF'
+
+
+def test_issue_18770():
+    numpy = import_module('numpy')
+    if not numpy:
+        skip("numpy not installed.")
+
+    from sympy import lambdify, Min, Max
+
+    expr1 = Min(0.1*x + 3, x + 1, 0.5*x + 1)
+    func = lambdify(x, expr1, "numpy")
+    assert (func(numpy.linspace(0, 3, 3)) == [1.0 , 1.75, 2.5 ]).all()
+    assert  func(4) == 3
+
+    expr1 = Max(x**2 , x**3)
+    func = lambdify(x,expr1, "numpy")
+    assert (func(numpy.linspace(-1 , 2, 4)) == [1, 0, 1, 8] ).all()
+    assert func(4) == 64
 
 
 def test_SciPyPrinter():
@@ -107,7 +151,8 @@ def test_SciPyPrinter():
     assert 'numpy' in p.module_imports
     assert not any(m.startswith('scipy') for m in p.module_imports)
     smat = SparseMatrix(2, 5, {(0, 1): 3})
-    assert p.doprint(smat) == 'scipy.sparse.coo_matrix([3], ([0], [1]), shape=(2, 5))'
+    assert p.doprint(smat) == \
+        'scipy.sparse.coo_matrix(([3], ([0], [1])), shape=(2, 5))'
     assert 'scipy.sparse' in p.module_imports
 
     assert p.doprint(S.GoldenRatio) == 'scipy.constants.golden_ratio'
@@ -151,6 +196,27 @@ def test_sqrt():
     prntr = SymPyPrinter()
     assert prntr._print_Pow(sqrt(x), rational=False) == 'sympy.sqrt(x)'
     assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
+
+
+def test_frac():
+    from sympy import frac
+
+    expr = frac(x)
+
+    prntr = NumPyPrinter()
+    assert prntr.doprint(expr) == 'numpy.mod(x, 1)'
+
+    prntr = SciPyPrinter()
+    assert prntr.doprint(expr) == 'numpy.mod(x, 1)'
+
+    prntr = PythonCodePrinter()
+    assert prntr.doprint(expr) == 'x % 1'
+
+    prntr = MpmathPrinter()
+    assert prntr.doprint(expr) == 'mpmath.frac(x)'
+
+    prntr = SymPyPrinter()
+    assert prntr.doprint(expr) == 'sympy.functions.elementary.integers.frac(x)'
 
 
 class CustomPrintedObject(Expr):
@@ -203,6 +269,27 @@ def test_issue_16535_16536():
     assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # uppergamma\nuppergamma(a, x)'
 
 
+def test_Integral():
+    from sympy import Integral, exp
+
+    single = Integral(exp(-x), (x, 0, oo))
+    double = Integral(x**2*exp(x*y), (x, -z, z), (y, 0, z))
+    indefinite = Integral(x**2, x)
+    evaluateat = Integral(x**2, (x, 1))
+
+    prntr = SciPyPrinter()
+    assert prntr.doprint(single) == 'scipy.integrate.quad(lambda x: numpy.exp(-x), 0, numpy.PINF)[0]'
+    assert prntr.doprint(double) == 'scipy.integrate.nquad(lambda x, y: x**2*numpy.exp(x*y), ((-z, z), (0, z)))[0]'
+    raises(NotImplementedError, lambda: prntr.doprint(indefinite))
+    raises(NotImplementedError, lambda: prntr.doprint(evaluateat))
+
+    prntr = MpmathPrinter()
+    assert prntr.doprint(single) == 'mpmath.quad(lambda x: mpmath.exp(-x), (0, mpmath.inf))'
+    assert prntr.doprint(double) == 'mpmath.quad(lambda x, y: x**2*mpmath.exp(x*y), (-z, z), (0, z))'
+    raises(NotImplementedError, lambda: prntr.doprint(indefinite))
+    raises(NotImplementedError, lambda: prntr.doprint(evaluateat))
+
+
 def test_fresnel_integrals():
     from sympy import fresnelc, fresnels
 
@@ -245,3 +332,46 @@ def test_beta():
 
     prntr = MpmathPrinter()
     assert prntr.doprint(expr) ==  'mpmath.beta(x, y)'
+
+def test_airy():
+    from sympy import airyai, airybi
+
+    expr1 = airyai(x)
+    expr2 = airybi(x)
+
+    prntr = SciPyPrinter()
+    assert prntr.doprint(expr1) == 'scipy.special.airy(x)[0]'
+    assert prntr.doprint(expr2) == 'scipy.special.airy(x)[2]'
+
+    prntr = NumPyPrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python with NumPy:\n  # airyai\nairyai(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python with NumPy:\n  # airybi\nairybi(x)'
+
+    prntr = PythonCodePrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # airyai\nairyai(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # airybi\nairybi(x)'
+
+def test_airy_prime():
+    from sympy import airyaiprime, airybiprime
+
+    expr1 = airyaiprime(x)
+    expr2 = airybiprime(x)
+
+    prntr = SciPyPrinter()
+    assert prntr.doprint(expr1) == 'scipy.special.airy(x)[1]'
+    assert prntr.doprint(expr2) == 'scipy.special.airy(x)[3]'
+
+    prntr = NumPyPrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python with NumPy:\n  # airyaiprime\nairyaiprime(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python with NumPy:\n  # airybiprime\nairybiprime(x)'
+
+    prntr = PythonCodePrinter()
+    assert prntr.doprint(expr1) == '  # Not supported in Python:\n  # airyaiprime\nairyaiprime(x)'
+    assert prntr.doprint(expr2) == '  # Not supported in Python:\n  # airybiprime\nairybiprime(x)'
+
+
+def test_numerical_accuracy_functions():
+    prntr = SciPyPrinter()
+    assert prntr.doprint(expm1(x)) == 'numpy.expm1(x)'
+    assert prntr.doprint(log1p(x)) == 'numpy.log1p(x)'
+    assert prntr.doprint(cosm1(x)) == 'scipy.special.cosm1(x)'

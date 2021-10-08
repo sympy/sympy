@@ -1,9 +1,10 @@
 from sympy import (
-    symbols, powsimp, symbols, MatrixSymbol, sqrt, pi, Mul, gamma, Function,
+    symbols, powsimp, MatrixSymbol, sqrt, pi, Mul, gamma, Function,
     S, I, exp, simplify, sin, E, log, hyper, Symbol, Dummy, powdenest, root,
     Rational, oo, signsimp)
+from sympy.core.symbol import Str
 
-from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, k
+from sympy.abc import x, y, z, a, b
 
 
 def test_powsimp():
@@ -227,7 +228,7 @@ def test_issue_9324_powsimp_on_matrix_symbol():
     M = MatrixSymbol('M', 10, 10)
     expr = powsimp(M, deep=True)
     assert expr == M
-    assert expr.args[0] == Symbol('M')
+    assert expr.args[0] == Str('M')
 
 
 def test_issue_6367():

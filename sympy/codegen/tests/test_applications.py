@@ -1,11 +1,12 @@
 # This file contains tests that exercise multiple AST nodes
 
-from sympy.core.compatibility import PY3
+import tempfile
+
 from sympy.external import import_module
-from sympy.printing.ccode import ccode
+from sympy.printing import ccode
 from sympy.utilities._compilation import compile_link_import_strings, has_c
-from sympy.utilities._compilation.util import TemporaryDirectory, may_xfail
-from sympy.utilities.pytest import skip
+from sympy.utilities._compilation.util import may_xfail
+from sympy.testing.pytest import skip
 from sympy.codegen.ast import (
     FunctionDefinition, FunctionPrototype, Variable, Pointer, real, Assignment,
     integer, CodeBlock, While
@@ -29,7 +30,7 @@ def _render_compile_import(funcdef, build_dir):
     declar = ccode(FunctionPrototype.from_FunctionDefinition(funcdef))
     return compile_link_import_strings([
         ('our_test_func.c', code_str),
-        ('_our_test_func.pyx', ("#cython: language_level={}\n".format("3" if PY3 else "2") +
+        ('_our_test_func.pyx', ("#cython: language_level={}\n".format("3") +
                                 "cdef extern {declar}\n"
                                 "def _{fname}({typ}[:] inp, {typ}[:] out):\n"
                                 "    {fname}(inp.size, &inp[0], &out[0])").format(
@@ -48,7 +49,7 @@ def test_copying_function():
         skip("Cython not found.")
 
     info = None
-    with TemporaryDirectory() as folder:
+    with tempfile.TemporaryDirectory() as folder:
         mod, info = _render_compile_import(_mk_func1(), build_dir=folder)
         inp = np.arange(10.0)
         out = np.empty_like(inp)
