@@ -430,6 +430,16 @@ def test_DDM_getitem():
     raises(IndexError, lambda: dm.getitem(3, 3))
 
 
+def test_DDM_setitem():
+    dm = DDM.zeros((3, 3), ZZ)
+    dm.setitem(0, 0, 1)
+    dm.setitem(1, -2, 1)
+    dm.setitem(-1, -1, 1)
+    assert dm == DDM.eye(3, ZZ)
+
+    raises(IndexError, lambda: dm.setitem(3, 3, 0))
+
+
 def test_DDM_extract_slice():
     dm = DDM([
         [ZZ(1), ZZ(2), ZZ(3)],
