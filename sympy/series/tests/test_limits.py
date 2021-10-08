@@ -593,6 +593,15 @@ def test_issue_8481():
     limit(lamda**k * exp(-lamda) / factorial(k), k, oo) == 0
 
 
+def test_issue_8635():
+    x = Symbol('x', real=True)
+    k = Symbol('k', positive=True)
+    assert limit(x**n - x**(n - 0), x, oo) == 0
+    assert limit(x**n - x**(n - 5), x, oo) == oo
+    assert limit(x**n - x**(n - 2.5), x, oo) == oo
+    assert limit(x**n - x**(n - k - 1), x, oo) == oo
+
+
 def test_issue_8730():
     assert limit(subfactorial(x), x, oo) is oo
 
