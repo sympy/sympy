@@ -764,19 +764,19 @@ class Bernoulli(SinglePatternODESolver):
         P(x)*f(x) + --(f(x)) = Q(x)*f (x)
                     dx
         >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=110)
-                                                                                                              -1
-                                                                                                             -----
-                                                                                                             n - 1
-               //         /                                /                           \                    \
-               ||        |                                |                            |                    |
-               ||        |                 /              |                 /          |            /       |
-               ||        |                |               |                |           |           |        |
-               ||        |       (1 - n)* | P(x) dx       |       (1 - n)* | P(x) dx   |  (n - 1)* | P(x) dx|
-               ||        |                |               |                |           |           |        |
-               ||        |               /                |               /            |          /         |
-        f(x) = ||C1 - n* | Q(x)*e                   dx +  | Q(x)*e                   dx|*e                  |
-               ||        |                                |                            |                    |
-               \\       /                                /                             /                    /
+                                                                                                                -1
+                                                                                                               -----
+                                                                                                               n - 1
+               //         /                                 /                            \                    \
+               ||        |                                 |                             |                    |
+               ||        |                  /              |                  /          |            /       |
+               ||        |                 |               |                 |           |           |        |
+               ||        |       -(n - 1)* | P(x) dx       |       -(n - 1)* | P(x) dx   |  (n - 1)* | P(x) dx|
+               ||        |                 |               |                 |           |           |        |
+               ||        |                /                |                /            |          /         |
+        f(x) = ||C1 - n* | Q(x)*e                    dx +  | Q(x)*e                    dx|*e                  |
+               ||        |                                 |                             |                    |
+               \\       /                                 /                              /                    /
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
@@ -1968,7 +1968,7 @@ class NthOrderReducible(SingleODESolver):
     >>> eq = Eq(x*f(x).diff(x)**2 + f(x).diff(x, 2), 0)
     >>> dsolve(eq, f(x), hint='nth_order_reducible')
     ... # doctest: +NORMALIZE_WHITESPACE
-    Eq(f(x), C1 - sqrt(-1/C2)*log(-C2*sqrt(-1/C2) + x) + sqrt(-1/C2)*log(C2*sqrt(-1/C2) + x))
+    Eq(f(x), C1 + sqrt(1/C2)*log(-C2*sqrt(1/C2) + x) - sqrt(1/C2)*log(C2*sqrt(1/C2) + x))
 
     """
     hint = "nth_order_reducible"
