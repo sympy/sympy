@@ -496,15 +496,15 @@ class IntegerPowerable:
     powering via binary expansion, for efficiency.
 
     By default, only integer powers >= 2 are supported. To support the first,
-    zeroeth, or negative powers, override the corresponding methods,
-    `_first_power`, `_zeroeth_power`, `_negative_power`, below.
+    zeroth, or negative powers, override the corresponding methods,
+    `_first_power`, `_zeroth_power`, `_negative_power`, below.
     """
 
     def __pow__(self, e, modulo=None):
         if e < 0:
             return self._negative_power(e, modulo=modulo)
         elif e == 0:
-            return self._zeroeth_power()
+            return self._zeroth_power()
         elif e == 1:
             return self._first_power()
         else:
@@ -535,7 +535,7 @@ class IntegerPowerable:
         """
         return NotImplemented
 
-    def _zeroeth_power(self):
+    def _zeroth_power(self):
         """Return unity element of algebraic struct to which self belongs."""
         return NotImplemented
 

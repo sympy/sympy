@@ -262,7 +262,7 @@ class Ideal(IntegerPowerable):
 
     __rmul__ = __mul__
 
-    def _zeroeth_power(self):
+    def _zeroth_power(self):
         return self.ring.ideal(1)
 
     def _first_power(self):
