@@ -1,6 +1,7 @@
 from sympy.polys.domains import GF, QQ
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.noninvertible import invertible_supplement
+from sympy.testing.pytest import raises
 
 
 def test_invertible_supplement_1():
@@ -23,10 +24,5 @@ def test_invertible_supplement_1():
 
 def test_invertible_supplement_2():
     M = DomainMatrix([[QQ(1), QQ(0), QQ(0)], [QQ(2), QQ(0), QQ(0)]], (2, 3), QQ).transpose()
-    try:
+    with raises(ValueError):
         invertible_supplement(M)
-    except ValueError as e:
-        # Should raise value error, since M was not of maximal rank.
-        assert str(e).find("maximal rank") > 0
-    else:
-        assert False
