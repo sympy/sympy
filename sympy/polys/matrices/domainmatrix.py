@@ -604,9 +604,11 @@ class DomainMatrix:
         rows, cols = self.shape
         return [self[i,j].element for i in range(rows) for j in range(cols)]
 
+    @property
     def is_zero_matrix(self):
         return self.rep.is_zero_matrix()
 
+    @property
     def is_upper(self):
         """
         Says whether this matrix is upper-triangular. True can be returned
@@ -614,6 +616,7 @@ class DomainMatrix:
         """
         return self.rep.is_upper()
 
+    @property
     def is_lower(self):
         """
         Says whether this matrix is lower-triangular. True can be returned
