@@ -61,6 +61,8 @@ domain checking and also shape checking so that the list of lists
 representation is friendlier.
 
 """
+from itertools import chain
+
 from .exceptions import DMBadInputError, DMShapeError, DMDomainError
 
 from .dense import (
@@ -124,6 +126,12 @@ class DDM(list):
         for row in self:
             flat.extend(row)
         return flat
+
+    def flatiter(self):
+        return chain.from_iterable(self)
+
+    def flat(self):
+        return list(self.flatiter())
 
     def to_dok(self):
         return {(i, j): e for i, row in enumerate(self) for j, e in enumerate(row)}
@@ -453,7 +461,8 @@ class DDM(list):
         """
         Says whether this matrix has all zero entries.
         """
-        return all(self[i][j] == self.domain.zero for i in range(self.shape[0]) for j in range(self.shape[1]))
+        zero = self.domain.zero
+        return all(Mij == zero for Mij in self.flatiter())
 
     def is_upper(self):
         """

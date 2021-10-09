@@ -479,6 +479,13 @@ def test_DDM_extract():
     raises(IndexError, lambda: dm2.extract([0], [-3]))
 
 
+def test_DDM_flat():
+    dm = DDM([
+        [ZZ(6), ZZ(4)],
+        [ZZ(3), ZZ(1)]], (2, 2), ZZ)
+    assert dm.flat() == [ZZ(6), ZZ(4), ZZ(3), ZZ(1)]
+
+
 def test_DDM_is_zero_matrix():
     A = DDM([[QQ(1), QQ(0)], [QQ(0), QQ(0)]], (2, 2), QQ)
     Azero = DDM.zeros((1, 2), QQ)
