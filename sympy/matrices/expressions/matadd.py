@@ -61,6 +61,9 @@ class MatAdd(MatrixExpr, Add):
     def shape(self):
         return self.args[0].shape
 
+    def could_extract_minus_sign(self):
+        return Add.could_extract_minus_sign(self)
+
     def _entry(self, i, j, **kwargs):
         return Add(*[arg._entry(i, j, **kwargs) for arg in self.args])
 

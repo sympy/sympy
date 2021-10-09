@@ -68,6 +68,10 @@ class MatMul(MatrixExpr, Mul):
         matrices = [arg for arg in self.args if arg.is_Matrix]
         return (matrices[0].rows, matrices[-1].cols)
 
+    def could_extract_minus_sign(self):
+        c = self.args[0]
+        return c.func.could_extract_minus_sign(c)
+
     def _entry(self, i, j, expand=True, **kwargs):
         # Avoid cyclic imports
         from sympy.concrete.summations import Sum

@@ -387,6 +387,20 @@ class Add(Expr, AssocOp):
             result, = kinds
         return result
 
+    def could_extract_minus_sign(self):
+        # We choose the one with less arguments with minus signs
+        negative_args = sum(1 for i in self.args
+            if i.could_extract_minus_sign())
+        positive_args = len(self.args) - negative_args
+        if positive_args > negative_args:
+            return False
+        elif positive_args < negative_args:
+            return True
+        # choose based on .sort_key() to prefer
+        # x - 1 instead of 1 - x and
+        # 3 - sqrt(2) instead of -3 + sqrt(2)
+        return bool(self.sort_key() < (-self).sort_key())
+
     def as_coefficients_dict(a):
         """Return a dictionary mapping terms to their Rational coefficient.
         Since the dictionary is a defaultdict, inquiries about terms which
