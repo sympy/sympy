@@ -695,6 +695,14 @@ def _integer_basis(poly):
     monoms = monoms[:-1]
     coeffs = coeffs[:-1]
 
+    # Special case for two-term polynominals
+    if len(monoms) == 1:
+        r = Pow(coeffs[0], S.One/monoms[0])
+        if r.is_Integer:
+            return int(r)
+        else:
+            return None
+
     divs = reversed(divisors(gcd_list(coeffs))[1:])
 
     try:
