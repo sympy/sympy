@@ -1339,7 +1339,9 @@ class Mul(Expr, AssocOp):
 
         numerators = []
         denominators = []
+        unknown = False
         for a in self.args:
+            hit = False
             if a.is_integer:
                 if abs(a) is not S.One:
                     numerators.append(a)
@@ -1351,10 +1353,11 @@ class Mul(Expr, AssocOp):
                     denominators.append(d)
             elif a.is_Pow:
                 b, e = a.as_base_exp()
-                if not b.is_integer or not e.is_integer: return
+                if not b.is_integer or not e.is_integer:
+                    hit = unknown = True
                 if e.is_negative:
                     denominators.append(2 if a is S.Half else Pow(a, S.NegativeOne))
-                else:
+                elif not hit:
                     # for integer b and positive integer e: a = b**e would be integer
                     assert not e.is_positive
                     # for self being rational and e equal to zero: a = b**e would be 1
@@ -1363,14 +1366,19 @@ class Mul(Expr, AssocOp):
             else:
                 return
 
-        if not denominators:
+        if not denominators and not unknown:
             return True
 
         allodd = lambda x: all(i.is_odd for i in x)
         alleven = lambda x: all(i.is_even for i in x)
         anyeven = lambda x: any(i.is_even for i in x)
 
-        if allodd(numerators) and anyeven(denominators):
+        if not numerators and denominators and all((_ - 1).is_extended_positive
+                for _ in denominators):
+            return False
+        elif unknown:
+            return
+        elif allodd(numerators) and anyeven(denominators):
             return False
         elif anyeven(numerators) and denominators == [2]:
             return True
