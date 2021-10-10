@@ -635,7 +635,7 @@ class Mul(Expr, AssocOp):
         c_part.extend([Pow(b, e) for e, b in pnew.items()])
 
         # oo, -oo
-        if (coeff is S.Infinity) or (coeff is S.NegativeInfinity):
+        if coeff in (S.Infinity, S.NegativeInfinity):
             def _handle_for_oo(c_part, coeff_sign):
                 new_c_part = []
                 for t in c_part:

@@ -120,9 +120,9 @@ class MapleCodePrinter(CodePrinter):
         PREC = precedence(expr)
         if expr.exp == -1:
             return '1/%s' % (self.parenthesize(expr.base, PREC))
-        elif expr.exp == 0.5 or expr.exp == S(1) / 2:
+        elif expr.exp in (0.5, S.Half):
             return 'sqrt(%s)' % self._print(expr.base)
-        elif expr.exp == -0.5 or expr.exp == -S(1) / 2:
+        elif expr.exp in (-0.5, -S.Half):
             return '1/sqrt(%s)' % self._print(expr.base)
         else:
             return '{base}^{exp}'.format(
@@ -184,7 +184,7 @@ class MapleCodePrinter(CodePrinter):
         return 'undefined'
 
     def _get_matrix(self, expr, sparse=False):
-        if expr.cols == 0 or expr.rows == 0:
+        if S.Zero in expr.shape:
             _strM = 'Matrix([], storage = {storage})'.format(
                 storage='sparse' if sparse else 'rectangular')
         else:

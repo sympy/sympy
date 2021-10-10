@@ -24,9 +24,9 @@ def _ivl(cond, x):
 def _add_splines(c, b1, d, b2, x):
     """Construct c*b1 + d*b2."""
 
-    if b1 == S.Zero or c == S.Zero:
+    if S.Zero in (b1, c):
         rv = piecewise_fold(d * b2)
-    elif b2 == S.Zero or d == S.Zero:
+    elif S.Zero in (b2, d):
         rv = piecewise_fold(c * b1)
     else:
         new_args = []

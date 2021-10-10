@@ -1,5 +1,6 @@
 import copy
 
+from sympy.core import S
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.miscellaneous import Min, sqrt
 from sympy.functions.elementary.complexes import sign
@@ -937,7 +938,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         # https://github.com/sympy/sympy/issues/9796
         pass
 
-    if M.rows == 0 or M.cols == 0:
+    if S.Zero in M.shape:
         # Define LU decomposition of a matrix with no entries as a matrix
         # of the same dimensions with all zero entries.
         return M.zeros(M.rows, M.cols), []

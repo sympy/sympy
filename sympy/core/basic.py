@@ -1218,8 +1218,8 @@ class Basic(Printable, metaclass=ManagedProperties):
         """Helper for .has()"""
         from sympy.core.function import UndefinedFunction, Function
         if isinstance(pattern, UndefinedFunction):
-            return any(f.func == pattern or f == pattern
-            for f in self.atoms(Function, UndefinedFunction))
+            return any(pattern in (f, f.func)
+                       for f in self.atoms(Function, UndefinedFunction))
 
         if isinstance(pattern, BasicMeta):
             subtrees = preorder_traversal(self)

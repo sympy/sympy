@@ -571,7 +571,7 @@ class PrettyPrinter(Printer):
                 if not wid or len(s) > wid:
                     return s
                 need = wid - len(s)
-                if how == '<^>' or how == "<" or how not in list('<^>'):
+                if how in ('<^>', "<") or how not in list('<^>'):
                     return s + ' '*need
                 half = need//2
                 lead = ' '*half

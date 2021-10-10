@@ -871,7 +871,7 @@ def InverseFunctionFreeQ(u, x):
     if AtomQ(u):
         return True
     else:
-        if InverseFunctionQ(u) or CalculusQ(u) or u.func == hyper or u.func == appellf1:
+        if InverseFunctionQ(u) or CalculusQ(u) or u.func in (hyper, appellf1):
             return FreeQ(u, x)
         else:
             for i in u.args:

@@ -643,7 +643,7 @@ class riemann_xi(Function):
     def eval(cls, s):
         from sympy import gamma
         z = zeta(s)
-        if s is S.Zero or s is S.One:
+        if s in (S.Zero, S.One):
             return S.Half
 
         if not isinstance(z, zeta):

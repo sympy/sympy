@@ -66,7 +66,7 @@ class QubitState(State):
 
         # Validate input (must have 0 or 1 input)
         for element in args:
-            if not (element == 1 or element == 0):
+            if element not in (S.Zero, S.One):
                 raise ValueError(
                     "Qubit values must be 0 or 1, got: %r" % element)
         return args
@@ -484,7 +484,7 @@ def matrix_to_qubit(matrix):
             element = matrix[i, 0]
         else:
             element = matrix[0, i]
-        if format == 'numpy' or format == 'scipy.sparse':
+        if format in ('numpy', 'scipy.sparse'):
             element = complex(element)
         if element != 0.0:
             # Form Qubit array; 0 in bit-locations where i is 0, 1 in

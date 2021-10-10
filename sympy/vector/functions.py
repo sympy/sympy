@@ -56,7 +56,7 @@ def express(expr, system, system2=None, variables=False):
 
     """
 
-    if expr == 0 or expr == Vector.zero:
+    if expr in (0, Vector.zero):
         return expr
 
     if not isinstance(system, CoordSys3D):

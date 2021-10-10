@@ -159,7 +159,7 @@ class erf(Function):
 
         # Try to pull out factors of I
         t = arg.extract_multiplicatively(S.ImaginaryUnit)
-        if t is S.Infinity or t is S.NegativeInfinity:
+        if t in (S.Infinity, S.NegativeInfinity):
             return arg
 
         # Try to pull out factors of -1
@@ -379,7 +379,7 @@ class erfc(Function):
 
         # Try to pull out factors of I
         t = arg.extract_multiplicatively(S.ImaginaryUnit)
-        if t is S.Infinity or t is S.NegativeInfinity:
+        if t in (S.Infinity, S.NegativeInfinity):
             return -arg
 
         # Try to pull out factors of -1
@@ -731,14 +731,12 @@ class erf2(Function):
 
     @classmethod
     def eval(cls, x, y):
-        I = S.Infinity
-        N = S.NegativeInfinity
-        O = S.Zero
+        chk = (S.Infinity, S.NegativeInfinity, S.Zero)
         if x is S.NaN or y is S.NaN:
             return S.NaN
         elif x == y:
             return S.Zero
-        elif (x is I or x is N or x is O) or (y is I or y is N or y is O):
+        elif x in chk or y in chk:
             return erf(y) - erf(x)
 
         if isinstance(y, erf2inv) and y.args[0] == x:

@@ -149,7 +149,7 @@ class Ellipse(GeometrySet):
         if hradius == vradius:
             return Circle(center, hradius, **kwargs)
 
-        if hradius == 0 or vradius == 0:
+        if S.Zero in (hradius, vradius):
             return Segment(Point(center[0] - hradius, center[1] - vradius), Point(center[0] + hradius, center[1] + vradius))
 
         if hradius.is_real is False or vradius.is_real is False:
@@ -1564,7 +1564,7 @@ class Circle(Ellipse):
             except ValueError:
                 raise GeometryError("The given equation is not that of a circle.")
 
-            if a == 0 or b == 0 or a != b:
+            if S.Zero in (a, b) or a != b:
                 raise GeometryError("The given equation is not that of a circle.")
 
             center_x = -c/a/2

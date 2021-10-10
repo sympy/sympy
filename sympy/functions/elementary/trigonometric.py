@@ -272,7 +272,7 @@ class sin(TrigonometricFunction):
                 return S.NaN
             elif arg.is_zero:
                 return S.Zero
-            elif arg is S.Infinity or arg is S.NegativeInfinity:
+            elif arg in (S.Infinity, S.NegativeInfinity):
                 return AccumBounds(-1, 1)
 
         if arg is S.ComplexInfinity:
@@ -574,7 +574,7 @@ class cos(TrigonometricFunction):
                 return S.NaN
             elif arg.is_zero:
                 return S.One
-            elif arg is S.Infinity or arg is S.NegativeInfinity:
+            elif arg in (S.Infinity, S.NegativeInfinity):
                 # In this case it is better to return AccumBounds(-1, 1)
                 # rather than returning S.NaN, since AccumBounds(-1, 1)
                 # preserves the information that sin(oo) is between
@@ -654,7 +654,7 @@ class cos(TrigonometricFunction):
                 if q in table2:
                     a, b = p*S.Pi/table2[q][0], p*S.Pi/table2[q][1]
                     nvala, nvalb = cls(a), cls(b)
-                    if None == nvala or None == nvalb:
+                    if None in (nvala, nvalb):
                         return None
                     return nvala*nvalb + cls(S.Pi/2 - a)*cls(S.Pi/2 - b)
 
@@ -1025,7 +1025,7 @@ class tan(TrigonometricFunction):
                 return S.NaN
             elif arg.is_zero:
                 return S.Zero
-            elif arg is S.Infinity or arg is S.NegativeInfinity:
+            elif arg in (S.Infinity, S.NegativeInfinity):
                 return AccumBounds(S.NegativeInfinity, S.Infinity)
 
         if arg is S.ComplexInfinity:
@@ -1071,7 +1071,7 @@ class tan(TrigonometricFunction):
                     3: sqrt(1 + 2*sqrt(5)/5),
                     4: sqrt(5 + 2*sqrt(5))
                     }
-                if q == 5 or q == 10:
+                if q in (5, 10):
                     n = 10*p/q
                     if n > 5:
                         n = 10 - n
@@ -1098,7 +1098,7 @@ class tan(TrigonometricFunction):
                     }
                 if q in table2:
                     nvala, nvalb = cls(p*S.Pi/table2[q][0]), cls(p*S.Pi/table2[q][1])
-                    if None == nvala or None == nvalb:
+                    if None in (nvala, nvalb):
                         return None
                     return (nvala - nvalb)/(1 + nvala*nvalb)
                 narg = ((pi_coeff + S.Half) % 1 - S.Half)*S.Pi
@@ -1387,7 +1387,7 @@ class cot(TrigonometricFunction):
                 return None
 
             if pi_coeff.is_Rational:
-                if pi_coeff.q == 5 or pi_coeff.q == 10:
+                if pi_coeff.q in (5, 10):
                     return tan(S.Pi/2 - arg)
                 if pi_coeff.q > 2 and not pi_coeff.q % 2:
                     narg = pi_coeff*S.Pi*2
@@ -1409,7 +1409,7 @@ class cot(TrigonometricFunction):
                 p = pi_coeff.p % q
                 if q in table2:
                     nvala, nvalb = cls(p*S.Pi/table2[q][0]), cls(p*S.Pi/table2[q][1])
-                    if None == nvala or None == nvalb:
+                    if None in (nvala, nvalb):
                         return None
                     return (1 + nvala*nvalb)/(nvalb - nvala)
                 narg = (((pi_coeff + S.Half) % 1) - S.Half)*S.Pi

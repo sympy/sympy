@@ -184,7 +184,7 @@ class besselj(BesselBase):
                 return S.ComplexInfinity
             elif nu.is_imaginary:
                 return S.NaN
-        if z is S.Infinity or (z is S.NegativeInfinity):
+        if z in (S.Infinity, S.NegativeInfinity):
             return S.Zero
 
         if z.could_extract_minus_sign():
@@ -317,7 +317,7 @@ class bessely(BesselBase):
                 return S.ComplexInfinity
             elif re(nu).is_zero:
                 return S.NaN
-        if z is S.Infinity or z is S.NegativeInfinity:
+        if z in (S.Infinity, S.NegativeInfinity):
             return S.Zero
 
         if nu.is_integer:
@@ -450,7 +450,7 @@ class besseli(BesselBase):
                 return S.ComplexInfinity
             elif nu.is_imaginary:
                 return S.NaN
-        if im(z) is S.Infinity or im(z) is S.NegativeInfinity:
+        if im(z) in (S.Infinity, S.NegativeInfinity):
             return S.Zero
 
         if z.could_extract_minus_sign():

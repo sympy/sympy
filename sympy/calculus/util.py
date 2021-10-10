@@ -522,7 +522,7 @@ def periodicity(f, symbol, check=False):
             for index, g in enumerate(reversed(g_s)):
                 start_index = num_of_gs - 1 - index
                 g = compogen(g_s[start_index:], symbol)
-                if g != orig_f and g != f: # Fix for issue 12620
+                if g not in (orig_f, f): # Fix for issue 12620
                     period = periodicity(g, symbol)
                     if period is not None:
                         break
@@ -1260,7 +1260,7 @@ class AccumulationBounds(AtomicExpr):
                         return AccumBounds(self.min / other.max, oo)
 
             elif other.is_extended_real:
-                if other is S.Infinity or other is S.NegativeInfinity:
+                if other in (S.Infinity, S.NegativeInfinity):
                     if self == AccumBounds(-oo, oo):
                         return AccumBounds(-oo, oo)
                     if self.max is S.Infinity:
@@ -1450,7 +1450,7 @@ class AccumulationBounds(AtomicExpr):
         """
         other = _sympify(other)
 
-        if other is S.Infinity or other is S.NegativeInfinity:
+        if other in (S.Infinity, S.NegativeInfinity):
             if self.min is S.NegativeInfinity or self.max is S.Infinity:
                 return True
             return False
