@@ -314,7 +314,8 @@ class Pow(Expr):
             # we returned Piecewise((-1, Ne(x, 1))) for such cases then
             # we could do this...but we don't
             elif (e.is_Symbol and e.is_integer or e.is_Integer
-                    ) and b.is_number and b.could_extract_minus_sign():
+                    ) and (b.is_number and b.is_Mul or b.is_Number
+                    ) and b.could_extract_minus_sign():
                 if e.is_even:
                     b = -b
                 elif e.is_odd:
