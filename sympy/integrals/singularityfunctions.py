@@ -1,5 +1,5 @@
 from sympy.functions import SingularityFunction, DiracDelta
-from sympy.core import S, sympify
+from sympy.core import sympify
 from sympy.integrals import integrate
 
 
