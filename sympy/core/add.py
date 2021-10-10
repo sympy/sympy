@@ -937,12 +937,18 @@ class Add(Expr, AssocOp):
 
         """
         from sympy import Order
-        lst = []
+        lst, seq1 = [], []
         symbols = list(symbols if is_sequence(symbols) else [symbols])
         if not point:
             point = [0]*len(symbols)
-        seq = [(f, Order(f, *zip(symbols, point))) for f in self.args]
-        for ef, of in seq:
+        if len(symbols) == 1:
+            new_self = self.series(*symbols).removeO().expand()
+            seq1 = [(f, Order(f, *zip(symbols, point))) for f in new_self.args]
+        if seq1 == []:
+            seq2 = [(f, Order(f, *zip(symbols, point))) for f in self.args]
+        else:
+            seq2 = seq1
+        for ef, of in seq2:
             for e, o in lst:
                 if o.contains(of) and o != of:
                     of = None

@@ -233,6 +233,10 @@ def test_leading_order2():
             (x*pi, O(x))}
 
 
+def test_leading_order3():
+    assert (1-cos(x)).extract_leading_order(x) == ((x**2/2, O(x**2)),)
+
+
 def test_order_leadterm():
     assert O(x**2)._eval_as_leading_term(x) == O(x**2)
 
@@ -378,6 +382,10 @@ def test_order_at_infinity():
 
     # issue 19545
     assert Order(1/x - 3/(3*x + 2), (x, oo)).expr == x**(-2)
+
+    # issue 21434, 21315, 12544
+    assert Order(1 - cos(1/x), (x, oo)) == O(x**(-2), (x, oo))
+
 
 def test_mixing_order_at_zero_and_infinity():
     assert (Order(x, (x, 0)) + Order(x, (x, oo))).is_Add

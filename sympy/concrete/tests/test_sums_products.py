@@ -1063,6 +1063,9 @@ def test_is_convergent():
     # issue 19836
     assert Sum(4/(n + 2) - 5/(n + 1) + 1/n,(n, 7, oo)).is_convergent() is S.true
 
+    # issue 21434, 21315, 12544
+    assert Sum(1 - cos(1/x), (x, 1, oo)).is_convergent() is S.true
+
 
 def test_is_absolutely_convergent():
     assert Sum((-1)**n, (n, 1, oo)).is_absolutely_convergent() is S.false
