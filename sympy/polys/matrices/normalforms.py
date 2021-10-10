@@ -291,30 +291,38 @@ def _hermite_normal_form_modulo_D(A, D):
 
 
 def hermite_normal_form(A, D=None, check_rank=False):
-    '''
-    Return the Hermite Normal Form `W` of a DomainMatrix `A` over ZZ.
-
-    If known in advance, a positive integer `D` being any multiple of `det(W)`
-    may be provided. In this case, if `A` also has rank equal to its number of
-    rows, then we may use an alternative algorithm that works mod `D` in order
-    to prevent coefficient explosion.
+    r'''
+    Return the Hermite Normal Form $W$ of a DomainMatrix *A* over ``ZZ``.
 
     Parameters
     ==========
 
-    A: DomainMatrix over ZZ
-    D: (optional) positive integer (see above)
-    check_rank: The basic assumption is that, if you pass a value for D, then
-      you already believe that rank(A) == #rows(A), so we do not waste time
-      checking it for you. If you do want this to be checked (and the ordinary,
-      non-modulo-D algorithm to be used if the check fails), then set
-      `check_rank` to `True`.
+    A: DomainMatrix over ``ZZ``
+
+    D: positive integer (optional)
+        If known in advance, a positive integer $D$ being any multiple of $\det(W)$
+        may be provided. In this case, if *A* is also of maximal rank, then we
+        may use an alternative algorithm that works mod $D$ in order to prevent
+        coefficient explosion.
+
+    check_rank: boolean (default ``False``)
+        The basic assumption is that, if you pass a value for $D$, then
+        you already believe that *A* is of maximal rank, so we do not waste time
+        checking it for you. If you do want this to be checked (and the ordinary,
+        non-modulo-$D$ algorithm to be used if the check fails), then set
+        *check_rank* to ``True``.
 
     Returns
     =======
 
     DomainMatrix
-        The HNF of matrix A.
+        The HNF of matrix *A*.
+
+    References
+    ==========
+
+    [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
+    (See Algorithms 2.4.5 and 2.4.8.)
 
     '''
     if not A.domain.is_ZZ:

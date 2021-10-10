@@ -10,36 +10,38 @@ from .exceptions import DMRankError
 
 
 def invertible_supplement(M):
-    """
-    Append carefully chosen columns to M to make a square invertible matrix.
+    r"""
+    Append carefully chosen columns to *M* to make a square invertible matrix.
 
     Explanation
     ===========
 
-    Given an n x r matrix M of rank r (so r <= n), this function computes an
-    invertible n x n matrix B such that the first r columns of B equal M.
+    Given an $n \times r$ matrix *M* of rank $r$ (so $r \leq n$), this function
+    computes an invertible $n \times n$ matrix $B$ such that the first $r$
+    columns of $B$ equal *M*.
 
     This operation can be interpreted as a way of extending a basis for a
     subspace, to give a basis for the whole space.
 
-    To be precise, suppose you have an n-dimensional vector space V, with basis
-    vectors v1, v2, ..., vn, and an r-dimensional subspace W of V, spanned by a
-    basis w1, w2, ..., wr, where the w_j are given as linear combinations of
-    the v_i. If the columns of M represent the w_j as such lin. combs., then
-    the columns of the matrix B computed by this function give a new basis
-    u1, u2, ..., un for V, again relative to the {v_i} basis, and such that
-    u_j == w_j for 1 <= j <= r.
+    To be precise, suppose you have an $n$-dimensional vector space $V$, with
+    basis $\{v_1, v_2, \ldots, v_n\}, and an $r$-dimensional subspace $W$ of
+    $V$, spanned by a basis $\{w_1, w_2, \ldots, w_r\}$, where the $w_j$ are
+    given as linear combinations of the $v_i$. If the columns of *M* represent
+    the $w_j$ as such linear combinations, then the columns of the matrix $B$
+    computed by this function give a new basis $\{u_1, u_2, \ldots, u_n\}$ for
+    $V$, again relative to the $\{v_i\}$ basis, and such that $u_j = w_j$
+    for $1 \leq j \leq r$.
 
     Parameters
     ==========
 
-    M: the DomainMatrix to be supplemented
+    M: DomainMatrix
 
     Returns
     =======
 
     DomainMatrix
-        the supplemented Matrix B
+        This DomainMatrix is invertible and its first r columns equal M.
 
     Raises
     ======

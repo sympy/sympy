@@ -490,13 +490,13 @@ class PicklableWithSlots:
 
 
 class IntegerPowerable:
-    """
+    r"""
     Mixin class for classes that define a `__mul__` method, and want to be
     raised to integer powers in the natural way that follows. Implements
     powering via binary expansion, for efficiency.
 
-    By default, only integer powers >= 2 are supported. To support the first,
-    zeroth, or negative powers, override the corresponding methods,
+    By default, only integer powers $\geq 2$ are supported. To support the
+    first, zeroth, or negative powers, override the corresponding methods,
     `_first_power`, `_zeroth_power`, `_negative_power`, below.
     """
 
