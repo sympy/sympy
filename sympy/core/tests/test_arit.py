@@ -413,6 +413,8 @@ def test_Mul_is_integer():
     e_20161 = Mul(-1,Mul(1,Pow(2,-1,evaluate=False),evaluate=False),evaluate=False)
     assert e_20161.is_integer is not True # expand(e_20161) -> -1/2, but no need to see that in the assumption without evaluation
 
+
+
 def test_Add_Mul_is_integer():
     x = Symbol('x')
 

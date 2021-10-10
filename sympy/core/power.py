@@ -308,11 +308,13 @@ class Pow(Expr):
                     from sympy import AccumBounds
                     return AccumBounds(Pow(b, e.min), Pow(b, e.max))
             # autosimplification if base is a number and exp odd/even
-            # if base is Number then the base will end up positive; otherwise
-            # it should just have a canonically representation based on minus
-            # sign extractions
-            elif b.is_number and (e.is_Symbol or e.is_number
-                ) and b.could_extract_minus_sign() and e.is_integer:
+            # if base is Number then the base will end up positive; we
+            # do not do this with arbitrary expressions since symbolic
+            # cancellation might occur as in (x - 1)/(1 - x) -> -1. If
+            # we returned Piecewise((-1, Ne(x, 1))) for such cases then
+            # we could do this...but we don't
+            elif (e.is_Symbol and e.is_integer or e.is_Integer
+                    ) and b.is_number and b.could_extract_minus_sign():
                 if e.is_even:
                     b = -b
                 elif e.is_odd:
@@ -422,7 +424,7 @@ class Pow(Expr):
                     if _half(other):
                         if b.is_negative is True:
                             return S.NegativeOne**other*Pow(-b, e*other)
-                        elif b.is_negative is False:
+                        elif b.is_negative is False:  # XXX ok if im(b) != 0?
                             return Pow(b, -other)
                 elif e.is_even:
                     if b.is_extended_real:
