@@ -733,18 +733,17 @@ def test_cot_rewrite():
     assert cot(x).rewrite(sin) == sin(2*x)/(2*(sin(x)**2))
     assert cot(x).rewrite(cos) == cos(x)/cos(x - pi/2, evaluate=False)
     assert cot(x).rewrite(tan) == 1/tan(x)
-    assert cot(sinh(x)).rewrite(
-        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, sinh(3)).n()
-    assert cot(cosh(x)).rewrite(
-        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, cosh(3)).n()
-    assert cot(tanh(x)).rewrite(
-        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, tanh(3)).n()
-    assert cot(coth(x)).rewrite(
-        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, coth(3)).n()
-    assert cot(sin(x)).rewrite(
-        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, sin(3)).n()
-    assert cot(tan(x)).rewrite(
-        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, tan(3)).n()
+    def check(func):
+        z = cot(func(x)).rewrite(exp
+            ) - cot(x).rewrite(exp).subs(x, func(x))
+        assert z.rewrite(exp).expand() == 0
+    check(sinh)
+    check(cosh)
+    check(tanh)
+    check(coth)
+    check(sin)
+    check(cos)
+    check(tan)
     assert cot(log(x)).rewrite(Pow) == -I*(x**-I + x**I)/(x**-I - x**I)
     assert cot(pi*Rational(4, 34)).rewrite(pow).ratsimp() == (cos(pi*Rational(4, 34))/sin(pi*Rational(4, 34))).rewrite(pow).ratsimp()
     assert cot(pi*Rational(4, 17)).rewrite(pow) == (cos(pi*Rational(4, 17))/sin(pi*Rational(4, 17))).rewrite(pow)

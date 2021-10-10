@@ -1789,7 +1789,7 @@ def _get_examples_ode_sol_separable():
     # https://github.com/sympy/sympy/issues/7081
     'separable_23': {
         'eq': x*(f(x).diff(x)) + 1 - f(x)**2,
-        'sol': [Eq(f(x), (C1 - x**2)/(C1 + x**2))],
+        'sol': [Eq(f(x), (-C1 - x**2)/(-C1 + x**2))],
     },
 
     # https://github.com/sympy/sympy/issues/10379
