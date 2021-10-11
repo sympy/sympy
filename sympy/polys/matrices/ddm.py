@@ -469,14 +469,16 @@ class DDM(list):
         Says whether this matrix is upper-triangular. True can be returned
         even if the matrix is not square.
         """
-        return all(self[i][j] == self.domain.zero for i in range(1, self.shape[0]) for j in range(min(i, self.shape[1])))
+        zero = self.domain.zero
+        return all(Mij == zero for i, Mi in enumerate(self) for Mij in Mi[:i])
 
     def is_lower(self):
         """
         Says whether this matrix is lower-triangular. True can be returned
         even if the matrix is not square.
         """
-        return all(self[i][j] == self.domain.zero for i in range(self.shape[0]) for j in range(i + 1, self.shape[1]))
+        zero = self.domain.zero
+        return all(Mij == zero for i, Mi in enumerate(self) for Mij in Mi[i+1:])
 
 
 from .sdm import SDM
