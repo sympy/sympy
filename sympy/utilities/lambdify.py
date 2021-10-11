@@ -272,7 +272,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         6
 
     expr : Expr
-        An expression, list of expressions, or matrix to be evaluated.
+        An expression, list of expressions, matrix or CodeBlock to be evaluated.
 
         Lists may be nested.
         If the expression is a list, the output will also be a list.
@@ -288,6 +288,11 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         >>> f(1)
         [[1]
         [2]]
+
+        If it is a CodeBlock, it is assumed a Return is used to indicate
+        which symbol(s) should be returned. When cse=True, it will make use
+        of CodeBlock.cse() (limited support).
+
 
         Note that the argument order here (variables then expression) is used
         to emulate the Python ``lambda`` keyword. ``lambdify(x, expr)`` works
@@ -859,6 +864,9 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
     if cse == True:
+        from sympy.codegen.ast import CodeBlock
+        if isinstance(expr,CodeBlock):
+            cses, _expr=(), expr.cse()
         from sympy.simplify.cse_main import cse
         cses, _expr = cse(expr, list=False)
     elif callable(cse):
@@ -1139,11 +1147,13 @@ class _EvaluatorPrinter:
                 funcbody.append('{} = {}'.format(s, self._exprrepr(e)))
 
         str_expr = _recursive_to_string(self._exprrepr, expr)
-
-
-        if '\n' in str_expr:
-            str_expr = '({})'.format(str_expr)
-        funcbody.append('return {}'.format(str_expr))
+        from sympy.codegen.ast import CodeBlock
+        if isinstance(expr,CodeBlock):
+            funcbody+=self._exprrepr(expr).split('\n')
+        else:
+            if '\n' in str_expr:
+                str_expr = '({})'.format(str_expr)
+            funcbody.append('return {}'.format(str_expr))
 
         funclines = [funcsig]
         funclines.extend(['    ' + line for line in funcbody])
