@@ -13,8 +13,10 @@ from sympy.testing.pytest import raises, skip
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
     split_symbols, implicit_multiplication, convert_equals_signs,
-    convert_xor, function_exponentiation,
-    implicit_multiplication_application,
+    convert_xor, function_exponentiation, lambda_notation, auto_symbol,
+    repeated_decimals, implicit_multiplication_application,
+    auto_number, factorial_notation, implicit_application,
+    _transformation, T
     )
 
 
@@ -293,3 +295,23 @@ def test_issue_19501():
         standard_transformations +
         (implicit_multiplication_application,)))
     assert eq.free_symbols == {x}
+
+
+def test_definitions():
+    assert len(_transformation) == 12  # if this changes, extend below
+    assert _transformation[0] == lambda_notation
+    assert _transformation[1] == auto_symbol
+    assert _transformation[2] == repeated_decimals
+    assert _transformation[3] == auto_number
+    assert _transformation[4] == factorial_notation
+    assert _transformation[5] == implicit_multiplication_application
+    assert _transformation[6] == convert_xor
+    assert _transformation[7] == implicit_application
+    assert _transformation[8] == implicit_multiplication
+    assert _transformation[9] == convert_equals_signs
+    assert _transformation[10] == function_exponentiation
+    assert _transformation[11] == rationalize
+    assert T[:5] == T[0,1,2,3,4] == standard_transformations
+    t = _transformation
+    assert T[-1, 0] == (t[len(t) - 1], t[0])
+    assert T[:5, 8] == standard_transformations + (t[8],)
