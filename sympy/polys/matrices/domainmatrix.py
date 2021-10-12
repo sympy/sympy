@@ -217,15 +217,19 @@ class DomainMatrix:
         return self
 
     @classmethod
-    def from_list_sympy(cls, nrows, ncols, rows, **kwargs):
+    def from_list(cls, rows, **kwargs):
         r"""
-        Convert a list of lists of Expr into a DomainMatrix using construct_domain
+        Convert a list of lists of Expr into a DomainMatrix
+
+        Explanation
+        ===========
+
+        If you pass keyword arg `domain`, then this is the domain that will be
+        used. Otherwise, we use `construct_domain` to determine it.
 
         Parameters
         ==========
 
-        nrows: number of rows
-        ncols: number of columns
         rows: list of lists
 
         Returns
@@ -238,7 +242,7 @@ class DomainMatrix:
 
         >>> from sympy.polys.matrices import DomainMatrix
         >>> from sympy.abc import x, y, z
-        >>> A = DomainMatrix.from_list_sympy(1, 3, [[x, y, z]])
+        >>> A = DomainMatrix.from_list([[x, y, z]])
         >>> A
         DomainMatrix([[x, y, z]], (1, 3), ZZ[x,y,z])
 
@@ -248,14 +252,17 @@ class DomainMatrix:
         sympy.polys.constructor.construct_domain, from_dict_sympy
 
         """
-        assert len(rows) == nrows
-        assert all(len(row) == ncols for row in rows)
+        nrows = len(rows)
+        ncols = 0 if not nrows else len(rows[0])
 
-        items_sympy = [_sympify(item) for row in rows for item in row]
-
-        domain, items_domain = cls.get_domain(items_sympy, **kwargs)
-
-        domain_rows = [[items_domain[ncols*r + c] for c in range(ncols)] for r in range(nrows)]
+        if 'domain' in kwargs:
+            domain = kwargs['domain']
+            conv = lambda e: domain.from_sympy(_sympify(e))
+            domain_rows = [[conv(e) for e in row] for row in rows]
+        else:
+            items_sympy = [_sympify(item) for row in rows for item in row]
+            domain, items_domain = cls.get_domain(items_sympy, **kwargs)
+            domain_rows = [[items_domain[ncols*r + c] for c in range(ncols)] for r in range(nrows)]
 
         return DomainMatrix(domain_rows, (nrows, ncols), domain)
 
@@ -288,7 +295,7 @@ class DomainMatrix:
         See Also
         ========
 
-        from_list_sympy
+        from_list
 
         """
         if not all(0 <= r < nrows for r in elemsdict):
@@ -350,7 +357,7 @@ class DomainMatrix:
 
         """
         if fmt == 'dense':
-            return cls.from_list_sympy(*M.shape, M.tolist(), **kwargs)
+            return cls.from_list(M.tolist(), **kwargs)
 
         return cls.from_dict_sympy(*M.shape, M.todod(), **kwargs)
 

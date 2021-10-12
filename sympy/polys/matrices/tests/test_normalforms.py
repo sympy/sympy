@@ -1,6 +1,6 @@
 from sympy.testing.pytest import raises
 
-from sympy import Symbol, sympify
+from sympy import Symbol
 from sympy.polys.matrices.normalforms import (
     invariant_factors, smith_normal_form, hermite_normal_form)
 from sympy.polys.domains import ZZ, QQ
@@ -8,10 +8,7 @@ from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.exceptions import DMDomainError
 
 
-def DM(elems, domain):
-    conv = lambda e: domain.from_sympy(sympify(e))
-    elems = [[conv(e) for e in row] for row in elems]
-    return DomainMatrix(elems, (len(elems), len(elems[0])), domain)
+DM = lambda rows, domain: DomainMatrix.from_list(rows, domain=domain)
 
 def test_smith_normal():
 

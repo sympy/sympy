@@ -66,7 +66,7 @@ def test_DomainMatrix_from_rep():
 
 def test_DomainMatrix_from_list_sympy():
     ddm = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    A = DomainMatrix.from_list_sympy(2, 2, [[1, 2], [3, 4]])
+    A = DomainMatrix.from_list([[1, 2], [3, 4]])
     assert A.rep == ddm
     assert A.shape == (2, 2)
     assert A.domain == ZZ
@@ -78,8 +78,8 @@ def test_DomainMatrix_from_list_sympy():
         (2, 2),
         K
     )
-    A = DomainMatrix.from_list_sympy(
-        2, 2, [[1 + sqrt(2), 2 + sqrt(2)], [3 + sqrt(2), 4 + sqrt(2)]],
+    A = DomainMatrix.from_list(
+        [[1 + sqrt(2), 2 + sqrt(2)], [3 + sqrt(2), 4 + sqrt(2)]],
         extension=True)
     assert A.rep == ddm
     assert A.shape == (2, 2)
