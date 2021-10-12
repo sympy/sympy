@@ -97,9 +97,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     Explanation
     ===========
 
-    It will convert Python ints into instances of :func:`~.Integer`,
-    floats into instances of :func:`~Float`, etc. It is also able to coerce symbolic
-    expressions which inherit from :func:`~.Basic`. This can be useful in cooperation
+    It will convert Python ints into instances of :class:`~.Integer`,
+    floats into instances of :class:`~.Float`, etc. It is also able to coerce symbolic
+    expressions which inherit from :class:`~.Basic`. This can be useful in cooperation
     with SAGE.
 
     .. warning::
@@ -141,7 +141,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     by ``from sympy import *``; anything used in a string that is not
     defined by that import will be converted to a symbol. In the following,
     the ``bitcount`` function is treated as a symbol and the ``O`` is
-    interpreted as the :func:`~.Order` object (used with series) and it raises
+    interpreted as the :class:`~.Order` object (used with series) and it raises
     an error when used improperly:
 
     >>> s = 'bitcount(42)'
@@ -324,7 +324,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         other cases, a SympifyError is raised.
 
     rational : bool, optional
-        If ``True``, converts floats into :func:`Rational`.
+        If ``True``, converts floats into :class:`Rational`.
         If ``False``, it lets floats remain as it is.
         Used only when input is a string.
 
