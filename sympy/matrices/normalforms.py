@@ -66,7 +66,7 @@ def invariant_factors(m, domain=None):
     return factors
 
 
-def hermite_normal_form(A, D=None, check_rank=False):
+def hermite_normal_form(A, *, D=None, check_rank=False):
     r'''
     Return the Hermite Normal Form $W$ of a DomainMatrix *A* over ``ZZ``.
 
