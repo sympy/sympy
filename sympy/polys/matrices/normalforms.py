@@ -1,7 +1,7 @@
 '''Functions returning normal forms of matrices'''
 
 from .domainmatrix import DomainMatrix
-from .exceptions import DMDomainError
+from .exceptions import DMDomainError, DMShapeError
 from sympy.polys.domains import QQ, ZZ
 
 
@@ -183,6 +183,8 @@ def _hermite_normal_form(A):
     (See Algorithm 2.4.5.)
 
     """
+    if not A.domain.is_ZZ:
+        raise DMDomainError('Matrix must be over domain ZZ.')
     # We work one row at a time, starting from the bottom row, and working our
     # way up. The total number of rows we will consider is min(m, n), where
     # A is an m x n matrix.
@@ -251,6 +253,9 @@ def _hermite_normal_form_modulo_D(A, D):
     (See Algorithm 2.4.8.)
 
     """
+    if not A.domain.is_ZZ:
+        raise DMDomainError('Matrix must be over domain ZZ.')
+
     from sympy.ntheory.modular import symmetric_residue
     def add_columns_mod_R(m, R, i, j, a, b, c, d):
         # replace m[:, i] by (a*m[:, i] + b*m[:, j]) % R
@@ -264,7 +269,8 @@ def _hermite_normal_form_modulo_D(A, D):
     W = defaultdict(dict)
 
     m, n = A.shape
-    assert n >= m
+    if n < m:
+        raise DMShapeError('Matrix must have at least as many columns as rows.')
     A = list(A.to_dense().rep.copy())
     k = n
     R = ZZ(abs(D))
