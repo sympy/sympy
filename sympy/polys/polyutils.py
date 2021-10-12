@@ -501,12 +501,16 @@ class IntegerPowerable:
     """
 
     def __pow__(self, e, modulo=None):
-        if e < 0:
-            return self._negative_power(e, modulo=modulo)
-        elif e == 0:
-            return self._zeroth_power()
-        elif e == 1:
-            return self._first_power()
+        if e < 2:
+            try:
+                if e == 1:
+                    return self._first_power()
+                elif e == 0:
+                    return self._zeroth_power()
+                else:
+                    return self._negative_power(e, modulo=modulo)
+            except NotImplementedError:
+                return NotImplemented
         else:
             bits = [int(d) for d in reversed(bin(e)[2:])]
             n = len(bits)
@@ -533,12 +537,12 @@ class IntegerPowerable:
         For example, if the class has an `inv()` method,
             return self.inv() ** abs(e) % modulo
         """
-        return NotImplemented
+        raise NotImplementedError
 
     def _zeroth_power(self):
         """Return unity element of algebraic struct to which self belongs."""
-        return NotImplemented
+        raise NotImplementedError
 
     def _first_power(self):
         """Return a copy of self."""
-        return NotImplemented
+        raise NotImplementedError
