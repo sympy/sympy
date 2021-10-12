@@ -2026,6 +2026,21 @@ class sinc(Function):
     def _eval_rewrite_as_sin(self, arg, **kwargs):
         return Piecewise((sin(arg)/arg, Ne(arg, S.Zero)), (S.One, S.true))
 
+    def _eval_is_zero(self):
+        if self.args[0].is_infinite:
+            return True
+        rest, pi_mult = _peeloff_pi(self.args[0])
+        if rest.is_zero:
+            return fuzzy_and([pi_mult.is_integer, pi_mult.is_nonzero])
+        if rest.is_Number and pi_mult.is_integer:
+            return False
+
+    def _eval_is_real(self):
+        if self.args[0].is_extended_real or self.args[0].is_imaginary:
+            return True
+
+    _eval_is_finite = _eval_is_real
+
 
 ###############################################################################
 ########################### TRIGONOMETRIC INVERSES ############################
