@@ -1908,7 +1908,9 @@ class LatexPrinter(Printer):
         return self._print(expr.name)
 
     def _print_ArrayElement(self, expr):
-        return "{{%s}_{%s}}" % (expr.name, ", ".join([f"{self._print(i)}" for i in expr.indices]))
+        return "{{%s}_{%s}}" % (
+            self.parenthesize(expr.name, PRECEDENCE["Func"], True),
+            ", ".join([f"{self._print(i)}" for i in expr.indices]))
 
     def _print_UniversalSet(self, expr):
         return r"\mathbb{U}"

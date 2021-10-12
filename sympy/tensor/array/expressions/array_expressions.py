@@ -62,7 +62,7 @@ class ArrayElement(_ArrayExpr):
         if isinstance(name, str):
             name = Symbol(name)
         name = _sympify(name)
-        indices = _sympify(indices)
+        indices = _sympify(tuple(indices))
         if hasattr(name, "shape"):
             if any((i >= s) == True for i, s in zip(indices, name.shape)):
                 raise ValueError("shape is out of bounds")
