@@ -131,7 +131,10 @@ class DDM(list):
         return chain.from_iterable(self)
 
     def flat(self):
-        return list(self.flatiter())
+        items = []
+        for row in self:
+            items.extend(row)
+        return items
 
     def to_dok(self):
         return {(i, j): e for i, row in enumerate(self) for j, e in enumerate(row)}
