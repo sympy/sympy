@@ -47,24 +47,25 @@ def _peeloff_ipi(arg):
     >>> from sympy import pi, I
     >>> from sympy.abc import x, y
     >>> peel(x + I*pi/2)
-    (x, I*pi/2)
+    (x, 1/2)
     >>> peel(x + I*2*pi/3 + I*pi*y)
-    (x + I*pi*y + I*pi/6, I*pi/2)
+    (x + I*pi*y + I*pi/6, 1/2)
     """
+    ipi = S.Pi*S.ImaginaryUnit
     for a in Add.make_args(arg):
-        if a == S.Pi*S.ImaginaryUnit:
+        if a == ipi:
             K = S.One
             break
         elif a.is_Mul:
             K, p = a.as_two_terms()
-            if p == S.Pi*S.ImaginaryUnit and K.is_Rational:
+            if p == ipi and K.is_Rational:
                 break
     else:
         return arg, S.Zero
 
-    m1 = (K % S.Half)*S.Pi*S.ImaginaryUnit
-    m2 = K*S.Pi*S.ImaginaryUnit - m1
-    return arg - m2, m2
+    m1 = (K % S.Half)
+    m2 = K - m1
+    return arg - m2*ipi, m2
 
 
 class sinh(HyperbolicFunction):
@@ -134,6 +135,7 @@ class sinh(HyperbolicFunction):
             if arg.is_Add:
                 x, m = _peeloff_ipi(arg)
                 if m:
+                    m = m*S.Pi*S.ImaginaryUnit
                     return sinh(m)*cosh(x) + cosh(m)*sinh(x)
 
             if arg.is_zero:
@@ -269,7 +271,9 @@ class sinh(HyperbolicFunction):
         return arg.is_finite
 
     def _eval_is_zero(self):
-        return (self.args[0]/(S.Pi*I)).is_integer
+        rest, ipi_mult = _peeloff_ipi(self.args[0])
+        return fuzzy_and([ipi_mult.is_integer,
+                          rest.is_zero])
 
 
 class cosh(HyperbolicFunction):
@@ -329,6 +333,7 @@ class cosh(HyperbolicFunction):
             if arg.is_Add:
                 x, m = _peeloff_ipi(arg)
                 if m:
+                    m = m*S.Pi*S.ImaginaryUnit
                     return cosh(m)*cosh(x) + sinh(m)*sinh(x)
 
             if arg.is_zero:
@@ -506,7 +511,12 @@ class cosh(HyperbolicFunction):
         return arg.is_finite
 
     def _eval_is_zero(self):
-        return (self.args[0]/(S.Pi*I) - S.Half).is_integer
+        rest, ipi_mult = _peeloff_ipi(self.args[0])
+        if ipi_mult:
+            return fuzzy_and([(ipi_mult - S.Half).is_integer,
+                              rest.is_zero])
+        else:
+            return rest.is_zero
 
 
 class tanh(HyperbolicFunction):
@@ -574,7 +584,7 @@ class tanh(HyperbolicFunction):
             if arg.is_Add:
                 x, m = _peeloff_ipi(arg)
                 if m:
-                    tanhm = tanh(m)
+                    tanhm = tanh(m*S.Pi*S.ImaginaryUnit)
                     if tanhm is S.ComplexInfinity:
                         return coth(x)
                     else: # tanhm == 0
@@ -793,7 +803,7 @@ class coth(HyperbolicFunction):
             if arg.is_Add:
                 x, m = _peeloff_ipi(arg)
                 if m:
-                    cothm = coth(m)
+                    cothm = coth(m*S.Pi*S.ImaginaryUnit)
                     if cothm is S.ComplexInfinity:
                         return coth(x)
                     else: # cothm == 0
