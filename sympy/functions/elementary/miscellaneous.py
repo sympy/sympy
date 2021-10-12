@@ -202,8 +202,8 @@ def cbrt(arg, evaluate=None):
     References
     ==========
 
-    * https://en.wikipedia.org/wiki/Cube_root
-    * https://en.wikipedia.org/wiki/Principal_value
+    .. [1] https://en.wikipedia.org/wiki/Cube_root
+    .. [2] https://en.wikipedia.org/wiki/Principal_value
 
     """
     return Pow(arg, Rational(1, 3), evaluate=evaluate)
@@ -296,11 +296,11 @@ def root(arg, n, k=0, evaluate=None):
     References
     ==========
 
-    * https://en.wikipedia.org/wiki/Square_root
-    * https://en.wikipedia.org/wiki/Real_root
-    * https://en.wikipedia.org/wiki/Root_of_unity
-    * https://en.wikipedia.org/wiki/Principal_value
-    * http://mathworld.wolfram.com/CubeRoot.html
+    .. [1] https://en.wikipedia.org/wiki/Square_root
+    .. [2] https://en.wikipedia.org/wiki/Real_root
+    .. [3] https://en.wikipedia.org/wiki/Root_of_unity
+    .. [4] https://en.wikipedia.org/wiki/Principal_value
+    .. [5] http://mathworld.wolfram.com/CubeRoot.html
 
     """
     n = sympify(n)

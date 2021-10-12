@@ -192,7 +192,7 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
         References
         ==========
 
-        - https://en.wikipedia.org/wiki/Method_of_successive_substitution
+        .. [1] https://en.wikipedia.org/wiki/Method_of_successive_substitution
         """
         a1, m1 = c1
         a2, m2 = c2

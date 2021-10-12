@@ -1342,7 +1342,7 @@ def eval_sum_residue(f, i_a_b):
     Notes
     =====
 
-    If $f(n), g(n)$ are polynomials with $\deg(g(n)) - \deg(f(n)) >= 2$,
+    If $f(n), g(n)$ are polynomials with $\deg(g(n)) - \deg(f(n)) \ge 2$,
     some infinite summations can be computed by the following residue
     evaluations.
 

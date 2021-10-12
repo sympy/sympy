@@ -538,7 +538,7 @@ def hessian(f, varlist, constraints=()):
     References
     ==========
 
-    https://en.wikipedia.org/wiki/Hessian_matrix
+    .. [1] https://en.wikipedia.org/wiki/Hessian_matrix
 
     See Also
     ========
