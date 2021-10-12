@@ -496,12 +496,13 @@ class sin(TrigonometricFunction):
 
     def _eval_is_finite(self):
         arg = self.args[0]
-        if arg.is_finite:
+        if arg.is_extended_real:
             return True
 
     def _eval_is_zero(self):
         rest, pi_mult = _peeloff_pi(self.args[0])
-        return fuzzy_and([pi_mult.is_integer, rest.is_zero])
+        if rest.is_zero:
+            return pi_mult.is_integer
 
     def _eval_is_complex(self):
         if self.args[0].is_extended_real \
@@ -1296,7 +1297,8 @@ class tan(TrigonometricFunction):
 
     def _eval_is_zero(self):
         rest, pi_mult = _peeloff_pi(self.args[0])
-        return fuzzy_and([pi_mult.is_integer, rest.is_zero])
+        if rest.is_zero:
+            return pi_mult.is_integer
 
     def _eval_is_complex(self):
         arg = self.args[0]
@@ -1607,11 +1609,8 @@ class cot(TrigonometricFunction):
 
     def _eval_is_zero(self):
         rest, pimult = _peeloff_pi(self.args[0])
-        if pimult:
-            return fuzzy_and([(pimult - S.Half).is_integer,
-                              rest.is_zero])
-        else:
-            return rest.is_zero
+        if pimult and rest.is_zero:
+            return (pimult - S.Half).is_integer
 
     def _eval_subs(self, old, new):
         arg = self.args[0]

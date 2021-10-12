@@ -272,8 +272,8 @@ class sinh(HyperbolicFunction):
 
     def _eval_is_zero(self):
         rest, ipi_mult = _peeloff_ipi(self.args[0])
-        return fuzzy_and([ipi_mult.is_integer,
-                          rest.is_zero])
+        if rest.is_zero:
+            return ipi_mult.is_integer
 
 
 class cosh(HyperbolicFunction):
@@ -512,11 +512,8 @@ class cosh(HyperbolicFunction):
 
     def _eval_is_zero(self):
         rest, ipi_mult = _peeloff_ipi(self.args[0])
-        if ipi_mult:
-            return fuzzy_and([(ipi_mult - S.Half).is_integer,
-                              rest.is_zero])
-        else:
-            return rest.is_zero
+        if ipi_mult and rest.is_zero:
+            (ipi_mult - S.Half).is_integer
 
 
 class tanh(HyperbolicFunction):
@@ -1369,7 +1366,8 @@ class acosh(InverseHyperbolicFunction):
         return cosh
 
     def _eval_is_zero(self):
-        return (self.args[0] - 1).is_zero
+        if (self.args[0] - 1).is_zero:
+            return True
 
 
 class atanh(InverseHyperbolicFunction):
@@ -1470,7 +1468,8 @@ class atanh(InverseHyperbolicFunction):
         return (log(1 + x) - log(1 - x)) / 2
 
     def _eval_is_zero(self):
-        return self.args[0].is_zero
+        if self.args[0].is_zero:
+            return True
 
     def _eval_is_imaginary(self):
         return self.args[0].is_imaginary
