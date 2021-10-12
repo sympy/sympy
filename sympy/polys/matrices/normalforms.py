@@ -162,19 +162,25 @@ def _gcdex(a, b):
 
 
 def _hermite_normal_form(A):
-    """
-    Compute the Hermite Normal Form of matrix A.
+    r"""
+    Compute the Hermite Normal Form of DomainMatrix *A* over :ref:`ZZ`.
 
     Parameters
     ==========
 
-    A: DomainMatrix
+    A: DomainMatrix over domain :ref:`ZZ`.
 
     Returns
     =======
 
     DomainMatrix
-        The HNF of matrix A.
+        The HNF of matrix *A*.
+
+    Raises
+    ======
+
+    DMDomainError
+        If the domain of the matrix is not :ref:`ZZ`.
 
     References
     ==========
@@ -230,21 +236,39 @@ def _hermite_normal_form(A):
 
 
 def _hermite_normal_form_modulo_D(A, D):
-    """
-    Compute the Hermite Normal Form W of matrix A, where rank(A) == #rows(A),
-    and given an integer D known to be a multiple of det(W).
+    r"""
+    Perform the mod *D* Hermite Normal Form reduction algorithm on DomainMatrix
+    *A*.
+
+    Explanation
+    ===========
+
+    If *A* is an $m \times n$ matrix of rank $m$, having Hermite Normal Form
+    $W$, and if *D* is any positive integer known in advance to be a multiple
+    of $\det(W)$, then the HNF of *A* can be computed by an algorithm that
+    works mod *D* in order to prevent coefficient explosion.
 
     Parameters
     ==========
 
-    A: DomainMatrix such that rank(A) == #rows(A).
-    D: integer known to be a multiple of the determinant of the HNF of A.
+    A: $m \times n $ DomainMatrix over domain :ref:ZZ, having rank $m$.
+    D: positive integer known to be a multiple of the determinant of the
+        HNF of *A*.
 
     Returns
     =======
 
     DomainMatrix
-        The HNF of matrix A.
+        The HNF of matrix *A*.
+
+    Raises
+    ======
+
+    DMDomainError
+        If the domain of the matrix is not :ref:`ZZ`.
+
+    DMShapeError
+        If the matrix has more rows than columns.
 
     References
     ==========
@@ -298,31 +322,53 @@ def _hermite_normal_form_modulo_D(A, D):
 
 def hermite_normal_form(A, *, D=None, check_rank=False):
     r'''
-    Return the Hermite Normal Form $W$ of a DomainMatrix *A* over ``ZZ``.
+    Compute the Hermite Normal Form of DomainMatrix *A* over :ref:`ZZ`.
 
     Parameters
     ==========
 
-    A: DomainMatrix over ``ZZ``
+    A: $m \times n$ DomainMatrix over domain :ref:`ZZ`.
 
     D: positive integer (optional)
-        If known in advance, a positive integer $D$ being any multiple of $\det(W)$
-        may be provided. In this case, if *A* is also of maximal rank, then we
-        may use an alternative algorithm that works mod $D$ in order to prevent
-        coefficient explosion.
+        Let $W$ be the HNF of *A*. If known in advance, a positive integer *D*
+        being any multiple of $\det(W)$ may be provided. In this case, if *A*
+        also has rank $m$, then we may use an alternative algorithm that works
+        mod *D* in order to prevent coefficient explosion.
 
     check_rank: boolean (default ``False``)
-        The basic assumption is that, if you pass a value for $D$, then
-        you already believe that *A* is of maximal rank, so we do not waste time
-        checking it for you. If you do want this to be checked (and the ordinary,
-        non-modulo-$D$ algorithm to be used if the check fails), then set
-        *check_rank* to ``True``.
+        The basic assumption is that, if you pass a value for *D*, then
+        you already believe that *A* has rank $m$, so we do not waste time
+        checking it for you. If you do want this to be checked (and the
+        ordinary, non-modulo *D* algorithm to be used if the check fails), then
+        set *check_rank* to ``True``.
 
     Returns
     =======
 
     DomainMatrix
         The HNF of matrix *A*.
+
+    Raises
+    ======
+
+    DMDomainError
+        If the domain of the matrix is not :ref:`ZZ`.
+
+    DMShapeError
+        If the mod *D* algorithm is used but the matrix has more rows than
+        columns.
+
+    Examples
+    ========
+
+    >>> from sympy import ZZ
+    >>> from sympy.polys.matrices import DomainMatrix
+    >>> from sympy.polys.matrices.normalforms import hermite_normal_form
+    >>> m = DomainMatrix([[ZZ(12), ZZ(6), ZZ(4)],
+    ...                   [ZZ(3), ZZ(9), ZZ(6)],
+    ...                   [ZZ(2), ZZ(16), ZZ(14)]], (3, 3), ZZ)
+    >>> print(hermite_normal_form(m).to_Matrix())
+    Matrix([[10, 0, 2], [0, 15, 3], [0, 0, 2]])
 
     References
     ==========

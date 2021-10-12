@@ -68,31 +68,50 @@ def invariant_factors(m, domain=None):
 
 def hermite_normal_form(A, *, D=None, check_rank=False):
     r'''
-    Return the Hermite Normal Form $W$ of a DomainMatrix *A* over ``ZZ``.
+    Compute the Hermite Normal Form of a Matrix *A* of integers.
 
     Parameters
     ==========
 
-    A: DomainMatrix over ``ZZ``
+    A: $m \times n$ Matrix of integers.
 
     D: positive integer (optional)
-        If known in advance, a positive integer $D$ being any multiple of $\det(W)$
-        may be provided. In this case, if *A* is also of maximal rank, then we
-        may use an alternative algorithm that works mod $D$ in order to prevent
-        coefficient explosion.
+        Let $W$ be the HNF of *A*. If known in advance, a positive integer *D*
+        being any multiple of $\det(W)$ may be provided. In this case, if *A*
+        also has rank $m$, then we may use an alternative algorithm that works
+        mod *D* in order to prevent coefficient explosion.
 
     check_rank: boolean (default ``False``)
-        The basic assumption is that, if you pass a value for $D$, then
-        you already believe that *A* is of maximal rank, so we do not waste time
-        checking it for you. If you do want this to be checked (and the ordinary,
-        non-modulo-$D$ algorithm to be used if the check fails), then set
-        *check_rank* to ``True``.
+        The basic assumption is that, if you pass a value for *D*, then
+        you already believe that *A* has rank $m$, so we do not waste time
+        checking it for you. If you do want this to be checked (and the
+        ordinary, non-modulo *D* algorithm to be used if the check fails), then
+        set *check_rank* to ``True``.
 
     Returns
     =======
 
-    DomainMatrix
+    Matrix
         The HNF of matrix *A*.
+
+    Raises
+    ======
+
+    :obj:`sympy.polys.matrices.exceptions.DMDomainError`
+        If the domain of the matrix is not :ref:`ZZ`.
+
+    :obj:`sympy.polys.matrices.exceptions.DMShapeError`
+        If the mod *D* algorithm is used but the matrix has more rows than
+        columns.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.matrices.normalforms import hermite_normal_form
+    >>> m = Matrix([[12, 6, 4], [3, 9, 6], [2, 16, 14]])
+    >>> print(hermite_normal_form(m))
+    Matrix([[10, 0, 2], [0, 15, 3], [0, 0, 2]])
 
     References
     ==========
