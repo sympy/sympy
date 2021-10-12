@@ -10,8 +10,8 @@ from sympy.matrices.dense import Matrix
 from sympy.polys.domains import ZZ, QQ, EXRAW
 
 from sympy.polys.matrices.domainmatrix import DomainMatrix, DomainScalar
-from sympy.polys.matrices.exceptions import (DMBadInputError, DMDomainError,
-                                             DMShapeError, DMFormatError)
+from sympy.polys.matrices.exceptions import (
+    DMBadInputError, DMDomainError, DMShapeError, DMFormatError, DMNotAField)
 from sympy.polys.matrices.ddm import DDM
 from sympy.polys.matrices.sdm import SDM
 
@@ -461,7 +461,7 @@ def test_DomainMatrix_rref():
     assert pivots == (1,)
 
     Az = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    raises(ValueError, lambda: Az.rref())
+    raises(DMNotAField, lambda: Az.rref())
 
 
 def test_DomainMatrix_columnspace():
@@ -470,7 +470,7 @@ def test_DomainMatrix_columnspace():
     assert A.columnspace() == Acol
 
     Az = DomainMatrix([[ZZ(1), ZZ(-1), ZZ(1)], [ZZ(2), ZZ(-2), ZZ(3)]], (2, 3), ZZ)
-    raises(ValueError, lambda: Az.columnspace())
+    raises(DMNotAField, lambda: Az.columnspace())
 
     A = DomainMatrix([[QQ(1), QQ(-1), QQ(1)], [QQ(2), QQ(-2), QQ(3)]], (2, 3), QQ, fmt='sparse')
     Acol = DomainMatrix({0: {0: QQ(1), 1: QQ(1)}, 1: {0: QQ(2), 1: QQ(3)}}, (2, 2), QQ)
@@ -482,7 +482,7 @@ def test_DomainMatrix_rowspace():
     assert A.rowspace() == A
 
     Az = DomainMatrix([[ZZ(1), ZZ(-1), ZZ(1)], [ZZ(2), ZZ(-2), ZZ(3)]], (2, 3), ZZ)
-    raises(ValueError, lambda: Az.rowspace())
+    raises(DMNotAField, lambda: Az.rowspace())
 
     A = DomainMatrix([[QQ(1), QQ(-1), QQ(1)], [QQ(2), QQ(-2), QQ(3)]], (2, 3), QQ, fmt='sparse')
     assert A.rowspace() == A
@@ -494,7 +494,7 @@ def test_DomainMatrix_nullspace():
     assert A.nullspace() == Anull
 
     Az = DomainMatrix([[ZZ(1), ZZ(1)], [ZZ(1), ZZ(1)]], (2, 2), ZZ)
-    raises(ValueError, lambda: Az.nullspace())
+    raises(DMNotAField, lambda: Az.nullspace())
 
 
 def test_DomainMatrix_solve():
@@ -509,7 +509,7 @@ def test_DomainMatrix_solve():
     raises(ShapeError, lambda: A._solve(b3))
 
     bz = DomainMatrix([[ZZ(1)], [ZZ(1)]], (2, 1), ZZ)
-    raises(ValueError, lambda: A._solve(bz))
+    raises(DMNotAField, lambda: A._solve(bz))
 
 
 def test_DomainMatrix_inv():
@@ -521,7 +521,7 @@ def test_DomainMatrix_inv():
     assert A.inv() == Ainv
 
     Az = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    raises(ValueError, lambda: Az.inv())
+    raises(DMNotAField, lambda: Az.inv())
 
     Ans = DomainMatrix([[QQ(1), QQ(2)]], (1, 2), QQ)
     raises(NonSquareMatrixError, lambda: Ans.inv())
@@ -606,7 +606,7 @@ def test_DomainMatrix_lu():
     assert A.lu() == (L, U, [])
 
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    raises(ValueError, lambda: A.lu())
+    raises(DMNotAField, lambda: A.lu())
 
 
 def test_DomainMatrix_lu_solve():
@@ -650,7 +650,7 @@ def test_DomainMatrix_lu_solve():
     # Non-field
     A = DomainMatrix([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
     b = DomainMatrix([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
-    raises(ValueError, lambda: A.lu_solve(b))
+    raises(DMNotAField, lambda: A.lu_solve(b))
 
     # Shape mismatch
     A = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(4)]], (2, 2), QQ)

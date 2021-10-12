@@ -28,6 +28,11 @@ class DMDomainError(DMError):
     pass
 
 
+class DMNotAField(DMDomainError):
+    """domain is not a field"""
+    pass
+
+
 class DMFormatError(DMError):
     """mixed dense/sparse not supported"""
     pass
@@ -45,7 +50,7 @@ class DMShapeError(DMError):
 
 __all__ = [
     'DMError', 'DMBadInputError', 'DMDomainError', 'DMFormatError',
-    'DMRankError', 'DMShapeError',
+    'DMRankError', 'DMShapeError', 'DMNotAField',
 
     'NonSquareMatrixError', 'NonInvertibleMatrixError', 'ShapeError',
 ]

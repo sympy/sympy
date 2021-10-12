@@ -15,7 +15,8 @@ from sympy.core.sympify import _sympify
 from ..constructor import construct_domain
 
 from .exceptions import (NonSquareMatrixError, ShapeError, DMShapeError,
-                         DMDomainError, DMFormatError, DMBadInputError)
+                         DMDomainError, DMFormatError, DMBadInputError,
+                         DMNotAField)
 
 from .ddm import DDM
 
@@ -1190,7 +1191,7 @@ class DomainMatrix:
 
         """
         if not self.domain.is_Field:
-            raise ValueError('Not a field')
+            raise DMNotAField('Not a field')
         rref_ddm, pivots = self.rep.rref()
         return self.from_rep(rref_ddm), tuple(pivots)
 
@@ -1217,7 +1218,7 @@ class DomainMatrix:
 
         """
         if not self.domain.is_Field:
-            raise ValueError('Not a field')
+            raise DMNotAField('Not a field')
         rref, pivots = self.rref()
         rows, cols = self.shape
         return self.extract(range(rows), pivots)
@@ -1245,7 +1246,7 @@ class DomainMatrix:
 
         """
         if not self.domain.is_Field:
-            raise ValueError('Not a field')
+            raise DMNotAField('Not a field')
         rref, pivots = self.rref()
         rows, cols = self.shape
         return self.extract(range(len(pivots)), range(cols))
@@ -1273,7 +1274,7 @@ class DomainMatrix:
 
         """
         if not self.domain.is_Field:
-            raise ValueError('Not a field')
+            raise DMNotAField('Not a field')
         return self.from_rep(self.rep.nullspace()[0])
 
     def inv(self):
@@ -1314,7 +1315,7 @@ class DomainMatrix:
 
         """
         if not self.domain.is_Field:
-            raise ValueError('Not a field')
+            raise DMNotAField('Not a field')
         m, n = self.shape
         if m != n:
             raise NonSquareMatrixError
@@ -1390,7 +1391,7 @@ class DomainMatrix:
 
         """
         if not self.domain.is_Field:
-            raise ValueError('Not a field')
+            raise DMNotAField('Not a field')
         L, U, swaps = self.rep.lu()
         return self.from_rep(L), self.from_rep(U), swaps
 
@@ -1442,7 +1443,7 @@ class DomainMatrix:
         if self.shape[0] != rhs.shape[0]:
             raise ShapeError("Shape")
         if not self.domain.is_Field:
-            raise ValueError('Not a field')
+            raise DMNotAField('Not a field')
         sol = self.rep.lu_solve(rhs.rep)
         return self.from_rep(sol)
 
@@ -1452,7 +1453,7 @@ class DomainMatrix:
         if A.shape[0] != b.shape[0]:
             raise ShapeError("Shape")
         if A.domain != b.domain or not A.domain.is_Field:
-            raise ValueError('Not a field')
+            raise DMNotAField('Not a field')
         Aaug = A.hstack(b)
         Arref, pivots = Aaug.rref()
         particular = Arref.from_rep(Arref.rep.particular())
