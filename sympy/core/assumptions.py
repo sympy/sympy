@@ -2,11 +2,11 @@
 This module contains the machinery handling assumptions.
 
 All symbolic objects have assumption attributes that can be accessed via
-.is_<assumption name> attribute.
+``.is_<assumption name>`` attribute.
 
 Assumptions determine certain properties of symbolic objects and can
-have 3 possible values: True, False, None.  True is returned if the
-object has the property and False is returned if it does not or cannot
+have 3 possible values: ``True``, ``False``, ``None``.  ``True`` is returned if the
+object has the property and ``False`` is returned if it does not or cannot
 (i.e. does not make sense):
 
     >>> from sympy import I
@@ -19,7 +19,7 @@ object has the property and False is returned if it does not or cannot
 
 When the property cannot be determined (or when a method is not
 implemented) None will be returned, e.g. a generic symbol, x, may or
-may not be positive so a value of None is returned for x.is_positive.
+may not be positive so a value of ``None`` is returned for ``x.is_positive``.
 
 By default, all symbolic values are in the largest set in the given context
 without specifying the property. For example, a symbol that has a property
@@ -48,6 +48,10 @@ Here follows a list of possible assumption names:
         object can have only values from the set
         of real numbers.
 
+    extended_real
+        object can have only values from the set
+        of real numbers, ``oo`` and ``-oo``.
+
     integer
         object can have only values from the set
         of integers.
@@ -58,15 +62,15 @@ Here follows a list of possible assumption names:
         odd (even) integers [2]_.
 
     prime
-        object is a natural number greater than ``1`` that has
-        no positive divisors other than ``1`` and itself.  See [6]_.
+        object is a natural number greater than 1 that has
+        no positive divisors other than 1 and itself.  See [6]_.
 
     composite
         object is a positive integer that has at least one positive
-        divisor other than ``1`` or the number itself.  See [4]_.
+        divisor other than 1 or the number itself.  See [4]_.
 
     zero
-        object has the value of ``0``.
+        object has the value of 0.
 
     nonzero
         object is a real number that is not zero.
@@ -98,8 +102,15 @@ Here follows a list of possible assumption names:
 
     positive
     nonpositive
-        object can have only positive (only
-        nonpositive) values.
+        object can have only positive (nonpositive) values.
+
+    extended_negative
+    extended_nonnegative
+    extended_positive
+    extended_nonpositive
+    extended_nonzero
+        as without the extended part, but also including infinity with
+        corresponding sign, e.g., extended_positive includes ``oo``
 
     hermitian
     antihermitian
@@ -125,6 +136,9 @@ See Also
     :py:class:`sympy.core.numbers.ImaginaryUnit`
     :py:class:`sympy.core.numbers.Zero`
     :py:class:`sympy.core.numbers.One`
+    :py:class:`sympy.core.numbers.Infinity`
+    :py:class:`sympy.core.numbers.NegativeInfinity`
+    :py:class:`sympy.core.numbers.ComplexInfinity`
 
 Notes
 =====
@@ -173,7 +187,7 @@ The ``generator`` is not necessarily canonical nor is it filtered
 in any way: it records the assumptions used to instantiate a Symbol
 and (for storage purposes) represents a more compact representation
 of the assumptions needed to recreate the full set in
-`Symbol.assumptions0`.
+``Symbol.assumptions0``.
 
 
 References
