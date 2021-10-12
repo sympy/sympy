@@ -513,7 +513,7 @@ class cosh(HyperbolicFunction):
     def _eval_is_zero(self):
         rest, ipi_mult = _peeloff_ipi(self.args[0])
         if ipi_mult and rest.is_zero:
-            (ipi_mult - S.Half).is_integer
+            return (ipi_mult - S.Half).is_integer
 
 
 class tanh(HyperbolicFunction):
