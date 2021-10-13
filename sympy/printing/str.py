@@ -2,6 +2,8 @@
 A Printer for generating readable representation of most sympy classes.
 """
 
+import itertools
+from collections import abc
 from typing import Any, Dict
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
@@ -245,18 +247,21 @@ class StrPrinter(Printer):
             + '[%s, %s]' % (self._print(expr.i), self._print(expr.j))
 
     def _print_MatrixSlice(self, expr):
-        def strslice(x, dim):
-            x = list(x)
-            if x[2] == 1:
-                del x[2]
-            if x[0] == 0:
-                x[0] = ''
-            if x[1] == dim:
-                x[1] = ''
-            return ':'.join(map(lambda arg: self._print(arg), x))
         return (self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) + '[' +
-                strslice(expr.rowslice, expr.parent.rows) + ', ' +
-                strslice(expr.colslice, expr.parent.cols) + ']')
+                self.__str_slice(expr.rowslice, expr.parent.rows) + ', ' +
+                self.__str_slice(expr.colslice, expr.parent.cols) + ']')
+
+    def __str_slice(self, x, dim):
+        if not isinstance(x, abc.Iterable):
+            return self._print(x)
+        x = list(x)
+        if x[2] == 1:
+            del x[2]
+        if x[0] == 0:
+            x[0] = ''
+        if x[1] == dim:
+            x[1] = ''
+        return ':'.join(map(lambda arg: self._print(arg), x))
 
     def _print_DeferredVector(self, expr):
         return expr.name
@@ -488,6 +493,16 @@ class StrPrinter(Printer):
 
     def _print_ArrayElement(self, expr):
         return "%s[%s]" % (expr.parent, ", ".join([self._print(i) for i in expr.indices]))
+
+    def _print_ArraySlice(self, expr):
+        slice_strings = []
+        for slice, max_size in itertools.zip_longest(expr.slices, expr.parent.shape):
+            if slice is None:
+                break
+            slice_strings.append(self.__str_slice(slice, max_size))
+        name = self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)
+        suffix = '[' + ", ".join(slice_strings) + ']'
+        return name + suffix
 
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % self._print(a) for a in expr.args]

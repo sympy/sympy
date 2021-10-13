@@ -5,6 +5,7 @@ A Printer which converts an expression into its LaTeX equivalent.
 from typing import Any, Dict
 
 import itertools
+from collections import abc
 
 from sympy.core import Add, Float, Mod, Mul, Number, S, Symbol
 from sympy.core.alphabets import greeks
@@ -1653,18 +1654,21 @@ class LatexPrinter(Printer):
             + '_{%s, %s}' % (self._print(expr.i), self._print(expr.j))
 
     def _print_MatrixSlice(self, expr):
-        def latexslice(x, dim):
-            x = list(x)
-            if x[2] == 1:
-                del x[2]
-            if x[0] == 0:
-                x[0] = None
-            if x[1] == dim:
-                x[1] = None
-            return ':'.join(self._print(xi) if xi is not None else '' for xi in x)
         return (self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) + r'\left[' +
-                latexslice(expr.rowslice, expr.parent.rows) + ', ' +
-                latexslice(expr.colslice, expr.parent.cols) + r'\right]')
+                self.__latex_slice(expr.rowslice, expr.parent.rows) + ', ' +
+                self.__latex_slice(expr.colslice, expr.parent.cols) + r'\right]')
+
+    def __latex_slice(self, x, dim) -> str:
+        if not isinstance(x, abc.Iterable):
+            return self._print(x)
+        x = list(x)
+        if x[2] == 1:
+            del x[2]
+        if x[0] == 0:
+            x[0] = None
+        if x[1] == dim:
+            x[1] = None
+        return ':'.join(self._print(xi) if xi is not None else '' for xi in x)
 
     def _print_BlockMatrix(self, expr):
         return self._print(expr.blocks)
@@ -1909,6 +1913,16 @@ class LatexPrinter(Printer):
 
     def _print_ArrayElement(self, expr):
         return "{{%s}_{%s}}" % (expr.parent, ", ".join([f"{self._print(i)}" for i in expr.indices]))
+
+    def _print_ArraySlice(self, expr):
+        slice_strings = []
+        for slice, max_size in itertools.zip_longest(expr.slices, expr.parent.shape):
+            if slice is None:
+                break
+            slice_strings.append(self.__latex_slice(slice, max_size))
+        name = self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)
+        suffix = R'\left[' + ", ".join(slice_strings) + R'\right]'
+        return name + suffix
 
     def _print_UniversalSet(self, expr):
         return r"\mathbb{U}"

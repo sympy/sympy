@@ -25,6 +25,7 @@ from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
 
 x, y, z, w, t = symbols('x,y,z,w,t')
+k, m, n = symbols('k m n', integer=True)
 d = Dummy('d')
 
 
@@ -1128,3 +1129,5 @@ def test_printing_str_array_expressions():
     assert sstr(ArraySymbol("A", 2, 3, 4)) == "A"
     A = ArraySymbol("A")
     assert sstr(ArrayElement(A, (2, 1/(1-x), 0))) == "A[2, 1/(1 - x), 0]"
+    assert sstr(A[:2]) == R"A[:2]"
+    assert sstr(A[2:n:k, m]) == R"A[2:n:k, m]"

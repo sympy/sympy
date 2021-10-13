@@ -2811,3 +2811,5 @@ def test_printing_latex_array_expressions():
     assert latex(ArraySymbol("A", 2, 3, 4)) == "A"
     A = ArraySymbol("A")
     assert latex(ArrayElement(A, (2, 1/(1-x), 0))) == "{{A}_{2, \\frac{1}{1 - x}, 0}}"
+    assert latex(A[:2]) == R"A\left[:2\right]"
+    assert latex(A[2:n:k, m]) == R"A\left[2:n:k, m\right]"
