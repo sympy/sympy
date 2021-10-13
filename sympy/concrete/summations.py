@@ -351,7 +351,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         # next try to combine any interior sums for further simplification
         result = Add(sum_combine(s_t), *o_t)
-
+        result = result.simplify(**kwargs)
         return factor_sum(result, limits=self.limits)
 
     def is_convergent(self):
