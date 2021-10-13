@@ -53,7 +53,7 @@ class ArrayElement(_ArrayExpr):
     An element of an array.
     """
 
-    name: ArraySymbol = property(lambda self: self._args[0])
+    parent: ArraySymbol = property(lambda self: self._args[0])
     indices = property(lambda self: self._args[1])
 
     def __new__(cls, parent: ArraySymbol, indices) -> "ArrayElement":

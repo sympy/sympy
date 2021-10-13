@@ -487,7 +487,7 @@ class StrPrinter(Printer):
         return expr._print()
 
     def _print_ArrayElement(self, expr):
-        return "%s[%s]" % (expr.name, ", ".join([self._print(i) for i in expr.indices]))
+        return "%s[%s]" % (expr.parent, ", ".join([self._print(i) for i in expr.indices]))
 
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % self._print(a) for a in expr.args]
