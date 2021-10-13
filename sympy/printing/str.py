@@ -486,9 +486,6 @@ class StrPrinter(Printer):
     def _print_TensAdd(self, expr):
         return expr._print()
 
-    def _print_ArraySymbol(self, expr):
-        return self._print(expr.name)
-
     def _print_ArrayElement(self, expr):
         return "%s[%s]" % (expr.name, ", ".join([self._print(i) for i in expr.indices]))
 
@@ -841,6 +838,7 @@ class StrPrinter(Printer):
 
     def _print_Symbol(self, expr):
         return expr.name
+    _print_ArraySymbol = _print_Symbol
     _print_MatrixSymbol = _print_Symbol
     _print_RandomSymbol = _print_Symbol
 

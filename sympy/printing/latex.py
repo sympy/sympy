@@ -1905,7 +1905,7 @@ class LatexPrinter(Printer):
             )
 
     def _print_ArraySymbol(self, expr):
-        return self._print(expr.name)
+        return self._print_MatrixSymbol(expr)
 
     def _print_ArrayElement(self, expr):
         return "{{%s}_{%s}}" % (expr.name, ", ".join([f"{self._print(i)}" for i in expr.indices]))

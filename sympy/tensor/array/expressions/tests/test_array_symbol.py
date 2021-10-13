@@ -1,6 +1,6 @@
 import pytest
 
-from sympy import Symbol, symbols
+from sympy import symbols
 from sympy.tensor.array.expressions.array_expressions import ArrayElement, ArraySymbol
 
 
@@ -15,7 +15,7 @@ class TestArraySymbol:
     )
     def test_constructor(self, shape: tuple):
         A = ArraySymbol("A", *shape)
-        assert A.name == Symbol("A")
+        assert A.name == "A"
         assert A.shape == shape
 
     def test_equality(self):

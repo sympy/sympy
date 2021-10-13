@@ -10,6 +10,7 @@ import typing
 from sympy import Expr, ImmutableDenseNDimArray, S, Symbol, ZeroMatrix, Basic, tensorproduct, permutedims, \
     Tuple, tensordiagonal, Lambda, Dummy, Function, MatrixExpr, NDimArray, Indexed, IndexedBase, default_sort_key, \
     tensorcontraction, diagonalize_vector, Mul
+from sympy.core.symbol import Str
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.utils import _apply_recursively_over_nested_lists, _sort_contraction_indices, \
     _get_mapping_from_subranks, _build_push_indices_up_func_transformation, _get_contraction_links, \
@@ -28,14 +29,14 @@ class ArraySymbol(_ArrayExpr):
     Symbol representing an array expression
     """
 
-    name = property(lambda self: self._args[0])
+    name: str = property(lambda self: self._args[0].name)
     shape = property(lambda self: self._args[1:])
 
-    def __new__(cls, symbol, *shape) -> "ArraySymbol":
-        if isinstance(symbol, str):
-            symbol = Symbol(symbol)
+    def __new__(cls, name, *shape) -> "ArraySymbol":
+        if isinstance(name, str):
+            name = Str(name)
         shape = map(_sympify, shape)
-        return Expr.__new__(cls, symbol, *shape)
+        return Expr.__new__(cls, name, *shape)
 
     def __getitem__(self, item):
         return ArrayElement(self, item)
