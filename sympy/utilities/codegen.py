@@ -2173,6 +2173,9 @@ def make_routine(name, expr, argument_sequence=None,
         language-agnostic but the precise way one is created, error
         checking, etc depend on the language.  [default: "F95"].
 
+    Notes
+    =====
+
     A decision about whether to use output arguments or return values is made
     depending on both the language and the particular mathematical expressions.
     For an expression of type Equality, the left hand side is typically made
