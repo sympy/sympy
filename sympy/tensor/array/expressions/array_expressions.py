@@ -28,19 +28,14 @@ class ArraySymbol(_ArrayExpr):
     Symbol representing an array expression
     """
 
+    name = property(lambda self: self._args[0])
+    shape = property(lambda self: self._args[1:])
+
     def __new__(cls, symbol, *shape) -> "ArraySymbol":
         if isinstance(symbol, str):
             symbol = Symbol(symbol)
         shape = map(_sympify, shape)
         return Expr.__new__(cls, symbol, *shape)
-
-    @property
-    def name(self):
-        return self._args[0]
-
-    @property
-    def shape(self):
-        return self._args[1:]
 
     def __getitem__(self, item):
         return ArrayElement(self, item)
@@ -56,6 +51,10 @@ class ArrayElement(_ArrayExpr):
     """
     An element of an array.
     """
+
+    name = property(lambda self: self._args[0])
+    indices = property(lambda self: self._args[1])
+
     def __new__(cls, name, indices) -> "ArrayElement":
         if isinstance(name, str):
             name = Symbol(name)
@@ -68,29 +67,19 @@ class ArrayElement(_ArrayExpr):
             raise ValueError("shape contains negative values")
         return Expr.__new__(cls, name, indices)
 
-    @property
-    def name(self):
-        return self._args[0]
-
-    @property
-    def indices(self):
-        return self._args[1]
-
 
 class ZeroArray(_ArrayExpr):
     """
     Symbolic array of zeros. Equivalent to ``ZeroMatrix`` for matrices.
     """
 
+    shape = property(lambda self: self._args)
+
     def __new__(cls, *shape) -> "ZeroArray":
         if len(shape) == 0:
             return S.Zero
         shape = map(_sympify, shape)
         return Expr.__new__(cls, *shape)
-
-    @property
-    def shape(self):
-        return self._args
 
     def as_explicit(self):
         if not all(i.is_Integer for i in self.shape):
@@ -103,15 +92,13 @@ class OneArray(_ArrayExpr):
     Symbolic array of ones.
     """
 
+    shape = property(lambda self: self._args)
+
     def __new__(cls, *shape) -> "OneArray":
         if len(shape) == 0:
             return S.One
         shape = map(_sympify, shape)
         return Expr.__new__(cls, *shape)
-
-    @property
-    def shape(self):
-        return self._args
 
     def as_explicit(self):
         if not all(i.is_Integer for i in self.shape):
