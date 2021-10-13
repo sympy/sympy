@@ -1,3 +1,4 @@
+from sympy.core.numbers import Number
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
@@ -332,8 +333,14 @@ class Product(ExprWithIntLimits):
 
         elif term.is_Add:
             factored = factor_terms(term, fraction=True)
-            if factored.simplify().is_zero:
-                return S.Zero
+            if isinstance(factored.simplify(), Number):
+                factored_simplified = factored.simplify()
+                if factored_simplified < 1:
+                    return S.Zero
+                elif factored_simplified == S.One:
+                    return S.One
+                elif factored_simplified > 1:
+                    return S.Infinity
             if factored.is_Mul:
                 return self._eval_product(factored, (k, a, n))
 
