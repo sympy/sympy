@@ -1250,6 +1250,11 @@ def test_as_coeff_exponent():
 
 
 def test_extractions():
+    for base in (2, S.Exp1):
+        assert Pow(base**x, 3, evaluate=False
+            ).extract_multiplicatively(base**x) == base**(2*x)
+        assert (base**(5*x)).extract_multiplicatively(
+            base**(3*x)) == base**(2*x)
     assert ((x*y)**3).extract_multiplicatively(x**2 * y) == x*y**2
     assert ((x*y)**3).extract_multiplicatively(x**4 * y) is None
     assert (2*x).extract_multiplicatively(2) == x
