@@ -21,10 +21,13 @@ from sympy.tensor.array.expressions.utils import _apply_recursively_over_nested_
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import _af_invert
 from sympy.core.sympify import _sympify
+from sympy.tensor.array.ndim_array import ArrayKind
 
 
 class _ArrayExpr(Expr):
     _iterable = False  # required for lambdify
+
+    kind = ArrayKind()
 
 
 class ArraySymbol(_ArrayExpr):
