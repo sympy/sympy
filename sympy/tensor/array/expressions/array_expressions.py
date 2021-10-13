@@ -28,12 +28,11 @@ class ArraySymbol(_ArrayExpr):
     Symbol representing an array expression
     """
 
-    def __new__(cls, symbol, *shape):
+    def __new__(cls, symbol, *shape) -> "ArraySymbol":
         if isinstance(symbol, str):
             symbol = Symbol(symbol)
         shape = map(_sympify, shape)
-        obj = Expr.__new__(cls, symbol, *shape)
-        return obj
+        return Expr.__new__(cls, symbol, *shape)
 
     @property
     def name(self):
@@ -57,7 +56,7 @@ class ArrayElement(_ArrayExpr):
     """
     An element of an array.
     """
-    def __new__(cls, name, indices):
+    def __new__(cls, name, indices) -> "ArrayElement":
         if isinstance(name, str):
             name = Symbol(name)
         name = _sympify(name)
@@ -67,8 +66,7 @@ class ArrayElement(_ArrayExpr):
                 raise ValueError("shape is out of bounds")
         if any((i < 0) == True for i in indices):
             raise ValueError("shape contains negative values")
-        obj = Expr.__new__(cls, name, indices)
-        return obj
+        return Expr.__new__(cls, name, indices)
 
     @property
     def name(self):
@@ -84,12 +82,11 @@ class ZeroArray(_ArrayExpr):
     Symbolic array of zeros. Equivalent to ``ZeroMatrix`` for matrices.
     """
 
-    def __new__(cls, *shape):
+    def __new__(cls, *shape) -> "ZeroArray":
         if len(shape) == 0:
             return S.Zero
         shape = map(_sympify, shape)
-        obj = Expr.__new__(cls, *shape)
-        return obj
+        return Expr.__new__(cls, *shape)
 
     @property
     def shape(self):
@@ -106,12 +103,11 @@ class OneArray(_ArrayExpr):
     Symbolic array of ones.
     """
 
-    def __new__(cls, *shape):
+    def __new__(cls, *shape) -> "OneArray":
         if len(shape) == 0:
             return S.One
         shape = map(_sympify, shape)
-        obj = Expr.__new__(cls, *shape)
-        return obj
+        return Expr.__new__(cls, *shape)
 
     @property
     def shape(self):
