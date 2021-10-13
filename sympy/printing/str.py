@@ -255,7 +255,7 @@ class StrPrinter(Printer):
         if not isinstance(x, abc.Iterable):
             return self._print(x)
         x = list(x)
-        if x[2] == 1:
+        if x[2] == 1 or x[2] is None:
             del x[2]
         if x[0] == 0:
             x[0] = ''

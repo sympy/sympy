@@ -149,6 +149,8 @@ def _compute_slice_size(slice, max_size):
     if not isinstance(slice, Tuple):
         return 1
     start, stop, step = slice
+    if stop is None and max_size is None:
+        return None
     size = stop - start
     size = size if step == 1 or step is None else floor(size / step)
     if max_size is not None and (size > max_size) == True:
