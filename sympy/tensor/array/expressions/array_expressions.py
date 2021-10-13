@@ -133,9 +133,9 @@ class ArraySlice(_ArrayExpr):
             if isinstance(s, slice):
                 new_slice = Tuple(*normalize(s, size))
             else:
-                new_slice = s
+                new_slice = _sympify(s)
             normalized_slices.append(new_slice)
-        return Expr.__new__(cls, parent, normalized_slices)
+        return Expr.__new__(cls, parent, Tuple(*normalized_slices))
 
     @property
     def shape(self) -> typing.Tuple[Union[Basic, int], ...]:
