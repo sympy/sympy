@@ -150,7 +150,10 @@ def _compute_slice_size(slice, max_size):
         return 1
     start, stop, step = slice
     size = stop - start
-    return size if step == 1 or step is None else floor(size / step)
+    size = size if step == 1 or step is None else floor(size / step)
+    if max_size is not None and (size > max_size) == True:
+        return max_size
+    return size
 
 
 class ZeroArray(_ArrayExpr):

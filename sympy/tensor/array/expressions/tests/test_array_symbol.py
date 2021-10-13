@@ -50,3 +50,12 @@ class TestArraySymbol:
         assert A_slice.shape == (2, 5)
         A_slice = ArraySymbol("A")[1:n, m, 3:7:2]
         assert A_slice.shape == (n - 1, 1, 2)
+
+    def test_getitem_slice_overflow(self):
+        assert ArraySymbol("A", 3)[-5:].shape == (3,)
+        assert ArraySymbol("A", 3)[:5].shape == (3,)
+        assert ArraySymbol("A", 3)[:5:2].shape == (2,)
+        assert ArraySymbol("A", n)[-5:].shape == (5,)
+        assert ArraySymbol("A", n)[:5].shape == (5,)
+        assert ArraySymbol("A", n)[:5:2].shape == (2,)
+        assert ArraySymbol("A", n, n)[:5:2].shape == (2, n)
