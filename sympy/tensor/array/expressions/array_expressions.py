@@ -7,7 +7,7 @@ from typing import Optional, List, Dict
 
 import typing
 
-from sympy import Expr, ImmutableDenseNDimArray, S, Symbol, ZeroMatrix, Basic, tensorproduct, permutedims, \
+from sympy import Expr, ImmutableDenseNDimArray, S, ZeroMatrix, Basic, tensorproduct, permutedims, \
     Tuple, tensordiagonal, Lambda, Dummy, Function, MatrixExpr, NDimArray, Indexed, IndexedBase, default_sort_key, \
     tensorcontraction, diagonalize_vector, Mul
 from sympy.core.symbol import Str
@@ -53,20 +53,21 @@ class ArrayElement(_ArrayExpr):
     An element of an array.
     """
 
-    name = property(lambda self: self._args[0])
+    name: ArraySymbol = property(lambda self: self._args[0])
     indices = property(lambda self: self._args[1])
 
-    def __new__(cls, name, indices) -> "ArrayElement":
-        if isinstance(name, str):
-            name = Symbol(name)
-        name = _sympify(name)
+    def __new__(cls, parent: ArraySymbol, indices) -> "ArrayElement":
+        if not isinstance(parent, ArraySymbol):
+            raise TypeError(
+                f"{cls.__name__} has to be constructed from an"
+                f"{ArraySymbol.__name__}, not {type(parent).__name__}"
+            )
         indices = _sympify(indices)
-        if hasattr(name, "shape"):
-            if any((i >= s) == True for i, s in zip(indices, name.shape)):
-                raise ValueError("shape is out of bounds")
+        if any((i >= s) == True for i, s in zip(indices, parent.shape)):
+            raise ValueError("shape is out of bounds")
         if any((i < 0) == True for i in indices):
             raise ValueError("shape contains negative values")
-        return Expr.__new__(cls, name, indices)
+        return Expr.__new__(cls, parent, indices)
 
 
 class ZeroArray(_ArrayExpr):

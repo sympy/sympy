@@ -1126,4 +1126,5 @@ def test_AppliedPredicate():
 
 def test_printing_str_array_expressions():
     assert sstr(ArraySymbol("A", 2, 3, 4)) == "A"
-    assert sstr(ArrayElement("A", (2, 1/(1-x), 0))) == "A[2, 1/(1 - x), 0]"
+    A = ArraySymbol("A")
+    assert sstr(ArrayElement(A, (2, 1/(1-x), 0))) == "A[2, 1/(1 - x), 0]"
