@@ -70,15 +70,23 @@ class ArrayElement(_ArrayExpr):
         indices = _sympify(indices)
         if any((i >= s) == True for i, s in zip(indices, parent.shape)):
             raise ValueError("shape is out of bounds")
-        if len(parent.shape) and len(indices) > len(parent.shape):
-            raise IndexError(
-                f"Too many indices for {cls.__name__}: parent"
-                f" {type(parent).__name__} is {len(parent.shape)}-dimensional,"
-                f" but {len(indices)} indices were given"
-            )
-        if any((i < 0) == True for i in indices):
-            raise ValueError("shape contains negative values")
-        return Expr.__new__(cls, parent, indices)
+        if len(parent.shape):
+            if len(indices) > len(parent.shape):
+                raise IndexError(
+                    f"Too many indices for {cls.__name__}: parent"
+                    f" {type(parent).__name__} is {len(parent.shape)}-dimensional,"
+                    f" but {len(indices)} indices were given"
+                )
+            normalized_indices = []
+            for i, s in zip(indices, parent.shape):
+                if -s <= i < 0:
+                    index = i + s
+                else:
+                    index = i
+                normalized_indices.append(index)
+        else:
+            normalized_indices = list(indices)
+        return Expr.__new__(cls, parent, Tuple(*normalized_indices))
 
 
 class ZeroArray(_ArrayExpr):

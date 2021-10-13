@@ -33,10 +33,9 @@ class TestArraySymbol:
         A = ArraySymbol("A", 3, 2, 4)
         assert A[2, 1] == ArrayElement(A, indices=(2, 1))
         assert A[2, 1, 3] == ArrayElement(A, indices=(2, 1, 3))
+        assert A[-2, -1, 3] == ArrayElement(A, indices=(1, 1, 3))
         with pytest.raises(ValueError, match="shape is out of bounds"):
             A[4, 1, 3]
-        with pytest.raises(ValueError, match="shape contains negative values"):
-            A[0, -1]
         with pytest.raises(
             IndexError,
             match=(
