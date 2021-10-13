@@ -1,7 +1,10 @@
 '''Functions returning normal forms of matrices'''
 
+from collections import defaultdict
+
 from .domainmatrix import DomainMatrix
 from .exceptions import DMDomainError, DMShapeError
+from sympy.ntheory.modular import symmetric_residue
 from sympy.polys.domains import QQ, ZZ
 
 
@@ -196,7 +199,7 @@ def _hermite_normal_form(A):
     # A is an m x n matrix.
     m, n = A.shape
     rows = min(m, n)
-    A = list(A.to_dense().rep.copy())
+    A = A.to_dense().rep.copy()
     # Our goal is to put pivot entries in the rightmost columns.
     # Invariant: Before processing each row, k should be the index of the
     # leftmost column in which we have so far put a pivot.
@@ -232,7 +235,7 @@ def _hermite_normal_form(A):
                 add_columns(A, j, k, 1, -q, 0, 1)
     # Finally, the HNF consists of those columns of A in which we succeeded in making
     # a nonzero pivot.
-    return DomainMatrix(A, (m, n), ZZ)[:, k:]
+    return DomainMatrix.from_rep(A)[:, k:]
 
 
 def _hermite_normal_form_modulo_D(A, D):
@@ -280,7 +283,6 @@ def _hermite_normal_form_modulo_D(A, D):
     if not A.domain.is_ZZ:
         raise DMDomainError('Matrix must be over domain ZZ.')
 
-    from sympy.ntheory.modular import symmetric_residue
     def add_columns_mod_R(m, R, i, j, a, b, c, d):
         # replace m[:, i] by (a*m[:, i] + b*m[:, j]) % R
         # and m[:, j] by (c*m[:, i] + d*m[:, j]) % R
@@ -289,13 +291,12 @@ def _hermite_normal_form_modulo_D(A, D):
             m[k][i] = symmetric_residue((a * e + b * m[k][j]) % R, R)
             m[k][j] = symmetric_residue((c * e + d * m[k][j]) % R, R)
 
-    from collections import defaultdict
     W = defaultdict(dict)
 
     m, n = A.shape
     if n < m:
         raise DMShapeError('Matrix must have at least as many columns as rows.')
-    A = list(A.to_dense().rep.copy())
+    A = A.to_dense().rep.copy()
     k = n
     R = ZZ(abs(D))
     for i in range(m - 1, -1, -1):
