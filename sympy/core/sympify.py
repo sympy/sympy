@@ -97,10 +97,10 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     Explanation
     ===========
 
-    It will convert Python ints into instances of :class:`~.Integer`,
-    floats into instances of :class:`~.Float`, etc. It is also able to coerce symbolic
-    expressions which inherit from :class:`~.Basic`. This can be useful in cooperation
-    with SAGE.
+    It will convert Python ints into instances of :class:`~.Integer`, floats
+    into instances of :class:`~.Float`, etc. It is also able to coerce
+    symbolic expressions which inherit from :class:`~.Basic`. This can be
+    useful in cooperation with SAGE.
 
     .. warning::
         Note that this function uses ``eval``, and thus shouldn't be used on
@@ -175,9 +175,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     If you want *all* single-letter and Greek-letter variables to be symbols
     then you can use the clashing-symbols dictionaries that have been defined
-    there as private variables: _clash1 (single-letter variables), _clash2
-    (the multi-letter Greek names) or _clash (both single and multi-letter
-    names that are defined in abc).
+    there as private variables: ``_clash1`` (single-letter variables),
+    ``_clash2`` (the multi-letter Greek names) or ``_clash`` (both single and
+    multi-letter names that are defined in ``abc``).
 
     >>> from sympy.abc import _clash1
     >>> set(_clash1)
@@ -209,7 +209,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     operators with their SymPy equivalents, so if an operand redefines any
     of those operations, the redefined operators will not be used. If
     argument a is not a string, the mathematical expression is evaluated
-    before being passed to sympify, so adding evaluate=False will still
+    before being passed to sympify, so adding ``evaluate=False`` will still
     return the evaluated result of expression.
 
     >>> sympify('2**2 / 3 + 5')
@@ -287,7 +287,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     that are very different in structure than what was entered. Until such
     autosimplification is no longer done, the ``kernS`` function might be of
     some use. In the example below you can see how an expression reduces to
-    -1 by autosimplification, but does not do so when ``kernS`` is used.
+    $-1$ by autosimplification, but does not do so when ``kernS`` is used.
 
     >>> from sympy.core.sympify import kernS
     >>> from sympy.abc import x
@@ -324,7 +324,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         other cases, a SympifyError is raised.
 
     rational : bool, optional
-        If ``True``, converts floats into :class:`Rational`.
+        If ``True``, converts floats into :class:`~.Rational`.
         If ``False``, it lets floats remain as it is.
         Used only when input is a string.
 
@@ -478,10 +478,10 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
 def _sympify(a):
     """
-    Short version of sympify for internal usage for ``__add__`` and ``__eq__`` methods
-    where it is ok to allow some things (like Python integers and floats) in
-    the expression. This excludes things (like strings) that are unwise to
-    allow into such an expression.
+    Short version of :func:`~.sympify` for internal usage for ``__add__`` and
+    ``__eq__`` methods where it is ok to allow some things (like Python
+    integers and floats) in the expression. This excludes things (like strings)
+    that are unwise to allow into such an expression.
 
     >>> from sympy import Integer
     >>> Integer(1) == 1
