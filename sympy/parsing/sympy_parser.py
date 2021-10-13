@@ -914,7 +914,7 @@ def eval_expr(code, local_dict, global_dict):
 
 
 def parse_expr(s, local_dict=None, transformations=standard_transformations,
-               global_dict=None, evaluate=True):
+               global_dict=None, evaluate=True, all=None, implicit=None):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
@@ -1025,6 +1025,12 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     >>> parse_expr('.3x', transformations=T[:])
     3*x/10
 
+    As a further convenience, keywords `implicit` and `all`, when set
+    to True, will select 0-5 and all the transformations, respectively.
+
+    >>> parse_expr('.3x', all=True)
+    3*x/10
+
     See Also
     ========
 
@@ -1044,7 +1050,18 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     elif not isinstance(global_dict, dict):
         raise TypeError('expecting global_dict to be a dict')
 
-    transformations = transformations or ()
+    if all:
+        if not (implicit is None and
+                transformations == standard_transformations):
+            raise ValueError('give transformations or use single selector keyword')
+        transformations =  T[:]
+    elif implicit:
+        if not (all is None and
+                transformations == standard_transformations):
+            raise ValueError('give transformations or use single selector keyword')
+        transformations = T[:6]
+    elif not transformations:
+        transformations = ()
     if transformations:
         if not iterable(transformations):
             raise TypeError(

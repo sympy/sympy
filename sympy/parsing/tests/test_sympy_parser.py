@@ -297,7 +297,8 @@ def test_issue_19501():
     assert eq.free_symbols == {x}
 
 
-def test_definitions():
+def test_parsing_definitions():
+    from sympy.abc import x
     assert len(_transformation) == 12  # if this changes, extend below
     assert _transformation[0] == lambda_notation
     assert _transformation[1] == auto_symbol
@@ -315,3 +316,5 @@ def test_definitions():
     t = _transformation
     assert T[-1, 0] == (t[len(t) - 1], t[0])
     assert T[:5, 8] == standard_transformations + (t[8],)
+    assert parse_expr('0.3x^2', all=True) == 3*x**2/10
+    assert parse_expr('sin 3x', implicit=True) == sin(3*x)
