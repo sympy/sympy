@@ -3,8 +3,8 @@ from collections import defaultdict, Counter
 from functools import reduce
 import itertools
 from collections import abc
-from itertools import accumulate
-from typing import Dict, List, Optional, Union
+from itertools import accumulate, zip_longest
+from typing import Dict, List, Optional, Union, overload
 
 import typing
 
@@ -12,7 +12,9 @@ from sympy import Expr, ImmutableDenseNDimArray, S, ZeroMatrix, Basic, tensorpro
     Tuple, tensordiagonal, Lambda, Dummy, Function, MatrixExpr, NDimArray, Indexed, IndexedBase, default_sort_key, \
     tensorcontraction, diagonalize_vector, Mul
 from sympy.core.symbol import Str
+from sympy.functions.elementary.integers import floor
 from sympy.matrices.expressions.matexpr import MatrixElement
+from sympy.matrices.expressions.slice import normalize
 from sympy.tensor.array.expressions.utils import _apply_recursively_over_nested_lists, _sort_contraction_indices, \
     _get_mapping_from_subranks, _build_push_indices_up_func_transformation, _get_contraction_links, \
     _build_push_indices_down_func_transformation
@@ -39,11 +41,31 @@ class ArraySymbol(_ArrayExpr):
         shape = map(_sympify, shape)
         return Expr.__new__(cls, name, *shape)
 
-    def __getitem__(self, key: typing.Tuple[Union[int, Basic], ...]) -> "ArrayElement":
+    @overload
+    def __getitem__(self, key: Union[Basic, int]) -> "ArrayElement":
+        ...
+
+    @overload
+    def __getitem__(self, key: slice) -> "ArraySlice":
+        ...
+
+    @overload
+    def __getitem__(self, key: typing.Tuple[Union[Basic, int], ...]) -> "ArrayElement":
+        ...
+
+    @overload
+    def __getitem__(
+        self, key: typing.Tuple[Union[Basic, int, slice], ...]
+    ) -> "ArraySlice":
+        ...
+
+    def __getitem__(self, key):
         if isinstance(key, abc.Iterable):
-            indices = key
+            indices = tuple(key)
         else:
             indices = (key,)
+        if any(isinstance(i, slice) for i in indices):
+            return ArraySlice(self, indices)
         return ArrayElement(self, indices)
 
     def as_explicit(self):
@@ -62,11 +84,7 @@ class ArrayElement(_ArrayExpr):
     indices = property(lambda self: self._args[1])
 
     def __new__(cls, parent: ArraySymbol, indices) -> "ArrayElement":
-        if not isinstance(parent, ArraySymbol):
-            raise TypeError(
-                f"{cls.__name__} has to be constructed from an"
-                f"{ArraySymbol.__name__}, not {type(parent).__name__}"
-            )
+        _assert_parent_type(cls, parent)
         indices = _sympify(indices)
         if any((i >= s) == True for i, s in zip(indices, parent.shape)):
             raise ValueError("shape is out of bounds")
@@ -87,6 +105,52 @@ class ArrayElement(_ArrayExpr):
         else:
             normalized_indices = list(indices)
         return Expr.__new__(cls, parent, Tuple(*normalized_indices))
+
+
+def _assert_parent_type(cls, parent) -> None:
+    if not isinstance(parent, ArraySymbol):
+        raise TypeError(
+            f"{cls.__name__} has to be constructed from an"
+            f"{ArraySymbol.__name__}, not {type(parent).__name__}"
+        )
+
+
+class ArraySlice(_ArrayExpr):
+    parent: ArraySymbol = property(lambda self: self.args[0])
+    slices: typing.Tuple[Tuple, ...] = property(lambda self: tuple(self.args[1]))
+
+    def __new__(
+        cls, parent: ArraySymbol, slices: typing.Tuple[Union[Basic, int, slice], ...]
+    ) -> "ArraySlice":
+        _assert_parent_type(cls, parent)
+        normalized_slices = []
+        for s, size in zip_longest(slices, parent.shape):
+            if s is None:
+                break
+            if isinstance(s, slice):
+                new_slice = Tuple(*normalize(s, size))
+            else:
+                new_slice = s
+            normalized_slices.append(new_slice)
+        return Expr.__new__(cls, parent, normalized_slices)
+
+    @property
+    def shape(self) -> typing.Tuple[Union[Basic, int], ...]:
+        shape = [
+            _compute_slice_size(slice, shape)
+            for slice, shape in zip_longest(self.slices, self.parent.shape)
+        ]
+        return tuple(shape)
+
+
+def _compute_slice_size(slice, max_size):
+    if slice is None:
+        return max_size
+    if not isinstance(slice, Tuple):
+        return 1
+    start, stop, step = slice
+    size = stop - start
+    return size if step == 1 or step is None else floor(size / step)
 
 
 class ZeroArray(_ArrayExpr):

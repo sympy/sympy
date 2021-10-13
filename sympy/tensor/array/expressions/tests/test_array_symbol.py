@@ -3,6 +3,7 @@ import pytest
 from sympy import symbols
 from sympy.tensor.array.expressions.array_expressions import ArrayElement, ArraySymbol
 
+k, m, n = symbols("k m n")
 
 class TestArraySymbol:
     @pytest.mark.parametrize(
@@ -10,7 +11,7 @@ class TestArraySymbol:
         [
             (),
             (3, 2, 4),
-            symbols("k m n"),
+            (k, m, n),
         ],
     )
     def test_constructor(self, shape: tuple):
@@ -19,7 +20,6 @@ class TestArraySymbol:
         assert A.shape == shape
 
     def test_equality(self):
-        m, n = symbols("m n")
         assert ArraySymbol("A") == ArraySymbol("A")
         assert ArraySymbol("A") != ArraySymbol("B")
         assert ArraySymbol("A", 2, 3) != ArraySymbol("A")
@@ -44,3 +44,9 @@ class TestArraySymbol:
             )
         ):
             A[0, 1, 2, 5]
+
+    def test_getitem_slice(self):
+        A_slice = ArraySymbol("A")[1:3, :5]
+        assert A_slice.shape == (2, 5)
+        A_slice = ArraySymbol("A")[1:n, m, 3:7:2]
+        assert A_slice.shape == (n - 1, 1, 2)
