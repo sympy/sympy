@@ -24,7 +24,7 @@ from sympy.core.sympify import _sympify
 
 
 class _ArrayExpr(Expr):
-    pass
+    _iterable = False  # required for lambdify
 
 
 class ArraySymbol(_ArrayExpr):
