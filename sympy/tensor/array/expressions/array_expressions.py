@@ -31,7 +31,6 @@ class ArraySymbol(_ArrayExpr):
     def __new__(cls, symbol, *shape):
         if isinstance(symbol, str):
             symbol = Symbol(symbol)
-        # symbol = _sympify(symbol)
         shape = map(_sympify, shape)
         obj = Expr.__new__(cls, symbol, *shape)
         return obj
