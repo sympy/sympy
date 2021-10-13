@@ -37,3 +37,11 @@ class TestArraySymbol:
             A[4, 1, 3]
         with pytest.raises(ValueError, match="shape contains negative values"):
             A[0, -1]
+        with pytest.raises(
+            IndexError,
+            match=(
+                f"Too many indices for {ArrayElement.__name__}: parent "
+                f"{ArraySymbol.__name__} is 3-dimensional, but 4 indices were given"
+            )
+        ):
+            A[0, 1, 2, 5]

@@ -70,6 +70,12 @@ class ArrayElement(_ArrayExpr):
         indices = _sympify(indices)
         if any((i >= s) == True for i, s in zip(indices, parent.shape)):
             raise ValueError("shape is out of bounds")
+        if len(parent.shape) and len(indices) > len(parent.shape):
+            raise IndexError(
+                f"Too many indices for {cls.__name__}: parent"
+                f" {type(parent).__name__} is {len(parent.shape)}-dimensional,"
+                f" but {len(indices)} indices were given"
+            )
         if any((i < 0) == True for i in indices):
             raise ValueError("shape contains negative values")
         return Expr.__new__(cls, parent, indices)
