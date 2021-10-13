@@ -2,8 +2,9 @@ import operator
 from collections import defaultdict, Counter
 from functools import reduce
 import itertools
+from collections import abc
 from itertools import accumulate
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional, Union
 
 import typing
 
@@ -38,8 +39,12 @@ class ArraySymbol(_ArrayExpr):
         shape = map(_sympify, shape)
         return Expr.__new__(cls, name, *shape)
 
-    def __getitem__(self, item):
-        return ArrayElement(self, item)
+    def __getitem__(self, key: typing.Tuple[Union[int, Basic], ...]) -> "ArrayElement":
+        if isinstance(key, abc.Iterable):
+            indices = key
+        else:
+            indices = (key,)
+        return ArrayElement(self, indices)
 
     def as_explicit(self):
         if not all(i.is_Integer for i in self.shape):
