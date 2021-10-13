@@ -30,6 +30,8 @@ class TestArraySymbol:
         A = ArraySymbol("A")
         assert A[0] == ArrayElement(A, indices=(0,))
         assert A[9, 7] == ArrayElement(A, indices=(9, 7))
+        A = ArraySymbol("A", n)
+        assert A[2] == ArrayElement(A, indices=(2,))
         A = ArraySymbol("A", 3, 2, 4)
         assert A[2, 1] == ArrayElement(A, indices=(2, 1))
         assert A[2, 1, 3] == ArrayElement(A, indices=(2, 1, 3))

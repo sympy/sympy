@@ -97,7 +97,7 @@ class ArrayElement(_ArrayExpr):
                 )
             normalized_indices = []
             for i, s in zip(indices, parent.shape):
-                if -s <= i < 0:
+                if s.is_Integer and -s <= i < 0:
                     index = i + s
                 else:
                     index = i
