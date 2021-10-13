@@ -1,0 +1,30 @@
+repos:
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+      - id: check-useless-excludes
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+        exclude: >
+          (?x)^(
+            .*\.ipynb|
+            .*\.svg
+          )$
+      - id: mixed-line-ending
+      - id: name-tests-test
+        name: Tests should start with test_
+        args: ["--django"]
+        exclude: >
+          (?x)^(
+            sympy/testing/tests/diagnose_imports\.py
+          )$
+      - id: trailing-whitespace
+
+  - repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: v1.5.7
+    hooks:
+      - id: autopep8
