@@ -914,7 +914,7 @@ def eval_expr(code, local_dict, global_dict):
 
 
 def parse_expr(s, local_dict=None, transformations=standard_transformations,
-               global_dict=None, evaluate=True, all=None, implicit=None):
+               global_dict=None, evaluate=True):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
@@ -931,12 +931,13 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         with ``from sympy import *``; provide this parameter to override
         this behavior (for instance, to parse ``"Q & S"``).
 
-    transformations : tuple, optional
+    transformations : tuple or str, optional
         A tuple of transformation functions used to modify the tokens of the
         parsed expression before evaluation. The default transformations
         convert numeric literals into their SymPy equivalents, convert
         undefined variables into SymPy symbols, and allow the use of standard
-        mathematical factorial notation (e.g. ``x!``).
+        mathematical factorial notation (e.g. ``x!``). Selection via
+        string is available (see below).
 
     evaluate : bool, optional
         When False, the order of the arguments will remain as they were in the
@@ -1025,10 +1026,10 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     >>> parse_expr('.3x', transformations=T[:])
     3*x/10
 
-    As a further convenience, keywords `implicit` and `all`, when set
-    to True, will select 0-5 and all the transformations, respectively.
+    As a further convenience, strings 'implicit' and 'all' can be used
+    to select 0-5 and all the transformations, respectively.
 
-    >>> parse_expr('.3x', all=True)
+    >>> parse_expr('.3x', transformations='all')
     3*x/10
 
     See Also
@@ -1050,18 +1051,14 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     elif not isinstance(global_dict, dict):
         raise TypeError('expecting global_dict to be a dict')
 
-    if all:
-        if not (implicit is None and
-                transformations == standard_transformations):
-            raise ValueError('give transformations or use single selector keyword')
-        transformations =  T[:]
-    elif implicit:
-        if not (all is None and
-                transformations == standard_transformations):
-            raise ValueError('give transformations or use single selector keyword')
-        transformations = T[:6]
-    elif not transformations:
-        transformations = ()
+    transformations = transformations or ()
+    if type(transformations) is str:
+        if transformations == 'all':
+            transformations = T[:]
+        elif transformations == 'implicit':
+            transformations = T[:6]
+        else:
+            raise ValueError('unknown transformation group name')
     if transformations:
         if not iterable(transformations):
             raise TypeError(
