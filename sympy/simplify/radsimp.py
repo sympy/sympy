@@ -2,7 +2,9 @@ from collections import defaultdict
 
 from sympy import SYMPY_DEBUG
 
-from sympy.core import expand_power_base, sympify, Add, S, Mul, Derivative, Pow, symbols, expand_mul
+from sympy.core import expand_power_base, sympify, Add, S, Mul, Derivative, Pow, expand_mul
+from sympy.core.symbol import symbols, Dummy
+from sympy.core.sympify import _sympify
 from sympy.core.add import _unevaluated_Add
 from sympy.core.compatibility import iterable, ordered, default_sort_key
 from sympy.core.parameters import global_parameters
@@ -12,7 +14,7 @@ from sympy.core.mul import _keep_coeff, _unevaluated_Mul
 from sympy.core.numbers import Rational, zoo, nan
 from sympy.functions import exp, sqrt, log
 from sympy.functions.elementary.complexes import Abs
-from sympy.polys import gcd
+from sympy.polys import gcd, gcdex
 from sympy.simplify.sqrtdenest import sqrtdenest
 
 
@@ -1205,3 +1207,161 @@ def _split_gcd(*a):
             g = g1
             b1.append(x)
     return g, b1, b2
+
+
+def rationalize(denom):
+    """Rationalize the denomiator.
+
+    Parameters
+    ==========
+
+    denom : Expr
+        The denominator of the expression which should be rationalized.
+
+    Returns
+    =======
+
+    numer, denom : Expr, Expr
+        The numerator and the denominator of the rationalized form of
+        the given denominator.
+        ``numer/denom`` should be mathematically equivalent to the
+        original expression, but with the denominator containing only
+        the rational combination of transcendental constants and
+        functions.
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, sqrt, cbrt
+    >>> from sympy.simplify.radsimp import rationalize
+    >>> x = Symbol('x')
+    >>> y = Symbol('y')
+
+    Rationalizing algebraic numbers:
+
+    >>> numer, denom = rationalize(cbrt(2) + cbrt(3))
+    >>> numer
+    -6**(1/3) + 2**(2/3) + 3**(2/3)
+    >>> denom
+    5
+
+    Rationalizing algebraic functions:
+
+    >>> numer, denom = rationalize(cbrt(x) + cbrt(y))
+    >>> numer
+    x**(2/3) - x**(1/3)*y**(1/3) + y**(2/3)
+    >>> denom
+    x + y
+
+    Some algebraic functions are not rationalizable as multiplying any
+    conjugates can make its denominator zero.
+
+    >>> numer, denom = rationalize(x + sqrt(x**2))
+    >>> numer
+    1
+    >>> denom
+    x + sqrt(x**2)
+
+    Notes
+    =====
+
+    Although you may expect rationalization to work with full fraction,
+    it is sufficient to work only with ``1/denom``
+    because the numerator can simply be multiplied with the result,
+    which is the reason behind providing this interface.
+
+    It is also more easy interface for more general usage, like
+    rationalizing the numerator instead, which is often needed for
+    computing limits involving square root functions.
+
+    Any unknown functions or constants encountered are treated as
+    transcendental.
+
+    References
+    ==========
+
+    .. [*] Lamagna, Computer Algebra: Concepts and Techniques, Ch. 5.3.2
+
+    .. [*] Allan Berele, and Stefan Catoiu. "Rationalizing Denominators."
+           Mathematics Magazine 88, no. 2 (2015): 121-36.
+           Accessed April 17, 2021. doi:10.4169/math.mag.88.2.121.
+    """
+    from sympy.polys import minpoly
+
+    denom = _sympify(denom)
+
+    def _search(expr):
+        """Search for any algebraic or transcendental constants or
+        functions that should be substituted.
+
+        Any unknown functions are just considered transcendental.
+        """
+        if expr.is_Symbol:
+            return []
+        elif expr.is_Integer or expr.is_Rational:
+            return []
+        elif expr.is_Add or expr.is_Mul:
+            result = []
+            for arg in expr.args:
+                result += _search(arg)
+            return result
+        elif expr.is_Pow:
+            base, exp = expr.args
+            if exp.is_Integer:
+                return _search(base)
+            elif exp.is_Rational:
+                found = _search(base)
+                if found:
+                    return found
+                return [expr]
+            return [expr]
+        return [expr]
+
+    def _build_structure(expr):
+        """Discover possible algebraic relations the expression have
+        and substitute the given expression into a multivariate rational
+        function which encodes it"""
+        idx = 0
+        subs = []
+        while True:
+            found = _search(expr)
+            if not found:
+                break
+
+            origin = found.pop()
+            dest = Dummy(r'\theta_{%d}' % idx)
+            subs.append((origin, dest))
+            idx += 1
+
+            expr = expr.xreplace({origin: dest})
+
+        return expr, subs
+
+    denom, subs = _build_structure(denom)
+    numer = S.One
+
+    for origin, dest in reversed(subs):
+        if dest not in denom.free_symbols:
+            continue
+
+        if origin.is_Pow:
+            base, exp = origin.args
+            s, t, d = gcdex(denom, dest ** exp.q - base ** exp.p, dest)
+            if d != 1:
+                continue
+            new_numer, new_denom = s.as_numer_denom()
+            numer *= new_numer
+            denom = new_denom
+        elif origin.is_algebraic:
+            s, t, d = gcdex(denom, minpoly(origin, dest), dest)
+            if d != 1:
+                continue
+            new_numer, new_denom = s.as_numer_denom()
+            numer *= new_numer
+            denom = new_denom
+
+    for dest, origin in reversed(subs):
+        numer = numer.xreplace({origin: dest})
+        denom = denom.xreplace({origin: dest})
+
+    return numer, denom
