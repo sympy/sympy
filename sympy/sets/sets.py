@@ -2457,7 +2457,10 @@ def simplify_intersection(args):
                 # with t. Returns the newly intersected set otherwise
 
                 if new_set is not None:
-                    new_args = (args - {s, t}).union({new_set})
+                    if isinstance(new_set, tuple):
+                        new_args = (args - {s, t}).union(new_set)
+                    else:
+                        new_args = (args - {s, t}).union({new_set})
                     break
             if new_args:
                 args = new_args

@@ -5,7 +5,7 @@ from sympy.sets.contains import Contains
 from sympy.sets.fancysets import Interval
 from sympy.sets.powerset import PowerSet
 from sympy.sets.sets import FiniteSet
-from sympy.testing.pytest import raises, XFAIL
+from sympy.testing.pytest import raises
 
 
 def test_powerset_creation():
@@ -54,10 +54,7 @@ def test_powerset__contains__():
                     PowerSet(subset_series[j], evaluate=False)
 
 
-@XFAIL
-def test_failing_powerset__contains__():
-    # XXX These are failing when evaluate=True,
-    # but using unevaluated PowerSet works fine.
+def test_powerset__contains__2():
     assert FiniteSet(1, 2) not in PowerSet(S.EmptySet).rewrite(FiniteSet)
     assert S.Naturals not in PowerSet(S.EmptySet).rewrite(FiniteSet)
     assert S.Naturals not in PowerSet(FiniteSet(1, 2)).rewrite(FiniteSet)
@@ -71,6 +68,20 @@ def test_failing_powerset__contains__():
     assert S.Reals not in PowerSet(FiniteSet(1, 2)).rewrite(FiniteSet)
     assert S.Complexes not in PowerSet(S.EmptySet).rewrite(FiniteSet)
     assert S.Complexes not in PowerSet(FiniteSet(1, 2)).rewrite(FiniteSet)
+
+    assert FiniteSet(1, 2) not in PowerSet(S.EmptySet)
+    assert S.Naturals not in PowerSet(S.EmptySet)
+    assert S.Naturals not in PowerSet(FiniteSet(1, 2))
+    assert S.Naturals0 not in PowerSet(S.EmptySet)
+    assert S.Naturals0 not in PowerSet(FiniteSet(1, 2)).rewrite(FiniteSet)
+    assert S.Integers not in PowerSet(S.EmptySet)
+    assert S.Integers not in PowerSet(FiniteSet(1, 2))
+    assert S.Rationals not in PowerSet(S.EmptySet)
+    assert S.Rationals not in PowerSet(FiniteSet(1, 2)).rewrite(FiniteSet)
+    assert S.Reals not in PowerSet(S.EmptySet)
+    assert S.Reals not in PowerSet(FiniteSet(1, 2))
+    assert S.Complexes not in PowerSet(S.EmptySet)
+    assert S.Complexes not in PowerSet(FiniteSet(1, 2))
 
 
 def test_powerset__len__():

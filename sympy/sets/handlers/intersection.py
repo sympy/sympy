@@ -1,5 +1,6 @@
 from sympy import (S, Dummy, Lambda, symbols, Interval, Intersection, Set,
                    EmptySet, FiniteSet, Union, ComplexRegion, Mul)
+from sympy.core.relational import is_le, is_lt, is_eq, is_gt
 from sympy.multipledispatch import dispatch
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
@@ -407,43 +408,57 @@ def intersection_sets(a, b): # noqa:F811
         if l.is_real or l in infty or r.is_real or r in infty:
             return b
 
-    # We can't intersect [0,3] with [x,6] -- we don't know if x>0 or x<0
-    if not a._is_comparable(b):
+
+    # Check if any start and end point combinations can be compared
+    comps = [is_le(a.start, b.start), is_le(a.start, b.end), is_le(a.end, b.start), is_le(a.end, b.end)]
+    if all(c is None for c in comps):
         return None
 
-    empty = False
-
-    if a.start <= b.end and b.start <= a.end:
-        # Get topology right.
-        if a.start < b.start:
-            start = b.start
-            left_open = b.left_open
-        elif a.start > b.start:
-            start = a.start
-            left_open = a.left_open
-        else:
-            start = a.start
-            left_open = a.left_open or b.left_open
-
-        if a.end < b.end:
-            end = a.end
-            right_open = a.right_open
-        elif a.end > b.end:
-            end = b.end
-            right_open = b.right_open
-        else:
-            end = a.end
-            right_open = a.right_open or b.right_open
-
-        if end - start == 0 and (left_open or right_open):
-            empty = True
-    else:
-        empty = True
-
-    if empty:
+    if comps[1] is False and comps[2]:
         return S.EmptySet
 
-    return Interval(start, end, left_open, right_open)
+    start = None
+    start_equal = False
+    if is_lt(a.start, b.start):
+        start = b.start
+        left_open = b.left_open
+    elif is_gt(a.start, b.start):
+        start = a.start
+        left_open = a.left_open
+    elif is_eq(a.start, b.start):
+        start = a.start
+        left_open = a.left_open or b.left_open
+        start_equal = (a.left_open == b.left_open)
+
+    end = None
+    end_equal = False
+    if is_lt(a.end, b.end):
+        end = a.end
+        right_open = a.right_open
+    elif is_gt(a.end, b.end):
+        end = b.end
+        right_open = b.right_open
+    elif is_eq(a.end, b.end):
+        end = a.end
+        right_open = a.right_open or b.right_open
+        end_equal = (a.right_open == b.right_open)
+
+    if start is not None and end is not None:
+        if is_eq(start, end) and (left_open or right_open):
+            return S.EmptySet
+        else:
+            return Interval(start, end, left_open, right_open)
+
+    if start is not None and not start_equal:
+        return (Interval(start, a.end, left_open, a.right_open),
+                Interval(start, b.end, left_open, b.right_open))
+
+    if end is not None and not end_equal:
+        return (Interval(a.start, end, a.left_open, right_open),
+                Interval(b.start, end, b.left_open, right_open))
+
+    return None
+
 
 @dispatch(type(EmptySet), Set)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
