@@ -985,10 +985,13 @@ def eval_sum(f, limits):
     from sympy.functions import KroneckerDelta
 
     (i, a, b) = limits
+    dif = b - a
     if f.is_zero or f.simplify().is_zero:
         return S.Zero
     if i not in f.free_symbols:
         return f*(b - a + 1)
+    if i not in f.simplify().free_symbols and dif.is_Number:
+        return f.simplify()*(b - a + 1)
     if a == b:
         return f.subs(i, a)
     if isinstance(f, Piecewise):
@@ -1012,7 +1015,6 @@ def eval_sum(f, limits):
         if _has_simple_delta(f, limits[0]):
             return deltasummation(f, limits)
 
-    dif = b - a
     definite = dif.is_Integer
     # Doing it directly may be faster if there are very few terms.
     if definite and (dif < 100):
