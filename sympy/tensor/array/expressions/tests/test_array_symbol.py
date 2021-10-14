@@ -1,9 +1,78 @@
+from typing import Type
+
 import pytest
 
-from sympy import symbols
-from sympy.tensor.array.expressions.array_expressions import ArrayElement, ArraySymbol
+from sympy import Tuple, symbols
+from sympy.tensor.array.expressions.array_expressions import (
+    ArrayElement,
+    ArraySlice,
+    ArraySymbol,
+)
 
 k, m, n = symbols("k m n")
+
+
+class TestArrayElement:
+    @pytest.mark.parametrize(
+        ["shape", "indices", "expected"],
+        [
+            # shapeless
+            ([], (0,), (0,)),
+            ([], (1, 2), (1, 2)),
+            # specific shape
+            ([3, 3], (1, 2), (1, 2)),
+            ([3, 3, 3], (1, 2), (1, 2)),
+            # negative indices
+            ([], (-1,), (-1,)),
+            ([3], (-1,), (2,)),
+            ([3, 3], (-1, -2), (2, 1)),
+        ],
+    )
+    def test_construct_from_array_symbol(self, shape, indices, expected):
+        A = ArraySymbol("A", *shape)
+        element = ArrayElement(A, indices=indices)
+        assert element.parent is A
+        assert element.indices == expected
+
+    @pytest.mark.parametrize(
+        ["shape", "indices", "exception", "match"],
+        [
+            ([2], (3,), ValueError, "shape is out of bounds"),
+            ([3], (0, 0), IndexError, r"Too many indices for ArrayElement"),
+        ],
+    )
+    def test_construction_errors_from_array_symbol(
+        self, shape, indices, exception: Type[Exception], match
+    ):
+        A = ArraySymbol("A", *shape)
+        with pytest.raises(exception, match=match):
+            ArrayElement(A, indices=indices)
+
+
+class TestArraySlice:
+    @pytest.mark.parametrize(
+        ["shape", "indices", "expected"],
+        [
+            # shapeless
+            ([], (0,), (0,)),
+            ([], (slice(None),), (Tuple(0, None, None),)),
+            ([], (slice(3, None),), (Tuple(3, None, None),)),
+            ([], (slice(3, None, 2),), (Tuple(3, None, 2),)),
+            ([], (slice(None, 5),), (Tuple(0, 5, None),)),
+            ([], (1, slice(None, 5)), (1, Tuple(0, 5, None))),
+            # # specific shape (normalized)
+            ([3, 3], (1, slice(None, 2)), (1, Tuple(0, 2, 1))),
+            ([3, 3], (1, slice(None, 5)), (1, Tuple(0, 5, 1))),  # overflow
+            # # negative indices
+            ([3, 3], (-1, slice(None, -2)), (-1, Tuple(0, 1, 1))),
+        ],
+    )
+    def test_construct_from_array_symbol(self, shape, indices, expected):
+        A = ArraySymbol("A", *shape)
+        array_slice = ArraySlice(A, slices=indices)
+        assert array_slice.parent is A
+        assert array_slice.slices == expected
+
 
 class TestArraySymbol:
     @pytest.mark.parametrize(
@@ -43,7 +112,7 @@ class TestArraySymbol:
             match=(
                 f"Too many indices for {ArrayElement.__name__}: parent "
                 f"{ArraySymbol.__name__} is 3-dimensional, but 4 indices were given"
-            )
+            ),
         ):
             A[0, 1, 2, 5]
 
