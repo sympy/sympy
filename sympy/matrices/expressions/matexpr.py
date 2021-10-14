@@ -4,7 +4,7 @@ import collections
 
 from sympy.core import S, Symbol, Integer, Basic, Expr, Mul, Add
 from sympy.core.assumptions import check_assumptions
-from sympy.core.compatibility import SYMPY_INTS, default_sort_key
+from sympy.core.compatibility import default_sort_key
 from sympy.core.decorators import call_highest_priority
 from sympy.core.logic import FuzzyBool
 from sympy.core.symbol import Str
