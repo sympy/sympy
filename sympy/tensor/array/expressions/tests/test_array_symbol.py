@@ -1,4 +1,4 @@
-import pytest
+from sympy.testing.pytest import raises
 
 from sympy import Array, Tuple, symbols
 from sympy.tensor.array.expressions.array_expressions import (
@@ -38,7 +38,7 @@ class TestArrayElement:
         )
         for shape, indices, exception, match in test_cases:
             A = ArraySymbol("A", *shape)
-            with pytest.raises(exception, match=match):
+            with raises(exception, match=match):
                 ArrayElement(A, indices=indices)
 
     def test_construct_from_expression(self):
@@ -118,9 +118,9 @@ class TestArraySymbol:
         assert A[2, 1] == ArrayElement(A, indices=(2, 1))
         assert A[2, 1, 3] == ArrayElement(A, indices=(2, 1, 3))
         assert A[-2, -1, 3] == ArrayElement(A, indices=(1, 1, 3))
-        with pytest.raises(ValueError, match="shape is out of bounds"):
+        with raises(ValueError, match="shape is out of bounds"):
             A[4, 1, 3]
-        with pytest.raises(
+        with raises(
             IndexError,
             match=(
                 f"Too many indices for {ArrayElement.__name__}: parent "
