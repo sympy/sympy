@@ -834,17 +834,17 @@ def test_sinc():
 
     assert sinc(x).rewrite(jn) == jn(0, x)
     assert sinc(x).rewrite(sin) == Piecewise((sin(x)/x, Ne(x, 0)), (1, True))
-    assert sinc(pi, evaluate=False).is_zero
+    assert sinc(pi, evaluate=False).is_zero is True
     assert sinc(0, evaluate=False).is_zero is False
-    assert sinc(n*pi, evaluate=False).is_zero
+    assert sinc(n*pi, evaluate=False).is_zero is True
     assert sinc(x).is_zero is None
     xr = Symbol('xr', real=True, nonzero=True)
     assert sinc(x).is_real is None
-    assert sinc(xr).is_real
-    assert sinc(I*xr).is_real
-    assert sinc(I*100).is_real
+    assert sinc(xr).is_real is True
+    assert sinc(I*xr).is_real is True
+    assert sinc(I*100).is_real is True
     assert sinc(x).is_finite is None
-    assert sinc(xr).is_finite
+    assert sinc(xr).is_finite is True
 
 
 def test_asin():
