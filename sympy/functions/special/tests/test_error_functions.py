@@ -513,6 +513,21 @@ def tn_arg(func):
         test(exp_polar(-I*pi), -1, -I)
 
 
+def test_rewrite_integral():
+    # Rewrite to Integral, integrate and get the same function back
+    # (maybe with simplification and rewrite to same function)
+    funcs1arg = [erf, erfi, li, Li, Ei, fresnelc, fresnels, Si, Shi, Chi, erfc]
+    for func in funcs1arg:
+        assert func(x).rewrite(Integral).doit().simplify().rewrite(func) == func(x), func
+
+    # Must be positive for log-terms to cancel
+    xp = Symbol('xp', positive=True)
+    assert Ci(xp).rewrite(Integral).doit().simplify() == Ci(xp)
+
+    # Will lead to erf(y) - erf(x) which is not possible to get back to erf2
+    assert erf2(x, y).rewrite(Integral).doit().simplify() == erf2(x, y).rewrite(erf)
+
+
 def test_li():
     z = Symbol("z")
     zr = Symbol("z", real=True)

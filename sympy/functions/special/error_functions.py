@@ -4,7 +4,7 @@
 from sympy.core import Add, S, sympify, cacheit, pi, I, Rational
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.relational import is_eq
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, Dummy
 from sympy.functions.combinatorial.factorials import factorial, factorial2, RisingFactorial
 from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.integers import floor
@@ -230,6 +230,11 @@ class erf(Function):
     def _eval_rewrite_as_erfi(self, z, **kwargs):
         return -I*erfi(I*z)
 
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals import Integral
+        t = Dummy('t')
+        return 2/sqrt(S.Pi)*Integral(exp(-t**2), (t, 0, z))
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
@@ -437,6 +442,11 @@ class erfc(Function):
     def _eval_rewrite_as_expint(self, z, **kwargs):
         return S.One - sqrt(z**2)/z + z*expint(S.Half, z**2)/sqrt(S.Pi)
 
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals import Integral
+        t = Dummy('t')
+        return 2/sqrt(S.Pi)*Integral(exp(-t**2), (t, z, S.Infinity))
+
     def _eval_expand_func(self, **hints):
         return self.rewrite(erf)
 
@@ -621,6 +631,11 @@ class erfi(Function):
     def _eval_rewrite_as_expint(self, z, **kwargs):
         return sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(S.Pi)
 
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals import Integral
+        t = Dummy('t')
+        return 2/sqrt(S.Pi)*Integral(exp(t**2), (t, 0, z))
+
     def _eval_expand_func(self, **hints):
         return self.rewrite(erf)
 
@@ -788,11 +803,17 @@ class erf2(Function):
     def _eval_rewrite_as_expint(self, x, y, **kwargs):
         return erf(y).rewrite(expint) - erf(x).rewrite(expint)
 
+    def _eval_rewrite_as_Integral(self, x, y, **kwargs):
+        from sympy.integrals import Integral
+        t = Dummy('t')
+        return 2/sqrt(S.Pi)*Integral(exp(-t**2), (t, x, y))
+
     def _eval_expand_func(self, **hints):
         return self.rewrite(erf)
 
     def _eval_is_zero(self):
         return is_eq(*self.args)
+
 
 class erfinv(Function):
     r"""
@@ -1213,6 +1234,16 @@ class Ei(Function):
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return exp(z) * _eis(z)
 
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals import Integral
+        t = Dummy('t')
+        return Integral(exp(t)/t, (t, S.NegativeInfinity, z))
+
+    def _eval_rewrite_as_Sum(self, z, **kwargs):
+        from sympy.concrete import Sum
+        n = Dummy('n', integer=True, positive=True)
+        return Sum(z**n/(n*factorial(n)), (n, 1, S.Infinity)) + log(z) + S.EulerGamma
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         x0 = self.args[0].limit(x, 0)
         if x0.is_zero:
@@ -1391,6 +1422,11 @@ class expint(Function):
                 Add(*[factorial(nu - k - 2)*x**k for k in range(nu - 1)])
         else:
             return self
+
+    def _eval_rewrite_as_Integral(self, nu, z, **kwargs):
+        from sympy.integrals import Integral
+        t = Dummy('t')
+        return Integral(exp(-z*t)/t**nu, (t, 1, S.Infinity))
 
     def _eval_expand_func(self, **hints):
         return self.rewrite(Ei).rewrite(expint, **hints)
@@ -1616,6 +1652,11 @@ class li(Function):
         return (-log(-log(z)) - S.Half*(log(S.One/log(z)) - log(log(z)))
                 - meijerg(((), (1,)), ((0, 0), ()), -log(z)))
 
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals import Integral
+        t = Dummy('t')
+        return Integral(1/log(t), (t, 0, z))
+
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return z * _eis(log(z))
 
@@ -1713,6 +1754,11 @@ class Li(Function):
 
     def _eval_rewrite_as_li(self, z, **kwargs):
         return li(z) - li(2)
+
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals import Integral
+        t = Dummy('t')
+        return Integral(1/log(t), (t, 2, z))
 
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return self.rewrite(li).rewrite("tractable", deep=True)
@@ -1890,6 +1936,11 @@ class Si(TrigonometricIntegral):
         t = Symbol('t', Dummy=True)
         return Integral(sinc(t), (t, 0, z))
 
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals import Integral
+        t = Dummy('t')
+        return Integral(sin(t)/t, (t, 0, z))
+
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
         point = args0[0]
@@ -2014,6 +2065,11 @@ class Ci(TrigonometricIntegral):
     def _eval_rewrite_as_expint(self, z, **kwargs):
         return -(E1(polar_lift(I)*z) + E1(polar_lift(-I)*z))/2
 
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals import Integral
+        t = Dummy('t')
+        return -Integral(cos(t)/t, (t, z, S.Infinity))
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
@@ -2131,6 +2187,11 @@ class Shi(TrigonometricIntegral):
         from sympy import exp_polar
         # XXX should we polarify z?
         return (E1(z) - E1(exp_polar(I*pi)*z))/2 - I*pi/2
+
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals import Integral
+        t = Dummy('t')
+        return Integral(sinh(t)/t, (t, 0, z))
 
     def _eval_is_zero(self):
         z = self.args[0]
@@ -2251,6 +2312,11 @@ class Chi(TrigonometricIntegral):
         from sympy import exp_polar
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
 
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals import Integral
+        t = Dummy('t')
+        return Integral((cosh(t) - 1)/t, (t, 0, z)) + log(z) + S.EulerGamma
+
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
@@ -2323,6 +2389,11 @@ class FresnelIntegral(Function):
         return self.func(self.args[0].conjugate())
 
     as_real_imag = real_to_real_as_real_imag
+
+    def _eval_rewrite_as_Integral(self, z, **kwargs):
+        from sympy.integrals import Integral
+        t = Dummy('t')
+        return Integral(self._trigfunc(S.Half*S.Pi*t**2), (t, 0, z))
 
 
 class fresnels(FresnelIntegral):
