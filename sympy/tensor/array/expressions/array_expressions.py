@@ -83,10 +83,10 @@ class ArrayElement(_ArrayExpr):
     An element of an array.
     """
 
-    parent: _ArrayExpr = property(lambda self: self._args[0])
+    parent: Expr = property(lambda self: self._args[0])
     indices = property(lambda self: self._args[1])
 
-    def __new__(cls, parent: _ArrayExpr, indices) -> "ArrayElement":
+    def __new__(cls, parent: Expr, indices) -> "ArrayElement":
         indices = _sympify(indices)
         parent_shape = _get_shape(parent)
         if any((i >= s) == True for i, s in zip(indices, parent_shape)):
@@ -114,11 +114,11 @@ def _normalize_index(idx, axis_size: Optional[Basic]):
 
 
 class ArraySlice(_ArrayExpr):
-    parent: _ArrayExpr = property(lambda self: self.args[0])
+    parent: Expr = property(lambda self: self.args[0])
     indices: typing.Tuple[Tuple, ...] = property(lambda self: tuple(self.args[1]))
 
     def __new__(
-        cls, parent: _ArrayExpr, indices: typing.Tuple[Union[Basic, int, slice], ...]
+        cls, parent: Expr, indices: typing.Tuple[Union[Basic, int, slice], ...]
     ) -> "ArraySlice":
         parent_shape = _get_shape(parent)
         normalized_indices = []

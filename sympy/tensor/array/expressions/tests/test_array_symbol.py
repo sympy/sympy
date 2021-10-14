@@ -2,7 +2,7 @@ from typing import Type
 
 import pytest
 
-from sympy import Tuple, symbols
+from sympy import Array, Tuple, symbols
 from sympy.tensor.array.expressions.array_expressions import (
     ArrayElement,
     ArraySlice,
@@ -52,6 +52,7 @@ class TestArrayElement:
     @pytest.mark.parametrize(
         "expression",
         [
+            Array(range(6), shape=(2, 3)),
             ArraySymbol("A") + ArraySymbol("B"),
             ArrayTensorProduct(ArraySymbol("A"), ArraySymbol("B")),
         ],
@@ -90,6 +91,7 @@ class TestArraySlice:
     @pytest.mark.parametrize(
         "expression",
         [
+            Array(range(6), shape=(2, 3)),
             ArraySymbol("A") + ArraySymbol("B"),
             ArrayTensorProduct(ArraySymbol("A"), ArraySymbol("B")),
         ],
