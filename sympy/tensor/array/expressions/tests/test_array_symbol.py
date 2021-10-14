@@ -7,6 +7,7 @@ from sympy.tensor.array.expressions.array_expressions import (
     ArrayElement,
     ArraySlice,
     ArraySymbol,
+    ArrayTensorProduct,
 )
 
 k, m, n = symbols("k m n")
@@ -48,6 +49,19 @@ class TestArrayElement:
         with pytest.raises(exception, match=match):
             ArrayElement(A, indices=indices)
 
+    @pytest.mark.parametrize(
+        "expression",
+        [
+            ArraySymbol("A") + ArraySymbol("B"),
+            ArrayTensorProduct(ArraySymbol("A"), ArraySymbol("B")),
+        ],
+    )
+    @pytest.mark.parametrize("indices", [(0,), (0, 1)])
+    def test_construct_from_expression(self, expression, indices):
+        element = ArrayElement(expression, indices)
+        assert element.parent is expression
+        assert element.indices == indices
+
 
 class TestArraySlice:
     @pytest.mark.parametrize(
@@ -72,6 +86,18 @@ class TestArraySlice:
         array_slice = ArraySlice(A, indices=indices)
         assert array_slice.parent is A
         assert array_slice.indices == expected
+
+    @pytest.mark.parametrize(
+        "expression",
+        [
+            ArraySymbol("A") + ArraySymbol("B"),
+            ArrayTensorProduct(ArraySymbol("A"), ArraySymbol("B")),
+        ],
+    )
+    def test_construct_from_expression(self, expression):
+        element = ArraySlice(expression, indices=[0, slice(3, 7, 2)])
+        assert element.parent is expression
+        assert element.indices == (0, Tuple(3, 7, 2))
 
 
 class TestArraySymbol:

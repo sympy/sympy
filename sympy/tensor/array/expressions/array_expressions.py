@@ -83,36 +83,28 @@ class ArrayElement(_ArrayExpr):
     An element of an array.
     """
 
-    parent: ArraySymbol = property(lambda self: self._args[0])
+    parent: _ArrayExpr = property(lambda self: self._args[0])
     indices = property(lambda self: self._args[1])
 
-    def __new__(cls, parent: ArraySymbol, indices) -> "ArrayElement":
-        _assert_parent_type(cls, parent)
+    def __new__(cls, parent: _ArrayExpr, indices) -> "ArrayElement":
         indices = _sympify(indices)
-        if any((i >= s) == True for i, s in zip(indices, parent.shape)):
+        parent_shape = _get_shape(parent)
+        if any((i >= s) == True for i, s in zip(indices, parent_shape)):
             raise ValueError("shape is out of bounds")
-        if len(parent.shape):
-            if len(indices) > len(parent.shape):
+        if len(parent_shape):
+            if len(indices) > len(parent_shape):
                 raise IndexError(
                     f"Too many indices for {cls.__name__}: parent"
-                    f" {type(parent).__name__} is {len(parent.shape)}-dimensional,"
+                    f" {type(parent).__name__} is {len(parent_shape)}-dimensional,"
                     f" but {len(indices)} indices were given"
                 )
             normalized_indices = [
                 _normalize_index(i, axis_size)
-                for i, axis_size in zip(indices, parent.shape)
+                for i, axis_size in zip(indices, parent_shape)
             ]
         else:
             normalized_indices = list(indices)
         return Expr.__new__(cls, parent, Tuple(*normalized_indices))
-
-
-def _assert_parent_type(cls, parent) -> None:
-    if not isinstance(parent, ArraySymbol):
-        raise TypeError(
-            f"{cls.__name__} has to be constructed from an"
-            f"{ArraySymbol.__name__}, not {type(parent).__name__}"
-        )
 
 
 def _normalize_index(idx, axis_size: Optional[Basic]):
@@ -122,15 +114,15 @@ def _normalize_index(idx, axis_size: Optional[Basic]):
 
 
 class ArraySlice(_ArrayExpr):
-    parent: ArraySymbol = property(lambda self: self.args[0])
+    parent: _ArrayExpr = property(lambda self: self.args[0])
     indices: typing.Tuple[Tuple, ...] = property(lambda self: tuple(self.args[1]))
 
     def __new__(
-        cls, parent: ArraySymbol, indices: typing.Tuple[Union[Basic, int, slice], ...]
+        cls, parent: _ArrayExpr, indices: typing.Tuple[Union[Basic, int, slice], ...]
     ) -> "ArraySlice":
-        _assert_parent_type(cls, parent)
+        parent_shape = _get_shape(parent)
         normalized_indices = []
-        for idx, axis_size in zip_longest(indices, parent.shape):
+        for idx, axis_size in zip_longest(indices, parent_shape):
             if idx is None:
                 break
             if isinstance(idx, slice):
@@ -142,9 +134,10 @@ class ArraySlice(_ArrayExpr):
 
     @property
     def shape(self) -> typing.Tuple[Union[Basic, int], ...]:
+        parent_shape = _get_shape(self.parent)
         shape = [
-            _compute_slice_size(idx, shape)
-            for idx, shape in zip_longest(self.indices, self.parent.shape)
+            _compute_slice_size(idx, axis_size)
+            for idx, axis_size in zip_longest(self.indices, parent_shape)
         ]
         return tuple(shape)
 
@@ -162,6 +155,12 @@ def _compute_slice_size(idx, axis_size):
     if axis_size is not None and (size > axis_size) == True:
         return axis_size
     return size
+
+
+def _get_shape(parent: Expr) -> tuple:
+    if hasattr(parent, "shape"):
+        return parent.shape
+    return ()
 
 
 class ZeroArray(_ArrayExpr):
