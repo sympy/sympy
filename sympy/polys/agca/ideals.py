@@ -266,6 +266,8 @@ class Ideal(IntegerPowerable):
         return self.ring.ideal(1)
 
     def _first_power(self):
+        # Raising to any power but 1 returns a new instance. So we mult by 1
+        # here so that the first power is no exception.
         return self * 1
 
     def __eq__(self, e):
