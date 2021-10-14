@@ -8,7 +8,7 @@ from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.exceptions import DMDomainError
 
 
-DM = lambda rows, domain: DomainMatrix.from_list(rows, domain=domain)
+DM = DomainMatrix.from_list
 
 def test_smith_normal():
 

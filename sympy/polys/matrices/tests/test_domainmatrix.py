@@ -7,7 +7,7 @@ from sympy.functions import sqrt
 from sympy.matrices.common import (NonInvertibleMatrixError,
     NonSquareMatrixError, ShapeError)
 from sympy.matrices.dense import Matrix
-from sympy.polys.domains import ZZ, QQ, EXRAW
+from sympy.polys.domains import FF, ZZ, QQ, EXRAW
 
 from sympy.polys.matrices.domainmatrix import DomainMatrix, DomainScalar
 from sympy.polys.matrices.exceptions import (
@@ -64,9 +64,30 @@ def test_DomainMatrix_from_rep():
     raises(TypeError, lambda: DomainMatrix.from_rep(A))
 
 
+def test_DomainMatrix_from_list():
+    ddm = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    A = DomainMatrix.from_list([[1, 2], [3, 4]], ZZ)
+    assert A.rep == ddm
+    assert A.shape == (2, 2)
+    assert A.domain == ZZ
+
+    dom = FF(7)
+    ddm = DDM([[dom(1), dom(2)], [dom(3), dom(4)]], (2, 2), dom)
+    A = DomainMatrix.from_list([[1, 2], [3, 4]], dom)
+    assert A.rep == ddm
+    assert A.shape == (2, 2)
+    assert A.domain == dom
+
+    ddm = DDM([[QQ(1, 2), QQ(3, 1)], [QQ(1, 4), QQ(5, 1)]], (2, 2), QQ)
+    A = DomainMatrix.from_list([[(1, 2), (3, 1)], [(1, 4), (5, 1)]], QQ)
+    assert A.rep == ddm
+    assert A.shape == (2, 2)
+    assert A.domain == QQ
+
+
 def test_DomainMatrix_from_list_sympy():
     ddm = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
-    A = DomainMatrix.from_list([[1, 2], [3, 4]])
+    A = DomainMatrix.from_list_sympy(2, 2, [[1, 2], [3, 4]])
     assert A.rep == ddm
     assert A.shape == (2, 2)
     assert A.domain == ZZ
@@ -78,8 +99,8 @@ def test_DomainMatrix_from_list_sympy():
         (2, 2),
         K
     )
-    A = DomainMatrix.from_list(
-        [[1 + sqrt(2), 2 + sqrt(2)], [3 + sqrt(2), 4 + sqrt(2)]],
+    A = DomainMatrix.from_list_sympy(
+        2, 2, [[1 + sqrt(2), 2 + sqrt(2)], [3 + sqrt(2), 4 + sqrt(2)]],
         extension=True)
     assert A.rep == ddm
     assert A.shape == (2, 2)
