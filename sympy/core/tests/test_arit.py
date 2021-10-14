@@ -2379,5 +2379,3 @@ def test_issue_22021():
 
 def test_issue_22244():
     assert -(zoo*x) == zoo*x
-    assert -(x*zoo) == zoo*x
-    assert -(zoo*x + zoo*y) == zoo*x + zoo*y
