@@ -1156,8 +1156,6 @@ class SubModulePolyRing(SubModule):
             return [FreeModuleElement(self,
                         tuple(self.ring._sdm_to_vector(x, self.rank)))
                     for x in self._groebner()]
-            return [self.convert(self.ring._sdm_to_vector(x, self.rank))
-                    for x in self._groebner()]
         gb, gbe = self._groebner(extended=True)
         return ([self.convert(self.ring._sdm_to_vector(x, self.rank))
                  for x in gb],
