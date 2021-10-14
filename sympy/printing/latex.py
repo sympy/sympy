@@ -1915,8 +1915,9 @@ class LatexPrinter(Printer):
         return "{{%s}_{%s}}" % (expr.parent, ", ".join([f"{self._print(i)}" for i in expr.indices]))
 
     def _print_ArraySlice(self, expr):
+        shape = getattr(expr.parent, "shape", tuple())
         stringified_indices = []
-        for idx, axis_size in itertools.zip_longest(expr.indices, expr.parent.shape):
+        for idx, axis_size in itertools.zip_longest(expr.indices, shape):
             if idx is None:
                 break
             stringified_indices.append(self.__slice_to_str(idx, axis_size))

@@ -17,7 +17,11 @@ from sympy.polys import (Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ,
     ZZ_I, QQ_I, lex, grlex)
 from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
 from sympy.tensor import NDimArray
-from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
+from sympy.tensor.array.expressions.array_expressions import (
+    ArrayElement,
+    ArraySlice,
+    ArraySymbol,
+)
 
 from sympy.testing.pytest import raises
 
@@ -1131,3 +1135,7 @@ def test_printing_str_array_expressions():
     assert sstr(ArrayElement(A, (2, 1/(1-x), 0))) == "A[2, 1/(1 - x), 0]"
     assert sstr(A[:2]) == R"A[:2]"
     assert sstr(A[2:n:k, m]) == R"A[2:n:k, m]"
+    B = ArraySymbol("B")
+    parent_without_shape = A + B
+    array_slice = ArraySlice(parent_without_shape, (slice(None), m))
+    assert sstr(array_slice) == "(A + B)[:, m]"

@@ -1,4 +1,8 @@
-from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
+from sympy.tensor.array.expressions.array_expressions import (
+    ArrayElement,
+    ArraySlice,
+    ArraySymbol,
+)
 from sympy.tensor.toperators import PartialDerivative
 
 from sympy import (
@@ -2808,8 +2812,13 @@ def test_pickleable():
     assert pickle.loads(pickle.dumps(latex)) is latex
 
 def test_printing_latex_array_expressions():
+    assert latex(ArraySymbol("A")) == "A"
     assert latex(ArraySymbol("A", 2, 3, 4)) == "A"
     A = ArraySymbol("A")
     assert latex(ArrayElement(A, (2, 1/(1-x), 0))) == "{{A}_{2, \\frac{1}{1 - x}, 0}}"
     assert latex(A[:2]) == R"A\left[:2\right]"
     assert latex(A[2:n:k, m]) == R"A\left[2:n:k, m\right]"
+    B = ArraySymbol("B")
+    parent_without_shape = A + B
+    array_slice = ArraySlice(parent_without_shape, (slice(None), m))
+    assert latex(array_slice) == R"\left(A + B\right)\left[:, m\right]"
