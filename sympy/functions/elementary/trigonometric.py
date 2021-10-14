@@ -94,7 +94,7 @@ class TrigonometricFunction(Function):
 
 def _peeloff_pi(arg):
     """
-    Split ARG into two parts, a "rest" and a multiple of pi/2.
+    Split ARG into two parts, a "rest" and a multiple of pi.
     This assumes ARG to be an Add.
     The multiple of pi returned in the second position is always a Rational.
 
