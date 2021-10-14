@@ -125,7 +125,7 @@ if matchpy:
     from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec, atan2)
     from sympy import pi as Pi
 
-from sympy.integrals.rubi.rubi import rubi_integrate
+from sympy.integrals.rubi.rubimain import rubi_integrate
 from sympy import Integral as Integrate, exp, log
 
 a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z = symbols('a b c d e f g h i j k l m n o p q r s t u v w x y z')

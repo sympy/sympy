@@ -125,7 +125,7 @@ from sympy.functions import (sin, cos, tan, cot, csc, sec, sqrt, erf, exp, log)
 from sympy.functions.elementary.hyperbolic import (acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch)
 from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec)
 from sympy import pi as Pi
-from sympy.integrals.rubi.rubi import rubi_integrate
+from sympy.integrals.rubi.rubimain import rubi_integrate
 a, b, c, d, e, f, m, n, x, u , k, p, r, s, t, i, j= symbols('a b c d e f m n x u k p r s t i j')
 A, B, C, D, a, b, c, d, e, f, g, h, y, z, m, n, p, q, u, v, w, F = symbols('A B C D a b c d e f g h y z m n p q u v w F', )
 
