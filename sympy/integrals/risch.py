@@ -1086,13 +1086,13 @@ def hermite_reduce(a, d, DE):
     gd = Poly(1, DE.t)
 
     dd = derivation(d, DE)
-    dm = gcd(d, dd).as_poly(DE.t)
+    dm = gcd(d.to_field(), dd.to_field()).as_poly(DE.t)
     ds, r = d.div(dm)
 
     while dm.degree(DE.t)>0:
 
         ddm = derivation(dm, DE)
-        dm2 = gcd(dm, ddm)
+        dm2 = gcd(dm.to_field(), ddm.to_field())
         dms, r = dm.div(dm2)
         ds_ddm = ds.mul(ddm)
         ds_ddm_dm, r = ds_ddm.div(dm)
