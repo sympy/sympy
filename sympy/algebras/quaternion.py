@@ -1,6 +1,3 @@
-# References :
-# http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
-# https://en.wikipedia.org/wiki/Quaternion
 from sympy import S, Rational
 from sympy import re, im, conjugate, sign
 from sympy import sqrt, sin, cos, acos, exp, ln
@@ -36,6 +33,12 @@ class Quaternion(Expr):
     x + x**3*i + x*j + x**2*k
     >>> q2
     (3 + 4*I) + (2 + 5*I)*i + 0*j + (7 + 8*I)*k
+
+    References
+    ==========
+
+    .. [1] http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
+    .. [2] https://en.wikipedia.org/wiki/Quaternion
 
     """
     _op_priority = 11.0

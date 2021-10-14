@@ -73,7 +73,7 @@ def is_square(n, prep=True):
     References
     ==========
 
-    [1]  http://mersenneforum.org/showpost.php?p=110896
+    .. [1]  http://mersenneforum.org/showpost.php?p=110896
 
     See Also
     ========
@@ -122,8 +122,8 @@ def mr(n, bases):
     References
     ==========
 
-    - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
-      A Computational Perspective", Springer, 2nd edition, 135-138
+    .. [1] Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
+           A Computational Perspective", Springer, 2nd edition, 135-138
 
     A list of thresholds and the bases they require are here:
     https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants
@@ -248,8 +248,8 @@ def _lucas_selfridge_params(n):
 
     References
     ==========
-    - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
-      http://mpqs.free.fr/LucasPseudoprimes.pdf
+    .. [1] "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
+           http://mpqs.free.fr/LucasPseudoprimes.pdf
     """
     from sympy.core import igcd
     from sympy.ntheory.residue_ntheory import jacobi_symbol
@@ -272,9 +272,9 @@ def _lucas_extrastrong_params(n):
 
     References
     ==========
-    - OEIS A217719: Extra Strong Lucas Pseudoprimes
-      https://oeis.org/A217719
-    - https://en.wikipedia.org/wiki/Lucas_pseudoprime
+    .. [1] OEIS A217719: Extra Strong Lucas Pseudoprimes
+           https://oeis.org/A217719
+    .. [1] https://en.wikipedia.org/wiki/Lucas_pseudoprime
     """
     from sympy.core import igcd
     from sympy.ntheory.residue_ntheory import jacobi_symbol

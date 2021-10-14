@@ -2834,7 +2834,7 @@ class Expr(Basic, EvalfMixin):
         References
         ==========
 
-        - https://en.wikipedia.org/wiki/Algebraic_expression
+        .. [1] https://en.wikipedia.org/wiki/Algebraic_expression
 
         """
         if syms:
@@ -3164,7 +3164,9 @@ class Expr(Basic, EvalfMixin):
         References
         ==========
 
-        .. [1] A New Algorithm for Computing Asymptotic Series - Dominik Gruntz
+        .. [1] Gruntz, Dominik. A new algorithm for computing asymptotic series.
+               In: Proc. 1993 Int. Symp. Symbolic and Algebraic Computation. 1993.
+               pp. 239-244.
         .. [2] Gruntz thesis - p90
         .. [3] http://en.wikipedia.org/wiki/Asymptotic_expansion
 

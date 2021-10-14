@@ -49,8 +49,8 @@ def invariant_factors(m, domain=None):
     References
     ==========
 
-    [1] https://en.wikipedia.org/wiki/Smith_normal_form#Algorithm
-    [2] http://sierra.nmsu.edu/morandi/notes/SmithNormalForm.pdf
+    .. [1] https://en.wikipedia.org/wiki/Smith_normal_form#Algorithm
+    .. [2] http://sierra.nmsu.edu/morandi/notes/SmithNormalForm.pdf
 
     '''
     dM = _to_domain(m, domain)
