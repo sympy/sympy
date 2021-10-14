@@ -2,10 +2,11 @@ from sympy.testing.pytest import raises
 
 from sympy import Symbol
 from sympy.polys.matrices.normalforms import (
-    invariant_factors, smith_normal_form, hermite_normal_form)
+    invariant_factors, smith_normal_form,
+    hermite_normal_form, _hermite_normal_form, _hermite_normal_form_modulo_D)
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.matrices import DomainMatrix
-from sympy.polys.matrices.exceptions import DMDomainError
+from sympy.polys.matrices.exceptions import DMDomainError, DMShapeError
 
 
 DM = DomainMatrix.from_list
@@ -46,8 +47,10 @@ def test_hermite_normal():
     assert hermite_normal_form(m, D=2) == hnf
     assert hermite_normal_form(m, D=2, check_rank=True) == hnf
 
-    tr_hnf = DM([[37, 0, 19], [222, -6, 113], [48, 0, 25], [0, 2, 1], [0, 0, 1]], ZZ)
-    assert hermite_normal_form(m.transpose()) == tr_hnf
+    m = m.transpose()
+    hnf = DM([[37, 0, 19], [222, -6, 113], [48, 0, 25], [0, 2, 1], [0, 0, 1]], ZZ)
+    assert hermite_normal_form(m) == hnf
+    raises(DMShapeError, lambda: _hermite_normal_form_modulo_D(m, 96))
 
     m = DM([[8, 28, 68, 116, 164], [3, 11, 19, 31, 43], [5, 13, 23, 37, 47]], ZZ)
     hnf = DM([[4, 0, 0], [0, 2, 1], [0, 0, 1]], ZZ)
@@ -69,3 +72,5 @@ def test_hermite_normal():
 
     m = DomainMatrix([[QQ(1)]], (1, 1), QQ)
     raises(DMDomainError, lambda: hermite_normal_form(m))
+    raises(DMDomainError, lambda: _hermite_normal_form(m))
+    raises(DMDomainError, lambda: _hermite_normal_form_modulo_D(m, 1))
