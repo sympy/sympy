@@ -220,7 +220,6 @@ from .tensor import (IndexedBase, Idx, Indexed, get_contraction_structure,
         MutableSparseNDimArray, ImmutableSparseNDimArray, NDimArray,
         tensorproduct, tensorcontraction, tensordiagonal, derive_by_array,
         permutedims, Array, DenseNDimArray, SparseNDimArray)
-from .tensor.array.expressions.array_expressions import ArraySymbol
 
 from .parsing import parse_expr
 
@@ -458,7 +457,6 @@ __all__ = [
     'MutableSparseNDimArray', 'ImmutableSparseNDimArray', 'NDimArray',
     'tensorproduct', 'tensorcontraction', 'tensordiagonal', 'derive_by_array',
     'permutedims', 'Array', 'DenseNDimArray', 'SparseNDimArray',
-    'ArraySymbol',
 
     # sympy.parsing
     'parse_expr',
