@@ -1514,7 +1514,7 @@ class Pow(Expr):
         # this should be the same as ExpBase.as_numer_denom wrt
         # exponent handling
         neg_exp = exp.is_negative
-        if exp.is_Mul and not neg_exp and not (-exp).is_negative:
+        if exp.is_Mul and not neg_exp and not exp.is_positive:
             neg_exp = exp.could_extract_minus_sign()
         int_exp = exp.is_integer
         # the denominator cannot be separated from the numerator if

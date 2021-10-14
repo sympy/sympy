@@ -16,6 +16,22 @@ from .kind import UndefinedKind
 _args_sortkey = cmp_to_key(Basic.compare)
 
 
+def _could_extract_minus_sign(expr):
+    # assume expr is Add-like
+    # We choose the one with less arguments with minus signs
+    negative_args = sum(1 for i in expr.args
+        if i.could_extract_minus_sign())
+    positive_args = len(expr.args) - negative_args
+    if positive_args > negative_args:
+        return False
+    elif positive_args < negative_args:
+        return True
+    # choose based on .sort_key() to prefer
+    # x - 1 instead of 1 - x and
+    # 3 - sqrt(2) instead of -3 + sqrt(2)
+    return bool(expr.sort_key() < (-expr).sort_key())
+
+
 def _addsort(args):
     # in-place sorting of args
     args.sort(key=_args_sortkey)
@@ -388,18 +404,7 @@ class Add(Expr, AssocOp):
         return result
 
     def could_extract_minus_sign(self):
-        # We choose the one with less arguments with minus signs
-        negative_args = sum(1 for i in self.args
-            if i.could_extract_minus_sign())
-        positive_args = len(self.args) - negative_args
-        if positive_args > negative_args:
-            return False
-        elif positive_args < negative_args:
-            return True
-        # choose based on .sort_key() to prefer
-        # x - 1 instead of 1 - x and
-        # 3 - sqrt(2) instead of -3 + sqrt(2)
-        return bool(self.sort_key() < (-self).sort_key())
+        return _could_extract_minus_sign(self)
 
     def as_coefficients_dict(a):
         """Return a dictionary mapping terms to their Rational coefficient.

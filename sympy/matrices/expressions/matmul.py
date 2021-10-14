@@ -69,8 +69,7 @@ class MatMul(MatrixExpr, Mul):
         return (matrices[0].rows, matrices[-1].cols)
 
     def could_extract_minus_sign(self):
-        c = self.args[0]
-        return c.func.could_extract_minus_sign(c)
+        return self.args[0].could_extract_minus_sign()
 
     def _entry(self, i, j, expand=True, **kwargs):
         # Avoid cyclic imports
