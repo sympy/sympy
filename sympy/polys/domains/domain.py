@@ -409,14 +409,17 @@ class Domain:
 
     def convert(self, element, base=None):
         """Convert ``element`` to ``self.dtype``. """
-        if _not_a_coeff(element):
-            raise CoercionFailed('%s is not in any domain' % element)
 
         if base is not None:
+            if _not_a_coeff(element):
+                raise CoercionFailed('%s is not in any domain' % element)
             return self.convert_from(element, base)
 
         if self.of_type(element):
             return element
+
+        if _not_a_coeff(element):
+            raise CoercionFailed('%s is not in any domain' % element)
 
         from sympy.polys.domains import ZZ, QQ, RealField, ComplexField
 
