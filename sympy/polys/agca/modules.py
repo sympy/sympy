@@ -1153,6 +1153,9 @@ class SubModulePolyRing(SubModule):
     def _groebner_vec(self, extended=False):
         """Returns a standard basis in element form."""
         if not extended:
+            return [FreeModuleElement(self,
+                        tuple(self.ring._sdm_to_vector(x, self.rank)))
+                    for x in self._groebner()]
             return [self.convert(self.ring._sdm_to_vector(x, self.rank))
                     for x in self._groebner()]
         gb, gbe = self._groebner(extended=True)
@@ -1170,12 +1173,12 @@ class SubModulePolyRing(SubModule):
         """Compute syzygies. See [SCA, algorithm 2.5.4]."""
         # NOTE if self.gens is a standard basis, this can be done more
         #      efficiently using Schreyer's theorem
-        from sympy.matrices import eye
 
         # First bullet point
         k = len(self.gens)
         r = self.rank
-        im = eye(k)
+        zero = self.ring.convert(0)
+        one = self.ring.convert(1)
         Rkr = self.ring.free_module(r + k)
         newgens = []
         for j, f in enumerate(self.gens):
@@ -1183,8 +1186,9 @@ class SubModulePolyRing(SubModule):
             for i, v in enumerate(f):
                 m[i] = f[i]
             for i in range(k):
-                m[r + i] = im[j, i]
-            newgens.append(Rkr.convert(m))
+                m[r + i] = one if j == i else zero
+            m = FreeModuleElement(Rkr, tuple(m))
+            newgens.append(m)
         # Note: we need *descending* order on module index, and TOP=False to
         #       get an elimination order
         F = Rkr.submodule(*newgens, order='ilex', TOP=False)
@@ -1193,8 +1197,7 @@ class SubModulePolyRing(SubModule):
         G = F._groebner_vec()
 
         # Third bullet point: G0 = G intersect the new k components
-        G0 = [x[r:] for x in G if all(y == self.ring.convert(0)
-                                      for y in x[:r])]
+        G0 = [x[r:] for x in G if all(y == zero for y in x[:r])]
 
         # Fourth and fifth bullet points: we are done
         return G0
