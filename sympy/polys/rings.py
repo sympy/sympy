@@ -247,7 +247,7 @@ class PolyRing(DefaultPrinting, IPolys):
 
 
             if order is lex:
-                obj.leading_expv = lambda f: max(f)
+                obj.leading_expv = max
             else:
                 obj.leading_expv = lambda f: max(f, key=order)
 
@@ -740,7 +740,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             if self.is_ground:
                 return self.coeff(1)
             else:
-                raise ValueError("can't drop %s" % gen)
+                raise ValueError("Cannot drop %s" % gen)
         else:
             poly = ring.zero
 
@@ -750,7 +750,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                     del K[i]
                     poly[tuple(K)] = v
                 else:
-                    raise ValueError("can't drop %s" % gen)
+                    raise ValueError("Cannot drop %s" % gen)
 
             return poly
 
@@ -764,7 +764,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def drop_to_ground(self, gen):
         if self.ring.ngens == 1:
-            raise ValueError("can't drop only generator to ground")
+            raise ValueError("Cannot drop only generator to ground")
 
         i, ring = self._drop_to_ground(gen)
         poly = ring.zero

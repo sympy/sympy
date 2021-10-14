@@ -9,7 +9,6 @@ from sympy.simplify.simplify import simplify
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
                    Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye,
                    Dummy, floor, And, Eq)
-from sympy.utilities.iterables import cartes
 from sympy.testing.pytest import XFAIL, raises
 from sympy.abc import x, y, t, z
 from sympy.core.mod import Mod
@@ -304,7 +303,7 @@ def test_Range_set():
             Range(1, 10, 2),
         ]:
         r = list(R)
-        for a, b, c in cartes(AB, AB, [-3, -1, None, 1, 3]):
+        for a, b, c in itertools.product(AB, AB, [-3, -1, None, 1, 3]):
             for reverse in range(2):
                 r = list(reversed(r))
                 R = R.reversed
@@ -510,6 +509,7 @@ def test_range_interval_intersection():
     assert Range(0).intersect(Interval(0.2, 0.8)) is S.EmptySet
     assert Range(0).intersect(Interval(-oo, oo)) is S.EmptySet
 
+
 def test_range_is_finite_set():
     assert Range(-100, 100).is_finite_set is True
     assert Range(2, oo).is_finite_set is False
@@ -529,9 +529,42 @@ def test_range_is_finite_set():
     assert Range(n, n + m + n).is_finite_set is True
     assert Range(n, oo).is_finite_set is False
     assert Range(-oo, n).is_finite_set is False
-    # assert Range(n, -oo).is_finite_set is True
-    # assert Range(oo, n).is_finite_set is True
-    # Above tests fail due to a (potential) bug in sympy.sets.fancysets.Range.size (See issue #18999)
+    assert Range(n, -oo).is_finite_set is True
+    assert Range(oo, n).is_finite_set is True
+
+
+
+def test_Range_is_iterable():
+    assert Range(-100, 100).is_iterable is True
+    assert Range(2, oo).is_iterable is False
+    assert Range(-oo, 50).is_iterable is False
+    assert Range(-oo, oo).is_iterable is False
+    assert Range(oo, -oo).is_iterable is True
+    assert Range(0, 0).is_iterable is True
+    assert Range(oo, oo).is_iterable is True
+    assert Range(-oo, -oo).is_iterable is True
+    n = Symbol('n', integer=True)
+    m = Symbol('m', integer=True)
+    p = Symbol('p', integer=True, positive=True)
+    assert Range(n, n + 49).is_iterable is True
+    assert Range(n, 0).is_iterable is False
+    assert Range(-3, n + 7).is_iterable is False
+    assert Range(-3, p + 7).is_iterable is False # Should work with better __iter__
+    assert Range(n, m).is_iterable is False
+    assert Range(n + m, m - n).is_iterable is False
+    assert Range(n, n + m + n).is_iterable is False
+    assert Range(n, oo).is_iterable is False
+    assert Range(-oo, n).is_iterable is False
+    x = Symbol('x')
+    assert Range(x, x + 49).is_iterable is False
+    assert Range(x, 0).is_iterable is False
+    assert Range(-3, x + 7).is_iterable is False
+    assert Range(x, m).is_iterable is False
+    assert Range(x + m, m - x).is_iterable is False
+    assert Range(x, x + m + x).is_iterable is False
+    assert Range(x, oo).is_iterable is False
+    assert Range(-oo, x).is_iterable is False
+
 
 def test_Integers_eval_imageset():
     ans = ImageSet(Lambda(x, 2*x + Rational(3, 7)), S.Integers)
@@ -574,6 +607,25 @@ def test_fun():
         Range(-10, 11))) == FiniteSet(-1, -sqrt(2)/2, 0, sqrt(2)/2, 1))
 
 
+def test_Range_is_empty():
+    i = Symbol('i', integer=True)
+    n = Symbol('n', negative=True, integer=True)
+    p = Symbol('p', positive=True, integer=True)
+
+    assert Range(0).is_empty
+    assert not Range(1).is_empty
+    assert Range(1, 0).is_empty
+    assert not Range(-1, 0).is_empty
+    assert Range(i).is_empty is None
+    assert Range(n).is_empty
+    assert Range(p).is_empty is False
+    assert Range(n, 0).is_empty is False
+    assert Range(n, p).is_empty is False
+    assert Range(p, n).is_empty
+    assert Range(n, -1).is_empty is None
+    assert Range(p, n, -1).is_empty is False
+
+
 def test_Reals():
     assert 5 in S.Reals
     assert S.Pi in S.Reals
@@ -584,6 +636,9 @@ def test_Reals():
     assert S.Reals != Interval(0, oo)
     assert S.Reals.is_subset(Interval(-oo, oo))
     assert S.Reals.intersect(Range(-oo, oo)) == Range(-oo, oo)
+    assert S.ComplexInfinity not in S.Reals
+    assert S.NaN not in S.Reals
+    assert x + S.ComplexInfinity not in S.Reals
 
 
 def test_Complex():
@@ -619,7 +674,7 @@ def test_intersections():
 
 
 def test_infinitely_indexed_set_1():
-    from sympy.abc import n, m, t
+    from sympy.abc import n, m
     assert imageset(Lambda(n, n), S.Integers) == imageset(Lambda(m, m), S.Integers)
 
     assert imageset(Lambda(n, 2*n), S.Integers).intersect(
@@ -656,7 +711,6 @@ def test_infinitely_indexed_set_2():
 
 
 def test_imageset_intersect_real():
-    from sympy import I
     from sympy.abc import n
     assert imageset(Lambda(n, n + (n - 1)*(n + 1)*I), S.Integers).intersect(S.Reals) == FiniteSet(-1, 1)
     im = (n - 1)*(n + S.Half)
@@ -758,7 +812,7 @@ def test_imageset_intersect_diophantine():
 
 
 def test_infinitely_indexed_set_3():
-    from sympy.abc import n, m, t
+    from sympy.abc import n, m
     assert imageset(Lambda(m, 2*pi*m), S.Integers).intersect(
             imageset(Lambda(n, 3*pi*n), S.Integers)).dummy_eq(
         ImageSet(Lambda(t, 6*pi*t), S.Integers))
@@ -780,7 +834,6 @@ def test_ImageSet_simplification():
 
 
 def test_ImageSet_contains():
-    from sympy.abc import x
     assert (2, S.Half) in imageset(x, (x, 1/x), S.Integers)
     assert imageset(x, x + I*3, S.Integers).intersection(S.Reals) is S.EmptySet
     i = Dummy(integer=True)

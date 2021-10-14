@@ -136,7 +136,7 @@ class Add(Expr, AssocOp):
     >>> type(expr)
     <class 'sympy.matrices.expressions.matadd.MatAdd'>
 
-    Note that the printers don't display in args order.
+    Note that the printers do not display in args order.
 
     >>> Add(x, 1)
     x + 1
@@ -509,7 +509,7 @@ class Add(Expr, AssocOp):
             return terms[0].matches(expr - coeff, repl_dict)
         return
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict=None, old=False):
         return self._matches_commutative(expr, repl_dict, old)
 
     @staticmethod
@@ -527,14 +527,16 @@ class Add(Expr, AssocOp):
                 S.Infinity: oo,
                 S.NegativeInfinity: -oo}
             ireps = {v: k for k, v in reps.items()}
-            eq = signsimp(lhs.xreplace(reps) - rhs.xreplace(reps))
+            eq = lhs.xreplace(reps) - rhs.xreplace(reps)
             if eq.has(oo):
                 eq = eq.replace(
                     lambda x: x.is_Pow and x.base is oo,
                     lambda x: x.base)
-            return eq.xreplace(ireps)
+            rv = eq.xreplace(ireps)
         else:
-            return signsimp(lhs - rhs)
+            rv = lhs - rhs
+        srv = signsimp(rv)
+        return srv if srv.is_Number else rv
 
     @cacheit
     def as_two_terms(self):
@@ -701,7 +703,7 @@ class Add(Expr, AssocOp):
                 return
         if z == len(self.args):
             return True
-        if len(nz) == 0 or len(nz) == len(self.args):
+        if len(nz) in [0, len(self.args)]:
             return None
         b = self.func(*nz)
         if b.is_zero:

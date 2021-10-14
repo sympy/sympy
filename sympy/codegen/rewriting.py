@@ -306,7 +306,7 @@ def create_expand_pow_optimization(limit, *, base_req=lambda b: b.is_symbol):
     x**5 + x*x*x
     >>> expand_opt(x**5 + x**3 + sin(x)**3)
     x**5 + sin(x)**3 + x*x*x
-    >>> opt2 = create_expand_pow_optimization(3 , base_req=lambda b: not b.is_Function)
+    >>> opt2 = create_expand_pow_optimization(3, base_req=lambda b: not b.is_Function)
     >>> opt2((x+1)**2 + sin(x)**2)
     sin(x)**2 + (x + 1)*(x + 1)
 

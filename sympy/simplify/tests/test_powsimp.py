@@ -164,8 +164,7 @@ def test_issue_6440():
 
 
 def test_powdenest():
-    from sympy import powdenest
-    from sympy.abc import x, y, z, a, b
+    x, y = symbols('x,y')
     p, q = symbols('p q', positive=True)
     i, j = symbols('i,j', integer=True)
 

@@ -424,7 +424,7 @@ class Vector(Printable, EvalfMixin):
         def _det(mat):
             """This is needed as a little method for to find the determinant
             of a list in python; needs to work for a 3x3 list.
-            SymPy's Matrix won't take in Vector, so need a custom function.
+            SymPy's Matrix will not take in Vector, so need a custom function.
             You shouldn't be calling this.
 
             """

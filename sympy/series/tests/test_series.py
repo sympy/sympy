@@ -100,7 +100,7 @@ def test_issue_11313():
 
 
 def test_series_of_Subs():
-    from sympy.abc import x, y, z
+    from sympy.abc import z
 
     subs1 = Subs(sin(x), x, y)
     subs2 = Subs(sin(x) * cos(z), x, y)
@@ -222,7 +222,7 @@ def test_issue_12791():
     sol = 0.5/(0.5*cos(theta) - 1.0)**2 - 0.25*cos(theta)/(0.5*cos(theta)\
         - 1.0)**2 + (beta - 0.5)*(-0.25*varphi*sin(2*theta) - 1.5*cos(theta)\
         + 0.25*cos(2*theta) + 1.25)/(0.5*cos(theta) - 1.0)**3\
-        + 0.25*varphi*sin(theta)/(0.5*cos(theta) - 1.0)**2 + O((beta - 0.5)**2, (beta, 0.5))
+        + 0.25*varphi*sin(theta)/(0.5*cos(theta) - 1.0)**2 + O((beta - S.Half)**2, (beta, S.Half))
 
     assert expr.series(beta, 0.5, 2).trigsimp() == sol
 

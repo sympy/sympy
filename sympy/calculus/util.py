@@ -1,20 +1,31 @@
-from sympy import Order, S, log, limit, lcm_list, im, re, Dummy, Piecewise
-from sympy.core import Add, Mul, Pow
+from sympy import Order, limit, lcm_list, Piecewise
+from sympy.core import Add, Mul, Pow, S
 from sympy.core.basic import Basic
 from sympy.core.compatibility import iterable
 from sympy.core.expr import AtomicExpr, Expr
-from sympy.core.function import expand_mul
+from sympy.core.function import diff, expand_mul
+from sympy.core.kind import NumberKind
+from sympy.core.mod import Mod
 from sympy.core.numbers import _sympifyit, oo, zoo
-from sympy.core.relational import is_le, is_lt, is_ge, is_gt
+from sympy.core.relational import is_le, is_lt, is_ge, is_gt, Relational
+from sympy.core.symbol import Symbol, Dummy
 from sympy.core.sympify import _sympify
+from sympy.functions.elementary.complexes import Abs, im, re
 from sympy.functions.elementary.miscellaneous import Min, Max
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.trigonometric import (
+    TrigonometricFunction, sin, cos, csc, sec)
 from sympy.logic.boolalg import And
+from sympy.polys.polytools import degree
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement, EmptySet)
 from sympy.sets.fancysets import ImageSet
+from sympy.simplify.simplify import simplify
+from sympy.solvers.decompogen import compogen, decompogen
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
 from sympy.multipledispatch import dispatch
+
 
 def continuous_domain(f, symbol, domain):
     """
@@ -63,7 +74,6 @@ def continuous_domain(f, symbol, domain):
         has not yet been developed.
 
     """
-    from sympy.solvers.inequalities import solve_univariate_inequality
     from sympy.calculus.singularities import singularities
 
     if domain.is_subset(S.Reals):
@@ -119,7 +129,7 @@ def function_range(f, symbol, domain):
     Interval.open(0, oo)
     >>> function_range(log(x), x, S.Reals)
     Interval(-oo, oo)
-    >>> function_range(sqrt(x), x , Interval(-5, 9))
+    >>> function_range(sqrt(x), x, Interval(-5, 9))
     Interval(0, 3)
 
     Returns
@@ -135,7 +145,7 @@ def function_range(f, symbol, domain):
     NotImplementedError
         If any of the intervals, in the given domain, for which function
         is continuous are not finite or real,
-        OR if the critical points of the function on the domain can't be found.
+        OR if the critical points of the function on the domain cannot be found.
     """
     from sympy.solvers.solveset import solveset
 
@@ -392,16 +402,8 @@ def periodicity(f, symbol, check=False):
     pi
     >>> periodicity(exp(x), x)
     """
-    from sympy.core.mod import Mod
-    from sympy.core.relational import Relational
-    from sympy.functions.elementary.exponential import exp
-    from sympy.functions.elementary.complexes import Abs
-    from sympy.functions.elementary.trigonometric import (
-        TrigonometricFunction, sin, cos, csc, sec)
-    from sympy.simplify.simplify import simplify
-    from sympy.solvers.decompogen import decompogen
-    from sympy.polys.polytools import degree
-
+    if symbol.kind is not NumberKind:
+        raise NotImplementedError("Cannot use symbol of kind %s" % symbol.kind)
     temp = Dummy('x', real=True)
     f = f.subs(symbol, temp)
     symbol = temp
@@ -514,14 +516,13 @@ def periodicity(f, symbol, check=False):
         pass  # not handling Piecewise yet as the return type is not favorable
 
     elif period is None:
-        from sympy.solvers.decompogen import compogen
         g_s = decompogen(f, symbol)
         num_of_gs = len(g_s)
         if num_of_gs > 1:
             for index, g in enumerate(reversed(g_s)):
                 start_index = num_of_gs - 1 - index
                 g = compogen(g_s[start_index:], symbol)
-                if g != orig_f and g != f: # Fix for issue 12620
+                if g not in (orig_f, f): # Fix for issue 12620
                     period = periodicity(g, symbol)
                     if period is not None:
                         break
@@ -738,7 +739,7 @@ def stationary_points(f, symbol, domain=S.Reals):
     {pi/2, 3*pi/2, 5*pi/2, 7*pi/2}
 
     """
-    from sympy import solveset, diff
+    from sympy.solvers.solveset import solveset
 
     if isinstance(domain, EmptySet):
         return S.EmptySet
@@ -788,8 +789,6 @@ def maximum(f, symbol, domain=S.Reals):
     1/2
 
     """
-    from sympy import Symbol
-
     if isinstance(symbol, Symbol):
         if isinstance(domain, EmptySet):
             raise ValueError("Maximum value not defined for empty domain.")
@@ -838,8 +837,6 @@ def minimum(f, symbol, domain=S.Reals):
     -1/2
 
     """
-    from sympy import Symbol
-
     if isinstance(symbol, Symbol):
         if isinstance(domain, EmptySet):
             raise ValueError("Minimum value not defined for empty domain.")
@@ -869,18 +866,18 @@ class AccumulationBounds(AtomicExpr):
 
     `\left\langle -\infty, \infty \right\rangle = \mathbb{R} \cup \{-\infty, \infty\}`
 
-    `oo` and `-oo` are added to the second and third definition respectively,
-    since if either `-oo` or `oo` is an argument, then the other one should
+    ``oo`` and ``-oo`` are added to the second and third definition respectively,
+    since if either ``-oo`` or ``oo`` is an argument, then the other one should
     be included (though not as an end point). This is forced, since we have,
-    for example, `1/AccumBounds(0, 1) = AccumBounds(1, oo)`, and the limit at
-    `0` is not one-sided. As x tends to `0-`, then `1/x -> -oo`, so `-oo`
-    should be interpreted as belonging to `AccumBounds(1, oo)` though it need
+    for example, ``1/AccumBounds(0, 1) = AccumBounds(1, oo)``, and the limit at
+    `0` is not one-sided. As `x` tends to `0-`, then `1/x \rightarrow -\infty`, so `-\infty`
+    should be interpreted as belonging to ``AccumBounds(1, oo)`` though it need
     not appear explicitly.
 
     In many cases it suffices to know that the limit set is bounded.
     However, in some other cases more exact information could be useful.
-    For example, all accumulation values of cos(x) + 1 are non-negative.
-    (AccumBounds(-1, 1) + 1 = AccumBounds(0, 2))
+    For example, all accumulation values of `\cos(x) + 1` are non-negative.
+    (``AccumBounds(-1, 1) + 1 = AccumBounds(0, 2)``)
 
     A AccumulationBounds object is defined to be real AccumulationBounds,
     if its end points are finite reals.
@@ -1263,7 +1260,7 @@ class AccumulationBounds(AtomicExpr):
                         return AccumBounds(self.min / other.max, oo)
 
             elif other.is_extended_real:
-                if other is S.Infinity or other is S.NegativeInfinity:
+                if other in (S.Infinity, S.NegativeInfinity):
                     if self == AccumBounds(-oo, oo):
                         return AccumBounds(-oo, oo)
                     if self.max is S.Infinity:
@@ -1453,7 +1450,7 @@ class AccumulationBounds(AtomicExpr):
         """
         other = _sympify(other)
 
-        if other is S.Infinity or other is S.NegativeInfinity:
+        if other in (S.Infinity, S.NegativeInfinity):
             if self.min is S.NegativeInfinity or self.max is S.Infinity:
                 return True
             return False

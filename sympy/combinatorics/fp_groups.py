@@ -17,12 +17,12 @@ from itertools import product
 
 
 @public
-def fp_group(fr_grp, relators=[]):
+def fp_group(fr_grp, relators=()):
     _fp_group = FpGroup(fr_grp, relators)
     return (_fp_group,) + tuple(_fp_group._generators)
 
 @public
-def xfp_group(fr_grp, relators=[]):
+def xfp_group(fr_grp, relators=()):
     _fp_group = FpGroup(fr_grp, relators)
     return (_fp_group, _fp_group._generators)
 
@@ -230,7 +230,7 @@ class FpGroup(DefaultPrinting):
         2
 
         """
-        from sympy import S, gcd
+        from sympy import gcd
         if self._order is not None:
             return self._order
         if self._coset_table is not None:
@@ -274,7 +274,7 @@ class FpGroup(DefaultPrinting):
             return None
 
 
-    def _finite_index_subgroup(self, s=[]):
+    def _finite_index_subgroup(self, s=None):
         '''
         Find the elements of `self` that generate a finite index subgroup
         and, if found, return the list of elements and the coset table of `self` by
@@ -379,7 +379,7 @@ class FpGroup(DefaultPrinting):
         will only terminate for finite groups.
 
         '''
-        from sympy.combinatorics import Permutation, PermutationGroup
+        from sympy.combinatorics import Permutation
         from sympy.combinatorics.homomorphisms import homomorphism
         if self.order() is S.Infinity:
             raise NotImplementedError("Permutation presentation of infinite "
@@ -686,9 +686,8 @@ class FpSubgroup(DefaultPrinting):
             return i == 0
 
     def order(self):
-        from sympy import S
         if not self.generators:
-            return 1
+            return S.One
         if isinstance(self.parent, FreeGroup):
             return S.Infinity
         if self.C is None:
@@ -718,7 +717,7 @@ class FpSubgroup(DefaultPrinting):
 #                           LOW INDEX SUBGROUPS                               #
 ###############################################################################
 
-def low_index_subgroups(G, N, Y=[]):
+def low_index_subgroups(G, N, Y=()):
     """
     Implements the Low Index Subgroups algorithm, i.e find all subgroups of
     ``G`` upto a given index ``N``. This implements the method described in
@@ -826,7 +825,7 @@ def try_descendant(S, C, R1_c_list, R2, N, alpha, x, beta, Y):
         descendant_subgroups(S, D, R1_c_list, x, R2, N, Y)
 
 
-def first_in_class(C, Y=[]):
+def first_in_class(C, Y=()):
     """
     Checks whether the subgroup ``H=G1`` corresponding to the Coset Table
     could possibly be the canonical representative of its conjugacy class.
@@ -1227,7 +1226,7 @@ def rewrite(C, alpha, w):
 
     >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, define_schreier_generators, rewrite
     >>> from sympy.combinatorics.free_groups import free_group
-    >>> F, x, y = free_group("x ,y")
+    >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**6])
     >>> C = CosetTable(f, [])
     >>> C.table = [[1, 1, 2, 3], [0, 0, 4, 5], [4, 4, 3, 0], [5, 5, 0, 2], [2, 2, 5, 1], [3, 3, 1, 4]]

@@ -629,8 +629,8 @@ class DifferentialExtension:
             self.backsubs, self.exts, self.extargs)
 
     # NOTE: this printing doesn't follow the Python's standard
-    # eval(repr(DE)) == DE, where DE is the DifferentialExtension object
-    # , also this printing is supposed to contain all the important
+    # eval(repr(DE)) == DE, where DE is the DifferentialExtension object,
+    # also this printing is supposed to contain all the important
     # attributes of a DifferentialExtension object
     def __repr__(self):
         # no need to have GeneratorType object printed in it
@@ -712,7 +712,7 @@ class DifferentialExtension:
         ===========
 
         This makes the working differential extension larger.  self.level is
-        given relative to the end of the list (-1, -2, etc.), so we don't need
+        given relative to the end of the list (-1, -2, etc.), so we do not need
         do worry about it when building the extension.
         """
         if self.level >= -1:
@@ -733,7 +733,7 @@ class DifferentialExtension:
         ===========
 
         This makes the working differential extension smaller.  self.level is
-        given relative to the end of the list (-1, -2, etc.), so we don't need
+        given relative to the end of the list (-1, -2, etc.), so we do not need
         do worry about it when building the extension.
         """
         if self.level <= -len(self.T):
@@ -820,7 +820,7 @@ def frac_in(f, t, *, cancel=False, **kwargs):
     where fa and fd are either basic expressions or Polys, and f == fa/fd.
     **kwargs are applied to Poly.
     """
-    if type(f) is tuple:
+    if isinstance(f, tuple):
         fa, fd = f
         f = fa.as_expr()/fd.as_expr()
     fa, fd = f.as_expr().as_numer_denom()

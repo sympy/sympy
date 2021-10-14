@@ -182,7 +182,7 @@ def as_int(n, strict=True):
     """
     if strict:
         try:
-            if type(n) is bool:
+            if isinstance(n, bool):
                 raise TypeError
             return operator.index(n)
         except TypeError:
@@ -286,7 +286,7 @@ def default_sort_key(item, order=None):
     [1/x, x]
 
     But since the keys for each of these terms are independent of ``order``'s
-    value, they don't sort differently when they appear separately in a list:
+    value, they do not sort differently when they appear separately in a list:
 
     >>> sorted(eq.args, key=default_sort_key)
     [1/x, x]
@@ -358,8 +358,15 @@ def default_sort_key(item, order=None):
     return (cls_index, 0, item.__class__.__name__
             ), args, S.One.sort_key(), S.One
 
+
 def _node_count(e):
+    # this not only counts nodes, it affirms that the
+    # args are Basic (i.e. have an args property). If
+    # some object has a non-Basic arg, it needs to be
+    # fixed since it is intended that all Basic args
+    # are of Basic type (though this is not easy to enforce).
     return 1 + sum(map(_node_count, e.args))
+
 
 def _nodes(e):
     """
@@ -373,7 +380,8 @@ def _nodes(e):
 
     if isinstance(e, Basic):
         if isinstance(e, Derivative):
-            return _nodes(e.expr) + len(e.variables)
+            return _nodes(e.expr) + sum(i[1] if i[1].is_Number else
+                _nodes(i[1]) for i in e.variable_count)
         return _node_count(e)
     elif iterable(e):
         return 1 + sum(_nodes(ei) for ei in e)
@@ -389,7 +397,7 @@ def ordered(seq, keys=None, default=True, warn=False):
     then no other keys will be computed.
 
     Two default keys will be applied if 1) keys are not provided or 2) the
-    given keys don't resolve all ties (but only if ``default`` is True). The
+    given keys do not resolve all ties (but only if ``default`` is True). The
     two keys are ``_nodes`` (which places smaller expressions before large) and
     ``default_sort_key`` which (if the ``sort_key`` for an object is defined
     properly) should resolve any ties.

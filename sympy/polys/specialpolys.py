@@ -37,7 +37,7 @@ def swinnerton_dyer_poly(n, x=None, polys=False):
     from .numberfields import minimal_polynomial
     if n <= 0:
         raise ValueError(
-            "can't generate Swinnerton-Dyer polynomial of order %s" % n)
+            "Cannot generate Swinnerton-Dyer polynomial of order %s" % n)
 
     if x is not None:
         sympify(x)
@@ -77,7 +77,7 @@ def cyclotomic_poly(n, x=None, polys=False):
     """
     if n <= 0:
         raise ValueError(
-            "can't generate cyclotomic polynomial of order %s" % n)
+            "Cannot generate cyclotomic polynomial of order %s" % n)
 
     poly = DMP(dup_zz_cyclotomic_poly(int(n), ZZ), ZZ)
 
@@ -100,7 +100,7 @@ def symmetric_poly(n, *gens, **args):
     gens = _analyze_gens(gens)
 
     if n < 0 or n > len(gens) or not gens:
-        raise ValueError("can't generate symmetric polynomial of order %s for %s" % (n, gens))
+        raise ValueError("Cannot generate symmetric polynomial of order %s for %s" % (n, gens))
     elif not n:
         poly = S.One
     else:

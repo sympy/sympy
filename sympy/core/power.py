@@ -282,7 +282,7 @@ class Pow(Expr):
         # than deprecated.
         from sympy.core.relational import Relational
         if isinstance(b, Relational) or isinstance(e, Relational):
-            raise TypeError('Relational can not be used in Pow')
+            raise TypeError('Relational cannot be used in Pow')
 
         # XXX: This should raise TypeError once deprecation period is over:
         if not (isinstance(b, Expr) and isinstance(e, Expr)):
@@ -562,7 +562,7 @@ class Pow(Expr):
                 return log(self.base).is_imaginary
 
     def _eval_is_extended_negative(self):
-        if self.exp is S(1)/2:
+        if self.exp is S.Half:
             if self.base.is_complex or self.base.is_extended_real:
                 return False
         if self.base.is_extended_negative:
@@ -633,7 +633,6 @@ class Pow(Expr):
 
     def _eval_is_extended_real(self):
         from ..functions import arg, log, exp
-        from .mul import Mul
 
         if self.base is S.Exp1:
             if self.exp.is_extended_real:
@@ -798,7 +797,7 @@ class Pow(Expr):
         return self.base.is_polar
 
     def _eval_subs(self, old, new):
-        from sympy import exp, log, Symbol, AccumBounds
+        from sympy import exp, log, AccumBounds
 
         if isinstance(self.exp, AccumBounds):
             b = self.base.subs(old, new)
@@ -926,8 +925,8 @@ class Pow(Expr):
     def as_base_exp(self):
         """Return base and exp of self.
 
-        Explnation
-        ==========
+        Explanation
+        ===========
 
         If base is 1/Integer, then return Integer, -exp. If this extra
         processing is not needed, the base and exp properties will
@@ -1237,7 +1236,7 @@ class Pow(Expr):
             return 1 / self.func(base, -exp)._eval_expand_multinomial()
         elif exp.is_Add and base.is_Number:
             #  a + b      a  b
-            # n      --> n  n  , where n, a, b are Numbers
+            #  n      --> n  n, where n, a, b are Numbers
 
             coeff, tail = S.One, S.Zero
             for term in exp.args:
@@ -1537,9 +1536,10 @@ class Pow(Expr):
                 return self.func(n, exp), d
         return self.func(n, exp), self.func(d, exp)
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict=None, old=False):
         expr = _sympify(expr)
-        repl_dict = repl_dict.copy()
+        if repl_dict is None:
+            repl_dict = dict()
 
         # special case, pattern = 1 and expr.exp can match to 0
         if expr is S.One:

@@ -34,7 +34,7 @@ cgs_gauss = UnitSystem(
 cgs_gauss.set_quantity_scale_factor(coulombs_constant, 1)
 
 cgs_gauss.set_quantity_dimension(statcoulomb, charge)
-cgs_gauss.set_quantity_scale_factor(statcoulomb, centimeter**(S(3)/2)*gram**(S(1)/2)/second)
+cgs_gauss.set_quantity_scale_factor(statcoulomb, centimeter**(S(3)/2)*gram**(S.Half)/second)
 
 cgs_gauss.set_quantity_dimension(coulomb, charge)
 

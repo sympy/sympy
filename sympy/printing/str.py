@@ -7,6 +7,7 @@ from typing import Any, Dict
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
 from sympy.core.function import _coeff_isneg
+from sympy.core.relational import Relational
 from sympy.sets.sets import FiniteSet
 from .printer import Printer, print_function
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -78,7 +79,12 @@ class StrPrinter(Printer):
         return '~%s' %(self.parenthesize(expr.args[0],PRECEDENCE["Not"]))
 
     def _print_And(self, expr):
-        return self.stringify(expr.args, " & ", PRECEDENCE["BitwiseAnd"])
+        args = list(expr.args)
+        for j, i in enumerate(args):
+            if isinstance(i, Relational) and (
+                    i.canonical.rhs is S.NegativeInfinity):
+                args.insert(0, args.pop(j))
+        return self.stringify(args, " & ", PRECEDENCE["BitwiseAnd"])
 
     def _print_Or(self, expr):
         return self.stringify(expr.args, " | ", PRECEDENCE["BitwiseOr"])
@@ -157,6 +163,11 @@ class StrPrinter(Printer):
     def _print_GoldenRatio(self, expr):
         return 'GoldenRatio'
 
+    def _print_Heaviside(self, expr):
+        # Same as _print_Function but uses pargs to suppress default 1/2 for
+        # 2nd args
+        return expr.func.__name__ + "(%s)" % self.stringify(expr.pargs, ", ")
+
     def _print_TribonacciConstant(self, expr):
         return 'TribonacciConstant'
 
@@ -222,6 +233,9 @@ class StrPrinter(Printer):
 
     def _print_list(self, expr):
         return "[%s]" % self.stringify(expr, ", ")
+
+    def _print_List(self, expr):
+        return self._print_list(expr)
 
     def _print_MatrixBase(self, expr):
         return expr._format_str(self)

@@ -790,7 +790,7 @@ class harmonic(Function):
     >>> limit(harmonic(n, 3), n, oo)
     -polygamma(2, 1)/2
 
-    However we can not compute the general relation yet:
+    However we cannot compute the general relation yet:
 
     >>> limit(harmonic(n, m), n, oo)
     harmonic(oo, m)
@@ -1162,7 +1162,7 @@ class catalan(Function):
                 return Rational(-1, 2)
 
     def fdiff(self, argindex=1):
-        from sympy import polygamma, log
+        from sympy import polygamma
         n = self.args[0]
         return catalan(n)*(polygamma(0, n + S.Half) - polygamma(0, n + 2) + log(4))
 
@@ -1514,7 +1514,6 @@ def nP(n, k=None, replacement=False):
 
 @cacheit
 def _nP(n, k=None, replacement=False):
-    from sympy.functions.combinatorial.factorials import factorial
     from sympy.core.mul import prod
 
     if k == 0:
@@ -1685,7 +1684,6 @@ def nC(n, k=None, replacement=False):
     .. [2] http://tinyurl.com/cep849r
 
     """
-    from sympy.functions.combinatorial.factorials import binomial
     from sympy.core.mul import prod
 
     if isinstance(n, SYMPY_INTS):
@@ -1887,7 +1885,7 @@ def _nT(n, k):
     # really quick exits
     if k > n or k < 0:
         return 0
-    if k == n or k == 1:
+    if k in (1, n):
         return 1
     if k == 0:
         return 0
@@ -2098,7 +2096,7 @@ class motzkin(Function):
         except ValueError:
             return False
         if n > 0:
-             if n == 1 or n == 2:
+             if n in (1, 2):
                 return True
 
              tn1 = 1

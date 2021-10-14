@@ -75,8 +75,6 @@ from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
         HyperRep_cosasin, HyperRep_sinasin, meijerg)
 from sympy.polys import poly, Poly
-from sympy.series import residue
-from sympy.simplify import simplify  # type: ignore
 from sympy.simplify.powsimp import powdenest
 from sympy.utilities.iterables import sift
 
@@ -1949,6 +1947,7 @@ def hyperexpand_special(ap, bq, z):
     z = unpolarify(z)
     if z == 0:
         return S.One
+    from sympy.simplify.simplify import simplify
     if p == 2 and q == 1:
         # 2F1
         a, b, c = ap + bq
@@ -1987,6 +1986,8 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
 
     if z.is_zero:
         return S.One
+
+    from sympy.simplify.simplify import simplify
 
     z = polarify(z, subs=False)
     if rewrite == 'default':
@@ -2284,6 +2285,7 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default',
     def do_slater(an, bm, ap, bq, z, zfinal):
         # zfinal is the value that will eventually be substituted for z.
         # We pass it to _hyperexpand to improve performance.
+        from sympy.series import residue
         func = G_Function(an, bm, ap, bq)
         _, pbm, pap, _ = func.compute_buckets()
         if not can_do(pbm, pap):

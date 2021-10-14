@@ -7,7 +7,7 @@ from sympy import (
     Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, Poly, posify, rad,
     Rational, S, separatevars, signsimp, simplify, sign, sin,
     sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan,
-    zoo, And, Gt, Ge, Le, Or)
+    zoo, And, Gt, Ge, Le, Or, eye, Derivative)
 from sympy.core.mul import _keep_coeff
 from sympy.core.expr import unchanged
 from sympy.simplify.simplify import nthroot, inversecombine
@@ -505,7 +505,7 @@ def test_issue_5950():
 
 
 def test_posify():
-    from sympy.abc import x
+    x = symbols('x')
 
     assert str(posify(
         x +
@@ -516,7 +516,6 @@ def test_posify():
     assert log(eq).expand().subs(rep) == -log(x)
     assert str(posify([x, 1 + x])) == '([_x, _x + 1], {_x: x})'
 
-    x = symbols('x')
     p = symbols('p', positive=True)
     n = symbols('n', negative=True)
     orig = [x, n, p]
@@ -542,7 +541,6 @@ def test_posify():
 
 def test_issue_4194():
     # simplify should call cancel
-    from sympy.abc import x, y
     f = Function('f')
     assert simplify((4*x + 6*f(y))/(2*x + 3*f(y))) == 2
 
@@ -608,7 +606,7 @@ def test_signsimp():
 
 
 def test_besselsimp():
-    from sympy import besselj, besseli, cosh, cosine_transform, bessely
+    from sympy import besselj, besseli, cosine_transform, bessely
     assert besselsimp(exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))) == \
         besselj(y, z)
     assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \
@@ -940,6 +938,11 @@ def test_simplify_kroneckerdelta():
                                      [0, K(0, n), 0, K(1, n)],
                                      [0, 0, K(0, n), 0],
                                      [0, 0, 0, K(0, n)]])
+    assert simplify(eye(1) * KroneckerDelta(0, n) *
+                    KroneckerDelta(1, n)) == Matrix([[0]])
+
+    assert simplify(S.Infinity * KroneckerDelta(0, n) *
+                    KroneckerDelta(1, n)) is S.NaN
 
 
 def test_issue_17292():
@@ -1004,6 +1007,13 @@ def test_issue_19484():
     e = x + sign(x + f(x)**3)
     assert simplify(Abs(x + f(x)**3) * e) == x*Abs(x + f(x)**3) + x + f(x)**3
 
+
 def test_issue_19161():
     polynomial = Poly('x**2').simplify()
     assert (polynomial-x**2).simplify() == 0
+
+
+def test_issue_22210():
+    d = Symbol('d', integer=True)
+    expr = 2*Derivative(sin(x), (x, d))
+    assert expr.simplify() == expr

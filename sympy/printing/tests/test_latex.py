@@ -88,15 +88,24 @@ def test_latex_basic():
     assert latex(3*x**2*y, mul_symbol='\\,') == r"3\,x^{2}\,y"
     assert latex(1.5*3**x, mul_symbol='\\,') == r"1.5 \cdot 3^{x}"
 
+    assert latex(x**S.Half**5) == r"\sqrt[32]{x}"
+    assert latex(Mul(S.Half, x**2, -5, evaluate=False)) == r"\frac{1}{2} x^{2} \left(-5\right)"
+    assert latex(Mul(S.Half, x**2, 5, evaluate=False)) == r"\frac{1}{2} x^{2} \cdot 5"
+    assert latex(Mul(-5, -5, evaluate=False)) == r"\left(-5\right) \left(-5\right)"
+    assert latex(Mul(5, -5, evaluate=False)) == r"5 \left(-5\right)"
+    assert latex(Mul(S.Half, -5, S.Half, evaluate=False)) == r"\frac{1}{2} \left(-5\right) \frac{1}{2}"
+    assert latex(Mul(5, I, 5, evaluate=False)) == r"5 i 5"
+    assert latex(Mul(5, I, -5, evaluate=False)) == r"5 i \left(-5\right)"
+
     assert latex(Mul(0, 1, evaluate=False)) == r'0 \cdot 1'
     assert latex(Mul(1, 0, evaluate=False)) == r'1 \cdot 0'
     assert latex(Mul(1, 1, evaluate=False)) == r'1 \cdot 1'
     assert latex(Mul(-1, 1, evaluate=False)) == r'\left(-1\right) 1'
     assert latex(Mul(1, 1, 1, evaluate=False)) == r'1 \cdot 1 \cdot 1'
     assert latex(Mul(1, 2, evaluate=False)) == r'1 \cdot 2'
-    assert latex(Mul(1, S.Half, evaluate=False)) == r'1 \frac{1}{2}'
+    assert latex(Mul(1, S.Half, evaluate=False)) == r'1 \cdot \frac{1}{2}'
     assert latex(Mul(1, 1, S.Half, evaluate=False)) == \
-        r'1 \cdot 1 \frac{1}{2}'
+        r'1 \cdot 1 \cdot \frac{1}{2}'
     assert latex(Mul(1, 1, 2, 3, x, evaluate=False)) == \
         r'1 \cdot 1 \cdot 2 \cdot 3 x'
     assert latex(Mul(1, -1, evaluate=False)) == r'1 \left(-1\right)'
@@ -105,7 +114,7 @@ def test_latex_basic():
     assert latex(Mul(4, 3, 2, 1+z, 0, y, x, evaluate=False)) == \
         r'4 \cdot 3 \cdot 2 \left(z + 1\right) 0 y x'
     assert latex(Mul(Rational(2, 3), Rational(5, 7), evaluate=False)) == \
-        r'\frac{2}{3} \frac{5}{7}'
+        r'\frac{2}{3} \cdot \frac{5}{7}'
 
     assert latex(1/x) == r"\frac{1}{x}"
     assert latex(1/x, fold_short_frac=True) == r"1 / x"
@@ -603,11 +612,14 @@ def test_latex_functions():
     assert latex(LambertW(n)**k) == r"W^{k}\left(n\right)"
     assert latex(LambertW(n, k)**p) == r"W^{p}_{k}\left(n\right)"
 
-    assert latex(Mod(x, 7)) == r'x\bmod{7}'
-    assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right)\bmod{7}'
-    assert latex(Mod(2 * x, 7)) == r'2 x\bmod{7}'
-    assert latex(Mod(x, 7) + 1) == r'\left(x\bmod{7}\right) + 1'
-    assert latex(2 * Mod(x, 7)) == r'2 \left(x\bmod{7}\right)'
+    assert latex(Mod(x, 7)) == r'x \bmod 7'
+    assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right) \bmod 7'
+    assert latex(Mod(7, x + 1)) == r'7 \bmod \left(x + 1\right)'
+    assert latex(Mod(2 * x, 7)) == r'2 x \bmod 7'
+    assert latex(Mod(7, 2 * x)) == r'7 \bmod 2 x'
+    assert latex(Mod(x, 7) + 1) == r'\left(x \bmod 7\right) + 1'
+    assert latex(2 * Mod(x, 7)) == r'2 \left(x \bmod 7\right)'
+    assert latex(Mod(7, 2 * x)**n) == r'\left(7 \bmod 2 x\right)^{n}'
 
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')
@@ -625,7 +637,6 @@ def test_function_subclass_different_name():
 
 
 def test_hyper_printing():
-    from sympy import pi
     from sympy.abc import x, z
 
     assert latex(meijerg(Tuple(pi, pi, x), Tuple(1),
@@ -823,10 +834,22 @@ def test_latex_Range():
     assert latex(Range(oo, -oo, -1)) == r'\left\{\ldots, 1, 0, -1, \ldots\right\}'
 
     a, b, c = symbols('a:c')
-    assert latex(Range(a, b, c)) == r'Range\left(a, b, c\right)'
-    assert latex(Range(a, 10, 1)) == r'Range\left(a, 10, 1\right)'
-    assert latex(Range(0, b, 1)) == r'Range\left(0, b, 1\right)'
-    assert latex(Range(0, 10, c)) == r'Range\left(0, 10, c\right)'
+    assert latex(Range(a, b, c)) == r'\text{Range}\left(a, b, c\right)'
+    assert latex(Range(a, 10, 1)) == r'\text{Range}\left(a, 10\right)'
+    assert latex(Range(0, b, 1)) == r'\text{Range}\left(b\right)'
+    assert latex(Range(0, 10, c)) == r'\text{Range}\left(0, 10, c\right)'
+
+    i = Symbol('i', integer=True)
+    n = Symbol('n', negative=True, integer=True)
+    p = Symbol('p', positive=True, integer=True)
+
+    assert latex(Range(i, i + 3)) == r'\left\{i, i + 1, i + 2\right\}'
+    assert latex(Range(-oo, n, 2)) == r'\left\{\ldots, n - 4, n - 2\right\}'
+    assert latex(Range(p, oo)) == r'\left\{p, p + 1, \ldots\right\}'
+    # The following will work if __iter__ is improved
+    # assert latex(Range(-3, p + 7)) == r'\left\{-3, -2,  \ldots, p + 6\right\}'
+    # Must have integer assumptions
+    assert latex(Range(a, a + 3)) == r'\text{Range}\left(a, a + 3\right)'
 
 
 def test_latex_sequences():
@@ -1106,7 +1129,7 @@ def test_latex_ImageSet():
     y = Symbol('y')
     imgset = ImageSet(Lambda((x, y), x + y), {1, 2, 3}, {3, 4})
     assert latex(imgset) == \
-        r"\left\{x + y\; \middle|\; x \in \left\{1, 2, 3\right\} , y \in \left\{3, 4\right\}\right\}"
+        r"\left\{x + y\; \middle|\; x \in \left\{1, 2, 3\right\}, y \in \left\{3, 4\right\}\right\}"
 
     imgset = ImageSet(Lambda(((x, y),), x + y), ProductSet({1, 2, 3}, {3, 4}))
     assert latex(imgset) == \
@@ -1604,8 +1627,6 @@ def test_custom_symbol_names():
 
 
 def test_matAdd():
-    from sympy import MatrixSymbol
-    from sympy.printing.latex import LatexPrinter
     C = MatrixSymbol('C', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     l = LatexPrinter()
@@ -1616,8 +1637,6 @@ def test_matAdd():
 
 
 def test_matMul():
-    from sympy import MatrixSymbol
-    from sympy.printing.latex import LatexPrinter
     A = MatrixSymbol('A', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     x = Symbol('x')
@@ -1842,7 +1861,7 @@ def test_Tr():
 
 
 def test_Adjoint():
-    from sympy.matrices import MatrixSymbol, Adjoint, Inverse, Transpose
+    from sympy.matrices import Adjoint, Inverse, Transpose
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
     assert latex(Adjoint(X)) == r'X^{\dagger}'
@@ -1873,7 +1892,7 @@ def test_Transpose():
 
 
 def test_Hadamard():
-    from sympy.matrices import MatrixSymbol, HadamardProduct, HadamardPower
+    from sympy.matrices import HadamardProduct, HadamardPower
     from sympy.matrices.expressions import MatAdd, MatMul, MatPow
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
@@ -1897,7 +1916,6 @@ def test_Hadamard():
 
 
 def test_ElementwiseApplyFunction():
-    from sympy.matrices import MatrixSymbol
     X = MatrixSymbol('X', 2, 2)
     expr = (X.T*X).applyfunc(sin)
     assert latex(expr) == r"{\left( d \mapsto \sin{\left(d \right)} \right)}_{\circ}\left({X^{T} X}\right)"
@@ -1907,13 +1925,13 @@ def test_ElementwiseApplyFunction():
 
 def test_ZeroMatrix():
     from sympy import ZeroMatrix
-    assert latex(ZeroMatrix(1, 1), mat_symbol_style='plain') == r"\mathbb{0}"
+    assert latex(ZeroMatrix(1, 1), mat_symbol_style='plain') == r"0"
     assert latex(ZeroMatrix(1, 1), mat_symbol_style='bold') == r"\mathbf{0}"
 
 
 def test_OneMatrix():
     from sympy import OneMatrix
-    assert latex(OneMatrix(3, 4), mat_symbol_style='plain') == r"\mathbb{1}"
+    assert latex(OneMatrix(3, 4), mat_symbol_style='plain') == r"1"
     assert latex(OneMatrix(3, 4), mat_symbol_style='bold') == r"\mathbf{1}"
 
 
@@ -2553,7 +2571,6 @@ def test_multiline_latex():
     raises(ValueError, lambda: multiline_latex(f, expr, environment="foo"))
 
 def test_issue_15353():
-    from sympy import ConditionSet, Tuple, S, sin, cos
     a, x = symbols('a x')
     # Obtained from nonlinsolve([(sin(a*x)),cos(a*x)],[x,a])
     sol = ConditionSet(

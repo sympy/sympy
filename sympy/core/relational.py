@@ -258,7 +258,7 @@ class Relational(Boolean, EvalfMixin):
         If failing_expression is True, return the expression whose truth value
         was unknown."""
         if isinstance(other, Relational):
-            if self == other or self.reversed == other:
+            if other in (self, self.reversed):
                 return True
             a, b = self, other
             if a.func in (Eq, Ne) or b.func in (Eq, Ne):
@@ -336,7 +336,7 @@ class Relational(Boolean, EvalfMixin):
                         else:
                             r = r.func(x, -b / m)
                     else:
-                        r = r.func(b, S.zero)
+                        r = r.func(b, S.Zero)
                 except ValueError:
                     # maybe not a linear function, try polynomial
                     from sympy.polys import Poly, poly, PolynomialError, gcd
@@ -375,7 +375,7 @@ class Relational(Boolean, EvalfMixin):
                             r = r.func(lhsterm, -newexpr)
 
                     else:
-                        r = r.func(constant, S.zero)
+                        r = r.func(constant, S.Zero)
                 except ValueError:
                     pass
         # Did we get a simplified result?

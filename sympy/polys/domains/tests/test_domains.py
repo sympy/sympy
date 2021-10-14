@@ -5,6 +5,7 @@ from sympy.abc import x, y, z
 
 from sympy.utilities.iterables import cartes
 from sympy.external.gmpy import HAS_GMPY
+
 from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, EXRAW, ZZ_gmpy,
     ZZ_python, QQ_gmpy, QQ_python)
 from sympy.polys.domains.algebraicfield import AlgebraicField
@@ -26,6 +27,9 @@ from sympy.polys.polyerrors import (
 from sympy.polys.polyutils import illegal
 
 from sympy.testing.pytest import raises
+
+from itertools import product
+
 
 ALG = QQ.algebraic_field(sqrt(2), sqrt(3))
 
@@ -576,8 +580,8 @@ def test_Domain_convert():
 
     def check_domains(K1, K2):
         K3 = K1.unify(K2)
-        check_element(K3.convert_from(K1.one,  K1), K3.one , K1, K2, K3)
-        check_element(K3.convert_from(K2.one,  K2), K3.one , K1, K2, K3)
+        check_element(K3.convert_from( K1.one, K1),  K3.one, K1, K2, K3)
+        check_element(K3.convert_from( K2.one, K2),  K3.one, K1, K2, K3)
         check_element(K3.convert_from(K1.zero, K1), K3.zero, K1, K2, K3)
         check_element(K3.convert_from(K2.zero, K2), K3.zero, K1, K2, K3)
 
@@ -615,7 +619,7 @@ def test_Domain_convert():
     K3 = QQ[x]
     K4 = ZZ[x]
     Ks = [K1, K2, K3, K4]
-    for Ka, Kb in cartes(Ks, Ks):
+    for Ka, Kb in product(Ks, Ks):
         assert Ka.convert_from(Kb.from_sympy(x), Kb) == Ka.from_sympy(x)
 
     assert K2.convert_from(QQ(1, 2), QQ) == K2(QQ(1, 2))

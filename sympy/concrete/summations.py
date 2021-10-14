@@ -213,7 +213,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if reps:
             undo = {v: k for k, v in reps.items()}
             did = self.xreplace(reps).doit(**hints)
-            if type(did) is tuple:  # when separate=True
+            if isinstance(did, tuple):  # when separate=True
                 did = tuple([i.xreplace(undo) for i in did])
             elif did is not None:
                 did = did.xreplace(undo)
@@ -322,7 +322,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import factor_sum, sum_combine
         from sympy.core.function import expand
-        from sympy.core.mul import Mul
 
         # split the function into adds
         terms = Add.make_args(expand(self.function))
@@ -402,7 +401,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         There are various tests employed to check the convergence like
         divergence test, root test, integral test, alternating series test,
         comparison tests, Dirichlet tests. It returns true if Sum is convergent
-        and false if divergent and NotImplementedError if it can not be checked.
+        and false if divergent and NotImplementedError if it cannot be checked.
 
         References
         ==========
@@ -1036,7 +1035,6 @@ def eval_sum_direct(expr, limits):
     Evaluate expression directly, but perform some simple checks first
     to possibly result in a smaller expression and faster execution.
     """
-    from sympy.core import Add
     (i, a, b) = limits
 
     dif = b - a
@@ -1287,8 +1285,6 @@ def _eval_sum_hyper(f, i, a):
 
 
 def eval_sum_hyper(f, i_a_b):
-    from sympy.logic.boolalg import And
-
     i, a, b = i_a_b
 
     if (b - a).is_Integer:

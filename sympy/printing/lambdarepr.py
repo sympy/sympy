@@ -1,6 +1,6 @@
 from .pycode import (
     PythonCodePrinter,
-    MpmathPrinter,  # MpmathPrinter is imported for backward compatibility
+    MpmathPrinter,
 )
 from .numpy import NumPyPrinter  # NumPyPrinter is imported for backward compatibility
 from sympy.utilities import default_sort_key
@@ -8,10 +8,11 @@ from sympy.utilities import default_sort_key
 
 __all__ = [
     'PythonCodePrinter',
-    'MpmathPrinter',
+    'MpmathPrinter',  # MpmathPrinter is published for backward compatibility
     'NumPyPrinter',
     'LambdaPrinter',
     'NumPyPrinter',
+    'IntervalPrinter',
     'lambdarepr',
 ]
 
@@ -181,6 +182,22 @@ class NumExprPrinter(LambdaPrinter):
     def doprint(self, expr):
         lstr = super().doprint(expr)
         return "evaluate('%s', truediv=True)" % lstr
+
+
+class IntervalPrinter(MpmathPrinter, LambdaPrinter):
+    """Use ``lambda`` printer but print numbers as ``mpi`` intervals. """
+
+    def _print_Integer(self, expr):
+        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Integer(expr)
+
+    def _print_Rational(self, expr):
+        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Rational(expr)
+
+    def _print_Half(self, expr):
+        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Rational(expr)
+
+    def _print_Pow(self, expr):
+        return super(MpmathPrinter, self)._print_Pow(expr, rational=True)
 
 
 for k in NumExprPrinter._numexpr_functions:

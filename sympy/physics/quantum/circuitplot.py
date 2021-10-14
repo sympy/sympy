@@ -141,7 +141,7 @@ class CircuitPlot:
             self._axes.add_line(line)
         # Also double any controlled lines off these wires
         for i,g in enumerate(self._gates()):
-            if isinstance(g, CGate) or isinstance(g, CGateS):
+            if isinstance(g, (CGate, CGateS)):
                 wires = g.controls + g.targets
                 for wire in wires:
                     if wire in ismeasured and \

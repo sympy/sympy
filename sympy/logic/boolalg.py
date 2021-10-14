@@ -10,6 +10,7 @@ from sympy.core.cache import cacheit
 from sympy.core.compatibility import ordered, as_int
 from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.function import Application, Derivative
+from sympy.core.kind import NumberKind
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
@@ -155,18 +156,20 @@ class Boolean(Basic):
         free = self.free_symbols
         if len(free) == 1:
             x = free.pop()
-            reps = {}
-            for r in self.atoms(Relational):
-                if periodicity(r, x) not in (0, None):
-                    s = r._eval_as_set()
-                    if s in (S.EmptySet, S.UniversalSet, S.Reals):
-                        reps[r] = s.as_relational(x)
-                        continue
-                    raise NotImplementedError(filldedent('''
-                        as_set is not implemented for relationals
-                        with periodic solutions
-                        '''))
-            return self.subs(reps)._eval_as_set()
+            if x.kind is NumberKind:
+                reps = {}
+                for r in self.atoms(Relational):
+                    if periodicity(r, x) not in (0, None):
+                        s = r._eval_as_set()
+                        if s in (S.EmptySet, S.UniversalSet, S.Reals):
+                            reps[r] = s.as_relational(x)
+                            continue
+                        raise NotImplementedError(filldedent('''
+                            as_set is not implemented for relationals
+                            with periodic solutions
+                            '''))
+                return self.subs(reps)._eval_as_set()
+            return self._eval_as_set()
         else:
             raise NotImplementedError("Sorry, as_set has not yet been"
                                       " implemented for multivariate"
@@ -1317,7 +1320,7 @@ class Implies(BooleanFunction):
             raise ValueError(
                 "%d operand(s) used for an Implies "
                 "(pairs are required): %s" % (len(args), str(args)))
-        if A == True or A == False or B == True or B == False:
+        if A in (True, False) or B in (True, False):
             return Or(Not(A), B)
         elif A == B:
             return S.true

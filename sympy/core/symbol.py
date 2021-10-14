@@ -9,12 +9,13 @@ from .function import FunctionClass
 from .kind import NumberKind, UndefinedKind
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
-from sympy.utilities.iterables import cartes, sift
+from sympy.utilities.iterables import sift
 from sympy.core.containers import Tuple
 
 import string
 import re as _re
 import random
+from itertools import product
 
 class Str(Atom):
     """
@@ -533,12 +534,15 @@ class Wild(Symbol):
         return super()._hashable_content() + (self.exclude, self.properties)
 
     # TODO add check against another Wild
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict=None, old=False):
         if any(expr.has(x) for x in self.exclude):
             return None
         if not all(f(expr) for f in self.properties):
             return None
-        repl_dict = repl_dict.copy()
+        if repl_dict is None:
+            repl_dict = dict()
+        else:
+            repl_dict = repl_dict.copy()
         repl_dict[self] = expr
         return repl_dict
 
@@ -738,7 +742,7 @@ def symbols(names, *, cls=Symbol, **args):
                 if len(split) == 1:
                     names = split[0]
                 else:
-                    names = [''.join(s) for s in cartes(*split)]
+                    names = [''.join(s) for s in product(*split)]
                 if literals:
                     result.extend([cls(literal(s), **args) for s in names])
                 else:

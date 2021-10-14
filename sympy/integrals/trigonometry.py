@@ -12,7 +12,7 @@ from sympy.functions import binomial, sin, cos, Piecewise
 # need to use a function instead of lamda since hash of lambda changes on
 # each call to _pat_sincos
 def _integer_instance(n):
-    return isinstance(n , Integer)
+    return isinstance(n, Integer)
 
 @cacheit
 def _pat_sincos(x):
@@ -234,7 +234,7 @@ def trigintegrate(f, x, conds='piecewise'):
             if n < 0:
                 # Same as the scheme described above.
                 # the function argument to integrate in the end will
-                # be 1 , this cannot be integrated by trigintegrate.
+                # be 1, this cannot be integrated by trigintegrate.
                 # Hence use sympy.integrals.integrate.
                 res = (Rational(1, n + 1) * cos(x)**(m - 1) * sin(x)**(n + 1) +
                        Rational(m - 1, n + 1) *

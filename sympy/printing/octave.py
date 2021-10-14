@@ -307,6 +307,7 @@ class OctaveCodePrinter(CodePrinter):
         return '{' + ', '.join(self._print(a) for a in expr) + '}'
     _print_tuple = _print_list
     _print_Tuple = _print_list
+    _print_List = _print_list
 
 
     def _print_BooleanTrue(self, expr):
@@ -329,7 +330,7 @@ class OctaveCodePrinter(CodePrinter):
         # Handle zero dimensions:
         if (A.rows, A.cols) == (0, 0):
             return '[]'
-        elif A.rows == 0 or A.cols == 0:
+        elif S.Zero in A.shape:
             return 'zeros(%s, %s)' % (A.rows, A.cols)
         elif (A.rows, A.cols) == (1, 1):
             # Octave does not distinguish between scalars and 1x1 matrices
@@ -406,7 +407,6 @@ class OctaveCodePrinter(CodePrinter):
             shape = [shape[0]]
         s = ", ".join(self._print(n) for n in shape)
         return "eye(" + s + ")"
-
 
     def _print_lowergamma(self, expr):
         # Octave implements regularized incomplete gamma function
@@ -561,7 +561,7 @@ class OctaveCodePrinter(CodePrinter):
         pretty = []
         level = 0
         for n, line in enumerate(code):
-            if line == '' or line == '\n':
+            if line in ('', '\n'):
                 pretty.append(line)
                 continue
             level -= decrease[n]

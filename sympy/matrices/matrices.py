@@ -14,7 +14,9 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, uniquely_named_symbol
 from sympy.core.sympify import sympify
 from sympy.core.sympify import _sympify
-from sympy.functions import exp, factorial, log
+from sympy.functions import factorial
+from sympy.functions.elementary.complexes import re
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import cancel
@@ -847,7 +849,7 @@ class MatrixBase(MatrixDeprecated,
                 .multiply(P.inv()))
 
     def __str__(self):
-        if self.rows == 0 or self.cols == 0:
+        if S.Zero in self.shape:
             return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
         return "Matrix(%s)" % str(self.tolist())
 
@@ -856,7 +858,7 @@ class MatrixBase(MatrixDeprecated,
             from sympy.printing.str import StrPrinter
             printer = StrPrinter()
         # Handle zero dimensions:
-        if self.rows == 0 or self.cols == 0:
+        if S.Zero in self.shape:
             return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
         if self.rows == 1:
             return "Matrix([%s])" % self.table(printer, rowsep=',\n')
@@ -881,7 +883,6 @@ class MatrixBase(MatrixDeprecated,
         [4, 2, 2, 2, 5, 5],
         [6, 6, 7, 7, 5, 5]])
       """
-      from sympy.core.compatibility import as_int
       ntop = as_int(ntop)
       # make sure we are working with explicit matrices
       b = [i.as_explicit() if hasattr(i, 'as_explicit') else i
@@ -1030,7 +1031,7 @@ class MatrixBase(MatrixDeprecated,
                     if isinstance(dat, (list, tuple)):
                         dat = [make_explicit_row(row) for row in dat]
 
-                if dat == [] or dat == [[]]:
+                if dat in ([], [[]]):
                     rows = cols = 0
                     flat_list = []
                 elif not any(raw(i) or ismat(i) for i in dat):
@@ -1194,7 +1195,7 @@ class MatrixBase(MatrixDeprecated,
         is_slice = isinstance(key, slice)
         i, j = key = self.key2ij(key)
         is_mat = isinstance(value, MatrixBase)
-        if type(i) is slice or type(j) is slice:
+        if isinstance(i, slice) or isinstance(j, slice):
             if is_mat:
                 self.copyin_matrix(key, value)
                 return
@@ -1649,7 +1650,6 @@ class MatrixBase(MatrixDeprecated,
 
         blocks = [cell._eval_matrix_exp_jblock() for cell in cells]
         from sympy.matrices import diag
-        from sympy import re
         eJ = diag(*blocks)
         # n = self.rows
         ret = P.multiply(eJ, dotprodsimp=None).multiply(P.inv(), dotprodsimp=None)
@@ -1953,8 +1953,8 @@ class MatrixBase(MatrixDeprecated,
         """
         # Row or Column Vector Norms
         vals = list(self.values()) or [0]
-        if self.rows == 1 or self.cols == 1:
-            if ord == 2 or ord is None:  # Common case sqrt(<x, x>)
+        if S.One in self.shape:
+            if ord in (2, None):  # Common case sqrt(<x, x>)
                 return sqrt(Add(*(abs(i) ** 2 for i in vals)))
 
             elif ord == 1:  # sum(abs(x))
@@ -2101,7 +2101,7 @@ class MatrixBase(MatrixDeprecated,
         {-33, 4}
         """
         # Handle zero dimensions:
-        if self.rows == 0 or self.cols == 0:
+        if S.Zero in self.shape:
             return '[]'
         # Build table of string representations of the elements
         res = []

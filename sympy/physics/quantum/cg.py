@@ -4,7 +4,7 @@
 # -Implement new simpifications
 """Clebsch-Gordon Coefficients."""
 
-from sympy import (Add, expand, Eq, Expr, Mul, Piecewise, Pow, sqrt, Sum,
+from sympy import (Add, expand, Eq, Expr, Mul, Piecewise, Pow, S, sqrt, Sum,
                    symbols, sympify, Wild)
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
@@ -719,7 +719,7 @@ def _check_varsh_sum_872_4(e):
         return (KroneckerDelta(c, cp)*KroneckerDelta(gamma, gammap)).subs(match1)
     match2 = e.match(Sum(cg1**2, (alpha, -a, a), (beta, -b, b)))
     if match2 is not None and len(match2) == 4:
-        return 1
+        return S.One
     return e
 
 
@@ -728,7 +728,7 @@ def _cg_list(term):
         return (term,), 1, 1
     cg = []
     coeff = 1
-    if not (isinstance(term, Mul) or isinstance(term, Pow)):
+    if not isinstance(term, (Mul, Pow)):
         raise NotImplementedError('term must be CG, Add, Mul or Pow')
     if isinstance(term, Pow) and sympify(term.exp).is_number:
         if sympify(term.exp).is_number:

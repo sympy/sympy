@@ -1,7 +1,7 @@
 from sympy import (
     symbols, sin, simplify, cos, trigsimp, tan, exptrigsimp,sinh,
     cosh, diff, cot, Subs, exp, tanh, S, integrate, I,Matrix,
-    Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise , Rational
+    Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise, Rational
     )
 
 from sympy.testing.pytest import XFAIL

@@ -5,7 +5,7 @@ from sympy import (
     erfcinv, exp, im, log, pi, re, sec, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
     root, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
-    E, cbrt, denom, Add, Piecewise, GoldenRatio, TribonacciConstant)
+    E, cbrt, denom, Add, Piecewise, GoldenRatio, TribonacciConstant, conjugate)
 
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -20,7 +20,7 @@ from sympy.polys.rootoftools import CRootOf
 from sympy.testing.pytest import slow, XFAIL, SKIP, raises
 from sympy.testing.randtest import verify_numerically as tn
 
-from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m, R
+from sympy.abc import a, b, c, d, e, k, h, p, x, y, z, t, q, m, R
 
 
 def NS(e, n=15, **options):
@@ -299,6 +299,10 @@ def test_solve_rational():
     """Test solve for rational functions"""
     assert solve( ( x - y**3 )/( (y**2)*sqrt(1 - y**2) ), x) == [y**3]
 
+
+def test_solve_conjugate():
+    """Test solve for simple conjugate functions"""
+    assert solve(conjugate(x) -3 + I) == [3 + I]
 
 def test_solve_nonlinear():
     assert solve(x**2 - y**2, x, y, dict=True) == [{x: -y}, {x: y}]
@@ -2382,6 +2386,17 @@ def test_issue_6819():
     assert solve(a*b**x - c*d**x, x) == [log(c/a)/log(b/d)]
 
 
+def test_issue_17454():
+    x = Symbol('x')
+    assert solve((1 - x - I)**4, x) == [1 - I]
+
+
 def test_issue_21852():
     solution = [21 - 21*sqrt(2)/2]
     assert solve(2*x + sqrt(2*x**2) - 21) == solution
+
+
+def test_issue_21942():
+    eq = -d + (a*c**(1 - e) + b**(1 - e)*(1 - a))**(1/(1 - e))
+    sol = solve(eq, c, simplify=False, check=False)
+    assert sol == [(b/b**e - b/(a*b**e) + d**(1 - e)/a)**(1/(1 - e))]

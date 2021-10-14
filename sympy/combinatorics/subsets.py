@@ -507,7 +507,7 @@ class Subset(Basic):
         subset_from_bitlist
         """
         bitlist = ['0'] * len(superset)
-        if type(subset) is Subset:
+        if isinstance(subset, Subset):
             subset = subset.subset
         for i in Subset.subset_indices(subset, superset):
             bitlist[i] = '1'

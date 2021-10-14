@@ -173,7 +173,7 @@ def scaled_zero(mag, sign=1):
     >>> Float(scaled_zero(ok), p)
     -0.e+30
     """
-    if type(mag) is tuple and len(mag) == 4 and iszero(mag, scaled=True):
+    if isinstance(mag, tuple) and len(mag) == 4 and iszero(mag, scaled=True):
         return (mag[0][0],) + mag[1:]
     elif isinstance(mag, SYMPY_INTS):
         if sign not in [-1, 1]:
@@ -189,7 +189,7 @@ def scaled_zero(mag, sign=1):
 def iszero(mpf, scaled=False):
     if not scaled:
         return not mpf or not mpf[1] and not mpf[-1]
-    return mpf and type(mpf[0]) is list and mpf[1] == mpf[-1] == 1
+    return mpf and isinstance(mpf[0], list) and mpf[1] == mpf[-1] == 1
 
 
 def complex_accuracy(result):
@@ -445,7 +445,7 @@ def add_terms(terms, prec, target_prec):
     - scaled_zero if the sum of the terms produces a zero by cancellation
       e.g. mpfs representing 1 and -1 would produce a scaled zero which need
       special handling since they are not actually zero and they are purposely
-      malformed to ensure that they can't be used in anything but accuracy
+      malformed to ensure that they cannot be used in anything but accuracy
       calculations;
     - a tuple that is scaled to target_prec that corresponds to the
       sum of the terms.
@@ -453,7 +453,7 @@ def add_terms(terms, prec, target_prec):
     The returned mpf tuple will be normalized to target_prec; the input
     prec is used to define the working precision.
 
-    XXX explain why this is needed and why one can't just loop using mpf_add
+    XXX explain why this is needed and why one cannot just loop using mpf_add
     """
 
     terms = [t for t in terms if not iszero(t[0])]
@@ -915,9 +915,9 @@ def evalf_piecewise(expr, prec, options):
         del newopts['subs']
         if hasattr(expr, 'func'):
             return evalf(expr, prec, newopts)
-        if type(expr) == float:
+        if isinstance(expr, float):
             return evalf(Float(expr), prec, newopts)
-        if type(expr) == int:
+        if isinstance(expr, int):
             return evalf(Integer(expr), prec, newopts)
 
     # We still have undefined symbols

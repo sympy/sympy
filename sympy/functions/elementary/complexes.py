@@ -318,9 +318,10 @@ class sign(Function):
     _singularities = True
 
     def doit(self, **hints):
-        if self.args[0].is_zero is False:
+        s = super().doit()
+        if s == self and self.args[0].is_zero is False:
             return self.args[0] / Abs(self.args[0])
-        return self
+        return s
 
     @classmethod
     def eval(cls, arg):
@@ -815,6 +816,9 @@ class conjugate(Function):
         if obj is not None:
             return obj
 
+    def inverse(self):
+        return conjugate
+
     def _eval_Abs(self):
         return Abs(self.args[0], evaluate=True)
 
@@ -1216,7 +1220,6 @@ class principal_branch(Function):
 
     @classmethod
     def eval(self, x, period):
-        from sympy import oo, exp_polar, I, Mul, polar_lift, Symbol
         if isinstance(x, polar_lift):
             return principal_branch(x.args[0], period)
         if period == oo:
@@ -1267,7 +1270,6 @@ class principal_branch(Function):
             return exp_polar(arg*I)*abs(c)
 
     def _eval_evalf(self, prec):
-        from sympy import exp, pi, I
         z, period = self.args
         p = periodic_argument(z, period)._eval_evalf(prec)
         if abs(p) > pi or p == -pi:
@@ -1390,7 +1392,7 @@ def _unpolarify(eq, exponents_only, pause=False):
     return eq.func(*[_unpolarify(x, exponents_only, True) for x in eq.args])
 
 
-def unpolarify(eq, subs={}, exponents_only=False):
+def unpolarify(eq, subs=None, exponents_only=False):
     """
     If p denotes the projection from the Riemann surface of the logarithm to
     the complex line, return a simplified version eq' of `eq` such that
@@ -1411,7 +1413,7 @@ def unpolarify(eq, subs={}, exponents_only=False):
         return eq
 
     eq = sympify(eq)
-    if subs != {}:
+    if subs is not None:
         return unpolarify(eq.subs(subs))
     changed = True
     pause = False

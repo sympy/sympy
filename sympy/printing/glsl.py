@@ -97,7 +97,7 @@ class GLSLPrinter(CodePrinter):
         pretty = []
         level = 0
         for n, line in enumerate(code):
-            if line == '' or line == '\n':
+            if line in ('', '\n'):
                 pretty.append(line)
                 continue
             level -= decrease[n]
@@ -134,7 +134,7 @@ class GLSLPrinter(CodePrinter):
                     A.table(self,rowsep=', ',
                     rowstart='',rowend='')
                 )
-        elif A.cols == 1 or A.rows == 1:
+        elif S.One in A.shape:
             return "{}({})".format(
                 array_constructor,
                 A.table(self,rowsep=mat_separator,rowstart='',rowend='')

@@ -120,9 +120,9 @@ class MapleCodePrinter(CodePrinter):
         PREC = precedence(expr)
         if expr.exp == -1:
             return '1/%s' % (self.parenthesize(expr.base, PREC))
-        elif expr.exp == 0.5 or expr.exp == S(1) / 2:
+        elif expr.exp in (0.5, S.Half):
             return 'sqrt(%s)' % self._print(expr.base)
-        elif expr.exp == -0.5 or expr.exp == -S(1) / 2:
+        elif expr.exp in (-0.5, -S.Half):
             return '1/sqrt(%s)' % self._print(expr.base)
         else:
             return '{base}^{exp}'.format(
@@ -184,7 +184,7 @@ class MapleCodePrinter(CodePrinter):
         return 'undefined'
 
     def _get_matrix(self, expr, sparse=False):
-        if expr.cols == 0 or expr.rows == 0:
+        if S.Zero in expr.shape:
             _strM = 'Matrix([], storage = {storage})'.format(
                 storage='sparse' if sparse else 'rectangular')
         else:
@@ -206,7 +206,7 @@ class MapleCodePrinter(CodePrinter):
         return self._get_matrix(expr, sparse=True)
 
     def _print_Identity(self, expr):
-        if isinstance(expr.rows, Integer) or isinstance(expr.rows, IntegerConstant):
+        if isinstance(expr.rows, (Integer, IntegerConstant)):
             return self._print(sympy.SparseMatrix(expr))
         else:
             return "Matrix({var_size}, shape = identity)".format(var_size=self._print(expr.rows))
@@ -215,11 +215,8 @@ class MapleCodePrinter(CodePrinter):
         PREC=precedence(expr)
         _fact_list = list(expr.args)
         _const = None
-        if not (
-            isinstance(_fact_list[0], sympy.MatrixBase) or isinstance(
-            _fact_list[0], sympy.MatrixExpr) or isinstance(
-            _fact_list[0], sympy.MatrixSlice) or isinstance(
-            _fact_list[0], sympy.MatrixSymbol)):
+        if not isinstance(_fact_list[0], (sympy.MatrixBase, sympy.MatrixExpr,
+                                          sympy.MatrixSlice, sympy.MatrixSymbol)):
             _const, _fact_list = _fact_list[0], _fact_list[1:]
 
         if _const is None or _const == 1:

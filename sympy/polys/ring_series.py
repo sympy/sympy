@@ -941,7 +941,7 @@ def rs_nth_root(p, n, x, prec):
 
     The result of this function is dependent on the ring over which the
     polynomial has been defined. If the answer involves a root of a constant,
-    make sure that the polynomial is over a real field. It can not yet handle
+    make sure that the polynomial is over a real field. It cannot yet handle
     roots of symbols.
 
     Examples
@@ -981,13 +981,13 @@ def rs_nth_root(p, n, x, prec):
                 c_expr = c.as_expr()
                 const = R(c_expr**(QQ(1, n)))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         else:
             try:                              # RealElement doesn't support
                 const = R(c**Rational(1, n))  # exponentiation with mpq object
             except ValueError:                # as exponent
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         res = rs_nth_root(p/c, n, x, prec)*const
     else:
@@ -1045,7 +1045,7 @@ def rs_log(p, x, prec):
                 try:
                     const = R(log(c))
                 except ValueError:
-                    raise DomainError("The given series can't be expanded in "
+                    raise DomainError("The given series cannot be expanded in "
                         "this domain.")
 
         dlog = p.diff(x)
@@ -1139,7 +1139,7 @@ def rs_exp(p, x, prec):
             try:
                 const = R(exp(c))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         p1 = p - c
 
@@ -1212,13 +1212,13 @@ def rs_atan(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(atan(c_expr))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         else:
             try:
                 const = R(atan(c))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
 
     # Instead of using a closed form formula, we differentiate atan(p) to get
@@ -1341,7 +1341,7 @@ def rs_tan(p, x, prec):
             try:
                 const = R(tan(c))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         p1 = p - c
 
@@ -1439,7 +1439,7 @@ def rs_sin(p, x, prec):
             try:
                 t1, t2 = R(sin(c)), R(cos(c))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         p1 = p - c
 
@@ -1506,7 +1506,7 @@ def rs_cos(p, x, prec):
             try:
                 _, _ = R(sin(c)), R(cos(c))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         p1 = p - c
 
@@ -1600,13 +1600,13 @@ def rs_atanh(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(atanh(c_expr))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         else:
             try:
                 const = R(atanh(c))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
 
     # Instead of using a closed form formula, we differentiate atanh(p) to get
@@ -1729,13 +1729,13 @@ def rs_tanh(p, x, prec):
                 c_expr = c.as_expr()
                 const = R(tanh(c_expr))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         else:
             try:
                 const = R(tanh(c))
             except ValueError:
-                raise DomainError("The given series can't be expanded in "
+                raise DomainError("The given series cannot be expanded in "
                     "this domain.")
         p1 = p - c
         t1 = rs_tanh(p1, x, prec)

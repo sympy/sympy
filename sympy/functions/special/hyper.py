@@ -337,7 +337,7 @@ class hyper(TupleParametersBase):
     @property
     def convergence_statement(self):
         """ Return a condition on z under which the series converges. """
-        from sympy import And, Or, re, Ne, oo
+        from sympy import And, Or, Ne
         R = self.radius_of_convergence
         if R == 0:
             return False
@@ -649,7 +649,7 @@ class meijerg(TupleParametersBase):
         alpha = compute(self.an)
         p, q = len(self.ap), len(self.bq)
         if p == q:
-            if beta == oo or alpha == oo:
+            if oo in (alpha, beta):
                 return oo
             return 2*pi*ilcm(alpha, beta)
         elif p < q:

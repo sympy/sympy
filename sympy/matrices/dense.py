@@ -2,6 +2,7 @@ import random
 
 from sympy.core.basic import Basic
 from sympy.core.compatibility import is_sequence
+from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -502,7 +503,7 @@ def GramSchmidt(vlist, orthonormal=False):
     )
 
 
-def hessian(f, varlist, constraints=[]):
+def hessian(f, varlist, constraints=()):
     """Compute Hessian matrix for a function f wrt parameters in varlist
     which may be given as a sequence or a row/column vector. A list of
     constraints may optionally be given.
@@ -740,7 +741,7 @@ def wronskian(functions, var, method='bareiss'):
         functions[index] = sympify(functions[index])
     n = len(functions)
     if n == 0:
-        return 1
+        return S.One
     W = Matrix(n, n, lambda i, j: functions[i].diff(var, j))
     return W.det(method)
 

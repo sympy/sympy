@@ -1,6 +1,6 @@
 from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
                    cot, sec, csc, Abs, symbols, I, re, simplify,
-                   expint, Rational, Piecewise)
+                   expint, Rational, Piecewise, MatrixSymbol, Min, Max)
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds, is_convex,
                                  stationary_points, minimum, maximum)
@@ -178,6 +178,12 @@ def test_periodicity():
     p = Piecewise((0, x < -1), (x**2, x <= 1), (log(x), True))
     assert periodicity(p, x) is None
 
+    m = MatrixSymbol('m', 3, 3)
+    raises(NotImplementedError, lambda: periodicity(sin(m), m))
+    raises(NotImplementedError, lambda: periodicity(sin(m[0, 0]), m))
+    raises(NotImplementedError, lambda: periodicity(sin(m), m[0, 0]))
+    raises(NotImplementedError, lambda: periodicity(sin(m[0, 0]), m[0, 0]))
+
 
 def test_periodicity_check():
     x = Symbol('x')
@@ -191,8 +197,6 @@ def test_periodicity_check():
 
 
 def test_lcim():
-    from sympy import pi
-
     assert lcim([S.Half, S(2), S(3)]) == 6
     assert lcim([pi/2, pi/4, pi]) == pi
     assert lcim([2*pi, pi/2]) == 2*pi
@@ -463,13 +467,13 @@ def test_AccumBounds_pow():
     assert B(0, 2)**S.Half == B(0, sqrt(2))
 
     neg = Symbol('neg', negative=True)
-    unchanged(Pow, B(neg, 1), S.Half)
+    assert unchanged(Pow, B(neg, 1), S.Half)
     nn = Symbol('nn', nonnegative=True)
     assert B(nn, nn + 1)**S.Half == B(sqrt(nn), sqrt(nn + 1))
     assert B(nn, nn + 1)**nn == B(nn**nn, (nn + 1)**nn)
-    unchanged(Pow, B(nn, nn + 1), x)
+    assert unchanged(Pow, B(nn, nn + 1), x)
     i = Symbol('i', integer=True)
-    unchanged(Pow, B(1, 2), i)
+    assert B(1, 2)**i == B(Min(1, 2**i), Max(1, 2**i))
     i = Symbol('i', integer=True, nonnegative=True)
     assert B(1, 2)**i == B(1, 2**i)
     assert B(0, 1)**i == B(0**i, 1)
@@ -540,7 +544,7 @@ def test_AccumBounds_exponent():
     assert B(2, 3)**B(-3, 2) == B(S(1)/27, 9)
 
     # bounds generating imaginary parts unevaluated
-    unchanged(Pow, B(-1, 1), B(1, 2))
+    assert unchanged(Pow, B(-1, 1), B(1, 2))
     assert B(0, S(1)/2)**B(1, oo) == B(0, S(1)/2)
     assert B(0, 1)**B(1, oo) == B(0, oo)
     assert B(0, 2)**B(1, oo) == B(0, oo)
@@ -636,6 +640,7 @@ def test_issue_16469():
     x = Symbol("x", real=True)
     f = abs(x)
     assert function_range(f, x, S.Reals) == Interval(0, oo, False, True)
+
 
 @_both_exp_pow
 def test_issue_18747():

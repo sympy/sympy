@@ -12,7 +12,7 @@ from sympy.core import Add, S, Pow, Rational
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, _mexpand
-from sympy.core.numbers import Float, zoo
+from sympy.core.numbers import zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.core.mul import Mul
@@ -291,7 +291,7 @@ class SingleODESolver:
 
     def get_general_solution(self, *, simplify: bool = True) -> List[Equality]:
         if not self.matches():
-            msg = "%s solver can not solve:\n%s"
+            msg = "%s solver cannot solve:\n%s"
             raise ODEMatchError(msg % (self.hint, self.ode_problem.eq))
         return self._get_general_solution(simplify_flag=simplify)
 
@@ -875,13 +875,12 @@ class Factorable(SingleODESolver):
     has_integral = False
 
     def _matches(self):
-        eq = self.ode_problem.eq
+        eq_orig = self.ode_problem.eq
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
-        order =self.ode_problem.order
         df = f(x).diff(x)
         self.eqs = []
-        eq = eq.collect(f(x), func = cancel)
+        eq = eq_orig.collect(f(x), func = cancel)
         eq = fraction(factor(eq))[0]
         factors = Mul.make_args(factor(eq))
         roots = [fac.as_base_exp() for fac in factors if len(fac.args)!=0]
@@ -894,13 +893,9 @@ class Factorable(SingleODESolver):
         roots = solve(eq, df)
         if len(roots)>0:
             self.eqs = [(df - root) for root in roots]
-            if len(self.eqs)==1:
-                if order>1:
-                    return False
-                if self.eqs[0].has(Float):
-                    return False
-                return fraction(factor(self.eqs[0]))[0]-eq!=0
-            return True
+            # Avoid infinite recursion
+            matches = self.eqs != [eq_orig]
+            return matches
         for i in factors:
             if i.has(f(x)):
                 self.eqs.append(i)

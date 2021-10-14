@@ -69,9 +69,9 @@ def _sympifyit(arg, retval=None):
 
 
 def __sympifyit(func, arg, retval=None):
-    """decorator to _sympify `arg` argument for function `func`
+    """Decorator to _sympify `arg` argument for function `func`.
 
-       don't use directly -- use _sympifyit instead
+       Do not use directly -- use _sympifyit instead.
     """
 
     # we support f(a,b) only

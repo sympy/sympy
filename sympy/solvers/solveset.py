@@ -186,12 +186,12 @@ def _invert(f_x, y, x, domain=S.Complexes):
 invert_complex = _invert
 
 
-def invert_real(f_x, y, x, domain=S.Reals):
+def invert_real(f_x, y, x):
     """
-    Inverts a real-valued function. Same as _invert, but sets
+    Inverts a real-valued function. Same as ``_invert``, but sets
     the domain to ``S.Reals`` before inverting.
     """
-    return _invert(f_x, y, x, domain)
+    return _invert(f_x, y, x, S.Reals)
 
 
 def _invert_real(f, g_ys, symbol):
@@ -295,16 +295,16 @@ def _invert_real(f, g_ys, symbol):
     if isinstance(f, TrigonometricFunction):
         if isinstance(g_ys, FiniteSet):
             def inv(trig):
-                if isinstance(f, (sin, csc)):
-                    F = asin if isinstance(f, sin) else acsc
+                if isinstance(trig, (sin, csc)):
+                    F = asin if isinstance(trig, sin) else acsc
                     return (lambda a: n*pi + (-1)**n*F(a),)
-                if isinstance(f, (cos, sec)):
-                    F = acos if isinstance(f, cos) else asec
+                if isinstance(trig, (cos, sec)):
+                    F = acos if isinstance(trig, cos) else asec
                     return (
                         lambda a: 2*n*pi + F(a),
                         lambda a: 2*n*pi - F(a),)
-                if isinstance(f, (tan, cot)):
-                    return (lambda a: n*pi + f.inverse()(a),)
+                if isinstance(trig, (tan, cot)):
+                    return (lambda a: n*pi + trig.inverse()(a),)
 
             n = Dummy('n', integer=True)
             invs = S.EmptySet
@@ -494,8 +494,8 @@ def _domain_check(f, symbol, p):
 def _is_finite_with_finite_vars(f, domain=S.Complexes):
     """
     Return True if the given expression is finite. For symbols that
-    don't assign a value for `complex` and/or `real`, the domain will
-    be used to assign a value; symbols that don't assign a value
+    do not assign a value for `complex` and/or `real`, the domain will
+    be used to assign a value; symbols that do not assign a value
     for `finite` will be made finite. All other assumptions are
     left unmodified.
     """
@@ -610,7 +610,7 @@ def _solve_trig1(f, symbol, domain):
 
     Returns either the solution set as a ConditionSet (auto-evaluated to a
     union of ImageSets if no variables besides 'symbol' are involved) or
-    raises _SolveTrig1Error if f == 0 can't be solved.
+    raises _SolveTrig1Error if f == 0 cannot be solved.
 
     Notes
     =====
@@ -708,7 +708,7 @@ def _solve_trig1(f, symbol, domain):
 def _solve_trig2(f, symbol, domain):
     """Secondary helper to solve trigonometric equations,
     called when first helper fails """
-    from sympy import ilcm, expand_trig, degree
+    from sympy import ilcm, expand_trig
     f = trigsimp(f)
     f_original = f
     trig_functions = f.atoms(sin, cos, tan, sec, cot, csc)
@@ -729,7 +729,7 @@ def _solve_trig2(f, symbol, domain):
         try:
             poly_ar = Poly(ar, symbol)
         except PolynomialError:
-            raise ValueError("give up, we can't solve if this is not a polynomial in x")
+            raise ValueError("give up, we cannot solve if this is not a polynomial in x")
         if poly_ar.degree() > 1:  # degree >1 still bad
             raise ValueError("degree of variable inside polynomial should not exceed one")
         if poly_ar.degree() == 0:  # degree 0, don't care
@@ -862,7 +862,7 @@ def _solve_radical(f, unradf, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    if isinstance(result, Complement) or isinstance(result,ConditionSet):
+    if not isinstance(result, FiniteSet):
         solution_set = result
     else:
         f_set = []  # solutions for FiniteSet
@@ -1025,8 +1025,10 @@ def _solveset(f, symbol, domain, _check=False):
             _is_function_class_equation(HyperbolicFunction, f, symbol):
         result = _solve_trig(f, symbol, domain)
     elif isinstance(f, arg):
+        from sympy.functions.elementary.complexes import re, im
         a = f.args[0]
-        result = solveset_real(a > 0, symbol)
+        result = Intersection(_solveset(re(a) > 0, symbol, domain),
+                              _solveset(im(a), symbol, domain))
     elif f.is_Piecewise:
         expr_set_pairs = f.as_expr_set_pairs(domain)
         for (expr, in_set) in expr_set_pairs:
@@ -1065,7 +1067,7 @@ def _solveset(f, symbol, domain, _check=False):
         elif isinstance(rhs_s, FiniteSet):
             for equation in [lhs - rhs for rhs in rhs_s]:
                 if equation == f:
-                    u = unrad(f)
+                    u = unrad(f, symbol)
                     if u:
                         result += _solve_radical(equation, u,
                                                  symbol,
@@ -1104,13 +1106,11 @@ def _solveset(f, symbol, domain, _check=False):
     if isinstance(result, ConditionSet):
         if isinstance(f, Expr):
             num, den = f.as_numer_denom()
-        else:
-            num, den = f, S.One
-        if den.has(symbol):
-            _result = _solveset(num, symbol, domain)
-            if not isinstance(_result, ConditionSet):
-                singularities = _solveset(den, symbol, domain)
-                result = _result - singularities
+            if den.has(symbol):
+                _result = _solveset(num, symbol, domain)
+                if not isinstance(_result, ConditionSet):
+                    singularities = _solveset(den, symbol, domain)
+                    result = _result - singularities
 
     if _check:
         if isinstance(result, ConditionSet):
@@ -2936,9 +2936,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 
     """
 
-    from sympy import Complement
-    from sympy.core.compatibility import is_sequence
-
     if not system:
         return S.EmptySet
 
@@ -3263,7 +3260,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             soln_new += soln.args[1]
                         soln = soln_new if soln_new else soln
                         if index > 0 and solver == solveset_real:
-                            # one symbol's real soln , another symbol may have
+                            # one symbol's real soln, another symbol may have
                             # corresponding complex soln.
                             if not isinstance(soln, (ImageSet, ConditionSet)):
                                 soln += solveset_complex(eq2, sym)
@@ -3381,7 +3378,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 
     if result_infinite:
         # we have general soln
-        # eg : [{x: -1, y : 1}, {x : -y , y: y}] then
+        # eg : [{x: -1, y : 1}, {x : -y, y: y}] then
         # return [{x : -y, y : y}]
         result_all_variables = result_infinite
     if intersections or complements:
@@ -3451,7 +3448,7 @@ def _separate_poly_nonpoly(system, symbols):
         if isinstance(eq, Equality):
             eq = eq.rewrite(Add)
         # try to remove sqrt and rational power
-        without_radicals = unrad(simplify(eq))
+        without_radicals = unrad(simplify(eq), *symbols)
         if without_radicals:
             eq_unrad, cov = without_radicals
             if not cov:
@@ -3574,7 +3571,7 @@ def nonlinsolve(system, *symbols):
     new `system`). But it is not recommended to solve linear system using
     `nonlinsolve`, because `linsolve` is better for general linear systems.
 
-    >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9 , y + z - 4], [x, y, z])
+    >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9, y + z - 4], [x, y, z])
     {(3*z - 5, 4 - z, z)}
 
     5. System having polynomial equations and only real solution is
@@ -3621,7 +3618,7 @@ def nonlinsolve(system, *symbols):
     3. Complement and Intersection will be added if any : nonlinsolve maintains
     dict for complements and Intersections. If solveset find complements or/and
     Intersection with any Interval or set during the execution of
-    `substitution` function ,then complement or/and Intersection for that
+    `substitution` function, then complement or/and Intersection for that
     variable is added before returning final solution.
 
     """

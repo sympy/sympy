@@ -226,7 +226,7 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
             return gcd(4*u_3*v, n)
 
         a24 = (C + 2)*mod_inverse(4, n) % n
-        Q = Point(u_3 , pow(v, 3, n), a24, n)
+        Q = Point(u_3, pow(v, 3, n), a24, n)
         Q = Q.mont_ladder(k)
         g = gcd(Q.z_cord, n)
 

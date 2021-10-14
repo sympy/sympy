@@ -197,7 +197,6 @@ def test_sin_rewrite():
 
 
 def _test_extrig(f, i, e):
-    from sympy.core.expr import unchanged
     from sympy.core.function import expand_trig
     assert unchanged(f, i)
     assert expand_trig(f(i)) == f(i)
@@ -1255,9 +1254,9 @@ def test_as_leading_term_issue_5272():
 
 
 def test_leading_terms():
-    assert sin(1/x).as_leading_term(x) == AccumBounds(-1 , 1)
+    assert sin(1/x).as_leading_term(x) == AccumBounds(-1, 1)
     assert sin(S.Half).as_leading_term(x) == sin(S.Half)
-    assert cos(1/x).as_leading_term(x) == AccumBounds(-1 , 1)
+    assert cos(1/x).as_leading_term(x) == AccumBounds(-1, 1)
     assert cos(S.Half).as_leading_term(x) == cos(S.Half)
 
     for func in [tan, cot]:

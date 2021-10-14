@@ -625,7 +625,7 @@ class BoundedParetoDistribution(SingleContinuousDistribution):
 
     @property
     def set(self):
-        return Interval(self.left , self.right)
+        return Interval(self.left, self.right)
 
     @staticmethod
     def check(alpha, left, right):
