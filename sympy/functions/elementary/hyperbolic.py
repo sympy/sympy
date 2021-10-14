@@ -36,7 +36,7 @@ class HyperbolicFunction(Function):
 
 def _peeloff_ipi(arg):
     """
-    Split ARG into two parts, a "rest" and a multiple of I*pi/2.
+    Split ARG into two parts, a "rest" and a multiple of I*pi.
     This assumes ARG to be an Add.
     The multiple of I*pi returned in the second position is always a Rational.
 
