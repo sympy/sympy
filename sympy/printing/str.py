@@ -248,10 +248,10 @@ class StrPrinter(Printer):
 
     def _print_MatrixSlice(self, expr):
         return (self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) + '[' +
-                self.__str_slice(expr.rowslice, expr.parent.rows) + ', ' +
-                self.__str_slice(expr.colslice, expr.parent.cols) + ']')
+                self.__slice_to_str(expr.rowslice, expr.parent.rows) + ', ' +
+                self.__slice_to_str(expr.colslice, expr.parent.cols) + ']')
 
-    def __str_slice(self, x, dim):
+    def __slice_to_str(self, x, dim):
         if not isinstance(x, abc.Iterable):
             return self._print(x)
         x = list(x)
@@ -495,13 +495,13 @@ class StrPrinter(Printer):
         return "%s[%s]" % (expr.parent, ", ".join([self._print(i) for i in expr.indices]))
 
     def _print_ArraySlice(self, expr):
-        slice_strings = []
-        for slice, max_size in itertools.zip_longest(expr.slices, expr.parent.shape):
-            if slice is None:
+        stringified_indices = []
+        for idx, axis_size in itertools.zip_longest(expr.indices, expr.parent.shape):
+            if idx is None:
                 break
-            slice_strings.append(self.__str_slice(slice, max_size))
+            stringified_indices.append(self.__slice_to_str(idx, axis_size))
         name = self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)
-        suffix = '[' + ", ".join(slice_strings) + ']'
+        suffix = "[" + ", ".join(stringified_indices) + "]"
         return name + suffix
 
     def _print_PermutationGroup(self, expr):

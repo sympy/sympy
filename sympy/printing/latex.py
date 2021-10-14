@@ -1655,10 +1655,10 @@ class LatexPrinter(Printer):
 
     def _print_MatrixSlice(self, expr):
         return (self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) + r'\left[' +
-                self.__latex_slice(expr.rowslice, expr.parent.rows) + ', ' +
-                self.__latex_slice(expr.colslice, expr.parent.cols) + r'\right]')
+                self.__slice_to_str(expr.rowslice, expr.parent.rows) + ', ' +
+                self.__slice_to_str(expr.colslice, expr.parent.cols) + r'\right]')
 
-    def __latex_slice(self, x, dim) -> str:
+    def __slice_to_str(self, x, dim) -> str:
         if not isinstance(x, abc.Iterable):
             return self._print(x)
         x = list(x)
@@ -1915,13 +1915,13 @@ class LatexPrinter(Printer):
         return "{{%s}_{%s}}" % (expr.parent, ", ".join([f"{self._print(i)}" for i in expr.indices]))
 
     def _print_ArraySlice(self, expr):
-        slice_strings = []
-        for slice, max_size in itertools.zip_longest(expr.slices, expr.parent.shape):
-            if slice is None:
+        stringified_indices = []
+        for idx, axis_size in itertools.zip_longest(expr.indices, expr.parent.shape):
+            if idx is None:
                 break
-            slice_strings.append(self.__latex_slice(slice, max_size))
+            stringified_indices.append(self.__slice_to_str(idx, axis_size))
         name = self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)
-        suffix = R'\left[' + ", ".join(slice_strings) + R'\right]'
+        suffix = R'\left[' + ", ".join(stringified_indices) + R'\right]'
         return name + suffix
 
     def _print_UniversalSet(self, expr):

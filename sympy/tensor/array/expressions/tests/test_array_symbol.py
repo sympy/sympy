@@ -69,9 +69,9 @@ class TestArraySlice:
     )
     def test_construct_from_array_symbol(self, shape, indices, expected):
         A = ArraySymbol("A", *shape)
-        array_slice = ArraySlice(A, slices=indices)
+        array_slice = ArraySlice(A, indices=indices)
         assert array_slice.parent is A
-        assert array_slice.slices == expected
+        assert array_slice.indices == expected
 
 
 class TestArraySymbol:

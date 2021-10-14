@@ -123,44 +123,44 @@ def _normalize_index(idx, axis_size: Optional[Basic]):
 
 class ArraySlice(_ArrayExpr):
     parent: ArraySymbol = property(lambda self: self.args[0])
-    slices: typing.Tuple[Tuple, ...] = property(lambda self: tuple(self.args[1]))
+    indices: typing.Tuple[Tuple, ...] = property(lambda self: tuple(self.args[1]))
 
     def __new__(
-        cls, parent: ArraySymbol, slices: typing.Tuple[Union[Basic, int, slice], ...]
+        cls, parent: ArraySymbol, indices: typing.Tuple[Union[Basic, int, slice], ...]
     ) -> "ArraySlice":
         _assert_parent_type(cls, parent)
-        normalized_slices = []
-        for s, size in zip_longest(slices, parent.shape):
-            if s is None:
+        normalized_indices = []
+        for idx, axis_size in zip_longest(indices, parent.shape):
+            if idx is None:
                 break
-            if isinstance(s, slice):
-                new_slice = Tuple(*normalize(s, size))
+            if isinstance(idx, slice):
+                new_idx = Tuple(*normalize(idx, axis_size))
             else:
-                new_slice = _sympify(_normalize_index(s, size))
-            normalized_slices.append(new_slice)
-        return Expr.__new__(cls, parent, Tuple(*normalized_slices))
+                new_idx = _sympify(_normalize_index(idx, axis_size))
+            normalized_indices.append(new_idx)
+        return Expr.__new__(cls, parent, Tuple(*normalized_indices))
 
     @property
     def shape(self) -> typing.Tuple[Union[Basic, int], ...]:
         shape = [
-            _compute_slice_size(slice, shape)
-            for slice, shape in zip_longest(self.slices, self.parent.shape)
+            _compute_slice_size(idx, shape)
+            for idx, shape in zip_longest(self.indices, self.parent.shape)
         ]
         return tuple(shape)
 
 
-def _compute_slice_size(slice, max_size):
-    if slice is None:
-        return max_size
-    if not isinstance(slice, Tuple):
+def _compute_slice_size(idx, axis_size):
+    if idx is None:
+        return axis_size
+    if not isinstance(idx, Tuple):
         return 1
-    start, stop, step = slice
-    if stop is None and max_size is None:
+    start, stop, step = idx
+    if stop is None and axis_size is None:
         return None
     size = stop - start
     size = size if step == 1 or step is None else floor(size / step)
-    if max_size is not None and (size > max_size) == True:
-        return max_size
+    if axis_size is not None and (size > axis_size) == True:
+        return axis_size
     return size
 
 
