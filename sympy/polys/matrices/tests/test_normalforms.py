@@ -5,11 +5,9 @@ from sympy.polys.matrices.normalforms import (
     invariant_factors, smith_normal_form,
     hermite_normal_form, _hermite_normal_form, _hermite_normal_form_modulo_D)
 from sympy.polys.domains import ZZ, QQ
-from sympy.polys.matrices import DomainMatrix
+from sympy.polys.matrices import DomainMatrix, DM
 from sympy.polys.matrices.exceptions import DMDomainError, DMShapeError
 
-
-DM = DomainMatrix.from_list
 
 def test_smith_normal():
 

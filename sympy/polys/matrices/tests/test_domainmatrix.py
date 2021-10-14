@@ -9,11 +9,19 @@ from sympy.matrices.common import (NonInvertibleMatrixError,
 from sympy.matrices.dense import Matrix
 from sympy.polys.domains import FF, ZZ, QQ, EXRAW
 
-from sympy.polys.matrices.domainmatrix import DomainMatrix, DomainScalar
+from sympy.polys.matrices.domainmatrix import DomainMatrix, DomainScalar, DM
 from sympy.polys.matrices.exceptions import (
     DMBadInputError, DMDomainError, DMShapeError, DMFormatError, DMNotAField)
 from sympy.polys.matrices.ddm import DDM
 from sympy.polys.matrices.sdm import SDM
+
+
+def test_DM():
+    ddm = DDM([[ZZ(1), ZZ(2)], [ZZ(3), ZZ(4)]], (2, 2), ZZ)
+    A = DM([[1, 2], [3, 4]], ZZ)
+    assert A.rep == ddm
+    assert A.shape == (2, 2)
+    assert A.domain == ZZ
 
 
 def test_DomainMatrix_init():

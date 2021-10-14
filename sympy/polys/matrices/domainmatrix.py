@@ -26,6 +26,26 @@ from .domainscalar import DomainScalar
 
 from sympy.polys.domains import ZZ, EXRAW
 
+
+def DM(rows, domain):
+    """Convenient alias for DomainMatrix.from_list
+
+    Examples
+    =======
+
+    >>> from sympy import ZZ
+    >>> from sympy.polys.matrices import DM
+    >>> DM([[1, 2], [3, 4]], ZZ)
+    DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
+
+    See also
+    =======
+
+    DomainMatrix.from_list
+    """
+    return DomainMatrix.from_list(rows, domain)
+
+
 class DomainMatrix:
     r"""
     Associate Matrix with :py:class:`~.Domain`
