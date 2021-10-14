@@ -62,7 +62,7 @@ class MatAdd(MatrixExpr, Add):
         return self.args[0].shape
 
     def could_extract_minus_sign(self):
-        from symyp.core.add import _could_extract_minus_sign as f
+        from sympy.core.add import _could_extract_minus_sign as f
         return f(self)
 
     def _entry(self, i, j, **kwargs):
