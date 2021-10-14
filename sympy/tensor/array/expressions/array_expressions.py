@@ -98,13 +98,10 @@ class ArrayElement(_ArrayExpr):
                     f" {type(parent).__name__} is {len(parent.shape)}-dimensional,"
                     f" but {len(indices)} indices were given"
                 )
-            normalized_indices = []
-            for i, s in zip(indices, parent.shape):
-                if s.is_Integer and -s <= i < 0:
-                    index = i + s
-                else:
-                    index = i
-                normalized_indices.append(index)
+            normalized_indices = [
+                _normalize_index(i, axis_size)
+                for i, axis_size in zip(indices, parent.shape)
+            ]
         else:
             normalized_indices = list(indices)
         return Expr.__new__(cls, parent, Tuple(*normalized_indices))
@@ -116,6 +113,12 @@ def _assert_parent_type(cls, parent) -> None:
             f"{cls.__name__} has to be constructed from an"
             f"{ArraySymbol.__name__}, not {type(parent).__name__}"
         )
+
+
+def _normalize_index(idx, axis_size: Optional[Basic]):
+    if axis_size and axis_size.is_Integer and -axis_size <= idx < 0:
+        return idx + axis_size
+    return idx
 
 
 class ArraySlice(_ArrayExpr):
@@ -133,7 +136,7 @@ class ArraySlice(_ArrayExpr):
             if isinstance(s, slice):
                 new_slice = Tuple(*normalize(s, size))
             else:
-                new_slice = _sympify(s)
+                new_slice = _sympify(_normalize_index(s, size))
             normalized_slices.append(new_slice)
         return Expr.__new__(cls, parent, Tuple(*normalized_slices))
 

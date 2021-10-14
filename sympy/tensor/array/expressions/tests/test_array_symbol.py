@@ -64,7 +64,7 @@ class TestArraySlice:
             ([3, 3], (1, slice(None, 2)), (1, Tuple(0, 2, 1))),
             ([3, 3], (1, slice(None, 5)), (1, Tuple(0, 5, 1))),  # overflow
             # # negative indices
-            ([3, 3], (-1, slice(None, -2)), (-1, Tuple(0, 1, 1))),
+            ([3, 3], (-1, slice(None, -2)), (2, Tuple(0, 1, 1))),
         ],
     )
     def test_construct_from_array_symbol(self, shape, indices, expected):
