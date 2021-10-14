@@ -164,6 +164,8 @@ class Mul(Expr, AssocOp):
     def __neg__(self):
         c, args = self.as_coeff_mul()
         c = -c
+        if args[0] is S.ComplexInfinity:
+            c = -c
         if c is not S.One:
             if args[0].is_Number:
                 args = list(args)
