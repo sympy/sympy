@@ -2375,3 +2375,7 @@ def test_issue_22021():
         e = Add(*args, evaluate=False)
         assert -e == -1*e
     assert 2*Add(1, x, x, evaluate=False) == 4*x + 2
+
+
+def test_issue_22244():
+    assert -(zoo*x) == zoo*x
