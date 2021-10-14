@@ -567,6 +567,9 @@ def test_lambertw():
     assert LambertW(0, evaluate=False).is_algebraic
     na = Symbol('na', nonzero=True, algebraic=True)
     assert LambertW(na).is_algebraic is False
+    assert LambertW(p).is_zero is False
+    n = Symbol('n', negative=True)
+    assert LambertW(n).is_zero is False
 
 
 def test_issue_5673():

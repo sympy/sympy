@@ -149,7 +149,7 @@ def test_sin():
             assert e < 1e-12
 
     assert sin(0, evaluate=False).is_zero is True
-    assert sin(k*pi, evaluate=False).is_zero is None
+    assert sin(k*pi, evaluate=False).is_zero is True
 
     assert sin(Add(1, -1, evaluate=False), evaluate=False).is_zero is True
 
@@ -834,6 +834,17 @@ def test_sinc():
 
     assert sinc(x).rewrite(jn) == jn(0, x)
     assert sinc(x).rewrite(sin) == Piecewise((sin(x)/x, Ne(x, 0)), (1, True))
+    assert sinc(pi, evaluate=False).is_zero is True
+    assert sinc(0, evaluate=False).is_zero is False
+    assert sinc(n*pi, evaluate=False).is_zero is True
+    assert sinc(x).is_zero is None
+    xr = Symbol('xr', real=True, nonzero=True)
+    assert sinc(x).is_real is None
+    assert sinc(xr).is_real is True
+    assert sinc(I*xr).is_real is True
+    assert sinc(I*100).is_real is True
+    assert sinc(x).is_finite is None
+    assert sinc(xr).is_finite is True
 
 
 def test_asin():
@@ -872,7 +883,7 @@ def test_asin():
     assert asin(x).diff(x) == 1/sqrt(1 - x**2)
     assert asin(1/x).as_leading_term(x) == I*log(1/x)
 
-    assert asin(0.2).is_real is True
+    assert asin(0.2, evaluate=False).is_real is True
     assert asin(-2).is_real is False
     assert asin(r).is_real is None
 
@@ -1581,9 +1592,9 @@ def test_sec():
 
     assert sec(x).as_leading_term() == sec(x)
 
-    assert sec(0).is_finite == True
+    assert sec(0, evaluate=False).is_finite == True
     assert sec(x).is_finite == None
-    assert sec(pi/2).is_finite == False
+    assert sec(pi/2, evaluate=False).is_finite == False
 
     assert series(sec(x), x, x0=0, n=6) == 1 + x**2/2 + 5*x**4/24 + O(x**6)
 
@@ -1668,9 +1679,9 @@ def test_csc():
 
     assert csc(x).as_leading_term() == csc(x)
 
-    assert csc(0).is_finite == False
+    assert csc(0, evaluate=False).is_finite == False
     assert csc(x).is_finite == None
-    assert csc(pi/2).is_finite == True
+    assert csc(pi/2, evaluate=False).is_finite == True
 
     assert series(csc(x), x, x0=pi/2, n=6) == \
         1 + (x - pi/2)**2/2 + 5*(x - pi/2)**4/24 + O((x - pi/2)**6, (x, pi/2))

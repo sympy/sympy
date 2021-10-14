@@ -36,7 +36,7 @@ class HyperbolicFunction(Function):
 
 def _peeloff_ipi(arg):
     """
-    Split ARG into two parts, a "rest" and a multiple of I*pi/2.
+    Split ARG into two parts, a "rest" and a multiple of I*pi.
     This assumes ARG to be an Add.
     The multiple of I*pi returned in the second position is always a Rational.
 
@@ -47,24 +47,25 @@ def _peeloff_ipi(arg):
     >>> from sympy import pi, I
     >>> from sympy.abc import x, y
     >>> peel(x + I*pi/2)
-    (x, I*pi/2)
+    (x, 1/2)
     >>> peel(x + I*2*pi/3 + I*pi*y)
-    (x + I*pi*y + I*pi/6, I*pi/2)
+    (x + I*pi*y + I*pi/6, 1/2)
     """
+    ipi = S.Pi*S.ImaginaryUnit
     for a in Add.make_args(arg):
-        if a == S.Pi*S.ImaginaryUnit:
+        if a == ipi:
             K = S.One
             break
         elif a.is_Mul:
             K, p = a.as_two_terms()
-            if p == S.Pi*S.ImaginaryUnit and K.is_Rational:
+            if p == ipi and K.is_Rational:
                 break
     else:
         return arg, S.Zero
 
-    m1 = (K % S.Half)*S.Pi*S.ImaginaryUnit
-    m2 = K*S.Pi*S.ImaginaryUnit - m1
-    return arg - m2, m2
+    m1 = (K % S.Half)
+    m2 = K - m1
+    return arg - m2*ipi, m2
 
 
 class sinh(HyperbolicFunction):
@@ -134,6 +135,7 @@ class sinh(HyperbolicFunction):
             if arg.is_Add:
                 x, m = _peeloff_ipi(arg)
                 if m:
+                    m = m*S.Pi*S.ImaginaryUnit
                     return sinh(m)*cosh(x) + cosh(m)*sinh(x)
 
             if arg.is_zero:
@@ -269,9 +271,9 @@ class sinh(HyperbolicFunction):
         return arg.is_finite
 
     def _eval_is_zero(self):
-        arg = self.args[0]
-        if arg.is_zero:
-            return True
+        rest, ipi_mult = _peeloff_ipi(self.args[0])
+        if rest.is_zero:
+            return ipi_mult.is_integer
 
 
 class cosh(HyperbolicFunction):
@@ -331,6 +333,7 @@ class cosh(HyperbolicFunction):
             if arg.is_Add:
                 x, m = _peeloff_ipi(arg)
                 if m:
+                    m = m*S.Pi*S.ImaginaryUnit
                     return cosh(m)*cosh(x) + sinh(m)*sinh(x)
 
             if arg.is_zero:
@@ -507,6 +510,11 @@ class cosh(HyperbolicFunction):
         arg = self.args[0]
         return arg.is_finite
 
+    def _eval_is_zero(self):
+        rest, ipi_mult = _peeloff_ipi(self.args[0])
+        if ipi_mult and rest.is_zero:
+            return (ipi_mult - S.Half).is_integer
+
 
 class tanh(HyperbolicFunction):
     r"""
@@ -573,7 +581,7 @@ class tanh(HyperbolicFunction):
             if arg.is_Add:
                 x, m = _peeloff_ipi(arg)
                 if m:
-                    tanhm = tanh(m)
+                    tanhm = tanh(m*S.Pi*S.ImaginaryUnit)
                     if tanhm is S.ComplexInfinity:
                         return coth(x)
                     else: # tanhm == 0
@@ -792,7 +800,7 @@ class coth(HyperbolicFunction):
             if arg.is_Add:
                 x, m = _peeloff_ipi(arg)
                 if m:
-                    cothm = coth(m)
+                    cothm = coth(m*S.Pi*S.ImaginaryUnit)
                     if cothm is S.ComplexInfinity:
                         return coth(x)
                     else: # cothm == 0
@@ -1211,9 +1219,7 @@ class asinh(InverseHyperbolicFunction):
         return sinh
 
     def _eval_is_zero(self):
-        arg = self.args[0]
-        if arg.is_zero:
-            return True
+        return self.args[0].is_zero
 
 
 class acosh(InverseHyperbolicFunction):
@@ -1359,6 +1365,10 @@ class acosh(InverseHyperbolicFunction):
         """
         return cosh
 
+    def _eval_is_zero(self):
+        if (self.args[0] - 1).is_zero:
+            return True
+
 
 class atanh(InverseHyperbolicFunction):
     """
@@ -1458,10 +1468,11 @@ class atanh(InverseHyperbolicFunction):
         return (log(1 + x) - log(1 - x)) / 2
 
     def _eval_is_zero(self):
-        arg = self.args[0]
-        if arg.is_zero:
+        if self.args[0].is_zero:
             return True
 
+    def _eval_is_imaginary(self):
+        return self.args[0].is_imaginary
 
     def inverse(self, argindex=1):
         """
@@ -1792,3 +1803,6 @@ class acsch(InverseHyperbolicFunction):
 
     def _eval_rewrite_as_log(self, arg, **kwargs):
         return log(1/arg + sqrt(1/arg**2 + 1))
+
+    def _eval_is_zero(self):
+        return self.args[0].is_infinite
