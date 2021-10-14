@@ -335,12 +335,7 @@ class Product(ExprWithIntLimits):
             factored = factor_terms(term, fraction=True)
             if isinstance(factored.simplify(), Number):
                 factored_simplified = factored.simplify()
-                if factored_simplified < 1:
-                    return S.Zero
-                elif factored_simplified == S.One:
-                    return S.One
-                elif factored_simplified > 1:
-                    return S.Infinity
+                return self._eval_product(factored_simplified, limits)
             if factored.is_Mul:
                 return self._eval_product(factored, (k, a, n))
 
@@ -408,10 +403,10 @@ class Product(ExprWithIntLimits):
 
     def _eval_product_direct(self, term, limits):
         (k, a, n) = limits
-        if len(term.free_symbols) > 1:
-            return Mul(*[term.subs(k, a + i) for i in range(n - a + 1)])
-        else:
+        if term.is_Add and len(term.free_symbols) == 1:
             return Mul(*[term.simplify().subs(k, a + i) for i in range(n - a + 1)])
+        else:
+            return Mul(*[term.subs(k, a + i) for i in range(n - a + 1)])
 
     def _eval_derivative(self, x):
         from sympy.concrete.summations import Sum
