@@ -234,13 +234,14 @@ def function_range(f, symbol, domain):
 
 def not_empty_in(finset_intersection, *syms):
     """
-    Finds the domain of the functions in `finite_set` in which the
-    `finite_set` is not-empty
+    Finds the domain of the functions in ``finset_intersection`` in which the
+    ``finite_set`` is not-empty
 
     Parameters
     ==========
 
-    finset_intersection : The unevaluated intersection of FiniteSet containing
+    finset_intersection : Intersection of FiniteSet
+                        The unevaluated intersection of FiniteSet containing
                         real-valued functions with Union of Sets
     syms : Tuple of symbols
             Symbol for which domain is to be found
@@ -362,8 +363,8 @@ def periodicity(f, symbol, check=False):
 
     period
         The period of the function is returned.
-        `None` is returned when the function is aperiodic or has a complex period.
-        The value of `0` is returned as the period of a constant function.
+        ``None`` is returned when the function is aperiodic or has a complex period.
+        The value of $0$ is returned as the period of a constant function.
 
     Raises
     ======

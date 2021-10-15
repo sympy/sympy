@@ -901,7 +901,7 @@ class Interval(Set):
     Notes
     =====
     - Only real end points are supported
-    - ``Interval(a, b)`` with `a > b` will return the empty set
+    - ``Interval(a, b)`` with $a > b$ will return the empty set
     - Use the ``evalf()`` method to turn an Interval into an mpmath
       ``mpi`` interval instance
 
@@ -955,7 +955,7 @@ class Interval(Set):
     @property
     def start(self):
         """
-        The left end point of the interval`.
+        The left end point of the interval.
 
         This property takes the same value as the ``inf`` property.
 
@@ -1538,7 +1538,7 @@ class Complement(Set):
     r"""Represents the set difference or relative complement of a set with
     another set.
 
-    `A - B = \{x \in A \mid x \notin B\}`
+    $$A - B = \{x \in A \mid x \notin B\}$$
 
 
     Examples
