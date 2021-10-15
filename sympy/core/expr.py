@@ -2219,6 +2219,7 @@ class Expr(Basic, EvalfMixin):
            x/6
 
         """
+        from sympy.functions.elementary.exponential import exp
         from .add import _unevaluated_Add
         c = sympify(c)
         if self is S.NaN:
@@ -2316,15 +2317,17 @@ class Expr(Basic, EvalfMixin):
                 if newarg is not None:
                     args[i] = newarg
                     return Mul(*args)
-        elif self.is_Pow:
-            if c.is_Pow and c.base == self.base:
-                new_exp = self.exp.extract_additively(c.exp)
+        elif self.is_Pow or isinstance(self, exp):
+            sb, se = self.as_base_exp()
+            cb, ce = c.as_base_exp()
+            if cb == sb:
+                new_exp = se.extract_additively(ce)
                 if new_exp is not None:
-                    return self.base ** (new_exp)
-            elif c == self.base:
+                    return Pow(sb, new_exp)
+            elif c == sb:
                 new_exp = self.exp.extract_additively(1)
                 if new_exp is not None:
-                    return self.base ** (new_exp)
+                    return Pow(sb, new_exp)
 
     def extract_additively(self, c):
         """Return self - c if it's possible to subtract c from self and
