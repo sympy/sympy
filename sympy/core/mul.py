@@ -1333,6 +1333,7 @@ class Mul(Expr, AssocOp):
     #    (a.is_integer for a in self.args), quick_exit=True)
     def _eval_is_integer(self):
         from sympy import trailing
+        from sympy.core.relational import is_gt
         is_rational = self._eval_is_rational()
         if is_rational is False:
             return False
@@ -1356,13 +1357,14 @@ class Mul(Expr, AssocOp):
                 if not b.is_integer or not e.is_integer:
                     hit = unknown = True
                 if e.is_negative:
-                    denominators.append(2 if a is S.Half else Pow(a, S.NegativeOne))
+                    denominators.append(2 if a is S.Half else
+                        Pow(a, S.NegativeOne))
                 elif not hit:
-                    # for integer b and positive integer e: a = b**e would be integer
+                    # int b and pos int e: a = b**e is integer
                     assert not e.is_positive
-                    # for self being rational and e equal to zero: a = b**e would be 1
+                    # for rational self and e equal to zero: a = b**e is 1
                     assert not e.is_zero
-                    return # sign of e unknown -> self.is_integer cannot be decided
+                    return # sign of e unknown -> self.is_integer unknown
             else:
                 return
 
@@ -1373,7 +1375,7 @@ class Mul(Expr, AssocOp):
         alleven = lambda x: all(i.is_even for i in x)
         anyeven = lambda x: any(i.is_even for i in x)
 
-        if not numerators and denominators and all((_ - 1).is_extended_positive
+        if not numerators and denominators and all(is_gt(_, 1)
                 for _ in denominators):
             return False
         elif unknown:
