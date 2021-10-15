@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from itertools import chain, zip_longest
 
 from .assumptions import BasicMeta, ManagedProperties
+from .decorators import deprecated
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import iterable, ordered
@@ -485,7 +486,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         if types:
             types = tuple(
                 [t if isinstance(t, type) else type(t) for t in types])
-        nodes = preorder_traversal(self)
+        nodes = _preorder_traversal(self)
         if types:
             result = {node for node in nodes if isinstance(node, types)}
         else:
@@ -1222,7 +1223,7 @@ class Basic(Printable, metaclass=ManagedProperties):
                        for f in self.atoms(Function, UndefinedFunction))
 
         if isinstance(pattern, BasicMeta):
-            subtrees = preorder_traversal(self)
+            subtrees = _preorder_traversal(self)
             return any(isinstance(arg, pattern) for arg in subtrees)
 
         pattern = _sympify(pattern)
@@ -1230,9 +1231,9 @@ class Basic(Printable, metaclass=ManagedProperties):
         _has_matcher = getattr(pattern, '_has_matcher', None)
         if _has_matcher is not None:
             match = _has_matcher()
-            return any(match(arg) for arg in preorder_traversal(self))
+            return any(match(arg) for arg in _preorder_traversal(self))
         else:
-            return any(arg == pattern for arg in preorder_traversal(self))
+            return any(arg == pattern for arg in _preorder_traversal(self))
 
     def _has_matcher(self):
         """Helper for .has()"""
@@ -1500,7 +1501,7 @@ class Basic(Printable, metaclass=ManagedProperties):
     def find(self, query, group=False):
         """Find all subexpressions matching a query. """
         query = _make_find_query(query)
-        results = list(filter(query, preorder_traversal(self)))
+        results = list(filter(query, _preorder_traversal(self)))
 
         if not group:
             return set(results)
@@ -1518,7 +1519,7 @@ class Basic(Printable, metaclass=ManagedProperties):
     def count(self, query):
         """Count the number of matching subexpressions. """
         query = _make_find_query(query)
-        return sum(bool(query(sub)) for sub in preorder_traversal(self))
+        return sum(bool(query(sub)) for sub in _preorder_traversal(self))
 
     def matches(self, expr, repl_dict=None, old=False):
         """
@@ -1956,7 +1957,7 @@ def _aresame(a, b):
     from .function import AppliedUndef, UndefinedFunction as UndefFunc
     if isinstance(a, Number) and isinstance(b, Number):
         return a == b and a.__class__ == b.__class__
-    for i, j in zip_longest(preorder_traversal(a), preorder_traversal(b)):
+    for i, j in zip_longest(_preorder_traversal(a), _preorder_traversal(b)):
         if i != j or type(i) != type(j):
             if ((isinstance(i, UndefFunc) and isinstance(j, UndefFunc)) or
                 (isinstance(i, AppliedUndef) and isinstance(j, AppliedUndef))):
@@ -2000,7 +2001,7 @@ def _atomic(e, recursive=False):
 
     """
     from sympy import Derivative, Function, Symbol
-    pot = preorder_traversal(e)
+    pot = _preorder_traversal(e)
     seen = set()
     if isinstance(e, Basic):
         free = getattr(e, "free_symbols", None)
@@ -2035,7 +2036,10 @@ def _make_find_query(query):
         return lambda expr: expr.match(query) is not None
     return query
 
-
 # Delayed to avoid cyclic import
 from .singleton import S
-from .traversal import preorder_traversal
+from .traversal import preorder_traversal as _preorder_traversal
+
+preorder_traversal = deprecated(
+    useinstead="sympy.core.traversal.preorder_traversal",
+    deprecated_since_version="1.10", issue=22288)(_preorder_traversal)

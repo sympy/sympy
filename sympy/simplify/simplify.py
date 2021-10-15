@@ -2,8 +2,9 @@ from collections import defaultdict
 
 from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify,
                         expand_func, Function, Dummy, Expr, factor_terms,
-                        expand_power_exp, Eq, bottom_up)
+                        expand_power_exp, Eq)
 from sympy.core.compatibility import iterable, ordered, as_int
+from sympy.core.decorators import deprecated
 from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand, _coeff_isneg,
@@ -12,6 +13,7 @@ from sympy.core.numbers import Float, I, pi, Rational, Integer
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
 from sympy.core.sympify import _sympify
+from sympy.core.traversal import bottom_up as _bottom_up, walk as _walk
 from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
 from sympy.functions.elementary.complexes import unpolarify, Abs, sign
@@ -631,7 +633,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         floats = True
         expr = nsimplify(expr, rational=True)
 
-    expr = bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
+    expr = _bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
     expr = Mul(*powsimp(expr).as_content_primitive())
     _e = cancel(expr)
     expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
@@ -1112,7 +1114,7 @@ def logcombine(expr, force=False):
 
         return Add(*other)
 
-    return bottom_up(expr, f)
+    return _bottom_up(expr, f)
 
 
 def inversecombine(expr):
@@ -1150,7 +1152,7 @@ def inversecombine(expr):
                 rv = rv.exp.args[0]
         return rv
 
-    return bottom_up(expr, f)
+    return _bottom_up(expr, f)
 
 
 def kroneckersimp(expr):
@@ -2124,3 +2126,13 @@ def dotprodsimp(expr, withsimp=False):
             simplified = True
 
     return (expr, simplified) if withsimp else expr
+
+
+bottom_up = deprecated(
+    useinstead="sympy.core.traversal.bottom_up",
+    deprecated_since_version="1.10", issue=22288)(_bottom_up)
+
+
+walk = deprecated(
+    useinstead="sympy.core.traversal.walk",
+    deprecated_since_version="1.10", issue=22288)(_walk)

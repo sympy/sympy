@@ -631,6 +631,9 @@
         "sympy/core/tests/test_sympify.py": [
             "test_kernS"
         ],
+        "sympy/core/tests/test_traversal.py": [
+            "test_use"
+        ],
         "sympy/crypto/tests/test_crypto.py": [
             "test_dh_private_key",
             "test_dh_public_key",
@@ -2133,9 +2136,6 @@
             "test_sqrtdenest3",
             "test_sqrtdenest4",
             "test_sqrtdenest_rec"
-        ],
-        "sympy/simplify/tests/test_traversaltools.py": [
-            "test_use"
         ],
         "sympy/simplify/tests/test_trigsimp.py": [
             "test_Piecewise",
