@@ -1375,7 +1375,7 @@ class Mul(Expr, AssocOp):
         alleven = lambda x: all(i.is_even for i in x)
         anyeven = lambda x: any(i.is_even for i in x)
 
-        if not numerators and denominators and all(is_gt(_, 1)
+        if not numerators and denominators and all(is_gt(_, S.One)
                 for _ in denominators):
             return False
         elif unknown:
