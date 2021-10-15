@@ -161,6 +161,12 @@ class Mul(Expr, AssocOp):
         arg_kinds = (a.kind for a in self.args)
         return self._kind_dispatcher(*arg_kinds)
 
+    def could_extract_minus_sign(self):
+        if self == (-self):
+            return False  # e.g. zoo*x == -zoo*x
+        c = self.args[0]
+        return c.is_Number and c.is_extended_negative
+
     def __neg__(self):
         c, args = self.as_coeff_mul()
         if args[0] is not S.ComplexInfinity:

@@ -6,7 +6,7 @@ from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify,
 from sympy.core.compatibility import iterable, ordered, as_int
 from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
-from sympy.core.function import (expand_log, count_ops, _mexpand, _coeff_isneg,
+from sympy.core.function import (expand_log, count_ops, _mexpand,
     nfloat, expand_mul, expand)
 from sympy.core.numbers import Float, I, pi, Rational, Integer
 from sympy.core.relational import Relational
@@ -403,7 +403,11 @@ def signsimp(expr, evaluate=None):
     if not isinstance(e, (Expr, Relational)) or e.is_Atom:
         return e
     if e.is_Add:
-        return e.func(*[signsimp(a, evaluate) for a in e.args])
+        rv = e.func(*[signsimp(a) for a in e.args])
+        if not evaluate and isinstance(rv, Add
+                ) and rv.could_extract_minus_sign():
+            return Mul(S.NegativeOne, -rv, evaluate=False)
+        return rv
     if evaluate:
         e = e.xreplace({m: -(-m) for m in e.atoms(Mul) if -(-m) != m})
     return e
@@ -1675,7 +1679,7 @@ def clear_coefficients(expr, rhs=S.Zero):
         c, expr = expr.as_coeff_Add(rational=True)
         rhs -= c
     expr = signsimp(expr, evaluate = False)
-    if _coeff_isneg(expr):
+    if expr.could_extract_minus_sign():
         expr = -expr
         rhs = -rhs
     return expr, rhs
@@ -2058,7 +2062,7 @@ def dotprodsimp(expr, withsimp=False):
                     ops += bool (a.p < 0) + bool (a.q != 1)
 
             elif a.is_Mul:
-                if _coeff_isneg(a):
+                if a.could_extract_minus_sign():
                     ops += 1
                     if a.args[0] is S.NegativeOne:
                         a = a.as_two_terms()[1]
@@ -2088,7 +2092,7 @@ def dotprodsimp(expr, withsimp=False):
                 negs   = 0
 
                 for ai in a.args:
-                    if _coeff_isneg(ai):
+                    if ai.could_extract_minus_sign():
                         negs += 1
                         ai    = -ai
                     args.append(ai)

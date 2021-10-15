@@ -1156,7 +1156,7 @@ class Expr(Basic, EvalfMixin):
 
         if order is None and self.is_Add:
             # Spot the special case of Add(Number, Mul(Number, expr)) with the
-            # first number positive and thhe second number nagative
+            # first number positive and the second number negative
             key = lambda x:not isinstance(x, (Number, NumberSymbol))
             add_args = sorted(Add.make_args(self), key=key)
             if (len(add_args) == 2
@@ -2467,12 +2467,9 @@ class Expr(Basic, EvalfMixin):
         return {j for i in self.args for j in i.expr_free_symbols}
 
     def could_extract_minus_sign(self):
-        """Return True if self is not in a canonical form with respect
-        to its sign.
-
-        For most expressions, e, there will be a difference in e and -e.
-        When there is, True will be returned for one and False for the
-        other; False will be returned if there is no difference.
+        """Return True if self has -1 as a leading factor or has
+        more literal negative signs than positive signs in a sum,
+        otherwise False.
 
         Examples
         ========
@@ -2482,35 +2479,22 @@ class Expr(Basic, EvalfMixin):
         >>> {i.could_extract_minus_sign() for i in (e, -e)}
         {False, True}
 
-        """
-        negative_self = -self
-        if self == negative_self:
-            return False  # e.g. zoo*x == -zoo*x
-        self_has_minus = (self.extract_multiplicatively(-1) is not None)
-        negative_self_has_minus = (
-            (negative_self).extract_multiplicatively(-1) is not None)
-        if self_has_minus != negative_self_has_minus:
-            return self_has_minus
-        else:
-            if self.is_Add:
-                # We choose the one with less arguments with minus signs
-                all_args = len(self.args)
-                negative_args = len([False for arg in self.args if arg.could_extract_minus_sign()])
-                positive_args = all_args - negative_args
-                if positive_args > negative_args:
-                    return False
-                elif positive_args < negative_args:
-                    return True
-            elif self.is_Mul:
-                # We choose the one with an odd number of minus signs
-                num, den = self.as_numer_denom()
-                args = Mul.make_args(num) + Mul.make_args(den)
-                arg_signs = [arg.could_extract_minus_sign() for arg in args]
-                negative_args = list(filter(None, arg_signs))
-                return len(negative_args) % 2 == 1
+        Though the ``y - x`` is considered like ``-(x - y)``, since it
+        is in a product without a leading factor of -1, the result is
+        false below:
 
-            # As a last resort, we choose the one with greater value of .sort_key()
-            return bool(self.sort_key() < negative_self.sort_key())
+        >>> (x*(y - x)).could_extract_minus_sign()
+        False
+
+        To put something in canonical form wrt to sign, use `signsimp`:
+
+        >>> from sympy.simplify.simplify import signsimp
+        >>> signsimp(x*(y - x))
+        -x*(x - y)
+        >>> _.could_extract_minus_sign()
+        True
+        """
+        return False
 
     def extract_branch_factor(self, allow_half=False):
         """

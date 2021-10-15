@@ -2,7 +2,7 @@ from sympy.core.logic import FuzzyBool
 
 from sympy.core import S, sympify, cacheit, pi, I, Rational
 from sympy.core.add import Add
-from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
+from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 from sympy.functions.elementary.exponential import exp, log, match_real_imag
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -129,7 +129,7 @@ class sinh(HyperbolicFunction):
             if i_coeff is not None:
                 return S.ImaginaryUnit * sin(i_coeff)
             else:
-                if _coeff_isneg(arg):
+                if arg.could_extract_minus_sign():
                     return -cls(-arg)
 
             if arg.is_Add:
@@ -327,7 +327,7 @@ class cosh(HyperbolicFunction):
             if i_coeff is not None:
                 return cos(i_coeff)
             else:
-                if _coeff_isneg(arg):
+                if arg.could_extract_minus_sign():
                     return cls(-arg)
 
             if arg.is_Add:
@@ -571,11 +571,11 @@ class tanh(HyperbolicFunction):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                if _coeff_isneg(i_coeff):
+                if i_coeff.could_extract_minus_sign():
                     return -S.ImaginaryUnit * tan(-i_coeff)
                 return S.ImaginaryUnit * tan(i_coeff)
             else:
-                if _coeff_isneg(arg):
+                if arg.could_extract_minus_sign():
                     return -cls(-arg)
 
             if arg.is_Add:
@@ -790,11 +790,11 @@ class coth(HyperbolicFunction):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                if _coeff_isneg(i_coeff):
+                if i_coeff.could_extract_minus_sign():
                     return S.ImaginaryUnit * cot(-i_coeff)
                 return -S.ImaginaryUnit * cot(i_coeff)
             else:
-                if _coeff_isneg(arg):
+                if arg.could_extract_minus_sign():
                     return -cls(-arg)
 
             if arg.is_Add:
@@ -1167,7 +1167,7 @@ class asinh(InverseHyperbolicFunction):
             if i_coeff is not None:
                 return S.ImaginaryUnit * asin(i_coeff)
             else:
-                if _coeff_isneg(arg):
+                if arg.could_extract_minus_sign():
                     return -cls(-arg)
 
         if isinstance(arg, sinh) and arg.args[0].is_number:
@@ -1426,7 +1426,7 @@ class atanh(InverseHyperbolicFunction):
             if i_coeff is not None:
                 return S.ImaginaryUnit * atan(i_coeff)
             else:
-                if _coeff_isneg(arg):
+                if arg.could_extract_minus_sign():
                     return -cls(-arg)
 
         if arg.is_zero:
@@ -1536,7 +1536,7 @@ class acoth(InverseHyperbolicFunction):
             if i_coeff is not None:
                 return -S.ImaginaryUnit * acot(i_coeff)
             else:
-                if _coeff_isneg(arg):
+                if arg.could_extract_minus_sign():
                     return -cls(-arg)
 
         if arg.is_zero:
@@ -1792,7 +1792,7 @@ class acsch(InverseHyperbolicFunction):
         if arg.is_zero:
             return S.ComplexInfinity
 
-        if _coeff_isneg(arg):
+        if arg.could_extract_minus_sign():
             return -cls(-arg)
 
     def inverse(self, argindex=1):

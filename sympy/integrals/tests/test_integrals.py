@@ -1834,8 +1834,8 @@ def test_issue_21024():
     assert F == integrate(f, x)
 
     f = (x + exp(3))/(2*x**2 + 2*x)
-    F = exp(3)*log(x)/2 + (Rational(1, 2) - exp(3)/2)*log(x + 1)
-    assert F == integrate(f, x)
+    F = exp(3)*log(x)/2 - exp(3)*log(x + 1)/2 + log(x + 1)/2
+    assert F == integrate(f, x).expand()
 
     f = log(x + 4*sinh(4))
     F = x*log(x + 4*sinh(4)) - x + 4*log(x + 4*sinh(4))*sinh(4)

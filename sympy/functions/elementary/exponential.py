@@ -2,7 +2,7 @@ from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.function import (
-    Function, ArgumentIndexError, _coeff_isneg,
+    Function, ArgumentIndexError,
     expand_mul, FunctionClass, PoleError)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
@@ -61,7 +61,7 @@ class ExpBase(Function):
         exp = self.exp
         neg_exp = exp.is_negative
         if not neg_exp and not (-exp).is_negative:
-            neg_exp = _coeff_isneg(exp)
+            neg_exp = exp.could_extract_minus_sign()
         if neg_exp:
             return S.One, self.func(-exp)
         return self, S.One

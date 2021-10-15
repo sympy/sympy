@@ -866,6 +866,7 @@ def test_issue_11413():
     U.norm = sqrt(v0**2/(v0**2 + v1**2 + v2**2) + v1**2/(v0**2 + v1**2 + v2**2) + v2**2/(v0**2 + v1**2 + v2**2))
     assert simplify(U.norm) == 1
 
+
 def test_periodic_argument():
     from sympy import (periodic_argument, unbranched_argument,
                        principal_branch, polar_lift)
@@ -962,6 +963,13 @@ def test_issue_14238():
     # doesn't cause recursion error
     r = Symbol('r', real=True)
     assert Abs(r + Piecewise((0, r > 0), (1 - r, True)))
+
+
+def test_issue_22189():
+    x = Symbol('x')
+    for a in (sqrt(7 - 2*x) - 2, 1 - x):
+        assert Abs(a) - Abs(-a) == 0, a
+
 
 def test_zero_assumptions():
     nr = Symbol('nonreal', real=False, finite=True)
