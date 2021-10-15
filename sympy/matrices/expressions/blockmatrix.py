@@ -778,7 +778,7 @@ def bc_dist(expr):
         new_B = [
             [factor * B[i, j] for j in range(B.cols)] for i in range(B.rows)]
         return BlockMatrix(new_B)
-    return unpacked
+    return expr
 
 
 def bc_matmul(expr):

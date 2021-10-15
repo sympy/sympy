@@ -118,6 +118,33 @@ def test_issue_18618():
     A = Matrix([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     assert A == Matrix(BlockDiagMatrix(A))
 
+def test_issue_22238():
+    C11 = MatrixSymbol('C11', 1, 1)
+    C21 = MatrixSymbol('C21', 1, 1)
+    C22 = MatrixSymbol('C22', 1, 1)
+    C31 = MatrixSymbol('C31', 1, 1)
+    C32 = MatrixSymbol('C32', 1, 1)
+    C33 = MatrixSymbol('C33', 1, 1)
+    C41 = MatrixSymbol('C41', 1, 1)
+    C42 = MatrixSymbol('C42', 1, 1)
+    C43 = MatrixSymbol('C43', 1, 1)
+    C44 = MatrixSymbol('C44', 1, 1)
+    Z = ZeroMatrix(1, 1)
+
+    M = BlockMatrix([
+        [C11,   Z,    Z],
+        [C21,   C22,  Z],
+        [C31,   C32,  C33]])
+    N = BlockMatrix([
+        [C11,   Z,    Z,    Z],
+        [C21,   C22,  Z,    Z],
+        [C31,   C32,  C33,  Z],
+        [C41,   C42,  C43,  C44]])
+
+    Minv = block_collapse(M.inverse())
+    Ninv = block_collapse(N.inverse())
+    assert Ninv.as_explicit()[0:3, 0:3] == Minv.as_explicit()
+
 def test_BlockMatrix_trace():
     A, B, C, D = [MatrixSymbol(s, 3, 3) for s in 'ABCD']
     X = BlockMatrix([[A, B], [C, D]])
