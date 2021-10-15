@@ -8,6 +8,12 @@ from sympy.ntheory.modular import symmetric_residue
 from sympy.polys.domains import QQ, ZZ
 
 
+# TODO (future work):
+#  There are faster algorithms for Smith and Hermite normal forms, which
+#  we should implement. See e.g. the Kannan-Bachem algorithm:
+#  <https://www.researchgate.net/publication/220617516_Polynomial_Algorithms_for_Computing_the_Smith_and_Hermite_Normal_Forms_of_an_Integer_Matrix>
+
+
 def smith_normal_form(m):
     '''
     Return the Smith Normal Form of a matrix `m` over the ring `domain`.
