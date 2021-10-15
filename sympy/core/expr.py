@@ -3438,7 +3438,16 @@ class Expr(Basic, EvalfMixin):
         """
         from sympy import powsimp
         if len(symbols) > 1:
-            c = self
+            c = self.expand()
+            if c.is_Mul:
+                return c
+            if c.is_Pow:
+                base_term = c.base.as_leading_term(*symbols, logx=logx, cdir=cdir)
+                exp_term = c.exp.as_leading_term(*symbols, logx=logx, cdir=cdir)
+                return base_term**exp_term
+            if c.is_Add:
+                symbwise_lead_terms = [c.as_leading_term(x, logx=logx, cdir=cdir) for x in symbols]
+                return c.func(*symbwise_lead_terms)
             for x in symbols:
                 c = c.as_leading_term(x, logx=logx, cdir=cdir)
             return c

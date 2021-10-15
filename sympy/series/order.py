@@ -220,75 +220,70 @@ class Order(Expr):
             old_expr = None
             while old_expr != expr:
                 old_expr = expr
-                if expr.is_Add:
-                    lst = expr.extract_leading_order(args)
-                    expr = Add(*[f.expr for (e, f) in lst])
+                from sympy import PoleError, Function
+                try:
+                    expr = expr.as_leading_term(*args)
+                except PoleError:
+                    if isinstance(expr, Function) or\
+                            all(isinstance(arg, Function) for arg in expr.args):
+                        # It is not possible to simplify an expression
+                        # containing only functions (which raise error on
+                        # call to leading term) further
+                        pass
+                    else:
+                        orders = []
+                        pts = tuple(zip(args, ps))
+                        for arg in expr.args:
+                            try:
+                                lt = arg.as_leading_term(*args)
+                            except PoleError:
+                                lt = arg
+                            if lt not in args:
+                                order = Order(lt)
+                            else:
+                                order = Order(lt, *pts)
+                            orders.append(order)
+                        if expr.is_Add:
+                            new_expr = Order(Add(*orders), *pts)
+                            if new_expr.is_Add:
+                                new_expr = Order(Add(*[a.expr for a in new_expr.args]), *pts)
+                            expr = new_expr.expr
+                        elif expr.is_Mul:
+                            expr = Mul(*[a.expr for a in orders])
+                        elif expr.is_Pow:
+                            expr = orders[0].expr**orders[1].expr
+                expr = expr.as_independent(*args, as_Add=False)[1]
 
-                elif expr:
-                    from sympy import PoleError, Function
-                    try:
-                        expr = expr.as_leading_term(*args)
-                    except PoleError:
-                        if isinstance(expr, Function) or\
-                                all(isinstance(arg, Function) for arg in expr.args):
-                            # It is not possible to simplify an expression
-                            # containing only functions (which raise error on
-                            # call to leading term) further
-                            pass
-                        else:
-                            orders = []
-                            pts = tuple(zip(args, ps))
-                            for arg in expr.args:
-                                try:
-                                    lt = arg.as_leading_term(*args)
-                                except PoleError:
-                                    lt = arg
-                                if lt not in args:
-                                    order = Order(lt)
-                                else:
-                                    order = Order(lt, *pts)
-                                orders.append(order)
-                            if expr.is_Add:
-                                new_expr = Order(Add(*orders), *pts)
-                                if new_expr.is_Add:
-                                    new_expr = Order(Add(*[a.expr for a in new_expr.args]), *pts)
-                                expr = new_expr.expr
-                            elif expr.is_Mul:
-                                expr = Mul(*[a.expr for a in orders])
-                            elif expr.is_Pow:
-                                expr = orders[0].expr**orders[1].expr
-                    expr = expr.as_independent(*args, as_Add=False)[1]
+                expr = expand_power_base(expr)
+                expr = expand_log(expr)
 
-                    expr = expand_power_base(expr)
-                    expr = expand_log(expr)
+                if len(args) == 1:
+                    # The definition of O(f(x)) symbol explicitly stated that
+                    # the argument of f(x) is irrelevant.  That's why we can
+                    # combine some power exponents (only "on top" of the
+                    # expression tree for f(x)), e.g.:
+                    # x**p * (-x)**q -> x**(p+q) for real p, q.
+                    x = args[0]
+                    margs = list(Mul.make_args(
+                        expr.as_independent(x, as_Add=False)[1]))
 
-                    if len(args) == 1:
-                        # The definition of O(f(x)) symbol explicitly stated that
-                        # the argument of f(x) is irrelevant.  That's why we can
-                        # combine some power exponents (only "on top" of the
-                        # expression tree for f(x)), e.g.:
-                        # x**p * (-x)**q -> x**(p+q) for real p, q.
-                        x = args[0]
-                        margs = list(Mul.make_args(
-                            expr.as_independent(x, as_Add=False)[1]))
+                    for i, t in enumerate(margs):
+                        if t.is_Pow:
+                            b, q = t.args
+                            if b in (x, -x) and q.is_real and not q.has(x):
+                                margs[i] = x**q
+                            elif b.is_Pow and not b.exp.has(x):
+                                b, r = b.args
+                                if b in (x, -x) and r.is_real:
+                                    margs[i] = x**(r*q)
+                            elif b.is_Mul and b.args[0] is S.NegativeOne:
+                                b = -b
+                                if b.is_Pow and not b.exp.has(x):
+                                     b, r = b.args
+                                     if b in (x, -x) and r.is_real:
+                                         margs[i] = x**(r*q)
 
-                        for i, t in enumerate(margs):
-                            if t.is_Pow:
-                                b, q = t.args
-                                if b in (x, -x) and q.is_real and not q.has(x):
-                                    margs[i] = x**q
-                                elif b.is_Pow and not b.exp.has(x):
-                                    b, r = b.args
-                                    if b in (x, -x) and r.is_real:
-                                        margs[i] = x**(r*q)
-                                elif b.is_Mul and b.args[0] is S.NegativeOne:
-                                    b = -b
-                                    if b.is_Pow and not b.exp.has(x):
-                                        b, r = b.args
-                                        if b in (x, -x) and r.is_real:
-                                            margs[i] = x**(r*q)
-
-                        expr = Mul(*margs)
+                    expr = Mul(*margs)
 
             expr = expr.subs(rs)
 
