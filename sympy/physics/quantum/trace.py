@@ -1,9 +1,9 @@
-from .add import Add
-from .containers import Tuple
-from .expr import Expr
-from .mul import Mul
-from .power import Pow
-from .sympify import sympify
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.sympify import sympify
 from sympy.matrices import Matrix
 from sympy.utilities import default_sort_key
 
@@ -96,7 +96,7 @@ class Tr(Expr):
     a) Trace(A+B) = Tr(A) + Tr(B)
     b) Trace(scalar*Operator) = scalar*Trace(Operator)
 
-    >>> from sympy.core.trace import Tr
+    >>> from sympy.physics.quantum.trace import Tr
     >>> from sympy import symbols, Matrix
     >>> a, b = symbols('a b', commutative=True)
     >>> A, B = symbols('A B', commutative=False)
@@ -171,7 +171,7 @@ class Tr(Expr):
 
         #TODO: Current version ignores the indices set for partial trace.
 
-        >>> from sympy.core.trace import Tr
+        >>> from sympy.physics.quantum.trace import Tr
         >>> from sympy.physics.quantum.operator import OuterProduct
         >>> from sympy.physics.quantum.spin import JzKet, JzBra
         >>> t = Tr(OuterProduct(JzKet(1,1), JzBra(1,1)))
@@ -202,7 +202,7 @@ class Tr(Expr):
         Examples
         ========
 
-        >>> from sympy.core.trace import Tr
+        >>> from sympy.physics.quantum.trace import Tr
         >>> from sympy import symbols
         >>> A, B, C, D = symbols('A B C D', commutative=False)
         >>> t = Tr(A*B*C*D)

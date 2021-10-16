@@ -44,7 +44,7 @@ from sympy.physics.control.lti import TransferFunction, Series, Parallel, \
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
-from sympy.core.trace import Tr
+from sympy.physics.quantum.trace import Tr
 from sympy.combinatorics.permutations import \
     Cycle, Permutation, AppliedPermutation
 from sympy.matrices.expressions.permutation import PermutationMatrix

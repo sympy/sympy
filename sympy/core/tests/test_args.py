@@ -922,10 +922,11 @@ def test_sympy__sets__sets__DisjointUnion():
            FiniteSet(2, 3, 4)))
 
 
-def test_sympy__core__trace__Tr():
-    from sympy.core.trace import Tr
+def test_sympy__physics__quantum__trace__Tr():
+    from sympy.physics.quantum.trace import Tr
     a, b = symbols('a b')
     assert _test_args(Tr(a + b))
+
 
 def test_sympy__sets__setexpr__SetExpr():
     from sympy.sets.setexpr import SetExpr

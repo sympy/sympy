@@ -14,7 +14,7 @@ from sympy import (
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
 from sympy.core.expr import UnevaluatedExpr
-from sympy.core.trace import Tr
+from sympy.physics.quantum.trace import Tr
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, beta, binomial, catalan, ceiling, cos,
