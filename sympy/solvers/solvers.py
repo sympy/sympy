@@ -28,8 +28,8 @@ from sympy.core.numbers import ilcm, Float, Rational
 from sympy.core.relational import Relational
 from sympy.core.logic import fuzzy_not
 from sympy.core.power import integer_log
+from sympy.core.traversal import preorder_traversal
 from sympy.logic.boolalg import And, Or, BooleanAtom
-from sympy.core.basic import preorder_traversal
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
                              Abs, re, im, arg, sqrt, atan2)

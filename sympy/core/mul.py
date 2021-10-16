@@ -11,6 +11,7 @@ from .logic import fuzzy_not, _fuzzy_group
 from .expr import Expr
 from .parameters import global_parameters
 from .kind import KindDispatcher
+from .traversal import bottom_up
 
 
 # internal marker to indicate:
@@ -2147,7 +2148,6 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
         return m
 
 def expand_2arg(e):
-    from sympy.simplify.simplify import bottom_up
     def do(e):
         if e.is_Mul:
             c, r = e.as_coeff_Mul()

@@ -16,7 +16,9 @@ from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
+from sympy.core.traversal import walk
 from sympy.logic.boolalg import And, Or
+
 
 def _minmax_as_Piecewise(op, *args):
     # helper for Min/Max rewrite as Piecewise
@@ -434,8 +436,6 @@ class MinMaxBase(Expr, LatticeOp):
         >>> Min(a, Max(b, Min(c, d, Max(a, e))))
         Min(a, Max(b, Min(a, c, d)))
         """
-        from sympy.simplify.simplify import walk
-
         if not args:
             return args
         args = list(ordered(args))
