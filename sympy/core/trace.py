@@ -1,4 +1,10 @@
-from sympy import Expr, Add, Mul, Pow, sympify, Matrix, Tuple
+from .add import Add
+from .containers import Tuple
+from .expr import Expr
+from .mul import Mul
+from .power import Pow
+from .sympify import sympify
+from sympy.matrices import Matrix
 from sympy.utilities import default_sort_key
 
 

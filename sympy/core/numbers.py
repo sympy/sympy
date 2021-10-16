@@ -13,11 +13,10 @@ from .singleton import S, Singleton
 from .basic import Basic
 from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
+from .cache import cacheit, clear_cache, lru_cache
+from .compatibility import as_int
 from .decorators import _sympifyit
-from .cache import cacheit, clear_cache
 from .logic import fuzzy_not
-from sympy.core.compatibility import as_int
-from sympy.core.cache import lru_cache
 from .kind import NumberKind
 from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, gmpy
 from sympy.multipledispatch import dispatch
@@ -696,7 +695,7 @@ class Number(AtomicExpr):
         return self
 
     def _eval_order(self, *symbols):
-        from sympy import Order
+        from sympy.series.order import Order
         # Order(5, x, y) -> Order(1,x,y)
         return Order(S.One, *symbols)
 
@@ -1884,7 +1883,6 @@ class Rational(Number):
         return self.ceiling()
 
     def __eq__(self, other):
-        from sympy.core.power import integer_log
         try:
             other = _sympify(other)
         except SympifyError:
@@ -1916,6 +1914,8 @@ class Rational(Number):
                 if not self.is_Integer or self.is_even:
                     return False
                 return m == self.p
+
+            from .power import integer_log
             if t > 0:
                 # other is an even integer
                 if not self.is_Integer:
@@ -2536,10 +2536,8 @@ class AlgebraicNumber(Expr):
 
     def __new__(cls, expr, coeffs=None, alias=None, **args):
         """Construct a new algebraic number. """
-        from sympy import Poly
         from sympy.polys.polyclasses import ANP, DMP
         from sympy.polys.numberfields import minimal_polynomial
-        from sympy.core.symbol import Symbol
 
         expr = sympify(expr)
 
@@ -2547,6 +2545,7 @@ class AlgebraicNumber(Expr):
             minpoly, root = expr
 
             if not minpoly.is_Poly:
+                from sympy.polys.polytools import Poly
                 minpoly = Poly(minpoly)
         elif expr.is_AlgebraicNumber:
             minpoly, root = expr.minpoly, expr.root
@@ -2574,6 +2573,7 @@ class AlgebraicNumber(Expr):
         sargs = (root, scoeffs)
 
         if alias is not None:
+            from .symbol import Symbol
             if not isinstance(alias, Symbol):
                 alias = Symbol(alias)
             sargs = sargs + (alias,)
@@ -2600,13 +2600,14 @@ class AlgebraicNumber(Expr):
 
     def as_poly(self, x=None):
         """Create a Poly instance from ``self``. """
-        from sympy import Dummy, Poly, PurePoly
+        from sympy.polys.polytools import Poly, PurePoly
         if x is not None:
             return Poly.new(self.rep, x)
         else:
             if self.alias is not None:
                 return Poly.new(self.rep, self.alias)
             else:
+                from .symbol import Dummy
                 return PurePoly.new(self.rep, Dummy('x'))
 
     def as_expr(self, x=None):
@@ -2623,7 +2624,8 @@ class AlgebraicNumber(Expr):
 
     def to_algebraic_integer(self):
         """Convert ``self`` to an algebraic integer. """
-        from sympy import Poly
+        from sympy.polys.polytools import Poly
+
         f = self.minpoly
 
         if f.LC() == 1:
@@ -3551,20 +3553,20 @@ class Exp1(NumberSymbol, metaclass=Singleton):
             pass
 
     def _eval_power(self, expt):
-        from sympy import exp
         if global_parameters.exp_is_pow:
             return self._eval_power_exp_is_pow(expt)
         else:
+            from sympy.functions.elementary.exponential import exp
             return exp(expt)
 
     def _eval_power_exp_is_pow(self, arg):
-        from ..functions.elementary.exponential import log
         if arg.is_Number:
             if arg is oo:
                 return oo
             elif arg == -oo:
                 return S.Zero
-        elif isinstance(arg, log):
+        from sympy.functions.elementary.exponential import log
+        if isinstance(arg, log):
             return arg.args[0]
 
         # don't autoexpand Pow or Mul (see the issue 3351):
@@ -3638,11 +3640,11 @@ class Exp1(NumberSymbol, metaclass=Singleton):
             return arg.exp()
 
     def _eval_rewrite_as_sin(self, **kwargs):
-        from sympy import sin
+        from sympy.functions.elementary.trigonometric import sin
         return sin(I + S.Pi/2) - I*sin(I)
 
     def _eval_rewrite_as_cos(self, **kwargs):
-        from sympy import cos
+        from sympy.functions.elementary.trigonometric import cos
         return cos(I) + I*cos(I + S.Pi/2)
 
 E = S.Exp1
@@ -3960,9 +3962,10 @@ class Catalan(NumberSymbol, metaclass=Singleton):
             return (Rational(9, 10, 1), S.One)
 
     def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None):
-        from sympy import Sum, Dummy
         if (k_sym is not None) or (symbols is not None):
             return self
+        from .symbol import Dummy
+        from sympy.concrete.summations import Sum
         k = Dummy('k', integer=True, nonnegative=True)
         return Sum((-1)**k / (2*k+1)**2, (k, 0, S.Infinity))
 

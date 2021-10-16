@@ -5,7 +5,7 @@ from functools import reduce
 from .sympify import sympify, _sympify, SympifyError
 from .basic import Basic, Atom
 from .singleton import S
-from .evalf import EvalfMixin, pure_complex
+from .evalf import EvalfMixin, pure_complex, DEFAULT_MAXPREC
 from .decorators import call_highest_priority, sympify_method_args, sympify_return
 from .cache import cacheit
 from .compatibility import as_int, default_sort_key
@@ -13,6 +13,8 @@ from .kind import NumberKind
 from sympy.utilities.misc import func_name
 from sympy.utilities.iterables import has_variety
 from mpmath.libmp import mpf_log, prec_to_dps
+from mpmath.libmp.libintmath import giant_steps
+
 
 from collections import defaultdict
 
@@ -198,7 +200,7 @@ class Expr(Basic, EvalfMixin):
         return Mul._from_args((S.NegativeOne, self), c)
 
     def __abs__(self):
-        from sympy import Abs
+        from sympy.functions.elementary.complexes import Abs
         return Abs(self)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -324,7 +326,7 @@ class Expr(Basic, EvalfMixin):
         # off by one. So...if our round value is the same as the int value
         # (regardless of how much extra work we do to calculate extra decimal
         # places) we need to test whether we are off by one.
-        from sympy import Dummy
+        from .symbol import Dummy
         if not self.is_number:
             raise TypeError("Cannot convert symbols to int")
         r = self.round(2)
@@ -392,7 +394,7 @@ class Expr(Basic, EvalfMixin):
 
     @staticmethod
     def _from_mpmath(x, prec):
-        from sympy import Float
+        from .numbers import Float
         if hasattr(x, "_mpf_"):
             return Float._new(x._mpf_, prec)
         elif hasattr(x, "_mpc_"):
@@ -520,11 +522,8 @@ class Expr(Basic, EvalfMixin):
             # increase the precision up to the default maximum
             # precision to see if we can get any significance
 
-            from mpmath.libmp.libintmath import giant_steps
-            from sympy.core.evalf import DEFAULT_MAXPREC as target
-
             # evaluate
-            for prec in giant_steps(2, target):
+            for prec in giant_steps(2, DEFAULT_MAXPREC):
                 nmag = abs(self.evalf(prec, subs=reps))
                 if nmag._prec != 1:
                     break
@@ -928,11 +927,11 @@ class Expr(Basic, EvalfMixin):
         respectively.
 
         """
-        from sympy.series import limit, Limit
-        from sympy.solvers.solveset import solveset
-        from sympy.sets.sets import Interval
-        from sympy.functions.elementary.exponential import log
         from sympy.calculus.util import AccumBounds
+        from sympy.functions.elementary.exponential import log
+        from sympy.series.limits import limit, Limit
+        from sympy.sets.sets import Interval
+        from sympy.solvers.solveset import solveset
 
         if (a is None and b is None):
             raise ValueError('Both interval ends cannot be None.')
@@ -1013,10 +1012,10 @@ class Expr(Basic, EvalfMixin):
         return c(self)
 
     def dir(self, x, cdir):
-        from sympy import log
-        minexp = S.Zero
         if self.is_zero:
             return S.Zero
+        from sympy.functions.elementary.exponential import log
+        minexp = S.Zero
         arg = self
         while arg:
             minexp += S.One
@@ -1273,7 +1272,6 @@ class Expr(Basic, EvalfMixin):
         >>> (1 + x).getn()
 
         """
-        from sympy import Dummy, Symbol
         o = self.getO()
         if o is None:
             return None
@@ -1290,6 +1288,7 @@ class Expr(Basic, EvalfMixin):
                     if oi.is_Symbol:
                         return S.One
                     if oi.is_Pow:
+                        from .symbol import Dummy, Symbol
                         syms = oi.atoms(Symbol)
                         if len(syms) == 1:
                             x = syms.pop()
@@ -1952,10 +1951,10 @@ class Expr(Basic, EvalfMixin):
            (re(z) - im(w), re(w) + im(z))
 
         """
-        from sympy import im, re
         if hints.get('ignore') == self:
             return None
         else:
+            from sympy.functions.elementary.complexes import im, re
             return (re(self), im(self))
 
     def as_powers_dict(self):
@@ -2527,7 +2526,9 @@ class Expr(Basic, EvalfMixin):
         >>> exp_polar(-I*pi).extract_branch_factor(allow_half=True)
         (1, -1/2)
         """
-        from sympy import exp_polar, pi, I, ceiling
+        from sympy.functions.elementary.exponential import exp_polar
+        from sympy.functions.elementary.integers import ceiling
+
         n = S.Zero
         res = S.One
         args = Mul.make_args(self)
@@ -2539,13 +2540,15 @@ class Expr(Basic, EvalfMixin):
                 res *= arg
         piimult = S.Zero
         extras = []
+
+        ipi = S.Pi*S.ImaginaryUnit
         while exps:
             exp = exps.pop()
             if exp.is_Add:
                 exps += exp.args
                 continue
             if exp.is_Mul:
-                coeff = exp.as_coefficient(pi*I)
+                coeff = exp.as_coefficient(ipi)
                 if coeff is not None:
                     piimult += coeff
                     continue
@@ -2564,7 +2567,7 @@ class Expr(Basic, EvalfMixin):
             if nc is not None:
                 n += S.Half
                 c = nc
-        newexp = pi*I*Add(*((c, ) + tail)) + Add(*extras)
+        newexp = ipi*Add(*((c, ) + tail)) + Add(*extras)
         if newexp != 0:
             res *= exp_polar(newexp)
         return res, n
@@ -2940,7 +2943,6 @@ class Expr(Basic, EvalfMixin):
             If "x0" is an infinity object
 
         """
-        from sympy import collect, Dummy, Order, Symbol, ceiling, PoleError
         if x is None:
             syms = self.free_symbols
             if not syms:
@@ -2949,6 +2951,7 @@ class Expr(Basic, EvalfMixin):
                 raise ValueError('x must be given for multivariate functions.')
             x = syms.pop()
 
+        from .symbol import Dummy, Symbol
         if isinstance(x, Symbol):
             dep = x in self.free_symbols
         else:
@@ -2964,6 +2967,7 @@ class Expr(Basic, EvalfMixin):
             raise ValueError("Dir must be '+' or '-'")
 
         if x0 in [S.Infinity, S.NegativeInfinity]:
+            from sympy import PoleError
             try:
                 sgn = 1 if x0 is S.Infinity else -1
                 s = self.subs(x, sgn/x).series(x, n=n, dir='+', cdir=cdir)
@@ -3001,6 +3005,7 @@ class Expr(Basic, EvalfMixin):
             else:
                 return rv.subs(xpos, x)
 
+        from sympy.series.order import Order
         if n is not None:  # nseries handling
             s1 = self._eval_nseries(x, n=n, logx=logx, cdir=cdir)
             o = s1.getO() or S.Zero
@@ -3019,6 +3024,7 @@ class Expr(Basic, EvalfMixin):
                     # number keep increasing (up to 9) until the received order
                     # is different than the original order and then predict how
                     # many additional terms are needed
+                    from sympy.functions.elementary.integers import ceiling
                     for more in range(1, 9):
                         s1 = self._eval_nseries(x, n=n + more, logx=logx, cdir=cdir)
                         newn = s1.getn()
@@ -3045,6 +3051,7 @@ class Expr(Basic, EvalfMixin):
                     o = S.Zero
 
             try:
+                from sympy import collect
                 return collect(s1, x) + o
             except NotImplementedError:
                 return s1 + o
@@ -3163,13 +3170,14 @@ class Expr(Basic, EvalfMixin):
         Expr.aseries: See the docstring of this function for complete details of this wrapper.
         """
 
-        from sympy import Order, Dummy, PoleError
-        from sympy.functions import exp, log
-        from sympy.series.gruntz import mrv, rewrite
+        from .symbol import Dummy
 
         if x.is_positive is x.is_negative is None:
             xpos = Dummy('x', positive=True)
             return self.subs(x, xpos).aseries(xpos, n, bound, hir).subs(xpos, x)
+
+        from .function import PoleError
+        from sympy.series.gruntz import mrv, rewrite
 
         try:
             om, exps = mrv(self, x)
@@ -3179,6 +3187,9 @@ class Expr(Basic, EvalfMixin):
         # We move one level up by replacing `x` by `exp(x)`, and then
         # computing the asymptotic series for f(exp(x)). Then asymptotic series
         # can be obtained by moving one-step back, by replacing x by ln(x).
+
+        from sympy.functions.elementary.exponential import exp, log
+        from sympy.series.order import Order
 
         if x in om:
             s = self.subs(x, exp(x)).aseries(x, n, bound, hir).subs(x, log(x))
@@ -3240,7 +3251,9 @@ class Expr(Basic, EvalfMixin):
         This method is slow, because it differentiates n-times. Subclasses can
         redefine it to make it faster by using the "previous_terms".
         """
-        from sympy import Dummy, factorial
+        from .symbol import Dummy
+        from sympy.functions.combinatorial.factorials import factorial
+
         x = sympify(x)
         _x = Dummy('x')
         return self.subs(x, _x).diff(_x, n).subs(_x, x).subs(x, 0) * x**n / factorial(n)
@@ -3389,9 +3402,8 @@ class Expr(Basic, EvalfMixin):
         as_leading_term is only allowed for results of .series()
         This is a wrapper to compute a series first.
         """
-        from sympy import Dummy, log, Piecewise, piecewise_fold
-        from sympy.series.gruntz import calculate_series
 
+        from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
         if self.has(Piecewise):
             expr = piecewise_fold(self)
         else:
@@ -3399,7 +3411,11 @@ class Expr(Basic, EvalfMixin):
         if self.removeO() == 0:
             return self
 
+        from sympy.series.gruntz import calculate_series
+
         if logx is None:
+            from .symbol import Dummy
+            from sympy.functions.elementary.exponential import log
             d = Dummy('logx')
             s = calculate_series(expr, x, d).subs(d, log(x))
         else:
@@ -3425,7 +3441,6 @@ class Expr(Basic, EvalfMixin):
         x**(-2)
 
         """
-        from sympy import powsimp
         if len(symbols) > 1:
             c = self
             for x in symbols:
@@ -3440,6 +3455,7 @@ class Expr(Basic, EvalfMixin):
             return self
         obj = self._eval_as_leading_term(x, logx=logx, cdir=cdir)
         if obj is not None:
+            from sympy.simplify.powsimp import powsimp
             return powsimp(obj, deep=True, combine='exp')
         raise NotImplementedError('as_leading_term(%s, %s)' % (self, x))
 
@@ -3472,7 +3488,8 @@ class Expr(Basic, EvalfMixin):
         (1, -2)
 
         """
-        from sympy import Dummy, log
+        from .symbol import Dummy
+        from sympy.functions.elementary.exponential import log
         l = self.as_leading_term(x, logx=logx, cdir=cdir)
         d = Dummy('logx')
         if l.has(log(x)):
@@ -3671,7 +3688,7 @@ class Expr(Basic, EvalfMixin):
 
     def separate(self, deep=False, force=False):
         """See the separate function in sympy.simplify"""
-        from sympy.core.function import expand_power_base
+        from .function import expand_power_base
         return expand_power_base(self, deep=deep, force=force)
 
     def collect(self, syms, func=None, evaluate=True, exact=False, distribute_order_term=True):
@@ -3737,10 +3754,10 @@ class Expr(Basic, EvalfMixin):
         ========
         sympy.core.numbers.mod_inverse, sympy.polys.polytools.invert
         """
-        from sympy.polys.polytools import invert
-        from sympy.core.numbers import mod_inverse
         if self.is_number and getattr(g, 'is_number', True):
+            from .numbers import mod_inverse
             return mod_inverse(self, g)
+        from sympy.polys.polytools import invert
         return invert(self, g, *gens, **args)
 
     def round(self, n=None):
@@ -3916,11 +3933,13 @@ class AtomicExpr(Atom, Expr):
         return S.Zero
 
     def _eval_derivative_n_times(self, s, n):
-        from sympy import Piecewise, Eq
-        from sympy import Tuple, MatrixExpr
+        from .containers import Tuple
+        from sympy.matrices.expressions.matexpr import MatrixExpr
         from sympy.matrices.common import MatrixCommon
         if isinstance(s, (MatrixCommon, Tuple, Iterable, MatrixExpr)):
             return super()._eval_derivative_n_times(s, n)
+        from .relational import Eq
+        from sympy.functions.elementary.piecewise import Piecewise
         if self == s:
             return Piecewise((self, Eq(n, 0)), (1, Eq(n, 1)), (0, True))
         else:
@@ -3967,13 +3986,13 @@ def _mag(x):
     4
     """
     from math import log10, ceil, log
-    from sympy import Float
     xpos = abs(x.n())
     if not xpos:
         return S.Zero
     try:
         mag_first_dig = int(ceil(log10(xpos)))
     except (ValueError, OverflowError):
+        from .numbers import Float
         mag_first_dig = int(ceil(Float(mpf_log(xpos._mpf_, 53))/log(10)))
     # check that we aren't off by 1
     if (xpos/10**mag_first_dig) >= 1:

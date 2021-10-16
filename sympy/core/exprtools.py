@@ -1,22 +1,21 @@
 """Tools for manipulating of large commutative expressions. """
 
-from sympy.core.add import Add
-from sympy.core.compatibility import iterable, is_sequence
-from sympy.core.mul import Mul, _keep_coeff
-from sympy.core.power import Pow
-from sympy.core.basic import Basic
-from sympy.core.expr import Expr
-from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational, Integer, Number, I
-from sympy.core.singleton import S
-from sympy.core.symbol import Dummy
-from sympy.core.traversal import preorder_traversal
-from sympy.core.coreerrors import NonCommutativeExpression
-from sympy.core.containers import Tuple, Dict
+from .add import Add
+from .mul import Mul, _keep_coeff
+from .power import Pow
+from .basic import Basic
+from .expr import Expr
+from .sympify import sympify
+from .numbers import Rational, Integer, Number, I
+from .singleton import S
+from .symbol import Dummy
+from .traversal import preorder_traversal
+from .coreerrors import NonCommutativeExpression
+from .containers import Tuple, Dict
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
-        variations, ordered)
+        variations, ordered, iterable, is_sequence)
 
 from collections import defaultdict
 
@@ -1358,7 +1357,7 @@ def _mask_nc(eq, name=None):
     names = numbered_names()
 
     def Dummy(*args, **kwargs):
-        from sympy import Dummy
+        from .symbol import Dummy
         return Dummy(next(names), *args, **kwargs)
 
     expr = eq

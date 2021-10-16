@@ -193,9 +193,9 @@ References
 
 """
 
-from sympy.core.facts import FactRules, FactKB
-from sympy.core.core import BasicMeta
-from sympy.core.sympify import sympify
+from .facts import FactRules, FactKB
+from .core import BasicMeta
+from .sympify import sympify
 
 from random import shuffle
 
