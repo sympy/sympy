@@ -2202,7 +2202,7 @@ class Subs(Expr):
         # to give a variable-independent expression
         pre = "_"
         pts = sorted(set(point), key=default_sort_key)
-        from sympy.printing import StrPrinter
+        from sympy.printing.str import StrPrinter
         class CustomStrPrinter(StrPrinter):
             def _print_Dummy(self, expr):
                 return str(expr) + str(expr.dummy_index)
@@ -3300,7 +3300,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     >>> type(nfloat((1, 2))) is tuple
     True
     """
-    from sympy import MatrixBase
+    from sympy.matrices.matrices import MatrixBase
 
     kw = dict(n=n, exponent=exponent, dkeys=dkeys)
 

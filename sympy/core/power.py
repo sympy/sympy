@@ -8,7 +8,7 @@ from .singleton import S
 from .expr import Expr
 from .evalf import PrecisionExhausted
 from .function import (expand_complex, expand_multinomial,
-    expand_mul, _mexpand)
+    expand_mul, _mexpand, PoleError)
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
 from .compatibility import as_int
 from .parameters import global_parameters
@@ -305,7 +305,7 @@ class Pow(Expr):
                 return S.ComplexInfinity
             elif e.__class__.__name__ == "AccumulationBounds":
                 if b == S.Exp1:
-                    from sympy import AccumBounds
+                    from sympy.calculus.util import AccumBounds
                     return AccumBounds(Pow(b, e.min), Pow(b, e.max))
             # autosimplification if base is a number and exp odd/even
             # if base is Number then the base will end up positive; we
@@ -329,18 +329,19 @@ class Pow(Expr):
             else:
                 # recognize base as E
                 if not e.is_Atom and b is not S.Exp1 and not isinstance(b, exp_polar):
+                    from .exprtools import factor_terms
                     from sympy.functions.elementary.exponential import log
-                    from sympy import numer, denom, factor_terms
+                    from sympy.simplify.radsimp import fraction
                     c, ex = factor_terms(e, sign=False).as_coeff_Mul()
-                    den = denom(ex)
+                    num, den = fraction(ex)
                     if isinstance(den, log) and den.args[0] == b:
-                        return S.Exp1**(c*numer(ex))
+                        return S.Exp1**(c*num)
                     elif den.is_Add:
                         from sympy.functions.elementary.complexes import sign, im
                         s = sign(im(b))
                         if s.is_Number and s and den == \
                                 log(-factor_terms(b, sign=False)) + s*S.ImaginaryUnit*S.Pi:
-                            return S.Exp1**(c*numer(ex))
+                            return S.Exp1**(c*num)
 
                 obj = b._eval_power(e)
                 if obj is not None:
@@ -495,14 +496,14 @@ class Pow(Expr):
         ``\phi(q) + e \bmod \phi(q)`` becomes the new exponent, and then
         the computation for the reduced expression can be done.
         """
-        from sympy.ntheory import totient
-        from .mod import Mod
 
         base, exp = self.base, self.exp
 
         if exp.is_integer and exp.is_positive:
             if q.is_integer and base % q == 0:
                 return S.Zero
+
+            from sympy.ntheory.factor_ import totient
 
             if base.is_Integer and exp.is_Integer and q.is_Integer:
                 b, e, m = int(base), int(exp), int(q)
@@ -511,6 +512,8 @@ class Pow(Expr):
                     phi = totient(m)
                     return Integer(pow(b, phi + e%phi, m))
                 return Integer(pow(b, e, m))
+
+            from .mod import Mod
 
             if isinstance(base, Pow) and base.is_integer and base.is_number:
                 base = Mod(base, q)
@@ -809,9 +812,7 @@ class Pow(Expr):
         return self.base.is_polar
 
     def _eval_subs(self, old, new):
-        from sympy import AccumBounds
-        from sympy.functions.elementary.exponential import exp, log
-
+        from sympy.calculus.util import AccumBounds
 
         if isinstance(self.exp, AccumBounds):
             b = self.base.subs(old, new)
@@ -819,6 +820,8 @@ class Pow(Expr):
             if isinstance(e, AccumBounds):
                 return e.__rpow__(b)
             return self.func(b, e)
+
+        from sympy.functions.elementary.exponential import exp, log
 
         def _check(ct1, ct2, old):
             """Return (bool, pow, remainder_pow) where, if bool is True, then the
@@ -1229,7 +1232,7 @@ class Pow(Expr):
                 # p = [x,y]; n = 3
                 # so now it's easy to get the correct result -- we get the
                 # coefficients first:
-                from sympy import multinomial_coefficients
+                from sympy.ntheory.multinomial import multinomial_coefficients
                 from sympy.polys.polyutils import basic_from_dict
                 expansion_dict = multinomial_coefficients(len(p), n)
                 # in our example: {(3, 0): 1, (1, 2): 3, (0, 3): 1, (2, 1): 3}
@@ -1601,9 +1604,9 @@ class Pow(Expr):
         #    g has order O(x**d) where d is strictly positive.
         # 2) Then b**e = (f**e)*((1 + g)**e).
         #    (1 + g)**e is computed using binomial series.
-        from sympy import polygamma, logcombine, EulerGamma, ff, PoleError, O, powdenest
         from sympy.functions.elementary.exponential import exp, log
-        from sympy.series import Order, limit
+        from sympy.series.limits import limit
+        from sympy.series.order import Order
         if self.base is S.Exp1:
             e_series = self.exp.nseries(x, n=n, logx=logx)
             if e_series.is_Order:
@@ -1623,6 +1626,7 @@ class Pow(Expr):
             exp_series += Order(t**n, x)
             from sympy.simplify.powsimp import powsimp
             return powsimp(exp_series, deep=True, combine='exp')
+        from sympy.simplify.powsimp import powdenest
         self = powdenest(self, force=True).trigsimp()
         b, e = self.as_base_exp()
         if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
@@ -1639,7 +1643,8 @@ class Pow(Expr):
 
         b = b.removeO()
         try:
-            if b.has(polygamma, EulerGamma) and logx is not None:
+            from sympy.functions.special.gamma_functions import polygamma
+            if b.has(polygamma, S.EulerGamma) and logx is not None:
                 raise ValueError()
             _, m = b.leadterm(x)
         except (ValueError, NotImplementedError, PoleError):
@@ -1649,6 +1654,7 @@ class Pow(Expr):
             _, m = b.leadterm(x)
 
         if e.has(log):
+            from sympy.simplify.simplify import logcombine
             e = logcombine(e).cancel()
 
         if not (m.is_zero or e.is_number and e.is_real):
@@ -1661,7 +1667,7 @@ class Pow(Expr):
         maxpow = n - m*e
 
         if maxpow.is_negative:
-            return O(x**(m*e), x)
+            return Order(x**(m*e), x)
 
         if g.is_zero:
             r = f**e
@@ -1717,7 +1723,7 @@ class Pow(Expr):
         terms = {S.Zero: S.One}
         tk = gterms
 
-        from sympy.functions.combinatorial.factorials import factorial
+        from sympy.functions.combinatorial.factorials import factorial, ff
 
         while (k*d - maxpow).is_negative:
             coeff = ff(e, k)/factorial(k)
@@ -1741,12 +1747,11 @@ class Pow(Expr):
 
         if not (e.is_integer and e.is_positive and (e*d - n).is_nonpositive and
                 res == _mexpand(self)):
-            res += O(x**n, x)
+            res += Order(x**n, x)
         return res
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.functions.elementary.exponential import exp, log
-        from sympy import PoleError
         e = self.exp
         b = self.base
         if self.base is S.Exp1:
@@ -1774,7 +1779,7 @@ class Pow(Expr):
 
     @cacheit
     def _taylor_term(self, n, x, *previous_terms): # of (1 + x)**e
-        from sympy import binomial
+        from sympy.functions.combinatorial.factorials import binomial
         return binomial(self.exp, n) * self.func(x, n)
 
     def taylor_term(self, n, x, *previous_terms):

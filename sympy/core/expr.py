@@ -1124,7 +1124,8 @@ class Expr(Basic, EvalfMixin):
         None
 
         """
-        from sympy.polys import Poly, PolynomialError
+        from sympy.polys.polyerrors import PolynomialError
+        from sympy.polys.polytools import Poly
 
         try:
             poly = Poly(self, *gens, **args)
@@ -2967,7 +2968,7 @@ class Expr(Basic, EvalfMixin):
             raise ValueError("Dir must be '+' or '-'")
 
         if x0 in [S.Infinity, S.NegativeInfinity]:
-            from sympy import PoleError
+            from .function import PoleError
             try:
                 sgn = 1 if x0 is S.Infinity else -1
                 s = self.subs(x, sgn/x).series(x, n=n, dir='+', cdir=cdir)
@@ -3051,7 +3052,7 @@ class Expr(Basic, EvalfMixin):
                     o = S.Zero
 
             try:
-                from sympy import collect
+                from sympy.simplify.radsimp import collect
                 return collect(s1, x) + o
             except NotImplementedError:
                 return s1 + o
@@ -3465,7 +3466,7 @@ class Expr(Basic, EvalfMixin):
     def as_coeff_exponent(self, x):
         """ ``c*x**e -> c,e`` where x can be any symbolic expression.
         """
-        from sympy import collect
+        from sympy.simplify.radsimp import collect
         s = collect(self, x)
         c, p = s.as_coeff_mul(x)
         if len(p) == 1:
@@ -3678,12 +3679,12 @@ class Expr(Basic, EvalfMixin):
 
     def integrate(self, *args, **kwargs):
         """See the integrate function in sympy.integrals"""
-        from sympy.integrals import integrate
+        from sympy.integrals.integrals import integrate
         return integrate(self, *args, **kwargs)
 
     def nsimplify(self, constants=(), tolerance=None, full=False):
         """See the nsimplify function in sympy.simplify"""
-        from sympy.simplify import nsimplify
+        from sympy.simplify.simplify import nsimplify
         return nsimplify(self, constants, tolerance, full)
 
     def separate(self, deep=False, force=False):
@@ -3693,57 +3694,57 @@ class Expr(Basic, EvalfMixin):
 
     def collect(self, syms, func=None, evaluate=True, exact=False, distribute_order_term=True):
         """See the collect function in sympy.simplify"""
-        from sympy.simplify import collect
+        from sympy.simplify.radsimp import collect
         return collect(self, syms, func, evaluate, exact, distribute_order_term)
 
     def together(self, *args, **kwargs):
         """See the together function in sympy.polys"""
-        from sympy.polys import together
+        from sympy.polys.rationaltools import together
         return together(self, *args, **kwargs)
 
     def apart(self, x=None, **args):
         """See the apart function in sympy.polys"""
-        from sympy.polys import apart
+        from sympy.polys.partfrac import apart
         return apart(self, x, **args)
 
     def ratsimp(self):
         """See the ratsimp function in sympy.simplify"""
-        from sympy.simplify import ratsimp
+        from sympy.simplify.ratsimp import ratsimp
         return ratsimp(self)
 
     def trigsimp(self, **args):
         """See the trigsimp function in sympy.simplify"""
-        from sympy.simplify import trigsimp
+        from sympy.simplify.trigsimp import trigsimp
         return trigsimp(self, **args)
 
     def radsimp(self, **kwargs):
         """See the radsimp function in sympy.simplify"""
-        from sympy.simplify import radsimp
+        from sympy.simplify.radsimp import radsimp
         return radsimp(self, **kwargs)
 
     def powsimp(self, *args, **kwargs):
         """See the powsimp function in sympy.simplify"""
-        from sympy.simplify import powsimp
+        from sympy.simplify.powsimp import powsimp
         return powsimp(self, *args, **kwargs)
 
     def combsimp(self):
         """See the combsimp function in sympy.simplify"""
-        from sympy.simplify import combsimp
+        from sympy.simplify.combsimp import combsimp
         return combsimp(self)
 
     def gammasimp(self):
         """See the gammasimp function in sympy.simplify"""
-        from sympy.simplify import gammasimp
+        from sympy.simplify.gammasimp import gammasimp
         return gammasimp(self)
 
     def factor(self, *gens, **args):
         """See the factor() function in sympy.polys.polytools"""
-        from sympy.polys import factor
+        from sympy.polys.polytools import factor
         return factor(self, *gens, **args)
 
     def cancel(self, *gens, **args):
         """See the cancel function in sympy.polys"""
-        from sympy.polys import cancel
+        from sympy.polys.polytools import cancel
         return cancel(self, *gens, **args)
 
     def invert(self, g, *gens, **args):

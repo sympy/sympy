@@ -841,17 +841,17 @@ class Number(AtomicExpr):
 
     def gcd(self, other):
         """Compute GCD of `self` and `other`. """
-        from sympy.polys import gcd
+        from sympy.polys.polytools import gcd
         return gcd(self, other)
 
     def lcm(self, other):
         """Compute LCM of `self` and `other`. """
-        from sympy.polys import lcm
+        from sympy.polys.polytools import lcm
         return lcm(self, other)
 
     def cofactors(self, other):
         """Compute GCD and cofactors of `self` and `other`. """
-        from sympy.polys import cofactors
+        from sympy.polys.polytools import cofactors
         return cofactors(self, other)
 
 
@@ -1994,7 +1994,7 @@ class Rational(Number):
         smaller than limit (or cheap to compute). Special methods of
         factoring are disabled by default so that only trial division is used.
         """
-        from sympy.ntheory import factorrat
+        from sympy.ntheory.factor_ import factorrat
 
         return factorrat(self, limit=limit, use_trial=use_trial,
                       use_rho=use_rho, use_pm1=use_pm1,
@@ -2419,7 +2419,7 @@ class Integer(Rational):
         return result
 
     def _eval_is_prime(self):
-        from sympy.ntheory import isprime
+        from sympy.ntheory.primetest import isprime
 
         return isprime(self)
 
@@ -2640,7 +2640,8 @@ class AlgebraicNumber(Expr):
         return AlgebraicNumber((minpoly, root), self.coeffs())
 
     def _eval_simplify(self, **kwargs):
-        from sympy.polys import CRootOf, minpoly
+        from sympy.polys.rootoftools import CRootOf
+        from sympy.polys import minpoly
         measure, ratio = kwargs['measure'], kwargs['ratio']
         for r in [r for r in self.minpoly.all_roots() if r.func != CRootOf]:
             if minpoly(self.root - r).is_Symbol:
@@ -3022,8 +3023,6 @@ class Infinity(Number, metaclass=Singleton):
         NegativeInfinity
 
         """
-        from sympy.functions import re
-
         if expt.is_extended_positive:
             return S.Infinity
         if expt.is_extended_negative:
@@ -3033,6 +3032,7 @@ class Infinity(Number, metaclass=Singleton):
         if expt is S.ComplexInfinity:
             return S.NaN
         if expt.is_extended_real is False and expt.is_number:
+            from sympy.functions.elementary.complexes import re
             expt_real = re(expt)
             if expt_real.is_positive:
                 return S.ComplexInfinity
@@ -3769,7 +3769,7 @@ class GoldenRatio(NumberSymbol, metaclass=Singleton):
         return mpf_norm(rv, prec)
 
     def _eval_expand_func(self, **hints):
-        from sympy import sqrt
+        from sympy.functions.elementary.miscellaneous import sqrt
         return S.Half + S.Half*sqrt(5)
 
     def approximation_interval(self, number_cls):
@@ -3839,7 +3839,7 @@ class TribonacciConstant(NumberSymbol, metaclass=Singleton):
         return Float(rv, precision=prec)
 
     def _eval_expand_func(self, **hints):
-        from sympy import sqrt, cbrt
+        from sympy.functions.elementary.miscellaneous import cbrt, sqrt
         return (1 + cbrt(19 - 3*sqrt(33)) + cbrt(19 + 3*sqrt(33))) / 3
 
     def approximation_interval(self, number_cls):

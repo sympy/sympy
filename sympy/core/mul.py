@@ -1,5 +1,6 @@
 from collections import defaultdict
 from functools import cmp_to_key, reduce
+from itertools import product
 import operator
 
 from .sympify import sympify
@@ -903,7 +904,7 @@ class Mul(Expr, AssocOp):
             if imco is S.Zero:
                 return (r, i)
             return (-imco*i, imco*r)
-        from sympy import expand_mul
+        from .function import expand_mul
         addre, addim = expand_mul(addterms, deep=False).as_real_imag()
         if imco is S.Zero:
             return (r*addre - i*addim, i*addre + r*addim)
@@ -931,7 +932,7 @@ class Mul(Expr, AssocOp):
         return Add.make_args(added)  # it may have collapsed down to one term
 
     def _eval_expand_mul(self, **hints):
-        from sympy import fraction
+        from sympy.simplify.radsimp import fraction
 
         # Handle things like 1/(x*(x + 1)), which are automatically converted
         # to 1/x*1/(x + 1)
@@ -1003,7 +1004,9 @@ class Mul(Expr, AssocOp):
                 p = prod([arg.diff((s, k)) for k, arg in zip(kvals, args)])
                 terms.append(c * p)
             return Add(*terms)
-        from sympy import factorial, Sum, Max
+        from sympy.concrete.summations import Sum
+        from sympy.functions.combinatorial.factorials import factorial
+        from sympy.functions.elementary.miscellaneous import Max
         kvals = symbols("k1:%i" % m, cls=Dummy)
         klast = n - sum(kvals)
         nfact = factorial(n)
@@ -1594,9 +1597,10 @@ class Mul(Expr, AssocOp):
         if is_integer:
             if self.is_zero:
                 return False
-            from sympy import trailing, fraction
+            from sympy.simplify.radsimp import fraction
             n, d = fraction(self)
             if d.is_Integer and d.is_even:
+                from sympy.ntheory.factor_ import trailing
                 # if minimal power of 2 in num vs den is
                 # positive then we have an even number
                 if (Add(*[i.as_base_exp()[1] for i in
@@ -1627,12 +1631,13 @@ class Mul(Expr, AssocOp):
         if is_integer:
             return fuzzy_not(self.is_odd)
 
-        from sympy import trailing, fraction
+        from sympy.simplify.radsimp import fraction
         n, d = fraction(self)
         if n.is_Integer and n.is_even:
             # if minimal power of 2 in den vs num is not
             # negative then this is not an integer and
             # can't be even
+            from sympy.ntheory.factor_ import trailing
             if (Add(*[i.as_base_exp()[1] for i in
                     Mul.make_args(d) if i.is_even]) - trailing(n.p)
                     ).is_nonnegative:
@@ -1921,8 +1926,9 @@ class Mul(Expr, AssocOp):
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        from sympy import degree, Order, ceiling, powsimp, PolynomialError, PoleError
-        from itertools import product
+        from .function import PoleError
+        from sympy.functions.elementary.integers import ceiling
+        from sympy.series.order import Order
 
         def coeff_exp(term, x):
             lt = term.as_coeff_exponent(x)
@@ -1959,6 +1965,7 @@ class Mul(Expr, AssocOp):
             if n0.is_nonnegative:
                 n0 = S.Zero
             facs = [t.nseries(x, n=ceiling(n-n0), logx=logx, cdir=cdir) for t in self.args]
+            from sympy.simplify.powsimp import powsimp
             res = powsimp(self.func(*facs).expand(), combine='exp', deep=True)
             if res.has(Order):
                 res += Order(x**n, x)
@@ -1988,6 +1995,8 @@ class Mul(Expr, AssocOp):
             return S.Zero
 
         if self.is_polynomial(x):
+            from sympy.polys.polyerrors import PolynomialError
+            from sympy.polys.polytools import degree
             try:
                 if max_degree(self, x) >= n or degree(self, x) != degree(res, x):
                     res += Order(x**n, x)

@@ -369,7 +369,8 @@ class Relational(Boolean, EvalfMixin):
                         r = r.func(b, S.Zero)
                 except ValueError:
                     # maybe not a linear function, try polynomial
-                    from sympy.polys import Poly, poly, PolynomialError, gcd
+                    from sympy.polys.polyerrors import PolynomialError
+                    from sympy.polys.polytools import gcd, Poly, poly
                     try:
                         p = poly(dif, x)
                         c = p.all_coeffs()
@@ -383,7 +384,7 @@ class Relational(Boolean, EvalfMixin):
             elif len(free) >= 2:
                 try:
                     from sympy.solvers.solveset import linear_coeffs
-                    from sympy.polys import gcd
+                    from sympy.polys.polytools import gcd
                     free = list(ordered(free))
                     dif = r.lhs - r.rhs
                     m = linear_coeffs(dif, *free)
@@ -417,7 +418,7 @@ class Relational(Boolean, EvalfMixin):
             return self
 
     def _eval_trigsimp(self, **opts):
-        from sympy.simplify import trigsimp
+        from sympy.simplify.trigsimp import trigsimp
         return self.func(trigsimp(self.lhs, **opts), trigsimp(self.rhs, **opts))
 
     def expand(self, **kwargs):
@@ -617,7 +618,7 @@ class Equality(Relational):
 
     def integrate(self, *args, **kwargs):
         """See the integrate function in sympy.integrals"""
-        from sympy.integrals import integrate
+        from sympy.integrals.integrals import integrate
         return integrate(self, *args, **kwargs)
 
     def as_poly(self, *gens, **kwargs):

@@ -1418,20 +1418,13 @@ def factor_nc(expr):
     >>> factor_nc(((x + A)*(x + B)).expand())
     (x + A)*(x + B)
     """
-    from sympy.simplify.simplify import powsimp
-    from sympy.polys import gcd, factor
-
-    def _pemexpand(expr):
-        "Expand with the minimal set of hints necessary to check the result."
-        return expr.expand(deep=True, mul=True, power_exp=True,
-            power_base=False, basic=False, multinomial=True, log=False)
-
     expr = sympify(expr)
     if not isinstance(expr, Expr) or not expr.args:
         return expr
     if not expr.is_Add:
         return expr.func(*[factor_nc(a) for a in expr.args])
 
+    from sympy.polys.polytools import gcd, factor
     expr, rep, nc_symbols = _mask_nc(expr)
     if rep:
         return factor(expr).subs(rep)
@@ -1534,6 +1527,8 @@ def factor_nc(expr):
         else:
             mid = expr
 
+        from sympy.simplify.powsimp import powsimp
+
         # sort the symbols so the Dummys would appear in the same
         # order as the original symbols, otherwise you may introduce
         # a factor of -1, e.g. A**2 - B**2) -- {A:y, B:x} --> y**2 - x**2
@@ -1551,6 +1546,10 @@ def factor_nc(expr):
             return _keep_coeff(c, g*l*new_mid*r)
 
         if new_mid.is_Mul:
+            def _pemexpand(expr):
+                "Expand with the minimal set of hints necessary to check the result."
+                return expr.expand(deep=True, mul=True, power_exp=True,
+                    power_base=False, basic=False, multinomial=True, log=False)
             # XXX TODO there should be a way to inspect what order the terms
             # must be in and just select the plausible ordering without
             # checking permutations
