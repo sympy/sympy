@@ -5,8 +5,8 @@ from sympy.polys import ZZ, QQ
 
 from sympy.polys.matrices.ddm import DDM
 from sympy.polys.matrices.exceptions import (
-        DDMShapeError, NonInvertibleMatrixError, DDMDomainError,
-        DDMBadInputError)
+    DMShapeError, NonInvertibleMatrixError, DMDomainError,
+    DMBadInputError)
 
 
 def test_DDM_init():
@@ -18,8 +18,8 @@ def test_DDM_init():
     assert ddm.cols == 3
     assert ddm.domain == ZZ
 
-    raises(DDMBadInputError, lambda: DDM([[ZZ(2), ZZ(3)]], (2, 2), ZZ))
-    raises(DDMBadInputError, lambda: DDM([[ZZ(1)], [ZZ(2), ZZ(3)]], (2, 2), ZZ))
+    raises(DMBadInputError, lambda: DDM([[ZZ(2), ZZ(3)]], (2, 2), ZZ))
+    raises(DMBadInputError, lambda: DDM([[ZZ(1)], [ZZ(2), ZZ(3)]], (2, 2), ZZ))
 
 
 def test_DDM_getsetitem():
@@ -129,11 +129,11 @@ def test_DDM_add():
     AQ = DDM([[QQ(1)], [QQ(2)]], (2, 1), QQ)
     assert A + B == A.add(B) == C
 
-    raises(DDMShapeError, lambda: A + DDM([[ZZ(5)]], (1, 1), ZZ))
+    raises(DMShapeError, lambda: A + DDM([[ZZ(5)]], (1, 1), ZZ))
     raises(TypeError, lambda: A + ZZ(1))
     raises(TypeError, lambda: ZZ(1) + A)
-    raises(DDMDomainError, lambda: A + AQ)
-    raises(DDMDomainError, lambda: AQ + A)
+    raises(DMDomainError, lambda: A + AQ)
+    raises(DMDomainError, lambda: AQ + A)
 
 
 def test_DDM_sub():
@@ -146,14 +146,14 @@ def test_DDM_sub():
 
     raises(TypeError, lambda: A - ZZ(1))
     raises(TypeError, lambda: ZZ(1) - A)
-    raises(DDMShapeError, lambda: A - D)
-    raises(DDMShapeError, lambda: D - A)
-    raises(DDMShapeError, lambda: A.sub(D))
-    raises(DDMShapeError, lambda: D.sub(A))
-    raises(DDMDomainError, lambda: A - AQ)
-    raises(DDMDomainError, lambda: AQ - A)
-    raises(DDMDomainError, lambda: A.sub(AQ))
-    raises(DDMDomainError, lambda: AQ.sub(A))
+    raises(DMShapeError, lambda: A - D)
+    raises(DMShapeError, lambda: D - A)
+    raises(DMShapeError, lambda: A.sub(D))
+    raises(DMShapeError, lambda: D.sub(A))
+    raises(DMDomainError, lambda: A - AQ)
+    raises(DMDomainError, lambda: AQ - A)
+    raises(DMDomainError, lambda: A.sub(AQ))
+    raises(DMDomainError, lambda: AQ.sub(A))
 
 
 def test_DDM_neg():
@@ -186,15 +186,15 @@ def test_DDM_matmul():
 
     Bq = DDM([[QQ(3), QQ(4)]], (1, 2), QQ)
 
-    raises(DDMDomainError, lambda: A @ Bq)
-    raises(DDMDomainError, lambda: Bq @ A)
+    raises(DMDomainError, lambda: A @ Bq)
+    raises(DMDomainError, lambda: Bq @ A)
 
     C = DDM([[ZZ(1)]], (1, 1), ZZ)
 
     assert A @ C == A.matmul(C) == A
 
-    raises(DDMShapeError, lambda: C @ A)
-    raises(DDMShapeError, lambda: C.matmul(A))
+    raises(DMShapeError, lambda: C @ A)
+    raises(DMShapeError, lambda: C.matmul(A))
 
     Z04 = DDM([], (0, 4), ZZ)
     Z40 = DDM([[]]*4, (4, 0), ZZ)
@@ -211,8 +211,8 @@ def test_DDM_matmul():
     assert Z00 @ Z00 == Z00.matmul(Z00) == Z00
     assert Z50 @ Z04 == Z50.matmul(Z04) == Z54
 
-    raises(DDMShapeError, lambda: Z05 @ Z40)
-    raises(DDMShapeError, lambda: Z05.matmul(Z40))
+    raises(DMShapeError, lambda: Z05 @ Z40)
+    raises(DMShapeError, lambda: Z05.matmul(Z40))
 
 
 def test_DDM_hstack():
@@ -318,11 +318,11 @@ def test_DDM_det():
 
     # Nonsquare error
     A = DDM([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
-    raises(DDMShapeError, lambda: A.det())
+    raises(DMShapeError, lambda: A.det())
 
     # Nonsquare error with empty matrix
     A = DDM([], (0, 1), ZZ)
-    raises(DDMShapeError, lambda: A.det())
+    raises(DMShapeError, lambda: A.det())
 
 
 def test_DDM_inv():
@@ -331,7 +331,7 @@ def test_DDM_inv():
     assert A.inv() == Ainv
 
     A = DDM([[QQ(1), QQ(2)]], (1, 2), QQ)
-    raises(DDMShapeError, lambda: A.inv())
+    raises(DMShapeError, lambda: A.inv())
 
     A = DDM([[ZZ(2)]], (1, 1), ZZ)
     raises(ValueError, lambda: A.inv())
@@ -395,11 +395,11 @@ def test_DDM_lu_solve():
 
     # Domain mismatch
     bz = DDM([[ZZ(1)], [ZZ(2)]], (2, 1), ZZ)
-    raises(DDMDomainError, lambda: A.lu_solve(bz))
+    raises(DMDomainError, lambda: A.lu_solve(bz))
 
     # Shape mismatch
     b3 = DDM([[QQ(1)], [QQ(2)], [QQ(3)]], (3, 1), QQ)
-    raises(DDMShapeError, lambda: A.lu_solve(b3))
+    raises(DMShapeError, lambda: A.lu_solve(b3))
 
 
 def test_DDM_charpoly():
@@ -414,7 +414,7 @@ def test_DDM_charpoly():
     assert A.charpoly() == Avec
 
     A = DDM([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
-    raises(DDMShapeError, lambda: A.charpoly())
+    raises(DMShapeError, lambda: A.charpoly())
 
 
 def test_DDM_getitem():
@@ -428,6 +428,16 @@ def test_DDM_getitem():
     assert dm.getitem(-1, -3) == ZZ(7)
 
     raises(IndexError, lambda: dm.getitem(3, 3))
+
+
+def test_DDM_setitem():
+    dm = DDM.zeros((3, 3), ZZ)
+    dm.setitem(0, 0, 1)
+    dm.setitem(1, -2, 1)
+    dm.setitem(-1, -1, 1)
+    assert dm == DDM.eye(3, ZZ)
+
+    raises(IndexError, lambda: dm.setitem(3, 3, 0))
 
 
 def test_DDM_extract_slice():
@@ -467,3 +477,81 @@ def test_DDM_extract():
     raises(IndexError, lambda: dm2.extract([0], [2]))
     raises(IndexError, lambda: dm2.extract([-3], [0]))
     raises(IndexError, lambda: dm2.extract([0], [-3]))
+
+
+def test_DDM_flat():
+    dm = DDM([
+        [ZZ(6), ZZ(4)],
+        [ZZ(3), ZZ(1)]], (2, 2), ZZ)
+    assert dm.flat() == [ZZ(6), ZZ(4), ZZ(3), ZZ(1)]
+
+
+def test_DDM_is_zero_matrix():
+    A = DDM([[QQ(1), QQ(0)], [QQ(0), QQ(0)]], (2, 2), QQ)
+    Azero = DDM.zeros((1, 2), QQ)
+    assert A.is_zero_matrix() is False
+    assert Azero.is_zero_matrix() is True
+
+
+def test_DDM_is_upper():
+    # Wide matrices:
+    A = DDM([
+        [QQ(1), QQ(2), QQ(3), QQ(4)],
+        [QQ(0), QQ(5), QQ(6), QQ(7)],
+        [QQ(0), QQ(0), QQ(8), QQ(9)]
+    ], (3, 4), QQ)
+    B = DDM([
+        [QQ(1), QQ(2), QQ(3), QQ(4)],
+        [QQ(0), QQ(5), QQ(6), QQ(7)],
+        [QQ(0), QQ(7), QQ(8), QQ(9)]
+    ], (3, 4), QQ)
+    assert A.is_upper() is True
+    assert B.is_upper() is False
+
+    # Tall matrices:
+    A = DDM([
+        [QQ(1), QQ(2), QQ(3)],
+        [QQ(0), QQ(5), QQ(6)],
+        [QQ(0), QQ(0), QQ(8)],
+        [QQ(0), QQ(0), QQ(0)]
+    ], (4, 3), QQ)
+    B = DDM([
+        [QQ(1), QQ(2), QQ(3)],
+        [QQ(0), QQ(5), QQ(6)],
+        [QQ(0), QQ(0), QQ(8)],
+        [QQ(0), QQ(0), QQ(10)]
+    ], (4, 3), QQ)
+    assert A.is_upper() is True
+    assert B.is_upper() is False
+
+
+def test_DDM_is_lower():
+    # Tall matrices:
+    A = DDM([
+        [QQ(1), QQ(2), QQ(3), QQ(4)],
+        [QQ(0), QQ(5), QQ(6), QQ(7)],
+        [QQ(0), QQ(0), QQ(8), QQ(9)]
+    ], (3, 4), QQ).transpose()
+    B = DDM([
+        [QQ(1), QQ(2), QQ(3), QQ(4)],
+        [QQ(0), QQ(5), QQ(6), QQ(7)],
+        [QQ(0), QQ(7), QQ(8), QQ(9)]
+    ], (3, 4), QQ).transpose()
+    assert A.is_lower() is True
+    assert B.is_lower() is False
+
+    # Wide matrices:
+    A = DDM([
+        [QQ(1), QQ(2), QQ(3)],
+        [QQ(0), QQ(5), QQ(6)],
+        [QQ(0), QQ(0), QQ(8)],
+        [QQ(0), QQ(0), QQ(0)]
+    ], (4, 3), QQ).transpose()
+    B = DDM([
+        [QQ(1), QQ(2), QQ(3)],
+        [QQ(0), QQ(5), QQ(6)],
+        [QQ(0), QQ(0), QQ(8)],
+        [QQ(0), QQ(0), QQ(10)]
+    ], (4, 3), QQ).transpose()
+    assert A.is_lower() is True
+    assert B.is_lower() is False

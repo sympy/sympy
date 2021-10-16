@@ -37,7 +37,7 @@ the elements of the matrix:
 from operator import mul
 
 from .exceptions import (
-    DDMShapeError,
+    DMShapeError,
     NonInvertibleMatrixError,
     NonSquareMatrixError,
     )
@@ -262,11 +262,11 @@ def ddm_ilu_solve(x, L, U, swaps, b):
 
     m2 = len(b)
     if not m2:
-        raise DDMShapeError("Shape mismtch")
+        raise DMShapeError("Shape mismtch")
     o = len(b[0])
 
     if m != m2:
-        raise DDMShapeError("Shape mismtch")
+        raise DMShapeError("Shape mismtch")
     if m < n:
         raise NotImplementedError("Underdetermined")
 
@@ -308,7 +308,7 @@ def ddm_berk(M, K):
     n = len(M[0])
 
     if m != n:
-        raise DDMShapeError("Not square")
+        raise DMShapeError("Not square")
 
     if n == 1:
         return [[K.one], [-M[0][0]]]
