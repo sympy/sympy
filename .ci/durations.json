@@ -1220,7 +1220,7 @@
             "test_trigintegrate_mixed",
             "test_trigintegrate_odd"
         ],
-        "sympy/interactive/tests/test_ipythonprinting.py": [
+        "sympy/interactive/tests/test_ipython.py": [
             "test_matplotlib_bad_latex"
         ],
         "sympy/liealgebras/tests/test_weyl_group.py": [
