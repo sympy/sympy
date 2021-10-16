@@ -83,9 +83,9 @@ def test_codegen_einsum():
     cg = convert_matrix_to_array(M * N)
     f = lambdify((M, N), cg, 'numpy')
 
-    ma = np.matrix([[1, 2], [3, 4]])
-    mb = np.matrix([[1,-2], [-1, 3]])
-    assert (f(ma, mb) == ma*mb).all()
+    ma = np.array([[1, 2], [3, 4]])
+    mb = np.array([[1,-2], [-1, 3]])
+    assert (f(ma, mb) == np.matmul(ma, mb)).all()
 
 
 def test_codegen_extra():
@@ -96,10 +96,10 @@ def test_codegen_extra():
     N = MatrixSymbol("N", 2, 2)
     P = MatrixSymbol("P", 2, 2)
     Q = MatrixSymbol("Q", 2, 2)
-    ma = np.matrix([[1, 2], [3, 4]])
-    mb = np.matrix([[1,-2], [-1, 3]])
-    mc = np.matrix([[2, 0], [1, 2]])
-    md = np.matrix([[1,-1], [4, 7]])
+    ma = np.array([[1, 2], [3, 4]])
+    mb = np.array([[1,-2], [-1, 3]])
+    mc = np.array([[2, 0], [1, 2]])
+    md = np.array([[1,-1], [4, 7]])
 
     cg = ArrayTensorProduct(M, N)
     f = lambdify((M, N), cg, 'numpy')
