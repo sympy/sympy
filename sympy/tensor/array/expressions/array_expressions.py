@@ -30,6 +30,7 @@ from sympy import (
 )
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import _af_invert
+from sympy.core.numbers import One, Zero
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.integers import floor
@@ -54,14 +55,14 @@ class ArraySymbol(_ArrayExpr):
     Symbol representing an array expression
     """
 
-    name: str = property(lambda self: self._args[0].name)
+    name: str = property(lambda self: self._args[0].name)  # type: ignore[assignment]
     shape = property(lambda self: self._args[1:])
 
     def __new__(cls, name, *shape) -> "ArraySymbol":
         if isinstance(name, str):
             name = Str(name)
-        shape = map(_sympify, shape)
-        return Expr.__new__(cls, name, *shape)
+        sympified_shape = map(_sympify, shape)
+        return Expr.__new__(cls, name, *sympified_shape)
 
     @overload
     def __getitem__(self, key: Union[Basic, int]) -> "ArrayElement":
@@ -72,7 +73,7 @@ class ArraySymbol(_ArrayExpr):
         ...
 
     @overload
-    def __getitem__(self, key: typing.Tuple[Union[Basic, int], ...]) -> "ArrayElement":
+    def __getitem__(self, key: typing.Tuple[Union[Basic, int], ...]) -> "ArrayElement":  # type: ignore[misc]
         ...
 
     @overload
@@ -102,7 +103,7 @@ class ArrayElement(_ArrayExpr):
     An element of an array.
     """
 
-    parent: Expr = property(lambda self: self._args[0])
+    parent: Expr = property(lambda self: self._args[0])  # type: ignore[assignment]
     indices = property(lambda self: self._args[1])
 
     def __new__(cls, parent: Expr, indices) -> "ArrayElement":
@@ -126,15 +127,15 @@ class ArrayElement(_ArrayExpr):
         return Expr.__new__(cls, parent, Tuple(*normalized_indices))
 
 
-def _normalize_index(idx, axis_size: Optional[Basic]):
+def _normalize_index(idx, axis_size: Optional[Expr]):
     if axis_size and axis_size.is_Integer and -axis_size <= idx < 0:
         return idx + axis_size
     return idx
 
 
 class ArraySlice(_ArrayExpr):
-    parent: Expr = property(lambda self: self.args[0])
-    indices: typing.Tuple[Tuple, ...] = property(lambda self: tuple(self.args[1]))
+    parent: Expr = property(lambda self: self.args[0])  # type: ignore[assignment]
+    indices: typing.Tuple[Tuple, ...] = property(lambda self: tuple(self.args[1]))  # type: ignore[assignment]
 
     def __new__(
         cls, parent: Expr, indices: typing.Tuple[Union[Basic, int, slice], ...]
@@ -183,11 +184,19 @@ class ZeroArray(_ArrayExpr):
 
     shape = property(lambda self: self._args)
 
+    @overload
+    def __new__(cls) -> Zero:  # type: ignore[misc]
+        ...
+
+    @overload
     def __new__(cls, *shape) -> "ZeroArray":
+        ...
+
+    def __new__(cls, *shape):
         if len(shape) == 0:
             return S.Zero
-        shape = map(_sympify, shape)
-        return Expr.__new__(cls, *shape)
+        sympified_shape = map(_sympify, shape)
+        return Expr.__new__(cls, *sympified_shape)
 
     def as_explicit(self):
         if not all(i.is_Integer for i in self.shape):
@@ -202,11 +211,19 @@ class OneArray(_ArrayExpr):
 
     shape = property(lambda self: self._args)
 
+    @overload
+    def __new__(cls) -> One:  # type: ignore[misc]
+        ...
+
+    @overload
     def __new__(cls, *shape) -> "OneArray":
+        ...
+
+    def __new__(cls, *shape):
         if len(shape) == 0:
             return S.One
-        shape = map(_sympify, shape)
-        return Expr.__new__(cls, *shape)
+        sympified_shape = map(_sympify, shape)
+        return Expr.__new__(cls, *sympified_shape)
 
     def as_explicit(self):
         if not all(i.is_Integer for i in self.shape):
@@ -701,11 +718,13 @@ class ArrayDiagonal(_CodegenArrayAbstract):
     the end of the indices.
     """
 
-    def __new__(cls, expr, *diagonal_indices):
+    def __new__(cls, expr: Basic, *indices):
         expr = _sympify(expr)
-        diagonal_indices = [Tuple(*sorted(i)) for i in diagonal_indices]
+        diagonal_indices = [Tuple(*sorted(i)) for i in indices]
         if isinstance(expr, ArrayAdd):
-            return ArrayAdd(*[ArrayDiagonal(arg, *diagonal_indices) for arg in expr.args])
+            return ArrayAdd(
+                *[ArrayDiagonal(arg, *diagonal_indices) for arg in expr.args]
+            )
         if isinstance(expr, ArrayDiagonal):
             return cls._flatten(expr, *diagonal_indices)
         if isinstance(expr, PermuteDims):
@@ -914,7 +933,7 @@ class ArrayContraction(_CodegenArrayAbstract):
         free_indices_to_position = {i: i for i in range(sum(obj._subranks)) if all(i not in cind for cind in contraction_indices)}
         obj._free_indices_to_position = free_indices_to_position
 
-        shape = expr.shape
+        shape = get_shape(expr)
         cls._validate(expr, *contraction_indices)
         if shape:
             shape = tuple(shp for i, shp in enumerate(shape) if not any(i in j for j in contraction_indices))
@@ -1044,8 +1063,8 @@ class ArrayContraction(_CodegenArrayAbstract):
             # Also consider the case of diagonal matrices being contracted:
             current_dimension = self.expr.shape[links[0]]
 
-            not_vectors: Tuple[_ArgE, int] = []
-            vectors: Tuple[_ArgE, int] = []
+            not_vectors: List[typing.Tuple[_ArgE, int]] = []
+            vectors: List[typing.Tuple[_ArgE, int]] = []
             for arg_ind, rel_ind in positions:
                 arg = editor.args_with_ind[arg_ind]
                 mat = arg.element
@@ -1398,12 +1417,13 @@ class _ArgE:
     the second index is contracted to the 4th (i.e. number ``3``) group of the
     array contraction object.
     """
+
     def __init__(self, element, indices: Optional[List[Optional[int]]] = None):
         self.element = element
         if indices is None:
             self.indices: List[Optional[int]] = [None for i in range(get_rank(element))]
         else:
-            self.indices: List[Optional[int]] = indices
+            self.indices = indices
 
     def __str__(self):
         return "_ArgE(%s, %s)" % (self.element, self.indices)
@@ -1418,6 +1438,7 @@ class _IndPos:
     - arg: the position of the argument in the tensor product,
     - rel: the relative position of the index inside the argument.
     """
+
     def __init__(self, arg: int, rel: int):
         self.arg = arg
         self.rel = rel
@@ -1446,11 +1467,13 @@ class _EditArrayContraction:
     by calling the ``.to_array_contraction()`` method.
     """
 
-    def __init__(self, base_array: typing.Union[ArrayContraction, ArrayDiagonal, ArrayTensorProduct]):
+    def __init__(
+        self, base_array: Union[ArrayContraction, ArrayDiagonal, ArrayTensorProduct]
+    ):
 
-        expr: Expr
-        diagonalized: List[int]
-        contraction_indices: List[Tuple[int]]
+        expr: Basic
+        diagonalized: List[List[int]]
+        contraction_indices: List[Tuple]
         if isinstance(base_array, ArrayContraction):
             mapping = _get_mapping_from_subranks(base_array.subranks)
             expr = base_array.expr
@@ -1493,7 +1516,7 @@ class _EditArrayContraction:
                 args_with_ind[arg_pos].indices[rel_pos] = i
         self.args_with_ind: List[_ArgE] = args_with_ind
         self.number_of_contraction_indices: int = len(contraction_indices)
-        self._track_permutation: Optional[List[int]] = None
+        self._track_permutation: Optional[List[List[int]]] = None
 
         mapping = _get_mapping_from_subranks(base_array.subranks)
 
@@ -1677,7 +1700,13 @@ class _EditArrayContraction:
     def track_permutation_merge(self, destination: _ArgE, from_element: _ArgE):
         index_destination = self.args_with_ind.index(destination)
         index_element = self.args_with_ind.index(from_element)
-        self._track_permutation[index_destination].extend(self._track_permutation[index_element])
+        if self._track_permutation is None:
+            raise ValueError(
+                f"{type(self).__name__}.track_permutation_start has not yet been called"
+            )
+        self._track_permutation[index_destination].extend(
+            self._track_permutation[index_element]
+        )
         self._track_permutation.pop(index_element)
 
     def get_absolute_free_range(self, arg: _ArgE) -> typing.Tuple[int, int]:
@@ -1740,7 +1769,7 @@ def _get_subranks(expr):
         return [get_rank(expr)]
 
 
-def get_shape(expr):
+def get_shape(expr: Basic) -> typing.Tuple[Expr, ...]:
     return getattr(expr, "shape", ())
 
 
