@@ -1445,10 +1445,8 @@ class _ArgE:
         else:
             self.indices = indices
 
-    def __str__(self):
-        return "_ArgE(%s, %s)" % (self.element, self.indices)
-
-    __repr__ = __str__
+    def __repr__(self):
+        return f"{type(self).__name__}({self.element}, {self.indices})"
 
 
 class _IndPos:
@@ -1463,10 +1461,8 @@ class _IndPos:
         self.arg = arg
         self.rel = rel
 
-    def __str__(self):
-        return "_IndPos(%i, %i)" % (self.arg, self.rel)
-
-    __repr__ = __str__
+    def __repr__(self):
+        return f"{type(self).__name__}({self.arg}, {self.rel})"
 
     def __iter__(self):
         yield from [self.arg, self.rel]
