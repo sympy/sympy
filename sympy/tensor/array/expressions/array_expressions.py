@@ -371,9 +371,11 @@ class ArrayAdd(_CodegenArrayAbstract):
         args = [arg for arg in args if not isinstance(arg, (ZeroArray, ZeroMatrix))]
         if len(args) == 0:
             if any(i for i in shapes if i is None):
-                raise NotImplementedError("cannot handle addition of ZeroMatrix/ZeroArray and undefined shape object")
+                raise NotImplementedError(
+                    "cannot handle addition of ZeroMatrix/ZeroArray and undefined shape object"
+                )
             return ZeroArray(*shapes[0])
-        elif len(args) == 1:
+        if len(args) == 1:
             return args[0]
 
         obj = Basic.__new__(cls, *args)
@@ -676,15 +678,23 @@ class PermuteDims(_CodegenArrayAbstract):
     @classmethod
     def _nest_permutation(cls, expr, permutation):
         if isinstance(expr, ArrayTensorProduct):
-            return PermuteDims(*cls._check_if_there_are_closed_cycles(expr, permutation))
-        elif isinstance(expr, ArrayContraction):
+            return PermuteDims(
+                *cls._check_if_there_are_closed_cycles(expr, permutation)
+            )
+        if isinstance(expr, ArrayContraction):
             # Invert tree hierarchy: put the contraction above.
             cycles = permutation.cyclic_form
-            newcycles = ArrayContraction._convert_outer_indices_to_inner_indices(expr, *cycles)
+            newcycles = ArrayContraction._convert_outer_indices_to_inner_indices(
+                expr, *cycles
+            )
             newpermutation = Permutation(newcycles)
-            new_contr_indices = [tuple(newpermutation(j) for j in i) for i in expr.contraction_indices]
-            return ArrayContraction(PermuteDims(expr.expr, newpermutation), *new_contr_indices)
-        elif isinstance(expr, ArrayAdd):
+            new_contr_indices = [
+                tuple(newpermutation(j) for j in i) for i in expr.contraction_indices
+            ]
+            return ArrayContraction(
+                PermuteDims(expr.expr, newpermutation), *new_contr_indices
+            )
+        if isinstance(expr, ArrayAdd):
             return ArrayAdd(*[PermuteDims(arg, permutation) for arg in expr.args])
         return None
 
@@ -943,14 +953,12 @@ class ArrayContraction(_CodegenArrayAbstract):
     def __mul__(self, other):
         if other == 1:
             return self
-        else:
-            raise NotImplementedError("Product of N-dim arrays is not uniquely defined. Use another method.")
+        raise NotImplementedError("Product of N-dim arrays is not uniquely defined")
 
     def __rmul__(self, other):
         if other == 1:
             return self
-        else:
-            raise NotImplementedError("Product of N-dim arrays is not uniquely defined. Use another method.")
+        raise NotImplementedError("Product of N-dim arrays is not uniquely defined")
 
     @staticmethod
     def _validate(expr, *contraction_indices):
@@ -1749,8 +1757,7 @@ def get_rank(expr):
         shape = expr.shape
         if shape is None:
             return -1
-        else:
-            return len(shape)
+        return len(shape)
     if hasattr(expr, "shape"):
         return len(expr.shape)
     return 0
@@ -1765,8 +1772,7 @@ def _get_subrank(expr):
 def _get_subranks(expr):
     if isinstance(expr, _CodegenArrayAbstract):
         return expr.subranks
-    else:
-        return [get_rank(expr)]
+    return [get_rank(expr)]
 
 
 def get_shape(expr: Basic) -> typing.Tuple[Expr, ...]:
@@ -1776,5 +1782,4 @@ def get_shape(expr: Basic) -> typing.Tuple[Expr, ...]:
 def nest_permutation(expr):
     if isinstance(expr, PermuteDims):
         return expr.nest_permutation()
-    else:
-        return expr
+    return expr
