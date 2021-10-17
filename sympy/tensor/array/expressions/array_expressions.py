@@ -545,9 +545,9 @@ class PermuteDims(_CodegenArrayAbstract):
         permutation_array_blocks_up = []
         image_form = _af_invert(permutation.array_form)
         counter = 0
-        for i, e in enumerate(subranks):
+        for i, _ in enumerate(subranks):
             current = []
-            for j in range(cumul[i], cumul[i+1]):
+            for j in range(cumul[i], cumul[i + 1]):
                 if j in contraction_indices_flat:
                     continue
                 current.append(image_form[counter])
@@ -654,7 +654,7 @@ class PermuteDims(_CodegenArrayAbstract):
         cyclic_min = [min(i) for i in cyclic_form]
         cyclic_max = [max(i) for i in cyclic_form]
         cyclic_keep = []
-        for i, cycle in enumerate(cyclic_form):
+        for i, _ in enumerate(cyclic_form):
             flag = True
             for j in range(0, len(cumulative_subranks) - 1):
                 if cyclic_min[i] >= cumulative_subranks[j] and cyclic_max[i] < cumulative_subranks[j+1]:
@@ -836,13 +836,13 @@ class ArrayDiagonal(_CodegenArrayAbstract):
 
     @classmethod
     def _push_indices_down(cls, diagonal_indices, indices, rank):
-        positions, shape = cls._get_positions_shape(range(rank), diagonal_indices)
+        positions, _ = cls._get_positions_shape(range(rank), diagonal_indices)
         transform = lambda x: positions[x] if x < len(positions) else None
         return _apply_recursively_over_nested_lists(transform, indices)
 
     @classmethod
     def _push_indices_up(cls, diagonal_indices, indices, rank):
-        positions, shape = cls._get_positions_shape(range(rank), diagonal_indices)
+        positions, _ = cls._get_positions_shape(range(rank), diagonal_indices)
 
         def transform(x):
             for i, e in enumerate(positions):
@@ -1076,8 +1076,8 @@ class ArrayContraction(_CodegenArrayAbstract):
             for arg_ind, rel_ind in positions:
                 arg = editor.args_with_ind[arg_ind]
                 mat = arg.element
-                abs_arg_start, abs_arg_end = editor.get_absolute_range(arg)
-                other_arg_pos = 1-rel_ind
+                abs_arg_start, _ = editor.get_absolute_range(arg)
+                other_arg_pos = 1 - rel_ind
                 other_arg_abs = abs_arg_start + other_arg_pos
                 if ((1 not in mat.shape) or
                     ((current_dimension == 1) is True and mat.shape != (1, 1)) or
@@ -1402,7 +1402,9 @@ class ArrayContraction(_CodegenArrayAbstract):
         `(2, 0)` respectively. `(0, 1)` is the index slot 1 (the 2nd) of
         argument in position 0 (that is, `A_{\ldot j}`), and so on.
         """
-        args, dlinks = _get_contraction_links([self], self.subranks, *self.contraction_indices)
+        _, dlinks = _get_contraction_links(
+            [self], self.subranks, *self.contraction_indices
+        )
         return dlinks
 
     def as_explicit(self):
