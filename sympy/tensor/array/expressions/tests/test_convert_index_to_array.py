@@ -98,7 +98,7 @@ def test_arrayexpr_convert_indexed_to_array_and_back_to_matrix():
     expr = a.T*b
     elem = expr[0, 0]
     cg = convert_indexed_to_array(elem)
-    assert cg == ArrayElement(ArrayContraction(ArrayTensorProduct(a, b), (0, 2)), [0, 0])
+    assert cg == ArrayElement(ArrayContraction(ArrayTensorProduct(a, b), (0, 2)), (0, 0))
 
     expr = M[i,j] + N[i,j]
     p1, p2 = _convert_indexed_to_array(expr)

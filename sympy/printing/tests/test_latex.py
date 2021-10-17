@@ -2819,11 +2819,11 @@ def test_ArraySymbol():
 
 def test_ArrayElement():
     A = ArraySymbol("A")
-    element = ArrayElement("A", (2, 1 / (1 - x), 0))
+    element = ArrayElement(A, (2, 1 / (1 - x), 0))
     assert latex(element) == R"{{A}_{2, \frac{1}{1 - x}, 0}}"
     M = MatrixSymbol("M", 3, 3)
     N = MatrixSymbol("N", 3, 3)
-    element = ArrayElement(M * N, [x, 0])
+    element = ArrayElement(M * N, (x, 0))
     assert latex(element) == R"{{\left(M N\right)}_{x, 0}}"
 
 

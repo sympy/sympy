@@ -1140,7 +1140,7 @@ def test_ArrayElement():
     assert sstr(element) == "A[2, 1/(1 - x), 0]"
     M = MatrixSymbol("M", 3, 3)
     N = MatrixSymbol("N", 3, 3)
-    element = ArrayElement(M * N, [x, 0])
+    element = ArrayElement(M * N, (x, 0))
     assert sstr(element) == "(M*N)[x, 0]"
 
 

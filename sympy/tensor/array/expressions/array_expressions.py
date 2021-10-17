@@ -128,7 +128,12 @@ class ArrayElement(_ArrayExpr):
 
 
 def _normalize_index(idx, axis_size: Optional[Expr]):
-    if axis_size and axis_size.is_Integer and -axis_size <= idx < 0:
+    if (
+        axis_size
+        and axis_size.is_Integer
+        and (-axis_size <= idx) == True
+        and (idx < 0) == True
+    ):
         return idx + axis_size
     return idx
 

@@ -1925,7 +1925,7 @@ class LatexPrinter(Printer):
             stringified_indices.append(self.__slice_to_str(idx, axis_size))
         parent = self.parenthesize(expr.parent, PRECEDENCE["Func"], strict=True)
         indices = ", ".join(stringified_indices)
-        return R"%s\left[%s\right]", (parent, indices)
+        return R"%s\left[%s\right]" % (parent, indices)
 
     def _print_UniversalSet(self, expr):
         return r"\mathbb{U}"
