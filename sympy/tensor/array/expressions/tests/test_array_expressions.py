@@ -30,6 +30,69 @@ c = ArraySymbol("c", k, 1)
 d = ArraySymbol("d", k, 1)
 
 
+class TestArrayContraction:
+    def test_construction(self):
+        cg = ArrayContraction(A)
+        assert cg == A
+        cg = ArrayContraction(ArrayTensorProduct(A, B), (1, 0))
+        assert cg == ArrayContraction(ArrayTensorProduct(A, B), (0, 1))
+
+    def test_get_contraction_tuples(self):
+        cg = ArrayContraction(ArrayTensorProduct(M, N), (0, 1))
+        indtup = cg._get_contraction_tuples()
+        assert indtup == [[(0, 0), (0, 1)]]
+        assert cg._contraction_tuples_to_contraction_indices(cg.expr, indtup) == [
+            (0, 1)
+        ]
+
+        cg = ArrayContraction(ArrayTensorProduct(M, N), (1, 2))
+        indtup = cg._get_contraction_tuples()
+        assert indtup == [[(0, 1), (1, 0)]]
+        assert cg._contraction_tuples_to_contraction_indices(cg.expr, indtup) == [
+            (1, 2)
+        ]
+
+        cg = ArrayContraction(ArrayTensorProduct(M, M, N), (1, 4), (2, 5))
+        indtup = cg._get_contraction_tuples()
+        assert indtup == [[(0, 0), (1, 1)], [(0, 1), (2, 0)]]
+        assert cg._contraction_tuples_to_contraction_indices(cg.expr, indtup) == [
+            (0, 3),
+            (1, 4),
+        ]
+
+    def test_arrayexpr_split_multiple_contractions(self):
+        a = MatrixSymbol("a", k, 1)
+        b = MatrixSymbol("b", k, 1)
+        A = MatrixSymbol("A", k, k)
+        B = MatrixSymbol("B", k, k)
+        C = MatrixSymbol("C", k, k)
+        X = MatrixSymbol("X", k, k)
+
+        cg = ArrayContraction(
+            ArrayTensorProduct(A.T, a, b, b.T, (A * X * b).applyfunc(cos)),
+            (1, 2, 8),
+            (5, 6, 9),
+        )
+        expected = ArrayContraction(
+            ArrayTensorProduct(
+                A.T, DiagMatrix(a), OneArray(1), b, b.T, (A * X * b).applyfunc(cos)
+            ),
+            (1, 3),
+            (2, 9),
+            (6, 7, 10),
+        )
+        assert cg.split_multiple_contractions().dummy_eq(expected)
+
+        # Check no overlap of lines
+        cg = ArrayContraction(
+            ArrayTensorProduct(A, a, C, a, B), (1, 2, 4), (5, 6, 8), (3, 7)
+        )
+        assert cg.split_multiple_contractions() == cg
+
+        cg = ArrayContraction(ArrayTensorProduct(a, b, A), (0, 2, 4), (1, 3))
+        assert cg.split_multiple_contractions() == cg
+
+
 def test_array_symbol_and_element():
     A = ArraySymbol("A", 2)
     A0 = ArrayElement(A, (0,))
@@ -82,30 +145,6 @@ def test_one_array():
     oa = OneArray(m, n, k, 2)
     assert oa.shape == (m, n, k, 2)
     raises(ValueError, lambda: oa.as_explicit())
-
-
-def test_arrayexpr_contraction_construction():
-
-    cg = ArrayContraction(A)
-    assert cg == A
-
-    cg = ArrayContraction(ArrayTensorProduct(A, B), (1, 0))
-    assert cg == ArrayContraction(ArrayTensorProduct(A, B), (0, 1))
-
-    cg = ArrayContraction(ArrayTensorProduct(M, N), (0, 1))
-    indtup = cg._get_contraction_tuples()
-    assert indtup == [[(0, 0), (0, 1)]]
-    assert cg._contraction_tuples_to_contraction_indices(cg.expr, indtup) == [(0, 1)]
-
-    cg = ArrayContraction(ArrayTensorProduct(M, N), (1, 2))
-    indtup = cg._get_contraction_tuples()
-    assert indtup == [[(0, 1), (1, 0)]]
-    assert cg._contraction_tuples_to_contraction_indices(cg.expr, indtup) == [(1, 2)]
-
-    cg = ArrayContraction(ArrayTensorProduct(M, M, N), (1, 4), (2, 5))
-    indtup = cg._get_contraction_tuples()
-    assert indtup == [[(0, 0), (1, 1)], [(0, 1), (2, 0)]]
-    assert cg._contraction_tuples_to_contraction_indices(cg.expr, indtup) == [(0, 3), (1, 4)]
 
 
 def test_arrayexpr_array_flatten():
@@ -265,27 +304,6 @@ def test_arrayexpr_push_indices_up_and_down():
 
     assert ArrayDiagonal._push_indices_down(contr_diag_indices, indices, 10) == (0, 3, 4, 5, 6, 9, (1, 2), (7, 8), None, None, None, None)
     assert ArrayDiagonal._push_indices_up(contr_diag_indices, indices, 10) == (0, 6, 6, 1, 2, 3, 4, 7, 7, 5, None, None)
-
-
-def test_arrayexpr_split_multiple_contractions():
-    a = MatrixSymbol("a", k, 1)
-    b = MatrixSymbol("b", k, 1)
-    A = MatrixSymbol("A", k, k)
-    B = MatrixSymbol("B", k, k)
-    C = MatrixSymbol("C", k, k)
-    X = MatrixSymbol("X", k, k)
-
-    cg = ArrayContraction(ArrayTensorProduct(A.T, a, b, b.T, (A*X*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
-    expected = ArrayContraction(ArrayTensorProduct(A.T, DiagMatrix(a), OneArray(1), b, b.T, (A*X*b).applyfunc(cos)), (1, 3), (2, 9), (6, 7, 10))
-    assert cg.split_multiple_contractions().dummy_eq(expected)
-
-    # Check no overlap of lines:
-
-    cg = ArrayContraction(ArrayTensorProduct(A, a, C, a, B), (1, 2, 4), (5, 6, 8), (3, 7))
-    assert cg.split_multiple_contractions() == cg
-
-    cg = ArrayContraction(ArrayTensorProduct(a, b, A), (0, 2, 4), (1, 3))
-    assert cg.split_multiple_contractions() == cg
 
 
 def test_arrayexpr_nested_permutations():
