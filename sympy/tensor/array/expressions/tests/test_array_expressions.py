@@ -290,7 +290,8 @@ def test_zero_array():
     m, n, k = symbols("m n k")
     za = ZeroArray(m, n, k, 2)
     assert za.shape == (m, n, k, 2)
-    raises(ValueError, lambda: za.as_explicit())
+    with raises(ValueError):
+        za.as_explicit()
 
 
 def test_one_array():
@@ -305,7 +306,8 @@ def test_one_array():
     m, n, k = symbols("m n k")
     oa = OneArray(m, n, k, 2)
     assert oa.shape == (m, n, k, 2)
-    raises(ValueError, lambda: oa.as_explicit())
+    with raises(ValueError):
+        oa.as_explicit()
 
 
 def test_arrayexpr_array_flatten():
