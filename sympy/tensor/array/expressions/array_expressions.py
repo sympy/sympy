@@ -85,7 +85,7 @@ class ArrayElement(_ArrayExpr):
 
     def __new__(cls, parent: Expr, indices) -> "ArrayElement":
         indices = _sympify(indices)
-        parent_shape = _get_shape(parent)
+        parent_shape = get_shape(parent)
         if any((i >= s) == True for i, s in zip(indices, parent_shape)):
             raise ValueError("shape is out of bounds")
         if len(parent_shape):
@@ -117,7 +117,7 @@ class ArraySlice(_ArrayExpr):
     def __new__(
         cls, parent: Expr, indices: typing.Tuple[Union[Basic, int, slice], ...]
     ) -> "ArraySlice":
-        parent_shape = _get_shape(parent)
+        parent_shape = get_shape(parent)
         normalized_indices = []
         for idx, axis_size in zip_longest(indices, parent_shape):
             if idx is None:
@@ -131,7 +131,7 @@ class ArraySlice(_ArrayExpr):
 
     @property
     def shape(self) -> typing.Tuple[Union[Basic, int], ...]:
-        parent_shape = _get_shape(self.parent)
+        parent_shape = get_shape(self.parent)
         shape = [
             _compute_slice_size(idx, axis_size)
             for idx, axis_size in zip_longest(self.indices, parent_shape)
@@ -152,12 +152,6 @@ def _compute_slice_size(idx, axis_size):
     if axis_size is not None and (size > axis_size) == True:
         return axis_size
     return size
-
-
-def _get_shape(parent: Expr) -> tuple:
-    if hasattr(parent, "shape"):
-        return parent.shape
-    return ()
 
 
 class ZeroArray(_ArrayExpr):
@@ -1726,9 +1720,7 @@ def _get_subranks(expr):
 
 
 def get_shape(expr):
-    if hasattr(expr, "shape"):
-        return expr.shape
-    return ()
+    return getattr(expr, "shape", ())
 
 
 def nest_permutation(expr):
