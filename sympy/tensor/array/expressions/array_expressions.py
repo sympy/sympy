@@ -557,7 +557,10 @@ class PermuteDims(_CodegenArrayAbstract):
             permutation_array_blocks_up.append(current)
 
         # Get the map of axis repositioning for every argument of tensor-product:
-        index_blocks = [[j for j in range(cumul[i], cumul[i+1])] for i, e in enumerate(expr.subranks)]
+        index_blocks = [
+            list(j for j in range(cumul[i], cumul[i + 1]))
+            for i, _ in enumerate(expr.subranks)
+        ]
         index_blocks_up = expr._push_indices_up(expr.contraction_indices, index_blocks)
         inverse_permutation = permutation**(-1)
         index_blocks_up_permuted = [[inverse_permutation(j) for j in i if j is not None] for i in index_blocks_up]
@@ -611,7 +614,10 @@ class PermuteDims(_CodegenArrayAbstract):
         maps = {}
         cumulative_subranks = [0] + list(accumulate(subranks))
         for i in range(0, len(subranks)):
-            s = set([index2arg[new_permutation[j]] for j in range(cumulative_subranks[i], cumulative_subranks[i+1])])
+            s = set(
+                index2arg[new_permutation[j]]
+                for j in range(cumulative_subranks[i], cumulative_subranks[i + 1])
+            )
             if len(s) != 1:
                 continue
             elem = next(iter(s))
