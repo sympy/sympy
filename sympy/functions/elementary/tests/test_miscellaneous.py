@@ -4,13 +4,14 @@ from sympy.core.expr import unchanged
 from sympy.core.function import Function
 from sympy.core.numbers import I, oo, Rational
 from sympy.core.power import Pow
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.external import import_module
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root, Min,
-                                                      Max, real_root)
+                                        Max, real_root, expand_minmax)
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.delta_functions import Heaviside
 
@@ -448,6 +449,14 @@ def test_rewrite_as_Abs():
     test(Max(x, y))
     test(Min(x, y, z))
     test(Min(Max(w, x), Max(y, z)))
+
+
+def test_expand_minmax():
+    from sympy.abc import x, y, z, w
+    assert expand_minmax(Eq(x, Min(x, y, z))) == (y >= x) & (z >= x)
+    assert expand_minmax(x <= Max(y, z)) == (y >= x) | (z >= x)
+    assert expand_minmax(Max(x, y) <= Min(z, w)) == (w >= x) & (w >= y) & (z >= x) & (z >= y)
+
 
 def test_issue_14000():
     assert isinstance(sqrt(4, evaluate=False), Pow) == True

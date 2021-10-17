@@ -11,14 +11,14 @@ from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from sympy.core.relational import Eq, Relational
+from sympy.core.relational import Eq, Ne, Le, Lt, Ge, Gt, Relational
 from sympy.core.singleton import Singleton
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.core.traversal import walk
-from sympy.logic.boolalg import And, Or
+from sympy.logic.boolalg import And, Or, BooleanFunction
 
 
 def _minmax_as_Piecewise(op, *args):
@@ -869,8 +869,8 @@ class Min(MinMaxBase, Application):
 
 def expand_minmax(expr):
     """
-    Function to rewrite expressions with Min and Max in relations, to try to
-    remove the Min and Max functions.
+    Function to rewrite expressions with :class:`~.Min` and :class;`~.Max` in
+    relations, to try to remove the :class:`~.Min` and :class:`~.Min` functions.
 
     Examples
     ========
@@ -884,8 +884,6 @@ def expand_minmax(expr):
     (y >= x) | (z >= x)
 
     """
-    from sympy.core.relational import Eq, Ne, Le, Lt, Ge, Gt, Relational
-    from sympy.logic.boolalg import And, Or, BooleanFunction
     if not expr.has(Min, Max) or not expr.has(Relational):
         return expr
     if expr.has(Eq, Ne):
