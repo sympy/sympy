@@ -1,26 +1,48 @@
-import operator
-from collections import defaultdict, Counter
-from functools import reduce
 import itertools
-from collections import abc
+import operator
+import typing
+from collections import Counter, abc, defaultdict
+from functools import reduce
 from itertools import accumulate, zip_longest
 from typing import Dict, List, Optional, Union, overload
 
-import typing
-
-from sympy import Expr, ImmutableDenseNDimArray, S, ZeroMatrix, Basic, tensorproduct, permutedims, \
-    Tuple, tensordiagonal, Lambda, Dummy, Function, MatrixExpr, NDimArray, Indexed, IndexedBase, default_sort_key, \
-    tensorcontraction, diagonalize_vector, Mul
+from sympy import (
+    Basic,
+    Dummy,
+    Expr,
+    Function,
+    ImmutableDenseNDimArray,
+    Indexed,
+    IndexedBase,
+    Lambda,
+    MatrixExpr,
+    Mul,
+    NDimArray,
+    S,
+    Tuple,
+    ZeroMatrix,
+    default_sort_key,
+    diagonalize_vector,
+    permutedims,
+    tensorcontraction,
+    tensordiagonal,
+    tensorproduct,
+)
+from sympy.combinatorics import Permutation
+from sympy.combinatorics.permutations import _af_invert
 from sympy.core.symbol import Str
+from sympy.core.sympify import _sympify
 from sympy.functions.elementary.integers import floor
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.matrices.expressions.slice import normalize
-from sympy.tensor.array.expressions.utils import _apply_recursively_over_nested_lists, _sort_contraction_indices, \
-    _get_mapping_from_subranks, _build_push_indices_up_func_transformation, _get_contraction_links, \
-    _build_push_indices_down_func_transformation
-from sympy.combinatorics import Permutation
-from sympy.combinatorics.permutations import _af_invert
-from sympy.core.sympify import _sympify
+from sympy.tensor.array.expressions.utils import (
+    _apply_recursively_over_nested_lists,
+    _build_push_indices_down_func_transformation,
+    _build_push_indices_up_func_transformation,
+    _get_contraction_links,
+    _get_mapping_from_subranks,
+    _sort_contraction_indices,
+)
 
 
 class _ArrayExpr(Expr):
@@ -424,7 +446,6 @@ class PermuteDims(_CodegenArrayAbstract):
     """
 
     def __new__(cls, expr, permutation, nest_permutation=True):
-        from sympy.combinatorics import Permutation
         expr = _sympify(expr)
         permutation = Permutation(permutation)
         permutation_size = permutation.size
