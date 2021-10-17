@@ -4,14 +4,14 @@ from sympy.core.numbers import Integer, Rational
 from sympy.core.singleton import S
 from sympy.functions import sqrt
 
-from sympy.matrices.common import (NonInvertibleMatrixError,
-    NonSquareMatrixError, ShapeError)
 from sympy.matrices.dense import Matrix
 from sympy.polys.domains import FF, ZZ, QQ, EXRAW
 
 from sympy.polys.matrices.domainmatrix import DomainMatrix, DomainScalar, DM
 from sympy.polys.matrices.exceptions import (
-    DMBadInputError, DMDomainError, DMShapeError, DMFormatError, DMNotAField)
+    DMBadInputError, DMDomainError, DMShapeError, DMFormatError, DMNotAField,
+    DMNonSquareMatrixError, DMNonInvertibleMatrixError,
+)
 from sympy.polys.matrices.ddm import DDM
 from sympy.polys.matrices.sdm import SDM
 
@@ -450,7 +450,7 @@ def test_DomainMatrix_pow():
     raises(NotImplementedError, lambda: A.pow(-1))
 
     A = DomainMatrix.zeros((2, 1), ZZ)
-    raises(NonSquareMatrixError, lambda: A ** 1)
+    raises(DMNonSquareMatrixError, lambda: A ** 1)
 
 
 def test_DomainMatrix_scc():
@@ -535,7 +535,7 @@ def test_DomainMatrix_solve():
     assert A._solve(b) == (particular, nullspace)
 
     b3 = DomainMatrix([[QQ(1)], [QQ(1)], [QQ(1)]], (3, 1), QQ)
-    raises(ShapeError, lambda: A._solve(b3))
+    raises(DMShapeError, lambda: A._solve(b3))
 
     bz = DomainMatrix([[ZZ(1)], [ZZ(1)]], (2, 1), ZZ)
     raises(DMNotAField, lambda: A._solve(bz))
@@ -553,10 +553,10 @@ def test_DomainMatrix_inv():
     raises(DMNotAField, lambda: Az.inv())
 
     Ans = DomainMatrix([[QQ(1), QQ(2)]], (1, 2), QQ)
-    raises(NonSquareMatrixError, lambda: Ans.inv())
+    raises(DMNonSquareMatrixError, lambda: Ans.inv())
 
     Aninv = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(6)]], (2, 2), QQ)
-    raises(NonInvertibleMatrixError, lambda: Aninv.inv())
+    raises(DMNonInvertibleMatrixError, lambda: Aninv.inv())
 
 
 def test_DomainMatrix_det():
@@ -576,7 +576,7 @@ def test_DomainMatrix_det():
     assert A.det() == ZZ(0)
 
     Ans = DomainMatrix([[QQ(1), QQ(2)]], (1, 2), QQ)
-    raises(NonSquareMatrixError, lambda: Ans.det())
+    raises(DMNonSquareMatrixError, lambda: Ans.det())
 
     A = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(4)]], (2, 2), QQ)
     assert A.det() == QQ(-2)
@@ -658,7 +658,7 @@ def test_DomainMatrix_lu_solve():
     # Non-invertible
     A = DomainMatrix([[QQ(1), QQ(2)], [QQ(2), QQ(4)]], (2, 2), QQ)
     b = DomainMatrix([[QQ(1)], [QQ(2)]], (2, 1), QQ)
-    raises(NonInvertibleMatrixError, lambda: A.lu_solve(b))
+    raises(DMNonInvertibleMatrixError, lambda: A.lu_solve(b))
 
     # Overdetermined, consistent
     A = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(4)], [QQ(5), QQ(6)]], (3, 2), QQ)
@@ -669,7 +669,7 @@ def test_DomainMatrix_lu_solve():
     # Overdetermined, inconsistent
     A = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(4)], [QQ(5), QQ(6)]], (3, 2), QQ)
     b = DomainMatrix([[QQ(1)], [QQ(2)], [QQ(4)]], (3, 1), QQ)
-    raises(NonInvertibleMatrixError, lambda: A.lu_solve(b))
+    raises(DMNonInvertibleMatrixError, lambda: A.lu_solve(b))
 
     # Underdetermined
     A = DomainMatrix([[QQ(1), QQ(2)]], (1, 2), QQ)
@@ -684,7 +684,7 @@ def test_DomainMatrix_lu_solve():
     # Shape mismatch
     A = DomainMatrix([[QQ(1), QQ(2)], [QQ(3), QQ(4)]], (2, 2), QQ)
     b = DomainMatrix([[QQ(1), QQ(2)]], (1, 2), QQ)
-    raises(ShapeError, lambda: A.lu_solve(b))
+    raises(DMShapeError, lambda: A.lu_solve(b))
 
 
 def test_DomainMatrix_charpoly():
@@ -701,7 +701,7 @@ def test_DomainMatrix_charpoly():
     assert A.charpoly() == [ZZ(1), ZZ(-15), ZZ(-18), ZZ(0)]
 
     Ans = DomainMatrix([[QQ(1), QQ(2)]], (1, 2), QQ)
-    raises(NonSquareMatrixError, lambda: Ans.charpoly())
+    raises(DMNonSquareMatrixError, lambda: Ans.charpoly())
 
 
 def test_DomainMatrix_eye():

@@ -5,7 +5,7 @@ from sympy.polys import ZZ, QQ
 
 from sympy.polys.matrices.ddm import DDM
 from sympy.polys.matrices.exceptions import (
-    DMShapeError, NonInvertibleMatrixError, DMDomainError,
+    DMShapeError, DMNonInvertibleMatrixError, DMDomainError,
     DMBadInputError)
 
 
@@ -340,7 +340,7 @@ def test_DDM_inv():
     assert A.inv() == A
 
     A = DDM([[QQ(1), QQ(2)], [QQ(2), QQ(4)]], (2, 2), QQ)
-    raises(NonInvertibleMatrixError, lambda: A.inv())
+    raises(DMNonInvertibleMatrixError, lambda: A.inv())
 
 
 def test_DDM_lu():
@@ -381,12 +381,12 @@ def test_DDM_lu_solve():
 
     # Overdetermined, inconsistent
     b = DDM([[QQ(1)], [QQ(2)], [QQ(4)]], (3, 1), QQ)
-    raises(NonInvertibleMatrixError, lambda: A.lu_solve(b))
+    raises(DMNonInvertibleMatrixError, lambda: A.lu_solve(b))
 
     # Square, noninvertible
     A = DDM([[QQ(1), QQ(2)], [QQ(1), QQ(2)]], (2, 2), QQ)
     b = DDM([[QQ(1)], [QQ(2)]], (2, 1), QQ)
-    raises(NonInvertibleMatrixError, lambda: A.lu_solve(b))
+    raises(DMNonInvertibleMatrixError, lambda: A.lu_solve(b))
 
     # Underdetermined
     A = DDM([[QQ(1), QQ(2)]], (1, 2), QQ)
