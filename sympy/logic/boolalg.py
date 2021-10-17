@@ -2136,7 +2136,7 @@ def truth_table(expr, variables, input=True):
     In this case, the corresponding input values of variables can be
     deduced from the index of a given output.
 
-    >>> from sympy.logic.boolalg import ibin
+    >>> from sympy.utilities.iterables import ibin
     >>> vars = [y, x]
     >>> values = truth_table(x >> y, vars, input=False)
     >>> values = list(values)
