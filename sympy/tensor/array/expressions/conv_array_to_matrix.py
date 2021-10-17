@@ -4,13 +4,16 @@ from typing import Tuple, Union, FrozenSet, Dict, List, Optional
 from functools import singledispatch
 from itertools import accumulate
 
-from sympy import Trace, MatrixExpr, Transpose, DiagMatrix, Mul, ZeroMatrix, hadamard_product, S, Identity, ask, Q
+from sympy import Trace, MatrixExpr, Transpose, DiagMatrix, Mul, ZeroMatrix, hadamard_product, S, Identity, ask, Q, \
+    OneMatrix
 from sympy.combinatorics.permutations import _af_invert, Permutation
 from sympy.matrices.common import MatrixCommon
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
+from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayDiagonal, \
     ArrayTensorProduct, OneArray, get_rank, _get_subrank, ZeroArray, ArrayContraction, \
-    ArrayAdd, _CodegenArrayAbstract, get_shape, ArrayElementwiseApplyFunc, _ArrayExpr, _EditArrayContraction, _ArgE
+    ArrayAdd, _CodegenArrayAbstract, get_shape, ArrayElementwiseApplyFunc, _ArrayExpr, _EditArrayContraction, _ArgE, \
+    ArrayElement
 from sympy.tensor.array.expressions.utils import _get_mapping_from_subranks
 
 
@@ -147,6 +150,11 @@ def _(expr: ArrayContraction):
         return _array2matrix(expr)
     subexpr = expr.expr
     contraction_indices: Tuple[Tuple[int]] = expr.contraction_indices
+    if contraction_indices == ((0,), (1,)):
+        shape = subexpr.shape
+        subexpr = _array2matrix(subexpr)
+        if isinstance(subexpr, MatrixExpr):
+            return OneMatrix(1, shape[0])*subexpr*OneMatrix(shape[1], 1)
     if isinstance(subexpr, ArrayTensorProduct):
         newexpr = ArrayContraction(_array2matrix(subexpr), *contraction_indices)
         contraction_indices = newexpr.contraction_indices
@@ -249,6 +257,14 @@ def _(expr: ArrayElementwiseApplyFunc):
         return ElementwiseApplyFunction(expr.function, subexpr)
     else:
         return ArrayElementwiseApplyFunc(expr.function, subexpr)
+
+
+@_array2matrix.register(ArrayElement)
+def _(expr: ArrayElement):
+    ret = _array2matrix(expr.name)
+    if isinstance(ret, MatrixExpr):
+        return MatrixElement(ret, *expr.indices)
+    return ArrayElement(ret, expr.indices)
 
 
 @singledispatch
@@ -762,7 +778,7 @@ def remove_identity_matrices(expr: ArrayContraction):
         identity_matrices = [i for i in args if isinstance(i.element, Identity)]
         number_identity_matrices = len(identity_matrices)
         # If the contraction involves a non-identity matrix and multiple identity matrices:
-        if number_identity_matrices != len(args) - 1:
+        if number_identity_matrices != len(args) - 1 or number_identity_matrices == 0:
             continue
         # Get the non-identity element:
         non_identity = [i for i in args if not isinstance(i.element, Identity)][0]
