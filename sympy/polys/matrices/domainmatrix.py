@@ -14,7 +14,7 @@ from sympy.core.sympify import _sympify
 
 from ..constructor import construct_domain
 
-from .exceptions import (NonSquareMatrixError, ShapeError, DMShapeError,
+from .exceptions import (DMNonSquareMatrixError, DMShapeError,
                          DMDomainError, DMFormatError, DMBadInputError,
                          DMNotAField)
 
@@ -854,7 +854,7 @@ class DomainMatrix:
         Raises
         ======
 
-        ShapeError
+        DMShapeError
             If the dimensions of the two DomainMatrix are not equal
 
         ValueError
@@ -904,7 +904,7 @@ class DomainMatrix:
         Raises
         ======
 
-        ShapeError
+        DMShapeError
             If the dimensions of the two DomainMatrix are not equal
 
         ValueError
@@ -1131,7 +1131,7 @@ class DomainMatrix:
         """
         nrows, ncols = A.shape
         if nrows != ncols:
-            raise NonSquareMatrixError('Power of a nonsquare matrix')
+            raise DMNonSquareMatrixError('Power of a nonsquare matrix')
         if n < 0:
             raise NotImplementedError('Negative powers')
         elif n == 0:
@@ -1360,7 +1360,7 @@ class DomainMatrix:
         ValueError
             If the domain of DomainMatrix not a Field
 
-        NonSquareMatrixError
+        DMNonSquareMatrixError
             If the DomainMatrix is not a not Square DomainMatrix
 
         Examples
@@ -1385,7 +1385,7 @@ class DomainMatrix:
             raise DMNotAField('Not a field')
         m, n = self.shape
         if m != n:
-            raise NonSquareMatrixError
+            raise DMNonSquareMatrixError
         inv = self.rep.inv()
         return self.from_rep(inv)
 
@@ -1420,7 +1420,7 @@ class DomainMatrix:
         """
         m, n = self.shape
         if m != n:
-            raise NonSquareMatrixError
+            raise DMNonSquareMatrixError
         return self.rep.det()
 
     def lu(self):
@@ -1480,7 +1480,7 @@ class DomainMatrix:
         Raises
         ======
 
-        ShapeError
+        DMShapeError
             If the DomainMatrix A and rhs have different number of rows
 
         ValueError
@@ -1508,7 +1508,7 @@ class DomainMatrix:
 
         """
         if self.shape[0] != rhs.shape[0]:
-            raise ShapeError("Shape")
+            raise DMShapeError("Shape")
         if not self.domain.is_Field:
             raise DMNotAField('Not a field')
         sol = self.rep.lu_solve(rhs.rep)
@@ -1518,7 +1518,7 @@ class DomainMatrix:
         # XXX: Not sure about this method or its signature. It is just created
         # because it is needed by the holonomic module.
         if A.shape[0] != b.shape[0]:
-            raise ShapeError("Shape")
+            raise DMShapeError("Shape")
         if A.domain != b.domain or not A.domain.is_Field:
             raise DMNotAField('Not a field')
         Aaug = A.hstack(b)
@@ -1543,7 +1543,7 @@ class DomainMatrix:
         Raises
         ======
 
-        NonSquareMatrixError
+        DMNonSquareMatrixError
             If the DomainMatrix is not a not Square DomainMatrix
 
         Examples
@@ -1561,7 +1561,7 @@ class DomainMatrix:
         """
         m, n = self.shape
         if m != n:
-            raise NonSquareMatrixError("not square")
+            raise DMNonSquareMatrixError("not square")
         return self.rep.charpoly()
 
     @classmethod
