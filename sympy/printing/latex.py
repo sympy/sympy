@@ -10,7 +10,7 @@ from collections import abc
 from sympy.core import Add, Float, Mod, Mul, Number, S, Symbol
 from sympy.core.alphabets import greeks
 from sympy.core.containers import Tuple
-from sympy.core.function import _coeff_isneg, AppliedUndef, Derivative
+from sympy.core.function import AppliedUndef, Derivative
 from sympy.core.operations import AssocOp
 from sympy.core.sympify import SympifyError
 from sympy.logic.boolalg import true
@@ -310,7 +310,7 @@ class LatexPrinter(Printer):
         from sympy import Integral, Product, Sum
 
         if expr.is_Mul:
-            if not first and _coeff_isneg(expr):
+            if not first and expr.could_extract_minus_sign():
                 return True
         elif precedence_traditional(expr) < PRECEDENCE["Mul"]:
             return True
@@ -376,7 +376,7 @@ class LatexPrinter(Printer):
         for i, term in enumerate(terms):
             if i == 0:
                 pass
-            elif _coeff_isneg(term):
+            elif term.could_extract_minus_sign():
                 tex += " - "
                 term = -term
             else:
@@ -551,7 +551,7 @@ class LatexPrinter(Printer):
                 return convert_args(args)
 
         include_parens = False
-        if _coeff_isneg(expr):
+        if expr.could_extract_minus_sign():
             expr = -expr
             tex = "- "
             if expr.is_Add:
@@ -778,7 +778,7 @@ class LatexPrinter(Printer):
         else:
             tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, self._print(dim), tex)
 
-        if any(_coeff_isneg(i) for i in expr.args):
+        if any(i.could_extract_minus_sign() for i in expr.args):
             return r"%s %s" % (tex, self.parenthesize(expr.expr,
                                                   PRECEDENCE["Mul"],
                                                   is_neg=True,
@@ -830,7 +830,7 @@ class LatexPrinter(Printer):
 
         return r"%s %s%s" % (tex, self.parenthesize(expr.function,
                                                     PRECEDENCE["Mul"],
-                                                    is_neg=any(_coeff_isneg(i) for i in expr.args),
+                                                    is_neg=any(i.could_extract_minus_sign() for i in expr.args),
                                                     strict=True),
                              "".join(symbols))
 
@@ -1705,7 +1705,7 @@ class LatexPrinter(Printer):
         else:
             args = list(args)
 
-        if isinstance(expr, MatMul) and _coeff_isneg(expr):
+        if isinstance(expr, MatMul) and expr.could_extract_minus_sign():
             if args[0] == -1:
                 args = args[1:]
             else:
@@ -1912,7 +1912,9 @@ class LatexPrinter(Printer):
         return self._print_MatrixSymbol(expr)
 
     def _print_ArrayElement(self, expr):
-        return "{{%s}_{%s}}" % (expr.parent, ", ".join([f"{self._print(i)}" for i in expr.indices]))
+        parent = self.parenthesize(expr.parent, PRECEDENCE["Func"], True)
+        indices = ", ".join(self._print(i) for i in expr.indices)
+        return "{{%s}_{%s}}" % (parent, indices)
 
     def _print_ArraySlice(self, expr):
         shape = getattr(expr.parent, "shape", tuple())
@@ -1921,9 +1923,9 @@ class LatexPrinter(Printer):
             if idx is None:
                 break
             stringified_indices.append(self.__slice_to_str(idx, axis_size))
-        name = self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True)
-        suffix = R'\left[' + ", ".join(stringified_indices) + R'\right]'
-        return name + suffix
+        parent = self.parenthesize(expr.parent, PRECEDENCE["Func"], strict=True)
+        indices = ", ".join(stringified_indices)
+        return R"%s\left[%s\right]", (parent, indices)
 
     def _print_UniversalSet(self, expr):
         return r"\mathbb{U}"

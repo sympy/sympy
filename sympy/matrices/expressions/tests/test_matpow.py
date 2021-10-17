@@ -209,3 +209,9 @@ def test_unchanged():
     assert unchanged(Inverse, MatPow(C, -1), -1)
     assert unchanged(MatPow, MatPow(C, -1), -1)
     assert unchanged(MatPow, MatPow(C, 1), 1)
+
+
+def test_no_exponentiation():
+    # if this passes, Pow.as_numer_denom should recognize
+    # MatAdd as exponent
+    raises(NotImplementedError, lambda: 3**(-2*C))

@@ -18,10 +18,10 @@ for:
 """
 
 from sympy import Derivative, S
-from sympy.core.basic import preorder_traversal
 from sympy.core.compatibility import iterable
 from sympy.core.decorators import deprecated
 from sympy.core.function import Subs
+from sympy.core.traversal import preorder_traversal
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 

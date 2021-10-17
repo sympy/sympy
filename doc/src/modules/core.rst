@@ -568,3 +568,23 @@ BooleanKind
 ^^^^^^^^^^^
 .. autoclass:: BooleanKind
    :members:
+
+Traversal
+---------
+.. module:: sympy.core.traversal
+
+bottom_up
+^^^^^^^^^
+.. autofunction:: bottom_up
+
+preorder_traversal
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: preorder_traversal
+
+use
+^^^
+.. autofunction:: use
+
+walk
+^^^^
+.. autofunction:: walk

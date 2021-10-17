@@ -3,6 +3,7 @@
 
 from sympy.core import Add, S, sympify, cacheit, pi, I, Rational
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.relational import is_eq
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial, factorial2, RisingFactorial
 from sympy.functions.elementary.complexes import re
@@ -192,8 +193,7 @@ class erf(Function):
             return self.args[0].is_extended_real
 
     def _eval_is_zero(self):
-        if self.args[0].is_zero:
-            return True
+        return self.args[0].is_zero
 
     def _eval_rewrite_as_uppergamma(self, z, **kwargs):
         from sympy import uppergamma
@@ -589,8 +589,7 @@ class erfi(Function):
         return self.args[0].is_extended_real
 
     def _eval_is_zero(self):
-        if self.args[0].is_zero:
-            return True
+        return self.args[0].is_zero
 
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return self.rewrite(erf).rewrite("tractable", deep=True, limitvar=limitvar)
@@ -792,6 +791,8 @@ class erf2(Function):
     def _eval_expand_func(self, **hints):
         return self.rewrite(erf)
 
+    def _eval_is_zero(self):
+        return is_eq(*self.args)
 
 class erfinv(Function):
     r"""
@@ -883,8 +884,7 @@ class erfinv(Function):
        return erfcinv(1-z)
 
     def _eval_is_zero(self):
-        if self.args[0].is_zero:
-            return True
+        return self.args[0].is_zero
 
 
 class erfcinv (Function):
@@ -961,6 +961,12 @@ class erfcinv (Function):
 
     def _eval_rewrite_as_erfinv(self, z, **kwargs):
         return erfinv(1-z)
+
+    def _eval_is_zero(self):
+        return (self.args[0] - 1).is_zero
+
+    def _eval_is_infinite(self):
+        return self.args[0].is_zero
 
 
 class erf2inv(Function):
@@ -2311,9 +2317,7 @@ class FresnelIntegral(Function):
     _eval_is_finite = _eval_is_extended_real
 
     def _eval_is_zero(self):
-        z = self.args[0]
-        if z.is_zero:
-            return True
+        return self.args[0].is_zero
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())

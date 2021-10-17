@@ -590,11 +590,11 @@ def _eval_bidiag_hholder(M):
 
 def _bidiagonal_decomposition(M, upper=True):
     """
-    Returns (U,B,V.H)
+    Returns $(U,B,V.H)$ for
 
-    $A = UBV^{H}$
+    $$A = UBV^{H}$$
 
-    where A is the input matrix, and B is its Bidiagonalized form
+    where $A$ is the input matrix, and $B$ is its Bidiagonalized form
 
     Note: Bidiagonal Computation can hang for symbolic matrices.
 
@@ -607,8 +607,8 @@ def _bidiagonal_decomposition(M, upper=True):
     References
     ==========
 
-    1. Algorith 5.4.2, Matrix computations by Golub and Van Loan, 4th edition
-    2. Complex Matrix Bidiagonalization : https://github.com/vslobody/Householder-Bidiagonalization
+    .. [1] Algorithm 5.4.2, Matrix computations by Golub and Van Loan, 4th edition
+    .. [2] Complex Matrix Bidiagonalization, https://github.com/vslobody/Householder-Bidiagonalization
 
     """
 
@@ -637,8 +637,8 @@ def _bidiagonalize(M, upper=True):
     References
     ==========
 
-    1. Algorith 5.4.2, Matrix computations by Golub and Van Loan, 4th edition
-    2. Complex Matrix Bidiagonalization : https://github.com/vslobody/Householder-Bidiagonalization
+    .. [1] Algorithm 5.4.2, Matrix computations by Golub and Van Loan, 4th edition
+    .. [2] Complex Matrix Bidiagonalization : https://github.com/vslobody/Householder-Bidiagonalization
 
     """
 

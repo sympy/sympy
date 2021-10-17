@@ -2,7 +2,7 @@ from collections import defaultdict
 from functools import reduce
 
 from sympy.core import (sympify, Basic, S, Expr, expand_mul, factor_terms,
-    Mul, Dummy, igcd, FunctionClass, Add, symbols, Wild, expand)
+    Mul, Dummy, igcd, FunctionClass, Add, symbols, Wild, expand, bottom_up)
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import iterable, SYMPY_INTS
 from sympy.core.function import count_ops, _mexpand
@@ -18,7 +18,6 @@ from sympy.simplify.cse_main import cse
 from sympy.strategies.core import identity
 from sympy.strategies.tree import greedy
 from sympy.utilities.misc import debug
-
 
 
 def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
@@ -526,7 +525,6 @@ def exptrigsimp(expr):
     exp(-z)
     """
     from sympy.simplify.fu import hyper_as_trig, TR2i
-    from sympy.simplify.simplify import bottom_up
 
     def exp_trig(e):
         # select the better of e, and e rewritten in terms of exp or trig
@@ -1088,7 +1086,6 @@ def futrig(e, *, hyper=True, **kwargs):
 
     """
     from sympy.simplify.fu import hyper_as_trig
-    from sympy.simplify.simplify import bottom_up
 
     e = sympify(e)
 

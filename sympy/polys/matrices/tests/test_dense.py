@@ -8,7 +8,7 @@ from sympy.polys.matrices.dense import (
         ddm_iadd, ddm_isub, ddm_ineg, ddm_imatmul, ddm_imul, ddm_irref,
         ddm_idet, ddm_iinv, ddm_ilu, ddm_ilu_split, ddm_ilu_solve, ddm_berk)
 from sympy.polys.matrices.exceptions import (
-        DDMShapeError, NonInvertibleMatrixError, NonSquareMatrixError)
+    DMShapeError, NonInvertibleMatrixError, NonSquareMatrixError)
 
 
 def test_ddm_transpose():
@@ -313,7 +313,7 @@ def test_ddm_ilu_solve():
 
     # Shape mismatch
     b3 = DDM([[QQ(1)], [QQ(2)], [QQ(3)]], (3, 1), QQ)
-    raises(DDMShapeError, lambda: ddm_ilu_solve(x, L, U, swaps, b3))
+    raises(DMShapeError, lambda: ddm_ilu_solve(x, L, U, swaps, b3))
 
     # Empty shape mismatch
     U = [[QQ(1)]]
@@ -321,7 +321,7 @@ def test_ddm_ilu_solve():
     swaps = []
     x = [[QQ(1)]]
     b = []
-    raises(DDMShapeError, lambda: ddm_ilu_solve(x, L, U, swaps, b))
+    raises(DMShapeError, lambda: ddm_ilu_solve(x, L, U, swaps, b))
 
     # Empty system
     U = []
@@ -342,4 +342,4 @@ def test_ddm_charpoly():
     assert ddm_berk(A, ZZ) == Avec
 
     A = DDM([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
-    raises(DDMShapeError, lambda: ddm_berk(A, ZZ))
+    raises(DMShapeError, lambda: ddm_berk(A, ZZ))

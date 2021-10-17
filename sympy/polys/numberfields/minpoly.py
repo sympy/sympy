@@ -10,6 +10,7 @@ from sympy.functions import sqrt, cbrt
 
 from sympy.core.exprtools import Factors
 from sympy.core.function import _mexpand
+from sympy.core.traversal import preorder_traversal
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import cos, sin, tan
 from sympy.ntheory.factor_ import divisors
@@ -670,7 +671,6 @@ def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None):
 
     """
     from sympy.polys.domains import FractionField
-    from sympy.core.basic import preorder_traversal
 
     ex = sympify(ex)
     if ex.is_number:

@@ -327,7 +327,7 @@ class IntegerPartition(Basic):
     References
     ==========
 
-    https://en.wikipedia.org/wiki/Partition_%28number_theory%29
+    .. [1] https://en.wikipedia.org/wiki/Partition_%28number_theory%29
     """
 
     _dict = None

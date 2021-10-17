@@ -2255,7 +2255,7 @@ class Permutation(Atom):
         References
         ==========
 
-        https://en.wikipedia.org/wiki/Commutator
+        .. [1] https://en.wikipedia.org/wiki/Commutator
         """
 
         a = self.array_form

@@ -88,7 +88,7 @@ latex: $(PDFFILES)
 	@echo "And run \`make all' in that directory to run these through xelatex."
 
 .svg.pdf:
-	inkscape --file=$< --export-area-drawing --without-gui --export-pdf=$@
+	dbus-run-session inkscape --file=$< --export-area-drawing --without-gui --export-pdf=$@
 
 changes:
 	mkdir -p _build/changes _build/doctrees

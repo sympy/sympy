@@ -125,9 +125,9 @@ def _liupc(M):
     References
     ==========
 
-    Symbolic Sparse Cholesky Factorization using Elimination Trees,
-    Jeroen Van Grondelle (1999)
-    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
+    .. [1] Symbolic Sparse Cholesky Factorization using Elimination Trees,
+           Jeroen Van Grondelle (1999)
+           http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
     """
     # Algorithm 2.4, p 17 of reference
 
@@ -173,9 +173,9 @@ def _row_structure_symbolic_cholesky(M):
     References
     ==========
 
-    Symbolic Sparse Cholesky Factorization using Elimination Trees,
-    Jeroen Van Grondelle (1999)
-    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
+    .. [1] Symbolic Sparse Cholesky Factorization using Elimination Trees,
+           Jeroen Van Grondelle (1999)
+           http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
     """
 
     R, parent = M.liupc()

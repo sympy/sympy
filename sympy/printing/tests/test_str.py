@@ -1129,13 +1129,26 @@ def test_Predicate():
 def test_AppliedPredicate():
     assert sstr(Q.even(x)) == 'Q.even(x)'
 
-def test_printing_str_array_expressions():
+
+def test_ArraySymbol():
     assert sstr(ArraySymbol("A", 2, 3, 4)) == "A"
+
+
+def test_ArrayElement():
     A = ArraySymbol("A")
-    assert sstr(ArrayElement(A, (2, 1/(1-x), 0))) == "A[2, 1/(1 - x), 0]"
+    element = ArrayElement(A, (2, 1 / (1 - x), 0))
+    assert sstr(element) == "A[2, 1/(1 - x), 0]"
+    M = MatrixSymbol("M", 3, 3)
+    N = MatrixSymbol("N", 3, 3)
+    element = ArrayElement(M * N, [x, 0])
+    assert sstr(element) == "(M*N)[x, 0]"
+
+
+def test_ArraySlice():
+    A = ArraySymbol("A")
     assert sstr(A[:2]) == R"A[:2]"
     assert sstr(A[2:n:k, m]) == R"A[2:n:k, m]"
     B = ArraySymbol("B")
-    parent_without_shape = A + B
-    array_slice = ArraySlice(parent_without_shape, (slice(None), m))
+    expr_no_shape = A + B
+    array_slice = ArraySlice(expr_no_shape, (slice(None), m))
     assert sstr(array_slice) == "(A + B)[:, m]"

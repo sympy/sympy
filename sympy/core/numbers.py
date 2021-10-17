@@ -620,6 +620,9 @@ class Number(AtomicExpr):
         msg = "expected str|int|long|float|Decimal|Number object but got %r"
         raise TypeError(msg % type(obj).__name__)
 
+    def could_extract_minus_sign(self):
+        return bool(self.is_extended_negative)
+
     def invert(self, other, *gens, **args):
         from sympy.polys.polytools import invert
         if getattr(other, 'is_number', True):
