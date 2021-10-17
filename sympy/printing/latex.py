@@ -1798,9 +1798,6 @@ class LatexPrinter(Printer):
             block_str = r'\left' + left_delim + block_str + \
                         r'\right' + right_delim
 
-        if expr.rank() == 0:
-            return block_str % ""
-
         if mat_str == 'array':
             block_str = block_str.replace('%s', '%s%s')
 
