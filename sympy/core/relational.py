@@ -667,7 +667,6 @@ class Equality(Relational):
                                 # Remove all numbers
                                 enew = Eq(constant, Max(*remaining))
                 else:
-                    from sympy.utilities.iterables import sift
                     constantpart, remaining = sift(minmax.args, lambda x: x == constant, binary=True)
                     if constantpart:
                         # Constant in the Min/Max, rewrite
