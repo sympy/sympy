@@ -1,5 +1,6 @@
 """
 This module contains the machinery handling assumptions.
+Do also consider the guide :ref:`assumptions`.
 
 All symbolic objects have assumption attributes that can be accessed via
 ``.is_<assumption name>`` attribute.
@@ -18,8 +19,8 @@ object has the property and ``False`` is returned if it does not or cannot
     False
 
 When the property cannot be determined (or when a method is not
-implemented) None will be returned, e.g. a generic symbol, x, may or
-may not be positive so a value of ``None`` is returned for ``x.is_positive``.
+implemented) ``None`` will be returned. For example,  a generic symbol, ``x``,
+may or may not be positive so a value of ``None`` is returned for ``x.is_positive``.
 
 By default, all symbolic values are in the largest set in the given context
 without specifying the property. For example, a symbol that has a property
@@ -31,11 +32,11 @@ Here follows a list of possible assumption names:
 
     commutative
         object commutes with any other object with
-        respect to multiplication operation.
+        respect to multiplication operation. See [12]_.
 
     complex
         object can have only values from the set
-        of complex numbers.
+        of complex numbers. See [13]_.
 
     imaginary
         object value is a number that can be written as a real
@@ -88,7 +89,7 @@ Here follows a list of possible assumption names:
         of transcendental numbers [10]_.
 
     irrational
-        object value cannot be represented exactly by Rational, see [5]_.
+        object value cannot be represented exactly by :class:`~.Rational`, see [5]_.
 
     finite
     infinite
@@ -114,7 +115,7 @@ Here follows a list of possible assumption names:
 
     hermitian
     antihermitian
-        object belongs to the field of hermitian
+        object belongs to the field of Hermitian
         (antihermitian) operators.
 
 Examples
@@ -175,7 +176,7 @@ will return values and update the dictionary.
     >>> eq._assumptions
     {'finite': True, 'infinite': False}
 
-For a Symbol, there are two locations for assumptions that may
+For a :class:`~.Symbol`, there are two locations for assumptions that may
 be of interest. The ``assumptions0`` attribute gives the full set of
 assumptions derived from a given set of initial assumptions. The
 latter assumptions are stored as ``Symbol._assumptions.generator``
@@ -204,6 +205,8 @@ References
 .. [9] http://docs.scipy.org/doc/numpy/reference/generated/numpy.isfinite.html
 .. [10] https://en.wikipedia.org/wiki/Transcendental_number
 .. [11] https://en.wikipedia.org/wiki/Algebraic_number
+.. [12] https://en.wikipedia.org/wiki/Commutative_property
+.. [13] https://en.wikipedia.org/wiki/Complex_number
 
 """
 
