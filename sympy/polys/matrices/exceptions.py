@@ -9,12 +9,9 @@ ValueError/TypeError would not be raised anywhere.
 
 """
 
-from sympy.matrices.common import (NonInvertibleMatrixError,
-    NonSquareMatrixError, ShapeError)
-
 
 class DMError(Exception):
-    """Base class for errors raised by DDM"""
+    """Base class for errors raised by DomainMatrix"""
     pass
 
 
@@ -38,6 +35,11 @@ class DMFormatError(DMError):
     pass
 
 
+class DMNonInvertibleMatrixError(DMError):
+    """The matrix in not invertible"""
+    pass
+
+
 class DMRankError(DMError):
     """matrix does not have expected rank"""
     pass
@@ -48,9 +50,13 @@ class DMShapeError(DMError):
     pass
 
 
+class DMNonSquareMatrixError(DMShapeError):
+    """The matrix is not square"""
+    pass
+
+
 __all__ = [
     'DMError', 'DMBadInputError', 'DMDomainError', 'DMFormatError',
     'DMRankError', 'DMShapeError', 'DMNotAField',
-
-    'NonSquareMatrixError', 'NonInvertibleMatrixError', 'ShapeError',
+    'DMNonInvertibleMatrixError', 'DMNonSquareMatrixError',
 ]
