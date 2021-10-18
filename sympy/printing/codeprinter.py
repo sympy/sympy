@@ -68,7 +68,10 @@ class CodePrinter(StrPrinter):
     _rewriteable_functions = {
             'erf2': 'erf',
             'Li': 'li',
-            'beta': 'gamma'
+            'beta': 'gamma',
+            'sinc': 'sin',
+            'fibonacci': 'sqrt',
+            'lucas': 'sqrt',
     }
 
     def __init__(self, settings=None):
@@ -455,14 +458,14 @@ class CodePrinter(StrPrinter):
 
     def _print_Xor(self, expr):
         if self._operators.get('xor') is None:
-            return self._print_not_supported(expr)
+            return self._print(expr.to_nnf())
         PREC = precedence(expr)
         return (" %s " % self._operators['xor']).join(self.parenthesize(a, PREC)
                 for a in expr.args)
 
     def _print_Equivalent(self, expr):
         if self._operators.get('equivalent') is None:
-            return self._print_not_supported(expr)
+            return self._print(expr.to_nnf())
         PREC = precedence(expr)
         return (" %s " % self._operators['equivalent']).join(self.parenthesize(a, PREC)
                 for a in expr.args)
@@ -470,6 +473,9 @@ class CodePrinter(StrPrinter):
     def _print_Not(self, expr):
         PREC = precedence(expr)
         return self._operators['not'] + self.parenthesize(expr.args[0], PREC)
+
+    def _print_BooleanFunction(self, expr):
+        return self._print(expr.to_nnf())
 
     def _print_Mul(self, expr):
 
