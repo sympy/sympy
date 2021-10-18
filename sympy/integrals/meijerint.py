@@ -699,7 +699,9 @@ def _condsimp(cond, first=True):
                     continue
                 newargs = [arg_ for (k, arg_) in enumerate(cond.args)
                            if k not in otherlist] + [to.subs(m)]
-                assert irule in (0, 2, 4, 5, 6, 7, 11, 12, 13, 14), irule
+                if SYMPY_DEBUG:
+                    if irule not in (0, 2, 4, 5, 6, 7, 11, 12, 13, 14):
+                        print('used new rule:', irule)
                 cond = cond.func(*newargs)
                 change = True
                 break
