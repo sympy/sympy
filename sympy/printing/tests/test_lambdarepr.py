@@ -1,5 +1,5 @@
-from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify, \
-                  Expr, sqrt
+from sympy import (symbols, sin, Interval, Piecewise, Sum, lambdify,
+    Expr, sqrt)
 from sympy.testing.pytest import raises
 
 from sympy.printing.tensorflow import TensorflowPrinter
@@ -17,26 +17,11 @@ def test_basic():
     assert lambdarepr(x**y) == "x**y"
 
 
-def test_matrix():
-    A = Matrix([[x, y], [y*x, z**2]])
-    # assert lambdarepr(A) == "ImmutableDenseMatrix([[x, y], [x*y, z**2]])"
-    # Test printing a Matrix that has an element that is printed differently
-    # with the LambdaPrinter than in the StrPrinter.
-    p = Piecewise((x, True), evaluate=False)
-    A = Matrix([p])
-    assert lambdarepr(A) == "ImmutableDenseMatrix([[((x))]])"
-
-
 def test_piecewise():
     # In each case, test eval() the lambdarepr() to make sure there are a
     # correct number of parentheses. It will give a SyntaxError if there aren't.
 
     h = "lambda x: "
-
-    p = Piecewise((x, True), evaluate=False)
-    l = lambdarepr(p)
-    eval(h + l)
-    assert l == "((x))"
 
     p = Piecewise((x, x < 0))
     l = lambdarepr(p)
