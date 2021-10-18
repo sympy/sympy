@@ -1556,24 +1556,28 @@ class Pow(Expr):
         if not isinstance(expr, Expr):
             return None
 
-        b, e = expr.as_base_exp()
-
-        # special case number
         sb, se = self.as_base_exp()
-        if sb.is_Symbol and se.is_Integer and expr:
-            if e.is_rational:
-                return sb.matches(b**(e/se), repl_dict)
-            return sb.matches(expr**(1/se), repl_dict)
+        if expr.is_Rational and expr.p == 1 and expr.q != 1:
+            # handle e.g. Rational(1, 2) as Pow(2, -1)
+            _, denom = expr.as_numer_denom()
+            b, e = denom, S.NegativeOne
+        else:
+            b, e = expr.as_base_exp()
 
-        d = repl_dict.copy()
-        d = self.base.matches(b, d)
-        if d is None:
-            return None
+        # First try matching se with e and sb with b
+        # Then try se with -e and sb with 1/b
+        for sign in [1, -1]:
+            d = repl_dict.copy()
+            d = se.matches(sign*e, d)
+            if d is None:
+                continue
+            d = sb.xreplace(d).matches(b**sign, d)
+            if d is None:
+                continue
+            return d
 
-        d = self.exp.xreplace(d).matches(e, d)
-        if d is None:
-            return Expr.matches(self, expr, repl_dict)
-        return d
+        # Fall back to the generic handler
+        return Expr.matches(self, expr, repl_dict)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE! This function is an important part of the gruntz algorithm
