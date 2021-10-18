@@ -8,6 +8,8 @@ from keyword import iskeyword
 import ast
 import unicodedata
 from io import StringIO
+import builtins
+import types
 
 from sympy.assumptions.ask import AssumptionKeys
 from sympy.core.basic import Basic
@@ -15,7 +17,7 @@ from sympy.core import Symbol
 from sympy.core.function import arity, Function
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import filldedent, func_name
-
+from sympy.functions.elementary.miscellaneous import Max, Min
 
 
 def _token_splittable(token):
@@ -1072,6 +1074,14 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
                 raise TypeError(filldedent('''
                     a transformation should be function that
                     takes 3 arguments'''))
+
+    builtins_dict = vars(builtins)
+    for name, obj in builtins_dict.items():
+        if isinstance(obj, types.BuiltinFunctionType):
+            global_dict[name] = obj
+    global_dict['max'] = Max
+    global_dict['min'] = Min
+
     code = stringify_expr(s, local_dict, global_dict, transformations)
 
     if not evaluate:
