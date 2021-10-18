@@ -34,9 +34,15 @@ def diop_simplify(eq):
     return _mexpand(powsimp(_mexpand(eq)))
 
 
-def test_input_format():
-    raises(TypeError, lambda: diophantine(sin(x)))
-    raises(TypeError, lambda: diophantine(x/pi - 3))
+def test_diophantine_input_format():
+
+    raises(TypeError, lambda: diophantine(sin(x) - pi))
+    assert diophantine(sin(x)) == {(0,)}
+    assert not diophantine(x/pi - 3)
+    # issue 18081
+    assert diophantine(x*pi) == {(0,)}
+    assert diophantine(x*pi - n1) == {(n1, 0)}
+    assert diophantine(x*pi - n1, syms=(x, n1)) == {(0, n1)}
 
 
 def test_nosols():
