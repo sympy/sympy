@@ -281,6 +281,7 @@ def test_harmonic_rational():
 def test_harmonic_evalf():
     assert str(harmonic(1.5).evalf(n=10)) == '1.280372306'
     assert str(harmonic(1.5, 2).evalf(n=10)) == '1.154576311'  # issue 7443
+    assert str(harmonic(2, 2.5).evalf(n=10)) == '1.176776695' # issue 22178
 
 
 def test_harmonic_rewrite():
