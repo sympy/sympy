@@ -630,7 +630,8 @@ def test_messy():
     assert laplace_transform(Chi(x), x, s) == \
         ((log(s**(-2)) - log(1 - 1/s**2))/(2*s), 1, s > 1)
 
-    # TODO maybe simplify the inequalities?
+    # TODO maybe simplify the inequalities? when the simplification
+    # allows for generators instead of symbols this will work
     assert laplace_transform(besselj(a, x), x, s)[1:] == \
         (0, And(re(a/2) + S.Half > S.Zero, re(a/2) + 1 > S.Zero))
 

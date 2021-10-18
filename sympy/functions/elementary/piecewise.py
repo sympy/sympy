@@ -3,7 +3,7 @@ from sympy.core.basic import Basic, as_Basic
 from sympy.core.numbers import Rational, NumberSymbol
 from sympy.core.parameters import global_parameters
 from sympy.core.relational import (Lt, Gt, Eq, Ne, Relational,
-    _canonical)
+    _canonical, _canonical_coeff)
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
     true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
@@ -174,7 +174,6 @@ class Piecewise(Function):
         >>> Piecewise(*args)
         Piecewise((1, x > 1), (2, True))
         """
-        from sympy.functions.elementary.complexes import im, re
         if not _args:
             return Undefined
 
@@ -183,44 +182,9 @@ class Piecewise(Function):
 
         newargs = []  # the unevaluated conditions
         current_cond = set()  # the conditions up to a given e, c pair
-        # make conditions canonical
-        args = []
-        for e, c in _args:
-            if (not c.is_Atom and not isinstance(c, Relational) and
-                    not c.has(im, re)):
-                free = c.free_symbols
-                if len(free) == 1:
-                    funcs = [i for i in c.atoms(Function)
-                             if not isinstance(i, Boolean)]
-                    if len(funcs) == 1 and len(
-                            c.xreplace({list(funcs)[0]: Dummy()}
-                            ).free_symbols) == 1:
-                        # we can treat function like a symbol
-                        free = funcs
-                    _c = c
-                    x = free.pop()
-                    try:
-                        c = c.as_set().as_relational(x)
-                    except NotImplementedError:
-                        pass
-                    else:
-                        reps = {}
-                        for i in c.atoms(Relational):
-                            inf = i.canonical.rhs
-                            if inf in (S.Infinity, S.NegativeInfinity):
-                                if not _c.has(inf):
-                                    # don't accept introduction of
-                                    # new Relationals with +/-oo
-                                    reps[i] = S.true
-                                elif ('=' not in i.rel_op and
-                                        c.xreplace({x: inf}) !=
-                                        _c.xreplace({x: inf})):
-                                    reps[i] = Relational(
-                                        i.lhs, i.rhs, i.rel_op + '=')
-                        c = c.xreplace(reps)
-            args.append((e, _canonical(c)))
-
-        for expr, cond in args:
+        for expr, cond in _args:
+            cond = cond.replace(
+                lambda _: _.is_Relational, _canonical_coeff)
             # Check here if expr is a Piecewise and collapse if one of
             # the conds in expr matches cond. This allows the collapsing
             # of Piecewise((Piecewise((x,x<0)),x<0)) to Piecewise((x,x<0)).

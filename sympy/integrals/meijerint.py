@@ -602,7 +602,7 @@ def _is_analytic(f, x):
     return not any(x in expr.free_symbols for expr in f.atoms(Heaviside, Abs))
 
 
-def _condsimp(cond):
+def _condsimp(cond, first=True):
     """
     Do naive simplifications on ``cond``.
 
@@ -616,37 +616,57 @@ def _condsimp(cond):
     ========
 
     >>> from sympy.integrals.meijerint import _condsimp as simp
-    >>> from sympy import Or, Eq, And
-    >>> from sympy.abc import x, y, z
-    >>> simp(Or(x < y, z, Eq(x, y)))
-    z | (x <= y)
-    >>> simp(Or(x <= y, And(x < y, z)))
+    >>> from sympy import Or, Eq
+    >>> from sympy.abc import x, y
+    >>> simp(Or(x < y, Eq(x, y)))
     x <= y
     """
+    from sympy import SYMPY_DEBUG
+    from sympy.core.relational import _canonical_coeff
+    if first:
+        cond = cond.replace(lambda _: _.is_Relational, _canonical_coeff)
+        first = False
     if not isinstance(cond, BooleanFunction):
         return cond
-    cond = cond.func(*list(map(_condsimp, cond.args)))
-    change = True
     p, q, r = symbols('p q r', cls=Wild)
+    # transforms tests use 0, 4, 5 and 11-14
+    # meijer tests use 0, 2, 11, 14
+    # joint_rv uses 6, 7
     rules = [
-        (Or(p < q, Eq(p, q)), p <= q),
+        (Or(p < q, Eq(p, q)), p <= q),  # 0
         # The next two obviously are instances of a general pattern, but it is
         # easier to spell out the few cases we care about.
         (And(Abs(arg(p)) <= pi, Abs(arg(p) - 2*pi) <= pi),
-         Eq(arg(p) - pi, 0)),
+         Eq(arg(p) - pi, 0)),  # 1
         (And(Abs(2*arg(p) + pi) <= pi, Abs(2*arg(p) - pi) <= pi),
-         Eq(arg(p), 0)),
+         Eq(arg(p), 0)), # 2
+        (And(Abs(2*arg(p) + pi) < pi, Abs(2*arg(p) - pi) <= pi),
+         S.false),  # 3
+        (And(Abs(arg(p) - pi/2) <= pi/2, Abs(arg(p) + pi/2) <= pi/2),
+         Eq(arg(p), 0)),  # 4
+        (And(Abs(arg(p) - pi/2) <= pi/2, Abs(arg(p) + pi/2) < pi/2),
+         S.false),  # 5
+        (And(Abs(arg(p**2/2 + 1)) < pi, Ne(Abs(arg(p**2/2 + 1)), pi)),
+         S.true),  # 6
+        (Or(Abs(arg(p**2/2 + 1)) < pi, Ne(1/(p**2/2 + 1), 0)),
+         S.true),  # 7
         (And(Abs(unbranched_argument(p)) <= pi,
            Abs(unbranched_argument(exp_polar(-2*pi*S.ImaginaryUnit)*p)) <= pi),
-       Eq(unbranched_argument(exp_polar(-S.ImaginaryUnit*pi)*p), 0)),
+         Eq(unbranched_argument(exp_polar(-S.ImaginaryUnit*pi)*p), 0)),  # 8
         (And(Abs(unbranched_argument(p)) <= pi/2,
            Abs(unbranched_argument(exp_polar(-pi*S.ImaginaryUnit)*p)) <= pi/2),
-       Eq(unbranched_argument(exp_polar(-S.ImaginaryUnit*pi/2)*p), 0)),
-        (Or(p <= q, And(p < q, r)), p <= q)
+         Eq(unbranched_argument(exp_polar(-S.ImaginaryUnit*pi/2)*p), 0)),  # 9
+        (Or(p <= q, And(p < q, r)), p <= q),  # 10
+        (Ne(p**2, 1) & (p**2 > 1), p**2 > 1),  # 11
+        (Ne(1/p, 1) & (cos(Abs(arg(p)))*Abs(p) > 1), Abs(p) > 1),  # 12
+        (Ne(p, 2) & (cos(Abs(arg(p)))*Abs(p) > 2), Abs(p) > 2),  # 13
+        ((Abs(arg(p)) < pi/2) & (cos(Abs(arg(p)))*sqrt(Abs(p**2)) > 1), p**2 > 1),  # 14
     ]
+    cond = cond.func(*list(map(lambda _: _condsimp(_, first), cond.args)))
+    change = True
     while change:
         change = False
-        for fro, to in rules:
+        for irule, (fro, to) in enumerate(rules):
             if fro.func != cond.func:
                 continue
             for n, arg1 in enumerate(cond.args):
@@ -679,31 +699,31 @@ def _condsimp(cond):
                     continue
                 newargs = [arg_ for (k, arg_) in enumerate(cond.args)
                            if k not in otherlist] + [to.subs(m)]
+                assert irule in (0, 2, 4, 5, 6, 7, 11, 12, 13, 14), irule
                 cond = cond.func(*newargs)
                 change = True
                 break
+
     # final tweak
+    def rel_touchup(rel):
+        if rel.rel_op != '==' or rel.rhs != 0:
+            return rel
 
-    def repl_eq(orig):
-        if orig.lhs == 0:
-            expr = orig.rhs
-        elif orig.rhs == 0:
-            expr = orig.lhs
-        else:
-            return orig
-        m = expr.match(arg(p)**q)
+        # handle Eq(*, 0)
+        LHS = rel.lhs
+        m = LHS.match(arg(p)**q)
         if not m:
-            m = expr.match(unbranched_argument(polar_lift(p)**q))
+            m = LHS.match(unbranched_argument(polar_lift(p)**q))
         if not m:
-            if isinstance(expr, periodic_argument) and not expr.args[0].is_polar \
-                    and expr.args[1] is S.Infinity:
-                return (expr.args[0] > 0)
-            return orig
+            if isinstance(LHS, periodic_argument) and not LHS.args[0].is_polar \
+                    and LHS.args[1] is S.Infinity:
+                return (LHS.args[0] > 0)
+            return rel
         return (m[p] > 0)
-    return cond.replace(
-        lambda expr: expr.is_Relational and expr.rel_op == '==',
-        repl_eq)
-
+    cond = cond.replace(lambda _: _.is_Relational, rel_touchup)
+    if SYMPY_DEBUG:
+        print('_condsimp: ', cond)
+    return cond
 
 def _eval_cond(cond):
     """ Re-evaluate the conditions. """
