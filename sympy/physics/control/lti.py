@@ -1,3 +1,5 @@
+from typing import Type
+
 from sympy import Basic, Add, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots
 from sympy.core.containers import Tuple
 from sympy.core.evalf import EvalfMixin, prec_to_dps
@@ -25,6 +27,9 @@ def _roots(poly, var):
 
 class LinearTimeInvariant(Basic, EvalfMixin):
     """A common class for all the Linear Time-Invariant Dynamical Systems."""
+
+    _clstype: Type
+
     # Users should not directly interact with this class.
     def __new__(cls, *system, **kwargs):
         if cls is LinearTimeInvariant:

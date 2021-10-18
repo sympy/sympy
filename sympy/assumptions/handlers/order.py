@@ -40,19 +40,19 @@ def _NegativePredicate_number(expr, assumptions):
             if r._prec != 1:
                 return r < 0
 
-@NegativePredicate.register(Basic)
+@NegativePredicate.register(Basic) # type: ignore
 def _(expr, assumptions):
     if expr.is_number:
         return _NegativePredicate_number(expr, assumptions)
 
-@NegativePredicate.register(Expr)
+@NegativePredicate.register(Expr) # type: ignore
 def _(expr, assumptions):
     ret = expr.is_negative
     if ret is None:
         raise MDNotImplementedError
     return ret
 
-@NegativePredicate.register(Add)
+@NegativePredicate.register(Add) # type: ignore
 def _(expr, assumptions):
     """
     Positive + Positive -> Positive,
@@ -76,7 +76,7 @@ def _(expr, assumptions):
         if nonpos < len(expr.args):
             return True
 
-@NegativePredicate.register(Mul)
+@NegativePredicate.register(Mul) # type: ignore
 def _(expr, assumptions):
     if expr.is_number:
         return _NegativePredicate_number(expr, assumptions)
@@ -92,7 +92,7 @@ def _(expr, assumptions):
             return
     return result
 
-@NegativePredicate.register(Pow)
+@NegativePredicate.register(Pow) # type: ignore
 def _(expr, assumptions):
     """
     Real ** Even -> NonNegative
@@ -116,11 +116,11 @@ def _(expr, assumptions):
         if ask(Q.odd(expr.exp), assumptions):
             return ask(Q.negative(expr.base), assumptions)
 
-@NegativePredicate.register_many(Abs, ImaginaryUnit)
+@NegativePredicate.register_many(Abs, ImaginaryUnit) # type: ignore
 def _(expr, assumptions):
     return False
 
-@NegativePredicate.register(exp)
+@NegativePredicate.register(exp) # type: ignore
 def _(expr, assumptions):
     if ask(Q.real(expr.exp), assumptions):
         return False
@@ -129,7 +129,7 @@ def _(expr, assumptions):
 
 # NonNegativePredicate
 
-@NonNegativePredicate.register(Basic)
+@NonNegativePredicate.register(Basic) # type: ignore
 def _(expr, assumptions):
     if expr.is_number:
         notnegative = fuzzy_not(_NegativePredicate_number(expr, assumptions))
@@ -138,7 +138,7 @@ def _(expr, assumptions):
         else:
             return notnegative
 
-@NonNegativePredicate.register(Expr)
+@NonNegativePredicate.register(Expr) # type: ignore
 def _(expr, assumptions):
     ret = expr.is_nonnegative
     if ret is None:
@@ -148,14 +148,14 @@ def _(expr, assumptions):
 
 # NonZeroPredicate
 
-@NonZeroPredicate.register(Expr)
+@NonZeroPredicate.register(Expr) # type: ignore
 def _(expr, assumptions):
     ret = expr.is_nonzero
     if ret is None:
         raise MDNotImplementedError
     return ret
 
-@NonZeroPredicate.register(Basic)
+@NonZeroPredicate.register(Basic) # type: ignore
 def _(expr, assumptions):
     if ask(Q.real(expr)) is False:
         return False
@@ -167,13 +167,13 @@ def _(expr, assumptions):
                 return i != 0
         return fuzzy_or(nonz(i) for i in i.as_real_imag())
 
-@NonZeroPredicate.register(Add)
+@NonZeroPredicate.register(Add) # type: ignore
 def _(expr, assumptions):
     if all(ask(Q.positive(x), assumptions) for x in expr.args) \
             or all(ask(Q.negative(x), assumptions) for x in expr.args):
         return True
 
-@NonZeroPredicate.register(Mul)
+@NonZeroPredicate.register(Mul) # type: ignore
 def _(expr, assumptions):
     for arg in expr.args:
         result = ask(Q.nonzero(arg), assumptions)
@@ -182,34 +182,34 @@ def _(expr, assumptions):
         return result
     return True
 
-@NonZeroPredicate.register(Pow)
+@NonZeroPredicate.register(Pow) # type: ignore
 def _(expr, assumptions):
     return ask(Q.nonzero(expr.base), assumptions)
 
-@NonZeroPredicate.register(Abs)
+@NonZeroPredicate.register(Abs) # type: ignore
 def _(expr, assumptions):
     return ask(Q.nonzero(expr.args[0]), assumptions)
 
-@NonZeroPredicate.register(NaN)
+@NonZeroPredicate.register(NaN) # type: ignore
 def _(expr, assumptions):
     return None
 
 
 # ZeroPredicate
 
-@ZeroPredicate.register(Expr)
+@ZeroPredicate.register(Expr) # type: ignore
 def _(expr, assumptions):
     ret = expr.is_zero
     if ret is None:
         raise MDNotImplementedError
     return ret
 
-@ZeroPredicate.register(Basic)
+@ZeroPredicate.register(Basic) # type: ignore
 def _(expr, assumptions):
     return fuzzy_and([fuzzy_not(ask(Q.nonzero(expr), assumptions)),
         ask(Q.real(expr), assumptions)])
 
-@ZeroPredicate.register(Mul)
+@ZeroPredicate.register(Mul) # type: ignore
 def _(expr, assumptions):
     # TODO: This should be deducible from the nonzero handler
     return fuzzy_or(ask(Q.zero(arg), assumptions) for arg in expr.args)
@@ -217,14 +217,14 @@ def _(expr, assumptions):
 
 # NonPositivePredicate
 
-@NonPositivePredicate.register(Expr)
+@NonPositivePredicate.register(Expr) # type: ignore
 def _(expr, assumptions):
     ret = expr.is_nonpositive
     if ret is None:
         raise MDNotImplementedError
     return ret
 
-@NonPositivePredicate.register(Basic)
+@NonPositivePredicate.register(Basic) # type: ignore
 def _(expr, assumptions):
     if expr.is_number:
         notpositive = fuzzy_not(_PositivePredicate_number(expr, assumptions))
@@ -255,19 +255,19 @@ def _PositivePredicate_number(expr, assumptions):
             if r._prec != 1:
                 return r > 0
 
-@PositivePredicate.register(Expr)
+@PositivePredicate.register(Expr) # type: ignore
 def _(expr, assumptions):
     ret = expr.is_positive
     if ret is None:
         raise MDNotImplementedError
     return ret
 
-@PositivePredicate.register(Basic)
+@PositivePredicate.register(Basic) # type: ignore
 def _(expr, assumptions):
     if expr.is_number:
         return _PositivePredicate_number(expr, assumptions)
 
-@PositivePredicate.register(Mul)
+@PositivePredicate.register(Mul) # type: ignore
 def _(expr, assumptions):
     if expr.is_number:
         return _PositivePredicate_number(expr, assumptions)
@@ -281,7 +281,7 @@ def _(expr, assumptions):
             return
     return result
 
-@PositivePredicate.register(Add)
+@PositivePredicate.register(Add) # type: ignore
 def _(expr, assumptions):
     if expr.is_number:
         return _PositivePredicate_number(expr, assumptions)
@@ -301,7 +301,7 @@ def _(expr, assumptions):
         if nonneg < len(expr.args):
             return True
 
-@PositivePredicate.register(Pow)
+@PositivePredicate.register(Pow) # type: ignore
 def _(expr, assumptions):
     if expr.base == E:
         if ask(Q.real(expr.exp), assumptions):
@@ -322,7 +322,7 @@ def _(expr, assumptions):
         if ask(Q.odd(expr.exp), assumptions):
             return False
 
-@PositivePredicate.register(exp)
+@PositivePredicate.register(exp) # type: ignore
 def _(expr, assumptions):
     if ask(Q.real(expr.exp), assumptions):
         return True
@@ -330,7 +330,7 @@ def _(expr, assumptions):
         from sympy import pi, I
         return ask(Q.even(expr.exp/(I*pi)), assumptions)
 
-@PositivePredicate.register(log)
+@PositivePredicate.register(log) # type: ignore
 def _(expr, assumptions):
     r = ask(Q.real(expr.args[0]), assumptions)
     if r is not True:
@@ -340,41 +340,41 @@ def _(expr, assumptions):
     if ask(Q.negative(expr.args[0] - 1), assumptions):
         return False
 
-@PositivePredicate.register(factorial)
+@PositivePredicate.register(factorial) # type: ignore
 def _(expr, assumptions):
     x = expr.args[0]
     if ask(Q.integer(x) & Q.positive(x), assumptions):
             return True
 
-@PositivePredicate.register(ImaginaryUnit)
+@PositivePredicate.register(ImaginaryUnit) # type: ignore
 def _(expr, assumptions):
     return False
 
-@PositivePredicate.register(Abs)
+@PositivePredicate.register(Abs) # type: ignore
 def _(expr, assumptions):
     return ask(Q.nonzero(expr), assumptions)
 
-@PositivePredicate.register(Trace)
+@PositivePredicate.register(Trace) # type: ignore
 def _(expr, assumptions):
     if ask(Q.positive_definite(expr.arg), assumptions):
         return True
 
-@PositivePredicate.register(Determinant)
+@PositivePredicate.register(Determinant) # type: ignore
 def _(expr, assumptions):
     if ask(Q.positive_definite(expr.arg), assumptions):
         return True
 
-@PositivePredicate.register(MatrixElement)
+@PositivePredicate.register(MatrixElement) # type: ignore
 def _(expr, assumptions):
     if (expr.i == expr.j
             and ask(Q.positive_definite(expr.parent), assumptions)):
         return True
 
-@PositivePredicate.register(atan)
+@PositivePredicate.register(atan) # type: ignore
 def _(expr, assumptions):
     return ask(Q.positive(expr.args[0]), assumptions)
 
-@PositivePredicate.register(asin)
+@PositivePredicate.register(asin) # type: ignore
 def _(expr, assumptions):
     x = expr.args[0]
     if ask(Q.positive(x) & Q.nonpositive(x - 1), assumptions):
@@ -382,38 +382,38 @@ def _(expr, assumptions):
     if ask(Q.negative(x) & Q.nonnegative(x + 1), assumptions):
         return False
 
-@PositivePredicate.register(acos)
+@PositivePredicate.register(acos) # type: ignore
 def _(expr, assumptions):
     x = expr.args[0]
     if ask(Q.nonpositive(x - 1) & Q.nonnegative(x + 1), assumptions):
         return True
 
-@PositivePredicate.register(acot)
+@PositivePredicate.register(acot) # type: ignore
 def _(expr, assumptions):
     return ask(Q.real(expr.args[0]), assumptions)
 
-@PositivePredicate.register(NaN)
+@PositivePredicate.register(NaN) # type: ignore
 def _(expr, assumptions):
     return None
 
 
 # ExtendedNegativePredicate
 
-@ExtendedNegativePredicate.register(object)
+@ExtendedNegativePredicate.register(object) # type: ignore
 def _(expr, assumptions):
     return ask(Q.negative(expr) | Q.negative_infinite(expr), assumptions)
 
 
 # ExtendedPositivePredicate
 
-@ExtendedPositivePredicate.register(object)
+@ExtendedPositivePredicate.register(object) # type: ignore
 def _(expr, assumptions):
     return ask(Q.positive(expr) | Q.positive_infinite(expr), assumptions)
 
 
 # ExtendedNonZeroPredicate
 
-@ExtendedNonZeroPredicate.register(object)
+@ExtendedNonZeroPredicate.register(object) # type: ignore
 def _(expr, assumptions):
     return ask(
         Q.negative_infinite(expr) | Q.negative(expr) | Q.positive(expr) | Q.positive_infinite(expr),
@@ -422,7 +422,7 @@ def _(expr, assumptions):
 
 # ExtendedNonPositivePredicate
 
-@ExtendedNonPositivePredicate.register(object)
+@ExtendedNonPositivePredicate.register(object) # type: ignore
 def _(expr, assumptions):
     return ask(
         Q.negative_infinite(expr) | Q.negative(expr) | Q.zero(expr),
@@ -431,7 +431,7 @@ def _(expr, assumptions):
 
 # ExtendedNonNegativePredicate
 
-@ExtendedNonNegativePredicate.register(object)
+@ExtendedNonNegativePredicate.register(object) # type: ignore
 def _(expr, assumptions):
     return ask(
         Q.zero(expr) | Q.positive(expr) | Q.positive_infinite(expr),

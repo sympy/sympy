@@ -74,7 +74,7 @@ class MatrixExpr(Expr):
     is_symbol = False
     is_scalar = False
 
-    kind = MatrixKind()
+    kind: MatrixKind = MatrixKind()
 
     def __new__(cls, *args, **kwargs):
         args = map(_sympify, args)

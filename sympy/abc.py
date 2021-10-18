@@ -91,10 +91,10 @@ _greek = list(greeks) # make a copy, so we can mutate it
 _greek.remove("lambda")
 _greek.append("lamda")
 
-ns = {}  # type: Dict[str, Any]
+ns: Dict[str, Any] = {}
 exec('from sympy import *', ns)
-_clash1 = {}
-_clash2 = {}
+_clash1: Dict[str, Any] = {}
+_clash2: Dict[str, Any] = {}
 while ns:
     _k, _ = ns.popitem()
     if _k in _greek:
