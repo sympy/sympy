@@ -1,16 +1,23 @@
 import functools
+from typing import List
 
 from sympy import Basic, Tuple, S
 from sympy.core.sympify import _sympify
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
-from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
+from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray, ArrayKind
 from sympy.simplify.simplify import simplify
 
 
 class DenseNDimArray(NDimArray):
 
+    _array: List[Basic]
+
     def __new__(self, *args, **kwargs):
         return ImmutableDenseNDimArray(*args, **kwargs)
+
+    @property
+    def kind(self) -> ArrayKind:
+        return ArrayKind._union(self._array)
 
     def __getitem__(self, index):
         """
@@ -119,7 +126,7 @@ class DenseNDimArray(NDimArray):
         return type(self)(self._array, newshape)
 
 
-class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray):
+class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray): # type: ignore
     """
 
     """

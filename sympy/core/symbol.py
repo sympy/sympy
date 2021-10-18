@@ -204,6 +204,8 @@ class Symbol(AtomicExpr, Boolean):
 
     __slots__ = ('name',)
 
+    name: str
+
     is_Symbol = True
     is_symbol = True
 
@@ -303,6 +305,15 @@ class Symbol(AtomicExpr, Boolean):
 
     def __getnewargs_ex__(self):
         return ((self.name,), self.assumptions0)
+
+    # NOTE: __setstate__ is not needed for pickles created by __getnewargs_ex__
+    # but was used before Symbol was changed to use __getnewargs_ex__ in v1.9.
+    # Pickles created in previous SymPy versions will still need __setstate__
+    # so that they can be unpickled in SymPy > v1.9.
+
+    def __setstate__(self, state):
+        for name, value in state.items():
+            setattr(self, name, value)
 
     def _hashable_content(self):
         # Note: user-specified assumptions not hashed, just derived ones

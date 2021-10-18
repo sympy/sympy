@@ -4,7 +4,7 @@ from operator import index as index_
 
 from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
-from sympy.core.kind import NumberKind, UndefinedKind
+from sympy.core.kind import Kind, NumberKind, UndefinedKind
 from sympy.core.numbers import Integer, Rational
 from sympy.core.sympify import _sympify, SympifyError
 from sympy.core.singleton import S
@@ -44,6 +44,8 @@ class RepMatrix(MatrixBase):
     # are not used because they differ from Expr in some way (e.g. automatic
     # expansion of powers and products).
     #
+
+    _rep: DomainMatrix
 
     def __eq__(self, other):
         # Skip sympify for mutable matrices...
@@ -155,8 +157,9 @@ class RepMatrix(MatrixBase):
         return self._fromrep(self._rep.copy())
 
     @property
-    def kind(self):
+    def kind(self) -> MatrixKind:
         domain = self._rep.domain
+        element_kind: Kind
         if domain in (ZZ, QQ):
             element_kind = NumberKind
         elif domain == EXRAW:
@@ -308,8 +311,6 @@ class MutableRepMatrix(RepMatrix):
     # to make the instances mutable. MutableRepMatrix is a superclass for both
     # MutableDenseMatrix and MutableSparseMatrix.
     #
-
-    __hash__ = None
 
     is_zero = False
 

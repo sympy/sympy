@@ -5,7 +5,7 @@ from sympy.physics.vector import dynamicsymbols, ReferenceFrame
 from sympy.testing.pytest import raises
 
 
-t = dynamicsymbols._t
+t = dynamicsymbols._t # type: ignore
 
 
 def test_jointsmethod():

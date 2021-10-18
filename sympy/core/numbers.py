@@ -4,11 +4,13 @@ import fractions
 import math
 import re as regex
 import sys
+from typing import Set
 
 from .containers import Tuple
 from .sympify import (SympifyError, converter, sympify, _convert_numpy_types, _sympify,
                       _is_numpy_instance)
 from .singleton import S, Singleton
+from .basic import Basic
 from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
 from .decorators import _sympifyit
@@ -2530,7 +2532,7 @@ class AlgebraicNumber(Expr):
     # Optional alias symbol is not free.
     # Actually, alias should be a Str, but some methods
     # expect that it be an instance of Expr.
-    free_symbols = set()
+    free_symbols: Set[Basic] = set()
 
     def __new__(cls, expr, coeffs=None, alias=None, **args):
         """Construct a new algebraic number. """

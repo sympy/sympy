@@ -681,7 +681,7 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
     def set(self):
         return set(list(Range(1, self.k+1)))
 
-    @property
+    @property # type: ignore
     @cacheit
     def dict(self):
         if self.k.is_Symbol:

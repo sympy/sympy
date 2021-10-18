@@ -6,7 +6,7 @@ from sympy.physics.mechanics.joint import Joint
 from sympy.physics.vector import Vector, ReferenceFrame
 from sympy.testing.pytest import raises
 
-t = dynamicsymbols._t
+t = dynamicsymbols._t # type: ignore
 
 
 def _generate_body():

@@ -2,13 +2,14 @@
 from collections import defaultdict
 from collections.abc import Mapping
 from itertools import chain, zip_longest
+from typing import Set, Tuple
 
 from .assumptions import BasicMeta, ManagedProperties
 from .decorators import deprecated
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .compatibility import iterable, ordered
-from .kind import UndefinedKind
+from .kind import Kind, UndefinedKind
 from ._print_helpers import Printable
 
 from inspect import getmro
@@ -76,6 +77,8 @@ class Basic(Printable, metaclass=ManagedProperties):
                  '_assumptions'
                 )
 
+    _args: 'Tuple[Basic, ...]'
+
     # To be overridden with True in the appropriate subclasses
     is_number = False
     is_Atom = False
@@ -108,7 +111,7 @@ class Basic(Printable, metaclass=ManagedProperties):
     is_MatAdd = False
     is_MatMul = False
 
-    kind = UndefinedKind
+    kind: Kind = UndefinedKind
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
@@ -494,7 +497,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         return result
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> 'Set[Basic]':
         """Return from the atoms of self those which are free symbols.
 
         For most expressions, all symbols are free symbols. For some classes
@@ -506,7 +509,8 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         Any other method that uses bound variables should implement a
         free_symbols method."""
-        return set().union(*[a.free_symbols for a in self.args])
+        empty: 'Set[Basic]' = set()
+        return empty.union(*(a.free_symbols for a in self.args))
 
     @property
     def expr_free_symbols(self):
@@ -712,7 +716,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         return self.__class__
 
     @property
-    def args(self):
+    def args(self) -> 'Tuple[Basic, ...]':
         """Returns a tuple of arguments of 'self'.
 
         Examples
