@@ -163,5 +163,5 @@ def mdft(n):
 
     To get identical behavior to ``mdft(n)``, use ``DFT(n).as_mutable()``.
     """
-    from sympy.matrices.expressions.special import DFT
+    from sympy.matrices.expressions.fourier import DFT
     return DFT(n).as_mutable()
