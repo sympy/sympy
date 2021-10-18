@@ -308,15 +308,11 @@ class PowerBasis(Module):
         if f == 0:
             return self.zero()
         d, g = f.clear_denoms()
-        # NOTE: `Poly` methods like `clear_denoms()` and `all_coeffs()` will
-        # return SymPy's special constants like `One` and `Zero`. When gmpy2
-        # is installed, then `ZZ` will not accept these, so we have to take
-        # care to convert to `int` first.
-        c = [int(a) for a in reversed(g.all_coeffs())]
+        c = list(reversed(g.rep.rep))
         ell = len(c)
         z = [ZZ(0)] * (n - ell)
         col = to_col(c + z)
-        return self(col, denom=ZZ(int(d)))
+        return self(col, denom=ZZ.from_sympy(d))
 
 
 class Submodule(Module, IntegerPowerable):
@@ -950,7 +946,7 @@ class PowerBasisElement(ModuleElement):
     def inverse(self):
         f = self.poly()
         e, h = f.invert(self.T).clear_denoms()
-        return self.module.element_from_poly(h) // ZZ(int(e))
+        return self.module.element_from_poly(h) // ZZ.from_sympy(e)
 
     def __rfloordiv__(self, a):
         return self.inverse() * a
