@@ -95,7 +95,7 @@ class NumExprPrinter(LambdaPrinter):
         'log': 'log',
         'exp': 'exp',
         'sqrt' : 'sqrt',
-        'Abs' : 'abs',
+        'abs' : 'abs',
         'conjugate' : 'conj',
         'im' : 'imag',
         're' : 'real',
