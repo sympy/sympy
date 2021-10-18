@@ -11,9 +11,14 @@ def is_rat(c):
     In many cases, we want to accept an argument c of type ZZ or QQ.
     For this, ``c in QQ`` is too accepting (e.g. ``3.14 in QQ`` is ``True``),
     while ``QQ.of_type(c)`` is too demanding (e.g. ``QQ.of_type(3)`` is ``False``).
-    So we need a convenience function.
+    Meanwhile, if gmpy2 is installed then ``ZZ.of_type()`` accepts only ``mpz``,
+    not ``int``, so we need another clause to ensure ``int`` is accepted.
     """
-    return ZZ.of_type(c) or QQ.of_type(c)
+    return isinstance(c, int) or ZZ.of_type(c) or QQ.of_type(c)
+
+
+def is_int(c):
+    return isinstance(c, int) or ZZ.of_type(c)
 
 
 def get_num_denom(c):

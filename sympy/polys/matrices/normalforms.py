@@ -304,7 +304,7 @@ def _hermite_normal_form_modulo_D(A, D):
         raise DMShapeError('Matrix must have at least as many columns as rows.')
     A = A.to_dense().rep.copy()
     k = n
-    R = ZZ(abs(D))
+    R = ZZ(abs(int(D)))
     for i in range(m - 1, -1, -1):
         k -= 1
         for j in range(k - 1, -1, -1):

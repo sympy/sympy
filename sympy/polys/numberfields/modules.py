@@ -9,7 +9,7 @@ from sympy.polys.matrices.exceptions import DMBadInputError
 from sympy.polys.matrices.normalforms import hermite_normal_form
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polyutils import IntegerPowerable
-from .utilities import AlgIntPowers, is_rat, get_num_denom
+from .utilities import AlgIntPowers, is_int, is_rat, get_num_denom
 
 
 def to_col(coeffs):
@@ -308,11 +308,16 @@ class PowerBasis(Module):
         if f == 0:
             return self.zero()
         d, g = f.clear_denoms()
-        c = list(reversed(g.all_coeffs()))
+        # NOTE: There are several places in this module, such as the following
+        # line, and the final line (where we do `int(d)`), where we seem to be
+        # doing superfluous conversions to `int`. The reason for this is that
+        # if gmpy2 is installed then the type of `ZZ` elements is `mpz`, and we
+        # need to ensure compatibility with that.
+        c = [int(a) for a in reversed(g.all_coeffs())]
         ell = len(c)
         z = [ZZ(0)] * (n - ell)
         col = to_col(c + z)
-        return self(col, denom=ZZ(d))
+        return self(col, denom=ZZ(int(d)))
 
 
 class Submodule(Module, IntegerPowerable):
@@ -338,7 +343,7 @@ class Submodule(Module, IntegerPowerable):
         self._QQ_matrix = None
 
     def __repr__(self):
-        r = 'cols' + repr(self.matrix.transpose().to_list())
+        r = 'cols' + repr(self.matrix.transpose().to_Matrix().tolist())
         if self.denom > 1:
             r += f'/{self.denom}'
         return r
@@ -411,7 +416,9 @@ class Submodule(Module, IntegerPowerable):
     def QQ_matrix(self):
         """Matrix over :ref:`QQ`, equal to ``self.matrix / self.denom``, and always dense."""
         if self._QQ_matrix is None:
-            self._QQ_matrix = (self.matrix / self.denom).to_dense()
+            # NOTE: converting denom to `int` is necessary in case gmpy2 is installed,
+            # in which case denom may be an `mpz`.
+            self._QQ_matrix = (self.matrix / int(self.denom)).to_dense()
         return self._QQ_matrix
 
     def starts_with_unity(self):
@@ -633,7 +640,7 @@ def make_submodule(container, matrix, denom=1, mult_tab=None):
     if isinstance(container, PowerBasis):
         n = matrix.shape[1]
         if is_HNF(matrix) and n == container.T.degree():
-            if (matrix / denom)[:, 0].to_dense() == DomainMatrix.eye(n, QQ)[:, 0].to_dense():
+            if (matrix / int(denom))[:, 0].to_dense() == DomainMatrix.eye(n, QQ)[:, 0].to_dense():
                 cls = Order
             else:
                 cls = Ideal
@@ -674,7 +681,7 @@ class ModuleElement(IntegerPowerable):
         self._QQ_col = None
 
     def __repr__(self):
-        r = str(self.col.flat())
+        r = str([int(c) for c in self.col.flat()])
         if self.denom > 1:
             r += f'/{self.denom}'
         return r
@@ -735,7 +742,7 @@ class ModuleElement(IntegerPowerable):
     def QQ_col(self):
         """Column vector over :ref:`QQ`, equal to ``self.col / self.denom``, and always dense."""
         if self._QQ_col is None:
-            self._QQ_col = (self.col / self.denom).to_dense()
+            self._QQ_col = (self.col / int(self.denom)).to_dense()
         return self._QQ_col
 
     def to_container(self):
@@ -911,7 +918,7 @@ class ModuleElement(IntegerPowerable):
         in the basis elements $a_i$, with content divisible by 7. But this is
         achieved by reducing our coeffs mod $2 \times 7$.
         """
-        if ZZ.of_type(a):
+        if is_int(a):
             m = a * self.denom
             col = to_col([c % m for c in self.coeffs])
             return type(self)(self.module, col, denom=self.denom)
@@ -946,7 +953,7 @@ class PowerBasisElement(ModuleElement):
     def inverse(self):
         f = self.poly()
         e, h = f.invert(self.T).clear_denoms()
-        return self.module.element_from_poly(h) // ZZ(e)
+        return self.module.element_from_poly(h) // ZZ(int(e))
 
     def __rfloordiv__(self, a):
         return self.inverse() * a

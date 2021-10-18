@@ -181,7 +181,7 @@ def prime_valuation(I, P):
 
     n, W, d = ZK.n, ZK.matrix, ZK.denom
 
-    A = W.convert_to(QQ).inv() * I.matrix * d / I.denom
+    A = W.convert_to(QQ).inv() * I.matrix * d / int(I.denom)
     # Although A must have integer entries, given that I is an integral ideal,
     # as a DomainMatrix it will still be over QQ, so we convert back:
     A = A.convert_to(ZZ)
@@ -401,7 +401,7 @@ def _prime_decomp_split_ideal(I, p, N, G, ZK):
     U, V, g = m1.gcdex(m2)
     # Sanity check: theory says m is squarefree, so m1, m2 should be coprime:
     assert g == 1
-    E = [ZZ(c) for c in reversed((U*m1).all_coeffs())]
+    E = [ZZ(int(c)) for c in reversed((U*m1).all_coeffs())]
     eps1 = sum(E[i]*alpha_powers[i] for i in range(len(E)))
     eps2 = 1 - eps1
     idemps = [eps1, eps2]

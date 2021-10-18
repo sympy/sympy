@@ -1,12 +1,13 @@
 from sympy.abc import x, zeta
 from sympy.polys import Poly, cyclotomic_poly
 from sympy.polys.domains import FF, QQ, ZZ
-from sympy.polys.matrices import DomainMatrix
+from sympy.polys.matrices import DomainMatrix, DM
 from sympy.polys.numberfields.modules import (
     ClosureFailure, HNF, Ideal, Module, ModuleElement, ModuleEndomorphism,
     Order, PowerBasis, PowerBasisElement,
     find_min_poly, is_HNF, make_mod_elt, make_submodule, to_col,
 )
+from sympy.polys.numberfields.utilities import is_int
 from sympy.testing.pytest import raises
 
 
@@ -180,7 +181,7 @@ def test_PowerBasis_mult_tab():
     # We get the table we expect:
     assert M == exp
     # And all entries are of expected type:
-    assert all(ZZ.of_type(c) for u in M for v in M[u] for c in M[u][v])
+    assert all(is_int(c) for u in M for v in M[u] for c in M[u][v])
 
 
 def test_PowerBasis_represent():
@@ -358,21 +359,21 @@ def test_Submodule_mul():
 
 
 def test_is_HNF():
-    M = DomainMatrix([
+    M = DM([
         [3, 2, 1],
         [0, 2, 1],
         [0, 0, 1]
-    ], (3, 3), ZZ)
-    M1 = DomainMatrix([
+    ], ZZ)
+    M1 = DM([
         [3, 2, 1],
         [0, -2, 1],
         [0, 0, 1]
-    ], (3, 3), ZZ)
-    M2 = DomainMatrix([
+    ], ZZ)
+    M2 = DM([
         [3, 2, 3],
         [0, 2, 1],
         [0, 0, 1]
-    ], (3, 3), ZZ)
+    ], ZZ)
     assert is_HNF(M) is True
     assert is_HNF(M1) is False
     assert is_HNF(M2) is False
@@ -410,12 +411,12 @@ def test_HNF_pb_elt_from_col():
 def test_make_submodule():
     T = Poly(cyclotomic_poly(5, x))
     A = PowerBasis(T)
-    M = DomainMatrix([
+    M = DM([
         [4, 0, 0, 2],
         [0, 4, 0, 0],
         [0, 0, 1, 0],
         [0, 0, 0, 1]
-    ], (4, 4), ZZ)
+    ], ZZ)
     B = make_submodule(A, M, denom=1)
     C = make_submodule(A, M, denom=4)
     D = make_submodule(A, M[:, 1:], denom=1)
