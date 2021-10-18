@@ -220,6 +220,13 @@ def test_piecewise_integrate1b():
         (Min(1, Max(0, y))**2/2 - S.Half, y < 1),
         (y - 1, True))
 
+
+def _condsimp(y, p):
+    # simplify conditions via set
+    return Piecewise(*[(e, c.as_set().as_relational(y))
+        for e, c in p.args])
+
+
 @slow
 def test_piecewise_integrate1ca():
     y = symbols('y', real=True)
@@ -237,14 +244,14 @@ def test_piecewise_integrate1ca():
     assert g.integrate((x, 1, 0)) == g1y.subs(y, 0)
     assert g.integrate((x, 2, 1)) == gy1.subs(y, 2)
     assert g.integrate((x, 1, 2)) == g1y.subs(y, 2)
-    assert piecewise_fold(gy1.rewrite(Piecewise)) == \
-        Piecewise(
+    assert _condsimp(y, piecewise_fold(gy1.rewrite(Piecewise))
+        ) == Piecewise(
             (1, y <= -1),
             (-y**2/2 - y + S.Half, y <= 0),
             (y**2/2 - y + S.Half, y < 1),
             (0, True))
-    assert piecewise_fold(g1y.rewrite(Piecewise)) == \
-        Piecewise(
+    assert _condsimp(y, piecewise_fold(g1y.rewrite(Piecewise))
+        ) == Piecewise(
             (-1, y <= -1),
             (y**2/2 + y - S.Half, y <= 0),
             (-y**2/2 + y - S.Half, y < 1),
@@ -280,14 +287,14 @@ def test_piecewise_integrate1cb():
     assert g.integrate((x, 2, 1)) == gy1.subs(y, 2)
     assert g.integrate((x, 1, 2)) == g1y.subs(y, 2)
 
-    assert piecewise_fold(gy1.rewrite(Piecewise)) == \
-        Piecewise(
+    assert _condsimp(y, piecewise_fold(gy1.rewrite(Piecewise))
+        ) == Piecewise(
             (1, y <= -1),
             (-y**2/2 - y + S.Half, y <= 0),
             (y**2/2 - y + S.Half, y < 1),
             (0, True))
-    assert piecewise_fold(g1y.rewrite(Piecewise)) == \
-        Piecewise(
+    assert _condsimp(y, piecewise_fold(g1y.rewrite(Piecewise))
+        ) == Piecewise(
             (-1, y <= -1),
             (y**2/2 + y - S.Half, y <= 0),
             (-y**2/2 + y - S.Half, y < 1),

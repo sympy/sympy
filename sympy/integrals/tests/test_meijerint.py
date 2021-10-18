@@ -624,11 +624,12 @@ def test_messy():
     assert laplace_transform(Si(x), x, s) == (
         (-atan(s) + pi/2)/s, 0, True)
 
-    assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, s > 1)
+    assert laplace_transform(Shi(x), x, s) == (
+        acoth(s)/s, -oo, s**2 > 1)
 
     # where should the logs be simplified?
-    assert laplace_transform(Chi(x), x, s) == \
-        ((log(s**(-2)) - log(1 - 1/s**2))/(2*s), 1, s > 1)
+    assert laplace_transform(Chi(x), x, s) == (
+        (log(s**(-2)) - log(1 - 1/s**2))/(2*s), -oo, s**2 > 1)
 
     # TODO maybe simplify the inequalities? when the simplification
     # allows for generators instead of symbols this will work

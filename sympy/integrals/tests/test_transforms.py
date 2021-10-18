@@ -12,7 +12,7 @@ from sympy import (
     cos, S, Abs, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
     exp_polar, unpolarify, Function, expint, expand_mul, Rational,
-    gammasimp, trigsimp, atan, sinh, cosh, atan2)
+    gammasimp, trigsimp, atan, sinh, cosh, atan2, Ne)
 from sympy.testing.pytest import XFAIL, slow, skip, raises, warns_deprecated_sympy
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
@@ -459,7 +459,7 @@ def test_laplace_transform():
 
     # test a bug
     spos = symbols('s', positive=True)
-    assert LT(exp(t), t, spos)[:2] == (1/(spos - 1), 1)
+    assert LT(exp(t), t, spos) == (1/(spos - 1), 0, spos > 1)
 
     # basic tests from wikipedia
     assert LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) == \
@@ -472,9 +472,9 @@ def test_laplace_transform():
     assert LT((exp(2*t) - 1)*exp(-b - t)*Heaviside(t)/2, t, s, noconds=True) \
         == exp(-b)/(s**2 - 1)
 
-    assert LT(exp(t), t, s)[:2] == (1/(s - 1), 1)
-    assert LT(exp(2*t), t, s)[:2] == (1/(s - 2), 2)
-    assert LT(exp(a*t), t, s)[:2] == (1/(s - a), a)
+    assert LT(exp(t), t, s) == (1/(s - 1), 0, abs(s) > 1)
+    assert LT(exp(2*t), t, s) == (1/(s - 2), 0, abs(s) > 2)
+    assert LT(exp(a*t), t, s) == (1/(s - a), a, Ne(s/a, 1))
 
     assert LT(log(t/a), t, s) == (-(log(a*s) + EulerGamma)/s, 0, True)
 
@@ -536,14 +536,14 @@ def test_laplace_transform():
     # The default behaviour for Laplace tranform of a Matrix returns a Matrix
     # of Tuples and is deprecated:
     with warns_deprecated_sympy():
-        Ms_conds = Matrix([[(1/(s - 1), 1, s > 1), ((s + 1)**(-2), 0, True)],
-                           [((s + 1)**(-2), 0, True), (1/(s - 1), 1, s > 1)]])
+        Ms_conds = Matrix([[(1/(s - 1), 0, Abs(s) > 1), ((s + 1)**(-2),
+            0, True)], [((s + 1)**(-2), 0, True), (1/(s - 1), 0, Abs(s) > 1)]])
     with warns_deprecated_sympy():
         assert LT(Mt, t, s) == Ms_conds
 
     # The new behavior is to return a tuple of a Matrix and the convergence
     # conditions for the matrix as a whole:
-    assert LT(Mt, t, s, legacy_matrix=False) == (Ms, 1, s > 1)
+    assert LT(Mt, t, s, legacy_matrix=False) == (Ms, 0, Abs(s) > 1)
 
     # With noconds=True the transformed matrix is returned without conditions
     # either way:
@@ -555,12 +555,12 @@ def test_laplace_transform():
 def test_issue_8368t_7173():
     LT = laplace_transform
     # hyperbolic
-    assert LT(sinh(x), x, s) == (1/(s**2 - 1), 1, s > 1)
-    assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, s > 1)
+    assert LT(sinh(x), x, s) == (1/(s**2 - 1), 0, abs(s) > 1)
+    assert LT(cosh(x), x, s) == (s/(s**2 - 1), -oo, s**2 > 1)
     assert LT(sinh(x + 3), x, s) == (
-        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, s > 1)
+        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 0, Abs(s) > 1)
     assert LT(sinh(x)*cosh(x), x, s) == (
-        1/(s**2 - 4), 2, s > 2)
+        1/(s**2 - 4), 0, Abs(s) > 2)
     # trig (make sure they are not being rewritten in terms of exp)
     assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), 0, True)
 

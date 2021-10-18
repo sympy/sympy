@@ -1357,10 +1357,7 @@ def test_issue_8368i():
                             polar_lift(s)**2),
                         True)
                 ),
-                And(
-                    Abs(periodic_argument(polar_lift(s)**2, oo)) < pi,
-                    cos(Abs(periodic_argument(polar_lift(s)**2, oo))/2)*sqrt(Abs(s**2)) - 1 > 0,
-                    Ne(s**2, 1))
+                s**2 > 1
             ),
             (
                 Integral(exp(-s*x)*cosh(x), (x, 0, oo)),
@@ -1369,10 +1366,10 @@ def test_issue_8368i():
         Piecewise(
             (   -1/(s + 1)/2 - 1/(-s + 1)/2,
                 And(
-                    Ne(1/s, 1),
-                    Abs(periodic_argument(s, oo)) < pi/2,
-                    Abs(periodic_argument(s, oo)) <= pi/2,
-                    cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1 > 0)),
+                    Abs(s) > 1,
+                    Abs(arg(s)) < pi/2,
+                    Abs(arg(s)) <= pi/2
+                    )),
             (   Integral(exp(-s*x)*sinh(x), (x, 0, oo)),
                 True))
 
