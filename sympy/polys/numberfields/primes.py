@@ -181,7 +181,7 @@ def prime_valuation(I, P):
 
     n, W, d = ZK.n, ZK.matrix, ZK.denom
 
-    A = W.convert_to(QQ).inv() * I.matrix * d / int(I.denom)
+    A = W.convert_to(QQ).inv() * I.matrix * d / I.denom
     # Although A must have integer entries, given that I is an integral ideal,
     # as a DomainMatrix it will still be over QQ, so we convert back:
     A = A.convert_to(ZZ)

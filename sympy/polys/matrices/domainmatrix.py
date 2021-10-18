@@ -1074,7 +1074,7 @@ class DomainMatrix:
 
     def __truediv__(A, lamda):
         """ Method for Scalar Divison"""
-        if isinstance(lamda, int):
+        if isinstance(lamda, int) or ZZ.of_type(lamda):
             lamda = DomainScalar(ZZ(lamda), ZZ)
 
         if not isinstance(lamda, DomainScalar):

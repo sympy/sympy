@@ -308,11 +308,10 @@ class PowerBasis(Module):
         if f == 0:
             return self.zero()
         d, g = f.clear_denoms()
-        # NOTE: There are several places in this module, such as the following
-        # line, and the final line (where we do `int(d)`), where we seem to be
-        # doing superfluous conversions to `int`. The reason for this is that
-        # if gmpy2 is installed then the type of `ZZ` elements is `mpz`, and we
-        # need to ensure compatibility with that.
+        # NOTE: `Poly` methods like `clear_denoms()` and `all_coeffs()` will
+        # return SymPy's special constants like `One` and `Zero`. When gmpy2
+        # is installed, then `ZZ` will not accept these, so we have to take
+        # care to convert to `int` first.
         c = [int(a) for a in reversed(g.all_coeffs())]
         ell = len(c)
         z = [ZZ(0)] * (n - ell)
@@ -416,9 +415,7 @@ class Submodule(Module, IntegerPowerable):
     def QQ_matrix(self):
         """Matrix over :ref:`QQ`, equal to ``self.matrix / self.denom``, and always dense."""
         if self._QQ_matrix is None:
-            # NOTE: converting denom to `int` is necessary in case gmpy2 is installed,
-            # in which case denom may be an `mpz`.
-            self._QQ_matrix = (self.matrix / int(self.denom)).to_dense()
+            self._QQ_matrix = (self.matrix / self.denom).to_dense()
         return self._QQ_matrix
 
     def starts_with_unity(self):
@@ -640,7 +637,7 @@ def make_submodule(container, matrix, denom=1, mult_tab=None):
     if isinstance(container, PowerBasis):
         n = matrix.shape[1]
         if is_HNF(matrix) and n == container.T.degree():
-            if (matrix / int(denom))[:, 0].to_dense() == DomainMatrix.eye(n, QQ)[:, 0].to_dense():
+            if (matrix / denom)[:, 0].to_dense() == DomainMatrix.eye(n, QQ)[:, 0].to_dense():
                 cls = Order
             else:
                 cls = Ideal
@@ -742,7 +739,7 @@ class ModuleElement(IntegerPowerable):
     def QQ_col(self):
         """Column vector over :ref:`QQ`, equal to ``self.col / self.denom``, and always dense."""
         if self._QQ_col is None:
-            self._QQ_col = (self.col / int(self.denom)).to_dense()
+            self._QQ_col = (self.col / self.denom).to_dense()
         return self._QQ_col
 
     def to_container(self):
