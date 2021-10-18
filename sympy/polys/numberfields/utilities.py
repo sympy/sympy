@@ -136,13 +136,13 @@ class AlgIntPowers:
     >>> from sympy.polys.numberfields.utilities import AlgIntPowers
     >>> T = Poly(cyclotomic_poly(5))
     >>> zeta_pow = AlgIntPowers(T)
-    >>> print(zeta_pow[0])
+    >>> print([int(c) for c in zeta_pow[0]])
     [1, 0, 0, 0]
-    >>> print(zeta_pow[1])
+    >>> print([int(c) for c in zeta_pow[1]])
     [0, 1, 0, 0]
-    >>> print(zeta_pow[4])
+    >>> print([int(c) for c in zeta_pow[4]])
     [-1, -1, -1, -1]
-    >>> print(zeta_pow[24])
+    >>> print([int(c) for c in zeta_pow[24]])
     [-1, -1, -1, -1]
 
     """
