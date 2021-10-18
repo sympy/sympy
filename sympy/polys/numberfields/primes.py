@@ -179,7 +179,7 @@ def prime_valuation(I, P):
     else:
         p, gens, ZK = P
 
-    T, n, W, d = ZK.T, ZK.n, ZK.matrix, ZK.denom
+    n, W, d = ZK.n, ZK.matrix, ZK.denom
 
     A = W.convert_to(QQ).inv() * I.matrix * d / I.denom
     # Although A must have integer entries, given that I is an integral ideal,
