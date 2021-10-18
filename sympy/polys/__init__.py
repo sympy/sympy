@@ -26,7 +26,7 @@ __all__ = [
     'PolificationFailed', 'OptionError', 'FlagError',
 
     'minpoly', 'minimal_polynomial', 'primitive_element', 'field_isomorphism',
-    'to_number_field', 'isolate',
+    'to_number_field', 'isolate', 'round_two', 'prime_decomp', 'prime_valuation',
 
     'itermonomials', 'Monomial',
 
