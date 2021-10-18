@@ -16,7 +16,8 @@ from sympy.stats.joint_rv_types import (JointRV, MultivariateNormalDistribution,
 from sympy.testing.pytest import raises, XFAIL, skip
 from sympy.external import import_module
 
-x, y, z, a, b = symbols('x y z a b')
+from sympy.abc import x, y
+
 
 def test_Normal():
     m = Normal('A', [1, 2], [[1, 0], [0, 1]])
@@ -78,6 +79,7 @@ def test_Normal():
 
     assert density_X_at_obs == expected_density
 
+
 def test_MultivariateTDist():
     t1 = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     assert(density(t1))(1, 1) == 1/(8*pi)
@@ -87,6 +89,7 @@ def test_MultivariateTDist():
     raises(ValueError, lambda: MultivariateT('T', [1, 2], [[1, 1], [1, -1]], 1))
     t2 = MultivariateT('t2', [1, 2], [[x, 0], [0, y]], 1)
     assert density(t2)(1, 2) == 1/(2*pi*sqrt(x*y))
+
 
 def test_multivariate_laplace():
     raises(ValueError, lambda: Laplace('T', [1, 2], [[1, 2], [2, 1]]))
@@ -99,6 +102,7 @@ def test_multivariate_laplace():
     assert L.pspace.distribution.set == ProductSet(S.Reals, S.Reals)
     assert L.pspace.distribution == L2.pspace.distribution
 
+
 def test_NormalGamma():
     ng = NormalGamma('G', 1, 2, 3, 4)
     assert density(ng)(1, 1) == 32*exp(-4)/sqrt(pi)
@@ -108,6 +112,7 @@ def test_NormalGamma():
         3*sqrt(10)*gamma(Rational(7, 4))/(10*sqrt(pi)*gamma(Rational(5, 4)))
     assert marginal_distribution(ng, y)(1) == exp(Rational(-1, 4))/128
     assert marginal_distribution(ng,[0,1])(x) == x**2*exp(-x/4)/128
+
 
 def test_GeneralizedMultivariateLogGammaDistribution():
     h = S.Half
@@ -167,6 +172,7 @@ def test_GeneralizedMultivariateLogGammaDistribution():
     raises(ValueError, lambda: GMVLGO('G', omega_f5, v, l_f5, mu_f5))
     raises(ValueError, lambda: GMVLG('G', Rational(3, 2), v, l, mu))
 
+
 def test_MultivariateBeta():
     a1, a2 = symbols('a1, a2', positive=True)
     a1_f, a2_f = symbols('a1, a2', positive=False, real=True)
@@ -181,6 +187,7 @@ def test_MultivariateBeta():
     raises(ValueError, lambda: MultivariateBeta('b3', [0, 0]))
     raises(ValueError, lambda: MultivariateBeta('b4', [a1_f, a2_f]))
     assert mb.pspace.distribution.set == ProductSet(Interval(0, 1), Interval(0, 1))
+
 
 def test_MultivariateEwens():
     n, theta, i = symbols('n theta i', positive=True)
@@ -212,6 +219,7 @@ def test_MultivariateEwens():
             Eq(n, Sum((k + 1)*a[k], (k, 0, n - 1)))), (0, True))
     assert density(eds)(a).dummy_eq(den)
 
+
 def test_Multinomial():
     n, x1, x2, x3, x4 = symbols('n, x1, x2, x3, x4', nonnegative=True, integer=True)
     p1, p2, p3, p4 = symbols('p1, p2, p3, p4', positive=True)
@@ -230,6 +238,7 @@ def test_Multinomial():
     raises(ValueError, lambda: Multinomial('b2', n_f, [p1, p2, p3, p4]))
     raises(ValueError, lambda: Multinomial('b3', n, 0.5, 0.4, 0.3, 0.1))
 
+
 def test_NegativeMultinomial():
     k0, x1, x2, x3, x4 = symbols('k0, x1, x2, x3, x4', nonnegative=True, integer=True)
     p1, p2, p3, p4 = symbols('p1, p2, p3, p4', positive=True)
@@ -247,6 +256,7 @@ def test_NegativeMultinomial():
     assert N.pspace.distribution.set == ProductSet(Range(0, oo, 1),
                     Range(0, oo, 1), Range(0, oo, 1), Range(0, oo, 1))
 
+
 def test_JointPSpace_marginal_distribution():
     T = MultivariateT('T', [0, 0], [[1, 0], [0, 1]], 2)
     assert marginal_distribution(T, T[1])(x) == sqrt(2)*(x**2 + 2)/(
@@ -256,6 +266,7 @@ def test_JointPSpace_marginal_distribution():
     t = MultivariateT('T', [0, 0, 0], [[1, 0, 0], [0, 1, 0], [0, 0, 1]], 3)
     assert comp(marginal_distribution(t, 0)(1).evalf(), 0.2, .01)
 
+
 def test_JointRV():
     x1, x2 = (Indexed('x', i) for i in (1, 2))
     pdf = exp(-x1**2/2 + x1 - x2**2/2 - S.Half)/(2*pi)
@@ -263,6 +274,7 @@ def test_JointRV():
     assert density(X)(1, 2) == exp(-2)/(2*pi)
     assert isinstance(X.pspace.distribution, JointDistributionHandmade)
     assert marginal_distribution(X, 0)(2) == sqrt(2)*exp(Rational(-1, 2))/(2*sqrt(pi))
+
 
 def test_expectation():
     m = Normal('A', [x, y], [[1, 0], [0, 1]])
@@ -291,6 +303,7 @@ def test_sample_numpy():
                 assert tuple(sam) in X.pspace.distribution.set
         N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
         raises(NotImplementedError, lambda: sample(N_c, library='numpy'))
+
 
 def test_sample_scipy():
     distribs_scipy = [
@@ -333,6 +346,7 @@ def test_sample_pymc3():
                 assert tuple(sam.flatten()) in X.pspace.distribution.set
         N_c = NegativeMultinomial('N', 3, 0.1, 0.1, 0.1)
         raises(NotImplementedError, lambda: sample(N_c, library='pymc3'))
+
 
 def test_sample_seed():
     x1, x2 = (Indexed('x', i) for i in (1, 2))

@@ -1540,7 +1540,7 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
     gamma(a + 1)
 
     >>> integrate(x**a*exp(-x), (x, 0, oo), conds='separate')
-    (gamma(a + 1), -re(a) < 1)
+    (gamma(a + 1), re(a) > -1)
 
     See Also
     ========

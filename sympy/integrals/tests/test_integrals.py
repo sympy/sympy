@@ -9,7 +9,6 @@ from sympy import (
     Float, fresnelc
 )
 from sympy.core.expr import unchanged
-from sympy.functions.elementary.complexes import periodic_argument
 from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
@@ -1343,7 +1342,8 @@ def test_issue_2884():
     assert str(e) == '1.86831064982608*y + 2.16387491480008'
 
 
-def test_issue_8368():
+def test_issue_8368i():
+    from sympy import arg, Abs
     assert integrate(exp(-s*x)*cosh(x), (x, 0, oo)) == \
         Piecewise(
             (   pi*Piecewise(
