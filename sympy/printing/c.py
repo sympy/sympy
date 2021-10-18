@@ -50,6 +50,7 @@ known_functions_C89 = {
     "tanh": "tanh",
     "floor": "floor",
     "ceiling": "ceil",
+    "sqrt": "sqrt", # To enable automatic rewrites
 }
 
 known_functions_C99 = dict(known_functions_C89, **{
