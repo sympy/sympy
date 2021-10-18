@@ -51,8 +51,10 @@ if aesara:
             sympy.StrictLessThan: aet.lt,
             sympy.LessThan: aet.le,
             sympy.GreaterThan: aet.ge,
-            sympy.And: aet.and_,
-            sympy.Or: aet.or_,
+            sympy.And: aet.and_,  # bitwise
+            sympy.Or: aet.or_,  # bitwise
+            sympy.Not: aet.invert,  # bitwise
+            sympy.Xor: aet.xor,  # bitwise
             sympy.Max: aet.maximum,  # Sympy accept >2 inputs, Aesara only 2
             sympy.Min: aet.minimum,  # Sympy accept >2 inputs, Aesara only 2
             sympy.conjugate: aet.conj,
