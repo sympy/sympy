@@ -5,7 +5,7 @@ from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.concrete.gosper import gosper_sum
 from sympy.core.add import Add
 from sympy.core.function import Derivative
-from sympy.core.numbers import Float, Rational
+from sympy.core.numbers import Float
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -24,6 +24,7 @@ from sympy.sets.sets import FiniteSet
 from sympy.simplify import denom
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.powsimp import powsimp
+from sympy.simplify.simplify import nsimplify
 from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.utilities.iterables import sift
@@ -1166,9 +1167,9 @@ def eval_sum_symbolic(f, limits):
     if result is not None:
         n = result[n]
         if isinstance(n, Float):
-            n = Rational(n)
+            n = nsimplify(n)
 
-        if n.is_Integer or n.is_Rational:
+        if n.is_number:
             if n >= 0:
                 if (b is S.Infinity and not a is S.NegativeInfinity) or \
                    (a is S.NegativeInfinity and not b is S.Infinity):

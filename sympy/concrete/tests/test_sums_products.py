@@ -615,6 +615,15 @@ def test_Sum_doit():
     assert Sum(1/(sqrt(x)) - 3, (x, 1, oo)).doit() == -oo
     assert Sum(x**3 - x**2, (x, 1, oo)).doit() == oo
     assert Sum(sqrt(x), (x, 1, 3)).doit() == 1 + sqrt(2) + sqrt(3)
+    assert Sum(x**(-1) , (x, 1, n)).doit() == harmonic(n)
+    assert Sum(x**(-1) , (x, 1, oo)).doit() == oo
+    assert Sum(x**(-S(3)/2) , (x, 1, oo)).doit() == zeta(S(3)/2)
+    assert Sum(x**(-S(3)/2) , (x, 1, n)).doit() == harmonic(n, S(3)/2)
+    assert Sum(x**(-S(3)/2) , (x, 2, n)).doit() == harmonic(n, S(3)/2) - harmonic(1, S(3)/2)
+    assert Sum(x**(-S(3)/2) , (x, 2, oo)).doit() == -harmonic(1, S(3)/2) + zeta(S(3)/2)
+    assert Sum(x**(-2) , (x, 1, oo)).doit() == pi**2/6
+    assert Sum(x**(-3) , (x, 1, oo)).doit() == zeta(3)
+
 
 def test_Product_doit():
     assert Product(n*Integral(a**2), (n, 1, 3)).doit() == 2 * a**9 / 9
