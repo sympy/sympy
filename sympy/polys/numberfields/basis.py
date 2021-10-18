@@ -1,0 +1,199 @@
+"""Computing integral bases for number fields. """
+
+from sympy.polys import Poly
+from sympy.polys.domains import ZZ
+from sympy.utilities import public
+from .modules import ModuleEndomorphism, ModuleHomomorphism, Order, PowerBasis
+from .utilities import extract_fundamental_discriminant
+
+
+def _apply_Dedekind_criterion(T, p):
+    """
+    Apply the "Dedekind criterion" to test whether the order needs to be
+    enlarged relative to a given prime *p*.
+    """
+    x = T.gen
+    T_bar = Poly(T, modulus=p)
+    lc, fl = T_bar.factor_list()
+    assert lc == 1
+    g_bar = Poly(1, x, modulus=p)
+    for ti_bar, _ in fl:
+        g_bar *= ti_bar
+    h_bar = T_bar // g_bar
+    g = Poly(g_bar, domain=ZZ)
+    h = Poly(h_bar, domain=ZZ)
+    f = (g * h - T) // p
+    f_bar = Poly(f, modulus=p)
+    Z_bar = f_bar
+    for b in [g_bar, h_bar]:
+        Z_bar = Z_bar.gcd(b)
+    U_bar = T_bar // Z_bar
+    m = Z_bar.degree()
+    return U_bar, m
+
+
+def nilradical_mod_p(H, p, q=None):
+    r"""
+    Compute the nilradical mod *p* for a given order *H*, and prime *p*.
+    This is the ideal $I$ in $H/pH$ consisting of all elements some positive power
+    of which is zero in this quotient ring, i.e. is a multiple of *p*.
+
+    Parameters
+    ==========
+    H: HNF instance representing the order
+    p: rational prime
+    q: (optional) If known, the smallest power of *p* that is ``>=`` the dimension
+      of *H*. If not provided, we compute it here.
+
+    Returns
+    =======
+    Module representing the nilradical mod *p* in *H*.
+
+    References
+    ==========
+
+    [1] Cohen, H. *A Course in Computational Algebraic Number Theory*.
+    (See Lemma 6.1.6.)
+
+    """
+    n = H.n
+    if q is None:
+        q = p
+        while q < n:
+            q *= p
+    phi = ModuleEndomorphism(H, lambda x: x**q)
+    return phi.kernel(modulus=p)
+
+
+def _second_enlargement(H, p, q):
+    """
+    Perform the second enlargement in the Round Two algorithm.
+    """
+    Ip = nilradical_mod_p(H, p, q=q)
+    B = H.container.submodule_from_matrix(H.matrix * Ip.matrix, denom=H.denom)
+    C = B + p*H
+    E = C.endomorphism_ring()
+    phi = ModuleHomomorphism(H, E, lambda x: E.inner_endomorphism(x))
+    gamma = phi.kernel(modulus=p)
+    G = H.container.submodule_from_matrix(H.matrix * gamma.matrix, denom=H.denom * p)
+    H1 = G + H
+    return H1, Ip
+
+
+@public
+def round_two(T, radicals=None):
+    r"""
+    Zassenhaus's "Round 2" algorithm.
+
+    Explanation
+    ===========
+
+    Carry out Zassenhaus's "Round 2" algorithm on a monic irreducible polynomial
+    *T* over :ref:`ZZ`. This computes an integral basis and the discriminant for
+    the field $K = \mathbb{Q}[x]/(T(x))$.
+
+    Ordinarily this function need not be called directly, as one can instead
+    access the ``maximal_order``, ``integral_basis``, and ``discriminant``
+    properties of an :py:class:`AlgebraicField`.
+
+    Parameters
+    ==========
+
+    T: minimal monic polynomial over :ref:`ZZ` defining the number field.
+
+    radicals: optional way for any $p$-radicals (if computed) to be returned by
+      reference. If desired, pass an empty dictionary. If the algorithm reaches
+      the point where it computes the nilradical mod $p$ of the ring of integers
+      $Z_K$, then an $\mathbb{F}_p$-basis for this ideal will be stored in this
+      dictionary under the key ``p``. This can be useful for other algorithms,
+      such as prime decomposition.
+
+    Returns
+    =======
+
+    Pair ``(ZK, dK)``, where:
+      ``ZK`` is an :py:class:`Order` representing the integral basis.
+      ``dK`` is the discriminant of the field $K = \mathbb{Q}[x]/(T(x))$.
+
+    Examples
+    ========
+
+    Calling directly:
+    >>> from sympy import Poly
+    >>> from sympy.abc import x
+    >>> from sympy.polys.numberfields.basis import round_two
+    >>> T = Poly(x ** 3 + x ** 2 - 2 * x + 8)
+    >>> print(round_two(T))
+    (cols[[2, 0, 0], [0, 2, 0], [0, 1, 1]]/2, -503)
+
+    Working through an AlgebraicField:
+    >>> from sympy import Poly, QQ
+    >>> from sympy.abc import x, theta
+    >>> T = Poly(x ** 3 + x ** 2 - 2 * x + 8)
+    >>> K = QQ.algebraic_field((T, theta))
+    >>> print(K.maximal_order())
+    cols[[2, 0, 0], [0, 2, 0], [0, 1, 1]]/2
+    >>> print(K.discriminant())
+    -503
+    >>> print(K.integral_basis())
+    DomainMatrix([[1, 0, 0], [0, 1, 1/2], [0, 0, 1/2]], (3, 3), QQ)
+
+    References
+    ==========
+
+    [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
+
+    """
+    if (   not T.is_univariate
+        or not T.is_irreducible
+        or not T.is_monic
+        or not T.domain == ZZ):
+        raise ValueError('Round 2 requires a monic irreducible univariate polynomial over ZZ.')
+    n = T.degree()
+    D = T.discriminant()
+    # D must be 0 or 1 mod 4 (see Cohen Sec 4.4), which ensures we can write
+    # it in the form D = D_0 * F**2, where D_0 is 1 or a fundamental discriminant.
+    _, F = extract_fundamental_discriminant(D)
+    Ztheta = PowerBasis(T)
+    H = Ztheta.whole_submodule()
+    nilrad = None
+    while F:
+        # Next prime:
+        for p in F: break
+        U_bar, m = _apply_Dedekind_criterion(T, p)
+        if m == 0:
+            del F[p]
+            continue
+        # For a given prime p, the first enlargement of the order spanned by
+        # the current basis can be done in a simple way:
+        U = Ztheta.element_from_poly(Poly(U_bar, domain=ZZ))
+        # TODO:
+        #  Theory says only first m columns of the U//p*H term below are needed.
+        #  Could be slightly more efficient to use only those. Maybe `Submodule`
+        #  class should support a slice operator?
+        H = H.add(U // p * H, hnf_modulus=D)
+        if F[p] <= m:
+            del F[p]
+            continue
+        # A second, and possibly more, enlargements for p will be needed.
+        # These enlargements require a more involved procedure.
+        q = p
+        while q < n:
+            q *= p
+        H1, nilrad = _second_enlargement(H, p, q)
+        while H1 != H:
+            H = H1
+            H1, nilrad = _second_enlargement(H, p, q)
+        del F[p]
+    # Note: We do not store all nilradicals mod p, only the very last. This is
+    # because, unless computed against the entire integral basis, it might not
+    # be accurate. (In other words, if H was not already equal to ZK when we
+    # passed it to `_second_enlargement`, then we can't trust the nilradical
+    # so computed.) Example: if T(x) = x ** 3 + 15 * x ** 2 - 9 * x + 13, then
+    # F is divisible by 2, 3, and 7, and the nilradical mod 2 as computed above
+    # will not be accurate for the full, maximal order ZK.
+    if nilrad is not None and isinstance(radicals, dict):
+        radicals[p] = nilrad
+    ZK = Order.from_submodule(H)
+    dK = (D * ZK.matrix.det() ** 2) // ZK.denom ** (2 * n)
+    return ZK, dK

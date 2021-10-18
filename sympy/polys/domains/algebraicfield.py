@@ -253,6 +253,10 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         self.zero = self.dtype.zero(self.mod.rep, dom)
         self.one = self.dtype.one(self.mod.rep, dom)
 
+        self._maximal_order = None
+        self._discriminant = None
+        self._nilradicals_mod_p = {}
+
     def new(self, element):
         return self.dtype(element, self.mod.rep, self.dom)
 
@@ -361,6 +365,58 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     def from_GaussianRationalField(K1, a, K0):
         """Convert a GaussianRational element 'a' to ``dtype``. """
         return K1.from_sympy(K0.to_sympy(a))
+
+    def _do_round_two(self):
+        from sympy.polys.numberfields.basis import round_two
+        ZK, dK = round_two(self.ext.minpoly, radicals=self._nilradicals_mod_p)
+        self._maximal_order = ZK
+        self._discriminant = dK
+
+    def maximal_order(self):
+        """
+        Get an integral basis for the field, as an Order.
+
+        See Also
+        ========
+
+        integral_basis()
+
+        """
+        if self._maximal_order is None:
+            self._do_round_two()
+        return self._maximal_order
+
+    def integral_basis(self):
+        r"""
+        Get an integral basis for the field.
+
+        If the field is of degree $n$ and $\theta$ is a primitive element, then
+        the basis is returned in the form of an upper triangular $n \times n$
+        matrix over domain :ref:`QQ`, whose column vectors represent the basis
+        elements as linear combinations over $\{1, \theta, \ldots, \theta^{n-1}\}$.
+
+        See Also
+        ========
+
+        maximal_order()
+
+        """
+        ZK = self.maximal_order()
+        return ZK.QQ_matrix
+
+    def discriminant(self):
+        """Get the discriminant of the field."""
+        if self._discriminant is None:
+            self._do_round_two()
+        return self._discriminant
+
+    def primes_above(self, p):
+        """Compute the prime ideals lying above a given rational prime *p*."""
+        from sympy.polys.numberfields.primes import prime_decomp
+        ZK = self.maximal_order()
+        dK = self.discriminant()
+        rad = self._nilradicals_mod_p.get(p)
+        return prime_decomp(p, ZK=ZK, dK=dK, radical=rad)
 
 
 def _make_converter(K):
