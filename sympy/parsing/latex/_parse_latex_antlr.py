@@ -94,17 +94,17 @@ def convert_relation(rel):
     lh = convert_relation(rel.relation(0))
     rh = convert_relation(rel.relation(1))
     if rel.LT():
-        return sympy.StrictLessThan(lh, rh)
+        return sympy.StrictLessThan(lh, rh, evaluate=False)
     elif rel.LTE():
-        return sympy.LessThan(lh, rh)
+        return sympy.LessThan(lh, rh, evaluate=False)
     elif rel.GT():
-        return sympy.StrictGreaterThan(lh, rh)
+        return sympy.StrictGreaterThan(lh, rh, evaluate=False)
     elif rel.GTE():
-        return sympy.GreaterThan(lh, rh)
+        return sympy.GreaterThan(lh, rh, evaluate=False)
     elif rel.EQUAL():
-        return sympy.Eq(lh, rh)
+        return sympy.Eq(lh, rh, evaluate=False)
     elif rel.NEQ():
-        return sympy.Ne(lh, rh)
+        return sympy.Ne(lh, rh, evaluate=False)
 
 
 def convert_expr(expr):
