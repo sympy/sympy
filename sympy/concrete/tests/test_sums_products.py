@@ -938,11 +938,13 @@ def test_issue_2787():
     res = s.doit().simplify()
     assert res == Piecewise(
         (n*p, p/Abs(p - 1) <= 1),
-        ((-p + 1)**n*Sum(k*p**k*(-p + 1)**(-k)*binomial(n, k), (k, 0, n)),
+        ((-p + 1)**n*Sum(k*p**k*binomial(n, k)/(-p + 1)**(k), (k, 0, n)),
         True))
-    # Issue #17165: make sure that another simplify does not change/increase
-    # the result
-    assert res == res.simplify()
+    # Issue #17165: make sure that another simplify does not complicate
+    # the result (but why didn't first simplify handle this?)
+    assert res.simplify() == Piecewise((n*p, p <= S.Half),
+        ((1 - p)**n*Sum(k*p**k*binomial(n, k)/(1 - p)**k,
+        (k, 0, n)), True))
 
 
 def test_issue_4668():
@@ -1359,9 +1361,9 @@ def test_issue_17165():
     s = (x*Sum(x**n, (n, -1, oo)))
     ssimp = s.doit().simplify()
 
-    assert ssimp == Piecewise((-1/(x - 1), Abs(x) < 1),
-                              (x*Sum(x**n, (n, -1, oo)), True))
-    assert ssimp == ssimp.simplify()
+    assert ssimp == Piecewise((-1/(x - 1), (x > -1) & (x < 1)),
+                              (x*Sum(x**n, (n, -1, oo)), True)), ssimp
+    assert ssimp.simplify() == ssimp
 
 
 def test_issue_19379():
