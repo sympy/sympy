@@ -2474,7 +2474,7 @@ def linear_eq_to_matrix(equations, *symbols):
     r"""
     Converts a given System of Equations into Matrix form.
     Here `equations` must be a linear system of equations in
-    `symbols`. Element M[i, j] corresponds to the coefficient
+    `symbols`. Element ``M[i, j]`` corresponds to the coefficient
     of the jth symbol in the ith equation.
 
     The Matrix form corresponds to the augmented matrix form.
@@ -2484,16 +2484,18 @@ def linear_eq_to_matrix(equations, *symbols):
     .. math:: 3x +  y +  z  = -6
     .. math:: 2x + 4y + 9z  = 2
 
-    This system would return `A` & `b` as given below:
+    This system will return $A$ and $b$ as:
 
-    ::
-
-         [ 4  2  3 ]          [ 1 ]
-     A = [ 3  1  1 ]   b  =   [-6 ]
-         [ 2  4  9 ]          [ 2 ]
+    $$ A = \begin{bmatrix}
+        4 & 2 & 3 \\
+        3 & 1 & 1 \\
+        2 & 4 & 9
+        \end{bmatrix} \ \  b = \begin{bmatrix}
+        1 \\ -6 \\ 2
+        \end{bmatrix} $$
 
     The only simplification performed is to convert
-    `Eq(a, b) -> a - b`.
+    ``Eq(a, b)`` $\Rightarrow a - b$.
 
     Raises
     ======
@@ -2588,43 +2590,55 @@ def linear_eq_to_matrix(equations, *symbols):
 
 def linsolve(system, *symbols):
     r"""
-    Solve system of N linear equations with M variables; both
+    Solve system of $N$ linear equations with $M$ variables; both
     underdetermined and overdetermined systems are supported.
     The possible number of solutions is zero, one or infinite.
     Zero solutions throws a ValueError, whereas infinite
     solutions are represented parametrically in terms of the given
-    symbols. For unique solution a FiniteSet of ordered tuples
+    symbols. For unique solution a :class:`~.FiniteSet` of ordered tuples
     is returned.
 
-    All Standard input formats are supported:
-    For the given set of Equations, the respective input types
+    All standard input formats are supported:
+    For the given set of equations, the respective input types
     are given below:
 
     .. math:: 3x + 2y -   z = 1
     .. math:: 2x - 2y + 4z = -2
     .. math:: 2x -   y + 2z = 0
 
-    * Augmented Matrix Form, `system` given below:
+    * Augmented matrix form, ``system`` given below:
+
+    $$ \text{system} = \begin{bmatrix}
+        3 &  2 & -1 &  1\\
+        2 & -2 &  4 & -2\\
+        2 & -1 &  2 &  0
+        \end{bmatrix} $$
 
     ::
 
-              [3   2  -1  1]
-     system = [2  -2   4 -2]
-              [2  -1   2  0]
+        system = Matrix([[3, 2, -1, 1], [2, -2, 4, -2], [2, -1, 2, 0]])
 
-    * List Of Equations Form
-
-    `system  =  [3x + 2y - z - 1, 2x - 2y + 4z + 2, 2x - y + 2z]`
-
-    * Input A & b Matrix Form (from Ax = b) are given as below:
+    * List of equations form
 
     ::
 
-         [3   2  -1 ]         [  1 ]
-     A = [2  -2   4 ]    b =  [ -2 ]
-         [2  -1   2 ]         [  0 ]
+        system  =  [3x + 2y - z - 1, 2x - 2y + 4z + 2, 2x - y + 2z]
 
-    `system = (A, b)`
+    * Input $A$ and $b$ in matrix form (from $Ax = b$) are given as below:
+
+    $$ A = \begin{bmatrix}
+        3 &  2 & -1 \\
+        2 & -2 &  4 \\
+        2 & -1 &  2
+        \end{bmatrix} \ \  b = \begin{bmatrix}
+        1 \\ -2 \\ 0
+        \end{bmatrix} $$
+
+    ::
+
+        A = Matrix([[3, 2, -1], [2, -2, 4], [2, -1, 2]])
+        b = Matrix([[1], [-2], [0]])
+        system = (A, b)
 
     Symbols can always be passed but are actually only needed
     when 1) a system of equations is being passed and 2) the
@@ -2687,19 +2701,19 @@ def linsolve(system, *symbols):
     {(z - 1, 2 - 2*z, z)}
 
     If no symbols are given, internally generated symbols will be used.
-    The `tau0` in the 3rd position indicates (as before) that the 3rd
-    variable -- whatever it's named -- can take on any value:
+    The ``tau0`` in the third position indicates (as before) that the third
+    variable -- whatever it is named -- can take on any value:
 
     >>> linsolve((A, b))
     {(tau0 - 1, 2 - 2*tau0, tau0)}
 
-    * List of Equations as input
+    * List of equations as input
 
     >>> Eqns = [3*x + 2*y - z - 1, 2*x - 2*y + 4*z + 2, - x + y/2 - z]
     >>> linsolve(Eqns, x, y, z)
     {(1, -2, -2)}
 
-    * Augmented Matrix as input
+    * Augmented matrix as input
 
     >>> aug = Matrix([[2, 1, 3, 1], [2, 6, 8, 3], [6, 8, 18, 5]])
     >>> aug
@@ -2852,7 +2866,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                  exclude=[], all_symbols=None):
     r"""
      Solves the `system` using substitution method. It is used in
-     `nonlinsolve`. This will be called from `nonlinsolve` when any
+     :func:`~.nonlinsolve`. This will be called from :func:`~.nonlinsolve` when any
      equation(s) is non polynomial equation.
 
     Parameters
@@ -2897,7 +2911,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         The input is not valid.
         The symbols are not given.
     AttributeError
-        The input symbols are not `Symbol` type.
+        The input symbols are not :class:`~.Symbol` type.
 
     Examples
     ========
@@ -2908,7 +2922,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     >>> substitution([x + y], [x], [{y: 1}], [y], set([]), [x, y])
     {(-1, 1)}
 
-    * when you want soln should not satisfy eq `x + 1 = 0`
+    * When you want a soln not satisfying $x + 1 = 0$
 
     >>> substitution([x + y], [x], [{y: 1}], [y], set([x + 1]), [y, x])
     EmptySet
@@ -3193,7 +3207,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     def _solve_using_known_values(result, solver):
         """Solves the system using already known solution
         (result contains the dict <symbol: value>).
-        solver is `solveset_complex` or `solveset_real`.
+        solver is :func:`~.solveset_complex` or :func:`~.solveset_real`.
         """
         # stores imageset <expr: imageset(Lambda(n, expr), base)>.
         soln_imageset = {}
@@ -3469,7 +3483,7 @@ def _separate_poly_nonpoly(system, symbols):
 
 def nonlinsolve(system, *symbols):
     r"""
-    Solve system of N nonlinear equations with M variables, which means both
+    Solve system of $N$ nonlinear equations with $M$ variables, which means both
     under and overdetermined systems are supported. Positive dimensional
     system is also supported (A system with infinitely many solutions is said
     to be positive-dimensional). In Positive dimensional system solution will
@@ -3502,14 +3516,15 @@ def nonlinsolve(system, *symbols):
     significance except for the fact it is just used to maintain a consistent
     output format throughout the solveset.
 
-    For the given set of Equations, the respective input types
+    For the given set of equations, the respective input types
     are given below:
 
     .. math:: x*y - 1 = 0
     .. math:: 4*x**2 + y**2 - 5 = 0
 
-    `system  = [x*y - 1, 4*x**2 + y**2 - 5]`
-    `symbols = [x, y]`
+    ::
+       system  = [x*y - 1, 4*x**2 + y**2 - 5]
+       symbols = [x, y]
 
     Raises
     ======
@@ -3549,7 +3564,7 @@ def nonlinsolve(system, *symbols):
     {(2 - y, y)}
 
     2. If some of the equations are non-polynomial then `nonlinsolve`
-    will call the `substitution` function and return real and complex solutions,
+    will call the ``substitution`` function and return real and complex solutions,
     if present.
 
     >>> from sympy import exp, sin
@@ -3565,17 +3580,17 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve([x**2 - 2*y**2 -2, x*y - 2], [x, y])
     {(-2, -1), (2, 1), (-sqrt(2)*I, sqrt(2)*I), (sqrt(2)*I, -sqrt(2)*I)}
 
-    4. `nonlinsolve` can solve some linear (zero or positive dimensional)
-    system (because it uses the `groebner` function to get the
-    groebner basis and then uses the `substitution` function basis as the
+    4. ``nonlinsolve`` can solve some linear (zero or positive dimensional)
+    system (because it uses the :func:`sympy.polys.polytools.groebner` function to get the
+    groebner basis and then uses the ``substitution`` function basis as the
     new `system`). But it is not recommended to solve linear system using
-    `nonlinsolve`, because `linsolve` is better for general linear systems.
+    ``nonlinsolve``, because :func:`~.linsolve` is better for general linear systems.
 
     >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9, y + z - 4], [x, y, z])
     {(3*z - 5, 4 - z, z)}
 
     5. System having polynomial equations and only real solution is
-    solved using `solve_poly_system`:
+    solved using :func:`~.solve_poly_system`:
 
     >>> e1 = sqrt(x**2 + y**2) - 10
     >>> e2 = sqrt(y**2 + (-x + 10)**2) - 3
@@ -3586,15 +3601,15 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [y, x])
     {(2, 1), (2 - sqrt(5), 1 + sqrt(5)), (2 + sqrt(5), 1 - sqrt(5))}
 
-    6. It is better to use symbols instead of Trigonometric Function or
-    Function (e.g. replace `sin(x)` with symbol, replace `f(x)` with symbol
-    and so on. Get soln from `nonlinsolve` and then using `solveset` get
-    the value of `x`)
+    6. It is better to use symbols instead of trigonometric functions or
+    :class:`~.Function`. For example, replace $\sin(x)$ with a symbol, replace
+    $f(x)$ with a symbol and so on. Get a solution from ``nonlinsolve`` and then
+    use :func:`~.solveset` to get the value of $x$.
 
     How nonlinsolve is better than old solver `_solve_system` :
     ===========================================================
 
-    1. A positive dimensional system solver : nonlinsolve can return
+    1. A positive dimensional system solver: nonlinsolve can return
     solution for positive dimensional system. It finds the
     Groebner Basis of the positive dimensional system(calling it as
     basis) then we can start solving equation(having least number of
@@ -3603,23 +3618,22 @@ def nonlinsolve(system, *symbols):
     terms of minimum variables. Here the important thing is how we
     are substituting the known values and in which equations.
 
-    2. Real and Complex both solutions : nonlinsolve returns both real
+    2. Real and complex solutions: nonlinsolve returns both real
     and complex solution. If all the equations in the system are polynomial
-    then using `solve_poly_system` both real and complex solution is returned.
+    then using :func:`~.solve_poly_system` both real and complex solution is returned.
     If all the equations in the system are not polynomial equation then goes to
-    `substitution` method with this polynomial and non polynomial equation(s),
+    ``substitution`` method with this polynomial and non polynomial equation(s),
     to solve for unsolved variables. Here to solve for particular variable
     solveset_real and solveset_complex is used. For both real and complex
-    solution function `_solve_using_know_values` is used inside `substitution`
-    function.(`substitution` function will be called when there is any non
-    polynomial equation(s) is present). When solution is valid then add its
-    general solution in the final result.
+    solution ``_solve_using_know_values`` is used inside ``substitution``
+    (``substitution`` will be called when any non-polynomial equation is present).
+    If a solution is valid its general solution is added to the final result.
 
-    3. Complement and Intersection will be added if any : nonlinsolve maintains
-    dict for complements and Intersections. If solveset find complements or/and
-    Intersection with any Interval or set during the execution of
-    `substitution` function, then complement or/and Intersection for that
-    variable is added before returning final solution.
+    3. :class:`~.Complement` and :class:`~.Intersection` will be added:
+    nonlinsolve maintains dict for complements and intersections. If solveset
+    find complements or/and intersections with any interval or set during the
+    execution of ``substitution`` function, then complement or/and
+    intersection for that variable is added before returning final solution.
 
     """
     from sympy.polys.polytools import is_zero_dimensional
