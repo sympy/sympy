@@ -709,6 +709,10 @@ class Unequality(Relational):
             return self.func(*eq.args)
         return eq.negated  # result of Ne is the negated Eq
 
+    def _eval_as_set(self):
+        from sympy.sets.sets import Complement
+        return Complement(S.UniversalSet, Eq(*self.args).as_set())
+
 
 Ne = Unequality
 

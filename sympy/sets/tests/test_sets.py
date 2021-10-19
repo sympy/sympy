@@ -937,6 +937,7 @@ def test_Complement_as_relational():
     expr = Complement(Interval(0, 1), FiniteSet(2), evaluate=False)
     assert expr.as_relational(x) == \
         And(Le(0, x), Le(x, 1), Ne(x, 2))
+    assert Complement(S.UniversalSet, {1}).as_relational(x) == Ne(x, 1)
 
 
 @XFAIL
