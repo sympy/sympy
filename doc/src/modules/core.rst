@@ -577,6 +577,10 @@ bottom_up
 ^^^^^^^^^
 .. autofunction:: bottom_up
 
+postorder_traversal
+^^^^^^^^^^^^^^^^^^^
+.. autofunction:: postorder_traversal
+
 preorder_traversal
 ^^^^^^^^^^^^^^^^^^
 .. autofunction:: preorder_traversal

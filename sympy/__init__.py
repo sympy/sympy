@@ -60,7 +60,8 @@ from .core import (sympify, SympifyError, cacheit, Basic, Atom,
         expand_func, expand_trig, expand_complex, expand_multinomial, nfloat,
         expand_power_base, expand_power_exp, arity, PrecisionExhausted, N,
         evalf, Tuple, Dict, gcd_terms, factor_terms, factor_nc, evaluate,
-        Catalan, EulerGamma, GoldenRatio, TribonacciConstant, bottom_up, use)
+        Catalan, EulerGamma, GoldenRatio, TribonacciConstant, bottom_up, use,
+        postorder_traversal)
 
 from .logic import (to_cnf, to_dnf, to_nnf, And, Or, Not, Xor, Nand, Nor,
         Implies, Equivalent, ITE, POSform, SOPform, simplify_logic, bool_map,
@@ -199,7 +200,7 @@ from .geometry import (Point, Point2D, Point3D, Line, Ray, Segment, Line2D,
         GeometryError, Curve, Parabola)
 
 from .utilities import (flatten, group, take, subsets, variations,
-        numbered_symbols, cartes, capture, dict_merge, postorder_traversal,
+        numbered_symbols, cartes, capture, dict_merge,
         interactive_traversal, prefixes, postfixes, sift, topological_sort,
         unflatten, has_dups, has_variety, reshape, default_sort_key, ordered,
         rotations, filldedent, lambdify, source, threaded, xthreaded, public,

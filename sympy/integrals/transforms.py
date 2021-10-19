@@ -11,6 +11,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import igcd, ilcm
 from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality
 from sympy.core.symbol import Dummy, symbols, Wild
+from sympy.core.traversal import postorder_traversal
 from sympy.functions.combinatorial.factorials import factorial, rf
 from sympy.functions.elementary.complexes import (re, arg, Abs, polar_lift,
                                                   periodic_argument)
@@ -841,7 +842,6 @@ class InverseMellinTransform(IntegralTransform):
         return a, b
 
     def _compute_transform(self, F, s, x, **hints):
-        from sympy.utilities.iterables import postorder_traversal
         global _allowed
         if _allowed is None:
             _allowed = {

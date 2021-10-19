@@ -7,11 +7,14 @@ from itertools import product as cartes # noqa: F401
 import random
 from operator import gt
 
-from sympy.core import Basic
+from sympy.core.basic import Basic
+from sympy.core.decorators import deprecated
+from sympy.core.traversal import postorder_traversal as _postorder_traversal
+
 
 # this is the logical location of these functions
-from sympy.core.compatibility import (as_int, is_sequence, iterable, ordered)
-from sympy.core.compatibility import default_sort_key  # noqa: F401
+from sympy.core.compatibility import as_int, is_sequence, ordered
+from sympy.core.compatibility import iterable, default_sort_key  # noqa: F401
 
 from sympy.utilities.enumerative import (
     multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
@@ -53,7 +56,7 @@ def is_palindromic(s, i=0, j=None):
     return all(s[i + k] == s[j - 1 - k] for k in range(m))
 
 
-def flatten(iterable, levels=None, cls=None):
+def flatten(iterable, levels=None, cls=None):  # noqa: F811
     """
     Recursively denest iterable containers.
 
@@ -321,62 +324,6 @@ def multiset(seq):
         rv[s] += 1
     return dict(rv)
 
-
-def postorder_traversal(node, keys=None):
-    """
-    Do a postorder traversal of a tree.
-
-    This generator recursively yields nodes that it has visited in a postorder
-    fashion. That is, it descends through the tree depth-first to yield all of
-    a node's children's postorder traversal before yielding the node itself.
-
-    Parameters
-    ==========
-
-    node : sympy expression
-        The expression to traverse.
-    keys : (default None) sort key(s)
-        The key(s) used to sort args of Basic objects. When None, args of Basic
-        objects are processed in arbitrary order. If key is defined, it will
-        be passed along to ordered() as the only key(s) to use to sort the
-        arguments; if ``key`` is simply True then the default keys of
-        ``ordered`` will be used (node count and default_sort_key).
-
-    Yields
-    ======
-    subtree : sympy expression
-        All of the subtrees in the tree.
-
-    Examples
-    ========
-
-    >>> from sympy.utilities.iterables import postorder_traversal
-    >>> from sympy.abc import w, x, y, z
-
-    The nodes are returned in the order that they are encountered unless key
-    is given; simply passing key=True will guarantee that the traversal is
-    unique.
-
-    >>> list(postorder_traversal(w + (x + y)*z)) # doctest: +SKIP
-    [z, y, x, x + y, z*(x + y), w, w + z*(x + y)]
-    >>> list(postorder_traversal(w + (x + y)*z, keys=True))
-    [w, z, x, y, x + y, z*(x + y), w + z*(x + y)]
-
-
-    """
-    if isinstance(node, Basic):
-        args = node.args
-        if keys:
-            if keys != True:
-                args = ordered(args, keys, default=False)
-            else:
-                args = ordered(args)
-        for arg in args:
-            yield from postorder_traversal(arg, keys)
-    elif iterable(node):
-        for item in node:
-            yield from postorder_traversal(item, keys)
-    yield node
 
 
 def interactive_traversal(expr):
@@ -2723,3 +2670,8 @@ def roundrobin(*iterables):
         except StopIteration:
             pending -= 1
             nexts = itertools.cycle(itertools.islice(nexts, pending))
+
+
+postorder_traversal = deprecated(
+    useinstead="sympy.core.traversal.postorder_traversal",
+    deprecated_since_version="1.10", issue=22288)(_postorder_traversal)
