@@ -28,12 +28,12 @@ class ArraySymbol(_ArrayExpr):
     Symbol representing an array expression
     """
 
-    def __new__(cls, symbol, *shape):
+    def __new__(cls, symbol, shape):
         if isinstance(symbol, str):
             symbol = Symbol(symbol)
         # symbol = _sympify(symbol)
-        shape = map(_sympify, shape)
-        obj = Expr.__new__(cls, symbol, *shape)
+        shape = Tuple(*map(_sympify, shape))
+        obj = Expr.__new__(cls, symbol, shape)
         return obj
 
     @property
@@ -42,7 +42,7 @@ class ArraySymbol(_ArrayExpr):
 
     @property
     def shape(self):
-        return self._args[1:]
+        return self._args[1]
 
     def __getitem__(self, item):
         return ArrayElement(self, item)

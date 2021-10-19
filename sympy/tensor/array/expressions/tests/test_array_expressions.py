@@ -11,27 +11,27 @@ from sympy.testing.pytest import raises
 i, j, k, l, m, n = symbols("i j k l m n")
 
 
-M = ArraySymbol("M", k, k)
-N = ArraySymbol("N", k, k)
-P = ArraySymbol("P", k, k)
-Q = ArraySymbol("Q", k, k)
+M = ArraySymbol("M", (k, k))
+N = ArraySymbol("N", (k, k))
+P = ArraySymbol("P", (k, k))
+Q = ArraySymbol("Q", (k, k))
 
-A = ArraySymbol("A", k, k)
-B = ArraySymbol("B", k, k)
-C = ArraySymbol("C", k, k)
-D = ArraySymbol("D", k, k)
+A = ArraySymbol("A", (k, k))
+B = ArraySymbol("B", (k, k))
+C = ArraySymbol("C", (k, k))
+D = ArraySymbol("D", (k, k))
 
-X = ArraySymbol("X", k, k)
-Y = ArraySymbol("Y", k, k)
+X = ArraySymbol("X", (k, k))
+Y = ArraySymbol("Y", (k, k))
 
-a = ArraySymbol("a", k, 1)
-b = ArraySymbol("b", k, 1)
-c = ArraySymbol("c", k, 1)
-d = ArraySymbol("d", k, 1)
+a = ArraySymbol("a", (k, 1))
+b = ArraySymbol("b", (k, 1))
+c = ArraySymbol("c", (k, 1))
+d = ArraySymbol("d", (k, 1))
 
 
 def test_array_symbol_and_element():
-    A = ArraySymbol("A", 2)
+    A = ArraySymbol("A", (2,))
     A0 = ArrayElement(A, (0,))
     A1 = ArrayElement(A, (1,))
     assert A.as_explicit() == ImmutableDenseNDimArray([A0, A1])
@@ -45,7 +45,7 @@ def test_array_symbol_and_element():
     # TODO: not yet supported:
     # assert A3.as_explicit() == Array([])
 
-    A = ArraySymbol("A", 2, 3, 4)
+    A = ArraySymbol("A", (2, 3, 4))
     Ae = A.as_explicit()
     assert Ae == ImmutableDenseNDimArray(
         [[[ArrayElement(A, (i, j, k)) for k in range(4)] for j in range(3)] for i in range(2)])
@@ -526,7 +526,7 @@ def test_arrayexpr_array_expr_zero_array():
 
 def test_arrayexpr_array_expr_applyfunc():
 
-    A = ArraySymbol("A", 3, k, 2)
+    A = ArraySymbol("A", (3, k, 2))
     aaf = ArrayElementwiseApplyFunc(sin, A)
     assert aaf.shape == (3, k, 2)
 
