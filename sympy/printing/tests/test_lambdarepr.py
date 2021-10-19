@@ -1,4 +1,4 @@
-from sympy import (symbols, sin, Interval, Piecewise, Sum, lambdify,
+from sympy import (symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify,
     Expr, sqrt)
 from sympy.testing.pytest import raises
 
