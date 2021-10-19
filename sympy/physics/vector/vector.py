@@ -764,8 +764,9 @@ class Vector(Printable, EvalfMixin):
         if not self.args:
             return self
         new_args = []
+        dps = prec_to_dps(prec)
         for mat, frame in self.args:
-            new_args.append([mat.evalf(n=prec_to_dps(prec)), frame])
+            new_args.append([mat.evalf(n=dps), frame])
         return Vector(new_args)
 
     def xreplace(self, rule):

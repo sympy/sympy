@@ -2927,7 +2927,8 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
 
     def _eval_evalf(self, prec):
         """Calls evalf() on each transfer function in the transfer function matrix"""
-        mat = self._expr_mat.applyfunc(lambda a: a.evalf(n=prec_to_dps(prec)))
+        dps = prec_to_dps(prec)
+        mat = self._expr_mat.applyfunc(lambda a: a.evalf(n=dps))
         return _to_TFM(mat, self.var)
 
     def _eval_simplify(self, **kwargs):

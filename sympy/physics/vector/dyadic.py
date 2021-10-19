@@ -533,9 +533,10 @@ class Dyadic(Printable, EvalfMixin):
         if not self.args:
             return self
         new_args = []
+        dps = prec_to_dps(prec)
         for inlist in self.args:
             new_inlist = list(inlist)
-            new_inlist[0] = inlist[0].evalf(n=prec_to_dps(prec))
+            new_inlist[0] = inlist[0].evalf(n=dps)
             new_args.append(tuple(new_inlist))
         return Dyadic(new_args)
 
