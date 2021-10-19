@@ -41,7 +41,7 @@ class ArraySymbol(_ArrayExpr):
         return self._args[0]
 
     @property
-    def shape(self) -> Tuple:
+    def shape(self):
         return self._args[1]
 
     def __getitem__(self, item):
