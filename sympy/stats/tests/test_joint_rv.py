@@ -36,7 +36,7 @@ def test_Normal():
 
     raises (ValueError, lambda: Normal('M', [1, 2], [[1, 1], [1, -1]]))
     # symbolic
-    n = symbols('n', natural=True)
+    n = symbols('n', integer=True, positive=True)
     mu = MatrixSymbol('mu', n, 1)
     sigma = MatrixSymbol('sigma', n, n)
     X = Normal('X', mu, sigma)
@@ -63,7 +63,7 @@ def test_Normal():
     assert eval_a == sqrt(2)/(4*pi**Rational(3/2))
     assert eval_b == sqrt(2)/(4*pi**Rational(3/2))
 
-    n = symbols('n', natural=True)
+    n = symbols('n', integer=True, positive=True)
 
     Sg = MatrixSymbol('Sg', n, n)
     mu = MatrixSymbol('mu', n, 1)

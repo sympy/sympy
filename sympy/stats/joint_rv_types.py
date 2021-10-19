@@ -208,7 +208,7 @@ def MultivariateNormal(name, mu, sigma):
     The example below shows that it is also possible to use
     symbolic parameters to define the MultivariateNormal class.
 
-    >>> n = symbols('n', natural=True)
+    >>> n = symbols('n', integer=True, positive=True)
     >>> Sg = MatrixSymbol('Sg', n, n)
     >>> mu = MatrixSymbol('mu', n, 1)
     >>> obs = MatrixSymbol('obs', n, 1)
