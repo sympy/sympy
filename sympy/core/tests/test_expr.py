@@ -349,7 +349,7 @@ def test_relational():
 
 
 def test_relational_assumptions():
-    from sympy import Lt, Gt, Le, Ge
+    from sympy import Lt, Le, Ge
     m1 = Symbol("m1", nonnegative=False)
     m2 = Symbol("m2", positive=False)
     m3 = Symbol("m3", nonpositive=False)
@@ -1412,10 +1412,17 @@ def test_coeff():
     assert (n*m + m*n*m).coeff(n, right=True) == m  # = (1 + m)*n*m
     assert (n*m + m*n).coeff(n) == 0
     assert (n*m + o*m*n).coeff(m*n) == o
-    assert (n*m + o*m*n).coeff(m*n, right=1) == 1
-    assert (n*m + n*m*n).coeff(n*m, right=1) == 1 + n  # = n*m*(n + 1)
+    assert (n*m + o*m*n).coeff(m*n, right=True) == 1
+    assert (n*m + n*m*n).coeff(n*m, right=True) == 1 + n  # = n*m*(n + 1)
 
     assert (x*y).coeff(z, 0) == x*y
+
+    assert (x*n + y*n + z*m).coeff(n) == x + y
+    assert (n*m + n*o + o*l).coeff(n, right=True) == m + o
+    assert (x*n*m*n + y*n*m*o + z*l).coeff(m, right=True) == x*n + y*o
+    assert (x*n*m*n + x*n*m*o + z*l).coeff(m, right=True) == n + o
+    assert (x*n*m*n + x*n*m*o + z*l).coeff(m) == x*n
+
 
 def test_coeff2():
     r, kappa = symbols('r, kappa')
@@ -1863,8 +1870,6 @@ def test_random():
 
 
 def test_round():
-    from sympy.abc import x
-
     assert str(Float('0.1249999').round(2)) == '0.12'
     d20 = 12345678901234567890
     ans = S(d20).round(2)

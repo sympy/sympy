@@ -1,11 +1,11 @@
 from sympy import (Add, Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
-    factorial, factorial2, Function, GoldenRatio, TribonacciConstant, I,
-    Integer, Integral, Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Pow,
-    Rational, Float, Rel, S, sin, SparseMatrix, sqrt, summation, Sum, Symbol,
-    symbols, Wild, WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
-    subfactorial, true, false, Equivalent, Xor, Complement, SymmetricDifference,
-    AccumBounds, UnevaluatedExpr, Eq, Ne, Quaternion, Subs, MatrixSymbol, MatrixSlice,
-    Q,)
+    factorial, factorial2, Function, GoldenRatio, Heaviside,
+    TribonacciConstant, I, Integer, Integral, Interval, Lambda, Limit, Matrix,
+    nan, O, oo, pi, Pow, Rational, Float, Rel, S, sin, SparseMatrix, sqrt,
+    summation, Sum, Symbol, symbols, Wild, WildFunction, zeta, zoo, Dummy,
+    Dict, Tuple, FiniteSet, factor, subfactorial, true, false, Equivalent, Xor,
+    Complement, SymmetricDifference, AccumBounds, UnevaluatedExpr, Eq, Ne,
+    Quaternion, Subs, MatrixSymbol, MatrixSlice, Q,)
 from sympy.combinatorics.partitions import Partition
 from sympy.core import Expr, Mul
 from sympy.core.parameters import _exp_is_pow
@@ -149,6 +149,11 @@ def test_Geometry():
 
 def test_GoldenRatio():
     assert str(GoldenRatio) == "GoldenRatio"
+
+
+def test_Heaviside():
+    assert str(Heaviside(x)) == str(Heaviside(x, S.Half)) == "Heaviside(x)"
+    assert str(Heaviside(x, 1)) == "Heaviside(x, 1)"
 
 
 def test_TribonacciConstant():
@@ -911,7 +916,6 @@ def test_UniversalSet():
 
 
 def test_PrettyPoly():
-    from sympy.polys.domains import QQ
     F = QQ.frac_field(x, y)
     R = QQ[x, y]
     assert sstr(F.convert(x/(x + y))) == sstr(x/(x + y))
@@ -948,8 +952,6 @@ def test_issue_6387():
 
 
 def test_MatMul_MatAdd():
-    from sympy import MatrixSymbol
-
     X, Y = MatrixSymbol("X", 2, 2), MatrixSymbol("Y", 2, 2)
     assert str(2*(X + Y)) == "2*X + 2*Y"
 

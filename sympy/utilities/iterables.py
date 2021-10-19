@@ -15,8 +15,6 @@ from sympy.core import Basic
 from sympy.core.compatibility import (as_int, is_sequence, iterable, ordered)
 from sympy.core.compatibility import default_sort_key  # noqa: F401
 
-import sympy
-
 from sympy.utilities.enumerative import (
     multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
 
@@ -528,7 +526,7 @@ def ibin(n, bits=None, str=False):
         bits = 0
     else:
         try:
-             bits = as_int(bits)
+            bits = as_int(bits)
         except ValueError:
             bits = -1
         else:
@@ -667,7 +665,7 @@ def filter_symbols(iterator, exclude):
         if s not in exclude:
             yield s
 
-def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumptions):
+def numbered_symbols(prefix='x', cls=None, start=0, exclude=(), *args, **assumptions):
     """
     Generate an infinite stream of Symbols consisting of a prefix and
     increasing subscripts provided that they do not occur in ``exclude``.
@@ -695,7 +693,7 @@ def numbered_symbols(prefix='x', cls=None, start=0, exclude=[], *args, **assumpt
     if cls is None:
         # We can't just make the default cls=Symbol because it isn't
         # imported yet.
-        from sympy import Symbol
+        from sympy.core import Symbol
         cls = Symbol
 
     while True:
@@ -1320,7 +1318,8 @@ def least_rotation(x, key=None):
     .. [1] https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
 
     '''
-    if key is None: key = sympy.Id
+    from sympy import Id
+    if key is None: key = Id
     S = x + x      # Concatenate string to it self to avoid modular arithmetic
     f = [-1] * len(S)     # Failure function
     k = 0       # Least rotation of string found so far
@@ -1368,12 +1367,16 @@ def multiset_combinations(m, n, g=None):
     """
     if g is None:
         if type(m) is dict:
-            if n > sum(m.values()):
+            if any(as_int(v) < 0 for v in m.values()):
+                raise ValueError('counts cannot be negative')
+            N = sum(m.values())
+            if n > N:
                 return
             g = [[k, m[k]] for k in ordered(m)]
         else:
             m = list(m)
-            if n > len(m):
+            N = len(m)
+            if n > N:
                 return
             try:
                 m = multiset(m)
@@ -1382,7 +1385,10 @@ def multiset_combinations(m, n, g=None):
                 m = list(ordered(m))
                 g = [list(i) for i in group(m, multiple=False)]
         del m
-    if sum(v for k, v in g) < n or not n:
+    else:
+        # not checking counts since g is intended for internal use
+        N = sum(v for k, v in g)
+    if n > N or not n:
         yield []
     else:
         for i, (k, v) in enumerate(g):
@@ -1394,7 +1400,6 @@ def multiset_combinations(m, n, g=None):
                     rv = [k]*v + j
                     if len(rv) == n:
                         yield rv
-
 
 def multiset_permutations(m, size=None, g=None):
     """
@@ -1414,6 +1419,8 @@ def multiset_permutations(m, size=None, g=None):
     """
     if g is None:
         if type(m) is dict:
+            if any(as_int(v) < 0 for v in m.values()):
+                raise ValueError('counts cannot be negative')
             g = [[k, m[k]] for k in ordered(m)]
         else:
             m = list(ordered(m))
@@ -2013,14 +2020,14 @@ def binary_partitions(n):
 
     """
     from math import ceil, log
-    pow = int(2**(ceil(log(n, 2))))
-    sum = 0
+    power = int(2**(ceil(log(n, 2))))
+    acc = 0
     partition = []
-    while pow:
-        if sum + pow <= n:
-            partition.append(pow)
-            sum += pow
-        pow >>= 1
+    while power:
+        if acc + power <= n:
+            partition.append(power)
+            acc += power
+        power >>= 1
 
     last_num = len(partition) - 1 - (n & 1)
     while last_num >= 0:
@@ -2064,8 +2071,8 @@ def has_dups(seq):
     from sympy.sets.sets import Set
     if isinstance(seq, (dict, set, Dict, Set)):
         return False
-    uniq = set()
-    return any(True for s in seq if s in uniq or uniq.add(s))
+    unique = set()
+    return any(True for s in seq if s in unique or unique.add(s))
 
 
 def has_variety(seq):
@@ -2417,15 +2424,15 @@ def generate_oriented_forest(n):
 
 
 def minlex(seq, directed=True, key=None):
-    """
+    r"""
     Return the rotation of the sequence in which the lexically smallest
-    elements appear first, e.g. `cba ->acb`.
+    elements appear first, e.g. `cba \rightarrow acb`.
 
     The sequence returned is a tuple, unless the input sequence is a string
     in which case a string is returned.
 
     If ``directed`` is False then the smaller of the sequence and the
-    reversed sequence is returned, e.g. `cba -> abc`.
+    reversed sequence is returned, e.g. `cba \rightarrow abc`.
 
     If ``key`` is not None then it is used to extract a comparison key from each element in iterable.
 
@@ -2451,8 +2458,8 @@ def minlex(seq, directed=True, key=None):
     ('c', 'a', 'bb', 'aaa')
 
     """
-
-    if key is None: key = sympy.Id
+    from sympy import Id
+    if key is None: key = Id
     best = rotate_left(seq, least_rotation(seq, key=key))
     if not directed:
         rseq = seq[::-1]
@@ -2696,8 +2703,8 @@ def roundrobin(*iterables):
     pending = len(iterables)
     while pending:
         try:
-            for next in nexts:
-                yield next()
+            for nxt in nexts:
+                yield nxt()
         except StopIteration:
             pending -= 1
             nexts = itertools.cycle(itertools.islice(nexts, pending))

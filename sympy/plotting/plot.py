@@ -356,7 +356,7 @@ class PlotGrid:
        :format: doctest
        :include-source: True
 
-        >>> PlotGrid(2, 1 , p1, p2)
+        >>> PlotGrid(2, 1, p1, p2)
         PlotGrid object containing:
         Plot[0]:Plot object containing:
         [0]: cartesian line: x for x over (-5.0, 5.0)
@@ -373,7 +373,7 @@ class PlotGrid:
        :format: doctest
        :include-source: True
 
-        >>> PlotGrid(1, 3 , p2, p3, p4)
+        >>> PlotGrid(1, 3, p2, p3, p4)
         PlotGrid object containing:
         Plot[0]:Plot object containing:
         [0]: cartesian line: x**2 for x over (-6.0, 6.0)
@@ -390,7 +390,7 @@ class PlotGrid:
        :format: doctest
        :include-source: True
 
-        >>> PlotGrid(2, 2, p1, p2 ,p3, p4)
+        >>> PlotGrid(2, 2, p1, p2, p3, p4)
         PlotGrid object containing:
         Plot[0]:Plot object containing:
         [0]: cartesian line: x for x over (-5.0, 5.0)
@@ -957,6 +957,9 @@ class Parametric3DLineSeries(Line3DBaseSeries):
         self.end = float(var_start_end[2])
         self.nb_of_points = kwargs.get('nb_of_points', 300)
         self.line_color = kwargs.get('line_color', None)
+        self._xlim = None
+        self._ylim = None
+        self._zlim = None
 
     def __str__(self):
         return '3D parametric cartesian line: (%s, %s, %s) for %s over %s' % (
@@ -1287,7 +1290,7 @@ class MatplotlibBackend(BaseBackend):
             are_3D = [s.is_3D for s in series]
 
             if any(are_3D) and not all(are_3D):
-                raise ValueError('The matplotlib backend can not mix 2D and 3D.')
+                raise ValueError('The matplotlib backend cannot mix 2D and 3D.')
             elif all(are_3D):
                 # mpl_toolkits.mplot3d is necessary for
                 # projection='3d'
@@ -1374,7 +1377,7 @@ class MatplotlibBackend(BaseBackend):
                 collection = ax.plot_surface(x, y, z,
                     cmap=getattr(self.cm, 'viridis', self.cm.jet),
                     rstride=1, cstride=1, linewidth=0.1)
-                if isinstance(s.surface_color, (float, int)) or isinstance(s.surface_color, Callable):
+                if isinstance(s.surface_color, (float, int, Callable)):
                     color_array = s.get_color_array()
                     color_array = color_array.reshape(color_array.size)
                     collection.set_array(color_array)

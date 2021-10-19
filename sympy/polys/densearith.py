@@ -937,7 +937,7 @@ def dup_pow(f, n, K):
     if not n:
         return [K.one]
     if n < 0:
-        raise ValueError("can't raise polynomial to a negative power")
+        raise ValueError("Cannot raise polynomial to a negative power")
     if n == 1 or not f or f == [K.one]:
         return f
 
@@ -977,7 +977,7 @@ def dmp_pow(f, n, u, K):
     if not n:
         return dmp_one(u, K)
     if n < 0:
-        raise ValueError("can't raise polynomial to a negative power")
+        raise ValueError("Cannot raise polynomial to a negative power")
     if n == 1 or dmp_zero_p(f, u) or dmp_one_p(f, u, K):
         return f
 

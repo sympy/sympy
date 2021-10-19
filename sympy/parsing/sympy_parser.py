@@ -814,10 +814,10 @@ def rationalize(tokens, local_dict, global_dict):
 def _transform_equals_sign(tokens, local_dict, global_dict):
     """Transforms the equals sign ``=`` to instances of Eq.
 
-    This is a helper function for `convert_equals_signs`.
+    This is a helper function for ``convert_equals_signs``.
     Works with expressions containing one equals sign and no
-    nesting. Expressions like `(1=2)=False` won't work with this
-    and should be used with `convert_equals_signs`.
+    nesting. Expressions like ``(1=2)=False`` will not work with this
+    and should be used with ``convert_equals_signs``.
 
     Examples: 1=2     to Eq(1,2)
               1*2=x   to Eq(1*2, x)
@@ -844,11 +844,11 @@ def convert_equals_signs(result, local_dict, global_dict):
     """ Transforms all the equals signs ``=`` to instances of Eq.
 
     Parses the equals signs in the expression and replaces them with
-    appropriate Eq instances.Also works with nested equals signs.
+    appropriate Eq instances. Also works with nested equals signs.
 
     Does not yet play well with function arguments.
-    For example, the expression `(x=y)` is ambiguous and can be interpreted
-    as x being an argument to a function and `convert_equals_signs` won't
+    For example, the expression ``(x=y)`` is ambiguous and can be interpreted
+    as x being an argument to a function and ``convert_equals_signs`` will not
     work for this.
 
     See also
@@ -1049,6 +1049,14 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         ast.BitAnd: 'And',
         ast.BitXor: 'Not',
     }
+    functions = (
+        'Abs', 'im', 're', 'sign', 'arg', 'conjugate',
+        'acos', 'acot', 'acsc', 'asec', 'asin', 'atan',
+        'acosh', 'acoth', 'acsch', 'asech', 'asinh', 'atanh',
+        'cos', 'cot', 'csc', 'sec', 'sin', 'tan',
+        'cosh', 'coth', 'csch', 'sech', 'sinh', 'tanh',
+        'exp', 'ln', 'log', 'sqrt', 'cbrt',
+    )
 
     def flatten(self, args, func):
         result = []
@@ -1116,3 +1124,9 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
 
             return new_node
         return node
+
+    def visit_Call(self, node):
+        new_node = self.generic_visit(node)
+        if isinstance(node.func, ast.Name) and node.func.id in self.functions:
+            new_node.keywords.append(ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load())))
+        return new_node

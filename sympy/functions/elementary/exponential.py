@@ -477,7 +477,7 @@ class exp(ExpBase, metaclass=ExpMeta):
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import ceiling, limit, Order, powsimp, Wild, expand_complex
+        from sympy import ceiling, limit, Order, powsimp, expand_complex
         arg = self.exp
         arg_series = arg._eval_nseries(x, n=n, logx=logx)
         if arg_series.is_Order:
@@ -563,9 +563,9 @@ def match_real_imag(expr):
 
     ``match_real_imag`` returns a tuple containing the real and imaginary
     parts of expr or (None, None) if direct matching is not possible. Contrary
-    to ``re()``, ``im()``, ``as_real_imag()``, this helper won't force things
+    to ``re()``, ``im()``, ``as_real_imag()``, this helper will not force things
     by returning expressions themselves containing ``re()`` or ``im()`` and it
-    doesn't expand its argument either.
+    does not expand its argument either.
 
     """
     r_, i_ = expr.as_independent(S.ImaginaryUnit, as_Add=True)

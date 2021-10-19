@@ -234,7 +234,7 @@ class Vector(BasisDependent):
 
         """
         if self.equals(Vector.zero):
-            return S.zero if scalar else Vector.zero
+            return S.Zero if scalar else Vector.zero
 
         if scalar:
             return self.dot(other) / self.dot(self)

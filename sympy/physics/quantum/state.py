@@ -1,6 +1,6 @@
 """Dirac notation for states."""
 
-from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
+from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, S, sqrt,
                    Tuple)
 from sympy.printing.pretty.stringpict import stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
@@ -788,7 +788,7 @@ class Wavefunction(Function):
                 continue
 
             if (args[ct] < lower) == True or (args[ct] > upper) == True:
-                return 0
+                return S.Zero
 
             ct += 1
 

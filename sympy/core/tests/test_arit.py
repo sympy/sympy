@@ -1915,7 +1915,7 @@ def test_Mod():
     assert (x**6000%400).args[1] == 400
 
     #issue 13543
-    assert Mod(Mod(x + 1, 2) + 1 , 2) == Mod(x,2)
+    assert Mod(Mod(x + 1, 2) + 1, 2) == Mod(x, 2)
 
     assert Mod(Mod(x + 2, 4)*(x + 4), 4) == Mod(x*(x + 2), 4)
     assert Mod(Mod(x + 2, 4)*4, 4) == 0
@@ -2354,3 +2354,24 @@ def test_issue_17130():
 def test_issue_21034():
     e = -I*log((re(asin(5)) + I*im(asin(5)))/sqrt(re(asin(5))**2 + im(asin(5))**2))/pi
     assert e.round(2)
+
+
+def test_issue_22021():
+    from sympy.calculus.util import AccumBounds
+    from sympy.utilities.iterables import permutations
+    # these objects are special cases in Mul
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
+    L = TensorIndexType("L")
+    i = tensor_indices("i", L)
+    A, B = tensor_heads("A B", [L])
+    e = A(i) + B(i)
+    assert -e == -1*e
+    e = zoo + x
+    assert -e == -1*e
+    a = AccumBounds(1, 2)
+    e = a + x
+    assert -e == -1*e
+    for args in permutations((zoo, a, x)):
+        e = Add(*args, evaluate=False)
+        assert -e == -1*e
+    assert 2*Add(1, x, x, evaluate=False) == 4*x + 2

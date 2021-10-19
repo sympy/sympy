@@ -63,7 +63,7 @@ def residue(expr, x, x0):
     for arg in args:
         c, m = arg.as_coeff_mul(x)
         m = Mul(*m)
-        if not (m == 1 or m == x or (m.is_Pow and m.exp.is_Integer)):
+        if not (m in (S.One, x) or (m.is_Pow and m.exp.is_Integer)):
             raise NotImplementedError('term of unexpected form: %s' % m)
         if m == 1/x:
             res += c

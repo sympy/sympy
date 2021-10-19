@@ -59,10 +59,10 @@ except ImportError:
     extra_kwargs['scripts'] = ['bin/isympy']
 
     # handle mpmath deps in the hard way:
-    from distutils.version import LooseVersion
+    from sympy.external.importtools import version_tuple
     try:
         import mpmath
-        if mpmath.__version__ < LooseVersion(min_mpmath_version):
+        if version_tuple(mpmath.__version__) < version_tuple(min_mpmath_version):
             raise ImportError
     except ImportError:
         print("Please install the mpmath package with a version >= %s"
@@ -144,6 +144,7 @@ modules = [
     'sympy.polys.benchmarks',
     'sympy.polys.domains',
     'sympy.polys.matrices',
+    'sympy.polys.numberfields',
     'sympy.printing',
     'sympy.printing.pretty',
     'sympy.sandbox',
@@ -390,6 +391,7 @@ tests = [
     'sympy.polys.agca.tests',
     'sympy.polys.domains.tests',
     'sympy.polys.matrices.tests',
+    'sympy.polys.numberfields.tests',
     'sympy.polys.tests',
     'sympy.printing.pretty.tests',
     'sympy.printing.tests',

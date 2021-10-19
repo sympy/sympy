@@ -28,7 +28,7 @@ def test_imageset():
     assert (r, r) in imageset(x, (x, x), S.Reals)
     assert 1 + I in imageset(x, x + I, S.Reals)
     assert {1} not in imageset(x, (x,), S.Reals)
-    assert (1, 1) not in imageset(x, (x,) , S.Reals)
+    assert (1, 1) not in imageset(x, (x,), S.Reals)
     raises(TypeError, lambda: imageset(x, ints))
     raises(ValueError, lambda: imageset(x, y, z, ints))
     raises(ValueError, lambda: imageset(Lambda(x, cos(x)), y))
@@ -1098,7 +1098,6 @@ def test_Interval_free_symbols():
 
 
 def test_image_interval():
-    from sympy.core.numbers import Rational
     x = Symbol('x', real=True)
     a = Symbol('a', real=True)
     assert imageset(x, 2*x, Interval(-2, 1)) == Interval(-4, 2)
@@ -1281,11 +1280,11 @@ def test_SymmetricDifference():
 
     assert SymmetricDifference(FiniteSet(0, 1, 2, 3, 4, 5), \
             FiniteSet(2, 4, 6, 8, 10)) == FiniteSet(0, 1, 3, 5, 6, 8, 10)
-    assert SymmetricDifference(FiniteSet(2, 3, 4), FiniteSet(2, 3 , 4 , 5)) \
+    assert SymmetricDifference(FiniteSet(2, 3, 4), FiniteSet(2, 3, 4 ,5)) \
             == FiniteSet(5)
     assert FiniteSet(1, 2, 3, 4, 5) ^ FiniteSet(1, 2, 5, 6) == \
             FiniteSet(3, 4, 6)
-    assert Set(S(1), S(2) , S(3)) ^ Set(S(2), S(3), S(4)) == Union(Set(S(1), S(2), S(3)) - Set(S(2), S(3), S(4)), \
+    assert Set(S(1), S(2), S(3)) ^ Set(S(2), S(3), S(4)) == Union(Set(S(1), S(2), S(3)) - Set(S(2), S(3), S(4)), \
             Set(S(2), S(3), S(4)) - Set(S(1), S(2), S(3)))
     assert Interval(0, 4) ^ Interval(2, 5) == Union(Interval(0, 4) - \
             Interval(2, 5), Interval(2, 5) - Interval(0, 4))
@@ -1612,6 +1611,23 @@ def test_issue_19378():
     assert Eq(c, b).simplify() is S.true
     assert Eq(a, c).simplify() is S.false
     assert Eq({1}, {x}).simplify() == Eq({1}, {x})
+
+def test_intersection_symbolic():
+    n = Symbol('n')
+    # These should not throw an error
+    assert isinstance(Intersection(Range(n), Range(100)), Intersection)
+    assert isinstance(Intersection(Range(n), Interval(1, 100)), Intersection)
+    assert isinstance(Intersection(Range(100), Interval(1, n)), Intersection)
+
+
+@XFAIL
+def test_intersection_symbolic_failing():
+    n = Symbol('n', integer=True, positive=True)
+    assert Intersection(Range(10, n), Range(4, 500, 5)) == Intersection(
+        Range(14, n), Range(14, 500, 5))
+    assert Intersection(Interval(10, n), Range(4, 500, 5)) == Intersection(
+        Interval(14, n), Range(14, 500, 5))
+
 
 def test_issue_20379():
     #https://github.com/sympy/sympy/issues/20379

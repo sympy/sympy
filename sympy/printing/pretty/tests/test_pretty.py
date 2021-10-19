@@ -3715,7 +3715,6 @@ def test_MatrixExpressions():
 
 
 def test_pretty_dotproduct():
-    from sympy.matrices import Matrix, MatrixSymbol
     from sympy.matrices.expressions.dotproduct import DotProduct
     n = symbols("n", integer=True)
     A = MatrixSymbol('A', n, 1)
@@ -4359,7 +4358,6 @@ def test_pretty_ImageSet():
     assert upretty(imgset) == ucode_str
 
 def test_pretty_ConditionSet():
-    from sympy import ConditionSet
     ascii_str = '{x | x in (-oo, oo) and sin(x) = 0}'
     ucode_str = '{x │ x ∊ ℝ ∧ (sin(x) = 0)}'
     assert pretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ascii_str
@@ -6647,8 +6645,7 @@ def test_pretty_Complement():
 
 
 def test_pretty_SymmetricDifference():
-    from sympy import SymmetricDifference, Interval
-    from sympy.testing.pytest import raises
+    from sympy import SymmetricDifference
     assert upretty(SymmetricDifference(Interval(2,3), Interval(3,5), \
            evaluate = False)) == '[2, 3] ∆ [3, 5]'
     with raises(NotImplementedError):
@@ -6922,7 +6919,6 @@ def test_MatrixElement_printing():
 
 
 def test_issue_12675():
-    from sympy.vector import CoordSys3D
     x, y, t, j = symbols('x y t j')
     e = CoordSys3D('e')
 
@@ -7156,7 +7152,6 @@ H   ⋅A  ⋅B \n\
 
 def test_pretty_print_tensor_partial_deriv():
     from sympy.tensor.toperators import PartialDerivative
-    from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, tensor_heads
 
     L = TensorIndexType("L")
     i, j, k = tensor_indices("i j k", L)

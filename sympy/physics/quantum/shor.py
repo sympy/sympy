@@ -135,7 +135,7 @@ def period_find(a, N):
     factor = 1/sqrt(2**t)
     qubits = 0
     for arr in variations(range(2), t, repetition=True):
-        qbitArray = arr + start
+        qbitArray = list(arr) + start
         qubits = qubits + Qubit(*qbitArray)
     circuit = (factor*qubits).expand()
     # Controlled second half of register so that we have:

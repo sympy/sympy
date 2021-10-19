@@ -5,7 +5,7 @@ from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial
 from sympy.testing.pytest import raises
 from sympy.testing.randtest import (test_derivative_numerically as td,
-                      random_complex_number as randcplx, verify_numerically as tn)
+                      random_complex_number as randcplx, verify_numerically)
 
 x = Symbol('x')
 a = Symbol('a')
@@ -94,8 +94,8 @@ def test_rewriting():
     assert dirichlet_eta(x).rewrite(zeta) == (1 - 2**(1 - x))*zeta(x)
     assert zeta(x).rewrite(dirichlet_eta) == dirichlet_eta(x)/(1 - 2**(1 - x))
     assert zeta(x).rewrite(dirichlet_eta, a=2) == zeta(x)
-    assert tn(dirichlet_eta(x), dirichlet_eta(x).rewrite(zeta), x)
-    assert tn(zeta(x), zeta(x).rewrite(dirichlet_eta), x)
+    assert verify_numerically(dirichlet_eta(x), dirichlet_eta(x).rewrite(zeta), x)
+    assert verify_numerically(zeta(x), zeta(x).rewrite(dirichlet_eta), x)
 
     assert zeta(x, a).rewrite(lerchphi) == lerchphi(1, x, a)
     assert polylog(s, z).rewrite(lerchphi) == lerchphi(z, s, 1)*z
@@ -141,7 +141,6 @@ def myexpand(func, target):
 
 
 def test_polylog_expansion():
-    from sympy import log
     assert polylog(s, 0) == 0
     assert polylog(s, 1) == zeta(s)
     assert polylog(s, -1) == -dirichlet_eta(s)
@@ -172,7 +171,6 @@ def test_issue_8404():
 
 
 def test_polylog_values():
-    from sympy.testing.randtest import verify_numerically as tn
     assert polylog(2, 2) == pi**2/4 - I*pi*log(2)
     assert polylog(2, S.Half) == pi**2/12 - log(2)**2/2
     for z in [S.Half, 2, (sqrt(5)-1)/2, -(sqrt(5)-1)/2, -(sqrt(5)+1)/2, (3-sqrt(5))/2]:
@@ -180,10 +178,10 @@ def test_polylog_values():
     z = Symbol("z")
     for s in [-1, 0]:
         for _ in range(10):
-            assert tn(polylog(s, z), polylog(s, z, evaluate=False), z,
-                a=-3, b=-2, c=S.Half, d=2)
-            assert tn(polylog(s, z), polylog(s, z, evaluate=False), z,
-                a=2, b=-2, c=5, d=2)
+            assert verify_numerically(polylog(s, z), polylog(s, z, evaluate=False),
+                                      z, a=-3, b=-2, c=S.Half, d=2)
+            assert verify_numerically(polylog(s, z), polylog(s, z, evaluate=False),
+                                      z, a=2, b=-2, c=5, d=2)
 
     from sympy import Integral
     assert polylog(0, Integral(1, (x, 0, 1))) == -S.Half

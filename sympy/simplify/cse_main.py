@@ -902,7 +902,6 @@ def _cse_homogeneous(exprs, **kwargs):
     <class 'set'>
     """
     if isinstance(exprs, str):
-        from sympy import sympify
         replacements, reduced_exprs = _cse_homogeneous(
             sympify(exprs), **kwargs)
         return replacements, repr(reduced_exprs)

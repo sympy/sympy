@@ -18,10 +18,10 @@ adummy = Dummy('conditionset')
 
 
 class ConditionSet(Set):
-    """
+    r"""
     Set of elements which satisfies a given condition.
 
-    {x | condition(x) is True for x in S}
+    .. math:: \{x \mid \textrm{condition}(x) = \texttt{True}, x \in S\}
 
     Examples
     ========

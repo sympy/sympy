@@ -163,7 +163,7 @@ def test_polygon():
         if isinstance(var, Point):
             assert var == Point(0, 0)
         else:
-            assert var == 5 or var == 10 or var == pi / 3
+            assert var in (5, 10, pi / 3)
     assert p1 != Point(0, 0)
     assert p1 != p5
 

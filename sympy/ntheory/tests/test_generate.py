@@ -23,7 +23,7 @@ def test_prime():
     raises(ValueError, lambda: prime(0))
     sieve.extend(3000)
     assert prime(401) == 2749
-    raises(ValueError , lambda: prime(-1))
+    raises(ValueError, lambda: prime(-1))
 
 
 def test_primepi():

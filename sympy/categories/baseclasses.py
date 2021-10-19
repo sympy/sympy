@@ -749,7 +749,7 @@ class Diagram(Basic):
                 for morphism in premises_arg:
                     objects |= FiniteSet(morphism.domain, morphism.codomain)
                     Diagram._add_morphism_closure(premises, morphism, empty)
-            elif isinstance(premises_arg, dict) or isinstance(premises_arg, Dict):
+            elif isinstance(premises_arg, (dict, Dict)):
                 # The user has supplied a dictionary of morphisms and
                 # their properties.
                 for morphism, props in premises_arg.items():

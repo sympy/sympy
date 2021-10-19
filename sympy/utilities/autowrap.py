@@ -76,7 +76,7 @@ When is this module NOT the best approach?
        tempdir="path/to/files/".
 
     2) If the array computation can be handled easily by numpy, and you
-       don't need the binaries for another project.
+       do not need the binaries for another project.
 
 """
 

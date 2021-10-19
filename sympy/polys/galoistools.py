@@ -644,7 +644,7 @@ def gf_expand(F, p, K):
     [4, 3, 0, 3, 0, 1, 4, 1]
 
     """
-    if type(F) is tuple:
+    if isinstance(F, tuple):
         lc, F = F
     else:
         lc = K.one
@@ -921,7 +921,7 @@ def gf_frobenius_map(f, g, b, p, K):
 
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.galoistools import gf_frobenius_monomial_base, gf_frobenius_map
-    >>> f = ZZ.map([2, 1 , 0, 1])
+    >>> f = ZZ.map([2, 1, 0, 1])
     >>> g = ZZ.map([1, 0, 2, 1])
     >>> p = 5
     >>> b = gf_frobenius_monomial_base(g, p, ZZ)

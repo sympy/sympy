@@ -77,7 +77,7 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
         opt.domain = domain.get_field()
     else:
         raise DomainError(
-            "can't compute rational simplification over %s" % domain)
+            "Cannot compute rational simplification over %s" % domain)
 
     # compute only once
     leading_monomials = [g.LM(opt.order) for g in polys[2:]]

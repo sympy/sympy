@@ -1172,7 +1172,7 @@ class HolonomicFunction:
     def composition(self, expr, *args, **kwargs):
         """
         Returns function after composition of a holonomic
-        function with an algebraic function. The method can't compute
+        function with an algebraic function. The method cannot compute
         initial conditions for the result by itself, so they can be also be
         provided.
 
@@ -1781,11 +1781,11 @@ class HolonomicFunction:
         Explanation
         ===========
 
-        The path should be given as a list :math:`[x_1, x_2, ... x_n]`. The numerical
+        The path should be given as a list :math:`[x_1, x_2, \dots x_n]`. The numerical
         values will be computed at each point in this order
-        :math:`x_1 --> x_2 --> x_3 ... --> x_n`.
+        :math:`x_1 \rightarrow x_2 \rightarrow x_3 \dots \rightarrow x_n`.
 
-        Returns values of the function at :math:`x_1, x_2, ... x_n` in a list.
+        Returns values of the function at :math:`x_1, x_2, \dots x_n` in a list.
 
         Examples
         ========
@@ -1887,7 +1887,7 @@ class HolonomicFunction:
         ===========
 
         Returns an answer of the form:
-        `a_1 \cdot x^{b_1} \cdot{hyper()} + a_2 \cdot x^{b_2} \cdot{hyper()} ...`
+        `a_1 \cdot x^{b_1} \cdot{hyper()} + a_2 \cdot x^{b_2} \cdot{hyper()} \dots`
 
         This is very useful as one can now use ``hyperexpand`` to find the
         symbolic expressions/functions.
@@ -2185,7 +2185,7 @@ def from_hyper(func, x0=0, evalf=False):
 
     simp = hyperexpand(func)
 
-    if isinstance(simp, Infinity) or isinstance(simp, NegativeInfinity):
+    if simp in (Infinity, NegativeInfinity):
         return HolonomicFunction(sol, x).composition(z)
 
     def _find_conditions(simp, x, x0, order, evalf=False):
@@ -2271,7 +2271,7 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
 
     simp = hyperexpand(func)
 
-    if isinstance(simp, Infinity) or isinstance(simp, NegativeInfinity):
+    if simp in (Infinity, NegativeInfinity):
         return HolonomicFunction(sol, x).composition(z)
 
     def _find_conditions(simp, x, x0, order, evalf=False):
@@ -2337,7 +2337,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
         Ground domain for the polynomials in ``x`` appearing as coefficients
         in the annihilator.
     initcond:
-        Set it false if you don't want the initial conditions to be computed.
+        Set it false if you do not want the initial conditions to be computed.
 
     Examples
     ========
@@ -2846,7 +2846,7 @@ def _create_table(table, domain=QQ):
     see meijerint._create_lookup_table.
     """
 
-    def add(formula, annihilator, arg, x0=0, y0=[]):
+    def add(formula, annihilator, arg, x0=0, y0=()):
         """
         Adds a formula in the dictionary
         """
@@ -2856,7 +2856,7 @@ def _create_table(table, domain=QQ):
     R = domain.old_poly_ring(x_1)
     _, Dx = DifferentialOperators(R, 'Dx')
 
-    from sympy import (sin, cos, exp, log, erf, sqrt, pi,
+    from sympy import (sin, cos, log, erf, sqrt, pi,
         sinh, cosh, sinc, erfc, Si, Ci, Shi, erfi)
 
     # add some basic functions

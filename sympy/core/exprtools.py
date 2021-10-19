@@ -75,27 +75,27 @@ def _monotonic_sign(self):
         s = self
         if s.is_prime:
             if s.is_odd:
-                return S(3)
+                return Integer(3)
             else:
-                return S(2)
+                return Integer(2)
         elif s.is_composite:
             if s.is_odd:
-                return S(9)
+                return Integer(9)
             else:
-                return S(4)
+                return Integer(4)
         elif s.is_positive:
             if s.is_even:
                 if s.is_prime is False:
-                    return S(4)
+                    return Integer(4)
                 else:
-                    return S(2)
+                    return Integer(2)
             elif s.is_integer:
                 return S.One
             else:
                 return _eps
         elif s.is_extended_negative:
             if s.is_even:
-                return S(-2)
+                return Integer(-2)
             elif s.is_integer:
                 return S.NegativeOne
             else:
@@ -113,7 +113,7 @@ def _monotonic_sign(self):
             from sympy.polys.polyerrors import PolynomialError
             x = free.pop()
             x0 = _monotonic_sign(x)
-            if x0 == _eps or x0 == -_eps:
+            if x0 in (_eps, -_eps):
                 x0 = S.Zero
             if x0 is not None:
                 d = self.diff(x)
@@ -125,7 +125,8 @@ def _monotonic_sign(self):
                     except (PolynomialError, NotImplementedError):
                         currentroots = [r for r in roots(d, x) if r.is_extended_real]
                 y = self.subs(x, x0)
-                if x.is_nonnegative and all(r <= x0 for r in currentroots):
+                if x.is_nonnegative and all(
+                        (r - x0).is_nonpositive for r in currentroots):
                     if y.is_nonnegative and d.is_positive:
                         if y:
                             return y if y.is_positive else Dummy('pos', positive=True)
@@ -136,7 +137,8 @@ def _monotonic_sign(self):
                             return y if y.is_negative else Dummy('neg', negative=True)
                         else:
                             return Dummy('npos', nonpositive=True)
-                elif x.is_nonpositive and all(r >= x0 for r in currentroots):
+                elif x.is_nonpositive and all(
+                        (r - x0).is_nonnegative for r in currentroots):
                     if y.is_nonnegative and d.is_negative:
                         if y:
                             return Dummy('pos', positive=True)
@@ -326,7 +328,7 @@ class Factors:
             factors = S(factors)
         if isinstance(factors, Factors):
             factors = factors.factors.copy()
-        elif factors is None or factors is S.One:
+        elif factors in (None, S.One):
             factors = {}
         elif factors is S.Zero or factors == 0:
             factors = {S.Zero: S.One}

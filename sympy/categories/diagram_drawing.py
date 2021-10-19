@@ -341,7 +341,7 @@ class DiagramGrid:
         returns an edge which would form a triangle with ``edge1`` and
         ``edge2``.
 
-        If ``edge1`` and ``edge2`` don't have a common endpoint,
+        If ``edge1`` and ``edge2`` do not have a common endpoint,
         returns ``None``.
 
         If ``edge1`` and ``edge`` are the same edge, returns ``None``.
@@ -842,7 +842,7 @@ class DiagramGrid:
         # should be converted to a FiniteSet, because that is what the
         # following code expects.
 
-        if isinstance(groups, dict) or isinstance(groups, Dict):
+        if isinstance(groups, (dict, Dict)):
             finiteset_groups = {}
             for group, local_hints in groups.items():
                 finiteset_group = group_to_finiteset(group)

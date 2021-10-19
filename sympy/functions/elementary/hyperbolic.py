@@ -1678,7 +1678,7 @@ class asech(InverseHyperbolicFunction):
                 return p * (n - 1)**2 // (n // 2)**2 * x**2 / 4
             else:
                 k = n // 2
-                R = RisingFactorial(S.Half , k) *  n
+                R = RisingFactorial(S.Half, k) *  n
                 F = factorial(k) * n // 2 * n // 2
                 return -1 * R / F * x**n / 4
 

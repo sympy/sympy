@@ -226,7 +226,7 @@ class ImplicitRegion(Basic):
                     flag = True
                     continue
 
-                if not (isinstance(sol_z, Integer) or isinstance(sol_z, int)):
+                if not isinstance(sol_z, (int, Integer)):
                     syms_z = sol_z.free_symbols
 
                     if len(syms_z) == 1:
@@ -465,7 +465,7 @@ class ImplicitRegion(Basic):
         elif len(self.variables) == 3:
 
             parameter1, parameter2 = parameters
-            if parameter1 == 'r' or parameter2 == 'r':
+            if 'r' in parameters:
                 # To avoid name conflict between parameters
                 r = _symbol('r_', real=True)
             else:

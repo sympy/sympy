@@ -448,7 +448,7 @@ class MarkovProcess(StochasticProcess):
 
         # `not None` is `True`. So the old test fails for symbolic sizes.
         # Need to build the statement differently.
-        sym_cond = not isinstance(self.number_of_states, (int, Integer))
+        sym_cond = not self.number_of_states.is_Integer
         cond1 = not sym_cond and len(state_index) != trans_probs.shape[0]
         if cond1:
             raise ValueError("state space is not compatible with the transition probabilities.")
@@ -579,16 +579,16 @@ class MarkovProcess(StochasticProcess):
                 s = Rational(0, 1)
                 n = len(self.state_space)
 
-                if isinstance(condition, Eq) or isinstance(condition, Ne):
+                if isinstance(condition, (Eq, Ne)):
                     for i in range(0, n):
                         s += self.probability(Eq(rv[0], i), Eq(rv[1], i)) * self.probability(Eq(rv[1], i), new_given_condition)
                     return s if isinstance(condition, Eq) else 1 - s
                 else:
                     upper = 0
                     greater = False
-                    if isinstance(condition, Ge) or isinstance(condition, Lt):
+                    if isinstance(condition, (Ge, Lt)):
                         upper = 1
-                    if isinstance(condition, Gt) or isinstance(condition, Ge):
+                    if isinstance(condition, (Ge, Gt)):
                         greater = True
 
                     for i in range(0, n):
@@ -621,7 +621,7 @@ class MarkovProcess(StochasticProcess):
                 raise IndexError("The timestamps of the process are not in it's index set.")
             states = Intersection(states, state_index) if not isinstance(self.number_of_states, Symbol) else states
             for state in Union(states, FiniteSet(gstate)):
-                if not isinstance(state, (int, Integer)) or Ge(state, mat.shape[0]) is True:
+                if not state.is_Integer or Ge(state, mat.shape[0]) is True:
                     raise IndexError("No information is available for (%s, %s) in "
                         "transition probabilities of shape, (%s, %s). "
                         "State space is zero indexed."
@@ -701,7 +701,7 @@ class MarkovProcess(StochasticProcess):
             next_state = condition.rhs if isinstance(condition.lhs, RandomIndexedSymbol) \
                 else condition.lhs
 
-            if isinstance(condition, Eq) or isinstance(condition, Ne):
+            if isinstance(condition, (Eq, Ne)):
                 if isinstance(self, DiscreteMarkovChain):
                     P = self.transition_probabilities**(rv[0].key - min_key_rv.key)
                 else:
@@ -711,9 +711,9 @@ class MarkovProcess(StochasticProcess):
             else:
                 upper = 1
                 greater = False
-                if isinstance(condition, Ge) or isinstance(condition, Lt):
+                if isinstance(condition, (Ge, Lt)):
                     upper = 0
-                if isinstance(condition, Gt) or isinstance(condition, Ge):
+                if isinstance(condition, (Ge, Gt)):
                     greater = True
                 k = Dummy('k')
                 condition = Eq(condition.lhs, k) if isinstance(condition.lhs, RandomIndexedSymbol)\
@@ -880,7 +880,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     >>> T = Matrix([[Rational(1, 10), Rational(4, 10), Rational(5, 10)], [Rational(3, 10), Rational(4, 10), Rational(3, 10)], [Rational(7, 10), Rational(2, 10), Rational(1, 10)]])
     >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
     >>> query = P(Eq(Y[a], b), Eq(Y[c], d))
-    >>> query.subs({a:10 ,b:2, c:5, d:1}).round(4)
+    >>> query.subs({a:10, b:2, c:5, d:1}).round(4)
     0.3096
     >>> P(Eq(Y[10], 2), Eq(Y[5], 1)).evalf().round(4)
     0.3096
@@ -1143,11 +1143,11 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return And(r > 0, A == Identity(r).as_explicit())
 
     def stationary_distribution(self, condition_set=False) -> tUnion[ImmutableMatrix, ConditionSet, Lambda]:
-        """
+        r"""
         The stationary distribution is any row vector, p, that solves p = pP,
         is row stochastic and each element in p must be nonnegative.
         That means in matrix form: :math:`(P-I)^T p^T = 0` and
-        :math:`(1, ..., 1) p = 1`
+        :math:`(1, \dots, 1) p = 1`
         where ``P`` is the one-step transition matrix.
 
         All time-homogeneous Markov Chains with a finite state space
@@ -1526,12 +1526,12 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
     >>> G = Matrix([[-S(1), Rational(1, 10), Rational(9, 10)], [Rational(2, 5), -S(1), Rational(3, 5)], [Rational(1, 2), Rational(1, 2), -S(1)]])
     >>> C = ContinuousMarkovChain('C', state_space=[0, 1, 2], gen_mat=G)
     >>> query = P(Eq(C(a), b), Eq(C(c), d))
-    >>> query.subs({a:3.65 ,b:2, c:1.78, d:1}).evalf().round(10)
+    >>> query.subs({a:3.65, b:2, c:1.78, d:1}).evalf().round(10)
     0.4002723175
     >>> P(Eq(C(3.65), 2), Eq(C(1.78), 1)).round(10)
     0.4002723175
     >>> query_gt = P(Gt(C(a), b), Eq(C(c), d))
-    >>> query_gt.subs({a:43.2 ,b:0, c:3.29, d:2}).evalf().round(10)
+    >>> query_gt.subs({a:43.2, b:0, c:3.29, d:2}).evalf().round(10)
     0.6832579186
     >>> P(Gt(C(43.2), 0), Eq(C(3.29), 2)).round(10)
     0.6832579186

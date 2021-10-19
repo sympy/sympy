@@ -1361,7 +1361,7 @@ def _apply_Mul(m):
         return m
     c_part, nc_part = m.args_cnc()
     n_nc = len(nc_part)
-    if n_nc == 0 or n_nc == 1:
+    if n_nc in (0, 1):
         return m
     else:
         last = nc_part[-1]

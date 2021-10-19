@@ -254,17 +254,17 @@ def test_Lambda():
     with warns_deprecated_sympy():
         assert Lambda([x, y], x+y) == Lambda((x, y), x+y)
 
-    flam = Lambda( ((x, y),) , x + y)
+    flam = Lambda(((x, y),), x + y)
     assert flam((2, 3)) == 5
-    flam = Lambda( ((x, y), z) , x + y + z)
+    flam = Lambda(((x, y), z), x + y + z)
     assert flam((2, 3), 1) == 6
-    flam = Lambda( (((x,y),z),) , x+y+z)
-    assert flam(    ((2,3),1) ) == 6
+    flam = Lambda((((x, y), z),), x + y + z)
+    assert flam(((2, 3), 1)) == 6
     raises(BadArgumentsError, lambda: flam(1, 2, 3))
     flam = Lambda( (x,), (x, x))
     assert flam(1,) == (1, 1)
     assert flam((1,)) == ((1,), (1,))
-    flam = Lambda( ((x,),) , (x, x))
+    flam = Lambda( ((x,),), (x, x))
     raises(BadArgumentsError, lambda: flam(1))
     assert flam((1,)) == (1, 1)
 

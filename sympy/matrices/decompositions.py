@@ -1,5 +1,6 @@
 import copy
 
+from sympy.core import S
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.miscellaneous import Min, sqrt
 from sympy.functions.elementary.complexes import sign
@@ -67,14 +68,14 @@ def _rank_decomposition(M, iszerofunc=_iszero, simplify=False):
     .. math::
         E_n E_{n-1} ... E_1 A = F
 
-    where `E_n, E_{n-1}, ... , E_1` are the elimination matrices or
+    where `E_n, E_{n-1}, \dots, E_1` are the elimination matrices or
     permutation matrices equivalent to each row-reduction step.
 
     The inverse of the same product of elimination matrices gives
     `C`:
 
     .. math::
-        C = (E_n E_{n-1} ... E_1)^{-1}
+        C = \left(E_n E_{n-1} \dots E_1\right)^{-1}
 
     It is not necessary, however, to actually compute the inverse:
     the columns of `C` are those from the original matrix with the
@@ -937,7 +938,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         # https://github.com/sympy/sympy/issues/9796
         pass
 
-    if M.rows == 0 or M.cols == 0:
+    if S.Zero in M.shape:
         # Define LU decomposition of a matrix with no entries as a matrix
         # of the same dimensions with all zero entries.
         return M.zeros(M.rows, M.cols), []
@@ -1150,7 +1151,7 @@ def _singular_value_decomposition(A):
     If you want to augment the results to return a full orthogonal
     decomposition, you should use the following procedures.
 
-    - Augment the $U , V$ matrices with columns that are orthogonal to every
+    - Augment the $U, V$ matrices with columns that are orthogonal to every
       other columns and make it square.
     - Augument the $\Sigma$ matrix with zero rows to make it have the same
       shape as the original matrix.

@@ -452,7 +452,7 @@ class frac(Function):
         from sympy import AccumBounds, im
 
         def _eval(arg):
-            if arg is S.Infinity or arg is S.NegativeInfinity:
+            if arg in (S.Infinity, S.NegativeInfinity):
                 return AccumBounds(0, 1)
             if arg.is_integer:
                 return S.Zero

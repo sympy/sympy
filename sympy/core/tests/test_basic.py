@@ -237,10 +237,6 @@ def test_rewrite():
     assert f1.rewrite() == f1
 
 def test_literal_evalf_is_number_is_zero_is_comparable():
-    from sympy.integrals.integrals import Integral
-    from sympy.core.symbol import symbols
-    from sympy.core.function import Function
-    from sympy.functions.elementary.trigonometric import cos, sin
     x = symbols('x')
     f = Function('f')
 

@@ -15,7 +15,6 @@ from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.functions import factorial
 from sympy.matrices import ImmutableDenseMatrix as Matrix
-from sympy.simplify import simplify
 from sympy.solvers import solve
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -2074,8 +2073,7 @@ def metric_to_Christoffel_1st(expr):
         raise ValueError(
             'The two-form representing the metric is not symmetric.')
     coord_sys = _find_coords(expr).pop()
-    deriv_matrices = [matrix.applyfunc(lambda a: d(a))
-                      for d in coord_sys.base_vectors()]
+    deriv_matrices = [matrix.applyfunc(d) for d in coord_sys.base_vectors()]
     indices = list(range(coord_sys.dim))
     christoffel = [[[(deriv_matrices[k][i, j] + deriv_matrices[j][i, k] - deriv_matrices[i][j, k])/2
                      for k in indices]
@@ -2245,8 +2243,14 @@ class _deprecated_container:
         self.warn()
         return super().__contains__(key)
 
+
 class _deprecated_list(_deprecated_container, list):
     pass
 
+
 class _deprecated_dict(_deprecated_container, dict):
     pass
+
+
+# Import at end to avoid cyclic imports
+from sympy.simplify.simplify import simplify

@@ -1,6 +1,6 @@
 """
 This module implements Pauli algebra by subclassing Symbol. Only algebraic
-properties of Pauli matrices are used (we don't use the Matrix class).
+properties of Pauli matrices are used (we do not use the Matrix class).
 
 See the documentation to the class Pauli for examples.
 

@@ -17,18 +17,20 @@ Segment3D
 
 """
 
-from sympy import Expr
-from sympy.core import S, sympify
+from sympy.core import Expr, S, sympify
 from sympy.core.compatibility import ordered
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
+from sympy.core.evalf import N
 from sympy.core.numbers import Rational, oo
 from sympy.core.relational import Eq
 from sympy.core.symbol import _symbol, Dummy
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
-from sympy.geometry.exceptions import GeometryError
-from sympy.geometry.util import intersection
+from .entity import GeometryEntity, GeometrySet
+from .exceptions import GeometryError
+from .point import Point, Point3D
+from .util import find, intersection
 from sympy.logic.boolalg import And
 from sympy.matrices import Matrix
 from sympy.sets import Intersection
@@ -37,8 +39,8 @@ from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import Undecidable, filldedent
 
-from .entity import GeometryEntity, GeometrySet
-from .point import Point, Point3D
+
+import random
 
 
 class LinearEntity(GeometrySet):
@@ -88,7 +90,7 @@ class LinearEntity(GeometrySet):
             return result
         else:
             raise Undecidable(
-                "can't decide whether '%s' contains '%s'" % (self, other))
+                "Cannot decide whether '%s' contains '%s'" % (self, other))
 
     def _span_test(self, other):
         """Test whether the point `other` lies in the positive span of `self`.
@@ -1006,8 +1008,6 @@ class LinearEntity(GeometrySet):
         Point2D(3.2, 1.92)
 
         """
-        import random
-
         if seed is not None:
             rng = random.Random(seed)
         else:
@@ -1154,8 +1154,6 @@ class Line(LinearEntity):
     Line2D(Point2D(0, -18), Point2D(1, -21))
     """
     def __new__(cls, *args, **kwargs):
-        from sympy.geometry.util import find
-
         if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
@@ -1384,8 +1382,6 @@ class Ray(LinearEntity):
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
         """
-        from sympy.core.evalf import N
-
         verts = (N(self.p1), N(self.p2))
         coords = ["{},{}".format(p.x, p.y) for p in verts]
         path = "M {} L {}".format(coords[0], " L ".join(coords[1:]))
@@ -2033,8 +2029,6 @@ class Line2D(LinearEntity2D, Line):
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
         """
-        from sympy.core.evalf import N
-
         verts = (N(self.p1), N(self.p2))
         coords = ["{},{}".format(p.x, p.y) for p in verts]
         path = "M {} L {}".format(coords[0], " L ".join(coords[1:]))
@@ -2177,7 +2171,6 @@ class Ray2D(LinearEntity2D, Ray):
             try:
                 p2 = Point(pt, dim=2)
             except (NotImplementedError, TypeError, ValueError):
-                from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent('''
                     The 2nd argument was not a valid Point; if
                     it was meant to be an angle it should be
@@ -2385,8 +2378,6 @@ class Segment2D(LinearEntity2D, Segment):
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
         """
-        from sympy.core.evalf import N
-
         verts = (N(self.p1), N(self.p2))
         coords = ["{},{}".format(p.x, p.y) for p in verts]
         path = "M {} L {}".format(coords[0], " L ".join(coords[1:]))
@@ -2502,7 +2493,7 @@ class Line3D(LinearEntity3D, Line):
     >>> L.points
     (Point3D(2, 3, 4), Point3D(3, 5, 1))
     """
-    def __new__(cls, p1, pt=None, direction_ratio=[], **kwargs):
+    def __new__(cls, p1, pt=None, direction_ratio=(), **kwargs):
         if isinstance(p1, LinearEntity3D):
             if pt is not None:
                 raise ValueError('if p1 is a LinearEntity, pt must be None.')
@@ -2618,8 +2609,7 @@ class Ray3D(LinearEntity3D, Ray):
     [1, 2, -4]
 
     """
-    def __new__(cls, p1, pt=None, direction_ratio=[], **kwargs):
-        from sympy.utilities.misc import filldedent
+    def __new__(cls, p1, pt=None, direction_ratio=(), **kwargs):
         if isinstance(p1, LinearEntity3D):
             if pt is not None:
                 raise ValueError('If p1 is a LinearEntity, pt must be None')

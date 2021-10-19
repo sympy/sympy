@@ -526,7 +526,7 @@ def _(expr, assumptions):
     else:
         if reals == 0:
             return True
-        if reals == 1 or (len(expr.args) == reals):
+        if reals in (1, len(expr.args)):
             # two reals could sum 0 thus giving an imaginary
             return False
 

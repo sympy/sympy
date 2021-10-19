@@ -150,11 +150,11 @@ def test_multivariate_crosscovariance():
     assert isinstance(expr, CrossCovarianceMatrix)
     assert expr.expand() == CrossCovarianceMatrix(X, Z) + CrossCovarianceMatrix(Y, Z)
 
-    expr = Covariance(A*X , Y)
+    expr = Covariance(A*X, Y)
     assert isinstance(expr, CrossCovarianceMatrix)
     assert expr.expand() == A*CrossCovarianceMatrix(X, Y)
 
-    expr = Covariance(X , B*Y)
+    expr = Covariance(X, B*Y)
     assert isinstance(expr, CrossCovarianceMatrix)
     assert expr.expand() == CrossCovarianceMatrix(X, Y)*B.T
 

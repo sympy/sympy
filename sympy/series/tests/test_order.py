@@ -446,3 +446,7 @@ def test_issue_15539():
 
 def test_issue_18606():
     assert unchanged(Order, 0)
+
+
+def test_issue_22165():
+    assert O(log(x)).contains(2)
