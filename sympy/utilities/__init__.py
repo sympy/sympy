@@ -3,7 +3,6 @@ SymPy.
 """
 from .iterables import (flatten, group, take, subsets,
     variations, numbered_symbols, cartes, capture, dict_merge,
-    interactive_traversal,
     prefixes, postfixes, sift, topological_sort, unflatten,
     has_dups, has_variety, reshape, default_sort_key, ordered,
     rotations)
@@ -20,8 +19,7 @@ from .timeutils import timed
 
 __all__ = [
     'flatten', 'group', 'take', 'subsets', 'variations', 'numbered_symbols',
-    'cartes', 'capture', 'dict_merge',
-    'interactive_traversal', 'prefixes', 'postfixes', 'sift',
+    'cartes', 'capture', 'dict_merge', 'prefixes', 'postfixes', 'sift',
     'topological_sort', 'unflatten', 'has_dups', 'has_variety', 'reshape',
     'default_sort_key', 'ordered', 'rotations',
 
