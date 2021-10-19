@@ -615,6 +615,14 @@ def test_Product_doit():
         6*Integral(a**2)**3
     assert product(n*Integral(a**2), (n, 1, 3)) == 6*Integral(a**2)**3
 
+    # issue 22260
+    assert Product(sin(n)**2 + cos(n)**2 - 1, (n, 1, oo)).doit() == 0
+    assert Product(sin(n)**2 + cos(n)**2 , (n, 1, oo)).doit() == 1
+    assert Product(sin(n)**2 + cos(n)**2 + 1, (n, 1, oo)).doit() == oo
+    assert Product(sin(n)**2 + cos(n)**2 - 1, (n, 1, 5)).doit() == 0
+    assert Product(sin(n)**2 + cos(n)**2 + 1, (n, 1, 5)).doit() == 32
+    assert Product(sin(n)**2 + cos(n)**2 , (n, 1, 5)).doit() == 1
+
 
 def test_Sum_interface():
     assert isinstance(Sum(0, (n, 0, 2)), Sum)
