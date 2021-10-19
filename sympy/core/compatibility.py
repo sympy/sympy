@@ -8,7 +8,7 @@ import operator
 from collections import defaultdict
 
 """
-Some utility functios origniating from Python 2 and Python 3 compatible imports.
+Some utility functions originating from Python 2 and Python 3 compatible imports.
 """
 
 __all__ = [
