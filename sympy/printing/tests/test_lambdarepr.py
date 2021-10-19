@@ -17,6 +17,14 @@ def test_basic():
     assert lambdarepr(x**y) == "x**y"
 
 
+def test_matrix():
+    # Test printing a Matrix that has an element that is printed differently
+    # with the LambdaPrinter than with the StrPrinter.
+    e = x % 2
+    assert lambdarepr(e) != str(e)
+    assert lambdarepr(Matrix([e])) == 'ImmutableDenseMatrix([[x % 2]])'
+
+
 def test_piecewise():
     # In each case, test eval() the lambdarepr() to make sure there are a
     # correct number of parentheses. It will give a SyntaxError if there aren't.
