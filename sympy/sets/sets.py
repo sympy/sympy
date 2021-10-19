@@ -648,7 +648,8 @@ class Set(Basic, EvalfMixin):
         raise NotImplementedError("(%s)._measure" % self)
 
     def _eval_evalf(self, prec):
-        return self.func(*[arg.evalf(n=prec_to_dps(prec)) for arg in self.args])
+        dps = prec_to_dps(prec)
+        return self.func(*[arg.evalf(n=dps) for arg in self.args])
 
     @sympify_return([('other', 'Set')], NotImplemented)
     def __add__(self, other):
@@ -1912,7 +1913,8 @@ class FiniteSet(Set):
         return (hash(self) - hash(other))
 
     def _eval_evalf(self, prec):
-        return FiniteSet(*[elem.evalf(n=prec_to_dps(prec)) for elem in self])
+        dps = prec_to_dps(prec)
+        return FiniteSet(*[elem.evalf(n=dps) for elem in self])
 
     def _eval_simplify(self, **kwargs):
         from sympy.simplify import simplify

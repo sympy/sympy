@@ -3,6 +3,7 @@ from functools import wraps
 from sympy.core import S
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
+from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, _mexpand
 from sympy.core.logic import fuzzy_or, fuzzy_not
 from sympy.core.numbers import Rational, pi, I
@@ -19,6 +20,8 @@ from sympy.functions.elementary.complexes import re, im
 from sympy.functions.special.gamma_functions import gamma, digamma, uppergamma
 from sympy.functions.special.hyper import hyper
 from sympy.polys.orthopolys import spherical_bessel_fn
+
+from mpmath import mp, workprec
 
 # TODO
 # o Scorer functions G1 and G2
@@ -1603,8 +1606,6 @@ class airyaiprime(AiryBase):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from mpmath import mp, workprec
-        from sympy import Expr
         z = self.args[0]._to_mpmath(prec)
         with workprec(prec):
             res = mp.airyai(z, derivative=1)
@@ -1769,8 +1770,6 @@ class airybiprime(AiryBase):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from mpmath import mp, workprec
-        from sympy import Expr
         z = self.args[0]._to_mpmath(prec)
         with workprec(prec):
             res = mp.airybi(z, derivative=1)

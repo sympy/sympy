@@ -2,6 +2,7 @@
 from functools import reduce
 
 from sympy.core import S, I, pi, oo, zoo, ilcm, Mod
+from sympy.core.expr import Expr
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 
 from sympy.core.containers import Tuple
@@ -670,7 +671,6 @@ class meijerg(TupleParametersBase):
         # (carefully so as not to loose the branch information), and evaluate
         # G(z'**(1/r)) = G(z'**n) = G(z).
         from sympy.functions import exp_polar, ceiling
-        from sympy import Expr
         import mpmath
         znum = self.argument._eval_evalf(prec)
         if znum.has(exp_polar):

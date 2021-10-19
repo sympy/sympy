@@ -1,8 +1,10 @@
-from sympy.core import Add, S, sympify, oo, pi, Dummy, expand_func
+from sympy.core import Add, S, sympify, Dummy, expand_func
 from sympy.core.compatibility import as_int
+from sympy.core.evalf import prec_to_dps
+from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_and, fuzzy_not
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, pi, oo
 from sympy.core.power import Pow
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.special.error_functions import erf, erfc, Ei
@@ -13,6 +15,8 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactorial
+
+from mpmath import mp, workprec
 
 def intlike(n):
     try:
@@ -336,8 +340,6 @@ class lowergamma(Function):
             return S.Zero
 
     def _eval_evalf(self, prec):
-        from mpmath import mp, workprec
-        from sympy import Expr
         if all(x.is_number for x in self.args):
             a = self.args[0]._to_mpmath(prec)
             z = self.args[1]._to_mpmath(prec)
@@ -472,8 +474,6 @@ class uppergamma(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from mpmath import mp, workprec
-        from sympy import Expr
         if all(x.is_number for x in self.args):
             a = self.args[0]._to_mpmath(prec)
             z = self.args[1]._to_mpmath(prec)
@@ -1100,7 +1100,8 @@ class digamma(Function):
     """
     def _eval_evalf(self, prec):
         z = self.args[0]
-        return polygamma(0, z).evalf(prec)
+        nprec = prec_to_dps(prec)
+        return polygamma(0, z).evalf(n=nprec)
 
     def fdiff(self, argindex=1):
         z = self.args[0]
@@ -1193,7 +1194,8 @@ class trigamma(Function):
     """
     def _eval_evalf(self, prec):
         z = self.args[0]
-        return polygamma(1, z).evalf(prec)
+        nprec = prec_to_dps(prec)
+        return polygamma(1, z).evalf(n=nprec)
 
     def fdiff(self, argindex=1):
         z = self.args[0]

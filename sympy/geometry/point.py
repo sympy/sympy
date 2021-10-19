@@ -475,7 +475,8 @@ class Point(GeometryEntity):
         Point2D(0.5, 1.5)
 
         """
-        coords = [x.evalf(n=prec_to_dps(prec), **options) for x in self.args]
+        dps = prec_to_dps(prec)
+        coords = [x.evalf(n=dps, **options) for x in self.args]
         return Point(*coords, evaluate=False)
 
     def intersection(self, other):

@@ -520,8 +520,8 @@ class Quaternion(Expr):
         + 0.500000000000000*k
 
         """
-
-        return Quaternion(*[arg.evalf(n=prec_to_dps(prec)) for arg in self.args])
+        nprec = prec_to_dps(prec)
+        return Quaternion(*[arg.evalf(n=nprec) for arg in self.args])
 
     def pow_cos_sin(self, p):
         """Computes the pth power in the cos-sin form.
