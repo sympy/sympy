@@ -3,6 +3,7 @@
 from sympy import igcd, ilcm
 from sympy.core.symbol import Dummy
 from sympy.polys import Poly
+from sympy.polys.densetools import dup_clear_denoms
 from sympy.polys.domains import FF, QQ, ZZ
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.exceptions import DMBadInputError
@@ -307,12 +308,12 @@ class PowerBasis(Module):
             f = f % self.T
         if f == 0:
             return self.zero()
-        d, g = f.clear_denoms()
-        c = list(reversed(g.rep.rep))
+        d, c = dup_clear_denoms(f.rep.rep, QQ, convert=True)
+        c = list(reversed(c))
         ell = len(c)
         z = [ZZ(0)] * (n - ell)
         col = to_col(c + z)
-        return self(col, denom=ZZ.from_sympy(d))
+        return self(col, denom=d)
 
 
 class Submodule(Module, IntegerPowerable):
@@ -945,8 +946,8 @@ class PowerBasisElement(ModuleElement):
 
     def inverse(self):
         f = self.poly()
-        e, h = f.invert(self.T).clear_denoms()
-        return self.module.element_from_poly(h) // ZZ.from_sympy(e)
+        f_inv = f.invert(self.T)
+        return self.module.element_from_poly(f_inv)
 
     def __rfloordiv__(self, a):
         return self.inverse() * a
