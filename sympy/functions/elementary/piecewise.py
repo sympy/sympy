@@ -646,7 +646,7 @@ class Piecewise(Function):
             upto = b
         return sum
 
-    def _intervals(self, sym):
+    def _intervals(self, sym, err_on_Eq=False):
         """Return a list of unique tuples, (a, b, e, i), where a and b
         are the lower and upper bounds in which the expression e of
         argument i in self is defined and a < b (when involving
@@ -737,6 +737,8 @@ class Piecewise(Function):
                 for cond2 in cond.args:
                     if isinstance(cond2, Eq):
                         lower = upper  # ignore
+                        if err_on_Eq:
+                            raise NotImplementedError('encountered Eq condition')
                         break
                     elif isinstance(cond2, Ne):
                         l, r = cond2.args
@@ -779,6 +781,8 @@ class Piecewise(Function):
                     'unrecognized condition: %s' % cond)
 
             lower, upper = lower, Max(lower, upper)
+            if err_on_Eq and lower == upper:
+                raise NotImplementedError('encountered Eq condition')
             if (lower >= upper) is not S.true:
                 int_expr.append((lower, upper, expr, iarg))
 
@@ -1189,6 +1193,48 @@ def _clip(A, B, k):
 def piecewise_simplify_arguments(expr, **kwargs):
     from sympy import simplify
     args = []
+    f1 = expr.args[0].cond.free_symbols
+    if len(f1) == 1 and not expr.atoms(Eq):
+        x = f1.pop()
+        try:
+            # this won't return intervals involving Eq
+            # and it won't handle symbols treated as
+            # booleans
+            abe_ = expr._intervals(x, err_on_Eq=True)
+        except (NotImplementedError, AttributeError):
+            pass
+        else:
+            args = []
+            for a, b, e, i in abe_:
+                c = expr.args[i].cond
+                if a is S.NegativeInfinity:
+                    if b is S.Infinity:
+                        c = S.true
+                    else:
+                        if c.subs(x, b) == True:
+                            c = (x <= b)
+                        else:
+                            c = (x < b)
+                else:
+                    incl_a = (c.subs(x, a) == True)
+                    incl_b = (c.subs(x, b) == True)
+                    if incl_a and incl_b:
+                        if b.is_infinite:
+                            c = (x >= a)
+                        else:
+                            c = And(a <= x, x <= b)
+                    elif incl_a:
+                        c = And(a <= x, x < b)
+                    elif incl_b:
+                        if b.is_infinite:
+                            c = (x > a)
+                        else:
+                            c = And(a < x, x <= b)
+                    else:
+                        c = And(a < x, x < b)
+                args.append((e, c))
+            args.append((Undefined, True))
+            expr = Piecewise(*args)
     for e, c in expr.args:
         if isinstance(e, Basic):
             doit = kwargs.pop('doit', None)
