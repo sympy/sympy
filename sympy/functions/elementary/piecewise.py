@@ -2,7 +2,8 @@ from sympy.core import S, Function, diff, Tuple, Dummy
 from sympy.core.basic import Basic, as_Basic
 from sympy.core.numbers import Rational, NumberSymbol
 from sympy.core.parameters import global_parameters
-from sympy.core.relational import Eq, Ne, Relational, _canonical
+from sympy.core.relational import (Lt, Gt, Eq, Ne, Relational,
+    _canonical)
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
     true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
@@ -275,11 +276,19 @@ class Piecewise(Function):
             if isinstance(cond, And):
                 nonredundant = []
                 for c in cond.args:
-                    if (isinstance(c, Relational) and
-                            c.negated.canonical in current_cond):
-                        continue
+                    if isinstance(c, Relational):
+                        if c.negated.canonical in current_cond:
+                            continue
+                        # if a strict inequality appears after
+                        # a non-strict one, then the condition is
+                        # redundant
+                        if isinstance(c, (Lt, Gt)) and (
+                                c.weak in current_cond):
+                            cond = False
+                            break
                     nonredundant.append(c)
-                cond = cond.func(*nonredundant)
+                else:
+                    cond = cond.func(*nonredundant)
             elif isinstance(cond, Relational):
                 if cond.negated.canonical in current_cond:
                     cond = S.true

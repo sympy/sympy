@@ -241,7 +241,7 @@ def test_equals():
     raises(NotImplementedError, lambda: (A & B).equals(A > B))
 
 
-def test_simplification():
+def test_simplification_boolalg():
     """
     Test working of simplification methods.
     """
@@ -311,6 +311,9 @@ def test_simplification():
     e = And(A, b)
     assert simplify_logic(e) == A & ~x & ~y
     raises(ValueError, lambda: simplify_logic(A & (B | C), form='blabla'))
+    assert simplify(Or(x <= y, And(x < y, z))) == (x <= y)
+    assert simplify(Or(x <= y, And(y > x, z))) == (x <= y)
+    assert simplify(Or(x >= y, And(y < x, z))) == (x >= y)
 
     # Check that expressions with nine variables or more are not simplified
     # (without the force-flag)

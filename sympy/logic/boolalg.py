@@ -153,6 +153,7 @@ class Boolean(Basic):
         """
         from sympy.calculus.util import periodicity
         from sympy.core.relational import Relational
+
         free = self.free_symbols
         if len(free) == 1:
             x = free.pop()
@@ -899,6 +900,12 @@ class Or(LatticeOp, BooleanFunction):
         return Nand(*[Not(arg) for arg in self.args])
 
     def _eval_simplify(self, **kwargs):
+        from sympy.core.relational import Le, Ge, Eq
+        lege = self.atoms(Le, Ge)
+        if lege:
+            reps = {i: self.func(
+                Eq(i.lhs, i.rhs), i.strict) for i in lege}
+            return self.xreplace(reps)._eval_simplify(**kwargs)
         # standard simplify
         rv = super()._eval_simplify(**kwargs)
         if not isinstance(rv, Or):
