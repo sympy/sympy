@@ -1023,7 +1023,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         References
         ==========
 
-        http://planetmath.org/cyclicpermutation
+        .. [1] http://planetmath.org/cyclicpermutation
 
         """
         return {self.cyclic_subword(i, i+len(self)) for i in range(len(self))}
@@ -1206,7 +1206,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         References
         ==========
 
-        http://planetmath.org/cyclicallyreduced
+        .. [1] http://planetmath.org/cyclicallyreduced
 
         """
         word = self.copy()

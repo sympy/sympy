@@ -31,7 +31,7 @@ from sympy.functions import exp, sqrt, hyper
 from sympy.integrals import Integral
 from sympy.polys import roots, gcd
 from sympy.polys.polytools import cancel, factor
-from sympy.simplify import collect, simplify, logcombine
+from sympy.simplify import collect, simplify, logcombine # type: ignore
 from sympy.simplify.powsimp import powdenest
 from sympy.solvers.ode.ode import get_numbered_constants
 

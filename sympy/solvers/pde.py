@@ -640,7 +640,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     >>> f = Function('f')
     >>> eq = -2*f(x,y).diff(x) + 4*f(x,y).diff(y) + 5*f(x,y) - exp(x + 3*y)
     >>> pdsolve(eq)
-    Eq(f(x, y), (F(4*x + 2*y) + exp(x/2 + 4*y)/15)*exp(x/2 - y))
+    Eq(f(x, y), (F(4*x + 2*y)*exp(x/2) + exp(x + 4*y)/15)*exp(-y))
 
     References
     ==========

@@ -1156,7 +1156,7 @@ class Expr(Basic, EvalfMixin):
 
         if order is None and self.is_Add:
             # Spot the special case of Add(Number, Mul(Number, expr)) with the
-            # first number positive and thhe second number nagative
+            # first number positive and the second number negative
             key = lambda x:not isinstance(x, (Number, NumberSymbol))
             add_args = sorted(Add.make_args(self), key=key)
             if (len(add_args) == 2
@@ -2219,6 +2219,7 @@ class Expr(Basic, EvalfMixin):
            x/6
 
         """
+        from sympy.functions.elementary.exponential import exp
         from .add import _unevaluated_Add
         c = sympify(c)
         if self is S.NaN:
@@ -2316,15 +2317,17 @@ class Expr(Basic, EvalfMixin):
                 if newarg is not None:
                     args[i] = newarg
                     return Mul(*args)
-        elif self.is_Pow:
-            if c.is_Pow and c.base == self.base:
-                new_exp = self.exp.extract_additively(c.exp)
+        elif self.is_Pow or isinstance(self, exp):
+            sb, se = self.as_base_exp()
+            cb, ce = c.as_base_exp()
+            if cb == sb:
+                new_exp = se.extract_additively(ce)
                 if new_exp is not None:
-                    return self.base ** (new_exp)
-            elif c == self.base:
+                    return Pow(sb, new_exp)
+            elif c == sb:
                 new_exp = self.exp.extract_additively(1)
                 if new_exp is not None:
-                    return self.base ** (new_exp)
+                    return Pow(sb, new_exp)
 
     def extract_additively(self, c):
         """Return self - c if it's possible to subtract c from self and
@@ -2464,12 +2467,9 @@ class Expr(Basic, EvalfMixin):
         return {j for i in self.args for j in i.expr_free_symbols}
 
     def could_extract_minus_sign(self):
-        """Return True if self is not in a canonical form with respect
-        to its sign.
-
-        For most expressions, e, there will be a difference in e and -e.
-        When there is, True will be returned for one and False for the
-        other; False will be returned if there is no difference.
+        """Return True if self has -1 as a leading factor or has
+        more literal negative signs than positive signs in a sum,
+        otherwise False.
 
         Examples
         ========
@@ -2479,35 +2479,22 @@ class Expr(Basic, EvalfMixin):
         >>> {i.could_extract_minus_sign() for i in (e, -e)}
         {False, True}
 
-        """
-        negative_self = -self
-        if self == negative_self:
-            return False  # e.g. zoo*x == -zoo*x
-        self_has_minus = (self.extract_multiplicatively(-1) is not None)
-        negative_self_has_minus = (
-            (negative_self).extract_multiplicatively(-1) is not None)
-        if self_has_minus != negative_self_has_minus:
-            return self_has_minus
-        else:
-            if self.is_Add:
-                # We choose the one with less arguments with minus signs
-                all_args = len(self.args)
-                negative_args = len([False for arg in self.args if arg.could_extract_minus_sign()])
-                positive_args = all_args - negative_args
-                if positive_args > negative_args:
-                    return False
-                elif positive_args < negative_args:
-                    return True
-            elif self.is_Mul:
-                # We choose the one with an odd number of minus signs
-                num, den = self.as_numer_denom()
-                args = Mul.make_args(num) + Mul.make_args(den)
-                arg_signs = [arg.could_extract_minus_sign() for arg in args]
-                negative_args = list(filter(None, arg_signs))
-                return len(negative_args) % 2 == 1
+        Though the ``y - x`` is considered like ``-(x - y)``, since it
+        is in a product without a leading factor of -1, the result is
+        false below:
 
-            # As a last resort, we choose the one with greater value of .sort_key()
-            return bool(self.sort_key() < negative_self.sort_key())
+        >>> (x*(y - x)).could_extract_minus_sign()
+        False
+
+        To put something in canonical form wrt to sign, use `signsimp`:
+
+        >>> from sympy.simplify.simplify import signsimp
+        >>> signsimp(x*(y - x))
+        -x*(x - y)
+        >>> _.could_extract_minus_sign()
+        True
+        """
+        return False
 
     def extract_branch_factor(self, allow_half=False):
         """
@@ -2834,7 +2821,7 @@ class Expr(Basic, EvalfMixin):
         References
         ==========
 
-        - https://en.wikipedia.org/wiki/Algebraic_expression
+        .. [1] https://en.wikipedia.org/wiki/Algebraic_expression
 
         """
         if syms:
@@ -3164,7 +3151,9 @@ class Expr(Basic, EvalfMixin):
         References
         ==========
 
-        .. [1] A New Algorithm for Computing Asymptotic Series - Dominik Gruntz
+        .. [1] Gruntz, Dominik. A new algorithm for computing asymptotic series.
+               In: Proc. 1993 Int. Symp. Symbolic and Algebraic Computation. 1993.
+               pp. 239-244.
         .. [2] Gruntz thesis - p90
         .. [3] http://en.wikipedia.org/wiki/Asymptotic_expansion
 

@@ -146,14 +146,6 @@ hyperexpand
 ^^^^^^^^^^^
 .. autofunction:: hyperexpand
 
-Traversal Tools
----------------
-.. module:: sympy.simplify.traversaltools
-
-use
-^^^
-.. autofunction:: use
-
 EPath Tools
 -----------
 .. module:: sympy.simplify.epathtools

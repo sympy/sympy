@@ -1071,6 +1071,16 @@ def strongly_connected_components(G):
             B -> D
         }
 
+    .. graphviz::
+
+        digraph {
+            A -> B
+            A -> C
+            B -> C
+            C -> B
+            B -> D
+        }
+
     where vertices are the letters A, B, C and D. This graph can be encoded
     using Python's elementary data structures as follows::
 
@@ -1207,6 +1217,13 @@ def connected_components(G):
 
 
     Given an undirected graph::
+
+        graph {
+            A -- B
+            C -- D
+        }
+
+    .. graphviz::
 
         graph {
             A -- B

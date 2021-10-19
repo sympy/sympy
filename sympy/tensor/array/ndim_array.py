@@ -72,6 +72,15 @@ class ArrayKind(Kind):
     def __repr__(self):
         return "ArrayKind(%s)" % self.element_kind
 
+    @classmethod
+    def _union(cls, kinds) -> 'ArrayKind':
+        elem_kinds = set(e.kind for e in kinds)
+        if len(elem_kinds) == 1:
+            elemkind, = elem_kinds
+        else:
+            elemkind = UndefinedKind
+        return ArrayKind(elemkind)
+
 
 class NDimArray(Printable):
     """
@@ -132,15 +141,6 @@ class NDimArray(Printable):
     def __new__(cls, iterable, shape=None, **kwargs):
         from sympy.tensor.array import ImmutableDenseNDimArray
         return ImmutableDenseNDimArray(iterable, shape, **kwargs)
-
-    @property
-    def kind(self):
-        elem_kinds = set(e.kind for e in self._array)
-        if len(elem_kinds) == 1:
-            elemkind, = elem_kinds
-        else:
-            elemkind = UndefinedKind
-        return ArrayKind(elemkind)
 
     def _parse_index(self, index):
         if isinstance(index, (SYMPY_INTS, Integer)):

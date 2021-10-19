@@ -1,7 +1,7 @@
 from sympy import Set, S
 from sympy.calculus.singularities import singularities
 from sympy.core import Expr, Add
-from sympy.core.function import Lambda, _coeff_isneg, FunctionClass, diff
+from sympy.core.function import Lambda, FunctionClass, diff
 from sympy.core.numbers import Float, oo
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.functions.elementary.exponential import exp, log
@@ -187,7 +187,8 @@ def _set_function(f, self): # noqa:F811
     c = f(0)
     fx = f(n) - c
     f_x = f(-n) - c
-    neg_count = lambda e: sum(_coeff_isneg(_) for _ in Add.make_args(e))
+    neg_count = lambda e: sum(_.could_extract_minus_sign()
+        for _ in Add.make_args(e))
     if neg_count(f_x) < neg_count(fx):
         expr = f_x + c
 

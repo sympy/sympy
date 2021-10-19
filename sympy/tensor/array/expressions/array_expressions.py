@@ -3,7 +3,7 @@ from collections import defaultdict, Counter
 from functools import reduce
 import itertools
 from itertools import accumulate
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple as tTuple
 
 import typing
 
@@ -62,7 +62,7 @@ class ArrayElement(_ArrayExpr):
         if isinstance(name, str):
             name = Symbol(name)
         name = _sympify(name)
-        indices = _sympify(indices)
+        indices = _sympify(tuple(indices))
         if hasattr(name, "shape"):
             if any((i >= s) == True for i, s in zip(indices, name.shape)):
                 raise ValueError("shape is out of bounds")
@@ -1309,12 +1309,14 @@ class _ArgE:
     the second index is contracted to the 4th (i.e. number ``3``) group of the
     array contraction object.
     """
+    indices: List[Optional[int]]
+
     def __init__(self, element, indices: Optional[List[Optional[int]]] = None):
         self.element = element
         if indices is None:
-            self.indices: List[Optional[int]] = [None for i in range(get_rank(element))]
+            self.indices = [None for i in range(get_rank(element))]
         else:
-            self.indices: List[Optional[int]] = indices
+            self.indices = indices
 
     def __str__(self):
         return "_ArgE(%s, %s)" % (self.element, self.indices)
@@ -1359,14 +1361,14 @@ class _EditArrayContraction:
 
     def __init__(self, base_array: typing.Union[ArrayContraction, ArrayDiagonal, ArrayTensorProduct]):
 
-        expr: Expr
-        diagonalized: List[int]
-        contraction_indices: List[Tuple[int]]
+        expr: Basic
+        diagonalized: tTuple[tTuple[int, ...], ...]
+        contraction_indices: List[tTuple[int]]
         if isinstance(base_array, ArrayContraction):
             mapping = _get_mapping_from_subranks(base_array.subranks)
             expr = base_array.expr
             contraction_indices = base_array.contraction_indices
-            diagonalized = []
+            diagonalized = ()
         elif isinstance(base_array, ArrayDiagonal):
 
             if isinstance(base_array.expr, ArrayContraction):
@@ -1388,7 +1390,7 @@ class _EditArrayContraction:
         elif isinstance(base_array, ArrayTensorProduct):
             expr = base_array
             contraction_indices = []
-            diagonalized = []
+            diagonalized = ()
         else:
             raise NotImplementedError()
 
@@ -1404,7 +1406,7 @@ class _EditArrayContraction:
                 args_with_ind[arg_pos].indices[rel_pos] = i
         self.args_with_ind: List[_ArgE] = args_with_ind
         self.number_of_contraction_indices: int = len(contraction_indices)
-        self._track_permutation: Optional[List[int]] = None
+        self._track_permutation: Optional[List[List[int]]] = None
 
         mapping = _get_mapping_from_subranks(base_array.subranks)
 
@@ -1588,8 +1590,8 @@ class _EditArrayContraction:
     def track_permutation_merge(self, destination: _ArgE, from_element: _ArgE):
         index_destination = self.args_with_ind.index(destination)
         index_element = self.args_with_ind.index(from_element)
-        self._track_permutation[index_destination].extend(self._track_permutation[index_element])
-        self._track_permutation.pop(index_element)
+        self._track_permutation[index_destination].extend(self._track_permutation[index_element]) # type: ignore
+        self._track_permutation.pop(index_element) # type: ignore
 
     def get_absolute_free_range(self, arg: _ArgE) -> typing.Tuple[int, int]:
         """

@@ -6,7 +6,7 @@ from .cache import cacheit
 from .singleton import S
 from .expr import Expr
 from .evalf import PrecisionExhausted
-from .function import (_coeff_isneg, expand_complex, expand_multinomial,
+from .function import (expand_complex, expand_multinomial,
     expand_mul, _mexpand)
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
 from .compatibility import as_int
@@ -308,9 +308,15 @@ class Pow(Expr):
                 if b == S.Exp1:
                     from sympy import AccumBounds
                     return AccumBounds(Pow(b, e.min), Pow(b, e.max))
-            # Only perform autosimplification if exponent or base is a Symbol or number
-            elif (b.is_Symbol or b.is_number) and (e.is_Symbol or e.is_number) and\
-                e.is_integer and _coeff_isneg(b):
+            # autosimplification if base is a number and exp odd/even
+            # if base is Number then the base will end up positive; we
+            # do not do this with arbitrary expressions since symbolic
+            # cancellation might occur as in (x - 1)/(1 - x) -> -1. If
+            # we returned Piecewise((-1, Ne(x, 1))) for such cases then
+            # we could do this...but we don't
+            elif (e.is_Symbol and e.is_integer or e.is_Integer
+                    ) and (b.is_number and b.is_Mul or b.is_Number
+                    ) and b.could_extract_minus_sign():
                 if e.is_even:
                     b = -b
                 elif e.is_odd:
@@ -373,7 +379,7 @@ class Pow(Expr):
     def _eval_refine(self, assumptions):
         from sympy.assumptions.ask import ask, Q
         b, e = self.as_base_exp()
-        if ask(Q.integer(e), assumptions) and _coeff_isneg(b):
+        if ask(Q.integer(e), assumptions) and b.could_extract_minus_sign():
             if ask(Q.even(e), assumptions):
                 return Pow(-b, e)
             elif ask(Q.odd(e), assumptions):
@@ -420,7 +426,7 @@ class Pow(Expr):
                     if _half(other):
                         if b.is_negative is True:
                             return S.NegativeOne**other*Pow(-b, e*other)
-                        elif b.is_negative is False:
+                        elif b.is_negative is False:  # XXX ok if im(b) != 0?
                             return Pow(b, -other)
                 elif e.is_even:
                     if b.is_extended_real:
@@ -1509,8 +1515,8 @@ class Pow(Expr):
         # this should be the same as ExpBase.as_numer_denom wrt
         # exponent handling
         neg_exp = exp.is_negative
-        if not neg_exp and not (-exp).is_negative:
-            neg_exp = _coeff_isneg(exp)
+        if exp.is_Mul and not neg_exp and not exp.is_positive:
+            neg_exp = exp.could_extract_minus_sign()
         int_exp = exp.is_integer
         # the denominator cannot be separated from the numerator if
         # its sign is unknown unless the exponent is an integer, e.g.

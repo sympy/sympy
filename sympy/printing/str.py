@@ -6,7 +6,6 @@ from typing import Any, Dict
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
-from sympy.core.function import _coeff_isneg
 from sympy.core.relational import Relational
 from sympy.sets.sets import FiniteSet
 from .printer import Printer, print_function
@@ -287,7 +286,7 @@ class StrPrinter(Printer):
                 d[i] = Pow(di.base, e, evaluate=False) if e - 1 else di.base
 
             # don't parenthesize first factor if negative
-            if _coeff_isneg(n[0]):
+            if n[0].could_extract_minus_sign():
                 pre = [str(n.pop(0))]
             else:
                 pre = []
@@ -295,7 +294,7 @@ class StrPrinter(Printer):
                 for a in n]
 
             # don't parenthesize first of denominator unless singleton
-            if len(d) > 1 and _coeff_isneg(d[0]):
+            if len(d) > 1 and d[0].could_extract_minus_sign():
                 pre = [str(d.pop(0))]
             else:
                 pre = []
@@ -490,7 +489,8 @@ class StrPrinter(Printer):
         return self._print(expr.name)
 
     def _print_ArrayElement(self, expr):
-        return "%s[%s]" % (expr.name, ", ".join([self._print(i) for i in expr.indices]))
+        return "%s[%s]" % (
+            self.parenthesize(expr.name, PRECEDENCE["Func"], True), ", ".join([self._print(i) for i in expr.indices]))
 
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % self._print(a) for a in expr.args]

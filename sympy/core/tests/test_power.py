@@ -397,6 +397,7 @@ def test_issue_7638():
     assert sqrt(r**Rational(4, 3)) != r**Rational(2, 3)
     assert sqrt((p + I)**Rational(4, 3)) == (p + I)**Rational(2, 3)
     assert sqrt((p - p**2*I)**2) == p - p**2*I
+    assert sqrt((p**2*I - p)**2) == p**2*I - p  # XXX ok?
     assert sqrt((p + r*I)**2) != p + r*I
     e = (1 + I/5)
     assert sqrt(e**5) == e**(5*S.Half)

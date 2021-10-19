@@ -1217,7 +1217,7 @@ def evalf_sum(expr, prec, options):
     prec2 = prec + 10
     try:
         n, a, b = limits[0]
-        if b != S.Infinity or a != int(a):
+        if b is not S.Infinity or a is S.NegativeInfinity or a != int(a):
             raise NotImplementedError
         # Use fast hypergeometric summation if possible
         v = hypsum(func, n, int(a), prec2)
@@ -1233,6 +1233,8 @@ def evalf_sum(expr, prec, options):
             s, err = expr.euler_maclaurin(m=m, n=n, eps=eps,
                 eval_integral=False)
             err = err.evalf()
+            if err is S.NaN:
+                raise NotImplementedError
             if err <= eps:
                 break
         err = fastlog(evalf(abs(err), 20, options)[0])
@@ -1529,6 +1531,8 @@ class EvalfMixin:
                 # Probably contains symbols or unknown functions
                 return v
         re, im, re_acc, im_acc = result
+        if re is S.NaN or im is S.NaN:
+            return S.NaN
         if re:
             p = max(min(prec, re_acc), 1)
             re = Float._new(re, p)

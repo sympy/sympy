@@ -98,7 +98,7 @@ class SparseNDimArray(NDimArray):
 
         return type(self)(self._sparse_array, newshape)
 
-class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray):
+class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray): # type: ignore
 
     def __new__(cls, iterable=None, shape=None, **kwargs):
         from sympy.utilities.iterables import flatten

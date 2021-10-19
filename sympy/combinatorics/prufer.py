@@ -205,7 +205,7 @@ class Prufer(Basic):
         References
         ==========
 
-        - https://hamberg.no/erlend/posts/2010-11-06-prufer-sequence-compact-tree-representation.html
+        .. [1] https://hamberg.no/erlend/posts/2010-11-06-prufer-sequence-compact-tree-representation.html
 
         See Also
         ========

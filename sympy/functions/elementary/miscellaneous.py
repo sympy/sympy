@@ -16,7 +16,9 @@ from sympy.core.singleton import Singleton
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
+from sympy.core.traversal import walk
 from sympy.logic.boolalg import And, Or
+
 
 def _minmax_as_Piecewise(op, *args):
     # helper for Min/Max rewrite as Piecewise
@@ -202,8 +204,8 @@ def cbrt(arg, evaluate=None):
     References
     ==========
 
-    * https://en.wikipedia.org/wiki/Cube_root
-    * https://en.wikipedia.org/wiki/Principal_value
+    .. [1] https://en.wikipedia.org/wiki/Cube_root
+    .. [2] https://en.wikipedia.org/wiki/Principal_value
 
     """
     return Pow(arg, Rational(1, 3), evaluate=evaluate)
@@ -296,11 +298,11 @@ def root(arg, n, k=0, evaluate=None):
     References
     ==========
 
-    * https://en.wikipedia.org/wiki/Square_root
-    * https://en.wikipedia.org/wiki/Real_root
-    * https://en.wikipedia.org/wiki/Root_of_unity
-    * https://en.wikipedia.org/wiki/Principal_value
-    * http://mathworld.wolfram.com/CubeRoot.html
+    .. [1] https://en.wikipedia.org/wiki/Square_root
+    .. [2] https://en.wikipedia.org/wiki/Real_root
+    .. [3] https://en.wikipedia.org/wiki/Root_of_unity
+    .. [4] https://en.wikipedia.org/wiki/Principal_value
+    .. [5] http://mathworld.wolfram.com/CubeRoot.html
 
     """
     n = sympify(n)
@@ -434,8 +436,6 @@ class MinMaxBase(Expr, LatticeOp):
         >>> Min(a, Max(b, Min(c, d, Max(a, e))))
         Min(a, Max(b, Min(a, c, d)))
         """
-        from sympy.simplify.simplify import walk
-
         if not args:
             return args
         args = list(ordered(args))

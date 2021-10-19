@@ -4,7 +4,7 @@ from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
 from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, PoleError, expand_mul
-from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool
+from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool, fuzzy_and
 from sympy.core.numbers import igcdex, Rational, pi, Integer
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
@@ -94,7 +94,7 @@ class TrigonometricFunction(Function):
 
 def _peeloff_pi(arg):
     """
-    Split ARG into two parts, a "rest" and a multiple of pi/2.
+    Split ARG into two parts, a "rest" and a multiple of pi.
     This assumes ARG to be an Add.
     The multiple of pi returned in the second position is always a Rational.
 
@@ -105,9 +105,9 @@ def _peeloff_pi(arg):
     >>> from sympy import pi
     >>> from sympy.abc import x, y
     >>> peel(x + pi/2)
-    (x, pi/2)
+    (x, 1/2)
     >>> peel(x + 2*pi/3 + pi*y)
-    (x + pi*y + pi/6, pi/2)
+    (x + pi*y + pi/6, 1/2)
 
     """
     pi_coeff = S.Zero
@@ -122,12 +122,10 @@ def _peeloff_pi(arg):
     if pi_coeff is S.Zero:
         return arg, S.Zero
 
-    m1 = (pi_coeff % S.Half)*S.Pi
-    m2 = pi_coeff*S.Pi - m1
-    final_coeff = m2 / S.Pi
-    if final_coeff.is_integer or ((2*final_coeff).is_integer
-        and final_coeff.is_even is False):
-            return Add(*(rest_terms + [m1])), m2
+    m1 = (pi_coeff % S.Half)
+    m2 = pi_coeff - m1
+    if m2.is_integer or ((2*m2).is_integer and m2.is_even is False):
+        return Add(*(rest_terms + [m1*pi])), m2
     return arg, S.Zero
 
 
@@ -345,6 +343,7 @@ class sin(TrigonometricFunction):
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
             if m:
+                m = m*S.Pi
                 return sin(m)*cos(x) + cos(m)*sin(x)
 
         if arg.is_zero:
@@ -501,9 +500,9 @@ class sin(TrigonometricFunction):
             return True
 
     def _eval_is_zero(self):
-        arg = self.args[0]
-        if arg.is_zero:
-            return True
+        rest, pi_mult = _peeloff_pi(self.args[0])
+        if rest.is_zero:
+            return pi_mult.is_integer
 
     def _eval_is_complex(self):
         if self.args[0].is_extended_real \
@@ -678,6 +677,7 @@ class cos(TrigonometricFunction):
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
             if m:
+                m = m*S.Pi
                 return cos(m)*cos(x) - sin(m)*sin(x)
 
         if arg.is_zero:
@@ -963,6 +963,13 @@ class cos(TrigonometricFunction):
             or self.args[0].is_complex:
             return True
 
+    def _eval_is_zero(self):
+        rest, pi_mult = _peeloff_pi(self.args[0])
+        if pi_mult:
+            return fuzzy_and([(pi_mult - S.Half).is_integer, rest.is_zero])
+        else:
+            return rest.is_zero
+
 
 class tan(TrigonometricFunction):
     """
@@ -1116,7 +1123,7 @@ class tan(TrigonometricFunction):
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
             if m:
-                tanm = tan(m)
+                tanm = tan(m*S.Pi)
                 if tanm is S.ComplexInfinity:
                     return -cot(x)
                 else: # tanm == 0
@@ -1289,9 +1296,9 @@ class tan(TrigonometricFunction):
             return True
 
     def _eval_is_zero(self):
-        arg = self.args[0]
-        if arg.is_zero:
-            return True
+        rest, pi_mult = _peeloff_pi(self.args[0])
+        if rest.is_zero:
+            return pi_mult.is_integer
 
     def _eval_is_complex(self):
         arg = self.args[0]
@@ -1427,7 +1434,7 @@ class cot(TrigonometricFunction):
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
             if m:
-                cotm = cot(m)
+                cotm = cot(m*S.Pi)
                 if cotm is S.ComplexInfinity:
                     return cot(x)
                 else: # cotm == 0
@@ -1599,6 +1606,11 @@ class cot(TrigonometricFunction):
         arg = self.args[0]
         if arg.is_real and (arg/pi).is_integer is False:
             return True
+
+    def _eval_is_zero(self):
+        rest, pimult = _peeloff_pi(self.args[0])
+        if pimult and rest.is_zero:
+            return (pimult - S.Half).is_integer
 
     def _eval_subs(self, old, new):
         arg = self.args[0]
@@ -1823,6 +1835,7 @@ class sec(ReciprocalTrigonometricFunction):
             return ((-1)**n)/lt
         return self.func(x0)
 
+
 class csc(ReciprocalTrigonometricFunction):
     """
     The cosecant function.
@@ -2012,6 +2025,21 @@ class sinc(Function):
 
     def _eval_rewrite_as_sin(self, arg, **kwargs):
         return Piecewise((sin(arg)/arg, Ne(arg, S.Zero)), (S.One, S.true))
+
+    def _eval_is_zero(self):
+        if self.args[0].is_infinite:
+            return True
+        rest, pi_mult = _peeloff_pi(self.args[0])
+        if rest.is_zero:
+            return fuzzy_and([pi_mult.is_integer, pi_mult.is_nonzero])
+        if rest.is_Number and pi_mult.is_integer:
+            return False
+
+    def _eval_is_real(self):
+        if self.args[0].is_extended_real or self.args[0].is_imaginary:
+            return True
+
+    _eval_is_finite = _eval_is_real
 
 
 ###############################################################################

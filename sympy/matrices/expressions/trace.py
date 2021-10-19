@@ -112,6 +112,9 @@ class Trace(Expr):
             else:
                 return Trace(self.arg)
 
+    def as_explicit(self):
+        return Trace(self.arg.as_explicit()).doit()
+
     def _normalize(self):
         # Normalization of trace of matrix products. Use transposition and
         # cyclic properties of traces to make sure the arguments of the matrix

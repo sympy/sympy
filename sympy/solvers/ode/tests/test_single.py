@@ -1687,10 +1687,8 @@ def _get_examples_ode_sol_separable():
 
     'separable_07': {
         'eq': f(x)*x**2*f(x).diff(x) - f(x)**3 - 2*x**2*f(x).diff(x),
-        'sol': [
-            Eq(f(x), (-x + sqrt(x*(4*C1*x + x - 4)))/(C1*x - 1)/2),
-            Eq(f(x), -((x + sqrt(x*(4*C1*x + x - 4)))/(C1*x - 1))/2)
-        ],
+        'sol': [Eq(f(x), (-x - sqrt(x*(4*C1*x + x - 4)))/(C1*x - 1)/2),
+                Eq(f(x), (-x + sqrt(x*(4*C1*x + x - 4)))/(C1*x - 1)/2)],
         'slow': True,
     },
 
@@ -1791,7 +1789,7 @@ def _get_examples_ode_sol_separable():
     # https://github.com/sympy/sympy/issues/7081
     'separable_23': {
         'eq': x*(f(x).diff(x)) + 1 - f(x)**2,
-        'sol': [Eq(f(x), -1/(-C1 + x**2)*(C1 + x**2))],
+        'sol': [Eq(f(x), (-C1 - x**2)/(-C1 + x**2))],
     },
 
     # https://github.com/sympy/sympy/issues/10379
@@ -2347,7 +2345,7 @@ def _get_examples_ode_sol_lie_group():
 
     'lie_group_10': {
         'eq': x**2*(f(x).diff(x)) - f(x) + x**2*exp(x - (1/x)),
-        'sol': [Eq(f(x), -((C1 + exp(x))*exp(-1/x)))],
+        'sol': [Eq(f(x), (C1 - exp(x))*exp(-1/x))],
         'XFAIL': ['factorable'], #It raises Recursion Error (maixmum depth exceeded)
     },
 

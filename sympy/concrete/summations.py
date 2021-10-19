@@ -769,8 +769,14 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         for k in range(1, n + 2):
             ga, gb = fpoint(g)
             term = bernoulli(2*k)/factorial(2*k)*(gb - ga)
-            if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
+            if k > n:
                 break
+            if eps and term:
+                term_evalf = term.evalf(3)
+                if term_evalf is S.NaN:
+                    return S.NaN, S.NaN
+                if abs(term_evalf) < eps:
+                    break
             s += term
             g = g.diff(i, 2, simplify=False)
         return s + iterm, abs(term)
@@ -1342,7 +1348,7 @@ def eval_sum_residue(f, i_a_b):
     Notes
     =====
 
-    If $f(n), g(n)$ are polynomials with $\deg(g(n)) - \deg(f(n)) >= 2$,
+    If $f(n), g(n)$ are polynomials with $\deg(g(n)) - \deg(f(n)) \ge 2$,
     some infinite summations can be computed by the following residue
     evaluations.
 

@@ -47,7 +47,7 @@ class CommonHandler(AskHandler):
 
 # CommutativePredicate
 
-@CommutativePredicate.register(Symbol)
+@CommutativePredicate.register(Symbol) # type: ignore
 def _(expr, assumptions):
     """Objects are expected to be commutative unless otherwise stated"""
     assumps = conjuncts(assumptions)
@@ -59,41 +59,41 @@ def _(expr, assumptions):
         return False
     return True
 
-@CommutativePredicate.register(Basic)
+@CommutativePredicate.register(Basic) # type: ignore
 def _(expr, assumptions):
     for arg in expr.args:
         if not ask(Q.commutative(arg), assumptions):
             return False
     return True
 
-@CommutativePredicate.register(Number)
+@CommutativePredicate.register(Number) # type: ignore
 def _(expr, assumptions):
     return True
 
-@CommutativePredicate.register(NaN)
+@CommutativePredicate.register(NaN) # type: ignore
 def _(expr, assumptions):
     return True
 
 
 # IsTruePredicate
 
-@IsTruePredicate.register(bool)
+@IsTruePredicate.register(bool) # type: ignore
 def _(expr, assumptions):
     return expr
 
-@IsTruePredicate.register(BooleanTrue)
+@IsTruePredicate.register(BooleanTrue) # type: ignore
 def _(expr, assumptions):
     return True
 
-@IsTruePredicate.register(BooleanFalse)
+@IsTruePredicate.register(BooleanFalse) # type: ignore
 def _(expr, assumptions):
     return False
 
-@IsTruePredicate.register(AppliedPredicate)
+@IsTruePredicate.register(AppliedPredicate) # type: ignore
 def _(expr, assumptions):
     return ask(expr, assumptions)
 
-@IsTruePredicate.register(Not)
+@IsTruePredicate.register(Not) # type: ignore
 def _(expr, assumptions):
     arg = expr.args[0]
     if arg.is_Symbol:
@@ -105,7 +105,7 @@ def _(expr, assumptions):
     else:
         return None
 
-@IsTruePredicate.register(Or)
+@IsTruePredicate.register(Or) # type: ignore
 def _(expr, assumptions):
     result = False
     for arg in expr.args:
@@ -116,7 +116,7 @@ def _(expr, assumptions):
             result = None
     return result
 
-@IsTruePredicate.register(And)
+@IsTruePredicate.register(And) # type: ignore
 def _(expr, assumptions):
     result = True
     for arg in expr.args:
@@ -127,12 +127,12 @@ def _(expr, assumptions):
             result = None
     return result
 
-@IsTruePredicate.register(Implies)
+@IsTruePredicate.register(Implies) # type: ignore
 def _(expr, assumptions):
     p, q = expr.args
     return ask(~p | q, assumptions=assumptions)
 
-@IsTruePredicate.register(Equivalent)
+@IsTruePredicate.register(Equivalent) # type: ignore
 def _(expr, assumptions):
     p, q = expr.args
     pt = ask(p, assumptions=assumptions)

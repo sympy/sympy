@@ -139,7 +139,7 @@ def prepare_apt():
     # Be sure to use the Python 2 pip
     sudo("/usr/bin/pip install twine")
     # Needed to build the docs
-    sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra librsvg2-bin docbook2x")
+    sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra librsvg2-bin docbook2x dbus")
     # Our Ubuntu is too old to include Python 3.3
     sudo("apt-get -y install python-software-properties")
     sudo("add-apt-repository -y ppa:fkrull/deadsnakes")
