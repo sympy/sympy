@@ -1,13 +1,12 @@
 from sympy.core.compatibility import as_int
 from sympy.core.function import Function
-from sympy.utilities.iterables import cartes
 from sympy.core.numbers import igcd, igcdex, mod_inverse
 from sympy.core.power import isqrt
 from sympy.core.singleton import S
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient, multiplicity
 from random import randint, Random
-
+from itertools import product
 
 
 def n_order(a, n):
@@ -795,7 +794,8 @@ def _help(m, prime_modulo_method, diff_method, expr_val):
     for x, y in dd.items():
         m.append(x)
         a.append(list(y))
-    return sorted({crt(m, list(i))[0] for i in cartes(*a)})
+    return sorted({crt(m, list(i))[0] for i in product(*a)})
+
 
 def _nthroot_mod_composite(a, n, m):
     """

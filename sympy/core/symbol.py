@@ -9,7 +9,7 @@ from .function import FunctionClass
 from .kind import NumberKind, UndefinedKind
 from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
-from sympy.utilities.iterables import cartes, sift
+from sympy.utilities.iterables import sift
 from sympy.core.containers import Tuple
 
 import string
