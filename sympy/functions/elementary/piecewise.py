@@ -6,9 +6,10 @@ from sympy.core.relational import (Equality, Unequality, Relational,
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or,
     true, false, Or, ITE, simplify_logic)
-from sympy.utilities.iterables import uniq, ordered, product, sift
+from sympy.utilities.iterables import uniq, ordered, sift, common_prefix
 from sympy.utilities.misc import filldedent, func_name
 
+from itertools import product
 
 Undefined = S.NaN  # Piecewise()
 
@@ -1087,7 +1088,6 @@ def piecewise_fold(expr):
             else:
                 new_args.append((e, c))
     else:
-        from sympy.utilities.iterables import cartes, sift, common_prefix
         # Given
         #     P1 = Piecewise((e11, c1), (e12, c2), A)
         #     P2 = Piecewise((e21, c1), (e22, c2), B)
@@ -1134,7 +1134,7 @@ def piecewise_fold(expr):
             args = expr.args
         # fold
         folded = list(map(piecewise_fold, args))
-        for ec in cartes(*[
+        for ec in product(*[
                 (i.args if isinstance(i, Piecewise) else
                  [(i, true)]) for i in folded]):
             e, c = zip(*ec)
