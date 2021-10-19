@@ -1,3 +1,15 @@
+'''
+problems
+
+These should be None
+    >>> Dummy(zero=True)**Dummy(infinite=True) >= 0
+    True
+    >>> Dummy(zero=True)**Dummy(infinite=True) > 0
+    False
+    >>> 0**-oo
+    zoo
+
+'''
 from typing import Dict, Union, Type
 from .basic import S, Atom
 from .compatibility import ordered
@@ -1187,10 +1199,10 @@ def _trivial(l):
                     return S.Infinity
             if (l.base - 1).is_positive:
                 if l.exp.is_extended_positive:
-                    assert None, 13
+                    # assert None, 13
                     return S.Infinity
                 if l.exp.is_extended_negative:
-                    assert None, 12
+                    # assert None, 12
                     return S.Zero
         if l.exp.is_finite:
             return l

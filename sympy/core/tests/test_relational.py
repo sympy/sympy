@@ -1300,6 +1300,10 @@ def test_21429():
     assert (r/i >= 0).is_Relational  # assertion 2
     assert (-2*y >= x).is_Relational  # recursion check
     assert (-2*i >= r).is_Relational  # recursion check
+    assert (2**Dummy(infinite=True, extended_positive=True
+        ) >= pi/2) is S.true  # assertion 13
+    assert (2**Dummy(infinite=True, extended_negative=True
+        ) >= pi/2) is S.false  # assertion 12
     def check(r, b):
         assert r <= b
         assert r < b + 1
