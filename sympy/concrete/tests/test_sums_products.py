@@ -608,6 +608,13 @@ def test_Sum_doit():
     assert summation(1/n**2, (n, 1, oo)) == zeta(2)
     assert summation(1/n**s, (n, 0, oo)) == Sum(n**(-s), (n, 0, oo))
 
+    # issue 14103
+    assert Sum(sin(x)**2 + cos(x)**2 , (x, 1, 10)).doit() == 10
+    assert Sum(sin(x)**2 + cos(x)**2 , (x, 1, 1000)).doit() == 1000
+    assert Sum(cos(pi*x) , (x, 1, 50)).doit() == 0
+    assert Sum(cos(pi*x) , (x, 1, 49)).doit() == -1
+    assert Sum(sec(x)*cos(x) , (x, 1, 50)).doit() == 50
+
 
 def test_Product_doit():
     assert Product(n*Integral(a**2), (n, 1, 3)).doit() == 2 * a**9 / 9
