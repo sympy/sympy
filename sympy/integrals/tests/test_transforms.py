@@ -12,12 +12,15 @@ from sympy import (
     cos, S, Abs, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
     exp_polar, unpolarify, Function, expint, expand_mul, Rational,
-    gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2)
+    gammasimp, trigsimp, atan, sinh, cosh, atan2)
 from sympy.testing.pytest import XFAIL, slow, skip, raises, warns_deprecated_sympy
 from sympy.matrices import Matrix, eye
-from sympy.abc import x, s, a, b, c, d
+from sympy.abc import x, s, a, b, c, d, t
 nu, beta, rho = symbols('nu beta rho')
 
+
+LT = laplace_transform
+ILT = inverse_laplace_transform
 
 def test_undefined_function():
     from sympy import MellinTransform
@@ -449,9 +452,7 @@ def test_inverse_mellin_transform():
 @slow
 def test_laplace_transform():
     from sympy import fresnels, fresnelc, DiracDelta
-    LT = laplace_transform
     a, b, c, = symbols('a b c', positive=True)
-    t = symbols('t')
     w = Symbol("w")
     f = Function("f")
 
@@ -532,9 +533,9 @@ def test_laplace_transform():
         ((2*sin(s**2/(2*pi))*fresnelc(s/pi) - 2*cos(s**2/(2*pi))*fresnels(s/pi)
         + sqrt(2)*cos(s**2/(2*pi) + pi/4))/(2*s), 0, True))
 
-    # What is this testing:
-    Ne(1/s, 1) & (0 < cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1)
 
+@slow
+def test_laplace_transform_matrix():
     Mt = Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]])
     Ms = Matrix([[    1/(s - 1), (s + 1)**(-2)],
                  [(s + 1)**(-2),     1/(s - 1)]])
@@ -542,14 +543,14 @@ def test_laplace_transform():
     # The default behaviour for Laplace tranform of a Matrix returns a Matrix
     # of Tuples and is deprecated:
     with warns_deprecated_sympy():
-        Ms_conds = Matrix([[(1/(s - 1), 1, s > 1), ((s + 1)**(-2), 0, True)],
-                           [((s + 1)**(-2), 0, True), (1/(s - 1), 1, s > 1)]])
+        Ms_conds = Matrix([[(1/(s - 1), 1, True), ((s + 1)**(-2), 0, True)],
+                           [((s + 1)**(-2), 0, True), (1/(s - 1), 1, True)]])
     with warns_deprecated_sympy():
-        assert LT(Mt, t, s) == Ms_conds
+        assert LT(Mt, t, s) == Ms_conds, LT(Mt, t, s)
 
     # The new behavior is to return a tuple of a Matrix and the convergence
     # conditions for the matrix as a whole:
-    assert LT(Mt, t, s, legacy_matrix=False) == (Ms, 1, s > 1)
+    assert LT(Mt, t, s, legacy_matrix=False) == (Ms, 1, True)
 
     # With noconds=True the transformed matrix is returned without conditions
     # either way:
@@ -559,14 +560,13 @@ def test_laplace_transform():
 
 @slow
 def test_issue_8368_7173():
-    LT = laplace_transform
     # hyperbolic
-    assert LT(sinh(x), x, s) == (1/(s**2 - 1), 1, s > 1)
+    assert LT(sinh(x), x, s) == (1/(s**2 - 1), 1, True)
     assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, s > 1)
     assert LT(sinh(x + 3), x, s) == (
-        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, s > 1)
+        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, True)
     assert LT(sinh(x)*cosh(x), x, s) == (
-        1/(s**2 - 4), 2, s > 2)
+        1/(s**2 - 4), 2, True)
     # trig (make sure they are not being rewritten in terms of exp)
     assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), 0, True)
 
@@ -574,9 +574,7 @@ def test_issue_8368_7173():
 @slow
 def test_inverse_laplace_transform():
     from sympy import simplify, factor_terms, DiracDelta
-    ILT = inverse_laplace_transform
     a, b, c, = symbols('a b c', positive=True)
-    t = symbols('t')
 
     def simp_hyp(expr):
         return factor_terms(expand_mul(expr)).rewrite(sin)
@@ -632,8 +630,6 @@ def test_inverse_laplace_transform():
 
 def test_inverse_laplace_transform_delta():
     from sympy import DiracDelta
-    ILT = inverse_laplace_transform
-    t = symbols('t')
     assert ILT(2, s, t) == 2*DiracDelta(t)
     assert ILT(2*exp(3*s) - 5*exp(-7*s), s, t) == \
         2*DiracDelta(t + 3) - 5*DiracDelta(t - 7)
@@ -646,8 +642,6 @@ def test_inverse_laplace_transform_delta():
 
 def test_inverse_laplace_transform_delta_cond():
     from sympy import DiracDelta, Eq, im
-    ILT = inverse_laplace_transform
-    t = symbols('t')
     r = Symbol('r', real=True)
     assert ILT(exp(r*s), s, t, noconds=False) == (DiracDelta(t + r), True)
     z = Symbol('z')
