@@ -51,6 +51,8 @@ def test_piecewise1():
 
     assert Piecewise((1, x > 0), (2, And(x <= 0, x > -1))
         ) == Piecewise((1, x > 0), (2, x > -1))
+    assert Piecewise((1, x <= 0), (2, (x < 0) & (x > -1))
+        ) == Piecewise((1, x <= 0))
 
     # test for supporting Contains in Piecewise
     pwise = Piecewise(
