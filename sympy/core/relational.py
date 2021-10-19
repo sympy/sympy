@@ -196,6 +196,36 @@ class Relational(Boolean, EvalfMixin):
         #      b, evaluate=evaluate)))(*self.args, evaluate=False)
         return Relational.__new__(ops.get(self.func), *self.args)
 
+    @property
+    def weak(self):
+        """return the non-strict version of the inequality or self
+
+        EXAMPLES
+        ========
+
+        >>> from sympy.abc import x
+        >>> (x < 1).weak
+        x <= 1
+        >>> _.weak
+        x <= 1
+        """
+        return self
+
+    @property
+    def strict(self):
+        """return the strict version of the inequality or self
+
+        EXAMPLES
+        ========
+
+        >>> from sympy.abc import x
+        >>> (x <= 1).strict
+        x < 1
+        >>> _.strict
+        x < 1
+        """
+        return self
+
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
 
@@ -997,6 +1027,9 @@ class GreaterThan(_Greater):
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_ge(lhs, rhs)
 
+    @property
+    def strict(self):
+        return Gt(*self.args)
 
 Ge = GreaterThan
 
@@ -1011,6 +1044,9 @@ class LessThan(_Less):
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_le(lhs, rhs)
 
+    @property
+    def strict(self):
+        return Lt(*self.args)
 
 Le = LessThan
 
@@ -1024,6 +1060,10 @@ class StrictGreaterThan(_Greater):
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_gt(lhs, rhs)
+
+    @property
+    def weak(self):
+        return Ge(*self.args)
 
 
 Gt = StrictGreaterThan
@@ -1039,6 +1079,9 @@ class StrictLessThan(_Less):
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_lt(lhs, rhs)
 
+    @property
+    def weak(self):
+        return Le(*self.args)
 
 Lt = StrictLessThan
 
