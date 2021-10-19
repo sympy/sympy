@@ -383,7 +383,7 @@ class C89CodePrinter(CodePrinter):
 
     def _print_ITE(self, expr):
         from sympy.functions import Piecewise
-        return self._print(expr.rewrite(Piecewise))
+        return self._print(expr.rewrite(Piecewise, deep=False))
 
     def _print_MatrixElement(self, expr):
         return "{}[{}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
