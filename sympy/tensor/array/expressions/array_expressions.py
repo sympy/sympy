@@ -28,7 +28,7 @@ class ArraySymbol(_ArrayExpr):
     Symbol representing an array expression
     """
 
-    def __new__(cls, symbol, shape):
+    def __new__(cls, symbol, shape: typing.Iterable) -> "ArraySymbol":
         if isinstance(symbol, str):
             symbol = Symbol(symbol)
         # symbol = _sympify(symbol)
@@ -41,7 +41,7 @@ class ArraySymbol(_ArrayExpr):
         return self._args[0]
 
     @property
-    def shape(self):
+    def shape(self) -> Tuple:
         return self._args[1]
 
     def __getitem__(self, item):
