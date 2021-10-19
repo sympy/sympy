@@ -64,7 +64,6 @@ from collections import defaultdict
 from itertools import product
 
 import warnings
-from itertools import product
 
 
 def recast_to_symbols(eqs, symbols):
