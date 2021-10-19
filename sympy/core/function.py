@@ -2296,7 +2296,7 @@ class Subs(Expr):
     def evalf(self, prec=None, **options):
         return self.doit().evalf(prec, **options)
 
-    n = evalf
+    n = evalf  # type:ignore
 
     @property
     def variables(self):

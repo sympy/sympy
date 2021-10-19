@@ -13,6 +13,7 @@ from sympy import (Basic, E, polylog, N, Wild, WildFunction, factor, gcd, Sum,
     powdenest, PolynomialDivisionFailed, discriminant, UnificationFailed, appellf1)
 from sympy.core.exprtools import factor_terms
 from sympy.core.sympify import sympify
+from sympy.core.traversal import postorder_traversal
 from sympy.functions import (log as sym_log, sin, cos, tan, cot, csc, sec,
                              sqrt, erf, gamma, uppergamma, polygamma, digamma,
                              loggamma, factorial, zeta, LambertW)
@@ -27,7 +28,7 @@ from sympy.logic.boolalg import Or
 from sympy.polys.polytools import Poly, quo, rem, total_degree, degree
 from sympy.simplify.simplify import fraction, simplify, cancel, powsimp
 from sympy.utilities.decorator import doctest_depends_on
-from sympy.utilities.iterables import flatten, postorder_traversal
+from sympy.utilities.iterables import flatten
 from random import randint
 
 
