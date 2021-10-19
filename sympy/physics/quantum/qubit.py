@@ -11,7 +11,7 @@ import math
 
 from sympy import Integer, log, Mul, Add, Pow, conjugate, S
 from sympy.core.basic import sympify
-from sympy.core.compatibility import SYMPY_INTS
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.matrices import Matrix, zeros
 from sympy.printing.pretty.stringpict import prettyForm
 

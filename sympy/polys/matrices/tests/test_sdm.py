@@ -5,7 +5,7 @@ Tests for the basic functionality of the SDM class.
 from itertools import product
 
 from sympy import S
-from sympy.core.compatibility import HAS_GMPY
+from sympy.external.gmpy import HAS_GMPY
 from sympy.testing.pytest import raises
 
 from sympy.polys.domains import QQ, ZZ, EXRAW

@@ -31,12 +31,13 @@ There are three types of functions implemented in SymPy:
 """
 
 from typing import Any, Dict as tDict, Optional, Set as tSet, Tuple as tTuple, Union
+from collections.abc import Iterable
 
 from .add import Add
 from .assumptions import ManagedProperties
 from .basic import Basic, _atomic
 from .cache import cacheit
-from .compatibility import iterable, is_sequence, as_int, ordered, Iterable
+from .compatibility import iterable, is_sequence, as_int, ordered
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
 from .numbers import Rational, Float

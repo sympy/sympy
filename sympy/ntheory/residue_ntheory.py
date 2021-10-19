@@ -10,6 +10,7 @@ from random import randint, Random
 
 from itertools import cycle, product
 
+
 def n_order(a, n):
     """Returns the order of ``a`` modulo ``n``.
 
@@ -791,6 +792,7 @@ def _help(m, prime_modulo_method, diff_method, expr_val):
         m.append(x)
         a.append(list(y))
     return sorted({crt(m, list(i))[0] for i in product(*a)})
+
 
 def _nthroot_mod_composite(a, n, m):
     """

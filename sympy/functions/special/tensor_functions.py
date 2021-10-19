@@ -1,8 +1,8 @@
 from sympy.core import S, Integer
-from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import prod
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.utilities.iterables import (has_dups, default_sort_key)
 
 ###############################################################################

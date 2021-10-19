@@ -22,7 +22,7 @@ from sympy.core.function import Derivative, Function, FunctionClass, Lambda, \
 from sympy.sets.sets import Interval
 from sympy.core.multidimensional import vectorize
 
-from sympy.core.compatibility import HAS_GMPY
+from sympy.external.gmpy import HAS_GMPY
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from sympy import symbols, S

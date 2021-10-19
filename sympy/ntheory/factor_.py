@@ -7,7 +7,7 @@ import random
 import math
 
 from sympy.core import sympify
-from sympy.core.compatibility import as_int, SYMPY_INTS
+from sympy.core.compatibility import as_int
 from sympy.core.containers import Dict
 from sympy.core.evalf import bitcount
 from sympy.core.expr import Expr
@@ -17,6 +17,7 @@ from sympy.core.mul import Mul, prod
 from sympy.core.numbers import igcd, ilcm, Rational, Integer
 from sympy.core.power import integer_nthroot, Pow
 from sympy.core.singleton import S
+from sympy.external.gmpy import SYMPY_INTS
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from .digits import digits

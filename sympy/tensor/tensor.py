@@ -42,12 +42,12 @@ from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.assumptions import ManagedProperties
-from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.containers import Tuple, Dict
 from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols
 from sympy.core.sympify import CantSympify, _sympify
 from sympy.core.operations import AssocOp
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.matrices import eye
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.decorator import memoize_property

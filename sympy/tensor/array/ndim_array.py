@@ -4,7 +4,7 @@ from sympy.core.expr import Expr
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify
 from sympy.core.kind import Kind, NumberKind, UndefinedKind
-from sympy.core.compatibility import SYMPY_INTS
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.printing.defaults import Printable
 
 import itertools

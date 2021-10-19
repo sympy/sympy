@@ -3,6 +3,8 @@ from itertools import (
     combinations, combinations_with_replacement, permutations,
     product
 )
+
+# For backwards compatibility
 from itertools import product as cartes # noqa: F401
 import random
 from operator import gt

@@ -9,9 +9,10 @@ from .evalf import PrecisionExhausted
 from .function import (expand_complex, expand_multinomial,
     expand_mul, _mexpand)
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
-from .compatibility import as_int, HAS_GMPY, gmpy
+from .compatibility import as_int
 from .parameters import global_parameters
 from .kind import NumberKind, UndefinedKind
+from sympy.external.gmpy import HAS_GMPY, gmpy
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.multipledispatch import Dispatcher

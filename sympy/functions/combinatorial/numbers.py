@@ -11,11 +11,12 @@ from typing import Callable, Dict
 
 from sympy.core import S, Symbol, Rational, Integer, Add, Dummy
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import as_int, SYMPY_INTS
+from sympy.core.compatibility import as_int
 from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import E, pi
 from sympy.core.relational import LessThan, StrictGreaterThan
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
