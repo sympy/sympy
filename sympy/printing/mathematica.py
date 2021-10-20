@@ -299,10 +299,11 @@ class MCodePrinter(CodePrinter):
             for cond, mfunc in cond_mfunc:
                 if cond(*expr.args):
                     return "%s[%s]" % (mfunc, self.stringify(expr.args, ", "))
-        elif (expr.func.__name__ in self._rewriteable_functions and
-              self._rewriteable_functions[expr.func.__name__] in self.known_functions):
+        elif expr.func.__name__ in self._rewriteable_functions:
             # Simple rewrite to supported function possible
-            return self._print(expr.rewrite(self._rewriteable_functions[expr.func.__name__]))
+            target_f, required_fs = self._rewriteable_functions[expr.func.__name__]
+            if self._can_print(target_f) and all(self._can_print(f) for f in required_fs):
+                return self._print(expr.rewrite(target_f))
         return expr.func.__name__ + "[%s]" % self.stringify(expr.args, ", ")
 
     _print_MinMaxBase = _print_Function

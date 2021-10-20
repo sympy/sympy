@@ -7,7 +7,8 @@ from sympy.functions import (arg, atan2, bernoulli, beta, ceiling, chebyshevu,
                              factorial, floor, harmonic, Heaviside, im,
                              laguerre, LambertW, log, Max, Min, Piecewise,
                              polylog, re, RisingFactorial, sign, sinc, sqrt,
-                             zeta, binomial, legendre)
+                             zeta, binomial, legendre, dirichlet_eta,
+                             riemann_xi)
 from sympy.functions import (sin, cos, tan, cot, sec, csc, asin, acos, acot,
                              atan, asec, acsc, sinh, cosh, tanh, coth, csch,
                              sech, asinh, acosh, atanh, acoth, asech, acsch)
@@ -24,7 +25,7 @@ from sympy.functions.special.gamma_functions import (gamma, lowergamma,
 from sympy.functions.special.error_functions import (Chi, Ci, erf, erfc, erfi,
                                                      erfcinv, erfinv, fresnelc,
                                                      fresnels, li, Shi, Si, Li,
-                                                     erf2)
+                                                     erf2, Ei)
 from sympy.printing.octave import octave_code, octave_code as mcode
 
 x, y, z = symbols('x,y,z')
@@ -492,6 +493,11 @@ def test_specfun():
     assert octave_code(yn(n, x)) == 'sqrt(2)*sqrt(pi)*sqrt(1./x).*bessely(n + 1/2, x)/2'
     assert octave_code(LambertW(x)) == 'lambertw(x)'
     assert octave_code(LambertW(x, n)) == 'lambertw(n, x)'
+
+    # Automatic rewrite
+    assert octave_code(Ei(x)) == 'logint(exp(x))'
+    assert octave_code(dirichlet_eta(x)) == '(1 - 2.^(1 - x)).*zeta(x)'
+    assert octave_code(riemann_xi(x)) == 'pi.^(-x/2).*x.*(x - 1).*gamma(x/2).*zeta(x)/2'
 
 
 def test_MatrixElement_printing():
