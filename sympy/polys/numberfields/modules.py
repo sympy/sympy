@@ -469,9 +469,9 @@ class Submodule(Module, IntegerPowerable):
                 x = A._solve(b)[0].transpose()
                 x = x.convert_to(ZZ)
             except DMBadInputError:
-                raise ClosureFailure('Element outside QQ-span of this module.')
+                raise ClosureFailure('Element outside QQ-span of this basis.')
             except CoercionFailed:
-                raise ClosureFailure('Element in QQ-span but not ZZ-span of this module.')
+                raise ClosureFailure('Element in QQ-span but not ZZ-span of this basis.')
             return x
         elif isinstance(self.container, Submodule):
             coeffs_in_container = self.container.represent(elt)
