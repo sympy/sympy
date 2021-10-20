@@ -22,7 +22,7 @@ issues
    * Multiple solutions: `x^2 = 1`
    * No Solution: `x^2 + 1 = 0 ; x \in \mathbb{R}`
    * Interval of solution: `\lfloor x \rfloor = 0`
-   * Infinitely many solutions: `sin(x) = 0`
+   * Infinitely many solutions: `\sin(x) = 0`
    * Multivariate functions with point solutions: `x^2 + y^2 = 0`
    * Multivariate functions with non-point solution: `x^2 + y^2 = 1`
    * System of equations: `x + y = 1` and `x - y = 0`
@@ -43,7 +43,7 @@ Why Solveset?
 
 * ``solveset`` has a cleaner input and output interface: ``solveset`` returns
   a set object and a set object takes care of all types of output. For
-  cases where it doesn't "know" all the solutions a ``ConditionSet`` with a partial
+  cases where it does not "know" all the solutions a ``ConditionSet`` with a partial
   solution is returned. For input it only takes the equation, the variables
   to solve for and the optional argument ``domain`` over which the equation is to
   be solved.

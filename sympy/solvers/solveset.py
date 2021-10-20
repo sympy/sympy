@@ -107,29 +107,33 @@ def _masked(f, *atoms):
 
 def _invert(f_x, y, x, domain=S.Complexes):
     r"""
-    Reduce the complex valued equation ``f(x) = y`` to a set of equations
-    ``{g(x) = h_1(y), g(x) = h_2(y), ..., g(x) = h_n(y) }`` where ``g(x)`` is
-    a simpler function than ``f(x)``.  The return value is a tuple ``(g(x),
-    set_h)``, where ``g(x)`` is a function of ``x`` and ``set_h`` is
-    the set of function ``{h_1(y), h_2(y), ..., h_n(y)}``.
-    Here, ``y`` is not necessarily a symbol.
+    Reduce the complex valued equation $f(x) = y$ to a set of equations
 
-    The ``set_h`` contains the functions, along with the information
+    $$\left\{g(x) = h_1(y),\  g(x) = h_2(y),\ \dots,\  g(x) = h_n(y) \right\}$$
+
+    where $g(x)$ is a simpler function than $f(x)$.  The return value is a tuple
+    $(g(x), \mathrm{set}_h)$, where $g(x)$ is a function of $x$ and $\mathrm{set}_h$ is
+    the set of function $\left\{h_1(y), h_2(y), \dots, h_n(y)\right\}$.
+    Here, $y$ is not necessarily a symbol.
+
+    $\mathrm{set}_h$ contains the functions, along with the information
     about the domain in which they are valid, through set
-    operations. For instance, if ``y = Abs(x) - n`` is inverted
-    in the real domain, then ``set_h`` is not simply
-    `{-n, n}` as the nature of `n` is unknown; rather, it is:
-    `Intersection([0, oo) {n}) U Intersection((-oo, 0], {-n})`
+    operations. For instance, if $y = |x| - n$ is inverted
+    in the real domain, then $\mathrm{set}_h$ is not simply
+    $\{-n, n\}$ as the nature of `n` is unknown; rather, it is:
+
+    $$ \left(\left[0, \infty\right) \cap \left\{n\right\}\right) \cup
+                       \left(\left(-\infty, 0\right] \cap \left\{- n\right\}\right)$$
 
     By default, the complex domain is used which means that inverting even
-    seemingly simple functions like ``exp(x)`` will give very different
+    seemingly simple functions like $\exp(x)$ will give very different
     results from those obtained in the real domain.
-    (In the case of ``exp(x)``, the inversion via ``log`` is multi-valued
+    (In the case of $\exp(x)$, the inversion via $\log$ is multi-valued
     in the complex domain, having infinitely many branches.)
 
     If you are working with real values only (or you are not sure which
     function to use) you should probably set the domain to
-    ``S.Reals`` (or use `invert\_real` which does that automatically).
+    ``S.Reals`` (or use ``invert_real`` which does that automatically).
 
 
     Examples
@@ -188,7 +192,7 @@ invert_complex = _invert
 
 def invert_real(f_x, y, x):
     """
-    Inverts a real-valued function. Same as ``_invert``, but sets
+    Inverts a real-valued function. Same as :func:`invert_complex`, but sets
     the domain to ``S.Reals`` before inverting.
     """
     return _invert(f_x, y, x, S.Reals)
@@ -381,11 +385,11 @@ def _invert_abs(f, g_ys, symbol):
     Returns the complete result of inverting an absolute value
     function along with the conditions which must also be satisfied.
 
-    If it is certain that all these conditions are met, a `FiniteSet`
+    If it is certain that all these conditions are met, a :class:`~.FiniteSet`
     of all possible solutions is returned. If any condition cannot be
-    satisfied, an `EmptySet` is returned. Otherwise, a `ConditionSet`
-    of the solutions, with all the required conditions specified, is
-    returned.
+    satisfied, an :class:`~.EmptySet` is returned. Otherwise, a
+    :class:`~.ConditionSet` of the solutions, with all the required conditions
+    specified, is returned.
 
     """
     if not g_ys.is_FiniteSet:
@@ -2083,11 +2087,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     Set
         A set of values for `symbol` for which `f` is True or is equal to
-        zero. An `EmptySet` is returned if `f` is False or nonzero.
-        A `ConditionSet` is returned as unsolved object if algorithms
+        zero. An :func:`~.EmptySet` is returned if `f` is False or nonzero.
+        A :func:`~.ConditionSet` is returned as unsolved object if algorithms
         to evaluate complete solution are not yet implemented.
 
-    `solveset` claims to be complete in the solution set that it returns.
+    ``solveset`` claims to be complete in the solution set that it returns.
 
     Raises
     ======
@@ -2106,7 +2110,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     Python interprets 0 and 1 as False and True, respectively, but
     in this function they refer to solutions of an expression. So 0 and 1
-    return the Domain and EmptySet, respectively, while True and False
+    return the domain and EmptySet, respectively, while True and False
     return the opposite (as they are assumed to be solutions of relational
     expressions).
 
@@ -2135,7 +2139,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
     {2*n*I*pi | n in Integers}
 
-    * If you want to use `solveset` to solve the equation in the
+    * If you want to use ``solveset`` to solve the equation in the
       real domain, provide a real domain. (Using ``solveset_real``
       does this automatically.)
 
@@ -2152,7 +2156,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     >>> pprint(solveset(p**2 - 4))
     {-2, 2}
 
-    When a conditionSet is returned, symbols with assumptions that
+    When a :func:`~.ConditionSet` is returned, symbols with assumptions that
     would alter the set are replaced with more generic symbols:
 
     >>> i = Symbol('i', imaginary=True)
@@ -2486,13 +2490,13 @@ def linear_eq_to_matrix(equations, *symbols):
 
     This system will return $A$ and $b$ as:
 
-    $$ A = \begin{bmatrix}
+    $$ A = \left[\begin{array}{ccc}
         4 & 2 & 3 \\
         3 & 1 & 1 \\
         2 & 4 & 9
-        \end{bmatrix} \ \  b = \begin{bmatrix}
+        \end{array}\right] \ \  b = \left[\begin{array}{c}
         1 \\ -6 \\ 2
-        \end{bmatrix} $$
+        \end{array}\right] $$
 
     The only simplification performed is to convert
     ``Eq(a, b)`` $\Rightarrow a - b$.
@@ -2608,11 +2612,11 @@ def linsolve(system, *symbols):
 
     * Augmented matrix form, ``system`` given below:
 
-    $$ \text{system} = \begin{bmatrix}
+    $$ \text{system} = \left[{array}{cccc}
         3 &  2 & -1 &  1\\
         2 & -2 &  4 & -2\\
         2 & -1 &  2 &  0
-        \end{bmatrix} $$
+        \end{array}\right] $$
 
     ::
 
@@ -2626,13 +2630,13 @@ def linsolve(system, *symbols):
 
     * Input $A$ and $b$ in matrix form (from $Ax = b$) are given as below:
 
-    $$ A = \begin{bmatrix}
+    $$ A = \left[\begin{array}{ccc}
         3 &  2 & -1 \\
         2 & -2 &  4 \\
         2 & -1 &  2
-        \end{bmatrix} \ \  b = \begin{bmatrix}
+        \end{array}\right] \ \  b = \left[\begin{array}{c}
         1 \\ -2 \\ 0
-        \end{bmatrix} $$
+        \end{array}\right] $$
 
     ::
 
@@ -3486,7 +3490,7 @@ def nonlinsolve(system, *symbols):
     Solve system of $N$ nonlinear equations with $M$ variables, which means both
     under and overdetermined systems are supported. Positive dimensional
     system is also supported (A system with infinitely many solutions is said
-    to be positive-dimensional). In Positive dimensional system solution will
+    to be positive-dimensional). In positive dimensional system solution will
     be dependent on at least one symbol. Returns both real solution
     and complex solution(If system have). The possible number of solutions
     is zero, one or infinite.
@@ -3502,27 +3506,29 @@ def nonlinsolve(system, *symbols):
     Returns
     =======
 
-    A FiniteSet of ordered tuple of values of `symbols` for which the `system`
+    A :class:`~.FiniteSet` of ordered tuple of values of `symbols` for which the `system`
     has solution. Order of values in the tuple is same as symbols present in
     the parameter `symbols`.
 
-    Please note that general FiniteSet is unordered, the solution returned
-    here is not simply a FiniteSet of solutions, rather it is a FiniteSet of
-    ordered tuple, i.e. the first & only argument to FiniteSet is a tuple of
-    solutions, which is ordered, & hence the returned solution is ordered.
+    Please note that general :class:`~.FiniteSet` is unordered, the solution
+    returned here is not simply a :class:`~.FiniteSet` of solutions, rather it
+    is a :class:`~.FiniteSet` of ordered tuple, i.e. the first and only
+    argument to :class:`~.FiniteSet` is a tuple of solutions, which is
+    ordered, and, hence ,the returned solution is ordered.
 
     Also note that solution could also have been returned as an ordered tuple,
-    FiniteSet is just a wrapper `{}` around the tuple. It has no other
+    FiniteSet is just a wrapper ``{}`` around the tuple. It has no other
     significance except for the fact it is just used to maintain a consistent
     output format throughout the solveset.
 
     For the given set of equations, the respective input types
     are given below:
 
-    .. math:: x*y - 1 = 0
-    .. math:: 4*x**2 + y**2 - 5 = 0
+    .. math:: xy - 1 = 0
+    .. math:: 4x^2 + y^2 - 5 = 0
 
     ::
+
        system  = [x*y - 1, 4*x**2 + y**2 - 5]
        symbols = [x, y]
 
@@ -3574,7 +3580,7 @@ def nonlinsolve(system, *symbols):
 
     3. If system is non-linear polynomial and zero-dimensional then it
     returns both solution (real and complex solutions, if present) using
-    `solve_poly_system`:
+    :func:`~.solve_poly_system`:
 
     >>> from sympy import sqrt
     >>> nonlinsolve([x**2 - 2*y**2 -2, x*y - 2], [x, y])
@@ -3606,7 +3612,7 @@ def nonlinsolve(system, *symbols):
     $f(x)$ with a symbol and so on. Get a solution from ``nonlinsolve`` and then
     use :func:`~.solveset` to get the value of $x$.
 
-    How nonlinsolve is better than old solver `_solve_system` :
+    How nonlinsolve is better than old solver ``_solve_system`` :
     ===========================================================
 
     1. A positive dimensional system solver: nonlinsolve can return
