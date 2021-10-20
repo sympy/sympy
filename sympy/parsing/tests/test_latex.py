@@ -323,7 +323,6 @@ def test_failing_not_parseable():
 
 def test_unevaluated_relationals():
     from sympy.parsing.latex import parse_latex
-    from sympy.core.relational import Eq, Ne
     op_ans = {
         '=': 'Eq(2*x, x + x)',
         '\\leq': '2*x <= x + x',
@@ -331,5 +330,5 @@ def test_unevaluated_relationals():
         '<': '2*x < x + x',
         '>': '2*x > x + x',
         '\\neq': 'Ne(2*x, x + x)'}
-    for o, a in op_ans.items():
-        assert str(parse_latex('2*x %s x+x' % o)) == a
+    for op, ans in op_ans.items():
+        assert str(parse_latex('2*x %s x+x' % op)) == ans
