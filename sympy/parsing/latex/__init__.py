@@ -4,7 +4,7 @@ from sympy.utilities.decorator import doctest_depends_on
 from .errors import LaTeXParsingError  # noqa
 
 @doctest_depends_on(modules=('antlr4',))
-def parse_latex(s):
+def parse_latex(s, evaluate=True):
     r"""Converts the string ``s`` to a SymPy ``Expr``
 
     Parameters
@@ -15,6 +15,11 @@ def parse_latex(s):
         *raw strings* (denoted with ``r"``, like this one) are preferred,
         as LaTeX makes liberal use of the ``\`` character, which would
         trigger escaping in normal Python strings.
+
+    evaluate : bool, optional
+        When False, the order of the arguments will remain as they were in the
+        string and automatic simplification that would normally occur is
+        suppressed.
 
     Examples
     ========
@@ -32,4 +37,4 @@ def parse_latex(s):
         import_kwargs={'fromlist': ['X']})
 
     if _latex is not None:
-        return _latex.parse_latex(s)
+        return _latex.parse_latex(s, evaluate=evaluate)

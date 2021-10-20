@@ -58,7 +58,7 @@ if ErrorListener:
             raise LaTeXParsingError(err)
 
 
-def parse_latex(string, evaluate=True):
+def parse_latex(string, evaluate):
     antlr4 = import_module('antlr4', warn_not_installed=True)
 
     if None in [antlr4, MathErrorListener]:

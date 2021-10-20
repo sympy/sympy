@@ -249,7 +249,7 @@ GOOD_PAIRS = [
 def test_parseable():
     from sympy.parsing.latex import parse_latex
     for latex_str, sympy_expr in GOOD_PAIRS:
-        assert parse_latex(latex_str) == sympy_expr, latex_str
+        assert parse_latex(latex_str, evaluate=False) == sympy_expr, latex_str
 
 # These bad LaTeX strings should raise a LaTeXParsingError when parsed
 BAD_STRINGS = [
@@ -331,4 +331,4 @@ def test_unevaluated_relationals():
         '>': '2*x > x + x',
         '\\neq': 'Ne(2*x, x + x)'}
     for op, ans in op_ans.items():
-        assert str(parse_latex('2*x %s x+x' % op)) == ans
+        assert str(parse_latex('2*x %s x+x' % op, evaluate=False)) == ans
