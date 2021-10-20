@@ -2087,8 +2087,8 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     Set
         A set of values for `symbol` for which `f` is True or is equal to
-        zero. An :func:`~.EmptySet` is returned if `f` is False or nonzero.
-        A :func:`~.ConditionSet` is returned as unsolved object if algorithms
+        zero. An :class:`~.EmptySet` is returned if `f` is False or nonzero.
+        A :class:`~.ConditionSet` is returned as unsolved object if algorithms
         to evaluate complete solution are not yet implemented.
 
     ``solveset`` claims to be complete in the solution set that it returns.
@@ -2156,7 +2156,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     >>> pprint(solveset(p**2 - 4))
     {-2, 2}
 
-    When a :func:`~.ConditionSet` is returned, symbols with assumptions that
+    When a :class:`~.ConditionSet` is returned, symbols with assumptions that
     would alter the set are replaced with more generic symbols:
 
     >>> i = Symbol('i', imaginary=True)

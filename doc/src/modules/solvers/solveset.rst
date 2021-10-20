@@ -66,22 +66,22 @@ SymPy has a well developed sets module, which can represent most of the set
 containers in Mathematics such as:
 
 
- * ``FiniteSet``
+ * :class:`~.FiniteSet`
 
    Represents a finite set of discrete numbers.
 
 
- * ``Interval``
+ * :class:`~.Interval`
 
    Represents a real interval as a set.
 
 
- * ``ProductSet``
+ * :class:`~.ProductSet`
 
    Represents a Cartesian product of sets.
 
 
- * ``ImageSet``
+ * :class:`~.ImageSet`
 
    Represents the image of a set under a mathematical function
 
@@ -91,46 +91,46 @@ containers in Mathematics such as:
     >>> 4 in squares
     True
 
- * ``ComplexRegion``
+ * :class:`ComplexRegion`
 
    Represents the set of all complex numbers in a region in the Argand plane.
 
 
- * ``ConditionSet``
+ * :class:`~.ConditionSet`
 
    Represents the set of elements, which satisfies a given condition.
 
 
 Also, the predefined set classes such as:
 
- * ``Naturals`` `\mathbb{N}`
+ * :class:`~.Naturals`, $\mathbb{N}
 
    Represents the natural numbers (or counting numbers), which are all
    positive integers starting from 1.
 
 
- * ``Naturals0`` `\mathbb{N_0}`
+ * :class:`~.Naturals0`, $\mathbb{N_0}$
 
    Represents the whole numbers, which are all the non-negative integers,
    inclusive of 0.
 
 
- * ``Integers`` `\mathbb{Z}`
+ * :class:`~.Integers`, $\mathbb{Z}$
 
    Represents all integers: positive, negative and zero.
 
 
- * ``Reals`` `\mathbb{R}`
+ * :class:`~.Reals`, $\mathbb{R}$
 
    Represents the set of all real numbers.
 
 
- * ``Complexes`` `\mathbb{C}`
+ * :class:`~.Complexes`, $\mathbb{C}$
 
    Represents the set of all complex numbers.
 
 
- * ``EmptySet`` `\phi`
+ * :class:`~.EmptySet`, $\emptyset$
 
    Represents the empty set.
 
