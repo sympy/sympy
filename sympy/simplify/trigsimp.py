@@ -4,7 +4,6 @@ from functools import reduce
 from sympy.core import (sympify, Basic, S, Expr, expand_mul, factor_terms,
     Mul, Dummy, igcd, FunctionClass, Add, symbols, Wild, expand, bottom_up)
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import iterable
 from sympy.core.function import count_ops, _mexpand
 from sympy.core.numbers import I, Integer
 from sympy.external.gmpy import SYMPY_INTS
@@ -18,6 +17,7 @@ from sympy.polys.polytools import groebner
 from sympy.simplify.cse_main import cse
 from sympy.strategies.core import identity
 from sympy.strategies.tree import greedy
+from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
 
 

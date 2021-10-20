@@ -1,9 +1,9 @@
 from sympy import Symbol, sympify
-from sympy.core.compatibility import is_sequence
 from sympy.geometry.entity import GeometryEntity
 from .plot_interval import PlotInterval
 from .plot_object import PlotObject
 from .util import parse_option_string
+from sympy.utilities.iterables import is_sequence
 
 
 class PlotMode(PlotObject):

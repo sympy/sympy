@@ -8,9 +8,10 @@ from .assumptions import BasicMeta, ManagedProperties
 from .decorators import deprecated
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
-from .compatibility import iterable, ordered
+from .compatibility import ordered
 from .kind import Kind, UndefinedKind
 from ._print_helpers import Printable
+
 
 from inspect import getmro
 
@@ -882,10 +883,12 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         from .containers import Dict
         from .symbol import Dummy, Symbol
+        from sympy.utilities.iterables import iterable
         from sympy.utilities.misc import filldedent
 
         unordered = False
         if len(args) == 1:
+
             sequence = args[0]
             if isinstance(sequence, set):
                 unordered = True
@@ -1806,6 +1809,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             method = "_eval_rewrite_as_%s" % clsname
 
         if pattern:
+            from sympy.utilities.iterables import iterable
             if iterable(pattern[0]):
                 pattern = pattern[0]
             pattern = tuple(p for p in pattern if self.has(p))

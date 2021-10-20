@@ -521,14 +521,6 @@ compatibility
 -------------
 .. module:: sympy.core.compatibility
 
-iterable
-^^^^^^^^
-.. autofunction:: iterable
-
-is_sequence
-^^^^^^^^^^^
-.. autofunction:: is_sequence
-
 as_int
 ^^^^^^
 .. autofunction:: as_int

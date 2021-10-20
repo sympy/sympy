@@ -14,8 +14,8 @@ from sympy.plotting import plot, PlotGrid
 from sympy.geometry.entity import GeometryEntity
 from sympy.external import import_module
 from sympy import lambdify, Add
-from sympy.core.compatibility import iterable
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.iterables import iterable
 
 numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
 

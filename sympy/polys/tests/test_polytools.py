@@ -60,9 +60,9 @@ from sympy import (
 
 from sympy.core.add import Add
 from sympy.core.basic import _aresame
-from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
 from sympy.core.power import Pow
+from sympy.utilities.iterables import iterable
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z

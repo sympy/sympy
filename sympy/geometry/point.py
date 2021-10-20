@@ -20,7 +20,6 @@ False
 import warnings
 
 from sympy.core import S, sympify, Expr
-from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.simplify import nsimplify, simplify
 from sympy.geometry.exceptions import GeometryError
@@ -31,7 +30,7 @@ from sympy.core.numbers import Float
 from sympy.core.parameters import global_parameters
 from sympy.core.add import Add
 from sympy.core.evalf import prec_to_dps
-from sympy.utilities.iterables import uniq
+from sympy.utilities.iterables import uniq, is_sequence
 from sympy.utilities.misc import filldedent, func_name, Undecidable
 
 from .entity import GeometryEntity

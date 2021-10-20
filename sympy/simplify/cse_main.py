@@ -1,12 +1,11 @@
 """ Tools for doing common subexpression elimination.
 """
 from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol
-from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple, OrderedSet
 from sympy.core.exprtools import factor_terms
 from sympy.core.singleton import S
 from sympy.utilities.iterables import numbered_symbols, sift, \
-        topological_sort, ordered
+        topological_sort, ordered, iterable
 
 from . import cse_opts
 

@@ -13,7 +13,7 @@ from sympy.core.logic import FuzzyBool
 from sympy.assumptions.refine import refine
 from sympy.core import SympifyError, Add
 from sympy.core.basic import Atom
-from sympy.core.compatibility import as_int, is_sequence
+from sympy.core.compatibility import as_int
 from sympy.core.decorators import call_highest_priority
 from sympy.core.kind import Kind, NumberKind
 from sympy.core.logic import fuzzy_and
@@ -25,7 +25,7 @@ from sympy.polys.polytools import Poly
 from sympy.simplify import simplify as _simplify
 from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import flatten
+from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.misc import filldedent
 from sympy.tensor.array import NDimArray
 

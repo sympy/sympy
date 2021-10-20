@@ -2,7 +2,6 @@ from collections import defaultdict
 from functools import cmp_to_key, reduce
 from operator import attrgetter
 from .basic import Basic
-from .compatibility import is_sequence
 from .parameters import global_parameters
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
@@ -11,6 +10,7 @@ from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
 from .kind import UndefinedKind
+from sympy.utilities.iterables import is_sequence
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)

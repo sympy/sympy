@@ -1,7 +1,7 @@
 from .assumptions import StdFactKB, _assume_defined
 from .basic import Basic, Atom
 from .cache import cacheit
-from .compatibility import is_sequence, ordered
+from .compatibility import ordered
 from .containers import Tuple
 from .expr import Expr, AtomicExpr
 from .function import AppliedUndef, FunctionClass
@@ -10,7 +10,7 @@ from .logic import fuzzy_bool
 from .singleton import S
 from .sympify import sympify
 from sympy.logic.boolalg import Boolean
-from sympy.utilities.iterables import sift
+from sympy.utilities.iterables import sift, is_sequence
 
 import string
 import re as _re

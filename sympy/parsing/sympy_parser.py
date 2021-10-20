@@ -10,10 +10,10 @@ import unicodedata
 from io import StringIO
 
 from sympy.assumptions.ask import AssumptionKeys
-from sympy.core.compatibility import iterable
 from sympy.core.basic import Basic
 from sympy.core import Symbol
 from sympy.core.function import arity, Function
+from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import filldedent, func_name
 
 

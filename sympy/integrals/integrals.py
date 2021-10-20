@@ -1,7 +1,6 @@
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
@@ -27,8 +26,9 @@ from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
 from sympy.simplify.fu import sincos_to_sum
 from sympy.tensor.functions import shape
-from sympy.utilities.misc import filldedent
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import is_sequence
+from sympy.utilities.misc import filldedent
 
 
 class Integral(AddWithLimits):

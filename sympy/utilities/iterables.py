@@ -9,11 +9,10 @@ from itertools import product as cartes # noqa: F401
 from operator import gt
 
 from sympy.core.decorators import deprecated
-from sympy.core.traversal import postorder_traversal as _postorder_traversal
 
 # this is the logical location of these functions
-from sympy.core.compatibility import as_int, is_sequence, ordered
-from sympy.core.compatibility import iterable, default_sort_key  # noqa: F401
+from sympy.core.compatibility import as_int, ordered
+from sympy.core.compatibility import default_sort_key  # noqa: F401
 
 from sympy.utilities.enumerative import (
     multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
@@ -2579,9 +2578,120 @@ def roundrobin(*iterables):
             nexts = itertools.cycle(itertools.islice(nexts, pending))
 
 
-postorder_traversal = deprecated(
-    useinstead="sympy.core.traversal.postorder_traversal",
-    deprecated_since_version="1.10", issue=22288)(_postorder_traversal)
+
+class NotIterable:
+    """
+    Use this as mixin when creating a class which is not supposed to
+    return true when iterable() is called on its instances because
+    calling list() on the instance, for example, would result in
+    an infinite loop.
+    """
+    pass
+
+
+def iterable(i, exclude=(str, dict, NotIterable)):
+    """
+    Return a boolean indicating whether ``i`` is SymPy iterable.
+    True also indicates that the iterator is finite, e.g. you can
+    call list(...) on the instance.
+
+    When SymPy is working with iterables, it is almost always assuming
+    that the iterable is not a string or a mapping, so those are excluded
+    by default. If you want a pure Python definition, make exclude=None. To
+    exclude multiple items, pass them as a tuple.
+
+    You can also set the _iterable attribute to True or False on your class,
+    which will override the checks here, including the exclude test.
+
+    As a rule of thumb, some SymPy functions use this to check if they should
+    recursively map over an object. If an object is technically iterable in
+    the Python sense but does not desire this behavior (e.g., because its
+    iteration is not finite, or because iteration might induce an unwanted
+    computation), it should disable it by setting the _iterable attribute to False.
+
+    See also: is_sequence
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import iterable
+    >>> from sympy import Tuple
+    >>> things = [[1], (1,), set([1]), Tuple(1), (j for j in [1, 2]), {1:2}, '1', 1]
+    >>> for i in things:
+    ...     print('%s %s' % (iterable(i), type(i)))
+    True <... 'list'>
+    True <... 'tuple'>
+    True <... 'set'>
+    True <class 'sympy.core.containers.Tuple'>
+    True <... 'generator'>
+    False <... 'dict'>
+    False <... 'str'>
+    False <... 'int'>
+
+    >>> iterable({}, exclude=None)
+    True
+    >>> iterable({}, exclude=str)
+    True
+    >>> iterable("no", exclude=str)
+    False
+
+    """
+    if hasattr(i, '_iterable'):
+        return i._iterable
+    try:
+        iter(i)
+    except TypeError:
+        return False
+    if exclude:
+        return not isinstance(i, exclude)
+    return True
+
+
+def is_sequence(i, include=None):
+    """
+    Return a boolean indicating whether ``i`` is a sequence in the SymPy
+    sense. If anything that fails the test below should be included as
+    being a sequence for your application, set 'include' to that object's
+    type; multiple types should be passed as a tuple of types.
+
+    Note: although generators can generate a sequence, they often need special
+    handling to make sure their elements are captured before the generator is
+    exhausted, so these are not included by default in the definition of a
+    sequence.
+
+    See also: iterable
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import is_sequence
+    >>> from types import GeneratorType
+    >>> is_sequence([])
+    True
+    >>> is_sequence(set())
+    False
+    >>> is_sequence('abc')
+    False
+    >>> is_sequence('abc', include=str)
+    True
+    >>> generator = (c for c in 'abc')
+    >>> is_sequence(generator)
+    False
+    >>> is_sequence(generator, include=(str, GeneratorType))
+    True
+
+    """
+    return (hasattr(i, '__getitem__') and
+            iterable(i) or
+            bool(include) and
+            isinstance(i, include))
+
+
+@deprecated(useinstead="sympy.core.traversal.postorder_traversal",
+    deprecated_since_version="1.10", issue=22288)
+def postorder_traversal(node, keys=None):
+    from sympy.core.traversal import postorder_traversal as _postorder_traversal
+    return _postorder_traversal(node, keys=keys)
 
 
 @deprecated(useinstead="sympy.interactive.traversal.interactive_traversal",

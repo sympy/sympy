@@ -1,6 +1,8 @@
 from .basic import Basic
-from .compatibility import iterable, ordered
+from .compatibility import ordered
 from .sympify import sympify
+from sympy.utilities.iterables import iterable
+
 
 
 class preorder_traversal:

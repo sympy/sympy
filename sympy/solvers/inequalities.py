@@ -1,7 +1,6 @@
 """Tools for solving inequalities and systems of inequalities. """
 
 from sympy.core import Symbol, Dummy, sympify
-from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.sets import Interval
@@ -13,7 +12,7 @@ from sympy.functions import Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
-from sympy.utilities.iterables import sift
+from sympy.utilities.iterables import sift, iterable
 from sympy.utilities.misc import filldedent
 
 

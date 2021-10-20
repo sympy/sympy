@@ -4,7 +4,7 @@ from sympy import SYMPY_DEBUG
 
 from sympy.core import expand_power_base, sympify, Add, S, Mul, Derivative, Pow, symbols, expand_mul
 from sympy.core.add import _unevaluated_Add
-from sympy.core.compatibility import iterable, ordered, default_sort_key
+from sympy.core.compatibility import ordered, default_sort_key
 from sympy.core.parameters import global_parameters
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.function import _mexpand
@@ -14,6 +14,7 @@ from sympy.functions import exp, sqrt, log
 from sympy.functions.elementary.complexes import Abs
 from sympy.polys import gcd
 from sympy.simplify.sqrtdenest import sqrtdenest
+from sympy.utilities.iterables import iterable
 
 
 

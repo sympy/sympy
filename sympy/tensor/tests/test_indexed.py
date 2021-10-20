@@ -1,7 +1,7 @@
 from sympy.core import symbols, Symbol, Tuple, oo, Dummy
-from sympy.core.compatibility import iterable
 from sympy.tensor.indexed import IndexException
 from sympy.testing.pytest import raises, XFAIL
+from sympy.utilities.iterables import iterable
 
 # import test:
 from sympy import (IndexedBase, Idx, Indexed, S, sin, cos, exp, log, Sum,

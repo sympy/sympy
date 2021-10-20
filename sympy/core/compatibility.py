@@ -12,122 +12,8 @@ Some utility functions originating from Python 2 and Python 3 compatible imports
 """
 
 __all__ = [
-    'NotIterable', 'iterable', 'is_sequence',
     'as_int', 'default_sort_key', 'ordered',
 ]
-
-
-
-# These are in here because telling if something is an iterable just by calling
-# hasattr(obj, "__iter__") behaves differently in Python 2 and Python 3.  In
-# particular, hasattr(str, "__iter__") is False in Python 2 and True in Python 3.
-# I think putting them here also makes it easier to use them in the core.
-
-class NotIterable:
-    """
-    Use this as mixin when creating a class which is not supposed to
-    return true when iterable() is called on its instances because
-    calling list() on the instance, for example, would result in
-    an infinite loop.
-    """
-    pass
-
-def iterable(i, exclude=(str, dict, NotIterable)):
-    """
-    Return a boolean indicating whether ``i`` is SymPy iterable.
-    True also indicates that the iterator is finite, e.g. you can
-    call list(...) on the instance.
-
-    When SymPy is working with iterables, it is almost always assuming
-    that the iterable is not a string or a mapping, so those are excluded
-    by default. If you want a pure Python definition, make exclude=None. To
-    exclude multiple items, pass them as a tuple.
-
-    You can also set the _iterable attribute to True or False on your class,
-    which will override the checks here, including the exclude test.
-
-    As a rule of thumb, some SymPy functions use this to check if they should
-    recursively map over an object. If an object is technically iterable in
-    the Python sense but does not desire this behavior (e.g., because its
-    iteration is not finite, or because iteration might induce an unwanted
-    computation), it should disable it by setting the _iterable attribute to False.
-
-    See also: is_sequence
-
-    Examples
-    ========
-
-    >>> from sympy.utilities.iterables import iterable
-    >>> from sympy import Tuple
-    >>> things = [[1], (1,), set([1]), Tuple(1), (j for j in [1, 2]), {1:2}, '1', 1]
-    >>> for i in things:
-    ...     print('%s %s' % (iterable(i), type(i)))
-    True <... 'list'>
-    True <... 'tuple'>
-    True <... 'set'>
-    True <class 'sympy.core.containers.Tuple'>
-    True <... 'generator'>
-    False <... 'dict'>
-    False <... 'str'>
-    False <... 'int'>
-
-    >>> iterable({}, exclude=None)
-    True
-    >>> iterable({}, exclude=str)
-    True
-    >>> iterable("no", exclude=str)
-    False
-
-    """
-    if hasattr(i, '_iterable'):
-        return i._iterable
-    try:
-        iter(i)
-    except TypeError:
-        return False
-    if exclude:
-        return not isinstance(i, exclude)
-    return True
-
-
-def is_sequence(i, include=None):
-    """
-    Return a boolean indicating whether ``i`` is a sequence in the SymPy
-    sense. If anything that fails the test below should be included as
-    being a sequence for your application, set 'include' to that object's
-    type; multiple types should be passed as a tuple of types.
-
-    Note: although generators can generate a sequence, they often need special
-    handling to make sure their elements are captured before the generator is
-    exhausted, so these are not included by default in the definition of a
-    sequence.
-
-    See also: iterable
-
-    Examples
-    ========
-
-    >>> from sympy.utilities.iterables import is_sequence
-    >>> from types import GeneratorType
-    >>> is_sequence([])
-    True
-    >>> is_sequence(set())
-    False
-    >>> is_sequence('abc')
-    False
-    >>> is_sequence('abc', include=str)
-    True
-    >>> generator = (c for c in 'abc')
-    >>> is_sequence(generator)
-    False
-    >>> is_sequence(generator, include=(str, GeneratorType))
-    True
-
-    """
-    return (hasattr(i, '__getitem__') and
-            iterable(i) or
-            bool(include) and
-            isinstance(i, include))
 
 
 def as_int(n, strict=True):
@@ -315,7 +201,7 @@ def default_sort_key(item, order=None):
     from .singleton import S
     from .basic import Basic
     from .sympify import sympify, SympifyError
-    from .compatibility import iterable
+    from sympy.utilities.iterables import iterable
 
     if isinstance(item, Basic):
         return item.sort_key(order=order)
@@ -377,6 +263,7 @@ def _nodes(e):
     """
     from .basic import Basic
     from .function import Derivative
+    from sympy.utilities.iterables import iterable
 
     if isinstance(e, Basic):
         if isinstance(e, Derivative):

@@ -16,10 +16,9 @@ from sympy.matrices import (
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix,
     MatrixSymbol, dotprodsimp)
 from sympy.matrices.utilities import _dotprodsimp_state
-from sympy.core.compatibility import iterable
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.utilities.iterables import flatten, capture
+from sympy.utilities.iterables import flatten, capture, iterable
 from sympy.testing.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
 from sympy.assumptions import Q
 from sympy.tensor.array import Array

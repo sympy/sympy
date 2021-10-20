@@ -13,10 +13,11 @@ import linecache
 
 from sympy.core.basic import Basic
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.core.compatibility import (is_sequence, iterable,
+from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.iterables import (is_sequence, iterable,
     NotIterable)
 from sympy.utilities.misc import filldedent
-from sympy.utilities.decorator import doctest_depends_on
+
 
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 

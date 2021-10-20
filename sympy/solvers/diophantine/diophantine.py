@@ -1,7 +1,7 @@
 from sympy.core.add import Add
 from sympy.core.assumptions import check_assumptions
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import as_int, is_sequence, ordered
+from sympy.core.compatibility import as_int, ordered
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.mul import Mul
@@ -27,6 +27,7 @@ from sympy.simplify.simplify import signsimp
 from sympy.solvers.solveset import solveset_real
 from sympy.utilities import default_sort_key, numbered_symbols
 from sympy.utilities.misc import filldedent
+from sympy.utilities.iterables import is_sequence
 
 
 # these are imported with 'from sympy.solvers.diophantine import *
