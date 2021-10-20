@@ -22,7 +22,7 @@ from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayE
 from sympy.testing.pytest import raises
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
-from sympy.core.trace import Tr
+from sympy.physics.quantum.trace import Tr
 
 x, y, z, w, t = symbols('x,y,z,w,t')
 d = Dummy('d')

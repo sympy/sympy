@@ -94,6 +94,11 @@ def _test_args(obj):
     return all_basic and recreatable
 
 
+def test_sympy__algebras__quaternion__Quaternion():
+    from sympy.algebras.quaternion import Quaternion
+    assert _test_args(Quaternion(x, 1, 2, 3))
+
+
 def test_sympy__assumptions__assume__AppliedPredicate():
     from sympy.assumptions.assume import AppliedPredicate, Predicate
     assert _test_args(AppliedPredicate(Predicate("test"), 2))
@@ -782,11 +787,6 @@ def test_sympy__core__power__Pow():
     assert _test_args(Pow(x, 2))
 
 
-def test_sympy__algebras__quaternion__Quaternion():
-    from sympy.algebras.quaternion import Quaternion
-    assert _test_args(Quaternion(x, 1, 2, 3))
-
-
 def test_sympy__core__relational__Equality():
     from sympy.core.relational import Equality
     assert _test_args(Equality(x, 2))
@@ -820,6 +820,11 @@ def test_sympy__core__relational__StrictLessThan():
 def test_sympy__core__relational__Unequality():
     from sympy.core.relational import Unequality
     assert _test_args(Unequality(x, 2))
+
+
+@SKIP("deprecated class")
+def test_sympy__core__trace__Tr():
+    pass
 
 
 def test_sympy__sandbox__indexed_integrals__IndexedIntegral():
@@ -922,10 +927,11 @@ def test_sympy__sets__sets__DisjointUnion():
            FiniteSet(2, 3, 4)))
 
 
-def test_sympy__core__trace__Tr():
-    from sympy.core.trace import Tr
+def test_sympy__physics__quantum__trace__Tr():
+    from sympy.physics.quantum.trace import Tr
     a, b = symbols('a b')
     assert _test_args(Tr(a + b))
+
 
 def test_sympy__sets__setexpr__SetExpr():
     from sympy.sets.setexpr import SetExpr

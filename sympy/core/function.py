@@ -37,21 +37,21 @@ from .add import Add
 from .assumptions import ManagedProperties
 from .basic import Basic, _atomic
 from .cache import cacheit
-from .compatibility import iterable, is_sequence, as_int, ordered
+from .containers import Tuple, Dict
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
-from .numbers import Rational, Float
+from .logic import fuzzy_and, fuzzy_or, fuzzy_not, FuzzyBool
+from .mul import Mul
+from .numbers import Rational, Float, Integer
 from .operations import LatticeOp
+from .parameters import global_parameters
 from .rules import Transform
 from .singleton import S
 from .sympify import sympify
 
-from sympy.core.containers import Tuple, Dict
-from sympy.core.parameters import global_parameters
-from sympy.core.logic import fuzzy_and, fuzzy_or, fuzzy_not, FuzzyBool
 from sympy.utilities import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import has_dups, sift
+from sympy.utilities.iterables import has_dups, sift, iterable, is_sequence, as_int, ordered
 from sympy.utilities.misc import filldedent
 
 import mpmath
@@ -494,11 +494,11 @@ class Function(Application, Expr):
 
         Returns the precision to evalf to, or -1 if it shouldn't evalf.
         """
-        from sympy.core.evalf import pure_complex
         if arg.is_Float:
             return arg._prec
         if not arg.is_Add:
             return -1
+        from .evalf import pure_complex
         m = pure_complex(arg)
         if m is None or not (m[0].is_Float or m[1].is_Float):
             return -1
@@ -687,13 +687,13 @@ class Function(Application, Expr):
         -1/x - log(x)/x + log(x)/2 + O(1)
 
         """
-        from sympy import Order
-        from sympy.core.symbol import uniquely_named_symbol
+        from .symbol import uniquely_named_symbol
+        from sympy.series.order import Order
         from sympy.sets.sets import FiniteSet
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
         if any(t.is_finite is False for t in args0):
-            from sympy import oo, zoo, nan
+            from .numbers import oo, zoo, nan
             # XXX could use t.as_leading_term(x) here but it's a little
             # slower
             a = [t.compute_leading_term(x, logx=logx) for t in args]
@@ -805,7 +805,7 @@ class Function(Application, Expr):
         argument whose leading term vanishes as x -> 0 might be encountered.
         See, for example, cos._eval_as_leading_term.
         """
-        from sympy import Order
+        from sympy.series.order import Order
         args = [a.as_leading_term(x, logx=logx) for a in self.args]
         o = Order(1, x)
         if any(x in a.free_symbols and o.contains(a) for a in args):
@@ -1243,11 +1243,6 @@ class Derivative(Expr):
         return self.expr._diff_wrt and isinstance(self.doit(), Derivative)
 
     def __new__(cls, expr, *variables, **kwargs):
-
-        from sympy.matrices.common import MatrixCommon
-        from sympy import Integer, MatrixExpr
-        from sympy.tensor.array import Array, NDimArray
-
         expr = sympify(expr)
         symbols_or_none = getattr(expr, "free_symbols", None)
         has_symbol_set = isinstance(symbols_or_none, set)
@@ -1283,6 +1278,8 @@ class Derivative(Expr):
         # derivative.
         variable_count = []
         array_likes = (tuple, list, Tuple)
+
+        from sympy.tensor.array import Array, NDimArray
 
         for i, v in enumerate(variables):
             if isinstance(v, Integer):
@@ -1370,6 +1367,8 @@ class Derivative(Expr):
             # derivatives.
             zero = False
             free = expr.free_symbols
+            from sympy.matrices.expressions.matexpr import MatrixExpr
+
             for v, c in variable_count:
                 vfree = v.free_symbols
                 if c.is_positive and vfree:
@@ -1421,6 +1420,7 @@ class Derivative(Expr):
         # -------------------------------------------------------------
         nderivs = 0  # how many derivatives were performed
         unhandled = []
+        from sympy.matrices.common import MatrixCommon
         for i, (v, count) in enumerate(variable_count):
 
             old_expr = expr
@@ -1482,7 +1482,7 @@ class Derivative(Expr):
             expr = Expr.__new__(cls, expr, *unhandled)
 
         if (nderivs > 1) == True and kwargs.get('simplify', True):
-            from sympy.core.exprtools import factor_terms
+            from .exprtools import factor_terms
             from sympy.simplify.simplify import signsimp
             expr = factor_terms(signsimp(expr))
         return expr
@@ -1895,7 +1895,7 @@ class Derivative(Expr):
         sympy.calculus.finite_diff.finite_diff_weights
 
         """
-        from ..calculus.finite_diff import _as_finite_diff
+        from sympy.calculus.finite_diff import _as_finite_diff
         return _as_finite_diff(self, points, x0, wrt)
 
     @classmethod
@@ -1913,8 +1913,8 @@ class Derivative(Expr):
 
 def _derivative_dispatch(expr, *variables, **kwargs):
     from sympy.matrices.common import MatrixCommon
-    from sympy import MatrixExpr
-    from sympy import NDimArray
+    from sympy.matrices.expressions.matexpr import MatrixExpr
+    from sympy.tensor.array import NDimArray
     array_types = (MatrixCommon, MatrixExpr, NDimArray, list, tuple, Tuple)
     if isinstance(expr, array_types) or any(isinstance(i[0], array_types) if isinstance(i, (tuple, list, Tuple)) else isinstance(i, array_types) for i in variables):
         from sympy.tensor.array.array_derivatives import ArrayDerivative
@@ -2076,7 +2076,7 @@ class Lambda(Expr):
         return self.signature == self.expr
 
     def _eval_evalf(self, prec):
-        from sympy.core.evalf import prec_to_dps
+        from .evalf import prec_to_dps
         return self.func(self.args[0], self.args[1].evalf(n=prec_to_dps(prec)))
 
 
@@ -2201,7 +2201,7 @@ class Subs(Expr):
         # to give a variable-independent expression
         pre = "_"
         pts = sorted(set(point), key=default_sort_key)
-        from sympy.printing import StrPrinter
+        from sympy.printing.str import StrPrinter
         class CustomStrPrinter(StrPrinter):
             def _print_Dummy(self, expr):
                 return str(expr) + str(expr.dummy_index)
@@ -2893,7 +2893,7 @@ def expand_log(expr, deep=True, force=False, factor=False):
     (x + y)*(log(x) + 2*log(y))*exp(x + y)
 
     """
-    from sympy import Mul, log
+    from sympy.functions.elementary.exponential import log
     if factor is False:
         def _handle(x):
             x1 = expand_mul(expand_log(x, deep=deep, force=force, factor=True))
@@ -3129,10 +3129,11 @@ def count_ops(expr, visual=False):
     2*ADD + SIN
 
     """
-    from sympy import Integral, Sum
-    from sympy.core.relational import Relational
-    from sympy.simplify.radsimp import fraction
+    from .relational import Relational
+    from sympy.concrete.summations import Sum
+    from sympy.integrals.integrals import Integral
     from sympy.logic.boolalg import BooleanFunction
+    from sympy.simplify.radsimp import fraction
     from sympy.utilities.misc import func_name
 
     expr = sympify(expr)
@@ -3298,9 +3299,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     >>> type(nfloat((1, 2))) is tuple
     True
     """
-    from sympy.core.power import Pow
-    from sympy.polys.rootoftools import RootOf
-    from sympy import MatrixBase
+    from sympy.matrices.matrices import MatrixBase
 
     kw = dict(n=n, exponent=exponent, dkeys=dkeys)
 
@@ -3345,8 +3344,10 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     # watch out for RootOf instances that don't like to have
     # their exponents replaced with Dummies and also sometimes have
     # problems with evaluating at low precision (issue 6393)
+    from sympy.polys.rootoftools import RootOf
     rv = rv.xreplace({ro: ro.n(n) for ro in rv.atoms(RootOf)})
 
+    from .power import Pow
     if not exponent:
         reps = [(p, Pow(p.base, Dummy())) for p in rv.atoms(Pow)]
         rv = rv.xreplace(dict(reps))
@@ -3365,4 +3366,4 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
         lambda x: isinstance(x, Function)))
 
 
-from sympy.core.symbol import Dummy, Symbol
+from .symbol import Dummy, Symbol

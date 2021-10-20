@@ -1,5 +1,6 @@
 from collections import defaultdict
 from functools import cmp_to_key, reduce
+from itertools import product
 import operator
 
 from .sympify import sympify
@@ -714,16 +715,16 @@ class Mul(Expr, AssocOp):
             return Mul(*[Pow(b, e, evaluate=False) for b in cargs]) * \
                 Pow(Mul._from_args(nc), e, evaluate=False)
         if e.is_Rational and e.q == 2:
-            from sympy.core.power import integer_nthroot
-            from sympy.functions.elementary.complexes import sign
             if self.is_imaginary:
                 a = self.as_real_imag()[1]
                 if a.is_Rational:
+                    from .power import integer_nthroot
                     n, d = abs(a/2).as_numer_denom()
                     n, t = integer_nthroot(n, 2)
                     if t:
                         d, t = integer_nthroot(d, 2)
                         if t:
+                            from sympy.functions.elementary.complexes import sign
                             r = sympify(n)/d
                             return _unevaluated_Mul(r**e.p, (1 + sign(a)*S.ImaginaryUnit)**e.p)
 
@@ -759,9 +760,9 @@ class Mul(Expr, AssocOp):
         """
         Convert self to an mpmath mpc if possible
         """
-        from sympy.core.numbers import I, Float
+        from .numbers import Float
         im_part, imag_unit = self.as_coeff_Mul()
-        if not imag_unit == I:
+        if imag_unit is not S.ImaginaryUnit:
             # ValueError may seem more reasonable but since it's a @property,
             # we need to use AttributeError to keep from confusing things like
             # hasattr.
@@ -858,7 +859,7 @@ class Mul(Expr, AssocOp):
         return S.One, self
 
     def as_real_imag(self, deep=True, **hints):
-        from sympy import Abs, expand_mul, im, re
+        from sympy.functions.elementary.complexes import Abs, im, re
         other = []
         coeffr = []
         coeffi = []
@@ -903,6 +904,7 @@ class Mul(Expr, AssocOp):
             if imco is S.Zero:
                 return (r, i)
             return (-imco*i, imco*r)
+        from .function import expand_mul
         addre, addim = expand_mul(addterms, deep=False).as_real_imag()
         if imco is S.Zero:
             return (r*addre - i*addim, i*addre + r*addim)
@@ -930,7 +932,7 @@ class Mul(Expr, AssocOp):
         return Add.make_args(added)  # it may have collapsed down to one term
 
     def _eval_expand_mul(self, **hints):
-        from sympy import fraction
+        from sympy.simplify.radsimp import fraction
 
         # Handle things like 1/(x*(x + 1)), which are automatically converted
         # to 1/x*1/(x + 1)
@@ -985,23 +987,26 @@ class Mul(Expr, AssocOp):
 
     @cacheit
     def _eval_derivative_n_times(self, s, n):
-        from sympy import Integer, factorial, Sum, Max
-        from sympy.ntheory.multinomial import multinomial_coefficients_iterator
         from .function import AppliedUndef
         from .symbol import Symbol, symbols, Dummy
         if not isinstance(s, AppliedUndef) and not isinstance(s, Symbol):
             # other types of s may not be well behaved, e.g.
             # (cos(x)*sin(y)).diff([[x, y, z]])
             return super()._eval_derivative_n_times(s, n)
+        from .numbers import Integer
         args = self.args
         m = len(args)
         if isinstance(n, (int, Integer)):
             # https://en.wikipedia.org/wiki/General_Leibniz_rule#More_than_two_factors
             terms = []
+            from sympy.ntheory.multinomial import multinomial_coefficients_iterator
             for kvals, c in multinomial_coefficients_iterator(m, n):
                 p = prod([arg.diff((s, k)) for k, arg in zip(kvals, args)])
                 terms.append(c * p)
             return Add(*terms)
+        from sympy.concrete.summations import Sum
+        from sympy.functions.combinatorial.factorials import factorial
+        from sympy.functions.elementary.miscellaneous import Max
         kvals = symbols("k1:%i" % m, cls=Dummy)
         klast = n - sum(kvals)
         nfact = factorial(n)
@@ -1340,8 +1345,7 @@ class Mul(Expr, AssocOp):
     #_eval_is_integer = lambda self: _fuzzy_group(
     #    (a.is_integer for a in self.args), quick_exit=True)
     def _eval_is_integer(self):
-        from sympy import trailing
-        from sympy.core.relational import is_gt
+        from sympy.ntheory.factor_ import trailing
         is_rational = self._eval_is_rational()
         if is_rational is False:
             return False
@@ -1383,6 +1387,7 @@ class Mul(Expr, AssocOp):
         alleven = lambda x: all(i.is_even for i in x)
         anyeven = lambda x: any(i.is_even for i in x)
 
+        from .relational import is_gt
         if not numerators and denominators and all(is_gt(_, S.One)
                 for _ in denominators):
             return False
@@ -1588,13 +1593,14 @@ class Mul(Expr, AssocOp):
         return self._eval_pos_neg(-1)
 
     def _eval_is_odd(self):
-        from sympy import trailing, fraction
         is_integer = self.is_integer
         if is_integer:
             if self.is_zero:
                 return False
+            from sympy.simplify.radsimp import fraction
             n, d = fraction(self)
             if d.is_Integer and d.is_even:
+                from sympy.ntheory.factor_ import trailing
                 # if minimal power of 2 in num vs den is
                 # positive then we have an even number
                 if (Add(*[i.as_base_exp()[1] for i in
@@ -1620,17 +1626,18 @@ class Mul(Expr, AssocOp):
         return is_integer # !integer -> !odd
 
     def _eval_is_even(self):
-        from sympy import trailing, fraction
         is_integer = self.is_integer
 
         if is_integer:
             return fuzzy_not(self.is_odd)
 
+        from sympy.simplify.radsimp import fraction
         n, d = fraction(self)
         if n.is_Integer and n.is_even:
             # if minimal power of 2 in den vs num is not
             # negative then this is not an integer and
             # can't be even
+            from sympy.ntheory.factor_ import trailing
             if (Add(*[i.as_base_exp()[1] for i in
                     Mul.make_args(d) if i.is_even]) - trailing(n.p)
                     ).is_nonnegative:
@@ -1674,7 +1681,7 @@ class Mul(Expr, AssocOp):
             # if I and -1 are in a Mul, they get both end up with
             # a -1 base (see issue 6421); all we want here are the
             # true Pow or exp separated into base and exponent
-            from sympy import exp
+            from sympy.functions.elementary.exponential import exp
             if a.is_Pow or isinstance(a, exp):
                 return a.as_base_exp()
             return a, S.One
@@ -1919,8 +1926,9 @@ class Mul(Expr, AssocOp):
         return co_residual*self2.func(*margs)*self2.func(*nc)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        from sympy import degree, Order, ceiling, powsimp, PolynomialError, PoleError
-        from itertools import product
+        from .function import PoleError
+        from sympy.functions.elementary.integers import ceiling
+        from sympy.series.order import Order
 
         def coeff_exp(term, x):
             lt = term.as_coeff_exponent(x)
@@ -1957,6 +1965,7 @@ class Mul(Expr, AssocOp):
             if n0.is_nonnegative:
                 n0 = S.Zero
             facs = [t.nseries(x, n=ceiling(n-n0), logx=logx, cdir=cdir) for t in self.args]
+            from sympy.simplify.powsimp import powsimp
             res = powsimp(self.func(*facs).expand(), combine='exp', deep=True)
             if res.has(Order):
                 res += Order(x**n, x)
@@ -1986,6 +1995,8 @@ class Mul(Expr, AssocOp):
             return S.Zero
 
         if self.is_polynomial(x):
+            from sympy.polys.polyerrors import PolynomialError
+            from sympy.polys.polytools import degree
             try:
                 if max_degree(self, x) >= n or degree(self, x) != degree(res, x):
                     res += Order(x**n, x)

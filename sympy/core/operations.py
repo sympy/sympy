@@ -4,12 +4,12 @@ from collections import defaultdict
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy.core.sympify import _sympify as _sympify_, sympify
-from sympy.core.basic import Basic
-from sympy.core.cache import cacheit
-from sympy.core.compatibility import ordered
-from sympy.core.logic import fuzzy_and
-from sympy.core.parameters import global_parameters
+from .sympify import _sympify as _sympify_, sympify
+from .basic import Basic
+from .cache import cacheit
+from .compatibility import ordered
+from .logic import fuzzy_and
+from .parameters import global_parameters
 from sympy.utilities.iterables import sift
 from sympy.multipledispatch.dispatcher import (Dispatcher,
     ambiguity_register_error_ignore_dup,
@@ -45,8 +45,6 @@ class AssocOp(Basic):
 
     @cacheit
     def __new__(cls, *args, evaluate=None, _sympify=True):
-        from sympy import Order
-
         # Allow faster processing by passing ``_sympify=False``, if all arguments
         # are already sympified.
         if _sympify:
@@ -55,7 +53,7 @@ class AssocOp(Basic):
         # Disallow non-Expr args in Add/Mul
         typ = cls._args_type
         if typ is not None:
-            from sympy.core.relational import Relational
+            from .relational import Relational
             if any(isinstance(arg, Relational) for arg in args):
                 raise TypeError("Relational cannot be used in %s" % cls.__name__)
 
@@ -88,6 +86,7 @@ class AssocOp(Basic):
         obj = cls._exec_constructor_postprocessors(obj)
 
         if order_symbols is not None:
+            from sympy.series.order import Order
             return Order(obj, *order_symbols)
         return obj
 
@@ -215,8 +214,7 @@ class AssocOp(Basic):
 
         """
         # make sure expr is Expr if pattern is Expr
-        from .expr import Add, Expr
-        from sympy import Mul
+        from .expr import Expr
         if isinstance(self, Expr) and not isinstance(expr, Expr):
             return None
 
@@ -287,6 +285,7 @@ class AssocOp(Basic):
                 if self.is_Mul:
                     # make e**i look like Mul
                     if expr.is_Pow and expr.exp.is_Integer:
+                        from .mul import Mul
                         if expr.exp > 0:
                             expr = Mul(*[expr.base, expr.base**(expr.exp - 1)], evaluate=False)
                         else:
@@ -298,6 +297,7 @@ class AssocOp(Basic):
                     # make i*e look like Add
                     c, e = expr.as_coeff_Mul()
                     if abs(c) > 1:
+                        from .add import Add
                         if c > 0:
                             expr = Add(*[e, (c - 1)*e], evaluate=False)
                         else:

@@ -1,22 +1,21 @@
 """Tools for manipulating of large commutative expressions. """
 
-from sympy.core.add import Add
-from sympy.core.compatibility import iterable, is_sequence
-from sympy.core.mul import Mul, _keep_coeff
-from sympy.core.power import Pow
-from sympy.core.basic import Basic
-from sympy.core.expr import Expr
-from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational, Integer, Number, I
-from sympy.core.singleton import S
-from sympy.core.symbol import Dummy
-from sympy.core.traversal import preorder_traversal
-from sympy.core.coreerrors import NonCommutativeExpression
-from sympy.core.containers import Tuple, Dict
+from .add import Add
+from .mul import Mul, _keep_coeff
+from .power import Pow
+from .basic import Basic
+from .expr import Expr
+from .sympify import sympify
+from .numbers import Rational, Integer, Number, I
+from .singleton import S
+from .symbol import Dummy
+from .traversal import preorder_traversal
+from .coreerrors import NonCommutativeExpression
+from .containers import Tuple, Dict
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
-        variations, ordered)
+        variations, ordered, iterable, is_sequence)
 
 from collections import defaultdict
 
@@ -1358,7 +1357,7 @@ def _mask_nc(eq, name=None):
     names = numbered_names()
 
     def Dummy(*args, **kwargs):
-        from sympy import Dummy
+        from .symbol import Dummy
         return Dummy(next(names), *args, **kwargs)
 
     expr = eq
@@ -1419,20 +1418,13 @@ def factor_nc(expr):
     >>> factor_nc(((x + A)*(x + B)).expand())
     (x + A)*(x + B)
     """
-    from sympy.simplify.simplify import powsimp
-    from sympy.polys import gcd, factor
-
-    def _pemexpand(expr):
-        "Expand with the minimal set of hints necessary to check the result."
-        return expr.expand(deep=True, mul=True, power_exp=True,
-            power_base=False, basic=False, multinomial=True, log=False)
-
     expr = sympify(expr)
     if not isinstance(expr, Expr) or not expr.args:
         return expr
     if not expr.is_Add:
         return expr.func(*[factor_nc(a) for a in expr.args])
 
+    from sympy.polys.polytools import gcd, factor
     expr, rep, nc_symbols = _mask_nc(expr)
     if rep:
         return factor(expr).subs(rep)
@@ -1535,6 +1527,8 @@ def factor_nc(expr):
         else:
             mid = expr
 
+        from sympy.simplify.powsimp import powsimp
+
         # sort the symbols so the Dummys would appear in the same
         # order as the original symbols, otherwise you may introduce
         # a factor of -1, e.g. A**2 - B**2) -- {A:y, B:x} --> y**2 - x**2
@@ -1552,6 +1546,10 @@ def factor_nc(expr):
             return _keep_coeff(c, g*l*new_mid*r)
 
         if new_mid.is_Mul:
+            def _pemexpand(expr):
+                "Expand with the minimal set of hints necessary to check the result."
+                return expr.expand(deep=True, mul=True, power_exp=True,
+                    power_base=False, basic=False, multinomial=True, log=False)
             # XXX TODO there should be a way to inspect what order the terms
             # must be in and just select the plausible ordering without
             # checking permutations
