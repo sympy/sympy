@@ -903,6 +903,9 @@ class ModuleElement(IntegerPowerable):
             return self * (1/a)
         return NotImplemented
 
+    def __rfloordiv__(self, a):
+        return a // self.over_power_basis()
+
     def __mod__(self, a):
         r"""
         Reducing mod an integer *a* reduces all numerator coeffs mod $d a$, where

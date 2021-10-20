@@ -599,6 +599,14 @@ def test_ModuleElement_mul():
     raises(ZeroDivisionError, lambda: e // 0)
 
 
+def test_ModuleElement_div():
+    T = Poly(cyclotomic_poly(5, x))
+    A = PowerBasis(T)
+    C = A.submodule_from_matrix(3 * DomainMatrix.eye(4, ZZ))
+    e = C(to_col([1, 1, 1, 1]))
+    assert 3 // e == -A(1)
+
+
 def test_ModuleElement_pow():
     T = Poly(cyclotomic_poly(5, x))
     A = PowerBasis(T)
