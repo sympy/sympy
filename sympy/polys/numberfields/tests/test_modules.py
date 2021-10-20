@@ -687,8 +687,10 @@ def test_EndomorphismRing_represent():
 def test_find_min_poly():
     T = Poly(cyclotomic_poly(5, x))
     A = PowerBasis(T)
-    m = find_min_poly(A(1), QQ, x=x)
+    powers = []
+    m = find_min_poly(A(1), QQ, x=x, powers=powers)
     assert m == Poly(T, domain=QQ)
+    assert len(powers) == 5
 
     B = A.submodule_from_matrix(2 * DomainMatrix.eye(4, ZZ))
     raises(ValueError, lambda: find_min_poly(B(1), QQ))

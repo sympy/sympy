@@ -1083,13 +1083,13 @@ def find_min_poly(alpha, domain, x=None, powers=None):
     ak = alpha
     m = None
     for k in range(1, R.n + 1):
+        powers.append(ak)
         ak_col = ak.column(domain=domain)
         try:
             X = powers_matrix._solve(ak_col)[0]
         except DMBadInputError:
             # This means alpha^k still isn't in the domain-span of the lower powers.
             powers_matrix = powers_matrix.hstack(ak_col)
-            powers.append(ak)
             ak *= alpha
         else:
             # alpha^k is in the domain-span of the lower powers, so we have found a
