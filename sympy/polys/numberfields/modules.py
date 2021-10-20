@@ -1,4 +1,125 @@
-"""Modules in number fields. """
+r"""Modules in number fields.
+
+The classes defined here allow us to work with finitely generated, free
+modules, whose generators are algebraic numbers.
+
+There is an abstract base class called ``Module``, which has two concrete
+subclasses, ``PowerBasis`` and ``Submodule``.
+
+Every module is defined by its basis, or set of generators:
+
+* For a ``PowerBasis``, the generators are the first $n$ powers (starting with
+  the zeroth) of an algebraic integer $\theta$ of degree $n$. The ``PowerBasis``
+  is constructred by passing the minimal polynomial of $\theta$.
+
+* For a ``Submodule``, the generators are a set of $\mathbb{Q}$-linear
+  combinations of the generators of another module. The coefficients are given
+  by an integer matrix, and a positive integer denominator.
+
+Thus, every module is either a ``PowerBasis``, or a ``Submodule``, some ancestor
+of which is a ``PowerBasis``.
+
+The ``ModuleElement`` class represents a linear combination of the generators
+of any module. Critically, the coefficients of this linear combination are not
+restricted to be integers, but may be any rational numbers. This is necessary
+so that any and all algebraic integers be representable, starting from the
+power basis in a primitive element $\theta$ for the number field in question.
+For example, in a quadratic field $\mathbb{Q}(\sqrt{d})$ where
+$d \equiv 1 \mod{4}$, a denominator of $2$ is needed.
+
+The ``PowerBasisElement`` class is a subclass of ``ModuleElement`` that
+represents elements of a ``PowerBasis``, and adds functionality pertinent to
+elements represented over powers of the primitive element $\theta$.
+
+
+Arithmetic with ``ModuleElement``s
+==================================
+
+While a ``ModuleElement`` represents a linear combination over the generators
+of a particular module, recall that every module is either a ``PowerBasis``
+or a descendant (along a chain of ``Submodule``s) thereof, so that in fact
+every ``ModuleElement`` represents an algebraic number in some field
+$\mathbb{Q}(\theta)$, where $\theta$ is the defining element of some
+``PowerBasis``. It thus makes sense to talk about the number field to which a
+given ``ModuleElement`` belongs.
+
+This means that any two ``ModuleElements`` can be added, subtracted, multiplied,
+or divided, provided they belong to the same number field. Similarly, since
+$\mathbb{Q}$ is a subfield of every number field, any ``ModuleElement`` may be
+added, multiplied, etc. by any rational number. The arithmetic operator methods
+of the ``ModuleElement`` class (``__add__``, ``__mul__``, etc.) have been
+defined accordingly.
+
+However, care must be taken with arithmetic operations on ``ModuleElemnts``,
+because the module $C$ to which the result will belong will be the nearest
+common ancestor (NCA) of the modules $A$, $B$ to which the two operands belong,
+and $C$ may be different from either or both of $A$ and $B$.
+
+Before the arithmetic operation is performed, copies of the two operands are
+automatically converted into elements of the NCA (the operands themselves are
+not modified). This upward conversion along an ancestor chain is easy: it just
+requires the successive multiplication by each ``Submodule``'s defining matrix.
+
+Conversely, downward conversion, i.e. representing a given ``ModuleElement`` in
+a submodule, is also supported -- namely by the ``Submodule.represent()``
+method -- but is not guaranteed to succeed in general, since the given element
+may not belong to the submodule. The main circumstance in which this issue
+tends to arise is with multiplication, since modules, while closed under
+addition, need not be closed under multiplication.
+
+
+Multiplication
+--------------
+
+Generally speaking, a module need not be closed under multiplication, i.e. need
+not form a ring. However, many of the modules we work with in the context of
+number fields are in fact rings, and our classes do support multiplication.
+
+Specifically, any ``Module`` can attempt to compute its own multiplication
+table, but this does not happen unless an attempt is made to multiply two of
+its ``ModuleElement``s.
+
+Every ``PowerBasis`` is, by its nature, closed under multiplication, so
+instances of ``PowerBasis`` can always successfully compute their
+multiplication table.
+
+When a ``Submodule`` attempts to compute its multiplication table, it converts
+each of its own generators into elements of the containing module, multiplies
+them there, in every possible pairing, and then tries to represent the results
+in itself, i.e. as $\mathbb{Z}$-linear combinations over its own generators.
+This will succeed if and only if the submodule is in fact closed under
+multiplication.
+
+
+Special Submodule Types
+=======================
+
+While a ``Submodule`` may in general be defined from a given module by any
+matrix and denominator (recall, this defines the generators of the ``Submodule``
+as $\mathbb{Q}$-linear combinations of the generators of the containing module)
+certain, special types of submodules are obtained when the matrix satisfies
+certain conditions.
+
+Namely, the ``Order`` and ``Ideal`` classes represent, respectively, orders
+and ideals in the integer rings of number fields. These are subclasses of a
+class called ``HNF`` (which is a subclass of ``Submodule``), which encodes
+the required special conditions on the defining matrix: the matrix must be
+square and in Hermite normal form.
+
+An ``Order`` is then an ``HNF`` in which the first generator equals unity,
+while an ``Ideal`` is an ``HNF`` in which it does not.
+
+
+Module Homomorphisms
+====================
+
+Many important number theoretic algorithms require the calculation of the
+kernels of one or more module homomorphisms. Accordingly we have several
+lightweight classes, ``ModuleHomomorphism``, ``ModuleEndomorphism``,
+``InnerEndomorphism``, and ``EndomorphismRing``, which do little more than
+define the necessary machinery to support this.
+
+"""
 
 from sympy import igcd, ilcm
 from sympy.core.symbol import Dummy
@@ -35,7 +156,20 @@ class Module:
         raise NotImplementedError
 
     def mult_tab(self):
-        """The multiplication table for this module (if closed under mult)."""
+        """
+        Get the multiplication table for this module (if closed under mult).
+
+        Returns
+        =======
+        Dictionary of dictionaries of lists ``M``, representing the upper
+        triangular half of the multiplication table. In other words, if
+        ``0 <= i <= j < self.n``, then ``M[i][j]`` is the list ``c`` of
+        coefficients such that
+        ``g[i] * g[j] == sum(c[k]*g[k], k in range(self.n))``,
+        where ``g`` is the list of generators of this module.
+        If ``j < i`` then ``M[i][j]`` is undefined.
+
+        """
         raise NotImplementedError
 
     @property
@@ -221,11 +355,12 @@ class Module:
         return self.submodule_from_matrix(B)
 
     def endomorphism_ring(self):
+        """Form the endomorphism ring for this module."""
         return EndomorphismRing(self)
 
 
 class PowerBasis(Module):
-    """The module generated by the powers of an algebraic integer theta."""
+    """The module generated by the powers of an algebraic integer."""
 
     def __init__(self, T):
         """
@@ -813,8 +948,8 @@ class ModuleElement(IntegerPowerable):
         a ModuleElement (belonging to the first ancestor of this module that
         starts with unity).
 
-        In all cases, the sum belongs to the nearest common ancestor (nca) of
-        the modules of the two summands. If the nca does not exist, we return
+        In all cases, the sum belongs to the nearest common ancestor (NCA) of
+        the modules of the two summands. If the NCA does not exist, we return
         ``NotImplemented``.
         """
         if self.is_compat(other):
@@ -848,14 +983,14 @@ class ModuleElement(IntegerPowerable):
         A ModuleElement can be multiplied by a rational number, or by another
         ModuleElement.
 
-        When the other ModuleElement belongs to the same Module as this one,
-        so will the product.
+        When the multiplier is a rational number, the product is computed by
+        operating directly on the coefficients of this ModuleElement.
 
-        However, if the other ModuleElement does not belong to the same Module
-        as this one, then the resulting product may not belong to the same
-        Module as _either_ of the operands. It will belong to their nearest
-        common ancestor (NCA) module, if that exists. If the NCA does not
-        exist, we return ``NotImplemented``.
+        When the multiplier is another ModuleElement, the product will belong
+        to the nearest common ancestor (NCA) of the modules of the two operands,
+        and that NCA must have a multiplication table. If the NCA does not
+        exist, we return ``NotImplemented``. If the NCA does not have a mult.
+        table, ``ClosureFailure`` will be raised.
         """
         if self.is_compat(other):
             M = self.module.mult_tab()
