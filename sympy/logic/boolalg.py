@@ -169,7 +169,11 @@ class Boolean(Basic):
                             as_set is not implemented for relationals
                             with periodic solutions
                             '''))
-                return self.subs(reps)._eval_as_set()
+                new = self.subs(reps)
+                if new.func != self.func:
+                    return new.as_set()
+                else:
+                    return new._eval_as_set()
             return self._eval_as_set()
         else:
             raise NotImplementedError("Sorry, as_set has not yet been"

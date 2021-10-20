@@ -5,7 +5,7 @@ from sympy.core.relational import Equality, Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise
-from sympy.functions.elementary.trigonometric import sin
+from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.sets.sets import (EmptySet, Interval, Union)
 from sympy.simplify.simplify import simplify
 from sympy.logic.boolalg import (
@@ -874,6 +874,8 @@ def test_bool_as_set():
     assert And(Or(x < 1, x > 3), x < 2).as_set() == Interval.open(-oo, 1)
     assert And(x < 1, sin(x) < 3).as_set() == (x < 1).as_set()
     raises(NotImplementedError, lambda: (sin(x) < 1).as_set())
+    # watch for object morph in as_set
+    assert Eq(-1, cos(2*x)**2/sin(2*x)**2).as_set() is S.EmptySet
 
 
 @XFAIL
