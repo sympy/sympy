@@ -14,7 +14,7 @@ PDFFILES = $(SVGFILES:%.svg=%.pdf)
 
 ALLSPHINXOPTS = -d _build/doctrees $(SPHINXOPTS) src
 ALLSPHINXOPTSapi = -d _build/doctrees-api $(SPHINXOPTS) api
-ALLSPHINXOPTSlatex = -d _build/doctrees-latex -D latex_element.papersize=$(PAPER) \
+ALLSPHINXOPTSlatex = -d _build/doctrees-latex -D latex_element.papersize=$(PAPER)paper \
                 $(SPHINXOPTS) src
 
 .PHONY: changes cheatsheet clean help html htmlapi htmlhelp info latex \
