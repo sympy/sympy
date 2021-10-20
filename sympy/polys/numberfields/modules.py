@@ -250,14 +250,18 @@ class PowerBasis(Module):
 
     def mult_tab(self):
         if self._mult_tab is None:
-            theta_pow = AlgIntPowers(self.T)
-            M = {}
-            for u in range(self.n):
-                M[u] = {}
-                for v in range(u, self.n):
-                    M[u][v] = theta_pow[u+v]
-            self._mult_tab = M
+            self.compute_mult_tab()
         return self._mult_tab
+
+    def compute_mult_tab(self):
+        theta_pow = AlgIntPowers(self.T)
+        M = {}
+        n = self.n
+        for u in range(n):
+            M[u] = {}
+            for v in range(u, n):
+                M[u][v] = theta_pow[u + v]
+        self._mult_tab = M
 
     def represent(self, elt):
         """
@@ -383,8 +387,8 @@ class Submodule(Module, IntegerPowerable):
         return self._mult_tab
 
     def compute_mult_tab(self):
+        gens = self.basis_element_pullbacks()
         M = {}
-        gens = [e.to_container() for e in self.basis_elements()]
         n = self.n
         for u in range(n):
             M[u] = {}
