@@ -2,7 +2,7 @@ from sympy.core import S, sympify
 from sympy.functions import Piecewise, piecewise_fold
 from sympy.sets.sets import Interval
 
-from sympy.core.cache import lru_cache
+from functools import lru_cache
 
 
 def _ivl(cond, x):

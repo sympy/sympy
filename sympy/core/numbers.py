@@ -4,6 +4,7 @@ import fractions
 import math
 import re as regex
 import sys
+from functools import lru_cache
 from typing import Set
 
 from .containers import Tuple
@@ -13,7 +14,7 @@ from .singleton import S, Singleton
 from .basic import Basic
 from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
-from .cache import cacheit, clear_cache, lru_cache
+from .cache import cacheit, clear_cache
 from .compatibility import as_int
 from .decorators import _sympifyit
 from .logic import fuzzy_not

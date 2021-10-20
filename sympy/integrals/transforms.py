@@ -1,5 +1,5 @@
 """ Integral Transforms """
-from functools import reduce
+from functools import reduce, wraps
 from itertools import repeat
 
 from sympy.core import S, pi
@@ -233,8 +233,6 @@ def _noconds_(default):
     argument of this function).
     """
     def make_wrapper(func):
-        from sympy.core.decorators import wraps
-
         @wraps(func)
         def wrapper(*args, noconds=default, **kwargs):
             res = func(*args, **kwargs)

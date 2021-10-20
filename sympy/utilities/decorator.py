@@ -3,8 +3,8 @@
 import sys
 import types
 import inspect
+from functools import wraps
 
-from sympy.core.decorators import wraps
 from sympy.testing.runtests import DependencyError, SymPyDocTests, PyTestReporter
 from sympy.utilities.iterables import iterable
 

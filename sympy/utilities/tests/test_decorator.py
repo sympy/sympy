@@ -1,9 +1,10 @@
+from functools import wraps
+
 from sympy.utilities.decorator import threaded, xthreaded, memoize_property
 
 from sympy import Eq, Matrix, Basic
 
 from sympy.abc import x, y
-from sympy.core.decorators import wraps
 
 
 def test_threaded():
