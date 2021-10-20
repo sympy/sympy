@@ -58,7 +58,7 @@ if ErrorListener:
             raise LaTeXParsingError(err)
 
 
-def parse_latex(sympy, evaluate=True):
+def parse_latex(string, evaluate=True):
     antlr4 = import_module('antlr4', warn_not_installed=True)
 
     if None in [antlr4, MathErrorListener]:
@@ -574,9 +574,9 @@ def parse_latex(sympy, evaluate=True):
             text = text[1:]
         return text
 
-    matherror = MathErrorListener(sympy)
+    matherror = MathErrorListener(string)
 
-    stream = antlr4.InputStream(sympy)
+    stream = antlr4.InputStream(string)
     lex = LaTeXLexer(stream)
     lex.removeErrorListeners()
     lex.addErrorListener(matherror)
