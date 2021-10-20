@@ -37,7 +37,6 @@ from .add import Add
 from .assumptions import ManagedProperties
 from .basic import Basic, _atomic
 from .cache import cacheit
-from .compatibility import as_int
 from .containers import Tuple, Dict
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
