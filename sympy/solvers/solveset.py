@@ -118,7 +118,7 @@ def _invert(f_x, y, x, domain=S.Complexes):
 
     $\mathrm{set}_h$ contains the functions, along with the information
     about the domain in which they are valid, through set
-    operations. For instance, if $y = |x| - n$ is inverted
+    operations. For instance, if :math:`y = |x| - n` is inverted
     in the real domain, then $\mathrm{set}_h$ is not simply
     $\{-n, n\}$ as the nature of `n` is unknown; rather, it is:
 
@@ -3613,7 +3613,7 @@ def nonlinsolve(system, *symbols):
     use :func:`~.solveset` to get the value of $x$.
 
     How nonlinsolve is better than old solver ``_solve_system`` :
-    ===========================================================
+    =============================================================
 
     1. A positive dimensional system solver: nonlinsolve can return
     solution for positive dimensional system. It finds the
