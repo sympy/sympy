@@ -432,8 +432,7 @@ class RustCodePrinter(CodePrinter):
 
     def _print_ITE(self, expr):
         from sympy.functions import Piecewise
-        _piecewise = Piecewise((expr.args[1], expr.args[0]), (expr.args[2], True))
-        return self._print(_piecewise)
+        return self._print(expr.rewrite(Piecewise, deep=False))
 
     def _print_MatrixBase(self, A):
         if A.cols == 1:

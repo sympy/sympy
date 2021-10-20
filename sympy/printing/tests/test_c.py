@@ -5,10 +5,10 @@ from sympy.core import (
 from sympy.functions import (
     Abs, acos, acosh, asin, asinh, atan, atanh, atan2, ceiling, cos, cosh, erf,
     erfc, exp, floor, gamma, log, loggamma, Max, Min, Piecewise, sign, sin, sinh,
-    sqrt, tan, tanh
+    sqrt, tan, tanh, fibonacci, lucas
 )
 from sympy.sets import Range
-from sympy.logic import ITE
+from sympy.logic import ITE, Implies, Equivalent
 from sympy.codegen import For, aug_assign, Assignment
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 from sympy.printing.c import C89CodePrinter, C99CodePrinter, get_math_macros
@@ -164,6 +164,8 @@ def test_ccode_functions2():
     assert ccode(Mod(p1, p2)**s) == 'pow(p1 % p2, s)'
     n = symbols('n', integer=True, negative=True)
     assert ccode(Mod(-n, p2)) == '(-n) % p2'
+    assert ccode(fibonacci(n)) == '(1.0/5.0)*pow(2, -n)*sqrt(5)*(-pow(1 - sqrt(5), n) + pow(1 + sqrt(5), n))'
+    assert ccode(lucas(n)) == 'pow(2, -n)*(pow(1 - sqrt(5), n) + pow(1 + sqrt(5), n))'
 
 
 def test_ccode_user_functions():
@@ -190,6 +192,11 @@ def test_ccode_boolean():
     assert ccode(x | y | z) == "x || y || z"
     assert ccode((x & y) | z) == "z || x && y"
     assert ccode((x | y) & z) == "z && (x || y)"
+    # Automatic rewrites
+    assert ccode(x ^ y) == '(x || y) && (!x || !y)'
+    assert ccode((x ^ y) ^ z) == '(x || y || z) && (x || !y || !z) && (y || !x || !z) && (z || !x || !y)'
+    assert ccode(Implies(x, y)) == 'y || !x'
+    assert ccode(Equivalent(x, z ^ y, Implies(z, x))) == '(x || (y || !z) && (z || !y)) && (z && !x || (y || z) && (!y || !z))'
 
 
 def test_ccode_Relational():
