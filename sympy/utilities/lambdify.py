@@ -117,7 +117,7 @@ def _import(module, reload=False):
 
     The argument module has to be one of the following strings: "math",
     "mpmath", "numpy", "sympy", "tensorflow".
-    These dictionaries map names of python functions to their equivalent in
+    These dictionaries map names of Python functions to their equivalent in
     other modules.
     """
     # Required despite static analysis claiming it is not used

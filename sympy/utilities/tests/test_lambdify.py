@@ -154,7 +154,7 @@ def test_math_lambda():
     prec = 1e-15
     assert -prec < f(0.2) - sin02 < prec
     raises(TypeError, lambda: f(x))
-           # if this succeeds, it can't be a python math function
+           # if this succeeds, it can't be a Python math function
 
 
 @conserve_mpmath_dps
@@ -702,7 +702,7 @@ def test_tensorflow_complexes():
     with tensorflow.compat.v1.Session() as s:
         # For versions before
         # https://github.com/tensorflow/tensorflow/issues/30029
-        # resolved, using python numeric types may not work
+        # resolved, using Python numeric types may not work
         a = tensorflow.constant(1+2j)
         assert func1(a).eval(session=s) == 1
         assert func2(a).eval(session=s) == 2
@@ -857,7 +857,7 @@ def test_dummification():
     t = symbols('t')
     F = Function('F')
     G = Function('G')
-    #"\alpha" is not a valid python variable name
+    #"\alpha" is not a valid Python variable name
     #lambdify should sub in a dummy for it, and return
     #without a syntax error
     alpha = symbols(r'\alpha')

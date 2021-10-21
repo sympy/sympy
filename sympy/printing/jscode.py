@@ -42,10 +42,10 @@ known_functions = {
 
 
 class JavascriptCodePrinter(CodePrinter):
-    """"A Printer to convert python expressions to strings of javascript code
+    """"A Printer to convert Python expressions to strings of JavaScript code
     """
     printmethod = '_javascript'
-    language = 'Javascript'
+    language = 'JavaScript'
 
     _default_settings = {
         'order': None,

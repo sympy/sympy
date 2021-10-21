@@ -214,7 +214,7 @@ reserved_words = ['abstract',
 
 
 class RustCodePrinter(CodePrinter):
-    """A printer to convert python expressions to strings of Rust code"""
+    """A printer to convert SymPy expressions to strings of Rust code"""
     printmethod = "_rust_code"
     language = "Rust"
 

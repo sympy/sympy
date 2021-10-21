@@ -174,7 +174,7 @@ class SymPyExpression:  # type: ignore
             )
 
     def convert_to_python(self):
-        """Returns a list with python code for the SymPy expressions
+        """Returns a list with Python code for the SymPy expressions
 
         Examples
         ========

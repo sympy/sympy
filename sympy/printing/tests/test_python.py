@@ -9,7 +9,7 @@ from sympy.testing.pytest import raises, XFAIL, skip
 from sympy.parsing.latex import parse_latex
 from sympy.external import import_module
 
-# To test latex to python printing
+# To test latex to Python printing
 antlr4 = import_module("antlr4")
 
 x, y = symbols('x,y')
@@ -192,7 +192,7 @@ def test_python_limits():
 def test_issue_20762():
     if not antlr4:
         skip('antlr not installed')
-    # Make sure python removes curly braces from subscripted variables
+    # Make sure Python removes curly braces from subscripted variables
     expr = parse_latex(r'a_b \cdot b')
     assert python(expr) == "a_b = Symbol('a_{b}')\nb = Symbol('b')\ne = a_b*b"
 

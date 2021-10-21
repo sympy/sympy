@@ -60,7 +60,7 @@ if GROUND_TYPES in ('auto', 'gmpy', 'gmpy2'):
 
 elif GROUND_TYPES == 'python':
 
-    # The user asked for python so ignore gmpy2 module.
+    # The user asked for Python so ignore gmpy2 module.
     gmpy = None
 
 else:

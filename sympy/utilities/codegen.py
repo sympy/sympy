@@ -460,7 +460,7 @@ class Result(Variable, ResultBase):
     """An expression for a return value.
 
     The name result is used to avoid conflicts with the reserved word
-    "return" in the python language.  It is also shorter than ReturnValue.
+    "return" in the Python language.  It is also shorter than ReturnValue.
 
     These may or may not need a name in the destination (e.g., "return(x*y)"
     might return a value without ever naming it).

@@ -186,7 +186,7 @@ def link(obj_files, out_file=None, shared=False, Runner=None,
 
 def link_py_so(obj_files, so_file=None, cwd=None, libraries=None,
                cplus=False, fort=False, **kwargs):
-    """ Link python extension module (shared object) for importing
+    """ Link Python extension module (shared object) for importing
 
     Parameters
     ==========
@@ -505,7 +505,7 @@ def compile_link_import_py_ext(sources, extname=None, build_dir='.', compile_kwa
     Returns
     =======
 
-    The imported module from of the python extension.
+    The imported module from of the Python extension.
     """
     if extname is None:
         extname = os.path.splitext(os.path.basename(sources[-1]))[0]

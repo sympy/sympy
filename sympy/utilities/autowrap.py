@@ -36,7 +36,7 @@ Wrapping the unexpanded expression gives the expected behavior:
     >>> e(4, 5), e(5, 4)
     (-1.0, 1.0)
 
-The callable returned from autowrap() is a binary python function, not a
+The callable returned from autowrap() is a binary Python function, not a
 SymPy object.  If it is desired to use the compiled function in symbolic
 expressions, it is better to use binary_function() which returns a SymPy
 Function object.  The binary callable is attached as the _imp_ attribute and
@@ -60,7 +60,7 @@ When is this useful?
        compiled binary should be significantly faster than SymPy's .evalf()
 
     3) If you are generating code with the codegen utility in order to use
-       it in another project, the automatic python wrappers let you test the
+       it in another project, the automatic Python wrappers let you test the
        binaries immediately from within SymPy.
 
     4) To create customized ufuncs for use with numpy arrays.
@@ -356,7 +356,7 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
         return getattr(mod, name + '_c')
 
     def dump_pyx(self, routines, f, prefix):
-        """Write a Cython file with python wrappers
+        """Write a Cython file with Python wrappers
 
         This file contains all the definitions of the routines in c code and
         refers to the header file.
@@ -547,7 +547,7 @@ def _validate_backend_language(backend, language):
 @doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
              flags=None, verbose=False, helpers=None, code_gen=None, **kwargs):
-    """Generates python callable binaries based on the math expression.
+    """Generates Python callable binaries based on the math expression.
 
     Parameters
     ==========
@@ -881,7 +881,7 @@ class UfuncifyCodeWrapper(CodeWrapper):
         f.write(setup)
 
     def dump_c(self, routines, f, prefix, funcname=None):
-        """Write a C file with python wrappers
+        """Write a C file with Python wrappers
 
         This file contains all the definitions of the routines in c code.
 

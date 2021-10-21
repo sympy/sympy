@@ -2684,7 +2684,7 @@ class MatrixArithmetic(MatrixRequired):
         from sympy import Mod
         return self._new(self.rows, self.cols, lambda i, j: Mod(self[i, j], other))
 
-    # python arithmetic functions
+    # Python arithmetic functions
     def __abs__(self):
         """Returns a new matrix with entry-wise absolute values."""
         return self._eval_Abs()

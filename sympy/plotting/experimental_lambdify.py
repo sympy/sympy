@@ -38,7 +38,7 @@ from sympy.utilities.iterables import numbered_symbols
 #  If you insist on fixing it here, look at the workarounds in the function
 # sympy_expression_namespace and in lambdify.
 
-# Q: Why are you not using python abstract syntax tree?
+# Q: Why are you not using Python abstract syntax tree?
 # A: Because it is more complicated and not much more powerful in this case.
 
 # Q: What if I have Symbol('sin') or g=Function('f')?
@@ -87,16 +87,16 @@ class vectorized_lambdify:
 
     This function uses experimental_lambdify to created a lambdified
     expression ready to be used with numpy. Many of the functions in sympy
-    are not implemented in numpy so in some cases we resort to python cmath or
+    are not implemented in numpy so in some cases we resort to Python cmath or
     even to evalf.
 
     The following translations are tried:
       only numpy complex
       - on errors raised by SymPy trying to work with ndarray:
-          only python cmath and then vectorize complex128
+          only Python cmath and then vectorize complex128
 
-    When using python cmath there is no need for evalf or float/complex
-    because python cmath calls those.
+    When using Python cmath there is no need for evalf or float/complex
+    because Python cmath calls those.
 
     This function never tries to mix numpy directly with evalf because numpy
     does not understand SymPy Float. If this is needed one can use the
@@ -153,7 +153,7 @@ class lambdify:
 
     This function uses experimental_lambdify to create a lambdified
     expression. It uses cmath to lambdify the expression. If the function
-    is not implemented in python cmath, python cmath calls evalf on those
+    is not implemented in Python cmath, Python cmath calls evalf on those
     functions.
     """
 
@@ -327,7 +327,7 @@ class Lambdifier:
     }
 
     ###
-    # python math
+    # Python math
     ###
 
     # Functions that are the same in math
@@ -351,7 +351,7 @@ class Lambdifier:
     }
 
     ###
-    # python cmath
+    # Python cmath
     ###
 
     # Functions that are the same in cmath

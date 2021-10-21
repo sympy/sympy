@@ -132,7 +132,7 @@ MutableMatrix = Matrix = MutableDenseMatrix
 
 
 def list2numpy(l, dtype=object):  # pragma: no cover
-    """Converts python list of SymPy expressions to a NumPy array.
+    """Converts Python list of SymPy expressions to a NumPy array.
 
     See Also
     ========

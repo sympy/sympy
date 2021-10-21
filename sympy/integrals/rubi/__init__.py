@@ -77,7 +77,7 @@ They have been properly explained with steps in `sympy/integrals/rubi/parsetools
 Running Tests
 =============
 The tests for rubi in `rubi_tests` have been blacklisted as it takes a very long time to run all the tests.
-To run a test run the following in a python terminal:
+To run a test run the following in a Python terminal:
 ```
 >>> import sympy
 >>> sympy.test("rubi_tests", blacklist = []) # doctest: +SKIP

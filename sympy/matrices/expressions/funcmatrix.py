@@ -22,7 +22,7 @@ class FunctionMatrix(MatrixExpr):
         it should be able to accept two arguments which represents the
         matrix coordinates.
 
-        If it is a pure string containing python ``lambda`` semantics,
+        If it is a pure string containing Python ``lambda`` semantics,
         it is interpreted by the SymPy parser and casted into a SymPy
         ``Lambda`` instance.
 
@@ -57,7 +57,7 @@ class FunctionMatrix(MatrixExpr):
     [f(1, 0), f(1, 1), f(1, 2)],
     [f(2, 0), f(2, 1), f(2, 2)]])
 
-    Creating a ``FunctionMatrix`` from python ``lambda``:
+    Creating a ``FunctionMatrix`` from Python ``lambda``:
 
     >>> FunctionMatrix(n, m, 'lambda i, j: i + j')
     FunctionMatrix(n, m, Lambda((i, j), i + j))

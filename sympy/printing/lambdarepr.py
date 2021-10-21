@@ -65,7 +65,7 @@ class LambdaPrinter(PythonCodePrinter):
         return str(expr)
 
     def _print_Pow(self, expr, **kwargs):
-        # XXX Temporary workaround. Should python math printer be
+        # XXX Temporary workaround. Should Python math printer be
         # isolated from PythonCodePrinter?
         return super(PythonCodePrinter, self)._print_Pow(expr, **kwargs)
 
@@ -171,7 +171,7 @@ class NumExprPrinter(LambdaPrinter):
     _print_ImmutableMatrix = \
     _print_ImmutableDenseMatrix = \
     blacklisted
-    # blacklist some python expressions
+    # blacklist some Python expressions
     _print_list = \
     _print_tuple = \
     _print_Tuple = \

@@ -231,7 +231,7 @@ class Qubit(QubitState, Ket):
 
     def _reduced_density(self, matrix, qubit, **options):
         """Compute the reduced density matrix by tracing out one qubit.
-           The qubit argument should be of type python int, since it is used
+           The qubit argument should be of type Python int, since it is used
            in bit operations
         """
         def find_index_that_is_projected(j, k, qubit):

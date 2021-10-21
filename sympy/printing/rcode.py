@@ -74,7 +74,7 @@ reserved_words = ['if',
 
 
 class RCodePrinter(CodePrinter):
-    """A printer to convert python expressions to strings of R code"""
+    """A printer to convert SymPy expressions to strings of R code"""
     printmethod = "_rcode"
     language = "R"
 

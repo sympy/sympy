@@ -114,7 +114,7 @@ known_functions = {
 
 
 class MCodePrinter(CodePrinter):
-    """A printer to convert python expressions to
+    """A printer to convert Python expressions to
     strings of the Wolfram's Mathematica code
     """
     printmethod = "_mcode"

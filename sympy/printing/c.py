@@ -143,7 +143,7 @@ def _as_macro_if_defined(meth):
 
 
 class C89CodePrinter(CodePrinter):
-    """A printer to convert python expressions to strings of c code"""
+    """A printer to convert Python expressions to strings of C code"""
     printmethod = "_ccode"
     language = "C"
     standard = "C89"

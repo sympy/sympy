@@ -191,7 +191,7 @@ class Mul(Expr, AssocOp):
 
         Notes
         =====
-            * In an expression like ``a*b*c``, python process this through sympy
+            * In an expression like ``a*b*c``, Python process this through SymPy
               as ``Mul(Mul(a, b), c)``. This can have undesirable consequences.
 
               -  Sometimes terms are not combined as one would like:
