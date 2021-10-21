@@ -91,7 +91,7 @@ containers in Mathematics such as:
     >>> 4 in squares
     True
 
- * :class:`ComplexRegion`
+ * :class:`~.ComplexRegion`
 
    Represents the set of all complex numbers in a region in the Argand plane.
 
