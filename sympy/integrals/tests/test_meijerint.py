@@ -624,11 +624,11 @@ def test_messy():
                        fourier_transform)
     assert laplace_transform(Si(x), x, s) == ((-atan(s) + pi/2)/s, 0, True)
 
-    assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, s > 1)
+    assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, True)
 
     # where should the logs be simplified?
     assert laplace_transform(Chi(x), x, s) == \
-        ((log(s**(-2)) - log(1 - 1/s**2))/(2*s), 1, s > 1)
+        ((log(s**(-2)) - log(1 - 1/s**2))/(2*s), 1, True)
 
     # TODO maybe simplify the inequalities?
     assert laplace_transform(besselj(a, x), x, s)[1:] == \
@@ -638,8 +638,8 @@ def test_messy():
     assert fourier_transform(besselj(1, x)/x, x, s, noconds=False) == \
         (Piecewise((0, 4*abs(pi**2*s**2) > 1),
                    (2*sqrt(-4*pi**2*s**2 + 1), True)), s > 0)
-    # TODO FT(besselj(0,x)) - conditions are messy (but for acceptable reasons)
-    #                       - folding could be better
+    assert fourier_transform(besselj(0, x), x, s) == Piecewise(
+        (0, 4*pi**2*abs(s**2) > 1), (2/sqrt(-4*pi**2*s**2 + 1), True))
 
     assert integrate(E1(x)*besselj(0, x), (x, 0, oo), meijerg=True) == \
         log(1 + sqrt(2))

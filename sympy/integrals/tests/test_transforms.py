@@ -562,7 +562,7 @@ def test_laplace_transform_matrix():
 def test_issue_8368_7173():
     # hyperbolic
     assert LT(sinh(x), x, s) == (1/(s**2 - 1), 1, True)
-    assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, s > 1)
+    assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, True)
     assert LT(sinh(x + 3), x, s) == (
         (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, True)
     assert LT(sinh(x)*cosh(x), x, s) == (
