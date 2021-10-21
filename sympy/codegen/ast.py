@@ -10,6 +10,10 @@ AST Type Tree
 ::
 
   *Basic*
+       |
+       |
+   CodegenAST
+       |
        |--->AssignmentBase
        |             |--->Assignment
        |             |--->AugmentedAssignment
@@ -156,8 +160,10 @@ def _mk_Tuple(args):
     args = [String(arg) if isinstance(arg, str) else arg for arg in args]
     return Tuple(*args)
 
+class CodegenAST(Basic): pass
 
-class Token(Basic):
+
+class Token(CodegenAST):
     """ Base class for the AST types.
 
     Explanation
@@ -239,7 +245,7 @@ class Token(Basic):
             val for attr, val in zip(cls.__slots__, attrvals)
             if attr not in cls.not_in_args
         ]
-        obj = Basic.__new__(cls, *basic_args)
+        obj = CodegenAST.__new__(cls, *basic_args)
 
         # Set attributes
         for attr, arg in zip(cls.__slots__, attrvals):
@@ -393,7 +399,7 @@ class NoneToken(Token):
 none = NoneToken()
 
 
-class AssignmentBase(Basic):
+class AssignmentBase(CodegenAST):
     """ Abstract base class for Assignment and AugmentedAssignment.
 
     Attributes:
@@ -580,7 +586,7 @@ def aug_assign(lhs, op, rhs):
     return augassign_classes[op](lhs, rhs)
 
 
-class CodeBlock(Basic):
+class CodeBlock(CodegenAST):
     """
     Represents a block of code.
 
@@ -630,7 +636,7 @@ class CodeBlock(Basic):
                 left_hand_sides.append(lhs)
                 right_hand_sides.append(rhs)
 
-        obj = Basic.__new__(cls, *args)
+        obj = CodegenAST.__new__(cls, *args)
 
         obj.left_hand_sides = Tuple(*left_hand_sides)
         obj.right_hand_sides = Tuple(*right_hand_sides)
@@ -1811,7 +1817,7 @@ class FunctionDefinition(FunctionPrototype):
         return cls(body=body, **func_proto.kwargs())
 
 
-class Return(Basic):
+class Return(CodegenAST):
     """ Represents a return command in the code. """
 
 

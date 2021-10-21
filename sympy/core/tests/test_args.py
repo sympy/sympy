@@ -126,6 +126,10 @@ def test_sympy__assumptions__wrapper__AssumptionsWrapper():
     from sympy.assumptions.wrapper import AssumptionsWrapper
     assert _test_args(AssumptionsWrapper(x, Q.positive(x)))
 
+@SKIP("abstract Class")
+def test_sympy__codegen__ast__CodegenAST():
+    from sympy.codegen.ast import CodegenAST
+    assert _test_args(CodegenAST())
 
 @SKIP("abstract Class")
 def test_sympy__codegen__ast__AssignmentBase():
