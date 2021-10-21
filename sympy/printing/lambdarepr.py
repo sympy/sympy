@@ -73,7 +73,7 @@ class LambdaPrinter(PythonCodePrinter):
 # numexpr works by altering the string passed to numexpr.evaluate
 # rather than by populating a namespace.  Thus a special printer...
 class NumExprPrinter(LambdaPrinter):
-    # key, value pairs correspond to sympy name and numexpr name
+    # key, value pairs correspond to SymPy name and numexpr name
     # functions not appearing in this dict will raise a TypeError
     printmethod = "_numexprcode"
 

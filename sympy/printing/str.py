@@ -1,5 +1,5 @@
 """
-A Printer for generating readable representation of most sympy classes.
+A Printer for generating readable representation of most SymPy classes.
 """
 
 from typing import Any, Dict

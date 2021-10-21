@@ -114,7 +114,7 @@ def runtest_issue_10274(language, backend):
             fil = open(tmp + '/' + file)
             lines = fil.readlines()
             assert lines[0] == "/******************************************************************************\n"
-            assert "Code generated with sympy " + sympy.__version__ in lines[1]
+            assert "Code generated with SymPy " + sympy.__version__ in lines[1]
             assert lines[2:] == [
                 " *                                                                            *\n",
                 " *              See http://www.sympy.org/ for more information.               *\n",

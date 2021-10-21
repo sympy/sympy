@@ -663,7 +663,7 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
 
 @doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def binary_function(symfunc, expr, **kwargs):
-    """Returns a sympy function with expr as binary implementation
+    """Returns a SymPy function with expr as binary implementation
 
     This is a convenience function that automates the steps needed to
     autowrap the SymPy expression and attaching it to a Function object
@@ -672,9 +672,9 @@ def binary_function(symfunc, expr, **kwargs):
     Parameters
     ==========
 
-    symfunc : sympy Function
+    symfunc : SymPy Function
         The function to bind the callable to.
-    expr : sympy Expression
+    expr : SymPy Expression
         The expression used to generate the function.
     kwargs : dict
         Any kwargs accepted by autowrap.

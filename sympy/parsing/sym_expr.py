@@ -118,7 +118,7 @@ class SymPyExpression:  # type: ignore
             raise ValueError('Please specify a mode for conversion')
 
     def convert_to_expr(self, src_code, mode):
-        """Converts the given source code to sympy Expressions
+        """Converts the given source code to SymPy Expressions
 
         Attributes
         ==========
@@ -174,7 +174,7 @@ class SymPyExpression:  # type: ignore
             )
 
     def convert_to_python(self):
-        """Returns a list with python code for the sympy expressions
+        """Returns a list with python code for the SymPy expressions
 
         Examples
         ========
@@ -199,7 +199,7 @@ class SymPyExpression:  # type: ignore
         return self._pycode
 
     def convert_to_c(self):
-        """Returns a list with the c source code for the sympy expressions
+        """Returns a list with the c source code for the SymPy expressions
 
 
         Examples
@@ -226,7 +226,7 @@ class SymPyExpression:  # type: ignore
         return self._ccode
 
     def convert_to_fortran(self):
-        """Returns a list with the fortran source code for the sympy expressions
+        """Returns a list with the fortran source code for the SymPy expressions
 
         Examples
         ========

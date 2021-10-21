@@ -31,7 +31,7 @@ class Tuple(Basic):
     sympify : bool
         If ``False``, ``sympify`` is not called on ``args``. This
         can be used for speedups for very large tuples where the
-        elements are known to already be sympy objects.
+        elements are known to already be SymPy objects.
 
     Examples
     ========

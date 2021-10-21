@@ -17,7 +17,7 @@ def variance_prop(expr, consts=(), include_covar=False):
     ==========
 
     expr : Expr
-        A sympy expression to compute the variance for.
+        A SymPy expression to compute the variance for.
     consts : sequence of Symbols, optional
         Represents symbols that are known constants in the expr,
         and thus have zero variance. All symbols not in consts are

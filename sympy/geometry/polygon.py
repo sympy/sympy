@@ -391,7 +391,7 @@ class Polygon(GeometrySet):
         Returns
         =======
 
-        I_xx, I_yy, I_xy : number or sympy expression
+        I_xx, I_yy, I_xy : number or SymPy expression
                            I_xx, I_yy are second moment of area of a two dimensional polygon.
                            I_xy is product moment of area of a two dimensional polygon.
 
@@ -470,7 +470,7 @@ class Polygon(GeometrySet):
         Returns
         =======
 
-        Q_x, Q_y: number or sympy expressions
+        Q_x, Q_y: number or SymPy expressions
             Q_x is the first moment of area about the x-axis
             Q_y is the first moment of area about the y-axis
             A negative sign indicates that the section modulus is

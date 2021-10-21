@@ -1,7 +1,7 @@
 """
 C code printer
 
-The C89CodePrinter & C99CodePrinter converts single sympy expressions into
+The C89CodePrinter & C99CodePrinter converts single SymPy expressions into
 single C expressions, using the functions defined in math.h where possible.
 
 A complete code generator, which uses ccode extensively, can be found in
@@ -32,7 +32,7 @@ from sympy.sets.fancysets import Range
 # from the top-level 'import sympy'. Export them here as well.
 from sympy.printing.codeprinter import ccode, print_ccode # noqa:F401
 
-# dictionary mapping sympy function to (argument_conditions, C_function).
+# dictionary mapping SymPy function to (argument_conditions, C_function).
 # Used in C89CodePrinter._print_Function(self)
 known_functions_C89 = {
     "Abs": [(lambda x: not x.is_integer, "fabs"), (lambda x: x.is_integer, "abs")],
@@ -96,7 +96,7 @@ def get_math_macros():
     Returns
     =======
 
-    Dictionary mapping sympy expressions to strings (macro names)
+    Dictionary mapping SymPy expressions to strings (macro names)
 
     """
     from sympy.codegen.cfunctions import log2, Sqrt

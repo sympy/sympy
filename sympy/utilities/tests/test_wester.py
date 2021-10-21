@@ -2749,7 +2749,7 @@ def test_X18():
     #                          /                 k!
     #                         -----
     #
-    # Now, sympy returns
+    # Now, SymPy returns
     #      oo
     #    _____
     #    \    `

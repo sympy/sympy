@@ -219,7 +219,7 @@ def entropy(density):
     Parameters
     ==========
 
-    density : density matrix of type Density, sympy matrix,
+    density : density matrix of type Density, SymPy matrix,
     scipy.sparse or numpy.ndarray
 
     Examples
@@ -250,7 +250,7 @@ def entropy(density):
         return -np.sum(eigvals*np.log(eigvals))
     else:
         raise ValueError(
-            "numpy.ndarray, scipy.sparse or sympy matrix expected")
+            "numpy.ndarray, scipy.sparse or SymPy matrix expected")
 
 
 def fidelity(state1, state2):

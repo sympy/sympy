@@ -190,7 +190,7 @@ class DixonResultant():
 
         The precondition requires that the column corresponding to the
         monomial 1 = x_1 ^ 0 * x_2 ^ 0 * ... * x_n ^ 0 is not a linear
-        combination of the remaining ones. In sympy notation this is
+        combination of the remaining ones. In SymPy notation this is
         the last column. For the precondition to hold the last non-zero
         row of the rref matrix should be of the form [0, 0, ..., 1].
         """
@@ -292,7 +292,7 @@ class MacaulayResultant():
 
         variables: list
             A list of all n variables
-        polynomials : list of sympy polynomials
+        polynomials : list of SymPy polynomials
             A  list of m n-degree polynomials
         """
         self.polynomials = polynomials

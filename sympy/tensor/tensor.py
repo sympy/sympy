@@ -738,7 +738,7 @@ class _TensorDataLazyEvaluator(CantSympify):
     def parse_data(data):
         """
         Transform ``data`` to array. The parameter ``data`` may
-        contain data in various formats, e.g. nested lists, sympy ``Matrix``,
+        contain data in various formats, e.g. nested lists, SymPy ``Matrix``,
         and so on.
 
         Examples

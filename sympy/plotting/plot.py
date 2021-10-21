@@ -64,11 +64,11 @@ class Plot:
 
     For interactive work the function ``plot`` is better suited.
 
-    This class permits the plotting of sympy expressions using numerous
+    This class permits the plotting of SymPy expressions using numerous
     backends (matplotlib, textplot, the old pyglet module for sympy, Google
     charts api, etc).
 
-    The figure can contain an arbitrary number of plots of sympy expressions,
+    The figure can contain an arbitrary number of plots of SymPy expressions,
     lists of coordinates of points, etc. Plot has a private attribute _series that
     contains all data series to be plotted (expressions for lines or surfaces,
     lists of points, etc (all subclasses of BaseSeries)). Those data series are
@@ -330,7 +330,7 @@ class Plot:
 
 
 class PlotGrid:
-    """This class helps to plot subplots from already created sympy plots
+    """This class helps to plot subplots from already created SymPy plots
     in a single figure.
 
     Examples
@@ -786,7 +786,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         return (list_x, list_y)
 
 class Parametric2DLineSeries(Line2DBaseSeries):
-    """Representation for a line consisting of two parametric sympy expressions
+    """Representation for a line consisting of two parametric SymPy expressions
     over a range."""
 
     is_parametric = True
@@ -1032,7 +1032,7 @@ class SurfaceBaseSeries(BaseSeries):
 
 
 class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
-    """Representation for a 3D surface consisting of a sympy expression and 2D
+    """Representation for a 3D surface consisting of a SymPy expression and 2D
     range."""
     def __init__(self, expr, var_start_end_x, var_start_end_y, **kwargs):
         super().__init__()
@@ -1406,7 +1406,7 @@ class MatplotlibBackend(BaseBackend):
                         ax.contourf(xarray, yarray, zarray, cmap=colormap)
             else:
                 raise NotImplementedError(
-                    '{} is not supported in the sympy plotting module '
+                    '{} is not supported in the SymPy plotting module '
                     'with matplotlib backend. Please report this issue.'
                     .format(ax))
 

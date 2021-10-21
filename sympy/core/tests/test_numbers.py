@@ -2041,7 +2041,7 @@ def test_comparisons_with_unknown_type():
     class Bar:
         """
         Class that considers itself equal to any instance of Number except
-        infinities and nans, and relies on sympy types returning the
+        infinities and nans, and relies on SymPy types returning the
         NotImplemented singleton for symmetric equality relations.
 
         """

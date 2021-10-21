@@ -36,7 +36,7 @@ class FunctionMatrix(MatrixExpr):
     >>> FunctionMatrix(n, m, Lambda((i, j), i + j))
     FunctionMatrix(n, m, Lambda((i, j), i + j))
 
-    Creating a ``FunctionMatrix`` from a sympy function:
+    Creating a ``FunctionMatrix`` from a SymPy function:
 
     >>> from sympy.functions import KroneckerDelta
     >>> X = FunctionMatrix(3, 3, KroneckerDelta)
@@ -46,7 +46,7 @@ class FunctionMatrix(MatrixExpr):
     [0, 1, 0],
     [0, 0, 1]])
 
-    Creating a ``FunctionMatrix`` from a sympy undefined function:
+    Creating a ``FunctionMatrix`` from a SymPy undefined function:
 
     >>> from sympy.core.function import Function
     >>> f = Function('f')

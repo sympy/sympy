@@ -46,7 +46,7 @@ def test_heurisch_fractions():
     assert heurisch(1/(x + sin(y)), x) == log(x + sin(y))
 
     # Up to a constant, where C = pi*I*Rational(5, 12), Mathematica gives identical
-    # result in the first case. The difference is because sympy changes
+    # result in the first case. The difference is because SymPy changes
     # signs of expressions without any care.
     # XXX ^ ^ ^ is this still correct?
     assert heurisch(5*x**5/(

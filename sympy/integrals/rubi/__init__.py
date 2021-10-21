@@ -1,5 +1,5 @@
 '''
-Rule Based Integration(RUBI) module in sympy uses set of transformation
+Rule Based Integration(RUBI) module in SymPy uses set of transformation
 rules to integrate an expression. All the transformation rules are compiled as a
 discrimination-net which helps in matching expression with the rule efficiently.
 

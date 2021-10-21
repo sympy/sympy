@@ -2702,7 +2702,7 @@ class MatrixArithmetic(MatrixRequired):
                 raise ShapeError("Matrix size mismatch: %s + %s" % (
                     self.shape, other.shape))
 
-        # honest sympy matrices defer to their class's routine
+        # honest SymPy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
             # call the highest-priority class's _eval_add
             a, b = self, other
@@ -2784,7 +2784,7 @@ class MatrixArithmetic(MatrixRequired):
                 raise ShapeError("Matrix size mismatch: %s * %s." % (
                     self.shape, other.shape))
 
-        # honest sympy matrices defer to their class's routine
+        # honest SymPy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
             m = self._eval_matrix_mul(other)
             if isimpbool:
@@ -2969,7 +2969,7 @@ class MatrixArithmetic(MatrixRequired):
             if self.shape[0] != other.shape[1]:
                 raise ShapeError("Matrix size mismatch.")
 
-        # honest sympy matrices defer to their class's routine
+        # honest SymPy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
             m = self._eval_matrix_rmul(other)
             if isimpbool:

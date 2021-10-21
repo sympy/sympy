@@ -30,7 +30,7 @@ While looking for the method, it follows these steps:
     its own latex, mathml, str and repr methods, but it turned out that it
     is hard to produce a high quality printer, if all the methods are spread
     out that far. Therefore all printing code was combined into the different
-    printers, which works great for built-in sympy objects, but not that
+    printers, which works great for built-in SymPy objects, but not that
     good for user defined classes where it is inconvenient to patch the
     printers.
 

@@ -1,7 +1,7 @@
 """
 R code printer
 
-The RCodePrinter converts single sympy expressions into single R expressions,
+The RCodePrinter converts single SymPy expressions into single R expressions,
 using the functions defined in math.h where possible.
 
 
@@ -14,7 +14,7 @@ from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.sets.fancysets import Range
 
-# dictionary mapping sympy function to (argument_conditions, C_function).
+# dictionary mapping SymPy function to (argument_conditions, C_function).
 # Used in RCodePrinter._print_Function(self)
 known_functions = {
     #"Abs": [(lambda x: not x.is_integer, "fabs")],
@@ -302,7 +302,7 @@ def rcode(expr, assign_to=None, **settings):
     ==========
 
     expr : Expr
-        A sympy expression to be converted.
+        A SymPy expression to be converted.
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned. Can be a string, ``Symbol``,

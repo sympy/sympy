@@ -136,7 +136,7 @@ if cin:
             =======
 
             py_nodes: list
-                A list of sympy AST nodes
+                A list of SymPy AST nodes
 
             """
             filename = os.path.abspath(filenames)
@@ -176,7 +176,7 @@ if cin:
             =======
 
             py_nodes: list
-                A list of sympy AST nodes
+                A list of SymPy AST nodes
 
             """
             file = tempfile.NamedTemporaryFile(mode = 'w+', suffix = '.cpp')
@@ -570,7 +570,7 @@ if cin:
             =====
 
             Only for cases where character is assigned to a integer value,
-            since character literal is not in sympy AST
+            since character literal is not in SymPy AST
 
             """
             try:
@@ -980,7 +980,7 @@ if cin:
             return 0
 
         def perform_operation(self, lhs, rhs, op):
-            """Performs operation supported by the sympy core
+            """Performs operation supported by the SymPy core
 
             Returns
             =======

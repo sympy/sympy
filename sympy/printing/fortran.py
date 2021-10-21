@@ -1,7 +1,7 @@
 """
 Fortran code printer
 
-The FCodePrinter converts single sympy expressions into single Fortran
+The FCodePrinter converts single SymPy expressions into single Fortran
 expressions, using the functions defined in the Fortran 77 standard where
 possible. Some useful pointers to Fortran can be found on wikipedia:
 
@@ -66,7 +66,7 @@ known_functions = {
 
 
 class FCodePrinter(CodePrinter):
-    """A printer to convert sympy expressions to strings of Fortran code"""
+    """A printer to convert SymPy expressions to strings of Fortran code"""
     printmethod = "_fcode"
     language = "Fortran"
 

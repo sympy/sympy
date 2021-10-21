@@ -79,7 +79,7 @@ def _rearrange_args(l):
 class Tr(Expr):
     """ Generic Trace operation than can trace over:
 
-    a) sympy matrix
+    a) SymPy matrix
     b) operators
     c) outer products
 
@@ -112,7 +112,7 @@ class Tr(Expr):
 
         Parameters
         ==========
-        args = sympy expression
+        args = SymPy expression
         indices = tuple/list if indices, optional
 
         """

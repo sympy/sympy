@@ -350,7 +350,7 @@ def glsl_code(expr,assign_to=None,**settings):
     ==========
 
     expr : Expr
-        A sympy expression to be converted.
+        A SymPy expression to be converted.
     assign_to : optional
         When given, the argument is used for naming the variable or variables
         to which the expression is assigned. Can be a string, ``Symbol``,

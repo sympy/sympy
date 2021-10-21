@@ -437,7 +437,7 @@ def matrix_to_qubit(matrix):
     ----------
     matrix : Matrix, numpy.matrix, scipy.sparse
         The matrix to build the Qubit representation of. This works with
-        sympy matrices, numpy matrices and scipy.sparse sparse matrices.
+        SymPy matrices, numpy matrices and scipy.sparse sparse matrices.
 
     Examples
     ========
@@ -493,7 +493,7 @@ def matrix_to_qubit(matrix):
             qubit_array.reverse()
             result = result + element*cls(*qubit_array)
 
-    # If sympy simplified by pulling out a constant coefficient, undo that.
+    # If SymPy simplified by pulling out a constant coefficient, undo that.
     if isinstance(result, (Mul, Add, Pow)):
         result = result.expand()
 
@@ -582,7 +582,7 @@ def measure_all(qubit, format='sympy', normalize=True):
         return results
     else:
         raise NotImplementedError(
-            "This function cannot handle non-sympy matrix formats yet"
+            "This function cannot handle non-SymPy matrix formats yet"
         )
 
 
@@ -657,7 +657,7 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
         return output
     else:
         raise NotImplementedError(
-            "This function cannot handle non-sympy matrix formats yet"
+            "This function cannot handle non-SymPy matrix formats yet"
         )
 
 
@@ -705,7 +705,7 @@ def measure_partial_oneshot(qubit, bits, format='sympy'):
                 return matrix_to_qubit(outcome.normalized())
     else:
         raise NotImplementedError(
-            "This function cannot handle non-sympy matrix formats yet"
+            "This function cannot handle non-SymPy matrix formats yet"
         )
 
 
@@ -800,5 +800,5 @@ def measure_all_oneshot(qubit, format='sympy'):
         return Qubit(IntQubit(result, int(math.log(max(m.shape), 2) + .1)))
     else:
         raise NotImplementedError(
-            "This function cannot handle non-sympy matrix formats yet"
+            "This function cannot handle non-SymPy matrix formats yet"
         )

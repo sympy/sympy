@@ -1094,7 +1094,7 @@ class Line(LinearEntity):
 
     p1 : Point
     p2 : Point
-    slope : sympy expression
+    slope : SymPy expression
     direction_ratio : list
     equation : equation of a line
 
@@ -1553,7 +1553,7 @@ class Segment(LinearEntity):
     Attributes
     ==========
 
-    length : number or sympy expression
+    length : number or SymPy expression
     midpoint : Point
 
     See Also
@@ -1649,7 +1649,7 @@ class Segment(LinearEntity):
                 # use the triangle inequality
                 d1, d2 = other - self.p1, other - self.p2
                 d = self.p2 - self.p1
-                # without the call to simplify, sympy cannot tell that an expression
+                # without the call to simplify, SymPy cannot tell that an expression
                 # like (a+b)*(a/2+b/2) is always non-negative.  If it cannot be
                 # determined, raise an Undecidable error
                 try:
@@ -1915,7 +1915,7 @@ class LinearEntity2D(LinearEntity):
         Returns
         =======
 
-        slope : number or sympy expression
+        slope : number or SymPy expression
 
         See Also
         ========
@@ -1954,7 +1954,7 @@ class Line2D(LinearEntity2D, Line):
 
     p1 : Point
     pt : Point
-    slope : sympy expression
+    slope : SymPy expression
 
     See Also
     ========
@@ -2088,7 +2088,7 @@ class Line2D(LinearEntity2D, Line):
         Returns
         =======
 
-        equation : sympy expression
+        equation : SymPy expression
 
         See Also
         ========
@@ -2331,7 +2331,7 @@ class Segment2D(LinearEntity2D, Segment):
     Attributes
     ==========
 
-    length : number or sympy expression
+    length : number or SymPy expression
     midpoint : Point
 
     See Also
@@ -2739,7 +2739,7 @@ class Segment3D(LinearEntity3D, Segment):
     Attributes
     ==========
 
-    length : number or sympy expression
+    length : number or SymPy expression
     midpoint : Point3D
 
     See Also

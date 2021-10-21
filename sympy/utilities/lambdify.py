@@ -1,5 +1,5 @@
 """
-This module provides convenient functions to transform sympy expressions to
+This module provides convenient functions to transform SymPy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
@@ -45,7 +45,7 @@ SYMPY = SYMPY_DEFAULT.copy()
 NUMEXPR = NUMEXPR_DEFAULT.copy()
 
 
-# Mappings between sympy and other modules function names.
+# Mappings between SymPy and other modules function names.
 MATH_TRANSLATIONS = {
     "ceiling": "ceil",
     "E": "e",
@@ -159,7 +159,7 @@ def _import(module, reload=False):
     for sympyname, translation in translations.items():
         namespace[sympyname] = namespace[translation]
 
-    # For computing the modulus of a sympy expression we use the builtin abs
+    # For computing the modulus of a SymPy expression we use the builtin abs
     # function, instead of the previously used fabs function for all
     # translation modules. This is because the fabs function in the math
     # module does not accept complex valued arguments. (see issue 9474). The
@@ -939,7 +939,7 @@ def _get_namespace(m):
 
 
 def _recursive_to_string(doprint, arg):
-    """Functions in lambdify accept both sympy types and non-sympy types such as python
+    """Functions in lambdify accept both SymPy types and non-SymPy types such as python
     lists and tuples. This method ensures that we only call the doprint method of the
     printer with SymPy types (so that the printer safely can use SymPy-methods)."""
     from sympy.matrices.common import MatrixOperations
@@ -1271,8 +1271,8 @@ def _imp_namespace(expr, namespace=None):
 
     We need to search for functions in anything that can be thrown at
     us - that is - anything that could be passed as ``expr``.  Examples
-    include sympy expressions, as well as tuples, lists and dicts that may
-    contain sympy expressions.
+    include SymPy expressions, as well as tuples, lists and dicts that may
+    contain SymPy expressions.
 
     Parameters
     ----------
@@ -1316,7 +1316,7 @@ def _imp_namespace(expr, namespace=None):
             _imp_namespace(key, namespace)
             _imp_namespace(val, namespace)
         return namespace
-    # sympy expressions may be Functions themselves
+    # SymPy expressions may be Functions themselves
     func = getattr(expr, 'func', None)
     if isinstance(func, FunctionClass):
         imp = getattr(func, '_imp_', None)

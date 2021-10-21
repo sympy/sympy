@@ -18,7 +18,7 @@ class preorder_traversal:
 
     Parameters
     ==========
-    node : sympy expression
+    node : SymPy expression
         The expression to traverse.
     keys : (default None) sort key(s)
         The key(s) used to sort args of Basic objects. When None, args of Basic
@@ -29,7 +29,7 @@ class preorder_traversal:
 
     Yields
     ======
-    subtree : sympy expression
+    subtree : SymPy expression
         All of the subtrees in the tree.
 
     Examples
@@ -202,7 +202,7 @@ def postorder_traversal(node, keys=None):
     Parameters
     ==========
 
-    node : sympy expression
+    node : SymPy expression
         The expression to traverse.
     keys : (default None) sort key(s)
         The key(s) used to sort args of Basic objects. When None, args of Basic
@@ -213,7 +213,7 @@ def postorder_traversal(node, keys=None):
 
     Yields
     ======
-    subtree : sympy expression
+    subtree : SymPy expression
         All of the subtrees in the tree.
 
     Examples

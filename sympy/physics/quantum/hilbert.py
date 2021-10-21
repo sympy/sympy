@@ -185,7 +185,7 @@ class ComplexSpace(HilbertSpace):
 class L2(HilbertSpace):
     """The Hilbert space of square integrable functions on an interval.
 
-    An L2 object takes in a single sympy Interval argument which represents
+    An L2 object takes in a single SymPy Interval argument which represents
     the interval its functions (vectors) are defined on.
 
     Examples

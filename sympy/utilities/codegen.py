@@ -1,12 +1,12 @@
 """
 module for generating C, C++, Fortran77, Fortran90, Julia, Rust
-and Octave/Matlab routines that evaluate sympy expressions.
+and Octave/Matlab routines that evaluate SymPy expressions.
 This module is work in progress.
 Only the milestones with a '+' character in the list below have been completed.
 
 --- How is sympy.utilities.codegen different from sympy.printing.ccode? ---
 
-We considered the idea to extend the printing routines for sympy functions in
+We considered the idea to extend the printing routines for SymPy functions in
 such a way that it prints complete compilable code, but this leads to a few
 unsurmountable issues that can only be tackled with dedicated code generator:
 
@@ -19,7 +19,7 @@ unsurmountable issues that can only be tackled with dedicated code generator:
   or non-contiguous arrays, including headers of other libraries such as gsl
   or others.
 
-- It is highly interesting to evaluate several sympy functions in one C
+- It is highly interesting to evaluate several SymPy functions in one C
   routine, eventually sharing common intermediate results with the help
   of the cse routine. This is more than just printing.
 
@@ -62,8 +62,8 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 - Optional extra include lines for libraries/objects that can eval special
   functions
 - Test other C compilers and libraries: gcc, tcc, libtcc, gcc+gsl, ...
-- Contiguous array arguments (sympy matrices)
-- Non-contiguous array arguments (sympy matrices)
+- Contiguous array arguments (SymPy matrices)
+- Non-contiguous array arguments (SymPy matrices)
 - ccode must raise an error when it encounters something that cannot be
   translated into c. ccode(integrate(sin(x)/x, x)) does not make sense.
 - Complex numbers as input and output
@@ -307,7 +307,7 @@ class Variable:
 
         """
         if not isinstance(name, (Symbol, MatrixSymbol)):
-            raise TypeError("The first argument must be a sympy symbol.")
+            raise TypeError("The first argument must be a SymPy symbol.")
         if datatype is None:
             datatype = get_default_datatype(name)
         elif not isinstance(datatype, DataType):
@@ -376,7 +376,7 @@ class InputArgument(Argument):
 class ResultBase:
     """Base class for all "outgoing" information from a routine.
 
-    Objects of this class stores a sympy expression, and a sympy object
+    Objects of this class stores a SymPy expression, and a SymPy object
     representing a result variable that will be used in the generated code
     only if necessary.
 
@@ -502,7 +502,7 @@ class Result(Variable, ResultBase):
         """
         # Basic because it is the base class for all types of expressions
         if not isinstance(expr, (Basic, MatrixBase)):
-            raise TypeError("The first argument must be a sympy expression.")
+            raise TypeError("The first argument must be a SymPy expression.")
 
         if name is None:
             name = 'result_%d' % abs(hash(expr))
@@ -854,7 +854,7 @@ class CodeGenArgumentListError(Exception):
         return self.args[1]
 
 
-header_comment = """Code generated with sympy %(version)s
+header_comment = """Code generated with SymPy %(version)s
 
 See http://www.sympy.org/ for more information.
 

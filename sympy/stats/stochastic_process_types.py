@@ -95,7 +95,7 @@ def _state_converter(itr: tSequence) -> tUnion[Tuple, Range]:
         itr_ret = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
 
     elif isinstance(itr, Range):
-        # the only ordered set in sympy I know of
+        # the only ordered set in SymPy I know of
         # try to convert to tuple
         try:
             itr_ret = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))

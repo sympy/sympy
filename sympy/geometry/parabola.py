@@ -196,7 +196,7 @@ class Parabola(GeometrySet):
 
         Returns
         =======
-        equation : sympy expression
+        equation : SymPy expression
 
         Examples
         ========

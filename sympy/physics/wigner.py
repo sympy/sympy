@@ -805,7 +805,7 @@ def wigner_d_small(J, beta):
     Explanation
     ===========
 
-    J : An integer, half-integer, or sympy symbol for the total angular
+    J : An integer, half-integer, or SymPy symbol for the total angular
         momentum of the angular momentum space being rotated.
     beta : A real number representing the Euler angle of rotation about
         the so-called line of nodes. See [Edmonds74]_.
@@ -943,7 +943,7 @@ def wigner_d(J, alpha, beta, gamma):
     ===========
 
     J :
-        An integer, half-integer, or sympy symbol for the total angular
+        An integer, half-integer, or SymPy symbol for the total angular
         momentum of the angular momentum space being rotated.
     alpha, beta, gamma - Real numbers representing the Euler.
         Angles of rotation about the so-called vertical, line of nodes, and

@@ -494,7 +494,7 @@ __all__ = [
 
 #===========================================================================#
 #                                                                           #
-# XXX: The names below were importable before sympy 1.6 using               #
+# XXX: The names below were importable before SymPy 1.6 using               #
 #                                                                           #
 #          from sympy import *                                              #
 #                                                                           #

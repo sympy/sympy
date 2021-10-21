@@ -102,7 +102,7 @@ class F1_1(DummyNumber):
 i5 = I5()
 f1_1 = F1_1()
 
-# basic sympy objects
+# basic SymPy objects
 basic_objs = [
     Rational(2),
     Float("1.3"),
