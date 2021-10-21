@@ -2628,7 +2628,7 @@ def linsolve(system, *symbols):
 
         system  =  [3x + 2y - z - 1, 2x - 2y + 4z + 2, 2x - y + 2z]
 
-    * Input $A$ and $b$ in matrix form (from $Ax = b$) are given as below:
+    * Input $A$ and $b$ in matrix form (from $Ax = b$) are given as:
 
     $$ A = \left[\begin{array}{ccc}
         3 &  2 & -1 \\
@@ -3490,9 +3490,9 @@ def nonlinsolve(system, *symbols):
     Solve system of $N$ nonlinear equations with $M$ variables, which means both
     under and overdetermined systems are supported. Positive dimensional
     system is also supported (A system with infinitely many solutions is said
-    to be positive-dimensional). In positive dimensional system solution will
+    to be positive-dimensional). In a positive dimensional system the solution will
     be dependent on at least one symbol. Returns both real solution
-    and complex solution(If system have). The possible number of solutions
+    and complex solution (if they exist). The possible number of solutions
     is zero, one or infinite.
 
     Parameters
