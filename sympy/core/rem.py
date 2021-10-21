@@ -23,8 +23,8 @@ class Rem(Function):
     ========
 
     >>> from sympy.abc import x, y
-    >>> Rem(x**3,y)
-    Rem(x, y)
+    >>> Rem(x**3, y)
+    Rem(x**3, y)
     >>> _.subs({x: -5, y: 6})
     -5
 
@@ -48,7 +48,7 @@ class Rem(Function):
 
             if q.is_Number:
                 if p.is_Number:
-                    return p - int(p/q)*q
-        rv=doit(p,q)
+                    return p - Integer(p/q)*q
+        rv = doit(p, q)
         if rv is not None:
             return rv
