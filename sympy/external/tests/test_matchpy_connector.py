@@ -1,7 +1,7 @@
 from sympy import symbols, cos, sin, S, Eq, Equality, sqrt, Ne
 from sympy.external import import_module
+from sympy.external.matchpy_connector import WildDot, WildPlus, WildStar, Replacer
 from sympy.testing.pytest import skip
-from sympy.utilities.matchpy_connector import WildDot, WildPlus, WildStar, Replacer
 
 matchpy = import_module("matchpy")
 
