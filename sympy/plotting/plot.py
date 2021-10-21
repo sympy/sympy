@@ -2,7 +2,7 @@
 
 A plot is represented by the ``Plot`` class that contains a reference to the
 backend and a list of the data series to be plotted. The data series are
-instances of classes meant to simplify getting points and meshes from sympy
+instances of classes meant to simplify getting points and meshes from SymPy
 expressions. ``plot_backends`` is a dictionary with all the backends.
 
 This module gives only the essential. For all the fancy stuff use directly
@@ -940,7 +940,7 @@ class Line3DBaseSeries(Line2DBaseSeries):
 
 
 class Parametric3DLineSeries(Line3DBaseSeries):
-    """Representation for a 3D line consisting of three parametric sympy
+    """Representation for a 3D line consisting of three parametric SymPy
     expressions and a range."""
 
     is_parametric = True
@@ -1074,7 +1074,7 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
 
 
 class ParametricSurfaceSeries(SurfaceBaseSeries):
-    """Representation for a 3D surface consisting of three parametric sympy
+    """Representation for a 3D surface consisting of three parametric SymPy
     expressions and a range."""
 
     is_parametric = True

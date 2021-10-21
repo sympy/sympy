@@ -162,7 +162,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             elif isinstance(o, bool):
                 return False
             elif isinstance(o, Printable):
-                # types known to sympy
+                # types known to SymPy
                 return True
             elif any(hasattr(o, hook) for hook in printing_hooks):
                 # types which add support themselves

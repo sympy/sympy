@@ -71,7 +71,7 @@ def test_evalf_complex_bug():
 def test_evalf_complex_powers():
     assert NS('(E+pi*I)**100000000000000000') == \
         '-3.58896782867793e+61850354284995199 + 4.58581754997159e+61850354284995199*I'
-    # XXX: rewrite if a+a*I simplification introduced in sympy
+    # XXX: rewrite if a+a*I simplification introduced in SymPy
     #assert NS('(pi + pi*I)**2') in ('0.e-15 + 19.7392088021787*I', '0.e-16 + 19.7392088021787*I')
     assert NS('(pi + pi*I)**2', chop=True) == '19.7392088021787*I'
     assert NS(

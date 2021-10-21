@@ -1312,7 +1312,7 @@ class MatrixProperties(MatrixRequired):
                     return False
         return True
 
-    # _eval_is_hermitian is called by some general sympy
+    # _eval_is_hermitian is called by some general SymPy
     # routines and has a different *args signature.  Make
     # sure the names don't clash by adding `_matrix_` in name.
     def _eval_is_matrix_hermitian(self, simpfunc):

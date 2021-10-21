@@ -86,7 +86,7 @@ class vectorized_lambdify:
     ===========
 
     This function uses experimental_lambdify to created a lambdified
-    expression ready to be used with numpy. Many of the functions in sympy
+    expression ready to be used with numpy. Many of the functions in SymPy
     are not implemented in numpy so in some cases we resort to Python cmath or
     even to evalf.
 
@@ -582,7 +582,7 @@ class Lambdifier:
 
     @classmethod
     def sympy_expression_namespace(cls, expr):
-        """Traverses the (func, args) tree of an expression and creates a sympy
+        """Traverses the (func, args) tree of an expression and creates a SymPy
         namespace. All other modules are imported only as a module name. That way
         the namespace is not polluted and rests quite small. It probably causes much
         more variable lookups and so it takes more time, but there are no tests on

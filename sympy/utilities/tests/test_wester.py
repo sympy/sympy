@@ -110,7 +110,7 @@ def test_C3():
     assert (factorial2(10), factorial2(9)) == (3840, 945)
 
 
-# Base conversions; not really implemented by sympy
+# Base conversions; not really implemented by SymPy
 # Whatever. Take credit!
 def test_C4():
     assert 0xABC == 2748
