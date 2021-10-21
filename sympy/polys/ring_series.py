@@ -1967,7 +1967,7 @@ def rs_series(expr, a, prec):
     prec : order of the series expansion
 
     Currently supports multivariate Taylor series expansion. This is much
-    faster that Sympy's series method as it uses sparse polynomial operations.
+    faster that SymPy's series method as it uses sparse polynomial operations.
 
     It automatically creates the simplest ring required to represent the series
     expansion through repeated calls to sring.

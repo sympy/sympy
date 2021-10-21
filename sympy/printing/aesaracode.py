@@ -88,7 +88,7 @@ class AesaraPrinter(Printer):
     ==========
 
     cache : dict
-        A cache of Aesara variables which have been created for Sympy
+        A cache of Aesara variables which have been created for SymPy
         symbol-like objects (e.g. :class:`sympy.core.symbol.Symbol` or
         :class:`sympy.matrices.expressions.MatrixSymbol`). This is used to
         ensure that all references to a given symbol in an expression (or
@@ -103,13 +103,13 @@ class AesaraPrinter(Printer):
         super().__init__(*args, **kwargs)
 
     def _get_key(self, s, name=None, dtype=None, broadcastable=None):
-        """ Get the cache key for a Sympy object.
+        """ Get the cache key for a SymPy object.
 
         Parameters
         ==========
 
         s : sympy.core.basic.Basic
-            Sympy object to get key for.
+            SymPy object to get key for.
 
         name : str
             Name of object, if it does not have a ``name`` attribute.
@@ -122,7 +122,7 @@ class AesaraPrinter(Printer):
 
     def _get_or_create(self, s, name=None, dtype=None, broadcastable=None):
         """
-        Get the Aesara variable for a Sympy symbol from the cache, or create it
+        Get the Aesara variable for a SymPy symbol from the cache, or create it
         if it does not exist.
         """
 
@@ -259,12 +259,12 @@ class AesaraPrinter(Printer):
         return expr
 
     def doprint(self, expr, dtypes=None, broadcastables=None):
-        """ Convert a Sympy expression to a Aesara graph variable.
+        """ Convert a SymPy expression to a Aesara graph variable.
 
         The ``dtypes`` and ``broadcastables`` arguments are used to specify the
         data type, dimension, and broadcasting behavior of the Aesara variables
         corresponding to the free symbols in ``expr``. Each is a mapping from
-        Sympy symbols to the value of the corresponding argument to
+        SymPy symbols to the value of the corresponding argument to
         ``aesara.tensor.var.TensorVariable``.
 
         See the corresponding `documentation page`__ for more information on
@@ -276,16 +276,16 @@ class AesaraPrinter(Printer):
         ==========
 
         expr : sympy.core.expr.Expr
-            Sympy expression to print.
+            SymPy expression to print.
 
         dtypes : dict
-            Mapping from Sympy symbols to Aesara datatypes to use when creating
+            Mapping from SymPy symbols to Aesara datatypes to use when creating
             new Aesara variables for those symbols. Corresponds to the ``dtype``
             argument to ``aesara.tensor.var.TensorVariable``. Defaults to ``'floatX'``
             for symbols not included in the mapping.
 
         broadcastables : dict
-            Mapping from Sympy symbols to the value of the ``broadcastable``
+            Mapping from SymPy symbols to the value of the ``broadcastable``
             argument to ``aesara.tensor.var.TensorVariable`` to use when creating Aesara
             variables for those symbols. Defaults to the empty tuple for symbols
             not included in the mapping (resulting in a scalar).
@@ -311,13 +311,13 @@ global_cache = {}  # type: Dict[Any, Any]
 
 def aesara_code(expr, cache=None, **kwargs):
     """
-    Convert a Sympy expression into a Aesara graph variable.
+    Convert a SymPy expression into a Aesara graph variable.
 
     Parameters
     ==========
 
     expr : sympy.core.expr.Expr
-        Sympy expression object to convert.
+        SymPy expression object to convert.
 
     cache : dict
         Cached Aesara variables (see :class:`AesaraPrinter.cache

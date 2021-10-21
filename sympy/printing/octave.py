@@ -30,7 +30,7 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "fresnelc", "fresnels", "gamma", "harmonic", "log",
                    "polylog", "sign", "zeta", "legendre"]
 
-# These functions have different names ("Sympy": "Octave"), more
+# These functions have different names ("SymPy": "Octave"), more
 # generally a mapping to (argument_conditions, octave_function).
 known_fcns_src2 = {
     "Abs": "abs",

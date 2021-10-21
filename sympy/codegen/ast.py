@@ -139,7 +139,7 @@ from sympy.utilities.iterables import iterable
 
 def _mk_Tuple(args):
     """
-    Create a Sympy Tuple object from an iterable, converting Python strings to
+    Create a SymPy Tuple object from an iterable, converting Python strings to
     AST strings.
 
     Parameters
@@ -458,13 +458,13 @@ class Assignment(AssignmentBase):
     ==========
 
     lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
+        SymPy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
         include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
         subclass these types are also supported.
 
     rhs : Expr
-        Sympy object representing the rhs of the expression. This can be any
+        SymPy object representing the rhs of the expression. This can be any
         type, provided its shape corresponds to that of the lhs. For example,
         a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
         the dimensions will not align.
@@ -552,7 +552,7 @@ def aug_assign(lhs, op, rhs):
     ==========
 
     lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
+        SymPy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
         include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
         subclass these types are also supported.
@@ -561,7 +561,7 @@ def aug_assign(lhs, op, rhs):
         Operator (+, -, /, \\*, %).
 
     rhs : Expr
-        Sympy object representing the rhs of the expression. This can be any
+        SymPy object representing the rhs of the expression. This can be any
         type, provided its shape corresponds to that of the lhs. For example,
         a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
         the dimensions will not align.

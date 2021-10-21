@@ -1,4 +1,4 @@
-"""Plotting module for Sympy.
+"""Plotting module for SymPy.
 
 A plot is represented by the ``Plot`` class that contains a reference to the
 backend and a list of the data series to be plotted. The data series are

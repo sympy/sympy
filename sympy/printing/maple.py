@@ -21,7 +21,7 @@ _known_func_same_name = [
 ]
 
 known_functions = {
-    # Sympy -> Maple
+    # SymPy -> Maple
     'Abs': 'abs',
     'log': 'ln',
     'asin': 'arcsin',
@@ -51,7 +51,7 @@ for _func in _known_func_same_name:
     known_functions[_func] = _func
 
 number_symbols = {
-    # Sympy -> Maple
+    # SymPy -> Maple
     S.Pi: 'Pi',
     S.Exp1: 'exp(1)',
     S.Catalan: 'Catalan',
@@ -60,7 +60,7 @@ number_symbols = {
 }
 
 spec_relational_ops = {
-    # Sympy -> Maple
+    # SymPy -> Maple
     '==': '=',
     '!=': '<>'
 }

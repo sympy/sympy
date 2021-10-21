@@ -589,7 +589,7 @@ def auto_symbol(tokens, local_dict, global_dict):
 
 
 def lambda_notation(tokens, local_dict, global_dict):
-    """Substitutes "lambda" with its Sympy equivalent Lambda().
+    """Substitutes "lambda" with its SymPy equivalent Lambda().
     However, the conversion doesn't take place if only "lambda"
     is passed because that is a syntax error.
 

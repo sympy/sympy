@@ -28,7 +28,7 @@ class Quantity(AtomicExpr):
             name = Symbol(name)
 
         # For Quantity(name, dim, scale, abbrev) to work like in the
-        # old version of Sympy:
+        # old version of SymPy:
         if not isinstance(abbrev, str) and not \
                    isinstance(abbrev, Symbol):
             dimension, scale_factor, abbrev = abbrev, dimension, scale_factor
