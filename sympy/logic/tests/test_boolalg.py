@@ -6,7 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise
 from sympy.functions.elementary.trigonometric import sin, cos
-from sympy.sets.sets import (EmptySet, Interval, Union)
+from sympy.sets.sets import (EmptySet, Interval, Complement)
 from sympy.simplify.simplify import simplify
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or,
@@ -866,8 +866,8 @@ def test_bool_as_set():
     assert Or(x >= 2, x <= -2).as_set() == Interval(-oo, -2) + Interval(2, oo)
     assert Not(x > 2).as_set() == Interval(-oo, 2)
     # issue 10240
-    assert Not(And(x > 2, x < 3)).as_set() == \
-        Union(Interval(-oo, 2), Interval(3, oo))
+    assert Not(And(x > 2, x < 3)).as_set() == Complement(
+        S.UniversalSet, Interval.open(2, 3))
     assert true.as_set() == S.UniversalSet
     assert false.as_set() == EmptySet()
     assert x.as_set() == S.UniversalSet
@@ -876,6 +876,10 @@ def test_bool_as_set():
     raises(NotImplementedError, lambda: (sin(x) < 1).as_set())
     # watch for object morph in as_set
     assert Eq(-1, cos(2*x)**2/sin(2*x)**2).as_set() is S.EmptySet
+    # Not is differenced with UniversalSet, not Reals
+    neset = And(Ne(x, 1), Ne(x, 2)).as_set()
+    assert neset == Complement(S.UniversalSet, {1, 2})
+    assert neset == neset.as_relational(x).as_set()
 
 
 @XFAIL

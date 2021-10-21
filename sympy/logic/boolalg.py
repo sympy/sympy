@@ -998,7 +998,9 @@ class Not(BooleanFunction):
         >>> Not(x > 0).as_set()
         Interval(-oo, 0)
         """
-        return self.args[0].as_set().complement(S.Reals)
+        # if we have Not(x) then the universe is the limit,
+        # not only Reals
+        return self.args[0].as_set().complement(S.UniversalSet)
 
     def to_nnf(self, simplify=True):
         if is_literal(self):
