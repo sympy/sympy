@@ -59,15 +59,14 @@ Here are some basic operations on ``Matrix``.
 Shape
 -----
 
-To get the shape of a matrix, use :func:`~.shape()` function.
+To get the shape of a matrix, use ``shape``.
 
-    >>> from sympy import shape
     >>> M = Matrix([[1, 2, 3], [-2, 0, 4]])
     >>> M
     ⎡1   2  3⎤
     ⎢        ⎥
     ⎣-2  0  4⎦
-    >>> shape(M)
+    >>> M.shape
     (2, 3)
 
 Accessing Rows and Columns
