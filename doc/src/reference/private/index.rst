@@ -13,3 +13,4 @@ subpackage.
    :maxdepth: 2
 
    sympy.abc.rst
+   sympy.algebras.rst
