@@ -96,12 +96,12 @@ def parse_latex(string, evaluate):
         if add.ADD():
             lh = convert_add(add.additive(0))
             rh = convert_add(add.additive(1))
-            return sympy.Add(lh, rh, evaluate=True)
+            return sympy.Add(lh, rh, evaluate=evaluate)
         elif add.SUB():
             lh = convert_add(add.additive(0))
             rh = convert_add(add.additive(1))
-            return sympy.Add(lh, sympy.Mul(-1, rh, evaluate=True),
-                            evaluate=True)
+            return sympy.Add(lh, sympy.Mul(-1, rh, evaluate=evaluate),
+                            evaluate=evaluate)
         else:
             return convert_mp(add.mp())
 
@@ -117,11 +117,11 @@ def parse_latex(string, evaluate):
         if mp.MUL() or mp.CMD_TIMES() or mp.CMD_CDOT():
             lh = convert_mp(mp_left)
             rh = convert_mp(mp_right)
-            return sympy.Mul(lh, rh, evaluate=True)
+            return sympy.Mul(lh, rh, evaluate=evaluate)
         elif mp.DIV() or mp.CMD_DIV() or mp.COLON():
             lh = convert_mp(mp_left)
             rh = convert_mp(mp_right)
-            return sympy.Mul(lh, sympy.Pow(rh, -1, evaluate=True), evaluate=True)
+            return sympy.Mul(lh, sympy.Pow(rh, -1, evaluate=evaluate), evaluate=evaluate)
         else:
             if hasattr(mp, 'unary'):
                 return convert_unary(mp.unary())
@@ -175,7 +175,7 @@ def parse_latex(string, evaluate):
                             return convert_postfix_list(arr, i + 1)
                 # multiply by next
                 return sympy.Mul(
-                    res, convert_postfix_list(arr, i + 1), evaluate=True)
+                    res, convert_postfix_list(arr, i + 1), evaluate=evaluate)
         else:  # must be derivative
             wrt = res[0]
             if i == len(arr) - 1:
@@ -211,7 +211,7 @@ def parse_latex(string, evaluate):
             if op.BANG():
                 if isinstance(exp, list):
                     raise LaTeXParsingError("Cannot apply postfix to derivative")
-                exp = sympy.factorial(exp, evaluate=True)
+                exp = sympy.factorial(exp, evaluate=evaluate)
             elif op.eval_at():
                 ev = op.eval_at()
                 at_b = None
@@ -221,7 +221,7 @@ def parse_latex(string, evaluate):
                 if ev.eval_at_sub():
                     at_a = do_subs(exp, ev.eval_at_sub())
                 if at_b is not None and at_a is not None:
-                    exp = sympy.Add(at_b, -1 * at_a, evaluate=True)
+                    exp = sympy.Add(at_b, -1 * at_a, evaluate=evaluate)
                 elif at_b is not None:
                     exp = at_b
                 elif at_a is not None:
@@ -244,7 +244,7 @@ def parse_latex(string, evaluate):
                 exponent = convert_atom(exp.atom())
             elif exp.expr():
                 exponent = convert_expr(exp.expr())
-            return sympy.Pow(base, exponent, evaluate=True)
+            return sympy.Pow(base, exponent, evaluate=evaluate)
         else:
             if hasattr(exp, 'comp'):
                 return convert_comp(exp.comp())
@@ -256,7 +256,7 @@ def parse_latex(string, evaluate):
         if comp.group():
             return convert_expr(comp.group().expr())
         elif comp.abs_group():
-            return sympy.Abs(convert_expr(comp.abs_group().expr()), evaluate=True)
+            return sympy.Abs(convert_expr(comp.abs_group().expr()), evaluate=evaluate)
         elif comp.atom():
             return convert_atom(comp.atom())
         elif comp.frac():
@@ -355,32 +355,32 @@ def parse_latex(string, evaluate):
 
             expr_top = None
             if diff_op and upper_text.startswith('d'):
-                expr_top = parse_latex(upper_text[1:])
+                expr_top = parse_latex(upper_text[1:], evaluate=evaluate)
             elif partial_op and frac.upper.start.text == '\\partial':
-                expr_top = parse_latex(upper_text[len('\\partial'):])
+                expr_top = parse_latex(upper_text[len('\\partial'):], evaluate=evaluate)
             if expr_top:
                 return sympy.Derivative(expr_top, wrt)
 
         expr_top = convert_expr(frac.upper)
         expr_bot = convert_expr(frac.lower)
-        inverse_denom = sympy.Pow(expr_bot, -1, evaluate=True)
+        inverse_denom = sympy.Pow(expr_bot, -1, evaluate=evaluate)
         if expr_top == 1:
             return inverse_denom
         else:
-            return sympy.Mul(expr_top, inverse_denom, evaluate=True)
+            return sympy.Mul(expr_top, inverse_denom, evaluate=evaluate)
 
     def convert_binom(binom):
         expr_n = convert_expr(binom.n)
         expr_k = convert_expr(binom.k)
-        return sympy.binomial(expr_n, expr_k, evaluate=True)
+        return sympy.binomial(expr_n, expr_k, evaluate=evaluate)
 
     def convert_floor(floor):
         val = convert_expr(floor.val)
-        return sympy.floor(val, evaluate=True)
+        return sympy.floor(val, evaluate=evaluate)
 
     def convert_ceil(ceil):
         val = convert_expr(ceil.val)
-        return sympy.ceiling(val, evaluate=True)
+        return sympy.ceiling(val, evaluate=evaluate)
 
     def convert_func(func):
         if func.func_normal():
@@ -396,13 +396,13 @@ def parse_latex(string, evaluate):
                     "arcsin", "arccos", "arctan", "arccsc", "arcsec", "arccot"
             ]:
                 name = "a" + name[3:]
-                expr = getattr(sympy.functions, name)(arg, evaluate=True)
+                expr = getattr(sympy.functions, name)(arg, evaluate=evaluate)
             if name in ["arsinh", "arcosh", "artanh"]:
                 name = "a" + name[2:]
-                expr = getattr(sympy.functions, name)(arg, evaluate=True)
+                expr = getattr(sympy.functions, name)(arg, evaluate=evaluate)
 
             if name == "exp":
-                expr = sympy.exp(arg, evaluate=True)
+                expr = sympy.exp(arg, evaluate=evaluate)
 
             if (name == "log" or name == "ln"):
                 if func.subexpr():
@@ -414,7 +414,7 @@ def parse_latex(string, evaluate):
                     base = 10
                 elif name == "ln":
                     base = sympy.E
-                expr = sympy.log(arg, base, evaluate=True)
+                expr = sympy.log(arg, base, evaluate=evaluate)
 
             func_pow = None
             should_pow = True
@@ -431,10 +431,10 @@ def parse_latex(string, evaluate):
                 if func_pow == -1:
                     name = "a" + name
                     should_pow = False
-                expr = getattr(sympy.functions, name)(arg, evaluate=True)
+                expr = getattr(sympy.functions, name)(arg, evaluate=evaluate)
 
             if func_pow and should_pow:
-                expr = sympy.Pow(expr, func_pow, evaluate=True)
+                expr = sympy.Pow(expr, func_pow, evaluate=evaluate)
 
             return expr
         elif func.LETTER() or func.SYMBOL():
@@ -464,12 +464,12 @@ def parse_latex(string, evaluate):
             expr = convert_expr(func.base)
             if func.root:
                 r = convert_expr(func.root)
-                return sympy.root(expr, r, evaluate=True)
+                return sympy.root(expr, r, evaluate=evaluate)
             else:
-                return sympy.sqrt(expr, evaluate=True)
+                return sympy.sqrt(expr, evaluate=evaluate)
         elif func.FUNC_OVERLINE():
             expr = convert_expr(func.base)
-            return sympy.conjugate(expr, evaluate=True)
+            return sympy.conjugate(expr, evaluate=evaluate)
         elif func.FUNC_SUM():
             return handle_sum_or_prod(func, "summation")
         elif func.FUNC_PROD():

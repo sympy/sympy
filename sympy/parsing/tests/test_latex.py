@@ -320,6 +320,18 @@ def test_failing_not_parseable():
         with raises(LaTeXParsingError):
             parse_latex(latex_str)
 
+def test_evaluated_relationals():
+    from sympy.parsing.latex import parse_latex
+    op_ans = {
+        '=': 'True',
+        '\\leq': '2*x <= 2*x',
+        '\\geq': '2*x >= 2*x',
+        '<': 'False',
+        '>': 'False',
+        '\\neq': 'False'}
+    for op, ans in op_ans.items():
+        assert str(parse_latex('2*x %s x+x' % op, evaluate=True)) == ans, op
+
 
 def test_unevaluated_relationals():
     from sympy.parsing.latex import parse_latex
@@ -331,4 +343,4 @@ def test_unevaluated_relationals():
         '>': '2*x > x + x',
         '\\neq': 'Ne(2*x, x + x)'}
     for op, ans in op_ans.items():
-        assert str(parse_latex('2*x %s x+x' % op, evaluate=False)) == ans
+        assert str(parse_latex('2*x %s x+x' % op, evaluate=False)) == ans, op
