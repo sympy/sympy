@@ -34,7 +34,6 @@ class Rem(Function):
 
     @classmethod
     def eval(cls,p,q):
-
         def doit(p,q):
             """ the function remainder if both p,q are numbers
                 and q is not zero
@@ -50,8 +49,7 @@ class Rem(Function):
             if q.is_Number:
                 if p.is_Number:
                     return p - int(p/q)*q
+        
         rv=doit(p,q)
         if rv is not None:
             return rv
-
-      
