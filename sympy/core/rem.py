@@ -48,7 +48,7 @@ class Rem(Function):
 
             if q.is_Number:
                 if p.is_Number:
-                    return p - Integer(p/q)*q
+                    return p - int(p/q)*q
         rv = doit(p, q)
         if rv is not None:
             return rv
