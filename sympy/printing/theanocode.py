@@ -1,8 +1,8 @@
 from typing import Any, Dict
 
-from sympy.core.compatibility import is_sequence
 from sympy.external import import_module
 from sympy.printing.printer import Printer
+from sympy.utilities.iterables import is_sequence
 import sympy
 from functools import partial
 

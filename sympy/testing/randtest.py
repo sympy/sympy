@@ -2,11 +2,12 @@
 
 from random import uniform, Random, randrange, randint
 
-from sympy.core.compatibility import is_sequence, as_int
+from sympy.core.compatibility import as_int
 from sympy.core.containers import Tuple
 from sympy.core.numbers import comp, I
 from sympy.core.symbol import Symbol
 from sympy.simplify.simplify import nsimplify
+from sympy.utilities.iterables import is_sequence
 
 
 def random_complex_number(a=2, b=-1, c=3, d=1, rational=False, tolerance=None):

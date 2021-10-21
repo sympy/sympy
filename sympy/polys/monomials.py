@@ -5,11 +5,10 @@ from itertools import combinations_with_replacement, product
 from textwrap import dedent
 
 from sympy.core import Mul, S, Tuple, sympify
-from sympy.core.compatibility import iterable
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.utilities import public
-from sympy.core.compatibility import is_sequence
+from sympy.utilities.iterables import is_sequence, iterable
 
 @public
 def itermonomials(variables, max_degrees, min_degrees=None):

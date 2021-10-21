@@ -1,7 +1,6 @@
 from sympy import Order, limit, lcm_list, Piecewise
 from sympy.core import Add, Mul, Pow, S
 from sympy.core.basic import Basic
-from sympy.core.compatibility import iterable
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import diff, expand_mul
 from sympy.core.kind import NumberKind
@@ -24,6 +23,7 @@ from sympy.simplify.simplify import simplify
 from sympy.solvers.decompogen import compogen, decompogen
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
+from sympy.utilities.iterables import iterable
 from sympy.multipledispatch import dispatch
 
 

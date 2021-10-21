@@ -28,6 +28,7 @@ from sympy.external import import_module
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import iterable
 import warnings
 
 
@@ -1666,7 +1667,6 @@ def _value_check(condition, message):
     >>> _value_check(And(a < 0, b < 0, c < 0), '')
     False
     """
-    from sympy.core.compatibility import iterable
     from sympy.core.logic import fuzzy_and
     if not iterable(condition):
         condition = [condition]

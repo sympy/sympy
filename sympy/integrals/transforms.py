@@ -1,10 +1,10 @@
 """ Integral Transforms """
-from functools import reduce
+from functools import reduce, wraps
 from itertools import repeat
 
 from sympy.core import S, pi
 from sympy.core.add import Add
-from sympy.core.compatibility import iterable, ordered
+from sympy.core.compatibility import ordered
 from sympy.core.function import (AppliedUndef, count_ops, expand,
                                  expand_complex, expand_mul, Function, Lambda)
 from sympy.core.mul import Mul
@@ -39,6 +39,7 @@ from sympy.simplify.powsimp import powdenest
 from sympy.solvers.inequalities import _solve_inequality
 from sympy.utilities import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import iterable
 
 
 ##########################################################################
@@ -232,8 +233,6 @@ def _noconds_(default):
     argument of this function).
     """
     def make_wrapper(func):
-        from sympy.core.decorators import wraps
-
         @wraps(func)
         def wrapper(*args, noconds=default, **kwargs):
             res = func(*args, **kwargs)

@@ -21,7 +21,6 @@ R3 are currently the only ambient spaces implemented.
 """
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.evalf import EvalfMixin
 from sympy.core.sympify import sympify
@@ -32,6 +31,7 @@ from sympy.sets import Set
 from sympy.sets.handlers.intersection import intersection_sets
 from sympy.sets.handlers.union import union_sets
 from sympy.utilities.misc import func_name
+from sympy.utilities.iterables import is_sequence
 
 
 # How entities are ordered; used by __cmp__ in GeometryEntity

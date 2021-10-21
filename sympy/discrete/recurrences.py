@@ -3,7 +3,9 @@ Recurrences
 """
 
 from sympy.core import S, sympify
-from sympy.core.compatibility import as_int, iterable
+from sympy.core.compatibility import as_int
+from sympy.utilities.iterables import iterable
+
 
 def linrec(coeffs, init, n):
     r"""

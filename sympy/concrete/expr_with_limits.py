@@ -1,5 +1,4 @@
 from sympy.core.add import Add
-from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
@@ -14,7 +13,7 @@ from sympy.tensor.indexed import Idx
 from sympy.sets.sets import Interval
 from sympy.sets.fancysets import Range
 from sympy.utilities import flatten
-from sympy.utilities.iterables import sift
+from sympy.utilities.iterables import sift, is_sequence
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 

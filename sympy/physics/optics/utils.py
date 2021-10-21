@@ -27,10 +27,10 @@ __all__ = ['refraction_angle',
 
 from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit, atan2, asin,\
 cos, sin, tan, I, cancel, pi, Float, S, zoo
-from sympy.core.compatibility import is_sequence
 from sympy.geometry.line import Ray3D
 from sympy.geometry.util import intersection
 from sympy.geometry.plane import Plane
+from sympy.utilities.iterables import is_sequence
 from .medium import Medium
 
 

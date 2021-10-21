@@ -8,7 +8,6 @@ from inspect import getmro
 import string
 from random import choice
 
-from .compatibility import iterable
 from .parameters import global_parameters
 
 
@@ -433,6 +432,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     if strict:
         raise SympifyError(a)
+
+    from sympy.utilities.iterables import iterable
 
     if iterable(a):
         try:

@@ -54,7 +54,7 @@ class MatrixExpr(Expr):
     """
 
     # Should not be considered iterable by the
-    # sympy.core.compatibility.iterable function. Subclass that actually are
+    # sympy.utilities.iterables.iterable function. Subclass that actually are
     # iterable (i.e., explicit matrices) should set this to True.
     _iterable = False
 

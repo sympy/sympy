@@ -229,7 +229,7 @@ of those tests will surely fail.
 """
 
 from sympy.core import Add, S, Mul, Pow, oo
-from sympy.core.compatibility import ordered, iterable
+from sympy.core.compatibility import ordered
 from sympy.core.containers import Tuple
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
@@ -255,8 +255,8 @@ from sympy.simplify import (collect, logcombine, powsimp,  # type: ignore
 from sympy.simplify.radsimp import collect_const
 from sympy.solvers import checksol, solve
 
-from sympy.utilities import numbered_symbols, default_sort_key, sift
-from sympy.utilities.iterables import uniq
+from sympy.utilities import numbered_symbols, default_sort_key
+from sympy.utilities.iterables import uniq, sift, iterable
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 
 

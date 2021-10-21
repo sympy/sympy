@@ -9,8 +9,7 @@ from typing import List, Optional
 from sympy.core import Basic, sympify
 from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 from sympy.utilities import numbered_symbols, topological_sort, public
-from sympy.utilities.iterables import has_dups
-from sympy.core.compatibility import is_sequence
+from sympy.utilities.iterables import has_dups, is_sequence
 
 import sympy.polys
 

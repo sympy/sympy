@@ -14,8 +14,7 @@ This module contain solvers for all kinds of equations:
 
 from sympy import divisors, binomial, expand_func
 from sympy.core.assumptions import check_assumptions
-from sympy.core.compatibility import (iterable, is_sequence, ordered,
-    default_sort_key)
+from sympy.core.compatibility import ordered, default_sort_key
 from sympy.core.sympify import sympify
 from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
     Pow, Unequality)
@@ -51,7 +50,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import (connected_components,
-    generate_bell, uniq)
+    generate_bell, uniq, iterable, is_sequence)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot

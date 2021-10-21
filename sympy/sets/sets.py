@@ -4,7 +4,7 @@ from collections import defaultdict
 import inspect
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import iterable, ordered
+from sympy.core.compatibility import ordered
 from sympy.core.containers import Tuple
 from sympy.core.decorators import (deprecated, sympify_method_args,
     sympify_return)
@@ -23,7 +23,7 @@ from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.sets.contains import Contains
 from sympy.utilities import subsets
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import iproduct, sift, roundrobin
+from sympy.utilities.iterables import iproduct, sift, roundrobin, iterable
 from sympy.utilities.misc import func_name, filldedent
 from mpmath import mpi, mpf
 

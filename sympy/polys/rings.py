@@ -7,7 +7,6 @@ from operator import add, mul, lt, le, gt, ge
 from functools import reduce
 from types import GeneratorType
 
-from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
 from sympy.core.numbers import igcd, oo
 from sympy.core.symbol import Symbol, symbols as _symbols
@@ -30,6 +29,7 @@ from sympy.polys.polyutils import (expr_from_dict, _dict_reorder,
                                    _parallel_dict_from_expr)
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
+from sympy.utilities.iterables import is_sequence
 from sympy.utilities.magic import pollute
 
 @public

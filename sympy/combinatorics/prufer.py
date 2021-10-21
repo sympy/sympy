@@ -1,6 +1,6 @@
 from sympy.core import Basic
-from sympy.core.compatibility import iterable, as_int
-from sympy.utilities.iterables import flatten
+from sympy.core.compatibility import as_int
+from sympy.utilities.iterables import flatten, iterable
 
 from collections import defaultdict
 

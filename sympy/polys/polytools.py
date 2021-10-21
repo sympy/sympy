@@ -8,7 +8,7 @@ from sympy.core import (
     S, Expr, I, Integer, Add, Tuple
 )
 from sympy.core.basic import Basic
-from sympy.core.compatibility import iterable, ordered
+from sympy.core.compatibility import ordered
 from sympy.core.decorators import _sympifyit
 from sympy.core.evalf import pure_complex
 from sympy.core.function import Derivative
@@ -47,8 +47,9 @@ from sympy.polys.polyutils import (
 )
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
-from sympy.utilities import group, sift, public, filldedent
+from sympy.utilities import group, public, filldedent
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import iterable, sift
 
 
 # Required to avoid errors

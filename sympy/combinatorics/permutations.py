@@ -6,14 +6,13 @@ from functools import reduce
 from sympy.core.parameters import global_parameters
 from sympy.core.basic import Atom
 from sympy.core.expr import Expr
-from sympy.core.compatibility import \
-    is_sequence, as_int
+from sympy.core.compatibility import as_int
 from sympy.core.numbers import Integer
 from sympy.core.sympify import _sympify
 from sympy.matrices import zeros
 from sympy.polys.polytools import lcm
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
-    has_dups, runs)
+    has_dups, runs, is_sequence)
 from mpmath.libmp.libintmath import ifac
 from sympy.multipledispatch import dispatch
 
