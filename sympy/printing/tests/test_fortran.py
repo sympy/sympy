@@ -14,7 +14,7 @@ from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.printing.fortran import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
-from sympy.utilities.lambdify import implemented_function
+from sympy.codegen.lambdify import implemented_function
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 

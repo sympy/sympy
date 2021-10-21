@@ -12,7 +12,7 @@ from sympy.functions import (sin, cos, tan, cot, sec, csc, asin, acos, acot,
                              atan, asec, acsc, sinh, cosh, tanh, coth, csch,
                              sech, asinh, acosh, atanh, acoth, asech, acsch)
 from sympy.testing.pytest import raises, XFAIL
-from sympy.utilities.lambdify import implemented_function
+from sympy.codegen.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
                             HadamardProduct, SparseMatrix, HadamardPower)
 from sympy.functions.special.bessel import (jn, yn, besselj, bessely, besseli,

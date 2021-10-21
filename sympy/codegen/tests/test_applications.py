@@ -4,8 +4,8 @@ import tempfile
 
 from sympy.external import import_module
 from sympy.printing.codeprinter import ccode
-from sympy.utilities._compilation import compile_link_import_strings, has_c
-from sympy.utilities._compilation.util import may_xfail
+from sympy.codegen._compilation import compile_link_import_strings, has_c
+from sympy.codegen._compilation.util import may_xfail
 from sympy.testing.pytest import skip
 from sympy.codegen.ast import (
     FunctionDefinition, FunctionPrototype, Variable, Pointer, real, Assignment,

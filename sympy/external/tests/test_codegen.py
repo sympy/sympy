@@ -1,5 +1,5 @@
 # This tests the compilation and execution of the source code generated with
-# utilities.codegen. The compilation takes place in a temporary directory that
+# codegen.codegen. The compilation takes place in a temporary directory that
 # is removed after the test. By default the test directory is always removed,
 # but this behavior can be changed by setting the environment variable
 # SYMPY_TEST_CLEAN_TEMP to:
@@ -23,7 +23,7 @@
 
 from sympy.abc import x, y, z
 from sympy.testing.pytest import skip
-from sympy.utilities.codegen import codegen, make_routine, get_code_generator
+from sympy.codegen.codegen import codegen, make_routine, get_code_generator
 import sys
 import os
 import tempfile

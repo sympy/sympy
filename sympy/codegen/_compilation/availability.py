@@ -43,7 +43,7 @@ def has_c():
             if os.environ.get('SYMPY_STRICT_COMPILER_CHECKS', '0') == '1':
                 raise
         else:
-            if info['exit_status'] != os.EX_OK or 'hello world' not in stdout:
+            if 'hello world' not in stdout or info['exit_status'] != os.EX_OK:
                 if os.environ.get('SYMPY_STRICT_COMPILER_CHECKS', '0') == '1':
                     raise ValueError("Failed to compile test program:\n%s\n%s\n" % (stdout, stderr))
                 has_c.result = False
@@ -68,7 +68,7 @@ def has_cxx():
             if os.environ.get('SYMPY_STRICT_COMPILER_CHECKS', '0') == '1':
                 raise
         else:
-            if info['exit_status'] != os.EX_OK or 'hello world' not in stdout:
+            if 'hello world' not in stdout or info['exit_status'] != os.EX_OK:
                 if os.environ.get('SYMPY_STRICT_COMPILER_CHECKS', '0') == '1':
                     raise ValueError("Failed to compile test program:\n%s\n%s\n" % (stdout, stderr))
                 has_cxx.result = False

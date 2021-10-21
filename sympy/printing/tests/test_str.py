@@ -789,7 +789,7 @@ def test_wild_str():
 
 
 def test_wild_matchpy():
-    from sympy.utilities.matchpy_connector import WildDot, WildPlus, WildStar
+    from sympy.external.matchpy_connector import WildDot, WildPlus, WildStar
 
     matchpy = import_module("matchpy")
 

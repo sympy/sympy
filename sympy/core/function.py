@@ -543,7 +543,7 @@ class Function(Application, Expr):
                 return None
 
             if not hasattr(mpmath, fname):
-                from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
+                from sympy.codegen.lambdify import MPMATH_TRANSLATIONS
                 fname = MPMATH_TRANSLATIONS.get(fname, None)
                 if fname is None:
                     return None

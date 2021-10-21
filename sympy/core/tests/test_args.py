@@ -1874,18 +1874,18 @@ def test_sympy__stats__matrix_distributions__MatrixStudentTDistribution():
     Location = MatrixSymbol('Location', 1, 3)
     assert _test_args(MatrixStudentTDistribution(v, Location, Omega, Sigma))
 
-def test_sympy__utilities__matchpy_connector__WildDot():
-    from sympy.utilities.matchpy_connector import WildDot
+def test_sympy__external__matchpy_connector__WildDot():
+    from sympy.external.matchpy_connector import WildDot
     assert _test_args(WildDot("w_"))
 
 
-def test_sympy__utilities__matchpy_connector__WildPlus():
-    from sympy.utilities.matchpy_connector import WildPlus
+def test_sympy__external__matchpy_connector__WildPlus():
+    from sympy.external.matchpy_connector import WildPlus
     assert _test_args(WildPlus("w__"))
 
 
-def test_sympy__utilities__matchpy_connector__WildStar():
-    from sympy.utilities.matchpy_connector import WildStar
+def test_sympy__external__matchpy_connector__WildStar():
+    from sympy.external.matchpy_connector import WildStar
     assert _test_args(WildStar("w___"))
 
 

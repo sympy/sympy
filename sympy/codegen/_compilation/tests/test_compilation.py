@@ -2,7 +2,7 @@ import shutil
 from sympy.external import import_module
 from sympy.testing.pytest import skip
 
-from sympy.utilities._compilation.compilation import compile_link_import_strings
+from sympy.codegen._compilation.compilation import compile_link_import_strings
 
 numpy = import_module('numpy')
 cython = import_module('cython')
@@ -45,7 +45,7 @@ def test_compile_link_import_strings():
     if not cython:
         skip("cython not installed.")
 
-    from sympy.utilities._compilation import has_c
+    from sympy.codegen._compilation import has_c
     if not has_c():
         skip("No C compiler found.")
 

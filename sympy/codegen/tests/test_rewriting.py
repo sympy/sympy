@@ -13,8 +13,8 @@ from sympy.codegen.rewriting import (
     optims_numpy, sinc_opts, FuncMinusOneOptim
 )
 from sympy.testing.pytest import XFAIL, skip
-from sympy.utilities._compilation import compile_link_import_strings, has_c
-from sympy.utilities._compilation.util import may_xfail
+from sympy.codegen._compilation import compile_link_import_strings, has_c
+from sympy.codegen._compilation.util import may_xfail
 
 cython = import_module('cython')
 

@@ -14,7 +14,7 @@ from sympy.functions.elementary.miscellaneous import (sqrt, cbrt, root, Min,
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.special.delta_functions import Heaviside
 
-from sympy.utilities.lambdify import lambdify
+from sympy.codegen.lambdify import lambdify
 from sympy.testing.pytest import raises, skip, ignore_warnings
 
 def test_Min():

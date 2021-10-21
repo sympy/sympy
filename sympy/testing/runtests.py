@@ -729,7 +729,7 @@ def _get_doctest_blacklist():
 
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
-        "sympy/utilities/autowrap.py",
+        "sympy/codegen/autowrap.py",
         "examples/advanced/autowrap_integrators.py",
         "examples/advanced/autowrap_ufuncify.py"
         ])

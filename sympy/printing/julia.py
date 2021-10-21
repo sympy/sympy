@@ -4,7 +4,7 @@ Julia code printer
 The `JuliaCodePrinter` converts SymPy expressions into Julia expressions.
 
 A complete code generator, which uses `julia_code` extensively, can be found
-in `sympy.utilities.codegen`.  The `codegen` module can be used to generate
+in `sympy.codegen.codegen`.  The `codegen` module can be used to generate
 complete source code files.
 
 """

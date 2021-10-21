@@ -7,7 +7,7 @@ from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
 from sympy.testing.pytest import raises
 from sympy.printing.rcode import RCodePrinter
-from sympy.utilities.lambdify import implemented_function
+from sympy.codegen.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 

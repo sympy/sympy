@@ -14,7 +14,7 @@ if matchpy:
         rubi_exp, rubi_unevaluated_expr, process_trig
     )
 
-    from sympy.utilities.matchpy_connector import op_iter, op_len
+    from sympy.external.matchpy_connector import op_iter, op_len
 
     @doctest_depends_on(modules=('matchpy',))
     def get_rubi_object():

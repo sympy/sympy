@@ -2,6 +2,7 @@
 
 
 from sympy import Basic
+from sympy.codegen import lambdify  # type: ignore
 from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
     symbols, sympify, Rational, Dummy)
 from sympy.core.cache import cacheit
@@ -22,7 +23,7 @@ from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import (
     dup_isolate_complex_roots_sqf,
     dup_isolate_real_roots_sqf)
-from sympy.utilities import lambdify, public, sift, numbered_symbols
+from sympy.utilities import public, sift, numbered_symbols
 
 from mpmath import mpf, mpc, findroot, workprec
 from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps

@@ -4,7 +4,7 @@ and Octave/Matlab routines that evaluate sympy expressions.
 This module is work in progress.
 Only the milestones with a '+' character in the list below have been completed.
 
---- How is sympy.utilities.codegen different from sympy.printing.ccode? ---
+--- How is sympy.codegen.codegen different from sympy.printing.ccode? ---
 
 We considered the idea to extend the printing routines for sympy functions in
 such a way that it prints complete compilable code, but this leads to a few
@@ -345,7 +345,7 @@ class Variable:
         ========
 
         >>> from sympy import Symbol
-        >>> from sympy.utilities.codegen import Variable
+        >>> from sympy.codegen.codegen import Variable
         >>> x = Variable(Symbol('x'))
         >>> x.get_datatype('c')
         'double'
@@ -2050,7 +2050,7 @@ def codegen(name_expr, language=None, prefix=None, project="project",
     Examples
     ========
 
-    >>> from sympy.utilities.codegen import codegen
+    >>> from sympy.codegen.codegen import codegen
     >>> from sympy.abc import x, y, z
     >>> [(c_name, c_code), (h_name, c_header)] = codegen(
     ...     ("f", x+y*z), "C89", "test", header=False, empty=False)
@@ -2102,7 +2102,7 @@ def codegen(name_expr, language=None, prefix=None, project="project",
     global variables have been defined, the 'global_vars' option can be used
     to remove the specified variables from the function signature
 
-    >>> from sympy.utilities.codegen import codegen
+    >>> from sympy.codegen.codegen import codegen
     >>> from sympy.abc import x, y, z
     >>> [(f_name, f_code), header] = codegen(
     ...     ("f", x+y*z), "F95", header=False, empty=False,
@@ -2186,7 +2186,7 @@ def make_routine(name, expr, argument_sequence=None,
     Examples
     ========
 
-    >>> from sympy.utilities.codegen import make_routine
+    >>> from sympy.codegen.codegen import make_routine
     >>> from sympy.abc import x, y, f, g
     >>> from sympy import Eq
     >>> r = make_routine('test', [Eq(f, 2*x), Eq(g, x + y)])
@@ -2213,7 +2213,7 @@ def make_routine(name, expr, argument_sequence=None,
 
     We can examine the various arguments more closely:
 
-    >>> from sympy.utilities.codegen import (InputArgument, OutputArgument,
+    >>> from sympy.codegen.codegen import (InputArgument, OutputArgument,
     ...                                      InOutArgument)
     >>> [a.name for a in r.arguments if isinstance(a, InputArgument)]
     [x, y]

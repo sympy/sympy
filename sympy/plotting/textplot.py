@@ -1,6 +1,6 @@
 from sympy.core.numbers import Float
 from sympy.core.symbol import Dummy
-from sympy.utilities.lambdify import lambdify
+from sympy.codegen.lambdify import lambdify
 
 import math
 

@@ -5,7 +5,7 @@ from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
                              sign)
 from sympy.logic import ITE
 from sympy.testing.pytest import raises
-from sympy.utilities.lambdify import implemented_function
+from sympy.codegen.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import MatrixSymbol, SparseMatrix, Matrix
 

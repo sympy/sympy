@@ -22,7 +22,7 @@ from sympy.functions.special.polynomials import \
 from sympy.matrices import Matrix, MatrixSymbol, SparseMatrix
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy.printing.numpy import NumPyPrinter
-from sympy.utilities.lambdify import implemented_function, lambdastr
+from sympy.codegen.lambdify import implemented_function, lambdastr
 from sympy.testing.pytest import skip
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.external import import_module
@@ -187,14 +187,14 @@ def test_mpmath_precision():
 
 
 def test_math_transl():
-    from sympy.utilities.lambdify import MATH_TRANSLATIONS
+    from sympy.codegen.lambdify import MATH_TRANSLATIONS
     for sym, mat in MATH_TRANSLATIONS.items():
         assert sym in sympy.__dict__
         assert mat in math.__dict__
 
 
 def test_mpmath_transl():
-    from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
+    from sympy.codegen.lambdify import MPMATH_TRANSLATIONS
     for sym, mat in MPMATH_TRANSLATIONS.items():
         assert sym in sympy.__dict__ or sym == 'Matrix'
         assert mat in mpmath.__dict__
@@ -204,7 +204,7 @@ def test_numpy_transl():
     if not numpy:
         skip("numpy not installed.")
 
-    from sympy.utilities.lambdify import NUMPY_TRANSLATIONS
+    from sympy.codegen.lambdify import NUMPY_TRANSLATIONS
     for sym, nump in NUMPY_TRANSLATIONS.items():
         assert sym in sympy.__dict__
         assert nump in numpy.__dict__
@@ -214,7 +214,7 @@ def test_scipy_transl():
     if not scipy:
         skip("scipy not installed.")
 
-    from sympy.utilities.lambdify import SCIPY_TRANSLATIONS
+    from sympy.codegen.lambdify import SCIPY_TRANSLATIONS
     for sym, scip in SCIPY_TRANSLATIONS.items():
         assert sym in sympy.__dict__
         assert scip in scipy.__dict__ or scip in scipy.special.__dict__

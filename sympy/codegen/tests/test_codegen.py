@@ -4,12 +4,12 @@ from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
 from sympy import erf, Integral, Symbol
 from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.utilities.codegen import (
+from sympy.codegen.codegen import (
     codegen, make_routine, CCodeGen, C89CodeGen, C99CodeGen, InputArgument,
     CodeGenError, FCodeGen, CodeGenArgumentListError, OutputArgument,
     InOutArgument)
 from sympy.testing.pytest import raises
-from sympy.utilities.lambdify import implemented_function
+from sympy.codegen.lambdify import implemented_function
 
 #FIXME: Fails due to circular import in with core
 # from sympy import codegen
@@ -1588,8 +1588,8 @@ def test_c_with_printer():
 
 
 def test_fcode_complex():
-    import sympy.utilities.codegen
-    sympy.utilities.codegen.COMPLEX_ALLOWED = True
+    import sympy.codegen.codegen
+    sympy.codegen.codegen.COMPLEX_ALLOWED = True
     x = Symbol('x', real=True)
     y = Symbol('y',real=True)
     result = codegen(('test',x+y), 'f95', 'test', header=False, empty=False)
@@ -1615,4 +1615,4 @@ def test_fcode_complex():
         "end function\n"
         )
     assert source==expected
-    sympy.utilities.codegen.COMPLEX_ALLOWED = False
+    sympy.codegen.codegen.COMPLEX_ALLOWED = False

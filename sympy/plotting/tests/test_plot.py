@@ -14,7 +14,7 @@ from sympy.plotting.plot import (
     unset_show, plot_contour, PlotGrid, DefaultBackend, MatplotlibBackend,
     TextBackend, BaseBackend)
 from sympy.testing.pytest import skip, raises, warns
-from sympy.utilities import lambdify as lambdify_
+from sympy.codegen import lambdify as lambdify_
 
 
 unset_show()

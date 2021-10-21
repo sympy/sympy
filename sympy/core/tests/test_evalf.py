@@ -342,7 +342,7 @@ def test_evalf_arguments():
 
 
 def test_implemented_function_evalf():
-    from sympy.utilities.lambdify import implemented_function
+    from sympy.codegen.lambdify import implemented_function
     f = Function('f')
     f = implemented_function(f, lambda x: x + 1)
     assert str(f(x)) == "f(x)"

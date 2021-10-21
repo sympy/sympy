@@ -202,7 +202,7 @@ from .geometry import (Point, Point2D, Point3D, Line, Ray, Segment, Line2D,
 from .utilities import (flatten, group, take, subsets, variations,
         numbered_symbols, cartes, capture, dict_merge, prefixes, postfixes,
         sift, topological_sort, unflatten, has_dups, has_variety, reshape,
-        default_sort_key, ordered, rotations, filldedent, lambdify, source,
+        default_sort_key, ordered, rotations, filldedent, source,
         threaded, xthreaded, public, memoize_property, timed)
 
 from .integrals import (integrate, Integral, line_integrate, mellin_transform,
@@ -241,6 +241,8 @@ from .printing import (pager_print, pretty, pretty_print, pprint,
         maple_code, print_maple_code)
 
 from .testing import test, doctest
+
+from .codegen import lambdify  # type: ignore
 
 # This module causes conflicts with other modules:
 # from .stats import *
@@ -435,7 +437,7 @@ __all__ = [
     'flatten', 'group', 'take', 'subsets', 'variations', 'numbered_symbols',
     'cartes', 'capture', 'dict_merge', 'prefixes', 'postfixes', 'sift',
     'topological_sort', 'unflatten', 'has_dups', 'has_variety', 'reshape',
-    'default_sort_key', 'ordered', 'rotations', 'filldedent', 'lambdify',
+    'default_sort_key', 'ordered', 'rotations', 'filldedent',
     'source', 'threaded', 'xthreaded', 'public', 'memoize_property', 'test',
     'doctest', 'timed',
 
@@ -489,6 +491,9 @@ __all__ = [
 
     # sympy.testing
     'test', 'doctest',
+
+    # sympy.codegen
+    'lambdify',
 ]
 
 

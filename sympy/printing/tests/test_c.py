@@ -19,7 +19,7 @@ from sympy.codegen.ast import (
 )
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, fma, log10, Cbrt, hypot, Sqrt
 from sympy.codegen.cnodes import restrict
-from sympy.utilities.lambdify import implemented_function
+from sympy.codegen.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol, SparseMatrix
 

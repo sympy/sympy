@@ -4,7 +4,7 @@ Rust code printer
 The `RustCodePrinter` converts SymPy expressions into Rust expressions.
 
 A complete code generator, which uses `rust_code` extensively, can be found
-in `sympy.utilities.codegen`. The `codegen` module can be used to generate
+in `sympy.codegen.codegen`. The `codegen` module can be used to generate
 complete source code files.
 
 """

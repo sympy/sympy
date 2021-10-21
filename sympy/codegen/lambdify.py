@@ -351,7 +351,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
     Examples
     ========
 
-    >>> from sympy.utilities.lambdify import implemented_function
+    >>> from sympy.codegen.lambdify import implemented_function
     >>> from sympy import sqrt, sin, Matrix
     >>> from sympy import Function
     >>> from sympy.abc import w, x, y, z
@@ -969,7 +969,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
     ========
 
     >>> from sympy.abc import x, y, z
-    >>> from sympy.utilities.lambdify import lambdastr
+    >>> from sympy.codegen.lambdify import lambdastr
     >>> lambdastr(x, x**2)
     'lambda x: (x**2)'
     >>> lambdastr((x,y,z), [z,y,x])
@@ -1294,7 +1294,7 @@ def _imp_namespace(expr, namespace=None):
     ========
 
     >>> from sympy.abc import x
-    >>> from sympy.utilities.lambdify import implemented_function, _imp_namespace
+    >>> from sympy.codegen.lambdify import implemented_function, _imp_namespace
     >>> from sympy import Function
     >>> f = implemented_function(Function('f'), lambda x: x+1)
     >>> g = implemented_function(Function('g'), lambda x: x*10)
@@ -1365,7 +1365,7 @@ def implemented_function(symfunc, implementation):
     ========
 
     >>> from sympy.abc import x
-    >>> from sympy.utilities.lambdify import lambdify, implemented_function
+    >>> from sympy.codegen.lambdify import lambdify, implemented_function
     >>> f = implemented_function('f', lambda x: x+1)
     >>> lam_f = lambdify(x, f(x))
     >>> lam_f(4)

@@ -4,7 +4,7 @@ from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.printing.glsl import GLSLPrinter
 from sympy.printing.str import StrPrinter
-from sympy.utilities.lambdify import implemented_function
+from sympy.codegen.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.core import Tuple

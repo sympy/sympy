@@ -47,7 +47,7 @@ from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
 from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
-from sympy.utilities.lambdify import lambdify
+from sympy.codegen.lambdify import lambdify
 from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import (connected_components,
     generate_bell, uniq, iterable, is_sequence)

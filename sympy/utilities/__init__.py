@@ -9,8 +9,6 @@ from .iterables import (flatten, group, take, subsets,
 
 from .misc import filldedent
 
-from .lambdify import lambdify
-
 from .source import source
 
 from .decorator import threaded, xthreaded, public, memoize_property
@@ -24,8 +22,6 @@ __all__ = [
     'default_sort_key', 'ordered', 'rotations',
 
     'filldedent',
-
-    'lambdify',
 
     'source',
 

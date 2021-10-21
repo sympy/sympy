@@ -4,7 +4,7 @@ import os
 from sympy import symbols, Eq, Mod
 from sympy.external import import_module
 from sympy.tensor import IndexedBase, Idx
-from sympy.utilities.autowrap import autowrap, ufuncify, CodeWrapError
+from sympy.codegen.autowrap import autowrap, ufuncify, CodeWrapError
 from sympy.testing.pytest import skip
 
 numpy = import_module('numpy', min_module_version='1.6.1')
@@ -255,7 +255,7 @@ def test_autowrap_custom_printer():
     has_module('Cython')
 
     from sympy import pi
-    from sympy.utilities.codegen import C99CodeGen
+    from sympy.codegen.codegen import C99CodeGen
     from sympy.printing.c import C99CodePrinter
 
     class PiPrinter(C99CodePrinter):

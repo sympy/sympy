@@ -3,7 +3,7 @@ python.
 
 .. note:: To use the autowrap module it must first be imported
 
-   >>> from sympy.utilities.autowrap import autowrap
+   >>> from sympy.codegen.autowrap import autowrap
 
 This module provides a common interface for different external backends, such
 as f2py, fwrap, Cython, SWIG(?) etc. (Currently only f2py and Cython are
@@ -43,7 +43,7 @@ Function object.  The binary callable is attached as the _imp_ attribute and
 invoked when a numerical evaluation is requested with evalf(), or with
 lambdify().
 
-    >>> from sympy.utilities.autowrap import binary_function
+    >>> from sympy.codegen.autowrap import binary_function
     >>> f = binary_function('f', expr)
     >>> 2*f(x, y) + y
     y + 2*f(x, y)
@@ -88,17 +88,17 @@ from subprocess import STDOUT, CalledProcessError, check_output
 from string import Template
 from warnings import warn
 
+from sympy.codegen.codegen import (make_routine, get_code_generator,
+                                     OutputArgument, InOutArgument,
+                                     InputArgument, CodeGenArgumentListError,
+                                     Result, ResultBase, C99CodeGen)
+from sympy.codegen.lambdify import implemented_function
 from sympy.core.cache import cacheit
 from sympy.core.function import Lambda
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy, Symbol
 from sympy.tensor.indexed import Idx, IndexedBase
-from sympy.utilities.codegen import (make_routine, get_code_generator,
-                                     OutputArgument, InOutArgument,
-                                     InputArgument, CodeGenArgumentListError,
-                                     Result, ResultBase, C99CodeGen)
 from sympy.utilities.iterables import iterable
-from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.decorator import doctest_depends_on
 
 _doctest_depends_on = {'exe': ('f2py', 'gfortran', 'gcc'),
@@ -605,7 +605,7 @@ def autowrap(expr, language=None, backend='f2py', tempdir=None, args=None,
     ========
 
     >>> from sympy.abc import x, y, z
-    >>> from sympy.utilities.autowrap import autowrap
+    >>> from sympy.codegen.autowrap import autowrap
     >>> expr = ((x - y + z)**(13)).expand()
     >>> binary_func = autowrap(expr)
     >>> binary_func(1, 4, 2)
@@ -683,7 +683,7 @@ def binary_function(symfunc, expr, **kwargs):
     ========
 
     >>> from sympy.abc import x, y
-    >>> from sympy.utilities.autowrap import binary_function
+    >>> from sympy.codegen.autowrap import binary_function
     >>> expr = ((x - y)**(25)).expand()
     >>> f = binary_function('f', expr)
     >>> type(f)
@@ -1053,7 +1053,7 @@ def ufuncify(args, expr, language=None, backend='numpy', tempdir=None,
     Examples
     ========
 
-    >>> from sympy.utilities.autowrap import ufuncify
+    >>> from sympy.codegen.autowrap import ufuncify
     >>> from sympy.abc import x, y
     >>> import numpy as np
     >>> f = ufuncify((x, y), y + x**2)

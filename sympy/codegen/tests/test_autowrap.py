@@ -7,9 +7,9 @@ import shutil
 from io import StringIO
 
 from sympy.core import symbols, Eq
-from sympy.utilities.autowrap import (autowrap, binary_function,
+from sympy.codegen.autowrap import (autowrap, binary_function,
             CythonCodeWrapper, UfuncifyCodeWrapper, CodeWrapper)
-from sympy.utilities.codegen import (
+from sympy.codegen.codegen import (
     CCodeGen, C99CodeGen, CodeGenArgumentListError, make_routine
 )
 from sympy.testing.pytest import raises

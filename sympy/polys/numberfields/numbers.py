@@ -1,13 +1,13 @@
 """Algebraic numbers -- forms of expression, and isolation."""
 
 from sympy import AlgebraicNumber, sympify
+from sympy.codegen.lambdify import lambdify
 from sympy.polys.numberfields.isomorphism import field_isomorphism
 from sympy.polys.numberfields.minpoly import minpoly, primitive_element
 from sympy.polys.polyerrors import IsomorphismFailed
 from sympy.printing.lambdarepr import IntervalPrinter
-from sympy.utilities import (
-    lambdify, public
-)
+from sympy.utilities import public
+
 
 from mpmath import mp
 

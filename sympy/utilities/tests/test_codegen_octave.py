@@ -4,7 +4,7 @@ from sympy.core import S, symbols, Eq, pi, Catalan, EulerGamma, Function
 from sympy import Piecewise
 from sympy import Equality
 from sympy.matrices import Matrix, MatrixSymbol
-from sympy.utilities.codegen import OctaveCodeGen, codegen, make_routine
+from sympy.codegen.codegen import OctaveCodeGen, codegen, make_routine
 from sympy.testing.pytest import raises
 from sympy.testing.pytest import XFAIL
 import sympy

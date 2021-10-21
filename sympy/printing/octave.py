@@ -5,7 +5,7 @@ The `OctaveCodePrinter` converts SymPy expressions into Octave expressions.
 It uses a subset of the Octave language for Matlab compatibility.
 
 A complete code generator, which uses `octave_code` extensively, can be found
-in `sympy.utilities.codegen`.  The `codegen` module can be used to generate
+in `sympy.codegen.codegen`.  The `codegen` module can be used to generate
 complete source code files.
 
 """
