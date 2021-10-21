@@ -1,7 +1,6 @@
 """Abstract tensor product."""
 
 from sympy import Expr, Add, Mul, Matrix, Pow, sympify
-from sympy.core.trace import Tr
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import QuantumError
@@ -14,6 +13,7 @@ from sympy.physics.quantum.matrixutils import (
     scipy_sparse_matrix,
     matrix_tensor_product
 )
+from sympy.physics.quantum.trace import Tr
 
 
 __all__ = [

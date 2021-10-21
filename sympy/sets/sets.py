@@ -1,10 +1,10 @@
 from typing import Optional
-
+from functools import reduce
 from collections import defaultdict
 import inspect
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import iterable, ordered, reduce
+from sympy.core.compatibility import iterable, ordered
 from sympy.core.containers import Tuple
 from sympy.core.decorators import (deprecated, sympify_method_args,
     sympify_return)
@@ -648,7 +648,8 @@ class Set(Basic, EvalfMixin):
         raise NotImplementedError("(%s)._measure" % self)
 
     def _eval_evalf(self, prec):
-        return self.func(*[arg.evalf(n=prec_to_dps(prec)) for arg in self.args])
+        dps = prec_to_dps(prec)
+        return self.func(*[arg.evalf(n=dps) for arg in self.args])
 
     @sympify_return([('other', 'Set')], NotImplemented)
     def __add__(self, other):
@@ -901,7 +902,7 @@ class Interval(Set):
     Notes
     =====
     - Only real end points are supported
-    - ``Interval(a, b)`` with `a > b` will return the empty set
+    - ``Interval(a, b)`` with $a > b$ will return the empty set
     - Use the ``evalf()`` method to turn an Interval into an mpmath
       ``mpi`` interval instance
 
@@ -955,7 +956,7 @@ class Interval(Set):
     @property
     def start(self):
         """
-        The left end point of the interval`.
+        The left end point of the interval.
 
         This property takes the same value as the ``inf`` property.
 
@@ -1538,7 +1539,7 @@ class Complement(Set):
     r"""Represents the set difference or relative complement of a set with
     another set.
 
-    `A - B = \{x \in A \mid x \notin B\}`
+    $$A - B = \{x \in A \mid x \notin B\}$$
 
 
     Examples
@@ -1912,7 +1913,8 @@ class FiniteSet(Set):
         return (hash(self) - hash(other))
 
     def _eval_evalf(self, prec):
-        return FiniteSet(*[elem.evalf(n=prec_to_dps(prec)) for elem in self])
+        dps = prec_to_dps(prec)
+        return FiniteSet(*[elem.evalf(n=dps) for elem in self])
 
     def _eval_simplify(self, **kwargs):
         from sympy.simplify import simplify
@@ -2193,7 +2195,7 @@ def imageset(*args):
     Explanation
     ===========
 
-    If this function can't compute the image, it returns an
+    If this function cannot compute the image, it returns an
     unevaluated ImageSet object.
 
     .. math::

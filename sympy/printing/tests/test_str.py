@@ -22,7 +22,7 @@ from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayE
 from sympy.testing.pytest import raises
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
-from sympy.core.trace import Tr
+from sympy.physics.quantum.trace import Tr
 
 x, y, z, w, t = symbols('x,y,z,w,t')
 d = Dummy('d')
@@ -1127,3 +1127,6 @@ def test_AppliedPredicate():
 def test_printing_str_array_expressions():
     assert sstr(ArraySymbol("A", 2, 3, 4)) == "A"
     assert sstr(ArrayElement("A", (2, 1/(1-x), 0))) == "A[2, 1/(1 - x), 0]"
+    M = MatrixSymbol("M", 3, 3)
+    N = MatrixSymbol("N", 3, 3)
+    assert sstr(ArrayElement(M*N, [x, 0])) == "(M*N)[x, 0]"

@@ -239,7 +239,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
          - sexpr is the base expression
          - rat_expo is the rational exponent that sexpr is raised to
          - sym_expo is the symbolic exponent that sexpr is raised to
-         - deriv contains the derivatives the the expression
+         - deriv contains the derivatives of the expression
 
          For example, the output of x would be (x, 1, None, None)
          the output of 2**x would be (2, 1, x, None).

@@ -244,7 +244,7 @@ def roots_quartic(f):
     There are many references for solving quartic expressions available [1-5].
     This reviewer has found that many of them require one to select from among
     2 or more possible sets of solutions and that some solutions work when one
-    is searching for real roots but don't work when searching for complex roots
+    is searching for real roots but do not work when searching for complex roots
     (though this is not always stated clearly). The following routine has been
     tested and found to be correct for 0, 2 or 4 complex roots.
 
@@ -694,6 +694,14 @@ def _integer_basis(poly):
 
     monoms = monoms[:-1]
     coeffs = coeffs[:-1]
+
+    # Special case for two-term polynominals
+    if len(monoms) == 1:
+        r = Pow(coeffs[0], S.One/monoms[0])
+        if r.is_Integer:
+            return int(r)
+        else:
+            return None
 
     divs = reversed(divisors(gcd_list(coeffs))[1:])
 

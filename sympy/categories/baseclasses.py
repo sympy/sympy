@@ -618,8 +618,8 @@ class Diagram(Basic):
     References
     ==========
 
-    [Pare1970] B. Pareigis: Categories and functors.  Academic Press,
-    1970.
+    [Pare1970] B. Pareigis: Categories and functors.  Academic Press, 1970.
+
     """
     @staticmethod
     def _set_dict_union(dictionary, key, value):

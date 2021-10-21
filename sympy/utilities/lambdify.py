@@ -127,7 +127,7 @@ def _import(module, reload=False):
             module]
     except KeyError:
         raise NameError(
-            "'%s' module can't be used for lambdification" % module)
+            "'%s' module cannot be used for lambdification" % module)
 
     # Clear namespace or exit
     if namespace != namespace_default:
@@ -153,7 +153,7 @@ def _import(module, reload=False):
                 pass
 
         raise ImportError(
-            "can't import '%s' with '%s' command" % (module, import_command))
+            "Cannot import '%s' with '%s' command" % (module, import_command))
 
     # Add translated names to namespace
     for sympyname, translation in translations.items():
@@ -859,8 +859,8 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
     if cse == True:
-        from sympy.simplify.cse_main import cse
-        cses, _expr = cse(expr, list=False)
+        from sympy.simplify.cse_main import cse as _cse
+        cses, _expr = _cse(expr, list=False)
     elif callable(cse):
         cses, _expr = cse(expr)
     else:

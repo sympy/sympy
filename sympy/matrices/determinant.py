@@ -82,7 +82,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
             continue
         simped = simpfunc(x)
         is_zero = iszerofunc(simped)
-        if is_zero == True or is_zero == False:
+        if is_zero in (True, False):
             newly_determined.append((i, simped))
         if is_zero == False:
             return (i, simped, False, newly_determined)

@@ -18,8 +18,8 @@ def euler_equations(L, funcs=(), vars=()):
         The Lagrangian that should be a function of the functions listed
         in the second argument and their derivatives.
 
-        For example, in the case of two functions `f(x,y)`, `g(x,y)` and
-        two independent variables `x`, `y` the Lagrangian would have the form:
+        For example, in the case of two functions $f(x,y)$, $g(x,y)$ and
+        two independent variables $x$, $y$ the Lagrangian has the form:
 
             .. math:: L\left(f(x,y),g(x,y),\frac{\partial f(x,y)}{\partial x},
                       \frac{\partial f(x,y)}{\partial y},
@@ -28,7 +28,7 @@ def euler_equations(L, funcs=(), vars=()):
 
         In many cases it is not necessary to provide anything, except the
         Lagrangian, it will be auto-detected (and an error raised if this
-        couldn't be done).
+        cannot be done).
 
     funcs : Function or an iterable of Functions
         The functions that the Lagrangian depends on. The Euler equations
@@ -87,7 +87,7 @@ def euler_equations(L, funcs=(), vars=()):
 
     for f in funcs:
         if not vars == f.args:
-            raise ValueError("Variables %s don't match args: %s" % (vars, f))
+            raise ValueError("Variables %s do not match args: %s" % (vars, f))
 
     order = max([len(d.variables) for d in L.atoms(Derivative)
                         if d.expr in funcs] + [0])

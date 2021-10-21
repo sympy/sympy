@@ -330,7 +330,7 @@ class OctaveCodePrinter(CodePrinter):
         # Handle zero dimensions:
         if (A.rows, A.cols) == (0, 0):
             return '[]'
-        elif A.rows == 0 or A.cols == 0:
+        elif S.Zero in A.shape:
             return 'zeros(%s, %s)' % (A.rows, A.cols)
         elif (A.rows, A.cols) == (1, 1):
             # Octave does not distinguish between scalars and 1x1 matrices
@@ -561,7 +561,7 @@ class OctaveCodePrinter(CodePrinter):
         pretty = []
         level = 0
         for n, line in enumerate(code):
-            if line == '' or line == '\n':
+            if line in ('', '\n'):
                 pretty.append(line)
                 continue
             level -= decrease[n]

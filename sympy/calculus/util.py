@@ -145,7 +145,7 @@ def function_range(f, symbol, domain):
     NotImplementedError
         If any of the intervals, in the given domain, for which function
         is continuous are not finite or real,
-        OR if the critical points of the function on the domain can't be found.
+        OR if the critical points of the function on the domain cannot be found.
     """
     from sympy.solvers.solveset import solveset
 
@@ -234,13 +234,14 @@ def function_range(f, symbol, domain):
 
 def not_empty_in(finset_intersection, *syms):
     """
-    Finds the domain of the functions in `finite_set` in which the
-    `finite_set` is not-empty
+    Finds the domain of the functions in ``finset_intersection`` in which the
+    ``finite_set`` is not-empty
 
     Parameters
     ==========
 
-    finset_intersection : The unevaluated intersection of FiniteSet containing
+    finset_intersection : Intersection of FiniteSet
+                        The unevaluated intersection of FiniteSet containing
                         real-valued functions with Union of Sets
     syms : Tuple of symbols
             Symbol for which domain is to be found
@@ -362,8 +363,8 @@ def periodicity(f, symbol, check=False):
 
     period
         The period of the function is returned.
-        `None` is returned when the function is aperiodic or has a complex period.
-        The value of `0` is returned as the period of a constant function.
+        ``None`` is returned when the function is aperiodic or has a complex period.
+        The value of $0$ is returned as the period of a constant function.
 
     Raises
     ======
@@ -522,7 +523,7 @@ def periodicity(f, symbol, check=False):
             for index, g in enumerate(reversed(g_s)):
                 start_index = num_of_gs - 1 - index
                 g = compogen(g_s[start_index:], symbol)
-                if g != orig_f and g != f: # Fix for issue 12620
+                if g not in (orig_f, f): # Fix for issue 12620
                     period = periodicity(g, symbol)
                     if period is not None:
                         break
@@ -1260,7 +1261,7 @@ class AccumulationBounds(AtomicExpr):
                         return AccumBounds(self.min / other.max, oo)
 
             elif other.is_extended_real:
-                if other is S.Infinity or other is S.NegativeInfinity:
+                if other in (S.Infinity, S.NegativeInfinity):
                     if self == AccumBounds(-oo, oo):
                         return AccumBounds(-oo, oo)
                     if self.max is S.Infinity:
@@ -1450,7 +1451,7 @@ class AccumulationBounds(AtomicExpr):
         """
         other = _sympify(other)
 
-        if other is S.Infinity or other is S.NegativeInfinity:
+        if other in (S.Infinity, S.NegativeInfinity):
             if self.min is S.NegativeInfinity or self.max is S.Infinity:
                 return True
             return False

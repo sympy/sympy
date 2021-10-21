@@ -18,8 +18,8 @@ class FiniteField(Field, SimpleDomain):
     :ref:`polys-domainsintro`).
 
     A :py:class:`~.Poly` created from an expression with integer
-    coefficients will have the domain :ref:`ZZ`. Howeer if the ``modulus=p``
-    option is given the the domain will be a finite field instead.
+    coefficients will have the domain :ref:`ZZ`. However, if the ``modulus=p``
+    option is given then the domain will be a finite field instead.
 
     >>> from sympy import Poly, Symbol
     >>> x = Symbol('x')

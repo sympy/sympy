@@ -44,7 +44,7 @@ from sympy.physics.control.lti import TransferFunction, Series, Parallel, \
     Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
 from sympy.physics.quantum import Commutator, Operator
 from sympy.physics.units import meter, gibibyte, microgram, second
-from sympy.core.trace import Tr
+from sympy.physics.quantum.trace import Tr
 from sympy.combinatorics.permutations import \
     Cycle, Permutation, AppliedPermutation
 from sympy.matrices.expressions.permutation import PermutationMatrix
@@ -2810,3 +2810,6 @@ def test_pickleable():
 def test_printing_latex_array_expressions():
     assert latex(ArraySymbol("A", 2, 3, 4)) == "A"
     assert latex(ArrayElement("A", (2, 1/(1-x), 0))) == "{{A}_{2, \\frac{1}{1 - x}, 0}}"
+    M = MatrixSymbol("M", 3, 3)
+    N = MatrixSymbol("N", 3, 3)
+    assert latex(ArrayElement(M*N, [x, 0])) == "{{\\left(M N\\right)}_{x, 0}}"

@@ -14,7 +14,7 @@ from sympy.logic.boolalg import (
     distribute_or_over_and, distribute_and_over_or,
     eliminate_implications, is_nnf, is_cnf, is_dnf, simplify_logic,
     to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
-    BooleanAtom, is_literal, term_to_integer, integer_to_term,
+    BooleanAtom, is_literal, term_to_integer,
     truth_table, as_Boolean, to_anf, is_anf, distribute_xor_over_and,
     anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial,
     _check_pair, _convert_to_varsSOP, _convert_to_varsPOS, Exclusive,)
@@ -241,7 +241,7 @@ def test_equals():
     raises(NotImplementedError, lambda: (A & B).equals(A > B))
 
 
-def test_simplification():
+def test_simplification_boolalg():
     """
     Test working of simplification methods.
     """
@@ -311,6 +311,9 @@ def test_simplification():
     e = And(A, b)
     assert simplify_logic(e) == A & ~x & ~y
     raises(ValueError, lambda: simplify_logic(A & (B | C), form='blabla'))
+    assert simplify(Or(x <= y, And(x < y, z))) == (x <= y)
+    assert simplify(Or(x <= y, And(y > x, z))) == (x <= y)
+    assert simplify(Or(x >= y, And(y < x, z))) == (x >= y)
 
     # Check that expressions with nine variables or more are not simplified
     # (without the force-flag)
@@ -923,12 +926,6 @@ def test_term_to_integer():
     assert term_to_integer([1, 0, 1, 0, 0, 1, 0]) == 82
     assert term_to_integer('0010101000111001') == 10809
 
-
-def test_integer_to_term():
-    assert integer_to_term(777) == [1, 1, 0, 0, 0, 0, 1, 0, 0, 1]
-    assert integer_to_term(123, 3) == [1, 1, 1, 1, 0, 1, 1]
-    assert integer_to_term(456, 16) == [0, 0, 0, 0, 0, 0, 0, 1,
-                                        1, 1, 0, 0, 1, 0, 0, 0]
 
 def test_issue_21971():
     a, b, c, d = symbols('a b c d')

@@ -7,7 +7,7 @@ from itertools import chain, combinations, product
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import ordered, as_int
+from sympy.core.compatibility import ordered
 from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.function import Application, Derivative
 from sympy.core.kind import NumberKind
@@ -153,6 +153,7 @@ class Boolean(Basic):
         """
         from sympy.calculus.util import periodicity
         from sympy.core.relational import Relational
+
         free = self.free_symbols
         if len(free) == 1:
             x = free.pop()
@@ -664,9 +665,8 @@ class And(LatticeOp, BooleanFunction):
     """
     Logical AND function.
 
-    It evaluates its arguments in order, giving ``false`` immediately
-    if any of them are ``false`` or ``False``, and ```true`` if they are all
-    ``true`` or ``True``.
+    It evaluates its arguments in order, returning false immediately
+    when an argument is false and true if they are all true.
 
     Examples
     ========
@@ -823,9 +823,8 @@ class Or(LatticeOp, BooleanFunction):
     """
     Logical OR function
 
-    It evaluates its arguments in order, giving ``true`` immediately
-    if any of them are ``true`` or ``True``, and ``false`` if they are all
-    ``false`` or ``False``.
+    It evaluates its arguments in order, returning true immediately
+    when an  argument is true, and false if they are all false.
 
     Examples
     ========
@@ -903,6 +902,12 @@ class Or(LatticeOp, BooleanFunction):
         return Nand(*[Not(arg) for arg in self.args])
 
     def _eval_simplify(self, **kwargs):
+        from sympy.core.relational import Le, Ge, Eq
+        lege = self.atoms(Le, Ge)
+        if lege:
+            reps = {i: self.func(
+                Eq(i.lhs, i.rhs), i.strict) for i in lege}
+            return self.xreplace(reps)._eval_simplify(**kwargs)
         # standard simplify
         rv = super()._eval_simplify(**kwargs)
         if not isinstance(rv, Or):
@@ -1325,7 +1330,7 @@ class Implies(BooleanFunction):
             raise ValueError(
                 "%d operand(s) used for an Implies "
                 "(pairs are required): %s" % (len(args), str(args)))
-        if A == True or A == False or B == True or B == False:
+        if A in (True, False) or B in (True, False):
             return Or(Not(A), B)
         elif A == B:
             return S.true
@@ -2111,32 +2116,7 @@ def term_to_integer(term):
     return int(''.join(list(map(str, list(term)))), 2)
 
 
-def integer_to_term(k, n_bits=None):
-    """
-    Return a list of the base-2 digits in the integer, ``k``.
-
-    Parameters
-    ==========
-
-    k : int
-
-    n_bits : int
-        If ``n_bits`` is given and the number of digits in the binary
-        representation of ``k`` is smaller than ``n_bits`` then left-pad the
-        list with 0s.
-
-    Examples
-    ========
-
-    >>> from sympy.logic.boolalg import integer_to_term
-    >>> integer_to_term(4)
-    [1, 0, 0]
-    >>> integer_to_term(4, 6)
-    [0, 0, 0, 1, 0, 0]
-    """
-
-    s = '{0:0{1}b}'.format(abs(as_int(k)), as_int(abs(n_bits or 0)))
-    return list(map(int, s))
+integer_to_term = ibin  # XXX could delete?
 
 
 def truth_table(expr, variables, input=True):
@@ -2175,7 +2155,7 @@ def truth_table(expr, variables, input=True):
     In this case, the corresponding input values of variables can be
     deduced from the index of a given output.
 
-    >>> from sympy.logic.boolalg import integer_to_term
+    >>> from sympy.utilities.iterables import ibin
     >>> vars = [y, x]
     >>> values = truth_table(x >> y, vars, input=False)
     >>> values = list(values)
@@ -2184,7 +2164,7 @@ def truth_table(expr, variables, input=True):
 
     >>> for i, value in enumerate(values):
     ...     print('{0} -> {1}'.format(list(zip(
-    ...     vars, integer_to_term(i, len(vars)))), value))
+    ...     vars, ibin(i, len(vars)))), value))
     [(y, 0), (x, 0)] -> True
     [(y, 0), (x, 1)] -> False
     [(y, 1), (x, 0)] -> True
@@ -2747,7 +2727,7 @@ def bool_minterm(k, variables):
 
     """
     if isinstance(k, int):
-        k = integer_to_term(k, len(variables))
+        k = ibin(k, len(variables))
     variables = tuple(map(sympify, variables))
     return _convert_to_varsSOP(k, variables)
 
@@ -2783,7 +2763,7 @@ def bool_maxterm(k, variables):
 
     """
     if isinstance(k, int):
-        k = integer_to_term(k, len(variables))
+        k = ibin(k, len(variables))
     variables = tuple(map(sympify, variables))
     return _convert_to_varsPOS(k, variables)
 
@@ -2824,7 +2804,7 @@ def bool_monomial(k, variables):
 
     """
     if isinstance(k, int):
-        k = integer_to_term(k, len(variables))
+        k = ibin(k, len(variables))
     variables = tuple(map(sympify, variables))
     return _convert_to_varsANF(k, variables)
 

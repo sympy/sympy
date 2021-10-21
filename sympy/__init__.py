@@ -60,7 +60,8 @@ from .core import (sympify, SympifyError, cacheit, Basic, Atom,
         expand_func, expand_trig, expand_complex, expand_multinomial, nfloat,
         expand_power_base, expand_power_exp, arity, PrecisionExhausted, N,
         evalf, Tuple, Dict, gcd_terms, factor_terms, factor_nc, evaluate,
-        Catalan, EulerGamma, GoldenRatio, TribonacciConstant)
+        Catalan, EulerGamma, GoldenRatio, TribonacciConstant, bottom_up, use,
+        postorder_traversal)
 
 from .logic import (to_cnf, to_dnf, to_nnf, And, Or, Not, Xor, Nand, Nor,
         Implies, Equivalent, ITE, POSform, SOPform, simplify_logic, bool_map,
@@ -153,8 +154,8 @@ from .discrete import (fft, ifft, ntt, intt, fwht, ifwht, mobius_transform,
         intersecting_product)
 
 from .simplify import (simplify, hypersimp, hypersimilar, logcombine,
-        separatevars, posify, besselsimp, kroneckersimp, signsimp, bottom_up,
-        nsimplify, FU, fu, sqrtdenest, cse, use, epath, EPath, hyperexpand,
+        separatevars, posify, besselsimp, kroneckersimp, signsimp,
+        nsimplify, FU, fu, sqrtdenest, cse, epath, EPath, hyperexpand,
         collect, rcollect, radsimp, collect_const, fraction, numer, denom,
         trigsimp, exptrigsimp, powsimp, powdenest, combsimp, gammasimp,
         ratsimp, ratsimpmodprime)
@@ -199,11 +200,10 @@ from .geometry import (Point, Point2D, Point3D, Line, Ray, Segment, Line2D,
         GeometryError, Curve, Parabola)
 
 from .utilities import (flatten, group, take, subsets, variations,
-        numbered_symbols, cartes, capture, dict_merge, postorder_traversal,
-        interactive_traversal, prefixes, postfixes, sift, topological_sort,
-        unflatten, has_dups, has_variety, reshape, default_sort_key, ordered,
-        rotations, filldedent, lambdify, source, threaded, xthreaded, public,
-        memoize_property, timed)
+        numbered_symbols, cartes, capture, dict_merge, prefixes, postfixes,
+        sift, topological_sort, unflatten, has_dups, has_variety, reshape,
+        default_sort_key, ordered, rotations, filldedent, lambdify, source,
+        threaded, xthreaded, public, memoize_property, timed)
 
 from .integrals import (integrate, Integral, line_integrate, mellin_transform,
         inverse_mellin_transform, MellinTransform, InverseMellinTransform,
@@ -249,7 +249,7 @@ from .testing import test, doctest
 # This module is slow to import:
 #from physics import units
 from .plotting import plot, textplot, plot_backends, plot_implicit, plot_parametric
-from .interactive import init_session, init_printing
+from .interactive import init_session, init_printing, interactive_traversal
 
 evalf._create_evalf_table()
 
@@ -269,7 +269,8 @@ __all__ = [
     'expand_complex', 'expand_multinomial', 'nfloat', 'expand_power_base',
     'expand_power_exp', 'arity', 'PrecisionExhausted', 'N', 'evalf', 'Tuple',
     'Dict', 'gcd_terms', 'factor_terms', 'factor_nc', 'evaluate', 'Catalan',
-    'EulerGamma', 'GoldenRatio', 'TribonacciConstant',
+    'EulerGamma', 'GoldenRatio', 'TribonacciConstant', 'bottom_up', 'use',
+    'postorder_traversal',
 
     # sympy.logic
     'to_cnf', 'to_dnf', 'to_nnf', 'And', 'Or', 'Not', 'Xor', 'Nand', 'Nor',
@@ -379,8 +380,8 @@ __all__ = [
 
     # sympy.simplify
     'simplify', 'hypersimp', 'hypersimilar', 'logcombine', 'separatevars',
-    'posify', 'besselsimp', 'kroneckersimp', 'signsimp', 'bottom_up',
-    'nsimplify', 'FU', 'fu', 'sqrtdenest', 'cse', 'use', 'epath', 'EPath',
+    'posify', 'besselsimp', 'kroneckersimp', 'signsimp',
+    'nsimplify', 'FU', 'fu', 'sqrtdenest', 'cse', 'epath', 'EPath',
     'hyperexpand', 'collect', 'rcollect', 'radsimp', 'collect_const',
     'fraction', 'numer', 'denom', 'trigsimp', 'exptrigsimp', 'powsimp',
     'powdenest', 'combsimp', 'gammasimp', 'ratsimp', 'ratsimpmodprime',
@@ -432,8 +433,7 @@ __all__ = [
 
     # sympy.utilities
     'flatten', 'group', 'take', 'subsets', 'variations', 'numbered_symbols',
-    'cartes', 'capture', 'dict_merge', 'postorder_traversal',
-    'interactive_traversal', 'prefixes', 'postfixes', 'sift',
+    'cartes', 'capture', 'dict_merge', 'prefixes', 'postfixes', 'sift',
     'topological_sort', 'unflatten', 'has_dups', 'has_variety', 'reshape',
     'default_sort_key', 'ordered', 'rotations', 'filldedent', 'lambdify',
     'source', 'threaded', 'xthreaded', 'public', 'memoize_property', 'test',
@@ -485,7 +485,7 @@ __all__ = [
     'plot', 'textplot', 'plot_backends', 'plot_implicit', 'plot_parametric',
 
     # sympy.interactive
-    'init_session', 'init_printing',
+    'init_session', 'init_printing', 'interactive_traversal',
 
     # sympy.testing
     'test', 'doctest',

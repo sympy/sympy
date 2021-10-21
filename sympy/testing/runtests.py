@@ -35,9 +35,9 @@ import stat
 import tempfile
 import warnings
 from contextlib import contextmanager
+from inspect import unwrap
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import (PY3, unwrap)
 from sympy.external import import_module
 
 IS_WINDOWS = (os.name == 'nt')
@@ -124,7 +124,7 @@ def _report_failure(self, out, test, example, got):
     out(self._failure_header(test, example) + s)
 
 
-if PY3 and IS_WINDOWS:
+if IS_WINDOWS:
     DocTestRunner.report_failure = _report_failure  # type: ignore
 
 
@@ -655,7 +655,6 @@ def _get_doctest_blacklist():
         "doc/src/modules/physics/mechanics/autolev_parser.rst",
         "sympy/galgebra.py", # no longer part of SymPy
         "sympy/this.py", # prints text
-        "sympy/physics/gaussopt.py", # raises deprecation warning
         "sympy/matrices/densearith.py", # raises deprecation warning
         "sympy/matrices/densesolve.py", # raises deprecation warning
         "sympy/matrices/densetools.py", # raises deprecation warning
@@ -1056,14 +1055,8 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
                          "relative paths.")
 
     # Relativize the path
-    if not PY3:
-        text, filename = pdoctest._load_testfile(
-            filename, package, module_relative)
-        if encoding is not None:
-            text = text.decode(encoding)
-    else:
-        text, filename = pdoctest._load_testfile(
-            filename, package, module_relative, encoding)
+    text, filename = pdoctest._load_testfile(
+        filename, package, module_relative, encoding)
 
     # If no name was given, then use the file's name.
     if name is None:
@@ -1190,10 +1183,7 @@ class SymPyTests:
         try:
             gl = {'__file__': filename}
             try:
-                if PY3:
-                    open_file = lambda: open(filename, encoding="utf8")
-                else:
-                    open_file = lambda: open(filename)
+                open_file = lambda: open(filename, encoding="utf8")
 
                 with open_file() as f:
                     source = f.read()
@@ -1542,11 +1532,10 @@ class SymPyDocTests:
             tempdir = tempfile.mkdtemp()
             os.environ['PATH'] = '%s:%s' % (tempdir, os.environ['PATH'])
 
-            vw = ('#!/usr/bin/env {}\n'
+            vw = ('#!/usr/bin/env python3\n'
                   'import sys\n'
                   'if len(sys.argv) <= 1:\n'
-                  '    exit("wrong number of args")\n').format(
-                      'python3' if PY3 else 'python')
+                  '    exit("wrong number of args")\n')
 
             for viewer in disable_viewers:
                 with open(os.path.join(tempdir, viewer), 'w') as fh:
@@ -2032,8 +2021,7 @@ class PyTestReporter(Reporter):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
                 stdout = process.stdout.read()
-                if PY3:
-                    stdout = stdout.decode("utf-8")
+                stdout = stdout.decode("utf-8")
             except OSError:
                 pass
             else:
@@ -2137,9 +2125,9 @@ class PyTestReporter(Reporter):
                 sys.stdout.write("\n")
 
         # Avoid UnicodeEncodeError when printing out test failures
-        if PY3 and IS_WINDOWS:
+        if IS_WINDOWS:
             text = text.encode('raw_unicode_escape').decode('utf8', 'ignore')
-        elif PY3 and not sys.stdout.encoding.lower().startswith('utf'):
+        elif not sys.stdout.encoding.lower().startswith('utf'):
             text = text.encode(sys.stdout.encoding, 'backslashreplace'
                               ).decode(sys.stdout.encoding)
 

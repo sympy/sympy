@@ -260,7 +260,7 @@ def _solve_lambert(f, symbol, gens):
         solutions for  ``2*log(-x) + log(g(x))`` since those must also
         be a solution of ``eq`` which has the same value when the ``x``
         in ``x**2`` is negated. If `g(x)` does not have even powers of
-        symbol then we don't want to replace the ``x`` there with
+        symbol then we do not want to replace the ``x`` there with
         ``-x``. So the role of the ``t`` in the expression received by
         this function is to mark where ``+/-x`` should be inserted
         before obtaining the Lambert solutions.

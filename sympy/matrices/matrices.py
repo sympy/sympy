@@ -1,9 +1,10 @@
 import mpmath as mp
+from collections.abc import Callable
+
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import (
-    Callable, NotIterable, as_int, is_sequence)
+from sympy.core.compatibility import NotIterable, as_int, is_sequence
 from sympy.core.decorators import deprecated
 from sympy.core.expr import Expr
 from sympy.core.kind import _NumberKind, UndefinedKind
@@ -791,7 +792,7 @@ class MatrixBase(MatrixDeprecated,
     one = S.One
 
     @property
-    def kind(self):
+    def kind(self) -> MatrixKind:
         elem_kinds = set(e.kind for e in self.flat())
         if len(elem_kinds) == 1:
             elemkind, = elem_kinds
@@ -848,7 +849,7 @@ class MatrixBase(MatrixDeprecated,
                 .multiply(P.inv()))
 
     def __str__(self):
-        if self.rows == 0 or self.cols == 0:
+        if S.Zero in self.shape:
             return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
         return "Matrix(%s)" % str(self.tolist())
 
@@ -857,7 +858,7 @@ class MatrixBase(MatrixDeprecated,
             from sympy.printing.str import StrPrinter
             printer = StrPrinter()
         # Handle zero dimensions:
-        if self.rows == 0 or self.cols == 0:
+        if S.Zero in self.shape:
             return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
         if self.rows == 1:
             return "Matrix([%s])" % self.table(printer, rowsep=',\n')
@@ -1030,7 +1031,7 @@ class MatrixBase(MatrixDeprecated,
                     if isinstance(dat, (list, tuple)):
                         dat = [make_explicit_row(row) for row in dat]
 
-                if dat == [] or dat == [[]]:
+                if dat in ([], [[]]):
                     rows = cols = 0
                     flat_list = []
                 elif not any(raw(i) or ismat(i) for i in dat):
@@ -1952,8 +1953,8 @@ class MatrixBase(MatrixDeprecated,
         """
         # Row or Column Vector Norms
         vals = list(self.values()) or [0]
-        if self.rows == 1 or self.cols == 1:
-            if ord == 2 or ord is None:  # Common case sqrt(<x, x>)
+        if S.One in self.shape:
+            if ord in (2, None):  # Common case sqrt(<x, x>)
                 return sqrt(Add(*(abs(i) ** 2 for i in vals)))
 
             elif ord == 1:  # sum(abs(x))
@@ -2100,7 +2101,7 @@ class MatrixBase(MatrixDeprecated,
         {-33, 4}
         """
         # Handle zero dimensions:
-        if self.rows == 0 or self.cols == 0:
+        if S.Zero in self.shape:
             return '[]'
         # Build table of string representations of the elements
         res = []

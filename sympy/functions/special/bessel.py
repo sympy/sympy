@@ -3,6 +3,7 @@ from functools import wraps
 from sympy.core import S
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
+from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, _mexpand
 from sympy.core.logic import fuzzy_or, fuzzy_not
 from sympy.core.numbers import Rational, pi, I
@@ -19,6 +20,8 @@ from sympy.functions.elementary.complexes import re, im
 from sympy.functions.special.gamma_functions import gamma, digamma, uppergamma
 from sympy.functions.special.hyper import hyper
 from sympy.polys.orthopolys import spherical_bessel_fn
+
+from mpmath import mp, workprec
 
 # TODO
 # o Scorer functions G1 and G2
@@ -184,7 +187,7 @@ class besselj(BesselBase):
                 return S.ComplexInfinity
             elif nu.is_imaginary:
                 return S.NaN
-        if z is S.Infinity or (z is S.NegativeInfinity):
+        if z in (S.Infinity, S.NegativeInfinity):
             return S.Zero
 
         if z.could_extract_minus_sign():
@@ -317,7 +320,7 @@ class bessely(BesselBase):
                 return S.ComplexInfinity
             elif re(nu).is_zero:
                 return S.NaN
-        if z is S.Infinity or z is S.NegativeInfinity:
+        if z in (S.Infinity, S.NegativeInfinity):
             return S.Zero
 
         if nu.is_integer:
@@ -450,7 +453,7 @@ class besseli(BesselBase):
                 return S.ComplexInfinity
             elif nu.is_imaginary:
                 return S.NaN
-        if im(z) is S.Infinity or im(z) is S.NegativeInfinity:
+        if im(z) in (S.Infinity, S.NegativeInfinity):
             return S.Zero
 
         if z.could_extract_minus_sign():
@@ -1603,8 +1606,6 @@ class airyaiprime(AiryBase):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from mpmath import mp, workprec
-        from sympy import Expr
         z = self.args[0]._to_mpmath(prec)
         with workprec(prec):
             res = mp.airyai(z, derivative=1)
@@ -1769,8 +1770,6 @@ class airybiprime(AiryBase):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from mpmath import mp, workprec
-        from sympy import Expr
         z = self.args[0]._to_mpmath(prec)
         with workprec(prec):
             res = mp.airybi(z, derivative=1)

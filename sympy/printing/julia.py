@@ -332,7 +332,7 @@ class JuliaCodePrinter(CodePrinter):
 
     def _print_MatrixBase(self, A):
         # Handle zero dimensions:
-        if A.rows == 0 or A.cols == 0:
+        if S.Zero in A.shape:
             return 'zeros(%s, %s)' % (A.rows, A.cols)
         elif (A.rows, A.cols) == (1, 1):
             return "[%s]" % A[0, 0]
@@ -480,7 +480,7 @@ class JuliaCodePrinter(CodePrinter):
         pretty = []
         level = 0
         for n, line in enumerate(code):
-            if line == '' or line == '\n':
+            if line in ('', '\n'):
                 pretty.append(line)
                 continue
             level -= decrease[n]

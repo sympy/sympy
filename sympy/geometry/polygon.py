@@ -94,7 +94,7 @@ class Polygon(GeometrySet):
     >>> Polygon((0, 2), (2, 2), (0, 0), (2, 0)).area
     0
 
-    When the the keyword `n` is used to define the number of sides of the
+    When the keyword `n` is used to define the number of sides of the
     Polygon then a RegularPolygon is created and the other arguments are
     interpreted as center, radius and rotation. The unrotated RegularPolygon
     will always have a vertex at Point(r, 0) where `r` is the radius of the
@@ -410,7 +410,7 @@ class Polygon(GeometrySet):
         References
         ==========
 
-        https://en.wikipedia.org/wiki/Second_moment_of_area
+        .. [1] https://en.wikipedia.org/wiki/Second_moment_of_area
 
         """
 
@@ -457,8 +457,8 @@ class Polygon(GeometrySet):
         References
         ==========
 
-        https://skyciv.com/docs/tutorials/section-tutorials/calculating-the-statical-or-first-moment-of-area-of-beam-sections/?cc=BMD
-        https://mechanicalc.com/reference/cross-sections
+        .. [1] https://skyciv.com/docs/tutorials/section-tutorials/calculating-the-statical-or-first-moment-of-area-of-beam-sections/?cc=BMD
+        .. [2] https://mechanicalc.com/reference/cross-sections
 
         Parameters
         ==========
@@ -521,11 +521,6 @@ class Polygon(GeometrySet):
         plane perpendicular to the object's central axis (i.e. parallel to
         the cross-section)
 
-        References
-        ==========
-
-        https://en.wikipedia.org/wiki/Polar_moment_of_inertia
-
         Examples
         ========
 
@@ -534,6 +529,12 @@ class Polygon(GeometrySet):
         >>> rectangle = Polygon((0, 0), (a, 0), (a, b), (0, b))
         >>> rectangle.polar_second_moment_of_area()
         a**3*b/12 + a*b**3/12
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Polar_moment_of_inertia
+
         """
         second_moment = self.second_moment_of_area()
         return second_moment[0] + second_moment[1]
@@ -546,11 +547,6 @@ class Polygon(GeometrySet):
         Section modulus is a geometric property of a polygon defined as the
         ratio of second moment of area to the distance of the extreme end of
         the polygon from the centroidal axis.
-
-        References
-        ==========
-
-        https://en.wikipedia.org/wiki/Section_modulus
 
         Parameters
         ==========
@@ -579,6 +575,12 @@ class Polygon(GeometrySet):
         (a*b**2/6, a**2*b/6)
         >>> rectangle.section_modulus(Point(a/4, b/4))
         (-a*b**2/3, -a**2*b/3)
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Section_modulus
+
         """
         x_c, y_c = self.centroid
         if point is None:
@@ -728,7 +730,7 @@ class Polygon(GeometrySet):
         References
         ==========
 
-        [1] http://paulbourke.net/geometry/polygonmesh/#insidepoly
+        .. [1] http://paulbourke.net/geometry/polygonmesh/#insidepoly
 
         """
         p = Point(p, dim=2)
@@ -967,11 +969,6 @@ class Polygon(GeometrySet):
 
         ValueError: When the line does not intersect the polygon
 
-        References
-        ==========
-
-        https://github.com/sympy/sympy/wiki/A-method-to-return-a-cut-section-of-any-polygon-geometry
-
         Examples
         ========
 
@@ -990,6 +987,12 @@ class Polygon(GeometrySet):
         Point2D(10, 15/2)
         >>> lower_segment.centroid
         Point2D(10, 5/2)
+
+        References
+        ==========
+
+        .. [1] https://github.com/sympy/sympy/wiki/A-method-to-return-a-cut-section-of-any-polygon-geometry
+
         """
         intersection_points = self.intersection(line)
         if not intersection_points:
@@ -2634,8 +2637,8 @@ class Triangle(Polygon):
         References
         ==========
 
-        [1] http://mathworld.wolfram.com/Exradius.html
-        [2] http://mathworld.wolfram.com/Excircles.html
+        .. [1] http://mathworld.wolfram.com/Exradius.html
+        .. [2] http://mathworld.wolfram.com/Excircles.html
 
         """
 

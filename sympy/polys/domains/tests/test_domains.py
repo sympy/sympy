@@ -3,7 +3,7 @@
 from sympy import I, S, sqrt, sin, oo, Poly, Float, Integer, Rational, pi, exp, E
 from sympy.abc import x, y, z
 
-from sympy.core.compatibility import HAS_GMPY
+from sympy.external.gmpy import HAS_GMPY
 
 from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, EXRAW, ZZ_gmpy,
     ZZ_python, QQ_gmpy, QQ_python)
@@ -28,7 +28,6 @@ from sympy.polys.polyutils import illegal
 from sympy.testing.pytest import raises
 
 from itertools import product
-
 
 ALG = QQ.algebraic_field(sqrt(2), sqrt(3))
 

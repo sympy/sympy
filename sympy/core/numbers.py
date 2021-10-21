@@ -4,20 +4,21 @@ import fractions
 import math
 import re as regex
 import sys
+from typing import Set
 
 from .containers import Tuple
 from .sympify import (SympifyError, converter, sympify, _convert_numpy_types, _sympify,
                       _is_numpy_instance)
 from .singleton import S, Singleton
+from .basic import Basic
 from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
+from .cache import cacheit, clear_cache, lru_cache
+from .compatibility import as_int
 from .decorators import _sympifyit
-from .cache import cacheit, clear_cache
 from .logic import fuzzy_not
-from sympy.core.compatibility import (as_int, HAS_GMPY, SYMPY_INTS,
-    gmpy)
-from sympy.core.cache import lru_cache
 from .kind import NumberKind
+from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, gmpy
 from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
@@ -542,7 +543,7 @@ def mod_inverse(a, m):
                 similar function,
                 sympy.polys.polytools.invert'''))
         big = (m > 1)
-        if not (big is S.true or big is S.false):
+        if big not in (S.true, S.false):
             raise ValueError('m > 1 did not evaluate; try to simplify %s' % m)
         elif big:
             c = 1/a
@@ -620,6 +621,9 @@ class Number(AtomicExpr):
         msg = "expected str|int|long|float|Decimal|Number object but got %r"
         raise TypeError(msg % type(obj).__name__)
 
+    def could_extract_minus_sign(self):
+        return bool(self.is_extended_negative)
+
     def invert(self, other, *gens, **args):
         from sympy.polys.polytools import invert
         if getattr(other, 'is_number', True):
@@ -691,7 +695,7 @@ class Number(AtomicExpr):
         return self
 
     def _eval_order(self, *symbols):
-        from sympy import Order
+        from sympy.series.order import Order
         # Order(5, x, y) -> Order(1,x,y)
         return Order(S.One, *symbols)
 
@@ -761,7 +765,7 @@ class Number(AtomicExpr):
         if isinstance(other, Number) and global_parameters.evaluate:
             if other is S.NaN:
                 return S.NaN
-            elif other is S.Infinity or other is S.NegativeInfinity:
+            elif other in (S.Infinity, S.NegativeInfinity):
                 return S.Zero
         return AtomicExpr.__truediv__(self, other)
 
@@ -837,17 +841,17 @@ class Number(AtomicExpr):
 
     def gcd(self, other):
         """Compute GCD of `self` and `other`. """
-        from sympy.polys import gcd
+        from sympy.polys.polytools import gcd
         return gcd(self, other)
 
     def lcm(self, other):
         """Compute LCM of `self` and `other`. """
-        from sympy.polys import lcm
+        from sympy.polys.polytools import lcm
         return lcm(self, other)
 
     def cofactors(self, other):
         """Compute GCD and cofactors of `self` and `other`. """
-        from sympy.polys import cofactors
+        from sympy.polys.polytools import cofactors
         return cofactors(self, other)
 
 
@@ -1259,12 +1263,12 @@ class Float(Number):
         return self._mpf_ == fzero
 
     def _eval_is_negative(self):
-        if self._mpf_ == _mpf_ninf or self._mpf_ == _mpf_inf:
+        if self._mpf_ in (_mpf_ninf, _mpf_inf):
             return False
         return self.num < 0
 
     def _eval_is_positive(self):
-        if self._mpf_ == _mpf_ninf or self._mpf_ == _mpf_inf:
+        if self._mpf_ in (_mpf_ninf, _mpf_inf):
             return False
         return self.num > 0
 
@@ -1879,7 +1883,6 @@ class Rational(Number):
         return self.ceiling()
 
     def __eq__(self, other):
-        from sympy.core.power import integer_log
         try:
             other = _sympify(other)
         except SympifyError:
@@ -1911,6 +1914,8 @@ class Rational(Number):
                 if not self.is_Integer or self.is_even:
                     return False
                 return m == self.p
+
+            from .power import integer_log
             if t > 0:
                 # other is an even integer
                 if not self.is_Integer:
@@ -1989,7 +1994,7 @@ class Rational(Number):
         smaller than limit (or cheap to compute). Special methods of
         factoring are disabled by default so that only trial division is used.
         """
-        from sympy.ntheory import factorrat
+        from sympy.ntheory.factor_ import factorrat
 
         return factorrat(self, limit=limit, use_trial=use_trial,
                       use_rho=use_rho, use_pm1=use_pm1,
@@ -2414,7 +2419,7 @@ class Integer(Rational):
         return result
 
     def _eval_is_prime(self):
-        from sympy.ntheory import isprime
+        from sympy.ntheory.primetest import isprime
 
         return isprime(self)
 
@@ -2527,14 +2532,12 @@ class AlgebraicNumber(Expr):
     # Optional alias symbol is not free.
     # Actually, alias should be a Str, but some methods
     # expect that it be an instance of Expr.
-    free_symbols = set()
+    free_symbols: Set[Basic] = set()
 
     def __new__(cls, expr, coeffs=None, alias=None, **args):
         """Construct a new algebraic number. """
-        from sympy import Poly
         from sympy.polys.polyclasses import ANP, DMP
         from sympy.polys.numberfields import minimal_polynomial
-        from sympy.core.symbol import Symbol
 
         expr = sympify(expr)
 
@@ -2542,6 +2545,7 @@ class AlgebraicNumber(Expr):
             minpoly, root = expr
 
             if not minpoly.is_Poly:
+                from sympy.polys.polytools import Poly
                 minpoly = Poly(minpoly)
         elif expr.is_AlgebraicNumber:
             minpoly, root = expr.minpoly, expr.root
@@ -2569,6 +2573,7 @@ class AlgebraicNumber(Expr):
         sargs = (root, scoeffs)
 
         if alias is not None:
+            from .symbol import Symbol
             if not isinstance(alias, Symbol):
                 alias = Symbol(alias)
             sargs = sargs + (alias,)
@@ -2595,13 +2600,14 @@ class AlgebraicNumber(Expr):
 
     def as_poly(self, x=None):
         """Create a Poly instance from ``self``. """
-        from sympy import Dummy, Poly, PurePoly
+        from sympy.polys.polytools import Poly, PurePoly
         if x is not None:
             return Poly.new(self.rep, x)
         else:
             if self.alias is not None:
                 return Poly.new(self.rep, self.alias)
             else:
+                from .symbol import Dummy
                 return PurePoly.new(self.rep, Dummy('x'))
 
     def as_expr(self, x=None):
@@ -2618,7 +2624,8 @@ class AlgebraicNumber(Expr):
 
     def to_algebraic_integer(self):
         """Convert ``self`` to an algebraic integer. """
-        from sympy import Poly
+        from sympy.polys.polytools import Poly
+
         f = self.minpoly
 
         if f.LC() == 1:
@@ -2633,7 +2640,8 @@ class AlgebraicNumber(Expr):
         return AlgebraicNumber((minpoly, root), self.coeffs())
 
     def _eval_simplify(self, **kwargs):
-        from sympy.polys import CRootOf, minpoly
+        from sympy.polys.rootoftools import CRootOf
+        from sympy.polys import minpoly
         measure, ratio = kwargs['measure'], kwargs['ratio']
         for r in [r for r in self.minpoly.all_roots() if r.func != CRootOf]:
             if minpoly(self.root - r).is_Symbol:
@@ -2834,7 +2842,7 @@ class NegativeOne(IntegerConstant, metaclass=Singleton):
                 return Float(-1.0)**expt
             if expt is S.NaN:
                 return S.NaN
-            if expt is S.Infinity or expt is S.NegativeInfinity:
+            if expt in (S.Infinity, S.NegativeInfinity):
                 return S.NaN
             if expt is S.Half:
                 return S.ImaginaryUnit
@@ -2950,7 +2958,7 @@ class Infinity(Number, metaclass=Singleton):
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
-            if other is S.NegativeInfinity or other is S.NaN:
+            if other in (S.NegativeInfinity, S.NaN):
                 return S.NaN
             return self
         return Number.__add__(self, other)
@@ -2959,7 +2967,7 @@ class Infinity(Number, metaclass=Singleton):
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
-            if other is S.Infinity or other is S.NaN:
+            if other in (S.Infinity, S.NaN):
                 return S.NaN
             return self
         return Number.__sub__(self, other)
@@ -3015,8 +3023,6 @@ class Infinity(Number, metaclass=Singleton):
         NegativeInfinity
 
         """
-        from sympy.functions import re
-
         if expt.is_extended_positive:
             return S.Infinity
         if expt.is_extended_negative:
@@ -3026,6 +3032,7 @@ class Infinity(Number, metaclass=Singleton):
         if expt is S.ComplexInfinity:
             return S.NaN
         if expt.is_extended_real is False and expt.is_number:
+            from sympy.functions.elementary.complexes import re
             expt_real = re(expt)
             if expt_real.is_positive:
                 return S.ComplexInfinity
@@ -3112,7 +3119,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
-            if other is S.Infinity or other is S.NaN:
+            if other in (S.Infinity, S.NaN):
                 return S.NaN
             return self
         return Number.__add__(self, other)
@@ -3121,7 +3128,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
     @_sympifyit('other', NotImplemented)
     def __sub__(self, other):
         if isinstance(other, Number) and global_parameters.evaluate:
-            if other is S.NegativeInfinity or other is S.NaN:
+            if other in (S.NegativeInfinity, S.NaN):
                 return S.NaN
             return self
         return Number.__sub__(self, other)
@@ -3546,20 +3553,20 @@ class Exp1(NumberSymbol, metaclass=Singleton):
             pass
 
     def _eval_power(self, expt):
-        from sympy import exp
         if global_parameters.exp_is_pow:
             return self._eval_power_exp_is_pow(expt)
         else:
+            from sympy.functions.elementary.exponential import exp
             return exp(expt)
 
     def _eval_power_exp_is_pow(self, arg):
-        from ..functions.elementary.exponential import log
         if arg.is_Number:
             if arg is oo:
                 return oo
             elif arg == -oo:
                 return S.Zero
-        elif isinstance(arg, log):
+        from sympy.functions.elementary.exponential import log
+        if isinstance(arg, log):
             return arg.args[0]
 
         # don't autoexpand Pow or Mul (see the issue 3351):
@@ -3633,11 +3640,11 @@ class Exp1(NumberSymbol, metaclass=Singleton):
             return arg.exp()
 
     def _eval_rewrite_as_sin(self, **kwargs):
-        from sympy import sin
+        from sympy.functions.elementary.trigonometric import sin
         return sin(I + S.Pi/2) - I*sin(I)
 
     def _eval_rewrite_as_cos(self, **kwargs):
-        from sympy import cos
+        from sympy.functions.elementary.trigonometric import cos
         return cos(I) + I*cos(I + S.Pi/2)
 
 E = S.Exp1
@@ -3762,7 +3769,7 @@ class GoldenRatio(NumberSymbol, metaclass=Singleton):
         return mpf_norm(rv, prec)
 
     def _eval_expand_func(self, **hints):
-        from sympy import sqrt
+        from sympy.functions.elementary.miscellaneous import sqrt
         return S.Half + S.Half*sqrt(5)
 
     def approximation_interval(self, number_cls):
@@ -3832,7 +3839,7 @@ class TribonacciConstant(NumberSymbol, metaclass=Singleton):
         return Float(rv, precision=prec)
 
     def _eval_expand_func(self, **hints):
-        from sympy import sqrt, cbrt
+        from sympy.functions.elementary.miscellaneous import cbrt, sqrt
         return (1 + cbrt(19 - 3*sqrt(33)) + cbrt(19 + 3*sqrt(33))) / 3
 
     def approximation_interval(self, number_cls):
@@ -3955,9 +3962,10 @@ class Catalan(NumberSymbol, metaclass=Singleton):
             return (Rational(9, 10, 1), S.One)
 
     def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None):
-        from sympy import Sum, Dummy
         if (k_sym is not None) or (symbols is not None):
             return self
+        from .symbol import Dummy
+        from sympy.concrete.summations import Sum
         k = Dummy('k', integer=True, nonnegative=True)
         return Sum((-1)**k / (2*k+1)**2, (k, 0, S.Infinity))
 

@@ -2256,7 +2256,7 @@ def cornacchia(a, b, m):
     ===========
 
     Uses the algorithm due to Cornacchia. The method only finds primitive
-    solutions, i.e. ones with `\gcd(x, y) = 1`. So this method can't be used to
+    solutions, i.e. ones with `\gcd(x, y) = 1`. So this method cannot be used to
     find the solutions of `x^2 + y^2 = 20` since the only solution to former is
     `(x, y) = (4, 2)` and it is not primitive. When `a = b`, only the
     solutions with `x \leq y` are found. For more details, see the References.
@@ -3715,7 +3715,7 @@ def sum_of_three_squares(n):
                 return _sorted_tuple(2**v*x, 2**v*(y + z), 2**v*abs(y - z))
         return
 
-    if n % 8 == 2 or n % 8 == 6:
+    if n % 8 in (2, 6):
         s = s if _odd(s) else s - 1
     else:
         s = s - 1 if _odd(s) else s
@@ -3767,7 +3767,7 @@ def sum_of_four_squares(n):
     if n % 8 == 7:
         d = 2
         n = n - 4
-    elif n % 8 == 6 or n % 8 == 2:
+    elif n % 8 in (2, 6):
         d = 1
         n = n - 1
     else:
@@ -3954,9 +3954,9 @@ def sum_of_squares(n, k, zeros=False):
 
 def _can_do_sum_of_squares(n, k):
     """Return True if n can be written as the sum of k squares,
-    False if it can't, or 1 if ``k == 2`` and ``n`` is prime (in which
+    False if it cannot, or 1 if ``k == 2`` and ``n`` is prime (in which
     case it *can* be written as a sum of two squares). A False
-    is returned only if it can't be written as ``k``-squares, even
+    is returned only if it cannot be written as ``k``-squares, even
     if 0s are allowed.
     """
     if k < 1:

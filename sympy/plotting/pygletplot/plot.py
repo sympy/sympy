@@ -7,8 +7,9 @@ except ImportError:
     raise ImportError("pyglet is required for plotting.\n "
                       "visit http://www.pyglet.org/")
 
-from sympy.core.compatibility import is_sequence, SYMPY_INTS
+from sympy.core.compatibility import is_sequence
 from sympy.core.numbers import Integer
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.geometry.entity import GeometryEntity
 from sympy.plotting.pygletplot.plot_axes import PlotAxes
 from sympy.plotting.pygletplot.plot_mode import PlotMode

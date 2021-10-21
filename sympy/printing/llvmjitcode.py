@@ -449,7 +449,7 @@ def llvm_callable(args, expr, callback_type=None):
         for _ in args:
             arg_ctype = ctypes.c_double
             arg_ctypes.append(arg_ctype)
-    elif callback_type == 'scipy.integrate' or callback_type == 'scipy.integrate.test':
+    elif callback_type in ('scipy.integrate', 'scipy.integrate.test'):
         signature.ret_type = ctypes.c_double
         arg_ctypes = [ctypes.c_int, ctypes.POINTER(ctypes.c_double)]
         arg_ctypes_formal = [ctypes.c_int, ctypes.c_double]

@@ -210,7 +210,7 @@ hint=your_hint)``, and also test the solution using
 :py:meth:`~sympy.solvers.ode.checkodesol` (you can put these in a separate
 tests and skip/XFAIL if it runs too slow/doesn't work).  Be sure to call your
 hint specifically in :py:meth:`~sympy.solvers.ode.dsolve`, that way the test
-won't be broken simply by the introduction of another matching hint.  If your
+will not be broken simply by the introduction of another matching hint.  If your
 method works for higher order (>1) ODEs, you will need to run ``sol =
 constant_renumber(sol, 'C', 1, order)`` for each solution, where ``order`` is
 the order of the ODE.  This is because ``constant_renumber`` renumbers the
@@ -239,6 +239,7 @@ from sympy.core.numbers import NaN, zoo, Number
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
+from sympy.core.traversal import preorder_traversal
 
 from sympy.logic.boolalg import (BooleanAtom, BooleanTrue,
                                 BooleanFalse)
@@ -885,7 +886,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
 
     ``subs``
 
-        If a hints has the word ``subs`` in it, it means the the ODE is solved
+        If a hints has the word ``subs`` in it, it means that the ODE is solved
         by substituting the expression given after the word ``subs`` for a
         single dummy variable.  This is usually in terms of ``indep`` and
         ``dep`` as above.  The substituted expression will be written only in
@@ -931,7 +932,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
     >>> classify_ode(f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 4)
-    ('nth_linear_constant_coeff_undetermined_coefficients',
+    ('factorable', 'nth_linear_constant_coeff_undetermined_coefficients',
     'nth_linear_constant_coeff_variation_of_parameters',
     'nth_linear_constant_coeff_variation_of_parameters_Integral')
 
@@ -1821,8 +1822,6 @@ def ode_sol_simplicity(sol, func, trysolving=True):
 
 
 def _extract_funcs(eqs):
-    from sympy.core.basic import preorder_traversal
-
     funcs = []
     for eq in eqs:
         derivs = [node for node in preorder_traversal(eq) if isinstance(node, Derivative)]
@@ -2609,7 +2608,7 @@ def _remove_redundant_solutions(eq, solns, order, var):
     There are two ways to find solutions to eq. The first is to solve f(x).diff(x, 2) = 0
     leading to solution f(x)=C1 + C2*x. The second is to solve the equation f(x).diff(x) = 0
     leading to the solution f(x) = C1. In this particular case we then see
-    that the second solution is a special case of the first and we don't
+    that the second solution is a special case of the first and we do not
     want to return it.
 
     This does not always happen. If we have

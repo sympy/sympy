@@ -16,6 +16,22 @@ from .kind import UndefinedKind
 _args_sortkey = cmp_to_key(Basic.compare)
 
 
+def _could_extract_minus_sign(expr):
+    # assume expr is Add-like
+    # We choose the one with less arguments with minus signs
+    negative_args = sum(1 for i in expr.args
+        if i.could_extract_minus_sign())
+    positive_args = len(expr.args) - negative_args
+    if positive_args > negative_args:
+        return False
+    elif positive_args < negative_args:
+        return True
+    # choose based on .sort_key() to prefer
+    # x - 1 instead of 1 - x and
+    # 3 - sqrt(2) instead of -3 + sqrt(2)
+    return bool(expr.sort_key() < (-expr).sort_key())
+
+
 def _addsort(args):
     # in-place sorting of args
     args.sort(key=_args_sortkey)
@@ -136,7 +152,7 @@ class Add(Expr, AssocOp):
     >>> type(expr)
     <class 'sympy.matrices.expressions.matadd.MatAdd'>
 
-    Note that the printers don't display in args order.
+    Note that the printers do not display in args order.
 
     >>> Add(x, 1)
     x + 1
@@ -387,6 +403,9 @@ class Add(Expr, AssocOp):
             result, = kinds
         return result
 
+    def could_extract_minus_sign(self):
+        return _could_extract_minus_sign(self)
+
     def as_coefficients_dict(a):
         """Return a dictionary mapping terms to their Rational coefficient.
         Since the dictionary is a defaultdict, inquiries about terms which
@@ -458,18 +477,17 @@ class Add(Expr, AssocOp):
 
     def _eval_power(self, e):
         if e.is_Rational and self.is_number:
-            from sympy.core.evalf import pure_complex
-            from sympy.core.mul import _unevaluated_Mul
-            from sympy.core.exprtools import factor_terms
-            from sympy.core.function import expand_multinomial
-            from sympy.functions.elementary.complexes import sign
-            from sympy.functions.elementary.miscellaneous import sqrt
+            from .evalf import pure_complex
             ri = pure_complex(self)
             if ri:
                 r, i = ri
                 if e.q == 2:
+                    from sympy.functions.elementary.miscellaneous import sqrt
                     D = sqrt(r**2 + i**2)
                     if D.is_Rational:
+                        from .exprtools import factor_terms
+                        from sympy.functions.elementary.complexes import sign
+                        from .function import expand_multinomial
                         # (r, i, D) is a Pythagorean triple
                         root = sqrt(factor_terms((D - r)/2))**e.p
                         return root*expand_multinomial((
@@ -519,9 +537,9 @@ class Add(Expr, AssocOp):
         returns 0, instead of a nan.
         """
         from sympy.simplify.simplify import signsimp
-        from sympy.core.symbol import Dummy
         inf = (S.Infinity, S.NegativeInfinity)
         if lhs.has(*inf) or rhs.has(*inf):
+            from .symbol import Dummy
             oo = Dummy('oo')
             reps = {
                 S.Infinity: oo,
@@ -703,7 +721,7 @@ class Add(Expr, AssocOp):
                 return
         if z == len(self.args):
             return True
-        if len(nz) == 0 or len(nz) == len(self.args):
+        if len(nz) in [0, len(self.args)]:
             return None
         b = self.func(*nz)
         if b.is_zero:
@@ -736,11 +754,11 @@ class Add(Expr, AssocOp):
         return False
 
     def _eval_is_extended_positive(self):
-        from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
             return super()._eval_is_extended_positive()
         c, a = self.as_coeff_Add()
         if not c.is_zero:
+            from .exprtools import _monotonic_sign
             v = _monotonic_sign(a)
             if v is not None:
                 s = v + c
@@ -790,10 +808,10 @@ class Add(Expr, AssocOp):
             return False
 
     def _eval_is_extended_nonnegative(self):
-        from sympy.core.exprtools import _monotonic_sign
         if not self.is_number:
             c, a = self.as_coeff_Add()
             if not c.is_zero and a.is_extended_nonnegative:
+                from .exprtools import _monotonic_sign
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
@@ -805,10 +823,10 @@ class Add(Expr, AssocOp):
                             return True
 
     def _eval_is_extended_nonpositive(self):
-        from sympy.core.exprtools import _monotonic_sign
         if not self.is_number:
             c, a = self.as_coeff_Add()
             if not c.is_zero and a.is_extended_nonpositive:
+                from .exprtools import _monotonic_sign
                 v = _monotonic_sign(a)
                 if v is not None:
                     s = v + c
@@ -820,11 +838,11 @@ class Add(Expr, AssocOp):
                             return True
 
     def _eval_is_extended_negative(self):
-        from sympy.core.exprtools import _monotonic_sign
         if self.is_number:
             return super()._eval_is_extended_negative()
         c, a = self.as_coeff_Add()
         if not c.is_zero:
+            from .exprtools import _monotonic_sign
             v = _monotonic_sign(a)
             if v is not None:
                 s = v + c
@@ -936,7 +954,7 @@ class Add(Expr, AssocOp):
         ((x, O(x)),)
 
         """
-        from sympy import Order
+        from sympy.series.order import Order
         lst = []
         symbols = list(symbols if is_sequence(symbols) else [symbols])
         if not point:
@@ -981,7 +999,10 @@ class Add(Expr, AssocOp):
         return (self.func(*re_part), self.func(*im_part))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import expand_mul, Order, Piecewise, piecewise_fold, log
+        from sympy.series.order import Order
+        from sympy.functions.elementary.exponential import log
+        from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
+        from .function import expand_mul
 
         old = self
 
@@ -1202,7 +1223,7 @@ class Add(Expr, AssocOp):
 
     @property
     def _sorted_args(self):
-        from sympy.core.compatibility import default_sort_key
+        from .compatibility import default_sort_key
         return tuple(sorted(self.args, key=default_sort_key))
 
     def _eval_difference_delta(self, n, step):
@@ -1214,10 +1235,10 @@ class Add(Expr, AssocOp):
         """
         Convert self to an mpmath mpc if possible
         """
-        from sympy.core.numbers import I, Float
+        from .numbers import Float
         re_part, rest = self.as_coeff_Add()
         im_part, imag_unit = rest.as_coeff_Mul()
-        if not imag_unit == I:
+        if not imag_unit == S.ImaginaryUnit:
             # ValueError may seem more reasonable but since it's a @property,
             # we need to use AttributeError to keep from confusing things like
             # hasattr.
@@ -1232,5 +1253,5 @@ class Add(Expr, AssocOp):
 
 add = AssocOpDispatcher('add')
 
-from .mul import Mul, _keep_coeff, prod
-from sympy.core.numbers import Rational
+from .mul import Mul, _keep_coeff, prod, _unevaluated_Mul
+from .numbers import Rational

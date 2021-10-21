@@ -445,7 +445,7 @@ class AssignmentBase(Basic):
             if not rhs_is_mat:
                 raise ValueError("Cannot assign a scalar to a matrix.")
             elif lhs.shape != rhs.shape:
-                raise ValueError("Dimensions of lhs and rhs don't align.")
+                raise ValueError("Dimensions of lhs and rhs do not align.")
         elif rhs_is_mat and not lhs_is_mat:
             raise ValueError("Cannot assign a matrix to a scalar.")
 

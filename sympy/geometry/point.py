@@ -475,7 +475,8 @@ class Point(GeometryEntity):
         Point2D(0.5, 1.5)
 
         """
-        coords = [x.evalf(n=prec_to_dps(prec), **options) for x in self.args]
+        dps = prec_to_dps(prec)
+        coords = [x.evalf(n=dps, **options) for x in self.args]
         return Point(*coords, evaluate=False)
 
     def intersection(self, other):
@@ -633,7 +634,7 @@ class Point(GeometryEntity):
             rv = (x1*y2 - x2*y1).equals(0)
             if rv is None:
                 raise Undecidable(filldedent(
-                    '''can't determine if %s is a scalar multiple of
+                    '''Cannot determine if %s is a scalar multiple of
                     %s''' % (s, o)))
 
         # if the vectors p1 and p2 are linearly dependent, then they must

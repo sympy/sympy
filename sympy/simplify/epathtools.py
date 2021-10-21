@@ -52,7 +52,7 @@ class EPath:
             index = 0
 
             for c in selector:
-                if c.isalnum() or c == '_' or c == '|' or c == '?':
+                if c.isalnum() or c in ('_', '|', '?'):
                     index += 1
                 else:
                     break

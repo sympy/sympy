@@ -12,7 +12,7 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.shor import Qubit
 from sympy.testing.pytest import raises
 from sympy.physics.quantum.density import Density
-from sympy.core.trace import Tr
+from sympy.physics.quantum.trace import Tr
 
 x, y = symbols('x,y')
 

@@ -11,6 +11,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import igcd, ilcm
 from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality
 from sympy.core.symbol import Dummy, symbols, Wild
+from sympy.core.traversal import postorder_traversal
 from sympy.functions.combinatorial.factorials import factorial, rf
 from sympy.functions.elementary.complexes import (re, arg, Abs, polar_lift,
                                                   periodic_argument)
@@ -137,7 +138,7 @@ class IntegralTransform(Function):
         Standard hints are the following:
 
         - ``simplify``: whether or not to simplify the result
-        - ``noconds``: if True, don't return convergence conditions
+        - ``noconds``: if True, do not return convergence conditions
         - ``needeval``: if True, raise IntegralTransformError instead of
                         returning IntegralTransform objects
 
@@ -841,7 +842,6 @@ class InverseMellinTransform(IntegralTransform):
         return a, b
 
     def _compute_transform(self, F, s, x, **hints):
-        from sympy.utilities.iterables import postorder_traversal
         global _allowed
         if _allowed is None:
             _allowed = {
@@ -994,12 +994,12 @@ def _simplifyconds(expr, s, a):
 
     def replue(x, y):
         b = bigger(x, y)
-        if b == True or b == False:
+        if b in (True, False):
             return True
         return Unequality(x, y)
 
     def repl(ex, *args):
-        if ex == True or ex == False:
+        if ex in (True, False):
             return bool(ex)
         return ex.replace(*args)
     from sympy.simplify.radsimp import collect_abs
@@ -1123,7 +1123,7 @@ def _laplace_transform(f, t, s_, simplify=True):
     conds = list(ordered(conds2))
 
     def cnt(expr):
-        if expr == True or expr == False:
+        if expr in (True, False):
             return 0
         return expr.count_ops()
     conds.sort(key=lambda x: (-x[0], cnt(x[1])))

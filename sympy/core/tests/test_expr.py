@@ -1250,6 +1250,11 @@ def test_as_coeff_exponent():
 
 
 def test_extractions():
+    for base in (2, S.Exp1):
+        assert Pow(base**x, 3, evaluate=False
+            ).extract_multiplicatively(base**x) == base**(2*x)
+        assert (base**(5*x)).extract_multiplicatively(
+            base**(3*x)) == base**(2*x)
     assert ((x*y)**3).extract_multiplicatively(x**2 * y) == x*y**2
     assert ((x*y)**3).extract_multiplicatively(x**4 * y) is None
     assert (2*x).extract_multiplicatively(2) == x
@@ -1309,12 +1314,10 @@ def test_extractions():
         (-x + y).could_extract_minus_sign()
     assert (1 - x - y).could_extract_minus_sign() is True
     assert (1 - x + y).could_extract_minus_sign() is False
-    assert ((-x - x*y)/y).could_extract_minus_sign() is True
-    assert (-(x + x*y)/y).could_extract_minus_sign() is True
+    assert ((-x - x*y)/y).could_extract_minus_sign() is False
     assert ((x + x*y)/(-y)).could_extract_minus_sign() is True
     assert ((x + x*y)/y).could_extract_minus_sign() is False
-    assert (x*(-x - x**3)).could_extract_minus_sign() is True
-    assert ((-x - y)/(x + y)).could_extract_minus_sign() is True
+    assert ((-x - y)/(x + y)).could_extract_minus_sign() is False
 
     class sign_invariant(Function, Expr):
         nargs = 1
@@ -1323,13 +1326,12 @@ def test_extractions():
     foo = sign_invariant(x)
     assert foo == -foo
     assert foo.could_extract_minus_sign() is False
-    # The results of each of these will vary on different machines, e.g.
-    # the first one might be False and the other (then) is true or vice versa,
-    # so both are included.
-    assert ((-x - y)/(x - y)).could_extract_minus_sign() is False or \
-           ((-x - y)/(y - x)).could_extract_minus_sign() is False
     assert (x - y).could_extract_minus_sign() is False
     assert (-x + y).could_extract_minus_sign() is True
+    assert (x - 1).could_extract_minus_sign() is False
+    assert (1 - x).could_extract_minus_sign() is True
+    assert (sqrt(2) - 1).could_extract_minus_sign() is True
+    assert (1 - sqrt(2)).could_extract_minus_sign() is False
     # check that result is canonical
     eq = (3*x + 15*y).extract_multiplicatively(3)
     assert eq.args == eq.func(*eq.args).args

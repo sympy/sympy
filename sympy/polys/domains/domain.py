@@ -4,8 +4,9 @@
 from typing import Any, Optional, Type
 
 from sympy.core import Basic, sympify
-from sympy.core.compatibility import HAS_GMPY, is_sequence, ordered
+from sympy.core.compatibility import is_sequence, ordered
 from sympy.core.decorators import deprecated
+from sympy.external.gmpy import HAS_GMPY
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
@@ -64,7 +65,7 @@ class Domain:
     operations ``+,-,*,**`` and depending on the domain some combination of
     ``/,//,%`` might be usable. For example in :ref:`ZZ` both ``//`` (floor
     division) and ``%`` (modulo division) can be used but ``/`` (true
-    division) can not. Since :ref:`QQ` is a :py:class:`~.Field` its elements
+    division) cannot. Since :ref:`QQ` is a :py:class:`~.Field` its elements
     can be used with ``/`` but ``//`` and ``%`` should not be used. Some
     domains have a :py:meth:`~.Domain.gcd` method.
 
@@ -405,18 +406,21 @@ class Domain:
             if result is not None:
                 return result
 
-        raise CoercionFailed("can't convert %s of type %s from %s to %s" % (element, type(element), base, self))
+        raise CoercionFailed("Cannot convert %s of type %s from %s to %s" % (element, type(element), base, self))
 
     def convert(self, element, base=None):
         """Convert ``element`` to ``self.dtype``. """
-        if _not_a_coeff(element):
-            raise CoercionFailed('%s is not in any domain' % element)
 
         if base is not None:
+            if _not_a_coeff(element):
+                raise CoercionFailed('%s is not in any domain' % element)
             return self.convert_from(element, base)
 
         if self.of_type(element):
             return element
+
+        if _not_a_coeff(element):
+            raise CoercionFailed('%s is not in any domain' % element)
 
         from sympy.polys.domains import ZZ, QQ, RealField, ComplexField
 
@@ -464,7 +468,7 @@ class Domain:
                 except (TypeError, ValueError):
                     pass
 
-        raise CoercionFailed("can't convert %s of type %s to %s" % (element, type(element), self))
+        raise CoercionFailed("Cannot convert %s of type %s to %s" % (element, type(element), self))
 
     def of_type(self, element):
         """Check if ``a`` is of type ``dtype``. """
@@ -676,7 +680,7 @@ class Domain:
 
     def unify_with_symbols(K0, K1, symbols):
         if (K0.is_Composite and (set(K0.symbols) & set(symbols))) or (K1.is_Composite and (set(K1.symbols) & set(symbols))):
-            raise UnificationFailed("can't unify %s with %s, given %s generators" % (K0, K1, tuple(symbols)))
+            raise UnificationFailed("Cannot unify %s with %s, given %s generators" % (K0, K1, tuple(symbols)))
 
         return K0.unify(K1)
 
@@ -883,7 +887,7 @@ class Domain:
 
     def algebraic_field(self, *extension):
         r"""Returns an algebraic field, i.e. `K(\alpha, \ldots)`. """
-        raise DomainError("can't create algebraic field over %s" % self)
+        raise DomainError("Cannot create algebraic field over %s" % self)
 
     def inject(self, *symbols):
         """Inject generators into this domain. """

@@ -715,3 +715,8 @@ def test_issue_19113():
 
 def test_issue_17454():
     assert roots([1, -3*(-4 - 4*I)**2/8 + 12*I, 0], multiple=True) == [0, 0]
+
+
+def test_issue_20913():
+    assert Poly(x + 9671406556917067856609794, x).real_roots() == [-9671406556917067856609794]
+    assert Poly(x**3 + 4, x).real_roots() == [-2**(S(2)/3)]

@@ -90,6 +90,7 @@ def test_cse_single2():
     subst_half, (red_half,) = cse(0.5)  # issue 15082
     assert len(subst_half) == 0 and red_half == 0.5
 
+
 def test_cse_not_possible():
     # No substitution possible.
     e = Add(x, y)
@@ -127,6 +128,8 @@ def test_subtraction_opt():
     e = n/x/(-n)**2 - 1/n/x
     assert cse(e, optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)]) == \
         ([], [0])
+    assert cse(((w + x + y + z)*(w - y - z))/(w + x)**3) == \
+        ([(x0, w + x), (x1, y + z)], [(w - x1)*(x0 + x1)/x0**3])
 
 
 def test_multiple_expressions():
@@ -292,11 +295,11 @@ def test_issue_4499():
         -2*a))
     c = cse(t)
     ans = (
-        [(x0, 2*a), (x1, -b), (x2, x0 + x1), (x3, x2 + 1), (x4, sqrt(z)), (x5,
-        B(b - 1, x4)), (x6, -x0), (x7, (x4/2)**(x6 + 1)*G(b)*G(x3)), (x8,
-        x7*B(x2, x4)), (x9, B(b, x4)), (x10, x7*B(x3, x4))],
-        [(a, a + S.Half, x0, b, x3, x5*x8, x4*x8*x9, x10*x4*x5, x10*x9,
-        1, 0, S.Half, z/2, x1 + 1, b + x6, x6)])
+        [(x0, 2*a), (x1, -b + x0), (x2, x1 + 1), (x3, b - 1), (x4, sqrt(z)),
+         (x5, B(x3, x4)), (x6, (x4/2)**(1 - x0)*G(b)*G(x2)), (x7, x6*B(x1, x4)),
+         (x8, B(b, x4)), (x9, x6*B(x2, x4))],
+        [(a, a + S.Half, x0, b, x2, x5*x7, x4*x7*x8, x4*x5*x9, x8*x9,
+          1, 0, S.Half, z/2, -x3, -x1, -x0)])
     assert ans == c
 
 
@@ -344,11 +347,12 @@ def test_cse_MatrixExpr():
     replacements, reduced_exprs = cse([A**2, A + A**2])
     assert replacements
 
+
 def test_Piecewise():
     f = Piecewise((-z + x*y, Eq(y, 0)), (-z - x*y, True))
     ans = cse(f)
-    actual_ans = ([(x0, -z), (x1, x*y)],
-        [Piecewise((x0 + x1, Eq(y, 0)), (x0 - x1, True))])
+    actual_ans = ([(x0, x*y)],
+        [Piecewise((x0 - z, Eq(y, 0)), (-z - x0, True))])
     assert ans == actual_ans
 
 

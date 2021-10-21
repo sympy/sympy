@@ -146,7 +146,7 @@ def replace_subcircuit(circuit, subcircuit, replace=None, pos=0):
 
     If multiple instances of subcircuit exists, the first instance is
     replaced.  The position to being searching from (if different from
-    0) may be optionally given.  If subcircuit can't be found, circuit
+    0) may be optionally given.  If subcircuit cannot be found, circuit
     is returned.
 
     Parameters

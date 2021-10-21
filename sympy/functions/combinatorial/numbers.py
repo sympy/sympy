@@ -11,11 +11,12 @@ from typing import Callable, Dict
 
 from sympy.core import S, Symbol, Rational, Integer, Add, Dummy
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import as_int, SYMPY_INTS
+from sympy.core.compatibility import as_int
 from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import E, pi
 from sympy.core.relational import LessThan, StrictGreaterThan
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
@@ -789,7 +790,7 @@ class harmonic(Function):
     >>> limit(harmonic(n, 3), n, oo)
     -polygamma(2, 1)/2
 
-    However we can not compute the general relation yet:
+    However we cannot compute the general relation yet:
 
     >>> limit(harmonic(n, m), n, oo)
     harmonic(oo, m)
@@ -1884,7 +1885,7 @@ def _nT(n, k):
     # really quick exits
     if k > n or k < 0:
         return 0
-    if k == n or k == 1:
+    if k in (1, n):
         return 1
     if k == 0:
         return 0
@@ -2095,7 +2096,7 @@ class motzkin(Function):
         except ValueError:
             return False
         if n > 0:
-             if n == 1 or n == 2:
+             if n in (1, 2):
                 return True
 
              tn1 = 1

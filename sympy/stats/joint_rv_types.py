@@ -88,7 +88,7 @@ def JointRV(symbol, pdf, _set=None):
     as the first argument
 
     NOTE: As of now, the set for each component for a `JointRV` is
-    equal to the set of all integers, which can not be changed.
+    equal to the set of all integers, which cannot be changed.
 
     Examples
     ========
@@ -208,7 +208,7 @@ def MultivariateNormal(name, mu, sigma):
     The example below shows that it is also possible to use
     symbolic parameters to define the MultivariateNormal class.
 
-    >>> n = symbols('n', natural=True)
+    >>> n = symbols('n', integer=True, positive=True)
     >>> Sg = MatrixSymbol('Sg', n, n)
     >>> mu = MatrixSymbol('mu', n, 1)
     >>> obs = MatrixSymbol('obs', n, 1)

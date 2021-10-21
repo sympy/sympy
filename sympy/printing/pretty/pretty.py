@@ -2,7 +2,6 @@ import itertools
 
 from sympy.core import S
 from sympy.core.containers import Tuple
-from sympy.core.function import _coeff_isneg
 from sympy.core.mul import Mul
 from sympy.core.numbers import Number, Rational
 from sympy.core.power import Pow
@@ -571,7 +570,7 @@ class PrettyPrinter(Printer):
                 if not wid or len(s) > wid:
                     return s
                 need = wid - len(s)
-                if how == '<^>' or how == "<" or how not in list('<^>'):
+                if how in ('<^>', "<") or how not in list('<^>'):
                     return s + ' '*need
                 half = need//2
                 lead = ' '*half
@@ -864,7 +863,7 @@ class PrettyPrinter(Printer):
                 s = pform     # First element
             else:
                 coeff = item.as_coeff_mmul()[0]
-                if _coeff_isneg(S(coeff)):
+                if S(coeff).could_extract_minus_sign():
                     s = prettyForm(*stringPict.next(s, ' '))
                     pform = self._print(item)
                 else:
@@ -1863,7 +1862,7 @@ class PrettyPrinter(Printer):
             return prettyForm(binding=prettyForm.NEG, *p)
 
         for i, term in enumerate(terms):
-            if term.is_Mul and _coeff_isneg(term):
+            if term.is_Mul and term.could_extract_minus_sign():
                 coeff, other = term.as_coeff_mul(rational=False)
                 if coeff == -1:
                     negterm = Mul(*other, evaluate=False)

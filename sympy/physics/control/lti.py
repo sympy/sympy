@@ -1,3 +1,5 @@
+from typing import Type
+
 from sympy import Basic, Add, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots
 from sympy.core.containers import Tuple
 from sympy.core.evalf import EvalfMixin, prec_to_dps
@@ -25,6 +27,9 @@ def _roots(poly, var):
 
 class LinearTimeInvariant(Basic, EvalfMixin):
     """A common class for all the Linear Time-Invariant Dynamical Systems."""
+
+    _clstype: Type
+
     # Users should not directly interact with this class.
     def __new__(cls, *system, **kwargs):
         if cls is LinearTimeInvariant:
@@ -275,7 +280,7 @@ class TransferFunction(SISOLinearTimeInvariant):
             raise TypeError("Variable input must be a Symbol.")
 
         if den == 0:
-            raise ValueError("TransferFunction can't have a zero denominator.")
+            raise ValueError("TransferFunction cannot have a zero denominator.")
 
         if (((isinstance(num, Expr) and num.has(Symbol)) or num.is_number) and
             ((isinstance(den, Expr) and den.has(Symbol)) or den.is_number)):
@@ -363,7 +368,7 @@ class TransferFunction(SISOLinearTimeInvariant):
 
         _num, _den = expr.as_numer_denom()
         if _den == 0 or _num.has(ComplexInfinity):
-            raise ZeroDivisionError("TransferFunction can't have a zero denominator.")
+            raise ZeroDivisionError("TransferFunction cannot have a zero denominator.")
         return cls(_num, _den, var)
 
     @property
@@ -1492,7 +1497,7 @@ class MIMOParallel(MIMOLinearTimeInvariant):
 
         ``var`` attribute is not same for every system.
 
-        All MIMO systems passed don't have same shape.
+        All MIMO systems passed do not have same shape.
     TypeError
         Any of the passed ``*args`` has unsupported type
 
@@ -2922,7 +2927,8 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
 
     def _eval_evalf(self, prec):
         """Calls evalf() on each transfer function in the transfer function matrix"""
-        mat = self._expr_mat.applyfunc(lambda a: a.evalf(n=prec_to_dps(prec)))
+        dps = prec_to_dps(prec)
+        mat = self._expr_mat.applyfunc(lambda a: a.evalf(n=dps))
         return _to_TFM(mat, self.var)
 
     def _eval_simplify(self, **kwargs):

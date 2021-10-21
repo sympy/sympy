@@ -51,6 +51,8 @@ def test_piecewise1():
 
     assert Piecewise((1, x > 0), (2, And(x <= 0, x > -1))
         ) == Piecewise((1, x > 0), (2, x > -1))
+    assert Piecewise((1, x <= 0), (2, (x < 0) & (x > -1))
+        ) == Piecewise((1, x <= 0))
 
     # test for supporting Contains in Piecewise
     pwise = Piecewise(
@@ -599,10 +601,6 @@ def test_piecewise_fold_expand():
         ) == Piecewise((1 - x, cond), (0, True))
     assert p2 == Piecewise((1 - x, cond), (0, True))
     assert p2 == expand(piecewise_fold((1 - x)*p1))
-    p3 = Piecewise((1, True), evaluate=False)
-    assert p3 != 1
-    assert piecewise_fold(p3, evaluate=None) == 1
-    assert piecewise_fold(p3, evaluate=False) == p3
 
 
 def test_piecewise_duplicate():
@@ -752,13 +750,13 @@ def test_conjugate_transpose():
 def test_piecewise_evaluate():
     assert Piecewise((x, True)) == x
     assert Piecewise((x, True), evaluate=True) == x
-    p = Piecewise((x, True), evaluate=False)
-    assert p != x
-    assert p.is_Piecewise
-    assert all(isinstance(i, Basic) for i in p.args)
     assert Piecewise((1, Eq(1, x))).args == ((1, Eq(x, 1)),)
     assert Piecewise((1, Eq(1, x)), evaluate=False).args == (
         (1, Eq(1, x)),)
+    # like the additive and multiplicative identities that
+    # cannot be kept in Add/Mul, we also do not keep a single True
+    p = Piecewise((x, True), evaluate=False)
+    assert p == x
 
 
 def test_as_expr_set_pairs():

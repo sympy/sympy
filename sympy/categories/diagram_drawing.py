@@ -79,7 +79,7 @@ therefore attempt to lay the objects out along a line.
 References
 ==========
 
-[Xypic] http://xy-pic.sourceforge.net/
+.. [Xypic] http://xy-pic.sourceforge.net/
 
 """
 from sympy.categories import (CompositeMorphism, IdentityMorphism,
@@ -341,7 +341,7 @@ class DiagramGrid:
         returns an edge which would form a triangle with ``edge1`` and
         ``edge2``.
 
-        If ``edge1`` and ``edge2`` don't have a common endpoint,
+        If ``edge1`` and ``edge2`` do not have a common endpoint,
         returns ``None``.
 
         If ``edge1`` and ``edge`` are the same edge, returns ``None``.
@@ -1457,7 +1457,7 @@ class ArrowStringDescription:
     References
     ==========
 
-    [Xypic] http://xy-pic.sourceforge.net/
+    .. [Xypic] http://xy-pic.sourceforge.net/
     """
     def __init__(self, unit, curving, curving_amount, looping_start,
                  looping_end, horizontal_direction, vertical_direction,

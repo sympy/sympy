@@ -7,7 +7,7 @@ from operator import mul
 from sympy.core import (
     S, Expr, I, Integer, Add, Tuple
 )
-from sympy.core.basic import Basic, preorder_traversal
+from sympy.core.basic import Basic
 from sympy.core.compatibility import iterable, ordered
 from sympy.core.decorators import _sympifyit
 from sympy.core.evalf import pure_complex
@@ -16,6 +16,7 @@ from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.relational import Relational
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
+from sympy.core.traversal import preorder_traversal, bottom_up
 from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
@@ -48,6 +49,7 @@ from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
 from sympy.utilities import group, sift, public, filldedent
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+
 
 # Required to avoid errors
 import sympy.polys
@@ -229,7 +231,7 @@ class Poly(Basic):
 
         if not gens:
             raise GeneratorsNeeded(
-                "can't initialize from 'dict' without generators")
+                "Cannot initialize from 'dict' without generators")
 
         level = len(gens) - 1
         domain = opt.domain
@@ -249,7 +251,7 @@ class Poly(Basic):
 
         if not gens:
             raise GeneratorsNeeded(
-                "can't initialize from 'list' without generators")
+                "Cannot initialize from 'list' without generators")
         elif len(gens) != 1:
             raise MultivariatePolynomialError(
                 "'list' representation not supported")
@@ -457,7 +459,7 @@ class Poly(Basic):
             try:
                 return f.rep.dom, f.per, f.rep, f.rep.per(f.rep.dom.from_sympy(g))
             except CoercionFailed:
-                raise UnificationFailed("can't unify %s with %s" % (f, g))
+                raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
         if isinstance(f.rep, DMP) and isinstance(g.rep, DMP):
             gens = _unify_gens(f.gens, g.gens)
@@ -486,7 +488,7 @@ class Poly(Basic):
             else:
                 G = g.rep.convert(dom)
         else:
-            raise UnificationFailed("can't unify %s with %s" % (f, g))
+            raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
         cls = f.__class__
 
@@ -646,7 +648,7 @@ class Poly(Basic):
                 gens[gens.index(x)] = y
                 return f.per(f.rep, gens=gens)
 
-        raise PolynomialError("can't replace %s with %s in %s" % (x, y, f))
+        raise PolynomialError("Cannot replace %s with %s in %s" % (x, y, f))
 
     def match(f, *args, **kwargs):
         """Match expression from Poly. See Basic.match()"""
@@ -706,7 +708,7 @@ class Poly(Basic):
 
             if any(monom[:j]):
                 # some generator is used in the portion to be trimmed
-                raise PolynomialError("can't left trim %s" % f)
+                raise PolynomialError("Cannot left trim %s" % f)
 
             terms[monom[j:]] = coeff
 
@@ -1173,7 +1175,7 @@ class Poly(Basic):
         if dom.is_Numerical:
             return f
         elif not dom.is_Poly:
-            raise DomainError("can't inject generators over %s" % dom)
+            raise DomainError("Cannot inject generators over %s" % dom)
 
         if hasattr(f.rep, 'inject'):
             result = f.rep.inject(front=front)
@@ -1208,7 +1210,7 @@ class Poly(Basic):
         dom = f.rep.dom
 
         if not dom.is_Numerical:
-            raise DomainError("can't eject generators over %s" % dom)
+            raise DomainError("Cannot eject generators over %s" % dom)
 
         k = len(gens)
 
@@ -2457,7 +2459,7 @@ class Poly(Basic):
             result = f.rep.eval(a, j)
         except CoercionFailed:
             if not auto:
-                raise DomainError("can't evaluate at %s in %s" % (a, f.rep.dom))
+                raise DomainError("Cannot evaluate at %s in %s" % (a, f.rep.dom))
             else:
                 a_domain, [a] = construct_domain([a])
                 new_domain = f.get_domain().unify_with_symbols(a_domain, f.gens)
@@ -3649,7 +3651,7 @@ class Poly(Basic):
         from sympy.functions.elementary.complexes import sign
         if f.is_multivariate:
             raise MultivariatePolynomialError(
-                "can't compute numerical roots of %s" % f)
+                "Cannot compute numerical roots of %s" % f)
 
         if f.degree() <= 0:
             return []
@@ -3718,7 +3720,7 @@ class Poly(Basic):
         """
         if f.is_multivariate:
             raise MultivariatePolynomialError(
-                "can't compute ground roots of %s" % f)
+                "Cannot compute ground roots of %s" % f)
 
         roots = {}
 
@@ -4265,13 +4267,13 @@ class PurePoly(Poly):
             try:
                 return f.rep.dom, f.per, f.rep, f.rep.per(f.rep.dom.from_sympy(g))
             except CoercionFailed:
-                raise UnificationFailed("can't unify %s with %s" % (f, g))
+                raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
         if len(f.gens) != len(g.gens):
-            raise UnificationFailed("can't unify %s with %s" % (f, g))
+            raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
         if not (isinstance(f.rep, DMP) and isinstance(g.rep, DMP)):
-            raise UnificationFailed("can't unify %s with %s" % (f, g))
+            raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
         cls = f.__class__
         gens = f.gens
@@ -5538,7 +5540,7 @@ def terms_gcd(f, *gens, **args):
     if isinstance(f, Equality):
         return Equality(*(terms_gcd(s, *gens, **args) for s in [f.lhs, f.rhs]))
     elif isinstance(f, Relational):
-        raise TypeError("Inequalities can not be used with terms_gcd. Found: %s" %(f,))
+        raise TypeError("Inequalities cannot be used with terms_gcd. Found: %s" %(f,))
 
     if not isinstance(f, Expr) or f.is_Atom:
         return orig
@@ -6351,7 +6353,7 @@ def factor(f, *gens, deep=False, **args):
     2**((x + 1)**2)
 
     If the ``fraction`` flag is False then rational expressions
-    won't be combined. By default it is True.
+    will not be combined. By default it is True.
 
     >>> factor(5*x + 3*exp(2 - 7*x), deep=True)
     (5*x*exp(7*x) + 3*exp(2))*exp(-7*x)
@@ -6365,7 +6367,6 @@ def factor(f, *gens, deep=False, **args):
     """
     f = sympify(f)
     if deep:
-        from sympy.simplify.simplify import bottom_up
         def _try_factor(expr):
             """
             Factor, but avoid changing the expression when unable to.
@@ -6476,7 +6477,7 @@ def refine_root(f, s, t, eps=None, steps=None, fast=False, check_sqf=False):
             raise PolynomialError("generator must be a Symbol")
     except GeneratorsNeeded:
         raise PolynomialError(
-            "can't refine a root of %s, not a polynomial" % f)
+            "Cannot refine a root of %s, not a polynomial" % f)
 
     return F.refine_root(s, t, eps=eps, steps=steps, fast=fast, check_sqf=check_sqf)
 
@@ -6509,7 +6510,7 @@ def count_roots(f, inf=None, sup=None):
             # that the generator will be sin(x), not x
             raise PolynomialError("generator must be a Symbol")
     except GeneratorsNeeded:
-        raise PolynomialError("can't count roots of %s, not a polynomial" % f)
+        raise PolynomialError("Cannot count roots of %s, not a polynomial" % f)
 
     return F.count_roots(inf=inf, sup=sup)
 
@@ -6537,7 +6538,7 @@ def real_roots(f, multiple=True):
             raise PolynomialError("generator must be a Symbol")
     except GeneratorsNeeded:
         raise PolynomialError(
-            "can't compute real roots of %s, not a polynomial" % f)
+            "Cannot compute real roots of %s, not a polynomial" % f)
 
     return F.real_roots(multiple=multiple)
 
@@ -6568,7 +6569,7 @@ def nroots(f, n=15, maxsteps=50, cleanup=True):
             raise PolynomialError("generator must be a Symbol")
     except GeneratorsNeeded:
         raise PolynomialError(
-            "can't compute numerical roots of %s, not a polynomial" % f)
+            "Cannot compute numerical roots of %s, not a polynomial" % f)
 
     return F.nroots(n=n, maxsteps=maxsteps, cleanup=cleanup)
 
@@ -7040,7 +7041,7 @@ class GroebnerBasis(Basic):
             return self
 
         if not self.is_zero_dimensional:
-            raise NotImplementedError("can't convert Groebner bases of ideals with positive dimension")
+            raise NotImplementedError("Cannot convert Groebner bases of ideals with positive dimension")
 
         polys = list(self._basis)
         domain = opt.domain

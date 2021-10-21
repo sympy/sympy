@@ -280,7 +280,9 @@ def test_series_AccumBounds():
     assert limit(sin(k) - sin(k)*cos(k), k, oo) == AccumBounds(-2, 2)
 
     # test for issue #9934
-    t1 = Mul(AccumBounds(-S(3)/2 + cos(1)/2, cos(1)/2 + S.Half), 1/(-1 + cos(1)))
+    lo = (-3 + cos(1))/2
+    hi = (1 + cos(1))/2
+    t1 = Mul(AccumBounds(lo, hi), 1/(-1 + cos(1)), evaluate=False)
     assert limit(simplify(Sum(cos(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t1
 
     t2 = Mul(AccumBounds(-1 + sin(1)/2, sin(1)/2 + 1), 1/(1 - cos(1)))
@@ -591,6 +593,15 @@ def test_issue_8481():
     k = Symbol('k', integer=True, nonnegative=True)
     lamda = Symbol('lamda', real=True, positive=True)
     limit(lamda**k * exp(-lamda) / factorial(k), k, oo) == 0
+
+
+def test_issue_8635():
+    x = Symbol('x', real=True)
+    k = Symbol('k', positive=True)
+    assert limit(x**n - x**(n - 0), x, oo) == 0
+    assert limit(x**n - x**(n - 5), x, oo) == oo
+    assert limit(x**n - x**(n - 2.5), x, oo) == oo
+    assert limit(x**n - x**(n - k - 1), x, oo) == oo
 
 
 def test_issue_8730():

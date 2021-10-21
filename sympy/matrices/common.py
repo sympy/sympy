@@ -2691,7 +2691,7 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        """Return self + other, raising ShapeError if shapes don't match."""
+        """Return self + other, raising ShapeError if shapes do not match."""
         if isinstance(other, NDimArray): # Matrix and array addition is currently not implemented
             return NotImplemented
         other = _matrixify(other)
@@ -3049,7 +3049,7 @@ class _MinimalMatrix:
 
     def __getitem__(self, key):
         def _normalize_slices(row_slice, col_slice):
-            """Ensure that row_slice and col_slice don't have
+            """Ensure that row_slice and col_slice do not have
             `None` in their arguments.  Any integers are converted
             to slices of length 1"""
             if not isinstance(row_slice, slice):

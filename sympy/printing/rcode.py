@@ -45,6 +45,7 @@ known_functions = {
     "digamma": "digamma",
     "trigamma": "trigamma",
     "beta": "beta",
+    "sqrt": "sqrt",  # To enable automatic rewrite
 }
 
 # These are the core reserved words in the R language. Taken from:
@@ -228,8 +229,7 @@ class RCodePrinter(CodePrinter):
 
     def _print_ITE(self, expr):
         from sympy.functions import Piecewise
-        _piecewise = Piecewise((expr.args[1], expr.args[0]), (expr.args[2], True))
-        return self._print(_piecewise)
+        return self._print(expr.rewrite(Piecewise))
 
     def _print_MatrixElement(self, expr):
         return "{}[{}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
@@ -247,14 +247,6 @@ class RCodePrinter(CodePrinter):
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
         return "{} {} {}".format(lhs_code, op, rhs_code)
-
-    def _print_sinc(self, expr):
-        from sympy.functions.elementary.trigonometric import sin
-        from sympy.core.relational import Ne
-        from sympy.functions import Piecewise
-        _piecewise = Piecewise(
-            (sin(expr.args[0]) / expr.args[0], Ne(expr.args[0], 0)), (1, True))
-        return self._print(_piecewise)
 
     def _print_AugmentedAssignment(self, expr):
         lhs_code = self._print(expr.lhs)
@@ -294,7 +286,7 @@ class RCodePrinter(CodePrinter):
         pretty = []
         level = 0
         for n, line in enumerate(code):
-            if line == '' or line == '\n':
+            if line in ('', '\n'):
                 pretty.append(line)
                 continue
             level -= decrease[n]
