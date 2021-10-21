@@ -3,3 +3,4 @@
 =====
 
 .. automodule:: sympy.abc
+   :noindex:

@@ -8,3 +8,4 @@
    :maxdepth: 2
 
    ../modules/index.rst
+   private/index.rst

@@ -50,6 +50,13 @@ This is the central page for all of SymPy's documentation.
 
 ..  rst-class:: clearfix row custom-headings
 
+.. autosummary::
+   :toctree: reference/private
+   :template: custom-module-template.rst
+   :recursive:
+
+   sympy.abc
+
 .. toctree::
    :hidden:
 

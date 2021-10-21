@@ -20,6 +20,7 @@ import sympy
 
 # If your extensions are in another directory, add it here.
 sys.path = ['ext'] + sys.path
+sys.path.insert(0, os.path.abspath('../..'))
 
 # General configuration
 # ---------------------
@@ -28,7 +29,8 @@ sys.path = ['ext'] + sys.path
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
               'sphinx.ext.mathjax', 'numpydoc', 'sympylive', 'sphinx_reredirects',
-              'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive']
+              'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive',
+              'sphinx.ext.autosummary']
 
 redirects = {
     "install.rst": "guides/getting_started/install.html",
@@ -69,6 +71,9 @@ mathjax_config = {
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
+
+exclude_patterns = ['_build', '_templates']
+autosummary_generate = True
 
 # The suffix of source filenames.
 source_suffix = '.rst'
