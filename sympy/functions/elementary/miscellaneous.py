@@ -17,6 +17,7 @@ from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.core.traversal import walk
+from sympy.core.numbers import Integer
 from sympy.logic.boolalg import And, Or
 
 
@@ -898,8 +899,8 @@ class Rem(Function):
     kind = NumberKind
 
     @classmethod
-    def eval(cls,p,q):
-        def doit(p,q):
+    def eval(cls, p, q):
+        def doit(p, q):
             """ the function remainder if both p,q are numbers
                 and q is not zero
             """
@@ -913,7 +914,7 @@ class Rem(Function):
 
             if q.is_Number:
                 if p.is_Number:
-                    return p - int(p/q)*q
+                    return p - Integer(p/q)*q
         rv = doit(p, q)
         if rv is not None:
             return rv
