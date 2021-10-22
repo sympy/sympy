@@ -4,7 +4,7 @@ from sympy import SYMPY_DEBUG
 
 from sympy.core import expand_power_base, sympify, Add, S, Mul, Derivative, Pow, symbols, expand_mul
 from sympy.core.add import _unevaluated_Add
-from sympy.core.compatibility import iterable, ordered, default_sort_key
+from sympy.core.compatibility import ordered, default_sort_key
 from sympy.core.parameters import global_parameters
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.function import _mexpand
@@ -14,6 +14,7 @@ from sympy.functions import exp, sqrt, log
 from sympy.functions.elementary.complexes import Abs
 from sympy.polys import gcd
 from sympy.simplify.sqrtdenest import sqrtdenest
+from sympy.utilities.iterables import iterable
 
 
 
@@ -239,7 +240,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
          - sexpr is the base expression
          - rat_expo is the rational exponent that sexpr is raised to
          - sym_expo is the symbolic exponent that sexpr is raised to
-         - deriv contains the derivatives the the expression
+         - deriv contains the derivatives of the expression
 
          For example, the output of x would be (x, 1, None, None)
          the output of 2**x would be (2, 1, x, None).
@@ -952,7 +953,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
                 # in general, only 4 terms can be removed with repeated squaring
                 # but other considerations can guide selection of radical terms
                 # so that radicals are removed
-                if all([x.is_Integer and (y**2).is_Rational for x, y in rterms]):
+                if all(x.is_Integer and (y**2).is_Rational for x, y in rterms):
                     nd, d = rad_rationalize(S.One, Add._from_args(
                         [sqrt(x)*y for x, y in rterms]))
                     n *= nd

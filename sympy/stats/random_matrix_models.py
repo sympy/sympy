@@ -407,8 +407,8 @@ def JointEigenDistribution(mat):
 
     """
     eigenvals = mat.eigenvals(multiple=True)
-    if any(not is_random(eigenval) for eigenval in set(eigenvals)):
-        raise ValueError("Eigen values don't have any random expression, "
+    if not all(is_random(eigenval) for eigenval in set(eigenvals)):
+        raise ValueError("Eigen values do not have any random expression, "
                          "joint distribution cannot be generated.")
     return JointDistributionHandmade(*eigenvals)
 

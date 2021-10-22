@@ -13,9 +13,9 @@ def deprecated(**decorator_kwargs):
     """This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
     when the function is used."""
-    from sympy.utilities.exceptions import SymPyDeprecationWarning
 
     def _warn_deprecation(wrapped, stacklevel):
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
         decorator_kwargs.setdefault('feature', wrapped.__name__)
         SymPyDeprecationWarning(**decorator_kwargs).warn(stacklevel=stacklevel)
 
@@ -69,9 +69,9 @@ def _sympifyit(arg, retval=None):
 
 
 def __sympifyit(func, arg, retval=None):
-    """decorator to _sympify `arg` argument for function `func`
+    """Decorator to _sympify `arg` argument for function `func`.
 
-       don't use directly -- use _sympifyit instead
+       Do not use directly -- use _sympifyit instead.
     """
 
     # we support f(a,b) only

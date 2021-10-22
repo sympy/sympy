@@ -65,7 +65,7 @@ def AZ(s=None):
     """
     if not s:
         return uppercase
-    t = type(s) is str
+    t = isinstance(s, str)
     if t:
         s = [s]
     rv = [check_and_join(i.upper().split(), uppercase, filter=True)
@@ -604,7 +604,7 @@ def encipher_vigenere(msg, key, symbols=None):
     'QRGKKTHRZQEBPR'
 
     Section 1 of the Kryptos sculpture at the CIA headquarters
-    uses this cipher and also changes the order of the the
+    uses this cipher and also changes the order of the
     alphabet [2]_. Here is the first line of that section of
     the sculpture:
 
@@ -1534,7 +1534,7 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
 
     primes, e = args[:-1], args[-1]
 
-    if any(not isprime(p) for p in primes):
+    if not all(isprime(p) for p in primes):
         new_primes = []
         for i in primes:
             new_primes.extend(factorint(i, multiple=True))
@@ -1590,8 +1590,8 @@ def rsa_public_key(*args, **kwargs):
         `\phi(n)` (Euler totient) or `\lambda(n)` (Carmichael totient)
         to be `\gcd(e, \phi(n)) = 1` or `\gcd(e, \lambda(n)) = 1`.
 
-        If specified as `p_1, p_2, ..., p_n, e` where
-        `p_1, p_2, ..., p_n` are specified as primes,
+        If specified as `p_1, p_2, \dots, p_n, e` where
+        `p_1, p_2, \dots, p_n` are specified as primes,
         and `e` is specified as a desired public exponent of the RSA,
         it will be able to form a multi-prime RSA, which is a more
         generalized form of the popular 2-prime RSA.
@@ -1623,11 +1623,11 @@ def rsa_public_key(*args, **kwargs):
         can still be bijective.
 
         If you pass a non-prime integer to the arguments
-        `p_1, p_2, ..., p_n`, the particular number will be
+        `p_1, p_2, \dots, p_n`, the particular number will be
         prime-factored and it will become either a multi-prime RSA or a
         multi-power RSA in its canonical form, depending on whether the
         product equals its radical or not.
-        `p_1 p_2 ... p_n = \text{rad}(p_1 p_2 ... p_n)`
+        `p_1 p_2 \dots p_n = \text{rad}(p_1 p_2 \dots p_n)`
 
     totient : bool, optional
         If ``'Euler'``, it uses Euler's totient `\phi(n)` which is
@@ -1642,7 +1642,7 @@ def rsa_public_key(*args, **kwargs):
 
     index : nonnegative integer, optional
         Returns an arbitrary solution of a RSA public key at the index
-        specified at `0, 1, 2, ...`. This parameter needs to be
+        specified at `0, 1, 2, \dots`. This parameter needs to be
         specified along with ``totient='Carmichael'``.
 
         Similarly to the non-uniquenss of a RSA private key as described
@@ -1784,7 +1784,7 @@ def rsa_private_key(*args, **kwargs):
 
     index : nonnegative integer, optional
         Returns an arbitrary solution of a RSA private key at the index
-        specified at `0, 1, 2, ...`. This parameter needs to be
+        specified at `0, 1, 2, \dots`. This parameter needs to be
         specified along with ``totient='Carmichael'``.
 
         RSA private exponent is a non-unique solution of
@@ -1981,21 +1981,21 @@ def decipher_rsa(i, key, factors=None):
     factors : list of coprime integers
         As the modulus `n` created from RSA key generation is composed
         of arbitrary prime factors
-        `n = {p_1}^{k_1}{p_2}^{k_2}...{p_n}^{k_n}` where
-        `p_1, p_2, ..., p_n` are distinct primes and
-        `k_1, k_2, ..., k_n` are positive integers, chinese remainder
+        `n = {p_1}^{k_1}{p_2}^{k_2}\dots{p_n}^{k_n}` where
+        `p_1, p_2, \dots, p_n` are distinct primes and
+        `k_1, k_2, \dots, k_n` are positive integers, chinese remainder
         theorem can be used to compute `i^d \bmod n` from the
         fragmented modulo operations like
 
         .. math::
-            i^d \bmod {p_1}^{k_1}, i^d \bmod {p_2}^{k_2}, ... ,
+            i^d \bmod {p_1}^{k_1}, i^d \bmod {p_2}^{k_2}, \dots,
             i^d \bmod {p_n}^{k_n}
 
         or like
 
         .. math::
             i^d \bmod {p_1}^{k_1}{p_2}^{k_2},
-            i^d \bmod {p_3}^{k_3}, ... ,
+            i^d \bmod {p_3}^{k_3}, \dots ,
             i^d \bmod {p_n}^{k_n}
 
         as long as every moduli does not share any common divisor each
@@ -2929,20 +2929,20 @@ def gm_private_key(p, q, a=None):
     $\\cdot$ Call their product $N$.
 
     $\\cdot$ Given a message as an integer $i$, write $i$ in its
-    bit representation $b_0$ , $\\dotsc$ , $b_n$ .
+    bit representation $b_0, \\dots, b_n$ .
 
     $\\cdot$ For each $k$ ,
 
-     if $b_k$ = 0:
+     if $b_k = 0$:
         let $a_k$ be a random square
         (quadratic residue) modulo $p q$
         such that $jacobi \\_symbol(a, p q) = 1$
-     if $b_k$ = 1:
+     if $b_k = 1$:
         let $a_k$ be a random non-square
         (non-quadratic residue) modulo $p q$
         such that $jacobi \\_ symbol(a, p q) = 1$
 
-    returns [$a_1$ , $a_2$ , $\\dotsc$ ]
+    returns $[a_1, a_2, \\dots]$
 
     $b_k$ can be recovered by checking whether or not
     $a_k$ is a residue. And from the $b_k$ 's, the message

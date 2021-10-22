@@ -6,7 +6,8 @@ from typing import Any, Dict
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
-from sympy.core.function import _coeff_isneg
+from sympy.core.relational import Relational
+from sympy.sets.sets import FiniteSet
 from .printer import Printer, print_function
 from sympy.printing.precedence import precedence, PRECEDENCE
 
@@ -77,7 +78,12 @@ class StrPrinter(Printer):
         return '~%s' %(self.parenthesize(expr.args[0],PRECEDENCE["Not"]))
 
     def _print_And(self, expr):
-        return self.stringify(expr.args, " & ", PRECEDENCE["BitwiseAnd"])
+        args = list(expr.args)
+        for j, i in enumerate(args):
+            if isinstance(i, Relational) and (
+                    i.canonical.rhs is S.NegativeInfinity):
+                args.insert(0, args.pop(j))
+        return self.stringify(args, " & ", PRECEDENCE["BitwiseAnd"])
 
     def _print_Or(self, expr):
         return self.stringify(expr.args, " | ", PRECEDENCE["BitwiseOr"])
@@ -156,6 +162,11 @@ class StrPrinter(Printer):
     def _print_GoldenRatio(self, expr):
         return 'GoldenRatio'
 
+    def _print_Heaviside(self, expr):
+        # Same as _print_Function but uses pargs to suppress default 1/2 for
+        # 2nd args
+        return expr.func.__name__ + "(%s)" % self.stringify(expr.pargs, ", ")
+
     def _print_TribonacciConstant(self, expr):
         return 'TribonacciConstant'
 
@@ -222,6 +233,9 @@ class StrPrinter(Printer):
     def _print_list(self, expr):
         return "[%s]" % self.stringify(expr, ", ")
 
+    def _print_List(self, expr):
+        return self._print_list(expr)
+
     def _print_MatrixBase(self, expr):
         return expr._format_str(self)
 
@@ -272,7 +286,7 @@ class StrPrinter(Printer):
                 d[i] = Pow(di.base, e, evaluate=False) if e - 1 else di.base
 
             # don't parenthesize first factor if negative
-            if _coeff_isneg(n[0]):
+            if n[0].could_extract_minus_sign():
                 pre = [str(n.pop(0))]
             else:
                 pre = []
@@ -280,7 +294,7 @@ class StrPrinter(Printer):
                 for a in n]
 
             # don't parenthesize first of denominator unless singleton
-            if len(d) > 1 and _coeff_isneg(d[0]):
+            if len(d) > 1 and d[0].could_extract_minus_sign():
                 pre = [str(d.pop(0))]
             else:
                 pre = []
@@ -475,7 +489,8 @@ class StrPrinter(Printer):
         return self._print(expr.name)
 
     def _print_ArrayElement(self, expr):
-        return "%s[%s]" % (expr.name, ", ".join([self._print(i) for i in expr.indices]))
+        return "%s[%s]" % (
+            self.parenthesize(expr.name, PRECEDENCE["Func"], True), ", ".join([self._print(i) for i in expr.indices]))
 
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % self._print(a) for a in expr.args]
@@ -554,7 +569,7 @@ class StrPrinter(Printer):
             else:
                 terms.extend(['+', s_term])
 
-        if terms[0] in ['-', '+']:
+        if terms[0] in ('-', '+'):
             modifier = terms.pop(0)
 
             if modifier == '-':
@@ -795,6 +810,20 @@ class StrPrinter(Printer):
         if not args:
             return "set()"
         return '{%s}' % args
+
+    def _print_FiniteSet(self, s):
+        items = sorted(s, key=default_sort_key)
+
+        args = ', '.join(self._print(item) for item in items)
+        if any(item.has(FiniteSet) for item in items):
+            return 'FiniteSet({})'.format(args)
+        return '{{{}}}'.format(args)
+
+    def _print_Partition(self, s):
+        items = sorted(s, key=default_sort_key)
+
+        args = ', '.join(self._print(arg) for arg in items)
+        return 'Partition({})'.format(args)
 
     def _print_frozenset(self, s):
         if not s:

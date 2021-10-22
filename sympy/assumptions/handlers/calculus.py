@@ -17,7 +17,7 @@ from ..predicates.calculus import (FinitePredicate, InfinitePredicate,
 # FinitePredicate
 
 
-@FinitePredicate.register(Symbol)
+@FinitePredicate.register(Symbol) # type: ignore
 def _(expr, assumptions):
     """
     Handles Symbol.
@@ -28,7 +28,7 @@ def _(expr, assumptions):
         return True
     return None
 
-@FinitePredicate.register(Add)
+@FinitePredicate.register(Add) # type: ignore
 def _(expr, assumptions):
     """
     Return True if expr is bounded, False if not and None if unknown.
@@ -101,7 +101,7 @@ def _(expr, assumptions):
         # is None and Bounded is None or there was already
         # an unknown sign, return None
         if sign != -1 and s != sign or \
-                s is None and (s == _bounded or s == sign):
+                s is None and None in (_bounded, sign):
             return None
         else:
             sign = s
@@ -110,7 +110,7 @@ def _(expr, assumptions):
             result = _bounded
     return result
 
-@FinitePredicate.register(Mul)
+@FinitePredicate.register(Mul) # type: ignore
 def _(expr, assumptions):
     """
     Return True if expr is bounded, False if not and None if unknown.
@@ -165,7 +165,7 @@ def _(expr, assumptions):
             result = False
     return result
 
-@FinitePredicate.register(Pow)
+@FinitePredicate.register(Pow) # type: ignore
 def _(expr, assumptions):
     """
     * Unbounded ** NonZero -> Unbounded
@@ -197,11 +197,11 @@ def _(expr, assumptions):
         return False
     return None
 
-@FinitePredicate.register(exp)
+@FinitePredicate.register(exp) # type: ignore
 def _(expr, assumptions):
     return ask(Q.finite(expr.exp), assumptions)
 
-@FinitePredicate.register(log)
+@FinitePredicate.register(log) # type: ignore
 def _(expr, assumptions):
     # After complex -> finite fact is registered to new assumption system,
     # querying Q.infinite may be removed.
@@ -209,16 +209,16 @@ def _(expr, assumptions):
         return False
     return ask(~Q.zero(expr.args[0]), assumptions)
 
-@FinitePredicate.register_many(cos, sin, Number, Pi, Exp1, GoldenRatio,
+@FinitePredicate.register_many(cos, sin, Number, Pi, Exp1, GoldenRatio, # type: ignore
     TribonacciConstant, ImaginaryUnit, sign)
 def _(expr, assumptions):
     return True
 
-@FinitePredicate.register_many(ComplexInfinity, Infinity, NegativeInfinity)
+@FinitePredicate.register_many(ComplexInfinity, Infinity, NegativeInfinity) # type: ignore
 def _(expr, assumptions):
     return False
 
-@FinitePredicate.register(NaN)
+@FinitePredicate.register(NaN) # type: ignore
 def _(expr, assumptions):
     return None
 
@@ -226,7 +226,7 @@ def _(expr, assumptions):
 # InfinitePredicate
 
 
-@InfinitePredicate.register_many(ComplexInfinity, Infinity, NegativeInfinity)
+@InfinitePredicate.register_many(ComplexInfinity, Infinity, NegativeInfinity) # type: ignore
 def _(expr, assumptions):
     return True
 
@@ -234,12 +234,12 @@ def _(expr, assumptions):
 # PositiveInfinitePredicate
 
 
-@PositiveInfinitePredicate.register(Infinity)
+@PositiveInfinitePredicate.register(Infinity) # type: ignore
 def _(expr, assumptions):
     return True
 
 
-@PositiveInfinitePredicate.register_many(NegativeInfinity, ComplexInfinity)
+@PositiveInfinitePredicate.register_many(NegativeInfinity, ComplexInfinity) # type: ignore
 def _(expr, assumptions):
     return False
 
@@ -247,11 +247,11 @@ def _(expr, assumptions):
 # NegativeInfinitePredicate
 
 
-@NegativeInfinitePredicate.register(NegativeInfinity)
+@NegativeInfinitePredicate.register(NegativeInfinity) # type: ignore
 def _(expr, assumptions):
     return True
 
 
-@NegativeInfinitePredicate.register_many(Infinity, ComplexInfinity)
+@NegativeInfinitePredicate.register_many(Infinity, ComplexInfinity) # type: ignore
 def _(expr, assumptions):
     return False

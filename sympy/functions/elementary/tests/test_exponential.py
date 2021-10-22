@@ -163,7 +163,6 @@ def test_exp_transpose():
 
 @_both_exp_pow
 def test_exp_rewrite():
-    from sympy.concrete.summations import Sum
     assert exp(x).rewrite(sin) == sinh(x) + cosh(x)
     assert exp(x*I).rewrite(cos) == cos(x) + I*sin(x)
     assert exp(1).rewrite(cos) == sinh(1) + cosh(1)
@@ -568,6 +567,9 @@ def test_lambertw():
     assert LambertW(0, evaluate=False).is_algebraic
     na = Symbol('na', nonzero=True, algebraic=True)
     assert LambertW(na).is_algebraic is False
+    assert LambertW(p).is_zero is False
+    n = Symbol('n', negative=True)
+    assert LambertW(n).is_zero is False
 
 
 def test_issue_5673():
@@ -646,7 +648,6 @@ def test_exp_summation():
 
 def test_log_product():
     from sympy.abc import n, m
-    from sympy.concrete import Product
 
     i, j = symbols('i,j', positive=True, integer=True)
     x, y = symbols('x,y', positive=True)
@@ -681,7 +682,6 @@ def test_log_product_simplify_to_sum():
     from sympy.abc import n, m
     i, j = symbols('i,j', positive=True, integer=True)
     x, y = symbols('x,y', positive=True)
-    from sympy.concrete import Product, Sum
     assert simplify(log(Product(x**i, (i, 1, n)))) == Sum(i*log(x), (i, 1, n))
     assert simplify(log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))) == \
             Sum(i*log(x) + j*log(y), (i, 1, n), (j, 1, m))

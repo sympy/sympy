@@ -1,7 +1,6 @@
 """Tools for solving inequalities and systems of inequalities. """
 
 from sympy.core import Symbol, Dummy, sympify
-from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.sets import Interval
@@ -13,7 +12,7 @@ from sympy.functions import Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
-from sympy.utilities.iterables import sift
+from sympy.utilities.iterables import sift, iterable
 from sympy.utilities.misc import filldedent
 
 
@@ -28,13 +27,13 @@ def solve_poly_inequality(poly, rel):
     >>> from sympy.solvers.inequalities import solve_poly_inequality
 
     >>> solve_poly_inequality(Poly(x, x, domain='ZZ'), '==')
-    [FiniteSet(0)]
+    [{0}]
 
     >>> solve_poly_inequality(Poly(x**2 - 1, x, domain='ZZ'), '!=')
     [Interval.open(-oo, -1), Interval.open(-1, 1), Interval.open(1, oo)]
 
     >>> solve_poly_inequality(Poly(x**2 - 1, x, domain='ZZ'), '==')
-    [FiniteSet(-1), FiniteSet(1)]
+    [{-1}, {1}]
 
     See Also
     ========
@@ -123,7 +122,6 @@ def solve_poly_inequalities(polys):
     ... Poly(-x**2 + 1), ">")))
     Union(Interval.open(-oo, -sqrt(3)), Interval.open(-1, 1), Interval.open(sqrt(3), oo))
     """
-    from sympy import Union
     return Union(*[s for p in polys for s in solve_poly_inequality(*p)])
 
 
@@ -140,7 +138,7 @@ def solve_rational_inequalities(eqs):
     >>> solve_rational_inequalities([[
     ... ((Poly(-x + 1), Poly(1, x)), '>='),
     ... ((Poly(-x + 1), Poly(1, x)), '<=')]])
-    FiniteSet(1)
+    {1}
 
     >>> solve_rational_inequalities([[
     ... ((Poly(x), Poly(1, x)), '!='),
@@ -307,7 +305,7 @@ def reduce_abs_inequality(expr, rel, gen):
     """
     if gen.is_extended_real is False:
          raise TypeError(filldedent('''
-            can't solve inequalities with absolute values containing
+            Cannot solve inequalities with absolute values containing
             non-real variables.
             '''))
 
@@ -437,7 +435,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     >>> x = Symbol('x')
 
     >>> solve_univariate_inequality(x**2 >= 4, x)
-    ((2 <= x) & (x < oo)) | ((x <= -2) & (-oo < x))
+    ((2 <= x) & (x < oo)) | ((-oo < x) & (x <= -2))
 
     >>> solve_univariate_inequality(x**2 >= 4, x, relational=False)
     Union(Interval(-oo, -2), Interval(2, oo))
@@ -510,13 +508,13 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             frange = function_range(e, gen, domain)
 
             rel = expr.rel_op
-            if rel == '<' or rel == '<=':
+            if rel in ('<', '<='):
                 if expr.func(frange.sup, 0):
                     rv = domain
                 elif not expr.func(frange.inf, 0):
                     rv = S.EmptySet
 
-            elif rel == '>' or rel == '>=':
+            elif rel in ('>', '>='):
                 if expr.func(frange.inf, 0):
                     rv = domain
                 elif not expr.func(frange.sup, 0):
@@ -734,7 +732,7 @@ def _solve_inequality(ie, s, linear=False):
     If `linear` is True (default is False) an `s`-dependent expression
     will be isolated on the left, if possible
     but it will not be solved for `s` unless the expression is linear
-    in `s`. Furthermore, only "safe" operations which don't change the
+    in `s`. Furthermore, only "safe" operations which do not change the
     sense of the relationship are applied: no division by an unsigned
     value is attempted unless the relationship involves Eq or Ne and
     no division by a value not known to be nonzero is ever attempted.

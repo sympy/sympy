@@ -3,7 +3,7 @@ from sympy import (
     Integral, integrate, Interval, KroneckerDelta, lambdify, log, Max, Min,
     oo, Or, pi, Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
     cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Sum, Tuple, zoo, Float,
-    DiracDelta, Heaviside, Add, Mul, factorial, Ge, Contains)
+    DiracDelta, Heaviside, Add, Mul, factorial, Ge, Contains, MatrixSymbol)
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.piecewise import Undefined, ExprCondPair
 from sympy.printing import srepr
@@ -51,6 +51,8 @@ def test_piecewise1():
 
     assert Piecewise((1, x > 0), (2, And(x <= 0, x > -1))
         ) == Piecewise((1, x > 0), (2, x > -1))
+    assert Piecewise((1, x <= 0), (2, (x < 0) & (x > -1))
+        ) == Piecewise((1, x <= 0))
 
     # test for supporting Contains in Piecewise
     pwise = Piecewise(
@@ -438,7 +440,7 @@ def test_piecewise_simplify():
             (2*x, And(Eq(a, 0), Eq(y, 0))),
             (2, And(Eq(a, 1), Eq(y, 0))),
             (0, True))
-    args = (2, And(Eq(x, 2), Ge(y ,0))), (x, True)
+    args = (2, And(Eq(x, 2), Ge(y, 0))), (x, True)
     assert Piecewise(*args).simplify() == Piecewise(*args)
     args = (1, Eq(x, 0)), (sin(x)/x, True)
     assert Piecewise(*args).simplify() == Piecewise(*args)
@@ -592,7 +594,12 @@ def test_piecewise_fold_expand():
     p1 = Piecewise((1, Interval(0, 1, False, True).contains(x)), (0, True))
 
     p2 = piecewise_fold(expand((1 - x)*p1))
-    assert p2 == Piecewise((1 - x, (x >= 0) & (x < 1)), (0, True))
+    cond = ((x >= 0) & (x < 1))
+    assert piecewise_fold(expand((1 - x)*p1), evaluate=False
+        ) == Piecewise((1 - x, cond), (-x, cond), (1, cond), (0, True), evaluate=False)
+    assert piecewise_fold(expand((1 - x)*p1), evaluate=None
+        ) == Piecewise((1 - x, cond), (0, True))
+    assert p2 == Piecewise((1 - x, cond), (0, True))
     assert p2 == expand(piecewise_fold((1 - x)*p1))
 
 
@@ -683,7 +690,7 @@ def test_piecewise_lambdify():
 
 
 def test_piecewise_series():
-    from sympy import sin, cos, O
+    from sympy import O
     p1 = Piecewise((sin(x), x < 0), (cos(x), x > 0))
     p2 = Piecewise((x + O(x**2), x < 0), (1 + O(x**2), x > 0))
     assert p1.nseries(x, n=2) == p2
@@ -743,13 +750,13 @@ def test_conjugate_transpose():
 def test_piecewise_evaluate():
     assert Piecewise((x, True)) == x
     assert Piecewise((x, True), evaluate=True) == x
-    p = Piecewise((x, True), evaluate=False)
-    assert p != x
-    assert p.is_Piecewise
-    assert all(isinstance(i, Basic) for i in p.args)
     assert Piecewise((1, Eq(1, x))).args == ((1, Eq(x, 1)),)
     assert Piecewise((1, Eq(1, x)), evaluate=False).args == (
         (1, Eq(1, x)),)
+    # like the additive and multiplicative identities that
+    # cannot be kept in Add/Mul, we also do not keep a single True
+    p = Piecewise((x, True), evaluate=False)
+    assert p == x
 
 
 def test_as_expr_set_pairs():
@@ -925,7 +932,7 @@ def test_issue_10137():
 
 
 def test_stackoverflow_43852159():
-    f = lambda x: Piecewise((1 , (x >= -1) & (x <= 1)) , (0, True))
+    f = lambda x: Piecewise((1, (x >= -1) & (x <= 1)), (0, True))
     Conv = lambda x: integrate(f(x - y)*f(y), (y, -oo, +oo))
     cx = Conv(x)
     assert cx.subs(x, -1.5) == cx.subs(x, 1.5)
@@ -1075,7 +1082,7 @@ def test_piecewise_with_DiracDelta():
         (Heaviside(x - 1), x < 2), (1, True))
     # TODO raise error if function is discontinuous at limit of
     # integration, e.g. integrate(d1, (x, -2, 1)) or Piecewise(
-    # (d1, Eq(x ,1)
+    # (d1, Eq(x, 1)
 
 
 def test_issue_10258():
@@ -1150,7 +1157,7 @@ def test_unevaluated_integrals():
     # solve_univariate_inequality fails
     assert p.integrate(y) == Piecewise(
         (y, Eq(f(x), 1) | ((x < 10) & Eq(f(x), 1))),
-        (2*y, (x >= -oo) & (x < 10)), (0, True))
+        (2*y, (x > -oo) & (x < 10)), (0, True))
 
 
 def test_conditions_as_alternate_booleans():
@@ -1353,8 +1360,21 @@ def test_issue_7370():
     v = integrate(f, (x, 0, Float("252.4", 30)))
     assert str(v) == '252.400000000000000000000000000'
 
+
+def test_issue_14933():
+    x = Symbol('x')
+    y = Symbol('y')
+
+    inp = MatrixSymbol('inp', 1, 1)
+    rep_dict = {y: inp[0, 0], x: inp[0, 0]}
+
+    p = Piecewise((1, ITE(y > 0, x < 0, True)))
+    assert p.xreplace(rep_dict) == Piecewise((1, ITE(inp[0, 0] > 0, inp[0, 0] < 0, True)))
+
+
 def test_issue_16715():
     raises(NotImplementedError, lambda: Piecewise((x, x<0), (0, y>1)).as_expr_set_pairs())
+
 
 def test_issue_20360():
     t, tau = symbols("t tau", real=True)
@@ -1362,3 +1382,48 @@ def test_issue_20360():
     lam = pi * (n - S.Half)
     eq = integrate(exp(lam * tau), (tau, 0, t))
     assert simplify(eq) == (2*exp(pi*t*(2*n - 1)/2) - 2)/(pi*(2*n - 1))
+
+
+def test_piecewise_eval():
+    # XXX these tests might need modification if this
+    # simplification is moved out of eval and into
+    # boolalg or Piecewise simplification functions
+    from sympy.functions.elementary.complexes import arg
+    f = lambda x: x.args[0].cond
+    # unsimplified
+    assert f(Piecewise((x, (x > -oo) & (x < 3)))
+        ) == ((x > -oo) & (x < 3))
+    assert f(Piecewise((x, (x > -oo) & (x < oo)))
+        ) == ((x > -oo) & (x < oo))
+    assert f(Piecewise((x, (x > -3) & (x < 3)))
+        ) == ((x > -3) & (x < 3))
+    assert f(Piecewise((x, (x > -3) & (x < oo)))
+        ) == ((x > -3) & (x < oo))
+    assert f(Piecewise((x, (x <= 3) & (x > -oo)))
+        ) == ((x <= 3) & (x > -oo))
+    assert f(Piecewise((x, (x <= 3) & (x > -3)))
+        ) == ((x <= 3) & (x > -3))
+    assert f(Piecewise((x, (x >= -3) & (x < 3)))
+        ) == ((x >= -3) & (x < 3))
+    assert f(Piecewise((x, (x >= -3) & (x < oo)))
+        ) == ((x >= -3) & (x < oo))
+    assert f(Piecewise((x, (x >= -3) & (x <= 3)))
+        ) == ((x >= -3) & (x <= 3))
+    # could simplify by keeping only the first
+    # arg of result
+    assert f(Piecewise((x, (x <= oo) & (x > -oo)))
+        ) == (x > -oo) & (x <= oo)
+    assert f(Piecewise((x, (x <= oo) & (x > -3)))
+        ) == (x > -3) & (x <= oo)
+    assert f(Piecewise((x, (x >= -oo) & (x < 3)))
+        ) == (x < 3) & (x >= -oo)
+    assert f(Piecewise((x, (x >= -oo) & (x < oo)))
+        ) == (x < oo) & (x >= -oo)
+    assert f(Piecewise((x, (x >= -oo) & (x <= 3)))
+        ) == (x <= 3) & (x >= -oo)
+    assert f(Piecewise((x, (x >= -oo) & (x <= oo)))
+        ) == (x <= oo) & (x >= -oo)  # but cannot be True unless x is real
+    assert f(Piecewise((x, (x >= -3) & (x <= oo)))
+        ) == (x >= -3) & (x <= oo)
+    assert f(Piecewise((x, (Abs(arg(a)) <= 1) | (Abs(arg(a)) < 1)))
+        ) == (Abs(arg(a)) <= 1) | (Abs(arg(a)) < 1)

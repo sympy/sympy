@@ -1,7 +1,6 @@
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
@@ -27,8 +26,9 @@ from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
 from sympy.simplify.fu import sincos_to_sum
 from sympy.tensor.functions import shape
-from sympy.utilities.misc import filldedent
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import is_sequence
+from sympy.utilities.misc import filldedent
 
 
 class Integral(AddWithLimits):
@@ -417,7 +417,7 @@ class Integral(AddWithLimits):
         eval_kwargs = dict(meijerg=meijerg, risch=risch, manual=manual, heurisch=heurisch,
             conds=conds)
 
-        if conds not in ['separate', 'piecewise', 'none']:
+        if conds not in ('separate', 'piecewise', 'none'):
             raise ValueError('conds must be one of "separate", "piecewise", '
                              '"none", got: %s' % conds)
 
@@ -468,6 +468,13 @@ class Integral(AddWithLimits):
         reps = {}
         for xab in self.limits:
             if len(xab) != 3:
+                # it makes sense to just make
+                # all x real but in practice with the
+                # current state of integration...this
+                # doesn't work out well
+                # x = xab[0]
+                # if x not in reps and not x.is_real:
+                #     reps[x] = Dummy(real=True)
                 continue
             x, a, b = xab
             l = (a, b)
@@ -484,7 +491,7 @@ class Integral(AddWithLimits):
         if reps:
             undo = {v: k for k, v in reps.items()}
             did = self.xreplace(reps).doit(**hints)
-            if type(did) is tuple:  # when separate=True
+            if isinstance(did, tuple):  # when separate=True
                 did = tuple([i.xreplace(undo) for i in did])
             else:
                 did = did.xreplace(undo)
@@ -559,10 +566,8 @@ class Integral(AddWithLimits):
                         if res is not None:
                             f, cond = res
                             if conds == 'piecewise':
-                                ret = Piecewise(
-                                    (f, cond),
-                                    (self.func(
-                                    function, (x, a, b)), True))
+                                u = self.func(function, (x, a, b))
+                                return Piecewise((f, cond), (u, True))
                             elif conds == 'separate':
                                 if len(self.limits) != 1:
                                     raise ValueError(filldedent('''
@@ -1323,30 +1328,6 @@ class Integral(AddWithLimits):
             raise ValueError("Unknown method %s" % method)
         return result.doit() if evaluate else result
 
-    def _sage_(self):
-        import sage.all as sage
-        f, limits = self.function._sage_(), list(self.limits)
-        for limit_ in limits:
-            if len(limit_) == 1:
-                x = limit_[0]
-                f = sage.integral(f,
-                                    x._sage_(),
-                                    hold=True)
-            elif len(limit_) == 2:
-                x, b = limit_
-                f = sage.integral(f,
-                                    x._sage_(),
-                                    b._sage_(),
-                                    hold=True)
-            else:
-                x, a, b = limit_
-                f = sage.integral(f,
-                                  (x._sage_(),
-                                    a._sage_(),
-                                    b._sage_()),
-                                    hold=True)
-        return f
-
     def principal_value(self, **kwargs):
         """
         Compute the Cauchy Principal Value of the definite integral of a real function in the given interval
@@ -1389,12 +1370,12 @@ class Integral(AddWithLimits):
             raise ValueError("The lower_limit must be smaller than or equal to the upper_limit to calculate "
                              "cauchy's principal value. Also, a and b need to be comparable.")
         if a == b:
-            return 0
+            return S.Zero
         r = Dummy('r')
         f = self.function
         singularities_list = [s for s in singularities(f, x) if s.is_comparable and a <= s <= b]
         for i in singularities_list:
-            if (i == b) or (i == a):
+            if i in (a, b):
                 raise ValueError(
                     'The principal value is not defined in the given interval due to singularity at %d.' % (i))
         F = integrate(f, x, **kwargs)

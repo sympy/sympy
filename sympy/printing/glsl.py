@@ -1,7 +1,7 @@
 from typing import Set
 
 from sympy.core import Basic, S
-from sympy.core.function import _coeff_isneg, Lambda
+from sympy.core.function import Lambda
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from functools import reduce
@@ -97,7 +97,7 @@ class GLSLPrinter(CodePrinter):
         pretty = []
         level = 0
         for n, line in enumerate(code):
-            if line == '' or line == '\n':
+            if line in ('', '\n'):
                 pretty.append(line)
                 continue
             level -= decrease[n]
@@ -134,7 +134,7 @@ class GLSLPrinter(CodePrinter):
                     A.table(self,rowsep=', ',
                     rowstart='',rowend='')
                 )
-        elif A.cols == 1 or A.rows == 1:
+        elif S.One in A.shape:
             return "{}({})".format(
                 array_constructor,
                 A.table(self,rowsep=mat_separator,rowstart='',rowend='')
@@ -318,7 +318,7 @@ class GLSLPrinter(CodePrinter):
         def add(a,b):
             return self._print_Function_with_args('add', (a, b))
             # return self.known_functions['add']+'(%s, %s)' % (a,b)
-        neg, pos = partition(lambda arg: _coeff_isneg(arg), terms)
+        neg, pos = partition(lambda arg: arg.could_extract_minus_sign(), terms)
         if pos:
             s = pos = reduce(lambda a,b: add(a,b), map(lambda t: self._print(t),pos))
         else:

@@ -60,9 +60,9 @@ from sympy import (
 
 from sympy.core.add import Add
 from sympy.core.basic import _aresame
-from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
 from sympy.core.power import Pow
+from sympy.utilities.iterables import iterable
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
@@ -2928,6 +2928,7 @@ def test_nroots():
         '- 2.5*I, -1.7 + 2.5*I, -1.0*I, 1.0*I, -1.7*I, 1.7*I, -2.8*I, '
         '2.8*I, -3.4*I, 3.4*I, 1.7 - 1.9*I, 1.7 + 1.9*I, 1.7 - 2.5*I, '
         '1.7 + 2.5*I]')
+    assert str(Poly(1e-15*x**2 -1).nroots()) == ('[-31622776.6016838, 31622776.6016838]')
 
 
 def test_ground_roots():
@@ -3399,7 +3400,7 @@ def test_Poly_precision():
 def test_issue_12400():
     # Correction of check for negative exponents
     assert poly(1/(1+sqrt(2)), x) == \
-            Poly(1/(1+sqrt(2)), x , domain='EX')
+            Poly(1/(1+sqrt(2)), x, domain='EX')
 
 def test_issue_14364():
     assert gcd(S(6)*(1 + sqrt(3))/5, S(3)*(1 + sqrt(3))/10) == Rational(3, 10) * (1 + sqrt(3))

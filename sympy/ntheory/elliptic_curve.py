@@ -1,9 +1,10 @@
-from sympy.core.compatibility import as_int, is_sequence
+from sympy.core.compatibility import as_int
 from sympy.core.numbers import oo
 from sympy.core.relational import Eq
 from sympy.core.symbol import symbols
 from sympy.polys.domains import FiniteField, QQ, RationalField, FF
 from sympy.solvers.solvers import solve
+from sympy.utilities.iterables import is_sequence
 from .factor_ import divisors
 from .residue_ntheory import polynomial_congruence
 
@@ -26,9 +27,9 @@ class EllipticCurve:
     References
     ==========
 
-    [1] J. Silverman "A Friendly Introduction to Number Theory" Third Edition
-    [2] http://mathworld.wolfram.com/EllipticDiscriminant.html
-    [3] G. Hardy, E. Wright "An Introduction to the Theory of Numbers" Sixth Edition
+    .. [1] J. Silverman "A Friendly Introduction to Number Theory" Third Edition
+    .. [2] http://mathworld.wolfram.com/EllipticDiscriminant.html
+    .. [3] G. Hardy, E. Wright "An Introduction to the Theory of Numbers" Sixth Edition
 
     """
 

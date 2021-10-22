@@ -1,5 +1,5 @@
 from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros, acos,
-    ImmutableMatrix as Matrix)
+    ImmutableMatrix as Matrix, _simplify_matrix)
 from sympy import trigsimp
 from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
@@ -424,7 +424,7 @@ class Vector(Printable, EvalfMixin):
         def _det(mat):
             """This is needed as a little method for to find the determinant
             of a list in python; needs to work for a 3x3 list.
-            SymPy's Matrix won't take in Vector, so need a custom function.
+            SymPy's Matrix will not take in Vector, so need a custom function.
             You shouldn't be calling this.
 
             """
@@ -653,7 +653,7 @@ class Vector(Printable, EvalfMixin):
         """Returns a simplified Vector."""
         d = {}
         for v in self.args:
-            d[v[1]] = v[0].simplify()
+            d[v[1]] = _simplify_matrix(v[0])
         return Vector(d)
 
     def subs(self, *args, **kwargs):
@@ -764,8 +764,9 @@ class Vector(Printable, EvalfMixin):
         if not self.args:
             return self
         new_args = []
+        dps = prec_to_dps(prec)
         for mat, frame in self.args:
-            new_args.append([mat.evalf(n=prec_to_dps(prec)), frame])
+            new_args.append([mat.evalf(n=dps), frame])
         return Vector(new_args)
 
     def xreplace(self, rule):

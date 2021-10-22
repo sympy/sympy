@@ -590,11 +590,11 @@ def _eval_bidiag_hholder(M):
 
 def _bidiagonal_decomposition(M, upper=True):
     """
-    Returns (U,B,V.H)
+    Returns $(U,B,V.H)$ for
 
-    $A = UBV^{H}$
+    $$A = UBV^{H}$$
 
-    where A is the input matrix, and B is its Bidiagonalized form
+    where $A$ is the input matrix, and $B$ is its Bidiagonalized form
 
     Note: Bidiagonal Computation can hang for symbolic matrices.
 
@@ -607,19 +607,19 @@ def _bidiagonal_decomposition(M, upper=True):
     References
     ==========
 
-    1. Algorith 5.4.2, Matrix computations by Golub and Van Loan, 4th edition
-    2. Complex Matrix Bidiagonalization : https://github.com/vslobody/Householder-Bidiagonalization
+    .. [1] Algorithm 5.4.2, Matrix computations by Golub and Van Loan, 4th edition
+    .. [2] Complex Matrix Bidiagonalization, https://github.com/vslobody/Householder-Bidiagonalization
 
     """
 
-    if type(upper) is not bool:
+    if not isinstance(upper, bool):
         raise ValueError("upper must be a boolean")
 
-    if not upper:
-        X = _bidiagonal_decmp_hholder(M.H)
-        return X[2].H, X[1].H, X[0].H
+    if upper:
+        return _bidiagonal_decmp_hholder(M)
 
-    return _bidiagonal_decmp_hholder(M)
+    X = _bidiagonal_decmp_hholder(M.H)
+    return X[2].H, X[1].H, X[0].H
 
 
 def _bidiagonalize(M, upper=True):
@@ -637,18 +637,17 @@ def _bidiagonalize(M, upper=True):
     References
     ==========
 
-    1. Algorith 5.4.2, Matrix computations by Golub and Van Loan, 4th edition
-    2. Complex Matrix Bidiagonalization : https://github.com/vslobody/Householder-Bidiagonalization
+    .. [1] Algorithm 5.4.2, Matrix computations by Golub and Van Loan, 4th edition
+    .. [2] Complex Matrix Bidiagonalization : https://github.com/vslobody/Householder-Bidiagonalization
 
     """
 
-    if type(upper) is not bool:
+    if not isinstance(upper, bool):
         raise ValueError("upper must be a boolean")
 
-    if not upper:
-        return _eval_bidiag_hholder(M.H).H
-
-    return _eval_bidiag_hholder(M)
+    if upper:
+        return _eval_bidiag_hholder(M)
+    return _eval_bidiag_hholder(M.H).H
 
 
 def _diagonalize(M, reals_only=False, sort=False, normalize=False):
@@ -844,6 +843,8 @@ def _is_positive_semidefinite_cholesky(M):
 
         if M[k, k].is_negative or pivot_val.is_negative:
             return False
+        elif not (M[k, k].is_nonnegative and pivot_val.is_nonnegative):
+            return None
 
         if pivot > 0:
             M.col_swap(k, k+pivot)
@@ -1227,7 +1228,7 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
         size_nums.reverse()
 
         block_structure.extend(
-            (eig, size) for size, num in size_nums for _ in range(num))
+            [(eig, size) for size, num in size_nums for _ in range(num)])
 
     jordan_form_size = sum(size for eig, size in block_structure)
 

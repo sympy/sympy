@@ -50,7 +50,7 @@ def residue(expr, x, x0):
     expr = sympify(expr)
     if x0 != 0:
         expr = expr.subs(x, x + x0)
-    for n in [0, 1, 2, 4, 8, 16, 32]:
+    for n in (0, 1, 2, 4, 8, 16, 32):
         s = expr.nseries(x, n=n)
         if not s.has(Order) or s.getn() >= 0:
             break
@@ -63,7 +63,7 @@ def residue(expr, x, x0):
     for arg in args:
         c, m = arg.as_coeff_mul(x)
         m = Mul(*m)
-        if not (m == 1 or m == x or (m.is_Pow and m.exp.is_Integer)):
+        if not (m in (S.One, x) or (m.is_Pow and m.exp.is_Integer)):
             raise NotImplementedError('term of unexpected form: %s' % m)
         if m == 1/x:
             res += c

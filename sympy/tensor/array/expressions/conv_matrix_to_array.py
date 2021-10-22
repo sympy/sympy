@@ -1,11 +1,11 @@
-from sympy import Mul, Basic, MatMul, MatAdd, Transpose, Trace, Pow, \
+from sympy import Integer, Mul, Basic, MatMul, MatAdd, Transpose, Trace, Pow, \
     MatPow, symbols, Dummy, Lambda, HadamardProduct, HadamardPower, S
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal, ArrayTensorProduct, \
     PermuteDims, ArrayAdd, ArrayContraction, ArrayElementwiseApplyFunc
 
 
-def convert_matrix_to_array(expr: MatrixExpr) -> Basic:
+def convert_matrix_to_array(expr: Basic) -> Basic:
     if isinstance(expr, MatMul):
         args_nonmat = []
         args = []
@@ -36,7 +36,7 @@ def convert_matrix_to_array(expr: MatrixExpr) -> Basic:
                 convert_matrix_to_array(expr.args[0]), [1, 0]
         )
     elif isinstance(expr, Trace):
-        inner_expr = convert_matrix_to_array(expr.arg)
+        inner_expr: MatrixExpr = convert_matrix_to_array(expr.arg) # type: ignore
         return ArrayContraction(inner_expr, (0, len(inner_expr.shape) - 1))
     elif isinstance(expr, Mul):
         return ArrayTensorProduct.fromiter(convert_matrix_to_array(i) for i in expr.args)
@@ -61,7 +61,7 @@ def convert_matrix_to_array(expr: MatrixExpr) -> Basic:
         return ArrayDiagonal(tp, *diag)
     elif isinstance(expr, HadamardPower):
         base, exp = expr.args
-        if exp.is_Integer and exp > 0:
+        if isinstance(exp, Integer) and exp > 0:
             return convert_matrix_to_array(HadamardProduct.fromiter(base for i in range(exp)))
         else:
             raise NotImplementedError("conversion of Hadamard symbolic power is currently not supported")

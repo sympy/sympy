@@ -1,7 +1,7 @@
 from sympy import Expr, sympify, Symbol, Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import is_sequence
+from sympy.utilities.iterables import is_sequence
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.matrixutils import (
@@ -412,6 +412,6 @@ def dispatch_method(self, basename, arg, **options):
         if result is not None:
             return result
     raise NotImplementedError(
-        "%s.%s can't handle: %r" %
+        "%s.%s cannot handle: %r" %
         (self.__class__.__name__, basename, arg)
     )

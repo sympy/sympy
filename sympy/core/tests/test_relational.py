@@ -5,7 +5,7 @@ from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
 from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
                    Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
                    log, cos, sin, Add, Mul, Pow, floor, ceiling, trigsimp, Reals,
-                   Basic, Expr, Q)
+                   Basic, Expr, Q, exp, exp_polar)
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -787,6 +787,13 @@ def test_simplify_relational():
     assert Lt(x, 2).simplify() == Lt(x, 2)
     assert Lt(-x, 2).simplify() == Gt(x, -2)
 
+    # Test particulat branches of _eval_simplify
+    m = exp(1) - exp_polar(1)
+    assert simplify(m*x > 1) is S.false
+    # These two tests the same branch
+    assert simplify(m*x + 2*m*y > 1) is S.false
+    assert simplify(m*x + y > 1 + y) is S.false
+
 
 def test_equals():
     w, x, y, z = symbols('w:z')
@@ -1211,3 +1218,21 @@ def test_is_ge_le():
     assert is_gt(PowTest(3, 9), PowTest(3,2))
     assert is_le(PowTest(3, 2), PowTest(3,9))
     assert is_lt(PowTest(3, 2), PowTest(3,9))
+
+
+def test_weak_strict():
+    for func in (Eq, Ne):
+        eq = func(x, 1)
+        assert eq.strict == eq.weak == eq
+    eq = Gt(x, 1)
+    assert eq.weak == Ge(x, 1)
+    assert eq.strict == eq
+    eq = Lt(x, 1)
+    assert eq.weak == Le(x, 1)
+    assert eq.strict == eq
+    eq = Ge(x, 1)
+    assert eq.strict == Gt(x, 1)
+    assert eq.weak == eq
+    eq = Le(x, 1)
+    assert eq.strict == Lt(x, 1)
+    assert eq.weak == eq

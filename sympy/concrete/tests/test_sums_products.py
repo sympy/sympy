@@ -388,6 +388,15 @@ def test_evalf_slow_series():
     assert NS(Sum((-1)**n / (2*n + 1)**3, (n, 0, oo)), 50) == NS(pi**3/32, 50)
 
 
+def test_evalf_oo_to_oo():
+    # There used to be an error in certain cases
+    # Does not evaluate, but at least do not throw an error
+    # Evaluates symbolically to 0, which is not correct
+    assert Sum(1/(n**2+1), (n, -oo, oo)).evalf() == Sum(1/(n**2+1), (n, -oo, oo))
+    # This evaluates if from 1 to oo and symbolically
+    assert Sum(1/(factorial(abs(n))), (n, -oo, -1)).evalf() == Sum(1/(factorial(abs(n))), (n, -oo, -1))
+
+
 def test_euler_maclaurin():
     # Exact polynomial sums with E-M
     def check_exact(f, a, b, m, n):
@@ -576,9 +585,9 @@ def test_Sum_doit():
     assert 0 == (s.doit() - n*(n+1)*(n-1)).factor()
 
     # Integer assumes finite
-    assert Sum(KroneckerDelta(x, y), (x, -oo, oo)).doit() == Piecewise((1, And(-oo <= y, y < oo)), (0, True))
+    assert Sum(KroneckerDelta(x, y), (x, -oo, oo)).doit() == Piecewise((1, And(-oo < y, y < oo)), (0, True))
     assert Sum(KroneckerDelta(m, n), (m, -oo, oo)).doit() == 1
-    assert Sum(m*KroneckerDelta(x, y), (x, -oo, oo)).doit() == Piecewise((m, And(-oo <= y, y < oo)), (0, True))
+    assert Sum(m*KroneckerDelta(x, y), (x, -oo, oo)).doit() == Piecewise((m, And(-oo < y, y < oo)), (0, True))
     assert Sum(x*KroneckerDelta(m, n), (m, -oo, oo)).doit() == x
     assert Sum(Sum(KroneckerDelta(m, n), (m, 1, 3)), (n, 1, 3)).doit() == 3
     assert Sum(Sum(KroneckerDelta(k, m), (m, 1, 3)), (n, 1, 3)).doit() == \
@@ -639,7 +648,6 @@ def test_diff():
 
 
 def test_hypersum():
-    from sympy import sin
     assert simplify(summation(x**n/fac(n), (n, 1, oo))) == -1 + exp(x)
     assert summation((-1)**n * x**(2*n) / fac(2*n), (n, 0, oo)) == cos(x)
     assert simplify(summation((-1)**n*x**(2*n + 1) /
@@ -1427,6 +1435,12 @@ def test_matrixsymbol_summation_numerical_limits():
            A**3*Matrix([[0, -9, 0], [3, 0, 0], [0, 0, 8]]) +
            A*Matrix([[0, 1, 0], [-1, 0, 0], [0, 0, 2]]))
     assert Sum(A**n*B**n, (n, 1, 3)).doit() == ans
+
+
+def test_issue_21651():
+    i = Symbol('i')
+    a = Sum(floor(2*2**(-i)), (i, S.One, 2))
+    assert a.doit() == S.One
 
 
 @XFAIL

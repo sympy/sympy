@@ -1,13 +1,13 @@
 from typing import Dict, List
 
 from sympy.core import S
-from sympy.core.compatibility import is_sequence, as_int
+from sympy.core.compatibility import as_int
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
-from sympy.utilities.iterables import flatten
+from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.magic import pollute
 
 
@@ -250,7 +250,7 @@ class FreeGroup(DefaultPrinting):
 
         """
         if self.rank == 0:
-            return 1
+            return S.One
         else:
             return S.Infinity
 
@@ -273,7 +273,7 @@ class FreeGroup(DefaultPrinting):
             return {self.identity}
         else:
             raise ValueError("Group contains infinitely many elements"
-                            ", hence can't be represented")
+                            ", hence cannot be represented")
 
     @property
     def rank(self):
@@ -300,10 +300,7 @@ class FreeGroup(DefaultPrinting):
         False
 
         """
-        if self.rank == 0 or self.rank == 1:
-            return True
-        else:
-            return False
+        return self.rank in (0, 1)
 
     @property
     def identity(self):
@@ -343,7 +340,7 @@ class FreeGroup(DefaultPrinting):
 
 
 class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
-    """Used to create elements of FreeGroup. It can not be used directly to
+    """Used to create elements of FreeGroup. It cannot be used directly to
     create a free group element. It is called by the `dtype` method of the
     `FreeGroup` class.
 
@@ -380,12 +377,12 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         size of each tuple is two. At the first position the tuple
         contains the `symbol-generator`, while at the second position
         of tuple contains the exponent of that generator at the position.
-        Since elements (i.e. words) don't commute, the indexing of tuple
+        Since elements (i.e. words) do not commute, the indexing of tuple
         makes that property to stay.
 
         The structure in ``array_form`` of ``FreeGroupElement`` is of form:
 
-        ``( ( symbol_of_gen , exponent ), ( , ), ... ( , ) )``
+        ``( ( symbol_of_gen, exponent ), ( , ), ... ( , ) )``
 
         Examples
         ========
@@ -582,7 +579,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         if self.is_identity:
-            return 1
+            return S.One
         else:
             return S.Infinity
 
@@ -1026,7 +1023,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         References
         ==========
 
-        http://planetmath.org/cyclicpermutation
+        .. [1] http://planetmath.org/cyclicpermutation
 
         """
         return {self.cyclic_subword(i, i+len(self)) for i in range(len(self))}
@@ -1209,7 +1206,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         References
         ==========
 
-        http://planetmath.org/cyclicallyreduced
+        .. [1] http://planetmath.org/cyclicallyreduced
 
         """
         word = self.copy()

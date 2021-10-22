@@ -128,7 +128,7 @@ __all__ = ['ContinuousRV',
 
 @is_random.register(MatrixBase)
 def _(x):
-    return any([is_random(i) for i in x])
+    return any(is_random(i) for i in x)
 
 def rv(symbol, cls, args, **kwargs):
     args = list(map(sympify, args))
@@ -625,7 +625,7 @@ class BoundedParetoDistribution(SingleContinuousDistribution):
 
     @property
     def set(self):
-        return Interval(self.left , self.right)
+        return Interval(self.left, self.right)
 
     @staticmethod
     def check(alpha, left, right):

@@ -374,6 +374,7 @@ def test_Mul_doesnt_expand_exp():
     assert sqrt(2)*2**Rational(1, 4)*5**Rational(3, 4) == 10**Rational(3, 4)
     assert (x**(-log(5)/log(3))*x)/(x*x**( - log(5)/log(3))) == sympify(1)
 
+
 def test_Mul_is_integer():
     k = Symbol('k', integer=True)
     n = Symbol('n', integer=True)
@@ -412,6 +413,7 @@ def test_Mul_is_integer():
     assert (xq*yq).is_integer is None
     e_20161 = Mul(-1,Mul(1,Pow(2,-1,evaluate=False),evaluate=False),evaluate=False)
     assert e_20161.is_integer is not True # expand(e_20161) -> -1/2, but no need to see that in the assumption without evaluation
+
 
 def test_Add_Mul_is_integer():
     x = Symbol('x')
@@ -511,6 +513,12 @@ def test_Mul_is_even_odd():
     assert (x*x).is_odd is None
     assert (x*(x + k)).is_odd is False
     assert (x*(x + m)).is_odd is None
+
+    # issue 8648
+    assert (m**2/2).is_even
+    assert (m**2/3).is_even is False
+    assert (2/m**2).is_odd is False
+    assert (2/m).is_odd is None
 
 
 @XFAIL
@@ -916,6 +924,7 @@ def test_Add_is_negative_positive():
     z = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
     assert z.is_zero
 
+
 def test_Add_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)
 
@@ -1050,6 +1059,19 @@ def test_Pow_is_integer():
     x = Symbol('x', positive=True)
     assert (1/(x + 1)).is_integer is False
     assert (1/(-x - 1)).is_integer is False
+    assert (-1/(x + 1)).is_integer is False
+
+    # issue 8648-like
+    k = Symbol('k', even=True)
+    assert (k**3/2).is_integer
+    assert (k**3/8).is_integer
+    assert (k**3/16).is_integer is None
+    assert (2/k).is_integer is None
+    assert (2/k**2).is_integer is False
+    o = Symbol('o', odd=True)
+    assert (k/o).is_integer is None
+    o = Symbol('o', odd=True, prime=True)
+    assert (k/o).is_integer is False
 
 
 def test_Pow_is_real():
@@ -1115,6 +1137,7 @@ def test_Pow_is_real():
     with evaluate(False):
         assert f.is_imaginary is False
 
+
 def test_real_Pow():
     k = Symbol('k', integer=True, nonzero=True)
     assert (k**(I*pi/log(k))).is_real
@@ -1162,6 +1185,7 @@ def test_Pow_is_finite():
     assert (1/S.Pi).is_finite is True
 
     assert (1/(i-1)).is_finite is None
+
 
 def test_Pow_is_even_odd():
     x = Symbol('x')
@@ -1897,7 +1921,7 @@ def test_Mod():
     assert (x**6000%400).args[1] == 400
 
     #issue 13543
-    assert Mod(Mod(x + 1, 2) + 1 , 2) == Mod(x,2)
+    assert Mod(Mod(x + 1, 2) + 1, 2) == Mod(x, 2)
 
     assert Mod(Mod(x + 2, 4)*(x + 4), 4) == Mod(x*(x + 2), 4)
     assert Mod(Mod(x + 2, 4)*4, 4) == 0
@@ -2243,6 +2267,7 @@ def test_mul_zero_detection():
         e = Mul(b, z, evaluate=False)
         test(z, b, e)
 
+
 def test_Mul_with_zero_infinite():
     zer = Dummy(zero=True)
     inf = Dummy(finite=False)
@@ -2254,6 +2279,7 @@ def test_Mul_with_zero_infinite():
     e = Mul(inf, zer, evaluate=False)
     assert e.is_extended_positive is None
     assert e.is_hermitian is None
+
 
 def test_Mul_does_not_cancel_infinities():
     a, b = symbols('a b')
@@ -2336,3 +2362,28 @@ def test_issue_17130():
 def test_issue_21034():
     e = -I*log((re(asin(5)) + I*im(asin(5)))/sqrt(re(asin(5))**2 + im(asin(5))**2))/pi
     assert e.round(2)
+
+
+def test_issue_22021():
+    from sympy.calculus.util import AccumBounds
+    from sympy.utilities.iterables import permutations
+    # these objects are special cases in Mul
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
+    L = TensorIndexType("L")
+    i = tensor_indices("i", L)
+    A, B = tensor_heads("A B", [L])
+    e = A(i) + B(i)
+    assert -e == -1*e
+    e = zoo + x
+    assert -e == -1*e
+    a = AccumBounds(1, 2)
+    e = a + x
+    assert -e == -1*e
+    for args in permutations((zoo, a, x)):
+        e = Add(*args, evaluate=False)
+        assert -e == -1*e
+    assert 2*Add(1, x, x, evaluate=False) == 4*x + 2
+
+
+def test_issue_22244():
+    assert -(zoo*x) == zoo*x

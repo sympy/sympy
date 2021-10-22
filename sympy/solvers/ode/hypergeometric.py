@@ -31,7 +31,7 @@ from sympy.functions import exp, sqrt, hyper
 from sympy.integrals import Integral
 from sympy.polys import roots, gcd
 from sympy.polys.polytools import cancel, factor
-from sympy.simplify import collect, simplify, logcombine
+from sympy.simplify import collect, simplify, logcombine # type: ignore
 from sympy.simplify.powsimp import powdenest
 from sympy.solvers.ode.ode import get_numbered_constants
 
@@ -46,7 +46,7 @@ def match_2nd_hypergeometric(eq, func):
     r = collect(eq,
         [func.diff(x, 2), func.diff(x), func]).match(deq)
     if r:
-        if not all([r[key].is_polynomial() for key in r]):
+        if not all(val.is_polynomial() for val in r.values()):
             n, d = eq.as_numer_denom()
             eq = expand(n)
             r = collect(eq, [func.diff(x, 2), func.diff(x), func]).match(deq)
@@ -214,7 +214,7 @@ def equivalence(max_num_pow, dem_pow):
         if dem_pow in [[1, 2, 2], [2, 2, 2], [1, 2], [2, 2]]:
             return "2F1"
     elif max_num_pow == 0:
-        if dem_pow in [[1, 1, 2], [2, 2], [1 ,2, 2], [1, 1], [2], [1, 2], [2, 2]]:
+        if dem_pow in [[1, 1, 2], [2, 2], [1, 2, 2], [1, 1], [2], [1, 2], [2, 2]]:
             return "2F1"
 
     return None

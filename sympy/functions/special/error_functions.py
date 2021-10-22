@@ -3,6 +3,7 @@
 
 from sympy.core import Add, S, sympify, cacheit, pi, I, Rational
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.relational import is_eq
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial, factorial2, RisingFactorial
 from sympy.functions.elementary.complexes import re
@@ -159,7 +160,7 @@ class erf(Function):
 
         # Try to pull out factors of I
         t = arg.extract_multiplicatively(S.ImaginaryUnit)
-        if t is S.Infinity or t is S.NegativeInfinity:
+        if t in (S.Infinity, S.NegativeInfinity):
             return arg
 
         # Try to pull out factors of -1
@@ -192,8 +193,7 @@ class erf(Function):
             return self.args[0].is_extended_real
 
     def _eval_is_zero(self):
-        if self.args[0].is_zero:
-            return True
+        return self.args[0].is_zero
 
     def _eval_rewrite_as_uppergamma(self, z, **kwargs):
         from sympy import uppergamma
@@ -379,12 +379,12 @@ class erfc(Function):
 
         # Try to pull out factors of I
         t = arg.extract_multiplicatively(S.ImaginaryUnit)
-        if t is S.Infinity or t is S.NegativeInfinity:
+        if t in (S.Infinity, S.NegativeInfinity):
             return -arg
 
         # Try to pull out factors of -1
         if arg.could_extract_minus_sign():
-            return S(2) - cls(-arg)
+            return 2 - cls(-arg)
 
     @staticmethod
     @cacheit
@@ -589,8 +589,7 @@ class erfi(Function):
         return self.args[0].is_extended_real
 
     def _eval_is_zero(self):
-        if self.args[0].is_zero:
-            return True
+        return self.args[0].is_zero
 
     def _eval_rewrite_as_tractable(self, z, limitvar=None, **kwargs):
         return self.rewrite(erf).rewrite("tractable", deep=True, limitvar=limitvar)
@@ -731,14 +730,12 @@ class erf2(Function):
 
     @classmethod
     def eval(cls, x, y):
-        I = S.Infinity
-        N = S.NegativeInfinity
-        O = S.Zero
+        chk = (S.Infinity, S.NegativeInfinity, S.Zero)
         if x is S.NaN or y is S.NaN:
             return S.NaN
         elif x == y:
             return S.Zero
-        elif (x is I or x is N or x is O) or (y is I or y is N or y is O):
+        elif x in chk or y in chk:
             return erf(y) - erf(x)
 
         if isinstance(y, erf2inv) and y.args[0] == x:
@@ -794,6 +791,8 @@ class erf2(Function):
     def _eval_expand_func(self, **hints):
         return self.rewrite(erf)
 
+    def _eval_is_zero(self):
+        return is_eq(*self.args)
 
 class erfinv(Function):
     r"""
@@ -885,8 +884,7 @@ class erfinv(Function):
        return erfcinv(1-z)
 
     def _eval_is_zero(self):
-        if self.args[0].is_zero:
-            return True
+        return self.args[0].is_zero
 
 
 class erfcinv (Function):
@@ -963,6 +961,12 @@ class erfcinv (Function):
 
     def _eval_rewrite_as_erfinv(self, z, **kwargs):
         return erfinv(1-z)
+
+    def _eval_is_zero(self):
+        return (self.args[0] - 1).is_zero
+
+    def _eval_is_infinite(self):
+        return self.args[0].is_zero
 
 
 class erf2inv(Function):
@@ -1342,8 +1346,7 @@ class expint(Function):
 
     @classmethod
     def eval(cls, nu, z):
-        from sympy import (unpolarify, expand_mul, uppergamma, exp, gamma,
-                           factorial)
+        from sympy import (unpolarify, expand_mul, uppergamma, gamma)
         nu2 = unpolarify(nu)
         if nu != nu2:
             return expint(nu2, z)
@@ -1364,7 +1367,6 @@ class expint(Function):
             return (exp(2*I*pi*nu*n) - 1)*z**(nu - 1)*gamma(1 - nu) + expint(nu, z)
 
     def fdiff(self, argindex):
-        from sympy import meijerg
         nu, z = self.args
         if argindex == 1:
             return -z**(nu - 1)*meijerg([], [1, 1], [0, 0, 1 - nu], [], z)
@@ -1378,7 +1380,7 @@ class expint(Function):
         return z**(nu - 1)*uppergamma(1 - nu, z)
 
     def _eval_rewrite_as_Ei(self, nu, z, **kwargs):
-        from sympy import exp_polar, unpolarify, exp, factorial
+        from sympy import exp_polar, unpolarify
         if nu == 1:
             return -Ei(z*exp_polar(-I*pi)) - I*pi
         elif nu.is_Integer and nu > 1:
@@ -1423,10 +1425,6 @@ class expint(Function):
             return (exp(-z)/z) * Add(*s)
 
         return super(expint, self)._eval_aseries(n, args0, x, logx)
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.exp_integral_e(self.args[0]._sage_(), self.args[1]._sage_())
 
 
 def E1(z):
@@ -1780,7 +1778,7 @@ class TrigonometricIntegral(Function):
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE this is fairly inefficient
-        from sympy import log, EulerGamma, Pow
+        from sympy import EulerGamma, Pow
         n += 1
         if self.args[0].subs(x, 0) != 0:
             return super()._eval_nseries(x, n, logx)
@@ -1912,10 +1910,6 @@ class Si(TrigonometricIntegral):
         z = self.args[0]
         if z.is_zero:
             return True
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.sin_integral(self.args[0]._sage_())
 
 
 class Ci(TrigonometricIntegral):
@@ -2049,10 +2043,6 @@ class Ci(TrigonometricIntegral):
         # All other points are not handled
         return super(Ci, self)._eval_aseries(n, args0, x, logx)
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.cos_integral(self.args[0]._sage_())
-
 
 class Shi(TrigonometricIntegral):
     r"""
@@ -2158,13 +2148,9 @@ class Shi(TrigonometricIntegral):
         elif not arg0.is_infinite:
             return self.func(arg0)
         elif arg0.is_infinite:
-            return -pi*S.ImaginiryUnit/2
+            return -pi*S.ImaginaryUnit/2
         else:
             return self
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.sinh_integral(self.args[0]._sage_())
 
 
 class Chi(TrigonometricIntegral):
@@ -2278,10 +2264,6 @@ class Chi(TrigonometricIntegral):
         else:
             return self
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.cosh_integral(self.args[0]._sage_())
-
 
 ###############################################################################
 #################### FRESNEL INTEGRALS ########################################
@@ -2335,9 +2317,7 @@ class FresnelIntegral(Function):
     _eval_is_finite = _eval_is_extended_real
 
     def _eval_is_zero(self):
-        z = self.args[0]
-        if z.is_zero:
-            return True
+        return self.args[0].is_zero
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())

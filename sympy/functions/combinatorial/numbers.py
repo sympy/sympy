@@ -11,11 +11,12 @@ from typing import Callable, Dict
 
 from sympy.core import S, Symbol, Rational, Integer, Add, Dummy
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import as_int, SYMPY_INTS
+from sympy.core.compatibility import as_int
 from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import E, pi
 from sympy.core.relational import LessThan, StrictGreaterThan
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
@@ -789,7 +790,7 @@ class harmonic(Function):
     >>> limit(harmonic(n, 3), n, oo)
     -polygamma(2, 1)/2
 
-    However we can not compute the general relation yet:
+    However we cannot compute the general relation yet:
 
     >>> limit(harmonic(n, m), n, oo)
     harmonic(oo, m)
@@ -1161,7 +1162,7 @@ class catalan(Function):
                 return Rational(-1, 2)
 
     def fdiff(self, argindex=1):
-        from sympy import polygamma, log
+        from sympy import polygamma
         n = self.args[0]
         return catalan(n)*(polygamma(0, n + S.Half) - polygamma(0, n + 2) + log(4))
 
@@ -1433,12 +1434,13 @@ def _multiset_histogram(n):
     else:
         n = list(n)
         s = set(n)
-        if len(s) == len(n):
-            n = [1]*len(n)
-            n.extend([len(n), len(n)])
+        lens = len(s)
+        lenn = len(n)
+        if lens == lenn:
+            n = [1]*lenn + [lenn, lenn]
             return _MultisetHistogram(n)
-        m = dict(zip(s, range(len(s))))
-        d = dict(zip(range(len(s)), [0]*len(s)))
+        m = dict(zip(s, range(lens)))
+        d = dict(zip(range(lens), (0,)*lens))
         for i in n:
             d[m[i]] += 1
         return _multiset_histogram(d)
@@ -1512,7 +1514,6 @@ def nP(n, k=None, replacement=False):
 
 @cacheit
 def _nP(n, k=None, replacement=False):
-    from sympy.functions.combinatorial.factorials import factorial
     from sympy.core.mul import prod
 
     if k == 0:
@@ -1597,7 +1598,7 @@ def _AOP_product(n):
     ord = sum(n)
     need = (ord + 2)//2
     rv = [1]*(n.pop() + 1)
-    rv.extend([0]*(need - len(rv)))
+    rv.extend((0,) * (need - len(rv)))
     rv = rv[:need]
     while n:
         ni = n.pop()
@@ -1683,7 +1684,6 @@ def nC(n, k=None, replacement=False):
     .. [2] http://tinyurl.com/cep849r
 
     """
-    from sympy.functions.combinatorial.factorials import binomial
     from sympy.core.mul import prod
 
     if isinstance(n, SYMPY_INTS):
@@ -1885,7 +1885,7 @@ def _nT(n, k):
     # really quick exits
     if k > n or k < 0:
         return 0
-    if k == n or k == 1:
+    if k in (1, n):
         return 1
     if k == 0:
         return 0
@@ -2096,7 +2096,7 @@ class motzkin(Function):
         except ValueError:
             return False
         if n > 0:
-             if n == 1 or n == 2:
+             if n in (1, 2):
                 return True
 
              tn1 = 1

@@ -4,7 +4,6 @@ from collections import defaultdict
 
 from sympy import oo, zoo, nan
 from sympy.core.add import Add
-from sympy.core.compatibility import iterable
 from sympy.core.expr import Expr
 from sympy.core.function import Derivative, Function, expand
 from sympy.core.mul import Mul
@@ -25,6 +24,8 @@ from sympy.series.order import Order
 from sympy.simplify.powsimp import powsimp
 from sympy.series.sequences import sequence
 from sympy.series.series_class import SeriesBase
+from sympy.utilities.iterables import iterable
+
 
 
 def rational_algorithm(f, x, k, order=4, full=False):

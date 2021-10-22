@@ -155,20 +155,21 @@ def test_pde_1st_linear_constant_coeff_homogeneous():
     sol = pdsolve(eq)
     assert checkpdesol(eq, sol)[0]
 
+
 def test_pde_1st_linear_constant_coeff():
     f, F = map(Function, ['f', 'F'])
     u = f(x,y)
     eq = -2*u.diff(x) + 4*u.diff(y) + 5*u - exp(x + 3*y)
     sol = pdsolve(eq)
     assert sol == Eq(f(x,y),
-    (F(4*x + 2*y) + exp(x/S(2) + 4*y)/S(15))*exp(x/S(2) - y))
+    (F(4*x + 2*y)*exp(x/2) + exp(x + 4*y)/15)*exp(-y))
     assert classify_pde(eq) == ('1st_linear_constant_coeff',
     '1st_linear_constant_coeff_Integral')
     assert checkpdesol(eq, sol)[0]
 
     eq = (u.diff(x)/u) + (u.diff(y)/u) + 1 - (exp(x + y)/u)
     sol = pdsolve(eq)
-    assert sol == Eq(f(x, y), F(x - y)*exp(-x/2 - y/2) + exp(x + y)/S(3))
+    assert sol == Eq(f(x, y), F(x - y)*exp(-x/2 - y/2) + exp(x + y)/3)
     assert classify_pde(eq) == ('1st_linear_constant_coeff',
     '1st_linear_constant_coeff_Integral')
     assert checkpdesol(eq, sol)[0]
@@ -176,22 +177,22 @@ def test_pde_1st_linear_constant_coeff():
     eq = 2*u + -u.diff(x) + 3*u.diff(y) + sin(x)
     sol = pdsolve(eq)
     assert sol == Eq(f(x, y),
-         F(3*x + y)*exp(x/S(5) - 3*y/S(5)) - 2*sin(x)/S(5) - cos(x)/S(5))
+         F(3*x + y)*exp(x/5 - 3*y/5) - 2*sin(x)/5 - cos(x)/5)
     assert classify_pde(eq) == ('1st_linear_constant_coeff',
     '1st_linear_constant_coeff_Integral')
     assert checkpdesol(eq, sol)[0]
 
     eq = u + u.diff(x) + u.diff(y) + x*y
     sol = pdsolve(eq)
-    assert sol == Eq(f(x, y),
-        -x*y + x + y + F(x - y)*exp(-x/S(2) - y/S(2)) - 2)
+    assert sol.expand() == Eq(f(x, y),
+        x + y + (x - y)**2/4 - (x + y)**2/4 + F(x - y)*exp(-x/2 - y/2) - 2).expand()
     assert classify_pde(eq) == ('1st_linear_constant_coeff',
     '1st_linear_constant_coeff_Integral')
     assert checkpdesol(eq, sol)[0]
-
     eq = u + u.diff(x) + u.diff(y) + log(x)
     assert classify_pde(eq) == ('1st_linear_constant_coeff',
     '1st_linear_constant_coeff_Integral')
+
 
 def test_pdsolve_all():
     f, F = map(Function, ['f', 'F'])
@@ -203,8 +204,9 @@ def test_pdsolve_all():
     assert sorted(sol.keys()) == keys
     assert sol['order'] == 1
     assert sol['default'] == '1st_linear_constant_coeff'
-    assert sol['1st_linear_constant_coeff'] == Eq(f(x, y),
-        -x**2*y + x**2 + 2*x*y - 4*x - 2*y + F(x - y)*exp(-x/S(2) - y/S(2)) + 6)
+    assert sol['1st_linear_constant_coeff'].expand() == Eq(f(x, y),
+        -x**2*y + x**2 + 2*x*y - 4*x - 2*y + F(x - y)*exp(-x/2 - y/2) + 6).expand()
+
 
 def test_pdsolve_variable_coeff():
     f, F = map(Function, ['f', 'F'])
@@ -231,4 +233,4 @@ def test_pdsolve_variable_coeff():
 
     eq = exp(2*x)*(u.diff(y)) + y*u - u
     sol = pdsolve(eq, hint='1st_linear_variable_coeff')
-    assert sol == Eq(u, exp((-y**2 + 2*y + 2*F(x))*exp(-2*x)/2))
+    assert sol == Eq(u, F(x)*exp(-y*(y - 2)*exp(-2*x)/2))

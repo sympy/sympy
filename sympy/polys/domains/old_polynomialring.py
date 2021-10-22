@@ -1,7 +1,6 @@
 """Implementation of :class:`PolynomialRing` class. """
 
 
-from sympy.core.compatibility import iterable
 from sympy.polys.agca.modules import FreeModulePolyRing
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.compositedomain import CompositeDomain
@@ -13,6 +12,7 @@ from sympy.polys.polyerrors import (GeneratorsNeeded, PolynomialError,
         CoercionFailed, ExactQuotientFailed, NotReversible)
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 from sympy.utilities import public
+from sympy.utilities.iterables import iterable
 
 # XXX why does this derive from CharacteristicZero???
 
@@ -268,7 +268,7 @@ class GlobalPolynomialRing(PolynomialRingBase):
         try:
             rep, _ = dict_from_basic(a, gens=self.gens)
         except PolynomialError:
-            raise CoercionFailed("can't convert %s to type %s" % (a, self))
+            raise CoercionFailed("Cannot convert %s to type %s" % (a, self))
 
         for k, v in rep.items():
             rep[k] = self.dom.from_sympy(v)

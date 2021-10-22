@@ -176,10 +176,9 @@ class lambdify:
             if abs(result.imag) > 1e-7 * abs(result):
                 return None
             return result.real
-        except (ZeroDivisionError, OverflowError, TypeError) as e:
-            if isinstance(e, ZeroDivisionError) or isinstance(e, OverflowError):
-                return None
-
+        except (ZeroDivisionError, OverflowError):
+            return None
+        except TypeError as e:
             if self.failure:
                 raise e
 
@@ -218,7 +217,7 @@ class Lambdifier:
 
         # Constructing the argument string
         # - check
-        if not all([isinstance(a, Symbol) for a in args]):
+        if not all(isinstance(a, Symbol) for a in args):
             raise ValueError('The arguments must be Symbols.')
         # - use numbered symbols
         syms = numbered_symbols(exclude=expr.free_symbols)

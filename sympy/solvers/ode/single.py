@@ -12,7 +12,7 @@ from sympy.core import Add, S, Pow, Rational
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, _mexpand
-from sympy.core.numbers import Float, zoo
+from sympy.core.numbers import zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.core.mul import Mul
@@ -20,7 +20,7 @@ from sympy.functions import exp, tan, log, sqrt, besselj, bessely, cbrt, airyai,
 from sympy.integrals import Integral
 from sympy.polys import Poly
 from sympy.polys.polytools import cancel, factor, degree
-from sympy.simplify import collect, simplify, separatevars, logcombine, posify
+from sympy.simplify import collect, simplify, separatevars, logcombine, posify # type: ignore
 from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
 from sympy.solvers.solvers import solve
@@ -291,7 +291,7 @@ class SingleODESolver:
 
     def get_general_solution(self, *, simplify: bool = True) -> List[Equality]:
         if not self.matches():
-            msg = "%s solver can not solve:\n%s"
+            msg = "%s solver cannot solve:\n%s"
             raise ODEMatchError(msg % (self.hint, self.ode_problem.eq))
         return self._get_general_solution(simplify_flag=simplify)
 
@@ -764,19 +764,19 @@ class Bernoulli(SinglePatternODESolver):
         P(x)*f(x) + --(f(x)) = Q(x)*f (x)
                     dx
         >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=110)
-                                                                                                              -1
-                                                                                                             -----
-                                                                                                             n - 1
-               //         /                                /                           \                    \
-               ||        |                                |                            |                    |
-               ||        |                 /              |                 /          |            /       |
-               ||        |                |               |                |           |           |        |
-               ||        |       (1 - n)* | P(x) dx       |       (1 - n)* | P(x) dx   |  (n - 1)* | P(x) dx|
-               ||        |                |               |                |           |           |        |
-               ||        |               /                |               /            |          /         |
-        f(x) = ||C1 - n* | Q(x)*e                   dx +  | Q(x)*e                   dx|*e                  |
-               ||        |                                |                            |                    |
-               \\       /                                /                             /                    /
+                                                                                                                -1
+                                                                                                               -----
+                                                                                                               n - 1
+               //         /                                 /                            \                    \
+               ||        |                                 |                             |                    |
+               ||        |                  /              |                  /          |            /       |
+               ||        |                 |               |                 |           |           |        |
+               ||        |       -(n - 1)* | P(x) dx       |       -(n - 1)* | P(x) dx   |  (n - 1)* | P(x) dx|
+               ||        |                 |               |                 |           |           |        |
+               ||        |                /                |                /            |          /         |
+        f(x) = ||C1 - n* | Q(x)*e                    dx +  | Q(x)*e                    dx|*e                  |
+               ||        |                                 |                             |                    |
+               \\       /                                 /                              /                    /
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
@@ -875,13 +875,12 @@ class Factorable(SingleODESolver):
     has_integral = False
 
     def _matches(self):
-        eq = self.ode_problem.eq
+        eq_orig = self.ode_problem.eq
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
-        order =self.ode_problem.order
         df = f(x).diff(x)
         self.eqs = []
-        eq = eq.collect(f(x), func = cancel)
+        eq = eq_orig.collect(f(x), func = cancel)
         eq = fraction(factor(eq))[0]
         factors = Mul.make_args(factor(eq))
         roots = [fac.as_base_exp() for fac in factors if len(fac.args)!=0]
@@ -894,13 +893,9 @@ class Factorable(SingleODESolver):
         roots = solve(eq, df)
         if len(roots)>0:
             self.eqs = [(df - root) for root in roots]
-            if len(self.eqs)==1:
-                if order>1:
-                    return False
-                if self.eqs[0].has(Float):
-                    return False
-                return fraction(factor(self.eqs[0]))[0]-eq!=0
-            return True
+            # Avoid infinite recursion
+            matches = self.eqs != [eq_orig]
+            return matches
         for i in factors:
             if i.has(f(x)):
                 self.eqs.append(i)
@@ -1699,7 +1694,7 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
     def _get_general_solution(self, *, simplify_flag: bool = True):
         d, e, fx, x, u, u1, y, xarg, yarg = self._get_match_object()
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
-        int = Integral(simplify((-d/(e + u1*d)).subs({x: u1, y: 1})), (u1, None, x/fx))
+        int = Integral(simplify((-d/(e + u1*d)).subs({x: u1, y: 1})), (u1, None, x/fx)) # type: ignore
         sol = logcombine(Eq(log(fx), int + log(C1)), force=True)
         gen_sol = sol.subs(fx, u).subs(((u, u - yarg), (x, x - xarg), (u, fx)))
         return [gen_sol]
@@ -2492,8 +2487,8 @@ class NthLinearEulerEqHomogeneous(SingleODESolver):
             coeff = match[order]
             factor = x**order / coeff
             self.r = {i: factor*match[i] for i in match}
-        if self.r and not any(not _test_term(self.r[i], f(x), i) for i in
-                self.r if i >= 0):
+        if self.r and all(_test_term(self.r[i], f(x), i) for i in
+                          self.r if i >= 0):
             if not self.r[-1]:
                 does_match = True
         return does_match
@@ -2575,8 +2570,8 @@ class NthLinearEulerEqNonhomogeneousVariationOfParameters(SingleODESolver):
             coeff = match[order]
             factor = x**order / coeff
             self.r = {i: factor*match[i] for i in match}
-        if self.r and not any(not _test_term(self.r[i], f(x), i) for i in
-                self.r if i >= 0):
+        if self.r and all(_test_term(self.r[i], f(x), i) for i in
+                          self.r if i >= 0):
             if self.r[-1]:
                 does_match = True
 
@@ -2656,8 +2651,8 @@ class NthLinearEulerEqNonhomogeneousUndeterminedCoefficients(SingleODESolver):
             coeff = match[order]
             factor = x**order / coeff
             self.r = {i: factor*match[i] for i in match}
-        if self.r and not any(not _test_term(self.r[i], f(x), i) for i in
-                self.r if i >= 0):
+        if self.r and all(_test_term(self.r[i], f(x), i) for i in
+                          self.r if i >= 0):
             if self.r[-1]:
                 e, re = posify(self.r[-1].subs(x, exp(x)))
                 undetcoeff = _undetermined_coefficients_match(e.subs(re), x)
@@ -2743,7 +2738,7 @@ class SecondLinearBessel(SingleODESolver):
         r = collect(eq,
             [f.diff(x, 2), df, f]).match(deq)
         if order == 2 and r:
-            if not all([r[key].is_polynomial() for key in r]):
+            if not all(r[key].is_polynomial() for key in r):
                 n, d = eq.as_numer_denom()
                 eq = expand(n)
                 r = collect(eq,

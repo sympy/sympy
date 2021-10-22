@@ -411,10 +411,10 @@ def median(X, evaluate=True, **kwargs):
     >>> from sympy.stats import Normal, Die, median
     >>> N = Normal('N', 3, 1)
     >>> median(N)
-    FiniteSet(3)
+    {3}
     >>> D = Die('D')
     >>> median(D)
-    FiniteSet(3, 4)
+    {3, 4}
 
     References
     ==========
@@ -437,7 +437,7 @@ def median(X, evaluate=True, **kwargs):
             pspace(X).probability(Eq(X, key)) >= Rational(1, 2):
                 result.append(key)
         return FiniteSet(*result)
-    if isinstance(pspace(X), ContinuousPSpace) or isinstance(pspace(X), DiscretePSpace):
+    if isinstance(pspace(X), (ContinuousPSpace, DiscretePSpace)):
         cdf = pspace(X).compute_cdf(X)
         x = Dummy('x')
         result = solveset(piecewise_fold(cdf(x) - Rational(1, 2)), x, pspace(X).set)

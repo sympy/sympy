@@ -5,7 +5,7 @@ from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
                    Function, jacobi, gegenbauer, chebyshevt, chebyshevu,
                    legendre, hermite, laguerre, assoc_laguerre, uppergamma, li,
                    Ei, Ci, Si, Chi, Shi, fresnels, fresnelc, polylog, erfi,
-                   sinh, cosh, elliptic_f, elliptic_e ,asec, acsc, acot )
+                   sinh, cosh, elliptic_f, elliptic_e, asec, acsc, acot)
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, integral_steps, contains_dont_know, manual_subs)
 from sympy.testing.pytest import raises, slow

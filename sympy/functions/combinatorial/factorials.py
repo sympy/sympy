@@ -3,11 +3,11 @@ from functools import reduce
 
 from sympy.core import S, sympify, Dummy, Mod
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import HAS_GMPY
 from sympy.core.function import Function, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi
 from sympy.core.relational import Eq
+from sympy.external.gmpy import HAS_GMPY
 from sympy.ntheory import sieve
 from sympy.polys.polytools import Poly
 
@@ -165,7 +165,7 @@ class factorial(CombinatorialFunction):
 
                     # GMPY factorial is faster, use it when available
                     elif HAS_GMPY:
-                        from sympy.core.compatibility import gmpy
+                        from sympy.external.gmpy import gmpy
                         result = gmpy.fac(n)
 
                     else:
@@ -219,7 +219,7 @@ class factorial(CombinatorialFunction):
                     # its inverse (if n > 4 is a composite number, then
                     # (n-1)! = 0 mod n)
                     if isprime:
-                        return S(-1 % q)
+                        return -1 % q
                     elif isprime is False and (aq - 6).is_nonnegative:
                         return S.Zero
                 elif n.is_Integer and q.is_Integer:
@@ -232,7 +232,7 @@ class factorial(CombinatorialFunction):
                     else:
                         fc = self._facmod(n, aq)
 
-                    return S(fc % q)
+                    return fc % q
 
     def _eval_rewrite_as_gamma(self, n, piecewise=True, **kwargs):
         from sympy import gamma
@@ -653,11 +653,6 @@ class RisingFactorial(CombinatorialFunction):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
                           self.args[1].is_nonnegative))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.rising_factorial(self.args[0]._sage_(),
-                                     self.args[1]._sage_())
-
 
 class FallingFactorial(CombinatorialFunction):
     r"""
@@ -812,11 +807,6 @@ class FallingFactorial(CombinatorialFunction):
         return fuzzy_and((self.args[0].is_integer, self.args[1].is_integer,
                           self.args[1].is_nonnegative))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.falling_factorial(self.args[0]._sage_(),
-                                      self.args[1]._sage_())
-
 
 rf = RisingFactorial
 ff = FallingFactorial
@@ -933,7 +923,7 @@ class binomial(CombinatorialFunction):
                     k = n - k
 
                 if HAS_GMPY:
-                    from sympy.core.compatibility import gmpy
+                    from sympy.external.gmpy import gmpy
                     return Integer(gmpy.bincoef(n, k))
 
                 d, result = n - k, 1

@@ -6,7 +6,7 @@ from sympy import (
     Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
     simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol, summation,
     symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper,
-    Float
+    Float, fresnelc
 )
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.complexes import periodic_argument
@@ -910,7 +910,6 @@ def test_issue_18153():
 
 def test_is_number():
     from sympy.abc import x, y, z
-    from sympy import cos, sin
     assert Integral(x).is_number is False
     assert Integral(1, x).is_number is False
     assert Integral(1, (x, 1)).is_number is True
@@ -1172,7 +1171,6 @@ def test_integrate_series():
 
 
 def test_atom_bug():
-    from sympy import meijerg
     from sympy.integrals.heurisch import heurisch
     assert heurisch(meijerg([], [], [1], [], x), x) is None
 
@@ -1196,7 +1194,6 @@ def test_issue_1888():
 
 
 def test_issue_3558():
-    from sympy import Si
     assert integrate(cos(x*y), (x, -pi/2, pi/2), (y, 0, pi)) == 2*Si(pi**2/2)
 
 
@@ -1205,7 +1202,6 @@ def test_issue_4422():
 
 
 def test_issue_4493():
-    from sympy import simplify
     assert simplify(integrate(x*sqrt(1 + 2*x), x)) == \
         sqrt(2*x + 1)*(6*x**2 + x - 1)/15
 
@@ -1218,14 +1214,14 @@ def test_issue_4737():
 
 def test_issue_4992():
     # Note: psi in _check_antecedents becomes NaN.
-    from sympy import simplify, expand_func, polygamma, gamma
+    from sympy import expand_func
     a = Symbol('a', positive=True)
     assert simplify(expand_func(integrate(exp(-x)*log(x)*x**a, (x, 0, oo)))) == \
         (a*polygamma(0, a) + 1)*gamma(a)
 
 
 def test_issue_4487():
-    from sympy import lowergamma, simplify
+    from sympy import lowergamma
     assert simplify(integrate(exp(-x)*x**y, x)) == lowergamma(y + 1, x)
 
 
@@ -1449,7 +1445,7 @@ def test_issue_12645():
 
 
 def test_issue_12677():
-    assert integrate(sin(x) / (cos(x)**3) , (x, 0, pi/6)) == Rational(1,6)
+    assert integrate(sin(x) / (cos(x)**3), (x, 0, pi/6)) == Rational(1, 6)
 
 
 def test_issue_14078():
@@ -1741,6 +1737,31 @@ def test_issue_4187():
     assert integrate(log(x)*exp(-x), (x, 0, oo)) == -EulerGamma
 
 
+def test_issue_5547():
+    L = Symbol('L')
+    z = Symbol('z')
+    r0 = Symbol('r0')
+    R0 = Symbol('R0')
+
+    assert integrate(r0**2*cos(z)**2, (z, -L/2, L/2)) == -r0**2*(-L/4 -
+                    sin(L/2)*cos(L/2)/2) + r0**2*(L/4 + sin(L/2)*cos(L/2)/2)
+
+    assert integrate(r0**2*cos(R0*z)**2, (z, -L/2, L/2)) == Piecewise(
+        (-r0**2*(-L*R0/4 - sin(L*R0/2)*cos(L*R0/2)/2)/R0 +
+         r0**2*(L*R0/4 + sin(L*R0/2)*cos(L*R0/2)/2)/R0, (R0 > -oo) & (R0 < oo) & Ne(R0, 0)),
+        (L*r0**2, True))
+
+    w = 2*pi*z/L
+
+    sol = sqrt(2)*sqrt(L)*r0**2*fresnelc(sqrt(2)*sqrt(L))*gamma(S.One/4)/(16*gamma(S(5)/4)) + L*r0**2/2
+
+    assert integrate(r0**2*cos(w*z)**2, (z, -L/2, L/2)) == sol
+
+
+def test_issue_15810():
+    assert integrate(1/(2**(2*x/3) + 1), (x, 0, oo)) == Rational(3, 2)
+
+
 def test_issue_21024():
     x = Symbol('x', real=True, nonzero=True)
     f = log(x)*log(4*x) + log(3*x + exp(2))
@@ -1813,8 +1834,8 @@ def test_issue_21024():
     assert F == integrate(f, x)
 
     f = (x + exp(3))/(2*x**2 + 2*x)
-    F = exp(3)*log(x)/2 + (Rational(1, 2) - exp(3)/2)*log(x + 1)
-    assert F == integrate(f, x)
+    F = exp(3)*log(x)/2 - exp(3)*log(x + 1)/2 + log(x + 1)/2
+    assert F == integrate(f, x).expand()
 
     f = log(x + 4*sinh(4))
     F = x*log(x + 4*sinh(4)) - x + 4*log(x + 4*sinh(4))*sinh(4)

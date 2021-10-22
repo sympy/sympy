@@ -134,7 +134,7 @@ def test_rcode_boolean():
     assert rcode((x | y) & z) == "z & (x | y)"
 
 def test_rcode_Relational():
-    from sympy import Eq, Ne, Le, Lt, Gt, Ge
+    from sympy import Ne, Le, Lt, Gt, Ge
     assert rcode(Eq(x, y)) == "x == y"
     assert rcode(Ne(x, y)) == "x != y"
     assert rcode(Le(x, y)) == "x <= y"
@@ -198,8 +198,6 @@ def test_rcode_settings():
 
 
 def test_rcode_Indexed():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o = symbols('n m o', integer=True)
     i, j, k = Idx('i', n), Idx('j', m), Idx('k', o)
     p = RCodePrinter()
@@ -266,8 +264,6 @@ def test_dummy_loops():
 
 
 def test_rcode_loops_add():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
@@ -291,8 +287,6 @@ def test_rcode_loops_add():
 
 
 def test_rcode_loops_multiple_contractions():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -321,8 +315,6 @@ def test_rcode_loops_multiple_contractions():
 
 
 def test_rcode_loops_addfactor():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -352,8 +344,6 @@ def test_rcode_loops_addfactor():
 
 
 def test_rcode_loops_multiple_terms():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')

@@ -1,4 +1,4 @@
-"""Plotting module for Sympy.
+"""Plotting module for SymPy.
 
 A plot is represented by the ``Plot`` class that contains a reference to the
 backend and a list of the data series to be plotted. The data series are
@@ -356,7 +356,7 @@ class PlotGrid:
        :format: doctest
        :include-source: True
 
-        >>> PlotGrid(2, 1 , p1, p2)
+        >>> PlotGrid(2, 1, p1, p2)
         PlotGrid object containing:
         Plot[0]:Plot object containing:
         [0]: cartesian line: x for x over (-5.0, 5.0)
@@ -373,7 +373,7 @@ class PlotGrid:
        :format: doctest
        :include-source: True
 
-        >>> PlotGrid(1, 3 , p2, p3, p4)
+        >>> PlotGrid(1, 3, p2, p3, p4)
         PlotGrid object containing:
         Plot[0]:Plot object containing:
         [0]: cartesian line: x**2 for x over (-6.0, 6.0)
@@ -390,7 +390,7 @@ class PlotGrid:
        :format: doctest
        :include-source: True
 
-        >>> PlotGrid(2, 2, p1, p2 ,p3, p4)
+        >>> PlotGrid(2, 2, p1, p2, p3, p4)
         PlotGrid object containing:
         Plot[0]:Plot object containing:
         [0]: cartesian line: x for x over (-5.0, 5.0)
@@ -742,9 +742,9 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                     else:
                         xarray = np.linspace(p[0], q[0], 10)
                     yarray = list(map(f, xarray))
-                    if any(y is not None for y in yarray):
+                    if not all(y is None for y in yarray):
                         for i in range(len(yarray) - 1):
-                            if yarray[i] is not None or yarray[i + 1] is not None:
+                            if not (yarray[i] is None and yarray[i + 1] is None):
                                 sample([xarray[i], yarray[i]],
                                     [xarray[i + 1], yarray[i + 1]], depth + 1)
 
@@ -891,8 +891,8 @@ class Parametric2DLineSeries(Line2DBaseSeries):
                 param_array = np.linspace(param_p, param_q, 10)
                 x_array = list(map(f_x, param_array))
                 y_array = list(map(f_y, param_array))
-                if any(x is not None and y is not None
-                        for x, y in zip(x_array, y_array)):
+                if not all(x is None and y is None
+                           for x, y in zip(x_array, y_array)):
                     for i in range(len(y_array) - 1):
                         if ((x_array[i] is not None and y_array[i] is not None) or
                                 (x_array[i + 1] is not None and y_array[i + 1] is not None)):
@@ -957,6 +957,9 @@ class Parametric3DLineSeries(Line3DBaseSeries):
         self.end = float(var_start_end[2])
         self.nb_of_points = kwargs.get('nb_of_points', 300)
         self.line_color = kwargs.get('line_color', None)
+        self._xlim = None
+        self._ylim = None
+        self._zlim = None
 
     def __str__(self):
         return '3D parametric cartesian line: (%s, %s, %s) for %s over %s' % (
@@ -1287,7 +1290,7 @@ class MatplotlibBackend(BaseBackend):
             are_3D = [s.is_3D for s in series]
 
             if any(are_3D) and not all(are_3D):
-                raise ValueError('The matplotlib backend can not mix 2D and 3D.')
+                raise ValueError('The matplotlib backend cannot mix 2D and 3D.')
             elif all(are_3D):
                 # mpl_toolkits.mplot3d is necessary for
                 # projection='3d'
@@ -1374,7 +1377,7 @@ class MatplotlibBackend(BaseBackend):
                 collection = ax.plot_surface(x, y, z,
                     cmap=getattr(self.cm, 'viridis', self.cm.jet),
                     rstride=1, cstride=1, linewidth=0.1)
-                if isinstance(s.surface_color, (float, int)) or isinstance(s.surface_color, Callable):
+                if isinstance(s.surface_color, (float, int, Callable)):
                     color_array = s.get_color_array()
                     color_array = color_array.reshape(color_array.size)
                     collection.set_array(color_array)
@@ -1625,8 +1628,8 @@ def _matplotlib_list(interval_list):
                           intervaly.end, intervaly.start, None])
     else:
         #XXX Ugly hack. Matplotlib does not accept empty lists for ``fill``
-        xlist.extend([None, None, None, None])
-        ylist.extend([None, None, None, None])
+        xlist.extend((None, None, None, None))
+        ylist.extend((None, None, None, None))
     return xlist, ylist
 
 

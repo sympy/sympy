@@ -1,7 +1,7 @@
 from typing import Any, Dict
 
 from sympy.testing.pytest import raises
-from sympy import (symbols, sympify, Function, Integer, Matrix, Abs,
+from sympy import (symbols, sympify, Function, Integer, Matrix, Abs, Heaviside,
     Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false, ones,
     sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild, MatrixSymbol, Q)
 from sympy.combinatorics import Cycle, Permutation
@@ -65,6 +65,11 @@ def test_Function():
 
     sT(sin(x), "sin(Symbol('x'))")
     sT(sin, "sin")
+
+
+def test_Heaviside():
+    sT(Heaviside(x), "Heaviside(Symbol('x'))")
+    sT(Heaviside(x, 1), "Heaviside(Symbol('x'), Integer(1))")
 
 
 def test_Geometry():
@@ -313,7 +318,6 @@ def test_Permutation():
     sT(Permutation(1, 2), "Permutation(1, 2)", import_stmt)
 
 def test_dict():
-    from sympy import srepr
     from sympy.abc import x, y, z
     d = {}
     assert srepr(d) == "{}"
@@ -328,7 +332,6 @@ def test_dict():
     assert srepr(d) == "{Symbol('x'): {Symbol('y'): Symbol('z')}}"
 
 def test_set():
-    from sympy import srepr
     from sympy.abc import x, y
     s = set()
     assert srepr(s) == "set()"

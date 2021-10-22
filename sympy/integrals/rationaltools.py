@@ -39,10 +39,10 @@ def ratint(f, x, **flags):
     sympy.integrals.rationaltools.ratint_ratpart
 
     """
-    if type(f) is not tuple:
-        p, q = f.as_numer_denom()
-    else:
+    if isinstance(f, tuple):
         p, q = f
+    else:
+        p, q = f.as_numer_denom()
 
     p, q = Poly(p, x, composite=False, field=True), Poly(q, x, composite=False, field=True)
 
@@ -78,12 +78,11 @@ def ratint(f, x, **flags):
         real = flags.get('real')
 
         if real is None:
-            if type(f) is not tuple:
-                atoms = f.atoms()
-            else:
+            if isinstance(f, tuple):
                 p, q = f
-
                 atoms = p.atoms() | q.atoms()
+            else:
+                atoms = f.atoms()
 
             for elt in atoms - {x}:
                 if not elt.is_extended_real:
@@ -224,7 +223,7 @@ def ratint_logpart(f, g, x, t=None):
     res, R = resultant(a, b, includePRS=True)
     res = Poly(res, t, composite=False)
 
-    assert res, "BUG: resultant(%s, %s) can't be zero" % (a, b)
+    assert res, "BUG: resultant(%s, %s) cannot be zero" % (a, b)
 
     R_map, H = {}, []
 

@@ -5,8 +5,7 @@
    contain the root `toctree` directive.
 
 Welcome to SymPy's documentation!
-
-=================================
+----------------------------------
 
 A PDF version of these docs can be found `here <https://github.com/sympy/sympy/releases>`_.
 
@@ -19,25 +18,18 @@ This is the central page for all of SymPy's documentation.
 
 ..  rst-class:: column
 
-:ref:`Getting Started <get_started>`
+:ref:`SymPy Tutorials <tutorial>`
 -------------------------------------------------------
 
-An introduction to SymPy for developers
-
-..  rst-class:: column
-
-:ref:`Tutorials <tutorial>`
--------------------------------------------------------
-
-A collection of SymPy tutorials.
+*Master SymPy concepts and features*
 
 
 ..  rst-class:: column
 
-:ref:`How-to Guides <how_to_guide>`
+:ref:`How-to Guides <guides>`
 -------------------------------------------------------
 
-Covers step-by-step intructions on how to do different key developer tasks.
+*Step-by-step intructions on how to do different key developer tasks*
 
 
 ..  rst-class:: column clearfix
@@ -45,37 +37,24 @@ Covers step-by-step intructions on how to do different key developer tasks.
 :ref:`Explanation <explanation>`
 -------------------------------------------------------
 
-Clarification and discussion of common pitfalls and advanced topics.
+*Common pitfalls and advanced topics*
 
 
 ..  rst-class:: column
 
-:ref:`Reference <reference>`
+:ref:`SymPy API Reference <reference>`
 -------------------------------------------------------
 
-Discusses and details the internal and public modules
+*SymPy internal and public modules*
 
 
 ..  rst-class:: clearfix row custom-headings
-
-
-:ref:`Contributing <contributing>`
--------------------------------------------------------
-
-Covers instructions for SymPy contributors.
-
-..  rst-class:: clearfix row custom-headings
-
-===============================================
 
 .. toctree::
    :hidden:
 
    tutorial/index.rst
-   getting_started/index.rst
    explanation/index.rst
    reference/index.rst
-   how_to_guide/index.rst
-   contributing/index.rst
+   guides/index.rst
    miscellaneous/index.rst
-

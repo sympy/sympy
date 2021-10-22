@@ -521,14 +521,6 @@ compatibility
 -------------
 .. module:: sympy.core.compatibility
 
-iterable
-^^^^^^^^
-.. autofunction:: iterable
-
-is_sequence
-^^^^^^^^^^^
-.. autofunction:: is_sequence
-
 as_int
 ^^^^^^
 .. autofunction:: as_int
@@ -568,3 +560,27 @@ BooleanKind
 ^^^^^^^^^^^
 .. autoclass:: BooleanKind
    :members:
+
+Traversal
+---------
+.. module:: sympy.core.traversal
+
+bottom_up
+^^^^^^^^^
+.. autofunction:: bottom_up
+
+postorder_traversal
+^^^^^^^^^^^^^^^^^^^
+.. autofunction:: postorder_traversal
+
+preorder_traversal
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: preorder_traversal
+
+use
+^^^
+.. autofunction:: use
+
+walk
+^^^^
+.. autofunction:: walk

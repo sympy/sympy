@@ -3,7 +3,7 @@
 NOTE
 ----
 
-at present this is mainly needed for facts.py , feel free however to improve
+at present this is mainly needed for facts.py, feel free however to improve
 this stuff for general purpose.
 """
 

@@ -1,4 +1,4 @@
-from sympy.core.decorators import wraps
+from functools import wraps
 
 
 def recurrence_memo(initial):

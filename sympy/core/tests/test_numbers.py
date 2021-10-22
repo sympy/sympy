@@ -172,7 +172,7 @@ def test_divmod():
 
     assert divmod(S(4), S(-3.1)) == Tuple(-2, -2.2)
     assert divmod(S(4), S(-2.1)) == divmod(4, -2.1)
-    assert divmod(S(-8), S(-2.5) ) == Tuple(3 , -0.5)
+    assert divmod(S(-8), S(-2.5) ) == Tuple(3, -0.5)
 
     assert divmod(oo, 1) == (S.NaN, S.NaN)
     assert divmod(S.NaN, 1) == (S.NaN, S.NaN)
@@ -343,6 +343,11 @@ def test_Rational_new():
     assert Rational(mpq(2, 6)) == Rational(1, 3)
     assert Rational(PythonRational(2, 6)) == Rational(1, 3)
 
+    assert Rational(2, 4, gcd=1).q == 4
+    n = Rational(2, -4, gcd=1)
+    assert n.q == 4
+    assert n.p == -2
+
 
 def test_Number_new():
     """"
@@ -438,11 +443,12 @@ def test_Float():
     assert (S(.3) == S(.5)) is False
 
     mpf = (0, 5404319552844595, -52, 53)
-    x_str =  Float((0, '13333333333333', -52, 53))
+    x_str = Float((0, '13333333333333', -52, 53))
+    x_0xstr = Float((0, '0x13333333333333', -52, 53))
     x2_str = Float((0, '26666666666666', -53, 54))
     x_hex = Float((0, int(0x13333333333333), -52, 53))
     x_dec = Float(mpf)
-    assert x_str == x_hex == x_dec == Float(1.2)
+    assert x_str == x_0xstr == x_hex == x_dec == Float(1.2)
     # x2_str was entered slightly malformed in that the mantissa
     # was even -- it should be odd and the even part should be
     # included with the exponent, but this is resolved by normalization

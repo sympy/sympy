@@ -29,7 +29,7 @@ If there is a (anti)symmetric metric, the indices can be raised and
 lowered when the tensor is put in canonical form.
 """
 
-from typing import Any, Dict as tDict, List, Set
+from typing import Any, Dict as tDict, List, Set, Tuple as tTuple
 from functools import reduce
 
 from abc import abstractmethod, ABCMeta
@@ -42,12 +42,12 @@ from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.assumptions import ManagedProperties
-from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.containers import Tuple, Dict
 from sympy.core.decorators import deprecated
 from sympy.core.symbol import Symbol, symbols
 from sympy.core.sympify import CantSympify, _sympify
 from sympy.core.operations import AssocOp
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.matrices import eye
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.decorator import memoize_property
@@ -379,7 +379,7 @@ def components_canon_args(components):
             numtyp.append([prev, 1])
     v = []
     for h, n in numtyp:
-        if h.comm == 0 or h.comm == 1:
+        if h.comm in (0, 1):
             comm = h.comm
         else:
             comm = TensorManager.get_comm(h.comm, h.comm)
@@ -469,9 +469,9 @@ class _TensorDataLazyEvaluator(CantSympify):
             #data_list = [self.data_from_tensor(i) for i in tensmul_args if isinstance(i, TensExpr)]
             data_list = [self.data_from_tensor(i) if isinstance(i, Tensor) else i.data for i in tensmul_args if isinstance(i, TensExpr)]
             coeff = prod([i for i in tensmul_args if not isinstance(i, TensExpr)])
-            if all([i is None for i in data_list]):
+            if all(i is None for i in data_list):
                 return None
-            if any([i is None for i in data_list]):
+            if any(i is None for i in data_list):
                 raise ValueError("Mixing tensors with associated components "\
                                  "data with tensors without components data")
             data_result = self.data_contract_dum(data_list, key.dum, key.ext_rank)
@@ -487,9 +487,9 @@ class _TensorDataLazyEvaluator(CantSympify):
                 else:
                     data_list.append(arg)
                     free_args_list.append([])
-            if all([i is None for i in data_list]):
+            if all(i is None for i in data_list):
                 return None
-            if any([i is None for i in data_list]):
+            if any(i is None for i in data_list):
                 raise ValueError("Mixing tensors with associated components "\
                                  "data with tensors without components data")
 
@@ -2278,9 +2278,9 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
                 expected_shape = [tensor.dim for i in range(2)]
             else:
                 expected_shape = [index_type.dim for index_type in tensor.index_types]
-            if len(expected_shape) != array.rank() or (not all([dim1 == dim2 if
+            if len(expected_shape) != array.rank() or (not all(dim1 == dim2 if
                 dim1.is_number else True for dim1, dim2 in zip(expected_shape,
-                array.shape)])):
+                array.shape))):
                 raise ValueError("shapes for tensor %s expected to be %s, "\
                     "replacement array shape is %s" % (tensor, expected_shape,
                     array.shape))
@@ -2698,6 +2698,7 @@ class Tensor(TensExpr):
     is_commutative = False
 
     _index_structure = None  # type: _IndexStructure
+    args: tTuple[TensorHead, Tuple]
 
     def __new__(cls, tensor_head, indices, *, is_canon_bp=False, **kw_args):
         indices = cls._parse_indices(tensor_head, indices)
@@ -3252,7 +3253,7 @@ class TensMul(TensExpr, AssocOp):
     def _tensMul_contract_indices(args, replace_indices=True):
         replacements = [{} for _ in args]
 
-        #_index_order = all([_has_index_order(arg) for arg in args])
+        #_index_order = all(_has_index_order(arg) for arg in args)
 
         args_indices = [get_indices(arg) for arg in args]
         indices, free, free_names, dummy_data = TensMul._indices_to_free_dum(args_indices)
@@ -3571,7 +3572,7 @@ class TensMul(TensExpr, AssocOp):
             for j in range(n, i, -1):
                 c = cv[j-1].commutes_with(cv[j])
                 # if `c` is `None`, it does neither commute nor anticommute, skip:
-                if c not in [0, 1]:
+                if c not in (0, 1):
                     continue
                 typ1 = sorted(set(cv[j-1].component.index_types), key=lambda x: x.name)
                 typ2 = sorted(set(cv[j].component.index_types), key=lambda x: x.name)

@@ -96,6 +96,17 @@ class Linearizer:
         dims = namedtuple('dims', ['l', 'm', 'n', 'o', 's', 'k'])
         self._dims = dims(l, m, n, o, s, k)
 
+        self._Pq = None
+        self._Pqi = None
+        self._Pqd = None
+        self._Pu = None
+        self._Pui = None
+        self._Pud = None
+        self._C_0 = None
+        self._C_1 = None
+        self._C_2 = None
+        self.perm_mat = None
+
         self._setup_done = False
 
     def _setup(self):

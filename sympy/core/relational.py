@@ -1,14 +1,14 @@
 from typing import Dict, Union, Type
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from .basic import S, Atom
+from .basic import Atom, Basic
 from .compatibility import ordered
-from .basic import Basic
 from .evalf import EvalfMixin
 from .function import AppliedUndef
+from .singleton import S
 from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
-from sympy.core.logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
+from .logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
 from sympy.logic.boolalg import Boolean, BooleanAtom
 
 __all__ = (
@@ -196,6 +196,36 @@ class Relational(Boolean, EvalfMixin):
         #      b, evaluate=evaluate)))(*self.args, evaluate=False)
         return Relational.__new__(ops.get(self.func), *self.args)
 
+    @property
+    def weak(self):
+        """return the non-strict version of the inequality or self
+
+        EXAMPLES
+        ========
+
+        >>> from sympy.abc import x
+        >>> (x < 1).weak
+        x <= 1
+        >>> _.weak
+        x <= 1
+        """
+        return self
+
+    @property
+    def strict(self):
+        """return the strict version of the inequality or self
+
+        EXAMPLES
+        ========
+
+        >>> from sympy.abc import x
+        >>> (x <= 1).strict
+        x < 1
+        >>> _.strict
+        x < 1
+        """
+        return self
+
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
 
@@ -258,7 +288,7 @@ class Relational(Boolean, EvalfMixin):
         If failing_expression is True, return the expression whose truth value
         was unknown."""
         if isinstance(other, Relational):
-            if self == other or self.reversed == other:
+            if other in (self, self.reversed):
                 return True
             a, b = self, other
             if a.func in (Eq, Ne) or b.func in (Eq, Ne):
@@ -302,7 +332,7 @@ class Relational(Boolean, EvalfMixin):
 
     def _eval_simplify(self, **kwargs):
         from .add import Add
-        from sympy.core.expr import Expr
+        from .expr import Expr
         r = self
         r = r.func(*[i.simplify(**kwargs) for i in r.args])
         if r.is_Relational:
@@ -336,10 +366,11 @@ class Relational(Boolean, EvalfMixin):
                         else:
                             r = r.func(x, -b / m)
                     else:
-                        r = r.func(b, S.zero)
+                        r = r.func(b, S.Zero)
                 except ValueError:
                     # maybe not a linear function, try polynomial
-                    from sympy.polys import Poly, poly, PolynomialError, gcd
+                    from sympy.polys.polyerrors import PolynomialError
+                    from sympy.polys.polytools import gcd, Poly, poly
                     try:
                         p = poly(dif, x)
                         c = p.all_coeffs()
@@ -353,7 +384,7 @@ class Relational(Boolean, EvalfMixin):
             elif len(free) >= 2:
                 try:
                     from sympy.solvers.solveset import linear_coeffs
-                    from sympy.polys import gcd
+                    from sympy.polys.polytools import gcd
                     free = list(ordered(free))
                     dif = r.lhs - r.rhs
                     m = linear_coeffs(dif, *free)
@@ -375,7 +406,7 @@ class Relational(Boolean, EvalfMixin):
                             r = r.func(lhsterm, -newexpr)
 
                     else:
-                        r = r.func(constant, S.zero)
+                        r = r.func(constant, S.Zero)
                 except ValueError:
                     pass
         # Did we get a simplified result?
@@ -387,7 +418,7 @@ class Relational(Boolean, EvalfMixin):
             return self
 
     def _eval_trigsimp(self, **opts):
-        from sympy.simplify import trigsimp
+        from sympy.simplify.trigsimp import trigsimp
         return self.func(trigsimp(self.lhs, **opts), trigsimp(self.rhs, **opts))
 
     def expand(self, **kwargs):
@@ -559,18 +590,18 @@ class Equality(Relational):
         return set()
 
     def _eval_simplify(self, **kwargs):
-        from .add import Add
-        from sympy.core.expr import Expr
-        from sympy.solvers.solveset import linear_coeffs
         # standard simplify
         e = super()._eval_simplify(**kwargs)
         if not isinstance(e, Equality):
             return e
+        from .expr import Expr
         if not isinstance(e.lhs, Expr) or not isinstance(e.rhs, Expr):
             return e
         free = self.free_symbols
         if len(free) == 1:
             try:
+                from .add import Add
+                from sympy.solvers.solveset import linear_coeffs
                 x = free.pop()
                 m, b = linear_coeffs(
                     e.rewrite(Add, evaluate=False), x)
@@ -587,7 +618,7 @@ class Equality(Relational):
 
     def integrate(self, *args, **kwargs):
         """See the integrate function in sympy.integrals"""
-        from sympy.integrals import integrate
+        from sympy.integrals.integrals import integrate
         return integrate(self, *args, **kwargs)
 
     def as_poly(self, *gens, **kwargs):
@@ -997,6 +1028,9 @@ class GreaterThan(_Greater):
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_ge(lhs, rhs)
 
+    @property
+    def strict(self):
+        return Gt(*self.args)
 
 Ge = GreaterThan
 
@@ -1011,6 +1045,9 @@ class LessThan(_Less):
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_le(lhs, rhs)
 
+    @property
+    def strict(self):
+        return Lt(*self.args)
 
 Le = LessThan
 
@@ -1024,6 +1061,10 @@ class StrictGreaterThan(_Greater):
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_gt(lhs, rhs)
+
+    @property
+    def weak(self):
+        return Ge(*self.args)
 
 
 Gt = StrictGreaterThan
@@ -1039,6 +1080,9 @@ class StrictLessThan(_Less):
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_lt(lhs, rhs)
 
+    @property
+    def weak(self):
+        return Le(*self.args)
 
 Lt = StrictLessThan
 
@@ -1342,13 +1386,6 @@ def is_eq(lhs, rhs, assumptions=None):
     False
 
     """
-    from sympy.assumptions.wrapper import (AssumptionsWrapper,
-        is_infinite, is_extended_real)
-    from sympy.core.add import Add
-    from sympy.functions.elementary.complexes import arg
-    from sympy.simplify.simplify import clear_coefficients
-    from sympy.utilities.iterables import sift
-
     # here, _eval_Eq is only called for backwards compatibility
     # new code should use is_eq with multiple dispatch as
     # outlined in the docstring
@@ -1379,6 +1416,10 @@ def is_eq(lhs, rhs, assumptions=None):
         isinstance(rhs, Boolean)):
         return False  # only Booleans can equal Booleans
 
+    from sympy.assumptions.wrapper import (AssumptionsWrapper,
+        is_infinite, is_extended_real)
+    from .add import Add
+
     _lhs = AssumptionsWrapper(lhs, assumptions)
     _rhs = AssumptionsWrapper(rhs, assumptions)
 
@@ -1393,6 +1434,7 @@ def is_eq(lhs, rhs, assumptions=None):
         # Try to split real/imaginary parts and equate them
         I = S.ImaginaryUnit
 
+        from sympy.utilities.iterables import sift
         def split_real_imag(expr):
             real_imag = lambda t: (
                 'real' if is_extended_real(t, assumptions) else
@@ -1407,6 +1449,7 @@ def is_eq(lhs, rhs, assumptions=None):
                 eq_imag = is_eq(I * Add(*lhs_ri['imag']), I * Add(*rhs_ri['imag']), assumptions)
                 return fuzzy_and(map(fuzzy_bool, [eq_real, eq_imag]))
 
+        from sympy.functions.elementary.complexes import arg
         # Compare e.g. zoo with 1+I*oo by comparing args
         arglhs = arg(lhs)
         argrhs = arg(rhs)
@@ -1445,6 +1488,7 @@ def is_eq(lhs, rhs, assumptions=None):
                     # if the condition that makes the denominator
                     # infinite does not make the original expression
                     # True then False can be returned
+                    from sympy.simplify.simplify import clear_coefficients
                     l, r = clear_coefficients(d, S.Infinity)
                     args = [_.subs(l, r) for _ in (lhs, rhs)]
                     if args != [lhs, rhs]:

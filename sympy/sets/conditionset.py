@@ -18,10 +18,10 @@ adummy = Dummy('conditionset')
 
 
 class ConditionSet(Set):
-    """
+    r"""
     Set of elements which satisfies a given condition.
 
-    {x | condition(x) is True for x in S}
+    .. math:: \{x \mid \textrm{condition}(x) = \texttt{True}, x \in S\}
 
     Examples
     ========
@@ -60,7 +60,7 @@ class ConditionSet(Set):
 
     >>> c = ConditionSet(x, x < 1, {x, z})
     >>> c.subs(x, y)
-    ConditionSet(x, x < 1, FiniteSet(y, z))
+    ConditionSet(x, x < 1, {y, z})
 
     To check if ``pi`` is in ``c`` use:
 

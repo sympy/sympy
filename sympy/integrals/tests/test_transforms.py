@@ -20,7 +20,7 @@ nu, beta, rho = symbols('nu beta rho')
 
 
 def test_undefined_function():
-    from sympy import Function, MellinTransform
+    from sympy import MellinTransform
     f = Function('f')
     assert mellin_transform(f(x), x, s) == MellinTransform(f(x), x, s)
     assert mellin_transform(f(x) + exp(-x), x, s) == \
@@ -31,14 +31,13 @@ def test_undefined_function():
 
 
 def test_free_symbols():
-    from sympy import Function
     f = Function('f')
     assert mellin_transform(f(x), x, s).free_symbols == {s}
     assert mellin_transform(f(x)*a, x, s).free_symbols == {s, a}
 
 
 def test_as_integral():
-    from sympy import Function, Integral
+    from sympy import Integral
     f = Function('f')
     assert mellin_transform(f(x), x, s).rewrite('Integral') == \
         Integral(x**(s - 1)*f(x), (x, 0, oo))
@@ -267,7 +266,7 @@ def test_mellin_transform_bessel():
 
 @slow
 def test_expint():
-    from sympy import E1, expint, Max, re, lerchphi, Symbol, simplify, Si, Ci, Ei
+    from sympy import E1, Max, lerchphi, simplify, Si, Ci, Ei
     aneg = Symbol('a', negative=True)
     u = Symbol('u', polar=True)
 
@@ -314,8 +313,7 @@ def test_expint():
 
 @slow
 def test_inverse_mellin_transform():
-    from sympy import (sin, simplify, Max, Min, expand,
-                       powsimp, exp_polar, cos, cot)
+    from sympy import simplify, Max, Min, expand, powsimp, cot
     IMT = inverse_mellin_transform
 
     assert IMT(gamma(s), s, x, (0, oo)) == exp(-x)
@@ -481,7 +479,7 @@ def test_laplace_transform():
     assert LT(exp(2*t), t, s)[:2] == (1/(s - 2), 2)
     assert LT(exp(a*t), t, s)[:2] == (1/(s - a), a)
 
-    assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, 0, True)
+    assert LT(log(t/a), t, s) == (-(log(a*s) + EulerGamma)/s, 0, True)
 
     assert LT(erf(t), t, s) == (erfc(s/2)*exp(s**2/4)/s, 0, True)
 
@@ -575,8 +573,7 @@ def test_issue_8368_7173():
 
 @slow
 def test_inverse_laplace_transform():
-    from sympy import sinh, cosh, besselj, besseli, simplify, factor_terms,\
-        DiracDelta
+    from sympy import simplify, factor_terms, DiracDelta
     ILT = inverse_laplace_transform
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
@@ -648,7 +645,7 @@ def test_inverse_laplace_transform_delta():
 
 
 def test_inverse_laplace_transform_delta_cond():
-    from sympy import DiracDelta, Eq, im, Heaviside
+    from sympy import DiracDelta, Eq, im
     ILT = inverse_laplace_transform
     t = symbols('t')
     r = Symbol('r', real=True)
@@ -723,8 +720,6 @@ def test_fourier_transform():
 
 
 def test_sine_transform():
-    from sympy import EulerGamma
-
     t = symbols("t")
     w = symbols("w")
     a = symbols("a")
@@ -751,7 +746,7 @@ def test_sine_transform():
         sqrt(2)*w/(sqrt(pi)*(a**2 + w**2)), w, t) == exp(-a*t)
 
     assert sine_transform(
-        log(t)/t, t, w) == -sqrt(2)*sqrt(pi)*(log(w**2) + 2*EulerGamma)/4
+        log(t)/t, t, w) == sqrt(2)*sqrt(pi)*-(log(w**2) + 2*EulerGamma)/4
 
     assert sine_transform(
         t*exp(-a*t**2), t, w) == sqrt(2)*w*exp(-w**2/(4*a))/(4*a**Rational(3, 2))
@@ -802,8 +797,6 @@ def test_cosine_transform():
 
 
 def test_hankel_transform():
-    from sympy import gamma, sqrt, exp
-
     r = Symbol("r")
     k = Symbol("k")
     nu = Symbol("nu")

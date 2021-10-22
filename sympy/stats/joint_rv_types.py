@@ -39,7 +39,7 @@ def marginal_distribution(rv, *indices):
 
     rv: A random variable with a joint probability distribution.
     indices: component indices or the indexed random symbol
-        for whom the joint distribution is to be calculated
+        for which the joint distribution is to be calculated
 
     Returns
     =======
@@ -88,7 +88,7 @@ def JointRV(symbol, pdf, _set=None):
     as the first argument
 
     NOTE: As of now, the set for each component for a `JointRV` is
-    equal to the set of all integers, which can not be changed.
+    equal to the set of all integers, which cannot be changed.
 
     Examples
     ========
@@ -208,7 +208,7 @@ def MultivariateNormal(name, mu, sigma):
     The example below shows that it is also possible to use
     symbolic parameters to define the MultivariateNormal class.
 
-    >>> n = symbols('n', natural=True)
+    >>> n = symbols('n', integer=True, positive=True)
     >>> Sg = MatrixSymbol('Sg', n, n)
     >>> mu = MatrixSymbol('mu', n, 1)
     >>> obs = MatrixSymbol('obs', n, 1)
@@ -259,9 +259,10 @@ class MultivariateLaplaceDistribution(JointDistribution):
         x = (mu_T*sigma_inv*mu)[0]
         y = (args_T*sigma_inv*args)[0]
         v = 1 - k/2
-        return S(2)/((2*pi)**(S(k)/2)*sqrt(det(sigma)))\
-        *(y/(2 + x))**(S(v)/2)*besselk(v, sqrt((2 + x)*(y)))\
-        *exp((args_T*sigma_inv*mu)[0])
+        return (2 * (y/(2 + x))**(v/2) * besselk(v, sqrt((2 + x)*y)) *
+                exp((args_T * sigma_inv * mu)[0]) /
+                ((2 * pi)**(k/2) * sqrt(det(sigma))))
+
 
 def MultivariateLaplace(name, mu, sigma):
     """

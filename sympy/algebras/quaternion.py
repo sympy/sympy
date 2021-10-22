@@ -4,6 +4,9 @@
 from sympy import S, Rational, Piecewise
 from sympy import re, im, conjugate, sign, Ne
 from sympy import sqrt, sin, cos, acos, exp, ln, sinc
+from sympy import S, Rational
+from sympy import re, im, conjugate, sign
+from sympy import sqrt, sin, cos, acos, exp, ln
 from sympy import trigsimp
 from sympy import integrate
 from sympy import Matrix
@@ -36,6 +39,12 @@ class Quaternion(Expr):
     x + x**3*i + x*j + x**2*k
     >>> q2
     (3 + 4*I) + (2 + 5*I)*i + 0*j + (7 + 8*I)*k
+
+    References
+    ==========
+
+    .. [1] http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
+    .. [2] https://en.wikipedia.org/wiki/Quaternion
 
     """
     _op_priority = 11.0
@@ -116,7 +125,11 @@ class Quaternion(Expr):
         c = y * s
         d = z * s
 
-        return cls(a, b, c, d).normalize()
+        # note that this quaternion is already normalized by construction:
+        # c^2 + (s*x)^2 + (s*y)^2 + (s*z)^2 = c^2 + s^2*(x^2 + y^2 + z^2) = c^2 + s^2 * 1 = c^2 + s^2 = 1
+        # so, what we return is a normalized quaternion
+
+        return cls(a, b, c, d)
 
     @classmethod
     def from_rotation_matrix(cls, M):
@@ -514,8 +527,8 @@ class Quaternion(Expr):
         + 0.500000000000000*k
 
         """
-
-        return Quaternion(*[arg.evalf(n=prec_to_dps(prec)) for arg in self.args])
+        nprec = prec_to_dps(prec)
+        return Quaternion(*[arg.evalf(n=nprec) for arg in self.args])
 
     def pow_cos_sin(self, p):
         """Computes the pth power in the cos-sin form.

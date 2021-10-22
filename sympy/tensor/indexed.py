@@ -109,11 +109,11 @@ from sympy import Number
 from sympy.core.assumptions import StdFactKB
 from sympy.core import Expr, Tuple, sympify, S
 from sympy.core.symbol import _filter_assumptions, Symbol
-from sympy.core.compatibility import (is_sequence, NotIterable)
 from sympy.core.logic import fuzzy_bool, fuzzy_not
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.multipledispatch import dispatch
+from sympy.utilities.iterables import is_sequence, NotIterable
 
 
 class IndexException(Exception):
@@ -159,7 +159,7 @@ class Indexed(Expr):
                 items (i.e. an object with a `__getitem__` method).
                 """))
         args = list(map(sympify, args))
-        if isinstance(base, (NDimArray, Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
+        if isinstance(base, (NDimArray, Iterable, Tuple, MatrixBase)) and all(i.is_number for i in args):
             if len(args) == 1:
                 return base[args[0]]
             else:

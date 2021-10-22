@@ -50,6 +50,7 @@ known_functions_C89 = {
     "tanh": "tanh",
     "floor": "floor",
     "ceiling": "ceil",
+    "sqrt": "sqrt", # To enable automatic rewrites
 }
 
 known_functions_C99 = dict(known_functions_C89, **{
@@ -293,9 +294,17 @@ class C89CodePrinter(CodePrinter):
     def _print_Mod(self, expr):
         num, den = expr.args
         if num.is_integer and den.is_integer:
-            return "(({}) % ({}))".format(self._print(num), self._print(den))
-        else:
-            return self._print_math_func(expr, known='fmod')
+            PREC = precedence(expr)
+            snum, sden = [self.parenthesize(arg, PREC) for arg in expr.args]
+            # % is remainder (same sign as numerator), not modulo (same sign as
+            # denominator), in C. Hence, % only works as modulo if both numbers
+            # have the same sign
+            if (num.is_nonnegative and den.is_nonnegative or
+                num.is_nonpositive and den.is_nonpositive):
+                return f"{snum} % {sden}"
+            return f"(({snum} % {sden}) + {sden}) % {sden}"
+        # Not guaranteed integer
+        return self._print_math_func(expr, known='fmod')
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
@@ -374,8 +383,7 @@ class C89CodePrinter(CodePrinter):
 
     def _print_ITE(self, expr):
         from sympy.functions import Piecewise
-        _piecewise = Piecewise((expr.args[1], expr.args[0]), (expr.args[2], True))
-        return self._print(_piecewise)
+        return self._print(expr.rewrite(Piecewise, deep=False))
 
     def _print_MatrixElement(self, expr):
         return "{}[{}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
@@ -393,14 +401,6 @@ class C89CodePrinter(CodePrinter):
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
         return "{} {} {}".format(lhs_code, op, rhs_code)
-
-    def _print_sinc(self, expr):
-        from sympy.functions.elementary.trigonometric import sin
-        from sympy.core.relational import Ne
-        from sympy.functions import Piecewise
-        _piecewise = Piecewise(
-            (sin(expr.args[0]) / expr.args[0], Ne(expr.args[0], 0)), (1, True))
-        return self._print(_piecewise)
 
     def _print_For(self, expr):
         target = self._print(expr.target)
@@ -461,7 +461,7 @@ class C89CodePrinter(CodePrinter):
         pretty = []
         level = 0
         for n, line in enumerate(code):
-            if line == '' or line == '\n':
+            if line in ('', '\n'):
                 pretty.append(line)
                 continue
             level -= decrease[n]
@@ -479,6 +479,11 @@ class C89CodePrinter(CodePrinter):
         alias = self.type_aliases.get(type_, type_)
         dflt = self.type_math_macro_suffixes.get(alias, '')
         return self.type_math_macro_suffixes.get(type_, dflt)
+
+    def _print_Tuple(self, expr):
+        return '{'+', '.join(self._print(e) for e in expr)+'}'
+
+    _print_List = _print_Tuple
 
     def _print_Type(self, type_):
         self.headers.update(self.type_headers.get(type_, set()))

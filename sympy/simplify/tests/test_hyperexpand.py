@@ -9,7 +9,8 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        hyperexpand, Hyper_Function, G_Function,
                        reduce_order_meijer,
                        build_hypergeometric_formula)
-from sympy import hyper, I, S, meijerg, Piecewise, Tuple, Sum, binomial, Expr
+from sympy import (hyper, I, S, meijerg, Piecewise, Tuple, Sum, binomial,
+                   Expr, symbols)
 from sympy.abc import z, a, b, c
 from sympy.testing.pytest import XFAIL, raises, slow, ON_TRAVIS, skip
 from sympy.testing.randtest import verify_numerically as tn
@@ -41,7 +42,6 @@ def test_hyperexpand():
 
 
 def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
-    from sympy import exp_polar, exp
     r = hyperexpand(hyper(ap, bq, z))
     if r.has(hyper):
         return False
@@ -53,7 +53,7 @@ def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
         # Only randomly generated parameters are checked.
         for n, ai in enumerate(randsyms):
             repl[ai] = randcplx(n)/div
-        if not any([b.is_Integer and b <= 0 for b in Tuple(*bq).subs(repl)]):
+        if not any(b.is_Integer and b <= 0 for b in Tuple(*bq).subs(repl)):
             break
     [a, b, c, d] = [2, -1, 3, 1]
     if lowerplane:
@@ -516,7 +516,7 @@ def test_meijerg_shift_operators():
 @slow
 def test_meijerg_confluence():
     def t(m, a, b):
-        from sympy import sympify, Piecewise
+        from sympy import sympify
         a, b = sympify([a, b])
         m_ = m
         m = hyperexpand(m)
@@ -564,7 +564,7 @@ def test_meijerg_with_Floats():
 
 
 def test_lerchphi():
-    from sympy import gammasimp, exp_polar, polylog, log, lerchphi
+    from sympy import gammasimp, polylog, lerchphi
     assert hyperexpand(hyper([1, a], [a + 1], z)/a) == lerchphi(z, 1, a)
     assert hyperexpand(
         hyper([1, a, a], [a + 1, a + 1], z)/a**2) == lerchphi(z, 2, a)
@@ -622,7 +622,7 @@ def test_partial_simp():
             assert tn(func1, func2, z)
 
     # Now test that formulae are partially simplified.
-    from sympy.abc import a, b, z
+    a, b, z = symbols('a b z')
     assert hyperexpand(hyper([3, a], [1, b], z)) == \
         (-a*b/2 + a*z/2 + 2*a)*hyper([a + 1], [b], z) \
         + (a*b/2 - 2*a + 1)*hyper([a], [b], z)
@@ -651,7 +651,7 @@ def test_hyperexpand_special():
 
 
 def test_Mod1_behavior():
-    from sympy import Symbol, simplify, lowergamma
+    from sympy import Symbol, simplify
     n = Symbol('n', integer=True)
     # Note: this should not hang.
     assert simplify(hyperexpand(meijerg([1], [], [n + 1], [0], z))) == \

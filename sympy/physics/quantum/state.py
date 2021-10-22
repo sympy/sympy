@@ -1,6 +1,6 @@
 """Dirac notation for states."""
 
-from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
+from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, S, sqrt,
                    Tuple)
 from sympy.printing.pretty.stringpict import stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
@@ -153,7 +153,7 @@ class StateBase(QExpr):
                 bracket_args = [ ' ' * (height//2 - i - 1) +
                                  slash for i in range(height // 2)]
                 bracket_args.extend(
-                    [ ' ' * i + bslash for i in range(height // 2)])
+                    [' ' * i + bslash for i in range(height // 2)])
             # Create right bracket
             elif bracket in {_rbracket, _rbracket_ucode}:
                 bracket_args = [ ' ' * i + bslash for i in range(height // 2)]
@@ -161,7 +161,7 @@ class StateBase(QExpr):
                     height//2 - i - 1) + slash for i in range(height // 2)])
             # Create straight bracket
             elif bracket in {_straight_bracket, _straight_bracket_ucode}:
-                bracket_args = [vert for i in range(height)]
+                bracket_args = [vert] * height
             else:
                 raise ValueError(bracket)
             brackets.append(
@@ -788,7 +788,7 @@ class Wavefunction(Function):
                 continue
 
             if (args[ct] < lower) == True or (args[ct] > upper) == True:
-                return 0
+                return S.Zero
 
             ct += 1
 

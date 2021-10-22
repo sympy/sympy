@@ -251,7 +251,7 @@ from sympy.polys.polyerrors import PolynomialError
 def sylvester(f, g, x, method = 1):
     '''
       The input polynomials f, g are in Z[x] or in Q[x]. Let m = degree(f, x),
-      n = degree(g, x) and mx = max( m , n ).
+      n = degree(g, x) and mx = max(m, n).
 
       a. If method = 1 (default), computes sylvester1, Sylvester's matrix of 1840
           of dimension (m + n) x (m + n). The determinants of properly chosen
@@ -440,7 +440,7 @@ def subresultants_sylv(f, g, x):
         # evaluate determinants and form coefficients list
         coeff_L, k, l = [], Sp.rows, 0
         while l <= j:
-            coeff_L.append(Sp[ : , 0 : k].det())
+            coeff_L.append(Sp[:, 0:k].det())
             Sp.col_swap(k - 1, k + l)
             l += 1
 
@@ -508,7 +508,7 @@ def modified_subresultants_sylv(f, g, x):
         # evaluate determinants and form coefficients list
         coeff_L, k, l = [], Sp.rows, 0
         while l <= j:
-            coeff_L.append(Sp[ : , 0 : k].det())
+            coeff_L.append(Sp[:, 0:k].det())
             Sp.col_swap(k - 1, k + l)
             l += 1
 
@@ -610,7 +610,7 @@ def sign_seq(poly_seq, x):
 def bezout(p, q, x, method='bz'):
     """
     The input polynomials p, q are in Z[x] or in Q[x]. Let
-    mx = max( degree(p, x) , degree(q, x) ).
+    mx = max(degree(p, x), degree(q, x)).
 
     The default option bezout(p, q, x, method='bz') returns Bezout's
     symmetric matrix of p and q, of dimensions (mx) x (mx). The
@@ -764,7 +764,7 @@ def subresultants_bezout(p, q, x):
         M = B[0:j, :]
         k, coeff_L = j - 1, []
         while k <= degF - 1:
-            coeff_L.append(M[: ,0 : j].det())
+            coeff_L.append(M[:, 0:j].det())
             if k < degF - 1:
                 M.col_swap(j - 1, k + 1)
             k = k + 1
@@ -839,7 +839,7 @@ def modified_subresultants_bezout(p, q, x):
         M = B[0:j, :]
         k, coeff_L = j - 1, []
         while k <= degF - 1:
-            coeff_L.append(M[: ,0 : j].det())
+            coeff_L.append(M[:, 0:j].det())
             if k < degF - 1:
                 M.col_swap(j - 1, k + 1)
             k = k + 1

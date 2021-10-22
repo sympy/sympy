@@ -249,7 +249,7 @@ def dup_zz_hensel_step(m, f, g, h, s, t, K):
 
 
 def dup_zz_hensel_lift(p, f, f_list, l, K):
-    """
+    r"""
     Multifactor Hensel lifting in `Z[x]`.
 
     Given a prime `p`, polynomial `f` over `Z[x]` such that `lc(f)`
@@ -259,7 +259,7 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
         f = lc(f) f_1 ... f_r (mod p)
 
     and a positive integer `l`, returns a list of monic polynomials
-    `F_1`, `F_2`, ..., `F_r` satisfying::
+    `F_1,\ F_2,\ \dots,\ F_r` satisfying::
 
        f = lc(f) F_1 ... F_r (mod p**l)
 
@@ -744,7 +744,7 @@ def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
 
         C.append(c)
 
-    if any(not j for j in J):
+    if not all(J):
         raise ExtraneousFactors  # pragma: no cover
 
     CC, HH = [], []
@@ -948,7 +948,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
 
 
 def dmp_zz_wang(f, u, K, mod=None, seed=None):
-    """
+    r"""
     Factor primitive square-free polynomials in `Z[X]`.
 
     Given a multivariate polynomial `f` in `Z[x_1,...,x_n]`, which is
@@ -961,7 +961,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
 
                       x_2 -> a_2, ..., x_n -> a_n
 
-    where `a_i`, for `i = 2, ..., n`, are carefully chosen integers.  The
+    where `a_i`, for `i = 2, \dots, n`, are carefully chosen integers.  The
     mapping is used to transform `f` into a univariate polynomial in `Z[x_1]`,
     which can be factored efficiently using Zassenhaus algorithm. The last
     step is to lift univariate factors to obtain true multivariate
@@ -1090,11 +1090,11 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
 
 
 def dmp_zz_factor(f, u, K):
-    """
+    r"""
     Factor (non square-free) polynomials in `Z[X]`.
 
     Given a multivariate polynomial `f` in `Z[x]` computes its complete
-    factorization `f_1, ..., f_n` into irreducibles over integers::
+    factorization `f_1, \dots, f_n` into irreducibles over integers::
 
                  f = content(f) f_1**k_1 ... f_n**k_n
 

@@ -278,7 +278,7 @@ class TWave(Expr):
                 raise NotImplementedError("Interference of waves with different frequencies"
                     " has not been implemented.")
         else:
-            raise TypeError(type(other).__name__ + " and TWave objects can't be added.")
+            raise TypeError(type(other).__name__ + " and TWave objects cannot be added.")
 
     def __mul__(self, other):
         """
@@ -288,7 +288,7 @@ class TWave(Expr):
         if isinstance(other, Number):
             return TWave(self._amplitude*other, *self.args[1:])
         else:
-            raise TypeError(type(other).__name__ + " and TWave objects can't be multiplied.")
+            raise TypeError(type(other).__name__ + " and TWave objects cannot be multiplied.")
 
     def __sub__(self, other):
         return self.__add__(-1*other)

@@ -1,8 +1,8 @@
 from sympy.core import S, Integer
-from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import prod
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.utilities.iterables import (has_dups, default_sort_key)
 
 ###############################################################################
@@ -471,10 +471,6 @@ class KroneckerDelta(Function):
     @property
     def indices(self):
         return self.args[0:2]
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.kronecker_delta(self.args[0]._sage_(), self.args[1]._sage_())
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         from sympy.functions.elementary.piecewise import Piecewise

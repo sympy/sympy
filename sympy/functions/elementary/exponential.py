@@ -2,7 +2,7 @@ from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.function import (
-    Function, ArgumentIndexError, _coeff_isneg,
+    Function, ArgumentIndexError,
     expand_mul, FunctionClass, PoleError)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
@@ -32,6 +32,10 @@ class ExpBase(Function):
     unbranched = True
     _singularities = (S.ComplexInfinity,)
 
+    @property
+    def kind(self):
+        return self.exp.kind
+
     def inverse(self, argindex=1):
         """
         Returns the inverse function of ``exp(x)``.
@@ -57,7 +61,7 @@ class ExpBase(Function):
         exp = self.exp
         neg_exp = exp.is_negative
         if not neg_exp and not (-exp).is_negative:
-            neg_exp = _coeff_isneg(exp)
+            neg_exp = exp.could_extract_minus_sign()
         if neg_exp:
             return S.One, self.func(-exp)
         return self, S.One
@@ -473,7 +477,7 @@ class exp(ExpBase, metaclass=ExpMeta):
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import ceiling, limit, Order, powsimp, Wild, expand_complex
+        from sympy import ceiling, limit, Order, powsimp, expand_complex
         arg = self.exp
         arg_series = arg._eval_nseries(x, n=n, logx=logx)
         if arg_series.is_Order:
@@ -559,9 +563,9 @@ def match_real_imag(expr):
 
     ``match_real_imag`` returns a tuple containing the real and imaginary
     parts of expr or (None, None) if direct matching is not possible. Contrary
-    to ``re()``, ``im()``, ``as_real_imag()``, this helper won't force things
+    to ``re()``, ``im()``, ``as_real_imag()``, this helper will not force things
     by returning expressions themselves containing ``re()`` or ``im()`` and it
-    doesn't expand its argument either.
+    does not expand its argument either.
 
     """
     r_, i_ = expr.as_independent(S.ImaginaryUnit, as_Add=True)
@@ -1198,8 +1202,6 @@ class LambertW(Function):
     def _eval_is_zero(self):
         x = self.args[0]
         if len(self.args) == 1:
-            k = S.Zero
+            return x.is_zero
         else:
-            k = self.args[1]
-        if x.is_zero and k.is_zero:
-            return True
+            return fuzzy_and([x.is_zero, self.args[1].is_zero])

@@ -8,6 +8,7 @@ from sympy.simplify import simplify
 from sympy.matrices import (ImmutableMatrix, Inverse, MatAdd, MatMul,
         MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError,
         SparseMatrix, Transpose, Adjoint, NonSquareMatrixError, MatrixSet)
+from sympy.matrices.expressions.determinant import Determinant, det
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.matrices.expressions.special import ZeroMatrix, Identity
 from sympy.testing.pytest import raises, XFAIL
@@ -179,6 +180,7 @@ def test_invariants():
     for obj in objs:
         assert obj == obj.__class__(*obj.args)
 
+
 def test_indexing():
     A = MatrixSymbol('A', n, m)
     A[1, 2]
@@ -219,6 +221,9 @@ def test_MatrixSymbol_determinant():
         A[0, 3]*A[1, 0]*A[2, 2]*A[3, 1] + A[0, 3]*A[1, 1]*A[2, 0]*A[3, 2] - \
         A[0, 3]*A[1, 1]*A[2, 2]*A[3, 0] - A[0, 3]*A[1, 2]*A[2, 0]*A[3, 1] + \
         A[0, 3]*A[1, 2]*A[2, 1]*A[3, 0]
+
+    B = MatrixSymbol('B', 4, 4)
+    assert Determinant(A + B).doit() == det(A + B) == (A + B).det()
 
 
 def test_MatrixElement_diff():
@@ -305,6 +310,17 @@ def test_inv():
     B = MatrixSymbol('B', 3, 3)
     assert B.inv() == B**-1
 
+    # https://github.com/sympy/sympy/issues/19162
+    X = MatrixSymbol('X', 1, 1).as_explicit()
+    assert X.inv() == Matrix([[1/X[0, 0]]])
+
+    X = MatrixSymbol('X', 2, 2).as_explicit()
+    detX = X[0, 0]*X[1, 1] - X[0, 1]*X[1, 0]
+    invX = Matrix([[ X[1, 1], -X[0, 1]],
+                   [-X[1, 0],  X[0, 0]]]) / detX
+    assert X.inv() == invX
+
+
 @XFAIL
 def test_factor_expand():
     A = MatrixSymbol("A", n, n)
@@ -319,6 +335,7 @@ def test_factor_expand():
     I = Identity(n)
     # Ideally we get the first, but we at least don't want a wrong answer
     assert factor(expr) in [I - C, B**-1*(A**-1*(I - C)*B**-1)**-1*A**-1]
+
 
 def test_issue_2749():
     A = MatrixSymbol("A", 5, 2)
@@ -381,12 +398,14 @@ def test_MatMul_postprocessor():
 
     assert Mul(A, x, M, M, x) == MatMul(A, Mx**2)
 
+
 @XFAIL
 def test_MatAdd_postprocessor_xfail():
     # This is difficult to get working because of the way that Add processes
     # its args.
     z = zeros(2)
     assert Add(z, S.NaN) == Add(S.NaN, z)
+
 
 def test_MatAdd_postprocessor():
     # Some of these are nonsensical, but we do not raise errors for Add
@@ -434,12 +453,14 @@ def test_MatAdd_postprocessor():
     assert isinstance(a, Add)
     assert a.args == (2*x, A + 2*M)
 
+
 def test_simplify_matrix_expressions():
     # Various simplification functions
     assert type(gcd_terms(C*D + D*C)) == MatAdd
     a = gcd_terms(2*C*D + 4*D*C)
     assert type(a) == MatAdd
     assert a.args == (2*C*D, 4*D*C)
+
 
 def test_exp():
     A = MatrixSymbol('A', 2, 2)
@@ -451,8 +472,10 @@ def test_exp():
     assert not isinstance(expr1, exp)
     assert not isinstance(expr2, exp)
 
+
 def test_invalid_args():
     raises(SympifyError, lambda: MatrixSymbol(1, 2, 'A'))
+
 
 def test_matrixsymbol_from_symbol():
     # The label should be preserved during doit and subs
@@ -472,6 +495,7 @@ def test_as_explicit():
         [Z[1, 0], Z[1, 1], Z[1, 2]],
     ])
     raises(ValueError, lambda: A.as_explicit())
+
 
 def test_MatrixSet():
     M = MatrixSet(2, 2, set=S.Reals)
@@ -495,6 +519,7 @@ def test_MatrixSet():
     raises(ValueError, lambda: MatrixSet(2, -2, S.Reals))
     raises(ValueError, lambda: MatrixSet(2.4, -1, S.Reals))
     raises(TypeError, lambda: MatrixSet(2, 2, (1, 2, 3)))
+
 
 def test_matrixsymbol_solving():
     A = MatrixSymbol('A', 2, 2)

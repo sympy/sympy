@@ -14,7 +14,6 @@ from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
                    Dummy, prod)
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum, summation
-from sympy.core.compatibility import iterable
 from sympy.core.containers import Tuple
 from sympy.integrals.integrals import Integral, integrate
 from sympy.matrices import ImmutableMatrix, matrix2numpy, list2numpy
@@ -23,6 +22,7 @@ from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
 from sympy.stats.rv import (ProductPSpace, NamedArgsMixin, Distribution,
                             ProductDomain, RandomSymbol, random_symbols,
                             SingleDomain, _symbol_converter)
+from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import filldedent
 from sympy.external import import_module
 
@@ -106,7 +106,7 @@ class JointPSpace(ProductPSpace):
     def compute_expectation(self, expr, rvs=None, evaluate=False, **kwargs):
         syms = tuple(self.value[i] for i in range(self.component_count))
         rvs = rvs or syms
-        if not any([i in rvs for i in syms]):
+        if not any(i in rvs for i in syms):
             return expr
         expr = expr*self.pdf
         for rv in rvs:
@@ -352,7 +352,7 @@ class MarginalDistribution(Distribution):
     def __new__(cls, dist, *rvs):
         if len(rvs) == 1 and iterable(rvs[0]):
             rvs = tuple(rvs[0])
-        if not all([isinstance(rv, (Indexed, RandomSymbol))] for rv in rvs):
+        if not all(isinstance(rv, (Indexed, RandomSymbol)) for rv in rvs):
             raise ValueError(filldedent('''Marginal distribution can be
              intitialised only in terms of random variables or indexed random
              variables'''))

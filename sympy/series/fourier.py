@@ -3,7 +3,6 @@
 from sympy import pi, oo, Wild
 from sympy.core.expr import Expr
 from sympy.core.add import Add
-from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
@@ -13,6 +12,7 @@ from sympy.series.series_class import SeriesBase
 from sympy.series.sequences import SeqFormula
 from sympy.sets.sets import Interval
 from sympy.simplify.fu import TR2, TR1, TR10, sincos_to_sum
+from sympy.utilities.iterables import is_sequence
 
 
 def fourier_cos_seq(func, limits, n):

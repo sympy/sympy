@@ -2,6 +2,7 @@
 from functools import reduce
 
 from sympy.core import S, I, pi, oo, zoo, ilcm, Mod
+from sympy.core.expr import Expr
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 
 from sympy.core.containers import Tuple
@@ -337,7 +338,7 @@ class hyper(TupleParametersBase):
     @property
     def convergence_statement(self):
         """ Return a condition on z under which the series converges. """
-        from sympy import And, Or, re, Ne, oo
+        from sympy import And, Or, Ne
         R = self.radius_of_convergence
         if R == 0:
             return False
@@ -354,12 +355,6 @@ class hyper(TupleParametersBase):
     def _eval_simplify(self, **kwargs):
         from sympy.simplify.hyperexpand import hyperexpand
         return hyperexpand(self)
-
-    def _sage_(self):
-        import sage.all as sage
-        ap = [arg._sage_() for arg in self.args[0]]
-        bq = [arg._sage_() for arg in self.args[1]]
-        return sage.hypergeometric(ap, bq, self.argument._sage_())
 
 
 class meijerg(TupleParametersBase):
@@ -655,7 +650,7 @@ class meijerg(TupleParametersBase):
         alpha = compute(self.an)
         p, q = len(self.ap), len(self.bq)
         if p == q:
-            if beta == oo or alpha == oo:
+            if oo in (alpha, beta):
                 return oo
             return 2*pi*ilcm(alpha, beta)
         elif p < q:
@@ -676,7 +671,6 @@ class meijerg(TupleParametersBase):
         # (carefully so as not to loose the branch information), and evaluate
         # G(z'**(1/r)) = G(z'**n) = G(z).
         from sympy.functions import exp_polar, ceiling
-        from sympy import Expr
         import mpmath
         znum = self.argument._eval_evalf(prec)
         if znum.has(exp_polar):

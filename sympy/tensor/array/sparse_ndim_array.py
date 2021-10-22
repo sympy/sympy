@@ -49,7 +49,7 @@ class SparseNDimArray(NDimArray):
         index = self._check_index_for_getitem(index)
 
         # `index` is a tuple with one or more slices:
-        if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
+        if isinstance(index, tuple) and any(isinstance(i, slice) for i in index):
             sl_factors, eindices = self._get_slice_data_for_array_access(index)
             array = [self._sparse_array.get(self._parse_index(i), S.Zero) for i in eindices]
             nshape = [len(el) for i, el in enumerate(sl_factors) if isinstance(index[i], slice)]
@@ -98,7 +98,7 @@ class SparseNDimArray(NDimArray):
 
         return type(self)(self._sparse_array, newshape)
 
-class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray):
+class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray): # type: ignore
 
     def __new__(cls, iterable=None, shape=None, **kwargs):
         from sympy.utilities.iterables import flatten
@@ -171,7 +171,7 @@ class MutableSparseNDimArray(MutableNDimArray, SparseNDimArray):
         >>> a
         [[1, 0], [0, 1]]
         """
-        if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
+        if isinstance(index, tuple) and any(isinstance(i, slice) for i in index):
             value, eindices, slice_offsets = self._get_slice_data_for_array_assignment(index, value)
             for i in eindices:
                 other_i = [ind - j for ind, j in zip(i, slice_offsets) if j is not None]

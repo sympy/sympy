@@ -1,14 +1,16 @@
-from sympy.core import Basic, S, Function, diff, Tuple, Dummy
-from sympy.core.basic import as_Basic
+from sympy.core import S, Function, diff, Tuple, Dummy
+from sympy.core.basic import Basic, as_Basic
 from sympy.core.numbers import Rational, NumberSymbol
-from sympy.core.relational import (Equality, Unequality, Relational,
+from sympy.core.parameters import global_parameters
+from sympy.core.relational import (Lt, Gt, Eq, Ne, Relational,
     _canonical)
 from sympy.functions.elementary.miscellaneous import Max, Min
-from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or,
-    true, false, Or, ITE, simplify_logic)
-from sympy.utilities.iterables import uniq, ordered, product, sift
+from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
+    true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
+from sympy.utilities.iterables import uniq, ordered, sift, common_prefix
 from sympy.utilities.misc import filldedent, func_name
 
+from itertools import product
 
 Undefined = S.NaN  # Piecewise()
 
@@ -66,11 +68,14 @@ class Piecewise(Function):
       Piecewise( (expr,cond), (expr,cond), ... )
         - Each argument is a 2-tuple defining an expression and condition
         - The conds are evaluated in turn returning the first that is True.
-          If any of the evaluated conds are not determined explicitly False,
-          e.g. x < 1, the function is returned in symbolic form.
+          If any of the evaluated conds are not explicitly False,
+          e.g. ``x < 1``, the function is returned in symbolic form.
         - If the function is evaluated at a place where all conditions are False,
           nan will be returned.
-        - Pairs where the cond is explicitly False, will be removed.
+        - Pairs where the cond is explicitly False, will be removed and no pair
+          appearing after a True condition will ever be retained. If a single
+          pair with a True condition remains, it will be returned, even when
+          evaluation is False.
 
     Examples
     ========
@@ -132,15 +137,15 @@ class Piecewise(Function):
             if cond is true:
                 break
 
-        if options.pop('evaluate', True):
+        eval = options.pop('evaluate', global_parameters.evaluate)
+        if eval:
             r = cls.eval(*newargs)
-        else:
-            r = None
+            if r is not None:
+                return r
+        elif len(newargs) == 1 and newargs[0].cond == True:
+            return newargs[0].expr
 
-        if r is None:
-            return Basic.__new__(cls, *newargs, **options)
-        else:
-            return r
+        return Basic.__new__(cls, *newargs, **options)
 
     @classmethod
     def eval(cls, *_args):
@@ -156,9 +161,20 @@ class Piecewise(Function):
         If there are no args left, nan will be returned.
         If there is a single arg with a True condition, its
         corresponding expression will be returned.
+
+        EXAMPLES
+        ========
+
+        >>> from sympy import Piecewise
+        >>> from sympy.abc import x
+        >>> cond = -x < -1
+        >>> args = [(1, cond), (4, cond), (3, False), (2, True), (5, x < 1)]
+        >>> Piecewise(*args, evaluate=False)
+        Piecewise((1, -x < -1), (4, -x < -1), (2, True))
+        >>> Piecewise(*args)
+        Piecewise((1, x > 1), (2, True))
         """
         from sympy.functions.elementary.complexes import im, re
-
         if not _args:
             return Undefined
 
@@ -171,7 +187,7 @@ class Piecewise(Function):
         args = []
         for e, c in _args:
             if (not c.is_Atom and not isinstance(c, Relational) and
-                not c.has(im, re)):
+                    not c.has(im, re)):
                 free = c.free_symbols
                 if len(free) == 1:
                     funcs = [i for i in c.atoms(Function)
@@ -190,15 +206,15 @@ class Piecewise(Function):
                     else:
                         reps = {}
                         for i in c.atoms(Relational):
-                            ic = i.canonical
-                            if ic.rhs in (S.Infinity, S.NegativeInfinity):
-                                if not _c.has(ic.rhs):
+                            inf = i.canonical.rhs
+                            if inf in (S.Infinity, S.NegativeInfinity):
+                                if not _c.has(inf):
                                     # don't accept introduction of
                                     # new Relationals with +/-oo
                                     reps[i] = S.true
-                                elif ('=' not in ic.rel_op and
-                                        c.xreplace({x: i.rhs}) !=
-                                        _c.xreplace({x: i.rhs})):
+                                elif ('=' not in i.rel_op and
+                                        c.xreplace({x: inf}) !=
+                                        _c.xreplace({x: inf})):
                                     reps[i] = Relational(
                                         i.lhs, i.rhs, i.rel_op + '=')
                         c = c.xreplace(reps)
@@ -260,11 +276,19 @@ class Piecewise(Function):
             if isinstance(cond, And):
                 nonredundant = []
                 for c in cond.args:
-                    if (isinstance(c, Relational) and
-                            c.negated.canonical in current_cond):
-                        continue
+                    if isinstance(c, Relational):
+                        if c.negated.canonical in current_cond:
+                            continue
+                        # if a strict inequality appears after
+                        # a non-strict one, then the condition is
+                        # redundant
+                        if isinstance(c, (Lt, Gt)) and (
+                                c.weak in current_cond):
+                            cond = False
+                            break
                     nonredundant.append(c)
-                cond = cond.func(*nonredundant)
+                else:
+                    cond = cond.func(*nonredundant)
             elif isinstance(cond, Relational):
                 if cond.negated.canonical in current_cond:
                     cond = S.true
@@ -534,7 +558,6 @@ class Piecewise(Function):
         # following papers;
         #     http://portal.acm.org/citation.cfm?id=281649
         #     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4127&rep=rep1&type=pdf
-        from sympy.core.symbol import Dummy
 
         if a is None or b is None:
             # In this case, it is just simple substitution
@@ -676,7 +699,6 @@ class Piecewise(Function):
         True will be returned as the last tuple with a, b = -oo, oo.
         """
         from sympy.solvers.inequalities import _solve_inequality
-        from sympy.logic.boolalg import to_cnf, distribute_or_over_and
 
         assert isinstance(self, Piecewise)
 
@@ -737,7 +759,7 @@ class Piecewise(Function):
             if isinstance(cond, Or):
                 expr_cond.extend(
                     [(i, expr, o) for o in cond.args
-                    if not isinstance(o, Equality)])
+                    if not isinstance(o, Eq)])
             elif cond is not S.false:
                 expr_cond.append((i, expr, cond))
 
@@ -749,10 +771,10 @@ class Piecewise(Function):
                 upper = S.Infinity
                 exclude = []
                 for cond2 in cond.args:
-                    if isinstance(cond2, Equality):
+                    if isinstance(cond2, Eq):
                         lower = upper  # ignore
                         break
-                    elif isinstance(cond2, Unequality):
+                    elif isinstance(cond2, Ne):
                         l, r = cond2.args
                         if l == sym:
                             exclude.append(r)
@@ -884,7 +906,7 @@ class Piecewise(Function):
         """Return the truth value of the condition."""
         if cond == True:
             return True
-        if isinstance(cond, Equality):
+        if isinstance(cond, Eq):
             try:
                 diff = cond.lhs - cond.rhs
                 if diff.is_commutative:
@@ -930,7 +952,7 @@ class Piecewise(Function):
                     multivariate conditions are not handled.'''))
             if complex:
                 for i in cond.atoms(Relational):
-                    if not isinstance(i, (Equality, Unequality)):
+                    if not isinstance(i, (Eq, Ne)):
                         raise ValueError(filldedent('''
                             Inequalities in the complex domain are
                             not supported. Try the real domain by
@@ -987,7 +1009,7 @@ class Piecewise(Function):
         return _canonical(last)
 
     def _eval_rewrite_as_KroneckerDelta(self, *args):
-        from sympy import Ne, Eq, Not, KroneckerDelta
+        from sympy import KroneckerDelta
 
         rules = {
             And: [False, False],
@@ -1046,11 +1068,16 @@ class Piecewise(Function):
             return result
 
 
-def piecewise_fold(expr):
+def piecewise_fold(expr, evaluate=True):
     """
     Takes an expression containing a piecewise function and returns the
     expression in piecewise form. In addition, any ITE conditions are
     rewritten in negation normal form and simplified.
+
+    The final Piecewise is evaluated (default) but if the raw form
+    is desired, send ``evaluate=False``; if trivial evaluation is
+    desired, send ``evaluate=None`` and duplicate conditions and
+    processing of True and False will be handled.
 
     Examples
     ========
@@ -1087,7 +1114,6 @@ def piecewise_fold(expr):
             else:
                 new_args.append((e, c))
     else:
-        from sympy.utilities.iterables import cartes, sift, common_prefix
         # Given
         #     P1 = Piecewise((e11, c1), (e12, c2), A)
         #     P2 = Piecewise((e21, c1), (e22, c2), B)
@@ -1134,13 +1160,20 @@ def piecewise_fold(expr):
             args = expr.args
         # fold
         folded = list(map(piecewise_fold, args))
-        for ec in cartes(*[
+        for ec in product(*[
                 (i.args if isinstance(i, Piecewise) else
                  [(i, true)]) for i in folded]):
             e, c = zip(*ec)
             new_args.append((expr.func(*e), And(*c)))
 
-    return Piecewise(*new_args)
+    if evaluate is None:
+        # don't return duplicate conditions, otherwise don't evaluate
+        new_args = list(reversed([(e, c) for c, e in {
+            c: e for e, c in reversed(new_args)}.items()]))
+    rv = Piecewise(*new_args, evaluate=evaluate)
+    if evaluate is None and len(rv.args) == 1 and rv.args[0].cond == True:
+        return rv.args[0].expr
+    return rv
 
 
 def _clip(A, B, k):
@@ -1222,8 +1255,8 @@ def piecewise_simplify(expr, **kwargs):
         # -> Piecewise((0, And(Eq(n, 0), Eq(m, 0))), (1, True))
         if isinstance(cond, And):
             eqs, other = sift(cond.args,
-                lambda i: isinstance(i, Equality), binary=True)
-        elif isinstance(cond, Equality):
+                lambda i: isinstance(i, Eq), binary=True)
+        elif isinstance(cond, Eq):
             eqs, other = [cond], []
         else:
             eqs = other = []
@@ -1246,8 +1279,8 @@ def piecewise_simplify(expr, **kwargs):
         if prevexpr is not None:
             if isinstance(cond, And):
                 eqs, other = sift(cond.args,
-                    lambda i: isinstance(i, Equality), binary=True)
-            elif isinstance(cond, Equality):
+                    lambda i: isinstance(i, Eq), binary=True)
+            elif isinstance(cond, Eq):
                 eqs, other = [cond], []
             else:
                 eqs = other = []

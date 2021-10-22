@@ -9,9 +9,9 @@ Todo:
 
 import math
 
-from sympy import Integer, log, Mul, Add, Pow, conjugate
+from sympy import Integer, log, Mul, Add, Pow, conjugate, S
 from sympy.core.basic import sympify
-from sympy.core.compatibility import SYMPY_INTS
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.matrices import Matrix, zeros
 from sympy.printing.pretty.stringpict import prettyForm
 
@@ -66,7 +66,7 @@ class QubitState(State):
 
         # Validate input (must have 0 or 1 input)
         for element in args:
-            if not (element == 1 or element == 0):
+            if element not in (S.Zero, S.One):
                 raise ValueError(
                     "Qubit values must be 0 or 1, got: %r" % element)
         return args
@@ -484,7 +484,7 @@ def matrix_to_qubit(matrix):
             element = matrix[i, 0]
         else:
             element = matrix[0, i]
-        if format == 'numpy' or format == 'scipy.sparse':
+        if format in ('numpy', 'scipy.sparse'):
             element = complex(element)
         if element != 0.0:
             # Form Qubit array; 0 in bit-locations where i is 0, 1 in
@@ -511,7 +511,7 @@ def matrix_to_density(mat):
     args = [[matrix_to_qubit(Matrix(
         [vector, ])), x[0]] for x in eigen for vector in x[2] if x[0] != 0]
     if (len(args) == 0):
-        return 0
+        return S.Zero
     else:
         return Density(*args)
 
@@ -582,7 +582,7 @@ def measure_all(qubit, format='sympy', normalize=True):
         return results
     else:
         raise NotImplementedError(
-            "This function can't handle non-sympy matrix formats yet"
+            "This function cannot handle non-sympy matrix formats yet"
         )
 
 
@@ -657,7 +657,7 @@ def measure_partial(qubit, bits, format='sympy', normalize=True):
         return output
     else:
         raise NotImplementedError(
-            "This function can't handle non-sympy matrix formats yet"
+            "This function cannot handle non-sympy matrix formats yet"
         )
 
 
@@ -705,7 +705,7 @@ def measure_partial_oneshot(qubit, bits, format='sympy'):
                 return matrix_to_qubit(outcome.normalized())
     else:
         raise NotImplementedError(
-            "This function can't handle non-sympy matrix formats yet"
+            "This function cannot handle non-sympy matrix formats yet"
         )
 
 
@@ -800,5 +800,5 @@ def measure_all_oneshot(qubit, format='sympy'):
         return Qubit(IntQubit(result, int(math.log(max(m.shape), 2) + .1)))
     else:
         raise NotImplementedError(
-            "This function can't handle non-sympy matrix formats yet"
+            "This function cannot handle non-sympy matrix formats yet"
         )

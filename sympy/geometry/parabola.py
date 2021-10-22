@@ -96,7 +96,7 @@ class Parabola(GeometrySet):
         2
 
         """
-        return S(2)
+        return 2
 
     @property
     def axis_of_symmetry(self):

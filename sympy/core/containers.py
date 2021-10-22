@@ -9,9 +9,9 @@
 from collections import OrderedDict
 from collections.abc import MutableSet
 
-from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int
-from sympy.core.sympify import _sympify, sympify, converter, SympifyError
+from .basic import Basic
+from .compatibility import as_int
+from .sympify import _sympify, sympify, converter, SympifyError
 from sympy.utilities.iterables import iterable
 
 class Tuple(Basic):
@@ -177,7 +177,7 @@ def tuple_wrapper(method):
     def wrap_tuples(*args, **kw_args):
         newargs = []
         for arg in args:
-            if type(arg) is tuple:
+            if isinstance(arg, tuple):
                 newargs.append(Tuple(*arg))
             else:
                 newargs.append(arg)
@@ -302,7 +302,7 @@ class Dict(Basic):
 
     @property
     def _sorted_args(self):
-        from sympy.utilities import default_sort_key
+        from sympy.utilities.iterables import default_sort_key
         return tuple(sorted(self.args, key=default_sort_key))
 
 

@@ -393,10 +393,6 @@ class DiracDelta(Function):
                 rewrite(SingularityFunction) doesn't support
                 arguments with more that 1 variable.'''))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.dirac_delta(self.args[0]._sage_())
-
 
 ###############################################################################
 ############################## HEAVISIDE FUNCTION #############################
@@ -497,6 +493,14 @@ class Heaviside(Function):
             H0 = S.Half
         return super(cls, cls).__new__(cls, arg, H0, **options)
 
+    @property
+    def pargs(self):
+        """Args without default S.Half"""
+        args = self.args
+        if args[1] is S.Half:
+            args = args[:1]
+        return args
+
     @classmethod
     def eval(cls, arg, H0=S.Half):
         """
@@ -519,7 +523,7 @@ class Heaviside(Function):
         >>> from sympy.abc import x
 
         >>> Heaviside(x)
-        Heaviside(x, 1/2)
+        Heaviside(x)
 
         >>> Heaviside(19)
         1
@@ -629,10 +633,10 @@ class Heaviside(Function):
         sign(x**2 - 2*x + 1)/2 + 1/2
 
         >>> Heaviside(y).rewrite(sign)
-        Heaviside(y, 1/2)
+        Heaviside(y)
 
         >>> Heaviside(y**2 - 2*y + 1).rewrite(sign)
-        Heaviside(y**2 - 2*y + 1, 1/2)
+        Heaviside(y**2 - 2*y + 1)
 
         See Also
         ========
@@ -645,7 +649,7 @@ class Heaviside(Function):
                 ((sign(arg) + 1)/2, Ne(arg, 0)),
                 (Heaviside(0, H0=H0), True))
             pw2 = Piecewise(
-                ((sign(arg) + 1)/2, Eq(Heaviside(0, H0=H0), S(1)/2)),
+                ((sign(arg) + 1)/2, Eq(Heaviside(0, H0=H0), S.Half)),
                 (pw1, True))
             return pw2
 
@@ -672,7 +676,3 @@ class Heaviside(Function):
             raise TypeError(filldedent('''
                 rewrite(SingularityFunction) doesn't
                 support arguments with more that 1 variable.'''))
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.heaviside(self.args[0]._sage_())

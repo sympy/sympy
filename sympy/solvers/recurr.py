@@ -800,7 +800,7 @@ def rsolve(f, y, init=None):
 
     solution, symbols = result
 
-    if init == {} or init == []:
+    if init in ({}, []):
         init = None
 
     if symbols and init is not None:

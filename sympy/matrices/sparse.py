@@ -1,8 +1,9 @@
 from collections.abc import Callable
 
-from sympy.core.compatibility import as_int, is_sequence
+from sympy.core.compatibility import as_int
 from sympy.core.containers import Dict
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import is_sequence
 
 from .matrices import MatrixBase
 from .repmatrix import MutableRepMatrix, RepMatrix
@@ -349,7 +350,7 @@ class SparseMatrix(RepMatrix):
         sympy.matrices.sparse.SparseMatrix.col_list
         """
         return [tuple(k + (self[k],)) for k in
-            sorted(self.todok().keys(), key=lambda k: list(k))]
+            sorted(self.todok().keys(), key=list)]
 
     def scalar_multiply(self, scalar):
         "Scalar element-wise multiplication"

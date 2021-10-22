@@ -65,7 +65,7 @@ class Vector(BasisDependent):
         """
         Returns the dot product of this Vector, either with another
         Vector, or a Dyadic, or a Del operator.
-        If 'other' is a Vector, returns the dot product scalar (Sympy
+        If 'other' is a Vector, returns the dot product scalar (SymPy
         expression).
         If 'other' is a Dyadic, the dot product is returned as a Vector.
         If 'other' is an instance of Del, returns the directional
@@ -234,7 +234,7 @@ class Vector(BasisDependent):
 
         """
         if self.equals(Vector.zero):
-            return S.zero if scalar else Vector.zero
+            return S.Zero if scalar else Vector.zero
 
         if scalar:
             return self.dot(other) / self.dot(self)

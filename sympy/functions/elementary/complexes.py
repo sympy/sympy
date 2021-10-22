@@ -136,10 +136,6 @@ class re(Function):
         if self.args[0].is_finite:
             return True
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.real_part(self.args[0]._sage_())
-
 
 class im(Function):
     """
@@ -241,10 +237,6 @@ class im(Function):
             return -S.ImaginaryUnit \
                 * re(Derivative(self.args[0], x, evaluate=True))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.imag_part(self.args[0]._sage_())
-
     def _eval_rewrite_as_re(self, arg, **kwargs):
         return -S.ImaginaryUnit*(self.args[0] - re(self.args[0]))
 
@@ -326,9 +318,10 @@ class sign(Function):
     _singularities = True
 
     def doit(self, **hints):
-        if self.args[0].is_zero is False:
+        s = super().doit()
+        if s == self and self.args[0].is_zero is False:
             return self.args[0] / Abs(self.args[0])
-        return self
+        return s
 
     @classmethod
     def eval(cls, arg):
@@ -430,10 +423,6 @@ class sign(Function):
         if cdir != 0:
             cdir = arg0.dir(x, cdir)
         return -S.One if re(cdir) < 0 else S.One
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.sgn(self.args[0]._sage_())
 
     def _eval_rewrite_as_Piecewise(self, arg, **kwargs):
         if arg.is_extended_real:
@@ -671,10 +660,6 @@ class Abs(Function):
         s = self.args[0]._eval_nseries(x, n=n, logx=logx)
         return (sign(direction)*s).expand()
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.abs_symbolic(self.args[0]._sage_())
-
     def _eval_derivative(self, x):
         if self.args[0].is_extended_real or self.args[0].is_imaginary:
             return Derivative(self.args[0], x, evaluate=True) \
@@ -830,6 +815,9 @@ class conjugate(Function):
         obj = arg._eval_conjugate()
         if obj is not None:
             return obj
+
+    def inverse(self):
+        return conjugate
 
     def _eval_Abs(self):
         return Abs(self.args[0], evaluate=True)
@@ -1232,7 +1220,6 @@ class principal_branch(Function):
 
     @classmethod
     def eval(self, x, period):
-        from sympy import oo, exp_polar, I, Mul, polar_lift, Symbol
         if isinstance(x, polar_lift):
             return principal_branch(x.args[0], period)
         if period == oo:
@@ -1283,7 +1270,6 @@ class principal_branch(Function):
             return exp_polar(arg*I)*abs(c)
 
     def _eval_evalf(self, prec):
-        from sympy import exp, pi, I
         z, period = self.args
         p = periodic_argument(z, period)._eval_evalf(prec)
         if abs(p) > pi or p == -pi:
@@ -1406,7 +1392,7 @@ def _unpolarify(eq, exponents_only, pause=False):
     return eq.func(*[_unpolarify(x, exponents_only, True) for x in eq.args])
 
 
-def unpolarify(eq, subs={}, exponents_only=False):
+def unpolarify(eq, subs=None, exponents_only=False):
     """
     If p denotes the projection from the Riemann surface of the logarithm to
     the complex line, return a simplified version eq' of `eq` such that
@@ -1427,7 +1413,7 @@ def unpolarify(eq, subs={}, exponents_only=False):
         return eq
 
     eq = sympify(eq)
-    if subs != {}:
+    if subs is not None:
         return unpolarify(eq.subs(subs))
     changed = True
     pause = False

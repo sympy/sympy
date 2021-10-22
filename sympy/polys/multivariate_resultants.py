@@ -147,7 +147,7 @@ class DixonResultant():
         r"""
         Returns a list of the maximum degree of each variable appearing
         in the coefficients of the Dixon polynomial. The coefficients are
-        viewed as polys in x_1, ... , x_n.
+        viewed as polys in $x_1, x_2, \dots, x_n$.
         """
         deg_lists = [degree_list(Poly(poly, self.variables))
                      for poly in polynomial.coeffs()]
@@ -177,8 +177,8 @@ class DixonResultant():
         # remove columns if needed
         if dixon_matrix.shape[0] != dixon_matrix.shape[1]:
             keep = [column for column in range(dixon_matrix.shape[-1])
-                    if any([element != 0 for element
-                        in dixon_matrix[:, column]])]
+                    if any(element != 0 for element
+                        in dixon_matrix[:, column])]
 
             dixon_matrix = dixon_matrix[:, keep]
 

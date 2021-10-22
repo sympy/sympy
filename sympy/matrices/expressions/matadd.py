@@ -46,12 +46,12 @@ class MatAdd(MatrixExpr, Add):
         obj = Basic.__new__(cls, *args)
 
         if check:
-            if all(not isinstance(i, MatrixExpr) for i in args):
+            if not any(isinstance(i, MatrixExpr) for i in args):
                 return Add.fromiter(args)
             validate(*args)
 
         if evaluate:
-            if all(not isinstance(i, MatrixExpr) for i in args):
+            if not any(isinstance(i, MatrixExpr) for i in args):
                 return Add(*args, evaluate=True)
             obj = canonicalize(obj)
 
@@ -60,6 +60,10 @@ class MatAdd(MatrixExpr, Add):
     @property
     def shape(self):
         return self.args[0].shape
+
+    def could_extract_minus_sign(self):
+        from sympy.core.add import _could_extract_minus_sign as f
+        return f(self)
 
     def _entry(self, i, j, **kwargs):
         return Add(*[arg._entry(i, j, **kwargs) for arg in self.args])

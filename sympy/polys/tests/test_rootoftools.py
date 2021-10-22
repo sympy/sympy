@@ -153,8 +153,8 @@ def test_CRootOf___eval_Eq__():
             assert Eq(r, s) is S.true
     eq = x**3 + x + 1
     sol = solve(eq)
-    assert [Eq(rootof(eq, i), j) for i in range(3) for j in sol] == [
-        False, False, True, False, True, False, True, False, False]
+    assert [Eq(rootof(eq, i), j) for i in range(3) for j in sol
+        ].count(True) == 3
     assert Eq(rootof(eq, 0), 1 + S.ImaginaryUnit) == False
 
 

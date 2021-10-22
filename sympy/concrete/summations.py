@@ -213,7 +213,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         if reps:
             undo = {v: k for k, v in reps.items()}
             did = self.xreplace(reps).doit(**hints)
-            if type(did) is tuple:  # when separate=True
+            if isinstance(did, tuple):  # when separate=True
                 did = tuple([i.xreplace(undo) for i in did])
             elif did is not None:
                 did = did.xreplace(undo)
@@ -322,7 +322,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import factor_sum, sum_combine
         from sympy.core.function import expand
-        from sympy.core.mul import Mul
 
         # split the function into adds
         terms = Add.make_args(expand(self.function))
@@ -402,7 +401,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         There are various tests employed to check the convergence like
         divergence test, root test, integral test, alternating series test,
         comparison tests, Dirichlet tests. It returns true if Sum is convergent
-        and false if divergent and NotImplementedError if it can not be checked.
+        and false if divergent and NotImplementedError if it cannot be checked.
 
         References
         ==========
@@ -770,8 +769,14 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         for k in range(1, n + 2):
             ga, gb = fpoint(g)
             term = bernoulli(2*k)/factorial(2*k)*(gb - ga)
-            if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
+            if k > n:
                 break
+            if eps and term:
+                term_evalf = term.evalf(3)
+                if term_evalf is S.NaN:
+                    return S.NaN, S.NaN
+                if abs(term_evalf) < eps:
+                    break
             s += term
             g = g.diff(i, 2, simplify=False)
         return s + iterm, abs(term)
@@ -1036,7 +1041,6 @@ def eval_sum_direct(expr, limits):
     Evaluate expression directly, but perform some simple checks first
     to possibly result in a smaller expression and faster execution.
     """
-    from sympy.core import Add
     (i, a, b) = limits
 
     dif = b - a
@@ -1287,8 +1291,6 @@ def _eval_sum_hyper(f, i, a):
 
 
 def eval_sum_hyper(f, i_a_b):
-    from sympy.logic.boolalg import And
-
     i, a, b = i_a_b
 
     if (b - a).is_Integer:
@@ -1346,7 +1348,7 @@ def eval_sum_residue(f, i_a_b):
     Notes
     =====
 
-    If $f(n), g(n)$ are polynomials with $\deg(g(n)) - \deg(f(n)) >= 2$,
+    If $f(n), g(n)$ are polynomials with $\deg(g(n)) - \deg(f(n)) \ge 2$,
     some infinite summations can be computed by the following residue
     evaluations.
 
@@ -1413,10 +1415,10 @@ def eval_sum_residue(f, i_a_b):
 
     def is_even_function(numer, denom):
         """Test if the rational function is an even function"""
-        numer_even = all([i % 2 == 0 for (i,) in numer.monoms()])
-        denom_even = all([i % 2 == 0 for (i,) in denom.monoms()])
-        numer_odd = all([i % 2 == 1 for (i,) in numer.monoms()])
-        denom_odd = all([i % 2 == 1 for (i,) in denom.monoms()])
+        numer_even = all(i % 2 == 0 for (i,) in numer.monoms())
+        denom_even = all(i % 2 == 0 for (i,) in denom.monoms())
+        numer_odd = all(i % 2 == 1 for (i,) in numer.monoms())
+        denom_odd = all(i % 2 == 1 for (i,) in denom.monoms())
         return (numer_even and denom_even) or (numer_odd and denom_odd)
 
     def match_rational(f, i):
@@ -1599,7 +1601,7 @@ def _dummy_with_inherited_properties_concrete(limits):
         assum_true = x._assumptions.get(assum, None)
         if assum_true:
             assumptions_to_keep[assum] = True
-        elif all([getattr(i, 'is_' + assum) for i in l]):
+        elif all(getattr(i, 'is_' + assum) for i in l):
             assumptions_to_add[assum] = True
     if assumptions_to_add:
         assumptions_to_keep.update(assumptions_to_add)

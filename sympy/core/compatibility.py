@@ -6,243 +6,14 @@ here for easy import.
 
 import operator
 from collections import defaultdict
-from time import perf_counter as clock
-
-from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, GROUND_TYPES, gmpy
-
 
 """
-Python 2 and Python 3 compatible imports
-
-String and Unicode compatible changes:
-    * `unicode()` removed in Python 3, import `unicode` for Python 2/3
-      compatible function
-    * Use `u()` for escaped unicode sequences (e.g. u'\u2020' -> u('\u2020'))
-    * Use `u_decode()` to decode utf-8 formatted unicode strings
-
-Renamed function attributes:
-    * Python 2 `.func_code`, Python 3 `.__func__`, access with
-      `get_function_code()`
-    * Python 2 `.func_globals`, Python 3 `.__globals__`, access with
-      `get_function_globals()`
-    * Python 2 `.func_name`, Python 3 `.__name__`, access with
-      `get_function_name()`
-
-Moved modules:
-    * `reduce()`
-    * `StringIO()`
-    * `cStringIO()` (same as `StingIO()` in Python 3)
-    * Python 2 `__builtin__`, access with Python 3 name, `builtins`
-
-exec:
-    * Use `exec_()`, with parameters `exec_(code, globs=None, locs=None)`
-
-Metaclasses:
-    * Use `with_metaclass()`, examples below
-        * Define class `Foo` with metaclass `Meta`, and no parent:
-            class Foo(with_metaclass(Meta)):
-                pass
-        * Define class `Foo` with metaclass `Meta` and parent class `Bar`:
-            class Foo(with_metaclass(Meta, Bar)):
-                pass
+Some utility functions originating from Python 2 and Python 3 compatible imports.
 """
 
 __all__ = [
-    'PY3', 'int_info', 'SYMPY_INTS', 'clock',
-    'unicode', 'u_decode', 'get_function_code', 'gmpy',
-    'get_function_globals', 'get_function_name', 'builtins', 'reduce',
-    'StringIO', 'cStringIO', 'exec_', 'Mapping', 'Callable',
-    'MutableMapping', 'MutableSet', 'Iterable', 'Hashable', 'unwrap',
-    'accumulate', 'with_metaclass', 'NotIterable', 'iterable', 'is_sequence',
-    'as_int', 'default_sort_key', 'ordered', 'GROUND_TYPES', 'HAS_GMPY',
+    'as_int', 'default_sort_key', 'ordered',
 ]
-
-import sys
-PY3 = True
-
-int_info = sys.int_info
-
-# String / unicode compatibility
-unicode = str
-
-def u_decode(x):
-    return x
-
-# Moved definitions
-get_function_code = operator.attrgetter("__code__")
-get_function_globals = operator.attrgetter("__globals__")
-get_function_name = operator.attrgetter("__name__")
-
-import builtins
-from functools import reduce
-from io import StringIO
-cStringIO = StringIO
-
-exec_ = getattr(builtins, "exec")
-
-from collections.abc import (Mapping, Callable, MutableMapping,
-    MutableSet, Iterable, Hashable)
-
-from inspect import unwrap
-from itertools import accumulate
-
-
-
-def with_metaclass(meta, *bases):
-    """
-    Create a base class with a metaclass.
-
-    For example, if you have the metaclass
-
-    >>> class Meta(type):
-    ...     pass
-
-    Use this as the metaclass by doing
-
-    >>> from sympy.core.compatibility import with_metaclass
-    >>> class MyClass(with_metaclass(Meta, object)):
-    ...     pass
-
-    This is equivalent to the Python 2::
-
-        class MyClass(object):
-            __metaclass__ = Meta
-
-    or Python 3::
-
-        class MyClass(object, metaclass=Meta):
-            pass
-
-    That is, the first argument is the metaclass, and the remaining arguments
-    are the base classes. Note that if the base class is just ``object``, you
-    may omit it.
-
-    >>> MyClass.__mro__
-    (<class '...MyClass'>, <... 'object'>)
-    >>> type(MyClass)
-    <class '...Meta'>
-
-    """
-    # This requires a bit of explanation: the basic idea is to make a dummy
-    # metaclass for one level of class instantiation that replaces itself with
-    # the actual metaclass.
-    # Code copied from the 'six' library.
-    class metaclass(meta):
-        def __new__(cls, name, this_bases, d):
-            return meta(name, bases, d)
-    return type.__new__(metaclass, "NewBase", (), {})
-
-
-# These are in here because telling if something is an iterable just by calling
-# hasattr(obj, "__iter__") behaves differently in Python 2 and Python 3.  In
-# particular, hasattr(str, "__iter__") is False in Python 2 and True in Python 3.
-# I think putting them here also makes it easier to use them in the core.
-
-class NotIterable:
-    """
-    Use this as mixin when creating a class which is not supposed to
-    return true when iterable() is called on its instances because
-    calling list() on the instance, for example, would result in
-    an infinite loop.
-    """
-    pass
-
-def iterable(i, exclude=(str, dict, NotIterable)):
-    """
-    Return a boolean indicating whether ``i`` is SymPy iterable.
-    True also indicates that the iterator is finite, e.g. you can
-    call list(...) on the instance.
-
-    When SymPy is working with iterables, it is almost always assuming
-    that the iterable is not a string or a mapping, so those are excluded
-    by default. If you want a pure Python definition, make exclude=None. To
-    exclude multiple items, pass them as a tuple.
-
-    You can also set the _iterable attribute to True or False on your class,
-    which will override the checks here, including the exclude test.
-
-    As a rule of thumb, some SymPy functions use this to check if they should
-    recursively map over an object. If an object is technically iterable in
-    the Python sense but does not desire this behavior (e.g., because its
-    iteration is not finite, or because iteration might induce an unwanted
-    computation), it should disable it by setting the _iterable attribute to False.
-
-    See also: is_sequence
-
-    Examples
-    ========
-
-    >>> from sympy.utilities.iterables import iterable
-    >>> from sympy import Tuple
-    >>> things = [[1], (1,), set([1]), Tuple(1), (j for j in [1, 2]), {1:2}, '1', 1]
-    >>> for i in things:
-    ...     print('%s %s' % (iterable(i), type(i)))
-    True <... 'list'>
-    True <... 'tuple'>
-    True <... 'set'>
-    True <class 'sympy.core.containers.Tuple'>
-    True <... 'generator'>
-    False <... 'dict'>
-    False <... 'str'>
-    False <... 'int'>
-
-    >>> iterable({}, exclude=None)
-    True
-    >>> iterable({}, exclude=str)
-    True
-    >>> iterable("no", exclude=str)
-    False
-
-    """
-    if hasattr(i, '_iterable'):
-        return i._iterable
-    try:
-        iter(i)
-    except TypeError:
-        return False
-    if exclude:
-        return not isinstance(i, exclude)
-    return True
-
-
-def is_sequence(i, include=None):
-    """
-    Return a boolean indicating whether ``i`` is a sequence in the SymPy
-    sense. If anything that fails the test below should be included as
-    being a sequence for your application, set 'include' to that object's
-    type; multiple types should be passed as a tuple of types.
-
-    Note: although generators can generate a sequence, they often need special
-    handling to make sure their elements are captured before the generator is
-    exhausted, so these are not included by default in the definition of a
-    sequence.
-
-    See also: iterable
-
-    Examples
-    ========
-
-    >>> from sympy.utilities.iterables import is_sequence
-    >>> from types import GeneratorType
-    >>> is_sequence([])
-    True
-    >>> is_sequence(set())
-    False
-    >>> is_sequence('abc')
-    False
-    >>> is_sequence('abc', include=str)
-    True
-    >>> generator = (c for c in 'abc')
-    >>> is_sequence(generator)
-    False
-    >>> is_sequence(generator, include=(str, GeneratorType))
-    True
-
-    """
-    return (hasattr(i, '__getitem__') and
-            iterable(i) or
-            bool(include) and
-            isinstance(i, include))
 
 
 def as_int(n, strict=True):
@@ -297,7 +68,7 @@ def as_int(n, strict=True):
     """
     if strict:
         try:
-            if type(n) is bool:
+            if isinstance(n, bool):
                 raise TypeError
             return operator.index(n)
         except TypeError:
@@ -401,7 +172,7 @@ def default_sort_key(item, order=None):
     [1/x, x]
 
     But since the keys for each of these terms are independent of ``order``'s
-    value, they don't sort differently when they appear separately in a list:
+    value, they do not sort differently when they appear separately in a list:
 
     >>> sorted(eq.args, key=default_sort_key)
     [1/x, x]
@@ -430,7 +201,7 @@ def default_sort_key(item, order=None):
     from .singleton import S
     from .basic import Basic
     from .sympify import sympify, SympifyError
-    from .compatibility import iterable
+    from sympy.utilities.iterables import iterable
 
     if isinstance(item, Basic):
         return item.sort_key(order=order)
@@ -473,8 +244,15 @@ def default_sort_key(item, order=None):
     return (cls_index, 0, item.__class__.__name__
             ), args, S.One.sort_key(), S.One
 
+
 def _node_count(e):
+    # this not only counts nodes, it affirms that the
+    # args are Basic (i.e. have an args property). If
+    # some object has a non-Basic arg, it needs to be
+    # fixed since it is intended that all Basic args
+    # are of Basic type (though this is not easy to enforce).
     return 1 + sum(map(_node_count, e.args))
+
 
 def _nodes(e):
     """
@@ -485,10 +263,12 @@ def _nodes(e):
     """
     from .basic import Basic
     from .function import Derivative
+    from sympy.utilities.iterables import iterable
 
     if isinstance(e, Basic):
         if isinstance(e, Derivative):
-            return _nodes(e.expr) + len(e.variables)
+            return _nodes(e.expr) + sum(i[1] if i[1].is_Number else
+                _nodes(i[1]) for i in e.variable_count)
         return _node_count(e)
     elif iterable(e):
         return 1 + sum(_nodes(ei) for ei in e)
@@ -504,7 +284,7 @@ def ordered(seq, keys=None, default=True, warn=False):
     then no other keys will be computed.
 
     Two default keys will be applied if 1) keys are not provided or 2) the
-    given keys don't resolve all ties (but only if ``default`` is True). The
+    given keys do not resolve all ties (but only if ``default`` is True). The
     two keys are ``_nodes`` (which places smaller expressions before large) and
     ``default_sort_key`` which (if the ``sort_key`` for an object is defined
     properly) should resolve any ties.

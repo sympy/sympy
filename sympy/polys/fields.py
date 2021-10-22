@@ -6,7 +6,6 @@ from functools import reduce
 
 from operator import add, mul, lt, le, gt, ge
 
-from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
 from sympy.core.mod import Mod
 from sympy.core.numbers import Exp1
@@ -25,6 +24,7 @@ from sympy.polys.polyutils import _parallel_dict_from_expr
 from sympy.polys.rings import PolyElement
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
+from sympy.utilities.iterables import is_sequence
 from sympy.utilities.magic import pollute
 
 @public

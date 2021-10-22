@@ -327,7 +327,7 @@ class ComplexRootOf(RootOf):
         degree = poly.degree()
 
         if degree <= 0:
-            raise PolynomialError("can't construct CRootOf object for %s" % f)
+            raise PolynomialError("Cannot construct CRootOf object for %s" % f)
 
         if index < -degree or index >= degree:
             raise IndexError("root index out of [%d, %d] range, got %d" %

@@ -229,7 +229,7 @@ def tensordiagonal(array, *diagonal_axes):
     True
 
     """
-    if any([len(i) <= 1 for i in diagonal_axes]):
+    if any(len(i) <= 1 for i in diagonal_axes):
         raise ValueError("need at least two axes to diagonalize")
 
     from sympy.tensor.array.expressions.array_expressions import _ArrayExpr

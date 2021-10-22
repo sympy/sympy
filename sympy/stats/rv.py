@@ -28,6 +28,7 @@ from sympy.external import import_module
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import iterable
 import warnings
 
 
@@ -40,7 +41,7 @@ def is_random(x):
 @is_random.register(Basic)
 def _(x):
     atoms = x.free_symbols
-    return any([is_random(i) for i in atoms])
+    return any(is_random(i) for i in atoms)
 
 class RandomDomain(Basic):
     """
@@ -457,7 +458,7 @@ class IndependentProductPSpace(ProductPSpace):
         expr = condition.lhs - condition.rhs
         rvs = random_symbols(expr)
         dens = self.compute_density(expr)
-        if any([pspace(rv).is_Continuous for rv in rvs]):
+        if any(pspace(rv).is_Continuous for rv in rvs):
             from sympy.stats.crv import SingleContinuousPSpace
             from sympy.stats.crv_types import ContinuousDistributionHandmade
             if expr in self.values:
@@ -497,17 +498,18 @@ class IndependentProductPSpace(ProductPSpace):
     def conditional_space(self, condition, normalize=True, **kwargs):
         rvs = random_symbols(condition)
         condition = condition.xreplace({rv: rv.symbol for rv in self.values})
-        if any([pspace(rv).is_Continuous for rv in rvs]):
+        pspaces = [pspace(rv) for rv in rvs]
+        if any(ps.is_Continuous for ps in pspaces):
             from sympy.stats.crv import (ConditionalContinuousDomain,
                 ContinuousPSpace)
             space = ContinuousPSpace
             domain = ConditionalContinuousDomain(self.domain, condition)
-        elif any([pspace(rv).is_Discrete for rv in rvs]):
+        elif any(ps.is_Discrete for ps in pspaces):
             from sympy.stats.drv import (ConditionalDiscreteDomain,
                 DiscretePSpace)
             space = DiscretePSpace
             domain = ConditionalDiscreteDomain(self.domain, condition)
-        elif all([pspace(rv).is_Finite for rv in rvs]):
+        elif all(ps.is_Finite for ps in pspaces):
             from sympy.stats.frv import FinitePSpace
             return FinitePSpace.conditional_space(self, condition)
         if normalize:
@@ -1031,7 +1033,7 @@ def where(condition, given_condition=None, **kwargs):
     >>> where(X**2<1).set
     Interval.open(-1, 1)
 
-    >>> where(And(D1<=D2 , D2<3))
+    >>> where(And(D1<=D2, D2<3))
     Domain: (Eq(a, 1) & Eq(b, 1)) | (Eq(a, 1) & Eq(b, 2)) | (Eq(a, 2) & Eq(b, 2))
     """
     if given_condition is not None:  # If there is a condition
@@ -1665,7 +1667,6 @@ def _value_check(condition, message):
     >>> _value_check(And(a < 0, b < 0, c < 0), '')
     False
     """
-    from sympy.core.compatibility import iterable
     from sympy.core.logic import fuzzy_and
     if not iterable(condition):
         condition = [condition]
