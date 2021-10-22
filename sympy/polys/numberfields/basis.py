@@ -159,10 +159,9 @@ def round_two(T, radicals=None):
     nilrad = None
     while F:
         # Next prime:
-        for p in F: break
+        p, e = F.popitem()
         U_bar, m = _apply_Dedekind_criterion(T, p)
         if m == 0:
-            del F[p]
             continue
         # For a given prime p, the first enlargement of the order spanned by
         # the current basis can be done in a simple way:
@@ -172,8 +171,7 @@ def round_two(T, radicals=None):
         #  Could be slightly more efficient to use only those. Maybe `Submodule`
         #  class should support a slice operator?
         H = H.add(U // p * H, hnf_modulus=D)
-        if F[p] <= m:
-            del F[p]
+        if e <= m:
             continue
         # A second, and possibly more, enlargements for p will be needed.
         # These enlargements require a more involved procedure.
@@ -184,7 +182,6 @@ def round_two(T, radicals=None):
         while H1 != H:
             H = H1
             H1, nilrad = _second_enlargement(H, p, q)
-        del F[p]
     # Note: We do not store all nilradicals mod p, only the very last. This is
     # because, unless computed against the entire integral basis, it might not
     # be accurate. (In other words, if H was not already equal to ZK when we
