@@ -371,6 +371,7 @@ def test_set_operations_nonsets():
 
 
 def test_complement():
+    assert Complement({1, 2}, {1}) == {2}
     assert Interval(0, 1).complement(S.Reals) == \
         Union(Interval(-oo, 0, True, True), Interval(1, oo, True, True))
     assert Interval(0, 1, True, False).complement(S.Reals) == \
