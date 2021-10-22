@@ -1,8 +1,8 @@
 """Computing integral bases for number fields. """
 
-from sympy.polys import Poly
-from sympy.polys.domains import ZZ
-from sympy.utilities import public
+from sympy.polys.polytools import Poly
+from sympy.polys.domains.integerring import ZZ
+from sympy.utilities.decorator import public
 from .modules import ModuleEndomorphism, ModuleHomomorphism, Order, PowerBasis
 from .utilities import extract_fundamental_discriminant
 

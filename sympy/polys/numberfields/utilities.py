@@ -1,9 +1,10 @@
 """Utilities for algebraic number theory. """
 
 from sympy.ntheory.factor_ import factorint
-from sympy.polys.domains import QQ, ZZ
+from sympy.polys.domains.rationalfield import QQ
+from sympy.polys.domains.integerring import ZZ
 from sympy.polys.matrices.exceptions import DMRankError
-from sympy.utilities import public
+from sympy.utilities.decorator import public
 
 
 def is_rat(c):
