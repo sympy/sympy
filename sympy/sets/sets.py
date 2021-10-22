@@ -1563,6 +1563,7 @@ class Complement(Set):
     is_Complement = True
 
     def __new__(cls, a, b, evaluate=True):
+        a, b = map(_sympify, (a, b))
         if evaluate:
             return Complement.reduce(a, b)
 
