@@ -219,8 +219,7 @@ from sympy import Basic, Add
 
 from sympy.core.core import BasicMeta
 from sympy.core.function import AppliedUndef, UndefinedFunction, Function
-
-
+from sympy.core import sympify
 
 @contextmanager
 def printer_context(printer, **kwargs):
@@ -347,6 +346,21 @@ class Printer:
             return list(expr.args)
         else:
             return expr.as_ordered_terms(order=order)
+
+    def _print_object(self, obj):
+        """
+        For classes that do not have any defined printing method
+        try to sympify the object. If a different class  emerges
+        try printing again, otherwise use the emtpyPrinter
+        """
+        try:
+            simp=sympify(obj)
+            if (simp.__class__==obj.__class__):
+                raise
+        except:
+            return self.emptyPrinter(obj)
+        return self._print(simp)
+
 
 
 class _PrintFunction:
