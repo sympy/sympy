@@ -2,7 +2,7 @@ from typing import Any, Dict, Set, Tuple
 
 from functools import wraps
 
-from sympy.core import Add, Expr, Mul, Pow, S, sympify, Float
+from sympy.core import Add, Expr, Mul, Pow, S, Float
 from sympy.core.basic import Basic
 from sympy.core.compatibility import default_sort_key
 from sympy.core.expr import UnevaluatedExpr
