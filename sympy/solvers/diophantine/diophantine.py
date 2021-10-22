@@ -10,7 +10,7 @@ from sympy.core.numbers import igcdex, ilcm, igcd
 from sympy.core.power import integer_nthroot, isqrt
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol, symbols
+from sympy.core.symbol import Symbol, symbols, Dummy
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.integers import floor
@@ -1350,30 +1350,47 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     if isinstance(eq, Eq):
         eq = eq.lhs - eq.rhs
 
+    var = list(eq.expand(force=True).free_symbols)
+    var.sort(key=default_sort_key)
+    if syms:
+        if not is_sequence(syms):
+            raise TypeError(
+                'syms should be given as a sequence, e.g. a list')
+        syms = [i for i in syms if i in var]
+        if syms != var:
+            dict_sym_index = dict(zip(syms, range(len(syms))))
+            return {tuple([t[dict_sym_index[i]] for i in var])
+                        for t in diophantine(eq, param, permute=True)}
+    n, d = eq.as_numer_denom()
+    if n.is_number:
+        return set()
+    if not d.is_number:
+        dsol = diophantine(d)
+        good = diophantine(n) - dsol
+        return {s for s in good if _mexpand(d.subs(zip(var, s)))}
+    else:
+        eq = n
+    eq = factor_terms(eq)
+    assert not eq.is_number
+    eq = eq.as_independent(*var, as_Add=False)[1]
+
+    # check for plausible integer non-solutions
+    ivar = {s: Dummy(integer=True) for s in var if not s.is_integer}
+    if eq.xreplace(ivar).is_integer is False:
+        return set()
+    nzvar = {s: Dummy(integer=True, zero=False) for s in var if s.is_zero is None}
+    if eq.xreplace(nzvar).is_integer is False:
+        # perhaps zero if 1 or more of the symbols is 0
+        rv = []
+        for i in subsets(nzvar):
+            zvar = {s: 0 for s in i}
+            if eq.xreplace(zvar).is_integer:
+                if len(i) == len(nzvar) and rv:
+                    continue
+                rv.append(tuple(
+                        [S.Zero if i in zvar else i for i in var]))
+        return set(rv)
     try:
-        var = list(eq.expand(force=True).free_symbols)
-        var.sort(key=default_sort_key)
-        if syms:
-            if not is_sequence(syms):
-                raise TypeError(
-                    'syms should be given as a sequence, e.g. a list')
-            syms = [i for i in syms if i in var]
-            if syms != var:
-                dict_sym_index = dict(zip(syms, range(len(syms))))
-                return {tuple([t[dict_sym_index[i]] for i in var])
-                            for t in diophantine(eq, param, permute=permute)}
-        n, d = eq.as_numer_denom()
-        if n.is_number:
-            return set()
-        if not d.is_number:
-            dsol = diophantine(d)
-            good = diophantine(n) - dsol
-            return {s for s in good if _mexpand(d.subs(zip(var, s)))}
-        else:
-            eq = n
-        eq = factor_terms(eq)
-        assert not eq.is_number
-        eq = eq.as_independent(*var, as_Add=False)[1]
         p = Poly(eq)
         assert not any(g.is_number for g in p.gens)
         eq = p.as_expr()
