@@ -626,21 +626,18 @@ class Submodule(Module, IntegerPowerable):
         return NotImplemented
 
     def add(self, other, hnf=True, hnf_modulus=None):
-        if self.is_compat_submodule(other):
-            d, e = self.denom, other.denom
-            m = ilcm(d, e)
-            a, b = m // d, m // e
-            B = (a * self.matrix).hstack(b * other.matrix)
-            if hnf:
-                B = hermite_normal_form(B, D=hnf_modulus)
-            return self.container.submodule_from_matrix(B, denom=m)
-        raise NotImplementedError
+        d, e = self.denom, other.denom
+        m = ilcm(d, e)
+        a, b = m // d, m // e
+        B = (a * self.matrix).hstack(b * other.matrix)
+        if hnf:
+            B = hermite_normal_form(B, D=hnf_modulus)
+        return self.container.submodule_from_matrix(B, denom=m)
 
     def __add__(self, other):
-        try:
+        if self.is_compat_submodule(other):
             return self.add(other)
-        except NotImplementedError:
-            return NotImplemented
+        return NotImplemented
 
     __radd__ = __add__
 
