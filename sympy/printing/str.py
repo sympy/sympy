@@ -2,6 +2,8 @@
 A Printer for generating readable representation of most sympy classes.
 """
 
+import itertools
+from collections import abc
 from typing import Any, Dict
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
@@ -244,18 +246,21 @@ class StrPrinter(Printer):
             + '[%s, %s]' % (self._print(expr.i), self._print(expr.j))
 
     def _print_MatrixSlice(self, expr):
-        def strslice(x, dim):
-            x = list(x)
-            if x[2] == 1:
-                del x[2]
-            if x[0] == 0:
-                x[0] = ''
-            if x[1] == dim:
-                x[1] = ''
-            return ':'.join(map(lambda arg: self._print(arg), x))
         return (self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) + '[' +
-                strslice(expr.rowslice, expr.parent.rows) + ', ' +
-                strslice(expr.colslice, expr.parent.cols) + ']')
+                self.__slice_to_str(expr.rowslice, expr.parent.rows) + ', ' +
+                self.__slice_to_str(expr.colslice, expr.parent.cols) + ']')
+
+    def __slice_to_str(self, x, dim):
+        if not isinstance(x, abc.Iterable):
+            return self._print(x)
+        x = list(x)
+        if x[2] == 1 or x[2] is None:
+            del x[2]
+        if x[0] == 0:
+            x[0] = ''
+        if x[1] == dim:
+            x[1] = ''
+        return ':'.join(map(lambda arg: self._print(arg), x))
 
     def _print_DeferredVector(self, expr):
         return expr.name
@@ -485,12 +490,21 @@ class StrPrinter(Printer):
     def _print_TensAdd(self, expr):
         return expr._print()
 
-    def _print_ArraySymbol(self, expr):
-        return self._print(expr.name)
-
     def _print_ArrayElement(self, expr):
-        return "%s[%s]" % (
-            self.parenthesize(expr.name, PRECEDENCE["Func"], True), ", ".join([self._print(i) for i in expr.indices]))
+        parent = self.parenthesize(expr.parent, PRECEDENCE["Func"], True)
+        indices = ", ".join(self._print(i) for i in expr.indices)
+        return "%s[%s]" % (parent, indices)
+
+    def _print_ArraySlice(self, expr):
+        shape = getattr(expr.parent, "shape", tuple())
+        stringified_indices = []
+        for idx, axis_size in itertools.zip_longest(expr.indices, shape):
+            if idx is None:
+                break
+            stringified_indices.append(self.__slice_to_str(idx, axis_size))
+        parent = self.parenthesize(expr.parent, PRECEDENCE["Func"], strict=True)
+        indices = ", ".join(stringified_indices)
+        return "%s[%s]" % (parent, indices)
 
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % self._print(a) for a in expr.args]
@@ -841,6 +855,7 @@ class StrPrinter(Printer):
 
     def _print_Symbol(self, expr):
         return expr.name
+    _print_ArraySymbol = _print_Symbol
     _print_MatrixSymbol = _print_Symbol
     _print_RandomSymbol = _print_Symbol
 

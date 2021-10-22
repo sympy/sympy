@@ -261,7 +261,7 @@ def _(expr: ArrayElementwiseApplyFunc):
 
 @_array2matrix.register(ArrayElement) # type: ignore
 def _(expr: ArrayElement):
-    ret = _array2matrix(expr.name)
+    ret = _array2matrix(expr.parent)
     if isinstance(ret, MatrixExpr):
         return MatrixElement(ret, *expr.indices)
     return ArrayElement(ret, expr.indices)

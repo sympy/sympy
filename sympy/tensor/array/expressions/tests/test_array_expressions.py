@@ -1,11 +1,36 @@
 import random
 
-from sympy import symbols, ImmutableDenseNDimArray, tensorproduct, tensorcontraction, permutedims, MatrixSymbol, \
-    ZeroMatrix, sin, cos, DiagMatrix
+from sympy import (
+    Array,
+    DiagMatrix,
+    ImmutableDenseNDimArray,
+    MatrixSymbol,
+    Tuple,
+    ZeroMatrix,
+    cos,
+    permutedims,
+    sin,
+    symbols,
+    tensorcontraction,
+    tensorproduct,
+)
 from sympy.combinatorics import Permutation
-from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol, ArrayElement, \
-    PermuteDims, ArrayContraction, ArrayTensorProduct, ArrayDiagonal, \
-    ArrayAdd, nest_permutation, ArrayElementwiseApplyFunc, _EditArrayContraction, _ArgE
+from sympy.tensor.array.expressions.array_expressions import (
+    ArrayAdd,
+    ArrayContraction,
+    ArrayDiagonal,
+    ArrayElement,
+    ArrayElementwiseApplyFunc,
+    ArraySlice,
+    ArraySymbol,
+    ArrayTensorProduct,
+    OneArray,
+    PermuteDims,
+    ZeroArray,
+    _ArgE,
+    _EditArrayContraction,
+    nest_permutation,
+)
 from sympy.testing.pytest import raises
 
 i, j, k, l, m, n = symbols("i j k l m n")
@@ -28,6 +53,205 @@ a = ArraySymbol("a", k, 1)
 b = ArraySymbol("b", k, 1)
 c = ArraySymbol("c", k, 1)
 d = ArraySymbol("d", k, 1)
+
+
+class TestArrayContraction:
+    def test_construction(self):
+        cg = ArrayContraction(A)
+        assert cg == A
+        cg = ArrayContraction(ArrayTensorProduct(A, B), (1, 0))
+        assert cg == ArrayContraction(ArrayTensorProduct(A, B), (0, 1))
+
+    def test_get_contraction_tuples(self):
+        cg = ArrayContraction(ArrayTensorProduct(M, N), (0, 1))
+        indtup = cg._get_contraction_tuples()
+        assert indtup == [[(0, 0), (0, 1)]]
+        assert cg._contraction_tuples_to_contraction_indices(cg.expr, indtup) == [
+            (0, 1)
+        ]
+
+        cg = ArrayContraction(ArrayTensorProduct(M, N), (1, 2))
+        indtup = cg._get_contraction_tuples()
+        assert indtup == [[(0, 1), (1, 0)]]
+        assert cg._contraction_tuples_to_contraction_indices(cg.expr, indtup) == [
+            (1, 2)
+        ]
+
+        cg = ArrayContraction(ArrayTensorProduct(M, M, N), (1, 4), (2, 5))
+        indtup = cg._get_contraction_tuples()
+        assert indtup == [[(0, 0), (1, 1)], [(0, 1), (2, 0)]]
+        assert cg._contraction_tuples_to_contraction_indices(cg.expr, indtup) == [
+            (0, 3),
+            (1, 4),
+        ]
+
+    def test_arrayexpr_split_multiple_contractions(self):
+        a = MatrixSymbol("a", k, 1)
+        b = MatrixSymbol("b", k, 1)
+        A = MatrixSymbol("A", k, k)
+        B = MatrixSymbol("B", k, k)
+        C = MatrixSymbol("C", k, k)
+        X = MatrixSymbol("X", k, k)
+
+        cg = ArrayContraction(
+            ArrayTensorProduct(A.T, a, b, b.T, (A * X * b).applyfunc(cos)),
+            (1, 2, 8),
+            (5, 6, 9),
+        )
+        expected = ArrayContraction(
+            ArrayTensorProduct(
+                A.T, DiagMatrix(a), OneArray(1), b, b.T, (A * X * b).applyfunc(cos)
+            ),
+            (1, 3),
+            (2, 9),
+            (6, 7, 10),
+        )
+        assert cg.split_multiple_contractions().dummy_eq(expected)
+
+        # Check no overlap of lines
+        cg = ArrayContraction(
+            ArrayTensorProduct(A, a, C, a, B), (1, 2, 4), (5, 6, 8), (3, 7)
+        )
+        assert cg.split_multiple_contractions() == cg
+
+        cg = ArrayContraction(ArrayTensorProduct(a, b, A), (0, 2, 4), (1, 3))
+        assert cg.split_multiple_contractions() == cg
+
+
+class TestArrayElement:
+    def test_construct_from_array_symbol(self):
+        test_cases = (  # @pytest.mark.parametrize
+            # shapeless
+            ([], (0,), (0,)),
+            ([], (1, 2), (1, 2)),
+            # specific shape
+            ([3, 3], (1, 2), (1, 2)),
+            ([3, 3, 3], (1, 2), (1, 2)),
+            # negative indices
+            ([], (-1,), (-1,)),
+            ([3], (-1,), (2,)),
+            ([3, 3], (-1, -2), (2, 1)),
+        )
+        for shape, indices, expected in test_cases:
+            A = ArraySymbol("A", *shape)
+            element = ArrayElement(A, indices=indices)
+            assert element.parent is A
+            assert element.indices == expected
+
+    def test_construction_errors_from_array_symbol(self):
+        test_cases = (  # @pytest.mark.parametrize
+            ([2], (3,), ValueError, "shape is out of bounds"),
+            ([3], (0, 0), IndexError, r"Too many indices for ArrayElement"),
+        )
+        for shape, indices, exception, match in test_cases:
+            A = ArraySymbol("A", *shape)
+            with raises(exception, match=match):
+                ArrayElement(A, indices=indices)
+
+    def test_construct_from_expression(self):
+        test_expressions = (  # @pytest.mark.parametrize
+            Array(range(6), shape=(2, 3)),
+            ArraySymbol("A") + ArraySymbol("B"),
+            ArrayTensorProduct(ArraySymbol("A"), ArraySymbol("B")),
+        )
+        test_indices = [(0,), (0, 1)]
+        for expression in test_expressions:
+            for indices in test_indices:
+                element = ArrayElement(expression, indices)
+                assert element.parent is expression
+                assert element.indices == indices
+
+
+class TestArraySlice:
+    def test_construct_from_array_symbol(self):
+        test_cases = (  # @pytest.mark.parametrize
+            # shapeless
+            ([], (0,), (0,)),
+            ([], (slice(None),), (Tuple(0, None, None),)),
+            ([], (slice(3, None),), (Tuple(3, None, None),)),
+            ([], (slice(3, None, 2),), (Tuple(3, None, 2),)),
+            ([], (slice(None, 5),), (Tuple(0, 5, None),)),
+            ([], (1, slice(None, 5)), (1, Tuple(0, 5, None))),
+            # # specific shape (normalized)
+            ([3, 3], (1, slice(None, 2)), (1, Tuple(0, 2, 1))),
+            ([3, 3], (1, slice(None, 5)), (1, Tuple(0, 5, 1))),  # overflow
+            # # negative indices
+            ([3, 3], (-1, slice(None, -2)), (2, Tuple(0, 1, 1))),
+        )
+        for shape, indices, expected in test_cases:
+            A = ArraySymbol("A", *shape)
+            array_slice = ArraySlice(A, indices=indices)
+            assert array_slice.parent is A
+            assert array_slice.indices == expected
+
+    def test_construct_from_expression(self):
+        test_cases = (  # @pytest.mark.parametrize
+            Array(range(6), shape=(2, 3)),
+            ArraySymbol("A") + ArraySymbol("B"),
+            ArrayTensorProduct(ArraySymbol("A"), ArraySymbol("B")),
+        )
+        for expression in test_cases:
+            element = ArraySlice(expression, indices=[0, slice(3, 7, 2)])
+            assert element.parent is expression
+            assert element.indices == (0, Tuple(3, 7, 2))
+
+
+class TestArraySymbol:
+    def test_constructor(self):
+        test_cases = (  # @pytest.mark.parametrize
+            (),
+            (3, 2, 4),
+            (k, m, n),
+        )
+        for shape in test_cases:
+            A = ArraySymbol("A", *shape)
+            assert A.name == "A"
+            assert A.shape == shape
+
+    def test_equality(self):
+        assert ArraySymbol("A") == ArraySymbol("A")
+        assert ArraySymbol("A") != ArraySymbol("B")
+        assert ArraySymbol("A", 2, 3) != ArraySymbol("A")
+        assert ArraySymbol("A", m) != ArraySymbol("A", n)
+        assert ArraySymbol("A", n) == ArraySymbol("A", n)
+
+    def test_getitem(self):
+        A = ArraySymbol("A")
+        assert A[0] == ArrayElement(A, indices=(0,))
+        assert A[9, 7] == ArrayElement(A, indices=(9, 7))
+        A = ArraySymbol("A", n)
+        assert A[2] == ArrayElement(A, indices=(2,))
+        A = ArraySymbol("A", 3, 2, 4)
+        assert A[2, 1] == ArrayElement(A, indices=(2, 1))
+        assert A[2, 1, 3] == ArrayElement(A, indices=(2, 1, 3))
+        assert A[-2, -1, 3] == ArrayElement(A, indices=(1, 1, 3))
+        with raises(ValueError, match="shape is out of bounds"):
+            assert A[4, 1, 3]
+        with raises(
+            IndexError,
+            match=(
+                f"Too many indices for {ArrayElement.__name__}: parent "
+                f"{ArraySymbol.__name__} is 3-dimensional, but 4 indices were given"
+            ),
+        ):
+            assert A[0, 1, 2, 5]
+
+    def test_getitem_slice(self):
+        A_slice = ArraySymbol("A")[1:3, :5]
+        assert A_slice.shape == (2, 5)
+        A_slice = ArraySymbol("A")[1:n, m, 3:7:2]
+        assert A_slice.shape == (n - 1, 1, 2)
+        A_slice = ArraySymbol("A")[3:]
+        assert A_slice.shape == (None,)
+
+    def test_getitem_slice_overflow(self):
+        assert ArraySymbol("A", 3)[-5:].shape == (3,)
+        assert ArraySymbol("A", 3)[:5].shape == (3,)
+        assert ArraySymbol("A", 3)[:5:2].shape == (2,)
+        assert ArraySymbol("A", n)[-5:].shape == (5,)
+        assert ArraySymbol("A", n)[:5].shape == (5,)
+        assert ArraySymbol("A", n)[:5:2].shape == (2,)
+        assert ArraySymbol("A", n, n)[:5:2].shape == (2, n)
 
 
 def test_array_symbol_and_element():
@@ -66,7 +290,8 @@ def test_zero_array():
     m, n, k = symbols("m n k")
     za = ZeroArray(m, n, k, 2)
     assert za.shape == (m, n, k, 2)
-    raises(ValueError, lambda: za.as_explicit())
+    with raises(ValueError):
+        za.as_explicit()
 
 
 def test_one_array():
@@ -81,31 +306,8 @@ def test_one_array():
     m, n, k = symbols("m n k")
     oa = OneArray(m, n, k, 2)
     assert oa.shape == (m, n, k, 2)
-    raises(ValueError, lambda: oa.as_explicit())
-
-
-def test_arrayexpr_contraction_construction():
-
-    cg = ArrayContraction(A)
-    assert cg == A
-
-    cg = ArrayContraction(ArrayTensorProduct(A, B), (1, 0))
-    assert cg == ArrayContraction(ArrayTensorProduct(A, B), (0, 1))
-
-    cg = ArrayContraction(ArrayTensorProduct(M, N), (0, 1))
-    indtup = cg._get_contraction_tuples()
-    assert indtup == [[(0, 0), (0, 1)]]
-    assert cg._contraction_tuples_to_contraction_indices(cg.expr, indtup) == [(0, 1)]
-
-    cg = ArrayContraction(ArrayTensorProduct(M, N), (1, 2))
-    indtup = cg._get_contraction_tuples()
-    assert indtup == [[(0, 1), (1, 0)]]
-    assert cg._contraction_tuples_to_contraction_indices(cg.expr, indtup) == [(1, 2)]
-
-    cg = ArrayContraction(ArrayTensorProduct(M, M, N), (1, 4), (2, 5))
-    indtup = cg._get_contraction_tuples()
-    assert indtup == [[(0, 0), (1, 1)], [(0, 1), (2, 0)]]
-    assert cg._contraction_tuples_to_contraction_indices(cg.expr, indtup) == [(0, 3), (1, 4)]
+    with raises(ValueError):
+        oa.as_explicit()
 
 
 def test_arrayexpr_array_flatten():
@@ -265,27 +467,6 @@ def test_arrayexpr_push_indices_up_and_down():
 
     assert ArrayDiagonal._push_indices_down(contr_diag_indices, indices, 10) == (0, 3, 4, 5, 6, 9, (1, 2), (7, 8), None, None, None, None)
     assert ArrayDiagonal._push_indices_up(contr_diag_indices, indices, 10) == (0, 6, 6, 1, 2, 3, 4, 7, 7, 5, None, None)
-
-
-def test_arrayexpr_split_multiple_contractions():
-    a = MatrixSymbol("a", k, 1)
-    b = MatrixSymbol("b", k, 1)
-    A = MatrixSymbol("A", k, k)
-    B = MatrixSymbol("B", k, k)
-    C = MatrixSymbol("C", k, k)
-    X = MatrixSymbol("X", k, k)
-
-    cg = ArrayContraction(ArrayTensorProduct(A.T, a, b, b.T, (A*X*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
-    expected = ArrayContraction(ArrayTensorProduct(A.T, DiagMatrix(a), OneArray(1), b, b.T, (A*X*b).applyfunc(cos)), (1, 3), (2, 9), (6, 7, 10))
-    assert cg.split_multiple_contractions().dummy_eq(expected)
-
-    # Check no overlap of lines:
-
-    cg = ArrayContraction(ArrayTensorProduct(A, a, C, a, B), (1, 2, 4), (5, 6, 8), (3, 7))
-    assert cg.split_multiple_contractions() == cg
-
-    cg = ArrayContraction(ArrayTensorProduct(a, b, A), (0, 2, 4), (1, 3))
-    assert cg.split_multiple_contractions() == cg
 
 
 def test_arrayexpr_nested_permutations():

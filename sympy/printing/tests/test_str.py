@@ -17,7 +17,11 @@ from sympy.polys import (Poly, rootof, RootSum, groebner, ring, field, ZZ, QQ,
     ZZ_I, QQ_I, lex, grlex)
 from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
 from sympy.tensor import NDimArray
-from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
+from sympy.tensor.array.expressions.array_expressions import (
+    ArrayElement,
+    ArraySlice,
+    ArraySymbol,
+)
 
 from sympy.testing.pytest import raises
 
@@ -25,6 +29,7 @@ from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.physics.quantum.trace import Tr
 
 x, y, z, w, t = symbols('x,y,z,w,t')
+k, m, n = symbols('k m n', integer=True)
 d = Dummy('d')
 
 
@@ -1124,9 +1129,26 @@ def test_Predicate():
 def test_AppliedPredicate():
     assert sstr(Q.even(x)) == 'Q.even(x)'
 
-def test_printing_str_array_expressions():
+
+def test_ArraySymbol():
     assert sstr(ArraySymbol("A", 2, 3, 4)) == "A"
-    assert sstr(ArrayElement("A", (2, 1/(1-x), 0))) == "A[2, 1/(1 - x), 0]"
+
+
+def test_ArrayElement():
+    A = ArraySymbol("A")
+    element = ArrayElement(A, (2, 1 / (1 - x), 0))
+    assert sstr(element) == "A[2, 1/(1 - x), 0]"
     M = MatrixSymbol("M", 3, 3)
     N = MatrixSymbol("N", 3, 3)
-    assert sstr(ArrayElement(M*N, [x, 0])) == "(M*N)[x, 0]"
+    element = ArrayElement(M * N, (x, 0))
+    assert sstr(element) == "(M*N)[x, 0]"
+
+
+def test_ArraySlice():
+    A = ArraySymbol("A")
+    assert sstr(A[:2]) == R"A[:2]"
+    assert sstr(A[2:n:k, m]) == R"A[2:n:k, m]"
+    B = ArraySymbol("B")
+    expr_no_shape = A + B
+    array_slice = ArraySlice(expr_no_shape, (slice(None), m))
+    assert sstr(array_slice) == "(A + B)[:, m]"

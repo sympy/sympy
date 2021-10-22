@@ -5,6 +5,7 @@ A Printer which converts an expression into its LaTeX equivalent.
 from typing import Any, Dict
 
 import itertools
+from collections import abc
 
 from sympy.core import Add, Float, Mod, Mul, Number, S, Symbol
 from sympy.core.alphabets import greeks
@@ -1653,18 +1654,21 @@ class LatexPrinter(Printer):
             + '_{%s, %s}' % (self._print(expr.i), self._print(expr.j))
 
     def _print_MatrixSlice(self, expr):
-        def latexslice(x, dim):
-            x = list(x)
-            if x[2] == 1:
-                del x[2]
-            if x[0] == 0:
-                x[0] = None
-            if x[1] == dim:
-                x[1] = None
-            return ':'.join(self._print(xi) if xi is not None else '' for xi in x)
         return (self.parenthesize(expr.parent, PRECEDENCE["Atom"], strict=True) + r'\left[' +
-                latexslice(expr.rowslice, expr.parent.rows) + ', ' +
-                latexslice(expr.colslice, expr.parent.cols) + r'\right]')
+                self.__slice_to_str(expr.rowslice, expr.parent.rows) + ', ' +
+                self.__slice_to_str(expr.colslice, expr.parent.cols) + r'\right]')
+
+    def __slice_to_str(self, x, dim) -> str:
+        if not isinstance(x, abc.Iterable):
+            return self._print(x)
+        x = list(x)
+        if x[2] == 1 or x[2] is None:
+            del x[2]
+        if x[0] == 0:
+            x[0] = None
+        if x[1] == dim:
+            x[1] = None
+        return ':'.join(self._print(xi) if xi is not None else '' for xi in x)
 
     def _print_BlockMatrix(self, expr):
         return self._print(expr.blocks)
@@ -1905,12 +1909,23 @@ class LatexPrinter(Printer):
             )
 
     def _print_ArraySymbol(self, expr):
-        return self._print(expr.name)
+        return self._print_MatrixSymbol(expr)
 
     def _print_ArrayElement(self, expr):
-        return "{{%s}_{%s}}" % (
-            self.parenthesize(expr.name, PRECEDENCE["Func"], True),
-            ", ".join([f"{self._print(i)}" for i in expr.indices]))
+        parent = self.parenthesize(expr.parent, PRECEDENCE["Func"], True)
+        indices = ", ".join(self._print(i) for i in expr.indices)
+        return "{{%s}_{%s}}" % (parent, indices)
+
+    def _print_ArraySlice(self, expr):
+        shape = getattr(expr.parent, "shape", tuple())
+        stringified_indices = []
+        for idx, axis_size in itertools.zip_longest(expr.indices, shape):
+            if idx is None:
+                break
+            stringified_indices.append(self.__slice_to_str(idx, axis_size))
+        parent = self.parenthesize(expr.parent, PRECEDENCE["Func"], strict=True)
+        indices = ", ".join(stringified_indices)
+        return R"%s\left[%s\right]" % (parent, indices)
 
     def _print_UniversalSet(self, expr):
         return r"\mathbb{U}"
