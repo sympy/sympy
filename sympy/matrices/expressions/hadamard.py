@@ -1,4 +1,5 @@
 from sympy.core import Mul, sympify
+from sympy.core.sorting import default_sort_key
 from sympy.matrices.common import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix
@@ -239,8 +240,6 @@ def canonicalize(x):
 
     .. [1] https://en.wikipedia.org/wiki/Hadamard_product_(matrices)
     """
-    from sympy.core.compatibility import default_sort_key
-
     # Associativity
     rule = condition(
             lambda x: isinstance(x, HadamardProduct),

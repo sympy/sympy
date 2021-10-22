@@ -1,6 +1,6 @@
 from sympy import S, Rational, gcd, sqrt, sign, symbols, Complement
 from sympy.core import Basic, Tuple, diff, expand, Eq, Integer
-from sympy.core.compatibility import ordered
+from sympy.core.sorting import ordered
 from sympy.core.symbol import _symbol
 from sympy.solvers import solveset, nonlinsolve, diophantine
 from sympy.polys import total_degree

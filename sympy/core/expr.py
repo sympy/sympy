@@ -8,7 +8,7 @@ from .singleton import S
 from .evalf import EvalfMixin, pure_complex, DEFAULT_MAXPREC
 from .decorators import call_highest_priority, sympify_method_args, sympify_return
 from .cache import cacheit
-from .compatibility import default_sort_key
+from .sorting import default_sort_key
 from .kind import NumberKind
 from sympy.utilities.misc import as_int, func_name
 from sympy.utilities.iterables import has_variety

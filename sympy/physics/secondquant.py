@@ -9,9 +9,9 @@ from collections import defaultdict
 from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
                    KroneckerDelta, Mul, Pow, S, sqrt, Symbol, sympify, Tuple,
                    zeros)
+from sympy.core.sorting import default_sort_key
 from sympy.printing.str import StrPrinter
 from sympy.utilities.iterables import has_dups
-from sympy.utilities import default_sort_key
 
 __all__ = [
     'Dagger',

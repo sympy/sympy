@@ -7,13 +7,13 @@ from itertools import chain, combinations, product
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import ordered
 from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.function import Application, Derivative
 from sympy.core.kind import NumberKind
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
+from sympy.core.sorting import ordered
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.kind import BooleanKind
 from sympy.utilities.iterables import sift, ibin

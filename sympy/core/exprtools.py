@@ -8,14 +8,14 @@ from .expr import Expr
 from .sympify import sympify
 from .numbers import Rational, Integer, Number, I
 from .singleton import S
+from .sorting import default_sort_key, ordered
 from .symbol import Dummy
 from .traversal import preorder_traversal
 from .coreerrors import NonCommutativeExpression
 from .containers import Tuple, Dict
 from sympy.external.gmpy import SYMPY_INTS
-from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
-        variations, ordered, iterable, is_sequence)
+        variations, iterable, is_sequence)
 
 from collections import defaultdict
 

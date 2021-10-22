@@ -2,8 +2,8 @@ import itertools
 
 from sympy import (Expr, Add, Mul, S, Integral, Eq, Sum, Symbol,
                     expand as _expand, Not)
-from sympy.core.compatibility import default_sort_key
 from sympy.core.parameters import global_parameters
+from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import _sympify
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean

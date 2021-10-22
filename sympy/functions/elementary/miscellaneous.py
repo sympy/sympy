@@ -2,7 +2,6 @@ from sympy.core import Function, S, sympify
 from sympy.utilities.iterables import sift
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import ordered
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import (Application, Lambda,
     ArgumentIndexError)
@@ -13,6 +12,7 @@ from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Relational
 from sympy.core.singleton import Singleton
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf

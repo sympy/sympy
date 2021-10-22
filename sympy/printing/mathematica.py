@@ -5,6 +5,7 @@ Mathematica code printer
 from typing import Any, Dict, Set, Tuple
 
 from sympy.core import Basic, Expr, Float
+from sympy.core.sorting import default_sort_key
 
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
@@ -227,7 +228,6 @@ class MCodePrinter(CodePrinter):
         return self.doprint(expr.tolist())
 
     def _print_ImmutableSparseMatrix(self, expr):
-        from sympy.core.compatibility import default_sort_key
 
         def print_rule(pos, val):
             return '{} -> {}'.format(

@@ -5,7 +5,7 @@ from functools import reduce
 from collections.abc import Iterable
 
 from sympy import Add, Mul, Pow, Tuple, sympify
-from sympy.core.compatibility import ordered
+from sympy.core.sorting import ordered
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.physics.units.dimensions import Dimension
 from sympy.physics.units.prefixes import Prefix

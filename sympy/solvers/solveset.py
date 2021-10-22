@@ -20,6 +20,7 @@ from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
 from sympy.core.mod import Mod
 from sympy.core.numbers import igcd
 from sympy.core.relational import Eq, Ne, Relational
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
 from sympy.simplify.simplify import simplify, fraction, trigsimp
@@ -51,9 +52,8 @@ from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import (numbered_symbols, has_dups,
-                                       default_sort_key, is_sequence)
+                                       is_sequence)
 from sympy.calculus.util import periodicity, continuous_domain
-from sympy.core.compatibility import ordered
 
 from types import GeneratorType
 from collections import defaultdict

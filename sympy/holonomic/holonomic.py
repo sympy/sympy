@@ -5,8 +5,8 @@ various operations on them.
 
 from sympy import (Symbol, S, Dummy, Order, rf, I,
     solve, limit, Float, nsimplify, gamma)
-from sympy.core.compatibility import ordered
 from sympy.core.numbers import NaN, Infinity, NegativeInfinity
+from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import exp_polar, exp

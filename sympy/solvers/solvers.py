@@ -14,7 +14,7 @@ This module contain solvers for all kinds of equations:
 
 from sympy import divisors, binomial, expand_func
 from sympy.core.assumptions import check_assumptions
-from sympy.core.compatibility import ordered, default_sort_key
+from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.sympify import sympify
 from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
     Pow, Unequality)

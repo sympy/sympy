@@ -1,5 +1,5 @@
 from .basic import Basic
-from .compatibility import ordered
+from .sorting import ordered
 from .sympify import sympify
 from sympy.utilities.iterables import iterable
 

@@ -4,7 +4,7 @@ from sympy import SYMPY_DEBUG
 
 from sympy.core import expand_power_base, sympify, Add, S, Mul, Derivative, Pow, symbols, expand_mul
 from sympy.core.add import _unevaluated_Add
-from sympy.core.compatibility import ordered, default_sort_key
+from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.parameters import global_parameters
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.function import _mexpand

@@ -5,7 +5,7 @@ A MathML printer.
 from typing import Any, Dict
 
 from sympy import sympify, S, Mul
-from sympy.core.compatibility import default_sort_key
+from sympy.core.sorting import default_sort_key
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import \
     precedence_traditional, PRECEDENCE, PRECEDENCE_TRADITIONAL

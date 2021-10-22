@@ -10,6 +10,7 @@ from collections import OrderedDict
 from collections.abc import MutableSet
 
 from .basic import Basic
+from .sorting import default_sort_key
 from .sympify import _sympify, sympify, converter, SympifyError
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import as_int
@@ -303,7 +304,6 @@ class Dict(Basic):
 
     @property
     def _sorted_args(self):
-        from sympy.utilities.iterables import default_sort_key
         return tuple(sorted(self.args, key=default_sort_key))
 
 

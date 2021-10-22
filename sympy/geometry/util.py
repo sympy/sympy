@@ -12,8 +12,8 @@ are_similar
 """
 
 from sympy import Function, Symbol, solve, sqrt
-from sympy.core.compatibility import ordered
 from sympy.core.containers import OrderedSet
+from sympy.core.sorting import ordered
 from .point import Point, Point2D
 from sympy.utilities.iterables import is_sequence
 

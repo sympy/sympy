@@ -8,12 +8,12 @@ from sympy.core import (
     S, Expr, I, Integer, Add, Tuple
 )
 from sympy.core.basic import Basic
-from sympy.core.compatibility import ordered
 from sympy.core.decorators import _sympifyit
 from sympy.core.evalf import pure_complex
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.relational import Relational
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal, bottom_up

@@ -1,7 +1,7 @@
 from textwrap import dedent
 from itertools import islice, product
 
-from sympy import symbols, Integer, Dummy, Basic, Matrix, factorial
+from sympy import symbols, Integer, Dummy, Basic, Matrix, factorial, ordered
 from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
@@ -10,7 +10,7 @@ from sympy.utilities.iterables import (
     generate_involutions, generate_oriented_forest, group, has_dups, ibin,
     iproduct, kbins, minlex, multiset, multiset_combinations,
     multiset_partitions, multiset_permutations, necklaces, numbered_symbols,
-    ordered, partitions, permutations, postfixes,
+    partitions, permutations, postfixes,
     prefixes, reshape, rotate_left, rotate_right, runs, sift,
     strongly_connected_components, subsets, take, topological_sort, unflatten,
     uniq, variations, ordered_partitions, rotations, is_palindromic, iterable,

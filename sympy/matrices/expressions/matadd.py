@@ -3,6 +3,7 @@ import operator
 
 from sympy.core import Add, Basic, sympify
 from sympy.core.add import add
+from sympy.core.sorting import default_sort_key
 from sympy.functions import adjoint
 from sympy.matrices.common import ShapeError
 from sympy.matrices.matrices import MatrixBase
@@ -11,7 +12,7 @@ from sympy.strategies import (rm_id, unpack, flatten, sort, condition,
     exhaust, do_one, glom)
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix, GenericZeroMatrix
-from sympy.utilities import default_sort_key, sift
+from sympy.utilities import sift
 
 # XXX: MatAdd should perhaps not subclass directly from Add
 class MatAdd(MatrixExpr, Add):

@@ -1,5 +1,5 @@
 from sympy.core.basic import Basic
-from sympy.core.compatibility import default_sort_key
+from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import symbols
 from sympy.core.traversal import preorder_traversal, use, postorder_traversal
 from sympy import expand, factor, I, Piecewise, S, Integral, Tuple

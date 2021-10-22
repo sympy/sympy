@@ -517,14 +517,6 @@ Dict
 .. autoclass:: Dict
    :members:
 
-compatibility
--------------
-.. module:: sympy.core.compatibility
-
-as_int
-^^^^^^
-.. autofunction:: as_int
-
 exprtools
 ---------
 .. module:: sympy.core.exprtools
@@ -536,11 +528,6 @@ gcd_terms
 factor_terms
 ^^^^^^^^^^^^
 .. autofunction:: factor_terms
-
-ordered
-^^^^^^^
-
-.. autofunction:: sympy.core.compatibility.ordered
 
 kind
 ----
@@ -560,6 +547,20 @@ BooleanKind
 ^^^^^^^^^^^
 .. autoclass:: BooleanKind
    :members:
+
+Sorting
+-------
+
+default_sort_key
+^^^^^^^^^^^^^^^^
+
+.. autofunction:: sympy.core.sorting.default_sort_key
+
+ordered
+^^^^^^^
+
+.. autofunction:: sympy.core.sorting.ordered
+
 
 Traversal
 ---------

@@ -49,9 +49,9 @@ from .rules import Transform
 from .singleton import S
 from .sympify import sympify
 
-from sympy.utilities import default_sort_key
+from .sorting import default_sort_key, ordered
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import has_dups, sift, iterable, is_sequence, ordered
+from sympy.utilities.iterables import has_dups, sift, iterable, is_sequence
 from sympy.utilities.misc import as_int, filldedent
 
 import mpmath

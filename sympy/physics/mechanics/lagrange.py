@@ -1,10 +1,10 @@
 from sympy.core.backend import diff, zeros, Matrix, eye, sympify
+from sympy.core.sorting import default_sort_key
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
 from sympy.physics.mechanics.method import _Methods
 from sympy.physics.mechanics.functions import (find_dynamicsymbols, msubs,
                                                _f_list_parser)
 from sympy.physics.mechanics.linearize import Linearizer
-from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import iterable
 
 __all__ = ['LagrangesMethod']

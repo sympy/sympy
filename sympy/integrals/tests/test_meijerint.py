@@ -4,7 +4,7 @@ from sympy import (meijerg, I, S, integrate, Integral, oo, gamma, cosh, sinc,
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
         meijerint_indefinite, _inflate_g, _create_lookup_table,
         meijerint_definite, meijerint_inversion)
-from sympy.utilities import default_sort_key
+from sympy.core.sorting import default_sort_key
 from sympy.testing.pytest import slow
 from sympy.testing.randtest import (verify_numerically,
         random_complex_number as randcplx)

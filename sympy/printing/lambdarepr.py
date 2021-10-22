@@ -3,7 +3,7 @@ from .pycode import (
     MpmathPrinter,
 )
 from .numpy import NumPyPrinter  # NumPyPrinter is imported for backward compatibility
-from sympy.utilities import default_sort_key
+from sympy.core.sorting import default_sort_key
 
 
 __all__ = [

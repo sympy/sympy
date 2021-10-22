@@ -1,5 +1,5 @@
 from sympy.core import Basic, Dict, sympify
-from sympy.core.compatibility import default_sort_key
+from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import _sympify
 from sympy.functions.combinatorial.numbers import bell
 from sympy.matrices import zeros
@@ -98,7 +98,7 @@ class Partition(FiniteSet):
         Examples
         ========
 
-        >>> from sympy.utilities.iterables import default_sort_key
+        >>> from sympy.core.sorting import default_sort_key
         >>> from sympy.combinatorics.partitions import Partition
         >>> from sympy.abc import x
         >>> a = Partition([1, 2])

@@ -26,15 +26,15 @@ from the names used in Bronstein's book.
 from types import GeneratorType
 from functools import reduce
 
-from sympy import real_roots, default_sort_key
+from sympy import real_roots
 from sympy.core.function import Lambda
 from sympy.core.numbers import ilcm, oo, I
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, Dummy
-from sympy.core.compatibility import ordered
 from sympy.integrals.heurisch import _symbols
 
 from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,

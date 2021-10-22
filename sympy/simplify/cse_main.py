@@ -4,8 +4,9 @@ from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol
 from sympy.core.containers import Tuple, OrderedSet
 from sympy.core.exprtools import factor_terms
 from sympy.core.singleton import S
+from sympy.core.sorting import ordered
 from sympy.utilities.iterables import numbered_symbols, sift, \
-        topological_sort, ordered, iterable
+        topological_sort, iterable
 
 from . import cse_opts
 

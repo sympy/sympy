@@ -8,7 +8,7 @@ from .assumptions import BasicMeta, ManagedProperties
 from .decorators import deprecated
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
-from .compatibility import ordered
+from .sorting import ordered
 from .kind import Kind, UndefinedKind
 from ._print_helpers import Printable
 
@@ -922,7 +922,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         sequence = list(filter(None, sequence))
 
         if unordered:
-            from .compatibility import _nodes, default_sort_key
+            from .sorting import _nodes, default_sort_key
             sequence = dict(sequence)
             # order so more complex items are first and items
             # of identical complexity are ordered so

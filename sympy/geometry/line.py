@@ -18,12 +18,12 @@ Segment3D
 """
 
 from sympy.core import Expr, S, sympify
-from sympy.core.compatibility import ordered
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.core.evalf import N
 from sympy.core.numbers import Rational, oo
 from sympy.core.relational import Eq
+from sympy.core.sorting import ordered
 from sympy.core.symbol import _symbol, Dummy
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)

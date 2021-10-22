@@ -1,4 +1,4 @@
-from sympy.core.compatibility import default_sort_key, ordered
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.testing.pytest import raises
 
 from sympy.abc import x

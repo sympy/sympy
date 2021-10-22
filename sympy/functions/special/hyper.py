@@ -7,11 +7,11 @@ from sympy.core.function import Function, Derivative, ArgumentIndexError
 
 from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
+from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy
 
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
         sinh, cosh, asinh, acosh, atanh, acoth, Abs, re)
-from sympy.utilities.iterables import default_sort_key
 
 class TupleArg(Tuple):
     def limit(self, x, xlim, dir='+'):
