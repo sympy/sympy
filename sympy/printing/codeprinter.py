@@ -12,7 +12,7 @@ from sympy.core.symbol import Symbol
 from sympy.functions.elementary.complexes import re
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
-
+from sympy.core.sympify import sympify, SympifyError
 
 class requires:
     """ Decorator for registering requirements on print methods. """
@@ -561,6 +561,20 @@ class CodePrinter(StrPrinter):
     _print_Wild = _print_not_supported
     _print_WildFunction = _print_not_supported
     _print_Relational = _print_not_supported
+
+    def _print_object(self, obj):
+        """
+        For classes that do not have any defined printing method
+        try to sympify the object. If a different class  emerges
+        try printing again, otherwise use the emtpyPrinter
+        """
+        try:
+            simp=sympify(obj)
+        except SympifyError:
+            return self.emptyPrinter(obj)
+        if (simp.__class__==obj.__class__):
+            return self.emptyPrinter(obj)
+        return self._print(simp)
 
 
 # Code printer functions. These are included in this file so that they can be
