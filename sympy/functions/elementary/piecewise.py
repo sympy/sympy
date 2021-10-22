@@ -715,6 +715,12 @@ class Piecewise(Function):
                 default = expr
                 idefault = i
                 break
+            assert not isinstance(cond, Eq)
+            #if isinstance(cond, Eq):
+            #    # maybe a replacement caused an Eq to appear
+            #    if err_on_Eq:
+            #        raise NotImplementedError('encountered Eq condition: %s' % cond)
+            #    continue  # zero width interval
 
             cond = to_cnf(cond)
             if isinstance(cond, And):
@@ -726,6 +732,10 @@ class Piecewise(Function):
                     if not isinstance(o, Eq)])
             elif cond is not S.false:
                 expr_cond.append((i, expr, cond))
+            elif cond is S.true:
+                default = expr
+                idefault = i
+                break
 
         # determine intervals represented by conditions
         int_expr = []
@@ -768,7 +778,7 @@ class Piecewise(Function):
                     newcond.pop(0)  # remove the primer
                     expr_cond.extend([(iarg, expr, And(i[0] < sym, sym < i[1])) for i in newcond])
                     continue
-            elif isinstance(cond, Relational):
+            elif isinstance(cond, Relational) and cond.rel_op != '!=':
                 lower, upper = cond.lts, cond.gts  # part 1: initialize with givens
                 if cond.lts == sym:                # part 1a: expand the side ...
                     lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
@@ -1201,7 +1211,7 @@ def piecewise_simplify_arguments(expr, **kwargs):
             # and it won't handle symbols treated as
             # booleans
             abe_ = expr._intervals(x, err_on_Eq=True)
-        except (NotImplementedError, AttributeError):
+        except NotImplementedError:
             pass
         else:
             args = []
