@@ -886,9 +886,11 @@ class Rem(Function):
     Examples
     ========
 
-    >>> from sympy.abc import x,y
-    >>> rv = Rem(x**3, y)
-    >>> rv.subs({x: -5, y: 3})
+    >>> from sympy.abc import x, y
+    >>> from sympy import Rem
+    >>> Rem(x**3, y)
+    Rem(x**3, y)
+    >>> Rem(x**3, y).subs({x: -5, y: 3})
     -2
 
     """
