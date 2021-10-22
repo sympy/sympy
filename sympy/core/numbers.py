@@ -15,7 +15,6 @@ from .basic import Basic
 from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
 from .cache import cacheit, clear_cache
-from .compatibility import as_int
 from .decorators import _sympifyit
 from .logic import fuzzy_not
 from .kind import NumberKind
@@ -31,7 +30,7 @@ from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
     prec_to_dps)
-from sympy.utilities.misc import debug, filldedent
+from sympy.utilities.misc import as_int, debug, filldedent
 from .parameters import global_parameters
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning

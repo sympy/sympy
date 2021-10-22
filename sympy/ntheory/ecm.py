@@ -1,6 +1,6 @@
 from sympy.ntheory import sieve, isprime
 from sympy.core.power import integer_log
-from sympy.core.compatibility import as_int
+from sympy.utilities.misc import as_int
 import random
 
 rgen = random.Random()

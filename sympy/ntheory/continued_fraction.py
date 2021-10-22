@@ -1,6 +1,7 @@
 from sympy.core.numbers import Integer, Rational
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
+from sympy.utilities.misc import as_int
 
 
 def continued_fraction(a):
@@ -125,7 +126,6 @@ def continued_fraction_periodic(p, q, d=0, s=1):
            Addison-Wesley, 3 Sub edition, pages 379-381, January 1992.
 
     """
-    from sympy.core.compatibility import as_int
     from sympy.functions import sqrt, floor
 
     p, q, d, s = list(map(as_int, [p, q, d, s]))

@@ -11,8 +11,9 @@ from operator import gt
 from sympy.core.decorators import deprecated
 
 # this is the logical location of these functions
-from sympy.core.compatibility import as_int, ordered
+from sympy.core.compatibility import ordered
 from sympy.core.compatibility import default_sort_key  # noqa: F401
+from sympy.utilities.misc import as_int
 
 from sympy.utilities.enumerative import (
     multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)

@@ -1,9 +1,9 @@
 from sympy.combinatorics import Permutation as Perm
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.core import Basic, Tuple
-from sympy.core.compatibility import as_int
 from sympy.sets import FiniteSet
 from sympy.utilities.iterables import (minlex, unflatten, flatten, default_sort_key)
+from sympy.utilities.misc import as_int
 
 rmul = Perm.rmul
 

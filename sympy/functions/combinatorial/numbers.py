@@ -11,7 +11,6 @@ from typing import Callable, Dict
 
 from sympy.core import S, Symbol, Rational, Integer, Add, Dummy
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import as_int
 from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import E, pi
@@ -25,6 +24,7 @@ from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.ntheory import isprime
 from sympy.ntheory.primetest import is_square
 from sympy.utilities.memoization import recurrence_memo
+from sympy.utilities.misc import as_int
 
 from mpmath import bernfrac, workprec
 from mpmath.libmp import ifib as _ifib

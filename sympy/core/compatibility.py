@@ -4,84 +4,21 @@ we support. Also some functions that are needed SymPy-wide and are located
 here for easy import.
 """
 
-import operator
+
 from collections import defaultdict
+
+from .decorators import deprecated
+from sympy.utilities.misc import as_int as _as_int
 
 """
 Some utility functions originating from Python 2 and Python 3 compatible imports.
 """
 
-__all__ = [
-    'as_int', 'default_sort_key', 'ordered',
-]
+__all__ = ['default_sort_key', 'ordered']
 
 
-def as_int(n, strict=True):
-    """
-    Convert the argument to a builtin integer.
-
-    The return value is guaranteed to be equal to the input. ValueError is
-    raised if the input has a non-integral value. When ``strict`` is True, this
-    uses `__index__ <https://docs.python.org/3/reference/datamodel.html#object.__index__>`_
-    and when it is False it uses ``int``.
-
-
-    Examples
-    ========
-
-    >>> from sympy.core.compatibility import as_int
-    >>> from sympy import sqrt, S
-
-    The function is primarily concerned with sanitizing input for
-    functions that need to work with builtin integers, so anything that
-    is unambiguously an integer should be returned as an int:
-
-    >>> as_int(S(3))
-    3
-
-    Floats, being of limited precision, are not assumed to be exact and
-    will raise an error unless the ``strict`` flag is False. This
-    precision issue becomes apparent for large floating point numbers:
-
-    >>> big = 1e23
-    >>> type(big) is float
-    True
-    >>> big == int(big)
-    True
-    >>> as_int(big)
-    Traceback (most recent call last):
-    ...
-    ValueError: ... is not an integer
-    >>> as_int(big, strict=False)
-    99999999999999991611392
-
-    Input that might be a complex representation of an integer value is
-    also rejected by default:
-
-    >>> one = sqrt(3 + 2*sqrt(2)) - sqrt(2)
-    >>> int(one) == 1
-    True
-    >>> as_int(one)
-    Traceback (most recent call last):
-    ...
-    ValueError: ... is not an integer
-    """
-    if strict:
-        try:
-            if isinstance(n, bool):
-                raise TypeError
-            return operator.index(n)
-        except TypeError:
-            raise ValueError('%s is not an integer' % (n,))
-    else:
-        try:
-            result = int(n)
-        except TypeError:
-            raise ValueError('%s is not an integer' % (n,))
-        if n != result:
-            raise ValueError('%s is not an integer' % (n,))
-        return result
-
+as_int = deprecated(useinstead="sympy.utilities.misc.as_int",
+    deprecated_since_version="1.10", issue=11410)(_as_int)
 
 def default_sort_key(item, order=None):
     """Return a key that can be used for sorting.

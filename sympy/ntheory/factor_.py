@@ -7,7 +7,6 @@ import random
 import math
 
 from sympy.core import sympify
-from sympy.core.compatibility import as_int
 from sympy.core.containers import Dict
 from sympy.core.evalf import bitcount
 from sympy.core.expr import Expr
@@ -21,7 +20,7 @@ from sympy.external.gmpy import SYMPY_INTS
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
-from sympy.utilities.misc import filldedent
+from sympy.utilities.misc import as_int, filldedent
 from .ecm import _ecm_one_factor
 
 # Note: This list should be updated whenever new Mersenne primes are found.

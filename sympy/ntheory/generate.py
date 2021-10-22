@@ -11,8 +11,8 @@ from itertools import count
 from array import array as _array
 
 from sympy import Function, S
-from sympy.core.compatibility import as_int
 from .primetest import isprime
+from sympy.utilities.misc import as_int
 
 
 def _azeros(n):

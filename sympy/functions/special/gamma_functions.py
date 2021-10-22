@@ -1,5 +1,4 @@
 from sympy.core import Add, S, sympify, Dummy, expand_func
-from sympy.core.compatibility import as_int
 from sympy.core.evalf import prec_to_dps
 from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError
@@ -15,6 +14,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactorial
+from sympy.utilities.misc import as_int
 
 from mpmath import mp, workprec
 

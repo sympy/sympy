@@ -3,7 +3,7 @@ from collections import defaultdict
 from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify,
                         expand_func, Function, Dummy, Expr, factor_terms,
                         expand_power_exp, Eq)
-from sympy.core.compatibility import ordered, as_int
+from sympy.core.compatibility import ordered
 from sympy.core.decorators import deprecated
 from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
@@ -34,6 +34,7 @@ from sympy.simplify.radsimp import radsimp, fraction, collect_abs
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
 from sympy.utilities.iterables import has_variety, sift, subsets, iterable
+from sympy.utilities.misc import as_int
 
 import mpmath
 

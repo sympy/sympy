@@ -10,12 +10,12 @@ from .evalf import PrecisionExhausted
 from .function import (expand_complex, expand_multinomial,
     expand_mul, _mexpand, PoleError)
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
-from .compatibility import as_int
 from .parameters import global_parameters
 from .kind import NumberKind, UndefinedKind
 from sympy.external.gmpy import HAS_GMPY, gmpy
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.misc import as_int
 from sympy.multipledispatch import Dispatcher
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem

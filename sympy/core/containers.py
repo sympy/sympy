@@ -10,9 +10,10 @@ from collections import OrderedDict
 from collections.abc import MutableSet
 
 from .basic import Basic
-from .compatibility import as_int
 from .sympify import _sympify, sympify, converter, SympifyError
 from sympy.utilities.iterables import iterable
+from sympy.utilities.misc import as_int
+
 
 class Tuple(Basic):
     """
