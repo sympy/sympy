@@ -711,16 +711,16 @@ class Piecewise(Function):
         for i, (expr, cond) in enumerate(args):
             if cond is S.false:
                 continue
-            elif cond is S.true:
+            if cond is S.true:
                 default = expr
                 idefault = i
                 break
-            assert not isinstance(cond, Eq)
-            #if isinstance(cond, Eq):
-            #    # maybe a replacement caused an Eq to appear
-            #    if err_on_Eq:
-            #        raise NotImplementedError('encountered Eq condition: %s' % cond)
-            #    continue  # zero width interval
+            if isinstance(cond, Eq):
+                # unanticipated condition, but it is here in case a
+                # replacement caused an Eq to appear
+                if err_on_Eq:
+                    raise NotImplementedError('encountered Eq condition: %s' % cond)
+                continue  # zero width interval
 
             cond = to_cnf(cond)
             if isinstance(cond, And):
