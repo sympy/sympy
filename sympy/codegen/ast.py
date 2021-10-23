@@ -56,9 +56,9 @@ AST Type Tree
        |        |--->BreakToken
        |        |--->ContinueToken
        |        |--->NoneToken
+       |        |--->Return
        |
-       |--->Statement
-       |--->Return
+      #|--->Statement  #Currently not yet defined.
 
 
 Predefined types
@@ -160,7 +160,9 @@ def _mk_Tuple(args):
     args = [String(arg) if isinstance(arg, str) else arg for arg in args]
     return Tuple(*args)
 
-class CodegenAST(Basic): pass
+
+class CodegenAST(Basic):
+    pass
 
 
 class Token(CodegenAST):
@@ -1817,8 +1819,39 @@ class FunctionDefinition(FunctionPrototype):
         return cls(body=body, **func_proto.kwargs())
 
 
-class Return(CodegenAST):
-    """ Represents a return command in the code. """
+class Return(Token):
+    """ Represents a return command in the code.
+
+    When multiple arguments are provided, they
+    are interpreted as a Tuple.
+
+    Parameters
+    ==========
+
+    return : Tuple
+
+    Examples
+    ========
+
+    >>> from sympy.codegen.ast import Return
+    >>> from sympy.printing.pycode import pycode
+    >>> from sympy import Symbol
+    >>> x = Symbol('x')
+    >>> print(pycode(Return(x)))
+    return x
+    >>> print(pycode(Return(x,x)))
+    return (x,x)
+
+    """
+    __slots__ = ('return',)
+    #Return has to support multiple arguments
+    #for backwards competability, these are now
+    #interpreted as a single tuple
+    def __new__(cls,*args,**kwargs):
+        if len(args)>1:
+            return super().__new__(cls,args,**kwargs)
+        return super().__new__(cls,*args,**kwargs)
+    _construct_return=staticmethod(_sympify)
 
 
 class FunctionCall(Token, Expr):
