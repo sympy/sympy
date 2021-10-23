@@ -1840,7 +1840,7 @@ class Return(Token):
     >>> print(pycode(Return(x)))
     return x
     >>> print(pycode(Return(x,x)))
-    return (x,x)
+    return (x, x)
 
     """
     __slots__ = ('return',)
