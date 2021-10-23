@@ -1,12 +1,17 @@
-from sympy import S, Rational
-from sympy import re, im, conjugate, sign
-from sympy import sqrt, sin, cos, acos, exp, ln
-from sympy import trigsimp
-from sympy import integrate
-from sympy import Matrix
-from sympy import sympify
 from sympy.core.evalf import prec_to_dps
 from sympy.core.expr import Expr
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
+from sympy.functions import ln
+from sympy.functions.elementary.complexes import (re, conjugate, im,
+    sign)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import cos, acos, sin
+from sympy.integrals.integrals import integrate
+from sympy.matrices.dense import Matrix
+from sympy.simplify.trigsimp import trigsimp
 
 
 class Quaternion(Expr):
