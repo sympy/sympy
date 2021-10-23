@@ -4,11 +4,12 @@ only and should not be used anywhere else as these do not possess the
 signatures common to SymPy objects. For general use of logic constructs
 please refer to sympy.logic classes And, Or, Not, etc.
 """
-from itertools import combinations, product
-from sympy import S, Nor, Nand, Xor, Implies, Equivalent, ITE
-from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
-from sympy.logic.boolalg import Or, And, Not, Xnor
-from itertools import zip_longest
+from itertools import zip_longest, combinations, product
+
+from sympy.core.relational import Ge, Ne, Lt, Le, Eq, Gt
+from sympy.core.singleton import S
+from sympy.logic.boolalg import (Xnor, Equivalent, ITE, Xor, And,
+    Implies, Not, Nand, Or, Nor)
 
 
 class Literal:
