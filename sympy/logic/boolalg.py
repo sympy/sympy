@@ -3171,10 +3171,9 @@ def simplify_univariate(expr):
     if len(free) != 1:
         return c
     x = free.pop()
-    try:
-        i = Piecewise((0, c), evaluate=False
+    ok, i = Piecewise((0, c), evaluate=False
             )._intervals(x, err_on_Eq=True)
-    except (NotImplementedError, AttributeError):
+    if not ok:
         return c
     if not i:
         return S.false
