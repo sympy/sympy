@@ -159,7 +159,8 @@ def get_sympy_dir():
 
 
 def setup_pprint():
-    from sympy import pprint_use_unicode, init_printing
+    from sympy.interactive.printing import init_printing
+    from sympy.printing.pretty.pretty import pprint_use_unicode
     import sympy.interactive.printing as interactive_printing
 
     # force pprint to be in ascii mode in doctests
@@ -764,7 +765,7 @@ def _doctest(*paths, **kwargs):
     Returns 0 if tests passed and 1 if they failed.  See the docstrings of
     ``doctest()`` and ``test()`` for more information.
     """
-    from sympy import pprint_use_unicode
+    from sympy.printing.pretty.pretty import pprint_use_unicode
 
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
@@ -1379,7 +1380,7 @@ class SymPyDocTests:
 
         from io import StringIO
         import sympy.interactive.printing as interactive_printing
-        from sympy import pprint_use_unicode
+        from sympy.printing.pretty.pretty import pprint_use_unicode
 
         rel_name = filename[len(self._root_dir) + 1:]
         dirname, file = os.path.split(filename)
