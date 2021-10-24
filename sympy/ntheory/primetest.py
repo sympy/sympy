@@ -650,7 +650,7 @@ def is_gaussian_prime(num):
     .. [1] https://oeis.org/wiki/Gaussian_primes
     """
 
-    from sympy import sympify
+    from sympy.core.sympify import sympify
     num = sympify(num)
     a, b = num.as_real_imag()
     a = as_int(a, strict=False)
