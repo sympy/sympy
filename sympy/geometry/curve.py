@@ -6,7 +6,7 @@ Curve
 
 """
 
-from sympy import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core import sympify, diff
 from sympy.core.containers import Tuple
 from sympy.core.evalf import prec_to_dps

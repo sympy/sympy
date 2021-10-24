@@ -382,7 +382,10 @@ class GeometryEntity(Basic, EvalfMixin):
         Circle(Point2D(-pi, pi), -5)
 
         """
-        from sympy import atan, Point, Dummy, oo
+        from sympy.core.numbers import oo
+        from sympy.core.symbol import Dummy
+        from sympy.functions.elementary.trigonometric import atan
+        from sympy.geometry.point import Point
 
         g = self
         l = line
