@@ -1,6 +1,15 @@
-from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix, KroneckerDelta,
-                   Identity, ZeroMatrix, ImmutableMatrix, eye, Sum, Dummy, trace,
-                   Symbol, sqrt, Trace, OneMatrix, HadamardPower)
+from sympy import Trace, OneMatrix, HadamardPower
+from sympy.concrete.summations import Sum
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.matrices.dense import eye
+from sympy.matrices.expressions.blockmatrix import BlockMatrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.matpow import MatPow
+from sympy.matrices.expressions.special import (Identity, ZeroMatrix)
+from sympy.matrices.expressions.trace import trace
+from sympy.matrices.immutable import ImmutableMatrix
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
 from sympy.testing.pytest import raises, XFAIL
 from sympy.matrices.expressions.matexpr import MatrixElement, MatrixExpr
