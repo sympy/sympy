@@ -6,7 +6,9 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.special.bessel import besseli
 from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import integrate
-from sympy.integrals.transforms import (fourier_transform, inverse_fourier_transform, inverse_laplace_transform, inverse_mellin_transform, laplace_transform, mellin_transform)
+from sympy.integrals.transforms import (mellin_transform,
+    inverse_fourier_transform, inverse_mellin_transform,
+    laplace_transform, inverse_laplace_transform, fourier_transform)
 
 LT = laplace_transform
 FT = fourier_transform

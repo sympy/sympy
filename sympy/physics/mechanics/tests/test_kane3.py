@@ -1,11 +1,11 @@
-from sympy import evalf
+from sympy.core.evalf import evalf
 from sympy.core.numbers import pi
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (acos, cos, sin)
+from sympy.functions.elementary.trigonometric import acos, sin, cos
 from sympy.matrices.dense import Matrix
-from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols, inertia,
-                                     KanesMethod, RigidBody, Point, dot, msubs)
+from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols,
+    KanesMethod, inertia, msubs, Point, RigidBody, dot)
 from sympy.testing.pytest import slow, ON_TRAVIS, skip
 
 

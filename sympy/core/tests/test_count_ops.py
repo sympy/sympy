@@ -8,7 +8,8 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.integrals.integrals import Integral
-from sympy.logic.boolalg import (And, Equivalent, ITE, Implies, Nand, Nor, Not, Or, Xor)
+from sympy.logic.boolalg import (And, Equivalent, ITE, Implies, Nand,
+    Nor, Not, Or, Xor)
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.core.containers import Tuple
 
