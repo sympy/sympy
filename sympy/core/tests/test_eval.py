@@ -1,4 +1,10 @@
-from sympy import Symbol, Function, exp, sqrt, Rational, I, cos, tan, S
+from sympy.core.function import Function
+from sympy.core.numbers import (I, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, tan)
 from sympy.testing.pytest import XFAIL
 
 

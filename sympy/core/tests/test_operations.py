@@ -1,4 +1,7 @@
-from sympy import Integer, S, Symbol, symbols, Expr
+from sympy.core.expr import Expr
+from sympy.core.numbers import Integer
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
 from sympy.core.operations import AssocOp, LatticeOp
 from sympy.testing.pytest import raises
 from sympy.core.sympify import SympifyError

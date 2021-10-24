@@ -1,9 +1,14 @@
 from sympy.core.basic import Basic
 from sympy.core.compatibility import default_sort_key
+from sympy.core.containers import Tuple
 from sympy.core.symbol import symbols
+from sympy.core.singleton import S
+from sympy.core.function import expand
+from sympy.core.numbers import I
+from sympy.integrals.integrals import Integral
+from sympy.polys.polytools import factor
 from sympy.core.traversal import preorder_traversal, use, postorder_traversal
-from sympy import expand, factor, I, Piecewise, S, Integral, Tuple
-from sympy.functions.elementary.piecewise import ExprCondPair
+from sympy.functions.elementary.piecewise import ExprCondPair, Piecewise
 
 b1 = Basic()
 b2 = Basic(b1)

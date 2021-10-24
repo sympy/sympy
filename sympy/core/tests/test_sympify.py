@@ -1,6 +1,21 @@
-from sympy import (Symbol, exp, Integer, Float, sin, cos, Poly, Lambda,
-    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
-    Pow, Or, true, false, Abs, pi, Range, Xor)
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.function import (Function, Lambda)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Integer, Rational, pi)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.logic.boolalg import (false, Or, true, Xor)
+from sympy.matrices.dense import Matrix
+from sympy.polys.polytools import Poly
+from sympy.printing.repr import srepr
+from sympy.sets.fancysets import Range
+from sympy.sets.sets import Interval
 from sympy.abc import x, y
 from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
     CantSympify)

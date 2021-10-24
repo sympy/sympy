@@ -51,7 +51,7 @@ from .sympify import sympify
 
 from sympy.utilities import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import has_dups, sift, iterable, is_sequence, as_int, ordered
+from sympy.utilities.iterables import (has_dups, sift, iterable, is_sequence, as_int, ordered)
 from sympy.utilities.misc import filldedent
 
 import mpmath

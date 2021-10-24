@@ -1,8 +1,21 @@
-from sympy import (Basic, Symbol, sin, cos, atan, exp, sqrt, Rational,
-        Float, re, pi, sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols,
-        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, floor, Poly,
-        FiniteSet
-)
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.mod import Mod
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Integer, Rational, comp, nan, oo, pi, zoo)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.complexes import (im, re, sign)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import (Max, sqrt)
+from sympy.functions.elementary.trigonometric import (atan, cos, sin)
+from sympy.polys.polytools import Poly
+from sympy.sets.sets import FiniteSet
+
 from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
@@ -2039,7 +2052,7 @@ def test_issue_6001():
 
 
 def test_polar():
-    from sympy import polar_lift
+    from sympy.functions.elementary.complexes import polar_lift
     p = Symbol('p', polar=True)
     x = Symbol('x')
     assert p.is_polar
@@ -2301,7 +2314,7 @@ def test_Mul_does_not_distribute_infinity():
 
 
 def test_issue_8247_8354():
-    from sympy import tan
+    from sympy.functions.elementary.trigonometric import tan
     z = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
     assert z.is_positive is False  # it's 0
     z = S('''-2**(1/3)*(3*sqrt(93) + 29)**2 - 4*(3*sqrt(93) + 29)**(4/3) +
