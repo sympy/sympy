@@ -9,10 +9,10 @@ from sympy.integrals.transforms import (mellin_transform,
     InverseSineTransform, InverseCosineTransform, IntegralTransformError)
 from sympy import (
     gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi, arg,
-    cos, S, Abs, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
+    cos, S, Abs, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
     exp_polar, unpolarify, Function, expint, expand_mul, Rational,
-    gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2)
+    gammasimp, trigsimp, atan, sinh, cosh, atan2, Ne)
 from sympy.testing.pytest import XFAIL, slow, skip, raises, warns_deprecated_sympy
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
@@ -101,18 +101,15 @@ def test_mellin_transform():
         (gamma(beta)*gamma(s)/gamma(beta + s), (0, oo), re(beta) > 0)
     assert MT((x - 1)**(beta - 1)*Heaviside(x - 1), x, s) == \
         (gamma(beta)*gamma(1 - beta - s)/gamma(1 - s),
-            (-oo, -re(beta) + 1), re(beta) > 0)
+            (-oo, 1 - re(beta)), re(beta) > 0)
 
     assert MT((1 + x)**(-rho), x, s) == \
         (gamma(s)*gamma(rho - s)/gamma(rho), (0, re(rho)), True)
 
-    # TODO also the conditions should be simplified, e.g.
-    # And(re(rho) - 1 < 0, re(rho) < 1) should just be
-    # re(rho) < 1
     assert MT(abs(1 - x)**(-rho), x, s) == (
         2*sin(pi*rho/2)*gamma(1 - rho)*
         cos(pi*(rho/2 - s))*gamma(s)*gamma(rho-s)/pi,
-        (0, re(rho)), And(re(rho) - 1 < 0, re(rho) < 1))
+        (0, re(rho)), re(rho) < 1)
     mt = MT((1 - x)**(beta - 1)*Heaviside(1 - x)
             + a*(x - 1)**(beta - 1)*Heaviside(x - 1), x, s)
     assert mt[1], mt[2] == ((0, -re(beta) + 1), re(beta) > 0)
@@ -121,12 +118,12 @@ def test_mellin_transform():
         pi*b**(a + s - 1)*sin(pi*a)/(sin(pi*s)*sin(pi*(a + s)))
     assert MT((x**a - bpos**a)/(x - bpos), x, s) == \
         (pi*bpos**(a + s - 1)*sin(pi*a)/(sin(pi*s)*sin(pi*(a + s))),
-            (Max(-re(a), 0), Min(1 - re(a), 1)), True)
+            (Max(0, -re(a)), Min(1, 1 - re(a))), True)
 
     expr = (sqrt(x + b**2) + b)**a
     assert MT(expr.subs(b, bpos), x, s) == \
         (-a*(2*bpos)**(a + 2*s)*gamma(s)*gamma(-a - 2*s)/gamma(-a - s + 1),
-         (0, -re(a)/2), True)
+            (0, -re(a)/2), True)
 
     expr = (sqrt(x + b**2) + b)**a/sqrt(x + b**2)
     assert MT(expr.subs(b, bpos), x, s) == \
@@ -462,7 +459,7 @@ def test_laplace_transform():
 
     # test a bug
     spos = symbols('s', positive=True)
-    assert LT(exp(t), t, spos)[:2] == (1/(spos - 1), 1)
+    assert LT(exp(t), t, spos) == (1/(spos - 1), 0, spos > 1)
 
     # basic tests from wikipedia
     assert LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) == \
@@ -475,9 +472,9 @@ def test_laplace_transform():
     assert LT((exp(2*t) - 1)*exp(-b - t)*Heaviside(t)/2, t, s, noconds=True) \
         == exp(-b)/(s**2 - 1)
 
-    assert LT(exp(t), t, s)[:2] == (1/(s - 1), 1)
-    assert LT(exp(2*t), t, s)[:2] == (1/(s - 2), 2)
-    assert LT(exp(a*t), t, s)[:2] == (1/(s - a), a)
+    assert LT(exp(t), t, s) == (1/(s - 1), 0, abs(s) > 1)
+    assert LT(exp(2*t), t, s) == (1/(s - 2), 0, abs(s) > 2)
+    assert LT(exp(a*t), t, s) == (1/(s - a), a, Ne(s/a, 1))
 
     assert LT(log(t/a), t, s) == (-(log(a*s) + EulerGamma)/s, 0, True)
 
@@ -532,9 +529,6 @@ def test_laplace_transform():
         ((2*sin(s**2/(2*pi))*fresnelc(s/pi) - 2*cos(s**2/(2*pi))*fresnels(s/pi)
         + sqrt(2)*cos(s**2/(2*pi) + pi/4))/(2*s), 0, True))
 
-    # What is this testing:
-    Ne(1/s, 1) & (0 < cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1)
-
     Mt = Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]])
     Ms = Matrix([[    1/(s - 1), (s + 1)**(-2)],
                  [(s + 1)**(-2),     1/(s - 1)]])
@@ -542,14 +536,14 @@ def test_laplace_transform():
     # The default behaviour for Laplace tranform of a Matrix returns a Matrix
     # of Tuples and is deprecated:
     with warns_deprecated_sympy():
-        Ms_conds = Matrix([[(1/(s - 1), 1, s > 1), ((s + 1)**(-2), 0, True)],
-                           [((s + 1)**(-2), 0, True), (1/(s - 1), 1, s > 1)]])
+        Ms_conds = Matrix([[(1/(s - 1), 0, Abs(s) > 1), ((s + 1)**(-2),
+            0, True)], [((s + 1)**(-2), 0, True), (1/(s - 1), 0, Abs(s) > 1)]])
     with warns_deprecated_sympy():
         assert LT(Mt, t, s) == Ms_conds
 
     # The new behavior is to return a tuple of a Matrix and the convergence
     # conditions for the matrix as a whole:
-    assert LT(Mt, t, s, legacy_matrix=False) == (Ms, 1, s > 1)
+    assert LT(Mt, t, s, legacy_matrix=False) == (Ms, 0, Abs(s) > 1)
 
     # With noconds=True the transformed matrix is returned without conditions
     # either way:
@@ -558,15 +552,15 @@ def test_laplace_transform():
 
 
 @slow
-def test_issue_8368_7173():
+def test_issue_8368t_7173():
     LT = laplace_transform
     # hyperbolic
-    assert LT(sinh(x), x, s) == (1/(s**2 - 1), 1, s > 1)
-    assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, s > 1)
+    assert LT(sinh(x), x, s) == (1/(s**2 - 1), 0, abs(s) > 1)
+    assert LT(cosh(x), x, s) == (s/(s**2 - 1), -oo, s**2 > 1)
     assert LT(sinh(x + 3), x, s) == (
-        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, s > 1)
+        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 0, Abs(s) > 1)
     assert LT(sinh(x)*cosh(x), x, s) == (
-        1/(s**2 - 4), 2, s > 2)
+        1/(s**2 - 4), 0, Abs(s) > 2)
     # trig (make sure they are not being rewritten in terms of exp)
     assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), 0, True)
 

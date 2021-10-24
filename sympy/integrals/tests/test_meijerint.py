@@ -1,9 +1,9 @@
-from sympy import (meijerg, I, S, integrate, Integral, oo, gamma, cosh, sinc,
-                   hyperexpand, exp, simplify, sqrt, pi, erf, erfc, sin, cos,
-                   exp_polar, polygamma, hyper, log, expand_func, Rational)
+from sympy import (meijerg, I, S, integrate, Integral, oo, gamma, cosh,
+    sinc, hyperexpand, exp, simplify, sqrt, pi, erf, erfc, sin, cos,
+    exp_polar, polygamma, hyper, log, expand_func, Rational, re)
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
-        meijerint_indefinite, _inflate_g, _create_lookup_table,
-        meijerint_definite, meijerint_inversion)
+    meijerint_indefinite, _inflate_g, _create_lookup_table,
+    meijerint_definite, meijerint_inversion)
 from sympy.utilities import default_sort_key
 from sympy.testing.pytest import slow
 from sympy.testing.randtest import (verify_numerically,
@@ -187,13 +187,13 @@ def test_meijerint():
     # (This is besselj*besselj in disguise, to stop the product from being
     #  recognised in the tables.)
     a, b, s = symbols('a b s')
-    from sympy import And, re
     assert meijerint_definite(meijerg([], [], [a/2], [-a/2], x/4)
-                  *meijerg([], [], [b/2], [-b/2], x/4)*x**(s - 1), x, 0, oo) == \
+                  *meijerg([], [], [b/2], [-b/2], x/4)*x**(s - 1), x, 0, oo
+        ) == (
         (4*2**(2*s - 2)*gamma(-2*s + 1)*gamma(a/2 + b/2 + s)
          /(gamma(-a/2 + b/2 - s + 1)*gamma(a/2 - b/2 - s + 1)
            *gamma(a/2 + b/2 - s + 1)),
-            And(0 < -2*re(4*s) + 8, 0 < re(a/2 + b/2 + s), re(2*s) < 1))
+            (re(s) < 1) & (re(s) < S(1)/2) & (re(a)/2 + re(b)/2 + re(s) > 0)))
 
     # test a bug
     assert integrate(sin(x**a)*sin(x**b), (x, 0, oo), meijerg=True) == \
@@ -441,7 +441,7 @@ def test_probability():
     i = integrate(x*betadist, (x, 0, oo), meijerg=True, conds='separate')
     assert (gammasimp(i[0]), i[1]) == (alpha/(beta - 1), 1 < beta)
     j = integrate(x**2*betadist, (x, 0, oo), meijerg=True, conds='separate')
-    assert j[1] == (1 < beta - 1)
+    assert j[1] == (beta > 2)
     assert gammasimp(j[0] - i[0]**2) == (alpha + beta - 1)*alpha \
         /(beta - 2)/(beta - 1)**2
 
@@ -619,24 +619,27 @@ def test_expint():
 
 
 def test_messy():
-    from sympy import (laplace_transform, Si, Shi, Chi, atan, Piecewise,
-                       acoth, E1, besselj, acosh, asin, And, re,
-                       fourier_transform)
-    assert laplace_transform(Si(x), x, s) == ((-atan(s) + pi/2)/s, 0, True)
+    from sympy import (laplace_transform, Si, Shi, Chi, atan,
+        Piecewise, acoth, E1, besselj, acosh, asin, fourier_transform)
+    assert laplace_transform(Si(x), x, s) == (
+        (-atan(s) + pi/2)/s, 0, True)
 
-    assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, s > 1)
+    assert laplace_transform(Shi(x), x, s) == (
+        acoth(s)/s, -oo, s**2 > 1)
 
     # where should the logs be simplified?
-    assert laplace_transform(Chi(x), x, s) == \
-        ((log(s**(-2)) - log(1 - 1/s**2))/(2*s), 1, s > 1)
+    assert laplace_transform(Chi(x), x, s) == (
+        (log(s**(-2)) - log(1 - 1/s**2))/(2*s), -oo, s**2 > 1)
 
-    # TODO maybe simplify the inequalities?
+    # TODO maybe simplify the inequalities? when the simplification
+    # allows for generators instead of symbols this will work
     assert laplace_transform(besselj(a, x), x, s)[1:] == \
-        (0, And(re(a/2) + S.Half > S.Zero, re(a/2) + 1 > S.Zero))
+        (0, (re(a) > -2) & (re(a) > -1))
 
     # NOTE s < 0 can be done, but argument reduction is not good enough yet
-    assert fourier_transform(besselj(1, x)/x, x, s, noconds=False) == \
-        (Piecewise((0, 4*abs(pi**2*s**2) > 1),
+    ans = fourier_transform(besselj(1, x)/x, x, s, noconds=False)
+    assert tuple([ans[0].factor(deep=True).expand(), ans[1]]) == \
+        (Piecewise((0, (s > 1/(2*pi)) | (s < -1/(2*pi))),
                    (2*sqrt(-4*pi**2*s**2 + 1), True)), s > 0)
     # TODO FT(besselj(0,x)) - conditions are messy (but for acceptable reasons)
     #                       - folding could be better

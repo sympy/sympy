@@ -220,6 +220,7 @@ def test_piecewise_integrate1b():
         (Min(1, Max(0, y))**2/2 - S.Half, y < 1),
         (y - 1, True))
 
+
 @slow
 def test_piecewise_integrate1ca():
     y = symbols('y', real=True)
@@ -237,14 +238,14 @@ def test_piecewise_integrate1ca():
     assert g.integrate((x, 1, 0)) == g1y.subs(y, 0)
     assert g.integrate((x, 2, 1)) == gy1.subs(y, 2)
     assert g.integrate((x, 1, 2)) == g1y.subs(y, 2)
-    assert piecewise_fold(gy1.rewrite(Piecewise)) == \
-        Piecewise(
+    assert piecewise_fold(gy1.rewrite(Piecewise)
+        ).simplify() == Piecewise(
             (1, y <= -1),
             (-y**2/2 - y + S.Half, y <= 0),
             (y**2/2 - y + S.Half, y < 1),
             (0, True))
-    assert piecewise_fold(g1y.rewrite(Piecewise)) == \
-        Piecewise(
+    assert piecewise_fold(g1y.rewrite(Piecewise)
+        ).simplify() == Piecewise(
             (-1, y <= -1),
             (y**2/2 + y - S.Half, y <= 0),
             (-y**2/2 + y - S.Half, y < 1),
@@ -280,14 +281,14 @@ def test_piecewise_integrate1cb():
     assert g.integrate((x, 2, 1)) == gy1.subs(y, 2)
     assert g.integrate((x, 1, 2)) == g1y.subs(y, 2)
 
-    assert piecewise_fold(gy1.rewrite(Piecewise)) == \
-        Piecewise(
+    assert piecewise_fold(gy1.rewrite(Piecewise)
+        ).simplify() == Piecewise(
             (1, y <= -1),
             (-y**2/2 - y + S.Half, y <= 0),
             (y**2/2 - y + S.Half, y < 1),
             (0, True))
-    assert piecewise_fold(g1y.rewrite(Piecewise)) == \
-        Piecewise(
+    assert piecewise_fold(g1y.rewrite(Piecewise)
+        ).simplify() == Piecewise(
             (-1, y <= -1),
             (y**2/2 + y - S.Half, y <= 0),
             (-y**2/2 + y - S.Half, y < 1),
@@ -1046,19 +1047,21 @@ def test_issue_4313():
 
 
 def test__intervals():
-    assert Piecewise((x + 2, Eq(x, 3)))._intervals(x) == []
+    assert Piecewise((x + 2, Eq(x, 3)))._intervals(x) == (True, [])
     assert Piecewise(
         (1, x > x + 1),
         (Piecewise((1, x < x + 1)), 2*x < 2*x + 1),
-        (1, True))._intervals(x) == [(-oo, oo, 1, 1)]
-    assert Piecewise((1, Ne(x, I)), (0, True))._intervals(x) == [
-        (-oo, oo, 1, 0)]
+        (1, True))._intervals(x) == (True, [(-oo, oo, 1, 1)])
+    assert Piecewise((1, Ne(x, I)), (0, True))._intervals(x) == (True,
+        [(-oo, oo, 1, 0)])
     assert Piecewise((-cos(x), sin(x) >= 0), (cos(x), True)
-        )._intervals(x) == [(0, pi, -cos(x), 0), (-oo, oo, cos(x), 1)]
+        )._intervals(x) == (True,
+        [(0, pi, -cos(x), 0), (-oo, oo, cos(x), 1)])
     # the following tests that duplicates are removed and that non-Eq
     # generated zero-width intervals are removed
     assert Piecewise((1, Abs(x**(-2)) > 1), (0, True)
-        )._intervals(x) == [(-1, 0, 1, 0), (0, 1, 1, 0), (-oo, oo, 0, 1)]
+        )._intervals(x) == (True,
+        [(-1, 0, 1, 0), (0, 1, 1, 0), (-oo, oo, 0, 1)])
 
 
 def test_containment():
