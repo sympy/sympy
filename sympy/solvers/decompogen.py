@@ -42,7 +42,7 @@ def decompogen(f, symbol):
 
     # ===== Simple Functions ===== #
     if isinstance(f, (Function, Pow)):
-        from sympy import S
+        from sympy.core.singleton import S
         if f.is_Pow and f.base == S.Exp1:
             arg = f.exp
         else:

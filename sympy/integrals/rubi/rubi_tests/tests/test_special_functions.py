@@ -117,16 +117,27 @@ if matchpy:
         CoshIntegral, Rule, Erf, PolyGamma, ExpIntegralEi, ExpIntegralE, LogGamma , UtilityOperator, Factorial,
         Zeta, ProductLog, DerivativeDivides, HypergeometricPFQ, IntHide, OneQ, Null, exp, log, Discriminant
     )
-    from sympy import (Integral, S, sqrt, And, Or, Integer, Float, Mod, I, Abs, simplify, Mul, Add, Pow)
+    from sympy.core.add import Add
+    from sympy.core.mod import Mod
+    from sympy.core.mul import Mul
+    from sympy.core.numbers import (Float, I, Integer)
+    from sympy.core.power import Pow
+    from sympy.core.singleton import S
+    from sympy.functions.elementary.complexes import Abs
+    from sympy.functions.elementary.miscellaneous import sqrt
+    from sympy.integrals.integrals import Integral
+    from sympy.logic.boolalg import (And, Or)
+    from sympy.simplify.simplify import simplify
     from sympy.integrals.rubi.symbol import WC
     from sympy.core.symbol import symbols, Symbol
     from sympy.functions import (sin, cos, tan, cot, csc, sec, sqrt, erf)
     from sympy.functions.elementary.hyperbolic import (acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch)
     from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec, atan2)
-    from sympy import pi as Pi
+    from sympy.core.numbers import pi as Pi
 
 from sympy.integrals.rubi.rubi import rubi_integrate
-from sympy import Integral as Integrate, exp, log
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.integrals.integrals import Integral as Integrate
 
 a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z = symbols('a b c d e f g h i j k l m n o p q r s t u v w x y z')
 A, B, C, F, G, H, J, K, L, M, N, O, P, Q, R, T, U, V, W, X, Y, Z = symbols('A B C F G H J K L M N O P Q R T U V W X Y Z')

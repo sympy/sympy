@@ -1,5 +1,8 @@
 from sympy.tensor import Indexed
-from sympy import Integral, Dummy, sympify, Tuple
+from sympy.core.containers import Tuple
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
+from sympy.integrals.integrals import Integral
 
 
 class IndexedIntegral(Integral):

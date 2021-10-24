@@ -6,7 +6,7 @@ if lfortran:
     from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
                                    Return, FunctionDefinition, Assignment)
     from sympy.core import Add, Mul, Integer, Float
-    from sympy import Symbol
+    from sympy.core.symbol import Symbol
 
     asr_mod = lfortran.asr
     asr = lfortran.asr.asr

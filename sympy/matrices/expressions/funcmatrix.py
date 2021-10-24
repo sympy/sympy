@@ -111,7 +111,7 @@ class FunctionMatrix(MatrixExpr):
 
     def _eval_trace(self):
         from sympy.matrices.expressions.trace import Trace
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         return Trace(self).rewrite(Sum).doit()
 
     def as_real_imag(self):

@@ -1,5 +1,16 @@
-from sympy import Integer, Mul, Basic, MatMul, MatAdd, Transpose, Trace, Pow, \
-    MatPow, symbols, Dummy, Lambda, HadamardProduct, HadamardPower, S
+from sympy.core.basic import Basic
+from sympy.core.function import Lambda
+from sympy.core.mul import Mul
+from sympy.core.numbers import Integer
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.matrices.expressions.hadamard import (HadamardPower, HadamardProduct)
+from sympy.matrices.expressions.matadd import MatAdd
+from sympy.matrices.expressions.matmul import MatMul
+from sympy.matrices.expressions.matpow import MatPow
+from sympy.matrices.expressions.trace import Trace
+from sympy.matrices.expressions.transpose import Transpose
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal, ArrayTensorProduct, \
     PermuteDims, ArrayAdd, ArrayContraction, ArrayElementwiseApplyFunc

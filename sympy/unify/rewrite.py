@@ -1,6 +1,6 @@
 """ Functions to support rewriting of SymPy expressions """
 
-from sympy import Expr
+from sympy.core.expr import Expr
 from sympy.assumptions import ask
 from sympy.strategies.tools import subs
 from sympy.unify.usympy import rebuild, unify

@@ -930,7 +930,7 @@ class MatrixSpecial(MatrixRequired):
        """
         from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.dense import Matrix
-        from sympy.matrices.sparse import SparseMatrix
+        from sympy.matrices import SparseMatrix
         klass = kwargs.get('cls', kls)
         if unpack and len(args) == 1 and is_sequence(args[0]) and \
                 not isinstance(args[0], MatrixBase):
@@ -2681,7 +2681,7 @@ class MatrixArithmetic(MatrixRequired):
         return self._new(self.rows, self.cols, lambda i, j: other*self[i,j])
 
     def _eval_Mod(self, other):
-        from sympy import Mod
+        from sympy.core.mod import Mod
         return self._new(self.rows, self.cols, lambda i, j: Mod(self[i, j], other))
 
     # python arithmetic functions

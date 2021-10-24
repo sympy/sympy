@@ -1,4 +1,5 @@
-from sympy import I, symbols
+from sympy.core.numbers import I
+from sympy.core.symbol import symbols
 from sympy.core.expr import unchanged
 from sympy.matrices import Matrix, SparseMatrix
 

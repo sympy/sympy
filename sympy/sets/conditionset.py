@@ -1,4 +1,4 @@
-from sympy import S
+from sympy.core.singleton import S
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.function import Lambda

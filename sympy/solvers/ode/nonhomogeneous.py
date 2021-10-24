@@ -10,7 +10,7 @@ instances in other classes for using them it is better to keep it here as separa
 """
 from collections import defaultdict
 from sympy.core import Add, S
-from sympy.core.function import  diff, expand, _mexpand, expand_mul
+from sympy.core.function import diff, expand, _mexpand, expand_mul
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy, Wild
 from sympy.functions import exp, cos, cosh, im, log, re, sin, sinh, \

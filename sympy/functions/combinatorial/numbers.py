@@ -667,7 +667,7 @@ class bell(Function):
                 return r
 
     def _eval_rewrite_as_Sum(self, n, k_sym=None, symbols=None, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         if (k_sym is not None) or (symbols is not None):
             return self
 
@@ -817,7 +817,7 @@ class harmonic(Function):
 
     @classmethod
     def eval(cls, n, m=None):
-        from sympy import zeta
+        from sympy.functions.special.zeta_functions import zeta
         if m is S.One:
             return cls(n)
         if m is None:
@@ -861,14 +861,14 @@ class harmonic(Function):
         return self.rewrite(polygamma)
 
     def _eval_rewrite_as_Sum(self, n, m=None, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         k = Dummy("k", integer=True)
         if m is None:
             m = S.One
         return Sum(k**(-m), (k, 1, n))
 
     def _eval_expand_func(self, **hints):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         n = self.args[0]
         m = self.args[1] if len(self.args) == 2 else 1
 
@@ -901,11 +901,11 @@ class harmonic(Function):
         return self
 
     def _eval_rewrite_as_tractable(self, n, m=1, limitvar=None, **kwargs):
-        from sympy import polygamma
+        from sympy.functions.special.gamma_functions import polygamma
         return self.rewrite(polygamma).rewrite("tractable", deep=True)
 
     def _eval_evalf(self, prec):
-        from sympy import polygamma
+        from sympy.functions.special.gamma_functions import polygamma
         if all(i.is_number for i in self.args):
             return self.rewrite(polygamma)._eval_evalf(prec)
 
@@ -1010,7 +1010,7 @@ class euler(Function):
                     if reim and all(a.is_Float or a.is_Integer for a in reim) \
                             and any(a.is_Float for a in reim):
                         from mpmath import mp
-                        from sympy import Expr
+                        from sympy.core.expr import Expr
                         m = int(m)
                         # XXX ComplexFloat (#12192) would be nice here, above
                         prec = min([a._prec for a in reim if a.is_Float])
@@ -1030,7 +1030,7 @@ class euler(Function):
                 return S.Zero
 
     def _eval_rewrite_as_Sum(self, n, x=None, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         if x is None and n.is_even:
             k = Dummy("k", integer=True)
             j = Dummy("j", integer=True)
@@ -1047,14 +1047,14 @@ class euler(Function):
 
         if x is None and m.is_Integer and m.is_nonnegative:
             from mpmath import mp
-            from sympy import Expr
+            from sympy.core.expr import Expr
             m = m._to_mpmath(prec)
             with workprec(prec):
                 res = mp.eulernum(m)
             return Expr._from_mpmath(res, prec)
         if x and x.is_number and m.is_Integer and m.is_nonnegative:
             from mpmath import mp
-            from sympy import Expr
+            from sympy.core.expr import Expr
             m = int(m)
             x = x._to_mpmath(prec)
             with workprec(prec):
@@ -1081,8 +1081,8 @@ class catalan(Function):
     Examples
     ========
 
-    >>> from sympy import (Symbol, binomial, gamma, hyper, catalan,
-    ...                    diff, combsimp, Rational, I)
+    >>> from sympy import (Symbol, binomial, gamma, hyper,
+    ...     catalan, diff, combsimp, Rational, I)
 
     >>> [catalan(i) for i in range(1,10)]
     [1, 2, 5, 14, 42, 132, 429, 1430, 4862]
@@ -1150,7 +1150,7 @@ class catalan(Function):
 
     @classmethod
     def eval(cls, n):
-        from sympy import gamma
+        from sympy.functions.special.gamma_functions import gamma
         if (n.is_Integer and n.is_nonnegative) or \
            (n.is_noninteger and n.is_negative):
             return 4**n*gamma(n + S.Half)/(gamma(S.Half)*gamma(n + 2))
@@ -1162,7 +1162,7 @@ class catalan(Function):
                 return Rational(-1, 2)
 
     def fdiff(self, argindex=1):
-        from sympy import polygamma
+        from sympy.functions.special.gamma_functions import polygamma
         n = self.args[0]
         return catalan(n)*(polygamma(0, n + S.Half) - polygamma(0, n + 2) + log(4))
 
@@ -1173,16 +1173,16 @@ class catalan(Function):
         return factorial(2*n) / (factorial(n+1) * factorial(n))
 
     def _eval_rewrite_as_gamma(self, n, piecewise=True, **kwargs):
-        from sympy import gamma
+        from sympy.functions.special.gamma_functions import gamma
         # The gamma function allows to generalize Catalan numbers to complex n
         return 4**n*gamma(n + S.Half)/(gamma(S.Half)*gamma(n + 2))
 
     def _eval_rewrite_as_hyper(self, n, **kwargs):
-        from sympy import hyper
+        from sympy.functions.special.hyper import hyper
         return hyper([1 - n, -n], [2], 1)
 
     def _eval_rewrite_as_Product(self, n, **kwargs):
-        from sympy import Product
+        from sympy.concrete.products import Product
         if not (n.is_integer and n.is_nonnegative):
             return self
         k = Dummy('k', integer=True, positive=True)
@@ -1201,7 +1201,7 @@ class catalan(Function):
             return True
 
     def _eval_evalf(self, prec):
-        from sympy import gamma
+        from sympy.functions.special.gamma_functions import gamma
         if self.args[0].is_number:
             return self.rewrite(gamma)._eval_evalf(prec)
 

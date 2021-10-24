@@ -1,5 +1,5 @@
-from sympy import Basic
-from sympy import S
+from sympy.core.basic import Basic
+from sympy.core.singleton import S
 from sympy.core.expr import Expr
 from sympy.core.numbers import Integer
 from sympy.core.sympify import sympify
@@ -207,7 +207,7 @@ class NDimArray(Printable):
     def _handle_ndarray_creation_inputs(cls, iterable=None, shape=None, **kwargs):
         from sympy.matrices.matrices import MatrixBase
         from sympy.tensor.array import SparseNDimArray
-        from sympy import Dict, Tuple
+        from sympy.core.containers import (Dict, Tuple)
 
         if shape is None:
             if iterable is None:

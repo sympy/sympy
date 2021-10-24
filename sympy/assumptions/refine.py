@@ -84,7 +84,7 @@ def refine_abs(expr, assumptions):
 
     """
     from sympy.core.logic import fuzzy_not
-    from sympy import Abs
+    from sympy.functions.elementary.complexes import Abs
     arg = expr.args[0]
     if ask(Q.real(arg), assumptions) and \
             fuzzy_not(ask(Q.negative(arg), assumptions)):

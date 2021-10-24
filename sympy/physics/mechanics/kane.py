@@ -1,5 +1,5 @@
 from sympy.core.backend import zeros, Matrix, diff, eye
-from sympy import solve_linear_system_LU
+from sympy.solvers.solvers import solve_linear_system_LU
 from sympy.utilities import default_sort_key
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)

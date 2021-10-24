@@ -1,4 +1,5 @@
-from sympy import sqrt, Abs
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.miscellaneous import sqrt
 
 from sympy.core import S, Rational
 

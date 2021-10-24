@@ -1,8 +1,6 @@
-from sympy import Matrix
-
+from sympy.matrices.dense import eye, Matrix
 from sympy.tensor.tensor import tensor_indices, TensorHead, tensor_heads, \
     TensExpr, canon_bp
-from sympy import eye
 from sympy.physics.hep.gamma_matrices import GammaMatrix as G, LorentzIndex, \
     kahane_simplify, gamma_trace, _simplify_single_line, simplify_gamma_expression
 

@@ -26,7 +26,8 @@ from the names used in Bronstein's book.
 from types import GeneratorType
 from functools import reduce
 
-from sympy import real_roots, default_sort_key
+from sympy.core.compatibility import default_sort_key
+from sympy.polys.polytools import real_roots
 from sympy.core.function import Lambda
 from sympy.core.numbers import ilcm, oo, I
 from sympy.core.mul import Mul

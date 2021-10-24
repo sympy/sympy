@@ -1,5 +1,5 @@
 from sympy.matrices.expressions import MatrixExpr
-from sympy import Q
+from sympy.assumptions.ask import Q
 
 class Factorization(MatrixExpr):
     arg = property(lambda self: self.args[0])

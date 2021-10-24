@@ -3,7 +3,7 @@ This module implements the Residue function and related tools for working
 with residues.
 """
 
-from sympy import sympify
+from sympy.core.sympify import sympify
 from sympy.utilities.timeutils import timethis
 
 
@@ -46,7 +46,10 @@ def residue(expr, x, x0):
     # For the definition of a resultant, see section 1.4 (and any
     # previous sections for more review).
 
-    from sympy import collect, Mul, Order, S
+    from sympy.core.mul import Mul
+    from sympy.core.singleton import S
+    from sympy.series.order import Order
+    from sympy.simplify.radsimp import collect
     expr = sympify(expr)
     if x0 != 0:
         expr = expr.subs(x, x + x0)

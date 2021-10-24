@@ -1,9 +1,23 @@
-from sympy import (
-    Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
-    Integer, Eq, symbols, Add, I, Float, log, Rational,
-    Lambda, atan2, cse, cot, tan, S, Tuple, Basic, Dict,
-    Piecewise, oo, Mul, factor, nsimplify, zoo, Subs, RootOf,
-    AccumBounds, Matrix, zeros, ZeroMatrix)
+from sympy.calculus.util import AccumBounds
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.containers import (Dict, Tuple)
+from sympy.core.function import (Derivative, Function, Lambda, Subs)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi, zoo)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, Wild, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (atan2, cos, cot, sin, tan)
+from sympy.matrices.dense import (Matrix, zeros)
+from sympy.matrices.expressions.special import ZeroMatrix
+from sympy.polys.polytools import factor
+from sympy.polys.rootoftools import RootOf
+from sympy.simplify.cse_main import cse
+from sympy.simplify.simplify import nsimplify
 from sympy.core.basic import _aresame
 from sympy.testing.pytest import XFAIL
 from sympy.abc import a, x, y, z, t

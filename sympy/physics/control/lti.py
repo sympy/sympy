@@ -1,6 +1,14 @@
 from typing import Type
 
-from sympy import Basic, Add, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr
+from sympy.core.function import expand
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.symbol import Symbol
+from sympy.polys.polyroots import roots
+from sympy.polys.polytools import (cancel, degree)
 from sympy.core.containers import Tuple
 from sympy.core.evalf import EvalfMixin, prec_to_dps
 from sympy.core.logic import fuzzy_and

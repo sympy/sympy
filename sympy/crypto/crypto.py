@@ -18,7 +18,7 @@ import warnings
 
 from itertools import cycle
 
-from sympy import nextprime
+from sympy.ntheory.generate import nextprime
 from sympy.core import Rational, Symbol
 from sympy.core.numbers import igcdex, mod_inverse, igcd
 from sympy.core.compatibility import as_int

@@ -4,9 +4,17 @@ from sympy.testing.pytest import raises, XFAIL
 from sympy.utilities.iterables import iterable
 
 # import test:
-from sympy import (IndexedBase, Idx, Indexed, S, sin, cos, exp, log, Sum,
-        Order, LessThan, StrictGreaterThan, GreaterThan, StrictLessThan,
-        Range, Subs, Function, KroneckerDelta, Derivative)
+from sympy.concrete.summations import Sum
+from sympy.core.function import Function, Subs, Derivative
+from sympy.core.relational import (StrictLessThan, GreaterThan,
+    StrictGreaterThan, LessThan)
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.series.order import Order
+from sympy.sets.fancysets import Range
+from sympy.tensor.indexed import IndexedBase, Idx, Indexed
 
 
 def test_Idx_construction():

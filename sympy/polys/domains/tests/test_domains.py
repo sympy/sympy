@@ -1,6 +1,11 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import I, S, sqrt, sin, oo, Poly, Float, Integer, Rational, pi, exp, E
+from sympy.core.numbers import (E, Float, I, Integer, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
+from sympy.polys.polytools import Poly
 from sympy.abc import x, y, z
 
 from sympy.external.gmpy import HAS_GMPY

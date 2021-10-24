@@ -1,5 +1,17 @@
-from sympy import (symbols, S, erf, sqrt, pi, exp, gamma, Interval, oo, beta,
-                    Eq, Piecewise, Integral, Sum, factorial)
+from sympy.concrete.summations import Sum
+from sympy.core.numbers import (oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.beta_functions import beta
+from sympy.functions.special.error_functions import erf
+from sympy.functions.special.gamma_functions import gamma
+from sympy.integrals.integrals import Integral
+from sympy.sets.sets import Interval
 from sympy.stats import (Normal, P, E, density, Gamma, Poisson, Rayleigh,
                         variance, Bernoulli, Beta, Uniform, cdf)
 from sympy.stats.compound_rv import CompoundDistribution, CompoundPSpace

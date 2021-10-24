@@ -1,4 +1,5 @@
-from sympy import S, simplify
+from sympy.core.singleton import S
+from sympy.simplify.simplify import simplify
 from sympy.core import Basic, diff
 from sympy.matrices import Matrix
 from sympy.vector import (CoordSys3D, Vector, ParametricRegion,

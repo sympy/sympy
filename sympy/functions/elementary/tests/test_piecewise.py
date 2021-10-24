@@ -1,9 +1,28 @@
-from sympy import (
-    adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, ITE,
-    Integral, integrate, Interval, KroneckerDelta, lambdify, log, Max, Min,
-    oo, Or, pi, Piecewise, piecewise_fold, Rational, solve, symbols, transpose,
-    cos, sin, exp, Abs, Ne, Not, Symbol, S, sqrt, Sum, Tuple, zoo, Float,
-    DiracDelta, Heaviside, Add, Mul, factorial, Ge, Contains, MatrixSymbol)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
+from sympy.core.function import (Function, diff, expand)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Rational, oo, pi, zoo)
+from sympy.core.relational import (Eq, Ge, Gt, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.complexes import (Abs, adjoint, arg, conjugate, im, re, transpose)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
+from sympy.functions.elementary.piecewise import (Piecewise, piecewise_fold)
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.delta_functions import (DiracDelta, Heaviside)
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.integrals.integrals import (Integral, integrate)
+from sympy.logic.boolalg import (And, ITE, Not, Or)
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.sets.contains import Contains
+from sympy.sets.sets import Interval
+from sympy.solvers.solvers import solve
+from sympy.utilities.lambdify import lambdify
 from sympy.core.expr import unchanged
 from sympy.functions.elementary.piecewise import Undefined, ExprCondPair
 from sympy.printing import srepr
@@ -691,7 +710,7 @@ def test_piecewise_lambdify():
 
 
 def test_piecewise_series():
-    from sympy import O
+    from sympy.series.order import O
     p1 = Piecewise((sin(x), x < 0), (cos(x), x > 0))
     p2 = Piecewise((x + O(x**2), x < 0), (1 + O(x**2), x > 0))
     assert p1.nseries(x, n=2) == p2
@@ -1240,7 +1259,6 @@ def test_issue_8458():
 
 
 def test_issue_16417():
-    from sympy import im, re, Gt
     z = Symbol('z')
     assert unchanged(Piecewise, (1, Or(Eq(im(z), 0), Gt(re(z), 0))), (2, True))
 
@@ -1391,7 +1409,6 @@ def test_piecewise_eval():
     # XXX these tests might need modification if this
     # simplification is moved out of eval and into
     # boolalg or Piecewise simplification functions
-    from sympy.functions.elementary.complexes import arg
     f = lambda x: x.args[0].cond
     # unsimplified
     assert f(Piecewise((x, (x > -oo) & (x < 3)))

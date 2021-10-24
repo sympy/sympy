@@ -4,13 +4,29 @@ import inspect
 
 import mpmath
 from sympy.testing.pytest import raises
-from sympy import (
-    symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
-    Float, Lambda, Piecewise, exp, E, Integral, oo, I, Abs, Function,
-    true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
-    digamma, RisingFactorial, besselj, bessely, besseli, besselk, S, beta,
-    betainc, betainc_regularized, fresnelc, fresnels)
+from sympy.concrete.summations import Sum
+from sympy.core.function import (Function, Lambda, diff)
+from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions.combinatorial.factorials import (RisingFactorial, factorial)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.hyperbolic import acosh
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, cos, sin, sinc, tan)
+from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely)
+from sympy.functions.special.beta_functions import (beta, betainc, betainc_regularized)
+from sympy.functions.special.error_functions import (erf, erfc, fresnelc, fresnels)
+from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma)
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
+from sympy.matrices.expressions.dotproduct import DotProduct
+from sympy.tensor.indexed import IndexedBase
+from sympy.utilities.lambdify import lambdify
 from sympy.core.expr import UnevaluatedExpr
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2

@@ -9,15 +9,15 @@ from sympy.core.containers import Tuple
 from sympy.core.decorators import (deprecated, sympify_method_args,
     sympify_return)
 from sympy.core.evalf import EvalfMixin, prec_to_dps
-from sympy.core.parameters import global_parameters
 from sympy.core.expr import Expr
 from sympy.core.logic import (FuzzyBool, fuzzy_bool, fuzzy_or, fuzzy_and,
     fuzzy_not)
 from sympy.core.numbers import Float
 from sympy.core.operations import LatticeOp
+from sympy.core.parameters import global_parameters
 from sympy.core.relational import Eq, Ne, is_lt
 from sympy.core.singleton import Singleton, S
-from sympy.core.symbol import Symbol, Dummy, uniquely_named_symbol
+from sympy.core.symbol import symbols, Symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.sets.contains import Contains
@@ -25,6 +25,7 @@ from sympy.utilities import subsets
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iproduct, sift, roundrobin, iterable
 from sympy.utilities.misc import func_name, filldedent
+
 from mpmath import mpi, mpf
 
 
@@ -2236,7 +2237,7 @@ def imageset(*args):
     sympy.sets.fancysets.ImageSet
 
     """
-    from sympy.core import Lambda
+    from sympy.core.function import Lambda
     from sympy.sets.fancysets import ImageSet
     from sympy.sets.setexpr import set_function
 
@@ -2323,7 +2324,7 @@ def is_function_invertible_in_set(func, setv):
     Checks whether function ``func`` is invertible when the domain is
     restricted to set ``setv``.
     """
-    from sympy import exp, log
+    from sympy.functions.elementary.exponential import (exp, log)
     # Functions known to always be invertible:
     if func in (exp, log):
         return True
@@ -2485,7 +2486,7 @@ def _handle_finite_sets(op, x, y, commutative):
 
 def _apply_operation(op, x, y, commutative):
     from sympy.sets import ImageSet
-    from sympy import symbols,Lambda
+    from sympy.core.function import Lambda
     d = Dummy('d')
 
     out = _handle_finite_sets(op, x, y, commutative)

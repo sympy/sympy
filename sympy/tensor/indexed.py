@@ -105,7 +105,7 @@ See the appropriate docstrings for a detailed explanation of the output.
 #      - Idx with step determined by function call
 from collections.abc import Iterable
 
-from sympy import Number
+from sympy.core.numbers import Number
 from sympy.core.assumptions import StdFactKB
 from sympy.core import Expr, Tuple, sympify, S
 from sympy.core.symbol import _filter_assumptions, Symbol
@@ -437,7 +437,8 @@ class IndexedBase(Expr, NotIterable):
         obj._assumptions._generator = tmp_asm_copy  # Issue #8873
 
     def __new__(cls, label, shape=None, *, offset=S.Zero, strides=None, **kw_args):
-        from sympy import MatrixBase, NDimArray
+        from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array.ndim_array import NDimArray
 
         assumptions, kw_args = _filter_assumptions(kw_args)
         if isinstance(label, str):

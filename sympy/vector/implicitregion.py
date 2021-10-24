@@ -1,4 +1,10 @@
-from sympy import S, Rational, gcd, sqrt, sign, symbols, Complement
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.polys.polytools import gcd
+from sympy.sets.sets import Complement
 from sympy.core import Basic, Tuple, diff, expand, Eq, Integer
 from sympy.core.compatibility import ordered
 from sympy.core.symbol import _symbol

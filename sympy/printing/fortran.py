@@ -202,7 +202,7 @@ class FCodePrinter(CodePrinter):
         return open_lines, close_lines
 
     def _print_sign(self, expr):
-        from sympy import Abs
+        from sympy.functions.elementary.complexes import Abs
         arg, = expr.args
         if arg.is_integer:
             new_expr = merge(0, isign(1, arg), Eq(arg, 0))

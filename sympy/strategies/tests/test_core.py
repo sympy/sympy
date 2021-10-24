@@ -1,4 +1,4 @@
-from sympy import S
+from sympy.core.singleton import S
 from sympy.strategies.core import (null_safe, exhaust, memoize, condition,
         chain, tryit, do_one, debug, switch, minimize)
 

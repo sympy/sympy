@@ -15,11 +15,8 @@ from sympy.core.numbers import (
     ilcm as python_lcm,
 )
 
-from sympy import (
-    Float as SymPyReal,
-    Integer as SymPyInteger,
-    Rational as SymPyRational,
-)
+from sympy.core.numbers import (Float as SymPyReal, Integer as SymPyInteger, Rational as SymPyRational)
+
 
 if HAS_GMPY == 2:
     from gmpy2 import (

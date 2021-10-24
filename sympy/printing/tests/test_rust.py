@@ -9,7 +9,7 @@ from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import MatrixSymbol, SparseMatrix, Matrix
 
-from sympy import rust_code
+from sympy.printing.rust import rust_code
 
 x, y, z = symbols('x,y,z')
 

@@ -7,13 +7,15 @@ Contains
 
 from sympy.core import S
 from sympy.core.compatibility import ordered
-from sympy.core.symbol import _symbol
-from sympy import symbols, simplify, solve  # type:ignore
+from sympy.core.symbol import _symbol, symbols
 from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point, Point2D
 from sympy.geometry.line import Line, Line2D, Ray2D, Segment2D, LinearEntity3D
 from sympy.geometry.ellipse import Ellipse
 from sympy.functions import sign
+from sympy.simplify import simplify
+from sympy.solvers.solvers import solve
+
 
 class Parabola(GeometrySet):
     """A parabolic GeometryEntity.

@@ -25,7 +25,7 @@ from sympy.polys.polyquinticconst import PolyQuintic
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.rationaltools import together
 from sympy.polys.specialpolys import cyclotomic_poly
-from sympy.simplify import simplify, powsimp
+from sympy.simplify.simplify import simplify, powsimp
 from sympy.utilities import public
 
 

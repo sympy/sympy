@@ -17,10 +17,21 @@ RobustSoliton
 """
 
 
-from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
-                   Dummy, Eq, Intersection, Interval, log, Range,
-                   Symbol, Lambda, Piecewise, Or, Gt, Lt, Ge, Le, Contains)
-from sympy import beta as beta_fn
+from sympy.core.cache import cacheit
+from sympy.core.function import Lambda
+from sympy.core.numbers import (Integer, Rational)
+from sympy.core.relational import (Eq, Ge, Gt, Le, Lt)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import binomial
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.logic.boolalg import Or
+from sympy.sets.contains import Contains
+from sympy.sets.fancysets import Range
+from sympy.sets.sets import (Intersection, Interval)
+from sympy.functions.special.beta_functions import beta as beta_fn
 from sympy.stats.frv import (SingleFiniteDistribution,
                              SingleFinitePSpace)
 from sympy.stats.rv import _value_check, Density, is_random

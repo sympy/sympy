@@ -1,4 +1,4 @@
-from sympy import symbols
+from sympy.core.symbol import symbols
 from sympy.functions.special.spherical_harmonics import Ynm
 
 x, y = symbols('x,y')

@@ -8,7 +8,7 @@ from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
                             HadamardProduct, SparseMatrix)
 from sympy.functions.special.bessel import besseli
 
-from sympy import maple_code
+from sympy.printing.maple import maple_code
 
 x, y, z = symbols('x,y,z')
 

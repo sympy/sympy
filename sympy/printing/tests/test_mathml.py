@@ -1,15 +1,34 @@
-from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
-    tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
-    pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float, Matrix, Basic, \
-    S, MatrixSymbol, Function, Derivative, log, true, false, Range, Min, Max, \
-    Lambda, IndexedBase, symbols, zoo, elliptic_f, elliptic_e, elliptic_pi, Ei, \
-    expint, jacobi, gegenbauer, chebyshevt, chebyshevu, legendre, assoc_legendre, \
-    laguerre, assoc_laguerre, hermite, euler, stieltjes, mathieuc, mathieus, \
-    mathieucprime, mathieusprime, TribonacciConstant, Contains, LambertW, \
-    cot, coth, acot, acoth, csc, acsc, csch, acsch, sec, asec, sech, asech
+from sympy.concrete.summations import Sum
+from sympy.core.basic import Basic
+from sympy.core.function import (Derivative, Function, Lambda, diff)
+from sympy.core import (EulerGamma, GoldenRatio, TribonacciConstant)
+from sympy.core.numbers import (E, Float, I, Integer, Rational, oo, pi, zoo)
+from sympy.core.relational import (Eq, Ge, Lt, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.combinatorial.numbers import euler
+from sympy.functions.elementary.exponential import (LambertW, log)
+from sympy.functions.elementary.hyperbolic import (acosh, acoth, acsch, asech, asinh, atanh, cosh, coth, csch, sech, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import (Max, Min)
+from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
+from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f, elliptic_pi)
+from sympy.functions.special.error_functions import (Ei, expint)
+from sympy.functions.special.mathieu_functions import (mathieuc, mathieucprime, mathieus, mathieusprime)
+from sympy.functions.special.polynomials import (assoc_laguerre, assoc_legendre, chebyshevt, chebyshevu, gegenbauer, hermite, jacobi, laguerre, legendre)
+from sympy.functions.special.zeta_functions import stieltjes
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import (false, true)
+from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.series.limits import Limit
+from sympy.sets.contains import Contains
+from sympy.sets.fancysets import Range
+from sympy.tensor.indexed import IndexedBase
 
-from sympy import elliptic_k, totient, reduced_totient, primenu, primeomega, \
-    fresnelc, fresnels, Heaviside
+from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.elliptic_integrals import elliptic_k
+from sympy.functions.special.error_functions import (fresnelc, fresnels)
+from sympy.ntheory.factor_ import (primenu, primeomega, reduced_totient, totient)
 from sympy.calculus.util import AccumBounds
 from sympy.core.containers import Tuple
 from sympy.functions.combinatorial.factorials import factorial, factorial2, \
@@ -32,7 +51,7 @@ from sympy.sets.sets import FiniteSet, Union, Intersection, Complement, \
 from sympy.stats.rv import RandomSymbol
 from sympy.testing.pytest import raises
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
-from sympy import sympify
+from sympy.core.sympify import sympify
 
 x, y, z, a, b, c, d, e, n = symbols('x:z a:e n')
 mp = MathMLContentPrinter()
@@ -1192,7 +1211,8 @@ def test_toprettyxml_hooking():
 
 
 def test_print_domains():
-    from sympy import Complexes, Integers, Naturals, Naturals0, Reals
+    from sympy import Complexes
+    from sympy.sets import Integers, Naturals, Naturals0, Reals
 
     assert mpp.doprint(Complexes) == '<mi mathvariant="normal">&#x2102;</mi>'
     assert mpp.doprint(Integers) == '<mi mathvariant="normal">&#x2124;</mi>'
@@ -1992,7 +2012,7 @@ def test_mathml_special_matrices():
     assert mathml(OneMatrix(2, 2), printer='presentation') == '<mn>&#x1D7D9</mn>'
 
 def test_mathml_piecewise():
-    from sympy import Piecewise
+    from sympy.functions.elementary.piecewise import Piecewise
     # Content MathML
     assert mathml(Piecewise((x, x <= 1), (x**2, True))) == \
         '<piecewise><piece><ci>x</ci><apply><leq/><ci>x</ci><cn>1</cn></apply></piece><otherwise><apply><power/><ci>x</ci><cn>2</cn></apply></otherwise></piecewise>'

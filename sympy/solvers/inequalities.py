@@ -3,8 +3,7 @@
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Eq, Ge, Lt
-from sympy.sets import Interval
-from sympy.sets.sets import FiniteSet, Union, EmptySet, Intersection
+from sympy.sets.sets import EmptySet, Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
 
@@ -448,7 +447,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Interval.open(0, pi)
 
     """
-    from sympy import im
+    from sympy.functions.elementary.complexes import im
     from sympy.calculus.util import (continuous_domain, periodicity,
         function_range)
     from sympy.solvers.solvers import denoms

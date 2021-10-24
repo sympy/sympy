@@ -466,7 +466,7 @@ class Piecewise(Function):
         # -----------------------------------------------------------------------
         ok, abei = self._intervals(x)
         if not ok:
-            from sympy import Integral
+            from sympy.integrals.integrals import Integral
             return Integral(self, x)  # unevaluated
 
         pieces = [(a, b) for a, b, _, _ in abei]
@@ -608,7 +608,7 @@ class Piecewise(Function):
         # -----------------------------------------------------------------
         ok, abei = self._intervals(x)
         if not ok:
-            from sympy import Integral
+            from sympy.integrals.integrals import Integral
             # not being able to do the interval of f(x) can
             # be stated as not being able to do the integral
             # of f'(x) over the same range
@@ -995,7 +995,7 @@ class Piecewise(Function):
         return _canonical(last)
 
     def _eval_rewrite_as_KroneckerDelta(self, *args):
-        from sympy import KroneckerDelta
+        from sympy.functions.special.tensor_functions import KroneckerDelta
 
         rules = {
             And: [False, False],
@@ -1209,7 +1209,7 @@ def _clip(A, B, k):
 
 
 def piecewise_simplify_arguments(expr, **kwargs):
-    from sympy import simplify
+    from sympy.simplify.simplify import simplify
     args = []
     f1 = expr.args[0].cond.free_symbols
     if len(f1) == 1 and not expr.atoms(Eq):

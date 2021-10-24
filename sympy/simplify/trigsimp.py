@@ -1176,7 +1176,7 @@ def _futrig(e):
 def _is_Expr(e):
     """_eapply helper to tell whether ``e`` and all its args
     are Exprs."""
-    from sympy import Derivative
+    from sympy.core.function import Derivative
     if isinstance(e, Derivative):
         return _is_Expr(e.expr)
     if not isinstance(e, Expr):

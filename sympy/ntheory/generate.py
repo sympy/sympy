@@ -10,7 +10,8 @@ from itertools import count
 # memory consumption
 from array import array as _array
 
-from sympy import Function, S
+from sympy.core.function import Function
+from sympy.core.singleton import S
 from sympy.core.compatibility import as_int
 from .primetest import isprime
 

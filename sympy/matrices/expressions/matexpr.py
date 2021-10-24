@@ -454,6 +454,7 @@ class MatrixExpr(Expr):
         from .applyfunc import ElementwiseApplyFunction
         return ElementwiseApplyFunction(func, self)
 
+
 @dispatch(MatrixExpr, Expr)
 def _eval_is_eq(lhs, rhs): # noqa:F811
     return False
@@ -567,7 +568,7 @@ class MatrixElement(Expr):
 
     def __new__(cls, name, n, m):
         n, m = map(_sympify, (n, m))
-        from sympy import MatrixBase
+        from sympy.matrices.matrices import MatrixBase
         if isinstance(name, (MatrixBase,)):
             if n.is_Integer and m.is_Integer:
                 return name[n, m]
@@ -593,10 +594,11 @@ class MatrixElement(Expr):
         return self.args[1:]
 
     def _eval_derivative(self, v):
-        from sympy import Sum, symbols, Dummy
+        from sympy.concrete.summations import Sum
+        from sympy.core.symbol import (Dummy, symbols)
 
         if not isinstance(v, MatrixElement):
-            from sympy import MatrixBase
+            from sympy.matrices.matrices import MatrixBase
             if isinstance(self.parent, MatrixBase):
                 return self.parent.diff(v)[self.i, self.j]
             return S.Zero
@@ -834,7 +836,7 @@ class _LeftRightArgs:
 
 
 def _make_matrix(x):
-    from sympy import ImmutableDenseMatrix
+    from sympy.matrices.immutable import ImmutableDenseMatrix
     if isinstance(x, MatrixExpr):
         return x
     return ImmutableDenseMatrix([[x]])

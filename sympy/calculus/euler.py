@@ -3,7 +3,11 @@ This module implements a method to find
 Euler-Lagrange Equations for given Lagrangian.
 """
 from itertools import combinations_with_replacement
-from sympy import Function, sympify, diff, Eq, S, Symbol, Derivative
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
 from sympy.utilities.iterables import iterable
 
 

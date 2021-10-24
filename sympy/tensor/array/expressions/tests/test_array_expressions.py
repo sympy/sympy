@@ -1,7 +1,12 @@
 import random
 
-from sympy import symbols, ImmutableDenseNDimArray, tensorproduct, tensorcontraction, permutedims, MatrixSymbol, \
-    ZeroMatrix, sin, cos, DiagMatrix
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.expressions.diagonal import DiagMatrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.special import ZeroMatrix
+from sympy.tensor.array.arrayop import (permutedims, tensorcontraction, tensorproduct)
+from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 from sympy.combinatorics import Permutation
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol, ArrayElement, \
     PermuteDims, ArrayContraction, ArrayTensorProduct, ArrayDiagonal, \

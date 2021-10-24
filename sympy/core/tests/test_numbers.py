@@ -1,14 +1,28 @@
 import numbers as nums
 import decimal
-from sympy import (Rational, Symbol, Float, I, sqrt, cbrt, oo, nan, pi, E,
-                   Integer, S, factorial, Catalan, EulerGamma, GoldenRatio,
-                   TribonacciConstant, cos, exp,
-                   Number, zoo, log, Mul, Pow, Tuple, latex, Gt, Lt, Ge, Le,
-                   AlgebraicNumber, simplify, sin, fibonacci, RealField,
-                   sympify, srepr, Dummy, Sum)
+from sympy.concrete.summations import Sum
+from sympy.core import (EulerGamma, Catalan, TribonacciConstant,
+    GoldenRatio)
+from sympy.core.containers import Tuple
 from sympy.core.logic import fuzzy_not
-from sympy.core.numbers import (igcd, ilcm, igcdex, seterr,
-    igcd2, igcd_lehmer, mpf_norm, comp, mod_inverse)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (mpf_norm, mod_inverse, igcd, seterr,
+    igcd_lehmer, Integer, I, pi, comp, ilcm, Rational, E, nan, igcd2,
+    oo, AlgebraicNumber, igcdex, Number, Float, zoo)
+from sympy.core.power import Pow
+from sympy.core.relational import Ge, Gt, Le, Lt
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy, Symbol
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.combinatorial.numbers import fibonacci
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.miscellaneous import sqrt, cbrt
+from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.polys.domains.realfield import RealField
+from sympy.printing.latex import latex
+from sympy.printing.repr import srepr
+from sympy.simplify import simplify
 from sympy.core.power import integer_nthroot, isqrt, integer_log
 from sympy.polys.domains.groundtypes import PythonRational
 from sympy.utilities.decorator import conserve_mpmath_dps
@@ -1146,7 +1160,7 @@ def test_powers_Integer():
 
     # test that eval_power factors numbers bigger than
     # the current limit in factor_trial_division (2**15)
-    from sympy import nextprime
+    from sympy.ntheory.generate import nextprime
     n = nextprime(2**15)
     assert sqrt(n**2) == n
     assert sqrt(n**3) == n*sqrt(n)

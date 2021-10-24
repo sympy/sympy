@@ -215,7 +215,7 @@ def deltaproduct(f, limit):
     if not delta:
         g = _expand_delta(f, limit[0])
         if f != g:
-            from sympy import factor
+            from sympy.polys.polytools import factor
             try:
                 return factor(deltaproduct(g, limit))
             except AssertionError:

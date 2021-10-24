@@ -816,7 +816,7 @@ class MatrixBase(MatrixDeprecated,
 
     def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
-        from sympy import binomial
+        from sympy.functions.combinatorial.factorials import binomial
 
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
@@ -969,7 +969,7 @@ class MatrixBase(MatrixDeprecated,
         ========
         irregular - filling a matrix with irregular blocks
         """
-        from sympy.matrices.sparse import SparseMatrix
+        from sympy.matrices import SparseMatrix
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.matrices.expressions.blockmatrix import BlockMatrix
         from sympy.utilities.iterables import reshape
@@ -1459,7 +1459,7 @@ class MatrixBase(MatrixDeprecated,
         so that the dual is a covariant second rank tensor.
 
         """
-        from sympy import LeviCivita
+        from sympy.functions.special.tensor_functions import LeviCivita
         from sympy.matrices import zeros
 
         M, n = self[:, :], self.rows
@@ -1553,7 +1553,7 @@ class MatrixBase(MatrixDeprecated,
             parameter of f
 
         """
-        from sympy import diff
+        from sympy.core.function import diff
 
         f, x = _sympify(f), _sympify(x)
         if not self.is_square:
