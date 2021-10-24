@@ -2,7 +2,7 @@ from typing import Any, Dict, Tuple
 
 from itertools import product
 import re
-from sympy import sympify
+from sympy.core.sympify import sympify
 
 
 def mathematica(s, additional_translations=None):
