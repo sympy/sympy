@@ -1,6 +1,13 @@
 from collections import defaultdict
 
-from sympy import Sum, Mul, KroneckerDelta, Indexed, IndexedBase, Add, Pow, Integer, default_sort_key
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.compatibility import default_sort_key
+from sympy.core.mul import Mul
+from sympy.core.numbers import Integer
+from sympy.core.power import Pow
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.combinatorics import Permutation
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayDiagonal, \

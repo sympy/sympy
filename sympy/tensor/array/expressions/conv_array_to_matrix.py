@@ -4,8 +4,15 @@ from typing import Tuple, Union, FrozenSet, Dict, List, Optional
 from functools import singledispatch
 from itertools import accumulate
 
-from sympy import Trace, MatrixExpr, Transpose, DiagMatrix, Mul, ZeroMatrix, hadamard_product, S, Identity, ask, Q, \
-    OneMatrix
+from sympy.assumptions.ask import (Q, ask)
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
+from sympy.matrices.expressions.diagonal import DiagMatrix
+from sympy.matrices.expressions.hadamard import hadamard_product
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.special import (Identity, ZeroMatrix, OneMatrix)
+from sympy.matrices.expressions.trace import Trace
+from sympy.matrices.expressions.transpose import Transpose
 from sympy.combinatorics.permutations import _af_invert, Permutation
 from sympy.matrices.common import MatrixCommon
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
@@ -587,7 +594,7 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
 
 def _a2m_mul(*args):
     if not any(isinstance(i, _CodegenArrayAbstract) for i in args):
-        from sympy import MatMul
+        from sympy.matrices.expressions.matmul import MatMul
         return MatMul(*args).doit()
     else:
         return ArrayContraction(
@@ -617,7 +624,7 @@ def _a2m_tensor_product(*args):
 
 def _a2m_add(*args):
     if not any(isinstance(i, _CodegenArrayAbstract) for i in args):
-        from sympy import MatAdd
+        from sympy.matrices.expressions.matadd import MatAdd
         return MatAdd(*args).doit()
     else:
         return ArrayAdd(*args)
@@ -627,7 +634,7 @@ def _a2m_trace(arg):
     if isinstance(arg, _CodegenArrayAbstract):
         return ArrayContraction(arg, (0, 1))
     else:
-        from sympy import Trace
+        from sympy.matrices.expressions.trace import Trace
         return Trace(arg)
 
 
@@ -635,7 +642,7 @@ def _a2m_transpose(arg):
     if isinstance(arg, _CodegenArrayAbstract):
         return PermuteDims(arg, [1, 0])
     else:
-        from sympy import Transpose
+        from sympy.matrices.expressions.transpose import Transpose
         return Transpose(arg).doit()
 
 
