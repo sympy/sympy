@@ -901,6 +901,10 @@ def test_issue_18508():
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='-') == -sqrt(2)
 
 
+def test_issue_18521():
+    raises(NotImplementedError, lambda: limit(exp((2 - n) * x), x, oo))
+
+
 def test_issue_18969():
     a, b = symbols('a b', positive=True)
     assert limit(LambertW(a), a, b) == LambertW(b)
