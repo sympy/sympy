@@ -3,8 +3,15 @@ This module implements Holonomic Functions and
 various operations on them.
 """
 
-from sympy import (Symbol, S, Dummy, Order, rf, I,
-    solve, limit, Float, nsimplify, gamma)
+from sympy.core.numbers import (Float, I)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.functions.combinatorial.factorials import rf
+from sympy.functions.special.gamma_functions import gamma
+from sympy.series.limits import limit
+from sympy.series.order import Order
+from sympy.simplify.simplify import nsimplify
+from sympy.solvers.solvers import solve
 from sympy.core.compatibility import ordered
 from sympy.core.numbers import NaN, Infinity, NegativeInfinity
 from sympy.core.sympify import sympify
@@ -2856,8 +2863,12 @@ def _create_table(table, domain=QQ):
     R = domain.old_poly_ring(x_1)
     _, Dx = DifferentialOperators(R, 'Dx')
 
-    from sympy import (sin, cos, log, erf, sqrt, pi,
-        sinh, cosh, sinc, erfc, Si, Ci, Shi, erfi)
+    from sympy.core.numbers import pi
+    from sympy.functions.elementary.exponential import log
+    from sympy.functions.elementary.hyperbolic import (cosh, sinh)
+    from sympy.functions.elementary.miscellaneous import sqrt
+    from sympy.functions.elementary.trigonometric import (cos, sin, sinc)
+    from sympy.functions.special.error_functions import (Ci, Shi, Si, erf, erfc, erfi)
 
     # add some basic functions
     add(sin(x_1), Dx**2 + 1, x_1, 0, [0, 1])
