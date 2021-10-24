@@ -1,11 +1,18 @@
-from sympy import (S, Dummy, Lambda, symbols, Interval, Intersection, Set,
-                   EmptySet, FiniteSet, Union, ComplexRegion, Mul)
+from sympy.core.function import Lambda
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.sets.fancysets import ComplexRegion
+from sympy.sets.sets import (FiniteSet, Intersection, Interval, Set, Union)
 from sympy.multipledispatch import dispatch
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
     ImageSet, Rationals)
 from sympy.sets.sets import UniversalSet, imageset, ProductSet
 from sympy.simplify.radsimp import numer
+
+
+EmptySet = S.EmptySet
 
 @dispatch(ConditionSet, ConditionSet)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
@@ -136,7 +143,7 @@ def intersection_sets(a, b): # noqa:F811
 
     from sympy.solvers.diophantine.diophantine import diop_linear
     from sympy.core.numbers import ilcm
-    from sympy import sign
+    from sympy.functions.elementary.complexes import sign
 
     # this equation represents the values of the Range;
     # it's a linear equation

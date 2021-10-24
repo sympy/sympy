@@ -1,4 +1,5 @@
-from sympy import Set, S
+from sympy.core.singleton import S
+from sympy.sets.sets import Set
 from sympy.calculus.singularities import singularities
 from sympy.core import Expr, Add
 from sympy.core.function import Lambda, FunctionClass, diff
