@@ -1,6 +1,11 @@
 """Tests on algebraic numbers. """
 
-from sympy import S, Rational, Symbol, Poly, sqrt, I, Tuple, AlgebraicNumber
+from sympy.core.containers import Tuple
+from sympy.core.numbers import (AlgebraicNumber, I, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.polys.polytools import Poly
 from sympy.testing.pytest import raises
 from sympy.polys.numberfields.numbers import (
     to_number_field,

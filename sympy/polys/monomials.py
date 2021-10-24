@@ -180,7 +180,7 @@ def monomial_count(V, N):
     6
 
     """
-    from sympy import factorial
+    from sympy.functions.combinatorial.factorials import factorial
     return factorial(V + N) / factorial(V) / factorial(N)
 
 def monomial_mul(A, B):

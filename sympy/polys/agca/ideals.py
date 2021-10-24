@@ -365,7 +365,7 @@ class ModuleImplementedIdeal(Ideal):
         return self._module.is_full_module()
 
     def __repr__(self):
-        from sympy import sstr
+        from sympy.printing.str import sstr
         return '<' + ','.join(sstr(x) for [x] in self._module.gens) + '>'
 
     # NOTE this is the only method using the fact that the module is a SubModule
