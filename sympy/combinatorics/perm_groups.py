@@ -1,7 +1,8 @@
 from random import randrange, choice
 from math import log
 from sympy.ntheory import primefactors
-from sympy import multiplicity, factorint, Symbol
+from sympy.core.symbol import Symbol
+from sympy.ntheory.factor_ import (factorint, multiplicity)
 
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import (_af_commutes_with, _af_invert,
