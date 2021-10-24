@@ -1186,7 +1186,7 @@ def least_rotation(x, key=None):
     .. [1] https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
 
     '''
-    from sympy import Id
+    from sympy.functions.elementary.miscellaneous import Id
     if key is None: key = Id
     S = x + x      # Concatenate string to it self to avoid modular arithmetic
     f = [-1] * len(S)     # Failure function
@@ -2326,7 +2326,7 @@ def minlex(seq, directed=True, key=None):
     ('c', 'a', 'bb', 'aaa')
 
     """
-    from sympy import Id
+    from sympy.functions.elementary.miscellaneous import Id
     if key is None: key = Id
     best = rotate_left(seq, least_rotation(seq, key=key))
     if not directed:
