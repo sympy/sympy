@@ -108,14 +108,25 @@ from sympy.integrals.rubi.utility_function import (Set, With, Module,
 # EllipticF, ArcCot, ArcCoth, Tanh, Cosh, Sech, ArcSec, ArcSech, Subst,
 # SqrtNumberSumQ, Sin, Cos, Tan, Cot, Sec, Csc, Csch, TrigHyperbolicFreeQ,
 # InverseFunctionFreeQ, RealQ,
+
+from sympy.core.add import Add
 from sympy.core.expr import unchanged
-from sympy.core.symbol import symbols, S
-from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec, atan2
+from sympy.core.numbers import (E, I, oo, pi, zoo)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (symbols, Symbol, Wild)
+from sympy.functions.elementary.exponential import exp, log as sym_log
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acsch, cosh, sinh, tanh, coth, sech, csch, acoth
-from sympy.functions import (sin, cos, tan, cot, sec, csc, sqrt, log as sym_log)
-from sympy import (I, E, pi, hyper, Add, Wild, simplify, Symbol, exp, Pow, li, Ei, expint,
-    Si, Ci, Shi, Chi, loggamma, zeta, zoo, gamma, polylog, oo, polygamma)
-from sympy import Integral, nsimplify, Min
+from sympy.functions.elementary.miscellaneous import Min, sqrt
+from sympy.functions.elementary.trigonometric import (cos, cot, csc, sec, sin, tan, atan, acsc, asin, acot, acos, asec, atan2)
+from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, expint, li)
+from sympy.functions.special.gamma_functions import (gamma, loggamma, polygamma)
+from sympy.functions.special.hyper import hyper
+from sympy.functions.special.zeta_functions import (polylog, zeta)
+from sympy.integrals.integrals import Integral
+from sympy.simplify.simplify import (nsimplify, simplify)
+
+
 A, B, a, b, c, d, e, f, g, h, y, z, m, n, p, q, u, v, w, F = symbols('A B a b c d e f g h y z m n p q u v w F', real=True, imaginary=False)
 x = Symbol('x')
 
@@ -2022,7 +2033,7 @@ def test_PolyGamma():
     assert PolyGamma(S(2), S(3)) == polygamma(2, 3)
 
 def test_ProductLog():
-    from sympy import N
+    from sympy.core.evalf import N
     assert N(ProductLog(S(5.0)), 5) == N(1.32672466524220, 5)
     assert N(ProductLog(S(2), S(3.5)), 5) == N(-1.14064876353898 + 10.8912237027092*I, 5)
 

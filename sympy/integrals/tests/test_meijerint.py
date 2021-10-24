@@ -1,6 +1,16 @@
-from sympy import (meijerg, I, S, integrate, Integral, oo, gamma, cosh, sinc,
-                   hyperexpand, exp, simplify, sqrt, pi, erf, erfc, sin, cos,
-                   exp_polar, polygamma, hyper, log, expand_func, Rational)
+from sympy.core.function import expand_func
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import (exp, exp_polar, log)
+from sympy.functions.elementary.hyperbolic import cosh
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin, sinc)
+from sympy.functions.special.error_functions import (erf, erfc)
+from sympy.functions.special.gamma_functions import (gamma, polygamma)
+from sympy.functions.special.hyper import (hyper, meijerg)
+from sympy.integrals.integrals import (Integral, integrate)
+from sympy.simplify.hyperexpand import hyperexpand
+from sympy.simplify.simplify import simplify
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
         meijerint_indefinite, _inflate_g, _create_lookup_table,
         meijerint_definite, meijerint_inversion)
@@ -28,7 +38,7 @@ def test_rewrite_single():
     tn(x**y)
 
     def u(expr, x):
-        from sympy import Add
+        from sympy.core.add import Add
         r = _rewrite_single(expr, x)
         e = Add(*[res[0]*res[2] for res in r[0]]).replace(
             exp_polar, exp)  # XXX Hack?
@@ -86,7 +96,7 @@ def test_inflate():
             d: randcplx(), y: randcplx()/10}
 
     def t(a, b, arg, n):
-        from sympy import Mul
+        from sympy.core.mul import Mul
         m1 = meijerg(a, b, arg)
         m2 = Mul(*_inflate_g(m1, n))
         # NOTE: (the random number)**9 must still be on the principal sheet.
@@ -98,7 +108,7 @@ def test_inflate():
 
 
 def test_recursive():
-    from sympy import symbols
+    from sympy.core.symbol import symbols
     a, b, c = symbols('a b c', positive=True)
     r = exp(-(x - a)**2)*exp(-(x - b)**2)
     e = integrate(r, (x, 0, oo), meijerg=True)
@@ -117,7 +127,9 @@ def test_recursive():
 
 @slow
 def test_meijerint():
-    from sympy import symbols, expand, arg
+    from sympy.core.function import expand
+    from sympy.core.symbol import symbols
+    from sympy.functions.elementary.complexes import arg
     s, t, mu = symbols('s t mu', real=True)
     assert integrate(meijerg([], [], [0], [], s*t)
                      *meijerg([], [], [mu/2], [-mu/2], t**2/4),
@@ -187,7 +199,8 @@ def test_meijerint():
     # (This is besselj*besselj in disguise, to stop the product from being
     #  recognised in the tables.)
     a, b, s = symbols('a b s')
-    from sympy import And, re
+    from sympy.functions.elementary.complexes import re
+    from sympy.logic.boolalg import And
     assert meijerint_definite(meijerg([], [], [a/2], [-a/2], x/4)
                   *meijerg([], [], [b/2], [-b/2], x/4)*x**(s - 1), x, 0, oo) == \
         (4*2**(2*s - 2)*gamma(-2*s + 1)*gamma(a/2 + b/2 + s)
@@ -204,7 +217,7 @@ def test_meijerint():
         (sqrt(pi)*polygamma(0, S.Half)/4).expand()
 
     # Test hyperexpand bug.
-    from sympy import lowergamma
+    from sympy.functions.special.gamma_functions import lowergamma
     n = symbols('n', integer=True)
     assert simplify(integrate(exp(-x)*x**n, x, meijerg=True)) == \
         lowergamma(n + 1, x)
@@ -222,7 +235,7 @@ def test_meijerint():
 
 
 def test_bessel():
-    from sympy import besselj, besseli
+    from sympy.functions.special.bessel import (besseli, besselj)
     assert simplify(integrate(besselj(a, z)*besselj(b, z)/z, (z, 0, oo),
                      meijerg=True, conds='none')) == \
         2*sin(pi*(a/2 - b/2))/(pi*(a - b)*(a + b))
@@ -270,7 +283,9 @@ def test_bessel():
 
 
 def test_inversion():
-    from sympy import piecewise_fold, besselj, Heaviside
+    from sympy.functions.elementary.piecewise import piecewise_fold
+    from sympy.functions.special.bessel import besselj
+    from sympy.functions.special.delta_functions import Heaviside
 
     def inv(f):
         return piecewise_fold(meijerint_inversion(f, s, t))
@@ -286,7 +301,8 @@ def test_inversion():
 
 
 def test_inversion_conditional_output():
-    from sympy import Symbol, InverseLaplaceTransform
+    from sympy.core.symbol import Symbol
+    from sympy.integrals.transforms import InverseLaplaceTransform
 
     a = Symbol('a', positive=True)
     F = sqrt(pi/a)*exp(-2*sqrt(a)*sqrt(s))
@@ -306,7 +322,8 @@ def test_inversion_conditional_output():
 
 
 def test_inversion_exp_real_nonreal_shift():
-    from sympy import Symbol, DiracDelta
+    from sympy.core.symbol import Symbol
+    from sympy.functions.special.delta_functions import DiracDelta
     r = Symbol('r', real=True)
     c = Symbol('c', extended_real=False)
     a = 1 + 2*I
@@ -322,7 +339,7 @@ def test_inversion_exp_real_nonreal_shift():
 @slow
 def test_lookup_table():
     from random import uniform, randrange
-    from sympy import Add
+    from sympy.core.add import Add
     from sympy.integrals.meijerint import z as z_dummy
     table = {}
     _create_lookup_table(table)
@@ -353,7 +370,8 @@ def test_lookup_table():
 
 
 def test_branch_bug():
-    from sympy import powdenest, lowergamma
+    from sympy.functions.special.gamma_functions import lowergamma
+    from sympy.simplify.powsimp import powdenest
     # TODO gammasimp cannot prove that the factor is unity
     assert powdenest(integrate(erf(x**3), x, meijerg=True).diff(x),
            polar=True) == 2*erf(x**3)*gamma(Rational(2, 3))/3/gamma(Rational(5, 3))
@@ -363,7 +381,7 @@ def test_branch_bug():
 
 
 def test_linear_subs():
-    from sympy import besselj
+    from sympy.functions.special.bessel import besselj
     assert integrate(sin(x - 1), x, meijerg=True) == -cos(1 - x)
     assert integrate(besselj(1, x - 1), x, meijerg=True) == -besselj(0, 1 - x)
 
@@ -371,7 +389,11 @@ def test_linear_subs():
 @slow
 def test_probability():
     # various integrals from probability theory
-    from sympy import symbols, Symbol, Abs, expand_mul, gammasimp, powsimp
+    from sympy.core.function import expand_mul
+    from sympy.core.symbol import (Symbol, symbols)
+    from sympy.functions.elementary.complexes import Abs
+    from sympy.simplify.gammasimp import gammasimp
+    from sympy.simplify.powsimp import powsimp
     mu1, mu2 = symbols('mu1 mu2', nonzero=True)
     sigma1, sigma2 = symbols('sigma1 sigma2', positive=True)
     rate = Symbol('lambda', positive=True)
@@ -541,7 +563,7 @@ def test_probability():
         lamda**n*gamma(1 + n/k)
 
     # rice distribution
-    from sympy import besseli
+    from sympy.functions.special.bessel import besseli
     nu, sigma = symbols('nu sigma', positive=True)
     rice = x/sigma**2*exp(-(x**2 + nu**2)/2/sigma**2)*besseli(0, x*nu/sigma**2)
     assert integrate(rice, (x, 0, oo), meijerg=True) == 1
@@ -567,8 +589,10 @@ def test_probability():
 @slow
 def test_expint():
     """ Test various exponential integrals. """
-    from sympy import (expint, unpolarify, Symbol, Ci, Si, Shi, Chi,
-                       sinh, Ei)
+    from sympy.core.symbol import Symbol
+    from sympy.functions.elementary.complexes import unpolarify
+    from sympy.functions.elementary.hyperbolic import sinh
+    from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, expint)
     assert simplify(unpolarify(integrate(exp(-z*x)/x**y, (x, 1, oo),
                 meijerg=True, conds='none'
                 ).rewrite(expint).expand(func=True))) == expint(y, z)
@@ -619,9 +643,14 @@ def test_expint():
 
 
 def test_messy():
-    from sympy import (laplace_transform, Si, Shi, Chi, atan, Piecewise,
-                       acoth, E1, besselj, acosh, asin, And, re,
-                       fourier_transform)
+    from sympy.functions.elementary.complexes import re
+    from sympy.functions.elementary.hyperbolic import (acosh, acoth)
+    from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.functions.elementary.trigonometric import (asin, atan)
+    from sympy.functions.special.bessel import besselj
+    from sympy.functions.special.error_functions import (Chi, E1, Shi, Si)
+    from sympy.integrals.transforms import (fourier_transform, laplace_transform)
+    from sympy.logic.boolalg import And
     assert laplace_transform(Si(x), x, s) == ((-atan(s) + pi/2)/s, 0, True)
 
     assert laplace_transform(Shi(x), x, s) == (acoth(s)/s, 1, s > 1)
@@ -669,7 +698,7 @@ def test_issue_6348():
 
 
 def test_fresnel():
-    from sympy import fresnels, fresnelc
+    from sympy.functions.special.error_functions import (fresnelc, fresnels)
 
     assert expand_func(integrate(sin(pi*x**2/2), x)) == fresnels(x)
     assert expand_func(integrate(cos(pi*x**2/2), x)) == fresnelc(x)
@@ -697,13 +726,13 @@ def test_issue_10211():
 
 
 def test_issue_11806():
-    from sympy import symbols
+    from sympy.core.symbol import symbols
     y, L = symbols('y L', positive=True)
     assert integrate(1/sqrt(x**2 + y**2)**3, (x, -L, L)) == \
         2*L/(y**2*sqrt(L**2 + y**2))
 
 def test_issue_10681():
-    from sympy import RR
+    from sympy.polys.domains.realfield import RR
     from sympy.abc import R, r
     f = integrate(r**2*(R**2-r**2)**0.5, r, meijerg=True)
     g = (1.0/3)*R**1.0*r**3*hyper((-0.5, Rational(3, 2)), (Rational(5, 2),),
@@ -711,13 +740,13 @@ def test_issue_10681():
     assert RR.almosteq((f/g).n(), 1.0, 1e-12)
 
 def test_issue_13536():
-    from sympy import Symbol
+    from sympy.core.symbol import Symbol
     a = Symbol('a', real=True, positive=True)
     assert integrate(1/x**2, (x, oo, a)) == -1/a
 
 
 def test_issue_6462():
-    from sympy import Symbol
+    from sympy.core.symbol import Symbol
     x = Symbol('x')
     n = Symbol('n')
     # Not the actual issue, still wrong answer for n = 1, but that there is no
