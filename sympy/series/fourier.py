@@ -1,6 +1,7 @@
 """Fourier Series"""
 
-from sympy import pi, oo, Wild
+from sympy.core.numbers import (oo, pi)
+from sympy.core.symbol import Wild
 from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.containers import Tuple

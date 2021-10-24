@@ -16,7 +16,7 @@ from sympy.sets.sets import Interval, Intersection
 from sympy.simplify import simplify
 from sympy.tensor.indexed import Idx
 from sympy.utilities.iterables import flatten, is_sequence, iterable
-from sympy import expand
+from sympy.core.function import expand
 
 
 ###############################################################################
