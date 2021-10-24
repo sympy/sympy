@@ -1,13 +1,20 @@
-from sympy import (Symbol, S, exp, log, sqrt, oo, E, zoo, pi, tan, sin, cos,
-                   cot, sec, csc, Abs, symbols, I, re, simplify,
-                   expint, Rational, Piecewise, MatrixSymbol, Min, Max)
+from sympy.core.numbers import (E, I, Rational, oo, pi, zoo)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (Abs, re)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, cot, csc, sec, sin, tan)
+from sympy.functions.special.error_functions import expint
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.simplify.simplify import simplify
 from sympy.calculus.util import (function_range, continuous_domain, not_empty_in,
                                  periodicity, lcim, AccumBounds, is_convex,
                                  stationary_points, minimum, maximum)
 from sympy.core import Add, Mul, Pow
 from sympy.core.expr import unchanged
-from sympy.sets.sets import (Interval, FiniteSet, EmptySet, Complement,
-                            Union)
+from sympy.sets.sets import (EmptySet, Interval, FiniteSet, Complement, Union)
 from sympy.testing.pytest import raises, _both_exp_pow, XFAIL
 from sympy.abc import x
 

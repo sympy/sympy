@@ -17,7 +17,8 @@ for:
 
 """
 
-from sympy import Derivative, S
+from sympy.core.function import Derivative
+from sympy.core.singleton import S
 from sympy.core.decorators import deprecated
 from sympy.core.function import Subs
 from sympy.core.traversal import preorder_traversal
