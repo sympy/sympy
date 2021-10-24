@@ -1,7 +1,12 @@
 from sympy.vector.vector import Vector
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.functions import express, matrix_to_vector, orthogonalize
-from sympy import symbols, S, sqrt, sin, cos, ImmutableMatrix as Matrix, Rational
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 from sympy.testing.pytest import raises
 
 N = CoordSys3D('N')
