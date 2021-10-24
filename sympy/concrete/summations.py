@@ -428,7 +428,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Sum.is_absolutely_convergent()
         sympy.concrete.products.Product.is_convergent()
         """
-        from sympy import Interval, Integral, log, symbols, simplify
+        from sympy.core.symbol import symbols
+        from sympy.functions.elementary.exponential import log
+        from sympy.integrals.integrals import Integral
+        from sympy.sets.sets import Interval
+        from sympy.simplify.simplify import simplify
         p, q, r = symbols('p q r', cls=Wild)
 
         sym = self.limits[0][0]
@@ -1202,7 +1206,8 @@ def eval_sum_symbolic(f, limits):
         r = gosper_sum(f, (i, a, b))
 
         if isinstance(r, (Mul,Add)):
-            from sympy import ordered, Tuple
+            from sympy.core.compatibility import ordered
+            from sympy.core.containers import Tuple
             non_limit = r.free_symbols - Tuple(*limits[1:]).free_symbols
             den = denom(together(r))
             den_sym = non_limit & den.free_symbols
