@@ -247,6 +247,7 @@ from sympy.concrete.summations import summation
 from sympy.core.function import expand
 from sympy.core.numbers import nan
 from sympy.core.singleton import S
+from sympy.core.symbol import Dummy as var
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.integers import floor
 from sympy.matrices.dense import eye, Matrix, zeros
