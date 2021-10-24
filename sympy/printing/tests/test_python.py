@@ -1,6 +1,14 @@
-from sympy import (Symbol, symbols, oo, limit, Rational, Integral, Derivative,
-    log, exp, sqrt, pi, Function, sin, Eq, Ge, Le, Gt, Lt, Ne, Abs, conjugate,
-    I, Matrix)
+from sympy.core.function import (Derivative, Function)
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (Abs, conjugate)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
+from sympy.integrals.integrals import Integral
+from sympy.matrices.dense import Matrix
+from sympy.series.limits import limit
 
 from sympy.printing.python import python
 

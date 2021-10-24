@@ -29,7 +29,7 @@ else:
     disabled = True
 
 import sympy as sy
-from sympy import S
+from sympy.core.singleton import S
 from sympy.abc import x, y, z, t
 from sympy.printing.theanocode import (theano_code, dim_handling,
         theano_function)
@@ -607,7 +607,7 @@ def test_Relationals():
 def test_complexfunctions():
     with warns_deprecated_sympy():
         xt, yt = theano_code_(x, dtypes={x:'complex128'}), theano_code_(y, dtypes={y: 'complex128'})
-    from sympy import conjugate
+    from sympy.functions.elementary.complexes import conjugate
     from theano.tensor import as_tensor_variable as atv
     from theano.tensor import complex as cplx
     with warns_deprecated_sympy():

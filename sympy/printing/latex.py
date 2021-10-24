@@ -306,7 +306,9 @@ class LatexPrinter(Printer):
         ``first=True`` specifies that this expr is the first to appear in
         a Mul.
         """
-        from sympy import Integral, Product, Sum
+        from sympy.concrete.products import Product
+        from sympy.concrete.summations import Sum
+        from sympy.integrals.integrals import Integral
 
         if expr.is_Mul:
             if not first and expr.could_extract_minus_sign():
@@ -1049,7 +1051,7 @@ class LatexPrinter(Printer):
         return self._do_exponent(tex, exp)
 
     def _print_Not(self, e):
-        from sympy import Equivalent, Implies
+        from sympy.logic.boolalg import (Equivalent, Implies)
         if isinstance(e.args[0], Equivalent):
             return self._print_Equivalent(e.args[0], r"\not\Leftrightarrow")
         if isinstance(e.args[0], Implies):
@@ -1690,7 +1692,7 @@ class LatexPrinter(Printer):
             return r"%s^{\dagger}" % self._print(mat)
 
     def _print_MatMul(self, expr):
-        from sympy import MatMul
+        from sympy.matrices.expressions.matmul import MatMul
 
         parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
                                              False)
