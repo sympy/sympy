@@ -1,6 +1,8 @@
 """Utilities to deal with sympy.Matrix, numpy and scipy.sparse."""
 
-from sympy import MatrixBase, I, Expr, Integer
+from sympy.core.expr import Expr
+from sympy.core.numbers import (I, Integer)
+from sympy.matrices.matrices import MatrixBase
 from sympy.matrices import eye, zeros
 from sympy.external import import_module
 

@@ -16,7 +16,7 @@ Todo:
 
 from typing import List, Dict
 
-from sympy import Mul
+from sympy.core.mul import Mul
 from sympy.external import import_module
 from sympy.physics.quantum.gate import Gate, OneQubitGate, CGate, CGateS
 from sympy.core.core import BasicMeta

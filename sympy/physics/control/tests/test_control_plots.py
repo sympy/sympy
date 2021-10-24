@@ -1,4 +1,7 @@
-from sympy import Dummy, arg, I, Abs, log
+from sympy.core.numbers import I
+from sympy.core.symbol import Dummy
+from sympy.functions.elementary.complexes import (Abs, arg)
+from sympy.functions.elementary.exponential import log
 from sympy.abc import s, p, a
 from sympy.external import import_module
 from sympy.physics.control.control_plots import \

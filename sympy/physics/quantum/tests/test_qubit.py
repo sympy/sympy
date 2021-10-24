@@ -1,6 +1,10 @@
 import random
 
-from sympy import Integer, Matrix, Rational, sqrt, symbols, S
+from sympy.core.numbers import (Integer, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.dense import Matrix
 from sympy.physics.quantum.qubit import (measure_all, measure_partial,
                                          matrix_to_qubit, matrix_to_density,
                                          qubit_to_matrix, IntQubit,

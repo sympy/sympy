@@ -1,5 +1,9 @@
-from sympy import (symbols, sin, cos, pi, zeros, eye, simplify, ImmutableMatrix
-                   as Matrix)
+from sympy.core.numbers import pi
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.dense import (eye, zeros)
+from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
+from sympy.simplify.simplify import simplify
 from sympy.physics.vector import (ReferenceFrame, Vector, CoordinateSym,
                                   dynamicsymbols, time_derivative, express,
                                   dot)

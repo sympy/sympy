@@ -15,8 +15,13 @@ from typing import Dict as tDict
 import collections
 from functools import reduce
 
-from sympy import (Matrix, S, Symbol, sympify, Basic, Tuple, Dict,
-    default_sort_key)
+from sympy.core.basic import Basic
+from sympy.core.compatibility import default_sort_key
+from sympy.core.containers import (Dict, Tuple)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.matrices.dense import Matrix
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.core.expr import Expr
 from sympy.core.power import Pow

@@ -4,7 +4,11 @@ Todo:
 * Sometimes the final result needs to be expanded, we should do this by hand.
 """
 
-from sympy import Add, Mul, Pow, sympify, S
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator

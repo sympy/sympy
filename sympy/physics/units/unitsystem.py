@@ -4,7 +4,11 @@ Unit system for physical quantities; include definition of constants.
 
 from typing import Dict
 
-from sympy import S, Mul, Pow, Add, Function, Derivative
+from sympy.core.add import Add
+from sympy.core.function import (Derivative, Function)
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.singleton import S
 from sympy.physics.units.dimensions import _QuantityMapper
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning

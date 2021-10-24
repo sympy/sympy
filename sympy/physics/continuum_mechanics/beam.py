@@ -13,11 +13,14 @@ from sympy.series import limit
 from sympy.plotting import plot, PlotGrid
 from sympy.geometry.entity import GeometryEntity
 from sympy.external import import_module
-from sympy import lambdify, Add
+from sympy.core.add import Add
+from sympy.utilities.lambdify import lambdify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import iterable
 
 numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
+
+
 
 class Beam:
     """
@@ -877,7 +880,9 @@ class Beam:
     def max_shear_force(self):
         """Returns maximum Shear force and its coordinate
         in the Beam object."""
-        from sympy import solve, Mul, Interval
+        from sympy.core.mul import Mul
+        from sympy.sets.sets import Interval
+        from sympy.solvers.solvers import solve
         shear_curve = self.shear_force()
         x = self.variable
 
@@ -962,7 +967,9 @@ class Beam:
     def max_bmoment(self):
         """Returns maximum Shear force and its coordinate
         in the Beam object."""
-        from sympy import solve, Mul, Interval
+        from sympy.core.mul import Mul
+        from sympy.sets.sets import Interval
+        from sympy.solvers.solvers import solve
         bending_curve = self.bending_moment()
         x = self.variable
 
@@ -1041,7 +1048,7 @@ class Beam:
         >>> b.point_cflexure()
         [10/3]
         """
-        from sympy import solve
+        from sympy.solvers.solvers import solve
 
         # To restrict the range within length of the Beam
         moment_curve = Piecewise((float("nan"), self.variable<=0),
@@ -1256,7 +1263,7 @@ class Beam:
         Returns point of max deflection and its corresponding deflection value
         in a Beam object.
         """
-        from sympy import solve
+        from sympy.solvers.solvers import solve
 
         # To restrict the range within length of the Beam
         slope_curve = Piecewise((float("nan"), self.variable<=0),
@@ -2128,7 +2135,7 @@ class Beam:
         x = self.variable
 
         # checking whether length is an expression in terms of any Symbol.
-        from sympy import Expr
+        from sympy.core.expr import Expr
         if isinstance(self.length, Expr):
             l = list(self.length.atoms(Symbol))
             # assigning every Symbol a default value of 10
@@ -2668,7 +2675,9 @@ class Beam3D(Beam):
         return self.bending_moment()[0]
 
     def solve_slope_deflection(self):
-        from sympy import dsolve, Function, Derivative, Eq
+        from sympy.core.function import (Derivative, Function)
+        from sympy.core.relational import Eq
+        from sympy.solvers.ode.ode import dsolve
         x = self.variable
         l = self.length
         E = self.elastic_modulus
@@ -3347,7 +3356,7 @@ class Beam3D(Beam):
 
         elif dir == 'z':
             dir_num = 2
-        from sympy import solve
+        from sympy.solvers.solvers import solve
 
         if not self.shear_force()[dir_num]:
             return (0,0)
@@ -3424,7 +3433,7 @@ class Beam3D(Beam):
         elif dir == 'z':
             dir_num = 2
 
-        from sympy import solve
+        from sympy.solvers.solvers import solve
 
         if not self.bending_moment()[dir_num]:
             return (0,0)
@@ -3502,7 +3511,7 @@ class Beam3D(Beam):
 
         elif dir == 'z':
             dir_num = 2
-        from sympy import solve
+        from sympy.solvers.solvers import solve
 
         if not self.deflection()[dir_num]:
             return (0,0)

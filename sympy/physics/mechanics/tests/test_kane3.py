@@ -1,4 +1,9 @@
-from sympy import evalf, symbols, pi, sin, cos, sqrt, acos, Matrix
+from sympy import evalf
+from sympy.core.numbers import pi
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, cos, sin)
+from sympy.matrices.dense import Matrix
 from sympy.physics.mechanics import (ReferenceFrame, dynamicsymbols, inertia,
                                      KanesMethod, RigidBody, Point, dot, msubs)
 from sympy.testing.pytest import slow, ON_TRAVIS, skip

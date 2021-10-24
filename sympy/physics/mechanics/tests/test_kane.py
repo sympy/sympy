@@ -1,6 +1,6 @@
 from sympy.core.backend import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
                                 zeros)
-from sympy import simplify
+from sympy.simplify.simplify import simplify
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
                                      dot)
