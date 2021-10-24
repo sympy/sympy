@@ -1,8 +1,12 @@
 # conceal the implicit import from the code quality tester
-from sympy import (exp, gamma, integrate, oo, pi, sqrt, Symbol, symbols,
-        besseli, laplace_transform, fourier_transform, mellin_transform,
-        inverse_fourier_transform, inverse_laplace_transform,
-        inverse_mellin_transform)
+from sympy.core.numbers import (oo, pi)
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.bessel import besseli
+from sympy.functions.special.gamma_functions import gamma
+from sympy.integrals.integrals import integrate
+from sympy.integrals.transforms import (fourier_transform, inverse_fourier_transform, inverse_laplace_transform, inverse_mellin_transform, laplace_transform, mellin_transform)
 
 LT = laplace_transform
 FT = fourier_transform
