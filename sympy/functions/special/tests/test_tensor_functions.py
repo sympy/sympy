@@ -1,7 +1,9 @@
-from sympy import (
-    adjoint, conjugate, Dummy, Eijk, KroneckerDelta, LeviCivita, Symbol,
-    symbols, transpose, Piecewise, Ne
-)
+from sympy.core.relational import Ne
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.complexes import (adjoint, conjugate, transpose)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.tensor_functions import (Eijk, KroneckerDelta, LeviCivita)
+
 from sympy.physics.secondquant import evaluate_deltas, F
 
 x, y = symbols('x y')

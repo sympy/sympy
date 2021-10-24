@@ -1278,7 +1278,7 @@ class principal_branch(Function):
 
 
 def _polarify(eq, lift, pause=False):
-    from sympy import Integral
+    from sympy.integrals.integrals import Integral
     if eq.is_polar:
         return eq
     if eq.is_number and not pause:

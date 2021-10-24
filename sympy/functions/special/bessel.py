@@ -200,7 +200,7 @@ class besselj(BesselBase):
                 return I**(nu)*besseli(nu, newz)
 
         # branch handling:
-        from sympy import unpolarify
+        from sympy.functions.elementary.complexes import unpolarify
         if nu.is_integer:
             newz = unpolarify(z)
             if newz != z:
@@ -214,7 +214,7 @@ class besselj(BesselBase):
             return besselj(nnu, z)
 
     def _eval_rewrite_as_besseli(self, nu, z, **kwargs):
-        from sympy import polar_lift
+        from sympy.functions.elementary.complexes import polar_lift
         return exp(I*pi*nu/2)*besseli(nu, polar_lift(-I)*z)
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
@@ -466,7 +466,7 @@ class besseli(BesselBase):
                 return I**(-nu)*besselj(nu, -newz)
 
         # branch handling:
-        from sympy import unpolarify
+        from sympy.functions.elementary.complexes import unpolarify
         if nu.is_integer:
             newz = unpolarify(z)
             if newz != z:
@@ -480,7 +480,7 @@ class besseli(BesselBase):
             return besseli(nnu, z)
 
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
-        from sympy import polar_lift
+        from sympy.functions.elementary.complexes import polar_lift
         return exp(-I*pi*nu/2)*besselj(nu, polar_lift(I)*z)
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
@@ -1092,7 +1092,7 @@ def jn_zeros(n, k, method="sympy", dps=15):
     if method == "sympy":
         from mpmath import besseljzero
         from mpmath.libmp.libmpf import dps_to_prec
-        from sympy import Expr
+        from sympy.core.expr import Expr
         prec = dps_to_prec(dps)
         return [Expr._from_mpmath(besseljzero(S(n + 0.5)._to_mpmath(prec),
                                               int(l)), prec)
