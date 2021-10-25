@@ -2017,9 +2017,9 @@ class MatrixOperations(MatrixRequired):
 
     def _eval_transpose(self):
         def func(i, j):
-            if hasattr(U[j, i], "transpose"):
-                return U[j, i].transpose()
-            return U[j, i]
+            if hasattr(self[j, i], "transpose"):
+                return self[j, i].transpose()
+            return self[j, i]
 
         return self._new(self.cols, self.rows, func)
 
