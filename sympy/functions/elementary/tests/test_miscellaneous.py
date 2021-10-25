@@ -471,6 +471,6 @@ def test_Rem():
     assert Rem(5, 3) == 2
     assert Rem(-5, 3) == -2
     assert Rem(5, -3) == 2
-    assert Rem(-5,-3) == -2
+    assert Rem(-5, -3) == -2
     assert Rem(x**3, y) == Rem(x**3, y)
     assert Rem(Rem(-5, 3) + 3, 3) == 1

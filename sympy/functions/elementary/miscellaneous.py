@@ -869,7 +869,9 @@ class Min(MinMaxBase, Application):
 
 
 class Rem(Function):
-    """
+    """Returns the remainder when ``p`` is divided by ``q`` where ``p`` is finite
+    and ``q`` is not equal to zero. This is given by ``p - int(p/q)q``.
+
     Parameters
     ==========
 
@@ -882,7 +884,7 @@ class Rem(Function):
     Notes
     =====
 
-    the remainder always has the same sign as the dividend.
+    The remainder always has the same sign as the dividend.
 
     Examples
     ========
