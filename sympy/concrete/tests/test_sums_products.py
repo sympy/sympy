@@ -21,10 +21,11 @@ from sympy.functions.special.gamma_functions import (gamma, lowergamma)
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.functions.special.zeta_functions import zeta
 from sympy.integrals.integrals import Integral
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, Or
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import Identity
 from sympy.sets.fancysets import Range
+from sympy.sets.sets import Interval
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.simplify import simplify
 from sympy.tensor.indexed import (Idx, Indexed, IndexedBase)
@@ -1537,3 +1538,24 @@ def test_summation_by_residues_failing():
     # Failing because of the bug in residue computation
     assert eval_sum_residue(x**2 / (x**4 + 1), (x, S(1), oo))
     assert eval_sum_residue(1 / ((x - 1)*(x - 2) + 1), (x, -oo, oo)) != 0
+
+
+def test_relational_set_limits():
+    # all expr with limits pass through _process_limits so test one
+    assert Sum(x, x >= 5) == Sum(x, (x, 5, oo))
+    assert Sum(x, x < 3) == Sum(x, (x, -oo, 2))
+    ans = Sum(x, (x, 0, 2))
+    assert Sum(x, And(x >= 0, x < 3)) == ans
+    assert Sum(x, (x, Range(3))) == ans
+    assert Sum(x, (x, Interval.Ropen(0, 3))) == ans
+    r, ans = Range(3, 10, 2), Sum(2*x + 3, (x, 0, 3))
+    assert Sum(x, (x, r)) == ans
+    assert Sum(x, (x, r.reversed)) == ans
+    r, ans = Range(3, oo, 2), Sum(2*x + 3, (x, 0, oo))
+    assert Sum(x, (x, r)) == ans
+    assert Sum(x, (x, r.reversed)) == ans
+    r, ans = Range(-oo, 5, 2), Sum(3 - 2*x, (x, 0, oo))
+    assert Sum(x, (x, r)) == ans
+    assert Sum(x, (x, r.reversed)) == ans
+    raises(ValueError, lambda: Sum(x, Range(3)))
+    raises(NotImplementedError, lambda: Sum(x, Or(x < 1, x > 3)))

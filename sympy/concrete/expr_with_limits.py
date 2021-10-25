@@ -10,7 +10,7 @@ from sympy.functions.elementary.piecewise import (piecewise_fold,
     Piecewise)
 from sympy.logic.boolalg import BooleanFunction
 from sympy.tensor.indexed import Idx
-from sympy.sets.sets import Interval
+from sympy.sets.sets import Interval, Set
 from sympy.sets.fancysets import Range
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift, is_sequence
@@ -85,6 +85,10 @@ def _process_limits(*symbols):
     storing them as Tuple(symbol, lower, upper). The orientation of
     the function is also returned when the upper limit is missing
     so (x, 1, None) becomes (x, None, 1) and the orientation is changed.
+    In the case that a limit is specified as (symbol, Range), a list of
+    length 4 may be returned if a change of variables is needed; the
+    expression that should replace the symbol in the expression is
+    the fourth element in the list.
     """
     limits = []
     orientation = 1
@@ -101,19 +105,30 @@ def _process_limits(*symbols):
             else:
                 limits.append(Tuple(V))
             continue
-        if is_sequence(V, (tuple, Tuple)):
-            if len(V) == 2 and isinstance(V[1], Range):
-                lo = V[1].inf
-                hi = V[1].sup
-                dx = abs(V[1].step)
-                V = [V[0]] + [0, (hi - lo)//dx, dx*V[0] + lo]
+        if is_sequence(V) and not isinstance(V, Set):
+            if len(V) == 2 and isinstance(V[1], Set):
+                V = list(V)
+                if isinstance(V[1], Interval):
+                    V[1:] = i.args[:2]
+                elif isinstance(V[1], Range):
+                    lo = V[1].inf
+                    hi = V[1].sup
+                    dx = abs(V[1].step)  # direction doesn't matter
+                    if dx == 1:
+                        V[1:] = [lo, hi]
+                    else:
+                        if lo is not S.NegativeInfinity:
+                            V = [V[0]] + [0, (hi - lo)//dx, dx*V[0] + lo]
+                        else:
+                            V = [V[0]] + [0, S.Infinity, -dx*V[0] + hi]
+                else:
+                    # more complicated sets would require splitting, e.g.
+                    # Union(Interval(1, 3), interval(6,10))
+                    raise NotImplementedError('expecting Range or Interval')
             V = sympify(flatten(V))  # a list of sympified elements
             if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
                 newsymbol = V[0]
-                if len(V) == 2 and isinstance(V[1], Interval):  # 2 -> 3
-                    # Interval
-                    V[1:] = [V[1].start, V[1].end]
-                elif len(V) == 3:
+                if len(V) == 3:
                     # general case
                     if V[2] is None and not V[1] is None:
                         orientation *= -1
