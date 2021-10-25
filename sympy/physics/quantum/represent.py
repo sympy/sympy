@@ -6,7 +6,12 @@ TODO:
 * Document default basis functionality.
 """
 
-from sympy import Add, Expr, I, integrate, Mul, Pow
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.numbers import I
+from sympy.core.power import Pow
+from sympy.integrals.integrals import integrate
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator

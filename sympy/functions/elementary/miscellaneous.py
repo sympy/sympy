@@ -775,7 +775,7 @@ class Max(MinMaxBase, Application):
     identity = S.NegativeInfinity
 
     def fdiff( self, argindex ):
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
@@ -787,7 +787,7 @@ class Max(MinMaxBase, Application):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
@@ -838,7 +838,7 @@ class Min(MinMaxBase, Application):
     identity = S.Infinity
 
     def fdiff( self, argindex ):
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
@@ -850,7 +850,7 @@ class Min(MinMaxBase, Application):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])
 

@@ -1,7 +1,7 @@
 """Implementation of RootOf class and related tools. """
 
 
-from sympy import Basic
+from sympy.core.basic import Basic
 from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
     symbols, sympify, Rational, Dummy)
 from sympy.core.cache import cacheit

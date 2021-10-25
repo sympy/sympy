@@ -1,6 +1,11 @@
 """Abstract tensor product."""
 
-from sympy import Expr, Add, Mul, Matrix, Pow, sympify
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.sympify import sympify
+from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import QuantumError

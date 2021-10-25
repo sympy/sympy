@@ -424,7 +424,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
         # if the primitive flag is set, get rid of any common
         # integer denominators
         def denom_clean(l):
-            from sympy import gcd
+            from sympy.polys.polytools import gcd
             return [(v / gcd(list(v))).applyfunc(simpfunc) for v in l]
 
         ret = [(val, mult, denom_clean(es)) for val, mult, es in ret]

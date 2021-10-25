@@ -1,4 +1,5 @@
-from sympy import Set, symbols
+from sympy.core.symbol import symbols
+from sympy.sets.sets import Set
 from sympy.core import Basic, Expr
 from sympy.multipledispatch import dispatch
 from sympy.sets import Interval
@@ -60,7 +61,7 @@ def _set_div(x, y): # noqa:F811
     https://en.wikipedia.org/wiki/Interval_arithmetic
     """
     from sympy.sets.setexpr import set_mul
-    from sympy import oo
+    from sympy.core.numbers import oo
     if (y.start*y.end).is_negative:
         return Interval(-oo, oo)
     if y.start == 0:

@@ -567,7 +567,12 @@ class Integral(AddWithLimits):
                             f, cond = res
                             if conds == 'piecewise':
                                 u = self.func(function, (x, a, b))
-                                return Piecewise((f, cond), (u, True))
+                                # if Piecewise modifies cond too
+                                # much it may not be recognized by
+                                # _condsimp pattern matching so just
+                                # turn off all evaluation
+                                return Piecewise((f, cond), (u, True),
+                                    evaluate=False)
                             elif conds == 'separate':
                                 if len(self.limits) != 1:
                                     raise ValueError(filldedent('''
@@ -1535,7 +1540,7 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
     gamma(a + 1)
 
     >>> integrate(x**a*exp(-x), (x, 0, oo), conds='separate')
-    (gamma(a + 1), -re(a) < 1)
+    (gamma(a + 1), re(a) > -1)
 
     See Also
     ========

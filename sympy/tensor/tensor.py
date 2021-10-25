@@ -36,7 +36,9 @@ from abc import abstractmethod, ABCMeta
 from collections import defaultdict
 import operator
 import itertools
-from sympy import Rational, prod, Integer, default_sort_key
+from sympy.core.compatibility import default_sort_key
+from sympy.core.mul import prod
+from sympy.core.numbers import (Integer, Rational)
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
@@ -2038,7 +2040,7 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
         Returns ndarray components data as a matrix, if components data are
         available and ndarray dimension does not exceed 2.
         """
-        from sympy import Matrix
+        from sympy.matrices.dense import Matrix
         deprecate_data()
         if 0 < self.rank <= 2:
             rows = self.data.shape[0]
@@ -2291,7 +2293,7 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
         return array
 
     def _check_add_Sum(self, expr, index_symbols):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         indices = self.get_indices()
         dum = self.dum
         sum_indices = [ (index_symbols[i], 0,
@@ -3071,7 +3073,7 @@ class Tensor(TensExpr):
         return self.contract_metric(metric)
 
     def _eval_rewrite_as_Indexed(self, tens, indices):
-        from sympy import Indexed
+        from sympy.tensor.indexed import Indexed
         # TODO: replace .args[0] with .name:
         index_symbols = [i.args[0] for i in self.get_indices()]
         expr = Indexed(tens.args[0], *index_symbols)
@@ -3901,7 +3903,7 @@ class TensMul(TensExpr, AssocOp):
         return self.data.__iter__()
 
     def _eval_rewrite_as_Indexed(self, *args):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         index_symbols = [i.args[0] for i in self.get_indices()]
         args = [arg.args[0] if isinstance(arg, Sum) else arg for arg in args]
         expr = Mul.fromiter(args)

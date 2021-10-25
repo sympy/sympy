@@ -1,6 +1,6 @@
 """ Riemann zeta and related function. """
 
-from sympy import Add
+from sympy.core.add import Add
 from sympy.core import Function, S, sympify, pi, I
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
@@ -120,7 +120,11 @@ class lerchphi(Function):
     """
 
     def _eval_expand_func(self, **hints):
-        from sympy import exp, floor, Poly, Dummy, unpolarify
+        from sympy.core.symbol import Dummy
+        from sympy.functions.elementary.complexes import unpolarify
+        from sympy.functions.elementary.exponential import exp
+        from sympy.functions.elementary.integers import floor
+        from sympy.polys.polytools import Poly
         z, s, a = self.args
         if z == 1:
             return zeta(s, a)
@@ -337,7 +341,8 @@ class polylog(Function):
         return z*lerchphi(z, s, 1)
 
     def _eval_expand_func(self, **hints):
-        from sympy import expand_mul, Dummy
+        from sympy.core.function import expand_mul
+        from sympy.core.symbol import Dummy
         s, z = self.args
         if s == 1:
             return -log(1 - z)
@@ -355,7 +360,8 @@ class polylog(Function):
             return True
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        from sympy import ceiling, Order
+        from sympy.functions.elementary.integers import ceiling
+        from sympy.series.order import Order
         nu, z = self.args
 
         z0 = z.subs(x, 0)
@@ -641,7 +647,7 @@ class riemann_xi(Function):
 
     @classmethod
     def eval(cls, s):
-        from sympy import gamma
+        from sympy.functions.special.gamma_functions import gamma
         z = zeta(s)
         if s in (S.Zero, S.One):
             return S.Half
@@ -650,7 +656,7 @@ class riemann_xi(Function):
             return s*(s - 1)*gamma(s/2)*z/(2*pi**(s/2))
 
     def _eval_rewrite_as_zeta(self, s, **kwargs):
-        from sympy import gamma
+        from sympy.functions.special.gamma_functions import gamma
         return s*(s - 1)*gamma(s/2)*zeta(s)/(2*pi**(s/2))
 
 class stieltjes(Function):

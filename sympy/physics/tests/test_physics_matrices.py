@@ -1,5 +1,8 @@
 from sympy.physics.matrices import msigma, mgamma, minkowski_tensor, pat_matrix, mdft
-from sympy import zeros, eye, I, Matrix, sqrt, Rational, S
+from sympy.core.numbers import (I, Rational)
+from sympy.core.singleton import S
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.dense import (Matrix, eye, zeros)
 from sympy.testing.pytest import warns_deprecated_sympy
 
 

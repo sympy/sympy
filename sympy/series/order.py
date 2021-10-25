@@ -225,7 +225,7 @@ class Order(Expr):
                     expr = Add(*[f.expr for (e, f) in lst])
 
                 elif expr:
-                    from sympy import PoleError, Function
+                    from sympy.core.function import (Function, PoleError)
                     try:
                         expr = expr.as_leading_term(*args)
                     except PoleError:
@@ -370,7 +370,7 @@ class Order(Expr):
         Return None if the inclusion relation cannot be determined
         (e.g. when self and expr have different symbols).
         """
-        from sympy import powsimp
+        from sympy.simplify.powsimp import powsimp
         expr = sympify(expr)
         if expr.is_zero:
             return True

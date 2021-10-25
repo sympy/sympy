@@ -943,7 +943,8 @@ class Point2D(Point):
         Point2D(2, -1)
 
         """
-        from sympy import cos, sin, Point
+        from sympy.functions.elementary.trigonometric import (cos, sin)
+        from sympy.geometry.point import Point
 
         c = cos(angle)
         s = sin(angle)

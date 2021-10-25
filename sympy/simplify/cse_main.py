@@ -123,7 +123,7 @@ def cse_release_variables(r, e):
     if not r:
         return r, e
 
-    from sympy import symbols
+    from sympy.core.symbol import symbols
 
     s, p = zip(*r)
     esyms = symbols('_:%d' % len(e))

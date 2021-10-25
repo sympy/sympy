@@ -46,9 +46,20 @@ Authors
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 
 """
-from sympy import (Integer, pi, sqrt, sympify, Dummy, S, Sum, Ynm, zeros,
-                   Function, sin, cos, exp, I, factorial, binomial,
-                   Add, ImmutableMatrix)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.function import Function
+from sympy.core.numbers import (I, Integer, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.spherical_harmonics import Ynm
+from sympy.matrices.dense import zeros
+from sympy.matrices.immutable import ImmutableMatrix
 
 # This list of precomputed factorials is needed to massively
 # accelerate future calculations of the various coefficients

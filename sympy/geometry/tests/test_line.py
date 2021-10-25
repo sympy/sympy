@@ -1,5 +1,10 @@
-from sympy import (Eq, Rational, Float, S, Symbol, cos, oo, pi, simplify,
-    sin, sqrt, symbols, acos)
+from sympy.core.numbers import (Float, Rational, oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, cos, sin)
+from sympy.simplify.simplify import simplify
 from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
     Segment, Triangle, intersection, Point3D, Line3D, Ray3D, Segment3D,
@@ -122,7 +127,7 @@ def test_arguments():
     """Functions accepting `Point` objects in `geometry`
     should also accept tuples, lists, and generators and
     automatically convert them to points."""
-    from sympy import subsets
+    from sympy.utilities.iterables import subsets
 
     singles2d = ((1, 2), [1, 3], Point(1, 5))
     doubles2d = subsets(singles2d, 2)

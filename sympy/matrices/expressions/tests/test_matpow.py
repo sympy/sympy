@@ -1,4 +1,4 @@
-from sympy import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.simplify.powsimp import powsimp
 from sympy.testing.pytest import raises
 from sympy.core.expr import unchanged

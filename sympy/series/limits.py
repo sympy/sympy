@@ -176,7 +176,7 @@ class Limit(Expr):
 
 
     def pow_heuristics(self, e):
-        from sympy import exp, log
+        from sympy.functions.elementary.exponential import (exp, log)
         _, z, z0, _ = self.args
         b1, e1 = e.base, e.exp
         if not b1.has(z):
@@ -207,7 +207,10 @@ class Limit(Expr):
         hints : optional keyword arguments
             To be passed to ``doit`` methods; only used if deep is True.
         """
-        from sympy import Abs, Float, nsimplify, powsimp, sign
+        from sympy.core.numbers import Float
+        from sympy.functions.elementary.complexes import (Abs, sign)
+        from sympy.simplify.powsimp import powsimp
+        from sympy.simplify.simplify import nsimplify
 
         e, z, z0, dir = self.args
 

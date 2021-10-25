@@ -6,7 +6,8 @@ Contains
 
 """
 
-from sympy import Expr, Eq
+from sympy.core.expr import Expr
+from sympy.core.relational import Eq
 from sympy.core import S, pi, sympify
 from sympy.core.evalf import prec_to_dps, N
 from sympy.core.parameters import global_parameters

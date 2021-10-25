@@ -1,6 +1,6 @@
 from sympy.core.backend import zeros, Matrix, diff, eye
 from sympy.core.sorting import default_sort_key
-from sympy import solve_linear_system_LU
+from sympy.solvers.solvers import solve_linear_system_LU
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
 from sympy.physics.mechanics.method import _Methods

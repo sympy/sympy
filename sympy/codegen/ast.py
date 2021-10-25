@@ -128,7 +128,7 @@ from typing import Any, Dict, List
 
 from collections import defaultdict
 
-from sympy import Lt, Le, Ge, Gt
+from sympy.core.relational import (Ge, Gt, Le, Lt)
 from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr

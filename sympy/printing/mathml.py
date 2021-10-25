@@ -4,8 +4,10 @@ A MathML printer.
 
 from typing import Any, Dict
 
-from sympy import sympify, S, Mul
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
+from sympy.core.sympify import sympify
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import \
     precedence_traditional, PRECEDENCE, PRECEDENCE_TRADITIONAL
@@ -1778,7 +1780,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return sup
 
     def _print_MatMul(self, expr):
-        from sympy import MatMul
+        from sympy.matrices.expressions.matmul import MatMul
 
         x = self.dom.createElement('mrow')
         args = expr.args

@@ -25,8 +25,7 @@ from sympy.functions.special.error_functions import (Chi, Ci, erf, erfc, erfi,
                                                      erfcinv, erfinv, fresnelc,
                                                      fresnels, li, Shi, Si, Li,
                                                      erf2)
-from sympy import octave_code
-from sympy import octave_code as mcode
+from sympy.printing.octave import octave_code, octave_code as mcode
 
 x, y, z = symbols('x,y,z')
 
@@ -392,7 +391,7 @@ def test_octave_not_supported():
 
 
 def test_octave_not_supported_not_on_whitelist():
-    from sympy import assoc_laguerre
+    from sympy.functions.special.polynomials import assoc_laguerre
     assert mcode(assoc_laguerre(x, y, z)) == (
         "% Not supported in Octave:\n"
         "% assoc_laguerre\n"

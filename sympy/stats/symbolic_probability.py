@@ -1,7 +1,15 @@
 import itertools
 
-from sympy import (Expr, Add, Mul, S, Integral, Eq, Sum, Symbol,
-                    expand as _expand, Not)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.function import expand as _expand
+from sympy.core.mul import Mul
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import Not
 from sympy.core.parameters import global_parameters
 from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import _sympify

@@ -82,7 +82,13 @@ References
 
 """
 
-from sympy import sin, cos, exp, I, pi, sqrt, Matrix, Abs, re, im, simplify
+from sympy.core.numbers import (I, pi)
+from sympy.functions.elementary.complexes import (Abs, im, re)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.dense import Matrix
+from sympy.simplify.simplify import simplify
 from sympy.physics.quantum import TensorProduct
 
 

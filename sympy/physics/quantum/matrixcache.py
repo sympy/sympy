@@ -1,6 +1,9 @@
 """A cache for storing small matrices in multiple formats."""
 
-from sympy import Matrix, I, Pow, Rational, exp, pi
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.power import Pow
+from sympy.functions.elementary.exponential import exp
+from sympy.matrices.dense import Matrix
 
 from sympy.physics.quantum.matrixutils import (
     to_sympy, to_numpy, to_scipy_sparse

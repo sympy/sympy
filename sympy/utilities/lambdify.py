@@ -529,7 +529,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
 
         # sin_cos_sympy.py
 
-        from sympy import sin, cos
+        from sympy.functions.elementary.trigonometric import (cos, sin)
 
         def sin_cos(x):
             return sin(x) + cos(x)
@@ -984,7 +984,10 @@ def lambdastr(args, expr, printer=None, dummify=None):
     """
     # Transforming everything to strings.
     from sympy.matrices import DeferredVector
-    from sympy import Dummy, sympify, Symbol, Function, flatten, Derivative
+    from sympy.core.function import (Derivative, Function)
+    from sympy.core.symbol import (Dummy, Symbol)
+    from sympy.core.sympify import sympify
+    from sympy.utilities.iterables import flatten
 
     if printer is not None:
         if inspect.isfunction(printer):
@@ -1106,7 +1109,7 @@ class _EvaluatorPrinter:
         """
         Returns the function definition code as a string.
         """
-        from sympy import Dummy
+        from sympy.core.symbol import Dummy
 
         funcbody = []
 
@@ -1162,7 +1165,11 @@ class _EvaluatorPrinter:
 
         Returns string form of args, and updated expr.
         """
-        from sympy import Dummy, Function, flatten, Derivative, ordered, Basic
+        from sympy.core.basic import Basic
+        from sympy.core.compatibility import ordered
+        from sympy.core.function import (Derivative, Function)
+        from sympy.core.symbol import Dummy
+        from sympy.utilities.iterables import flatten
         from sympy.matrices import DeferredVector
         from sympy.core.symbol import uniquely_named_symbol
         from sympy.core.expr import Expr
@@ -1199,7 +1206,7 @@ class _EvaluatorPrinter:
 
     def _subexpr(self, expr, dummies_dict):
         from sympy.matrices import DeferredVector
-        from sympy import sympify
+        from sympy.core.sympify import sympify
 
         expr = sympify(expr)
         xreplace = getattr(expr, 'xreplace', None)
@@ -1248,7 +1255,7 @@ class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
         This method is used when the input value is not interable,
         but can be indexed (see issue #14655).
         """
-        from sympy import flatten
+        from sympy.utilities.iterables import flatten
 
         def flat_indexes(elems):
             n = 0

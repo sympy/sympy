@@ -1,10 +1,33 @@
-from sympy import (
-    Abs, And, binomial, Catalan, combsimp, cos, Derivative, E, Eq, exp, EulerGamma,
-    factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
-    nan, oo, pi, Piecewise, Product, product, Rational, S, simplify, Identity,
-    sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma,
-    Indexed, Idx, IndexedBase, prod, Dummy, lowergamma, Range, floor,
-    rf, MatrixSymbol, tanh, sinh)
+from sympy.concrete.products import (Product, product)
+from sympy.concrete.summations import (Sum, summation)
+from sympy.core.function import (Derivative, Function)
+from sympy.core.mul import prod
+from sympy.core import (Catalan, EulerGamma)
+from sympy.core.numbers import (E, I, Rational, nan, oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (rf, binomial, factorial)
+from sympy.functions.combinatorial.numbers import harmonic
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (sinh, tanh)
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.gamma_functions import (gamma, lowergamma)
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.functions.special.zeta_functions import zeta
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import And
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.special import Identity
+from sympy.sets.fancysets import Range
+from sympy.simplify.combsimp import combsimp
+from sympy.simplify.simplify import simplify
+from sympy.tensor.indexed import (Idx, Indexed, IndexedBase)
 from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import (
     telescopic, _dummy_with_inherited_properties_concrete, eval_sum_residue)
@@ -938,11 +961,13 @@ def test_issue_2787():
     res = s.doit().simplify()
     assert res == Piecewise(
         (n*p, p/Abs(p - 1) <= 1),
-        ((-p + 1)**n*Sum(k*p**k*(-p + 1)**(-k)*binomial(n, k), (k, 0, n)),
+        ((-p + 1)**n*Sum(k*p**k*binomial(n, k)/(-p + 1)**(k), (k, 0, n)),
         True))
-    # Issue #17165: make sure that another simplify does not change/increase
-    # the result
-    assert res == res.simplify()
+    # Issue #17165: make sure that another simplify does not complicate
+    # the result (but why didn't first simplify handle this?)
+    assert res.simplify() == Piecewise((n*p, p <= S.Half),
+        ((1 - p)**n*Sum(k*p**k*binomial(n, k)/(1 - p)**k,
+        (k, 0, n)), True))
 
 
 def test_issue_4668():
@@ -1359,9 +1384,9 @@ def test_issue_17165():
     s = (x*Sum(x**n, (n, -1, oo)))
     ssimp = s.doit().simplify()
 
-    assert ssimp == Piecewise((-1/(x - 1), Abs(x) < 1),
-                              (x*Sum(x**n, (n, -1, oo)), True))
-    assert ssimp == ssimp.simplify()
+    assert ssimp == Piecewise((-1/(x - 1), (x > -1) & (x < 1)),
+                              (x*Sum(x**n, (n, -1, oo)), True)), ssimp
+    assert ssimp.simplify() == ssimp
 
 
 def test_issue_19379():
@@ -1375,7 +1400,7 @@ def test_issue_20777():
 def test__dummy_with_inherited_properties_concrete():
     x = Symbol('x')
 
-    from sympy import Tuple
+    from sympy.core.containers import Tuple
     d = _dummy_with_inherited_properties_concrete(Tuple(x, 0, 5))
     assert d.is_real
     assert d.is_integer

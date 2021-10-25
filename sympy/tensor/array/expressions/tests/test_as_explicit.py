@@ -1,5 +1,7 @@
-from sympy import ImmutableDenseNDimArray, tensorproduct, MatrixSymbol, tensorcontraction, tensordiagonal, permutedims, \
-    Symbol
+from sympy.core.symbol import Symbol
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.tensor.array.arrayop import (permutedims, tensorcontraction, tensordiagonal, tensorproduct)
+from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol, \
     ArrayTensorProduct, PermuteDims, ArrayDiagonal, ArrayContraction, ArrayAdd
 from sympy.testing.pytest import raises

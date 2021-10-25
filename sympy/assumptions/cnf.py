@@ -5,7 +5,8 @@ signatures common to SymPy objects. For general use of logic constructs
 please refer to sympy.logic classes And, Or, Not, etc.
 """
 from itertools import combinations, product
-from sympy import S, Nor, Nand, Xor, Implies, Equivalent, ITE
+from sympy.core.singleton import S
+from sympy.logic.boolalg import (Equivalent, ITE, Implies, Nand, Nor, Xor)
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.logic.boolalg import Or, And, Not, Xnor
 from itertools import zip_longest

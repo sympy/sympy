@@ -1,7 +1,9 @@
 import sympy
 import tempfile
 import os
-from sympy import symbols, Eq, Mod
+from sympy.core.mod import Mod
+from sympy.core.relational import Eq
+from sympy.core.symbol import symbols
 from sympy.external import import_module
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.autowrap import autowrap, ufuncify, CodeWrapError
@@ -254,7 +256,7 @@ def test_issue_15337_C_cython():
 def test_autowrap_custom_printer():
     has_module('Cython')
 
-    from sympy import pi
+    from sympy.core.numbers import pi
     from sympy.utilities.codegen import C99CodeGen
     from sympy.printing.c import C99CodePrinter
 

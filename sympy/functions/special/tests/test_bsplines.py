@@ -1,5 +1,10 @@
 from sympy.functions import bspline_basis_set, interpolating_spline
-from sympy import (Piecewise, Interval, And, symbols, Rational, S)
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.logic.boolalg import And
+from sympy.sets.sets import Interval
 from sympy.testing.pytest import slow
 
 x, y = symbols('x,y')

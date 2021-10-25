@@ -1,4 +1,5 @@
-from sympy import S, simplify
+from sympy.core.singleton import S
+from sympy.simplify.simplify import simplify
 from sympy.core import Basic, diff
 from sympy.core.sorting import default_sort_key
 from sympy.matrices import Matrix

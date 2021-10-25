@@ -10,8 +10,14 @@ sympy.stats.drv
 """
 
 
-from sympy import (Basic, Lambda, sympify, Indexed, Symbol, ProductSet, S,
-                   Dummy, prod)
+from sympy.core.basic import Basic
+from sympy.core.function import Lambda
+from sympy.core.mul import prod
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.sympify import sympify
+from sympy.sets.sets import ProductSet
+from sympy.tensor.indexed import Indexed
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum, summation
 from sympy.core.containers import Tuple

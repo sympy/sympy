@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from sympy import symbols, sin, asin, cos, sqrt, Function
+from sympy.core.function import Function
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (asin, cos, sin)
 from sympy.physics.vector import ReferenceFrame, dynamicsymbols, Dyadic
 from sympy.physics.vector.printing import (VectorLatexPrinter, vpprint,
                                            vsprint, vsstrrepr, vlatex)

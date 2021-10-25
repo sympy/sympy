@@ -1,4 +1,9 @@
-from sympy import Sum, MatrixSymbol, Identity, symbols, IndexedBase, KroneckerDelta
+from sympy.concrete.summations import Sum
+from sympy.core.symbol import symbols
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.special import Identity
+from sympy.tensor.indexed import IndexedBase
 from sympy.combinatorics import Permutation
 from sympy.tensor.array.expressions.array_expressions import ArrayContraction, ArrayTensorProduct, \
     ArrayDiagonal, ArrayAdd, PermuteDims, ArrayElement

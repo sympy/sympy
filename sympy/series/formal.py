@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 
-from sympy import oo, zoo, nan
+from sympy.core.numbers import (nan, oo, zoo)
 from sympy.core.add import Add
 from sympy.core.expr import Expr
 from sympy.core.function import Derivative, Function, expand

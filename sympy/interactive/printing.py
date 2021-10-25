@@ -3,8 +3,8 @@
 from sympy.external.importtools import version_tuple
 from io import BytesIO
 
-from sympy import latex as default_latex
-from sympy import preview
+from sympy.printing.latex import latex as default_latex
+from sympy.printing.preview import preview
 from sympy.utilities.misc import debug
 from sympy.printing.defaults import Printable
 

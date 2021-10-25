@@ -17,9 +17,22 @@ sympy.stats.rv_interface
 from functools import singledispatch
 from typing import Tuple as tTuple
 
-from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify, Or,
-                   Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-                   DiracDelta, Mul, Indexed, MatrixSymbol, Function, prod)
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import (Function, Lambda)
+from sympy.core.mul import (Mul, prod)
+from sympy.core.relational import (Eq, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.sympify import sympify
+from sympy.functions.special.delta_functions import DiracDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.logic.boolalg import (And, Or)
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.tensor.indexed import Indexed
+from sympy.utilities.lambdify import lambdify
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
@@ -711,7 +724,7 @@ def given(expr, condition=None, **kwargs):
         condition = Eq(condition, condition.symbol)
 
     condsymbols = random_symbols(condition)
-    if (isinstance(condition, Equality) and len(condsymbols) == 1 and
+    if (isinstance(condition, Eq) and len(condsymbols) == 1 and
         not isinstance(pspace(expr).domain, ConditionalDomain)):
         rv = tuple(condsymbols)[0]
 

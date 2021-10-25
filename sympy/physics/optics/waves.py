@@ -8,8 +8,13 @@ This module has all the classes and functions related to waves in optics.
 
 __all__ = ['TWave']
 
-from sympy import (sympify, pi, sin, cos, sqrt, Number, Symbol, S,
-    symbols, Derivative, atan2)
+from sympy.core.function import Derivative
+from sympy.core.numbers import (Number, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (atan2, cos, sin)
 from sympy.core.expr import Expr
 from sympy.physics.units import speed_of_light, meter, second
 
@@ -314,12 +319,13 @@ class TWave(Expr):
             - self.angular_velocity*Symbol('t') + self._phase)
 
     def _eval_rewrite_as_pde(self, *args, **kwargs):
-        from sympy import Function
+        from sympy.core.function import Function
         mu, epsilon, x, t = symbols('mu, epsilon, x, t')
         E = Function('E')
         return Derivative(E(x, t), x, 2) + mu*epsilon*Derivative(E(x, t), t, 2)
 
     def _eval_rewrite_as_exp(self, *args, **kwargs):
-        from sympy import exp, I
+        from sympy.core.numbers import I
+        from sympy.functions.elementary.exponential import exp
         return self._amplitude*exp(I*(self.wavenumber*Symbol('x')
             - self.angular_velocity*Symbol('t') + self._phase))

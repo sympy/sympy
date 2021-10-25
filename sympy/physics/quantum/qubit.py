@@ -9,7 +9,13 @@ Todo:
 
 import math
 
-from sympy import Integer, log, Mul, Add, Pow, conjugate, S
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.numbers import Integer
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.functions.elementary.complexes import conjugate
+from sympy.functions.elementary.exponential import log
 from sympy.core.basic import sympify
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.matrices import Matrix, zeros

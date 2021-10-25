@@ -12,7 +12,8 @@ and so on).
 
 
 import re
-from sympy import Symbol, NumberSymbol, I, zoo, oo
+from sympy.core.numbers import (I, NumberSymbol, oo, zoo)
+from sympy.core.symbol import Symbol
 from sympy.utilities.iterables import numbered_symbols
 
 #  We parse the expression string into a tree that identifies functions. Then
@@ -239,7 +240,7 @@ class Lambdifier:
         # XXX Workaround
         # Ugly workaround because Pow(a,Half) prints as sqrt(a)
         # and sympy_expression_namespace can not catch it.
-        from sympy import sqrt
+        from sympy.functions.elementary.miscellaneous import sqrt
         namespace.update({'sqrt': sqrt})
         namespace.update({'Eq': lambda x, y: x == y})
         namespace.update({'Ne': lambda x, y: x != y})

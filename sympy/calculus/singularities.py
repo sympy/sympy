@@ -15,7 +15,8 @@ the following function types in the given ``Interval``:
 
 """
 
-from sympy import S, Symbol
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.solvers.solveset import solveset
 from sympy.utilities.misc import filldedent

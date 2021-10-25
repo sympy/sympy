@@ -1,8 +1,8 @@
 from io import StringIO
 
 from sympy.core import S, symbols, pi, Catalan, EulerGamma, Function
-from sympy import Piecewise
-from sympy import Equality
+from sympy.core.relational import Equality
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.utilities.codegen import RustCodeGen, codegen, make_routine
 from sympy.testing.pytest import XFAIL
 import sympy
@@ -178,7 +178,7 @@ def test_results_named_ordered():
 
 
 def test_complicated_rs_codegen():
-    from sympy import sin, cos, tan
+    from sympy.functions.elementary.trigonometric import (cos, sin, tan)
     name_expr = ("testlong",
             [ ((sin(x) + cos(y) + tan(z))**3).expand(),
             cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))
@@ -203,7 +203,7 @@ def test_complicated_rs_codegen():
 
 def test_output_arg_mixed_unordered():
     # named outputs are alphabetical, unnamed output appear in the given order
-    from sympy import sin, cos
+    from sympy.functions.elementary.trigonometric import (cos, sin)
     a = symbols("a")
     name_expr = ("foo", [cos(2*x), Equality(y, sin(x)), cos(x), Equality(a, sin(2*x))])
     result, = codegen(name_expr, "Rust", header=False, empty=False)

@@ -5,8 +5,9 @@ infinitesimal, finite, etc.
 
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Mul, Pow, Symbol
-from sympy.core.numbers import (ComplexInfinity, Exp1, GoldenRatio, ImaginaryUnit,
-    Infinity, NaN, NegativeInfinity, Number, Pi, TribonacciConstant, E)
+from sympy.core.numbers import (NegativeInfinity, GoldenRatio,
+    Infinity, Exp1, ComplexInfinity, ImaginaryUnit, NaN, Number, Pi, E,
+    TribonacciConstant)
 from sympy.functions import cos, exp, log, sign, sin
 from sympy.logic.boolalg import conjuncts
 

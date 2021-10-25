@@ -299,7 +299,7 @@ def interpolating_spline(d, x, X, Y):
     bspline_basis_set, interpolating_poly
 
     """
-    from sympy import symbols, Dummy
+    from sympy.core.symbol import (Dummy, symbols)
     from sympy.solvers.solveset import linsolve
     from sympy.matrices.dense import Matrix
 

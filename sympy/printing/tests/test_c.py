@@ -1,7 +1,8 @@
 from sympy.core import (
     S, pi, oo, symbols, Rational, Integer, Float, Mod, GoldenRatio, EulerGamma, Catalan,
-    Lambda, Dummy, Eq, nan, Mul, Pow, UnevaluatedExpr
+    Lambda, Dummy, nan, Mul, Pow, UnevaluatedExpr
 )
+from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
 from sympy.functions import (
     Abs, acos, acosh, asin, asinh, atan, atanh, atan2, ceiling, cos, cosh, erf,
     erfc, exp, floor, gamma, log, loggamma, Max, Min, Piecewise, sign, sin, sinh,
@@ -23,7 +24,7 @@ from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol, SparseMatrix
 
-from sympy import ccode
+from sympy.printing.codeprinter import ccode
 
 x, y, z = symbols('x,y,z')
 
@@ -200,7 +201,6 @@ def test_ccode_boolean():
 
 
 def test_ccode_Relational():
-    from sympy import Ne, Le, Lt, Gt, Ge
     assert ccode(Eq(x, y)) == "x == y"
     assert ccode(Ne(x, y)) == "x != y"
     assert ccode(Le(x, y)) == "x <= y"
@@ -252,7 +252,7 @@ def test_ccode_Piecewise():
 
 
 def test_ccode_sinc():
-    from sympy import sinc
+    from sympy.functions.elementary.trigonometric import sinc
     expr = sinc(x)
     assert ccode(expr) == (
             "((x != 0) ? (\n"
@@ -348,7 +348,7 @@ def test_ccode_Indexed_without_looking_for_contraction():
     x = IndexedBase('x', shape=(len_y,))
     Dy = IndexedBase('Dy', shape=(len_y-1,))
     i = Idx('i', len_y-1)
-    e=Eq(Dy[i], (y[i+1]-y[i])/(x[i+1]-x[i]))
+    e = Eq(Dy[i], (y[i+1]-y[i])/(x[i+1]-x[i]))
     code0 = ccode(e.rhs, assign_to=e.lhs, contract=False)
     assert code0 == 'Dy[i] = (y[%s] - y[i])/(x[%s] - x[i]);' % (i + 1, i + 1)
 

@@ -12,7 +12,9 @@ This module contain solvers for all kinds of equations:
 
 """
 
-from sympy import divisors, binomial, expand_func
+from sympy.core.function import expand_func
+from sympy.functions.combinatorial.factorials import binomial
+from sympy.ntheory.factor_ import divisors
 from sympy.core.assumptions import check_assumptions
 from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.sympify import sympify
@@ -3218,7 +3220,7 @@ def unrad(eq, *syms, **flags):
     (_p**3 + _p**2 - 2, [_p, _p**6 - x])
 
     """
-    from sympy import Equality as Eq
+    from sympy.core.relational import Equality as Eq
 
     uflags = dict(check=False, simplify=False)
 

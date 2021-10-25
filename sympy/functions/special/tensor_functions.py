@@ -28,7 +28,7 @@ def Eijk(*args, **kwargs):
 
 def eval_levicivita(*args):
     """Evaluate Levi-Civita symbol."""
-    from sympy import factorial
+    from sympy.functions.combinatorial.factorials import factorial
     n = len(args)
     return prod(
         prod(args[j] - args[i] for j in range(i + 1, n))

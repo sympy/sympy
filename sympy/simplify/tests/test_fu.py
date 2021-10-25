@@ -1,6 +1,12 @@
-from sympy import (
-    Add, Mul, S, Symbol, cos, cot, pi, I, sin, sqrt, tan, root, csc, sec,
-    powsimp, symbols, sinh, cosh, tanh, coth, sech, csch, Dummy, Rational)
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.hyperbolic import (cosh, coth, csch, sech, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import (root, sqrt)
+from sympy.functions.elementary.trigonometric import (cos, cot, csc, sec, sin, tan)
+from sympy.simplify.powsimp import powsimp
 from sympy.simplify.fu import (
     L, TR1, TR10, TR10i, TR11, _TR11, TR12, TR12i, TR13, TR14, TR15, TR16,
     TR111, TR2, TR2i, TR3, TR5, TR6, TR7, TR8, TR9, TRmorrie, _TR56 as T,

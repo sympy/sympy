@@ -81,7 +81,7 @@ in a shorter form.
 
 .. code-block:: python
 
-    from sympy import Symbol
+    from sympy.core.symbol import Symbol
     from sympy.printing.latex import LatexPrinter, print_latex
     from sympy.core.function import UndefinedFunction, Function
 
@@ -215,7 +215,8 @@ import inspect
 from contextlib import contextmanager
 from functools import cmp_to_key, update_wrapper
 
-from sympy import Basic, Add
+from sympy.core.add import Add
+from sympy.core.basic import Basic
 
 from sympy.core.core import BasicMeta
 from sympy.core.function import AppliedUndef, UndefinedFunction, Function

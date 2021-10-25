@@ -1,6 +1,13 @@
 from collections import defaultdict
 
-from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet, Integer
+from sympy.core.basic import Basic
+from sympy.core.containers import (Dict, Tuple)
+from sympy.core.numbers import Integer
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.core.sympify import sympify
+from sympy.matrices.dense import Matrix
+from sympy.sets.sets import FiniteSet
 from sympy.core.containers import tuple_wrapper
 from sympy.core.expr import unchanged
 from sympy.core.function import Function, Lambda

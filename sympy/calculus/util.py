@@ -1,4 +1,7 @@
-from sympy import Order, limit, lcm_list, Piecewise
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.polys.polytools import lcm_list
+from sympy.series.limits import limit
+from sympy.series.order import Order
 from sympy.core import Add, Mul, Pow, S
 from sympy.core.basic import Basic
 from sympy.core.expr import AtomicExpr, Expr

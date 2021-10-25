@@ -706,7 +706,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         # automatically passed to gammasimp
         expr = combsimp(expr)
 
-    from sympy import Sum, Product, Integral
+    from sympy.concrete.products import Product
+    from sympy.concrete.summations import Sum
+    from sympy.integrals.integrals import Integral
 
     if expr.has(Sum):
         expr = sum_simplify(expr, **kwargs)

@@ -1881,7 +1881,7 @@ def build_hypergeometric_formula(func):
     # would have kicked in. However, `ap` could be empty. In this case we can
     # use a different basis.
     # I'm not aware of a basis that works in all cases.
-    from sympy import zeros, Matrix, eye
+    from sympy.matrices.dense import (Matrix, eye, zeros)
     z = Dummy('z')
     if func.ap:
         afactors = [_x + a for a in func.ap]
@@ -1996,7 +1996,7 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     def carryout_plan(f, ops):
         C = apply_operators(f.C.subs(f.z, z0), ops,
                             make_derivative_operator(f.M.subs(f.z, z0), z0))
-        from sympy import eye
+        from sympy.matrices.dense import eye
         C = apply_operators(C, ops0,
                             make_derivative_operator(f.M.subs(f.z, z0)
                                          + prem*eye(f.M.shape[0]), z0))

@@ -1211,7 +1211,7 @@ def test_multi_exp():
 
 def test__solveset_multi():
     from sympy.solvers.solveset import _solveset_multi
-    from sympy import Reals
+    from sympy.sets import Reals
 
     # Basic univariate case:
     assert _solveset_multi([x**2-1], [x], [S.Reals]) == FiniteSet((1,), (-1,))

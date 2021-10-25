@@ -307,7 +307,7 @@ def _(expr, assumptions):
         if ask(Q.real(expr.exp), assumptions):
             return True
         if ask(Q.imaginary(expr.exp), assumptions):
-            from sympy import pi, I
+            from sympy.core.numbers import (I, pi)
             return ask(Q.even(expr.exp/(I*pi)), assumptions)
         return
 
@@ -327,10 +327,10 @@ def _(expr, assumptions):
     if ask(Q.real(expr.exp), assumptions):
         return True
     if ask(Q.imaginary(expr.exp), assumptions):
-        from sympy import pi, I
+        from sympy.core.numbers import (I, pi)
         return ask(Q.even(expr.exp/(I*pi)), assumptions)
 
-@PositivePredicate.register(log) # type: ignore
+@PositivePredicate.register(log)  # type: ignore
 def _(expr, assumptions):
     r = ask(Q.real(expr.args[0]), assumptions)
     if r is not True:

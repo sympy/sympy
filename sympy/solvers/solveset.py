@@ -709,7 +709,8 @@ def _solve_trig1(f, symbol, domain):
 def _solve_trig2(f, symbol, domain):
     """Secondary helper to solve trigonometric equations,
     called when first helper fails """
-    from sympy import ilcm, expand_trig
+    from sympy.core.function import expand_trig
+    from sympy.core.numbers import ilcm
     f = trigsimp(f)
     f_original = f
     trig_functions = f.atoms(sin, cos, tan, sec, cot, csc)

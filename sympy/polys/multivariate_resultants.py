@@ -9,8 +9,11 @@ Multivariate resultants are used to identify whether a multivariate
 system has common roots. That is when the resultant is equal to zero.
 """
 
-from sympy import IndexedBase, Matrix, Mul, Poly
-from sympy import rem, prod, degree_list, diag, simplify
+from sympy.core.mul import (Mul, prod)
+from sympy.matrices.dense import (Matrix, diag)
+from sympy.polys.polytools import (Poly, degree_list, rem)
+from sympy.simplify.simplify import simplify
+from sympy.tensor.indexed import IndexedBase
 from sympy.polys.monomials import itermonomials, monomial_deg
 from sympy.polys.orderings import monomial_key
 from sympy.polys.polytools import poly_from_expr, total_degree

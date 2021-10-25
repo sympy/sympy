@@ -11,16 +11,24 @@ if sys.version_info[:2] < (3, 6):
 
 from sympy.integrals.rubi.rubi import rubi_integrate
 from sympy.functions import log, sqrt, exp, cos, sin, tan, sec, csc, cot,cosh, sinh, tanh, coth, csch, csch, sech
-from sympy import acsch , acsc, asinh,asin,acos,acosh,atan,atanh
+from sympy.functions.elementary.hyperbolic import (acosh, acsch, asinh, atanh)
+from sympy.functions.elementary.trigonometric import (acos, acsc, asin, atan)
 
 from sympy.integrals.rubi.utility_function import (EllipticE, EllipticF, Int, ArcCsch, ArcCsc, Gamma, Factorial, PolyGamma , LogGamma , Subst ,
     hypergeom, rubi_test, AppellF1, EllipticPi, Log, Sqrt, ArcTan, ArcTanh, ArcSin, ArcSinh, ArcCosh, ArcTanh, ArcCos, Hypergeometric2F1,)
-from sympy import pi
-from sympy import S, hyper, I, simplify, exp_polar, symbols, exp, Ei,erf, erfi, li, Integral, polylog, hyper as HypergeometricPFQ
-from sympy import EulerGamma, expint, Chi, Shi, Ci, Si, E
+from sympy.core.singleton import S
+from sympy.core import EulerGamma
+from sympy.core.numbers import (E, I, pi)
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import (exp, exp_polar)
+from sympy.functions.special.error_functions import (Chi, Ci, Ei, erf, erfi, expint, li, Shi, Si)
+from sympy.functions.special.hyper import HypergeometricPFQ as hyper
+from sympy.functions.special.zeta_functions import polylog
+from sympy.integrals.integrals import Integral
+from sympy.simplify.simplify import simplify
 from sympy.testing.pytest import SKIP
 
-a, b, c, d, e, f, m, n, x, u , k, p, r, s, t, i, j= symbols('a b c d e f m n x u k p r s t i j')
+a, b, c, d, e, f, m, n, x, u , k, p, r, s, t, i, j = symbols('a b c d e f m n x u k p r s t i j')
 A, B, C, D, a, b, c, d, e, f, g, h, y, z, m, n, p, q, u, v, w, F = symbols('A B C D a b c d e f g h y z m n p q u v w F', )
 
 

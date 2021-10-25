@@ -269,7 +269,7 @@ class FreeModuleElement(ModuleElement):
         return tuple(x / p for x in d)
 
     def __repr__(self):
-        from sympy import sstr
+        from sympy.printing.str import sstr
         return '[' + ', '.join(sstr(x) for x in self.data) + ']'
 
     def __iter__(self):

@@ -90,7 +90,7 @@ class MatPow(MatrixExpr):
         return MatPow(base.T, exp)
 
     def _eval_derivative(self, x):
-        from sympy import Pow
+        from sympy.core.power import Pow
         return Pow._eval_derivative(self, x)
 
     def _eval_derivative_matrix_lines(self, x):

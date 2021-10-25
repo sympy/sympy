@@ -1,6 +1,6 @@
 from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros, acos,
     ImmutableMatrix as Matrix, _simplify_matrix)
-from sympy import trigsimp
+from sympy.simplify.trigsimp import trigsimp
 from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
 from sympy.core.evalf import EvalfMixin, prec_to_dps

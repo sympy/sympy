@@ -3,7 +3,7 @@ from sympy.core.basic import Basic, as_Basic
 from sympy.core.numbers import Rational, NumberSymbol
 from sympy.core.parameters import global_parameters
 from sympy.core.relational import (Lt, Gt, Eq, Ne, Relational,
-    _canonical)
+    _canonical, _canonical_coeff)
 from sympy.core.sorting import ordered
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
@@ -175,7 +175,6 @@ class Piecewise(Function):
         >>> Piecewise(*args)
         Piecewise((1, x > 1), (2, True))
         """
-        from sympy.functions.elementary.complexes import im, re
         if not _args:
             return Undefined
 
@@ -184,44 +183,9 @@ class Piecewise(Function):
 
         newargs = []  # the unevaluated conditions
         current_cond = set()  # the conditions up to a given e, c pair
-        # make conditions canonical
-        args = []
-        for e, c in _args:
-            if (not c.is_Atom and not isinstance(c, Relational) and
-                    not c.has(im, re)):
-                free = c.free_symbols
-                if len(free) == 1:
-                    funcs = [i for i in c.atoms(Function)
-                             if not isinstance(i, Boolean)]
-                    if len(funcs) == 1 and len(
-                            c.xreplace({list(funcs)[0]: Dummy()}
-                            ).free_symbols) == 1:
-                        # we can treat function like a symbol
-                        free = funcs
-                    _c = c
-                    x = free.pop()
-                    try:
-                        c = c.as_set().as_relational(x)
-                    except NotImplementedError:
-                        pass
-                    else:
-                        reps = {}
-                        for i in c.atoms(Relational):
-                            inf = i.canonical.rhs
-                            if inf in (S.Infinity, S.NegativeInfinity):
-                                if not _c.has(inf):
-                                    # don't accept introduction of
-                                    # new Relationals with +/-oo
-                                    reps[i] = S.true
-                                elif ('=' not in i.rel_op and
-                                        c.xreplace({x: inf}) !=
-                                        _c.xreplace({x: inf})):
-                                    reps[i] = Relational(
-                                        i.lhs, i.rhs, i.rel_op + '=')
-                        c = c.xreplace(reps)
-            args.append((e, _canonical(c)))
-
-        for expr, cond in args:
+        for expr, cond in _args:
+            cond = cond.replace(
+                lambda _: _.is_Relational, _canonical_coeff)
             # Check here if expr is a Piecewise and collapse if one of
             # the conds in expr matches cond. This allows the collapsing
             # of Piecewise((Piecewise((x,x<0)),x<0)) to Piecewise((x,x<0)).
@@ -501,10 +465,9 @@ class Piecewise(Function):
 
         # handle a Piecewise from -oo to oo with and no x-independent relationals
         # -----------------------------------------------------------------------
-        try:
-            abei = self._intervals(x)
-        except NotImplementedError:
-            from sympy import Integral
+        ok, abei = self._intervals(x)
+        if not ok:
+            from sympy.integrals.integrals import Integral
             return Integral(self, x)  # unevaluated
 
         pieces = [(a, b) for a, b, _, _ in abei]
@@ -644,10 +607,9 @@ class Piecewise(Function):
 
         # handle a Piecewise with lo <= hi and no x-independent relationals
         # -----------------------------------------------------------------
-        try:
-            abei = self._intervals(x)
-        except NotImplementedError:
-            from sympy import Integral
+        ok, abei = self._intervals(x)
+        if not ok:
+            from sympy.integrals.integrals import Integral
             # not being able to do the interval of f(x) can
             # be stated as not being able to do the integral
             # of f'(x) over the same range
@@ -683,16 +645,18 @@ class Piecewise(Function):
             upto = b
         return sum
 
-    def _intervals(self, sym):
-        """Return a list of unique tuples, (a, b, e, i), where a and b
+    def _intervals(self, sym, err_on_Eq=False):
+        """Return a bool and a message (when bool is False), else a
+        list of unique tuples, (a, b, e, i), where a and b
         are the lower and upper bounds in which the expression e of
         argument i in self is defined and a < b (when involving
         numbers) or a <= b when involving symbols.
 
         If there are any relationals not involving sym, or any
-        relational cannot be solved for sym, NotImplementedError is
-        raised. The calling routine should have removed such
-        relationals before calling this routine.
+        relational cannot be solved for sym, the bool will be False
+        a message be given as the second return value. The calling
+        routine should have removed such relationals before calling
+        this routine.
 
         The evaluated conditions will be returned as ranges.
         Discontinuous ranges will be returned separately with
@@ -703,16 +667,22 @@ class Piecewise(Function):
 
         assert isinstance(self, Piecewise)
 
+        def nonsymfail(cond):
+            return False, filldedent('''
+                A condition not involving
+                %s appeared: %s''' % (sym, cond))
+
         def _solve_relational(r):
             if sym not in r.free_symbols:
-                nonsymfail(r)
-            rv = _solve_inequality(r, sym)
+                return nonsymfail(r)
+            try:
+                rv = _solve_inequality(r, sym)
+            except NotImplementedError:
+                return False, 'Unable to solve relational %s for %s.' % (r, sym)
             if isinstance(rv, Relational):
                 free = rv.args[1].free_symbols
                 if rv.args[0] != sym or sym in free:
-                    raise NotImplementedError(filldedent('''
-                        Unable to solve relational
-                        %s for %s.''' % (r, sym)))
+                    return False, 'Unable to solve relational %s for %s.' % (r, sym)
                 if rv.rel_op == '==':
                     # this equality has been affirmed to have the form
                     # Eq(sym, rhs) where rhs is sym-free; it represents
@@ -728,16 +698,17 @@ class Piecewise(Function):
                         rv = S.true
             elif rv == (S.NegativeInfinity < sym) & (sym < S.Infinity):
                 rv = S.true
-            return rv
+            return True, rv
 
-        def nonsymfail(cond):
-            raise NotImplementedError(filldedent('''
-                A condition not involving
-                %s appeared: %s''' % (sym, cond)))
-
+        args = list(self.args)
         # make self canonical wrt Relationals
-        reps = {
-            r: _solve_relational(r) for r in self.atoms(Relational)}
+        keys = self.atoms(Relational)
+        reps = {}
+        for r in keys:
+            ok, s = _solve_relational(r)
+            if ok != True:
+                return False, ok
+            reps[r] = s
         # process args individually so if any evaluate, their position
         # in the original Piecewise will be known
         args = [i.xreplace(reps) for i in self.args]
@@ -748,10 +719,16 @@ class Piecewise(Function):
         for i, (expr, cond) in enumerate(args):
             if cond is S.false:
                 continue
-            elif cond is S.true:
+            if cond is S.true:
                 default = expr
                 idefault = i
                 break
+            if isinstance(cond, Eq):
+                # unanticipated condition, but it is here in case a
+                # replacement caused an Eq to appear
+                if err_on_Eq:
+                    return False, 'encountered Eq condition: %s' % cond
+                continue  # zero width interval
 
             cond = to_cnf(cond)
             if isinstance(cond, And):
@@ -763,6 +740,10 @@ class Piecewise(Function):
                     if not isinstance(o, Eq)])
             elif cond is not S.false:
                 expr_cond.append((i, expr, cond))
+            elif cond is S.true:
+                default = expr
+                idefault = i
+                break
 
         # determine intervals represented by conditions
         int_expr = []
@@ -772,8 +753,12 @@ class Piecewise(Function):
                 upper = S.Infinity
                 exclude = []
                 for cond2 in cond.args:
+                    if not isinstance(cond2, Relational):
+                        return False, 'expecting only Relationals'
                     if isinstance(cond2, Eq):
                         lower = upper  # ignore
+                        if err_on_Eq:
+                            return False, 'encountered secondary Eq condition'
                         break
                     elif isinstance(cond2, Ne):
                         l, r = cond2.args
@@ -782,14 +767,14 @@ class Piecewise(Function):
                         elif r == sym:
                             exclude.append(l)
                         else:
-                            nonsymfail(cond2)
+                            return nonsymfail(cond2)
                         continue
                     elif cond2.lts == sym:
                         upper = Min(cond2.gts, upper)
                     elif cond2.gts == sym:
                         lower = Max(cond2.lts, lower)
                     else:
-                        nonsymfail(cond2)  # should never get here
+                        return nonsymfail(cond2)  # should never get here
                 if exclude:
                     exclude = list(ordered(exclude))
                     newcond = []
@@ -803,19 +788,20 @@ class Piecewise(Function):
                     newcond.pop(0)  # remove the primer
                     expr_cond.extend([(iarg, expr, And(i[0] < sym, sym < i[1])) for i in newcond])
                     continue
-            elif isinstance(cond, Relational):
+            elif isinstance(cond, Relational) and cond.rel_op != '!=':
                 lower, upper = cond.lts, cond.gts  # part 1: initialize with givens
                 if cond.lts == sym:                # part 1a: expand the side ...
                     lower = S.NegativeInfinity   # e.g. x <= 0 ---> -oo <= 0
                 elif cond.gts == sym:            # part 1a: ... that can be expanded
                     upper = S.Infinity           # e.g. x >= 0 --->  oo >= 0
                 else:
-                    nonsymfail(cond)
+                    return nonsymfail(cond)
             else:
-                raise NotImplementedError(
-                    'unrecognized condition: %s' % cond)
+                return False, 'unrecognized condition: %s' % cond
 
             lower, upper = lower, Max(lower, upper)
+            if err_on_Eq and lower == upper:
+                return False, 'encountered Eq condition'
             if (lower >= upper) is not S.true:
                 int_expr.append((lower, upper, expr, iarg))
 
@@ -823,7 +809,7 @@ class Piecewise(Function):
             int_expr.append(
                 (S.NegativeInfinity, S.Infinity, default, idefault))
 
-        return list(uniq(int_expr))
+        return True, list(uniq(int_expr))
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         args = [(ec.expr._eval_nseries(x, n, logx), ec.cond) for ec in self.args]
@@ -1010,7 +996,7 @@ class Piecewise(Function):
         return _canonical(last)
 
     def _eval_rewrite_as_KroneckerDelta(self, *args):
-        from sympy import KroneckerDelta
+        from sympy.functions.special.tensor_functions import KroneckerDelta
 
         rules = {
             And: [False, False],
@@ -1224,8 +1210,47 @@ def _clip(A, B, k):
 
 
 def piecewise_simplify_arguments(expr, **kwargs):
-    from sympy import simplify
+    from sympy.simplify.simplify import simplify
     args = []
+    f1 = expr.args[0].cond.free_symbols
+    if len(f1) == 1 and not expr.atoms(Eq):
+        x = f1.pop()
+        # this won't return intervals involving Eq
+        # and it won't handle symbols treated as
+        # booleans
+        ok, abe_ = expr._intervals(x, err_on_Eq=True)
+        if ok:
+            args = []
+            for a, b, e, i in abe_:
+                c = expr.args[i].cond
+                if a is S.NegativeInfinity:
+                    if b is S.Infinity:
+                        c = S.true
+                    else:
+                        if c.subs(x, b) == True:
+                            c = (x <= b)
+                        else:
+                            c = (x < b)
+                else:
+                    incl_a = (c.subs(x, a) == True)
+                    incl_b = (c.subs(x, b) == True)
+                    if incl_a and incl_b:
+                        if b.is_infinite:
+                            c = (x >= a)
+                        else:
+                            c = And(a <= x, x <= b)
+                    elif incl_a:
+                        c = And(a <= x, x < b)
+                    elif incl_b:
+                        if b.is_infinite:
+                            c = (x > a)
+                        else:
+                            c = And(a < x, x <= b)
+                    else:
+                        c = And(a < x, x < b)
+                args.append((e, c))
+            args.append((Undefined, True))
+            expr = Piecewise(*args)
     for e, c in expr.args:
         if isinstance(e, Basic):
             doit = kwargs.pop('doit', None)

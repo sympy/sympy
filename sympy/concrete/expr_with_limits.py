@@ -92,8 +92,7 @@ def _process_limits(*symbols):
         if isinstance(V, (Relational, BooleanFunction)):
             variable = V.atoms(Symbol).pop()
             V = (variable, V.as_set())
-
-        if isinstance(V, Symbol) or getattr(V, '_diff_wrt', False):
+        elif isinstance(V, Symbol) or getattr(V, '_diff_wrt', False):
             if isinstance(V, Idx):
                 if V.lower is None or V.upper is None:
                     limits.append(Tuple(V))
@@ -102,7 +101,7 @@ def _process_limits(*symbols):
             else:
                 limits.append(Tuple(V))
             continue
-        elif is_sequence(V, Tuple):
+        if is_sequence(V, (tuple, Tuple)):
             if len(V) == 2 and isinstance(V[1], Range):
                 lo = V[1].inf
                 hi = V[1].sup

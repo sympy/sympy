@@ -7,9 +7,21 @@ from typing import Optional, List, Dict, Tuple as tTuple
 
 import typing
 
-from sympy import Expr, ImmutableDenseNDimArray, S, Symbol, ZeroMatrix, Basic, tensorproduct, permutedims, \
-    Tuple, tensordiagonal, Lambda, Dummy, Function, MatrixExpr, NDimArray, Indexed, IndexedBase, default_sort_key, \
-    tensorcontraction, diagonalize_vector, Mul
+from sympy.core.basic import Basic
+from sympy.core.compatibility import default_sort_key
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import (Function, Lambda)
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.matrices.expressions.diagonal import diagonalize_vector
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.special import ZeroMatrix
+from sympy.tensor.array.arrayop import (permutedims, tensorcontraction, tensordiagonal, tensorproduct)
+from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
+from sympy.tensor.array.ndim_array import NDimArray
+from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.utils import _apply_recursively_over_nested_lists, _sort_contraction_indices, \
     _get_mapping_from_subranks, _build_push_indices_up_func_transformation, _get_contraction_links, \

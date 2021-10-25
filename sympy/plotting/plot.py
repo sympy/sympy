@@ -25,7 +25,10 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 
 from collections.abc import Callable
 
-from sympy import sympify, Expr, Tuple, Dummy, Symbol
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.sympify import sympify
 from sympy.external import import_module
 from sympy.core.function import arity
 from sympy.utilities.iterables import is_sequence

@@ -1,4 +1,5 @@
-from sympy import Integer, Rational, Tuple
+from sympy.core.containers import Tuple
+from sympy.core.numbers import (Integer, Rational)
 import sympy.polys
 
 from math import gcd

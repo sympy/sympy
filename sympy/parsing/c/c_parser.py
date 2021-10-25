@@ -51,7 +51,9 @@ if cin:
         PreIncrement, PostIncrement)
     from sympy.core import Add, Mod, Mul, Pow, Rel
     from sympy.logic.boolalg import And, as_Boolean, Not, Or
-    from sympy import Symbol, sympify, true, false
+    from sympy.core.symbol import Symbol
+    from sympy.core.sympify import sympify
+    from sympy.logic.boolalg import (false, true)
     import sys
     import tempfile
 

@@ -453,7 +453,7 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         return self._print_Rational(expr)
 
     def _print_frac(self, expr):
-        from sympy import Mod
+        from sympy.core.mod import Mod
         return self._print_Mod(Mod(expr.args[0], 1))
 
     def _print_Symbol(self, expr):
