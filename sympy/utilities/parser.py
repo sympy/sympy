@@ -28,7 +28,6 @@ class Parser():
             return parsed
         run_parser.__doc__=parser.__doc__
         decorated=MethodType(run_parser,self)
-        
         return decorated
 
     def setup_parser(self,name):
@@ -59,7 +58,7 @@ class Parser():
             return self.generic_parser
         #this can happen if Parser._<parse> or Parser._<parse>_<Class>
         #is used directly, but a Parser._<parse> is not explicitly defined:
-        #in that case, we replace the first Parser._<parse> with a 
+        #in that case, we replace the first Parser._<parse> with a
         #generic do to set it up properly:
         if len(attr[1:].split('_'))==1:
             self.setup_parser(attr[1:])
@@ -117,16 +116,16 @@ class Parser():
                     c == classes[0] or \
                     c.endswith("Base")) + classes[i:]
             #If a class is inside any group, add the group Class right after
-            #the class which is part of the group          
+            #the class which is part of the group
             for group_class,group in self.groups.items():
                 idx=0
                 for i,cls in enumerate(classes):
                     if cls in group:
                         idx=i+1
-                if idx:        
+                if idx:
                     classes=classes[:idx] +(group_class,) + classes[idx:]
             for cls in classes:
-                parsemethodname = '_'+name+'_' + cls #               
+                parsemethodname = '_'+name+'_' + cls
                 parsemethod = getattr(self, parsemethodname, None)
                 if parsemethod is not None:
                     return parsemethod(expr, **kwargs)
@@ -135,4 +134,3 @@ class Parser():
             return empty(expr, **kwargs)
         finally:
             setattr(self,'_'+name+'_level',getattr(self,'_'+name+'_level')-1)
-

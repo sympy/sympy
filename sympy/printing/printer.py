@@ -217,8 +217,6 @@ from functools import cmp_to_key, update_wrapper
 
 from sympy import Basic, Add
 
-from sympy.core.core import BasicMeta
-from sympy.core.function import AppliedUndef, UndefinedFunction, Function
 from sympy.utilities.parser import Parser
 
 
