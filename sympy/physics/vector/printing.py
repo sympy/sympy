@@ -62,7 +62,7 @@ class VectorLatexPrinter(LatexPrinter):
                 base = self.parenthesize_super(base)
                 return r"%s^{%s}" % (base, exp)
             else:
-                return super()._print(expr)
+                return self._print(expr)
         else:
             return super()._print_Function(expr, exp)
 

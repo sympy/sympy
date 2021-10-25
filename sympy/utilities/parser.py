@@ -2,6 +2,7 @@ from types import MethodType
 
 class Parser():
     groups = {} # type: dict[str,tuple]
+    namestack = [] #type: list[str]
 
     def __init__(self,*args,**kwargs):
         self.namestack=[]

@@ -271,6 +271,7 @@ class Printer(Parser):
         # _print_level is the number of times self._print() was recursively
         # called. See StrPrinter._print_Float() for an example of usage
         self._print_level = 0
+        super().__init__()
 
     @classmethod
     def set_global_settings(cls, **settings):
@@ -285,6 +286,10 @@ class Printer(Parser):
             return self._settings['order']
         else:
             raise AttributeError("No order defined.")
+
+    def doprint(self, expr):
+        """Returns printer's representation for expr (as a string)"""
+        return self._str(self._print(expr))
 
     _printempty='emptyPrinter'
 
