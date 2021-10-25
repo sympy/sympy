@@ -805,5 +805,5 @@ def test_issue_8615():
 
 
 def test_issue_22361():
-    assert Line(Eq(x, 1)) == Line2D(Point2D(0, 1), Point2D(1, 1))
-    assert Line(Eq(y, 1)) == Line2D(Point2D(1, 0), Point2D(1, 1))
+    assert Line(Eq(x, 1)) == Line2D(Point2D(1, 0), Point2D(1, 1))
+    assert Line(Eq(y, 1)) == Line2D(Point2D(0, 1), Point2D(1, 1))
