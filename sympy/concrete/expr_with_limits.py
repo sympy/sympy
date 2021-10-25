@@ -17,7 +17,7 @@ from sympy.utilities.iterables import sift, is_sequence
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
-def _common_new(cls, function, *symbols, **assumptions):
+def _common_new(cls, function, *symbols, discrete, **assumptions):
     """Return either a special return value or the tuple,
     (function, limits, orientation). This code is common to
     both ExprWithLimits and AddWithLimits."""
@@ -26,7 +26,7 @@ def _common_new(cls, function, *symbols, **assumptions):
     if isinstance(function, Equality):
         # This transforms e.g. Integral(Eq(x, y)) to Eq(Integral(x), Integral(y))
         # but that is only valid for definite integrals.
-        limits, orientation = _process_limits(*symbols)
+        limits, orientation = _process_limits(*symbols, discrete=discrete)
         if not (limits and all(len(limit) == 3 for limit in limits)):
             SymPyDeprecationWarning(
                 feature='Integral(Eq(x, y))',
@@ -44,7 +44,7 @@ def _common_new(cls, function, *symbols, **assumptions):
         return S.NaN
 
     if symbols:
-        limits, orientation = _process_limits(*symbols)
+        limits, orientation = _process_limits(*symbols, discrete=discrete)
         for i, li in enumerate(limits):
             if len(li) == 4:
                 function = function.subs(li[0], li[-1])
@@ -80,7 +80,7 @@ def _common_new(cls, function, *symbols, **assumptions):
     return function, limits, orientation
 
 
-def _process_limits(*symbols):
+def _process_limits(*symbols, discrete=None):
     """Process the list of symbols and convert them to canonical limits,
     storing them as Tuple(symbol, lower, upper). The orientation of
     the function is also returned when the upper limit is missing
@@ -92,8 +92,16 @@ def _process_limits(*symbols):
     """
     limits = []
     orientation = 1
+    if discrete is None:
+        err_msg = 'discrete must be True or False'
+    elif discrete:
+        err_msg = 'use Range, not Interval or Relational'
+    else:
+        err_msg = 'use Interval or Relational, not Range'
     for V in symbols:
         if isinstance(V, (Relational, BooleanFunction)):
+            if discrete:
+                raise TypeError(err_msg)
             variable = V.atoms(Symbol).pop()
             V = (variable, V.as_set())
         elif isinstance(V, Symbol) or getattr(V, '_diff_wrt', False):
@@ -108,9 +116,13 @@ def _process_limits(*symbols):
         if is_sequence(V) and not isinstance(V, Set):
             if len(V) == 2 and isinstance(V[1], Set):
                 V = list(V)
-                if isinstance(V[1], Interval):
-                    V[1:] = i.args[:2]
+                if isinstance(V[1], Interval):  # includes Reals
+                    if discrete:
+                        raise TypeError(err_msg)
+                    V[1:] = V[1].inf, V[1].sup
                 elif isinstance(V[1], Range):
+                    if not discrete:
+                        raise TypeError(err_msg)
                     lo = V[1].inf
                     hi = V[1].sup
                     dx = abs(V[1].step)  # direction doesn't matter
@@ -124,7 +136,9 @@ def _process_limits(*symbols):
                 else:
                     # more complicated sets would require splitting, e.g.
                     # Union(Interval(1, 3), interval(6,10))
-                    raise NotImplementedError('expecting Range or Interval')
+                    raise NotImplementedError(
+                        'expecting Range' if discrete else
+                        'Relational or single Interval' )
             V = sympify(flatten(V))  # a list of sympified elements
             if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
                 newsymbol = V[0]
@@ -176,7 +190,9 @@ class ExprWithLimits(Expr):
     __slots__ = ('is_commutative',)
 
     def __new__(cls, function, *symbols, **assumptions):
-        pre = _common_new(cls, function, *symbols, **assumptions)
+        from sympy.concrete.products import Product
+        pre = _common_new(cls, function, *symbols,
+            discrete=issubclass(cls, Product), **assumptions)
         if isinstance(pre, tuple):
             function, limits, _ = pre
         else:
@@ -509,7 +525,9 @@ class AddWithLimits(ExprWithLimits):
     """
 
     def __new__(cls, function, *symbols, **assumptions):
-        pre = _common_new(cls, function, *symbols, **assumptions)
+        from sympy.concrete.summations import Sum
+        pre = _common_new(cls, function, *symbols,
+            discrete=issubclass(cls, Sum), **assumptions)
         if isinstance(pre, tuple):
             function, limits, orientation = pre
         else:
