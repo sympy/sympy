@@ -27,7 +27,9 @@ def find(x, equation):
 
     free = equation.free_symbols
     xs = [i for i in free if (i.name if isinstance(x, str) else i) == x]
-    if not xs:
+    if not xs and (str(equation) != x):
+        return 1
+    if str(equation) == x:
         raise ValueError('could not find %s' % x)
     if len(xs) != 1:
         raise ValueError('ambiguous %s' % x)
