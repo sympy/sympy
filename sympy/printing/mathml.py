@@ -66,7 +66,9 @@ class MathMLPrinterBase(Printer):
         """
         Prints the expression as MathML.
         """
-        mathML = Printer._print(self, expr)
+        #mathML = Printer._print(self, expr)
+        #
+        mathML=self._print(expr)
         unistr = mathML.toxml()
         xmlbstr = unistr.encode('ascii', 'xmlcharrefreplace')
         res = xmlbstr.decode()
