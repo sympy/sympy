@@ -1,7 +1,7 @@
 from types import MethodType
 
 class Parser():
-    groups={}
+    groups: = {} # type: Dict[str,Tuple(str)]
 
     def __init__(self,*args,**kwargs):
         self.namestack=[]
