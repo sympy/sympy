@@ -2016,7 +2016,12 @@ class MatrixOperations(MatrixRequired):
         return sum(self[i, i] for i in range(self.rows))
 
     def _eval_transpose(self):
-        return self._new(self.cols, self.rows, lambda i, j: self[j, i])
+        def func(i, j):
+            if hasattr(U[j, i], "transpose"):
+                return U[j, i].transpose()
+            return U[j, i]
+            
+        return self._new(self.cols, self.rows, func)
 
     def adjoint(self):
         """Conjugate transpose or Hermitian conjugation."""
