@@ -2020,7 +2020,7 @@ class MatrixOperations(MatrixRequired):
             if hasattr(U[j, i], "transpose"):
                 return U[j, i].transpose()
             return U[j, i]
-            
+
         return self._new(self.cols, self.rows, func)
 
     def adjoint(self):
