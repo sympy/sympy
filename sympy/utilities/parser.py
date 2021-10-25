@@ -15,13 +15,13 @@ class Parser():
     def decorate_parser(self,parser):
         def run_parser(self,*args,**kwargs):
             name=parser.__name__[2:]
-
+            self.namestack.append(name)
             #setup parser attributes
             self.setup_parser(name)
 
             #update the stack so that we can nest different parsers
             #(but not the same)
-            self.namestack.append(name)
+
             #perform parsing
             parsed=parser(*args,**kwargs)
             #pop the stack to indicate we are done with parsing
@@ -38,7 +38,7 @@ class Parser():
         #    raise RecursionError(error.format(name))
         level="_"+name+"_level"
         if not hasattr(self,level):
-            setattr(self,"_"+name+"_level",0)
+            setattr(self,level,0)
         #setup the name of the method to use for parsing of a class
         #that is being parsed has it.
         method=name+"method"
@@ -52,8 +52,8 @@ class Parser():
 
     def __getattr__(self,attr):
         if attr[:2]=='do':
-            self.setup_parser(attr[2:])
             self.namestack.append(attr[2:])
+            self.setup_parser(attr[2:])
             return self.generic_do
         if attr[1:] in self.namestack:
             return self.generic_parser
@@ -62,6 +62,9 @@ class Parser():
         #in that case, we replace the first Parser._<parse> with a
         #generic do to set it up properly:
         if len(attr[1:].split('_'))==1:
+            for name in self.namestack:
+                if attr in ['_'+name+'_level',name+'method','_'+name+'empty']:
+                    raise AttributeError(attr)
             self.setup_parser(attr[1:])
             self.namestack.append(attr[1:])
             return self.generic_do
@@ -81,7 +84,9 @@ class Parser():
         self.namestack.pop()
         return result
 
-    def generic_parser(self,expr,name=None,**kwargs):
+    def generic_parser(self,*args,**kwargs):
+        expr=args[0]
+        name=kwargs.get('name',None)
         if name is None:
             name=self.namestack[-1]
         """Internal dispatcher
@@ -98,8 +103,8 @@ class Parser():
             # should be printed, use that method.
             parsemethod=getattr(self,name+'method')
             if (parsemethod and hasattr(expr, parsemethod) #
-                    and not 'BasicMeta' in expr.__class__.__mro__):
-                return getattr(expr, parsemethod)(self, **kwargs) #
+                    and not isinstance(expr,type)):
+                return getattr(expr, parsemethod)(self, *args[1:],**kwargs) #
             # See if the class of expr is known, or if one of its super
             # classes is known, and use that print function
             # Exception: ignore the subclasses of Undefined, so that, e.g.,
@@ -129,9 +134,9 @@ class Parser():
                 parsemethodname = '_'+name+'_' + cls
                 parsemethod = getattr(self, parsemethodname, None)
                 if parsemethod is not None:
-                    return parsemethod(expr, **kwargs)
+                    return parsemethod(*args, **kwargs)
             #use the empty parser as a last resort
             empty=getattr(self,getattr(self,"_"+name+"empty"))
-            return empty(expr, **kwargs)
+            return empty(*args, **kwargs)
         finally:
             setattr(self,'_'+name+'_level',getattr(self,'_'+name+'_level')-1)
