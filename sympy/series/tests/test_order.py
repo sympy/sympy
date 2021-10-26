@@ -450,3 +450,7 @@ def test_issue_18606():
 
 def test_issue_22165():
     assert O(log(x)).contains(2)
+
+
+def test_issue_9917():
+    assert O(x*sin(x) + 1, (x, oo)) == O(x, (x, oo))
