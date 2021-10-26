@@ -151,7 +151,7 @@ class GLSLPrinter(CodePrinter):
                 A.table(self,rowsep=mat_separator,rowstart='float[](',rowend=')')
             )
 
-    def _print_SparseMatrix(self, mat):
+    def _print_SparseRepMatrix(self, mat):
         # do not allow sparse matrices to be made dense
         return self._print_not_supported(mat)
 

@@ -440,7 +440,7 @@ class RustCodePrinter(CodePrinter):
         else:
             raise ValueError("Full Matrix Support in Rust need Crates (https://crates.io/keywords/matrix).")
 
-    def _print_SparseMatrix(self, mat):
+    def _print_SparseRepMatrix(self, mat):
         # do not allow sparse matrices to be made dense
         return self._print_not_supported(mat)
 

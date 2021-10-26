@@ -202,7 +202,7 @@ class MapleCodePrinter(CodePrinter):
     def _print_MatrixBase(self, expr):
         return self._get_matrix(expr, sparse=False)
 
-    def _print_SparseMatrix(self, expr):
+    def _print_SparseRepMatrix(self, expr):
         return self._get_matrix(expr, sparse=True)
 
     def _print_Identity(self, expr):

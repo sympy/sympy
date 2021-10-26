@@ -345,7 +345,7 @@ class JuliaCodePrinter(CodePrinter):
                                 rowsep=';\n', colsep=' ')
 
 
-    def _print_SparseMatrix(self, A):
+    def _print_SparseRepMatrix(self, A):
         from sympy.matrices import Matrix
         L = A.col_list();
         # make row vectors of the indices and entries
