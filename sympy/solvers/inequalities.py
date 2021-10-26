@@ -3,7 +3,7 @@
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Eq, Ge, Lt
-from sympy.sets.sets import EmptySet, Interval, FiniteSet, Union, Intersection
+from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
 
@@ -639,7 +639,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     im_sol = S.Reals
                     check = False
 
-                if isinstance(im_sol, EmptySet):
+                if im_sol is S.EmptySet:
                     raise ValueError(filldedent('''
                         %s contains imaginary parts which cannot be
                         made 0 for any value of %s satisfying the

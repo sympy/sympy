@@ -25,7 +25,7 @@ from sympy.polys.rootoftools import CRootOf
 from sympy.sets.contains import Contains
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import ImageSet, Range
-from sympy.sets.sets import (Complement, EmptySet, FiniteSet,
+from sympy.sets.sets import (Complement, FiniteSet,
     Intersection, Interval, Union, imageset, ProductSet)
 from sympy.simplify import simplify
 from sympy.tensor.indexed import Indexed
@@ -91,7 +91,7 @@ def test_invert_real():
 
     # issue 21236
     assert invert_real(x**pi, y, x) == (x, FiniteSet(y**(1/pi)))
-    assert invert_real(x**pi, -E, x) == (x, EmptySet())
+    assert invert_real(x**pi, -E, x) == (x, S.EmptySet)
     assert invert_real(x**Rational(3/2), 1000, x) == (x, FiniteSet(100))
     assert invert_real(x**1.0, 1, x) == (x**1.0, FiniteSet(1))
 
@@ -307,7 +307,7 @@ def test_solve_mul():
     assert solveset_real((anz*x + bb)*(exp(x) - 3), x) == \
         FiniteSet(-bb/anz, log(3))
     assert solveset_real((2*x + 8)*(8 + exp(x)), x) == FiniteSet(S(-4))
-    assert solveset_real(x/log(x), x) == EmptySet()
+    assert solveset_real(x/log(x), x) is S.EmptySet
 
 
 def test_solve_invert():
@@ -546,20 +546,20 @@ def test_solve_rational():
 
 
 def test_solveset_real_gen_is_pow():
-    assert solveset_real(sqrt(1) + 1, x) == EmptySet()
+    assert solveset_real(sqrt(1) + 1, x) is S.EmptySet
 
 
 def test_no_sol():
-    assert solveset(1 - oo*x) == EmptySet()
-    assert solveset(oo*x, x) == EmptySet()
-    assert solveset(oo*x - oo, x) == EmptySet()
-    assert solveset_real(4, x) == EmptySet()
-    assert solveset_real(exp(x), x) == EmptySet()
-    assert solveset_real(x**2 + 1, x) == EmptySet()
-    assert solveset_real(-3*a/sqrt(x), x) == EmptySet()
-    assert solveset_real(1/x, x) == EmptySet()
-    assert solveset_real(-(1 + x)/(2 + x)**2 + 1/(2 + x), x) == \
-        EmptySet()
+    assert solveset(1 - oo*x) is S.EmptySet
+    assert solveset(oo*x, x) is S.EmptySet
+    assert solveset(oo*x - oo, x) is S.EmptySet
+    assert solveset_real(4, x) is S.EmptySet
+    assert solveset_real(exp(x), x) is S.EmptySet
+    assert solveset_real(x**2 + 1, x) is S.EmptySet
+    assert solveset_real(-3*a/sqrt(x), x) is S.EmptySet
+    assert solveset_real(1/x, x) is S.EmptySet
+    assert solveset_real(-(1 + x)/(2 + x)**2 + 1/(2 + x), x
+        ) is S.EmptySet
 
 
 def test_sol_zero_real():
@@ -569,8 +569,8 @@ def test_sol_zero_real():
 
 
 def test_no_sol_rational_extragenous():
-    assert solveset_real((x/(x + 1) + 3)**(-2), x) == EmptySet()
-    assert solveset_real((x - 1)/(1 + 1/(x - 1)), x) == EmptySet()
+    assert solveset_real((x/(x + 1) + 3)**(-2), x) is S.EmptySet
+    assert solveset_real((x - 1)/(1 + 1/(x - 1)), x) is S.EmptySet
 
 
 def test_solve_polynomial_cv_1a():
@@ -728,7 +728,7 @@ def test_solveset_complex_polynomial():
 
 
 def test_sol_zero_complex():
-    assert solveset_complex(0, x) == S.Complexes
+    assert solveset_complex(0, x) is S.Complexes
 
 
 def test_solveset_complex_rational():
@@ -1088,7 +1088,7 @@ def test_solve_lambert():
         FiniteSet(4*LambertW(sqrt(2)*sqrt(a)/4))
 
     # coverage test
-    assert solveset_real(tanh(x + 3)*tanh(x - 3) - 1, x) == EmptySet()
+    assert solveset_real(tanh(x + 3)*tanh(x - 3) - 1, x) is S.EmptySet
 
     assert solveset_real((x**2 - 2*x + 1).subs(x, log(x) + 3*x), x) == \
         FiniteSet(LambertW(3*S.Exp1)/3)
@@ -1298,8 +1298,8 @@ def test_issue_9522():
     expr1 = Eq(1/(x**2 - 4) + x, 1/(x**2 - 4) + 2)
     expr2 = Eq(1/x + x, 1/x)
 
-    assert solveset(expr1, x, S.Reals) == EmptySet()
-    assert solveset(expr2, x, S.Reals) == EmptySet()
+    assert solveset(expr1, x, S.Reals) is S.EmptySet
+    assert solveset(expr2, x, S.Reals) is S.EmptySet
 
 
 def test_solvify():
@@ -1425,7 +1425,7 @@ def test_linsolve():
     # No solution
     A = Matrix([[1, 2, 3], [2, 4, 6], [3, 6, 9]])
     B = Matrix([0, 0, 1])
-    assert linsolve((A, B), (x, y, z)) == EmptySet()
+    assert linsolve((A, B), (x, y, z)) is S.EmptySet
 
     # Issue #10056
     A, B, J1, J2 = symbols('A B J1 J2')
@@ -1485,7 +1485,7 @@ def test_linsolve():
     #
     # XXX: The case below should give the same as for [0]
     # assert linsolve([], [x]) == {(x,)}
-    assert linsolve([], [x]) == EmptySet()
+    assert linsolve([], [x]) is S.EmptySet
     assert linsolve([0], [x]) == {(x,)}
     assert linsolve([x], [x, y]) == {(0, y)}
     assert linsolve([x, 0], [x, y]) == {(0, y)}
@@ -1809,7 +1809,7 @@ def test_issue_13396():
     assert solveset(expr, y, domain=S.Reals) == sol
 
     # Related type of equation also solved here
-    assert solveset(atan(x**2 - y**2)-pi/2, y, S.Reals) == EmptySet()
+    assert solveset(atan(x**2 - y**2)-pi/2, y, S.Reals) is S.EmptySet
 
 
 def test_issue_12032():
@@ -2144,9 +2144,9 @@ def test_issue_14565():
 def test_issue_9556():
     b = Symbol('b', positive=True)
 
-    assert solveset(Abs(x) + 1, x, S.Reals) == EmptySet()
-    assert solveset(Abs(x) + b, x, S.Reals) == EmptySet()
-    assert solveset(Eq(b, -1), b, S.Reals) == EmptySet()
+    assert solveset(Abs(x) + 1, x, S.Reals) is S.EmptySet
+    assert solveset(Abs(x) + b, x, S.Reals) is S.EmptySet
+    assert solveset(Eq(b, -1), b, S.Reals) is S.EmptySet
 
 
 def test_issue_9611():
@@ -2354,7 +2354,7 @@ def test_issue_13550():
 
 
 def test_issue_13849():
-    assert nonlinsolve((t*(sqrt(5) + sqrt(2)) - sqrt(2), t), t) == EmptySet()
+    assert nonlinsolve((t*(sqrt(5) + sqrt(2)) - sqrt(2), t), t) is S.EmptySet
 
 
 def test_issue_14223():
@@ -2612,9 +2612,9 @@ def test_logarithmic():
 @XFAIL
 def test_uselogcombine_2():
     eq = log(exp(2*x) + 1) + log(-tanh(x) + 1) - log(2)
-    assert solveset_real(eq, x) == EmptySet()
+    assert solveset_real(eq, x) is S.EmptySet
     eq = log(8*x) - log(sqrt(x) + 1) - 2
-    assert solveset_real(eq, x) == EmptySet()
+    assert solveset_real(eq, x) is S.EmptySet
 
 
 def test_is_logarithmic():
@@ -2714,12 +2714,12 @@ def test_invert_modular():
             (Mod((x + 1)*(x + 2), 7), 5)
     # a.is_Pow
     assert invert_modular(Mod(x**4, 7), S(5), n, x) == \
-            (x, EmptySet())
+            (x, S.EmptySet)
     assert dumeq(invert_modular(Mod(3**x, 4), S(3), n, x),
             (x, ImageSet(Lambda(n, 2*n + 1), S.Naturals0)))
     assert dumeq(invert_modular(Mod(2**(x**2 + x + 1), 7), S(2), n, x),
             (x**2 + x + 1, ImageSet(Lambda(n, 3*n + 1), S.Naturals0)))
-    assert invert_modular(Mod(sin(x)**4, 7), S(5), n, x) == (x, EmptySet())
+    assert invert_modular(Mod(sin(x)**4, 7), S(5), n, x) == (x, S.EmptySet)
 
 
 def test_solve_modular():
@@ -2740,12 +2740,12 @@ def test_solve_modular():
         ).dummy_eq(ConditionSet(x, Eq(Mod(exp(x), 7) - 3, 0),
         S.Integers))
     # EmptySet solution definitely
-    assert solveset(7 - Mod(x, 5), x, S.Integers) == EmptySet()
-    assert solveset(5 - Mod(x, 5), x, S.Integers) == EmptySet()
+    assert solveset(7 - Mod(x, 5), x, S.Integers) is S.EmptySet
+    assert solveset(5 - Mod(x, 5), x, S.Integers) is S.EmptySet
     # Negative m
     assert dumeq(solveset(2 + Mod(x, -3), x, S.Integers),
             ImageSet(Lambda(n, -3*n - 2), S.Integers))
-    assert solveset(4 + Mod(x, -3), x, S.Integers) == EmptySet()
+    assert solveset(4 + Mod(x, -3), x, S.Integers) is S.EmptySet
     # linear expression in Mod
     assert dumeq(solveset(3 - Mod(x, 5), x, S.Integers),
         ImageSet(Lambda(n, 5*n + 3), S.Integers))
@@ -2763,7 +2763,7 @@ def test_solve_modular():
             ImageSet(Lambda(n, 160*n + 93), S.Integers),
             ImageSet(Lambda(n, 160*n + 147), S.Integers),
             ImageSet(Lambda(n, 160*n + 157), S.Integers)))
-    assert solveset(3 - Mod(x**4, 7), x, S.Integers) == EmptySet()
+    assert solveset(3 - Mod(x**4, 7), x, S.Integers) is S.EmptySet
     assert dumeq(solveset(Mod(x**4, 17) - 13, x, S.Integers),
             Union(ImageSet(Lambda(n, 17*n + 3), S.Integers),
             ImageSet(Lambda(n, 17*n + 5), S.Integers),
@@ -2782,7 +2782,7 @@ def test_solve_modular():
             Intersection(ImageSet(Lambda(n, Intersection({log(2*n + 1)/log(3)},
             S.Integers)), S.Naturals0), S.Integers))
     # Implemented for m without primitive root
-    assert solveset(Mod(x**3, 7) - 2, x, S.Integers) == EmptySet()
+    assert solveset(Mod(x**3, 7) - 2, x, S.Integers) is S.EmptySet
     assert dumeq(solveset(Mod(x**3, 8) - 1, x, S.Integers),
             ImageSet(Lambda(n, 8*n + 1), S.Integers))
     assert dumeq(solveset(Mod(x**4, 9) - 4, x, S.Integers),
@@ -2793,7 +2793,7 @@ def test_solve_modular():
             Intersection(ImageSet(Lambda(n, 7*n + 5), S.Integers), S.Naturals0))
     # Complex args
     assert solveset(Mod(x, 3) - I, x, S.Integers) == \
-            EmptySet()
+            S.EmptySet
     assert solveset(Mod(I*x, 3) - 2, x, S.Integers
         ).dummy_eq(
             ConditionSet(x, Eq(Mod(I*x, 3) - 2, 0), S.Integers))
@@ -2822,7 +2822,7 @@ def test_solve_modular():
     assert dumeq(solveset(c - Mod(a**(2*n)*b, m), n, S.Integers),
             Intersection(ImageSet(Lambda(n, 1073741823*n + 50), S.Naturals0),
             S.Integers))
-    assert solveset(c - Mod(a**(2*n + 7)*b, m), n, S.Integers) == EmptySet()
+    assert solveset(c - Mod(a**(2*n + 7)*b, m), n, S.Integers) is S.EmptySet
     assert dumeq(solveset(c - Mod(a**(n - 4)*b, m), n, S.Integers),
             Intersection(ImageSet(Lambda(n, 2147483646*n + 104), S.Naturals0),
             S.Integers))
@@ -2971,7 +2971,7 @@ def test_substitution_with_infeasible_solution():
 
 
 def test_issue_20097():
-    assert solveset(1/sqrt(x)) == EmptySet()
+    assert solveset(1/sqrt(x)) is S.EmptySet
 
 
 def test_issue_15350():
@@ -2995,7 +2995,7 @@ def test_issue_17604():
 
 
 def test_issue_17580():
-    assert solveset(1/(1 - x**3)**2, x, S.Reals) == EmptySet()
+    assert solveset(1/(1 - x**3)**2, x, S.Reals) is S.EmptySet
 
 
 def test_issue_17566_actual():

@@ -10,7 +10,8 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import true
 from sympy.multipledispatch import dispatch
 from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
-                        EmptySet, Intersection, Range)
+    Intersection, Range)
+from sympy.sets.sets import EmptySet
 from sympy.sets.fancysets import Integers, Naturals, Reals
 from sympy.functions.elementary.exponential import match_real_imag
 
@@ -88,7 +89,8 @@ def _set_function(f, x): # noqa:F811
 
     if len(sing) == 0:
         soln_expr = solveset(diff(expr, var), var)
-        if not (isinstance(soln_expr, FiniteSet) or soln_expr is EmptySet):
+        if not (isinstance(soln_expr, FiniteSet)
+                or soln_expr is S.EmptySet):
             return
         solns = list(soln_expr)
 
@@ -140,7 +142,7 @@ def _set_function(f, x): # noqa:F811
     else:
         return ImageSet(Lambda(_x, f(_x)), x)
 
-@dispatch(FunctionUnion, type(EmptySet))  # type: ignore # noqa:F811
+@dispatch(FunctionUnion, EmptySet)  # type: ignore # noqa:F811
 def _set_function(f, x): # noqa:F811
     return x
 

@@ -1513,9 +1513,3 @@ class Complexes(CartesianComplexRegion, metaclass=Singleton):
 
     def __new__(cls):
         return Set.__new__(cls)
-
-    def __str__(self):
-        return "S.Complexes"
-
-    def __repr__(self):
-        return "S.Complexes"

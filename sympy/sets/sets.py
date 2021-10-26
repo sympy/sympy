@@ -210,7 +210,7 @@ class Set(Basic, EvalfMixin):
         elif isinstance(other, Complement):
             return Complement(other.args[0], Union(other.args[1], self), evaluate=False)
 
-        elif isinstance(other, EmptySet):
+        elif other is S.EmptySet:
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
@@ -2108,7 +2108,7 @@ class DisjointUnion(Set):
         where ``set`` is the element in ``sets`` at index = ``i``
         """
 
-        dj_union = EmptySet()
+        dj_union = S.EmptySet
         index = 0
         for set_i in sets:
             if isinstance(set_i, Set):

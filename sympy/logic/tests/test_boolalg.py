@@ -6,7 +6,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.sets.sets import (EmptySet, Interval, Union)
+from sympy.sets.sets import (Interval, Union)
 from sympy.simplify.simplify import simplify
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or,
@@ -869,7 +869,7 @@ def test_bool_as_set():
     assert Not(And(x > 2, x < 3)).as_set() == \
         Union(Interval(-oo, 2), Interval(3, oo))
     assert true.as_set() == S.UniversalSet
-    assert false.as_set() == EmptySet()
+    assert false.as_set() is S.EmptySet
     assert x.as_set() == S.UniversalSet
     assert And(Or(x < 1, x > 3), x < 2).as_set() == Interval.open(-oo, 1)
     assert And(x < 1, sin(x) < 3).as_set() == (x < 1).as_set()

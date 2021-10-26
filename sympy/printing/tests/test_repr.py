@@ -107,6 +107,15 @@ def test_Singletons():
     sT(S.One, 'Integer(1)')
     sT(S.Pi, 'pi')
     sT(S.Zero, 'Integer(0)')
+    sT(S.Complexes, 'Complexes')
+    sT(S.EmptySequence, 'EmptySequence')
+    sT(S.EmptySet, 'EmptySet')
+    # sT(S.IdentityFunction, 'Lambda(_x, _x)')
+    sT(S.Naturals, 'Naturals')
+    sT(S.Naturals0, 'Naturals0')
+    sT(S.Rationals, 'Rationals')
+    sT(S.Reals, 'Reals')
+    sT(S.UniversalSet, 'UniversalSet')
 
 
 def test_Integer():
