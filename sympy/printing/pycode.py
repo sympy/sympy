@@ -306,7 +306,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         func = self.known_functions.get(name, name)
         return "%s(%s)" % (func, self._print(expr.tolist()))
 
-    _print_SparseMatrix = \
+    _print_SparseRepMatrix = \
         _print_MutableSparseMatrix = \
         _print_ImmutableSparseMatrix = \
         _print_Matrix = \

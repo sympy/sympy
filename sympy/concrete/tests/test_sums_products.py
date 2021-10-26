@@ -35,8 +35,8 @@ from sympy.concrete.summations import (
 from sympy.concrete.expr_with_intlimits import ReorderError
 from sympy.core.facts import InconsistentAssumptions
 from sympy.testing.pytest import XFAIL, raises, slow
-from sympy.matrices import \
-    Matrix, SparseMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix
+from sympy.matrices import (Matrix, SparseMatrix,
+    ImmutableDenseMatrix, ImmutableSparseMatrix)
 from sympy.core.mod import Mod
 
 n = Symbol('n', integer=True)

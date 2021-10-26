@@ -1,12 +1,11 @@
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
-from sympy.sets.sets import (FiniteSet, Intersection, Interval, ProductSet, Set, Union, UniversalSet)
-from sympy.sets.fancysets import ComplexRegion
-from sympy.sets.fancysets import (Naturals, Naturals0, Integers, Rationals, Reals)
+from sympy.sets.sets import (EmptySet, FiniteSet, Intersection,
+    Interval, ProductSet, Set, Union, UniversalSet)
+from sympy.sets.fancysets import (ComplexRegion, Naturals, Naturals0,
+    Integers, Rationals, Reals)
 from sympy.multipledispatch import dispatch
 
-
-EmptySet = S.EmptySet
 
 @dispatch(Naturals0, Naturals)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
@@ -55,7 +54,7 @@ def union_sets(a, b): # noqa:F811
             return ComplexRegion(Union(a.sets, b.sets), polar=True)
     return None
 
-@dispatch(type(EmptySet), Set)  # type: ignore # noqa:F811
+@dispatch(EmptySet, Set)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     return b
 
