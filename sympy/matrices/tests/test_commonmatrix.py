@@ -792,11 +792,12 @@ def test_multiplication():
 
     # https://github.com/sympy/sympy/issues/22353
     A = Matrix(ones(3, 1))
-    B = Matrix([-Rational(1, 2), -Rational(1, 2), -Rational(1, 2)])
+    _h = -Rational(1, 2)
+    B = Matrix([_h, _h, _h])
     assert A.multiply_elementwise(B) == Matrix([
-        [-1/2],
-        [-1/2],
-        [-1/2]])
+        [_h],
+        [_h],
+        [_h]])
 
 
 def test_matmul():
