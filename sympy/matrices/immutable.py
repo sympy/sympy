@@ -8,7 +8,7 @@ from sympy.matrices.dense import DenseMatrix
 from sympy.matrices.expressions import MatrixExpr
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.repmatrix import RepMatrix
-from sympy.matrices.sparse import SparseMatrix
+from sympy.matrices.sparse import SparseRepMatrix
 from sympy.multipledispatch import dispatch
 
 
@@ -72,7 +72,7 @@ class ImmutableRepMatrix(RepMatrix, MatrixExpr): # type: ignore
         return super().is_diagonalizable(
             reals_only=reals_only, **kwargs)
 
-    is_diagonalizable.__doc__ = SparseMatrix.is_diagonalizable.__doc__
+    is_diagonalizable.__doc__ = SparseRepMatrix.is_diagonalizable.__doc__
     is_diagonalizable = cacheit(is_diagonalizable)
 
 
@@ -136,7 +136,7 @@ class ImmutableDenseMatrix(DenseMatrix, ImmutableRepMatrix):  # type: ignore
 ImmutableMatrix = ImmutableDenseMatrix
 
 
-class ImmutableSparseMatrix(SparseMatrix, ImmutableRepMatrix):  # type:ignore
+class ImmutableSparseMatrix(SparseRepMatrix, ImmutableRepMatrix):  # type:ignore
     """Create an immutable version of a sparse matrix.
 
     Examples

@@ -14,7 +14,7 @@ from sympy.calculus.util import (function_range, continuous_domain, not_empty_in
                                  stationary_points, minimum, maximum)
 from sympy.core import Add, Mul, Pow
 from sympy.core.expr import unchanged
-from sympy.sets.sets import (EmptySet, Interval, FiniteSet, Complement, Union)
+from sympy.sets.sets import (Interval, FiniteSet, Complement, Union)
 from sympy.testing.pytest import raises, _both_exp_pow, XFAIL
 from sympy.abc import x
 
@@ -225,9 +225,9 @@ def test_stationary_points():
     assert stationary_points(sin(x), x, Interval(-pi/2, pi/2)
         ) == {-pi/2, pi/2}
     assert  stationary_points(sin(x), x, Interval.Ropen(0, pi/4)
-        ) == EmptySet()
+        ) is S.EmptySet
     assert stationary_points(tan(x), x,
-        ) == EmptySet()
+        ) is S.EmptySet
     assert stationary_points(sin(x)*cos(x), x, Interval(0, pi)
         ) == {pi/4, pi*Rational(3, 4)}
     assert stationary_points(sec(x), x, Interval(0, pi)
@@ -235,7 +235,7 @@ def test_stationary_points():
     assert stationary_points((x+3)*(x-2), x
         ) == FiniteSet(Rational(-1, 2))
     assert stationary_points((x + 3)/(x - 2), x, Interval(-5, 5)
-        ) == EmptySet()
+        ) is S.EmptySet
     assert stationary_points((x**2+3)/(x-2), x
         ) == {2 - sqrt(7), 2 + sqrt(7)}
     assert stationary_points((x**2+3)/(x-2), x, Interval(0, 5)
@@ -243,7 +243,7 @@ def test_stationary_points():
     assert stationary_points(x**4 + x**3 - 5*x**2, x, S.Reals
         ) == FiniteSet(-2, 0, Rational(5, 4))
     assert stationary_points(exp(x), x
-        ) == EmptySet()
+        ) is S.EmptySet
     assert stationary_points(log(x) - x, x, S.Reals
         ) == {1}
     assert stationary_points(cos(x), x, Union(Interval(0, 5), Interval(-6, -3))

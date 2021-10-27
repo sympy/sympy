@@ -20,7 +20,7 @@ from sympy.functions.elementary.trigonometric import (
 from sympy.logic.boolalg import And
 from sympy.polys.polytools import degree
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
-                             Complement, EmptySet)
+                             Complement)
 from sympy.sets.fancysets import ImageSet
 from sympy.simplify.simplify import simplify
 from sympy.solvers.decompogen import compogen, decompogen
@@ -152,7 +152,7 @@ def function_range(f, symbol, domain):
     """
     from sympy.solvers.solveset import solveset
 
-    if isinstance(domain, EmptySet):
+    if domain is S.EmptySet:
         return S.EmptySet
 
     period = periodicity(f, symbol)
@@ -745,7 +745,7 @@ def stationary_points(f, symbol, domain=S.Reals):
     """
     from sympy.solvers.solveset import solveset
 
-    if isinstance(domain, EmptySet):
+    if domain is S.EmptySet:
         return S.EmptySet
 
     domain = continuous_domain(f, symbol, domain)
@@ -794,7 +794,7 @@ def maximum(f, symbol, domain=S.Reals):
 
     """
     if isinstance(symbol, Symbol):
-        if isinstance(domain, EmptySet):
+        if domain is S.EmptySet:
             raise ValueError("Maximum value not defined for empty domain.")
 
         return function_range(f, symbol, domain).sup
@@ -842,7 +842,7 @@ def minimum(f, symbol, domain=S.Reals):
 
     """
     if isinstance(symbol, Symbol):
-        if isinstance(domain, EmptySet):
+        if domain is S.EmptySet:
             raise ValueError("Minimum value not defined for empty domain.")
 
         return function_range(f, symbol, domain).inf

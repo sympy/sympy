@@ -8,11 +8,9 @@ from sympy.multipledispatch import dispatch
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
     ImageSet, Rationals)
-from sympy.sets.sets import UniversalSet, imageset, ProductSet
+from sympy.sets.sets import EmptySet, UniversalSet, imageset, ProductSet
 from sympy.simplify.radsimp import numer
 
-
-EmptySet = S.EmptySet
 
 @dispatch(ConditionSet, ConditionSet)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
@@ -275,7 +273,7 @@ def intersection_sets(self, other): # noqa:F811
             # Among those, there is one type of solution set that is
             # not helpful here: multiple parametric solutions.
             if len(solns) == 0:
-                return EmptySet
+                return S.EmptySet
             elif any(s.free_symbols for tupl in solns for s in tupl):
                 if len(solns) == 1:
                     soln, solm = solns[0]
@@ -452,7 +450,7 @@ def intersection_sets(a, b): # noqa:F811
 
     return Interval(start, end, left_open, right_open)
 
-@dispatch(type(EmptySet), Set)  # type: ignore # noqa:F811
+@dispatch(EmptySet, Set)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return S.EmptySet
 

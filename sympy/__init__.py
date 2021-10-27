@@ -162,7 +162,7 @@ from .simplify import (simplify, hypersimp, hypersimilar, logcombine,
 
 from .sets import (Set, Interval, Union, EmptySet, FiniteSet, ProductSet,
         Intersection, DisjointUnion, imageset, Complement, SymmetricDifference, ImageSet,
-        Range, ComplexRegion, Reals, Contains, ConditionSet, Ordinal,
+        Range, ComplexRegion, Complexes, Reals, Contains, ConditionSet, Ordinal,
         OmegaPower, ord0, PowerSet, Naturals, Naturals0, UniversalSet,
         Integers, Rationals)
 
@@ -175,8 +175,7 @@ from .solvers import (solve, solve_linear_system, solve_linear_system_LU,
         pdsolve, classify_pde, checkpdesol, ode_order, reduce_inequalities,
         reduce_abs_inequality, reduce_abs_inequalities, solve_poly_inequality,
         solve_rational_inequalities, solve_univariate_inequality, decompogen,
-        solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution,
-        Complexes)
+        solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution)
 
 from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
         casoratian, diag, eye, hessian, jordan_cell, list2numpy, matrix2numpy,
@@ -390,8 +389,8 @@ __all__ = [
     'Set', 'Interval', 'Union', 'EmptySet', 'FiniteSet', 'ProductSet',
     'Intersection', 'imageset', 'DisjointUnion', 'Complement', 'SymmetricDifference',
     'ImageSet', 'Range', 'ComplexRegion', 'Reals', 'Contains', 'ConditionSet',
-    'Ordinal', 'OmegaPower', 'ord0', 'PowerSet', 'Reals', 'Naturals',
-    'Naturals0', 'UniversalSet', 'Integers', 'Rationals',
+    'Ordinal', 'OmegaPower', 'ord0', 'PowerSet', 'Naturals',
+    'Naturals0', 'UniversalSet', 'Integers', 'Rationals', 'Complexes',
 
     # sympy.solvers
     'solve', 'solve_linear_system', 'solve_linear_system_LU',
@@ -405,7 +404,7 @@ __all__ = [
     'reduce_abs_inequality', 'reduce_abs_inequalities',
     'solve_poly_inequality', 'solve_rational_inequalities',
     'solve_univariate_inequality', 'decompogen', 'solveset', 'linsolve',
-    'linear_eq_to_matrix', 'nonlinsolve', 'substitution', 'Complexes',
+    'linear_eq_to_matrix', 'nonlinsolve', 'substitution',
 
     # sympy.matrices
     'ShapeError', 'NonSquareMatrixError', 'GramSchmidt', 'casoratian', 'diag',
@@ -435,9 +434,8 @@ __all__ = [
     'flatten', 'group', 'take', 'subsets', 'variations', 'numbered_symbols',
     'cartes', 'capture', 'dict_merge', 'prefixes', 'postfixes', 'sift',
     'topological_sort', 'unflatten', 'has_dups', 'has_variety', 'reshape',
-    'rotations', 'filldedent', 'lambdify',
-    'source', 'threaded', 'xthreaded', 'public', 'memoize_property', 'test',
-    'doctest', 'timed',
+    'rotations', 'filldedent', 'lambdify', 'source', 'threaded', 'xthreaded',
+    'public', 'memoize_property', 'timed',
 
     # sympy.integrals
     'integrate', 'Integral', 'line_integrate', 'mellin_transform',

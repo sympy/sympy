@@ -162,7 +162,7 @@ class NumExprPrinter(LambdaPrinter):
                         expr.__class__.__name__)
 
     # blacklist all Matrix printing
-    _print_SparseMatrix = \
+    _print_SparseRepMatrix = \
     _print_MutableSparseMatrix = \
     _print_ImmutableSparseMatrix = \
     _print_Matrix = \

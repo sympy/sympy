@@ -234,7 +234,7 @@ from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
     expand, expand_mul, Subs)
 from sympy.core.multidimensional import vectorize
-from sympy.core.numbers import NaN, zoo, Number
+from sympy.core.numbers import nan, zoo, Number
 from sympy.core.relational import Equality, Eq
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
@@ -1073,10 +1073,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             check = cancel(r[d]/r[e])
             check1 = check.subs({x: point, y: value})
             if not check1.has(oo) and not check1.has(zoo) and \
-                not check1.has(NaN) and not check1.has(-oo):
+                not check1.has(nan) and not check1.has(-oo):
                 check2 = (check1.diff(x)).subs({x: point, y: value})
                 if not check2.has(oo) and not check2.has(zoo) and \
-                    not check2.has(NaN) and not check2.has(-oo):
+                    not check2.has(nan) and not check2.has(-oo):
                     rseries = r.copy()
                     rseries.update({'terms': terms, 'f0': point, 'f0val': value})
                     matching_hints["1st_power_series"] = rseries
@@ -1101,9 +1101,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             q = cancel(r[c3]/r[a3])  # Used below
             point = kwargs.get('x0', 0)
             check = p.subs(x, point)
-            if not check.has(oo, NaN, zoo, -oo):
+            if not check.has(oo, nan, zoo, -oo):
                 check = q.subs(x, point)
-                if not check.has(oo, NaN, zoo, -oo):
+                if not check.has(oo, nan, zoo, -oo):
                     ordinary = True
                     r.update({'a3': a3, 'b3': b3, 'c3': c3, 'x0': point, 'terms': terms})
                     matching_hints["2nd_power_series_ordinary"] = r
@@ -1114,10 +1114,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             if not ordinary:
                 p = cancel((x - point)*p)
                 check = p.subs(x, point)
-                if not check.has(oo, NaN, zoo, -oo):
+                if not check.has(oo, nan, zoo, -oo):
                     q = cancel(((x - point)**2)*q)
                     check = q.subs(x, point)
-                    if not check.has(oo, NaN, zoo, -oo):
+                    if not check.has(oo, nan, zoo, -oo):
                         coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                         matching_hints["2nd_power_series_regular"] = coeff_dict
 
@@ -2772,7 +2772,7 @@ def ode_1st_power_series(eq, func, order, match):
     series = value
     if terms > 1:
         hc = h.subs({x: point, y: value})
-        if hc.has(oo) or hc.has(NaN) or hc.has(zoo):
+        if hc.has(oo) or hc.has(nan) or hc.has(zoo):
             # Derivative does not exist, not analytic
             return Eq(f(x), oo)
         elif hc:
@@ -2782,7 +2782,7 @@ def ode_1st_power_series(eq, func, order, match):
         Fnew = F.diff(x) + F.diff(y)*h
         Fnewc = Fnew.subs({x: point, y: value})
         # Same logic as above
-        if Fnewc.has(oo) or Fnewc.has(NaN) or Fnewc.has(-oo) or Fnewc.has(zoo):
+        if Fnewc.has(oo) or Fnewc.has(nan) or Fnewc.has(-oo) or Fnewc.has(zoo):
             return Eq(f(x), oo)
         series += Fnewc*((x - point)**factcount)/factorial(factcount)
         F = Fnew
