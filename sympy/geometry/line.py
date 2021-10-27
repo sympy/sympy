@@ -24,7 +24,7 @@ from sympy.core.decorators import deprecated
 from sympy.core.evalf import N
 from sympy.core.numbers import Rational, oo
 from sympy.core.relational import Eq
-from sympy.core.symbol import _symbol, Dummy
+from sympy.core.symbol import _symbol, Dummy, uniquely_named_symbol
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from .entity import GeometryEntity, GeometrySet
@@ -1154,7 +1154,6 @@ class Line(LinearEntity):
     Line2D(Point2D(0, -18), Point2D(1, -21))
     """
     def __new__(cls, *args, **kwargs):
-        from sympy.core.symbol import uniquely_named_symbol
         if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
