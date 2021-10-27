@@ -1155,8 +1155,6 @@ class Line(LinearEntity):
     """
     def __new__(cls, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
-            x = kwargs.get('x', 'x')
-            y = kwargs.get('y', 'y')
             missing = uniquely_named_symbol('?', args).name
             if not kwargs:
                 x = 'x'
