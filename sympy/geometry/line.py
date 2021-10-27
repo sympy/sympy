@@ -1154,15 +1154,31 @@ class Line(LinearEntity):
     Line2D(Point2D(0, -18), Point2D(1, -21))
     """
     def __new__(cls, *args, **kwargs):
+        from sympy.core.symbol import uniquely_named_symbol
         if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
             x = kwargs.get('x', 'x')
             y = kwargs.get('y', 'y')
+            missing = uniquely_named_symbol('?', args).name
+            if not kwargs:
+                x = 'x'
+                y = 'y'
+            else:
+                x = kwargs.pop('x', missing)
+                y = kwargs.pop('y', missing)
+            if kwargs:
+                raise ValueError('expecting only x and y as keywords')
+
             equation = args[0]
             if isinstance(equation, Eq):
                 equation = equation.lhs - equation.rhs
-            xin, yin = x, y
-            x = find(x, equation) or Dummy()
-            y = find(y, equation) or Dummy()
+
+            def find_or_missing(x):
+                try:
+                    return find(x, equation)
+                except ValueError:
+                    return missing
+            x = find_or_missing(x)
+            y = find_or_missing(y)
 
             a, b, c = linear_coeffs(equation, x, y)
 
@@ -1170,7 +1186,8 @@ class Line(LinearEntity):
                 return Line((0, -c/b), slope=-a/b)
             if a:
                 return Line((-c/a, 0), slope=oo)
-            raise ValueError('neither %s nor %s were found in the equation' % (xin, yin))
+
+            raise ValueError('not found in equation: %s' % (set('xy') - {x, y}))
 
         else:
             if len(args) > 0:
