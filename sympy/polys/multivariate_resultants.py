@@ -29,7 +29,7 @@ class DixonResultant():
     Examples
     ========
 
-    >>> from sympy.core import symbols
+    >>> from sympy import symbols
 
     >>> from sympy.polys.multivariate_resultants import DixonResultant
     >>> x, y = symbols('x, y')
@@ -250,7 +250,7 @@ class MacaulayResultant():
     Examples
     ========
 
-    >>> from sympy.core import symbols
+    >>> from sympy import symbols
 
     >>> from sympy.polys.multivariate_resultants import MacaulayResultant
     >>> x, y, z = symbols('x, y, z')

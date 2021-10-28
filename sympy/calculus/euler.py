@@ -50,8 +50,7 @@ def euler_equations(L, funcs=(), vars=()):
     Examples
     ========
 
-    >>> from sympy import Symbol, Function
-    >>> from sympy.calculus.euler import euler_equations
+    >>> from sympy import euler_equations, Symbol, Function
     >>> x = Function('x')
     >>> t = Symbol('t')
     >>> L = (x(t).diff(t))**2/2 - x(t)**2/2

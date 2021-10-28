@@ -65,7 +65,7 @@ class Polyhedron(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> from sympy.interactive import init_printing
+        >>> from sympy import init_printing
         >>> from sympy.abc import w, x, y, z
         >>> init_printing(pretty_print=False, perm_cyclic=False)
 
@@ -263,8 +263,7 @@ class Polyhedron(Basic):
         not a proper polyhedron, but the Polyhedron class can be used to
         represent it in a way that helps to visualize the Rubik's cube.
 
-        >>> from sympy.utilities.iterables import flatten, unflatten
-        >>> from sympy import symbols
+        >>> from sympy import flatten, unflatten, symbols
         >>> from sympy.combinatorics import RubikGroup
         >>> facelets = flatten([symbols(s+'1:5') for s in 'UFRBLD'])
         >>> def show():

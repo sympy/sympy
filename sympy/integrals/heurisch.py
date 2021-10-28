@@ -121,8 +121,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     Examples
     ========
 
-    >>> from sympy.core import symbols
-    >>> from sympy.functions import cos
+    >>> from sympy import cos, symbols
     >>> from sympy.integrals.heurisch import heurisch, heurisch_wrapper
     >>> n, x = symbols('n x')
     >>> heurisch(cos(n*x), x)

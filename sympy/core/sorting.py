@@ -217,8 +217,7 @@ def ordered(seq, keys=None, default=True, warn=False):
     Examples
     ========
 
-    >>> from sympy.core.sorting import ordered
-    >>> from sympy import count_ops
+    >>> from sympy import ordered, count_ops
     >>> from sympy.abc import x, y
 
     The count_ops is not sufficient to break ties in this list and the first

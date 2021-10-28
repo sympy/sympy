@@ -57,7 +57,7 @@ class Partition(FiniteSet):
 
         Creating Partition from SymPy finite sets:
 
-        >>> from sympy.sets.sets import FiniteSet
+        >>> from sympy import FiniteSet
         >>> a = FiniteSet(1, 2, 3)
         >>> b = FiniteSet(4, 5)
         >>> Partition(a, b)
@@ -98,7 +98,7 @@ class Partition(FiniteSet):
         Examples
         ========
 
-        >>> from sympy.core.sorting import default_sort_key
+        >>> from sympy import default_sort_key
         >>> from sympy.combinatorics.partitions import Partition
         >>> from sympy.abc import x
         >>> a = Partition([1, 2])

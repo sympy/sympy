@@ -111,7 +111,7 @@ class hyper(TupleParametersBase):
     The parameters $a_p$ and $b_q$ can be passed as arbitrary
     iterables, for example:
 
-    >>> from sympy.functions import hyper
+    >>> from sympy import hyper
     >>> from sympy.abc import x, n, a
     >>> hyper((1, 2, 3), [3, 4], x)
     hyper((1, 2, 3), (3, 4), x)
@@ -300,7 +300,7 @@ class hyper(TupleParametersBase):
         Examples
         ========
 
-        >>> from sympy.functions import hyper
+        >>> from sympy import hyper
         >>> from sympy.abc import z
         >>> hyper((1, 2), [3], z).radius_of_convergence
         1
@@ -413,10 +413,8 @@ class meijerg(TupleParametersBase):
 
     You can pass the parameters either as four separate vectors:
 
-    >>> from sympy.functions import meijerg
+    >>> from sympy import meijerg, Tuple, pprint
     >>> from sympy.abc import x, a
-    >>> from sympy.core.containers import Tuple
-    >>> from sympy import pprint
     >>> pprint(meijerg((1, 2), (a, 4), (5,), [], x), use_unicode=False)
      __1, 2 /1, 2  a, 4 |  \
     /__     |           | x|
@@ -625,9 +623,8 @@ class meijerg(TupleParametersBase):
         Examples
         ========
 
-        >>> from sympy.functions.special.hyper import meijerg
+        >>> from sympy import meijerg, pi, S
         >>> from sympy.abc import z
-        >>> from sympy import pi, S
 
         >>> meijerg([1], [], [], [], z).get_period()
         2*pi
@@ -1115,8 +1112,7 @@ class appellf1(Function):
     Examples
     ========
 
-    >>> from sympy.functions.special.hyper import appellf1
-    >>> from sympy import symbols
+    >>> from sympy import appellf1, symbols
     >>> x, y, a, b1, b2, c = symbols('x y a b1 b2 c')
     >>> appellf1(2., 1., 6., 4., 5., 6.)
     0.0063339426292673

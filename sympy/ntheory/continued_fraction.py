@@ -262,7 +262,7 @@ def continued_fraction_iterator(x):
     Examples
     ========
 
-    >>> from sympy.core import Rational, pi
+    >>> from sympy import Rational, pi
     >>> from sympy.ntheory.continued_fraction import continued_fraction_iterator
 
     >>> list(continued_fraction_iterator(Rational(3, 8)))

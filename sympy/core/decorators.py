@@ -151,8 +151,8 @@ def sympify_method_args(cls):
     Examples
     ========
 
-    >>> from sympy.core.basic import Basic
-    >>> from sympy.core.sympify import _sympify, SympifyError
+    >>> from sympy import Basic, SympifyError
+    >>> from sympy.core.sympify import _sympify
 
     >>> class MyTuple(Basic):
     ...     def __add__(self, other):

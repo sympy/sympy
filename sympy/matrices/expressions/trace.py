@@ -1,6 +1,7 @@
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import sympify
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.common import NonSquareMatrixError
@@ -122,7 +123,6 @@ class Trace(Expr):
         # Normalization of trace of matrix products. Use transposition and
         # cyclic properties of traces to make sure the arguments of the matrix
         # product are sorted and the first argument is not a trasposition.
-        from sympy.core.compatibility import default_sort_key
         from sympy.matrices.expressions.matmul import MatMul
         from sympy.matrices.expressions.transpose import Transpose
         trace_arg = self.arg

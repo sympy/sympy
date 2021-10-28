@@ -49,7 +49,7 @@ class ExpBase(Function):
         Examples
         ========
 
-        >>> from sympy.functions import exp
+        >>> from sympy import exp
         >>> from sympy.abc import x
         >>> exp(-x).as_numer_denom()
         (1, exp(x))
@@ -219,9 +219,8 @@ class exp(ExpBase, metaclass=ExpMeta):
     Examples
     ========
 
-    >>> from sympy.functions import exp
+    >>> from sympy import exp, I, pi
     >>> from sympy.abc import x
-    >>> from sympy import I, pi
     >>> exp(x)
     exp(x)
     >>> exp(x).diff(x)
@@ -407,9 +406,8 @@ class exp(ExpBase, metaclass=ExpMeta):
         Examples
         ========
 
-        >>> from sympy import I
+        >>> from sympy import exp, I
         >>> from sympy.abc import x
-        >>> from sympy.functions import exp
         >>> exp(x).as_real_imag()
         (exp(re(x))*cos(im(x)), exp(re(x))*sin(im(x)))
         >>> exp(1).as_real_imag()
@@ -885,9 +883,8 @@ class log(Function):
         Examples
         ========
 
-        >>> from sympy import I
+        >>> from sympy import I, log
         >>> from sympy.abc import x
-        >>> from sympy.functions import log
         >>> log(x).as_real_imag()
         (log(Abs(x)), arg(x))
         >>> log(I).as_real_imag()

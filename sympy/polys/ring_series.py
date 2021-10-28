@@ -1976,9 +1976,7 @@ def rs_series(expr, a, prec):
     ========
 
     >>> from sympy.polys.ring_series import rs_series
-    >>> from sympy.functions import sin, cos, exp, tan
-    >>> from sympy.core import symbols
-    >>> from sympy.polys.domains import QQ
+    >>> from sympy import sin, cos, exp, tan, symbols, QQ
     >>> a, b, c = symbols('a, b, c')
     >>> rs_series(sin(a) + exp(a), a, 5)
     1/24*a**4 + 1/2*a**2 + 2*a + 1

@@ -55,15 +55,15 @@ def sfield(exprs, *symbols, **options):
     ==========
 
     exprs   : py:class:`~.Expr` or sequence of :py:class:`~.Expr` (sympifiable)
+
     symbols : sequence of :py:class:`~.Symbol`/:py:class:`~.Expr`
+
     options : keyword arguments understood by :py:class:`~.Options`
 
     Examples
     ========
 
-    >>> from sympy.core import symbols
-    >>> from sympy.functions import exp, log
-    >>> from sympy.polys.fields import sfield
+    >>> from sympy import exp, log, symbols, sfield
 
     >>> x = symbols("x")
     >>> K, f = sfield((x*log(x) + 4*x**2)*exp(1/x + log(x)/3)/x**2)

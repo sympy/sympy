@@ -282,8 +282,7 @@ class sign(Function):
     Examples
     ========
 
-    >>> from sympy.functions import sign
-    >>> from sympy.core.numbers import I
+    >>> from sympy import sign, I
 
     >>> sign(-1)
     -1
@@ -699,8 +698,7 @@ class arg(Function):
     Examples
     ========
 
-    >>> from sympy.functions import arg
-    >>> from sympy import I, sqrt
+    >>> from sympy import arg, I, sqrt
     >>> arg(2.0)
     0
     >>> arg(I)
@@ -848,9 +846,7 @@ class transpose(Function):
     Examples
     ========
 
-    >>> from sympy.functions import transpose
-    >>> from sympy.matrices import MatrixSymbol
-    >>> from sympy import Matrix
+    >>> from sympy import transpose, Matrix, MatrixSymbol
     >>> A = MatrixSymbol('A', 25, 9)
     >>> transpose(A)
     A.T
@@ -907,8 +903,7 @@ class adjoint(Function):
     Examples
     ========
 
-    >>> from sympy import adjoint
-    >>> from sympy.matrices import MatrixSymbol
+    >>> from sympy import adjoint, MatrixSymbol
     >>> A = MatrixSymbol('A', 10, 5)
     >>> adjoint(A)
     Adjoint(A)

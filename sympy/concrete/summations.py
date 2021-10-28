@@ -4,10 +4,12 @@ from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.concrete.gosper import gosper_sum
 from sympy.core.add import Add
+from sympy.core.containers import Tuple
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Wild, Symbol
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
@@ -1206,8 +1208,6 @@ def eval_sum_symbolic(f, limits):
         r = gosper_sum(f, (i, a, b))
 
         if isinstance(r, (Mul,Add)):
-            from sympy.core.compatibility import ordered
-            from sympy.core.containers import Tuple
             non_limit = r.free_symbols - Tuple(*limits[1:]).free_symbols
             den = denom(together(r))
             den_sym = non_limit & den.free_symbols

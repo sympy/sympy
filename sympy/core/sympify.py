@@ -36,7 +36,8 @@ class CantSympify:
     Examples
     ========
 
-    >>> from sympy.core.sympify import sympify, CantSympify
+    >>> from sympy import sympify
+    >>> from sympy.core.sympify import CantSympify
 
     >>> class Something(dict):
     ...     pass

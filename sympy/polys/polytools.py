@@ -5018,8 +5018,7 @@ def invert(f, g, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import invert, S
-    >>> from sympy.core.numbers import mod_inverse
+    >>> from sympy import invert, S, mod_inverse
     >>> from sympy.abc import x
 
     >>> invert(x**2 - 1, 2*x - 1)

@@ -50,8 +50,7 @@ def continuous_domain(f, symbol, domain):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, tan, log, pi, sqrt
-    >>> from sympy.sets import Interval
+    >>> from sympy import Interval, Symbol, S, tan, log, pi, sqrt
     >>> from sympy.calculus.util import continuous_domain
     >>> x = Symbol('x')
     >>> continuous_domain(1/x, x, S.Reals)
@@ -118,8 +117,7 @@ def function_range(f, symbol, domain):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, exp, log, pi, sqrt, sin, tan
-    >>> from sympy.sets import Interval
+    >>> from sympy import Interval, Symbol, S, exp, log, pi, sqrt, sin, tan
     >>> from sympy.calculus.util import function_range
     >>> x = Symbol('x')
     >>> function_range(sin(x), x, Interval(0, 2*pi))
@@ -392,8 +390,7 @@ def periodicity(f, symbol, check=False):
 
     Examples
     ========
-    >>> from sympy import Symbol, sin, cos, tan, exp
-    >>> from sympy.calculus.util import periodicity
+    >>> from sympy import periodicity, Symbol, sin, cos, tan, exp
     >>> x = Symbol('x')
     >>> f = sin(x) + sin(2*x) + sin(3*x)
     >>> periodicity(f, x)
@@ -601,8 +598,7 @@ def lcim(numbers):
     Examples
     ========
 
-    >>> from sympy import S, pi
-    >>> from sympy.calculus.util import lcim
+    >>> from sympy import lcim, S, pi
     >>> lcim([S(1)/2, S(3)/4, S(5)/6])
     15/2
     >>> lcim([2*pi, 3*pi, pi, pi/2])
@@ -670,8 +666,7 @@ def is_convex(f, *syms, domain=S.Reals):
     Examples
     ========
 
-    >>> from sympy import symbols, exp, oo, Interval
-    >>> from sympy.calculus.util import is_convex
+    >>> from sympy import is_convex, symbols, exp, oo, Interval
     >>> x = symbols('x')
     >>> is_convex(exp(x), x)
     True
@@ -727,8 +722,7 @@ def stationary_points(f, symbol, domain=S.Reals):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, sin, pi, pprint, stationary_points
-    >>> from sympy.sets import Interval
+    >>> from sympy import Interval, Symbol, S, sin, pi, pprint, stationary_points
     >>> x = Symbol('x')
 
     >>> stationary_points(1/x, x, S.Reals)
@@ -778,8 +772,7 @@ def maximum(f, symbol, domain=S.Reals):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, sin, cos, pi, maximum
-    >>> from sympy.sets import Interval
+    >>> from sympy import Interval, Symbol, S, sin, cos, pi, maximum
     >>> x = Symbol('x')
 
     >>> f = -x**2 + 2*x + 5
@@ -826,8 +819,7 @@ def minimum(f, symbol, domain=S.Reals):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, sin, cos, minimum
-    >>> from sympy.sets import Interval
+    >>> from sympy import Interval, Symbol, S, sin, cos, minimum
     >>> x = Symbol('x')
 
     >>> f = x**2 + 2*x + 5

@@ -38,8 +38,7 @@ class Tuple(Basic):
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.core.containers import Tuple
+    >>> from sympy import Tuple, symbols
     >>> a, b, c, d = symbols('a b c d')
     >>> Tuple(a, b, c)[1:]
     (b, c)
@@ -203,8 +202,7 @@ class Dict(Basic):
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.core.containers import Dict
+    >>> from sympy import Dict, Symbol
 
     >>> D = Dict({1: 'one', 2: 'two'})
     >>> for key in D:

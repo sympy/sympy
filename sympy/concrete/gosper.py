@@ -101,7 +101,7 @@ def gosper_term(f, n):
     ========
 
     >>> from sympy.concrete.gosper import gosper_term
-    >>> from sympy.functions import factorial
+    >>> from sympy import factorial
     >>> from sympy.abc import n
 
     >>> gosper_term((4*n + 1)*factorial(n)/factorial(2*n + 1), n)
@@ -181,7 +181,7 @@ def gosper_sum(f, k):
     ========
 
     >>> from sympy.concrete.gosper import gosper_sum
-    >>> from sympy.functions import factorial
+    >>> from sympy import factorial
     >>> from sympy.abc import n, k
 
     >>> f = (4*k + 1)*factorial(k)/factorial(2*k + 1)

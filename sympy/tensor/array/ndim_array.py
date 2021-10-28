@@ -51,7 +51,7 @@ class ArrayKind(Kind):
     the element kind. Use ``is`` with specifying the element kind.
 
     >>> from sympy.tensor.array import ArrayKind
-    >>> from sympy.core.kind import NumberKind
+    >>> from sympy.core import NumberKind
     >>> boolA = NDimArray([True, False])
     >>> isinstance(boolA.kind, ArrayKind)
     True

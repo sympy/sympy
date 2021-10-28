@@ -67,8 +67,7 @@ def singularities(expression, symbol, domain=None):
     Examples
     ========
 
-    >>> from sympy.calculus.singularities import singularities
-    >>> from sympy import Symbol, log
+    >>> from sympy import singularities, Symbol, log
     >>> x = Symbol('x', real=True)
     >>> y = Symbol('y', real=False)
     >>> singularities(x**2 + x + 1, x)

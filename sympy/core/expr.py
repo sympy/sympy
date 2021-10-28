@@ -416,8 +416,7 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import Integral, cos, sin, pi
-        >>> from sympy.core.function import Function
+        >>> from sympy import Function, Integral, cos, sin, pi
         >>> from sympy.abc import x
         >>> f = Function('f')
 
@@ -2488,7 +2487,7 @@ class Expr(Basic, EvalfMixin):
 
         To put something in canonical form wrt to sign, use `signsimp`:
 
-        >>> from sympy.simplify.simplify import signsimp
+        >>> from sympy import signsimp
         >>> signsimp(x*(y - x))
         -x*(x - y)
         >>> _.could_extract_minus_sign()
