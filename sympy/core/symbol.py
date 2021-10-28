@@ -1,5 +1,5 @@
 from .assumptions import StdFactKB, _assume_defined
-from .basic import Basic, Atom
+from .basic import Basic
 from .cache import cacheit
 from .containers import Tuple
 from .expr import Expr, AtomicExpr
@@ -16,33 +16,6 @@ import string
 import re as _re
 import random
 from itertools import product
-
-class Str(Atom):
-    """
-    Represents string in SymPy.
-
-    Explanation
-    ===========
-
-    Previously, ``Symbol`` was used where string is needed in ``args`` of SymPy
-    objects, e.g. denoting the name of the instance. However, since ``Symbol``
-    represents mathematical scalar, this class should be used instead.
-
-    """
-    __slots__ = ('name',)
-
-    def __new__(cls, name, **kwargs):
-        if not isinstance(name, str):
-            raise TypeError("name should be a string, not %s" % repr(type(name)))
-        obj = Expr.__new__(cls, **kwargs)
-        obj.name = name
-        return obj
-
-    def __getnewargs__(self):
-        return (self.name,)
-
-    def _hashable_content(self):
-        return (self.name,)
 
 
 def _filter_assumptions(kwargs):
@@ -897,3 +870,19 @@ def disambiguate(*iter):
             ki = mapping[k][i]
             reps[ki] = Symbol(name, **ki.assumptions0)
     return new_iter.xreplace(reps)
+
+
+class Str(Symbol):
+    """
+    Represents string in SymPy.
+
+    Explanation
+    ===========
+
+    Previously, ``Symbol`` was used where string is needed in ``args`` of SymPy
+    objects, e.g. denoting the name of the instance. However, since ``Symbol``
+    represents mathematical scalar, this class should be used instead.
+
+    """
+    __slots__ = ('name',)
+    is_scalar = False

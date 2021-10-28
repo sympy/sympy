@@ -240,7 +240,7 @@ def test_IndexedBase_assumptions_inheritance():
     assert I_explicit.is_integer
     assert I_inherit.label.is_integer
     assert I_explicit.label.is_integer
-    assert I_inherit == I_explicit
+    assert I_inherit.is_integer == I_explicit.is_integer == True
 
 
 def test_issue_17652():
@@ -259,9 +259,10 @@ def test_issue_17652():
 
 
 def test_Indexed_constructor():
+    from sympy.core.symbol import Str
     i, j = symbols('i j', integer=True)
     A = Indexed('A', i, j)
-    assert A == Indexed(Symbol('A'), i, j)
+    assert A == Indexed(Str('A'), i, j)
     assert A == Indexed(IndexedBase('A'), i, j)
     raises(TypeError, lambda: Indexed(A, i, j))
     raises(IndexException, lambda: Indexed("A"))
@@ -418,7 +419,7 @@ def test_indexed_is_constant():
 def test_issue_12533():
     d = IndexedBase('d')
     assert IndexedBase(range(5)) == Range(0, 5, 1)
-    assert d[0].subs(Symbol("d"), range(5)) == 0
+    assert d[0].subs(d.label, range(5)) == 0
     assert d[0].subs(d, range(5)) == 0
     assert d[1].subs(d, range(5)) == 1
     assert Indexed(Range(5), 2) == 2

@@ -439,10 +439,11 @@ class IndexedBase(Expr, NotIterable):
     def __new__(cls, label, shape=None, *, offset=S.Zero, strides=None, **kw_args):
         from sympy.matrices.matrices import MatrixBase
         from sympy.tensor.array.ndim_array import NDimArray
+        from sympy.core.symbol import Str
 
         assumptions, kw_args = _filter_assumptions(kw_args)
         if isinstance(label, str):
-            label = Symbol(label, **assumptions)
+            label = Str(label, **assumptions)
         elif isinstance(label, Symbol):
             assumptions = label._merge(assumptions)
         elif isinstance(label, (MatrixBase, NDimArray)):
