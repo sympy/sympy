@@ -117,7 +117,7 @@ def default_sort_key(item, order=None):
     See Also
     ========
 
-    ordered, sympy.core.expr.as_ordered_factors, sympy.core.expr.as_ordered_terms
+    ordered, sympy.core.expr.Expr.as_ordered_factors, sympy.core.expr.Expr.as_ordered_terms
 
     """
     from .basic import Basic
