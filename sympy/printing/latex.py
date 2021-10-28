@@ -2736,9 +2736,6 @@ class LatexPrinter(Printer):
                 (self._print(expr.args[0]), exp)
         return r'\Omega\left(%s\right)' % self._print(expr.args[0])
 
-    def _print_Str(self, s):
-        return str(s.name)
-
     def _print_float(self, expr):
         return self._print(Float(expr))
 

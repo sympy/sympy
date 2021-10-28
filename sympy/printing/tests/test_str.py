@@ -1120,7 +1120,7 @@ def test_issue_21119_21460():
 def test_Str():
     from sympy.core.symbol import Str
     assert str(Str('x')) == 'x'
-    assert sstrrepr(Str('x')) == "Str('x')"
+    assert sstrrepr(Str('x')) == 'x'
 
 
 def test_diffgeom():

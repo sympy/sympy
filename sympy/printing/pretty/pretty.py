@@ -2818,9 +2818,6 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*stringPict.next(l, op, r))
         return pform
 
-    def _print_Str(self, s):
-        return self._print(s.name)
-
 
 @print_function(PrettyPrinter)
 def pretty(expr, **settings):

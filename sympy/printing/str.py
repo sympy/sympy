@@ -966,9 +966,6 @@ class StrPrinter(Printer):
         #TODO : Handle indices
         return "%s(%s)" % ("Tr", self._print(expr.args[0]))
 
-    def _print_Str(self, s):
-        return self._print(s.name)
-
     def _print_AppliedBinaryRelation(self, expr):
         rel = expr.function
         return '%s(%s, %s)' % (self._print(rel),
@@ -1004,10 +1001,6 @@ class StrReprPrinter(StrPrinter):
 
     def _print_str(self, s):
         return repr(s)
-
-    def _print_Str(self, s):
-        # Str does not to be printed same as str here
-        return s.name#"%s(%s)" % (s.__class__.__name__, self._print(s.name))
 
 
 @print_function(StrReprPrinter)
