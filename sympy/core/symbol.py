@@ -884,5 +884,4 @@ class Str(Symbol):
     represents mathematical scalar, this class should be used instead.
 
     """
-    __slots__ = ('name',)
     is_scalar = False

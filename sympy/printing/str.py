@@ -1007,7 +1007,7 @@ class StrReprPrinter(StrPrinter):
 
     def _print_Str(self, s):
         # Str does not to be printed same as str here
-        return "%s(%s)" % (s.__class__.__name__, self._print(s.name))
+        return s.name#"%s(%s)" % (s.__class__.__name__, self._print(s.name))
 
 
 @print_function(StrReprPrinter)

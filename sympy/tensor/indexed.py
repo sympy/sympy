@@ -420,7 +420,7 @@ class IndexedBase(Expr, NotIterable):
     >>> I = symbols('I', integer=True)
     >>> C_inherit = IndexedBase(I)
     >>> C_explicit = IndexedBase('I', integer=True)
-    >>> C_inherit == C_explicit
+    >>> C_inherit.is_integer == C_explicit.is_integer == True
     True
     """
     is_commutative = True

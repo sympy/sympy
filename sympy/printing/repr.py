@@ -223,7 +223,7 @@ class ReprPrinter(Printer):
                                            self._print(expr.a), self._print(expr.b))
 
     def _print_Str(self, s):
-        return "%s(%s)" % (s.__class__.__name__, self._print(s.name))
+        return s.name#"%s(%s)" % (s.__class__.__name__, self._print(s.name))
 
     def _print_Symbol(self, expr):
         d = expr._assumptions.generator
