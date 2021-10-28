@@ -1,10 +1,10 @@
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import ordered
 from sympy.core.function import (Function, Lambda, nfloat, diff)
 from sympy.core.mod import Mod
 from sympy.core.numbers import (E, I, Rational, oo, pi, Integer)
 from sympy.core.relational import (Eq, Gt, Ne, Ge)
 from sympy.core.singleton import S
+from sympy.core.sorting import ordered
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, arg, im, re, sign, conjugate)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)

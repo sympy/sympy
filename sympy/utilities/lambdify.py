@@ -1166,7 +1166,7 @@ class _EvaluatorPrinter:
         Returns string form of args, and updated expr.
         """
         from sympy.core.basic import Basic
-        from sympy.core.compatibility import ordered
+        from sympy.core.sorting import ordered
         from sympy.core.function import (Derivative, Function)
         from sympy.core.symbol import Dummy
         from sympy.utilities.iterables import flatten

@@ -38,6 +38,7 @@ from sympy.core.function import (expand, expand_mul, expand_power_base,
 from sympy.core.mul import Mul
 from sympy.core.numbers import ilcm, Rational
 from sympy.core.relational import Eq, Ne
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (re, im, arg, Abs, sign,
@@ -64,9 +65,8 @@ from sympy.polys import cancel, factor
 from sympy.simplify.fu import sincos_to_sum
 from sympy.simplify import (collect, gammasimp, hyperexpand, powdenest,
                             powsimp, simplify)
-from sympy.utilities.iterables import multiset_partitions, ordered
+from sympy.utilities.iterables import multiset_partitions
 from sympy.utilities.misc import debug as _debug
-from sympy.utilities import default_sort_key
 
 # keep this at top for easy reference
 z = Dummy('z')

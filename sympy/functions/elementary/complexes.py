@@ -2,9 +2,10 @@ from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
-    AppliedUndef)
+    AppliedUndef, expand_mul)
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi, I, oo
+from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.functions.elementary.exponential import exp, exp_polar, log
 from sympy.functions.elementary.integers import ceiling
@@ -282,8 +283,7 @@ class sign(Function):
     Examples
     ========
 
-    >>> from sympy.functions import sign
-    >>> from sympy.core.numbers import I
+    >>> from sympy import sign, I
 
     >>> sign(-1)
     -1
@@ -517,8 +517,6 @@ class Abs(Function):
     @classmethod
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
-        from sympy.core.function import expand_mul
-        from sympy.core.power import Pow
 
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()
@@ -699,8 +697,7 @@ class arg(Function):
     Examples
     ========
 
-    >>> from sympy.functions import arg
-    >>> from sympy import I, sqrt
+    >>> from sympy import arg, I, sqrt
     >>> arg(2.0)
     0
     >>> arg(I)
@@ -848,9 +845,7 @@ class transpose(Function):
     Examples
     ========
 
-    >>> from sympy.functions import transpose
-    >>> from sympy.matrices import MatrixSymbol
-    >>> from sympy import Matrix
+    >>> from sympy import transpose, Matrix, MatrixSymbol
     >>> A = MatrixSymbol('A', 25, 9)
     >>> transpose(A)
     A.T
@@ -907,8 +902,7 @@ class adjoint(Function):
     Examples
     ========
 
-    >>> from sympy import adjoint
-    >>> from sympy.matrices import MatrixSymbol
+    >>> from sympy import adjoint, MatrixSymbol
     >>> A = MatrixSymbol('A', 10, 5)
     >>> adjoint(A)
     Adjoint(A)

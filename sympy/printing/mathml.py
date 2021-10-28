@@ -6,8 +6,8 @@ from typing import Any, Dict
 
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import sympify
-from sympy.core.compatibility import default_sort_key
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import \
     precedence_traditional, PRECEDENCE, PRECEDENCE_TRADITIONAL

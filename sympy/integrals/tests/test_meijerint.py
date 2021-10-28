@@ -1,6 +1,7 @@
 from sympy.core.function import expand_func
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.hyperbolic import cosh
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -14,7 +15,6 @@ from sympy.simplify.simplify import simplify
 from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
     meijerint_indefinite, _inflate_g, _create_lookup_table,
     meijerint_definite, meijerint_inversion)
-from sympy.utilities import default_sort_key
 from sympy.testing.pytest import slow
 from sympy.testing.randtest import (verify_numerically,
         random_complex_number as randcplx)

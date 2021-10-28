@@ -3,6 +3,7 @@ from itertools import islice, product
 
 from sympy.core.basic import Basic
 from sympy.core.numbers import Integer
+from sympy.core.sorting import ordered
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices.dense import Matrix
@@ -14,7 +15,7 @@ from sympy.utilities.iterables import (
     generate_involutions, generate_oriented_forest, group, has_dups, ibin,
     iproduct, kbins, minlex, multiset, multiset_combinations,
     multiset_partitions, multiset_permutations, necklaces, numbered_symbols,
-    ordered, partitions, permutations, postfixes,
+    partitions, permutations, postfixes,
     prefixes, reshape, rotate_left, rotate_right, runs, sift,
     strongly_connected_components, subsets, take, topological_sort, unflatten,
     uniq, variations, ordered_partitions, rotations, is_palindromic, iterable,

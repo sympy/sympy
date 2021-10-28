@@ -11,6 +11,7 @@ from sympy.core.alphabets import greeks
 from sympy.core.containers import Tuple
 from sympy.core.function import AppliedUndef, Derivative
 from sympy.core.operations import AssocOp
+from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import SympifyError
 from sympy.logic.boolalg import true
 
@@ -23,7 +24,6 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps
 
-from sympy.core.compatibility import default_sort_key
 from sympy.utilities.iterables import has_variety
 
 import re

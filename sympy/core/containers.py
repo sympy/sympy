@@ -10,9 +10,11 @@ from collections import OrderedDict
 from collections.abc import MutableSet
 
 from .basic import Basic
-from .compatibility import as_int
+from .sorting import default_sort_key
 from .sympify import _sympify, sympify, converter, SympifyError
 from sympy.utilities.iterables import iterable
+from sympy.utilities.misc import as_int
+
 
 class Tuple(Basic):
     """
@@ -36,8 +38,7 @@ class Tuple(Basic):
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.core.containers import Tuple
+    >>> from sympy import Tuple, symbols
     >>> a, b, c, d = symbols('a b c d')
     >>> Tuple(a, b, c)[1:]
     (b, c)
@@ -201,8 +202,7 @@ class Dict(Basic):
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.core.containers import Dict
+    >>> from sympy import Dict, Symbol
 
     >>> D = Dict({1: 'one', 2: 'two'})
     >>> for key in D:
@@ -302,7 +302,6 @@ class Dict(Basic):
 
     @property
     def _sorted_args(self):
-        from sympy.utilities.iterables import default_sort_key
         return tuple(sorted(self.args, key=default_sort_key))
 
 

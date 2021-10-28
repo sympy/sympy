@@ -6,7 +6,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys.polytools import gcd
 from sympy.sets.sets import Complement
 from sympy.core import Basic, Tuple, diff, expand, Eq, Integer
-from sympy.core.compatibility import ordered
+from sympy.core.sorting import ordered
 from sympy.core.symbol import _symbol
 from sympy.solvers import solveset, nonlinsolve, diophantine
 from sympy.polys import total_degree

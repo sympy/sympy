@@ -49,7 +49,7 @@ def __cacheit(maxsize):
         Examples
         ========
 
-        >>> from sympy.core.cache import cacheit
+        >>> from sympy import cacheit
         >>> @cacheit
         ... def f(a, b):
         ...    return a+b

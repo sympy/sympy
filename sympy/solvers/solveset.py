@@ -20,6 +20,7 @@ from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
 from sympy.core.mod import Mod
 from sympy.core.numbers import igcd
 from sympy.core.relational import Eq, Ne, Relational
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
 from sympy.simplify.simplify import simplify, fraction, trigsimp
@@ -51,9 +52,8 @@ from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import (numbered_symbols, has_dups,
-                                       default_sort_key, is_sequence)
+                                       is_sequence)
 from sympy.calculus.util import periodicity, continuous_domain
-from sympy.core.compatibility import ordered
 
 from types import GeneratorType
 from collections import defaultdict
@@ -1362,8 +1362,7 @@ def _solve_modular(f, symbol, domain):
     ========
 
     >>> from sympy.solvers.solveset import _solve_modular as solve_modulo
-    >>> from sympy import S, Symbol, sin, Intersection, Interval
-    >>> from sympy.core.mod import Mod
+    >>> from sympy import S, Symbol, sin, Intersection, Interval, Mod
     >>> x = Symbol('x')
     >>> solve_modulo(Mod(5*x - 8, 7) - 3, x, S.Integers)
     ImageSet(Lambda(_n, 7*_n + 5), Integers)
@@ -2918,9 +2917,8 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     Examples
     ========
 
-    >>> from sympy.core.symbol import symbols
+    >>> from sympy import symbols, substitution
     >>> x, y = symbols('x, y', real=True)
-    >>> from sympy.solvers.solveset import substitution
     >>> substitution([x + y], [x], [{y: 1}], [y], set([]), [x, y])
     {(-1, 1)}
 
@@ -3540,8 +3538,7 @@ def nonlinsolve(system, *symbols):
     Examples
     ========
 
-    >>> from sympy.core.symbol import symbols
-    >>> from sympy.solvers.solveset import nonlinsolve
+    >>> from sympy import symbols, nonlinsolve
     >>> x, y, z = symbols('x, y, z', real=True)
     >>> nonlinsolve([x*y - 1, 4*x**2 + y**2 - 5], [x, y])
     {(-1, -1), (-1/2, -2), (1/2, 2), (1, 1)}

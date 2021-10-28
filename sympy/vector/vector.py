@@ -1,16 +1,18 @@
 from typing import Type
 
-from sympy.core.assumptions import StdFactKB
-from sympy.core import S, Pow, sympify
-from sympy.core.expr import AtomicExpr, Expr
-from sympy.core.compatibility import default_sort_key
 from sympy.core.add import Add
+from sympy.core.assumptions import StdFactKB
+from sympy.core.expr import AtomicExpr, Expr
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
+from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
+from sympy.vector.basisdependent import (BasisDependentZero,
+    BasisDependent, BasisDependentMul, BasisDependentAdd)
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
-                                         BasisDependentMul, BasisDependentZero)
-from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
+from sympy.vector.dyadic import Dyadic, BaseDyadic, DyadicAdd
 
 
 class Vector(BasisDependent):

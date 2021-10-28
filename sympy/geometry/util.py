@@ -12,9 +12,9 @@ are_similar
 """
 
 from .point import Point, Point2D
-from sympy.core.compatibility import ordered
 from sympy.core.containers import OrderedSet
 from sympy.core.function import Function
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Symbol
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.solvers.solvers import solve

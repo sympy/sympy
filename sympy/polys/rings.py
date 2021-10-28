@@ -139,8 +139,7 @@ def sring(exprs, *symbols, **options):
     Examples
     ========
 
-    >>> from sympy.core import symbols
-    >>> from sympy.polys.rings import sring
+    >>> from sympy import sring, symbols
 
     >>> x, y, z = symbols("x,y,z")
     >>> R, f = sring(x + 2*y + 3*z)

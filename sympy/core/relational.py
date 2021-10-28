@@ -2,7 +2,7 @@ from typing import Dict, Union, Type
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .basic import Atom, Basic
-from .compatibility import ordered
+from .sorting import ordered
 from .evalf import EvalfMixin
 from .function import AppliedUndef
 from .singleton import S

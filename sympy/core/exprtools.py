@@ -8,14 +8,14 @@ from .expr import Expr
 from .sympify import sympify
 from .numbers import Rational, Integer, Number, I
 from .singleton import S
+from .sorting import default_sort_key, ordered
 from .symbol import Dummy
 from .traversal import preorder_traversal
 from .coreerrors import NonCommutativeExpression
 from .containers import Tuple, Dict
 from sympy.external.gmpy import SYMPY_INTS
-from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
-        variations, ordered, iterable, is_sequence)
+        variations, iterable, is_sequence)
 
 from collections import defaultdict
 
@@ -601,7 +601,7 @@ class Factors:
 
         factor_terms can clean up such Rational-bases powers:
 
-        >>> from sympy.core.exprtools import factor_terms
+        >>> from sympy import factor_terms
         >>> n, d = Factors(2**(2*x + 2)).div(S(8))
         >>> n.as_expr()/d.as_expr()
         2**(2*x + 2)/8
@@ -1014,7 +1014,7 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     Examples
     ========
 
-    >>> from sympy.core import gcd_terms
+    >>> from sympy import gcd_terms
     >>> from sympy.abc import x, y
 
     >>> gcd_terms((x + 1)**2*y + (x + 1)*y**2)
@@ -1408,8 +1408,7 @@ def factor_nc(expr):
     Examples
     ========
 
-    >>> from sympy.core.exprtools import factor_nc
-    >>> from sympy import Symbol
+    >>> from sympy import factor_nc, Symbol
     >>> from sympy.abc import x
     >>> A = Symbol('A', commutative=False)
     >>> B = Symbol('B', commutative=False)

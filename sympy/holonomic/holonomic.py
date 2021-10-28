@@ -3,18 +3,13 @@ This module implements Holonomic Functions and
 various operations on them.
 """
 
-from sympy.core.numbers import (Float, I)
+from sympy.core.numbers import NaN, Infinity, NegativeInfinity, Float, I
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.sorting import ordered
+from sympy.core.symbol import Dummy, Symbol
+from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import rf
 from sympy.functions.special.gamma_functions import gamma
-from sympy.series.limits import limit
-from sympy.series.order import Order
-from sympy.simplify.simplify import nsimplify
-from sympy.solvers.solvers import solve
-from sympy.core.compatibility import ordered
-from sympy.core.numbers import NaN, Infinity, NegativeInfinity
-from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import exp_polar, exp
 from sympy.functions.special.hyper import hyper, meijerg
@@ -28,7 +23,11 @@ from sympy.polys.polyroots import roots
 from sympy.polys.polytools import Poly
 from sympy.polys.matrices import DomainMatrix
 from sympy.printing import sstr
+from sympy.series.limits import limit
+from sympy.series.order import Order
 from sympy.simplify.hyperexpand import hyperexpand
+from sympy.simplify.simplify import nsimplify
+from sympy.solvers.solvers import solve
 
 from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
 from .holonomicerrors import (NotPowerSeriesError, NotHyperSeriesError,

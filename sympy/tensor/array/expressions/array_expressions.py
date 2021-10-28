@@ -8,12 +8,12 @@ from typing import Optional, List, Dict, Tuple as tTuple
 import typing
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import default_sort_key
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Function, Lambda)
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import (Dummy, Symbol)
 from sympy.matrices.expressions.diagonal import diagonalize_vector
 from sympy.matrices.expressions.matexpr import MatrixExpr

@@ -17,14 +17,16 @@ Segment3D
 
 """
 
-from sympy.core import Expr, S, sympify
-from sympy.core.compatibility import ordered
 from sympy.core.containers import Tuple
 from sympy.core.decorators import deprecated
 from sympy.core.evalf import N
+from sympy.core.expr import Expr
 from sympy.core.numbers import Rational, oo
 from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.sorting import ordered
 from sympy.core.symbol import _symbol, Dummy, uniquely_named_symbol
+from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from .entity import GeometryEntity, GeometrySet
@@ -33,7 +35,7 @@ from .point import Point, Point3D
 from .util import find, intersection
 from sympy.logic.boolalg import And
 from sympy.matrices import Matrix
-from sympy.sets import Intersection
+from sympy.sets.sets import Intersection
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.exceptions import SymPyDeprecationWarning

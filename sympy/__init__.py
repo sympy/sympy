@@ -61,7 +61,7 @@ from .core import (sympify, SympifyError, cacheit, Basic, Atom,
         expand_power_base, expand_power_exp, arity, PrecisionExhausted, N,
         evalf, Tuple, Dict, gcd_terms, factor_terms, factor_nc, evaluate,
         Catalan, EulerGamma, GoldenRatio, TribonacciConstant, bottom_up, use,
-        postorder_traversal)
+        postorder_traversal, default_sort_key, ordered)
 
 from .logic import (to_cnf, to_dnf, to_nnf, And, Or, Not, Xor, Nand, Nor,
         Implies, Equivalent, ITE, POSform, SOPform, simplify_logic, bool_map,
@@ -201,7 +201,7 @@ from .geometry import (Point, Point2D, Point3D, Line, Ray, Segment, Line2D,
 from .utilities import (flatten, group, take, subsets, variations,
         numbered_symbols, cartes, capture, dict_merge, prefixes, postfixes,
         sift, topological_sort, unflatten, has_dups, has_variety, reshape,
-        default_sort_key, ordered, rotations, filldedent, lambdify, source,
+        rotations, filldedent, lambdify, source,
         threaded, xthreaded, public, memoize_property, timed)
 
 from .integrals import (integrate, Integral, line_integrate, mellin_transform,
@@ -269,7 +269,7 @@ __all__ = [
     'expand_power_exp', 'arity', 'PrecisionExhausted', 'N', 'evalf', 'Tuple',
     'Dict', 'gcd_terms', 'factor_terms', 'factor_nc', 'evaluate', 'Catalan',
     'EulerGamma', 'GoldenRatio', 'TribonacciConstant', 'bottom_up', 'use',
-    'postorder_traversal',
+    'postorder_traversal', 'default_sort_key', 'ordered',
 
     # sympy.logic
     'to_cnf', 'to_dnf', 'to_nnf', 'And', 'Or', 'Not', 'Xor', 'Nand', 'Nor',
@@ -434,9 +434,8 @@ __all__ = [
     'flatten', 'group', 'take', 'subsets', 'variations', 'numbered_symbols',
     'cartes', 'capture', 'dict_merge', 'prefixes', 'postfixes', 'sift',
     'topological_sort', 'unflatten', 'has_dups', 'has_variety', 'reshape',
-    'default_sort_key', 'ordered', 'rotations', 'filldedent', 'lambdify',
-    'source', 'threaded', 'xthreaded', 'public', 'memoize_property',
-    'timed',
+    'rotations', 'filldedent', 'lambdify', 'source', 'threaded', 'xthreaded',
+    'public', 'memoize_property', 'timed',
 
     # sympy.integrals
     'integrate', 'Integral', 'line_integrate', 'mellin_transform',

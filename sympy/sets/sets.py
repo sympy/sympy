@@ -4,12 +4,12 @@ from collections import defaultdict
 import inspect
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import ordered
 from sympy.core.containers import Tuple
 from sympy.core.decorators import (deprecated, sympify_method_args,
     sympify_return)
 from sympy.core.evalf import EvalfMixin, prec_to_dps
 from sympy.core.expr import Expr
+from sympy.core.function import Lambda
 from sympy.core.logic import (FuzzyBool, fuzzy_bool, fuzzy_or, fuzzy_and,
     fuzzy_not)
 from sympy.core.numbers import Float
@@ -17,6 +17,7 @@ from sympy.core.operations import LatticeOp
 from sympy.core.parameters import global_parameters
 from sympy.core.relational import Eq, Ne, is_lt
 from sympy.core.singleton import Singleton, S
+from sympy.core.sorting import ordered
 from sympy.core.symbol import symbols, Symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And, Or, Not, Xor, true, false
@@ -2237,7 +2238,6 @@ def imageset(*args):
     sympy.sets.fancysets.ImageSet
 
     """
-    from sympy.core.function import Lambda
     from sympy.sets.fancysets import ImageSet
     from sympy.sets.setexpr import set_function
 
@@ -2486,7 +2486,6 @@ def _handle_finite_sets(op, x, y, commutative):
 
 def _apply_operation(op, x, y, commutative):
     from sympy.sets import ImageSet
-    from sympy.core.function import Lambda
     d = Dummy('d')
 
     out = _handle_finite_sets(op, x, y, commutative)

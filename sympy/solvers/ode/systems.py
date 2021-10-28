@@ -3,6 +3,7 @@ from sympy.core.containers import Tuple
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
 from sympy.core.relational import Eq, Equality
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.function import (expand_mul, expand, Derivative,
                                  AppliedUndef, Function, Subs)
@@ -18,8 +19,7 @@ from sympy.simplify.simplify import simplify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError, solveset
-from sympy.utilities import default_sort_key
-from sympy.utilities.iterables import ordered, iterable
+from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import filldedent
 from sympy.integrals.integrals import Integral, integrate
 

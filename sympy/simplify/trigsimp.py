@@ -1115,7 +1115,7 @@ def _futrig(e):
         TR1, TR2, TR3, TR2i, TR10, L, TR10i,
         TR8, TR6, TR15, TR16, TR111, TR5, TRmorrie, TR11, _TR11, TR14, TR22,
         TR12)
-    from sympy.core.compatibility import _nodes
+    from sympy.core.sorting import _nodes
 
     if not e.has(TrigonometricFunction):
         return e

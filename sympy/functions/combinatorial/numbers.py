@@ -9,12 +9,14 @@ the separate 'factorials' module.
 
 from typing import Callable, Dict
 
-from sympy.core import S, Symbol, Rational, Integer, Add, Dummy
+from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import as_int
+from sympy.core.evalf import pure_complex
+from sympy.core.expr import Expr
 from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
-from sympy.core.numbers import E, pi
+from sympy.core.mul import prod
+from sympy.core.numbers import E, pi, Rational, Integer
 from sympy.core.relational import LessThan, StrictGreaterThan
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions.combinatorial.factorials import binomial, factorial
@@ -25,6 +27,7 @@ from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.ntheory import isprime
 from sympy.ntheory.primetest import is_square
 from sympy.utilities.memoization import recurrence_memo
+from sympy.utilities.misc import as_int
 
 from mpmath import bernfrac, workprec
 from mpmath.libmp import ifib as _ifib
@@ -946,8 +949,7 @@ class euler(Function):
     Examples
     ========
 
-    >>> from sympy import Symbol, S
-    >>> from sympy.functions import euler
+    >>> from sympy import euler, Symbol, S
     >>> [euler(n) for n in range(10)]
     [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]
     >>> n = Symbol("n")
@@ -1004,13 +1006,11 @@ class euler(Function):
                     return Integer(res)
                 # Euler polynomial
                 else:
-                    from sympy.core.evalf import pure_complex
                     reim = pure_complex(sym, or_real=True)
                     # Evaluate polynomial numerically using mpmath
                     if reim and all(a.is_Float or a.is_Integer for a in reim) \
                             and any(a.is_Float for a in reim):
                         from mpmath import mp
-                        from sympy.core.expr import Expr
                         m = int(m)
                         # XXX ComplexFloat (#12192) would be nice here, above
                         prec = min([a._prec for a in reim if a.is_Float])
@@ -1047,14 +1047,12 @@ class euler(Function):
 
         if x is None and m.is_Integer and m.is_nonnegative:
             from mpmath import mp
-            from sympy.core.expr import Expr
             m = m._to_mpmath(prec)
             with workprec(prec):
                 res = mp.eulernum(m)
             return Expr._from_mpmath(res, prec)
         if x and x.is_number and m.is_Integer and m.is_nonnegative:
             from mpmath import mp
-            from sympy.core.expr import Expr
             m = int(m)
             x = x._to_mpmath(prec)
             with workprec(prec):
@@ -1226,8 +1224,7 @@ class genocchi(Function):
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.functions import genocchi
+    >>> from sympy import genocchi, Symbol
     >>> [genocchi(n) for n in range(1, 9)]
     [1, -1, 0, 1, 0, -3, 0, 17]
     >>> n = Symbol('n', integer=True, positive=True)
@@ -1325,8 +1322,7 @@ class partition(Function):
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.functions import partition
+    >>> from sympy import partition, Symbol
     >>> [partition(n) for n in range(9)]
     [1, 1, 2, 3, 5, 7, 11, 15, 22]
     >>> n = Symbol('n', integer=True, negative=True)
@@ -1514,7 +1510,6 @@ def nP(n, k=None, replacement=False):
 
 @cacheit
 def _nP(n, k=None, replacement=False):
-    from sympy.core.mul import prod
 
     if k == 0:
         return 1
@@ -1684,7 +1679,6 @@ def nC(n, k=None, replacement=False):
     .. [2] http://tinyurl.com/cep849r
 
     """
-    from sympy.core.mul import prod
 
     if isinstance(n, SYMPY_INTS):
         if k is None:
@@ -1974,7 +1968,7 @@ def nT(n, k=None):
 
     Partitions of an integer expressed as a sum of positive integers:
 
-    >>> from sympy.functions.combinatorial.numbers import partition
+    >>> from sympy import partition
     >>> partition(4)
     5
     >>> nT(4, 1) + nT(4, 2) + nT(4, 3) + nT(4, 4)

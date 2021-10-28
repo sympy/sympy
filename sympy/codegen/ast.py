@@ -91,7 +91,7 @@ Newton's method::
     ...     aug_assign(x, '+', dx),
     ...     Print([x])
     ... ])
-    >>> from sympy.printing import pycode
+    >>> from sympy import pycode
     >>> py_str = pycode(whl)
     >>> print(py_str)
     while (abs(delta) > tol):
@@ -111,7 +111,7 @@ Newton's method::
 
 If we want to generate Fortran code for the same while loop we simple call ``fcode``::
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> print(fcode(whl, standard=2003, source_format='free'))
     do while (abs(delta) > tol)
        delta = (val**3 - cos(val))/(-3*val**2 - sin(val))
@@ -337,7 +337,7 @@ class BreakToken(Token):
     Examples
     ========
 
-    >>> from sympy.printing import ccode, fcode
+    >>> from sympy import ccode, fcode
     >>> from sympy.codegen.ast import break_
     >>> ccode(break_)
     'break'
@@ -356,7 +356,7 @@ class ContinueToken(Token):
     Examples
     ========
 
-    >>> from sympy.printing import ccode, fcode
+    >>> from sympy import ccode, fcode
     >>> from sympy.codegen.ast import continue_
     >>> ccode(continue_)
     'continue'
@@ -375,7 +375,7 @@ class NoneToken(Token):
     ========
 
     >>> from sympy.codegen.ast import none, Variable
-    >>> from sympy.printing.pycode import pycode
+    >>> from sympy import pycode
     >>> print(pycode(Variable('x').as_Declaration(value=none)))
     x = None
 
@@ -987,7 +987,7 @@ class Type(Token):
       ...
     ValueError: Casting gives a significantly different value.
     >>> boost_mp50 = Type('boost::multiprecision::cpp_dec_float_50')
-    >>> from sympy.printing import cxxcode
+    >>> from sympy import cxxcode
     >>> from sympy.codegen.ast import Declaration, Variable
     >>> cxxcode(Declaration(Variable('x', type=boost_mp50)))
     'boost::multiprecision::cpp_dec_float_50 x'
@@ -1701,7 +1701,7 @@ class Print(Token):
     ========
 
     >>> from sympy.codegen.ast import Print
-    >>> from sympy.printing.pycode import pycode
+    >>> from sympy import pycode
     >>> print(pycode(Print('x y'.split(), "coordinate: %12.5g %12.5g")))
     print("coordinate: %12.5g %12.5g" % (x, y))
 
@@ -1733,7 +1733,7 @@ class FunctionPrototype(Node):
 
     >>> from sympy import symbols
     >>> from sympy.codegen.ast import real, FunctionPrototype
-    >>> from sympy.printing import ccode
+    >>> from sympy import ccode
     >>> x, y = symbols('x y', real=True)
     >>> fp = FunctionPrototype(real, 'foo', [x, y])
     >>> ccode(fp)
@@ -1779,9 +1779,8 @@ class FunctionDefinition(FunctionPrototype):
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import ccode, symbols
     >>> from sympy.codegen.ast import real, FunctionPrototype
-    >>> from sympy.printing import ccode
     >>> x, y = symbols('x y', real=True)
     >>> fp = FunctionPrototype(real, 'foo', [x, y])
     >>> ccode(fp)
@@ -1828,7 +1827,7 @@ class FunctionCall(Token, Expr):
     ========
 
     >>> from sympy.codegen.ast import FunctionCall
-    >>> from sympy.printing.pycode import pycode
+    >>> from sympy import pycode
     >>> fcall = FunctionCall('foo', 'bar baz'.split())
     >>> print(pycode(fcall))
     foo(bar, baz)

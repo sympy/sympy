@@ -16,14 +16,14 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import I
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.sorting import default_sort_key
+from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.dense import zeros
 from sympy.printing.str import StrPrinter
 from sympy.utilities.iterables import has_dups
-from sympy.utilities import default_sort_key
 
 __all__ = [
     'Dagger',

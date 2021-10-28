@@ -11,8 +11,9 @@ from operator import gt
 from sympy.core.decorators import deprecated
 
 # this is the logical location of these functions
-from sympy.core.compatibility import as_int, ordered
-from sympy.core.compatibility import default_sort_key  # noqa: F401
+# from sympy.core.compatibility import ordered
+# from sympy.core.compatibility import default_sort_key  # noqa: F401
+from sympy.utilities.misc import as_int
 
 from sympy.utilities.enumerative import (
     multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
@@ -1233,6 +1234,7 @@ def multiset_combinations(m, n, g=None):
     (165, 54)
 
     """
+    from sympy.core.sorting import ordered
     if g is None:
         if type(m) is dict:
             if any(as_int(v) < 0 for v in m.values()):
@@ -1285,6 +1287,7 @@ def multiset_permutations(m, size=None, g=None):
     >>> len(list(multiset_permutations('banana')))
     60
     """
+    from sympy.core.sorting import ordered
     if g is None:
         if type(m) is dict:
             if any(as_int(v) < 0 for v in m.values()):
@@ -1558,6 +1561,7 @@ def multiset_partitions(multiset, m=None):
                     rv.extend([x*k]*p[k])
                 yield rv
     else:
+        from sympy.core.sorting import ordered
         multiset = list(ordered(multiset))
         n = len(multiset)
         if m and m > n:

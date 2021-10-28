@@ -1,12 +1,13 @@
 from sympy.core.singleton import S
 from sympy.simplify.simplify import simplify
 from sympy.core import Basic, diff
+from sympy.core.sorting import default_sort_key
 from sympy.matrices import Matrix
 from sympy.vector import (CoordSys3D, Vector, ParametricRegion,
                         parametric_region_list, ImplicitRegion)
 from sympy.vector.operators import _get_coord_sys_from_expr
 from sympy.integrals import Integral, integrate
-from sympy.utilities.iterables import topological_sort, default_sort_key
+from sympy.utilities.iterables import topological_sort
 from sympy.geometry.entity import GeometryEntity
 
 

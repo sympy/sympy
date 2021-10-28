@@ -6,7 +6,7 @@ Contains
 """
 
 from sympy.core import S
-from sympy.core.compatibility import ordered
+from sympy.core.sorting import ordered
 from sympy.core.symbol import _symbol, symbols
 from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point, Point2D

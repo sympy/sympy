@@ -3,7 +3,7 @@ Primality testing
 
 """
 
-from sympy.core.compatibility import as_int
+from sympy.utilities.misc import as_int
 
 from mpmath.libmp import bitcount as _bitlength
 

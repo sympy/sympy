@@ -1223,7 +1223,7 @@ class Add(Expr, AssocOp):
 
     @property
     def _sorted_args(self):
-        from .compatibility import default_sort_key
+        from .sorting import default_sort_key
         return tuple(sorted(self.args, key=default_sort_key))
 
     def _eval_difference_delta(self, n, step):

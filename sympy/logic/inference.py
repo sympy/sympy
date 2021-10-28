@@ -1,7 +1,7 @@
 """Inference in propositional logic"""
 
 from sympy.logic.boolalg import And, Not, conjuncts, to_cnf
-from sympy.core.compatibility import ordered
+from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
 from sympy.external.importtools import import_module
 

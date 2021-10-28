@@ -1,6 +1,5 @@
-from sympy.core.compatibility import as_int
 from sympy.utilities.iterables import is_sequence
-from sympy.utilities.misc import filldedent
+from sympy.utilities.misc import as_int, filldedent
 
 from .sparse import MutableSparseMatrix as SparseMatrix
 

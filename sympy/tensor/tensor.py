@@ -36,7 +36,6 @@ from abc import abstractmethod, ABCMeta
 from collections import defaultdict
 import operator
 import itertools
-from sympy.core.compatibility import default_sort_key
 from sympy.core.mul import prod
 from sympy.core.numbers import (Integer, Rational)
 from sympy.combinatorics import Permutation
@@ -46,6 +45,7 @@ from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.assumptions import ManagedProperties
 from sympy.core.containers import Tuple, Dict
 from sympy.core.decorators import deprecated
+from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol, symbols
 from sympy.core.sympify import CantSympify, _sympify
 from sympy.core.operations import AssocOp

@@ -21,12 +21,11 @@ from itertools import cycle
 from sympy.ntheory.generate import nextprime
 from sympy.core import Rational, Symbol
 from sympy.core.numbers import igcdex, mod_inverse, igcd
-from sympy.core.compatibility import as_int
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, primitive_root, factorint
 from sympy.polys.domains import FF
 from sympy.polys.polytools import gcd, Poly
-from sympy.utilities.misc import filldedent, translate
+from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
 from sympy.testing.randtest import _randrange, _randint
 

@@ -4,7 +4,7 @@ from collections import Counter
 from mpmath import mp, workprec
 from mpmath.libmp.libmpf import prec_to_dps
 
-from sympy.core.compatibility import default_sort_key
+from sympy.core.sorting import default_sort_key
 from sympy.core.evalf import DEFAULT_MAXPREC, PrecisionExhausted
 from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import Float

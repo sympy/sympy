@@ -49,8 +49,8 @@ from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
 from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational, igcd
-from sympy.core.compatibility import as_int
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
+from sympy.utilities.misc import as_int
 from mpmath.libmp.libintmath import giant_steps
 import math
 
@@ -1976,9 +1976,7 @@ def rs_series(expr, a, prec):
     ========
 
     >>> from sympy.polys.ring_series import rs_series
-    >>> from sympy.functions import sin, cos, exp, tan
-    >>> from sympy.core import symbols
-    >>> from sympy.polys.domains import QQ
+    >>> from sympy import sin, cos, exp, tan, symbols, QQ
     >>> a, b, c = symbols('a, b, c')
     >>> rs_series(sin(a) + exp(a), a, 5)
     1/24*a**4 + 1/2*a**2 + 2*a + 1

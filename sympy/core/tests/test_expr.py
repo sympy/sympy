@@ -2,7 +2,6 @@ from sympy.assumptions.refine import refine
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import default_sort_key
 from sympy.core.containers import Tuple
 from sympy.core.expr import (ExprBuilder, unchanged, Expr,
     UnevaluatedExpr)
@@ -14,6 +13,7 @@ from sympy.core.numbers import (NumberSymbol, E, zoo, oo, Float, I,
 from sympy.core.power import Pow
 from sympy.core.relational import Ge, Lt, Gt, Le
 from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol, symbols, Dummy, Wild
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial

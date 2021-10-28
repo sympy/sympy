@@ -8,12 +8,12 @@ from sympy.core import (
     S, Expr, I, Integer, Add, Tuple
 )
 from sympy.core.basic import Basic
-from sympy.core.compatibility import ordered
 from sympy.core.decorators import _sympifyit
 from sympy.core.evalf import pure_complex
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.relational import Relational
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal, bottom_up
@@ -5018,8 +5018,7 @@ def invert(f, g, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import invert, S
-    >>> from sympy.core.numbers import mod_inverse
+    >>> from sympy import invert, S, mod_inverse
     >>> from sympy.abc import x
 
     >>> invert(x**2 - 1, 2*x - 1)

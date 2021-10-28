@@ -9,14 +9,12 @@ from collections.abc import Iterable
 from inspect import isfunction
 from functools import reduce
 
-from sympy.core.logic import FuzzyBool
 from sympy.assumptions.refine import refine
 from sympy.core import SympifyError, Add
 from sympy.core.basic import Atom
-from sympy.core.compatibility import as_int
 from sympy.core.decorators import call_highest_priority
 from sympy.core.kind import Kind, NumberKind
-from sympy.core.logic import fuzzy_and
+from sympy.core.logic import fuzzy_and, FuzzyBool
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
@@ -26,7 +24,7 @@ from sympy.simplify import simplify as _simplify
 from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten, is_sequence
-from sympy.utilities.misc import filldedent
+from sympy.utilities.misc import as_int, filldedent
 from sympy.tensor.array import NDimArray
 
 from .utilities import _get_intermediate_simp_bool
@@ -3183,8 +3181,8 @@ class MatrixKind(Kind):
     the element kind. Use ``is`` with specifying the element kind.
 
     >>> from sympy import Matrix
+    >>> from sympy.core import NumberKind
     >>> from sympy.matrices import MatrixKind
-    >>> from sympy.core.kind import NumberKind
     >>> M = Matrix([1, 2])
     >>> isinstance(M.kind, MatrixKind)
     True

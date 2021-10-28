@@ -49,11 +49,11 @@ from .rules import Transform
 from .singleton import S
 from .sympify import sympify
 
-from sympy.utilities import default_sort_key
+from .sorting import default_sort_key, ordered
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import (has_dups, sift, iterable,
-    is_sequence, as_int, ordered)
-from sympy.utilities.misc import filldedent
+    is_sequence)
+from sympy.utilities.misc import as_int, filldedent
 
 import mpmath
 import mpmath.libmp as mlib
@@ -128,8 +128,7 @@ def arity(cls):
     Examples
     ========
 
-    >>> from sympy.core.function import arity
-    >>> from sympy import log
+    >>> from sympy import arity, log
     >>> arity(lambda x: x)
     1
     >>> arity(log)
@@ -220,7 +219,7 @@ class FunctionClass(ManagedProperties):
         Examples
         ========
 
-        >>> from sympy.core.function import Function
+        >>> from sympy import Function
         >>> f = Function('f')
 
         If the function can take any number of arguments, the set of whole
@@ -3287,9 +3286,8 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     Examples
     ========
 
-    >>> from sympy.core.function import nfloat
+    >>> from sympy import nfloat, cos, pi, sqrt
     >>> from sympy.abc import x, y
-    >>> from sympy import cos, pi, sqrt
     >>> nfloat(x**4 + x/2 + cos(pi/3) + 1 + sqrt(y))
     x**4 + 0.5*x + sqrt(y) + 1.5
     >>> nfloat(x**4 + sqrt(y), exponent=True)

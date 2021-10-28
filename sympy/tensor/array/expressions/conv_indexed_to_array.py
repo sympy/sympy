@@ -2,10 +2,10 @@ from collections import defaultdict
 
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
-from sympy.core.compatibility import default_sort_key
 from sympy.core.mul import Mul
 from sympy.core.numbers import Integer
 from sympy.core.power import Pow
+from sympy.core.sorting import default_sort_key
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.combinatorics import Permutation

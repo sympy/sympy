@@ -1,6 +1,6 @@
 from sympy.core import Expr, S, oo, pi, sympify
-from sympy.core.compatibility import as_int, ordered
 from sympy.core.evalf import N, prec_to_dps
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import _symbol, Dummy, symbols, Symbol
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
@@ -14,9 +14,8 @@ from sympy.logic import And
 from sympy.matrices import Matrix
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
-from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import has_dups, has_variety, uniq, rotate_left, least_rotation
-from sympy.utilities.misc import func_name
+from sympy.utilities.misc import as_int, func_name
 
 import warnings
 

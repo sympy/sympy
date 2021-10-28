@@ -1,5 +1,7 @@
-from sympy.core.function import Lambda
+from sympy.core.function import Lambda, expand_complex
 from sympy.core.mul import Mul
+from sympy.core.numbers import ilcm
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.sets.fancysets import ComplexRegion
@@ -140,7 +142,6 @@ def intersection_sets(a, b): # noqa:F811
         return a
 
     from sympy.solvers.diophantine.diophantine import diop_linear
-    from sympy.core.numbers import ilcm
     from sympy.functions.elementary.complexes import sign
 
     # this equation represents the values of the Range;
@@ -286,9 +287,7 @@ def intersection_sets(self, other): # noqa:F811
                 return FiniteSet(*(fn.subs(n, s[0]) for s in solns))
 
     if other == S.Reals:
-        from sympy.core.function import expand_complex
         from sympy.solvers.solvers import denoms, solve_linear
-        from sympy.core.relational import Eq
 
         def _solution_union(exprs, sym):
             # return a union of linear solutions to i in expr;

@@ -10,8 +10,8 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import Not
-from sympy.core.compatibility import default_sort_key
 from sympy.core.parameters import global_parameters
+from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import _sympify
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean

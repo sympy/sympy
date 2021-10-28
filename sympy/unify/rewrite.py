@@ -16,7 +16,7 @@ def rewriterule(source, target, variables=(), condition=None, assume=None):
 
     >>> from sympy.abc import w, x, y, z
     >>> from sympy.unify.rewrite import rewriterule
-    >>> from sympy.utilities import default_sort_key
+    >>> from sympy import default_sort_key
     >>> rl = rewriterule(x + y, x**y, [x, y])
     >>> sorted(rl(z + 3), key=default_sort_key)
     [3**z, z**3]

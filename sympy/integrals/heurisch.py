@@ -11,6 +11,7 @@ from sympy.core.basic import sympify
 from sympy.core.numbers import Rational, pi, I
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
+from sympy.core.sorting import ordered
 
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
 from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
@@ -36,7 +37,6 @@ from sympy.polys.rings import PolyRing
 from sympy.polys.solvers import solve_lin_sys
 from sympy.polys.constructor import construct_domain
 
-from sympy.core.compatibility import ordered
 from sympy.integrals.integrals import integrate
 
 
@@ -121,8 +121,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     Examples
     ========
 
-    >>> from sympy.core import symbols
-    >>> from sympy.functions import cos
+    >>> from sympy import cos, symbols
     >>> from sympy.integrals.heurisch import heurisch, heurisch_wrapper
     >>> n, x = symbols('n x')
     >>> heurisch(cos(n*x), x)

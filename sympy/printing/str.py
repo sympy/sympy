@@ -7,13 +7,14 @@ from typing import Any, Dict
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
 from sympy.core.relational import Relational
+from sympy.core.sorting import default_sort_key
 from sympy.sets.sets import FiniteSet
 from .printer import Printer, print_function
 from sympy.printing.precedence import precedence, PRECEDENCE
 
 from mpmath.libmp import prec_to_dps, to_str as mlib_to_str
 
-from sympy.utilities import default_sort_key, sift
+from sympy.utilities import sift
 
 
 class StrPrinter(Printer):

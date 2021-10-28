@@ -16,7 +16,7 @@ from sympy.core.function import expand_func
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.ntheory.factor_ import divisors
 from sympy.core.assumptions import check_assumptions
-from sympy.core.compatibility import ordered, default_sort_key
+from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.sympify import sympify
 from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
     Pow, Unequality)
@@ -2019,15 +2019,13 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     Examples
     ========
 
-    >>> from sympy.core.power import Pow
-    >>> from sympy.polys.polytools import cancel
+    >>> from sympy import cancel, Pow
 
     ``f`` is independent of the symbols in *symbols* that are not in
     *exclude*:
 
-    >>> from sympy.solvers.solvers import solve_linear
+    >>> from sympy import cos, sin, solve_linear
     >>> from sympy.abc import x, y, z
-    >>> from sympy import cos, sin
     >>> eq = y*cos(x)**2 + y*sin(x)**2 - y  # = y*(1 - 1) = 0
     >>> solve_linear(eq)
     (0, 1)

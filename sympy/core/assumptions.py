@@ -287,7 +287,7 @@ def common_assumptions(exprs, check=None):
     Examples
     ========
 
-    >>> from sympy.core.assumptions import common_assumptions
+    >>> from sympy.core import common_assumptions
     >>> from sympy import oo, pi, sqrt
     >>> common_assumptions([-4, 0, sqrt(2), 2, pi, oo])
     {'commutative': True, 'composite': False,

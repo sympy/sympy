@@ -15,7 +15,6 @@ from .basic import Basic
 from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
 from .cache import cacheit, clear_cache
-from .compatibility import as_int
 from .decorators import _sympifyit
 from .logic import fuzzy_not
 from .kind import NumberKind
@@ -31,7 +30,7 @@ from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
     prec_to_dps)
-from sympy.utilities.misc import debug, filldedent
+from sympy.utilities.misc import as_int, debug, filldedent
 from .parameters import global_parameters
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -52,7 +51,7 @@ def comp(z1, z2, tol=None):
     ``abs(z1 - z2)*10**p <= 5`` where ``p`` is minimum value of the
     decimal precision of each value.
 
-    >>> from sympy.core.numbers import comp, pi
+    >>> from sympy import comp, pi
     >>> pi4 = pi.n(4); pi4
     3.142
     >>> comp(_, 3.142)
@@ -243,7 +242,7 @@ def igcd(*args):
     Examples
     ========
 
-    >>> from sympy.core.numbers import igcd
+    >>> from sympy import igcd
     >>> igcd(2, 4)
     2
     >>> igcd(5, 10, 15)
@@ -421,7 +420,7 @@ def ilcm(*args):
     Examples
     ========
 
-    >>> from sympy.core.numbers import ilcm
+    >>> from sympy import ilcm
     >>> ilcm(5, 10)
     10
     >>> ilcm(7, 3)
@@ -496,8 +495,7 @@ def mod_inverse(a, m):
     Examples
     ========
 
-    >>> from sympy import S
-    >>> from sympy.core.numbers import mod_inverse
+    >>> from sympy import mod_inverse, S
 
     Suppose we wish to find multiplicative inverse x of
     3 modulo 11. This is the same as finding x such

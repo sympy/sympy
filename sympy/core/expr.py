@@ -8,9 +8,9 @@ from .singleton import S
 from .evalf import EvalfMixin, pure_complex, DEFAULT_MAXPREC
 from .decorators import call_highest_priority, sympify_method_args, sympify_return
 from .cache import cacheit
-from .compatibility import as_int, default_sort_key
+from .sorting import default_sort_key
 from .kind import NumberKind
-from sympy.utilities.misc import func_name
+from sympy.utilities.misc import as_int, func_name
 from sympy.utilities.iterables import has_variety
 from mpmath.libmp import mpf_log, prec_to_dps
 from mpmath.libmp.libintmath import giant_steps
@@ -416,8 +416,7 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import Integral, cos, sin, pi
-        >>> from sympy.core.function import Function
+        >>> from sympy import Function, Integral, cos, sin, pi
         >>> from sympy.abc import x
         >>> f = Function('f')
 
@@ -2488,7 +2487,7 @@ class Expr(Basic, EvalfMixin):
 
         To put something in canonical form wrt to sign, use `signsimp`:
 
-        >>> from sympy.simplify.simplify import signsimp
+        >>> from sympy import signsimp
         >>> signsimp(x*(y - x))
         -x*(x - y)
         >>> _.could_extract_minus_sign()

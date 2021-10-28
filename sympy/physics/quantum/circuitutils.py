@@ -2,7 +2,7 @@
 
 from functools import reduce
 
-from sympy.core.compatibility import default_sort_key
+from sympy.core.sorting import default_sort_key
 from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
 from sympy.core.symbol import Symbol
