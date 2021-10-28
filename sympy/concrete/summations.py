@@ -5,12 +5,13 @@ from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.concrete.gosper import gosper_sum
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
-from sympy.core.function import Derivative
+from sympy.core.function import Derivative, expand
 from sympy.core.mul import Mul
+from sympy.core.numbers import Float
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
-from sympy.core.symbol import Dummy, Wild, Symbol
+from sympy.core.symbol import Dummy, Wild, Symbol, symbols
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cot, csc
@@ -22,7 +23,7 @@ from sympy.series.limitseq import limit_seq
 from sympy.series.order import O
 from sympy.series.residues import residue
 from sympy.sets.sets import FiniteSet
-from sympy.simplify import denom
+from sympy.simplify import denom, simplify
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.powsimp import powsimp
 from sympy.solvers import solve
@@ -323,7 +324,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import factor_sum, sum_combine
-        from sympy.core.function import expand
 
         # split the function into adds
         terms = Add.make_args(expand(self.function))
@@ -430,11 +430,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Sum.is_absolutely_convergent()
         sympy.concrete.products.Product.is_convergent()
         """
-        from sympy.core.symbol import symbols
         from sympy.functions.elementary.exponential import log
         from sympy.integrals.integrals import Integral
         from sympy.sets.sets import Interval
-        from sympy.simplify.simplify import simplify
         p, q, r = symbols('p q r', cls=Wild)
 
         sym = self.limits[0][0]
@@ -1244,9 +1242,8 @@ def eval_sum_symbolic(f, limits):
 def _eval_sum_hyper(f, i, a):
     """ Returns (res, cond). Sums from a to oo. """
     from sympy.functions import hyper
-    from sympy.simplify import hyperexpand, hypersimp, fraction, simplify
+    from sympy.simplify import hyperexpand, hypersimp, fraction
     from sympy.polys.polytools import Poly, factor
-    from sympy.core.numbers import Float
 
     if a != 0:
         return _eval_sum_hyper(f.subs(i, i + a), i, 0)

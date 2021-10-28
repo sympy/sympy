@@ -1,16 +1,17 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 
-from sympy.core import Add, S, sympify, cacheit, pi, I, Rational
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core import Add, S, sympify, cacheit, pi, I, Rational, EulerGamma
+from sympy.core.function import Function, ArgumentIndexError, expand_mul
 from sympy.core.relational import is_eq
+from sympy.core.power import Pow
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial, factorial2, RisingFactorial
 from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, root
-from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.complexes import polar_lift
+from sympy.functions.elementary.exponential import exp, log, exp_polar
+from sympy.functions.elementary.complexes import polar_lift, unpolarify
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.trigonometric import cos, sin, sinc
 from sympy.functions.special.hyper import hyper, meijerg
@@ -1171,7 +1172,6 @@ class Ei(Function):
             return Ei(nz) + 2*I*pi*n
 
     def fdiff(self, argindex=1):
-        from sympy.functions.elementary.complexes import unpolarify
         arg = unpolarify(self.args[0])
         if argindex == 1:
             return exp(arg)/arg
@@ -1346,8 +1346,6 @@ class expint(Function):
 
     @classmethod
     def eval(cls, nu, z):
-        from sympy.core.function import expand_mul
-        from sympy.functions.elementary.complexes import unpolarify
         from sympy.functions.special.gamma_functions import (gamma, uppergamma)
         nu2 = unpolarify(nu)
         if nu != nu2:
@@ -1382,8 +1380,6 @@ class expint(Function):
         return z**(nu - 1)*uppergamma(1 - nu, z)
 
     def _eval_rewrite_as_Ei(self, nu, z, **kwargs):
-        from sympy.functions.elementary.complexes import unpolarify
-        from sympy.functions.elementary.exponential import exp_polar
         if nu == 1:
             return -Ei(z*exp_polar(-I*pi)) - I*pi
         elif nu.is_Integer and nu > 1:
@@ -1765,7 +1761,6 @@ class TrigonometricIntegral(Function):
         return 2*pi*I*n*cls._trigfunc(0) + cls(nz)
 
     def fdiff(self, argindex=1):
-        from sympy.functions.elementary.complexes import unpolarify
         arg = unpolarify(self.args[0])
         if argindex == 1:
             return self._trigfunc(arg)/arg
@@ -1781,8 +1776,6 @@ class TrigonometricIntegral(Function):
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE this is fairly inefficient
-        from sympy.core import EulerGamma
-        from sympy.core.power import Pow
         n += 1
         if self.args[0].subs(x, 0) != 0:
             return super()._eval_nseries(x, n, logx)
@@ -2132,7 +2125,6 @@ class Shi(TrigonometricIntegral):
         return I*Si(z)*sign
 
     def _eval_rewrite_as_expint(self, z, **kwargs):
-        from sympy.functions.elementary.exponential import exp_polar
         # XXX should we polarify z?
         return (E1(z) - E1(exp_polar(I*pi)*z))/2 - I*pi/2
 
@@ -2252,7 +2244,6 @@ class Chi(TrigonometricIntegral):
         return Ci(z) + I*pi/2*sign
 
     def _eval_rewrite_as_expint(self, z, **kwargs):
-        from sympy.functions.elementary.exponential import exp_polar
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):

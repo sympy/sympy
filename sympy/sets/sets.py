@@ -9,6 +9,7 @@ from sympy.core.decorators import (deprecated, sympify_method_args,
     sympify_return)
 from sympy.core.evalf import EvalfMixin, prec_to_dps
 from sympy.core.expr import Expr
+from sympy.core.function import Lambda
 from sympy.core.logic import (FuzzyBool, fuzzy_bool, fuzzy_or, fuzzy_and,
     fuzzy_not)
 from sympy.core.numbers import Float
@@ -2237,7 +2238,6 @@ def imageset(*args):
     sympy.sets.fancysets.ImageSet
 
     """
-    from sympy.core.function import Lambda
     from sympy.sets.fancysets import ImageSet
     from sympy.sets.setexpr import set_function
 
@@ -2486,7 +2486,6 @@ def _handle_finite_sets(op, x, y, commutative):
 
 def _apply_operation(op, x, y, commutative):
     from sympy.sets import ImageSet
-    from sympy.core.function import Lambda
     d = Dummy('d')
 
     out = _handle_finite_sets(op, x, y, commutative)

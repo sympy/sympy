@@ -1,10 +1,11 @@
 """ Tools for doing common subexpression elimination.
 """
-from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol
+from sympy.core import Basic, Mul, Add, Pow, sympify
 from sympy.core.containers import Tuple, OrderedSet
 from sympy.core.exprtools import factor_terms
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
+from sympy.core.symbol import symbols, Symbol
 from sympy.utilities.iterables import numbered_symbols, sift, \
         topological_sort, iterable
 
@@ -122,8 +123,6 @@ def cse_release_variables(r, e):
     """
     if not r:
         return r, e
-
-    from sympy.core.symbol import symbols
 
     s, p = zip(*r)
     esyms = symbols('_:%d' % len(e))

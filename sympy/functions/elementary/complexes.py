@@ -2,9 +2,10 @@ from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
-    AppliedUndef)
+    AppliedUndef, expand_mul)
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi, I, oo
+from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.functions.elementary.exponential import exp, exp_polar, log
 from sympy.functions.elementary.integers import ceiling
@@ -516,8 +517,6 @@ class Abs(Function):
     @classmethod
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
-        from sympy.core.function import expand_mul
-        from sympy.core.power import Pow
 
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()

@@ -1,12 +1,11 @@
 from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.function import (
-    Function, ArgumentIndexError,
-    expand_mul, FunctionClass, PoleError)
+from sympy.core.function import (Function, ArgumentIndexError, expand_log,
+    expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
-from sympy.core.numbers import Integer, Rational
+from sympy.core.numbers import Integer, Rational, pi, I
 from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -176,7 +175,6 @@ class exp_polar(ExpBase):
 
     def _eval_evalf(self, prec):
         """ Careful! any evalf of polar numbers is flaky """
-        from sympy.core.numbers import pi
         from sympy.functions.elementary.complexes import (im, re)
         i = im(self.args[0])
         try:
@@ -478,7 +476,6 @@ class exp(ExpBase, metaclass=ExpMeta):
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy.core.function import expand_complex
         from sympy.functions.elementary.integers import ceiling
         from sympy.series.limits import limit
         from sympy.series.order import Order
@@ -806,7 +803,6 @@ class log(Function):
         return (1 - 2*(n % 2)) * x**(n + 1)/(n + 1)
 
     def _eval_expand_log(self, deep=True, **hints):
-        from sympy.core.function import expand_log
         from sympy.functions.elementary.complexes import unpolarify
         from sympy.ntheory.factor_ import factorint
         from sympy.concrete import Sum, Product
@@ -955,7 +951,6 @@ class log(Function):
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy.core.numbers import I
         from sympy.functions.elementary.complexes import im
         from sympy.polys.polytools import cancel
         from sympy.series.order import Order
@@ -1043,7 +1038,6 @@ class log(Function):
         return res + Order(x**n, x)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy.core.numbers import I
         from sympy.functions.elementary.complexes import (im, re)
         arg0 = self.args[0].together()
 
@@ -1194,7 +1188,6 @@ class LambertW(Function):
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         if len(self.args) == 1:
-            from sympy.core.function import expand_multinomial
             from sympy.functions.elementary.integers import ceiling
             from sympy.series.order import Order
             arg = self.args[0].nseries(x, n=n, logx=logx)

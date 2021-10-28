@@ -2,16 +2,19 @@
 from functools import reduce
 
 from sympy.core import S, I, pi, oo, zoo, ilcm, Mod
+from sympy.core.add import Add
 from sympy.core.expr import Expr
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 
 from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
+from sympy.core.relational import Ne
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy
 
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
-        sinh, cosh, asinh, acosh, atanh, acoth, Abs, re)
+        sinh, cosh, asinh, acosh, atanh, acoth, Abs, re, factorial, RisingFactorial)
+from sympy.logic.boolalg import (And, Or)
 
 class TupleArg(Tuple):
     def limit(self, x, xlim, dir='+'):
@@ -233,8 +236,6 @@ class hyper(TupleParametersBase):
 
     def _eval_nseries(self, x, n, logx, cdir=0):
 
-        from sympy.functions import factorial, RisingFactorial
-        from sympy.core.add import Add
         from sympy.series.order import Order
 
         arg = self.args[2]
@@ -340,8 +341,6 @@ class hyper(TupleParametersBase):
     @property
     def convergence_statement(self):
         """ Return a condition on z under which the series converges. """
-        from sympy.core.relational import Ne
-        from sympy.logic.boolalg import (And, Or)
         R = self.radius_of_convergence
         if R == 0:
             return False

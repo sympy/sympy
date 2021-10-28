@@ -1,13 +1,13 @@
 from sympy.core import Add, S, sympify, Dummy, expand_func
 from sympy.core.evalf import prec_to_dps
 from sympy.core.expr import Expr
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.function import Function, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and, fuzzy_not
-from sympy.core.numbers import Rational, pi, oo
+from sympy.core.numbers import Rational, pi, oo, I
 from sympy.core.power import Pow
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.special.error_functions import erf, erfc, Ei
-from sympy.functions.elementary.complexes import re
+from sympy.functions.elementary.complexes import re, unpolarify
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -202,7 +202,6 @@ class gamma(Function):
         return (self.func(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy.core.function import PoleError
         arg = self.args[0]
         x0 = arg.subs(x, 0)
 
@@ -276,7 +275,6 @@ class lowergamma(Function):
 
 
     def fdiff(self, argindex=2):
-        from sympy.functions.elementary.complexes import unpolarify
         from sympy.functions.special.hyper import meijerg
         if argindex == 2:
             a, z = self.args
@@ -306,8 +304,6 @@ class lowergamma(Function):
         #    where lowergamma_unbranched(s, x) is an entire function (in fact
         #    of both s and x), i.e.
         #    lowergamma(s, exp(2*I*pi*n)*x) = exp(2*pi*I*n*a)*lowergamma(a, x)
-        from sympy.core.numbers import I
-        from sympy.functions.elementary.complexes import unpolarify
         if x is S.Zero:
             return S.Zero
         nx, n = x.extract_branch_factor()
@@ -465,7 +461,6 @@ class uppergamma(Function):
 
 
     def fdiff(self, argindex=2):
-        from sympy.functions.elementary.complexes import unpolarify
         from sympy.functions.special.hyper import meijerg
         if argindex == 2:
             a, z = self.args
@@ -487,8 +482,6 @@ class uppergamma(Function):
 
     @classmethod
     def eval(cls, a, z):
-        from sympy.core.numbers import I
-        from sympy.functions.elementary.complexes import unpolarify
         from sympy.functions.special.error_functions import expint
         if z.is_Number:
             if z is S.NaN:
@@ -735,7 +728,6 @@ class polygamma(Function):
     @classmethod
     def eval(cls, n, z):
         n, z = map(sympify, (n, z))
-        from sympy.functions.elementary.complexes import unpolarify
 
         if n.is_integer:
             if n.is_nonnegative:

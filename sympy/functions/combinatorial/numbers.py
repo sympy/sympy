@@ -9,11 +9,14 @@ the separate 'factorials' module.
 
 from typing import Callable, Dict
 
-from sympy.core import S, Symbol, Rational, Integer, Add, Dummy
+from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
+from sympy.core.evalf import pure_complex
+from sympy.core.expr import Expr
 from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
-from sympy.core.numbers import E, pi
+from sympy.core.mul import prod
+from sympy.core.numbers import E, pi, Rational, Integer
 from sympy.core.relational import LessThan, StrictGreaterThan
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions.combinatorial.factorials import binomial, factorial
@@ -1003,13 +1006,11 @@ class euler(Function):
                     return Integer(res)
                 # Euler polynomial
                 else:
-                    from sympy.core.evalf import pure_complex
                     reim = pure_complex(sym, or_real=True)
                     # Evaluate polynomial numerically using mpmath
                     if reim and all(a.is_Float or a.is_Integer for a in reim) \
                             and any(a.is_Float for a in reim):
                         from mpmath import mp
-                        from sympy.core.expr import Expr
                         m = int(m)
                         # XXX ComplexFloat (#12192) would be nice here, above
                         prec = min([a._prec for a in reim if a.is_Float])
@@ -1046,14 +1047,12 @@ class euler(Function):
 
         if x is None and m.is_Integer and m.is_nonnegative:
             from mpmath import mp
-            from sympy.core.expr import Expr
             m = m._to_mpmath(prec)
             with workprec(prec):
                 res = mp.eulernum(m)
             return Expr._from_mpmath(res, prec)
         if x and x.is_number and m.is_Integer and m.is_nonnegative:
             from mpmath import mp
-            from sympy.core.expr import Expr
             m = int(m)
             x = x._to_mpmath(prec)
             with workprec(prec):
@@ -1511,7 +1510,6 @@ def nP(n, k=None, replacement=False):
 
 @cacheit
 def _nP(n, k=None, replacement=False):
-    from sympy.core.mul import prod
 
     if k == 0:
         return 1
@@ -1681,7 +1679,6 @@ def nC(n, k=None, replacement=False):
     .. [2] http://tinyurl.com/cep849r
 
     """
-    from sympy.core.mul import prod
 
     if isinstance(n, SYMPY_INTS):
         if k is None:

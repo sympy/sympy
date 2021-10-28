@@ -8,7 +8,7 @@ from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool, fuzzy_and
 from sympy.core.numbers import igcdex, Rational, pi, Integer
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, Dummy
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 from sympy.functions.elementary.exponential import log, exp
 from sympy.functions.elementary.integers import floor
@@ -2274,7 +2274,6 @@ class asin(InverseTrigonometricFunction):
         return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # asin
-        from sympy.core.symbol import Dummy
         from sympy.functions.elementary.complexes import im
         from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
@@ -2486,7 +2485,6 @@ class acos(InverseTrigonometricFunction):
         return self._eval_is_extended_real()
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # acos
-        from sympy.core.symbol import Dummy
         from sympy.functions.elementary.complexes import im
         from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
@@ -3078,7 +3076,6 @@ class asec(InverseTrigonometricFunction):
         return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # asec
-        from sympy.core.symbol import Dummy
         from sympy.functions.elementary.complexes import im
         from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
@@ -3252,7 +3249,6 @@ class acsc(InverseTrigonometricFunction):
         return self.func(x0)
 
     def _eval_nseries(self, x, n, logx, cdir=0):  # acsc
-        from sympy.core.symbol import Dummy
         from sympy.functions.elementary.complexes import im
         from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)

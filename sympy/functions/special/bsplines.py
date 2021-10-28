@@ -1,4 +1,5 @@
 from sympy.core import S, sympify
+from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise, piecewise_fold
 from sympy.sets.sets import Interval
 
@@ -162,7 +163,6 @@ def bspline_basis(d, knots, n, x):
     .. [1] https://en.wikipedia.org/wiki/B-spline
 
     """
-    from sympy.core.symbol import Dummy
     # make sure x has no assumptions so conditions don't evaluate
     xvar = x
     x = Dummy()
@@ -299,7 +299,6 @@ def interpolating_spline(d, x, X, Y):
     bspline_basis_set, interpolating_poly
 
     """
-    from sympy.core.symbol import (Dummy, symbols)
     from sympy.solvers.solveset import linsolve
     from sympy.matrices.dense import Matrix
 

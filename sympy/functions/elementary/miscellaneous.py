@@ -6,6 +6,7 @@ from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import (Application, Lambda,
     ArgumentIndexError)
 from sympy.core.expr import Expr
+from sympy.core.exprtools import factor_terms
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
@@ -605,7 +606,6 @@ class MinMaxBase(Expr, LatticeOp):
         """
         Check if x and y are connected somehow.
         """
-        from sympy.core.exprtools import factor_terms
         def hit(v, t, f):
             if not v.is_Relational:
                 return t if v else f

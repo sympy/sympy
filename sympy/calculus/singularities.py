@@ -15,6 +15,7 @@ the following function types in the given ``Interval``:
 
 """
 
+from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
@@ -84,7 +85,6 @@ def singularities(expression, symbol, domain=None):
     """
     from sympy.functions.elementary.exponential import log
     from sympy.functions.elementary.trigonometric import sec, csc, cot, tan, cos
-    from sympy.core.power import Pow
 
     if domain is None:
         domain = S.Reals if symbol.is_real else S.Complexes
