@@ -239,8 +239,9 @@ class RepMatrix(MatrixBase):
         return classof(self, other)._fromrep(self._rep * other._rep)
 
     def _eval_matrix_mul_elementwise(self, other):
-        rep = self._rep.mul_elementwise(other._rep)
-        return classof(self, other)._fromrep(rep)
+        selfrep, otherrep = self._rep.unify(other._rep)
+        newrep = selfrep.mul_elementwise(otherrep)
+        return classof(self, other)._fromrep(newrep)
 
     def _eval_scalar_mul(self, other):
         rep, other = self._unify_element_sympy(self._rep, other)

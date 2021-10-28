@@ -790,6 +790,15 @@ def test_multiplication():
         assert c[1, 0] == 3*5
         assert c[1, 1] == 0
 
+    # https://github.com/sympy/sympy/issues/22353
+    A = Matrix(ones(3, 1))
+    _h = -Rational(1, 2)
+    B = Matrix([_h, _h, _h])
+    assert A.multiply_elementwise(B) == Matrix([
+        [_h],
+        [_h],
+        [_h]])
+
 
 def test_matmul():
     a = Matrix([[1, 2], [3, 4]])
