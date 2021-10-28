@@ -598,7 +598,8 @@ def lcim(numbers):
     Examples
     ========
 
-    >>> from sympy import lcim, S, pi
+    >>> from sympy.calculus.util import lcim
+    >>> from sympy import S, pi
     >>> lcim([S(1)/2, S(3)/4, S(5)/6])
     15/2
     >>> lcim([2*pi, 3*pi, pi, pi/2])
