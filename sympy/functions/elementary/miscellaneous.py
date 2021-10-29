@@ -899,10 +899,9 @@ class Rem(Function):
 
     See Also
     ========
-    
+
     Mod
     """
-
     kind = NumberKind
 
     @classmethod
