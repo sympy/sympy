@@ -285,9 +285,9 @@ class MatrixReductions(MatrixDeterminant):
 
         `op` may be one of
 
-            * "n->kn" (column n goes to k*n)
-            * "n<->m" (swap column n and column m)
-            * "n->n+km" (column n goes to column n + k*column m)
+            * ``"n->kn"`` (column n goes to k*n)
+            * ``"n<->m"`` (swap column n and column m)
+            * ``"n->n+km"`` (column n goes to column n + k*column m)
 
         Parameters
         ==========
@@ -315,9 +315,9 @@ class MatrixReductions(MatrixDeterminant):
 
         `op` may be one of
 
-            * "n->kn" (row n goes to k*n)
-            * "n<->m" (swap row n and row m)
-            * "n->n+km" (row n goes to row n + k*row m)
+            * ``"n->kn"`` (row n goes to k*n)
+            * ``"n<->m"`` (swap row n and row m)
+            * ``"n->n+km"`` (row n goes to row n + k*row m)
 
         Parameters
         ==========
