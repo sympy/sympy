@@ -901,7 +901,6 @@ class Rem(Function):
     ========
     
     Mod
-    
     """
 
     kind = NumberKind
