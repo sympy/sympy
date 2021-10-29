@@ -1,10 +1,10 @@
 from sympy.core import S, sympify, Expr, Dummy
 from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import default_sort_key, is_sequence
 from sympy.core.containers import Tuple
+from sympy.core.sorting import default_sort_key
 from sympy.sets.sets import Complement
-from sympy.utilities.iterables import uniq
+from sympy.utilities.iterables import uniq, is_sequence
 
 
 class Order(Expr):
@@ -225,7 +225,7 @@ class Order(Expr):
                     expr = Add(*[f.expr for (e, f) in lst])
 
                 elif expr:
-                    from sympy import PoleError, Function
+                    from sympy.core.function import (Function, PoleError)
                     try:
                         expr = expr.as_leading_term(*args)
                     except PoleError:
@@ -370,7 +370,8 @@ class Order(Expr):
         Return None if the inclusion relation cannot be determined
         (e.g. when self and expr have different symbols).
         """
-        from sympy import powsimp
+        from sympy.simplify.powsimp import powsimp
+        expr = sympify(expr)
         if expr.is_zero:
             return True
         if expr is S.NaN:
@@ -382,12 +383,12 @@ class Order(Expr):
                 return None
             if expr.expr == self.expr:
                 # O(1) + O(1), O(1) + O(1, x), etc.
-                return all([x in self.args[1:] for x in expr.args[1:]])
+                return all(x in self.args[1:] for x in expr.args[1:])
             if expr.expr.is_Add:
-                return all([self.contains(x) for x in expr.expr.args])
+                return all(self.contains(x) for x in expr.expr.args)
             if self.expr.is_Add and point.is_zero:
-                return any([self.func(x, *self.args[1:]).contains(expr)
-                            for x in self.expr.args])
+                return any(self.func(x, *self.args[1:]).contains(expr)
+                            for x in self.expr.args)
             if self.variables and expr.variables:
                 common_symbols = tuple(
                     [s for s in self.variables if s in expr.variables])

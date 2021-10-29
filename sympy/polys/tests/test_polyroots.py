@@ -1,8 +1,16 @@
 """Tests for algorithms for computing symbolic roots of polynomials. """
 
-from sympy import (S, symbols, Symbol, Wild, Rational, sqrt,
-    powsimp, sin, cos, pi, I, Interval, re, im, exp, ZZ, Piecewise,
-    acos, root, conjugate)
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, Wild, symbols)
+from sympy.functions.elementary.complexes import (conjugate, im, re)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import (root, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, cos, sin)
+from sympy.polys.domains.integerring import ZZ
+from sympy.sets.sets import Interval
+from sympy.simplify.powsimp import powsimp
 
 from sympy.polys import Poly, cyclotomic_poly, intervals, nroots, rootof
 
@@ -14,10 +22,11 @@ from sympy.polys.orthopolys import legendre_poly
 from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polyutils import _nsort
 
-from sympy.utilities.iterables import cartes
 from sympy.testing.pytest import raises, slow
 from sympy.testing.randtest import verify_numerically
 import mpmath
+from itertools import product
+
 
 
 a, b, c, d, e, q, t, x, y, z = symbols('a,b,c,d,e,q,t,x,y,z')
@@ -69,7 +78,7 @@ def test_roots_quadratic():
     f = Poly(-24*x**2 - 180*x + 264)
     assert [w.n(2) for w in f.all_roots(radicals=True)] == \
            [w.n(2) for w in f.all_roots(radicals=False)]
-    for _a, _b, _c in cartes((-2, 2), (-2, 2), (0, -1)):
+    for _a, _b, _c in product((-2, 2), (-2, 2), (0, -1)):
         f = Poly(_a*x**2 + _b*x + _c)
         roots = roots_quadratic(f)
         assert roots == _nsort(roots)
@@ -307,7 +316,7 @@ def test_roots_binomial():
 
     assert powsimp(r0[0]) == powsimp(r1[0])
     assert powsimp(r0[1]) == powsimp(r1[1])
-    for a, b, s, n in cartes((1, 2), (1, 2), (-1, 1), (2, 3, 4, 5)):
+    for a, b, s, n in product((1, 2), (1, 2), (-1, 1), (2, 3, 4, 5)):
         if a == b and a != 1:  # a == b == 1 is sufficient
             continue
         p = Poly(a*x**n + s*b)
@@ -710,3 +719,12 @@ def test_roots_composite():
 def test_issue_19113():
     eq = cos(x)**3 - cos(x) + 1
     raises(PolynomialError, lambda: roots(eq))
+
+
+def test_issue_17454():
+    assert roots([1, -3*(-4 - 4*I)**2/8 + 12*I, 0], multiple=True) == [0, 0]
+
+
+def test_issue_20913():
+    assert Poly(x + 9671406556917067856609794, x).real_roots() == [-9671406556917067856609794]
+    assert Poly(x**3 + 4, x).real_roots() == [-2**(S(2)/3)]

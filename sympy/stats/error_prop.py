@@ -2,7 +2,13 @@
 
 from itertools import repeat, combinations
 
-from sympy import S, Symbol, Add, Mul, simplify, Pow, exp
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import exp
+from sympy.simplify.simplify import simplify
 from sympy.stats.symbolic_probability import RandomSymbol, Variance, Covariance
 from sympy.stats.rv import is_random
 

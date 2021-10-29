@@ -3,10 +3,10 @@
 import sys
 import types
 import inspect
+from functools import wraps
 
-from sympy.core.decorators import wraps
-from sympy.core.compatibility import iterable
 from sympy.testing.runtests import DependencyError, SymPyDocTests, PyTestReporter
+from sympy.utilities.iterables import iterable
 
 def threaded_factory(func, use_add):
     """A factory for ``threaded`` decorators. """
@@ -178,7 +178,7 @@ def public(obj):
     Append ``obj``'s name to global ``__all__`` variable (call site).
 
     By using this decorator on functions or classes you achieve the same goal
-    as by filling ``__all__`` variables manually, you just don't have to repeat
+    as by filling ``__all__`` variables manually, you just do not have to repeat
     yourself (object's name). You also know if object is public at definition
     site, not at some random location (where ``__all__`` was set).
 

@@ -1,7 +1,11 @@
 """Abstract tensor product."""
 
-from sympy import Expr, Add, Mul, Matrix, Pow, sympify
-from sympy.core.trace import Tr
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.sympify import sympify
+from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.qexpr import QuantumError
@@ -14,6 +18,7 @@ from sympy.physics.quantum.matrixutils import (
     scipy_sparse_matrix,
     matrix_tensor_product
 )
+from sympy.physics.quantum.trace import Tr
 
 
 __all__ = [
@@ -160,8 +165,8 @@ class TensorProduct(Expr):
     def _pretty(self, printer, *args):
 
         if (_combined_printing and
-                (all([isinstance(arg, Ket) for arg in self.args]) or
-                 all([isinstance(arg, Bra) for arg in self.args]))):
+                (all(isinstance(arg, Ket) for arg in self.args) or
+                 all(isinstance(arg, Bra) for arg in self.args))):
 
             length = len(self.args)
             pform = printer._print('', *args)
@@ -204,8 +209,8 @@ class TensorProduct(Expr):
     def _latex(self, printer, *args):
 
         if (_combined_printing and
-                (all([isinstance(arg, Ket) for arg in self.args]) or
-                 all([isinstance(arg, Bra) for arg in self.args]))):
+                (all(isinstance(arg, Ket) for arg in self.args) or
+                 all(isinstance(arg, Bra) for arg in self.args))):
 
             def _label_wrap(label, nlabels):
                 return label if nlabels == 1 else r"\left\{%s\right\}" % label

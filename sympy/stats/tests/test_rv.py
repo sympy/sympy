@@ -1,6 +1,20 @@
-from sympy import (S, Symbol, Interval, binomial, nan, exp, Or,
-        symbols, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic, Indexed,
-        DiracDelta, Lambda, log, pi, FallingFactorial, Rational, Matrix)
+from sympy.concrete.summations import Sum
+from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
+from sympy.core.function import Lambda
+from sympy.core.numbers import (Rational, nan, oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.combinatorial.factorials import (FallingFactorial, binomial)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.delta_functions import DiracDelta
+from sympy.integrals.integrals import integrate
+from sympy.logic.boolalg import (And, Or)
+from sympy.matrices.dense import Matrix
+from sympy.sets.sets import Interval
+from sympy.tensor.indexed import Indexed
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         density, given, independent, dependent, where, pspace, GaussianUnitaryEnsemble,
         random_symbols, sample, Geometric, factorial_moment, Binomial, Hypergeometric,
@@ -50,7 +64,7 @@ def test_random_symbols():
 
 def test_characteristic_function():
     #  Imports I from sympy
-    from sympy import I
+    from sympy.core.numbers import I
     X = Normal('X',0,1)
     Y = DiscreteUniform('Y', [1,2,7])
     Z = Poisson('Z', 2)
@@ -214,10 +228,9 @@ def test_Sample():
     if not numpy:
         skip('Numpy is not installed. Abort tests')
     #Test Issue #21563: Output of sample must be a float or array
-    assert isinstance(sample(X), numpy.int64)
+    assert isinstance(sample(X), (numpy.int32, numpy.int64))
     assert isinstance(sample(Y), numpy.float64)
     assert isinstance(sample(X, size=2), numpy.ndarray)
-
 
 
 @XFAIL

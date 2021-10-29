@@ -1,14 +1,15 @@
 from sympy.core import (
     S, pi, oo, symbols, Rational, Integer, Float, Mod, GoldenRatio, EulerGamma, Catalan,
-    Lambda, Dummy, Eq, nan, Mul, Pow
+    Lambda, Dummy, nan, Mul, Pow, UnevaluatedExpr
 )
+from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
 from sympy.functions import (
     Abs, acos, acosh, asin, asinh, atan, atanh, atan2, ceiling, cos, cosh, erf,
     erfc, exp, floor, gamma, log, loggamma, Max, Min, Piecewise, sign, sin, sinh,
-    sqrt, tan, tanh
+    sqrt, tan, tanh, fibonacci, lucas
 )
 from sympy.sets import Range
-from sympy.logic import ITE
+from sympy.logic import ITE, Implies, Equivalent
 from sympy.codegen import For, aug_assign, Assignment
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 from sympy.printing.c import C89CodePrinter, C99CodePrinter, get_math_macros
@@ -23,7 +24,7 @@ from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol, SparseMatrix
 
-from sympy import ccode
+from sympy.printing.codeprinter import ccode
 
 x, y, z = symbols('x,y,z')
 
@@ -145,12 +146,27 @@ def test_ccode_exceptions():
     assert 'not supported in c' in gamma_c89.lower()
     gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=True)
     assert not 'not supported in c' in gamma_c89.lower()
+
+
+def test_ccode_functions2():
     assert ccode(ceiling(x)) == "ceil(x)"
     assert ccode(Abs(x)) == "fabs(x)"
     assert ccode(gamma(x)) == "tgamma(x)"
     r, s = symbols('r,s', real=True)
-    assert ccode(Mod(ceiling(r), ceiling(s))) == "((ceil(r)) % (ceil(s)))"
+    assert ccode(Mod(ceiling(r), ceiling(s))) == '((ceil(r) % ceil(s)) + '\
+                                                 'ceil(s)) % ceil(s)'
     assert ccode(Mod(r, s)) == "fmod(r, s)"
+    p1, p2 = symbols('p1 p2', integer=True, positive=True)
+    assert ccode(Mod(p1, p2)) == 'p1 % p2'
+    assert ccode(Mod(p1, p2 + 3)) == 'p1 % (p2 + 3)'
+    assert ccode(Mod(-3, -7, evaluate=False)) == '(-3) % (-7)'
+    assert ccode(-Mod(3, 7, evaluate=False)) == '-(3 % 7)'
+    assert ccode(r*Mod(p1, p2)) == 'r*(p1 % p2)'
+    assert ccode(Mod(p1, p2)**s) == 'pow(p1 % p2, s)'
+    n = symbols('n', integer=True, negative=True)
+    assert ccode(Mod(-n, p2)) == '(-n) % p2'
+    assert ccode(fibonacci(n)) == '(1.0/5.0)*pow(2, -n)*sqrt(5)*(-pow(1 - sqrt(5), n) + pow(1 + sqrt(5), n))'
+    assert ccode(lucas(n)) == 'pow(2, -n)*(pow(1 - sqrt(5), n) + pow(1 + sqrt(5), n))'
 
 
 def test_ccode_user_functions():
@@ -177,10 +193,14 @@ def test_ccode_boolean():
     assert ccode(x | y | z) == "x || y || z"
     assert ccode((x & y) | z) == "z || x && y"
     assert ccode((x | y) & z) == "z && (x || y)"
+    # Automatic rewrites
+    assert ccode(x ^ y) == '(x || y) && (!x || !y)'
+    assert ccode((x ^ y) ^ z) == '(x || y || z) && (x || !y || !z) && (y || !x || !z) && (z || !x || !y)'
+    assert ccode(Implies(x, y)) == 'y || !x'
+    assert ccode(Equivalent(x, z ^ y, Implies(z, x))) == '(x || (y || !z) && (z || !y)) && (z && !x || (y || z) && (!y || !z))'
 
 
 def test_ccode_Relational():
-    from sympy import Eq, Ne, Le, Lt, Gt, Ge
     assert ccode(Eq(x, y)) == "x == y"
     assert ccode(Ne(x, y)) == "x != y"
     assert ccode(Le(x, y)) == "x <= y"
@@ -232,7 +252,7 @@ def test_ccode_Piecewise():
 
 
 def test_ccode_sinc():
-    from sympy import sinc
+    from sympy.functions.elementary.trigonometric import sinc
     expr = sinc(x)
     assert ccode(expr) == (
             "((x != 0) ? (\n"
@@ -288,8 +308,6 @@ def test_ccode_settings():
 
 
 def test_ccode_Indexed():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     s, n, m, o = symbols('s n m o', integer=True)
     i, j, k = Idx('i', n), Idx('j', m), Idx('k', o)
 
@@ -330,7 +348,7 @@ def test_ccode_Indexed_without_looking_for_contraction():
     x = IndexedBase('x', shape=(len_y,))
     Dy = IndexedBase('Dy', shape=(len_y-1,))
     i = Idx('i', len_y-1)
-    e=Eq(Dy[i], (y[i+1]-y[i])/(x[i+1]-x[i]))
+    e = Eq(Dy[i], (y[i+1]-y[i])/(x[i+1]-x[i]))
     code0 = ccode(e.rhs, assign_to=e.lhs, contract=False)
     assert code0 == 'Dy[i] = (y[%s] - y[i])/(x[%s] - x[i]);' % (i + 1, i + 1)
 
@@ -372,8 +390,6 @@ def test_dummy_loops():
 
 
 def test_ccode_loops_add():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
@@ -396,8 +412,6 @@ def test_ccode_loops_add():
 
 
 def test_ccode_loops_multiple_contractions():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -425,8 +439,6 @@ def test_ccode_loops_multiple_contractions():
 
 
 def test_ccode_loops_addfactor():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -455,8 +467,6 @@ def test_ccode_loops_addfactor():
 
 
 def test_ccode_loops_multiple_terms():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -630,6 +640,7 @@ def test_C99CodePrinter__precision_f80():
 
 def test_C99CodePrinter__precision():
     n = symbols('n', integer=True)
+    p = symbols('p', integer=True, positive=True)
     f32_printer = C99CodePrinter(dict(type_aliases={real: float32}))
     f64_printer = C99CodePrinter(dict(type_aliases={real: float64}))
     f80_printer = C99CodePrinter(dict(type_aliases={real: float80}))
@@ -646,8 +657,8 @@ def test_C99CodePrinter__precision():
         check(exp(x*8.0), 'exp{s}(8.0{S}*x)')
         check(exp2(x), 'exp2{s}(x)')
         check(expm1(x*4.0), 'expm1{s}(4.0{S}*x)')
-        check(Mod(n, 2), '((n) % (2))')
-        check(Mod(2*n + 3, 3*n + 5), '((2*n + 3) % (3*n + 5))')
+        check(Mod(p, 2), 'p % 2')
+        check(Mod(2*p + 3, 3*p + 5, evaluate=False), '(2*p + 3) % (3*p + 5)')
         check(Mod(x + 2.0, 3.0), 'fmod{s}(1.0{S}*x + 2.0{S}, 3.0{S})')
         check(Mod(x, 2.0*x + 3.0), 'fmod{s}(1.0{S}*x, 2.0{S}*x + 3.0{S})')
         check(log(x/2), 'log{s}((1.0{S}/2.0{S})*x)')
@@ -840,3 +851,20 @@ def test_ccode_submodule():
     # Test the compatibility sympy.printing.ccode module imports
     with warns_deprecated_sympy():
         import sympy.printing.ccode # noqa:F401
+
+
+def test_ccode_UnevaluatedExpr():
+    assert ccode(UnevaluatedExpr(y * x) + z) == "z + x*y"
+    assert ccode(UnevaluatedExpr(y + x) + z) == "z + (x + y)"  # gh-21955
+    w = symbols('w')
+    assert ccode(UnevaluatedExpr(y + x) + UnevaluatedExpr(z + w)) == "(w + z) + (x + y)"
+
+    p, q, r = symbols("p q r", real=True)
+    q_r = UnevaluatedExpr(q + r)
+    expr = abs(exp(p+q_r))
+    assert ccode(expr) == "exp(p + (q + r))"
+
+
+def test_ccode_array_like_containers():
+    assert ccode([2,3,4]) == "{2, 3, 4}"
+    assert ccode((2,3,4)) == "{2, 3, 4}"

@@ -1,6 +1,12 @@
-from sympy import (cos, Derivative, diff,
-    Eq, erf, erfi, exp, Function, I, Integral, log, pi,
-    Rational, sin, sqrt, Symbol, symbols, Ei)
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.relational import Eq
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.error_functions import (Ei, erf, erfi)
+from sympy.integrals.integrals import Integral
 
 from sympy.solvers.ode.subscheck import checkodesol, checksysodesol
 

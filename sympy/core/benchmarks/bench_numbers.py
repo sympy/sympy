@@ -1,5 +1,5 @@
-from sympy.core.numbers import Integer, Rational, integer_nthroot, igcd
-from sympy import S, pi, oo
+from sympy.core.numbers import Integer, Rational, integer_nthroot, igcd, pi, oo
+from sympy.core.singleton import S
 
 i3 = Integer(3)
 i4 = Integer(4)

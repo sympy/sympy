@@ -1,4 +1,4 @@
-from sympy import S
+from sympy.core.singleton import S
 
 from sympy.core.numbers import pi
 

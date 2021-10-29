@@ -1,4 +1,8 @@
-from sympy import Symbol, sqrt, Derivative, S, Function, exp
+from sympy.core.function import (Derivative, Function)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.geometry import Point, Point2D, Line, Polygon, Segment, convex_hull,\
     intersection, centroid, Point3D, Line3D
 from sympy.geometry.util import idiff, closest_points, farthest_points, _ordered_points, are_coplanar
@@ -14,7 +18,7 @@ def test_idiff():
     g = Function('g')
     # the use of idiff in ellipse also provides coverage
     circ = x**2 + y**2 - 4
-    ans = -3*x*(x**2 + y**2)/y**5
+    ans = 3*x*(-x**2 - y**2)/y**5
     assert ans == idiff(circ, y, x, 3).simplify()
     assert ans == idiff(circ, [y], x, 3).simplify()
     assert idiff(circ, y, x, 3).simplify() == ans

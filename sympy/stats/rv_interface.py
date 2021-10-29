@@ -1,6 +1,13 @@
 from sympy.sets import FiniteSet
-from sympy import (sqrt, log, exp, FallingFactorial, Rational, Eq, Dummy,
-                piecewise_fold, solveset, Integral)
+from sympy.core.numbers import Rational
+from sympy.core.relational import Eq
+from sympy.core.symbol import Dummy
+from sympy.functions.combinatorial.factorials import FallingFactorial
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import piecewise_fold
+from sympy.integrals.integrals import Integral
+from sympy.solvers.solveset import solveset
 from .rv import (probability, expectation, density, where, given, pspace, cdf, PSpace,
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
                  sampling_density, moment_generating_function, quantile, is_random,
@@ -437,7 +444,7 @@ def median(X, evaluate=True, **kwargs):
             pspace(X).probability(Eq(X, key)) >= Rational(1, 2):
                 result.append(key)
         return FiniteSet(*result)
-    if isinstance(pspace(X), ContinuousPSpace) or isinstance(pspace(X), DiscretePSpace):
+    if isinstance(pspace(X), (ContinuousPSpace, DiscretePSpace)):
         cdf = pspace(X).compute_cdf(X)
         x = Dummy('x')
         result = solveset(piecewise_fold(cdf(x) - Rational(1, 2)), x, pspace(X).set)

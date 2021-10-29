@@ -1,4 +1,7 @@
-from sympy import sin, cos, exp, cot, I, symbols
+from sympy.core.numbers import I
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.trigonometric import (cos, cot, sin)
 from sympy.testing.pytest import _both_exp_pow
 
 x, y, z, n = symbols('x,y,z,n')

@@ -1,11 +1,10 @@
 """Tools for setting up printing in interactive sessions. """
 
-import sys
-from distutils.version import LooseVersion as V
+from sympy.external.importtools import version_tuple
 from io import BytesIO
 
-from sympy import latex as default_latex
-from sympy import preview
+from sympy.printing.latex import latex as default_latex
+from sympy.printing.preview import preview
 from sympy.utilities.misc import debug
 from sympy.printing.defaults import Printable
 
@@ -247,7 +246,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             print(repr(arg))
 
     import IPython
-    if V(IPython.__version__) >= '0.11':
+    if version_tuple(IPython.__version__) >= version_tuple('0.11'):
 
         # Printable is our own type, so we handle it with methods instead of
         # the approach required by builtin types. This allows downstream
@@ -319,7 +318,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 def _is_ipython(shell):
     """Is a shell instance an IPython shell?"""
     # shortcut, so we don't import IPython if we don't have to
-    if 'IPython' not in sys.modules:
+    from sys import modules
+    if 'IPython' not in modules:
         return False
     try:
         from IPython.core.interactiveshell import InteractiveShell
@@ -524,7 +524,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
             # IPython 1.0 deprecates the frontend module, so we import directly
             # from the terminal module to prevent a deprecation message from being
             # shown.
-            if V(IPython.__version__) >= '1.0':
+            if version_tuple(IPython.__version__) >= version_tuple('1.0'):
                 from IPython.terminal.interactiveshell import TerminalInteractiveShell
             else:
                 from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell

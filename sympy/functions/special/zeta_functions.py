@@ -1,11 +1,13 @@
 """ Riemann zeta and related function. """
 
-from sympy import Add
+from sympy.core.add import Add
 from sympy.core import Function, S, sympify, pi, I
-from sympy.core.function import ArgumentIndexError
+from sympy.core.function import ArgumentIndexError, expand_mul
+from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
-from sympy.functions.elementary.complexes import re
-from sympy.functions.elementary.exponential import log, exp_polar
+from sympy.functions.elementary.complexes import re, unpolarify, Abs, polar_lift
+from sympy.functions.elementary.exponential import log, exp_polar, exp
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 
 ###############################################################################
@@ -120,7 +122,7 @@ class lerchphi(Function):
     """
 
     def _eval_expand_func(self, **hints):
-        from sympy import exp, I, floor, Add, Poly, Dummy, exp_polar, unpolarify
+        from sympy.polys.polytools import Poly
         z, s, a = self.args
         if z == 1:
             return zeta(s, a)
@@ -322,8 +324,6 @@ class polylog(Function):
                 return z/(1 - z)
 
         # polylog is branched, but not over the unit disk
-        from sympy.functions.elementary.complexes import (Abs, unpolarify,
-                                                          polar_lift)
         if z.has(exp_polar, polar_lift) and (zone or (Abs(z) <= S.One) == True):
             return cls(s, unpolarify(z))
 
@@ -337,7 +337,6 @@ class polylog(Function):
         return z*lerchphi(z, s, 1)
 
     def _eval_expand_func(self, **hints):
-        from sympy import log, expand_mul, Dummy
         s, z = self.args
         if s == 1:
             return -log(1 - z)
@@ -355,7 +354,8 @@ class polylog(Function):
             return True
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        from sympy import ceiling, Order
+        from sympy.functions.elementary.integers import ceiling
+        from sympy.series.order import Order
         nu, z = self.args
 
         z0 = z.subs(x, 0)
@@ -641,16 +641,16 @@ class riemann_xi(Function):
 
     @classmethod
     def eval(cls, s):
-        from sympy import gamma
+        from sympy.functions.special.gamma_functions import gamma
         z = zeta(s)
-        if s is S.Zero or s is S.One:
+        if s in (S.Zero, S.One):
             return S.Half
 
         if not isinstance(z, zeta):
             return s*(s - 1)*gamma(s/2)*z/(2*pi**(s/2))
 
     def _eval_rewrite_as_zeta(self, s, **kwargs):
-        from sympy import gamma
+        from sympy.functions.special.gamma_functions import gamma
         return s*(s - 1)*gamma(s/2)*zeta(s)/(2*pi**(s/2))
 
 class stieltjes(Function):

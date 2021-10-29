@@ -20,6 +20,7 @@ from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
 from sympy.core.mod import Mod
 from sympy.core.numbers import igcd
 from sympy.core.relational import Eq, Ne, Relational
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
 from sympy.simplify.simplify import simplify, fraction, trigsimp
@@ -50,9 +51,9 @@ from sympy.solvers.solvers import (checksol, denoms, unrad,
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
-from sympy.utilities.iterables import numbered_symbols, has_dups
+from sympy.utilities.iterables import (numbered_symbols, has_dups,
+                                       is_sequence)
 from sympy.calculus.util import periodicity, continuous_domain
-from sympy.core.compatibility import ordered, default_sort_key, is_sequence
 
 from types import GeneratorType
 from collections import defaultdict
@@ -186,12 +187,12 @@ def _invert(f_x, y, x, domain=S.Complexes):
 invert_complex = _invert
 
 
-def invert_real(f_x, y, x, domain=S.Reals):
+def invert_real(f_x, y, x):
     """
-    Inverts a real-valued function. Same as _invert, but sets
+    Inverts a real-valued function. Same as ``_invert``, but sets
     the domain to ``S.Reals`` before inverting.
     """
-    return _invert(f_x, y, x, domain)
+    return _invert(f_x, y, x, S.Reals)
 
 
 def _invert_real(f, g_ys, symbol):
@@ -295,16 +296,16 @@ def _invert_real(f, g_ys, symbol):
     if isinstance(f, TrigonometricFunction):
         if isinstance(g_ys, FiniteSet):
             def inv(trig):
-                if isinstance(f, (sin, csc)):
-                    F = asin if isinstance(f, sin) else acsc
+                if isinstance(trig, (sin, csc)):
+                    F = asin if isinstance(trig, sin) else acsc
                     return (lambda a: n*pi + (-1)**n*F(a),)
-                if isinstance(f, (cos, sec)):
-                    F = acos if isinstance(f, cos) else asec
+                if isinstance(trig, (cos, sec)):
+                    F = acos if isinstance(trig, cos) else asec
                     return (
                         lambda a: 2*n*pi + F(a),
                         lambda a: 2*n*pi - F(a),)
-                if isinstance(f, (tan, cot)):
-                    return (lambda a: n*pi + f.inverse()(a),)
+                if isinstance(trig, (tan, cot)):
+                    return (lambda a: n*pi + trig.inverse()(a),)
 
             n = Dummy('n', integer=True)
             invs = S.EmptySet
@@ -487,15 +488,15 @@ def _domain_check(f, symbol, p):
                 return True
     else:
         # TODO : We should not blindly recurse through all args of arbitrary expressions like this
-        return all([_domain_check(g, symbol, p)
-                    for g in f.args])
+        return all(_domain_check(g, symbol, p)
+                   for g in f.args)
 
 
 def _is_finite_with_finite_vars(f, domain=S.Complexes):
     """
     Return True if the given expression is finite. For symbols that
-    don't assign a value for `complex` and/or `real`, the domain will
-    be used to assign a value; symbols that don't assign a value
+    do not assign a value for `complex` and/or `real`, the domain will
+    be used to assign a value; symbols that do not assign a value
     for `finite` will be made finite. All other assumptions are
     left unmodified.
     """
@@ -610,7 +611,7 @@ def _solve_trig1(f, symbol, domain):
 
     Returns either the solution set as a ConditionSet (auto-evaluated to a
     union of ImageSets if no variables besides 'symbol' are involved) or
-    raises _SolveTrig1Error if f == 0 can't be solved.
+    raises _SolveTrig1Error if f == 0 cannot be solved.
 
     Notes
     =====
@@ -708,7 +709,8 @@ def _solve_trig1(f, symbol, domain):
 def _solve_trig2(f, symbol, domain):
     """Secondary helper to solve trigonometric equations,
     called when first helper fails """
-    from sympy import ilcm, expand_trig, degree
+    from sympy.core.function import expand_trig
+    from sympy.core.numbers import ilcm
     f = trigsimp(f)
     f_original = f
     trig_functions = f.atoms(sin, cos, tan, sec, cot, csc)
@@ -729,7 +731,7 @@ def _solve_trig2(f, symbol, domain):
         try:
             poly_ar = Poly(ar, symbol)
         except PolynomialError:
-            raise ValueError("give up, we can't solve if this is not a polynomial in x")
+            raise ValueError("give up, we cannot solve if this is not a polynomial in x")
         if poly_ar.degree() > 1:  # degree >1 still bad
             raise ValueError("degree of variable inside polynomial should not exceed one")
         if poly_ar.degree() == 0:  # degree 0, don't care
@@ -830,8 +832,8 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
             # - sqrt(2)*I/2. We are not expanding for solution with symbols
             # or undefined functions because that makes the solution more complicated.
             # For example, expand_complex(a) returns re(a) + I*im(a)
-            if all([s.atoms(Symbol, AppliedUndef) == set() and not isinstance(s, RootOf)
-                    for s in result]):
+            if all(s.atoms(Symbol, AppliedUndef) == set() and not isinstance(s, RootOf)
+                   for s in result):
                 s = Dummy('s')
                 result = imageset(Lambda(s, expand_complex(s)), result)
         if isinstance(result, FiniteSet) and domain != S.Complexes:
@@ -862,7 +864,7 @@ def _solve_radical(f, unradf, symbol, solveset_solver):
         result = Union(*[imageset(Lambda(y, g_y), f_y_sols)
                          for g_y in g_y_s])
 
-    if isinstance(result, Complement) or isinstance(result,ConditionSet):
+    if not isinstance(result, FiniteSet):
         solution_set = result
     else:
         f_set = []  # solutions for FiniteSet
@@ -1025,8 +1027,10 @@ def _solveset(f, symbol, domain, _check=False):
             _is_function_class_equation(HyperbolicFunction, f, symbol):
         result = _solve_trig(f, symbol, domain)
     elif isinstance(f, arg):
+        from sympy.functions.elementary.complexes import re, im
         a = f.args[0]
-        result = solveset_real(a > 0, symbol)
+        result = Intersection(_solveset(re(a) > 0, symbol, domain),
+                              _solveset(im(a), symbol, domain))
     elif f.is_Piecewise:
         expr_set_pairs = f.as_expr_set_pairs(domain)
         for (expr, in_set) in expr_set_pairs:
@@ -1065,7 +1069,7 @@ def _solveset(f, symbol, domain, _check=False):
         elif isinstance(rhs_s, FiniteSet):
             for equation in [lhs - rhs for rhs in rhs_s]:
                 if equation == f:
-                    u = unrad(f)
+                    u = unrad(f, symbol)
                     if u:
                         result += _solve_radical(equation, u,
                                                  symbol,
@@ -1104,13 +1108,11 @@ def _solveset(f, symbol, domain, _check=False):
     if isinstance(result, ConditionSet):
         if isinstance(f, Expr):
             num, den = f.as_numer_denom()
-        else:
-            num, den = f, S.One
-        if den.has(symbol):
-            _result = _solveset(num, symbol, domain)
-            if not isinstance(_result, ConditionSet):
-                singularities = _solveset(den, symbol, domain)
-                result = _result - singularities
+            if den.has(symbol):
+                _result = _solveset(num, symbol, domain)
+                if not isinstance(_result, ConditionSet):
+                    singularities = _solveset(den, symbol, domain)
+                    result = _result - singularities
 
     if _check:
         if isinstance(result, ConditionSet):
@@ -1360,8 +1362,7 @@ def _solve_modular(f, symbol, domain):
     ========
 
     >>> from sympy.solvers.solveset import _solve_modular as solve_modulo
-    >>> from sympy import S, Symbol, sin, Intersection, Interval
-    >>> from sympy.core.mod import Mod
+    >>> from sympy import S, Symbol, sin, Intersection, Interval, Mod
     >>> x = Symbol('x')
     >>> solve_modulo(Mod(5*x - 8, 7) - 3, x, S.Integers)
     ImageSet(Lambda(_n, 7*_n + 5), Integers)
@@ -2474,7 +2475,7 @@ def linear_eq_to_matrix(equations, *symbols):
     r"""
     Converts a given System of Equations into Matrix form.
     Here `equations` must be a linear system of equations in
-    `symbols`. Element M[i, j] corresponds to the coefficient
+    `symbols`. Element ``M[i, j]`` corresponds to the coefficient
     of the jth symbol in the ith equation.
 
     The Matrix form corresponds to the augmented matrix form.
@@ -2484,16 +2485,18 @@ def linear_eq_to_matrix(equations, *symbols):
     .. math:: 3x +  y +  z  = -6
     .. math:: 2x + 4y + 9z  = 2
 
-    This system would return `A` & `b` as given below:
+    This system will return $A$ and $b$ as:
 
-    ::
-
-         [ 4  2  3 ]          [ 1 ]
-     A = [ 3  1  1 ]   b  =   [-6 ]
-         [ 2  4  9 ]          [ 2 ]
+    $$ A = \begin{bmatrix}
+        4 & 2 & 3 \\
+        3 & 1 & 1 \\
+        2 & 4 & 9
+        \end{bmatrix} \ \  b = \begin{bmatrix}
+        1 \\ -6 \\ 2
+        \end{bmatrix} $$
 
     The only simplification performed is to convert
-    `Eq(a, b) -> a - b`.
+    ``Eq(a, b)`` $\Rightarrow a - b$.
 
     Raises
     ======
@@ -2588,43 +2591,55 @@ def linear_eq_to_matrix(equations, *symbols):
 
 def linsolve(system, *symbols):
     r"""
-    Solve system of N linear equations with M variables; both
+    Solve system of $N$ linear equations with $M$ variables; both
     underdetermined and overdetermined systems are supported.
     The possible number of solutions is zero, one or infinite.
     Zero solutions throws a ValueError, whereas infinite
     solutions are represented parametrically in terms of the given
-    symbols. For unique solution a FiniteSet of ordered tuples
+    symbols. For unique solution a :class:`~.FiniteSet` of ordered tuples
     is returned.
 
-    All Standard input formats are supported:
-    For the given set of Equations, the respective input types
+    All standard input formats are supported:
+    For the given set of equations, the respective input types
     are given below:
 
     .. math:: 3x + 2y -   z = 1
     .. math:: 2x - 2y + 4z = -2
     .. math:: 2x -   y + 2z = 0
 
-    * Augmented Matrix Form, `system` given below:
+    * Augmented matrix form, ``system`` given below:
+
+    $$ \text{system} = \begin{bmatrix}
+        3 &  2 & -1 &  1\\
+        2 & -2 &  4 & -2\\
+        2 & -1 &  2 &  0
+        \end{bmatrix} $$
 
     ::
 
-              [3   2  -1  1]
-     system = [2  -2   4 -2]
-              [2  -1   2  0]
+        system = Matrix([[3, 2, -1, 1], [2, -2, 4, -2], [2, -1, 2, 0]])
 
-    * List Of Equations Form
-
-    `system  =  [3x + 2y - z - 1, 2x - 2y + 4z + 2, 2x - y + 2z]`
-
-    * Input A & b Matrix Form (from Ax = b) are given as below:
+    * List of equations form
 
     ::
 
-         [3   2  -1 ]         [  1 ]
-     A = [2  -2   4 ]    b =  [ -2 ]
-         [2  -1   2 ]         [  0 ]
+        system  =  [3x + 2y - z - 1, 2x - 2y + 4z + 2, 2x - y + 2z]
 
-    `system = (A, b)`
+    * Input $A$ and $b$ in matrix form (from $Ax = b$) are given as below:
+
+    $$ A = \begin{bmatrix}
+        3 &  2 & -1 \\
+        2 & -2 &  4 \\
+        2 & -1 &  2
+        \end{bmatrix} \ \  b = \begin{bmatrix}
+        1 \\ -2 \\ 0
+        \end{bmatrix} $$
+
+    ::
+
+        A = Matrix([[3, 2, -1], [2, -2, 4], [2, -1, 2]])
+        b = Matrix([[1], [-2], [0]])
+        system = (A, b)
 
     Symbols can always be passed but are actually only needed
     when 1) a system of equations is being passed and 2) the
@@ -2687,19 +2702,19 @@ def linsolve(system, *symbols):
     {(z - 1, 2 - 2*z, z)}
 
     If no symbols are given, internally generated symbols will be used.
-    The `tau0` in the 3rd position indicates (as before) that the 3rd
-    variable -- whatever it's named -- can take on any value:
+    The ``tau0`` in the third position indicates (as before) that the third
+    variable -- whatever it is named -- can take on any value:
 
     >>> linsolve((A, b))
     {(tau0 - 1, 2 - 2*tau0, tau0)}
 
-    * List of Equations as input
+    * List of equations as input
 
     >>> Eqns = [3*x + 2*y - z - 1, 2*x - 2*y + 4*z + 2, - x + y/2 - z]
     >>> linsolve(Eqns, x, y, z)
     {(1, -2, -2)}
 
-    * Augmented Matrix as input
+    * Augmented matrix as input
 
     >>> aug = Matrix([[2, 1, 3, 1], [2, 6, 8, 3], [6, 8, 18, 5]])
     >>> aug
@@ -2852,7 +2867,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                  exclude=[], all_symbols=None):
     r"""
      Solves the `system` using substitution method. It is used in
-     `nonlinsolve`. This will be called from `nonlinsolve` when any
+     :func:`~.nonlinsolve`. This will be called from :func:`~.nonlinsolve` when any
      equation(s) is non polynomial equation.
 
     Parameters
@@ -2897,18 +2912,17 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         The input is not valid.
         The symbols are not given.
     AttributeError
-        The input symbols are not `Symbol` type.
+        The input symbols are not :class:`~.Symbol` type.
 
     Examples
     ========
 
-    >>> from sympy.core.symbol import symbols
+    >>> from sympy import symbols, substitution
     >>> x, y = symbols('x, y', real=True)
-    >>> from sympy.solvers.solveset import substitution
     >>> substitution([x + y], [x], [{y: 1}], [y], set([]), [x, y])
     {(-1, 1)}
 
-    * when you want soln should not satisfy eq `x + 1 = 0`
+    * When you want a soln not satisfying $x + 1 = 0$
 
     >>> substitution([x + y], [x], [{y: 1}], [y], set([x + 1]), [y, x])
     EmptySet
@@ -2935,9 +2949,6 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
       ImageSet(Lambda(_n, sqrt(-exp(2*x) + sin(2*_n*I*pi - log(3)))), Integers))}
 
     """
-
-    from sympy import Complement
-    from sympy.core.compatibility import is_sequence
 
     if not system:
         return S.EmptySet
@@ -3196,7 +3207,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     def _solve_using_known_values(result, solver):
         """Solves the system using already known solution
         (result contains the dict <symbol: value>).
-        solver is `solveset_complex` or `solveset_real`.
+        solver is :func:`~.solveset_complex` or :func:`~.solveset_real`.
         """
         # stores imageset <expr: imageset(Lambda(n, expr), base)>.
         soln_imageset = {}
@@ -3263,7 +3274,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             soln_new += soln.args[1]
                         soln = soln_new if soln_new else soln
                         if index > 0 and solver == solveset_real:
-                            # one symbol's real soln , another symbol may have
+                            # one symbol's real soln, another symbol may have
                             # corresponding complex soln.
                             if not isinstance(soln, (ImageSet, ConditionSet)):
                                 soln += solveset_complex(eq2, sym)
@@ -3292,9 +3303,9 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             sym, sol, soln_imageset)
                         sol = set(sol).pop()
                         free = sol.free_symbols
-                        if got_symbol and any([
+                        if got_symbol and any(
                             ss in free for ss in got_symbol
-                        ]):
+                        ):
                             # sol depends on previously solved symbols
                             # then continue
                             continue
@@ -3381,7 +3392,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
 
     if result_infinite:
         # we have general soln
-        # eg : [{x: -1, y : 1}, {x : -y , y: y}] then
+        # eg : [{x: -1, y : 1}, {x : -y, y: y}] then
         # return [{x : -y, y : y}]
         result_all_variables = result_infinite
     if intersections or complements:
@@ -3451,7 +3462,7 @@ def _separate_poly_nonpoly(system, symbols):
         if isinstance(eq, Equality):
             eq = eq.rewrite(Add)
         # try to remove sqrt and rational power
-        without_radicals = unrad(simplify(eq))
+        without_radicals = unrad(simplify(eq), *symbols)
         if without_radicals:
             eq_unrad, cov = without_radicals
             if not cov:
@@ -3472,7 +3483,7 @@ def _separate_poly_nonpoly(system, symbols):
 
 def nonlinsolve(system, *symbols):
     r"""
-    Solve system of N nonlinear equations with M variables, which means both
+    Solve system of $N$ nonlinear equations with $M$ variables, which means both
     under and overdetermined systems are supported. Positive dimensional
     system is also supported (A system with infinitely many solutions is said
     to be positive-dimensional). In Positive dimensional system solution will
@@ -3505,14 +3516,15 @@ def nonlinsolve(system, *symbols):
     significance except for the fact it is just used to maintain a consistent
     output format throughout the solveset.
 
-    For the given set of Equations, the respective input types
+    For the given set of equations, the respective input types
     are given below:
 
     .. math:: x*y - 1 = 0
     .. math:: 4*x**2 + y**2 - 5 = 0
 
-    `system  = [x*y - 1, 4*x**2 + y**2 - 5]`
-    `symbols = [x, y]`
+    ::
+       system  = [x*y - 1, 4*x**2 + y**2 - 5]
+       symbols = [x, y]
 
     Raises
     ======
@@ -3526,8 +3538,7 @@ def nonlinsolve(system, *symbols):
     Examples
     ========
 
-    >>> from sympy.core.symbol import symbols
-    >>> from sympy.solvers.solveset import nonlinsolve
+    >>> from sympy import symbols, nonlinsolve
     >>> x, y, z = symbols('x, y, z', real=True)
     >>> nonlinsolve([x*y - 1, 4*x**2 + y**2 - 5], [x, y])
     {(-1, -1), (-1/2, -2), (1/2, 2), (1, 1)}
@@ -3552,7 +3563,7 @@ def nonlinsolve(system, *symbols):
     {(2 - y, y)}
 
     2. If some of the equations are non-polynomial then `nonlinsolve`
-    will call the `substitution` function and return real and complex solutions,
+    will call the ``substitution`` function and return real and complex solutions,
     if present.
 
     >>> from sympy import exp, sin
@@ -3568,17 +3579,17 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve([x**2 - 2*y**2 -2, x*y - 2], [x, y])
     {(-2, -1), (2, 1), (-sqrt(2)*I, sqrt(2)*I), (sqrt(2)*I, -sqrt(2)*I)}
 
-    4. `nonlinsolve` can solve some linear (zero or positive dimensional)
-    system (because it uses the `groebner` function to get the
-    groebner basis and then uses the `substitution` function basis as the
+    4. ``nonlinsolve`` can solve some linear (zero or positive dimensional)
+    system (because it uses the :func:`sympy.polys.polytools.groebner` function to get the
+    groebner basis and then uses the ``substitution`` function basis as the
     new `system`). But it is not recommended to solve linear system using
-    `nonlinsolve`, because `linsolve` is better for general linear systems.
+    ``nonlinsolve``, because :func:`~.linsolve` is better for general linear systems.
 
-    >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9 , y + z - 4], [x, y, z])
+    >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9, y + z - 4], [x, y, z])
     {(3*z - 5, 4 - z, z)}
 
     5. System having polynomial equations and only real solution is
-    solved using `solve_poly_system`:
+    solved using :func:`~.solve_poly_system`:
 
     >>> e1 = sqrt(x**2 + y**2) - 10
     >>> e2 = sqrt(y**2 + (-x + 10)**2) - 3
@@ -3589,15 +3600,15 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [y, x])
     {(2, 1), (2 - sqrt(5), 1 + sqrt(5)), (2 + sqrt(5), 1 - sqrt(5))}
 
-    6. It is better to use symbols instead of Trigonometric Function or
-    Function (e.g. replace `sin(x)` with symbol, replace `f(x)` with symbol
-    and so on. Get soln from `nonlinsolve` and then using `solveset` get
-    the value of `x`)
+    6. It is better to use symbols instead of trigonometric functions or
+    :class:`~.Function`. For example, replace $\sin(x)$ with a symbol, replace
+    $f(x)$ with a symbol and so on. Get a solution from ``nonlinsolve`` and then
+    use :func:`~.solveset` to get the value of $x$.
 
     How nonlinsolve is better than old solver `_solve_system` :
     ===========================================================
 
-    1. A positive dimensional system solver : nonlinsolve can return
+    1. A positive dimensional system solver: nonlinsolve can return
     solution for positive dimensional system. It finds the
     Groebner Basis of the positive dimensional system(calling it as
     basis) then we can start solving equation(having least number of
@@ -3606,23 +3617,22 @@ def nonlinsolve(system, *symbols):
     terms of minimum variables. Here the important thing is how we
     are substituting the known values and in which equations.
 
-    2. Real and Complex both solutions : nonlinsolve returns both real
+    2. Real and complex solutions: nonlinsolve returns both real
     and complex solution. If all the equations in the system are polynomial
-    then using `solve_poly_system` both real and complex solution is returned.
+    then using :func:`~.solve_poly_system` both real and complex solution is returned.
     If all the equations in the system are not polynomial equation then goes to
-    `substitution` method with this polynomial and non polynomial equation(s),
+    ``substitution`` method with this polynomial and non polynomial equation(s),
     to solve for unsolved variables. Here to solve for particular variable
     solveset_real and solveset_complex is used. For both real and complex
-    solution function `_solve_using_know_values` is used inside `substitution`
-    function.(`substitution` function will be called when there is any non
-    polynomial equation(s) is present). When solution is valid then add its
-    general solution in the final result.
+    solution ``_solve_using_know_values`` is used inside ``substitution``
+    (``substitution`` will be called when any non-polynomial equation is present).
+    If a solution is valid its general solution is added to the final result.
 
-    3. Complement and Intersection will be added if any : nonlinsolve maintains
-    dict for complements and Intersections. If solveset find complements or/and
-    Intersection with any Interval or set during the execution of
-    `substitution` function ,then complement or/and Intersection for that
-    variable is added before returning final solution.
+    3. :class:`~.Complement` and :class:`~.Intersection` will be added:
+    nonlinsolve maintains dict for complements and intersections. If solveset
+    find complements or/and intersections with any interval or set during the
+    execution of ``substitution`` function, then complement or/and
+    intersection for that variable is added before returning final solution.
 
     """
     from sympy.polys.polytools import is_zero_dimensional

@@ -85,8 +85,8 @@ in the ``cse`` function. Examples::
     ⎝[(x₀, sin(x + 1) + cos(y))], ⎣╲╱ x₀ + 4 ⋅╲╱ x₀ + 5 ⎦⎠
 
     >>> pprint(cse((x-y)*(z-y) + sqrt((x-y)*(z-y))), use_unicode=True)
-    ⎛                                     ⎡  ____     ⎤⎞
-    ⎝[(x₀, -y), (x₁, (x + x₀)⋅(x₀ + z))], ⎣╲╱ x₁  + x₁⎦⎠
+    ⎛                          ⎡  ____     ⎤⎞
+    ⎝[(x₀, (x - y)⋅(-y + z))], ⎣╲╱ x₀  + x₀⎦⎠
 
 Optimizations to be performed before and after common subexpressions
 elimination can be passed in the``optimizations`` optional argument. A set of

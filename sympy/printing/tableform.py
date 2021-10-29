@@ -112,7 +112,9 @@ class TableForm:
          .. . ..
         ... . ...
         """
-        from sympy import Symbol, S, Matrix
+        from sympy.core.singleton import S
+        from sympy.core.symbol import Symbol
+        from sympy.matrices.dense import Matrix
         from sympy.core.sympify import SympifyError
 
         # We only support 2D data. Check the consistency:
@@ -226,7 +228,7 @@ class TableForm:
         [ 4, 2],
         [10, 3]])
         """
-        from sympy import Matrix
+        from sympy.matrices.dense import Matrix
         return Matrix(self._lines)
 
     def as_str(self):

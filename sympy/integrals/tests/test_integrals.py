@@ -1,15 +1,38 @@
-from sympy import (
-    Abs, acos, acosh, Add, And, asin, asinh, atan, Ci, cos, sinh, cosh,
-    tanh, Derivative, diff, DiracDelta, E, Ei, Eq, exp, erf, erfc, erfi,
-    EulerGamma, Expr, factor, Function, gamma, gammasimp, I, Idx, im, IndexedBase,
-    integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
-    Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
-    simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol, summation,
-    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper,
-    Float
-)
+from sympy.concrete.summations import (Sum, summation)
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import (Derivative, Function, Lambda, diff)
+from sympy.core import EulerGamma
+from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi)
+from sympy.core.relational import (Eq, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.complexes import (Abs, im, polar_lift, re, sign)
+from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, log)
+from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan)
+from sympy.functions.special.delta_functions import DiracDelta
+from sympy.functions.special.error_functions import (Ci, Ei, Si, erf, erfc, erfi, fresnelc, li)
+from sympy.functions.special.gamma_functions import (gamma, polygamma)
+from sympy.functions.special.hyper import (hyper, meijerg)
+from sympy.functions.special.singularity_functions import SingularityFunction
+from sympy.functions.special.zeta_functions import lerchphi
+from sympy.integrals.integrals import integrate
+from sympy.logic.boolalg import And
+from sympy.matrices.dense import Matrix
+from sympy.polys.polytools import (Poly, factor)
+from sympy.printing.str import sstr
+from sympy.series.order import O
+from sympy.sets.sets import Interval
+from sympy.simplify.gammasimp import gammasimp
+from sympy.simplify.simplify import simplify
+from sympy.simplify.trigsimp import trigsimp
+from sympy.tensor.indexed import (Idx, IndexedBase)
 from sympy.core.expr import unchanged
-from sympy.functions.elementary.complexes import periodic_argument
 from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
@@ -331,7 +354,8 @@ def test_issue_3679():
 
 
 def test_issue_3686():  # remove this when fresnel itegrals are implemented
-    from sympy import expand_func, fresnels
+    from sympy.core.function import expand_func
+    from sympy.functions.special.error_functions import fresnels
     assert expand_func(integrate(sin(x**2), x)) == \
         sqrt(2)*sqrt(pi)*fresnels(sqrt(2)*x/sqrt(pi))/2
 
@@ -910,7 +934,6 @@ def test_issue_18153():
 
 def test_is_number():
     from sympy.abc import x, y, z
-    from sympy import cos, sin
     assert Integral(x).is_number is False
     assert Integral(1, x).is_number is False
     assert Integral(1, (x, 1)).is_number is True
@@ -1107,7 +1130,7 @@ def test_issue_3940():
     assert integrate(exp(a*x**2 + b*x + c), x) == \
         sqrt(pi)*exp(c)*exp(-b**2/(4*a))*erfi(sqrt(a)*x + b/(2*sqrt(a)))/(2*sqrt(a))
 
-    from sympy import expand_mul
+    from sympy.core.function import expand_mul
     from sympy.abc import k
     assert expand_mul(integrate(exp(-x**2)*exp(I*k*x), (x, -oo, oo))) == \
         sqrt(pi)*exp(-k**2/4)
@@ -1172,7 +1195,6 @@ def test_integrate_series():
 
 
 def test_atom_bug():
-    from sympy import meijerg
     from sympy.integrals.heurisch import heurisch
     assert heurisch(meijerg([], [], [1], [], x), x) is None
 
@@ -1196,7 +1218,6 @@ def test_issue_1888():
 
 
 def test_issue_3558():
-    from sympy import Si
     assert integrate(cos(x*y), (x, -pi/2, pi/2), (y, 0, pi)) == 2*Si(pi**2/2)
 
 
@@ -1205,7 +1226,6 @@ def test_issue_4422():
 
 
 def test_issue_4493():
-    from sympy import simplify
     assert simplify(integrate(x*sqrt(1 + 2*x), x)) == \
         sqrt(2*x + 1)*(6*x**2 + x - 1)/15
 
@@ -1218,14 +1238,14 @@ def test_issue_4737():
 
 def test_issue_4992():
     # Note: psi in _check_antecedents becomes NaN.
-    from sympy import simplify, expand_func, polygamma, gamma
+    from sympy.core.function import expand_func
     a = Symbol('a', positive=True)
     assert simplify(expand_func(integrate(exp(-x)*log(x)*x**a, (x, 0, oo)))) == \
         (a*polygamma(0, a) + 1)*gamma(a)
 
 
 def test_issue_4487():
-    from sympy import lowergamma, simplify
+    from sympy.functions.special.gamma_functions import lowergamma
     assert simplify(integrate(exp(-x)*x**y, x)) == lowergamma(y + 1, x)
 
 
@@ -1320,11 +1340,12 @@ def test_issue_4234():
 
 
 def test_issue_4492():
-    assert simplify(integrate(x**2 * sqrt(5 - x**2), x)) == Piecewise(
+    assert simplify(integrate(x**2 * sqrt(5 - x**2), x)).factor(
+        deep=True) == Piecewise(
         (I*(2*x**5 - 15*x**3 + 25*x - 25*sqrt(x**2 - 5)*acosh(sqrt(5)*x/5)) /
-            (8*sqrt(x**2 - 5)), 1 < Abs(x**2)/5),
-        ((-2*x**5 + 15*x**3 - 25*x + 25*sqrt(-x**2 + 5)*asin(sqrt(5)*x/5)) /
-            (8*sqrt(-x**2 + 5)), True))
+            (8*sqrt(x**2 - 5)), (x > sqrt(5)) | (x < -sqrt(5))),
+        ((2*x**5 - 15*x**3 + 25*x - 25*sqrt(5 - x**2)*asin(sqrt(5)*x/5)) /
+            (-8*sqrt(-x**2 + 5)), True))
 
 
 def test_issue_2708():
@@ -1347,7 +1368,8 @@ def test_issue_2884():
     assert str(e) == '1.86831064982608*y + 2.16387491480008'
 
 
-def test_issue_8368():
+def test_issue_8368i():
+    from sympy.functions.elementary.complexes import arg, Abs
     assert integrate(exp(-s*x)*cosh(x), (x, 0, oo)) == \
         Piecewise(
             (   pi*Piecewise(
@@ -1361,10 +1383,7 @@ def test_issue_8368():
                             polar_lift(s)**2),
                         True)
                 ),
-                And(
-                    Abs(periodic_argument(polar_lift(s)**2, oo)) < pi,
-                    cos(Abs(periodic_argument(polar_lift(s)**2, oo))/2)*sqrt(Abs(s**2)) - 1 > 0,
-                    Ne(s**2, 1))
+                s**2 > 1
             ),
             (
                 Integral(exp(-s*x)*cosh(x), (x, 0, oo)),
@@ -1373,10 +1392,10 @@ def test_issue_8368():
         Piecewise(
             (   -1/(s + 1)/2 - 1/(-s + 1)/2,
                 And(
-                    Ne(1/s, 1),
-                    Abs(periodic_argument(s, oo)) < pi/2,
-                    Abs(periodic_argument(s, oo)) <= pi/2,
-                    cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1 > 0)),
+                    Abs(s) > 1,
+                    Abs(arg(s)) < pi/2,
+                    Abs(arg(s)) <= pi/2
+                    )),
             (   Integral(exp(-s*x)*sinh(x), (x, 0, oo)),
                 True))
 
@@ -1449,7 +1468,7 @@ def test_issue_12645():
 
 
 def test_issue_12677():
-    assert integrate(sin(x) / (cos(x)**3) , (x, 0, pi/6)) == Rational(1,6)
+    assert integrate(sin(x) / (cos(x)**3), (x, 0, pi/6)) == Rational(1, 6)
 
 
 def test_issue_14078():
@@ -1741,6 +1760,31 @@ def test_issue_4187():
     assert integrate(log(x)*exp(-x), (x, 0, oo)) == -EulerGamma
 
 
+def test_issue_5547():
+    L = Symbol('L')
+    z = Symbol('z')
+    r0 = Symbol('r0')
+    R0 = Symbol('R0')
+
+    assert integrate(r0**2*cos(z)**2, (z, -L/2, L/2)) == -r0**2*(-L/4 -
+                    sin(L/2)*cos(L/2)/2) + r0**2*(L/4 + sin(L/2)*cos(L/2)/2)
+
+    assert integrate(r0**2*cos(R0*z)**2, (z, -L/2, L/2)) == Piecewise(
+        (-r0**2*(-L*R0/4 - sin(L*R0/2)*cos(L*R0/2)/2)/R0 +
+         r0**2*(L*R0/4 + sin(L*R0/2)*cos(L*R0/2)/2)/R0, (R0 > -oo) & (R0 < oo) & Ne(R0, 0)),
+        (L*r0**2, True))
+
+    w = 2*pi*z/L
+
+    sol = sqrt(2)*sqrt(L)*r0**2*fresnelc(sqrt(2)*sqrt(L))*gamma(S.One/4)/(16*gamma(S(5)/4)) + L*r0**2/2
+
+    assert integrate(r0**2*cos(w*z)**2, (z, -L/2, L/2)) == sol
+
+
+def test_issue_15810():
+    assert integrate(1/(2**(2*x/3) + 1), (x, 0, oo)) == Rational(3, 2)
+
+
 def test_issue_21024():
     x = Symbol('x', real=True, nonzero=True)
     f = log(x)*log(4*x) + log(3*x + exp(2))
@@ -1813,8 +1857,8 @@ def test_issue_21024():
     assert F == integrate(f, x)
 
     f = (x + exp(3))/(2*x**2 + 2*x)
-    F = exp(3)*log(x)/2 + (Rational(1, 2) - exp(3)/2)*log(x + 1)
-    assert F == integrate(f, x)
+    F = exp(3)*log(x)/2 - exp(3)*log(x + 1)/2 + log(x + 1)/2
+    assert F == integrate(f, x).expand()
 
     f = log(x + 4*sinh(4))
     F = x*log(x + 4*sinh(4)) - x + 4*log(x + 4*sinh(4))*sinh(4)

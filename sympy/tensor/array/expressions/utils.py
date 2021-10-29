@@ -1,7 +1,8 @@
 import bisect
 from collections import defaultdict
 
-from sympy import Tuple, Integer
+from sympy.core.containers import Tuple
+from sympy.core.numbers import Integer
 
 
 def _get_mapping_from_subranks(subranks):

@@ -4,7 +4,8 @@ Module defining unit prefixe class and some constants.
 Constant dict for SI and binary prefixes are defined as PREFIXES and
 BIN_PREFIXES.
 """
-from sympy import Expr, sympify
+from sympy.core.expr import Expr
+from sympy.core.sympify import sympify
 
 
 class Prefix(Expr):

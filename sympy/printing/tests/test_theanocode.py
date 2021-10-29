@@ -29,7 +29,7 @@ else:
     disabled = True
 
 import sympy as sy
-from sympy import S
+from sympy.core.singleton import S
 from sympy.abc import x, y, z, t
 from sympy.printing.theanocode import (theano_code, dim_handling,
         theano_function)
@@ -62,7 +62,7 @@ def fgraph_of(*exprs):
     Parameters
     ==========
     exprs
-        Sympy expressions
+        SymPy expressions
 
     Returns
     =======
@@ -607,7 +607,7 @@ def test_Relationals():
 def test_complexfunctions():
     with warns_deprecated_sympy():
         xt, yt = theano_code_(x, dtypes={x:'complex128'}), theano_code_(y, dtypes={y: 'complex128'})
-    from sympy import conjugate
+    from sympy.functions.elementary.complexes import conjugate
     from theano.tensor import as_tensor_variable as atv
     from theano.tensor import complex as cplx
     with warns_deprecated_sympy():
@@ -619,3 +619,22 @@ def test_constantfunctions():
     with warns_deprecated_sympy():
         tf = theano_function_([],[1+1j])
     assert(tf()==1+1j)
+
+
+def test_Exp1():
+    """
+    Test that exp(1) prints without error and evaluates close to sympy's E
+    """
+    # sy.exp(1) should yield same instance of E as sy.E (singleton), but extra
+    # check added for sanity
+    e_a = sy.exp(1)
+    e_b = sy.E
+
+    np.testing.assert_allclose(float(e_a), np.e)
+    np.testing.assert_allclose(float(e_b), np.e)
+
+    e = theano_code_(e_a)
+    np.testing.assert_allclose(float(e_a), e.eval())
+
+    e = theano_code_(e_b)
+    np.testing.assert_allclose(float(e_b), e.eval())

@@ -1,8 +1,8 @@
 from sympy.core.add import Add
-from sympy.core.compatibility import ordered
 from sympy.core.function import expand_log
 from sympy.core.power import Pow
 from sympy.core.singleton import S
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import root
@@ -260,7 +260,7 @@ def _solve_lambert(f, symbol, gens):
         solutions for  ``2*log(-x) + log(g(x))`` since those must also
         be a solution of ``eq`` which has the same value when the ``x``
         in ``x**2`` is negated. If `g(x)` does not have even powers of
-        symbol then we don't want to replace the ``x`` there with
+        symbol then we do not want to replace the ``x`` there with
         ``-x``. So the role of the ``t`` in the expression received by
         this function is to mark where ``+/-x`` should be inserted
         before obtaining the Lambert solutions.

@@ -1,9 +1,9 @@
 from sympy.core import Add, Mul, S
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
 from sympy.core.relational import Eq, Equality
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.function import (expand_mul, expand, Derivative,
                                  AppliedUndef, Function, Subs)
@@ -12,15 +12,14 @@ from sympy.functions import (exp, im, cos, sin, re, Piecewise,
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase, eye
 from sympy.polys import Poly, together
-from sympy.simplify import collect, radsimp, signsimp
+from sympy.simplify import collect, radsimp, signsimp # type: ignore
 from sympy.simplify.powsimp import powdenest, powsimp
 from sympy.simplify.ratsimp import ratsimp
 from sympy.simplify.simplify import simplify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError, solveset
-from sympy.utilities import default_sort_key
-from sympy.utilities.iterables import ordered
+from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import filldedent
 from sympy.integrals.integrals import Integral, integrate
 
@@ -95,7 +94,7 @@ def simpsol(sol, wrt1, wrt2, doit=True):
     # We split each term into two multiplicative factors dep and coeff where
     # all factors that involve wrt1 are in dep and any constant factors are in
     # coeff e.g.
-    #         sqrt(2)*C1*exp(t) -> ( exp(t) , sqrt(2)*C1 )
+    #         sqrt(2)*C1*exp(t) -> ( exp(t), sqrt(2)*C1 )
     #
     # The dep factors are simplified using powsimp to combine expanded
     # exponential factors e.g.
@@ -270,7 +269,7 @@ def linodesolve_type(A, t, b=None):
     Traceback (most recent call last):
     ...
     NotImplementedError:
-    The system doesn't have a commutative antiderivative, it can't be
+    The system does not have a commutative antiderivative, it cannot be
     solved by linodesolve.
 
     Returns
@@ -303,7 +302,7 @@ def linodesolve_type(A, t, b=None):
         B, is_commuting = _is_commutative_anti_derivative(A, t)
         if not is_commuting:
             raise NotImplementedError(filldedent('''
-                The system doesn't have a commutative antiderivative, it can't be solved
+                The system does not have a commutative antiderivative, it cannot be solved
                 by linodesolve.
             '''))
 
@@ -364,7 +363,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     Examples
     ========
 
-    >>> from sympy import (Function, Symbol, Matrix, Eq)
+    >>> from sympy import Function, Symbol, Matrix, Eq
     >>> from sympy.solvers.ode.systems import linear_ode_to_matrix
     >>> t = Symbol('t')
     >>> x = Function('x')
@@ -849,7 +848,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
 
     >>> eqs = [Eq(f(x).diff(x), f(x) + x*g(x)), Eq(g(x).diff(x), -x*f(x) + g(x))]
 
-    The system defined above is already in the desired form, so we don't have to convert it.
+    The system defined above is already in the desired form, so we do not have to convert it.
 
     >>> (A1, A0), b = linear_ode_to_matrix(eqs, funcs, x, 1)
     >>> A = A0
@@ -883,7 +882,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
     ValueError
         This error is raised when the coefficient matrix, non-homogeneous term
         or the antiderivative, if passed, aren't a matrix or
-        don't have correct dimensions
+        do not have correct dimensions
     NonSquareMatrixError
         When the coefficient matrix or its antiderivative, if passed isn't a square
         matrix
@@ -958,7 +957,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
         type = system_info["type_of_equation"]
         B = system_info["antiderivative"]
 
-    if type == "type5" or type == "type6":
+    if type in ("type5", "type6"):
         is_transformed = True
         if passed_type != "auto":
             if tau is None:
@@ -973,11 +972,11 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
                 A = system_info['A']
                 b = system_info['b']
 
-    if type in ["type1", "type2", "type5", "type6"]:
+    if type in ("type1", "type2", "type5", "type6"):
         P, J = matrix_exp_jordan_form(A, t)
         P = simplify(P)
 
-        if type == "type1" or type == "type5":
+        if type in ("type1", "type5"):
             sol_vector = P * (J * Cvect)
         else:
             sol_vector = P * J * ((J.inv() * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
@@ -1163,7 +1162,7 @@ def _is_second_order_type2(A, t):
         poly = Poly(term.expand(), t)
         monoms = poly.monoms()
 
-        if monoms[0][0] == 4 or monoms[0][0] == 2:
+        if monoms[0][0] in (2, 4):
             cs = _get_poly_coeffs(poly, 4)
             a, b, c, d, e = cs
 
@@ -1356,7 +1355,7 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
     t: Symbol
         Independent variable of the equations in eqs
     is_canon: Boolean
-        If True, then this function won't try to get the
+        If True, then this function will not try to get the
         system in canonical form. Default value is False
 
     Returns
@@ -2092,7 +2091,7 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
 
     if len(eqs) != len(funcs):
         raise ValueError(filldedent('''
-            Number of equations and number of functions don't match
+            Number of equations and number of functions do not match
         '''))
 
     if t is not None and not isinstance(t, Symbol):

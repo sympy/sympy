@@ -1,4 +1,4 @@
-from sympy import pi, I
+from sympy.core.numbers import (I, pi)
 from sympy.core import Dummy, sympify
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.singleton import S
@@ -213,7 +213,7 @@ class Ynm(Function):
         #       mpmath for Legendre polynomials. But using
         #       the dedicated function directly is cleaner.
         from mpmath import mp, workprec
-        from sympy import Expr
+        from sympy.core.expr import Expr
         n = self.args[0]._to_mpmath(prec)
         m = self.args[1]._to_mpmath(prec)
         theta = self.args[2]._to_mpmath(prec)
@@ -263,7 +263,7 @@ def Ynm_c(n, m, theta, phi):
     .. [3] http://functions.wolfram.com/Polynomials/SphericalHarmonicY/
 
     """
-    from sympy import conjugate
+    from sympy.functions.elementary.complexes import conjugate
     return conjugate(Ynm(n, m, theta, phi))
 
 

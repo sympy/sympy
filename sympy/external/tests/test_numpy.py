@@ -4,8 +4,7 @@
 # Always write regular SymPy tests for anything, that can be tested in pure
 # Python (without numpy). Here we test everything, that a user may need when
 # using SymPy with NumPy
-from distutils.version import LooseVersion
-
+from sympy.external.importtools import version_tuple
 from sympy.external import import_module
 
 numpy = import_module('numpy')
@@ -16,8 +15,11 @@ else:
     disabled = True
 
 
-from sympy import (Rational, Symbol, list2numpy, matrix2numpy, sin, Float,
-        Matrix, lambdify, symarray, symbols, Integer)
+from sympy.core.numbers import (Float, Integer, Rational)
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.trigonometric import sin
+from sympy.matrices.dense import (Matrix, list2numpy, matrix2numpy, symarray)
+from sympy.utilities.lambdify import lambdify
 import sympy
 
 import mpmath
@@ -235,7 +237,7 @@ def test_lambdify():
 
     # if this succeeds, it can't be a numpy function
 
-    if LooseVersion(numpy.__version__) >= LooseVersion('1.17'):
+    if version_tuple(numpy.__version__) >= version_tuple('1.17'):
         with raises(TypeError):
             f(x)
     else:

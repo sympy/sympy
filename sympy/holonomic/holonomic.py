@@ -3,11 +3,13 @@ This module implements Holonomic Functions and
 various operations on them.
 """
 
-from sympy import (Symbol, S, Dummy, Order, rf, I,
-    solve, limit, Float, nsimplify, gamma)
-from sympy.core.compatibility import ordered
-from sympy.core.numbers import NaN, Infinity, NegativeInfinity
+from sympy.core.numbers import NaN, Infinity, NegativeInfinity, Float, I
+from sympy.core.singleton import S
+from sympy.core.sorting import ordered
+from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import rf
+from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.exponential import exp_polar, exp
 from sympy.functions.special.hyper import hyper, meijerg
@@ -21,7 +23,11 @@ from sympy.polys.polyroots import roots
 from sympy.polys.polytools import Poly
 from sympy.polys.matrices import DomainMatrix
 from sympy.printing import sstr
+from sympy.series.limits import limit
+from sympy.series.order import Order
 from sympy.simplify.hyperexpand import hyperexpand
+from sympy.simplify.simplify import nsimplify
+from sympy.solvers.solvers import solve
 
 from .recurrence import HolonomicSequence, RecurrenceOperator, RecurrenceOperators
 from .holonomicerrors import (NotPowerSeriesError, NotHyperSeriesError,
@@ -1172,7 +1178,7 @@ class HolonomicFunction:
     def composition(self, expr, *args, **kwargs):
         """
         Returns function after composition of a holonomic
-        function with an algebraic function. The method can't compute
+        function with an algebraic function. The method cannot compute
         initial conditions for the result by itself, so they can be also be
         provided.
 
@@ -1781,11 +1787,11 @@ class HolonomicFunction:
         Explanation
         ===========
 
-        The path should be given as a list :math:`[x_1, x_2, ... x_n]`. The numerical
+        The path should be given as a list :math:`[x_1, x_2, \dots x_n]`. The numerical
         values will be computed at each point in this order
-        :math:`x_1 --> x_2 --> x_3 ... --> x_n`.
+        :math:`x_1 \rightarrow x_2 \rightarrow x_3 \dots \rightarrow x_n`.
 
-        Returns values of the function at :math:`x_1, x_2, ... x_n` in a list.
+        Returns values of the function at :math:`x_1, x_2, \dots x_n` in a list.
 
         Examples
         ========
@@ -1887,7 +1893,7 @@ class HolonomicFunction:
         ===========
 
         Returns an answer of the form:
-        `a_1 \cdot x^{b_1} \cdot{hyper()} + a_2 \cdot x^{b_2} \cdot{hyper()} ...`
+        `a_1 \cdot x^{b_1} \cdot{hyper()} + a_2 \cdot x^{b_2} \cdot{hyper()} \dots`
 
         This is very useful as one can now use ``hyperexpand`` to find the
         symbolic expressions/functions.
@@ -2185,7 +2191,7 @@ def from_hyper(func, x0=0, evalf=False):
 
     simp = hyperexpand(func)
 
-    if isinstance(simp, Infinity) or isinstance(simp, NegativeInfinity):
+    if simp in (Infinity, NegativeInfinity):
         return HolonomicFunction(sol, x).composition(z)
 
     def _find_conditions(simp, x, x0, order, evalf=False):
@@ -2271,7 +2277,7 @@ def from_meijerg(func, x0=0, evalf=False, initcond=True, domain=QQ):
 
     simp = hyperexpand(func)
 
-    if isinstance(simp, Infinity) or isinstance(simp, NegativeInfinity):
+    if simp in (Infinity, NegativeInfinity):
         return HolonomicFunction(sol, x).composition(z)
 
     def _find_conditions(simp, x, x0, order, evalf=False):
@@ -2337,7 +2343,7 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
         Ground domain for the polynomials in ``x`` appearing as coefficients
         in the annihilator.
     initcond:
-        Set it false if you don't want the initial conditions to be computed.
+        Set it false if you do not want the initial conditions to be computed.
 
     Examples
     ========
@@ -2846,7 +2852,7 @@ def _create_table(table, domain=QQ):
     see meijerint._create_lookup_table.
     """
 
-    def add(formula, annihilator, arg, x0=0, y0=[]):
+    def add(formula, annihilator, arg, x0=0, y0=()):
         """
         Adds a formula in the dictionary
         """
@@ -2856,8 +2862,12 @@ def _create_table(table, domain=QQ):
     R = domain.old_poly_ring(x_1)
     _, Dx = DifferentialOperators(R, 'Dx')
 
-    from sympy import (sin, cos, exp, log, erf, sqrt, pi,
-        sinh, cosh, sinc, erfc, Si, Ci, Shi, erfi)
+    from sympy.core.numbers import pi
+    from sympy.functions.elementary.exponential import log
+    from sympy.functions.elementary.hyperbolic import (cosh, sinh)
+    from sympy.functions.elementary.miscellaneous import sqrt
+    from sympy.functions.elementary.trigonometric import (cos, sin, sinc)
+    from sympy.functions.special.error_functions import (Ci, Shi, Si, erf, erfc, erfi)
 
     # add some basic functions
     add(sin(x_1), Dx**2 + 1, x_1, 0, [0, 1])

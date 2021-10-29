@@ -1,30 +1,32 @@
 from typing import Optional
-
+from functools import reduce
 from collections import defaultdict
 import inspect
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import iterable, ordered, reduce
 from sympy.core.containers import Tuple
 from sympy.core.decorators import (deprecated, sympify_method_args,
     sympify_return)
 from sympy.core.evalf import EvalfMixin, prec_to_dps
-from sympy.core.parameters import global_parameters
 from sympy.core.expr import Expr
+from sympy.core.function import Lambda
 from sympy.core.logic import (FuzzyBool, fuzzy_bool, fuzzy_or, fuzzy_and,
     fuzzy_not)
 from sympy.core.numbers import Float
 from sympy.core.operations import LatticeOp
+from sympy.core.parameters import global_parameters
 from sympy.core.relational import Eq, Ne, is_lt
 from sympy.core.singleton import Singleton, S
-from sympy.core.symbol import Symbol, Dummy, uniquely_named_symbol
+from sympy.core.sorting import ordered
+from sympy.core.symbol import symbols, Symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.sets.contains import Contains
 from sympy.utilities import subsets
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import iproduct, sift, roundrobin
+from sympy.utilities.iterables import iproduct, sift, roundrobin, iterable
 from sympy.utilities.misc import func_name, filldedent
+
 from mpmath import mpi, mpf
 
 
@@ -93,7 +95,7 @@ class Set(Basic, EvalfMixin):
         Examples
         ========
 
-        As a shortcut it is possible to use the '+' operator:
+        As a shortcut it is possible to use the ``+`` operator:
 
         >>> from sympy import Interval, FiniteSet
         >>> Interval(0, 1).union(Interval(2, 3))
@@ -103,7 +105,7 @@ class Set(Basic, EvalfMixin):
         >>> Interval(1, 2, True, True) + FiniteSet(2, 3)
         Union({3}, Interval.Lopen(1, 2))
 
-        Similarly it is possible to use the '-' operator for set differences:
+        Similarly it is possible to use the ``-`` operator for set differences:
 
         >>> Interval(0, 2) - Interval(0, 1)
         Interval.Lopen(1, 2)
@@ -200,7 +202,7 @@ class Set(Basic, EvalfMixin):
             return Union(*overlaps)
 
         elif isinstance(other, Interval):
-            if isinstance(self, Interval) or isinstance(self, FiniteSet):
+            if isinstance(self, (Interval, FiniteSet)):
                 return Intersection(other, self.complement(S.Reals))
 
         elif isinstance(other, Union):
@@ -209,12 +211,10 @@ class Set(Basic, EvalfMixin):
         elif isinstance(other, Complement):
             return Complement(other.args[0], Union(other.args[1], self), evaluate=False)
 
-        elif isinstance(other, EmptySet):
+        elif other is S.EmptySet:
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
-            from sympy.utilities.iterables import sift
-
             sifted = sift(other, lambda x: fuzzy_bool(self.contains(x)))
             # ignore those that are contained in self
             return Union(FiniteSet(*(sifted[False])),
@@ -307,7 +307,7 @@ class Set(Basic, EvalfMixin):
         >>> Interval(0, 1).contains(0.5)
         True
 
-        As a shortcut it is possible to use the 'in' operator, but that
+        As a shortcut it is possible to use the ``in`` operator, but that
         will raise an error unless an affirmative true or false is not
         obtained.
 
@@ -650,7 +650,8 @@ class Set(Basic, EvalfMixin):
         raise NotImplementedError("(%s)._measure" % self)
 
     def _eval_evalf(self, prec):
-        return self.func(*[arg.evalf(n=prec_to_dps(prec)) for arg in self.args])
+        dps = prec_to_dps(prec)
+        return self.func(*[arg.evalf(n=dps) for arg in self.args])
 
     @sympify_return([('other', 'Set')], NotImplemented)
     def __add__(self, other):
@@ -703,7 +704,7 @@ class ProductSet(Set):
     Returns a Cartesian product given several sets as either an iterable
     or individual arguments.
 
-    Can use '*' operator on any sets for convenient shorthand.
+    Can use ``*`` operator on any sets for convenient shorthand.
 
     Examples
     ========
@@ -783,7 +784,7 @@ class ProductSet(Set):
 
     def _contains(self, element):
         """
-        'in' operator for ProductSets.
+        ``in`` operator for ProductSets.
 
         Examples
         ========
@@ -867,7 +868,7 @@ class ProductSet(Set):
         return reduce(lambda a, b: a*b, (len(s) for s in self.args))
 
     def __bool__(self):
-        return all([bool(s) for s in self.sets])
+        return all(self.sets)
 
 
 class Interval(Set):
@@ -875,10 +876,10 @@ class Interval(Set):
     Represents a real interval as a Set.
 
     Usage:
-        Returns an interval with end points "start" and "end".
+        Returns an interval with end points ``start`` and ``end``.
 
-        For left_open=True (default left_open is False) the interval
-        will be open on the left. Similarly, for right_open=True the interval
+        For ``left_open=True`` (default ``left_open`` is ``False``) the interval
+        will be open on the left. Similarly, for ``right_open=True`` the interval
         will be open on the right.
 
     Examples
@@ -903,9 +904,9 @@ class Interval(Set):
     Notes
     =====
     - Only real end points are supported
-    - Interval(a, b) with a > b will return the empty set
-    - Use the evalf() method to turn an Interval into an mpmath
-      'mpi' interval instance
+    - ``Interval(a, b)`` with $a > b$ will return the empty set
+    - Use the ``evalf()`` method to turn an Interval into an mpmath
+      ``mpi`` interval instance
 
     References
     ==========
@@ -957,9 +958,9 @@ class Interval(Set):
     @property
     def start(self):
         """
-        The left end point of ``self``.
+        The left end point of the interval.
 
-        This property takes the same value as the 'inf' property.
+        This property takes the same value as the ``inf`` property.
 
         Examples
         ========
@@ -974,9 +975,9 @@ class Interval(Set):
     @property
     def end(self):
         """
-        The right end point of 'self'.
+        The right end point of the interval.
 
-        This property takes the same value as the 'sup' property.
+        This property takes the same value as the ``sup`` property.
 
         Examples
         ========
@@ -991,7 +992,7 @@ class Interval(Set):
     @property
     def left_open(self):
         """
-        True if ``self`` is left-open.
+        True if interval is left-open.
 
         Examples
         ========
@@ -1008,7 +1009,7 @@ class Interval(Set):
     @property
     def right_open(self):
         """
-        True if ``self`` is right-open.
+        True if interval is right-open.
 
         Examples
         ========
@@ -1087,7 +1088,9 @@ class Interval(Set):
 
     def _contains(self, other):
         if (not isinstance(other, Expr) or other is S.NaN
-            or other.is_real is False):
+            or other.is_real is False or other.has(S.ComplexInfinity)):
+                # if an expression has zoo it will be zoo or nan
+                # and neither of those is real
                 return false
 
         if self.start is S.NegativeInfinity and self.end is S.Infinity:
@@ -1265,12 +1268,12 @@ class Union(Set, LatticeOp):
             # Clear out duplicates
             sos_list = []
             sets_list = []
-            for set in sets:
-                if set[0] in sos_list:
+            for _set in sets:
+                if _set[0] in sos_list:
                     continue
                 else:
-                    sos_list.append(set[0])
-                    sets_list.append(set)
+                    sos_list.append(_set[0])
+                    sets_list.append(_set)
             sets = sets_list
 
             # Flip Parity - next time subtract/add if we added/subtracted here
@@ -1538,7 +1541,7 @@ class Complement(Set):
     r"""Represents the set difference or relative complement of a set with
     another set.
 
-    `A - B = \{x \in A \mid x \notin B\}`
+    $$A - B = \{x \in A \mid x \notin B\}$$
 
 
     Examples
@@ -1562,6 +1565,7 @@ class Complement(Set):
     is_Complement = True
 
     def __new__(cls, a, b, evaluate=True):
+        a, b = map(_sympify, (a, b))
         if evaluate:
             return Complement.reduce(a, b)
 
@@ -1626,7 +1630,7 @@ class Complement(Set):
 class EmptySet(Set, metaclass=Singleton):
     """
     Represents the empty set. The empty set is available as a singleton
-    as S.EmptySet.
+    as ``S.EmptySet``.
 
     Examples
     ========
@@ -1691,7 +1695,7 @@ class EmptySet(Set, metaclass=Singleton):
 class UniversalSet(Set, metaclass=Singleton):
     """
     Represents the set of all things.
-    The universal set is available as a singleton as S.UniversalSet.
+    The universal set is available as a singleton as ``S.UniversalSet``.
 
     Examples
     ========
@@ -1906,14 +1910,14 @@ class FiniteSet(Set):
 
     def as_relational(self, symbol):
         """Rewrite a FiniteSet in terms of equalities and logic operators. """
-        from sympy.core.relational import Eq
         return Or(*[Eq(symbol, elem) for elem in self])
 
     def compare(self, other):
         return (hash(self) - hash(other))
 
     def _eval_evalf(self, prec):
-        return FiniteSet(*[elem.evalf(n=prec_to_dps(prec)) for elem in self])
+        dps = prec_to_dps(prec)
+        return FiniteSet(*[elem.evalf(n=dps) for elem in self])
 
     def _eval_simplify(self, **kwargs):
         from sympy.simplify import simplify
@@ -2105,7 +2109,7 @@ class DisjointUnion(Set):
         where ``set`` is the element in ``sets`` at index = ``i``
         """
 
-        dj_union = EmptySet()
+        dj_union = S.EmptySet
         index = 0
         for set_i in sets:
             if isinstance(set_i, Set):
@@ -2116,7 +2120,7 @@ class DisjointUnion(Set):
 
     def _contains(self, element):
         """
-        'in' operator for DisjointUnion
+        ``in`` operator for DisjointUnion
 
         Examples
         ========
@@ -2194,7 +2198,7 @@ def imageset(*args):
     Explanation
     ===========
 
-    If this function can't compute the image, it returns an
+    If this function cannot compute the image, it returns an
     unevaluated ImageSet object.
 
     .. math::
@@ -2234,7 +2238,6 @@ def imageset(*args):
     sympy.sets.fancysets.ImageSet
 
     """
-    from sympy.core import Lambda
     from sympy.sets.fancysets import ImageSet
     from sympy.sets.setexpr import set_function
 
@@ -2321,7 +2324,7 @@ def is_function_invertible_in_set(func, setv):
     Checks whether function ``func`` is invertible when the domain is
     restricted to set ``setv``.
     """
-    from sympy import exp, log
+    from sympy.functions.elementary.exponential import (exp, log)
     # Functions known to always be invertible:
     if func in (exp, log):
         return True
@@ -2483,7 +2486,6 @@ def _handle_finite_sets(op, x, y, commutative):
 
 def _apply_operation(op, x, y, commutative):
     from sympy.sets import ImageSet
-    from sympy import symbols,Lambda
     d = Dummy('d')
 
     out = _handle_finite_sets(op, x, y, commutative)

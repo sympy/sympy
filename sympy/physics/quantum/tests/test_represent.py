@@ -1,4 +1,5 @@
-from sympy import Float, I, Integer, Matrix
+from sympy.core.numbers import (Float, I, Integer)
+from sympy.matrices.dense import Matrix
 from sympy.external import import_module
 from sympy.testing.pytest import skip
 

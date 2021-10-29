@@ -1,8 +1,9 @@
 from collections.abc import Callable
 
-from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.containers import Dict
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import is_sequence
+from sympy.utilities.misc import as_int
 
 from .matrices import MatrixBase
 from .repmatrix import MutableRepMatrix, RepMatrix
@@ -17,7 +18,7 @@ from .solvers import (
     _lower_triangular_solve_sparse, _upper_triangular_solve_sparse)
 
 
-class SparseMatrix(RepMatrix):
+class SparseRepMatrix(RepMatrix):
     """
     A sparse matrix (a matrix with a large number of zero elements).
 
@@ -349,7 +350,7 @@ class SparseMatrix(RepMatrix):
         sympy.matrices.sparse.SparseMatrix.col_list
         """
         return [tuple(k + (self[k],)) for k in
-            sorted(self.todok().keys(), key=lambda k: list(k))]
+            sorted(self.todok().keys(), key=list)]
 
     def scalar_multiply(self, scalar):
         "Scalar element-wise multiplication"
@@ -455,7 +456,7 @@ class SparseMatrix(RepMatrix):
     upper_triangular_solve.__doc__          = upper_triangular_solve.__doc__
 
 
-class MutableSparseMatrix(SparseMatrix, MutableRepMatrix):
+class MutableSparseMatrix(SparseRepMatrix, MutableRepMatrix):
 
     @classmethod
     def _new(cls, *args, **kwargs):
@@ -464,3 +465,6 @@ class MutableSparseMatrix(SparseMatrix, MutableRepMatrix):
         rep = cls._smat_to_DomainMatrix(rows, cols, smat)
 
         return cls._fromrep(rep)
+
+
+SparseMatrix = MutableSparseMatrix

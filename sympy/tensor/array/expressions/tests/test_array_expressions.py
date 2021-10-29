@@ -1,7 +1,12 @@
 import random
 
-from sympy import symbols, ImmutableDenseNDimArray, tensorproduct, tensorcontraction, permutedims, MatrixSymbol, \
-    ZeroMatrix, sin, cos, DiagMatrix
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.expressions.diagonal import DiagMatrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.special import ZeroMatrix
+from sympy.tensor.array.arrayop import (permutedims, tensorcontraction, tensorproduct)
+from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 from sympy.combinatorics import Permutation
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol, ArrayElement, \
     PermuteDims, ArrayContraction, ArrayTensorProduct, ArrayDiagonal, \
@@ -178,12 +183,15 @@ def test_arrayexpr_array_flatten():
 
     expr1 = ArrayDiagonal(ArrayTensorProduct(X, A), (1, 2))
     expr2 = ArrayTensorProduct(expr1, a)
-    assert expr2 == PermuteDims(ArrayDiagonal(ArrayTensorProduct(X, A, a), (1, 2)), [0, 1, 3, 4, 2])
+    assert expr2 == PermuteDims(ArrayDiagonal(ArrayTensorProduct(X, A, a), (1, 2)), [0, 1, 4, 2, 3])
 
     expr1 = ArrayContraction(ArrayTensorProduct(X, A), (1, 2))
     expr2 = ArrayTensorProduct(expr1, a)
     assert isinstance(expr2, ArrayContraction)
     assert isinstance(expr2.expr, ArrayTensorProduct)
+
+    cg = ArrayTensorProduct(ArrayDiagonal(ArrayTensorProduct(A, X, Y), (0, 3), (1, 5)), a, b)
+    assert cg == PermuteDims(ArrayDiagonal(ArrayTensorProduct(A, X, Y, a, b), (0, 3), (1, 5)), [0, 1, 6, 7, 2, 3, 4, 5])
 
 
 def test_arrayexpr_array_diagonal():
@@ -273,8 +281,8 @@ def test_arrayexpr_split_multiple_contractions():
     X = MatrixSymbol("X", k, k)
 
     cg = ArrayContraction(ArrayTensorProduct(A.T, a, b, b.T, (A*X*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
-    assert cg.split_multiple_contractions().dummy_eq(ArrayContraction(ArrayTensorProduct(DiagMatrix(a), (A*X*b).applyfunc(cos), A.T, b, b.T), (0, 2), (1, 5), (3, 7, 8)))
-    # assert recognize_matrix_expression(cg)
+    expected = ArrayContraction(ArrayTensorProduct(A.T, DiagMatrix(a), OneArray(1), b, b.T, (A*X*b).applyfunc(cos)), (1, 3), (2, 9), (6, 7, 10))
+    assert cg.split_multiple_contractions().dummy_eq(expected)
 
     # Check no overlap of lines:
 

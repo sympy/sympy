@@ -1,7 +1,9 @@
-from sympy import ImmutableDenseNDimArray, tensorproduct, MatrixSymbol, tensorcontraction, tensordiagonal, permutedims, \
-    Symbol
+from sympy.core.symbol import Symbol
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.tensor.array.arrayop import (permutedims, tensorcontraction, tensordiagonal, tensorproduct)
+from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol, \
-    ArrayTensorProduct, PermuteDims, ArrayDiagonal, ArrayContraction
+    ArrayTensorProduct, PermuteDims, ArrayDiagonal, ArrayContraction, ArrayAdd
 from sympy.testing.pytest import raises
 
 
@@ -56,3 +58,6 @@ def test_array_as_explicit_matrix_symbol():
     texpr = permutedims(A, [1, 0])
     assert isinstance(texpr, PermuteDims)
     assert texpr.as_explicit() == permutedims(A.as_explicit(), [1, 0])
+
+    expr = ArrayAdd(ArrayTensorProduct(A, B), ArrayTensorProduct(B, A))
+    assert expr.as_explicit() == expr.args[0].as_explicit() + expr.args[1].as_explicit()

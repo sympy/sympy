@@ -15,8 +15,9 @@ from sympy.integrals.rubi.parsetools.parse import (rubi_rule_parser,
     setWC, replaceWith, rubi_printer, set_matchq_in_constraint, contains_diff_return_type,
     process_return_type, extract_set)
 
-from sympy import Symbol, Not, symbols
-from sympy import sympify
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.logic.boolalg import Not
 
 a, b, c, d, e, j, m, n, p, q, x, Pq, Pqq = symbols('a b c d e j m n p q x Pq Pqq')
 
@@ -111,7 +112,7 @@ def test_set_matchq_in_constraint():
     assert result == expected1 or result == expected
 
 def test_process_return_type():
-    from sympy import Function
+    from sympy.core.function import Function
     Int = Function("Int")
     ExpandToSum = Function("ExpandToSum")
     s = ('\n        q = Expon(Pq, x)\n        Pqq = Coeff(Pq, x, q)', 'With(List(Set(Pqq, Coeff(Pq, x, q))), Pqq*c**(n - q + S(-1))*(c*x)**(m - n + q + S(1))*(a*x**j + b*x**n)**(p + S(1))/(b*(m + n*p + q + S(1))) + Int((c*x)**m*(a*x**j + b*x**n)**p*ExpandToSum(Pq - Pqq*a*x**(-n + q)*(m - n + q + S(1))/(b*(m + n*p + q + S(1))) - Pqq*x**q, x), x))')

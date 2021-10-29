@@ -1,6 +1,9 @@
-from sympy import Number
-from sympy.core import Mul, Basic, sympify, S
-from sympy.core.mul import mul
+from sympy.assumptions.ask import ask, Q
+from sympy.assumptions.refine import handlers_dict
+from sympy.core import Basic, sympify, S
+from sympy.core.mul import mul, Mul
+from sympy.core.numbers import Number, Integer
+from sympy.core.symbol import Dummy
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
@@ -65,8 +68,13 @@ class MatMul(MatrixExpr, Mul):
         matrices = [arg for arg in self.args if arg.is_Matrix]
         return (matrices[0].rows, matrices[-1].cols)
 
+    def could_extract_minus_sign(self):
+        return self.args[0].could_extract_minus_sign()
+
     def _entry(self, i, j, expand=True, **kwargs):
-        from sympy import Dummy, Sum, Mul, ImmutableMatrix, Integer
+        # Avoid cyclic imports
+        from sympy.concrete.summations import Sum
+        from sympy.matrices.immutable import ImmutableMatrix
 
         coeff, matrices = self.as_coeff_matrices()
 
@@ -226,8 +234,8 @@ def newmul(*args):
     return new(MatMul, *args)
 
 def any_zeros(mul):
-    if any([arg.is_zero or (arg.is_Matrix and arg.is_ZeroMatrix)
-                       for arg in mul.args]):
+    if any(arg.is_zero or (arg.is_Matrix and arg.is_ZeroMatrix)
+                       for arg in mul.args):
         matrices = [arg for arg in mul.args if arg.is_Matrix]
         return ZeroMatrix(matrices[0].rows, matrices[-1].cols)
     return mul
@@ -422,10 +430,6 @@ def only_squares(*matrices):
             out.append(MatMul(*matrices[start:i+1]).doit())
             start = i+1
     return out
-
-
-from sympy.assumptions.ask import ask, Q
-from sympy.assumptions.refine import handlers_dict
 
 
 def refine_MatMul(expr, assumptions):

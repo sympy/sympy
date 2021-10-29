@@ -370,7 +370,8 @@ def _make_converter(K):
     # conversion from K to Expr is slow. Here we compute the expansions for
     # each power of the generator and collect together the resulting algebraic
     # terms and the rational coefficients into a matrix.
-    from sympy import Add, S
+    from sympy.core.add import Add
+    from sympy.core.singleton import S
 
     gen = K.ext.as_expr()
     todom = K.dom.from_sympy
@@ -393,7 +394,8 @@ def _make_converter(K):
 
     def converter(a):
         """Convert a to Expr using converter"""
-        from sympy import Add, Mul
+        from sympy.core.add import Add
+        from sympy.core.mul import Mul
         ai = a.rep[::-1]
         tosympy = K.dom.to_sympy
         coeffs_dom = [sum(mij*aj for mij, aj in zip(mi, ai)) for mi in matrix]

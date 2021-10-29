@@ -1,11 +1,26 @@
-from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
-        log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
-        E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
-        Tuple, Dummy, Eq, Expr, symbols, nfloat, Piecewise, Indexed,
-        Matrix, Basic, Dict, oo, zoo, nan, Pow, sstr)
-from sympy.core.basic import _aresame
+from sympy.concrete.summations import Sum
+from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import clear_cache
-from sympy.core.expr import unchanged
+from sympy.core.containers import Dict, Tuple
+from sympy.core.expr import Expr, unchanged
+from sympy.core.function import (Subs, Function, diff, Lambda, expand,
+    nfloat, Derivative)
+from sympy.core.numbers import E, Float, zoo, Rational, pi, I, oo, nan
+from sympy.core.power import Pow
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols, Dummy, Symbol
+from sympy.functions.elementary.complexes import im, re
+from sympy.functions.elementary.exponential import log, exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import sin, cos, acos
+from sympy.functions.special.error_functions import expint
+from sympy.functions.special.gamma_functions import loggamma, polygamma
+from sympy.matrices.dense import Matrix
+from sympy.printing.str import sstr
+from sympy.series.order import O
+from sympy.tensor.indexed import Indexed
 from sympy.core.function import (PoleError, _mexpand, arity,
         BadSignatureError, BadArgumentsError)
 from sympy.core.parameters import _exp_is_pow
@@ -254,17 +269,17 @@ def test_Lambda():
     with warns_deprecated_sympy():
         assert Lambda([x, y], x+y) == Lambda((x, y), x+y)
 
-    flam = Lambda( ((x, y),) , x + y)
+    flam = Lambda(((x, y),), x + y)
     assert flam((2, 3)) == 5
-    flam = Lambda( ((x, y), z) , x + y + z)
+    flam = Lambda(((x, y), z), x + y + z)
     assert flam((2, 3), 1) == 6
-    flam = Lambda( (((x,y),z),) , x+y+z)
-    assert flam(    ((2,3),1) ) == 6
+    flam = Lambda((((x, y), z),), x + y + z)
+    assert flam(((2, 3), 1)) == 6
     raises(BadArgumentsError, lambda: flam(1, 2, 3))
     flam = Lambda( (x,), (x, x))
     assert flam(1,) == (1, 1)
     assert flam((1,)) == ((1,), (1,))
-    flam = Lambda( ((x,),) , (x, x))
+    flam = Lambda( ((x,),), (x, x))
     raises(BadArgumentsError, lambda: flam(1))
     assert flam((1,)) == (1, 1)
 
