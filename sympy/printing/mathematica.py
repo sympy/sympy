@@ -39,6 +39,7 @@ known_functions = {
     "acoth": [(lambda x: True, "ArcCoth")],
     "asech": [(lambda x: True, "ArcSech")],
     "acsch": [(lambda x: True, "ArcCsch")],
+    "sinc": [(lambda x: True, "Sinc")],
     "conjugate": [(lambda x: True, "Conjugate")],
     "Max": [(lambda *x: True, "Max")],
     "Min": [(lambda *x: True, "Min")],
@@ -68,6 +69,7 @@ known_functions = {
     "subfactorial": [(lambda x: True, "Subfactorial")],
     "catalan": [(lambda x: True, "CatalanNumber")],
     "harmonic": [(lambda *x: True, "HarmonicNumber")],
+    "lucas": [(lambda x: True, "LucasL")],
     "RisingFactorial": [(lambda *x: True, "Pochhammer")],
     "FallingFactorial": [(lambda *x: True, "FactorialPower")],
     "laguerre": [(lambda *x: True, "LaguerreL")],
@@ -89,6 +91,8 @@ known_functions = {
     "elliptic_k": [(lambda x: True, "EllipticK")],
     "elliptic_pi": [(lambda *x: True, "EllipticPi")],
     "zeta": [(lambda *x: True, "Zeta")],
+    "dirichlet_eta": [(lambda x: True, "DirichletEta")],
+    "riemann_xi": [(lambda x: True, "RiemannXi")],
     "besseli": [(lambda *x: True, "BesselI")],
     "besselj": [(lambda *x: True, "BesselJ")],
     "besselk": [(lambda *x: True, "BesselK")],
@@ -111,6 +115,7 @@ known_functions = {
     "DiracDelta": [(lambda x: True, "DiracDelta")],
     "Heaviside": [(lambda x: True, "HeavisideTheta")],
     "KroneckerDelta": [(lambda *x: True, "KroneckerDelta")],
+    "sqrt": [(lambda x: True, "Sqrt")],  # For automatic rewrites
 }
 
 
