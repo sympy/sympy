@@ -6,7 +6,7 @@ from tempfile import TemporaryDirectory
 from subprocess import check_call
 
 
-PY_VERSIONS = '3.6', '3.7', '3.8', '3.9'
+PY_VERSIONS = '3.7', '3.8', '3.9'
 
 
 def main(version, outdir):

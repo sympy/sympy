@@ -28,8 +28,6 @@ sudo apt install\
 	#
 
 sudo apt install\
-	python3.6\
-	python3.6-venv\
 	python3.7\
 	python3.7-venv\
 	python3.9\
