@@ -282,7 +282,7 @@ def test_TransferFunction_functions():
     raises(ValueError, lambda: tf5**s)
     raises(ValueError, lambda: tf4**tf5)
 
-    # sympy's own functions.
+    # SymPy's own functions.
     tf = TransferFunction(s - 1, s**2 - 2*s + 1, s)
     tf6 = TransferFunction(s + p, p**2 - 5, s)
     assert factor(tf) == TransferFunction(s - 1, (s - 1)**2, s)

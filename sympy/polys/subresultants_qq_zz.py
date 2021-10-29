@@ -131,7 +131,7 @@ subresultant and modified subresultant prs respectively.
 
 2. Functions in the module:
 ===========================
-No function utilizes sympy's function prem().
+No function utilizes SymPy's function prem().
 
 2A. Matrices:
 =============

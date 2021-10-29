@@ -132,7 +132,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def __reduce_ex__(self, protocol):
         if protocol < 2:
-            msg = "Only pickle protocol 2 or higher is supported by sympy"
+            msg = "Only pickle protocol 2 or higher is supported by SymPy"
             raise NotImplementedError(msg)
         return super().__reduce_ex__(protocol)
 
