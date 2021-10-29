@@ -65,13 +65,30 @@ class CodePrinter(StrPrinter):
 
     # Functions which are "simple" to rewrite to other functions that
     # may be supported
+    # function_to_rewrite : (function_to_rewrite_to, iterable_with_other_functions_required)
     _rewriteable_functions = {
-            'erf2': 'erf',
-            'Li': 'li',
-            'beta': 'gamma',
-            'sinc': 'sin',
-            'fibonacci': 'sqrt',
-            'lucas': 'sqrt',
+            'catalan': ('gamma', []),
+            'fibonacci': ('sqrt', []),
+            'lucas': ('sqrt', []),
+            'beta': ('gamma', []),
+            'sinc': ('sin', ['Piecewise']),
+            'Mod': ('floor', []),
+            'factorial': ('gamma', []),
+            'factorial2': ('gamma', ['Piecewise']),
+            'subfactorial': ('uppergamma', []),
+            'RisingFactorial': ('gamma', ['Piecewise']),
+            'FallingFactorial': ('gamma', ['Piecewise']),
+            'binomial': ('gamma', []),
+            'frac': ('floor', []),
+            'Max': ('Piecewise', []),
+            'Min': ('Piecewise', []),
+            'Heaviside': ('Piecewise', []),
+            'erf2': ('erf', []),
+            'erfc': ('erf', []),
+            'Li': ('li', []),
+            'Ei': ('li', []),
+            'dirichlet_eta': ('zeta', []),
+            'riemann_xi': ('zeta', ['gamma']),
     }
 
     def __init__(self, settings=None):
@@ -391,6 +408,11 @@ class CodePrinter(StrPrinter):
         else:
             return name
 
+    def _can_print(self, name):
+        """ Check if function ``name`` is either a known function or has its own
+            printing method. Used to check if rewriting is possible."""
+        return name in self.known_functions or getattr(self, '_print_{}'.format(name), False)
+
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
             cond_func = self.known_functions[expr.func.__name__]
@@ -409,11 +431,12 @@ class CodePrinter(StrPrinter):
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
-        elif (expr.func.__name__ in self._rewriteable_functions and
-              self._rewriteable_functions[expr.func.__name__] in self.known_functions):
+        elif expr.func.__name__ in self._rewriteable_functions:
             # Simple rewrite to supported function possible
-            return self._print(expr.rewrite(self._rewriteable_functions[expr.func.__name__]))
-        elif expr.is_Function and self._settings.get('allow_unknown_functions', False):
+            target_f, required_fs = self._rewriteable_functions[expr.func.__name__]
+            if self._can_print(target_f) and all(self._can_print(f) for f in required_fs):
+                return self._print(expr.rewrite(target_f))
+        if expr.is_Function and self._settings.get('allow_unknown_functions', False):
             return '%s(%s)' % (self._print(expr.func), ', '.join(map(self._print, expr.args)))
         else:
             return self._print_not_supported(expr)

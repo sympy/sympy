@@ -39,6 +39,7 @@ known_functions = {
     "acoth": [(lambda x: True, "ArcCoth")],
     "asech": [(lambda x: True, "ArcSech")],
     "acsch": [(lambda x: True, "ArcCsch")],
+    "sinc": [(lambda x: True, "Sinc")],
     "conjugate": [(lambda x: True, "Conjugate")],
     "Max": [(lambda *x: True, "Max")],
     "Min": [(lambda *x: True, "Min")],
@@ -68,6 +69,7 @@ known_functions = {
     "subfactorial": [(lambda x: True, "Subfactorial")],
     "catalan": [(lambda x: True, "CatalanNumber")],
     "harmonic": [(lambda *x: True, "HarmonicNumber")],
+    "lucas": [(lambda x: True, "LucasL")],
     "RisingFactorial": [(lambda *x: True, "Pochhammer")],
     "FallingFactorial": [(lambda *x: True, "FactorialPower")],
     "laguerre": [(lambda *x: True, "LaguerreL")],
@@ -89,6 +91,8 @@ known_functions = {
     "elliptic_k": [(lambda x: True, "EllipticK")],
     "elliptic_pi": [(lambda *x: True, "EllipticPi")],
     "zeta": [(lambda *x: True, "Zeta")],
+    "dirichlet_eta": [(lambda x: True, "DirichletEta")],
+    "riemann_xi": [(lambda x: True, "RiemannXi")],
     "besseli": [(lambda *x: True, "BesselI")],
     "besselj": [(lambda *x: True, "BesselJ")],
     "besselk": [(lambda *x: True, "BesselK")],
@@ -111,6 +115,7 @@ known_functions = {
     "DiracDelta": [(lambda x: True, "DiracDelta")],
     "Heaviside": [(lambda x: True, "HeavisideTheta")],
     "KroneckerDelta": [(lambda *x: True, "KroneckerDelta")],
+    "sqrt": [(lambda x: True, "Sqrt")],  # For automatic rewrites
 }
 
 
@@ -299,10 +304,11 @@ class MCodePrinter(CodePrinter):
             for cond, mfunc in cond_mfunc:
                 if cond(*expr.args):
                     return "%s[%s]" % (mfunc, self.stringify(expr.args, ", "))
-        elif (expr.func.__name__ in self._rewriteable_functions and
-              self._rewriteable_functions[expr.func.__name__] in self.known_functions):
+        elif expr.func.__name__ in self._rewriteable_functions:
             # Simple rewrite to supported function possible
-            return self._print(expr.rewrite(self._rewriteable_functions[expr.func.__name__]))
+            target_f, required_fs = self._rewriteable_functions[expr.func.__name__]
+            if self._can_print(target_f) and all(self._can_print(f) for f in required_fs):
+                return self._print(expr.rewrite(target_f))
         return expr.func.__name__ + "[%s]" % self.stringify(expr.args, ", ")
 
     _print_MinMaxBase = _print_Function

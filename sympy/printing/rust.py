@@ -101,6 +101,7 @@ known_functions = {
     "asinh": "asinh",
     "acosh": "acosh",
     "atanh": "atanh",
+    "sqrt": "sqrt",  # To enable automatic rewrites
 }
 
 # i64 method in Rust
@@ -330,6 +331,11 @@ class RustCodePrinter(CodePrinter):
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
+        elif expr.func.__name__ in self._rewriteable_functions:
+            # Simple rewrite to supported function possible
+            target_f, required_fs = self._rewriteable_functions[expr.func.__name__]
+            if self._can_print(target_f) and all(self._can_print(f) for f in required_fs):
+                return self._print(expr.rewrite(target_f))
         else:
             return self._print_not_supported(expr)
 
