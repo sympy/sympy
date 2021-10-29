@@ -870,7 +870,8 @@ class Min(MinMaxBase, Application):
 
 class Rem(Function):
     """Returns the remainder when ``p`` is divided by ``q`` where ``p`` is finite
-    and ``q`` is not equal to zero. This is given by ``p - int(p/q)q``.
+    and ``q`` is not equal to zero. The result has the same sign as the divisor,
+    given by ``p - int(p/q)*q``.
 
     Parameters
     ==========
@@ -884,7 +885,7 @@ class Rem(Function):
     Notes
     =====
 
-    The remainder always has the same sign as the dividend.
+    ``Rem`` corresponds to the ``%`` operator in C.
 
     Examples
     ========
@@ -896,6 +897,11 @@ class Rem(Function):
     >>> Rem(x**3, y).subs({x: -5, y: 3})
     -2
 
+    See Also
+    ========
+    
+    Mod
+    
     """
 
     kind = NumberKind
