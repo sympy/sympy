@@ -99,10 +99,10 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     Explanation
     ===========
 
-    It will convert Python ints into instances of sympy.Integer,
-    floats into instances of sympy.Float, etc. It is also able to coerce symbolic
-    expressions which inherit from Basic. This can be useful in cooperation
-    with SAGE.
+    It will convert Python ints into instances of :class:`~.Integer`, floats
+    into instances of :class:`~.Float`, etc. It is also able to coerce
+    symbolic expressions which inherit from :class:`~.Basic`. This can be
+    useful in cooperation with SAGE.
 
     .. warning::
         Note that this function uses ``eval``, and thus shouldn't be used on
@@ -143,7 +143,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     by ``from sympy import *``; anything used in a string that is not
     defined by that import will be converted to a symbol. In the following,
     the ``bitcount`` function is treated as a symbol and the ``O`` is
-    interpreted as the Order object (used with series) and it raises
+    interpreted as the :class:`~.Order` object (used with series) and it raises
     an error when used improperly:
 
     >>> s = 'bitcount(42)'
@@ -177,9 +177,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     If you want *all* single-letter and Greek-letter variables to be symbols
     then you can use the clashing-symbols dictionaries that have been defined
-    there as private variables: _clash1 (single-letter variables), _clash2
-    (the multi-letter Greek names) or _clash (both single and multi-letter
-    names that are defined in abc).
+    there as private variables: ``_clash1`` (single-letter variables),
+    ``_clash2`` (the multi-letter Greek names) or ``_clash`` (both single and
+    multi-letter names that are defined in ``abc``).
 
     >>> from sympy.abc import _clash1
     >>> set(_clash1)
@@ -211,7 +211,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     operators with their SymPy equivalents, so if an operand redefines any
     of those operations, the redefined operators will not be used. If
     argument a is not a string, the mathematical expression is evaluated
-    before being passed to sympify, so adding evaluate=False will still
+    before being passed to sympify, so adding ``evaluate=False`` will still
     return the evaluated result of expression.
 
     >>> sympify('2**2 / 3 + 5')
@@ -289,7 +289,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     that are very different in structure than what was entered. Until such
     autosimplification is no longer done, the ``kernS`` function might be of
     some use. In the example below you can see how an expression reduces to
-    -1 by autosimplification, but does not do so when ``kernS`` is used.
+    $-1$ by autosimplification, but does not do so when ``kernS`` is used.
 
     >>> from sympy.core.sympify import kernS
     >>> from sympy.abc import x
@@ -306,31 +306,31 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     a :
         - any object defined in SymPy
-        - standard numeric Python types: int, long, float, Decimal
-        - strings (like "0.09", "2e-19" or 'sin(x)')
+        - standard numeric Python types: ``int``, ``long``, ``float``, ``Decimal``
+        - strings (like ``"0.09"``, ``"2e-19"`` or ``'sin(x)'``)
         - booleans, including ``None`` (will leave ``None`` unchanged)
-        - dict, lists, sets or tuples containing any of the above
+        - dicts, lists, sets or tuples containing any of the above
 
-    convert_xor : boolean, optional
-        If true, treats XOR as exponentiation.
-        If False, treats XOR as XOR itself.
+    convert_xor : bool, optional
+        If true, treats ``^`` as exponentiation.
+        If False, treats ``^`` as XOR itself.
         Used only when input is a string.
 
     locals : any object defined in SymPy, optional
         In order to have strings be recognized it can be imported
         into a namespace dictionary and passed as locals.
 
-    strict : boolean, optional
-        If the option strict is set to True, only the types for which
+    strict : bool, optional
+        If the option strict is set to ``True``, only the types for which
         an explicit conversion has been defined are converted. In the
         other cases, a SympifyError is raised.
 
-    rational : boolean, optional
-        If true, converts floats into Rational.
-        If false, it lets floats remain as it is.
+    rational : bool, optional
+        If ``True``, converts floats into :class:`~.Rational`.
+        If ``False``, it lets floats remain as it is.
         Used only when input is a string.
 
-    evaluate : boolean, optional
+    evaluate : bool, optional
         If False, then arithmetic and operators will be converted into
         their SymPy equivalents. If True the expression will be evaluated
         and the result will be returned.
@@ -482,10 +482,10 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
 def _sympify(a):
     """
-    Short version of sympify for internal usage for __add__ and __eq__ methods
-    where it is ok to allow some things (like Python integers and floats) in
-    the expression. This excludes things (like strings) that are unwise to
-    allow into such an expression.
+    Short version of :func:`~.sympify` for internal usage for ``__add__`` and
+    ``__eq__`` methods where it is ok to allow some things (like Python
+    integers and floats) in the expression. This excludes things (like strings)
+    that are unwise to allow into such an expression.
 
     >>> from sympy import Integer
     >>> Integer(1) == 1

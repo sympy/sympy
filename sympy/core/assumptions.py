@@ -1,12 +1,13 @@
 """
 This module contains the machinery handling assumptions.
+Do also consider the guide :ref:`assumptions`.
 
 All symbolic objects have assumption attributes that can be accessed via
-.is_<assumption name> attribute.
+``.is_<assumption name>`` attribute.
 
 Assumptions determine certain properties of symbolic objects and can
-have 3 possible values: True, False, None.  True is returned if the
-object has the property and False is returned if it does not or cannot
+have 3 possible values: ``True``, ``False``, ``None``.  ``True`` is returned if the
+object has the property and ``False`` is returned if it does not or cannot
 (i.e. does not make sense):
 
     >>> from sympy import I
@@ -18,8 +19,8 @@ object has the property and False is returned if it does not or cannot
     False
 
 When the property cannot be determined (or when a method is not
-implemented) None will be returned, e.g. a generic symbol, x, may or
-may not be positive so a value of None is returned for x.is_positive.
+implemented) ``None`` will be returned. For example,  a generic symbol, ``x``,
+may or may not be positive so a value of ``None`` is returned for ``x.is_positive``.
 
 By default, all symbolic values are in the largest set in the given context
 without specifying the property. For example, a symbol that has a property
@@ -31,11 +32,11 @@ Here follows a list of possible assumption names:
 
     commutative
         object commutes with any other object with
-        respect to multiplication operation.
+        respect to multiplication operation. See [12]_.
 
     complex
         object can have only values from the set
-        of complex numbers.
+        of complex numbers. See [13]_.
 
     imaginary
         object value is a number that can be written as a real
@@ -48,6 +49,10 @@ Here follows a list of possible assumption names:
         object can have only values from the set
         of real numbers.
 
+    extended_real
+        object can have only values from the set
+        of real numbers, ``oo`` and ``-oo``.
+
     integer
         object can have only values from the set
         of integers.
@@ -58,15 +63,15 @@ Here follows a list of possible assumption names:
         odd (even) integers [2]_.
 
     prime
-        object is a natural number greater than ``1`` that has
-        no positive divisors other than ``1`` and itself.  See [6]_.
+        object is a natural number greater than 1 that has
+        no positive divisors other than 1 and itself.  See [6]_.
 
     composite
         object is a positive integer that has at least one positive
-        divisor other than ``1`` or the number itself.  See [4]_.
+        divisor other than 1 or the number itself.  See [4]_.
 
     zero
-        object has the value of ``0``.
+        object has the value of 0.
 
     nonzero
         object is a real number that is not zero.
@@ -84,7 +89,7 @@ Here follows a list of possible assumption names:
         of transcendental numbers [10]_.
 
     irrational
-        object value cannot be represented exactly by Rational, see [5]_.
+        object value cannot be represented exactly by :class:`~.Rational`, see [5]_.
 
     finite
     infinite
@@ -98,12 +103,19 @@ Here follows a list of possible assumption names:
 
     positive
     nonpositive
-        object can have only positive (only
-        nonpositive) values.
+        object can have only positive (nonpositive) values.
+
+    extended_negative
+    extended_nonnegative
+    extended_positive
+    extended_nonpositive
+    extended_nonzero
+        as without the extended part, but also including infinity with
+        corresponding sign, e.g., extended_positive includes ``oo``
 
     hermitian
     antihermitian
-        object belongs to the field of hermitian
+        object belongs to the field of Hermitian
         (antihermitian) operators.
 
 Examples
@@ -125,6 +137,9 @@ See Also
     :py:class:`sympy.core.numbers.ImaginaryUnit`
     :py:class:`sympy.core.numbers.Zero`
     :py:class:`sympy.core.numbers.One`
+    :py:class:`sympy.core.numbers.Infinity`
+    :py:class:`sympy.core.numbers.NegativeInfinity`
+    :py:class:`sympy.core.numbers.ComplexInfinity`
 
 Notes
 =====
@@ -161,7 +176,7 @@ will return values and update the dictionary.
     >>> eq._assumptions
     {'finite': True, 'infinite': False}
 
-For a Symbol, there are two locations for assumptions that may
+For a :class:`~.Symbol`, there are two locations for assumptions that may
 be of interest. The ``assumptions0`` attribute gives the full set of
 assumptions derived from a given set of initial assumptions. The
 latter assumptions are stored as ``Symbol._assumptions.generator``
@@ -173,7 +188,7 @@ The ``generator`` is not necessarily canonical nor is it filtered
 in any way: it records the assumptions used to instantiate a Symbol
 and (for storage purposes) represents a more compact representation
 of the assumptions needed to recreate the full set in
-`Symbol.assumptions0`.
+``Symbol.assumptions0``.
 
 
 References
@@ -190,6 +205,8 @@ References
 .. [9] http://docs.scipy.org/doc/numpy/reference/generated/numpy.isfinite.html
 .. [10] https://en.wikipedia.org/wiki/Transcendental_number
 .. [11] https://en.wikipedia.org/wiki/Algebraic_number
+.. [12] https://en.wikipedia.org/wiki/Commutative_property
+.. [13] https://en.wikipedia.org/wiki/Complex_number
 
 """
 
