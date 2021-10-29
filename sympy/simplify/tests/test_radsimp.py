@@ -1,7 +1,17 @@
-from sympy import (
-    sqrt, Derivative, symbols, collect, Function, factor, Wild, S,
-    collect_const, log, fraction, I, cos, Add, O,sin, rcollect,
-    Mul, Pow, radsimp, diff, root, Symbol, Rational, exp, Abs)
+from sympy.core.add import Add
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Rational)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, Wild, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import (root, sqrt)
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.polys.polytools import factor
+from sympy.series.order import O
+from sympy.simplify.radsimp import (collect, collect_const, fraction, radsimp, rcollect)
 
 from sympy.core.expr import unchanged
 from sympy.core.mul import _unevaluated_Mul as umul
@@ -429,7 +439,8 @@ def test_issue_5615():
 
 
 def test_issue_5933():
-    from sympy import Polygon, RegularPolygon, denom
+    from sympy.geometry.polygon import (Polygon, RegularPolygon)
+    from sympy.simplify.radsimp import denom
     x = Polygon(*RegularPolygon((0, 0), 1, 5).vertices).centroid.x
     assert abs(denom(x).n()) > 1e-12
     assert abs(denom(radsimp(x))) > 1e-12  # in case simplify didn't handle it

@@ -1,4 +1,5 @@
 import os
+from typing import Tuple, Type
 
 import mpmath.libmp as mlib
 
@@ -77,6 +78,8 @@ else:
 # unrecognised value). The two blocks below define the values exported by this
 # module in each case.
 #
+SYMPY_INTS: Tuple[Type, ...]
+
 if gmpy is not None:
 
     HAS_GMPY = 2
@@ -97,5 +100,5 @@ else:
     MPZ = int
     MPQ = PythonMPQ
 
-    factorial = mlib.ifac
-    sqrt = mlib.isqrt
+    factorial = lambda x: int(mlib.ifac(x))
+    sqrt = lambda x: int(mlib.isqrt(x))

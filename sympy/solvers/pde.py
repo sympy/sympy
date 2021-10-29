@@ -37,13 +37,12 @@ from functools import reduce
 from itertools import combinations_with_replacement
 from sympy.simplify import simplify  # type: ignore
 from sympy.core import Add, S
-from sympy.core.compatibility import is_sequence
 from sympy.core.function import Function, expand, AppliedUndef, Subs
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, symbols
 from sympy.functions import exp
 from sympy.integrals.integrals import Integral
-from sympy.utilities.iterables import has_dups
+from sympy.utilities.iterables import has_dups, is_sequence
 from sympy.utilities.misc import filldedent
 
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
@@ -640,7 +639,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     >>> f = Function('f')
     >>> eq = -2*f(x,y).diff(x) + 4*f(x,y).diff(y) + 5*f(x,y) - exp(x + 3*y)
     >>> pdsolve(eq)
-    Eq(f(x, y), (F(4*x + 2*y) + exp(x/2 + 4*y)/15)*exp(x/2 - y))
+    Eq(f(x, y), (F(4*x + 2*y)*exp(x/2) + exp(x + 4*y)/15)*exp(-y))
 
     References
     ==========

@@ -1,4 +1,8 @@
-from sympy import I, Integer, sqrt, symbols, S, Mul, Rational
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Integer, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator

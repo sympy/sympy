@@ -1,6 +1,6 @@
 .. _get_started:
 
-SymPy Overview
+Getting Started
 ===============
 
 SymPy is a Python library for symbolic mathematics. It aims to become a full-featured computer

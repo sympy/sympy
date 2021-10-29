@@ -1,4 +1,5 @@
-from sympy import sqrt, S
+from sympy.core.singleton import S
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import UnitSystem, centimeter, gram, second, coulomb, charge, speed_of_light, current, mass, \
     length, voltage, magnetic_density, magnetic_flux
 from sympy.physics.units.definitions import coulombs_constant
@@ -34,7 +35,7 @@ cgs_gauss = UnitSystem(
 cgs_gauss.set_quantity_scale_factor(coulombs_constant, 1)
 
 cgs_gauss.set_quantity_dimension(statcoulomb, charge)
-cgs_gauss.set_quantity_scale_factor(statcoulomb, centimeter**(S(3)/2)*gram**(S(1)/2)/second)
+cgs_gauss.set_quantity_scale_factor(statcoulomb, centimeter**(S(3)/2)*gram**(S.Half)/second)
 
 cgs_gauss.set_quantity_dimension(coulomb, charge)
 

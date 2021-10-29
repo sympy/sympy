@@ -1,7 +1,7 @@
 from sympy.core import S, Basic, Dict, Symbol, Tuple, sympify
-from sympy.core.compatibility import iterable
 from sympy.core.symbol import Str
 from sympy.sets import Set, FiniteSet, EmptySet
+from sympy.utilities.iterables import iterable
 
 
 class Class(Set):
@@ -618,8 +618,8 @@ class Diagram(Basic):
     References
     ==========
 
-    [Pare1970] B. Pareigis: Categories and functors.  Academic Press,
-    1970.
+    [Pare1970] B. Pareigis: Categories and functors.  Academic Press, 1970.
+
     """
     @staticmethod
     def _set_dict_union(dictionary, key, value):
@@ -749,7 +749,7 @@ class Diagram(Basic):
                 for morphism in premises_arg:
                     objects |= FiniteSet(morphism.domain, morphism.codomain)
                     Diagram._add_morphism_closure(premises, morphism, empty)
-            elif isinstance(premises_arg, dict) or isinstance(premises_arg, Dict):
+            elif isinstance(premises_arg, (dict, Dict)):
                 # The user has supplied a dictionary of morphisms and
                 # their properties.
                 for morphism, props in premises_arg.items():
@@ -925,15 +925,15 @@ class Diagram(Basic):
         >>> d1.is_subdiagram(d)
         False
         """
-        premises = all([(m in self.premises) and
-                        (diagram.premises[m] == self.premises[m])
-                        for m in diagram.premises])
+        premises = all((m in self.premises) and
+                       (diagram.premises[m] == self.premises[m])
+                       for m in diagram.premises)
         if not premises:
             return False
 
-        conclusions = all([(m in self.conclusions) and
-                           (diagram.conclusions[m] == self.conclusions[m])
-                        for m in diagram.conclusions])
+        conclusions = all((m in self.conclusions) and
+                          (diagram.conclusions[m] == self.conclusions[m])
+                          for m in diagram.conclusions)
 
         # Premises is surely ``True`` here.
         return conclusions

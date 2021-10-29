@@ -2,9 +2,10 @@ from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
-    AppliedUndef)
+    AppliedUndef, expand_mul)
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi, I, oo
+from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.functions.elementary.exponential import exp, exp_polar, log
 from sympy.functions.elementary.integers import ceiling
@@ -282,8 +283,7 @@ class sign(Function):
     Examples
     ========
 
-    >>> from sympy.functions import sign
-    >>> from sympy.core.numbers import I
+    >>> from sympy import sign, I
 
     >>> sign(-1)
     -1
@@ -318,9 +318,10 @@ class sign(Function):
     _singularities = True
 
     def doit(self, **hints):
-        if self.args[0].is_zero is False:
+        s = super().doit()
+        if s == self and self.args[0].is_zero is False:
             return self.args[0] / Abs(self.args[0])
-        return self
+        return s
 
     @classmethod
     def eval(cls, arg):
@@ -516,8 +517,6 @@ class Abs(Function):
     @classmethod
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
-        from sympy.core.function import expand_mul
-        from sympy.core.power import Pow
 
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()
@@ -698,8 +697,7 @@ class arg(Function):
     Examples
     ========
 
-    >>> from sympy.functions import arg
-    >>> from sympy import I, sqrt
+    >>> from sympy import arg, I, sqrt
     >>> arg(2.0)
     0
     >>> arg(I)
@@ -815,6 +813,9 @@ class conjugate(Function):
         if obj is not None:
             return obj
 
+    def inverse(self):
+        return conjugate
+
     def _eval_Abs(self):
         return Abs(self.args[0], evaluate=True)
 
@@ -844,9 +845,7 @@ class transpose(Function):
     Examples
     ========
 
-    >>> from sympy.functions import transpose
-    >>> from sympy.matrices import MatrixSymbol
-    >>> from sympy import Matrix
+    >>> from sympy import transpose, Matrix, MatrixSymbol
     >>> A = MatrixSymbol('A', 25, 9)
     >>> transpose(A)
     A.T
@@ -903,8 +902,7 @@ class adjoint(Function):
     Examples
     ========
 
-    >>> from sympy import adjoint
-    >>> from sympy.matrices import MatrixSymbol
+    >>> from sympy import adjoint, MatrixSymbol
     >>> A = MatrixSymbol('A', 10, 5)
     >>> adjoint(A)
     Adjoint(A)
@@ -1216,7 +1214,6 @@ class principal_branch(Function):
 
     @classmethod
     def eval(self, x, period):
-        from sympy import oo, exp_polar, I, Mul, polar_lift, Symbol
         if isinstance(x, polar_lift):
             return principal_branch(x.args[0], period)
         if period == oo:
@@ -1267,7 +1264,6 @@ class principal_branch(Function):
             return exp_polar(arg*I)*abs(c)
 
     def _eval_evalf(self, prec):
-        from sympy import exp, pi, I
         z, period = self.args
         p = periodic_argument(z, period)._eval_evalf(prec)
         if abs(p) > pi or p == -pi:
@@ -1276,7 +1272,7 @@ class principal_branch(Function):
 
 
 def _polarify(eq, lift, pause=False):
-    from sympy import Integral
+    from sympy.integrals.integrals import Integral
     if eq.is_polar:
         return eq
     if eq.is_number and not pause:
@@ -1390,7 +1386,7 @@ def _unpolarify(eq, exponents_only, pause=False):
     return eq.func(*[_unpolarify(x, exponents_only, True) for x in eq.args])
 
 
-def unpolarify(eq, subs={}, exponents_only=False):
+def unpolarify(eq, subs=None, exponents_only=False):
     """
     If p denotes the projection from the Riemann surface of the logarithm to
     the complex line, return a simplified version eq' of `eq` such that
@@ -1411,7 +1407,7 @@ def unpolarify(eq, subs={}, exponents_only=False):
         return eq
 
     eq = sympify(eq)
-    if subs != {}:
+    if subs is not None:
         return unpolarify(eq.subs(subs))
     changed = True
     pause = False

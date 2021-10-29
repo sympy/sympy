@@ -1,13 +1,13 @@
-# References :
-# http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
-# https://en.wikipedia.org/wiki/Quaternion
-from sympy import S, Rational
-from sympy import re, im, conjugate, sign
-from sympy import sqrt, sin, cos, acos, exp, ln
-from sympy import trigsimp
-from sympy import integrate
-from sympy import Matrix
-from sympy import sympify
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
+from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
+from sympy.functions.elementary.exponential import (exp, log as ln)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, cos, sin)
+from sympy.simplify.trigsimp import trigsimp
+from sympy.integrals.integrals import integrate
+from sympy.matrices.dense import MutableDenseMatrix as Matrix
+from sympy.core.sympify import sympify
 from sympy.core.evalf import prec_to_dps
 from sympy.core.expr import Expr
 
@@ -36,6 +36,12 @@ class Quaternion(Expr):
     x + x**3*i + x*j + x**2*k
     >>> q2
     (3 + 4*I) + (2 + 5*I)*i + 0*j + (7 + 8*I)*k
+
+    References
+    ==========
+
+    .. [1] http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
+    .. [2] https://en.wikipedia.org/wiki/Quaternion
 
     """
     _op_priority = 11.0
@@ -517,8 +523,8 @@ class Quaternion(Expr):
         + 0.500000000000000*k
 
         """
-
-        return Quaternion(*[arg.evalf(n=prec_to_dps(prec)) for arg in self.args])
+        nprec = prec_to_dps(prec)
+        return Quaternion(*[arg.evalf(n=nprec) for arg in self.args])
 
     def pow_cos_sin(self, p):
         """Computes the pth power in the cos-sin form.

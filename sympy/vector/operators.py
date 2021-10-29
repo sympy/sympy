@@ -6,7 +6,8 @@ from sympy.vector.vector import Vector, VectorMul, VectorAdd, Cross, Dot
 from sympy.vector.scalar import BaseScalar
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.function import Derivative
-from sympy import Add, Mul
+from sympy.core.add import Add
+from sympy.core.mul import Mul
 
 
 def _get_coord_systems(expr):

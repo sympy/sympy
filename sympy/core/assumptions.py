@@ -6,8 +6,8 @@ All symbolic objects have assumption attributes that can be accessed via
 
 Assumptions determine certain properties of symbolic objects and can
 have 3 possible values: True, False, None.  True is returned if the
-object has the property and False is returned if it doesn't or can't
-(i.e. doesn't make sense):
+object has the property and False is returned if it does not or cannot
+(i.e. does not make sense):
 
     >>> from sympy import I
     >>> I.is_algebraic
@@ -193,9 +193,9 @@ References
 
 """
 
-from sympy.core.facts import FactRules, FactKB
-from sympy.core.core import BasicMeta
-from sympy.core.sympify import sympify
+from .facts import FactRules, FactKB
+from .core import BasicMeta
+from .sympify import sympify
 
 from random import shuffle
 
@@ -287,7 +287,7 @@ def common_assumptions(exprs, check=None):
     Examples
     ========
 
-    >>> from sympy.core.assumptions import common_assumptions
+    >>> from sympy.core import common_assumptions
     >>> from sympy import oo, pi, sqrt
     >>> common_assumptions([-4, 0, sqrt(2), 2, pi, oo])
     {'commutative': True, 'composite': False,

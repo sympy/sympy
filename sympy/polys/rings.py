@@ -7,7 +7,6 @@ from operator import add, mul, lt, le, gt, ge
 from functools import reduce
 from types import GeneratorType
 
-from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
 from sympy.core.numbers import igcd, oo
 from sympy.core.symbol import Symbol, symbols as _symbols
@@ -30,6 +29,7 @@ from sympy.polys.polyutils import (expr_from_dict, _dict_reorder,
                                    _parallel_dict_from_expr)
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
+from sympy.utilities.iterables import is_sequence
 from sympy.utilities.magic import pollute
 
 @public
@@ -139,8 +139,7 @@ def sring(exprs, *symbols, **options):
     Examples
     ========
 
-    >>> from sympy.core import symbols
-    >>> from sympy.polys.rings import sring
+    >>> from sympy import sring, symbols
 
     >>> x, y, z = symbols("x,y,z")
     >>> R, f = sring(x + 2*y + 3*z)
@@ -247,7 +246,7 @@ class PolyRing(DefaultPrinting, IPolys):
 
 
             if order is lex:
-                obj.leading_expv = lambda f: max(f)
+                obj.leading_expv = max
             else:
                 obj.leading_expv = lambda f: max(f, key=order)
 
@@ -740,7 +739,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             if self.is_ground:
                 return self.coeff(1)
             else:
-                raise ValueError("can't drop %s" % gen)
+                raise ValueError("Cannot drop %s" % gen)
         else:
             poly = ring.zero
 
@@ -750,7 +749,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                     del K[i]
                     poly[tuple(K)] = v
                 else:
-                    raise ValueError("can't drop %s" % gen)
+                    raise ValueError("Cannot drop %s" % gen)
 
             return poly
 
@@ -764,7 +763,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def drop_to_ground(self, gen):
         if self.ring.ngens == 1:
-            raise ValueError("can't drop only generator to ground")
+            raise ValueError("Cannot drop only generator to ground")
 
         i, ring = self._drop_to_ground(gen)
         poly = ring.zero
@@ -1426,7 +1425,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if isinstance(fv, PolyElement):
             ret_single = True
             fv = [fv]
-        if any(not f for f in fv):
+        if not all(fv):
             raise ZeroDivisionError("polynomial division")
         if not self:
             if ret_single:
@@ -1473,7 +1472,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         f = self
         if isinstance(G, PolyElement):
             G = [G]
-        if any(not g for g in G):
+        if not all(G):
             raise ZeroDivisionError("polynomial division")
         ring = f.ring
         domain = ring.domain

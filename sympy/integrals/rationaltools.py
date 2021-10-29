@@ -1,7 +1,14 @@
 """This module implements tools for integrating rational functions. """
 
-from sympy import S, Symbol, symbols, I, log, atan, \
-    roots, RootSum, Lambda, cancel, Dummy
+from sympy.core.function import Lambda
+from sympy.core.numbers import I
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.trigonometric import atan
+from sympy.polys.polyroots import roots
+from sympy.polys.polytools import cancel
+from sympy.polys.rootoftools import RootSum
 
 from sympy.polys import Poly, resultant, ZZ
 
@@ -39,10 +46,10 @@ def ratint(f, x, **flags):
     sympy.integrals.rationaltools.ratint_ratpart
 
     """
-    if type(f) is not tuple:
-        p, q = f.as_numer_denom()
-    else:
+    if isinstance(f, tuple):
         p, q = f
+    else:
+        p, q = f.as_numer_denom()
 
     p, q = Poly(p, x, composite=False, field=True), Poly(q, x, composite=False, field=True)
 
@@ -78,12 +85,11 @@ def ratint(f, x, **flags):
         real = flags.get('real')
 
         if real is None:
-            if type(f) is not tuple:
-                atoms = f.atoms()
-            else:
+            if isinstance(f, tuple):
                 p, q = f
-
                 atoms = p.atoms() | q.atoms()
+            else:
+                atoms = f.atoms()
 
             for elt in atoms - {x}:
                 if not elt.is_extended_real:
@@ -147,7 +153,7 @@ def ratint_ratpart(f, g, x):
 
     ratint, ratint_logpart
     """
-    from sympy import solve
+    from sympy.solvers.solvers import solve
 
     f = Poly(f, x)
     g = Poly(g, x)
@@ -224,7 +230,7 @@ def ratint_logpart(f, g, x, t=None):
     res, R = resultant(a, b, includePRS=True)
     res = Poly(res, t, composite=False)
 
-    assert res, "BUG: resultant(%s, %s) can't be zero" % (a, b)
+    assert res, "BUG: resultant(%s, %s) cannot be zero" % (a, b)
 
     R_map, H = {}, []
 
@@ -351,7 +357,7 @@ def log_to_real(h, q, x, t):
 
     log_to_atan
     """
-    from sympy import collect
+    from sympy.simplify.radsimp import collect
     u, v = symbols('u,v', cls=Dummy)
 
     H = h.as_expr().subs({t: u + I*v}).expand()

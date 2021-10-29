@@ -42,7 +42,7 @@ def test_schur_partition():
     raises(ValueError, lambda: schur_partition(x))
 
 def test_schur_number():
-    first_known_schur_numbers = {1: 1, 2: 4, 3: 13, 4: 44}
+    first_known_schur_numbers = {1: 1, 2: 4, 3: 13, 4: 44, 5: 160}
     for k in first_known_schur_numbers:
         assert SchurNumber(k) == first_known_schur_numbers[k]
 
@@ -52,4 +52,4 @@ def test_schur_number():
 
     n = symbols("n")
     assert SchurNumber(n).lower_bound() == 3**n/2 - Rational(1, 2)
-    assert SchurNumber(6).lower_bound() == 364
+    assert SchurNumber(8).lower_bound() == 5039

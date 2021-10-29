@@ -1,4 +1,9 @@
-from sympy import factorial, sqrt, exp, S, assoc_laguerre, Float
+from sympy.core.numbers import Float
+from sympy.core.singleton import S
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.polynomials import assoc_laguerre
 from sympy.functions.special.spherical_harmonics import Ynm
 
 

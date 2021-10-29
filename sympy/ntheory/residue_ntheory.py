@@ -1,13 +1,14 @@
-from sympy.core.compatibility import as_int
 from sympy.core.function import Function
-from sympy.utilities.iterables import cartes
 from sympy.core.numbers import igcd, igcdex, mod_inverse
 from sympy.core.power import isqrt
 from sympy.core.singleton import S
+from sympy.polys.domains import ZZ
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient, multiplicity
+from sympy.utilities.misc import as_int
 from random import randint, Random
 
+from itertools import cycle, product
 
 
 def n_order(a, n):
@@ -277,8 +278,7 @@ def _product(*iters):
     Author: Fernando Sumudu
     with small changes
     """
-    import itertools
-    inf_iters = tuple(itertools.cycle(enumerate(it)) for it in iters)
+    inf_iters = tuple(cycle(enumerate(it)) for it in iters)
     num_iters = len(inf_iters)
     cur_val = [None]*num_iters
 
@@ -317,7 +317,6 @@ def sqrt_mod_iter(a, p, domain=int):
     [21, 22]
     """
     from sympy.polys.galoistools import gf_crt1, gf_crt2
-    from sympy.polys.domains import ZZ
     a, p = as_int(a), abs(as_int(p))
     if isprime(p):
         a = a % p
@@ -382,9 +381,6 @@ def _sqrt_mod_prime_power(a, p, k):
     .. [2] http://www.numbertheory.org/php/squareroot.html
     .. [3] [Gathen99]_
     """
-    from sympy.core.numbers import igcdex
-    from sympy.polys.domains import ZZ
-
     pk = p**k
     a = a % pk
 
@@ -795,7 +791,8 @@ def _help(m, prime_modulo_method, diff_method, expr_val):
     for x, y in dd.items():
         m.append(x)
         a.append(list(y))
-    return sorted({crt(m, list(i))[0] for i in cartes(*a)})
+    return sorted({crt(m, list(i))[0] for i in product(*a)})
+
 
 def _nthroot_mod_composite(a, n, m):
     """
@@ -830,7 +827,6 @@ def nthroot_mod(a, n, p, all_roots=False):
     >>> nthroot_mod(68, 3, 109)
     23
     """
-    from sympy.core.numbers import igcdex
     a = a % p
     a, n, p = as_int(a), as_int(n), as_int(p)
 
@@ -868,7 +864,7 @@ def nthroot_mod(a, n, p, all_roots=False):
         else:
             res = a
     elif pa == 2:
-        return sqrt_mod(a, p , all_roots)
+        return sqrt_mod(a, p, all_roots)
     else:
         res = _nthroot_mod1(a, pa, p, all_roots)
     return res
@@ -1408,7 +1404,7 @@ def quadratic_congruence(a, b, c, p):
         for i in y:
             res.add((i - b // 2) % p)
         return sorted(res)
-    y = sqrt_mod(b * b - 4 * a * c , 4 * a * p, all_roots=True)
+    y = sqrt_mod(b * b - 4 * a * c, 4 * a * p, all_roots=True)
     res = set()
     for i in y:
         root = linear_congruence(2 * a, i - b, 4 * a * p)
@@ -1490,12 +1486,11 @@ def _valid_expr(expr):
     with integer coefficients else raise a ValueError.
     """
 
-    from sympy import Poly
-    from sympy.polys.domains import ZZ
     if not expr.is_polynomial():
         raise ValueError("The expression should be a polynomial")
+    from sympy.polys import Poly
     polynomial = Poly(expr)
-    if not  polynomial.is_univariate:
+    if not polynomial.is_univariate:
         raise ValueError("The expression should be univariate")
     if not polynomial.domain == ZZ:
         raise ValueError("The expression should should have integer coefficients")

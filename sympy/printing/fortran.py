@@ -202,7 +202,7 @@ class FCodePrinter(CodePrinter):
         return open_lines, close_lines
 
     def _print_sign(self, expr):
-        from sympy import Abs
+        from sympy.functions.elementary.complexes import Abs
         arg, = expr.args
         if arg.is_integer:
             new_expr = merge(0, isign(1, arg), Eq(arg, 0))
@@ -602,7 +602,7 @@ class FCodePrinter(CodePrinter):
         tabwidth = 3
         new_code = []
         for i, line in enumerate(code):
-            if line == '' or line == '\n':
+            if line in ('', '\n'):
                 new_code.append(line)
                 continue
             level -= decrease[i]

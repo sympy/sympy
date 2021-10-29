@@ -1,4 +1,5 @@
-from sympy import Symbol, Q
+from sympy.assumptions.ask import Q
+from sympy.core.symbol import Symbol
 from sympy.assumptions.wrapper import (AssumptionsWrapper, is_infinite,
     is_extended_real)
 

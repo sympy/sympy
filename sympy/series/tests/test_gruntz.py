@@ -1,5 +1,14 @@
-from sympy import Symbol, exp, log, oo, Rational, I, sin, gamma, loggamma, S, \
-    atan, acot, pi, cancel, E, erf, sqrt, zeta, cos, digamma, Integer, Ei, EulerGamma
+from sympy.core import EulerGamma
+from sympy.core.numbers import (E, I, Integer, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acot, atan, cos, sin)
+from sympy.functions.special.error_functions import (Ei, erf)
+from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma)
+from sympy.functions.special.zeta_functions import zeta
+from sympy.polys.polytools import cancel
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, tanh
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign
@@ -129,12 +138,12 @@ def test_grunts_eval_special_slow_sometimes_fail():
     assert gruntz(exp(gamma(x - exp(-x))*exp(1/x)) - exp(gamma(x)), x, oo) is oo
 
 
+def test_gruntz_Ei():
+    assert gruntz((Ei(x - exp(-exp(x))) - Ei(x)) *exp(-x)*exp(exp(x))*x, x, oo) == -1
+
+
 @XFAIL
 def test_gruntz_eval_special_fail():
-    # TODO exponential integral Ei
-    assert gruntz(
-        (Ei(x - exp(-exp(x))) - Ei(x)) *exp(-x)*exp(exp(x))*x, x, oo) == -1
-
     # TODO zeta function series
     assert gruntz(
         exp((log(2) + 1)*x) * (zeta(x + exp(-x)) - zeta(x)), x, oo) == -log(2)
@@ -390,7 +399,6 @@ def test_MrvTestCase_page47_ex3_21():
 
 
 def test_I():
-    from sympy import sign
     y = Symbol("y")
     assert gruntz(I*x, x, oo) == I*oo
     assert gruntz(y*I*x, x, oo) == y*I*oo

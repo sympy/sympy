@@ -2,13 +2,16 @@
 from collections import defaultdict
 from collections.abc import Mapping
 from itertools import chain, zip_longest
+from typing import Set, Tuple
 
 from .assumptions import BasicMeta, ManagedProperties
+from .decorators import deprecated
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
-from .compatibility import iterable, ordered
-from .kind import UndefinedKind
+from .sorting import ordered
+from .kind import Kind, UndefinedKind
 from ._print_helpers import Printable
+
 
 from inspect import getmro
 
@@ -75,6 +78,8 @@ class Basic(Printable, metaclass=ManagedProperties):
                  '_assumptions'
                 )
 
+    _args: 'Tuple[Basic, ...]'
+
     # To be overridden with True in the appropriate subclasses
     is_number = False
     is_Atom = False
@@ -107,7 +112,7 @@ class Basic(Printable, metaclass=ManagedProperties):
     is_MatAdd = False
     is_MatMul = False
 
-    kind = UndefinedKind
+    kind: Kind = UndefinedKind
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
@@ -242,7 +247,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             r = b.p * a.q
             return (l > r) - (l < r)
         else:
-            from sympy.core.symbol import Wild
+            from .symbol import Wild
             p1, p2, p3 = Wild("p1"), Wild("p2"), Wild("p3")
             r_a = a.match(p1 * p2**p3)
             if r_a and p3 in r_a:
@@ -287,7 +292,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         Examples
         ========
 
-        >>> from sympy.core import S, I
+        >>> from sympy import S, I
 
         >>> sorted([S(1)/2, I, -I], key=lambda x: x.sort_key())
         [1/2, -I, I]
@@ -416,7 +421,7 @@ class Basic(Printable, metaclass=ManagedProperties):
     def atoms(self, *types):
         """Returns the atoms that form the current object.
 
-        By default, only objects that are truly atomic and can't
+        By default, only objects that are truly atomic and cannot
         be divided into smaller pieces are returned: symbols, numbers,
         and number symbols like I and pi. It is possible to request
         atoms of any type, however, as demonstrated below.
@@ -485,7 +490,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         if types:
             types = tuple(
                 [t if isinstance(t, type) else type(t) for t in types])
-        nodes = preorder_traversal(self)
+        nodes = _preorder_traversal(self)
         if types:
             result = {node for node in nodes if isinstance(node, types)}
         else:
@@ -493,7 +498,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         return result
 
     @property
-    def free_symbols(self):
+    def free_symbols(self) -> 'Set[Basic]':
         """Return from the atoms of self those which are free symbols.
 
         For most expressions, all symbols are free symbols. For some classes
@@ -505,7 +510,8 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         Any other method that uses bound variables should implement a
         free_symbols method."""
-        return set().union(*[a.free_symbols for a in self.args])
+        empty: 'Set[Basic]' = set()
+        return empty.union(*(a.free_symbols for a in self.args))
 
     @property
     def expr_free_symbols(self):
@@ -543,7 +549,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         a property, `bound_symbols` that returns those symbols
         appearing in the object.
         """
-        from sympy.core.symbol import Dummy, Symbol
+        from .symbol import Dummy, Symbol
         def can(x):
             # mask free that shadow bound
             free = x.free_symbols
@@ -558,7 +564,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             return self
         return self.replace(
             lambda x: hasattr(x, 'bound_symbols'),
-            lambda x: can(x),
+            can,
             simultaneous=False)
 
     @property
@@ -596,11 +602,11 @@ class Basic(Printable, metaclass=ManagedProperties):
         """Apply on the argument recursively through the expression tree.
 
         This method is used to simulate a common abuse of notation for
-        operators. For instance in SymPy the the following will not work:
+        operators. For instance, in SymPy the following will not work:
 
         ``(x+Lambda(y, 2*y))(z) == x+2*z``,
 
-        however you can use
+        however, you can use:
 
         >>> from sympy import Lambda
         >>> from sympy.abc import x, y, z
@@ -612,7 +618,7 @@ class Basic(Printable, metaclass=ManagedProperties):
     @staticmethod
     def _recursive_call(expr_to_call, on_args):
         """Helper for rcall method."""
-        from sympy import Symbol
+        from .symbol import Symbol
         def the_call_method_is_overridden(expr):
             for cls in getmro(type(expr)):
                 if '__call__' in cls.__dict__:
@@ -631,8 +637,8 @@ class Basic(Printable, metaclass=ManagedProperties):
             return expr_to_call
 
     def is_hypergeometric(self, k):
-        from sympy.simplify import hypersimp
-        from sympy.functions import Piecewise
+        from sympy.simplify.simplify import hypersimp
+        from sympy.functions.elementary.piecewise import Piecewise
         if self.has(Piecewise):
             return None
         return hypersimp(self, k) is not None
@@ -711,7 +717,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         return self.__class__
 
     @property
-    def args(self):
+    def args(self) -> 'Tuple[Basic, ...]':
         """Returns a tuple of arguments of 'self'.
 
         Examples
@@ -745,7 +751,7 @@ class Basic(Printable, metaclass=ManagedProperties):
     @property
     def _sorted_args(self):
         """
-        The same as ``args``.  Derived classes which don't fix an
+        The same as ``args``.  Derived classes which do not fix an
         order on their arguments should override this method to
         produce the sorted representation.
         """
@@ -875,13 +881,14 @@ class Basic(Printable, metaclass=ManagedProperties):
         sympy.core.evalf.EvalfMixin.evalf: calculates the given formula to a desired level of precision
 
         """
-        from sympy.core.compatibility import _nodes, default_sort_key
-        from sympy.core.containers import Dict
-        from sympy.core.symbol import Dummy, Symbol
+        from .containers import Dict
+        from .symbol import Dummy, Symbol
+        from sympy.utilities.iterables import iterable
         from sympy.utilities.misc import filldedent
 
         unordered = False
         if len(args) == 1:
+
             sequence = args[0]
             if isinstance(sequence, set):
                 unordered = True
@@ -915,6 +922,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         sequence = list(filter(None, sequence))
 
         if unordered:
+            from .sorting import _nodes, default_sort_key
             sequence = dict(sequence)
             # order so more complex items are first and items
             # of identical complexity are ordered so
@@ -924,7 +932,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             # For more complex ordering use an unordered sequence.
             k = list(ordered(sequence, default=False, keys=(
                 lambda x: -_nodes(x),
-                lambda x: default_sort_key(x),
+                default_sort_key,
                 )))
             sequence = [(k, sequence[k]) for k in k]
 
@@ -1185,7 +1193,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         Note ``has`` is a structural algorithm with no knowledge of
         mathematics. Consider the following half-open interval:
 
-        >>> from sympy.sets import Interval
+        >>> from sympy import Interval
         >>> i = Interval.Lopen(0, 5); i
         Interval.Lopen(0, 5)
         >>> i.args
@@ -1216,13 +1224,13 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def _has(self, pattern):
         """Helper for .has()"""
-        from sympy.core.function import UndefinedFunction, Function
+        from .function import UndefinedFunction, Function
         if isinstance(pattern, UndefinedFunction):
-            return any(f.func == pattern or f == pattern
-            for f in self.atoms(Function, UndefinedFunction))
+            return any(pattern in (f, f.func)
+                       for f in self.atoms(Function, UndefinedFunction))
 
         if isinstance(pattern, BasicMeta):
-            subtrees = preorder_traversal(self)
+            subtrees = _preorder_traversal(self)
             return any(isinstance(arg, pattern) for arg in subtrees)
 
         pattern = _sympify(pattern)
@@ -1230,9 +1238,9 @@ class Basic(Printable, metaclass=ManagedProperties):
         _has_matcher = getattr(pattern, '_has_matcher', None)
         if _has_matcher is not None:
             match = _has_matcher()
-            return any(match(arg) for arg in preorder_traversal(self))
+            return any(match(arg) for arg in _preorder_traversal(self))
         else:
-            return any(arg == pattern for arg in preorder_traversal(self))
+            return any(arg == pattern for arg in _preorder_traversal(self))
 
     def _has_matcher(self):
         """Helper for .has()"""
@@ -1400,8 +1408,6 @@ class Basic(Printable, metaclass=ManagedProperties):
                   using matching rules
 
         """
-        from sympy.core.symbol import Wild
-
 
         try:
             query = _sympify(query)
@@ -1425,6 +1431,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         elif isinstance(query, Basic):
             _query = lambda expr: expr.match(query)
             if exact is None:
+                from .symbol import Wild
                 exact = (len(query.atoms(Wild)) > 1)
 
             if isinstance(value, Basic):
@@ -1482,7 +1489,6 @@ class Basic(Printable, metaclass=ManagedProperties):
                 rv = F(rv)
             return rv
 
-
         mapping = {}  # changes that took place
 
         def rec_replace(expr):
@@ -1501,7 +1507,7 @@ class Basic(Printable, metaclass=ManagedProperties):
     def find(self, query, group=False):
         """Find all subexpressions matching a query. """
         query = _make_find_query(query)
-        results = list(filter(query, preorder_traversal(self)))
+        results = list(filter(query, _preorder_traversal(self)))
 
         if not group:
             return set(results)
@@ -1519,9 +1525,9 @@ class Basic(Printable, metaclass=ManagedProperties):
     def count(self, query):
         """Count the number of matching subexpressions. """
         query = _make_find_query(query)
-        return sum(bool(query(sub)) for sub in preorder_traversal(self))
+        return sum(bool(query(sub)) for sub in _preorder_traversal(self))
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict=None, old=False):
         """
         Helper method for match() that looks for a match between Wild symbols
         in self and expressions in expr.
@@ -1537,10 +1543,14 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> Basic(a + x, x).matches(Basic(a + b + c, b + c))
         {x_: b + c}
         """
-        repl_dict = repl_dict.copy()
         expr = sympify(expr)
         if not isinstance(expr, self.__class__):
             return None
+
+        if repl_dict is None:
+            repl_dict = dict()
+        else:
+            repl_dict = repl_dict.copy()
 
         if self == expr:
             return repl_dict
@@ -1548,11 +1558,17 @@ class Basic(Printable, metaclass=ManagedProperties):
         if len(self.args) != len(expr.args):
             return None
 
-        d = repl_dict.copy()
+        d = repl_dict  # already a copy
         for arg, other_arg in zip(self.args, expr.args):
             if arg == other_arg:
                 continue
-            d = arg.xreplace(d).matches(other_arg, d, old=old)
+            if arg.is_Relational:
+                try:
+                    d = arg.xreplace(d).matches(other_arg, d, old=old)
+                except TypeError: # Should be InvalidComparisonError when introduced
+                    d = None
+            else:
+                    d = arg.xreplace(d).matches(other_arg, d, old=old)
             if d is None:
                 return None
         return d
@@ -1607,8 +1623,6 @@ class Basic(Printable, metaclass=ManagedProperties):
         {p_: 2/x**2}
 
         """
-        from sympy.core.symbol import Wild
-        from sympy.core.function import WildFunction
         from sympy.utilities.misc import filldedent
 
         pattern = sympify(pattern)
@@ -1617,6 +1631,8 @@ class Basic(Printable, metaclass=ManagedProperties):
         m = canonical(pattern).matches(canonical(self), old=old)
         if m is None:
             return m
+        from .symbol import Wild
+        from .function import WildFunction
         wild = pattern.atoms(Wild, WildFunction)
         # sanity check
         if set(m) - wild:
@@ -1641,7 +1657,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def count_ops(self, visual=None):
         """wrapper for count_ops that returns the operation count."""
-        from sympy import count_ops
+        from .function import count_ops
         return count_ops(self, visual)
 
     def doit(self, **hints):
@@ -1672,12 +1688,12 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def simplify(self, **kwargs):
         """See the simplify function in sympy.simplify"""
-        from sympy.simplify import simplify
+        from sympy.simplify.simplify import simplify
         return simplify(self, **kwargs)
 
     def refine(self, assumption=True):
         """See the refine function in sympy.assumptions"""
-        from sympy.assumptions import refine
+        from sympy.assumptions.refine import refine
         return refine(self, assumption)
 
     def _eval_derivative_n_times(self, s, n):
@@ -1687,7 +1703,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         # while leaving the derivative unevaluated if `n` is symbolic.  This
         # method should be overridden if the object has a closed form for its
         # symbolic n-th derivative.
-        from sympy import Integer
+        from .numbers import Integer
         if isinstance(n, (int, Integer)):
             obj = self
             for i in range(n):
@@ -1793,6 +1809,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             method = "_eval_rewrite_as_%s" % clsname
 
         if pattern:
+            from sympy.utilities.iterables import iterable
             if iterable(pattern[0]):
                 pattern = pattern[0]
             pattern = tuple(p for p in pattern if self.has(p))
@@ -1870,6 +1887,9 @@ class Basic(Printable, metaclass=ManagedProperties):
             # call the freshly monkey-patched method
             return self._sage_()
 
+    def could_extract_minus_sign(self):
+        return False  # see Expr.could_extract_minus_sign
+
 
 class Atom(Basic):
     """
@@ -1886,8 +1906,10 @@ class Atom(Basic):
 
     __slots__ = ()
 
-    def matches(self, expr, repl_dict={}, old=False):
+    def matches(self, expr, repl_dict=None, old=False):
         if self == expr:
+            if repl_dict is None:
+                return dict()
             return repl_dict.copy()
 
     def xreplace(self, rule, hack2=False):
@@ -1945,7 +1967,7 @@ def _aresame(a, b):
     from .function import AppliedUndef, UndefinedFunction as UndefFunc
     if isinstance(a, Number) and isinstance(b, Number):
         return a == b and a.__class__ == b.__class__
-    for i, j in zip_longest(preorder_traversal(a), preorder_traversal(b)):
+    for i, j in zip_longest(_preorder_traversal(a), _preorder_traversal(b)):
         if i != j or type(i) != type(j):
             if ((isinstance(i, UndefFunc) and isinstance(j, UndefFunc)) or
                 (isinstance(i, AppliedUndef) and isinstance(j, AppliedUndef))):
@@ -1988,8 +2010,7 @@ def _atomic(e, recursive=False):
     {y, cos(x), Derivative(f(x), x)}
 
     """
-    from sympy import Derivative, Function, Symbol
-    pot = preorder_traversal(e)
+    pot = _preorder_traversal(e)
     seen = set()
     if isinstance(e, Basic):
         free = getattr(e, "free_symbols", None)
@@ -1997,6 +2018,8 @@ def _atomic(e, recursive=False):
             return {e}
     else:
         return set()
+    from .symbol import Symbol
+    from .function import Derivative, Function
     atoms = set()
     for p in pot:
         if p in seen:
@@ -2012,107 +2035,6 @@ def _atomic(e, recursive=False):
     return atoms
 
 
-class preorder_traversal:
-    """
-    Do a pre-order traversal of a tree.
-
-    This iterator recursively yields nodes that it has visited in a pre-order
-    fashion. That is, it yields the current node then descends through the
-    tree breadth-first to yield all of a node's children's pre-order
-    traversal.
-
-
-    For an expression, the order of the traversal depends on the order of
-    .args, which in many cases can be arbitrary.
-
-    Parameters
-    ==========
-    node : sympy expression
-        The expression to traverse.
-    keys : (default None) sort key(s)
-        The key(s) used to sort args of Basic objects. When None, args of Basic
-        objects are processed in arbitrary order. If key is defined, it will
-        be passed along to ordered() as the only key(s) to use to sort the
-        arguments; if ``key`` is simply True then the default keys of ordered
-        will be used.
-
-    Yields
-    ======
-    subtree : sympy expression
-        All of the subtrees in the tree.
-
-    Examples
-    ========
-
-    >>> from sympy import symbols
-    >>> from sympy.core.basic import preorder_traversal
-    >>> x, y, z = symbols('x y z')
-
-    The nodes are returned in the order that they are encountered unless key
-    is given; simply passing key=True will guarantee that the traversal is
-    unique.
-
-    >>> list(preorder_traversal((x + y)*z, keys=None)) # doctest: +SKIP
-    [z*(x + y), z, x + y, y, x]
-    >>> list(preorder_traversal((x + y)*z, keys=True))
-    [z*(x + y), z, x + y, x, y]
-
-    """
-    def __init__(self, node, keys=None):
-        self._skip_flag = False
-        self._pt = self._preorder_traversal(node, keys)
-
-    def _preorder_traversal(self, node, keys):
-        yield node
-        if self._skip_flag:
-            self._skip_flag = False
-            return
-        if isinstance(node, Basic):
-            if not keys and hasattr(node, '_argset'):
-                # LatticeOp keeps args as a set. We should use this if we
-                # don't care about the order, to prevent unnecessary sorting.
-                args = node._argset
-            else:
-                args = node.args
-            if keys:
-                if keys != True:
-                    args = ordered(args, keys, default=False)
-                else:
-                    args = ordered(args)
-            for arg in args:
-                yield from self._preorder_traversal(arg, keys)
-        elif iterable(node):
-            for item in node:
-                yield from self._preorder_traversal(item, keys)
-
-    def skip(self):
-        """
-        Skip yielding current node's (last yielded node's) subtrees.
-
-        Examples
-        ========
-
-        >>> from sympy.core import symbols
-        >>> from sympy.core.basic import preorder_traversal
-        >>> x, y, z = symbols('x y z')
-        >>> pt = preorder_traversal((x+y*z)*z)
-        >>> for i in pt:
-        ...     print(i)
-        ...     if i == x+y*z:
-        ...             pt.skip()
-        z*(x + y*z)
-        z
-        x + y*z
-        """
-        self._skip_flag = True
-
-    def __next__(self):
-        return next(self._pt)
-
-    def __iter__(self):
-        return self
-
-
 def _make_find_query(query):
     """Convert the argument of Basic.find() into a callable"""
     try:
@@ -2125,6 +2047,10 @@ def _make_find_query(query):
         return lambda expr: expr.match(query) is not None
     return query
 
-
 # Delayed to avoid cyclic import
 from .singleton import S
+from .traversal import preorder_traversal as _preorder_traversal
+
+preorder_traversal = deprecated(
+    useinstead="sympy.core.traversal.preorder_traversal",
+    deprecated_since_version="1.10", issue=22288)(_preorder_traversal)

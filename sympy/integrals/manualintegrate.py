@@ -24,7 +24,6 @@ from functools import reduce
 
 import sympy
 
-from sympy.core.compatibility import iterable
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_not
@@ -35,6 +34,7 @@ from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.core.relational import Eq, Ne
 from sympy.polys.polytools import degree
 from sympy.ntheory.factor_ import divisors
+from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
 
 ZERO = sympy.S.Zero
@@ -528,7 +528,7 @@ def _parts_rule(integrand, symbol):
 
     def pull_out_u(*functions):
         def pull_out_u_rl(integrand):
-            if any([integrand.has(f) for f in functions]):
+            if any(integrand.has(f) for f in functions):
                 args = [arg for arg in integrand.args
                         if any(isinstance(arg, cls) for cls in functions)]
                 if args:
@@ -682,7 +682,7 @@ def parts_rule(integral):
 
 def trig_rule(integral):
     integrand, symbol = integral
-    if isinstance(integrand, sympy.sin) or isinstance(integrand, sympy.cos):
+    if isinstance(integrand, (sympy.sin, sympy.cos)):
         arg = integrand.args[0]
 
         if not isinstance(arg, sympy.Symbol):
@@ -1232,7 +1232,7 @@ def integral_steps(integrand, symbol, **options):
     >>> print(repr(integral_steps(sin(x), x))) \
     # doctest: +NORMALIZE_WHITESPACE
     TrigRule(func='sin', arg=x, context=sin(x), symbol=x)
-    >>> print(repr(integral_steps((x**2 + 3)**2 , x))) \
+    >>> print(repr(integral_steps((x**2 + 3)**2, x))) \
     # doctest: +NORMALIZE_WHITESPACE
     RewriteRule(rewritten=x**4 + 6*x**2 + 9,
     substep=AddRule(substeps=[PowerRule(base=x, exp=4, context=x**4, symbol=x),

@@ -5,8 +5,9 @@ if typing.TYPE_CHECKING:
     from typing import Any, Callable, Dict, Type
 
 from inspect import getmro
+import string
+from random import choice
 
-from .compatibility import iterable
 from .parameters import global_parameters
 
 
@@ -35,7 +36,8 @@ class CantSympify:
     Examples
     ========
 
-    >>> from sympy.core.sympify import sympify, CantSympify
+    >>> from sympy import sympify
+    >>> from sympy.core.sympify import CantSympify
 
     >>> class Something(dict):
     ...     pass
@@ -77,7 +79,7 @@ def _convert_numpy_types(a, **sympify_args):
             return sympify(a.item(), **sympify_args)
     else:
         try:
-            from sympy.core.numbers import Float
+            from .numbers import Float
             prec = np.finfo(a).nmant + 1
             # E.g. double precision means prec=53 but nmant=52
             # Leading bit of mantissa is always 1, so is not stored
@@ -387,7 +389,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if _sympy_ is not None:
         try:
             return a._sympy_()
-        # XXX: Catches AttributeError: 'SympyConverter' object has no
+        # XXX: Catches AttributeError: 'SymPyConverter' object has no
         # attribute 'tuple'
         # This is probably a bug somewhere but for now we catch it here.
         except AttributeError:
@@ -400,7 +402,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         if flat is not None:
             shape = getattr(a, "shape", None)
             if shape is not None:
-                from ..tensor.array import Array
+                from sympy.tensor.array import Array
                 return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
 
     if not isinstance(a, str):
@@ -431,6 +433,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     if strict:
         raise SympifyError(a)
+
+    from sympy.utilities.iterables import iterable
 
     if iterable(a):
         try:
@@ -531,9 +535,6 @@ def kernS(s):
 
     XXX This hack should not be necessary once issue 4596 has been resolved.
     """
-    import string
-    from random import choice
-    from sympy.core.symbol import Symbol
     hit = False
     quoted = '"' in s or "'" in s
     if '(' in s and not quoted:
@@ -597,6 +598,7 @@ def kernS(s):
     if not hit:
         return expr
 
+    from .symbol import Symbol
     rep = {Symbol(kern): 1}
     def _clear(expr):
         if isinstance(expr, (list, tuple, set)):

@@ -11,11 +11,13 @@ import keyword
 import textwrap
 import linecache
 
+from sympy.core.basic import Basic
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.core.compatibility import (is_sequence, iterable,
+from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.iterables import (is_sequence, iterable,
     NotIterable)
 from sympy.utilities.misc import filldedent
-from sympy.utilities.decorator import doctest_depends_on
+
 
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
@@ -126,7 +128,7 @@ def _import(module, reload=False):
             module]
     except KeyError:
         raise NameError(
-            "'%s' module can't be used for lambdification" % module)
+            "'%s' module cannot be used for lambdification" % module)
 
     # Clear namespace or exit
     if namespace != namespace_default:
@@ -152,7 +154,7 @@ def _import(module, reload=False):
                 pass
 
         raise ImportError(
-            "can't import '%s' with '%s' command" % (module, import_command))
+            "Cannot import '%s' with '%s' command" % (module, import_command))
 
     # Add translated names to namespace
     for sympyname, translation in translations.items():
@@ -527,7 +529,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
 
         # sin_cos_sympy.py
 
-        from sympy import sin, cos
+        from sympy.functions.elementary.trigonometric import (cos, sin)
 
         def sin_cos(x):
             return sin(x) + cos(x)
@@ -858,8 +860,8 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
     if cse == True:
-        from sympy.simplify.cse_main import cse
-        cses, _expr = cse(expr, list=False)
+        from sympy.simplify.cse_main import cse as _cse
+        cses, _expr = _cse(expr, list=False)
     elif callable(cse):
         cses, _expr = cse(expr)
     else:
@@ -936,6 +938,29 @@ def _get_namespace(m):
     else:
         raise TypeError("Argument must be either a string, dict or module but it is: %s" % m)
 
+
+def _recursive_to_string(doprint, arg):
+    """Functions in lambdify accept both sympy types and non-sympy types such as python
+    lists and tuples. This method ensures that we only call the doprint method of the
+    printer with SymPy types (so that the printer safely can use SymPy-methods)."""
+    from sympy.matrices.common import MatrixOperations
+
+    if isinstance(arg, (Basic, MatrixOperations)):
+        return doprint(arg)
+    elif iterable(arg):
+        if isinstance(arg, list):
+            left, right = "[]"
+        elif isinstance(arg, tuple):
+            left, right = "()"
+        else:
+            raise NotImplementedError("unhandled type: %s, %s" % (type(arg), arg))
+        return left +', '.join(_recursive_to_string(doprint, e) for e in arg) + right
+    elif isinstance(arg, str):
+        return arg
+    else:
+        return doprint(arg)
+
+
 def lambdastr(args, expr, printer=None, dummify=None):
     """
     Returns a string that can be evaluated to a lambda function.
@@ -959,7 +984,10 @@ def lambdastr(args, expr, printer=None, dummify=None):
     """
     # Transforming everything to strings.
     from sympy.matrices import DeferredVector
-    from sympy import Dummy, sympify, Symbol, Function, flatten, Derivative, Basic
+    from sympy.core.function import (Derivative, Function)
+    from sympy.core.symbol import (Dummy, Symbol)
+    from sympy.core.sympify import sympify
+    from sympy.utilities.iterables import flatten
 
     if printer is not None:
         if inspect.isfunction(printer):
@@ -1047,7 +1075,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
             pass
         else:
             expr = sub_expr(expr, dummies_dict)
-    expr = lambdarepr(expr)
+    expr = _recursive_to_string(lambdarepr, expr)
     return "lambda %s: (%s)" % (args, expr)
 
 class _EvaluatorPrinter:
@@ -1081,7 +1109,7 @@ class _EvaluatorPrinter:
         """
         Returns the function definition code as a string.
         """
-        from sympy import Dummy
+        from sympy.core.symbol import Dummy
 
         funcbody = []
 
@@ -1108,15 +1136,21 @@ class _EvaluatorPrinter:
 
         funcbody.extend(unpackings)
 
-        funcbody.extend(['{} = {}'.format(s, self._exprrepr(e)) for s, e in cses])
+        for s, e in cses:
+            if e is None:
+                funcbody.append('del {}'.format(s))
+            else:
+                funcbody.append('{} = {}'.format(s, self._exprrepr(e)))
 
-        str_expr = self._exprrepr(expr)
+        str_expr = _recursive_to_string(self._exprrepr, expr)
+
+
         if '\n' in str_expr:
             str_expr = '({})'.format(str_expr)
         funcbody.append('return {}'.format(str_expr))
 
         funclines = [funcsig]
-        funclines.extend('    ' + line for line in funcbody)
+        funclines.extend(['    ' + line for line in funcbody])
 
         return '\n'.join(funclines) + '\n'
 
@@ -1131,7 +1165,11 @@ class _EvaluatorPrinter:
 
         Returns string form of args, and updated expr.
         """
-        from sympy import Dummy, Function, flatten, Derivative, ordered, Basic
+        from sympy.core.basic import Basic
+        from sympy.core.sorting import ordered
+        from sympy.core.function import (Derivative, Function)
+        from sympy.core.symbol import Dummy
+        from sympy.utilities.iterables import flatten
         from sympy.matrices import DeferredVector
         from sympy.core.symbol import uniquely_named_symbol
         from sympy.core.expr import Expr
@@ -1168,7 +1206,7 @@ class _EvaluatorPrinter:
 
     def _subexpr(self, expr, dummies_dict):
         from sympy.matrices import DeferredVector
-        from sympy import sympify
+        from sympy.core.sympify import sympify
 
         expr = sympify(expr)
         xreplace = getattr(expr, 'xreplace', None)
@@ -1217,7 +1255,7 @@ class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
         This method is used when the input value is not interable,
         but can be indexed (see issue #14655).
         """
-        from sympy import flatten
+        from sympy.utilities.iterables import flatten
 
         def flat_indexes(elems):
             n = 0

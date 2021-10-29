@@ -9,14 +9,12 @@ from collections.abc import Iterable
 from inspect import isfunction
 from functools import reduce
 
-from sympy.core.logic import FuzzyBool
 from sympy.assumptions.refine import refine
 from sympy.core import SympifyError, Add
 from sympy.core.basic import Atom
-from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.decorators import call_highest_priority
 from sympy.core.kind import Kind, NumberKind
-from sympy.core.logic import fuzzy_and
+from sympy.core.logic import fuzzy_and, FuzzyBool
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
@@ -25,8 +23,8 @@ from sympy.polys.polytools import Poly
 from sympy.simplify import simplify as _simplify
 from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import flatten
-from sympy.utilities.misc import filldedent
+from sympy.utilities.iterables import flatten, is_sequence
+from sympy.utilities.misc import as_int, filldedent
 from sympy.tensor.array import NDimArray
 
 from .utilities import _get_intermediate_simp_bool
@@ -105,8 +103,7 @@ class MatrixShaping(MatrixRequired):
                 return other[i, j - pos]
             return self[i, j - other.cols]
 
-        return self._new(self.rows, self.cols + other.cols,
-                         lambda i, j: entry(i, j))
+        return self._new(self.rows, self.cols + other.cols, entry)
 
     def _eval_col_join(self, other):
         rows = self.rows
@@ -117,7 +114,7 @@ class MatrixShaping(MatrixRequired):
             return other[i - rows, j]
 
         return classof(self, other)._new(self.rows + other.rows, self.cols,
-                                         lambda i, j: entry(i, j))
+                                         entry)
 
     def _eval_extract(self, rowsList, colsList):
         mat = list(self)
@@ -172,7 +169,7 @@ class MatrixShaping(MatrixRequired):
             return other[i, j - cols]
 
         return classof(self, other)._new(self.rows, self.cols + other.cols,
-                                         lambda i, j: entry(i, j))
+                                         entry)
 
     def _eval_tolist(self):
         return [list(self[i,:]) for i in range(self.rows)]
@@ -931,7 +928,7 @@ class MatrixSpecial(MatrixRequired):
        """
         from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.dense import Matrix
-        from sympy.matrices.sparse import SparseMatrix
+        from sympy.matrices import SparseMatrix
         klass = kwargs.get('cls', kls)
         if unpack and len(args) == 1 and is_sequence(args[0]) and \
                 not isinstance(args[0], MatrixBase):
@@ -1468,7 +1465,7 @@ class MatrixProperties(MatrixRequired):
 
         >>> from sympy.abc import x, y
         >>> m = Matrix(3, 3, [0, x**2 + 2*x + 1, y,
-        ...                   -(x + 1)**2 , 0, x*y,
+        ...                   -(x + 1)**2, 0, x*y,
         ...                   -y, -x*y, 0])
 
         Simplification of matrix elements is done by default so even
@@ -1734,7 +1731,7 @@ class MatrixProperties(MatrixRequired):
         >>> m.is_lower
         True
 
-        >>> m = Matrix(4, 3, [0, 0, 0, 2, 0, 0, 1, 4 , 0, 6, 6, 5])
+        >>> m = Matrix(4, 3, [0, 0, 0, 2, 0, 0, 1, 4, 0, 6, 6, 5])
         >>> m
         Matrix([
         [0, 0, 0],
@@ -1838,7 +1835,7 @@ class MatrixProperties(MatrixRequired):
         False
 
         >>> from sympy.abc import x, y
-        >>> m = Matrix(3, 3, [1, x**2 + 2*x + 1, y, (x + 1)**2 , 2, 0, y, 0, 3])
+        >>> m = Matrix(3, 3, [1, x**2 + 2*x + 1, y, (x + 1)**2, 2, 0, y, 0, 3])
         >>> m
         Matrix([
         [         1, x**2 + 2*x + 1, y],
@@ -1911,7 +1908,7 @@ class MatrixProperties(MatrixRequired):
         >>> m.is_upper
         True
 
-        >>> m = Matrix(4, 3, [5, 1, 9, 0, 4 , 6, 0, 0, 5, 0, 0, 0])
+        >>> m = Matrix(4, 3, [5, 1, 9, 0, 4, 6, 0, 0, 5, 0, 0, 0])
         >>> m
         Matrix([
         [5, 1, 9],
@@ -2682,7 +2679,7 @@ class MatrixArithmetic(MatrixRequired):
         return self._new(self.rows, self.cols, lambda i, j: other*self[i,j])
 
     def _eval_Mod(self, other):
-        from sympy import Mod
+        from sympy.core.mod import Mod
         return self._new(self.rows, self.cols, lambda i, j: Mod(self[i, j], other))
 
     # python arithmetic functions
@@ -2692,7 +2689,7 @@ class MatrixArithmetic(MatrixRequired):
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        """Return self + other, raising ShapeError if shapes don't match."""
+        """Return self + other, raising ShapeError if shapes do not match."""
         if isinstance(other, NDimArray): # Matrix and array addition is currently not implemented
             return NotImplemented
         other = _matrixify(other)
@@ -3050,7 +3047,7 @@ class _MinimalMatrix:
 
     def __getitem__(self, key):
         def _normalize_slices(row_slice, col_slice):
-            """Ensure that row_slice and col_slice don't have
+            """Ensure that row_slice and col_slice do not have
             `None` in their arguments.  Any integers are converted
             to slices of length 1"""
             if not isinstance(row_slice, slice):
@@ -3184,8 +3181,8 @@ class MatrixKind(Kind):
     the element kind. Use ``is`` with specifying the element kind.
 
     >>> from sympy import Matrix
+    >>> from sympy.core import NumberKind
     >>> from sympy.matrices import MatrixKind
-    >>> from sympy.core.kind import NumberKind
     >>> M = Matrix([1, 2])
     >>> isinstance(M.kind, MatrixKind)
     True
@@ -3234,7 +3231,7 @@ def _matrixify(mat):
 
 def a2idx(j, n=None):
     """Return integer after making positive and validating against n."""
-    if type(j) is not int:
+    if not isinstance(j, int):
         jindex = getattr(j, '__index__', None)
         if jindex is not None:
             j = jindex()

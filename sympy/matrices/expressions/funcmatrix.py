@@ -38,7 +38,7 @@ class FunctionMatrix(MatrixExpr):
 
     Creating a ``FunctionMatrix`` from a sympy function:
 
-    >>> from sympy.functions import KroneckerDelta
+    >>> from sympy import KroneckerDelta
     >>> X = FunctionMatrix(3, 3, KroneckerDelta)
     >>> X.as_explicit()
     Matrix([
@@ -48,7 +48,7 @@ class FunctionMatrix(MatrixExpr):
 
     Creating a ``FunctionMatrix`` from a sympy undefined function:
 
-    >>> from sympy.core.function import Function
+    >>> from sympy import Function
     >>> f = Function('f')
     >>> X = FunctionMatrix(3, 3, f)
     >>> X.as_explicit()
@@ -111,7 +111,7 @@ class FunctionMatrix(MatrixExpr):
 
     def _eval_trace(self):
         from sympy.matrices.expressions.trace import Trace
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         return Trace(self).rewrite(Sum).doit()
 
     def as_real_imag(self):

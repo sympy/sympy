@@ -1,24 +1,25 @@
-from sympy import ask, Q
+from sympy.assumptions.ask import (Q, ask)
 from sympy.core import Basic, Add, Mul, S
 from sympy.core.sympify import _sympify
-from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.functions.elementary.complexes import re, im
 from sympy.strategies import typed, exhaust, condition, do_one, unpack
 from sympy.strategies.traverse import bottom_up
-from sympy.utilities import sift
+from sympy.utilities.iterables import is_sequence, sift
 from sympy.utilities.misc import filldedent
 
+from sympy.matrices import Matrix, ShapeError
+from sympy.matrices.common import NonInvertibleMatrixError
+from sympy.matrices.expressions.determinant import det, Determinant
+from sympy.matrices.expressions.inverse import Inverse
+from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matexpr import MatrixExpr, MatrixElement
 from sympy.matrices.expressions.matmul import MatMul
-from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matpow import MatPow
-from sympy.matrices.expressions.transpose import Transpose, transpose
-from sympy.matrices.expressions.trace import trace
-from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.slice import MatrixSlice
-from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices.expressions.special import ZeroMatrix, Identity
-from sympy.matrices import Matrix, ShapeError
-from sympy.functions.elementary.complexes import re, im
+from sympy.matrices.expressions.trace import trace
+from sympy.matrices.expressions.transpose import Transpose, transpose
+
 
 class BlockMatrix(MatrixExpr):
     """A BlockMatrix is a Matrix comprised of other matrices.
@@ -30,7 +31,7 @@ class BlockMatrix(MatrixExpr):
     ...     Identity, ZeroMatrix, block_collapse)
     >>> n,m,l = symbols('n m l')
     >>> X = MatrixSymbol('X', n, n)
-    >>> Y = MatrixSymbol('Y', m ,m)
+    >>> Y = MatrixSymbol('Y', m, m)
     >>> Z = MatrixSymbol('Z', n, m)
     >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
     >>> print(B)
@@ -78,7 +79,6 @@ class BlockMatrix(MatrixExpr):
     """
     def __new__(cls, *args, **kwargs):
         from sympy.matrices.immutable import ImmutableDenseMatrix
-        from sympy.utilities.iterables import is_sequence
         isMat = lambda i: getattr(i, 'is_Matrix', False)
         if len(args) != 1 or \
                 not is_sequence(args[0]) or \
@@ -222,7 +222,7 @@ class BlockMatrix(MatrixExpr):
         >>> from sympy import MatrixSymbol, BlockMatrix, ZeroMatrix
         >>> from sympy.abc import m, n
         >>> X = MatrixSymbol('X', n, n)
-        >>> Y = MatrixSymbol('Y', m ,m)
+        >>> Y = MatrixSymbol('Y', m, m)
         >>> Z = MatrixSymbol('Z', n, m)
         >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
         >>> B.transpose()
@@ -560,7 +560,7 @@ class BlockDiagMatrix(BlockMatrix):
     >>> from sympy import MatrixSymbol, BlockDiagMatrix, symbols
     >>> n, m, l = symbols('n m l')
     >>> X = MatrixSymbol('X', n, n)
-    >>> Y = MatrixSymbol('Y', m ,m)
+    >>> Y = MatrixSymbol('Y', m, m)
     >>> BlockDiagMatrix(X, Y)
     Matrix([
     [X, 0],
@@ -677,11 +677,10 @@ class BlockDiagMatrix(BlockMatrix):
 def block_collapse(expr):
     """Evaluates a block matrix expression
 
-    >>> from sympy import MatrixSymbol, BlockMatrix, symbols, \
-                          Identity, ZeroMatrix, block_collapse
+    >>> from sympy import MatrixSymbol, BlockMatrix, symbols, Identity, ZeroMatrix, block_collapse
     >>> n,m,l = symbols('n m l')
     >>> X = MatrixSymbol('X', n, n)
-    >>> Y = MatrixSymbol('Y', m ,m)
+    >>> Y = MatrixSymbol('Y', m, m)
     >>> Z = MatrixSymbol('Z', n, m)
     >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m, n), Y]])
     >>> print(B)
@@ -895,7 +894,6 @@ def deblock(B):
     wrap = lambda x: x if isinstance(x, BlockMatrix) else BlockMatrix([[x]])
     bb = B.blocks.applyfunc(wrap)  # everything is a block
 
-    from sympy import Matrix
     try:
         MM = Matrix(0, sum(bb[0, i].blocks.shape[1] for i in range(bb.shape[1])), [])
         for row in range(0, bb.shape[0]):

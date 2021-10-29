@@ -1,5 +1,16 @@
-from sympy import (symbols, factor, Function, simplify, exp, oo, I,
-    S, Mul, Pow, Add, Rational, sqrt, CRootOf, eye)
+from sympy.core.add import Add
+from sympy.core.function import Function
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.dense import eye
+from sympy.polys.polytools import factor
+from sympy.polys.rootoftools import CRootOf
+from sympy.simplify.simplify import simplify
 from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix, Matrix
 from sympy.physics.control import (TransferFunction, Series, Parallel,

@@ -6,7 +6,12 @@ TODO:
 * Document default basis functionality.
 """
 
-from sympy import Add, Expr, I, integrate, Mul, Pow
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.numbers import I
+from sympy.core.power import Pow
+from sympy.integrals.integrals import integrate
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
@@ -167,7 +172,7 @@ def represent(expr, **options):
         return result
     elif isinstance(expr, Pow):
         base, exp = expr.as_base_exp()
-        if format == 'numpy' or format == 'scipy.sparse':
+        if format in ('numpy', 'scipy.sparse'):
             exp = _sympy_to_scalar(exp)
         base = represent(base, **options)
         # scipy.sparse doesn't support negative exponents
@@ -192,13 +197,13 @@ def represent(expr, **options):
         return A*B + B*A
     elif isinstance(expr, InnerProduct):
         return represent(Mul(expr.bra, expr.ket), **options)
-    elif not (isinstance(expr, Mul) or isinstance(expr, OuterProduct)):
+    elif not isinstance(expr, (Mul, OuterProduct)):
         # For numpy and scipy.sparse, we can only handle numerical prefactors.
-        if format == 'numpy' or format == 'scipy.sparse':
+        if format in ('numpy', 'scipy.sparse'):
             return _sympy_to_scalar(expr)
         return expr
 
-    if not (isinstance(expr, Mul) or isinstance(expr, OuterProduct)):
+    if not isinstance(expr, (Mul, OuterProduct)):
         raise TypeError('Mul expected, got: %r' % expr)
 
     if "index" in options:
@@ -539,7 +544,7 @@ def enumerate_states(*args, **options):
 
     state = args[0]
 
-    if not (len(args) == 2 or len(args) == 3):
+    if len(args) not in (2, 3):
         raise NotImplementedError("Wrong number of arguments!")
 
     if not isinstance(state, StateBase):

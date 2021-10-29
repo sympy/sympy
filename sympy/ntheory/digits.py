@@ -1,7 +1,7 @@
 from collections import defaultdict
 
-from sympy.core.compatibility import as_int
 from sympy.utilities.iterables import multiset, is_palindromic as _palindromic
+from sympy.utilities.misc import as_int
 
 
 def digits(n, b=10, digits=None):

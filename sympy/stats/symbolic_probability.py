@@ -1,9 +1,17 @@
 import itertools
 
-from sympy import (Expr, Add, Mul, S, Integral, Eq, Sum, Symbol,
-                    expand as _expand, Not)
-from sympy.core.compatibility import default_sort_key
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.function import expand as _expand
+from sympy.core.mul import Mul
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import Not
 from sympy.core.parameters import global_parameters
+from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import _sympify
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
@@ -20,7 +28,7 @@ def _(x):
     atoms = x.free_symbols
     if len(atoms) == 1 and next(iter(atoms)) == x:
         return False
-    return any([is_random(i) for i in atoms])
+    return any(is_random(i) for i in atoms)
 
 @is_random.register(RandomSymbol)  # type: ignore
 def _(x):
@@ -80,7 +88,7 @@ class Probability(Expr):
             if len(condrv) == 1 and condrv[0] == given_condition:
                 from sympy.stats.frv_types import BernoulliDistribution
                 return BernoulliDistribution(self.func(condition).doit(**hints), 0, 1)
-            if any([dependent(rv, given_condition) for rv in condrv]):
+            if any(dependent(rv, given_condition) for rv in condrv):
                 return Probability(condition, given_condition)
             else:
                 return Probability(condition).doit()

@@ -1,9 +1,17 @@
 import string
 
-from sympy import (
-    Symbol, symbols, Dummy, S, Sum, Rational, oo, pi, I, floor, limit,
-    expand_func, diff, EulerGamma, cancel, re, im, Product, carmichael,
-    TribonacciConstant)
+from sympy.concrete.products import Product
+from sympy.concrete.summations import Sum
+from sympy.core.function import (diff, expand_func)
+from sympy.core import (EulerGamma, TribonacciConstant)
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.combinatorial.numbers import carmichael
+from sympy.functions.elementary.complexes import (im, re)
+from sympy.functions.elementary.integers import floor
+from sympy.polys.polytools import cancel
+from sympy.series.limits import limit
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
     genocchi, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
@@ -358,7 +366,7 @@ def test_euler_polynomials():
     assert euler(3, x) == x**3 - (3*x**2)/2 + Rational(1, 4)
     m = Symbol('m')
     assert isinstance(euler(m, x), euler)
-    from sympy import Float
+    from sympy.core.numbers import Float
     A = Float('-0.46237208575048694923364757452876131e8')  # from Maple
     B = euler(19, S.Pi.evalf(32))
     assert abs((A - B)/A) < 1e-31  # expect low relative error
@@ -479,7 +487,6 @@ def test_nC_nP_nT():
         nP, nC, nT, stirling, _stirling1, _stirling2, _multiset_histogram, _AOP_product)
 
     from sympy.combinatorics.permutations import Permutation
-    from sympy.core.numbers import oo
     from random import choice
 
     c = string.ascii_lowercase

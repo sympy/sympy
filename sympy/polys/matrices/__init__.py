@@ -8,8 +8,8 @@ implementation is typically a lot faster than sympy's standard Matrix class
 but is a work in progress and is still experimental.
 
 """
-from .domainmatrix import DomainMatrix
+from .domainmatrix import DomainMatrix, DM
 
 __all__ = [
-    'DomainMatrix',
+    'DomainMatrix', 'DM',
 ]

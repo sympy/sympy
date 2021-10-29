@@ -1,7 +1,15 @@
-from sympy import (Symbol, Rational, ln, exp, log, sqrt, E, O, pi, I, sinh,
-    sin, cosh, cos, tanh, coth, asinh, acosh, atanh, acoth, tan, cot, Integer,
-    PoleError, floor, ceiling, asin, symbols, limit, sign, cbrt,
-    Derivative, S)
+from sympy.core.function import (Derivative, PoleError)
+from sympy.core.numbers import (E, I, Integer, Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (acosh, acoth, asinh, atanh, cosh, coth, sinh, tanh)
+from sympy.functions.elementary.integers import (ceiling, floor)
+from sympy.functions.elementary.miscellaneous import (cbrt, sqrt)
+from sympy.functions.elementary.trigonometric import (asin, cos, cot, sin, tan)
+from sympy.series.limits import limit
+from sympy.series.order import O
 from sympy.abc import x, y, z
 
 from sympy.testing.pytest import raises, XFAIL
@@ -16,13 +24,13 @@ def test_simple_1():
 
 
 def test_mul_0():
-    assert (x*ln(x)).nseries(x, n=5) == x*ln(x)
+    assert (x*log(x)).nseries(x, n=5) == x*log(x)
 
 
 def test_mul_1():
-    assert (x*ln(2 + x)).nseries(x, n=5) == x*log(2) + x**2/2 - x**3/8 + \
+    assert (x*log(2 + x)).nseries(x, n=5) == x*log(2) + x**2/2 - x**3/8 + \
         x**4/24 + O(x**5)
-    assert (x*ln(1 + x)).nseries(
+    assert (x*log(1 + x)).nseries(
         x, n=5) == x**2 - x**3/2 + x**4/3 + O(x**5)
 
 
@@ -72,7 +80,7 @@ def test_exp_sqrt_1():
 
 
 def test_power_x_x1():
-    assert (exp(x*ln(x))).nseries(x, n=4) == \
+    assert (exp(x*log(x))).nseries(x, n=4) == \
         1 + x*log(x) + x**2*log(x)**2/2 + x**3*log(x)**3/6 + O(x**4*log(x)**4)
 
 
@@ -277,7 +285,6 @@ def test_issue_3224():
 
 
 def test_issue_3463():
-    from sympy import symbols
     w, i = symbols('w,i')
     r = log(5)/log(3)
     p = w**(-1 + r)

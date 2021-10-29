@@ -64,7 +64,7 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 - Test other C compilers and libraries: gcc, tcc, libtcc, gcc+gsl, ...
 - Contiguous array arguments (sympy matrices)
 - Non-contiguous array arguments (sympy matrices)
-- ccode must raise an error when it encounters something that can not be
+- ccode must raise an error when it encounters something that cannot be
   translated into c. ccode(integrate(sin(x)/x, x)) does not make sense.
 - Complex numbers as input and output
 - A default complex datatype
@@ -85,7 +85,6 @@ from io import StringIO
 
 from sympy import __version__ as sympy_version
 from sympy.core import Symbol, S, Tuple, Equality, Function, Basic
-from sympy.core.compatibility import is_sequence
 from sympy.printing.c import c_code_printers
 from sympy.printing.codeprinter import AssignmentError
 from sympy.printing.fortran import FCodePrinter
@@ -95,6 +94,7 @@ from sympy.printing.rust import RustCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
                             MatrixExpr, MatrixSlice)
+from sympy.utilities.iterables import is_sequence
 
 
 __all__ = [
@@ -2172,6 +2172,9 @@ def make_routine(name, expr, argument_sequence=None,
         Specify a target language.  The Routine itself should be
         language-agnostic but the precise way one is created, error
         checking, etc depend on the language.  [default: "F95"].
+
+    Notes
+    =====
 
     A decision about whether to use output arguments or return values is made
     depending on both the language and the particular mathematical expressions.

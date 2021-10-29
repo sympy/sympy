@@ -81,7 +81,7 @@ in a shorter form.
 
 .. code-block:: python
 
-    from sympy import Symbol
+    from sympy.core.symbol import Symbol
     from sympy.printing.latex import LatexPrinter, print_latex
     from sympy.core.function import UndefinedFunction, Function
 
@@ -142,16 +142,16 @@ This is done by overriding the method ``_latex`` of ``Mod``.
 >>> class ModOp(Mod):
 ...     def _latex(self, printer):
 ...         a, b = [printer._print(i) for i in self.args]
-...         return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
+...         return r"\\operatorname{Mod}{\\left(%s, %s\\right)}" % (a, b)
 
 Comparing the output of our custom operator to the builtin one:
 
 >>> x = Symbol('x')
 >>> m = Symbol('m')
 >>> print_latex(Mod(x, m))
-x\\bmod{m}
+x \\bmod m
 >>> print_latex(ModOp(x, m))
-\\operatorname{Mod}{\\left( x,m \\right)}
+\\operatorname{Mod}{\\left(x, m\\right)}
 
 Common mistakes
 ~~~~~~~~~~~~~~~
@@ -165,29 +165,29 @@ an expression when customizing a printer. Mistakes include:
     >>> class ModOpModeWrong(Mod):
     ...     def _latex(self, printer):
     ...         a, b = [printer.doprint(i) for i in self.args]
-    ...         return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
+    ...         return r"\\operatorname{Mod}{\\left(%s, %s\\right)}" % (a, b)
 
     This fails when the `mode` argument is passed to the printer:
 
     >>> print_latex(ModOp(x, m), mode='inline')  # ok
-    $\\operatorname{Mod}{\\left( x,m \\right)}$
+    $\\operatorname{Mod}{\\left(x, m\\right)}$
     >>> print_latex(ModOpModeWrong(x, m), mode='inline')  # bad
-    $\\operatorname{Mod}{\\left( $x$,$m$ \\right)}$
+    $\\operatorname{Mod}{\\left($x$, $m$\\right)}$
 
 2.  Using ``str(obj)`` instead:
 
     >>> class ModOpNestedWrong(Mod):
     ...     def _latex(self, printer):
     ...         a, b = [str(i) for i in self.args]
-    ...         return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
+    ...         return r"\\operatorname{Mod}{\\left(%s, %s\\right)}" % (a, b)
 
     This fails on nested objects:
 
     >>> # Nested modulo.
     >>> print_latex(ModOp(ModOp(x, m), Integer(7)))  # ok
-    \\operatorname{Mod}{\\left( \\operatorname{Mod}{\\left( x,m \\right)},7 \\right)}
+    \\operatorname{Mod}{\\left(\\operatorname{Mod}{\\left(x, m\\right)}, 7\\right)}
     >>> print_latex(ModOpNestedWrong(ModOpNestedWrong(x, m), Integer(7)))  # bad
-    \\operatorname{Mod}{\\left( ModOpNestedWrong(x, m),7 \\right)}
+    \\operatorname{Mod}{\\left(ModOpNestedWrong(x, m), 7\\right)}
 
 3.  Using ``LatexPrinter()._print(obj)`` instead.
 
@@ -195,7 +195,7 @@ an expression when customizing a printer. Mistakes include:
     >>> class ModOpSettingsWrong(Mod):
     ...     def _latex(self, printer):
     ...         a, b = [LatexPrinter()._print(i) for i in self.args]
-    ...         return r"\\operatorname{Mod}{\\left( %s,%s \\right)}" % (a,b)
+    ...         return r"\\operatorname{Mod}{\\left(%s, %s\\right)}" % (a, b)
 
     This causes all the settings to be discarded in the subobjects. As an
     example, the ``full_prec`` setting which shows floats to full precision is
@@ -203,18 +203,20 @@ an expression when customizing a printer. Mistakes include:
 
     >>> from sympy import Float
     >>> print_latex(ModOp(Float(1) * x, m), full_prec=True)  # ok
-    \\operatorname{Mod}{\\left( 1.00000000000000 x,m \\right)}
+    \\operatorname{Mod}{\\left(1.00000000000000 x, m\\right)}
     >>> print_latex(ModOpSettingsWrong(Float(1) * x, m), full_prec=True)  # bad
-    \\operatorname{Mod}{\\left( 1.0 x,m \\right)}
+    \\operatorname{Mod}{\\left(1.0 x, m\\right)}
 
 """
 
+import sys
 from typing import Any, Dict, Type
 import inspect
 from contextlib import contextmanager
 from functools import cmp_to_key, update_wrapper
 
-from sympy import Basic, Add
+from sympy.core.add import Add
+from sympy.core.basic import Basic
 
 from sympy.core.core import BasicMeta
 from sympy.core.function import AppliedUndef, UndefinedFunction, Function
@@ -324,9 +326,10 @@ class Printer:
                     c.__name__ == classes[0].__name__ or \
                     c.__name__.endswith("Base")) + classes[i:]
             for cls in classes:
-                printmethod = '_print_' + cls.__name__
-                if hasattr(self, printmethod):
-                    return getattr(self, printmethod)(expr, **kwargs)
+                printmethodname = '_print_' + cls.__name__
+                printmethod = getattr(self, printmethodname, None)
+                if printmethod is not None:
+                    return printmethod(expr, **kwargs)
             # Unknown object, fall back to the emptyPrinter.
             return self.emptyPrinter(expr)
         finally:
@@ -366,9 +369,6 @@ class _PrintFunction:
         # because the wrapped function can't be retrieved by name.
         return self.__wrapped__.__qualname__
 
-    def __repr__(self) -> str:
-        return repr(self.__wrapped__)  # type:ignore
-
     def __call__(self, *args, **kwargs):
         return self.__wrapped__(*args, **kwargs)
 
@@ -387,5 +387,11 @@ class _PrintFunction:
 def print_function(print_cls):
     """ A decorator to replace kwargs with the printer settings in __signature__ """
     def decorator(f):
-        return _PrintFunction(f, print_cls)
+        if sys.version_info < (3, 9):
+            # We have to create a subclass so that `help` actually shows the docstring in older python versions.
+            # IPython and Sphinx do not need this, only a raw python console.
+            cls = type(f'{f.__qualname__}_PrintFunction', (_PrintFunction,), dict(__doc__=f.__doc__))
+        else:
+            cls = _PrintFunction
+        return cls(f, print_cls)
     return decorator

@@ -1,16 +1,25 @@
 import functools
+from typing import List
 
-from sympy import Basic, Tuple, S
+from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
+from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
-from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
+from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray, ArrayKind
 from sympy.simplify.simplify import simplify
 
 
 class DenseNDimArray(NDimArray):
 
+    _array: List[Basic]
+
     def __new__(self, *args, **kwargs):
         return ImmutableDenseNDimArray(*args, **kwargs)
+
+    @property
+    def kind(self) -> ArrayKind:
+        return ArrayKind._union(self._array)
 
     def __getitem__(self, index):
         """
@@ -51,7 +60,7 @@ class DenseNDimArray(NDimArray):
 
         index = self._check_index_for_getitem(index)
 
-        if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
+        if isinstance(index, tuple) and any(isinstance(i, slice) for i in index):
             sl_factors, eindices = self._get_slice_data_for_array_access(index)
             array = [self._array[self._parse_index(i)] for i in eindices]
             nshape = [len(el) for i, el in enumerate(sl_factors) if isinstance(index[i], slice)]
@@ -119,7 +128,7 @@ class DenseNDimArray(NDimArray):
         return type(self)(self._array, newshape)
 
 
-class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray):
+class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray): # type: ignore
     """
 
     """
@@ -184,7 +193,7 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
         [[1, 0], [0, 1]]
 
         """
-        if isinstance(index, tuple) and any([isinstance(i, slice) for i in index]):
+        if isinstance(index, tuple) and any(isinstance(i, slice) for i in index):
             value, eindices, slice_offsets = self._get_slice_data_for_array_assignment(index, value)
             for i in eindices:
                 other_i = [ind - j for ind, j in zip(i, slice_offsets) if j is not None]

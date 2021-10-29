@@ -1,4 +1,4 @@
-from sympy import S
+from sympy.core.singleton import S
 from sympy.physics.vector import Vector, ReferenceFrame, Dyadic
 from sympy.testing.pytest import raises
 

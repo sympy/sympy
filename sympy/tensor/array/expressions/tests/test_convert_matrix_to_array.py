@@ -1,4 +1,11 @@
-from sympy import MatrixSymbol, Transpose, Inverse, Trace, HadamardProduct, HadamardPower, MatPow, symbols, Identity
+from sympy.core.symbol import symbols
+from sympy.matrices.expressions.hadamard import (HadamardPower, HadamardProduct)
+from sympy.matrices.expressions.inverse import Inverse
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.matpow import MatPow
+from sympy.matrices.expressions.special import Identity
+from sympy.matrices.expressions.trace import Trace
+from sympy.matrices.expressions.transpose import Transpose
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayContraction, \
     PermuteDims, ArrayDiagonal
 from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
