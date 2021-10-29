@@ -1,4 +1,4 @@
-from sympy import S
+from sympy.core.singleton import S
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.function import Lambda
@@ -11,7 +11,7 @@ from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .contains import Contains
-from .sets import Set, EmptySet, Union, FiniteSet
+from .sets import Set, Union, FiniteSet
 
 
 adummy = Dummy('conditionset')
@@ -118,8 +118,8 @@ class ConditionSet(Set):
         if condition is S.false:
             return S.EmptySet
 
-        if isinstance(base_set, EmptySet):
-            return base_set
+        if base_set is S.EmptySet:
+            return S.EmptySet
 
         # no simple answers, so now check syms
         for i in flat:

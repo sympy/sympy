@@ -1,11 +1,15 @@
-from sympy import symbols, Matrix, cos, sin, expand, trigsimp
+from sympy.core.function import expand
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.dense import Matrix
+from sympy.simplify.trigsimp import trigsimp
 from sympy.physics.mechanics import (PinJoint, JointsMethod, Body, KanesMethod,
                                     PrismaticJoint, LagrangesMethod, inertia)
 from sympy.physics.vector import dynamicsymbols, ReferenceFrame
 from sympy.testing.pytest import raises
 
 
-t = dynamicsymbols._t
+t = dynamicsymbols._t # type: ignore
 
 
 def test_jointsmethod():

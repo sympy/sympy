@@ -2,14 +2,20 @@
 
 from functools import reduce
 
-from sympy import (
-    S, Rational, GoldenRatio, TribonacciConstant,
-    Add, Mul, sympify, Dummy, expand_mul, I, pi
-)
+from sympy.core.add import Add
+from sympy.core.function import expand_mul
+from sympy.core.mul import Mul
+from sympy.core import (GoldenRatio, TribonacciConstant)
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
+
 from sympy.functions import sqrt, cbrt
 
 from sympy.core.exprtools import Factors
 from sympy.core.function import _mexpand
+from sympy.core.traversal import preorder_traversal
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import cos, sin, tan
 from sympy.ntheory.factor_ import divisors
@@ -670,7 +676,6 @@ def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None):
 
     """
     from sympy.polys.domains import FractionField
-    from sympy.core.basic import preorder_traversal
 
     ex = sympify(ex)
     if ex.is_number:

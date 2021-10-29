@@ -26,7 +26,7 @@ def pycosat_satisfiable(expr, all_models=False):
         if not result:
             return result
 
-        # Make solutions sympy compatible by creating a generator
+        # Make solutions SymPy compatible by creating a generator
         def _gen(results):
             satisfiable = False
             try:

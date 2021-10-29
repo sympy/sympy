@@ -38,7 +38,7 @@ CACHE = _cache()
 print_cache = CACHE.print_cache
 clear_cache = CACHE.clear_cache
 
-from functools import lru_cache
+from functools import lru_cache, wraps
 
 def __cacheit(maxsize):
     """caching decorator.
@@ -49,7 +49,7 @@ def __cacheit(maxsize):
         Examples
         ========
 
-        >>> from sympy.core.cache import cacheit
+        >>> from sympy import cacheit
         >>> @cacheit
         ... def f(a, b):
         ...    return a+b
@@ -62,8 +62,6 @@ def __cacheit(maxsize):
         set environment variable SYMPY_USE_CACHE to 'debug'
     """
     def func_wrapper(func):
-        from .decorators import wraps
-
         cfunc = lru_cache(maxsize, typed=True)(func)
 
         @wraps(func)
@@ -93,8 +91,6 @@ def __cacheit_nocache(func):
 def __cacheit_debug(maxsize):
     """cacheit + code to check cache consistency"""
     def func_wrapper(func):
-        from .decorators import wraps
-
         cfunc = __cacheit(maxsize)(func)
 
         @wraps(func)

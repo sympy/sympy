@@ -1,6 +1,19 @@
-from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-                   Piecewise, S, cacheit, Sum, exp, I, Ne, Eq, poly,
-                   series, factorial, And, floor)
+from sympy.concrete.summations import (Sum, summation)
+from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
+from sympy.core.function import Lambda
+from sympy.core.numbers import I
+from sympy.core.relational import (Eq, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.logic.boolalg import And
+from sympy.polys.polytools import poly
+from sympy.series.series import series
 
 from sympy.polys.polyerrors import PolynomialError
 from sympy.stats.crv import reduce_rational_inequalities_wrap

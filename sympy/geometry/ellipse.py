@@ -6,13 +6,14 @@ Contains
 
 """
 
-from sympy import Expr, Eq
+from sympy.core.expr import Expr
+from sympy.core.relational import Eq
 from sympy.core import S, pi, sympify
 from sympy.core.evalf import prec_to_dps, N
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
-from sympy.core.compatibility import ordered
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, uniquely_named_symbol, _symbol
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max
@@ -422,7 +423,7 @@ class Ellipse(GeometrySet):
         Returns
         =======
 
-        equation : sympy expression
+        equation : SymPy expression
 
         See Also
         ========
@@ -493,7 +494,7 @@ class Ellipse(GeometrySet):
         Returns
         =======
 
-        equation : sympy expression
+        equation : SymPy expression
 
         Examples
         ========
@@ -1006,8 +1007,8 @@ class Ellipse(GeometrySet):
         References
         ==========
 
-        [1] http://mathworld.wolfram.com/SemilatusRectum.html
-        [2] https://en.wikipedia.org/wiki/Ellipse#Semi-latus_rectum
+        .. [1] http://mathworld.wolfram.com/SemilatusRectum.html
+        .. [2] https://en.wikipedia.org/wiki/Ellipse#Semi-latus_rectum
 
         """
         return self.major * (1 - self.eccentricity ** 2)
@@ -1353,7 +1354,7 @@ class Ellipse(GeometrySet):
         Returns
         =======
 
-        I_xx, I_yy, I_xy : number or sympy expression
+        I_xx, I_yy, I_xy : number or SymPy expression
             I_xx, I_yy are second moment of area of an ellise.
             I_xy is product moment of area of an ellipse.
 
@@ -1369,7 +1370,7 @@ class Ellipse(GeometrySet):
         References
         ==========
 
-        https://en.wikipedia.org/wiki/List_of_second_moments_of_area
+        .. [1] https://en.wikipedia.org/wiki/List_of_second_moments_of_area
 
         """
 
@@ -1400,11 +1401,6 @@ class Ellipse(GeometrySet):
         plane perpendicular to the object's central axis (i.e. parallel to
         the cross-section)
 
-        References
-        ==========
-
-        https://en.wikipedia.org/wiki/Polar_moment_of_inertia
-
         Examples
         ========
 
@@ -1416,6 +1412,12 @@ class Ellipse(GeometrySet):
         >>> e = Ellipse((0, 0), a, b)
         >>> e.polar_second_moment_of_area()
         pi*a**3*b/4 + pi*a*b**3/4
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Polar_moment_of_inertia
+
         """
         second_moment = self.second_moment_of_area()
         return second_moment[0] + second_moment[1]
@@ -1427,11 +1429,6 @@ class Ellipse(GeometrySet):
         Section modulus is a geometric property of an ellipse defined as the
         ratio of second moment of area to the distance of the extreme end of
         the ellipse from the centroidal axis.
-
-        References
-        ==========
-
-        https://en.wikipedia.org/wiki/Section_modulus
 
         Parameters
         ==========
@@ -1463,6 +1460,12 @@ class Ellipse(GeometrySet):
         (8*pi, 4*pi)
         >>> e.section_modulus((2, 2))
         (16*pi, 4*pi)
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Section_modulus
+
         """
         x_c, y_c = self.center
         if point is None:
@@ -1493,7 +1496,7 @@ class Circle(Ellipse):
     ==========
 
     center : Point
-    radius : number or sympy expression
+    radius : number or SymPy expression
     points : sequence of three Points
     equation : equation of a circle
 
@@ -1696,7 +1699,7 @@ class Circle(Ellipse):
         Returns
         =======
 
-        radius : number or sympy expression
+        radius : number or SymPy expression
 
         See Also
         ========

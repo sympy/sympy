@@ -13,9 +13,9 @@ def deprecated(**decorator_kwargs):
     """This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
     when the function is used."""
-    from sympy.utilities.exceptions import SymPyDeprecationWarning
 
     def _warn_deprecation(wrapped, stacklevel):
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
         decorator_kwargs.setdefault('feature', wrapped.__name__)
         SymPyDeprecationWarning(**decorator_kwargs).warn(stacklevel=stacklevel)
 
@@ -89,7 +89,7 @@ def __sympifyit(func, arg, retval=None):
         def __sympifyit_wrapper(a, b):
             try:
                 # If an external class has _op_priority, it knows how to deal
-                # with sympy objects. Otherwise, it must be converted.
+                # with SymPy objects. Otherwise, it must be converted.
                 if not hasattr(b, '_op_priority'):
                     b = sympify(b, strict=True)
                 return func(a, b)
@@ -151,8 +151,8 @@ def sympify_method_args(cls):
     Examples
     ========
 
-    >>> from sympy.core.basic import Basic
-    >>> from sympy.core.sympify import _sympify, SympifyError
+    >>> from sympy import Basic, SympifyError
+    >>> from sympy.core.sympify import _sympify
 
     >>> class MyTuple(Basic):
     ...     def __add__(self, other):

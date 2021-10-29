@@ -1,6 +1,9 @@
 """Simple Harmonic Oscillator 1-Dimension"""
 
-from sympy import sqrt, I, Symbol, Integer, S
+from sympy.core.numbers import (I, Integer)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.state import Bra, Ket, State

@@ -7,15 +7,16 @@ from operator import mul
 from sympy.core import (
     S, Expr, I, Integer, Add, Tuple
 )
-from sympy.core.basic import Basic, preorder_traversal
-from sympy.core.compatibility import iterable, ordered
+from sympy.core.basic import Basic
 from sympy.core.decorators import _sympifyit
 from sympy.core.evalf import pure_complex
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.relational import Relational
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
+from sympy.core.traversal import preorder_traversal, bottom_up
 from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
@@ -46,8 +47,10 @@ from sympy.polys.polyutils import (
 )
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
-from sympy.utilities import group, sift, public, filldedent
+from sympy.utilities import group, public, filldedent
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import iterable, sift
+
 
 # Required to avoid errors
 import sympy.polys
@@ -5015,8 +5018,7 @@ def invert(f, g, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import invert, S
-    >>> from sympy.core.numbers import mod_inverse
+    >>> from sympy import invert, S, mod_inverse
     >>> from sympy.abc import x
 
     >>> invert(x**2 - 1, 2*x - 1)
@@ -6365,7 +6367,6 @@ def factor(f, *gens, deep=False, **args):
     """
     f = sympify(f)
     if deep:
-        from sympy.simplify.simplify import bottom_up
         def _try_factor(expr):
             """
             Factor, but avoid changing the expression when unable to.

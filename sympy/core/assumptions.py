@@ -210,9 +210,9 @@ References
 
 """
 
-from sympy.core.facts import FactRules, FactKB
-from sympy.core.core import BasicMeta
-from sympy.core.sympify import sympify
+from .facts import FactRules, FactKB
+from .core import BasicMeta
+from .sympify import sympify
 
 from random import shuffle
 
@@ -304,7 +304,7 @@ def common_assumptions(exprs, check=None):
     Examples
     ========
 
-    >>> from sympy.core.assumptions import common_assumptions
+    >>> from sympy.core import common_assumptions
     >>> from sympy import oo, pi, sqrt
     >>> common_assumptions([-4, 0, sqrt(2), 2, pi, oo])
     {'commutative': True, 'composite': False,

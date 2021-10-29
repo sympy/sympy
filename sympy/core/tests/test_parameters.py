@@ -1,7 +1,8 @@
 from sympy.abc import x, y
 from sympy.core.parameters import evaluate
 from sympy.core import Mul, Add, Pow, S
-from sympy import sqrt, oo
+from sympy.core.numbers import oo
+from sympy.functions.elementary.miscellaneous import sqrt
 
 def test_add():
     with evaluate(False):

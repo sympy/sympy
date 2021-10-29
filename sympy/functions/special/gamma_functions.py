@@ -1,18 +1,22 @@
-from sympy.core import Add, S, sympify, oo, pi, Dummy, expand_func
-from sympy.core.compatibility import as_int
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core import Add, S, sympify, Dummy, expand_func
+from sympy.core.evalf import prec_to_dps
+from sympy.core.expr import Expr
+from sympy.core.function import Function, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and, fuzzy_not
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, pi, oo, I
 from sympy.core.power import Pow
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.special.error_functions import erf, erfc, Ei
-from sympy.functions.elementary.complexes import re
+from sympy.functions.elementary.complexes import re, unpolarify
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactorial
+from sympy.utilities.misc import as_int
+
+from mpmath import mp, workprec
 
 def intlike(n):
     try:
@@ -198,7 +202,6 @@ class gamma(Function):
         return (self.func(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import PoleError
         arg = self.args[0]
         x0 = arg.subs(x, 0)
 
@@ -272,7 +275,7 @@ class lowergamma(Function):
 
 
     def fdiff(self, argindex=2):
-        from sympy import meijerg, unpolarify
+        from sympy.functions.special.hyper import meijerg
         if argindex == 2:
             a, z = self.args
             return exp(-unpolarify(z))*z**(a - 1)
@@ -301,7 +304,6 @@ class lowergamma(Function):
         #    where lowergamma_unbranched(s, x) is an entire function (in fact
         #    of both s and x), i.e.
         #    lowergamma(s, exp(2*I*pi*n)*x) = exp(2*pi*I*n*a)*lowergamma(a, x)
-        from sympy import unpolarify, I
         if x is S.Zero:
             return S.Zero
         nx, n = x.extract_branch_factor()
@@ -336,8 +338,6 @@ class lowergamma(Function):
             return S.Zero
 
     def _eval_evalf(self, prec):
-        from mpmath import mp, workprec
-        from sympy import Expr
         if all(x.is_number for x in self.args):
             a = self.args[0]._to_mpmath(prec)
             z = self.args[1]._to_mpmath(prec)
@@ -370,7 +370,7 @@ class lowergamma(Function):
         return fuzzy_and([s0.is_finite, z0.is_finite, fuzzy_not(z0.is_zero)])
 
     def _eval_aseries(self, n, args0, x, logx):
-        from sympy import O
+        from sympy.series.order import O
         s, z = self.args
         if args0[0] is S.Infinity and not z.has(x):
             coeff = z**s*exp(-z)
@@ -383,7 +383,7 @@ class lowergamma(Function):
         return gamma(s) - uppergamma(s, x)
 
     def _eval_rewrite_as_expint(self, s, x, **kwargs):
-        from sympy import expint
+        from sympy.functions.special.error_functions import expint
         if s.is_integer and s.is_nonpositive:
             return self
         return self.rewrite(uppergamma).rewrite(expint)
@@ -461,7 +461,7 @@ class uppergamma(Function):
 
 
     def fdiff(self, argindex=2):
-        from sympy import meijerg, unpolarify
+        from sympy.functions.special.hyper import meijerg
         if argindex == 2:
             a, z = self.args
             return -exp(-unpolarify(z))*z**(a - 1)
@@ -472,8 +472,6 @@ class uppergamma(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from mpmath import mp, workprec
-        from sympy import Expr
         if all(x.is_number for x in self.args):
             a = self.args[0]._to_mpmath(prec)
             z = self.args[1]._to_mpmath(prec)
@@ -484,7 +482,7 @@ class uppergamma(Function):
 
     @classmethod
     def eval(cls, a, z):
-        from sympy import unpolarify, I, expint
+        from sympy.functions.special.error_functions import expint
         if z.is_Number:
             if z is S.NaN:
                 return S.NaN
@@ -548,7 +546,7 @@ class uppergamma(Function):
         return exp(loggamma(s)) - lowergamma(s, x)
 
     def _eval_rewrite_as_expint(self, s, x, **kwargs):
-        from sympy import expint
+        from sympy.functions.special.error_functions import expint
         return expint(1 - s, x)*x**s
 
 
@@ -687,7 +685,7 @@ class polygamma(Function):
             return self.args[0].is_even
 
     def _eval_aseries(self, n, args0, x, logx):
-        from sympy import Order
+        from sympy.series.order import Order
         if args0[1] != oo or not \
                 (self.args[0].is_Integer and self.args[0].is_nonnegative):
             return super()._eval_aseries(n, args0, x, logx)
@@ -730,7 +728,6 @@ class polygamma(Function):
     @classmethod
     def eval(cls, n, z):
         n, z = map(sympify, (n, z))
-        from sympy import unpolarify
 
         if n.is_integer:
             if n.is_nonnegative:
@@ -844,7 +841,7 @@ class polygamma(Function):
                 return S.NegativeOne**(n+1) * factorial(n) * (zeta(n+1) - harmonic(z-1, n+1))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
+        from sympy.series.order import Order
         n, z = [a.as_leading_term(x) for a in self.args]
         o = Order(z, x)
         if n == 0 and o.contains(1/x):
@@ -986,7 +983,7 @@ class loggamma(Function):
             return S.NaN
 
     def _eval_expand_func(self, **hints):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         z = self.args[0]
 
         if z.is_Rational:
@@ -1014,7 +1011,7 @@ class loggamma(Function):
         return super()._eval_nseries(x, n, logx)
 
     def _eval_aseries(self, n, args0, x, logx):
-        from sympy import Order
+        from sympy.series.order import Order
         if args0[0] != oo:
             return super()._eval_aseries(n, args0, x, logx)
         z = self.args[0]
@@ -1100,7 +1097,8 @@ class digamma(Function):
     """
     def _eval_evalf(self, prec):
         z = self.args[0]
-        return polygamma(0, z).evalf(prec)
+        nprec = prec_to_dps(prec)
+        return polygamma(0, z).evalf(n=nprec)
 
     def fdiff(self, argindex=1):
         z = self.args[0]
@@ -1193,7 +1191,8 @@ class trigamma(Function):
     """
     def _eval_evalf(self, prec):
         z = self.args[0]
-        return polygamma(1, z).evalf(prec)
+        nprec = prec_to_dps(prec)
+        return polygamma(1, z).evalf(n=nprec)
 
     def fdiff(self, argindex=1):
         z = self.args[0]
@@ -1303,7 +1302,7 @@ class multigamma(Function):
     unbranched = True
 
     def fdiff(self, argindex=2):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         if argindex == 2:
             x, p = self.args
             k = Dummy("k")
@@ -1313,7 +1312,7 @@ class multigamma(Function):
 
     @classmethod
     def eval(cls, x, p):
-        from sympy import Product
+        from sympy.concrete.products import Product
         x, p = map(sympify, (x, p))
         if p.is_positive is False or p.is_integer is False:
             raise ValueError('Order parameter p must be positive integer.')

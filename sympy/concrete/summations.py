@@ -4,11 +4,14 @@ from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.concrete.gosper import gosper_sum
 from sympy.core.add import Add
-from sympy.core.function import Derivative
+from sympy.core.containers import Tuple
+from sympy.core.function import Derivative, expand
 from sympy.core.mul import Mul
+from sympy.core.numbers import Float
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Wild, Symbol
+from sympy.core.sorting import ordered
+from sympy.core.symbol import Dummy, Wild, Symbol, symbols
 from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cot, csc
@@ -20,7 +23,7 @@ from sympy.series.limitseq import limit_seq
 from sympy.series.order import O
 from sympy.series.residues import residue
 from sympy.sets.sets import FiniteSet
-from sympy.simplify import denom
+from sympy.simplify import denom, simplify
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.powsimp import powsimp
 from sympy.solvers import solve
@@ -321,7 +324,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
     def _eval_simplify(self, **kwargs):
         from sympy.simplify.simplify import factor_sum, sum_combine
-        from sympy.core.function import expand
 
         # split the function into adds
         terms = Add.make_args(expand(self.function))
@@ -428,7 +430,9 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Sum.is_absolutely_convergent()
         sympy.concrete.products.Product.is_convergent()
         """
-        from sympy import Interval, Integral, log, symbols, simplify
+        from sympy.functions.elementary.exponential import log
+        from sympy.integrals.integrals import Integral
+        from sympy.sets.sets import Interval
         p, q, r = symbols('p q r', cls=Wild)
 
         sym = self.limits[0][0]
@@ -769,8 +773,14 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         for k in range(1, n + 2):
             ga, gb = fpoint(g)
             term = bernoulli(2*k)/factorial(2*k)*(gb - ga)
-            if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
+            if k > n:
                 break
+            if eps and term:
+                term_evalf = term.evalf(3)
+                if term_evalf is S.NaN:
+                    return S.NaN, S.NaN
+                if abs(term_evalf) < eps:
+                    break
             s += term
             g = g.diff(i, 2, simplify=False)
         return s + iterm, abs(term)
@@ -1196,7 +1206,6 @@ def eval_sum_symbolic(f, limits):
         r = gosper_sum(f, (i, a, b))
 
         if isinstance(r, (Mul,Add)):
-            from sympy import ordered, Tuple
             non_limit = r.free_symbols - Tuple(*limits[1:]).free_symbols
             den = denom(together(r))
             den_sym = non_limit & den.free_symbols
@@ -1233,9 +1242,8 @@ def eval_sum_symbolic(f, limits):
 def _eval_sum_hyper(f, i, a):
     """ Returns (res, cond). Sums from a to oo. """
     from sympy.functions import hyper
-    from sympy.simplify import hyperexpand, hypersimp, fraction, simplify
+    from sympy.simplify import hyperexpand, hypersimp, fraction
     from sympy.polys.polytools import Poly, factor
-    from sympy.core.numbers import Float
 
     if a != 0:
         return _eval_sum_hyper(f.subs(i, i + a), i, 0)
@@ -1342,7 +1350,7 @@ def eval_sum_residue(f, i_a_b):
     Notes
     =====
 
-    If $f(n), g(n)$ are polynomials with $\deg(g(n)) - \deg(f(n)) >= 2$,
+    If $f(n), g(n)$ are polynomials with $\deg(g(n)) - \deg(f(n)) \ge 2$,
     some infinite summations can be computed by the following residue
     evaluations.
 

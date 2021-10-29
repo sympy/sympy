@@ -1,5 +1,10 @@
-from sympy import (atan, Eq, exp, Function, log,
-    Rational, sin, sqrt, Symbol, tan, symbols)
+from sympy.core.function import Function
+from sympy.core.numbers import Rational
+from sympy.core.relational import Eq
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (atan, sin, tan)
 
 from sympy.solvers.ode import (classify_ode, checkinfsol, dsolve, infinitesimals)
 

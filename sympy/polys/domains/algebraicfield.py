@@ -89,7 +89,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     to create instances which then support the operations ``+,-,*,**,/``. The
     :py:meth:`~.Domain.algebraic_field` method is used to construct a
     particular :ref:`QQ(a)` domain. The :py:meth:`~.Domain.from_sympy` method
-    can be used to create domain elements from normal sympy expressions.
+    can be used to create domain elements from normal SymPy expressions.
 
     >>> K = QQ.algebraic_field(sqrt(2))
     >>> K
@@ -365,12 +365,13 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
 def _make_converter(K):
     """Construct the converter to convert back to Expr"""
-    # Precompute the effect of converting to sympy and expanding expressions
+    # Precompute the effect of converting to SymPy and expanding expressions
     # like (sqrt(2) + sqrt(3))**2. Asking Expr to do the expansion on every
     # conversion from K to Expr is slow. Here we compute the expansions for
     # each power of the generator and collect together the resulting algebraic
     # terms and the rational coefficients into a matrix.
-    from sympy import Add, S
+    from sympy.core.add import Add
+    from sympy.core.singleton import S
 
     gen = K.ext.as_expr()
     todom = K.dom.from_sympy
@@ -384,7 +385,7 @@ def _make_converter(K):
         powers.append((gen * powers[-1]).expand())
 
     # Collect the rational coefficients and algebraic Expr that can
-    # map the ANP coefficients into an expanded sympy expression
+    # map the ANP coefficients into an expanded SymPy expression
     terms = [dict(t.as_coeff_Mul()[::-1] for t in Add.make_args(p)) for p in powers]
     algebraics = set().union(*terms)
     matrix = [[todom(t.get(a, S.Zero)) for t in terms] for a in algebraics]
@@ -393,7 +394,8 @@ def _make_converter(K):
 
     def converter(a):
         """Convert a to Expr using converter"""
-        from sympy import Add, Mul
+        from sympy.core.add import Add
+        from sympy.core.mul import Mul
         ai = a.rep[::-1]
         tosympy = K.dom.to_sympy
         coeffs_dom = [sum(mij*aj for mij, aj in zip(mi, ai)) for mi in matrix]

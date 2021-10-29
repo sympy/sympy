@@ -1,11 +1,13 @@
 from textwrap import dedent
 from itertools import islice, product
 
-from sympy import (
-    symbols, Integer, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
-    factorial, true)
+from sympy.core.basic import Basic
+from sympy.core.numbers import Integer
+from sympy.core.sorting import ordered
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.matrices.dense import Matrix
 from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
-from sympy.core.compatibility import iterable
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
     cartes, common_prefix, common_suffix, connected_components, dict_merge,
@@ -13,15 +15,15 @@ from sympy.utilities.iterables import (
     generate_involutions, generate_oriented_forest, group, has_dups, ibin,
     iproduct, kbins, minlex, multiset, multiset_combinations,
     multiset_partitions, multiset_permutations, necklaces, numbered_symbols,
-    ordered, partitions, permutations, postfixes, postorder_traversal,
+    partitions, permutations, postfixes,
     prefixes, reshape, rotate_left, rotate_right, runs, sift,
     strongly_connected_components, subsets, take, topological_sort, unflatten,
-    uniq, variations, ordered_partitions, rotations, is_palindromic)
+    uniq, variations, ordered_partitions, rotations, is_palindromic, iterable,
+    NotIterable)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
 from sympy.core.singleton import S
-from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.testing.pytest import raises
 
 w, x, y, z = symbols('w,x,y,z')
@@ -41,31 +43,6 @@ def test_is_palindromic():
     assert is_palindromic('xxyzyx', 1)
     assert not is_palindromic('xxyzyx', 2)
     assert is_palindromic('xxyzyx', 2, 2 + 3)
-
-
-def test_postorder_traversal():
-    expr = z + w*(x + y)
-    expected = [z, w, x, y, x + y, w*(x + y), w*(x + y) + z]
-    assert list(postorder_traversal(expr, keys=default_sort_key)) == expected
-    assert list(postorder_traversal(expr, keys=True)) == expected
-
-    expr = Piecewise((x, x < 1), (x**2, True))
-    expected = [
-        x, 1, x, x < 1, ExprCondPair(x, x < 1),
-        2, x, x**2, true,
-        ExprCondPair(x**2, True), Piecewise((x, x < 1), (x**2, True))
-    ]
-    assert list(postorder_traversal(expr, keys=default_sort_key)) == expected
-    assert list(postorder_traversal(
-        [expr], keys=default_sort_key)) == expected + [[expr]]
-
-    assert list(postorder_traversal(Integral(x**2, (x, 0, 1)),
-        keys=default_sort_key)) == [
-            2, x, x**2, 0, 1, x, Tuple(x, 0, 1),
-            Integral(x**2, Tuple(x, 0, 1))
-        ]
-    assert list(postorder_traversal(('abc', ('d', 'ef')))) == [
-        'abc', 'd', 'ef', ('d', 'ef'), ('abc', ('d', 'ef'))]
 
 
 def test_flatten():
@@ -843,3 +820,40 @@ def test_ibin():
     assert list(ibin(2, '', str=True)) == ['00', '01', '10', '11']
     raises(ValueError, lambda: ibin(-.5))
     raises(ValueError, lambda: ibin(2, 1))
+
+
+def test_iterable():
+    assert iterable(0) is False
+    assert iterable(1) is False
+    assert iterable(None) is False
+
+    class Test1(NotIterable):
+        pass
+
+    assert iterable(Test1()) is False
+
+    class Test2(NotIterable):
+        _iterable = True
+
+    assert iterable(Test2()) is True
+
+    class Test3:
+        pass
+
+    assert iterable(Test3()) is False
+
+    class Test4:
+        _iterable = True
+
+    assert iterable(Test4()) is True
+
+    class Test5:
+        def __iter__(self):
+            yield 1
+
+    assert iterable(Test5()) is True
+
+    class Test6(Test5):
+        _iterable = False
+
+    assert iterable(Test6()) is False

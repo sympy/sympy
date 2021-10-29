@@ -1,7 +1,7 @@
 """
 C code printer
 
-The C89CodePrinter & C99CodePrinter converts single sympy expressions into
+The C89CodePrinter & C99CodePrinter converts single SymPy expressions into
 single C expressions, using the functions defined in math.h where possible.
 
 A complete code generator, which uses ccode extensively, can be found in
@@ -32,7 +32,7 @@ from sympy.sets.fancysets import Range
 # from the top-level 'import sympy'. Export them here as well.
 from sympy.printing.codeprinter import ccode, print_ccode # noqa:F401
 
-# dictionary mapping sympy function to (argument_conditions, C_function).
+# dictionary mapping SymPy function to (argument_conditions, C_function).
 # Used in C89CodePrinter._print_Function(self)
 known_functions_C89 = {
     "Abs": [(lambda x: not x.is_integer, "fabs"), (lambda x: x.is_integer, "abs")],
@@ -50,6 +50,7 @@ known_functions_C89 = {
     "tanh": "tanh",
     "floor": "floor",
     "ceiling": "ceil",
+    "sqrt": "sqrt", # To enable automatic rewrites
 }
 
 known_functions_C99 = dict(known_functions_C89, **{
@@ -95,7 +96,7 @@ def get_math_macros():
     Returns
     =======
 
-    Dictionary mapping sympy expressions to strings (macro names)
+    Dictionary mapping SymPy expressions to strings (macro names)
 
     """
     from sympy.codegen.cfunctions import log2, Sqrt
@@ -142,7 +143,7 @@ def _as_macro_if_defined(meth):
 
 
 class C89CodePrinter(CodePrinter):
-    """A printer to convert python expressions to strings of c code"""
+    """A printer to convert Python expressions to strings of C code"""
     printmethod = "_ccode"
     language = "C"
     standard = "C89"
@@ -382,8 +383,7 @@ class C89CodePrinter(CodePrinter):
 
     def _print_ITE(self, expr):
         from sympy.functions import Piecewise
-        _piecewise = Piecewise((expr.args[1], expr.args[0]), (expr.args[2], True))
-        return self._print(_piecewise)
+        return self._print(expr.rewrite(Piecewise, deep=False))
 
     def _print_MatrixElement(self, expr):
         return "{}[{}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
@@ -401,14 +401,6 @@ class C89CodePrinter(CodePrinter):
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
         return "{} {} {}".format(lhs_code, op, rhs_code)
-
-    def _print_sinc(self, expr):
-        from sympy.functions.elementary.trigonometric import sin
-        from sympy.core.relational import Ne
-        from sympy.functions import Piecewise
-        _piecewise = Piecewise(
-            (sin(expr.args[0]) / expr.args[0], Ne(expr.args[0], 0)), (1, True))
-        return self._print(_piecewise)
 
     def _print_For(self, expr):
         target = self._print(expr.target)

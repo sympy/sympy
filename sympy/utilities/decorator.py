@@ -3,10 +3,10 @@
 import sys
 import types
 import inspect
+from functools import wraps
 
-from sympy.core.decorators import wraps
-from sympy.core.compatibility import iterable
 from sympy.testing.runtests import DependencyError, SymPyDocTests, PyTestReporter
+from sympy.utilities.iterables import iterable
 
 def threaded_factory(func, use_add):
     """A factory for ``threaded`` decorators. """

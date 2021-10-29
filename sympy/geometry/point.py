@@ -20,7 +20,6 @@ False
 import warnings
 
 from sympy.core import S, sympify, Expr
-from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.simplify import nsimplify, simplify
 from sympy.geometry.exceptions import GeometryError
@@ -31,7 +30,7 @@ from sympy.core.numbers import Float
 from sympy.core.parameters import global_parameters
 from sympy.core.add import Add
 from sympy.core.evalf import prec_to_dps
-from sympy.utilities.iterables import uniq
+from sympy.utilities.iterables import uniq, is_sequence
 from sympy.utilities.misc import filldedent, func_name, Undecidable
 
 from .entity import GeometryEntity
@@ -475,7 +474,8 @@ class Point(GeometryEntity):
         Point2D(0.5, 1.5)
 
         """
-        coords = [x.evalf(n=prec_to_dps(prec), **options) for x in self.args]
+        dps = prec_to_dps(prec)
+        coords = [x.evalf(n=dps, **options) for x in self.args]
         return Point(*coords, evaluate=False)
 
     def intersection(self, other):
@@ -943,7 +943,8 @@ class Point2D(Point):
         Point2D(2, -1)
 
         """
-        from sympy import cos, sin, Point
+        from sympy.functions.elementary.trigonometric import (cos, sin)
+        from sympy.geometry.point import Point
 
         c = cos(angle)
         s = sin(angle)

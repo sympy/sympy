@@ -30,7 +30,7 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "airyai", "airyaiprime", "airybi", "airybiprime",
                    "besselj", "bessely", "besseli", "besselk",
                    "erfinv", "erfcinv"]
-# These functions have different names ("Sympy": "Julia"), more
+# These functions have different names ("SymPy": "Julia"), more
 # generally a mapping to (argument_conditions, julia_function).
 known_fcns_src2 = {
     "Abs": "abs",
@@ -345,7 +345,7 @@ class JuliaCodePrinter(CodePrinter):
                                 rowsep=';\n', colsep=' ')
 
 
-    def _print_SparseMatrix(self, A):
+    def _print_SparseRepMatrix(self, A):
         from sympy.matrices import Matrix
         L = A.col_list();
         # make row vectors of the indices and entries
@@ -496,7 +496,7 @@ def julia_code(expr, assign_to=None, **settings):
     ==========
 
     expr : Expr
-        A sympy expression to be converted.
+        A SymPy expression to be converted.
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned.  Can be a string, ``Symbol``,

@@ -71,6 +71,7 @@ jobs:
             - librsvg2-bin
             - imagemagick
             - docbook2x
+            - dbus
 
     - python: 3.8
       dist: xenial

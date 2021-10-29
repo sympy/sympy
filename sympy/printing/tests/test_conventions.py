@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 
-from sympy import symbols, Derivative, Integral, exp, cos, oo, Function
+from sympy.core.function import (Derivative, Function)
+from sympy.core.numbers import oo
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.trigonometric import cos
+from sympy.integrals.integrals import Integral
 from sympy.functions.special.bessel import besselj
 from sympy.functions.special.polynomials import legendre
 from sympy.functions.combinatorial.numbers import bell
