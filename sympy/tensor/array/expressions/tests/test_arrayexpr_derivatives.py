@@ -18,7 +18,7 @@ B = MatrixSymbol("B", k, k)
 C = MatrixSymbol("C", k, k)
 D = MatrixSymbol("D", k, k)
 
-A1 = ArraySymbol("A", 3, 2, k)
+A1 = ArraySymbol("A", (3, 2, k))
 
 
 def test_arrayexpr_derivatives1():
