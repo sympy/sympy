@@ -1,7 +1,7 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.core import EulerGamma, GoldenRatio, Catalan, Lambda, Mul, Pow
-from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos
+from sympy.functions import Piecewise, sqrt, ceiling, exp, sin, cos, sinc, lucas
 from sympy.testing.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
@@ -373,6 +373,11 @@ def test_maple_derivatives():
     f = Function('f')
     assert maple_code(f(x).diff(x)) == 'diff(f(x), x)'
     assert maple_code(f(x).diff(x, 2)) == 'diff(f(x), x$2)'
+
+
+def test_automatic_rewrites():
+    assert maple_code(lucas(x)) == '2^(-x)*((1 - sqrt(5))^x + (1 + sqrt(5))^x)'
+    assert maple_code(sinc(x)) == 'piecewise(x <> 0, sin(x)/x, 1)'
 
 
 def test_specfun():

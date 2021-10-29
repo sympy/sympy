@@ -15,10 +15,13 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 
 import sympy
 
-_known_func_same_name = [
+_known_func_same_name = (
     'sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'sinh', 'cosh', 'tanh', 'sech',
-    'csch', 'coth', 'exp', 'floor', 'factorial'
-]
+    'csch', 'coth', 'exp', 'floor', 'factorial', 'bernoulli',  'euler',
+    'fibonacci', 'gcd', 'lcm', 'conjugate', 'Ci', 'Chi', 'Ei', 'Li', 'Si', 'Shi',
+    'erf', 'erfc', 'harmonic', 'LambertW',
+    'sqrt', # For automatic rewrites
+)
 
 known_functions = {
     # SymPy -> Maple
@@ -37,7 +40,11 @@ known_functions = {
     'acsch': 'arccsch',
     'acoth': 'arccoth',
     'ceiling': 'ceil',
+    'Max' : 'max',
+    'Min' : 'min',
 
+    'factorial2': 'doublefactorial',
+    'RisingFactorial': 'pochhammer',
     'besseli': 'BesselI',
     'besselj': 'BesselJ',
     'besselk': 'BesselK',
@@ -45,8 +52,13 @@ known_functions = {
     'hankelh1': 'HankelH1',
     'hankelh2': 'HankelH2',
     'airyai': 'AiryAi',
-    'airybi': 'AiryBi'
+    'airybi': 'AiryBi',
+    'appellf1': 'AppellF1',
+    'fresnelc': 'FresnelC',
+    'fresnels': 'FresnelS',
+    'lerchphi' : 'LerchPhi',
 }
+
 for _func in _known_func_same_name:
     known_functions[_func] = _func
 
