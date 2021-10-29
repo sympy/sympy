@@ -565,3 +565,59 @@ def test_edit_array_contraction():
 
     ecg.insert_after(ecg.args_with_ind[1], _ArgE(C))
     assert ecg.to_array_contraction() == ArrayContraction(ArrayTensorProduct(A, X, C, B, D), (1, 2), (3, 6))
+
+
+def test_array_expressions_no_normalization():
+
+    tp = ArrayTensorProduct(M, N, P)
+
+    # ArrayTensorProduct:
+
+    expr = ArrayTensorProduct(tp, N, normalize=False)
+    assert str(expr) == "ArrayTensorProduct(ArrayTensorProduct(M, N, P), N)"
+
+    expr = ArrayTensorProduct(ArrayContraction(M, (0, 1)), N, normalize=False)
+    assert str(expr) == "ArrayTensorProduct(ArrayContraction(M, (0, 1)), N)"
+
+    expr = ArrayTensorProduct(ArrayDiagonal(M, (0, 1)), N, normalize=False)
+    assert str(expr) == "ArrayTensorProduct(ArrayDiagonal(M, (0, 1)), N)"
+
+    expr = ArrayTensorProduct(PermuteDims(M, [1, 0]), N, normalize=False)
+    assert str(expr) == "ArrayTensorProduct(PermuteDims(M, (0 1)), N)"
+
+    # ArrayContraction:
+
+    expr = ArrayContraction(ArrayContraction(tp, (0, 2)), (0, 1), normalize=False)
+    assert isinstance(expr, ArrayContraction)
+    assert isinstance(expr.expr, ArrayContraction)
+    assert str(expr) == "ArrayContraction(ArrayContraction(ArrayTensorProduct(M, N, P), (0, 2)), (0, 1))"
+
+    expr = ArrayContraction(ArrayDiagonal(tp, (0, 1)), (0, 1), normalize=False)
+    assert str(expr) == "ArrayContraction(ArrayDiagonal(ArrayTensorProduct(M, N, P), (0, 1)), (0, 1))"
+
+    expr = ArrayContraction(PermuteDims(M, [1, 0]), (0, 1), normalize=False)
+    assert str(expr) == "ArrayContraction(PermuteDims(M, (0 1)), (0, 1))"
+
+    # ArrayDiagonal:
+
+    expr = ArrayDiagonal(ArrayDiagonal(tp, (0, 2)), (0, 1), normalize=False)
+    assert str(expr) == "ArrayDiagonal(ArrayDiagonal(ArrayTensorProduct(M, N, P), (0, 2)), (0, 1))"
+
+    expr = ArrayDiagonal(ArrayContraction(tp, (0, 1)), (0, 1), normalize=False)
+    assert str(expr) == "ArrayDiagonal(ArrayContraction(ArrayTensorProduct(M, N, P), (0, 1)), (0, 1))"
+
+    expr = ArrayDiagonal(PermuteDims(M, [1, 0]), (0, 1), normalize=False)
+    assert str(expr) == "ArrayDiagonal(PermuteDims(M, (0 1)), (0, 1))"
+
+    # ArrayAdd:
+
+    expr = ArrayAdd(ArrayAdd(M, N), P, normalize=False)
+    assert str(expr) == "ArrayAdd(ArrayAdd(M, N), P)"
+
+    expr = ArrayAdd(M, ZeroArray(k, k), N, normalize=False)
+    assert str(expr) == "ArrayAdd(M, ZeroArray(k, k), N)"
+
+    # PermuteDims:
+
+    expr = PermuteDims(PermuteDims(M, [1, 0]), [1, 0], normalize=False)
+    assert str(expr) == "PermuteDims(PermuteDims(M, (0 1)), (0 1))"
