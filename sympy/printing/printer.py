@@ -30,7 +30,7 @@ While looking for the method, it follows these steps:
     its own latex, mathml, str and repr methods, but it turned out that it
     is hard to produce a high quality printer, if all the methods are spread
     out that far. Therefore all printing code was combined into the different
-    printers, which works great for built-in sympy objects, but not that
+    printers, which works great for built-in SymPy objects, but not that
     good for user defined classes where it is inconvenient to patch the
     printers.
 
@@ -388,8 +388,8 @@ def print_function(print_cls):
     """ A decorator to replace kwargs with the printer settings in __signature__ """
     def decorator(f):
         if sys.version_info < (3, 9):
-            # We have to create a subclass so that `help` actually shows the docstring in older python versions.
-            # IPython and Sphinx do not need this, only a raw python console.
+            # We have to create a subclass so that `help` actually shows the docstring in older Python versions.
+            # IPython and Sphinx do not need this, only a raw Python console.
             cls = type(f'{f.__qualname__}_PrintFunction', (_PrintFunction,), dict(__doc__=f.__doc__))
         else:
             cls = _PrintFunction

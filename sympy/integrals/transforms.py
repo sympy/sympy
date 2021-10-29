@@ -882,7 +882,7 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
     an unevaluated :class:`InverseMellinTransform` object.
 
     Note that this function will assume x to be positive and real, regardless
-    of the sympy assumptions!
+    of the SymPy assumptions!
 
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.
@@ -1389,7 +1389,7 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     an unevaluated :class:`InverseLaplaceTransform` object.
 
     Note that this function will always assume `t` to be real,
-    regardless of the sympy assumption on `t`.
+    regardless of the SymPy assumption on `t`.
 
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.

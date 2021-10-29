@@ -746,7 +746,7 @@ class ReferenceFrame:
         # amounts must be a Matrix type object
         # (e.g. sympy.matrices.dense.MutableDenseMatrix).
         if not isinstance(dcm, MatrixBase):
-            raise TypeError("Amounts must be a sympy Matrix type object.")
+            raise TypeError("Amounts must be a SymPy Matrix type object.")
 
         parent_orient_dcm = []
         parent_orient_dcm = dcm

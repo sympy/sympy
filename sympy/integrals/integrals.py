@@ -925,7 +925,7 @@ class Integral(AddWithLimits):
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
         # It is important to make this check first, otherwise the other code
-        # will return a sympy expression instead of a Polynomial.
+        # will return a SymPy expression instead of a Polynomial.
         #
         # see Polynomial for details.
         if isinstance(f, Poly) and not (manual or meijerg or risch):

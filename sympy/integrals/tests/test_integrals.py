@@ -312,7 +312,7 @@ def test_issue_3635():
     assert integrate(x**2, y) == x**2*y
     assert integrate(x**2, (y, -1, 1)) == 2*x**2
 
-# works in sympy and py.test but hangs in `setup.py test`
+# works in SymPy and py.test but hangs in `setup.py test`
 
 
 def test_integrate_linearterm_pow():

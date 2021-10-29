@@ -72,7 +72,7 @@ class TensorProduct(Expr):
     Examples
     ========
 
-    Start with a simple tensor product of sympy matrices::
+    Start with a simple tensor product of SymPy matrices::
 
         >>> from sympy import Matrix
         >>> from sympy.physics.quantum import TensorProduct

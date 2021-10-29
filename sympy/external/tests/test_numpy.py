@@ -288,7 +288,7 @@ def test_lambdify_transl():
 
 
 def test_symarray():
-    """Test creation of numpy arrays of sympy symbols."""
+    """Test creation of numpy arrays of SymPy symbols."""
 
     import numpy as np
     import numpy.testing as npt

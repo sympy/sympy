@@ -39,7 +39,7 @@ __all__ = [
 
 
 def _sympy_to_scalar(e):
-    """Convert from a sympy scalar to a Python scalar."""
+    """Convert from a SymPy scalar to a Python scalar."""
     if isinstance(e, Expr):
         if e.is_Integer:
             return int(e)
@@ -64,7 +64,7 @@ def represent(expr, **options):
 
     This function is the top-level interface for this action.
 
-    This function walks the sympy expression tree looking for ``QExpr``
+    This function walks the SymPy expression tree looking for ``QExpr``
     instances that have a ``_represent`` method. This method is then called
     and the object is replaced by the representation returned by this method.
     By default, the ``_represent`` method will dispatch to other methods

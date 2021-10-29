@@ -1310,7 +1310,7 @@ class MatrixProperties(MatrixRequired):
                     return False
         return True
 
-    # _eval_is_hermitian is called by some general sympy
+    # _eval_is_hermitian is called by some general SymPy
     # routines and has a different *args signature.  Make
     # sure the names don't clash by adding `_matrix_` in name.
     def _eval_is_matrix_hermitian(self, simpfunc):
@@ -2682,7 +2682,7 @@ class MatrixArithmetic(MatrixRequired):
         from sympy.core.mod import Mod
         return self._new(self.rows, self.cols, lambda i, j: Mod(self[i, j], other))
 
-    # python arithmetic functions
+    # Python arithmetic functions
     def __abs__(self):
         """Returns a new matrix with entry-wise absolute values."""
         return self._eval_Abs()
@@ -2700,7 +2700,7 @@ class MatrixArithmetic(MatrixRequired):
                 raise ShapeError("Matrix size mismatch: %s + %s" % (
                     self.shape, other.shape))
 
-        # honest sympy matrices defer to their class's routine
+        # honest SymPy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
             # call the highest-priority class's _eval_add
             a, b = self, other
@@ -2782,7 +2782,7 @@ class MatrixArithmetic(MatrixRequired):
                 raise ShapeError("Matrix size mismatch: %s * %s." % (
                     self.shape, other.shape))
 
-        # honest sympy matrices defer to their class's routine
+        # honest SymPy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
             m = self._eval_matrix_mul(other)
             if isimpbool:
@@ -2967,7 +2967,7 @@ class MatrixArithmetic(MatrixRequired):
             if self.shape[0] != other.shape[1]:
                 raise ShapeError("Matrix size mismatch.")
 
-        # honest sympy matrices defer to their class's routine
+        # honest SymPy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
             m = self._eval_matrix_rmul(other)
             if isimpbool:

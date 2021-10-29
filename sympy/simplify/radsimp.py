@@ -620,7 +620,7 @@ def collect_const(expr, *vars, Numbers=True):
     Parameters
     ==========
 
-    expr : sympy expression
+    expr : SymPy expression
         This parameter defines the expression the expression from which
         terms with similar coefficients are to be collected. A non-Add
         expression is returned as it is.

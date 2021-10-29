@@ -2005,7 +2005,7 @@ def decipher_rsa(i, key, factors=None):
 
         Note that the speed advantage of using this is only viable for
         very large cases (Like 2048-bit RSA keys) since the
-        overhead of using pure python implementation of
+        overhead of using pure Python implementation of
         :meth:`sympy.ntheory.modular.crt` may overcompensate the
         theoritical speed advantage.
 

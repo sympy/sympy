@@ -1898,7 +1898,7 @@ class Pow(Expr):
             m, me = m.as_base_exp()
             if m is S.One or me == e:  # probably always true
                 # return the following, not return c, m*Pow(t, e)
-                # which would change Pow into Mul; we let sympy
+                # which would change Pow into Mul; we let SymPy
                 # decide what to do by using the unevaluated Mul, e.g
                 # should it stay as sqrt(2 + 2*sqrt(5)) or become
                 # sqrt(2)*sqrt(1 + sqrt(5))

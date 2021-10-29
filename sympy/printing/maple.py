@@ -1,7 +1,7 @@
 """
 Maple code printer
 
-The MapleCodePrinter converts single sympy expressions into single
+The MapleCodePrinter converts single SymPy expressions into single
 Maple expressions, using the functions defined in the Maple objects where possible.
 
 
@@ -71,7 +71,7 @@ not_supported_symbol = [
 
 class MapleCodePrinter(CodePrinter):
     """
-    Printer which converts a sympy expression into a maple code.
+    Printer which converts a SymPy expression into a maple code.
     """
     printmethod = "_maple"
     language = "maple"
@@ -251,7 +251,7 @@ def maple_code(expr, assign_to=None, **settings):
     ==========
 
     expr : Expr
-        A sympy expression to be converted.
+        A SymPy expression to be converted.
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned.  Can be a string, ``Symbol``,

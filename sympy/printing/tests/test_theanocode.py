@@ -623,7 +623,7 @@ def test_constantfunctions():
 
 def test_Exp1():
     """
-    Test that exp(1) prints without error and evaluates close to sympy's E
+    Test that exp(1) prints without error and evaluates close to SymPy's E
     """
     # sy.exp(1) should yield same instance of E as sy.E (singleton), but extra
     # check added for sanity

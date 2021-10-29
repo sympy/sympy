@@ -306,7 +306,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     a :
         - any object defined in SymPy
-        - standard numeric python types: int, long, float, Decimal
+        - standard numeric Python types: int, long, float, Decimal
         - strings (like "0.09", "2e-19" or 'sin(x)')
         - booleans, including ``None`` (will leave ``None`` unchanged)
         - dict, lists, sets or tuples containing any of the above

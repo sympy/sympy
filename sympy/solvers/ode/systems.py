@@ -423,7 +423,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     Parameters
     ==========
 
-    eqs : list of sympy expressions or equalities
+    eqs : list of SymPy expressions or equalities
         The equations as expressions (assumed equal to zero).
     funcs : list of applied functions
         The dependent variables of the system of ODEs.

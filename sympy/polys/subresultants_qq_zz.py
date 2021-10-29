@@ -58,7 +58,7 @@ Recall that the determinant of sylvester1(f, g, x) itself is
 called the resultant of f, g and serves as a criterion of whether
 the two polynomials have common roots or not.
 
-In sympy the resultant is computed with the function
+In SymPy the resultant is computed with the function
 resultant(f, g, x). This function does _not_ evaluate the
 determinant of sylvester(f, g, x, 1); instead, it returns
 the last member of the subresultant prs of f, g, multiplied
@@ -131,7 +131,7 @@ subresultant and modified subresultant prs respectively.
 
 2. Functions in the module:
 ===========================
-No function utilizes sympy's function prem().
+No function utilizes SymPy's function prem().
 
 2A. Matrices:
 =============

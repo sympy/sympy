@@ -166,7 +166,7 @@ def test_Dict():
     assert d.has(x) and d.has(1)  # SymPy Basic .has method
 
     # Test input types
-    # input - a python dict
+    # input - a Python dict
     # input - items as args - SymPy style
     assert (Dict({x: 1, y: 2, z: 3}) ==
             Dict((x, 1), (y, 2), (z, 3)))

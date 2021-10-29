@@ -38,7 +38,7 @@ def test_simple_code_with_header():
     result, = codegen(name_expr, "Rust", header=True, empty=False)
     assert result[0] == "test.rs"
     source = result[1]
-    version_str = "Code generated with sympy %s" % sympy.__version__
+    version_str = "Code generated with SymPy %s" % sympy.__version__
     version_line = version_str.center(76).rstrip()
     expected = (
         "/*\n"
@@ -286,7 +286,7 @@ def test_multifcns_per_file_w_header():
     result = codegen(name_expr, "Rust", header=True, empty=False)
     assert result[0][0] == "foo.rs"
     source = result[0][1];
-    version_str = "Code generated with sympy %s" % sympy.__version__
+    version_str = "Code generated with SymPy %s" % sympy.__version__
     version_line = version_str.center(76).rstrip()
     expected = (
         "/*\n"

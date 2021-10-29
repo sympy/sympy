@@ -511,7 +511,7 @@ class Domain:
         =======
 
         expr: Expr
-            A normal sympy expression of type :py:class:`~.Expr`.
+            A normal SymPy expression of type :py:class:`~.Expr`.
 
         Examples
         ========
@@ -592,7 +592,7 @@ class Domain:
         ==========
 
         expr: Expr
-            A normal sympy expression of type :py:class:`~.Expr`.
+            A normal SymPy expression of type :py:class:`~.Expr`.
 
         Returns
         =======

@@ -519,7 +519,7 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     Parameters
     ==========
 
-    expression : sympy expression
+    expression : SymPy expression
 
     exclude : iterable of dynamicsymbols, optional
 

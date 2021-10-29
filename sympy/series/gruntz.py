@@ -653,7 +653,7 @@ def rewrite(e, Omega, x, wsym):
     if sig == 1:
         logw = -logw  # log(w)->log(1/w)=-log(w)
 
-    # Some parts of sympy have difficulty computing series expansions with
+    # Some parts of SymPy have difficulty computing series expansions with
     # non-integral exponents. The following heuristic improves the situation:
     exponent = reduce(ilcm, denominators, 1)
     f = f.subs({wsym: wsym**exponent})

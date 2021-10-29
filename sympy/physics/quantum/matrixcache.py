@@ -31,7 +31,7 @@ class MatrixCache:
         name : str
             A descriptive name for the matrix, like "identity2".
         m : list of lists
-            The raw matrix data as a sympy Matrix.
+            The raw matrix data as a SymPy Matrix.
         """
         try:
             self._sympy_matrix(name, m)

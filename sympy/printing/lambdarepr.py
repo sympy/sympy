@@ -65,7 +65,7 @@ class LambdaPrinter(PythonCodePrinter):
         return str(expr)
 
     def _print_Pow(self, expr, **kwargs):
-        # XXX Temporary workaround. Should python math printer be
+        # XXX Temporary workaround. Should Python math printer be
         # isolated from PythonCodePrinter?
         return super(PythonCodePrinter, self)._print_Pow(expr, **kwargs)
 
@@ -73,7 +73,7 @@ class LambdaPrinter(PythonCodePrinter):
 # numexpr works by altering the string passed to numexpr.evaluate
 # rather than by populating a namespace.  Thus a special printer...
 class NumExprPrinter(LambdaPrinter):
-    # key, value pairs correspond to sympy name and numexpr name
+    # key, value pairs correspond to SymPy name and numexpr name
     # functions not appearing in this dict will raise a TypeError
     printmethod = "_numexprcode"
 
@@ -171,7 +171,7 @@ class NumExprPrinter(LambdaPrinter):
     _print_ImmutableMatrix = \
     _print_ImmutableDenseMatrix = \
     blacklisted
-    # blacklist some python expressions
+    # blacklist some Python expressions
     _print_list = \
     _print_tuple = \
     _print_Tuple = \

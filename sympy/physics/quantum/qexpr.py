@@ -216,7 +216,7 @@ class QExpr(Expr):
     # Printing
     #-------------------------------------------------------------------------
 
-    # Utilities for printing: these operate on raw sympy objects
+    # Utilities for printing: these operate on raw SymPy objects
 
     def _print_sequence(self, seq, sep, printer, *args):
         result = []

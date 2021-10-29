@@ -597,7 +597,7 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
         A function which determines if a given expression is zero.
 
         The function should be a callable that takes a single
-        sympy expression and returns a 3-valued boolean value
+        SymPy expression and returns a 3-valued boolean value
         ``True``, ``False``, or ``None``.
 
         It is internally used by the pivot searching algorithm.
@@ -608,8 +608,8 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
         A function that simplifies the input.
 
         If this is specified as a function, this function should be
-        a callable that takes a single sympy expression and returns
-        an another sympy expression that is algebraically
+        a callable that takes a single SymPy expression and returns
+        an another SymPy expression that is algebraically
         equivalent.
 
         If ``None``, it indicates that the pivot search algorithm
@@ -692,7 +692,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         A function which determines if a given expression is zero.
 
         The function should be a callable that takes a single
-        sympy expression and returns a 3-valued boolean value
+        SymPy expression and returns a 3-valued boolean value
         ``True``, ``False``, or ``None``.
 
         It is internally used by the pivot searching algorithm.
@@ -703,8 +703,8 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         A function that simplifies the input.
 
         If this is specified as a function, this function should be
-        a callable that takes a single sympy expression and returns
-        an another sympy expression that is algebraically
+        a callable that takes a single SymPy expression and returns
+        an another SymPy expression that is algebraically
         equivalent.
 
         If ``None``, it indicates that the pivot search algorithm

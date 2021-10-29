@@ -50,7 +50,7 @@ from random import randint
 class rubi_unevaluated_expr(UnevaluatedExpr):
     """
     This is needed to convert `exp` as `Pow`.
-    sympy's UnevaluatedExpr has an issue with `is_commutative`.
+    SymPy's UnevaluatedExpr has an issue with `is_commutative`.
     """
     @property
     def is_commutative(self):
@@ -62,7 +62,7 @@ _E = rubi_unevaluated_expr(E)
 
 class rubi_exp(Function):
     """
-    sympy's exp is not identified as `Pow`. So it is not matched with `Pow`.
+    SymPy's exp is not identified as `Pow`. So it is not matched with `Pow`.
     Like `a = exp(2)` is not identified as `Pow(E, 2)`. Rubi rules need it.
     So, another exp has been created only for rubi module.
 
@@ -127,7 +127,7 @@ Int = Integral
 
 def replace_pow_exp(z):
     """
-    This function converts back rubi's `exp` to general sympy's `exp`.
+    This function converts back rubi's `exp` to general SymPy's `exp`.
 
     Examples
     ========
@@ -831,7 +831,7 @@ def NumericQ(u):
 
 def Length(expr):
     """
-    Returns number of elements in the expression just as sympy's len.
+    Returns number of elements in the expression just as SymPy's len.
 
     Examples
     ========
@@ -6628,7 +6628,7 @@ def IntegralFreeQ(u):
 
 def Dist(u, v, x):
     #Dist(u,v) returns the sum of u times each term of v, provided v is free of Int
-    u = replace_pow_exp(u) # to replace back to sympy's exp
+    u = replace_pow_exp(u) # to replace back to SymPy's exp
     v = replace_pow_exp(v)
     w = Simp(u*x**2, x)/x**2
     if u == 1:
@@ -6705,7 +6705,7 @@ def HypergeometricPFQ(a, b, c):
 
 def Sum_doit(exp, args):
     """
-    This function perform summation using sympy's `Sum`.
+    This function perform summation using SymPy's `Sum`.
 
     Examples
     ========

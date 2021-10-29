@@ -1419,7 +1419,7 @@ def _apply_Mul(m):
 
 def apply_operators(e):
     """
-    Take a sympy expression with operators and states and apply the operators.
+    Take a SymPy expression with operators and states and apply the operators.
 
     Examples
     ========

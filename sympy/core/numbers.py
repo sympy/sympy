@@ -184,7 +184,7 @@ _errdict = {"divide": False}
 
 def seterr(divide=False):
     """
-    Should sympy raise an exception on 0/0 or return a nan?
+    Should SymPy raise an exception on 0/0 or return a nan?
 
     divide == True .... raise an exception
     divide == False ... return nan
@@ -2443,7 +2443,7 @@ class Integer(Rational):
         return Integer(Integer(other).p // self.p)
 
     # These bitwise operations (__lshift__, __rlshift__, ..., __invert__) are defined
-    # for Integer only and not for general sympy expressions. This is to achieve
+    # for Integer only and not for general SymPy expressions. This is to achieve
     # compatibility with the numbers.Integral ABC which only defines these operations
     # among instances of numbers.Integral. Therefore, these methods check explicitly for
     # integer types rather than using sympify because they should not accept arbitrary

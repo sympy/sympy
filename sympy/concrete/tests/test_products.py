@@ -31,7 +31,7 @@ def test_karr_convention():
     #
     # It is important to note that he defines all products with
     # the upper limit being *exclusive*.
-    # In contrast, sympy and the usual mathematical notation has:
+    # In contrast, SymPy and the usual mathematical notation has:
     #
     # prod_{i = a}^b f(i) = f(a) * f(a+1) * ... * f(b-1) * f(b)
     #

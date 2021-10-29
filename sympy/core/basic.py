@@ -133,7 +133,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def __reduce_ex__(self, protocol):
         if protocol < 2:
-            msg = "Only pickle protocol 2 or higher is supported by sympy"
+            msg = "Only pickle protocol 2 or higher is supported by SymPy"
             raise NotImplementedError(msg)
         return super().__reduce_ex__(protocol)
 
@@ -460,7 +460,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         Be careful to check your assumptions when using the implicit option
         since ``S(1).is_Integer = True`` but ``type(S(1))`` is ``One``, a special type
-        of sympy atom, while ``type(S(2))`` is type ``Integer`` and will find all
+        of SymPy atom, while ``type(S(2))`` is type ``Integer`` and will find all
         integers in an expression:
 
         >>> from sympy import S
@@ -471,7 +471,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         {1, 2}
 
         Finally, arguments to atoms() can select more than atomic atoms: any
-        sympy type (loaded in core/__init__.py) can be listed as an argument
+        SymPy type (loaded in core/__init__.py) can be listed as an argument
         and those types of "atoms" as found in scanning the arguments of the
         expression recursively:
 

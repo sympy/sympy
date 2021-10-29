@@ -2919,7 +2919,7 @@ def nsolve(*args, dict=False, **kwargs):
     if iterable(x0):
         x0 = list(x0)
     if not isinstance(f, Matrix):
-        # assume it's a sympy expression
+        # assume it's a SymPy expression
         if isinstance(f, Equality):
             f = f.lhs - f.rhs
         syms = f.free_symbols

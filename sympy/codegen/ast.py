@@ -196,7 +196,7 @@ class Token(Basic):
         if arg == None:
             return cls.defaults.get(attr, none)
         else:
-            if isinstance(arg, Dummy):  # sympy's replace uses Dummy instances
+            if isinstance(arg, Dummy):  # SymPy's replace uses Dummy instances
                 return arg
             else:
                 return cls._get_constructor(attr)(arg)

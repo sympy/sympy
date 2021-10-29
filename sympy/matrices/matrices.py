@@ -909,7 +909,7 @@ class MatrixBase(MatrixDeprecated,
     def _handle_ndarray(cls, arg):
         # NumPy array or matrix or some other object that implements
         # __array__. So let's first use this method to get a
-        # numpy.array() and then make a python list out of it.
+        # numpy.array() and then make a Python list out of it.
         arr = arg.__array__()
         if len(arr.shape) == 2:
             rows, cols = arr.shape[0], arr.shape[1]

@@ -48,7 +48,7 @@ from sympy.printing.codeprinter import CodePrinter
 # 3. args[1].func(), method without arguments (e.g. (e, x) => x.exp())
 # 4. func(args), function with arguments
 
-# dictionary mapping sympy function to (argument_conditions, Rust_function).
+# dictionary mapping SymPy function to (argument_conditions, Rust_function).
 # Used in RustCodePrinter._print_Function(self)
 
 # f64 method in Rust
@@ -214,7 +214,7 @@ reserved_words = ['abstract',
 
 
 class RustCodePrinter(CodePrinter):
-    """A printer to convert python expressions to strings of Rust code"""
+    """A printer to convert SymPy expressions to strings of Rust code"""
     printmethod = "_rust_code"
     language = "Rust"
 
@@ -507,7 +507,7 @@ def rust_code(expr, assign_to=None, **settings):
     ==========
 
     expr : Expr
-        A sympy expression to be converted.
+        A SymPy expression to be converted.
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned. Can be a string, ``Symbol``,

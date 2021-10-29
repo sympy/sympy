@@ -40,7 +40,7 @@ def test_jl_simple_code_with_header():
     assert result[0] == "test.jl"
     source = result[1]
     expected = (
-        "#   Code generated with sympy " + sympy.__version__ + "\n"
+        "#   Code generated with SymPy " + sympy.__version__ + "\n"
         "#\n"
         "#   See http://www.sympy.org/ for more information.\n"
         "#\n"
@@ -281,7 +281,7 @@ def test_jl_multifcns_per_file_w_header():
     assert result[0][0] == "foo.jl"
     source = result[0][1];
     expected = (
-        "#   Code generated with sympy " + sympy.__version__ + "\n"
+        "#   Code generated with SymPy " + sympy.__version__ + "\n"
         "#\n"
         "#   See http://www.sympy.org/ for more information.\n"
         "#\n"

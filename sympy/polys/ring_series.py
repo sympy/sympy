@@ -1143,7 +1143,7 @@ def rs_exp(p, x, prec):
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy functions to evaluate the values of the cos/sin
+    # Makes use of SymPy functions to evaluate the values of the cos/sin
     # of the constant term.
         return const*rs_exp(p1, x, prec)
 
@@ -1345,7 +1345,7 @@ def rs_tan(p, x, prec):
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy functions to evaluate the values of the cos/sin
+    # Makes use of SymPy functions to evaluate the values of the cos/sin
     # of the constant term.
         t2 = rs_tan(p1, x, prec)
         t = rs_series_inversion(1 - const*t2, x, prec)
@@ -1443,7 +1443,7 @@ def rs_sin(p, x, prec):
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy cos, sin functions to evaluate the values of the
+    # Makes use of SymPy cos, sin functions to evaluate the values of the
     # cos/sin of the constant term.
         return rs_sin(p1, x, prec)*t2 + rs_cos(p1, x, prec)*t1
 
@@ -1510,7 +1510,7 @@ def rs_cos(p, x, prec):
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy cos, sin functions to evaluate the values of the
+    # Makes use of SymPy cos, sin functions to evaluate the values of the
     # cos/sin of the constant term.
         p_cos = rs_cos(p1, x, prec)
         p_sin = rs_sin(p1, x, prec)

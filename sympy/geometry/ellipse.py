@@ -423,7 +423,7 @@ class Ellipse(GeometrySet):
         Returns
         =======
 
-        equation : sympy expression
+        equation : SymPy expression
 
         See Also
         ========
@@ -494,7 +494,7 @@ class Ellipse(GeometrySet):
         Returns
         =======
 
-        equation : sympy expression
+        equation : SymPy expression
 
         Examples
         ========
@@ -1354,7 +1354,7 @@ class Ellipse(GeometrySet):
         Returns
         =======
 
-        I_xx, I_yy, I_xy : number or sympy expression
+        I_xx, I_yy, I_xy : number or SymPy expression
             I_xx, I_yy are second moment of area of an ellise.
             I_xy is product moment of area of an ellipse.
 
@@ -1496,7 +1496,7 @@ class Circle(Ellipse):
     ==========
 
     center : Point
-    radius : number or sympy expression
+    radius : number or SymPy expression
     points : sequence of three Points
     equation : equation of a circle
 
@@ -1699,7 +1699,7 @@ class Circle(Ellipse):
         Returns
         =======
 
-        radius : number or sympy expression
+        radius : number or SymPy expression
 
         See Also
         ========

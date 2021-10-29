@@ -134,12 +134,12 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             return None
 
 
-    # Hook methods for builtin sympy printers
+    # Hook methods for builtin SymPy printers
     printing_hooks = ('_latex', '_sympystr', '_pretty', '_sympyrepr')
 
 
     def _can_print(o):
-        """Return True if type o can be printed with one of the sympy printers.
+        """Return True if type o can be printed with one of the SymPy printers.
 
         If o is a container type, this is True if and only if every element of
         o can be printed in this way.
@@ -162,7 +162,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             elif isinstance(o, bool):
                 return False
             elif isinstance(o, Printable):
-                # types known to sympy
+                # types known to SymPy
                 return True
             elif any(hasattr(o, hook) for hook in printing_hooks):
                 # types which add support themselves
@@ -219,7 +219,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 
     def _print_latex_text(o):
         """
-        A function to generate the latex representation of sympy expressions.
+        A function to generate the latex representation of SymPy expressions.
         """
         if _can_print(o):
             s = latex(o, mode=latex_mode, **settings)

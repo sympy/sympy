@@ -1225,7 +1225,7 @@ def gate_sort(circuit):
                 first_base, first_exp = circ_array[i].as_base_exp()
                 second_base, second_exp = circ_array[i + 1].as_base_exp()
 
-                # Use sympy's hash based sorting. This is not mathematical
+                # Use SymPy's hash based sorting. This is not mathematical
                 # sorting, but is rather based on comparing hashes of objects.
                 # See Basic.compare for details.
                 if first_base.compare(second_base) > 0:

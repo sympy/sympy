@@ -477,7 +477,7 @@ class Abs(Function):
         >>> type(abs(S.NegativeOne))
         <class 'sympy.core.numbers.One'>
 
-    Abs will always return a sympy object.
+    Abs will always return a SymPy object.
 
     Parameters
     ==========

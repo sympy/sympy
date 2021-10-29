@@ -928,7 +928,7 @@ def sequence(seq, limits=None):
     Explanation
     ===========
 
-    If ``seq`` is a sympy sequence, returns :class:`SeqPer` object
+    If ``seq`` is a SymPy sequence, returns :class:`SeqPer` object
     otherwise returns :class:`SeqFormula` object.
 
     Examples
