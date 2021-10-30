@@ -4,7 +4,7 @@ from sympy.core.mul import Mul
 from sympy.core.numbers import (Integer, oo, pi)
 from sympy.core.power import Pow
 from sympy.core.relational import (Eq, Ne)
-from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.core.symbol import (Dummy, Str, Symbol, symbols)
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
