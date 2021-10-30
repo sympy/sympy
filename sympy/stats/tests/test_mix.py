@@ -60,7 +60,8 @@ def test_MarginalDistribution():
     Add(Symbol('a1', positive=True), -1)),
     Pow(Indexed(IndexedBase('B'), 1),
     Add(Indexed(IndexedBase('C'), 0), -1)))
-    assert MGR(C) == mgrc, MGR(C)
+    from sympy import srepr
+    assert MGR(C) == mgrc, ('\n',srepr(mgrc),'\n',srepr(MGR(C)))
 
 
 def test_compound_distribution():
