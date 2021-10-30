@@ -5,8 +5,8 @@ here for easy import.
 """
 
 
-from .decorators import deprecated
 from .sorting import ordered as _ordered, _nodes as __nodes, default_sort_key as _default_sort_key
+from sympy.utilities.decorator import deprecated
 from sympy.utilities.misc import as_int as _as_int
 from sympy.utilities.iterables import iterable as _iterable, is_sequence as _is_sequence
 

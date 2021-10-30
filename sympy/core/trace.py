@@ -1,5 +1,5 @@
-from .decorators import deprecated
 from .expr import Expr
+from sympy.utilities.decorator import deprecated
 
 @deprecated(useinstead="sympy.physics.quantum.trace.Tr",
     deprecated_since_version="1.10", issue=22330)

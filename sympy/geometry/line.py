@@ -18,7 +18,6 @@ Segment3D
 """
 
 from sympy.core.containers import Tuple
-from sympy.core.decorators import deprecated
 from sympy.core.evalf import N
 from sympy.core.expr import Expr
 from sympy.core.numbers import Rational, oo
@@ -38,6 +37,7 @@ from sympy.matrices import Matrix
 from sympy.sets.sets import Intersection
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solveset import linear_coeffs
+from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import Undecidable, filldedent
 
