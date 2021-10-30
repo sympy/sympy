@@ -2,7 +2,7 @@ from sympy.core.singleton import S
 from sympy.sets.sets import Set
 from sympy.calculus.singularities import singularities
 from sympy.core import Expr, Add
-from sympy.core.function import Lambda, FunctionClass, diff
+from sympy.core.function import Lambda, FunctionClass, diff, expand_mul
 from sympy.core.numbers import Float, oo
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.functions.elementary.exponential import exp, log
@@ -152,7 +152,6 @@ def _set_function(f, x): # noqa:F811
 
 @dispatch(FunctionUnion, Range)  # type: ignore # noqa:F811
 def _set_function(f, self): # noqa:F811
-    from sympy.core.function import expand_mul
     if not self:
         return S.EmptySet
     if not isinstance(f.expr, Expr):

@@ -52,8 +52,9 @@ from .sympify import sympify
 from .sorting import default_sort_key, ordered
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import (has_dups, sift, iterable,
-    is_sequence)
-from sympy.utilities.misc import as_int, filldedent
+    is_sequence, uniq, topological_sort)
+from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
+from sympy.utilities.misc import as_int, filldedent, func_name
 
 import mpmath
 import mpmath.libmp as mlib
@@ -543,7 +544,6 @@ class Function(Application, Expr):
                 return None
 
             if not hasattr(mpmath, fname):
-                from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
                 fname = MPMATH_TRANSLATIONS.get(fname, None)
                 if fname is None:
                     return None
@@ -1541,7 +1541,6 @@ class Derivative(Expr):
         >>> assert vsort0(dfx, y) == [y, dfx]
         >>> assert vsort0(dfx, x) == [dfx, x]
         """
-        from sympy.utilities.iterables import uniq, topological_sort
         if not vc:
             return []
         vc = list(vc)
@@ -3134,7 +3133,6 @@ def count_ops(expr, visual=False):
     from sympy.integrals.integrals import Integral
     from sympy.logic.boolalg import BooleanFunction
     from sympy.simplify.radsimp import fraction
-    from sympy.utilities.misc import func_name
 
     expr = sympify(expr)
     if isinstance(expr, Expr) and not expr.is_Relational:

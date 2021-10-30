@@ -3,15 +3,19 @@ This module implements Holonomic Functions and
 various operations on them.
 """
 
-from sympy.core.numbers import NaN, Infinity, NegativeInfinity, Float, I
+from sympy.core import Add, Mul, Pow
+from sympy.core.numbers import NaN, Infinity, NegativeInfinity, Float, I, pi
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
-from sympy.functions.combinatorial.factorials import rf
+from sympy.functions.combinatorial.factorials import binomial, factorial, rf
+from sympy.functions.elementary.exponential import exp_polar, exp, log
+from sympy.functions.elementary.hyperbolic import (cosh, sinh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin, sinc)
+from sympy.functions.special.error_functions import (Ci, Shi, Si, erf, erfc, erfi)
 from sympy.functions.special.gamma_functions import gamma
-from sympy.functions.combinatorial.factorials import binomial, factorial
-from sympy.functions.elementary.exponential import exp_polar, exp
 from sympy.functions.special.hyper import hyper, meijerg
 from sympy.integrals import meijerint
 from sympy.matrices import Matrix
@@ -2440,7 +2444,6 @@ def expr_to_holonomic(func, x=None, x0=0, y0=None, lenics=None, domain=None, ini
     # iterate through the expression recursively
     args = func.args
     f = func.func
-    from sympy.core import Add, Mul, Pow
     sol = expr_to_holonomic(args[0], x=x, initcond=False, domain=domain)
 
     if f is Add:
@@ -2861,13 +2864,6 @@ def _create_table(table, domain=QQ):
 
     R = domain.old_poly_ring(x_1)
     _, Dx = DifferentialOperators(R, 'Dx')
-
-    from sympy.core.numbers import pi
-    from sympy.functions.elementary.exponential import log
-    from sympy.functions.elementary.hyperbolic import (cosh, sinh)
-    from sympy.functions.elementary.miscellaneous import sqrt
-    from sympy.functions.elementary.trigonometric import (cos, sin, sinc)
-    from sympy.functions.special.error_functions import (Ci, Shi, Si, erf, erfc, erfi)
 
     # add some basic functions
     add(sin(x_1), Dx**2 + 1, x_1, 0, [0, 1])

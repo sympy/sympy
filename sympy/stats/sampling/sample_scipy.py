@@ -103,7 +103,6 @@ def _(dist: CauchyDistribution, size, seed):
 @do_sample_scipy.register(DiscreteDistributionHandmade) # type: ignore
 def _(dist: DiscreteDistributionHandmade, size, seed):
     from scipy.stats import rv_discrete
-    from sympy.utilities.lambdify import lambdify
 
     z = Dummy('z')
     handmade_pmf = lambdify(z, dist.pdf(z), ['numpy', 'scipy'])

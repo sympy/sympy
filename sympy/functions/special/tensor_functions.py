@@ -2,6 +2,7 @@ from sympy.core import S, Integer
 from sympy.core.function import Function
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import prod
+from sympy.core.relational import Ne
 from sympy.core.sorting import default_sort_key
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.utilities.iterables import has_dups
@@ -468,6 +469,5 @@ class KroneckerDelta(Function):
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
         from sympy.functions.elementary.piecewise import Piecewise
-        from sympy.core.relational import Ne
         i, j = args
         return Piecewise((0, Ne(i, j)), (1, True))

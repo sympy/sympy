@@ -1,12 +1,12 @@
 from sympy.core import S, sympify, diff
-from sympy.core.decorators import deprecated
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_not
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.complexes import im, sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys.polyerrors import PolynomialError
-from sympy.utilities import filldedent
+from sympy.utilities.decorator import deprecated
+from sympy.utilities.misc import filldedent
 
 
 ###############################################################################

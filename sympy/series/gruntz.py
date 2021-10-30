@@ -118,8 +118,11 @@ debug this function to figure out the exact problem.
 """
 from functools import reduce
 
+from sympy.core import Basic, S, Mul, PoleError
 from sympy.core.cache import cacheit
-from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul, PoleError, bottom_up
+from sympy.core.numbers import ilcm, I, oo
+from sympy.core.symbol import Dummy, Wild
+from sympy.core.traversal import bottom_up
 
 from sympy.functions import log, exp, sign as _sign
 from sympy.series.order import Order
@@ -598,7 +601,6 @@ def rewrite(e, Omega, x, wsym):
     Returns the rewritten e in terms of w and log(w). See test_rewrite1()
     for examples and correct results.
     """
-    from sympy.core.numbers import ilcm
     if not isinstance(Omega, SubsSet):
         raise TypeError("Omega should be an instance of SubsSet")
     if len(Omega) == 0:

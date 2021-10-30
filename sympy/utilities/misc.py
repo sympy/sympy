@@ -8,7 +8,6 @@ import os
 import re as _re
 import struct
 from textwrap import fill, dedent
-from sympy.core.decorators import deprecated
 
 
 class Undecidable(ValueError):
@@ -247,16 +246,16 @@ def debug(*args):
         print(*args, file=sys.stderr)
 
 
-@deprecated(
-    useinstead="the builtin ``shutil.which`` function",
-    issue=19634,
-    deprecated_since_version="1.7")
 def find_executable(executable, path=None):
     """Try to find 'executable' in the directories listed in 'path' (a
     string listing directories separated by 'os.pathsep'; defaults to
     os.environ['PATH']).  Returns the complete filename or None if not
     found
     """
+    from .exceptions import SymPyDeprecationWarning
+    SymPyDeprecationWarning(useinstead="the builtin ``shutil.which`` function",
+                            issue=19634,
+                            deprecated_since_version="1.7").warn()
     if path is None:
         path = os.environ['PATH']
     paths = path.split(os.pathsep)

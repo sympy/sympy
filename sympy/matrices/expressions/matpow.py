@@ -2,9 +2,11 @@ from sympy.matrices.common import NonSquareMatrixError
 from .matexpr import MatrixExpr
 from .special import Identity
 from sympy.core import S
+from sympy.core.expr import ExprBuilder
+from sympy.core.cache import cacheit
+from sympy.core.power import Pow
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
-from ... import cacheit
 
 
 class MatPow(MatrixExpr):
@@ -90,11 +92,9 @@ class MatPow(MatrixExpr):
         return MatPow(base.T, exp)
 
     def _eval_derivative(self, x):
-        from sympy.core.power import Pow
         return Pow._eval_derivative(self, x)
 
     def _eval_derivative_matrix_lines(self, x):
-        from sympy.core.expr import ExprBuilder
         from sympy.tensor.array.expressions.array_expressions import ArrayContraction
         from ...tensor.array.expressions.array_expressions import ArrayTensorProduct
         from .matmul import MatMul

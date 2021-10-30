@@ -22,6 +22,7 @@ from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Function, Lambda)
+from sympy.core.logic import fuzzy_and
 from sympy.core.mul import (Mul, prod)
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
@@ -1680,7 +1681,6 @@ def _value_check(condition, message):
     >>> _value_check(And(a < 0, b < 0, c < 0), '')
     False
     """
-    from sympy.core.logic import fuzzy_and
     if not iterable(condition):
         condition = [condition]
     truth = fuzzy_and(condition)

@@ -4,7 +4,7 @@ from collections.abc import Callable
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.decorators import deprecated
+from sympy.core.function import diff
 from sympy.core.expr import Expr
 from sympy.core.kind import _NumberKind, UndefinedKind
 from sympy.core.mul import Mul
@@ -22,6 +22,7 @@ from sympy.polys import cancel
 from sympy.printing import sstr
 from sympy.printing.defaults import Printable
 from sympy.simplify import simplify as _simplify
+from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten, NotIterable, is_sequence
 from sympy.utilities.misc import as_int, filldedent
@@ -1552,7 +1553,6 @@ class MatrixBase(MatrixDeprecated,
             parameter of f
 
         """
-        from sympy.core.function import diff
 
         f, x = _sympify(f), _sympify(x)
         if not self.is_square:

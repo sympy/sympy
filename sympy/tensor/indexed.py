@@ -114,6 +114,7 @@ from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.multipledispatch import dispatch
 from sympy.utilities.iterables import is_sequence, NotIterable
+from sympy.utilities.misc import filldedent
 
 
 class IndexException(Exception):
@@ -144,7 +145,6 @@ class Indexed(Expr):
     is_Atom = True
 
     def __new__(cls, base, *args, **kw_args):
-        from sympy.utilities.misc import filldedent
         from sympy.tensor.array.ndim_array import NDimArray
         from sympy.matrices.matrices import MatrixBase
 
@@ -283,7 +283,6 @@ class Indexed(Expr):
         >>> B[i, j].shape
         (m, m)
         """
-        from sympy.utilities.misc import filldedent
 
         if self.base.shape:
             return self.base.shape
@@ -641,7 +640,6 @@ class Idx(Expr):
     _diff_wrt = True
 
     def __new__(cls, label, range=None, **kw_args):
-        from sympy.utilities.misc import filldedent
 
         if isinstance(label, str):
             label = Symbol(label, integer=True)

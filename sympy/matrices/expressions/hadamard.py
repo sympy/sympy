@@ -1,4 +1,6 @@
 from sympy.core import Mul, sympify
+from sympy.core.add import Add
+from sympy.core.expr import ExprBuilder
 from sympy.core.sorting import default_sort_key
 from sympy.matrices.common import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
@@ -96,7 +98,6 @@ class HadamardProduct(MatrixExpr):
         return canonicalize(expr)
 
     def _eval_derivative(self, x):
-        from sympy.core.add import Add
         terms = []
         args = list(self.args)
         for i in range(len(args)):
@@ -105,7 +106,6 @@ class HadamardProduct(MatrixExpr):
         return Add.fromiter(terms)
 
     def _eval_derivative_matrix_lines(self, x):
-        from sympy.core.expr import ExprBuilder
         from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
         from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
         from sympy.matrices.expressions.matexpr import _make_matrix
@@ -431,7 +431,6 @@ class HadamardPower(MatrixExpr):
     def _eval_derivative_matrix_lines(self, x):
         from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
         from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
-        from sympy.core.expr import ExprBuilder
         from sympy.matrices.expressions.matexpr import _make_matrix
 
         lr = self.base._eval_derivative_matrix_lines(x)

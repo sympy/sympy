@@ -10,8 +10,9 @@ from .decorators import call_highest_priority, sympify_method_args, sympify_retu
 from .cache import cacheit
 from .sorting import default_sort_key
 from .kind import NumberKind
-from sympy.utilities.misc import as_int, func_name
-from sympy.utilities.iterables import has_variety
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.misc import as_int, func_name, filldedent
+from sympy.utilities.iterables import has_variety, sift
 from mpmath.libmp import mpf_log, prec_to_dps
 from mpmath.libmp.libintmath import giant_steps
 
@@ -1872,7 +1873,6 @@ class Expr(Basic, EvalfMixin):
         from .symbol import Symbol
         from .add import _unevaluated_Add
         from .mul import _unevaluated_Mul
-        from sympy.utilities.iterables import sift
 
         if self.is_zero:
             return S.Zero, S.Zero
@@ -2459,7 +2459,6 @@ class Expr(Basic, EvalfMixin):
         >>> t.free_symbols
         {x, y}
         """
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
         SymPyDeprecationWarning(feature="expr_free_symbols method",
                                 issue=21494,
                                 deprecated_since_version="1.9").warn()
@@ -3383,7 +3382,6 @@ class Expr(Basic, EvalfMixin):
         never call this method directly (use .nseries() instead), so you do not
         have to write docstrings for _eval_nseries().
         """
-        from sympy.utilities.misc import filldedent
         raise NotImplementedError(filldedent("""
                      The _eval_nseries method should be added to
                      %s to give terms up to O(x**n) at x=0
@@ -3496,7 +3494,6 @@ class Expr(Basic, EvalfMixin):
             l = l.subs(log(x), d)
         c, e = l.as_coeff_exponent(x)
         if x in c.free_symbols:
-            from sympy.utilities.misc import filldedent
             raise ValueError(filldedent("""
                 cannot compute leadterm(%s, %s). The coefficient
                 should have been free of %s but got %s""" % (self, x, x, c)))
@@ -3963,7 +3960,6 @@ class AtomicExpr(Atom, Expr):
 
     @property
     def expr_free_symbols(self):
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
         SymPyDeprecationWarning(feature="expr_free_symbols method",
                                 issue=21494,
                                 deprecated_since_version="1.9").warn()

@@ -2,6 +2,7 @@ from sympy.core.sympify import _sympify
 
 from sympy.matrices.expressions import MatrixExpr
 from sympy.core import S, Eq, Ge
+from sympy.core.mul import Mul
 from sympy.functions.special.tensor_functions import KroneckerDelta
 
 
@@ -192,7 +193,6 @@ class DiagMatrix(MatrixExpr):
 
     def doit(self, **hints):
         from sympy.assumptions import ask, Q
-        from sympy.core.mul import Mul
         from sympy.matrices.expressions.matmul import MatMul
         from sympy.matrices.expressions.transpose import Transpose
         from sympy.matrices.dense import eye

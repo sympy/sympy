@@ -11,6 +11,7 @@ from sympy.core.alphabets import greeks
 from sympy.core.containers import Tuple
 from sympy.core.function import AppliedUndef, Derivative
 from sympy.core.operations import AssocOp
+from sympy.core.power import Pow
 from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import SympifyError
 from sympy.logic.boolalg import true
@@ -498,7 +499,6 @@ class LatexPrinter(Printer):
         return r"\triangle %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
     def _print_Mul(self, expr):
-        from sympy.core.power import Pow
         from sympy.physics.units import Quantity
         from sympy.simplify import fraction
         separator = self._settings['mul_symbol_latex']

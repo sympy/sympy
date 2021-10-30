@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 from .sympify import sympify, SympifyError
+from sympy.utilities.iterables import iterable, uniq
 
 
 __all__ = ['default_sort_key', 'ordered']
@@ -122,7 +123,6 @@ def default_sort_key(item, order=None):
     """
     from .basic import Basic
     from .singleton import S
-    from sympy.utilities.iterables import iterable
 
     if isinstance(item, Basic):
         return item.sort_key(order=order)
@@ -184,7 +184,6 @@ def _nodes(e):
     """
     from .basic import Basic
     from .function import Derivative
-    from sympy.utilities.iterables import iterable
 
     if isinstance(e, Basic):
         if isinstance(e, Derivative):
@@ -278,7 +277,6 @@ def ordered(seq, keys=None, default=True, warn=False):
     of candidates is small relative to the number of items being processed.
 
     """
-    from sympy.utilities.iterables import uniq
 
     d = defaultdict(list)
     if keys:
