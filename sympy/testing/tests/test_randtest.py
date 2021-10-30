@@ -5,7 +5,7 @@ from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.solvers.solvers import solve
 from sympy.testing.randtest import numerically_zero
-from sympy.utilities.pytest import slow
+from sympy.testing.pytest import slow
 
 from sympy.abc import a, b, c, x, y, z
 
