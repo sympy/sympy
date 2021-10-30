@@ -1218,7 +1218,7 @@ def solve_linear_inequalities(inequalities):
     >>> eq4 = x - z
 
     >>> inequalities=[eq1, eq2, eq3, eq4]
-    >>> d = assert solve_linear_inequalities(inequalities)
+    >>> d = solve_linear_inequalities(inequalities)
     >>> assert set(d) == set([x, y, z])
     >>> d[x]
     {'greater_than': [-13/15, -2/7], 'lower_than': []}
