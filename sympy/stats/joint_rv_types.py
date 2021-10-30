@@ -125,9 +125,10 @@ def JointRV(symbol, pdf, _set=None):
 
     """
     #TODO: Add support for sets provided by the user
-    symbol = sympify(symbol)
+    base = IndexedBase(symbol)
+    symbol = base.label
     syms = list(i for i in pdf.free_symbols if isinstance(i, Indexed)
-        and i.base == IndexedBase(symbol))
+        and i.base == base)
     syms = tuple(sorted(syms, key = lambda index: index.args[1]))
     _set = S.Reals**len(syms)
     pdf = Lambda(syms, pdf)

@@ -74,7 +74,7 @@ class JointPSpace(ProductPSpace):
 
     @property
     def pdf(self):
-        sym = [Indexed(self.symbol, i) for i in range(self.component_count)]
+        sym = [Indexed(self.symbol.name, i) for i in range(self.component_count)]
         return self.distribution(*sym)
 
     @property
@@ -92,10 +92,10 @@ class JointPSpace(ProductPSpace):
         if count.atoms(Symbol):
             raise ValueError("Marginal distributions cannot be computed "
                                 "for symbolic dimensions. It is a work under progress.")
-        orig = [Indexed(self.symbol, i) for i in range(count)]
+        orig = [Indexed(self.symbol.name, i) for i in range(count)]
         all_syms = [Symbol(str(i)) for i in orig]
         replace_dict = dict(zip(all_syms, orig))
-        sym = tuple(Symbol(str(Indexed(self.symbol, i))) for i in indices)
+        sym = tuple(Symbol(str(Indexed(self.symbol.name, i))) for i in indices)
         limits = list([i,] for i in all_syms if i not in sym)
         index = 0
         for i in range(count):
