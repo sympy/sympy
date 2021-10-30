@@ -1013,125 +1013,107 @@ def _find_pivot(inequalities):
     ========
 
     >>> from sympy.solvers.inequalities import _find_pivot
-    >>> from sympy import Symbol
+    >>> from sympy.abc import x, y, z
 
-    >>> x=Symbol("x")
-    >>> y=Symbol("y")
-    >>> z=Symbol("z")
-    >>> eq1= 2*x-3*y+z+1
-    >>> eq2= x-y+2*z-2
-    >>> eq3= x+y+3*z+4
-    >>> eq4= x-z
-    >>> inequalities=[eq1,eq2,eq3,eq4]
+    >>> eq1 = 2*x - 3*y + z + 1
+    >>> eq2 = x - y + 2*z - 2
+    >>> eq3 = x + y + 3*z + 4
+    >>> eq4 = x - z
+
+    >>> inequalities = [eq1, eq2, eq3, eq4]
     >>> _find_pivot(inequalities)
     y
+
     """
     memory={}
     for eq in inequalities:
         for symbol in eq.free_symbols:
             if not(symbol in memory.keys()):
-                memory[symbol]=[False,False]
+                memory[symbol] = [False, False]
             coeff=eq.coeff(symbol)
             if coeff>0:
-                    memory[symbol][0]=True
+                    memory[symbol][0] = True
             else:
-                    memory[symbol][1]=True
-            if memory[symbol]==[True,True]:
+                    memory[symbol][1] = True
+            if memory[symbol] == [True, True]:
                 return symbol
-    return None
 
 
-def _split_lower_greater(inequalities,pivot):
-    """
-    Split the inequalities in lists that contains the variable pivot with a positive and negative sign.
-    The list describe what pivot is respectively greater and lower than according to the system of inequalities.
-    Inequalities that does not contains pivot are put in a third list.
+def _split_lower_greater(inequalities, pivot):
+    """Split the inequalities in lists that contains the variable pivot with
+    a positive and negative sign. The list describe what pivot is
+    respectively greater and lower than according to the system of
+    inequalities. Inequalities that does not contains pivot are put in a
+    third list.
 
     Examples
     ========
-    
+
     >>> from sympy.solvers.inequalities import _split_lower_greater
-    >>> from sympy import Symbol
-    
-    >>> x=Symbol("x")
-    >>> y=Symbol("y")
-    >>> z=Symbol("z")
-   
-    >>> eq1= 2*x-3*y+z+1
-    >>> eq2= x-y+2*z-2
-    >>> eq3= x+y+3*z+4
-    >>> eq4= x-z
-  
-    >>> inequalities=[eq1,eq2,eq3,eq4]
-    >>> pivot= y
-   
-    >>> _split_lower_greater(inequalities,pivot)
+    >>> from sympy.abc import x, y, z
+
+    >>> eq1 = 2*x - 3*y + z + 1
+    >>> eq2 = x - y + 2*z - 2
+    >>> eq3 = x + y + 3*z + 4
+    >>> eq4 = x - z
+
+    >>> inequalities = [eq1, eq2, eq3, eq4]
+    >>> pivot = y
+    >>> _split_lower_greater(inequalities, pivot)
     ([-x - 3*z - 4], [2*x/3 + z/3 + 1/3, x + 2*z - 2], [x - z])
-    
+
     """
 
-    greater_than=[]
-    lower_than=[]
-    extra=[]
+    greater_than = []
+    lower_than = []
+    extra = []
     for eq in inequalities:
-        coeff=eq.coeff(pivot)
-        if coeff>0:
-            greater_than.append(-(eq-(pivot*coeff))/coeff)
-        elif coeff<0:
-            lower_than.append(-(eq-(pivot*coeff))/coeff)
+        coeff = eq.coeff(pivot)
+        if coeff > 0:
+            greater_than.append(-(eq - (pivot*coeff))/coeff)
+        elif coeff < 0:
+            lower_than.append(-(eq - (pivot*coeff))/coeff)
         else:
             extra.append(eq)
-    return greater_than,lower_than,extra
-    
-def _merge_lower_greater(greater_than,lower_than):
-    """
-    Build the system of inequalities which verify that all equations in the list greater_than are greater than those
-    that are in lower_than.
+    return greater_than, lower_than, extra
+
+
+def _merge_lower_greater(greater_than, lower_than):
+    """Build the system of inequalities which verify that all equations
+    in the list greater_than are greater than those that are in lower_than.
 
     Examples
     ========
-    
+
     >>> from sympy.solvers.inequalities import _merge_lower_greater
-    >>> from sympy import Symbol
-    
-    >>> x=Symbol("x")
-    >>> z=Symbol("z")
+    >>> from sympy.abc import x, z
 
-    >>> greater_than= [-x - 3*z - 4]
-    >>> lower_than = [2*x/3 + z/3 + 1/3, x + 2*z - 2]
+    >>> greater_than = [-x - 3*z - 4]
+    >>> lower_than = [(2*x + z + 1)/3, x + 2*z - 2]
 
-    >>> _merge_lower_greater(greater_than,lower_than)
-    [5*x/3 + 10*z/3 + 4.33333333333333, 2*x + 5*z + 2]
+    >>> _merge_lower_greater(greater_than, lower_than)
+    [5*x/3 + 10*z/3 + 13/3, 2*x + 5*z + 2]
 
     """
-    inequalities=[]
-    for eq1 in lower_than:
-        for eq2 in greater_than:
-            inequalities.append(eq1-eq2)
-            
-    return inequalities
+    return [i - j for i in lower_than for j in greater_than]
+
 
 def _fourier_motzkin(inequalities):
-    """
-    Eliminate variables of system of linear inequalities by using Fourier-Motzkin elimination algorithm
+    """Eliminate variables of system of linear inequalities by using
+    Fourier-Motzkin elimination algorithm
 
     Examples
     ========
-    
+
     >>> from sympy.solvers.inequalities import _fourier_motzkin
-    >>> from sympy import Symbol
-    
-    >>> x=Symbol("x")
-    >>> y=Symbol("y")
-    >>> z=Symbol("z")
-    >>> 
-    >>> eq1= 2*x-3*y+z+1
-    >>> eq2= x-y+2*z-2
-    >>> eq3= x+y+3*z+4
-    >>> eq4= x-z
+    >>> from sympy.abc import x, y, z
 
-    >>> inequalities=[eq1,eq2,eq3,eq4]
+    >>> eq1 = 2*x - 3*y + z + 1
+    >>> eq2 = x - y + 2*z - 2
+    >>> eq3 = x + y + 3*z + 4
+    >>> eq4 = x - z
 
+    >>> inequalities=[eq1, eq2, eq3, eq4]
     >>> _fourier_motzkin(inequalities)
     ([3*x/2 + 13/10, 7*x/5 + 2/5],
     {
@@ -1140,118 +1122,100 @@ def _fourier_motzkin(inequalities):
     })
 
     """
-    pivot=_find_pivot(inequalities)
-    res={}
-    while pivot!=None:
-        greater_than,lower_than,extra=_split_lower_greater(inequalities,pivot)
-        res[pivot]={"greater_than":greater_than,"lower_than":lower_than}
-        inequalities=_merge_lower_greater(greater_than,lower_than)+extra
-        pivot=_find_pivot(inequalities)
-    return inequalities,res
-    
+    pivot = _find_pivot(inequalities)
+    res = {}
+    while pivot != None:
+        greater_than, lower_than, extra = _split_lower_greater(inequalities, pivot)
+        res[pivot] = {"greater_than": greater_than, "lower_than": lower_than}
+        inequalities = _merge_lower_greater(greater_than, lower_than) + extra
+        pivot = _find_pivot(inequalities)
+    return inequalities, res
+
+
 def _fourier_motzkin_extension(inequalities):
-    """
-    Extension of the Fourier-Motzkin algorithm to the case where inequalities does not contains variables that have at
-    least two coefficients with opposite sign.
+    """Extension of the Fourier-Motzkin algorithm to the case where inequalities
+    do not contain variables that have at least two coefficients with opposite sign.
 
     Examples
     ========
-    
+
     >>> from sympy.solvers.inequalities import _fourier_motzkin_extension
-    >>> from sympy import Symbol
-    
-    >>> x=Symbol("x")
-    >>> y=Symbol("y")
-    >>> z=Symbol("z")
- 
-    >>> eq1= 2*x-3*y+z+1
-    >>> eq2= x-y+2*z-2
-    >>> eq3= x-y+3*z+4
-    >>> eq4= x+z
- 
-    >>> inequalities=[eq1,eq2,eq3,eq4]
+    >>> from sympy.abc import x, y, z
 
+    >>> eq1 = 2*x - 3*y + z + 1
+    >>> eq2 = x - y + 2*z - 2
+    >>> eq3 = x - y + 3*z + 4
+    >>> eq4 = x + z
+
+    >>> inequalities = [eq1, eq2, eq3, eq4]
     >>> _fourier_motzkin_extension(inequalities)
-
     {
     y: {'greater_than': [], 'lower_than': [2*x/3 + z/3 + 1/3, x + 2*z - 2, x + 3*z + 4]},
     x: {'greater_than': [-z], 'lower_than': []}
     }
     """
 
-    pivot=_pick_var(inequalities)
-    res={}
-    while inequalities!=[]:
-        greater_than,lower_than,extra=_split_lower_greater(inequalities,pivot)
-        res[pivot]={"greater_than":greater_than,"lower_than":lower_than}
-        inequalities=extra
-        pivot=_pick_var(inequalities)
+    pivot = _pick_var(inequalities)
+    res = {}
+    while inequalities:
+        greater_than, lower_than, extra = _split_lower_greater(inequalities, pivot)
+        res[pivot] = {"greater_than":greater_than, "lower_than":lower_than}
+        inequalities = extra
+        pivot = _pick_var(inequalities)
     return res
-        
+
 
 def _pick_var(inequalities):
-    """
-    Return a free variable of the system of inequalities
+    """Return a free variable of the system of inequalities
 
     Examples
     ========
-    
+
     >>> from sympy.solvers.inequalities import _pick_var
-    >>> from sympy import Symbol
-    
-    >>> x=Symbol("x")
-    >>> y=Symbol("y")
-    >>> z=Symbol("z")
-    
-    >>> eq1= 2*x-3*y+z+1
-    >>> eq2= x-y+2*z-2
-    >>> eq3= x+y+3*z+4
-    >>> eq4= x-z
-    
-    >>> inequalities=[eq1,eq2,eq3,eq4]
-     
+    >>> from sympy.abc import x, y, z
+
+    >>> eq1 = 2*x - 3*y + z + 1
+    >>> eq2 = x - y + 2*z - 2
+    >>> eq3 = x + y + 3*z + 4
+    >>> eq4 = x - z
+
+    >>> inequalities = [eq1, eq2, eq3, eq4]
     >>> _pick_var(inequalities)
     x
-    
+
     """
-    for eq in inequalities:
-        for symb in eq.free_symbols:
+    for eq in ordered(inequalities):
+        for symb in ordered(eq.free_symbols):
             return symb
 
 
-            
 def solve_linear_inequalities(inequalities):
     """ Solve a system of linear inequalities
 
     Parameters
     ==========
-    
+
     inequalities: list of sympy equations
-        The system of inequalities to solve. All equations in the list are assume to be linear and greater than 0.
-        The system must be expressed as follows:
-        
-        2x-3y+z+1 > 0
-        x-y+2z-2  > 0
-        x+y+3z+4  > 0
-        x  -z     > 0     
-    
+        The system of inequalities to solve. All equations in the list are assume to be
+        linear and greater than 0. The system must be expressed as follows:
+
+        2x - 3y +  z + 1 > 0
+        x  -  y + 2z - 2 > 0
+        x  +  y + 3z + 4 > 0
+        x       -  z     > 0
+
     Examples
     ========
 
     >>> from sympy.solvers.inequalities import solve_linear_inequalities
-    >>> from sympy import Symbol
+    >>> from sympy.abc import x, y, z
 
-    >>> x=Symbol("x")
-    >>> y=Symbol("y")
-    >>> z=Symbol("z")
+    >>> eq1 = 2*x - 3*y + z + 1
+    >>> eq2 = x - y + 2*z - 2
+    >>> eq3 = x + y + 3*z + 4
+    >>> eq4 = x - z
 
-    >>> eq1= 2*x-3*y+z+1
-    >>> eq2= x-y+2*z-2
-    >>> eq3= x+y+3*z+4
-    >>> eq4= x-z
-   
-    >>> inequalities=[eq1,eq2,eq3,eq4]
-    
+    >>> inequalities=[eq1, eq2, eq3, eq4]
     >>> solve_linear_inequalities(inequalities)
     {
     y: {'greater_than': [-x - 3*z - 4], 'lower_than': [2*x/3 + z/3 + 1/3, x + 2*z - 2]},
@@ -1259,12 +1223,11 @@ def solve_linear_inequalities(inequalities):
     x: {'greater_than': [-13/15, -2/7], 'lower_than': []}
     }
 
-    x=2 is valid because: 2 > max(-13/15,-2/7)
-    z=1 is valid because: x > 1 > max(-x/2 - 13/10, -2*x/5 - 2/5) 
-    y=-1 is valid because: min(2*x/3 + z/3 + 1/3, x + 2*z - 2) > y > -x - 3*z - 4
+    x = 2 is valid because: 2 > max(-13/15, -2/7)
+    z = 1 is valid because: x > 1 > max(-x/2 - 13/10, -2*x/5 - 2/5)
+    y = -1 is valid because: min(2*x/3 + z/3 + 1/3, x + 2*z - 2) > y > -x - 3*z - 4
     """
 
-    inequalities,res1=_fourier_motzkin(inequalities)
-    res2=_fourier_motzkin_extension(inequalities)
-
-    return {**res1,**res2}
+    inequalities, res1 = _fourier_motzkin(inequalities)
+    res2 = _fourier_motzkin_extension(inequalities)
+    return {**res1, **res2}
