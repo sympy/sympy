@@ -14,11 +14,11 @@ from sympy.core.sympify import sympify
 from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
                         Add)
 from sympy.core.containers import Tuple
-from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
-                                expand_log)
+                                expand_log, _mexpand, expand_trig)
 from sympy.core.mod import Mod
-from sympy.core.numbers import igcd
+from sympy.core.numbers import igcd, I, Number, Rational, oo, ilcm
+from sympy.core.power import integer_log
 from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
@@ -28,10 +28,11 @@ from sympy.simplify import powdenest, logcombine
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
                              piecewise_fold, Piecewise)
+from sympy.functions.elementary.complexes import re, im
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, BooleanTrue
 from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set, ProductSet
@@ -282,7 +283,6 @@ def _invert_real(f, g_ys, symbol):
                 return _invert_real(expo,
                     imageset(Lambda(n, log(n, base, evaluate=False)), g_ys), symbol)
             elif base.is_negative:
-                from sympy.core.power import integer_log
                 s, b = integer_log(rhs, base)
                 if b:
                     return _invert_real(expo, FiniteSet(s), symbol)
@@ -572,7 +572,6 @@ def _is_function_class_equation(func_class, f, symbol):
 
 def _solve_as_rational(f, symbol, domain):
     """ solve rational functions"""
-    from sympy.core.function import _mexpand
     f = together(_mexpand(f, recursive=True), deep=True)
     g, h = fraction(f)
     if not h.has(symbol):
@@ -713,8 +712,6 @@ def _solve_trig1(f, symbol, domain):
 def _solve_trig2(f, symbol, domain):
     """Secondary helper to solve trigonometric equations,
     called when first helper fails """
-    from sympy.core.function import expand_trig
-    from sympy.core.numbers import ilcm
     f = trigsimp(f)
     f_original = f
     trig_functions = f.atoms(sin, cos, tan, sec, cot, csc)
@@ -991,7 +988,6 @@ def _solveset(f, symbol, domain, _check=False):
     given symbol."""
     # _check controls whether the answer is checked or not
     from sympy.simplify.simplify import signsimp
-    from sympy.logic.boolalg import BooleanTrue
 
     if isinstance(f, BooleanTrue):
         return domain
@@ -1031,7 +1027,6 @@ def _solveset(f, symbol, domain, _check=False):
             _is_function_class_equation(HyperbolicFunction, f, symbol):
         result = _solve_trig(f, symbol, domain)
     elif isinstance(f, arg):
-        from sympy.functions.elementary.complexes import re, im
         a = f.args[0]
         result = Intersection(_solveset(re(a) > 0, symbol, domain),
                               _solveset(im(a), symbol, domain))
@@ -1547,8 +1542,6 @@ def _solve_exponential(lhs, rhs, symbol, domain):
 
     a_base, a_exp = a_term.as_base_exp()
     b_base, b_exp = b_term.as_base_exp()
-
-    from sympy.functions.elementary.complexes import im
 
     if domain.is_subset(S.Reals):
         conditions = And(

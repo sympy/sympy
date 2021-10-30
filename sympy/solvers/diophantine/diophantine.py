@@ -27,7 +27,8 @@ from sympy.simplify.simplify import signsimp
 from sympy.solvers.solveset import solveset_real
 from sympy.utilities import numbered_symbols
 from sympy.utilities.misc import as_int, filldedent
-from sympy.utilities.iterables import is_sequence
+from sympy.utilities.iterables import (is_sequence, subsets, permute_signs,
+                                       signed_permutations, ordered_partitions)
 
 
 # these are imported with 'from sympy.solvers.diophantine import *
@@ -1341,9 +1342,6 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     sympy.utilities.iterables.permute_signs
     sympy.utilities.iterables.signed_permutations
     """
-
-    from sympy.utilities.iterables import (
-        subsets, permute_signs, signed_permutations)
 
     eq = _sympify(eq)
 
@@ -3594,7 +3592,6 @@ def partition(n, k=None, zeros=False):
     (0, 0, 5)
 
     """
-    from sympy.utilities.iterables import ordered_partitions
     if not zeros or k is None:
         for i in ordered_partitions(n, k):
             yield tuple(i)

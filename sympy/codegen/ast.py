@@ -134,7 +134,8 @@ from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.numbers import Float, Integer, oo
 from sympy.core.sympify import _sympify, sympify, SympifyError
-from sympy.utilities.iterables import iterable
+from sympy.utilities.iterables import (iterable, topological_sort,
+                                       numbered_symbols, filter_symbols)
 
 
 def _mk_Tuple(args):
@@ -688,7 +689,6 @@ class CodeBlock(Basic):
         )
 
         """
-        from sympy.utilities.iterables import topological_sort
 
         if not all(isinstance(i, Assignment) for i in assignments):
             # Will support more things later
@@ -771,7 +771,6 @@ class CodeBlock(Basic):
 
         """
         from sympy.simplify.cse_main import cse
-        from sympy.utilities.iterables import numbered_symbols, filter_symbols
 
         # Check that the CodeBlock only contains assignments to unique variables
         if not all(isinstance(i, Assignment) for i in self.args):

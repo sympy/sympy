@@ -19,7 +19,8 @@ from sympy.simplify.simplify import simplify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError, solveset
-from sympy.utilities.iterables import iterable
+from sympy.utilities.iterables import (connected_components, iterable,
+                                       strongly_connected_components)
 from sympy.utilities.misc import filldedent
 from sympy.integrals.integrals import Integral, integrate
 
@@ -1577,7 +1578,6 @@ def _combine_type1_subsystems(subsystem, funcs, t):
 
 
 def _component_division(eqs, funcs, t):
-    from sympy.utilities.iterables import connected_components, strongly_connected_components
 
     # Assuming that each eq in eqs is in canonical form,
     # that is, [f(x).diff(x) = .., g(x).diff(x) = .., etc]

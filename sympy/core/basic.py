@@ -12,6 +12,9 @@ from .sorting import ordered
 from .kind import Kind, UndefinedKind
 from ._print_helpers import Printable
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import iterable, numbered_symbols
+from sympy.utilities.misc import filldedent, func_name
 
 from inspect import getmro
 
@@ -20,7 +23,6 @@ def as_Basic(expr):
     """Return expr as a Basic instance using strict sympify
     or raise a TypeError; this is just a wrapper to _sympify,
     raising a TypeError instead of a SympifyError."""
-    from sympy.utilities.misc import func_name
     try:
         return _sympify(expr)
     except SympifyError:
@@ -515,7 +517,6 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @property
     def expr_free_symbols(self):
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
         SymPyDeprecationWarning(feature="expr_free_symbols method",
                                 issue=21494,
                                 deprecated_since_version="1.9").warn()
@@ -581,7 +582,6 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> Lambda(x, 2*x).canonical_variables
         {x: _0}
         """
-        from sympy.utilities.iterables import numbered_symbols
         if not hasattr(self, 'bound_symbols'):
             return {}
         dums = numbered_symbols('_')
@@ -883,8 +883,6 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         from .containers import Dict
         from .symbol import Dummy, Symbol
-        from sympy.utilities.iterables import iterable
-        from sympy.utilities.misc import filldedent
 
         unordered = False
         if len(args) == 1:
@@ -1623,8 +1621,6 @@ class Basic(Printable, metaclass=ManagedProperties):
         {p_: 2/x**2}
 
         """
-        from sympy.utilities.misc import filldedent
-
         pattern = sympify(pattern)
         # match non-bound symbols
         canonical = lambda x: x if x.is_Symbol else x.as_dummy()
@@ -1809,7 +1805,6 @@ class Basic(Printable, metaclass=ManagedProperties):
             method = "_eval_rewrite_as_%s" % clsname
 
         if pattern:
-            from sympy.utilities.iterables import iterable
             if iterable(pattern[0]):
                 pattern = pattern[0]
             pattern = tuple(p for p in pattern if self.has(p))

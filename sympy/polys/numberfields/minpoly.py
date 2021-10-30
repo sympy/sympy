@@ -3,7 +3,7 @@
 from functools import reduce
 
 from sympy.core.add import Add
-from sympy.core.function import expand_mul
+from sympy.core.function import expand_mul, expand_multinomial
 from sympy.core.mul import Mul
 from sympy.core import (GoldenRatio, TribonacciConstant)
 from sympy.core.numbers import (I, Rational, pi)
@@ -22,7 +22,7 @@ from sympy.ntheory.factor_ import divisors
 from sympy.utilities.iterables import subsets
 
 from sympy.polys.densetools import dup_eval
-from sympy.polys.domains import ZZ, QQ
+from sympy.polys.domains import ZZ, QQ, FractionField
 from sympy.polys.orthopolys import dup_chebyshevt
 from sympy.polys.polyerrors import (
     NotAlgebraic,
@@ -32,7 +32,7 @@ from sympy.polys.polytools import (
     Poly, PurePoly, invert, factor_list, groebner, resultant,
     degree, poly_from_expr, parallel_poly_from_expr, lcm
 )
-from sympy.polys.polyutils import dict_from_expr, expr_from_dict
+from sympy.polys.polyutils import dict_from_expr, expr_from_dict, illegal
 from sympy.polys.ring_series import rs_compose_add
 from sympy.polys.rings import ring
 from sympy.polys.rootoftools import CRootOf
@@ -49,7 +49,6 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
     Return a factor having root ``v``
     It is assumed that one of the factors has root ``v``.
     """
-    from sympy.polys.polyutils import illegal
 
     if isinstance(factors[0], tuple):
         factors = [f[0] for f in factors]
@@ -675,7 +674,6 @@ def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None):
     x**2 - y
 
     """
-    from sympy.polys.domains import FractionField
 
     ex = sympify(ex)
     if ex.is_number:
@@ -729,7 +727,6 @@ def _minpoly_groebner(ex, x, cls):
     x**2 - 2*x - 1
 
     """
-    from sympy.core.function import expand_multinomial
 
     generator = numbered_symbols('a', cls=Dummy)
     mapping, symbols = {}, {}

@@ -1,5 +1,6 @@
 from sympy.core.add import Add
-from sympy.core.function import expand_log
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import expand_log, _mexpand
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
@@ -8,7 +9,6 @@ from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import root
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import Poly, factor
-from sympy.core.function import _mexpand
 from sympy.simplify.simplify import separatevars
 from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import powsimp
@@ -99,7 +99,6 @@ def _linab(arg, symbol):
     >>> _linab(3 + 2*exp(x), x)
     (2, 3, exp(x))
     """
-    from sympy.core.exprtools import factor_terms
     arg = factor_terms(arg.expand())
     ind, dep = arg.as_independent(symbol)
     if arg.is_Mul and dep.is_Add:

@@ -1,6 +1,5 @@
 from typing import Dict, Union, Type
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .basic import Atom, Basic
 from .sorting import ordered
 from .evalf import EvalfMixin
@@ -10,6 +9,9 @@ from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
 from .logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
 from sympy.logic.boolalg import Boolean, BooleanAtom
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import sift
+from sympy.utilities.misc import filldedent
 
 __all__ = (
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
@@ -110,7 +112,6 @@ class Relational(Boolean, EvalfMixin):
             # Note: Symbol is a subclass of Boolean but is considered
             # acceptable here.
             if any(map(_nontrivBool, (lhs, rhs))):
-                from sympy.utilities.misc import filldedent
                 raise TypeError(filldedent('''
                     A Boolean argument can only be used in
                     Eq and Ne; all other relationals expect
@@ -1448,7 +1449,6 @@ def is_eq(lhs, rhs, assumptions=None):
         # Try to split real/imaginary parts and equate them
         I = S.ImaginaryUnit
 
-        from sympy.utilities.iterables import sift
         def split_real_imag(expr):
             real_imag = lambda t: (
                 'real' if is_extended_real(t, assumptions) else

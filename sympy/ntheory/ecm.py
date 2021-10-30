@@ -1,4 +1,5 @@
 from sympy.ntheory import sieve, isprime
+from sympy.core.numbers import mod_inverse
 from sympy.core.power import integer_log
 from sympy.utilities.misc import as_int
 import random
@@ -50,7 +51,6 @@ class Point:
     def __eq__(self, other):
         """Two points are equal if X/Z of both points are equal
         """
-        from sympy.core.numbers import mod_inverse
         if self.a_24 != other.a_24 or self.mod != other.mod:
             return False
         return self.x_cord * mod_inverse(self.z_cord, self.mod) % self.mod ==\
@@ -193,7 +193,6 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     .. [1]  Carl Pomerance and Richard Crandall "Prime Numbers:
         A Computational Perspective" (2nd Ed.), page 344
     """
-    from sympy.core.numbers import mod_inverse
     from sympy.functions.elementary.miscellaneous import sqrt
     from sympy.polys.polytools import gcd
     n = as_int(n)

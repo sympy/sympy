@@ -11,6 +11,7 @@ from .sorting import ordered
 from .sympify import sympify
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.iterables import sift, is_sequence
+from sympy.utilities.misc import filldedent
 
 import string
 import re as _re
@@ -251,7 +252,6 @@ class Symbol(AtomicExpr, Boolean):
         base = self.assumptions0
         for k in set(assumptions) & set(base):
             if assumptions[k] != base[k]:
-                from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent('''
                     non-matching assumptions for %s: existing value
                     is %s and new value is %s''' % (

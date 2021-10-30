@@ -22,7 +22,7 @@ R3 are currently the only ambient spaces implemented.
 
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
-from sympy.core.evalf import EvalfMixin
+from sympy.core.evalf import EvalfMixin, N
 from sympy.core.numbers import oo
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
@@ -164,8 +164,6 @@ class GeometryEntity(Basic, EvalfMixin):
 
     def _repr_svg_(self):
         """SVG representation of a GeometryEntity suitable for IPython"""
-
-        from sympy.core.evalf import N
 
         try:
             bounds = self.bounds

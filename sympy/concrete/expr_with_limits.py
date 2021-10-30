@@ -1,6 +1,7 @@
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
+from sympy.core.function import AppliedUndef, UndefinedFunction
 from sympy.core.mul import Mul
 from sympy.core.relational import Equality, Relational
 from sympy.core.singleton import S
@@ -360,7 +361,6 @@ class ExprWithLimits(Expr):
         change_index : Perform mapping on the sum and product dummy variables
 
         """
-        from sympy.core.function import AppliedUndef, UndefinedFunction
         func, limits = self.function, list(self.limits)
 
         # If one of the expressions we are replacing is used as a func index

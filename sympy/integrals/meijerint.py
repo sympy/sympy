@@ -28,7 +28,8 @@ The main references for this are:
 
 from typing import Dict, Tuple as tTuple
 
-from sympy.core import S, pi, Expr
+from sympy import SYMPY_DEBUG
+from sympy.core import S, Expr
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.containers import Tuple
@@ -36,8 +37,8 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand, expand_mul, expand_power_base,
                                  expand_trig, Function)
 from sympy.core.mul import Mul
-from sympy.core.numbers import ilcm, Rational
-from sympy.core.relational import Eq, Ne
+from sympy.core.numbers import ilcm, Rational, pi
+from sympy.core.relational import Eq, Ne, _canonical_coeff
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.functions.combinatorial.factorials import factorial
@@ -621,8 +622,6 @@ def _condsimp(cond, first=True):
     >>> simp(Or(x < y, Eq(x, y)))
     x <= y
     """
-    from sympy import SYMPY_DEBUG
-    from sympy.core.relational import _canonical_coeff
     if first:
         cond = cond.replace(lambda _: _.is_Relational, _canonical_coeff)
         first = False

@@ -1092,7 +1092,6 @@ def jn_zeros(n, k, method="sympy", dps=15):
     if method == "sympy":
         from mpmath import besseljzero
         from mpmath.libmp.libmpf import dps_to_prec
-        from sympy.core.expr import Expr
         prec = dps_to_prec(dps)
         return [Expr._from_mpmath(besseljzero(S(n + 0.5)._to_mpmath(prec),
                                               int(l)), prec)

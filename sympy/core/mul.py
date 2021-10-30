@@ -14,6 +14,7 @@ from .parameters import global_parameters
 from .kind import KindDispatcher
 from .traversal import bottom_up
 
+from sympy.utilities.iterables import sift
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -831,7 +832,6 @@ class Mul(Expr, AssocOp):
     @cacheit
     def as_coeff_mul(self, *deps, rational=True, **kwargs):
         if deps:
-            from sympy.utilities.iterables import sift
             l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
             return self._new_rawargs(*l2), tuple(l1)
         args = self.args

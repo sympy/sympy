@@ -1,7 +1,8 @@
 from sympy.core.basic import Basic
-from sympy.core.expr import Expr
+from sympy.core.expr import Expr, ExprBuilder
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
+from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices.common import NonSquareMatrixError
@@ -57,7 +58,6 @@ class Trace(Expr):
 
     def _eval_derivative_matrix_lines(self, x):
         from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayContraction
-        from sympy.core.expr import ExprBuilder
         r = self.args[0]._eval_derivative_matrix_lines(x)
         for lr in r:
             if lr.higher == 1:
@@ -144,7 +144,6 @@ class Trace(Expr):
 
     def _eval_rewrite_as_Sum(self, expr, **kwargs):
         from sympy.concrete.summations import Sum
-        from sympy.core.symbol import Dummy
         i = Dummy('i')
         return Sum(self.arg[i, i], (i, 0, self.arg.rows-1)).doit()
 

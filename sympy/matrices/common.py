@@ -15,6 +15,7 @@ from sympy.core.basic import Atom
 from sympy.core.decorators import call_highest_priority
 from sympy.core.kind import Kind, NumberKind
 from sympy.core.logic import fuzzy_and, FuzzyBool
+from sympy.core.mod import Mod
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
@@ -2679,7 +2680,6 @@ class MatrixArithmetic(MatrixRequired):
         return self._new(self.rows, self.cols, lambda i, j: other*self[i,j])
 
     def _eval_Mod(self, other):
-        from sympy.core.mod import Mod
         return self._new(self.rows, self.cols, lambda i, j: Mod(self[i, j], other))
 
     # Python arithmetic functions

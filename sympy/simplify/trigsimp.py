@@ -1,11 +1,14 @@
 from collections import defaultdict
 from functools import reduce
 
-from sympy.core import (sympify, Basic, S, Expr, expand_mul, factor_terms,
-    Mul, Dummy, igcd, FunctionClass, Add, symbols, Wild, expand, bottom_up)
+from sympy.core import (sympify, Basic, S, Expr, factor_terms,
+                        Mul, Add, bottom_up)
 from sympy.core.cache import cacheit
-from sympy.core.function import count_ops, _mexpand
-from sympy.core.numbers import I, Integer
+from sympy.core.function import (count_ops, _mexpand, FunctionClass, expand,
+                                 expand_mul, Derivative)
+from sympy.core.numbers import I, Integer, igcd
+from sympy.core.sorting import _nodes
+from sympy.core.symbol import Dummy, symbols, Wild
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
@@ -1115,7 +1118,6 @@ def _futrig(e):
         TR1, TR2, TR3, TR2i, TR10, L, TR10i,
         TR8, TR6, TR15, TR16, TR111, TR5, TRmorrie, TR11, _TR11, TR14, TR22,
         TR12)
-    from sympy.core.sorting import _nodes
 
     if not e.has(TrigonometricFunction):
         return e
@@ -1176,7 +1178,6 @@ def _futrig(e):
 def _is_Expr(e):
     """_eapply helper to tell whether ``e`` and all its args
     are Exprs."""
-    from sympy.core.function import Derivative
     if isinstance(e, Derivative):
         return _is_Expr(e.expr)
     if not isinstance(e, Expr):
