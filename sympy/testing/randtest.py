@@ -3,7 +3,6 @@
 from random import uniform, Random, randrange, randint
 
 from sympy.core.containers import Tuple
-from sympy.core.function import _coeff_isneg
 from sympy.core.numbers import comp, I
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
