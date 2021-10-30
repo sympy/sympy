@@ -18,6 +18,38 @@ import random
 from itertools import product
 
 
+class Str(Atom):
+    """
+    Represents a string in SymPy which should be used to store a string
+    as an argument in a SymPy object, e.g. the name of an instance.
+
+    Explanation
+    ===========
+
+    Previously, a ``Symbol`` was used to provide a string via its name when
+    a string was needed in ``args`` of SymPy objects, e.g. to denote the name
+    of the instance. Since ``Symbol`` represents mathematical scalar, with
+    mathematical operations defined, this class should be used instead
+    """
+    __slots__ = ('name',)
+
+    def __new__(cls, name, **kwargs):
+        if not isinstance(name, str):
+            raise TypeError("name should be a string, not %s" % repr(type(name)))
+        obj = Expr.__new__(cls, **kwargs)
+        obj.name = name
+        return obj
+
+    def __getnewargs__(self):
+        return (self.name,)
+
+    def _hashable_content(self):
+        return (self.name,)
+
+    def __str__(self):
+        return self.name  # XXX probably will have to redefine printers for this
+
+
 def _filter_assumptions(kwargs):
     """Split the given dict into assumptions and non-assumptions.
     Keys are taken as assumptions if they correspond to an
@@ -870,18 +902,3 @@ def disambiguate(*iter):
             ki = mapping[k][i]
             reps[ki] = Symbol(name, **ki.assumptions0)
     return new_iter.xreplace(reps)
-
-
-class Str(Symbol):
-    """
-    Represents string in SymPy.
-
-    Explanation
-    ===========
-
-    Previously, ``Symbol`` was used where string is needed in ``args`` of SymPy
-    objects, e.g. denoting the name of the instance. However, since ``Symbol``
-    represents mathematical scalar, this class should be used instead.
-
-    """
-    is_scalar = False
