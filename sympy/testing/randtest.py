@@ -3,7 +3,9 @@
 from random import uniform, Random, randrange, randint
 
 from sympy.core.containers import Tuple
+from sympy.core.function import _coeff_isneg
 from sympy.core.numbers import comp, I
+from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.simplify.simplify import nsimplify
 from sympy.utilities.iterables import is_sequence
@@ -25,6 +27,80 @@ def random_complex_number(a=2, b=-1, c=3, d=1, rational=False, tolerance=None):
         return A + I*B
     return (nsimplify(A, rational=True, tolerance=tolerance) +
         I*nsimplify(B, rational=True, tolerance=tolerance))
+
+
+def numerically_zero(f, number=10, prec=10, a=2, b=-1, c=3, d=1, maxfail=100, maxprec=100):
+    """
+    Test numerically if ``|f| < 10**-prec`` by replacing all symbols (``number``
+    times) with random complex numbers and evaluating the result. If a value
+    is ever computed that fails the test, False will be returned; otherwise
+    None will be returned. Failures to compute a finite result will not be
+    counted and will be allowed ``maxfail`` times before an error message
+    is raised.
+
+    If you are not sure what precision to use you can set ``prec=None`` and
+    a numerical estimate of the error will be made from two numerical
+    estimates.
+
+    Examples
+    ========
+
+    >>> from sympy import sin, cos, pi, S, Add
+    >>> from sympy.abc import x
+    >>> from sympy.utilities.randtest import numerically_zero as is_zero
+    >>> is_zero(sin(x)**2 + cos(x)**2)
+    False
+    >>> is_zero(sin(x)**2 + cos(x)**2 - 1)
+
+    Better detection of nonzero values is obtained by using larger values
+    of ``prec``:
+
+    >>> eps = lambda e: Add(pi, 10**S(e), -pi, evaluate=False)
+    >>> is_zero(eps(-11))
+    >>> is_zero(eps(-11), prec=12)
+    False
+
+    See Also
+    ========
+    random_complex_number
+    """
+    tol = S(10)**-prec if prec else None
+    f = S(f)
+    if not f.args:
+        if f.is_number and abs(f) <= (tol or 0):
+            return True
+        return False
+    s = f.free_symbols
+    did = 0
+    for i in range(number + maxfail):
+        reps = dict(zip(s,
+            [random_complex_number(a, b, c, d, rational=True) for i in s]))
+        if tol:
+            check = f.xreplace(reps).n(2, maxn=prec)
+            if not check.is_finite == True:
+                # reject attempts where nan or infinite quantites were calculated
+                continue
+            if abs(check) > tol:
+                return False
+        else:
+            M = 10
+            n = f.xreplace(reps)
+            n2 = n.n(2, maxn=M)
+            r, i = n2.as_real_imag()
+            # if neither real not imaginary is computed with precision, then
+            # retry at maximum working precision
+            if r._prec == 1 and i._prec == 1 and maxprec > 10:
+                M = maxprec
+                n2 = n.n(2, maxn=M)
+            n4 = n.n(4, maxn=M)
+            err = abs(n4 - n2)
+            if abs(n4) > err:
+                return False
+        did += 1
+        if not s or did == number:
+            break
+    else:
+        raise NotImplementedError('unable to find good values for calculation')
 
 
 def verify_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
