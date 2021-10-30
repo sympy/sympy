@@ -1004,3 +1004,115 @@ def reduce_inequalities(inequalities, symbols=[]):
 
     # restore original symbols and return
     return rv.xreplace({v: k for k, v in recast.items()})
+
+def _fourier_motzkin_extension(inequalities):
+    """
+    Extension of the Fourier-Motzkin algorithm to the case where inequalities does not contains variables that have at
+    least two coefficients with opposite sign.
+
+    Examples
+    ========
+    >>> from sympy.solvers.inequalities import _fourier_motzkin_extension
+    >>> x=sp.Symbol("x")
+    >>> y=sp.Symbol("y")
+    >>> z=sp.Symbol("z")
+    >>> 
+    >>> eq1= 2*x-3*y+z+1
+    >>> eq2= x-y+2*z-2
+    >>> eq3= x-y+3*z+4
+    >>> eq4= x+z
+    >>> 
+    >>> inequalities=[eq1,eq2,eq3,eq4]
+    >>> 
+    >>> _fourier_motzkin_extension(inequalities)
+
+    {
+    y: {'greater_than': [], 'lower_than': [2*x/3 + z/3 + 1/3, x + 2*z - 2, x + 3*z + 4]},
+    x: {'greater_than': [-z], 'lower_than': []}
+    }
+    """
+
+    pivot=_pick_var(inequalities)
+    res={}
+    while inequalities!=[]:
+        greater_than,lower_than,extra=_split_lower_greater(inequalities,pivot)
+        res[pivot]={"greater_than":greater_than,"lower_than":lower_than}
+        inequalities=extra
+        pivot=_pick_var(inequalities)
+    return res
+        
+
+def _pick_var(inequalities):
+    """
+    Return a free variable of the system of inequalities
+
+    Examples
+    ========
+    >>> from sympy.solvers.inequalities import _pick_var
+    >>> x=sp.Symbol("x")
+    >>> y=sp.Symbol("y")
+    >>> z=sp.Symbol("z")
+    >>> 
+    >>> eq1= 2*x-3*y+z+1
+    >>> eq2= x-y+2*z-2
+    >>> eq3= x+y+3*z+4
+    >>> eq4= x-z
+    >>> 
+    >>> inequalities=[eq1,eq2,eq3,eq4]
+    >>> 
+    >>> _pick_var(inequalities)
+    x
+    
+    """
+    for eq in inequalities:
+        for symb in eq.free_symbols:
+            return symb
+
+
+            
+def solve_linear_inequalities(inequalities):
+    """ Solve a system of linear inequalities
+
+    Parameters
+    ==========
+    inequalities: list of sympy equations
+        The system of inequalities to solve. All equations in the list are assume to be linear and greater than 0.
+        The system must be expressed as follows:
+        
+        2x-3y+z+1 > 0
+        x-y+2z-2  > 0
+        x+y+3z+4  > 0
+        x  -z     > 0     
+    
+    Examples
+    ========
+
+    >>> from sympy.solvers.inequalities import solve_linear_inequalities
+
+    >>> x=sp.Symbol("x")
+    >>> y=sp.Symbol("y")
+    >>> z=sp.Symbol("z")
+    >>> 
+    >>> eq1= 2*x-3*y+z+1
+    >>> eq2= x-y+2*z-2
+    >>> eq3= x+y+3*z+4
+    >>> eq4= x-z
+    >>> 
+    >>> inequalities=[eq1,eq2,eq3,eq4]
+    >>> 
+    >>> solve_linear_inequalities(inequalities)
+    {
+    y: {'greater_than': [-x - 3*z - 4], 'lower_than': [2*x/3 + z/3 + 1/3, x + 2*z - 2]},
+    z: {'greater_than': [-x/2 - 13/10, -2*x/5 - 2/5], 'lower_than': [x]},
+    x: {'greater_than': [-13/15, -2/7], 'lower_than': []}
+    }
+
+    x=2 is valid because: 2 > max(-13/15,-2/7)
+    z=1 is valid because: x > 1 > max(-x/2 - 13/10, -2*x/5 - 2/5) 
+    y=-1 is valid because: min(2*x/3 + z/3 + 1/3, x + 2*z - 2) > y > -x - 3*z - 4
+    """
+
+    inequalities,res1=_fourier_motzkin(inequalities)
+    res2=_fourier_motzkin_extension(inequalities)
+
+    return {**res1,**res2}
