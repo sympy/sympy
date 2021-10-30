@@ -46,7 +46,7 @@ def numerically_zero(f, number=10, prec=10, a=2, b=-1, c=3, d=1, maxfail=100, ma
 
     >>> from sympy import sin, cos, pi, S, Add
     >>> from sympy.abc import x
-    >>> from sympy.utilities.randtest import numerically_zero as is_zero
+    >>> from sympy.testing.randtest import numerically_zero as is_zero
     >>> is_zero(sin(x)**2 + cos(x)**2)
     False
     >>> is_zero(sin(x)**2 + cos(x)**2 - 1)
