@@ -375,7 +375,7 @@ class UndefinedPredicate(Predicate):
     >>> Q.P.func
     <class 'sympy.assumptions.assume.UndefinedPredicate'>
     >>> Q.P.name
-    Str('P')
+    P
 
     """
 
