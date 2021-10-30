@@ -1150,11 +1150,9 @@ def _fourier_motzkin_extension(inequalities):
 
     >>> inequalities = [eq1, eq2, eq3, eq4]
     >>> d = _fourier_motzkin_extension(inequalities)
-    >>> assert set(d) == set([x, y])
+    >>> assert set(d) == {x}
     >>> d[x]
-    {'greater_than': [-z], 'lower_than': []}
-    >>> d[y]
-    {'greater_than': [], 'lower_than': [2*x/3 + z/3 + 1/3, x + 2*z - 2, x + 3*z + 4]}
+    {'greater_than': [3*y/2 - z/2 - 1/2, y - 2*z + 2, y - 3*z - 4, -z], 'lower_than': []}
     """
 
     pivot = _pick_var(inequalities)
@@ -1186,8 +1184,8 @@ def _pick_var(inequalities):
     x
 
     """
-    for eq in ordered(inequalities):
-        for symb in ordered(eq.free_symbols):
+    for eq in inequalities:  # should already be in canonical order
+        for symb in ordered(eq.free_symbols):  # make selection canonical
             return symb
 
 
@@ -1231,7 +1229,7 @@ def solve_linear_inequalities(inequalities):
     z = 1 is valid because: x > 1 > max(-x/2 - 13/10, -2*x/5 - 2/5)
     y = -1 is valid because: min(2*x/3 + z/3 + 1/3, x + 2*z - 2) > y > -x - 3*z - 4
     """
-
-    inequalities, res1 = _fourier_motzkin(inequalities)
-    res2 = _fourier_motzkin_extension(inequalities)
+    eqs = list(ordered(inequalities))
+    eqs, res1 = _fourier_motzkin(eqs)
+    res2 = _fourier_motzkin_extension(eqs)
     return {**res1, **res2}
