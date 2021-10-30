@@ -1,10 +1,10 @@
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core.numbers import (Integer, oo, pi)
+from sympy.core.numbers import (oo, pi)
 from sympy.core.power import Pow
 from sympy.core.relational import (Eq, Ne)
-from sympy.core.symbol import (Dummy, Str, Symbol, symbols)
+from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -44,22 +44,22 @@ def test_MarginalDistribution():
     C = Multinomial('C', 2, p1, p2)
     B = MultivariateBeta('B', a1, C[0])
     MGR = MarginalDistribution(B, (C[0],))
-    mgrc = Mul(Symbol('B'), Piecewise(ExprCondPair(Mul(Integer(2),
-    Pow(Symbol('p1', positive=True), Indexed(IndexedBase(Str('C')),
-    Integer(0))), Pow(Symbol('p2', positive=True),
-    Indexed(IndexedBase(Str('C')), Integer(1))),
-    Pow(factorial(Indexed(IndexedBase(Str('C')), Integer(0))), Integer(-1)),
-    Pow(factorial(Indexed(IndexedBase(Str('C')), Integer(1))), Integer(-1))),
-    Eq(Add(Indexed(IndexedBase(Str('C')), Integer(0)),
-    Indexed(IndexedBase(Str('C')), Integer(1))), Integer(2))),
-    ExprCondPair(Integer(0), True)), Pow(gamma(Symbol('a1', positive=True)),
-    Integer(-1)), gamma(Add(Symbol('a1', positive=True),
-    Indexed(IndexedBase(Str('C')), Integer(0)))),
-    Pow(gamma(Indexed(IndexedBase(Str('C')), Integer(0))), Integer(-1)),
-    Pow(Indexed(IndexedBase(Str('B')), Integer(0)),
-    Add(Symbol('a1', positive=True), Integer(-1))),
-    Pow(Indexed(IndexedBase(Str('B')), Integer(1)),
-    Add(Indexed(IndexedBase(Str('C')), Integer(0)), Integer(-1))))
+    mgrc = Mul(Symbol('B'), Piecewise(ExprCondPair(Mul(2,
+    Pow(Symbol('p1', positive=True), Indexed(IndexedBase('C'),
+    0)), Pow(Symbol('p2', positive=True),
+    Indexed(IndexedBase('C'), 1)),
+    Pow(factorial(Indexed(IndexedBase('C'), 0)), -1),
+    Pow(factorial(Indexed(IndexedBase('C'), 1)), -1)),
+    Eq(Add(Indexed(IndexedBase('C'), 0),
+    Indexed(IndexedBase('C'), 1)), Integer(2))),
+    ExprCondPair(0, True)), Pow(gamma(Symbol('a1', positive=True)),
+    -1), gamma(Add(Symbol('a1', positive=True),
+    Indexed(IndexedBase('C'), 0))),
+    Pow(gamma(Indexed(IndexedBase('C', 0)), -1),
+    Pow(Indexed(IndexedBase('B'), 0),
+    Add(Symbol('a1', positive=True), -1)),
+    Pow(Indexed(IndexedBase('B'), 1),
+    Add(Indexed(IndexedBase('C'), 0), -1)))
     assert MGR(C) == mgrc, MGR(C)
 
 
