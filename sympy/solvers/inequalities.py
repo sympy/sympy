@@ -2,11 +2,11 @@
 
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.exprtools import factor_terms
+from sympy.core.function import expand_mul
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
-from sympy.core.function import expand_mul
-
+from sympy.core.sorting import ordered
 from sympy.functions import Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
