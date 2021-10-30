@@ -26,6 +26,7 @@ from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.ntheory import isprime
 from sympy.ntheory.primetest import is_square
+from sympy.utilities.enumerative import MultisetPartitionTraverser
 from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
 
@@ -1988,7 +1989,6 @@ def nT(n, k=None):
     .. [1] http://undergraduate.csse.uwa.edu.au/units/CITS7209/partition.pdf
 
     """
-    from sympy.utilities.enumerative import MultisetPartitionTraverser
 
     if isinstance(n, SYMPY_INTS):
         # n identical items

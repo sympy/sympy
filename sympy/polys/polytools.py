@@ -5,14 +5,16 @@ from functools import wraps, reduce
 from operator import mul
 
 from sympy.core import (
-    S, Expr, I, Integer, Add, Tuple
+    S, Expr, Add, Tuple
 )
 from sympy.core.basic import Basic
 from sympy.core.decorators import _sympifyit
+from sympy.core.exprtools import Factors, factor_nc, factor_terms
 from sympy.core.evalf import pure_complex
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
-from sympy.core.relational import Relational
+from sympy.core.numbers import ilcm, I, Integer
+from sympy.core.relational import Relational, Equality
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
@@ -3664,7 +3666,6 @@ class Poly(Basic):
             coeffs = [int(coeff) for coeff in f.all_coeffs()]
         elif f.rep.dom is QQ:
             denoms = [coeff.q for coeff in f.all_coeffs()]
-            from sympy.core.numbers import ilcm
             fac = ilcm(*denoms)
             coeffs = [int(coeff*fac) for coeff in f.all_coeffs()]
         else:
@@ -5533,7 +5534,6 @@ def terms_gcd(f, *gens, **args):
     sympy.core.exprtools.gcd_terms, sympy.core.exprtools.factor_terms
 
     """
-    from sympy.core.relational import Equality
 
     orig = sympify(f)
 
@@ -6171,7 +6171,6 @@ def to_rational_coeffs(f):
         """
         Return True if ``f`` is a sum with square roots but no other root
         """
-        from sympy.core.exprtools import Factors
         coeffs = p.coeffs()
         has_sq = False
         for y in coeffs:
@@ -6391,7 +6390,6 @@ def factor(f, *gens, deep=False, **args):
         return _generic_factor(f, gens, args, method='factor')
     except PolynomialError as msg:
         if not f.is_commutative:
-            from sympy.core.exprtools import factor_nc
             return factor_nc(f)
         else:
             raise PolynomialError(msg)
@@ -6673,7 +6671,6 @@ def cancel(f, *gens, **args):
     >>> together(_)
     (x + 2)/2
     """
-    from sympy.core.exprtools import factor_terms
     from sympy.functions.elementary.piecewise import Piecewise
     from sympy.polys.rings import sring
     options.allowed_flags(args, ['polys'])

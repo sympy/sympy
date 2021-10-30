@@ -1,4 +1,5 @@
 from sympy.core.numbers import igcd, mod_inverse
+from sympy.core.power import integer_nthroot
 from sympy.ntheory.residue_ntheory import _sqrt_mod_prime_power
 from sympy.ntheory import isprime
 from math import log, sqrt
@@ -412,7 +413,6 @@ def _find_factor(dependent_rows, mark, gauss_matrix, index, smooth_relations, N)
     smooth_relations : Smooth relations vectors matrix
     N : Number to be factored
     """
-    from sympy.core.power import integer_nthroot
     idx_in_smooth = dependent_rows[index][1]
     independent_u = [smooth_relations[idx_in_smooth][0]]
     independent_v = [smooth_relations[idx_in_smooth][1]]

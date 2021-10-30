@@ -14,12 +14,13 @@ from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul, prod
 from sympy.core.numbers import igcd, ilcm, Rational, Integer
-from sympy.core.power import integer_nthroot, Pow
+from sympy.core.power import integer_nthroot, Pow, integer_log
 from sympy.core.singleton import S
 from sympy.external.gmpy import SYMPY_INTS
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
+from sympy.utilities.iterables import flatten
 from sympy.utilities.misc import as_int, filldedent
 from .ecm import _ecm_one_factor
 
@@ -151,7 +152,6 @@ def smoothness_p(n, m=-1, power=0, visual=None):
 
     factorint, smoothness
     """
-    from sympy.utilities import flatten
 
     # visual must be True, False or other (stored as None)
     if visual in (1, 0):
@@ -2363,7 +2363,6 @@ def is_perfect(n):
     .. [2] https://en.wikipedia.org/wiki/Perfect_number
 
     """
-    from sympy.core.power import integer_log
 
     n = as_int(n)
     if _isperfect(n):
@@ -2440,7 +2439,6 @@ def is_mersenne_prime(n):
     .. [1] http://mathworld.wolfram.com/MersennePrime.html
 
     """
-    from sympy.core.power import integer_log
 
     n = as_int(n)
     if _ismersenneprime(n):

@@ -4,6 +4,7 @@ from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray
+from sympy.utilities.iterables import flatten
 
 import functools
 
@@ -103,8 +104,6 @@ class SparseNDimArray(NDimArray):
 class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray): # type: ignore
 
     def __new__(cls, iterable=None, shape=None, **kwargs):
-        from sympy.utilities.iterables import flatten
-
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         shape = Tuple(*map(_sympify, shape))
         cls._check_special_bounds(flat_list, shape)
@@ -139,8 +138,6 @@ class ImmutableSparseNDimArray(SparseNDimArray, ImmutableNDimArray): # type: ign
 class MutableSparseNDimArray(MutableNDimArray, SparseNDimArray):
 
     def __new__(cls, iterable=None, shape=None, **kwargs):
-        from sympy.utilities.iterables import flatten
-
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         self = object.__new__(cls)
         self._shape = shape

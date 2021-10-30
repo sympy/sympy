@@ -5,6 +5,7 @@ from collections.abc import Callable
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.decorators import deprecated
+from sympy.core.function import diff
 from sympy.core.expr import Expr
 from sympy.core.kind import _NumberKind, UndefinedKind
 from sympy.core.mul import Mul
@@ -1552,7 +1553,6 @@ class MatrixBase(MatrixDeprecated,
             parameter of f
 
         """
-        from sympy.core.function import diff
 
         f, x = _sympify(f), _sympify(x)
         if not self.is_square:

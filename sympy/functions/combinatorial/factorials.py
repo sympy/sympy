@@ -5,7 +5,7 @@ from sympy.core import S, sympify, Dummy, Mod
 from sympy.core.cache import cacheit
 from sympy.core.function import Function, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and
-from sympy.core.numbers import Integer, pi
+from sympy.core.numbers import Integer, pi, I
 from sympy.core.relational import Eq
 from sympy.external.gmpy import HAS_GMPY
 from sympy.ntheory import sieve
@@ -361,7 +361,6 @@ class subfactorial(CombinatorialFunction):
         return factorial(arg) * summation(f, (i, 0, arg))
 
     def _eval_rewrite_as_gamma(self, arg, piecewise=True, **kwargs):
-        from sympy.core.numbers import I
         from sympy.functions.elementary.exponential import exp
         from sympy.functions.special.gamma_functions import (gamma, lowergamma)
         return ((-1)**(arg + 1)*exp(-I*pi*arg)*lowergamma(arg + 1, -1) + gamma(arg + 1))*exp(-1)

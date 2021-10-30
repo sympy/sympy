@@ -11,7 +11,6 @@ import keyword
 import textwrap
 import linecache
 
-from sympy.core.basic import Basic
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import (is_sequence, iterable,
@@ -944,6 +943,7 @@ def _recursive_to_string(doprint, arg):
     lists and tuples. This method ensures that we only call the doprint method of the
     printer with SymPy types (so that the printer safely can use SymPy-methods)."""
     from sympy.matrices.common import MatrixOperations
+    from sympy.core.basic import Basic
 
     if isinstance(arg, (Basic, MatrixOperations)):
         return doprint(arg)
@@ -984,6 +984,7 @@ def lambdastr(args, expr, printer=None, dummify=None):
     """
     # Transforming everything to strings.
     from sympy.matrices import DeferredVector
+    from sympy.core.basic import Basic
     from sympy.core.function import (Derivative, Function)
     from sympy.core.symbol import (Dummy, Symbol)
     from sympy.core.sympify import sympify

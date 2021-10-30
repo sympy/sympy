@@ -1,4 +1,7 @@
 from sympy.core.containers import Tuple
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import SympifyError
 
 from types import FunctionType
 
@@ -112,10 +115,7 @@ class TableForm:
          .. . ..
         ... . ...
         """
-        from sympy.core.singleton import S
-        from sympy.core.symbol import Symbol
         from sympy.matrices.dense import Matrix
-        from sympy.core.sympify import SympifyError
 
         # We only support 2D data. Check the consistency:
         if isinstance(data, Matrix):

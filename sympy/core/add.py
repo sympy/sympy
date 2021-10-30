@@ -10,7 +10,7 @@ from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
 from .kind import UndefinedKind
-from sympy.utilities.iterables import is_sequence
+from sympy.utilities.iterables import is_sequence, sift
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
@@ -453,7 +453,6 @@ class Add(Expr, AssocOp):
         (0, (7*x,))
         """
         if deps:
-            from sympy.utilities.iterables import sift
             l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
             return self._new_rawargs(*l2), tuple(l1)
         coeff, notrat = self.args[0].as_coeff_add()

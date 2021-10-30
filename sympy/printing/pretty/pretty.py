@@ -1,7 +1,9 @@
 import itertools
 
 from sympy.core import S
+from sympy.core.add import Add
 from sympy.core.containers import Tuple
+from sympy.core.function import Function
 from sympy.core.mul import Mul
 from sympy.core.numbers import Number, Rational
 from sympy.core.power import Pow
@@ -874,7 +876,6 @@ class PrettyPrinter(Printer):
 
     def _print_MatMul(self, expr):
         args = list(expr.args)
-        from sympy.core.add import Add
         from sympy.matrices.expressions.hadamard import HadamardProduct
         from sympy.matrices.expressions.kronecker import KroneckerProduct
         from sympy.matrices.expressions.matadd import MatAdd
@@ -1763,7 +1764,6 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def _print_expint(self, e):
-        from sympy.core.function import Function
         if e.args[0].is_Integer and self._use_unicode:
             return self._print_Function(Function('E_%s' % e.args[0])(e.args[1]))
         return self._print_Function(e)

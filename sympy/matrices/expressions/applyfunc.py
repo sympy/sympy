@@ -1,8 +1,9 @@
-from sympy.matrices.expressions import MatrixExpr
+from sympy.core.expr import ExprBuilder
 from sympy.core.function import (Function, FunctionClass, Lambda)
 from sympy.core.symbol import Dummy
-from sympy.matrices.matrices import MatrixBase
 from sympy.core.sympify import sympify, _sympify
+from sympy.matrices.expressions import MatrixExpr
+from sympy.matrices.matrices import MatrixBase
 
 
 class ElementwiseApplyFunction(MatrixExpr):
@@ -137,7 +138,6 @@ class ElementwiseApplyFunction(MatrixExpr):
         from sympy.tensor.array.expressions.array_expressions import ArrayContraction
         from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
         from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
-        from sympy.core.expr import ExprBuilder
 
         fdiff = self._get_function_fdiff()
         lr = self.expr._eval_derivative_matrix_lines(x)

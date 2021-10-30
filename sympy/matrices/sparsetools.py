@@ -1,3 +1,5 @@
+from sympy.core.containers import Dict
+from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import as_int, filldedent
 
@@ -193,8 +195,6 @@ def banded(*args, **kwargs):
     [0, 0, 0, 0, 2, 1, 1],
     [0, 0, 0, 0, 0, 0, 1]])
     """
-    from sympy.core.containers import Dict
-    from sympy.core.symbol import Dummy
     try:
         if len(args) not in (1, 2, 3):
             raise TypeError

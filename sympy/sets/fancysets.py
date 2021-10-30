@@ -6,7 +6,8 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
-from sympy.core.numbers import oo
+from sympy.core.mod import Mod
+from sympy.core.numbers import oo, igcd, Rational
 from sympy.core.relational import Eq, is_eq
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
@@ -45,7 +46,6 @@ class Rationals(Set, metaclass=Singleton):
         return other.is_rational
 
     def __iter__(self):
-        from sympy.core.numbers import igcd, Rational
         yield S.Zero
         yield S.One
         yield S.NegativeOne
@@ -978,7 +978,6 @@ class Range(Set):
 
     def as_relational(self, x):
         """Rewrite a Range in terms of equalities and logic operators. """
-        from sympy.core.mod import Mod
         if self.start.is_infinite:
             assert not self.stop.is_infinite  # by instantiation
             a = self.reversed.start

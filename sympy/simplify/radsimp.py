@@ -7,7 +7,7 @@ from sympy.core.add import _unevaluated_Add, Add
 from sympy.core.assumptions import assumptions
 from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.function import _mexpand, expand_mul, expand_power_base
-from sympy.core.mul import _keep_coeff, _unevaluated_Mul
+from sympy.core.mul import _keep_coeff, _unevaluated_Mul, _mulsort
 from sympy.core.numbers import Rational, zoo, nan
 from sympy.core.parameters import global_parameters
 from sympy.core.sorting import ordered, default_sort_key
@@ -576,7 +576,6 @@ def collect_abs(expr):
     Abs(1/x)
     """
     def _abs(mul):
-      from sympy.core.mul import _mulsort
       c, nc = mul.args_cnc()
       a = []
       o = []

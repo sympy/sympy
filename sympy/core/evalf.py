@@ -26,6 +26,7 @@ from .sympify import sympify
 from .singleton import S
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.utilities.iterables import is_sequence
+from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import as_int
 
 LG10 = math.log(10, 2)
@@ -1132,7 +1133,6 @@ def hypsum(expr, n, start, prec):
     """
     from .numbers import Float
     from sympy.simplify.simplify import hypersimp
-    from sympy.utilities.lambdify import lambdify
 
     if prec == float('inf'):
         raise NotImplementedError('does not support inf prec')
