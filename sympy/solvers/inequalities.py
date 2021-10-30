@@ -1114,12 +1114,12 @@ def _fourier_motzkin(inequalities):
     >>> eq4 = x - z
 
     >>> inequalities=[eq1, eq2, eq3, eq4]
-    >>> _fourier_motzkin(inequalities)
-    ([3*x/2 + 13/10, 7*x/5 + 2/5],
-    {
-    y: {'greater_than': [-x - 3*z - 4], 'lower_than': [2*x/3 + z/3 + 1/3, x + 2*z - 2]},
-    z: {'greater_than': [-x/2 - 13/10, -2*x/5 - 2/5], 'lower_than': [x]}
-    })
+    >>> assert _fourier_motzkin(inequalities) == \
+    ... ([3*x/2 + 13/10, 7*x/5 + 2/5],
+    ... {
+    ... y: {'greater_than': [-x - 3*z - 4], 'lower_than': [2*x/3 + z/3 + 1/3, x + 2*z - 2]},
+    ... z: {'greater_than': [-x/2 - 13/10, -2*x/5 - 2/5], 'lower_than': [x]}
+    ... })
 
     """
     pivot = _find_pivot(inequalities)
@@ -1148,11 +1148,11 @@ def _fourier_motzkin_extension(inequalities):
     >>> eq4 = x + z
 
     >>> inequalities = [eq1, eq2, eq3, eq4]
-    >>> _fourier_motzkin_extension(inequalities)
-    {
-    y: {'greater_than': [], 'lower_than': [2*x/3 + z/3 + 1/3, x + 2*z - 2, x + 3*z + 4]},
-    x: {'greater_than': [-z], 'lower_than': []}
-    }
+    >>> assert _fourier_motzkin_extension(inequalities) == \
+    ... {
+    ... y: {'greater_than': [], 'lower_than': [2*x/3 + z/3 + 1/3, x + 2*z - 2, x + 3*z + 4]},
+    ... x: {'greater_than': [-z], 'lower_than': []}
+    ... }
     """
 
     pivot = _pick_var(inequalities)
@@ -1216,12 +1216,12 @@ def solve_linear_inequalities(inequalities):
     >>> eq4 = x - z
 
     >>> inequalities=[eq1, eq2, eq3, eq4]
-    >>> solve_linear_inequalities(inequalities)
-    {
-    y: {'greater_than': [-x - 3*z - 4], 'lower_than': [2*x/3 + z/3 + 1/3, x + 2*z - 2]},
-    z: {'greater_than': [-x/2 - 13/10, -2*x/5 - 2/5], 'lower_than': [x]},
-    x: {'greater_than': [-13/15, -2/7], 'lower_than': []}
-    }
+    >>> assert solve_linear_inequalities(inequalities) == \
+    ... {
+    ... y: {'greater_than': [-x - 3*z - 4], 'lower_than': [2*x/3 + z/3 + 1/3, x + 2*z - 2]},
+    ... z: {'greater_than': [-x/2 - 13/10, -2*x/5 - 2/5], 'lower_than': [x]},
+    ... x: {'greater_than': [-13/15, -2/7], 'lower_than': []}
+    ... }
 
     x = 2 is valid because: 2 > max(-13/15, -2/7)
     z = 1 is valid because: x > 1 > max(-x/2 - 13/10, -2*x/5 - 2/5)
