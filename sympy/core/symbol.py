@@ -1,5 +1,5 @@
 from .assumptions import StdFactKB, _assume_defined
-from .basic import Basic
+from .basic import Atom, Basic
 from .cache import cacheit
 from .containers import Tuple
 from .expr import Expr, AtomicExpr
