@@ -9,7 +9,7 @@ from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 
-from sympy import jscode
+from sympy.printing.jscode import jscode
 
 x, y, z = symbols('x,y,z')
 

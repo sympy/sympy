@@ -1,6 +1,10 @@
 """Pauli operators and states"""
 
-from sympy import I, Mul, Add, Pow, exp, Integer
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Integer)
+from sympy.core.power import Pow
+from sympy.functions.elementary.exponential import exp
 from sympy.physics.quantum import Operator, Ket, Bra
 from sympy.physics.quantum import ComplexSpace
 from sympy.matrices import Matrix

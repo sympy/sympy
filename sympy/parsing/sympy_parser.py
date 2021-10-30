@@ -10,10 +10,10 @@ import unicodedata
 from io import StringIO
 
 from sympy.assumptions.ask import AssumptionKeys
-from sympy.core.compatibility import iterable
 from sympy.core.basic import Basic
 from sympy.core import Symbol
 from sympy.core.function import arity, Function
+from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import filldedent, func_name
 
 
@@ -589,7 +589,7 @@ def auto_symbol(tokens, local_dict, global_dict):
 
 
 def lambda_notation(tokens, local_dict, global_dict):
-    """Substitutes "lambda" with its Sympy equivalent Lambda().
+    """Substitutes "lambda" with its SymPy equivalent Lambda().
     However, the conversion doesn't take place if only "lambda"
     is passed because that is a syntax error.
 

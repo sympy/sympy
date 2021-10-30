@@ -25,13 +25,16 @@ jobs:
         with:
           python-version: '3.9'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath flake8
+      - run: pip install mpmath flake8 mypy
 
       - name: Basic code quality tests
         run: bin/test quality
 
       - name: Run flake8 on the sympy package
         run: flake8 sympy
+
+      - name: Run mypy on the sympy package
+        run: mypy sympy
 
       - name: Detect invalid escapes like '\e'
         run: python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/

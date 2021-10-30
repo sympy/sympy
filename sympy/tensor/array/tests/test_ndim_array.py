@@ -1,9 +1,13 @@
 from sympy.testing.pytest import raises
-from sympy import (
-    Array, ImmutableDenseNDimArray, ImmutableSparseNDimArray,
-    MutableDenseNDimArray, MutableSparseNDimArray, sin, cos,
-    simplify, Matrix
-)
+from sympy.functions.elementary.trigonometric import sin, cos
+from sympy.matrices.dense import Matrix
+from sympy.simplify import simplify
+from sympy.tensor.array import Array
+from sympy.tensor.array.dense_ndim_array import (
+    ImmutableDenseNDimArray, MutableDenseNDimArray)
+from sympy.tensor.array.sparse_ndim_array import (
+    ImmutableSparseNDimArray, MutableSparseNDimArray)
+
 from sympy.abc import x, y
 
 array_types = [

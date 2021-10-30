@@ -11,12 +11,21 @@ if sys.version_info[:2] < (3, 6):
 
 from sympy.integrals.rubi.rubimain import rubi_integrate
 from sympy.functions import log, sqrt, exp, cos, sin, tan, sec, csc, cot, sinh, sech, atan, asin, acos, atanh, asinh, acosh
-from sympy import acsch as arccsch, acsc as arccsc
+from sympy.functions.elementary.hyperbolic import acsch as arccsch
+from sympy.functions.elementary.trigonometric import acsc as arccsc
 
 from sympy.integrals.rubi.utility_function import (EllipticE, EllipticF, Int, ArcCsch, ArcCsc, Gamma,
     hypergeom, rubi_test, AppellF1, EllipticPi, Log, Sqrt, ArcTan, ArcTanh, ArcSin, ArcSinh, ArcCosh, ArcTanh, ArcCos, Hypergeometric2F1)
-from sympy import pi
-from sympy import S, hyper, I, simplify, exp_polar, symbols, Ei,erf, erfi,gamma,uppergamma, polylog, Integral, exp
+from sympy.core.numbers import (I, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import (exp, exp_polar)
+from sympy.functions.special.error_functions import (Ei, erf, erfi)
+from sympy.functions.special.gamma_functions import (gamma, uppergamma)
+from sympy.functions.special.hyper import hyper
+from sympy.functions.special.zeta_functions import polylog
+from sympy.integrals.integrals import Integral
+from sympy.simplify.simplify import simplify
 from sympy.testing.pytest import SKIP
 
 a, b, c, d, e, f, m, n, x, u , k, p, r, s, t= symbols('a b c d e f m n x u k p r s t')

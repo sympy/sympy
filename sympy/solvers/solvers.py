@@ -12,10 +12,11 @@ This module contain solvers for all kinds of equations:
 
 """
 
-from sympy import divisors, binomial, expand_func
+from sympy.core.function import expand_func
+from sympy.functions.combinatorial.factorials import binomial
+from sympy.ntheory.factor_ import divisors
 from sympy.core.assumptions import check_assumptions
-from sympy.core.compatibility import (iterable, is_sequence, ordered,
-    default_sort_key)
+from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.sympify import sympify
 from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
     Pow, Unequality)
@@ -28,8 +29,8 @@ from sympy.core.numbers import ilcm, Float, Rational
 from sympy.core.relational import Relational
 from sympy.core.logic import fuzzy_not
 from sympy.core.power import integer_log
+from sympy.core.traversal import preorder_traversal
 from sympy.logic.boolalg import And, Or, BooleanAtom
-from sympy.core.basic import preorder_traversal
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
                              Abs, re, im, arg, sqrt, atan2)
@@ -51,7 +52,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
 from sympy.utilities.iterables import (connected_components,
-    generate_bell, uniq)
+    generate_bell, uniq, iterable, is_sequence)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot
@@ -657,11 +658,12 @@ def solve(f, *symbols, **flags):
     instances will be returned instead:
 
         >>> solve(x**3 - x + 1)
-        [-1/((-1/2 - sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)) - (-1/2 -
-        sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)/3, -(-1/2 +
-        sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)/3 - 1/((-1/2 +
-        sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)), -(3*sqrt(69)/2 +
-        27/2)**(1/3)/3 - 1/(3*sqrt(69)/2 + 27/2)**(1/3)]
+        [-1/((-1/2 - sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)) -
+        (-1/2 - sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)/3,
+        -(-1/2 + sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)/3 -
+        1/((-1/2 + sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)),
+        -(3*sqrt(69)/2 + 27/2)**(1/3)/3 -
+        1/(3*sqrt(69)/2 + 27/2)**(1/3)]
         >>> solve(x**3 - x + 1, cubics=False)
         [CRootOf(x**3 - x + 1, 0),
          CRootOf(x**3 - x + 1, 1),
@@ -2017,15 +2019,13 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     Examples
     ========
 
-    >>> from sympy.core.power import Pow
-    >>> from sympy.polys.polytools import cancel
+    >>> from sympy import cancel, Pow
 
     ``f`` is independent of the symbols in *symbols* that are not in
     *exclude*:
 
-    >>> from sympy.solvers.solvers import solve_linear
+    >>> from sympy import cos, sin, solve_linear
     >>> from sympy.abc import x, y, z
-    >>> from sympy import cos, sin
     >>> eq = y*cos(x)**2 + y*sin(x)**2 - y  # = y*(1 - 1) = 0
     >>> solve_linear(eq)
     (0, 1)
@@ -2919,7 +2919,7 @@ def nsolve(*args, dict=False, **kwargs):
     if iterable(x0):
         x0 = list(x0)
     if not isinstance(f, Matrix):
-        # assume it's a sympy expression
+        # assume it's a SymPy expression
         if isinstance(f, Equality):
             f = f.lhs - f.rhs
         syms = f.free_symbols
@@ -3218,7 +3218,7 @@ def unrad(eq, *syms, **flags):
     (_p**3 + _p**2 - 2, [_p, _p**6 - x])
 
     """
-    from sympy import Equality as Eq
+    from sympy.core.relational import Equality as Eq
 
     uflags = dict(check=False, simplify=False)
 

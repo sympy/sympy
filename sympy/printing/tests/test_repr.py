@@ -1,9 +1,20 @@
 from typing import Any, Dict
 
 from sympy.testing.pytest import raises
-from sympy import (symbols, sympify, Function, Integer, Matrix, Abs, Heaviside,
-    Rational, Float, S, WildFunction, ImmutableDenseMatrix, sin, true, false, ones,
-    sqrt, root, AlgebraicNumber, Symbol, Dummy, Wild, MatrixSymbol, Q)
+from sympy.assumptions.ask import Q
+from sympy.core.function import (Function, WildFunction)
+from sympy.core.numbers import (AlgebraicNumber, Float, Integer, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, Wild, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.miscellaneous import (root, sqrt)
+from sympy.functions.elementary.trigonometric import sin
+from sympy.functions.special.delta_functions import Heaviside
+from sympy.logic.boolalg import (false, true)
+from sympy.matrices.dense import (Matrix, ones)
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.immutable import ImmutableDenseMatrix
 from sympy.combinatorics import Cycle, Permutation
 from sympy.core.symbol import Str
 from sympy.geometry import Point, Ellipse
@@ -52,7 +63,8 @@ def test_Add():
 
 
 def test_more_than_255_args_issue_10259():
-    from sympy import Add, Mul
+    from sympy.core.add import Add
+    from sympy.core.mul import Mul
     for op in (Add, Mul):
         expr = op(*symbols('x:256'))
         assert eval(srepr(expr)) == expr
@@ -95,6 +107,15 @@ def test_Singletons():
     sT(S.One, 'Integer(1)')
     sT(S.Pi, 'pi')
     sT(S.Zero, 'Integer(0)')
+    sT(S.Complexes, 'Complexes')
+    sT(S.EmptySequence, 'EmptySequence')
+    sT(S.EmptySet, 'EmptySet')
+    # sT(S.IdentityFunction, 'Lambda(_x, _x)')
+    sT(S.Naturals, 'Naturals')
+    sT(S.Naturals0, 'Naturals0')
+    sT(S.Rationals, 'Rationals')
+    sT(S.Reals, 'Reals')
+    sT(S.UniversalSet, 'UniversalSet')
 
 
 def test_Integer():

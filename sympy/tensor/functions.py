@@ -1,7 +1,10 @@
 from collections.abc import Iterable
 from functools import singledispatch
 
-from sympy import Expr, S, Mul, sympify
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
 from sympy.core.parameters import global_parameters
 
 
@@ -13,7 +16,8 @@ class TensorProduct(Expr):
 
     def __new__(cls, *args, **kwargs):
         from sympy.tensor.array import NDimArray, tensorproduct, Array
-        from sympy import MatrixBase, MatrixExpr
+        from sympy.matrices.expressions.matexpr import MatrixExpr
+        from sympy.matrices.matrices import MatrixBase
         from sympy.strategies import flatten
 
         args = [sympify(arg) for arg in args]
@@ -48,7 +52,7 @@ class TensorProduct(Expr):
         return len(self.shape)
 
     def _get_args_shapes(self):
-        from sympy import Array
+        from sympy.tensor.array import Array
         return [i.shape if hasattr(i, "shape") else Array(i).shape for i in self.args]
 
     @property

@@ -1,9 +1,9 @@
 from sympy.core import Add, Mul, S
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import I
 from sympy.core.relational import Eq, Equality
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.function import (expand_mul, expand, Derivative,
                                  AppliedUndef, Function, Subs)
@@ -12,15 +12,14 @@ from sympy.functions import (exp, im, cos, sin, re, Piecewise,
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase, eye
 from sympy.polys import Poly, together
-from sympy.simplify import collect, radsimp, signsimp
+from sympy.simplify import collect, radsimp, signsimp # type: ignore
 from sympy.simplify.powsimp import powdenest, powsimp
 from sympy.simplify.ratsimp import ratsimp
 from sympy.simplify.simplify import simplify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError, solveset
-from sympy.utilities import default_sort_key
-from sympy.utilities.iterables import ordered
+from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import filldedent
 from sympy.integrals.integrals import Integral, integrate
 
@@ -364,7 +363,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     Examples
     ========
 
-    >>> from sympy import (Function, Symbol, Matrix, Eq)
+    >>> from sympy import Function, Symbol, Matrix, Eq
     >>> from sympy.solvers.ode.systems import linear_ode_to_matrix
     >>> t = Symbol('t')
     >>> x = Function('x')
@@ -424,7 +423,7 @@ def linear_ode_to_matrix(eqs, funcs, t, order):
     Parameters
     ==========
 
-    eqs : list of sympy expressions or equalities
+    eqs : list of SymPy expressions or equalities
         The equations as expressions (assumed equal to zero).
     funcs : list of applied functions
         The dependent variables of the system of ODEs.

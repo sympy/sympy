@@ -49,8 +49,8 @@ from sympy.polys.monomials import (monomial_min, monomial_mul, monomial_div,
 from mpmath.libmp.libintmath import ifac
 from sympy.core import PoleError, Function, Expr
 from sympy.core.numbers import Rational, igcd
-from sympy.core.compatibility import as_int
 from sympy.functions import sin, cos, tan, atan, exp, atanh, tanh, log, ceiling
+from sympy.utilities.misc import as_int
 from mpmath.libmp.libintmath import giant_steps
 import math
 
@@ -1143,7 +1143,7 @@ def rs_exp(p, x, prec):
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy functions to evaluate the values of the cos/sin
+    # Makes use of SymPy functions to evaluate the values of the cos/sin
     # of the constant term.
         return const*rs_exp(p1, x, prec)
 
@@ -1345,7 +1345,7 @@ def rs_tan(p, x, prec):
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy functions to evaluate the values of the cos/sin
+    # Makes use of SymPy functions to evaluate the values of the cos/sin
     # of the constant term.
         t2 = rs_tan(p1, x, prec)
         t = rs_series_inversion(1 - const*t2, x, prec)
@@ -1443,7 +1443,7 @@ def rs_sin(p, x, prec):
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy cos, sin functions to evaluate the values of the
+    # Makes use of SymPy cos, sin functions to evaluate the values of the
     # cos/sin of the constant term.
         return rs_sin(p1, x, prec)*t2 + rs_cos(p1, x, prec)*t1
 
@@ -1510,7 +1510,7 @@ def rs_cos(p, x, prec):
                     "this domain.")
         p1 = p - c
 
-    # Makes use of sympy cos, sin functions to evaluate the values of the
+    # Makes use of SymPy cos, sin functions to evaluate the values of the
     # cos/sin of the constant term.
         p_cos = rs_cos(p1, x, prec)
         p_sin = rs_sin(p1, x, prec)
@@ -1967,7 +1967,7 @@ def rs_series(expr, a, prec):
     prec : order of the series expansion
 
     Currently supports multivariate Taylor series expansion. This is much
-    faster that Sympy's series method as it uses sparse polynomial operations.
+    faster that SymPy's series method as it uses sparse polynomial operations.
 
     It automatically creates the simplest ring required to represent the series
     expansion through repeated calls to sring.
@@ -1976,9 +1976,7 @@ def rs_series(expr, a, prec):
     ========
 
     >>> from sympy.polys.ring_series import rs_series
-    >>> from sympy.functions import sin, cos, exp, tan
-    >>> from sympy.core import symbols
-    >>> from sympy.polys.domains import QQ
+    >>> from sympy import sin, cos, exp, tan, symbols, QQ
     >>> a, b, c = symbols('a, b, c')
     >>> rs_series(sin(a) + exp(a), a, 5)
     1/24*a**4 + 1/2*a**2 + 2*a + 1

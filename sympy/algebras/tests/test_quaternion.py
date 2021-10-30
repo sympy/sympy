@@ -1,6 +1,14 @@
-from sympy import symbols, re, im, sign, I, Abs, Symbol, \
-     cos, sin, sqrt, conjugate, log, acos, asin, E, pi, \
-     Matrix, diff, integrate, trigsimp, S, Rational
+from sympy.core.function import diff
+from sympy.core.numbers import (E, I, Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (Abs, conjugate, im, re, sign)
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin)
+from sympy.integrals.integrals import integrate
+from sympy.matrices.dense import Matrix
+from sympy.simplify.trigsimp import trigsimp
 from sympy.algebras.quaternion import Quaternion
 from sympy.testing.pytest import raises
 

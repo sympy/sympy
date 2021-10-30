@@ -18,7 +18,8 @@ if cin:
         StrictLessThan, LessThan, StrictGreaterThan, GreaterThan,
         Equality, Unequality)
     from sympy.logic.boolalg import And, Not, Or
-    from sympy import Symbol, true, false
+    from sympy.core.symbol import Symbol
+    from sympy.logic.boolalg import (false, true)
     import os
 
     def test_variable():

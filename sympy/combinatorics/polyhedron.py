@@ -1,9 +1,9 @@
 from sympy.combinatorics import Permutation as Perm
 from sympy.combinatorics.perm_groups import PermutationGroup
-from sympy.core import Basic, Tuple
-from sympy.core.compatibility import as_int
+from sympy.core import Basic, Tuple, default_sort_key
 from sympy.sets import FiniteSet
-from sympy.utilities.iterables import (minlex, unflatten, flatten, default_sort_key)
+from sympy.utilities.iterables import (minlex, unflatten, flatten)
+from sympy.utilities.misc import as_int
 
 rmul = Perm.rmul
 
@@ -65,7 +65,7 @@ class Polyhedron(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> from sympy.interactive import init_printing
+        >>> from sympy import init_printing
         >>> from sympy.abc import w, x, y, z
         >>> init_printing(pretty_print=False, perm_cyclic=False)
 
@@ -263,8 +263,7 @@ class Polyhedron(Basic):
         not a proper polyhedron, but the Polyhedron class can be used to
         represent it in a way that helps to visualize the Rubik's cube.
 
-        >>> from sympy.utilities.iterables import flatten, unflatten
-        >>> from sympy import symbols
+        >>> from sympy import flatten, unflatten, symbols
         >>> from sympy.combinatorics import RubikGroup
         >>> facelets = flatten([symbols(s+'1:5') for s in 'UFRBLD'])
         >>> def show():

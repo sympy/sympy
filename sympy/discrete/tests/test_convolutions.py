@@ -1,4 +1,6 @@
-from sympy import sqrt, pi, E, exp, Rational
+from sympy.core.numbers import (E, Rational, pi)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core import S, symbols, I
 from sympy.discrete.convolutions import (
     convolution, convolution_fft, convolution_ntt, convolution_fwht,

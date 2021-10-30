@@ -1,7 +1,7 @@
 from typing import Set
 
 from sympy.core import Basic, S
-from sympy.core.function import _coeff_isneg, Lambda
+from sympy.core.function import Lambda
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 from functools import reduce
@@ -151,7 +151,7 @@ class GLSLPrinter(CodePrinter):
                 A.table(self,rowsep=mat_separator,rowstart='float[](',rowend=')')
             )
 
-    def _print_SparseMatrix(self, mat):
+    def _print_SparseRepMatrix(self, mat):
         # do not allow sparse matrices to be made dense
         return self._print_not_supported(mat)
 
@@ -318,7 +318,7 @@ class GLSLPrinter(CodePrinter):
         def add(a,b):
             return self._print_Function_with_args('add', (a, b))
             # return self.known_functions['add']+'(%s, %s)' % (a,b)
-        neg, pos = partition(lambda arg: _coeff_isneg(arg), terms)
+        neg, pos = partition(lambda arg: arg.could_extract_minus_sign(), terms)
         if pos:
             s = pos = reduce(lambda a,b: add(a,b), map(lambda t: self._print(t),pos))
         else:
@@ -350,7 +350,7 @@ def glsl_code(expr,assign_to=None,**settings):
     ==========
 
     expr : Expr
-        A sympy expression to be converted.
+        A SymPy expression to be converted.
     assign_to : optional
         When given, the argument is used for naming the variable or variables
         to which the expression is assigned. Can be a string, ``Symbol``,

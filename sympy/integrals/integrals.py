@@ -1,7 +1,6 @@
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
@@ -27,8 +26,9 @@ from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
 from sympy.simplify.fu import sincos_to_sum
 from sympy.tensor.functions import shape
-from sympy.utilities.misc import filldedent
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import is_sequence
+from sympy.utilities.misc import filldedent
 
 
 class Integral(AddWithLimits):
@@ -567,7 +567,12 @@ class Integral(AddWithLimits):
                             f, cond = res
                             if conds == 'piecewise':
                                 u = self.func(function, (x, a, b))
-                                return Piecewise((f, cond), (u, True))
+                                # if Piecewise modifies cond too
+                                # much it may not be recognized by
+                                # _condsimp pattern matching so just
+                                # turn off all evaluation
+                                return Piecewise((f, cond), (u, True),
+                                    evaluate=False)
                             elif conds == 'separate':
                                 if len(self.limits) != 1:
                                     raise ValueError(filldedent('''
@@ -920,7 +925,7 @@ class Integral(AddWithLimits):
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
         # It is important to make this check first, otherwise the other code
-        # will return a sympy expression instead of a Polynomial.
+        # will return a SymPy expression instead of a Polynomial.
         #
         # see Polynomial for details.
         if isinstance(f, Poly) and not (manual or meijerg or risch):
@@ -1535,7 +1540,7 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
     gamma(a + 1)
 
     >>> integrate(x**a*exp(-x), (x, 0, oo), conds='separate')
-    (gamma(a + 1), -re(a) < 1)
+    (gamma(a + 1), re(a) > -1)
 
     See Also
     ========

@@ -1,5 +1,6 @@
 from sympy.diffgeom import Manifold, Patch, CoordSystem, Point
-from sympy import symbols, Function
+from sympy.core.function import Function
+from sympy.core.symbol import symbols
 from sympy.testing.pytest import warns_deprecated_sympy
 
 m = Manifold('m', 2)

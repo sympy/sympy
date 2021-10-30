@@ -24,6 +24,7 @@ sudo apt install\
        	docbook2x\
 	graphviz\
 	gfortran\
+	dbus\
 	#
 
 sudo apt install\

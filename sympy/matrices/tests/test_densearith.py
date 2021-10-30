@@ -7,7 +7,7 @@ with ignore_warnings(SymPyDeprecationWarning):
     from sympy.matrices.densetools import eye
     from sympy.matrices.densearith import add, sub, mulmatmat, mulmatscaler
 
-from sympy import ZZ
+from sympy.polys.domains.integerring import ZZ
 
 
 def test_add():

@@ -1,14 +1,14 @@
 from typing import Dict, List
 
 from sympy.core import S
-from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
-from sympy.utilities.iterables import flatten
+from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.magic import pollute
+from sympy.utilities.misc import as_int
 
 
 @public
@@ -1023,7 +1023,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         References
         ==========
 
-        http://planetmath.org/cyclicpermutation
+        .. [1] http://planetmath.org/cyclicpermutation
 
         """
         return {self.cyclic_subword(i, i+len(self)) for i in range(len(self))}
@@ -1206,7 +1206,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         References
         ==========
 
-        http://planetmath.org/cyclicallyreduced
+        .. [1] http://planetmath.org/cyclicallyreduced
 
         """
         word = self.copy()

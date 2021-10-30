@@ -29,7 +29,8 @@ from sympy.core.symbol import Dummy
 
 from sympy.polys import Poly, gcd, ZZ, cancel
 
-from sympy import sqrt, re, im
+from sympy.functions.elementary.complexes import (im, re)
+from sympy.functions.elementary.miscellaneous import sqrt
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     splitfactor, NonElementaryIntegralException, DecrementLevel, recognize_log_derivative)

@@ -61,7 +61,9 @@ domain checking and also shape checking so that the list of lists
 representation is friendlier.
 
 """
-from .exceptions import DDMBadInputError, DDMShapeError, DDMDomainError
+from itertools import chain
+
+from .exceptions import DMBadInputError, DMShapeError, DMDomainError
 
 from .dense import (
         ddm_transpose,
@@ -95,10 +97,13 @@ class DDM(list):
         self.domain = domain
 
         if not (len(self) == m and all(len(row) == n for row in self)):
-            raise DDMBadInputError("Inconsistent row-list/shape")
+            raise DMBadInputError("Inconsistent row-list/shape")
 
     def getitem(self, i, j):
         return self[i][j]
+
+    def setitem(self, i, j, value):
+        self[i][j] = value
 
     def extract_slice(self, slice1, slice2):
         ddm = [row[slice2] for row in self[slice1]]
@@ -121,6 +126,15 @@ class DDM(list):
         for row in self:
             flat.extend(row)
         return flat
+
+    def flatiter(self):
+        return chain.from_iterable(self)
+
+    def flat(self):
+        items = []
+        for row in self:
+            items.extend(row)
+        return items
 
     def to_dok(self):
         return {(i, j): e for i, row in enumerate(self) for j, e in enumerate(row)}
@@ -224,10 +238,10 @@ class DDM(list):
     def _check(cls, a, op, b, ashape, bshape):
         if a.domain != b.domain:
             msg = "Domain mismatch: %s %s %s" % (a.domain, op, b.domain)
-            raise DDMDomainError(msg)
+            raise DMDomainError(msg)
         if ashape != bshape:
             msg = "Shape mismatch: %s %s %s" % (a.shape, op, b.shape)
-            raise DDMShapeError(msg)
+            raise DMShapeError(msg)
 
     def add(a, b):
         """a + b"""
@@ -398,7 +412,7 @@ class DDM(list):
         """Determinant of a"""
         m, n = a.shape
         if m != n:
-            raise DDMShapeError("Determinant of non-square matrix")
+            raise DMShapeError("Determinant of non-square matrix")
         b = a.copy()
         K = b.domain
         deta = ddm_idet(b, K)
@@ -408,7 +422,7 @@ class DDM(list):
         """Inverse of a"""
         m, n = a.shape
         if m != n:
-            raise DDMShapeError("Determinant of non-square matrix")
+            raise DMShapeError("Determinant of non-square matrix")
         ainv = a.copy()
         K = a.domain
         ddm_iinv(ainv, a, K)
@@ -441,10 +455,33 @@ class DDM(list):
         K = a.domain
         m, n = a.shape
         if m != n:
-            raise DDMShapeError("Charpoly of non-square matrix")
+            raise DMShapeError("Charpoly of non-square matrix")
         vec = ddm_berk(a, K)
         coeffs = [vec[i][0] for i in range(n+1)]
         return coeffs
+
+    def is_zero_matrix(self):
+        """
+        Says whether this matrix has all zero entries.
+        """
+        zero = self.domain.zero
+        return all(Mij == zero for Mij in self.flatiter())
+
+    def is_upper(self):
+        """
+        Says whether this matrix is upper-triangular. True can be returned
+        even if the matrix is not square.
+        """
+        zero = self.domain.zero
+        return all(Mij == zero for i, Mi in enumerate(self) for Mij in Mi[:i])
+
+    def is_lower(self):
+        """
+        Says whether this matrix is lower-triangular. True can be returned
+        even if the matrix is not square.
+        """
+        zero = self.domain.zero
+        return all(Mij == zero for i, Mi in enumerate(self) for Mij in Mi[i+1:])
 
 
 from .sdm import SDM

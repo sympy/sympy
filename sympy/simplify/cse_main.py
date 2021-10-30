@@ -1,18 +1,18 @@
 """ Tools for doing common subexpression elimination.
 """
-from sympy.core import Basic, Mul, Add, Pow, sympify, Symbol
-from sympy.core.compatibility import iterable
+from sympy.core import Basic, Mul, Add, Pow, sympify
 from sympy.core.containers import Tuple, OrderedSet
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import _coeff_isneg
 from sympy.core.singleton import S
+from sympy.core.sorting import ordered
+from sympy.core.symbol import symbols, Symbol
 from sympy.utilities.iterables import numbered_symbols, sift, \
-        topological_sort, ordered
+        topological_sort, iterable
 
 from . import cse_opts
 
 # (preprocessor, postprocessor) pairs which are commonly useful. They should
-# each take a sympy expression and return a possibly transformed expression.
+# each take a SymPy expression and return a possibly transformed expression.
 # When used in the function ``cse()``, the target expressions will be transformed
 # by each of the preprocessor functions in order. After the common
 # subexpressions are eliminated, each resulting expression will have the
@@ -124,8 +124,6 @@ def cse_release_variables(r, e):
     if not r:
         return r, e
 
-    from sympy import symbols
-
     s, p = zip(*r)
     esyms = symbols('_:%d' % len(e))
     syms = list(esyms)
@@ -166,7 +164,7 @@ def preprocess_for_cse(expr, optimizations):
     Parameters
     ==========
 
-    expr : sympy expression
+    expr : SymPy expression
         The target expression to optimize.
     optimizations : list of (callable, callable) pairs
         The (preprocessor, postprocessor) pairs.
@@ -174,7 +172,7 @@ def preprocess_for_cse(expr, optimizations):
     Returns
     =======
 
-    expr : sympy expression
+    expr : SymPy expression
         The transformed expression.
     """
     for pre, post in optimizations:
@@ -190,7 +188,7 @@ def postprocess_for_cse(expr, optimizations):
     Parameters
     ==========
 
-    expr : sympy expression
+    expr : SymPy expression
         The target expression to transform.
     optimizations : list of (callable, callable) pairs, optional
         The (preprocessor, postprocessor) pairs.  The postprocessors will be
@@ -200,7 +198,7 @@ def postprocess_for_cse(expr, optimizations):
     Returns
     =======
 
-    expr : sympy expression
+    expr : SymPy expression
         The transformed expression.
     """
     for pre, post in reversed(optimizations):
@@ -458,7 +456,7 @@ def opt_cse(exprs, order='canonical'):
     Parameters
     ==========
 
-    exprs : list of sympy expressions
+    exprs : list of SymPy expressions
         The expressions to optimize.
     order : string, 'none' or 'canonical'
         The order by which Mul and Add arguments are processed. For large
@@ -506,7 +504,7 @@ def opt_cse(exprs, order='canonical'):
 
         list(map(_find_opts, expr.args))
 
-        if _coeff_isneg(expr):
+        if expr.could_extract_minus_sign():
             neg_expr = -expr
             if not neg_expr.is_Atom:
                 opt_subs[expr] = Unevaluated(Mul, (S.NegativeOne, neg_expr))
@@ -521,7 +519,7 @@ def opt_cse(exprs, order='canonical'):
 
         elif isinstance(expr, (Pow, MatPow)):
             base, exp = expr.base, expr.exp
-            if _coeff_isneg(exp):
+            if exp.could_extract_minus_sign():
                 opt_subs[expr] = Unevaluated(Pow, (Pow(base, -exp), -1))
 
     for e in exprs:
@@ -555,7 +553,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
     Parameters
     ==========
 
-    exprs : list of sympy expressions
+    exprs : list of SymPy expressions
         The expressions to reduce.
     symbols : infinite iterator yielding unique Symbols
         The symbols used to label the common subexpressions which are pulled
@@ -701,7 +699,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     Parameters
     ==========
 
-    exprs : list of sympy expressions, or a single sympy expression
+    exprs : list of SymPy expressions, or a single SymPy expression
         The expressions to reduce.
     symbols : infinite iterator yielding unique Symbols
         The symbols used to label the common subexpressions which are pulled
@@ -736,7 +734,7 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
         All of the common subexpressions that were replaced. Subexpressions
         earlier in this list might show up in subexpressions later in this
         list.
-    reduced_exprs : list of sympy expressions
+    reduced_exprs : list of SymPy expressions
         The reduced expressions with all of the replacements above.
 
     Examples
@@ -747,10 +745,6 @@ def cse(exprs, symbols=None, optimizations=None, postprocess=None,
     >>> cse(((w + x + y + z)*(w + y + z))/(w + x)**3)
     ([(x0, y + z), (x1, w + x)], [(w + x0)*(x0 + x1)/x1**3])
 
-    Note that currently, y + z will not get substituted if -y - z is used.
-
-    >>> cse(((w + x + y + z)*(w - y - z))/(w + x)**3)
-     ([(x0, w + x)], [(w - y - z)*(x0 + y + z)/x0**3])
 
     List of expressions with recursive substitutions:
 
@@ -874,7 +868,7 @@ def _cse_homogeneous(exprs, **kwargs):
         All of the common subexpressions that were replaced. Subexpressions
         earlier in this list might show up in subexpressions later in this
         list.
-    reduced_exprs : list of sympy expressions
+    reduced_exprs : list of SymPy expressions
         The reduced expressions with all of the replacements above.
 
     Examples

@@ -369,7 +369,8 @@ def test_rewrite_MaxMin_as_Heaviside():
 
 
 def test_rewrite_MaxMin_as_Piecewise():
-    from sympy import symbols, Piecewise
+    from sympy.core.symbol import symbols
+    from sympy.functions.elementary.piecewise import Piecewise
     x, y, z, a, b = symbols('x y z a b', real=True)
     vx, vy, va = symbols('vx vy va')
     assert Max(a, b).rewrite(Piecewise) == Piecewise((a, a >= b), (b, True))
@@ -461,7 +462,7 @@ def test_issue_14000():
     assert real_root(-8, 3, evaluate=False).has(Pow) == True
 
 def test_issue_6899():
-    from sympy import Lambda
+    from sympy.core.function import Lambda
     x = Symbol('x')
     eqn = Lambda(x, x)
     assert eqn.func(*eqn.args) == eqn

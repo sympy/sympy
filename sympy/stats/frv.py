@@ -9,9 +9,20 @@ sympy.stats.crv
 """
 from itertools import product
 
-from sympy import (Basic, Symbol, cacheit, sympify, Mul,
-                   And, Or, Piecewise, Eq, Lambda, exp, I, Dummy, nan,
-                   Sum, Intersection, S)
+from sympy.concrete.summations import Sum
+from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
+from sympy.core.function import Lambda
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, nan)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.logic.boolalg import (And, Or)
+from sympy.sets.sets import Intersection
 from sympy.core.containers import Dict
 from sympy.core.logic import Logic
 from sympy.core.relational import Relational

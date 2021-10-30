@@ -24,7 +24,6 @@ from functools import reduce
 
 import sympy
 
-from sympy.core.compatibility import iterable
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_not
@@ -35,6 +34,7 @@ from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.core.relational import Eq, Ne
 from sympy.polys.polytools import degree
 from sympy.ntheory.factor_ import divisors
+from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
 
 ZERO = sympy.S.Zero

@@ -626,7 +626,7 @@ class Range(Set):
             dif = stop - start
             n = dif/step
             if n.is_Rational:
-                from sympy import floor
+                from sympy.functions.elementary.integers import floor
                 if dif == 0:
                     null = True
                 else:  # (x, x + 5, 2) or (x, 3*x, x)
@@ -1513,9 +1513,3 @@ class Complexes(CartesianComplexRegion, metaclass=Singleton):
 
     def __new__(cls):
         return Set.__new__(cls)
-
-    def __str__(self):
-        return "S.Complexes"
-
-    def __repr__(self):
-        return "S.Complexes"

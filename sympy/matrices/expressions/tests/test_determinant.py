@@ -7,7 +7,8 @@ from sympy.matrices.expressions import (
 )
 from sympy.matrices.expressions.special import OneMatrix
 from sympy.testing.pytest import raises
-from sympy import refine, Q
+from sympy.assumptions.ask import Q
+from sympy.assumptions.refine import refine
 
 n = symbols('n', integer=True)
 A = MatrixSymbol('A', n, n)
