@@ -18,7 +18,7 @@ test_derivative_numerically = deprecated(useinstead="sympy.core.random.test_deri
     deprecated_since_version="1.10", issue=22433)(C)
 
 
-_randrange = deprecated(useinstead="sympy.core.random._randint",
+_randrange = deprecated(useinstead="sympy.core.random._randrange",
     deprecated_since_version="1.10", issue=22433)(D)
 
 
