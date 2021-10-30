@@ -1,3 +1,4 @@
+from sympy.calculus import singularities
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
