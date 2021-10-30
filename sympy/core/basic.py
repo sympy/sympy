@@ -5,13 +5,13 @@ from itertools import chain, zip_longest
 from typing import Set, Tuple
 
 from .assumptions import BasicMeta, ManagedProperties
-from .decorators import deprecated
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
 from .sorting import ordered
 from .kind import Kind, UndefinedKind
 from ._print_helpers import Printable
 
+from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iterable, numbered_symbols
 from sympy.utilities.misc import filldedent, func_name

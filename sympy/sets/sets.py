@@ -5,8 +5,7 @@ import inspect
 
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
-from sympy.core.decorators import (deprecated, sympify_method_args,
-    sympify_return)
+from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.evalf import EvalfMixin, prec_to_dps
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
@@ -22,9 +21,10 @@ from sympy.core.symbol import symbols, Symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.sets.contains import Contains
-from sympy.utilities import subsets
+from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import iproduct, sift, roundrobin, iterable
+from sympy.utilities.iterables import (iproduct, sift, roundrobin, iterable,
+                                       subsets)
 from sympy.utilities.misc import func_name, filldedent
 
 from mpmath import mpi, mpf

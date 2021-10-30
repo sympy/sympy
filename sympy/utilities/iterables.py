@@ -8,7 +8,6 @@ from itertools import (
 from itertools import product as cartes # noqa: F401
 from operator import gt
 
-from sympy.core.decorators import deprecated
 
 # this is the logical location of these functions
 # from sympy.core.compatibility import ordered
@@ -17,6 +16,8 @@ from sympy.utilities.misc import as_int
 
 from sympy.utilities.enumerative import (
     multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
+
+from sympy.utilities.decorator import deprecated
 
 
 def is_palindromic(s, i=0, j=None):
