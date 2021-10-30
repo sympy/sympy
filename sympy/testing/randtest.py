@@ -66,7 +66,7 @@ def numerically_zero(f, number=10, prec=10, a=2, b=-1, c=3, d=1, maxfail=100, ma
     tol = S(10)**-prec if prec else None
     f = S(f)
     if not f.args:
-        if f.is_number and abs(f) <= (tol or 0):
+        if f.is_number and f.is_comparable and abs(f) <= (tol or 0):
             return True
         return False
     s = f.free_symbols
