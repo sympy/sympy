@@ -54,7 +54,7 @@ def test_MarginalDistribution():
     Indexed(IndexedBase('C'), 1)), 2)),
     ExprCondPair(0, True)), Pow(gamma(Symbol('a1', positive=True)),
     -1), gamma(Add(Symbol('a1', positive=True),
-    Indexed(IndexedBase('C'), 0))),	
+    Indexed(IndexedBase('C'), 0))),
     Pow(gamma(Indexed(IndexedBase('C'), 0)), -1),
     Pow(Indexed(IndexedBase('B'), 0),
     Add(Symbol('a1', positive=True), -1)),
