@@ -24,6 +24,7 @@ from sympy.stats.joint_rv import MarginalDistribution
 from sympy.stats.rv import pspace, density
 from sympy.testing.pytest import ignore_warnings
 
+
 def test_density():
     x = Symbol('x')
     l = Symbol('l', positive=True)
@@ -44,22 +45,23 @@ def test_MarginalDistribution():
     B = MultivariateBeta('B', a1, C[0])
     MGR = MarginalDistribution(B, (C[0],))
     mgrc = Mul(Symbol('B'), Piecewise(ExprCondPair(Mul(Integer(2),
-    Pow(Symbol('p1', positive=True), Indexed(IndexedBase(Symbol('C')),
+    Pow(Symbol('p1', positive=True), Indexed(IndexedBase(Str('C')),
     Integer(0))), Pow(Symbol('p2', positive=True),
-    Indexed(IndexedBase(Symbol('C')), Integer(1))),
-    Pow(factorial(Indexed(IndexedBase(Symbol('C')), Integer(0))), Integer(-1)),
-    Pow(factorial(Indexed(IndexedBase(Symbol('C')), Integer(1))), Integer(-1))),
-    Eq(Add(Indexed(IndexedBase(Symbol('C')), Integer(0)),
-    Indexed(IndexedBase(Symbol('C')), Integer(1))), Integer(2))),
+    Indexed(IndexedBase(Str('C')), Integer(1))),
+    Pow(factorial(Indexed(IndexedBase(Str('C')), Integer(0))), Integer(-1)),
+    Pow(factorial(Indexed(IndexedBase(Str('C')), Integer(1))), Integer(-1))),
+    Eq(Add(Indexed(IndexedBase(Str('C')), Integer(0)),
+    Indexed(IndexedBase(Str('C')), Integer(1))), Integer(2))),
     ExprCondPair(Integer(0), True)), Pow(gamma(Symbol('a1', positive=True)),
     Integer(-1)), gamma(Add(Symbol('a1', positive=True),
-    Indexed(IndexedBase(Symbol('C')), Integer(0)))),
-    Pow(gamma(Indexed(IndexedBase(Symbol('C')), Integer(0))), Integer(-1)),
-    Pow(Indexed(IndexedBase(Symbol('B')), Integer(0)),
+    Indexed(IndexedBase(Str('C')), Integer(0)))),
+    Pow(gamma(Indexed(IndexedBase(Str('C')), Integer(0))), Integer(-1)),
+    Pow(Indexed(IndexedBase(Str('B')), Integer(0)),
     Add(Symbol('a1', positive=True), Integer(-1))),
-    Pow(Indexed(IndexedBase(Symbol('B')), Integer(1)),
-    Add(Indexed(IndexedBase(Symbol('C')), Integer(0)), Integer(-1))))
-    assert MGR(C) == mgrc
+    Pow(Indexed(IndexedBase(Str('B')), Integer(1)),
+    Add(Indexed(IndexedBase(Str('C')), Integer(0)), Integer(-1))))
+    assert MGR(C) == mgrc, MGR(C)
+
 
 def test_compound_distribution():
     Y = Poisson('Y', 1)
@@ -67,6 +69,7 @@ def test_compound_distribution():
     assert isinstance(pspace(Z), CompoundPSpace)
     assert isinstance(pspace(Z).distribution, CompoundDistribution)
     assert Z.pspace.distribution.pdf(1).doit() == exp(-2)*exp(exp(-1))
+
 
 def test_mix_expression():
     Y, E = Poisson('Y', 1), Exponential('E', 1)
