@@ -3,15 +3,14 @@ from collections import defaultdict, Counter
 from functools import reduce
 import itertools
 from itertools import accumulate
-from typing import Iterable, Optional, List, Dict as tDict, Tuple as tTuple
-
-import typing
+from typing import Iterable, Optional, List, Dict as tDict, Tuple as tTuple, Union as tUnion, overload
 
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Function, Lambda)
 from sympy.core.mul import Mul
+from sympy.core.numbers import One, Zero
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import (Dummy, Symbol)
@@ -41,7 +40,7 @@ class ArraySymbol(_ArrayExpr):
     """
 
     name = property(lambda self: self._args[0])
-    shape = property(lambda self: self._args[1])
+    shape: Tuple = property(lambda self: self._args[1])  # type: ignore[assignment]
 
     def __new__(cls, symbol, shape: Iterable) -> "ArraySymbol":
         if isinstance(symbol, str):
@@ -65,9 +64,9 @@ class ArrayElement(_ArrayExpr):
     """
 
     name = property(lambda self: self._args[0])
-    indices = property(lambda self: self._args[1])
+    indices: Tuple = property(lambda self: self._args[1])  # type: ignore[assignment]
 
-    def __new__(cls, name, indices):
+    def __new__(cls, name, indices) -> "ArrayElement":
         if isinstance(name, str):
             name = Symbol(name)
         name = _sympify(name)
@@ -77,8 +76,7 @@ class ArrayElement(_ArrayExpr):
                 raise ValueError("shape is out of bounds")
         if any((i < 0) == True for i in indices):
             raise ValueError("shape contains negative values")
-        obj = Expr.__new__(cls, name, indices)
-        return obj
+        return Expr.__new__(cls, name, indices)
 
 
 class ZeroArray(_ArrayExpr):
@@ -86,7 +84,15 @@ class ZeroArray(_ArrayExpr):
     Symbolic array of zeros. Equivalent to ``ZeroMatrix`` for matrices.
     """
 
-    shape = property(lambda self: self._args[0])
+    shape: Tuple = property(lambda self: self._args[0])  # type: ignore[assignment]
+
+    @overload
+    def __new__(cls, shape: tTuple[()]) -> "Zero":  # type: ignore[misc]
+        ...
+
+    @overload
+    def __new__(cls, shape: Iterable) -> "ZeroArray":
+        ...
 
     def __new__(cls, shape):
         if len(shape) == 0:
@@ -105,7 +111,15 @@ class OneArray(_ArrayExpr):
     Symbolic array of ones.
     """
 
-    shape = property(lambda self: self._args[0])
+    shape: Tuple = property(lambda self: self._args[0])  # type: ignore[assignment]
+
+    @overload
+    def __new__(cls, shape: tTuple[()]) -> "One":  # type: ignore[misc]
+        ...
+
+    @overload
+    def __new__(cls, shape: Iterable) -> "OneArray":
+        ...
 
     def __new__(cls, shape):
         if len(shape) == 0:
@@ -1427,7 +1441,7 @@ class _EditArrayContraction:
     by calling the ``.to_array_contraction()`` method.
     """
 
-    def __init__(self, base_array: typing.Union[ArrayContraction, ArrayDiagonal, ArrayTensorProduct]):
+    def __init__(self, base_array: tUnion[ArrayContraction, ArrayDiagonal, ArrayTensorProduct]):
 
         expr: Basic
         diagonalized: tTuple[tTuple[int, ...], ...]
@@ -1661,7 +1675,7 @@ class _EditArrayContraction:
         self._track_permutation[index_destination].extend(self._track_permutation[index_element]) # type: ignore
         self._track_permutation.pop(index_element) # type: ignore
 
-    def get_absolute_free_range(self, arg: _ArgE) -> typing.Tuple[int, int]:
+    def get_absolute_free_range(self, arg: _ArgE) -> tTuple[int, int]:
         """
         Return the range of the free indices of the arg as absolute positions
         among all free indices.
@@ -1674,7 +1688,7 @@ class _EditArrayContraction:
             counter += number_free_indices
         raise IndexError("argument not found")
 
-    def get_absolute_range(self, arg: _ArgE) -> typing.Tuple[int, int]:
+    def get_absolute_range(self, arg: _ArgE) -> tTuple[int, int]:
         """
         Return the absolute range of indices for arg, disregarding dummy
         indices.
