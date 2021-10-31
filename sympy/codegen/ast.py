@@ -54,7 +54,6 @@ AST Type Tree
        |        |--->NoneToken
        |
        |--->Statement
-       |--->Return
 
 
 Predefined types
