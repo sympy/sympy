@@ -603,192 +603,16 @@ class BooleanFunction(Application, Boolean):
         Rel = [i.canonical for i in Rel]
 
         if threeterm_patterns:
-            Rel = self._apply_patternbased_threeterm_simplification(Rel,
+            Rel = _apply_patternbased_threeterm_simplification(Rel,
                                 threeterm_patterns, rv.func, dominatingvalue,
                                 replacementvalue, measure)
 
-        Rel = self._apply_patternbased_twoterm_simplification(Rel, patterns,
+        Rel = _apply_patternbased_twoterm_simplification(Rel, patterns,
                         rv.func, dominatingvalue, replacementvalue, measure)
 
         rv = rv.func(*([_canonical(i) for i in ordered(Rel)]
                      + nonRel + nonRealRel))
         return rv
-
-    def _apply_patternbased_twoterm_simplification(self, Rel, patterns, func,
-                                                   dominatingvalue,
-                                                   replacementvalue,
-                                                   measure):
-        from sympy.functions.elementary.miscellaneous import Min, Max
-        changed = True
-        while changed and len(Rel) >= 2:
-            changed = False
-            # Sort based on ordered
-            Rel = list(ordered(Rel))
-            # Create a list of possible replacements
-            results = []
-            # Try all combinations
-            for ((i, pi), (j, pj)) in combinations(enumerate(Rel), 2):
-                for pattern, simp in patterns:
-                    res = []
-                    # use SymPy matching
-                    oldexpr = Tuple(pi, pj)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing first relational
-                    # This and the rest should not be required with a better
-                    # canonical
-                    oldexpr = Tuple(pi.reversed, pj)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing second relational
-                    oldexpr = Tuple(pi, pj.reversed)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing both relationals
-                    oldexpr = Tuple(pi.reversed, pj.reversed)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-
-                    if res:
-                        for tmpres, oldexpr in res:
-                            # we have a matching, compute replacement
-                            np = simp.subs(tmpres)
-                            if np == dominatingvalue:
-                                # if dominatingvalue, the whole expression
-                                # will be replacementvalue
-                                return [replacementvalue]
-                            # add replacement
-                            if not isinstance(np, ITE) and not np.has(Min, Max):
-                                # We only want to use ITE and Min/Max replacements if
-                                # they simplify to a relational
-                                costsaving = measure(func(*oldexpr.args)) - measure(np)
-                                if costsaving > 0:
-                                    results.append((costsaving, ([i, j], np)))
-            if results:
-                # Sort results based on complexity
-                results = list(reversed(sorted(results,
-                                               key=lambda pair: pair[0])))
-                # Replace the one providing most simplification
-                replacement = results[0][1]
-                idx, newrel = replacement
-                idx.sort()
-                # Remove the old relationals
-                for index in reversed(idx):
-                    del Rel[index]
-                if dominatingvalue is None or newrel != ~dominatingvalue:
-                    # Insert the new one (no need to insert a value that will
-                    # not affect the result)
-                    if newrel.func == func:
-                        for a in newrel.args:
-                            Rel.append(a)
-                    else:
-                        Rel.append(newrel)
-                # We did change something so try again
-                changed = True
-        return Rel
-
-    def _apply_patternbased_threeterm_simplification(self, Rel, patterns, func,
-                                                     dominatingvalue,
-                                                     replacementvalue,
-                                                     measure):
-        from sympy.functions.elementary.miscellaneous import Min, Max
-        changed = True
-        while changed and len(Rel) >= 3:
-            changed = False
-            # Sort based on ordered
-            Rel = list(ordered(Rel))
-            # Create a list of possible replacements
-            results = []
-            # Try all combinations
-            for ((i, pi), (j, pj), (k, pk)) in permutations(enumerate(Rel), 3):
-                for pattern, simp in patterns:
-                    res = []
-                    # use SymPy matching
-                    oldexpr = Tuple(pi, pj, pk)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing first relational
-                    # This and the rest should not be required with a better
-                    # canonical
-                    oldexpr = Tuple(pi.reversed, pj, pk)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing second relational
-                    oldexpr = Tuple(pi, pj.reversed, pk)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing both relationals
-                    oldexpr = Tuple(pi.reversed, pj.reversed, pk)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Same but with third pattern reversed
-                    oldexpr = Tuple(pi, pj, pk.reversed)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing first relational
-                    # This and the rest should not be required with a better
-                    # canonical
-                    oldexpr = Tuple(pi.reversed, pj, pk.reversed)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing second relational
-                    oldexpr = Tuple(pi, pj.reversed, pk.reversed)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing both relationals
-                    oldexpr = Tuple(pi.reversed, pj.reversed, pk.reversed)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-
-                    if res:
-                        for tmpres, oldexpr in res:
-                            # we have a matching, compute replacement
-                            np = simp.subs(tmpres)
-                            if np == dominatingvalue:
-                                # if dominatingvalue, the whole expression
-                                # will be replacementvalue
-                                return [replacementvalue]
-                            # add replacement
-                            if not isinstance(np, ITE) and not np.has(Min, Max):
-                                # We only want to use ITE and Min/Max replacements if
-                                # they simplify to a relational
-                                costsaving = measure(func(*oldexpr.args)) - measure(np)
-                                if costsaving > 0:
-                                    results.append((costsaving, ([i, j, k], np)))
-            if results:
-                # Sort results based on complexity
-                results = list(reversed(sorted(results,
-                                               key=lambda pair: pair[0])))
-                # Replace the one providing most simplification
-                replacement = results[0][1]
-                idx, newrel = replacement
-                idx.sort()
-                # Remove the old relationals
-                for index in reversed(idx):
-                    del Rel[index]
-                if dominatingvalue is None or newrel != ~dominatingvalue:
-                    # Insert the new one (no need to insert a value that will
-                    # not affect the result)
-                    if newrel.func == func:
-                        for a in newrel.args:
-                            Rel.append(a)
-                    else:
-                        Rel.append(newrel)
-                # We did change something so try again
-                changed = True
-        return Rel
 
 
 class And(LatticeOp, BooleanFunction):
@@ -931,8 +755,8 @@ class And(LatticeOp, BooleanFunction):
             nonlineqs = [ei.subs(reps) for ei in nonlineqs]
             other = [ei.subs(reps) for ei in other]
             rv = rv.func(*([i.canonical for i in (eqs + nonlineqs + other)] + nonRel))
-        patterns = simplify_patterns_and()
-        threeterm_patterns = simplify_patterns_and3()
+        patterns = _simplify_patterns_and()
+        threeterm_patterns = _simplify_patterns_and3()
         return self._apply_patternbased_simplification(rv, patterns,
                                                        measure, S.false,
                                                        threeterm_patterns=threeterm_patterns)
@@ -1044,7 +868,7 @@ class Or(LatticeOp, BooleanFunction):
         rv = super()._eval_simplify(**kwargs)
         if not isinstance(rv, Or):
             return rv
-        patterns = simplify_patterns_or()
+        patterns = _simplify_patterns_or()
         return self._apply_patternbased_simplification(rv, patterns,
             kwargs['measure'], S.true)
 
@@ -1290,7 +1114,7 @@ class Xor(BooleanFunction):
         rv = self.func(*[a.simplify(**kwargs) for a in self.args])
         if not isinstance(rv, Xor):  # This shouldn't really happen here
             return rv
-        patterns = simplify_patterns_xor()
+        patterns = _simplify_patterns_xor()
         return self._apply_patternbased_simplification(rv, patterns,
             kwargs['measure'], None)
 
@@ -3216,7 +3040,137 @@ def bool_map(bool1, bool2):
     return m
 
 
-def simplify_patterns_and():
+def _apply_patternbased_twoterm_simplification(Rel, patterns, func,
+                                               dominatingvalue,
+                                               replacementvalue,
+                                               measure):
+    from sympy.functions.elementary.miscellaneous import Min, Max
+    changed = True
+    while changed and len(Rel) >= 2:
+        changed = False
+        # Sort based on ordered
+        Rel = list(ordered(Rel))
+        # Create a list of possible replacements
+        results = []
+        # Try all combinations
+        for ((i, pi), (j, pj)) in combinations(enumerate(Rel), 2):
+            # Try all combinations of reversed relational
+            ti = (pi, pi.reversed)
+            tj = (pj, pj.reversed)
+            for pattern, simp in patterns:
+                res = []
+                for p1, p2 in product(ti, tj):
+                    # use SymPy matching
+                    oldexpr = Tuple(p1, p2)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+
+                if res:
+                    for tmpres, oldexpr in res:
+                        # we have a matching, compute replacement
+                        np = simp.subs(tmpres)
+                        if np == dominatingvalue:
+                            # if dominatingvalue, the whole expression
+                            # will be replacementvalue
+                            return [replacementvalue]
+                        # add replacement
+                        if not isinstance(np, ITE) and not np.has(Min, Max):
+                            # We only want to use ITE and Min/Max replacements if
+                            # they simplify to a relational
+                            costsaving = measure(func(*oldexpr.args)) - measure(np)
+                            if costsaving > 0:
+                                results.append((costsaving, ([i, j], np)))
+        if results:
+            # Sort results based on complexity
+            results = list(reversed(sorted(results,
+                                           key=lambda pair: pair[0])))
+            # Replace the one providing most simplification
+            replacement = results[0][1]
+            idx, newrel = replacement
+            idx.sort()
+            # Remove the old relationals
+            for index in reversed(idx):
+                del Rel[index]
+            if dominatingvalue is None or newrel != ~dominatingvalue:
+                # Insert the new one (no need to insert a value that will
+                # not affect the result)
+                if newrel.func == func:
+                    for a in newrel.args:
+                        Rel.append(a)
+                else:
+                    Rel.append(newrel)
+            # We did change something so try again
+            changed = True
+    return Rel
+
+def _apply_patternbased_threeterm_simplification(Rel, patterns, func,
+                                                 dominatingvalue,
+                                                 replacementvalue,
+                                                 measure):
+    from sympy.functions.elementary.miscellaneous import Min, Max
+    changed = True
+    while changed and len(Rel) >= 3:
+        changed = False
+        # Sort based on ordered
+        Rel = list(ordered(Rel))
+        # Create a list of possible replacements
+        results = []
+        # Try all combinations
+        for ((i, pi), (j, pj), (k, pk)) in permutations(enumerate(Rel), 3):
+            # Try all combinations of reversed relational
+            ti = (pi, pi.reversed)
+            tj = (pj, pj.reversed)
+            tk = (pk, pk.reversed)
+            for pattern, simp in patterns:
+                res = []
+                for p1, p2, p3 in product(ti, tj, tk):
+                    # use SymPy matching
+                    oldexpr = Tuple(p1, p2, p3)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+
+                if res:
+                    for tmpres, oldexpr in res:
+                        # we have a matching, compute replacement
+                        np = simp.subs(tmpres)
+                        if np == dominatingvalue:
+                            # if dominatingvalue, the whole expression
+                            # will be replacementvalue
+                            return [replacementvalue]
+                        # add replacement
+                        if not isinstance(np, ITE) and not np.has(Min, Max):
+                            # We only want to use ITE and Min/Max replacements if
+                            # they simplify to a relational
+                            costsaving = measure(func(*oldexpr.args)) - measure(np)
+                            if costsaving > 0:
+                                results.append((costsaving, ([i, j, k], np)))
+        if results:
+            # Sort results based on complexity
+            results = list(reversed(sorted(results,
+                                           key=lambda pair: pair[0])))
+            # Replace the one providing most simplification
+            replacement = results[0][1]
+            idx, newrel = replacement
+            idx.sort()
+            # Remove the old relationals
+            for index in reversed(idx):
+                del Rel[index]
+            if dominatingvalue is None or newrel != ~dominatingvalue:
+                # Insert the new one (no need to insert a value that will
+                # not affect the result)
+                if newrel.func == func:
+                    for a in newrel.args:
+                        Rel.append(a)
+                else:
+                    Rel.append(newrel)
+            # We did change something so try again
+            changed = True
+    return Rel
+
+
+def _simplify_patterns_and():
     from sympy.core import Wild
     from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
     from sympy.functions.elementary.complexes import Abs
@@ -3233,7 +3187,7 @@ def simplify_patterns_and():
                      (Tuple(Eq(a, b), Ge(a, b)), Eq(a, b)),
                      (Tuple(Eq(a, b), Le(a, b)), Eq(a, b)),
                      (Tuple(Ge(a, b), Gt(a, b)), Gt(a, b)),
-                     # (Tuple(Ge(a, b), Le(a, b)), Eq(a, b)),
+                     (Tuple(Ge(a, b), Le(a, b)), Eq(a, b)),
                      (Tuple(Ge(a, b), Ne(a, b)), Gt(a, b)),
                      (Tuple(Gt(a, b), Ne(a, b)), Gt(a, b)),
                      (Tuple(Le(a, b), Lt(a, b)), Lt(a, b)),
@@ -3258,7 +3212,8 @@ def simplify_patterns_and():
                      )
     return _matchers_and
 
-def simplify_patterns_and3():
+
+def _simplify_patterns_and3():
     from sympy.core import Wild
     from sympy.core.relational import Eq, Ge, Gt
 
@@ -3296,7 +3251,7 @@ def simplify_patterns_and3():
     return _matchers_and
 
 
-def simplify_patterns_or():
+def _simplify_patterns_or():
     from sympy.core import Wild
     from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
     from sympy.functions.elementary.complexes import Abs
@@ -3338,7 +3293,7 @@ def simplify_patterns_or():
                     )
     return _matchers_or
 
-def simplify_patterns_xor():
+def _simplify_patterns_xor():
     from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.core import Wild
     from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt

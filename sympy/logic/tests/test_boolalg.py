@@ -1155,15 +1155,15 @@ def test_relational_simplification_numerically():
 
 def test_relational_simplification_patterns_numerically():
     from sympy.core import Wild
-    from sympy.logic.boolalg import simplify_patterns_and, \
-        simplify_patterns_or, simplify_patterns_xor
+    from sympy.logic.boolalg import _simplify_patterns_and, \
+        _simplify_patterns_or, _simplify_patterns_xor
     a = Wild('a')
     b = Wild('b')
     c = Wild('c')
     symb = [a, b, c]
-    patternlists = [[And, simplify_patterns_and()],
-                    [Or, simplify_patterns_or()],
-                    [Xor, simplify_patterns_xor()]]
+    patternlists = [[And, _simplify_patterns_and()],
+                    [Or, _simplify_patterns_or()],
+                    [Xor, _simplify_patterns_xor()]]
     valuelist = list(set(list(combinations(list(range(-2, 3))*3, 3))))
     # Skip combinations of +/-2 and 0, except for all 0
     valuelist = [v for v in valuelist if any([w % 2 for w in v]) or not any(v)]
@@ -1300,12 +1300,12 @@ def test_refine():
 
 def test_relational_threeterm_simplification_patterns_numerically():
     from sympy.core import Wild
-    from sympy.logic.boolalg import simplify_patterns_and3
+    from sympy.logic.boolalg import _simplify_patterns_and3
     a = Wild('a')
     b = Wild('b')
     c = Wild('c')
     symb = [a, b, c]
-    patternlists = [[And, simplify_patterns_and3()]]
+    patternlists = [[And, _simplify_patterns_and3()]]
     valuelist = list(set(list(combinations(list(range(-2, 3))*3, 3))))
     # Skip combinations of +/-2 and 0, except for all 0
     valuelist = [v for v in valuelist if any([w % 2 for w in v]) or not any(v)]
