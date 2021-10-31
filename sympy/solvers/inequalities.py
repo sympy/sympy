@@ -1178,6 +1178,7 @@ def _pick_var(inequalities):
 
     >>> from sympy.solvers.inequalities import _pick_var
     >>> from sympy.abc import x, y, z
+    >>> from sympy.core.sorting import ordered
 
     >>> eq1 = 2*x - 3*y + z + 1
     >>> eq2 = x - y + 2*z - 2
