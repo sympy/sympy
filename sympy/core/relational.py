@@ -631,55 +631,11 @@ class Equality(Relational):
                 pass
 
         # Simplify expressions of the type Eq(x, Min/Max(..., x, ...))
-        from sympy.functions.elementary.miscellaneous import Min, Max
-        if self.has(Min, Max):
-            minmax, constant = None, None
-            if isinstance(e.rhs, (Min, Max)) and not e.lhs.has(Min, Max):
-                minmax, constant = e.rhs, e.lhs
-            elif isinstance(e.lhs, (Min, Max)) and not e.rhs.has(Min, Max):
-                minmax, constant = e.lhs, e.rhs
-            if minmax:
-                # There is a Min or Max for one of the arguments
-                from sympy.utilities.iterables import sift
-                enew = None
-                if constant.is_number:
-                    # The other side is a number, get rid of any numbers in Min/Max
-                    numberpart, remaining = sift(minmax.args, lambda x: x.is_number, binary=True)
-                    if numberpart:
-                        if isinstance(minmax, Min):
-                            if Min(*numberpart) < constant:
-                                # Smallest number in Min is smaller than other side
-                                enew = S.false
-                            elif constant in numberpart:
-                                # Constant is in the Min, rewrite
-                                enew = Le(constant, Min(*remaining))
-                            else:
-                                # Remove all numbers
-                                enew = Eq(constant, Min(*remaining))
-                        else:
-                            if Max(*numberpart) > constant:
-                                # Largest number in Max is larger than other side
-                                enew = S.false
-                            elif constant in numberpart:
-                                # Constant in the Max, rewrite
-                                enew = Ge(constant, Max(*remaining))
-                            else:
-                                # Remove all numbers
-                                enew = Eq(constant, Max(*remaining))
-                else:
-                    constantpart, remaining = sift(minmax.args, lambda x: x == constant, binary=True)
-                    if constantpart:
-                        # Constant in the Min/Max, rewrite
-                        if isinstance(minmax, Min):
-                            enew = Le(constant, Min(*remaining))
-                            # enew = Le(constant, minmax._new_rawargs(*remaining))
-                        else:
-                            enew = Ge(constant, Max(*remaining))
-                            # enew = Ge(constant, minmax._new_rawargs(*remaining))
-                if enew is not None:
-                    measure = kwargs['measure']
-                    if measure(enew) <= kwargs['ratio']*measure(e):
-                        e = enew.canonical
+        enew = _simplify_equality_with_minmax(e)
+        if enew is not None:
+            measure = kwargs['measure']
+            if measure(enew) <= kwargs['ratio']*measure(e):
+                e = enew.canonical
 
         return e
 
@@ -770,11 +726,7 @@ class Unequality(Relational):
 
     def _eval_simplify(self, **kwargs):
         # simplify as an equality
-        eq = Equality(*self.args)._eval_simplify(**kwargs)
-        if isinstance(eq, Equality):
-            # send back Ne with the new args
-            return self.func(*eq.args)
-        return eq.negated  # result of Ne is the negated Eq
+        return self.negated._eval_simplify(**kwargs).negated
 
 
 Ne = Unequality
@@ -1109,42 +1061,14 @@ class GreaterThan(_Greater):
                 return e
 
         # Simplify expressions of the type Ge(x, Min/Max(..., x, ...))
-        from sympy.functions.elementary.miscellaneous import Min, Max
-        if self.has(Min, Max):
-            enew = None
-            if isinstance(e.rhs, (Min, Max)) and not e.lhs.has(Min, Max):
-                # c >= Min/Max, reverse
-                enew = e.reversed
-            elif isinstance(e.lhs, (Min, Max)) and not e.rhs.has(Min, Max):
-                # Min/Max >= c
-                enew = e
-            if enew is not None:
-                if e.rhs.is_number:
-                    numberpart, remaining = sift(e.lhs.args, lambda x: x.is_number, binary=True)
-                    if numberpart:
-                        if isinstance(e.lhs, Max):
-                            if Max(*numberpart) >= e.rhs:
-                                enew = S.true
-                            else:
-                                enew = GreaterThan(Max(*remaining), e.rhs)
-                        else:
-                            if Min(*numberpart) < e.rhs:
-                                enew = S.false
-                            else:
-                                enew = GreaterThan(Min(*remaining), e.rhs)
-                else:
-                    constantpart, remaining = sift(e.lhs.args, lambda x: x == e.rhs, binary=True)
-                    if constantpart:
-                        if isinstance(e.lhs, Max):
-                            enew = S.true
-                        else:
-                            enew = GreaterThan(Min(*remaining), e.rhs)
-                            # e = GreaterThan(e.lhs._new_rawargs(*remaining), e.rhs).canonical
-                measure = kwargs['measure']
-                if measure(enew) <= kwargs['ratio']*measure(eundo):
-                    eundo = enew.canonical
+        enew = _simplify_inequality_with_minmax(e, GreaterThan, is_ge, is_lt)
+        if enew is not None:
+            measure = kwargs['measure']
+            if measure(enew) <= kwargs['ratio']*measure(eundo):
+                eundo = enew.canonical
 
         return eundo
+
 
 Ge = GreaterThan
 
@@ -1165,12 +1089,7 @@ class LessThan(_Less):
 
     def _eval_simplify(self, **kwargs):
         # simplify as a StrictGreaterThan
-        gt = StrictGreaterThan(*self.args)._eval_simplify(**kwargs)
-        if isinstance(gt, StrictGreaterThan):
-            # send back LessThan with the new args
-            return self.func(*gt.args)
-        else:
-            return gt.negated  # result of LessThan is the negated gt
+        return self.negated._eval_simplify(**kwargs).negated
 
 Le = LessThan
 
@@ -1198,39 +1117,11 @@ class StrictGreaterThan(_Greater):
             else:
                 return e
 
-        # Simplify expressions of the type Gt(x, Min/Max(..., x, ...))
-        from sympy.functions.elementary.miscellaneous import Min, Max
-        if self.has(Min, Max):
-            enew = None
-            if isinstance(e.rhs, (Min, Max)) and not e.lhs.has(Min, Max):
-                # c > Min/Max, reverse
-                enew = e.reversed
-            elif isinstance(e.lhs, (Min, Max)) and not e.rhs.has(Min, Max):
-                # Min/Max > c
-                enew = e
-            if enew is not None:
-                if e.rhs.is_number:
-                    # Other side is number, evaluate cases
-                    numberpart, remaining = sift(e.lhs.args, lambda x: x.is_number, binary=True)
-                    if numberpart:
-                        if isinstance(e.lhs, Max):
-                            if Max(*numberpart) > e.rhs:
-                                enew = S.true
-                            else:
-                                enew = StrictGreaterThan(Max(*remaining), e.rhs)
-                        else:
-                            enew = S.false
-                else:
-                    # Other part is Symbol/expression, evaluate cases
-                    constantpart, remaining = sift(e.lhs.args, lambda x: x == e.rhs, binary=True)
-                    if constantpart:
-                        if isinstance(e.lhs, Max):
-                            enew = StrictGreaterThan(Max(*remaining), e.rhs)
-                        else:
-                            enew = S.false
-                measure = kwargs['measure']
-                if measure(enew) <= kwargs['ratio']*measure(eundo):
-                    eundo = enew.canonical
+        enew = _simplify_inequality_with_minmax(e, StrictGreaterThan, is_gt, is_le)
+        if enew is not None:
+            measure = kwargs['measure']
+            if measure(enew) <= kwargs['ratio']*measure(eundo):
+                eundo = enew.canonical
 
         return eundo
 
@@ -1254,12 +1145,7 @@ class StrictLessThan(_Less):
 
     def _eval_simplify(self, **kwargs):
         # simplify as a GreaterThan
-        ge = GreaterThan(*self.args)._eval_simplify(**kwargs)
-        if isinstance(ge, GreaterThan):
-            # send back StrictLessThan with the new args
-            return self.func(*ge.args)
-        else:
-            return ge.negated  # result of StrictLessThan is the negated gt
+        return self.negated._eval_simplify(**kwargs).negated
 
 Lt = StrictLessThan
 
@@ -1676,3 +1562,103 @@ def is_eq(lhs, rhs, assumptions=None):
             rv = False
         if rv is not None:
             return rv
+
+
+def _simplify_inequality_with_minmax(e, fn, cmp1, cmp2):
+    """ Simplify inequalities, i.e., ``>``, ``<``, ``>=``, ``<=``, that
+    contains a :class:`~.Min` and/or :class:`~.Max` functins.
+
+    Written so that only ``>`` and ``>=``are supported, but it is possible to
+    ``<`` and ``<=`` expressions by using ``.negated`` before and after simplifying.
+    """
+    # Simplify expressions of the type Gt(x, Min/Max(..., x, ...))
+    from sympy.functions.elementary.miscellaneous import Min, Max
+    if e.has(Min, Max):
+        enew = None
+        if isinstance(e.rhs, (Min, Max)) and not e.lhs.has(Min, Max):
+            # c >/>= Min/Max, reverse
+            enew = e.reversed
+        elif isinstance(e.lhs, (Min, Max)) and not e.rhs.has(Min, Max):
+            # Min/Max >/>= c
+            enew = e
+        if enew is not None:
+            if e.rhs.is_number:
+                # Other side is number, evaluate cases
+                numberpart, remaining = sift(e.lhs.args, lambda x: x.is_number, binary=True)
+                if numberpart:
+                    if isinstance(e.lhs, Max):
+                        if cmp1(Max(*numberpart), e.rhs):
+                            enew = S.true
+                        else:
+                            enew = fn(Max(*remaining), e.rhs)
+                    else:
+                        if cmp2(Min(*numberpart), e.rhs):
+                            enew = S.false
+                        else:
+                            enew = fn(Min(*remaining), e.rhs)
+            else:
+                # Other part is Symbol/expression, evaluate cases
+                constantpart, remaining = sift(e.lhs.args, lambda x: x == e.rhs, binary=True)
+                if constantpart:
+                    if fn == StrictGreaterThan:
+                        if isinstance(e.lhs, Max):
+                            enew = StrictGreaterThan(Max(*remaining), e.rhs)
+                        else:
+                            enew = S.false
+                    else:  # GreaterThan
+                        if isinstance(e.lhs, Max):
+                            enew = S.true
+                        else:
+                            enew = GreaterThan(Min(*remaining), e.rhs)
+                            # e = GreaterThan(e.lhs._new_rawargs(*remaining), e.rhs).canonical
+        return enew
+
+def _simplify_equality_with_minmax(e):
+    """ Simplify :class:`~.Equality` that
+    contains a :class:`~.Min` and/or :class:`~.Max` functins.
+    """
+    from sympy.functions.elementary.miscellaneous import Min, Max
+    if e.has(Min, Max):
+        minmax, constant = None, None
+        if isinstance(e.rhs, (Min, Max)) and not e.lhs.has(Min, Max):
+            minmax, constant = e.rhs, e.lhs
+        elif isinstance(e.lhs, (Min, Max)) and not e.rhs.has(Min, Max):
+            minmax, constant = e.lhs, e.rhs
+        if minmax:
+            # There is a Min or Max for one of the arguments
+            enew = None
+            if constant.is_number:
+                # The other side is a number, get rid of any numbers in Min/Max
+                numberpart, remaining = sift(minmax.args, lambda x: x.is_number, binary=True)
+                if numberpart:
+                    if isinstance(minmax, Min):
+                        if Min(*numberpart) < constant:
+                            # Smallest number in Min is smaller than other side
+                            enew = S.false
+                        elif constant in numberpart:
+                            # Constant is in the Min, rewrite
+                            enew = Le(constant, Min(*remaining))
+                        else:
+                            # Remove all numbers
+                            enew = Eq(constant, Min(*remaining))
+                    else:
+                        if Max(*numberpart) > constant:
+                            # Largest number in Max is larger than other side
+                            enew = S.false
+                        elif constant in numberpart:
+                            # Constant in the Max, rewrite
+                            enew = Ge(constant, Max(*remaining))
+                        else:
+                            # Remove all numbers
+                            enew = Eq(constant, Max(*remaining))
+            else:
+                constantpart, remaining = sift(minmax.args, lambda x: x == constant, binary=True)
+                if constantpart:
+                    # Constant in the Min/Max, rewrite
+                    if isinstance(minmax, Min):
+                        enew = Le(constant, Min(*remaining))
+                        # enew = Le(constant, minmax._new_rawargs(*remaining))
+                    else:
+                        enew = Ge(constant, Max(*remaining))
+                        # enew = Ge(constant, minmax._new_rawargs(*remaining))
+        return enew

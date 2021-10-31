@@ -7,7 +7,6 @@ from itertools import chain, combinations, product, permutations
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import ordered, as_int
 from sympy.core.containers import Tuple
 from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.function import Application, Derivative

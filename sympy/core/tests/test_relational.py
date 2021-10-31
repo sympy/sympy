@@ -1271,10 +1271,10 @@ def test_minmax_simplification_systematic_numerically():
     var = [x, y]
     valuelist = list(set(list(combinations(list(range(-2, 3))*3, 2))))
     # Skip combinations of +/-2 and 0, except for all 0
-    valuelist = [v for v in valuelist if any([w % 2 for w in v]) or not any(v)]
+    valuelist = [v for v in valuelist if any(w % 2 for w in v) or not any(v)]
     err = "{} and {} did not evalute to the same value for {}."
-    for rel in [Eq, Ne, Ge, Gt, Le, Lt]:
-        for minmax in [Min, Max]:
+    for rel in (Eq, Ne, Ge, Gt, Le, Lt):
+        for minmax in (Min, Max):
             f = rel(minmax(x, y), x)
             fs = f.simplify()
             for val in valuelist:
@@ -1301,10 +1301,10 @@ def test_minmax_simplification_systematic_numerically_slow():
     valuelist = list(set(list(combinations(list(range(-2, 3))*3, 2))))
     err = "{} and {} did not evalute to the same value for {}."
     # Skip combinations of +/-2 and 0, except for all 0
-    valuelist = [v for v in valuelist if any([w % 2 for w in v]) or not any(v)]
-    for const in [-2, -1, 0, 1, 2]:
-        for rel in [Eq, Ne, Ge, Gt, Le, Lt]:
-            for minmax in [Min, Max]:
+    valuelist = [v for v in valuelist if any(w % 2 for w in v) or not any(v)]
+    for const in (-2, -1, 0, 1, 2):
+        for rel in (Eq, Ne, Ge, Gt, Le, Lt):
+            for minmax in (Min, Max):
                 f = rel(minmax(x, y, const), x)
                 fs = f.simplify()
                 for val in valuelist:
