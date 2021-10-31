@@ -1039,7 +1039,7 @@ def _find_pivot(inequalities):
                 return symbol
 
 
-def _split_lower_greater(inequalities, pivot):
+def _split_min_max(inequalities, pivot):
     """Split the inequalities in lists that contains the variable pivot with
     a positive and negative sign. The list describe what pivot is
     respectively greater and lower than according to the system of
@@ -1049,7 +1049,7 @@ def _split_lower_greater(inequalities, pivot):
     Examples
     ========
 
-    >>> from sympy.solvers.inequalities import _split_lower_greater
+    >>> from sympy.solvers.inequalities import _split_min_max(
     >>> from sympy.abc import x, y, z
 
     >>> eq1 = 2*x - 3*y + z + 1
@@ -1059,7 +1059,7 @@ def _split_lower_greater(inequalities, pivot):
 
     >>> inequalities = [eq1, eq2, eq3, eq4]
     >>> pivot = y
-    >>> _split_lower_greater(inequalities, pivot)
+    >>> _split_min_max(inequalities, pivot)
     ([-x - 3*z - 4], [2*x/3 + z/3 + 1/3, x + 2*z - 2], [x - z])
 
     """
@@ -1075,32 +1075,40 @@ def _split_lower_greater(inequalities, pivot):
             lower_than.append(-(eq - (pivot*coeff))/coeff)
         else:
             extra.append(eq)
-    return greater_than, lower_than, extra
+    return Max(*greater_than), Min(*lower_than), extra
 
 
-def _merge_lower_greater(greater_than, lower_than):
-    """Build the system of inequalities which verify that all equations
-    in the list greater_than are greater than those that are in lower_than.
+def _merge_mins_maxs(maxs, mins):
+    """Build the system of inequalities which verify that all equations of maxs are greater than those of mins.
 
     Examples
     ========
 
-    >>> from sympy.solvers.inequalities import _merge_lower_greater
+    >>> from sympy.solvers.inequalities import __merge_mins_maxs
     >>> from sympy.abc import x, z
+    >>> from sympy import Min,Max
 
-    >>> greater_than = [-x - 3*z - 4]
-    >>> lower_than = [(2*x + z + 1)/3, x + 2*z - 2]
+    >>> maxs = -x - 3*z - 4
+    >>> mins = Min(2*x/3 + z/3 + 1/3, x + 2*z - 2)
 
-    >>> _merge_lower_greater(greater_than, lower_than)
-    [5*x/3 + 10*z/3 + 13/3, 2*x + 5*z + 2]
+    >>> _merge_mins_maxs(maxs, mins)
+    [2*x + 5*z + 2, 5*x/3 + 10*z/3 + 4.33333333333333]
 
     """
-    return [i - j for i in lower_than for j in greater_than]
+    if type(mins)!=Min:
+        mins=[mins]
+    else:
+        mins=mins.args
+
+    if type(maxs)!=Max:
+        maxs=[maxs]
+    else:
+        maxs=maxs.args
+    return [i - j for i in mins for j in maxs]
 
 
 def _fourier_motzkin(inequalities):
-    """Eliminate variables of system of linear inequalities by using
-    Fourier-Motzkin elimination algorithm
+    """Eliminate variables of system of linear inequalities by using Fourier-Motzkin elimination algorithm
 
     Examples
     ========
@@ -1119,16 +1127,16 @@ def _fourier_motzkin(inequalities):
     [3*x/2 + 13/10, 7*x/5 + 2/5]
     >>> assert set(d) == set([y, z])
     >>> d[y]
-    {'greater_than': [-x - 3*z - 4], 'lower_than': [2*x/3 + z/3 + 1/3, x + 2*z - 2]}
+    (Min(2*x/3 + z/3 + 1/3, x + 2*z - 2) > y, y > -x - 3*z - 4)
     >>> d[z]
-    {'greater_than': [-x/2 - 13/10, -2*x/5 - 2/5], 'lower_than': [x]}
+    (x > z, z > Max(-x/2 - 13/10, -2*x/5 - 2/5))
     """
     pivot = _find_pivot(inequalities)
     res = {}
     while pivot != None:
-        greater_than, lower_than, extra = _split_lower_greater(inequalities, pivot)
-        res[pivot] = {"greater_than": greater_than, "lower_than": lower_than}
-        inequalities = _merge_lower_greater(greater_than, lower_than) + extra
+        maxs, mins, extra = _split_min_max(inequalities, pivot)
+        res[pivot] = (mins > pivot ,pivot > maxs)
+        inequalities = _merge_mins_maxs(maxs, mins) + extra
         pivot = _find_pivot(inequalities)
     return inequalities, res
 
@@ -1152,14 +1160,14 @@ def _fourier_motzkin_extension(inequalities):
     >>> d = _fourier_motzkin_extension(inequalities)
     >>> assert set(d) == {x}
     >>> d[x]
-    {'greater_than': [3*y/2 - z/2 - 1/2, y - 2*z + 2, y - 3*z - 4, -z], 'lower_than': []}
+    (oo > x, x > Max(-z, y - 3*z - 4, y - 2*z + 2, 3*y/2 - z/2 - 1/2))
     """
 
     pivot = _pick_var(inequalities)
     res = {}
     while inequalities:
-        greater_than, lower_than, extra = _split_lower_greater(inequalities, pivot)
-        res[pivot] = {"greater_than":greater_than, "lower_than":lower_than}
+        maxs, mins, extra = _split_min_max(inequalities, pivot)
+        res[pivot] = (mins > pivot ,pivot > maxs)
         inequalities = extra
         pivot = _pick_var(inequalities)
     return res
@@ -1188,7 +1196,6 @@ def _pick_var(inequalities):
         for symb in ordered(eq.free_symbols):  # make selection canonical
             return symb
 
-
 def solve_linear_inequalities(inequalities):
     """ Solve a system of linear inequalities
 
@@ -1209,6 +1216,7 @@ def solve_linear_inequalities(inequalities):
 
     >>> from sympy.solvers.inequalities import solve_linear_inequalities
     >>> from sympy.abc import x, y, z
+    >>> from sympy.core.sorting import ordered
 
     >>> eq1 = 2*x - 3*y + z + 1
     >>> eq2 = x - y + 2*z - 2
@@ -1219,15 +1227,15 @@ def solve_linear_inequalities(inequalities):
     >>> d = solve_linear_inequalities(inequalities)
     >>> assert set(d) == set([x, y, z])
     >>> d[x]
-     {'greater_than': [-2/7, -13/15], 'lower_than': []}
-    >>> d[y]
-    {'greater_than': [-4*x - 4], 'lower_than': [3*x - 2, x + 1/3]}
+    (oo > x, x > -2/7)
     >>> d[z]
-     {'greater_than': [-x/3 - y/3 - 4/3, -x/2 + y/2 + 1, -2*x + 3*y - 1], 'lower_than': [x]}
-
-    x = 2 is valid because: 2 > max(-13/15, -2/7)
-    z = 1 is valid because: x > 1 > max(-x/2 - 13/10, -2*x/5 - 2/5)
-    y = -1 is valid because: min(2*x/3 + z/3 + 1/3, x + 2*z - 2) > y > -x - 3*z - 4
+    (x > z, z > Max(-x/2 - 13/10, -2*x/5 - 2/5))
+    >>> d[y]
+    (Min(2*x/3 + z/3 + 1/3, x + 2*z - 2) > y, y > -x - 3*z - 4)
+    
+    x = 2 is valid because: oo > 2 > -2/7
+    z = 1 is valid because: x > 1 > Max(-x/2 - 13/10, -2*x/5 - 2/5)
+    y = -1 is valid because: Min(2*x/3 + z/3 + 1/3, x + 2*z - 2) > -1 > -x - 3*z - 4
     """
     eqs = list(ordered(inequalities))
     eqs, res1 = _fourier_motzkin(eqs)
