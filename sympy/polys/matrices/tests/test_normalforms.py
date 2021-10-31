@@ -49,7 +49,7 @@ def test_hermite_normal():
     hnf = DM([[37, 0, 19], [222, -6, 113], [48, 0, 25], [0, 2, 1], [0, 0, 1]], ZZ)
     assert hermite_normal_form(m) == hnf
     raises(DMShapeError, lambda: _hermite_normal_form_modulo_D(m, ZZ(96)))
-    raises(TypeError, lambda: _hermite_normal_form_modulo_D(m, 96))
+    raises(DMDomainError, lambda: _hermite_normal_form_modulo_D(m, 96))
 
     m = DM([[8, 28, 68, 116, 164], [3, 11, 19, 31, 43], [5, 13, 23, 37, 47]], ZZ)
     hnf = DM([[4, 0, 0], [0, 2, 1], [0, 0, 1]], ZZ)

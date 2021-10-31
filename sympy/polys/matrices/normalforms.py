@@ -274,7 +274,8 @@ def _hermite_normal_form_modulo_D(A, D):
     ======
 
     DMDomainError
-        If the domain of the matrix is not :ref:`ZZ`.
+        If the domain of the matrix is not :ref:`ZZ`, or
+        if *D* is given but is not in :ref:`ZZ`.
 
     DMShapeError
         If the matrix has more rows than columns.
@@ -289,7 +290,7 @@ def _hermite_normal_form_modulo_D(A, D):
     if not A.domain.is_ZZ:
         raise DMDomainError('Matrix must be over domain ZZ.')
     if not ZZ.of_type(D) or D < 1:
-        raise TypeError('Modulus D must be positive element of domain ZZ.')
+        raise DMDomainError('Modulus D must be positive element of domain ZZ.')
 
     def add_columns_mod_R(m, R, i, j, a, b, c, d):
         # replace m[:, i] by (a*m[:, i] + b*m[:, j]) % R
@@ -362,10 +363,8 @@ def hermite_normal_form(A, *, D=None, check_rank=False):
     ======
 
     DMDomainError
-        If the domain of the matrix is not :ref:`ZZ`.
-
-    TypeError
-        If *D* is given but is not in :ref:`ZZ`.
+        If the domain of the matrix is not :ref:`ZZ`, or
+        if *D* is given but is not in :ref:`ZZ`.
 
     DMShapeError
         If the mod *D* algorithm is used but the matrix has more rows than
