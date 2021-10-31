@@ -275,8 +275,8 @@ def test_unicode_names():
 
 def test_python3_features():
     # Make sure the tokenizer can handle Python 3-only features
-    if sys.version_info < (3, 6):
-        skip("test_python3_features requires Python 3.6 or newer")
+    if sys.version_info < (3, 7):
+        skip("test_python3_features requires Python 3.7 or newer")
 
 
     assert parse_expr("123_456") == 123456
