@@ -178,6 +178,39 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     >>> K.mod
     DMP([1, 0, -10, 0, 1], QQ, None)
 
+    The `discriminant`_ of the field can be obtained from the
+    :py:meth:`~.discriminant` method, and an `integral basis`_ from the
+    :py:meth:`~.integral_basis` method as a list of :py:class:`~.ANP`
+    instances. The maximal order, or ring of integers, of the field can also be
+    obtained from the :py:meth:`~.maximal_order` method, as a
+    :py:class:`~sympy.polys.numberfields.modules.Submodule`.
+
+    >>> zeta5 = exp(2*I*pi/5)
+    >>> K = QQ.algebraic_field(zeta5)
+    >>> K
+    QQ<exp(2*I*pi/5)>
+    >>> K.discriminant()
+    125
+    >>> K = QQ.algebraic_field(sqrt(5))
+    >>> K
+    QQ<sqrt(5)>
+    >>> [K.to_sympy(a) for a in K.integral_basis()]
+    [1, 1/2 + sqrt(5)/2]
+    >>> K.maximal_order()
+    Submodule[[2, 0], [1, 1]]/2
+
+    The factorization of a rational prime into prime ideals of the field is
+    computed by the :py:meth:`~.primes_above` method, which returns a list
+    of :py:class:`~sympy.polys.numberfields.primes.PrimeIdeal` instances.
+
+    >>> zeta7 = exp(2*I*pi/7)
+    >>> K = QQ.algebraic_field(zeta7)
+    >>> K
+    QQ<exp(2*I*pi/7)>
+    >>> K.primes_above(11)
+    [[ (11, x**3 + 5*x**2 + 4*x - 1) e=1, f=3 ],
+     [ (11, x**3 - 4*x**2 - 5*x - 1) e=1, f=3 ]]
+
     Notes
     =====
 
@@ -192,6 +225,8 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
     .. _algebraic number field: https://en.wikipedia.org/wiki/Algebraic_number_field
     .. _algebraic numbers: https://en.wikipedia.org/wiki/Algebraic_number
+    .. _discriminant: https://en.wikipedia.org/wiki/Discriminant_of_an_algebraic_number_field
+    .. _integral basis: https://en.wikipedia.org/wiki/Algebraic_number_field#Integral_basis
     .. _minimal polynomial: https://en.wikipedia.org/wiki/Minimal_polynomial_(field_theory)
     .. _primitive element: https://en.wikipedia.org/wiki/Primitive_element_theorem
     """
@@ -374,7 +409,12 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
     def maximal_order(self):
         """
-        Get an integral basis for the field, as an Order.
+        Compute the maximal order, or ring of integers, of the field.
+
+        Returns
+        =======
+
+        :py:class:`~sympy.polys.numberfields.modules.Submodule`.
 
         See Also
         ========

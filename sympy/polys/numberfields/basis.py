@@ -42,6 +42,7 @@ def nilradical_mod_p(H, p, q=None):
 
     Parameters
     ==========
+
     H: HNF instance representing the order
     p: rational prime
     q: (optional) If known, the smallest power of *p* that is ``>=`` the dimension
@@ -49,6 +50,7 @@ def nilradical_mod_p(H, p, q=None):
 
     Returns
     =======
+
     Module representing the nilradical mod *p* in *H*.
 
     References
@@ -101,14 +103,15 @@ def round_two(T, radicals=None):
     Parameters
     ==========
 
-    T: minimal monic polynomial over :ref:`ZZ` defining the number field.
+    T: Poly, being the minimal monic polynomial over :ref:`ZZ` defining the
+        number field.
 
     radicals: optional way for any $p$-radicals (if computed) to be returned by
-      reference. If desired, pass an empty dictionary. If the algorithm reaches
-      the point where it computes the nilradical mod $p$ of the ring of integers
-      $Z_K$, then an $\mathbb{F}_p$-basis for this ideal will be stored in this
-      dictionary under the key ``p``. This can be useful for other algorithms,
-      such as prime decomposition.
+        reference. If desired, pass an empty dictionary. If the algorithm
+        reaches the point where it computes the nilradical mod $p$ of the ring
+        of integers $Z_K$, then an $\mathbb{F}_p$-basis for this ideal will be
+        stored in this dictionary under the key ``p``. This can be useful for
+        other algorithms, such as prime decomposition.
 
     Returns
     =======
@@ -137,8 +140,15 @@ def round_two(T, radicals=None):
     Submodule[[2, 0, 0], [0, 2, 0], [0, 1, 1]]/2
     >>> print(K.discriminant())
     -503
-    >>> print(K.integral_basis())
-    DomainMatrix([[1, 0, 0], [0, 1, 1/2], [0, 0, 1/2]], (3, 3), QQ)
+    >>> print([K.to_sympy(a) for a in K.integral_basis()])
+    [1, theta, theta**2/2 + theta/2]
+
+    See Also
+    ========
+
+    :py:meth:`sympy.polys.domains.algebraicfield.AlgebraicField.maximal_order`
+    :py:meth:`sympy.polys.domains.algebraicfield.AlgebraicField.integral_basis`
+    :py:meth:`sympy.polys.domains.algebraicfield.AlgebraicField.discriminant`
 
     References
     ==========

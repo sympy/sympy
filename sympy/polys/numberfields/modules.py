@@ -9,15 +9,32 @@ subclasses, ``PowerBasis`` and ``Submodule``.
 Every module is defined by its basis, or set of generators:
 
 * For a ``PowerBasis``, the generators are the first $n$ powers (starting with
-  the zeroth) of an algebraic integer $\theta$ of degree $n$. The ``PowerBasis``
-  is constructred by passing the minimal polynomial of $\theta$.
+  the zeroth) of an algebraic integer $\theta$ of degree $n$. The
+  ``PowerBasis`` is constructred by passing the minimal polynomial of $\theta$.
 
 * For a ``Submodule``, the generators are a set of $\mathbb{Q}$-linear
-  combinations of the generators of another module. The coefficients are given
-  by an integer matrix, and a positive integer denominator.
+  combinations of the generators of another module. That other module is then
+  the "parent" of the ``Submodule``. The coefficients of the
+  $\mathbb{Q}$-linear combinations may be given by an integer matrix, and a
+  positive integer denominator. Each column of the matrix defines a generator.
 
-Thus, every module is either a ``PowerBasis``, or a ``Submodule``, some ancestor
-of which is a ``PowerBasis``.
+>>> from sympy.polys import Poly, cyclotomic_poly, ZZ
+>>> from sympy.abc import x
+>>> from sympy.polys.matrices import DomainMatrix, DM
+>>> from sympy.polys.numberfields.modules import PowerBasis
+>>> T = Poly(cyclotomic_poly(5, x))
+>>> A = PowerBasis(T)
+>>> print(A)
+PowerBasis(x**4 + x**3 + x**2 + x + 1)
+>>> B = A.submodule_from_matrix(2 * DomainMatrix.eye(4, ZZ), denom=3)
+>>> print(B)
+Submodule[[2, 0, 0, 0], [0, 2, 0, 0], [0, 0, 2, 0], [0, 0, 0, 2]]/3
+>>> print(B.parent)
+PowerBasis(x**4 + x**3 + x**2 + x + 1)
+
+Thus, every module is either a ``PowerBasis``, or a ``Submodule``, some
+ancestor of which is a ``PowerBasis``. (If ``S`` is a ``Submodule``, then its
+ancestors are ``S.parent``, ``S.parent.parent``, and so on).
 
 The ``ModuleElement`` class represents a linear combination of the generators
 of any module. Critically, the coefficients of this linear combination are not
@@ -26,6 +43,17 @@ so that any and all algebraic integers be representable, starting from the
 power basis in a primitive element $\theta$ for the number field in question.
 For example, in a quadratic field $\mathbb{Q}(\sqrt{d})$ where
 $d \equiv 1 \mod{4}$, a denominator of $2$ is needed.
+
+A ``ModuleElement`` can be constructed from an integer column vector and a
+denominator:
+
+>>> U = Poly(x**2 - 5)
+>>> M = PowerBasis(U)
+>>> e = M(DM([[1], [1]], ZZ), denom=2)
+>>> print(e)
+[1, 1]/2
+>>> print(e.module)
+PowerBasis(x**2 - 5)
 
 The ``PowerBasisElement`` class is a subclass of ``ModuleElement`` that
 represents elements of a ``PowerBasis``, and adds functionality pertinent to
@@ -46,14 +74,37 @@ given ``ModuleElement`` belongs.
 This means that any two ``ModuleElements`` can be added, subtracted, multiplied,
 or divided, provided they belong to the same number field. Similarly, since
 $\mathbb{Q}$ is a subfield of every number field, any ``ModuleElement`` may be
-added, multiplied, etc. by any rational number. The arithmetic operator methods
-of the ``ModuleElement`` class (``__add__``, ``__mul__``, etc.) have been
-defined accordingly.
+added, multiplied, etc. by any rational number.
 
-However, care must be taken with arithmetic operations on ``ModuleElemnts``,
+>>> from sympy import QQ
+>>> from sympy.polys.numberfields.modules import to_col
+>>> T = Poly(cyclotomic_poly(5))
+>>> A = PowerBasis(T)
+>>> C = A.submodule_from_matrix(3 * DomainMatrix.eye(4, ZZ))
+>>> e = A(to_col([1, 2, 3, 4]), denom=6)
+>>> f = A(to_col([5, 6, 7, 8]), denom=10)
+>>> g = C(to_col([1, 1, 1, 1]), denom=2)
+>>> print(e + f)
+[10, 14, 18, 22]/15
+>>> print(e - f)
+[-5, -4, -3, -2]/15
+>>> print(e + g)
+[10, 11, 12, 13]/6
+>>> print(e + QQ(7, 10))
+[26, 10, 15, 20]/30
+>>> print(g + QQ(7, 10))
+[22, 15, 15, 15]/10
+
+However, care must be taken with arithmetic operations on ``ModuleElemnt``s,
 because the module $C$ to which the result will belong will be the nearest
 common ancestor (NCA) of the modules $A$, $B$ to which the two operands belong,
 and $C$ may be different from either or both of $A$ and $B$.
+
+>>> A = PowerBasis(T)
+>>> B = A.submodule_from_matrix(2 * DomainMatrix.eye(4, ZZ))
+>>> C = A.submodule_from_matrix(3 * DomainMatrix.eye(4, ZZ))
+>>> print((B(0) * C(0)).module == A)
+True
 
 Before the arithmetic operation is performed, copies of the two operands are
 automatically converted into elements of the NCA (the operands themselves are
@@ -61,7 +112,7 @@ not modified). This upward conversion along an ancestor chain is easy: it just
 requires the successive multiplication by each ``Submodule``'s defining matrix.
 
 Conversely, downward conversion, i.e. representing a given ``ModuleElement`` in
-a submodule, is also supported -- namely by the ``Submodule.represent()``
+a submodule, is also supported -- namely by the :py:meth:`Submodule.represent`
 method -- but is not guaranteed to succeed in general, since the given element
 may not belong to the submodule. The main circumstance in which this issue
 tends to arise is with multiplication, since modules, while closed under
@@ -79,12 +130,19 @@ Specifically, any ``Module`` can attempt to compute its own multiplication
 table, but this does not happen unless an attempt is made to multiply two of
 its ``ModuleElement``s.
 
+>>> A = PowerBasis(T)
+>>> print(A._mult_tab is None)
+True
+>>> A(0)*A(1)
+>>> print(A._mult_tab is None)
+False
+
 Every ``PowerBasis`` is, by its nature, closed under multiplication, so
 instances of ``PowerBasis`` can always successfully compute their
 multiplication table.
 
 When a ``Submodule`` attempts to compute its multiplication table, it converts
-each of its own generators into elements of the containing module, multiplies
+each of its own generators into elements of its parent module, multiplies
 them there, in every possible pairing, and then tries to represent the results
 in itself, i.e. as $\mathbb{Z}$-linear combinations over its own generators.
 This will succeed if and only if the submodule is in fact closed under
@@ -108,6 +166,23 @@ square and in Hermite normal form.
 
 An ``Order`` is then an ``HNF`` in which the first generator equals unity,
 while an ``Ideal`` is an ``HNF`` in which it does not.
+
+Generally, the user need not instantiate these classes directly. The right
+class will be generated automatically when using the
+:py:meth:`Module.submodule_from_matrix` or
+:py:meth:`Module.submodule_from_gens` methods.
+
+>>> T = Poly(cyclotomic_poly(5, x))
+>>> A = PowerBasis(T)
+>>> B = A.submodule_from_matrix(2 * DomainMatrix.eye(4, ZZ))
+>>> print(type(B))
+<class 'sympy.polys.numberfields.modules.Ideal'>
+>>> C = A.submodule_from_gens([A(0), 3*A(1), 4*A(2), 5*A(3)])
+>>> print(type(C))
+<class 'sympy.polys.numberfields.modules.Order'>
+>>> D = A.submodule_from_gens([A(0), 3*A(1), 4*A(2)])
+>>> print(type(D))
+<class 'sympy.polys.numberfields.modules.Submodule'>
 
 
 Module Homomorphisms
@@ -142,15 +217,53 @@ def to_col(coeffs):
 
 
 class ClosureFailure(Exception):
-    """
-    Signals that a ModuleElement which was supposed to belong to a certain
-    Module, does not in fact belong to it.
+    r"""
+    Signals that a :py:class:`ModuleElement` which we tried to represent in a
+    certain :py:class:`Module` cannot in fact be represented there.
+
+    Examples
+    ========
+
+    >>> from sympy.polys import Poly, cyclotomic_poly, ZZ
+    >>> from sympy.polys.matrices import DomainMatrix
+    >>> from sympy.polys.numberfields.modules import PowerBasis, to_col, ClosureFailure
+    >>> from sympy.testing.pytest import raises
+    >>> T = Poly(cyclotomic_poly(5))
+    >>> A = PowerBasis(T)
+    >>> B = A.submodule_from_matrix(2 * DomainMatrix.eye(4, ZZ))
+
+    Because we are in a cyclotomic field, the power basis ``A`` is an integral
+    basis, and the submodule ``B`` is just the ideal $(2)$. Therefore ``B`` can
+    represent an element having all even coefficients over the power basis:
+
+    >>> a1 = A(to_col([2, 4, 6, 8]))
+    >>> print(B.represent(a1))
+    DomainMatrix([[1], [2], [3], [4]], (4, 1), ZZ)
+
+    but ``B`` cannot represent an element with an odd coefficient:
+
+    >>> a2 = A(to_col([1, 2, 2, 2]))
+    >>> print(raises(ClosureFailure, lambda: B.represent(a2)))
+    <ExceptionInfo ClosureFailure('Element in QQ-span but not ZZ-span of this basis.')>
+
     """
     pass
 
 
 class Module:
-    """Generic finitely-generated module."""
+    """
+    Generic finitely-generated module.
+
+    This is an abstract base class, and should not be instantiated directly.
+    The two concrete subclasses are :py:class:`PowerBasis` and
+    :py:class:`Submodule`.
+
+    Every ``Submodule`` is derived from another module,
+    referenced by its ``parent`` attribute. If ``S`` is a submodule, then
+    we refer to ``S.parent``, ``S.parent.parent``, and so on, as the
+    "ancestors" of ``S``. Thus, every ``Module`` is either a ``PowerBasis``
+    or a ``Submodule``, some ancestor of which is a ``PowerBasis``.
+    """
 
     @property
     def n(self):
@@ -161,8 +274,22 @@ class Module:
         """
         Get the multiplication table for this module (if closed under mult).
 
+        Examples
+        ========
+
+        >>> from sympy.polys import Poly, cyclotomic_poly
+        >>> from sympy.polys.numberfields.modules import PowerBasis
+        >>> T = Poly(cyclotomic_poly(5))
+        >>> A = PowerBasis(T)
+        >>> print(A.mult_tab())  # doctest: +SKIP
+        {0: {0: [1, 0, 0, 0], 1: [0, 1, 0, 0], 2: [0, 0, 1, 0],     3: [0, 0, 0, 1]},
+                          1: {1: [0, 0, 1, 0], 2: [0, 0, 0, 1],     3: [-1, -1, -1, -1]},
+                                           2: {2: [-1, -1, -1, -1], 3: [1, 0, 0, 0]},
+                                                                3: {3: [0, 1, 0, 0]}}
+
         Returns
         =======
+
         Dictionary of dictionaries of lists ``M``, representing the upper
         triangular half of the multiplication table. In other words, if
         ``0 <= i <= j < self.n``, then ``M[i][j]`` is the list ``c`` of
@@ -176,19 +303,43 @@ class Module:
 
     @property
     def container(self):
-        """A larger module, in which this one is regarded as a submodule."""
+        """
+        The container ``Module``, if any, for this ``Module``.
+
+        For a ``Submodule`` this is its ``container`` attribute; for a
+        ``PowerBasis`` this is ``None``.
+
+        See Also
+        ========
+
+        :py:class:`Module`
+
+        """
         return None
 
     def represent(self, elt):
         """
-        Represent an element of an ancestor module as a ZZ-linear combination
-        over the generators of this module.
+        Represent an element of an ancestor module as an integer-linear
+        combination over the generators of this module.
+
+        See Also
+        ========
+
+        :py:class:`Module`
+
         """
         raise NotImplementedError
 
     def ancestors(self, include_self=False):
         """
-        Return list of ancestors of this module, from largest/oldest to smallest/newest.
+        Return the list of ancestor ``Module``s of this ``Module``, from the
+        foundational ``PowerBasis`` downward, optionally including ``self``.
+
+        See Also
+        ========
+
+        :py:class:`Module`
+
         """
         c = self.container
         a = [] if c is None else c.ancestors(include_self=True)
@@ -197,7 +348,15 @@ class Module:
         return a
 
     def power_basis_ancestor(self):
-        """Return the PowerBasis that is an ancestor of this module."""
+        """
+        Return the ``PowerBasis`` that is an ancestor of this module.
+
+        See Also
+        ========
+
+        :py:class:`Module`
+
+        """
         if isinstance(self, PowerBasis):
             return self
         c = self.container
@@ -213,6 +372,11 @@ class Module:
         =======
 
         Module or None
+
+        See Also
+        ========
+
+        :py:class:`Module`
 
         """
         sA = self.ancestors(include_self=True)
@@ -278,7 +442,10 @@ class Module:
         Parameters
         ==========
 
-        a: anything such that ``is_rat(a)`` is ``True``
+        a: any argument on which
+            :py:func:`sympy.polys.numberfields.utilities.is_rat` returns
+            ``True``. This means it may be Python's built in `int`, or
+            the types of the domains :ref:`ZZ` or :ref:`QQ`.
 
         Returns
         =======
@@ -433,8 +600,8 @@ class PowerBasis(Module):
 
     def element_from_poly(self, f):
         """
-        Produce an element of this module, representing a given polynomial
-        after reduction mod our defining minimal polynomial.
+        Produce an element of this module, representing *f* after reduction mod
+        our defining minimal polynomial.
 
         Parameters
         ==========
@@ -915,6 +1082,7 @@ class ModuleElement(IntegerPowerable):
 
         Returns
         =======
+
         Pair of ModuleElements belonging to a common Module, or else the pair
         ``(None, None)`` if no common ancestor could be found.
 
