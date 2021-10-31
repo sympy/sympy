@@ -163,6 +163,12 @@ def test_Module_whole_submodule():
     assert e3 ** 2 == e1
 
 
+def test_PowerBasis_repr():
+    T = Poly(cyclotomic_poly(5, x))
+    A = PowerBasis(T)
+    assert repr(A) == 'PowerBasis(x**4 + x**3 + x**2 + x + 1)'
+
+
 def test_PowerBasis_eq():
     T = Poly(cyclotomic_poly(5, x))
     A = PowerBasis(T)
@@ -209,7 +215,7 @@ def test_Submodule_repr():
     T = Poly(cyclotomic_poly(5, x))
     A = PowerBasis(T)
     B = A.submodule_from_matrix(2 * DomainMatrix.eye(4, ZZ), denom=3)
-    assert repr(B) == 'cols[[2, 0, 0, 0], [0, 2, 0, 0], [0, 0, 2, 0], [0, 0, 0, 2]]/3'
+    assert repr(B) == 'Submodule[[2, 0, 0, 0], [0, 2, 0, 0], [0, 0, 2, 0], [0, 0, 0, 2]]/3'
 
 
 def test_Submodule_copy():

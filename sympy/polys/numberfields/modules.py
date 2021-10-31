@@ -376,6 +376,9 @@ class PowerBasis(Module):
         self._n = T.degree()
         self._mult_tab = None
 
+    def __repr__(self):
+        return f'PowerBasis({self.T.as_expr()})'
+
     def __eq__(self, other):
         if isinstance(other, PowerBasis):
             return self.T == other.T
@@ -480,7 +483,7 @@ class Submodule(Module, IntegerPowerable):
         self._QQ_matrix = None
 
     def __repr__(self):
-        r = 'cols' + repr(self.matrix.transpose().to_Matrix().tolist())
+        r = 'Submodule' + repr(self.matrix.transpose().to_Matrix().tolist())
         if self.denom > 1:
             r += f'/{self.denom}'
         return r

@@ -126,7 +126,7 @@ def round_two(T, radicals=None):
     >>> from sympy.polys.numberfields.basis import round_two
     >>> T = Poly(x ** 3 + x ** 2 - 2 * x + 8)
     >>> print(round_two(T))
-    (cols[[2, 0, 0], [0, 2, 0], [0, 1, 1]]/2, -503)
+    (Submodule[[2, 0, 0], [0, 2, 0], [0, 1, 1]]/2, -503)
 
     Working through an AlgebraicField:
     >>> from sympy import Poly, QQ
@@ -134,7 +134,7 @@ def round_two(T, radicals=None):
     >>> T = Poly(x ** 3 + x ** 2 - 2 * x + 8)
     >>> K = QQ.algebraic_field((T, theta))
     >>> print(K.maximal_order())
-    cols[[2, 0, 0], [0, 2, 0], [0, 1, 1]]/2
+    Submodule[[2, 0, 0], [0, 2, 0], [0, 1, 1]]/2
     >>> print(K.discriminant())
     -503
     >>> print(K.integral_basis())
