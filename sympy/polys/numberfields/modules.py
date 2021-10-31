@@ -10,7 +10,7 @@ Every module is defined by its basis, or set of generators:
 
 * For a ``PowerBasis``, the generators are the first $n$ powers (starting with
   the zeroth) of an algebraic integer $\theta$ of degree $n$. The
-  ``PowerBasis`` is constructred by passing the minimal polynomial of $\theta$.
+  ``PowerBasis`` is constructed by passing the minimal polynomial of $\theta$.
 
 * For a ``Submodule``, the generators are a set of $\mathbb{Q}$-linear
   combinations of the generators of another module. That other module is then
@@ -1301,6 +1301,10 @@ class ModuleHomomorphism:
         # ZZ-submodule, so, while the conversion to QQ above was required in
         # order for the nullspace calculation to work, conversion back to ZZ
         # afterward should always work.
+        # TODO:
+        #  Watch <https://github.com/sympy/sympy/issues/21834>, which calls
+        #  for fraction-free algorithms. If this is implemented, we can skip
+        #  the conversion to `QQ` above.
         K = M.nullspace().convert_to(ZZ).transpose()
         return self.domain.submodule_from_matrix(K)
 
@@ -1357,9 +1361,10 @@ def find_min_poly(alpha, domain, x=None, powers=None):
     alpha: ModuleElement whose min poly is to be found, and whose module has
         multiplication and starts with unity.
 
-    domain: The desired domain of the polynomial.
+    domain: The desired :py:class:`~.Domain` of the polynomial.
 
-    x: (optional) desired variable for the polynomial.
+    x: (optional) :py:class:`~.Symbol`, the desired variable for the
+        polynomial.
 
     powers: (optional) If desired, pass an empty list. The powers of alpha
         (as ModuleElements) from the zeroth up to the degree of the min poly
