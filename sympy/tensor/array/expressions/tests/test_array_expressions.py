@@ -1,6 +1,6 @@
 import random
 
-from sympy.core.symbol import symbols
+from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices.expressions.diagonal import DiagMatrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
@@ -33,6 +33,67 @@ a = ArraySymbol("a", (k, 1))
 b = ArraySymbol("b", (k, 1))
 c = ArraySymbol("c", (k, 1))
 d = ArraySymbol("d", (k, 1))
+
+
+class TestArrayElement:
+    def test_construct_from_array_symbol(self):
+        test_cases = (  # @pytest.mark.parametrize
+            # shapeless
+            ([], (1, 2), (1, 2)),
+            ([], (i, j), (i, j)),
+            # specific shape
+            ([3, 3], (1, 2), (1, 2)),
+            ([m, n], (i, j), (i, j)),
+            ([3, 3, 3], (1, 2), (1, 2)),
+        )
+        for shape, indices, expected in test_cases:
+            A = ArraySymbol("A", shape)
+            element = ArrayElement(A, indices=indices)
+            assert element.name is A
+            assert element.indices == expected
+
+    def test_construction_errors_from_array_symbol(self):
+        test_cases = (  # @pytest.mark.parametrize
+            ([4, 4], (7, 0), ValueError, r"shape is out of bounds"),
+        )
+        for shape, indices, exception, match in test_cases:
+            A = ArraySymbol("A", shape)
+            with raises(exception, match=match):
+                ArrayElement(A, indices=indices)
+
+
+class TestArraySymbol:
+    def test_constructor(self):
+        test_cases = (  # @pytest.mark.parametrize
+            (),
+            (3, 2, 4),
+            (k, m, n),
+        )
+        for shape in test_cases:
+            A = ArraySymbol("A", shape)
+            assert A.name == Symbol("A")
+            assert A.shape == shape
+
+    def test_equality(self):
+        assert ArraySymbol("A", shape=(k, m, n)) == ArraySymbol("A", shape=(k, m, n))
+        assert ArraySymbol("A", shape=(k, m, n)) != ArraySymbol("B", shape=(k, m, n))
+        assert ArraySymbol("A", shape=(2, 3)) != ArraySymbol("A", shape=(4, 4))
+        assert ArraySymbol("A", shape=(m,)) != ArraySymbol("A", shape=(n,))
+        assert ArraySymbol("A", shape=(n,)) == ArraySymbol("A", shape=(n,))
+
+    def test_getitem(self):
+        A = ArraySymbol("A", shape=(m, n))
+        assert A[i, j] == ArrayElement(A, indices=(i, j))
+        assert A[9, 7] == ArrayElement(A, indices=(9, 7))
+        A = ArraySymbol("A", shape=(3, 2, 4))
+        assert A[i, j] == ArrayElement(A, indices=(i, j))
+        assert A[i, j, k] == ArrayElement(A, indices=(i, j, k))
+        assert A[2, 1] == ArrayElement(A, indices=(2, 1))
+        assert A[2, 1, 3] == ArrayElement(A, indices=(2, 1, 3))
+        with raises(ValueError, match="shape is out of bounds"):
+            A[4, 1, 3]
+        with raises(ValueError, match="shape contains negative values"):
+            A[0, -1]
 
 
 def test_array_symbol_and_element():
