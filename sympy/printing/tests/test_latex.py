@@ -2834,9 +2834,17 @@ def test_pickleable():
     import pickle
     assert pickle.loads(pickle.dumps(latex)) is latex
 
-def test_printing_latex_array_expressions():
-    assert latex(ArraySymbol("A", (2, 3, 4))) == "A"
-    assert latex(ArrayElement("A", (2, 1/(1-x), 0))) == "{{A}_{2, \\frac{1}{1 - x}, 0}}"
+
+def test_printing_ArraySymbol():
+    A = ArraySymbol("A", shape=(2, 3, 4))
+    assert latex(A) == "A"
+
+
+def test_printing_ArrayElement():
+    element = ArrayElement("A", indices=(2, 1 / (1 - x), 0))
+    assert latex(element) == R"{{A}_{2, \frac{1}{1 - x}, 0}}"
+
     M = MatrixSymbol("M", 3, 3)
     N = MatrixSymbol("N", 3, 3)
-    assert latex(ArrayElement(M*N, [x, 0])) == "{{\\left(M N\\right)}_{x, 0}}"
+    element = ArrayElement(M * N, indices=(x, 0))
+    assert latex(element) == R"{{\left(M N\right)}_{x, 0}}"
