@@ -58,7 +58,7 @@ AST Type Tree
        |        |--->NoneToken
        |        |--->Return
        |
-      #|--->Statement  #Currently not yet defined.
+       |--->Statement
 
 
 Predefined types
@@ -1822,13 +1822,10 @@ class FunctionDefinition(FunctionPrototype):
 class Return(Token):
     """ Represents a return command in the code.
 
-    When multiple arguments are provided, they
-    are interpreted as a Tuple.
-
     Parameters
     ==========
 
-    return : Tuple
+    return : Basic
 
     Examples
     ========
@@ -1839,18 +1836,9 @@ class Return(Token):
     >>> x = Symbol('x')
     >>> print(pycode(Return(x)))
     return x
-    >>> print(pycode(Return(x,x)))
-    return (x, x)
 
     """
     __slots__ = ('return',)
-    #Return has to support multiple arguments
-    #for backwards competability, these are now
-    #interpreted as a single tuple
-    def __new__(cls,*args,**kwargs):
-        if len(args)>1:
-            return super().__new__(cls,args,**kwargs)
-        return super().__new__(cls,*args,**kwargs)
     _construct_return=staticmethod(_sympify)
 
 
