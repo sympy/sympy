@@ -53,7 +53,6 @@ AST Type Tree
        |        |--->ContinueToken
        |        |--->NoneToken
        |
-       |--->Statement
        |--->Return
 
 

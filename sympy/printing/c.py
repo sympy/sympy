@@ -250,10 +250,6 @@ class C89CodePrinter(CodePrinter):
     def _rate_index_position(self, p):
         return p*5
 
-    def _get_statement(self, codestring):
-        """ Get code string as a statement - i.e. ending with a semicolon. """
-        return codestring if codestring.endswith(';') else codestring + ';'
-
     def _get_comment(self, text):
         return "// {}".format(text)
 
