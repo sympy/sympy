@@ -3,18 +3,21 @@ from itertools import (
     combinations, combinations_with_replacement, permutations,
     product
 )
+
+# For backwards compatibility
 from itertools import product as cartes # noqa: F401
-import random
 from operator import gt
 
-from sympy.core import Basic
 
 # this is the logical location of these functions
-from sympy.core.compatibility import (as_int, is_sequence, iterable, ordered)
-from sympy.core.compatibility import default_sort_key  # noqa: F401
+# from sympy.core.compatibility import ordered
+# from sympy.core.compatibility import default_sort_key  # noqa: F401
+from sympy.utilities.misc import as_int
 
 from sympy.utilities.enumerative import (
     multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
+
+from sympy.utilities.decorator import deprecated
 
 
 def is_palindromic(s, i=0, j=None):
@@ -53,7 +56,7 @@ def is_palindromic(s, i=0, j=None):
     return all(s[i + k] == s[j - 1 - k] for k in range(m))
 
 
-def flatten(iterable, levels=None, cls=None):
+def flatten(iterable, levels=None, cls=None):  # noqa: F811
     """
     Recursively denest iterable containers.
 
@@ -322,154 +325,6 @@ def multiset(seq):
     return dict(rv)
 
 
-def postorder_traversal(node, keys=None):
-    """
-    Do a postorder traversal of a tree.
-
-    This generator recursively yields nodes that it has visited in a postorder
-    fashion. That is, it descends through the tree depth-first to yield all of
-    a node's children's postorder traversal before yielding the node itself.
-
-    Parameters
-    ==========
-
-    node : sympy expression
-        The expression to traverse.
-    keys : (default None) sort key(s)
-        The key(s) used to sort args of Basic objects. When None, args of Basic
-        objects are processed in arbitrary order. If key is defined, it will
-        be passed along to ordered() as the only key(s) to use to sort the
-        arguments; if ``key`` is simply True then the default keys of
-        ``ordered`` will be used (node count and default_sort_key).
-
-    Yields
-    ======
-    subtree : sympy expression
-        All of the subtrees in the tree.
-
-    Examples
-    ========
-
-    >>> from sympy.utilities.iterables import postorder_traversal
-    >>> from sympy.abc import w, x, y, z
-
-    The nodes are returned in the order that they are encountered unless key
-    is given; simply passing key=True will guarantee that the traversal is
-    unique.
-
-    >>> list(postorder_traversal(w + (x + y)*z)) # doctest: +SKIP
-    [z, y, x, x + y, z*(x + y), w, w + z*(x + y)]
-    >>> list(postorder_traversal(w + (x + y)*z, keys=True))
-    [w, z, x, y, x + y, z*(x + y), w + z*(x + y)]
-
-
-    """
-    if isinstance(node, Basic):
-        args = node.args
-        if keys:
-            if keys != True:
-                args = ordered(args, keys, default=False)
-            else:
-                args = ordered(args)
-        for arg in args:
-            yield from postorder_traversal(arg, keys)
-    elif iterable(node):
-        for item in node:
-            yield from postorder_traversal(item, keys)
-    yield node
-
-
-def interactive_traversal(expr):
-    """Traverse a tree asking a user which branch to choose. """
-    from sympy.printing import pprint
-
-    RED, BRED = '\033[0;31m', '\033[1;31m'
-    GREEN, BGREEN = '\033[0;32m', '\033[1;32m'
-    YELLOW, BYELLOW = '\033[0;33m', '\033[1;33m'  # noqa
-    BLUE, BBLUE = '\033[0;34m', '\033[1;34m'      # noqa
-    MAGENTA, BMAGENTA = '\033[0;35m', '\033[1;35m'# noqa
-    CYAN, BCYAN = '\033[0;36m', '\033[1;36m'      # noqa
-    END = '\033[0m'
-
-    def cprint(*args):
-        print("".join(map(str, args)) + END)
-
-    def _interactive_traversal(expr, stage):
-        if stage > 0:
-            print()
-
-        cprint("Current expression (stage ", BYELLOW, stage, END, "):")
-        print(BCYAN)
-        pprint(expr)
-        print(END)
-
-        if isinstance(expr, Basic):
-            if expr.is_Add:
-                args = expr.as_ordered_terms()
-            elif expr.is_Mul:
-                args = expr.as_ordered_factors()
-            else:
-                args = expr.args
-        elif hasattr(expr, "__iter__"):
-            args = list(expr)
-        else:
-            return expr
-
-        n_args = len(args)
-
-        if not n_args:
-            return expr
-
-        for i, arg in enumerate(args):
-            cprint(GREEN, "[", BGREEN, i, GREEN, "] ", BLUE, type(arg), END)
-            pprint(arg)
-            print()
-
-        if n_args == 1:
-            choices = '0'
-        else:
-            choices = '0-%d' % (n_args - 1)
-
-        try:
-            choice = input("Your choice [%s,f,l,r,d,?]: " % choices)
-        except EOFError:
-            result = expr
-            print()
-        else:
-            if choice == '?':
-                cprint(RED, "%s - select subexpression with the given index" %
-                       choices)
-                cprint(RED, "f - select the first subexpression")
-                cprint(RED, "l - select the last subexpression")
-                cprint(RED, "r - select a random subexpression")
-                cprint(RED, "d - done\n")
-
-                result = _interactive_traversal(expr, stage)
-            elif choice in ('d', ''):
-                result = expr
-            elif choice == 'f':
-                result = _interactive_traversal(args[0], stage + 1)
-            elif choice == 'l':
-                result = _interactive_traversal(args[-1], stage + 1)
-            elif choice == 'r':
-                result = _interactive_traversal(random.choice(args), stage + 1)
-            else:
-                try:
-                    choice = int(choice)
-                except ValueError:
-                    cprint(BRED,
-                           "Choice must be a number in %s range\n" % choices)
-                    result = _interactive_traversal(expr, stage)
-                else:
-                    if choice < 0 or choice >= n_args:
-                        cprint(BRED, "Choice must be in %s range\n" % choices)
-                        result = _interactive_traversal(expr, stage)
-                    else:
-                        result = _interactive_traversal(args[choice], stage + 1)
-
-        return result
-
-    return _interactive_traversal(expr, 0)
 
 
 def ibin(n, bits=None, str=False):
@@ -1069,6 +924,16 @@ def strongly_connected_components(G):
             B -> D
         }
 
+    .. graphviz::
+
+        digraph {
+            A -> B
+            A -> C
+            B -> C
+            C -> B
+            B -> D
+        }
+
     where vertices are the letters A, B, C and D. This graph can be encoded
     using Python's elementary data structures as follows::
 
@@ -1211,6 +1076,13 @@ def connected_components(G):
             C -- D
         }
 
+    .. graphviz::
+
+        graph {
+            A -- B
+            C -- D
+        }
+
     We can find the connected components using this function if we include
     each edge in both directions::
 
@@ -1316,7 +1188,7 @@ def least_rotation(x, key=None):
     .. [1] https://en.wikipedia.org/wiki/Lexicographically_minimal_string_rotation
 
     '''
-    from sympy import Id
+    from sympy.functions.elementary.miscellaneous import Id
     if key is None: key = Id
     S = x + x      # Concatenate string to it self to avoid modular arithmetic
     f = [-1] * len(S)     # Failure function
@@ -1363,6 +1235,7 @@ def multiset_combinations(m, n, g=None):
     (165, 54)
 
     """
+    from sympy.core.sorting import ordered
     if g is None:
         if type(m) is dict:
             if any(as_int(v) < 0 for v in m.values()):
@@ -1415,6 +1288,7 @@ def multiset_permutations(m, size=None, g=None):
     >>> len(list(multiset_permutations('banana')))
     60
     """
+    from sympy.core.sorting import ordered
     if g is None:
         if type(m) is dict:
             if any(as_int(v) < 0 for v in m.values()):
@@ -1688,6 +1562,7 @@ def multiset_partitions(multiset, m=None):
                     rv.extend([x*k]*p[k])
                 yield rv
     else:
+        from sympy.core.sorting import ordered
         multiset = list(ordered(multiset))
         n = len(multiset)
         if m and m > n:
@@ -2456,7 +2331,7 @@ def minlex(seq, directed=True, key=None):
     ('c', 'a', 'bb', 'aaa')
 
     """
-    from sympy import Id
+    from sympy.functions.elementary.miscellaneous import Id
     if key is None: key = Id
     best = rotate_left(seq, least_rotation(seq, key=key))
     if not directed:
@@ -2706,3 +2581,126 @@ def roundrobin(*iterables):
         except StopIteration:
             pending -= 1
             nexts = itertools.cycle(itertools.islice(nexts, pending))
+
+
+
+class NotIterable:
+    """
+    Use this as mixin when creating a class which is not supposed to
+    return true when iterable() is called on its instances because
+    calling list() on the instance, for example, would result in
+    an infinite loop.
+    """
+    pass
+
+
+def iterable(i, exclude=(str, dict, NotIterable)):
+    """
+    Return a boolean indicating whether ``i`` is SymPy iterable.
+    True also indicates that the iterator is finite, e.g. you can
+    call list(...) on the instance.
+
+    When SymPy is working with iterables, it is almost always assuming
+    that the iterable is not a string or a mapping, so those are excluded
+    by default. If you want a pure Python definition, make exclude=None. To
+    exclude multiple items, pass them as a tuple.
+
+    You can also set the _iterable attribute to True or False on your class,
+    which will override the checks here, including the exclude test.
+
+    As a rule of thumb, some SymPy functions use this to check if they should
+    recursively map over an object. If an object is technically iterable in
+    the Python sense but does not desire this behavior (e.g., because its
+    iteration is not finite, or because iteration might induce an unwanted
+    computation), it should disable it by setting the _iterable attribute to False.
+
+    See also: is_sequence
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import iterable
+    >>> from sympy import Tuple
+    >>> things = [[1], (1,), set([1]), Tuple(1), (j for j in [1, 2]), {1:2}, '1', 1]
+    >>> for i in things:
+    ...     print('%s %s' % (iterable(i), type(i)))
+    True <... 'list'>
+    True <... 'tuple'>
+    True <... 'set'>
+    True <class 'sympy.core.containers.Tuple'>
+    True <... 'generator'>
+    False <... 'dict'>
+    False <... 'str'>
+    False <... 'int'>
+
+    >>> iterable({}, exclude=None)
+    True
+    >>> iterable({}, exclude=str)
+    True
+    >>> iterable("no", exclude=str)
+    False
+
+    """
+    if hasattr(i, '_iterable'):
+        return i._iterable
+    try:
+        iter(i)
+    except TypeError:
+        return False
+    if exclude:
+        return not isinstance(i, exclude)
+    return True
+
+
+def is_sequence(i, include=None):
+    """
+    Return a boolean indicating whether ``i`` is a sequence in the SymPy
+    sense. If anything that fails the test below should be included as
+    being a sequence for your application, set 'include' to that object's
+    type; multiple types should be passed as a tuple of types.
+
+    Note: although generators can generate a sequence, they often need special
+    handling to make sure their elements are captured before the generator is
+    exhausted, so these are not included by default in the definition of a
+    sequence.
+
+    See also: iterable
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import is_sequence
+    >>> from types import GeneratorType
+    >>> is_sequence([])
+    True
+    >>> is_sequence(set())
+    False
+    >>> is_sequence('abc')
+    False
+    >>> is_sequence('abc', include=str)
+    True
+    >>> generator = (c for c in 'abc')
+    >>> is_sequence(generator)
+    False
+    >>> is_sequence(generator, include=(str, GeneratorType))
+    True
+
+    """
+    return (hasattr(i, '__getitem__') and
+            iterable(i) or
+            bool(include) and
+            isinstance(i, include))
+
+
+@deprecated(useinstead="sympy.core.traversal.postorder_traversal",
+    deprecated_since_version="1.10", issue=22288)
+def postorder_traversal(node, keys=None):
+    from sympy.core.traversal import postorder_traversal as _postorder_traversal
+    return _postorder_traversal(node, keys=keys)
+
+
+@deprecated(useinstead="sympy.interactive.traversal.interactive_traversal",
+            issue=22288, deprecated_since_version="1.10")
+def interactive_traversal(expr):
+    from sympy.interactive.traversal import interactive_traversal as _interactive_traversal
+    return _interactive_traversal(expr)

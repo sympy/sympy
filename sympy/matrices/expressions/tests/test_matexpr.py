@@ -1,5 +1,11 @@
-from sympy import (KroneckerDelta, diff, Sum, Dummy, factor,
-                   expand, zeros, gcd_terms, Eq, Symbol)
+from sympy.concrete.summations import Sum
+from sympy.core.exprtools import gcd_terms
+from sympy.core.function import (diff, expand)
+from sympy.core.relational import Eq
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.matrices.dense import zeros
+from sympy.polys.polytools import factor
 
 from sympy.core import (S, symbols, Add, Mul, SympifyError, Rational,
                     Function)

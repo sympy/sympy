@@ -1,11 +1,30 @@
-from sympy import (
-    Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
-    LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol, Ne,
-    Wild, acos, asin, atan, atanh, binomial, cos, cosh, diff, erf, erfinv, erfc,
-    erfcinv, exp, im, log, pi, re, sec, sin,
-    sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
-    root, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
-    E, cbrt, denom, Add, Piecewise, GoldenRatio, TribonacciConstant, conjugate)
+from sympy.assumptions.ask import (Q, ask)
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.mul import Mul
+from sympy.core import (GoldenRatio, TribonacciConstant)
+from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
+from sympy.core.relational import (Eq, Gt, Lt, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, Wild, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import binomial
+from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, re)
+from sympy.functions.elementary.exponential import (LambertW, exp, log)
+from sympy.functions.elementary.hyperbolic import (atanh, cosh, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import (cbrt, root, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, atan2, cos, sec, sin, tan)
+from sympy.functions.special.error_functions import (erf, erfc, erfcinv, erfinv)
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import (And, Or)
+from sympy.matrices.dense import Matrix
+from sympy.matrices import SparseMatrix
+from sympy.polys.polytools import Poly
+from sympy.printing.str import sstr
+from sympy.simplify.radsimp import denom
+from sympy.solvers.solvers import (nsolve, solve, solve_linear)
 
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -503,16 +522,23 @@ def test_solve_transcendental():
 
     eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
     result = solve(eq, x)
-    ans = [(log(2401) + 5*LambertW((-1 + sqrt(5) + sqrt(2)*I*sqrt(sqrt(5) + \
-        5))*log(7**(7*3**Rational(1, 5)/20))* -1))/(-3*log(7)), \
-        (log(2401) + 5*LambertW((1 + sqrt(5) - sqrt(2)*I*sqrt(5 - \
-        sqrt(5)))*log(7**(7*3**Rational(1, 5)/20))))/(-3*log(7)), \
-        (log(2401) + 5*LambertW((1 + sqrt(5) + sqrt(2)*I*sqrt(5 - \
-        sqrt(5)))*log(7**(7*3**Rational(1, 5)/20))))/(-3*log(7)), \
-        (log(2401) + 5*LambertW((-sqrt(5) + 1 + sqrt(2)*I*sqrt(sqrt(5) + \
-        5))*log(7**(7*3**Rational(1, 5)/20))))/(-3*log(7)), \
-        (log(2401) + 5*LambertW(-log(7**(7*3**Rational(1, 5)/5))))/(-3*log(7))]
-    assert result == ans
+    x0 = -log(2401)
+    x1 = 3**Rational(1, 5)
+    x2 = log(7**(7*x1/20))
+    x3 = sqrt(2)
+    x4 = sqrt(5)
+    x5 = x3*sqrt(x4 - 5)
+    x6 = x4 + 1
+    x7 = 1/(3*log(7))
+    x8 = -x4
+    x9 = x3*sqrt(x8 - 5)
+    x10 = x8 + 1
+    ans = [x7*(x0 - 5*LambertW(x2*(-x5 + x6))),
+           x7*(x0 - 5*LambertW(x2*(x5 + x6))),
+           x7*(x0 - 5*LambertW(x2*(x10 - x9))),
+           x7*(x0 - 5*LambertW(x2*(x10 + x9))),
+           x7*(x0 - 5*LambertW(-log(7**(7*x1/5))))]
+    assert result == ans, result
     # it works if expanded, too
     assert solve(eq.expand(), x) == result
 
@@ -1787,19 +1813,19 @@ def test_lambert_bivariate():
     x3 = x2*LambertW(1/x2)/a**5
     x4 = x3**Rational(1, 3)/2
     assert ans == [
+        x0*log(x4*(-x1 - 1)),
         x0*log(x4*(x1 - 1)),
-        x0*log(-x4*(x1 + 1)),
         x0*log(x3)/3]
     x1 = LambertW(Rational(1, 3))
     x2 = a**(-5)
-    x3 = 3**Rational(1, 3)
+    x3 = -3**Rational(1, 3)
     x4 = 3**Rational(5, 6)*I
     x5 = x1**Rational(1, 3)*x2**Rational(1, 3)/2
     ans = solve(3*log(ax) + ax, x)
     assert ans == [
         x0*log(3*x1*x2)/3,
-        x0*log(x5*(-x3 + x4)),
-        x0*log(-x5*(x3 + x4))]
+        x0*log(x5*(x3 - x4)),
+        x0*log(x5*(x3 + x4))]
     # coverage
     p = symbols('p', positive=True)
     eq = 4*2**(2*p + 3) - 2*p - 3
@@ -1818,8 +1844,8 @@ def test_lambert_bivariate():
     x2 = x0/6
     assert ans == [
         6*LambertW(x0/3),
-        6*LambertW(x2*(x1 - 1)),
-        6*LambertW(-x2*(x1 + 1))]
+        6*LambertW(x2*(-x1 - 1)),
+        6*LambertW(x2*(x1 - 1))]
     assert solve((1/x + exp(x/2)).diff(x, 2), x) == \
                 [6*LambertW(Rational(-1, 3)), 6*LambertW(Rational(1, 6) - sqrt(3)*I/6), \
                 6*LambertW(Rational(1, 6) + sqrt(3)*I/6), 6*LambertW(Rational(-1, 3), -1)]
@@ -1846,7 +1872,7 @@ def test_rewrite_trig():
 @XFAIL
 def test_rewrite_trigh():
     # if this import passes then the test below should also pass
-    from sympy import sech
+    from sympy.functions.elementary.hyperbolic import sech
     assert solve(sinh(x) + sech(x)) == [
         2*atanh(Rational(-1, 2) + sqrt(5)/2 - sqrt(-2*sqrt(5) + 2)/2),
         2*atanh(Rational(-1, 2) + sqrt(5)/2 + sqrt(-2*sqrt(5) + 2)/2),

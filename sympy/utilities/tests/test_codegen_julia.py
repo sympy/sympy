@@ -1,8 +1,8 @@
 from io import StringIO
 
 from sympy.core import S, symbols, Eq, pi, Catalan, EulerGamma, Function
-from sympy import Piecewise
-from sympy import Equality
+from sympy.core.relational import Equality
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.utilities.codegen import JuliaCodeGen, codegen, make_routine
 from sympy.testing.pytest import XFAIL
@@ -40,7 +40,7 @@ def test_jl_simple_code_with_header():
     assert result[0] == "test.jl"
     source = result[1]
     expected = (
-        "#   Code generated with sympy " + sympy.__version__ + "\n"
+        "#   Code generated with SymPy " + sympy.__version__ + "\n"
         "#\n"
         "#   See http://www.sympy.org/ for more information.\n"
         "#\n"
@@ -174,7 +174,7 @@ def test_results_named_ordered():
 
 
 def test_complicated_jl_codegen():
-    from sympy import sin, cos, tan
+    from sympy.functions.elementary.trigonometric import (cos, sin, tan)
     name_expr = ("testlong",
             [ ((sin(x) + cos(y) + tan(z))**3).expand(),
             cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))
@@ -196,7 +196,7 @@ def test_complicated_jl_codegen():
 
 def test_jl_output_arg_mixed_unordered():
     # named outputs are alphabetical, unnamed output appear in the given order
-    from sympy import sin, cos
+    from sympy.functions.elementary.trigonometric import (cos, sin)
     a = symbols("a")
     name_expr = ("foo", [cos(2*x), Equality(y, sin(x)), cos(x), Equality(a, sin(2*x))])
     result, = codegen(name_expr, "Julia", header=False, empty=False)
@@ -281,7 +281,7 @@ def test_jl_multifcns_per_file_w_header():
     assert result[0][0] == "foo.jl"
     source = result[0][1];
     expected = (
-        "#   Code generated with sympy " + sympy.__version__ + "\n"
+        "#   Code generated with SymPy " + sympy.__version__ + "\n"
         "#\n"
         "#   See http://www.sympy.org/ for more information.\n"
         "#\n"
@@ -474,7 +474,7 @@ def test_jl_loops():
     # and n.  Perhaps users would expect us to vectorize automatically here?
     # Or is it possible to represent such things using IndexedBase?
     from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
+    from sympy.core.symbol import symbols
     n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
@@ -504,7 +504,7 @@ def test_jl_loops():
 def test_jl_tensor_loops_multiple_contractions():
     # see comments in previous test about vectorizing
     from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
+    from sympy.core.symbol import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     A = IndexedBase('A')
     B = IndexedBase('B')

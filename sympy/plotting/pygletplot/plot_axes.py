@@ -2,10 +2,10 @@ import pyglet.gl as pgl
 from pyglet import font
 
 from sympy.core import S
-from sympy.core.compatibility import is_sequence
 from sympy.plotting.pygletplot.plot_object import PlotObject
 from sympy.plotting.pygletplot.util import billboard_matrix, dot_product, \
         get_direction_vectors, strided_range, vec_mag, vec_sub
+from sympy.utilities.iterables import is_sequence
 
 
 class PlotAxes(PlotObject):

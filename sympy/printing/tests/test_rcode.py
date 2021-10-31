@@ -1,7 +1,8 @@
 from sympy.core import (S, pi, oo, Symbol, symbols, Rational, Integer,
-                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy, Eq)
+                        GoldenRatio, EulerGamma, Catalan, Lambda, Dummy)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
                              gamma, sign, Max, Min, factorial, beta)
+from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
 from sympy.sets import Range
 from sympy.logic import ITE
 from sympy.codegen import For, aug_assign, Assignment
@@ -11,7 +12,7 @@ from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 
-from sympy import rcode
+from sympy.printing.rcode import rcode
 
 x, y, z = symbols('x,y,z')
 
@@ -134,7 +135,6 @@ def test_rcode_boolean():
     assert rcode((x | y) & z) == "z & (x | y)"
 
 def test_rcode_Relational():
-    from sympy import Ne, Le, Lt, Gt, Ge
     assert rcode(Eq(x, y)) == "x == y"
     assert rcode(Ne(x, y)) == "x != y"
     assert rcode(Le(x, y)) == "x <= y"
@@ -166,7 +166,7 @@ def test_rcode_Piecewise():
 
 
 def test_rcode_sinc():
-    from sympy import sinc
+    from sympy.functions.elementary.trigonometric import sinc
     expr = sinc(x)
     res = rcode(expr)
     ref = "ifelse(x != 0,sin(x)/x,1)"

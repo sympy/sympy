@@ -11,7 +11,16 @@ from sympy.functions import (log, sin, cos, tan, cot, csc, sec, erf, gamma, uppe
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi, Ei
-from sympy import (Basic, Mul, Add, Pow, Integral, exp, Symbol, Expr, srepr, Equality, Unequality)
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.relational import (Equality, Unequality)
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import exp
+from sympy.integrals.integrals import Integral
+from sympy.printing.repr import srepr
 from sympy.utilities.decorator import doctest_depends_on
 
 matchpy = import_module("matchpy")
@@ -98,15 +107,15 @@ if matchpy:
 if matchpy:
     from matchpy import Wildcard
 else:
-    class Wildcard:
+    class Wildcard: # type: ignore
         def __init__(self, min_length, fixed_size, variable_name, optional):
             pass
 
 
 @doctest_depends_on(modules=('matchpy',))
 class _WildAbstract(Wildcard, Symbol):
-    min_length = None  # abstract field required in subclasses
-    fixed_size = None  # abstract field required in subclasses
+    min_length: int # abstract field required in subclasses
+    fixed_size: bool # abstract field required in subclasses
 
     def __init__(self, variable_name=None, optional=None, **assumptions):
         min_length = self.min_length

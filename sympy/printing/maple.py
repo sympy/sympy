@@ -1,7 +1,7 @@
 """
 Maple code printer
 
-The MapleCodePrinter converts single sympy expressions into single
+The MapleCodePrinter converts single SymPy expressions into single
 Maple expressions, using the functions defined in the Maple objects where possible.
 
 
@@ -15,13 +15,16 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 
 import sympy
 
-_known_func_same_name = [
+_known_func_same_name = (
     'sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'sinh', 'cosh', 'tanh', 'sech',
-    'csch', 'coth', 'exp', 'floor', 'factorial'
-]
+    'csch', 'coth', 'exp', 'floor', 'factorial', 'bernoulli',  'euler',
+    'fibonacci', 'gcd', 'lcm', 'conjugate', 'Ci', 'Chi', 'Ei', 'Li', 'Si', 'Shi',
+    'erf', 'erfc', 'harmonic', 'LambertW',
+    'sqrt', # For automatic rewrites
+)
 
 known_functions = {
-    # Sympy -> Maple
+    # SymPy -> Maple
     'Abs': 'abs',
     'log': 'ln',
     'asin': 'arcsin',
@@ -37,7 +40,11 @@ known_functions = {
     'acsch': 'arccsch',
     'acoth': 'arccoth',
     'ceiling': 'ceil',
+    'Max' : 'max',
+    'Min' : 'min',
 
+    'factorial2': 'doublefactorial',
+    'RisingFactorial': 'pochhammer',
     'besseli': 'BesselI',
     'besselj': 'BesselJ',
     'besselk': 'BesselK',
@@ -45,13 +52,18 @@ known_functions = {
     'hankelh1': 'HankelH1',
     'hankelh2': 'HankelH2',
     'airyai': 'AiryAi',
-    'airybi': 'AiryBi'
+    'airybi': 'AiryBi',
+    'appellf1': 'AppellF1',
+    'fresnelc': 'FresnelC',
+    'fresnels': 'FresnelS',
+    'lerchphi' : 'LerchPhi',
 }
+
 for _func in _known_func_same_name:
     known_functions[_func] = _func
 
 number_symbols = {
-    # Sympy -> Maple
+    # SymPy -> Maple
     S.Pi: 'Pi',
     S.Exp1: 'exp(1)',
     S.Catalan: 'Catalan',
@@ -60,7 +72,7 @@ number_symbols = {
 }
 
 spec_relational_ops = {
-    # Sympy -> Maple
+    # SymPy -> Maple
     '==': '=',
     '!=': '<>'
 }
@@ -71,7 +83,7 @@ not_supported_symbol = [
 
 class MapleCodePrinter(CodePrinter):
     """
-    Printer which converts a sympy expression into a maple code.
+    Printer which converts a SymPy expression into a maple code.
     """
     printmethod = "_maple"
     language = "maple"
@@ -202,7 +214,7 @@ class MapleCodePrinter(CodePrinter):
     def _print_MatrixBase(self, expr):
         return self._get_matrix(expr, sparse=False)
 
-    def _print_SparseMatrix(self, expr):
+    def _print_SparseRepMatrix(self, expr):
         return self._get_matrix(expr, sparse=True)
 
     def _print_Identity(self, expr):
@@ -251,7 +263,7 @@ def maple_code(expr, assign_to=None, **settings):
     ==========
 
     expr : Expr
-        A sympy expression to be converted.
+        A SymPy expression to be converted.
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned.  Can be a string, ``Symbol``,

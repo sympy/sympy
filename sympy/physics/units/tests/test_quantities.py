@@ -1,7 +1,15 @@
 import warnings
 
-from sympy import (Abs, Add, Function, Number, Rational, S, Symbol,
-                   diff, exp, integrate, log, sin, sqrt, symbols)
+from sympy.core.add import Add
+from sympy.core.function import (Function, diff)
+from sympy.core.numbers import (Number, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
+from sympy.integrals.integrals import integrate
 from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
                                  volume, kilometer, joule)
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
@@ -462,7 +470,7 @@ def test_issue_14547():
     # not raise an error when the `arg - 1` calculation is
     # performed in the assumptions system
     from sympy.physics.units import foot, inch
-    from sympy import Eq
+    from sympy.core.relational import Eq
     assert log(foot).is_zero is None
     assert log(foot).is_positive is None
     assert log(foot).is_nonnegative is None

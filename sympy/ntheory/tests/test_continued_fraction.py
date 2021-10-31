@@ -1,4 +1,7 @@
-from sympy import S, pi, GoldenRatio as phi, sqrt, Rational
+from sympy.core import GoldenRatio as phi
+from sympy.core.numbers import (Rational, pi)
+from sympy.core.singleton import S
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory.continued_fraction import \
     (continued_fraction_periodic as cf_p,
      continued_fraction_iterator as cf_i,

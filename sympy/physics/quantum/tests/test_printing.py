@@ -21,7 +21,13 @@ from sympy.physics.quantum.state import Bra, Ket, TimeDepBra, TimeDepKet
 from sympy.physics.quantum.tensorproduct import TensorProduct
 from sympy.physics.quantum.sho1d import RaisingOp
 
-from sympy import Derivative, Function, Interval, Matrix, Pow, S, symbols, Symbol, oo
+from sympy.core.function import (Derivative, Function)
+from sympy.core.numbers import oo
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.matrices.dense import Matrix
+from sympy.sets.sets import Interval
 from sympy.testing.pytest import XFAIL
 
 # Imports used in srepr strings

@@ -1,6 +1,14 @@
-from sympy import (Symbol, symbols, oo, limit, Rational, Integral, Derivative,
-    log, exp, sqrt, pi, Function, sin, Eq, Ge, Le, Gt, Lt, Ne, Abs, conjugate,
-    I, Matrix)
+from sympy.core.function import (Derivative, Function)
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (Abs, conjugate)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
+from sympy.integrals.integrals import Integral
+from sympy.matrices.dense import Matrix
+from sympy.series.limits import limit
 
 from sympy.printing.python import python
 
@@ -9,7 +17,7 @@ from sympy.testing.pytest import raises, XFAIL, skip
 from sympy.parsing.latex import parse_latex
 from sympy.external import import_module
 
-# To test latex to python printing
+# To test latex to Python printing
 antlr4 = import_module("antlr4")
 
 x, y = symbols('x,y')
@@ -192,7 +200,7 @@ def test_python_limits():
 def test_issue_20762():
     if not antlr4:
         skip('antlr not installed')
-    # Make sure python removes curly braces from subscripted variables
+    # Make sure Python removes curly braces from subscripted variables
     expr = parse_latex(r'a_b \cdot b')
     assert python(expr) == "a_b = Symbol('a_{b}')\nb = Symbol('b')\ne = a_b*b"
 

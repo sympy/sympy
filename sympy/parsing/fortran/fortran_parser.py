@@ -6,7 +6,7 @@ if lfortran:
     from sympy.codegen.ast import (Variable, IntBaseType, FloatBaseType, String,
                                    Return, FunctionDefinition, Assignment)
     from sympy.core import Add, Mul, Integer, Float
-    from sympy import Symbol
+    from sympy.core.symbol import Symbol
 
     asr_mod = lfortran.asr
     asr = lfortran.asr.asr
@@ -316,7 +316,7 @@ def call_visitor(fort_node):
     =======
 
     res_ast : list
-        list of sympy AST Nodes
+        list of SymPy AST Nodes
 
     """
     v = ASR2PyVisitor()
@@ -338,7 +338,7 @@ def src_to_sympy(src):
     =======
 
     py_src : string
-        A string with the python source code compatible with SymPy
+        A string with the Python source code compatible with SymPy
 
     """
     a_ast = src_to_ast(src, translation_unit=False)

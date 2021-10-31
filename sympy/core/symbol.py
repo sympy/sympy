@@ -1,16 +1,17 @@
-from sympy.core.assumptions import StdFactKB, _assume_defined
-from sympy.core.compatibility import is_sequence, ordered
+from .assumptions import StdFactKB, _assume_defined
 from .basic import Basic, Atom
-from .sympify import sympify
-from .singleton import S
-from .expr import Expr, AtomicExpr
 from .cache import cacheit
-from .function import FunctionClass
+from .containers import Tuple
+from .expr import Expr, AtomicExpr
+from .function import AppliedUndef, FunctionClass
 from .kind import NumberKind, UndefinedKind
-from sympy.core.logic import fuzzy_bool
+from .logic import fuzzy_bool
+from .singleton import S
+from .sorting import ordered
+from .sympify import sympify
 from sympy.logic.boolalg import Boolean
-from sympy.utilities.iterables import sift
-from sympy.core.containers import Tuple
+from sympy.utilities.iterables import sift, is_sequence
+from sympy.utilities.misc import filldedent
 
 import string
 import re as _re
@@ -150,8 +151,6 @@ def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptio
     >>> uniquely_named_symbol('x', x)
     x0
     """
-    from sympy.core.function import AppliedUndef
-
     def numbered_string_incr(s, start=0):
         if not s:
             return str(start)
@@ -204,6 +203,8 @@ class Symbol(AtomicExpr, Boolean):
 
     __slots__ = ('name',)
 
+    name: str
+
     is_Symbol = True
     is_symbol = True
 
@@ -251,7 +252,6 @@ class Symbol(AtomicExpr, Boolean):
         base = self.assumptions0
         for k in set(assumptions) & set(base):
             if assumptions[k] != base[k]:
-                from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent('''
                     non-matching assumptions for %s: existing value
                     is %s and new value is %s''' % (
@@ -304,13 +304,22 @@ class Symbol(AtomicExpr, Boolean):
     def __getnewargs_ex__(self):
         return ((self.name,), self.assumptions0)
 
+    # NOTE: __setstate__ is not needed for pickles created by __getnewargs_ex__
+    # but was used before Symbol was changed to use __getnewargs_ex__ in v1.9.
+    # Pickles created in previous SymPy versions will still need __setstate__
+    # so that they can be unpickled in SymPy > v1.9.
+
+    def __setstate__(self, state):
+        for name, value in state.items():
+            setattr(self, name, value)
+
     def _hashable_content(self):
         # Note: user-specified assumptions not hashed, just derived ones
         return (self.name,) + tuple(sorted(self.assumptions0.items()))
 
     def _eval_subs(self, old, new):
-        from sympy.core.power import Pow
         if old.is_Pow:
+            from sympy.core.power import Pow
             return Pow(self, S.One, evaluate=False)._eval_subs(old, new)
 
     def _eval_refine(self, assumptions):
@@ -331,10 +340,10 @@ class Symbol(AtomicExpr, Boolean):
             else Dummy(self.name, commutative=self.is_commutative)
 
     def as_real_imag(self, deep=True, **hints):
-        from sympy import im, re
         if hints.get('ignore') == self:
             return None
         else:
+            from sympy.functions.elementary.complexes import im, re
             return (re(self), im(self))
 
     def is_constant(self, *wrt, **flags):

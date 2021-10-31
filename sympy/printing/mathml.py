@@ -4,16 +4,16 @@ A MathML printer.
 
 from typing import Any, Dict
 
-from sympy import sympify, S, Mul
-from sympy.core.compatibility import default_sort_key
-from sympy.core.function import _coeff_isneg
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
+from sympy.core.sympify import sympify
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import \
     precedence_traditional, PRECEDENCE, PRECEDENCE_TRADITIONAL
 from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.printer import Printer, print_function
 
-import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps, repr_dps, to_str as mlib_to_str
 
 
@@ -199,7 +199,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
 
     def _print_Mul(self, expr):
 
-        if _coeff_isneg(expr):
+        if expr.could_extract_minus_sign():
             x = self.dom.createElement('apply')
             x.appendChild(self.dom.createElement('minus'))
             x.appendChild(self._print_Mul(-expr))
@@ -237,7 +237,7 @@ class MathMLContentPrinter(MathMLPrinterBase):
         lastProcessed = self._print(args[0])
         plusNodes = []
         for arg in args[1:]:
-            if _coeff_isneg(arg):
+            if arg.could_extract_minus_sign():
                 # use minus
                 x = self.dom.createElement('apply')
                 x.appendChild(self.dom.createElement('minus'))
@@ -705,7 +705,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
                     mrow.appendChild(y)
             return mrow
         mrow = self.dom.createElement('mrow')
-        if _coeff_isneg(expr):
+        if expr.could_extract_minus_sign():
             x = self.dom.createElement('mo')
             x.appendChild(self.dom.createTextNode('-'))
             mrow.appendChild(x)
@@ -720,7 +720,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         args = self._as_ordered_terms(expr, order=order)
         mrow.appendChild(self._print(args[0]))
         for arg in args[1:]:
-            if _coeff_isneg(arg):
+            if arg.could_extract_minus_sign():
                 # use minus
                 x = self.dom.createElement('mo')
                 x.appendChild(self.dom.createTextNode('-'))
@@ -1173,7 +1173,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
         dps = prec_to_dps(expr._prec)
-        str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=True)
+        str_real = mlib_to_str(expr._mpf_, dps, strip_zeros=True)
 
         # Must always have a mul symbol (as 2.5 10^{20} just looks odd)
         # thus we use the number separator
@@ -1779,7 +1779,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         return sup
 
     def _print_MatMul(self, expr):
-        from sympy import MatMul
+        from sympy.matrices.expressions.matmul import MatMul
 
         x = self.dom.createElement('mrow')
         args = expr.args
@@ -1788,7 +1788,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
         else:
             args = list(args)
 
-        if isinstance(expr, MatMul) and _coeff_isneg(expr):
+        if isinstance(expr, MatMul) and expr.could_extract_minus_sign():
             if args[0] == -1:
                 args = args[1:]
             else:

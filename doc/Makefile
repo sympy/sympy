@@ -14,7 +14,7 @@ PDFFILES = $(SVGFILES:%.svg=%.pdf)
 
 ALLSPHINXOPTS = -d _build/doctrees $(SPHINXOPTS) src
 ALLSPHINXOPTSapi = -d _build/doctrees-api $(SPHINXOPTS) api
-ALLSPHINXOPTSlatex = -d _build/doctrees-latex -D latex_paper_size=$(PAPER) \
+ALLSPHINXOPTSlatex = -d _build/doctrees-latex -D latex_element.papersize=$(PAPER)paper \
                 $(SPHINXOPTS) src
 
 .PHONY: changes cheatsheet clean help html htmlapi htmlhelp info latex \
@@ -88,7 +88,7 @@ latex: $(PDFFILES)
 	@echo "And run \`make all' in that directory to run these through xelatex."
 
 .svg.pdf:
-	inkscape --file=$< --export-area-drawing --without-gui --export-pdf=$@
+	dbus-run-session inkscape --file=$< --export-area-drawing --without-gui --export-pdf=$@
 
 changes:
 	mkdir -p _build/changes _build/doctrees

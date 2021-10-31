@@ -3,7 +3,10 @@ Primality testing
 
 """
 
-from sympy.core.compatibility import as_int
+from sympy.core.numbers import igcd
+from sympy.core.power import integer_nthroot
+from sympy.core.sympify import sympify
+from sympy.utilities.misc import as_int
 
 from mpmath.libmp import bitcount as _bitlength
 
@@ -73,7 +76,7 @@ def is_square(n, prep=True):
     References
     ==========
 
-    [1]  http://mersenneforum.org/showpost.php?p=110896
+    .. [1]  http://mersenneforum.org/showpost.php?p=110896
 
     See Also
     ========
@@ -89,7 +92,6 @@ def is_square(n, prep=True):
     if not ((m*0x8bc40d7d) & (m*0xa1e2f5d1) & 0x14020a):
         m = n % 63
         if not ((m*0x3d491df7) & (m*0xc824a9f9) & 0x10f14008):
-            from sympy.core.power import integer_nthroot
             return integer_nthroot(n, 2)[1]
     return False
 
@@ -122,8 +124,8 @@ def mr(n, bases):
     References
     ==========
 
-    - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
-      A Computational Perspective", Springer, 2nd edition, 135-138
+    .. [1] Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
+           A Computational Perspective", Springer, 2nd edition, 135-138
 
     A list of thresholds and the bases they require are here:
     https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants
@@ -248,10 +250,9 @@ def _lucas_selfridge_params(n):
 
     References
     ==========
-    - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
-      http://mpqs.free.fr/LucasPseudoprimes.pdf
+    .. [1] "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
+           http://mpqs.free.fr/LucasPseudoprimes.pdf
     """
-    from sympy.core import igcd
     from sympy.ntheory.residue_ntheory import jacobi_symbol
     D = 5
     while True:
@@ -272,11 +273,10 @@ def _lucas_extrastrong_params(n):
 
     References
     ==========
-    - OEIS A217719: Extra Strong Lucas Pseudoprimes
-      https://oeis.org/A217719
-    - https://en.wikipedia.org/wiki/Lucas_pseudoprime
+    .. [1] OEIS A217719: Extra Strong Lucas Pseudoprimes
+           https://oeis.org/A217719
+    .. [1] https://en.wikipedia.org/wiki/Lucas_pseudoprime
     """
-    from sympy.core import igcd
     from sympy.ntheory.residue_ntheory import jacobi_symbol
     P, Q, D = 3, 1, 5
     while True:
@@ -571,7 +571,7 @@ def isprime(n):
     # If we have GMPY2, skip straight to step 3 and do a strong BPSW test.
     # This should be a bit faster than our step 2, and for large values will
     # be a lot faster than our step 3 (C+GMP vs. Python).
-    from sympy.core.compatibility import HAS_GMPY
+    from sympy.external.gmpy import HAS_GMPY
     if HAS_GMPY == 2:
         from gmpy2 import is_strong_prp, is_strong_selfridge_prp
         return is_strong_prp(n, 2) and is_strong_selfridge_prp(n)
@@ -650,7 +650,6 @@ def is_gaussian_prime(num):
     .. [1] https://oeis.org/wiki/Gaussian_primes
     """
 
-    from sympy import sympify
     num = sympify(num)
     a, b = num.as_real_imag()
     a = as_int(a, strict=False)

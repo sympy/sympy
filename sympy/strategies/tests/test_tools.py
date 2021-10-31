@@ -1,9 +1,9 @@
 from sympy.strategies.tools import subs, typed
 from sympy.strategies.rl import rm_id
-from sympy import Basic
+from sympy.core.basic import Basic
 
 def test_subs():
-    from sympy import symbols
+    from sympy.core.symbol import symbols
     a,b,c,d,e,f = symbols('a,b,c,d,e,f')
     mapping = {a: d, d: a, Basic(e): Basic(f)}
     expr   = Basic(a, Basic(b, c), Basic(d, Basic(e)))
