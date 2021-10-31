@@ -1023,7 +1023,6 @@ def _find_pivot(inequalities):
     >>> inequalities = [eq1, eq2, eq3, eq4]
     >>> _find_pivot(inequalities)
     y
-
     """
     memory={}
     for eq in inequalities:
@@ -1061,7 +1060,6 @@ def _split_min_max(inequalities, pivot):
     >>> pivot = y
     >>> _split_min_max(inequalities, pivot)
     ([-x - 3*z - 4], [2*x/3 + z/3 + 1/3, x + 2*z - 2], [x - z])
-
     """
 
     greater_than = []
@@ -1093,7 +1091,6 @@ def _merge_mins_maxs(maxs, mins):
 
     >>> _merge_mins_maxs(maxs, mins)
     [2*x + 5*z + 2, 5*x/3 + 10*z/3 + 4.33333333333333]
-
     """
     if type(mins)!=Min:
         mins=[mins]
@@ -1190,7 +1187,6 @@ def _pick_var(inequalities):
     >>> inequalities = [eq1, eq2, eq3, eq4]
     >>> _pick_var(inequalities)
     x
-
     """
     for eq in inequalities:  # should already be in canonical order
         for symb in ordered(eq.free_symbols):  # make selection canonical
@@ -1233,6 +1229,9 @@ def solve_linear_inequalities(inequalities):
     >>> d[y]
     (Min(2*x/3 + z/3 + 1/3, x + 2*z - 2) > y, y > -x - 3*z - 4)
     
+    Explanation
+    ===========
+
     x = 2 is valid because: oo > 2 > -2/7
     z = 1 is valid because: x > 1 > Max(-x/2 - 13/10, -2*x/5 - 2/5)
     y = -1 is valid because: Min(2*x/3 + z/3 + 1/3, x + 2*z - 2) > -1 > -x - 3*z - 4
