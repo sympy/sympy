@@ -208,46 +208,13 @@ from sympy.polys.matrices.exceptions import DMBadInputError
 from sympy.polys.matrices.normalforms import hermite_normal_form
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polyutils import IntegerPowerable
+from .exceptions import ClosureFailure, MissingUnityError
 from .utilities import AlgIntPowers, is_int, is_rat, get_num_denom
 
 
 def to_col(coeffs):
     """Transform a list of integer coefficients into a column vector."""
     return DomainMatrix([[ZZ(c) for c in coeffs]], (1, len(coeffs)), ZZ).transpose()
-
-
-class ClosureFailure(Exception):
-    r"""
-    Signals that a :py:class:`ModuleElement` which we tried to represent in a
-    certain :py:class:`Module` cannot in fact be represented there.
-
-    Examples
-    ========
-
-    >>> from sympy.polys import Poly, cyclotomic_poly, ZZ
-    >>> from sympy.polys.matrices import DomainMatrix
-    >>> from sympy.polys.numberfields.modules import PowerBasis, to_col, ClosureFailure
-    >>> from sympy.testing.pytest import raises
-    >>> T = Poly(cyclotomic_poly(5))
-    >>> A = PowerBasis(T)
-    >>> B = A.submodule_from_matrix(2 * DomainMatrix.eye(4, ZZ))
-
-    Because we are in a cyclotomic field, the power basis ``A`` is an integral
-    basis, and the submodule ``B`` is just the ideal $(2)$. Therefore ``B`` can
-    represent an element having all even coefficients over the power basis:
-
-    >>> a1 = A(to_col([2, 4, 6, 8]))
-    >>> print(B.represent(a1))
-    DomainMatrix([[1], [2], [3], [4]], (4, 1), ZZ)
-
-    but ``B`` cannot represent an element with an odd coefficient:
-
-    >>> a2 = A(to_col([1, 2, 2, 2]))
-    >>> print(raises(ClosureFailure, lambda: B.represent(a2)))
-    <ExceptionInfo ClosureFailure('Element in QQ-span but not ZZ-span of this basis.')>
-
-    """
-    pass
 
 
 class Module:
@@ -742,7 +709,7 @@ class Submodule(Module, IntegerPowerable):
     def represent(self, elt):
         """
         Represent a ModuleElement belonging to an ancestor module, as a
-        ``ZZ``-linear combination over the generators of this Submodule.
+        :ref:`ZZ`-linear combination over the generators of this Submodule.
 
         Parameters
         ==========
@@ -1377,7 +1344,7 @@ def find_min_poly(alpha, domain, x=None, powers=None):
     Raises
     ======
 
-    ValueError
+    MissingUnityError
         If the module to which alpha belongs does not start with unity.
     ClosureFailure
         If the module to which alpha belongs is not closed under multiplication.
@@ -1385,7 +1352,7 @@ def find_min_poly(alpha, domain, x=None, powers=None):
     """
     R = alpha.module
     if not R.starts_with_unity():
-        raise ValueError("alpha must belong to finitely generated ring with unity.")
+        raise MissingUnityError("alpha must belong to finitely generated ring with unity.")
     if powers is None:
         powers = []
     one = R(0)

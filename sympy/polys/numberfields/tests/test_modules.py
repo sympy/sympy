@@ -2,8 +2,11 @@ from sympy.abc import x, zeta
 from sympy.polys import Poly, cyclotomic_poly
 from sympy.polys.domains import FF, QQ, ZZ
 from sympy.polys.matrices import DomainMatrix, DM
+from sympy.polys.numberfields.exceptions import (
+    ClosureFailure, MissingUnityError
+)
 from sympy.polys.numberfields.modules import (
-    ClosureFailure, HNF, Ideal, Module, ModuleElement, ModuleEndomorphism,
+    HNF, Ideal, Module, ModuleElement, ModuleEndomorphism,
     Order, PowerBasis, PowerBasisElement,
     find_min_poly, is_HNF, make_mod_elt, make_submodule, to_col,
 )
@@ -711,4 +714,4 @@ def test_find_min_poly():
     assert m == Poly(T, domain=QQ)
 
     B = A.submodule_from_matrix(2 * DomainMatrix.eye(4, ZZ))
-    raises(ValueError, lambda: find_min_poly(B(1), QQ))
+    raises(MissingUnityError, lambda: find_min_poly(B(1), QQ))
