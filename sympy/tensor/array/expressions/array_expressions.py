@@ -40,6 +40,9 @@ class ArraySymbol(_ArrayExpr):
     Symbol representing an array expression
     """
 
+    name = property(lambda self: self._args[0])
+    shape = property(lambda self: self._args[1])
+
     def __new__(cls, symbol, shape: typing.Iterable) -> "ArraySymbol":
         if isinstance(symbol, str):
             symbol = Symbol(symbol)
@@ -47,14 +50,6 @@ class ArraySymbol(_ArrayExpr):
         shape = Tuple(*map(_sympify, shape))
         obj = Expr.__new__(cls, symbol, shape)
         return obj
-
-    @property
-    def name(self):
-        return self._args[0]
-
-    @property
-    def shape(self):
-        return self._args[1]
 
     def __getitem__(self, item):
         return ArrayElement(self, item)
@@ -70,6 +65,10 @@ class ArrayElement(_ArrayExpr):
     """
     An element of an array.
     """
+
+    name = property(lambda self: self._args[0])
+    indices = property(lambda self: self._args[1])
+
     def __new__(cls, name, indices):
         if isinstance(name, str):
             name = Symbol(name)
@@ -83,19 +82,13 @@ class ArrayElement(_ArrayExpr):
         obj = Expr.__new__(cls, name, indices)
         return obj
 
-    @property
-    def name(self):
-        return self._args[0]
-
-    @property
-    def indices(self):
-        return self._args[1]
-
 
 class ZeroArray(_ArrayExpr):
     """
     Symbolic array of zeros. Equivalent to ``ZeroMatrix`` for matrices.
     """
+
+    shape = property(lambda self: self._args)
 
     def __new__(cls, *shape):
         if len(shape) == 0:
@@ -103,10 +96,6 @@ class ZeroArray(_ArrayExpr):
         shape = map(_sympify, shape)
         obj = Expr.__new__(cls, *shape)
         return obj
-
-    @property
-    def shape(self):
-        return self._args
 
     def as_explicit(self):
         if not all(i.is_Integer for i in self.shape):
@@ -119,6 +108,8 @@ class OneArray(_ArrayExpr):
     Symbolic array of ones.
     """
 
+    shape = property(lambda self: self._args)
+
     def __new__(cls, *shape):
         if len(shape) == 0:
             return S.One
@@ -126,14 +117,12 @@ class OneArray(_ArrayExpr):
         obj = Expr.__new__(cls, *shape)
         return obj
 
-    @property
-    def shape(self):
-        return self._args
-
     def as_explicit(self):
         if not all(i.is_Integer for i in self.shape):
             raise ValueError("Cannot return explicit form for symbolic shape.")
-        return ImmutableDenseNDimArray([S.One for i in range(reduce(operator.mul, self.shape))]).reshape(*self.shape)
+        return ImmutableDenseNDimArray(
+            [S.One for i in range(reduce(operator.mul, self.shape))]
+        ).reshape(*self.shape)
 
 
 class _CodegenArrayAbstract(Basic):
