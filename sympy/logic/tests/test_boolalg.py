@@ -1107,6 +1107,9 @@ def test_relational_simplification():
         (Eq(x, y) & Eq(d, e) & (d >= e))
     assert And(Eq(x, y), Eq(x, -y)).simplify() == And(Eq(x, 0), Eq(y, 0))
     assert Xor(x >= y, x <= y).simplify() == Ne(x, y)
+    assert And(x > 1, x < -1, Eq(x, y)).simplify() == S.false
+    # From #16690
+    assert And(x >= y, Eq(y, 0)).simplify() == And(x >= 0, Eq(y, 0))
 
 
 def test_issue_8373():
