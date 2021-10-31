@@ -3139,7 +3139,7 @@ def _apply_patternbased_threeterm_simplification(Rel, patterns, func,
                 if res:
                     for tmpres, oldexpr in res:
                         # we have a matching, compute replacement
-                        np = simp.subs(tmpres)
+                        np = simp.xreplace(tmpres)
                         if np == dominatingvalue:
                             # if dominatingvalue, the whole expression
                             # will be replacementvalue
