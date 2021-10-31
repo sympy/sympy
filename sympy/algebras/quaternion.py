@@ -8,8 +8,9 @@ from sympy.simplify.trigsimp import trigsimp
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import MutableDenseMatrix as Matrix
 from sympy.core.sympify import sympify
-from sympy.core.evalf import prec_to_dps
 from sympy.core.expr import Expr
+
+from mpmath.libmp.libmpf import prec_to_dps
 
 
 class Quaternion(Expr):
