@@ -3045,6 +3045,7 @@ def _apply_patternbased_twoterm_simplification(Rel, patterns, func,
                                                dominatingvalue,
                                                replacementvalue,
                                                measure):
+    """ Apply pattern-based two-term simplification."""
     from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.core.relational import Ge, Gt, _Inequality
     changed = True
@@ -3112,6 +3113,7 @@ def _apply_patternbased_threeterm_simplification(Rel, patterns, func,
                                                  dominatingvalue,
                                                  replacementvalue,
                                                  measure):
+    """ Apply pattern-based three-term simplification."""
     from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.core.relational import Le, Lt, _Inequality
     changed = True
@@ -3176,6 +3178,8 @@ def _apply_patternbased_threeterm_simplification(Rel, patterns, func,
 
 
 def _simplify_patterns_and():
+    """ Two-term patterns for And."""
+
     from sympy.core import Wild
     from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
     from sympy.functions.elementary.complexes import Abs
@@ -3183,6 +3187,9 @@ def _simplify_patterns_and():
     a = Wild('a')
     b = Wild('b')
     c = Wild('c')
+    # Relationals patterns should be in alphabetical order
+    # (pattern1, pattern2, simplified)
+    # Do not use Ge, Gt
     _matchers_and = ((Tuple(Eq(a, b), Lt(a, b)), S.false),
                      # (Tuple(Eq(a, b), Lt(b, a)), S.false),
                      (Tuple(Le(b, a), Lt(a, b)), S.false),
@@ -3220,12 +3227,17 @@ def _simplify_patterns_and():
 
 
 def _simplify_patterns_and3():
+    """ Three-term patterns for And."""
+
     from sympy.core import Wild
     from sympy.core.relational import Eq, Ge, Gt
 
     a = Wild('a')
     b = Wild('b')
     c = Wild('c')
+    # Relationals patterns should be in alphabetical order
+    # (pattern1, pattern2, pattern3, simplified)
+    # Do not use Le, Lt
     _matchers_and = ((Tuple(Ge(a, b), Ge(b, c), Gt(c, a)), S.false),
                      (Tuple(Ge(a, b), Gt(b, c), Gt(c, a)), S.false),
                      (Tuple(Gt(a, b), Gt(b, c), Gt(c, a)), S.false),
@@ -3257,6 +3269,8 @@ def _simplify_patterns_and3():
 
 
 def _simplify_patterns_or():
+    """ Two-term patterns for Or."""
+
     from sympy.core import Wild
     from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
     from sympy.functions.elementary.complexes import Abs
@@ -3264,6 +3278,9 @@ def _simplify_patterns_or():
     a = Wild('a')
     b = Wild('b')
     c = Wild('c')
+    # Relationals patterns should be in alphabetical order
+    # (pattern1, pattern2, simplified)
+    # Do not use Ge, Gt
     _matchers_or = ((Tuple(Le(b, a), Le(a, b)), S.true),
                     (Tuple(Le(b, a), Lt(a, b)), S.true),
                     (Tuple(Le(b, a), Ne(a, b)), S.true),
@@ -3301,12 +3318,17 @@ def _simplify_patterns_or():
     return _matchers_or
 
 def _simplify_patterns_xor():
+    """ Two-term patterns for Xor."""
+
     from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.core import Wild
     from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
     a = Wild('a')
     b = Wild('b')
     c = Wild('c')
+    # Relationals patterns should be in alphabetical order
+    # (pattern1, pattern2, simplified)
+    # Do not use Ge, Gt
     _matchers_xor = ((Tuple(Le(b, a), Lt(a, b)), S.true),
                      # (Tuple(Lt(b, a), Le(a, b)), S.true),
                      # (Tuple(Eq(a, b), Le(b, a)), Gt(a, b)),

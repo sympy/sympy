@@ -1566,7 +1566,7 @@ def is_eq(lhs, rhs, assumptions=None):
 
 def _simplify_inequality_with_minmax(e, fn, cmp1, cmp2):
     """ Simplify inequalities, i.e., ``>``, ``<``, ``>=``, ``<=``, that
-    contains a :class:`~.Min` and/or :class:`~.Max` functins.
+    contains a :class:`~.Min` and/or :class:`~.Max` functions.
 
     Written so that only ``>`` and ``>=``are supported, but it is possible to
     ``<`` and ``<=`` expressions by using ``.negated`` before and after simplifying.
@@ -1615,7 +1615,7 @@ def _simplify_inequality_with_minmax(e, fn, cmp1, cmp2):
 
 def _simplify_equality_with_minmax(e):
     """ Simplify :class:`~.Equality` that
-    contains a :class:`~.Min` and/or :class:`~.Max` functins.
+    contains a :class:`~.Min` and/or :class:`~.Max` functions.
     """
     from sympy.functions.elementary.miscellaneous import Min, Max
     if e.has(Min, Max):
