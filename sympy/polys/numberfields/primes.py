@@ -261,7 +261,7 @@ def _two_elt_rep(gens, ZK, p, f=None, Np=None):
     (See Algorithm 4.7.10.)
 
     """
-    pb = ZK.container
+    pb = ZK.parent
     T = ZK.T
     # Detect the special cases in which either (a) all generators are multiples
     # of p, or (b) there are no generators (so `all` is vacuously true):
@@ -383,12 +383,12 @@ def _prime_decomp_split_ideal(I, p, N, G, ZK):
     the the quotient ``ZK/I`` is _not_ a field, and we want to perform a non-trivial
     factorization of *I* by locating an idempotent element of ``ZK/I``.
     """
-    assert I.container == ZK and G.container is ZK and N.container is G
+    assert I.parent == ZK and G.parent is ZK and N.parent is G
     # Since ZK/I is not a field, the kernel computed in the previous step contains
     # more than just the prime field Fp, and our basis N for the nullspace therefore
     # contains at least a second column (which represents an element outside Fp).
     # Let alpha be such an element:
-    alpha = N(1).to_container()
+    alpha = N(1).to_parent()
     assert alpha.module is G
 
     alpha_powers = []
@@ -408,7 +408,7 @@ def _prime_decomp_split_ideal(I, p, N, G, ZK):
     idemps = [eps1, eps2]
     factors = []
     for eps in idemps:
-        e = eps.to_container()
+        e = eps.to_parent()
         assert e.module is ZK
         D = I.matrix.convert_to(FF(p)).hstack(*[
             (e * om).column(domain=FF(p)) for om in ZK.basis_elements()

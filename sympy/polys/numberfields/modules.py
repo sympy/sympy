@@ -302,11 +302,11 @@ class Module:
         raise NotImplementedError
 
     @property
-    def container(self):
+    def parent(self):
         """
-        The container ``Module``, if any, for this ``Module``.
+        The parent ``Module``, if any, for this ``Module``.
 
-        For a ``Submodule`` this is its ``container`` attribute; for a
+        For a ``Submodule`` this is its ``parent`` attribute; for a
         ``PowerBasis`` this is ``None``.
 
         See Also
@@ -341,7 +341,7 @@ class Module:
         :py:class:`Module`
 
         """
-        c = self.container
+        c = self.parent
         a = [] if c is None else c.ancestors(include_self=True)
         if include_self:
             a.append(self)
@@ -359,7 +359,7 @@ class Module:
         """
         if isinstance(self, PowerBasis):
             return self
-        c = self.container
+        c = self.parent
         if c is not None:
             return c.power_basis_ancestor()
         return None
@@ -630,19 +630,19 @@ class PowerBasis(Module):
 class Submodule(Module, IntegerPowerable):
     """A submodule of another module."""
 
-    def __init__(self, container, matrix, denom=1, mult_tab=None):
+    def __init__(self, parent, matrix, denom=1, mult_tab=None):
         """
         Parameters
         ==========
 
-        container: the Module in which this one is contained
+        parent: the Module from which this one is derived
         matrix: the DomainMatrix over :ref:`ZZ` whose columns define this submodule's
-          generators as linear combinations over the container's generators.
+          generators as linear combinations over the parent's generators.
         denom: optional denominator.
         mult_tab: optional multiplication table for this module.
 
         """
-        self._container = container
+        self._parent = parent
         self._matrix = matrix
         self._denom = denom
         self._mult_tab = mult_tab
@@ -657,7 +657,7 @@ class Submodule(Module, IntegerPowerable):
 
     def copy(self):
         """Make a copy of this Submodule."""
-        return type(self)(self.container, self.matrix.copy(), denom=self.denom, mult_tab=self._mult_tab)
+        return type(self)(self.parent, self.matrix.copy(), denom=self.denom, mult_tab=self._mult_tab)
 
     def reduced(self):
         """Produce a reduced version of this Submodule."""
@@ -666,7 +666,7 @@ class Submodule(Module, IntegerPowerable):
         g = igcd(self.denom, *self.coeffs)
         if g == 1:
             return self.copy()
-        return type(self)(self.container, (self.matrix / g).convert_to(ZZ), denom=self.denom // g, mult_tab=self._mult_tab)
+        return type(self)(self.parent, (self.matrix / g).convert_to(ZZ), denom=self.denom // g, mult_tab=self._mult_tab)
 
     def discard_before(self, r):
         """
@@ -682,7 +682,7 @@ class Submodule(Module, IntegerPowerable):
                 M[u] = {}
                 for v in range(u, s):
                     M[u][v] = mt[r + u][r + v][r:]
-        return make_submodule(self.container, W, denom=self.denom, mult_tab=M)
+        return make_submodule(self.parent, W, denom=self.denom, mult_tab=M)
 
     @property
     def n(self):
@@ -704,8 +704,8 @@ class Submodule(Module, IntegerPowerable):
         self._mult_tab = M
 
     @property
-    def container(self):
-        return self._container
+    def parent(self):
+        return self._parent
 
     @property
     def matrix(self):
@@ -733,11 +733,11 @@ class Submodule(Module, IntegerPowerable):
         if self.starts_with_unity():
             return self(0) * a
         else:
-            return self.container.element_from_rational(a)
+            return self.parent.element_from_rational(a)
 
     def basis_element_pullbacks(self):
-        """Return list of this Submodule's basis elements as elements of the container."""
-        return [e.to_container() for e in self.basis_elements()]
+        """Return list of this Submodule's basis elements as elements of the parent."""
+        return [e.to_parent() for e in self.basis_elements()]
 
     def represent(self, elt):
         """
@@ -766,7 +766,7 @@ class Submodule(Module, IntegerPowerable):
         """
         if elt.module == self:
             return elt.column()
-        elif elt.module == self.container:
+        elif elt.module == self.parent:
             try:
                 # The given element should be a ZZ-linear combination over our
                 # basis vectors; however, due to the presence of denominators,
@@ -780,15 +780,15 @@ class Submodule(Module, IntegerPowerable):
             except CoercionFailed:
                 raise ClosureFailure('Element in QQ-span but not ZZ-span of this basis.')
             return x
-        elif isinstance(self.container, Submodule):
-            coeffs_in_container = self.container.represent(elt)
-            container_element = self.container(coeffs_in_container)
-            return self.represent(container_element)
+        elif isinstance(self.parent, Submodule):
+            coeffs_in_parent = self.parent.represent(elt)
+            parent_element = self.parent(coeffs_in_parent)
+            return self.represent(parent_element)
         else:
             raise ClosureFailure('Element outside ancestor chain of this module.')
 
     def is_compat_submodule(self, other):
-        return isinstance(other, Submodule) and other.container == self.container
+        return isinstance(other, Submodule) and other.parent == self.parent
 
     def __eq__(self, other):
         if self.is_compat_submodule(other):
@@ -802,7 +802,7 @@ class Submodule(Module, IntegerPowerable):
         B = (a * self.matrix).hstack(b * other.matrix)
         if hnf:
             B = hermite_normal_form(B, D=hnf_modulus)
-        return self.container.submodule_from_matrix(B, denom=m)
+        return self.parent.submodule_from_matrix(B, denom=m)
 
     def __add__(self, other):
         if self.is_compat_submodule(other):
@@ -817,20 +817,20 @@ class Submodule(Module, IntegerPowerable):
             if a == b == 1:
                 return self.copy()
             else:
-                return make_submodule(self.container,
+                return make_submodule(self.parent,
                              self.matrix * a, denom=self.denom * b,
                              mult_tab=None).reduced()
-        elif isinstance(other, ModuleElement) and other.module == self.container:
-            # The submodule is multiplied by an element of the containing module.
-            # We presume this means we want a new submodule of the containing module.
+        elif isinstance(other, ModuleElement) and other.module == self.parent:
+            # The submodule is multiplied by an element of the parent module.
+            # We presume this means we want a new submodule of the parent module.
             gens = [other * e for e in self.basis_element_pullbacks()]
-            return self.container.submodule_from_gens(gens, hnf=hnf, hnf_modulus=hnf_modulus)
+            return self.parent.submodule_from_gens(gens, hnf=hnf, hnf_modulus=hnf_modulus)
         elif self.is_compat_submodule(other):
             # This case usually means you're multiplying ideals, and want another
-            # ideal, i.e. another submodule of the same container module.
+            # ideal, i.e. another submodule of the same parent module.
             alphas, betas = self.basis_element_pullbacks(), other.basis_element_pullbacks()
             gens = [a * b for a in alphas for b in betas]
-            return self.container.submodule_from_gens(gens, hnf=hnf, hnf_modulus=hnf_modulus)
+            return self.parent.submodule_from_gens(gens, hnf=hnf, hnf_modulus=hnf_modulus)
         return NotImplemented
 
     def __mul__(self, other):
@@ -864,21 +864,21 @@ def is_HNF(dm):
 class HNF(Submodule):
     """
     A submodule such that:
-      * Its container is a PowerBasis.
+      * Its parent is a PowerBasis.
       * Its number of generators equals the degree of the minimal polynomial
         of the PowerBasis.
       * Its matrix is in square, maximal-rank, Hermite normal form.
     """
 
-    def __init__(self, container, matrix, denom=1, mult_tab=None):
-        super().__init__(container, matrix, denom=denom, mult_tab=mult_tab)
-        assert isinstance(self.container, PowerBasis)
+    def __init__(self, parent, matrix, denom=1, mult_tab=None):
+        super().__init__(parent, matrix, denom=denom, mult_tab=mult_tab)
+        assert isinstance(self.parent, PowerBasis)
         assert self.n == self.T.degree()
         assert is_HNF(matrix)
 
     @property
     def T(self):
-        return self.container.T
+        return self.parent.T
 
     def power_basis_elements(self):
         return self.basis_element_pullbacks()
@@ -899,10 +899,10 @@ class HNF(Submodule):
         PowerBasisElement
 
         """
-        return self.container.element_from_poly(f)
+        return self.parent.element_from_poly(f)
 
     def pb_elt_from_col(self, col, denom=1):
-        return self.container(col, denom=denom)
+        return self.parent(col, denom=denom)
 
 
 class Order(HNF):
@@ -912,13 +912,13 @@ class Order(HNF):
     This is an HNF that includes unity.
     """
 
-    def __init__(self, container, matrix, denom=1, mult_tab=None):
-        super().__init__(container, matrix, denom=denom, mult_tab=mult_tab)
+    def __init__(self, parent, matrix, denom=1, mult_tab=None):
+        super().__init__(parent, matrix, denom=denom, mult_tab=mult_tab)
         assert self.starts_with_unity()
 
     @classmethod
     def from_submodule(cls, S):
-        return cls(S.container, S.matrix, denom=S.denom, mult_tab=S._mult_tab)
+        return cls(S.parent, S.matrix, denom=S.denom, mult_tab=S._mult_tab)
 
 
 class Ideal(HNF):
@@ -928,25 +928,25 @@ class Ideal(HNF):
     This is an HNF that does not include unity.
     """
 
-    def __init__(self, container, matrix, denom=1, mult_tab=None):
-        super().__init__(container, matrix, denom=denom, mult_tab=mult_tab)
+    def __init__(self, parent, matrix, denom=1, mult_tab=None):
+        super().__init__(parent, matrix, denom=denom, mult_tab=mult_tab)
         assert not self.starts_with_unity()
 
 
-def make_submodule(container, matrix, denom=1, mult_tab=None):
+def make_submodule(parent, matrix, denom=1, mult_tab=None):
     """
     Factory function which builds a Submodule, but ensures that it is an
     Order or Ideal as appropriate.
     """
     cls = Submodule
-    if isinstance(container, PowerBasis):
+    if isinstance(parent, PowerBasis):
         n = matrix.shape[1]
-        if is_HNF(matrix) and n == container.T.degree():
+        if is_HNF(matrix) and n == parent.T.degree():
             if (matrix / denom)[:, 0].to_dense() == DomainMatrix.eye(n, QQ)[:, 0].to_dense():
                 cls = Order
             else:
                 cls = Ideal
-    return cls(container, matrix, denom=denom, mult_tab=mult_tab)
+    return cls(parent, matrix, denom=denom, mult_tab=mult_tab)
 
 
 def make_mod_elt(module, col, denom=1):
@@ -1047,12 +1047,12 @@ class ModuleElement(IntegerPowerable):
             self._QQ_col = (self.col / self.denom).to_dense()
         return self._QQ_col
 
-    def to_container(self):
-        """Transform into a ModuleElement belonging to the container of our module."""
+    def to_parent(self):
+        """Transform into a ModuleElement belonging to the parent of our module."""
         if not isinstance(self.module, Submodule):
             raise ValueError('Not an element of a Submodule.')
         return make_mod_elt(
-            self.module.container, self.module.matrix * self.col,
+            self.module.parent, self.module.matrix * self.col,
             denom=self.module.denom * self.denom)
 
     def to_ancestor(self, anc):
@@ -1060,13 +1060,13 @@ class ModuleElement(IntegerPowerable):
         if anc == self.module:
             return self.copy()
         else:
-            return self.to_container().to_ancestor(anc)
+            return self.to_parent().to_ancestor(anc)
 
     def over_power_basis(self):
         """Transform into a PowerBasisElement over our PowerBasis ancestor."""
         e = self
         while not isinstance(e.module, PowerBasis):
-            e = e.to_container()
+            e = e.to_parent()
         return e
 
     def is_compat(self, other):

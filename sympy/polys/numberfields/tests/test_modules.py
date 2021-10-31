@@ -143,7 +143,7 @@ def test_Module_submodule_from_matrix():
     A = PowerBasis(T)
     B = A.submodule_from_matrix(2 * DomainMatrix.eye(4, ZZ))
     e = B(to_col([1, 2, 3, 4]))
-    f = e.to_container()
+    f = e.to_parent()
     assert f.col.flat() == [2, 4, 6, 8]
     # Matrix must be over ZZ:
     raises(ValueError, lambda: A.submodule_from_matrix(DomainMatrix.eye(4, QQ)))
@@ -156,7 +156,7 @@ def test_Module_whole_submodule():
     A = PowerBasis(T)
     B = A.whole_submodule()
     e = B(to_col([1, 2, 3, 4]))
-    f = e.to_container()
+    f = e.to_parent()
     assert f.col.flat() == [1, 2, 3, 4]
     e0, e1, e2, e3 = B(0), B(1), B(2), B(3)
     assert e2 * e3 == e0
@@ -242,7 +242,7 @@ def test_Submodule_discard_before():
     B = A.submodule_from_matrix(2 * DomainMatrix.eye(4, ZZ))
     B.compute_mult_tab()
     C = B.discard_before(2)
-    assert C.container == B.container
+    assert C.parent == B.parent
     assert isinstance(B, HNF) and not isinstance(C, HNF)
     assert C.matrix == B.matrix[:, 2:]
     assert C.mult_tab() == {0: {0: [-2, -2], 1: [0, 0]}, 1: {1: [0, 0]}}
@@ -513,7 +513,7 @@ def test_ModuleElement_to_ancestors():
     C = B.submodule_from_matrix(3 * DomainMatrix.eye(4, ZZ))
     D = C.submodule_from_matrix(5 * DomainMatrix.eye(4, ZZ))
     eD = D(0)
-    eC = eD.to_container()
+    eC = eD.to_parent()
     eB = eD.to_ancestor(B)
     eA = eD.over_power_basis()
     assert eC.module is C and eC.coeffs == [5, 0, 0, 0]
@@ -521,7 +521,7 @@ def test_ModuleElement_to_ancestors():
     assert eA.module is A and eA.coeffs == [30, 0, 0, 0]
 
     a = A(0)
-    raises(ValueError, lambda: a.to_container())
+    raises(ValueError, lambda: a.to_parent())
 
 
 def test_ModuleElement_compatibility():
