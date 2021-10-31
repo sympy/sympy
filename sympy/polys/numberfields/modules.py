@@ -1203,8 +1203,6 @@ class ModuleElement(IntegerPowerable):
     def __floordiv__(self, a):
         if is_rat(a):
             a = QQ(a)
-            if a == 0:
-                raise ZeroDivisionError
             return self * (1/a)
         return NotImplemented
 
