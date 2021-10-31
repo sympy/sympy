@@ -568,7 +568,7 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
                 contr_indices.append(((pos2_outer, pos2_inner), (len(args)-1, pos1_inner)))
                 total_rank += 1
                 diag_indices[i] = None
-                args[pos1_outer] = OneArray(arg1.shape[pos1_in2])
+                args[pos1_outer] = OneArray(shape=[arg1.shape[pos1_in2]])
                 replaced[pos1_outer] = True
             elif arg2.shape[pos2_in2] == 1:
                 if arg2.shape[pos2_inner] != 1:
@@ -579,7 +579,7 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
                 contr_indices.append(((pos1_outer, pos1_inner), (len(args)-1, pos2_inner)))
                 total_rank += 1
                 diag_indices[i] = None
-                args[pos2_outer] = OneArray(arg2.shape[pos2_in2])
+                args[pos2_outer] = OneArray(shape=[arg2.shape[pos2_in2]])
                 replaced[pos2_outer] = True
         diag_indices_new = [i for i in diag_indices if i is not None]
         cumul = list(accumulate([0] + [get_rank(arg) for arg in args]))
@@ -728,8 +728,8 @@ def identify_removable_identity_matrices(expr):
                     counted = editor.count_args_with_index(ind)
                     if counted == 1:
                         # Identity matrix contracted only on one index with itself,
-                        # transform to a OneArray(k) element:
-                        editor.insert_after(arg_with_ind, OneArray(k))
+                        # transform to a OneArray(shape=[k]) element:
+                        editor.insert_after(arg_with_ind, OneArray(shape=[k]))
                         editor.args_with_ind.remove(arg_with_ind)
                         flag = True
                         break

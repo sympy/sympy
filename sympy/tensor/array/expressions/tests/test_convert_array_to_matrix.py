@@ -84,7 +84,7 @@ def test_arrayexpr_convert_array_to_matrix():
             ), (2, 4)), [0, 1, 3, 2])
     assert convert_array_to_matrix(cg) == a * (b.T * c + c.T * b)
 
-    za = ZeroArray(m, n)
+    za = ZeroArray(shape=(m, n))
     assert convert_array_to_matrix(za) == ZeroMatrix(m, n)
 
     cg = ArrayTensorProduct(3, M)
@@ -96,7 +96,7 @@ def test_arrayexpr_convert_array_to_matrix():
 
     x = MatrixSymbol("x", k, 1)
     cg = PermuteDims(
-        ArrayContraction(ArrayTensorProduct(OneArray(1), x, OneArray(1), DiagMatrix(Identity(1))),
+        ArrayContraction(ArrayTensorProduct(OneArray(shape=[1]), x, OneArray(shape=[1]), DiagMatrix(Identity(1))),
                                 (0, 5)), Permutation(1, 2, 3))
     assert convert_array_to_matrix(cg) == x
 
@@ -165,25 +165,26 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
     # Transform diagonal operator to contraction:
 
     cg = ArrayDiagonal(ArrayTensorProduct(A, a), (1, 2))
-    assert _array_diag2contr_diagmatrix(cg) == ArrayContraction(ArrayTensorProduct(A, OneArray(1), DiagMatrix(a)), (1, 3))
+    ones = OneArray(shape=[1])
+    assert _array_diag2contr_diagmatrix(cg) == ArrayContraction(ArrayTensorProduct(A, ones, DiagMatrix(a)), (1, 3))
     assert convert_array_to_matrix(cg) == A * DiagMatrix(a)
 
     cg = ArrayDiagonal(ArrayTensorProduct(a, b), (0, 2))
     assert _array_diag2contr_diagmatrix(cg) == PermuteDims(
-        ArrayContraction(ArrayTensorProduct(DiagMatrix(a), OneArray(1), b), (0, 3)), [1, 2, 0]
+        ArrayContraction(ArrayTensorProduct(DiagMatrix(a), ones, b), (0, 3)), [1, 2, 0]
     )
     assert convert_array_to_matrix(cg) == b.T * DiagMatrix(a)
 
     cg = ArrayDiagonal(ArrayTensorProduct(A, a), (0, 2))
-    assert _array_diag2contr_diagmatrix(cg) == ArrayContraction(ArrayTensorProduct(A, OneArray(1), DiagMatrix(a)), (0, 3))
+    assert _array_diag2contr_diagmatrix(cg) == ArrayContraction(ArrayTensorProduct(A, ones, DiagMatrix(a)), (0, 3))
     assert convert_array_to_matrix(cg) == A.T * DiagMatrix(a)
 
     cg = ArrayDiagonal(ArrayTensorProduct(I, x, I1), (0, 2), (3, 5))
-    assert _array_diag2contr_diagmatrix(cg) == ArrayContraction(ArrayTensorProduct(I, OneArray(1), I1, DiagMatrix(x)), (0, 5))
+    assert _array_diag2contr_diagmatrix(cg) == ArrayContraction(ArrayTensorProduct(I, ones, I1, DiagMatrix(x)), (0, 5))
     assert convert_array_to_matrix(cg) == DiagMatrix(x)
 
     cg = ArrayDiagonal(ArrayTensorProduct(I, x, A, B), (1, 2), (5, 6))
-    assert _array_diag2contr_diagmatrix(cg) == ArrayDiagonal(ArrayContraction(ArrayTensorProduct(I, OneArray(1), A, B, DiagMatrix(x)), (1, 7)), (5, 6))
+    assert _array_diag2contr_diagmatrix(cg) == ArrayDiagonal(ArrayContraction(ArrayTensorProduct(I, ones, A, B, DiagMatrix(x)), (1, 7)), (5, 6))
     # TODO: this is returning a wrong result:
     # convert_array_to_matrix(cg)
 
@@ -191,7 +192,7 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
     assert convert_array_to_matrix(cg) == a*b.T
 
     cg = ArrayDiagonal(ArrayTensorProduct(I1, a, b), (1, 3))
-    assert _array_diag2contr_diagmatrix(cg) == ArrayContraction(ArrayTensorProduct(OneArray(1), a, b, I1), (2, 6))
+    assert _array_diag2contr_diagmatrix(cg) == ArrayContraction(ArrayTensorProduct(ones, a, b, I1), (2, 6))
     assert convert_array_to_matrix(cg) == a*b.T
 
     cg = ArrayDiagonal(ArrayTensorProduct(x, I1), (1, 2))
@@ -200,7 +201,7 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
     assert convert_array_to_matrix(cg) == x
 
     cg = ArrayDiagonal(ArrayTensorProduct(x, I), (0, 2))
-    assert _array_diag2contr_diagmatrix(cg) == ArrayContraction(ArrayTensorProduct(OneArray(1), I, DiagMatrix(x)), (1, 3))
+    assert _array_diag2contr_diagmatrix(cg) == ArrayContraction(ArrayTensorProduct(ones, I, DiagMatrix(x)), (1, 3))
     assert convert_array_to_matrix(cg).doit() == DiagMatrix(x)
 
     raises(ValueError, lambda: ArrayDiagonal(x, (1,)))
@@ -222,33 +223,33 @@ def test_arrayexpr_convert_array_to_diagonalized_vector():
     assert convert_array_to_matrix(cg) == A * a
 
     cg = ArrayContraction(ArrayTensorProduct(A, a, B), (1, 2, 4))
-    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), OneArray(1), B), (1, 2), (3, 5))
+    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), ones, B), (1, 2), (3, 5))
     assert convert_array_to_matrix(cg) == A * DiagMatrix(a) * B
 
     cg = ArrayContraction(ArrayTensorProduct(A, a, B), (0, 2, 4))
-    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), OneArray(1), B), (0, 2), (3, 5))
+    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), ones, B), (0, 2), (3, 5))
     assert convert_array_to_matrix(cg) == A.T * DiagMatrix(a) * B
 
     cg = ArrayContraction(ArrayTensorProduct(A, a, b, a.T, B), (0, 2, 4, 7, 9))
-    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), OneArray(1),
-                                                DiagMatrix(b), OneArray(1), DiagMatrix(a), OneArray(1), B),
+    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), ones,
+                                                DiagMatrix(b), ones, DiagMatrix(a), ones, B),
                                                (0, 2), (3, 5), (6, 9), (8, 12))
     assert convert_array_to_matrix(cg) == A.T * DiagMatrix(a) * DiagMatrix(b) * DiagMatrix(a) * B.T
 
     cg = ArrayContraction(ArrayTensorProduct(I1, I1, I1), (1, 2, 4))
-    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(I1, I1, OneArray(1), I1), (1, 2), (3, 5))
+    assert cg.split_multiple_contractions() == ArrayContraction(ArrayTensorProduct(I1, I1, ones, I1), (1, 2), (3, 5))
     assert convert_array_to_matrix(cg) == 1
 
     cg = ArrayContraction(ArrayTensorProduct(I, I, I, I, A), (1, 2, 8), (5, 6, 9))
     assert convert_array_to_matrix(cg.split_multiple_contractions()).doit() == A
 
     cg = ArrayContraction(ArrayTensorProduct(A, a, C, a, B), (1, 2, 4), (5, 6, 8))
-    expected = ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), OneArray(1), C, DiagMatrix(a), OneArray(1), B), (1, 3), (2, 5), (6, 7), (8, 10))
+    expected = ArrayContraction(ArrayTensorProduct(A, DiagMatrix(a), ones, C, DiagMatrix(a), ones, B), (1, 3), (2, 5), (6, 7), (8, 10))
     assert cg.split_multiple_contractions() == expected
     assert convert_array_to_matrix(cg) == A * DiagMatrix(a) * C * DiagMatrix(a) * B
 
     cg = ArrayContraction(ArrayTensorProduct(a, I1, b, I1, (a.T*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
-    expected = ArrayContraction(ArrayTensorProduct(a, I1, OneArray(1), b, I1, OneArray(1), (a.T*b).applyfunc(cos)),
+    expected = ArrayContraction(ArrayTensorProduct(a, I1, ones, b, I1, ones, (a.T*b).applyfunc(cos)),
                                 (1, 3), (2, 10), (6, 8), (7, 11))
     assert cg.split_multiple_contractions().dummy_eq(expected)
     assert convert_array_to_matrix(cg).doit().dummy_eq(MatMul(a, (a.T * b).applyfunc(cos), b.T))
@@ -397,33 +398,34 @@ def test_arrayexpr_convert_array_to_matrix_remove_trivial_dims():
 def test_arrayexpr_convert_array_to_matrix_diag2contraction_diagmatrix():
     cg = ArrayDiagonal(ArrayTensorProduct(M, a), (1, 2))
     res = _array_diag2contr_diagmatrix(cg)
+    ones = OneArray(shape=[1])
     assert res.shape == cg.shape
-    assert res == ArrayContraction(ArrayTensorProduct(M, OneArray(1), DiagMatrix(a)), (1, 3))
+    assert res == ArrayContraction(ArrayTensorProduct(M, ones, DiagMatrix(a)), (1, 3))
 
     raises(ValueError, lambda: ArrayDiagonal(ArrayTensorProduct(a, M), (1, 2)))
 
     cg = ArrayDiagonal(ArrayTensorProduct(a.T, M), (1, 2))
     res = _array_diag2contr_diagmatrix(cg)
     assert res.shape == cg.shape
-    assert res == ArrayContraction(ArrayTensorProduct(OneArray(1), M, DiagMatrix(a.T)), (1, 4))
+    assert res == ArrayContraction(ArrayTensorProduct(ones, M, DiagMatrix(a.T)), (1, 4))
 
     cg = ArrayDiagonal(ArrayTensorProduct(a.T, M, N, b.T), (1, 2), (4, 7))
     res = _array_diag2contr_diagmatrix(cg)
     assert res.shape == cg.shape
     assert res == ArrayContraction(
-        ArrayTensorProduct(OneArray(1), M, N, OneArray(1), DiagMatrix(a.T), DiagMatrix(b.T)), (1, 7), (3, 9))
+        ArrayTensorProduct(ones, M, N, ones, DiagMatrix(a.T), DiagMatrix(b.T)), (1, 7), (3, 9))
 
     cg = ArrayDiagonal(ArrayTensorProduct(a, M, N, b.T), (0, 2), (4, 7))
     res = _array_diag2contr_diagmatrix(cg)
     assert res.shape == cg.shape
     assert res == ArrayContraction(
-        ArrayTensorProduct(OneArray(1), M, N, OneArray(1), DiagMatrix(a), DiagMatrix(b.T)), (1, 6), (3, 9))
+        ArrayTensorProduct(ones, M, N, ones, DiagMatrix(a), DiagMatrix(b.T)), (1, 6), (3, 9))
 
     cg = ArrayDiagonal(ArrayTensorProduct(a, M, N, b.T), (0, 4), (3, 7))
     res = _array_diag2contr_diagmatrix(cg)
     assert res.shape == cg.shape
     assert res == ArrayContraction(
-        ArrayTensorProduct(OneArray(1), M, N, OneArray(1), DiagMatrix(a), DiagMatrix(b.T)), (3, 6), (2, 9))
+        ArrayTensorProduct(ones, M, N, ones, DiagMatrix(a), DiagMatrix(b.T)), (3, 6), (2, 9))
 
     I1 = Identity(1)
     x = MatrixSymbol("x", k, 1)

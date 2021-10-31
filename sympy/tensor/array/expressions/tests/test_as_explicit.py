@@ -9,14 +9,14 @@ from sympy.testing.pytest import raises
 
 def test_array_as_explicit_call():
 
-    assert ZeroArray(3, 2, 4).as_explicit() == ImmutableDenseNDimArray.zeros(3, 2, 4)
-    assert OneArray(3, 2, 4).as_explicit() == ImmutableDenseNDimArray([1 for i in range(3*2*4)]).reshape(3, 2, 4)
+    assert ZeroArray(shape=(3, 2, 4)).as_explicit() == ImmutableDenseNDimArray.zeros(3, 2, 4)
+    assert OneArray(shape=(3, 2, 4)).as_explicit() == ImmutableDenseNDimArray([1 for i in range(3*2*4)]).reshape(3, 2, 4)
 
     k = Symbol("k")
     X = ArraySymbol("X", (k, 3, 2))
     raises(ValueError, lambda: X.as_explicit())
-    raises(ValueError, lambda: ZeroArray(k, 2, 3).as_explicit())
-    raises(ValueError, lambda: OneArray(2, k, 2).as_explicit())
+    raises(ValueError, lambda: ZeroArray(shape=(k, 2, 3)).as_explicit())
+    raises(ValueError, lambda: OneArray(shape=(2, k, 2)).as_explicit())
 
     A = ArraySymbol("A", (3, 3))
     B = ArraySymbol("B", (3, 3))

@@ -60,31 +60,31 @@ def test_array_symbol_and_element():
 
 
 def test_zero_array():
-    assert ZeroArray() == 0
-    assert ZeroArray().is_Integer
+    assert ZeroArray(shape=()) == 0
+    assert ZeroArray(shape=()).is_Integer
 
-    za = ZeroArray(3, 2, 4)
+    za = ZeroArray(shape=(3, 2, 4))
     assert za.shape == (3, 2, 4)
     za_e = za.as_explicit()
     assert za_e.shape == (3, 2, 4)
 
     m, n, k = symbols("m n k")
-    za = ZeroArray(m, n, k, 2)
+    za = ZeroArray(shape=(m, n, k, 2))
     assert za.shape == (m, n, k, 2)
     raises(ValueError, lambda: za.as_explicit())
 
 
 def test_one_array():
-    assert OneArray() == 1
-    assert OneArray().is_Integer
+    assert OneArray(shape=()) == 1
+    assert OneArray(shape=()).is_Integer
 
-    oa = OneArray(3, 2, 4)
+    oa = OneArray(shape=(3, 2, 4))
     assert oa.shape == (3, 2, 4)
     oa_e = oa.as_explicit()
     assert oa_e.shape == (3, 2, 4)
 
     m, n, k = symbols("m n k")
-    oa = OneArray(m, n, k, 2)
+    oa = OneArray(shape=(m, n, k, 2))
     assert oa.shape == (m, n, k, 2)
     raises(ValueError, lambda: oa.as_explicit())
 
@@ -281,7 +281,7 @@ def test_arrayexpr_split_multiple_contractions():
     X = MatrixSymbol("X", k, k)
 
     cg = ArrayContraction(ArrayTensorProduct(A.T, a, b, b.T, (A*X*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
-    expected = ArrayContraction(ArrayTensorProduct(A.T, DiagMatrix(a), OneArray(1), b, b.T, (A*X*b).applyfunc(cos)), (1, 3), (2, 9), (6, 7, 10))
+    expected = ArrayContraction(ArrayTensorProduct(A.T, DiagMatrix(a), OneArray(shape=[1]), b, b.T, (A*X*b).applyfunc(cos)), (1, 3), (2, 9), (6, 7, 10))
     assert cg.split_multiple_contractions().dummy_eq(expected)
 
     # Check no overlap of lines:
@@ -498,29 +498,29 @@ def test_arrayexpr_nested_array_elementwise_add():
 
 
 def test_arrayexpr_array_expr_zero_array():
-    za1 = ZeroArray(k, l, m, n)
+    za1 = ZeroArray(shape=(k, l, m, n))
     zm1 = ZeroMatrix(m, n)
 
-    za2 = ZeroArray(k, m, m, n)
+    za2 = ZeroArray(shape=(k, m, m, n))
     zm2 = ZeroMatrix(m, m)
     zm3 = ZeroMatrix(k, k)
 
-    assert ArrayTensorProduct(M, N, za1) == ZeroArray(k, k, k, k, k, l, m, n)
-    assert ArrayTensorProduct(M, N, zm1) == ZeroArray(k, k, k, k, m, n)
+    assert ArrayTensorProduct(M, N, za1) == ZeroArray(shape=(k, k, k, k, k, l, m, n))
+    assert ArrayTensorProduct(M, N, zm1) == ZeroArray(shape=(k, k, k, k, m, n))
 
-    assert ArrayContraction(za1, (3,)) == ZeroArray(k, l, m)
-    assert ArrayContraction(zm1, (1,)) == ZeroArray(m)
-    assert ArrayContraction(za2, (1, 2)) == ZeroArray(k, n)
+    assert ArrayContraction(za1, (3,)) == ZeroArray(shape=(k, l, m))
+    assert ArrayContraction(zm1, (1,)) == ZeroArray(shape=(m,))
+    assert ArrayContraction(za2, (1, 2)) == ZeroArray(shape=(k, n))
     assert ArrayContraction(zm2, (0, 1)) == 0
 
-    assert ArrayDiagonal(za2, (1, 2)) == ZeroArray(k, n, m)
-    assert ArrayDiagonal(zm2, (0, 1)) == ZeroArray(m)
+    assert ArrayDiagonal(za2, (1, 2)) == ZeroArray(shape=(k, n, m))
+    assert ArrayDiagonal(zm2, (0, 1)) == ZeroArray(shape=(m,))
 
-    assert PermuteDims(za1, [2, 1, 3, 0]) == ZeroArray(m, l, n, k)
-    assert PermuteDims(zm1, [1, 0]) == ZeroArray(n, m)
+    assert PermuteDims(za1, [2, 1, 3, 0]) == ZeroArray(shape=(m, l, n, k))
+    assert PermuteDims(zm1, [1, 0]) == ZeroArray(shape=(n, m))
 
     assert ArrayAdd(za1) == za1
-    assert ArrayAdd(zm1) == ZeroArray(m, n)
+    assert ArrayAdd(zm1) == ZeroArray(shape=(m, n))
     tp1 = ArrayTensorProduct(MatrixSymbol("A", k, l), MatrixSymbol("B", m, n))
     assert ArrayAdd(tp1, za1) == tp1
     tp2 = ArrayTensorProduct(MatrixSymbol("C", k, l), MatrixSymbol("D", m, n))
@@ -614,8 +614,8 @@ def test_array_expressions_no_normalization():
     expr = ArrayAdd(ArrayAdd(M, N), P, normalize=False)
     assert str(expr) == "ArrayAdd(ArrayAdd(M, N), P)"
 
-    expr = ArrayAdd(M, ZeroArray(k, k), N, normalize=False)
-    assert str(expr) == "ArrayAdd(M, ZeroArray(k, k), N)"
+    expr = ArrayAdd(M, ZeroArray(shape=(k, k)), N, normalize=False)
+    assert str(expr) == "ArrayAdd(M, ZeroArray((k, k)), N)"
 
     # PermuteDims:
 
