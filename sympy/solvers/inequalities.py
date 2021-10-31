@@ -1219,11 +1219,11 @@ def solve_linear_inequalities(inequalities):
     >>> d = solve_linear_inequalities(inequalities)
     >>> assert set(d) == set([x, y, z])
     >>> d[x]
-    {'greater_than': [-13/15, -2/7], 'lower_than': []}
+     {'greater_than': [-2/7, -13/15], 'lower_than': []}
     >>> d[y]
-    {'greater_than': [-x - 3*z - 4], 'lower_than': [2*x/3 + z/3 + 1/3, x + 2*z - 2]}
+    {'greater_than': [-4*x - 4], 'lower_than': [3*x - 2, x + 1/3]}
     >>> d[z]
-    {'greater_than': [-x/2 - 13/10, -2*x/5 - 2/5], 'lower_than': [x]}
+     {'greater_than': [-x/3 - y/3 - 4/3, -x/2 + y/2 + 1, -2*x + 3*y - 1], 'lower_than': [x]}
 
     x = 2 is valid because: 2 > max(-13/15, -2/7)
     z = 1 is valid because: x > 1 > max(-x/2 - 13/10, -2*x/5 - 2/5)
