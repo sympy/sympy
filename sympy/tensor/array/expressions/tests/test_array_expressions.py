@@ -39,6 +39,7 @@ class TestArrayElement:
     def test_construct_from_array_symbol(self):
         test_cases = (  # @pytest.mark.parametrize
             # shapeless
+            ([], (0,), (0,)),
             ([], (1, 2), (1, 2)),
             ([], (i, j), (i, j)),
             # specific shape
@@ -83,6 +84,8 @@ class TestArraySymbol:
 
     def test_getitem(self):
         A = ArraySymbol("A", shape=(m, n))
+        assert A[0] == ArrayElement(A, indices=(0,))
+        assert A[k] == ArrayElement(A, indices=(k,))
         assert A[i, j] == ArrayElement(A, indices=(i, j))
         assert A[9, 7] == ArrayElement(A, indices=(9, 7))
         A = ArraySymbol("A", shape=(3, 2, 4))

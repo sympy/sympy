@@ -1,9 +1,9 @@
 import operator
-from collections import defaultdict, Counter
+from collections import Counter, abc, defaultdict
 from functools import reduce
 import itertools
 from itertools import accumulate
-from typing import Iterable, Optional, List, Dict as tDict, Tuple as tTuple, Union as tUnion
+from typing import Iterable, Optional, List, Dict as tDict, Tuple as tTuple, Union as tUnion, overload
 
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
@@ -54,8 +54,20 @@ class ArraySymbol(_ArrayExpr):
     def shape(self):
         return self._args[1]
 
-    def __getitem__(self, item):
-        return ArrayElement(self, item)
+    @overload
+    def __getitem__(self, key: tUnion[Basic, int]) -> "ArrayElement":
+        ...
+
+    @overload
+    def __getitem__(self, key: tTuple[tUnion[Basic, int], ...]) -> "ArrayElement":
+        ...
+
+    def __getitem__(self, key):
+        if isinstance(key, abc.Iterable):
+            indices = key
+        else:
+            indices = (key,)
+        return ArrayElement(self, indices)
 
     def as_explicit(self):
         if not all(i.is_Integer for i in self.shape):
@@ -68,6 +80,7 @@ class ArrayElement(_ArrayExpr):
     """
     An element of an array.
     """
+
     def __new__(cls, name, indices):
         if isinstance(name, str):
             name = Symbol(name)
@@ -131,7 +144,9 @@ class OneArray(_ArrayExpr):
     def as_explicit(self):
         if not all(i.is_Integer for i in self.shape):
             raise ValueError("Cannot return explicit form for symbolic shape.")
-        return ImmutableDenseNDimArray([S.One for i in range(reduce(operator.mul, self.shape))]).reshape(*self.shape)
+        return ImmutableDenseNDimArray(
+            [S.One for i in range(reduce(operator.mul, self.shape))]
+        ).reshape(*self.shape)
 
 
 class _CodegenArrayAbstract(Basic):
