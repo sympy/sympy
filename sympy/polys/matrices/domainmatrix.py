@@ -436,7 +436,9 @@ class DomainMatrix:
         Parameters
         ==========
 
-        K : Represents the desired domain or field
+        K : Represents the desired domain or field.
+            Alternatively, ``None`` may be passed, in which case this method
+            reduces to :py:meth:`~.copy`.
 
         Returns
         =======
@@ -457,6 +459,8 @@ class DomainMatrix:
         DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ_I)
 
         """
+        if K is None:
+            return self.copy()
         return self.from_rep(self.rep.convert_to(K))
 
     def to_sympy(self):

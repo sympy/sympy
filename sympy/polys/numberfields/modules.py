@@ -998,10 +998,7 @@ class ModuleElement(IntegerPowerable):
 
     def column(self, domain=None):
         """Get a copy of this element's column, optionally converting to a domain."""
-        if domain is None:
-            return self.col.copy()
-        else:
-            return self.col.convert_to(domain)
+        return self.col.convert_to(domain)
 
     @property
     def coeffs(self):
