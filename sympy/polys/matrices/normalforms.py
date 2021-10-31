@@ -246,8 +246,8 @@ def _hermite_normal_form(A):
 
 def _hermite_normal_form_modulo_D(A, D):
     r"""
-    Perform the mod *D* Hermite Normal Form reduction algorithm on DomainMatrix
-    *A*.
+    Perform the mod *D* Hermite Normal Form reduction algorithm on
+    :py:class:`~.DomainMatrix` *A*.
 
     Explanation
     ===========
@@ -260,9 +260,9 @@ def _hermite_normal_form_modulo_D(A, D):
     Parameters
     ==========
 
-    A: $m \times n $ DomainMatrix over domain :ref:ZZ, having rank $m$.
-    D: positive integer known to be a multiple of the determinant of the
-        HNF of *A*.
+    A: $m \times n$ ``DomainMatrix`` over domain :ref:`ZZ`, having rank $m$.
+    D: positive integer, given as an element of :ref:`ZZ`, and known to be a
+        multiple of the determinant of the HNF of *A*.
 
     Returns
     =======
@@ -288,6 +288,8 @@ def _hermite_normal_form_modulo_D(A, D):
     """
     if not A.domain.is_ZZ:
         raise DMDomainError('Matrix must be over domain ZZ.')
+    if not ZZ.of_type(D) or D < 1:
+        raise TypeError('Modulus D must be positive element of domain ZZ.')
 
     def add_columns_mod_R(m, R, i, j, a, b, c, d):
         # replace m[:, i] by (a*m[:, i] + b*m[:, j]) % R
@@ -304,7 +306,7 @@ def _hermite_normal_form_modulo_D(A, D):
         raise DMShapeError('Matrix must have at least as many columns as rows.')
     A = A.to_dense().rep.copy()
     k = n
-    R = ZZ(abs(int(D)))
+    R = D
     for i in range(m - 1, -1, -1):
         k -= 1
         for j in range(k - 1, -1, -1):
@@ -329,14 +331,15 @@ def _hermite_normal_form_modulo_D(A, D):
 
 def hermite_normal_form(A, *, D=None, check_rank=False):
     r'''
-    Compute the Hermite Normal Form of DomainMatrix *A* over :ref:`ZZ`.
+    Compute the Hermite Normal Form of :py:class:`~.DomainMatrix` *A* over
+    :ref:`ZZ`.
 
     Parameters
     ==========
 
-    A: $m \times n$ DomainMatrix over domain :ref:`ZZ`.
+    A: $m \times n$ ``DomainMatrix`` over domain :ref:`ZZ`.
 
-    D: positive integer (optional)
+    D: positive integer in :ref:`ZZ` (optional)
         Let $W$ be the HNF of *A*. If known in advance, a positive integer *D*
         being any multiple of $\det(W)$ may be provided. In this case, if *A*
         also has rank $m$, then we may use an alternative algorithm that works
@@ -360,6 +363,9 @@ def hermite_normal_form(A, *, D=None, check_rank=False):
 
     DMDomainError
         If the domain of the matrix is not :ref:`ZZ`.
+
+    TypeError
+        If *D* is given but is not in :ref:`ZZ`.
 
     DMShapeError
         If the mod *D* algorithm is used but the matrix has more rows than

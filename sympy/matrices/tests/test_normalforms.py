@@ -1,6 +1,6 @@
 from sympy.testing.pytest import warns_deprecated_sympy
 
-from sympy import Symbol, Poly
+from sympy import Symbol, Poly, Integer
 from sympy.matrices import Matrix
 from sympy.matrices.normalforms import (
     invariant_factors,
@@ -67,6 +67,8 @@ def test_hermite_normal():
     hnf = Matrix([[4, 0, 0], [0, 2, 1], [0, 0, 1]])
     assert hermite_normal_form(m) == hnf
     assert hermite_normal_form(m, D=8) == hnf
+    assert hermite_normal_form(m, D=ZZ(8)) == hnf
+    assert hermite_normal_form(m, D=Integer(8)) == hnf
 
     m = Matrix([[10, 8, 6, 30, 2], [45, 36, 27, 18, 9], [5, 4, 3, 2, 1]])
     hnf = Matrix([[26, 2], [0, 9], [0, 1]])

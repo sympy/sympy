@@ -1,5 +1,6 @@
 '''Functions returning normal forms of matrices'''
 
+from sympy.polys.domains.integerring import ZZ
 from sympy.polys.polytools import Poly
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.normalforms import (
@@ -120,4 +121,7 @@ def hermite_normal_form(A, *, D=None, check_rank=False):
     (See Algorithms 2.4.5 and 2.4.8.)
 
     '''
+    # Accept any of Python int, SymPy Integer, and ZZ itself:
+    if D is not None and not ZZ.of_type(D):
+        D = ZZ(int(D))
     return _hnf(A._rep, D=D, check_rank=check_rank).to_Matrix()
