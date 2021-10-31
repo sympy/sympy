@@ -6,7 +6,7 @@ import inspect
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.decorators import sympify_method_args, sympify_return
-from sympy.core.evalf import EvalfMixin, prec_to_dps
+from sympy.core.evalf import EvalfMixin
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.logic import (FuzzyBool, fuzzy_bool, fuzzy_or, fuzzy_and,
@@ -28,6 +28,8 @@ from sympy.utilities.iterables import (iproduct, sift, roundrobin, iterable,
 from sympy.utilities.misc import func_name, filldedent
 
 from mpmath import mpi, mpf
+
+from mpmath.libmp.libmpf import prec_to_dps
 
 
 tfn = defaultdict(lambda: None, {

@@ -10,7 +10,7 @@ from sympy.core.symbol import Symbol
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import (cancel, degree)
 from sympy.core.containers import Tuple
-from sympy.core.evalf import EvalfMixin, prec_to_dps
+from sympy.core.evalf import EvalfMixin
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, ComplexInfinity
 from sympy.core.symbol import Dummy
@@ -19,6 +19,8 @@ from sympy.polys import Poly, rootof
 from sympy.series import limit
 from sympy.matrices import ImmutableMatrix, eye
 from sympy.matrices.expressions import MatMul, MatAdd
+
+from mpmath.libmp.libmpf import prec_to_dps
 
 __all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
     'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix']

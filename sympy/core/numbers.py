@@ -22,20 +22,18 @@ from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, gmpy
 from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
-from mpmath.libmp import bitcount
+from mpmath.libmp import bitcount, round_nearest as rnd
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from mpmath.ctx_mp import mpnumeric
 from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
-    prec_to_dps)
+    prec_to_dps, dps_to_prec)
 from sympy.utilities.misc import as_int, debug, filldedent
 from .parameters import global_parameters
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-
-rnd = mlib.round_nearest
 
 _LOG2 = math.log(2)
 
@@ -1095,7 +1093,7 @@ class Float(Number):
                     if num.is_Integer and isint:
                         dps = max(dps, len(str(num).lstrip('-')))
                     dps = max(15, dps)
-                    precision = mlib.libmpf.dps_to_prec(dps)
+                    precision = dps_to_prec(dps)
         elif precision == '' and dps is None or precision is None and dps == '':
             if not isinstance(num, str):
                 raise ValueError('The null string can only be used when '
@@ -1111,7 +1109,7 @@ class Float(Number):
                     num, dps = _decimal_to_Rational_prec(Num)
                     if num.is_Integer and isint:
                         dps = max(dps, len(str(num).lstrip('-')))
-                        precision = mlib.libmpf.dps_to_prec(dps)
+                        precision = dps_to_prec(dps)
                     ok = True
             if ok is None:
                 raise ValueError('string-float not recognized: %s' % num)
@@ -1122,7 +1120,7 @@ class Float(Number):
         # precision.
 
         if precision is None or precision == '':
-            precision = mlib.libmpf.dps_to_prec(dps)
+            precision = dps_to_prec(dps)
 
         precision = int(precision)
 

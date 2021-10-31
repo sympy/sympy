@@ -1,5 +1,4 @@
 from sympy.core import Add, S, sympify, Dummy, expand_func
-from sympy.core.evalf import prec_to_dps
 from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and, fuzzy_not
@@ -17,6 +16,7 @@ from sympy.functions.combinatorial.factorials import factorial, rf, RisingFactor
 from sympy.utilities.misc import as_int
 
 from mpmath import mp, workprec
+from mpmath.libmp.libmpf import prec_to_dps
 
 def intlike(n):
     try:
