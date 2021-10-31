@@ -59,7 +59,7 @@ def test_round_two():
     )
     for f, B_exp, d_exp in cases:
         K = QQ.algebraic_field((f, theta))
-        B = K.integral_basis()
+        B = K.maximal_order().QQ_matrix
         d = K.discriminant()
         assert d == d_exp
         # The computed basis need not equal the expected one, but their quotient

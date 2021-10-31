@@ -390,10 +390,10 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         r"""
         Get an integral basis for the field.
 
-        If the field is of degree $n$ and $\theta$ is a primitive element, then
-        the basis is returned in the form of an upper triangular $n \times n$
-        matrix over domain :ref:`QQ`, whose column vectors represent the basis
-        elements as linear combinations over $\{1, \theta, \ldots, \theta^{n-1}\}$.
+        Returns
+        =======
+
+        List of :py:class:`~.ANP` instances.
 
         See Also
         ========
@@ -402,7 +402,9 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
         """
         ZK = self.maximal_order()
-        return ZK.QQ_matrix
+        M = ZK.QQ_matrix
+        return [self.dtype(list(reversed(M[:, j].flat())), self.mod.rep, self.dom)
+                for j in range(M.shape[1])]
 
     def discriminant(self):
         """Get the discriminant of the field."""

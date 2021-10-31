@@ -2,6 +2,8 @@
 
 from sympy.polys.polytools import Poly
 from sympy.polys.domains.integerring import ZZ
+from sympy.polys.domains.rationalfield import QQ
+from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities.decorator import public
 from .modules import ModuleEndomorphism, ModuleHomomorphism, Order, PowerBasis
 from .utilities import extract_fundamental_discriminant
@@ -144,6 +146,11 @@ def round_two(T, radicals=None):
     [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
 
     """
+    if T.domain == QQ:
+        try:
+            T = Poly(T, domain=ZZ)
+        except CoercionFailed:
+            pass  # Let the error be raised by the next clause.
     if (   not T.is_univariate
         or not T.is_irreducible
         or not T.is_monic
