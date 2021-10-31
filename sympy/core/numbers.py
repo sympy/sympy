@@ -1048,19 +1048,6 @@ class Float(Number):
         if isinstance(num, str):
             # Float accepts spaces as digit separators
             num = num.replace(' ', '').lower()
-            # in Py 3.6
-            # underscores are allowed. In anticipation of that, we ignore
-            # legally placed underscores
-            if '_' in num:
-                parts = num.split('_')
-                if not (all(parts) and
-                        all(parts[i][-1].isdigit()
-                            for i in range(0, len(parts), 2)) and
-                        all(parts[i][0].isdigit()
-                            for i in range(1, len(parts), 2))):
-                    # copy Py 3.6 error
-                    raise ValueError("could not convert string to float: '%s'" % num)
-                num = ''.join(parts)
             if num.startswith('.') and len(num) > 1:
                 num = '0' + num
             elif num.startswith('-.') and len(num) > 2:

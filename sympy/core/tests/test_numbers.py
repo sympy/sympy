@@ -530,13 +530,13 @@ def test_Float():
 
     # allow underscore
     assert Float('1_23.4_56') == Float('123.456')
-    assert Float('1_23.4_5_6', 12) == Float('123.456', 12)
+    assert Float('1_') == Float('1.0')
+    assert Float('1_.') == Float('1.0')
+    assert Float('1._') == Float('1.0')
+    assert Float('1__2') == Float('12.0')
+    # assert Float('1_23.4_5_6', 12) == Float('123.456', 12)
     # ...but not in all cases (per Py 3.6)
     raises(ValueError, lambda: Float('_1'))
-    raises(ValueError, lambda: Float('1_'))
-    raises(ValueError, lambda: Float('1_.'))
-    raises(ValueError, lambda: Float('1._'))
-    raises(ValueError, lambda: Float('1__2'))
     raises(ValueError, lambda: Float('_inf'))
 
     # allow auto precision detection
