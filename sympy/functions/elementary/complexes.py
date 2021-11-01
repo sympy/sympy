@@ -689,15 +689,20 @@ class Abs(Function):
 
 class arg(Function):
     """
-    returns the argument (in radians) of a complex number.  The argument is
+    returns the argument (in radians) of a complex number. The argument is
     evaluated in consistent convention with atan2 where the branch-cut is
     taken along the negative real axis and arg(z) is in the interval
-    (-pi,pi].  For a positive number, the argument is always 0.
+    (-pi,pi]. For a positive number, the argument is always 0; the
+    argument of a negative number is pi; and the argument of 0
+    is undefined and returns nan. So the ``arg`` function will never nest
+    greater than 3 levels since at the 4th application, the result must be
+    nan; for a real number, nan is returned on the 3rd application.
 
     Examples
     ========
 
-    >>> from sympy import arg, I, sqrt
+    >>> from sympy import arg, I, sqrt, Dummy
+    >>> from sympy.abc import x
     >>> arg(2.0)
     0
     >>> arg(I)
@@ -710,6 +715,11 @@ class arg(Function):
     atan(3/4)
     >>> arg(0.8 + 0.6*I)
     0.643501108793284
+    >>> arg(arg(arg(arg(x))))
+    nan
+    >>> real = Dummy(real=True)
+    >>> arg(arg(arg(real)))
+    nan
 
     Parameters
     ==========
@@ -732,6 +742,16 @@ class arg(Function):
 
     @classmethod
     def eval(cls, arg):
+        a = arg
+        for i in range(3):
+            if isinstance(a, cls):
+                a = a.args[0]
+            else:
+                if i == 2 and a.is_extended_real:
+                    return S.NaN
+                break
+        else:
+            return S.NaN
         if isinstance(arg, exp_polar):
             return periodic_argument(arg, oo)
         if not arg.is_Atom:
