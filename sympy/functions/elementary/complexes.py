@@ -747,7 +747,7 @@ class arg(Function):
             if isinstance(a, cls):
                 a = a.args[0]
             else:
-                if i == 2 and a.is_real:
+                if i == 2 and a.is_extended_real:
                     return S.NaN
                 break
         else:

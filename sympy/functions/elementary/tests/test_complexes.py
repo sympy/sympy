@@ -612,7 +612,7 @@ def test_arg():
     x = Symbol('x')
     assert arg(arg(arg(x))) is not S.NaN
     assert arg(arg(arg(arg(x)))) is S.NaN
-    r = Symbol('r', real=True)
+    r = Symbol('r', extended_real=True)
     assert arg(arg(r)) is not S.NaN
     assert arg(arg(arg(r))) is S.NaN
 
