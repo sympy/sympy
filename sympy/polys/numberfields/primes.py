@@ -54,9 +54,6 @@ class PrimeIdeal(IntegerPowerable):
     def as_submodule(self):
         return self.p * self.ZK + self.alpha * self.ZK
 
-    def copy(self):
-        return PrimeIdeal(self.ZK.copy(), self.p, self.alpha.copy(), self.f, self.e)
-
     def __eq__(self, other):
         if isinstance(other, PrimeIdeal):
             return self.as_submodule() == other.as_submodule()
@@ -68,10 +65,10 @@ class PrimeIdeal(IntegerPowerable):
     __rmul__ = __mul__
 
     def _zeroth_power(self):
-        return self.ZK.copy()
+        return self.ZK
 
     def _first_power(self):
-        return self.copy()
+        return self
 
     def beta(self):
         """

@@ -622,17 +622,13 @@ class Submodule(Module, IntegerPowerable):
             r += f'/{self.denom}'
         return r
 
-    def copy(self):
-        """Make a copy of this Submodule."""
-        return type(self)(self.parent, self.matrix.copy(), denom=self.denom, mult_tab=self._mult_tab)
-
     def reduced(self):
         """Produce a reduced version of this Submodule."""
         if self.denom == 1:
-            return self.copy()
+            return self
         g = igcd(self.denom, *self.coeffs)
         if g == 1:
-            return self.copy()
+            return self
         return type(self)(self.parent, (self.matrix / g).convert_to(ZZ), denom=self.denom // g, mult_tab=self._mult_tab)
 
     def discard_before(self, r):
@@ -782,7 +778,7 @@ class Submodule(Module, IntegerPowerable):
         if is_rat(other):
             a, b = get_num_denom(other)
             if a == b == 1:
-                return self.copy()
+                return self
             else:
                 return make_submodule(self.parent,
                              self.matrix * a, denom=self.denom * b,
@@ -806,7 +802,7 @@ class Submodule(Module, IntegerPowerable):
     __rmul__ = __mul__
 
     def _first_power(self):
-        return self.copy()
+        return self
 
 
 def is_HNF(dm):
@@ -955,20 +951,16 @@ class ModuleElement(IntegerPowerable):
             r += f'/{self.denom}'
         return r
 
-    def copy(self):
-        """Make a copy of this ModuleElement."""
-        return type(self)(self.module, self.col.copy(), denom=self.denom)
-
     def reduced(self):
         """
         Produce a reduced version of this ModuleElement, i.e. one in which the
         gcd of the denominator together with all numerator coefficients is 1.
         """
         if self.denom == 1:
-            return self.copy()
+            return self
         g = igcd(self.denom, *self.coeffs)
         if g == 1:
-            return self.copy()
+            return self
         return type(self)(self.module,
                             (self.col / g).convert_to(ZZ),
                             denom=self.denom // g)
@@ -1022,7 +1014,7 @@ class ModuleElement(IntegerPowerable):
     def to_ancestor(self, anc):
         """Transform into a ModuleElement belonging to a given ancestor of our module."""
         if anc == self.module:
-            return self.copy()
+            return self
         else:
             return self.to_parent().to_ancestor(anc)
 
@@ -1155,7 +1147,7 @@ class ModuleElement(IntegerPowerable):
         elif is_rat(other):
             a, b = get_num_denom(other)
             if a == b == 1:
-                return self.copy()
+                return self
             else:
                 return make_mod_elt(self.module,
                                  self.col * a, denom=self.denom * b).reduced()
@@ -1167,7 +1159,7 @@ class ModuleElement(IntegerPowerable):
         return self.module.one()
 
     def _first_power(self):
-        return self.copy()
+        return self
 
     def __floordiv__(self, a):
         if is_rat(a):

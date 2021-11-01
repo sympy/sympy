@@ -221,15 +221,6 @@ def test_Submodule_repr():
     assert repr(B) == 'Submodule[[2, 0, 0, 0], [0, 2, 0, 0], [0, 0, 2, 0], [0, 0, 0, 2]]/3'
 
 
-def test_Submodule_copy():
-    T = Poly(cyclotomic_poly(5, x))
-    A = PowerBasis(T)
-    B = A.submodule_from_matrix(2 * DomainMatrix.eye(4, ZZ))
-    C = B.copy()
-    assert C is not B
-    assert C == B
-
-
 def test_Submodule_reduced():
     T = Poly(cyclotomic_poly(5, x))
     A = PowerBasis(T)
@@ -450,15 +441,6 @@ def test_ModuleElement_repr():
     A = PowerBasis(T)
     e = A(to_col([1, 2, 3, 4]), denom=2)
     assert repr(e) == '[1, 2, 3, 4]/2'
-
-
-def test_ModuleElement_copy():
-    T = Poly(cyclotomic_poly(5, x))
-    A = PowerBasis(T)
-    e = A(0)
-    f = e.copy()
-    assert f is not e
-    assert f == e
 
 
 def test_ModuleElement_reduced():
