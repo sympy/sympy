@@ -3,19 +3,19 @@ Boolean algebra module for SymPy
 """
 
 from collections import defaultdict
-from itertools import chain, combinations, product
+from itertools import chain, combinations, product, permutations
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
+from sympy.core.containers import Tuple
 from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.function import Application, Derivative
-from sympy.core.kind import NumberKind
+from sympy.core.kind import BooleanKind, NumberKind
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
 from sympy.core.sympify import converter, _sympify, sympify
-from sympy.core.kind import BooleanKind
 from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
 
@@ -245,6 +245,9 @@ class BooleanAtom(Boolean):
     __gt__ = __lt__
     __ge__ = __lt__
     # \\\
+
+    def _eval_simplify(self, **kwargs):
+        return self
 
 
 class BooleanTrue(BooleanAtom, metaclass=Singleton):
@@ -551,123 +554,6 @@ class BooleanFunction(Application, Boolean):
         else:
             return S.Zero
 
-    def _apply_patternbased_simplification(self, rv, patterns, measure,
-                                           dominatingvalue,
-                                           replacementvalue=None):
-        """
-        Replace patterns of Relational
-
-        Parameters
-        ==========
-
-        rv : Expr
-            Boolean expression
-
-        patterns : tuple
-            Tuple of tuples, with (pattern to simplify, simplified pattern).
-
-        measure : function
-            Simplification measure.
-
-        dominatingvalue : Boolean or ``None``
-            The dominating value for the function of consideration.
-            For example, for :py:class:`~.And` ``S.false`` is dominating.
-            As soon as one expression is ``S.false`` in :py:class:`~.And`,
-            the whole expression is ``S.false``.
-
-        replacementvalue : Boolean or ``None``, optional
-            The resulting value for the whole expression if one argument
-            evaluates to ``dominatingvalue``.
-            For example, for :py:class:`~.Nand` ``S.false`` is dominating, but
-            in this case the resulting value is ``S.true``. Default is ``None``.
-            If ``replacementvalue`` is ``None`` and ``dominatingvalue`` is not
-            ``None``, ``replacementvalue = dominatingvalue``.
-
-        """
-        from sympy.core.relational import Relational, _canonical
-        from sympy.functions.elementary.miscellaneous import Min, Max
-
-        if replacementvalue is None and dominatingvalue is not None:
-            replacementvalue = dominatingvalue
-        # Use replacement patterns for Relationals
-        changed = True
-        Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational),
-                           binary=True)
-        if len(Rel) <= 1:
-            return rv
-        Rel, nonRealRel = sift(Rel, lambda i: not any(s.is_real is False
-                                                      for s in i.free_symbols),
-                               binary=True)
-        Rel = [i.canonical for i in Rel]
-        while changed and len(Rel) >= 2:
-            changed = False
-            # Sort based on ordered
-            Rel = list(ordered(Rel))
-            # Create a list of possible replacements
-            results = []
-            # Try all combinations
-            for ((i, pi), (j, pj)) in combinations(enumerate(Rel), 2):
-                for pattern, simp in patterns:
-                    res = []
-                    # use SymPy matching
-                    oldexpr = rv.func(pi, pj)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing first relational
-                    # This and the rest should not be required with a better
-                    # canonical
-                    oldexpr = rv.func(pi.reversed, pj)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing second relational
-                    oldexpr = rv.func(pi, pj.reversed)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-                    # Try reversing both relationals
-                    oldexpr = rv.func(pi.reversed, pj.reversed)
-                    tmpres = oldexpr.match(pattern)
-                    if tmpres:
-                        res.append((tmpres, oldexpr))
-
-                    if res:
-                        for tmpres, oldexpr in res:
-                            # we have a matching, compute replacement
-                            np = simp.subs(tmpres)
-                            if np == dominatingvalue:
-                                # if dominatingvalue, the whole expression
-                                # will be replacementvalue
-                                return replacementvalue
-                            # add replacement
-                            if not isinstance(np, ITE) and not np.has(Min, Max):
-                                # We only want to use ITE and Min/Max
-                                # replacements if they simplify away
-                                costsaving = measure(oldexpr) - measure(np)
-                                if costsaving > 0:
-                                    results.append((costsaving, (i, j, np)))
-            if results:
-                # Sort results based on complexity
-                results = list(reversed(sorted(results,
-                                               key=lambda pair: pair[0])))
-                # Replace the one providing most simplification
-                replacement = results[0][1]
-                i, j, newrel = replacement
-                # Remove the old relationals
-                del Rel[j]
-                del Rel[i]
-                if dominatingvalue is None or newrel != ~dominatingvalue:
-                    # Insert the new one (no need to insert a value that will
-                    # not affect the result)
-                    Rel.append(newrel)
-                # We did change something so try again
-                changed = True
-
-        rv = rv.func(*([_canonical(i) for i in ordered(Rel)]
-                     + nonRel + nonRealRel))
-        return rv
-
 
 class And(LatticeOp, BooleanFunction):
     """
@@ -809,9 +695,11 @@ class And(LatticeOp, BooleanFunction):
             nonlineqs = [ei.subs(reps) for ei in nonlineqs]
             other = [ei.subs(reps) for ei in other]
             rv = rv.func(*([i.canonical for i in (eqs + nonlineqs + other)] + nonRel))
-        patterns = simplify_patterns_and()
-        return self._apply_patternbased_simplification(rv, patterns,
-                                                       measure, False)
+        patterns = _simplify_patterns_and()
+        threeterm_patterns = _simplify_patterns_and3()
+        return _apply_patternbased_simplification(rv, patterns,
+                                                  measure, S.false,
+                                                  threeterm_patterns=threeterm_patterns)
 
     def _eval_as_set(self):
         from sympy.sets.sets import Intersection
@@ -920,9 +808,9 @@ class Or(LatticeOp, BooleanFunction):
         rv = super()._eval_simplify(**kwargs)
         if not isinstance(rv, Or):
             return rv
-        patterns = simplify_patterns_or()
-        return self._apply_patternbased_simplification(rv, patterns,
-            kwargs['measure'], S.true)
+        patterns = _simplify_patterns_or()
+        return _apply_patternbased_simplification(rv, patterns,
+                                                  kwargs['measure'], S.true)
 
     def to_anf(self, deep=True):
         args = range(1, len(self.args) + 1)
@@ -1166,9 +1054,9 @@ class Xor(BooleanFunction):
         rv = self.func(*[a.simplify(**kwargs) for a in self.args])
         if not isinstance(rv, Xor):  # This shouldn't really happen here
             return rv
-        patterns = simplify_patterns_xor()
-        return self._apply_patternbased_simplification(rv, patterns,
-            kwargs['measure'], None)
+        patterns = _simplify_patterns_xor()
+        return _apply_patternbased_simplification(rv, patterns,
+                                                  kwargs['measure'], None)
 
     def _eval_subs(self, old, new):
         # If old is Xor, replace the parts of the arguments with new if all
@@ -2898,8 +2786,29 @@ def simplify_logic(expr, form=None, deep=True, force=False):
     # get variables in case not deep or after doing
     # deep simplification since they may have changed
     variables = _find_predicates(expr)
+
+    # Replace variables with Dummys in case there are Relationals to possibly
+    # reduce the number of variables
+    repl = dict()
+    undo = dict()
+    from sympy.core.relational import Relational
+    if expr.has(Relational):
+        from sympy.core.symbol import Dummy
+        while variables:
+            d = Dummy()
+            var = variables.pop()
+            undo[d] = var
+            repl[var] = d
+            nvar = ~var
+            if nvar in variables:
+                repl[nvar] = ~d
+                variables -= set([nvar])
+
+    expr = expr.xreplace(repl)
+    # Get new variables after replacing
+    variables = _find_predicates(expr)
     if not force and len(variables) > 8:
-        return expr
+        return expr.xreplace(undo)
     # group into constants and variable values
     c, v = sift(ordered(variables), lambda x: x in (True, False), binary=True)
     variables = c + v
@@ -2911,8 +2820,8 @@ def simplify_logic(expr, form=None, deep=True, force=False):
             truthtable.append(c + list(t))
     big = len(truthtable) >= (2 ** (len(variables) - 1))
     if form == 'dnf' or form is None and big:
-        return SOPform(variables, truthtable)
-    return POSform(variables, truthtable)
+        return SOPform(variables, truthtable).xreplace(undo)
+    return POSform(variables, truthtable).xreplace(undo)
 
 
 def _finger(eq):
@@ -3071,107 +2980,383 @@ def bool_map(bool1, bool2):
     return m
 
 
-def simplify_patterns_and():
+def _apply_patternbased_simplification(rv, patterns, measure,
+                                       dominatingvalue,
+                                       replacementvalue=None,
+                                       threeterm_patterns=None):
+    """
+    Replace patterns of Relational
+
+    Parameters
+    ==========
+
+    rv : Expr
+        Boolean expression
+
+    patterns : tuple
+        Tuple of tuples, with (pattern to simplify, simplified pattern).
+
+    measure : function
+        Simplification measure.
+
+    dominatingvalue : Boolean or ``None``
+        The dominating value for the function of consideration.
+        For example, for :py:class:`~.And` ``S.false`` is dominating.
+        As soon as one expression is ``S.false`` in :py:class:`~.And`,
+        the whole expression is ``S.false``.
+
+    replacementvalue : Boolean or ``None``, optional
+        The resulting value for the whole expression if one argument
+        evaluates to ``dominatingvalue``.
+        For example, for :py:class:`~.Nand` ``S.false`` is dominating, but
+        in this case the resulting value is ``S.true``. Default is ``None``.
+        If ``replacementvalue`` is ``None`` and ``dominatingvalue`` is not
+        ``None``, ``replacementvalue = dominatingvalue``.
+
+    """
+    from sympy.core.relational import Relational, _canonical
+
+    if replacementvalue is None and dominatingvalue is not None:
+        replacementvalue = dominatingvalue
+    # Use replacement patterns for Relationals
+    Rel, nonRel = sift(rv.args, lambda i: isinstance(i, Relational),
+                       binary=True)
+    if len(Rel) <= 1:
+        return rv
+    Rel, nonRealRel = sift(Rel, lambda i: not any(s.is_real is False
+                                                  for s in i.free_symbols),
+                           binary=True)
+    Rel = [i.canonical for i in Rel]
+
+    if threeterm_patterns and len(Rel) >= 3:
+        Rel = _apply_patternbased_threeterm_simplification(Rel,
+                            threeterm_patterns, rv.func, dominatingvalue,
+                            replacementvalue, measure)
+
+    Rel = _apply_patternbased_twoterm_simplification(Rel, patterns,
+                    rv.func, dominatingvalue, replacementvalue, measure)
+
+    rv = rv.func(*([_canonical(i) for i in ordered(Rel)]
+                 + nonRel + nonRealRel))
+    return rv
+
+
+def _apply_patternbased_twoterm_simplification(Rel, patterns, func,
+                                               dominatingvalue,
+                                               replacementvalue,
+                                               measure):
+    """ Apply pattern-based two-term simplification."""
     from sympy.functions.elementary.miscellaneous import Min, Max
+    from sympy.core.relational import Ge, Gt, _Inequality
+    changed = True
+    while changed and len(Rel) >= 2:
+        changed = False
+        # Use only < or <=
+        Rel = [r.reversed if isinstance(r, (Ge, Gt)) else r for r in Rel]
+        # Sort based on ordered
+        Rel = list(ordered(Rel))
+        # Eq and Ne must be tested reversed as well
+        rtmp = [(r, ) if isinstance(r, _Inequality) else (r, r.reversed) for r in Rel]
+        # Create a list of possible replacements
+        results = []
+        # Try all combinations of possibly reversed relational
+        for ((i, pi), (j, pj)) in combinations(enumerate(rtmp), 2):
+            for pattern, simp in patterns:
+                res = []
+                for p1, p2 in product(pi, pj):
+                    # use SymPy matching
+                    oldexpr = Tuple(p1, p2)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+
+                if res:
+                    for tmpres, oldexpr in res:
+                        # we have a matching, compute replacement
+                        np = simp.xreplace(tmpres)
+                        if np == dominatingvalue:
+                            # if dominatingvalue, the whole expression
+                            # will be replacementvalue
+                            return [replacementvalue]
+                        # add replacement
+                        if not isinstance(np, ITE) and not np.has(Min, Max):
+                            # We only want to use ITE and Min/Max replacements if
+                            # they simplify to a relational
+                            costsaving = measure(func(*oldexpr.args)) - measure(np)
+                            if costsaving > 0:
+                                results.append((costsaving, ([i, j], np)))
+        if results:
+            # Sort results based on complexity
+            results = list(reversed(sorted(results,
+                                           key=lambda pair: pair[0])))
+            # Replace the one providing most simplification
+            replacement = results[0][1]
+            idx, newrel = replacement
+            idx.sort()
+            # Remove the old relationals
+            for index in reversed(idx):
+                del Rel[index]
+            if dominatingvalue is None or newrel != ~dominatingvalue:
+                # Insert the new one (no need to insert a value that will
+                # not affect the result)
+                if newrel.func == func:
+                    for a in newrel.args:
+                        Rel.append(a)
+                else:
+                    Rel.append(newrel)
+            # We did change something so try again
+            changed = True
+    return Rel
+
+
+def _apply_patternbased_threeterm_simplification(Rel, patterns, func,
+                                                 dominatingvalue,
+                                                 replacementvalue,
+                                                 measure):
+    """ Apply pattern-based three-term simplification."""
+    from sympy.functions.elementary.miscellaneous import Min, Max
+    from sympy.core.relational import Le, Lt, _Inequality
+    changed = True
+    while changed and len(Rel) >= 3:
+        changed = False
+        # Use only > or >=
+        Rel = [r.reversed if isinstance(r, (Le, Lt)) else r for r in Rel]
+        # Sort based on ordered
+        Rel = list(ordered(Rel))
+        # Create a list of possible replacements
+        results = []
+        # Eq and Ne must be tested reversed as well
+        rtmp = [(r, ) if isinstance(r, _Inequality) else (r, r.reversed) for r in Rel]
+        # Try all combinations of possibly reversed relational
+        for ((i, pi), (j, pj), (k, pk)) in permutations(enumerate(rtmp), 3):
+            for pattern, simp in patterns:
+                res = []
+                for p1, p2, p3 in product(pi, pj, pk):
+                    # use SymPy matching
+                    oldexpr = Tuple(p1, p2, p3)
+                    tmpres = oldexpr.match(pattern)
+                    if tmpres:
+                        res.append((tmpres, oldexpr))
+
+                if res:
+                    for tmpres, oldexpr in res:
+                        # we have a matching, compute replacement
+                        np = simp.xreplace(tmpres)
+                        if np == dominatingvalue:
+                            # if dominatingvalue, the whole expression
+                            # will be replacementvalue
+                            return [replacementvalue]
+                        # add replacement
+                        if not isinstance(np, ITE) and not np.has(Min, Max):
+                            # We only want to use ITE and Min/Max replacements if
+                            # they simplify to a relational
+                            costsaving = measure(func(*oldexpr.args)) - measure(np)
+                            if costsaving > 0:
+                                results.append((costsaving, ([i, j, k], np)))
+        if results:
+            # Sort results based on complexity
+            results = list(reversed(sorted(results,
+                                           key=lambda pair: pair[0])))
+            # Replace the one providing most simplification
+            replacement = results[0][1]
+            idx, newrel = replacement
+            idx.sort()
+            # Remove the old relationals
+            for index in reversed(idx):
+                del Rel[index]
+            if dominatingvalue is None or newrel != ~dominatingvalue:
+                # Insert the new one (no need to insert a value that will
+                # not affect the result)
+                if newrel.func == func:
+                    for a in newrel.args:
+                        Rel.append(a)
+                else:
+                    Rel.append(newrel)
+            # We did change something so try again
+            changed = True
+    return Rel
+
+
+def _simplify_patterns_and():
+    """ Two-term patterns for And."""
+
     from sympy.core import Wild
     from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
+    from sympy.functions.elementary.complexes import Abs
+    from sympy.functions.elementary.miscellaneous import Min, Max
     a = Wild('a')
     b = Wild('b')
     c = Wild('c')
-    # With a better canonical fewer results are required
-    _matchers_and = ((And(Eq(a, b), Ge(a, b)), Eq(a, b)),
-                     (And(Eq(a, b), Gt(a, b)), S.false),
-                     (And(Eq(a, b), Le(a, b)), Eq(a, b)),
-                     (And(Eq(a, b), Lt(a, b)), S.false),
-                     (And(Ge(a, b), Gt(a, b)), Gt(a, b)),
-                     (And(Ge(a, b), Le(a, b)), Eq(a, b)),
-                     (And(Ge(a, b), Lt(a, b)), S.false),
-                     (And(Ge(a, b), Ne(a, b)), Gt(a, b)),
-                     (And(Gt(a, b), Le(a, b)), S.false),
-                     (And(Gt(a, b), Lt(a, b)), S.false),
-                     (And(Gt(a, b), Ne(a, b)), Gt(a, b)),
-                     (And(Le(a, b), Lt(a, b)), Lt(a, b)),
-                     (And(Le(a, b), Ne(a, b)), Lt(a, b)),
-                     (And(Lt(a, b), Ne(a, b)), Lt(a, b)),
-                     # Min/max
-                     (And(Ge(a, b), Ge(a, c)), Ge(a, Max(b, c))),
-                     (And(Ge(a, b), Gt(a, c)), ITE(b > c, Ge(a, b), Gt(a, c))),
-                     (And(Gt(a, b), Gt(a, c)), Gt(a, Max(b, c))),
-                     (And(Le(a, b), Le(a, c)), Le(a, Min(b, c))),
-                     (And(Le(a, b), Lt(a, c)), ITE(b < c, Le(a, b), Lt(a, c))),
-                     (And(Lt(a, b), Lt(a, c)), Lt(a, Min(b, c))),
+    # Relationals patterns should be in alphabetical order
+    # (pattern1, pattern2, simplified)
+    # Do not use Ge, Gt
+    _matchers_and = ((Tuple(Eq(a, b), Lt(a, b)), S.false),
+                     # (Tuple(Eq(a, b), Lt(b, a)), S.false),
+                     (Tuple(Le(b, a), Lt(a, b)), S.false),
+                     # (Tuple(Lt(b, a), Le(a, b)), S.false),
+                     (Tuple(Lt(b, a), Lt(a, b)), S.false),
+                     (Tuple(Eq(a, b), Le(b, a)), Eq(a, b)),
+                     # (Tuple(Eq(a, b), Le(a, b)), Eq(a, b)),
+                     #(Tuple(Le(b, a), Lt(b, a)), Gt(a, b)),
+                     (Tuple(Le(b, a), Le(a, b)), Eq(a, b)),
+                     #(Tuple(Le(b, a), Ne(a, b)), Gt(a, b)),
+                     #(Tuple(Lt(b, a), Ne(a, b)), Gt(a, b)),
+                     (Tuple(Le(a, b), Lt(a, b)), Lt(a, b)),
+                     (Tuple(Le(a, b), Ne(a, b)), Lt(a, b)),
+                     (Tuple(Lt(a, b), Ne(a, b)), Lt(a, b)),
                      # Sign
-                     (And(Eq(a, b), Eq(a, -b)), And(Eq(a, S.Zero), Eq(b, S.Zero))),
+                     (Tuple(Eq(a, b), Eq(a, -b)), And(Eq(a, S.Zero), Eq(b, S.Zero))),
+                     # Min/Max/ITE
+                     (Tuple(Le(b, a), Le(c, a)), Ge(a, Max(b, c))),
+                     (Tuple(Le(b, a), Lt(c, a)), ITE(b > c, Ge(a, b), Gt(a, c))),
+                     (Tuple(Lt(b, a), Lt(c, a)), Gt(a, Max(b, c))),
+                     (Tuple(Le(a, b), Le(a, c)), Le(a, Min(b, c))),
+                     (Tuple(Le(a, b), Lt(a, c)), ITE(b < c, Le(a, b), Lt(a, c))),
+                     (Tuple(Lt(a, b), Lt(a, c)), Lt(a, Min(b, c))),
+                     (Tuple(Le(a, b), Le(c, a)), ITE(Eq(b, c), Eq(a, b), ITE(b < c, S.false, And(Le(a, b), Ge(a, c))))),
+                     (Tuple(Le(c, a), Le(a, b)), ITE(Eq(b, c), Eq(a, b), ITE(b < c, S.false, And(Le(a, b), Ge(a, c))))),
+                     (Tuple(Lt(a, b), Lt(c, a)), ITE(b < c, S.false, And(Lt(a, b), Gt(a, c)))),
+                     (Tuple(Lt(c, a), Lt(a, b)), ITE(b < c, S.false, And(Lt(a, b), Gt(a, c)))),
+                     (Tuple(Le(a, b), Lt(c, a)), ITE(b <= c, S.false, And(Le(a, b), Gt(a, c)))),
+                     (Tuple(Le(c, a), Lt(a, b)), ITE(b <= c, S.false, And(Lt(a, b), Ge(a, c)))),
+                     (Tuple(Eq(a, b), Eq(a, c)), ITE(Eq(b, c), Eq(a, b), S.false)),
+                     (Tuple(Lt(a, b), Lt(-b, a)), ITE(b > 0, Lt(Abs(a), b), S.false)),
+                     (Tuple(Le(a, b), Le(-b, a)), ITE(b >= 0, Le(Abs(a), b), S.false)),
                      )
     return _matchers_and
 
 
-def simplify_patterns_or():
-    from sympy.functions.elementary.miscellaneous import Min, Max
+def _simplify_patterns_and3():
+    """ Three-term patterns for And."""
+
     from sympy.core import Wild
-    from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
+    from sympy.core.relational import Eq, Ge, Gt
+
     a = Wild('a')
     b = Wild('b')
     c = Wild('c')
-    _matchers_or = ((Or(Eq(a, b), Ge(a, b)), Ge(a, b)),
-                    (Or(Eq(a, b), Gt(a, b)), Ge(a, b)),
-                    (Or(Eq(a, b), Le(a, b)), Le(a, b)),
-                    (Or(Eq(a, b), Lt(a, b)), Le(a, b)),
-                    (Or(Ge(a, b), Gt(a, b)), Ge(a, b)),
-                    (Or(Ge(a, b), Le(a, b)), S.true),
-                    (Or(Ge(a, b), Lt(a, b)), S.true),
-                    (Or(Ge(a, b), Ne(a, b)), S.true),
-                    (Or(Gt(a, b), Le(a, b)), S.true),
-                    (Or(Gt(a, b), Lt(a, b)), Ne(a, b)),
-                    (Or(Gt(a, b), Ne(a, b)), Ne(a, b)),
-                    (Or(Le(a, b), Lt(a, b)), Le(a, b)),
-                    (Or(Le(a, b), Ne(a, b)), S.true),
-                    (Or(Lt(a, b), Ne(a, b)), Ne(a, b)),
-                    # Min/max
-                    (Or(Ge(a, b), Ge(a, c)), Ge(a, Min(b, c))),
-                    (Or(Ge(a, b), Gt(a, c)), ITE(b > c, Gt(a, c), Ge(a, b))),
-                    (Or(Gt(a, b), Gt(a, c)), Gt(a, Min(b, c))),
-                    (Or(Le(a, b), Le(a, c)), Le(a, Max(b, c))),
-                    (Or(Le(a, b), Lt(a, c)), ITE(b >= c, Le(a, b), Lt(a, c))),
-                    (Or(Lt(a, b), Lt(a, c)), Lt(a, Max(b, c))),
+    # Relationals patterns should be in alphabetical order
+    # (pattern1, pattern2, pattern3, simplified)
+    # Do not use Le, Lt
+    _matchers_and = ((Tuple(Ge(a, b), Ge(b, c), Gt(c, a)), S.false),
+                     (Tuple(Ge(a, b), Gt(b, c), Gt(c, a)), S.false),
+                     (Tuple(Gt(a, b), Gt(b, c), Gt(c, a)), S.false),
+                     # (Tuple(Ge(c, a), Gt(a, b), Gt(b, c)), S.false),
+                     # Lower bound relations
+                     # Commented out combinations that does not simplify
+                     (Tuple(Ge(a, b), Ge(a, c), Ge(b, c)), And(Ge(a, b), Ge(b, c))),
+                     (Tuple(Ge(a, b), Ge(a, c), Gt(b, c)), And(Ge(a, b), Gt(b, c))),
+                     # (Tuple(Ge(a, b), Gt(a, c), Ge(b, c)), And(Ge(a, b), Ge(b, c))),
+                     (Tuple(Ge(a, b), Gt(a, c), Gt(b, c)), And(Ge(a, b), Gt(b, c))),
+                     # (Tuple(Gt(a, b), Ge(a, c), Ge(b, c)), And(Gt(a, b), Ge(b, c))),
+                     (Tuple(Ge(a, c), Gt(a, b), Gt(b, c)), And(Gt(a, b), Gt(b, c))),
+                     (Tuple(Ge(b, c), Gt(a, b), Gt(a, c)), And(Gt(a, b), Ge(b, c))),
+                     (Tuple(Gt(a, b), Gt(a, c), Gt(b, c)), And(Gt(a, b), Gt(b, c))),
+                     # Upper bound relations
+                     # Commented out combinations that does not simplify
+                     (Tuple(Ge(b, a), Ge(c, a), Ge(b, c)), And(Ge(c, a), Ge(b, c))),
+                     (Tuple(Ge(b, a), Ge(c, a), Gt(b, c)), And(Ge(c, a), Gt(b, c))),
+                     # (Tuple(Ge(b, a), Gt(c, a), Ge(b, c)), And(Gt(c, a), Ge(b, c))),
+                     (Tuple(Ge(b, a), Gt(c, a), Gt(b, c)), And(Gt(c, a), Gt(b, c))),
+                     # (Tuple(Gt(b, a), Ge(c, a), Ge(b, c)), And(Ge(c, a), Ge(b, c))),
+                     (Tuple(Ge(c, a), Gt(b, a), Gt(b, c)), And(Ge(c, a), Gt(b, c))),
+                     (Tuple(Ge(b, c), Gt(b, a), Gt(c, a)), And(Gt(c, a), Ge(b, c))),
+                     (Tuple(Gt(b, a), Gt(c, a), Gt(b, c)), And(Gt(c, a), Gt(b, c))),
+                     # Circular relation
+                     (Tuple(Ge(a, b), Ge(b, c), Ge(c, a)), And(Eq(a, b), Eq(b, c))),
+                     )
+    return _matchers_and
+
+
+def _simplify_patterns_or():
+    """ Two-term patterns for Or."""
+
+    from sympy.core import Wild
+    from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
+    from sympy.functions.elementary.complexes import Abs
+    from sympy.functions.elementary.miscellaneous import Min, Max
+    a = Wild('a')
+    b = Wild('b')
+    c = Wild('c')
+    # Relationals patterns should be in alphabetical order
+    # (pattern1, pattern2, simplified)
+    # Do not use Ge, Gt
+    _matchers_or = ((Tuple(Le(b, a), Le(a, b)), S.true),
+                    (Tuple(Le(b, a), Lt(a, b)), S.true),
+                    (Tuple(Le(b, a), Ne(a, b)), S.true),
+                    # (Tuple(Le(a, b), Lt(b, a)), S.true),
+                    # (Tuple(Le(a, b), Ne(a, b)), S.true),
+                    #(Tuple(Eq(a, b), Le(b, a)), Ge(a, b)),
+                    #(Tuple(Eq(a, b), Lt(b, a)), Ge(a, b)),
+                    (Tuple(Eq(a, b), Le(a, b)), Le(a, b)),
+                    (Tuple(Eq(a, b), Lt(a, b)), Le(a, b)),
+                    #(Tuple(Le(b, a), Lt(b, a)), Ge(a, b)),
+                    (Tuple(Lt(b, a), Lt(a, b)), Ne(a, b)),
+                    (Tuple(Lt(b, a), Ne(a, b)), Ne(a, b)),
+                    (Tuple(Le(a, b), Lt(a, b)), Le(a, b)),
+                    #(Tuple(Lt(a, b), Ne(a, b)), Ne(a, b)),
+                    # Min/Max/ITE
+                    (Tuple(Le(b, a), Le(c, a)), Ge(a, Min(b, c))),
+#                    (Tuple(Ge(b, a), Ge(c, a)), Ge(Min(b, c), a)),
+                    (Tuple(Le(b, a), Lt(c, a)), ITE(b > c, Gt(a, c), Ge(a, b))),
+                    (Tuple(Lt(b, a), Lt(c, a)), Gt(a, Min(b, c))),
+#                    (Tuple(Gt(b, a), Gt(c, a)), Gt(Min(b, c), a)),
+                    (Tuple(Le(a, b), Le(a, c)), Le(a, Max(b, c))),
+#                    (Tuple(Le(b, a), Le(c, a)), Le(Max(b, c), a)),
+                    (Tuple(Le(a, b), Lt(a, c)), ITE(b >= c, Le(a, b), Lt(a, c))),
+                    (Tuple(Lt(a, b), Lt(a, c)), Lt(a, Max(b, c))),
+#                    (Tuple(Lt(b, a), Lt(c, a)), Lt(Max(b, c), a)),
+                    (Tuple(Le(a, b), Le(c, a)), ITE(b >= c, S.true, Or(Le(a, b), Ge(a, c)))),
+                    (Tuple(Le(c, a), Le(a, b)), ITE(b >= c, S.true, Or(Le(a, b), Ge(a, c)))),
+                    (Tuple(Lt(a, b), Lt(c, a)), ITE(b > c, S.true, Or(Lt(a, b), Gt(a, c)))),
+                    (Tuple(Lt(c, a), Lt(a, b)), ITE(b > c, S.true, Or(Lt(a, b), Gt(a, c)))),
+                    (Tuple(Le(a, b), Lt(c, a)), ITE(b >= c, S.true, Or(Le(a, b), Gt(a, c)))),
+                    (Tuple(Le(c, a), Lt(a, b)), ITE(b >= c, S.true, Or(Lt(a, b), Ge(a, c)))),
+                    (Tuple(Lt(b, a), Lt(a, -b)), ITE(b >= 0, Gt(Abs(a), b), S.true)),
+                    (Tuple(Le(b, a), Le(a, -b)), ITE(b > 0, Ge(Abs(a), b), S.true)),
                     )
     return _matchers_or
 
-def simplify_patterns_xor():
+def _simplify_patterns_xor():
+    """ Two-term patterns for Xor."""
+
     from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.core import Wild
     from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
     a = Wild('a')
     b = Wild('b')
     c = Wild('c')
-    _matchers_xor = ((Xor(Eq(a, b), Ge(a, b)), Gt(a, b)),
-                     (Xor(Eq(a, b), Gt(a, b)), Ge(a, b)),
-                     (Xor(Eq(a, b), Le(a, b)), Lt(a, b)),
-                     (Xor(Eq(a, b), Lt(a, b)), Le(a, b)),
-                     (Xor(Ge(a, b), Gt(a, b)), Eq(a, b)),
-                     (Xor(Ge(a, b), Le(a, b)), Ne(a, b)),
-                     (Xor(Ge(a, b), Lt(a, b)), S.true),
-                     (Xor(Ge(a, b), Ne(a, b)), Le(a, b)),
-                     (Xor(Gt(a, b), Le(a, b)), S.true),
-                     (Xor(Gt(a, b), Lt(a, b)), Ne(a, b)),
-                     (Xor(Gt(a, b), Ne(a, b)), Lt(a, b)),
-                     (Xor(Le(a, b), Lt(a, b)), Eq(a, b)),
-                     (Xor(Le(a, b), Ne(a, b)), Ge(a, b)),
-                     (Xor(Lt(a, b), Ne(a, b)), Gt(a, b)),
-                     # Min/max
-                     (Xor(Ge(a, b), Ge(a, c)),
+    # Relationals patterns should be in alphabetical order
+    # (pattern1, pattern2, simplified)
+    # Do not use Ge, Gt
+    _matchers_xor = ((Tuple(Le(b, a), Lt(a, b)), S.true),
+                     # (Tuple(Lt(b, a), Le(a, b)), S.true),
+                     # (Tuple(Eq(a, b), Le(b, a)), Gt(a, b)),
+                     # (Tuple(Eq(a, b), Lt(b, a)), Ge(a, b)),
+                     (Tuple(Eq(a, b), Le(a, b)), Lt(a, b)),
+                     (Tuple(Eq(a, b), Lt(a, b)), Le(a, b)),
+                     (Tuple(Le(a, b), Lt(a, b)), Eq(a, b)),
+                     (Tuple(Le(a, b), Le(b, a)), Ne(a, b)),
+                     (Tuple(Le(b, a), Ne(a, b)), Le(a, b)),
+                     # (Tuple(Lt(b, a), Lt(a, b)), Ne(a, b)),
+                     (Tuple(Lt(b, a), Ne(a, b)), Lt(a, b)),
+                     # (Tuple(Le(a, b), Lt(a, b)), Eq(a, b)),
+                     # (Tuple(Le(a, b), Ne(a, b)), Ge(a, b)),
+                     # (Tuple(Lt(a, b), Ne(a, b)), Gt(a, b)),
+                     # Min/Max/ITE
+                     (Tuple(Le(b, a), Le(c, a)),
                       And(Ge(a, Min(b, c)), Lt(a, Max(b, c)))),
-                     (Xor(Ge(a, b), Gt(a, c)),
+                     (Tuple(Le(b, a), Lt(c, a)),
                       ITE(b > c, And(Gt(a, c), Lt(a, b)),
                           And(Ge(a, b), Le(a, c)))),
-                     (Xor(Gt(a, b), Gt(a, c)),
+                     (Tuple(Lt(b, a), Lt(c, a)),
                       And(Gt(a, Min(b, c)), Le(a, Max(b, c)))),
-                     (Xor(Le(a, b), Le(a, c)),
+                     (Tuple(Le(a, b), Le(a, c)),
                       And(Le(a, Max(b, c)), Gt(a, Min(b, c)))),
-                     (Xor(Le(a, b), Lt(a, c)),
+                     (Tuple(Le(a, b), Lt(a, c)),
                       ITE(b < c, And(Lt(a, c), Gt(a, b)),
                           And(Le(a, b), Ge(a, c)))),
-                     (Xor(Lt(a, b), Lt(a, c)),
+                     (Tuple(Lt(a, b), Lt(a, c)),
                       And(Lt(a, Max(b, c)), Ge(a, Min(b, c)))),
                      )
     return _matchers_xor

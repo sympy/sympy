@@ -11,14 +11,14 @@ from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from sympy.core.relational import Eq, Relational
+from sympy.core.relational import Eq, Ne, Le, Lt, Ge, Gt, Relational
 from sympy.core.singleton import Singleton
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.core.traversal import walk
-from sympy.logic.boolalg import And, Or
+from sympy.logic.boolalg import And, Or, BooleanFunction
 
 
 def _minmax_as_Piecewise(op, *args):
@@ -865,3 +865,44 @@ class Min(MinMaxBase, Application):
 
     def _eval_is_negative(self):
         return fuzzy_or(a.is_negative for a in self.args)
+
+
+def expand_minmax(expr):
+    """
+    Function to rewrite expressions with :class:`~.Min` and :class;`~.Max` in
+    relations, to try to remove the :class:`~.Min` and :class:`~.Min` functions.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.elementary.miscellaneous import expand_minmax
+    >>> from sympy import symbols, Eq, Min, Max
+    >>> x, y, z = symbols('x y z')
+    >>> expand_minmax(Eq(x, Min(x, y, z)))
+    (y >= x) & (z >= x)
+    >>> expand_minmax(x <= Max(y, z))
+    (y >= x) | (z >= x)
+
+    """
+    if not expr.has(Min, Max) or not expr.has(Relational):
+        return expr
+    if expr.has(Eq, Ne):
+        expr = expr.simplify()
+    if isinstance(expr, (BooleanFunction)):
+        return expr.func(*[expand_minmax(e) for e in expr.args])
+    elif isinstance(expr, (Le, Lt, Ge, Gt)):
+        if isinstance(expr, (Le, Lt)):
+            expr = expr.reversed
+        if isinstance(expr.lhs, Min):
+            return expand_minmax(And(*[expr.func(a, expr.rhs)
+                                       for a in expr.lhs.args]))
+        elif isinstance(expr.lhs, Max):
+            return expand_minmax(Or(*[expr.func(a, expr.rhs)
+                                      for a in expr.lhs.args]))
+        elif isinstance(expr.rhs, Min):
+            return expand_minmax(Or(*[expr.func(expr.lhs, a)
+                                      for a in expr.rhs.args]))
+        elif isinstance(expr.rhs, Max):
+            return expand_minmax(And(*[expr.func(expr.lhs, a)
+                                       for a in expr.rhs.args]))
+    return expr

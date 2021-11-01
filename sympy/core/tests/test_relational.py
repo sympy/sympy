@@ -14,7 +14,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)
 from sympy.functions.elementary.integers import (ceiling, floor)
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.logic.boolalg import (And, Implies, Not, Or, Xor)
 from sympy.sets import Reals
@@ -25,6 +25,7 @@ from sympy.core.relational import (Relational, Equality, Unequality,
                                    StrictLessThan, Rel, Eq, Lt, Le,
                                    Gt, Ge, Ne, is_le, is_gt, is_ge, is_lt, is_eq, is_neq)
 from sympy.sets.sets import Interval, FiniteSet
+from sympy.testing.pytest import slow
 
 from itertools import combinations
 
@@ -1250,3 +1251,78 @@ def test_weak_strict():
     eq = Le(x, 1)
     assert eq.strict == Lt(x, 1)
     assert eq.weak == eq
+
+
+def test_minmax_simplification():
+    x, y, z = symbols('x y z', real=True)
+    assert (Min(x, y, z) >= z).simplify() == (z <= Min(x, y))
+    assert (Max(x, y, z) >= z).simplify() is S.true
+    assert (Eq(Min(x, y, z), z)).simplify() == (z <= Min(x, y))
+    assert (Ne(Max(x, y, z), z)).simplify() == (z < Max(x, y))
+    assert (Max(x, y, 2) >= 1).simplify() is S.true
+    assert (Max(x, y, 0) >= 1).simplify() == (Max(x, y) >= 1)
+    assert (Min(x, y, 0) >= 1).simplify() is S.false
+    assert (Min(x, y, 2) >= 1).simplify() == (Min(x, y) >= 1)
+
+
+def test_minmax_simplification_systematic_numerically():
+    # Test min/max simplification systematically
+    x, y = symbols('x y')
+    var = [x, y]
+    valuelist = list(set(list(combinations(list(range(-2, 3))*3, 2))))
+    # Skip combinations of +/-2 and 0, except for all 0
+    valuelist = [v for v in valuelist if any(w % 2 for w in v) or not any(v)]
+    err = "{} and {} did not evalute to the same value for {}."
+    for rel in (Eq, Ne, Ge, Gt, Le, Lt):
+        for minmax in (Min, Max):
+            f = rel(minmax(x, y), x)
+            fs = f.simplify()
+            for val in valuelist:
+                f2 = fs
+                repl = dict(zip(var, val))
+                if isinstance(f2, Relational):
+                    f2 = f2.xreplace(repl)
+                assert f2 == f.xreplace(repl), err.format(f, fs, repl)
+            f = rel(x, minmax(y, x))
+            fs = f.simplify()
+            for val in valuelist:
+                f2 = fs
+                repl = dict(zip(var, val))
+                if isinstance(f2, Relational):
+                    f2 = f2.xreplace(repl)
+                assert f2 == f.xreplace(repl), err.format(f, fs, repl)
+
+
+@slow
+def test_minmax_simplification_systematic_numerically_slow():
+    # Test min/max simplification systematically with a constant involved
+    x, y = symbols('x y')
+    var = [x, y]
+    valuelist = list(set(list(combinations(list(range(-2, 3))*3, 2))))
+    err = "{} and {} did not evalute to the same value for {}."
+    # Skip combinations of +/-2 and 0, except for all 0
+    valuelist = [v for v in valuelist if any(w % 2 for w in v) or not any(v)]
+    for const in (-2, -1, 0, 1, 2):
+        for rel in (Eq, Ne, Ge, Gt, Le, Lt):
+            for minmax in (Min, Max):
+                f = rel(minmax(x, y, const), x)
+                fs = f.simplify()
+                for val in valuelist:
+                    f2 = fs
+                    repl = dict(zip(var, val))
+                    if isinstance(f2, Relational):
+                        f2 = f2.xreplace(repl)
+                    assert f2 == f.xreplace(repl), err.format(f, fs, repl)
+                f = rel(x, minmax(y, x, const))
+                fs = f.simplify()
+                for val in valuelist:
+                    f2 = fs
+                    repl = dict(zip(var, val))
+                    if isinstance(f2, Relational):
+                        f2 = f2.xreplace(repl)
+                    assert f2 == f.xreplace(repl), err.format(f, fs, repl)
+
+
+def test_issue_13605():
+    a = Symbol('a', positive=True)
+    assert simplify(1 > Max(0, 1 - a)) == S.true
