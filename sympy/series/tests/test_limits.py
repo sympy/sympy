@@ -883,10 +883,8 @@ def test_issue_18118():
 def test_issue_18176():
     x = Symbol('x', real=True , positive= True)
     n = Symbol('n', integer=True, positive=True)
-    k = 1
-    assert limit(x**n-x**(n-k), x, oo) == oo
-    k = -2
-    assert limit(x**n-x**(n-k), x, oo) == -oo
+    assert limit(x**n - x**(n - 1), x, oo) == oo
+    assert limit(x**n - x**(n + 2), x, oo) == -oo
 
 
 def test_issue_18306():
