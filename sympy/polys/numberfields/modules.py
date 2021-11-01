@@ -149,42 +149,6 @@ This will succeed if and only if the submodule is in fact closed under
 multiplication.
 
 
-Special Submodule Types
-=======================
-
-While a ``Submodule`` may in general be defined from a given module by any
-matrix and denominator (recall, this defines the generators of the ``Submodule``
-as $\mathbb{Q}$-linear combinations of the generators of the containing module)
-certain, special types of submodules are obtained when the matrix satisfies
-certain conditions.
-
-Namely, the ``Order`` and ``Ideal`` classes represent, respectively, orders
-and ideals in the integer rings of number fields. These are subclasses of a
-class called ``HNF`` (which is a subclass of ``Submodule``), which encodes
-the required special conditions on the defining matrix: the matrix must be
-square and in Hermite normal form.
-
-An ``Order`` is then an ``HNF`` in which the first generator equals unity,
-while an ``Ideal`` is an ``HNF`` in which it does not.
-
-Generally, the user need not instantiate these classes directly. The right
-class will be generated automatically when using the
-:py:meth:`Module.submodule_from_matrix` or
-:py:meth:`Module.submodule_from_gens` methods.
-
->>> T = Poly(cyclotomic_poly(5, x))
->>> A = PowerBasis(T)
->>> B = A.submodule_from_matrix(2 * DomainMatrix.eye(4, ZZ))
->>> print(type(B))
-<class 'sympy.polys.numberfields.modules.Ideal'>
->>> C = A.submodule_from_gens([A(0), 3*A(1), 4*A(2), 5*A(3)])
->>> print(type(C))
-<class 'sympy.polys.numberfields.modules.Order'>
->>> D = A.submodule_from_gens([A(0), 3*A(1), 4*A(2)])
->>> print(type(D))
-<class 'sympy.polys.numberfields.modules.Submodule'>
-
-
 Module Homomorphisms
 ====================
 
@@ -483,7 +447,7 @@ class Module:
             raise ValueError('Matrix must be over ZZ.')
         if not m == self.n:
             raise ValueError('Matrix row count must match base module.')
-        return make_submodule(self, B, denom=denom)
+        return Submodule(self, B, denom=denom)
 
     def whole_submodule(self):
         """Return a submodule equal to this entire module."""
@@ -615,6 +579,8 @@ class Submodule(Module, IntegerPowerable):
         self._mult_tab = mult_tab
         self._n = matrix.shape[1]
         self._QQ_matrix = None
+        self._starts_with_unity = None
+        self._is_sq_maxrank_HNF = None
 
     def __repr__(self):
         r = 'Submodule' + repr(self.matrix.transpose().to_Matrix().tolist())
@@ -645,7 +611,7 @@ class Submodule(Module, IntegerPowerable):
                 M[u] = {}
                 for v in range(u, s):
                     M[u][v] = mt[r + u][r + v][r:]
-        return make_submodule(self.parent, W, denom=self.denom, mult_tab=M)
+        return Submodule(self.parent, W, denom=self.denom, mult_tab=M)
 
     @property
     def n(self):
@@ -690,7 +656,17 @@ class Submodule(Module, IntegerPowerable):
         return self._QQ_matrix
 
     def starts_with_unity(self):
-        return self(0).equiv(1)
+        if self._starts_with_unity is None:
+            self._starts_with_unity = self(0).equiv(1)
+        return self._starts_with_unity
+
+    def is_sq_maxrank_HNF(self):
+        if self._is_sq_maxrank_HNF is None:
+            self._is_sq_maxrank_HNF = is_sq_maxrank_HNF(self._matrix)
+        return self._is_sq_maxrank_HNF
+
+    def is_power_basis_submodule(self):
+        return isinstance(self.parent, PowerBasis)
 
     def element_from_rational(self, a):
         if self.starts_with_unity():
@@ -780,7 +756,7 @@ class Submodule(Module, IntegerPowerable):
             if a == b == 1:
                 return self
             else:
-                return make_submodule(self.parent,
+                return Submodule(self.parent,
                              self.matrix * a, denom=self.denom * b,
                              mult_tab=None).reduced()
         elif isinstance(other, ModuleElement) and other.module == self.parent:
@@ -805,11 +781,10 @@ class Submodule(Module, IntegerPowerable):
         return self
 
 
-def is_HNF(dm):
+def is_sq_maxrank_HNF(dm):
     """
-    Say whether a DomainMatrix is in that special case of Hermite normal form,
-    in which the matrix is also square and of maximal rank. This is the only
-    case that concerns us here.
+    Say whether a DomainMatrix is in that special case of Hermite Normal Form,
+    in which the matrix is also square and of maximal rank.
     """
     if dm.domain.is_ZZ and dm.is_square and dm.is_upper:
         n = dm.shape[0]
@@ -822,94 +797,6 @@ def is_HNF(dm):
                     return False
         return True
     return False
-
-
-class HNF(Submodule):
-    """
-    A submodule such that:
-      * Its parent is a PowerBasis.
-      * Its number of generators equals the degree of the minimal polynomial
-        of the PowerBasis.
-      * Its matrix is in square, maximal-rank, Hermite normal form.
-    """
-
-    def __init__(self, parent, matrix, denom=1, mult_tab=None):
-        super().__init__(parent, matrix, denom=denom, mult_tab=mult_tab)
-        assert isinstance(self.parent, PowerBasis)
-        assert self.n == self.T.degree()
-        assert is_HNF(matrix)
-
-    @property
-    def T(self):
-        return self.parent.T
-
-    def power_basis_elements(self):
-        return self.basis_element_pullbacks()
-
-    def pb_elt_from_poly(self, f):
-        """
-        Produce an element of the PowerBasis, representing a given polynomial
-        after reduction mod our defining minimal polynomial ``T``.
-
-        Parameters
-        ==========
-
-        f: Poly over :ref:`ZZ` in same var as our defining poly ``T``.
-
-        Returns
-        =======
-
-        PowerBasisElement
-
-        """
-        return self.parent.element_from_poly(f)
-
-    def pb_elt_from_col(self, col, denom=1):
-        return self.parent(col, denom=denom)
-
-
-class Order(HNF):
-    """
-    An order in a number field.
-
-    This is an HNF that includes unity.
-    """
-
-    def __init__(self, parent, matrix, denom=1, mult_tab=None):
-        super().__init__(parent, matrix, denom=denom, mult_tab=mult_tab)
-        assert self.starts_with_unity()
-
-    @classmethod
-    def from_submodule(cls, S):
-        return cls(S.parent, S.matrix, denom=S.denom, mult_tab=S._mult_tab)
-
-
-class Ideal(HNF):
-    """
-    An ideal in a number field.
-
-    This is an HNF that does not include unity.
-    """
-
-    def __init__(self, parent, matrix, denom=1, mult_tab=None):
-        super().__init__(parent, matrix, denom=denom, mult_tab=mult_tab)
-        assert not self.starts_with_unity()
-
-
-def make_submodule(parent, matrix, denom=1, mult_tab=None):
-    """
-    Factory function which builds a Submodule, but ensures that it is an
-    Order or Ideal as appropriate.
-    """
-    cls = Submodule
-    if isinstance(parent, PowerBasis):
-        n = matrix.shape[1]
-        if is_HNF(matrix) and n == parent.T.degree():
-            if (matrix / denom)[:, 0].to_dense() == DomainMatrix.eye(n, QQ)[:, 0].to_dense():
-                cls = Order
-            else:
-                cls = Ideal
-    return cls(parent, matrix, denom=denom, mult_tab=mult_tab)
 
 
 def make_mod_elt(module, col, denom=1):

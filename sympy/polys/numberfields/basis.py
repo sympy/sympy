@@ -5,7 +5,7 @@ from sympy.polys.domains.integerring import ZZ
 from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities.decorator import public
-from .modules import ModuleEndomorphism, ModuleHomomorphism, Order, PowerBasis
+from .modules import ModuleEndomorphism, ModuleHomomorphism, PowerBasis
 from .utilities import extract_fundamental_discriminant
 
 
@@ -43,7 +43,7 @@ def nilradical_mod_p(H, p, q=None):
     Parameters
     ==========
 
-    H: HNF instance representing the order
+    H: :py:class:`~.Submodule` representing the order
     p: rational prime
     q: (optional) If known, the smallest power of *p* that is ``>=`` the dimension
       of *H*. If not provided, we compute it here.
@@ -117,7 +117,7 @@ def round_two(T, radicals=None):
     =======
 
     Pair ``(ZK, dK)``, where:
-      ``ZK`` is an :py:class:`Order` representing the integral basis.
+      ``ZK`` is a :py:class:`~.Submodule` representing the maximal order.
       ``dK`` is the discriminant of the field $K = \mathbb{Q}[x]/(T(x))$.
 
     Examples
@@ -209,6 +209,9 @@ def round_two(T, radicals=None):
     # will not be accurate for the full, maximal order ZK.
     if nilrad is not None and isinstance(radicals, dict):
         radicals[p] = nilrad
-    ZK = Order.from_submodule(H)
+    ZK = H
+    # Pre-set expensive boolean properties which we already know to be true:
+    ZK._starts_with_unity = True
+    ZK._is_sq_maxrank_HNF = True
     dK = (D * ZK.matrix.det() ** 2) // ZK.denom ** (2 * n)
     return ZK, dK

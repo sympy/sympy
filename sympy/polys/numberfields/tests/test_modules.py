@@ -6,9 +6,8 @@ from sympy.polys.numberfields.exceptions import (
     ClosureFailure, MissingUnityError
 )
 from sympy.polys.numberfields.modules import (
-    HNF, Ideal, Module, ModuleElement, ModuleEndomorphism,
-    Order, PowerBasis, PowerBasisElement,
-    find_min_poly, is_HNF, make_mod_elt, make_submodule, to_col,
+    Module, ModuleElement, ModuleEndomorphism, PowerBasis, PowerBasisElement,
+    find_min_poly, is_sq_maxrank_HNF, make_mod_elt, to_col,
 )
 from sympy.polys.numberfields.utilities import is_int
 from sympy.testing.pytest import raises
@@ -237,7 +236,7 @@ def test_Submodule_discard_before():
     B.compute_mult_tab()
     C = B.discard_before(2)
     assert C.parent == B.parent
-    assert isinstance(B, HNF) and not isinstance(C, HNF)
+    assert B.is_sq_maxrank_HNF() and not C.is_sq_maxrank_HNF()
     assert C.matrix == B.matrix[:, 2:]
     assert C.mult_tab() == {0: {0: [-2, -2], 1: [0, 0]}, 1: {1: [0, 0]}}
 
@@ -374,55 +373,9 @@ def test_is_HNF():
         [0, 2, 1],
         [0, 0, 1]
     ], ZZ)
-    assert is_HNF(M) is True
-    assert is_HNF(M1) is False
-    assert is_HNF(M2) is False
-
-
-def test_HNF_power_basis_elements():
-    T = Poly(cyclotomic_poly(5, x))
-    A = PowerBasis(T)
-    B = A.submodule_from_matrix(2 * DomainMatrix.eye(4, ZZ))
-    assert isinstance(B, HNF)
-    pb = B.power_basis_elements()
-    assert all(e.module is A for e in pb)
-
-
-def test_HNF_pb_elt_from_poly():
-    T = Poly(cyclotomic_poly(5, x))
-    A = PowerBasis(T)
-    B = A.submodule_from_matrix(2 * DomainMatrix.eye(4, ZZ))
-    f = Poly(1 + 2*x)
-    g = Poly(x**4)
-    h = Poly(0, x)
-    assert B.pb_elt_from_poly(f).coeffs == [1, 2, 0, 0]
-    assert B.pb_elt_from_poly(g).coeffs == [-1, -1, -1, -1]
-    assert B.pb_elt_from_poly(h).coeffs == [0, 0, 0, 0]
-
-
-def test_HNF_pb_elt_from_col():
-    T = Poly(cyclotomic_poly(5, x))
-    A = PowerBasis(T)
-    B = A.submodule_from_matrix(2 * DomainMatrix.eye(4, ZZ))
-    c = to_col([1, 2, 3, 4])
-    assert B.pb_elt_from_col(c) == A(c)
-
-
-def test_make_submodule():
-    T = Poly(cyclotomic_poly(5, x))
-    A = PowerBasis(T)
-    M = DM([
-        [4, 0, 0, 2],
-        [0, 4, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1]
-    ], ZZ)
-    B = make_submodule(A, M, denom=1)
-    C = make_submodule(A, M, denom=4)
-    D = make_submodule(A, M[:, 1:], denom=1)
-    assert isinstance(B, Ideal)
-    assert isinstance(C, Order)
-    assert not isinstance(D, (Ideal, Order))
+    assert is_sq_maxrank_HNF(M) is True
+    assert is_sq_maxrank_HNF(M1) is False
+    assert is_sq_maxrank_HNF(M2) is False
 
 
 def test_make_mod_elt():

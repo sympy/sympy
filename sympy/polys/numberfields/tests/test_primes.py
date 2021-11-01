@@ -1,14 +1,32 @@
-from sympy import QQ
+from sympy import QQ, ZZ
 from sympy.abc import x, theta
 from sympy.core.mul import prod
 from sympy.ntheory import factorint
 from sympy.ntheory.residue_ntheory import n_order
 from sympy.polys import Poly, cyclotomic_poly
+from sympy.polys.matrices import DomainMatrix
 from sympy.polys.numberfields.basis import round_two
+from sympy.polys.numberfields.exceptions import StructureError
+from sympy.polys.numberfields.modules import PowerBasis
 from sympy.polys.numberfields.primes import (
-    prime_decomp, _two_elt_rep, prime_valuation
+    prime_decomp, _two_elt_rep, prime_valuation,
+    _check_formal_conditions_for_maximal_order,
 )
 from sympy.testing.pytest import raises
+
+
+def test_check_formal_conditions_for_maximal_order():
+    T = Poly(cyclotomic_poly(5, x))
+    A = PowerBasis(T)
+    B = A.submodule_from_matrix(2 * DomainMatrix.eye(4, ZZ))
+    C = B.submodule_from_matrix(3 * DomainMatrix.eye(4, ZZ))
+    D = A.submodule_from_matrix(DomainMatrix.eye(4, ZZ)[:, :-1])
+    # Is a direct submodule of a power basis, but lacks 1 as first generator:
+    raises(StructureError, lambda: _check_formal_conditions_for_maximal_order(B))
+    # Is not a direct submodule of a power basis:
+    raises(StructureError, lambda: _check_formal_conditions_for_maximal_order(C))
+    # Is direct submod of pow basis, and starts with 1, but not sq/max rank/HNF:
+    raises(StructureError, lambda: _check_formal_conditions_for_maximal_order(D))
 
 
 def test_two_elt_rep():
@@ -25,7 +43,7 @@ def test_two_elt_rep():
             # rep. The latter need not be identical to the two-elt rep we
             # already have, but it must have the same HNF.
             H = p*ZK + Pi.alpha*ZK
-            gens = H.power_basis_elements()
+            gens = H.basis_element_pullbacks()
             # Note: we could supply f = Pi.f, but prefer to test behavior without it.
             b = _two_elt_rep(gens, ZK, p)
             if b != Pi.alpha:

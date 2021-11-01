@@ -10,8 +10,33 @@ from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.polyutils import IntegerPowerable
 from sympy.utilities.decorator import public
 from .basis import round_two, nilradical_mod_p
-from .modules import ModuleEndomorphism, Order, find_min_poly
+from .exceptions import StructureError
+from .modules import ModuleEndomorphism, find_min_poly
 from .utilities import coeff_search, supplement_a_subspace
+
+
+def _check_formal_conditions_for_maximal_order(submodule):
+    """
+    Several functions in this module accept an argument which is to be a
+    :py:class:`~.Submodule` representing the maximal order in a number field,
+    such as returned by the :py:func:`~sympy.polys.numberfields.basis.round_two`
+    algorithm.
+
+    We do not attempt to check that the given ``Submodule`` actually represents
+    a maximal order, but we do check a basic set of formal conditions that the
+    ``Submodule`` must satisfy, at a minimum. The purpose is to catch an
+    obviously ill-formed argument.
+    """
+    prefix = 'The submodule representing the maximal order should '
+    cond = None
+    if not submodule.is_power_basis_submodule():
+        cond = 'be a direct submodule of a power basis.'
+    elif not submodule.starts_with_unity():
+        cond = 'have 1 as its first generator.'
+    elif not submodule.is_sq_maxrank_HNF():
+        cond = 'have square matrix, of maximal rank, in Hermite Normal Form.'
+    if cond is not None:
+        raise StructureError(prefix + cond)
 
 
 class PrimeIdeal(IntegerPowerable):
@@ -24,15 +49,17 @@ class PrimeIdeal(IntegerPowerable):
         Parameters
         ==========
 
-        ZK: the :py:class:`Order` where this ideal lives
+        ZK: :py:class:`~.Submodule` representing the maximal order where this
+            ideal lives
         p: the rational prime this ideal divides.
-        alpha: :py:class:`PowerBasisElement` such that the ideal is equal
+        alpha: :py:class:`~.PowerBasisElement` such that the ideal is equal
             to ``p*ZK + alpha*ZK``.
         f: the inertia degree.
         e: the ramification index, if already known. If ``None``, we will
             compute it here.
 
         """
+        _check_formal_conditions_for_maximal_order(ZK)
         self.ZK = ZK
         self.p = p
         self.alpha = alpha
@@ -84,7 +111,8 @@ class PrimeIdeal(IntegerPowerable):
 
     def valuation(self, I):
         """
-        Compute the P-adic valuation of integral ideal I, given as an HNF.
+        Compute the P-adic valuation of integral ideal I, given as a
+        :py:class:`~.Submodule`.
         """
         return prime_valuation(I, self)
 
@@ -104,7 +132,8 @@ def _compute_beta(p, gens, ZK):
         rational *p* can and should be omitted (since it has no effect except
         to waste time).
 
-    ZK: maximal :py:class:`Order`
+    ZK: :py:class:`~.Submodule` representing the maximal order where the
+        prime ideal $P$ lives.
 
     Returns
     =======
@@ -118,6 +147,7 @@ def _compute_beta(p, gens, ZK):
     (See Proposition 4.8.15.)
 
     """
+    _check_formal_conditions_for_maximal_order(ZK)
     E = ZK.endomorphism_ring()
     matrices = [E.inner_endomorphism(g).matrix(modulus=p) for g in gens]
     B = DomainMatrix.zeros((0, ZK.n), FF(p)).vstack(*matrices)
@@ -129,7 +159,7 @@ def _compute_beta(p, gens, ZK):
     # predicts that such an element must exist, so nullspace should
     # be non-trivial.
     x = B.nullspace()[0, :].transpose()
-    beta = ZK.pb_elt_from_col(ZK.matrix * x, denom=ZK.denom)
+    beta = ZK.parent(ZK.matrix * x, denom=ZK.denom)
     return beta
 
 
@@ -142,9 +172,10 @@ def prime_valuation(I, P):
     Parameters
     ==========
 
-    I: :py:class:`Ideal`, representing an integral ideal whose valuation is desired.
+    I: :py:class:`~.Submodule`, representing an integral ideal whose valuation
+        is desired.
 
-    P: :py:class:`PrimeIdeal` at which to compute the valuation.
+    P: :py:class:`~.PrimeIdeal` at which to compute the valuation.
 
     Returns
     =======
@@ -195,7 +226,7 @@ def prime_valuation(I, P):
         A = W * A
         # And then one column at a time...
         for j in range(n):
-            c = ZK.pb_elt_from_col(A[:, j], denom=d)
+            c = ZK.parent(A[:, j], denom=d)
             c *= beta
             # ...turn back into lin combs of omegas, after multiplying by beta:
             c = ZK.represent(c).flat()
@@ -231,7 +262,7 @@ def _two_elt_rep(gens, ZK, p, f=None, Np=None):
     gens: list of :py:class:`PowerBasisElement`s giving generators for the
         prime ideal over *ZK*, the ring of integers of the field $K$.
 
-    ZK: maximal :py:class:`Order` in $K$.
+    ZK: :py:class:`~.Submodule` representing the maximal order in $K$.
 
     p: the rational prime divided by the prime ideal.
 
@@ -255,8 +286,9 @@ def _two_elt_rep(gens, ZK, p, f=None, Np=None):
     (See Algorithm 4.7.10.)
 
     """
+    _check_formal_conditions_for_maximal_order(ZK)
     pb = ZK.parent
-    T = ZK.T
+    T = pb.T
     # Detect the special cases in which either (a) all generators are multiples
     # of p, or (b) there are no generators (so `all` is vacuously true):
     if all((g % p).equiv(0) for g in gens):
@@ -268,8 +300,7 @@ def _two_elt_rep(gens, ZK, p, f=None, Np=None):
         else:
             Np = abs(pb.submodule_from_gens(gens).matrix.det())
 
-    assert isinstance(ZK, Order)
-    omega = ZK.power_basis_elements()
+    omega = ZK.basis_element_pullbacks()
     beta = [p*om for om in omega[1:]]  # note: we omit omega[0] == 1
     beta += gens
     search = coeff_search(len(beta), 1)
@@ -286,15 +317,18 @@ def _two_elt_rep(gens, ZK, p, f=None, Np=None):
 
 def _prime_decomp_easy_case(p, ZK):
     r"""
-    Compute the decomposition of rational prime *p* in the ring of integers *ZK*
-    (as an :py:class:`Order`), in the "easy case", i.e. the case where *p* does
-    not divide the index of $\theta$ in *ZK*, $\theta$ a root of ``ZK.T``.
+    Compute the decomposition of rational prime *p* in the ring of integers
+    *ZK* (given as a :py:class:`~.Submodule`), in the "easy case", i.e. the
+    case where *p* does not divide the index of $\theta$ in *ZK*, where
+    $\theta$ is the generator of the ``PowerBasis`` of which *ZK* is a
+    ``Submodule``.
     """
-    T = ZK.T
+    T = ZK.parent.T
     T_bar = Poly(T, modulus=p)
     lc, fl = T_bar.factor_list()
     return [PrimeIdeal(ZK, p,
-                       ZK.pb_elt_from_poly(Poly(t, domain=ZZ)), t.degree(), e)
+                       ZK.parent.element_from_poly(Poly(t, domain=ZZ)),
+                       t.degree(), e)
             for t, e in fl]
 
 
@@ -305,7 +339,7 @@ def _prime_decomp_compute_kernel(I, p, ZK):
 
     I: a Module, representing an ideal of ``ZK/pZK``.
     p: the rational prime being factored
-    ZK: maximal Order
+    ZK: :py:class:`~.Submodule` representing the maximal order
 
     Returns
     =======
@@ -354,7 +388,7 @@ def _prime_decomp_maximal_ideal(I, p, ZK):
 
     I: a Module representing an ideal of ``O/pO``.
     p: the rational prime being factored
-    ZK: maximal Order
+    ZK: :py:class:`~.Submodule` representing the maximal order
 
     Returns
     =======
@@ -365,7 +399,7 @@ def _prime_decomp_maximal_ideal(I, p, ZK):
     m, n = I.matrix.shape
     f = m - n
     G = ZK.matrix * I.matrix
-    gens = [ZK.pb_elt_from_col(G[:, j], denom=ZK.denom) for j in range(G.shape[1])]
+    gens = [ZK.parent(G[:, j], denom=ZK.denom) for j in range(G.shape[1])]
     alpha = _two_elt_rep(gens, ZK, p, f=f)
     return PrimeIdeal(ZK, p, alpha, f)
 
@@ -428,12 +462,14 @@ def prime_decomp(p, T=None, ZK=None, dK=None, radical=None):
     T: (optional) minimal, monic polynomial defining the number field $K$ in
         which to factor.
 
-    ZK: (optional) maximal :py:class:`Order` for $K$, if already known.
-        Note that at least one of *T* or *ZK* must be provided.
+    ZK: (optional) :py:class:`~.Submodule` representing the maximal order for
+        $K$, if already known.
+
+        NOTE: at least one of *T* or *ZK* must be provided.
 
     dK: (optional) the discriminant of the field $K$, if already known.
 
-    radical: (optional) :py:class:`Submodule`, giving the nilradical mod *p*
+    radical: (optional) :py:class:`~.Submodule`, giving the nilradical mod *p*
         in the integers of $K$, if already known.
 
     Returns
@@ -460,8 +496,10 @@ def prime_decomp(p, T=None, ZK=None, dK=None, radical=None):
     """
     if T is None and ZK is None:
         raise ValueError('At least one of T or ZK must be provided.')
+    if ZK is not None:
+        _check_formal_conditions_for_maximal_order(ZK)
     if T is None:
-        T = ZK.T
+        T = ZK.parent.T
     radicals = {}
     if dK is None or ZK is None:
         ZK, dK = round_two(T, radicals=radicals)
