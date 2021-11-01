@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 from sympy.simplify import simplify as simp, trigsimp as tsimp
 from sympy.core.decorators import call_highest_priority, _sympifyit
@@ -301,7 +301,7 @@ class BasisDependentZero(BasisDependent):
     """
     # XXX: Can't type the keys as BaseVector because of cyclic import
     # problems.
-    components = {}  # type: Dict[Any, Expr]
+    components = {}  # type: tDict[Any, Expr]
 
     def __new__(cls):
         obj = super().__new__(cls)

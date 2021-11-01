@@ -128,7 +128,7 @@ There is a function constructing a loop (or a complete function) like this in
 
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict as tDict, List
 
 from collections import defaultdict
 
@@ -185,7 +185,7 @@ class Token(CodegenAST):
     """
 
     __slots__ = ()
-    defaults = {}  # type: Dict[str, Any]
+    defaults = {}  # type: tDict[str, Any]
     not_in_args = []  # type: List[str]
     indented_args = ['body']
 
@@ -939,7 +939,7 @@ class Node(Token):
 
     __slots__ = ('attrs',)
 
-    defaults = {'attrs': Tuple()}  # type: Dict[str, Any]
+    defaults = {'attrs': Tuple()}  # type: tDict[str, Any]
 
     _construct_attrs = staticmethod(_mk_Tuple)
 

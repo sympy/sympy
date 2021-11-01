@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple as tTuple
 
 from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
@@ -2049,7 +2049,7 @@ class sinc(Function):
 
 class InverseTrigonometricFunction(Function):
     """Base class for inverse trigonometric functions."""
-    _singularities = (S.One, S.NegativeOne, S.Zero, S.ComplexInfinity)  # type: Tuple[Expr, ...]
+    _singularities = (S.One, S.NegativeOne, S.Zero, S.ComplexInfinity)  # type: tTuple[Expr, ...]
 
     @staticmethod
     def _asin_table():

@@ -1,5 +1,5 @@
 import os
-from typing import Tuple, Type
+from typing import Tuple as tTuple, Type
 
 import mpmath.libmp as mlib
 
@@ -78,7 +78,7 @@ else:
 # unrecognised value). The two blocks below define the values exported by this
 # module in each case.
 #
-SYMPY_INTS: Tuple[Type, ...]
+SYMPY_INTS: tTuple[Type, ...]
 
 if gmpy is not None:
 

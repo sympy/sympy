@@ -7,7 +7,7 @@ Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
 
-from typing import Callable, Dict
+from typing import Callable, Dict as tDict
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
@@ -817,7 +817,7 @@ class harmonic(Function):
 
     # Generate one memoized Harmonic number-generating function for each
     # order and store it in a dictionary
-    _functions = {}  # type: Dict[Integer, Callable[[int], Rational]]
+    _functions = {}  # type: tDict[Integer, Callable[[int], Rational]]
 
     @classmethod
     def eval(cls, n, m=None):
