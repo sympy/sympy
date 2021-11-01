@@ -694,7 +694,7 @@ class Submodule(Module, IntegerPowerable):
         return self._QQ_matrix
 
     def starts_with_unity(self):
-        return self(0) == 1
+        return self(0).equiv(1)
 
     def element_from_rational(self, a):
         if self.starts_with_unity():
@@ -1061,17 +1061,22 @@ class ModuleElement(IntegerPowerable):
     def __eq__(self, other):
         if self.is_compat(other):
             return self.QQ_col == other.QQ_col
+        return NotImplemented
+
+    def equiv(self, other):
+        if self == other:
+            return True
         elif isinstance(other, ModuleElement):
             a, b = self.make_compat(other)
             if a is None:
-                return NotImplemented
+                return False
             return a == b
         elif is_rat(other):
             if isinstance(self, PowerBasisElement):
                 return self == self.module(0) * other
             else:
-                return self.over_power_basis() == other
-        return NotImplemented
+                return self.over_power_basis().equiv(other)
+        return False
 
     def __add__(self, other):
         """

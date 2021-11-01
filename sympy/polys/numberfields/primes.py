@@ -262,7 +262,7 @@ def _two_elt_rep(gens, ZK, p, f=None, Np=None):
     T = ZK.T
     # Detect the special cases in which either (a) all generators are multiples
     # of p, or (b) there are no generators (so `all` is vacuously true):
-    if all(g % p == 0 for g in gens):
+    if all((g % p).equiv(0) for g in gens):
         return pb.zero()
 
     if Np is None:

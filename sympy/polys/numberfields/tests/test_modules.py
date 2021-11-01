@@ -551,19 +551,33 @@ def test_ModuleElement_compatibility():
 def test_ModuleElement_eq():
     T = Poly(cyclotomic_poly(5, x))
     A = PowerBasis(T)
-    C = A.submodule_from_matrix(3 * DomainMatrix.eye(4, ZZ))
     e = A(to_col([1, 2, 3, 4]), denom=1)
     f = A(to_col([3, 6, 9, 12]), denom=3)
     assert e == f
-    g = C(to_col([1, 2, 3, 4]), denom=1)
-    h = A(to_col([3, 6, 9, 12]), denom=1)
-    assert g == h
-    assert C(to_col([5, 0, 0, 0]), denom=7) == QQ(15, 7)
 
     U = Poly(cyclotomic_poly(7, x))
     Z = PowerBasis(U)
     assert e != Z(0)
     assert e != 3.14
+
+
+def test_ModuleElement_equiv():
+    T = Poly(cyclotomic_poly(5, x))
+    A = PowerBasis(T)
+    e = A(to_col([1, 2, 3, 4]), denom=1)
+    f = A(to_col([3, 6, 9, 12]), denom=3)
+    assert e.equiv(f)
+
+    C = A.submodule_from_matrix(3 * DomainMatrix.eye(4, ZZ))
+    g = C(to_col([1, 2, 3, 4]), denom=1)
+    h = A(to_col([3, 6, 9, 12]), denom=1)
+    assert g.equiv(h)
+    assert C(to_col([5, 0, 0, 0]), denom=7).equiv(QQ(15, 7))
+
+    U = Poly(cyclotomic_poly(7, x))
+    Z = PowerBasis(U)
+    assert e.equiv(Z(0)) is False
+    assert e.equiv(3.14) is False
 
 
 def test_ModuleElement_add():
@@ -597,7 +611,7 @@ def test_ModuleElement_mul():
     assert e * g == A(to_col([-1, -1, -1, -1]))
     assert e * h == A(to_col([-2, -2, -2, 4]), denom=21)
     assert e * QQ(6, 5) == A(to_col([0, 4, 0, 0]), denom=5)
-    assert g * QQ(10, 21) == A(to_col([0, 0, 0, 5]), denom=7)
+    assert (g * QQ(10, 21)).equiv(A(to_col([0, 0, 0, 5]), denom=7))
     assert e // QQ(6, 5) == A(to_col([0, 5, 0, 0]), denom=9)
 
     U = Poly(cyclotomic_poly(7, x))
