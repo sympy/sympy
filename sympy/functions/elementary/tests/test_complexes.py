@@ -608,16 +608,25 @@ def test_arg():
     f = Function('f')
     assert not arg(f(0) + I*f(1)).atoms(re)
 
+    # check nesting
     x = Symbol('x')
+    assert arg(arg(arg(x))) is not S.NaN
+    assert arg(arg(arg(arg(x)))) is S.NaN
+    r = Symbol('r', real=True)
+    assert arg(arg(r)) is not S.NaN
+    assert arg(arg(arg(r))) is S.NaN
+
     p = Function('p', extended_positive=True)
     assert arg(p(x)) == 0
     assert arg((3 + I)*p(x)) == arg(3  + I)
 
     p = Symbol('p', positive=True)
     assert arg(p) == 0
+    assert arg(p*I) == pi/2
 
     n = Symbol('n', negative=True)
     assert arg(n) == pi
+    assert arg(n*I) == -pi/2
 
     x = Symbol('x')
     assert conjugate(arg(x)) == arg(x)
