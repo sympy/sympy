@@ -880,6 +880,14 @@ def test_issue_18118():
     assert limit(sign(sin(x)), x, 0, "-") == -1
     assert limit(sign(sin(x)), x, 0, "+") == 1
 
+def test_issue_18176():
+    x = Symbol('x', real=True , positive= True)
+    n = Symbol('n', integer=True, positive=True)
+    k = 1
+    assert limit(x**n-x**(n-k), x, oo) == oo
+    k = -2
+    assert limit(x**n-x**(n-k), x, oo) == -oo
+
 
 def test_issue_18306():
     assert limit(sin(sqrt(x))/sqrt(sin(x)), x, 0, '+') == 1
