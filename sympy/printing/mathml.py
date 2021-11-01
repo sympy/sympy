@@ -2,7 +2,7 @@
 A MathML printer.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
@@ -37,7 +37,7 @@ class MathMLPrinterBase(Printer):
         "root_notation": True,
         "symbol_names": {},
         "mul_symbol_mathml_numbers": '&#xB7;',
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
 
     def __init__(self, settings=None):
         Printer.__init__(self, settings)

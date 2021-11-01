@@ -8,7 +8,7 @@ using the functions defined in math.h where possible.
 
 """
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
@@ -88,7 +88,7 @@ class RCodePrinter(CodePrinter):
         'dereference': set(),
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
     _operators = {
        'and': '&',
         'or': '|',
@@ -96,7 +96,7 @@ class RCodePrinter(CodePrinter):
     }
 
     _relationals = {
-    }  # type: Dict[str, str]
+    }  # type: tDict[str, str]
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)

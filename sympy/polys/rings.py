@@ -1,7 +1,7 @@
 """Sparse polynomial rings. """
 
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 from operator import add, mul, lt, le, gt, ge
 from functools import reduce
@@ -191,7 +191,7 @@ def _parse_symbols(symbols):
 
     raise GeneratorsError("expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions")
 
-_ring_cache = {}  # type: Dict[Any, Any]
+_ring_cache = {}  # type: tDict[Any, Any]
 
 class PolyRing(DefaultPrinting, IPolys):
     """Multivariate distributed polynomial ring. """

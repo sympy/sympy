@@ -1,7 +1,7 @@
 """Sparse rational function fields. """
 
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 from functools import reduce
 
 from operator import add, mul, lt, le, gt, ge
@@ -99,7 +99,7 @@ def sfield(exprs, *symbols, **options):
     else:
         return (_field, fracs)
 
-_field_cache = {}  # type: Dict[Any, Any]
+_field_cache = {}  # type: tDict[Any, Any]
 
 class FracField(DefaultPrinting):
     """Multivariate distributed rational function field. """

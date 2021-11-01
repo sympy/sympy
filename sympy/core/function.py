@@ -30,7 +30,7 @@ There are three types of functions implemented in SymPy:
 
 """
 
-from typing import Any, Dict as tDict, Optional, Set as tSet, Tuple as tTuple, Union
+from typing import Any, Dict as tDict, Optional, Set as tSet, Tuple as tTuple, Union as tUnion
 from collections.abc import Iterable
 
 from .add import Add
@@ -632,7 +632,7 @@ class Function(Application, Expr):
 
         return fuzzy_not(type(self).is_singular(arg.subs(x, a)))
 
-    _singularities = None  # type: Union[FuzzyBool, tTuple[Expr, ...]]
+    _singularities = None  # type: tUnion[FuzzyBool, tTuple[Expr, ...]]
 
     @classmethod
     def is_singular(cls, a):

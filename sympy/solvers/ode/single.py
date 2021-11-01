@@ -5,7 +5,7 @@
 import typing
 if typing.TYPE_CHECKING:
     from typing import ClassVar
-from typing import Dict, Type, Iterator, List, Optional
+from typing import Dict as tDict, Type, Iterator, List, Optional
 
 from .riccati import match_riccati, solve_riccati
 from sympy.core import Add, S, Pow, Rational
@@ -433,7 +433,7 @@ class NthAlgebraic(SingleODESolver):
     # be stored in cached results we need to ensure that we always get the
     # same class back for each particular integration variable so we store these
     # classes in a global dict:
-    _diffx_stored = {}  # type: Dict[Symbol, Type[Function]]
+    _diffx_stored = {}  # type: tDict[Symbol, Type[Function]]
 
     @staticmethod
     def _get_diffx(var):

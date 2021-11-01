@@ -1,5 +1,5 @@
 from operator import attrgetter
-from typing import Tuple, Type
+from typing import Tuple as tTuple, Type
 from collections import defaultdict
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -39,7 +39,7 @@ class AssocOp(Basic):
 
     # for performance reason, we don't let is_commutative go to assumptions,
     # and keep it right here
-    __slots__ = ('is_commutative',)  # type: Tuple[str, ...]
+    __slots__ = ('is_commutative',)  # type: tTuple[str, ...]
 
     _args_type = None  # type: Type[Basic]
 

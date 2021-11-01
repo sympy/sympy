@@ -1,6 +1,6 @@
 import itertools
 from collections import defaultdict
-from typing import Tuple, Union, FrozenSet, Dict, List, Optional
+from typing import Tuple as tTuple, Union as tUnion, FrozenSet, Dict as tDict, List, Optional
 from functools import singledispatch
 from itertools import accumulate
 
@@ -24,7 +24,7 @@ from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayD
 from sympy.tensor.array.expressions.utils import _get_mapping_from_subranks
 
 
-def _get_candidate_for_matmul_from_contraction(scan_indices: List[Optional[int]], remaining_args: List[_ArgE]) -> Tuple[Optional[_ArgE], bool, int]:
+def _get_candidate_for_matmul_from_contraction(scan_indices: List[Optional[int]], remaining_args: List[_ArgE]) -> tTuple[Optional[_ArgE], bool, int]:
 
     scan_indices_int: List[int] = [i for i in scan_indices if i is not None]
     if len(scan_indices_int) == 0:
@@ -156,7 +156,7 @@ def _(expr: ArrayContraction):
     if not isinstance(expr, ArrayContraction):
         return _array2matrix(expr)
     subexpr = expr.expr
-    contraction_indices: Tuple[Tuple[int]] = expr.contraction_indices
+    contraction_indices: tTuple[tTuple[int]] = expr.contraction_indices
     if contraction_indices == ((0,), (1,)):
         shape = subexpr.shape
         subexpr = _array2matrix(subexpr)
@@ -646,12 +646,12 @@ def _a2m_transpose(arg):
         return Transpose(arg).doit()
 
 
-def identify_hadamard_products(expr: Union[ArrayContraction, ArrayDiagonal]):
+def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
 
     editor: _EditArrayContraction = _EditArrayContraction(expr)
 
-    map_contr_to_args: Dict[FrozenSet, List[_ArgE]] = defaultdict(list)
-    map_ind_to_inds: Dict[Optional[int], int] = defaultdict(int)
+    map_contr_to_args: tDict[FrozenSet, List[_ArgE]] = defaultdict(list)
+    map_ind_to_inds: tDict[Optional[int], int] = defaultdict(int)
     for arg_with_ind in editor.args_with_ind:
         for ind in arg_with_ind.indices:
             map_ind_to_inds[ind] += 1

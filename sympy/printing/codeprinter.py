@@ -1,4 +1,4 @@
-from typing import Any, Dict, Set, Tuple
+from typing import Any, Dict as tDict, Set as tSet, Tuple as tTuple
 
 from functools import wraps
 
@@ -61,7 +61,7 @@ class CodePrinter(StrPrinter):
         'human': True,
         'inline': False,
         'allow_unknown_functions': False,
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
 
     # Functions which are "simple" to rewrite to other functions that
     # may be supported
@@ -142,7 +142,7 @@ class CodePrinter(StrPrinter):
         # keep a set of expressions that are not strictly translatable to Code
         # and number constants that must be declared and initialized
         self._not_supported = set()
-        self._number_symbols = set()  # type: Set[Tuple[Expr, Float]]
+        self._number_symbols = set()  # type: tSet[tTuple[Expr, Float]]
 
         lines = self._print(expr).splitlines()
 

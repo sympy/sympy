@@ -1,4 +1,4 @@
-from typing import Any, Dict, Tuple
+from typing import Any, Dict as tDict, Tuple as tTuple
 
 from itertools import product
 import re
@@ -142,13 +142,13 @@ class MathematicaParser:
                 '''
 
     # will contain transformed CORRESPONDENCES dictionary
-    TRANSLATIONS = {}  # type: Dict[Tuple[str, int], Dict[str, Any]]
+    TRANSLATIONS = {}  # type: tDict[tTuple[str, int], tDict[str, Any]]
 
     # cache for a raw users' translation dictionary
-    cache_original = {}  # type: Dict[Tuple[str, int], Dict[str, Any]]
+    cache_original = {}  # type: tDict[tTuple[str, int], tDict[str, Any]]
 
     # cache for a compiled users' translation dictionary
-    cache_compiled = {}  # type: Dict[Tuple[str, int], Dict[str, Any]]
+    cache_compiled = {}  # type: tDict[tTuple[str, int], tDict[str, Any]]
 
     @classmethod
     def _initialize_class(cls):

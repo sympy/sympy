@@ -31,7 +31,7 @@ complete source code files.
 # .. _Rational64: http://rust-num.github.io/num/num/rational/type.Rational64.html
 # .. _BigRational: http://rust-num.github.io/num/num/rational/type.BigRational.html
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 from sympy.core import S, Rational, Float, Lambda
 from sympy.printing.codeprinter import CodePrinter
@@ -230,7 +230,7 @@ class RustCodePrinter(CodePrinter):
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
         'inline': False,
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
