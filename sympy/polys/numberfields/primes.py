@@ -19,24 +19,26 @@ class PrimeIdeal(IntegerPowerable):
     A prime ideal in a ring of algebraic integers.
     """
 
-    def __init__(self, p, alpha, e, f, ZK):
+    def __init__(self, ZK, p, alpha, f, e=None):
         """
         Parameters
         ==========
 
-        p: the rational prime this ideal divides.
-        alpha: :py:class:`PowerBasisElement` such that the ideal is equal to ``p*ZK + alpha*ZK``.
-        e: the ramification index.
-        f: the inertia degree.
         ZK: the :py:class:`Order` where this ideal lives
+        p: the rational prime this ideal divides.
+        alpha: :py:class:`PowerBasisElement` such that the ideal is equal
+            to ``p*ZK + alpha*ZK``.
+        f: the inertia degree.
+        e: the ramification index, if already known. If ``None``, we will
+            compute it here.
 
         """
+        self.ZK = ZK
         self.p = p
         self.alpha = alpha
-        self.e = e
         self.f = f
-        self.ZK = ZK
         self._beta = None
+        self.e = e if e is not None else self.valuation(p * ZK)
 
     def pretty(self, theta=None):
         theta = theta or symbols('x')
@@ -49,17 +51,19 @@ class PrimeIdeal(IntegerPowerable):
     def __repr__(self):
         return self.pretty()
 
-    def as_ideal(self):
+    def as_submodule(self):
         return self.p * self.ZK + self.alpha * self.ZK
 
     def copy(self):
-        return PrimeIdeal(self.p, self.alpha.copy(), self.e, self.f, self.ZK.copy())
+        return PrimeIdeal(self.ZK.copy(), self.p, self.alpha.copy(), self.f, self.e)
 
     def __eq__(self, other):
-        return self.as_ideal() == other
+        if isinstance(other, PrimeIdeal):
+            return self.as_submodule() == other.as_submodule()
+        return NotImplemented
 
     def __mul__(self, other):
-        return self.as_ideal() * other
+        return self.as_submodule() * other
 
     __rmul__ = __mul__
 
@@ -98,8 +102,10 @@ def _compute_beta(p, gens, ZK):
 
     p: the rational prime $P$ divides
 
-    gens: list of :py:class:`PowerBasisElement`s being generators for $P$.
-        Rational *p* may safely be omitted, since we will skip it anyway.
+    gens: list of :py:class:`PowerBasisElement`s being a complete set of
+        generators for $P$ over *ZK*, EXCEPT that an element equivalent to
+        rational *p* can and should be omitted (since it has no effect except
+        to waste time).
 
     ZK: maximal :py:class:`Order`
 
@@ -116,7 +122,7 @@ def _compute_beta(p, gens, ZK):
 
     """
     E = ZK.endomorphism_ring()
-    matrices = [E.inner_endomorphism(g).matrix(modulus=p) for g in gens if g != p]
+    matrices = [E.inner_endomorphism(g).matrix(modulus=p) for g in gens]
     B = DomainMatrix.zeros((0, ZK.n), FF(p)).vstack(*matrices)
     # A nonzero element of the nullspace of B will represent a
     # lin comb over the omegas which (i) is not a multiple of p
@@ -133,20 +139,15 @@ def _compute_beta(p, gens, ZK):
 @public
 def prime_valuation(I, P):
     r"""
-    Compute the p-adic valuation for an ideal *I* at a given prime ideal *P*.
+    Compute the p-adic valuation for an integral ideal *I* at a given prime
+    ideal *P*.
 
     Parameters
     ==========
 
     I: :py:class:`Ideal`, representing an integral ideal whose valuation is desired.
 
-    P: specification of the prime ideal. Can be of one of two forms:
-       - a :py:class:`PrimeIdeal` instance, or
-       - a triple ``(p, gens, ZK)``, where:
-            p: the rational prime.
-            gens: list of :py:class:`PowerBasisElement`s giving ZK-generators of
-                a prime ideal lying over p.
-            ZK: maximal :py:class:`Order`.
+    P: :py:class:`PrimeIdeal` at which to compute the valuation.
 
     Returns
     =======
@@ -175,11 +176,7 @@ def prime_valuation(I, P):
     (See Algorithm 4.8.17.)
 
     """
-    if isinstance(P, PrimeIdeal):
-        p, ZK = P.p, P.ZK
-    else:
-        p, gens, ZK = P
-
+    p, ZK = P.p, P.ZK
     n, W, d = ZK.n, ZK.matrix, ZK.denom
 
     A = W.convert_to(QQ).inv() * I.matrix * d / I.denom
@@ -190,7 +187,7 @@ def prime_valuation(I, P):
     if D % p != 0:
         return 0
 
-    beta = P.beta() if isinstance(P, PrimeIdeal) else _compute_beta(p, gens, ZK)
+    beta = P.beta()
 
     f = d ** n // W.det()
     need_complete_test = (f % p == 0)
@@ -299,8 +296,8 @@ def _prime_decomp_easy_case(p, ZK):
     T = ZK.T
     T_bar = Poly(T, modulus=p)
     lc, fl = T_bar.factor_list()
-    return [PrimeIdeal(p, ZK.pb_elt_from_poly(Poly(t, domain=ZZ)),
-                         e, t.degree(), ZK)
+    return [PrimeIdeal(ZK, p,
+                       ZK.pb_elt_from_poly(Poly(t, domain=ZZ)), t.degree(), e)
             for t, e in fl]
 
 
@@ -373,8 +370,7 @@ def _prime_decomp_maximal_ideal(I, p, ZK):
     G = ZK.matrix * I.matrix
     gens = [ZK.pb_elt_from_col(G[:, j], denom=ZK.denom) for j in range(G.shape[1])]
     alpha = _two_elt_rep(gens, ZK, p, f=f)
-    e = prime_valuation(p * ZK, (p, [alpha], ZK))
-    return PrimeIdeal(p, alpha, e, f, ZK)
+    return PrimeIdeal(ZK, p, alpha, f)
 
 
 def _prime_decomp_split_ideal(I, p, N, G, ZK):

@@ -40,10 +40,6 @@ def test_valuation_at_prime_ideal():
     P = prime_decomp(p, T, dK=dK, ZK=ZK)
     assert len(P) == 1
     P0 = P[0]
-    # Work through the function, passing a triple as second arg:
-    v = prime_valuation(p * ZK, (p, [p, P0.alpha], ZK))
-    assert v == P0.e
-    # Work through the PrimeIdeal:
     v = P0.valuation(p*ZK)
     assert v == P0.e
     # Test easy 0 case:
@@ -131,7 +127,7 @@ def test_decomp_5():
             assert len(P) == 1
             assert P[0].e == 1
             assert P[0].f == 2
-            assert P[0] == p * ZK
+            assert P[0].as_submodule() == p * ZK
 
 
 def test_decomp_6():
@@ -205,3 +201,13 @@ def test_decomp_8():
             J = p * ZK
             #display(T, p, radical, P, I, J)
             assert I == J
+
+
+def test_PrimeIdeal_eq():
+    # `==` should fail on objects of different types, so even a completely
+    # inert PrimeIdeal should test unequal to the rational prime it divides.
+    T = Poly(cyclotomic_poly(7))
+    P0 = prime_decomp(5, T)[0]
+    assert P0.f == 6
+    assert P0.as_submodule() == 5 * P0.ZK
+    assert P0 != 5
