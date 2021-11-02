@@ -151,7 +151,7 @@ def round_two(T, radicals=None):
 
     >>> T = Poly(x**3 + 3*x**2 + 5)
     >>> rad = {}
-    >>> round_two(T, radicals=rad)
+    >>> ZK, dK = round_two(T, radicals=rad)
     >>> print(rad)
     {3: Submodule[[-1, 1, 0], [-1, 0, 1]]}
 

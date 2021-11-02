@@ -133,7 +133,7 @@ its ``ModuleElement``s.
 >>> A = PowerBasis(T)
 >>> print(A._mult_tab is None)
 True
->>> A(0)*A(1)
+>>> a = A(0)*A(1)
 >>> print(A._mult_tab is None)
 False
 
