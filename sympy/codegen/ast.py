@@ -27,38 +27,36 @@ AST Type Tree
        |
        |
        |--->Token
-       |        |--->Attribute
-       |        |--->For
-       |        |--->String
-       |        |       |--->QuotedString
-       |        |       |--->Comment
-       |        |--->Type
-       |        |       |--->IntBaseType
-       |        |       |              |--->_SizedIntType
-       |        |       |                               |--->SignedIntType
-       |        |       |                               |--->UnsignedIntType
-       |        |       |--->FloatBaseType
-       |        |                        |--->FloatType
-       |        |                        |--->ComplexBaseType
-       |        |                                           |--->ComplexType
-       |        |--->Node
-       |        |       |--->Variable
-       |        |       |           |---> Pointer
-       |        |       |--->FunctionPrototype
-       |        |                            |--->FunctionDefinition
-       |        |--->Element
-       |        |--->Declaration
-       |        |--->While
-       |        |--->Scope
-       |        |--->Stream
-       |        |--->Print
-       |        |--->FunctionCall
-       |        |--->BreakToken
-       |        |--->ContinueToken
-       |        |--->NoneToken
-       |        |--->Return
-       |
-       |--->Statement
+                |--->Attribute
+                |--->For
+                |--->String
+                |       |--->QuotedString
+                |       |--->Comment
+                |--->Type
+                |       |--->IntBaseType
+                |       |              |--->_SizedIntType
+                |       |                               |--->SignedIntType
+                |       |                               |--->UnsignedIntType
+                |       |--->FloatBaseType
+                |                        |--->FloatType
+                |                        |--->ComplexBaseType
+                |                                           |--->ComplexType
+                |--->Node
+                |       |--->Variable
+                |       |           |---> Pointer
+                |       |--->FunctionPrototype
+                |                            |--->FunctionDefinition
+                |--->Element
+                |--->Declaration
+                |--->While
+                |--->Scope
+                |--->Stream
+                |--->Print
+                |--->FunctionCall
+                |--->BreakToken
+                |--->ContinueToken
+                |--->NoneToken
+                |--->Return
 
 
 Predefined types

@@ -391,10 +391,6 @@ class CodePrinter(StrPrinter):
     def _print_Variable(self, expr):
         return self._print(expr.symbol)
 
-    def _print_Statement(self, expr):
-        arg, = expr.args
-        return self._get_statement(self._print(arg))
-
     def _print_Symbol(self, expr):
 
         name = super()._print_Symbol(expr)
