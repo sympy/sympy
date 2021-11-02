@@ -899,6 +899,11 @@ class ArrayContraction(_CodegenArrayAbstract):
         if isinstance(expr, ArrayAdd):
             return self._ArrayContraction_denest_ArrayAdd(expr, *contraction_indices)
 
+        # Check single index contractions on 1-dimensional axes:
+        contraction_indices = [i for i in contraction_indices if len(i) > 1 or get_shape(expr)[i[0]] != 1]
+        if len(contraction_indices) == 0:
+            return expr
+
         return self.func(expr, *contraction_indices, normalize=False)
 
     def __mul__(self, other):
