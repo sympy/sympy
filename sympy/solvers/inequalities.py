@@ -8,6 +8,7 @@ from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.functions import Abs
+from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
@@ -354,7 +355,7 @@ def reduce_abs_inequality(expr, rel, gen):
 
     for expr, conds in exprs:
         if rel not in mapping.keys():
-            expr = Relational( expr, 0, rel)
+            expr = Relational(expr, 0, rel)
         else:
             expr = Relational(-expr, 0, mapping[rel])
 
@@ -796,6 +797,7 @@ def _solve_inequality(ie, s, linear=False):
     (x < 1) & Ne(x, 0)
     """
     from sympy.solvers.solvers import denoms
+
     if s not in ie.free_symbols:
         return ie
     if ie.rhs == s:
@@ -839,8 +841,7 @@ def _solve_inequality(ie, s, linear=False):
             if okoo is S.true and classify(rv, s, oo) is S.false:
                 rv = rv.subs(s < oo, True)
             oknoo = classify(ie, s, -oo)
-            if (oknoo is S.true and
-                    classify(rv, s, -oo) is S.false):
+            if oknoo is S.true and classify(rv, s, -oo) is S.false:
                 rv = rv.subs(-oo < s, True)
                 rv = rv.subs(s > -oo, True)
             if rv is S.true:
@@ -1007,7 +1008,8 @@ def reduce_inequalities(inequalities, symbols=[]):
 
 def _find_pivot(inequalities):
     """
-    Return a variable that has at least two coefficients with opposite sign in a system of inequalities.
+    Return a variable that has at least two coefficients with opposite
+    sign in a system of inequalities.
 
     Examples
     ========
@@ -1024,31 +1026,29 @@ def _find_pivot(inequalities):
     >>> _find_pivot(inequalities)
     y
     """
-    memory={}
+    memory = {}
     for eq in inequalities:
         for symbol in eq.free_symbols:
-            if not(symbol in memory.keys()):
+            if not (symbol in memory.keys()):
                 memory[symbol] = [False, False]
-            coeff=eq.coeff(symbol)
-            if coeff>0:
-                    memory[symbol][0] = True
+            coeff = eq.coeff(symbol)
+            if coeff > 0:
+                memory[symbol][0] = True
             else:
-                    memory[symbol][1] = True
+                memory[symbol][1] = True
             if memory[symbol] == [True, True]:
                 return symbol
 
 
 def _split_min_max(inequalities, pivot):
-    """Split the inequalities in lists that contains the variable pivot with
-    a positive and negative sign. The list describe what pivot is
-    respectively greater and lower than according to the system of
-    inequalities. Inequalities that does not contains pivot are put in a
-    third list.
+    """return expressions that are less than or greater than the pivot
+    (have a coefficient on the pivot that is negative or positive).
+    Inequalities that do not contain a pivot are returned as a list.
 
     Examples
     ========
 
-    >>> from sympy.solvers.inequalities import _split_min_max(
+    >>> from sympy.solvers.inequalities import _split_min_max
     >>> from sympy.abc import x, y, z
 
     >>> eq1 = 2*x - 3*y + z + 1
@@ -1059,7 +1059,7 @@ def _split_min_max(inequalities, pivot):
     >>> inequalities = [eq1, eq2, eq3, eq4]
     >>> pivot = y
     >>> _split_min_max(inequalities, pivot)
-    ([-x - 3*z - 4], [2*x/3 + z/3 + 1/3, x + 2*z - 2], [x - z])
+    (Min(2*x/3 + z/3 + 1/3, x + 2*z - 2), -x - 3*z - 4, [x - z])
     """
 
     greater_than = []
@@ -1068,44 +1068,46 @@ def _split_min_max(inequalities, pivot):
     for eq in inequalities:
         coeff = eq.coeff(pivot)
         if coeff > 0:
-            greater_than.append(-(eq - (pivot*coeff))/coeff)
+            greater_than.append(-(eq - (pivot * coeff)) / coeff)
         elif coeff < 0:
-            lower_than.append(-(eq - (pivot*coeff))/coeff)
+            lower_than.append(-(eq - (pivot * coeff)) / coeff)
         else:
             extra.append(eq)
-    return Max(*greater_than), Min(*lower_than), extra
+    return Min(*lower_than), Max(*greater_than), extra
 
 
-def _merge_mins_maxs(maxs, mins):
-    """Build the system of inequalities which verify that all equations of maxs are greater than those of mins.
+def _merge_mins_maxs(mins, maxs):
+    """Build the system of inequalities which verify that all equations
+    of maxs are greater than those of mins.
 
     Examples
     ========
 
-    >>> from sympy.solvers.inequalities import __merge_mins_maxs
+    >>> from sympy.solvers.inequalities import _merge_mins_maxs
     >>> from sympy.abc import x, z
     >>> from sympy import Min,Max
 
     >>> maxs = -x - 3*z - 4
-    >>> mins = Min(2*x/3 + z/3 + 1/3, x + 2*z - 2)
+    >>> mins = Min((2*x + z + 1)/3, x + 2*z - 2)
 
-    >>> _merge_mins_maxs(maxs, mins)
-    [2*x + 5*z + 2, 5*x/3 + 10*z/3 + 4.33333333333333]
+    >>> _merge_mins_maxs(mins, maxs)
+    [2*x + 5*z + 2, 5*x/3 + 10*z/3 + 13/3]
     """
-    if type(mins)!=Min:
-        mins=[mins]
+    if not isinstance(mins, Min):
+        mins = [mins]
     else:
-        mins=mins.args
+        mins = mins.args
 
-    if type(maxs)!=Max:
-        maxs=[maxs]
+    if not isinstance(maxs, Max):
+        maxs = [maxs]
     else:
-        maxs=maxs.args
+        maxs = maxs.args
     return [i - j for i in mins for j in maxs]
 
 
 def _fourier_motzkin(inequalities):
-    """Eliminate variables of system of linear inequalities by using Fourier-Motzkin elimination algorithm
+    """Eliminate variables of system of linear inequalities by using
+    Fourier-Motzkin elimination algorithm
 
     Examples
     ========
@@ -1118,8 +1120,7 @@ def _fourier_motzkin(inequalities):
     >>> eq3 = x + y + 3*z + 4
     >>> eq4 = x - z
 
-    >>> inequalities=[eq1, eq2, eq3, eq4]
-    >>> ie, d = _fourier_motzkin(inequalities)
+    >>> ie, d = _fourier_motzkin([eq1, eq2, eq3, eq4])
     >>> ie
     [3*x/2 + 13/10, 7*x/5 + 2/5]
     >>> assert set(d) == set([y, z])
@@ -1131,16 +1132,17 @@ def _fourier_motzkin(inequalities):
     pivot = _find_pivot(inequalities)
     res = {}
     while pivot != None:
-        maxs, mins, extra = _split_min_max(inequalities, pivot)
-        res[pivot] = (mins > pivot ,pivot > maxs)
-        inequalities = _merge_mins_maxs(maxs, mins) + extra
+        mins, maxs, extra = _split_min_max(inequalities, pivot)
+        res[pivot] = (mins > pivot, pivot > maxs)
+        inequalities = _merge_mins_maxs(mins, maxs) + extra
         pivot = _find_pivot(inequalities)
     return inequalities, res
 
 
 def _fourier_motzkin_extension(inequalities):
-    """Extension of the Fourier-Motzkin algorithm to the case where inequalities
-    do not contain variables that have at least two coefficients with opposite sign.
+    """Extension of the Fourier-Motzkin algorithm to the case where
+    inequalities do not contain variables that have at least two
+    coefficients with opposite sign.
 
     Examples
     ========
@@ -1153,18 +1155,19 @@ def _fourier_motzkin_extension(inequalities):
     >>> eq3 = x - y + 3*z + 4
     >>> eq4 = x + z
 
-    >>> inequalities = [eq1, eq2, eq3, eq4]
-    >>> d = _fourier_motzkin_extension(inequalities)
+    >>> d = _fourier_motzkin_extension([eq1, eq2, eq3, eq4])
     >>> assert set(d) == {x}
     >>> d[x]
     (oo > x, x > Max(-z, y - 3*z - 4, y - 2*z + 2, 3*y/2 - z/2 - 1/2))
+    >>> _fourier_motzkin_extension([x - 3, 5 - x])
+    {x: (5 > x, x > 3)}
     """
 
-    pivot = _pick_var(inequalities)
     res = {}
-    while inequalities:
-        maxs, mins, extra = _split_min_max(inequalities, pivot)
-        res[pivot] = (mins > pivot ,pivot > maxs)
+    pivot = _pick_var(inequalities)
+    while pivot and inequalities:
+        mins, maxs, extra = _split_min_max(inequalities, pivot)
+        res[pivot] = (mins > pivot, pivot > maxs)
         inequalities = extra
         pivot = _pick_var(inequalities)
     return res
@@ -1193,15 +1196,17 @@ def _pick_var(inequalities):
         for symb in ordered(eq.free_symbols):  # make selection canonical
             return symb
 
+
 def solve_linear_inequalities(inequalities):
-    """ Solve a system of linear inequalities
+    """Solve a system of linear inequalities
 
     Parameters
     ==========
 
     inequalities: list of sympy equations
-        The system of inequalities to solve. All equations in the list are assume to be
-        linear and greater than 0. The system must be expressed as follows:
+        The system of inequalities to solve. All equations in the list
+        are assumed to be linear and greater than 0. The system must
+        be expressed as follows:
 
         2x - 3y +  z + 1 > 0
         x  -  y + 2z - 2 > 0
@@ -1220,16 +1225,15 @@ def solve_linear_inequalities(inequalities):
     >>> eq3 = x + y + 3*z + 4
     >>> eq4 = x - z
 
-    >>> inequalities=[eq1, eq2, eq3, eq4]
-    >>> d = solve_linear_inequalities(inequalities)
+    >>> d = solve_linear_inequalities([eq1, eq2, eq3, eq4])
     >>> assert set(d) == set([x, y, z])
     >>> d[x]
     (oo > x, x > -2/7)
     >>> d[z]
-    (x > z, z > Max(-x/2 - 13/10, -2*x/5 - 2/5))
+    (x > z, z > Max(-2*x + 3*y - 1, -x/2 + y/2 + 1, -x/3 - y/3 - 4/3))
     >>> d[y]
-    (Min(2*x/3 + z/3 + 1/3, x + 2*z - 2) > y, y > -x - 3*z - 4)
-    
+    (Min(x + 1/3, 3*x - 2) > y, y > -4*x - 4)
+
     Explanation
     ===========
 
