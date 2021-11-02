@@ -48,6 +48,7 @@ from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.physics.quantum.trace import Tr
 
 x, y, z, w, t = symbols('x,y,z,w,t')
+k, m, n = symbols("k m n", integer=True)
 d = Dummy('d')
 
 
@@ -1154,8 +1155,8 @@ def test_printing_ArraySymbol():
 
 
 def test_printing_ArrayElement():
-    element = ArrayElement("A", indices=(2, 1 / (1 - x), 0))
-    assert sstr(element) == "A[2, 1/(1 - x), 0]"
+    element = ArrayElement("A", indices=(2, 2 * m + 1, 0))
+    assert sstr(element) == "A[2, 2*m + 1, 0]"
 
     M = MatrixSymbol("M", 3, 3)
     N = MatrixSymbol("N", 3, 3)

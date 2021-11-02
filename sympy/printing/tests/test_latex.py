@@ -2841,8 +2841,8 @@ def test_printing_ArraySymbol():
 
 
 def test_printing_ArrayElement():
-    element = ArrayElement("A", indices=(2, 1 / (1 - x), 0))
-    assert latex(element) == R"{{A}_{2, \frac{1}{1 - x}, 0}}"
+    element = ArrayElement("A", indices=(2, 2 * m + 1, 0))
+    assert latex(element) == "{{A}_{2, 2 m + 1, 0}}"
 
     M = MatrixSymbol("M", 3, 3)
     N = MatrixSymbol("N", 3, 3)
