@@ -615,7 +615,6 @@ def test_issue_8635_18176():
     assert limit(x**n - x**(n - 2.5), x, oo) == oo
     assert limit(x**n - x**(n - k - 1), x, oo) == oo
     x = Symbol('x', positive=True)
-    n = Symbol('n', integer=True, positive=True)
     assert limit(x**n - x**(n - 1), x, oo) == oo
     assert limit(x**n - x**(n + 2), x, oo) == -oo
 
