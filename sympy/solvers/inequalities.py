@@ -1085,7 +1085,7 @@ def _merge_mins_maxs(mins, maxs):
 
     >>> from sympy.solvers.inequalities import _merge_mins_maxs
     >>> from sympy.abc import x, z
-    >>> from sympy import Min,Max
+    >>> from sympy import Min
 
     >>> maxs = -x - 3*z - 4
     >>> mins = Min((2*x + z + 1)/3, x + 2*z - 2)
@@ -1139,6 +1139,29 @@ def _fourier_motzkin(inequalities):
     return inequalities, res
 
 
+def _pick_var(inequalities):
+    """Return a free variable of the system of inequalities
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.inequalities import _pick_var
+    >>> from sympy.abc import x, y, z
+
+    >>> eq1 = 2*x - 3*y + z + 1
+    >>> eq2 = x - y + 2*z - 2
+    >>> eq3 = x + y + 3*z + 4
+    >>> eq4 = x - z
+
+    >>> inequalities = [eq1, eq2, eq3, eq4]
+    >>> _pick_var(inequalities)
+    x
+    """
+    for eq in inequalities:  # should already be in canonical order
+        for symb in ordered(eq.free_symbols):  # make selection canonical
+            return symb
+
+
 def _fourier_motzkin_extension(inequalities):
     """Extension of the Fourier-Motzkin algorithm to the case where
     inequalities do not contain variables that have at least two
@@ -1173,30 +1196,6 @@ def _fourier_motzkin_extension(inequalities):
     return res
 
 
-def _pick_var(inequalities):
-    """Return a free variable of the system of inequalities
-
-    Examples
-    ========
-
-    >>> from sympy.solvers.inequalities import _pick_var
-    >>> from sympy.abc import x, y, z
-    >>> from sympy.core.sorting import ordered
-
-    >>> eq1 = 2*x - 3*y + z + 1
-    >>> eq2 = x - y + 2*z - 2
-    >>> eq3 = x + y + 3*z + 4
-    >>> eq4 = x - z
-
-    >>> inequalities = [eq1, eq2, eq3, eq4]
-    >>> _pick_var(inequalities)
-    x
-    """
-    for eq in inequalities:  # should already be in canonical order
-        for symb in ordered(eq.free_symbols):  # make selection canonical
-            return symb
-
-
 def solve_linear_inequalities(inequalities):
     """Solve a system of linear inequalities
 
@@ -1218,7 +1217,6 @@ def solve_linear_inequalities(inequalities):
 
     >>> from sympy.solvers.inequalities import solve_linear_inequalities
     >>> from sympy.abc import x, y, z
-    >>> from sympy.core.sorting import ordered
 
     >>> eq1 = 2*x - 3*y + z + 1
     >>> eq2 = x - y + 2*z - 2
@@ -1228,11 +1226,11 @@ def solve_linear_inequalities(inequalities):
     >>> d = solve_linear_inequalities([eq1, eq2, eq3, eq4])
     >>> assert set(d) == set([x, y, z])
     >>> d[x]
-    (oo > x, x > -2/7)
-    >>> d[z]
-    (x > z, z > Max(-2*x + 3*y - 1, -x/2 + y/2 + 1, -x/3 - y/3 - 4/3))
+    (oo > x) & (x > -2/7)
     >>> d[y]
-    (Min(x + 1/3, 3*x - 2) > y, y > -4*x - 4)
+    (y > -4*x - 4) & (Min(x + 1/3, 3*x - 2) > y)
+    >>> d[z]
+    (x > z) & (z > Max(-2*x + 3*y - 1, -x/2 + y/2 + 1, -x/3 - y/3 - 4/3))
 
     Explanation
     ===========
@@ -1244,4 +1242,4 @@ def solve_linear_inequalities(inequalities):
     eqs = list(ordered(inequalities))
     eqs, res1 = _fourier_motzkin(eqs)
     res2 = _fourier_motzkin_extension(eqs)
-    return {**res1, **res2}
+    return {k: And(*v) for k, v in {**res1, **res2}.items()}
