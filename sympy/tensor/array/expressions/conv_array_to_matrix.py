@@ -157,7 +157,11 @@ def _(expr: ArrayContraction):
         return _array2matrix(expr)
     subexpr = expr.expr
     contraction_indices: tTuple[tTuple[int]] = expr.contraction_indices
-    if contraction_indices == ((0,), (1,)):
+    if contraction_indices == ((0,), (1,)) or (
+        contraction_indices == ((0,),) and subexpr.shape[1] == 1
+    ) or (
+        contraction_indices == ((1,),) and subexpr.shape[0] == 1
+    ):
         shape = subexpr.shape
         subexpr = _array2matrix(subexpr)
         if isinstance(subexpr, MatrixExpr):
