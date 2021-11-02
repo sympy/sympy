@@ -84,19 +84,20 @@ class TestArraySymbol:
 
     def test_getitem(self):
         A = ArraySymbol("A", shape=(m, n))
-        assert A[0] == ArrayElement(A, indices=(0,))
-        assert A[k] == ArrayElement(A, indices=(k,))
         assert A[i, j] == ArrayElement(A, indices=(i, j))
         assert A[9, 7] == ArrayElement(A, indices=(9, 7))
         A = ArraySymbol("A", shape=(3, 2, 4))
-        assert A[i, j] == ArrayElement(A, indices=(i, j))
         assert A[i, j, k] == ArrayElement(A, indices=(i, j, k))
-        assert A[2, 1] == ArrayElement(A, indices=(2, 1))
         assert A[2, 1, 3] == ArrayElement(A, indices=(2, 1, 3))
         with raises(ValueError, match="shape is out of bounds"):
             A[4, 1, 3]
         with raises(ValueError, match="shape contains negative values"):
-            A[0, -1]
+            A[0, -1, 0]
+
+    def test_getitem_exception(self):
+        A = ArraySymbol("A", shape=(m, n))
+        with raises(ValueError, match=r"Number of indices .* not the same as shape"):
+            A[0]
 
 
 def test_array_symbol_and_element():

@@ -67,6 +67,11 @@ class ArraySymbol(_ArrayExpr):
             indices = key
         else:
             indices = (key,)
+        if len(indices) != len(self.shape):
+            raise ValueError(
+                f"Number of indices ({len(indices)}) is not the same"
+                f" as shape size ({len(self.shape)})."
+            )
         return ArrayElement(self, indices)
 
     def as_explicit(self):
