@@ -812,10 +812,10 @@ def make_mod_elt(module, col, denom=1):
 
 class ModuleElement(IntegerPowerable):
     """
-    Element of a Module.
+    Element of a :py:class:`~.Module`.
 
-    NOTE: Should not be constructed directly. Use ``make_mod_elt()`` factory
-    function instead.
+    NOTE: Should not be constructed directly. Use :py:func:`make_mod_elt()`
+    factory function instead.
     """
 
     def __init__(self, module, col, denom=1):

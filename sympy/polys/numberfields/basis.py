@@ -103,8 +103,8 @@ def round_two(T, radicals=None):
     Parameters
     ==========
 
-    T: Poly, being the minimal monic polynomial over :ref:`ZZ` defining the
-        number field.
+    T: :py:class:`~.Poly`, being the irreducible monic polynomial over
+        :ref:`ZZ` defining the number field.
 
     radicals: optional way for any $p$-radicals (if computed) to be returned by
         reference. If desired, pass an empty dictionary. If the algorithm
@@ -123,15 +123,8 @@ def round_two(T, radicals=None):
     Examples
     ========
 
-    Calling directly:
-    >>> from sympy import Poly
-    >>> from sympy.abc import x
-    >>> from sympy.polys.numberfields.basis import round_two
-    >>> T = Poly(x ** 3 + x ** 2 - 2 * x + 8)
-    >>> print(round_two(T))
-    (Submodule[[2, 0, 0], [0, 2, 0], [0, 1, 1]]/2, -503)
-
     Working through an AlgebraicField:
+
     >>> from sympy import Poly, QQ
     >>> from sympy.abc import x, theta
     >>> T = Poly(x ** 3 + x ** 2 - 2 * x + 8)
@@ -142,6 +135,25 @@ def round_two(T, radicals=None):
     -503
     >>> print([K.to_sympy(a) for a in K.integral_basis()])
     [1, theta, theta**2/2 + theta/2]
+
+    Calling directly:
+
+    >>> from sympy import Poly
+    >>> from sympy.abc import x
+    >>> from sympy.polys.numberfields.basis import round_two
+    >>> T = Poly(x ** 3 + x ** 2 - 2 * x + 8)
+    >>> print(round_two(T))
+    (Submodule[[2, 0, 0], [0, 2, 0], [0, 1, 1]]/2, -503)
+
+    The nilradicals mod $p$ that are sometimes computed during the Round Two
+    algorithm may be useful in further calculations. Pass a dictionary under
+    `radicals` to receive these:
+
+    >>> T = Poly(x**3 + 3*x**2 + 5)
+    >>> rad = {}
+    >>> round_two(T, radicals=rad)
+    >>> print(rad)
+    {3: Submodule[[-1, 1, 0], [-1, 0, 1]]}
 
     See Also
     ========
