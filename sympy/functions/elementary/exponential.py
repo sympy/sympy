@@ -1055,6 +1055,9 @@ class log(Function):
             return self.func(x0) - 2*I*S.Pi
         return self.func(arg)
 
+    def is_constant(self, *wrt, **flags):
+        return self.args[0].is_constant(*wrt, **flags)
+
 
 class LambertW(Function):
     r"""
