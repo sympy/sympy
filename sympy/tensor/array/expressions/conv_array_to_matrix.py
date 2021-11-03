@@ -4,7 +4,7 @@ from typing import Tuple as tTuple, Union as tUnion, FrozenSet, Dict as tDict, L
 from functools import singledispatch
 from itertools import accumulate
 
-from sympy import MatMul
+from sympy import MatMul, Basic
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
@@ -145,7 +145,7 @@ def _find_trivial_matrices_rewrite(expr: ArrayTensorProduct):
     second: Optional[MatrixExpr] = None
     removed: List[int] = []
     counter: int = 0
-    args = list(expr.args)
+    args: List[Optional[Basic]] = [i for i in expr.args]
     for i, arg in enumerate(expr.args):
         if isinstance(arg, MatrixExpr):
             if arg.shape == (1, 1):
