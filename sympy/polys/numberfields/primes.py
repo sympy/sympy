@@ -64,7 +64,7 @@ class PrimeIdeal(IntegerPowerable):
         self.p = p
         self.alpha = alpha
         self.f = f
-        self._beta = None
+        self._test_factor = None
         self.e = e if e is not None else self.valuation(p * ZK)
 
     def pretty(self, theta=None):
@@ -97,17 +97,25 @@ class PrimeIdeal(IntegerPowerable):
     def _first_power(self):
         return self
 
-    def beta(self):
+    def test_factor(self):
+        r"""
+        Compute a test factor for this prime ideal.
+
+        Explanation
+        ===========
+
+        Write $\mathfrak{p}$ for this prime ideal, $p$ for the rational prime
+        it divides. Then, for computing $\mathfrak{p}$-adic valuations it is
+        useful to have a number $\beta \in \mathbb{Z}_K$ such that
+        $p/\mathfrak{p} = p \mathbb{Z}_K + \beta \mathbb{Z}_K$.
+
+        Essentially, this is the same as the number $\Psi$ (or the "reagent")
+        from Kummer's 1847 paper (*Ueber die Zerlegung...*, Crelle vol. 35) in
+        which ideal divisors were invented.
         """
-        Write P for this prime ideal, p for the rational prime it divides.
-        Then, for computing P-adic valuations it is useful to have a number
-        beta in ZK such that p/P = p*ZK + beta*ZK. Essentially, this is the
-        number Psi (or the "reagent") from Kummer's 1847 paper (*Ueber die
-        Zerlegung...*, Crelle vol. 35).
-        """
-        if self._beta is None:
-            self._beta = _compute_beta(self.p, [self.alpha], self.ZK)
-        return self._beta
+        if self._test_factor is None:
+            self._test_factor = _compute_test_factor(self.p, [self.alpha], self.ZK)
+        return self._test_factor
 
     def valuation(self, I):
         """
@@ -117,10 +125,9 @@ class PrimeIdeal(IntegerPowerable):
         return prime_valuation(I, self)
 
 
-def _compute_beta(p, gens, ZK):
+def _compute_test_factor(p, gens, ZK):
     r"""
-    Compute the "beta" for a :ref:`PrimeIdeal` $P$ (see ``beta`` method in
-    that class).
+    Compute the test factor for a :py:class:`~.PrimeIdeal` $\mathfrak{p}$.
 
     Parameters
     ==========
@@ -138,7 +145,7 @@ def _compute_beta(p, gens, ZK):
     Returns
     =======
 
-    PowerBasisElement for beta
+    :py:class:`~.PowerBasisElement`
 
     References
     ==========
@@ -215,7 +222,7 @@ def prime_valuation(I, P):
     if D % p != 0:
         return 0
 
-    beta = P.beta()
+    beta = P.test_factor()
 
     f = d ** n // W.det()
     need_complete_test = (f % p == 0)
