@@ -1,10 +1,11 @@
-from sympy import Basic
-from sympy import S
+from sympy.core.basic import Basic
+from sympy.core.containers import (Dict, Tuple)
 from sympy.core.expr import Expr
-from sympy.core.numbers import Integer
-from sympy.core.sympify import sympify
 from sympy.core.kind import Kind, NumberKind, UndefinedKind
-from sympy.core.compatibility import SYMPY_INTS
+from sympy.core.numbers import Integer
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.printing.defaults import Printable
 
 import itertools
@@ -51,7 +52,7 @@ class ArrayKind(Kind):
     the element kind. Use ``is`` with specifying the element kind.
 
     >>> from sympy.tensor.array import ArrayKind
-    >>> from sympy.core.kind import NumberKind
+    >>> from sympy.core import NumberKind
     >>> boolA = NDimArray([True, False])
     >>> isinstance(boolA.kind, ArrayKind)
     True
@@ -207,7 +208,6 @@ class NDimArray(Printable):
     def _handle_ndarray_creation_inputs(cls, iterable=None, shape=None, **kwargs):
         from sympy.matrices.matrices import MatrixBase
         from sympy.tensor.array import SparseNDimArray
-        from sympy import Dict, Tuple
 
         if shape is None:
             if iterable is None:

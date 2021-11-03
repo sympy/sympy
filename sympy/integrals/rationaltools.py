@@ -1,7 +1,14 @@
 """This module implements tools for integrating rational functions. """
 
-from sympy import S, Symbol, symbols, I, log, atan, \
-    roots, RootSum, Lambda, cancel, Dummy
+from sympy.core.function import Lambda
+from sympy.core.numbers import I
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.trigonometric import atan
+from sympy.polys.polyroots import roots
+from sympy.polys.polytools import cancel
+from sympy.polys.rootoftools import RootSum
 
 from sympy.polys import Poly, resultant, ZZ
 
@@ -146,7 +153,7 @@ def ratint_ratpart(f, g, x):
 
     ratint, ratint_logpart
     """
-    from sympy import solve
+    from sympy.solvers.solvers import solve
 
     f = Poly(f, x)
     g = Poly(g, x)
@@ -350,7 +357,7 @@ def log_to_real(h, q, x, t):
 
     log_to_atan
     """
-    from sympy import collect
+    from sympy.simplify.radsimp import collect
     u, v = symbols('u,v', cls=Dummy)
 
     H = h.as_expr().subs({t: u + I*v}).expand()

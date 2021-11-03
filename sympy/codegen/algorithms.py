@@ -1,4 +1,9 @@
-from sympy import And, Gt, Lt, Abs, Dummy, oo, Tuple, Symbol
+from sympy.core.containers import Tuple
+from sympy.core.numbers import oo
+from sympy.core.relational import (Gt, Lt)
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.functions.elementary.complexes import Abs
+from sympy.logic.boolalg import And
 from sympy.codegen.ast import (
     Assignment, AddAugmentedAssignment, CodeBlock, Declaration, FunctionDefinition,
     Print, Return, Scope, While, Variable, Pointer, real

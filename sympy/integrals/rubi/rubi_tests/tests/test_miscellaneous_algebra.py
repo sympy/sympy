@@ -19,11 +19,16 @@ from sympy.functions.elementary.trigonometric import asin
 from sympy.functions.elementary.trigonometric import acos
 from sympy.integrals.rubi.utility_function import (EllipticE, EllipticF,
     hypergeom, rubi_test, AppellF1, EllipticPi, Log, Sqrt, ArcTan, ArcTanh, ArcSin, ArcCos, Hypergeometric2F1)
-from sympy import pi as Pi
-from sympy import S, hyper, I, simplify, exp_polar, symbols,elliptic_pi,elliptic_e, elliptic_f
+from sympy.core.numbers import (I, pi as Pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import exp_polar
+from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f, elliptic_pi)
+from sympy.functions.special.hyper import hyper
+from sympy.simplify.simplify import simplify
 from sympy.testing.pytest import SKIP
-from sympy import acsch as arccsch, acsc as arccsc
-from sympy import acsch, acsc
+from sympy.functions.elementary.hyperbolic import acsch as arccsch
+from sympy.functions.elementary.trigonometric import acsc as arccsc
 
 a, b, c, d, e, f, m, n, x, u , k, p, r, s, t= symbols('a b c d e f m n x u k p r s t')
 A, B, C, D, a, b, c, d, e, f, g, h, y, z, m, n, p, q, u, v, w, F = symbols('A B C D a b c d e f g h y z m n p q u v w F',)

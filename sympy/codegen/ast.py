@@ -10,6 +10,10 @@ AST Type Tree
 ::
 
   *Basic*
+       |
+       |
+   CodegenAST
+       |
        |--->AssignmentBase
        |             |--->Assignment
        |             |--->AugmentedAssignment
@@ -23,38 +27,36 @@ AST Type Tree
        |
        |
        |--->Token
-       |        |--->Attribute
-       |        |--->For
-       |        |--->String
-       |        |       |--->QuotedString
-       |        |       |--->Comment
-       |        |--->Type
-       |        |       |--->IntBaseType
-       |        |       |              |--->_SizedIntType
-       |        |       |                               |--->SignedIntType
-       |        |       |                               |--->UnsignedIntType
-       |        |       |--->FloatBaseType
-       |        |                        |--->FloatType
-       |        |                        |--->ComplexBaseType
-       |        |                                           |--->ComplexType
-       |        |--->Node
-       |        |       |--->Variable
-       |        |       |           |---> Pointer
-       |        |       |--->FunctionPrototype
-       |        |                            |--->FunctionDefinition
-       |        |--->Element
-       |        |--->Declaration
-       |        |--->While
-       |        |--->Scope
-       |        |--->Stream
-       |        |--->Print
-       |        |--->FunctionCall
-       |        |--->BreakToken
-       |        |--->ContinueToken
-       |        |--->NoneToken
-       |
-       |--->Statement
-       |--->Return
+                |--->Attribute
+                |--->For
+                |--->String
+                |       |--->QuotedString
+                |       |--->Comment
+                |--->Type
+                |       |--->IntBaseType
+                |       |              |--->_SizedIntType
+                |       |                               |--->SignedIntType
+                |       |                               |--->UnsignedIntType
+                |       |--->FloatBaseType
+                |                        |--->FloatType
+                |                        |--->ComplexBaseType
+                |                                           |--->ComplexType
+                |--->Node
+                |       |--->Variable
+                |       |           |---> Pointer
+                |       |--->FunctionPrototype
+                |                            |--->FunctionDefinition
+                |--->Element
+                |--->Declaration
+                |--->While
+                |--->Scope
+                |--->Stream
+                |--->Print
+                |--->FunctionCall
+                |--->BreakToken
+                |--->ContinueToken
+                |--->NoneToken
+                |--->Return
 
 
 Predefined types
@@ -91,7 +93,7 @@ Newton's method::
     ...     aug_assign(x, '+', dx),
     ...     Print([x])
     ... ])
-    >>> from sympy.printing import pycode
+    >>> from sympy import pycode
     >>> py_str = pycode(whl)
     >>> print(py_str)
     while (abs(delta) > tol):
@@ -111,7 +113,7 @@ Newton's method::
 
 If we want to generate Fortran code for the same while loop we simple call ``fcode``::
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> print(fcode(whl, standard=2003, source_format='free'))
     do while (abs(delta) > tol)
        delta = (val**3 - cos(val))/(-3*val**2 - sin(val))
@@ -124,22 +126,23 @@ There is a function constructing a loop (or a complete function) like this in
 
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict as tDict, List
 
 from collections import defaultdict
 
-from sympy import Lt, Le, Ge, Gt
+from sympy.core.relational import (Ge, Gt, Le, Lt)
 from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.numbers import Float, Integer, oo
 from sympy.core.sympify import _sympify, sympify, SympifyError
-from sympy.utilities.iterables import iterable
+from sympy.utilities.iterables import (iterable, topological_sort,
+                                       numbered_symbols, filter_symbols)
 
 
 def _mk_Tuple(args):
     """
-    Create a Sympy Tuple object from an iterable, converting Python strings to
+    Create a SymPy Tuple object from an iterable, converting Python strings to
     AST strings.
 
     Parameters
@@ -157,7 +160,11 @@ def _mk_Tuple(args):
     return Tuple(*args)
 
 
-class Token(Basic):
+class CodegenAST(Basic):
+    pass
+
+
+class Token(CodegenAST):
     """ Base class for the AST types.
 
     Explanation
@@ -176,7 +183,7 @@ class Token(Basic):
     """
 
     __slots__ = ()
-    defaults = {}  # type: Dict[str, Any]
+    defaults = {}  # type: tDict[str, Any]
     not_in_args = []  # type: List[str]
     indented_args = ['body']
 
@@ -196,7 +203,7 @@ class Token(Basic):
         if arg == None:
             return cls.defaults.get(attr, none)
         else:
-            if isinstance(arg, Dummy):  # sympy's replace uses Dummy instances
+            if isinstance(arg, Dummy):  # SymPy's replace uses Dummy instances
                 return arg
             else:
                 return cls._get_constructor(attr)(arg)
@@ -239,7 +246,7 @@ class Token(Basic):
             val for attr, val in zip(cls.__slots__, attrvals)
             if attr not in cls.not_in_args
         ]
-        obj = Basic.__new__(cls, *basic_args)
+        obj = CodegenAST.__new__(cls, *basic_args)
 
         # Set attributes
         for attr, arg in zip(cls.__slots__, attrvals):
@@ -337,7 +344,7 @@ class BreakToken(Token):
     Examples
     ========
 
-    >>> from sympy.printing import ccode, fcode
+    >>> from sympy import ccode, fcode
     >>> from sympy.codegen.ast import break_
     >>> ccode(break_)
     'break'
@@ -356,7 +363,7 @@ class ContinueToken(Token):
     Examples
     ========
 
-    >>> from sympy.printing import ccode, fcode
+    >>> from sympy import ccode, fcode
     >>> from sympy.codegen.ast import continue_
     >>> ccode(continue_)
     'continue'
@@ -375,7 +382,7 @@ class NoneToken(Token):
     ========
 
     >>> from sympy.codegen.ast import none, Variable
-    >>> from sympy.printing.pycode import pycode
+    >>> from sympy import pycode
     >>> print(pycode(Variable('x').as_Declaration(value=none)))
     x = None
 
@@ -393,7 +400,7 @@ class NoneToken(Token):
 none = NoneToken()
 
 
-class AssignmentBase(Basic):
+class AssignmentBase(CodegenAST):
     """ Abstract base class for Assignment and AugmentedAssignment.
 
     Attributes:
@@ -458,13 +465,13 @@ class Assignment(AssignmentBase):
     ==========
 
     lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
+        SymPy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
         include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
         subclass these types are also supported.
 
     rhs : Expr
-        Sympy object representing the rhs of the expression. This can be any
+        SymPy object representing the rhs of the expression. This can be any
         type, provided its shape corresponds to that of the lhs. For example,
         a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
         the dimensions will not align.
@@ -552,7 +559,7 @@ def aug_assign(lhs, op, rhs):
     ==========
 
     lhs : Expr
-        Sympy object representing the lhs of the expression. These should be
+        SymPy object representing the lhs of the expression. These should be
         singular objects, such as one would use in writing code. Notable types
         include Symbol, MatrixSymbol, MatrixElement, and Indexed. Types that
         subclass these types are also supported.
@@ -561,7 +568,7 @@ def aug_assign(lhs, op, rhs):
         Operator (+, -, /, \\*, %).
 
     rhs : Expr
-        Sympy object representing the rhs of the expression. This can be any
+        SymPy object representing the rhs of the expression. This can be any
         type, provided its shape corresponds to that of the lhs. For example,
         a Matrix type can be assigned to MatrixSymbol, but not to Symbol, as
         the dimensions will not align.
@@ -580,7 +587,7 @@ def aug_assign(lhs, op, rhs):
     return augassign_classes[op](lhs, rhs)
 
 
-class CodeBlock(Basic):
+class CodeBlock(CodegenAST):
     """
     Represents a block of code.
 
@@ -630,7 +637,7 @@ class CodeBlock(Basic):
                 left_hand_sides.append(lhs)
                 right_hand_sides.append(rhs)
 
-        obj = Basic.__new__(cls, *args)
+        obj = CodegenAST.__new__(cls, *args)
 
         obj.left_hand_sides = Tuple(*left_hand_sides)
         obj.right_hand_sides = Tuple(*right_hand_sides)
@@ -688,7 +695,6 @@ class CodeBlock(Basic):
         )
 
         """
-        from sympy.utilities.iterables import topological_sort
 
         if not all(isinstance(i, Assignment) for i in assignments):
             # Will support more things later
@@ -771,7 +777,6 @@ class CodeBlock(Basic):
 
         """
         from sympy.simplify.cse_main import cse
-        from sympy.utilities.iterables import numbered_symbols, filter_symbols
 
         # Check that the CodeBlock only contains assignments to unique variables
         if not all(isinstance(i, Assignment) for i in self.args):
@@ -932,7 +937,7 @@ class Node(Token):
 
     __slots__ = ('attrs',)
 
-    defaults = {'attrs': Tuple()}  # type: Dict[str, Any]
+    defaults = {'attrs': Tuple()}  # type: tDict[str, Any]
 
     _construct_attrs = staticmethod(_mk_Tuple)
 
@@ -987,7 +992,7 @@ class Type(Token):
       ...
     ValueError: Casting gives a significantly different value.
     >>> boost_mp50 = Type('boost::multiprecision::cpp_dec_float_50')
-    >>> from sympy.printing import cxxcode
+    >>> from sympy import cxxcode
     >>> from sympy.codegen.ast import Declaration, Variable
     >>> cxxcode(Declaration(Variable('x', type=boost_mp50)))
     'boost::multiprecision::cpp_dec_float_50 x'
@@ -1701,7 +1706,7 @@ class Print(Token):
     ========
 
     >>> from sympy.codegen.ast import Print
-    >>> from sympy.printing.pycode import pycode
+    >>> from sympy import pycode
     >>> print(pycode(Print('x y'.split(), "coordinate: %12.5g %12.5g")))
     print("coordinate: %12.5g %12.5g" % (x, y))
 
@@ -1733,7 +1738,7 @@ class FunctionPrototype(Node):
 
     >>> from sympy import symbols
     >>> from sympy.codegen.ast import real, FunctionPrototype
-    >>> from sympy.printing import ccode
+    >>> from sympy import ccode
     >>> x, y = symbols('x y', real=True)
     >>> fp = FunctionPrototype(real, 'foo', [x, y])
     >>> ccode(fp)
@@ -1779,9 +1784,8 @@ class FunctionDefinition(FunctionPrototype):
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import ccode, symbols
     >>> from sympy.codegen.ast import real, FunctionPrototype
-    >>> from sympy.printing import ccode
     >>> x, y = symbols('x y', real=True)
     >>> fp = FunctionPrototype(real, 'foo', [x, y])
     >>> ccode(fp)
@@ -1811,8 +1815,27 @@ class FunctionDefinition(FunctionPrototype):
         return cls(body=body, **func_proto.kwargs())
 
 
-class Return(Basic):
-    """ Represents a return command in the code. """
+class Return(Token):
+    """ Represents a return command in the code.
+
+    Parameters
+    ==========
+
+    return : Basic
+
+    Examples
+    ========
+
+    >>> from sympy.codegen.ast import Return
+    >>> from sympy.printing.pycode import pycode
+    >>> from sympy import Symbol
+    >>> x = Symbol('x')
+    >>> print(pycode(Return(x)))
+    return x
+
+    """
+    __slots__ = ('return',)
+    _construct_return=staticmethod(_sympify)
 
 
 class FunctionCall(Token, Expr):
@@ -1828,7 +1851,7 @@ class FunctionCall(Token, Expr):
     ========
 
     >>> from sympy.codegen.ast import FunctionCall
-    >>> from sympy.printing.pycode import pycode
+    >>> from sympy import pycode
     >>> fcall = FunctionCall('foo', 'bar baz'.split())
     >>> print(pycode(fcall))
     foo(bar, baz)

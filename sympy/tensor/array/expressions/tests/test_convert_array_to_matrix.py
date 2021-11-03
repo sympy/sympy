@@ -1,11 +1,14 @@
-from sympy import (
-    symbols, Identity, cos, ZeroMatrix, OneMatrix, sqrt, HadamardProduct)
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import cos
+from sympy.matrices.expressions.hadamard import HadamardProduct
+from sympy.matrices.expressions.special import (Identity, OneMatrix, ZeroMatrix)
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 from sympy.tensor.array.expressions.conv_array_to_matrix import _support_function_tp1_recognize, \
     _array_diag2contr_diagmatrix, convert_array_to_matrix, _remove_trivial_dims, _array2matrix, \
     _combine_removed, identify_removable_identity_matrices, _array_contraction_to_diagonal_multiple_identity
-from sympy import MatrixSymbol
+from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.combinatorics import Permutation
 from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
 from sympy.matrices import Trace, MatMul, Transpose

@@ -1,5 +1,10 @@
 from sympy.parsing.maxima import parse_maxima
-from sympy import Rational, Abs, Symbol, sin, cos, E, oo, log, factorial
+from sympy.core.numbers import (E, Rational, oo)
+from sympy.core.symbol import Symbol
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.abc import x
 
 n = Symbol('n', integer=True)

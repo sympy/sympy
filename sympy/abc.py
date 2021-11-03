@@ -51,7 +51,7 @@ pi(C, Q)
 
 """
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 import string
 
@@ -85,16 +85,16 @@ phi, chi, psi, omega = symbols('phi, chi, psi, omega')
 # This is mostly for diagnosing SymPy's namespace during SymPy development.
 
 _latin = list(string.ascii_letters)
-# OSINEQ should not be imported as they clash; gamma, pi and zeta clash, too
+# QOSINE should not be imported as they clash; gamma, pi and zeta clash, too
 _greek = list(greeks) # make a copy, so we can mutate it
 # Note: We import lamda since lambda is a reserved keyword in Python
 _greek.remove("lambda")
 _greek.append("lamda")
 
-ns: Dict[str, Any] = {}
+ns: tDict[str, Any] = {}
 exec('from sympy import *', ns)
-_clash1: Dict[str, Any] = {}
-_clash2: Dict[str, Any] = {}
+_clash1: tDict[str, Any] = {}
+_clash2: tDict[str, Any] = {}
 while ns:
     _k, _ = ns.popitem()
     if _k in _greek:

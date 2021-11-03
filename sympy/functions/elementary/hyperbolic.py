@@ -105,7 +105,7 @@ class sinh(HyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import sin
+        from sympy.functions.elementary.trigonometric import sin
 
         arg = sympify(arg)
 
@@ -180,7 +180,7 @@ class sinh(HyperbolicFunction):
         """
         Returns this function as a complex coordinate.
         """
-        from sympy import cos, sin
+        from sympy.functions.elementary.trigonometric import (cos, sin)
         if self.args[0].is_extended_real:
             if deep:
                 hints['complex'] = False
@@ -304,7 +304,7 @@ class cosh(HyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import cos
+        from sympy.functions.elementary.trigonometric import cos
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -370,7 +370,7 @@ class cosh(HyperbolicFunction):
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
-        from sympy import cos, sin
+        from sympy.functions.elementary.trigonometric import (cos, sin)
         if self.args[0].is_extended_real:
             if deep:
                 hints['complex'] = False
@@ -550,7 +550,7 @@ class tanh(HyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import tan
+        from sympy.functions.elementary.trigonometric import tan
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -607,7 +607,7 @@ class tanh(HyperbolicFunction):
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
-        from sympy import bernoulli
+        from sympy.functions.combinatorial.numbers import bernoulli
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -624,7 +624,7 @@ class tanh(HyperbolicFunction):
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
-        from sympy import cos, sin
+        from sympy.functions.elementary.trigonometric import (cos, sin)
         if self.args[0].is_extended_real:
             if deep:
                 hints['complex'] = False
@@ -641,7 +641,7 @@ class tanh(HyperbolicFunction):
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
         if arg.is_Add:
-            from sympy import symmetric_poly
+            from sympy.polys.specialpolys import symmetric_poly
             n = len(arg.args)
             TX = [tanh(x, evaluate=False)._eval_expand_trig()
                 for x in arg.args]
@@ -681,7 +681,7 @@ class tanh(HyperbolicFunction):
         return 1/coth(arg)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
+        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and Order(1, x).contains(arg):
@@ -717,7 +717,7 @@ class tanh(HyperbolicFunction):
             return self.args[0].is_negative
 
     def _eval_is_finite(self):
-        from sympy import sinh, cos
+        from sympy.functions.elementary.trigonometric import cos
         arg = self.args[0]
 
         re, im = arg.as_real_imag()
@@ -769,7 +769,7 @@ class coth(HyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import cot
+        from sympy.functions.elementary.trigonometric import cot
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -826,7 +826,7 @@ class coth(HyperbolicFunction):
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
-        from sympy import bernoulli
+        from sympy.functions.combinatorial.numbers import bernoulli
         if n == 0:
             return 1 / sympify(x)
         elif n < 0 or n % 2 == 0:
@@ -843,7 +843,7 @@ class coth(HyperbolicFunction):
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
-        from sympy import cos, sin
+        from sympy.functions.elementary.trigonometric import (cos, sin)
         if self.args[0].is_extended_real:
             if deep:
                 hints['complex'] = False
@@ -883,7 +883,7 @@ class coth(HyperbolicFunction):
             return self.args[0].is_negative
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
+        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and Order(1, x).contains(arg):
@@ -894,7 +894,7 @@ class coth(HyperbolicFunction):
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
         if arg.is_Add:
-            from sympy import symmetric_poly
+            from sympy.polys.specialpolys import symmetric_poly
             CX = [coth(x, evaluate=False)._eval_expand_trig() for x in arg.args]
             p = [[], []]
             n = len(arg.args)
@@ -902,7 +902,7 @@ class coth(HyperbolicFunction):
                 p[(n - i) % 2].append(symmetric_poly(i, CX))
             return Add(*p[0])/Add(*p[1])
         elif arg.is_Mul:
-            from sympy import binomial
+            from sympy.functions.combinatorial.factorials import binomial
             coeff, x = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer and coeff > 1:
                 c = coth(x, evaluate=False)
@@ -1025,7 +1025,7 @@ class csch(ReciprocalHyperbolicFunction):
         """
         Returns the next term in the Taylor series expansion
         """
-        from sympy import bernoulli
+        from sympy.functions.combinatorial.numbers import bernoulli
         if n == 0:
             return 1/sympify(x)
         elif n < 0 or n % 2 == 0:
@@ -1137,7 +1137,7 @@ class asinh(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import asin
+        from sympy.functions.elementary.trigonometric import asin
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -1201,7 +1201,7 @@ class asinh(InverseHyperbolicFunction):
                 return (-1)**k * R / F * x**n / n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
+        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and Order(1, x).contains(arg):
@@ -1348,7 +1348,7 @@ class acosh(InverseHyperbolicFunction):
                 return -R / F * S.ImaginaryUnit * x**n / n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
+        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and Order(1, x).contains(arg):
@@ -1398,7 +1398,7 @@ class atanh(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import atan
+        from sympy.functions.elementary.trigonometric import atan
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -1456,7 +1456,7 @@ class atanh(InverseHyperbolicFunction):
             return x**n / n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
+        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and Order(1, x).contains(arg):
@@ -1509,7 +1509,7 @@ class acoth(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import acot
+        from sympy.functions.elementary.trigonometric import acot
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -1554,7 +1554,7 @@ class acoth(InverseHyperbolicFunction):
             return x**n / n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
+        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and Order(1, x).contains(arg):

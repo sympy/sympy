@@ -1,4 +1,6 @@
-from sympy import integrate, Symbol, sin
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.trigonometric import sin
+from sympy.integrals.integrals import integrate
 
 x = Symbol('x')
 

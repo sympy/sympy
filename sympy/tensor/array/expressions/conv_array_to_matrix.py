@@ -1,11 +1,18 @@
 import itertools
 from collections import defaultdict
-from typing import Tuple, Union, FrozenSet, Dict, List, Optional
+from typing import Tuple as tTuple, Union as tUnion, FrozenSet, Dict as tDict, List, Optional
 from functools import singledispatch
 from itertools import accumulate
 
-from sympy import Trace, MatrixExpr, Transpose, DiagMatrix, Mul, ZeroMatrix, hadamard_product, S, Identity, ask, Q, \
-    OneMatrix
+from sympy.assumptions.ask import (Q, ask)
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
+from sympy.matrices.expressions.diagonal import DiagMatrix
+from sympy.matrices.expressions.hadamard import hadamard_product
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.special import (Identity, ZeroMatrix, OneMatrix)
+from sympy.matrices.expressions.trace import Trace
+from sympy.matrices.expressions.transpose import Transpose
 from sympy.combinatorics.permutations import _af_invert, Permutation
 from sympy.matrices.common import MatrixCommon
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
@@ -17,7 +24,7 @@ from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayD
 from sympy.tensor.array.expressions.utils import _get_mapping_from_subranks
 
 
-def _get_candidate_for_matmul_from_contraction(scan_indices: List[Optional[int]], remaining_args: List[_ArgE]) -> Tuple[Optional[_ArgE], bool, int]:
+def _get_candidate_for_matmul_from_contraction(scan_indices: List[Optional[int]], remaining_args: List[_ArgE]) -> tTuple[Optional[_ArgE], bool, int]:
 
     scan_indices_int: List[int] = [i for i in scan_indices if i is not None]
     if len(scan_indices_int) == 0:
@@ -149,8 +156,12 @@ def _(expr: ArrayContraction):
     if not isinstance(expr, ArrayContraction):
         return _array2matrix(expr)
     subexpr = expr.expr
-    contraction_indices: Tuple[Tuple[int]] = expr.contraction_indices
-    if contraction_indices == ((0,), (1,)):
+    contraction_indices: tTuple[tTuple[int]] = expr.contraction_indices
+    if contraction_indices == ((0,), (1,)) or (
+        contraction_indices == ((0,),) and subexpr.shape[1] == 1
+    ) or (
+        contraction_indices == ((1,),) and subexpr.shape[0] == 1
+    ):
         shape = subexpr.shape
         subexpr = _array2matrix(subexpr)
         if isinstance(subexpr, MatrixExpr):
@@ -259,7 +270,7 @@ def _(expr: ArrayElementwiseApplyFunc):
         return ArrayElementwiseApplyFunc(expr.function, subexpr)
 
 
-@_array2matrix.register(ArrayElement)
+@_array2matrix.register(ArrayElement) # type: ignore
 def _(expr: ArrayElement):
     ret = _array2matrix(expr.name)
     if isinstance(ret, MatrixExpr):
@@ -587,7 +598,7 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
 
 def _a2m_mul(*args):
     if not any(isinstance(i, _CodegenArrayAbstract) for i in args):
-        from sympy import MatMul
+        from sympy.matrices.expressions.matmul import MatMul
         return MatMul(*args).doit()
     else:
         return ArrayContraction(
@@ -617,7 +628,7 @@ def _a2m_tensor_product(*args):
 
 def _a2m_add(*args):
     if not any(isinstance(i, _CodegenArrayAbstract) for i in args):
-        from sympy import MatAdd
+        from sympy.matrices.expressions.matadd import MatAdd
         return MatAdd(*args).doit()
     else:
         return ArrayAdd(*args)
@@ -627,7 +638,7 @@ def _a2m_trace(arg):
     if isinstance(arg, _CodegenArrayAbstract):
         return ArrayContraction(arg, (0, 1))
     else:
-        from sympy import Trace
+        from sympy.matrices.expressions.trace import Trace
         return Trace(arg)
 
 
@@ -635,16 +646,16 @@ def _a2m_transpose(arg):
     if isinstance(arg, _CodegenArrayAbstract):
         return PermuteDims(arg, [1, 0])
     else:
-        from sympy import Transpose
+        from sympy.matrices.expressions.transpose import Transpose
         return Transpose(arg).doit()
 
 
-def identify_hadamard_products(expr: Union[ArrayContraction, ArrayDiagonal]):
+def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
 
     editor: _EditArrayContraction = _EditArrayContraction(expr)
 
-    map_contr_to_args: Dict[FrozenSet, List[_ArgE]] = defaultdict(list)
-    map_ind_to_inds: Dict[Optional[int], int] = defaultdict(int)
+    map_contr_to_args: tDict[FrozenSet, List[_ArgE]] = defaultdict(list)
+    map_ind_to_inds: tDict[Optional[int], int] = defaultdict(int)
     for arg_with_ind in editor.args_with_ind:
         for ind in arg_with_ind.indices:
             map_ind_to_inds[ind] += 1

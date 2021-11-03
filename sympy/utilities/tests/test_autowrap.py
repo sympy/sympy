@@ -49,7 +49,7 @@ def test_cython_wrapper_scalar_function():
 
 
 def test_cython_wrapper_outarg():
-    from sympy import Equality
+    from sympy.core.relational import Equality
     x, y, z = symbols('x,y,z')
     code_gen = CythonCodeWrapper(C99CodeGen())
 
@@ -68,7 +68,7 @@ def test_cython_wrapper_outarg():
 
 
 def test_cython_wrapper_inoutarg():
-    from sympy import Equality
+    from sympy.core.relational import Equality
     x, y, z = symbols('x,y,z')
     code_gen = CythonCodeWrapper(C99CodeGen())
     routine = make_routine("test", Equality(z, x + y + z))
@@ -85,7 +85,7 @@ def test_cython_wrapper_inoutarg():
 
 
 def test_cython_wrapper_compile_flags():
-    from sympy import Equality
+    from sympy.core.relational import Equality
     x, y, z = symbols('x,y,z')
     routine = make_routine("test", Equality(z, x + y))
 
@@ -186,7 +186,8 @@ setup(ext_modules=cythonize(ext_mods, **cy_opts))
     TmpFileManager.cleanup()
 
 def test_cython_wrapper_unique_dummyvars():
-    from sympy import Dummy, Equality
+    from sympy.core.relational import Equality
+    from sympy.core.symbol import Dummy
     x, y, z = Dummy('x'), Dummy('y'), Dummy('z')
     x_id, y_id, z_id = [str(d.dummy_index) for d in [x, y, z]]
     expr = Equality(z, x + y)

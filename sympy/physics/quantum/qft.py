@@ -11,7 +11,11 @@ Todo:
 * Fix the printing of Rk gates in plotting.
 """
 
-from sympy import Expr, Matrix, exp, I, pi, Integer, Symbol
+from sympy.core.expr import Expr
+from sympy.core.numbers import (I, Integer, pi)
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import exp
+from sympy.matrices.dense import Matrix
 from sympy.functions import sqrt
 
 from sympy.physics.quantum.qapply import qapply

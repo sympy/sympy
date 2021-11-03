@@ -1,6 +1,6 @@
 import os
 import tempfile
-from sympy import Symbol, symbols
+from sympy.core.symbol import (Symbol, symbols)
 from sympy.codegen.ast import (
     Assignment, Print, Declaration, FunctionDefinition, Return, real,
     FunctionCall, Variable, Element, integer

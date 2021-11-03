@@ -10,7 +10,7 @@ complete source code files.
 
 """
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 from sympy.core import Mul, Pow, S, Rational
 from sympy.core.mul import _keep_coeff
@@ -30,7 +30,7 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "fresnelc", "fresnels", "gamma", "harmonic", "log",
                    "polylog", "sign", "zeta", "legendre"]
 
-# These functions have different names ("Sympy": "Octave"), more
+# These functions have different names ("SymPy": "Octave"), more
 # generally a mapping to (argument_conditions, octave_function).
 known_fcns_src2 = {
     "Abs": "abs",
@@ -82,7 +82,7 @@ class OctaveCodePrinter(CodePrinter):
         'allow_unknown_functions': False,
         'contract': True,
         'inline': True,
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
     # Note: contract is for expressing tensors as loops (if True), or just
     # assignment (if False).  FIXME: this should be looked a more carefully
     # for Octave.
@@ -339,7 +339,7 @@ class OctaveCodePrinter(CodePrinter):
                                   for r in range(A.rows))
 
 
-    def _print_SparseMatrix(self, A):
+    def _print_SparseRepMatrix(self, A):
         from sympy.matrices import Matrix
         L = A.col_list();
         # make row vectors of the indices and entries
@@ -579,7 +579,7 @@ def octave_code(expr, assign_to=None, **settings):
     ==========
 
     expr : Expr
-        A sympy expression to be converted.
+        A SymPy expression to be converted.
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned.  Can be a string, ``Symbol``,

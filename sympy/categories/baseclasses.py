@@ -1,7 +1,7 @@
 from sympy.core import S, Basic, Dict, Symbol, Tuple, sympify
-from sympy.core.compatibility import iterable
 from sympy.core.symbol import Str
 from sympy.sets import Set, FiniteSet, EmptySet
+from sympy.utilities.iterables import iterable
 
 
 class Class(Set):

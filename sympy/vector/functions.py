@@ -3,7 +3,10 @@ from sympy.vector.deloperator import Del
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.operators import gradient, curl, divergence
-from sympy import diff, integrate, S, simplify
+from sympy.core.function import diff
+from sympy.core.singleton import S
+from sympy.integrals.integrals import integrate
+from sympy.simplify.simplify import simplify
 from sympy.core import sympify
 from sympy.vector.dyadic import Dyadic
 

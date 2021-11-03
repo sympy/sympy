@@ -2,17 +2,18 @@ from sympy.core import Function, S, sympify
 from sympy.utilities.iterables import sift
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import ordered
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import (Application, Lambda,
     ArgumentIndexError)
 from sympy.core.expr import Expr
+from sympy.core.exprtools import factor_terms
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Relational
 from sympy.core.singleton import Singleton
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
@@ -605,7 +606,6 @@ class MinMaxBase(Expr, LatticeOp):
         """
         Check if x and y are connected somehow.
         """
-        from sympy.core.exprtools import factor_terms
         def hit(v, t, f):
             if not v.is_Relational:
                 return t if v else f
@@ -775,7 +775,7 @@ class Max(MinMaxBase, Application):
     identity = S.NegativeInfinity
 
     def fdiff( self, argindex ):
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
@@ -787,7 +787,7 @@ class Max(MinMaxBase, Application):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
@@ -838,7 +838,7 @@ class Min(MinMaxBase, Application):
     identity = S.Infinity
 
     def fdiff( self, argindex ):
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
@@ -850,7 +850,7 @@ class Min(MinMaxBase, Application):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])
 

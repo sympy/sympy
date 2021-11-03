@@ -1,10 +1,12 @@
 from sympy.core import Basic, Dict, sympify
-from sympy.core.compatibility import as_int, default_sort_key
+from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import _sympify
 from sympy.functions.combinatorial.numbers import bell
 from sympy.matrices import zeros
 from sympy.sets.sets import FiniteSet, Union
 from sympy.utilities.iterables import flatten, group
+from sympy.utilities.misc import as_int
+
 
 from collections import defaultdict
 
@@ -55,7 +57,7 @@ class Partition(FiniteSet):
 
         Creating Partition from SymPy finite sets:
 
-        >>> from sympy.sets.sets import FiniteSet
+        >>> from sympy import FiniteSet
         >>> a = FiniteSet(1, 2, 3)
         >>> b = FiniteSet(4, 5)
         >>> Partition(a, b)
@@ -96,7 +98,7 @@ class Partition(FiniteSet):
         Examples
         ========
 
-        >>> from sympy.utilities.iterables import default_sort_key
+        >>> from sympy import default_sort_key
         >>> from sympy.combinatorics.partitions import Partition
         >>> from sympy.abc import x
         >>> a = Partition([1, 2])

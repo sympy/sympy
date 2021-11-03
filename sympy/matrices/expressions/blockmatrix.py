@@ -1,4 +1,4 @@
-from sympy import ask, Q
+from sympy.assumptions.ask import (Q, ask)
 from sympy.core import Basic, Add, Mul, S
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import re, im
@@ -677,8 +677,7 @@ class BlockDiagMatrix(BlockMatrix):
 def block_collapse(expr):
     """Evaluates a block matrix expression
 
-    >>> from sympy import MatrixSymbol, BlockMatrix, symbols, \
-                          Identity, ZeroMatrix, block_collapse
+    >>> from sympy import MatrixSymbol, BlockMatrix, symbols, Identity, ZeroMatrix, block_collapse
     >>> n,m,l = symbols('n m l')
     >>> X = MatrixSymbol('X', n, n)
     >>> Y = MatrixSymbol('Y', m, m)

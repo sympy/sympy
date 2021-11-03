@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple as tTuple
 
 from sympy.core.add import Add
 from sympy.core.basic import sympify, cacheit
@@ -8,7 +8,7 @@ from sympy.core.logic import fuzzy_not, fuzzy_or, FuzzyBool, fuzzy_and
 from sympy.core.numbers import igcdex, Rational, pi, Integer
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, Dummy
 from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
 from sympy.functions.elementary.exponential import log, exp
 from sympy.functions.elementary.integers import floor
@@ -476,7 +476,7 @@ class sin(TrigonometricFunction):
         return sin(arg)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import re
+        from sympy.functions.elementary.complexes import re
         from sympy.calculus.util import AccumBounds
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
@@ -934,7 +934,7 @@ class cos(TrigonometricFunction):
         return cos(arg)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import re
+        from sympy.functions.elementary.complexes import re
         from sympy.calculus.util import AccumBounds
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
@@ -1162,7 +1162,7 @@ class tan(TrigonometricFunction):
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
-        from sympy import bernoulli
+        from sympy.functions.combinatorial.numbers import bernoulli
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -1199,11 +1199,11 @@ class tan(TrigonometricFunction):
             return (self.func(re), S.Zero)
 
     def _eval_expand_trig(self, **hints):
-        from sympy import im, re
+        from sympy.functions.elementary.complexes import (im, re)
         arg = self.args[0]
         x = None
         if arg.is_Add:
-            from sympy import symmetric_poly
+            from sympy.polys.specialpolys import symmetric_poly
             n = len(arg.args)
             TX = []
             for x in arg.args:
@@ -1473,7 +1473,7 @@ class cot(TrigonometricFunction):
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
-        from sympy import bernoulli
+        from sympy.functions.combinatorial.numbers import bernoulli
         if n == 0:
             return 1/sympify(x)
         elif n < 0 or n % 2 == 0:
@@ -1563,11 +1563,11 @@ class cot(TrigonometricFunction):
         return self.args[0].is_extended_real
 
     def _eval_expand_trig(self, **hints):
-        from sympy import im, re
+        from sympy.functions.elementary.complexes import (im, re)
         arg = self.args[0]
         x = None
         if arg.is_Add:
-            from sympy import symmetric_poly
+            from sympy.polys.specialpolys import symmetric_poly
             n = len(arg.args)
             CX = []
             for x in arg.args:
@@ -1911,7 +1911,7 @@ class csc(ReciprocalTrigonometricFunction):
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
-        from sympy import bernoulli
+        from sympy.functions.combinatorial.numbers import bernoulli
         if n == 0:
             return 1/sympify(x)
         elif n < 0 or n % 2 == 0:
@@ -2049,7 +2049,7 @@ class sinc(Function):
 
 class InverseTrigonometricFunction(Function):
     """Base class for inverse trigonometric functions."""
-    _singularities = (S.One, S.NegativeOne, S.Zero, S.ComplexInfinity)  # type: Tuple[Expr, ...]
+    _singularities = (S.One, S.NegativeOne, S.Zero, S.ComplexInfinity)  # type: tTuple[Expr, ...]
 
     @staticmethod
     def _asin_table():
@@ -2258,7 +2258,7 @@ class asin(InverseTrigonometricFunction):
                 return R/F*x**n/n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import im
+        from sympy.functions.elementary.complexes import im
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0.is_zero:
@@ -2273,8 +2273,9 @@ class asin(InverseTrigonometricFunction):
             return S.Pi - self.func(x0)
         return self.func(x0)
 
-    def _eval_nseries(self, x, n, logx, cdir=0): #asin
-        from sympy import Dummy, im, O
+    def _eval_nseries(self, x, n, logx, cdir=0):  # asin
+        from sympy.functions.elementary.complexes import im
+        from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
         if arg0 is S.One:
             t = Dummy('t', positive=True)
@@ -2461,7 +2462,7 @@ class acos(InverseTrigonometricFunction):
                 return -R/F*x**n/n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import im
+        from sympy.functions.elementary.complexes import im
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0 == 1:
@@ -2483,8 +2484,9 @@ class acos(InverseTrigonometricFunction):
     def _eval_is_nonnegative(self):
         return self._eval_is_extended_real()
 
-    def _eval_nseries(self, x, n, logx, cdir=0): #acos
-        from sympy import Dummy, im, O
+    def _eval_nseries(self, x, n, logx, cdir=0):  # acos
+        from sympy.functions.elementary.complexes import im
+        from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
         if arg0 is S.One:
             t = Dummy('t', positive=True)
@@ -2683,7 +2685,7 @@ class atan(InverseTrigonometricFunction):
             return (-1)**((n - 1)//2)*x**n/n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import im, re
+        from sympy.functions.elementary.complexes import (im, re)
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0.is_zero:
@@ -2698,8 +2700,8 @@ class atan(InverseTrigonometricFunction):
             return self.func(x0) + S.Pi
         return self.func(x0)
 
-    def _eval_nseries(self, x, n, logx, cdir=0): #atan
-        from sympy import im, re
+    def _eval_nseries(self, x, n, logx, cdir=0):  # atan
+        from sympy.functions.elementary.complexes import (im, re)
         arg0 = self.args[0].subs(x, 0)
         res = Function._eval_nseries(self, x, n=n, logx=logx)
         if cdir != 0:
@@ -2880,7 +2882,7 @@ class acot(InverseTrigonometricFunction):
             return (-1)**((n + 1)//2)*x**n/n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import im, re
+        from sympy.functions.elementary.complexes import (im, re)
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0 is S.ComplexInfinity:
@@ -2897,8 +2899,8 @@ class acot(InverseTrigonometricFunction):
             return self.func(x0) - S.Pi
         return self.func(x0)
 
-    def _eval_nseries(self, x, n, logx, cdir=0): #acot
-        from sympy import im, re
+    def _eval_nseries(self, x, n, logx, cdir=0):  # acot
+        from sympy.functions.elementary.complexes import (im, re)
         arg0 = self.args[0].subs(x, 0)
         res = Function._eval_nseries(self, x, n=n, logx=logx)
         if arg0 is S.ComplexInfinity:
@@ -3058,7 +3060,7 @@ class asec(InverseTrigonometricFunction):
         return sec
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import im
+        from sympy.functions.elementary.complexes import im
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0 == 1:
@@ -3073,8 +3075,9 @@ class asec(InverseTrigonometricFunction):
             return 2*S.Pi - self.func(x0)
         return self.func(x0)
 
-    def _eval_nseries(self, x, n, logx, cdir=0): #asec
-        from sympy import Dummy, im, O
+    def _eval_nseries(self, x, n, logx, cdir=0):  # asec
+        from sympy.functions.elementary.complexes import im
+        from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
         if arg0 is S.One:
             t = Dummy('t', positive=True)
@@ -3230,7 +3233,7 @@ class acsc(InverseTrigonometricFunction):
         return csc
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import im
+        from sympy.functions.elementary.complexes import im
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         if x0.is_zero:
@@ -3245,8 +3248,9 @@ class acsc(InverseTrigonometricFunction):
             return -S.Pi - self.func(x0)
         return self.func(x0)
 
-    def _eval_nseries(self, x, n, logx, cdir=0): #acsc
-        from sympy import Dummy, im, O
+    def _eval_nseries(self, x, n, logx, cdir=0):  # acsc
+        from sympy.functions.elementary.complexes import im
+        from sympy.series.order import O
         arg0 = self.args[0].subs(x, 0)
         if arg0 is S.One:
             t = Dummy('t', positive=True)
@@ -3403,7 +3407,8 @@ class atan2(InverseTrigonometricFunction):
 
     @classmethod
     def eval(cls, y, x):
-        from sympy import Heaviside, im, re
+        from sympy.functions.elementary.complexes import (im, re)
+        from sympy.functions.special.delta_functions import Heaviside
         if x is S.NegativeInfinity:
             if y.is_zero:
                 # Special case y = 0 because we define Heaviside(0) = 1/2
@@ -3445,14 +3450,14 @@ class atan2(InverseTrigonometricFunction):
         return -S.ImaginaryUnit*log((x + S.ImaginaryUnit*y)/sqrt(x**2 + y**2))
 
     def _eval_rewrite_as_atan(self, y, x, **kwargs):
-        from sympy import re
+        from sympy.functions.elementary.complexes import re
         return Piecewise((2*atan(y/(x + sqrt(x**2 + y**2))), Ne(y, 0)),
                          (pi, re(x) < 0),
                          (0, Ne(x, 0)),
                          (S.NaN, True))
 
     def _eval_rewrite_as_arg(self, y, x, **kwargs):
-        from sympy import arg
+        from sympy.functions.elementary.complexes import arg
         if x.is_extended_real and y.is_extended_real:
             return arg(x + y*S.ImaginaryUnit)
         n = x + S.ImaginaryUnit*y

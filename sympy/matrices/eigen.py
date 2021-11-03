@@ -4,7 +4,7 @@ from collections import Counter
 from mpmath import mp, workprec
 from mpmath.libmp.libmpf import prec_to_dps
 
-from sympy.core.compatibility import default_sort_key
+from sympy.core.sorting import default_sort_key
 from sympy.core.evalf import DEFAULT_MAXPREC, PrecisionExhausted
 from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import Float
@@ -424,7 +424,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
         # if the primitive flag is set, get rid of any common
         # integer denominators
         def denom_clean(l):
-            from sympy import gcd
+            from sympy.polys.polytools import gcd
             return [(v / gcd(list(v))).applyfunc(simpfunc) for v in l]
 
         ret = [(val, mult, denom_clean(es)) for val, mult, es in ret]

@@ -1,11 +1,14 @@
 import functools
 from typing import List
 
-from sympy import Basic, Tuple, S
+from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
+from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
+from sympy.simplify.simplify import simplify
 from sympy.tensor.array.mutable_ndim_array import MutableNDimArray
 from sympy.tensor.array.ndim_array import NDimArray, ImmutableNDimArray, ArrayKind
-from sympy.simplify.simplify import simplify
+from sympy.utilities.iterables import flatten
 
 
 class DenseNDimArray(NDimArray):
@@ -136,8 +139,6 @@ class ImmutableDenseNDimArray(DenseNDimArray, ImmutableNDimArray): # type: ignor
 
     @classmethod
     def _new(cls, iterable, shape, **kwargs):
-        from sympy.utilities.iterables import flatten
-
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         shape = Tuple(*map(_sympify, shape))
         cls._check_special_bounds(flat_list, shape)
@@ -166,8 +167,6 @@ class MutableDenseNDimArray(DenseNDimArray, MutableNDimArray):
 
     @classmethod
     def _new(cls, iterable, shape, **kwargs):
-        from sympy.utilities.iterables import flatten
-
         shape, flat_list = cls._handle_ndarray_creation_inputs(iterable, shape, **kwargs)
         flat_list = flatten(flat_list)
         self = object.__new__(cls)

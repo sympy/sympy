@@ -1,4 +1,4 @@
-from typing import Set
+from typing import Set as tSet
 
 from sympy.core import Basic, S
 from sympy.core.function import Lambda
@@ -33,7 +33,7 @@ class GLSLPrinter(CodePrinter):
     Additional settings:
     'use_operators': Boolean (should the printer use operators for +,-,*, or functions?)
     """
-    _not_supported = set()  # type: Set[Basic]
+    _not_supported = set()  # type: tSet[Basic]
     printmethod = "_glsl"
     language = "GLSL"
 
@@ -151,7 +151,7 @@ class GLSLPrinter(CodePrinter):
                 A.table(self,rowsep=mat_separator,rowstart='float[](',rowend=')')
             )
 
-    def _print_SparseMatrix(self, mat):
+    def _print_SparseRepMatrix(self, mat):
         # do not allow sparse matrices to be made dense
         return self._print_not_supported(mat)
 
@@ -350,7 +350,7 @@ def glsl_code(expr,assign_to=None,**settings):
     ==========
 
     expr : Expr
-        A sympy expression to be converted.
+        A SymPy expression to be converted.
     assign_to : optional
         When given, the argument is used for naming the variable or variables
         to which the expression is assigned. Can be a string, ``Symbol``,

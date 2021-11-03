@@ -1,17 +1,19 @@
 import itertools
 
 from sympy.core import S
+from sympy.core.add import Add
 from sympy.core.containers import Tuple
+from sympy.core.function import Function
 from sympy.core.mul import Mul
 from sympy.core.numbers import Number, Rational
 from sympy.core.power import Pow
+from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import SympifyError
 from sympy.printing.conventions import requires_partial
 from sympy.printing.precedence import PRECEDENCE, precedence, precedence_traditional
 from sympy.printing.printer import Printer, print_function
 from sympy.printing.str import sstr
-from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import has_variety
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -226,7 +228,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_Not(self, e):
-        from sympy import Equivalent, Implies
+        from sympy.logic.boolalg import (Equivalent, Implies)
         if self._use_unicode:
             arg = e.args[0]
             pform = self._print(arg)
@@ -874,7 +876,9 @@ class PrettyPrinter(Printer):
 
     def _print_MatMul(self, expr):
         args = list(expr.args)
-        from sympy import Add, MatAdd, HadamardProduct, KroneckerProduct
+        from sympy.matrices.expressions.hadamard import HadamardProduct
+        from sympy.matrices.expressions.kronecker import KroneckerProduct
+        from sympy.matrices.expressions.matadd import MatAdd
         for i, a in enumerate(args):
             if (isinstance(a, (Add, MatAdd, HadamardProduct, KroneckerProduct))
                     and len(expr.args) > 1):
@@ -918,7 +922,9 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_HadamardProduct(self, expr):
-        from sympy import MatAdd, MatMul, HadamardProduct
+        from sympy.matrices.expressions.hadamard import HadamardProduct
+        from sympy.matrices.expressions.matadd import MatAdd
+        from sympy.matrices.expressions.matmul import MatMul
         if self._use_unicode:
             delim = pretty_atom('Ring')
         else:
@@ -943,7 +949,8 @@ class PrettyPrinter(Printer):
         return pretty_base**pretty_circ_exp
 
     def _print_KroneckerProduct(self, expr):
-        from sympy import MatAdd, MatMul
+        from sympy.matrices.expressions.matadd import MatAdd
+        from sympy.matrices.expressions.matmul import MatMul
         if self._use_unicode:
             delim = ' \N{N-ARY CIRCLED TIMES OPERATOR} '
         else:
@@ -1177,7 +1184,7 @@ class PrettyPrinter(Printer):
         return prettyForm('\n'.join([s[:-3] for s in strs]))
 
     def _print_NDimArray(self, expr):
-        from sympy import ImmutableMatrix
+        from sympy.matrices.immutable import ImmutableMatrix
 
         if expr.rank() == 0:
             return self._print(expr[()])
@@ -1757,7 +1764,6 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def _print_expint(self, e):
-        from sympy import Function
         if e.args[0].is_Integer and self._use_unicode:
             return self._print_Function(Function('E_%s' % e.args[0])(e.args[1]))
         return self._print_Function(e)
@@ -1956,7 +1962,10 @@ class PrettyPrinter(Printer):
             else:
                 a.append(item)
 
-        from sympy import Integral, Piecewise, Product, Sum
+        from sympy.concrete.products import Product
+        from sympy.concrete.summations import Sum
+        from sympy.functions.elementary.piecewise import Piecewise
+        from sympy.integrals.integrals import Integral
 
         # Convert to pretty forms. Add parens to Add instances if there
         # is more than one term in the numer/denom

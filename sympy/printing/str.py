@@ -1,19 +1,21 @@
 """
-A Printer for generating readable representation of most sympy classes.
+A Printer for generating readable representation of most SymPy classes.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
 from sympy.core.relational import Relational
+from sympy.core.sorting import default_sort_key
+from sympy.core.sympify import SympifyError
 from sympy.sets.sets import FiniteSet
+from sympy.utilities.iterables import sift
+from .precedence import precedence, PRECEDENCE
 from .printer import Printer, print_function
-from sympy.printing.precedence import precedence, PRECEDENCE
 
 from mpmath.libmp import prec_to_dps, to_str as mlib_to_str
 
-from sympy.utilities import default_sort_key, sift
 
 
 class StrPrinter(Printer):
@@ -26,9 +28,9 @@ class StrPrinter(Printer):
         "perm_cyclic": True,
         "min": None,
         "max": None,
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
 
-    _relationals = dict()  # type: Dict[str, str]
+    _relationals = dict()  # type: tDict[str, str]
 
     def parenthesize(self, item, level, strict=False):
         if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
@@ -908,7 +910,6 @@ class StrPrinter(Printer):
         return "0"
 
     def _print_DMP(self, p):
-        from sympy.core.sympify import SympifyError
         try:
             if p.ring is not None:
                 # TODO incorporate order

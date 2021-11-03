@@ -2,11 +2,26 @@ from functools import reduce
 import itertools
 from operator import add
 
-from sympy import (
-    Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-    Matrix, S, cos, sin, Eq, Function, Tuple, CRootOf,
-    IndexedBase, Idx, Piecewise, O, signsimp
-)
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.function import Function
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.dense import Matrix
+from sympy.polys.rootoftools import CRootOf
+from sympy.series.order import O
+from sympy.simplify.cse_main import cse
+from sympy.simplify.simplify import signsimp
+from sympy.tensor.indexed import (Idx, IndexedBase)
+
 from sympy.core.function import count_ops
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
@@ -229,7 +244,7 @@ def test_issue_6263():
 
 
 def test_dont_cse_tuples():
-    from sympy import Subs
+    from sympy.core.function import Subs
     f = Function("f")
     g = Function("g")
 

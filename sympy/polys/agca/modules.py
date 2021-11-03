@@ -21,12 +21,12 @@ convenience methods, for example if there are faster algorithms available.
 from copy import copy
 from functools import reduce
 
-from sympy.core.compatibility import iterable
 from sympy.polys.agca.ideals import Ideal
 from sympy.polys.domains.field import Field
 from sympy.polys.orderings import ProductOrder, monomial_key
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.core.basic import _aresame
+from sympy.utilities.iterables import iterable
 
 # TODO
 # - module saturation
@@ -269,7 +269,7 @@ class FreeModuleElement(ModuleElement):
         return tuple(x / p for x in d)
 
     def __repr__(self):
-        from sympy import sstr
+        from sympy.printing.str import sstr
         return '[' + ', '.join(sstr(x) for x in self.data) + ']'
 
     def __iter__(self):

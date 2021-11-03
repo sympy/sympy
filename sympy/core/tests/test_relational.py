@@ -2,10 +2,24 @@ from sympy.core.logic import fuzzy_and
 from sympy.core.sympify import _sympify
 from sympy.multipledispatch import dispatch
 from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
-from sympy import (S, Symbol, symbols, nan, oo, I, pi, Float, And, Or,
-                   Not, Implies, Xor, zoo, sqrt, Rational, simplify, Function,
-                   log, cos, sin, Add, Mul, Pow, floor, ceiling, trigsimp, Reals,
-                   Basic, Expr, Q, exp, exp_polar)
+from sympy.assumptions.ask import Q
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr
+from sympy.core.function import Function
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Rational, nan, oo, pi, zoo)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import (exp, exp_polar, log)
+from sympy.functions.elementary.integers import (ceiling, floor)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.logic.boolalg import (And, Implies, Not, Or, Xor)
+from sympy.sets import Reals
+from sympy.simplify.simplify import simplify
+from sympy.simplify.trigsimp import trigsimp
 from sympy.core.relational import (Relational, Equality, Unequality,
                                    GreaterThan, LessThan, StrictGreaterThan,
                                    StrictLessThan, Rel, Eq, Lt, Le,
@@ -263,7 +277,7 @@ def test_rich_cmp():
 
 
 def test_doit():
-    from sympy import Symbol
+    from sympy.core.symbol import Symbol
     p = Symbol('p', positive=True)
     n = Symbol('n', negative=True)
     np = Symbol('np', nonpositive=True)
@@ -1156,7 +1170,7 @@ def test_EvalEq():
     This test exists to ensure backwards compatibility.
     The method to use is _eval_is_eq
     """
-    from sympy import Expr
+    from sympy.core.expr import Expr
 
     class PowTest(Expr):
         def __new__(cls, base, exp):
@@ -1224,9 +1238,9 @@ def test_is_ge_le():
 
 
 def test_21429():
+    from sympy import Dummy
     def test__trivial():
         from sympy.core.assumptions import check_assumptions, common_assumptions
-        from sympy import Dummy
 
         # concrete numbers to test
         n = [oo, S(3), S(2), S(1), S.Half]
@@ -1285,11 +1299,6 @@ def test_21429():
         check(b, e, None)
         check(Dummy(extended_negative=True), Dummy(integer=True), None)
 
-    # /---remove before final commit
-    from sympy.solvers.inequalities import reduce_inequalities
-    assert reduce_inequalities(0 <= x + 2*y - 1, [x]) == (x >= 1 - 2*y) & (x < oo)
-    assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x >= -y + 1) & (x < oo)
-    # ---/
     test__trivial()
     assert oo > 2*pi
     r = Symbol('r', real=True)
@@ -1459,3 +1468,21 @@ def test_21429():
     assert (nn + 1)**nn >= nn**nn
     assert (n - 1)**no >= n**no
     assert n**po >= (n - 1)**po
+
+
+def test_weak_strict():
+    for func in (Eq, Ne):
+        eq = func(x, 1)
+        assert eq.strict == eq.weak == eq
+    eq = Gt(x, 1)
+    assert eq.weak == Ge(x, 1)
+    assert eq.strict == eq
+    eq = Lt(x, 1)
+    assert eq.weak == Le(x, 1)
+    assert eq.strict == eq
+    eq = Ge(x, 1)
+    assert eq.strict == Gt(x, 1)
+    assert eq.weak == eq
+    eq = Le(x, 1)
+    assert eq.strict == Lt(x, 1)
+    assert eq.weak == eq

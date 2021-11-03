@@ -1,6 +1,9 @@
 import random
 from sympy.core.numbers import I
-from sympy import symbols, Symbol, Rational, sqrt, Poly
+from sympy.core.numbers import Rational
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.polys.polytools import Poly
 from sympy.matrices import Matrix, eye, ones
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises

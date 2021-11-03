@@ -29,7 +29,8 @@ from .containers import Tuple, Dict
 from .exprtools import gcd_terms, factor_terms, factor_nc
 from .parameters import evaluate
 from .kind import UndefinedKind, NumberKind, BooleanKind
-from .traversal import preorder_traversal, bottom_up, use
+from .traversal import preorder_traversal, bottom_up, use, postorder_traversal
+from .sorting import default_sort_key, ordered
 
 # expose singletons
 Catalan = S.Catalan
@@ -93,5 +94,7 @@ __all__ = [
 
     'UndefinedKind', 'NumberKind', 'BooleanKind',
 
-    'preorder_traversal', 'bottom_up', 'use',
+    'preorder_traversal', 'bottom_up', 'use', 'postorder_traversal',
+
+    'default_sort_key', 'ordered',
 ]

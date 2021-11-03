@@ -5,12 +5,16 @@ from itertools import chain, zip_longest
 from typing import Set, Tuple
 
 from .assumptions import BasicMeta, ManagedProperties
-from .decorators import deprecated
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
-from .compatibility import iterable, ordered
+from .sorting import ordered
 from .kind import Kind, UndefinedKind
 from ._print_helpers import Printable
+
+from sympy.utilities.decorator import deprecated
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import iterable, numbered_symbols
+from sympy.utilities.misc import filldedent, func_name
 
 from inspect import getmro
 
@@ -19,7 +23,6 @@ def as_Basic(expr):
     """Return expr as a Basic instance using strict sympify
     or raise a TypeError; this is just a wrapper to _sympify,
     raising a TypeError instead of a SympifyError."""
-    from sympy.utilities.misc import func_name
     try:
         return _sympify(expr)
     except SympifyError:
@@ -132,7 +135,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def __reduce_ex__(self, protocol):
         if protocol < 2:
-            msg = "Only pickle protocol 2 or higher is supported by sympy"
+            msg = "Only pickle protocol 2 or higher is supported by SymPy"
             raise NotImplementedError(msg)
         return super().__reduce_ex__(protocol)
 
@@ -246,7 +249,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             r = b.p * a.q
             return (l > r) - (l < r)
         else:
-            from sympy.core.symbol import Wild
+            from .symbol import Wild
             p1, p2, p3 = Wild("p1"), Wild("p2"), Wild("p3")
             r_a = a.match(p1 * p2**p3)
             if r_a and p3 in r_a:
@@ -291,7 +294,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         Examples
         ========
 
-        >>> from sympy.core import S, I
+        >>> from sympy import S, I
 
         >>> sorted([S(1)/2, I, -I], key=lambda x: x.sort_key())
         [1/2, -I, I]
@@ -459,7 +462,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         Be careful to check your assumptions when using the implicit option
         since ``S(1).is_Integer = True`` but ``type(S(1))`` is ``One``, a special type
-        of sympy atom, while ``type(S(2))`` is type ``Integer`` and will find all
+        of SymPy atom, while ``type(S(2))`` is type ``Integer`` and will find all
         integers in an expression:
 
         >>> from sympy import S
@@ -470,7 +473,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         {1, 2}
 
         Finally, arguments to atoms() can select more than atomic atoms: any
-        sympy type (loaded in core/__init__.py) can be listed as an argument
+        SymPy type (loaded in core/__init__.py) can be listed as an argument
         and those types of "atoms" as found in scanning the arguments of the
         expression recursively:
 
@@ -514,7 +517,6 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @property
     def expr_free_symbols(self):
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
         SymPyDeprecationWarning(feature="expr_free_symbols method",
                                 issue=21494,
                                 deprecated_since_version="1.9").warn()
@@ -548,7 +550,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         a property, `bound_symbols` that returns those symbols
         appearing in the object.
         """
-        from sympy.core.symbol import Dummy, Symbol
+        from .symbol import Dummy, Symbol
         def can(x):
             # mask free that shadow bound
             free = x.free_symbols
@@ -580,7 +582,6 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> Lambda(x, 2*x).canonical_variables
         {x: _0}
         """
-        from sympy.utilities.iterables import numbered_symbols
         if not hasattr(self, 'bound_symbols'):
             return {}
         dums = numbered_symbols('_')
@@ -617,7 +618,7 @@ class Basic(Printable, metaclass=ManagedProperties):
     @staticmethod
     def _recursive_call(expr_to_call, on_args):
         """Helper for rcall method."""
-        from sympy import Symbol
+        from .symbol import Symbol
         def the_call_method_is_overridden(expr):
             for cls in getmro(type(expr)):
                 if '__call__' in cls.__dict__:
@@ -636,8 +637,8 @@ class Basic(Printable, metaclass=ManagedProperties):
             return expr_to_call
 
     def is_hypergeometric(self, k):
-        from sympy.simplify import hypersimp
-        from sympy.functions import Piecewise
+        from sympy.simplify.simplify import hypersimp
+        from sympy.functions.elementary.piecewise import Piecewise
         if self.has(Piecewise):
             return None
         return hypersimp(self, k) is not None
@@ -880,13 +881,12 @@ class Basic(Printable, metaclass=ManagedProperties):
         sympy.core.evalf.EvalfMixin.evalf: calculates the given formula to a desired level of precision
 
         """
-        from sympy.core.compatibility import _nodes, default_sort_key
-        from sympy.core.containers import Dict
-        from sympy.core.symbol import Dummy, Symbol
-        from sympy.utilities.misc import filldedent
+        from .containers import Dict
+        from .symbol import Dummy, Symbol
 
         unordered = False
         if len(args) == 1:
+
             sequence = args[0]
             if isinstance(sequence, set):
                 unordered = True
@@ -920,6 +920,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         sequence = list(filter(None, sequence))
 
         if unordered:
+            from .sorting import _nodes, default_sort_key
             sequence = dict(sequence)
             # order so more complex items are first and items
             # of identical complexity are ordered so
@@ -1190,7 +1191,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         Note ``has`` is a structural algorithm with no knowledge of
         mathematics. Consider the following half-open interval:
 
-        >>> from sympy.sets import Interval
+        >>> from sympy import Interval
         >>> i = Interval.Lopen(0, 5); i
         Interval.Lopen(0, 5)
         >>> i.args
@@ -1221,7 +1222,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def _has(self, pattern):
         """Helper for .has()"""
-        from sympy.core.function import UndefinedFunction, Function
+        from .function import UndefinedFunction, Function
         if isinstance(pattern, UndefinedFunction):
             return any(pattern in (f, f.func)
                        for f in self.atoms(Function, UndefinedFunction))
@@ -1405,8 +1406,6 @@ class Basic(Printable, metaclass=ManagedProperties):
                   using matching rules
 
         """
-        from sympy.core.symbol import Wild
-
 
         try:
             query = _sympify(query)
@@ -1430,6 +1429,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         elif isinstance(query, Basic):
             _query = lambda expr: expr.match(query)
             if exact is None:
+                from .symbol import Wild
                 exact = (len(query.atoms(Wild)) > 1)
 
             if isinstance(value, Basic):
@@ -1621,16 +1621,14 @@ class Basic(Printable, metaclass=ManagedProperties):
         {p_: 2/x**2}
 
         """
-        from sympy.core.symbol import Wild
-        from sympy.core.function import WildFunction
-        from sympy.utilities.misc import filldedent
-
         pattern = sympify(pattern)
         # match non-bound symbols
         canonical = lambda x: x if x.is_Symbol else x.as_dummy()
         m = canonical(pattern).matches(canonical(self), old=old)
         if m is None:
             return m
+        from .symbol import Wild
+        from .function import WildFunction
         wild = pattern.atoms(Wild, WildFunction)
         # sanity check
         if set(m) - wild:
@@ -1655,7 +1653,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def count_ops(self, visual=None):
         """wrapper for count_ops that returns the operation count."""
-        from sympy import count_ops
+        from .function import count_ops
         return count_ops(self, visual)
 
     def doit(self, **hints):
@@ -1686,12 +1684,12 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def simplify(self, **kwargs):
         """See the simplify function in sympy.simplify"""
-        from sympy.simplify import simplify
+        from sympy.simplify.simplify import simplify
         return simplify(self, **kwargs)
 
     def refine(self, assumption=True):
         """See the refine function in sympy.assumptions"""
-        from sympy.assumptions import refine
+        from sympy.assumptions.refine import refine
         return refine(self, assumption)
 
     def _eval_derivative_n_times(self, s, n):
@@ -1701,7 +1699,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         # while leaving the derivative unevaluated if `n` is symbolic.  This
         # method should be overridden if the object has a closed form for its
         # symbolic n-th derivative.
-        from sympy import Integer
+        from .numbers import Integer
         if isinstance(n, (int, Integer)):
             obj = self
             for i in range(n):
@@ -2007,7 +2005,6 @@ def _atomic(e, recursive=False):
     {y, cos(x), Derivative(f(x), x)}
 
     """
-    from sympy import Derivative, Function, Symbol
     pot = _preorder_traversal(e)
     seen = set()
     if isinstance(e, Basic):
@@ -2016,6 +2013,8 @@ def _atomic(e, recursive=False):
             return {e}
     else:
         return set()
+    from .symbol import Symbol
+    from .function import Derivative, Function
     atoms = set()
     for p in pot:
         if p in seen:

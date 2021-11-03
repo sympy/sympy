@@ -1,14 +1,14 @@
-from typing import Dict, List
+from typing import Dict as tDict, List
 
 from sympy.core import S
-from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
-from sympy.utilities.iterables import flatten
+from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.magic import pollute
+from sympy.utilities.misc import as_int
 
 
 @public
@@ -109,7 +109,7 @@ def _parse_symbols(symbols):
 #                          FREE GROUP                                        #
 ##############################################################################
 
-_free_group_cache = {}  # type: Dict[int, FreeGroup]
+_free_group_cache = {}  # type: tDict[int, FreeGroup]
 
 class FreeGroup(DefaultPrinting):
     """

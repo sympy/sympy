@@ -1,7 +1,14 @@
 import itertools
 
-from sympy import (MatrixExpr, Expr, ShapeError, ZeroMatrix,
-                    Add, Mul, MatMul, S, expand as _expand)
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.function import expand as _expand
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
+from sympy.matrices.common import ShapeError
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.matmul import MatMul
+from sympy.matrices.expressions.special import ZeroMatrix
 from sympy.stats.rv import RandomSymbol, is_random
 from sympy.core.sympify import _sympify
 from sympy.stats.symbolic_probability import Variance, Covariance, Expectation

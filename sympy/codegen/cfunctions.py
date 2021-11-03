@@ -99,7 +99,7 @@ class log1p(Function):
 
     >>> from sympy.abc import x
     >>> from sympy.codegen.cfunctions import log1p
-    >>> from sympy.core.function import expand_log
+    >>> from sympy import expand_log
     >>> '%.0e' % expand_log(log1p(1e-99)).evalf()
     '1e-99'
     >>> from math import log

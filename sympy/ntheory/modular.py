@@ -1,11 +1,11 @@
 from functools import reduce
 
-from sympy.core.compatibility import as_int
 from sympy.core.mul import prod
 from sympy.core.numbers import igcdex, igcd
 from sympy.ntheory.primetest import isprime
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt, gf_crt1, gf_crt2
+from sympy.utilities.misc import as_int
 
 
 def symmetric_residue(a, m):

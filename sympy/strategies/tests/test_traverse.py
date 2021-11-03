@@ -2,7 +2,10 @@ from sympy.strategies.traverse import (top_down, bottom_up, sall, top_down_once,
         bottom_up_once, basic_fns)
 from sympy.strategies.rl import rebuild
 from sympy.strategies.util import expr_fns
-from sympy import Add, Basic, Symbol, S
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.abc import x, y, z
 
 

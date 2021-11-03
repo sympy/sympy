@@ -34,7 +34,7 @@ else:
     disabled = True
 
 import sympy as sy
-from sympy import S
+from sympy.core.singleton import S
 from sympy.abc import x, y, z, t
 from sympy.printing.aesaracode import (aesara_code, dim_handling,
         aesara_function)
@@ -65,7 +65,7 @@ def fgraph_of(*exprs):
     Parameters
     ==========
     exprs
-        Sympy expressions
+        SymPy expressions
 
     Returns
     =======
@@ -609,7 +609,7 @@ def test_Relationals():
 
 def test_complexfunctions():
     xt, yt = aesara_code(x, dtypes={x:'complex128'}), aesara_code(y, dtypes={y: 'complex128'})
-    from sympy import conjugate
+    from sympy.functions.elementary.complexes import conjugate
     from aesara.tensor import as_tensor_variable as atv
     from aesara.tensor import complex as cplx
     assert theq(aesara_code(y*conjugate(x)), yt*(xt.conj()))

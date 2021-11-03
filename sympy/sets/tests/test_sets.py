@@ -1,9 +1,20 @@
-from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    Max, Min, Float, DisjointUnion,
-    FiniteSet, Intersection, imageset, I, true, false, ProductSet,
-    sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
-    Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix, Range, Add, symbols, zoo, Rational)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.function import Lambda
+from sympy.core.numbers import (Float, I, Rational, nan, oo, pi, zoo)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.logic.boolalg import (false, true)
+from sympy.matrices.dense import Matrix
+from sympy.polys.rootoftools import rootof
+from sympy.sets.contains import Contains
+from sympy.sets.fancysets import (ImageSet, Range)
+from sympy.sets.sets import (Complement, DisjointUnion, FiniteSet, Intersection, Interval, ProductSet, Set, SymmetricDifference, Union, imageset)
 from mpmath import mpi
 
 from sympy.core.expr import unchanged
@@ -13,6 +24,7 @@ from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.abc import x, y, z, m, n
 
+EmptySet = S.EmptySet
 
 def test_imageset():
     ints = S.Integers
@@ -371,6 +383,7 @@ def test_set_operations_nonsets():
 
 
 def test_complement():
+    assert Complement({1, 2}, {1}) == {2}
     assert Interval(0, 1).complement(S.Reals) == \
         Union(Interval(-oo, 0, True, True), Interval(1, oo, True, True))
     assert Interval(0, 1, True, False).complement(S.Reals) == \

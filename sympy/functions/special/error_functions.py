@@ -1,16 +1,17 @@
 """ This module contains various functions that are special cases
     of incomplete gamma functions. It should probably be renamed. """
 
-from sympy.core import Add, S, sympify, cacheit, pi, I, Rational
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core import Add, S, sympify, cacheit, pi, I, Rational, EulerGamma
+from sympy.core.function import Function, ArgumentIndexError, expand_mul
 from sympy.core.relational import is_eq
+from sympy.core.power import Pow
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial, factorial2, RisingFactorial
 from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt, root
-from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.complexes import polar_lift
+from sympy.functions.elementary.exponential import exp, log, exp_polar
+from sympy.functions.elementary.complexes import polar_lift, unpolarify
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.trigonometric import cos, sin, sinc
 from sympy.functions.special.hyper import hyper, meijerg
@@ -196,7 +197,7 @@ class erf(Function):
         return self.args[0].is_zero
 
     def _eval_rewrite_as_uppergamma(self, z, **kwargs):
-        from sympy import uppergamma
+        from sympy.functions.special.gamma_functions import uppergamma
         return sqrt(z**2)/z*(S.One - uppergamma(S.Half, z**2)/sqrt(S.Pi))
 
     def _eval_rewrite_as_fresnels(self, z, **kwargs):
@@ -243,7 +244,7 @@ class erf(Function):
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
-        from sympy import ceiling
+        from sympy.functions.elementary.integers import ceiling
         point = args0[0]
 
         if point in [S.Infinity, S.NegativeInfinity]:
@@ -431,7 +432,7 @@ class erfc(Function):
         return S.One - 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], -z**2)
 
     def _eval_rewrite_as_uppergamma(self, z, **kwargs):
-        from sympy import uppergamma
+        from sympy.functions.special.gamma_functions import uppergamma
         return S.One - sqrt(z**2)/z*(S.One - uppergamma(S.Half, z**2)/sqrt(S.Pi))
 
     def _eval_rewrite_as_expint(self, z, **kwargs):
@@ -615,7 +616,7 @@ class erfi(Function):
         return 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], z**2)
 
     def _eval_rewrite_as_uppergamma(self, z, **kwargs):
-        from sympy import uppergamma
+        from sympy.functions.special.gamma_functions import uppergamma
         return sqrt(-z**2)/z*(uppergamma(S.Half, -z**2)/sqrt(S.Pi) - S.One)
 
     def _eval_rewrite_as_expint(self, z, **kwargs):
@@ -781,7 +782,7 @@ class erf2(Function):
         return erf(y).rewrite(hyper) - erf(x).rewrite(hyper)
 
     def _eval_rewrite_as_uppergamma(self, x, y, **kwargs):
-        from sympy import uppergamma
+        from sympy.functions.special.gamma_functions import uppergamma
         return (sqrt(y**2)/y*(S.One - uppergamma(S.Half, y**2)/sqrt(S.Pi)) -
             sqrt(x**2)/x*(S.One - uppergamma(S.Half, x**2)/sqrt(S.Pi)))
 
@@ -1171,7 +1172,6 @@ class Ei(Function):
             return Ei(nz) + 2*I*pi*n
 
     def fdiff(self, argindex=1):
-        from sympy import unpolarify
         arg = unpolarify(self.args[0])
         if argindex == 1:
             return exp(arg)/arg
@@ -1184,7 +1184,7 @@ class Ei(Function):
         return Function._eval_evalf(self, prec)
 
     def _eval_rewrite_as_uppergamma(self, z, **kwargs):
-        from sympy import uppergamma
+        from sympy.functions.special.gamma_functions import uppergamma
         # XXX this does not currently work usefully because uppergamma
         #     immediately turns into expint
         return -uppergamma(0, polar_lift(-1)*z) - I*pi
@@ -1346,7 +1346,7 @@ class expint(Function):
 
     @classmethod
     def eval(cls, nu, z):
-        from sympy import (unpolarify, expand_mul, uppergamma, gamma)
+        from sympy.functions.special.gamma_functions import (gamma, uppergamma)
         nu2 = unpolarify(nu)
         if nu != nu2:
             return expint(nu2, z)
@@ -1376,11 +1376,10 @@ class expint(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_uppergamma(self, nu, z, **kwargs):
-        from sympy import uppergamma
+        from sympy.functions.special.gamma_functions import uppergamma
         return z**(nu - 1)*uppergamma(1 - nu, z)
 
     def _eval_rewrite_as_Ei(self, nu, z, **kwargs):
-        from sympy import exp_polar, unpolarify
         if nu == 1:
             return -Ei(z*exp_polar(-I*pi)) - I*pi
         elif nu.is_Integer and nu > 1:
@@ -1593,7 +1592,7 @@ class li(Function):
         return Ei(log(z))
 
     def _eval_rewrite_as_uppergamma(self, z, **kwargs):
-        from sympy import uppergamma
+        from sympy.functions.special.gamma_functions import uppergamma
         return (-uppergamma(0, -log(z)) +
                 S.Half*(log(log(z)) - log(S.One/log(z))) - log(-log(z)))
 
@@ -1762,7 +1761,6 @@ class TrigonometricIntegral(Function):
         return 2*pi*I*n*cls._trigfunc(0) + cls(nz)
 
     def fdiff(self, argindex=1):
-        from sympy import unpolarify
         arg = unpolarify(self.args[0])
         if argindex == 1:
             return self._trigfunc(arg)/arg
@@ -1773,12 +1771,11 @@ class TrigonometricIntegral(Function):
         return self._eval_rewrite_as_expint(z).rewrite(Ei)
 
     def _eval_rewrite_as_uppergamma(self, z, **kwargs):
-        from sympy import uppergamma
+        from sympy.functions.special.gamma_functions import uppergamma
         return self._eval_rewrite_as_expint(z).rewrite(uppergamma)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE this is fairly inefficient
-        from sympy import EulerGamma, Pow
         n += 1
         if self.args[0].subs(x, 0) != 0:
             return super()._eval_nseries(x, n, logx)
@@ -1886,7 +1883,7 @@ class Si(TrigonometricIntegral):
         return pi/2 + (E1(polar_lift(I)*z) - E1(polar_lift(-I)*z))/2/I
 
     def _eval_rewrite_as_sinc(self, z, **kwargs):
-        from sympy import Integral
+        from sympy.integrals.integrals import Integral
         t = Symbol('t', Dummy=True)
         return Integral(sinc(t), (t, 0, z))
 
@@ -2128,7 +2125,6 @@ class Shi(TrigonometricIntegral):
         return I*Si(z)*sign
 
     def _eval_rewrite_as_expint(self, z, **kwargs):
-        from sympy import exp_polar
         # XXX should we polarify z?
         return (E1(z) - E1(exp_polar(I*pi)*z))/2 - I*pi/2
 
@@ -2248,7 +2244,6 @@ class Chi(TrigonometricIntegral):
         return Ci(z) + I*pi/2*sign
 
     def _eval_rewrite_as_expint(self, z, **kwargs):
-        from sympy import exp_polar
         return -I*pi/2 - (E1(z) + E1(exp_polar(I*pi)*z))/2
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
@@ -2452,7 +2447,7 @@ class fresnels(FresnelIntegral):
             return self.func(arg0)
 
     def _eval_aseries(self, n, args0, x, logx):
-        from sympy import Order
+        from sympy.series.order import Order
         point = args0[0]
 
         # Expansion at oo and -oo
@@ -2593,7 +2588,7 @@ class fresnelc(FresnelIntegral):
                 * meijerg([], [1], [Rational(1, 4)], [Rational(3, 4), 0], -pi**2*z**4/16))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
+        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x, logx=logx, cdir=cdir)
         arg0 = arg.subs(x, 0)
 
@@ -2608,7 +2603,7 @@ class fresnelc(FresnelIntegral):
             return self.func(arg0)
 
     def _eval_aseries(self, n, args0, x, logx):
-        from sympy import Order
+        from sympy.series.order import Order
         point = args0[0]
 
         # Expansion at oo
@@ -2654,7 +2649,7 @@ class _erfs(Function):
             return S.One
 
     def _eval_aseries(self, n, args0, x, logx):
-        from sympy import Order
+        from sympy.series.order import Order
         point = args0[0]
 
         # Expansion at oo
@@ -2700,7 +2695,7 @@ class _eis(Function):
 
 
     def _eval_aseries(self, n, args0, x, logx):
-        from sympy import Order
+        from sympy.series.order import Order
         if args0[0] != S.Infinity:
             return super(_erfs, self)._eval_aseries(n, args0, x, logx)
 

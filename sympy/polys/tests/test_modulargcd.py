@@ -9,7 +9,7 @@ from sympy.polys.modulargcd import (
     _to_ANP_poly,
     func_field_modgcd,
     _func_field_modgcd_m)
-from sympy import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt
 
 
 def test_modgcd_univariate_integers():
