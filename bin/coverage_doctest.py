@@ -228,8 +228,9 @@ def _get_arg_list(name, fobj):
     # Add var args
     if argspec.varargs:
         arg_list.append(argspec.varargs)
-    if argspec.keywords:
-        arg_list.append(argspec.keywords)
+    #if hasattr(argspec, 'keywords') and argspec.keywords:
+    if argspec.varkw:
+        arg_list.append(argspec.varkw)
 
     # Truncate long arguments
     arg_list = [x[:trunc] for x in arg_list]
@@ -327,7 +328,7 @@ def process_function(name, c_name, b_obj, mod_path, f_sk, f_md, f_mdt, f_idt,
             # this was a function defined in the docstring
             f_doctest = True
         else:
-            assert None, type(doc)
+            raise TypeError('Docstring must be a string or property type')
 
         function = True
 
@@ -355,7 +356,7 @@ def process_function(name, c_name, b_obj, mod_path, f_sk, f_md, f_mdt, f_idt,
     return f_doctest, function
 
 
-def process_class(c_name, obj, c_sk, c_md, c_mdt, c_idt, c_has_doctest,
+def process_class(c_name, obj, c_skip, c_md, c_mdt, c_idt, c_has_doctest,
                   mod_path, sph, sphinx=True):
     """
     Extracts information about the class regarding documentation.
@@ -365,7 +366,7 @@ def process_class(c_name, obj, c_sk, c_md, c_mdt, c_idt, c_has_doctest,
 
     # Skip class case
     if c_name.startswith('_'):
-        c_sk.append(c_name)
+        c_skip.append(c_name)
         return False, False, None
 
     c = False
@@ -381,7 +382,7 @@ def process_class(c_name, obj, c_sk, c_md, c_mdt, c_idt, c_has_doctest,
     c = True
     full_name = "LINE %d: %s" % (line_no, c_name)
     doc = obj.__doc__
-    if type(doc) is str:
+    if isinstance(doc, str):
         if not doc:
             c_md.append(full_name)
         elif not '>>>' in doc:
@@ -395,8 +396,14 @@ def process_class(c_name, obj, c_sk, c_md, c_mdt, c_idt, c_has_doctest,
         # this was a class defined in the docstring
         c_dt = True
         c_has_doctest.append(full_name)
+    elif isinstance(doc, property):
+        # skip class with dynamic doc
+        c_skip.append(c_name)
+        return False, False, None
     else:
-        assert None, type(doc)
+        print(obj)
+        print(type(doc))
+        raise TypeError('Docstring must be a string or property type')
 
     in_sphinx = False
     if sphinx:
