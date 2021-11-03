@@ -1,17 +1,34 @@
-from __future__ import unicode_literals
-from sympy import (S, Symbol, Interval, exp,
-        symbols, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
-        DiracDelta, Lambda, log, pi, FallingFactorial, Rational)
+from sympy.concrete.summations import Sum
+from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
+from sympy.core.function import Lambda
+from sympy.core.numbers import (Rational, nan, oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.combinatorial.factorials import (FallingFactorial, binomial)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.delta_functions import DiracDelta
+from sympy.integrals.integrals import integrate
+from sympy.logic.boolalg import (And, Or)
+from sympy.matrices.dense import Matrix
+from sympy.sets.sets import Interval
+from sympy.tensor.indexed import Indexed
 from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
-        density, given, independent, dependent, where, pspace,
+        density, given, independent, dependent, where, pspace, GaussianUnitaryEnsemble,
         random_symbols, sample, Geometric, factorial_moment, Binomial, Hypergeometric,
-        DiscreteUniform, Poisson, characteristic_function, moment_generating_function)
+        DiscreteUniform, Poisson, characteristic_function, moment_generating_function,
+        BernoulliProcess, Variance, Expectation, Probability, Covariance, covariance, cmoment,
+        moment, median)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
-        RandomSymbol, sample_iter, PSpace)
-from sympy.testing.pytest import raises, skip, XFAIL, ignore_warnings
+        RandomSymbol, sample_iter, PSpace, is_random, RandomIndexedSymbol, RandomMatrixSymbol)
+from sympy.testing.pytest import raises, skip, XFAIL
 from sympy.external import import_module
 from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution
+from sympy.core.symbol import Dummy
+from sympy.functions.elementary.piecewise import Piecewise
 
 def test_where():
     X, Y = Die('X'), Die('Y')
@@ -39,14 +56,15 @@ def test_where():
 def test_random_symbols():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
 
-    assert set(random_symbols(2*X + 1)) == set((X,))
-    assert set(random_symbols(2*X + Y)) == set((X, Y))
-    assert set(random_symbols(2*X + Y.symbol)) == set((X,))
+    assert set(random_symbols(2*X + 1)) == {X}
+    assert set(random_symbols(2*X + Y)) == {X, Y}
+    assert set(random_symbols(2*X + Y.symbol)) == {X}
     assert set(random_symbols(2)) == set()
+
 
 def test_characteristic_function():
     #  Imports I from sympy
-    from sympy import I
+    from sympy.core.numbers import I
     X = Normal('X',0,1)
     Y = DiscreteUniform('Y', [1,2,7])
     Z = Poisson('Z', 2)
@@ -56,9 +74,10 @@ def test_characteristic_function():
     R = Lambda(t, exp(2 * exp(t*I) - 2))
 
 
-    assert characteristic_function(X) == P
-    assert characteristic_function(Y) == Q
-    assert characteristic_function(Z) == R
+    assert characteristic_function(X).dummy_eq(P)
+    assert characteristic_function(Y).dummy_eq(Q)
+    assert characteristic_function(Z).dummy_eq(R)
+
 
 def test_moment_generating_function():
 
@@ -71,14 +90,14 @@ def test_moment_generating_function():
     R = Lambda(t, exp(2 * exp(t) - 2))
 
 
-    assert moment_generating_function(X) == P
-    assert moment_generating_function(Y) == Q
-    assert moment_generating_function(Z) == R
+    assert moment_generating_function(X).dummy_eq(P)
+    assert moment_generating_function(Y).dummy_eq(Q)
+    assert moment_generating_function(Z).dummy_eq(R)
 
 def test_sample_iter():
 
     X = Normal('X',0,1)
-    Y = DiscreteUniform('Y', [1,2,7])
+    Y = DiscreteUniform('Y', [1, 2, 7])
     Z = Poisson('Z', 2)
 
     scipy = import_module('scipy')
@@ -188,9 +207,8 @@ def test_Sample():
     scipy = import_module('scipy')
     if not scipy:
         skip('Scipy is not installed. Abort tests')
-    with ignore_warnings(UserWarning):
-        assert next(sample(X)) in [1, 2, 3, 4, 5, 6]
-        assert next(sample(X + Y))[0].is_Float
+    assert sample(X) in [1, 2, 3, 4, 5, 6]
+    assert isinstance(sample(X + Y), float)
 
     assert P(X + Y > 0, Y < 0, numsamples=10).is_number
     assert E(X + Y, numsamples=10).is_number
@@ -205,6 +223,14 @@ def test_Sample():
 
     assert all(i in range(1, 7) for i in density(X, numsamples=10))
     assert all(i in range(4, 7) for i in density(X, X>3, numsamples=10))
+
+    numpy = import_module('numpy')
+    if not numpy:
+        skip('Numpy is not installed. Abort tests')
+    #Test Issue #21563: Output of sample must be a float or array
+    assert isinstance(sample(X), (numpy.int32, numpy.int64))
+    assert isinstance(sample(Y), numpy.float64)
+    assert isinstance(sample(X, size=2), numpy.ndarray)
 
 
 @XFAIL
@@ -301,6 +327,27 @@ def test_density_constant():
     assert density(3)(2) == 0
     assert density(3)(3) == DiracDelta(0)
 
+def test_cmoment_constant():
+    assert variance(3) == 0
+    assert cmoment(3, 3) == 0
+    assert cmoment(3, 4) == 0
+    x = Symbol('x')
+    assert variance(x) == 0
+    assert cmoment(x, 15) == 0
+    assert cmoment(x, 0) == 1
+
+def test_moment_constant():
+    assert moment(3, 0) == 1
+    assert moment(3, 1) == 3
+    assert moment(3, 2) == 9
+    x = Symbol('x')
+    assert moment(x, 2) == x**2
+
+def test_median_constant():
+    assert median(3) == 3
+    x = Symbol('x')
+    assert median(x) == x
+
 def test_real():
     x = Normal('x', 0, 1)
     assert x.is_real
@@ -338,3 +385,55 @@ def test_issue_12237():
     assert W == P(X + Y > 0, X)
     assert U == BernoulliDistribution(S.Half, S.Zero, S.One)
     assert V == S.Half
+
+def test_is_random():
+    X = Normal('X', 0, 1)
+    Y = Normal('Y', 0, 1)
+    a, b = symbols('a, b')
+    G = GaussianUnitaryEnsemble('U', 2)
+    B = BernoulliProcess('B', 0.9)
+    assert not is_random(a)
+    assert not is_random(a + b)
+    assert not is_random(a * b)
+    assert not is_random(Matrix([a**2, b**2]))
+    assert is_random(X)
+    assert is_random(X**2 + Y)
+    assert is_random(Y + b**2)
+    assert is_random(Y > 5)
+    assert is_random(B[3] < 1)
+    assert is_random(G)
+    assert is_random(X * Y * B[1])
+    assert is_random(Matrix([[X, B[2]], [G, Y]]))
+    assert is_random(Eq(X, 4))
+
+def test_issue_12283():
+    x = symbols('x')
+    X = RandomSymbol(x)
+    Y = RandomSymbol('Y')
+    Z = RandomMatrixSymbol('Z', 2, 1)
+    W = RandomMatrixSymbol('W', 2, 1)
+    RI = RandomIndexedSymbol(Indexed('RI', 3))
+    assert pspace(Z) == PSpace()
+    assert pspace(RI) == PSpace()
+    assert pspace(X) == PSpace()
+    assert E(X) == Expectation(X)
+    assert P(Y > 3) == Probability(Y > 3)
+    assert variance(X) == Variance(X)
+    assert variance(RI) == Variance(RI)
+    assert covariance(X, Y) == Covariance(X, Y)
+    assert covariance(W, Z) == Covariance(W, Z)
+
+def test_issue_6810():
+    X = Die('X', 6)
+    Y = Normal('Y', 0, 1)
+    assert P(Eq(X, 2)) == S(1)/6
+    assert P(Eq(Y, 0)) == 0
+    assert P(Or(X > 2, X < 3)) == 1
+    assert P(And(X > 3, X > 2)) == S(1)/2
+
+def test_issue_20286():
+    n, p = symbols('n p')
+    B = Binomial('B', n, p)
+    k = Dummy('k', integer = True)
+    eq = Sum(Piecewise((-p**k*(1 - p)**(-k + n)*log(p**k*(1 - p)**(-k + n)*binomial(n, k))*binomial(n, k), (k >= 0) & (k <= n)), (nan, True)), (k, 0, n))
+    assert eq.dummy_eq(H(B))

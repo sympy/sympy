@@ -4,7 +4,8 @@ Module defining unit prefixe class and some constants.
 Constant dict for SI and binary prefixes are defined as PREFIXES and
 BIN_PREFIXES.
 """
-from sympy import Expr, sympify
+from sympy.core.expr import Expr
+from sympy.core.sympify import sympify
 
 
 class Prefix(Expr):
@@ -74,7 +75,7 @@ class Prefix(Expr):
     def __mul__(self, other):
         from sympy.physics.units import Quantity
         if not isinstance(other, (Quantity, Prefix)):
-            return super(Prefix, self).__mul__(other)
+            return super().__mul__(other)
 
         fact = self.scale_factor * other.scale_factor
 
@@ -89,9 +90,9 @@ class Prefix(Expr):
 
         return self.scale_factor * other
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         if not hasattr(other, "scale_factor"):
-            return super(Prefix, self).__div__(other)
+            return super().__truediv__(other)
 
         fact = self.scale_factor / other.scale_factor
 
@@ -105,16 +106,12 @@ class Prefix(Expr):
 
         return self.scale_factor / other
 
-    __truediv__ = __div__
-
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         if other == 1:
             for p in PREFIXES:
                 if PREFIXES[p].scale_factor == 1 / self.scale_factor:
                     return PREFIXES[p]
         return other / self.scale_factor
-
-    __rtruediv__ = __rdiv__
 
 
 def prefix_unit(unit, prefixes):
@@ -126,7 +123,6 @@ def prefix_unit(unit, prefixes):
 
         >>> from sympy.physics.units.prefixes import (PREFIXES,
         ...                                                 prefix_unit)
-        >>> from sympy.physics.units.systems import MKS
         >>> from sympy.physics.units import m
         >>> pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
         >>> prefix_unit(m, pref)  # doctest: +SKIP

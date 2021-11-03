@@ -1,6 +1,10 @@
 from itertools import product
 
-from sympy import S, symbols, Function, exp, diff, Rational
+from sympy.core.function import (Function, diff)
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import exp
 from sympy.calculus.finite_diff import (
     apply_finite_diff, differentiate_finite, finite_diff_weights,
     as_finite_diff
@@ -142,8 +146,8 @@ def test_differentiate_finite():
     res2 = differentiate_finite(f(x) + x**3 + 42, x, points=[x-1, x+1])
     ref2 = (f(x + 1) + (x + 1)**3 - f(x - 1) - (x - 1)**3)/2
     assert (res2 - ref2).simplify() == 0
-    raises(ValueError, lambda: differentiate_finite(f(x)*g(x), x,
-                                                    pints=[x-1, x+1]))
+    raises(TypeError, lambda: differentiate_finite(f(x)*g(x), x,
+                                                   pints=[x-1, x+1]))
 
     res3 = differentiate_finite(f(x)*g(x).diff(x), x)
     ref3 = (-g(x) + g(x + 1))*f(x + S.Half) - (g(x) - g(x - 1))*f(x - S.Half)

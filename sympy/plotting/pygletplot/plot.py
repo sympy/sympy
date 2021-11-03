@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 from threading import RLock
 
 # it is sufficient to import "pyglet" here once
@@ -9,8 +7,8 @@ except ImportError:
     raise ImportError("pyglet is required for plotting.\n "
                       "visit http://www.pyglet.org/")
 
-from sympy.core.compatibility import is_sequence, SYMPY_INTS
 from sympy.core.numbers import Integer
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.geometry.entity import GeometryEntity
 from sympy.plotting.pygletplot.plot_axes import PlotAxes
 from sympy.plotting.pygletplot.plot_mode import PlotMode
@@ -18,6 +16,7 @@ from sympy.plotting.pygletplot.plot_object import PlotObject
 from sympy.plotting.pygletplot.plot_window import PlotWindow
 from sympy.plotting.pygletplot.util import parse_option_string
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.iterables import is_sequence
 
 from time import sleep
 from os import getcwd, listdir
@@ -25,7 +24,7 @@ from os import getcwd, listdir
 import ctypes
 
 @doctest_depends_on(modules=('pyglet',))
-class PygletPlot(object):
+class PygletPlot:
     """
     Plot Examples
     =============
@@ -165,7 +164,6 @@ class PygletPlot(object):
         other words...
 
         >>> from sympy.plotting.pygletplot import PygletPlot as Plot
-        >>> from sympy.core import Symbol
         >>> from sympy.abc import x
         >>> p = Plot(x**2, visible=False)
 
@@ -411,10 +409,8 @@ class ScreenShot:
         self.invisibleMode = False
         self.flag = 0
 
-    def __nonzero__(self):
+    def __bool__(self):
         return self.screenshot_requested
-
-    __bool__ = __nonzero__
 
     def _execute_saving(self):
         if self.flag < 3:

@@ -1,6 +1,5 @@
-from __future__ import print_function, division
+from time import perf_counter
 
-from sympy.core.compatibility import clock
 
 import pyglet.gl as pgl
 
@@ -39,7 +38,7 @@ class PlotWindow(ManagedWindow):
         self.caption_update_interval = 0.2
         self.drawing_first_object = True
 
-        super(PlotWindow, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def setup(self):
         self.camera = PlotCamera(self, ortho=self.ortho)
@@ -67,7 +66,7 @@ class PlotWindow(ManagedWindow):
         self.camera.setup_projection()
 
     def on_resize(self, w, h):
-        super(PlotWindow, self).on_resize(w, h)
+        super().on_resize(w, h)
         if self.camera is not None:
             self.camera.setup_projection()
 
@@ -81,7 +80,7 @@ class PlotWindow(ManagedWindow):
         calc_verts_pos, calc_verts_len = 0, 0
         calc_cverts_pos, calc_cverts_len = 0, 0
 
-        should_update_caption = (clock() - self.last_caption_update >
+        should_update_caption = (perf_counter() - self.last_caption_update >
                                  self.caption_update_interval)
 
         if len(self.plot._functions.values()) == 0:
@@ -129,7 +128,7 @@ class PlotWindow(ManagedWindow):
         if should_update_caption:
             self.update_caption(calc_verts_pos, calc_verts_len,
                                 calc_cverts_pos, calc_cverts_len)
-            self.last_caption_update = clock()
+            self.last_caption_update = perf_counter()
 
         if self.plot._screenshot:
             self.plot._screenshot._execute_saving()

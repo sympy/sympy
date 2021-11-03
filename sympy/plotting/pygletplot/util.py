@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 try:
     from ctypes import c_float, c_int, c_double
 except ImportError:
@@ -149,7 +147,7 @@ def strided_range(r_min, r_max, stride, max_steps=50):
     except (TypeError, OverflowError):
         return []
     if r_min > r_max:
-        raise ValueError("r_min can not be greater than r_max")
+        raise ValueError("r_min cannot be greater than r_max")
     r_min_s = (r_min % stride)
     r_max_s = stride - (r_max % stride)
     if abs(r_max_s - stride) < 0.001:

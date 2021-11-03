@@ -6,7 +6,7 @@ from sympy.matrices.expressions import (
     Adjoint, Identity, FunctionMatrix, MatrixExpr, MatrixSymbol, Trace,
     ZeroMatrix, trace, MatPow, MatAdd, MatMul
 )
-from sympy.matrices.expressions.matexpr import OneMatrix
+from sympy.matrices.expressions.special import OneMatrix
 from sympy.testing.pytest import raises
 
 n = symbols('n', integer=True)
@@ -97,3 +97,17 @@ def test_trace_constant_factor():
 
 def test_rewrite():
     assert isinstance(trace(A).rewrite(Sum), Sum)
+
+
+def test_trace_normalize():
+    assert Trace(B*A) != Trace(A*B)
+    assert Trace(B*A)._normalize() == Trace(A*B)
+    assert Trace(B*A.T)._normalize() == Trace(A*B.T)
+
+
+def test_trace_as_explicit():
+    raises(ValueError, lambda: Trace(A).as_explicit())
+
+    X = MatrixSymbol("X", 3, 3)
+    assert Trace(X).as_explicit() == X[0, 0] + X[1, 1] + X[2, 2]
+    assert Trace(eye(3)).as_explicit() == 3

@@ -1,11 +1,10 @@
 """Implementation of :class:`GMPYIntegerRing` class. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.groundtypes import (
     GMPYInteger, SymPyInteger,
-    gmpy_factorial,
-    gmpy_gcdex, gmpy_gcd, gmpy_lcm, gmpy_sqrt,
+    factorial as gmpy_factorial,
+    gmpy_gcdex, gmpy_gcd, gmpy_lcm, sqrt as gmpy_sqrt,
 )
 from sympy.polys.domains.integerring import IntegerRing
 from sympy.polys.polyerrors import CoercionFailed
@@ -13,7 +12,11 @@ from sympy.utilities import public
 
 @public
 class GMPYIntegerRing(IntegerRing):
-    """Integer ring based on GMPY's ``mpz`` type. """
+    """Integer ring based on GMPY's ``mpz`` type.
+
+    This will be the implementation of :ref:`ZZ` if ``gmpy`` or ``gmpy2`` is
+    installed. Elements will be of type ``gmpy.mpz``.
+    """
 
     dtype = GMPYInteger
     zero = dtype(0)
@@ -45,6 +48,11 @@ class GMPYIntegerRing(IntegerRing):
         """Convert Python's ``int`` to GMPY's ``mpz``. """
         return GMPYInteger(a)
 
+    def from_QQ(K1, a, K0):
+        """Convert Python's ``Fraction`` to GMPY's ``mpz``. """
+        if a.denominator == 1:
+            return GMPYInteger(a.numerator)
+
     def from_QQ_python(K1, a, K0):
         """Convert Python's ``Fraction`` to GMPY's ``mpz``. """
         if a.denominator == 1:
@@ -69,6 +77,10 @@ class GMPYIntegerRing(IntegerRing):
 
         if q == 1:
             return GMPYInteger(p)
+
+    def from_GaussianIntegerRing(K1, a, K0):
+        if a.y == 0:
+            return a.x
 
     def gcdex(self, a, b):
         """Compute extended GCD of ``a`` and ``b``. """

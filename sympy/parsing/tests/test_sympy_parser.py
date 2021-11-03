@@ -3,7 +3,7 @@
 
 import sys
 
-
+from sympy.assumptions import Q
 from sympy.core import Symbol, Function, Float, Rational, Integer, I, Mul, Pow, Eq
 from sympy.functions import exp, factorial, factorial2, sin
 from sympy.logic import And
@@ -13,8 +13,10 @@ from sympy.testing.pytest import raises, skip
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
     split_symbols, implicit_multiplication, convert_equals_signs,
-    convert_xor, function_exponentiation,
-    implicit_multiplication_application,
+    convert_xor, function_exponentiation, lambda_notation, auto_symbol,
+    repeated_decimals, implicit_multiplication_application,
+    auto_number, factorial_notation, implicit_application,
+    _transformation, T
     )
 
 
@@ -49,6 +51,7 @@ def test_sympy_parser():
             Pow(3, 1, evaluate=False),
             evaluate=False),
         'Limit(sin(x), x, 0, dir="-")': Limit(sin(x), x, 0, dir='-'),
+        'Q.even(x)': Q.even(x),
 
 
     }
@@ -130,9 +133,8 @@ def test_local_dict_symbol_to_fcn():
     x = Symbol('x')
     d = {'foo': Function('bar')}
     assert parse_expr('foo(x)', local_dict=d) == d['foo'](x)
-    # XXX: bit odd, but would be error if parser left the Symbol
     d = {'foo': Symbol('baz')}
-    assert parse_expr('foo(x)', local_dict=d) == Function('baz')(x)
+    raises(TypeError, lambda: parse_expr('foo(x)', local_dict=d))
 
 
 def test_global_dict():
@@ -157,13 +159,31 @@ def test_issue_7663():
     assert parse_expr(e, evaluate=0) == parse_expr(e, evaluate=False)
     assert parse_expr(e, evaluate=0).equals(2*(x+1))
 
-def test_issue_10560():
+def test_recursive_evaluate_false_10560():
     inputs = {
-        '4*-3' : '(-3)*4',
+        '4*-3' : '4*-3',
         '-4*3' : '(-4)*3',
+        "-2*x*y": '(-2)*x*y',
+        "x*-4*x": "x*(-4)*x"
     }
     for text, result in inputs.items():
         assert parse_expr(text, evaluate=False) == parse_expr(result, evaluate=False)
+
+
+def test_function_evaluate_false():
+    inputs = [
+        'Abs(0)', 'im(0)', 're(0)', 'sign(0)', 'arg(0)', 'conjugate(0)',
+        'acos(0)', 'acot(0)', 'acsc(0)', 'asec(0)', 'asin(0)', 'atan(0)',
+        'acosh(0)', 'acoth(0)', 'acsch(0)', 'asech(0)', 'asinh(0)', 'atanh(0)',
+        'cos(0)', 'cot(0)', 'csc(0)', 'sec(0)', 'sin(0)', 'tan(0)',
+        'cosh(0)', 'coth(0)', 'csch(0)', 'sech(0)', 'sinh(0)', 'tanh(0)',
+        'exp(0)', 'log(0)', 'sqrt(0)',
+    ]
+    for case in inputs:
+        expr = parse_expr(case, evaluate=False)
+        assert case == str(expr) != str(expr.doit())
+    assert str(parse_expr('ln(0)', evaluate=False)) == 'log(0)'
+    assert str(parse_expr('cbrt(0)', evaluate=False)) == '0**(1/3)'
 
 
 def test_issue_10773():
@@ -252,13 +272,13 @@ def test_split_symbols_numeric():
 
 
 def test_unicode_names():
-    assert parse_expr(u'α') == Symbol(u'α')
+    assert parse_expr('α') == Symbol('α')
 
 
 def test_python3_features():
     # Make sure the tokenizer can handle Python 3-only features
-    if sys.version_info < (3, 6):
-        skip("test_python3_features requires Python 3.6 or newer")
+    if sys.version_info < (3, 7):
+        skip("test_python3_features requires Python 3.7 or newer")
 
 
     assert parse_expr("123_456") == 123456
@@ -267,3 +287,34 @@ def test_python3_features():
     assert parse_expr('.[3_4]') == parse_expr('.[34]') == Rational(34, 99)
     assert parse_expr('.1[3_4]') == parse_expr('.1[34]') == Rational(133, 990)
     assert parse_expr('123_123.123_123[3_4]') == parse_expr('123123.123123[34]') == Rational(12189189189211, 99000000)
+
+
+def test_issue_19501():
+    x = Symbol('x')
+    eq = parse_expr('E**x(1+x)', local_dict={'x': x}, transformations=(
+        standard_transformations +
+        (implicit_multiplication_application,)))
+    assert eq.free_symbols == {x}
+
+
+def test_parsing_definitions():
+    from sympy.abc import x
+    assert len(_transformation) == 12  # if this changes, extend below
+    assert _transformation[0] == lambda_notation
+    assert _transformation[1] == auto_symbol
+    assert _transformation[2] == repeated_decimals
+    assert _transformation[3] == auto_number
+    assert _transformation[4] == factorial_notation
+    assert _transformation[5] == implicit_multiplication_application
+    assert _transformation[6] == convert_xor
+    assert _transformation[7] == implicit_application
+    assert _transformation[8] == implicit_multiplication
+    assert _transformation[9] == convert_equals_signs
+    assert _transformation[10] == function_exponentiation
+    assert _transformation[11] == rationalize
+    assert T[:5] == T[0,1,2,3,4] == standard_transformations
+    t = _transformation
+    assert T[-1, 0] == (t[len(t) - 1], t[0])
+    assert T[:5, 8] == standard_transformations + (t[8],)
+    assert parse_expr('0.3x^2', transformations='all') == 3*x**2/10
+    assert parse_expr('sin 3x', transformations='implicit') == sin(3*x)

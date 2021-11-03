@@ -1,6 +1,7 @@
-from typing import Dict, List
+from typing import Dict as tDict, List
 
 from itertools import permutations
+from functools import reduce
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -10,6 +11,7 @@ from sympy.core.basic import sympify
 from sympy.core.numbers import Rational, pi, I
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
+from sympy.core.sorting import ordered
 
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
 from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
@@ -35,7 +37,6 @@ from sympy.polys.rings import PolyRing
 from sympy.polys.solvers import solve_lin_sys
 from sympy.polys.constructor import construct_domain
 
-from sympy.core.compatibility import reduce, ordered
 from sympy.integrals.integrals import integrate
 
 
@@ -46,8 +47,11 @@ def components(f, x):
     non-integer powers. Fractional powers are collected with
     minimal, positive exponents.
 
+    Examples
+    ========
+
     >>> from sympy import cos, sin
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> from sympy.integrals.heurisch import components
 
     >>> components(sin(x)*cos(x)**2, x)
@@ -83,7 +87,7 @@ def components(f, x):
     return result
 
 # name -> [] of symbols
-_symbols_cache = {}  # type: Dict[str, List[Dummy]]
+_symbols_cache = {}  # type: tDict[str, List[Dummy]]
 
 
 # NB @cacheit is not convenient here
@@ -107,6 +111,9 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     """
     A wrapper around the heurisch integration algorithm.
 
+    Explanation
+    ===========
+
     This method takes the result from heurisch and checks for poles in the
     denominator. For each of these poles, the integral is reevaluated, and
     the final integration result is given in terms of a Piecewise.
@@ -114,8 +121,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     Examples
     ========
 
-    >>> from sympy.core import symbols
-    >>> from sympy.functions import cos
+    >>> from sympy import cos, symbols
     >>> from sympy.integrals.heurisch import heurisch, heurisch_wrapper
     >>> n, x = symbols('n x')
     >>> heurisch(cos(n*x), x)
@@ -236,6 +242,9 @@ class DiffCache:
     """
     Store for derivatives of expressions.
 
+    Explanation
+    ===========
+
     The standard form of the derivative of a Bessel function of order n
     contains two Bessel functions of orders n-1 and n+1, respectively.
     Such forms cannot be used in parallel Risch algorithm, because
@@ -283,6 +292,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     """
     Compute indefinite integral using heuristic Risch algorithm.
 
+    Explanation
+    ===========
+
     This is a heuristic approach to indefinite integration in finite
     terms using the extended heuristic (parallel) Risch algorithm, based
     on Manuel Bronstein's "Poor Man's Integrator".
@@ -329,21 +341,24 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     See Manuel Bronstein's "Poor Man's Integrator":
 
-    [1] http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
+    References
+    ==========
+
+    .. [1] http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/index.html
 
     For more information on the implemented algorithm refer to:
 
-    [2] K. Geddes, L. Stefanus, On the Risch-Norman Integration
+    .. [2] K. Geddes, L. Stefanus, On the Risch-Norman Integration
        Method and its Implementation in Maple, Proceedings of
        ISSAC'89, ACM Press, 212-217.
 
-    [3] J. H. Davenport, On the Parallel Risch Algorithm (I),
+    .. [3] J. H. Davenport, On the Parallel Risch Algorithm (I),
        Proceedings of EUROCAM'82, LNCS 144, Springer, 144-157.
 
-    [4] J. H. Davenport, On the Parallel Risch Algorithm (III):
+    .. [4] J. H. Davenport, On the Parallel Risch Algorithm (III):
        Use of Tangents, SIGSAM Bulletin 16 (1982), 3-6.
 
-    [5] J. H. Davenport, B. M. Trager, On the Parallel Risch
+    .. [5] J. H. Davenport, B. M. Trager, On the Parallel Risch
        Algorithm (II), ACM Transactions on Mathematical
        Software 11 (1985), 356-362.
 
@@ -687,7 +702,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                 pass # ignore trivial numbers
             elif expr in syms:
                 pass # ignore variables
-            elif not expr.has(*syms):
+            elif not expr.free_symbols & syms:
                 non_syms.add(expr)
             elif expr.is_Add or expr.is_Mul or expr.is_Pow:
                 list(map(find_non_syms, expr.args))
@@ -714,8 +729,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         if solution is None:
             return None
         else:
-            return candidate.subs(solution).subs(
-                list(zip(poly_coeffs, [S.Zero]*len(poly_coeffs))))
+            return candidate.xreplace(solution).xreplace(
+                dict(zip(poly_coeffs, [S.Zero]*len(poly_coeffs))))
 
     if not (F.free_symbols - set(V)):
         solution = _integrate('Q')
@@ -727,7 +742,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     if solution is not None:
         antideriv = solution.subs(rev_mapping)
-        antideriv = cancel(antideriv).expand(force=True)
+        antideriv = cancel(antideriv).expand()
 
         if antideriv.is_Add:
             antideriv = antideriv.as_independent(x)[1]

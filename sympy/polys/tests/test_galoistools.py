@@ -1,4 +1,3 @@
-
 from sympy.polys.galoistools import (
     gf_crt, gf_crt1, gf_crt2, gf_int,
     gf_degree, gf_strip, gf_trunc, gf_normal,
@@ -34,7 +33,8 @@ from sympy.polys.polyerrors import (
 from sympy.polys import polyconfig as config
 
 from sympy.polys.domains import ZZ
-from sympy import pi, nextprime
+from sympy.core.numbers import pi
+from sympy.ntheory.generate import nextprime
 from sympy.testing.pytest import raises
 
 

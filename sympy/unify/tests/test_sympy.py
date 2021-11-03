@@ -1,4 +1,9 @@
-from sympy import Add, Basic, symbols, Symbol, And
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.logic.boolalg import And
+from sympy.core.symbol import Str
 from sympy.unify.core import Compound, Variable
 from sympy.unify.usympy import (deconstruct, construct, unify, is_associative,
         is_commutative)
@@ -89,19 +94,19 @@ def test_unify_iter():
     assert iterdicteq(result, expected)
 
 def test_hard_match():
-    from sympy import sin, cos
+    from sympy.functions.elementary.trigonometric import (cos, sin)
     expr = sin(x) + cos(x)**2
     p, q = map(Symbol, 'pq')
     pattern = sin(p) + cos(p)**2
     assert list(unify(expr, pattern, {}, (p, q))) == [{p: x}]
 
 def test_matrix():
-    from sympy import MatrixSymbol
+    from sympy.matrices.expressions.matexpr import MatrixSymbol
     X = MatrixSymbol('X', n, n)
     Y = MatrixSymbol('Y', 2, 2)
     Z = MatrixSymbol('Z', 2, 3)
-    assert list(unify(X, Y, {}, variables=[n, Symbol('X')])) == [{Symbol('X'): Symbol('Y'), n: 2}]
-    assert list(unify(X, Z, {}, variables=[n, Symbol('X')])) == []
+    assert list(unify(X, Y, {}, variables=[n, Str('X')])) == [{Str('X'): Str('Y'), n: 2}]
+    assert list(unify(X, Z, {}, variables=[n, Str('X')])) == []
 
 def test_non_frankenAdds():
     # the is_commutative property used to fail because of Basic.__new__
@@ -113,7 +118,7 @@ def test_non_frankenAdds():
     rebuilt.is_commutative
 
 def test_FiniteSet_commutivity():
-    from sympy import FiniteSet
+    from sympy.sets.sets import FiniteSet
     a, b, c, x, y = symbols('a,b,c,x,y')
     s = FiniteSet(a, b, c)
     t = FiniteSet(x, y)
@@ -121,13 +126,13 @@ def test_FiniteSet_commutivity():
     assert {x: FiniteSet(a, c), y: b} in tuple(unify(s, t, variables=variables))
 
 def test_FiniteSet_complex():
-    from sympy import FiniteSet
+    from sympy.sets.sets import FiniteSet
     a, b, c, x, y, z = symbols('a,b,c,x,y,z')
-    expr = FiniteSet(Basic(1, x), y, Basic(x, z))
+    expr = FiniteSet(Basic(S(1), x), y, Basic(x, z))
     pattern = FiniteSet(a, Basic(x, b))
     variables = a, b
     expected = tuple([{b: 1, a: FiniteSet(y, Basic(x, z))},
-                      {b: z, a: FiniteSet(y, Basic(1, x))}])
+                      {b: z, a: FiniteSet(y, Basic(S(1), x))}])
     assert iterdicteq(unify(expr, pattern, variables=variables), expected)
 
 
@@ -138,7 +143,7 @@ def test_and():
                       expected)
 
 def test_Union():
-    from sympy import Interval
+    from sympy.sets.sets import Interval
     assert list(unify(Interval(0, 1) + Interval(10, 11),
                       Interval(0, 1) + Interval(12, 13),
                       variables=(Interval(12, 13),)))
@@ -150,7 +155,7 @@ def test_is_commutative():
 
 def test_commutative_in_commutative():
     from sympy.abc import a,b,c,d
-    from sympy import sin, cos
+    from sympy.functions.elementary.trigonometric import (cos, sin)
     eq = sin(3)*sin(4)*sin(5) + 4*cos(3)*cos(4)
     pat = a*cos(b)*cos(c) + d*sin(b)*sin(c)
     assert next(unify(eq, pat, variables=(a,b,c,d)))

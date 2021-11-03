@@ -1,5 +1,5 @@
-
-from sympy import TableForm, S
+from sympy.core.singleton import S
+from sympy.printing.tableform import TableForm
 from sympy.printing.latex import latex
 from sympy.abc import x
 from sympy.functions.elementary.miscellaneous import sqrt

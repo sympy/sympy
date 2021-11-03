@@ -1,11 +1,13 @@
 from textwrap import dedent
 from itertools import islice, product
 
-from sympy import (
-    symbols, Integer, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
-    factorial, true)
+from sympy.core.basic import Basic
+from sympy.core.numbers import Integer
+from sympy.core.sorting import ordered
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.matrices.dense import Matrix
 from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
-from sympy.core.compatibility import iterable
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
     cartes, common_prefix, common_suffix, connected_components, dict_merge,
@@ -13,15 +15,15 @@ from sympy.utilities.iterables import (
     generate_involutions, generate_oriented_forest, group, has_dups, ibin,
     iproduct, kbins, minlex, multiset, multiset_combinations,
     multiset_partitions, multiset_permutations, necklaces, numbered_symbols,
-    ordered, partitions, permutations, postfixes, postorder_traversal,
+    partitions, permutations, postfixes,
     prefixes, reshape, rotate_left, rotate_right, runs, sift,
     strongly_connected_components, subsets, take, topological_sort, unflatten,
-    uniq, variations, ordered_partitions, rotations, is_palindromic)
+    uniq, variations, ordered_partitions, rotations, is_palindromic, iterable,
+    NotIterable, multiset_derangements)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
 from sympy.core.singleton import S
-from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.testing.pytest import raises
 
 w, x, y, z = symbols('w,x,y,z')
@@ -41,31 +43,6 @@ def test_is_palindromic():
     assert is_palindromic('xxyzyx', 1)
     assert not is_palindromic('xxyzyx', 2)
     assert is_palindromic('xxyzyx', 2, 2 + 3)
-
-
-def test_postorder_traversal():
-    expr = z + w*(x + y)
-    expected = [z, w, x, y, x + y, w*(x + y), w*(x + y) + z]
-    assert list(postorder_traversal(expr, keys=default_sort_key)) == expected
-    assert list(postorder_traversal(expr, keys=True)) == expected
-
-    expr = Piecewise((x, x < 1), (x**2, True))
-    expected = [
-        x, 1, x, x < 1, ExprCondPair(x, x < 1),
-        2, x, x**2, true,
-        ExprCondPair(x**2, True), Piecewise((x, x < 1), (x**2, True))
-    ]
-    assert list(postorder_traversal(expr, keys=default_sort_key)) == expected
-    assert list(postorder_traversal(
-        [expr], keys=default_sort_key)) == expected + [[expr]]
-
-    assert list(postorder_traversal(Integral(x**2, (x, 0, 1)),
-        keys=default_sort_key)) == [
-            2, x, x**2, 0, 1, x, Tuple(x, 0, 1),
-            Integral(x**2, Tuple(x, 0, 1))
-        ]
-    assert list(postorder_traversal(('abc', ('d', 'ef')))) == [
-        'abc', 'd', 'ef', ('d', 'ef'), ('abc', ('d', 'ef'))]
 
 
 def test_flatten():
@@ -411,6 +388,7 @@ def test_multiset_combinations():
     assert len(list(multiset_combinations('a', 3))) == 0
     assert len(list(multiset_combinations('a', 0))) == 1
     assert list(multiset_combinations('abc', 1)) == [['a'], ['b'], ['c']]
+    raises(ValueError, lambda: list(multiset_combinations({0: 3, 1: -1}, 2)))
 
 
 def test_multiset_permutations():
@@ -423,6 +401,12 @@ def test_multiset_permutations():
         [0, 1], [0, 2], [1, 0], [1, 2], [2, 0], [2, 1]]
     assert len(list(multiset_permutations('a', 0))) == 1
     assert len(list(multiset_permutations('a', 3))) == 0
+    for nul in ([], {}, ''):
+        assert list(multiset_permutations(nul)) == [[]]
+    assert list(multiset_permutations(nul, 0)) == [[]]
+    # impossible requests give no result
+    assert list(multiset_permutations(nul, 1)) == []
+    assert list(multiset_permutations(nul, -1)) == []
 
     def test():
         for i in range(1, 7):
@@ -469,6 +453,7 @@ def test_multiset_permutations():
         [1, 0, 1, 0, 0]
         [1, 1, 0, 0, 0]
         6\n''')
+    raises(ValueError, lambda: list(multiset_permutations({0: 3, 1: -1})))
 
 
 def test_partitions():
@@ -481,24 +466,24 @@ def test_partitions():
         assert list(partitions(6, None, 2, size=i)) != ans[i]
         assert list(partitions(6, 2, 0, size=i)) == ans[i]
 
-    assert [p.copy() for p in partitions(6, k=2)] == [
+    assert [p for p in partitions(6, k=2)] == [
         {2: 3}, {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]
 
-    assert [p.copy() for p in partitions(6, k=3)] == [
+    assert [p for p in partitions(6, k=3)] == [
         {3: 2}, {1: 1, 2: 1, 3: 1}, {1: 3, 3: 1}, {2: 3}, {1: 2, 2: 2},
         {1: 4, 2: 1}, {1: 6}]
 
-    assert [p.copy() for p in partitions(8, k=4, m=3)] == [
+    assert [p for p in partitions(8, k=4, m=3)] == [
         {4: 2}, {1: 1, 3: 1, 4: 1}, {2: 2, 4: 1}, {2: 1, 3: 2}] == [
-        i.copy() for i in partitions(8, k=4, m=3) if all(k <= 4 for k in i)
+        i for i in partitions(8, k=4, m=3) if all(k <= 4 for k in i)
         and sum(i.values()) <=3]
 
-    assert [p.copy() for p in partitions(S(3), m=2)] == [
+    assert [p for p in partitions(S(3), m=2)] == [
         {3: 1}, {1: 1, 2: 1}]
 
-    assert [i.copy() for i in partitions(4, k=3)] == [
+    assert [i for i in partitions(4, k=3)] == [
         {1: 1, 3: 1}, {2: 2}, {1: 2, 2: 1}, {1: 4}] == [
-        i.copy() for i in partitions(4) if all(k <= 3 for k in i)]
+        i for i in partitions(4) if all(k <= 3 for k in i)]
 
 
     # Consistency check on output of _partitions and RGS_unrank.
@@ -562,6 +547,19 @@ def test_derangements():
     assert list(generate_derangements([0, 1, 2, 2])) == [
         [2, 2, 0, 1], [2, 2, 1, 0]]
     assert list(generate_derangements('ba')) == [list('ab')]
+    # multiset_derangements
+    D = multiset_derangements
+    assert list(D('abb')) == []
+    assert [''.join(i) for i in D('ab')] == ['ba']
+    assert [''.join(i) for i in D('abc')] == ['bca', 'cab']
+    assert [''.join(i) for i in D('aabb')] == ['bbaa']
+    assert [''.join(i) for i in D('aabbcccc')] == [
+        'ccccaabb', 'ccccabab', 'ccccabba', 'ccccbaab', 'ccccbaba',
+        'ccccbbaa']
+    assert [''.join(i) for i in D('aabbccc')] == [
+        'cccabba', 'cccabab', 'cccaabb', 'ccacbba', 'ccacbab',
+        'ccacabb', 'cbccbaa', 'cbccaba', 'cbccaab', 'bcccbaa',
+        'bcccaba', 'bcccaab']
 
 
 def test_necklaces():
@@ -645,6 +643,7 @@ def test_minlex():
     assert minlex((1, 0, 2)) == (0, 2, 1)
     assert minlex((1, 0, 2), directed=False) == (0, 1, 2)
     assert minlex('aba') == 'aab'
+    assert minlex(('bb', 'aaa', 'c', 'a'), key=len) == ('c', 'a', 'bb', 'aaa')
 
 
 def test_ordered():
@@ -697,7 +696,7 @@ def test_reshape():
 
 
 def test_uniq():
-    assert list(uniq(p.copy() for p in partitions(4))) == \
+    assert list(uniq(p for p in partitions(4))) == \
         [{4: 1}, {1: 1, 3: 1}, {2: 2}, {1: 2, 2: 1}, {1: 4}]
     assert list(uniq(x % 2 for x in range(5))) == [0, 1]
     assert list(uniq('a')) == ['a']
@@ -834,3 +833,40 @@ def test_ibin():
     assert list(ibin(2, '', str=True)) == ['00', '01', '10', '11']
     raises(ValueError, lambda: ibin(-.5))
     raises(ValueError, lambda: ibin(2, 1))
+
+
+def test_iterable():
+    assert iterable(0) is False
+    assert iterable(1) is False
+    assert iterable(None) is False
+
+    class Test1(NotIterable):
+        pass
+
+    assert iterable(Test1()) is False
+
+    class Test2(NotIterable):
+        _iterable = True
+
+    assert iterable(Test2()) is True
+
+    class Test3:
+        pass
+
+    assert iterable(Test3()) is False
+
+    class Test4:
+        _iterable = True
+
+    assert iterable(Test4()) is True
+
+    class Test5:
+        def __iter__(self):
+            yield 1
+
+    assert iterable(Test5()) is True
+
+    class Test6(Test5):
+        _iterable = False
+
+    assert iterable(Test6()) is False

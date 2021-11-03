@@ -1,9 +1,18 @@
 # A collection of failing integrals from the issues.
 
-from sympy import (
-    integrate, I, Integral, exp, oo, pi, sign, sqrt, sin, cos, Piecewise,
-    tan, S, log, gamma, sinh, sec, acos, atan, sech, csch, DiracDelta, Rational
-)
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (csch, sech, sinh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, atan, cos, sec, sin, tan)
+from sympy.functions.special.delta_functions import DiracDelta
+from sympy.functions.special.gamma_functions import gamma
+from sympy.integrals.integrals import (Integral, integrate)
+
 
 from sympy.testing.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
 
@@ -280,3 +289,8 @@ def test_integrate_Piecewise_rational_over_reals():
 def test_issue_4311_slow():
     # Not slow when bypassing heurish
     assert not integrate(x*abs(9-x**2), x).has(Integral)
+
+@XFAIL
+def test_issue_20370():
+    a = symbols('a', positive=True)
+    assert integrate((1 + a * cos(x))**-1, (x, 0, 2 * pi)) == (2 * pi / sqrt(1 - a**2))

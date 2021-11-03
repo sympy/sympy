@@ -11,7 +11,7 @@ if cin:
     from sympy.parsing.c.c_parser import parse_c
 
 @doctest_depends_on(modules=['lfortran', 'clang.cindex'])
-class SymPyExpression(object):  # type: ignore
+class SymPyExpression:  # type: ignore
     """Class to store and handle SymPy expressions
 
     This class will hold SymPy Expressions and handle the API for the
@@ -93,7 +93,7 @@ class SymPyExpression(object):  # type: ignore
 
     def __init__(self, source_code = None, mode = None):
         """Constructor for SymPyExpression class"""
-        super(SymPyExpression, self).__init__()
+        super().__init__()
         if not(mode or source_code):
             self._expr = []
         elif mode:
@@ -118,7 +118,7 @@ class SymPyExpression(object):  # type: ignore
             raise ValueError('Please specify a mode for conversion')
 
     def convert_to_expr(self, src_code, mode):
-        """Converts the given source code to sympy Expressions
+        """Converts the given source code to SymPy Expressions
 
         Attributes
         ==========
@@ -174,7 +174,7 @@ class SymPyExpression(object):  # type: ignore
             )
 
     def convert_to_python(self):
-        """Returns a list with python code for the sympy expressions
+        """Returns a list with Python code for the SymPy expressions
 
         Examples
         ========
@@ -199,7 +199,7 @@ class SymPyExpression(object):  # type: ignore
         return self._pycode
 
     def convert_to_c(self):
-        """Returns a list with the c source code for the sympy expressions
+        """Returns a list with the c source code for the SymPy expressions
 
 
         Examples
@@ -226,7 +226,7 @@ class SymPyExpression(object):  # type: ignore
         return self._ccode
 
     def convert_to_fortran(self):
-        """Returns a list with the fortran source code for the sympy expressions
+        """Returns a list with the fortran source code for the SymPy expressions
 
         Examples
         ========

@@ -18,15 +18,14 @@ import warnings
 
 from itertools import cycle
 
-from sympy import nextprime
+from sympy.ntheory.generate import nextprime
 from sympy.core import Rational, Symbol
 from sympy.core.numbers import igcdex, mod_inverse, igcd
-from sympy.core.compatibility import as_int
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, primitive_root, factorint
 from sympy.polys.domains import FF
 from sympy.polys.polytools import gcd, Poly
-from sympy.utilities.misc import filldedent, translate
+from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
 from sympy.testing.randtest import _randrange, _randint
 
@@ -65,7 +64,7 @@ def AZ(s=None):
     """
     if not s:
         return uppercase
-    t = type(s) is str
+    t = isinstance(s, str)
     if t:
         s = [s]
     rv = [check_and_join(i.upper().split(), uppercase, filter=True)
@@ -81,10 +80,9 @@ bifid10 = printable
 
 def padded_key(key, symbols):
     """Return a string of the distinct characters of ``symbols`` with
-    those of ``key`` appearing first, omitting characters in ``key``
-    that are not in ``symbols``. A ValueError is raised if a) there are
-    duplicate characters in ``symbols`` or b) there are characters
-    in ``key`` that are  not in ``symbols``.
+    those of ``key`` appearing first. A ValueError is raised if
+    a) there are duplicate characters in ``symbols`` or
+    b) there are characters in ``key`` that are  not in ``symbols``.
 
     Examples
     ========
@@ -299,8 +297,8 @@ def encipher_rot13(msg, symbols=None):
     """
     Performs the ROT13 encryption on a given plaintext ``msg``.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     ROT13 is a substitution cipher which substitutes each letter
     in the plaintext message for the letter furthest away from it
@@ -327,8 +325,8 @@ def decipher_rot13(msg, symbols=None):
     """
     Performs the ROT13 decryption on a given plaintext ``msg``.
 
-    Notes
-    =====
+    Explanation
+    ============
 
     ``decipher_rot13`` is equivalent to ``encipher_rot13`` as both
     ``decipher_shift`` with a key of 13 and ``encipher_shift`` key with a
@@ -360,6 +358,9 @@ def encipher_affine(msg, key, symbols=None, _inverse=False):
     r"""
     Performs the affine cipher encryption on plaintext ``msg``, and
     returns the ciphertext.
+
+    Explanation
+    ===========
 
     Encryption is based on the map `x \rightarrow ax+b` (mod `N`)
     where ``N`` is the number of characters in the alphabet.
@@ -464,8 +465,8 @@ def encipher_atbash(msg, symbols=None):
     r"""
     Enciphers a given ``msg`` into its Atbash ciphertext and returns it.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     Atbash is a substitution cipher originally used to encrypt the Hebrew
     alphabet. Atbash works on the principle of mapping each alphabet to its
@@ -487,8 +488,8 @@ def decipher_atbash(msg, symbols=None):
     r"""
     Deciphers a given ``msg`` using Atbash cipher and returns it.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     ``decipher_atbash`` is functionally equivalent to ``encipher_atbash``.
     However, it has still been added as a separate function to maintain
@@ -531,8 +532,8 @@ def encipher_substitution(msg, old, new=None):
     If ``old`` is a mapping, then new is ignored and the replacements
     defined by ``old`` are used.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     This is a more general than the affine cipher in that the key can
     only be recovered by determining the mapping for each symbol.
@@ -602,7 +603,7 @@ def encipher_vigenere(msg, key, symbols=None):
     'QRGKKTHRZQEBPR'
 
     Section 1 of the Kryptos sculpture at the CIA headquarters
-    uses this cipher and also changes the order of the the
+    uses this cipher and also changes the order of the
     alphabet [2]_. Here is the first line of that section of
     the sculpture:
 
@@ -613,8 +614,8 @@ def encipher_vigenere(msg, key, symbols=None):
     >>> decipher_vigenere(msg, key, alp)
     'BETWEENSUBTLESHADINGANDTHEABSENC'
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     The Vigenere cipher is named after Blaise de Vigenere, a sixteenth
     century diplomat and cryptographer, by a historical accident.
@@ -786,8 +787,8 @@ def encipher_hill(msg, key, symbols=None, pad="Q"):
     r"""
     Return the Hill cipher encryption of ``msg``.
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     The Hill cipher [1]_, invented by Lester S. Hill in the 1920's [2]_,
     was the first polygraphic cipher in which it was practical
@@ -1157,6 +1158,9 @@ def encipher_bifid5(msg, key):
     Performs the Bifid cipher encryption on plaintext ``msg``, and
     returns the ciphertext.
 
+    Explanation
+    ===========
+
     This is the version of the Bifid cipher that uses the `5 \times 5`
     Polybius square. The letter "J" is ignored so it must be replaced
     with something else (traditionally an "I") before encryption.
@@ -1259,6 +1263,9 @@ def encipher_bifid5(msg, key):
 def decipher_bifid5(msg, key):
     r"""
     Return the Bifid cipher decryption of ``msg``.
+
+    Explanation
+    ===========
 
     This is the version of the Bifid cipher that uses the `5 \times 5`
     Polybius square; the letter "J" is ignored unless a ``key`` of
@@ -1450,7 +1457,7 @@ def _decipher_rsa_crt(i, d, factors):
         Ciphertext
 
     d : integer
-        The exponent component
+        The exponent component.
 
     factors : list of relatively-prime integers
         The integers given must be coprime and the product must equal
@@ -1485,14 +1492,14 @@ def _decipher_rsa_crt(i, d, factors):
     return result[0]
 
 
-def _rsa_key(*args, **kwargs):
+def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, multipower=None):
     r"""A private subroutine to generate RSA key
 
     Parameters
     ==========
 
     public, private : bool, optional
-        Flag to generate either a public key, a private key
+        Flag to generate either a public key, a private key.
 
     totient : 'Euler' or 'Carmichael'
         Different notation used for totient.
@@ -1502,12 +1509,6 @@ def _rsa_key(*args, **kwargs):
     """
     from sympy.ntheory import totient as _euler
     from sympy.ntheory import reduced_totient as _carmichael
-
-    public = kwargs.pop('public', True)
-    private = kwargs.pop('private', True)
-    totient = kwargs.pop('totient', 'Euler')
-    index = kwargs.pop('index', None)
-    multipower = kwargs.pop('multipower', None)
 
     if len(args) < 2:
         return False
@@ -1532,7 +1533,7 @@ def _rsa_key(*args, **kwargs):
 
     primes, e = args[:-1], args[-1]
 
-    if any(not isprime(p) for p in primes):
+    if not all(isprime(p) for p in primes):
         new_primes = []
         for i in primes:
             new_primes.extend(factorint(i, multiple=True))
@@ -1588,8 +1589,8 @@ def rsa_public_key(*args, **kwargs):
         `\phi(n)` (Euler totient) or `\lambda(n)` (Carmichael totient)
         to be `\gcd(e, \phi(n)) = 1` or `\gcd(e, \lambda(n)) = 1`.
 
-        If specified as `p_1, p_2, ..., p_n, e` where
-        `p_1, p_2, ..., p_n` are specified as primes,
+        If specified as `p_1, p_2, \dots, p_n, e` where
+        `p_1, p_2, \dots, p_n` are specified as primes,
         and `e` is specified as a desired public exponent of the RSA,
         it will be able to form a multi-prime RSA, which is a more
         generalized form of the popular 2-prime RSA.
@@ -1621,11 +1622,11 @@ def rsa_public_key(*args, **kwargs):
         can still be bijective.
 
         If you pass a non-prime integer to the arguments
-        `p_1, p_2, ..., p_n`, the particular number will be
+        `p_1, p_2, \dots, p_n`, the particular number will be
         prime-factored and it will become either a multi-prime RSA or a
         multi-power RSA in its canonical form, depending on whether the
         product equals its radical or not.
-        `p_1 p_2 ... p_n = \text{rad}(p_1 p_2 ... p_n)`
+        `p_1 p_2 \dots p_n = \text{rad}(p_1 p_2 \dots p_n)`
 
     totient : bool, optional
         If ``'Euler'``, it uses Euler's totient `\phi(n)` which is
@@ -1640,7 +1641,7 @@ def rsa_public_key(*args, **kwargs):
 
     index : nonnegative integer, optional
         Returns an arbitrary solution of a RSA public key at the index
-        specified at `0, 1, 2, ...`. This parameter needs to be
+        specified at `0, 1, 2, \dots`. This parameter needs to be
         specified along with ``totient='Carmichael'``.
 
         Similarly to the non-uniquenss of a RSA private key as described
@@ -1782,7 +1783,7 @@ def rsa_private_key(*args, **kwargs):
 
     index : nonnegative integer, optional
         Returns an arbitrary solution of a RSA private key at the index
-        specified at `0, 1, 2, ...`. This parameter needs to be
+        specified at `0, 1, 2, \dots`. This parameter needs to be
         specified along with ``totient='Carmichael'``.
 
         RSA private exponent is a non-unique solution of
@@ -1979,21 +1980,21 @@ def decipher_rsa(i, key, factors=None):
     factors : list of coprime integers
         As the modulus `n` created from RSA key generation is composed
         of arbitrary prime factors
-        `n = {p_1}^{k_1}{p_2}^{k_2}...{p_n}^{k_n}` where
-        `p_1, p_2, ..., p_n` are distinct primes and
-        `k_1, k_2, ..., k_n` are positive integers, chinese remainder
+        `n = {p_1}^{k_1}{p_2}^{k_2}\dots{p_n}^{k_n}` where
+        `p_1, p_2, \dots, p_n` are distinct primes and
+        `k_1, k_2, \dots, k_n` are positive integers, chinese remainder
         theorem can be used to compute `i^d \bmod n` from the
         fragmented modulo operations like
 
         .. math::
-            i^d \bmod {p_1}^{k_1}, i^d \bmod {p_2}^{k_2}, ... ,
+            i^d \bmod {p_1}^{k_1}, i^d \bmod {p_2}^{k_2}, \dots,
             i^d \bmod {p_n}^{k_n}
 
         or like
 
         .. math::
             i^d \bmod {p_1}^{k_1}{p_2}^{k_2},
-            i^d \bmod {p_3}^{k_3}, ... ,
+            i^d \bmod {p_3}^{k_3}, \dots ,
             i^d \bmod {p_n}^{k_n}
 
         as long as every moduli does not share any common divisor each
@@ -2004,7 +2005,7 @@ def decipher_rsa(i, key, factors=None):
 
         Note that the speed advantage of using this is only viable for
         very large cases (Like 2048-bit RSA keys) since the
-        overhead of using pure python implementation of
+        overhead of using pure Python implementation of
         :meth:`sympy.ntheory.modular.crt` may overcompensate the
         theoritical speed advantage.
 
@@ -2048,6 +2049,11 @@ def decipher_rsa(i, key, factors=None):
 
     >>> decipher_rsa(new_msg, prk, factors=[p, q])
     12
+
+    See Also
+    ========
+
+    encipher_rsa
     """
     return _encipher_decipher_rsa(i, key, factors=factors)
 
@@ -2059,6 +2065,9 @@ def kid_rsa_public_key(a, b, A, B):
     r"""
     Kid RSA is a version of RSA useful to teach grade school children
     since it does not involve exponentiation.
+
+    Explanation
+    ===========
 
     Alice wants to talk to Bob. Bob generates keys as follows.
     Key generation:
@@ -2192,7 +2201,7 @@ char_morse = {v: k for k, v in morse_char.items()}
 def encode_morse(msg, sep='|', mapping=None):
     """
     Encodes a plaintext into popular Morse Code with letters
-    separated by `sep` and words by a double `sep`.
+    separated by ``sep`` and words by a double ``sep``.
 
     Examples
     ========
@@ -2238,7 +2247,7 @@ def encode_morse(msg, sep='|', mapping=None):
 
 def decode_morse(msg, sep='|', mapping=None):
     """
-    Decodes a Morse Code with letters separated by `sep`
+    Decodes a Morse Code with letters separated by ``sep``
     (default is '|') and words by `word_sep` (default is '||)
     into plaintext.
 
@@ -2530,6 +2539,9 @@ def elgamal_private_key(digit=10, seed=None):
     r"""
     Return three number tuple as private key.
 
+    Explanation
+    ===========
+
     Elgamal encryption is based on the mathmatical problem
     called the Discrete Logarithm Problem (DLP). For example,
 
@@ -2610,7 +2622,10 @@ def elgamal_public_key(key):
 
 def encipher_elgamal(i, key, seed=None):
     r"""
-    Encrypt message with public key
+    Encrypt message with public key.
+
+    Explanation
+    ===========
 
     ``i`` is a plaintext message expressed as an integer.
     ``key`` is public key (p, r, e). In order to encrypt
@@ -2667,7 +2682,7 @@ def encipher_elgamal(i, key, seed=None):
 
 def decipher_elgamal(msg, key):
     r"""
-    Decrypt message with private key
+    Decrypt message with private key.
 
     `msg = (c_{1}, c_{2})`
 
@@ -2709,6 +2724,9 @@ def decipher_elgamal(msg, key):
 def dh_private_key(digit=10, seed=None):
     r"""
     Return three integer tuple as private key.
+
+    Explanation
+    ===========
 
     Diffie-Hellman key exchange is based on the mathematical problem
     called the Discrete Logarithm Problem (see ElGamal).
@@ -2857,7 +2875,7 @@ def dh_shared_key(key, b):
 def _legendre(a, p):
     """
     Returns the legendre symbol of a and p
-    assuming that p is a prime
+    assuming that p is a prime.
 
     i.e. 1 if a is a quadratic residue mod p
         -1 if a is not a quadratic residue mod p
@@ -2897,43 +2915,42 @@ def _random_coprime_stream(n, seed=None):
 
 
 def gm_private_key(p, q, a=None):
-    """
+    r"""
     Check if ``p`` and ``q`` can be used as private keys for
     the Goldwasser-Micali encryption. The method works
     roughly as follows.
 
-    $\\cdot$ Pick two large primes $p$ and $q$.
+    Explanation
+    ===========
 
-    $\\cdot$ Call their product $N$.
+    #. Pick two large primes $p$ and $q$.
+    #. Call their product $N$.
+    #. Given a message as an integer $i$, write $i$ in its bit representation $b_0, \dots, b_n$.
+    #. For each $k$,
 
-    $\\cdot$ Given a message as an integer $i$, write $i$ in its
-    bit representation $b_0$ , $\\dotsc$ , $b_n$ .
-
-    $\\cdot$ For each $k$ ,
-
-     if $b_k$ = 0:
+     if $b_k = 0$:
         let $a_k$ be a random square
         (quadratic residue) modulo $p q$
-        such that $jacobi \\_symbol(a, p q) = 1$
-     if $b_k$ = 1:
+        such that ``jacobi_symbol(a, p*q) = 1``
+     if $b_k = 1$:
         let $a_k$ be a random non-square
         (non-quadratic residue) modulo $p q$
-        such that $jacobi \\_ symbol(a, p q) = 1$
+        such that ``jacobi_symbol(a, p*q) = 1``
 
-    returns [$a_1$ , $a_2$ , $\\dotsc$ ]
+    returns $\left[a_1, a_2, \dots\right]$
 
     $b_k$ can be recovered by checking whether or not
-    $a_k$ is a residue. And from the $b_k$ 's, the message
+    $a_k$ is a residue. And from the $b_k$'s, the message
     can be reconstructed.
 
-    The idea is that, while $jacobi \\_ symbol(a, p q)$
+    The idea is that, while ``jacobi_symbol(a, p*q)``
     can be easily computed (and when it is equal to $-1$ will
-    tell you that $a$ is not a square mod $p q$ ), quadratic
+    tell you that $a$ is not a square mod $p q$), quadratic
     residuosity modulo a composite number is hard to compute
     without knowing its factorization.
 
     Moreover, approximately half the numbers coprime to $p q$ have
-    $jacobi \\_ symbol$ equal to $1$ . And among those, approximately half
+    :func:`~.jacobi_symbol` equal to $1$ . And among those, approximately half
     are residues and approximately half are not. This maximizes the
     entropy of the code.
 
@@ -2970,7 +2987,7 @@ def gm_private_key(p, q, a=None):
 
 def gm_public_key(p, q, a=None, seed=None):
     """
-    Compute public keys for p and q.
+    Compute public keys for ``p`` and ``q``.
     Note that in Goldwasser-Micali Encryption,
     public keys are randomly selected.
 
@@ -3150,6 +3167,9 @@ def bg_private_key(p, q):
     Check if p and q can be used as private keys for
     the Blum-Goldwasser cryptosystem.
 
+    Explanation
+    ===========
+
     The three necessary checks for p and q to pass
     so that they can be used as private keys:
 
@@ -3192,6 +3212,9 @@ def bg_public_key(p, q):
     """
     Calculates public keys from private keys.
 
+    Explanation
+    ===========
+
     The function first checks the validity of
     private keys passed as arguments and
     then returns their product.
@@ -3216,6 +3239,9 @@ def bg_public_key(p, q):
 def encipher_bg(i, key, seed=None):
     """
     Encrypts the message using public key and seed.
+
+    Explanation
+    ===========
 
     ALGORITHM:
         1. Encodes i as a string of L bits, m.
@@ -3278,6 +3304,9 @@ def encipher_bg(i, key, seed=None):
 def decipher_bg(message, key):
     """
     Decrypts the message using private keys.
+
+    Explanation
+    ===========
 
     ALGORITHM:
         1. Let, c be the encrypted message, y the second number received,

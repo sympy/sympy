@@ -1,10 +1,17 @@
-from sympy import Set, symbols, exp, log, S, Wild, Dummy, oo
+from sympy.core.singleton import S
+from sympy.sets.sets import Set
+from sympy.calculus.singularities import singularities
 from sympy.core import Expr, Add
-from sympy.core.function import Lambda, _coeff_isneg, FunctionClass
+from sympy.core.function import Lambda, FunctionClass, diff, expand_mul
+from sympy.core.numbers import Float, oo
+from sympy.core.symbol import Dummy, symbols, Wild
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import true
 from sympy.multipledispatch import dispatch
 from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
-                        EmptySet, Intersection, Range)
+    Intersection, Range)
+from sympy.sets.sets import EmptySet
 from sympy.sets.fancysets import Integers, Naturals, Reals
 from sympy.functions.elementary.exponential import match_real_imag
 
@@ -24,11 +31,8 @@ def _set_function(f, x): # noqa:F811
 
 @dispatch(Lambda, Interval)  # type: ignore # noqa:F811
 def _set_function(f, x): # noqa:F811
-    from sympy.functions.elementary.miscellaneous import Min, Max
     from sympy.solvers.solveset import solveset
-    from sympy.core.function import diff, Lambda
     from sympy.series import limit
-    from sympy.calculus.singularities import singularities
     from sympy.sets import Complement
     # TODO: handle functions with infinitely many solutions (eg, sin, tan)
     # TODO: handle multivariate functions
@@ -85,7 +89,8 @@ def _set_function(f, x): # noqa:F811
 
     if len(sing) == 0:
         soln_expr = solveset(diff(expr, var), var)
-        if not (isinstance(soln_expr, FiniteSet) or soln_expr is EmptySet):
+        if not (isinstance(soln_expr, FiniteSet)
+                or soln_expr is S.EmptySet):
             return
         solns = list(soln_expr)
 
@@ -137,7 +142,7 @@ def _set_function(f, x): # noqa:F811
     else:
         return ImageSet(Lambda(_x, f(_x)), x)
 
-@dispatch(FunctionUnion, type(EmptySet))  # type: ignore # noqa:F811
+@dispatch(FunctionUnion, EmptySet)  # type: ignore # noqa:F811
 def _set_function(f, x): # noqa:F811
     return x
 
@@ -147,7 +152,6 @@ def _set_function(f, x): # noqa:F811
 
 @dispatch(FunctionUnion, Range)  # type: ignore # noqa:F811
 def _set_function(f, self): # noqa:F811
-    from sympy.core.function import expand_mul
     if not self:
         return S.EmptySet
     if not isinstance(f.expr, Expr):
@@ -185,14 +189,17 @@ def _set_function(f, self): # noqa:F811
     c = f(0)
     fx = f(n) - c
     f_x = f(-n) - c
-    neg_count = lambda e: sum(_coeff_isneg(_) for _ in Add.make_args(e))
+    neg_count = lambda e: sum(_.could_extract_minus_sign()
+        for _ in Add.make_args(e))
     if neg_count(f_x) < neg_count(fx):
         expr = f_x + c
 
     a = Wild('a', exclude=[n])
     b = Wild('b', exclude=[n])
     match = expr.match(a*n + b)
-    if match and match[a]:
+    if match and match[a] and (
+            not match[a].atoms(Float) and
+            not match[b].atoms(Float)):
         # canonical shift
         a, b = match[a], match[b]
         if a in [1, -1]:

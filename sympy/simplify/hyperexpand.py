@@ -56,16 +56,15 @@ It is described in great(er) detail in the Sphinx documentation.
 # o Deciding if one index quadruple is reachable from another is tricky. For
 #   this reason, we use hand-built routines to match and instantiate formulas.
 #
-from __future__ import print_function, division
-
 from collections import defaultdict
 from itertools import product
+from functools import reduce
 
 from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
     EulerGamma, oo, zoo, expand_func, Add, nan, Expr, Rational)
-from sympy.core.compatibility import default_sort_key, reduce
 from sympy.core.mod import Mod
+from sympy.core.sorting import default_sort_key
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
         besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
         sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, floor, ceiling,
@@ -76,8 +75,6 @@ from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
         HyperRep_cosasin, HyperRep_sinasin, meijerg)
 from sympy.polys import poly, Poly
-from sympy.series import residue
-from sympy.simplify import simplify  # type: ignore
 from sympy.simplify.powsimp import powdenest
 from sympy.utilities.iterables import sift
 
@@ -481,7 +478,7 @@ class Hyper_Function(Expr):
     """ A generalized hypergeometric function. """
 
     def __new__(cls, ap, bq):
-        obj = super(Hyper_Function, cls).__new__(cls)
+        obj = super().__new__(cls)
         obj.ap = Tuple(*list(map(expand, ap)))
         obj.bq = Tuple(*list(map(expand, bq)))
         return obj
@@ -504,7 +501,7 @@ class Hyper_Function(Expr):
         return sum(bool(x.is_integer and x.is_negative) for x in self.ap)
 
     def _hashable_content(self):
-        return super(Hyper_Function, self)._hashable_content() + (self.ap,
+        return super()._hashable_content() + (self.ap,
                 self.bq)
 
     def __call__(self, arg):
@@ -513,6 +510,9 @@ class Hyper_Function(Expr):
     def build_invariants(self):
         """
         Compute the invariant vector.
+
+        Explanation
+        ===========
 
         The invariant vector is:
             (gamma, ((s1, n1), ..., (sk, nk)), ((t1, m1), ..., (tr, mr)))
@@ -581,6 +581,9 @@ class Hyper_Function(Expr):
         """
         Decide if ``self`` is a suitable origin.
 
+        Explanation
+        ===========
+
         A function is a suitable origin iff:
         * none of the ai equals bj + n, with n a non-negative integer
         * none of the ai is zero
@@ -607,7 +610,7 @@ class G_Function(Expr):
     """ A Meijer G-function. """
 
     def __new__(cls, an, ap, bm, bq):
-        obj = super(G_Function, cls).__new__(cls)
+        obj = super().__new__(cls)
         obj.an = Tuple(*list(map(expand, an)))
         obj.ap = Tuple(*list(map(expand, ap)))
         obj.bm = Tuple(*list(map(expand, bm)))
@@ -619,7 +622,7 @@ class G_Function(Expr):
         return (self.an, self.ap, self.bm, self.bq)
 
     def _hashable_content(self):
-        return super(G_Function, self)._hashable_content() + self.args
+        return super()._hashable_content() + self.args
 
     def __call__(self, z):
         return meijerg(self.an, self.ap, self.bm, self.bq, z)
@@ -627,6 +630,9 @@ class G_Function(Expr):
     def compute_buckets(self):
         """
         Compute buckets for the fours sets of parameters.
+
+        Explanation
+        ===========
 
         We guarantee that any two equal Mod objects returned are actually the
         same, and that the buckets are sorted by real part (an and bq
@@ -637,7 +643,7 @@ class G_Function(Expr):
 
         >>> from sympy.simplify.hyperexpand import G_Function
         >>> from sympy.abc import y
-        >>> from sympy import S, symbols
+        >>> from sympy import S
 
         >>> a, b = [1, 3, 2, S(3)/2], [1 + y, y, 2, y + 3]
         >>> G_Function(a, b, [2], [y]).compute_buckets()
@@ -666,9 +672,12 @@ class G_Function(Expr):
 # Dummy variable.
 _x = Dummy('x')
 
-class Formula(object):
+class Formula:
     """
     This class represents hypergeometric formulae.
+
+    Explanation
+    ===========
 
     Its data members are:
     - z, the argument
@@ -762,7 +771,7 @@ class Formula(object):
         base_repl = [dict(list(zip(self.symbols, values)))
                 for values in product(*symbol_values)]
         abuckets, bbuckets = [sift(params, _mod1) for params in [ap, bq]]
-        a_inv, b_inv = [dict((a, len(vals)) for a, vals in bucket.items())
+        a_inv, b_inv = [{a: len(vals) for a, vals in bucket.items()}
                 for bucket in [abuckets, bbuckets]]
         critical_values = [[0] for _ in self.symbols]
         result = []
@@ -800,7 +809,7 @@ class Formula(object):
 
 
 
-class FormulaCollection(object):
+class FormulaCollection:
     """ A collection of formulae to use as origins. """
 
     def __init__(self):
@@ -876,7 +885,7 @@ class FormulaCollection(object):
         return None
 
 
-class MeijerFormula(object):
+class MeijerFormula:
     """
     This class represents a Meijer G-function formula.
 
@@ -917,7 +926,7 @@ class MeijerFormula(object):
                                  self.M.subs(subs), None)
 
 
-class MeijerFormulaCollection(object):
+class MeijerFormulaCollection:
     """
     This class holds a collection of meijer g formulae.
     """
@@ -940,9 +949,12 @@ class MeijerFormulaCollection(object):
                 return res
 
 
-class Operator(object):
+class Operator:
     """
     Base class for operators to be applied to our functions.
+
+    Explanation
+    ===========
 
     These operators are differential operators. They are by convention
     expressed in the variable D = z*d/dz (although this base class does
@@ -1438,6 +1450,9 @@ def reduce_order(func):
     Given the hypergeometric function ``func``, find a sequence of operators to
     reduces order as much as possible.
 
+    Explanation
+    ===========
+
     Return (newfunc, [operators]), where applying the operators to the
     hypergeometric function newfunc yields func.
 
@@ -1866,7 +1881,7 @@ def build_hypergeometric_formula(func):
     # would have kicked in. However, `ap` could be empty. In this case we can
     # use a different basis.
     # I'm not aware of a basis that works in all cases.
-    from sympy import zeros, Matrix, eye
+    from sympy.matrices.dense import (Matrix, eye, zeros)
     z = Dummy('z')
     if func.ap:
         afactors = [_x + a for a in func.ap]
@@ -1932,6 +1947,7 @@ def hyperexpand_special(ap, bq, z):
     z = unpolarify(z)
     if z == 0:
         return S.One
+    from sympy.simplify.simplify import simplify
     if p == 2 and q == 1:
         # 2F1
         a, b, c = ap + bq
@@ -1960,13 +1976,18 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     """
     Try to find an expression for the hypergeometric function ``func``.
 
-    The result is expressed in terms of a dummy variable z0. Then it
-    is multiplied by premult. Then ops0 is applied.
-    premult must be a*z**prem for some a independent of z.
+    Explanation
+    ===========
+
+    The result is expressed in terms of a dummy variable ``z0``. Then it
+    is multiplied by ``premult``. Then ``ops0`` is applied.
+    ``premult`` must be a*z**prem for some a independent of ``z``.
     """
 
     if z.is_zero:
         return S.One
+
+    from sympy.simplify.simplify import simplify
 
     z = polarify(z, subs=False)
     if rewrite == 'default':
@@ -1975,7 +1996,7 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     def carryout_plan(f, ops):
         C = apply_operators(f.C.subs(f.z, z0), ops,
                             make_derivative_operator(f.M.subs(f.z, z0), z0))
-        from sympy import eye
+        from sympy.matrices.dense import eye
         C = apply_operators(C, ops0,
                             make_derivative_operator(f.M.subs(f.z, z0)
                                          + prem*eye(f.M.shape[0]), z0))
@@ -2062,12 +2083,15 @@ def devise_plan_meijer(fro, to, z):
     """
     Find operators to convert G-function ``fro`` into G-function ``to``.
 
-    It is assumed that fro and to have the same signatures, and that in fact
+    Explanation
+    ===========
+
+    It is assumed that ``fro`` and ``to`` have the same signatures, and that in fact
     any corresponding pair of parameters differs by integers, and a direct path
     is possible. I.e. if there are parameters a1 b1 c1  and a2 b2 c2 it is
     assumed that a1 can be shifted to a2, etc. The only thing this routine
     determines is the order of shifts to apply, nothing clever will be tried.
-    It is also assumed that fro is suitable.
+    It is also assumed that ``fro`` is suitable.
 
     Examples
     ========
@@ -2261,6 +2285,7 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default',
     def do_slater(an, bm, ap, bq, z, zfinal):
         # zfinal is the value that will eventually be substituted for z.
         # We pass it to _hyperexpand to improve performance.
+        from sympy.series import residue
         func = G_Function(an, bm, ap, bq)
         _, pbm, pap, _ = func.compute_buckets()
         if not can_do(pbm, pap):

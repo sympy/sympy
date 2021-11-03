@@ -1,6 +1,10 @@
 from functools import wraps
 
-from sympy import Matrix, eye, Integer, expand, Indexed, Sum
+from sympy.concrete.summations import Sum
+from sympy.core.function import expand
+from sympy.core.numbers import Integer
+from sympy.matrices.dense import (Matrix, eye)
+from sympy.tensor.indexed import Indexed
 from sympy.combinatorics import Permutation
 from sympy.core import S, Rational, Symbol, Basic, Add
 from sympy.core.containers import Tuple
@@ -461,6 +465,14 @@ def test_indices():
     raises(ValueError, lambda: tensor_indices(3, Lorentz))
     raises(ValueError, lambda: A(a,b,c))
 
+    A = TensorHead('A', [Lorentz, Lorentz])
+    assert A('a', 'b') == A(TensorIndex('a', Lorentz),
+                            TensorIndex('b', Lorentz))
+    assert A('a', '-b') == A(TensorIndex('a', Lorentz),
+                             TensorIndex('b', Lorentz, is_up=False))
+    assert A('a', TensorIndex('b', Lorentz)) == A(TensorIndex('a', Lorentz),
+                                                  TensorIndex('b', Lorentz))
+
 def test_TensorSymmetry():
     assert TensorSymmetry.fully_symmetric(2) == \
         TensorSymmetry(get_symmetric_group_sgs(2))
@@ -497,8 +509,8 @@ def test_TensExpr():
     #raises(NotImplementedError, lambda: TensExpr.__radd__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__sub__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__rsub__(t, 'a'))
-    #raises(NotImplementedError, lambda: TensExpr.__div__(t, 'a'))
-    #raises(NotImplementedError, lambda: TensExpr.__rdiv__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensExpr.__truediv__(t, 'a'))
+    #raises(NotImplementedError, lambda: TensExpr.__rtruediv__(t, 'a'))
     with ignore_warnings(SymPyDeprecationWarning):
         # DO NOT REMOVE THIS AFTER DEPRECATION REMOVED:
         raises(ValueError, lambda: A(a, b)**2)

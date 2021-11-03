@@ -1,11 +1,10 @@
-from typing import Callable, Dict, Optional, Tuple, Union
+from typing import Callable, Dict as tDict, Optional, Tuple as tTuple, Union as tUnion
 
 from collections import OrderedDict
 from distutils.errors import CompileError
 import os
 import re
 import subprocess
-import sys
 
 from .util import (
     find_binary_of_command, unique_list
@@ -52,21 +51,21 @@ class CompilerRunner:
     """
 
     # Subclass to vendor/binary dict
-    compiler_dict = None  # type: Dict[str, str]
+    compiler_dict = None  # type: tDict[str, str]
 
     # Standards should be a tuple of supported standards
     # (first one will be the default)
-    standards = None  # type: Tuple[Union[None, str], ...]
+    standards = None  # type: tTuple[tUnion[None, str], ...]
 
     # Subclass to dict of binary/formater-callback
-    std_formater = None  # type: Dict[str, Callable[[Optional[str]], str]]
+    std_formater = None  # type: tDict[str, Callable[[Optional[str]], str]]
 
     # subclass to be e.g. {'gcc': 'gnu', ...}
-    compiler_name_vendor_mapping = None  # type: Dict[str, str]
+    compiler_name_vendor_mapping = None  # type: tDict[str, str]
 
     def __init__(self, sources, out, flags=None, run_linker=True, compiler=None, cwd='.',
                  include_dirs=None, libraries=None, library_dirs=None, std=None, define=None,
-                 undef=None, strict_aliasing=None, preferred_vendor=None, **kwargs):
+                 undef=None, strict_aliasing=None, preferred_vendor=None, linkline=None, **kwargs):
         if isinstance(sources, str):
             raise ValueError("Expected argument sources to be a list of strings.")
         self.sources = list(sources)
@@ -100,7 +99,7 @@ class CompilerRunner:
             self.flags.append(self.std_formater[
                 self.compiler_name](self.std))
 
-        self.linkline = []
+        self.linkline = linkline or []
 
         if strict_aliasing is not None:
             nsa_re = re.compile("no-strict-aliasing$")
@@ -176,13 +175,10 @@ class CompilerRunner:
                              stderr=subprocess.STDOUT,
                              env=env)
         comm = p.communicate()
-        if sys.version_info[0] == 2:
-            self.cmd_outerr = comm[0]
-        else:
-            try:
-                self.cmd_outerr = comm[0].decode('utf-8')
-            except UnicodeDecodeError:
-                self.cmd_outerr = comm[0].decode('iso-8859-1')  # win32
+        try:
+            self.cmd_outerr = comm[0].decode('utf-8')
+        except UnicodeDecodeError:
+            self.cmd_outerr = comm[0].decode('iso-8859-1')  # win32
         self.cmd_returncode = p.returncode
 
         # Error handling

@@ -1,5 +1,11 @@
-from sympy import limit, Symbol, oo, sqrt, Rational, log, exp, cos, sin, tan, \
-    pi, asin, together, root, S
+from sympy.core.numbers import (Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import (root, sqrt)
+from sympy.functions.elementary.trigonometric import (asin, cos, sin, tan)
+from sympy.polys.rationaltools import together
+from sympy.series.limits import limit
 
 # Numbers listed with the tests refer to problem numbers in the book
 # "Anti-demidovich, problemas resueltos, Ed. URSS"
@@ -110,7 +116,7 @@ def test_f1b():
     assert limit(x*sin(pi/x), x, oo) == pi  # 220
     assert limit((1 - cos(x))/x**2, x, 0) == S.Half  # 221
     assert limit(x*sin(1/x), x, oo) == 1  # 227b
-    assert limit((cos(m*x) - cos(n*x))/x**2, x, 0) == ((n**2 - m**2)/2)  # 232
+    assert limit((cos(m*x) - cos(n*x))/x**2, x, 0) == -m**2/2 + n**2/2  # 232
     assert limit((tan(x) - sin(x))/x**3, x, 0) == S.Half  # 233
     assert limit((x - sin(2*x))/(x + sin(3*x)), x, 0) == -Rational(1, 4)  # 237
     assert limit((1 - sqrt(cos(x)))/x**2, x, 0) == Rational(1, 4)  # 239

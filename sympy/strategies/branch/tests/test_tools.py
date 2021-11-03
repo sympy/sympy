@@ -1,5 +1,5 @@
 from sympy.strategies.branch.tools import canon
-from sympy import Basic
+from sympy.core.basic import Basic
 
 
 def posdec(x):
@@ -29,8 +29,8 @@ def test_zero_ints():
 
 def test_split5():
     expr = Basic(2, Basic(5,  3), 8)
-    expected = set([Basic(0, Basic(0,  0), 10),
-                 Basic(0, Basic(10, 0), 10)])
+    expected = {Basic(0, Basic(0,  0), 10),
+                 Basic(0, Basic(10, 0), 10)}
 
     brl = canon(branch5)
     assert set(brl(expr)) == expected

@@ -1,7 +1,14 @@
-from sympy import (symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log,
-    sqrt, coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth,
-    Integer, O, exp, sech, sec, csch, asech, acsch, acos, asin, expand_mul,
-    AccumBounds, im, re)
+from sympy.calculus.util import AccumBounds
+from sympy.core.function import (expand_mul, expand_trig)
+from sympy.core.numbers import (E, I, Integer, Rational, nan, oo, pi, zoo)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (im, re)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (acosh, acoth, acsch, asech, asinh, atanh, cosh, coth, csch, sech, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, asin, cos, cot, sec, sin, tan)
+from sympy.series.order import O
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
@@ -79,6 +86,10 @@ def test_sinh():
     assert sinh(I*x).is_finite is True
     assert sinh(x).is_real is True
     assert sinh(I).is_real is False
+    p = Symbol('p', positive=True)
+    assert sinh(p).is_zero is False
+    assert sinh(0, evaluate=False).is_zero is True
+    assert sinh(2*pi*I, evaluate=False).is_zero is True
 
 
 def test_sinh_series():
@@ -161,6 +172,8 @@ def test_cosh():
     assert cosh(I*x).is_finite is True
     assert cosh(I*x).is_real is True
     assert cosh(I*2 + 1).is_real is False
+    assert cosh(5*I*S.Pi/2, evaluate=False).is_zero is True
+    assert cosh(x).is_zero is False
 
 
 def test_cosh_series():
@@ -327,6 +340,11 @@ def test_coth():
     x = Symbol('x', extended_real=True)
     assert coth(x).as_real_imag(deep=False) == (coth(x), 0)
 
+    assert expand_trig(coth(2*x)) == (coth(x)**2 + 1)/(2*coth(x))
+    assert expand_trig(coth(3*x)) == (coth(x)**3 + 3*coth(x))/(1 + 3*coth(x)**2)
+
+    assert expand_trig(coth(x + y)) == (1 + coth(x)*coth(y))/(coth(x) + coth(y))
+
 
 def test_coth_series():
     x = Symbol('x')
@@ -397,6 +415,8 @@ def test_csch():
 
     assert csch(n).is_real is True
 
+    assert expand_trig(csch(x + y)) == 1/(sinh(x)*cosh(y) + cosh(x)*sinh(y))
+
 
 def test_csch_series():
     x = Symbol('x')
@@ -465,6 +485,8 @@ def test_sech():
 
     assert sech(n).is_real is True
 
+    assert expand_trig(sech(x + y)) == 1/(cosh(x)*cosh(y) + sinh(x)*sinh(y))
+
 
 def test_sech_series():
     x = Symbol('x')
@@ -528,6 +550,9 @@ def test_asinh():
     assert asinh(sinh(-73 + 97*I)) == 73 - 97*I + 31*I*pi
     assert asinh(sinh(-7 - 23*I)) == 7 - 7*I*pi + 23*I
     assert asinh(sinh(13 - 3*I)) == -13 - I*pi + 3*I
+    p = Symbol('p', positive=True)
+    assert asinh(p).is_zero is False
+    assert asinh(sinh(0, evaluate=False), evaluate=False).is_zero is True
 
 
 def test_asinh_rewrite():
@@ -606,6 +631,7 @@ def test_acosh():
     assert acosh(cosh(-5 - 17*I)) == 5 - 6*I*pi + 17*I
     assert acosh(cosh(-21 + 11*I)) == 21 - 11*I + 4*I*pi
     assert acosh(cosh(cosh(1) + I)) == cosh(1) + I
+    assert acosh(1, evaluate=False).is_zero is True
 
 
 def test_acosh_rewrite():

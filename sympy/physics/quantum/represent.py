@@ -6,9 +6,12 @@ TODO:
 * Document default basis functionality.
 """
 
-from __future__ import print_function, division
-
-from sympy import Add, Expr, I, integrate, Mul, Pow
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.numbers import I
+from sympy.core.power import Pow
+from sympy.integrals.integrals import integrate
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.commutator import Commutator
 from sympy.physics.quantum.anticommutator import AntiCommutator
@@ -36,7 +39,7 @@ __all__ = [
 
 
 def _sympy_to_scalar(e):
-    """Convert from a sympy scalar to a Python scalar."""
+    """Convert from a SymPy scalar to a Python scalar."""
     if isinstance(e, Expr):
         if e.is_Integer:
             return int(e)
@@ -61,7 +64,7 @@ def represent(expr, **options):
 
     This function is the top-level interface for this action.
 
-    This function walks the sympy expression tree looking for ``QExpr``
+    This function walks the SymPy expression tree looking for ``QExpr``
     instances that have a ``_represent`` method. This method is then called
     and the object is replaced by the representation returned by this method.
     By default, the ``_represent`` method will dispatch to other methods
@@ -169,7 +172,7 @@ def represent(expr, **options):
         return result
     elif isinstance(expr, Pow):
         base, exp = expr.as_base_exp()
-        if format == 'numpy' or format == 'scipy.sparse':
+        if format in ('numpy', 'scipy.sparse'):
             exp = _sympy_to_scalar(exp)
         base = represent(base, **options)
         # scipy.sparse doesn't support negative exponents
@@ -194,13 +197,13 @@ def represent(expr, **options):
         return A*B + B*A
     elif isinstance(expr, InnerProduct):
         return represent(Mul(expr.bra, expr.ket), **options)
-    elif not (isinstance(expr, Mul) or isinstance(expr, OuterProduct)):
+    elif not isinstance(expr, (Mul, OuterProduct)):
         # For numpy and scipy.sparse, we can only handle numerical prefactors.
-        if format == 'numpy' or format == 'scipy.sparse':
+        if format in ('numpy', 'scipy.sparse'):
             return _sympy_to_scalar(expr)
         return expr
 
-    if not (isinstance(expr, Mul) or isinstance(expr, OuterProduct)):
+    if not isinstance(expr, (Mul, OuterProduct)):
         raise TypeError('Mul expected, got: %r' % expr)
 
     if "index" in options:
@@ -306,7 +309,7 @@ def rep_expectation(expr, **options):
     Examples
     ========
 
-    >>> from sympy.physics.quantum.cartesian import XOp, XKet, PxOp, PxKet
+    >>> from sympy.physics.quantum.cartesian import XOp, PxOp, PxKet
     >>> from sympy.physics.quantum.represent import rep_expectation
     >>> rep_expectation(XOp())
     x_1*DiracDelta(x_1 - x_2)
@@ -411,7 +414,7 @@ def integrate_result(orig_expr, result, **options):
     return result
 
 
-def get_basis(expr, **options):
+def get_basis(expr, *, basis=None, replace_none=True, **options):
     """
     Returns a basis state instance corresponding to the basis specified in
     options=s. If no basis is specified, the function tries to form a default
@@ -462,9 +465,6 @@ def get_basis(expr, **options):
 
     """
 
-    basis = options.pop("basis", None)
-    replace_none = options.pop("replace_none", True)
-
     if basis is None and not replace_none:
         return None
 
@@ -472,7 +472,7 @@ def get_basis(expr, **options):
         if isinstance(expr, KetBase):
             return _make_default(expr.__class__)
         elif isinstance(expr, BraBase):
-            return _make_default((expr.dual_class()))
+            return _make_default(expr.dual_class())
         elif isinstance(expr, Operator):
             state_inst = operators_to_state(expr)
             return (state_inst if state_inst is not None else None)
@@ -544,7 +544,7 @@ def enumerate_states(*args, **options):
 
     state = args[0]
 
-    if not (len(args) == 2 or len(args) == 3):
+    if len(args) not in (2, 3):
         raise NotImplementedError("Wrong number of arguments!")
 
     if not isinstance(state, StateBase):

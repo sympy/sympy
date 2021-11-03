@@ -1,10 +1,9 @@
-from __future__ import print_function, division
-
-from sympy import Symbol, sympify
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
 from sympy.core.numbers import Integer
 
 
-class PlotInterval(object):
+class PlotInterval:
     """
     """
     _v, _v_min, _v_max, _v_steps = None, None, None, None
@@ -55,7 +54,7 @@ class PlotInterval(object):
             self._v = None
             return
         if not isinstance(v, Symbol):
-            raise ValueError("v must be a sympy Symbol.")
+            raise ValueError("v must be a SymPy Symbol.")
         self._v = v
 
     def get_v_min(self):
@@ -94,7 +93,7 @@ class PlotInterval(object):
         if isinstance(v_steps, int):
             v_steps = Integer(v_steps)
         elif not isinstance(v_steps, Integer):
-            raise ValueError("v_steps must be an int or sympy Integer.")
+            raise ValueError("v_steps must be an int or SymPy Integer.")
         if v_steps <= Integer(0):
             raise ValueError("v_steps must be positive.")
         self._v_steps = v_steps
@@ -155,7 +154,7 @@ class PlotInterval(object):
     @require_all_args
     def vrange(self):
         """
-        Yields v_steps+1 sympy numbers ranging from
+        Yields v_steps+1 SymPy numbers ranging from
         v_min to v_max.
         """
         d = (self.v_max - self.v_min) / self.v_steps
@@ -166,7 +165,7 @@ class PlotInterval(object):
     @require_all_args
     def vrange2(self):
         """
-        Yields v_steps pairs of sympy numbers ranging from
+        Yields v_steps pairs of SymPy numbers ranging from
         (v_min, v_min + step) to (v_max - step, v_max).
         """
         d = (self.v_max - self.v_min) / self.v_steps

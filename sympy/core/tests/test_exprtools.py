@@ -1,8 +1,22 @@
 """Tests for tools for manipulating of large commutative expressions. """
 
-from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, I,
-                   Function, Interval, O, symbols, simplify, collect, Sum,
-                   Basic, Dict, root, exp, cos, Dummy, log, Rational)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.containers import (Dict, Tuple)
+from sympy.core.function import Function
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import (root, sqrt)
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.integrals.integrals import Integral
+from sympy.series.order import O
+from sympy.sets.sets import Interval
+from sympy.simplify.radsimp import collect
+from sympy.simplify.simplify import simplify
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
                                   gcd_terms, factor_terms, factor_nc, _mask_nc,
                                   _monotonic_sign)
@@ -56,6 +70,8 @@ def test_Factors():
     assert Factors(-I)*I == Factors()
     assert Factors({S.NegativeOne: S(3)})*Factors({S.NegativeOne: S.One, I: S(5)}) == \
         Factors(I)
+    assert Factors(sqrt(I)*I) == Factors(I**(S(3)/2)) == Factors({I: S(3)/2})
+    assert Factors({I: S(3)/2}).as_expr() == I**(S(3)/2)
 
     assert Factors(S(2)**x).div(S(3)**x) == \
         (Factors({S(2): x}), Factors({S(3): x}))
@@ -355,7 +371,7 @@ def test_factor_nc():
 
     # for coverage:
     from sympy.physics.secondquant import Commutator
-    from sympy import factor
+    from sympy.polys.polytools import factor
     eq = 1 + x*Commutator(m, n)
     assert factor_nc(eq) == eq
     eq = x*Commutator(m, n) + x*Commutator(m, o)*Commutator(m, n)
@@ -447,7 +463,7 @@ def test_monotonic_sign():
     assert F(-(p - 1)*q - 1).is_negative
 
 def test_issue_17256():
-    from sympy import Symbol, Range, Sum
+    from sympy.sets.fancysets import Range
     x = Symbol('x')
     s1 = Sum(x + 1, (x, 1, 9))
     s2 = Sum(x + 1, (x, Range(1, 10)))
@@ -462,3 +478,8 @@ def test_issue_17256():
     r1 = s1.xreplace({x:a})
     r2 = s2.xreplace({x:a})
     assert r1 == r2
+
+def test_issue_21623():
+    from sympy.matrices.expressions.matexpr import MatrixSymbol
+    M = MatrixSymbol('X', 2, 2)
+    assert gcd_terms(M[0,0], 1) == M[0,0]

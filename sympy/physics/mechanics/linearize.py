@@ -1,24 +1,23 @@
-from __future__ import print_function, division
-
 __all__ = ['Linearizer']
 
 from sympy.core.backend import Matrix, eye, zeros
-from sympy.core.compatibility import Iterable
-from sympy import Dummy
+from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import flatten
 from sympy.physics.vector import dynamicsymbols
 from sympy.physics.mechanics.functions import msubs
 
 from collections import namedtuple
+from collections.abc import Iterable
 
-class Linearizer(object):
+class Linearizer:
     """This object holds the general model form for a dynamic system.
     This model is used for computing the linearized form of the system,
     while properly dealing with constraints leading to  dependent
     coordinates and speeds.
 
     Attributes
-    ----------
+    ==========
+
     f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a : Matrix
         Matrices holding the general system form.
     q, u, r : Matrix
@@ -36,7 +35,8 @@ class Linearizer(object):
             q_i=None, q_d=None, u_i=None, u_d=None, r=None, lams=None):
         """
         Parameters
-        ----------
+        ==========
+
         f_0, f_1, f_2, f_3, f_4, f_c, f_v, f_a : array_like
             System of equations holding the general system form.
             Supply empty array or Matrix if the parameter
@@ -95,6 +95,17 @@ class Linearizer(object):
         k = len(self.lams)
         dims = namedtuple('dims', ['l', 'm', 'n', 'o', 's', 'k'])
         self._dims = dims(l, m, n, o, s, k)
+
+        self._Pq = None
+        self._Pqi = None
+        self._Pqd = None
+        self._Pu = None
+        self._Pui = None
+        self._Pud = None
+        self._C_0 = None
+        self._C_1 = None
+        self._C_2 = None
+        self.perm_mat = None
 
         self._setup_done = False
 
@@ -226,7 +237,8 @@ class Linearizer(object):
         These may be either symbolic or numeric.
 
         Parameters
-        ----------
+        ==========
+
         op_point : dict or iterable of dicts, optional
             Dictionary or iterable of dictionaries containing the operating
             point conditions. These will be substituted in to the linearized
@@ -246,7 +258,8 @@ class Linearizer(object):
             For large expressions this may be time consuming. Default is False.
 
         Potential Issues
-        ----------------
+        ================
+
             Note that the process of solving with A_and_B=True is
             computationally intensive if there are many symbolic parameters.
             For this reason, it may be more desirable to use the default
@@ -403,14 +416,16 @@ def permutation_matrix(orig_vec, per_vec):
     orig_vec into order of per_vec.
 
     Parameters
-    ----------
+    ==========
+
     orig_vec : array_like
         Symbols in original ordering.
     per_vec : array_like
         Symbols in new ordering.
 
     Returns
-    -------
+    =======
+
     p_matrix : Matrix
         Permutation matrix such that orig_vec == (p_matrix * per_vec).
     """

@@ -15,11 +15,11 @@ import sys
 import os
 
 
-if sys.version_info < (3, 6):
-    sys.exit("This script requires Python 3.6 or newer")
+if sys.version_info < (3, 7):
+    sys.exit("This script requires Python 3.7 or newer")
 
 from subprocess import run, PIPE
-from distutils.version import LooseVersion
+from sympy.external.importtools import version_tuple
 from collections import OrderedDict
 
 def red(text):
@@ -44,7 +44,7 @@ from sympy.utilities.misc import filldedent
 # check git version
 minimal = '1.8.4.2'
 git_ver = run(['git', '--version'], stdout=PIPE, encoding='utf-8').stdout[12:]
-if LooseVersion(git_ver) < LooseVersion(minimal):
+if version_tuple(git_ver) < version_tuple(minimal):
     print(yellow("Please use a git version >= %s" % minimal))
 
 def author_name(line):
@@ -90,10 +90,16 @@ try:
     # this will fail if the .mailmap is not right
     assert 'Sergey B Kirpichev' == author_name(git_people.pop(226)
         ), 'Sergey B Kirpichev was not found at line 226.'
-    assert 'azure-pipelines[bot]' == \
-        author_name(git_people.pop(751)), 'azure-pipelines[bot] was not found at line 751'
-    assert 'whitesource-bolt-for-github[bot]' == \
-        author_name(git_people.pop(792)), 'whitesource-bolt-for-github[bot] not found at line 792'
+
+    index = git_people.index(
+        "azure-pipelines[bot] " +
+        "<azure-pipelines[bot]@users.noreply.github.com>")
+    git_people.pop(index)
+    index = git_people.index(
+        "whitesource-bolt-for-github[bot] " +
+        "<whitesource-bolt-for-github[bot]@users.noreply.github.com>")
+    git_people.pop(index)
+
 except AssertionError as msg:
     print(red(msg))
     sys.exit(1)
@@ -121,7 +127,8 @@ old_lines = codecs.open(os.path.realpath(os.path.join(
         __file__, os.path.pardir, os.path.pardir, "AUTHORS")),
         "r", "utf-8").read().splitlines()
 if old_lines == lines:
-    sys.exit(green('No changes made to AUTHORS.'))
+    print(green('No changes made to AUTHORS.'))
+    sys.exit(0)
 
 # check for new additions
 new_authors = []
@@ -154,3 +161,7 @@ if new_authors:
         print('\t%s' % i)
 else:
     print(yellow("The AUTHORS file was updated."))
+
+print(red("Changes were made in the authors file"))
+run(['git', 'diff']) # Show the changes
+sys.exit(1)

@@ -31,9 +31,7 @@ complete source code files.
 # .. _Rational64: http://rust-num.github.io/num/num/rational/type.Rational64.html
 # .. _BigRational: http://rust-num.github.io/num/num/rational/type.BigRational.html
 
-from __future__ import print_function, division
-
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 from sympy.core import S, Rational, Float, Lambda
 from sympy.printing.codeprinter import CodePrinter
@@ -50,7 +48,7 @@ from sympy.printing.codeprinter import CodePrinter
 # 3. args[1].func(), method without arguments (e.g. (e, x) => x.exp())
 # 4. func(args), function with arguments
 
-# dictionary mapping sympy function to (argument_conditions, Rust_function).
+# dictionary mapping SymPy function to (argument_conditions, Rust_function).
 # Used in RustCodePrinter._print_Function(self)
 
 # f64 method in Rust
@@ -103,6 +101,7 @@ known_functions = {
     "asinh": "asinh",
     "acosh": "acosh",
     "atanh": "atanh",
+    "sqrt": "sqrt",  # To enable automatic rewrites
 }
 
 # i64 method in Rust
@@ -216,7 +215,7 @@ reserved_words = ['abstract',
 
 
 class RustCodePrinter(CodePrinter):
-    """A printer to convert python expressions to strings of Rust code"""
+    """A printer to convert SymPy expressions to strings of Rust code"""
     printmethod = "_rust_code"
     language = "Rust"
 
@@ -231,7 +230,7 @@ class RustCodePrinter(CodePrinter):
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
         'inline': False,
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
@@ -332,6 +331,11 @@ class RustCodePrinter(CodePrinter):
         elif hasattr(expr, '_imp_') and isinstance(expr._imp_, Lambda):
             # inlined function
             return self._print(expr._imp_(*expr.args))
+        elif expr.func.__name__ in self._rewriteable_functions:
+            # Simple rewrite to supported function possible
+            target_f, required_fs = self._rewriteable_functions[expr.func.__name__]
+            if self._can_print(target_f) and all(self._can_print(f) for f in required_fs):
+                return self._print(expr.rewrite(target_f))
         else:
             return self._print_not_supported(expr)
 
@@ -342,14 +346,14 @@ class RustCodePrinter(CodePrinter):
         return self._print_Function(expr)
 
     def _print_Float(self, expr, _type=False):
-        ret = super(RustCodePrinter, self)._print_Float(expr)
+        ret = super()._print_Float(expr)
         if _type:
             return ret + '_f64'
         else:
             return ret
 
     def _print_Integer(self, expr, _type=False):
-        ret = super(RustCodePrinter, self)._print_Integer(expr)
+        ret = super()._print_Integer(expr)
         if _type:
             return ret + '_i32'
         else:
@@ -363,7 +367,7 @@ class RustCodePrinter(CodePrinter):
         lhs_code = self._print(expr.lhs)
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
-        return "{0} {1} {2}".format(lhs_code, op, rhs_code)
+        return "{} {} {}".format(lhs_code, op, rhs_code)
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array
@@ -434,8 +438,7 @@ class RustCodePrinter(CodePrinter):
 
     def _print_ITE(self, expr):
         from sympy.functions import Piecewise
-        _piecewise = Piecewise((expr.args[1], expr.args[0]), (expr.args[2], True))
-        return self._print(_piecewise)
+        return self._print(expr.rewrite(Piecewise, deep=False))
 
     def _print_MatrixBase(self, A):
         if A.cols == 1:
@@ -443,22 +446,17 @@ class RustCodePrinter(CodePrinter):
         else:
             raise ValueError("Full Matrix Support in Rust need Crates (https://crates.io/keywords/matrix).")
 
+    def _print_SparseRepMatrix(self, mat):
+        # do not allow sparse matrices to be made dense
+        return self._print_not_supported(mat)
+
     def _print_MatrixElement(self, expr):
         return "%s[%s]" % (expr.parent,
                            expr.j + expr.i*expr.parent.shape[1])
 
-    # FIXME: Str/CodePrinter could define each of these to call the _print
-    # method from higher up the class hierarchy (see _print_NumberSymbol).
-    # Then subclasses like us would not need to repeat all this.
-    _print_Matrix = _print_MatrixBase
-    _print_DenseMatrix = _print_MatrixBase
-    _print_MutableDenseMatrix = _print_MatrixBase
-    _print_ImmutableMatrix = _print_MatrixBase
-    _print_ImmutableDenseMatrix = _print_MatrixBase
-
     def _print_Symbol(self, expr):
 
-        name = super(RustCodePrinter, self)._print_Symbol(expr)
+        name = super()._print_Symbol(expr)
 
         if expr in self._dereference:
             return '(*%s)' % name
@@ -499,7 +497,7 @@ class RustCodePrinter(CodePrinter):
         pretty = []
         level = 0
         for n, line in enumerate(code):
-            if line == '' or line == '\n':
+            if line in ('', '\n'):
                 pretty.append(line)
                 continue
             level -= decrease[n]
@@ -515,7 +513,7 @@ def rust_code(expr, assign_to=None, **settings):
     ==========
 
     expr : Expr
-        A sympy expression to be converted.
+        A SymPy expression to be converted.
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned. Can be a string, ``Symbol``,

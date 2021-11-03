@@ -32,18 +32,17 @@ more information on each (run help(pde)):
     variable coefficients.
 
 """
-from __future__ import print_function, division
+from functools import reduce
 
 from itertools import combinations_with_replacement
 from sympy.simplify import simplify  # type: ignore
 from sympy.core import Add, S
-from sympy.core.compatibility import reduce, is_sequence
 from sympy.core.function import Function, expand, AppliedUndef, Subs
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, symbols
 from sympy.functions import exp
 from sympy.integrals.integrals import Integral
-from sympy.utilities.iterables import has_dups
+from sympy.utilities.iterables import has_dups, is_sequence
 from sympy.utilities.misc import filldedent
 
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
@@ -151,7 +150,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     ========
 
     >>> from sympy.solvers.pde import pdsolve
-    >>> from sympy import Function, diff, Eq
+    >>> from sympy import Function, Eq
     >>> from sympy.abc import x, y
     >>> f = Function('f')
     >>> u = f(x, y)
@@ -228,7 +227,7 @@ def _handle_Integral(expr, func, order, hint):
         return expr
 
 
-def classify_pde(eq, func=None, dict=False, **kwargs):
+def classify_pde(eq, func=None, dict=False, *, prep=True, **kwargs):
     """
     Returns a tuple of possible pdsolve() classifications for a PDE.
 
@@ -256,7 +255,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     ========
 
     >>> from sympy.solvers.pde import classify_pde
-    >>> from sympy import Function, diff, Eq
+    >>> from sympy import Function, Eq
     >>> from sympy.abc import x, y
     >>> f = Function('f')
     >>> u = f(x, y)
@@ -266,8 +265,6 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     >>> classify_pde(eq)
     ('1st_linear_constant_coeff_homogeneous',)
     """
-
-    prep = kwargs.pop('prep', True)
 
     if func and len(func.args) != 2:
         raise NotImplementedError("Right now only partial "
@@ -418,7 +415,7 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
     Examples
     ========
 
-    >>> from sympy import Function, symbols, diff
+    >>> from sympy import Function, symbols
     >>> from sympy.solvers.pde import checkpdesol, pdsolve
     >>> x, y = symbols('x y')
     >>> f = Function('f')
@@ -525,10 +522,8 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     Examples
     ========
 
-    >>> from sympy.solvers.pde import (
-    ... pde_1st_linear_constant_coeff_homogeneous)
     >>> from sympy import pdsolve
-    >>> from sympy import Function, diff, pprint
+    >>> from sympy import Function, pprint
     >>> from sympy.abc import x,y
     >>> f = Function('f')
     >>> pdsolve(f(x,y) + f(x,y).diff(x) + f(x,y).diff(y))
@@ -639,12 +634,12 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     ========
 
     >>> from sympy.solvers.pde import pdsolve
-    >>> from sympy import Function, diff, pprint, exp
+    >>> from sympy import Function, pprint, exp
     >>> from sympy.abc import x,y
     >>> f = Function('f')
     >>> eq = -2*f(x,y).diff(x) + 4*f(x,y).diff(y) + 5*f(x,y) - exp(x + 3*y)
     >>> pdsolve(eq)
-    Eq(f(x, y), (F(4*x + 2*y) + exp(x/2 + 4*y)/15)*exp(x/2 - y))
+    Eq(f(x, y), (F(4*x + 2*y)*exp(x/2) + exp(x + 4*y)/15)*exp(-y))
 
     References
     ==========
@@ -701,7 +696,6 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
 
     which can be solved using ``dsolve``.
 
-    >>> from sympy.solvers.pde import pdsolve
     >>> from sympy.abc import x, y
     >>> from sympy import Function, pprint
     >>> a, b, c, G, f= [Function(i) for i in ['a', 'b', 'c', 'G', 'f']]
@@ -719,7 +713,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     ========
 
     >>> from sympy.solvers.pde import pdsolve
-    >>> from sympy import Function, diff, pprint, exp
+    >>> from sympy import Function, pprint
     >>> from sympy.abc import x,y
     >>> f = Function('f')
     >>> eq =  x*(u.diff(x)) - y*(u.diff(y)) + y**2*u - y**2

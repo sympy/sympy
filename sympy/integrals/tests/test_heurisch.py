@@ -1,7 +1,19 @@
-from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
-    I, erf, tan, asin, asinh, acos, atan, Function, Derivative, diff, simplify, \
-    LambertW, Ne, Piecewise, Symbol, Add, ratsimp, Integral, Sum, \
-    besselj, besselk, bessely, jn, tanh
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.relational import Ne
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import (LambertW, exp, log)
+from sympy.functions.elementary.hyperbolic import (asinh, cosh, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, tan)
+from sympy.functions.special.bessel import (besselj, besselk, bessely, jn)
+from sympy.functions.special.error_functions import erf
+from sympy.integrals.integrals import Integral
+from sympy.simplify.ratsimp import ratsimp
+from sympy.simplify.simplify import simplify
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
 from sympy.testing.pytest import XFAIL, skip, slow, ON_TRAVIS
 from sympy.integrals.integrals import integrate
@@ -29,6 +41,9 @@ def test_components():
 def test_issue_10680():
     assert isinstance(integrate(x**log(x**log(x**log(x))),x), Integral)
 
+def test_issue_21166():
+    assert integrate(sin(x/sqrt(abs(x))), (x, -1, 1)) == 0
+
 def test_heurisch_polynomials():
     assert heurisch(1, x) == x
     assert heurisch(x, x) == x**2/2
@@ -43,7 +58,7 @@ def test_heurisch_fractions():
     assert heurisch(1/(x + sin(y)), x) == log(x + sin(y))
 
     # Up to a constant, where C = pi*I*Rational(5, 12), Mathematica gives identical
-    # result in the first case. The difference is because sympy changes
+    # result in the first case. The difference is because SymPy changes
     # signs of expressions without any care.
     # XXX ^ ^ ^ is this still correct?
     assert heurisch(5*x**5/(
@@ -120,6 +135,7 @@ def test_heurisch_hyperbolic():
 
 def test_heurisch_mixed():
     assert heurisch(sin(x)*exp(x), x) == exp(x)*sin(x)/2 - exp(x)*cos(x)/2
+    assert heurisch(sin(x/sqrt(-x)), x) == 2*x*cos(x/sqrt(-x))/sqrt(-x) - 2*sin(x/sqrt(-x))
 
 
 def test_heurisch_radicals():
@@ -153,9 +169,8 @@ def test_heurisch_symbolic_coeffs():
 def test_heurisch_symbolic_coeffs_1130():
     y = Symbol('y')
     assert heurisch_wrapper(1/(x**2 + y), x) == Piecewise(
-        (-I*log(x - I*sqrt(y))/(2*sqrt(y))
-         + I*log(x + I*sqrt(y))/(2*sqrt(y)), Ne(y, 0)),
-        (-1/x, True))
+    (log(x - sqrt(-y))/(2*sqrt(-y)) - log(x + sqrt(-y))/(2*sqrt(-y)),
+    Ne(y, 0)), (-1/x, True))
     y = Symbol('y', positive=True)
     assert heurisch_wrapper(1/(x**2 + y), x) == (atan(x/sqrt(y))/sqrt(y))
 
@@ -205,8 +220,8 @@ def test_heurisch_wrapper():
         (-log(x - y)/(2*y) + log(x + y)/(2*y), Ne(y, 0)), (1/x, True))
     # issue 6926
     f = sqrt(x**2/((y - x)*(y + x)))
-    assert heurisch_wrapper(f, x) == x*sqrt(x**2)*sqrt(1/(-x**2 + y**2)) \
-        - y**2*sqrt(x**2)*sqrt(1/(-x**2 + y**2))/x
+    assert heurisch_wrapper(f, x) == x*sqrt(x**2/(-x**2 + y**2)) \
+    - y**2*sqrt(x**2/(-x**2 + y**2))/x
 
 def test_issue_3609():
     assert heurisch(1/(x * (1 + log(x)**2)), x) == atan(log(x))

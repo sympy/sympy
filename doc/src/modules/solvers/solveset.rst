@@ -22,7 +22,7 @@ issues
    * Multiple solutions: `x^2 = 1`
    * No Solution: `x^2 + 1 = 0 ; x \in \mathbb{R}`
    * Interval of solution: `\lfloor x \rfloor = 0`
-   * Infinitely many solutions: `sin(x) = 0`
+   * Infinitely many solutions: `\sin(x) = 0`
    * Multivariate functions with point solutions: `x^2 + y^2 = 0`
    * Multivariate functions with non-point solution: `x^2 + y^2 = 1`
    * System of equations: `x + y = 1` and `x - y = 0`
@@ -43,7 +43,7 @@ Why Solveset?
 
 * ``solveset`` has a cleaner input and output interface: ``solveset`` returns
   a set object and a set object takes care of all types of output. For
-  cases where it doesn't "know" all the solutions a ``ConditionSet`` with a partial
+  cases where it does not "know" all the solutions a ``ConditionSet`` with a partial
   solution is returned. For input it only takes the equation, the variables
   to solve for and the optional argument ``domain`` over which the equation is to
   be solved.
@@ -66,22 +66,22 @@ SymPy has a well developed sets module, which can represent most of the set
 containers in Mathematics such as:
 
 
- * ``FiniteSet``
+ * :class:`~.FiniteSet`
 
    Represents a finite set of discrete numbers.
 
 
- * ``Interval``
+ * :class:`~.Interval`
 
    Represents a real interval as a set.
 
 
- * ``ProductSet``
+ * :class:`~.ProductSet`
 
    Represents a Cartesian product of sets.
 
 
- * ``ImageSet``
+ * :class:`~.ImageSet`
 
    Represents the image of a set under a mathematical function
 
@@ -91,46 +91,46 @@ containers in Mathematics such as:
     >>> 4 in squares
     True
 
- * ``ComplexRegion``
+ * :class:`~.ComplexRegion`
 
    Represents the set of all complex numbers in a region in the Argand plane.
 
 
- * ``ConditionSet``
+ * :class:`~.ConditionSet`
 
    Represents the set of elements, which satisfies a given condition.
 
 
 Also, the predefined set classes such as:
 
- * ``Naturals`` `\mathbb{N}`
+ * :class:`~.Naturals`, $\mathbb{N}
 
    Represents the natural numbers (or counting numbers), which are all
    positive integers starting from 1.
 
 
- * ``Naturals0`` `\mathbb{N_0}`
+ * :class:`~.Naturals0`, $\mathbb{N_0}$
 
    Represents the whole numbers, which are all the non-negative integers,
    inclusive of 0.
 
 
- * ``Integers`` `\mathbb{Z}`
+ * :class:`~.Integers`, $\mathbb{Z}$
 
    Represents all integers: positive, negative and zero.
 
 
- * ``Reals`` `\mathbb{R}`
+ * :class:`~.Reals`, $\mathbb{R}$
 
    Represents the set of all real numbers.
 
 
- * ``Complexes`` `\mathbb{C}`
+ * :class:`~.Complexes`, $\mathbb{C}$
 
    Represents the set of all complex numbers.
 
 
- * ``EmptySet`` `\phi`
+ * :class:`~.EmptySet`, $\emptyset$
 
    Represents the empty set.
 
@@ -182,9 +182,9 @@ For example:
 
  >>> from sympy import FiniteSet
  >>> FiniteSet(1, 2, 3)   # Unordered
- FiniteSet(1, 2, 3)
+ {1, 2, 3}
  >>> FiniteSet((1, 2, 3))  # Ordered
- FiniteSet((1, 2, 3))
+ {(1, 2, 3)}
 
 
 Why not use dicts as output?
@@ -256,7 +256,7 @@ What is this domain argument about?
     >>> from sympy import solveset, S
     >>> from sympy.abc import x
     >>> solveset(x**2 + 1, x) # domain=S.Complexes is default
-    FiniteSet(I, -I)
+    {-I, I}
     >>> solveset(x**2 + 1, x, domain=S.Reals)
     EmptySet
 
@@ -346,7 +346,7 @@ How do we manipulate and return an infinite solution?
    >>> from sympy import ImageSet, Lambda, pi, S, Dummy, pprint
    >>> n = Dummy('n')
    >>> pprint(ImageSet(Lambda(n, 2*pi*n), S.Integers), use_unicode=True)
-   {2⋅n⋅π | n ∊ ℤ}
+   {2⋅n⋅π │ n ∊ ℤ}
 
 
    Where ``n`` is a dummy variable. It is basically the image of the
@@ -361,7 +361,7 @@ How do we manipulate and return an infinite solution?
 
    >>> from sympy import ComplexRegion, FiniteSet, Interval, pi, pprint
    >>> pprint(ComplexRegion(FiniteSet(1)*Interval(0, 2*pi), polar=True), use_unicode=True)
-   {r⋅(ⅈ⋅sin(θ) + cos(θ)) | r, θ ∊ {1} × [0, 2⋅π)}
+   {r⋅(ⅈ⋅sin(θ) + cos(θ)) │ r, θ ∊ {1} × [0, 2⋅π)}
 
 
    Where the ``FiniteSet`` in the ``ProductSet`` is the range of the value
@@ -376,7 +376,7 @@ How do we manipulate and return an infinite solution?
 
    >>> from sympy import ComplexRegion, Interval, pi, oo, pprint
    >>> pprint(ComplexRegion(Interval(-oo, oo)*Interval(0, oo)), use_unicode=True)
-   {x + y⋅ⅈ | x, y ∊ (-∞, ∞) × [0, ∞)}
+   {x + y⋅ⅈ │ x, y ∊ (-∞, ∞) × [0, ∞)}
 
 
    where the Intervals are the range of `x` and `y` for the set of complex
@@ -400,7 +400,7 @@ How does ``solveset`` ensure that it is not returning any wrong solution?
     >>> from sympy import symbols, S, pprint, solveset
     >>> x, n = symbols('x, n')
     >>> pprint(solveset(abs(x) - n, x, domain=S.Reals), use_unicode=True)
-    {x | x ∊ {-n, n} ∧ (n ∈ [0, ∞))}
+    {x │ x ∊ {-n, n} ∧ (n ∈ [0, ∞))}
 
  Though, there still a lot of work needs to be done in this regard.
 
@@ -482,7 +482,7 @@ What will you do with the old solve?
 ------------------------------------
 
  There are still a few things ``solveset`` can't do, which the old ``solve``
- can, such as solving non linear multivariate & LambertW type equations.
+ can, such as solving nonlinear multivariate & LambertW type equations.
  Hence, it's not yet a perfect replacement for old ``solve``. The ultimate
  goal is to:
 
@@ -552,60 +552,60 @@ Solving an equation like `x^2 == 1` can be done as follows::
     >>> from sympy import Symbol, Eq
     >>> x = Symbol('x')
     >>> solveset(Eq(x**2, 1), x)
-    FiniteSet(-1, 1)
+    {-1, 1}
 
 Or one may manually rewrite the equation as an expression equal to 0::
 
     >>> solveset(x**2 - 1, x)
-    FiniteSet(-1, 1)
+    {-1, 1}
 
 The first argument for :func:`solveset` is an expression (equal to zero) or an equation and the second argument
 is the symbol that we want to solve the equation for.
 
-.. autofunction:: sympy.solvers.solveset.solveset
+.. autofunction:: sympy.solvers.solveset::solveset
 
-.. autofunction:: sympy.solvers.solveset.solveset_real
+.. autofunction:: sympy.solvers.solveset::solveset_real
 
-.. autofunction:: sympy.solvers.solveset.solveset_complex
+.. autofunction:: sympy.solvers.solveset::solveset_complex
 
-.. autofunction:: sympy.solvers.solveset.invert_real
+.. autofunction:: sympy.solvers.solveset::invert_real
 
-.. autofunction:: sympy.solvers.solveset.invert_complex
+.. autofunction:: sympy.solvers.solveset::invert_complex
 
-.. autofunction:: sympy.solvers.solveset.domain_check
+.. autofunction:: sympy.solvers.solveset::domain_check
 
-.. autofunction:: sympy.solvers.solveset.solvify
+.. autofunction:: sympy.solvers.solveset::solvify
 
 linear_eq_to_matrix
 -------------------
 
-.. autofunction:: sympy.solvers.solveset.linear_eq_to_matrix
+.. autofunction:: sympy.solvers.solveset::linear_eq_to_matrix
 
 
 linsolve
 --------
 
-.. autofunction:: sympy.solvers.solveset.linsolve
+.. autofunction:: sympy.solvers.solveset::linsolve
 
 
 nonlinsolve
 -----------
 
-.. autofunction:: sympy.solvers.solveset.nonlinsolve
+.. autofunction:: sympy.solvers.solveset::nonlinsolve
 
 
 transolve
 ---------
 
-.. autofunction:: sympy.solvers.solveset._transolve
+.. autofunction:: sympy.solvers.solveset::_transolve
 
-.. autofunction:: sympy.solvers.solveset._is_exponential
+.. autofunction:: sympy.solvers.solveset::_is_exponential
 
-.. autofunction:: sympy.solvers.solveset._solve_exponential
+.. autofunction:: sympy.solvers.solveset::_solve_exponential
 
-.. autofunction:: sympy.solvers.solveset._solve_logarithm
+.. autofunction:: sympy.solvers.solveset::_solve_logarithm
 
-.. autofunction:: sympy.solvers.solveset._is_logarithmic
+.. autofunction:: sympy.solvers.solveset::_is_logarithmic
 
 
 Diophantine Equations (DEs)

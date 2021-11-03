@@ -3,8 +3,17 @@ If the arbitrary constant class from issue 4435 is ever implemented, this
 should serve as a set of test cases.
 """
 
-from sympy import (acos, cos, cosh, Eq, exp, Function, I, Integral, log, Pow,
-                   S, sin, sinh, sqrt, Symbol)
+from sympy.core.function import Function
+from sympy.core.numbers import I
+from sympy.core.power import Pow
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (cosh, sinh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, cos, sin)
+from sympy.integrals.integrals import Integral
 from sympy.solvers.ode.ode import constantsimp, constant_renumber
 from sympy.testing.pytest import XFAIL
 
@@ -135,7 +144,7 @@ def test_constant_repeated():
 def test_ode_solutions():
     # only a few examples here, the rest will be tested in the actual dsolve tests
     assert constant_renumber(constantsimp(C1*exp(2*x) + exp(x)*(C2 + C3), [C1, C2, C3])) == \
-        constant_renumber((C1*exp(x) + C2*exp(2*x)))
+        constant_renumber(C1*exp(x) + C2*exp(2*x))
     assert constant_renumber(
         constantsimp(Eq(f(x), I*C1*sinh(x/3) + C2*cosh(x/3)), [C1, C2])
         ) == constant_renumber(Eq(f(x), C1*sinh(x/3) + C2*cosh(x/3)))

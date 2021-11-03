@@ -59,8 +59,8 @@ This is where the meat of code generation is; the translation of SymPy
 actually more like a lightweight version of codegen for Python, and
 Python (:py:func:`sympy.printing.pycode.pycode`), and
 :py:func:`sympy.printing.lambdarepr.lambdarepr`, which supports many libraries
-(like NumPy), and theano
-(:py:func:`sympy.printing.theanocode.theano_function`). The code printers are
+(like NumPy), and Aesara
+(:py:func:`sympy.printing.aesaracode.aesara_function`). The code printers are
 special cases of the other prints in SymPy (str printer, pretty printer, etc.).
 
 An important distinction is that the code printer has to deal with assignments
@@ -428,7 +428,7 @@ supply an argument sequence to helper routines.
 Another method available at the ``autowrap`` level is ``binary_function``. It
 returns a sympy function. The advantage is that we can have very fast functions
 as compared to SymPy speeds. This is because we will be using compiled
-functions with Sympy attributes and methods. An illustration::
+functions with SymPy attributes and methods. An illustration::
 
     >>> from sympy.utilities.autowrap import binary_function
     >>> from sympy.physics.hydrogen import R_nl
@@ -614,11 +614,4 @@ Fortran utilities (sympy.codegen.futils)
 ----------------------------------------
 
 .. automodule:: sympy.codegen.futils
-   :members:
-
-
-Array utilities (sympy.codegen.array_utils)
--------------------------------------------
-
-.. automodule:: sympy.codegen.array_utils
    :members:

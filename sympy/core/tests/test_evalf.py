@@ -1,7 +1,28 @@
-from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
-    factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
-    integrate, log, Mul, N, oo, pi, Pow, product, Product,
-    Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat, cosh, acosh, acos)
+from sympy.concrete.products import (Product, product)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.evalf import N
+from sympy.core.function import (Function, nfloat)
+from sympy.core.mul import Mul
+from sympy.core import (GoldenRatio)
+from sympy.core.numbers import (E, I, Rational, oo, pi)
+from sympy.core.power import Pow
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.combinatorial.numbers import fibonacci
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (acosh, cosh)
+from sympy.functions.elementary.integers import (ceiling, floor)
+from sympy.functions.elementary.miscellaneous import (Max, sqrt)
+from sympy.functions.elementary.trigonometric import (acos, atan, cos, sin, tan)
+from sympy.integrals.integrals import (Integral, integrate)
+from sympy.polys.polytools import factor
+from sympy.printing.str import sstr
+from sympy.simplify.simplify import simplify
 from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
     scaled_zero, get_integer_part, as_mpmath, evalf)
@@ -71,7 +92,7 @@ def test_evalf_complex_bug():
 def test_evalf_complex_powers():
     assert NS('(E+pi*I)**100000000000000000') == \
         '-3.58896782867793e+61850354284995199 + 4.58581754997159e+61850354284995199*I'
-    # XXX: rewrite if a+a*I simplification introduced in sympy
+    # XXX: rewrite if a+a*I simplification introduced in SymPy
     #assert NS('(pi + pi*I)**2') in ('0.e-15 + 19.7392088021787*I', '0.e-16 + 19.7392088021787*I')
     assert NS('(pi + pi*I)**2', chop=True) == '19.7392088021787*I'
     assert NS(
@@ -234,6 +255,9 @@ def test_evalf_bugs():
     #issue 13076
     assert NS(Mul(Max(0, y), x, evaluate=False).evalf()) == 'x*Max(0, y)'
 
+    #issue 18516
+    assert NS(log(S(3273390607896141870013189696827599152216642046043064789483291368096133796404674554883270092325904157150886684127560071009217256545885393053328527589376)/36360291795869936842385267079543319118023385026001623040346035832580600191583895484198508262979388783308179702534403855752855931517013066142992430916562025780021771247847643450125342836565813209972590371590152578728008385990139795377610001).evalf(15, chop=True)) == '-oo'
+
 
 def test_evalf_integer_parts():
     a = floor(log(8)/log(2) - exp(-1000), evaluate=False)
@@ -261,6 +285,16 @@ def test_evalf_integer_parts():
 
     assert float((floor(1.5, evaluate=False)+1/9).evalf()) == 1 + 1/9
     assert float((floor(0.5, evaluate=False)+20).evalf()) == 20
+
+    # issue 19991
+    n = 1169809367327212570704813632106852886389036911
+    r = 744723773141314414542111064094745678855643068
+
+    assert floor(n / (pi / 2)) == r
+    assert floor(80782 * sqrt(2)) == 114242
+
+    # issue 20076
+    assert 260515 - floor(260515/pi + 1/2) * pi == atan(tan(260515))
 
 
 def test_evalf_trig_zero_detection():
@@ -363,12 +397,13 @@ def test_issue_5486():
 
 
 def test_issue_5486_bug():
-    from sympy import I, Expr
+    from sympy.core.expr import Expr
+    from sympy.core.numbers import I
     assert abs(Expr._from_mpmath(I._to_mpmath(15), 15) - I) < 1.0e-15
 
 
 def test_bugs():
-    from sympy import polar_lift, re
+    from sympy.functions.elementary.complexes import (polar_lift, re)
 
     assert abs(re((1 + I)**2)) < 1e-15
 
@@ -420,7 +455,7 @@ def test_issue_4806():
 
 
 def test_evalf_mul():
-    # sympy should not try to expand this; it should be handled term-wise
+    # SymPy should not try to expand this; it should be handled term-wise
     # in evalf through mpmath
     assert NS(product(1 + sqrt(n)*I, (n, 1, 500)), 1) == '5.e+567 + 2.e+568*I'
 
@@ -461,7 +496,7 @@ def test_issue_6632_evalf():
 
 def test_issue_4945():
     from sympy.abc import H
-    from sympy import zoo
+    from sympy.core.numbers import zoo
     assert (H/0).evalf(subs={H:1}) == zoo*H
 
 
@@ -503,7 +538,7 @@ def test_issue_17681():
 
 
 def test_issue_9326():
-    from sympy import Dummy
+    from sympy.core.symbol import Dummy
     d1 = Dummy('d')
     d2 = Dummy('d')
     e = d1 + d2
@@ -579,3 +614,17 @@ def test_issue_13425():
 
 def test_issue_17421():
     assert N(acos(-I + acosh(cosh(cosh(1) + I)))) == 1.0*I
+
+
+def test_issue_20291():
+    from sympy.sets import EmptySet, Reals
+    from sympy.sets.sets import (Complement, FiniteSet, Intersection)
+    a = Symbol('a')
+    b = Symbol('b')
+    A = FiniteSet(a, b)
+    assert A.evalf(subs={a: 1, b: 2}) == FiniteSet(1.0, 2.0)
+    B = FiniteSet(a-b, 1)
+    assert B.evalf(subs={a: 1, b: 2}) == FiniteSet(-1.0, 1.0)
+
+    sol = Complement(Intersection(FiniteSet(-b/2 - sqrt(b**2-4*pi)/2), Reals), FiniteSet(0))
+    assert sol.evalf(subs={b: 1}) == EmptySet

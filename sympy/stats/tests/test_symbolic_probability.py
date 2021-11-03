@@ -1,7 +1,15 @@
-from sympy import symbols, Mul, sin, Integral, oo, Eq, Sum
+from sympy.concrete.summations import Sum
+from sympy.core.mul import Mul
+from sympy.core.numbers import (oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
+from sympy.integrals.integrals import Integral
 from sympy.core.expr import unchanged
 from sympy.stats import (Normal, Poisson, variance, Covariance, Variance,
-                         Probability, Expectation)
+                         Probability, Expectation, Moment, CentralMoment)
 from sympy.stats.rv import probability, expectation
 
 
@@ -26,7 +34,26 @@ def test_literal_probability():
     assert Expectation(2*X + 3*Y + z*X*Y).expand() == 2*Expectation(X) + 3*Expectation(Y) + z*Expectation(X*Y)
     assert Expectation(2*X + 3*Y + z*X*Y).args == (2*X + 3*Y + z*X*Y,)
     assert Expectation(sin(X)) == Expectation(sin(X)).expand()
-    assert Expectation(2*x*sin(X)*Y + y*X**2 + z*X*Y).expand() == 2*x*Expectation(sin(X)*Y) + y*Expectation(X**2) + z*Expectation(X*Y)
+    assert Expectation(2*x*sin(X)*Y + y*X**2 + z*X*Y).expand() == 2*x*Expectation(sin(X)*Y) \
+                            + y*Expectation(X**2) + z*Expectation(X*Y)
+    assert Expectation(X + Y).expand() ==  Expectation(X) + Expectation(Y)
+    assert Expectation((X + Y)*(X - Y)).expand() == Expectation(X**2) - Expectation(Y**2)
+    assert Expectation((X + Y)*(X - Y)).expand().doit() == -12
+    assert Expectation(X + Y, evaluate=True).doit() == 5
+    assert Expectation(X + Expectation(Y)).doit() == 5
+    assert Expectation(X + Expectation(Y)).doit(deep=False) == 2 + Expectation(Expectation(Y))
+    assert Expectation(X + Expectation(Y + Expectation(2*X))).doit(deep=False) == 2 \
+                                + Expectation(Expectation(Y + Expectation(2*X)))
+    assert Expectation(X + Expectation(Y + Expectation(2*X))).doit() == 9
+    assert Expectation(Expectation(2*X)).doit() == 4
+    assert Expectation(Expectation(2*X)).doit(deep=False) == Expectation(2*X)
+    assert Expectation(4*Expectation(2*X)).doit(deep=False) == 4*Expectation(2*X)
+    assert Expectation((X + Y)**3).expand() == 3*Expectation(X*Y**2) +\
+                3*Expectation(X**2*Y) + Expectation(X**3) + Expectation(Y**3)
+    assert Expectation((X - Y)**3).expand() == 3*Expectation(X*Y**2) -\
+                3*Expectation(X**2*Y) + Expectation(X**3) - Expectation(Y**3)
+    assert Expectation((X - Y)**2).expand() == -2*Expectation(X*Y) +\
+                Expectation(X**2) + Expectation(Y**2)
 
     assert Variance(w).args == (w,)
     assert Variance(w).expand() == 0
@@ -108,3 +135,41 @@ def test_probability_rewrite():
 
     assert Variance(X, condition=Y).rewrite(Probability) == Integral(x**2*Probability(Eq(X, x), Y), (x, -oo, oo)) - \
                                                             Integral(x*Probability(Eq(X, x), Y), (x, -oo, oo))**2
+
+
+def test_symbolic_Moment():
+    mu = symbols('mu', real=True)
+    sigma = symbols('sigma', real=True, positive=True)
+    x = symbols('x')
+    X = Normal('X', mu, sigma)
+    M = Moment(X, 4, 2)
+    assert M.rewrite(Expectation) == Expectation((X - 2)**4)
+    assert M.rewrite(Probability) == Integral((x - 2)**4*Probability(Eq(X, x)),
+                                    (x, -oo, oo))
+    k = Dummy('k')
+    expri = Integral(sqrt(2)*(k - 2)**4*exp(-(k - \
+                mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (k, -oo, oo))
+    assert M.rewrite(Integral).dummy_eq(expri)
+    assert M.doit() == (mu**4 - 8*mu**3 + 6*mu**2*sigma**2 + \
+                24*mu**2 - 24*mu*sigma**2 - 32*mu + 3*sigma**4 + 24*sigma**2 + 16)
+    M = Moment(2, 5)
+    assert M.doit() == 2**5
+
+
+def test_symbolic_CentralMoment():
+    mu = symbols('mu', real=True)
+    sigma = symbols('sigma', real=True, positive=True)
+    x = symbols('x')
+    X = Normal('X', mu, sigma)
+    CM = CentralMoment(X, 6)
+    assert CM.rewrite(Expectation) == Expectation((X - Expectation(X))**6)
+    assert CM.rewrite(Probability) == Integral((x - Integral(x*Probability(True),
+                    (x, -oo, oo)))**6*Probability(Eq(X, x)), (x, -oo, oo))
+    k = Dummy('k')
+    expri = Integral(sqrt(2)*(k - Integral(sqrt(2)*k*exp(-(k - \
+        mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (k, -oo, oo)))**6*exp(-(k - \
+        mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma), (k, -oo, oo))
+    assert CM.rewrite(Integral).dummy_eq(expri)
+    assert CM.doit().simplify() == 15*sigma**6
+    CM = Moment(5, 5)
+    assert CM.doit() == 5**5

@@ -17,12 +17,14 @@ for:
 
 """
 
-from sympy import Derivative, S
-from sympy.core.basic import preorder_traversal
-from sympy.core.compatibility import iterable
-from sympy.core.decorators import deprecated
+from sympy.core.function import Derivative
+from sympy.core.singleton import S
 from sympy.core.function import Subs
+from sympy.core.traversal import preorder_traversal
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import iterable
+from sympy.utilities.decorator import deprecated
+
 
 
 def finite_diff_weights(order, x_list, x0=S.One):
@@ -57,8 +59,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     Examples
     ========
 
-    >>> from sympy import S
-    >>> from sympy.calculus import finite_diff_weights
+    >>> from sympy import finite_diff_weights, S
     >>> res = finite_diff_weights(1, [-S(1)/2, S(1)/2, S(3)/2, S(5)/2], 0)
     >>> res
     [[[1, 0, 0, 0],
@@ -85,8 +86,6 @@ def finite_diff_weights(order, x_list, x0=S.One):
     Since res[1][2] has an order of accuracy of
     ``len(x_list[:3]) - order = 3 - 1 = 2``, the same is true for ``res[1][1]``!
 
-    >>> from sympy import S
-    >>> from sympy.calculus import finite_diff_weights
     >>> res = finite_diff_weights(1, [S(0), S(1), -S(1), S(2), -S(2)], 0)[1]
     >>> res
     [[0, 0, 0, 0, 0],
@@ -106,8 +105,6 @@ def finite_diff_weights(order, x_list, x0=S.One):
     Let us compare this to a differently defined ``x_list``. Pay attention to
     ``foo[i][k]`` corresponding to the gridpoint defined by ``x_list[k]``.
 
-    >>> from sympy import S
-    >>> from sympy.calculus import finite_diff_weights
     >>> foo = finite_diff_weights(1, [-S(2), -S(1), S(0), S(1), S(2)], 0)[1]
     >>> foo
     [[0, 0, 0, 0, 0],
@@ -129,7 +126,6 @@ def finite_diff_weights(order, x_list, x0=S.One):
     used e.g. to minimize Runge's phenomenon by using Chebyshev nodes:
 
     >>> from sympy import cos, symbols, pi, simplify
-    >>> from sympy.calculus import finite_diff_weights
     >>> N, (h, x) = 4, symbols('h x')
     >>> x_list = [x+h*cos(i*pi/(N)) for i in range(N,-1,-1)] # chebyshev nodes
     >>> print(x_list)
@@ -138,7 +134,7 @@ def finite_diff_weights(order, x_list, x0=S.One):
     >>> [simplify(c) for c in  mycoeffs] #doctest: +NORMALIZE_WHITESPACE
     [(h**3/2 + h**2*x - 3*h*x**2 - 4*x**3)/h**4,
     (-sqrt(2)*h**3 - 4*h**2*x + 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,
-    6*x/h**2 - 8*x**3/h**4,
+    (6*h**2*x - 8*x**3)/h**4,
     (sqrt(2)*h**3 - 4*h**2*x - 3*sqrt(2)*h*x**2 + 8*x**3)/h**4,
     (-h**3/2 + h**2*x + 3*h*x**2 - 4*x**3)/h**4]
 
@@ -228,7 +224,7 @@ def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
     Examples
     ========
 
-    >>> from sympy.calculus import apply_finite_diff
+    >>> from sympy import apply_finite_diff
     >>> cube = lambda arg: (1.0*arg)**3
     >>> xlist = range(-3,3+1)
     >>> apply_finite_diff(2, xlist, map(cube, xlist), 2) - 12 # doctest: +SKIP
@@ -238,7 +234,6 @@ def apply_finite_diff(order, x_list, y_list, x0=S.Zero):
     apply_finite_diff can also be used on more abstract objects:
 
     >>> from sympy import IndexedBase, Idx
-    >>> from sympy.calculus import apply_finite_diff
     >>> x, y = map(IndexedBase, 'xy')
     >>> i = Idx('i')
     >>> x_list, y_list = zip(*[(x[i+j], y[i+j]) for j in range(-1,2)])
@@ -422,8 +417,7 @@ as_finite_diff.__doc__ = """
 
 
 def differentiate_finite(expr, *symbols,
-                         # points=1, x0=None, wrt=None, evaluate=True, #Py2:
-                         **kwargs):
+                         points=1, x0=None, wrt=None, evaluate=False):
     r""" Differentiate expr and replace Derivatives with finite differences.
 
     Parameters
@@ -441,7 +435,7 @@ def differentiate_finite(expr, *symbols,
     Examples
     ========
 
-    >>> from sympy import cos, sin, Function, differentiate_finite
+    >>> from sympy import sin, Function, differentiate_finite
     >>> from sympy.abc import x, y, h
     >>> f, g = Function('f'), Function('g')
     >>> differentiate_finite(f(x)*g(x), x, points=[x-h, x+h])
@@ -468,15 +462,8 @@ def differentiate_finite(expr, *symbols,
     g(x + dx(x)/2 + dx(x + dx(x)/2)/2)/dx(x + dx(x)/2))*f(x + dx(x)/2)/dx(x)
 
     """
-    # Key-word only arguments only available in Python 3
-    points = kwargs.pop('points', 1)
-    x0 = kwargs.pop('x0', None)
-    wrt = kwargs.pop('wrt', None)
-    evaluate = kwargs.pop('evaluate', False)
     if any(term.is_Derivative for term in list(preorder_traversal(expr))):
         evaluate = False
-    if kwargs:
-        raise ValueError("Unknown kwargs: %s" % kwargs)
 
     Dexpr = expr.diff(*symbols, evaluate=evaluate)
     if evaluate:

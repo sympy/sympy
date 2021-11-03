@@ -1,8 +1,19 @@
-from sympy import (
-    Symbol, Dummy, gamma, I, oo, nan, zoo, factorial, sqrt, Rational,
-    multigamma, log, polygamma, digamma, trigamma, EulerGamma, pi, uppergamma, S, expand_func,
-    loggamma, sin, cos, O, lowergamma, exp, erf, erfc, exp_polar, harmonic,
-    zeta, conjugate, Ei, im, re, tanh, Abs)
+from sympy.core.function import expand_func
+from sympy.core import EulerGamma
+from sympy.core.numbers import (I, Rational, nan, oo, pi, zoo)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.combinatorial.numbers import harmonic
+from sympy.functions.elementary.complexes import (Abs, conjugate, im, re)
+from sympy.functions.elementary.exponential import (exp, exp_polar, log)
+from sympy.functions.elementary.hyperbolic import tanh
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.error_functions import (Ei, erf, erfc)
+from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma, lowergamma, multigamma, polygamma, trigamma, uppergamma)
+from sympy.functions.special.zeta_functions import zeta
+from sympy.series.order import O
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
@@ -98,7 +109,6 @@ def test_gamma_series():
 
 
 def tn_branch(s, func):
-    from sympy import I, pi, exp_polar
     from random import uniform
     c = uniform(1, 5)
     expr = func(s, c*exp_polar(I*pi)) - func(s, c*exp_polar(-I*pi))
@@ -108,7 +118,8 @@ def tn_branch(s, func):
 
 
 def test_lowergamma():
-    from sympy import meijerg, exp_polar, I, expint
+    from sympy.functions.special.error_functions import expint
+    from sympy.functions.special.hyper import meijerg
     assert lowergamma(x, 0) == 0
     assert lowergamma(x, y).diff(y) == y**(x - 1)*exp(-y)
     assert td(lowergamma(randcplx(), y), y)
@@ -140,6 +151,28 @@ def test_lowergamma():
     assert conjugate(lowergamma(x, 0)) == 0
     assert unchanged(conjugate, lowergamma(x, -oo))
 
+    assert lowergamma(0, x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(S(1)/3, x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(1, x, evaluate=False)._eval_is_meromorphic(x, 0) == True
+    assert lowergamma(x, x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(x + 1, x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(1/x, x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(0, x + 1)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(S(1)/3, x + 1)._eval_is_meromorphic(x, 0) == True
+    assert lowergamma(1, x + 1, evaluate=False)._eval_is_meromorphic(x, 0) == True
+    assert lowergamma(x, x + 1)._eval_is_meromorphic(x, 0) == True
+    assert lowergamma(x + 1, x + 1)._eval_is_meromorphic(x, 0) == True
+    assert lowergamma(1/x, x + 1)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(0, 1/x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(S(1)/3, 1/x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(1, 1/x, evaluate=False)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(x, 1/x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(x + 1, 1/x)._eval_is_meromorphic(x, 0) == False
+    assert lowergamma(1/x, 1/x)._eval_is_meromorphic(x, 0) == False
+
+    assert lowergamma(x, 2).series(x, oo, 3) == \
+        2**x*(1 + 2/(x + 1))*exp(-2)/x + O(exp(x*log(2))/x**3, (x, oo))
+
     assert lowergamma(
         x, y).rewrite(expint) == -y**x*expint(-x + 1, y) + gamma(x)
     k = Symbol('k', integer=True)
@@ -155,7 +188,8 @@ def test_lowergamma():
 
 
 def test_uppergamma():
-    from sympy import meijerg, exp_polar, I, expint
+    from sympy.functions.special.error_functions import expint
+    from sympy.functions.special.hyper import meijerg
     assert uppergamma(4, 0) == 6
     assert uppergamma(x, y).diff(y) == -y**(x - 1)*exp(-y)
     assert td(uppergamma(randcplx(), y), y)
@@ -203,8 +237,6 @@ def test_uppergamma():
 
 
 def test_polygamma():
-    from sympy import I
-
     assert polygamma(n, nan) is nan
 
     assert polygamma(0, oo) is oo
@@ -276,7 +308,6 @@ def test_polygamma():
                                                                  + zeta(ni + 1))*factorial(ni)
 
     # Polygamma of non-negative integer order is unbranched:
-    from sympy import exp_polar
     k = Symbol('n', integer=True, nonnegative=True)
     assert polygamma(k, exp_polar(2*I*pi)*x) == polygamma(k, x)
 
@@ -372,8 +403,6 @@ def test_polygamma_expand_func():
     assert e.expand(func=True, basic=False) == e
 
 def test_digamma():
-    from sympy import I
-
     assert digamma(nan) == nan
 
     assert digamma(oo) == oo
@@ -500,8 +529,6 @@ def test_loggamma():
     assert loggamma(-n) is oo
     assert loggamma(n/2) == log(2**(-n + 1)*sqrt(pi)*gamma(n)/gamma(n/2 + S.Half))
 
-    from sympy import I
-
     assert loggamma(oo) is oo
     assert loggamma(-oo) is zoo
     assert loggamma(I*oo) is zoo
@@ -546,10 +573,10 @@ def test_loggamma():
 
     assert loggamma(x).rewrite('intractable') == log(gamma(x))
 
-    s1 = loggamma(x).series(x)
+    s1 = loggamma(x).series(x).cancel()
     assert s1 == -log(x) - EulerGamma*x + pi**2*x**2/12 + x**3*polygamma(2, 1)/6 + \
         pi**4*x**4/360 + x**5*polygamma(4, 1)/120 + O(x**6)
-    assert s1 == loggamma(x).rewrite('intractable').series(x)
+    assert s1 == loggamma(x).rewrite('intractable').series(x).cancel()
 
     assert conjugate(loggamma(x)) == loggamma(conjugate(x))
     assert conjugate(loggamma(0)) is oo
@@ -575,16 +602,16 @@ def test_loggamma():
         assert loggamma(1/x)._eval_nseries(x, n=N).getn() == M
     tN(0, 0)
     tN(1, 1)
-    tN(2, 3)
+    tN(2, 2)
     tN(3, 3)
-    tN(4, 5)
+    tN(4, 4)
     tN(5, 5)
 
 
 def test_polygamma_expansion():
     # A. & S., pa. 259 and 260
     assert polygamma(0, 1/x).nseries(x, n=3) == \
-        -log(x) - x/2 - x**2/12 + O(x**4)
+        -log(x) - x/2 - x**2/12 + O(x**3)
     assert polygamma(1, 1/x).series(x, n=5) == \
         x + x**2/2 + x**3/6 + O(x**5)
     assert polygamma(3, 1/x).nseries(x, n=11) == \
@@ -632,7 +659,7 @@ def test_issue_14528():
     assert isinstance(gamma(k), gamma)
 
 def test_multigamma():
-    from sympy import Product
+    from sympy.concrete.products import Product
     p = Symbol('p')
     _k = Dummy('_k')
 

@@ -1,4 +1,3 @@
-from __future__ import unicode_literals, print_function
 from sympy.external import import_module
 import os
 
@@ -8,7 +7,7 @@ cin = import_module('clang.cindex', import_kwargs = {'fromlist': ['cindex']})
 This module contains all the necessary Classes and Function used to Parse C and
 C++ code into SymPy expression
 The module serves as a backend for SymPyExpression to parse C code
-It is also dependent on Clang's AST and Sympy's Codegen AST.
+It is also dependent on Clang's AST and SymPy's Codegen AST.
 The module only supports the features currently supported by the Clang and
 codegen AST which will be updated as the development of codegen AST and this
 module progresses.
@@ -47,16 +46,18 @@ if cin:
         FunctionPrototype, FunctionDefinition, FunctionCall,
         none, Return, Assignment, intc, int8, int16, int64,
         uint8, uint16, uint32, uint64, float32, float64, float80,
-        aug_assign, bool_)
+        aug_assign, bool_, While, CodeBlock)
     from sympy.codegen.cnodes import (PreDecrement, PostDecrement,
         PreIncrement, PostIncrement)
     from sympy.core import Add, Mod, Mul, Pow, Rel
     from sympy.logic.boolalg import And, as_Boolean, Not, Or
-    from sympy import Symbol, sympify, true, false
+    from sympy.core.symbol import Symbol
+    from sympy.core.sympify import sympify
+    from sympy.logic.boolalg import (false, true)
     import sys
     import tempfile
 
-    class BaseParser(object):
+    class BaseParser:
         """Base Class for the C parser"""
 
         def __init__(self):
@@ -89,7 +90,7 @@ if cin:
 
         def __init__(self):
             """Initializes the code converter"""
-            super(CCodeConverter, self).__init__()
+            super().__init__()
             self._py_nodes = []
             self._data_types = {
                 "void": {
@@ -137,7 +138,7 @@ if cin:
             =======
 
             py_nodes: list
-                A list of sympy AST nodes
+                A list of SymPy AST nodes
 
             """
             filename = os.path.abspath(filenames)
@@ -177,7 +178,7 @@ if cin:
             =======
 
             py_nodes: list
-                A list of sympy AST nodes
+                A list of SymPy AST nodes
 
             """
             file = tempfile.NamedTemporaryFile(mode = 'w+', suffix = '.cpp')
@@ -571,7 +572,7 @@ if cin:
             =====
 
             Only for cases where character is assigned to a integer value,
-            since character literal is not in sympy AST
+            since character literal is not in SymPy AST
 
             """
             try:
@@ -981,7 +982,7 @@ if cin:
             return 0
 
         def perform_operation(self, lhs, rhs, op):
-            """Performs operation supported by the sympy core
+            """Performs operation supported by the SymPy core
 
             Returns
             =======
@@ -1032,6 +1033,35 @@ if cin:
                 return combined_variable[0]
             if combined_variable[1] == 'boolean':
                     return true if combined_variable[0] == 'true' else false
+
+        def transform_null_stmt(self, node):
+            """Handles Null Statement and returns None"""
+            return none
+
+        def transform_while_stmt(self, node):
+            """Transformation function for handling while statement
+
+            Returns
+            =======
+
+            while statement : Codegen AST Node
+                contains the while statement node having condition and
+                statement block
+
+            """
+            children = node.get_children()
+
+            condition = self.transform(next(children))
+            statements = self.transform(next(children))
+
+            if isinstance(statements, list):
+                statement_block = CodeBlock(*statements)
+            else:
+                statement_block = CodeBlock(statements)
+
+            return While(condition, statement_block)
+
+
 
 else:
     class CCodeConverter():  # type: ignore

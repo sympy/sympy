@@ -1,20 +1,21 @@
 """Tools for manipulating of large commutative expressions. """
 
-from sympy.core.add import Add
-from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS
-from sympy.core.mul import Mul, _keep_coeff
-from sympy.core.power import Pow
-from sympy.core.basic import Basic, preorder_traversal
-from sympy.core.expr import Expr
-from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational, Integer, Number, I
-from sympy.core.singleton import S
-from sympy.core.symbol import Dummy
-from sympy.core.coreerrors import NonCommutativeExpression
-from sympy.core.containers import Tuple, Dict
-from sympy.utilities import default_sort_key
+from .add import Add
+from .mul import Mul, _keep_coeff
+from .power import Pow
+from .basic import Basic
+from .expr import Expr
+from .sympify import sympify
+from .numbers import Rational, Integer, Number, I
+from .singleton import S
+from .sorting import default_sort_key, ordered
+from .symbol import Dummy
+from .traversal import preorder_traversal
+from .coreerrors import NonCommutativeExpression
+from .containers import Tuple, Dict
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.utilities.iterables import (common_prefix, common_suffix,
-        variations, ordered)
+        variations, iterable, is_sequence)
 
 from collections import defaultdict
 
@@ -49,7 +50,7 @@ def _monotonic_sign(self):
     ========
 
     >>> from sympy.core.exprtools import _monotonic_sign as F
-    >>> from sympy import Dummy, S
+    >>> from sympy import Dummy
     >>> nn = Dummy(integer=True, nonnegative=True)
     >>> p = Dummy(integer=True, positive=True)
     >>> p2 = Dummy(integer=True, positive=True)
@@ -74,27 +75,27 @@ def _monotonic_sign(self):
         s = self
         if s.is_prime:
             if s.is_odd:
-                return S(3)
+                return Integer(3)
             else:
-                return S(2)
+                return Integer(2)
         elif s.is_composite:
             if s.is_odd:
-                return S(9)
+                return Integer(9)
             else:
-                return S(4)
+                return Integer(4)
         elif s.is_positive:
             if s.is_even:
                 if s.is_prime is False:
-                    return S(4)
+                    return Integer(4)
                 else:
-                    return S(2)
+                    return Integer(2)
             elif s.is_integer:
                 return S.One
             else:
                 return _eps
         elif s.is_extended_negative:
             if s.is_even:
-                return S(-2)
+                return Integer(-2)
             elif s.is_integer:
                 return S.NegativeOne
             else:
@@ -112,7 +113,7 @@ def _monotonic_sign(self):
             from sympy.polys.polyerrors import PolynomialError
             x = free.pop()
             x0 = _monotonic_sign(x)
-            if x0 == _eps or x0 == -_eps:
+            if x0 in (_eps, -_eps):
                 x0 = S.Zero
             if x0 is not None:
                 d = self.diff(x)
@@ -124,7 +125,8 @@ def _monotonic_sign(self):
                     except (PolynomialError, NotImplementedError):
                         currentroots = [r for r in roots(d, x) if r.is_extended_real]
                 y = self.subs(x, x0)
-                if x.is_nonnegative and all(r <= x0 for r in currentroots):
+                if x.is_nonnegative and all(
+                        (r - x0).is_nonpositive for r in currentroots):
                     if y.is_nonnegative and d.is_positive:
                         if y:
                             return y if y.is_positive else Dummy('pos', positive=True)
@@ -135,7 +137,8 @@ def _monotonic_sign(self):
                             return y if y.is_negative else Dummy('neg', negative=True)
                         else:
                             return Dummy('npos', nonpositive=True)
-                elif x.is_nonpositive and all(r >= x0 for r in currentroots):
+                elif x.is_nonpositive and all(
+                        (r - x0).is_nonnegative for r in currentroots):
                     if y.is_nonnegative and d.is_negative:
                         if y:
                             return Dummy('pos', positive=True)
@@ -212,6 +215,9 @@ def _monotonic_sign(self):
 def decompose_power(expr):
     """
     Decompose power into symbolic base and integer exponent.
+
+    Explanation
+    ===========
 
     This is strictly only valid if the exponent from which
     the integer is extracted is itself an integer or the
@@ -322,7 +328,7 @@ class Factors:
             factors = S(factors)
         if isinstance(factors, Factors):
             factors = factors.factors.copy()
-        elif factors is None or factors is S.One:
+        elif factors in (None, S.One):
             factors = {}
         elif factors is S.Zero or factors == 0:
             factors = {S.Zero: S.One}
@@ -360,7 +366,7 @@ class Factors:
                     factors[q] = (factors[q] if q in factors else S.Zero) - factors[f]
                     factors.pop(f)
             if i:
-                factors[I] = S.One*i
+                factors[I] = factors.get(I, S.Zero) + i
             if nc:
                 factors[Mul(*nc, evaluate=False)] = S.One
         else:
@@ -385,9 +391,7 @@ class Factors:
                         elif a is I:
                             factors[I] = S.One
                         elif a.is_Pow:
-                            if S.NegativeOne not in factors:
-                                factors[S.NegativeOne] = S.Zero
-                            factors[S.NegativeOne] += a.exp
+                            factors[a.base] = factors.get(a.base, S.Zero) + a.exp
                         elif a == 1:
                             factors[a] = S.One
                         elif a == -1:
@@ -597,7 +601,7 @@ class Factors:
 
         factor_terms can clean up such Rational-bases powers:
 
-        >>> from sympy.core.exprtools import factor_terms
+        >>> from sympy import factor_terms
         >>> n, d = Factors(2**(2*x + 2)).div(S(8))
         >>> n.as_expr()/d.as_expr()
         2**(2*x + 2)/8
@@ -790,10 +794,8 @@ class Factors:
     def __divmod__(self, other):  # Factors
         return self.div(other)
 
-    def __div__(self, other):  # Factors
+    def __truediv__(self, other):  # Factors
         return self.quo(other)
-
-    __truediv__ = __div__
 
     def __mod__(self, other):  # Factors
         return self.rem(other)
@@ -899,13 +901,11 @@ class Term:
         else:
             return NotImplemented
 
-    def __div__(self, other):  # Term
+    def __truediv__(self, other):  # Term
         if isinstance(other, Term):
             return self.quo(other)
         else:
             return NotImplemented
-
-    __truediv__ = __div__
 
     def __pow__(self, other):  # Term
         if isinstance(other, SYMPY_INTS):
@@ -925,12 +925,17 @@ class Term:
 def _gcd_terms(terms, isprimitive=False, fraction=True):
     """Helper function for :func:`gcd_terms`.
 
-    If ``isprimitive`` is True then the call to primitive
-    for an Add will be skipped. This is useful when the
-    content has already been extrated.
+    Parameters
+    ==========
 
-    If ``fraction`` is True then the expression will appear over a common
-    denominator, the lcm of all term denominators.
+    isprimitive : boolean, optional
+        If ``isprimitive`` is True then the call to primitive
+        for an Add will be skipped. This is useful when the
+        content has already been extrated.
+
+    fraction : boolean, optional
+        If ``fraction`` is True then the expression will appear over a common
+        denominator, the lcm of all term denominators.
     """
 
     if isinstance(terms, Basic) and not isinstance(terms, Tuple):
@@ -985,24 +990,31 @@ def _gcd_terms(terms, isprimitive=False, fraction=True):
 def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     """Compute the GCD of ``terms`` and put them together.
 
-    ``terms`` can be an expression or a non-Basic sequence of expressions
-    which will be handled as though they are terms from a sum.
+    Parameters
+    ==========
 
-    If ``isprimitive`` is True the _gcd_terms will not run the primitive
-    method on the terms.
+    terms : Expr
+        Can be an expression or a non-Basic sequence of expressions
+        which will be handled as though they are terms from a sum.
 
-    ``clear`` controls the removal of integers from the denominator of an Add
-    expression. When True (default), all numerical denominator will be cleared;
-    when False the denominators will be cleared only if all terms had numerical
-    denominators other than 1.
+    isprimitive : bool, optional
+        If ``isprimitive`` is True the _gcd_terms will not run the primitive
+        method on the terms.
 
-    ``fraction``, when True (default), will put the expression over a common
-    denominator.
+    clear : bool, optional
+        It controls the removal of integers from the denominator of an Add
+        expression. When True (default), all numerical denominator will be cleared;
+        when False the denominators will be cleared only if all terms had numerical
+        denominators other than 1.
+
+    fraction : bool, optional
+        When True (default), will put the expression over a common
+        denominator.
 
     Examples
     ========
 
-    >>> from sympy.core import gcd_terms
+    >>> from sympy import gcd_terms
     >>> from sympy.abc import x, y
 
     >>> gcd_terms((x + 1)**2*y + (x + 1)*y**2)
@@ -1032,6 +1044,7 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
 
     See Also
     ========
+
     factor_terms, sympy.polys.polytools.terms_gcd
 
     """
@@ -1091,6 +1104,8 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
         # don't treat internal args like terms of an Add
         if not isinstance(a, Expr):
             if isinstance(a, Basic):
+                if not a.args:
+                    return a
                 return a.func(*[handle(i) for i in a.args])
             return type(a)([handle(i) for i in a])
         return gcd_terms(a, isprimitive, clear, fraction)
@@ -1153,18 +1168,25 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     changing the underlying structure of the expr. No expansion or
     simplification (and no processing of non-commutatives) is performed.
 
-    If radical=True then a radical common to all terms will be factored
-    out of any Add sub-expressions of the expr.
+    Parameters
+    ==========
 
-    If clear=False (default) then coefficients will not be separated
-    from a single Add if they can be distributed to leave one or more
-    terms with integer coefficients.
+    radical: bool, optional
+        If radical=True then a radical common to all terms will be factored
+        out of any Add sub-expressions of the expr.
 
-    If fraction=True (default is False) then a common denominator will be
-    constructed for the expression.
+    clear : bool, optional
+        If clear=False (default) then coefficients will not be separated
+        from a single Add if they can be distributed to leave one or more
+        terms with integer coefficients.
 
-    If sign=True (default) then even if the only factor in common is a -1,
-    it will be factored out of the expression.
+    fraction : bool, optional
+        If fraction=True (default is False) then a common denominator will be
+        constructed for the expression.
+
+    sign : bool, optional
+        If sign=True (default) then even if the only factor in common is a -1,
+        it will be factored out of the expression.
 
     Examples
     ========
@@ -1198,6 +1220,7 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
 
     See Also
     ========
+
     gcd_terms, sympy.polys.polytools.terms_gcd
 
     """
@@ -1228,8 +1251,8 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
         if p.is_Add:
             list_args = [do(a) for a in Add.make_args(p)]
             # get a common negative (if there) which gcd_terms does not remove
-            if all(a.as_coeff_Mul()[0].extract_multiplicatively(-1) is not None
-                   for a in list_args):
+            if not any(a.as_coeff_Mul()[0].extract_multiplicatively(-1) is None
+                       for a in list_args):
                 cont = -cont
                 list_args = [-a for a in list_args]
             # watch out for exp(-(x+2)) which gcd_terms will change to exp(-x-2)
@@ -1262,12 +1285,9 @@ def _mask_nc(eq, name=None):
     and cannot be made commutative. The third value returned is a list
     of any non-commutative symbols that appear in the returned equation.
 
-    ``name``, if given, is the name that will be used with numbered Dummy
-    variables that will replace the non-commutative objects and is mainly
-    used for doctesting purposes.
+    Explanation
+    ===========
 
-    Notes
-    =====
     All non-commutative objects other than Symbols are replaced with
     a non-commutative Symbol. Identical objects will be identified
     by identical symbols.
@@ -1278,11 +1298,19 @@ def _mask_nc(eq, name=None):
     replacements in this case since some care must be taken to keep
     track of the ordering of symbols when they occur within Muls.
 
+    Parameters
+    ==========
+
+    name : str
+        ``name``, if given, is the name that will be used with numbered Dummy
+        variables that will replace the non-commutative objects and is mainly
+        used for doctesting purposes.
+
     Examples
     ========
 
     >>> from sympy.physics.secondquant import Commutator, NO, F, Fd
-    >>> from sympy import symbols, Mul
+    >>> from sympy import symbols
     >>> from sympy.core.exprtools import _mask_nc
     >>> from sympy.abc import x, y
     >>> A, B, C = symbols('A,B,C', commutative=False)
@@ -1316,22 +1344,6 @@ def _mask_nc(eq, name=None):
     >>> _mask_nc(eq, 'd')
     (A*_d0 + B*_d1, {_d0: Commutator(A, B), _d1: Commutator(A, C)}, [_d0, _d1, A, B])
 
-    If there is an object that:
-
-        - doesn't contain nc-symbols
-        - but has arguments which derive from Basic, not Expr
-        - and doesn't define an _eval_is_commutative routine
-
-    then it will give False (or None?) for the is_commutative test. Such
-    objects are also removed by this routine:
-
-    >>> from sympy import Basic
-    >>> eq = (1 + Mul(Basic(), Basic(), evaluate=False))
-    >>> eq.is_commutative
-    False
-    >>> _mask_nc(eq, 'd')
-    (_d0**2 + 1, {_d0: Basic()}, [])
-
     """
     name = name or 'mask'
     # Make Dummy() append sequential numbers to the name
@@ -1345,7 +1357,7 @@ def _mask_nc(eq, name=None):
     names = numbered_names()
 
     def Dummy(*args, **kwargs):
-        from sympy import Dummy
+        from .symbol import Dummy
         return Dummy(next(names), *args, **kwargs)
 
     expr = eq
@@ -1396,8 +1408,7 @@ def factor_nc(expr):
     Examples
     ========
 
-    >>> from sympy.core.exprtools import factor_nc
-    >>> from sympy import Symbol
+    >>> from sympy import factor_nc, Symbol
     >>> from sympy.abc import x
     >>> A = Symbol('A', commutative=False)
     >>> B = Symbol('B', commutative=False)
@@ -1406,20 +1417,13 @@ def factor_nc(expr):
     >>> factor_nc(((x + A)*(x + B)).expand())
     (x + A)*(x + B)
     """
-    from sympy.simplify.simplify import powsimp
-    from sympy.polys import gcd, factor
-
-    def _pemexpand(expr):
-        "Expand with the minimal set of hints necessary to check the result."
-        return expr.expand(deep=True, mul=True, power_exp=True,
-            power_base=False, basic=False, multinomial=True, log=False)
-
     expr = sympify(expr)
     if not isinstance(expr, Expr) or not expr.args:
         return expr
     if not expr.is_Add:
         return expr.func(*[factor_nc(a) for a in expr.args])
 
+    from sympy.polys.polytools import gcd, factor
     expr, rep, nc_symbols = _mask_nc(expr)
     if rep:
         return factor(expr).subs(rep)
@@ -1522,6 +1526,8 @@ def factor_nc(expr):
         else:
             mid = expr
 
+        from sympy.simplify.powsimp import powsimp
+
         # sort the symbols so the Dummys would appear in the same
         # order as the original symbols, otherwise you may introduce
         # a factor of -1, e.g. A**2 - B**2) -- {A:y, B:x} --> y**2 - x**2
@@ -1539,6 +1545,10 @@ def factor_nc(expr):
             return _keep_coeff(c, g*l*new_mid*r)
 
         if new_mid.is_Mul:
+            def _pemexpand(expr):
+                "Expand with the minimal set of hints necessary to check the result."
+                return expr.expand(deep=True, mul=True, power_exp=True,
+                    power_base=False, basic=False, multinomial=True, log=False)
             # XXX TODO there should be a way to inspect what order the terms
             # must be in and just select the plausible ordering without
             # checking permutations

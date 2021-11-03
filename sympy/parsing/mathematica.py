@@ -1,10 +1,8 @@
-from __future__ import print_function, division
-
-from typing import Any, Dict, Tuple
+from typing import Any, Dict as tDict, Tuple as tTuple
 
 from itertools import product
 import re
-from sympy import sympify
+from sympy.core.sympify import sympify
 
 
 def mathematica(s, additional_translations=None):
@@ -33,7 +31,7 @@ def _deco(cls):
 
 
 @_deco
-class MathematicaParser(object):
+class MathematicaParser:
     '''An instance of this class converts a string of a basic Mathematica
     expression to SymPy style. Output is string type.'''
 
@@ -63,7 +61,7 @@ class MathematicaParser(object):
         'PrimeQ[x]': 'isprime(x)',
         'Factorial[x]': 'factorial(x)',
         'FactorialPower[x,y]': 'ff(x,y)',
-        'Binomial[x,y]': 'binomial(x,y)',
+        'Binomial[x,y]': 'binomial(x,y,True)',
         'Multinomial[*x]': 'multinomial(*x)'
     }
 
@@ -148,13 +146,13 @@ class MathematicaParser(object):
                 '''
 
     # will contain transformed CORRESPONDENCES dictionary
-    TRANSLATIONS = {}  # type: Dict[Tuple[str, int], Dict[str, Any]]
+    TRANSLATIONS = {}  # type: tDict[tTuple[str, int], tDict[str, Any]]
 
     # cache for a raw users' translation dictionary
-    cache_original = {}  # type: Dict[Tuple[str, int], Dict[str, Any]]
+    cache_original = {}  # type: tDict[tTuple[str, int], tDict[str, Any]]
 
     # cache for a compiled users' translation dictionary
-    cache_compiled = {}  # type: Dict[Tuple[str, int], Dict[str, Any]]
+    cache_compiled = {}  # type: tDict[tTuple[str, int], tDict[str, Any]]
 
     @classmethod
     def _initialize_class(cls):

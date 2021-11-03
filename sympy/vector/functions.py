@@ -3,7 +3,10 @@ from sympy.vector.deloperator import Del
 from sympy.vector.scalar import BaseScalar
 from sympy.vector.vector import Vector, BaseVector
 from sympy.vector.operators import gradient, curl, divergence
-from sympy import diff, integrate, S, simplify
+from sympy.core.function import diff
+from sympy.core.singleton import S
+from sympy.integrals.integrals import integrate
+from sympy.simplify.simplify import simplify
 from sympy.core import sympify
 from sympy.vector.dyadic import Dyadic
 
@@ -56,7 +59,7 @@ def express(expr, system, system2=None, variables=False):
 
     """
 
-    if expr == 0 or expr == Vector.zero:
+    if expr in (0, Vector.zero):
         return expr
 
     if not isinstance(system, CoordSys3D):
@@ -354,7 +357,7 @@ def scalar_potential_difference(field, coord_sys, point1, point2):
     Examples
     ========
 
-    >>> from sympy.vector import CoordSys3D, Point
+    >>> from sympy.vector import CoordSys3D
     >>> from sympy.vector import scalar_potential_difference
     >>> R = CoordSys3D('R')
     >>> P = R.origin.locate_new('P', R.x*R.i + R.y*R.j + R.z*R.k)
@@ -463,7 +466,7 @@ def _path(from_object, to_object):
     return index, from_path
 
 
-def orthogonalize(*vlist, **kwargs):
+def orthogonalize(*vlist, orthonormal=False):
     """
     Takes a sequence of independent vectors and orthogonalizes them
     using the Gram - Schmidt process. Returns a list of
@@ -483,7 +486,6 @@ def orthogonalize(*vlist, **kwargs):
     ========
 
     >>> from sympy.vector.coordsysrect import CoordSys3D
-    >>> from sympy.vector.vector import Vector, BaseVector
     >>> from sympy.vector.functions import orthogonalize
     >>> C = CoordSys3D('C')
     >>> i, j, k = C.base_vectors()
@@ -498,7 +500,6 @@ def orthogonalize(*vlist, **kwargs):
     .. [1] https://en.wikipedia.org/wiki/Gram-Schmidt_process
 
     """
-    orthonormal = kwargs.get('orthonormal', False)
 
     if not all(isinstance(vec, Vector) for vec in vlist):
         raise TypeError('Each element must be of Type Vector')

@@ -1,6 +1,10 @@
 from sympy.matrices.common import NonSquareMatrixError
-from .matexpr import MatrixExpr, Identity
+from .matexpr import MatrixExpr
+from .special import Identity
 from sympy.core import S
+from sympy.core.expr import ExprBuilder
+from sympy.core.cache import cacheit
+from sympy.core.power import Pow
 from sympy.core.sympify import _sympify
 from sympy.matrices import MatrixBase
 
@@ -34,6 +38,10 @@ class MatPow(MatrixExpr):
     def shape(self):
         return self.base.shape
 
+    @cacheit
+    def _get_explicit_matrix(self):
+        return self.base.as_explicit()**self.exp
+
     def _entry(self, i, j, **kwargs):
         from sympy.matrices.expressions import MatMul
         A = self.doit()
@@ -41,12 +49,8 @@ class MatPow(MatrixExpr):
             # We still have a MatPow, make an explicit MatMul out of it.
             if A.exp.is_Integer and A.exp.is_positive:
                 A = MatMul(*[A.base for k in range(A.exp)])
-            #elif A.exp.is_Integer and self.exp.is_negative:
-            # Note: possible future improvement: in principle we can take
-            # positive powers of the inverse, but carefully avoid recursion,
-            # perhaps by adding `_entry` to Inverse (as it is our subclass).
-            # T = A.base.as_explicit().inverse()
-            # A = MatMul(*[T for k in range(-A.exp)])
+            elif not self._is_shape_symbolic():
+                return A._get_explicit_matrix()[i, j]
             else:
                 # Leave the expression unevaluated:
                 from sympy.matrices.expressions.matexpr import MatrixElement
@@ -88,12 +92,11 @@ class MatPow(MatrixExpr):
         return MatPow(base.T, exp)
 
     def _eval_derivative(self, x):
-        from sympy import Pow
         return Pow._eval_derivative(self, x)
 
     def _eval_derivative_matrix_lines(self, x):
-        from sympy.core.expr import ExprBuilder
-        from sympy.codegen.array_utils import CodegenArrayContraction, CodegenArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import ArrayContraction
+        from ...tensor.array.expressions.array_expressions import ArrayTensorProduct
         from .matmul import MatMul
         from .inverse import Inverse
         exp = self.exp
@@ -101,10 +104,10 @@ class MatPow(MatrixExpr):
             lr = self.base._eval_derivative_matrix_lines(x)
             for i in lr:
                 subexpr = ExprBuilder(
-                    CodegenArrayContraction,
+                    ArrayContraction,
                     [
                         ExprBuilder(
-                            CodegenArrayTensorProduct,
+                            ArrayTensorProduct,
                             [
                                 Identity(1),
                                 i._lines[0],
@@ -115,7 +118,7 @@ class MatPow(MatrixExpr):
                         ),
                         (0, 3, 4), (5, 7, 8)
                     ],
-                    validator=CodegenArrayContraction._validate
+                    validator=ArrayContraction._validate
                 )
                 i._first_pointer_parent = subexpr.args[0].args
                 i._first_pointer_index = 0

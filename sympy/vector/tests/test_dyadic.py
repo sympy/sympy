@@ -1,5 +1,8 @@
-from sympy import sin, cos, symbols, pi, ImmutableMatrix as Matrix, \
-     simplify
+from sympy.core.numbers import pi
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
+from sympy.simplify.simplify import simplify
 from sympy.vector import (CoordSys3D, Vector, Dyadic,
                           DyadicAdd, DyadicMul, DyadicZero,
                           BaseDyadic, express)

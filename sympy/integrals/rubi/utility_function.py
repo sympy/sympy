@@ -5,36 +5,52 @@ See: http://www.apmaths.uwo.ca/~arich/IntegrationRules/PortableDocumentFiles/Int
 """
 from sympy.external import import_module
 matchpy = import_module("matchpy")
-from sympy import (Basic, E, polylog, N, Wild, WildFunction, factor, gcd, Sum,
-    S, I, Mul, Integer, Float, Dict, Symbol, Rational, Add, hyper, symbols,
-    sqf_list, sqf, Max, factorint, factorrat, Min, sign, E, Function, collect,
-    FiniteSet, nsimplify, expand_trig, expand, poly, apart, lcm, And, Pow, pi,
-    zoo, oo, Integral, UnevaluatedExpr, PolynomialError, Dummy, exp as sym_exp,
-    powdenest, PolynomialDivisionFailed, discriminant, UnificationFailed, appellf1)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.containers import Dict
+from sympy.core.evalf import N
+from sympy.core.expr import UnevaluatedExpr
 from sympy.core.exprtools import factor_terms
+from sympy.core.function import (Function, WildFunction, expand, expand_trig)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (E, Float, I, Integer, Rational, oo, pi, zoo)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, Wild, symbols)
 from sympy.core.sympify import sympify
-from sympy.functions import (log as sym_log, sin, cos, tan, cot, csc, sec,
-                             sqrt, erf, gamma, uppergamma, polygamma, digamma,
-                             loggamma, factorial, zeta, LambertW)
-from sympy.functions.elementary.complexes import im, re, Abs
+from sympy.core.traversal import postorder_traversal
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.complexes import im, re, Abs, sign
+from sympy.functions.elementary.exponential import exp as sym_exp, log as sym_log, LambertW
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions.elementary.integers import floor, frac
-from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec, atan2
+from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
+from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec, atan2, sin, cos, tan, cot, csc, sec
 from sympy.functions.special.elliptic_integrals import elliptic_f, elliptic_e, elliptic_pi
-from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi, Ei, expint, li, Si, Ci, Shi, Chi
-from sympy.functions.special.hyper import TupleArg
-from sympy.logic.boolalg import Or
-from sympy.polys.polytools import Poly, quo, rem, total_degree, degree
-from sympy.simplify.simplify import fraction, simplify, cancel, powsimp
+from sympy.functions.special.error_functions import erf, fresnelc, fresnels, erfc, erfi, Ei, expint, li, Si, Ci, Shi, Chi
+from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma, polygamma, uppergamma)
+from sympy.functions.special.hyper import (appellf1, hyper, TupleArg)
+from sympy.functions.special.zeta_functions import polylog, zeta
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import And, Or
+from sympy.ntheory.factor_ import (factorint, factorrat)
+from sympy.polys.partfrac import apart
+from sympy.polys.polyerrors import (PolynomialDivisionFailed, PolynomialError, UnificationFailed)
+from sympy.polys.polytools import (discriminant, factor, gcd, lcm, poly, sqf, sqf_list, Poly, degree, quo, rem, total_degree)
+from sympy.sets.sets import FiniteSet
+from sympy.simplify.powsimp import powdenest
+from sympy.simplify.radsimp import collect
+from sympy.simplify.simplify import fraction, simplify, cancel, powsimp, nsimplify
 from sympy.utilities.decorator import doctest_depends_on
-from sympy.utilities.iterables import flatten, postorder_traversal
+from sympy.utilities.iterables import flatten
 from random import randint
 
 
 class rubi_unevaluated_expr(UnevaluatedExpr):
     """
     This is needed to convert `exp` as `Pow`.
-    sympy's UnevaluatedExpr has an issue with `is_commutative`.
+    SymPy's UnevaluatedExpr has an issue with `is_commutative`.
     """
     @property
     def is_commutative(self):
@@ -46,7 +62,7 @@ _E = rubi_unevaluated_expr(E)
 
 class rubi_exp(Function):
     """
-    sympy's exp is not identified as `Pow`. So it is not matched with `Pow`.
+    SymPy's exp is not identified as `Pow`. So it is not matched with `Pow`.
     Like `a = exp(2)` is not identified as `Pow(E, 2)`. Rubi rules need it.
     So, another exp has been created only for rubi module.
 
@@ -111,7 +127,7 @@ Int = Integral
 
 def replace_pow_exp(z):
     """
-    This function converts back rubi's `exp` to general sympy's `exp`.
+    This function converts back rubi's `exp` to general SymPy's `exp`.
 
     Examples
     ========
@@ -357,7 +373,7 @@ def First(expr, d=None):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import First
-    >>> from sympy.abc import  a, b, c
+    >>> from sympy.abc import a, b, c
     >>> First(a + b + c)
     a
     >>> First(a*b*c)
@@ -383,7 +399,7 @@ def Rest(expr):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import Rest
-    >>> from sympy.abc import  a, b, c
+    >>> from sympy.abc import a, b, c
     >>> Rest(a + b + c)
     b + c
     >>> Rest(a*b*c)
@@ -421,7 +437,7 @@ def LinearQ(expr, x):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import LinearQ
-    >>> from sympy.abc import  x, y, a
+    >>> from sympy.abc import x, y, a
     >>> LinearQ(a, x)
     False
     >>> LinearQ(3*x + y**2, x)
@@ -468,7 +484,7 @@ def Coefficient(expr, var, n=1):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import Coefficient
-    >>> from sympy.abc import  x, a, b, c
+    >>> from sympy.abc import x, a, b, c
     >>> Coefficient(7 + 2*x + 4*x**3, x, 1)
     2
     >>> Coefficient(a + b*x + c*x**3, x, 0)
@@ -655,7 +671,7 @@ def IndependentQ(u, x):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import IndependentQ
-    >>> from sympy.abc import  x, a, b
+    >>> from sympy.abc import x, a, b
     >>> IndependentQ(a + b*x, x)
     False
     >>> IndependentQ(a + b, x)
@@ -815,13 +831,13 @@ def NumericQ(u):
 
 def Length(expr):
     """
-    Returns number of elements in the expression just as sympy's len.
+    Returns number of elements in the expression just as SymPy's len.
 
     Examples
     ========
 
     >>> from sympy.integrals.rubi.utility_function import Length
-    >>> from sympy.abc import  x, a, b
+    >>> from sympy.abc import x, a, b
     >>> from sympy import cos, sin
     >>> Length(a + b)
     2
@@ -871,7 +887,7 @@ def InverseFunctionFreeQ(u, x):
     if AtomQ(u):
         return True
     else:
-        if InverseFunctionQ(u) or CalculusQ(u) or u.func == hyper or u.func == appellf1:
+        if InverseFunctionQ(u) or CalculusQ(u) or u.func in (hyper, appellf1):
             return FreeQ(u, x)
         else:
             for i in u.args:
@@ -1584,7 +1600,7 @@ def NonfreeFactors(u, x):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import NonfreeFactors
-    >>> from sympy.abc import  x, a, b
+    >>> from sympy.abc import x, a, b
     >>> NonfreeFactors(a, x)
     1
     >>> NonfreeFactors(x + a, x)
@@ -1625,7 +1641,7 @@ def FreeTerms(u, x):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import FreeTerms
-    >>> from sympy.abc import  x, a, b
+    >>> from sympy.abc import x, a, b
     >>> FreeTerms(a, x)
     a
     >>> FreeTerms(x*a, x)
@@ -1803,7 +1819,7 @@ def LeadBase(u):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import LeadBase
-    >>> from sympy.abc import  a, b, c
+    >>> from sympy.abc import a, b, c
     >>> LeadBase(a**b)
     a
     >>> LeadBase(a**b*c)
@@ -1917,7 +1933,7 @@ def BinomialQ(u, x, n=None):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import BinomialQ
-    >>> from sympy.abc import  x
+    >>> from sympy.abc import x
     >>> BinomialQ(x**9, x)
     True
     >>> BinomialQ((1 + x)**3, x)
@@ -2088,7 +2104,7 @@ def RationalFunctionExponents(u, x):
     Examples
     ========
     >>> from sympy.integrals.rubi.utility_function import RationalFunctionExponents
-    >>> from sympy.abc import  x, a
+    >>> from sympy.abc import x, a
     >>> RationalFunctionExponents(x, x)
     [1, 0]
     >>> RationalFunctionExponents(x**(-1), x)
@@ -2456,7 +2472,7 @@ def MinimumMonomialExponent(u, x):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import MinimumMonomialExponent
-    >>> from sympy.abc import  x
+    >>> from sympy.abc import x
     >>> MinimumMonomialExponent(x**2 + 5*x**2 + 3*x**5, x)
     2
     >>> MinimumMonomialExponent(x**2 + 5*x**2 + 1, x)
@@ -2675,7 +2691,7 @@ def NonalgebraicFunctionFactors(u, x):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import NonalgebraicFunctionFactors
-    >>> from sympy.abc import  x
+    >>> from sympy.abc import x
     >>> from sympy import sin
     >>> NonalgebraicFunctionFactors(sin(x), x)
     sin(x)
@@ -2848,7 +2864,7 @@ def SubstForInverseFunction(*args):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import SubstForInverseFunction
-    >>> from sympy.abc import  x, a, b
+    >>> from sympy.abc import x, a, b
     >>> SubstForInverseFunction(a, a, b, x)
     a
     >>> SubstForInverseFunction(x**a, x**a, b, x)
@@ -3144,7 +3160,7 @@ def PolynomialInQ(u, v, x):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import PolynomialInQ
-    >>> from sympy.abc import  x
+    >>> from sympy.abc import x
     >>> from sympy import log, S
     >>> PolynomialInQ(S(1), log(x), x)
     True
@@ -3214,7 +3230,7 @@ def FunctionOfPower(*args):
     ========
 
     >>> from sympy.integrals.rubi.utility_function import FunctionOfPower
-    >>> from sympy.abc import  x
+    >>> from sympy.abc import x
     >>> FunctionOfPower(x, x)
     1
     >>> FunctionOfPower(x**3, x)
@@ -5264,7 +5280,6 @@ def IntSum(u, x):
     # If u is free of x or of the form c*(a+b*x)^m, IntSum[u,x] returns the antiderivative of u wrt x;
     # else it returns d*Int[v,x] where d*v=u and d is free of x.
     return Add(*[Integral(i, x) for i in u.args])
-    return Simp(FreeTerms(u, x)*x, x) + IntTerm(NonfreeTerms(u, x), x)
 
 def IntTerm(expr, x):
     # If u is of the form c*(a+b*x)**m, IntTerm(u,x) returns the antiderivative of u wrt x;
@@ -5514,7 +5529,7 @@ def rubi_test(expr, x, optimal_output, expand=False, _hyper_check=False, _diff=F
     #_hyper_check=True evaluates numerically
     #_diff=True differentiates the expressions before equating
     #_numerical=True equates the expressions at random `x`. Normally used for large expressions.
-    from sympy import nsimplify
+    from sympy.simplify.simplify import nsimplify
     if not expr.has(csc, sec, cot, csch, sech, coth):
         optimal_output = process_trig(optimal_output)
     if expr == optimal_output:
@@ -6613,7 +6628,7 @@ def IntegralFreeQ(u):
 
 def Dist(u, v, x):
     #Dist(u,v) returns the sum of u times each term of v, provided v is free of Int
-    u = replace_pow_exp(u) # to replace back to sympy's exp
+    u = replace_pow_exp(u) # to replace back to SymPy's exp
     v = replace_pow_exp(v)
     w = Simp(u*x**2, x)/x**2
     if u == 1:
@@ -6690,7 +6705,7 @@ def HypergeometricPFQ(a, b, c):
 
 def Sum_doit(exp, args):
     """
-    This function perform summation using sympy's `Sum`.
+    This function perform summation using SymPy's `Sum`.
 
     Examples
     ========

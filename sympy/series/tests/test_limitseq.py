@@ -1,5 +1,14 @@
-from sympy import (symbols, Symbol, oo, Sum, harmonic, Add, S, binomial,
-    factorial, log, fibonacci, sin, cos, pi, I, sqrt, Rational)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.combinatorial.factorials import (binomial, factorial, subfactorial)
+from sympy.functions.combinatorial.numbers import (fibonacci, harmonic)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.gamma_functions import gamma
 from sympy.series.limitseq import limit_seq
 from sympy.series.limitseq import difference_delta as dd
 from sympy.testing.pytest import raises, XFAIL
@@ -116,9 +125,25 @@ def test_limitseq_sum():
                   (2**x*x), x) == 4)
 
 
+def test_issue_9308():
+    assert limit_seq(subfactorial(n)/factorial(n), n) == exp(-1)
+
+
 def test_issue_10382():
     n = Symbol('n', integer=True)
     assert limit_seq(fibonacci(n+1)/fibonacci(n), n) == S.GoldenRatio
+
+
+def test_issue_11672():
+    assert limit_seq(Rational(-1, 2)**n, n) == 0
+
+
+def test_issue_16735():
+    assert limit_seq(5**n/factorial(n), n) == 0
+
+
+def test_issue_19868():
+    assert limit_seq(1/gamma(n + S.One/2), n) == 0
 
 
 @XFAIL

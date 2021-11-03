@@ -18,12 +18,12 @@ To enable simple substitutions, add the match to find_substitutions.
 """
 
 from typing import Dict as tDict, Optional
-
 from collections import namedtuple, defaultdict
+from collections.abc import Mapping
+from functools import reduce
 
 import sympy
 
-from sympy.core.compatibility import reduce, Mapping, iterable
 from sympy.core.containers import Dict
 from sympy.core.expr import Expr
 from sympy.core.logic import fuzzy_not
@@ -34,6 +34,7 @@ from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.core.relational import Eq, Ne
 from sympy.polys.polytools import degree
 from sympy.ntheory.factor_ import divisors
+from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
 
 ZERO = sympy.S.Zero
@@ -174,6 +175,9 @@ def manual_subs(expr, *args):
 # Method based on that on SIN, described in "Symbolic Integration: The
 # Stormy Decade"
 
+inverse_trig_functions = (sympy.atan, sympy.asin, sympy.acos, sympy.acot, sympy.acsc, sympy.asec)
+
+
 def find_substitutions(integrand, symbol, u_var):
     results = []
 
@@ -213,7 +217,7 @@ def find_substitutions(integrand, symbol, u_var):
 
     def possible_subterms(term):
         if isinstance(term, (TrigonometricFunction,
-                             sympy.asin, sympy.acos, sympy.atan,
+                             *inverse_trig_functions,
                              sympy.exp, sympy.log, sympy.Heaviside)):
             return [term.args[0]]
         elif isinstance(term, (sympy.chebyshevt, sympy.chebyshevu,
@@ -330,7 +334,6 @@ def alternatives(*rules):
     return _alternatives
 
 def constant_rule(integral):
-    integrand, symbol = integral
     return ConstantRule(integral.integrand, *integral)
 
 def power_rule(integral):
@@ -525,7 +528,7 @@ def _parts_rule(integrand, symbol):
 
     def pull_out_u(*functions):
         def pull_out_u_rl(integrand):
-            if any([integrand.has(f) for f in functions]):
+            if any(integrand.has(f) for f in functions):
                 args = [arg for arg in integrand.args
                         if any(isinstance(arg, cls) for cls in functions)]
                 if args:
@@ -535,14 +538,14 @@ def _parts_rule(integrand, symbol):
 
         return pull_out_u_rl
 
-    liate_rules = [pull_out_u(sympy.log), pull_out_u(sympy.atan, sympy.asin, sympy.acos),
+    liate_rules = [pull_out_u(sympy.log), pull_out_u(*inverse_trig_functions),
                    pull_out_algebraic, pull_out_u(sympy.sin, sympy.cos),
                    pull_out_u(sympy.exp)]
 
 
     dummy = sympy.Dummy("temporary")
     # we can integrate log(x) and atan(x) by setting dv = 1
-    if isinstance(integrand, (sympy.log, sympy.atan, sympy.asin, sympy.acos)):
+    if isinstance(integrand, (sympy.log, *inverse_trig_functions)):
         integrand = dummy * integrand
 
     for index, rule in enumerate(liate_rules):
@@ -587,8 +590,8 @@ def _parts_rule(integrand, symbol):
                 for a in dv.args)):
                     accept = True
             else:
-                for rule in liate_rules[index + 1:]:
-                    r = rule(integrand)
+                for lrule in liate_rules[index + 1:]:
+                    r = lrule(integrand)
                     if r and r[0].subs(dummy, 1).equals(dv):
                         accept = True
                         break
@@ -679,7 +682,7 @@ def parts_rule(integral):
 
 def trig_rule(integral):
     integrand, symbol = integral
-    if isinstance(integrand, sympy.sin) or isinstance(integrand, sympy.cos):
+    if isinstance(integrand, (sympy.sin, sympy.cos)):
         arg = integrand.args[0]
 
         if not isinstance(arg, sympy.Symbol):
@@ -1202,6 +1205,9 @@ _cache_dummy = sympy.Dummy("z")
 def integral_steps(integrand, symbol, **options):
     """Returns the steps needed to compute an integral.
 
+    Explanation
+    ===========
+
     This function attempts to mirror what a student would do by hand as
     closely as possible.
 
@@ -1213,7 +1219,7 @@ def integral_steps(integrand, symbol, **options):
     Examples
     ========
 
-    >>> from sympy import exp, sin, cos
+    >>> from sympy import exp, sin
     >>> from sympy.integrals.manualintegrate import integral_steps
     >>> from sympy.abc import x
     >>> print(repr(integral_steps(exp(x) / (1 + exp(2 * x)), x))) \
@@ -1226,7 +1232,7 @@ def integral_steps(integrand, symbol, **options):
     >>> print(repr(integral_steps(sin(x), x))) \
     # doctest: +NORMALIZE_WHITESPACE
     TrigRule(func='sin', arg=x, context=sin(x), symbol=x)
-    >>> print(repr(integral_steps((x**2 + 3)**2 , x))) \
+    >>> print(repr(integral_steps((x**2 + 3)**2, x))) \
     # doctest: +NORMALIZE_WHITESPACE
     RewriteRule(rewritten=x**4 + 6*x**2 + 9,
     substep=AddRule(substeps=[PowerRule(base=x, exp=4, context=x**4, symbol=x),
@@ -1239,6 +1245,7 @@ def integral_steps(integrand, symbol, **options):
 
     Returns
     =======
+
     rule : namedtuple
         The first step; most rules have substeps that must also be
         considered. These substeps can be evaluated using ``manualintegrate``
@@ -1271,8 +1278,8 @@ def integral_steps(integrand, symbol, **options):
             return sympy.Number
         else:
             for cls in (sympy.Pow, sympy.Symbol, sympy.exp, sympy.log,
-                        sympy.Add, sympy.Mul, sympy.atan, sympy.asin,
-                        sympy.acos, sympy.Heaviside, OrthogonalPolynomial):
+                        sympy.Add, sympy.Mul, *inverse_trig_functions,
+                        sympy.Heaviside, OrthogonalPolynomial):
                 if isinstance(integrand, cls):
                     return cls
 
@@ -1312,7 +1319,8 @@ def integral_steps(integrand, symbol, **options):
                     integral_is_subclass(sympy.Mul, sympy.Pow),
                     cancel_rule),
                 condition(
-                    integral_is_subclass(sympy.Mul, sympy.log, sympy.atan, sympy.asin, sympy.acos),
+                    integral_is_subclass(sympy.Mul, sympy.log,
+                    *inverse_trig_functions),
                     parts_rule),
                 condition(
                     integral_is_subclass(sympy.Mul, sympy.Pow),
@@ -1430,6 +1438,8 @@ def eval_piecewise(substeps, integrand, symbol):
 @evaluates(TrigSubstitutionRule)
 def eval_trigsubstitution(theta, func, rewritten, substep, restriction, integrand, symbol):
     func = func.subs(sympy.sec(theta), 1/sympy.cos(theta))
+    func = func.subs(sympy.csc(theta), 1/sympy.sin(theta))
+    func = func.subs(sympy.cot(theta), 1/sympy.tan(theta))
 
     trig_function = list(func.find(TrigonometricFunction))
     assert len(trig_function) == 1
@@ -1601,6 +1611,9 @@ def _manualintegrate(rule):
 
 def manualintegrate(f, var):
     """manualintegrate(f, var)
+
+    Explanation
+    ===========
 
     Compute indefinite integral of a single variable using an algorithm that
     resembles what a student would do by hand.

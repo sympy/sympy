@@ -1,6 +1,5 @@
 """Polynomial factorization routines in characteristic zero. """
 
-from __future__ import print_function, division
 
 from sympy.polys.galoistools import (
     gf_from_int_poly, gf_to_int_poly,
@@ -163,7 +162,7 @@ def dup_zz_mignotte_bound(f, K):
     ..[1] [Abbott2013]_
 
     """
-    from sympy import binomial
+    from sympy.functions.combinatorial.factorials import binomial
 
     d = dup_degree(f)
     delta = _ceil(d / 2)
@@ -250,7 +249,7 @@ def dup_zz_hensel_step(m, f, g, h, s, t, K):
 
 
 def dup_zz_hensel_lift(p, f, f_list, l, K):
-    """
+    r"""
     Multifactor Hensel lifting in `Z[x]`.
 
     Given a prime `p`, polynomial `f` over `Z[x]` such that `lc(f)`
@@ -260,7 +259,7 @@ def dup_zz_hensel_lift(p, f, f_list, l, K):
         f = lc(f) f_1 ... f_r (mod p)
 
     and a positive integer `l`, returns a list of monic polynomials
-    `F_1`, `F_2`, ..., `F_r` satisfying::
+    `F_1,\ F_2,\ \dots,\ F_r` satisfying::
 
        f = lc(f) F_1 ... F_r (mod p**l)
 
@@ -745,7 +744,7 @@ def dmp_zz_wang_lead_coeffs(f, T, cs, E, H, A, u, K):
 
         C.append(c)
 
-    if any(not j for j in J):
+    if not all(J):
         raise ExtraneousFactors  # pragma: no cover
 
     CC, HH = [], []
@@ -949,7 +948,7 @@ def dmp_zz_wang_hensel_lifting(f, H, LC, A, p, u, K):
 
 
 def dmp_zz_wang(f, u, K, mod=None, seed=None):
-    """
+    r"""
     Factor primitive square-free polynomials in `Z[X]`.
 
     Given a multivariate polynomial `f` in `Z[x_1,...,x_n]`, which is
@@ -962,7 +961,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
 
                       x_2 -> a_2, ..., x_n -> a_n
 
-    where `a_i`, for `i = 2, ..., n`, are carefully chosen integers.  The
+    where `a_i`, for `i = 2, \dots, n`, are carefully chosen integers.  The
     mapping is used to transform `f` into a univariate polynomial in `Z[x_1]`,
     which can be factored efficiently using Zassenhaus algorithm. The last
     step is to lift univariate factors to obtain true multivariate
@@ -993,7 +992,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
         else:
             mod = 1
 
-    history, configs, A, r = set([]), [], [K.zero]*u, None
+    history, configs, A, r = set(), [], [K.zero]*u, None
 
     try:
         cs, s, E = dmp_zz_wang_test_points(f, T, ct, A, u, K)
@@ -1091,11 +1090,11 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
 
 
 def dmp_zz_factor(f, u, K):
-    """
+    r"""
     Factor (non square-free) polynomials in `Z[X]`.
 
     Given a multivariate polynomial `f` in `Z[x]` computes its complete
-    factorization `f_1, ..., f_n` into irreducibles over integers::
+    factorization `f_1, \dots, f_n` into irreducibles over integers::
 
                  f = content(f) f_1**k_1 ... f_n**k_n
 
@@ -1155,6 +1154,72 @@ def dmp_zz_factor(f, u, K):
     return cont, _sort_factors(factors)
 
 
+def dup_qq_i_factor(f, K0):
+    """Factor univariate polynomials into irreducibles in `QQ_I[x]`. """
+    # Factor in QQ<I>
+    K1 = K0.as_AlgebraicField()
+    f = dup_convert(f, K0, K1)
+    coeff, factors = dup_factor_list(f, K1)
+    factors = [(dup_convert(fac, K1, K0), i) for fac, i in factors]
+    coeff = K0.convert(coeff, K1)
+    return coeff, factors
+
+
+def dup_zz_i_factor(f, K0):
+    """Factor univariate polynomials into irreducibles in `ZZ_I[x]`. """
+    # First factor in QQ_I
+    K1 = K0.get_field()
+    f = dup_convert(f, K0, K1)
+    coeff, factors = dup_qq_i_factor(f, K1)
+
+    new_factors = []
+    for fac, i in factors:
+        # Extract content
+        fac_denom, fac_num = dup_clear_denoms(fac, K1)
+        fac_num_ZZ_I = dup_convert(fac_num, K1, K0)
+        content, fac_prim = dmp_ground_primitive(fac_num_ZZ_I, 0, K1)
+
+        coeff = (coeff * content ** i) // fac_denom ** i
+        new_factors.append((fac_prim, i))
+
+    factors = new_factors
+    coeff = K0.convert(coeff, K1)
+    return coeff, factors
+
+
+def dmp_qq_i_factor(f, u, K0):
+    """Factor multivariate polynomials into irreducibles in `QQ_I[X]`. """
+    # Factor in QQ<I>
+    K1 = K0.as_AlgebraicField()
+    f = dmp_convert(f, u, K0, K1)
+    coeff, factors = dmp_factor_list(f, u, K1)
+    factors = [(dmp_convert(fac, u, K1, K0), i) for fac, i in factors]
+    coeff = K0.convert(coeff, K1)
+    return coeff, factors
+
+
+def dmp_zz_i_factor(f, u, K0):
+    """Factor multivariate polynomials into irreducibles in `ZZ_I[X]`. """
+    # First factor in QQ_I
+    K1 = K0.get_field()
+    f = dmp_convert(f, u, K0, K1)
+    coeff, factors = dmp_qq_i_factor(f, u, K1)
+
+    new_factors = []
+    for fac, i in factors:
+        # Extract content
+        fac_denom, fac_num = dmp_clear_denoms(fac, u, K1)
+        fac_num_ZZ_I = dmp_convert(fac_num, u, K1, K0)
+        content, fac_prim = dmp_ground_primitive(fac_num_ZZ_I, u, K1)
+
+        coeff = (coeff * content ** i) // fac_denom ** i
+        new_factors.append((fac_prim, i))
+
+    factors = new_factors
+    coeff = K0.convert(coeff, K1)
+    return coeff, factors
+
+
 def dup_ext_factor(f, K):
     """Factor univariate polynomials over algebraic number fields. """
     n, lc = dup_degree(f), dup_LC(f, K)
@@ -1198,7 +1263,7 @@ def dmp_ext_factor(f, u, K):
         return lc, []
 
     f, F = dmp_sqf_part(f, u, K), f
-    s, g, r = dmp_sqf_norm(F, u, K)
+    s, g, r = dmp_sqf_norm(f, u, K)
 
     factors = dmp_factor_list_include(r, u, K.dom)
 
@@ -1242,6 +1307,10 @@ def dup_factor_list(f, K0):
         coeff, factors = dup_gf_factor(f, K0)
     elif K0.is_Algebraic:
         coeff, factors = dup_ext_factor(f, K0)
+    elif K0.is_GaussianRing:
+        coeff, factors = dup_zz_i_factor(f, K0)
+    elif K0.is_GaussianField:
+        coeff, factors = dup_qq_i_factor(f, K0)
     else:
         if not K0.is_Exact:
             K0_inexact, K0 = K0, K0.get_exact()
@@ -1318,6 +1387,10 @@ def dmp_factor_list(f, u, K0):
         coeff, factors = dmp_gf_factor(f, u, K0)
     elif K0.is_Algebraic:
         coeff, factors = dmp_ext_factor(f, u, K0)
+    elif K0.is_GaussianRing:
+        coeff, factors = dmp_zz_i_factor(f, u, K0)
+    elif K0.is_GaussianField:
+        coeff, factors = dmp_qq_i_factor(f, u, K0)
     else:
         if not K0.is_Exact:
             K0_inexact, K0 = K0, K0.get_exact()

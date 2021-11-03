@@ -1,11 +1,12 @@
-from __future__ import print_function, division
-
 from sympy.core.containers import Tuple
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import SympifyError
 
 from types import FunctionType
 
 
-class TableForm(object):
+class TableForm:
     r"""
     Create a nice table representation of data.
 
@@ -114,8 +115,7 @@ class TableForm(object):
          .. . ..
         ... . ...
         """
-        from sympy import Symbol, S, Matrix
-        from sympy.core.sympify import SympifyError
+        from sympy.matrices.dense import Matrix
 
         # We only support 2D data. Check the consistency:
         if isinstance(data, Matrix):
@@ -228,7 +228,7 @@ class TableForm(object):
         [ 4, 2],
         [10, 3]])
         """
-        from sympy import Matrix
+        from sympy.matrices.dense import Matrix
         return Matrix(self._lines)
 
     def as_str(self):

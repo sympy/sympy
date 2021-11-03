@@ -4,12 +4,12 @@ This module implements sums and products containing the Kronecker Delta function
 References
 ==========
 
-- http://mathworld.wolfram.com/KroneckerDelta.html
+.. [1] http://mathworld.wolfram.com/KroneckerDelta.html
 
 """
 from sympy.core import Add, Mul, S, Dummy
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import default_sort_key
+from sympy.core.sorting import default_sort_key
 from sympy.functions import KroneckerDelta, Piecewise, piecewise_fold
 from sympy.sets import Interval
 
@@ -38,6 +38,9 @@ def _expand_delta(expr, index):
 def _extract_delta(expr, index):
     """
     Extract a simple KroneckerDelta from the expression.
+
+    Explanation
+    ===========
 
     Returns the tuple ``(delta, newexpr)`` where:
 
@@ -212,7 +215,7 @@ def deltaproduct(f, limit):
     if not delta:
         g = _expand_delta(f, limit[0])
         if f != g:
-            from sympy import factor
+            from sympy.polys.polytools import factor
             try:
                 return factor(deltaproduct(g, limit))
             except AssertionError:
@@ -227,6 +230,9 @@ def deltaproduct(f, limit):
 def deltasummation(f, limit, no_piecewise=False):
     """
     Handle summations containing a KroneckerDelta.
+
+    Explanation
+    ===========
 
     The idea for summation is the following:
 
@@ -267,7 +273,7 @@ def deltasummation(f, limit, no_piecewise=False):
     >>> from sympy.abc import k
     >>> i, j = symbols('i, j', integer=True, finite=True)
     >>> from sympy.concrete.delta import deltasummation
-    >>> from sympy import KroneckerDelta, Piecewise
+    >>> from sympy import KroneckerDelta
     >>> deltasummation(KroneckerDelta(i, k), (k, -oo, oo))
     1
     >>> deltasummation(KroneckerDelta(i, k), (k, 0, oo))

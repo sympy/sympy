@@ -1,8 +1,10 @@
 from sympy.core import Mul, sympify
+from sympy.core.add import Add
+from sympy.core.expr import ExprBuilder
+from sympy.core.sorting import default_sort_key
 from sympy.matrices.common import ShapeError
-from sympy.matrices.expressions.matexpr import (
-    MatrixExpr, OneMatrix, ZeroMatrix
-)
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix
 from sympy.strategies import (
     unpack, flatten, condition, exhaust, rm_id, sort
 )
@@ -59,9 +61,8 @@ class HadamardProduct(MatrixExpr):
     """
     is_HadamardProduct = True
 
-    def __new__(cls, *args, evaluate=False, **kwargs):
+    def __new__(cls, *args, evaluate=False, check=True):
         args = list(map(sympify, args))
-        check = kwargs.get('check', True)
         if check:
             validate(*args)
 
@@ -84,7 +85,7 @@ class HadamardProduct(MatrixExpr):
     def doit(self, **ignored):
         expr = self.func(*[i.doit(**ignored) for i in self.args])
         # Check for explicit matrices:
-        from sympy import MatrixBase
+        from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.immutable import ImmutableMatrix
         explicit = [i for i in expr.args if isinstance(i, MatrixBase)]
         if explicit:
@@ -97,7 +98,6 @@ class HadamardProduct(MatrixExpr):
         return canonicalize(expr)
 
     def _eval_derivative(self, x):
-        from sympy import Add
         terms = []
         args = list(self.args)
         for i in range(len(args)):
@@ -106,8 +106,8 @@ class HadamardProduct(MatrixExpr):
         return Add.fromiter(terms)
 
     def _eval_derivative_matrix_lines(self, x):
-        from sympy.core.expr import ExprBuilder
-        from sympy.codegen.array_utils import CodegenArrayDiagonal, CodegenArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
+        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
         from sympy.matrices.expressions.matexpr import _make_matrix
 
         with_x_ind = [i for i, arg in enumerate(self.args) if arg.has(x)]
@@ -124,10 +124,10 @@ class HadamardProduct(MatrixExpr):
                 l1 = i._lines[i._first_line_index]
                 l2 = i._lines[i._second_line_index]
                 subexpr = ExprBuilder(
-                    CodegenArrayDiagonal,
+                    ArrayDiagonal,
                     [
                         ExprBuilder(
-                            CodegenArrayTensorProduct,
+                            ArrayTensorProduct,
                             [
                                 ExprBuilder(_make_matrix, [l1]),
                                 hadam,
@@ -240,8 +240,6 @@ def canonicalize(x):
 
     .. [1] https://en.wikipedia.org/wiki/Hadamard_product_(matrices)
     """
-    from sympy.core.compatibility import default_sort_key
-
     # Associativity
     rule = condition(
             lambda x: isinstance(x, HadamardProduct),
@@ -421,7 +419,7 @@ class HadamardPower(MatrixExpr):
         return HadamardPower(transpose(self.base), self.exp)
 
     def _eval_derivative(self, x):
-        from sympy import log
+        from sympy.functions.elementary.exponential import log
         dexp = self.exp.diff(x)
         logbase = self.base.applyfunc(log)
         dlbase = logbase.diff(x)
@@ -431,9 +429,8 @@ class HadamardPower(MatrixExpr):
         )
 
     def _eval_derivative_matrix_lines(self, x):
-        from sympy.codegen.array_utils import CodegenArrayTensorProduct
-        from sympy.codegen.array_utils import CodegenArrayDiagonal
-        from sympy.core.expr import ExprBuilder
+        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
+        from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
         from sympy.matrices.expressions.matexpr import _make_matrix
 
         lr = self.base._eval_derivative_matrix_lines(x)
@@ -443,10 +440,10 @@ class HadamardPower(MatrixExpr):
             l1 = i._lines[i._first_line_index]
             l2 = i._lines[i._second_line_index]
             subexpr = ExprBuilder(
-                CodegenArrayDiagonal,
+                ArrayDiagonal,
                 [
                     ExprBuilder(
-                        CodegenArrayTensorProduct,
+                        ArrayTensorProduct,
                         [
                             ExprBuilder(_make_matrix, [l1]),
                             self.exp*hadamard_power(self.base, self.exp-1),
@@ -454,7 +451,7 @@ class HadamardPower(MatrixExpr):
                         ]
                     ),
                 *diagonal],
-                validator=CodegenArrayDiagonal._validate
+                validator=ArrayDiagonal._validate
             )
             i._first_pointer_parent = subexpr.args[0].args[0].args
             i._first_pointer_index = 0

@@ -1,8 +1,9 @@
 from sympy.core import S, sympify
+from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise, piecewise_fold
 from sympy.sets.sets import Interval
 
-from sympy.core.cache import lru_cache
+from functools import lru_cache
 
 
 def _ivl(cond, x):
@@ -24,9 +25,9 @@ def _ivl(cond, x):
 def _add_splines(c, b1, d, b2, x):
     """Construct c*b1 + d*b2."""
 
-    if b1 == S.Zero or c == S.Zero:
+    if S.Zero in (b1, c):
         rv = piecewise_fold(d * b2)
-    elif b2 == S.Zero or d == S.Zero:
+    elif S.Zero in (b2, d):
         rv = piecewise_fold(c * b1)
     else:
         new_args = []
@@ -137,6 +138,20 @@ def bspline_basis(d, knots, n, x):
         >>> f = lambdify(x, b0)
         >>> y = f(0.5)
 
+    Parameters
+    ==========
+
+    d : integer
+        degree of bspline
+
+    knots : list of integer values
+        list of knots points of bspline
+
+    n : integer
+        $n$-th B-spline
+
+    x : symbol
+
     See Also
     ========
 
@@ -148,7 +163,6 @@ def bspline_basis(d, knots, n, x):
     .. [1] https://en.wikipedia.org/wiki/B-spline
 
     """
-    from sympy.core.symbol import Dummy
     # make sure x has no assumptions so conditions don't evaluate
     xvar = x
     x = Dummy()
@@ -218,6 +232,17 @@ def bspline_basis_set(d, knots, x):
               (x**2/2 - 4*x + 8, (x >= 3) & (x <= 4)),
               (0, True))]
 
+    Parameters
+    ==========
+
+    d : integer
+        degree of bspline
+
+    knots : list of integers
+        list of knots points of bspline
+
+    x : symbol
+
     See Also
     ========
 
@@ -254,13 +279,26 @@ def interpolating_spline(d, x, X, Y):
     Piecewise((7*x**3/117 + 7*x**2/117 - 131*x/117 + 2, (x >= -2) & (x <= 1)),
             (10*x**3/117 - 2*x**2/117 - 122*x/117 + 77/39, (x >= 1) & (x <= 4)))
 
+    Parameters
+    ==========
+
+    d : integer
+        Degree of Bspline strictly greater than equal to one
+
+    x : symbol
+
+    X : list of strictly increasing integer values
+        list of X coordinates through which the spline passes
+
+    Y : list of strictly increasing integer values
+        list of Y coordinates through which the spline passes
+
     See Also
     ========
 
     bspline_basis_set, interpolating_poly
 
     """
-    from sympy import symbols, Dummy
     from sympy.solvers.solveset import linsolve
     from sympy.matrices.dense import Matrix
 

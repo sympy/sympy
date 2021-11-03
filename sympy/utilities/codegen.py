@@ -1,12 +1,12 @@
 """
 module for generating C, C++, Fortran77, Fortran90, Julia, Rust
-and Octave/Matlab routines that evaluate sympy expressions.
+and Octave/Matlab routines that evaluate SymPy expressions.
 This module is work in progress.
 Only the milestones with a '+' character in the list below have been completed.
 
 --- How is sympy.utilities.codegen different from sympy.printing.ccode? ---
 
-We considered the idea to extend the printing routines for sympy functions in
+We considered the idea to extend the printing routines for SymPy functions in
 such a way that it prints complete compilable code, but this leads to a few
 unsurmountable issues that can only be tackled with dedicated code generator:
 
@@ -19,7 +19,7 @@ unsurmountable issues that can only be tackled with dedicated code generator:
   or non-contiguous arrays, including headers of other libraries such as gsl
   or others.
 
-- It is highly interesting to evaluate several sympy functions in one C
+- It is highly interesting to evaluate several SymPy functions in one C
   routine, eventually sharing common intermediate results with the help
   of the cse routine. This is more than just printing.
 
@@ -62,9 +62,9 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 - Optional extra include lines for libraries/objects that can eval special
   functions
 - Test other C compilers and libraries: gcc, tcc, libtcc, gcc+gsl, ...
-- Contiguous array arguments (sympy matrices)
-- Non-contiguous array arguments (sympy matrices)
-- ccode must raise an error when it encounters something that can not be
+- Contiguous array arguments (SymPy matrices)
+- Non-contiguous array arguments (SymPy matrices)
+- ccode must raise an error when it encounters something that cannot be
   translated into c. ccode(integrate(sin(x)/x, x)) does not make sense.
 - Complex numbers as input and output
 - A default complex datatype
@@ -81,19 +81,20 @@ unsurmountable issues that can only be tackled with dedicated code generator:
 
 import os
 import textwrap
+from io import StringIO
 
 from sympy import __version__ as sympy_version
 from sympy.core import Symbol, S, Tuple, Equality, Function, Basic
-from sympy.core.compatibility import is_sequence, StringIO
-from sympy.printing.ccode import c_code_printers
+from sympy.printing.c import c_code_printers
 from sympy.printing.codeprinter import AssignmentError
-from sympy.printing.fcode import FCodePrinter
+from sympy.printing.fortran import FCodePrinter
 from sympy.printing.julia import JuliaCodePrinter
 from sympy.printing.octave import OctaveCodePrinter
 from sympy.printing.rust import RustCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
                             MatrixExpr, MatrixSlice)
+from sympy.utilities.iterables import is_sequence
 
 
 __all__ = [
@@ -306,7 +307,7 @@ class Variable:
 
         """
         if not isinstance(name, (Symbol, MatrixSymbol)):
-            raise TypeError("The first argument must be a sympy symbol.")
+            raise TypeError("The first argument must be a SymPy symbol.")
         if datatype is None:
             datatype = get_default_datatype(name)
         elif not isinstance(datatype, DataType):
@@ -375,7 +376,7 @@ class InputArgument(Argument):
 class ResultBase:
     """Base class for all "outgoing" information from a routine.
 
-    Objects of this class stores a sympy expression, and a sympy object
+    Objects of this class stores a SymPy expression, and a SymPy object
     representing a result variable that will be used in the generated code
     only if necessary.
 
@@ -459,7 +460,7 @@ class Result(Variable, ResultBase):
     """An expression for a return value.
 
     The name result is used to avoid conflicts with the reserved word
-    "return" in the python language.  It is also shorter than ReturnValue.
+    "return" in the Python language.  It is also shorter than ReturnValue.
 
     These may or may not need a name in the destination (e.g., "return(x*y)"
     might return a value without ever naming it).
@@ -501,7 +502,7 @@ class Result(Variable, ResultBase):
         """
         # Basic because it is the base class for all types of expressions
         if not isinstance(expr, (Basic, MatrixBase)):
-            raise TypeError("The first argument must be a sympy expression.")
+            raise TypeError("The first argument must be a SymPy expression.")
 
         if name is None:
             name = 'result_%d' % abs(hash(expr))
@@ -604,8 +605,6 @@ class CodeGen:
                 # pack the simplified expressions back up with their left hand sides
                 expr = [Equality(e.lhs, rhs) for e, rhs in zip(expr, simplified)]
             else:
-                rhs = [expr]
-
                 if isinstance(expr, Equality):
                     common, simplified = cse(expr.rhs) #, ignore=in_out_args)
                     expr = Equality(expr.lhs, simplified[0])
@@ -855,7 +854,7 @@ class CodeGenArgumentListError(Exception):
         return self.args[1]
 
 
-header_comment = """Code generated with sympy %(version)s
+header_comment = """Code generated with SymPy %(version)s
 
 See http://www.sympy.org/ for more information.
 
@@ -964,9 +963,7 @@ class CCodeGen(CodeGen):
             t = result.get_datatype('c')
             if isinstance(result.expr, (MatrixBase, MatrixExpr)):
                 dims = result.expr.shape
-                if dims[1] != 1:
-                    raise CodeGenError("Only column vectors are supported in local variabels. Local result {} has dimensions {}".format(result, dims))
-                code_lines.append("{} {}[{}];\n".format(t, str(assign_to), dims[0]))
+                code_lines.append("{} {}[{}];\n".format(t, str(assign_to), dims[0]*dims[1]))
                 prefix = ""
             else:
                 prefix = "const {} ".format(t)
@@ -1727,7 +1724,7 @@ class OctaveCodeGen(CodeGen):
                     raise ValueError('Octave function name should match prefix')
                 if header:
                     code_lines.append("%" + prefix.upper() +
-                                      "  Autogenerated by sympy\n")
+                                      "  Autogenerated by SymPy\n")
                     code_lines.append(''.join(self._get_header()))
             code_lines.extend(self._declare_arguments(routine))
             code_lines.extend(self._declare_globals(routine))
@@ -2175,6 +2172,9 @@ def make_routine(name, expr, argument_sequence=None,
         Specify a target language.  The Routine itself should be
         language-agnostic but the precise way one is created, error
         checking, etc depend on the language.  [default: "F95"].
+
+    Notes
+    =====
 
     A decision about whether to use output arguments or return values is made
     depending on both the language and the particular mathematical expressions.

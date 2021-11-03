@@ -1,13 +1,17 @@
-from sympy import (Abs, Rational, Float, S, Symbol, symbols, cos, sin, pi, sqrt, \
-                    oo, acos)
+from sympy.core.numbers import (Float, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, cos, sin)
 from sympy.functions.elementary.trigonometric import tan
-from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D, \
-                            Polygon, Ray, RegularPolygon, Segment, Triangle, \
+from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D,
+                            Polygon, Ray, RegularPolygon, Segment, Triangle,
                             are_similar, convex_hull, intersection, Line, Ray2D)
 from sympy.testing.pytest import raises, slow, warns
 from sympy.testing.randtest import verify_numerically
 from sympy.geometry.polygon import rad, deg
-from sympy import integrate
+from sympy.integrals.integrals import integrate
 
 
 def feq(a, b):
@@ -27,6 +31,7 @@ def test_polygon():
     half = S.Half
     a, b, c = Point(0, 0), Point(2, 0), Point(3, 3)
     t = Triangle(a, b, c)
+    assert Polygon(Point(0, 0)) == Point(0, 0)
     assert Polygon(a, Point(1, 0), b, c) == t
     assert Polygon(Point(1, 0), b, c, a) == t
     assert Polygon(b, c, a, Point(1, 0)) == t
@@ -73,6 +78,7 @@ def test_polygon():
         Point(0, 2), Point(2, 2),
         Point(0, 0), Point(2, 0))
     p11 = Polygon(Point(0, 0), 1, n=3)
+    p12 = Polygon(Point(0, 0), 1, 0, n=3)
 
     r = Ray(Point(-9, 6.6), Point(-9, 5.5))
     #
@@ -122,6 +128,7 @@ def test_polygon():
     assert p6.intersection(r) == [Point(-9, Rational(-84, 13)), Point(-9, Rational(33, 5))]
     assert p10.area == 0
     assert p11 == RegularPolygon(Point(0, 0), 1, 3, 0)
+    assert p11 == p12
     assert p11.vertices[0] == Point(1, 0)
     assert p11.args[0] == Point(0, 0)
     p11.spin(pi/2)
@@ -160,7 +167,7 @@ def test_polygon():
         if isinstance(var, Point):
             assert var == Point(0, 0)
         else:
-            assert var == 5 or var == 10 or var == pi / 3
+            assert var in (5, 10, pi / 3)
     assert p1 != Point(0, 0)
     assert p1 != p5
 
@@ -496,8 +503,10 @@ def test_parameter_value():
     sq = Polygon((0, 0), (0, 1), (1, 1), (1, 0))
     assert sq.parameter_value((0.5, 1), t) == {t: Rational(3, 8)}
     q = Polygon((0, 0), (2, 1), (2, 4), (4, 0))
-    assert q.parameter_value((4, 0), t) == {t: -6 + 3*sqrt(5)}  # ~= 0.708
+    assert q.parameter_value((4, 0), t) == {t: -6 + 3*sqrt(5)} # ~= 0.708
+
     raises(ValueError, lambda: sq.parameter_value((5, 6), t))
+    raises(ValueError, lambda: sq.parameter_value(Circle(Point(0, 0), 1), t))
 
 
 def test_issue_12966():

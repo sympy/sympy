@@ -1,9 +1,11 @@
-from sympy.core.compatibility import as_int, reduce
+from functools import reduce
+
 from sympy.core.mul import prod
 from sympy.core.numbers import igcdex, igcd
 from sympy.ntheory.primetest import isprime
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt, gf_crt1, gf_crt2
+from sympy.utilities.misc import as_int
 
 
 def symmetric_residue(a, m):
@@ -42,7 +44,7 @@ def crt(m, v, symmetric=False, check=True):
     As an example consider a set of residues ``U = [49, 76, 65]``
     and a set of moduli ``M = [99, 97, 95]``. Then we have::
 
-       >>> from sympy.ntheory.modular import crt, solve_congruence
+       >>> from sympy.ntheory.modular import crt
 
        >>> crt([99, 97, 95], [49, 76, 65])
        (639985, 912285)
@@ -190,7 +192,7 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
         References
         ==========
 
-        - https://en.wikipedia.org/wiki/Method_of_successive_substitution
+        .. [1] https://en.wikipedia.org/wiki/Method_of_successive_substitution
         """
         a1, m1 = c1
         a2, m2 = c2

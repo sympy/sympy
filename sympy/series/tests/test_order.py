@@ -1,6 +1,14 @@
-from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
-    S, Integral, sin, cos, sqrt, conjugate, expand, transpose, symbols,
-    Function, Add)
+from sympy.core.add import Add
+from sympy.core.function import (Function, expand)
+from sympy.core.numbers import (I, Rational, nan, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (conjugate, transpose)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.integrals.integrals import Integral
+from sympy.series.order import O, Order
 from sympy.core.expr import unchanged
 from sympy.testing.pytest import raises
 from sympy.abc import w, x, y, z
@@ -45,7 +53,7 @@ def test_simple_2():
     assert Order(2*x)*x == Order(x**2)
     assert Order(2*x)/x == Order(1, x)
     assert Order(2*x)*x*exp(1/x) == Order(x**2*exp(1/x))
-    assert (Order(2*x)*x*exp(1/x)/ln(x)**3).expr == x**2*exp(1/x)*ln(x)**-3
+    assert (Order(2*x)*x*exp(1/x)/log(x)**3).expr == x**2*exp(1/x)*log(x)**-3
 
 
 def test_simple_3():
@@ -94,7 +102,7 @@ def test_simple_8():
 
 def test_as_expr_variables():
     assert Order(x).as_expr_variables(None) == (x, ((x, 0),))
-    assert Order(x).as_expr_variables((((x, 0),))) == (x, ((x, 0),))
+    assert Order(x).as_expr_variables(((x, 0),)) == (x, ((x, 0),))
     assert Order(y).as_expr_variables(((x, 0),)) == (y, ((x, 0), (y, 0)))
     assert Order(y).as_expr_variables(((x, 0), (y, 0))) == (y, ((x, 0), (y, 0)))
 
@@ -134,8 +142,8 @@ def test_contains_3():
 
 
 def test_contains_4():
-    assert Order(sin(1/x**2)).contains(Order(cos(1/x**2))) is None
-    assert Order(cos(1/x**2)).contains(Order(sin(1/x**2))) is None
+    assert Order(sin(1/x**2)).contains(Order(cos(1/x**2))) is True
+    assert Order(cos(1/x**2)).contains(Order(sin(1/x**2))) is True
 
 
 def test_contains():
@@ -149,7 +157,7 @@ def test_add_1():
     assert Order(3*x - 2*x**2) == Order(x)
     assert Order(1 + x) == Order(1, x)
     assert Order(1 + 1/x) == Order(1/x)
-    assert Order(ln(x) + 1/ln(x)) == Order(ln(x))
+    assert Order(log(x) + 1/log(x)) == Order(log(x))
     assert Order(exp(1/x) + x) == Order(exp(1/x))
     assert Order(exp(1/x) + 1/x**20) == Order(exp(1/x))
 
@@ -168,11 +176,11 @@ def test_multivar_0():
     assert Order(x*y*z).expr == x*y*z
     assert Order(x/y).expr == x/y
     assert Order(x*exp(1/y)).expr == x*exp(1/y)
-    assert Order(exp(x)*exp(1/y)).expr == exp(1/y)
+    assert Order(exp(x)*exp(1/y)).expr == exp(x)*exp(1/y)
 
 
 def test_multivar_0a():
-    assert Order(exp(1/x)*exp(1/y)).expr == exp(1/x + 1/y)
+    assert Order(exp(1/x)*exp(1/y)).expr == exp(1/x)*exp(1/y)
 
 
 def test_multivar_1():
@@ -227,10 +235,10 @@ def test_leading_order():
 
 
 def test_leading_order2():
-    assert set((2 + pi + x**2).extract_leading_order(x)) == set(((pi, O(1, x)),
-            (S(2), O(1, x))))
-    assert set((2*x + pi*x + x**2).extract_leading_order(x)) == set(((2*x, O(x)),
-            (x*pi, O(x))))
+    assert set((2 + pi + x**2).extract_leading_order(x)) == {(pi, O(1, x)),
+            (S(2), O(1, x))}
+    assert set((2*x + pi*x + x**2).extract_leading_order(x)) == {(2*x, O(x)),
+            (x*pi, O(x))}
 
 
 def test_order_leadterm():
@@ -277,7 +285,7 @@ def test_getO():
 
 
 def test_leading_term():
-    from sympy import digamma
+    from sympy.functions.special.gamma_functions import digamma
     assert O(1/digamma(1/x)) == O(1/log(x))
 
 
@@ -349,7 +357,7 @@ def test_order_at_infinity():
     assert Order(2*x, (x, oo))*x == Order(x**2, (x, oo))
     assert Order(2*x, (x, oo))/x == Order(1, (x, oo))
     assert Order(2*x, (x, oo))*x*exp(1/x) == Order(x**2*exp(1/x), (x, oo))
-    assert Order(2*x, (x, oo))*x*exp(1/x)/ln(x)**3 == Order(x**2*exp(1/x)*ln(x)**-3, (x, oo))
+    assert Order(2*x, (x, oo))*x*exp(1/x)/log(x)**3 == Order(x**2*exp(1/x)*log(x)**-3, (x, oo))
 
     assert Order(x, (x, oo)) + 1/x == 1/x + Order(x, (x, oo)) == Order(x, (x, oo))
     assert Order(x, (x, oo)) + 1 == 1 + Order(x, (x, oo)) == Order(x, (x, oo))
@@ -376,6 +384,8 @@ def test_order_at_infinity():
     assert Order(exp(x), (x, oo)).expr == Order(2*exp(x), (x, oo)).expr == exp(x)
     assert Order(y**x, (x, oo)).expr == Order(2*y**x, (x, oo)).expr == exp(log(y)*x)
 
+    # issue 19545
+    assert Order(1/x - 3/(3*x + 2), (x, oo)).expr == x**(-2)
 
 def test_mixing_order_at_zero_and_infinity():
     assert (Order(x, (x, 0)) + Order(x, (x, oo))).is_Add
@@ -416,6 +426,11 @@ def test_issue_9192():
     assert O(1)*O(1) == O(1)
     assert O(1)**O(1) == O(1)
 
+
+def test_issue_9910():
+    assert O(x*log(x) + sin(x), (x, oo)) == O(x*log(x), (x, oo))
+
+
 def test_performance_of_adding_order():
     l = list(x**i for i in range(1000))
     l.append(O(x**1001))
@@ -439,3 +454,11 @@ def test_issue_15539():
 
 def test_issue_18606():
     assert unchanged(Order, 0)
+
+
+def test_issue_22165():
+    assert O(log(x)).contains(2)
+
+
+def test_issue_9917():
+    assert O(x*sin(x) + 1, (x, oo)) == O(x, (x, oo))

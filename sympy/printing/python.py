@@ -1,5 +1,3 @@
-from __future__ import print_function, division
-
 import keyword as kw
 import sympy
 from .repr import ReprPrinter
@@ -14,7 +12,7 @@ class PythonPrinter(ReprPrinter, StrPrinter):
     """A printer which converts an expression into its Python interpretation."""
 
     def __init__(self, settings=None):
-        super(PythonPrinter, self).__init__(settings)
+        super().__init__(settings)
         self.symbols = []
         self.functions = []
 
@@ -53,8 +51,14 @@ def python(expr, **settings):
     # Returning found symbols and functions
     renamings = {}
     for symbolname in printer.symbols:
-        newsymbolname = symbolname
-        # Escape symbol names that are reserved python keywords
+        # Remove curly braces from subscripted variables
+        if '{' in symbolname:
+            newsymbolname = symbolname.replace('{', '').replace('}', '')
+            renamings[sympy.Symbol(symbolname)] = newsymbolname
+        else:
+            newsymbolname = symbolname
+
+        # Escape symbol names that are reserved Python keywords
         if kw.iskeyword(newsymbolname):
             while True:
                 newsymbolname += "_"
@@ -67,7 +71,7 @@ def python(expr, **settings):
 
     for functionname in printer.functions:
         newfunctionname = functionname
-        # Escape function names that are reserved python keywords
+        # Escape function names that are reserved Python keywords
         if kw.iskeyword(newfunctionname):
             while True:
                 newfunctionname += "_"

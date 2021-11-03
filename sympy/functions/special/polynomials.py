@@ -95,7 +95,7 @@ class jacobi(OrthogonalPolynomial):
     (-1)**n*jacobi(n, b, a, x)
 
     >>> jacobi(n, a, b, 0)
-    2**(-n)*gamma(a + n + 1)*hyper((-b - n, -n), (a + 1,), -1)/(factorial(n)*gamma(a + 1))
+    gamma(a + n + 1)*hyper((-b - n, -n), (a + 1,), -1)/(2**n*factorial(n)*gamma(a + 1))
     >>> jacobi(n, a, b, 1)
     RisingFactorial(a + 1, n)/factorial(n)
 
@@ -169,7 +169,7 @@ class jacobi(OrthogonalPolynomial):
             return jacobi_poly(n, a, b, x)
 
     def fdiff(self, argindex=4):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         if argindex == 1:
             # Diff wrt n
             raise ArgumentIndexError(self, argindex)
@@ -197,7 +197,7 @@ class jacobi(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, a, b, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         # Make sure n \in N
         if n.is_negative or n.is_integer is False:
             raise ValueError("Error: n should be a non-negative integer.")
@@ -242,6 +242,17 @@ def jacobi_normalized(n, a, b, x):
 
     >>> jacobi_normalized(n, a, b, x)
     jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)/((a + b + 2*n + 1)*factorial(n)*gamma(a + b + n + 1)))
+
+    Parameters
+    ==========
+
+    n : integer degree of polynomial
+
+    a : alpha value
+
+    b : beta value
+
+    x : symbol
 
     See Also
     ========
@@ -388,7 +399,7 @@ class gegenbauer(OrthogonalPolynomial):
             return gegenbauer_poly(n, a, x)
 
     def fdiff(self, argindex=3):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         if argindex == 1:
             # Diff wrt n
             raise ArgumentIndexError(self, argindex)
@@ -410,7 +421,7 @@ class gegenbauer(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, a, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
         kern = ((-1)**k * RisingFactorial(a, n - k) * (2*x)**(n - 2*k) /
                 (factorial(k) * factorial(n - 2*k)))
@@ -441,7 +452,7 @@ class chebyshevt(OrthogonalPolynomial):
     Examples
     ========
 
-    >>> from sympy import chebyshevt, chebyshevu, diff
+    >>> from sympy import chebyshevt, diff
     >>> from sympy.abc import n,x
     >>> chebyshevt(0, x)
     1
@@ -531,7 +542,7 @@ class chebyshevt(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
         kern = binomial(n, 2*k) * (x**2 - 1)**k * x**(n - 2*k)
         return Sum(kern, (k, 0, floor(n/2)))
@@ -553,7 +564,7 @@ class chebyshevu(OrthogonalPolynomial):
     Examples
     ========
 
-    >>> from sympy import chebyshevt, chebyshevu, diff
+    >>> from sympy import chebyshevu, diff
     >>> from sympy.abc import n,x
     >>> chebyshevu(0, x)
     1
@@ -650,7 +661,7 @@ class chebyshevu(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
         kern = S.NegativeOne**k * factorial(
             n - k) * (2*x)**(n - 2*k) / (factorial(k) * factorial(n - 2*k))
@@ -845,7 +856,7 @@ class legendre(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
         kern = (-1)**k*binomial(n, k)**2*((1 + x)/2)**(n - k)*((1 - x)/2)**k
         return Sum(kern, (k, 0, n))
@@ -947,7 +958,7 @@ class assoc_legendre(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, m, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
         kern = factorial(2*n - 2*k)/(2**n*factorial(n - k)*factorial(
             k)*factorial(n - 2*k - m))*(-1)**k*x**(n - m - 2*k)
@@ -1048,7 +1059,7 @@ class hermite(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
         kern = (-1)**k / (factorial(k)*factorial(n - 2*k)) * (2*x)**(n - 2*k)
         return factorial(n)*Sum(kern, (k, 0, floor(n/2)))
@@ -1151,7 +1162,7 @@ class laguerre(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         # Make sure n \in N_0
         if n.is_negative:
             return exp(x) * self._eval_rewrite_as_polynomial(-n - 1, -x, **kwargs)
@@ -1169,7 +1180,7 @@ class assoc_laguerre(OrthogonalPolynomial):
     Examples
     ========
 
-    >>> from sympy import laguerre, assoc_laguerre, diff
+    >>> from sympy import assoc_laguerre, diff
     >>> from sympy.abc import x, n, a
     >>> assoc_laguerre(0, a, x)
     1
@@ -1255,7 +1266,7 @@ class assoc_laguerre(OrthogonalPolynomial):
                 return laguerre_poly(n, x, alpha)
 
     def fdiff(self, argindex=3):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         if argindex == 1:
             # Diff wrt n
             raise ArgumentIndexError(self, argindex)
@@ -1272,7 +1283,7 @@ class assoc_laguerre(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, alpha, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         # Make sure n \in N_0
         if n.is_negative or n.is_integer is False:
             raise ValueError("Error: n should be a non-negative integer.")

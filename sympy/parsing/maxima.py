@@ -1,7 +1,8 @@
-from __future__ import print_function, division
-
 import re
-from sympy import sympify, Sum, product, sin, cos
+from sympy.concrete.products import product
+from sympy.concrete.summations import Sum
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.trigonometric import (cos, sin)
 
 
 class MaximaHelpers:

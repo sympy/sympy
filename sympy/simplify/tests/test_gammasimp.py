@@ -1,6 +1,16 @@
-from sympy import (
-    Rational, gammasimp, factorial, gamma, binomial, multinomial, pi,
-    S, sin, exp, powsimp, sqrt, simplify, symbols, cos, rf)
+
+from sympy.core.numbers import (Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.combinatorial.factorials import (rf, binomial, factorial, multinomial)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.gamma_functions import gamma
+from sympy.simplify.gammasimp import gammasimp
+from sympy.simplify.powsimp import powsimp
+from sympy.simplify.simplify import simplify
 
 from sympy.abc import x, y
 
@@ -65,8 +75,9 @@ def test_gammasimp():
 
     # issue 9699
     assert gammasimp((x + 1)*factorial(x)/gamma(y)) == gamma(x + 2)/gamma(y)
-    assert gammasimp(rf(x + n, k)*binomial(n, k)) == gamma(n + 1)*gamma(k + n
-        + x)/(gamma(k + 1)*gamma(n + x)*gamma(-k + n + 1))
+    assert gammasimp(rf(x + n, k)*binomial(n, k)).simplify() == Piecewise(
+        (gamma(n + 1)*gamma(k + n + x)/(gamma(k + 1)*gamma(n + x)*gamma(-k + n + 1)), n > -x),
+        ((-1)**k*gamma(n + 1)*gamma(-n - x + 1)/(gamma(k + 1)*gamma(-k + n + 1)*gamma(-k - n - x + 1)), True))
 
     A, B = symbols('A B', commutative=False)
     assert gammasimp(e*B*A) == gammasimp(e)*B*A

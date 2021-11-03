@@ -1,4 +1,5 @@
-from sympy import Rational, fibonacci
+from sympy.core.numbers import Rational
+from sympy.functions.combinatorial.numbers import fibonacci
 from sympy.core import S, symbols
 from sympy.testing.pytest import raises
 from sympy.discrete.recurrences import linrec

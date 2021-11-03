@@ -1,11 +1,21 @@
-from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
-                   Symbol, Integral, integrate, pi, Dummy, Derivative,
-                   diff, I, sqrt, erf, Piecewise, Ne, symbols, Rational,
-                   And, Heaviside, S, asinh, acosh, atanh, acoth, expand,
-                   Function, jacobi, gegenbauer, chebyshevt, chebyshevu,
-                   legendre, hermite, laguerre, assoc_laguerre, uppergamma, li,
-                   Ei, Ci, Si, Chi, Shi, fresnels, fresnelc, polylog, erfi,
-                   sinh, cosh, elliptic_f, elliptic_e)
+from sympy.core.function import (Derivative, Function, diff, expand)
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.relational import Ne
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (acosh, acoth, asinh, atanh, cosh, sinh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
+from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f)
+from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, erf, erfi, fresnelc, fresnels, li)
+from sympy.functions.special.gamma_functions import uppergamma
+from sympy.functions.special.polynomials import (assoc_laguerre, chebyshevt, chebyshevu, gegenbauer, hermite, jacobi, laguerre, legendre)
+from sympy.functions.special.zeta_functions import polylog
+from sympy.integrals.integrals import (Integral, integrate)
+from sympy.logic.boolalg import And
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, integral_steps, contains_dont_know, manual_subs)
 from sympy.testing.pytest import raises, slow
@@ -84,6 +94,7 @@ def test_manualintegrate_trigonometry():
         -3*log(cos(x)) + 2*log(cos(x)**2) - 2*cos(x)**2
 
 
+@slow
 def test_manualintegrate_trigpowers():
     assert manualintegrate(sin(x)**2 * cos(x), x) == sin(x)**3 / 3
     assert manualintegrate(sin(x)**2 * cos(x) **2, x) == \
@@ -101,6 +112,7 @@ def test_manualintegrate_trigpowers():
         -cot(x)**7/7 - 2*cot(x)**5/5 - cot(x)**3/3
 
 
+@slow
 def test_manualintegrate_inversetrig():
     # atan
     assert manualintegrate(exp(x) / (1 + exp(2*x)), x) == atan(exp(x))
@@ -159,6 +171,32 @@ def test_manualintegrate_inversetrig():
         Piecewise((sqrt(1/a)*acosh(sqrt(a)*x/2), a > 0))
     assert manualintegrate(1/sqrt(-a + 4*x**2), x) == \
         Piecewise((asinh(2*x*sqrt(-1/a))/2, -a > 0), (acosh(2*x*sqrt(1/a))/2, -a < 0))
+
+    # From https://www.wikiwand.com/en/List_of_integrals_of_inverse_trigonometric_functions
+    # asin
+    assert manualintegrate(asin(x), x) == x*asin(x) + sqrt(1 - x**2)
+    assert manualintegrate(asin(a*x), x) == Piecewise(((a*x*asin(a*x) + sqrt(-a**2*x**2 + 1))/a, Ne(a, 0)), (0, True))
+    assert manualintegrate(x*asin(a*x), x) == -a*Integral(x**2/sqrt(-a**2*x**2 + 1), x)/2 + x**2*asin(a*x)/2
+    # acos
+    assert manualintegrate(acos(x), x) == x*acos(x) - sqrt(1 - x**2)
+    assert manualintegrate(acos(a*x), x) == Piecewise(((a*x*acos(a*x) - sqrt(-a**2*x**2 + 1))/a, Ne(a, 0)), (pi*x/2, True))
+    assert manualintegrate(x*acos(a*x), x) == a*Integral(x**2/sqrt(-a**2*x**2 + 1), x)/2 + x**2*acos(a*x)/2
+    # atan
+    assert manualintegrate(atan(x), x) == x*atan(x) - log(x**2 + 1)/2
+    assert manualintegrate(atan(a*x), x) == Piecewise(((a*x*atan(a*x) - log(a**2*x**2 + 1)/2)/a, Ne(a, 0)), (0, True))
+    assert manualintegrate(x*atan(a*x), x) == -a*(x/a**2 - atan(x/sqrt(a**(-2)))/(a**4*sqrt(a**(-2))))/2 + x**2*atan(a*x)/2
+    # acsc
+    assert manualintegrate(acsc(x), x) == x*acsc(x) + Integral(1/(x*sqrt(1 - 1/x**2)), x)
+    assert manualintegrate(acsc(a*x), x) == x*acsc(a*x) + Integral(1/(x*sqrt(1 - 1/(a**2*x**2))), x)/a
+    assert manualintegrate(x*acsc(a*x), x) == x**2*acsc(a*x)/2 + Integral(1/sqrt(1 - 1/(a**2*x**2)), x)/(2*a)
+    # asec
+    assert manualintegrate(asec(x), x) == x*asec(x) - Integral(1/(x*sqrt(1 - 1/x**2)), x)
+    assert manualintegrate(asec(a*x), x) == x*asec(a*x) - Integral(1/(x*sqrt(1 - 1/(a**2*x**2))), x)/a
+    assert manualintegrate(x*asec(a*x), x) == x**2*asec(a*x)/2 - Integral(1/sqrt(1 - 1/(a**2*x**2)), x)/(2*a)
+    # acot
+    assert manualintegrate(acot(x), x) == x*acot(x) + log(x**2 + 1)/2
+    assert manualintegrate(acot(a*x), x) == Piecewise(((a*x*acot(a*x) + log(a**2*x**2 + 1)/2)/a, Ne(a, 0)), (pi*x/2, True))
+    assert manualintegrate(x*acot(a*x), x) == a*(x/a**2 - atan(x/sqrt(a**(-2)))/(a**4*sqrt(a**(-2))))/2 + x**2*acot(a*x)/2
 
     # piecewise
     assert manualintegrate(1/sqrt(a-b*x**2), x) == \
@@ -287,6 +325,8 @@ def test_manualintegrate_orthogonal_poly():
             new_args[i] = t
             assert isinstance(manualintegrate(p.func(*new_args), t), Integral)
 
+
+@slow
 def test_issue_6799():
     r, x, phi = map(Symbol, 'r x phi'.split())
     n = Symbol('n', integer=True, positive=True)
@@ -391,6 +431,7 @@ def test_issue_10847_slow():
                            2*x/(x**2 + 1) + 3*atan(x) - 1/(x**2 + 1) - 3/(x + 1)
 
 
+@slow
 def test_issue_10847():
 
     assert manualintegrate(x**2 / (x**2 - c), x) == c*atan(x/sqrt(-c))/sqrt(-c) + x
@@ -456,6 +497,7 @@ def test_issue_12641():
         -2*log(cos(x) + 1) - cos(x)**2 + 2*cos(x)
 
 
+@slow
 def test_issue_13297():
     assert manualintegrate(sin(x) * cos(x)**5, x) == -cos(x)**6 / 6
 
@@ -499,10 +541,12 @@ def test_manual_subs():
     raises(ValueError, lambda: manual_subs(expr, exp(x), x, y))
 
 
+@slow
 def test_issue_15471():
     f = log(x)*cos(log(x))/x**Rational(3, 4)
     F = -128*x**Rational(1, 4)*sin(log(x))/289 + 240*x**Rational(1, 4)*cos(log(x))/289 + (16*x**Rational(1, 4)*sin(log(x))/17 + 4*x**Rational(1, 4)*cos(log(x))/17)*log(x)
     assert manualintegrate(f, x) == F and F.diff(x).equals(f)
+
 
 def test_quadratic_denom():
     f = (5*x + 2)/(3*x**2 - 2*x + 8)

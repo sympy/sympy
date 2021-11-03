@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # SymPy documentation build configuration file, created by
 # sphinx-quickstart.py on Sat Mar 22 19:34:32 2008.
@@ -28,8 +27,18 @@ sys.path = ['ext'] + sys.path
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
-              'sphinx.ext.mathjax', 'numpydoc', 'sympylive',
+              'sphinx.ext.mathjax', 'numpydoc', 'sympylive', 'sphinx_reredirects',
               'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive']
+
+redirects = {
+    "install.rst": "guides/getting_started/install.html",
+    "documentation-style-guide.rst": "guides/contributing/documentation-style-guide.html",
+    "gotchas.rst": "explanation/gotchas.html",
+    "special_topics/classification.rst": "explanation/classification.html",
+    "special_topics/finite_diff_derivatives.rst": "explanation/finite_diff_derivatives.html",
+    "special_topics/intro.rst": "explanation/index.html",
+    "special_topics/index.rst": "explanation/index.html",
+}
 
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
@@ -37,6 +46,10 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
 # Enable warnings for all bad cross references. These are turned into errors
 # with the -W flag in the Makefile.
 nitpicky = True
+
+nitpick_ignore = [
+    ('py:class', 'sympy.logic.boolalg.Boolean')
+]
 
 # To stop docstrings inheritance.
 autodoc_inherit_docstrings = False
@@ -120,7 +133,8 @@ html_static_path = ['_static']
 # using the given strftime format.
 html_last_updated_fmt = '%b %d, %Y'
 
-html_theme = 'classic'
+# was classic
+html_theme = "classic"
 
 html_logo = '_static/sympylogo.png'
 html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
@@ -174,6 +188,10 @@ latex_documents = [('index', 'sympy-%s.tex' % release, 'SymPy Documentation',
 latex_elements = {
     'babel':     '',
     'fontenc': r'''
+% Define version of \LaTeX that is usable in math mode
+\let\OldLaTeX\LaTeX
+\renewcommand{\LaTeX}{\text{\OldLaTeX}}
+
 \usepackage{bm}
 \usepackage{amssymb}
 \usepackage{fontspec}
@@ -187,8 +205,6 @@ latex_elements = {
     'inputenc':  '',
     'utf8extra': '',
     'preamble':  r'''
-% redefine \LaTeX to be usable in math mode
-\expandafter\def\expandafter\LaTeX\expandafter{\expandafter\text\expandafter{\LaTeX}}
 '''
 }
 
@@ -229,7 +245,7 @@ graphviz_output_format = 'svg'
 commit_hash_filepath = '../commit_hash.txt'
 commit_hash = None
 if os.path.isfile(commit_hash_filepath):
-    with open(commit_hash_filepath, 'r') as f:
+    with open(commit_hash_filepath) as f:
         commit_hash = f.readline()
 
 # Get commit hash from the external file.

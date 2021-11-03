@@ -1,10 +1,18 @@
-from sympy import (
-    adjoint, conjugate, DiracDelta, Heaviside, nan, pi, sign, sqrt,
-    symbols, transpose, Symbol, Piecewise, I, S, Eq, Ne, oo,
-    SingularityFunction, signsimp
-)
+from sympy.core.numbers import (I, nan, oo, pi)
+from sympy.core.relational import (Eq, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (adjoint, conjugate, sign, transpose)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.delta_functions import (DiracDelta, Heaviside)
+from sympy.functions.special.singularity_functions import SingularityFunction
+from sympy.simplify.simplify import signsimp
+
 
 from sympy.testing.pytest import raises, warns_deprecated_sympy
+
+from sympy.core.expr import unchanged
 
 from sympy.core.function import ArgumentIndexError
 
@@ -80,19 +88,22 @@ def test_DiracDelta():
 
 
 def test_heaviside():
-    assert Heaviside(0).func == Heaviside
     assert Heaviside(-5) == 0
     assert Heaviside(1) == 1
-    assert Heaviside(nan) is nan
+    assert Heaviside(0) == S.Half
 
     assert Heaviside(0, x) == x
-    assert Heaviside(0, nan) is nan
-    assert Heaviside(x, None) == Heaviside(x)
-    assert Heaviside(0, None) == Heaviside(0)
+    assert unchanged(Heaviside,x, nan)
+    assert Heaviside(0, nan) == nan
 
-    # we do not want None and Heaviside(0) in the args:
-    assert Heaviside(x, H0=None).args == (x,)
-    assert Heaviside(x, H0=Heaviside(0)).args == (x,)
+    h0  = Heaviside(x, 0)
+    h12 = Heaviside(x, S.Half)
+    h1  = Heaviside(x, 1)
+
+    assert h0.args == h0.pargs == (x, 0)
+    assert h1.args == h1.pargs == (x, 1)
+    assert h12.args == (x, S.Half)
+    assert h12.pargs == (x,) # default 1/2 suppressed
 
     assert adjoint(Heaviside(x)) == Heaviside(x)
     assert adjoint(Heaviside(x - y)) == Heaviside(x - y)
@@ -122,6 +133,8 @@ def test_rewrite():
         Piecewise((0, x <= 0), (1, x > 0)))
     assert Heaviside(x, 1).rewrite(Piecewise) == (
         Piecewise((0, x < 0), (1, x >= 0)))
+    assert Heaviside(x, nan).rewrite(Piecewise) == (
+        Piecewise((0, x < 0), (nan, Eq(x, 0)), (1, x > 0)))
 
     assert Heaviside(x).rewrite(sign) == \
         Heaviside(x, H0=Heaviside(0)).rewrite(sign) == \
@@ -153,13 +166,4 @@ def test_rewrite():
     assert Heaviside(x).rewrite(SingularityFunction) == SingularityFunction(x, 0, 0)
     assert 5*x*y*Heaviside(y + 1).rewrite(SingularityFunction) == 5*x*y*SingularityFunction(y, -1, 0)
     assert ((x - 3)**3*Heaviside(x - 3)).rewrite(SingularityFunction) == (x - 3)**3*SingularityFunction(x, 3, 0)
-    assert Heaviside(0).rewrite(SingularityFunction) == SingularityFunction(0, 0, 0)
-
-def test_issue_15923():
-    x = Symbol('x', real=True)
-    assert Heaviside(x).rewrite(Piecewise, H0=0) == (
-        Piecewise((0, x <= 0), (1, True)))
-    assert Heaviside(x).rewrite(Piecewise, H0=1) == (
-        Piecewise((0, x < 0), (1, True)))
-    assert Heaviside(x).rewrite(Piecewise, H0=S.Half) == (
-        Piecewise((0, x < 0), (S.Half, Eq(x, 0)), (1, x > 0)))
+    assert Heaviside(0).rewrite(SingularityFunction) == S.Half

@@ -1,7 +1,7 @@
 from sympy.unify.core import Compound, Variable, CondVariable, allcombinations
 from sympy.unify import core
 
-a,b,c = 'abc'
+a,b,c = 'a', 'b', 'c'
 w,x,y,z = map(Variable, 'wxyz')
 
 C = Compound
@@ -50,17 +50,17 @@ def test_commutative():
 
 def _test_combinations_assoc():
     assert set(allcombinations((1,2,3), (a,b), True)) == \
-        set(((((1, 2), (3,)), (a, b)), (((1,), (2, 3)), (a, b))))
+        {(((1, 2), (3,)), (a, b)), (((1,), (2, 3)), (a, b))}
 
 def _test_combinations_comm():
     assert set(allcombinations((1,2,3), (a,b), None)) == \
-        set(((((1,), (2, 3)), ('a', 'b')), (((2,), (3, 1)), ('a', 'b')),
+        {(((1,), (2, 3)), ('a', 'b')), (((2,), (3, 1)), ('a', 'b')),
              (((3,), (1, 2)), ('a', 'b')), (((1, 2), (3,)), ('a', 'b')),
-             (((2, 3), (1,)), ('a', 'b')), (((3, 1), (2,)), ('a', 'b'))))
+             (((2, 3), (1,)), ('a', 'b')), (((3, 1), (2,)), ('a', 'b'))}
 
 def test_allcombinations():
     assert set(allcombinations((1,2), (1,2), 'commutative')) ==\
-        set(((((1,),(2,)), ((1,),(2,))), (((1,),(2,)), ((2,),(1,)))))
+        {(((1,),(2,)), ((1,),(2,))), (((1,),(2,)), ((2,),(1,)))}
 
 
 def test_commutativity():

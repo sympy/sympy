@@ -1,9 +1,13 @@
 """ Riemann zeta and related function. """
 
+from sympy.core.add import Add
 from sympy.core import Function, S, sympify, pi, I
-from sympy.core.function import ArgumentIndexError
+from sympy.core.function import ArgumentIndexError, expand_mul
+from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
-from sympy.functions.elementary.exponential import log, exp_polar
+from sympy.functions.elementary.complexes import re, unpolarify, Abs, polar_lift
+from sympy.functions.elementary.exponential import log, exp_polar, exp
+from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 
 ###############################################################################
@@ -76,7 +80,7 @@ class lerchphi(Function):
     reduces to a sum of Hurwitz zeta functions:
 
     >>> expand_func(lerchphi(-1, s, a))
-    2**(-s)*zeta(s, a/2) - 2**(-s)*zeta(s, a/2 + 1/2)
+    zeta(s, a/2)/2**s - zeta(s, a/2 + 1/2)/2**s
 
     If $a=1$, the Lerch transcendent reduces to the polylogarithm:
 
@@ -118,7 +122,7 @@ class lerchphi(Function):
     """
 
     def _eval_expand_func(self, **hints):
-        from sympy import exp, I, floor, Add, Poly, Dummy, exp_polar, unpolarify
+        from sympy.polys.polytools import Poly
         z, s, a = self.args
         if z == 1:
             return zeta(s, a)
@@ -320,8 +324,6 @@ class polylog(Function):
                 return z/(1 - z)
 
         # polylog is branched, but not over the unit disk
-        from sympy.functions.elementary.complexes import (Abs, unpolarify,
-                                                          polar_lift)
         if z.has(exp_polar, polar_lift) and (zone or (Abs(z) <= S.One) == True):
             return cls(s, unpolarify(z))
 
@@ -335,7 +337,6 @@ class polylog(Function):
         return z*lerchphi(z, s, 1)
 
     def _eval_expand_func(self, **hints):
-        from sympy import log, expand_mul, Dummy
         s, z = self.args
         if s == 1:
             return -log(1 - z)
@@ -351,6 +352,39 @@ class polylog(Function):
         z = self.args[1]
         if z.is_zero:
             return True
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.functions.elementary.integers import ceiling
+        from sympy.series.order import Order
+        nu, z = self.args
+
+        z0 = z.subs(x, 0)
+        if z0 is S.NaN:
+            z0 = z.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+
+        if z0.is_zero:
+            # In case of powers less than 1, number of terms need to be computed
+            # separately to avoid repeated callings of _eval_nseries with wrong n
+            try:
+                _, exp = z.leadterm(x)
+            except (ValueError, NotImplementedError):
+                return self
+
+            if exp.is_positive:
+                newn = ceiling(n/exp)
+                o = Order(x**n, x)
+                r = z._eval_nseries(x, n, logx, cdir).removeO()
+                if r is S.Zero:
+                    return o
+
+                term = r
+                s = [term]
+                for k in range(2, newn):
+                    term *= r
+                    s.append(term/k**nu)
+                return Add(*s) + o
+
+        return super(polylog, self)._eval_nseries(x, n, logx, cdir)
 
 ###############################################################################
 ###################### HURWITZ GENERALIZED ZETA FUNCTION ######################
@@ -580,6 +614,44 @@ class dirichlet_eta(Function):
     def _eval_rewrite_as_zeta(self, s, **kwargs):
         return (1 - 2**(1 - s)) * zeta(s)
 
+
+class riemann_xi(Function):
+    r"""
+    Riemann Xi function.
+
+    Examples
+    ========
+
+    The Riemann Xi function is closely related to the Riemann zeta function.
+    The zeros of Riemann Xi function are precisely the non-trivial zeros
+    of the zeta function.
+
+    >>> from sympy import riemann_xi, zeta
+    >>> from sympy.abc import s
+    >>> riemann_xi(s).rewrite(zeta)
+    s*(s - 1)*gamma(s/2)*zeta(s)/(2*pi**(s/2))
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Riemann_Xi_function
+
+    """
+
+
+    @classmethod
+    def eval(cls, s):
+        from sympy.functions.special.gamma_functions import gamma
+        z = zeta(s)
+        if s in (S.Zero, S.One):
+            return S.Half
+
+        if not isinstance(z, zeta):
+            return s*(s - 1)*gamma(s/2)*z/(2*pi**(s/2))
+
+    def _eval_rewrite_as_zeta(self, s, **kwargs):
+        from sympy.functions.special.gamma_functions import gamma
+        return s*(s - 1)*gamma(s/2)*zeta(s)/(2*pi**(s/2))
 
 class stieltjes(Function):
     r"""

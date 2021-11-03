@@ -1,13 +1,15 @@
-from __future__ import print_function, division
-
 from collections import defaultdict
+from functools import reduce
 
-from sympy.core import (sympify, Basic, S, Expr, expand_mul, factor_terms,
-    Mul, Dummy, igcd, FunctionClass, Add, symbols, Wild, expand)
+from sympy.core import (sympify, Basic, S, Expr, factor_terms,
+                        Mul, Add, bottom_up)
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import reduce, iterable, SYMPY_INTS
-from sympy.core.function import count_ops, _mexpand
-from sympy.core.numbers import I, Integer
+from sympy.core.function import (count_ops, _mexpand, FunctionClass, expand,
+                                 expand_mul, Derivative)
+from sympy.core.numbers import I, Integer, igcd
+from sympy.core.sorting import _nodes
+from sympy.core.symbol import Dummy, symbols, Wild
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
@@ -18,14 +20,17 @@ from sympy.polys.polytools import groebner
 from sympy.simplify.cse_main import cse
 from sympy.strategies.core import identity
 from sympy.strategies.tree import greedy
+from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
-
 
 
 def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
                       polynomial=False):
     """
     Simplify trigonometric expressions using a groebner basis algorithm.
+
+    Explanation
+    ===========
 
     This routine takes a fraction involving trigonometric or hyperbolic
     expressions, and tries to simplify it. The primary metric is the
@@ -220,7 +225,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
 
     def build_ideal(x, terms):
         """
-        Build generators for our ideal. Terms is an iterable with elements of
+        Build generators for our ideal. ``Terms`` is an iterable with elements of
         the form (fn, coeff), indicating that we have a generator fn(coeff*x).
 
         If any of the terms is trigonometric, sin(x) and cos(x) are guaranteed
@@ -323,7 +328,7 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
             x = gcd*Mul(*key)
             r = build_ideal(x, terms)
             res.extend(r)
-            newgens.extend(set(fn(v*x) for fn, v in terms))
+            newgens.extend({fn(v*x) for fn, v in terms})
 
         # Add generators for compound expressions from iterables
         for fn, args in iterables:
@@ -425,8 +430,8 @@ def trigsimp(expr, **opts):
     """
     reduces expression by using known trig identities
 
-    Notes
-    =====
+    Explanation
+    ===========
 
     method:
     - Determine the method to use. Valid choices are 'matching' (default),
@@ -444,7 +449,7 @@ def trigsimp(expr, **opts):
     ========
 
     >>> from sympy import trigsimp, sin, cos, log
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
     >>> trigsimp(e)
     2
@@ -524,7 +529,6 @@ def exptrigsimp(expr):
     exp(-z)
     """
     from sympy.simplify.fu import hyper_as_trig, TR2i
-    from sympy.simplify.simplify import bottom_up
 
     def exp_trig(e):
         # select the better of e, and e rewritten in terms of exp or trig
@@ -548,13 +552,13 @@ def exptrigsimp(expr):
         rvd = rv.as_powers_dict()
         newd = rvd.copy()
 
-        def signlog(expr, sign=1):
+        def signlog(expr, sign=S.One):
             if expr is S.Exp1:
-                return sign, 1
-            elif isinstance(expr, exp):
-                return sign, expr.args[0]
-            elif sign == 1:
-                return signlog(-expr, sign=-1)
+                return sign, S.One
+            elif isinstance(expr, exp) or (expr.is_Pow and expr.base == S.Exp1):
+                return sign, expr.exp
+            elif sign is S.One:
+                return signlog(-expr, sign=-S.One)
             else:
                 return None, None
 
@@ -604,9 +608,9 @@ def exptrigsimp(expr):
 
 #-------------------- the old trigsimp routines ---------------------
 
-def trigsimp_old(expr, **opts):
+def trigsimp_old(expr, *, first=True, **opts):
     """
-    reduces expression by using known trig identities
+    Reduces expression by using known trig identities.
 
     Notes
     =====
@@ -638,8 +642,8 @@ def trigsimp_old(expr, **opts):
     Examples
     ========
 
-    >>> from sympy import trigsimp, sin, cos, log, cosh, sinh, tan, cot
-    >>> from sympy.abc import x, y
+    >>> from sympy import trigsimp, sin, cos, log, cot
+    >>> from sympy.abc import x
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
     >>> trigsimp(e, old=True)
     2
@@ -663,7 +667,6 @@ def trigsimp_old(expr, **opts):
 
     """
     old = expr
-    first = opts.pop('first', True)
     if first:
         if not expr.has(*_trigs):
             return expr
@@ -1066,7 +1069,7 @@ def __trigsimp(expr, deep=False):
 #------------------- end of old trigsimp routines --------------------
 
 
-def futrig(e, **kwargs):
+def futrig(e, *, hyper=True, **kwargs):
     """Return simplified ``e`` using Fu-like transformations.
     This is not the "Fu" algorithm. This is called by default
     from ``trigsimp``. By default, hyperbolics subexpressions
@@ -1087,7 +1090,6 @@ def futrig(e, **kwargs):
 
     """
     from sympy.simplify.fu import hyper_as_trig
-    from sympy.simplify.simplify import bottom_up
 
     e = sympify(e)
 
@@ -1098,11 +1100,11 @@ def futrig(e, **kwargs):
         return e
 
     old = e
-    e = bottom_up(e, lambda x: _futrig(x, **kwargs))
+    e = bottom_up(e, _futrig)
 
-    if kwargs.pop('hyper', True) and e.has(HyperbolicFunction):
+    if hyper and e.has(HyperbolicFunction):
         e, f = hyper_as_trig(e)
-        e = f(_futrig(e))
+        e = f(bottom_up(e, _futrig))
 
     if e != old and e.is_Mul and e.args[0].is_Rational:
         # redistribute leading coeff on 2-arg Add
@@ -1110,13 +1112,12 @@ def futrig(e, **kwargs):
     return e
 
 
-def _futrig(e, **kwargs):
+def _futrig(e):
     """Helper for futrig."""
     from sympy.simplify.fu import (
         TR1, TR2, TR3, TR2i, TR10, L, TR10i,
         TR8, TR6, TR15, TR16, TR111, TR5, TRmorrie, TR11, _TR11, TR14, TR22,
         TR12)
-    from sympy.core.compatibility import _nodes
 
     if not e.has(TrigonometricFunction):
         return e
@@ -1177,7 +1178,6 @@ def _futrig(e, **kwargs):
 def _is_Expr(e):
     """_eapply helper to tell whether ``e`` and all its args
     are Exprs."""
-    from sympy import Derivative
     if isinstance(e, Derivative):
         return _is_Expr(e.expr)
     if not isinstance(e, Expr):

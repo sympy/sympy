@@ -1,28 +1,25 @@
 from sympy.concrete.products import Product
+from sympy.core import EulerGamma
 from sympy.core.expr import unchanged
-from sympy.core.function import ArgumentIndexError, expand_func
+from sympy.core.function import expand_func, ArgumentIndexError
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
-from sympy.core.numbers import (EulerGamma, Float, I, Rational, nan,
-    oo, pi, zoo)
-EulerGamma = EulerGamma()  # no EulerGamma = S.EulerGamma in numbers
+from sympy.core.numbers import (oo, nan, Rational, pi, I, Float, zoo)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import (Dummy, Symbol, symbols)
-from sympy.functions.combinatorial.factorials import (
-    ff, rf, binomial, factorial, factorial2,
-    multinomial)
-from sympy.functions.combinatorial.factorials import subfactorial
+from sympy.core.symbol import Symbol, symbols, Dummy
+from sympy.functions.combinatorial.factorials import (subfactorial,
+    binomial, factorial2, ff, factorial, rf, multinomial)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
-from sympy.functions.special.gamma_functions import (
-    gamma, loggamma, polygamma, uppergamma)
+from sympy.functions.special.gamma_functions import (gamma, uppergamma,
+    polygamma, loggamma)
 from sympy.polys.polytools import Poly
 from sympy.series.order import O
 from sympy.sets.fancysets import Range
 from sympy.simplify.simplify import simplify
-from sympy.testing.pytest import XFAIL, raises, slow
+from sympy.testing.pytest import raises, XFAIL, slow
 from sympy.utilities.iterables import cartes
 
 #Solves and Fixes Issue #10388 - This is the updated test for the same solved issue
@@ -84,13 +81,38 @@ def test_rf_eval_apply():
     assert rf(n, m + pi).is_integer is False
     assert rf(pi, m).is_integer is False
 
+    def check(x, k, o, n):
+        a, b = Dummy(), Dummy()
+        r = lambda x, k: o(a, b).rewrite(n).subs({a:x,b:k})
+        for i in range(-5,5):
+          for j in range(-5,5):
+              assert o(i, j) == r(i, j), (o, n, i, j)
+    check(x, k, rf, ff)
+    check(x, k, rf, binomial)
+    check(n, k, rf, factorial)
+    check(x, y, rf, factorial)
+    check(x, y, rf, binomial)
+
+    assert rf(5, k).rewrite(gamma) == gamma(k + 5)/24
+    assert rf(5, k).rewrite(factorial) == factorial(k + 4)/24
+
     assert rf(x, k).rewrite(ff) == ff(x + k - 1, k)
+    assert rf(x, y).rewrite(ff) == ff(x + y - 1, y)
+
+    assert rf(x, k).rewrite(gamma) == Piecewise(
+        (gamma(k + x)/gamma(x), x > 0),
+        ((-1)**k*gamma(1 - x)/gamma(-k - x + 1), True))
+    assert rf(x, y).rewrite(gamma) == Piecewise(
+        (gamma(x + y)/gamma(x), x > 0),
+        ((-1)**y*gamma(1 - x)/gamma(-x - y + 1), True))
+
     assert rf(x, k).rewrite(binomial) == factorial(k)*binomial(x + k - 1, k)
-    assert rf(n, k).rewrite(factorial) == \
-        factorial(n + k - 1) / factorial(n - 1)
-    assert rf(x, y).rewrite(factorial) == rf(x, y)
     assert rf(x, y).rewrite(binomial) == rf(x, y)
-    assert rf(x, y).rewrite(gamma) == gamma(x + y)/gamma(x)
+
+    assert rf(n, k).rewrite(factorial) == Piecewise(
+        (factorial(k + n - 1)/factorial(n - 1), n > 0),
+        ((-1)**k*factorial(-n)/factorial(-k - n), True))
+    assert rf(x, y).rewrite(factorial) == rf(x, y)
 
     import random
     from mpmath import rf as mpmath_rf
@@ -153,9 +175,28 @@ def test_ff_eval_apply():
     assert isinstance(ff(x, x), ff)
     assert ff(n, n) == factorial(n)
 
+    def check(x, k, o, n):
+        a, b = Dummy(), Dummy()
+        r = lambda x, k: o(a, b).rewrite(n).subs({a:x,b:k})
+        for i in range(-5,5):
+          for j in range(-5,5):
+              assert o(i, j) == r(i, j), (o, n)
+    check(x, k, ff, rf)
+    check(x, k, ff, gamma)
+    check(n, k, ff, factorial)
+    check(x, k, ff, binomial)
+    check(x, y, ff, factorial)
+    check(x, y, ff, binomial)
+
     assert ff(x, k).rewrite(rf) == rf(x - k + 1, k)
-    assert ff(x, k).rewrite(gamma) == (-1)**k*gamma(k - x) / gamma(-x)
-    assert ff(n, k).rewrite(factorial) == factorial(n) / factorial(n - k)
+    assert ff(x, k).rewrite(gamma) == Piecewise(
+        (gamma(x + 1)/gamma(-k + x + 1), x >= 0),
+        ((-1)**k*gamma(k - x)/gamma(-x), True))
+    assert ff(5, k).rewrite(gamma) == 120/gamma(6 - k)
+    assert ff(n, k).rewrite(factorial) == Piecewise(
+        (factorial(n)/factorial(-k + n), n >= 0),
+        ((-1)**k*factorial(k - n - 1)/factorial(-n - 1), True))
+    assert ff(5, k).rewrite(factorial) == 120/factorial(5 - k)
     assert ff(x, k).rewrite(binomial) == factorial(k) * binomial(x, k)
     assert ff(x, y).rewrite(factorial) == ff(x, y)
     assert ff(x, y).rewrite(binomial) == ff(x, y)
@@ -185,7 +226,7 @@ def test_rf_ff_eval_hiprec():
 
 
 def test_rf_lambdify_mpmath():
-    from sympy import lambdify
+    from sympy.utilities.lambdify import lambdify
     x, y = symbols('x,y')
     f = lambdify((x,y), rf(x, y), 'mpmath')
     maple = Float('34.007346127440197')
@@ -399,7 +440,7 @@ def test_binomial_fail2():
 @XFAIL
 def test_binomial_fail3():
     i, j = symbols('i j', integer=True, zero=False)
-    # gives None but should be Tru
+    # gives None but should be True
     assert binomial(i, j).equals(
         binomial(i - 1, j - 1) + binomial(i - 1, j))
 
@@ -443,7 +484,7 @@ def test_binomial():
     assert binomial(x, 1.) == binomial(x, x - 1.) == x
     assert binomial(x + 1, x) == x + 1
 
-    assert unchanged(binomial, x, -1)
+    assert unchanged(binomial, x, -1, True)
     assert binomial(-1 + nz, -1) == 0
     assert binomial(v, v + i) == 0
     assert binomial(nt, nt + 1) == 0
@@ -451,16 +492,23 @@ def test_binomial():
 
     assert unchanged(binomial, kp, -kn)
     assert binomial(kp, 2*kp) == 0
-    assert unchanged(binomial, n, u)
-    assert unchanged(binomial, kp, u)
+    assert binomial(n, u) == 0
+    assert unchanged(binomial, n, u, True)
+    assert binomial(kp, u) == 0
+    assert unchanged(binomial, kp, u, True)
     assert unchanged(binomial, n, p)
     assert unchanged(binomial, n, k)
     assert unchanged(binomial, n, n + p)
     assert unchanged(binomial, kn, x)
-    assert unchanged(binomial, x, kn - 1)
+    assert unchanged(binomial, x, kn - 1, True)
+    assert binomial(x, kn - 1) == 0
     assert unchanged(binomial, u, -u)
-    assert unchanged(binomial, u, 2*u)
-    assert unchanged(binomial, 2*u, u)
+    assert binomial(u, 2*u) == 0
+    assert binomial(u, u, True) == 1
+    assert binomial(u, u) == 0
+    assert unchanged(binomial, u, 2*u, True)
+    assert unchanged(binomial, 2*u, u, True)
+    assert binomial(2*u, u) == 0
     assert unchanged(binomial, v, v + p)
 
     assert unchanged(binomial, n, 3)
@@ -510,7 +558,8 @@ def test_binomial():
     assert binomial(4321, 51) == 124595639629264868916081001263541480185227731958274383287107643816863897851139048158022599533438936036467601690983780576
 
     assert binomial(a, b).is_nonnegative is True
-    assert binomial(kne, kne - 1).is_zero is False
+    assert binomial(kne, kne - 1, True).is_zero is False
+    assert binomial(kne, kne - 1).is_zero is True
     assert binomial(kne, kne - 2).is_nonnegative is True
     assert binomial(kne, kne - 3, True).is_nonnegative is False
     assert binomial(-2*kp, -4*kp - 1, True).is_nonnegative is False
@@ -530,9 +579,11 @@ def test_binomial():
     assert binomial(Rational(13, 2), -10) == 0
     assert binomial(-49, -51, True) == 1225
 
-    assert binomial(19, Rational(-7, 2)) == S(-68719476736)/(911337863661225*pi)
+    assert binomial(19, Rational(-7, 2), True) == S(-68719476736)/(911337863661225*pi)
+    assert binomial(19, Rational(-7, 2)) == 0
     assert binomial(0, Rational(3, 2)) == S(-2)/(3*pi)
-    assert binomial(-3, Rational(-7, 2)) is zoo
+    assert binomial(-3, Rational(-7, 2), True) is zoo
+    assert binomial(-3, Rational(-7, 2)) == 0
     assert binomial(kn, kt) is zoo
 
     assert binomial(nt, kt).func == binomial
@@ -543,19 +594,19 @@ def test_binomial():
         nt + 1)/(15*sqrt(pi)*gamma(nt - Rational(3, 2)))
     assert binomial(nr, Rational(5, 2)).rewrite(gamma
         ) == 8*gamma(nr + 1)/(15*sqrt(pi)*gamma(nr - Rational(3, 2)))
-    assert binomial(Rational(20, 3), Rational(-5, 4)
+    assert binomial(Rational(20, 3), Rational(-5, 4), True
         ).rewrite(gamma) == gamma(Rational(23, 3)
         )/(gamma(Rational(-1, 4))*gamma(Rational(107, 12)))
-    assert binomial(Rational(19, 2), Rational(-7, 2)
+    assert binomial(Rational(19, 2), Rational(-7, 2), True
         ).rewrite(gamma) == Rational(-1615, 8388608)
-    assert binomial(Rational(-13, 5), Rational(-7, 8)
+    assert binomial(Rational(-13, 5), Rational(-7, 8), True
         ).rewrite(gamma) == gamma(Rational(-8, 5))/(gamma(Rational(-29, 40))*gamma(Rational(1, 8)))
-    assert binomial(Rational(-19, 8), Rational(-13, 5)
+    assert binomial(Rational(-19, 8), Rational(-13, 5), True
         ).rewrite(gamma) == gamma(Rational(-11, 8)
         )/(gamma(Rational(-8, 5))*gamma(Rational(49, 40)))
 
     # binomial for complexes
-    assert binomial(I, Rational(-89, 8)).rewrite(gamma
+    assert binomial(I, Rational(-89, 8), True).rewrite(gamma
         ) == gamma(1 + I)/(gamma(Rational(-81, 8)
         )*gamma(Rational(97, 8) + I))
     assert binomial(I, 2*I).rewrite(gamma
@@ -721,10 +772,17 @@ def test_binomial_rewrite():
     ix = 0
     for i in range(-1, 2):
         for j in range(i - 1, i + 2):
-            assert v[ix] == binomial(i, j), [v[ix], binomial(i, j, evaluate=False)]
-            assert v[ix + 1] == binomial(i + h, j), [v[ix + 1], binomial(i + h, j, evaluate=False)]
-            assert v[ix + 2] == binomial(i, j + h), [v[ix + 2], binomial(i, j + h, evaluate=False)]
-            assert v[ix + 3] == binomial(i + h, j + h), [v[ix + 3], binomial(i + h, j + h, evaluate=False)]
+            for b in (True, False):
+                if b or j >= 0:
+                    assert v[ix] == binomial(i, j, b), [ix, v[ix], binomial(i, j, evaluate=False)]
+                    assert v[ix + 1] == binomial(i + h, j, b), [ix + 1, v[ix + 1], binomial(i + h, j, evaluate=False)]
+                    assert v[ix + 2] == binomial(i, j + h, b), [ix + 2, v[ix + 2], binomial(i, j + h, evaluate=False)]
+                    assert v[ix + 3] == binomial(i + h, j + h, b), [ix + 3, v[ix + 3], binomial(i + h, j + h, evaluate=False)]
+                else:
+                    assert 0 == binomial(i, j, b)
+                    assert 0 == binomial(i + h, j, b)
+                    assert 0 == binomial(i, j + h, b)
+                    assert 0 == binomial(i + h, j + h, b)
             ix += 4
     rw = binomial(x, y, True).rewrite(Piecewise)
     # make sure that special cases produce Float
@@ -740,8 +798,8 @@ def test_binomial_rewrite():
                         rw = expand_func(u)
                     else:
                         rw = u.rewrite(F)
-                    v = binomial(x, y, True)
-                    assert Eq(rw.n(), v.n()), (rw, v, x, y, F)
+                    v = u.func(*u.args)
+                    assert Eq(rw.n(), v.n()), (u, rw, v, x, y, F)
 
 
 def test_multinomial():

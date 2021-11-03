@@ -1,8 +1,7 @@
 """Efficient functions for generating orthogonal polynomials. """
 
-from __future__ import print_function, division
 
-from sympy import Dummy
+from sympy.core.symbol import Dummy
 from sympy.polys.constructor import construct_domain
 from sympy.polys.densearith import (
     dup_mul, dup_mul_ground, dup_lshift, dup_sub, dup_add
@@ -51,7 +50,7 @@ def jacobi_poly(n, a, b, x=None, polys=False):
         (default) returns an expression.
     """
     if n < 0:
-        raise ValueError("can't generate Jacobi polynomial of degree %s" % n)
+        raise ValueError("Cannot generate Jacobi polynomial of degree %s" % n)
 
     K, v = construct_domain([a, b], field=True)
     poly = DMP(dup_jacobi(int(n), v[0], v[1], K), K)
@@ -96,7 +95,7 @@ def gegenbauer_poly(n, a, x=None, polys=False):
     """
     if n < 0:
         raise ValueError(
-            "can't generate Gegenbauer polynomial of degree %s" % n)
+            "Cannot generate Gegenbauer polynomial of degree %s" % n)
 
     K, a = construct_domain(a, field=True)
     poly = DMP(dup_gegenbauer(int(n), a, K), K)
@@ -136,7 +135,7 @@ def chebyshevt_poly(n, x=None, polys=False):
     """
     if n < 0:
         raise ValueError(
-            "can't generate 1st kind Chebyshev polynomial of degree %s" % n)
+            "Cannot generate 1st kind Chebyshev polynomial of degree %s" % n)
 
     poly = DMP(dup_chebyshevt(int(n), ZZ), ZZ)
 
@@ -175,7 +174,7 @@ def chebyshevu_poly(n, x=None, polys=False):
     """
     if n < 0:
         raise ValueError(
-            "can't generate 2nd kind Chebyshev polynomial of degree %s" % n)
+            "Cannot generate 2nd kind Chebyshev polynomial of degree %s" % n)
 
     poly = DMP(dup_chebyshevu(int(n), ZZ), ZZ)
 
@@ -217,7 +216,7 @@ def hermite_poly(n, x=None, polys=False):
         (default) returns an expression.
     """
     if n < 0:
-        raise ValueError("can't generate Hermite polynomial of degree %s" % n)
+        raise ValueError("Cannot generate Hermite polynomial of degree %s" % n)
 
     poly = DMP(dup_hermite(int(n), ZZ), ZZ)
 
@@ -257,7 +256,7 @@ def legendre_poly(n, x=None, polys=False):
         (default) returns an expression.
     """
     if n < 0:
-        raise ValueError("can't generate Legendre polynomial of degree %s" % n)
+        raise ValueError("Cannot generate Legendre polynomial of degree %s" % n)
 
     poly = DMP(dup_legendre(int(n), QQ), QQ)
 
@@ -300,7 +299,7 @@ def laguerre_poly(n, x=None, alpha=None, polys=False):
         (default) returns an expression.
     """
     if n < 0:
-        raise ValueError("can't generate Laguerre polynomial of degree %s" % n)
+        raise ValueError("Cannot generate Laguerre polynomial of degree %s" % n)
 
     if alpha is not None:
         K, alpha = construct_domain(

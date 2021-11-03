@@ -1,6 +1,6 @@
 """Fermionic quantum operators."""
 
-from sympy import Integer
+from sympy.core.numbers import Integer
 from sympy.physics.quantum import Operator
 from sympy.physics.quantum import HilbertSpace, Ket, Bra
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -106,7 +106,7 @@ class FermionOp(Operator):
         if self.is_annihilation:
             return pform
         else:
-            return pform**prettyForm(u'\N{DAGGER}')
+            return pform**prettyForm('\N{DAGGER}')
 
 
 class FermionFockKet(Ket):
@@ -121,7 +121,7 @@ class FermionFockKet(Ket):
     """
 
     def __new__(cls, n):
-        if n not in [0, 1]:
+        if n not in (0, 1):
             raise ValueError("n must be 0 or 1")
         return Ket.__new__(cls, n)
 
@@ -165,7 +165,7 @@ class FermionFockBra(Bra):
     """
 
     def __new__(cls, n):
-        if n not in [0, 1]:
+        if n not in (0, 1):
             raise ValueError("n must be 0 or 1")
         return Bra.__new__(cls, n)
 

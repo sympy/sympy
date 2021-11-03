@@ -1,14 +1,12 @@
 """
 Maple code printer
 
-The MapleCodePrinter converts single sympy expressions into single
+The MapleCodePrinter converts single SymPy expressions into single
 Maple expressions, using the functions defined in the Maple objects where possible.
 
 
 FIXME: This module is still under actively developed. Some functions may be not completed.
 """
-
-from __future__ import print_function, division
 
 from sympy.core import S
 from sympy.core.numbers import Integer, IntegerConstant
@@ -17,13 +15,16 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 
 import sympy
 
-_known_func_same_name = [
+_known_func_same_name = (
     'sin', 'cos', 'tan', 'sec', 'csc', 'cot', 'sinh', 'cosh', 'tanh', 'sech',
-    'csch', 'coth', 'exp', 'floor', 'factorial'
-]
+    'csch', 'coth', 'exp', 'floor', 'factorial', 'bernoulli',  'euler',
+    'fibonacci', 'gcd', 'lcm', 'conjugate', 'Ci', 'Chi', 'Ei', 'Li', 'Si', 'Shi',
+    'erf', 'erfc', 'harmonic', 'LambertW',
+    'sqrt', # For automatic rewrites
+)
 
 known_functions = {
-    # Sympy -> Maple
+    # SymPy -> Maple
     'Abs': 'abs',
     'log': 'ln',
     'asin': 'arcsin',
@@ -39,7 +40,11 @@ known_functions = {
     'acsch': 'arccsch',
     'acoth': 'arccoth',
     'ceiling': 'ceil',
+    'Max' : 'max',
+    'Min' : 'min',
 
+    'factorial2': 'doublefactorial',
+    'RisingFactorial': 'pochhammer',
     'besseli': 'BesselI',
     'besselj': 'BesselJ',
     'besselk': 'BesselK',
@@ -47,13 +52,18 @@ known_functions = {
     'hankelh1': 'HankelH1',
     'hankelh2': 'HankelH2',
     'airyai': 'AiryAi',
-    'airybi': 'AiryBi'
+    'airybi': 'AiryBi',
+    'appellf1': 'AppellF1',
+    'fresnelc': 'FresnelC',
+    'fresnels': 'FresnelS',
+    'lerchphi' : 'LerchPhi',
 }
+
 for _func in _known_func_same_name:
     known_functions[_func] = _func
 
 number_symbols = {
-    # Sympy -> Maple
+    # SymPy -> Maple
     S.Pi: 'Pi',
     S.Exp1: 'exp(1)',
     S.Catalan: 'Catalan',
@@ -62,7 +72,7 @@ number_symbols = {
 }
 
 spec_relational_ops = {
-    # Sympy -> Maple
+    # SymPy -> Maple
     '==': '=',
     '!=': '<>'
 }
@@ -73,7 +83,7 @@ not_supported_symbol = [
 
 class MapleCodePrinter(CodePrinter):
     """
-    Printer which converts a sympy expression into a maple code.
+    Printer which converts a SymPy expression into a maple code.
     """
     printmethod = "_maple"
     language = "maple"
@@ -89,7 +99,7 @@ class MapleCodePrinter(CodePrinter):
     def __init__(self, settings=None):
         if settings is None:
             settings = dict()
-        super(MapleCodePrinter, self).__init__(settings)
+        super().__init__(settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
         self.known_functions.update(userfuncs)
@@ -98,10 +108,10 @@ class MapleCodePrinter(CodePrinter):
         return "%s;" % codestring
 
     def _get_comment(self, text):
-        return "# {0}".format(text)
+        return "# {}".format(text)
 
     def _declare_number_const(self, name, value):
-        return "{0} := {1};".format(name,
+        return "{} := {};".format(name,
                                     value.evalf(self._settings['precision']))
 
     def _format_code(self, lines):
@@ -122,9 +132,9 @@ class MapleCodePrinter(CodePrinter):
         PREC = precedence(expr)
         if expr.exp == -1:
             return '1/%s' % (self.parenthesize(expr.base, PREC))
-        elif expr.exp == 0.5 or expr.exp == S(1) / 2:
+        elif expr.exp in (0.5, S.Half):
             return 'sqrt(%s)' % self._print(expr.base)
-        elif expr.exp == -0.5 or expr.exp == -S(1) / 2:
+        elif expr.exp in (-0.5, -S.Half):
             return '1/sqrt(%s)' % self._print(expr.base)
         else:
             return '{base}^{exp}'.format(
@@ -186,7 +196,7 @@ class MapleCodePrinter(CodePrinter):
         return 'undefined'
 
     def _get_matrix(self, expr, sparse=False):
-        if expr.cols == 0 or expr.rows == 0:
+        if S.Zero in expr.shape:
             _strM = 'Matrix([], storage = {storage})'.format(
                 storage='sparse' if sparse else 'rectangular')
         else:
@@ -204,21 +214,11 @@ class MapleCodePrinter(CodePrinter):
     def _print_MatrixBase(self, expr):
         return self._get_matrix(expr, sparse=False)
 
-    def _print_SparseMatrix(self, expr):
+    def _print_SparseRepMatrix(self, expr):
         return self._get_matrix(expr, sparse=True)
 
-    _print_Matrix = \
-        _print_DenseMatrix = \
-        _print_MutableDenseMatrix = \
-        _print_ImmutableMatrix = \
-        _print_ImmutableDenseMatrix = \
-        _print_MatrixBase
-    _print_MutableSparseMatrix = \
-        _print_ImmutableSparseMatrix = \
-        _print_SparseMatrix
-
     def _print_Identity(self, expr):
-        if isinstance(expr.rows, Integer) or isinstance(expr.rows, IntegerConstant):
+        if isinstance(expr.rows, (Integer, IntegerConstant)):
             return self._print(sympy.SparseMatrix(expr))
         else:
             return "Matrix({var_size}, shape = identity)".format(var_size=self._print(expr.rows))
@@ -227,11 +227,8 @@ class MapleCodePrinter(CodePrinter):
         PREC=precedence(expr)
         _fact_list = list(expr.args)
         _const = None
-        if not (
-            isinstance(_fact_list[0], sympy.MatrixBase) or isinstance(
-            _fact_list[0], sympy.MatrixExpr) or isinstance(
-            _fact_list[0], sympy.MatrixSlice) or isinstance(
-            _fact_list[0], sympy.MatrixSymbol)):
+        if not isinstance(_fact_list[0], (sympy.MatrixBase, sympy.MatrixExpr,
+                                          sympy.MatrixSlice, sympy.MatrixSymbol)):
             _const, _fact_list = _fact_list[0], _fact_list[1:]
 
         if _const is None or _const == 1:
@@ -266,7 +263,7 @@ def maple_code(expr, assign_to=None, **settings):
     ==========
 
     expr : Expr
-        A sympy expression to be converted.
+        A SymPy expression to be converted.
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned.  Can be a string, ``Symbol``,

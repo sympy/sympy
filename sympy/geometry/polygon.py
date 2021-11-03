@@ -1,21 +1,23 @@
-from sympy.core import Expr, S, Symbol, oo, pi, sympify
-from sympy.core.compatibility import as_int, ordered
-from sympy.core.symbol import _symbol, Dummy, symbols
+from sympy.core import Expr, S, oo, pi, sympify
+from sympy.core.evalf import N
+from sympy.core.sorting import default_sort_key, ordered
+from sympy.core.symbol import _symbol, Dummy, symbols, Symbol
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan
-from sympy.geometry.exceptions import GeometryError
+from .ellipse import Circle
+from .entity import GeometryEntity, GeometrySet
+from .exceptions import GeometryError
+from .line import Line, Segment, Ray
+from .point import Point
 from sympy.logic import And
 from sympy.matrices import Matrix
-from sympy.simplify import simplify
-from sympy.utilities import default_sort_key
+from sympy.simplify.simplify import simplify
+from sympy.solvers.solvers import solve
 from sympy.utilities.iterables import has_dups, has_variety, uniq, rotate_left, least_rotation
-from sympy.utilities.misc import func_name
+from sympy.utilities.misc import as_int, func_name
 
-from .entity import GeometryEntity, GeometrySet
-from .point import Point
-from .ellipse import Circle
-from .line import Line, Segment, Ray
+from mpmath.libmp.libmpf import prec_to_dps
 
 import warnings
 
@@ -75,7 +77,7 @@ class Polygon(GeometrySet):
     Examples
     ========
 
-    >>> from sympy import Point, Polygon, pi
+    >>> from sympy import Polygon, pi
     >>> p1, p2, p3, p4, p5 = [(0, 0), (1, 0), (5, 1), (0, 1), (3, 0)]
     >>> Polygon(p1, p2, p3, p4)
     Polygon(Point2D(0, 0), Point2D(1, 0), Point2D(5, 1), Point2D(0, 1))
@@ -93,7 +95,7 @@ class Polygon(GeometrySet):
     >>> Polygon((0, 2), (2, 2), (0, 0), (2, 0)).area
     0
 
-    When the the keyword `n` is used to define the number of sides of the
+    When the keyword `n` is used to define the number of sides of the
     Polygon then a RegularPolygon is created and the other arguments are
     interpreted as center, radius and rotation. The unrotated RegularPolygon
     will always have a vertex at Point(r, 0) where `r` is the radius of the
@@ -390,14 +392,14 @@ class Polygon(GeometrySet):
         Returns
         =======
 
-        I_xx, I_yy, I_xy : number or sympy expression
+        I_xx, I_yy, I_xy : number or SymPy expression
                            I_xx, I_yy are second moment of area of a two dimensional polygon.
                            I_xy is product moment of area of a two dimensional polygon.
 
         Examples
         ========
 
-        >>> from sympy import Point, Polygon, symbols
+        >>> from sympy import Polygon, symbols
         >>> a, b = symbols('a, b')
         >>> p1, p2, p3, p4, p5 = [(0, 0), (a, 0), (a, b), (0, b), (a/3, b/3)]
         >>> rectangle = Polygon(p1, p2, p3, p4)
@@ -409,7 +411,7 @@ class Polygon(GeometrySet):
         References
         ==========
 
-        https://en.wikipedia.org/wiki/Second_moment_of_area
+        .. [1] https://en.wikipedia.org/wiki/Second_moment_of_area
 
         """
 
@@ -456,8 +458,8 @@ class Polygon(GeometrySet):
         References
         ==========
 
-        https://skyciv.com/docs/tutorials/section-tutorials/calculating-the-statical-or-first-moment-of-area-of-beam-sections/?cc=BMD
-        https://mechanicalc.com/reference/cross-sections
+        .. [1] https://skyciv.com/docs/tutorials/section-tutorials/calculating-the-statical-or-first-moment-of-area-of-beam-sections/?cc=BMD
+        .. [2] https://mechanicalc.com/reference/cross-sections
 
         Parameters
         ==========
@@ -469,7 +471,7 @@ class Polygon(GeometrySet):
         Returns
         =======
 
-        Q_x, Q_y: number or sympy expressions
+        Q_x, Q_y: number or SymPy expressions
             Q_x is the first moment of area about the x-axis
             Q_y is the first moment of area about the y-axis
             A negative sign indicates that the section modulus is
@@ -499,8 +501,6 @@ class Polygon(GeometrySet):
         h_poly = self.cut_section(h_line)
         v_poly = self.cut_section(v_line)
 
-        x_min, y_min, x_max, y_max = self.bounds
-
         poly_1 = h_poly[0] if h_poly[0].area <= h_poly[1].area else h_poly[1]
         poly_2 = v_poly[0] if v_poly[0].area <= v_poly[1].area else v_poly[1]
 
@@ -522,11 +522,6 @@ class Polygon(GeometrySet):
         plane perpendicular to the object's central axis (i.e. parallel to
         the cross-section)
 
-        References
-        ==========
-
-        https://en.wikipedia.org/wiki/Polar_moment_of_inertia
-
         Examples
         ========
 
@@ -535,6 +530,12 @@ class Polygon(GeometrySet):
         >>> rectangle = Polygon((0, 0), (a, 0), (a, b), (0, b))
         >>> rectangle.polar_second_moment_of_area()
         a**3*b/12 + a*b**3/12
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Polar_moment_of_inertia
+
         """
         second_moment = self.second_moment_of_area()
         return second_moment[0] + second_moment[1]
@@ -547,11 +548,6 @@ class Polygon(GeometrySet):
         Section modulus is a geometric property of a polygon defined as the
         ratio of second moment of area to the distance of the extreme end of
         the polygon from the centroidal axis.
-
-        References
-        ==========
-
-        https://en.wikipedia.org/wiki/Section_modulus
 
         Parameters
         ==========
@@ -580,6 +576,12 @@ class Polygon(GeometrySet):
         (a*b**2/6, a**2*b/6)
         >>> rectangle.section_modulus(Point(a/4, b/4))
         (-a*b**2/3, -a**2*b/3)
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Section_modulus
+
         """
         x_c, y_c = self.centroid
         if point is None:
@@ -718,7 +720,6 @@ class Polygon(GeometrySet):
         ========
 
         >>> from sympy import Polygon, Point
-        >>> from sympy.abc import t
         >>> p = Polygon((0, 0), (4, 0), (4, 4))
         >>> p.encloses_point(Point(2, 1))
         True
@@ -730,7 +731,7 @@ class Polygon(GeometrySet):
         References
         ==========
 
-        [1] http://paulbourke.net/geometry/polygonmesh/#insidepoly
+        .. [1] http://paulbourke.net/geometry/polygonmesh/#insidepoly
 
         """
         p = Point(p, dim=2)
@@ -811,7 +812,7 @@ class Polygon(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Polygon, S, Symbol
+        >>> from sympy import Polygon, Symbol
         >>> t = Symbol('t', real=True)
         >>> tri = Polygon((0, 0), (1, 0), (1, 1))
         >>> p = tri.arbitrary_point('t')
@@ -838,7 +839,6 @@ class Polygon(GeometrySet):
         return Piecewise(*sides)
 
     def parameter_value(self, other, t):
-        from sympy.solvers.solvers import solve
         if not isinstance(other,GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other,Point):
@@ -970,15 +970,10 @@ class Polygon(GeometrySet):
 
         ValueError: When the line does not intersect the polygon
 
-        References
-        ==========
-
-        https://github.com/sympy/sympy/wiki/A-method-to-return-a-cut-section-of-any-polygon-geometry
-
         Examples
         ========
 
-        >>> from sympy import Point, Symbol, Polygon, Line
+        >>> from sympy import Polygon, Line
         >>> a, b = 20, 10
         >>> p1, p2, p3, p4 = [(0, b), (0, 0), (a, 0), (a, b)]
         >>> rectangle = Polygon(p1, p2, p3, p4)
@@ -993,6 +988,12 @@ class Polygon(GeometrySet):
         Point2D(10, 15/2)
         >>> lower_segment.centroid
         Point2D(10, 5/2)
+
+        References
+        ==========
+
+        .. [1] https://github.com/sympy/sympy/wiki/A-method-to-return-a-cut-section-of-any-polygon-geometry
+
         """
         intersection_points = self.intersection(line)
         if not intersection_points:
@@ -1289,9 +1290,6 @@ class Polygon(GeometrySet):
         fill_color : str, optional
             Hex string for fill color. Default is "#66cc99".
         """
-
-        from sympy.core.evalf import N
-
         verts = map(N, self.vertices)
         coords = ["{},{}".format(p.x, p.y) for p in verts]
         path = "M {} L {} z".format(coords[0], " L ".join(coords[1:]))
@@ -1488,6 +1486,12 @@ class RegularPolygon(Polygon):
         obj._radius = r
         obj._rot = rot % (2*S.Pi/n) if rot.is_number else rot
         return obj
+
+    def _eval_evalf(self, prec=15, **options):
+        c, r, n, a = self.args
+        dps = prec_to_dps(prec)
+        c, r, a = [i.evalf(n=dps, **options) for i in (c, r, a)]
+        return self.func(c, r, n, a)
 
     @property
     def args(self):
@@ -1919,7 +1923,7 @@ class RegularPolygon(Polygon):
         """Override GeometryEntity.rotate to first rotate the RegularPolygon
         about its center.
 
-        >>> from sympy import Point, RegularPolygon, Polygon, pi
+        >>> from sympy import Point, RegularPolygon, pi
         >>> t = RegularPolygon(Point(1, 0), 1, 3)
         >>> t.vertices[0] # vertex on x-axis
         Point2D(2, 0)
@@ -2625,7 +2629,7 @@ class Triangle(Polygon):
         The exradius touches the side of the triangle to which it is keyed, e.g.
         the exradius touching side 2 is:
 
-        >>> from sympy.geometry import Point, Triangle, Segment2D, Point2D
+        >>> from sympy.geometry import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.exradii[t.sides[2]]
@@ -2634,8 +2638,8 @@ class Triangle(Polygon):
         References
         ==========
 
-        [1] http://mathworld.wolfram.com/Exradius.html
-        [2] http://mathworld.wolfram.com/Excircles.html
+        .. [1] http://mathworld.wolfram.com/Exradius.html
+        .. [2] http://mathworld.wolfram.com/Excircles.html
 
         """
 

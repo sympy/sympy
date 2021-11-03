@@ -1,14 +1,18 @@
 from typing import Type
 
+from sympy.core.add import Add
 from sympy.core.assumptions import StdFactKB
-from sympy.core import S, Pow, sympify
 from sympy.core.expr import AtomicExpr, Expr
-from sympy.core.compatibility import default_sort_key
-from sympy import sqrt, ImmutableMatrix as Matrix, Add
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
+from sympy.vector.basisdependent import (BasisDependentZero,
+    BasisDependent, BasisDependentMul, BasisDependentAdd)
 from sympy.vector.coordsysrect import CoordSys3D
-from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
-                                         BasisDependentMul, BasisDependentZero)
-from sympy.vector.dyadic import BaseDyadic, Dyadic, DyadicAdd
+from sympy.vector.dyadic import Dyadic, BaseDyadic, DyadicAdd
 
 
 class Vector(BasisDependent):
@@ -65,7 +69,7 @@ class Vector(BasisDependent):
         """
         Returns the dot product of this Vector, either with another
         Vector, or a Dyadic, or a Del operator.
-        If 'other' is a Vector, returns the dot product scalar (Sympy
+        If 'other' is a Vector, returns the dot product scalar (SymPy
         expression).
         If 'other' is a Dyadic, the dot product is returned as a Vector.
         If 'other' is an instance of Del, returns the directional
@@ -223,7 +227,6 @@ class Vector(BasisDependent):
         ========
 
         >>> from sympy.vector.coordsysrect import CoordSys3D
-        >>> from sympy.vector.vector import Vector, BaseVector
         >>> C = CoordSys3D('C')
         >>> i, j, k = C.base_vectors()
         >>> v1 = i + j + k
@@ -235,7 +238,7 @@ class Vector(BasisDependent):
 
         """
         if self.equals(Vector.zero):
-            return S.zero if scalar else Vector.zero
+            return S.Zero if scalar else Vector.zero
 
         if scalar:
             return self.dot(other) / self.dot(self)
@@ -389,15 +392,12 @@ class BaseVector(Vector, AtomicExpr):
     def system(self):
         return self._system
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         return self._name
 
     @property
     def free_symbols(self):
         return {self}
-
-    __repr__ = __str__
-    _sympystr = __str__
 
 
 class VectorAdd(BasisDependentAdd, Vector):
@@ -409,7 +409,7 @@ class VectorAdd(BasisDependentAdd, Vector):
         obj = BasisDependentAdd.__new__(cls, *args, **options)
         return obj
 
-    def __str__(self, printer=None):
+    def _sympystr(self, printer):
         ret_str = ''
         items = list(self.separate().items())
         items.sort(key=lambda x: x[0].__str__())
@@ -418,11 +418,8 @@ class VectorAdd(BasisDependentAdd, Vector):
             for x in base_vects:
                 if x in vect.components:
                     temp_vect = self.components[x] * x
-                    ret_str += temp_vect.__str__(printer) + " + "
+                    ret_str += printer._print(temp_vect) + " + "
         return ret_str[:-3]
-
-    __repr__ = __str__
-    _sympystr = __str__
 
 
 class VectorMul(BasisDependentMul, Vector):

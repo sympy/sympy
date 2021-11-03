@@ -1,8 +1,6 @@
-from __future__ import print_function, division
-
 import sys
 sys._running_pytest = True  # type: ignore
-from distutils.version import LooseVersion as V
+from sympy.external.importtools import version_tuple
 
 import pytest
 from sympy.core.cache import clear_cache
@@ -32,7 +30,7 @@ def pytest_report_header(config):
     s = "architecture: %s\n" % ARCH
     from sympy.core.cache import USE_CACHE
     s += "cache:        %s\n" % USE_CACHE
-    from sympy.core.compatibility import GROUND_TYPES, HAS_GMPY
+    from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
     version = ''
     if GROUND_TYPES =='gmpy':
         if HAS_GMPY == 1:
@@ -72,6 +70,6 @@ def check_disabled(request):
         pytest.skip("test requirements not met.")
     elif getattr(request.module, 'ipython', False):
         # need to check version and options for ipython tests
-        if (V(pytest.__version__) < '2.6.3' and
+        if (version_tuple(pytest.__version__) < version_tuple('2.6.3') and
             pytest.config.getvalue('-s') != 'no'):
             pytest.skip("run py.test with -s or upgrade to newer version.")

@@ -1,4 +1,9 @@
-from sympy import ratsimpmodprime, ratsimp, Rational, sqrt, pi, log, erf, GF
+from sympy.core.numbers import (Rational, pi)
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.error_functions import erf
+from sympy.polys.domains.finitefield import GF
+from sympy.simplify.ratsimp import (ratsimp, ratsimpmodprime)
 
 from sympy.abc import x, y, z, t, a, b, c, d, e
 
@@ -44,7 +49,7 @@ def test_ratsimpmodprime():
     b = x - y
     F = [x*y**5 - x - y]
     assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
-        (x**2 + x*y + x + y) / (x**2 - x*y)
+        (-x**2 - x*y - x - y) / (-x**2 + x*y)
 
     a = x + y**2 - 2
     b = x + y**2 - y - 1

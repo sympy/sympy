@@ -1,9 +1,10 @@
 from sympy.combinatorics import Permutation as Perm
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.core import Basic, Tuple
-from sympy.core.compatibility import as_int
+from sympy.core.sorting import default_sort_key
 from sympy.sets import FiniteSet
 from sympy.utilities.iterables import (minlex, unflatten, flatten)
+from sympy.utilities.misc import as_int
 
 rmul = Perm.rmul
 
@@ -11,6 +12,9 @@ rmul = Perm.rmul
 class Polyhedron(Basic):
     """
     Represents the polyhedral symmetry group (PSG).
+
+    Explanation
+    ===========
 
     The PSG is one of the symmetry groups of the Platonic solids.
     There are three polyhedral groups: the tetrahedral group
@@ -23,13 +27,17 @@ class Polyhedron(Basic):
     References
     ==========
 
-    http://mathworld.wolfram.com/PolyhedralGroup.html
+    .. [1] http://mathworld.wolfram.com/PolyhedralGroup.html
+
     """
     _edges = None
 
-    def __new__(cls, corners, faces=[], pgroup=[]):
+    def __new__(cls, corners, faces=(), pgroup=()):
         """
         The constructor of the Polyhedron group object.
+
+        Explanation
+        ===========
 
         It takes up to three parameters: the corners, faces, and
         allowed transformations.
@@ -45,9 +53,9 @@ class Polyhedron(Basic):
 
             >>> from sympy.combinatorics.polyhedron import Polyhedron
             >>> Polyhedron(list('abc'), [(1, 2, 0)]).faces
-            FiniteSet((0, 1, 2))
+            {(0, 1, 2)}
             >>> Polyhedron(list('abc'), [(1, 0, 2)]).faces
-            FiniteSet((0, 1, 2))
+            {(0, 1, 2)}
 
         The allowed transformations are entered as allowable permutations
         of the vertices for the polyhedron. Instance of Permutations
@@ -58,7 +66,7 @@ class Polyhedron(Basic):
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> from sympy.interactive import init_printing
+        >>> from sympy import init_printing
         >>> from sympy.abc import w, x, y, z
         >>> init_printing(pretty_print=False, perm_cyclic=False)
 
@@ -91,7 +99,7 @@ class Polyhedron(Basic):
         >>> tetra.size
         4
         >>> tetra.edges
-        FiniteSet((0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3))
+        {(0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3)}
         >>> tetra.corners
         (w, x, y, z)
 
@@ -256,8 +264,7 @@ class Polyhedron(Basic):
         not a proper polyhedron, but the Polyhedron class can be used to
         represent it in a way that helps to visualize the Rubik's cube.
 
-        >>> from sympy.utilities.iterables import flatten, unflatten
-        >>> from sympy import symbols
+        >>> from sympy import flatten, unflatten, symbols
         >>> from sympy.combinatorics import RubikGroup
         >>> facelets = flatten([symbols(s+'1:5') for s in 'UFRBLD'])
         >>> def show():
@@ -364,7 +371,7 @@ class Polyhedron(Basic):
 
         >>> from sympy.combinatorics.polyhedron import cube
         >>> cube.edges
-        FiniteSet((0, 1), (0, 3), (0, 4), (1, 2), (1, 5), (2, 3), (2, 6), (3, 7), (4, 5), (4, 7), (5, 6), (6, 7))
+        {(0, 1), (0, 3), (0, 4), (1, 2), (1, 5), (2, 3), (2, 6), (3, 7), (4, 5), (4, 7), (5, 6), (6, 7)}
 
         If you want to use letters or other names for the corners you
         can still use the pre-calculated faces:
@@ -379,7 +386,7 @@ class Polyhedron(Basic):
         .. [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
 
         """
-        faces = [minlex(f, directed=False, is_set=True) for f in faces]
+        faces = [minlex(f, directed=False, key=default_sort_key) for f in faces]
         corners, faces, pgroup = args = \
             [Tuple(*a) for a in (corners, faces, pgroup)]
         obj = Basic.__new__(cls, *args)
@@ -425,7 +432,6 @@ class Polyhedron(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation, Cycle
         >>> from sympy.combinatorics.polyhedron import tetrahedron
         >>> tetrahedron = tetrahedron.copy()
         >>> tetrahedron.array_form
@@ -492,7 +498,7 @@ class Polyhedron(Basic):
         >>> corners = (a, b, c)
         >>> faces = [(0, 1, 2)]
         >>> Polyhedron(corners, faces).edges
-        FiniteSet((0, 1), (0, 2), (1, 2))
+        {(0, 1), (0, 2), (1, 2)}
 
         """
         if self._edges is None:
@@ -598,6 +604,9 @@ def _pgroup_calcs():
     tetrahedron_faces, cube_faces, octahedron_faces, dodecahedron_faces,
     icosahedron_faces
 
+    Explanation
+    ===========
+
     (This author didn't find and didn't know of a better way to do it though
     there likely is such a way.)
 
@@ -666,7 +675,8 @@ def _pgroup_calcs():
     References
     ==========
 
-    http://dogschool.tripod.com/trianglegroup.html
+    .. [1] http://dogschool.tripod.com/trianglegroup.html
+
     """
     def _pgroup_of_double(polyh, ordered_faces, pgroup):
         n = len(ordered_faces[0])
@@ -687,7 +697,7 @@ def _pgroup_calcs():
             reorder = unflatten([c[j] for j in flat_faces], n)
             # make them canonical
             reorder = [tuple(map(as_int,
-                       minlex(f, directed=False, is_set=True)))
+                       minlex(f, directed=False)))
                        for f in reorder]
             # map face to vertex: the resulting list of vertices are the
             # permutation that we seek for the double

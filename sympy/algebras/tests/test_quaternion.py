@@ -1,6 +1,14 @@
-from sympy import symbols, re, im, sign, I, Abs, Symbol, \
-     cos, sin, sqrt, conjugate, log, acos, E, pi, \
-     Matrix, diff, integrate, trigsimp, S, Rational
+from sympy.core.function import diff
+from sympy.core.numbers import (E, I, Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (Abs, conjugate, im, re, sign)
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin)
+from sympy.integrals.integrals import integrate
+from sympy.matrices.dense import Matrix
+from sympy.simplify.trigsimp import trigsimp
 from sympy.algebras.quaternion import Quaternion
 from sympy.testing.pytest import raises
 
@@ -23,6 +31,31 @@ def test_quaternion_construction():
     nc = Symbol('nc', commutative=False)
     raises(ValueError, lambda: Quaternion(w, x, nc, z))
 
+
+def test_quaternion_axis_angle():
+
+    test_data = [ # axis, angle, expected_quaternion
+        ((1, 0, 0), 0, (1, 0, 0, 0)),
+        ((1, 0, 0), pi/2, (sqrt(2)/2, sqrt(2)/2, 0, 0)),
+        ((0, 1, 0), pi/2, (sqrt(2)/2, 0, sqrt(2)/2, 0)),
+        ((0, 0, 1), pi/2, (sqrt(2)/2, 0, 0, sqrt(2)/2)),
+        ((1, 0, 0), pi, (0, 1, 0, 0)),
+        ((0, 1, 0), pi, (0, 0, 1, 0)),
+        ((0, 0, 1), pi, (0, 0, 0, 1)),
+        ((1, 1, 1), pi, (0, 1/sqrt(3),1/sqrt(3),1/sqrt(3))),
+        ((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), pi*2/3, (S.Half, S.Half, S.Half, S.Half))
+    ]
+
+    for axis, angle, expected in test_data:
+        assert Quaternion.from_axis_angle(axis, angle) == Quaternion(*expected)
+
+
+def test_quaternion_axis_angle_simplification():
+    result = Quaternion.from_axis_angle((1, 2, 3), asin(4))
+    assert result.a == cos(asin(4)/2)
+    assert result.b == sqrt(14)*sin(asin(4)/2)/14
+    assert result.c == sqrt(14)*sin(asin(4)/2)/7
+    assert result.d == 3*sqrt(14)*sin(asin(4)/2)/14
 
 def test_quaternion_complex_real_addition():
     a = symbols("a", complex=True)
@@ -55,6 +88,11 @@ def test_quaternion_complex_real_addition():
     assert q1 + q0 == q1
     assert q1 - q0 == q1
     assert q1 - q1 == q0
+
+
+def test_quaternion_evalf():
+    assert Quaternion(sqrt(2), 0, 0, sqrt(3)).evalf() == Quaternion(sqrt(2).evalf(), 0, 0, sqrt(3).evalf())
+    assert Quaternion(1/sqrt(2), 0, 0, 1/sqrt(2)).evalf() == Quaternion((1/sqrt(2)).evalf(), 0, 0, (1/sqrt(2)).evalf())
 
 
 def test_quaternion_functions():

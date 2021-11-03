@@ -1,5 +1,7 @@
 from collections import defaultdict
-from sympy import S, Symbol, Tuple, Dummy
+from sympy.core.containers import Tuple
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
 
 from sympy.ntheory import n_order, is_primitive_root, is_quad_residue, \
     legendre_symbol, jacobi_symbol, totient, primerange, sqrt_mod, \

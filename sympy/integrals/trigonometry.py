@@ -12,7 +12,7 @@ from sympy.functions import binomial, sin, cos, Piecewise
 # need to use a function instead of lamda since hash of lambda changes on
 # each call to _pat_sincos
 def _integer_instance(n):
-    return isinstance(n , Integer)
+    return isinstance(n, Integer)
 
 @cacheit
 def _pat_sincos(x):
@@ -26,25 +26,32 @@ _u = Dummy('u')
 
 
 def trigintegrate(f, x, conds='piecewise'):
-    """Integrate f = Mul(trig) over x
+    """
+    Integrate f = Mul(trig) over x.
 
-       >>> from sympy import Symbol, sin, cos, tan, sec, csc, cot
-       >>> from sympy.integrals.trigonometry import trigintegrate
-       >>> from sympy.abc import x
+    Examples
+    ========
 
-       >>> trigintegrate(sin(x)*cos(x), x)
-       sin(x)**2/2
+    >>> from sympy import sin, cos, tan, sec
+    >>> from sympy.integrals.trigonometry import trigintegrate
+    >>> from sympy.abc import x
 
-       >>> trigintegrate(sin(x)**2, x)
-       x/2 - sin(x)*cos(x)/2
+    >>> trigintegrate(sin(x)*cos(x), x)
+    sin(x)**2/2
 
-       >>> trigintegrate(tan(x)*sec(x), x)
-       1/cos(x)
+    >>> trigintegrate(sin(x)**2, x)
+    x/2 - sin(x)*cos(x)/2
 
-       >>> trigintegrate(sin(x)*tan(x), x)
-       -log(sin(x) - 1)/2 + log(sin(x) + 1)/2 - sin(x)
+    >>> trigintegrate(tan(x)*sec(x), x)
+    1/cos(x)
 
-       http://en.wikibooks.org/wiki/Calculus/Integration_techniques
+    >>> trigintegrate(sin(x)*tan(x), x)
+    -log(sin(x) - 1)/2 + log(sin(x) + 1)/2 - sin(x)
+
+    References
+    ==========
+
+    .. [1] http://en.wikibooks.org/wiki/Calculus/Integration_techniques
 
     See Also
     ========
@@ -227,7 +234,7 @@ def trigintegrate(f, x, conds='piecewise'):
             if n < 0:
                 # Same as the scheme described above.
                 # the function argument to integrate in the end will
-                # be 1 , this cannot be integrated by trigintegrate.
+                # be 1, this cannot be integrated by trigintegrate.
                 # Hence use sympy.integrals.integrate.
                 res = (Rational(1, n + 1) * cos(x)**(m - 1) * sin(x)**(n + 1) +
                        Rational(m - 1, n + 1) *

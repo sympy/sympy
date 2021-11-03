@@ -1,22 +1,19 @@
-from __future__ import print_function, division
-
 from sympy.core.add import Add
-from sympy.core.compatibility import ordered
-from sympy.core.function import expand_log
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import expand_log, _mexpand
 from sympy.core.power import Pow
 from sympy.core.singleton import S
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import root
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import Poly, factor
-from sympy.core.function import _mexpand
 from sympy.simplify.simplify import separatevars
 from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import powsimp
 from sympy.solvers.solvers import solve, _invert
 from sympy.utilities.iterables import uniq
-
 
 
 def _filtered_gens(poly, symbol):
@@ -59,7 +56,6 @@ def _mostfunc(lhs, func, X=None):
 
     >>> from sympy.solvers.bivariate import _mostfunc
     >>> from sympy.functions.elementary.exponential import exp
-    >>> from sympy.testing.pytest import raises
     >>> from sympy.abc import x, y
     >>> _mostfunc(exp(x) + exp(exp(x) + 2), exp)
     exp(exp(x) + 2)
@@ -103,7 +99,6 @@ def _linab(arg, symbol):
     >>> _linab(3 + 2*exp(x), x)
     (2, 3, exp(x))
     """
-    from sympy.core.exprtools import factor_terms
     arg = factor_terms(arg.expand())
     ind, dep = arg.as_independent(symbol)
     if arg.is_Mul and dep.is_Add:
@@ -264,7 +259,7 @@ def _solve_lambert(f, symbol, gens):
         solutions for  ``2*log(-x) + log(g(x))`` since those must also
         be a solution of ``eq`` which has the same value when the ``x``
         in ``x**2`` is negated. If `g(x)` does not have even powers of
-        symbol then we don't want to replace the ``x`` there with
+        symbol then we do not want to replace the ``x`` there with
         ``-x``. So the role of the ``t`` in the expression received by
         this function is to mark where ``+/-x`` should be inserted
         before obtaining the Lambert solutions.
@@ -418,7 +413,7 @@ def _solve_lambert(f, symbol, gens):
     return list(ordered(soln))
 
 
-def bivariate_type(f, x, y, **kwargs):
+def bivariate_type(f, x, y, *, first=True):
     """Given an expression, f, 3 tests will be done to see what type
     of composite bivariate it might be, options for u(x, y) are::
 
@@ -459,7 +454,7 @@ def bivariate_type(f, x, y, **kwargs):
 
     u = Dummy('u', positive=True)
 
-    if kwargs.pop('first', True):
+    if first:
         p = Poly(f, x, y)
         f = p.as_expr()
         _x = Dummy()

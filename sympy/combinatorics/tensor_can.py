@@ -26,21 +26,21 @@ from sympy.combinatorics.util import _distribute_gens_by_base, \
 
 def dummy_sgs(dummies, sym, n):
     """
-    Return the strong generators for dummy indices
+    Return the strong generators for dummy indices.
 
     Parameters
     ==========
 
-    dummies : list of dummy indices
-        `dummies[2k], dummies[2k+1]` are paired indices
+    dummies : List of dummy indices.
+        `dummies[2k], dummies[2k+1]` are paired indices.
+        In base form, the dummy indices are always in
+        consecutive positions.
     sym : symmetry under interchange of contracted dummies::
         * None  no symmetry
         * 0     commuting
         * 1     anticommuting
 
     n : number of indices
-
-    in base form the dummy indices are always in consecutive positions
 
     Examples
     ========
@@ -73,9 +73,9 @@ def dummy_sgs(dummies, sym, n):
 
 def _min_dummies(dummies, sym, indices):
     """
-    Return list of minima of the orbits of indices in group of dummies
-    see `double_coset_can_rep` for the description of `dummies` and `sym`
-    indices is the initial list of dummy indices
+    Return list of minima of the orbits of indices in group of dummies.
+    See ``double_coset_can_rep`` for the description of ``dummies`` and ``sym``.
+    ``indices`` is the initial list of dummy indices.
 
     Examples
     ========
@@ -162,8 +162,8 @@ def transversal2coset(size, base, transversal):
 
 
 def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
-    """
-    Butler-Portugal algorithm for tensor canonicalization with dummy indices
+    r"""
+    Butler-Portugal algorithm for tensor canonicalization with dummy indices.
 
     Parameters
     ==========
@@ -227,17 +227,17 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     (the indices including both the contravariant and the covariant ones)
     can be written as
 
-    `t = T(ind[g[0]],..., ind[g[n-1]])`,
+    `t = T(ind[g[0]], \dots, ind[g[n-1]])`,
 
-    where `n= len(ind)`;
+    where `n = len(ind)`;
     `g` has size `n + 2`, the last two indices for the sign of the tensor
     (trick introduced in [4]).
 
     A slot symmetry transformation `s` is a permutation acting on the slots
-    `t -> T(ind[(g*s)[0]],..., ind[(g*s)[n-1]])`
+    `t \rightarrow T(ind[(g*s)[0]], \dots, ind[(g*s)[n-1]])`
 
     A dummy symmetry transformation acts on `ind`
-    `t -> T(ind[(d*g)[0]],..., ind[(d*g)[n-1]])`
+    `t \rightarrow T(ind[(d*g)[0]], \dots, ind[(d*g)[n-1]])`
 
     Being interested only in the transformations of the tensor under
     these symmetries, one can represent the tensor by `g`, which transforms
@@ -283,7 +283,7 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     the dummy indices themselves (d1 <-> d2).
 
     The dummy symmetry acts from the left
-    `d = [1, 0, 2, 3, 4, 5, 6, 7]`  exchange `d1 <-> -d1`
+    `d = [1, 0, 2, 3, 4, 5, 6, 7]`  exchange `d1 \leftrightarrow -d1`
     `T^{d3 d2 d1}{}_{d1 d2 d3} == T^{d3 d2}{}_{d1}{}^{d1}{}_{d2 d3}`
 
     `g=[4, 2, 0, 1, 3, 5, 6, 7]  -> [4, 2, 1, 0, 3, 5, 6, 7] = _af_rmul(d, g)`
@@ -311,38 +311,38 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     from the sign, return zero; otherwise
     choose as representative the tensor with indices
     ordered lexicographically according to `[d1, -d1, d2, -d2, d3, -d3]`
-    that is `rep = min(D*g*S) = min([d*g*s for d in D for s in S])`
+    that is ``rep = min(D*g*S) = min([d*g*s for d in D for s in S])``
 
     The indices are fixed one by one; first choose the lowest index
     for slot 0, then the lowest remaining index for slot 1, etc.
     Doing this one obtains a chain of stabilizers
 
-    `S -> S_{b0} -> S_{b0,b1} -> ...` and
-    `D -> D_{p0} -> D_{p0,p1} -> ...`
+    `S \rightarrow S_{b0} \rightarrow S_{b0,b1} \rightarrow \dots` and
+    `D \rightarrow D_{p0} \rightarrow D_{p0,p1} \rightarrow \dots`
 
-    where `[b0, b1, ...] = range(b)` is a base of the symmetric group;
+    where ``[b0, b1, ...] = range(b)`` is a base of the symmetric group;
     the strong base `b_S` of S is an ordered sublist of it;
     therefore it is sufficient to compute once the
     strong base generators of S using the Schreier-Sims algorithm;
     the stabilizers of the strong base generators are the
     strong base generators of the stabilizer subgroup.
 
-    `dbase = [p0, p1, ...]` is not in general in lexicographic order,
+    ``dbase = [p0, p1, ...]`` is not in general in lexicographic order,
     so that one must recompute the strong base generators each time;
     however this is trivial, there is no need to use the Schreier-Sims
     algorithm for D.
 
     The algorithm keeps a TAB of elements `(s_i, d_i, h_i)`
-    where `h_i = d_i*g*s_i` satisfying `h_i[j] = p_j` for `0 <= j < i`
+    where `h_i = d_i \times g \times s_i` satisfying `h_i[j] = p_j` for `0 \le j < i`
     starting from `s_0 = id, d_0 = id, h_0 = g`.
 
-    The equations `h_0[0] = p_0, h_1[1] = p_1,...` are solved in this order,
+    The equations `h_0[0] = p_0, h_1[1] = p_1, \dots` are solved in this order,
     choosing each time the lowest possible value of p_i
 
     For `j < i`
-    `d_i*g*s_i*S_{b_0,...,b_{i-1}}*b_j = D_{p_0,...,p_{i-1}}*p_j`
-    so that for dx in `D_{p_0,...,p_{i-1}}` and sx in
-    `S_{base[0],...,base[i-1]}` one has `dx*d_i*g*s_i*sx*b_j = p_j`
+    `d_i*g*s_i*S_{b_0, \dots, b_{i-1}}*b_j = D_{p_0, \dots, p_{i-1}}*p_j`
+    so that for dx in `D_{p_0,\dots,p_{i-1}}` and sx in
+    `S_{base[0], \dots, base[i-1]}` one has `dx*d_i*g*s_i*sx*b_j = p_j`
 
     Search for dx, sx such that this equation holds for `j = i`;
     it can be written as `s_i*sx*b_j = J, dx*d_i*g*J = p_j`
@@ -387,7 +387,6 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     ========
 
     >>> from sympy.combinatorics.permutations import Permutation
-    >>> from sympy.combinatorics.perm_groups import PermutationGroup
     >>> from sympy.combinatorics.tensor_can import double_coset_can_rep, get_transversals
     >>> gens = [Permutation(x) for x in [[2, 1, 0, 3, 4, 5, 7, 6], [4, 1, 2, 3, 0, 5, 7, 6]]]
     >>> base = [0, 2]
@@ -404,7 +403,7 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     g = g.array_form
     num_dummies = size - 2
     indices = list(range(num_dummies))
-    all_metrics_with_sym = all([_ is not None for _ in sym])
+    all_metrics_with_sym = not any(_ is None for _ in sym)
     num_types = len(sym)
     dumx = dummies[:]
     dumx_flat = []
@@ -538,16 +537,19 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
 
 def canonical_free(base, gens, g, num_free):
     """
-    canonicalization of a tensor with respect to free indices
+    Canonicalization of a tensor with respect to free indices
     choosing the minimum with respect to lexicographical ordering
-    in the free indices
+    in the free indices.
+
+    Explanation
+    ===========
 
     ``base``, ``gens``  BSGS for slot permutation group
     ``g``               permutation representing the tensor
     ``num_free``        number of free indices
     The indices must be ordered with first the free indices
 
-    see explanation in double_coset_can_rep
+    See explanation in double_coset_can_rep
     The algorithm is a variation of the one given in [2].
 
     Examples
@@ -650,11 +652,13 @@ def canonicalize(g, dummies, msym, *v):
       the dummy indices must come after the free indices,
       and put in order contravariant, covariant
       [d0, -d0, d1,-d1,...]
+
     msym :  symmetry of the metric(s)
         it can be an integer or a list;
         in the first case it is the symmetry of the dummy index metric;
         in the second case it is the list of the symmetries of the
         index metric for each type
+
     v : list, (base_i, gens_i, n_i, sym_i) for tensors of type `i`
 
     base_i, gens_i : BSGS for tensors of this type.
@@ -759,12 +763,12 @@ def canonicalize(g, dummies, msym, *v):
     """
     from sympy.combinatorics.testutil import canonicalize_naive
     if not isinstance(msym, list):
-        if not msym in [0, 1, None]:
+        if not msym in (0, 1, None):
             raise ValueError('msym must be 0, 1 or None')
         num_types = 1
     else:
         num_types = len(msym)
-        if not all(msymx in [0, 1, None] for msymx in msym):
+        if not all(msymx in (0, 1, None) for msymx in msym):
             raise ValueError('msym entries must be 0, 1 or None')
         if len(dummies) != num_types:
             raise ValueError(
@@ -860,7 +864,7 @@ def canonicalize(g, dummies, msym, *v):
 
 def perm_af_direct_product(gens1, gens2, signed=True):
     """
-    direct products of the generators gens1 and gens2
+    Direct products of the generators gens1 and gens2.
 
     Examples
     ========
@@ -897,23 +901,22 @@ def perm_af_direct_product(gens1, gens2, signed=True):
 
 def bsgs_direct_product(base1, gens1, base2, gens2, signed=True):
     """
-    Direct product of two BSGS
+    Direct product of two BSGS.
 
     Parameters
     ==========
 
-    base1    base of the first BSGS.
+    base1 : base of the first BSGS.
 
-    gens1    strong generating sequence of the first BSGS.
+    gens1 : strong generating sequence of the first BSGS.
 
-    base2, gens2   similarly for the second BSGS.
+    base2, gens2 : similarly for the second BSGS.
 
-    signed   flag for signed permutations.
+    signed : flag for signed permutations.
 
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.tensor_can import (get_symmetric_group_sgs, bsgs_direct_product)
     >>> base1, gens1 = get_symmetric_group_sgs(1)
     >>> base2, gens2 = get_symmetric_group_sgs(2)
@@ -939,15 +942,17 @@ def get_symmetric_group_sgs(n, antisym=False):
     """
     Return base, gens of the minimal BSGS for (anti)symmetric tensor
 
-    ``n``  rank of the tensor
+    Parameters
+    ==========
 
-    ``antisym = False`` symmetric tensor
-    ``antisym = True``  antisymmetric tensor
+    ``n``: rank of the tensor
+    ``antisym`` : bool
+        ``antisym = False`` symmetric tensor
+        ``antisym = True``  antisymmetric tensor
 
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.tensor_can import get_symmetric_group_sgs
     >>> get_symmetric_group_sgs(3)
     ([0, 1], [(4)(0 1), (4)(1 2)])
@@ -1037,7 +1042,10 @@ def get_minimal_bsgs(base, gens):
 def tensor_gens(base, gens, list_free_indices, sym=0):
     """
     Returns size, res_base, res_gens BSGS for n tensors of the
-    same type
+    same type.
+
+    Explanation
+    ===========
 
     base, gens BSGS for tensors of this type
     list_free_indices  list of the slots occupied by fixed indices
@@ -1051,7 +1059,6 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.tensor_can import tensor_gens, get_symmetric_group_sgs
 
     two symmetric tensors with 3 indices without free indices
@@ -1085,7 +1092,7 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
     if not base and list_free_indices.count([]) < 2:
         n = len(list_free_indices)
         size = gens[0].size
-        size = n * (gens[0].size - 2) + 2
+        size = n * (size - 2) + 2
         return size, [], [_af_new(list(range(size)))]
 
     # if any(list_free_indices) one needs to compute the pointwise
@@ -1154,7 +1161,10 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
 
 def gens_products(*v):
     """
-    Returns size, res_base, res_gens BSGS for n tensors of different types
+    Returns size, res_base, res_gens BSGS for n tensors of different types.
+
+    Explanation
+    ===========
 
     v is a sequence of (base_i, gens_i, free_i, sym_i)
     where
@@ -1167,7 +1177,6 @@ def gens_products(*v):
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, gens_products
     >>> base, gens = get_symmetric_group_sgs(2)
     >>> gens_products((base, gens, [[], []], 0))

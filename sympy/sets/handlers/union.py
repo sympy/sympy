@@ -1,9 +1,10 @@
-from sympy import (Interval, Intersection, Set, EmptySet, S, sympify,
-                   FiniteSet, Union, ComplexRegion, ProductSet)
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
+from sympy.sets.sets import (EmptySet, FiniteSet, Intersection,
+    Interval, ProductSet, Set, Union, UniversalSet)
+from sympy.sets.fancysets import (ComplexRegion, Naturals, Naturals0,
+    Integers, Rationals, Reals)
 from sympy.multipledispatch import dispatch
-from sympy.sets.fancysets import (Naturals, Naturals0, Integers, Rationals,
-                                  Reals)
-from sympy.sets.sets import UniversalSet
 
 
 @dispatch(Naturals0, Naturals)  # type: ignore # noqa:F811
@@ -53,7 +54,7 @@ def union_sets(a, b): # noqa:F811
             return ComplexRegion(Union(a.sets, b.sets), polar=True)
     return None
 
-@dispatch(type(EmptySet), Set)  # type: ignore # noqa:F811
+@dispatch(EmptySet, Set)  # type: ignore # noqa:F811
 def union_sets(a, b): # noqa:F811
     return b
 
@@ -123,7 +124,7 @@ def union_sets(a, b): # noqa:F811
         open_left = a.left_open and a.start not in b
         open_right = a.right_open and a.end not in b
         new_a = Interval(a.start, a.end, open_left, open_right)
-        return set((new_a, b))
+        return {new_a, b}
     return None
 
 @dispatch(FiniteSet, FiniteSet)  # type: ignore # noqa:F811
@@ -134,8 +135,8 @@ def union_sets(a, b): # noqa:F811
 def union_sets(a, b): # noqa:F811
     # If `b` set contains one of my elements, remove it from `a`
     if any(b.contains(x) == True for x in a):
-        return set((
-            FiniteSet(*[x for x in a if b.contains(x) != True]), b))
+        return {
+            FiniteSet(*[x for x in a if b.contains(x) != True]), b}
     return None
 
 @dispatch(Set, Set)  # type: ignore # noqa:F811

@@ -1,8 +1,8 @@
 """Utilities to deal with sympy.Matrix, numpy and scipy.sparse."""
 
-from __future__ import print_function, division
-
-from sympy import MatrixBase, I, Expr, Integer
+from sympy.core.expr import Expr
+from sympy.core.numbers import (I, Integer)
+from sympy.matrices.matrices import MatrixBase
 from sympy.matrices import eye, zeros
 from sympy.external import import_module
 
@@ -27,14 +27,14 @@ __all__ = [
 
 np = import_module('numpy')
 if not np:
-    class numpy_ndarray(object):
+    class numpy_ndarray:
         pass
 else:
     numpy_ndarray = np.ndarray  # type: ignore
 
 scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 if not scipy:
-    class scipy_sparse_matrix(object):
+    class scipy_sparse_matrix:
         pass
     sparse = None
 else:
@@ -49,7 +49,7 @@ else:
 
 
 def sympy_to_numpy(m, **options):
-    """Convert a sympy Matrix/complex number to a numpy matrix or scalar."""
+    """Convert a SymPy Matrix/complex number to a numpy matrix or scalar."""
     if not np:
         raise ImportError
     dtype = options.get('dtype', 'complex')
@@ -62,7 +62,7 @@ def sympy_to_numpy(m, **options):
 
 
 def sympy_to_scipy_sparse(m, **options):
-    """Convert a sympy Matrix/complex number to a numpy matrix or scalar."""
+    """Convert a SymPy Matrix/complex number to a numpy matrix or scalar."""
     if not np or not sparse:
         raise ImportError
     dtype = options.get('dtype', 'complex')
@@ -75,17 +75,17 @@ def sympy_to_scipy_sparse(m, **options):
 
 
 def scipy_sparse_to_sympy(m, **options):
-    """Convert a scipy.sparse matrix to a sympy matrix."""
+    """Convert a scipy.sparse matrix to a SymPy matrix."""
     return MatrixBase(m.todense())
 
 
 def numpy_to_sympy(m, **options):
-    """Convert a numpy matrix to a sympy matrix."""
+    """Convert a numpy matrix to a SymPy matrix."""
     return MatrixBase(m)
 
 
 def to_sympy(m, **options):
-    """Convert a numpy/scipy.sparse matrix to a sympy matrix."""
+    """Convert a numpy/scipy.sparse matrix to a SymPy matrix."""
     if isinstance(m, MatrixBase):
         return m
     elif isinstance(m, numpy_ndarray):
@@ -145,7 +145,7 @@ def matrix_dagger(e):
 
 # TODO: Move this into sympy.matricies.
 def _sympy_tensor_product(*matrices):
-    """Compute the kronecker product of a sequence of sympy Matrices.
+    """Compute the kronecker product of a sequence of SymPy Matrices.
     """
     from sympy.matrices.expressions.kronecker import matrix_kronecker_product
 

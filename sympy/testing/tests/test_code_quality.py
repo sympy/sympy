@@ -1,5 +1,4 @@
 # coding=utf-8
-
 from os import walk, sep, pardir
 from os.path import split, join, abspath, exists, isfile
 from glob import glob
@@ -128,7 +127,7 @@ def check_files(files, file_check, exclusions=set(), pattern=None):
 
 def test_files():
     """
-    This test tests all files in sympy and checks that:
+    This test tests all files in SymPy and checks that:
       o no lines contains a trailing whitespace
       o no lines end with \r\n
       o no line uses tabs instead of spaces
@@ -142,9 +141,9 @@ def test_files():
     """
 
     def test(fname):
-        with open(fname, "rt", encoding="utf8") as test_file:
+        with open(fname, encoding="utf8") as test_file:
             test_this_file(fname, test_file)
-        with open(fname, 'rt', encoding='utf8') as test_file:
+        with open(fname, encoding='utf8') as test_file:
             _test_this_file_encoding(fname, test_file)
 
     def test_this_file(fname, test_file):
@@ -198,15 +197,15 @@ def test_files():
         "setupegg.py",
     ]]
     # Files to exclude from all tests
-    exclude = set([
+    exclude = {
         "%(sep)ssympy%(sep)sparsing%(sep)sautolev%(sep)s_antlr%(sep)sautolevparser.py" % sepd,
         "%(sep)ssympy%(sep)sparsing%(sep)sautolev%(sep)s_antlr%(sep)sautolevlexer.py" % sepd,
         "%(sep)ssympy%(sep)sparsing%(sep)sautolev%(sep)s_antlr%(sep)sautolevlistener.py" % sepd,
         "%(sep)ssympy%(sep)sparsing%(sep)slatex%(sep)s_antlr%(sep)slatexparser.py" % sepd,
         "%(sep)ssympy%(sep)sparsing%(sep)slatex%(sep)s_antlr%(sep)slatexlexer.py" % sepd,
-    ])
+    }
     # Files to exclude from the implicit import test
-    import_exclude = set([
+    import_exclude = {
         # glob imports are allowed in top-level __init__.py:
         "%(sep)ssympy%(sep)s__init__.py" % sepd,
         # these __init__.py should be fixed:
@@ -216,7 +215,7 @@ def test_files():
         "%(sep)squantum%(sep)s__init__.py" % sepd,
         "%(sep)spolys%(sep)s__init__.py" % sepd,
         "%(sep)spolys%(sep)sdomains%(sep)s__init__.py" % sepd,
-        # interactive sympy executes ``from sympy import *``:
+        # interactive SymPy executes ``from sympy import *``:
         "%(sep)sinteractive%(sep)ssession.py" % sepd,
         # isympy.py executes ``from sympy import *``:
         "%(sep)sisympy.py" % sepd,
@@ -229,6 +228,7 @@ def test_files():
         "%(sep)splotting%(sep)spygletplot%(sep)s" % sepd,
         # False positive in the docstring
         "%(sep)sbin%(sep)stest_external_imports.py" % sepd,
+        "%(sep)sbin%(sep)stest_submodule_imports.py" % sepd,
         # These are deprecated stubs that can be removed at some point:
         "%(sep)sutilities%(sep)sruntests.py" % sepd,
         "%(sep)sutilities%(sep)spytest.py" % sepd,
@@ -236,9 +236,9 @@ def test_files():
         "%(sep)sutilities%(sep)stmpfiles.py" % sepd,
         "%(sep)sutilities%(sep)squality_unicode.py" % sepd,
         "%(sep)sutilities%(sep)sbenchmarking.py" % sepd,
-    ])
+    }
     check_files(top_level_files, test)
-    check_directory_tree(BIN_PATH, test, set(["~", ".pyc", ".sh"]), "*")
+    check_directory_tree(BIN_PATH, test, {"~", ".pyc", ".sh"}, "*")
     check_directory_tree(SYMPY_PATH, test, exclude)
     check_directory_tree(EXAMPLES_PATH, test, exclude)
 

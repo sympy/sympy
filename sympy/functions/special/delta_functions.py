@@ -1,12 +1,12 @@
 from sympy.core import S, sympify, diff
-from sympy.core.decorators import deprecated
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.logic import fuzzy_not
 from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.complexes import im, sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys.polyerrors import PolynomialError
-from sympy.utilities import filldedent
+from sympy.utilities.decorator import deprecated
+from sympy.utilities.misc import filldedent
 
 
 ###############################################################################
@@ -58,7 +58,7 @@ class DiracDelta(Function):
     Examples
     ========
 
-    >>> from sympy import DiracDelta, diff, pi, Piecewise
+    >>> from sympy import DiracDelta, diff, pi
     >>> from sympy.abc import x, y
 
     >>> DiracDelta(x)
@@ -132,6 +132,12 @@ class DiracDelta(Function):
         >>> diff(DiracDelta(x, 1)).fdiff()
         DiracDelta(x, 3)
 
+        Parameters
+        ==========
+
+        argindex : integer
+            degree of derivative
+
         """
         if argindex == 1:
             #I didn't know if there is a better way to handle default arguments
@@ -160,7 +166,7 @@ class DiracDelta(Function):
         Examples
         ========
 
-        >>> from sympy import DiracDelta, S, Subs
+        >>> from sympy import DiracDelta, S
         >>> from sympy.abc import x
 
         >>> DiracDelta(x)
@@ -192,6 +198,14 @@ class DiracDelta(Function):
 
         >>> DiracDelta(x - 100).subs(x, 100)
         DiracDelta(0)
+
+        Parameters
+        ==========
+
+        k : integer
+            order of derivative
+
+        arg : argument passed to DiracDelta
 
         """
         k = sympify(k)
@@ -335,17 +349,17 @@ class DiracDelta(Function):
         Examples
         ========
 
-        >>> from sympy import DiracDelta, Piecewise, Symbol, SingularityFunction
+        >>> from sympy import DiracDelta, Piecewise, Symbol
         >>> x = Symbol('x')
 
         >>> DiracDelta(x).rewrite(Piecewise)
         Piecewise((DiracDelta(0), Eq(x, 0)), (0, True))
 
         >>> DiracDelta(x - 5).rewrite(Piecewise)
-        Piecewise((DiracDelta(0), Eq(x - 5, 0)), (0, True))
+        Piecewise((DiracDelta(0), Eq(x, 5)), (0, True))
 
         >>> DiracDelta(x**2 - 5).rewrite(Piecewise)
-           Piecewise((DiracDelta(0), Eq(x**2 - 5, 0)), (0, True))
+           Piecewise((DiracDelta(0), Eq(x**2, 5)), (0, True))
 
         >>> DiracDelta(x - 5, 4).rewrite(Piecewise)
         DiracDelta(x - 5, 4)
@@ -379,10 +393,6 @@ class DiracDelta(Function):
                 rewrite(SingularityFunction) doesn't support
                 arguments with more that 1 variable.'''))
 
-    def _sage_(self):
-        import sage.all as sage
-        return sage.dirac_delta(self.args[0]._sage_())
-
 
 ###############################################################################
 ############################## HEAVISIDE FUNCTION #############################
@@ -391,43 +401,44 @@ class DiracDelta(Function):
 
 class Heaviside(Function):
     r"""
-    Heaviside Piecewise function.
+    Heaviside step function.
 
     Explanation
     ===========
 
-    Heaviside function has the following properties:
+    The Heaviside step function has the following properties:
 
     1) $\frac{d}{d x} \theta(x) = \delta(x)$
-    2) $\theta(x) = \begin{cases} 0 & \text{for}\: x < 0 \\ \text{undefined} &
+    2) $\theta(x) = \begin{cases} 0 & \text{for}\: x < 0 \\ \frac{1}{2} &
        \text{for}\: x = 0 \\1 & \text{for}\: x > 0 \end{cases}$
     3) $\frac{d}{d x} \max(x, 0) = \theta(x)$
 
     Heaviside(x) is printed as $\theta(x)$ with the SymPy LaTeX printer.
 
-    Regarding to the value at 0, Mathematica defines $\theta(0)=1$, but Maple
-    uses $\theta(0) = \text{undefined}$. Different application areas may have
-    specific conventions. For example, in control theory, it is common practice
-    to assume $\theta(0) = 0$ to match the Laplace transform of a DiracDelta
-    distribution.
+    The value at 0 is set differently in different fields. SymPy uses 1/2,
+    which is a convention from electronics and signal processing, and is
+    consistent with solving improper integrals by Fourier transform and
+    convolution.
 
-    To specify the value of Heaviside at ``x=0``, a second argument can be
-    given. Omit this 2nd argument or pass ``None`` to recover the default
-    behavior.
+    To specify a different value of Heaviside at ``x=0``, a second argument
+    can be given. Using ``Heaviside(x, nan)`` gives an expression that will
+    evaluate to nan for x=0.
+
+    .. versionchanged:: 1.9 ``Heaviside(0)`` now returns 1/2 (before: undefined)
 
     Examples
     ========
 
-    >>> from sympy import Heaviside, S
+    >>> from sympy import Heaviside, nan
     >>> from sympy.abc import x
     >>> Heaviside(9)
     1
     >>> Heaviside(-9)
     0
     >>> Heaviside(0)
-    Heaviside(0)
-    >>> Heaviside(0, S.Half)
     1/2
+    >>> Heaviside(0, nan)
+    nan
     >>> (Heaviside(x) + 1).replace(Heaviside(x), Heaviside(x, 1))
     Heaviside(x, 1) + 1
 
@@ -465,23 +476,33 @@ class Heaviside(Function):
         >>> diff(Heaviside(x)).fdiff()
         DiracDelta(x, 1)
 
+        Parameters
+        ==========
+
+        argindex : integer
+            order of derivative
+
         """
         if argindex == 1:
-            # property number 1
             return DiracDelta(self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def __new__(cls, arg, H0=None, **options):
+    def __new__(cls, arg, H0=S.Half, **options):
         if isinstance(H0, Heaviside) and len(H0.args) == 1:
-            H0 = None
-
-        if H0 is None:
-            return super(cls, cls).__new__(cls, arg, **options)
+            H0 = S.Half
         return super(cls, cls).__new__(cls, arg, H0, **options)
 
+    @property
+    def pargs(self):
+        """Args without default S.Half"""
+        args = self.args
+        if args[1] is S.Half:
+            args = args[:1]
+        return args
+
     @classmethod
-    def eval(cls, arg, H0=None):
+    def eval(cls, arg, H0=S.Half):
         """
         Returns a simplified form or a value of Heaviside depending on the
         argument passed by the Heaviside object.
@@ -508,7 +529,7 @@ class Heaviside(Function):
         1
 
         >>> Heaviside(0)
-        Heaviside(0)
+        1/2
 
         >>> Heaviside(0, 1)
         1
@@ -519,7 +540,7 @@ class Heaviside(Function):
         >>> Heaviside(S.NaN)
         nan
 
-        >>> Heaviside(x).eval(100)
+        >>> Heaviside(x).eval(42)
         1
 
         >>> Heaviside(x - 100).subs(x, 5)
@@ -527,6 +548,13 @@ class Heaviside(Function):
 
         >>> Heaviside(x - 100).subs(x, 105)
         1
+
+        Parameters
+        ==========
+
+        arg : argument passed by Heaviside object
+
+        H0 : value of Heaviside(0)
 
         """
         H0 = sympify(H0)
@@ -549,57 +577,60 @@ class Heaviside(Function):
         Examples
         ========
 
-        >>> from sympy import Heaviside, Piecewise, Symbol, pprint
+        >>> from sympy import Heaviside, Piecewise, Symbol, nan
         >>> x = Symbol('x')
 
         >>> Heaviside(x).rewrite(Piecewise)
-        Piecewise((0, x < 0), (Heaviside(0), Eq(x, 0)), (1, x > 0))
+        Piecewise((0, x < 0), (1/2, Eq(x, 0)), (1, x > 0))
+
+        >>> Heaviside(x,nan).rewrite(Piecewise)
+        Piecewise((0, x < 0), (nan, Eq(x, 0)), (1, x > 0))
 
         >>> Heaviside(x - 5).rewrite(Piecewise)
-        Piecewise((0, x - 5 < 0), (Heaviside(0), Eq(x - 5, 0)), (1, x - 5 > 0))
+        Piecewise((0, x < 5), (1/2, Eq(x, 5)), (1, x > 5))
 
         >>> Heaviside(x**2 - 1).rewrite(Piecewise)
-        Piecewise((0, x**2 - 1 < 0), (Heaviside(0), Eq(x**2 - 1, 0)), (1, x**2 - 1 > 0))
+        Piecewise((0, x**2 < 1), (1/2, Eq(x**2, 1)), (1, x**2 > 1))
 
         """
-        if H0 is None:
-            return Piecewise((0, arg < 0), (Heaviside(0), Eq(arg, 0)), (1, arg > 0))
         if H0 == 0:
             return Piecewise((0, arg <= 0), (1, arg > 0))
         if H0 == 1:
             return Piecewise((0, arg < 0), (1, arg >= 0))
         return Piecewise((0, arg < 0), (H0, Eq(arg, 0)), (1, arg > 0))
 
-    def _eval_rewrite_as_sign(self, arg, H0=None, **kwargs):
+    def _eval_rewrite_as_sign(self, arg, H0=S.Half, **kwargs):
         """
         Represents the Heaviside function in the form of sign function.
 
         Explanation
         ===========
 
-        The value of the second argument of Heaviside must specify Heaviside(0)
-        = 1/2 for rewritting as sign to be strictly equivalent. For easier
-        usage, we also allow this rewriting when Heaviside(0) is undefined.
+        The value of Heaviside(0) must be 1/2 for rewritting as sign to be
+        strictly equivalent. For easier usage, we also allow this rewriting
+        when Heaviside(0) is undefined.
 
         Examples
         ========
 
-        >>> from sympy import Heaviside, Symbol, sign, S
+        >>> from sympy import Heaviside, Symbol, sign, nan
         >>> x = Symbol('x', real=True)
+        >>> y = Symbol('y')
 
-        >>> Heaviside(x, H0=S.Half).rewrite(sign)
+        >>> Heaviside(x).rewrite(sign)
         sign(x)/2 + 1/2
 
         >>> Heaviside(x, 0).rewrite(sign)
         Piecewise((sign(x)/2 + 1/2, Ne(x, 0)), (0, True))
 
-        >>> Heaviside(x - 2, H0=S.Half).rewrite(sign)
+        >>> Heaviside(x, nan).rewrite(sign)
+        Piecewise((sign(x)/2 + 1/2, Ne(x, 0)), (nan, True))
+
+        >>> Heaviside(x - 2).rewrite(sign)
         sign(x - 2)/2 + 1/2
 
-        >>> Heaviside(x**2 - 2*x + 1, H0=S.Half).rewrite(sign)
+        >>> Heaviside(x**2 - 2*x + 1).rewrite(sign)
         sign(x**2 - 2*x + 1)/2 + 1/2
-
-        >>> y = Symbol('y')
 
         >>> Heaviside(y).rewrite(sign)
         Heaviside(y)
@@ -618,11 +649,11 @@ class Heaviside(Function):
                 ((sign(arg) + 1)/2, Ne(arg, 0)),
                 (Heaviside(0, H0=H0), True))
             pw2 = Piecewise(
-                ((sign(arg) + 1)/2, Eq(Heaviside(0, H0=H0), S(1)/2)),
+                ((sign(arg) + 1)/2, Eq(Heaviside(0, H0=H0), S.Half)),
                 (pw1, True))
             return pw2
 
-    def _eval_rewrite_as_SingularityFunction(self, args, **kwargs):
+    def _eval_rewrite_as_SingularityFunction(self, args, H0=S.Half, **kwargs):
         """
         Returns the Heaviside expression written in the form of Singularity
         Functions.
@@ -645,7 +676,3 @@ class Heaviside(Function):
             raise TypeError(filldedent('''
                 rewrite(SingularityFunction) doesn't
                 support arguments with more that 1 variable.'''))
-
-    def _sage_(self):
-        import sage.all as sage
-        return sage.heaviside(self.args[0]._sage_())

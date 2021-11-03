@@ -30,7 +30,7 @@ intent_inout = Attribute('intent_inout')
 allocatable = Attribute('allocatable')
 
 class Program(Token):
-    """ Represents a 'program' block in Fortran
+    """ Represents a 'program' block in Fortran.
 
     Examples
     ========
@@ -38,11 +38,12 @@ class Program(Token):
     >>> from sympy.codegen.ast import Print
     >>> from sympy.codegen.fnodes import Program
     >>> prog = Program('myprogram', [Print([42])])
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> print(fcode(prog, source_format='free'))
     program myprogram
         print *, 42
     end program
+
     """
     __slots__ = ('name', 'body')
     _construct_name = String
@@ -50,19 +51,20 @@ class Program(Token):
 
 
 class use_rename(Token):
-    """ Represents a renaming in a use statement in Fortran
+    """ Represents a renaming in a use statement in Fortran.
 
     Examples
     ========
 
     >>> from sympy.codegen.fnodes import use_rename, use
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> ren = use_rename("thingy", "convolution2d")
     >>> print(fcode(ren, source_format='free'))
     thingy => convolution2d
     >>> full = use('signallib', only=['snr', ren])
     >>> print(fcode(full, source_format='free'))
     use signallib, only: snr, thingy => convolution2d
+
     """
     __slots__ = ('local', 'original')
     _construct_local = String
@@ -75,19 +77,20 @@ def _name(arg):
         return String(arg)
 
 class use(Token):
-    """ Represents a use statement in Fortran
+    """ Represents a use statement in Fortran.
 
     Examples
     ========
 
     >>> from sympy.codegen.fnodes import use
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> fcode(use('signallib'), source_format='free')
     'use signallib'
     >>> fcode(use('signallib', [('metric', 'snr')]), source_format='free')
     'use signallib, metric => snr'
     >>> fcode(use('signallib', only=['snr', 'convolution2d']), source_format='free')
     'use signallib, only: snr, convolution2d'
+
     """
     __slots__ = ('namespace', 'rename', 'only')
     defaults = {'rename': none, 'only': none}
@@ -97,13 +100,13 @@ class use(Token):
 
 
 class Module(Token):
-    """ Represents a module in Fortran
+    """ Represents a module in Fortran.
 
     Examples
     ========
 
     >>> from sympy.codegen.fnodes import Module
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> print(fcode(Module('signallib', ['implicit none'], []), source_format='free'))
     module signallib
     implicit none
@@ -122,15 +125,14 @@ class Module(Token):
 
 
 class Subroutine(Node):
-    """ Represents a subroutine in Fortran
+    """ Represents a subroutine in Fortran.
 
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import fcode, symbols
     >>> from sympy.codegen.ast import Print
     >>> from sympy.codegen.fnodes import Subroutine
-    >>> from sympy.printing import fcode
     >>> x, y = symbols('x y', real=True)
     >>> sub = Subroutine('mysub', [x, y], [Print([x**2 + y**2, x*y])])
     >>> print(fcode(sub, source_format='free', standard=2003))
@@ -139,6 +141,7 @@ class Subroutine(Node):
     real*8 :: y
     print *, x**2 + y**2, x*y
     end subroutine
+
     """
     __slots__ = ('name', 'parameters', 'body', 'attrs')
     _construct_name = String
@@ -152,15 +155,16 @@ class Subroutine(Node):
             return CodeBlock(*itr)
 
 class SubroutineCall(Token):
-    """ Represents a call to a subroutine in Fortran
+    """ Represents a call to a subroutine in Fortran.
 
     Examples
     ========
 
     >>> from sympy.codegen.fnodes import SubroutineCall
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> fcode(SubroutineCall('mysub', 'x y'.split()))
     '       call mysub(x, y)'
+
     """
     __slots__ = ('name', 'subroutine_args')
     _construct_name = staticmethod(_name)
@@ -168,15 +172,14 @@ class SubroutineCall(Token):
 
 
 class Do(Token):
-    """ Represents a Do loop in in Fortran
+    """ Represents a Do loop in in Fortran.
 
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import fcode, symbols
     >>> from sympy.codegen.ast import aug_assign, Print
     >>> from sympy.codegen.fnodes import Do
-    >>> from sympy.printing import fcode
     >>> i, n = symbols('i n', integer=True)
     >>> r = symbols('r', real=True)
     >>> body = [aug_assign(r, '+', 1/i), Print([i, r])]
@@ -192,6 +195,7 @@ class Do(Token):
         r = r + 1d0/i
         print *, i, r
     end do
+
     """
 
     __slots__ = ('body', 'counter', 'first', 'last', 'step', 'concurrent')
@@ -205,12 +209,12 @@ class Do(Token):
 
 
 class ArrayConstructor(Token):
-    """ Represents an array constructor
+    """ Represents an array constructor.
 
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.fnodes import ArrayConstructor
     >>> ac = ArrayConstructor([1, 2, 3])
     >>> fcode(ac, standard=95, source_format='free')
@@ -224,7 +228,7 @@ class ArrayConstructor(Token):
 
 
 class ImpliedDoLoop(Token):
-    """ Represents an implied do loop in Fortran
+    """ Represents an implied do loop in Fortran.
 
     Examples
     ========
@@ -255,7 +259,7 @@ class Extent(Basic):
 
     >>> from sympy.codegen.fnodes import Extent
     >>> e = Extent(-3, 3)  # -3, -2, -1, 0, 1, 2, 3
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> fcode(e, source_format='free')
     '-3:3'
     >>> from sympy.codegen.ast import Variable, real
@@ -289,7 +293,7 @@ def dimension(*args):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.fnodes import dimension, intent_in
     >>> dim = dimension('2', ':')  # 2 rows, runtime determined number of columns
     >>> from sympy.codegen.ast import Variable, integer
@@ -320,8 +324,8 @@ def dimension(*args):
 
 assumed_size = dimension('*')
 
-def array(symbol, dim, intent=None, **kwargs):
-    """ Convenience function for creating a Variable instance for a Fortran array
+def array(symbol, dim, intent=None, *, attrs=(), value=None, type=None):
+    """ Convenience function for creating a Variable instance for a Fortran array.
 
     Parameters
     ==========
@@ -338,7 +342,7 @@ def array(symbol, dim, intent=None, **kwargs):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.ast import integer, real
     >>> from sympy.codegen.fnodes import array
     >>> arr = array('a', '*', 'in', type=integer)
@@ -347,6 +351,7 @@ def array(symbol, dim, intent=None, **kwargs):
     >>> x = array('x', [3, ':', ':'], intent='out', type=real)
     >>> print(fcode(x.as_Declaration(value=1), source_format='free', standard=2003))
     real*8, dimension(3, :, :), intent(out) :: x = 1
+
     """
     if isinstance(dim, Attribute):
         if str(dim.name) != 'dimension':
@@ -354,17 +359,15 @@ def array(symbol, dim, intent=None, **kwargs):
     else:
         dim = dimension(*dim)
 
-    attrs = list(kwargs.pop('attrs', [])) + [dim]
+    attrs = list(attrs) + [dim]
     if intent is not None:
         if intent not in (intent_in, intent_out, intent_inout):
             intent = {'in': intent_in, 'out': intent_out, 'inout': intent_inout}[intent]
         attrs.append(intent)
-    value = kwargs.pop('value', None)
-    type_ = kwargs.pop('type', None)
-    if type_ is None:
+    if type is None:
         return Variable.deduced(symbol, value=value, attrs=attrs)
     else:
-        return Variable(symbol, type_, value=value, attrs=attrs)
+        return Variable(symbol, type, value=value, attrs=attrs)
 
 def _printable(arg):
     return String(arg) if isinstance(arg, str) else sympify(arg)
@@ -376,11 +379,12 @@ def allocated(array):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.fnodes import allocated
     >>> alloc = allocated('x')
     >>> fcode(alloc, source_format='free')
     'allocated(x)'
+
     """
     return FunctionCall('allocated', [_printable(array)])
 
@@ -398,11 +402,12 @@ def lbound(array, dim=None, kind=None):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.fnodes import lbound
     >>> lb = lbound('arr', dim=2)
     >>> fcode(lb, source_format='free')
     'lbound(arr, 2)'
+
     """
     return FunctionCall(
         'lbound',
@@ -433,11 +438,12 @@ def shape(source, kind=None):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.fnodes import shape
     >>> shp = shape('x')
     >>> fcode(shp, source_format='free')
     'shape(x)'
+
     """
     return FunctionCall(
         'shape',
@@ -452,9 +458,8 @@ def size(array, dim=None, kind=None):
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.printing import fcode
-    >>> from sympy.codegen.ast import FunctionDefinition, real, Return, Variable
+    >>> from sympy import fcode, Symbol
+    >>> from sympy.codegen.ast import FunctionDefinition, real, Return
     >>> from sympy.codegen.fnodes import array, sum_, size
     >>> a = Symbol('a', real=True)
     >>> body = [Return((sum_(a**2)/size(a))**.5)]
@@ -483,6 +488,7 @@ def reshape(source, shape, pad=None, order=None):
 
     source : Symbol or String
     shape : ArrayExpr
+
     """
     return FunctionCall(
         'reshape',
@@ -493,7 +499,7 @@ def reshape(source, shape, pad=None, order=None):
 
 
 def bind_C(name=None):
-    """ Creates an Attribute ``bind_C`` with a name
+    """ Creates an Attribute ``bind_C`` with a name.
 
     Parameters
     ==========
@@ -503,10 +509,9 @@ def bind_C(name=None):
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.printing import fcode
-    >>> from sympy.codegen.ast import FunctionDefinition, real, Return, Variable
-    >>> from sympy.codegen.fnodes import array, sum_, size, bind_C
+    >>> from sympy import fcode, Symbol
+    >>> from sympy.codegen.ast import FunctionDefinition, real, Return
+    >>> from sympy.codegen.fnodes import array, sum_, bind_C
     >>> a = Symbol('a', real=True)
     >>> s = Symbol('s', integer=True)
     >>> arr = array(a, dim=[s], intent='in')
@@ -518,6 +523,7 @@ def bind_C(name=None):
     integer*4 :: s
     rms = sqrt(sum(a**2)/s)
     end function
+
     """
     return Attribute('bind_C', [String(name)] if name else [])
 
@@ -529,9 +535,10 @@ class GoTo(Token):
 
     >>> from sympy.codegen.fnodes import GoTo
     >>> go = GoTo([10, 20, 30], 'i')
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> fcode(go, source_format='free')
     'go to (10, 20, 30), i'
+
     """
     __slots__ = ('labels', 'expr')
     defaults = {'expr': none}
@@ -541,6 +548,9 @@ class GoTo(Token):
 
 class FortranReturn(Token):
     """ AST node explicitly mapped to a fortran "return".
+
+    Explanation
+    ===========
 
     Because a return statement in fortran is different from C, and
     in order to aid reuse of our codegen ASTs the ordinary
@@ -552,9 +562,10 @@ class FortranReturn(Token):
     ========
 
     >>> from sympy.codegen.fnodes import FortranReturn
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> fcode(FortranReturn('x'))
     '       return x'
+
     """
     __slots__ = ('return_value',)
     defaults = {'return_value': none}

@@ -1,7 +1,9 @@
 import copy
 
+from sympy.core import S
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.miscellaneous import Min, sqrt
+from sympy.functions.elementary.complexes import sign
 
 from .common import NonSquareMatrixError, NonPositiveDefiniteMatrixError
 from .utilities import _get_intermediate_simp, _iszero
@@ -66,14 +68,14 @@ def _rank_decomposition(M, iszerofunc=_iszero, simplify=False):
     .. math::
         E_n E_{n-1} ... E_1 A = F
 
-    where `E_n, E_{n-1}, ... , E_1` are the elimination matrices or
+    where `E_n, E_{n-1}, \dots, E_1` are the elimination matrices or
     permutation matrices equivalent to each row-reduction step.
 
     The inverse of the same product of elimination matrices gives
     `C`:
 
     .. math::
-        C = (E_n E_{n-1} ... E_1)^{-1}
+        C = \left(E_n E_{n-1} \dots E_1\right)^{-1}
 
     It is not necessary, however, to actually compute the inverse:
     the columns of `C` are those from the original matrix with the
@@ -91,7 +93,7 @@ def _rank_decomposition(M, iszerofunc=_iszero, simplify=False):
     See Also
     ========
 
-    rref
+    sympy.matrices.matrices.MatrixReductions.rref
     """
 
     F, pivot_cols = M.rref(simplify=simplify, iszerofunc=iszerofunc,
@@ -123,9 +125,9 @@ def _liupc(M):
     References
     ==========
 
-    Symbolic Sparse Cholesky Factorization using Elimination Trees,
-    Jeroen Van Grondelle (1999)
-    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
+    .. [1] Symbolic Sparse Cholesky Factorization using Elimination Trees,
+           Jeroen Van Grondelle (1999)
+           http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
     """
     # Algorithm 2.4, p 17 of reference
 
@@ -171,9 +173,9 @@ def _row_structure_symbolic_cholesky(M):
     References
     ==========
 
-    Symbolic Sparse Cholesky Factorization using Elimination Trees,
-    Jeroen Van Grondelle (1999)
-    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
+    .. [1] Symbolic Sparse Cholesky Factorization using Elimination Trees,
+           Jeroen Van Grondelle (1999)
+           http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
     """
 
     R, parent = M.liupc()
@@ -244,7 +246,7 @@ def _cholesky(M, hermitian=True):
     ========
 
     sympy.matrices.dense.DenseMatrix.LDLdecomposition
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     QRdecomposition
     """
 
@@ -335,7 +337,7 @@ def _cholesky_sparse(M, hermitian=True):
     ========
 
     sympy.matrices.sparse.SparseMatrix.LDLdecomposition
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     QRdecomposition
     """
 
@@ -446,7 +448,7 @@ def _LDLdecomposition(M, hermitian=True):
     ========
 
     sympy.matrices.dense.DenseMatrix.cholesky
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     QRdecomposition
     """
 
@@ -577,8 +579,8 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
     """Returns (L, U, perm) where L is a lower triangular matrix with unit
     diagonal, U is an upper triangular matrix, and perm is a list of row
     swap index pairs. If A is the original matrix, then
-    A = (L*U).permuteBkwd(perm), and the row permutation matrix P such
-    that P*A = L*U can be computed by P=eye(A.row).permuteFwd(perm).
+    ``A = (L*U).permuteBkwd(perm)``, and the row permutation matrix P such
+    that $P A = L U$ can be computed by ``P = eye(A.rows).permuteFwd(perm)``.
 
     See documentation for LUCombined for details about the keyword argument
     rankcheck, iszerofunc, and simpfunc.
@@ -595,7 +597,7 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
         A function which determines if a given expression is zero.
 
         The function should be a callable that takes a single
-        sympy expression and returns a 3-valued boolean value
+        SymPy expression and returns a 3-valued boolean value
         ``True``, ``False``, or ``None``.
 
         It is internally used by the pivot searching algorithm.
@@ -606,8 +608,8 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
         A function that simplifies the input.
 
         If this is specified as a function, this function should be
-        a callable that takes a single sympy expression and returns
-        an another sympy expression that is algebraically
+        a callable that takes a single SymPy expression and returns
+        an another SymPy expression that is algebraically
         equivalent.
 
         If ``None``, it indicates that the pivot search algorithm
@@ -690,7 +692,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         A function which determines if a given expression is zero.
 
         The function should be a callable that takes a single
-        sympy expression and returns a 3-valued boolean value
+        SymPy expression and returns a 3-valued boolean value
         ``True``, ``False``, or ``None``.
 
         It is internally used by the pivot searching algorithm.
@@ -701,8 +703,8 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         A function that simplifies the input.
 
         If this is specified as a function, this function should be
-        a callable that takes a single sympy expression and returns
-        an another sympy expression that is algebraically
+        a callable that takes a single SymPy expression and returns
+        an another SymPy expression that is algebraically
         equivalent.
 
         If ``None``, it indicates that the pivot search algorithm
@@ -927,7 +929,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
     See Also
     ========
 
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     LUdecompositionFF
     LUsolve
     """
@@ -936,7 +938,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         # https://github.com/sympy/sympy/issues/9796
         pass
 
-    if M.rows == 0 or M.cols == 0:
+    if S.Zero in M.shape:
         # Define LU decomposition of a matrix with no entries as a matrix
         # of the same dimensions with all zero entries.
         return M.zeros(M.rows, M.cols), []
@@ -1072,7 +1074,7 @@ def _LUdecompositionFF(M):
     See Also
     ========
 
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     LUdecomposition_Simple
     LUsolve
 
@@ -1121,6 +1123,261 @@ def _LUdecompositionFF(M):
     DD[n - 1, n - 1] = oldpivot
 
     return P, L, DD, U
+
+def _singular_value_decomposition(A):
+    r"""Returns a Condensed Singular Value decomposition.
+
+    Explanation
+    ===========
+
+    A Singular Value decomposition is a decomposition in the form $A = U \Sigma V$
+    where
+
+    - $U, V$ are column orthogonal matrix.
+    - $\Sigma$ is a diagonal matrix, where the main diagonal contains singular
+      values of matrix A.
+
+    A column orthogonal matrix satisfies
+    $\mathbb{I} = U^H U$ while a full orthogonal matrix satisfies
+    relation $\mathbb{I} = U U^H = U^H U$ where $\mathbb{I}$ is an identity
+    matrix with matching dimensions.
+
+    For matrices which are not square or are rank-deficient, it is
+    sufficient to return a column orthogonal matrix because augmenting
+    them may introduce redundant computations.
+    In condensed Singular Value Decomposition we only return column orthognal
+    matrices because of this reason
+
+    If you want to augment the results to return a full orthogonal
+    decomposition, you should use the following procedures.
+
+    - Augment the $U, V$ matrices with columns that are orthogonal to every
+      other columns and make it square.
+    - Augument the $\Sigma$ matrix with zero rows to make it have the same
+      shape as the original matrix.
+
+    The procedure will be illustrated in the examples section.
+
+    Examples
+    ========
+
+    we take a full rank matrix first:
+
+    >>> from sympy import Matrix
+    >>> A = Matrix([[1, 2],[2,1]])
+    >>> U, S, V = A.singular_value_decomposition()
+    >>> U
+    Matrix([
+    [ sqrt(2)/2, sqrt(2)/2],
+    [-sqrt(2)/2, sqrt(2)/2]])
+    >>> S
+    Matrix([
+    [1, 0],
+    [0, 3]])
+    >>> V
+    Matrix([
+    [-sqrt(2)/2, sqrt(2)/2],
+    [ sqrt(2)/2, sqrt(2)/2]])
+
+    If a matrix if square and full rank both U, V
+    are orthogonal in both directions
+
+    >>> U * U.H
+    Matrix([
+    [1, 0],
+    [0, 1]])
+    >>> U.H * U
+    Matrix([
+    [1, 0],
+    [0, 1]])
+
+    >>> V * V.H
+    Matrix([
+    [1, 0],
+    [0, 1]])
+    >>> V.H * V
+    Matrix([
+    [1, 0],
+    [0, 1]])
+    >>> A == U * S * V.H
+    True
+
+    >>> C = Matrix([
+    ...         [1, 0, 0, 0, 2],
+    ...         [0, 0, 3, 0, 0],
+    ...         [0, 0, 0, 0, 0],
+    ...         [0, 2, 0, 0, 0],
+    ...     ])
+    >>> U, S, V = C.singular_value_decomposition()
+
+    >>> V.H * V
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
+    >>> V * V.H
+    Matrix([
+    [1/5, 0, 0, 0, 2/5],
+    [  0, 1, 0, 0,   0],
+    [  0, 0, 1, 0,   0],
+    [  0, 0, 0, 0,   0],
+    [2/5, 0, 0, 0, 4/5]])
+
+    If you want to augment the results to be a full orthogonal
+    decomposition, you should augment $V$ with an another orthogonal
+    column.
+
+    You are able to append an arbitrary standard basis that are linearly
+    independent to every other columns and you can run the Gram-Schmidt
+    process to make them augmented as orthogonal basis.
+
+    >>> V_aug = V.row_join(Matrix([[0,0,0,0,1],
+    ... [0,0,0,1,0]]).H)
+    >>> V_aug = V_aug.QRdecomposition()[0]
+    >>> V_aug
+    Matrix([
+    [0,   sqrt(5)/5, 0, -2*sqrt(5)/5, 0],
+    [1,           0, 0,            0, 0],
+    [0,           0, 1,            0, 0],
+    [0,           0, 0,            0, 1],
+    [0, 2*sqrt(5)/5, 0,    sqrt(5)/5, 0]])
+    >>> V_aug.H * V_aug
+    Matrix([
+    [1, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 1]])
+    >>> V_aug * V_aug.H
+    Matrix([
+    [1, 0, 0, 0, 0],
+    [0, 1, 0, 0, 0],
+    [0, 0, 1, 0, 0],
+    [0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 1]])
+
+    Similarly we augment U
+
+    >>> U_aug = U.row_join(Matrix([0,0,1,0]))
+    >>> U_aug = U_aug.QRdecomposition()[0]
+    >>> U_aug
+    Matrix([
+    [0, 1, 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 1],
+    [1, 0, 0, 0]])
+
+    >>> U_aug.H * U_aug
+    Matrix([
+    [1, 0, 0, 0],
+    [0, 1, 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 1]])
+    >>> U_aug * U_aug.H
+    Matrix([
+    [1, 0, 0, 0],
+    [0, 1, 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 1]])
+
+    We add 2 zero columns and one row to S
+
+    >>> S_aug = S.col_join(Matrix([[0,0,0]]))
+    >>> S_aug = S_aug.row_join(Matrix([[0,0,0,0],
+    ... [0,0,0,0]]).H)
+    >>> S_aug
+    Matrix([
+    [2,       0, 0, 0, 0],
+    [0, sqrt(5), 0, 0, 0],
+    [0,       0, 3, 0, 0],
+    [0,       0, 0, 0, 0]])
+
+
+
+    >>> U_aug * S_aug * V_aug.H == C
+    True
+
+    """
+
+    AH = A.H
+    m, n = A.shape
+    if m >= n:
+        V, S = (AH * A).diagonalize()
+
+        ranked = []
+        for i, x in enumerate(S.diagonal()):
+            if not x.is_zero:
+                ranked.append(i)
+
+        V = V[:, ranked]
+
+        Singular_vals = [sqrt(S[i, i]) for i in range(S.rows) if i in ranked]
+
+        S = S.zeros(len(Singular_vals))
+
+        for i in range(len(Singular_vals)):
+            S[i, i] = Singular_vals[i]
+
+        V, _ = V.QRdecomposition()
+        U = A * V * S.inv()
+    else:
+        U, S = (A * AH).diagonalize()
+
+        ranked = []
+        for i, x in enumerate(S.diagonal()):
+            if not x.is_zero:
+                ranked.append(i)
+
+        U = U[:, ranked]
+        Singular_vals = [sqrt(S[i, i]) for i in range(S.rows) if i in ranked]
+
+        S = S.zeros(len(Singular_vals))
+
+        for i in range(len(Singular_vals)):
+            S[i, i] = Singular_vals[i]
+
+        U, _ = U.QRdecomposition()
+        V = AH * U * S.inv()
+
+    return U, S, V
+
+def _QRdecomposition_optional(M, normalize=True):
+    def dot(u, v):
+        return u.dot(v, hermitian=True)
+
+    dps = _get_intermediate_simp(expand_mul, expand_mul)
+
+    A = M.as_mutable()
+    ranked = list()
+
+    Q = A
+    R = A.zeros(A.cols)
+
+    for j in range(A.cols):
+        for i in range(j):
+            if Q[:, i].is_zero_matrix:
+                continue
+
+            R[i, j] = dot(Q[:, i], Q[:, j]) / dot(Q[:, i], Q[:, i])
+            R[i, j] = dps(R[i, j])
+            Q[:, j] -= Q[:, i] * R[i, j]
+
+        Q[:, j] = dps(Q[:, j])
+        if Q[:, j].is_zero_matrix is False:
+            ranked.append(j)
+            R[j, j] = M.one
+
+    Q = Q.extract(range(Q.rows), ranked)
+    R = R.extract(ranked, range(R.cols))
+
+    if normalize:
+        # Normalization
+        for i in range(Q.cols):
+            norm = Q[:, i].norm()
+            Q[:, i] /= norm
+            R[i, :] *= norm
+
+    return M.__class__(Q), M.__class__(R)
 
 
 def _QRdecomposition(M):
@@ -1300,44 +1557,73 @@ def _QRdecomposition(M):
 
     sympy.matrices.dense.DenseMatrix.cholesky
     sympy.matrices.dense.DenseMatrix.LDLdecomposition
-    LUdecomposition
+    sympy.matrices.matrices.MatrixBase.LUdecomposition
     QRsolve
     """
+    return _QRdecomposition_optional(M, normalize=True)
 
-    dps    = _get_intermediate_simp(expand_mul, expand_mul)
-    mat    = M.as_mutable()
-    n      = mat.rows
-    m      = mat.cols
-    ranked = list()
+def _upper_hessenberg_decomposition(A):
+    """Converts a matrix into Hessenberg matrix H
 
-    # Pad with additional rows to make wide matrices square
-    # nOrig keeps track of original size so zeros can be trimmed from Q
-    if n < m:
-        nOrig = n
-        n     = m
-        mat   = mat.col_join(mat.zeros(n - nOrig, m))
-    else:
-        nOrig = n
+    Returns 2 matrices H, P s.t.
+    $P H P^{T} = A$, where H is an upper hessenberg matrix
+    and P is an orthogonal matrix
 
-    Q, R = mat.zeros(n, m), mat.zeros(m)
+    Examples
+    ========
 
-    for j in range(m):  # for each column vector
-        tmp = mat[:, j]  # take original v
+    >>> from sympy import Matrix
+    >>> A = Matrix([
+    ...     [1,2,3],
+    ...     [-3,5,6],
+    ...     [4,-8,9],
+    ... ])
+    >>> H, P = A.upper_hessenberg_decomposition()
+    >>> H
+    Matrix([
+    [1,    6/5,    17/5],
+    [5, 213/25, -134/25],
+    [0, 216/25,  137/25]])
+    >>> P
+    Matrix([
+    [1,    0,   0],
+    [0, -3/5, 4/5],
+    [0,  4/5, 3/5]])
+    >>> P * H * P.H == A
+    True
 
-        for i in range(j):
-            # subtract the project of mat on new vector
-            R[i, j]  = dps(Q[:, i].dot(mat[:, j], hermitian=True))
-            tmp     -= Q[:, i] * R[i, j]
 
-        tmp = dps(tmp)
+    References
+    ==========
 
-        # normalize it
-        R[j, j] = tmp.norm()
+    .. [#] https://mathworld.wolfram.com/HessenbergDecomposition.html
+    """
 
-        if not R[j, j].is_zero:
-            ranked.append(j)
-            Q[:, j] = tmp / R[j, j]
+    M = A.as_mutable()
 
-    Q = Q.extract(range(nOrig), ranked)
-    R = R.extract(ranked, range(R.cols))
-    return M.__class__(Q), M.__class__(R)
+    if not M.is_square:
+        raise NonSquareMatrixError("Matrix must be square.")
+
+    n = M.cols
+    P = M.eye(n)
+    H = M
+
+    for j in range(n - 2):
+
+        u = H[j + 1:, j]
+
+        if u[1:, :].is_zero_matrix:
+            continue
+
+        if sign(u[0]) != 0:
+            u[0] = u[0] + sign(u[0]) * u.norm()
+        else:
+            u[0] = u[0] + u.norm()
+
+        v = u / u.norm()
+
+        H[j + 1:, :] = H[j + 1:, :] - 2 * v * (v.H * H[j + 1:, :])
+        H[:, j + 1:] = H[:, j + 1:] - (H[:, j + 1:] * (2 * v)) * v.H
+        P[:, j + 1:] = P[:, j + 1:] - (P[:, j + 1:] * (2 * v)) * v.H
+
+    return H, P

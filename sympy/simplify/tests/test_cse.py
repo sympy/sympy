@@ -2,11 +2,26 @@ from functools import reduce
 import itertools
 from operator import add
 
-from sympy import (
-    Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-    Matrix, S, cos, sin, Eq, Function, Tuple, CRootOf,
-    IndexedBase, Idx, Piecewise, O, signsimp
-)
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.function import Function
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.dense import Matrix
+from sympy.polys.rootoftools import CRootOf
+from sympy.series.order import O
+from sympy.simplify.cse_main import cse
+from sympy.simplify.simplify import signsimp
+from sympy.tensor.indexed import (Idx, IndexedBase)
+
 from sympy.core.function import count_ops
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
@@ -90,6 +105,7 @@ def test_cse_single2():
     subst_half, (red_half,) = cse(0.5)  # issue 15082
     assert len(subst_half) == 0 and red_half == 0.5
 
+
 def test_cse_not_possible():
     # No substitution possible.
     e = Add(x, y)
@@ -127,6 +143,8 @@ def test_subtraction_opt():
     e = n/x/(-n)**2 - 1/n/x
     assert cse(e, optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)]) == \
         ([], [0])
+    assert cse(((w + x + y + z)*(w - y - z))/(w + x)**3) == \
+        ([(x0, w + x), (x1, y + z)], [(w - x1)*(x0 + x1)/x0**3])
 
 
 def test_multiple_expressions():
@@ -226,7 +244,7 @@ def test_issue_6263():
 
 
 def test_dont_cse_tuples():
-    from sympy import Subs
+    from sympy.core.function import Subs
     f = Function("f")
     g = Function("g")
 
@@ -292,11 +310,11 @@ def test_issue_4499():
         -2*a))
     c = cse(t)
     ans = (
-        [(x0, 2*a), (x1, -b), (x2, x0 + x1), (x3, x2 + 1), (x4, sqrt(z)), (x5,
-        B(b - 1, x4)), (x6, -x0), (x7, (x4/2)**(x6 + 1)*G(b)*G(x3)), (x8,
-        x7*B(x2, x4)), (x9, B(b, x4)), (x10, x7*B(x3, x4))],
-        [(a, a + S.Half, x0, b, x3, x5*x8, x4*x8*x9, x10*x4*x5, x10*x9,
-        1, 0, S.Half, z/2, x1 + 1, b + x6, x6)])
+        [(x0, 2*a), (x1, -b + x0), (x2, x1 + 1), (x3, b - 1), (x4, sqrt(z)),
+         (x5, B(x3, x4)), (x6, (x4/2)**(1 - x0)*G(b)*G(x2)), (x7, x6*B(x1, x4)),
+         (x8, B(b, x4)), (x9, x6*B(x2, x4))],
+        [(a, a + S.Half, x0, b, x2, x5*x7, x4*x7*x8, x4*x5*x9, x8*x9,
+          1, 0, S.Half, z/2, -x3, -x1, -x0)])
     assert ans == c
 
 
@@ -330,7 +348,6 @@ def test_cse_MatrixSymbol():
     assert cse(B) == ([], [B])
 
 def test_cse_MatrixExpr():
-    from sympy import MatrixSymbol
     A = MatrixSymbol('A', 3, 3)
     y = MatrixSymbol('y', 3, 1)
 
@@ -345,11 +362,12 @@ def test_cse_MatrixExpr():
     replacements, reduced_exprs = cse([A**2, A + A**2])
     assert replacements
 
+
 def test_Piecewise():
     f = Piecewise((-z + x*y, Eq(y, 0)), (-z - x*y, True))
     ans = cse(f)
-    actual_ans = ([(x0, -z), (x1, x*y)],
-        [Piecewise((x0 + x1, Eq(y, 0)), (x0 - x1, True))])
+    actual_ans = ([(x0, x*y)],
+        [Piecewise((x0 - z, Eq(y, 0)), (-z - x0, True))])
     assert ans == actual_ans
 
 
@@ -546,6 +564,36 @@ def test_unevaluated_mul():
     eq = Mul(x + y, x + y, evaluate=False)
     assert cse(eq) == ([(x0, x + y)], [x0**2])
 
+def test_cse_release_variables():
+    from sympy.simplify.cse_main import cse_release_variables
+    _0, _1, _2, _3, _4 = symbols('_:5')
+    eqs = [(x + y - 1)**2, x,
+        x + y, (x + y)/(2*x + 1) + (x + y - 1)**2,
+        (2*x + 1)**(x + y)]
+    r, e = cse(eqs, postprocess=cse_release_variables)
+    # this can change in keeping with the intention of the function
+    assert r, e == ([
+    (x0, x + y), (x1, (x0 - 1)**2), (x2, 2*x + 1),
+    (_3, x0/x2 + x1), (_4, x2**x0), (x2, None), (_0, x1),
+    (x1, None), (_2, x0), (x0, None), (_1, x)], (_0, _1, _2, _3, _4))
+    r.reverse()
+    assert eqs == [i.subs(r) for i in e]
+
+def test_cse_list():
+    _cse = lambda x: cse(x, list=False)
+    assert _cse(x) == ([], x)
+    assert _cse('x') == ([], 'x')
+    it = [x]
+    for c in (list, tuple, set, Tuple):
+        assert _cse(c(it)) == ([], c(it))
+    d = {x: 1}
+    assert _cse(d) == ([], d)
+
 def test_issue_18991():
     A = MatrixSymbol('A', 2, 2)
     assert signsimp(-A * A - A) == -A * A - A
+
+
+def test_unevaluated_Mul():
+    m = [Mul(1, 2, evaluate=False)]
+    assert cse(m) == ([], m)

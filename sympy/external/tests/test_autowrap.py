@@ -1,7 +1,9 @@
 import sympy
 import tempfile
 import os
-from sympy import symbols, Eq, Mod
+from sympy.core.mod import Mod
+from sympy.core.relational import Eq
+from sympy.core.symbol import symbols
 from sympy.external import import_module
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.autowrap import autowrap, ufuncify, CodeWrapError
@@ -114,7 +116,7 @@ def runtest_issue_10274(language, backend):
             fil = open(tmp + '/' + file)
             lines = fil.readlines()
             assert lines[0] == "/******************************************************************************\n"
-            assert "Code generated with sympy " + sympy.__version__ in lines[1]
+            assert "Code generated with SymPy " + sympy.__version__ in lines[1]
             assert lines[2:] == [
                 " *                                                                            *\n",
                 " *              See http://www.sympy.org/ for more information.               *\n",
@@ -254,9 +256,9 @@ def test_issue_15337_C_cython():
 def test_autowrap_custom_printer():
     has_module('Cython')
 
-    from sympy import pi
+    from sympy.core.numbers import pi
     from sympy.utilities.codegen import C99CodeGen
-    from sympy.printing.ccode import C99CodePrinter
+    from sympy.printing.c import C99CodePrinter
 
     class PiPrinter(C99CodePrinter):
         def _print_Pi(self, expr):

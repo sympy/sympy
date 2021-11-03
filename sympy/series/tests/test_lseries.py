@@ -1,4 +1,9 @@
-from sympy import sin, cos, exp, tanh, E, S, Order
+from sympy.core.numbers import E
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.hyperbolic import tanh
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.series.order import Order
 from sympy.abc import x, y
 
 

@@ -1,20 +1,25 @@
 from sympy.core import Function, S, sympify
+from sympy.utilities.iterables import sift
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import (Application, Lambda,
     ArgumentIndexError)
 from sympy.core.expr import Expr
+from sympy.core.exprtools import factor_terms
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Relational
 from sympy.core.singleton import Singleton
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
+from sympy.core.traversal import walk
 from sympy.logic.boolalg import And, Or
+
 
 def _minmax_as_Piecewise(op, *args):
     # helper for Min/Max rewrite as Piecewise
@@ -42,17 +47,16 @@ class IdentityFunction(Lambda, metaclass=Singleton):
 
     """
 
-    def __new__(cls):
-        x = Dummy('x')
-        #construct "by hand" to avoid infinite loop
-        return Expr.__new__(cls, Tuple(x), x)
+    _symbol = Dummy('x')
 
     @property
-    def args(self):
-        return ()
+    def signature(self):
+        return Tuple(self._symbol)
 
-    def __getnewargs__(self):
-        return ()
+    @property
+    def expr(self):
+        return self._symbol
+
 
 Id = S.IdentityFunction
 
@@ -201,8 +205,8 @@ def cbrt(arg, evaluate=None):
     References
     ==========
 
-    * https://en.wikipedia.org/wiki/Cube_root
-    * https://en.wikipedia.org/wiki/Principal_value
+    .. [1] https://en.wikipedia.org/wiki/Cube_root
+    .. [2] https://en.wikipedia.org/wiki/Principal_value
 
     """
     return Pow(arg, Rational(1, 3), evaluate=evaluate)
@@ -250,7 +254,7 @@ def root(arg, n, k=0, evaluate=None):
     The following examples show the roots of unity for n
     equal 2, 3 and 4:
 
-    >>> from sympy import rootof, I
+    >>> from sympy import rootof
 
     >>> [rootof(x**2 - 1, i) for i in range(2)]
     [-1, 1]
@@ -295,11 +299,11 @@ def root(arg, n, k=0, evaluate=None):
     References
     ==========
 
-    * https://en.wikipedia.org/wiki/Square_root
-    * https://en.wikipedia.org/wiki/Real_root
-    * https://en.wikipedia.org/wiki/Root_of_unity
-    * https://en.wikipedia.org/wiki/Principal_value
-    * http://mathworld.wolfram.com/CubeRoot.html
+    .. [1] https://en.wikipedia.org/wiki/Square_root
+    .. [2] https://en.wikipedia.org/wiki/Real_root
+    .. [3] https://en.wikipedia.org/wiki/Root_of_unity
+    .. [4] https://en.wikipedia.org/wiki/Principal_value
+    .. [5] http://mathworld.wolfram.com/CubeRoot.html
 
     """
     n = sympify(n)
@@ -329,8 +333,7 @@ def real_root(arg, n=None, evaluate=None):
     Examples
     ========
 
-    >>> from sympy import root, real_root, Rational
-    >>> from sympy.abc import x, n
+    >>> from sympy import root, real_root
 
     >>> real_root(-8, 3)
     -2
@@ -406,7 +409,7 @@ class MinMaxBase(Expr, LatticeOp):
 
         # base creation
         _args = frozenset(args)
-        obj = Expr.__new__(cls, _args, **assumptions)
+        obj = Expr.__new__(cls, *ordered(_args), **assumptions)
         obj._argset = _args
         return obj
 
@@ -433,11 +436,7 @@ class MinMaxBase(Expr, LatticeOp):
 
         >>> Min(a, Max(b, Min(c, d, Max(a, e))))
         Min(a, Max(b, Min(a, c, d)))
-
         """
-        from sympy.utilities.iterables import ordered
-        from sympy.simplify.simplify import walk
-
         if not args:
             return args
         args = list(ordered(args))
@@ -519,28 +518,33 @@ class MinMaxBase(Expr, LatticeOp):
         # easy case where all functions contain something in common;
         # trying to find some optimal subset of args to modify takes
         # too long
+
+        def factor_minmax(args):
+            is_other = lambda arg: isinstance(arg, other)
+            other_args, remaining_args = sift(args, is_other, binary=True)
+            if not other_args:
+                return args
+
+            # Min(Max(x, y, z), Max(x, y, u, v)) -> {x,y}, ({z}, {u,v})
+            arg_sets = [set(arg.args) for arg in other_args]
+            common = set.intersection(*arg_sets)
+            if not common:
+                return args
+
+            new_other_args = list(common)
+            arg_sets_diff = [arg_set - common for arg_set in arg_sets]
+
+            # If any set is empty after removing common then all can be
+            # discarded e.g. Min(Max(a, b, c), Max(a, b)) -> Max(a, b)
+            if all(arg_sets_diff):
+                other_args_diff = [other(*s, evaluate=False) for s in arg_sets_diff]
+                new_other_args.append(cls(*other_args_diff, evaluate=False))
+
+            other_args_factored = other(*new_other_args, evaluate=False)
+            return remaining_args + [other_args_factored]
+
         if len(args) > 1:
-            common = None
-            remove = []
-            sets = []
-            for i in range(len(args)):
-                a = args[i]
-                if not isinstance(a, other):
-                    continue
-                s = set(a.args)
-                common = s if common is None else (common & s)
-                if not common:
-                    break
-                sets.append(s)
-                remove.append(i)
-            if common:
-                sets = filter(None, [s - common for s in sets])
-                sets = [other(*s, evaluate=False) for s in sets]
-                for i in reversed(remove):
-                    args.pop(i)
-                oargs = [cls(*sets)] if sets else []
-                oargs.extend(common)
-                args.append(other(*oargs, evaluate=False))
+            args = factor_minmax(args)
 
         return args
 
@@ -602,7 +606,6 @@ class MinMaxBase(Expr, LatticeOp):
         """
         Check if x and y are connected somehow.
         """
-        from sympy.core.exprtools import factor_terms
         def hit(v, t, f):
             if not v.is_Relational:
                 return t if v else f
@@ -772,7 +775,7 @@ class Max(MinMaxBase, Application):
     identity = S.NegativeInfinity
 
     def fdiff( self, argindex ):
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
@@ -784,7 +787,7 @@ class Max(MinMaxBase, Application):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
@@ -835,7 +838,7 @@ class Min(MinMaxBase, Application):
     identity = S.Infinity
 
     def fdiff( self, argindex ):
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
@@ -847,7 +850,7 @@ class Min(MinMaxBase, Application):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])
 

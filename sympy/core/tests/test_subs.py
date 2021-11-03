@@ -1,9 +1,23 @@
-from sympy import (
-    Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
-    Integer, Eq, symbols, Add, I, Float, log, Rational,
-    Lambda, atan2, cse, cot, tan, S, Tuple, Basic, Dict,
-    Piecewise, oo, Mul, factor, nsimplify, zoo, Subs, RootOf,
-    AccumBounds, Matrix, zeros, ZeroMatrix)
+from sympy.calculus.util import AccumBounds
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.containers import (Dict, Tuple)
+from sympy.core.function import (Derivative, Function, Lambda, Subs)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi, zoo)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, Wild, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (atan2, cos, cot, sin, tan)
+from sympy.matrices.dense import (Matrix, zeros)
+from sympy.matrices.expressions.special import ZeroMatrix
+from sympy.polys.polytools import factor
+from sympy.polys.rootoftools import RootOf
+from sympy.simplify.cse_main import cse
+from sympy.simplify.simplify import nsimplify
 from sympy.core.basic import _aresame
 from sympy.testing.pytest import XFAIL
 from sympy.abc import a, x, y, z, t
@@ -850,3 +864,15 @@ def test_issue_17823():
     expr = q1.diff().diff()**2*q1 + q1.diff()*q2.diff()
     reps={q1: a, q1.diff(): a*x*y, q1.diff().diff(): z}
     assert expr.subs(reps) == a*x*y*Derivative(q2, t) + a*z**2
+
+
+def test_issue_19326():
+    x, y = [i(t) for i in map(Function, 'xy')]
+    assert (x*y).subs({x: 1 + x, y: x}) == (1 + x)*x
+
+def test_issue_19558():
+    e = (7*x*cos(x) - 12*log(x)**3)*(-log(x)**4 + 2*sin(x) + 1)**2/ \
+    (2*(x*cos(x) - 2*log(x)**3)*(3*log(x)**4 - 7*sin(x) + 3)**2)
+
+    assert e.subs(x, oo) == AccumBounds(-oo, oo)
+    assert (sin(x) + cos(x)).subs(x, oo) == AccumBounds(-2, 2)

@@ -3,7 +3,6 @@ from hashlib import sha256
 import os
 import shutil
 import sys
-import tempfile
 import fnmatch
 
 from sympy.testing.pytest import XFAIL
@@ -17,22 +16,6 @@ def may_xfail(func):
         return XFAIL(func)
     else:
         return func
-
-
-if sys.version_info[0] == 2:
-    class FileNotFoundError(IOError):
-        pass
-
-    class TemporaryDirectory:
-        def __init__(self):
-            self.path = tempfile.mkdtemp()
-        def __enter__(self):
-            return self.path
-        def __exit__(self, exc, value, tb):
-            shutil.rmtree(self.path)
-else:
-    FileNotFoundError = FileNotFoundError
-    TemporaryDirectory = tempfile.TemporaryDirectory
 
 
 class CompilerNotFoundError(FileNotFoundError):
@@ -130,7 +113,6 @@ def copy(src, dst, only_update=False, copystat=True, cwd=None,
         dst = os.path.join(dest_dir, dest_fname)
     else:
         dest_dir = os.path.dirname(dst)
-        dest_fname = os.path.basename(dst)
 
     if not os.path.exists(dest_dir):
         if create_dest_dirs:
@@ -218,7 +200,7 @@ def pyx_is_cplus(path):
     return False
 
 def import_module_from_file(filename, only_if_newer_than=None):
-    """ Imports python extension (from shared object file)
+    """ Imports Python extension (from shared object file)
 
     Provide a list of paths in `only_if_newer_than` to check
     timestamps of dependencies. import_ raises an ImportError

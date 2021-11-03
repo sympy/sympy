@@ -1,20 +1,37 @@
-from sympy import (
-    Abs, acos, Add, asin, atan, Basic, binomial, besselsimp,
-    cos, cosh, count_ops, csch, diff, E,
-    Eq, erf, exp, exp_polar, expand, expand_multinomial, factor,
-    factorial, Float, Function, gamma, GoldenRatio, hyper,
-    hypersimp, I, Integral, integrate, KroneckerDelta, log, logcombine, Lt,
-    Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, posify, rad,
-    Rational, S, separatevars, signsimp, simplify, sign, sin,
-    sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan,
-    zoo)
-from sympy.core.mul import _keep_coeff
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.basic import Basic
 from sympy.core.expr import unchanged
-from sympy.simplify.simplify import nthroot, inversecombine
-from sympy.testing.pytest import XFAIL, slow
+from sympy.core.function import (count_ops, diff, expand, expand_multinomial, Function, Derivative)
+from sympy.core.mul import Mul, _keep_coeff
+from sympy.core import GoldenRatio
+from sympy.core.numbers import (E, Float, I, oo, pi, Rational, zoo)
+from sympy.core.relational import (Eq, Lt, Gt, Ge, Le)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.complexes import (Abs, sign)
+from sympy.functions.elementary.exponential import (exp, exp_polar, log)
+from sympy.functions.elementary.hyperbolic import (cosh, csch, sinh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan)
+from sympy.functions.special.error_functions import erf
+from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.hyper import hyper
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.geometry.polygon import rad
+from sympy.integrals.integrals import (Integral, integrate)
+from sympy.logic.boolalg import (And, Or)
+from sympy.matrices.dense import (Matrix, eye)
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.polys.polytools import (factor, Poly)
+from sympy.simplify.simplify import (besselsimp, hypersimp, inversecombine, logcombine, nsimplify, nthroot, posify, separatevars, signsimp, simplify)
+from sympy.solvers.solvers import solve
 
-from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i
-
+from sympy.testing.pytest import XFAIL, slow, _both_exp_pow
+from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, n
 
 def test_issue_7263():
     assert abs((simplify(30.8**2 - 82.5**2 * sin(rad(11.6))**2)).evalf() - \
@@ -157,6 +174,7 @@ def test_simplify_other():
     assert simplify(2**(2 + x)/4) == 2**x
 
 
+@_both_exp_pow
 def test_simplify_complex():
     cosAsExp = cos(x)._eval_rewrite_as_exp(x)
     tanAsExp = tan(x)._eval_rewrite_as_exp(x)
@@ -200,6 +218,7 @@ def test_simplify_rational():
     assert simplify(expr, rational = True) == 2**(x+y)
     assert simplify(expr, rational = None) == 2.0**(x+y)
     assert simplify(expr, rational = False) == expr
+    assert simplify('0.9 - 0.8 - 0.1', rational = True) == 0
 
 
 def test_simplify_issue_1308():
@@ -246,6 +265,7 @@ def test_nthroot1():
     assert nthroot(p, 5) == q
 
 
+@_both_exp_pow
 def test_separatevars():
     x, y, z, n = symbols('x,y,z,n')
     assert separatevars(2*n*x*z + 2*x*y*z) == 2*x*z*(n + y)
@@ -502,7 +522,7 @@ def test_issue_5950():
 
 
 def test_posify():
-    from sympy.abc import x
+    x = symbols('x')
 
     assert str(posify(
         x +
@@ -513,7 +533,6 @@ def test_posify():
     assert log(eq).expand().subs(rep) == -log(x)
     assert str(posify([x, 1 + x])) == '([_x, _x + 1], {_x: x})'
 
-    x = symbols('x')
     p = symbols('p', positive=True)
     n = symbols('n', negative=True)
     orig = [x, n, p]
@@ -539,7 +558,6 @@ def test_posify():
 
 def test_issue_4194():
     # simplify should call cancel
-    from sympy.abc import x, y
     f = Function('f')
     assert simplify((4*x + 6*f(y))/(2*x + 3*f(y))) == 2
 
@@ -561,7 +579,7 @@ def test_as_content_primitive():
     # although the _as_content_primitive methods do not alter the underlying structure,
     # the as_content_primitive function will touch up the expression and join
     # bases that would otherwise have not been joined.
-    assert ((x*(2 + 2*x)*(3*x + 3)**2)).as_content_primitive() == \
+    assert (x*(2 + 2*x)*(3*x + 3)**2).as_content_primitive() == \
         (18, x*(x + 1)**3)
     assert (2 + 2*x + 2*y*(3 + 3*y)).as_content_primitive() == \
         (2, x + 3*y*(y + 1) + 1)
@@ -571,7 +589,7 @@ def test_as_content_primitive():
         (1, (_keep_coeff(S(2), (3*x + 1)))**(2*y))
     assert (5 + 10*x + 2*y*(3 + 3*y)).as_content_primitive() == \
         (1, 10*x + 6*y*(y + 1) + 5)
-    assert ((5*(x*(1 + y)) + 2*x*(3 + 3*y))).as_content_primitive() == \
+    assert (5*(x*(1 + y)) + 2*x*(3 + 3*y)).as_content_primitive() == \
         (11, x*(y + 1))
     assert ((5*(x*(1 + y)) + 2*x*(3 + 3*y))**2).as_content_primitive() == \
         (121, x**2*(y + 1)**2)
@@ -605,7 +623,8 @@ def test_signsimp():
 
 
 def test_besselsimp():
-    from sympy import besselj, besseli, cosh, cosine_transform, bessely
+    from sympy.functions.special.bessel import (besseli, besselj, bessely)
+    from sympy.integrals.transforms import cosine_transform
     assert besselsimp(exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))) == \
         besselj(y, z)
     assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \
@@ -699,7 +718,8 @@ def test_inequality_no_auto_simplify():
 
 
 def test_issue_9398():
-    from sympy import Number, cancel
+    from sympy.core.numbers import Number
+    from sympy.polys.polytools import cancel
     assert cancel(1e-14) != 0
     assert cancel(1e-14*I) != 0
 
@@ -734,11 +754,25 @@ def test_issue_9324_simplify():
     assert simplify(e) == e
 
 
+def test_issue_9817_simplify():
+    # simplify on trace of substituted explicit quadratic form of matrix
+    # expressions (a scalar) should return without errors (AttributeError)
+    # See issue #9817 and #9190 for the original bug more discussion on this
+    from sympy.matrices.expressions import Identity, trace
+    v = MatrixSymbol('v', 3, 1)
+    A = MatrixSymbol('A', 3, 3)
+    x = Matrix([i + 1 for i in range(3)])
+    X = Identity(3)
+    quadratic = v.T * A * v
+    assert simplify((trace(quadratic.as_explicit())).xreplace({v:x, A:X})) == 14
+
+
 def test_issue_13474():
     x = Symbol('x')
     assert simplify(x + csch(sinc(1))) == x + csch(sinc(1))
 
 
+@_both_exp_pow
 def test_simplify_function_inverse():
     # "inverse" attribute does not guarantee that f(g(x)) is x
     # so this simplification should not happen automatically.
@@ -760,6 +794,7 @@ def test_simplify_function_inverse():
     assert simplify(2*asin(sin(3*x)), inverse=True) == 6*x
     assert simplify(log(exp(x))) == log(exp(x))
     assert simplify(log(exp(x)), inverse=True) == x
+    assert simplify(exp(log(x)), inverse=True) == x
     assert simplify(log(exp(x), 2), inverse=True) == x/log(2)
     assert simplify(log(exp(x), 2, evaluate=False), inverse=True) == x/log(2)
 
@@ -846,6 +881,37 @@ def test_issue_17137():
     assert simplify(cos(x)**(2 + 3*I)) == cos(x)**(2 + 3*I)
 
 
+def test_issue_21869():
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    expr = And(Eq(x**2, 4), Le(x, y))
+    assert expr.simplify() == expr
+
+    expr = And(Eq(x**2, 4), Eq(x, 2))
+    assert expr.simplify() == Eq(x, 2)
+
+    expr = And(Eq(x**3, x**2), Eq(x, 1))
+    assert expr.simplify() == Eq(x, 1)
+
+    expr = And(Eq(sin(x), x**2), Eq(x, 0))
+    assert expr.simplify() == Eq(x, 0)
+
+    expr = And(Eq(x**3, x**2), Eq(x, 2))
+    assert expr.simplify() == S.false
+
+    expr = And(Eq(y, x**2), Eq(x, 1))
+    assert expr.simplify() == And(Eq(y,1), Eq(x, 1))
+
+    expr = And(Eq(y**2, 1), Eq(y, x**2), Eq(x, 1))
+    assert expr.simplify() == And(Eq(y,1), Eq(x, 1))
+
+    expr = And(Eq(y**2, 4), Eq(y, 2*x**2), Eq(x, 1))
+    assert expr.simplify() == And(Eq(y,2), Eq(x, 1))
+
+    expr = And(Eq(y**2, 4), Eq(y, x**2), Eq(x, 1))
+    assert expr.simplify() == S.false
+
+
 def test_issue_7971():
     z = Integral(x, (x, 1, 1))
     assert z != 0
@@ -891,9 +957,82 @@ def test_simplify_kroneckerdelta():
                                      [0, K(0, n), 0, K(1, n)],
                                      [0, 0, K(0, n), 0],
                                      [0, 0, 0, K(0, n)]])
+    assert simplify(eye(1) * KroneckerDelta(0, n) *
+                    KroneckerDelta(1, n)) == Matrix([[0]])
+
+    assert simplify(S.Infinity * KroneckerDelta(0, n) *
+                    KroneckerDelta(1, n)) is S.NaN
 
 
 def test_issue_17292():
     assert simplify(abs(x)/abs(x**2)) == 1/abs(x)
     # this is bigger than the issue: check that deep processing works
     assert simplify(5*abs((x**2 - 1)/(x - 1))) == 5*Abs(x + 1)
+
+
+def test_issue_19822():
+    expr = And(Gt(n-2, 1), Gt(n, 1))
+    assert simplify(expr) == Gt(n, 3)
+
+
+def test_issue_18645():
+    expr = And(Ge(x, 3), Le(x, 3))
+    assert simplify(expr) == Eq(x, 3)
+    expr = And(Eq(x, 3), Le(x, 3))
+    assert simplify(expr) == Eq(x, 3)
+
+
+@XFAIL
+def test_issue_18642():
+    i = Symbol("i", integer=True)
+    n = Symbol("n", integer=True)
+    expr = And(Eq(i, 2 * n), Le(i, 2*n -1))
+    assert simplify(expr) == S.false
+
+
+@XFAIL
+def test_issue_18389():
+    n = Symbol("n", integer=True)
+    expr = Eq(n, 0) | (n >= 1)
+    assert simplify(expr) == Ge(n, 0)
+
+
+def test_issue_8373():
+    x = Symbol('x', real=True)
+    assert simplify(Or(x < 1, x >= 1)) == S.true
+
+
+def test_issue_7950():
+    expr = And(Eq(x, 1), Eq(x, 2))
+    assert simplify(expr) == S.false
+
+
+def test_issue_22020():
+    expr = I*pi/2 -oo
+    assert simplify(expr) == expr
+    # Used to throw an error
+
+
+def test_issue_19484():
+    assert simplify(sign(x) * Abs(x)) == x
+
+    e = x + sign(x + x**3)
+    assert simplify(Abs(x + x**3)*e) == x**3 + x*Abs(x**3 + x) + x
+
+    e = x**2 + sign(x**3 + 1)
+    assert simplify(Abs(x**3 + 1) * e) == x**3 + x**2*Abs(x**3 + 1) + 1
+
+    f = Function('f')
+    e = x + sign(x + f(x)**3)
+    assert simplify(Abs(x + f(x)**3) * e) == x*Abs(x + f(x)**3) + x + f(x)**3
+
+
+def test_issue_19161():
+    polynomial = Poly('x**2').simplify()
+    assert (polynomial-x**2).simplify() == 0
+
+
+def test_issue_22210():
+    d = Symbol('d', integer=True)
+    expr = 2*Derivative(sin(x), (x, d))
+    assert expr.simplify() == expr

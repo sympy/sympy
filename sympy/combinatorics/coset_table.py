@@ -541,9 +541,9 @@ class CosetTable(DefaultPrinting):
 
         The unfortunate situation when the scan completes but not correctly,
         then ``coincidence`` routine is run. i.e when for some `i` with
-        `1 \le i \le r+1`, we have `w=st` with `s=x_1*x_2 ... x_{i-1}`,
-        `t=x_i*x_{i+1} ... x_r`, and `\beta = \alpha^s` and
-        `\gamma = \alph^{t-1}` are defined but unequal. This means that
+        `1 \le i \le r+1`, we have `w=st` with `s = x_1 x_2 \dots x_{i-1}`,
+        `t = x_i x_{i+1} \dots x_r`, and `\beta = \alpha^s` and
+        `\gamma = \alpha^{t-1}` are defined but unequal. This means that
         `\beta` and `\gamma` represent the same coset of `H` in `G`. Described
         on Pg. 156 [1]. ``rep``
 
@@ -755,7 +755,7 @@ class CosetTable(DefaultPrinting):
         A coset table is standardized if when running through the cosets and
         within each coset through the generator images (ignoring generator
         inverses), the cosets appear in order of the integers
-        `0, 1, , \ldots, n`. "Standardize" reorders the elements of `\Omega`
+        `0, 1, \dots, n`. "Standardize" reorders the elements of `\Omega`
         such that, if we scan the coset table first by elements of `\Omega`
         and then by elements of A, then the cosets occur in ascending order.
         ``standardize()`` is used at the end of an enumeration to permute the
@@ -1171,7 +1171,7 @@ def modified_coset_enumeration_r(fp_grp, Y, max_cosets=None, draft=None,
     ========
 
     >>> from sympy.combinatorics.free_groups import free_group
-    >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
+    >>> from sympy.combinatorics.fp_groups import FpGroup
     >>> from sympy.combinatorics.coset_table import modified_coset_enumeration_r
     >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])

@@ -3,15 +3,16 @@
 import sys
 import types
 import inspect
+from functools import wraps, update_wrapper
 
-from sympy.core.decorators import wraps
-from sympy.core.compatibility import get_function_globals, get_function_name, iterable
 from sympy.testing.runtests import DependencyError, SymPyDocTests, PyTestReporter
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 def threaded_factory(func, use_add):
     """A factory for ``threaded`` decorators. """
     from sympy.core import sympify
     from sympy.matrices import MatrixBase
+    from sympy.utilities.iterables import iterable
 
     @wraps(func)
     def threaded_func(expr, *args, **kwargs):
@@ -79,7 +80,6 @@ def xthreaded(func):
 def conserve_mpmath_dps(func):
     """After the function finishes, resets the value of mpmath.mp.dps to
     the value it had before the function was run."""
-    import functools
     import mpmath
 
     def func_wrapper(*args, **kwargs):
@@ -89,7 +89,7 @@ def conserve_mpmath_dps(func):
         finally:
             mpmath.mp.dps = dps
 
-    func_wrapper = functools.update_wrapper(func_wrapper, func)
+    func_wrapper = update_wrapper(func_wrapper, func)
     return func_wrapper
 
 
@@ -178,7 +178,7 @@ def public(obj):
     Append ``obj``'s name to global ``__all__`` variable (call site).
 
     By using this decorator on functions or classes you achieve the same goal
-    as by filling ``__all__`` variables manually, you just don't have to repeat
+    as by filling ``__all__`` variables manually, you just do not have to repeat
     yourself (object's name). You also know if object is public at definition
     site, not at some random location (where ``__all__`` was set).
 
@@ -192,7 +192,7 @@ def public(obj):
 
     >>> from sympy.utilities.decorator import public
 
-    >>> __all__
+    >>> __all__ # noqa: F821
     Traceback (most recent call last):
     ...
     NameError: name '__all__' is not defined
@@ -201,13 +201,13 @@ def public(obj):
     ... def some_function():
     ...     pass
 
-    >>> __all__
+    >>> __all__ # noqa: F821
     ['some_function']
 
     """
     if isinstance(obj, types.FunctionType):
-        ns = get_function_globals(obj)
-        name = get_function_name(obj)
+        ns = obj.__globals__
+        name = obj.__name__
     elif isinstance(obj, (type(type), type)):
         ns = sys.modules[obj.__module__].__dict__
         name = obj.__name__
@@ -238,3 +238,32 @@ def memoize_property(propfunc):
         return val
 
     return property(accessor)
+
+
+def deprecated(**decorator_kwargs):
+    """This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emitted
+    when the function is used."""
+
+    def _warn_deprecation(wrapped, stacklevel):
+        decorator_kwargs.setdefault('feature', wrapped.__name__)
+        SymPyDeprecationWarning(**decorator_kwargs).warn(stacklevel=stacklevel)
+
+    def deprecated_decorator(wrapped):
+        if hasattr(wrapped, '__mro__'):  # wrapped is actually a class
+            class wrapper(wrapped):
+                __doc__ = wrapped.__doc__
+                __name__ = wrapped.__name__
+                __module__ = wrapped.__module__
+                _sympy_deprecated_func = wrapped
+                def __init__(self, *args, **kwargs):
+                    _warn_deprecation(wrapped, 4)
+                    super().__init__(*args, **kwargs)
+        else:
+            @wraps(wrapped)
+            def wrapper(*args, **kwargs):
+                _warn_deprecation(wrapped, 3)
+                return wrapped(*args, **kwargs)
+            wrapper._sympy_deprecated_func = wrapped
+        return wrapper
+    return deprecated_decorator

@@ -1,7 +1,10 @@
 from sympy.core.basic import Basic
-from sympy import (sympify, eye, sin, cos, rot_axis1, rot_axis2,
-                   rot_axis3, ImmutableMatrix as Matrix, Symbol)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.dense import (eye, rot_axis1, rot_axis2, rot_axis3)
+from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 from sympy.core.cache import cacheit
+from sympy.core.symbol import Str
 import sympy.vector
 
 
@@ -104,7 +107,7 @@ class ThreeAngleOrienter(Orienter):
     """
 
     def __new__(cls, angle1, angle2, angle3, rot_order):
-        if isinstance(rot_order, Symbol):
+        if isinstance(rot_order, Str):
             rot_order = rot_order.name
 
         approved_orders = ('123', '231', '312', '132', '213',
@@ -137,7 +140,7 @@ class ThreeAngleOrienter(Orienter):
         parent_orient = parent_orient.T
 
         obj = super().__new__(
-            cls, angle1, angle2, angle3, Symbol(rot_order))
+            cls, angle1, angle2, angle3, Str(rot_order))
         obj._angle1 = angle1
         obj._angle2 = angle2
         obj._angle3 = angle3

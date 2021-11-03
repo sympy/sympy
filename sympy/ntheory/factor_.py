@@ -7,7 +7,6 @@ import random
 import math
 
 from sympy.core import sympify
-from sympy.core.compatibility import as_int, SYMPY_INTS
 from sympy.core.containers import Dict
 from sympy.core.evalf import bitcount
 from sympy.core.expr import Expr
@@ -15,13 +14,15 @@ from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul, prod
 from sympy.core.numbers import igcd, ilcm, Rational, Integer
-from sympy.core.power import integer_nthroot, Pow
+from sympy.core.power import integer_nthroot, Pow, integer_log
 from sympy.core.singleton import S
+from sympy.external.gmpy import SYMPY_INTS
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
-from sympy.utilities.misc import filldedent
-
+from sympy.utilities.iterables import flatten
+from sympy.utilities.misc import as_int, filldedent
+from .ecm import _ecm_one_factor
 
 # Note: This list should be updated whenever new Mersenne primes are found.
 # Refer: https://www.mersenne.org/
@@ -151,7 +152,6 @@ def smoothness_p(n, m=-1, power=0, visual=None):
 
     factorint, smoothness
     """
-    from sympy.utilities import flatten
 
     # visual must be True, False or other (stored as None)
     if visual in (1, 0):
@@ -170,20 +170,20 @@ def smoothness_p(n, m=-1, power=0, visual=None):
         if visual is not True and visual is not False:
             return d
         return smoothness_p(d, visual=False)
-    elif type(n) is not tuple:
+    elif not isinstance(n, tuple):
         facs = factorint(n, visual=False)
 
     if power:
         k = -1
     else:
         k = 1
-    if type(n) is not tuple:
+    if isinstance(n, tuple):
+        rv = n
+    else:
         rv = (m, sorted([(f,
                           tuple([M] + list(smoothness(f + m))))
                          for f, M in [i for i in facs.items()]],
                         key=lambda x: (x[1][k], x[0])))
-    else:
-        rv = n
 
     if visual is False or (visual is not True) and (type(n) in [int, Mul]):
         return rv
@@ -251,11 +251,10 @@ def multiplicity(p, n):
     Examples
     ========
 
-    >>> from sympy.ntheory import multiplicity
-    >>> from sympy.core.numbers import Rational as R
+    >>> from sympy import multiplicity, Rational
     >>> [multiplicity(5, n) for n in [8, 5, 25, 125, 250]]
     [0, 1, 2, 3, 3]
-    >>> multiplicity(3, R(1, 9))
+    >>> multiplicity(3, Rational(1, 9))
     -2
 
     Note: when checking for the multiplicity of a number in a
@@ -453,7 +452,6 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     sympy.core.power.integer_nthroot
     sympy.ntheory.primetest.is_square
     """
-    from sympy.core.power import integer_nthroot
     n = as_int(n)
     if n < 3:
         if n < 1:
@@ -699,8 +697,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     work had a gcd value not equal to ``n`` but equal to one of the
     factors:
 
-        >>> from sympy.core.numbers import ilcm, igcd
-        >>> from sympy import factorint, Pow
+        >>> from sympy import ilcm, igcd, factorint, Pow
         >>> M = 1
         >>> for i in range(2, 256):
         ...     M = ilcm(M, i)
@@ -728,9 +725,9 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     Examples
     ========
 
-    With the default smoothness bound, this number can't be cracked:
+    With the default smoothness bound, this number cannot be cracked:
 
-        >>> from sympy.ntheory import pollard_pm1, primefactors
+        >>> from sympy.ntheory import pollard_pm1
         >>> pollard_pm1(21477639576571)
 
     Increasing the smoothness bound helps:
@@ -740,7 +737,6 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
 
     Looking at the smoothness of the factors of this number we find:
 
-        >>> from sympy.utilities import flatten
         >>> from sympy.ntheory.factor_ import smoothness_p, factorint
         >>> print(smoothness_p(21477639576571, visual=1))
         p**i=4410317**1 has p-1 B=1787, B-pow=1787
@@ -766,7 +762,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     conditions apply then the power-smoothness will be about p/2 or p. The more
     realistic is that there will be a large prime factor next to p requiring
     a B value on the order of p/2. Although primes may have been searched for
-    up to this level, the p/2 is a factor of p - 1, something that we don't
+    up to this level, the p/2 is a factor of p - 1, something that we do not
     know. The modular.math reference below states that 15% of numbers in the
     range of 10**15 to 15**15 + 10**4 are 10**6 power smooth so a B of 10**6
     will fail 85% of the time in that range. From 10**8 to 10**8 + 10**3 the
@@ -867,6 +863,7 @@ trial_int_msg = "Trial division with ints [%i ... %i] and fail_max=%i"
 trial_msg = "Trial division with primes [%i ... %i]"
 rho_msg = "Pollard's rho with retries %i, max_steps %i and seed %i"
 pm1_msg = "Pollard's p-1 with smoothness bound %i and seed %i"
+ecm_msg = "Elliptic Curve with B1 bound %i, B2 bound %i, num_curves %i"
 factor_msg = '\t%i ** %i'
 fermat_msg = 'Close factors satisying Fermat condition found.'
 complete_msg = 'Factorization is complete.'
@@ -974,7 +971,7 @@ def _factorint_small(factors, n, limit, fail_max):
 
 
 def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
-              verbose=False, visual=None, multiple=False):
+              use_ecm=True, verbose=False, visual=None, multiple=False):
     r"""
     Given a positive integer ``n``, ``factorint(n)`` returns a dict containing
     the prime factors of ``n`` as keys and their respective multiplicities
@@ -1048,7 +1045,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     You can easily switch between the two forms by sending them back to
     factorint:
 
-    >>> from sympy import Mul, Pow
+    >>> from sympy import Mul
     >>> regular = factorint(1764); regular
     {2: 2, 3: 2, 7: 2}
     >>> pprint(factorint(regular))
@@ -1133,7 +1130,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         return factorlist
 
     factordict = {}
-    if visual and not isinstance(n, Mul) and not isinstance(n, dict):
+    if visual and not isinstance(n, (Mul, dict)):
         factordict = factorint(n, limit=limit, use_trial=use_trial,
                                use_rho=use_rho, use_pm1=use_pm1,
                                verbose=verbose, visual=False)
@@ -1142,7 +1139,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             n.as_powers_dict().items()}
     elif isinstance(n, dict):
         factordict = n
-    if factordict and (isinstance(n, Mul) or isinstance(n, dict)):
+    if factordict and isinstance(n, (Mul, dict)):
         # check it
         for key in list(factordict.keys()):
             if isprime(key):
@@ -1171,7 +1168,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     elif isinstance(n, dict) or isinstance(n, Mul):
         return factordict
 
-    assert use_trial or use_rho or use_pm1
+    assert use_trial or use_rho or use_pm1 or use_ecm
 
     from sympy.functions.combinatorial.factorials import factorial
     if isinstance(n, factorial):
@@ -1200,6 +1197,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     n = as_int(n)
     if limit:
         limit = int(limit)
+        use_ecm = False
 
     # special cases
     if n < 0:
@@ -1312,7 +1310,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     limit = limit or sqrt_n
     # add 1 to make sure limit is reached in primerange calls
     limit += 1
-
+    iteration = 0
     while 1:
 
         try:
@@ -1355,6 +1353,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                                            use_trial=use_trial,
                                            use_rho=use_rho,
                                            use_pm1=use_pm1,
+                                           use_ecm=use_ecm,
                                            verbose=verbose)
                             n, _ = _trial(factors, n, ps, verbose=False)
                             _check_termination(factors, n, limit, use_trial,
@@ -1373,6 +1372,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
                                            use_trial=use_trial,
                                            use_rho=use_rho,
                                            use_pm1=use_pm1,
+                                           use_ecm=use_ecm,
                                            verbose=verbose)
                             n, _ = _trial(factors, n, ps, verbose=False)
                             _check_termination(factors, n, limit, use_trial,
@@ -1382,8 +1382,40 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
             if verbose:
                 print(complete_msg)
             return factors
-
+        #Use subexponential algorithms if use_ecm
+        #Use pollard algorithms for finding small factors for 3 iterations
+        #if after small factors the number of digits of n is >= 20 then use ecm
+        iteration += 1
+        if use_ecm and iteration >= 3 and len(str(n)) >= 25:
+            break
         low, high = high, high*2
+    B1 = 10000
+    B2 = 100*B1
+    num_curves = 50
+    while(1):
+        if verbose:
+            print(ecm_msg % (B1, B2, num_curves))
+        while(1):
+            try:
+                factor = _ecm_one_factor(n, B1, B2, num_curves)
+                ps = factorint(factor, limit=limit - 1,
+                               use_trial=use_trial,
+                               use_rho=use_rho,
+                               use_pm1=use_pm1,
+                               use_ecm=use_ecm,
+                               verbose=verbose)
+                n, _ = _trial(factors, n, ps, verbose=False)
+                _check_termination(factors, n, limit, use_trial,
+                                       use_rho, use_pm1, verbose)
+            except ValueError:
+                break
+            except StopIteration:
+                if verbose:
+                    print(complete_msg)
+                return factors
+        B1 *= 5
+        B2 = 100*B1
+        num_curves *= 4
 
 
 def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
@@ -1393,8 +1425,7 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     the prime factors of ``r`` as keys and their respective multiplicities
     as values. For example:
 
-    >>> from sympy.ntheory import factorrat
-    >>> from sympy.core.symbol import S
+    >>> from sympy import factorrat, S
     >>> factorrat(S(8)/9)    # 8/9 = (2**3) * (3**-2)
     {2: 3, 3: -2}
     >>> factorrat(S(-1)/987)    # -1/789 = -1 * (3**-1) * (7**-1) * (47**-1)
@@ -1411,7 +1442,6 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
         - ``multiple``: Toggle returning a list of factors or dict
         - ``visual``: Toggle product form of output
     """
-    from collections import defaultdict
     if multiple:
         fac = factorrat(rat, limit=limit, use_trial=use_trial,
                   use_rho=use_rho, use_pm1=use_pm1,
@@ -2333,7 +2363,6 @@ def is_perfect(n):
     .. [2] https://en.wikipedia.org/wiki/Perfect_number
 
     """
-    from sympy.core.power import integer_log
 
     n = as_int(n)
     if _isperfect(n):
@@ -2410,7 +2439,6 @@ def is_mersenne_prime(n):
     .. [1] http://mathworld.wolfram.com/MersennePrime.html
 
     """
-    from sympy.core.power import integer_log
 
     n = as_int(n)
     if _ismersenneprime(n):

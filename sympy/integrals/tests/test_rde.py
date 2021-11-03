@@ -1,5 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
-from sympy import Poly, symbols, oo, I, Rational
+from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.symbol import symbols
+from sympy.polys.polytools import Poly
 from sympy.integrals.risch import (DifferentialExtension,
     NonElementaryIntegralException)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
@@ -81,7 +83,9 @@ def test_special_denom():
     DE.decrement_level()
     assert special_denom(Poly(1, t0), Poly(I*k, t0), Poly(1, t0), Poly(t0, t0),
     Poly(1, t0), DE) == \
-        (Poly(1, t0), Poly(I*k, t0), Poly(t0, t0), Poly(1, t0))
+        (Poly(1, t0, domain='ZZ'), Poly(I*k, t0, domain='ZZ_I[k,x]'),
+                Poly(t0, t0, domain='ZZ'), Poly(1, t0, domain='ZZ'))
+
 
     assert special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), Poly(t**2 - 1, t),
     Poly(t, t), DE, case='tan') == \

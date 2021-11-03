@@ -1,6 +1,12 @@
-from sympy import Rational, oo, sqrt, S
-from sympy import Line, Point, Point2D, Parabola, Segment2D, Ray2D
-from sympy import Circle, Ellipse, symbols, sign
+from sympy.core.numbers import (Rational, oo)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.geometry.ellipse import (Circle, Ellipse)
+from sympy.geometry.line import (Line, Ray2D, Segment2D)
+from sympy.geometry.parabola import Parabola
+from sympy.geometry.point import (Point, Point2D)
 from sympy.testing.pytest import raises
 
 
@@ -42,6 +48,7 @@ def test_parabola_geom():
 
     # Basic Stuff
     assert pa1.focus == Point(0, 0)
+    assert pa1.ambient_dimension == S(2)
     assert pa2 == pa3
     assert pa4 != pa7
     assert pa6 != pa7
@@ -98,6 +105,7 @@ def test_parabola_intersection():
     assert parabola1.intersection(Line(Point2D(-7, 3), Point(12, 3))) == [Point2D(-4, 3), Point2D(4, 3)]
     assert parabola1.intersection(Line(Point(-4, -1), Point(4, -1))) == [Point(0, -1)]
     assert parabola1.intersection(Line(Point(2, 0), Point(0, -2))) == [Point2D(2, 0)]
+    raises(TypeError, lambda: parabola1.intersection(Line(Point(0, 0, 0), Point(1, 1, 1))))
     # parabola with segment
     assert parabola1.intersection(Segment2D((-4, -5), (4, 3))) == [Point2D(0, -1), Point2D(4, 3)]
     assert parabola1.intersection(Segment2D((0, -5), (0, 6))) == [Point2D(0, -1)]
@@ -113,3 +121,5 @@ def test_parabola_intersection():
     assert parabola1.intersection(Ellipse(Point(0, 19), 5, 7)) == []
     assert parabola1.intersection(Ellipse((0, 3), 12, 4)) == \
            [Point2D(0, -1), Point2D(0, -1), Point2D(-4*sqrt(17)/3, Rational(59, 9)), Point2D(4*sqrt(17)/3, Rational(59, 9))]
+    # parabola with unsupported type
+    raises(TypeError, lambda: parabola1.intersection(2))

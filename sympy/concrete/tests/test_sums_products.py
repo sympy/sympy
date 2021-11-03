@@ -1,17 +1,42 @@
-from sympy import (
-    Abs, And, binomial, Catalan, cos, Derivative, E, Eq, exp, EulerGamma,
-    factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
-    nan, oo, pi, Piecewise, Product, product, Rational, S, simplify, Identity,
-    sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma,
-    Indexed, Idx, IndexedBase, prod, Dummy, lowergamma, Range, floor,
-    RisingFactorial, MatrixSymbol)
+from sympy.concrete.products import (Product, product)
+from sympy.concrete.summations import (Sum, summation)
+from sympy.core.function import (Derivative, Function)
+from sympy.core.mul import prod
+from sympy.core import (Catalan, EulerGamma)
+from sympy.core.numbers import (E, I, Rational, nan, oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (rf, binomial, factorial)
+from sympy.functions.combinatorial.numbers import harmonic
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (sinh, tanh)
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.gamma_functions import (gamma, lowergamma)
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.functions.special.zeta_functions import zeta
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import And, Or
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.special import Identity
+from sympy.sets.fancysets import Range
+from sympy.sets.sets import Interval
+from sympy.simplify.combsimp import combsimp
+from sympy.simplify.simplify import simplify
+from sympy.tensor.indexed import (Idx, Indexed, IndexedBase)
 from sympy.abc import a, b, c, d, k, m, x, y, z
-from sympy.concrete.summations import telescopic, _dummy_with_inherited_properties_concrete
+from sympy.concrete.summations import (
+    telescopic, _dummy_with_inherited_properties_concrete, eval_sum_residue)
 from sympy.concrete.expr_with_intlimits import ReorderError
 from sympy.core.facts import InconsistentAssumptions
 from sympy.testing.pytest import XFAIL, raises, slow
-from sympy.matrices import \
-    Matrix, SparseMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix
+from sympy.matrices import (Matrix, SparseMatrix,
+    ImmutableDenseMatrix, ImmutableSparseMatrix)
 from sympy.core.mod import Mod
 
 n = Symbol('n', integer=True)
@@ -29,7 +54,7 @@ def test_karr_convention():
     #
     # It is important to note that he defines all sums with
     # the upper limit being *exclusive*.
-    # In contrast, sympy and the usual mathematical notation has:
+    # In contrast, SymPy and the usual mathematical notation has:
     #
     # sum_{i = a}^b f(i) = f(a) + f(a+1) + ... + f(b-1) + f(b)
     #
@@ -387,6 +412,15 @@ def test_evalf_slow_series():
     assert NS(Sum((-1)**n / (2*n + 1)**3, (n, 0, oo)), 50) == NS(pi**3/32, 50)
 
 
+def test_evalf_oo_to_oo():
+    # There used to be an error in certain cases
+    # Does not evaluate, but at least do not throw an error
+    # Evaluates symbolically to 0, which is not correct
+    assert Sum(1/(n**2+1), (n, -oo, oo)).evalf() == Sum(1/(n**2+1), (n, -oo, oo))
+    # This evaluates if from 1 to oo and symbolically
+    assert Sum(1/(factorial(abs(n))), (n, -oo, -1)).evalf() == Sum(1/(factorial(abs(n))), (n, -oo, -1))
+
+
 def test_euler_maclaurin():
     # Exact polynomial sums with E-M
     def check_exact(f, a, b, m, n):
@@ -476,12 +510,12 @@ def test_simple_products():
 
 
 def test_rational_products():
-    assert simplify(product(1 + 1/n, (n, a, b))) == (1 + b)/a
-    assert simplify(product(n + 1, (n, a, b))) == gamma(2 + b)/gamma(1 + a)
-    assert simplify(product((n + 1)/(n - 1), (n, a, b))) == b*(1 + b)/(a*(a - 1))
-    assert simplify(product(n/(n + 1)/(n + 2), (n, a, b))) == \
+    assert combsimp(product(1 + 1/n, (n, a, b))) == (1 + b)/a
+    assert combsimp(product(n + 1, (n, a, b))) == gamma(2 + b)/gamma(1 + a)
+    assert combsimp(product((n + 1)/(n - 1), (n, a, b))) == b*(1 + b)/(a*(a - 1))
+    assert combsimp(product(n/(n + 1)/(n + 2), (n, a, b))) == \
         a*gamma(a + 2)/(b + 1)/gamma(b + 3)
-    assert simplify(product(n*(n + 1)/(n - 1)/(n - 2), (n, a, b))) == \
+    assert combsimp(product(n*(n + 1)/(n - 1)/(n - 2), (n, a, b))) == \
         b**2*(b - 1)*(1 + b)/(a - 1)**2/(a*(a - 2))
 
 
@@ -575,9 +609,9 @@ def test_Sum_doit():
     assert 0 == (s.doit() - n*(n+1)*(n-1)).factor()
 
     # Integer assumes finite
-    assert Sum(KroneckerDelta(x, y), (x, -oo, oo)).doit() == Piecewise((1, And(-oo <= y, y < oo)), (0, True))
+    assert Sum(KroneckerDelta(x, y), (x, -oo, oo)).doit() == Piecewise((1, And(-oo < y, y < oo)), (0, True))
     assert Sum(KroneckerDelta(m, n), (m, -oo, oo)).doit() == 1
-    assert Sum(m*KroneckerDelta(x, y), (x, -oo, oo)).doit() == Piecewise((m, And(-oo <= y, y < oo)), (0, True))
+    assert Sum(m*KroneckerDelta(x, y), (x, -oo, oo)).doit() == Piecewise((m, And(-oo < y, y < oo)), (0, True))
     assert Sum(x*KroneckerDelta(m, n), (m, -oo, oo)).doit() == x
     assert Sum(Sum(KroneckerDelta(m, n), (m, 1, 3)), (n, 1, 3)).doit() == 3
     assert Sum(Sum(KroneckerDelta(k, m), (m, 1, 3)), (n, 1, 3)).doit() == \
@@ -638,7 +672,6 @@ def test_diff():
 
 
 def test_hypersum():
-    from sympy import sin
     assert simplify(summation(x**n/fac(n), (n, 1, oo))) == -1 + exp(x)
     assert summation((-1)**n * x**(2*n) / fac(2*n), (n, 0, oo)) == cos(x)
     assert simplify(summation((-1)**n*x**(2*n + 1) /
@@ -929,11 +962,13 @@ def test_issue_2787():
     res = s.doit().simplify()
     assert res == Piecewise(
         (n*p, p/Abs(p - 1) <= 1),
-        ((-p + 1)**n*Sum(k*p**k*(-p + 1)**(-k)*binomial(n, k), (k, 0, n)),
+        ((-p + 1)**n*Sum(k*p**k*binomial(n, k)/(-p + 1)**(k), (k, 0, n)),
         True))
-    # Issue #17165: make sure that another simplify does not change/increase
-    # the result
-    assert res == res.simplify()
+    # Issue #17165: make sure that another simplify does not complicate
+    # the result (but why didn't first simplify handle this?)
+    assert res.simplify() == Piecewise((n*p, p <= S.Half),
+        ((1 - p)**n*Sum(k*p**k*binomial(n, k)/(1 - p)**k,
+        (k, 0, n)), True))
 
 
 def test_issue_4668():
@@ -987,6 +1022,7 @@ def test_indexed_idx_sum():
     raises(ValueError, lambda: Product(A[k], (k, 2, oo)))
 
 
+@slow
 def test_is_convergent():
     # divergence tests --
     assert Sum(n/(2*n + 1), (n, 1, oo)).is_convergent() is S.false
@@ -995,6 +1031,9 @@ def test_is_convergent():
     assert Sum((-1)**n*n, (n, 3, oo)).is_convergent() is S.false
     assert Sum((-1)**n, (n, 1, oo)).is_convergent() is S.false
     assert Sum(log(1/n), (n, 2, oo)).is_convergent() is S.false
+
+    # Raabe's test --
+    assert Sum(Product((3*m),(m,1,n))/Product((3*m+4),(m,1,n)),(n,1,oo)).is_convergent() is S.true
 
     # root test --
     assert Sum((-12)**n/n, (n, 1, oo)).is_convergent() is S.false
@@ -1006,6 +1045,9 @@ def test_is_convergent():
     assert Sum(1/n**Rational(6, 5), (n, 1, oo)).is_convergent() is S.true
     assert Sum(2/(n*sqrt(n - 1)), (n, 2, oo)).is_convergent() is S.true
     assert Sum(1/(sqrt(n)*sqrt(n)), (n, 2, oo)).is_convergent() is S.false
+    assert Sum(factorial(n) / factorial(n+2), (n, 1, oo)).is_convergent() is S.true
+    assert Sum(rf(5,n)/rf(7,n),(n,1,oo)).is_convergent() is S.true
+    assert Sum((rf(1, n)*rf(2, n))/(rf(3, n)*factorial(n)),(n,1,oo)).is_convergent() is S.false
 
     # comparison test --
     assert Sum(1/(n + log(n)), (n, 1, oo)).is_convergent() is S.false
@@ -1050,6 +1092,12 @@ def test_is_convergent():
     assert Sum(1/(x**3), (x, 1, oo)).is_convergent() is S.true
     assert Sum(1/(x**S.Half), (x, 1, oo)).is_convergent() is S.false
 
+    # issue 19545
+    assert Sum(1/n - 3/(3*n +2), (n, 1, oo)).is_convergent() is S.true
+
+    # issue 19836
+    assert Sum(4/(n + 2) - 5/(n + 1) + 1/n,(n, 7, oo)).is_convergent() is S.true
+
 
 def test_is_absolutely_convergent():
     assert Sum((-1)**n, (n, 1, oo)).is_absolutely_convergent() is S.false
@@ -1077,6 +1125,10 @@ def test_issue_10156():
     e = 2*y*Sum(2*cx*x**2, (x, 1, 9))
     assert e.factor() == \
         8*y**3*Sum(x, (x, 1, 3))*Sum(x**2, (x, 1, 9))
+
+
+def test_issue_10973():
+    assert Sum((-n + (n**3 + 1)**(S(1)/3))/log(n), (n, 1, oo)).is_convergent() is S.true
 
 
 def test_issue_14129():
@@ -1110,7 +1162,7 @@ def test_issue_14111():
 
 
 def test_issue_14484():
-    raises(NotImplementedError, lambda: Sum(sin(n)/log(log(n)), (n, 22, oo)).is_convergent())
+    assert Sum(sin(n)/log(log(n)), (n, 22, oo)).is_convergent() is S.false
 
 
 def test_issue_14640():
@@ -1323,21 +1375,30 @@ def test_issue_8016():
     # if we replace non-integers with integers *before* simplification
     # we get a different simplification
     got2 = ans.subs(reps).simplify()
-    assert got2 != 0
-    # this was the answer before changes were made to binomial
-    got3 = cos(pi*n/2)*gamma(m + 1)/gamma(n/2 + 1)/gamma(m - n/2 + 1)
-    # the before and after forms are equivalent
-    assert (got2/got3).simplify() == 1
+    assert got2 == 2**n*sqrt(pi)*gamma(m + 1)/(
+        gamma((1 - n)/2)*gamma(n + 1)*gamma(m - n/2 + 1))
+    # make symbols the same as in got1 and show equivalence
+    got2_with_old = got2.xreplace({n: oldn, m: oldm})
+    # (it works better to prove the two are the same by computing the
+    # ratio of 1 then the difference of 0)
+    assert (got1/got2_with_old).simplify() == 1
 
 
-@XFAIL
 def test_issue_14313():
     assert Sum(S.Half**floor(n/2), (n, 1, oo)).is_convergent()
 
 
-@XFAIL
+def test_issue_14563():
+    # The assertion was failing due to no assumptions methods in Sums and Product
+    assert 1 % Sum(1, (x, 0, 1)) == 1
+
+
+def test_issue_16735():
+    assert Sum(5**n/gamma(n+1), (n, 1, oo)).is_convergent() is S.true
+
+
 def test_issue_14871():
-    assert Sum((Rational(1, 10))**x*RisingFactorial(0, x)/factorial(x), (x, 0, oo)).rewrite(factorial).doit() == 1
+    assert Sum((Rational(1, 10))**n*rf(0, n)/factorial(n), (n, 0, oo)).rewrite(factorial).doit() == 1
 
 
 def test_issue_17165():
@@ -1346,15 +1407,23 @@ def test_issue_17165():
     s = (x*Sum(x**n, (n, -1, oo)))
     ssimp = s.doit().simplify()
 
-    assert ssimp == Piecewise((-1/(x - 1), Abs(x) < 1),
-                              (x*Sum(x**n, (n, -1, oo)), True))
-    assert ssimp == ssimp.simplify()
+    assert ssimp == Piecewise((-1/(x - 1), (x > -1) & (x < 1)),
+                              (x*Sum(x**n, (n, -1, oo)), True)), ssimp
+    assert ssimp.simplify() == ssimp
+
+
+def test_issue_19379():
+    assert Sum(factorial(n)/factorial(n + 2), (n, 1, oo)).is_convergent() is S.true
+
+
+def test_issue_20777():
+    assert Sum(exp(x*sin(n/m)), (n, 1, m)).doit() == Sum(exp(x*sin(n/m)), (n, 1, m))
 
 
 def test__dummy_with_inherited_properties_concrete():
     x = Symbol('x')
 
-    from sympy import Tuple
+    from sympy.core.containers import Tuple
     d = _dummy_with_inherited_properties_concrete(Tuple(x, 0, 5))
     assert d.is_real
     assert d.is_integer
@@ -1416,6 +1485,12 @@ def test_matrixsymbol_summation_numerical_limits():
     assert Sum(A**n*B**n, (n, 1, 3)).doit() == ans
 
 
+def test_issue_21651():
+    i = Symbol('i')
+    a = Sum(floor(2*2**(-i)), (i, S.One, 2))
+    assert a.doit() == S.One
+
+
 @XFAIL
 def test_matrixsymbol_summation_symbolic_limits():
     N = Symbol('N', integer=True, positive=True)
@@ -1424,3 +1499,111 @@ def test_matrixsymbol_summation_symbolic_limits():
     n = Symbol('n', integer=True)
     assert Sum(A, (n, 0, N)).doit() == (N+1)*A
     assert Sum(n*A, (n, 0, N)).doit() == (N**2/2+N/2)*A
+
+
+def test_summation_by_residues():
+    x = Symbol('x')
+
+    # Examples from Nakhle H. Asmar, Loukas Grafakos,
+    # Complex Analysis with Applications
+    assert eval_sum_residue(1 / (x**2 + 1), (x, -oo, oo)) == pi/tanh(pi)
+    assert eval_sum_residue(1 / x**6, (x, S(1), oo)) == pi**6/945
+    assert eval_sum_residue(1 / (x**2 + 9), (x, -oo, oo)) == pi/(3*tanh(3*pi))
+    assert eval_sum_residue(1 / (x**2 + 1)**2, (x, -oo, oo)).cancel() == \
+        (-pi**2*tanh(pi)**2 + pi*tanh(pi) + pi**2)/(2*tanh(pi)**2)
+    assert eval_sum_residue(x**2 / (x**2 + 1)**2, (x, -oo, oo)).cancel() == \
+        (-pi**2 + pi*tanh(pi) + pi**2*tanh(pi)**2)/(2*tanh(pi)**2)
+    assert eval_sum_residue(1 / (4*x**2 - 1), (x, -oo, oo)) == 0
+    assert eval_sum_residue(x**2 / (x**2 - S(1)/4)**2, (x, -oo, oo)) == pi**2/2
+    assert eval_sum_residue(1 / (4*x**2 - 1)**2, (x, -oo, oo)) == pi**2/8
+    assert eval_sum_residue(1 / ((x - S(1)/2)**2 + 1), (x, -oo, oo)) == pi*tanh(pi)
+    assert eval_sum_residue(1 / x**2, (x, S(1), oo)) == pi**2/6
+    assert eval_sum_residue(1 / x**4, (x, S(1), oo)) == pi**4/90
+    assert eval_sum_residue(1 / x**2 / (x**2 + 4), (x, S(1), oo)) == \
+        -pi*(-pi/12 - 1/(16*pi) + 1/(8*tanh(2*pi)))/2
+
+    # Some examples made from 1 / (x**2 + 1)
+    assert eval_sum_residue(1 / (x**2 + 1), (x, S(0), oo)) == \
+        S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (x**2 + 1), (x, S(1), oo)) == \
+        -S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (x**2 + 1), (x, S(-1), oo)) == \
+        1 + pi/(2*tanh(pi))
+    assert eval_sum_residue((-1)**x / (x**2 + 1), (x, -oo, oo)) == \
+        pi/sinh(pi)
+    assert eval_sum_residue((-1)**x / (x**2 + 1), (x, S(0), oo)) == \
+        pi/(2*sinh(pi)) + S(1)/2
+    assert eval_sum_residue((-1)**x / (x**2 + 1), (x, S(1), oo)) == \
+        -S(1)/2 + pi/(2*sinh(pi))
+    assert eval_sum_residue((-1)**x / (x**2 + 1), (x, S(-1), oo)) == \
+        pi/(2*sinh(pi))
+
+    # Some examples made from shifting of 1 / (x**2 + 1)
+    assert eval_sum_residue(1 / (x**2 + 2*x + 2), (x, S(-1), oo)) == S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (x**2 + 4*x + 5), (x, S(-2), oo)) == S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (x**2 - 2*x + 2), (x, S(1), oo)) == S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue(1 / (x**2 - 4*x + 5), (x, S(2), oo)) == S(1)/2 + pi/(2*tanh(pi))
+    assert eval_sum_residue((-1)**x * -1 / (x**2 + 2*x + 2), (x, S(-1), oo)) ==  S(1)/2 + pi/(2*sinh(pi))
+    assert eval_sum_residue((-1)**x * -1 / (x**2 -2*x + 2), (x, S(1), oo)) == S(1)/2 + pi/(2*sinh(pi))
+
+    # Some examples made from 1 / x**2
+    assert eval_sum_residue(1 / x**2, (x, S(2), oo)) == -1 + pi**2/6
+    assert eval_sum_residue(1 / x**2, (x, S(3), oo)) == -S(5)/4 + pi**2/6
+    assert eval_sum_residue((-1)**x / x**2, (x, S(1), oo)) == -pi**2/12
+    assert eval_sum_residue((-1)**x / x**2, (x, S(2), oo)) == 1 - pi**2/12
+
+
+@slow
+def test_summation_by_residues_failing():
+    x = Symbol('x')
+
+    # Failing because of the bug in residue computation
+    assert eval_sum_residue(x**2 / (x**4 + 1), (x, S(1), oo))
+    assert eval_sum_residue(1 / ((x - 1)*(x - 2) + 1), (x, -oo, oo)) != 0
+
+
+def test_process_limits():
+    from sympy.concrete.expr_with_limits import _process_limits
+
+    # these should be (x, Range(3)) not Range(3)
+    raises(ValueError, lambda: _process_limits(
+        Range(3), discrete=True))
+    raises(ValueError, lambda: _process_limits(
+        Range(3), discrete=False))
+    # these should be (x, union) not union
+    # (but then we would get a TypeError because we don't
+    # handle non-contiguous sets: see below use of `union`)
+    union = Or(x < 1, x > 3).as_set()
+    raises(ValueError, lambda: _process_limits(
+        union, discrete=True))
+    raises(ValueError, lambda: _process_limits(
+        union, discrete=False))
+
+    # error not triggered if not needed
+    assert _process_limits((x, 1, 2)) == ([(x, 1, 2)], 1)
+
+    # this equivalence is used to detect Reals in _process_limits
+    assert isinstance(S.Reals, Interval)
+
+    C = Integral  # continuous limits
+    assert C(x, x >= 5) == C(x, (x, 5, oo))
+    assert C(x, x < 3) == C(x, (x, -oo, 3))
+    ans = C(x, (x, 0, 3))
+    assert C(x, And(x >= 0, x < 3)) == ans
+    assert C(x, (x, Interval.Ropen(0, 3))) == ans
+    raises(TypeError, lambda: C(x, (x, Range(3))))
+
+    # discrete limits
+    for D in (Sum, Product):
+        r, ans = Range(3, 10, 2), D(2*x + 3, (x, 0, 3))
+        assert D(x, (x, r)) == ans
+        assert D(x, (x, r.reversed)) == ans
+        r, ans = Range(3, oo, 2), D(2*x + 3, (x, 0, oo))
+        assert D(x, (x, r)) == ans
+        assert D(x, (x, r.reversed)) == ans
+        r, ans = Range(-oo, 5, 2), D(3 - 2*x, (x, 0, oo))
+        assert D(x, (x, r)) == ans
+        assert D(x, (x, r.reversed)) == ans
+        raises(TypeError, lambda: D(x, x > 0))
+        raises(ValueError, lambda: D(x, Interval(1, 3)))
+        raises(NotImplementedError, lambda: D(x, (x, union)))

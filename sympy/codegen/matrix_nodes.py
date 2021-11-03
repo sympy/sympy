@@ -49,10 +49,10 @@ class MatrixSolve(Token, MatrixExpr):
     >>> n = symbols('n', integer=True)
     >>> A = MatrixSymbol('A', n, n)
     >>> x = MatrixSymbol('x', n, 1)
-    >>> from sympy.printing.pycode import NumPyPrinter
+    >>> from sympy.printing.numpy import NumPyPrinter
     >>> NumPyPrinter().doprint(MatrixSolve(A, x))
     'numpy.linalg.solve(A, x)'
-    >>> from sympy.printing import octave_code
+    >>> from sympy import octave_code
     >>> octave_code(MatrixSolve(A, x))
     'A \\\\ x'
 
@@ -61,5 +61,6 @@ class MatrixSolve(Token, MatrixExpr):
 
     _construct_matrix = staticmethod(sympify)
 
-    def __init__(self, matrix, vector):
-        self.shape = self.vector.shape
+    @property
+    def shape(self):
+        return self.vector.shape

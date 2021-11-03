@@ -3,13 +3,13 @@
 
 * Medium
 """
-
-from __future__ import division
 from sympy.physics.units import second, meter, kilogram, ampere
 
 __all__ = ['Medium']
 
-from sympy import Symbol, sympify, sqrt
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import speed_of_light, u0, e0
 
 
@@ -23,6 +23,9 @@ class Medium(Symbol):
     """
     This class represents an optical medium. The prime reason to implement this is
     to facilitate refraction, Fermat's principle, etc.
+
+    Explanation
+    ===========
 
     An optical medium is a material through which electromagnetic waves propagate.
     The permittivity and permeability of the medium define how electromagnetic
@@ -66,7 +69,7 @@ class Medium(Symbol):
     """
 
     def __new__(cls, name, permittivity=None, permeability=None, n=None):
-        obj = super(Medium, cls).__new__(cls, name)
+        obj = super().__new__(cls, name)
         obj._permittivity = sympify(permittivity)
         obj._permeability = sympify(permeability)
         obj._n = sympify(n)
@@ -89,6 +92,9 @@ class Medium(Symbol):
     def intrinsic_impedance(self):
         """
         Returns intrinsic impedance of the medium.
+
+        Explanation
+        ===========
 
         The intrinsic impedance of a medium is the ratio of the
         transverse components of the electric and magnetic fields

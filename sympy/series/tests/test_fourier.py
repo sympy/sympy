@@ -1,8 +1,14 @@
-from sympy import (symbols, pi, Piecewise, sin, cos, sinc, Rational, S,
-                   oo, fourier_series, Add, log, exp, tan)
+from sympy.core.add import Add
+from sympy.core.numbers import (Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin, sinc, tan)
+from sympy.series.fourier import fourier_series
 from sympy.series.fourier import FourierSeries
 from sympy.testing.pytest import raises
-from sympy.core.cache import lru_cache
+from functools import lru_cache
 
 x, y, z = symbols('x y z')
 
@@ -72,7 +78,7 @@ def test_FourierSeries_2():
                             4*cos(pi*x / 2) / pi**2 + S.Half)
 
 
-def test_fourier_series_square_wave():
+def test_square_wave():
     """Test if fourier_series approximates discontinuous function correctly."""
     square_wave = Piecewise((1, x < pi), (-1, True))
     s = fourier_series(square_wave, (x, 0, 2*pi))
@@ -81,6 +87,15 @@ def test_fourier_series_square_wave():
         4 / (5 * pi) * sin(5 * x)
     assert s.sigma_approximation(4) == 4 / pi * sin(x) * sinc(pi / 4) + \
         4 / (3 * pi) * sin(3 * x) * sinc(3 * pi / 4)
+
+
+def test_sawtooth_wave():
+    s = fourier_series(x, (x, 0, pi))
+    assert s.truncate(4) == \
+        pi/2 - sin(2*x) - sin(4*x)/2 - sin(6*x)/3
+    s = fourier_series(x, (x, 0, 1))
+    assert s.truncate(4) == \
+        S.Half - sin(2*pi*x)/pi - sin(4*pi*x)/(2*pi) - sin(6*pi*x)/(3*pi)
 
 
 def test_FourierSeries__operations():
@@ -146,5 +161,5 @@ def test_FourierSeries_finite():
            + cos(4)*cos(3*x) + sin(3)*cos(4*x)
     assert fourier_series(sin(x)+cos(x)*tan(x)).truncate(oo) == 2*sin(x)
     assert fourier_series(cos(pi*x), (x, -1, 1)).truncate(oo) == cos(pi*x)
-    assert fourier_series(cos(3*pi*x + 4) - sin(4*pi*x)*log(pi*y) , (x, -1, 1)).truncate(oo) == -log(pi*y)*sin(4*pi*x)\
+    assert fourier_series(cos(3*pi*x + 4) - sin(4*pi*x)*log(pi*y), (x, -1, 1)).truncate(oo) == -log(pi*y)*sin(4*pi*x)\
            - sin(4)*sin(3*pi*x) + cos(4)*cos(3*pi*x)

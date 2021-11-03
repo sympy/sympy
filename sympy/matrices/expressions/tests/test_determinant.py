@@ -1,12 +1,14 @@
 from sympy.core import S, symbols
-from sympy.matrices import eye, Matrix, ShapeError
+from sympy.matrices import eye, ones, Matrix, ShapeError
 from sympy.matrices.expressions import (
     Identity, MatrixExpr, MatrixSymbol, Determinant,
-    det, ZeroMatrix, Transpose
+    det, per, ZeroMatrix, Transpose,
+    Permanent
 )
-from sympy.matrices.expressions.matexpr import OneMatrix
+from sympy.matrices.expressions.special import OneMatrix
 from sympy.testing.pytest import raises
-from sympy import refine, Q
+from sympy.assumptions.ask import Q
+from sympy.assumptions.refine import refine
 
 n = symbols('n', integer=True)
 A = MatrixSymbol('A', n, n)
@@ -38,6 +40,8 @@ def test_eval_determinant():
 def test_refine():
     assert refine(det(A), Q.orthogonal(A)) == 1
     assert refine(det(A), Q.singular(A)) == 0
+    assert refine(det(A), Q.unit_triangular(A)) == 1
+    assert refine(det(A), Q.normal(A)) == det(A)
 
 
 def test_commutative():
@@ -46,3 +50,13 @@ def test_commutative():
     assert det_a.is_commutative
     assert det_b.is_commutative
     assert det_a * det_b == det_b * det_a
+
+def test_permanent():
+    assert isinstance(Permanent(A), Permanent)
+    assert not isinstance(Permanent(A), MatrixExpr)
+    assert isinstance(Permanent(C), Permanent)
+    assert Permanent(ones(3, 3)).doit() == 6
+    C / per(C)
+    assert per(Matrix(3, 3, [1, 3, 2, 4, 1, 3, 2, 5, 2])) == 103
+    raises(TypeError, lambda: Permanent(S.One))
+    assert Permanent(A).arg is A

@@ -1,17 +1,16 @@
-from typing import Dict, Any
+from typing import Dict as tDict, Any
 
 from sympy.multipledispatch import dispatch
 from sympy.multipledispatch.conflict import AmbiguityWarning
-from sympy.testing.pytest import raises, XFAIL, warns
+from sympy.testing.pytest import raises, warns
 from functools import partial
 
-test_namespace = dict()  # type: Dict[str, Any]
+test_namespace = dict()  # type: tDict[str, Any]
 
 orig_dispatch = dispatch
 dispatch = partial(dispatch, namespace=test_namespace)
 
 
-@XFAIL
 def test_singledispatch():
     @dispatch(int)
     def f(x): # noqa:F811
@@ -66,7 +65,6 @@ def test_inheritance():
     assert f(C()) == 'a'
 
 
-@XFAIL
 def test_inheritance_and_multiple_dispatch():
     @dispatch(A, A)
     def f(x, y): # noqa:F811

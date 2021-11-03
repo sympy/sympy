@@ -1,8 +1,16 @@
-from sympy import (
-    symbols, sin, simplify, cos, trigsimp, tan, exptrigsimp,sinh,
-    cosh, diff, cot, Subs, exp, tanh, S, integrate, I,Matrix,
-    Symbol, coth, pi, log, count_ops, sqrt, E, expand, Piecewise , Rational
-    )
+from sympy.core.function import (Subs, count_ops, diff, expand)
+from sympy.core.numbers import (E, I, Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (cosh, coth, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, cot, sin, tan)
+from sympy.integrals.integrals import integrate
+from sympy.matrices.dense import Matrix
+from sympy.simplify.simplify import simplify
+from sympy.simplify.trigsimp import (exptrigsimp, trigsimp)
 
 from sympy.testing.pytest import XFAIL
 
@@ -284,6 +292,9 @@ def test_hyperbolic_simp():
     e = 2*cosh(x)**2 - 2*sinh(x)**2
     assert trigsimp(log(e)) == log(2)
 
+    # issue 19535:
+    assert trigsimp(sqrt(cosh(x)**2 - 1)) == sqrt(sinh(x)**2)
+
     assert trigsimp(cosh(x)**2*cosh(y)**2 - cosh(x)**2*sinh(y)**2 - sinh(x)**2,
             recursive=True) == 1
     assert trigsimp(sinh(x)**2*sinh(y)**2 - sinh(x)**2*cosh(y)**2 + cosh(x)**2,
@@ -442,6 +453,11 @@ def test_Piecewise():
     # trigsimp tries not to touch non-trig containing args
     assert trigsimp(Piecewise((e1, e3 < e2), (e3, True))) == \
         Piecewise((e1, e3 < s2), (e3, True))
+
+
+def test_issue_21594():
+    assert simplify(exp(Rational(1,2)) + exp(Rational(-1,2))) == cosh(S.Half)*2
+
 
 def test_trigsimp_old():
     x, y = symbols('x,y')

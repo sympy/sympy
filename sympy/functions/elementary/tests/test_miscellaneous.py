@@ -369,7 +369,8 @@ def test_rewrite_MaxMin_as_Heaviside():
 
 
 def test_rewrite_MaxMin_as_Piecewise():
-    from sympy import symbols, Piecewise
+    from sympy.core.symbol import symbols
+    from sympy.functions.elementary.piecewise import Piecewise
     x, y, z, a, b = symbols('x y z a b', real=True)
     vx, vy, va = symbols('vx vy va')
     assert Max(a, b).rewrite(Piecewise) == Piecewise((a, a >= b), (b, True))
@@ -409,6 +410,10 @@ def test_issue_12638():
     assert Min(a, b, c, Max(a, b)) == Min(a, b, c)
     assert Min(a, b, Max(a, b, c)) == Min(a, b)
     assert Min(a, b, Max(a, c)) == Min(a, b)
+
+def test_issue_21399():
+    from sympy.abc import a, b, c
+    assert Max(Min(a, b), Min(a, b, c)) == Min(a, b)
 
 
 def test_instantiation_evaluation():
@@ -455,3 +460,9 @@ def test_issue_14000():
 
     assert root(16, 4, 2, evaluate=False).has(Pow) == True
     assert real_root(-8, 3, evaluate=False).has(Pow) == True
+
+def test_issue_6899():
+    from sympy.core.function import Lambda
+    x = Symbol('x')
+    eqn = Lambda(x, x)
+    assert eqn.func(*eqn.args) == eqn
