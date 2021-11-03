@@ -438,7 +438,7 @@ class DomainMatrix:
 
         K : Represents the desired domain or field.
             Alternatively, ``None`` may be passed, in which case this method
-            reduces to :py:meth:`~.copy`.
+            just returns a copy of this DomainMatrix.
 
         Returns
         =======

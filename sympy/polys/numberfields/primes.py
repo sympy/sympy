@@ -452,7 +452,7 @@ def prime_decomp(p, T=None, ZK=None, dK=None, radical=None):
     Compute the decomposition of rational prime *p* in a number field.
 
     Ordinarily this should be accessed through the ``primes_above()`` method
-    of an :py:class:`AlgebraicField`.
+    of an :py:class:`~.AlgebraicField`.
 
     Parameters
     ==========
@@ -475,7 +475,7 @@ def prime_decomp(p, T=None, ZK=None, dK=None, radical=None):
     Returns
     =======
 
-    List of :py:class:`PrimeIdeal` instances.
+    List of :py:class:`~.PrimeIdeal` instances.
 
     Examples
     ========

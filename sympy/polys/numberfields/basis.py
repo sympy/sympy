@@ -97,8 +97,10 @@ def round_two(T, radicals=None):
     the field $K = \mathbb{Q}[x]/(T(x))$.
 
     Ordinarily this function need not be called directly, as one can instead
-    access the ``maximal_order``, ``integral_basis``, and ``discriminant``
-    properties of an :py:class:`AlgebraicField`.
+    access the :py:meth:`~.AlgebraicField.maximal_order`,
+    :py:meth:`~.AlgebraicField.integral_basis`, and
+    :py:meth:`~.AlgebraicField.discriminant` methods of an
+    :py:class:`~.AlgebraicField`.
 
     Parameters
     ==========
@@ -117,8 +119,10 @@ def round_two(T, radicals=None):
     =======
 
     Pair ``(ZK, dK)``, where:
-      ``ZK`` is a :py:class:`~.Submodule` representing the maximal order.
-      ``dK`` is the discriminant of the field $K = \mathbb{Q}[x]/(T(x))$.
+        ``ZK`` is a :py:class:`~sympy.polys.numberfields.modules.Submodule`
+        representing the maximal order.
+
+        ``dK`` is the discriminant of the field $K = \mathbb{Q}[x]/(T(x))$.
 
     Examples
     ========
@@ -158,14 +162,14 @@ def round_two(T, radicals=None):
     See Also
     ========
 
-    :py:meth:`sympy.polys.domains.algebraicfield.AlgebraicField.maximal_order`
-    :py:meth:`sympy.polys.domains.algebraicfield.AlgebraicField.integral_basis`
-    :py:meth:`sympy.polys.domains.algebraicfield.AlgebraicField.discriminant`
+    .AlgebraicField.maximal_order
+    .AlgebraicField.integral_basis
+    .AlgebraicField.discriminant
 
     References
     ==========
 
-    [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
+    .. [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
 
     """
     if T.domain == QQ:

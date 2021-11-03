@@ -60,8 +60,8 @@ represents elements of a ``PowerBasis``, and adds functionality pertinent to
 elements represented over powers of the primitive element $\theta$.
 
 
-Arithmetic with ``ModuleElement``s
-==================================
+Arithmetic with module elements
+===============================
 
 While a ``ModuleElement`` represents a linear combination over the generators
 of a particular module, recall that every module is either a ``PowerBasis``
@@ -95,7 +95,7 @@ added, multiplied, etc. by any rational number.
 >>> print(g + QQ(7, 10))
 [22, 15, 15, 15]/10
 
-However, care must be taken with arithmetic operations on ``ModuleElemnt``s,
+However, care must be taken with arithmetic operations on ``ModuleElemnt`` s,
 because the module $C$ to which the result will belong will be the nearest
 common ancestor (NCA) of the modules $A$, $B$ to which the two operands belong,
 and $C$ may be different from either or both of $A$ and $B$.
@@ -112,7 +112,8 @@ not modified). This upward conversion along an ancestor chain is easy: it just
 requires the successive multiplication by each ``Submodule``'s defining matrix.
 
 Conversely, downward conversion, i.e. representing a given ``ModuleElement`` in
-a submodule, is also supported -- namely by the :py:meth:`Submodule.represent`
+a submodule, is also supported -- namely by the
+:py:meth:`~sympy.polys.numberfields.modules.Submodule.represent`
 method -- but is not guaranteed to succeed in general, since the given element
 may not belong to the submodule. The main circumstance in which this issue
 tends to arise is with multiplication, since modules, while closed under
@@ -128,7 +129,7 @@ number fields are in fact rings, and our classes do support multiplication.
 
 Specifically, any ``Module`` can attempt to compute its own multiplication
 table, but this does not happen unless an attempt is made to multiply two of
-its ``ModuleElement``s.
+its ``ModuleElement`` s.
 
 >>> A = PowerBasis(T)
 >>> print(A._mult_tab is None)
@@ -186,8 +187,8 @@ class Module:
     Generic finitely-generated module.
 
     This is an abstract base class, and should not be instantiated directly.
-    The two concrete subclasses are :py:class:`PowerBasis` and
-    :py:class:`Submodule`.
+    The two concrete subclasses are :py:class:`~.PowerBasis` and
+    :py:class:`~.Submodule`.
 
     Every ``Submodule`` is derived from another module,
     referenced by its ``parent`` attribute. If ``S`` is a submodule, then
@@ -243,7 +244,7 @@ class Module:
         See Also
         ========
 
-        :py:class:`Module`
+        Module
 
         """
         return None
@@ -256,7 +257,7 @@ class Module:
         See Also
         ========
 
-        :py:class:`Module`
+        Module
 
         """
         raise NotImplementedError
@@ -269,7 +270,7 @@ class Module:
         See Also
         ========
 
-        :py:class:`Module`
+        Module
 
         """
         c = self.parent
@@ -285,7 +286,7 @@ class Module:
         See Also
         ========
 
-        :py:class:`Module`
+        Module
 
         """
         if isinstance(self, PowerBasis):
@@ -307,7 +308,7 @@ class Module:
         See Also
         ========
 
-        :py:class:`Module`
+        Module
 
         """
         sA = self.ancestors(include_self=True)
@@ -373,10 +374,7 @@ class Module:
         Parameters
         ==========
 
-        a: any argument on which
-            :py:func:`sympy.polys.numberfields.utilities.is_rat` returns
-            ``True``. This means it may be Python's built in `int`, or
-            the types of the domains :ref:`ZZ` or :ref:`QQ`.
+        a : int, ZZ, QQ
 
         Returns
         =======
@@ -1204,8 +1202,8 @@ def find_min_poly(alpha, domain, x=None, powers=None):
     Parameters
     ==========
 
-    alpha: ModuleElement whose min poly is to be found, and whose module has
-        multiplication and starts with unity.
+    alpha: :py:class:`~.ModuleElement` whose min poly is to be found, and whose
+        module has multiplication and starts with unity.
 
     domain: The desired :py:class:`~.Domain` of the polynomial.
 
@@ -1219,8 +1217,8 @@ def find_min_poly(alpha, domain, x=None, powers=None):
     Returns
     =======
 
-    Poly, being the minimal polynomial for alpha, or ``None`` if no polynomial
-        could be found over the desired domain.
+    :py:class:`~.Poly`, being the minimal polynomial for alpha, or ``None`` if
+        no polynomial could be found over the desired domain.
 
     Raises
     ======
