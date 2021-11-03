@@ -49,13 +49,16 @@ class PrimeIdeal(IntegerPowerable):
         Parameters
         ==========
 
-        ZK: :py:class:`~.Submodule` representing the maximal order where this
-            ideal lives
-        p: the rational prime this ideal divides.
-        alpha: :py:class:`~.PowerBasisElement` such that the ideal is equal
-            to ``p*ZK + alpha*ZK``.
-        f: the inertia degree.
-        e: the ramification index, if already known. If ``None``, we will
+        ZK : :py:class:`~.Submodule`
+            The maximal order where this ideal lives.
+        p : int
+            The rational prime this ideal divides.
+        alpha : :py:class:`~.PowerBasisElement`
+            Such that the ideal is equal to ``p*ZK + alpha*ZK``.
+        f : int
+            The inertia degree.
+        e : int, ``None``, optional
+            The ramification index, if already known. If ``None``, we will
             compute it here.
 
         """
@@ -118,9 +121,14 @@ class PrimeIdeal(IntegerPowerable):
         return self._test_factor
 
     def valuation(self, I):
-        """
-        Compute the P-adic valuation of integral ideal I, given as a
-        :py:class:`~.Submodule`.
+        r"""
+        Compute the $\mathfrak{p}$-adic valuation of integral ideal I.
+
+        Parameters
+        ==========
+
+        I : :py:class:`~.Submodule`
+
         """
         return prime_valuation(I, self)
 
@@ -132,15 +140,16 @@ def _compute_test_factor(p, gens, ZK):
     Parameters
     ==========
 
-    p: the rational prime $P$ divides
+    p : int
+        The rational prime $\mathfrak{p}$ divides
 
-    gens: list of :py:class:`PowerBasisElement`s being a complete set of
-        generators for $P$ over *ZK*, EXCEPT that an element equivalent to
-        rational *p* can and should be omitted (since it has no effect except
-        to waste time).
+    gens : list of :py:class:`PowerBasisElement`
+        A complete set of generators for $\mathfrak{p}$ over *ZK*, EXCEPT that
+        an element equivalent to rational *p* can and should be omitted (since
+        it has no effect except to waste time).
 
-    ZK: :py:class:`~.Submodule` representing the maximal order where the
-        prime ideal $P$ lives.
+    ZK : :py:class:`~.Submodule`
+        The maximal order where the prime ideal $\mathfrak{p}$ lives.
 
     Returns
     =======
@@ -150,7 +159,7 @@ def _compute_test_factor(p, gens, ZK):
     References
     ==========
 
-    [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
+    .. [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
     (See Proposition 4.8.15.)
 
     """
@@ -173,22 +182,7 @@ def _compute_test_factor(p, gens, ZK):
 @public
 def prime_valuation(I, P):
     r"""
-    Compute the p-adic valuation for an integral ideal *I* at a given prime
-    ideal *P*.
-
-    Parameters
-    ==========
-
-    I: :py:class:`~.Submodule`, representing an integral ideal whose valuation
-        is desired.
-
-    P: :py:class:`~.PrimeIdeal` at which to compute the valuation.
-
-    Returns
-    =======
-
-    int (non-negative since *I* is required to be an integral ideal) giving the
-    p-adic valuation of *I* at the prime *P*.
+    Compute the *P*-adic valuation for an integral ideal *I*.
 
     Examples
     ========
@@ -204,11 +198,25 @@ def prime_valuation(I, P):
     >>> print(prime_valuation(25*ZK, P[0]))
     8
 
+    Parameters
+    ==========
+
+    I : :py:class:`~.Submodule`
+        An integral ideal whose valuation is desired.
+
+    P : :py:class:`~.PrimeIdeal`
+        The prime at which to compute the valuation.
+
+    Returns
+    =======
+
+    int
+
     References
     ==========
 
-    [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
-    (See Algorithm 4.8.17.)
+    .. [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
+       (See Algorithm 4.8.17.)
 
     """
     p, ZK = P.p, P.ZK
@@ -266,16 +274,21 @@ def _two_elt_rep(gens, ZK, p, f=None, Np=None):
     Parameters
     ==========
 
-    gens: list of :py:class:`PowerBasisElement`s giving generators for the
-        prime ideal over *ZK*, the ring of integers of the field $K$.
+    gens : list of :py:class:`PowerBasisElement`
+        Generators for the prime ideal over *ZK*, the ring of integers of the
+        field $K$.
 
-    ZK: :py:class:`~.Submodule` representing the maximal order in $K$.
+    ZK : :py:class:`~.Submodule`
+        The maximal order in $K$.
 
-    p: the rational prime divided by the prime ideal.
+    p : int
+        The rational prime divided by the prime ideal.
 
-    f: (optional): the inertia degree of the prime ideal, if known.
+    f : int, optional
+        The inertia degree of the prime ideal, if known.
 
-    Np: (optional): the norm $p^f$ of the prime ideal, if known.
+    Np : int, optional
+        The norm $p^f$ of the prime ideal, if known.
         NOTE: There is no reason to supply both *f* and *Np*. Either one will
         save us from having to compute the norm *Np* ourselves. If both are known,
         *Np* is preferred since it saves one exponentiation.
@@ -283,13 +296,13 @@ def _two_elt_rep(gens, ZK, p, f=None, Np=None):
     Returns
     =======
 
-    PowerBasisElement representing a single algebraic integer alpha such that
-    the prime ideal is equal to ``p*ZK + alpha*ZK``.
+    :py:class:`~.PowerBasisElement` representing a single algebraic integer
+    alpha such that the prime ideal is equal to ``p*ZK + alpha*ZK``.
 
     References
     ==========
 
-    [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
+    .. [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
     (See Algorithm 4.7.10.)
 
     """
@@ -344,17 +357,24 @@ def _prime_decomp_compute_kernel(I, p, ZK):
     Parameters
     ==========
 
-    I: a Module, representing an ideal of ``ZK/pZK``.
-    p: the rational prime being factored
-    ZK: :py:class:`~.Submodule` representing the maximal order
+    I : :py:class:`~.Module`
+        An ideal of ``ZK/pZK``.
+    p : int
+        The rational prime being factored.
+    ZK : :py:class:`~.Submodule`
+        The maximal order.
 
     Returns
     =======
 
     Pair ``(N, G)``, where:
-      N: Module representing the kernel of the map ``a |--> a**p - a`` on ``(O/pO)/I``,
-         guaranteed to be a module with unity, along with
-      G: Module representing a basis for the separable algebra ``A = O/I`` (see Cohen).
+
+        ``N`` is a :py:class:`~.Module` representing the kernel of the map
+        ``a |--> a**p - a`` on ``(O/pO)/I``, guaranteed to be a module with
+        unity.
+
+        ``G`` is a :py:class:`~.Module` representing a basis for the separable
+        algebra ``A = O/I`` (see Cohen).
 
     """
     W = I.matrix
@@ -393,14 +413,17 @@ def _prime_decomp_maximal_ideal(I, p, ZK):
     Parameters
     ==========
 
-    I: a Module representing an ideal of ``O/pO``.
-    p: the rational prime being factored
-    ZK: :py:class:`~.Submodule` representing the maximal order
+    I : :py:class:`~.Module`
+        An ideal of ``O/pO``.
+    p : int
+        The rational prime being factored.
+    ZK : :py:class:`~.Submodule`
+        The maximal order.
 
     Returns
     =======
 
-    PrimeIdeal instance representing this prime
+    :py:class:`~.PrimeIdeal` instance representing this prime
 
     """
     m, n = I.matrix.shape
@@ -458,31 +481,12 @@ def prime_decomp(p, T=None, ZK=None, dK=None, radical=None):
     r"""
     Compute the decomposition of rational prime *p* in a number field.
 
-    Ordinarily this should be accessed through the ``primes_above()`` method
-    of an :py:class:`~.AlgebraicField`.
+    Explanation
+    ===========
 
-    Parameters
-    ==========
-
-    p: the rational prime whose decomposition is desired.
-
-    T: (optional) minimal, monic polynomial defining the number field $K$ in
-        which to factor.
-
-    ZK: (optional) :py:class:`~.Submodule` representing the maximal order for
-        $K$, if already known.
-
-        NOTE: at least one of *T* or *ZK* must be provided.
-
-    dK: (optional) the discriminant of the field $K$, if already known.
-
-    radical: (optional) :py:class:`~.Submodule`, giving the nilradical mod *p*
-        in the integers of $K$, if already known.
-
-    Returns
-    =======
-
-    List of :py:class:`~.PrimeIdeal` instances.
+    Ordinarily this should be accessed through the
+    :py:meth:`~.AlgebraicField.primes_above` method of an
+    :py:class:`~.AlgebraicField`.
 
     Examples
     ========
@@ -492,13 +496,39 @@ def prime_decomp(p, T=None, ZK=None, dK=None, radical=None):
     >>> T = Poly(x ** 3 + x ** 2 - 2 * x + 8)
     >>> K = QQ.algebraic_field((T, theta))
     >>> print(K.primes_above(2))
-    [[ (2, x**2 + 1) e=1, f=1 ], [ (2, (x**2 + 3*x + 2)/2) e=1, f=1 ], [ (2, (3*x**2 + 3*x)/2) e=1, f=1 ]]
+    [[ (2, x**2 + 1) e=1, f=1 ], [ (2, (x**2 + 3*x + 2)/2) e=1, f=1 ],
+     [ (2, (3*x**2 + 3*x)/2) e=1, f=1 ]]
+
+    Parameters
+    ==========
+
+    p : int
+        The rational prime whose decomposition is desired.
+
+    T : :py:class:`~.Poly`, optional
+        Monic irreducible polynomial defining the number field $K$ in which to
+        factor. NOTE: at least one of *T* or *ZK* must be provided.
+
+    ZK : :py:class:`~.Submodule`, optional
+        The maximal order for $K$, if already known.
+        NOTE: at least one of *T* or *ZK* must be provided.
+
+    dK : int, optional
+        The discriminant of the field $K$, if already known.
+
+    radical : :py:class:`~.Submodule`, optional
+        The nilradical mod *p* in the integers of $K$, if already known.
+
+    Returns
+    =======
+
+    List of :py:class:`~.PrimeIdeal` instances.
 
     References
     ==========
 
-    [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
-    (See Algorithm 6.2.9.)
+    .. [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
+       (See Algorithm 6.2.9.)
 
     """
     if T is None and ZK is None:

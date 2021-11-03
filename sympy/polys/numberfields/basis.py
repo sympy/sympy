@@ -37,26 +37,33 @@ def _apply_Dedekind_criterion(T, p):
 def nilradical_mod_p(H, p, q=None):
     r"""
     Compute the nilradical mod *p* for a given order *H*, and prime *p*.
-    This is the ideal $I$ in $H/pH$ consisting of all elements some positive power
-    of which is zero in this quotient ring, i.e. is a multiple of *p*.
+
+    Explanation
+    ===========
+
+    This is the ideal $I$ in $H/pH$ consisting of all elements some positive
+    power of which is zero in this quotient ring, i.e. is a multiple of *p*.
 
     Parameters
     ==========
 
-    H: :py:class:`~.Submodule` representing the order
-    p: rational prime
-    q: (optional) If known, the smallest power of *p* that is ``>=`` the dimension
-      of *H*. If not provided, we compute it here.
+    H : :py:class:`~.Submodule`
+        The given order.
+    p : int
+        The rational prime.
+    q : int, optional
+        If known, the smallest power of *p* that is $>=$ the dimension of *H*.
+        If not provided, we compute it here.
 
     Returns
     =======
 
-    Module representing the nilradical mod *p* in *H*.
+    :py:class:`~.Module` representing the nilradical mod *p* in *H*.
 
     References
     ==========
 
-    [1] Cohen, H. *A Course in Computational Algebraic Number Theory*.
+    .. [1] Cohen, H. *A Course in Computational Algebraic Number Theory*.
     (See Lemma 6.1.6.)
 
     """
@@ -92,37 +99,15 @@ def round_two(T, radicals=None):
     Explanation
     ===========
 
-    Carry out Zassenhaus's "Round 2" algorithm on a monic irreducible polynomial
-    *T* over :ref:`ZZ`. This computes an integral basis and the discriminant for
-    the field $K = \mathbb{Q}[x]/(T(x))$.
+    Carry out Zassenhaus's "Round 2" algorithm on a monic irreducible
+    polynomial *T* over :ref:`ZZ`. This computes an integral basis and the
+    discriminant for the field $K = \mathbb{Q}[x]/(T(x))$.
 
     Ordinarily this function need not be called directly, as one can instead
     access the :py:meth:`~.AlgebraicField.maximal_order`,
     :py:meth:`~.AlgebraicField.integral_basis`, and
     :py:meth:`~.AlgebraicField.discriminant` methods of an
     :py:class:`~.AlgebraicField`.
-
-    Parameters
-    ==========
-
-    T: :py:class:`~.Poly`, being the irreducible monic polynomial over
-        :ref:`ZZ` defining the number field.
-
-    radicals: optional way for any $p$-radicals (if computed) to be returned by
-        reference. If desired, pass an empty dictionary. If the algorithm
-        reaches the point where it computes the nilradical mod $p$ of the ring
-        of integers $Z_K$, then an $\mathbb{F}_p$-basis for this ideal will be
-        stored in this dictionary under the key ``p``. This can be useful for
-        other algorithms, such as prime decomposition.
-
-    Returns
-    =======
-
-    Pair ``(ZK, dK)``, where:
-        ``ZK`` is a :py:class:`~sympy.polys.numberfields.modules.Submodule`
-        representing the maximal order.
-
-        ``dK`` is the discriminant of the field $K = \mathbb{Q}[x]/(T(x))$.
 
     Examples
     ========
@@ -158,6 +143,31 @@ def round_two(T, radicals=None):
     >>> ZK, dK = round_two(T, radicals=rad)
     >>> print(rad)
     {3: Submodule[[-1, 1, 0], [-1, 0, 1]]}
+
+    Parameters
+    ==========
+
+    T : :py:class:`~.Poly`
+        The irreducible monic polynomial over :ref:`ZZ` defining the number
+        field.
+
+    radicals : dict, optional
+        This is a way for any $p$-radicals (if computed) to be returned by
+        reference. If desired, pass an empty dictionary. If the algorithm
+        reaches the point where it computes the nilradical mod $p$ of the ring
+        of integers $Z_K$, then an $\mathbb{F}_p$-basis for this ideal will be
+        stored in this dictionary under the key ``p``. This can be useful for
+        other algorithms, such as prime decomposition.
+
+    Returns
+    =======
+
+    Pair ``(ZK, dK)``, where:
+
+        ``ZK`` is a :py:class:`~sympy.polys.numberfields.modules.Submodule`
+        representing the maximal order.
+
+        ``dK`` is the discriminant of the field $K = \mathbb{Q}[x]/(T(x))$.
 
     See Also
     ========
