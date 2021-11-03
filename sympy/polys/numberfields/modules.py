@@ -367,6 +367,9 @@ class Module:
         """
         Return a ModuleElement representing a rational number.
 
+        Explanation
+        ===========
+
         The returned ModuleElement will belong to the first module on this
         module's ancestor chain (including this module itself) that starts
         with unity.
@@ -1116,12 +1119,52 @@ class ModuleHomomorphism:
     """A homomorphism from one module to another."""
 
     def __init__(self, domain, codomain, mapping):
+        """
+        Parameters
+        ==========
+
+        domain: :py:class:`~.Module` being the domain of the mapping.
+
+        codomain: :py:class:`~.Module` being the codomain of the mapping.
+
+        mapping: an arbitrary callable is accepted, but should be chosen so as
+            to represent an actual module homomorphism. In particular, should
+            accept elements of ``domain`` and return elements of ``codomain``.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, cyclotomic_poly
+        >>> from sympy.polys.numberfields.modules import PowerBasis, ModuleHomomorphism
+        >>> T = Poly(cyclotomic_poly(5))
+        >>> A = PowerBasis(T)
+        >>> B = A.submodule_from_gens([2*A(j) for j in range(4)])
+        >>> phi = ModuleHomomorphism(A, B, lambda x: 6*x)
+        >>> print(phi.matrix())  # doctest: +SKIP
+        DomainMatrix([[3, 0, 0, 0], [0, 3, 0, 0], [0, 0, 3, 0], [0, 0, 0, 3]], (4, 4), ZZ)
+
+        """
         self.domain = domain
         self.codomain = codomain
         self.mapping = mapping
 
     def matrix(self, modulus=None):
-        """Compute the matrix of this homomorphism."""
+        """
+        Compute the matrix of this homomorphism.
+
+        Parameters
+        ==========
+
+        modulus: (optional) a positive prime number $p$ if the matrix should
+            be reduced mod $p$.
+
+        Returns
+        =======
+
+        :py:class:`~.DomainMatrix` over :ref:`ZZ`, or over :ref:`GF(p)` if a
+            modulus was given.
+
+        """
         basis = self.domain.basis_elements()
         cols = [self.codomain.represent(self.mapping(elt)) for elt in basis]
         if not cols:
@@ -1133,8 +1176,21 @@ class ModuleHomomorphism:
 
     def kernel(self, modulus=None):
         """
-        Compute a matrix whose columns form a basis for the kernel of this
-        homomorphism.
+        Compute a Submodule representing the kernel of this homomorphism.
+
+        Parameters
+        ==========
+
+        modulus: (optional) a positive prime number $p$ if the kernel should
+            be computed mod $p$.
+
+        Returns
+        =======
+
+        :py:class:`~.Submodule` whose generators span the kernel of this
+            homomorphism over :ref:`ZZ`, or over :ref:`GF(p)` if a
+            modulus was given.
+
         """
         M = self.matrix(modulus=modulus)
         if modulus is None:
@@ -1157,6 +1213,18 @@ class ModuleEndomorphism(ModuleHomomorphism):
     """A homomorphism from one module to itself."""
 
     def __init__(self, domain, mapping):
+        """
+        Parameters
+        ==========
+
+        domain: :py:class:`~.Module` being the common domain and codomain of
+            the mapping.
+
+        mapping: an arbitrary callable is accepted, but should be chosen so as
+            to represent an actual module endomorphism. In particular, should
+            accept and return elements of ``domain``.
+
+        """
         super().__init__(domain, domain, mapping)
 
 
@@ -1167,6 +1235,17 @@ class InnerEndomorphism(ModuleEndomorphism):
     """
 
     def __init__(self, domain, multiplier):
+        r"""
+        Parameters
+        ==========
+
+        domain: :py:class:`~.Module` being the domain and codomain of the
+            endomorphism.
+
+        multiplier: :py:class:`~.ModuleElement` $a$ defining the mapping
+            as $x \mapsto a x$.
+
+        """
         super().__init__(domain, lambda x: multiplier * x)
         self.multiplier = multiplier
 
@@ -1175,18 +1254,68 @@ class EndomorphismRing:
     """The ring of endomorphisms on a module."""
 
     def __init__(self, domain):
+        """
+        Parameters
+        ==========
+
+        domain: :py:class:`~.Module` being the domain and codomain of the
+            endomorphisms.
+
+        """
         self.domain = domain
 
     def inner_endomorphism(self, multiplier):
+        """
+        Form an inner endomorphism belonging to this endomorphism ring.
+
+        Parameters
+        ==========
+
+        multiplier: :py:class:`~.ModuleElement` $a$ defining the inner
+            endomorphism $x \mapsto a x$.
+
+        Returns
+        =======
+
+        :py:class:`~.InnerEndomorphism`
+
+        """
         return InnerEndomorphism(self.domain, multiplier)
 
     def represent(self, element):
+        r"""
+        Represent an element of this endomorphism ring, as a single column
+        vector.
+
+        Explanation
+        ===========
+
+        Let $M$ be a module, and $E$ its ring of endomorphisms. Let $N$ be
+        another module, and consider a homomorphism $\varphi: N \rightarrow E$.
+        In the event that $\varphi$ is to be represented by a matrix $A$, each
+        column of $A$ must represent an element of $E$. This is possible when
+        the elements of $E$ are themselves representable as matrices, by
+        stacking the columns of such a matrix into a single column.
+
+        This method supports calculating such matrices $A$, by representing
+        an element of this endomorphism ring first as a matrix, and then
+        stacking that matrix's columns into a single column.
+
+        Parameters
+        ==========
+
+        element: :py:class:`~.ModuleEndomorphism` belonging to this ring.
+
+        Returns
+        =======
+
+        DomainMatrix, in the shape of a column vector.
+
+        """
         if isinstance(element, ModuleEndomorphism) and element.domain == self.domain:
             M = element.matrix()
-            # The purpose of this method is to produce a column vector (which
-            # can be included as a column in a matrix representing a linear map).
-            # So must transform the matrix we compute into a single column,
-            # which should reproduce the original columns, one after another.
+            # Transform the matrix into a single column, which should reproduce
+            # the original columns, one after another.
             m, n = M.shape
             if n == 0:
                 return M
