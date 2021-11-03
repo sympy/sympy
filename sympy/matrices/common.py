@@ -75,7 +75,7 @@ class MatrixRequired:
         """Implementations of __getitem__ should accept ints, in which
         case the matrix is indexed as a flat list, tuples (i,j) in which
         case the (i,j) entry is returned, slices, or mixed tuples (a,b)
-        where a and b are any combintion of slices and integers."""
+        where a and b are any combination of slices and integers."""
         raise NotImplementedError("Subclasses must implement this.")
 
     def __len__(self):
