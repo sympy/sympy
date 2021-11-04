@@ -3064,6 +3064,16 @@ def test_issue_19144():
     assert nonlinsolve([Eq(x + 1/x, 1/x)], [x]) == FiniteSet((S.EmptySet,))
 
 
+def test_issue_22413():
+    res =  nonlinsolve((4*y*(2*x + 2*exp(y) + 1)*exp(2*x),
+                         4*x*exp(2*x) + 4*y*exp(2*x + y) + 4*exp(2*x + y) + 1),
+                        x, y)
+    # First solution is not correct, but the issue was an exception
+    sols = FiniteSet((x, S.Zero), (-exp(y) - S.Half, y))
+    assert res == sols
+
+
+
 def test_issue_19814():
     assert nonlinsolve([ 2**m - 2**(2*n), 4*2**m - 2**(4*n)], m, n
                       ) == FiniteSet((log(2**(2*n))/log(2), S.Complexes))
