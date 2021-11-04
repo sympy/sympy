@@ -74,7 +74,7 @@ def extract_fundamental_discriminant(a):
     Given any rational integer *a* that is 0 or 1 mod 4, write $a = d f^2$,
     where $d$ is either 1 or a fundamental discriminant, and return a pair
     of dictionaries ``(D, F)`` giving the prime factorizations of $d$ and $f$
-    resp., in the same format returned by :py:func:`~.factorint`.
+    respectively, in the same format returned by :py:func:`~.factorint`.
 
     A fundamental discriminant $d$ is different from unity, and is either
     1 mod 4 and squarefree, or is 0 mod 4 and such that $d/4$ is squarefree
@@ -89,6 +89,7 @@ def extract_fundamental_discriminant(a):
     ({3: 1, -1: 1}, {2: 2, 3: 1})
 
     For comparison:
+
     >>> from sympy import factorint
     >>> print(factorint(-432))
     {2: 4, 3: 3, -1: 1}
@@ -159,15 +160,15 @@ class AlgIntPowers:
     Explanation
     ===========
 
-    Given an algebraic integer $\theta$ by its monic minimal polynomial ``T``
-    over :ref:`ZZ`, this class computes representations of arbitrarily high
-    powers of $\theta$, as :ref:`ZZ`-linear combinations over
+    Given an algebraic integer $\theta$ by its monic irreducible polynomial
+    ``T`` over :ref:`ZZ`, this class computes representations of arbitrarily
+    high powers of $\theta$, as :ref:`ZZ`-linear combinations over
     $\{1, \theta, \ldots, \theta^{n-1}\}$, where $n = \deg(T)$.
 
     The representations are computed using the linear recurrence relations for
     powers of $\theta$, derived from the polynomial ``T``.
 
-    Optionally, the representations may be reduced w.r.t. a modulus.
+    Optionally, the representations may be reduced with respect to a modulus.
 
     Examples
     ========
@@ -301,7 +302,7 @@ def supplement_a_subspace(M):
     subspace, to give a basis for the whole space.
 
     To be precise, suppose you have an $n$-dimensional vector space $V$, with
-    basis $\{v_1, v_2, \ldots, v_n\}, and an $r$-dimensional subspace $W$ of
+    basis $\{v_1, v_2, \ldots, v_n\}$, and an $r$-dimensional subspace $W$ of
     $V$, spanned by a basis $\{w_1, w_2, \ldots, w_r\}$, where the $w_j$ are
     given as linear combinations of the $v_i$. If the columns of *M* represent
     the $w_j$ as such linear combinations, then the columns of the matrix $B$

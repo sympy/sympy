@@ -151,8 +151,8 @@ in the :py:mod:`~.modules` module. Here, the :py:class:`~.ModuleElement` class
 provides another way to represent algebraic numbers.
 
 
-Modules
--------
+Finitely-generated modules
+--------------------------
 
 .. automodule:: sympy.polys.numberfields.modules
 
