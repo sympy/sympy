@@ -8,7 +8,7 @@ from sympy.utilities.decorator import public
 
 
 def is_rat(c):
-    """
+    r"""
     Test whether an argument is of an acceptable type to be used as a rational
     number.
 
@@ -36,7 +36,7 @@ def is_rat(c):
 
 
 def is_int(c):
-    """
+    r"""
     Test whether an argument is of an acceptable type to be used as an integer.
 
     See Also
@@ -49,7 +49,7 @@ def is_int(c):
 
 
 def get_num_denom(c):
-    """
+    r"""
     Given any argument on which :py:func:`~.is_rat` is ``True``, return the
     numerator and denominator of this number.
 
@@ -250,7 +250,7 @@ class AlgIntPowers:
 
 @public
 def coeff_search(m, R):
-    """
+    r"""
     Generate coefficients for searching through polynomials.
 
     Parameters

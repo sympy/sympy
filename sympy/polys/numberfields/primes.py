@@ -16,7 +16,7 @@ from .utilities import coeff_search, supplement_a_subspace
 
 
 def _check_formal_conditions_for_maximal_order(submodule):
-    """
+    r"""
     Several functions in this module accept an argument which is to be a
     :py:class:`~.Submodule` representing the maximal order in a number field,
     such as returned by the :py:func:`~sympy.polys.numberfields.basis.round_two`
@@ -40,7 +40,7 @@ def _check_formal_conditions_for_maximal_order(submodule):
 
 
 class PrimeIdeal(IntegerPowerable):
-    """
+    r"""
     A prime ideal in a ring of algebraic integers.
     """
 
@@ -353,7 +353,7 @@ def _prime_decomp_easy_case(p, ZK):
 
 
 def _prime_decomp_compute_kernel(I, p, ZK):
-    """
+    r"""
     Parameters
     ==========
 
@@ -406,7 +406,7 @@ def _prime_decomp_compute_kernel(I, p, ZK):
 
 
 def _prime_decomp_maximal_ideal(I, p, ZK):
-    """
+    r"""
     We have reached the case where we have a maximal (hence prime) ideal *I*,
     which we know because the quotient ``O/I`` is a field.
 
@@ -435,7 +435,7 @@ def _prime_decomp_maximal_ideal(I, p, ZK):
 
 
 def _prime_decomp_split_ideal(I, p, N, G, ZK):
-    """
+    r"""
     Perform the step in the prime decomposition algorithm where we have determined
     the the quotient ``ZK/I`` is _not_ a field, and we want to perform a non-trivial
     factorization of *I* by locating an idempotent element of ``ZK/I``.

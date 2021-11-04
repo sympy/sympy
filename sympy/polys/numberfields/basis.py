@@ -10,7 +10,7 @@ from .utilities import extract_fundamental_discriminant
 
 
 def _apply_Dedekind_criterion(T, p):
-    """
+    r"""
     Apply the "Dedekind criterion" to test whether the order needs to be
     enlarged relative to a given prime *p*.
     """
@@ -77,7 +77,7 @@ def nilradical_mod_p(H, p, q=None):
 
 
 def _second_enlargement(H, p, q):
-    """
+    r"""
     Perform the second enlargement in the Round Two algorithm.
     """
     Ip = nilradical_mod_p(H, p, q=q)

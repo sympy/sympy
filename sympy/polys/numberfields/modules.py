@@ -194,7 +194,7 @@ from .utilities import AlgIntPowers, is_int, is_rat, get_num_denom
 
 
 def to_col(coeffs):
-    """Transform a list of integer coefficients into a column vector."""
+    r"""Transform a list of integer coefficients into a column vector."""
     return DomainMatrix([[ZZ(c) for c in coeffs]], (1, len(coeffs)), ZZ).transpose()
 
 
@@ -1049,7 +1049,7 @@ class Submodule(Module, IntegerPowerable):
 
 
 def is_sq_maxrank_HNF(dm):
-    """
+    r"""
     Say whether a :py:class:`~.DomainMatrix` is in that special case of Hermite
     Normal Form, in which the matrix is also square and of maximal rank.
 
@@ -1080,7 +1080,7 @@ def is_sq_maxrank_HNF(dm):
 
 
 def make_mod_elt(module, col, denom=1):
-    """
+    r"""
     Factory function which builds a :py:class:`~.ModuleElement`, but ensures
     that it is a :py:class:`~.PowerBasisElement` if the module is a
     :py:class:`~.PowerBasis`.
@@ -1092,7 +1092,7 @@ def make_mod_elt(module, col, denom=1):
 
 
 class ModuleElement(IntegerPowerable):
-    """
+    r"""
     Represents an element of a :py:class:`~.Module`.
 
     NOTE: Should not be constructed directly. Use the
@@ -1440,7 +1440,7 @@ class ModuleElement(IntegerPowerable):
 
 
 class PowerBasisElement(ModuleElement):
-    """
+    r"""
     Subclass for :py:class:`~.ModuleElement` instances whose module is a
     :py:class:`~.PowerBasis`.
     """
@@ -1479,10 +1479,10 @@ class PowerBasisElement(ModuleElement):
 
 
 class ModuleHomomorphism:
-    """A homomorphism from one module to another."""
+    r"""A homomorphism from one module to another."""
 
     def __init__(self, domain, codomain, mapping):
-        """
+        r"""
         Parameters
         ==========
 
@@ -1515,7 +1515,7 @@ class ModuleHomomorphism:
         self.mapping = mapping
 
     def matrix(self, modulus=None):
-        """
+        r"""
         Compute the matrix of this homomorphism.
 
         Parameters
@@ -1543,7 +1543,7 @@ class ModuleHomomorphism:
         return M
 
     def kernel(self, modulus=None):
-        """
+        r"""
         Compute a Submodule representing the kernel of this homomorphism.
 
         Parameters
@@ -1580,10 +1580,10 @@ class ModuleHomomorphism:
 
 
 class ModuleEndomorphism(ModuleHomomorphism):
-    """A homomorphism from one module to itself."""
+    r"""A homomorphism from one module to itself."""
 
     def __init__(self, domain, mapping):
-        """
+        r"""
         Parameters
         ==========
 
@@ -1600,7 +1600,7 @@ class ModuleEndomorphism(ModuleHomomorphism):
 
 
 class InnerEndomorphism(ModuleEndomorphism):
-    """
+    r"""
     An inner endomorphism on a module, i.e. the endomorphism corresponding to
     multiplication by a fixed element.
     """
@@ -1622,7 +1622,7 @@ class InnerEndomorphism(ModuleEndomorphism):
 
 
 class EndomorphismRing:
-    """The ring of endomorphisms on a module."""
+    r"""The ring of endomorphisms on a module."""
 
     def __init__(self, domain):
         """
@@ -1636,7 +1636,7 @@ class EndomorphismRing:
         self.domain = domain
 
     def inner_endomorphism(self, multiplier):
-        """
+        r"""
         Form an inner endomorphism belonging to this endomorphism ring.
 
         Parameters
@@ -1697,7 +1697,7 @@ class EndomorphismRing:
 
 
 def find_min_poly(alpha, domain, x=None, powers=None):
-    """
+    r"""
     Find a polynomial of least degree (not necessarily irreducible) satisfied
     by an element of a finitely-generated ring with unity.
 
