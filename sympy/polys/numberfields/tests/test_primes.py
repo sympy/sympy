@@ -9,7 +9,7 @@ from sympy.polys.numberfields.basis import round_two
 from sympy.polys.numberfields.exceptions import StructureError
 from sympy.polys.numberfields.modules import PowerBasis
 from sympy.polys.numberfields.primes import (
-    prime_decomp, _two_elt_rep, prime_valuation,
+    prime_decomp, _two_elt_rep,
     _check_formal_conditions_for_maximal_order,
 )
 from sympy.testing.pytest import raises
