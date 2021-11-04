@@ -81,7 +81,7 @@ Task                               Implementation
 =================================  ======================================
 
 
-Reference
+Internals
 =========
 
 Algebraic number fields
@@ -158,14 +158,25 @@ Class Reference
 .. autoclass:: Module
    :members:
 
+   .. automethod:: Module.__call__
+
 .. autoclass:: PowerBasis
    :members:
+
+   .. automethod:: PowerBasis.__init__
 
 .. autoclass:: Submodule
    :members:
 
+   .. automethod:: Submodule.__init__
+
 .. autoclass:: ModuleElement
    :members:
+
+   .. automethod:: ModuleElement.__init__
+   .. automethod:: ModuleElement.__add__
+   .. automethod:: ModuleElement.__mul__
+   .. automethod:: ModuleElement.__mod__
 
 .. autoclass:: PowerBasisElement
    :members:
@@ -175,17 +186,47 @@ Class Reference
 .. autoclass:: ModuleHomomorphism
    :members:
 
+   .. automethod:: ModuleHomomorphism.__init__
+
 .. autoclass:: ModuleEndomorphism
    :members:
+
+   .. automethod:: ModuleEndomorphism.__init__
 
 .. autoclass:: InnerEndomorphism
    :members:
 
+   .. automethod:: InnerEndomorphism.__init__
+
 .. autoclass:: EndomorphismRing
    :members:
 
+   .. automethod:: EndomorphismRing.__init__
+
 .. autofunction:: find_min_poly
 
+
+Utilities
+---------
+
+.. currentmodule:: sympy.polys.numberfields.utilities
+
+.. autofunction:: is_rat
+.. autofunction:: is_int
+.. autofunction:: get_num_denom
+.. autofunction:: extract_fundamental_discriminant
+
+.. autoclass:: AlgIntPowers
+   :members:
+
+   .. automethod:: AlgIntPowers.__init__
+
+.. autofunction:: coeff_search
+.. autofunction:: supplement_a_subspace
+
+
+Solving the Main Problems
+=========================
 
 Integral Basis
 --------------
@@ -201,6 +242,8 @@ Prime Decomposition
 .. currentmodule:: sympy.polys.numberfields.primes
 .. autoclass:: PrimeIdeal
    :members:
+
+   .. automethod:: PrimeIdeal.__init__
 
 
 p-adic Valuation
