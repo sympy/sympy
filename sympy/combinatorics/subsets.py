@@ -65,18 +65,12 @@ class Subset():
 
     def __eq__(self, other):
         """Return a boolean indicating whether a == b on the basis of
-        whether both objects are of the class Subset and if the values 
+        whether both objects are of the class Subset and if the values
         of the subset and superset attributes are the same.
         """
-        if not isinstance(self, Subset):
-            return False
         if not isinstance(other, Subset):
-            return False
-        if not self.superset == other.superset:
-            return False
-        if not self.subset == other.subset:
-            return False
-        return True
+            return NotImplemented
+        return self.subset == other.subset and self.superset == other.superset
 
     def iterate_binary(self, k):
         """
