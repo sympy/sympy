@@ -343,7 +343,7 @@ class Module:
         if isinstance(spec, int) and 0 <= spec < self.n:
             spec = DomainMatrix.eye(self.n, ZZ)[:, spec].to_dense()
         if not self.is_compat_col(spec):
-            raise ValueError('Expect compatible column vector specification.')
+            raise ValueError('Compatible column vector required.')
         return make_mod_elt(self, spec, denom=denom)
 
     def starts_with_unity(self):
