@@ -448,7 +448,7 @@ class Module:
         ========
 
         >>> from sympy.polys import Poly, cyclotomic_poly, QQ
-        >>> from sympy.polys.numberfields.modules import PowerBasis, to_col
+        >>> from sympy.polys.numberfields.modules import PowerBasis
         >>> T = Poly(cyclotomic_poly(5))
         >>> A = PowerBasis(T)
         >>> a = A.element_from_rational(QQ(2, 3))
