@@ -138,7 +138,7 @@ To test pull requests, use
 
 ## Regenerate Experimental <span class="title-ref">LaTeX</span> Parser/Lexer
 
-The parser and lexer generated with the [ANTLR4](http://antlr4.org)
+The parser and lexer were generated with the [ANTLR4](http://antlr4.org)
 toolchain in `sympy/parsing/latex/_antlr` and checked into the repo.
 Presently, most users should not need to regenerate these files, but
 if you plan to work on this feature, you will need the `antlr4`
@@ -197,7 +197,7 @@ on Stack Overflow using the [sympy](https://stackoverflow.com/questions/tagged/s
 
 SymPy was started by Ondřej Čertík in 2005, he wrote some code during
 the summer, then he wrote some more code during summer 2006. In February
-2007, Fabian Pedregosa joined the project and helped fixed many things,
+2007, Fabian Pedregosa joined the project and helped fix many things,
 contributed documentation, and made it alive again. 5 students (Mateusz
 Paprocki, Brian Jorgensen, Jason Gedge, Robert Schwarz, and Chris Wu)
 improved SymPy incredibly during summer 2007 as part of the Google
@@ -270,7 +270,7 @@ A BibTeX entry for LaTeX users is
 ```
 
 SymPy is BSD licensed, so you are free to use it whatever you like, be
-it academic, commercial, creating forks or derivatives, as long as you
+it academic, commercial, creating forks, or derivatives, as long as you
 copy the BSD statement if you redistribute it (see the LICENSE file for
 details). That said, although not required by the SymPy license, if it
 is convenient for you, please cite SymPy when using it in your work and
