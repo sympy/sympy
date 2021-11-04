@@ -9,23 +9,55 @@ from sympy.utilities.decorator import public
 
 def is_rat(c):
     """
-    In many cases, we want to accept an argument c of type ZZ or QQ.
+    Test whether an argument is of an acceptable type to be used as a rational
+    number.
+
+    Explanation
+    ===========
+
+    In many cases, we want to accept an argument ``c`` that may be any rational
+    number, including any integer, and may be represented in various forms.
+
     For this, ``c in QQ`` is too accepting (e.g. ``3.14 in QQ`` is ``True``),
-    while ``QQ.of_type(c)`` is too demanding (e.g. ``QQ.of_type(3)`` is ``False``).
-    Meanwhile, if gmpy2 is installed then ``ZZ.of_type()`` accepts only ``mpz``,
-    not ``int``, so we need another clause to ensure ``int`` is accepted.
+    while ``QQ.of_type(c)`` is too demanding (e.g. ``QQ.of_type(3)`` is
+    ``False``).
+
+    Meanwhile, if gmpy2 is installed then ``ZZ.of_type()`` accepts only
+    ``mpz``, not ``int``, so we need another clause to ensure ``int`` is
+    accepted.
+
+    See Also
+    ========
+
+    is_int
+
     """
     return isinstance(c, int) or ZZ.of_type(c) or QQ.of_type(c)
 
 
 def is_int(c):
+    """
+    Test whether an argument is of an acceptable type to be used as an integer.
+
+    See Also
+    ========
+
+    is_rat
+
+    """
     return isinstance(c, int) or ZZ.of_type(c)
 
 
 def get_num_denom(c):
     """
-    Given any argument ``c`` such that ``is_rat(c)`` is ``True``, return the
-    numerator and denominator for this number.
+    Given any argument on which :py:func:`~.is_rat` is ``True``, return the
+    numerator and denominator of this number.
+
+    See Also
+    ========
+
+    is_rat
+
     """
     r = QQ(c)
     return r.numerator, r.denominator
@@ -42,27 +74,12 @@ def extract_fundamental_discriminant(a):
     Given any rational integer *a* that is 0 or 1 mod 4, write $a = d f^2$,
     where $d$ is either 1 or a fundamental discriminant, and return a pair
     of dictionaries ``(D, F)`` giving the prime factorizations of $d$ and $f$
-    resp., in the same format returned by :ref:`sympy.ntheory.factor_.factorint`.
+    resp., in the same format returned by :py:func:`~.factorint`.
 
     A fundamental discriminant $d$ is different from unity, and is either
     1 mod 4 and squarefree, or is 0 mod 4 and such that $d/4$ is squarefree
     and 2 or 3 mod 4. This is the same as being the discriminant of some
     quadratic field.
-
-    Parameters
-    ==========
-
-    a: int, which must be 0 or 1 mod 4
-
-    Returns
-    =======
-
-    Pair ``(D, F)``  of dictionaries.
-
-    Raises
-    ======
-
-    ValueError if *a* is not 0 or 1 mod 4.
 
     Examples
     ========
@@ -75,6 +92,28 @@ def extract_fundamental_discriminant(a):
     >>> from sympy import factorint
     >>> print(factorint(-432))
     {2: 4, 3: 3, -1: 1}
+
+    Parameters
+    ==========
+
+    a: int, must be 0 or 1 mod 4
+
+    Returns
+    =======
+
+    Pair ``(D, F)``  of dictionaries.
+
+    Raises
+    ======
+
+    ValueError
+        If *a* is not 0 or 1 mod 4.
+
+    References
+    ==========
+
+    .. [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
+       (See Prop. 5.1.3)
 
     """
     if a % 4 not in [0, 1]:
@@ -146,6 +185,12 @@ class AlgIntPowers:
     >>> print([int(c) for c in zeta_pow[24]])
     [-1, -1, -1, -1]
 
+    References
+    ==========
+
+    .. [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
+       (See Sec. 4.2.2)
+
     """
 
     def __init__(self, T, modulus=None):
@@ -153,9 +198,12 @@ class AlgIntPowers:
         Parameters
         ==========
 
-        T: the monic minimal polynomial over :ref:`ZZ` defining the algebraic integer.
+        T : :py:class:`~.Poly`
+            The monic irreducible polynomial over :ref:`ZZ` defining the
+            algebraic integer.
 
-        modulus: if not ``None``, all representations will be reduced w.r.t. this.
+        modulus : int, None, optional
+            If not ``None``, all representations will be reduced w.r.t. this.
 
         """
         self.T = T
@@ -207,13 +255,16 @@ def coeff_search(m, R):
     Parameters
     ==========
 
-    m: length of coeff list
-    R: initial max abs val for coeffs (will increase as search proceeds)
+    m : int
+        Length of coeff list.
+    R : int
+        Initial max abs val for coeffs (will increase as search proceeds).
 
     Returns
     =======
 
-    Infinite generator of lists of coefficients.
+    generator
+        Infinite generator of lists of coefficients.
 
     """
     R0 = R
@@ -261,24 +312,26 @@ def supplement_a_subspace(M):
     Parameters
     ==========
 
-    M: DomainMatrix
+    M : :py:class:`~.DomainMatrix`
+        The columns give the basis for the subspace.
 
     Returns
     =======
 
-    DomainMatrix
-        This DomainMatrix is invertible and its first $r$ columns equal *M*.
+    :py:class:`~.DomainMatrix`
+        This matrix is invertible and its first $r$ columns equal *M*.
 
     Raises
     ======
 
-    DMRankError if *M* was not of maximal rank
+    DMRankError
+        If *M* was not of maximal rank.
 
     References
     ==========
 
-    Cohen, H. *A Course in Computational Algebraic Number Theory*
-    (See Sec. 2.3.2.)
+    .. [1] Cohen, H. *A Course in Computational Algebraic Number Theory*
+       (See Sec. 2.3.2.)
 
     """
     n, r = M.shape
