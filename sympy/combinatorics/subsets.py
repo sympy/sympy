@@ -1,10 +1,9 @@
 from itertools import combinations
 
 from sympy.combinatorics.graycode import GrayCode
-from sympy.core import Atom
 
 
-class Subset(Atom):
+class Subset():
     """
     Represents a basic subset object.
 
@@ -59,10 +58,25 @@ class Subset(Atom):
             if elem not in superset:
                 raise ValueError('The superset provided is invalid as it does '
                                  'not contain the element {}'.format(elem))
-        obj = Atom.__new__(cls)
+        obj = object.__new__(cls)
         obj._subset = subset
         obj._superset = superset
         return obj
+
+    def __eq__(self, other):
+        """Return a boolean indicating whether a == b on the basis of
+        whether both objects are of the class Subset and if the values 
+        of the subset and superset attributes are the same.
+        """
+        if not isinstance(self, Subset):
+            return False
+        if not isinstance(other, Subset):
+            return False
+        if not self.superset == other.superset:
+            return False
+        if not self.subset == other.subset:
+            return False
+        return True
 
     def iterate_binary(self, k):
         """
