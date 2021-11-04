@@ -11,7 +11,7 @@ from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
-from sympy.core.relational import Eq, Relational
+from sympy.core.relational import Eq, Relational, is_ge, is_le
 from sympy.core.singleton import Singleton
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy
@@ -607,21 +607,21 @@ class MinMaxBase(Expr, LatticeOp):
         Check if x and y are connected somehow.
         """
         def hit(v, t, f):
-            if not v.is_Relational:
+            if v is not None:
                 return t if v else f
         for i in range(2):
             if x == y:
                 return True
-            r = hit(x >= y, Max, Min)
+            r = hit(is_ge(x, y), Max, Min)
             if r is not None:
                 return r
-            r = hit(y <= x, Max, Min)
+            r = hit(is_le(y, x), Max, Min)
             if r is not None:
                 return r
-            r = hit(x <= y, Min, Max)
+            r = hit(is_le(x, y), Min, Max)
             if r is not None:
                 return r
-            r = hit(y >= x, Min, Max)
+            r = hit(is_ge(y, x), Min, Max)
             if r is not None:
                 return r
             # simplification can be expensive, so be conservative
