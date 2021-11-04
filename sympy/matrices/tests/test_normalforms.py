@@ -9,6 +9,7 @@ from sympy.matrices.normalforms import (
     hermite_normal_form,
 )
 from sympy.polys.domains import ZZ, QQ
+from sympy.core.numbers import Integer
 
 
 def test_smith_normal():
