@@ -1,6 +1,5 @@
 from sympy.testing.pytest import warns_deprecated_sympy
 
-from sympy.core.numbers import Integer
 from sympy.core.symbol import Symbol
 from sympy.polys.polytools import Poly
 from sympy.matrices import Matrix
