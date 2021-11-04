@@ -101,15 +101,18 @@ forms may be preferable for different computational tasks.
 See [Cohen93]_ Section 4.2.
 
 
-
 As number field elements
 ````````````````````````
 
-In SymPy, an element of an :py:class:`~.AlgebraicField` is represented by
-an :py:class:`~.AlgebraicNumber`.
+In SymPy, there is a distinction between number and expression classes defined
+in the :py:mod:`sympy.core.numbers` module on the one hand, and domains and
+domain elements defined in the :py:mod:`~sympy.polys` module on the other.
 
-.. autoclass:: AlgebraicNumber
-   :members:
+When it comes to algebraic numbers, the :py:mod:`sympy.core.numbers` module
+offers the :py:class:`~.AlgebraicNumber` class, while the
+:py:mod:`~sympy.polys` module offers the
+:py:class:`~sympy.polys.polyclasses.ANP` class. This is the type of domain
+elements belonging to the :py:class:`~.AlgebraicField` domain.
 
 
 As points in the complex plane
@@ -143,9 +146,9 @@ In particular, the maximal order -- or `ring of integers`_ -- in a number field
 is a finitely-generated $\mathbb{Z}$-module, whose generators form an
 `integral basis`_ for the field.
 
-Classes allowing us to represent such modules, and their elements, and
-homomorphisms between them, are provided in the
-:py:mod:`~.modules` module.
+Classes allowing us to represent such modules, and their elements, are provided
+in the :py:mod:`~.modules` module. Here, the :py:class:`~.ModuleElement` class
+provides another way to represent algebraic numbers.
 
 
 Modules

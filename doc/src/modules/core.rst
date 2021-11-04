@@ -124,6 +124,11 @@ Integer
 .. autoclass:: Integer
    :members:
 
+AlgebraicNumber
+^^^^^^^^^^^^^^^
+.. autoclass:: AlgebraicNumber
+   :members:
+
 NumberSymbol
 ^^^^^^^^^^^^
 .. autoclass:: NumberSymbol
