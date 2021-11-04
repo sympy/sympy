@@ -1059,6 +1059,8 @@ class ModuleElement(IntegerPowerable):
         if is_rat(a):
             a = QQ(a)
             return self * (1/a)
+        elif isinstance(a, ModuleElement):
+            return self * (1//a)
         return NotImplemented
 
     def __rfloordiv__(self, a):
