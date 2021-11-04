@@ -53,3 +53,11 @@ SDM Class Reference
 
 .. autoclass:: SDM
    :members:
+
+
+Normal Forms
+============
+.. currentmodule:: sympy.polys.matrices.normalforms
+
+.. autofunction:: smith_normal_form
+.. autofunction:: hermite_normal_form
