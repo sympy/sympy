@@ -1,10 +1,10 @@
 from itertools import combinations
 
 from sympy.combinatorics.graycode import GrayCode
-from sympy.core import Basic
+from sympy.core import Atom
 
 
-class Subset(Basic):
+class Subset(Atom):
     """
     Represents a basic subset object.
 
@@ -59,7 +59,7 @@ class Subset(Basic):
             if elem not in superset:
                 raise ValueError('The superset provided is invalid as it does '
                                  'not contain the element {}'.format(elem))
-        obj = Basic.__new__(cls)
+        obj = Atom.__new__(cls)
         obj._subset = subset
         obj._superset = superset
         return obj
