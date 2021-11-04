@@ -2,7 +2,11 @@
 
 from functools import reduce
 
-from sympy import Symbol, Tuple, Mul, sympify, default_sort_key
+from sympy.core.sorting import default_sort_key
+from sympy.core.containers import Tuple
+from sympy.core.mul import Mul
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
 from sympy.utilities import numbered_symbols
 from sympy.physics.quantum.gate import Gate
 

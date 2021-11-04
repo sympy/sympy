@@ -1,16 +1,20 @@
-from sympy import (
-    symbols, Identity, cos, ZeroMatrix, OneMatrix, sqrt, HadamardProduct)
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import cos
+from sympy.matrices.expressions.hadamard import HadamardProduct
+from sympy.matrices.expressions.special import (Identity, OneMatrix, ZeroMatrix)
+from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 from sympy.tensor.array.expressions.conv_array_to_matrix import _support_function_tp1_recognize, \
     _array_diag2contr_diagmatrix, convert_array_to_matrix, _remove_trivial_dims, _array2matrix, \
     _combine_removed, identify_removable_identity_matrices, _array_contraction_to_diagonal_multiple_identity
-from sympy import MatrixSymbol
+from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.combinatorics import Permutation
 from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
 from sympy.matrices import Trace, MatMul, Transpose
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, \
     ArrayTensorProduct, ArrayAdd, PermuteDims, ArrayDiagonal, \
-    ArrayContraction
+    ArrayContraction, ArrayElement, ArraySymbol
 from sympy.testing.pytest import raises
 
 
@@ -131,6 +135,16 @@ def test_arrayexpr_convert_array_to_matrix2():
 
     cg = ArrayTensorProduct(PermuteDims(N, [1, 0]), PermuteDims(M, [1, 0]))
     assert convert_array_to_matrix(cg) == ArrayTensorProduct(N.T, M.T)
+
+    cg = ArrayContraction(M, (0,), (1,))
+    assert convert_array_to_matrix(cg) == OneMatrix(1, k)*M*OneMatrix(k, 1)
+
+    cg = ArrayContraction(x, (0,), (1,))
+    assert convert_array_to_matrix(cg) == OneMatrix(1, k)*x
+
+    Xm = MatrixSymbol("Xm", m, n)
+    cg = ArrayContraction(Xm, (0,), (1,))
+    assert convert_array_to_matrix(cg) == OneMatrix(1, m)*Xm*OneMatrix(n, 1)
 
 
 def test_arrayexpr_convert_array_to_diagonalized_vector():
@@ -379,6 +393,19 @@ def test_arrayexpr_convert_array_to_matrix_remove_trivial_dims():
     assert ret == PermuteDims(ArrayContraction(ArrayTensorProduct(A, B, C, M), (3, 4)), [0, 2, 3, 4, 5, 1])
     assert removed == []
 
+    # Trivial matrices are sometimes inserted into MatMul expressions:
+
+    cg = ArrayTensorProduct(b*b.T, a.T*a)
+    ret, removed = _remove_trivial_dims(cg)
+    assert ret == b*a.T*a*b.T
+    assert removed == [2, 3]
+
+    Xs = ArraySymbol("X", (3, 2, k))
+    cg = ArrayTensorProduct(M, Xs, b.T*c, a*a.T, b*b.T, c.T*d)
+    ret, removed = _remove_trivial_dims(cg)
+    assert ret == ArrayTensorProduct(M, Xs, a*b.T*c*c.T*d*a.T, b*b.T)
+    assert removed == [5, 6, 11, 12]
+
 
 def test_arrayexpr_convert_array_to_matrix_diag2contraction_diagmatrix():
     cg = ArrayDiagonal(ArrayTensorProduct(M, a), (1, 2))
@@ -589,3 +616,15 @@ def test_array_contraction_to_diagonal_multiple_identities():
 
     expr = ArrayContraction(ArrayTensorProduct(A, I, I, B), (1, 2, 3, 4, 6))
     assert _array_contraction_to_diagonal_multiple_identity(expr) == (expr, [])
+
+
+def test_convert_array_element_to_matrix():
+
+    expr = ArrayElement(M, (i, j))
+    assert convert_array_to_matrix(expr) == MatrixElement(M, i, j)
+
+    expr = ArrayElement(ArrayContraction(ArrayTensorProduct(M, N), (1, 3)), (i, j))
+    assert convert_array_to_matrix(expr) == MatrixElement(M*N.T, i, j)
+
+    expr = ArrayElement(ArrayTensorProduct(M, N), (i, j, m, n))
+    assert convert_array_to_matrix(expr) == expr

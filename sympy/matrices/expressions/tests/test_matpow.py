@@ -1,4 +1,4 @@
-from sympy import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.simplify.powsimp import powsimp
 from sympy.testing.pytest import raises
 from sympy.core.expr import unchanged
@@ -209,3 +209,9 @@ def test_unchanged():
     assert unchanged(Inverse, MatPow(C, -1), -1)
     assert unchanged(MatPow, MatPow(C, -1), -1)
     assert unchanged(MatPow, MatPow(C, 1), 1)
+
+
+def test_no_exponentiation():
+    # if this passes, Pow.as_numer_denom should recognize
+    # MatAdd as exponent
+    raises(NotImplementedError, lambda: 3**(-2*C))

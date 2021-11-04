@@ -3,7 +3,7 @@ import fnmatch
 
 
 # XXX Python 2 unicode import test.
-# May remove after deprecating python 2.7.
+# May remove after deprecating Python 2.7.
 message_unicode_A = \
     "File contains a unicode character : %s, line %s. " \
     "But with no encoding header. " \
@@ -70,7 +70,7 @@ def _test_this_file_encoding(
     fname, test_file,
     unicode_whitelist=unicode_whitelist,
     unicode_strict_whitelist=unicode_strict_whitelist):
-    """Test helper function for python 2 importability test
+    """Test helper function for Python 2 importability test
 
     This test checks whether the file has
     # coding=utf-8
@@ -80,7 +80,7 @@ def _test_this_file_encoding(
 
     The test may have to operate on filewise manner, so it had moved
     to a separate process.
-    May remove after deprecating python 2.7.
+    May remove after deprecating Python 2.7.
     """
     has_coding_utf8 = False
     has_unicode = False

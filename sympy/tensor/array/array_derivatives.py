@@ -1,11 +1,13 @@
 from typing import Optional
 
-from sympy import Derivative, Integer, Expr
+from sympy.core.expr import Expr
+from sympy.core.function import Derivative
+from sympy.core.numbers import Integer
 from sympy.matrices.common import MatrixCommon
 from .ndim_array import NDimArray
 from .arrayop import derive_by_array
-from sympy import MatrixExpr
-from sympy import ZeroMatrix
+from sympy.matrices.expressions.matexpr import MatrixExpr
+from sympy.matrices.expressions.special import ZeroMatrix
 from sympy.matrices.expressions.matexpr import _matrix_derivative
 
 

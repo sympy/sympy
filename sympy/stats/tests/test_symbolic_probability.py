@@ -1,4 +1,12 @@
-from sympy import symbols, Mul, sin, Integral, oo, Eq, Sum, sqrt, exp, pi, Dummy
+from sympy.concrete.summations import Sum
+from sympy.core.mul import Mul
+from sympy.core.numbers import (oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
+from sympy.integrals.integrals import Integral
 from sympy.core.expr import unchanged
 from sympy.stats import (Normal, Poisson, variance, Covariance, Variance,
                          Probability, Expectation, Moment, CentralMoment)

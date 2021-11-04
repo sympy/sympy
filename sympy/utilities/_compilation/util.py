@@ -200,7 +200,7 @@ def pyx_is_cplus(path):
     return False
 
 def import_module_from_file(filename, only_if_newer_than=None):
-    """ Imports python extension (from shared object file)
+    """ Imports Python extension (from shared object file)
 
     Provide a list of paths in `only_if_newer_than` to check
     timestamps of dependencies. import_ raises an ImportError

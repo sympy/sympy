@@ -7,13 +7,13 @@ from itertools import chain, combinations, product
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import ordered, as_int
 from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.function import Application, Derivative
 from sympy.core.kind import NumberKind
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
+from sympy.core.sorting import ordered
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.kind import BooleanKind
 from sympy.utilities.iterables import sift, ibin
@@ -21,8 +21,8 @@ from sympy.utilities.misc import filldedent
 
 
 def as_Boolean(e):
-    """Like bool, return the Boolean value of an expression, e,
-    which can be any instance of Boolean or bool.
+    """Like ``bool``, return the Boolean value of an expression, e,
+    which can be any instance of :py:class:`~.Boolean` or ``bool``.
 
     Examples
     ========
@@ -63,7 +63,7 @@ def as_Boolean(e):
 
 @sympify_method_args
 class Boolean(Basic):
-    """A boolean object is an object for which logic operations make sense."""
+    """A Boolean object is an object for which logic operations make sense."""
 
     __slots__ = ()
 
@@ -104,7 +104,7 @@ class Boolean(Basic):
 
     def equals(self, other):
         """
-        Returns True if the given formulas have the same truth table.
+        Returns ``True`` if the given formulas have the same truth table.
         For two formulas to be equal they must have the same literals.
 
         Examples
@@ -153,6 +153,7 @@ class Boolean(Basic):
         """
         from sympy.calculus.util import periodicity
         from sympy.core.relational import Relational
+
         free = self.free_symbols
         if len(free) == 1:
             x = free.pop()
@@ -168,7 +169,12 @@ class Boolean(Basic):
                             as_set is not implemented for relationals
                             with periodic solutions
                             '''))
-                return self.subs(reps)._eval_as_set()
+                new = self.subs(reps)
+                if new.func != self.func:
+                    return new.as_set()  # restart with new obj
+                else:
+                    return new._eval_as_set()
+
             return self._eval_as_set()
         else:
             raise NotImplementedError("Sorry, as_set has not yet been"
@@ -194,7 +200,7 @@ class Boolean(Basic):
 
 class BooleanAtom(Boolean):
     """
-    Base class of BooleanTrue and BooleanFalse.
+    Base class of :py:class:`~.BooleanTrue` and :py:class:`~.BooleanFalse`.
     """
     is_Boolean = True
     is_Atom = True
@@ -243,11 +249,11 @@ class BooleanAtom(Boolean):
 
 class BooleanTrue(BooleanAtom, metaclass=Singleton):
     """
-    SymPy version of True, a singleton that can be accessed via S.true.
+    SymPy version of ``True``, a singleton that can be accessed via ``S.true``.
 
-    This is the SymPy version of True, for use in the logic module. The
-    primary advantage of using true instead of True is that shorthand boolean
-    operations like ~ and >> will work as expected on this class, whereas with
+    This is the SymPy version of ``True``, for use in the logic module. The
+    primary advantage of using ``true`` instead of ``True`` is that shorthand Boolean
+    operations like ``~`` and ``>>`` will work as expected on this class, whereas with
     True they act bitwise on 1. Functions in the logic module will return this
     class when they evaluate to true.
 
@@ -360,13 +366,13 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
 
 class BooleanFalse(BooleanAtom, metaclass=Singleton):
     """
-    SymPy version of False, a singleton that can be accessed via S.false.
+    SymPy version of ``False``, a singleton that can be accessed via ``S.false``.
 
-    This is the SymPy version of False, for use in the logic module. The
-    primary advantage of using false instead of False is that shorthand boolean
-    operations like ~ and >> will work as expected on this class, whereas with
-    False they act bitwise on 0. Functions in the logic module will return this
-    class when they evaluate to false.
+    This is the SymPy version of ``False``, for use in the logic module. The
+    primary advantage of using ``false`` instead of ``False`` is that shorthand
+    Boolean operations like ``~`` and ``>>`` will work as expected on this class,
+    whereas with ``False`` they act bitwise on 0. Functions in the logic module
+    will return this class when they evaluate to false.
 
     Notes
     ======
@@ -439,12 +445,16 @@ converter[bool] = lambda x: S.true if x else S.false
 
 class BooleanFunction(Application, Boolean):
     """Boolean function is a function that lives in a boolean space
-    It is used as base class for And, Or, Not, etc.
+    It is used as base class for :py:class:`~.And`, :py:class:`~.Or`,
+    :py:class:`~.Not`, etc.
     """
     is_Boolean = True
 
     def _eval_simplify(self, **kwargs):
-        rv = self.func(*[a.simplify(**kwargs) for a in self.args])
+        rv = simplify_univariate(self)
+        if not isinstance(rv, BooleanFunction):
+            return rv.simplify(**kwargs)
+        rv = rv.func(*[a.simplify(**kwargs) for a in rv.args])
         return simplify_logic(rv)
 
     def simplify(self, **kwargs):
@@ -554,23 +564,24 @@ class BooleanFunction(Application, Boolean):
             Boolean expression
 
         patterns : tuple
-            Tuple of tuples, with (pattern to simplify, simplified pattern)
+            Tuple of tuples, with (pattern to simplify, simplified pattern).
 
         measure : function
-            Simplification measure
+            Simplification measure.
 
-        dominatingvalue : boolean or None
+        dominatingvalue : Boolean or ``None``
             The dominating value for the function of consideration.
-            For example, for And S.false is dominating. As soon as one
-            expression is S.false in And, the whole expression is S.false.
+            For example, for :py:class:`~.And` ``S.false`` is dominating.
+            As soon as one expression is ``S.false`` in :py:class:`~.And`,
+            the whole expression is ``S.false``.
 
-        replacementvalue : boolean or None, optional
+        replacementvalue : Boolean or ``None``, optional
             The resulting value for the whole expression if one argument
-            evaluates to dominatingvalue.
-            For example, for Nand S.false is dominating, but in this case
-            the resulting value is S.true. Default is None. If replacementvalue
-            is None and dominatingvalue is not None,
-            replacementvalue = dominatingvalue
+            evaluates to ``dominatingvalue``.
+            For example, for :py:class:`~.Nand` ``S.false`` is dominating, but
+            in this case the resulting value is ``S.true``. Default is ``None``.
+            If ``replacementvalue`` is ``None`` and ``dominatingvalue`` is not
+            ``None``, ``replacementvalue = dominatingvalue``.
 
         """
         from sympy.core.relational import Relational, _canonical
@@ -662,8 +673,8 @@ class And(LatticeOp, BooleanFunction):
     """
     Logical AND function.
 
-    It evaluates its arguments in order, giving False immediately
-    if any of them are False, and True if they are all True.
+    It evaluates its arguments in order, returning false immediately
+    when an argument is false and true if they are all true.
 
     Examples
     ========
@@ -820,8 +831,8 @@ class Or(LatticeOp, BooleanFunction):
     """
     Logical OR function
 
-    It evaluates its arguments in order, giving True immediately
-    if any of them are True, and False if they are all False.
+    It evaluates its arguments in order, returning true immediately
+    when an  argument is true, and false if they are all false.
 
     Examples
     ========
@@ -899,6 +910,12 @@ class Or(LatticeOp, BooleanFunction):
         return Nand(*[Not(arg) for arg in self.args])
 
     def _eval_simplify(self, **kwargs):
+        from sympy.core.relational import Le, Ge, Eq
+        lege = self.atoms(Le, Ge)
+        if lege:
+            reps = {i: self.func(
+                Eq(i.lhs, i.rhs), i.strict) for i in lege}
+            return self.xreplace(reps)._eval_simplify(**kwargs)
         # standard simplify
         rv = super()._eval_simplify(**kwargs)
         if not isinstance(rv, Or):
@@ -921,8 +938,8 @@ class Not(BooleanFunction):
     Logical Not function (negation)
 
 
-    Returns True if the statement is False
-    Returns False if the statement is True
+    Returns ``true`` if the statement is ``false`` or ``False``.
+    Returns ``false`` if the statement is ``true`` or ``True``.
 
     Examples
     ========
@@ -1259,10 +1276,11 @@ class Xnor(BooleanFunction):
 
 
 class Implies(BooleanFunction):
-    """
+    r"""
     Logical implication.
 
-    A implies B is equivalent to !A v B
+    A implies B is equivalent to if A then B. Mathematically, it is written
+    as `A \Rightarrow B` and is equivalent to `\neg A \vee B` or ``~A | B``.
 
     Accepts two Boolean arguments; A and B.
     Returns False if A is True and B is False
@@ -1320,7 +1338,7 @@ class Implies(BooleanFunction):
             raise ValueError(
                 "%d operand(s) used for an Implies "
                 "(pairs are required): %s" % (len(args), str(args)))
-        if A == True or A == False or B == True or B == False:
+        if A in (True, False) or B in (True, False):
             return Or(Not(A), B)
         elif A == B:
             return S.true
@@ -1345,10 +1363,12 @@ class Equivalent(BooleanFunction):
     """
     Equivalence relation.
 
-    Equivalent(A, B) is True iff A and B are both True or both False
+    ``Equivalent(A, B)`` is True iff A and B are both True or both False.
 
     Returns True if all of the arguments are logically equivalent.
     Returns False otherwise.
+
+    For two arguments, this is equivalent to :py:class:`~.Xnor`.
 
     Examples
     ========
@@ -1425,9 +1445,9 @@ class Equivalent(BooleanFunction):
 
 class ITE(BooleanFunction):
     """
-    If then else clause.
+    If-then-else clause.
 
-    ITE(A, B, C) evaluates and returns the result of B if A is true
+    ``ITE(A, B, C)`` evaluates and returns the result of B if A is true
     else it returns the result of C. All args must be Booleans.
 
     Examples
@@ -1543,6 +1563,8 @@ class Exclusive(BooleanFunction):
 
     ``Exclusive(A, B, C)`` is equivalent to ``~(A & B) & ~(A & C) & ~(B & C)``.
 
+    For two arguments, this is equivalent to :py:class:`~.Xor`.
+
     Examples
     ========
 
@@ -1567,7 +1589,7 @@ class Exclusive(BooleanFunction):
 
 
 def conjuncts(expr):
-    """Return a list of the conjuncts in the expr s.
+    """Return a list of the conjuncts in ``expr``.
 
     Examples
     ========
@@ -1584,7 +1606,7 @@ def conjuncts(expr):
 
 
 def disjuncts(expr):
-    """Return a list of the disjuncts in the sentence s.
+    """Return a list of the disjuncts in ``expr``.
 
     Examples
     ========
@@ -1602,7 +1624,7 @@ def disjuncts(expr):
 
 def distribute_and_over_or(expr):
     """
-    Given a sentence s consisting of conjunctions and disjunctions
+    Given a sentence ``expr`` consisting of conjunctions and disjunctions
     of literals, return an equivalent sentence in CNF.
 
     Examples
@@ -1619,7 +1641,7 @@ def distribute_and_over_or(expr):
 
 def distribute_or_over_and(expr):
     """
-    Given a sentence s consisting of conjunctions and disjunctions
+    Given a sentence ``expr`` consisting of conjunctions and disjunctions
     of literals, return an equivalent sentence in DNF.
 
     Note that the output is NOT simplified.
@@ -1638,7 +1660,7 @@ def distribute_or_over_and(expr):
 
 def distribute_xor_over_and(expr):
     """
-    Given a sentence s consisting of conjunction and
+    Given a sentence ``expr`` consisting of conjunction and
     exclusive disjunctions of literals, return an
     equivalent exclusive disjunction.
 
@@ -1657,7 +1679,7 @@ def distribute_xor_over_and(expr):
 
 def _distribute(info):
     """
-    Distributes info[1] over info[2] with respect to info[0].
+    Distributes ``info[1]`` over ``info[2]`` with respect to ``info[0]``.
     """
     if isinstance(info[0], info[2]):
         for arg in info[0].args:
@@ -1725,10 +1747,11 @@ def to_anf(expr, deep=True):
 
 def to_nnf(expr, simplify=True):
     """
-    Converts expr to Negation Normal Form.
-    A logical expression is in Negation Normal Form (NNF) if it
+    Converts ``expr`` to Negation Normal Form (NNF).
+
+    A logical expression is in NNF if it
     contains only And, Or and Not, and Not is applied only to literals.
-    If simplify is True, the result contains no redundant clauses.
+    If ``simplify`` is ``True``, the result contains no redundant clauses.
 
     Examples
     ========
@@ -1748,12 +1771,12 @@ def to_nnf(expr, simplify=True):
 
 def to_cnf(expr, simplify=False, force=False):
     """
-    Convert a propositional logical sentence s to conjunctive normal
-    form: ((A | ~B | ...) & (B | C | ...) & ...).
-    If simplify is True, the expr is evaluated to its simplest CNF
+    Convert a propositional logical sentence ``expr`` to conjunctive normal
+    form: ``((A | ~B | ...) & (B | C | ...) & ...)``.
+    If ``simplify`` is ``True``, ``expr`` is evaluated to its simplest CNF
     form using the Quine-McCluskey algorithm; this may take a long
     time if there are more than 8 variables and requires that the
-    ``force`` flag be set to True (default is False).
+    ``force`` flag be set to ``True`` (default is ``False``).
 
     Examples
     ========
@@ -1790,12 +1813,12 @@ def to_cnf(expr, simplify=False, force=False):
 
 def to_dnf(expr, simplify=False, force=False):
     """
-    Convert a propositional logical sentence s to disjunctive normal
-    form: ((A & ~B & ...) | (B & C & ...) | ...).
-    If simplify is True, the expr is evaluated to its simplest DNF form using
+    Convert a propositional logical sentence ``expr`` to disjunctive normal
+    form: ``((A & ~B & ...) | (B & C & ...) | ...)``.
+    If ``simplify`` is ``True``, ``expr`` is evaluated to its simplest DNF form using
     the Quine-McCluskey algorithm; this may take a long
     time if there are more than 8 variables and requires that the
-    ``force`` flag be set to True (default is False).
+    ``force`` flag be set to ``True`` (default is ``False``).
 
     Examples
     ========
@@ -1830,7 +1853,7 @@ def to_dnf(expr, simplify=False, force=False):
 
 def is_anf(expr):
     r"""
-    Checks if expr is in Algebraic Normal Form (ANF).
+    Checks if ``expr``  is in Algebraic Normal Form (ANF).
 
     A logical expression is in ANF if it has the form
 
@@ -1885,10 +1908,11 @@ def is_anf(expr):
 
 def is_nnf(expr, simplified=True):
     """
-    Checks if expr is in Negation Normal Form.
-    A logical expression is in Negation Normal Form (NNF) if it
+    Checks if ``expr`` is in Negation Normal Form (NNF).
+
+    A logical expression is in NNF if it
     contains only And, Or and Not, and Not is applied only to literals.
-    If simplified is True, checks if result contains no redundant clauses.
+    If ``simplified`` is ``True``, checks if result contains no redundant clauses.
 
     Examples
     ========
@@ -1994,8 +2018,9 @@ def _is_form(expr, function1, function2):
 
 def eliminate_implications(expr):
     """
-    Change >>, <<, and Equivalent into &, |, and ~. That is, return an
-    expression that is equivalent to s, but has only &, |, and ~ as logical
+    Change ``Implies`` and ``Equivalent`` into ``And``, ``Or``, and ``Not``.
+    That is, return an expression that is equivalent to ``expr``, but has only
+    ``&``, ``|``, and ``~`` as logical
     operators.
 
     Examples
@@ -2099,31 +2124,7 @@ def term_to_integer(term):
     return int(''.join(list(map(str, list(term)))), 2)
 
 
-def integer_to_term(k, n_bits=None):
-    """
-    Return a list of the base-2 digits in the integer, ``k``.
-
-    Parameters
-    ==========
-
-    k : int
-    n_bits : int
-        If ``n_bits`` is given and the number of digits in the binary
-        representation of ``k`` is smaller than ``n_bits`` then left-pad the
-        list with 0s.
-
-    Examples
-    ========
-
-    >>> from sympy.logic.boolalg import integer_to_term
-    >>> integer_to_term(4)
-    [1, 0, 0]
-    >>> integer_to_term(4, 6)
-    [0, 0, 0, 1, 0, 0]
-    """
-
-    s = '{0:0{1}b}'.format(abs(as_int(k)), as_int(abs(n_bits or 0)))
-    return list(map(int, s))
+integer_to_term = ibin  # XXX could delete?
 
 
 def truth_table(expr, variables, input=True):
@@ -2134,10 +2135,12 @@ def truth_table(expr, variables, input=True):
     Parameters
     ==========
 
-    expr : string or boolean expression
+    expr : Boolean expression
+
     variables : list of variables
-    input : boolean (default True)
-        indicates whether to return the input combinations.
+
+    input : bool (default ``True``)
+        Indicates whether to return the input combinations.
 
     Examples
     ========
@@ -2156,11 +2159,11 @@ def truth_table(expr, variables, input=True):
     >>> list(table)
     [([0, 0], False), ([0, 1], True), ([1, 0], True), ([1, 1], True)]
 
-    If input is false, truth_table returns only a list of truth values.
+    If ``input`` is ``False``, ``truth_table`` returns only a list of truth values.
     In this case, the corresponding input values of variables can be
     deduced from the index of a given output.
 
-    >>> from sympy.logic.boolalg import integer_to_term
+    >>> from sympy.utilities.iterables import ibin
     >>> vars = [y, x]
     >>> values = truth_table(x >> y, vars, input=False)
     >>> values = list(values)
@@ -2169,7 +2172,7 @@ def truth_table(expr, variables, input=True):
 
     >>> for i, value in enumerate(values):
     ...     print('{0} -> {1}'.format(list(zip(
-    ...     vars, integer_to_term(i, len(vars)))), value))
+    ...     vars, ibin(i, len(vars)))), value))
     [(y, 0), (x, 0)] -> True
     [(y, 0), (x, 1)] -> False
     [(y, 1), (x, 0)] -> True
@@ -2196,7 +2199,7 @@ def truth_table(expr, variables, input=True):
 def _check_pair(minterm1, minterm2):
     """
     Checks if a pair of minterms differs by only one bit. If yes, returns
-    index, else returns -1.
+    index, else returns `-1`.
     """
     # Early termination seems to be faster than list comprehension,
     # at least for large examples.
@@ -2622,7 +2625,7 @@ def ANFform(variables, truthvalues):
     References
     ==========
 
-    .. [2] https://en.wikipedia.org/wiki/Zhegalkin_polynomial
+    .. [1] https://en.wikipedia.org/wiki/Zhegalkin_polynomial
 
     """
 
@@ -2653,14 +2656,14 @@ def anf_coeffs(truthvalues):
     disjunction) representing the boolean expression in ANF
     (i.e., the "Zhegalkin polynomial").
 
-    There are 2^n possible Zhegalkin monomials in n variables, since
+    There are `2^n` possible Zhegalkin monomials in `n` variables, since
     each monomial is fully specified by the presence or absence of
     each variable.
 
     We can enumerate all the monomials. For example, boolean
-    function with four variables (a, b, c, d) can contain
-    up to 2^4 = 16 monomials. The 13-th monomial is the
-    product a & b & d, because 13 in binary is 1, 1, 0, 1.
+    function with four variables ``(a, b, c, d)`` can contain
+    up to `2^4 = 16` monomials. The 13-th monomial is the
+    product ``a & b & d``, because 13 in binary is 1, 1, 0, 1.
 
     A given monomial's presence or absence in a polynomial corresponds
     to that monomial's coefficient being 1 or 0 respectively.
@@ -2717,6 +2720,7 @@ def bool_minterm(k, variables):
 
     Examples
     ========
+
     >>> from sympy.logic.boolalg import bool_minterm
     >>> from sympy.abc import x, y, z
     >>> bool_minterm([1, 0, 1], [x, y, z])
@@ -2727,11 +2731,11 @@ def bool_minterm(k, variables):
     References
     ==========
 
-    .. [3] https://en.wikipedia.org/wiki/Canonical_normal_form#Indexing_minterms
+    .. [1] https://en.wikipedia.org/wiki/Canonical_normal_form#Indexing_minterms
 
     """
     if isinstance(k, int):
-        k = integer_to_term(k, len(variables))
+        k = ibin(k, len(variables))
     variables = tuple(map(sympify, variables))
     return _convert_to_varsSOP(k, variables)
 
@@ -2763,11 +2767,11 @@ def bool_maxterm(k, variables):
     References
     ==========
 
-    .. [4] https://en.wikipedia.org/wiki/Canonical_normal_form#Indexing_maxterms
+    .. [1] https://en.wikipedia.org/wiki/Canonical_normal_form#Indexing_maxterms
 
     """
     if isinstance(k, int):
-        k = integer_to_term(k, len(variables))
+        k = ibin(k, len(variables))
     variables = tuple(map(sympify, variables))
     return _convert_to_varsPOS(k, variables)
 
@@ -2782,14 +2786,14 @@ def bool_monomial(k, variables):
 
     Each boolean function can be uniquely represented by a
     Zhegalkin Polynomial (Algebraic Normal Form). The Zhegalkin
-    Polynomial of the boolean function with n variables can contain
-    up to 2^n monomials. We can enumarate all the monomials.
+    Polynomial of the boolean function with `n` variables can contain
+    up to `2^n` monomials. We can enumarate all the monomials.
     Each monomial is fully specified by the presence or absence
     of each variable.
 
-    For example, boolean function with four variables (a, b, c, d)
-    can contain up to 2^4 = 16 monomials. The 13-th monomial is the
-    product a & b & d, because 13 in binary is 1, 1, 0, 1.
+    For example, boolean function with four variables ``(a, b, c, d)``
+    can contain up to `2^4 = 16` monomials. The 13-th monomial is the
+    product ``a & b & d``, because 13 in binary is 1, 1, 0, 1.
 
     Parameters
     ==========
@@ -2808,7 +2812,7 @@ def bool_monomial(k, variables):
 
     """
     if isinstance(k, int):
-        k = integer_to_term(k, len(variables))
+        k = ibin(k, len(variables))
     variables = tuple(map(sympify, variables))
     return _convert_to_varsANF(k, variables)
 
@@ -2833,23 +2837,23 @@ def simplify_logic(expr, form=None, deep=True, force=False):
     Parameters
     ==========
 
-    expr : string or boolean expression
+    expr : Boolean expression
 
-    form : string ('cnf' or 'dnf') or None (default).
-        If 'cnf' or 'dnf', the simplest expression in the corresponding
-        normal form is returned; if None, the answer is returned
+    form : string (``'cnf'`` or ``'dnf'``) or ``None`` (default).
+        If ``'cnf'`` or ``'dnf'``, the simplest expression in the corresponding
+        normal form is returned; if ``None``, the answer is returned
         according to the form with fewest args (in CNF by default).
 
-    deep : boolean (default True)
+    deep : bool (default ``True``)
         Indicates whether to recursively simplify any
         non-boolean functions contained within the input.
 
-    force : boolean (default False)
+    force : bool (default ``False``)
         As the simplifications require exponential time in the number
         of variables, there is by default a limit on expressions with
         8 variables. When the expression has more than 8 variables
         only symbolical simplification (controlled by ``deep``) is
-        made. By setting force to ``True``, this limit is removed. Be
+        made. By setting ``force`` to ``True``, this limit is removed. Be
         aware that this can lead to very long simplification times.
 
     Examples
@@ -2984,15 +2988,16 @@ def _finger(eq):
 
 def bool_map(bool1, bool2):
     """
-    Return the simplified version of bool1, and the mapping of variables
-    that makes the two expressions bool1 and bool2 represent the same
+    Return the simplified version of *bool1*, and the mapping of variables
+    that makes the two expressions *bool1* and *bool2* represent the same
     logical behaviour for some correspondence between the variables
     of each.
     If more than one mappings of this sort exist, one of them
     is returned.
-    For example, And(x, y) is logically equivalent to And(a, b) for
-    the mapping {x: a, y:b} or {x: b, y:a}.
-    If no such mapping exists, return False.
+
+    For example, ``And(x, y)`` is logically equivalent to ``And(a, b)`` for
+    the mapping ``{x: a, y: b}`` or ``{x: b, y: a}``.
+    If no such mapping exists, return ``False``.
 
     Examples
     ========
@@ -3025,7 +3030,7 @@ def bool_map(bool1, bool2):
         and is either an And (or an Or) whose arguments are either
         symbols (x), negated symbols (Not(x)), or Or (or an And) whose
         arguments are only symbols or negated symbols. For example,
-        And(x, Not(y), Or(w, Not(z))).
+        ``And(x, Not(y), Or(w, Not(z)))``.
 
         Basic.match is not robust enough (see issue 4835) so this is
         a workaround that is valid for simplified boolean expressions
@@ -3170,3 +3175,53 @@ def simplify_patterns_xor():
                       And(Lt(a, Max(b, c)), Ge(a, Min(b, c)))),
                      )
     return _matchers_xor
+
+
+def simplify_univariate(expr):
+    """return a simplified version of univariate boolean expression, else ``expr``"""
+    from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.core.relational import Eq, Ne
+    if not isinstance(expr, BooleanFunction):
+        return expr
+    if expr.atoms(Eq, Ne):
+        return expr
+    c = expr
+    free = c.free_symbols
+    if len(free) != 1:
+        return c
+    x = free.pop()
+    ok, i = Piecewise((0, c), evaluate=False
+            )._intervals(x, err_on_Eq=True)
+    if not ok:
+        return c
+    if not i:
+        return S.false
+    args = []
+    for a, b, _, _ in i:
+        if a is S.NegativeInfinity:
+            if b is S.Infinity:
+                c = S.true
+            else:
+                if c.subs(x, b) == True:
+                    c = (x <= b)
+                else:
+                    c = (x < b)
+        else:
+            incl_a = (c.subs(x, a) == True)
+            incl_b = (c.subs(x, b) == True)
+            if incl_a and incl_b:
+                if b.is_infinite:
+                    c = (x >= a)
+                else:
+                    c = And(a <= x, x <= b)
+            elif incl_a:
+                c = And(a <= x, x < b)
+            elif incl_b:
+                if b.is_infinite:
+                    c = (x > a)
+                else:
+                    c = And(a < x, x <= b)
+            else:
+                c = And(a < x, x < b)
+        args.append(c)
+    return Or(*args)

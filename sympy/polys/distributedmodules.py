@@ -35,7 +35,8 @@ from sympy.polys.monomials import (
 
 from sympy.polys.polytools import Poly
 from sympy.polys.polyutils import parallel_dict_from_expr
-from sympy import S, sympify
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
 
 # Additional monomial tools.
 

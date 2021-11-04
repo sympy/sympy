@@ -6,7 +6,9 @@
 
 from sympy.testing.pytest import raises
 
-from sympy import S, Eq, I
+from sympy.core.numbers import I
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
 from sympy.abc import x, y, z
 
 from sympy.polys.matrices.linsolve import _linsolve

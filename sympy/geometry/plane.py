@@ -7,9 +7,7 @@ Plane
 """
 
 from sympy.core import Dummy, Rational, S, Symbol
-from sympy.core.evalf import prec_to_dps
 from sympy.core.symbol import _symbol
-from sympy.core.compatibility import is_sequence
 from sympy.functions.elementary.trigonometric import cos, sin, acos, asin, sqrt
 from .entity import GeometryEntity
 from .line import (Line, Ray, Segment, Line3D, LinearEntity, LinearEntity3D,
@@ -19,8 +17,10 @@ from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
 from sympy.simplify.simplify import simplify
 from sympy.solvers import solve, linsolve
-from sympy.utilities.iterables import uniq
+from sympy.utilities.iterables import uniq, is_sequence
 from sympy.utilities.misc import filldedent, func_name, Undecidable
+
+from mpmath.libmp.libmpf import prec_to_dps
 
 import random
 

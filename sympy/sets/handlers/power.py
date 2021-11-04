@@ -1,4 +1,9 @@
-from sympy import Min, Max, Set, Lambda, symbols, S, oo
+from sympy.core.function import Lambda
+from sympy.core.numbers import oo
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import (Max, Min)
+from sympy.sets.sets import Set
 from sympy.core import Basic, Expr, Integer
 from sympy.core.numbers import Infinity, NegativeInfinity, Zero
 from sympy.multipledispatch import dispatch

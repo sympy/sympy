@@ -1,8 +1,22 @@
-from sympy import (Basic, Symbol, sin, cos, atan, exp, sqrt, Rational,
-        Float, re, pi, sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols,
-        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, floor, Poly,
-        FiniteSet
-)
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.mod import Mod
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Integer, Rational, comp, nan,
+    oo, pi, zoo)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.complexes import (im, re, sign)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import (Max, sqrt)
+from sympy.functions.elementary.trigonometric import (atan, cos, sin)
+from sympy.polys.polytools import Poly
+from sympy.sets.sets import FiniteSet
+
 from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
@@ -374,6 +388,7 @@ def test_Mul_doesnt_expand_exp():
     assert sqrt(2)*2**Rational(1, 4)*5**Rational(3, 4) == 10**Rational(3, 4)
     assert (x**(-log(5)/log(3))*x)/(x*x**( - log(5)/log(3))) == sympify(1)
 
+
 def test_Mul_is_integer():
     k = Symbol('k', integer=True)
     n = Symbol('n', integer=True)
@@ -412,6 +427,7 @@ def test_Mul_is_integer():
     assert (xq*yq).is_integer is None
     e_20161 = Mul(-1,Mul(1,Pow(2,-1,evaluate=False),evaluate=False),evaluate=False)
     assert e_20161.is_integer is not True # expand(e_20161) -> -1/2, but no need to see that in the assumption without evaluation
+
 
 def test_Add_Mul_is_integer():
     x = Symbol('x')
@@ -922,6 +938,7 @@ def test_Add_is_negative_positive():
     z = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
     assert z.is_zero
 
+
 def test_Add_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)
 
@@ -1056,6 +1073,7 @@ def test_Pow_is_integer():
     x = Symbol('x', positive=True)
     assert (1/(x + 1)).is_integer is False
     assert (1/(-x - 1)).is_integer is False
+    assert (-1/(x + 1)).is_integer is False
 
     # issue 8648-like
     k = Symbol('k', even=True)
@@ -1133,6 +1151,7 @@ def test_Pow_is_real():
     with evaluate(False):
         assert f.is_imaginary is False
 
+
 def test_real_Pow():
     k = Symbol('k', integer=True, nonzero=True)
     assert (k**(I*pi/log(k))).is_real
@@ -1180,6 +1199,7 @@ def test_Pow_is_finite():
     assert (1/S.Pi).is_finite is True
 
     assert (1/(i-1)).is_finite is None
+
 
 def test_Pow_is_even_odd():
     x = Symbol('x')
@@ -2033,7 +2053,7 @@ def test_issue_6001():
 
 
 def test_polar():
-    from sympy import polar_lift
+    from sympy.functions.elementary.complexes import polar_lift
     p = Symbol('p', polar=True)
     x = Symbol('x')
     assert p.is_polar
@@ -2261,6 +2281,7 @@ def test_mul_zero_detection():
         e = Mul(b, z, evaluate=False)
         test(z, b, e)
 
+
 def test_Mul_with_zero_infinite():
     zer = Dummy(zero=True)
     inf = Dummy(finite=False)
@@ -2272,6 +2293,7 @@ def test_Mul_with_zero_infinite():
     e = Mul(inf, zer, evaluate=False)
     assert e.is_extended_positive is None
     assert e.is_hermitian is None
+
 
 def test_Mul_does_not_cancel_infinities():
     a, b = symbols('a b')
@@ -2293,7 +2315,7 @@ def test_Mul_does_not_distribute_infinity():
 
 
 def test_issue_8247_8354():
-    from sympy import tan
+    from sympy.functions.elementary.trigonometric import tan
     z = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
     assert z.is_positive is False  # it's 0
     z = S('''-2**(1/3)*(3*sqrt(93) + 29)**2 - 4*(3*sqrt(93) + 29)**(4/3) +
@@ -2375,3 +2397,7 @@ def test_issue_22021():
         e = Add(*args, evaluate=False)
         assert -e == -1*e
     assert 2*Add(1, x, x, evaluate=False) == 4*x + 2
+
+
+def test_issue_22244():
+    assert -(zoo*x) == zoo*x

@@ -1,6 +1,6 @@
 import sympy.physics.mechanics.models as models
 from sympy.core.backend import (cos, sin, Matrix, symbols, zeros)
-from sympy import simplify
+from sympy.simplify.simplify import simplify
 from sympy.physics.mechanics import (dynamicsymbols)
 
 

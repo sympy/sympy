@@ -16,7 +16,7 @@ AutolevListener = getattr(autolevlistener, 'AutolevListener', None)
 def parse_autolev(autolev_code, include_numeric):
     antlr4 = import_module('antlr4', warn_not_installed=True)
     if not antlr4:
-        raise ImportError("Autolev parsing requires the antlr4 python package,"
+        raise ImportError("Autolev parsing requires the antlr4 Python package,"
                           " provided by pip (antlr4-python2-runtime or"
                           " antlr4-python3-runtime) or"
                           " conda (antlr-python-runtime)")

@@ -1,6 +1,7 @@
-#this module tests that sympy works with true division turned on
+#this module tests that SymPy works with true division turned on
 
-from sympy import Rational, Symbol, Float
+from sympy.core.numbers import (Float, Rational)
+from sympy.core.symbol import Symbol
 
 
 def test_truediv():

@@ -6,7 +6,12 @@ TODO:
 
 """
 
-from sympy import DiracDelta, exp, I, Interval, pi, S, sqrt
+from sympy.core.numbers import (I, pi)
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.delta_functions import DiracDelta
+from sympy.sets.sets import Interval
 
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.hilbert import L2

@@ -1,8 +1,20 @@
-from sympy import (sin, cos, atan2, log, exp, gamma, conjugate, sqrt,
-                   factorial, Integral, Piecewise, Add, diff, symbols, S,
-                   Float, Dummy, Eq, Range, Catalan, EulerGamma, E,
-                   GoldenRatio, I, pi, Function, Rational, Integer, Lambda,
-                   sign, Mod)
+from sympy.core.add import Add
+from sympy.core.function import (Function, Lambda, diff)
+from sympy.core.mod import Mod
+from sympy.core import (Catalan, EulerGamma, GoldenRatio)
+from sympy.core.numbers import (E, Float, I, Integer, Rational, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.complexes import (conjugate, sign)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (atan2, cos, sin)
+from sympy.functions.special.gamma_functions import gamma
+from sympy.integrals.integrals import Integral
+from sympy.sets.fancysets import Range
 
 from sympy.codegen import For, Assignment, aug_assign
 from sympy.codegen.ast import Declaration, Variable, float32, float64, \

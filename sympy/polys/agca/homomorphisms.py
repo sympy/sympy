@@ -483,7 +483,7 @@ class MatrixHomomorphism(ModuleHomomorphism):
         self.matrix = tuple(converter(x) for x in matrix)
 
     def _sympy_matrix(self):
-        """Helper function which returns a sympy matrix ``self.matrix``."""
+        """Helper function which returns a SymPy matrix ``self.matrix``."""
         from sympy.matrices import Matrix
         c = lambda x: x
         if isinstance(self.codomain, (QuotientModule, SubQuotientModule)):

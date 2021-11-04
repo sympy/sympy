@@ -17,7 +17,7 @@ def test_ecm():
 
 
 def test_Point():
-    from sympy import mod_inverse
+    from sympy.core.numbers import mod_inverse
     #The curve is of the form y**2 = x**3 + a*x**2 + x
     mod = 101
     a = 10

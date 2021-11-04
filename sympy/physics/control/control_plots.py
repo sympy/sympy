@@ -1,4 +1,6 @@
-from sympy import I, log, apart, exp
+from sympy.core.numbers import I
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.polys.partfrac import apart
 from sympy.core.symbol import Dummy
 from sympy.external import import_module
 from sympy.functions import arg, Abs

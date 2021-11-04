@@ -1,18 +1,42 @@
-from sympy import (
-    Abs, And, binomial, Catalan, combsimp, cos, Derivative, E, Eq, exp, EulerGamma,
-    factorial, Function, harmonic, I, Integral, KroneckerDelta, log,
-    nan, oo, pi, Piecewise, Product, product, Rational, S, simplify, Identity,
-    sin, sqrt, Sum, summation, Symbol, symbols, sympify, zeta, gamma,
-    Indexed, Idx, IndexedBase, prod, Dummy, lowergamma, Range, floor,
-    rf, MatrixSymbol, tanh, sinh)
+from sympy.concrete.products import (Product, product)
+from sympy.concrete.summations import (Sum, summation)
+from sympy.core.function import (Derivative, Function)
+from sympy.core.mul import prod
+from sympy.core import (Catalan, EulerGamma)
+from sympy.core.numbers import (E, I, Rational, nan, oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (rf, binomial, factorial)
+from sympy.functions.combinatorial.numbers import harmonic
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (sinh, tanh)
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.gamma_functions import (gamma, lowergamma)
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.functions.special.zeta_functions import zeta
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import And, Or
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.special import Identity
+from sympy.sets.fancysets import Range
+from sympy.sets.sets import Interval
+from sympy.simplify.combsimp import combsimp
+from sympy.simplify.simplify import simplify
+from sympy.tensor.indexed import (Idx, Indexed, IndexedBase)
 from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import (
     telescopic, _dummy_with_inherited_properties_concrete, eval_sum_residue)
 from sympy.concrete.expr_with_intlimits import ReorderError
 from sympy.core.facts import InconsistentAssumptions
 from sympy.testing.pytest import XFAIL, raises, slow
-from sympy.matrices import \
-    Matrix, SparseMatrix, ImmutableDenseMatrix, ImmutableSparseMatrix
+from sympy.matrices import (Matrix, SparseMatrix,
+    ImmutableDenseMatrix, ImmutableSparseMatrix)
 from sympy.core.mod import Mod
 
 n = Symbol('n', integer=True)
@@ -30,7 +54,7 @@ def test_karr_convention():
     #
     # It is important to note that he defines all sums with
     # the upper limit being *exclusive*.
-    # In contrast, sympy and the usual mathematical notation has:
+    # In contrast, SymPy and the usual mathematical notation has:
     #
     # sum_{i = a}^b f(i) = f(a) + f(a+1) + ... + f(b-1) + f(b)
     #
@@ -386,6 +410,15 @@ def test_evalf_slow_series():
     assert NS(Sum(1/n**2, (n, 1, oo)), 500) == NS(pi**2/6, 500)
     assert NS(Sum((-1)**n / (2*n + 1)**3, (n, 0, oo)), 15) == NS(pi**3/32, 15)
     assert NS(Sum((-1)**n / (2*n + 1)**3, (n, 0, oo)), 50) == NS(pi**3/32, 50)
+
+
+def test_evalf_oo_to_oo():
+    # There used to be an error in certain cases
+    # Does not evaluate, but at least do not throw an error
+    # Evaluates symbolically to 0, which is not correct
+    assert Sum(1/(n**2+1), (n, -oo, oo)).evalf() == Sum(1/(n**2+1), (n, -oo, oo))
+    # This evaluates if from 1 to oo and symbolically
+    assert Sum(1/(factorial(abs(n))), (n, -oo, -1)).evalf() == Sum(1/(factorial(abs(n))), (n, -oo, -1))
 
 
 def test_euler_maclaurin():
@@ -929,11 +962,13 @@ def test_issue_2787():
     res = s.doit().simplify()
     assert res == Piecewise(
         (n*p, p/Abs(p - 1) <= 1),
-        ((-p + 1)**n*Sum(k*p**k*(-p + 1)**(-k)*binomial(n, k), (k, 0, n)),
+        ((-p + 1)**n*Sum(k*p**k*binomial(n, k)/(-p + 1)**(k), (k, 0, n)),
         True))
-    # Issue #17165: make sure that another simplify does not change/increase
-    # the result
-    assert res == res.simplify()
+    # Issue #17165: make sure that another simplify does not complicate
+    # the result (but why didn't first simplify handle this?)
+    assert res.simplify() == Piecewise((n*p, p <= S.Half),
+        ((1 - p)**n*Sum(k*p**k*binomial(n, k)/(1 - p)**k,
+        (k, 0, n)), True))
 
 
 def test_issue_4668():
@@ -1353,9 +1388,9 @@ def test_issue_17165():
     s = (x*Sum(x**n, (n, -1, oo)))
     ssimp = s.doit().simplify()
 
-    assert ssimp == Piecewise((-1/(x - 1), Abs(x) < 1),
-                              (x*Sum(x**n, (n, -1, oo)), True))
-    assert ssimp == ssimp.simplify()
+    assert ssimp == Piecewise((-1/(x - 1), (x > -1) & (x < 1)),
+                              (x*Sum(x**n, (n, -1, oo)), True)), ssimp
+    assert ssimp.simplify() == ssimp
 
 
 def test_issue_19379():
@@ -1369,7 +1404,7 @@ def test_issue_20777():
 def test__dummy_with_inherited_properties_concrete():
     x = Symbol('x')
 
-    from sympy import Tuple
+    from sympy.core.containers import Tuple
     d = _dummy_with_inherited_properties_concrete(Tuple(x, 0, 5))
     assert d.is_real
     assert d.is_integer
@@ -1506,3 +1541,50 @@ def test_summation_by_residues_failing():
     # Failing because of the bug in residue computation
     assert eval_sum_residue(x**2 / (x**4 + 1), (x, S(1), oo))
     assert eval_sum_residue(1 / ((x - 1)*(x - 2) + 1), (x, -oo, oo)) != 0
+
+
+def test_process_limits():
+    from sympy.concrete.expr_with_limits import _process_limits
+
+    # these should be (x, Range(3)) not Range(3)
+    raises(ValueError, lambda: _process_limits(
+        Range(3), discrete=True))
+    raises(ValueError, lambda: _process_limits(
+        Range(3), discrete=False))
+    # these should be (x, union) not union
+    # (but then we would get a TypeError because we don't
+    # handle non-contiguous sets: see below use of `union`)
+    union = Or(x < 1, x > 3).as_set()
+    raises(ValueError, lambda: _process_limits(
+        union, discrete=True))
+    raises(ValueError, lambda: _process_limits(
+        union, discrete=False))
+
+    # error not triggered if not needed
+    assert _process_limits((x, 1, 2)) == ([(x, 1, 2)], 1)
+
+    # this equivalence is used to detect Reals in _process_limits
+    assert isinstance(S.Reals, Interval)
+
+    C = Integral  # continuous limits
+    assert C(x, x >= 5) == C(x, (x, 5, oo))
+    assert C(x, x < 3) == C(x, (x, -oo, 3))
+    ans = C(x, (x, 0, 3))
+    assert C(x, And(x >= 0, x < 3)) == ans
+    assert C(x, (x, Interval.Ropen(0, 3))) == ans
+    raises(TypeError, lambda: C(x, (x, Range(3))))
+
+    # discrete limits
+    for D in (Sum, Product):
+        r, ans = Range(3, 10, 2), D(2*x + 3, (x, 0, 3))
+        assert D(x, (x, r)) == ans
+        assert D(x, (x, r.reversed)) == ans
+        r, ans = Range(3, oo, 2), D(2*x + 3, (x, 0, oo))
+        assert D(x, (x, r)) == ans
+        assert D(x, (x, r.reversed)) == ans
+        r, ans = Range(-oo, 5, 2), D(3 - 2*x, (x, 0, oo))
+        assert D(x, (x, r)) == ans
+        assert D(x, (x, r.reversed)) == ans
+        raises(TypeError, lambda: D(x, x > 0))
+        raises(ValueError, lambda: D(x, Interval(1, 3)))
+        raises(NotImplementedError, lambda: D(x, (x, union)))

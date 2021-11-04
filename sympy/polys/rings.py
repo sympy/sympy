@@ -1,13 +1,12 @@
 """Sparse polynomial rings. """
 
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 from operator import add, mul, lt, le, gt, ge
 from functools import reduce
 from types import GeneratorType
 
-from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
 from sympy.core.numbers import igcd, oo
 from sympy.core.symbol import Symbol, symbols as _symbols
@@ -30,6 +29,7 @@ from sympy.polys.polyutils import (expr_from_dict, _dict_reorder,
                                    _parallel_dict_from_expr)
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
+from sympy.utilities.iterables import is_sequence
 from sympy.utilities.magic import pollute
 
 @public
@@ -139,8 +139,7 @@ def sring(exprs, *symbols, **options):
     Examples
     ========
 
-    >>> from sympy.core import symbols
-    >>> from sympy.polys.rings import sring
+    >>> from sympy import sring, symbols
 
     >>> x, y, z = symbols("x,y,z")
     >>> R, f = sring(x + 2*y + 3*z)
@@ -192,7 +191,7 @@ def _parse_symbols(symbols):
 
     raise GeneratorsError("expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions")
 
-_ring_cache = {}  # type: Dict[Any, Any]
+_ring_cache = {}  # type: tDict[Any, Any]
 
 class PolyRing(DefaultPrinting, IPolys):
     """Multivariate distributed polynomial ring. """

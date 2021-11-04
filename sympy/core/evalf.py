@@ -3,7 +3,7 @@ Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
 
-from typing import Tuple
+from typing import Tuple as tTuple
 
 import math
 
@@ -22,11 +22,12 @@ from mpmath.libmp.libmpc import _infs_nan
 from mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
 from mpmath.libmp.gammazeta import mpf_bernoulli
 
-from .compatibility import SYMPY_INTS
 from .sympify import sympify
 from .singleton import S
-
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.utilities.iterables import is_sequence
+from sympy.utilities.lambdify import lambdify
+from sympy.utilities.misc import as_int
 
 LG10 = math.log(10, 2)
 rnd = round_nearest
@@ -352,7 +353,7 @@ def get_integer_part(expr, no, options, return_ints=False):
     # must also calculate whether the difference to the nearest integer is
     # positive or negative (which may fail if very close).
     def calc_part(re_im, nexpr):
-        from sympy.core.add import Add
+        from .add import Add
         _, _, exponent, _ = nexpr
         is_int = exponent == 0
         nint = int(to_int(nexpr, rnd))
@@ -379,7 +380,6 @@ def get_integer_part(expr, no, options, return_ints=False):
             s = options.get('subs', False)
             if s:
                 doit = True
-                from sympy.core.compatibility import as_int
                 # use strict=False with as_int because we take
                 # 2.0 == 2
                 for v in s.values():
@@ -464,13 +464,13 @@ def add_terms(terms, prec, target_prec):
 
     # see if any argument is NaN or oo and thus warrants a special return
     special = []
-    from sympy.core.numbers import Float
+    from .numbers import Float
     for t in terms:
         arg = Float._new(t[0], 1)
         if arg is S.NaN or arg.is_infinite:
             special.append(arg)
     if special:
-        from sympy.core.add import Add
+        from .add import Add
         rv = evalf(Add(*special), prec + 4, {})
         return rv[0], rv[2]
 
@@ -569,7 +569,7 @@ def evalf_mul(v, prec, options):
 
     # see if any argument is NaN or oo and thus warrants a special return
     special = []
-    from sympy.core.numbers import Float
+    from .numbers import Float
     for arg in args:
         arg = evalf(arg, prec, options)
         if arg[0] is None:
@@ -578,7 +578,7 @@ def evalf_mul(v, prec, options):
         if arg is S.NaN or arg.is_infinite:
             special.append(arg)
     if special:
-        from sympy.core.mul import Mul
+        from .mul import Mul
         special = Mul(*special)
         return evalf(special, prec + 4, {})
 
@@ -784,7 +784,7 @@ def evalf_trig(v, prec, options):
 
     TODO: should also handle tan of complex arguments.
     """
-    from sympy import cos, sin
+    from sympy.functions.elementary.trigonometric import cos, sin
     if isinstance(v, cos):
         func = mpf_cos
     elif isinstance(v, sin):
@@ -840,7 +840,7 @@ def evalf_trig(v, prec, options):
 
 
 def evalf_log(expr, prec, options):
-    from sympy import Abs, Add, log
+
     if len(expr.args)>1:
         expr = expr.doit()
         return evalf(expr, prec, options)
@@ -860,6 +860,9 @@ def evalf_log(expr, prec, options):
         xre = fzero
 
     if xim:
+        from sympy.functions.elementary.complexes import Abs
+        from sympy.functions.elementary.exponential import log
+
         # XXX: use get_abs etc instead
         re = evalf_log(
             log(Abs(arg, evaluate=False), evaluate=False), prec, options)
@@ -871,6 +874,7 @@ def evalf_log(expr, prec, options):
     re = mpf_log(mpf_abs(xre), prec, rnd)
     size = fastlog(re)
     if prec - size > workprec and re != fzero:
+        from .add import Add
         # We actually need to compute 1+x accurately, not x
         arg = Add(S.NegativeOne, arg, evaluate=False)
         xre, xim, _, _ = evalf_add(arg, prec, options)
@@ -908,7 +912,7 @@ def evalf_subs(prec, subs):
 
 
 def evalf_piecewise(expr, prec, options):
-    from sympy import Float, Integer
+    from .numbers import Float, Integer
     if 'subs' in options:
         expr = expr.subs(evalf_subs(prec, options['subs']))
         newopts = options.copy()
@@ -942,7 +946,7 @@ def evalf_bernoulli(expr, prec, options):
 
 
 def as_mpmath(x, prec, options):
-    from sympy.core.numbers import Infinity, NegativeInfinity, Zero
+    from .numbers import Infinity, NegativeInfinity, Zero
     x = sympify(x)
     if isinstance(x, Zero) or x == 0:
         return mpf(0)
@@ -985,7 +989,8 @@ def do_integral(expr, prec, options):
         # to account for the variable quadrature weights,
         # but it is better than nothing
 
-        from sympy import cos, sin, Wild
+        from sympy.functions.elementary.trigonometric import cos, sin
+        from .symbol import Wild
 
         have_part = [False, False]
         max_real_term = [MINUS_INF]
@@ -1101,7 +1106,7 @@ def check_convergence(numer, denom, n):
         <= 1 for polynomial divergence of rate n**(-h)
 
     """
-    from sympy import Poly
+    from sympy.polys.polytools import Poly
     npol = Poly(numer, n)
     dpol = Poly(denom, n)
     p = npol.degree()
@@ -1126,7 +1131,8 @@ def hypsum(expr, n, start, prec):
     quotient between successive terms must be a quotient of integer
     polynomials.
     """
-    from sympy import Float, hypersimp, lambdify
+    from .numbers import Float
+    from sympy.simplify.simplify import hypersimp
 
     if prec == float('inf'):
         raise NotImplementedError('does not support inf prec')
@@ -1196,16 +1202,16 @@ def hypsum(expr, n, start, prec):
 
 
 def evalf_prod(expr, prec, options):
-    from sympy import Sum
     if all((l[1] - l[2]).is_Integer for l in expr.limits):
         re, im, re_acc, im_acc = evalf(expr.doit(), prec=prec, options=options)
     else:
+        from sympy.concrete.summations import Sum
         re, im, re_acc, im_acc = evalf(expr.rewrite(Sum), prec=prec, options=options)
     return re, im, re_acc, im_acc
 
 
 def evalf_sum(expr, prec, options):
-    from sympy import Float
+    from .numbers import Float
     if 'subs' in options:
         expr = expr.subs(options['subs'])
     func = expr.function
@@ -1217,7 +1223,7 @@ def evalf_sum(expr, prec, options):
     prec2 = prec + 10
     try:
         n, a, b = limits[0]
-        if b != S.Infinity or a != int(a):
+        if b is not S.Infinity or a is S.NegativeInfinity or a != int(a):
             raise NotImplementedError
         # Use fast hypergeometric summation if possible
         v = hypsum(func, n, int(a), prec2)
@@ -1233,6 +1239,8 @@ def evalf_sum(expr, prec, options):
             s, err = expr.euler_maclaurin(m=m, n=n, eps=eps,
                 eval_integral=False)
             err = err.evalf()
+            if err is S.NaN:
+                raise NotImplementedError
             if err <= eps:
                 break
         err = fastlog(evalf(abs(err), 20, options)[0])
@@ -1275,11 +1283,11 @@ def _create_evalf_table():
     from sympy.functions.combinatorial.numbers import bernoulli
     from sympy.concrete.products import Product
     from sympy.concrete.summations import Sum
-    from sympy.core.add import Add
-    from sympy.core.mul import Mul
-    from sympy.core.numbers import Exp1, Float, Half, ImaginaryUnit, Integer, NaN, NegativeOne, One, Pi, Rational, Zero
-    from sympy.core.power import Pow
-    from sympy.core.symbol import Dummy, Symbol
+    from .add import Add
+    from .mul import Mul
+    from .numbers import Exp1, Float, Half, ImaginaryUnit, Integer, NaN, NegativeOne, One, Pi, Rational, Zero
+    from .power import Pow
+    from .symbol import Dummy, Symbol
     from sympy.functions.elementary.complexes import Abs, im, re
     from sympy.functions.elementary.exponential import exp, log
     from sympy.functions.elementary.integers import ceiling, floor
@@ -1360,7 +1368,7 @@ def evalf(x, prec, options):
     If all values are ``None``, then that represents 0.
     Note that 0 is also represented as ``fzero = (0, 0, 0, 0)``.
     """
-    from sympy import re as re_, im as im_
+    from sympy.functions.elementary.complexes import re as re_, im as im_
     try:
         rf = evalf_table[x.func]
         r = rf(x, prec, options)
@@ -1420,7 +1428,7 @@ def evalf(x, prec, options):
 class EvalfMixin:
     """Mixin class adding evalf capabililty."""
 
-    __slots__ = ()  # type: Tuple[str, ...]
+    __slots__ = ()  # type: tTuple[str, ...]
 
     def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """
@@ -1487,7 +1495,7 @@ class EvalfMixin:
         >>> (x + y - z).evalf(subs=values)
         1.00000000000000
         """
-        from sympy import Float, Number
+        from .numbers import Float, Number
         n = n if n is not None else 15
 
         if subs and is_sequence(subs):
@@ -1495,7 +1503,7 @@ class EvalfMixin:
 
         # for sake of sage that doesn't like evalf(1)
         if n == 1 and isinstance(self, Number):
-            from sympy.core.expr import _mag
+            from .expr import _mag
             rv = self.evalf(2, subs, maxn, chop, strict, quad, verbose)
             m = _mag(rv)
             rv = rv.round(1 - m)
@@ -1529,6 +1537,8 @@ class EvalfMixin:
                 # Probably contains symbols or unknown functions
                 return v
         re, im, re_acc, im_acc = result
+        if re is S.NaN or im is S.NaN:
+            return S.NaN
         if re:
             p = max(min(prec, re_acc), 1)
             re = Float._new(re, p)

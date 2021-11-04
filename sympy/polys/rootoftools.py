@@ -1,12 +1,12 @@
 """Implementation of RootOf class and related tools. """
 
 
-from sympy import Basic
+from sympy.core.basic import Basic
 from sympy.core import (S, Expr, Integer, Float, I, oo, Add, Lambda,
     symbols, sympify, Rational, Dummy)
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import ordered
 from sympy.core.relational import is_le
+from sympy.core.sorting import ordered
 from sympy.polys.domains import QQ
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,

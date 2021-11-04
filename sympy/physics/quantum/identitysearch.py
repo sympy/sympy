@@ -2,7 +2,10 @@ from collections import deque
 from random import randint
 
 from sympy.external import import_module
-from sympy import Mul, Basic, Number, Pow, Integer
+from sympy.core.basic import Basic
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Integer, Number)
+from sympy.core.power import Pow
 from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.dagger import Dagger
 

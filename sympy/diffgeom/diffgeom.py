@@ -1,4 +1,4 @@
-from typing import Any, Set
+from typing import Any, Set as tSet
 
 from functools import reduce
 from itertools import permutations
@@ -971,7 +971,7 @@ class BaseScalarField(Expr):
         return simplify(coords[self._index]).doit()
 
     # XXX Workaround for limitations on the content of args
-    free_symbols = set()  # type: Set[Any]
+    free_symbols = set()  # type: tSet[Any]
 
     def doit(self):
         return self
@@ -1126,7 +1126,7 @@ class Commutator(Expr):
 
     >>> from sympy.diffgeom.rn import R2_p, R2_r
     >>> from sympy.diffgeom import Commutator
-    >>> from sympy.simplify import simplify
+    >>> from sympy import simplify
 
     >>> fx, fy = R2_r.base_scalars()
     >>> e_x, e_y = R2_r.base_vectors()

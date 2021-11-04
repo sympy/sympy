@@ -1,4 +1,7 @@
-from sympy import I, Mul, latex, Matrix
+from sympy.core.mul import Mul
+from sympy.core.numbers import I
+from sympy.matrices.dense import Matrix
+from sympy.printing.latex import latex
 from sympy.physics.quantum import (Dagger, Commutator, AntiCommutator, qapply,
                                    Operator, represent)
 from sympy.physics.quantum.pauli import (SigmaOpBase, SigmaX, SigmaY, SigmaZ,

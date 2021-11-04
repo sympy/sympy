@@ -1,4 +1,5 @@
-from sympy import Symbol, Integer
+from sympy.core.numbers import Integer
+from sympy.core.symbol import Symbol
 from sympy.physics.quantum.qexpr import QExpr, _qsympify_sequence
 from sympy.physics.quantum.hilbert import HilbertSpace
 from sympy.core.containers import Tuple

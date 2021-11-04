@@ -11,8 +11,8 @@ import sys
 import os
 
 
-if sys.version_info < (3, 6):
-    sys.exit("This script requires Python 3.6 or newer")
+if sys.version_info < (3, 7):
+    sys.exit("This script requires Python 3.7 or newer")
 
 from subprocess import run, PIPE
 from sympy.external.importtools import version_tuple

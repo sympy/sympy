@@ -1,7 +1,12 @@
-from sympy import Sum, MatrixSymbol, Identity, symbols, IndexedBase, KroneckerDelta
+from sympy.concrete.summations import Sum
+from sympy.core.symbol import symbols
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.special import Identity
+from sympy.tensor.indexed import IndexedBase
 from sympy.combinatorics import Permutation
 from sympy.tensor.array.expressions.array_expressions import ArrayContraction, ArrayTensorProduct, \
-    ArrayDiagonal, ArrayAdd, PermuteDims
+    ArrayDiagonal, ArrayAdd, PermuteDims, ArrayElement
 from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
 from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array, _convert_indexed_to_array
 from sympy.testing.pytest import raises
@@ -98,7 +103,7 @@ def test_arrayexpr_convert_indexed_to_array_and_back_to_matrix():
     expr = a.T*b
     elem = expr[0, 0]
     cg = convert_indexed_to_array(elem)
-    assert cg == ArrayContraction(ArrayTensorProduct(a, b), (0, 2))
+    assert cg == ArrayElement(ArrayContraction(ArrayTensorProduct(a, b), (0, 2)), [0, 0])
 
     expr = M[i,j] + N[i,j]
     p1, p2 = _convert_indexed_to_array(expr)
