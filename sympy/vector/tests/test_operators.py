@@ -24,7 +24,7 @@ def test_Divergence():
     assert Divergence(v2).doit() == 3
     # issue 22384
     Rc = CoordSys3D('R', transformation='cylindrical')
-    assert divergence(Rc.i) == 1/Rc.r
+    assert Divergence(Rc.i).doit() == 1/Rc.r
 
 
 def test_Curl():
