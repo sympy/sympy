@@ -361,4 +361,5 @@ def _diff_conditional(expr, base_scalar, coeff_1, coeff_2):
     """
     from sympy.vector.functions import express
     new_expr = express(expr, base_scalar.system, variables=True)
-    return Derivative(coeff_1 * coeff_2 * new_expr, base_scalar)
+    arg = coeff_1 * coeff_2 * new_expr
+    return Derivative(arg, base_scalar) if arg else S.Zero
