@@ -1226,11 +1226,11 @@ def solve_linear_inequalities(inequalities):
     >>> d = solve_linear_inequalities([eq1, eq2, eq3, eq4])
     >>> assert set(d) == set([x, y, z])
     >>> d[x]
-    (oo > x) & (x > -2/7)
+    (oo > x, x > -2/7)
     >>> d[y]
-    (y > -4*x - 4) & (Min(x + 1/3, 3*x - 2) > y)
+    (Min(x + 1/3, 3*x - 2) > y, y > -4*x - 4)
     >>> d[z]
-    (x > z) & (z > Max(-2*x + 3*y - 1, -x/2 + y/2 + 1, -x/3 - y/3 - 4/3))
+    (x > z, z > Max(-2*x + 3*y - 1, -x/2 + y/2 + 1, -x/3 - y/3 - 4/3))
 
     Explanation
     ===========
@@ -1242,4 +1242,4 @@ def solve_linear_inequalities(inequalities):
     eqs = list(ordered(inequalities))
     eqs, res1 = _fourier_motzkin(eqs)
     res2 = _fourier_motzkin_extension(eqs)
-    return {k: And(*v) for k, v in {**res1, **res2}.items()}
+    return {**res1, **res2}
