@@ -53,13 +53,14 @@ class TestArrayElement:
             assert element.name is A
             assert element.indices == expected
 
-    def test_construction_errors_from_array_symbol(self):
+    def test_construct_errors_from_array_symbol(self):
         test_cases = (  # @pytest.mark.parametrize
-            ([4, 4], (7, 0), ValueError, r"shape is out of bounds"),
+            ((7, 0), r"Some of the indices are out of bounds of the shape"),
+            ((-1, 0), r"Some of the indices are negative"),
         )
-        for shape, indices, exception, match in test_cases:
-            A = ArraySymbol("A", shape)
-            with raises(exception, match=match):
+        for indices, match in test_cases:
+            A = ArraySymbol("A", shape=(4, 4))
+            with raises(IndexError, match=match):
                 ArrayElement(A, indices=indices)
 
 

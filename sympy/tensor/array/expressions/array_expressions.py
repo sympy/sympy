@@ -93,9 +93,9 @@ class ArrayElement(_ArrayExpr):
         indices = _sympify(tuple(indices))
         if hasattr(name, "shape"):
             if any((i >= s) == True for i, s in zip(indices, name.shape)):
-                raise ValueError("shape is out of bounds")
+                raise IndexError("Some of the indices are out of bounds of the shape")
         if any((i < 0) == True for i in indices):
-            raise ValueError("shape contains negative values")
+            raise IndexError("Some of the indices are negative")
         obj = Expr.__new__(cls, name, indices)
         return obj
 
