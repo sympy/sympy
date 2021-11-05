@@ -72,8 +72,8 @@ def print_header(name, underline=None, color=None):
         print(underline*len(name))
 
 
-def print_coverage(module_path, c, c_missing_doc, c_missing_doctest, c_indierect_doctest, c_sph, f, f_missing_doc, f_missing_doctest,
-                   f_indierect_doctest, f_sph, score, total_doctests, total_members,
+def print_coverage(module_path, c, c_missing_doc, c_missing_doctest, c_indirect_doctest, c_sph, f, f_missing_doc, f_missing_doctest,
+                   f_indirect_doctest, f_sph, score, total_doctests, total_members,
                    sphinx_score, total_sphinx, verbose=False, no_color=False,
                    sphinx=True):
     """ Prints details (depending on verbose) of a module """
@@ -145,11 +145,11 @@ def print_coverage(module_path, c, c_missing_doc, c_missing_doctest, c_indierect
                 print_header('Missing doctests', '-', not no_color and small_header_color)
                 for md in c_missing_doctest:
                     print('  * ' + md)
-            if c_indierect_doctest:
+            if c_indirect_doctest:
                 # Use "# indirect doctest" in the docstring to
                 # suppress this warning.
                 print_header('Indirect doctests', '-', not no_color and small_header_color)
-                for md in c_indierect_doctest:
+                for md in c_indirect_doctest:
                     print('  * ' + md)
                 print('\n    Use \"# indirect doctest\" in the docstring to suppress this warning')
             if c_sph:
@@ -169,9 +169,9 @@ def print_coverage(module_path, c, c_missing_doc, c_missing_doctest, c_indierect
                 print_header('Missing doctests', '-', not no_color and small_header_color)
                 for md in f_missing_doctest:
                     print('  * ' + md)
-            if f_indierect_doctest:
+            if f_indirect_doctest:
                 print_header('Indirect doctests', '-', not no_color and small_header_color)
-                for md in f_indierect_doctest:
+                for md in f_indirect_doctest:
                     print('  * ' + md)
                 print('\n    Use \"# indirect doctest\" in the docstring to suppress this warning')
             if f_sph:
@@ -283,7 +283,7 @@ def find_sphinx(name, mod_path, found={}):
     found[mod_path] = p.is_imported
     return name in p.is_imported
 
-def process_function(name, c_name, b_obj, mod_path, f_skip, f_missing_doc, f_missing_doctest, f_indierect_doctest,
+def process_function(name, c_name, b_obj, mod_path, f_skip, f_missing_doc, f_missing_doctest, f_indirect_doctest,
                      f_has_doctest, skip_list, sph, sphinx=True):
     """
     Processes a function to get information regarding documentation.
@@ -296,7 +296,7 @@ def process_function(name, c_name, b_obj, mod_path, f_skip, f_missing_doc, f_mis
     # We add in the end, as inspect.getsourcelines is slow
     add_missing_doc = False
     add_missing_doctest = False
-    add_indierect_doctest = False
+    add_indirect_doctest = False
     in_sphinx = True
     f_doctest = False
     function = False
@@ -320,7 +320,7 @@ def process_function(name, c_name, b_obj, mod_path, f_skip, f_missing_doc, f_mis
             elif not '>>>' in doc:
                 add_missing_doctest = True
             elif _is_indirect(name, doc):
-                add_indierect_doctest = True
+                add_indirect_doctest = True
             else:
                 f_doctest = True
         elif doc is None:
@@ -334,7 +334,7 @@ def process_function(name, c_name, b_obj, mod_path, f_skip, f_missing_doc, f_mis
         if sphinx:
             in_sphinx = find_sphinx(obj_name, mod_path)
 
-    if add_missing_doc or add_missing_doctest or add_indierect_doctest or not in_sphinx:
+    if add_missing_doc or add_missing_doctest or add_indirect_doctest or not in_sphinx:
         try:
             line_no = inspect.getsourcelines(obj)[1]
         except IOError:
@@ -347,15 +347,15 @@ def process_function(name, c_name, b_obj, mod_path, f_skip, f_missing_doc, f_mis
             f_missing_doc.append(full_name)
         elif add_missing_doctest:
             f_missing_doctest.append(full_name)
-        elif add_indierect_doctest:
-            f_indierect_doctest.append(full_name)
+        elif add_indirect_doctest:
+            f_indirect_doctest.append(full_name)
         if not in_sphinx:
             sph.append(full_name)
 
     return f_doctest, function
 
 
-def process_class(c_name, obj, c_skip, c_missing_doc, c_missing_doctest, c_indierect_doctest, c_has_doctest,
+def process_class(c_name, obj, c_skip, c_missing_doc, c_missing_doctest, c_indirect_doctest, c_has_doctest,
                   mod_path, sph, sphinx=True):
     """
     Extracts information about the class regarding documentation.
@@ -387,7 +387,7 @@ def process_class(c_name, obj, c_skip, c_missing_doc, c_missing_doctest, c_indie
         elif not '>>>' in doc:
             c_missing_doctest.append(full_name)
         elif _is_indirect(c_name, doc):
-            c_indierect_doctest.append(full_name)
+            c_indirect_doctest.append(full_name)
         else:
             c_dt = True
             c_has_doctest.append(full_name)
@@ -432,7 +432,7 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
     c_missing_doc = []
     c_missing_doctest = []
     c_has_doctest = []
-    c_indierect_doctest = []
+    c_indirect_doctest = []
     classes = 0
     c_doctests = 0
     c_sph = []
@@ -441,7 +441,7 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
     f_missing_doc = []
     f_missing_doctest = []
     f_has_doctest = []
-    f_indierect_doctest = []
+    f_indirect_doctest = []
     functions = 0
     f_doctests = 0
     f_sph = []
@@ -469,7 +469,7 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
         if inspect.isfunction(obj) or inspect.ismethod(obj):
 
             f_dt, f = process_function(member, '', obj, module_path,
-                f_skipped, f_missing_doc, f_missing_doctest, f_indierect_doctest, f_has_doctest, skip_members,
+                f_skipped, f_missing_doc, f_missing_doctest, f_indirect_doctest, f_has_doctest, skip_members,
                 f_sph, sphinx=sphinx)
             if f:
                 functions += 1
@@ -481,7 +481,7 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
 
             # Process the class first
             c_dt, c, source = process_class(member, obj, c_skipped, c_missing_doc,
-                c_missing_doctest, c_indierect_doctest, c_has_doctest, module_path, c_sph, sphinx=sphinx)
+                c_missing_doctest, c_indirect_doctest, c_has_doctest, module_path, c_sph, sphinx=sphinx)
             if not c:
                 continue
             else:
@@ -511,7 +511,7 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
                 if inspect.isfunction(f_obj) or inspect.ismethod(f_obj):
 
                     f_dt, f = process_function(f_name, member, obj,
-                        module_path, f_skipped, f_missing_doc, f_missing_doctest, f_indierect_doctest, f_has_doctest,
+                        module_path, f_skipped, f_missing_doc, f_missing_doctest, f_indirect_doctest, f_has_doctest,
                         skip_members, f_sph, sphinx=sphinx)
                     if f:
                         functions += 1
@@ -541,14 +541,14 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
     # Sort functions/classes by line number
     c_missing_doc = sorted(c_missing_doc, key=lambda x: int(x.split()[1][:-1]))
     c_missing_doctest = sorted(c_missing_doctest, key=lambda x: int(x.split()[1][:-1]))
-    c_indierect_doctest = sorted(c_indierect_doctest, key=lambda x: int(x.split()[1][:-1]))
+    c_indirect_doctest = sorted(c_indirect_doctest, key=lambda x: int(x.split()[1][:-1]))
 
     f_missing_doc = sorted(f_missing_doc, key=lambda x: int(x.split()[1][:-1]))
     f_missing_doctest = sorted(f_missing_doctest, key=lambda x: int(x.split()[1][:-1]))
-    f_indierect_doctest = sorted(f_indierect_doctest, key=lambda x: int(x.split()[1][:-1]))
+    f_indirect_doctest = sorted(f_indirect_doctest, key=lambda x: int(x.split()[1][:-1]))
 
-    print_coverage(module_path, classes, c_missing_doc, c_missing_doctest, c_indierect_doctest, c_sph, functions, f_missing_doc,
-                   f_missing_doctest, f_indierect_doctest, f_sph, score, total_doctests, total_members,
+    print_coverage(module_path, classes, c_missing_doc, c_missing_doctest, c_indirect_doctest, c_sph, functions, f_missing_doc,
+                   f_missing_doctest, f_indirect_doctest, f_sph, score, total_doctests, total_members,
                    sphinx_score, total_sphinx, verbose=verbose,
                    no_color=no_color, sphinx=sphinx)
 
