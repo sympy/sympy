@@ -1704,10 +1704,10 @@ def find_min_poly(alpha, domain, x=None, powers=None):
     Examples
     ========
 
-    For the $n$th cyclotomic field, consider the quadratic equation whose roots
-    are the two periods of length $(n-1)/2$. Article 356 of Gauss tells us that
-    we should get $x^2 + x - (n-1)/4$ or $x^2 + x + (n+1)/4$ according to
-    whether $n$ is 1 or 3 mod 4, respectively.
+    For the $n$th cyclotomic field, $n$ an odd prime, consider the quadratic
+    equation whose roots are the two periods of length $(n-1)/2$. Article 356
+    of Gauss tells us that we should get $x^2 + x - (n-1)/4$ or
+    $x^2 + x + (n+1)/4$ according to whether $n$ is 1 or 3 mod 4, respectively.
 
     >>> from sympy import Poly, cyclotomic_poly, primitive_root, QQ
     >>> from sympy.abc import x
@@ -1716,13 +1716,15 @@ def find_min_poly(alpha, domain, x=None, powers=None):
     >>> g = primitive_root(n)
     >>> C = PowerBasis(Poly(cyclotomic_poly(n, x)))
     >>> ee = [g**(2*k+1) % n for k in range((n-1)//2)]
-    >>> print(find_min_poly(sum(C(e) for e in ee), QQ, x=x).as_expr())
+    >>> eta = sum(C(e) for e in ee)
+    >>> print(find_min_poly(eta, QQ, x=x).as_expr())
     x**2 + x - 3
     >>> n = 19
     >>> g = primitive_root(n)
     >>> C = PowerBasis(Poly(cyclotomic_poly(n, x)))
     >>> ee = [g**(2*k+2) % n for k in range((n-1)//2)]
-    >>> print(find_min_poly(sum(C(e) for e in ee), QQ, x=x).as_expr())
+    >>> eta = sum(C(e) for e in ee)
+    >>> print(find_min_poly(eta, QQ, x=x).as_expr())
     x**2 + x + 5
 
     Parameters

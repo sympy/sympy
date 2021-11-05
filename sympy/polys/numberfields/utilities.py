@@ -15,16 +15,7 @@ def is_rat(c):
     Explanation
     ===========
 
-    In many cases, we want to accept an argument ``c`` that may be any rational
-    number, including any integer, and may be represented in various forms.
-
-    For this, ``c in QQ`` is too accepting (e.g. ``3.14 in QQ`` is ``True``),
-    while ``QQ.of_type(c)`` is too demanding (e.g. ``QQ.of_type(3)`` is
-    ``False``).
-
-    Meanwhile, if gmpy2 is installed then ``ZZ.of_type()`` accepts only
-    ``mpz``, not ``int``, so we need another clause to ensure ``int`` is
-    accepted.
+    Returns ``True`` on any argument of type ``int``, :ref:`ZZ`, or :ref:`QQ`.
 
     See Also
     ========
@@ -32,6 +23,12 @@ def is_rat(c):
     is_int
 
     """
+    # ``c in QQ`` is too accepting (e.g. ``3.14 in QQ`` is ``True``),
+    # ``QQ.of_type(c)`` is too demanding (e.g. ``QQ.of_type(3)`` is ``False``).
+    #
+    # Meanwhile, if gmpy2 is installed then ``ZZ.of_type()`` accepts only
+    # ``mpz``, not ``int``, so we need another clause to ensure ``int`` is
+    # accepted.
     return isinstance(c, int) or ZZ.of_type(c) or QQ.of_type(c)
 
 
@@ -39,12 +36,20 @@ def is_int(c):
     r"""
     Test whether an argument is of an acceptable type to be used as an integer.
 
+    Explanation
+    ===========
+
+    Returns ``True`` on any argument of type ``int`` or :ref:`ZZ`.
+
     See Also
     ========
 
     is_rat
 
     """
+    # If gmpy2 is installed then ``ZZ.of_type()`` accepts only
+    # ``mpz``, not ``int``, so we need another clause to ensure ``int`` is
+    # accepted.
     return isinstance(c, int) or ZZ.of_type(c)
 
 
@@ -166,7 +171,7 @@ class AlgIntPowers:
     $\{1, \theta, \ldots, \theta^{n-1}\}$, where $n = \deg(T)$.
 
     The representations are computed using the linear recurrence relations for
-    powers of $\theta$, derived from the polynomial ``T``.
+    powers of $\theta$, derived from the polynomial ``T``. See [1], Sec. 4.2.2.
 
     Optionally, the representations may be reduced with respect to a modulus.
 
@@ -177,20 +182,19 @@ class AlgIntPowers:
     >>> from sympy.polys.numberfields.utilities import AlgIntPowers
     >>> T = Poly(cyclotomic_poly(5))
     >>> zeta_pow = AlgIntPowers(T)
-    >>> print([int(c) for c in zeta_pow[0]])
+    >>> print(zeta_pow[0])
     [1, 0, 0, 0]
-    >>> print([int(c) for c in zeta_pow[1]])
+    >>> print(zeta_pow[1])
     [0, 1, 0, 0]
-    >>> print([int(c) for c in zeta_pow[4]])
+    >>> print(zeta_pow[4])  # doctest: +SKIP
     [-1, -1, -1, -1]
-    >>> print([int(c) for c in zeta_pow[24]])
+    >>> print(zeta_pow[24])  # doctest: +SKIP
     [-1, -1, -1, -1]
 
     References
     ==========
 
     .. [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
-       (See Sec. 4.2.2)
 
     """
 
@@ -253,6 +257,23 @@ def coeff_search(m, R):
     r"""
     Generate coefficients for searching through polynomials.
 
+    Explanation
+    ===========
+
+    Lead coeff is always non-negative. Explore all combinations with coeffs
+    bounded in absolute value before increasing the bound. Skip the all-zero
+    list, and skip any repeats. See examples.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.numberfields.utilities import coeff_search
+    >>> cs = coeff_search(2, 1)
+    >>> C = [next(cs) for i in range(13)]
+    >>> print(C)
+    [[1, 1], [1, 0], [1, -1], [0, 1], [2, 2], [2, 1], [2, 0], [2, -1], [2, -2],
+     [1, 2], [1, -2], [0, 2], [3, 3]]
+
     Parameters
     ==========
 
@@ -309,6 +330,25 @@ def supplement_a_subspace(M):
     computed by this function give a new basis $\{u_1, u_2, \ldots, u_n\}$ for
     $V$, again relative to the $\{v_i\}$ basis, and such that $u_j = w_j$
     for $1 \leq j \leq r$.
+
+    Examples
+    ========
+
+    Note: The function works in terms of columns, so in these examples we
+    print matrix transposes in order to make the columns easier to inspect.
+
+    >>> from sympy.polys.matrices import DM
+    >>> from sympy import QQ, FF
+    >>> from sympy.polys.numberfields.utilities import supplement_a_subspace
+    >>> M = DM([[1, 7, 0], [2, 3, 4]], QQ).transpose()
+    >>> print(supplement_a_subspace(M).to_Matrix().transpose())
+    Matrix([[1, 7, 0], [2, 3, 4], [1, 0, 0]])
+
+    >>> M2 = M.convert_to(FF(7))
+    >>> print(M2.to_Matrix().transpose())
+    Matrix([[1, 0, 0], [2, 3, -3]])
+    >>> print(supplement_a_subspace(M2).to_Matrix().transpose())
+    Matrix([[1, 0, 0], [2, 3, -3], [0, 1, 0]])
 
     Parameters
     ==========
