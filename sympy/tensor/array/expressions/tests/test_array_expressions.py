@@ -57,6 +57,7 @@ class TestArrayElement:
         test_cases = (  # @pytest.mark.parametrize
             ((7, 0), r"Some of the indices are out of bounds of the shape"),
             ((-1, 0), r"Some of the indices are negative"),
+            ((3.14, 0), r"Not all indices are integer"),
         )
         for indices, match in test_cases:
             A = ArraySymbol("A", shape=(4, 4))

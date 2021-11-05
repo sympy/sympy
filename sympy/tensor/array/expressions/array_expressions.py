@@ -94,6 +94,8 @@ class ArrayElement(_ArrayExpr):
         if hasattr(name, "shape"):
             if any((i >= s) == True for i, s in zip(indices, name.shape)):
                 raise IndexError("Some of the indices are out of bounds of the shape")
+        if any((i.is_integer) == False for i in indices):
+            raise IndexError("Not all indices are integer")
         if any((i < 0) == True for i in indices):
             raise IndexError("Some of the indices are negative")
         obj = Expr.__new__(cls, name, indices)
