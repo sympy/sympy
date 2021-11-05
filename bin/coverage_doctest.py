@@ -228,7 +228,6 @@ def _get_arg_list(name, fobj):
     # Add var args
     if argspec.varargs:
         arg_list.append(argspec.varargs)
-    #if hasattr(argspec, 'keywords') and argspec.keywords:
     if argspec.varkw:
         arg_list.append(argspec.varkw)
 
