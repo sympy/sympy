@@ -1,11 +1,21 @@
 from itertools import product
 
-from sympy import (jn, yn, symbols, Symbol, sin, cos, pi, S, jn_zeros, besselj,
-                   bessely, besseli, besselk, hankel1, hankel2, hn1, hn2,
-                   expand_func, sqrt, sinh, cosh, diff, series, gamma, hyper,
-                   I, O, oo, conjugate, uppergamma, exp, Integral, Sum,
-                   Rational, log, polar_lift, exp_polar)
-from sympy.functions.special.bessel import fn
+from sympy.concrete.summations import Sum
+from sympy.core.function import (diff, expand_func)
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (conjugate, polar_lift)
+from sympy.functions.elementary.exponential import (exp, exp_polar, log)
+from sympy.functions.elementary.hyperbolic import (cosh, sinh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely, hankel1, hankel2, hn1, hn2, jn, jn_zeros, yn)
+from sympy.functions.special.gamma_functions import (gamma, uppergamma)
+from sympy.functions.special.hyper import hyper
+from sympy.integrals.integrals import Integral
+from sympy.series.order import O
+from sympy.series.series import series
 from sympy.functions.special.bessel import (airyai, airybi,
                                             airyaiprime, airybiprime, marcumq)
 from sympy.testing.randtest import (random_complex_number as randcplx,
@@ -267,14 +277,6 @@ def test_slow_expand():
                  -bessely(rn - 2, x) + 2*(rn - 1)*bessely(rn - 1, x)/x)
     assert check(expand_func(bessely(-rn, x)),
                  -bessely(-rn + 2, x) + 2*(-rn + 1)*bessely(-rn + 1, x)/x)
-
-
-def test_fn():
-    x, z = symbols("x z")
-    assert fn(1, z) == 1/z**2
-    assert fn(2, z) == -1/z + 3/z**3
-    assert fn(3, z) == -6/z**2 + 15/z**4
-    assert fn(4, z) == 1/z - 45/z**3 + 105/z**5
 
 
 def mjn(n, z):

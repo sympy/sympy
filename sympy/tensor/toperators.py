@@ -1,5 +1,8 @@
-from sympy import Symbol, Number, sympify
-from sympy import MutableDenseNDimArray, S
+from sympy.core.numbers import Number
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.tensor.array.dense_ndim_array import MutableDenseNDimArray
 from sympy.tensor.tensor import (Tensor, TensExpr, TensAdd, TensMul,
                                  TensorIndex)
 

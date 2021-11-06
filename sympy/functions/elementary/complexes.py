@@ -2,9 +2,10 @@ from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
-    AppliedUndef)
+    AppliedUndef, expand_mul)
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi, I, oo
+from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.functions.elementary.exponential import exp, exp_polar, log
 from sympy.functions.elementary.integers import ceiling
@@ -282,8 +283,7 @@ class sign(Function):
     Examples
     ========
 
-    >>> from sympy.functions import sign
-    >>> from sympy.core.numbers import I
+    >>> from sympy import sign, I
 
     >>> sign(-1)
     -1
@@ -477,7 +477,7 @@ class Abs(Function):
         >>> type(abs(S.NegativeOne))
         <class 'sympy.core.numbers.One'>
 
-    Abs will always return a sympy object.
+    Abs will always return a SymPy object.
 
     Parameters
     ==========
@@ -517,8 +517,6 @@ class Abs(Function):
     @classmethod
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
-        from sympy.core.function import expand_mul
-        from sympy.core.power import Pow
 
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()
@@ -691,16 +689,20 @@ class Abs(Function):
 
 class arg(Function):
     """
-    returns the argument (in radians) of a complex number.  The argument is
+    returns the argument (in radians) of a complex number. The argument is
     evaluated in consistent convention with atan2 where the branch-cut is
     taken along the negative real axis and arg(z) is in the interval
-    (-pi,pi].  For a positive number, the argument is always 0.
+    (-pi,pi]. For a positive number, the argument is always 0; the
+    argument of a negative number is pi; and the argument of 0
+    is undefined and returns nan. So the ``arg`` function will never nest
+    greater than 3 levels since at the 4th application, the result must be
+    nan; for a real number, nan is returned on the 3rd application.
 
     Examples
     ========
 
-    >>> from sympy.functions import arg
-    >>> from sympy import I, sqrt
+    >>> from sympy import arg, I, sqrt, Dummy
+    >>> from sympy.abc import x
     >>> arg(2.0)
     0
     >>> arg(I)
@@ -713,6 +715,11 @@ class arg(Function):
     atan(3/4)
     >>> arg(0.8 + 0.6*I)
     0.643501108793284
+    >>> arg(arg(arg(arg(x))))
+    nan
+    >>> real = Dummy(real=True)
+    >>> arg(arg(arg(real)))
+    nan
 
     Parameters
     ==========
@@ -735,6 +742,16 @@ class arg(Function):
 
     @classmethod
     def eval(cls, arg):
+        a = arg
+        for i in range(3):
+            if isinstance(a, cls):
+                a = a.args[0]
+            else:
+                if i == 2 and a.is_extended_real:
+                    return S.NaN
+                break
+        else:
+            return S.NaN
         if isinstance(arg, exp_polar):
             return periodic_argument(arg, oo)
         if not arg.is_Atom:
@@ -816,6 +833,9 @@ class conjugate(Function):
         if obj is not None:
             return obj
 
+    def inverse(self):
+        return conjugate
+
     def _eval_Abs(self):
         return Abs(self.args[0], evaluate=True)
 
@@ -845,9 +865,7 @@ class transpose(Function):
     Examples
     ========
 
-    >>> from sympy.functions import transpose
-    >>> from sympy.matrices import MatrixSymbol
-    >>> from sympy import Matrix
+    >>> from sympy import transpose, Matrix, MatrixSymbol
     >>> A = MatrixSymbol('A', 25, 9)
     >>> transpose(A)
     A.T
@@ -904,8 +922,7 @@ class adjoint(Function):
     Examples
     ========
 
-    >>> from sympy import adjoint
-    >>> from sympy.matrices import MatrixSymbol
+    >>> from sympy import adjoint, MatrixSymbol
     >>> A = MatrixSymbol('A', 10, 5)
     >>> adjoint(A)
     Adjoint(A)
@@ -1217,7 +1234,6 @@ class principal_branch(Function):
 
     @classmethod
     def eval(self, x, period):
-        from sympy import oo, exp_polar, I, Mul, polar_lift, Symbol
         if isinstance(x, polar_lift):
             return principal_branch(x.args[0], period)
         if period == oo:
@@ -1268,7 +1284,6 @@ class principal_branch(Function):
             return exp_polar(arg*I)*abs(c)
 
     def _eval_evalf(self, prec):
-        from sympy import exp, pi, I
         z, period = self.args
         p = periodic_argument(z, period)._eval_evalf(prec)
         if abs(p) > pi or p == -pi:
@@ -1277,7 +1292,7 @@ class principal_branch(Function):
 
 
 def _polarify(eq, lift, pause=False):
-    from sympy import Integral
+    from sympy.integrals.integrals import Integral
     if eq.is_polar:
         return eq
     if eq.is_number and not pause:

@@ -1,4 +1,4 @@
-from sympy import Derivative
+from sympy.core.function import Derivative
 from sympy.core.function import UndefinedFunction, AppliedUndef
 from sympy.core.symbol import Symbol
 from sympy.interactive.printing import init_printing

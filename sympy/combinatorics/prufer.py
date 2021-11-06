@@ -1,6 +1,6 @@
 from sympy.core import Basic
-from sympy.core.compatibility import iterable, as_int
-from sympy.utilities.iterables import flatten
+from sympy.utilities.iterables import flatten, iterable
+from sympy.utilities.misc import as_int
 
 from collections import defaultdict
 
@@ -205,7 +205,7 @@ class Prufer(Basic):
         References
         ==========
 
-        - https://hamberg.no/erlend/posts/2010-11-06-prufer-sequence-compact-tree-representation.html
+        .. [1] https://hamberg.no/erlend/posts/2010-11-06-prufer-sequence-compact-tree-representation.html
 
         See Also
         ========

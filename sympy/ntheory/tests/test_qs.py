@@ -1,4 +1,4 @@
-from typing import Dict, Tuple
+from typing import Dict as tDict, Tuple as tTuple
 
 from sympy.ntheory import qs
 from sympy.ntheory.qs import SievePolynomial, \
@@ -7,7 +7,7 @@ from sympy.ntheory.qs import SievePolynomial, \
     _build_matrix, _find_factor
 
 assert qs(10009202107, 100, 10000) == {100043, 100049}
-assert qs(211107295182713951054568361 , 1000, 10000) == {13791315212531, 15307263442931}
+assert qs(211107295182713951054568361, 1000, 10000) == {13791315212531, 15307263442931}
 assert qs(980835832582657*990377764891511, 3000, 50000) == {980835832582657, 990377764891511}
 assert qs(18640889198609*20991129234731, 1000, 50000) == {18640889198609, 20991129234731}
 
@@ -50,7 +50,7 @@ assert _check_smoothness(9645, factor_base) == (5, False)
 assert _check_smoothness(210313, factor_base)[0][0:15] == [0, 0, 0, 0, 0, 0, 0,\
                         0, 0, 1, 0, 0, 1, 0, 1]
 assert _check_smoothness(210313, factor_base)[1] == True
-partial_relations = {} # type: Dict[int, Tuple[int, int]]
+partial_relations = {} # type: tDict[int, tTuple[int, int]]
 smooth_relation, partial_relation = _trial_division_stage(n, M, factor_base,\
                                                           sieve_array, sieve_poly,\
                                                           partial_relations, ERROR_TERM=25*2**10)

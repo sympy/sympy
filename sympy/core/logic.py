@@ -3,15 +3,15 @@
 NOTE
 ----
 
-at present this is mainly needed for facts.py , feel free however to improve
+at present this is mainly needed for facts.py, feel free however to improve
 this stuff for general purpose.
 """
 
-from typing import Dict, Type, Union
+from typing import Dict as tDict, Type, Union as tUnion
 
 
 # Type of a fuzzy bool
-FuzzyBool = Union[bool, None]
+FuzzyBool = tUnion[bool, None]
 
 
 def _torf(args):
@@ -223,7 +223,7 @@ def fuzzy_nand(args):
 class Logic:
     """Logical expression"""
     # {} 'op' -> LogicClass
-    op_2class = {}  # type: Dict[str, Type[Logic]]
+    op_2class = {}  # type: tDict[str, Type[Logic]]
 
     def __new__(cls, *args):
         obj = object.__new__(cls)

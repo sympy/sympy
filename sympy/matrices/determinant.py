@@ -7,7 +7,7 @@ from sympy.core.mul import Mul
 from sympy.polys import PurePoly, cancel
 from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
-from sympy import sympify
+from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.numbers import nC
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 
@@ -82,7 +82,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
             continue
         simped = simpfunc(x)
         is_zero = iszerofunc(simped)
-        if is_zero == True or is_zero == False:
+        if is_zero in (True, False):
             newly_determined.append((i, simped))
         if is_zero == False:
             return (i, simped, False, newly_determined)

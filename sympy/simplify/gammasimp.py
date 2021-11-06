@@ -1,5 +1,5 @@
 from sympy.core import Function, S, Mul, Pow, Add
-from sympy.core.compatibility import ordered, default_sort_key
+from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.function import count_ops, expand_func
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions import gamma, sqrt, sin
@@ -85,7 +85,19 @@ def _gammasimp(expr, as_comb):
         expr = expr.replace(_rf,
             lambda a, b: gamma(a + b)/gamma(a))
 
-    def rule(n, k):
+    def rule(n, k, binom=None):
+        _args = (n, k) if binom is None else (n, k, binom)
+        cond = None
+        if binom:
+            # don't simplify if n==0 & k==0 is possible
+            if (n - k).is_zero is False:
+                # they aren't the same so they both can't be zero
+                pass
+            elif not (n.is_zero is False or k.is_zero is False):
+                # if 1 of them is not known to be non-zero
+                # don't do anything
+                from sympy import Ne, And, Piecewise
+                cond = And(Ne(n, 0), Ne(k, 0))
         coeff, rewrite = S.One, False
 
         cn, _n = n.as_coeff_Add()
@@ -110,7 +122,12 @@ def _gammasimp(expr, as_comb):
             k = n - k
 
         if rewrite:
-            return coeff*binomial(n, k)
+            args = (n, k) if binom is None else (n, k, binom)
+            rv = coeff*binomial(*args)
+            if cond in (None, True):
+                return rv
+            orig = binomial(*_args)
+            return Piecewise((rv, cond), (orig, True))
 
     expr = expr.replace(binomial, rule)
 

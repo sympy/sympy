@@ -1,8 +1,8 @@
 import pyglet.gl as pgl
 from sympy.core import S
-from sympy.core.compatibility import is_sequence
 from sympy.plotting.pygletplot.color_scheme import ColorScheme
 from sympy.plotting.pygletplot.plot_mode import PlotMode
+from sympy.utilities.iterables import is_sequence
 from time import sleep
 from threading import Thread, Event, RLock
 import warnings
@@ -113,7 +113,7 @@ class PlotModeBase(PlotMode):
                 return e
             except Exception:
                 warnings.warn("\nWarning: creating lambda evaluator failed. "
-                       "Falling back on sympy subs evaluator.")
+                       "Falling back on SymPy subs evaluator.")
         return self._get_sympy_evaluator()
 
     def _get_sympy_evaluator(self):

@@ -29,8 +29,6 @@ def rescale(y, W, H, mi, ma):
             if not is_valid(normalized):
                 y_new.append(None)
             else:
-                # XXX There are some test failings because of the
-                # difference between the python 2 and 3 rounding.
                 rescaled = Float((normalized*H + H/2) * (H-1)/H).round()
                 rescaled = int(rescaled)
                 y_new.append(rescaled)

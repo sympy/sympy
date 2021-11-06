@@ -1,4 +1,8 @@
-from sympy import exp, I, Matrix, pi, sqrt, Symbol
+from sympy.core.numbers import (I, pi)
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.dense import Matrix
 
 from sympy.physics.quantum.qft import QFT, IQFT, RkGate
 from sympy.physics.quantum.gate import (ZGate, SwapGate, HadamardGate, CGate,

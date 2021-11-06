@@ -9,8 +9,11 @@ Multivariate resultants are used to identify whether a multivariate
 system has common roots. That is when the resultant is equal to zero.
 """
 
-from sympy import IndexedBase, Matrix, Mul, Poly
-from sympy import rem, prod, degree_list, diag, simplify
+from sympy.core.mul import (Mul, prod)
+from sympy.matrices.dense import (Matrix, diag)
+from sympy.polys.polytools import (Poly, degree_list, rem)
+from sympy.simplify.simplify import simplify
+from sympy.tensor.indexed import IndexedBase
 from sympy.polys.monomials import itermonomials, monomial_deg
 from sympy.polys.orderings import monomial_key
 from sympy.polys.polytools import poly_from_expr, total_degree
@@ -26,7 +29,7 @@ class DixonResultant():
     Examples
     ========
 
-    >>> from sympy.core import symbols
+    >>> from sympy import symbols
 
     >>> from sympy.polys.multivariate_resultants import DixonResultant
     >>> x, y = symbols('x, y')
@@ -147,7 +150,7 @@ class DixonResultant():
         r"""
         Returns a list of the maximum degree of each variable appearing
         in the coefficients of the Dixon polynomial. The coefficients are
-        viewed as polys in x_1, ... , x_n.
+        viewed as polys in $x_1, x_2, \dots, x_n$.
         """
         deg_lists = [degree_list(Poly(poly, self.variables))
                      for poly in polynomial.coeffs()]
@@ -190,7 +193,7 @@ class DixonResultant():
 
         The precondition requires that the column corresponding to the
         monomial 1 = x_1 ^ 0 * x_2 ^ 0 * ... * x_n ^ 0 is not a linear
-        combination of the remaining ones. In sympy notation this is
+        combination of the remaining ones. In SymPy notation this is
         the last column. For the precondition to hold the last non-zero
         row of the rref matrix should be of the form [0, 0, ..., 1].
         """
@@ -247,7 +250,7 @@ class MacaulayResultant():
     Examples
     ========
 
-    >>> from sympy.core import symbols
+    >>> from sympy import symbols
 
     >>> from sympy.polys.multivariate_resultants import MacaulayResultant
     >>> x, y, z = symbols('x, y, z')
@@ -292,7 +295,7 @@ class MacaulayResultant():
 
         variables: list
             A list of all n variables
-        polynomials : list of sympy polynomials
+        polynomials : list of SymPy polynomials
             A  list of m n-degree polynomials
         """
         self.polynomials = polynomials

@@ -17,10 +17,21 @@ RobustSoliton
 """
 
 
-from sympy import (S, sympify, Rational, binomial, cacheit, Integer,
-                   Dummy, Eq, Intersection, Interval, log, Range,
-                   Symbol, Lambda, Piecewise, Or, Gt, Lt, Ge, Le, Contains)
-from sympy import beta as beta_fn
+from sympy.core.cache import cacheit
+from sympy.core.function import Lambda
+from sympy.core.numbers import (Integer, Rational)
+from sympy.core.relational import (Eq, Ge, Gt, Le, Lt)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import binomial
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.logic.boolalg import Or
+from sympy.sets.contains import Contains
+from sympy.sets.fancysets import Range
+from sympy.sets.sets import (Intersection, Interval)
+from sympy.functions.special.beta_functions import beta as beta_fn
 from sympy.stats.frv import (SingleFiniteDistribution,
                              SingleFinitePSpace)
 from sympy.stats.rv import _value_check, Density, is_random
@@ -220,7 +231,7 @@ class DieDistribution(SingleFiniteDistribution):
     def pmf(self, x):
         x = sympify(x)
         if not (x.is_number or x.is_Symbol or is_random(x)):
-            raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
+            raise ValueError("'x' expected as an argument of type 'number', 'Symbol', or "
                         "'RandomSymbol' not %s" % (type(x)))
         cond = Ge(x, 1) & Le(x, self.sides) & Contains(x, S.Integers)
         return Piecewise((S.One/self.sides, cond), (S.Zero, True))
@@ -406,7 +417,7 @@ class BinomialDistribution(SingleFiniteDistribution):
         n, p = self.n, self.p
         x = sympify(x)
         if not (x.is_number or x.is_Symbol or is_random(x)):
-            raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
+            raise ValueError("'x' expected as an argument of type 'number', 'Symbol', or "
                         "'RandomSymbol' not %s" % (type(x)))
         cond = Ge(x, 0) & Le(x, n) & Contains(x, S.Integers)
         return Piecewise((binomial(n, x) * p**x * (1 - p)**(n - x), cond), (S.Zero, True))
@@ -681,7 +692,7 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
     def set(self):
         return set(list(Range(1, self.k+1)))
 
-    @property
+    @property # type: ignore
     @cacheit
     def dict(self):
         if self.k.is_Symbol:
@@ -693,7 +704,7 @@ class IdealSolitonDistribution(SingleFiniteDistribution):
     def pmf(self, x):
         x = sympify(x)
         if not (x.is_number or x.is_Symbol or is_random(x)):
-            raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
+            raise ValueError("'x' expected as an argument of type 'number', 'Symbol', or "
                         "'RandomSymbol' not %s" % (type(x)))
         cond1 = Eq(x, 1) & x.is_integer
         cond2 = Ge(x, 1) & Le(x, self.k) & x.is_integer
@@ -790,7 +801,7 @@ class RobustSolitonDistribution(SingleFiniteDistribution):
     def pmf(self, x):
         x = sympify(x)
         if not (x.is_number or x.is_Symbol or is_random(x)):
-            raise ValueError("'x' expected as an argument of type 'number' or 'Symbol' or , "
+            raise ValueError("'x' expected as an argument of type 'number', 'Symbol', or "
                         "'RandomSymbol' not %s" % (type(x)))
 
         cond1 = Eq(x, 1) & x.is_integer

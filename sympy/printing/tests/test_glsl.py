@@ -8,7 +8,7 @@ from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.core import Tuple
-from sympy import glsl_code
+from sympy.printing.glsl import glsl_code
 import textwrap
 
 x, y, z = symbols('x,y,z')
@@ -154,8 +154,6 @@ def test_glsl_code_settings():
 
 
 def test_glsl_code_Indexed():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o = symbols('n m o', integer=True)
     i, j, k = Idx('i', n), Idx('j', m), Idx('k', o)
     p = GLSLPrinter()
@@ -218,8 +216,6 @@ def test_dummy_loops():
 
 
 def test_glsl_code_loops_add():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
@@ -243,8 +239,6 @@ def test_glsl_code_loops_add():
 
 
 def test_glsl_code_loops_multiple_contractions():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -273,8 +267,6 @@ def test_glsl_code_loops_multiple_contractions():
 
 
 def test_glsl_code_loops_addfactor():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -304,8 +296,6 @@ def test_glsl_code_loops_addfactor():
 
 
 def test_glsl_code_loops_multiple_terms():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')

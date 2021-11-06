@@ -1,11 +1,15 @@
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
+from sympy.core.numbers import Float
 from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.complexes import (Abs, sign)
+from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
 from sympy.series.order import Order
+from sympy.simplify.powsimp import powsimp
 from sympy.simplify.ratsimp import ratsimp
-from sympy.simplify.simplify import together
+from sympy.simplify.simplify import nsimplify, together
 from .gruntz import gruntz
 
 def limit(e, z, z0, dir="+"):
@@ -175,20 +179,19 @@ class Limit(Expr):
         return isyms
 
 
-    def pow_heuristics(self):
-        from sympy import exp, log
-        expr, z, z0, _ = self.args
-        b, e = expr.base, expr.exp
-        if not b.has(z):
-            res = limit(e*log(b), z, z0)
+    def pow_heuristics(self, e):
+        _, z, z0, _ = self.args
+        b1, e1 = e.base, e.exp
+        if not b1.has(z):
+            res = limit(e1*log(b1), z, z0)
             return exp(res)
 
-        ex_lim = limit(e, z, z0)
-        base_lim = limit(b, z, z0)
+        ex_lim = limit(e1, z, z0)
+        base_lim = limit(b1, z, z0)
 
         if base_lim is S.One:
             if ex_lim in (S.Infinity, S.NegativeInfinity):
-                res = limit(e*(b - 1), z, z0)
+                res = limit(e1*(b1 - 1), z, z0)
                 return exp(res)
         if base_lim is S.NegativeInfinity and ex_lim is S.Infinity:
             return S.ComplexInfinity
@@ -207,7 +210,6 @@ class Limit(Expr):
         hints : optional keyword arguments
             To be passed to ``doit`` methods; only used if deep is True.
         """
-        from sympy import Abs, sign
 
         e, z, z0, dir = self.args
 
@@ -260,6 +262,12 @@ class Limit(Expr):
                         return expr.args[0] if abs_flag else S.One
             return expr
 
+        if e.has(Float):
+            # Convert floats like 0.5 to exact SymPy numbers like S.Half, to
+            # prevent rounding errors which can lead to unexpected execution
+            # of conditional blocks that work on comparisons
+            # Also see comments in https://github.com/sympy/sympy/issues/19453
+            e = nsimplify(e)
         e = set_signs(e)
 
         if e.is_meromorphic(z, z0):
@@ -295,8 +303,9 @@ class Limit(Expr):
             coeff, ex = newe.leadterm(z, cdir=cdir)
         except (ValueError, NotImplementedError, PoleError):
             # The NotImplementedError catching is for custom functions
+            e = powsimp(e)
             if e.is_Pow:
-                r = self.pow_heuristics()
+                r = self.pow_heuristics(e)
                 if r is not None:
                     return r
         else:

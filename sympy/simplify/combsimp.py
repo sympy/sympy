@@ -1,6 +1,6 @@
 from sympy.core import Mul
-from sympy.core.basic import preorder_traversal
 from sympy.core.function import count_ops
+from sympy.core.traversal import preorder_traversal, bottom_up
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions import gamma
 from sympy.simplify.gammasimp import gammasimp, _gammasimp
@@ -66,8 +66,6 @@ def _gamma_as_comb(expr):
 
     expr = expr.rewrite(factorial)
 
-    from .simplify import bottom_up
-
     def f(rv):
         if not rv.is_Mul:
             return rv
@@ -99,9 +97,10 @@ def _gamma_as_comb(expr):
                         nd_fact_args[1 - m].remove(sum)
                         del nd_fact_args[m][j]
                         del nd_fact_args[m][i]
-
-                        rvd[binomial(sum, ai if count_ops(ai) <
-                                count_ops(aj) else aj)] += (
+                        n = sum
+                        k = ai if count_ops(ai) < count_ops(aj) else aj
+                        # XXX which binom version is valid?
+                        rvd[binomial(n, k)] += (
                                 -1 if m == 0 else 1)
                         break
                 else:

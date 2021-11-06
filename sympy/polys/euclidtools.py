@@ -68,7 +68,7 @@ def dup_half_gcdex(f, g, K):
 
     """
     if not K.is_Field:
-        raise DomainError("can't compute half extended GCD over %s" % K)
+        raise DomainError("Cannot compute half extended GCD over %s" % K)
 
     a, b = [K.one], []
 

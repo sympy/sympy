@@ -146,8 +146,8 @@ def _basis(G, ring):
             if all(monomial_div(_incr_k(t, k), lmg) is None
             for lmg in leading_monomials)]
         candidates.extend(new_candidates)
-        candidates.sort(key=lambda m: order(m), reverse=True)
+        candidates.sort(key=order, reverse=True)
 
     basis = list(set(basis))
 
-    return sorted(basis, key=lambda m: order(m))
+    return sorted(basis, key=order)

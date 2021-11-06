@@ -162,7 +162,7 @@ def transversal2coset(size, base, transversal):
 
 
 def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
-    """
+    r"""
     Butler-Portugal algorithm for tensor canonicalization with dummy indices.
 
     Parameters
@@ -227,17 +227,17 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     (the indices including both the contravariant and the covariant ones)
     can be written as
 
-    `t = T(ind[g[0]],..., ind[g[n-1]])`,
+    `t = T(ind[g[0]], \dots, ind[g[n-1]])`,
 
-    where `n= len(ind)`;
+    where `n = len(ind)`;
     `g` has size `n + 2`, the last two indices for the sign of the tensor
     (trick introduced in [4]).
 
     A slot symmetry transformation `s` is a permutation acting on the slots
-    `t -> T(ind[(g*s)[0]],..., ind[(g*s)[n-1]])`
+    `t \rightarrow T(ind[(g*s)[0]], \dots, ind[(g*s)[n-1]])`
 
     A dummy symmetry transformation acts on `ind`
-    `t -> T(ind[(d*g)[0]],..., ind[(d*g)[n-1]])`
+    `t \rightarrow T(ind[(d*g)[0]], \dots, ind[(d*g)[n-1]])`
 
     Being interested only in the transformations of the tensor under
     these symmetries, one can represent the tensor by `g`, which transforms
@@ -283,7 +283,7 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     the dummy indices themselves (d1 <-> d2).
 
     The dummy symmetry acts from the left
-    `d = [1, 0, 2, 3, 4, 5, 6, 7]`  exchange `d1 <-> -d1`
+    `d = [1, 0, 2, 3, 4, 5, 6, 7]`  exchange `d1 \leftrightarrow -d1`
     `T^{d3 d2 d1}{}_{d1 d2 d3} == T^{d3 d2}{}_{d1}{}^{d1}{}_{d2 d3}`
 
     `g=[4, 2, 0, 1, 3, 5, 6, 7]  -> [4, 2, 1, 0, 3, 5, 6, 7] = _af_rmul(d, g)`
@@ -311,38 +311,38 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     from the sign, return zero; otherwise
     choose as representative the tensor with indices
     ordered lexicographically according to `[d1, -d1, d2, -d2, d3, -d3]`
-    that is `rep = min(D*g*S) = min([d*g*s for d in D for s in S])`
+    that is ``rep = min(D*g*S) = min([d*g*s for d in D for s in S])``
 
     The indices are fixed one by one; first choose the lowest index
     for slot 0, then the lowest remaining index for slot 1, etc.
     Doing this one obtains a chain of stabilizers
 
-    `S -> S_{b0} -> S_{b0,b1} -> ...` and
-    `D -> D_{p0} -> D_{p0,p1} -> ...`
+    `S \rightarrow S_{b0} \rightarrow S_{b0,b1} \rightarrow \dots` and
+    `D \rightarrow D_{p0} \rightarrow D_{p0,p1} \rightarrow \dots`
 
-    where `[b0, b1, ...] = range(b)` is a base of the symmetric group;
+    where ``[b0, b1, ...] = range(b)`` is a base of the symmetric group;
     the strong base `b_S` of S is an ordered sublist of it;
     therefore it is sufficient to compute once the
     strong base generators of S using the Schreier-Sims algorithm;
     the stabilizers of the strong base generators are the
     strong base generators of the stabilizer subgroup.
 
-    `dbase = [p0, p1, ...]` is not in general in lexicographic order,
+    ``dbase = [p0, p1, ...]`` is not in general in lexicographic order,
     so that one must recompute the strong base generators each time;
     however this is trivial, there is no need to use the Schreier-Sims
     algorithm for D.
 
     The algorithm keeps a TAB of elements `(s_i, d_i, h_i)`
-    where `h_i = d_i*g*s_i` satisfying `h_i[j] = p_j` for `0 <= j < i`
+    where `h_i = d_i \times g \times s_i` satisfying `h_i[j] = p_j` for `0 \le j < i`
     starting from `s_0 = id, d_0 = id, h_0 = g`.
 
-    The equations `h_0[0] = p_0, h_1[1] = p_1,...` are solved in this order,
+    The equations `h_0[0] = p_0, h_1[1] = p_1, \dots` are solved in this order,
     choosing each time the lowest possible value of p_i
 
     For `j < i`
-    `d_i*g*s_i*S_{b_0,...,b_{i-1}}*b_j = D_{p_0,...,p_{i-1}}*p_j`
-    so that for dx in `D_{p_0,...,p_{i-1}}` and sx in
-    `S_{base[0],...,base[i-1]}` one has `dx*d_i*g*s_i*sx*b_j = p_j`
+    `d_i*g*s_i*S_{b_0, \dots, b_{i-1}}*b_j = D_{p_0, \dots, p_{i-1}}*p_j`
+    so that for dx in `D_{p_0,\dots,p_{i-1}}` and sx in
+    `S_{base[0], \dots, base[i-1]}` one has `dx*d_i*g*s_i*sx*b_j = p_j`
 
     Search for dx, sx such that this equation holds for `j = i`;
     it can be written as `s_i*sx*b_j = J, dx*d_i*g*J = p_j`

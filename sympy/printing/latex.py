@@ -2,15 +2,17 @@
 A Printer which converts an expression into its LaTeX equivalent.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 import itertools
 
 from sympy.core import Add, Float, Mod, Mul, Number, S, Symbol
 from sympy.core.alphabets import greeks
 from sympy.core.containers import Tuple
-from sympy.core.function import _coeff_isneg, AppliedUndef, Derivative
+from sympy.core.function import AppliedUndef, Derivative
 from sympy.core.operations import AssocOp
+from sympy.core.power import Pow
+from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import SympifyError
 from sympy.logic.boolalg import true
 
@@ -20,10 +22,8 @@ from sympy.printing.printer import Printer, print_function
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import precedence, PRECEDENCE
 
-import mpmath.libmp as mlib
-from mpmath.libmp import prec_to_dps
+from mpmath.libmp.libmpf import prec_to_dps, to_str as mlib_to_str
 
-from sympy.core.compatibility import default_sort_key
 from sympy.utilities.iterables import has_variety
 
 import re
@@ -31,7 +31,7 @@ import re
 # Hand-picked functions which can be used directly in both LaTeX and MathJax
 # Complete list at
 # https://docs.mathjax.org/en/latest/tex.html#supported-latex-commands
-# This variable only contains those functions which sympy uses.
+# This variable only contains those functions which SymPy uses.
 accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
                             'sinh', 'cosh', 'tanh', 'sqrt', 'ln', 'log', 'sec',
                             'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
@@ -115,7 +115,7 @@ greek_letters_set = frozenset(greeks)
 
 _between_two_numbers_p = (
     re.compile(r'[0-9][} ]*$'),  # search
-    re.compile(r'[{ ]*[-+0-9]'),  # match
+    re.compile(r'[0-9]'),  # match
 )
 
 
@@ -123,7 +123,7 @@ def latex_escape(s):
     """
     Escape a string such that latex interprets it as plaintext.
 
-    We can't use verbatim easily with mathjax, so escaping is easier.
+    We cannot use verbatim easily with mathjax, so escaping is easier.
     Rules from https://tex.stackexchange.com/a/34586/41112.
     """
     s = s.replace('\\', r'\textbackslash')
@@ -161,7 +161,7 @@ class LatexPrinter(Printer):
         "parenthesize_super": True,
         "min": None,
         "max": None,
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
 
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
@@ -306,10 +306,12 @@ class LatexPrinter(Printer):
         ``first=True`` specifies that this expr is the first to appear in
         a Mul.
         """
-        from sympy import Integral, Product, Sum
+        from sympy.concrete.products import Product
+        from sympy.concrete.summations import Sum
+        from sympy.integrals.integrals import Integral
 
         if expr.is_Mul:
-            if not first and _coeff_isneg(expr):
+            if not first and expr.could_extract_minus_sign():
                 return True
         elif precedence_traditional(expr) < PRECEDENCE["Mul"]:
             return True
@@ -375,7 +377,7 @@ class LatexPrinter(Printer):
         for i, term in enumerate(terms):
             if i == 0:
                 pass
-            elif _coeff_isneg(term):
+            elif term.could_extract_minus_sign():
                 tex += " - "
                 term = -term
             else:
@@ -443,7 +445,7 @@ class LatexPrinter(Printer):
         strip = False if self._settings['full_prec'] else True
         low = self._settings["min"] if "min" in self._settings else None
         high = self._settings["max"] if "max" in self._settings else None
-        str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=strip, min_fixed=low, max_fixed=high)
+        str_real = mlib_to_str(expr._mpf_, dps, strip_zeros=strip, min_fixed=low, max_fixed=high)
 
         # Must always have a mul symbol (as 2.5 10^{20} just looks odd)
         # thus we use the number separator
@@ -496,7 +498,6 @@ class LatexPrinter(Printer):
         return r"\triangle %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
     def _print_Mul(self, expr):
-        from sympy.core.power import Pow
         from sympy.physics.units import Quantity
         from sympy.simplify import fraction
         separator = self._settings['mul_symbol_latex']
@@ -529,7 +530,7 @@ class LatexPrinter(Printer):
                         term_tex = r"\left(%s\right)" % term_tex
 
                     if _between_two_numbers_p[0].search(last_term_tex) and \
-                            _between_two_numbers_p[1].match(term_tex):
+                            _between_two_numbers_p[1].match(str(term)):
                         # between two numbers
                         _tex += numbersep
                     elif _tex:
@@ -550,7 +551,7 @@ class LatexPrinter(Printer):
                 return convert_args(args)
 
         include_parens = False
-        if _coeff_isneg(expr):
+        if expr.could_extract_minus_sign():
             expr = -expr
             tex = "- "
             if expr.is_Add:
@@ -777,7 +778,7 @@ class LatexPrinter(Printer):
         else:
             tex = r"\frac{%s^{%s}}{%s}" % (diff_symbol, self._print(dim), tex)
 
-        if any(_coeff_isneg(i) for i in expr.args):
+        if any(i.could_extract_minus_sign() for i in expr.args):
             return r"%s %s" % (tex, self.parenthesize(expr.expr,
                                                   PRECEDENCE["Mul"],
                                                   is_neg=True,
@@ -829,7 +830,7 @@ class LatexPrinter(Printer):
 
         return r"%s %s%s" % (tex, self.parenthesize(expr.function,
                                                     PRECEDENCE["Mul"],
-                                                    is_neg=any(_coeff_isneg(i) for i in expr.args),
+                                                    is_neg=any(i.could_extract_minus_sign() for i in expr.args),
                                                     strict=True),
                              "".join(symbols))
 
@@ -1049,7 +1050,7 @@ class LatexPrinter(Printer):
         return self._do_exponent(tex, exp)
 
     def _print_Not(self, e):
-        from sympy import Equivalent, Implies
+        from sympy.logic.boolalg import (Equivalent, Implies)
         if isinstance(e.args[0], Equivalent):
             return self._print_Equivalent(e.args[0], r"\not\Leftrightarrow")
         if isinstance(e.args[0], Implies):
@@ -1690,7 +1691,7 @@ class LatexPrinter(Printer):
             return r"%s^{\dagger}" % self._print(mat)
 
     def _print_MatMul(self, expr):
-        from sympy import MatMul, Mul
+        from sympy.matrices.expressions.matmul import MatMul
 
         parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
                                              False)
@@ -1701,7 +1702,7 @@ class LatexPrinter(Printer):
         else:
             args = list(args)
 
-        if isinstance(expr, MatMul) and _coeff_isneg(expr):
+        if isinstance(expr, MatMul) and expr.could_extract_minus_sign():
             if args[0] == -1:
                 args = args[1:]
             else:
@@ -1762,11 +1763,11 @@ class LatexPrinter(Printer):
             'mat_symbol_style'])
 
     def _print_ZeroMatrix(self, Z):
-        return r"\mathbb{0}" if self._settings[
+        return "0" if self._settings[
             'mat_symbol_style'] == 'plain' else r"\mathbf{0}"
 
     def _print_OneMatrix(self, O):
-        return r"\mathbb{1}" if self._settings[
+        return "1" if self._settings[
             'mat_symbol_style'] == 'plain' else r"\mathbf{1}"
 
     def _print_Identity(self, I):
@@ -1908,7 +1909,9 @@ class LatexPrinter(Printer):
         return self._print(expr.name)
 
     def _print_ArrayElement(self, expr):
-        return "{{%s}_{%s}}" % (expr.name, ", ".join([f"{self._print(i)}" for i in expr.indices]))
+        return "{{%s}_{%s}}" % (
+            self.parenthesize(expr.name, PRECEDENCE["Func"], True),
+            ", ".join([f"{self._print(i)}" for i in expr.indices]))
 
     def _print_UniversalSet(self, expr):
         return r"\mathbb{U}"
@@ -1989,7 +1992,8 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_Heaviside(self, expr, exp=None):
-        tex = r"\theta\left(%s\right)" % self._print(expr.args[0])
+        pargs = ', '.join(self._print(arg) for arg in expr.pargs)
+        tex = r"\theta\left(%s\right)" % pargs
         if exp:
             tex = r"\left(%s\right)^{%s}" % (tex, exp)
         return tex
@@ -2229,7 +2233,7 @@ class LatexPrinter(Printer):
         expr = s.lamda.expr
         sig = s.lamda.signature
         xys = ((self._print(x), self._print(y)) for x, y in zip(sig, s.base_sets))
-        xinys = r" , ".join(r"%s \in %s" % xy for xy in xys)
+        xinys = r", ".join(r"%s \in %s" % xy for xy in xys)
         return r"\left\{%s\; \middle|\; %s\right\}" % (self._print(expr), xinys)
 
     def _print_ConditionSet(self, s):
@@ -2483,14 +2487,10 @@ class LatexPrinter(Printer):
         return r"\cdot".join(map(parens, args))
 
     def _print_Parallel(self, expr):
-        args = list(expr.args)
-        func = lambda x: self._print(x)
-        return ' + '.join(map(func, args))
+        return ' + '.join(map(self._print, expr.args))
 
     def _print_MIMOParallel(self, expr):
-        args = list(expr.args)
-        func = lambda x: self._print(x)
-        return ' + '.join(map(func, args))
+        return ' + '.join(map(self._print, expr.args))
 
     def _print_Feedback(self, expr):
         from sympy.physics.control import TransferFunction, Series
@@ -2791,7 +2791,7 @@ def translate(s):
         return "\\" + s
     else:
         # Process modifiers, if any, and recurse
-        for key in sorted(modifier_dict.keys(), key=lambda k:len(k), reverse=True):
+        for key in sorted(modifier_dict.keys(), key=len, reverse=True):
             if s.lower().endswith(key) and len(s) > len(key):
                 return modifier_dict[key](translate(s[:-len(key)]))
         return s

@@ -31,8 +31,8 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
               'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive']
 
 redirects = {
-    "install.rst": "getting_started/install.html",
-    "documentation-style-guide.rst": "contributing/documentation-style-guide.html",
+    "install.rst": "guides/getting_started/install.html",
+    "documentation-style-guide.rst": "guides/contributing/documentation-style-guide.html",
     "gotchas.rst": "explanation/gotchas.html",
     "special_topics/classification.rst": "explanation/classification.html",
     "special_topics/finite_diff_derivatives.rst": "explanation/finite_diff_derivatives.html",

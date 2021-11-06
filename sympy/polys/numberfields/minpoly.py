@@ -1,26 +1,30 @@
-"""Computational algebraic field theory. """
+"""Minimal polynomials for algebraic numbers."""
 
 from functools import reduce
 
-from sympy import (
-    S, Rational, AlgebraicNumber, GoldenRatio, TribonacciConstant,
-    Add, Mul, sympify, Dummy, expand_mul, I, pi
-)
+from sympy.core.add import Add
+from sympy.core.function import expand_mul, expand_multinomial
+from sympy.core.mul import Mul
+from sympy.core import (GoldenRatio, TribonacciConstant)
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
+
 from sympy.functions import sqrt, cbrt
 
 from sympy.core.exprtools import Factors
 from sympy.core.function import _mexpand
+from sympy.core.traversal import preorder_traversal
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import cos, sin, tan
-from sympy.ntheory import sieve
 from sympy.ntheory.factor_ import divisors
 from sympy.utilities.iterables import subsets
 
 from sympy.polys.densetools import dup_eval
-from sympy.polys.domains import ZZ, QQ
+from sympy.polys.domains import ZZ, QQ, FractionField
 from sympy.polys.orthopolys import dup_chebyshevt
 from sympy.polys.polyerrors import (
-    IsomorphismFailed,
     NotAlgebraic,
     GeneratorsError,
 )
@@ -28,21 +32,16 @@ from sympy.polys.polytools import (
     Poly, PurePoly, invert, factor_list, groebner, resultant,
     degree, poly_from_expr, parallel_poly_from_expr, lcm
 )
-from sympy.polys.polyutils import dict_from_expr, expr_from_dict
+from sympy.polys.polyutils import dict_from_expr, expr_from_dict, illegal
 from sympy.polys.ring_series import rs_compose_add
 from sympy.polys.rings import ring
 from sympy.polys.rootoftools import CRootOf
 from sympy.polys.specialpolys import cyclotomic_poly
-from sympy.printing.lambdarepr import LambdaPrinter
-from sympy.printing.pycode import PythonCodePrinter, MpmathPrinter
 from sympy.simplify.radsimp import _split_gcd
 from sympy.simplify.simplify import _is_sum_surds
 from sympy.utilities import (
-    numbered_symbols, lambdify, public, sift
+    numbered_symbols, public, sift
 )
-
-from mpmath import pslq, mp
-
 
 
 def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
@@ -50,7 +49,6 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
     Return a factor having root ``v``
     It is assumed that one of the factors has root ``v``.
     """
-    from sympy.polys.polyutils import illegal
 
     if isinstance(factors[0], tuple):
         factors = [f[0] for f in factors]
@@ -110,7 +108,7 @@ def _separate_sq(p):
 
     >>> from sympy import sqrt
     >>> from sympy.abc import x
-    >>> from sympy.polys.numberfields import _separate_sq
+    >>> from sympy.polys.numberfields.minpoly import _separate_sq
     >>> p= -x + sqrt(2) + sqrt(3) + sqrt(7)
     >>> p = _separate_sq(p); p
     -x**2 + 2*sqrt(3)*x + 2*sqrt(7)*x - 2*sqrt(21) - 8
@@ -120,7 +118,6 @@ def _separate_sq(p):
     -x**8 + 48*x**6 - 536*x**4 + 1728*x**2 - 400
 
     """
-    from sympy.utilities.iterables import sift
     def is_sqrt(expr):
         return expr.is_Pow and expr.exp is S.Half
     # p = c1*sqrt(q1) + ... + cn*sqrt(qn) -> a = [(c1, q1), .., (cn, qn)]
@@ -174,7 +171,7 @@ def _minimal_polynomial_sq(p, n, x):
     Examples
     ========
 
-    >>> from sympy.polys.numberfields import _minimal_polynomial_sq
+    >>> from sympy.polys.numberfields.minpoly import _minimal_polynomial_sq
     >>> from sympy import sqrt
     >>> from sympy.abc import x
     >>> q = 1 + sqrt(2) + sqrt(3)
@@ -182,8 +179,6 @@ def _minimal_polynomial_sq(p, n, x):
     x**12 - 4*x**9 - 4*x**6 + 16*x**3 - 8
 
     """
-    from sympy.simplify.simplify import _is_sum_surds
-
     p = sympify(p)
     n = sympify(n)
     if not n.is_Integer or not n > 0 or not _is_sum_surds(p):
@@ -232,7 +227,7 @@ def _minpoly_op_algebraic_element(op, ex1, ex2, x, dom, mp1=None, mp2=None):
     ========
 
     >>> from sympy import sqrt, Add, Mul, QQ
-    >>> from sympy.polys.numberfields import _minpoly_op_algebraic_element
+    >>> from sympy.polys.numberfields.minpoly import _minpoly_op_algebraic_element
     >>> from sympy.abc import x, y
     >>> p1 = sqrt(sqrt(2) + 1)
     >>> p2 = sqrt(sqrt(2) - 1)
@@ -333,7 +328,7 @@ def _minpoly_pow(ex, pw, x, dom, mp=None):
     ========
 
     >>> from sympy import sqrt, QQ, Rational
-    >>> from sympy.polys.numberfields import _minpoly_pow, minpoly
+    >>> from sympy.polys.numberfields.minpoly import _minpoly_pow, minpoly
     >>> from sympy.abc import x, y
     >>> p = sqrt(1 + sqrt(2))
     >>> _minpoly_pow(p, 2, x, QQ)
@@ -436,7 +431,6 @@ def _minpoly_cos(ex, x):
     Returns the minimal polynomial of ``cos(ex)``
     see http://mathworld.wolfram.com/TrigonometryAngles.html
     """
-    from sympy import sqrt
     c, a = ex.args[0].as_coeff_Mul()
     if a is pi:
         if c.is_rational:
@@ -680,9 +674,6 @@ def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None):
     x**2 - y
 
     """
-    from sympy.polys.polytools import degree
-    from sympy.polys.domains import FractionField
-    from sympy.core.basic import preorder_traversal
 
     ex = sympify(ex)
     if ex.is_number:
@@ -736,8 +727,6 @@ def _minpoly_groebner(ex, x, cls):
     x**2 - 2*x - 1
 
     """
-    from sympy.polys.polytools import degree
-    from sympy.core.function import expand_multinomial
 
     generator = numbered_symbols('a', cls=Dummy)
     mapping, symbols = {}, {}
@@ -879,7 +868,7 @@ def _linsolve(p):
 def primitive_element(extension, x=None, *, ex=False, polys=False):
     """Construct a common number field for all extensions. """
     if not extension:
-        raise ValueError("can't compute primitive element for empty extension")
+        raise ValueError("Cannot compute primitive element for empty extension")
 
     if x is not None:
         x, cls = sympify(x), Poly
@@ -924,229 +913,3 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
         return f.as_expr(), coeffs, H
     else:
         return f, coeffs, H
-
-
-def is_isomorphism_possible(a, b):
-    """Returns `True` if there is a chance for isomorphism. """
-    n = a.minpoly.degree()
-    m = b.minpoly.degree()
-
-    if m % n != 0:
-        return False
-
-    if n == m:
-        return True
-
-    da = a.minpoly.discriminant()
-    db = b.minpoly.discriminant()
-
-    i, k, half = 1, m//n, db//2
-
-    while True:
-        p = sieve[i]
-        P = p**k
-
-        if P > half:
-            break
-
-        if ((da % p) % 2) and not (db % P):
-            return False
-
-        i += 1
-
-    return True
-
-
-def field_isomorphism_pslq(a, b):
-    """Construct field isomorphism using PSLQ algorithm. """
-    if not a.root.is_real or not b.root.is_real:
-        raise NotImplementedError("PSLQ doesn't support complex coefficients")
-
-    f = a.minpoly
-    g = b.minpoly.replace(f.gen)
-
-    n, m, prev = 100, b.minpoly.degree(), None
-
-    for i in range(1, 5):
-        A = a.root.evalf(n)
-        B = b.root.evalf(n)
-
-        basis = [1, B] + [ B**i for i in range(2, m) ] + [A]
-
-        dps, mp.dps = mp.dps, n
-        coeffs = pslq(basis, maxcoeff=int(1e10), maxsteps=1000)
-        mp.dps = dps
-
-        if coeffs is None:
-            break
-
-        if coeffs != prev:
-            prev = coeffs
-        else:
-            break
-
-        coeffs = [S(c)/coeffs[-1] for c in coeffs[:-1]]
-
-        while not coeffs[-1]:
-            coeffs.pop()
-
-        coeffs = list(reversed(coeffs))
-        h = Poly(coeffs, f.gen, domain='QQ')
-
-        if f.compose(h).rem(g).is_zero:
-            d, approx = len(coeffs) - 1, 0
-
-            for i, coeff in enumerate(coeffs):
-                approx += coeff*B**(d - i)
-
-            if A*approx < 0:
-                return [ -c for c in coeffs ]
-            else:
-                return coeffs
-        elif f.compose(-h).rem(g).is_zero:
-            return [ -c for c in coeffs ]
-        else:
-            n *= 2
-
-    return None
-
-
-def field_isomorphism_factor(a, b):
-    """Construct field isomorphism via factorization. """
-    _, factors = factor_list(a.minpoly, extension=b)
-
-    for f, _ in factors:
-        if f.degree() == 1:
-            coeffs = f.rep.TC().to_sympy_list()
-            d, terms = len(coeffs) - 1, []
-
-            for i, coeff in enumerate(coeffs):
-                terms.append(coeff*b.root**(d - i))
-
-            root = Add(*terms)
-
-            if (a.root - root).evalf(chop=True) == 0:
-                return coeffs
-
-            if (a.root + root).evalf(chop=True) == 0:
-                return [-c for c in coeffs]
-
-    return None
-
-
-@public
-def field_isomorphism(a, b, *, fast=True):
-    """Construct an isomorphism between two number fields. """
-    a, b = sympify(a), sympify(b)
-
-    if not a.is_AlgebraicNumber:
-        a = AlgebraicNumber(a)
-
-    if not b.is_AlgebraicNumber:
-        b = AlgebraicNumber(b)
-
-    if a == b:
-        return a.coeffs()
-
-    n = a.minpoly.degree()
-    m = b.minpoly.degree()
-
-    if n == 1:
-        return [a.root]
-
-    if m % n != 0:
-        return None
-
-    if fast:
-        try:
-            result = field_isomorphism_pslq(a, b)
-
-            if result is not None:
-                return result
-        except NotImplementedError:
-            pass
-
-    return field_isomorphism_factor(a, b)
-
-
-@public
-def to_number_field(extension, theta=None, *, gen=None):
-    """Express `extension` in the field generated by `theta`. """
-    if hasattr(extension, '__iter__'):
-        extension = list(extension)
-    else:
-        extension = [extension]
-
-    if len(extension) == 1 and type(extension[0]) is tuple:
-        return AlgebraicNumber(extension[0])
-
-    minpoly, coeffs = primitive_element(extension, gen, polys=True)
-    root = sum([ coeff*ext for coeff, ext in zip(coeffs, extension) ])
-
-    if theta is None:
-        return AlgebraicNumber((minpoly, root))
-    else:
-        theta = sympify(theta)
-
-        if not theta.is_AlgebraicNumber:
-            theta = AlgebraicNumber(theta, gen=gen)
-
-        coeffs = field_isomorphism(root, theta)
-
-        if coeffs is not None:
-            return AlgebraicNumber(theta, coeffs)
-        else:
-            raise IsomorphismFailed(
-                "%s is not in a subfield of %s" % (root, theta.root))
-
-
-class IntervalPrinter(MpmathPrinter, LambdaPrinter):
-    """Use ``lambda`` printer but print numbers as ``mpi`` intervals. """
-
-    def _print_Integer(self, expr):
-        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Integer(expr)
-
-    def _print_Rational(self, expr):
-        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Rational(expr)
-
-    def _print_Half(self, expr):
-        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Rational(expr)
-
-    def _print_Pow(self, expr):
-        return super(MpmathPrinter, self)._print_Pow(expr, rational=True)
-
-@public
-def isolate(alg, eps=None, fast=False):
-    """Give a rational isolating interval for an algebraic number. """
-    alg = sympify(alg)
-
-    if alg.is_Rational:
-        return (alg, alg)
-    elif not alg.is_real:
-        raise NotImplementedError(
-            "complex algebraic numbers are not supported")
-
-    func = lambdify((), alg, modules="mpmath", printer=IntervalPrinter())
-
-    poly = minpoly(alg, polys=True)
-    intervals = poly.intervals(sqf=True)
-
-    dps, done = mp.dps, False
-
-    try:
-        while not done:
-            alg = func()
-
-            for a, b in intervals:
-                if a <= alg.a and alg.b <= b:
-                    done = True
-                    break
-            else:
-                mp.dps *= 2
-    finally:
-        mp.dps = dps
-
-    if eps is not None:
-        a, b = poly.refine_root(a, b, eps=eps, fast=fast)
-
-    return (a, b)

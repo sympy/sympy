@@ -5,7 +5,7 @@ class TypeB(Standard_Cartan):
 
     def __new__(cls, n):
         if n < 2:
-            raise ValueError("n can not be less than 2")
+            raise ValueError("n cannot be less than 2")
         return Standard_Cartan.__new__(cls, "B", n)
 
     def dimension(self):

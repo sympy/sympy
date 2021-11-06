@@ -1,8 +1,10 @@
 from sympy.functions import adjoint, conjugate, transpose
 from sympy.matrices.expressions import MatrixSymbol, Adjoint, trace, Transpose
 from sympy.matrices import eye, Matrix
-from sympy import symbols, S
-from sympy import refine, Q
+from sympy.assumptions.ask import Q
+from sympy.assumptions.refine import refine
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
 A = MatrixSymbol('A', n, m)

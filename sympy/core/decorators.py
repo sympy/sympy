@@ -9,36 +9,6 @@ from functools import wraps
 from .sympify import SympifyError, sympify
 
 
-def deprecated(**decorator_kwargs):
-    """This is a decorator which can be used to mark functions
-    as deprecated. It will result in a warning being emitted
-    when the function is used."""
-    from sympy.utilities.exceptions import SymPyDeprecationWarning
-
-    def _warn_deprecation(wrapped, stacklevel):
-        decorator_kwargs.setdefault('feature', wrapped.__name__)
-        SymPyDeprecationWarning(**decorator_kwargs).warn(stacklevel=stacklevel)
-
-    def deprecated_decorator(wrapped):
-        if hasattr(wrapped, '__mro__'):  # wrapped is actually a class
-            class wrapper(wrapped):
-                __doc__ = wrapped.__doc__
-                __name__ = wrapped.__name__
-                __module__ = wrapped.__module__
-                _sympy_deprecated_func = wrapped
-                def __init__(self, *args, **kwargs):
-                    _warn_deprecation(wrapped, 4)
-                    super().__init__(*args, **kwargs)
-        else:
-            @wraps(wrapped)
-            def wrapper(*args, **kwargs):
-                _warn_deprecation(wrapped, 3)
-                return wrapped(*args, **kwargs)
-            wrapper._sympy_deprecated_func = wrapped
-        return wrapper
-    return deprecated_decorator
-
-
 def _sympifyit(arg, retval=None):
     """
     decorator to smartly _sympify function arguments
@@ -69,9 +39,9 @@ def _sympifyit(arg, retval=None):
 
 
 def __sympifyit(func, arg, retval=None):
-    """decorator to _sympify `arg` argument for function `func`
+    """Decorator to _sympify `arg` argument for function `func`.
 
-       don't use directly -- use _sympifyit instead
+       Do not use directly -- use _sympifyit instead.
     """
 
     # we support f(a,b) only
@@ -89,7 +59,7 @@ def __sympifyit(func, arg, retval=None):
         def __sympifyit_wrapper(a, b):
             try:
                 # If an external class has _op_priority, it knows how to deal
-                # with sympy objects. Otherwise, it must be converted.
+                # with SymPy objects. Otherwise, it must be converted.
                 if not hasattr(b, '_op_priority'):
                     b = sympify(b, strict=True)
                 return func(a, b)
@@ -151,8 +121,8 @@ def sympify_method_args(cls):
     Examples
     ========
 
-    >>> from sympy.core.basic import Basic
-    >>> from sympy.core.sympify import _sympify, SympifyError
+    >>> from sympy import Basic, SympifyError
+    >>> from sympy.core.sympify import _sympify
 
     >>> class MyTuple(Basic):
     ...     def __add__(self, other):

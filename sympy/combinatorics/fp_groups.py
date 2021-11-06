@@ -1,6 +1,7 @@
 """Finitely Presented Groups and its algorithms. """
 
-from sympy import S
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
 from sympy.combinatorics.free_groups import (FreeGroup, FreeGroupElement,
                                                 free_group)
 from sympy.combinatorics.rewritingsystem import RewritingSystem
@@ -11,7 +12,6 @@ from sympy.combinatorics import PermutationGroup
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.magic import pollute
-from sympy import symbols
 
 from itertools import product
 
@@ -230,7 +230,7 @@ class FpGroup(DefaultPrinting):
         2
 
         """
-        from sympy import S, gcd
+        from sympy.polys.polytools import gcd
         if self._order is not None:
             return self._order
         if self._coset_table is not None:
@@ -379,7 +379,7 @@ class FpGroup(DefaultPrinting):
         will only terminate for finite groups.
 
         '''
-        from sympy.combinatorics import Permutation, PermutationGroup
+        from sympy.combinatorics import Permutation
         from sympy.combinatorics.homomorphisms import homomorphism
         if self.order() is S.Infinity:
             raise NotImplementedError("Permutation presentation of infinite "
@@ -686,9 +686,8 @@ class FpSubgroup(DefaultPrinting):
             return i == 0
 
     def order(self):
-        from sympy import S
         if not self.generators:
-            return 1
+            return S.One
         if isinstance(self.parent, FreeGroup):
             return S.Infinity
         if self.C is None:
@@ -1081,7 +1080,7 @@ def _simplification_technique_1(rels):
     [x**2*y**4, x**4]
 
     """
-    from sympy import gcd
+    from sympy.polys.polytools import gcd
 
     rels = rels[:]
     # dictionary with "gen: n" where gen^n is one of the relators
@@ -1227,7 +1226,7 @@ def rewrite(C, alpha, w):
 
     >>> from sympy.combinatorics.fp_groups import FpGroup, CosetTable, define_schreier_generators, rewrite
     >>> from sympy.combinatorics.free_groups import free_group
-    >>> F, x, y = free_group("x ,y")
+    >>> F, x, y = free_group("x, y")
     >>> f = FpGroup(F, [x**2, y**3, (x*y)**6])
     >>> C = CosetTable(f, [])
     >>> C.table = [[1, 1, 2, 3], [0, 0, 4, 5], [4, 4, 3, 0], [5, 5, 0, 2], [2, 2, 5, 1], [3, 3, 1, 4]]

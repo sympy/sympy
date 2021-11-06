@@ -14,7 +14,7 @@ def parse_autolev(autolev_code, include_numeric=False):
     Returns
     =======
     sympy_code : str
-        Equivalent sympy and/or numpy/pydy code as the input code.
+        Equivalent SymPy and/or numpy/pydy code as the input code.
 
 
     Example (Double Pendulum)

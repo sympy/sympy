@@ -4,7 +4,7 @@ from sympy.ntheory.primetest import (mr, is_lucas_prp, is_square,
                                      is_gaussian_prime)
 
 from sympy.testing.pytest import slow
-from sympy import I
+from sympy.core.numbers import I
 
 def test_euler_pseudoprimes():
     assert is_euler_pseudoprime(9, 1) == True

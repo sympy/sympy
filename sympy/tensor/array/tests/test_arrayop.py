@@ -4,7 +4,11 @@ from sympy.combinatorics import Permutation
 from sympy.combinatorics.permutations import _af_invert
 from sympy.testing.pytest import raises
 
-from sympy import symbols, sin, exp, log, cos, transpose, adjoint, conjugate, diff
+from sympy.core.function import diff
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.complexes import (adjoint, conjugate, transpose)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.tensor.array import Array, ImmutableDenseNDimArray, ImmutableSparseNDimArray, MutableSparseNDimArray
 
 from sympy.tensor.array.arrayop import tensorproduct, tensorcontraction, derive_by_array, permutedims, Flatten, \
@@ -298,7 +302,7 @@ def test_array_permutedims():
 
 
 def test_flatten():
-    from sympy import Matrix
+    from sympy.matrices.dense import Matrix
     for ArrayType in [ImmutableDenseNDimArray, ImmutableSparseNDimArray, Matrix]:
         A = ArrayType(range(24)).reshape(4, 6)
         assert [i for i in Flatten(A)] == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
@@ -308,7 +312,7 @@ def test_flatten():
 
 
 def test_tensordiagonal():
-    from sympy import eye
+    from sympy.matrices.dense import eye
     expr = Array(range(9)).reshape(3, 3)
     raises(ValueError, lambda: tensordiagonal(expr, [0], [1]))
     assert tensordiagonal(eye(3), [0, 1]) == Array([1, 1, 1])

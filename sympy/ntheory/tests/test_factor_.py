@@ -1,4 +1,10 @@
-from sympy import Mul, S, Pow, Symbol, summation, Dict, factorial as fac
+from sympy.concrete.summations import summation
+from sympy.core.containers import Dict
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.combinatorial.factorials import factorial as fac
 from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
 

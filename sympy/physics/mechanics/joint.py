@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from sympy import pi
+from sympy.core.numbers import pi
 from sympy.physics.mechanics.body import Body
 from sympy.physics.vector import Vector, dynamicsymbols, cross
 from sympy.physics.vector.frame import ReferenceFrame

@@ -2,7 +2,10 @@
 
 import warnings
 
-from sympy import Add, Mul, Pow, Integer
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.numbers import Integer
+from sympy.core.power import Pow
 from sympy.physics.quantum import Operator, Commutator, AntiCommutator
 from sympy.physics.quantum.boson import BosonOp
 from sympy.physics.quantum.fermion import FermionOp

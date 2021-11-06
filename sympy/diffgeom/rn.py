@@ -11,7 +11,9 @@ using the usual `coord_sys.coord_function(index, name)` interface.
 from typing import Any
 import warnings
 
-from sympy import sqrt, atan2, acos, sin, cos, symbols, Dummy
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, atan2, cos, sin)
 from .diffgeom import Manifold, Patch, CoordSystem
 
 __all__ = [

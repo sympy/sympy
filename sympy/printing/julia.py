@@ -9,7 +9,7 @@ complete source code files.
 
 """
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 from sympy.core import Mul, Pow, S, Rational
 from sympy.core.mul import _keep_coeff
@@ -30,7 +30,7 @@ known_fcns_src1 = ["sin", "cos", "tan", "cot", "sec", "csc",
                    "airyai", "airyaiprime", "airybi", "airybiprime",
                    "besselj", "bessely", "besseli", "besselk",
                    "erfinv", "erfcinv"]
-# These functions have different names ("Sympy": "Julia"), more
+# These functions have different names ("SymPy": "Julia"), more
 # generally a mapping to (argument_conditions, julia_function).
 known_fcns_src2 = {
     "Abs": "abs",
@@ -65,7 +65,7 @@ class JuliaCodePrinter(CodePrinter):
         'allow_unknown_functions': False,
         'contract': True,
         'inline': True,
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
     # Note: contract is for expressing tensors as loops (if True), or just
     # assignment (if False).  FIXME: this should be looked a more carefully
     # for Julia.
@@ -332,7 +332,7 @@ class JuliaCodePrinter(CodePrinter):
 
     def _print_MatrixBase(self, A):
         # Handle zero dimensions:
-        if A.rows == 0 or A.cols == 0:
+        if S.Zero in A.shape:
             return 'zeros(%s, %s)' % (A.rows, A.cols)
         elif (A.rows, A.cols) == (1, 1):
             return "[%s]" % A[0, 0]
@@ -345,7 +345,7 @@ class JuliaCodePrinter(CodePrinter):
                                 rowsep=';\n', colsep=' ')
 
 
-    def _print_SparseMatrix(self, A):
+    def _print_SparseRepMatrix(self, A):
         from sympy.matrices import Matrix
         L = A.col_list();
         # make row vectors of the indices and entries
@@ -480,7 +480,7 @@ class JuliaCodePrinter(CodePrinter):
         pretty = []
         level = 0
         for n, line in enumerate(code):
-            if line == '' or line == '\n':
+            if line in ('', '\n'):
                 pretty.append(line)
                 continue
             level -= decrease[n]
@@ -496,7 +496,7 @@ def julia_code(expr, assign_to=None, **settings):
     ==========
 
     expr : Expr
-        A sympy expression to be converted.
+        A SymPy expression to be converted.
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned.  Can be a string, ``Symbol``,

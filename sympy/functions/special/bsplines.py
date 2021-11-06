@@ -1,8 +1,9 @@
 from sympy.core import S, sympify
+from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise, piecewise_fold
 from sympy.sets.sets import Interval
 
-from sympy.core.cache import lru_cache
+from functools import lru_cache
 
 
 def _ivl(cond, x):
@@ -24,9 +25,9 @@ def _ivl(cond, x):
 def _add_splines(c, b1, d, b2, x):
     """Construct c*b1 + d*b2."""
 
-    if b1 == S.Zero or c == S.Zero:
+    if S.Zero in (b1, c):
         rv = piecewise_fold(d * b2)
-    elif b2 == S.Zero or d == S.Zero:
+    elif S.Zero in (b2, d):
         rv = piecewise_fold(c * b1)
     else:
         new_args = []
@@ -162,7 +163,6 @@ def bspline_basis(d, knots, n, x):
     .. [1] https://en.wikipedia.org/wiki/B-spline
 
     """
-    from sympy.core.symbol import Dummy
     # make sure x has no assumptions so conditions don't evaluate
     xvar = x
     x = Dummy()
@@ -299,7 +299,6 @@ def interpolating_spline(d, x, X, Y):
     bspline_basis_set, interpolating_poly
 
     """
-    from sympy import symbols, Dummy
     from sympy.solvers.solveset import linsolve
     from sympy.matrices.dense import Matrix
 

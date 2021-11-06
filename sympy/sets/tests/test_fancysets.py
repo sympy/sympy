@@ -6,9 +6,20 @@ from sympy.sets.sets import (FiniteSet, Interval, Union, imageset,
                              Intersection, ProductSet, Contains)
 from sympy.sets.conditionset import ConditionSet
 from sympy.simplify.simplify import simplify
-from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-                   Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye,
-                   Dummy, floor, And, Eq)
+from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
+from sympy.core.function import Lambda
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.logic.boolalg import And
+from sympy.matrices.dense import eye
 from sympy.testing.pytest import XFAIL, raises
 from sympy.abc import x, y, t, z
 from sympy.core.mod import Mod
@@ -529,9 +540,9 @@ def test_range_is_finite_set():
     assert Range(n, n + m + n).is_finite_set is True
     assert Range(n, oo).is_finite_set is False
     assert Range(-oo, n).is_finite_set is False
-    # assert Range(n, -oo).is_finite_set is True
-    # assert Range(oo, n).is_finite_set is True
-    # Above tests fail due to a (potential) bug in sympy.sets.fancysets.Range.size (See issue #18999)
+    assert Range(n, -oo).is_finite_set is True
+    assert Range(oo, n).is_finite_set is True
+
 
 
 def test_Range_is_iterable():
@@ -652,8 +663,8 @@ def test_Complex():
     assert S.Complexes.union(S.Reals) == S.Complexes
     assert S.Complexes == ComplexRegion(S.Reals*S.Reals)
     assert (S.Complexes == ComplexRegion(Interval(1, 2)*Interval(3, 4))) == False
-    assert str(S.Complexes) == "S.Complexes"
-    assert repr(S.Complexes) == "S.Complexes"
+    assert str(S.Complexes) == "Complexes"
+    assert repr(S.Complexes) == "Complexes"
 
 
 def take(n, iterable):
@@ -674,7 +685,7 @@ def test_intersections():
 
 
 def test_infinitely_indexed_set_1():
-    from sympy.abc import n, m, t
+    from sympy.abc import n, m
     assert imageset(Lambda(n, n), S.Integers) == imageset(Lambda(m, m), S.Integers)
 
     assert imageset(Lambda(n, 2*n), S.Integers).intersect(
@@ -711,7 +722,6 @@ def test_infinitely_indexed_set_2():
 
 
 def test_imageset_intersect_real():
-    from sympy import I
     from sympy.abc import n
     assert imageset(Lambda(n, n + (n - 1)*(n + 1)*I), S.Integers).intersect(S.Reals) == FiniteSet(-1, 1)
     im = (n - 1)*(n + S.Half)
@@ -813,7 +823,7 @@ def test_imageset_intersect_diophantine():
 
 
 def test_infinitely_indexed_set_3():
-    from sympy.abc import n, m, t
+    from sympy.abc import n, m
     assert imageset(Lambda(m, 2*pi*m), S.Integers).intersect(
             imageset(Lambda(n, 3*pi*n), S.Integers)).dummy_eq(
         ImageSet(Lambda(t, 6*pi*t), S.Integers))
@@ -835,7 +845,6 @@ def test_ImageSet_simplification():
 
 
 def test_ImageSet_contains():
-    from sympy.abc import x
     assert (2, S.Half) in imageset(x, (x, 1/x), S.Integers)
     assert imageset(x, x + I*3, S.Integers).intersection(S.Reals) is S.EmptySet
     i = Dummy(integer=True)

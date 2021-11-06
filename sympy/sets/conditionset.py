@@ -1,27 +1,26 @@
-from sympy import S
+from sympy.core.singleton import S
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
-from sympy.core.function import Lambda
+from sympy.core.function import Lambda, BadSignatureError
 from sympy.core.logic import fuzzy_bool
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import And, as_Boolean
-from sympy.utilities.iterables import sift
+from sympy.utilities.iterables import sift, flatten, has_dups
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-
 from .contains import Contains
-from .sets import Set, EmptySet, Union, FiniteSet
+from .sets import Set, Union, FiniteSet
 
 
 adummy = Dummy('conditionset')
 
 
 class ConditionSet(Set):
-    """
+    r"""
     Set of elements which satisfies a given condition.
 
-    {x | condition(x) is True for x in S}
+    .. math:: \{x \mid \textrm{condition}(x) = \texttt{True}, x \in S\}
 
     Examples
     ========
@@ -87,8 +86,6 @@ class ConditionSet(Set):
 
     """
     def __new__(cls, sym, condition, base_set=S.UniversalSet):
-        from sympy.core.function import BadSignatureError
-        from sympy.utilities.iterables import flatten, has_dups
         sym = _sympify(sym)
         flat = flatten([sym])
         if has_dups(flat):
@@ -118,8 +115,8 @@ class ConditionSet(Set):
         if condition is S.false:
             return S.EmptySet
 
-        if isinstance(base_set, EmptySet):
-            return base_set
+        if base_set is S.EmptySet:
+            return S.EmptySet
 
         # no simple answers, so now check syms
         for i in flat:
@@ -178,7 +175,6 @@ class ConditionSet(Set):
 
     @property
     def bound_symbols(self):
-        from sympy.utilities.iterables import flatten
         return flatten([self.sym])
 
     def _contains(self, other):
