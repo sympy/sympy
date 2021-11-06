@@ -3092,17 +3092,15 @@ def substitution(
         return S.EmptySet
 
     if not symbols:
-        msg = (
-            "Symbols must be given, for which solution of the " "system is to be found."
-        )
+        msg = "Symbols must be given, for which solution of the system is to be found."
         raise ValueError(filldedent(msg))
 
     if not is_sequence(symbols):
-        msg = "symbols should be given as a sequence, e.g. a list." "Not type %s: %s"
+        msg = "symbols should be given as a sequence, e.g. a list.Not type %s: %s"
         raise TypeError(filldedent(msg % (type(symbols), symbols)))
 
     if not getattr(symbols[0], "is_Symbol", False):
-        msg = "Iterable of symbols must be given as " "second argument, not type %s: %s"
+        msg = "Iterable of symbols must be given as second argument, not type %s: %s"
         raise ValueError(filldedent(msg % (type(symbols[0]), symbols[0])))
 
     # By default `all_symbols` will be same as `symbols`
@@ -3808,18 +3806,14 @@ def nonlinsolve(system, *symbols):
         return S.EmptySet
 
     if not symbols:
-        msg = (
-            "Symbols must be given, for which solution of the " "system is to be found."
-        )
+        msg = "Symbols must be given, for which solution of the system is to be found."
         raise ValueError(filldedent(msg))
 
     if hasattr(symbols[0], "__iter__"):
         symbols = symbols[0]
 
     if not is_sequence(symbols) or not symbols:
-        msg = (
-            "Symbols must be given, for which solution of the " "system is to be found."
-        )
+        msg = "Symbols must be given, for which solution of the system is to be found."
         raise IndexError(filldedent(msg))
 
     system, symbols, swap = recast_to_symbols(system, symbols)

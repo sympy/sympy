@@ -81,7 +81,7 @@ def _preprocess(expr, func=None, hint="_Integral"):
         funcs = set().union(*[d.atoms(AppliedUndef) for d in derivs])
         if len(funcs) != 1:
             raise ValueError(
-                "The function cannot be " "automatically detected for %s." % expr
+                "The function cannot be automatically detected for %s." % expr
             )
         func = funcs.pop()
     fvars = set(func.args)

@@ -241,7 +241,7 @@ def infinitesimals(eq, func=None, order=None, hint="default", match=None):
             order = ode_order(eq, func)
         if order != 1:
             raise NotImplementedError(
-                "Infinitesimals for only " "first order ODE's have been implemented"
+                "Infinitesimals for only first order ODE's have been implemented"
             )
         else:
             df = func.diff(x)
@@ -260,8 +260,7 @@ def infinitesimals(eq, func=None, order=None, hint="default", match=None):
                         sol = solve(eq, df)
                     except NotImplementedError:
                         raise NotImplementedError(
-                            "Infinitesimals for the "
-                            "first order ODE could not be found"
+                            "Infinitesimals for the first order ODE could not be found"
                         )
                     else:
                         h = sol[0]  # Find infinitesimals for one solution
@@ -284,7 +283,7 @@ def infinitesimals(eq, func=None, order=None, hint="default", match=None):
                     return xieta
                 else:
                     raise NotImplementedError(
-                        "Infinitesimals could not be found for " "the given ODE"
+                        "Infinitesimals could not be found for the given ODE"
                     )
 
             elif hint == "default":
@@ -295,7 +294,7 @@ def infinitesimals(eq, func=None, order=None, hint="default", match=None):
                         return xieta
 
                 raise NotImplementedError(
-                    "Infinitesimals could not be found for" " the given ODE"
+                    "Infinitesimals could not be found for the given ODE"
                 )
 
             elif hint not in lie_heuristics:
@@ -308,7 +307,7 @@ def infinitesimals(eq, func=None, order=None, hint="default", match=None):
                     return xieta
                 else:
                     raise ValueError(
-                        "Infinitesimals could not be found using the" " given heuristic"
+                        "Infinitesimals could not be found using the given heuristic"
                     )
 
 

@@ -1117,7 +1117,8 @@ def test_solve_transcendental():
     a, b = symbols("a, b", real=True, negative=False)
     assert (
         str(solve(Eq(a, 0.5 - cos(pi * b) / 2), b))
-        == "[2.0 - 0.318309886183791*acos(1.0 - 2.0*a), 0.318309886183791*acos(1.0 - 2.0*a)]"
+        == "[2.0 - 0.318309886183791*acos(1.0 - 2.0*a), 0.318309886183791*acos(1.0 -"
+        " 2.0*a)]"
     )
 
     # issue 15325

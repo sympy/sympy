@@ -425,7 +425,7 @@ def _solve_lambert(f, symbol, gens):
 
     if not soln:
         raise NotImplementedError(
-            "%s does not appear to have a solution in " "terms of LambertW" % f
+            "%s does not appear to have a solution in terms of LambertW" % f
         )
 
     return list(ordered(soln))

@@ -855,7 +855,8 @@ def solve_ics(sols, funcs, constants, ics):
 
     if solved_constants == True:
         raise ValueError(
-            "Initial conditions did not produce any solutions for constants. Perhaps they are degenerate."
+            "Initial conditions did not produce any solutions for constants. Perhaps"
+            " they are degenerate."
         )
 
     if len(solved_constants) > 1:
@@ -1092,7 +1093,8 @@ def classify_ode(
 
             else:
                 raise ValueError(
-                    "Enter boundary conditions of the form ics={f(point): value, f(x).diff(x, order).subs(x, point): value}"
+                    "Enter boundary conditions of the form ics={f(point): value,"
+                    " f(x).diff(x, order).subs(x, point): value}"
                 )
 
     ode = SingleODEProblem(eq_orig, func, x, prep=prep, xi=xi, eta=eta)
@@ -3014,7 +3016,7 @@ def checkinfsol(eq, infinitesimals, func=None, order=None):
                     sol = solve(eq, df)
                 except NotImplementedError:
                     raise NotImplementedError(
-                        "Infinitesimals for the " "first order ODE could not be found"
+                        "Infinitesimals for the first order ODE could not be found"
                     )
                 else:
                     h = sol[0]  # Find infinitesimals for one solution

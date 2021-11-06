@@ -4560,7 +4560,8 @@ def test_substitution_with_infeasible_solution():
         p10,
         p11,
     ) = symbols(
-        "a00, a01, a10, a11, l0, l1, l2, l3, m0, m1, m2, m3, m4, m5, m6, m7, c00, c01, c10, c11, p00, p01, p10, p11"
+        "a00, a01, a10, a11, l0, l1, l2, l3, m0, m1, m2, m3, m4, m5, m6, m7, c00, c01,"
+        " c10, c11, p00, p01, p10, p11"
     )
     solvefor = [p00, p01, p10, p11, c00, c01, c10, c11, m0, m1, m3, l0, l1, l2, l3]
     system = [
