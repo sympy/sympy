@@ -15,12 +15,11 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, Or)
 from sympy.polys.polytools import (Poly, PurePoly)
 from sympy.sets.sets import (FiniteSet, Interval, Union)
-from sympy.solvers.inequalities import (reduce_inequalities,
-                                        solve_poly_inequality as psolve,
-                                        reduce_rational_inequalities,
-                                        solve_univariate_inequality as isolve,
-                                        reduce_abs_inequality,
-                                        _solve_inequality)
+from sympy.solvers.inequalities import (
+    reduce_inequalities, solve_poly_inequality as psolve,
+    reduce_rational_inequalities, solve_univariate_inequality as isolve,
+    reduce_abs_inequality, _solve_inequality
+)
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
@@ -29,7 +28,6 @@ from sympy.abc import x, y
 from sympy.core.mod import Mod
 
 from sympy.testing.pytest import raises, XFAIL
-
 
 inf = oo.evalf()
 
@@ -41,12 +39,13 @@ def test_solve_poly_inequality():
 
 
 def test_reduce_poly_inequalities_real_interval():
+    assert reduce_rational_inequalities([[Eq(x**2, 0)]], x,
+                                        relational=False) == FiniteSet(0)
+    assert reduce_rational_inequalities([[Le(x**2, 0)]], x,
+                                        relational=False) == FiniteSet(0)
     assert reduce_rational_inequalities(
-        [[Eq(x**2, 0)]], x, relational=False) == FiniteSet(0)
-    assert reduce_rational_inequalities(
-        [[Le(x**2, 0)]], x, relational=False) == FiniteSet(0)
-    assert reduce_rational_inequalities(
-        [[Lt(x**2, 0)]], x, relational=False) == S.EmptySet
+        [[Lt(x**2, 0)]], x, relational=False
+    ) == S.EmptySet
     assert reduce_rational_inequalities(
         [[Ge(x**2, 0)]], x, relational=False) == \
         S.Reals if x.is_real else Interval(-oo, oo)
@@ -57,12 +56,13 @@ def test_reduce_poly_inequalities_real_interval():
         [[Ne(x**2, 0)]], x, relational=False) == \
         FiniteSet(0).complement(S.Reals)
 
-    assert reduce_rational_inequalities(
-        [[Eq(x**2, 1)]], x, relational=False) == FiniteSet(-1, 1)
-    assert reduce_rational_inequalities(
-        [[Le(x**2, 1)]], x, relational=False) == Interval(-1, 1)
-    assert reduce_rational_inequalities(
-        [[Lt(x**2, 1)]], x, relational=False) == Interval(-1, 1, True, True)
+    assert reduce_rational_inequalities([[Eq(x**2, 1)]], x,
+                                        relational=False) == FiniteSet(-1, 1)
+    assert reduce_rational_inequalities([[Le(x**2, 1)]], x,
+                                        relational=False) == Interval(-1, 1)
+    assert reduce_rational_inequalities([[
+        Lt(x**2, 1)
+    ]], x, relational=False) == Interval(-1, 1, True, True)
     assert reduce_rational_inequalities(
         [[Ge(x**2, 1)]], x, relational=False) == \
         Union(Interval(-oo, -1), Interval(1, oo))
@@ -72,12 +72,15 @@ def test_reduce_poly_inequalities_real_interval():
     assert reduce_rational_inequalities(
         [[Ne(x**2, 1)]], x, relational=False) == \
         FiniteSet(-1, 1).complement(S.Reals)
-    assert reduce_rational_inequalities([[Eq(
-        x**2, 1.0)]], x, relational=False) == FiniteSet(-1.0, 1.0).evalf()
     assert reduce_rational_inequalities(
-        [[Le(x**2, 1.0)]], x, relational=False) == Interval(-1.0, 1.0)
-    assert reduce_rational_inequalities([[Lt(
-        x**2, 1.0)]], x, relational=False) == Interval(-1.0, 1.0, True, True)
+        [[Eq(x**2, 1.0)]], x, relational=False
+    ) == FiniteSet(-1.0, 1.0).evalf()
+    assert reduce_rational_inequalities(
+        [[Le(x**2, 1.0)]], x, relational=False
+    ) == Interval(-1.0, 1.0)
+    assert reduce_rational_inequalities(
+        [[Lt(x**2, 1.0)]], x, relational=False
+    ) == Interval(-1.0, 1.0, True, True)
     assert reduce_rational_inequalities(
         [[Ge(x**2, 1.0)]], x, relational=False) == \
         Union(Interval(-inf, -1.0), Interval(1.0, inf))
@@ -91,39 +94,45 @@ def test_reduce_poly_inequalities_real_interval():
 
     s = sqrt(2)
 
-    assert reduce_rational_inequalities([[Lt(
-        x**2 - 1, 0), Gt(x**2 - 1, 0)]], x, relational=False) == S.EmptySet
-    assert reduce_rational_inequalities([[Le(x**2 - 1, 0), Ge(
-        x**2 - 1, 0)]], x, relational=False) == FiniteSet(-1, 1)
+    assert reduce_rational_inequalities(
+        [[Lt(x**2 - 1, 0), Gt(x**2 - 1, 0)]], x, relational=False
+    ) == S.EmptySet
+    assert reduce_rational_inequalities(
+        [[Le(x**2 - 1, 0), Ge(x**2 - 1, 0)]], x, relational=False
+    ) == FiniteSet(-1, 1)
     assert reduce_rational_inequalities(
         [[Le(x**2 - 2, 0), Ge(x**2 - 1, 0)]], x, relational=False
-        ) == Union(Interval(-s, -1, False, False), Interval(1, s, False, False))
+    ) == Union(Interval(-s, -1, False, False), Interval(1, s, False, False))
     assert reduce_rational_inequalities(
         [[Le(x**2 - 2, 0), Gt(x**2 - 1, 0)]], x, relational=False
-        ) == Union(Interval(-s, -1, False, True), Interval(1, s, True, False))
+    ) == Union(Interval(-s, -1, False, True), Interval(1, s, True, False))
     assert reduce_rational_inequalities(
         [[Lt(x**2 - 2, 0), Ge(x**2 - 1, 0)]], x, relational=False
-        ) == Union(Interval(-s, -1, True, False), Interval(1, s, False, True))
+    ) == Union(Interval(-s, -1, True, False), Interval(1, s, False, True))
     assert reduce_rational_inequalities(
         [[Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]], x, relational=False
-        ) == Union(Interval(-s, -1, True, True), Interval(1, s, True, True))
+    ) == Union(Interval(-s, -1, True, True), Interval(1, s, True, True))
     assert reduce_rational_inequalities(
         [[Lt(x**2 - 2, 0), Ne(x**2 - 1, 0)]], x, relational=False
-        ) == Union(Interval(-s, -1, True, True), Interval(-1, 1, True, True),
-        Interval(1, s, True, True))
+    ) == Union(
+        Interval(-s, -1, True, True), Interval(-1, 1, True, True),
+        Interval(1, s, True, True)
+    )
 
     assert reduce_rational_inequalities([[Lt(x**2, -1.)]], x) is S.false
 
 
 def test_reduce_poly_inequalities_complex_relational():
+    assert reduce_rational_inequalities([[Eq(x**2, 0)]], x,
+                                        relational=True) == Eq(x, 0)
+    assert reduce_rational_inequalities([[Le(x**2, 0)]], x,
+                                        relational=True) == Eq(x, 0)
     assert reduce_rational_inequalities(
-        [[Eq(x**2, 0)]], x, relational=True) == Eq(x, 0)
-    assert reduce_rational_inequalities(
-        [[Le(x**2, 0)]], x, relational=True) == Eq(x, 0)
-    assert reduce_rational_inequalities(
-        [[Lt(x**2, 0)]], x, relational=True) == False
-    assert reduce_rational_inequalities(
-        [[Ge(x**2, 0)]], x, relational=True) == And(Lt(-oo, x), Lt(x, oo))
+        [[Lt(x**2, 0)]], x, relational=True
+    ) == False
+    assert reduce_rational_inequalities([[
+        Ge(x**2, 0)
+    ]], x, relational=True) == And(Lt(-oo, x), Lt(x, oo))
     assert reduce_rational_inequalities(
         [[Gt(x**2, 0)]], x, relational=True) == \
         And(Gt(x, -oo), Lt(x, oo), Ne(x, 0))
@@ -188,7 +197,8 @@ def test_reduce_rational_inequalities_real_relational():
 
     # issue sympy/sympy#10237
     assert reduce_rational_inequalities(
-        [[x < oo, x >= 0, -oo < x]], x, relational=False) == Interval(0, oo)
+        [[x < oo, x >= 0, -oo < x]], x, relational=False
+    ) == Interval(0, oo)
 
 
 def test_reduce_abs_inequalities():
@@ -197,11 +207,12 @@ def test_reduce_abs_inequalities():
     assert reduce_inequalities(e) == ans
     assert reduce_inequalities(e, x) == ans
     assert reduce_inequalities(abs(x - 5)) == Eq(x, 5)
-    assert reduce_inequalities(
-        abs(2*x + 3) >= 8) == Or(And(Le(Rational(5, 2), x), Lt(x, oo)),
-        And(Le(x, Rational(-11, 2)), Lt(-oo, x)))
-    assert reduce_inequalities(abs(x - 4) + abs(
-        3*x - 5) < 7) == And(Lt(S.Half, x), Lt(x, 4))
+    assert reduce_inequalities(abs(2*x + 3) >= 8) == Or(
+        And(Le(Rational(5, 2), x), Lt(x, oo)),
+        And(Le(x, Rational(-11, 2)), Lt(-oo, x))
+    )
+    assert reduce_inequalities(abs(x - 4) + abs(3*x - 5) < 7
+                               ) == And(Lt(S.Half, x), Lt(x, 4))
     assert reduce_inequalities(abs(x - 4) + abs(3*abs(x) - 5) < 7) == \
         Or(And(S(-2) < x, x < -1), And(S.Half < x, x < 4))
 
@@ -216,8 +227,7 @@ def test_reduce_inequalities_general():
 
 
 def test_reduce_inequalities_boolean():
-    assert reduce_inequalities(
-        [Eq(x**2, 0), True]) == Eq(x, 0)
+    assert reduce_inequalities([Eq(x**2, 0), True]) == Eq(x, 0)
     assert reduce_inequalities([Eq(x**2, 0), False]) == False
     assert reduce_inequalities(x**2 >= 0) is S.true  # issue 10196
 
@@ -225,7 +235,8 @@ def test_reduce_inequalities_boolean():
 def test_reduce_inequalities_multivariate():
     assert reduce_inequalities([Ge(x**2, 1), Ge(y**2, 1)]) == And(
         Or(And(Le(S.One, x), Lt(x, oo)), And(Le(x, -1), Lt(-oo, x))),
-        Or(And(Le(S.One, y), Lt(y, oo)), And(Le(y, -1), Lt(-oo, y))))
+        Or(And(Le(S.One, y), Lt(y, oo)), And(Le(y, -1), Lt(-oo, y)))
+    )
 
 
 def test_reduce_inequalities_errors():
@@ -235,7 +246,8 @@ def test_reduce_inequalities_errors():
 
 def test__solve_inequalities():
     assert reduce_inequalities(x + y < 1, symbols=[x]) == (x < 1 - y)
-    assert reduce_inequalities(x + y >= 1, symbols=[x]) == (x < oo) & (x >= -y + 1)
+    assert reduce_inequalities(x + y >= 1,
+                               symbols=[x]) == (x < oo) & (x >= -y + 1)
     assert reduce_inequalities(Eq(0, x - y), symbols=[x]) == Eq(x, y)
     assert reduce_inequalities(Ne(0, x - y), symbols=[x]) == Ne(x, y)
 
@@ -276,10 +288,11 @@ def test_issue_5526():
 
 
 def test_solve_univariate_inequality():
-    assert isolve(x**2 >= 4, x, relational=False) == Union(Interval(-oo, -2),
-        Interval(2, oo))
-    assert isolve(x**2 >= 4, x) == Or(And(Le(2, x), Lt(x, oo)), And(Le(x, -2),
-        Lt(-oo, x)))
+    assert isolve(x**2 >= 4, x, relational=False
+                  ) == Union(Interval(-oo, -2), Interval(2, oo))
+    assert isolve(x**2 >= 4, x) == Or(
+        And(Le(2, x), Lt(x, oo)), And(Le(x, -2), Lt(-oo, x))
+    )
     assert isolve((x - 1)*(x - 2)*(x - 3) >= 0, x, relational=False) == \
         Union(Interval(1, 2), Interval(3, oo))
     assert isolve((x - 1)*(x - 2)*(x - 3) >= 0, x) == \
@@ -294,10 +307,12 @@ def test_solve_univariate_inequality():
     assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
         Interval(1, oo, True)
     #issue 13105
-    assert isolve((x + I)*(x + 2*I) < 0, x) == Eq(x, 0)
-    assert isolve(((x - 1)*(x - 2) + I)*((x - 1)*(x - 2) + 2*I) < 0, x) == Or(Eq(x, 1), Eq(x, 2))
-    assert isolve((((x - 1)*(x - 2) + I)*((x - 1)*(x - 2) + 2*I))/(x - 2) > 0, x) == Eq(x, 1)
-    raises (ValueError, lambda: isolve((x**2 - 3*x*I + 2)/x < 0, x))
+    assert isolve((x+I)*(x + 2*I) < 0, x) == Eq(x, 0)
+    assert isolve(((x-1)*(x-2) + I)*((x-1)*(x-2) + 2*I) < 0,
+                  x) == Or(Eq(x, 1), Eq(x, 2))
+    assert isolve((((x-1)*(x-2) + I)*((x-1)*(x-2) + 2*I))/(x-2) > 0,
+                  x) == Eq(x, 1)
+    raises(ValueError, lambda: isolve((x**2 - 3*x*I + 2)/x < 0, x))
 
     # numerical testing in valid() is needed
     assert isolve(x**7 - x - 2 > 0, x) == \
@@ -306,13 +321,15 @@ def test_solve_univariate_inequality():
     # handle numerator and denominator; although these would be handled as
     # rational inequalities, these test confirm that the right thing is done
     # when the domain is EX (e.g. when 2 is replaced with sqrt(2))
-    assert isolve(1/(x - 2) > 0, x) == And(S(2) < x, x < oo)
-    den = ((x - 1)*(x - 2)).expand()
+    assert isolve(1/(x-2) > 0, x) == And(S(2) < x, x < oo)
+    den = ((x-1)*(x-2)).expand()
     assert isolve((x - 1)/den <= 0, x) == \
         (x > -oo) & (x < 2) & Ne(x, 1)
 
     n = Dummy('n')
-    raises(NotImplementedError, lambda: isolve(Abs(x) <= n, x, relational=False))
+    raises(
+        NotImplementedError, lambda: isolve(Abs(x) <= n, x, relational=False)
+    )
     c1 = Dummy("c1", positive=True)
     raises(NotImplementedError, lambda: isolve(n/c1 < 0, c1))
     n = Dummy('n', negative=True)
@@ -322,19 +339,19 @@ def test_solve_univariate_inequality():
 
     zero = cos(1)**2 + sin(1)**2 - 1
     raises(NotImplementedError, lambda: isolve(x**2 < zero, x))
-    raises(NotImplementedError, lambda: isolve(
-        x**2 < zero*I, x))
-    raises(NotImplementedError, lambda: isolve(1/(x - y) < 2, x))
-    raises(NotImplementedError, lambda: isolve(1/(x - y) < 0, x))
+    raises(NotImplementedError, lambda: isolve(x**2 < zero*I, x))
+    raises(NotImplementedError, lambda: isolve(1/(x-y) < 2, x))
+    raises(NotImplementedError, lambda: isolve(1/(x-y) < 0, x))
     raises(TypeError, lambda: isolve(x - I < 0, x))
 
-    zero = x**2 + x - x*(x + 1)
+    zero = x**2 + x - x*(x+1)
     assert isolve(zero < 0, x, relational=False) is S.EmptySet
     assert isolve(zero <= 0, x, relational=False) is S.Reals
 
     # make sure iter_solutions gets a default value
-    raises(NotImplementedError, lambda: isolve(
-        Eq(cos(x)**2 + sin(x)**2, 1), x))
+    raises(
+        NotImplementedError, lambda: isolve(Eq(cos(x)**2 + sin(x)**2, 1), x)
+    )
 
 
 def test_trig_inequalities():
@@ -388,15 +405,17 @@ def test_issue_8974():
 
 
 def test_issue_10198():
-    assert reduce_inequalities(
-        -1 + 1/abs(1/x - 1) < 0) == (x > -oo) & (x < 1/2) & Ne(x, 0)
+    assert reduce_inequalities(-1 + 1/abs(1/x - 1) < 0
+                               ) == (x > -oo) & (x < 1/2) & Ne(x, 0)
 
     assert reduce_inequalities(abs(1/sqrt(x)) - 1, x) == Eq(x, 1)
     assert reduce_abs_inequality(-3 + 1/abs(1 - 1/x), '<', x) == \
         Or(And(-oo < x, x < 0),
         And(S.Zero < x, x < Rational(3, 4)), And(Rational(3, 2) < x, x < oo))
-    raises(ValueError,lambda: reduce_abs_inequality(-3 + 1/abs(
-        1 - 1/sqrt(x)), '<', x))
+    raises(
+        ValueError,
+        lambda: reduce_abs_inequality(-3 + 1/abs(1 - 1/sqrt(x)), '<', x)
+    )
 
 
 def test_issue_10047():
@@ -424,8 +443,8 @@ def test_isolve_Sets():
 def test_integer_domain_relational_isolve():
 
     dom = FiniteSet(0, 3)
-    x = Symbol('x',zero=False)
-    assert isolve((x - 1)*(x - 2)*(x - 4) < 0, x, domain=dom) == Eq(x, 3)
+    x = Symbol('x', zero=False)
+    assert isolve((x-1)*(x-2)*(x-4) < 0, x, domain=dom) == Eq(x, 3)
 
     x = Symbol('x')
     assert isolve(x + 2 < 0, x, domain=S.Integers) == \
@@ -455,13 +474,12 @@ def test__solve_inequality():
     assert _solve_inequality(Eq(2*x - 1, x), x) == Eq(x, 1)
     ie = Eq(S.One, y)
     assert _solve_inequality(ie, x) == ie
-    for fx in (x**2, exp(x), sin(x) + cos(x), x*(1 + x)):
+    for fx in (x**2, exp(x), sin(x) + cos(x), x*(1+x)):
         for c in (0, 1):
             e = 2*fx - c > 0
-            assert _solve_inequality(e, x, linear=True) == (
-                fx > c/S(2))
-    assert _solve_inequality(2*x**2 + 2*x - 1 < 0, x, linear=True) == (
-        x*(x + 1) < S.Half)
+            assert _solve_inequality(e, x, linear=True) == (fx > c/S(2))
+    assert _solve_inequality(2*x**2 + 2*x - 1 < 0, x,
+                             linear=True) == (x*(x+1) < S.Half)
     assert _solve_inequality(Eq(x*y, 1), x) == Eq(x*y, 1)
     nz = Symbol('nz', nonzero=True)
     assert _solve_inequality(Eq(x*nz, 1), x) == Eq(x, 1/nz)

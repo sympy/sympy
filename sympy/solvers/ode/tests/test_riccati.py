@@ -13,12 +13,13 @@ from sympy.polys.polytools import Poly
 from sympy.simplify.ratsimp import ratsimp
 from sympy.solvers.ode.subscheck import checkodesol
 from sympy.testing.pytest import slow
-from sympy.solvers.ode.riccati import (riccati_normal, riccati_inverse_normal,
-    riccati_reduced, match_riccati, inverse_transform_poly, limit_at_inf,
-    check_necessary_conds, val_at_inf, construct_c_case_1,
-    construct_c_case_2, construct_c_case_3, construct_d_case_4,
-    construct_d_case_5, construct_d_case_6, rational_laurent_series,
-    solve_riccati)
+from sympy.solvers.ode.riccati import (
+    riccati_normal, riccati_inverse_normal, riccati_reduced, match_riccati,
+    inverse_transform_poly, limit_at_inf, check_necessary_conds, val_at_inf,
+    construct_c_case_1, construct_c_case_2, construct_c_case_3,
+    construct_d_case_4, construct_d_case_5, construct_d_case_6,
+    rational_laurent_series, solve_riccati
+)
 
 f = Function('f')
 x = symbols('x')
@@ -26,12 +27,13 @@ x = symbols('x')
 # These are the functions used to generate the tests
 # SHOULD NOT BE USED DIRECTLY IN TESTS
 
+
 def rand_rational(maxint):
     return Rational(randint(-maxint, maxint), randint(1, maxint))
 
 
 def rand_poly(x, degree, maxint):
-    return Poly([rand_rational(maxint) for _ in range(degree+1)], x)
+    return Poly([rand_rational(maxint) for _ in range(degree + 1)], x)
 
 
 def rand_rational_function(x, degree, maxint):
@@ -41,7 +43,7 @@ def rand_rational_function(x, degree, maxint):
     den = rand_poly(x, degden, maxint)
     while den == Poly(0, x):
         den = rand_poly(x, degden, maxint)
-    return num / den
+    return num/den
 
 
 def find_riccati_ode(ratfunc, x, yf):
@@ -59,6 +61,7 @@ def find_riccati_ode(ratfunc, x, yf):
 
 
 # Testing functions start
+
 
 def test_riccati_transformation():
     """
@@ -291,34 +294,32 @@ def test_val_at_inf():
     3. val_inf - Valuation of rational function at oo
     """
     tests = [
-    # degree(denom) > degree(numer)
-    (
-        Poly(10*x**3 + 8*x**2 - 13*x + 6, x),
-        Poly(-13*x**10 - x**9 + 5*x**8 + 7*x**7 + 10*x**6 + 6*x**5 - 7*x**4 + 11*x**3 - 8*x**2 + 5*x + 13, x),
-         7
-    ),
-    (
-        Poly(1, x),
-        Poly(-9*x**4 + 3*x**3 + 15*x**2 - 6*x - 14, x),
-         4
-    ),
-    # degree(denom) == degree(numer)
-    (
-        Poly(-6*x**3 - 8*x**2 + 8*x - 6, x),
-        Poly(-5*x**3 + 12*x**2 - 6*x - 9, x),
-         0
-    ),
-    # degree(denom) < degree(numer)
-    (
-        Poly(12*x**8 - 12*x**7 - 11*x**6 + 8*x**5 + 3*x**4 - x**3 + x**2 - 11*x, x),
-        Poly(-14*x**2 + x, x),
-         -6
-    ),
-    (
-        Poly(5*x**6 + 9*x**5 - 11*x**4 - 9*x**3 + x**2 - 4*x + 4, x),
-        Poly(15*x**4 + 3*x**3 - 8*x**2 + 15*x + 12, x),
-         -2
-    )]
+        # degree(denom) > degree(numer)
+        (
+            Poly(10*x**3 + 8*x**2 - 13*x + 6, x),
+            Poly(
+                -13*x**10 - x**9 + 5*x**8 + 7*x**7 + 10*x**6 + 6*x**5 -
+                7*x**4 + 11*x**3 - 8*x**2 + 5*x + 13, x
+            ), 7
+        ),
+        (Poly(1, x), Poly(-9*x**4 + 3*x**3 + 15*x**2 - 6*x - 14, x), 4),
+        # degree(denom) == degree(numer)
+        (
+            Poly(-6*x**3 - 8*x**2 + 8*x - 6,
+                 x), Poly(-5*x**3 + 12*x**2 - 6*x - 9, x), 0
+        ),
+        # degree(denom) < degree(numer)
+        (
+            Poly(
+                12*x**8 - 12*x**7 - 11*x**6 + 8*x**5 + 3*x**4 - x**3 + x**2 -
+                11*x, x
+            ), Poly(-14*x**2 + x, x), -6
+        ),
+        (
+            Poly(5*x**6 + 9*x**5 - 11*x**4 - 9*x**3 + x**2 - 4*x + 4,
+                 x), Poly(15*x**4 + 3*x**3 - 8*x**2 + 15*x + 12, x), -2
+        )
+    ]
     for num, den, val in tests:
         assert val_at_inf(num, den, x) == val
 
@@ -575,7 +576,7 @@ def test_construct_d_case_4():
     )]
     for num, den, mul, d in tests:
         ser = rational_laurent_series(num, den, x, oo, mul, 1)
-        assert construct_d_case_4(ser, mul//2) == d
+        assert construct_d_case_4(ser, mul // 2) == d
 
 
 def test_construct_d_case_5():
@@ -590,21 +591,22 @@ def test_construct_d_case_5():
     3. d - The d-vector.
     """
     tests = [
-    (
-        Poly(2*x**3 + x**2 + x - 2, x, extension=True),
-        Poly(9*x**3 + 5*x**2 + 2*x - 1, x, extension=True),
-        [[sqrt(2)/3, -sqrt(2)/108], [-sqrt(2)/3, sqrt(2)/108]]
-    ),
-    (
-        Poly(3*x**5 + x**4 - x**3 + x**2 - 2*x - 2, x, domain='ZZ'),
-        Poly(9*x**5 + 7*x**4 + 3*x**3 + 2*x**2 + 5*x + 7, x, domain='ZZ'),
-        [[sqrt(3)/3, -2*sqrt(3)/27], [-sqrt(3)/3, 2*sqrt(3)/27]]
-    ),
-    (
-        Poly(x**2 - x + 1, x, domain='ZZ'),
-        Poly(3*x**2 + 7*x + 3, x, domain='ZZ'),
-        [[sqrt(3)/3, -5*sqrt(3)/9], [-sqrt(3)/3, 5*sqrt(3)/9]]
-    )]
+        (
+            Poly(2*x**3 + x**2 + x - 2, x, extension=True),
+            Poly(9*x**3 + 5*x**2 + 2*x - 1, x, extension=True),
+            [[sqrt(2)/3, -sqrt(2)/108], [-sqrt(2)/3, sqrt(2)/108]]
+        ),
+        (
+            Poly(3*x**5 + x**4 - x**3 + x**2 - 2*x - 2, x, domain='ZZ'),
+            Poly(9*x**5 + 7*x**4 + 3*x**3 + 2*x**2 + 5*x + 7, x, domain='ZZ'),
+            [[sqrt(3)/3, -2*sqrt(3)/27], [-sqrt(3)/3, 2*sqrt(3)/27]]
+        ),
+        (
+            Poly(x**2 - x + 1, x,
+                 domain='ZZ'), Poly(3*x**2 + 7*x + 3, x, domain='ZZ'),
+            [[sqrt(3)/3, -5*sqrt(3)/9], [-sqrt(3)/3, 5*sqrt(3)/9]]
+        )
+    ]
     for num, den, d in tests:
         # Multiplicity of oo is 0
         ser = rational_laurent_series(num, den, x, oo, 0, 1)
