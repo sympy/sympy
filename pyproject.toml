@@ -1,4 +1,5 @@
 [tool.black]
+experimental-string-processing = true
 target-version = [
     "py36",
     "py37",
