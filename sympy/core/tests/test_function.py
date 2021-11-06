@@ -623,8 +623,7 @@ def test_issue_5399():
 
 
 def test_derivative_numerically():
-    from sympy.core.random import random
-    z0 = random() + I*random()
+    z0 = x._random()
     assert abs(Derivative(sin(x), x).doit_numerically(z0) - cos(z0)) < 1e-15
 
 
