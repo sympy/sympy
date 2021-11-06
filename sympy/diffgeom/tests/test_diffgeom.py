@@ -134,6 +134,12 @@ def test_R3():
         #TODO assert m == R3_c.coord_tuple_transform_to(R3_s, R3_s.coord_tuple_transform_to(R3_c, m)).applyfunc(simplify)
 
 
+def test_CoordinateSymbol():
+    x, y = R2_r.symbols
+    r, theta = R2_p.symbols
+    assert y.rewrite(R2_p) == r*sin(theta)
+
+
 def test_point():
     x, y = symbols('x, y')
     p = R2_r.point([x, y])
@@ -312,3 +318,10 @@ def test_simplify():
     assert simplify(dx*dy) == dx*dy
     assert simplify(ex*ey) == ex*ey
     assert ((1-x)*dx)/(1-x)**2 == dx/(1-x)
+
+
+def test_issue_17917():
+    X = R2.x*R2.e_x - R2.y*R2.e_y
+    Y = (R2.x**2 + R2.y**2)*R2.e_x - R2.x*R2.y*R2.e_y
+    assert LieDerivative(X, Y).expand() == (
+        R2.x**2*R2.e_x - 3*R2.y**2*R2.e_x - R2.x*R2.y*R2.e_y)

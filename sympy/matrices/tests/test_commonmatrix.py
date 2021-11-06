@@ -2,6 +2,7 @@ from sympy.assumptions import Q
 from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.function import Function
+from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.core.numbers import I, Integer, oo, pi, Rational
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, symbols
@@ -11,7 +12,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices.common import (ShapeError, NonSquareMatrixError,
     _MinimalMatrix, _CastableMatrix, MatrixShaping, MatrixProperties,
-    MatrixOperations, MatrixArithmetic, MatrixSpecial)
+    MatrixOperations, MatrixArithmetic, MatrixSpecial, MatrixKind)
 from sympy.matrices.matrices import MatrixCalculus
 from sympy.matrices import (Matrix, diag, eye,
     matrix_multiply_elementwise, ones, zeros, SparseMatrix, banded,
@@ -20,7 +21,7 @@ from sympy.matrices import (Matrix, diag, eye,
 from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import flatten
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
-from sympy import Array
+from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray as Array
 
 from sympy.abc import x, y, z
 
@@ -98,6 +99,16 @@ def test__MinimalMatrix():
     assert _MinimalMatrix([(1, 2, 3), (4, 5, 6)]) == x
     assert _MinimalMatrix(((1, 2, 3), (4, 5, 6))) == x
     assert not (_MinimalMatrix([[1, 2], [3, 4], [5, 6]]) == x)
+
+
+def test_kind():
+    assert Matrix([[1, 2], [3, 4]]).kind == MatrixKind(NumberKind)
+    assert Matrix([[0, 0], [0, 0]]).kind == MatrixKind(NumberKind)
+    assert Matrix(0, 0, []).kind == MatrixKind(NumberKind)
+    assert Matrix([[x]]).kind == MatrixKind(NumberKind)
+    assert Matrix([[1, Matrix([[1]])]]).kind == MatrixKind(UndefinedKind)
+    assert SparseMatrix([[1]]).kind == MatrixKind(NumberKind)
+    assert SparseMatrix([[1, Matrix([[1]])]]).kind == MatrixKind(UndefinedKind)
 
 
 # ShapingOnlyMatrix tests
@@ -561,6 +572,10 @@ def test_simplify():
     assert M.simplify() == Matrix([[eq]])
     assert M.simplify(ratio=oo) == Matrix([[eq.simplify(ratio=oo)]])
 
+    # https://github.com/sympy/sympy/issues/19353
+    m = Matrix([[30, 2], [3, 4]])
+    assert (1/(m.trace())).simplify() == Rational(1, 34)
+
 
 def test_subs():
     assert OperationsOnlyMatrix([[1, x], [x, 4]]).subs(x, 5) == Matrix([[1, 5], [5, 4]])
@@ -774,6 +789,15 @@ def test_multiplication():
         assert c[0, 1] == 2*5
         assert c[1, 0] == 3*5
         assert c[1, 1] == 0
+
+    # https://github.com/sympy/sympy/issues/22353
+    A = Matrix(ones(3, 1))
+    _h = -Rational(1, 2)
+    B = Matrix([_h, _h, _h])
+    assert A.multiply_elementwise(B) == Matrix([
+        [_h],
+        [_h],
+        [_h]])
 
 
 def test_matmul():

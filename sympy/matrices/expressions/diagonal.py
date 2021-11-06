@@ -2,6 +2,7 @@ from sympy.core.sympify import _sympify
 
 from sympy.matrices.expressions import MatrixExpr
 from sympy.core import S, Eq, Ge
+from sympy.core.mul import Mul
 from sympy.functions.special.tensor_functions import KroneckerDelta
 
 
@@ -187,13 +188,15 @@ class DiagMatrix(MatrixExpr):
         return self
 
     def as_explicit(self):
-        from sympy import diag
+        from sympy.matrices.dense import diag
         return diag(*list(self._vector.as_explicit()))
 
     def doit(self, **hints):
         from sympy.assumptions import ask, Q
-        from sympy import Transpose, Mul, MatMul
-        from sympy import MatrixBase, eye
+        from sympy.matrices.expressions.matmul import MatMul
+        from sympy.matrices.expressions.transpose import Transpose
+        from sympy.matrices.dense import eye
+        from sympy.matrices.matrices import MatrixBase
         vector = self._vector
         # This accounts for shape (1, 1) and identity matrices, among others:
         if ask(Q.diagonal(vector)):

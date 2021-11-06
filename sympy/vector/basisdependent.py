@@ -1,9 +1,11 @@
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 from sympy.simplify import simplify as simp, trigsimp as tsimp
 from sympy.core.decorators import call_highest_priority, _sympifyit
 from sympy.core.assumptions import StdFactKB
-from sympy import factor as fctr, diff as df, Integral
+from sympy.core.function import diff as df
+from sympy.integrals.integrals import Integral
+from sympy.polys.polytools import factor as fctr
 from sympy.core import S, Add, Mul
 from sympy.core.expr import Expr
 
@@ -299,7 +301,7 @@ class BasisDependentZero(BasisDependent):
     """
     # XXX: Can't type the keys as BaseVector because of cyclic import
     # problems.
-    components = {}  # type: Dict[Any, Expr]
+    components = {}  # type: tDict[Any, Expr]
 
     def __new__(cls):
         obj = super().__new__(cls)

@@ -27,7 +27,7 @@ def minisat22_satisfiable(expr, all_models=False, minimal=False):
         return {expr.symbols[abs(lit) - 1]: lit > 0 for lit in r.get_model()}
 
     else:
-        # Make solutions sympy compatible by creating a generator
+        # Make solutions SymPy compatible by creating a generator
         def _gen(results):
             satisfiable = False
             while results.solve():

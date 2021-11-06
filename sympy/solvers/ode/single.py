@@ -5,14 +5,14 @@
 import typing
 if typing.TYPE_CHECKING:
     from typing import ClassVar
-from typing import Dict, Type
+from typing import Dict as tDict, Type, Iterator, List, Optional
 
-from typing import Iterator, List, Optional
+from .riccati import match_riccati, solve_riccati
 from sympy.core import Add, S, Pow, Rational
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, _mexpand
-from sympy.core.numbers import Float, zoo
+from sympy.core.numbers import zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
 from sympy.core.mul import Mul
@@ -20,7 +20,7 @@ from sympy.functions import exp, tan, log, sqrt, besselj, bessely, cbrt, airyai,
 from sympy.integrals import Integral
 from sympy.polys import Poly
 from sympy.polys.polytools import cancel, factor, degree
-from sympy.simplify import collect, simplify, separatevars, logcombine, posify
+from sympy.simplify import collect, simplify, separatevars, logcombine, posify # type: ignore
 from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
 from sympy.solvers.solvers import solve
@@ -291,7 +291,7 @@ class SingleODESolver:
 
     def get_general_solution(self, *, simplify: bool = True) -> List[Equality]:
         if not self.matches():
-            msg = "%s solver can not solve:\n%s"
+            msg = "%s solver cannot solve:\n%s"
             raise ODEMatchError(msg % (self.hint, self.ode_problem.eq))
         return self._get_general_solution(simplify_flag=simplify)
 
@@ -433,7 +433,7 @@ class NthAlgebraic(SingleODESolver):
     # be stored in cached results we need to ensure that we always get the
     # same class back for each particular integration variable so we store these
     # classes in a global dict:
-    _diffx_stored = {}  # type: Dict[Symbol, Type[Function]]
+    _diffx_stored = {}  # type: tDict[Symbol, Type[Function]]
 
     @staticmethod
     def _get_diffx(var):
@@ -764,19 +764,19 @@ class Bernoulli(SinglePatternODESolver):
         P(x)*f(x) + --(f(x)) = Q(x)*f (x)
                     dx
         >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=110)
-                                                                                                              -1
-                                                                                                             -----
-                                                                                                             n - 1
-               //         /                                /                           \                    \
-               ||        |                                |                            |                    |
-               ||        |                 /              |                 /          |            /       |
-               ||        |                |               |                |           |           |        |
-               ||        |       (1 - n)* | P(x) dx       |       (1 - n)* | P(x) dx   |  (n - 1)* | P(x) dx|
-               ||        |                |               |                |           |           |        |
-               ||        |               /                |               /            |          /         |
-        f(x) = ||C1 - n* | Q(x)*e                   dx +  | Q(x)*e                   dx|*e                  |
-               ||        |                                |                            |                    |
-               \\       /                                /                             /                    /
+                                                                                                                -1
+                                                                                                               -----
+                                                                                                               n - 1
+               //         /                                 /                            \                    \
+               ||        |                                 |                             |                    |
+               ||        |                  /              |                  /          |            /       |
+               ||        |                 |               |                 |           |           |        |
+               ||        |       -(n - 1)* | P(x) dx       |       -(n - 1)* | P(x) dx   |  (n - 1)* | P(x) dx|
+               ||        |                 |               |                 |           |           |        |
+               ||        |                /                |                /            |          /         |
+        f(x) = ||C1 - n* | Q(x)*e                    dx +  | Q(x)*e                    dx|*e                  |
+               ||        |                                 |                             |                    |
+               \\       /                                 /                              /                    /
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
@@ -875,13 +875,12 @@ class Factorable(SingleODESolver):
     has_integral = False
 
     def _matches(self):
-        eq = self.ode_problem.eq
+        eq_orig = self.ode_problem.eq
         f = self.ode_problem.func.func
         x = self.ode_problem.sym
-        order =self.ode_problem.order
         df = f(x).diff(x)
         self.eqs = []
-        eq = eq.collect(f(x), func = cancel)
+        eq = eq_orig.collect(f(x), func = cancel)
         eq = fraction(factor(eq))[0]
         factors = Mul.make_args(factor(eq))
         roots = [fac.as_base_exp() for fac in factors if len(fac.args)!=0]
@@ -894,13 +893,9 @@ class Factorable(SingleODESolver):
         roots = solve(eq, df)
         if len(roots)>0:
             self.eqs = [(df - root) for root in roots]
-            if len(self.eqs)==1:
-                if order>1:
-                    return False
-                if self.eqs[0].has(Float):
-                    return False
-                return fraction(factor(self.eqs[0]))[0]-eq!=0
-            return True
+            # Avoid infinite recursion
+            matches = self.eqs != [eq_orig]
+            return matches
         for i in factors:
             if i.has(f(x)):
                 self.eqs.append(i)
@@ -947,7 +942,7 @@ class RiccatiSpecial(SinglePatternODESolver):
     >>> f = Function('f')
     >>> y = f(x)
     >>> genform = a*y.diff(x) - (b*y**2 + c*y/x + d/x**2)
-    >>> sol = dsolve(genform, y)
+    >>> sol = dsolve(genform, y, hint="Riccati_special_minus2")
     >>> pprint(sol, wrap_line=False)
             /                                 /        __________________       \\
             |           __________________    |       /                2        ||
@@ -963,9 +958,9 @@ class RiccatiSpecial(SinglePatternODESolver):
     References
     ==========
 
-    1. http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
-    2. http://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
-       http://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
+    - http://www.maplesoft.com/support/help/Maple/view.aspx?path=odeadvisor/Riccati
+    - http://eqworld.ipmnet.ru/en/solutions/ode/ode0106.pdf -
+      http://eqworld.ipmnet.ru/en/solutions/ode/ode0123.pdf
     """
     hint = "Riccati_special_minus2"
     has_integral = False
@@ -991,6 +986,76 @@ class RiccatiSpecial(SinglePatternODESolver):
 
         gensol = Eq(fx, (a - c - mu*tan(mu/(2*a)*log(x) + C1))/(2*b*x))
         return [gensol]
+
+
+class RationalRiccati(SinglePatternODESolver):
+    r"""
+    Gives general solutions to the first order Riccati differential
+    equations that have atleast one rational particular solution.
+
+    .. math :: y' = b_0(x) + b_1(x) y + b_2(x) y^2
+
+    where `b_0`, `b_1` and `b_2` are rational functions of `x`
+    with `b_2 \ne 0` (`b_2 = 0` would make it a Bernoulli equation).
+
+    Examples
+    ========
+
+    >>> from sympy import Symbol, Function, dsolve, checkodesol
+    >>> f = Function('f')
+    >>> x = Symbol('x')
+
+    >>> eq = -x**4*f(x)**2 + x**3*f(x).diff(x) + x**2*f(x) + 20
+    >>> sol = dsolve(eq, hint="1st_rational_riccati")
+    >>> sol
+    Eq(f(x), (4*C1 - 5*x**9 - 4)/(x**2*(C1 + x**9 - 1)))
+    >>> checkodesol(eq, sol)
+    (True, 0)
+
+    References
+    ==========
+
+    - Riccati ODE:  https://en.wikipedia.org/wiki/Riccati_equation
+    - N. Thieu Vo - Rational and Algebraic Solutions of First-Order Algebraic ODEs:
+      Algorithm 11, pp. 78 - https://www3.risc.jku.at/publications/download/risc_5387/PhDThesisThieu.pdf
+    """
+    has_integral = False
+    hint = "1st_rational_riccati"
+    order = [1]
+
+    def _wilds(self, f, x, order):
+        b0 = Wild('b0', exclude=[f(x), f(x).diff(x)])
+        b1 = Wild('b1', exclude=[f(x), f(x).diff(x)])
+        b2 = Wild('b2', exclude=[f(x), f(x).diff(x)])
+        return (b0, b1, b2)
+
+    def _equation(self, fx, x, order):
+        b0, b1, b2 = self.wilds()
+        return fx.diff(x) - b0 - b1*fx - b2*fx**2
+
+    def _matches(self):
+        eq = self.ode_problem.eq_expanded
+        f = self.ode_problem.func.func
+        x = self.ode_problem.sym
+        order = self.ode_problem.order
+
+        if order != 1:
+            return False
+
+        match, funcs = match_riccati(eq, f, x)
+        if not match:
+            return False
+        _b0, _b1, _b2 = funcs
+        b0, b1, b2 = self.wilds()
+        self._wilds_match = match = {b0: _b0, b1: _b1, b2: _b2}
+        return True
+
+    def _get_general_solution(self, *, simplify_flag: bool = True):
+        # Match the equation
+        b0, b1, b2 = self.wilds_match()
+        fx = self.ode_problem.func
+        x = self.ode_problem.sym
+        return solve_riccati(fx, x, b0, b1, b2, gensol=True)
 
 
 class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
@@ -1025,7 +1090,7 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
     References
     ==========
 
-    http://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
+    - http://eqworld.ipmnet.ru/en/solutions/ode/ode0301.pdf
     """
     hint = "2nd_nonlinear_autonomous_conserved"
     has_integral = True
@@ -1629,7 +1694,7 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
     def _get_general_solution(self, *, simplify_flag: bool = True):
         d, e, fx, x, u, u1, y, xarg, yarg = self._get_match_object()
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
-        int = Integral(simplify((-d/(e + u1*d)).subs({x: u1, y: 1})), (u1, None, x/fx))
+        int = Integral(simplify((-d/(e + u1*d)).subs({x: u1, y: 1})), (u1, None, x/fx)) # type: ignore
         sol = logcombine(Eq(log(fx), int + log(C1)), force=True)
         gen_sol = sol.subs(fx, u).subs(((u, u - yarg), (x, x - xarg), (u, fx)))
         return [gen_sol]
@@ -2422,8 +2487,8 @@ class NthLinearEulerEqHomogeneous(SingleODESolver):
             coeff = match[order]
             factor = x**order / coeff
             self.r = {i: factor*match[i] for i in match}
-        if self.r and not any(not _test_term(self.r[i], f(x), i) for i in
-                self.r if i >= 0):
+        if self.r and all(_test_term(self.r[i], f(x), i) for i in
+                          self.r if i >= 0):
             if not self.r[-1]:
                 does_match = True
         return does_match
@@ -2505,8 +2570,8 @@ class NthLinearEulerEqNonhomogeneousVariationOfParameters(SingleODESolver):
             coeff = match[order]
             factor = x**order / coeff
             self.r = {i: factor*match[i] for i in match}
-        if self.r and not any(not _test_term(self.r[i], f(x), i) for i in
-                self.r if i >= 0):
+        if self.r and all(_test_term(self.r[i], f(x), i) for i in
+                          self.r if i >= 0):
             if self.r[-1]:
                 does_match = True
 
@@ -2586,8 +2651,8 @@ class NthLinearEulerEqNonhomogeneousUndeterminedCoefficients(SingleODESolver):
             coeff = match[order]
             factor = x**order / coeff
             self.r = {i: factor*match[i] for i in match}
-        if self.r and not any(not _test_term(self.r[i], f(x), i) for i in
-                self.r if i >= 0):
+        if self.r and all(_test_term(self.r[i], f(x), i) for i in
+                          self.r if i >= 0):
             if self.r[-1]:
                 e, re = posify(self.r[-1].subs(x, exp(x)))
                 undetcoeff = _undetermined_coefficients_match(e.subs(re), x)
@@ -2673,7 +2738,7 @@ class SecondLinearBessel(SingleODESolver):
         r = collect(eq,
             [f.diff(x, 2), df, f]).match(deq)
         if order == 2 and r:
-            if not all([r[key].is_polynomial() for key in r]):
+            if not all(r[key].is_polynomial() for key in r):
                 n, d = eq.as_numer_denom()
                 eq = expand(n)
                 r = collect(eq,
@@ -2898,6 +2963,36 @@ class LieGroup(SingleODESolver):
                 + " the lie group method")
         return desols
 
+
+solver_map = {
+    'factorable': Factorable,
+    'nth_linear_constant_coeff_homogeneous': NthLinearConstantCoeffHomogeneous,
+    'nth_linear_euler_eq_homogeneous': NthLinearEulerEqHomogeneous,
+    'nth_linear_constant_coeff_undetermined_coefficients': NthLinearConstantCoeffUndeterminedCoefficients,
+    'nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients': NthLinearEulerEqNonhomogeneousUndeterminedCoefficients,
+    'separable': Separable,
+    '1st_exact': FirstExact,
+    '1st_linear': FirstLinear,
+    'Bernoulli': Bernoulli,
+    'Riccati_special_minus2': RiccatiSpecial,
+    '1st_rational_riccati': RationalRiccati,
+    '1st_homogeneous_coeff_best': HomogeneousCoeffBest,
+    '1st_homogeneous_coeff_subs_indep_div_dep': HomogeneousCoeffSubsIndepDivDep,
+    '1st_homogeneous_coeff_subs_dep_div_indep': HomogeneousCoeffSubsDepDivIndep,
+    'almost_linear': AlmostLinear,
+    'linear_coefficients': LinearCoefficients,
+    'separable_reduced': SeparableReduced,
+    'nth_linear_constant_coeff_variation_of_parameters': NthLinearConstantCoeffVariationOfParameters,
+    'nth_linear_euler_eq_nonhomogeneous_variation_of_parameters': NthLinearEulerEqNonhomogeneousVariationOfParameters,
+    'Liouville': Liouville,
+    '2nd_linear_airy': SecondLinearAiry,
+    '2nd_linear_bessel': SecondLinearBessel,
+    '2nd_hypergeometric': SecondHypergeometric,
+    'nth_order_reducible': NthOrderReducible,
+    '2nd_nonlinear_autonomous_conserved': SecondNonlinearAutonomousConserved,
+    'nth_algebraic': NthAlgebraic,
+    'lie_group': LieGroup,
+    }
 
 # Avoid circular import:
 from .ode import dsolve, ode_sol_simplicity, odesimp, homogeneous_order

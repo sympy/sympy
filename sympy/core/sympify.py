@@ -2,11 +2,12 @@
 
 import typing
 if typing.TYPE_CHECKING:
-    from typing import Any, Callable, Dict, Type
+    from typing import Any, Callable, Dict as tDict, Type
 
 from inspect import getmro
+import string
+from random import choice
 
-from .compatibility import iterable
 from .parameters import global_parameters
 
 
@@ -25,7 +26,7 @@ class SympifyError(ValueError):
 
 
 # See sympify docstring.
-converter = {}  # type: Dict[Type[Any], Callable[[Any], Basic]]
+converter = {}  # type: tDict[Type[Any], Callable[[Any], Basic]]
 
 
 class CantSympify:
@@ -35,7 +36,8 @@ class CantSympify:
     Examples
     ========
 
-    >>> from sympy.core.sympify import sympify, CantSympify
+    >>> from sympy import sympify
+    >>> from sympy.core.sympify import CantSympify
 
     >>> class Something(dict):
     ...     pass
@@ -77,7 +79,7 @@ def _convert_numpy_types(a, **sympify_args):
             return sympify(a.item(), **sympify_args)
     else:
         try:
-            from sympy.core.numbers import Float
+            from .numbers import Float
             prec = np.finfo(a).nmant + 1
             # E.g. double precision means prec=53 but nmant=52
             # Leading bit of mantissa is always 1, so is not stored
@@ -97,10 +99,10 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     Explanation
     ===========
 
-    It will convert Python ints into instances of sympy.Integer,
-    floats into instances of sympy.Float, etc. It is also able to coerce symbolic
-    expressions which inherit from Basic. This can be useful in cooperation
-    with SAGE.
+    It will convert Python ints into instances of :class:`~.Integer`, floats
+    into instances of :class:`~.Float`, etc. It is also able to coerce
+    symbolic expressions which inherit from :class:`~.Basic`. This can be
+    useful in cooperation with SAGE.
 
     .. warning::
         Note that this function uses ``eval``, and thus shouldn't be used on
@@ -141,7 +143,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     by ``from sympy import *``; anything used in a string that is not
     defined by that import will be converted to a symbol. In the following,
     the ``bitcount`` function is treated as a symbol and the ``O`` is
-    interpreted as the Order object (used with series) and it raises
+    interpreted as the :class:`~.Order` object (used with series) and it raises
     an error when used improperly:
 
     >>> s = 'bitcount(42)'
@@ -175,9 +177,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     If you want *all* single-letter and Greek-letter variables to be symbols
     then you can use the clashing-symbols dictionaries that have been defined
-    there as private variables: _clash1 (single-letter variables), _clash2
-    (the multi-letter Greek names) or _clash (both single and multi-letter
-    names that are defined in abc).
+    there as private variables: ``_clash1`` (single-letter variables),
+    ``_clash2`` (the multi-letter Greek names) or ``_clash`` (both single and
+    multi-letter names that are defined in ``abc``).
 
     >>> from sympy.abc import _clash1
     >>> set(_clash1)
@@ -209,7 +211,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     operators with their SymPy equivalents, so if an operand redefines any
     of those operations, the redefined operators will not be used. If
     argument a is not a string, the mathematical expression is evaluated
-    before being passed to sympify, so adding evaluate=False will still
+    before being passed to sympify, so adding ``evaluate=False`` will still
     return the evaluated result of expression.
 
     >>> sympify('2**2 / 3 + 5')
@@ -287,7 +289,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     that are very different in structure than what was entered. Until such
     autosimplification is no longer done, the ``kernS`` function might be of
     some use. In the example below you can see how an expression reduces to
-    -1 by autosimplification, but does not do so when ``kernS`` is used.
+    $-1$ by autosimplification, but does not do so when ``kernS`` is used.
 
     >>> from sympy.core.sympify import kernS
     >>> from sympy.abc import x
@@ -304,31 +306,31 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     a :
         - any object defined in SymPy
-        - standard numeric python types: int, long, float, Decimal
-        - strings (like "0.09", "2e-19" or 'sin(x)')
+        - standard numeric Python types: ``int``, ``long``, ``float``, ``Decimal``
+        - strings (like ``"0.09"``, ``"2e-19"`` or ``'sin(x)'``)
         - booleans, including ``None`` (will leave ``None`` unchanged)
-        - dict, lists, sets or tuples containing any of the above
+        - dicts, lists, sets or tuples containing any of the above
 
-    convert_xor : boolean, optional
-        If true, treats XOR as exponentiation.
-        If False, treats XOR as XOR itself.
+    convert_xor : bool, optional
+        If true, treats ``^`` as exponentiation.
+        If False, treats ``^`` as XOR itself.
         Used only when input is a string.
 
     locals : any object defined in SymPy, optional
         In order to have strings be recognized it can be imported
         into a namespace dictionary and passed as locals.
 
-    strict : boolean, optional
-        If the option strict is set to True, only the types for which
+    strict : bool, optional
+        If the option strict is set to ``True``, only the types for which
         an explicit conversion has been defined are converted. In the
         other cases, a SympifyError is raised.
 
-    rational : boolean, optional
-        If true, converts floats into Rational.
-        If false, it lets floats remain as it is.
+    rational : bool, optional
+        If ``True``, converts floats into :class:`~.Rational`.
+        If ``False``, it lets floats remain as it is.
         Used only when input is a string.
 
-    evaluate : boolean, optional
+    evaluate : bool, optional
         If False, then arithmetic and operators will be converted into
         their SymPy equivalents. If True the expression will be evaluated
         and the result will be returned.
@@ -387,7 +389,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if _sympy_ is not None:
         try:
             return a._sympy_()
-        # XXX: Catches AttributeError: 'SympyConverter' object has no
+        # XXX: Catches AttributeError: 'SymPyConverter' object has no
         # attribute 'tuple'
         # This is probably a bug somewhere but for now we catch it here.
         except AttributeError:
@@ -400,7 +402,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         if flat is not None:
             shape = getattr(a, "shape", None)
             if shape is not None:
-                from ..tensor.array import Array
+                from sympy.tensor.array import Array
                 return Array(a.flat, a.shape)  # works with e.g. NumPy arrays
 
     if not isinstance(a, str):
@@ -431,6 +433,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     if strict:
         raise SympifyError(a)
+
+    from sympy.utilities.iterables import iterable
 
     if iterable(a):
         try:
@@ -478,10 +482,10 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
 def _sympify(a):
     """
-    Short version of sympify for internal usage for __add__ and __eq__ methods
-    where it is ok to allow some things (like Python integers and floats) in
-    the expression. This excludes things (like strings) that are unwise to
-    allow into such an expression.
+    Short version of :func:`~.sympify` for internal usage for ``__add__`` and
+    ``__eq__`` methods where it is ok to allow some things (like Python
+    integers and floats) in the expression. This excludes things (like strings)
+    that are unwise to allow into such an expression.
 
     >>> from sympy import Integer
     >>> Integer(1) == 1
@@ -531,9 +535,6 @@ def kernS(s):
 
     XXX This hack should not be necessary once issue 4596 has been resolved.
     """
-    import string
-    from random import choice
-    from sympy.core.symbol import Symbol
     hit = False
     quoted = '"' in s or "'" in s
     if '(' in s and not quoted:
@@ -597,6 +598,7 @@ def kernS(s):
     if not hit:
         return expr
 
+    from .symbol import Symbol
     rep = {Symbol(kern): 1}
     def _clear(expr):
         if isinstance(expr, (list, tuple, set)):

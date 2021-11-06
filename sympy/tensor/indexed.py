@@ -105,15 +105,16 @@ See the appropriate docstrings for a detailed explanation of the output.
 #      - Idx with step determined by function call
 from collections.abc import Iterable
 
-from sympy import Number
+from sympy.core.numbers import Number
 from sympy.core.assumptions import StdFactKB
 from sympy.core import Expr, Tuple, sympify, S
 from sympy.core.symbol import _filter_assumptions, Symbol
-from sympy.core.compatibility import (is_sequence, NotIterable)
 from sympy.core.logic import fuzzy_bool, fuzzy_not
 from sympy.core.sympify import _sympify
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.multipledispatch import dispatch
+from sympy.utilities.iterables import is_sequence, NotIterable
+from sympy.utilities.misc import filldedent
 
 
 class IndexException(Exception):
@@ -144,7 +145,6 @@ class Indexed(Expr):
     is_Atom = True
 
     def __new__(cls, base, *args, **kw_args):
-        from sympy.utilities.misc import filldedent
         from sympy.tensor.array.ndim_array import NDimArray
         from sympy.matrices.matrices import MatrixBase
 
@@ -159,7 +159,7 @@ class Indexed(Expr):
                 items (i.e. an object with a `__getitem__` method).
                 """))
         args = list(map(sympify, args))
-        if isinstance(base, (NDimArray, Iterable, Tuple, MatrixBase)) and all([i.is_number for i in args]):
+        if isinstance(base, (NDimArray, Iterable, Tuple, MatrixBase)) and all(i.is_number for i in args):
             if len(args) == 1:
                 return base[args[0]]
             else:
@@ -283,7 +283,6 @@ class Indexed(Expr):
         >>> B[i, j].shape
         (m, m)
         """
-        from sympy.utilities.misc import filldedent
 
         if self.base.shape:
             return self.base.shape
@@ -437,7 +436,8 @@ class IndexedBase(Expr, NotIterable):
         obj._assumptions._generator = tmp_asm_copy  # Issue #8873
 
     def __new__(cls, label, shape=None, *, offset=S.Zero, strides=None, **kw_args):
-        from sympy import MatrixBase, NDimArray
+        from sympy.matrices.matrices import MatrixBase
+        from sympy.tensor.array.ndim_array import NDimArray
 
         assumptions, kw_args = _filter_assumptions(kw_args)
         if isinstance(label, str):
@@ -640,7 +640,6 @@ class Idx(Expr):
     _diff_wrt = True
 
     def __new__(cls, label, range=None, **kw_args):
-        from sympy.utilities.misc import filldedent
 
         if isinstance(label, str):
             label = Symbol(label, integer=True)

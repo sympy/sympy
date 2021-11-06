@@ -4,15 +4,15 @@ Tests for the basic functionality of the SDM class.
 
 from itertools import product
 
-from sympy.core.numbers import oo
-from sympy.core.compatibility import HAS_GMPY
+from sympy.core.singleton import S
+from sympy.external.gmpy import HAS_GMPY
 from sympy.testing.pytest import raises
 
 from sympy.polys.domains import QQ, ZZ, EXRAW
 from sympy.polys.matrices.sdm import SDM
 from sympy.polys.matrices.ddm import DDM
-from sympy.polys.matrices.exceptions import (DDMBadInputError, DDMDomainError,
-        DDMShapeError)
+from sympy.polys.matrices.exceptions import (DMBadInputError, DMDomainError,
+                                             DMShapeError)
 
 
 def test_SDM():
@@ -21,8 +21,8 @@ def test_SDM():
     assert A.shape == (2, 2)
     assert dict(A) == {0:{0:ZZ(1)}}
 
-    raises(DDMBadInputError, lambda: SDM({5:{1:ZZ(0)}}, (2, 2), ZZ))
-    raises(DDMBadInputError, lambda: SDM({0:{5:ZZ(0)}}, (2, 2), ZZ))
+    raises(DMBadInputError, lambda: SDM({5:{1:ZZ(0)}}, (2, 2), ZZ))
+    raises(DMBadInputError, lambda: SDM({0:{5:ZZ(0)}}, (2, 2), ZZ))
 
 
 def test_DDM_str():
@@ -52,8 +52,8 @@ def test_SDM_from_list():
     A = SDM.from_list([[ZZ(0), ZZ(1)], [ZZ(1), ZZ(0)]], (2, 2), ZZ)
     assert A == SDM({0:{1:ZZ(1)}, 1:{0:ZZ(1)}}, (2, 2), ZZ)
 
-    raises(DDMBadInputError, lambda: SDM.from_list([[ZZ(0)], [ZZ(0), ZZ(1)]], (2, 2), ZZ))
-    raises(DDMBadInputError, lambda: SDM.from_list([[ZZ(0), ZZ(1)]], (2, 2), ZZ))
+    raises(DMBadInputError, lambda: SDM.from_list([[ZZ(0)], [ZZ(0), ZZ(1)]], (2, 2), ZZ))
+    raises(DMBadInputError, lambda: SDM.from_list([[ZZ(0), ZZ(1)]], (2, 2), ZZ))
 
 
 def test_SDM_to_list():
@@ -218,8 +218,8 @@ def test_SDM_mul_elementwise():
     Aq = A.convert_to(QQ)
     A1 = SDM({0:{0:ZZ(1)}}, (1, 1), ZZ)
 
-    raises(DDMDomainError, lambda: Aq.mul_elementwise(B))
-    raises(DDMShapeError, lambda: A1.mul_elementwise(B))
+    raises(DMDomainError, lambda: Aq.mul_elementwise(B))
+    raises(DMShapeError, lambda: A1.mul_elementwise(B))
 
 
 def test_SDM_matmul():
@@ -228,7 +228,7 @@ def test_SDM_matmul():
     assert A.matmul(A) == A*A == B
 
     C = SDM({0:{0:ZZ(2)}}, (2, 2), QQ)
-    raises(DDMDomainError, lambda: A.matmul(C))
+    raises(DMDomainError, lambda: A.matmul(C))
 
     A = SDM({0:{0:ZZ(1), 1:ZZ(2)}, 1:{0:ZZ(3), 1:ZZ(4)}}, (2, 2), ZZ)
     B = SDM({0:{0:ZZ(7), 1:ZZ(10)}, 1:{0:ZZ(15), 1:ZZ(22)}}, (2, 2), ZZ)
@@ -244,8 +244,8 @@ def test_SDM_matmul():
     # XXX: @ not supported by SDM...
     #assert A32.matmul(A23) == A32 @ A23 == A33
     #assert A23.matmul(A32) == A23 @ A32 == A22
-    #raises(DDMShapeError, lambda: A23 @ A22)
-    raises(DDMShapeError, lambda: A23.matmul(A22))
+    #raises(DMShapeError, lambda: A23 @ A22)
+    raises(DMShapeError, lambda: A23.matmul(A22))
 
     A = SDM({0: {0: ZZ(-1), 1: ZZ(1)}}, (1, 2), ZZ)
     B = SDM({0: {0: ZZ(-1)}, 1: {0: ZZ(-1)}}, (2, 1), ZZ)
@@ -262,7 +262,7 @@ def test_matmul_exraw():
                 result[i] = row
         return SDM(result, (2, 2), EXRAW)
 
-    values = [-oo, -1, 0, 1, oo]
+    values = [S.NegativeInfinity, S.NegativeOne, S.Zero, S.One, S.Infinity]
     for a, b, c, d in product(*[values]*4):
         Ad = dm({0: {0:a, 1:b}, 1: {0:c, 1:d}})
         Ad2 = dm({0: {0:a*a + b*c, 1:a*b + b*d}, 1:{0:c*a + d*c, 1: c*b + d*d}})
@@ -411,3 +411,34 @@ def test_SDM_particular():
     A = SDM({0:{0:QQ(1)}}, (2, 2), QQ)
     Apart = SDM.zeros((1, 2), QQ)
     assert A.particular() == Apart
+
+
+def test_SDM_is_zero_matrix():
+    A = SDM({0: {0: QQ(1)}}, (2, 2), QQ)
+    Azero = SDM.zeros((1, 2), QQ)
+    assert A.is_zero_matrix() is False
+    assert Azero.is_zero_matrix() is True
+
+
+def test_SDM_is_upper():
+    A = SDM({0: {0: QQ(1), 1: QQ(2), 2: QQ(3), 3: QQ(4)},
+                       1: {1: QQ(5), 2: QQ(6), 3: QQ(7)},
+                                 2: {2: QQ(8), 3: QQ(9)}}, (3, 4), QQ)
+    B = SDM({0: {0: QQ(1), 1: QQ(2), 2: QQ(3), 3: QQ(4)},
+                       1: {1: QQ(5), 2: QQ(6), 3: QQ(7)},
+                       2: {1: QQ(7), 2: QQ(8), 3: QQ(9)}}, (3, 4), QQ)
+    assert A.is_upper() is True
+    assert B.is_upper() is False
+
+
+def test_SDM_is_lower():
+    A = SDM({0: {0: QQ(1), 1: QQ(2), 2: QQ(3), 3: QQ(4)},
+                       1: {1: QQ(5), 2: QQ(6), 3: QQ(7)},
+                                 2: {2: QQ(8), 3: QQ(9)}}, (3, 4), QQ
+            ).transpose()
+    B = SDM({0: {0: QQ(1), 1: QQ(2), 2: QQ(3), 3: QQ(4)},
+                       1: {1: QQ(5), 2: QQ(6), 3: QQ(7)},
+                       2: {1: QQ(7), 2: QQ(8), 3: QQ(9)}}, (3, 4), QQ
+            ).transpose()
+    assert A.is_lower() is True
+    assert B.is_lower() is False

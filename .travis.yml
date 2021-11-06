@@ -47,7 +47,7 @@ jobs:
             - python-scipy
 
     # Tensorflow 1 support
-    - python: 3.6
+    - python: 3.9
       env:
         - TEST_OPT_DEPENDENCY="tensorflow<2 python=3"
         - TEST_TENSORFLOW_1=true
@@ -71,6 +71,7 @@ jobs:
             - librsvg2-bin
             - imagemagick
             - docbook2x
+            - dbus
 
     - python: 3.8
       dist: xenial
@@ -90,7 +91,7 @@ jobs:
 
     # Note: This never actually fails. The benchmark script doesn't report any
     # failure exit code.
-    - python: 3.6
+    - python: 3.9
       dist: xenial
       env:
         - BENCHMARK="true"
@@ -143,7 +144,7 @@ before_install:
         fi
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-    pip install sphinx "docutils" doctr matplotlib sphinx-math-dollar;
+    pip install sphinx "docutils" doctr matplotlib sphinx-math-dollar sphinx-reredirects;
     fi
   - if [[ "${BENCHMARK}" == "true" ]]; then
     pip install asv;

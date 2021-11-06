@@ -35,9 +35,9 @@ import stat
 import tempfile
 import warnings
 from contextlib import contextmanager
+from inspect import unwrap
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import (PY3, unwrap)
 from sympy.external import import_module
 
 IS_WINDOWS = (os.name == 'nt')
@@ -124,7 +124,7 @@ def _report_failure(self, out, test, example, got):
     out(self._failure_header(test, example) + s)
 
 
-if PY3 and IS_WINDOWS:
+if IS_WINDOWS:
     DocTestRunner.report_failure = _report_failure  # type: ignore
 
 
@@ -149,7 +149,7 @@ def convert_to_native_paths(lst):
 
 def get_sympy_dir():
     """
-    Returns the root sympy directory and set the global value
+    Returns the root SymPy directory and set the global value
     indicating whether the system is case sensitive or not.
     """
     this_file = os.path.abspath(__file__)
@@ -159,7 +159,8 @@ def get_sympy_dir():
 
 
 def setup_pprint():
-    from sympy import pprint_use_unicode, init_printing
+    from sympy.interactive.printing import init_printing
+    from sympy.printing.pretty.pretty import pprint_use_unicode
     import sympy.interactive.printing as interactive_printing
 
     # force pprint to be in ascii mode in doctests
@@ -286,8 +287,7 @@ def run_all_tests(test_args=(), test_kwargs=None,
     Run all tests.
 
     Right now, this runs the regular tests (bin/test), the doctests
-    (bin/doctest), the examples (examples/all.py), and the sage tests (see
-    sympy/external/tests/test_sage.py).
+    (bin/doctest), and the examples (examples/all.py).
 
     This is what ``setup.py test`` uses.
 
@@ -302,7 +302,6 @@ def run_all_tests(test_args=(), test_kwargs=None,
     ... test_kwargs={"colors:False"}) # doctest: +SKIP
 
     """
-    cwd = get_sympy_dir()
     tests_successful = True
 
     test_kwargs = test_kwargs or {}
@@ -327,20 +326,6 @@ def run_all_tests(test_args=(), test_kwargs=None,
         from all import run_examples  # type: ignore
         if not run_examples(*examples_args, **examples_kwargs):
             tests_successful = False
-
-        # Sage tests
-        if sys.platform != "win32" and not PY3 and os.path.exists("bin/test"):
-            # run Sage tests; Sage currently doesn't support Windows or Python 3
-            # Only run Sage tests if 'bin/test' is present (it is missing from
-            # our release because everything in the 'bin' directory gets
-            # installed).
-            dev_null = open(os.devnull, 'w')
-            if subprocess.call("sage -v", shell=True, stdout=dev_null,
-                               stderr=dev_null) == 0:
-                if subprocess.call("sage -python bin/test "
-                                   "sympy/external/tests/test_sage.py",
-                    shell=True, cwd=cwd) != 0:
-                    tests_successful = False
 
         if tests_successful:
             return
@@ -455,7 +440,7 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
     >>> sympy.test(split='1/2')  # doctest: +SKIP
 
     The ``time_balance`` option can be passed in conjunction with ``split``.
-    If ``time_balance=True`` (the default for ``sympy.test``), sympy will attempt
+    If ``time_balance=True`` (the default for ``sympy.test``), SymPy will attempt
     to split the tests such that each split takes equal time.  This heuristic
     for balancing is based on pre-recorded test data.
 
@@ -591,7 +576,7 @@ def _test(*paths,
 
 def doctest(*paths, subprocess=True, rerun=0, **kwargs):
     r"""
-    Runs doctests in all \*.py files in the sympy directory which match
+    Runs doctests in all \*.py files in the SymPy directory which match
     any of the given strings in ``paths`` or all tests if paths=[].
 
     Notes:
@@ -671,7 +656,6 @@ def _get_doctest_blacklist():
         "doc/src/modules/physics/mechanics/autolev_parser.rst",
         "sympy/galgebra.py", # no longer part of SymPy
         "sympy/this.py", # prints text
-        "sympy/physics/gaussopt.py", # raises deprecation warning
         "sympy/matrices/densearith.py", # raises deprecation warning
         "sympy/matrices/densesolve.py", # raises deprecation warning
         "sympy/matrices/densetools.py", # raises deprecation warning
@@ -781,7 +765,7 @@ def _doctest(*paths, **kwargs):
     Returns 0 if tests passed and 1 if they failed.  See the docstrings of
     ``doctest()`` and ``test()`` for more information.
     """
-    from sympy import pprint_use_unicode
+    from sympy.printing.pretty.pretty import pprint_use_unicode
 
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
@@ -1072,14 +1056,8 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
                          "relative paths.")
 
     # Relativize the path
-    if not PY3:
-        text, filename = pdoctest._load_testfile(
-            filename, package, module_relative)
-        if encoding is not None:
-            text = text.decode(encoding)
-    else:
-        text, filename = pdoctest._load_testfile(
-            filename, package, module_relative, encoding)
+    text, filename = pdoctest._load_testfile(
+        filename, package, module_relative, encoding)
 
     # If no name was given, then use the file's name.
     if name is None:
@@ -1206,10 +1184,7 @@ class SymPyTests:
         try:
             gl = {'__file__': filename}
             try:
-                if PY3:
-                    open_file = lambda: open(filename, encoding="utf8")
-                else:
-                    open_file = lambda: open(filename)
+                open_file = lambda: open(filename, encoding="utf8")
 
                 with open_file() as f:
                     source = f.read()
@@ -1364,7 +1339,7 @@ class SymPyTests:
     def get_test_files(self, dir, pat='test_*.py'):
         """
         Returns the list of test_*.py (default) files at or below directory
-        ``dir`` relative to the sympy home directory.
+        ``dir`` relative to the SymPy home directory.
         """
         dir = os.path.join(self._root_dir, convert_to_native_paths([dir])[0])
 
@@ -1405,7 +1380,7 @@ class SymPyDocTests:
 
         from io import StringIO
         import sympy.interactive.printing as interactive_printing
-        from sympy import pprint_use_unicode
+        from sympy.printing.pretty.pretty import pprint_use_unicode
 
         rel_name = filename[len(self._root_dir) + 1:]
         dirname, file = os.path.split(filename)
@@ -1558,11 +1533,10 @@ class SymPyDocTests:
             tempdir = tempfile.mkdtemp()
             os.environ['PATH'] = '%s:%s' % (tempdir, os.environ['PATH'])
 
-            vw = ('#!/usr/bin/env {}\n'
+            vw = ('#!/usr/bin/env python3\n'
                   'import sys\n'
                   'if len(sys.argv) <= 1:\n'
-                  '    exit("wrong number of args")\n').format(
-                      'python3' if PY3 else 'python')
+                  '    exit("wrong number of args")\n')
 
             for viewer in disable_viewers:
                 with open(os.path.join(tempdir, viewer), 'w') as fh:
@@ -2048,8 +2022,7 @@ class PyTestReporter(Reporter):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
                 stdout = process.stdout.read()
-                if PY3:
-                    stdout = stdout.decode("utf-8")
+                stdout = stdout.decode("utf-8")
             except OSError:
                 pass
             else:
@@ -2153,9 +2126,9 @@ class PyTestReporter(Reporter):
                 sys.stdout.write("\n")
 
         # Avoid UnicodeEncodeError when printing out test failures
-        if PY3 and IS_WINDOWS:
+        if IS_WINDOWS:
             text = text.encode('raw_unicode_escape').decode('utf8', 'ignore')
-        elif PY3 and not sys.stdout.encoding.lower().startswith('utf'):
+        elif not sys.stdout.encoding.lower().startswith('utf'):
             text = text.encode(sys.stdout.encoding, 'backslashreplace'
                               ).decode(sys.stdout.encoding)
 

@@ -1,6 +1,10 @@
-from sympy import (
-    Rational, Symbol, N, I, Abs, sqrt, exp, Float, sin,
-    cos, symbols)
+from sympy.core.evalf import N
+from sympy.core.numbers import (Float, I, Rational)
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices import eye, Matrix
 from sympy.core.singleton import S
 from sympy.testing.pytest import raises, XFAIL
@@ -681,3 +685,9 @@ def test_issue_20275():
         [Matrix([[S(1)/2 + sqrt(5)/2], [0], [1], [1], [0]]),
          Matrix([[S(1)/2 + sqrt(5)/2], [1], [0], [0], [1]])]
     )
+
+
+def test_issue_20752():
+    b = symbols('b', nonzero=True)
+    m = Matrix([[0, 0, 0], [0, b, 0], [0, 0, b]])
+    assert m.is_positive_semidefinite is None

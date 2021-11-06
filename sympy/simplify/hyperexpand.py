@@ -58,12 +58,13 @@ It is described in great(er) detail in the Sphinx documentation.
 #
 from collections import defaultdict
 from itertools import product
+from functools import reduce
 
 from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
     EulerGamma, oo, zoo, expand_func, Add, nan, Expr, Rational)
-from sympy.core.compatibility import default_sort_key, reduce
 from sympy.core.mod import Mod
+from sympy.core.sorting import default_sort_key
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
         besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
         sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, floor, ceiling,
@@ -74,8 +75,6 @@ from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
         HyperRep_cosasin, HyperRep_sinasin, meijerg)
 from sympy.polys import poly, Poly
-from sympy.series import residue
-from sympy.simplify import simplify  # type: ignore
 from sympy.simplify.powsimp import powdenest
 from sympy.utilities.iterables import sift
 
@@ -1882,7 +1881,7 @@ def build_hypergeometric_formula(func):
     # would have kicked in. However, `ap` could be empty. In this case we can
     # use a different basis.
     # I'm not aware of a basis that works in all cases.
-    from sympy import zeros, Matrix, eye
+    from sympy.matrices.dense import (Matrix, eye, zeros)
     z = Dummy('z')
     if func.ap:
         afactors = [_x + a for a in func.ap]
@@ -1948,6 +1947,7 @@ def hyperexpand_special(ap, bq, z):
     z = unpolarify(z)
     if z == 0:
         return S.One
+    from sympy.simplify.simplify import simplify
     if p == 2 and q == 1:
         # 2F1
         a, b, c = ap + bq
@@ -1987,6 +1987,8 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     if z.is_zero:
         return S.One
 
+    from sympy.simplify.simplify import simplify
+
     z = polarify(z, subs=False)
     if rewrite == 'default':
         rewrite = 'nonrepsmall'
@@ -1994,7 +1996,7 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     def carryout_plan(f, ops):
         C = apply_operators(f.C.subs(f.z, z0), ops,
                             make_derivative_operator(f.M.subs(f.z, z0), z0))
-        from sympy import eye
+        from sympy.matrices.dense import eye
         C = apply_operators(C, ops0,
                             make_derivative_operator(f.M.subs(f.z, z0)
                                          + prem*eye(f.M.shape[0]), z0))
@@ -2283,6 +2285,7 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default',
     def do_slater(an, bm, ap, bq, z, zfinal):
         # zfinal is the value that will eventually be substituted for z.
         # We pass it to _hyperexpand to improve performance.
+        from sympy.series import residue
         func = G_Function(an, bm, ap, bq)
         _, pbm, pap, _ = func.compute_buckets()
         if not can_do(pbm, pap):

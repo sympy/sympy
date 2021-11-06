@@ -210,7 +210,7 @@ hint=your_hint)``, and also test the solution using
 :py:meth:`~sympy.solvers.ode.checkodesol` (you can put these in a separate
 tests and skip/XFAIL if it runs too slow/doesn't work).  Be sure to call your
 hint specifically in :py:meth:`~sympy.solvers.ode.dsolve`, that way the test
-won't be broken simply by the introduction of another matching hint.  If your
+will not be broken simply by the introduction of another matching hint.  If your
 method works for higher order (>1) ODEs, you will need to run ``sol =
 constant_renumber(sol, 'C', 1, order)`` for each solution, where ``order`` is
 the order of the ODE.  This is because ``constant_renumber`` renumbers the
@@ -229,16 +229,17 @@ of those tests will surely fail.
 """
 
 from sympy.core import Add, S, Mul, Pow, oo
-from sympy.core.compatibility import ordered, iterable
 from sympy.core.containers import Tuple
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
     expand, expand_mul, Subs)
 from sympy.core.multidimensional import vectorize
-from sympy.core.numbers import NaN, zoo, Number
+from sympy.core.numbers import nan, zoo, Number
 from sympy.core.relational import Equality, Eq
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
+from sympy.core.traversal import preorder_traversal
 
 from sympy.logic.boolalg import (BooleanAtom, BooleanTrue,
                                 BooleanFalse)
@@ -254,8 +255,8 @@ from sympy.simplify import (collect, logcombine, powsimp,  # type: ignore
 from sympy.simplify.radsimp import collect_const
 from sympy.solvers import checksol, solve
 
-from sympy.utilities import numbered_symbols, default_sort_key, sift
-from sympy.utilities.iterables import uniq
+from sympy.utilities import numbered_symbols
+from sympy.utilities.iterables import uniq, sift, iterable
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 
 
@@ -280,6 +281,7 @@ allhints = (
     "1st_exact",
     "1st_linear",
     "Bernoulli",
+    "1st_rational_riccati",
     "Riccati_special_minus2",
     "1st_homogeneous_coeff_best",
     "1st_homogeneous_coeff_subs_indep_div_dep",
@@ -608,7 +610,7 @@ def dsolve(eq, func=None, hint="default", simplify=True,
         if all_:
             retdict = {}
             failed_hints = {}
-            gethints = classify_ode(eq, dict=True)
+            gethints = classify_ode(eq, dict=True, hint='all')
             orderedhints = gethints['ordered_hints']
             for hint in hints:
                 try:
@@ -884,7 +886,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
 
     ``subs``
 
-        If a hints has the word ``subs`` in it, it means the the ODE is solved
+        If a hints has the word ``subs`` in it, it means that the ODE is solved
         by substituting the expression given after the word ``subs`` for a
         single dummy variable.  This is usually in terms of ``indep`` and
         ``dep`` as above.  The substituted expression will be written only in
@@ -930,7 +932,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
     >>> classify_ode(f(x).diff(x, 2) + 3*f(x).diff(x) + 2*f(x) - 4)
-    ('nth_linear_constant_coeff_undetermined_coefficients',
+    ('factorable', 'nth_linear_constant_coeff_undetermined_coefficients',
     'nth_linear_constant_coeff_variation_of_parameters',
     'nth_linear_constant_coeff_variation_of_parameters_Integral')
 
@@ -1014,45 +1016,29 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             else:
                 raise ValueError("Enter boundary conditions of the form ics={f(point): value, f(x).diff(x, order).subs(x, point): value}")
 
-    # Any ODE that can be solved with a combination of algebra and
-    # integrals e.g.:
-    # d^3/dx^3(x y) = F(x)
     ode = SingleODEProblem(eq_orig, func, x, prep=prep, xi=xi, eta=eta)
-    solvers = {
-        NthAlgebraic: ('nth_algebraic',),
-        FirstExact:('1st_exact',),
-        FirstLinear: ('1st_linear',),
-        AlmostLinear: ('almost_linear',),
-        Bernoulli: ('Bernoulli',),
-        Factorable: ('factorable',),
-        RiccatiSpecial: ('Riccati_special_minus2',),
-        SecondNonlinearAutonomousConserved: ('2nd_nonlinear_autonomous_conserved',),
-        Liouville: ('Liouville',),
-        Separable: ('separable',),
-        SeparableReduced: ('separable_reduced',),
-        HomogeneousCoeffSubsDepDivIndep: ('1st_homogeneous_coeff_subs_dep_div_indep',),
-        HomogeneousCoeffSubsIndepDivDep: ('1st_homogeneous_coeff_subs_indep_div_dep',),
-        HomogeneousCoeffBest: ('1st_homogeneous_coeff_best',),
-        LinearCoefficients: ('linear_coefficients',),
-        NthOrderReducible: ('nth_order_reducible',),
-        SecondHypergeometric: ('2nd_hypergeometric',),
-        NthLinearConstantCoeffHomogeneous: ('nth_linear_constant_coeff_homogeneous',),
-        NthLinearConstantCoeffVariationOfParameters: ('nth_linear_constant_coeff_variation_of_parameters',),
-        NthLinearConstantCoeffUndeterminedCoefficients: ('nth_linear_constant_coeff_undetermined_coefficients',),
-        NthLinearEulerEqHomogeneous: ('nth_linear_euler_eq_homogeneous',),
-        NthLinearEulerEqNonhomogeneousVariationOfParameters: ('nth_linear_euler_eq_nonhomogeneous_variation_of_parameters',),
-        NthLinearEulerEqNonhomogeneousUndeterminedCoefficients: ('nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients',),
-        SecondLinearBessel: ('2nd_linear_bessel',),
-        SecondLinearAiry: ('2nd_linear_airy',),
-        LieGroup: ('lie_group',),
-    }
-    for solvercls in solvers:
-        solver = solvercls(ode)
+    user_hint = kwargs.get('hint', 'default')
+    # Used when dsolve is called without an explicit hint.
+    # We exit early to return the first valid match
+    early_exit = (user_hint=='default')
+    if user_hint.endswith('_Integral'):
+        user_hint = user_hint[:-len('_Integral')]
+    user_map = solver_map
+    # An explicit hint has been given to dsolve
+    # Skip matching code for other hints
+    if user_hint not in ['default', 'all', 'all_Integral', 'best'] and user_hint in solver_map:
+        user_map = {user_hint: solver_map[user_hint]}
+
+    for hint in user_map:
+        solver = user_map[hint](ode)
         if solver.matches():
-            for hints in solvers[solvercls]:
-                matching_hints[hints] = solver
-                if solvercls.has_integral:
-                    matching_hints[hints + "_Integral"] = solver
+            matching_hints[hint] = solver
+            if user_map[hint].has_integral:
+                matching_hints[hint + "_Integral"] = solver
+            if dict and early_exit:
+                matching_hints["default"] = hint
+                return matching_hints
+
     eq = expand(eq)
     # Precondition to try remove f(x) from highest order derivative
     reduced_eq = None
@@ -1087,10 +1073,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             check = cancel(r[d]/r[e])
             check1 = check.subs({x: point, y: value})
             if not check1.has(oo) and not check1.has(zoo) and \
-                not check1.has(NaN) and not check1.has(-oo):
+                not check1.has(nan) and not check1.has(-oo):
                 check2 = (check1.diff(x)).subs({x: point, y: value})
                 if not check2.has(oo) and not check2.has(zoo) and \
-                    not check2.has(NaN) and not check2.has(-oo):
+                    not check2.has(nan) and not check2.has(-oo):
                     rseries = r.copy()
                     rseries.update({'terms': terms, 'f0': point, 'f0val': value})
                     matching_hints["1st_power_series"] = rseries
@@ -1105,7 +1091,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             [f(x).diff(x, 2), f(x).diff(x), f(x)]).match(deq)
         ordinary = False
         if r:
-            if not all([r[key].is_polynomial() for key in r]):
+            if not all(r[key].is_polynomial() for key in r):
                 n, d = reduced_eq.as_numer_denom()
                 reduced_eq = expand(n)
                 r = collect(reduced_eq,
@@ -1115,9 +1101,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             q = cancel(r[c3]/r[a3])  # Used below
             point = kwargs.get('x0', 0)
             check = p.subs(x, point)
-            if not check.has(oo, NaN, zoo, -oo):
+            if not check.has(oo, nan, zoo, -oo):
                 check = q.subs(x, point)
-                if not check.has(oo, NaN, zoo, -oo):
+                if not check.has(oo, nan, zoo, -oo):
                     ordinary = True
                     r.update({'a3': a3, 'b3': b3, 'c3': c3, 'x0': point, 'terms': terms})
                     matching_hints["2nd_power_series_ordinary"] = r
@@ -1128,10 +1114,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             if not ordinary:
                 p = cancel((x - point)*p)
                 check = p.subs(x, point)
-                if not check.has(oo, NaN, zoo, -oo):
+                if not check.has(oo, nan, zoo, -oo):
                     q = cancel(((x - point)**2)*q)
                     check = q.subs(x, point)
-                    if not check.has(oo, NaN, zoo, -oo):
+                    if not check.has(oo, nan, zoo, -oo):
                         coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                         matching_hints["2nd_power_series_regular"] = coeff_dict
 
@@ -1405,7 +1391,7 @@ def check_linear_2eq_order1(eq, func, func_coef):
     if r['d1']!=0 or r['d2']!=0:
         return None
     else:
-        if all(not r[k].has(t) for k in 'a1 a2 b1 b2 c1 c2'.split()):
+        if not any(r[k].has(t) for k in 'a1 a2 b1 b2 c1 c2'.split()):
             return None
         else:
             r['b1'] = r['b1']/r['a1'] ; r['b2'] = r['b2']/r['a2']
@@ -1600,7 +1586,7 @@ def odesimp(ode, eq, func, hint):
 
     >>> from sympy import sin, symbols, dsolve, pprint, Function
     >>> from sympy.solvers.ode.ode import odesimp
-    >>> x , u2, C1= symbols('x,u2,C1')
+    >>> x, u2, C1= symbols('x,u2,C1')
     >>> f = Function('f')
 
     >>> eq = dsolve(x*f(x).diff(x) - f(x) - x*sin(f(x)/x), f(x),
@@ -1836,8 +1822,6 @@ def ode_sol_simplicity(sol, func, trysolving=True):
 
 
 def _extract_funcs(eqs):
-    from sympy.core.basic import preorder_traversal
-
     funcs = []
     for eq in eqs:
         derivs = [node for node in preorder_traversal(eq) if isinstance(node, Derivative)]
@@ -2010,7 +1994,7 @@ def constantsimp(expr, constants):
         xes = list(xe.free_symbols)
         if not xes:
             continue
-        if all([expr.count(c) == xe.count(c) for c in xes]):
+        if all(expr.count(c) == xe.count(c) for c in xes):
             xes.sort(key=str)
             expr = expr.subs(xe, xes[0])
 
@@ -2518,7 +2502,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     p0, q0 = indicial
     sollist = solve(m*(m - 1) + m*p0 + q0, m)
     if sollist and isinstance(sollist, list) and all(
-        [sol.is_real for sol in sollist]):
+        sol.is_real for sol in sollist):
         serdict1 = {}
         serdict2 = {}
         if len(sollist) == 1:
@@ -2624,7 +2608,7 @@ def _remove_redundant_solutions(eq, solns, order, var):
     There are two ways to find solutions to eq. The first is to solve f(x).diff(x, 2) = 0
     leading to solution f(x)=C1 + C2*x. The second is to solve the equation f(x).diff(x) = 0
     leading to the solution f(x) = C1. In this particular case we then see
-    that the second solution is a special case of the first and we don't
+    that the second solution is a special case of the first and we do not
     want to return it.
 
     This does not always happen. If we have
@@ -2788,7 +2772,7 @@ def ode_1st_power_series(eq, func, order, match):
     series = value
     if terms > 1:
         hc = h.subs({x: point, y: value})
-        if hc.has(oo) or hc.has(NaN) or hc.has(zoo):
+        if hc.has(oo) or hc.has(nan) or hc.has(zoo):
             # Derivative does not exist, not analytic
             return Eq(f(x), oo)
         elif hc:
@@ -2798,7 +2782,7 @@ def ode_1st_power_series(eq, func, order, match):
         Fnew = F.diff(x) + F.diff(y)*h
         Fnewc = Fnew.subs({x: point, y: value})
         # Same logic as above
-        if Fnewc.has(oo) or Fnewc.has(NaN) or Fnewc.has(-oo) or Fnewc.has(zoo):
+        if Fnewc.has(oo) or Fnewc.has(nan) or Fnewc.has(-oo) or Fnewc.has(zoo):
             return Eq(f(x), oo)
         series += Fnewc*((x - point)**factcount)/factorial(factcount)
         F = Fnew
@@ -3006,7 +2990,7 @@ def _linear_2eq_order1_type7(x, y, t, r, eq):
 
     where C1 and C2 are arbitrary constants and
 
-    .. math:: F(t) = e^{\int f(t) \,dt} , P(t) = e^{\int p(t) \,dt}
+    .. math:: F(t) = e^{\int f(t) \,dt}, P(t) = e^{\int p(t) \,dt}
 
     """
     C1, C2, C3, C4 = get_numbered_constants(eq, num=4)
@@ -3581,12 +3565,4 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
 
 
 #This import is written at the bottom to avoid circular imports.
-from .single import (NthAlgebraic, Factorable, FirstLinear, AlmostLinear,
-        Bernoulli, SingleODEProblem, SingleODESolver, RiccatiSpecial,
-        SecondNonlinearAutonomousConserved, FirstExact, Liouville, Separable,
-        SeparableReduced, HomogeneousCoeffSubsDepDivIndep, HomogeneousCoeffSubsIndepDivDep,
-        HomogeneousCoeffBest, LinearCoefficients, NthOrderReducible, SecondHypergeometric,
-        NthLinearConstantCoeffHomogeneous, NthLinearConstantCoeffVariationOfParameters,
-        NthLinearConstantCoeffUndeterminedCoefficients, NthLinearEulerEqHomogeneous,
-        NthLinearEulerEqNonhomogeneousVariationOfParameters, LieGroup,
-        NthLinearEulerEqNonhomogeneousUndeterminedCoefficients, SecondLinearBessel, SecondLinearAiry)
+from .single import SingleODEProblem, SingleODESolver, solver_map

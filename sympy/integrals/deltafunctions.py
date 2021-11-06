@@ -1,7 +1,7 @@
 from sympy.core import Mul
 from sympy.functions import DiracDelta, Heaviside
-from sympy.core.compatibility import default_sort_key
 from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
 
 
 def change_mul(node, x):
@@ -123,9 +123,9 @@ def deltaintegrate(f, x):
         >>> from sympy.integrals.deltafunctions import deltaintegrate
         >>> from sympy import sin, cos, DiracDelta
         >>> deltaintegrate(x*sin(x)*cos(x)*DiracDelta(x - 1), x)
-        sin(1)*cos(1)*Heaviside(x - 1, 1/2)
+        sin(1)*cos(1)*Heaviside(x - 1)
         >>> deltaintegrate(y**2*DiracDelta(x - z)*DiracDelta(y - z), y)
-        z**2*DiracDelta(x - z)*Heaviside(y - z, 1/2)
+        z**2*DiracDelta(x - z)*Heaviside(y - z)
 
     See Also
     ========

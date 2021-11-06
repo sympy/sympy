@@ -1,60 +1,87 @@
-from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
-from sympy.tensor.toperators import PartialDerivative
-
-from sympy import (
-    Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
-    FiniteSet, Float, FourierTransform, Function, Indexed, IndexedBase, Integral,
-    Interval, InverseCosineTransform, InverseFourierTransform, Derivative,
-    InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
-    Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
-    Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational,
-    RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
-    Sum, Symbol, ImageSet, Tuple, Ynm, Znm, arg, asin, acsc, asinh, Mod,
-    assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling,
-    chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
-    exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
-    hyper, im, jacobi, laguerre, legendre, lerchphi, log, frac,
-    meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
-    uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
-    elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
-    Contains, divisor_sigma, SeqPer, SeqFormula, MatrixSlice,
-    SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
-    stieltjes, mathieuc, mathieus, mathieucprime, mathieusprime,
-    UnevaluatedExpr, Quaternion, I, KroneckerProduct, LambertW)
-
-from sympy.ntheory.factor_ import udivisor_sigma
-
-from sympy.abc import mu, tau
-from sympy.printing.latex import (latex, translate, greek_letters_set,
-                                  tex_greek_dictionary, multiline_latex,
-                                  latex_escape, LatexPrinter)
+from sympy.algebras.quaternion import Quaternion
+from sympy.calculus.util import AccumBounds
+from sympy.combinatorics.permutations import Cycle, Permutation, AppliedPermutation
+from sympy.concrete.products import Product
+from sympy.concrete.summations import Sum
+from sympy.core.containers import Tuple, Dict
+from sympy.core.expr import UnevaluatedExpr
+from sympy.core.function import (Derivative, Function, Lambda, Subs, diff)
+from sympy.core.mod import Mod
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi)
+from sympy.core.power import Pow
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, Wild, symbols)
+from sympy.functions.combinatorial.factorials import (FallingFactorial, RisingFactorial, binomial, factorial, factorial2, subfactorial)
+from sympy.functions.combinatorial.numbers import bernoulli, bell, catalan, euler, lucas, fibonacci, tribonacci
+from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, polar_lift, re)
+from sympy.functions.elementary.exponential import (LambertW, exp, log)
+from sympy.functions.elementary.hyperbolic import (asinh, coth)
+from sympy.functions.elementary.integers import (ceiling, floor, frac)
+from sympy.functions.elementary.miscellaneous import (Max, Min, root, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acsc, asin, cos, cot, sin, tan)
+from sympy.functions.special.beta_functions import beta
+from sympy.functions.special.delta_functions import (DiracDelta, Heaviside)
+from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f, elliptic_k, elliptic_pi)
+from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, expint)
+from sympy.functions.special.gamma_functions import (gamma, uppergamma)
+from sympy.functions.special.hyper import (hyper, meijerg)
+from sympy.functions.special.mathieu_functions import (mathieuc, mathieucprime, mathieus, mathieusprime)
+from sympy.functions.special.polynomials import (assoc_laguerre, assoc_legendre, chebyshevt, chebyshevu, gegenbauer, hermite, jacobi, laguerre, legendre)
+from sympy.functions.special.singularity_functions import SingularityFunction
+from sympy.functions.special.spherical_harmonics import (Ynm, Znm)
+from sympy.functions.special.tensor_functions import (KroneckerDelta, LeviCivita)
+from sympy.functions.special.zeta_functions import (dirichlet_eta, lerchphi, polylog, stieltjes, zeta)
+from sympy.integrals.integrals import Integral
+from sympy.integrals.transforms import (CosineTransform, FourierTransform, InverseCosineTransform, InverseFourierTransform, InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform, LaplaceTransform, MellinTransform, SineTransform)
+from sympy.logic import Implies
+from sympy.logic.boolalg import (And, Or, Xor, Equivalent, false, Not, true)
+from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions.kronecker import KroneckerProduct
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.permutation import PermutationMatrix
+from sympy.matrices.expressions.slice import MatrixSlice
+from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
+from sympy.ntheory.factor_ import (divisor_sigma, primenu, primeomega, reduced_totient, totient, udivisor_sigma)
+from sympy.physics.quantum import Commutator, Operator
+from sympy.physics.quantum.trace import Tr
+from sympy.physics.units import meter, gibibyte, microgram, second
+from sympy.polys.domains.integerring import ZZ
+from sympy.polys.fields import field
+from sympy.polys.polytools import Poly
+from sympy.polys.rings import ring
+from sympy.polys.rootoftools import (RootSum, rootof)
+from sympy.series.formal import fps
+from sympy.series.fourier import fourier_series
+from sympy.series.limits import Limit
+from sympy.series.order import Order
+from sympy.series.sequences import (SeqAdd, SeqFormula, SeqMul, SeqPer)
+from sympy.sets.conditionset import ConditionSet
+from sympy.sets.contains import Contains
+from sympy.sets.fancysets import (ComplexRegion, ImageSet, Range)
+from sympy.sets.sets import (FiniteSet, Interval, Union, Intersection, Complement, SymmetricDifference, ProductSet)
+from sympy.sets.setexpr import SetExpr
 from sympy.tensor.array import (ImmutableDenseNDimArray,
                                 ImmutableSparseNDimArray,
                                 MutableSparseNDimArray,
                                 MutableDenseNDimArray,
                                 tensorproduct)
-from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
-from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
-from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
-    fibonacci, tribonacci
-from sympy.logic import Implies
-from sympy.logic.boolalg import And, Or, Xor
-from sympy.physics.control.lti import TransferFunction, Series, Parallel, \
-    Feedback, TransferFunctionMatrix
-from sympy.physics.quantum import Commutator, Operator
-from sympy.physics.units import meter, gibibyte, microgram, second
-from sympy.core.trace import Tr
-from sympy.combinatorics.permutations import \
-    Cycle, Permutation, AppliedPermutation
-from sympy.matrices.expressions.permutation import PermutationMatrix
-from sympy import MatrixSymbol, ln
+from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
+from sympy.tensor.indexed import (Indexed, IndexedBase)
+from sympy.tensor.toperators import PartialDerivative
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
-from sympy.sets.setexpr import SetExpr
-from sympy.sets.sets import \
-    Union, Intersection, Complement, SymmetricDifference, ProductSet
+
+
+from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
+from sympy.printing.latex import (latex, translate, greek_letters_set,
+                                  tex_greek_dictionary, multiline_latex,
+                                  latex_escape, LatexPrinter)
 
 import sympy as sym
+
+from sympy.abc import mu, tau
 
 
 class lowergamma(sym.lowergamma):
@@ -88,15 +115,24 @@ def test_latex_basic():
     assert latex(3*x**2*y, mul_symbol='\\,') == r"3\,x^{2}\,y"
     assert latex(1.5*3**x, mul_symbol='\\,') == r"1.5 \cdot 3^{x}"
 
+    assert latex(x**S.Half**5) == r"\sqrt[32]{x}"
+    assert latex(Mul(S.Half, x**2, -5, evaluate=False)) == r"\frac{1}{2} x^{2} \left(-5\right)"
+    assert latex(Mul(S.Half, x**2, 5, evaluate=False)) == r"\frac{1}{2} x^{2} \cdot 5"
+    assert latex(Mul(-5, -5, evaluate=False)) == r"\left(-5\right) \left(-5\right)"
+    assert latex(Mul(5, -5, evaluate=False)) == r"5 \left(-5\right)"
+    assert latex(Mul(S.Half, -5, S.Half, evaluate=False)) == r"\frac{1}{2} \left(-5\right) \frac{1}{2}"
+    assert latex(Mul(5, I, 5, evaluate=False)) == r"5 i 5"
+    assert latex(Mul(5, I, -5, evaluate=False)) == r"5 i \left(-5\right)"
+
     assert latex(Mul(0, 1, evaluate=False)) == r'0 \cdot 1'
     assert latex(Mul(1, 0, evaluate=False)) == r'1 \cdot 0'
     assert latex(Mul(1, 1, evaluate=False)) == r'1 \cdot 1'
     assert latex(Mul(-1, 1, evaluate=False)) == r'\left(-1\right) 1'
     assert latex(Mul(1, 1, 1, evaluate=False)) == r'1 \cdot 1 \cdot 1'
     assert latex(Mul(1, 2, evaluate=False)) == r'1 \cdot 2'
-    assert latex(Mul(1, S.Half, evaluate=False)) == r'1 \frac{1}{2}'
+    assert latex(Mul(1, S.Half, evaluate=False)) == r'1 \cdot \frac{1}{2}'
     assert latex(Mul(1, 1, S.Half, evaluate=False)) == \
-        r'1 \cdot 1 \frac{1}{2}'
+        r'1 \cdot 1 \cdot \frac{1}{2}'
     assert latex(Mul(1, 1, 2, 3, x, evaluate=False)) == \
         r'1 \cdot 1 \cdot 2 \cdot 3 x'
     assert latex(Mul(1, -1, evaluate=False)) == r'1 \left(-1\right)'
@@ -105,7 +141,7 @@ def test_latex_basic():
     assert latex(Mul(4, 3, 2, 1+z, 0, y, x, evaluate=False)) == \
         r'4 \cdot 3 \cdot 2 \left(z + 1\right) 0 y x'
     assert latex(Mul(Rational(2, 3), Rational(5, 7), evaluate=False)) == \
-        r'\frac{2}{3} \frac{5}{7}'
+        r'\frac{2}{3} \cdot \frac{5}{7}'
 
     assert latex(1/x) == r"\frac{1}{x}"
     assert latex(1/x, fold_short_frac=True) == r"1 / x"
@@ -188,6 +224,10 @@ def test_latex_basic():
         r"z_i \vee \left(x_i \wedge y_i\right)"
     assert latex(Implies(x, y), symbol_names={x: "x_i", y: "y_i"}) == \
         r"x_i \Rightarrow y_i"
+    assert latex(Pow(Rational(1, 3), -1, evaluate=False)) == r"\frac{1}{\frac{1}{3}}"
+    assert latex(Pow(Rational(1, 3), -2, evaluate=False)) == r"\frac{1}{(\frac{1}{3})^{2}}"
+    assert latex(Pow(Integer(1)/100, -1, evaluate=False)) == r"\frac{1}{\frac{1}{100}}"
+
 
     p = Symbol('p', positive=True)
     assert latex(exp(-p)*log(p)) == r"e^{- p} \log{\left(p \right)}"
@@ -594,12 +634,19 @@ def test_latex_functions():
     assert latex(LambertW(n)) == r'W\left(n\right)'
     assert latex(LambertW(n, -1)) == r'W_{-1}\left(n\right)'
     assert latex(LambertW(n, k)) == r'W_{k}\left(n\right)'
+    assert latex(LambertW(n) * LambertW(n)) == r"W^{2}\left(n\right)"
+    assert latex(Pow(LambertW(n), 2)) == r"W^{2}\left(n\right)"
+    assert latex(LambertW(n)**k) == r"W^{k}\left(n\right)"
+    assert latex(LambertW(n, k)**p) == r"W^{p}_{k}\left(n\right)"
 
-    assert latex(Mod(x, 7)) == r'x\bmod{7}'
-    assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right)\bmod{7}'
-    assert latex(Mod(2 * x, 7)) == r'2 x\bmod{7}'
-    assert latex(Mod(x, 7) + 1) == r'\left(x\bmod{7}\right) + 1'
-    assert latex(2 * Mod(x, 7)) == r'2 \left(x\bmod{7}\right)'
+    assert latex(Mod(x, 7)) == r'x \bmod 7'
+    assert latex(Mod(x + 1, 7)) == r'\left(x + 1\right) \bmod 7'
+    assert latex(Mod(7, x + 1)) == r'7 \bmod \left(x + 1\right)'
+    assert latex(Mod(2 * x, 7)) == r'2 x \bmod 7'
+    assert latex(Mod(7, 2 * x)) == r'7 \bmod 2 x'
+    assert latex(Mod(x, 7) + 1) == r'\left(x \bmod 7\right) + 1'
+    assert latex(2 * Mod(x, 7)) == r'2 \left(x \bmod 7\right)'
+    assert latex(Mod(7, 2 * x)**n) == r'\left(7 \bmod 2 x\right)^{n}'
 
     # some unknown function name should get rendered with \operatorname
     fjlkd = Function('fjlkd')
@@ -617,7 +664,6 @@ def test_function_subclass_different_name():
 
 
 def test_hyper_printing():
-    from sympy import pi
     from sympy.abc import x, z
 
     assert latex(meijerg(Tuple(pi, pi, x), Tuple(1),
@@ -815,10 +861,22 @@ def test_latex_Range():
     assert latex(Range(oo, -oo, -1)) == r'\left\{\ldots, 1, 0, -1, \ldots\right\}'
 
     a, b, c = symbols('a:c')
-    assert latex(Range(a, b, c)) == r'Range\left(a, b, c\right)'
-    assert latex(Range(a, 10, 1)) == r'Range\left(a, 10, 1\right)'
-    assert latex(Range(0, b, 1)) == r'Range\left(0, b, 1\right)'
-    assert latex(Range(0, 10, c)) == r'Range\left(0, 10, c\right)'
+    assert latex(Range(a, b, c)) == r'\text{Range}\left(a, b, c\right)'
+    assert latex(Range(a, 10, 1)) == r'\text{Range}\left(a, 10\right)'
+    assert latex(Range(0, b, 1)) == r'\text{Range}\left(b\right)'
+    assert latex(Range(0, 10, c)) == r'\text{Range}\left(0, 10, c\right)'
+
+    i = Symbol('i', integer=True)
+    n = Symbol('n', negative=True, integer=True)
+    p = Symbol('p', positive=True, integer=True)
+
+    assert latex(Range(i, i + 3)) == r'\left\{i, i + 1, i + 2\right\}'
+    assert latex(Range(-oo, n, 2)) == r'\left\{\ldots, n - 4, n - 2\right\}'
+    assert latex(Range(p, oo)) == r'\left\{p, p + 1, \ldots\right\}'
+    # The following will work if __iter__ is improved
+    # assert latex(Range(-3, p + 7)) == r'\left\{-3, -2,  \ldots, p + 6\right\}'
+    # Must have integer assumptions
+    assert latex(Range(a, a + 3)) == r'\text{Range}\left(a, a + 3\right)'
 
 
 def test_latex_sequences():
@@ -1098,7 +1156,7 @@ def test_latex_ImageSet():
     y = Symbol('y')
     imgset = ImageSet(Lambda((x, y), x + y), {1, 2, 3}, {3, 4})
     assert latex(imgset) == \
-        r"\left\{x + y\; \middle|\; x \in \left\{1, 2, 3\right\} , y \in \left\{3, 4\right\}\right\}"
+        r"\left\{x + y\; \middle|\; x \in \left\{1, 2, 3\right\}, y \in \left\{3, 4\right\}\right\}"
 
     imgset = ImageSet(Lambda(((x, y),), x + y), ProductSet({1, 2, 3}, {3, 4}))
     assert latex(imgset) == \
@@ -1168,11 +1226,10 @@ def test_latex_limits():
 
 def test_latex_log():
     assert latex(log(x)) == r"\log{\left(x \right)}"
-    assert latex(ln(x)) == r"\log{\left(x \right)}"
     assert latex(log(x), ln_notation=True) == r"\ln{\left(x \right)}"
-    assert latex(log(x)+log(y)) == \
+    assert latex(log(x) + log(y)) == \
         r"\log{\left(x \right)} + \log{\left(y \right)}"
-    assert latex(log(x)+log(y), ln_notation=True) == \
+    assert latex(log(x) + log(y), ln_notation=True) == \
         r"\ln{\left(x \right)} + \ln{\left(y \right)}"
     assert latex(pow(log(x), x)) == r"\log{\left(x \right)}^{x}"
     assert latex(pow(log(x), x), ln_notation=True) == \
@@ -1596,8 +1653,6 @@ def test_custom_symbol_names():
 
 
 def test_matAdd():
-    from sympy import MatrixSymbol
-    from sympy.printing.latex import LatexPrinter
     C = MatrixSymbol('C', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     l = LatexPrinter()
@@ -1608,8 +1663,6 @@ def test_matAdd():
 
 
 def test_matMul():
-    from sympy import MatrixSymbol
-    from sympy.printing.latex import LatexPrinter
     A = MatrixSymbol('A', 5, 5)
     B = MatrixSymbol('B', 5, 5)
     x = Symbol('x')
@@ -1834,7 +1887,7 @@ def test_Tr():
 
 
 def test_Adjoint():
-    from sympy.matrices import MatrixSymbol, Adjoint, Inverse, Transpose
+    from sympy.matrices import Adjoint, Inverse, Transpose
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
     assert latex(Adjoint(X)) == r'X^{\dagger}'
@@ -1865,7 +1918,7 @@ def test_Transpose():
 
 
 def test_Hadamard():
-    from sympy.matrices import MatrixSymbol, HadamardProduct, HadamardPower
+    from sympy.matrices import HadamardProduct, HadamardPower
     from sympy.matrices.expressions import MatAdd, MatMul, MatPow
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
@@ -1889,7 +1942,6 @@ def test_Hadamard():
 
 
 def test_ElementwiseApplyFunction():
-    from sympy.matrices import MatrixSymbol
     X = MatrixSymbol('X', 2, 2)
     expr = (X.T*X).applyfunc(sin)
     assert latex(expr) == r"{\left( d \mapsto \sin{\left(d \right)} \right)}_{\circ}\left({X^{T} X}\right)"
@@ -1898,19 +1950,19 @@ def test_ElementwiseApplyFunction():
 
 
 def test_ZeroMatrix():
-    from sympy import ZeroMatrix
-    assert latex(ZeroMatrix(1, 1), mat_symbol_style='plain') == r"\mathbb{0}"
+    from sympy.matrices.expressions.special import ZeroMatrix
+    assert latex(ZeroMatrix(1, 1), mat_symbol_style='plain') == r"0"
     assert latex(ZeroMatrix(1, 1), mat_symbol_style='bold') == r"\mathbf{0}"
 
 
 def test_OneMatrix():
-    from sympy import OneMatrix
-    assert latex(OneMatrix(3, 4), mat_symbol_style='plain') == r"\mathbb{1}"
+    from sympy.matrices.expressions.special import OneMatrix
+    assert latex(OneMatrix(3, 4), mat_symbol_style='plain') == r"1"
     assert latex(OneMatrix(3, 4), mat_symbol_style='bold') == r"\mathbf{1}"
 
 
 def test_Identity():
-    from sympy import Identity
+    from sympy.matrices.expressions.special import Identity
     assert latex(Identity(1), mat_symbol_style='plain') == r"\mathbb{I}"
     assert latex(Identity(1), mat_symbol_style='bold') == r"\mathbf{I}"
 
@@ -2269,6 +2321,22 @@ def test_Series_printing():
     assert latex(Series(-tf2, tf1)) == \
         r'\left(\frac{- x + y}{x + y}\right) \left(\frac{x y^{2} - z}{- t^{3} + y^{3}}\right)'
 
+    M_1 = Matrix([[5/s], [5/(2*s)]])
+    T_1 = TransferFunctionMatrix.from_Matrix(M_1, s)
+    M_2 = Matrix([[5, 6*s**3]])
+    T_2 = TransferFunctionMatrix.from_Matrix(M_2, s)
+    # Brackets
+    assert latex(T_1*(T_2 + T_2)) == \
+        r'\left[\begin{matrix}\frac{5}{s}\\\frac{5}{2 s}\end{matrix}\right]_\tau\cdot\left(\left[\begin{matrix}\frac{5}{1} &' \
+        r' \frac{6 s^{3}}{1}\end{matrix}\right]_\tau + \left[\begin{matrix}\frac{5}{1} & \frac{6 s^{3}}{1}\end{matrix}\right]_\tau\right)' \
+            == latex(MIMOSeries(MIMOParallel(T_2, T_2), T_1))
+    # No Brackets
+    M_3 = Matrix([[5, 6], [6, 5/s]])
+    T_3 = TransferFunctionMatrix.from_Matrix(M_3, s)
+    assert latex(T_1*T_2 + T_3) == r'\left[\begin{matrix}\frac{5}{s}\\\frac{5}{2 s}\end{matrix}\right]_\tau\cdot\left[\begin{matrix}' \
+        r'\frac{5}{1} & \frac{6 s^{3}}{1}\end{matrix}\right]_\tau + \left[\begin{matrix}\frac{5}{1} & \frac{6}{1}\\\frac{6}{1} & ' \
+            r'\frac{5}{s}\end{matrix}\right]_\tau' == latex(MIMOParallel(MIMOSeries(T_2, T_1), T_3))
+
 
 def test_TransferFunction_printing():
     tf1 = TransferFunction(x - 1, x + 1, x)
@@ -2283,9 +2351,20 @@ def test_Parallel_printing():
     tf1 = TransferFunction(x*y**2 - z, y**3 - t**3, y)
     tf2 = TransferFunction(x - y, x + y, y)
     assert latex(Parallel(tf1, tf2)) == \
-        r'\left(\frac{x y^{2} - z}{- t^{3} + y^{3}}\right) \left(\frac{x - y}{x + y}\right)'
+        r'\frac{x y^{2} - z}{- t^{3} + y^{3}} + \frac{x - y}{x + y}'
     assert latex(Parallel(-tf2, tf1)) == \
-        r'\left(\frac{- x + y}{x + y}\right) \left(\frac{x y^{2} - z}{- t^{3} + y^{3}}\right)'
+        r'\frac{- x + y}{x + y} + \frac{x y^{2} - z}{- t^{3} + y^{3}}'
+
+    M_1 = Matrix([[5, 6], [6, 5/s]])
+    T_1 = TransferFunctionMatrix.from_Matrix(M_1, s)
+    M_2 = Matrix([[5/s, 6], [6, 5/(s - 1)]])
+    T_2 = TransferFunctionMatrix.from_Matrix(M_2, s)
+    M_3 = Matrix([[6, 5/(s*(s - 1))], [5, 6]])
+    T_3 = TransferFunctionMatrix.from_Matrix(M_3, s)
+    assert latex(T_1 + T_2 + T_3) == r'\left[\begin{matrix}\frac{5}{1} & \frac{6}{1}\\\frac{6}{1} & \frac{5}{s}\end{matrix}\right]' \
+        r'_\tau + \left[\begin{matrix}\frac{5}{s} & \frac{6}{1}\\\frac{6}{1} & \frac{5}{s - 1}\end{matrix}\right]_\tau + \left[\begin{matrix}' \
+            r'\frac{6}{1} & \frac{5}{s \left(s - 1\right)}\\\frac{5}{1} & \frac{6}{1}\end{matrix}\right]_\tau' \
+                == latex(MIMOParallel(T_1, T_2, T_3)) == latex(MIMOParallel(T_1, MIMOParallel(T_2, T_3))) == latex(MIMOParallel(MIMOParallel(T_1, T_2), T_3))
 
 
 def test_TransferFunctionMatrix_printing():
@@ -2301,10 +2380,40 @@ def test_TransferFunctionMatrix_printing():
 def test_Feedback_printing():
     tf1 = TransferFunction(p, p + x, p)
     tf2 = TransferFunction(-s + p, p + s, p)
+    # Negative Feedback (Default)
     assert latex(Feedback(tf1, tf2)) == \
-        r'\frac{\frac{p}{p + x}}{\left(1 \cdot 1^{-1}\right) \left(\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)\right)}'
+        r'\frac{\frac{p}{p + x}}{\frac{1}{1} + \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
     assert latex(Feedback(tf1*tf2, TransferFunction(1, 1, p))) == \
-        r'\frac{\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}{\left(1 \cdot 1^{-1}\right) \left(\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)\right)}'
+        r'\frac{\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}{\frac{1}{1} + \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
+    # Positive Feedback
+    assert latex(Feedback(tf1, tf2, 1)) == \
+        r'\frac{\frac{p}{p + x}}{\frac{1}{1} - \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
+    assert latex(Feedback(tf1*tf2, sign=1)) == \
+        r'\frac{\left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}{\frac{1}{1} - \left(\frac{p}{p + x}\right) \left(\frac{p - s}{p + s}\right)}'
+
+
+def test_MIMOFeedback_printing():
+    tf1 = TransferFunction(1, s, s)
+    tf2 = TransferFunction(s, s**2 - 1, s)
+    tf3 = TransferFunction(s, s - 1, s)
+    tf4 = TransferFunction(s**2, s**2 - 1, s)
+
+    tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
+    tfm_2 = TransferFunctionMatrix([[tf4, tf3], [tf2, tf1]])
+
+    # Negative Feedback (Default)
+    assert latex(MIMOFeedback(tfm_1, tfm_2)) == \
+        r'\left(I_{\tau} + \left[\begin{matrix}\frac{1}{s} & \frac{s}{s^{2} - 1}\\\frac{s}{s - 1} & \frac{s^{2}}{s^{2} - 1}\end{matrix}\right]_\tau\cdot\left[' \
+        r'\begin{matrix}\frac{s^{2}}{s^{2} - 1} & \frac{s}{s - 1}\\\frac{s}{s^{2} - 1} & \frac{1}{s}\end{matrix}\right]_\tau\right)^{-1} \cdot \left[\begin{matrix}' \
+        r'\frac{1}{s} & \frac{s}{s^{2} - 1}\\\frac{s}{s - 1} & \frac{s^{2}}{s^{2} - 1}\end{matrix}\right]_\tau'
+
+    # Positive Feedback
+    assert latex(MIMOFeedback(tfm_1*tfm_2, tfm_1, 1)) == \
+        r'\left(I_{\tau} - \left[\begin{matrix}\frac{1}{s} & \frac{s}{s^{2} - 1}\\\frac{s}{s - 1} & \frac{s^{2}}{s^{2} - 1}\end{matrix}\right]_\tau\cdot\left' \
+        r'[\begin{matrix}\frac{s^{2}}{s^{2} - 1} & \frac{s}{s - 1}\\\frac{s}{s^{2} - 1} & \frac{1}{s}\end{matrix}\right]_\tau\cdot\left[\begin{matrix}\frac{1}{s} & \frac{s}{s^{2} - 1}' \
+        r'\\\frac{s}{s - 1} & \frac{s^{2}}{s^{2} - 1}\end{matrix}\right]_\tau\right)^{-1} \cdot \left[\begin{matrix}\frac{1}{s} & \frac{s}{s^{2} - 1}' \
+        r'\\\frac{s}{s - 1} & \frac{s^{2}}{s^{2} - 1}\end{matrix}\right]_\tau\cdot\left[\begin{matrix}\frac{s^{2}}{s^{2} - 1} & \frac{s}{s - 1}\\\frac{s}{s^{2} - 1}' \
+        r' & \frac{1}{s}\end{matrix}\right]_\tau'
 
 
 def test_Quaternion_latex_printing():
@@ -2488,7 +2597,6 @@ def test_multiline_latex():
     raises(ValueError, lambda: multiline_latex(f, expr, environment="foo"))
 
 def test_issue_15353():
-    from sympy import ConditionSet, Tuple, S, sin, cos
     a, x = symbols('a x')
     # Obtained from nonlinsolve([(sin(a*x)),cos(a*x)],[x,a])
     sol = ConditionSet(
@@ -2501,7 +2609,7 @@ def test_issue_15353():
 
 def test_trace():
     # Issue 15303
-    from sympy import trace
+    from sympy.matrices.expressions.trace import trace
     A = MatrixSymbol("A", 2, 2)
     assert latex(trace(A)) == r"\operatorname{tr}\left(A \right)"
     assert latex(trace(A**2)) == r"\operatorname{tr}\left(A^{2} \right)"
@@ -2509,7 +2617,8 @@ def test_trace():
 
 def test_print_basic():
     # Issue 15303
-    from sympy import Basic, Expr
+    from sympy.core.basic import Basic
+    from sympy.core.expr import Expr
 
     # dummy class for testing printing where the function is not
     # implemented in latex.py
@@ -2536,7 +2645,7 @@ def test_print_basic():
 
 def test_MatrixSymbol_bold():
     # Issue #15871
-    from sympy import trace
+    from sympy.matrices.expressions.trace import trace
     A = MatrixSymbol("A", 2, 2)
     assert latex(trace(A), mat_symbol_style='bold') == \
         r"\operatorname{tr}\left(\mathbf{A} \right)"
@@ -2726,5 +2835,8 @@ def test_pickleable():
     assert pickle.loads(pickle.dumps(latex)) is latex
 
 def test_printing_latex_array_expressions():
-    assert latex(ArraySymbol("A", 2, 3, 4)) == "A"
+    assert latex(ArraySymbol("A", (2, 3, 4))) == "A"
     assert latex(ArrayElement("A", (2, 1/(1-x), 0))) == "{{A}_{2, \\frac{1}{1 - x}, 0}}"
+    M = MatrixSymbol("M", 3, 3)
+    N = MatrixSymbol("N", 3, 3)
+    assert latex(ArrayElement(M*N, [x, 0])) == "{{\\left(M N\\right)}_{x, 0}}"

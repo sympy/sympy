@@ -1,14 +1,43 @@
-from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, I,
-                   sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
-                   WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
-                   Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
-                   simplify, together, collect, factorial, apart, combsimp, factor, refine,
-                   cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-                   exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
-                   integrate, gammasimp, Gt)
-from sympy.core.expr import ExprBuilder, unchanged
-from sympy.core.function import AppliedUndef
+from sympy.assumptions.refine import refine
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
+from sympy.core.expr import (ExprBuilder, unchanged, Expr,
+    UnevaluatedExpr)
+from sympy.core.function import (Function, expand, WildFunction,
+    AppliedUndef, Derivative, diff)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (NumberSymbol, E, zoo, oo, Float, I,
+    Rational, nan, Integer, Number, pi)
+from sympy.core.power import Pow
+from sympy.core.relational import Ge, Lt, Gt, Le
+from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
+from sympy.core.symbol import Symbol, symbols, Dummy, Wild
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.exponential import exp_polar, exp, log
+from sympy.functions.elementary.miscellaneous import sqrt, Max
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import tan, sin, cos
+from sympy.functions.special.delta_functions import (Heaviside,
+    DiracDelta)
+from sympy.functions.special.error_functions import Si
+from sympy.functions.special.gamma_functions import gamma
+from sympy.integrals.integrals import integrate, Integral
 from sympy.physics.secondquant import FockState
+from sympy.polys.partfrac import apart
+from sympy.polys.polytools import factor, cancel, Poly
+from sympy.polys.rationaltools import together
+from sympy.series.order import O
+from sympy.simplify.combsimp import combsimp
+from sympy.simplify.gammasimp import gammasimp
+from sympy.simplify.powsimp import powsimp
+from sympy.simplify.radsimp import collect, radsimp
+from sympy.simplify.ratsimp import ratsimp
+from sympy.simplify.simplify import simplify, nsimplify
+from sympy.simplify.trigsimp import trigsimp
 from sympy.physics.units import meter
 
 from sympy.testing.pytest import raises, XFAIL
@@ -102,7 +131,7 @@ class F1_1(DummyNumber):
 i5 = I5()
 f1_1 = F1_1()
 
-# basic sympy objects
+# basic SymPy objects
 basic_objs = [
     Rational(2),
     Float("1.3"),
@@ -334,7 +363,7 @@ def test_cooperative_operations():
 
 
 def test_relational():
-    from sympy import Lt
+    from sympy.core.relational import Lt
     assert (pi < 3) is S.false
     assert (pi <= 3) is S.false
     assert (pi > 3) is S.true
@@ -349,7 +378,6 @@ def test_relational():
 
 
 def test_relational_assumptions():
-    from sympy import Lt, Gt, Le, Ge
     m1 = Symbol("m1", nonnegative=False)
     m2 = Symbol("m2", positive=False)
     m3 = Symbol("m3", nonpositive=False)
@@ -1250,6 +1278,11 @@ def test_as_coeff_exponent():
 
 
 def test_extractions():
+    for base in (2, S.Exp1):
+        assert Pow(base**x, 3, evaluate=False
+            ).extract_multiplicatively(base**x) == base**(2*x)
+        assert (base**(5*x)).extract_multiplicatively(
+            base**(3*x)) == base**(2*x)
     assert ((x*y)**3).extract_multiplicatively(x**2 * y) == x*y**2
     assert ((x*y)**3).extract_multiplicatively(x**4 * y) is None
     assert (2*x).extract_multiplicatively(2) == x
@@ -1309,12 +1342,10 @@ def test_extractions():
         (-x + y).could_extract_minus_sign()
     assert (1 - x - y).could_extract_minus_sign() is True
     assert (1 - x + y).could_extract_minus_sign() is False
-    assert ((-x - x*y)/y).could_extract_minus_sign() is True
-    assert (-(x + x*y)/y).could_extract_minus_sign() is True
+    assert ((-x - x*y)/y).could_extract_minus_sign() is False
     assert ((x + x*y)/(-y)).could_extract_minus_sign() is True
     assert ((x + x*y)/y).could_extract_minus_sign() is False
-    assert (x*(-x - x**3)).could_extract_minus_sign() is True
-    assert ((-x - y)/(x + y)).could_extract_minus_sign() is True
+    assert ((-x - y)/(x + y)).could_extract_minus_sign() is False
 
     class sign_invariant(Function, Expr):
         nargs = 1
@@ -1323,13 +1354,12 @@ def test_extractions():
     foo = sign_invariant(x)
     assert foo == -foo
     assert foo.could_extract_minus_sign() is False
-    # The results of each of these will vary on different machines, e.g.
-    # the first one might be False and the other (then) is true or vice versa,
-    # so both are included.
-    assert ((-x - y)/(x - y)).could_extract_minus_sign() is False or \
-           ((-x - y)/(y - x)).could_extract_minus_sign() is False
     assert (x - y).could_extract_minus_sign() is False
     assert (-x + y).could_extract_minus_sign() is True
+    assert (x - 1).could_extract_minus_sign() is False
+    assert (1 - x).could_extract_minus_sign() is True
+    assert (sqrt(2) - 1).could_extract_minus_sign() is True
+    assert (1 - sqrt(2)).could_extract_minus_sign() is False
     # check that result is canonical
     eq = (3*x + 15*y).extract_multiplicatively(3)
     assert eq.args == eq.func(*eq.args).args
@@ -1412,10 +1442,17 @@ def test_coeff():
     assert (n*m + m*n*m).coeff(n, right=True) == m  # = (1 + m)*n*m
     assert (n*m + m*n).coeff(n) == 0
     assert (n*m + o*m*n).coeff(m*n) == o
-    assert (n*m + o*m*n).coeff(m*n, right=1) == 1
-    assert (n*m + n*m*n).coeff(n*m, right=1) == 1 + n  # = n*m*(n + 1)
+    assert (n*m + o*m*n).coeff(m*n, right=True) == 1
+    assert (n*m + n*m*n).coeff(n*m, right=True) == 1 + n  # = n*m*(n + 1)
 
     assert (x*y).coeff(z, 0) == x*y
+
+    assert (x*n + y*n + z*m).coeff(n) == x + y
+    assert (n*m + n*o + o*l).coeff(n, right=True) == m + o
+    assert (x*n*m*n + y*n*m*o + z*l).coeff(m, right=True) == x*n + y*o
+    assert (x*n*m*n + x*n*m*o + z*l).coeff(m, right=True) == n + o
+    assert (x*n*m*n + x*n*m*o + z*l).coeff(m) == x*n
+
 
 def test_coeff2():
     r, kappa = symbols('r, kappa')
@@ -1854,7 +1891,8 @@ def test_equals():
 
 
 def test_random():
-    from sympy import posify, lucas
+    from sympy.functions.combinatorial.numbers import lucas
+    from sympy.simplify.simplify import posify
     assert posify(x)[0]._random() is not None
     assert lucas(n)._random(2, -2, 0, -1, 1) is None
 
@@ -1863,8 +1901,6 @@ def test_random():
 
 
 def test_round():
-    from sympy.abc import x
-
     assert str(Float('0.1249999').round(2)) == '0.12'
     d20 = 12345678901234567890
     ans = S(d20).round(2)
@@ -2111,6 +2147,13 @@ def test_ExprBuilder():
     eb = ExprBuilder(Mul)
     eb.args.extend([x, x])
     assert eb.build() == x**2
+
+
+def test_issue_22020():
+    from sympy.parsing.sympy_parser import parse_expr
+    x = parse_expr("log((2*V/3-V)/C)/-(R+r)*C")
+    y = parse_expr("log((2*V/3-V)/C)/-(R+r)*2")
+    assert x.equals(y) is False
 
 
 def test_non_string_equality():

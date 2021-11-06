@@ -7,7 +7,9 @@ Module for the SDM class.
 from operator import add, neg, pos, sub, mul
 from collections import defaultdict
 
-from .exceptions import DDMBadInputError, DDMDomainError, DDMShapeError
+from sympy.utilities.iterables import _strongly_connected_components
+
+from .exceptions import DMBadInputError, DMDomainError, DMShapeError
 
 from .ddm import DDM
 
@@ -69,9 +71,9 @@ class SDM(dict):
         self.domain = domain
 
         if not all(0 <= r < m for r in self):
-            raise DDMBadInputError("Row out of range")
+            raise DMBadInputError("Row out of range")
         if not all(0 <= c < n for row in self.values() for c in row):
-            raise DDMBadInputError("Column out of range")
+            raise DMBadInputError("Column out of range")
 
     def getitem(self, i, j):
         try:
@@ -252,7 +254,7 @@ class SDM(dict):
 
         m, n = shape
         if not (len(ddm) == m and all(len(row) == n for row in ddm)):
-            raise DDMBadInputError("Inconsistent row-list/shape")
+            raise DMBadInputError("Inconsistent row-list/shape")
         getrow = lambda i: {j:ddm[i][j] for j in range(n) if ddm[i][j]}
         irows = ((i, getrow(i)) for i in range(m))
         sdm = {i: row for i, row in irows if row}
@@ -471,11 +473,11 @@ class SDM(dict):
 
         """
         if A.domain != B.domain:
-            raise DDMDomainError
+            raise DMDomainError
         m, n = A.shape
         n2, o = B.shape
         if n != n2:
-            raise DDMShapeError
+            raise DMShapeError
         C = sdm_matmul(A, B, A.domain, m, o)
         return A.new(C, (m, o), A.domain)
 
@@ -502,9 +504,9 @@ class SDM(dict):
 
     def mul_elementwise(A, B):
         if A.domain != B.domain:
-            raise DDMDomainError
+            raise DMDomainError
         if A.shape != B.shape:
-            raise DDMShapeError
+            raise DMShapeError
         zero = A.domain.zero
         fzero = lambda e: zero
         Csdm = binop_dict(A, B, mul, fzero, fzero)
@@ -587,6 +589,29 @@ class SDM(dict):
             return A.copy()
         Ak = unop_dict(A, lambda e: K.convert_from(e, Kold))
         return A.new(Ak, A.shape, K)
+
+    def scc(A):
+        """Strongly connected components of a square matrix *A*.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import SDM
+        >>> A = SDM({0:{0: ZZ(2)}, 1:{1:ZZ(1)}}, (2, 2), ZZ)
+        >>> A.scc()
+        [[0], [1]]
+
+        See also
+        ========
+
+        sympy.polys.matrices.domainmatrix.DomainMatrix.scc
+        """
+        rows, cols = A.shape
+        assert rows == cols
+        V = range(rows)
+        Emap = {v: list(A.get(v, [])) for v in V}
+        return _strongly_connected_components(V, Emap)
 
     def rref(A):
         """
@@ -706,19 +731,22 @@ class SDM(dict):
         return A.new(rep, (1, ncols-1), A.domain)
 
     def hstack(A, *B):
-        """
-        Horizontally stacks two :py:class:`~.SDM` matrices A & B
+        """Horizontally stacks :py:class:`~.SDM` matrices.
 
         Examples
         ========
 
-        >>> from sympy import QQ
+        >>> from sympy import ZZ
         >>> from sympy.polys.matrices.sdm import SDM
-        >>> B = SDM({0:{0:QQ(1)}, 1:{0:QQ(2)}}, (2, 1), QQ)
-        >>> A = SDM({0:{0:QQ(1), 1:QQ(2)}, 1:{0:QQ(3), 1:QQ(4)}}, (2, 2), QQ)
-        >>> A.hstack(B)
-        {0: {0: 1, 1: 2, 2: 1}, 1: {0: 3, 1: 4, 2: 2}}
 
+        >>> A = SDM({0: {0: ZZ(1), 1: ZZ(2)}, 1: {0: ZZ(3), 1: ZZ(4)}}, (2, 2), ZZ)
+        >>> B = SDM({0: {0: ZZ(5), 1: ZZ(6)}, 1: {0: ZZ(7), 1: ZZ(8)}}, (2, 2), ZZ)
+        >>> A.hstack(B)
+        {0: {0: 1, 1: 2, 2: 5, 3: 6}, 1: {0: 3, 1: 4, 2: 7, 3: 8}}
+
+        >>> C = SDM({0: {0: ZZ(9), 1: ZZ(10)}, 1: {0: ZZ(11), 1: ZZ(12)}}, (2, 2), ZZ)
+        >>> A.hstack(B, C)
+        {0: {0: 1, 1: 2, 2: 5, 3: 6, 4: 9, 5: 10}, 1: {0: 3, 1: 4, 2: 7, 3: 8, 4: 11, 5: 12}}
         """
         Anew = dict(A.copy())
         rows, cols = A.shape
@@ -740,6 +768,23 @@ class SDM(dict):
         return A.new(Anew, (rows, cols), A.domain)
 
     def vstack(A, *B):
+        """Vertically stacks :py:class:`~.SDM` matrices.
+
+        Examples
+        ========
+
+        >>> from sympy import ZZ
+        >>> from sympy.polys.matrices.sdm import SDM
+
+        >>> A = SDM({0: {0: ZZ(1), 1: ZZ(2)}, 1: {0: ZZ(3), 1: ZZ(4)}}, (2, 2), ZZ)
+        >>> B = SDM({0: {0: ZZ(5), 1: ZZ(6)}, 1: {0: ZZ(7), 1: ZZ(8)}}, (2, 2), ZZ)
+        >>> A.vstack(B)
+        {0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}, 2: {0: 5, 1: 6}, 3: {0: 7, 1: 8}}
+
+        >>> C = SDM({0: {0: ZZ(9), 1: ZZ(10)}, 1: {0: ZZ(11), 1: ZZ(12)}}, (2, 2), ZZ)
+        >>> A.vstack(B, C)
+        {0: {0: 1, 1: 2}, 1: {0: 3, 1: 4}, 2: {0: 5, 1: 6}, 3: {0: 7, 1: 8}, 4: {0: 9, 1: 10}, 5: {0: 11, 1: 12}}
+        """
         Anew = dict(A.copy())
         rows, cols = A.shape
         domain = A.domain
@@ -785,6 +830,26 @@ class SDM(dict):
 
         """
         return A.to_ddm().charpoly()
+
+    def is_zero_matrix(self):
+        """
+        Says whether this matrix has all zero entries.
+        """
+        return not self
+
+    def is_upper(self):
+        """
+        Says whether this matrix is upper-triangular. True can be returned
+        even if the matrix is not square.
+        """
+        return all(i <= j for i, row in self.items() for j in row)
+
+    def is_lower(self):
+        """
+        Says whether this matrix is lower-triangular. True can be returned
+        even if the matrix is not square.
+        """
+        return all(i >= j for i, row in self.items() for j in row)
 
 
 def binop_dict(A, B, fab, fa, fb):

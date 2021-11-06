@@ -3,14 +3,13 @@
 
 __all__ = ["Options"]
 
-from typing import Dict, Type
+from typing import Dict as tDict, Type
 from typing import List, Optional
 
 from sympy.core import Basic, sympify
 from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 from sympy.utilities import numbered_symbols, topological_sort, public
-from sympy.utilities.iterables import has_dups
-from sympy.core.compatibility import is_sequence
+from sympy.utilities.iterables import has_dups, is_sequence
 
 import sympy.polys
 
@@ -124,7 +123,7 @@ class Options(dict):
     """
 
     __order__ = None
-    __options__ = {}  # type: Dict[str, Type[Option]]
+    __options__ = {}  # type: tDict[str, Type[Option]]
 
     def __init__(self, gens, args, flags=None, strict=False):
         dict.__init__(self)

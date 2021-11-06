@@ -21,7 +21,7 @@ class Dagger(adjoint):
     ==========
 
     arg : Expr
-        The sympy expression that we want to take the dagger of.
+        The SymPy expression that we want to take the dagger of.
 
     Examples
     ========

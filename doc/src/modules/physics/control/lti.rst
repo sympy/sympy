@@ -21,3 +21,12 @@ lti
 
 .. autoclass:: TransferFunctionMatrix
    :members:
+
+.. autoclass:: MIMOSeries
+   :members:
+
+.. autoclass:: MIMOParallel
+   :members:
+
+.. autoclass:: MIMOFeedback
+   :members:

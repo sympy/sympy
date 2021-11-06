@@ -1,4 +1,5 @@
 import os
+from typing import Tuple as tTuple, Type
 
 import mpmath.libmp as mlib
 
@@ -59,7 +60,7 @@ if GROUND_TYPES in ('auto', 'gmpy', 'gmpy2'):
 
 elif GROUND_TYPES == 'python':
 
-    # The user asked for python so ignore gmpy2 module.
+    # The user asked for Python so ignore gmpy2 module.
     gmpy = None
 
 else:
@@ -77,6 +78,8 @@ else:
 # unrecognised value). The two blocks below define the values exported by this
 # module in each case.
 #
+SYMPY_INTS: tTuple[Type, ...]
+
 if gmpy is not None:
 
     HAS_GMPY = 2
@@ -97,5 +100,5 @@ else:
     MPZ = int
     MPQ = PythonMPQ
 
-    factorial = mlib.ifac
-    sqrt = mlib.isqrt
+    factorial = lambda x: int(mlib.ifac(x))
+    sqrt = lambda x: int(mlib.isqrt(x))

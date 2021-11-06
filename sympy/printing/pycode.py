@@ -1,7 +1,7 @@
 """
 Python code printers
 
-This module contains python code printers for plain python as well as NumPy & SciPy enabled code.
+This module contains Python code printers for plain Python as well as NumPy & SciPy enabled code.
 """
 from collections import defaultdict
 from itertools import chain
@@ -57,7 +57,7 @@ _known_constants_math = {
     'Exp1': 'e',
     'Pi': 'pi',
     'E': 'e'
-    # Only in python >= 3.5:
+    # Only in Python >= 3.5:
     # 'Infinity': 'inf',
     # 'NaN': 'nan'
 }
@@ -104,7 +104,7 @@ class AbstractPythonCodePrinter(CodePrinter):
             import sys
             std = 'python{}'.format(sys.version_info.major)
         if std not in ('python2', 'python3'):
-            raise ValueError('Unrecognized python standard : {}'.format(std))
+            raise ValueError('Unrecognized Python standard : {}'.format(std))
         self.standard = std
 
         self.module_imports = defaultdict(set)
@@ -306,7 +306,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         func = self.known_functions.get(name, name)
         return "%s(%s)" % (func, self._print(expr.tolist()))
 
-    _print_SparseMatrix = \
+    _print_SparseRepMatrix = \
         _print_MutableSparseMatrix = \
         _print_ImmutableSparseMatrix = \
         _print_Matrix = \
@@ -453,8 +453,23 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         return self._print_Rational(expr)
 
     def _print_frac(self, expr):
-        from sympy import Mod
+        from sympy.core.mod import Mod
         return self._print_Mod(Mod(expr.args[0], 1))
+
+    def _print_Symbol(self, expr):
+
+        name = super()._print_Symbol(expr)
+
+        if name in self.reserved_words:
+            if self._settings['error_on_reserved']:
+                msg = ('This expression includes the symbol "{}" which is a '
+                       'reserved keyword in this language.')
+                raise ValueError(msg.format(name))
+            return name + self._settings['reserved_word_suffix']
+        elif '{' in name:   # Remove curly braces from subscripted variables
+            return name.replace('{', '').replace('}', '')
+        else:
+            return name
 
     _print_lowergamma = CodePrinter._print_not_supported
     _print_uppergamma = CodePrinter._print_not_supported

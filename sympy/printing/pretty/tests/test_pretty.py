@@ -1,20 +1,49 @@
 # -*- coding: utf-8 -*-
-from sympy import (
-    Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
-    FiniteSet, Function, Ge, Gt, I, Implies, Integral, SingularityFunction,
-    Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
-    Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
-    Segment, Subs, Sum, Symbol, Tuple, Trace, Xor, ZZ, conjugate,
-    groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
-    SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps, ITE,
-    Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio,
-    LambertW, airyai, airybi, airyaiprime, airybiprime, fresnelc, fresnels,
-    Heaviside, dirichlet_eta, diag, MatrixSlice)
-
+from sympy.concrete.products import Product
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.containers import (Dict, Tuple)
+from sympy.core.function import (Derivative, Function, Lambda, Subs)
+from sympy.core.mul import Mul
+from sympy.core import (EulerGamma, GoldenRatio)
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.power import Pow
+from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import conjugate
+from sympy.functions.elementary.exponential import LambertW
+from sympy.functions.special.bessel import (airyai, airyaiprime, airybi, airybiprime)
+from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.error_functions import (fresnelc, fresnels)
+from sympy.functions.special.singularity_functions import SingularityFunction
+from sympy.functions.special.zeta_functions import dirichlet_eta
+from sympy.geometry.line import (Ray, Segment)
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import (And, Equivalent, ITE, Implies, Nand, Nor, Not, Or, Xor)
+from sympy.matrices.dense import (Matrix, diag)
+from sympy.matrices.expressions.slice import MatrixSlice
+from sympy.matrices.expressions.trace import Trace
+from sympy.polys.domains.finitefield import FF
+from sympy.polys.domains.integerring import ZZ
+from sympy.polys.domains.rationalfield import QQ
+from sympy.polys.domains.realfield import RR
+from sympy.polys.orderings import (grlex, ilex)
+from sympy.polys.polytools import groebner
+from sympy.polys.rootoftools import (RootSum, rootof)
+from sympy.series.formal import fps
+from sympy.series.fourier import fourier_series
+from sympy.series.limits import Limit
+from sympy.series.order import O
+from sympy.series.sequences import (SeqAdd, SeqFormula, SeqMul, SeqPer)
+from sympy.sets.contains import Contains
+from sympy.sets.fancysets import Range
+from sympy.sets.sets import (Complement, FiniteSet, Intersection, Interval, Union)
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
 from sympy.core.expr import UnevaluatedExpr
-from sympy.core.trace import Tr
+from sympy.physics.quantum.trace import Tr
 
 from sympy.functions import (Abs, Chi, Ci, Ei, KroneckerDelta,
     Piecewise, Shi, Si, atan2, beta, binomial, catalan, ceiling, cos,
@@ -29,11 +58,11 @@ from sympy.matrices.expressions import hadamard_power
 
 from sympy.physics import mechanics
 from sympy.physics.control.lti import (TransferFunction, Feedback, TransferFunctionMatrix,
-    Series, Parallel)
+    Series, Parallel, MIMOSeries, MIMOParallel, MIMOFeedback)
 from sympy.physics.units import joule, degree
 from sympy.printing.pretty import pprint, pretty as xpretty
 from sympy.printing.pretty.pretty_symbology import center_accent, is_combining
-from sympy import ConditionSet
+from sympy.sets.conditionset import ConditionSet
 
 from sympy.sets import ImageSet, ProductSet
 from sympy.sets.setexpr import SetExpr
@@ -377,6 +406,7 @@ def test_pretty_Permutation():
     assert xpretty(p1, perm_cyclic=False, use_unicode=False) == \
     "/0 1 2 3 4\\\n"\
     "\\0 2 1 4 3/"
+
 
 def test_pretty_basic():
     assert pretty( -Rational(1)/2 ) == '-1/2'
@@ -2379,6 +2409,14 @@ def test_pretty_Series():
     tf1 = TransferFunction(x + y, x - 2*y, y)
     tf2 = TransferFunction(x - y, x + y, y)
     tf3 = TransferFunction(x**2 + y, y - x, y)
+    tf4 = TransferFunction(2, 3, y)
+
+    tfm1 = TransferFunctionMatrix([[tf1, tf2], [tf3, tf4]])
+    tfm2 = TransferFunctionMatrix([[tf3], [-tf4]])
+    tfm3 = TransferFunctionMatrix([[tf1, -tf2, -tf3], [tf3, -tf4, tf2]])
+    tfm4 = TransferFunctionMatrix([[tf1, tf2], [tf3, -tf4], [-tf2, -tf1]])
+    tfm5 = TransferFunctionMatrix([[-tf2, -tf1], [tf4, -tf3], [tf1, tf2]])
+
     expected1 = \
 """\
           ⎛ 2    ⎞\n\
@@ -2406,16 +2444,52 @@ def test_pretty_Series():
 ⎜─────── + ─────⎟⋅⎜───── + ──────⎟\n\
 ⎝x - 2⋅y   x + y⎠ ⎝x + y   -x + y⎠\
 """
+    expected5 = \
+"""\
+⎡ x + y   x - y⎤  ⎡ 2    ⎤ \n\
+⎢───────  ─────⎥  ⎢x  + y⎥ \n\
+⎢x - 2⋅y  x + y⎥  ⎢──────⎥ \n\
+⎢              ⎥  ⎢-x + y⎥ \n\
+⎢ 2            ⎥ ⋅⎢      ⎥ \n\
+⎢x  + y     2  ⎥  ⎢ -2   ⎥ \n\
+⎢──────     ─  ⎥  ⎢ ───  ⎥ \n\
+⎣-x + y     3  ⎦τ ⎣  3   ⎦τ\
+"""
+    expected6 = \
+"""\
+                                               ⎛⎡ x + y    x - y ⎤    ⎡ x - y    x + y ⎤ ⎞\n\
+                                               ⎜⎢───────   ───── ⎥    ⎢ ─────   ───────⎥ ⎟\n\
+⎡ x + y   x - y⎤  ⎡                    2    ⎤  ⎜⎢x - 2⋅y   x + y ⎥    ⎢ x + y   x - 2⋅y⎥ ⎟\n\
+⎢───────  ─────⎥  ⎢ x + y   -x + y  - x  - y⎥  ⎜⎢                ⎥    ⎢                ⎥ ⎟\n\
+⎢x - 2⋅y  x + y⎥  ⎢───────  ──────  ────────⎥  ⎜⎢ 2              ⎥    ⎢          2     ⎥ ⎟\n\
+⎢              ⎥  ⎢x - 2⋅y  x + y    -x + y ⎥  ⎜⎢x  + y     -2   ⎥    ⎢  -2     x  + y ⎥ ⎟\n\
+⎢ 2            ⎥ ⋅⎢                         ⎥ ⋅⎜⎢──────     ───  ⎥  + ⎢  ───    ────── ⎥ ⎟\n\
+⎢x  + y     2  ⎥  ⎢ 2                       ⎥  ⎜⎢-x + y      3   ⎥    ⎢   3     -x + y ⎥ ⎟\n\
+⎢──────     ─  ⎥  ⎢x  + y    -2      x - y  ⎥  ⎜⎢                ⎥    ⎢                ⎥ ⎟\n\
+⎣-x + y     3  ⎦τ ⎢──────    ───     ─────  ⎥  ⎜⎢-x + y    -x - y⎥    ⎢ -x - y  -x + y ⎥ ⎟\n\
+                  ⎣-x + y     3      x + y  ⎦τ ⎜⎢──────   ───────⎥    ⎢───────  ────── ⎥ ⎟\n\
+                                               ⎝⎣x + y    x - 2⋅y⎦τ   ⎣x - 2⋅y  x + y  ⎦τ⎠\
+"""
+
     assert upretty(Series(tf1, tf3)) == expected1
     assert upretty(Series(-tf2, -tf1)) == expected2
     assert upretty(Series(tf3, tf1, Parallel(-tf1, tf2))) == expected3
     assert upretty(Series(Parallel(tf1, tf2), Parallel(tf2, tf3))) == expected4
+    assert upretty(MIMOSeries(tfm2, tfm1)) == expected5
+    assert upretty(MIMOSeries(MIMOParallel(tfm4, -tfm5), tfm3, tfm1)) == expected6
 
 
 def test_pretty_Parallel():
     tf1 = TransferFunction(x + y, x - 2*y, y)
     tf2 = TransferFunction(x - y, x + y, y)
     tf3 = TransferFunction(x**2 + y, y - x, y)
+    tf4 = TransferFunction(y**2 - x, x**3 + x, y)
+
+    tfm1 = TransferFunctionMatrix([[tf1, tf2], [tf3, -tf4], [-tf2, -tf1]])
+    tfm2 = TransferFunctionMatrix([[-tf2, -tf1], [tf4, -tf3], [tf1, tf2]])
+    tfm3 = TransferFunctionMatrix([[-tf1, tf2], [-tf3, tf4], [tf2, tf1]])
+    tfm4 = TransferFunctionMatrix([[-tf1, -tf2], [-tf3, -tf4]])
+
     expected1 = \
 """\
  x + y    x - y\n\
@@ -2442,10 +2516,45 @@ x  + y    x + y    ⎛ -x - y⎞ ⎛x - y⎞\n\
 ⎜───────⎟⋅⎜─────⎟ + ⎜─────⎟⋅⎜──────⎟\n\
 ⎝x - 2⋅y⎠ ⎝x + y⎠   ⎝x + y⎠ ⎝-x + y⎠\
 """
+    expected5 = \
+"""\
+⎡ x + y   -x + y ⎤    ⎡ x - y    x + y ⎤    ⎡ x + y    x - y ⎤ \n\
+⎢───────  ────── ⎥    ⎢ ─────   ───────⎥    ⎢───────   ───── ⎥ \n\
+⎢x - 2⋅y  x + y  ⎥    ⎢ x + y   x - 2⋅y⎥    ⎢x - 2⋅y   x + y ⎥ \n\
+⎢                ⎥    ⎢                ⎥    ⎢                ⎥ \n\
+⎢ 2            2 ⎥    ⎢     2    2     ⎥    ⎢ 2            2 ⎥ \n\
+⎢x  + y   x - y  ⎥    ⎢x - y    x  + y ⎥    ⎢x  + y   x - y  ⎥ \n\
+⎢──────   ────── ⎥  + ⎢──────   ────── ⎥  + ⎢──────   ────── ⎥ \n\
+⎢-x + y    3     ⎥    ⎢ 3       -x + y ⎥    ⎢-x + y    3     ⎥ \n\
+⎢         x  + x ⎥    ⎢x  + x          ⎥    ⎢         x  + x ⎥ \n\
+⎢                ⎥    ⎢                ⎥    ⎢                ⎥ \n\
+⎢-x + y    -x - y⎥    ⎢ -x - y  -x + y ⎥    ⎢-x + y    -x - y⎥ \n\
+⎢──────   ───────⎥    ⎢───────  ────── ⎥    ⎢──────   ───────⎥ \n\
+⎣x + y    x - 2⋅y⎦τ   ⎣x - 2⋅y  x + y  ⎦τ   ⎣x + y    x - 2⋅y⎦τ\
+"""
+    expected6 = \
+"""\
+⎡ x - y    x + y ⎤                        ⎡-x + y    -x - y ⎤ \n\
+⎢ ─────   ───────⎥                        ⎢──────   ─────── ⎥ \n\
+⎢ x + y   x - 2⋅y⎥  ⎡ -x - y   -x + y⎤    ⎢x + y    x - 2⋅y ⎥ \n\
+⎢                ⎥  ⎢───────   ──────⎥    ⎢                 ⎥ \n\
+⎢     2    2     ⎥  ⎢x - 2⋅y   x + y ⎥    ⎢      2     2    ⎥ \n\
+⎢x - y    x  + y ⎥  ⎢                ⎥    ⎢-x + y   - x  - y⎥ \n\
+⎢──────   ────── ⎥ ⋅⎢   2           2⎥  + ⎢───────  ────────⎥ \n\
+⎢ 3       -x + y ⎥  ⎢- x  - y  x - y ⎥    ⎢  3       -x + y ⎥ \n\
+⎢x  + x          ⎥  ⎢────────  ──────⎥    ⎢ x  + x          ⎥ \n\
+⎢                ⎥  ⎢ -x + y    3    ⎥    ⎢                 ⎥ \n\
+⎢ -x - y  -x + y ⎥  ⎣          x  + x⎦τ   ⎢ x + y    x - y  ⎥ \n\
+⎢───────  ────── ⎥                        ⎢───────   ─────  ⎥ \n\
+⎣x - 2⋅y  x + y  ⎦τ                       ⎣x - 2⋅y   x + y  ⎦τ\
+"""
+
     assert upretty(Parallel(tf1, tf2)) == expected1
     assert upretty(Parallel(-tf2, -tf1)) == expected2
     assert upretty(Parallel(tf3, tf1, Series(-tf1, tf2))) == expected3
     assert upretty(Parallel(Series(tf1, tf2), Series(tf2, tf3))) == expected4
+    assert upretty(MIMOParallel(-tfm3, -tfm2, tfm1)) == expected5
+    assert upretty(MIMOParallel(MIMOSeries(tfm4, -tfm2), tfm2)) == expected6
 
 
 def test_pretty_Feedback():
@@ -2458,13 +2567,13 @@ def test_pretty_Feedback():
     tf6 = TransferFunction(2, 2, x)
     expected1 = \
 """\
-    ⎛1⎞    \n\
-    ⎜─⎟    \n\
-    ⎝1⎠    \n\
-───────────\n\
-1    x + y \n\
-─ + ───────\n\
-1   x - 2⋅y\
+     ⎛1⎞     \n\
+     ⎜─⎟     \n\
+     ⎝1⎠     \n\
+─────────────\n\
+1   ⎛ x + y ⎞\n\
+─ + ⎜───────⎟\n\
+1   ⎝x - 2⋅y⎠\
 """
     expected2 = \
 """\
@@ -2534,13 +2643,33 @@ def test_pretty_Feedback():
 """
     expected8 = \
 """\
- ⎛1 - x⎞ \n\
- ⎜─────⎟ \n\
- ⎝x - y⎠ \n\
-─────────\n\
-1   1 - x\n\
-─ + ─────\n\
-1   x - y\
+  ⎛1 - x⎞  \n\
+  ⎜─────⎟  \n\
+  ⎝x - y⎠  \n\
+───────────\n\
+1   ⎛1 - x⎞\n\
+─ + ⎜─────⎟\n\
+1   ⎝x - y⎠\
+"""
+    expected9 = \
+"""\
+      ⎛ x + y ⎞ ⎛x - y⎞      \n\
+      ⎜───────⎟⋅⎜─────⎟      \n\
+      ⎝x - 2⋅y⎠ ⎝x + y⎠      \n\
+─────────────────────────────\n\
+1   ⎛ x + y ⎞ ⎛x - y⎞ ⎛1 - x⎞\n\
+─ - ⎜───────⎟⋅⎜─────⎟⋅⎜─────⎟\n\
+1   ⎝x - 2⋅y⎠ ⎝x + y⎠ ⎝x - y⎠\
+"""
+    expected10 = \
+"""\
+  ⎛1 - x⎞  \n\
+  ⎜─────⎟  \n\
+  ⎝x - y⎠  \n\
+───────────\n\
+1   ⎛1 - x⎞\n\
+─ - ⎜─────⎟\n\
+1   ⎝x - y⎠\
 """
     assert upretty(Feedback(tf, tf1)) == expected1
     assert upretty(Feedback(tf, tf2*tf1*tf3)) == expected2
@@ -2550,6 +2679,43 @@ def test_pretty_Feedback():
     assert upretty(Feedback(tf3*tf5, tf2*tf1)) == expected6
     assert upretty(Feedback(tf4, tf6)) == expected7
     assert upretty(Feedback(tf5, tf)) == expected8
+
+    assert upretty(Feedback(tf1*tf2, tf5, 1)) == expected9
+    assert upretty(Feedback(tf5, tf, 1)) == expected10
+
+
+def test_pretty_MIMOFeedback():
+    tf1 = TransferFunction(x + y, x - 2*y, y)
+    tf2 = TransferFunction(x - y, x + y, y)
+    tfm_1 = TransferFunctionMatrix([[tf1, tf2], [tf2, tf1]])
+    tfm_2 = TransferFunctionMatrix([[tf2, tf1], [tf1, tf2]])
+    tfm_3 = TransferFunctionMatrix([[tf1, tf1], [tf2, tf2]])
+
+    expected1 = \
+"""\
+⎛    ⎡ x + y    x - y ⎤  ⎡ x - y    x + y ⎤ ⎞-1   ⎡ x + y    x - y ⎤ \n\
+⎜    ⎢───────   ───── ⎥  ⎢ ─────   ───────⎥ ⎟     ⎢───────   ───── ⎥ \n\
+⎜    ⎢x - 2⋅y   x + y ⎥  ⎢ x + y   x - 2⋅y⎥ ⎟     ⎢x - 2⋅y   x + y ⎥ \n\
+⎜I - ⎢                ⎥ ⋅⎢                ⎥ ⎟   ⋅ ⎢                ⎥ \n\
+⎜    ⎢ x - y    x + y ⎥  ⎢ x + y    x - y ⎥ ⎟     ⎢ x - y    x + y ⎥ \n\
+⎜    ⎢ ─────   ───────⎥  ⎢───────   ───── ⎥ ⎟     ⎢ ─────   ───────⎥ \n\
+⎝    ⎣ x + y   x - 2⋅y⎦τ ⎣x - 2⋅y   x + y ⎦τ⎠     ⎣ x + y   x - 2⋅y⎦τ\
+"""
+    expected2 = \
+"""\
+⎛    ⎡ x + y    x - y ⎤  ⎡ x - y    x + y ⎤  ⎡ x + y    x + y ⎤ ⎞-1   ⎡ x + y    x - y ⎤  ⎡ x - y    x + y ⎤ \n\
+⎜    ⎢───────   ───── ⎥  ⎢ ─────   ───────⎥  ⎢───────  ───────⎥ ⎟     ⎢───────   ───── ⎥  ⎢ ─────   ───────⎥ \n\
+⎜    ⎢x - 2⋅y   x + y ⎥  ⎢ x + y   x - 2⋅y⎥  ⎢x - 2⋅y  x - 2⋅y⎥ ⎟     ⎢x - 2⋅y   x + y ⎥  ⎢ x + y   x - 2⋅y⎥ \n\
+⎜I + ⎢                ⎥ ⋅⎢                ⎥ ⋅⎢                ⎥ ⎟   ⋅ ⎢                ⎥ ⋅⎢                ⎥ \n\
+⎜    ⎢ x - y    x + y ⎥  ⎢ x + y    x - y ⎥  ⎢ x - y    x - y ⎥ ⎟     ⎢ x - y    x + y ⎥  ⎢ x + y    x - y ⎥ \n\
+⎜    ⎢ ─────   ───────⎥  ⎢───────   ───── ⎥  ⎢ ─────    ───── ⎥ ⎟     ⎢ ─────   ───────⎥  ⎢───────   ───── ⎥ \n\
+⎝    ⎣ x + y   x - 2⋅y⎦τ ⎣x - 2⋅y   x + y ⎦τ ⎣ x + y    x + y ⎦τ⎠     ⎣ x + y   x - 2⋅y⎦τ ⎣x - 2⋅y   x + y ⎦τ\
+"""
+
+    assert upretty(MIMOFeedback(tfm_1, tfm_2, 1)) == \
+        expected1  # Positive MIMOFeedback
+    assert upretty(MIMOFeedback(tfm_1*tfm_2, tfm_3)) == \
+        expected2  # Negative MIMOFeedback (Default)
 
 
 def test_pretty_TransferFunctionMatrix():
@@ -3579,7 +3745,6 @@ def test_MatrixExpressions():
 
 
 def test_pretty_dotproduct():
-    from sympy.matrices import Matrix, MatrixSymbol
     from sympy.matrices.expressions.dotproduct import DotProduct
     n = symbols("n", integer=True)
     A = MatrixSymbol('A', n, 1)
@@ -4223,7 +4388,6 @@ def test_pretty_ImageSet():
     assert upretty(imgset) == ucode_str
 
 def test_pretty_ConditionSet():
-    from sympy import ConditionSet
     ascii_str = '{x | x in (-oo, oo) and sin(x) = 0}'
     ucode_str = '{x │ x ∊ ℝ ∧ (sin(x) = 0)}'
     assert pretty(ConditionSet(x, Eq(sin(x), 0), S.Reals)) == ascii_str
@@ -4269,7 +4433,7 @@ def test_pretty_ConditionSet():
     assert upretty(condset) == ucode_str
 
 def test_pretty_ComplexRegion():
-    from sympy import ComplexRegion
+    from sympy.sets.fancysets import ComplexRegion
     cregion = ComplexRegion(Interval(3, 5)*Interval(4, 6))
     ascii_str = '{x + y*I | x, y in [3, 5] x [4, 6]}'
     ucode_str = '{x + y⋅ⅈ │ x, y ∊ [3, 5] × [4, 6]}'
@@ -6511,8 +6675,7 @@ def test_pretty_Complement():
 
 
 def test_pretty_SymmetricDifference():
-    from sympy import SymmetricDifference, Interval
-    from sympy.testing.pytest import raises
+    from sympy.sets.sets import SymmetricDifference
     assert upretty(SymmetricDifference(Interval(2,3), Interval(3,5), \
            evaluate = False)) == '[2, 3] ∆ [3, 5]'
     with raises(NotImplementedError):
@@ -6786,7 +6949,6 @@ def test_MatrixElement_printing():
 
 
 def test_issue_12675():
-    from sympy.vector import CoordSys3D
     x, y, t, j = symbols('x y t j')
     e = CoordSys3D('e')
 
@@ -7020,7 +7182,6 @@ H   ⋅A  ⋅B \n\
 
 def test_pretty_print_tensor_partial_deriv():
     from sympy.tensor.toperators import PartialDerivative
-    from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorHead, tensor_heads
 
     L = TensorIndexType("L")
     i, j, k = tensor_indices("i j k", L)
@@ -7223,7 +7384,7 @@ def test_matrixSymbolBold():
     def boldpretty(expr):
         return xpretty(expr, use_unicode=True, wrap_line=False, mat_symbol_style="bold")
 
-    from sympy import trace
+    from sympy.matrices.expressions.trace import trace
     A = MatrixSymbol("A", 2, 2)
     assert boldpretty(trace(A)) == 'tr(𝐀)'
 
@@ -7268,7 +7429,7 @@ def test_center_accent():
 
 
 def test_imaginary_unit():
-    from sympy import pretty # As it is redefined above
+    from sympy.printing.pretty import pretty  # b/c it was redefined above
     assert pretty(1 + I, use_unicode=False) == '1 + I'
     assert pretty(1 + I, use_unicode=True) == '1 + ⅈ'
     assert pretty(1 + I, use_unicode=False, imaginary_unit='j') == '1 + I'

@@ -15,8 +15,13 @@ from typing import Dict as tDict
 import collections
 from functools import reduce
 
-from sympy import (Integer, Matrix, S, Symbol, sympify, Basic, Tuple, Dict,
-    default_sort_key)
+from sympy.core.basic import Basic
+from sympy.core.containers import (Dict, Tuple)
+from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.matrices.dense import Matrix
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
@@ -296,14 +301,10 @@ class Dimension(Expr):
         final result is well-defined.
         """
 
-        for dpow in dim_sys.get_dimensional_dependencies(self).values():
-            if not isinstance(dpow, (int, Integer)):
-                return False
-
-        return True
+        return all(dpow.is_Integer for dpow in dim_sys.get_dimensional_dependencies(self).values())
 
 
-# Create dimensions according the the base units in MKSA.
+# Create dimensions according to the base units in MKSA.
 # For other unit systems, they can be derived by transforming the base
 # dimensional dependency dictionary.
 
@@ -324,7 +325,7 @@ class DimensionSystem(Basic, _QuantityMapper):
     may be omitted.
     """
 
-    def __new__(cls, base_dims, derived_dims=[], dimensional_dependencies={}, name=None, descr=None):
+    def __new__(cls, base_dims, derived_dims=(), dimensional_dependencies={}, name=None, descr=None):
         dimensional_dependencies = dict(dimensional_dependencies)
 
         if (name is not None) or (descr is not None):
@@ -433,7 +434,7 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         if name.is_Add:
             dicts = [get_for_name(i) for i in name.args]
-            if all([d == dicts[0] for d in dicts[1:]]):
+            if all(d == dicts[0] for d in dicts[1:]):
                 return dicts[0]
             raise TypeError("Only equivalent dimensions can be added or subtracted.")
 
@@ -456,7 +457,7 @@ class DimensionSystem(Basic, _QuantityMapper):
                 return self.get_dimensional_dependencies(result)
             elif result.func == name.func:
                 if isinstance(name, TrigonometricFunction):
-                    if dicts[0] == {} or dicts[0] == {Symbol('angle'): 1}:
+                    if dicts[0] in ({}, {Symbol('angle'): 1}):
                         return {}
                     else:
                         raise TypeError("The input argument for the function {} must be dimensionless or have dimensions of angle.".format(name.func))
@@ -481,7 +482,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         deps2 = self.get_dimensional_dependencies(dim2)
         return deps1 == deps2
 
-    def extend(self, new_base_dims, new_derived_dims=[], new_dim_deps={}, name=None, description=None):
+    def extend(self, new_base_dims, new_derived_dims=(), new_dim_deps=None, name=None, description=None):
         if (name is not None) or (description is not None):
             SymPyDeprecationWarning(
                 deprecated_since_version="1.2",
@@ -491,7 +492,8 @@ class DimensionSystem(Basic, _QuantityMapper):
             ).warn()
 
         deps = dict(self.dimensional_dependencies)
-        deps.update(new_dim_deps)
+        if new_dim_deps:
+            deps.update(new_dim_deps)
 
         new_dim_sys = DimensionSystem(
             tuple(self.base_dims) + tuple(new_base_dims),

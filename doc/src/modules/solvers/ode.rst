@@ -100,6 +100,11 @@ factorable
 .. autoclass:: sympy.solvers.ode.single::FirstLinear
    :members:
 
+1st_rational_riccati
+^^^^^^^^^^^^^^^^^^^^
+.. autoclass:: sympy.solvers.ode.single::RationalRiccati
+   :members:
+
 2nd_linear_airy
 ^^^^^^^^^^^^^^^
 .. autoclass:: sympy.solvers.ode.single::SecondLinearAiry
@@ -162,7 +167,7 @@ nth_algebraic
 
 nth_order_reducible
 ^^^^^^^^^^^^^^^^^^^
-.. autoclass:: sympy.solvers.ode.ode::NthOrderReducible
+.. autoclass:: sympy.solvers.ode.single::NthOrderReducible
    :members:
 
 separable
@@ -187,7 +192,7 @@ separable_reduced
 
 lie_group
 ^^^^^^^^^
-.. autoclass:: sympy.solvers.ode.ode::LieGroup
+.. autoclass:: sympy.solvers.ode.single::LieGroup
    :members:
 
 2nd_hypergeometric
@@ -248,6 +253,56 @@ abaco2_unique_general
 linear
 ^^^^^^
 .. autofunction:: sympy.solvers.ode.lie_group::lie_heuristic_linear
+
+Rational Riccati Solver
+-----------------------
+These functions are intended for internal use to solve
+a first order Riccati differential equation with atleast
+one rational particular solution.
+
+riccati_normal
+^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.riccati::riccati_normal
+
+riccati_inverse_normal
+^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.riccati::riccati_inverse_normal
+
+riccati_reduced
+^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.riccati::riccati_reduced
+
+construct_c
+^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.riccati::construct_c
+
+construct_d
+^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.riccati::construct_d
+
+rational_laurent_series
+^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.riccati::rational_laurent_series
+
+compute_m_ybar
+^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.riccati::compute_m_ybar
+
+solve_aux_eq
+^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.riccati::solve_aux_eq
+
+remove_redundant_sols
+^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.riccati::remove_redundant_sols
+
+get_gen_sol_from_part_sol
+^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.riccati::get_gen_sol_from_part_sol
+
+solve_riccati
+^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.riccati::solve_riccati
 
 System of ODEs
 --------------

@@ -27,7 +27,7 @@ class QuotientRingElement:
         self.data = data
 
     def __str__(self):
-        from sympy import sstr
+        from sympy.printing.str import sstr
         return sstr(self.data) + " + " + str(self.ring.base_ideal)
 
     __repr__ = __str__

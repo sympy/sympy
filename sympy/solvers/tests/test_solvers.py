@@ -1,11 +1,30 @@
-from sympy import (
-    Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
-    LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol, Ne,
-    Wild, acos, asin, atan, atanh, binomial, cos, cosh, diff, erf, erfinv, erfc,
-    erfcinv, exp, im, log, pi, re, sec, sin,
-    sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
-    root, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
-    E, cbrt, denom, Add, Piecewise, GoldenRatio, TribonacciConstant)
+from sympy.assumptions.ask import (Q, ask)
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.mul import Mul
+from sympy.core import (GoldenRatio, TribonacciConstant)
+from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
+from sympy.core.relational import (Eq, Gt, Lt, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, Wild, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import binomial
+from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, re)
+from sympy.functions.elementary.exponential import (LambertW, exp, log)
+from sympy.functions.elementary.hyperbolic import (atanh, cosh, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import (cbrt, root, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, atan2, cos, sec, sin, tan)
+from sympy.functions.special.error_functions import (erf, erfc, erfcinv, erfinv)
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import (And, Or)
+from sympy.matrices.dense import Matrix
+from sympy.matrices import SparseMatrix
+from sympy.polys.polytools import Poly
+from sympy.printing.str import sstr
+from sympy.simplify.radsimp import denom
+from sympy.solvers.solvers import (nsolve, solve, solve_linear)
 
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -20,7 +39,7 @@ from sympy.polys.rootoftools import CRootOf
 from sympy.testing.pytest import slow, XFAIL, SKIP, raises
 from sympy.testing.randtest import verify_numerically as tn
 
-from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m, R
+from sympy.abc import a, b, c, d, e, k, h, p, x, y, z, t, q, m, R
 
 
 def NS(e, n=15, **options):
@@ -300,6 +319,10 @@ def test_solve_rational():
     assert solve( ( x - y**3 )/( (y**2)*sqrt(1 - y**2) ), x) == [y**3]
 
 
+def test_solve_conjugate():
+    """Test solve for simple conjugate functions"""
+    assert solve(conjugate(x) -3 + I) == [3 + I]
+
 def test_solve_nonlinear():
     assert solve(x**2 - y**2, x, y, dict=True) == [{x: -y}, {x: y}]
     assert solve(x**2 - y**2/exp(x), y, x, dict=True) == [{y: -x*sqrt(exp(x))},
@@ -499,16 +522,23 @@ def test_solve_transcendental():
 
     eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
     result = solve(eq, x)
-    ans = [(log(2401) + 5*LambertW((-1 + sqrt(5) + sqrt(2)*I*sqrt(sqrt(5) + \
-        5))*log(7**(7*3**Rational(1, 5)/20))* -1))/(-3*log(7)), \
-        (log(2401) + 5*LambertW((1 + sqrt(5) - sqrt(2)*I*sqrt(5 - \
-        sqrt(5)))*log(7**(7*3**Rational(1, 5)/20))))/(-3*log(7)), \
-        (log(2401) + 5*LambertW((1 + sqrt(5) + sqrt(2)*I*sqrt(5 - \
-        sqrt(5)))*log(7**(7*3**Rational(1, 5)/20))))/(-3*log(7)), \
-        (log(2401) + 5*LambertW((-sqrt(5) + 1 + sqrt(2)*I*sqrt(sqrt(5) + \
-        5))*log(7**(7*3**Rational(1, 5)/20))))/(-3*log(7)), \
-        (log(2401) + 5*LambertW(-log(7**(7*3**Rational(1, 5)/5))))/(-3*log(7))]
-    assert result == ans
+    x0 = -log(2401)
+    x1 = 3**Rational(1, 5)
+    x2 = log(7**(7*x1/20))
+    x3 = sqrt(2)
+    x4 = sqrt(5)
+    x5 = x3*sqrt(x4 - 5)
+    x6 = x4 + 1
+    x7 = 1/(3*log(7))
+    x8 = -x4
+    x9 = x3*sqrt(x8 - 5)
+    x10 = x8 + 1
+    ans = [x7*(x0 - 5*LambertW(x2*(-x5 + x6))),
+           x7*(x0 - 5*LambertW(x2*(x5 + x6))),
+           x7*(x0 - 5*LambertW(x2*(x10 - x9))),
+           x7*(x0 - 5*LambertW(x2*(x10 + x9))),
+           x7*(x0 - 5*LambertW(-log(7**(7*x1/5))))]
+    assert result == ans, result
     # it works if expanded, too
     assert solve(eq.expand(), x) == result
 
@@ -870,12 +900,12 @@ def test_issue_5132():
         {(log(-sin(2)), -S(2)), (log(sin(2)), S(2))}
     eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
     assert solve(eqs, set=True) == \
-        ([x, y], {
-        (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
-        (log(-z**2 - sin(log(3)))/2, -log(3))})
+        ([y, z], {
+        (-log(3), sqrt(-exp(2*x) - sin(log(3)))),
+        (-log(3), -sqrt(-exp(2*x) - sin(log(3))))})
     assert solve(eqs, x, z, set=True) == (
         [x, z],
-        {(log(-z**2 + sin(y))/2, z), (log(-sqrt(-z**2 + sin(y))), z)})
+        {(x, sqrt(-exp(2*x) + sin(y))), (x, -sqrt(-exp(2*x) + sin(y)))})
     assert set(solve(eqs, x, y)) == \
         {
             (log(-sqrt(-z**2 - sin(log(3)))), -log(3)),
@@ -885,12 +915,10 @@ def test_issue_5132():
             (-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
         (-log(3), sqrt(-exp(2*x) - sin(log(3))))}
     eqs = [exp(x)**2 - sin(y) + z, 1/exp(y) - 3]
-    assert solve(eqs, set=True) == ([x, y], {
-        (log(-sqrt(-z - sin(log(3)))), -log(3)),
-            (log(-z - sin(log(3)))/2, -log(3))})
+    assert solve(eqs, set=True) == ([y, z], {
+        (-log(3), -exp(2*x) - sin(log(3)))})
     assert solve(eqs, x, z, set=True) == (
-        [x, z],
-        {(log(-sqrt(-z + sin(y))), z), (log(-z + sin(y))/2, z)})
+        [x, z], {(x, -exp(2*x) + sin(y))})
     assert set(solve(eqs, x, y)) == {
             (log(-sqrt(-z - sin(log(3)))), -log(3)),
             (log(-z - sin(log(3)))/2, -log(3))}
@@ -1316,6 +1344,11 @@ def test_issue_5114_solvers():
 
 
 def test_issue_5849():
+    #
+    # XXX: This system does not have a solution for most values of the
+    # parameters. Generally solve returns the empty set for systems that are
+    # generically inconsistent.
+    #
     I1, I2, I3, I4, I5, I6 = symbols('I1:7')
     dI1, dI4, dQ2, dQ4, Q2, Q4 = symbols('dI1,dI4,dQ2,dQ4,Q2,Q4')
 
@@ -1332,21 +1365,24 @@ def test_issue_5849():
     )
 
     ans = [{
-    I1: I2 + I6,
-    dI1: -4*I2 - 4*I3 - 4*I5 - 10*I6 + 24,
-    I4: -I5 + I6,
-    dQ4: -I5 + I6,
-    Q4: 3*I5/2 - I6/2 - dI4/2,
+    I1: I2 + I3,
+    dI1: -4*I2 - 8*I3 - 4*I5 - 6*I6 + 24,
+    I4: I3 - I5,
+    dQ4: I3 - I5,
+    Q4: -I3/2 + 3*I5/2 - dI4/2,
     dQ2: I2,
     Q2: 2*I3 + 2*I5 + 3*I6}]
 
     v = I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4
     assert solve(e, *v, manual=True, check=False, dict=True) == ans
-    assert solve(e, *v, manual=True) == ans[0]
+    assert solve(e, *v, manual=True, check=False) == ans[0]
+    assert solve(e, *v, manual=True) == []
+    assert solve(e, *v) == []
+
     # the matrix solver (tested below) doesn't like this because it produces
     # a zero row in the matrix. Is this related to issue 4551?
     assert [ei.subs(
-        ans[0]) for ei in e] == [-I3 + I6, I3 - I6, 0, 0, 0, 0, 0, 0, 0]
+        ans[0]) for ei in e] == [0, 0, I3 - I6, -I3 + I6, 0, 0, 0, 0, 0]
 
 
 def test_issue_5849_matrix():
@@ -1373,14 +1409,32 @@ def test_issue_5849_matrix():
         2*I3 + 2*I5 + 3*I6 - Q2,
         I4 - 2*I5 + 2*Q4 + dI4
     )
-    assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4) == {
-    I1: I2 + I6,
-    dI1: -4*I2 - 4*I3 - 4*I5 - 10*I6 + 24,
-    I4: -I5 + I6,
-    dQ4: -I5 + I6,
-    Q4: 3*I5/2 - I6/2 - dI4/2,
-    dQ2: I2,
-    Q2: 2*I3 + 2*I5 + 3*I6}
+    assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4) == []
+
+
+def test_issue_21882():
+
+    a, b, c, d, f, g, k = unknowns = symbols('a, b, c, d, f, g, k')
+
+    equations = [
+        -k*a + b + 5*f/6 + 2*c/9 + 5*d/6 + 4*a/3,
+        -k*f + 4*f/3 + d/2,
+        -k*d + f/6 + d,
+        13*b/18 + 13*c/18 + 13*a/18,
+        -k*c + b/2 + 20*c/9 + a,
+        -k*b + b + c/18 + a/6,
+        5*b/3 + c/3 + a,
+        2*b/3 + 2*c + 4*a/3,
+        -g,
+    ]
+
+    answer = [
+        {a: 0, f: 0, b: 0, d: 0, c: 0, g: 0},
+        {a: 0, f: -d, b: 0, k: S(5)/6, c: 0, g: 0},
+        {a: -2*c, f: 0, b: c, d: 0, k: S(13)/18, g: 0},
+    ]
+
+    assert solve(equations, unknowns, dict=True) == answer
 
 
 def test_issue_5901():
@@ -1759,19 +1813,19 @@ def test_lambert_bivariate():
     x3 = x2*LambertW(1/x2)/a**5
     x4 = x3**Rational(1, 3)/2
     assert ans == [
+        x0*log(x4*(-x1 - 1)),
         x0*log(x4*(x1 - 1)),
-        x0*log(-x4*(x1 + 1)),
         x0*log(x3)/3]
     x1 = LambertW(Rational(1, 3))
     x2 = a**(-5)
-    x3 = 3**Rational(1, 3)
+    x3 = -3**Rational(1, 3)
     x4 = 3**Rational(5, 6)*I
     x5 = x1**Rational(1, 3)*x2**Rational(1, 3)/2
     ans = solve(3*log(ax) + ax, x)
     assert ans == [
         x0*log(3*x1*x2)/3,
-        x0*log(x5*(-x3 + x4)),
-        x0*log(-x5*(x3 + x4))]
+        x0*log(x5*(x3 - x4)),
+        x0*log(x5*(x3 + x4))]
     # coverage
     p = symbols('p', positive=True)
     eq = 4*2**(2*p + 3) - 2*p - 3
@@ -1790,8 +1844,8 @@ def test_lambert_bivariate():
     x2 = x0/6
     assert ans == [
         6*LambertW(x0/3),
-        6*LambertW(x2*(x1 - 1)),
-        6*LambertW(-x2*(x1 + 1))]
+        6*LambertW(x2*(-x1 - 1)),
+        6*LambertW(x2*(x1 - 1))]
     assert solve((1/x + exp(x/2)).diff(x, 2), x) == \
                 [6*LambertW(Rational(-1, 3)), 6*LambertW(Rational(1, 6) - sqrt(3)*I/6), \
                 6*LambertW(Rational(1, 6) + sqrt(3)*I/6), 6*LambertW(Rational(-1, 3), -1)]
@@ -1818,7 +1872,7 @@ def test_rewrite_trig():
 @XFAIL
 def test_rewrite_trigh():
     # if this import passes then the test below should also pass
-    from sympy import sech
+    from sympy.functions.elementary.hyperbolic import sech
     assert solve(sinh(x) + sech(x)) == [
         2*atanh(Rational(-1, 2) + sqrt(5)/2 - sqrt(-2*sqrt(5) + 2)/2),
         2*atanh(Rational(-1, 2) + sqrt(5)/2 + sqrt(-2*sqrt(5) + 2)/2),
@@ -2351,3 +2405,24 @@ def test_issue_4886():
     t = b*c/(a**2 + b**2)
     sol = [((b*(t - z) - c)/(-a), t - z), ((b*(t + z) - c)/(-a), t + z)]
     assert solve([x**2 + y**2 - R**2, a*x + b*y - c], x, y) == sol
+
+
+def test_issue_6819():
+    a, b, c, d = symbols('a b c d', positive=True)
+    assert solve(a*b**x - c*d**x, x) == [log(c/a)/log(b/d)]
+
+
+def test_issue_17454():
+    x = Symbol('x')
+    assert solve((1 - x - I)**4, x) == [1 - I]
+
+
+def test_issue_21852():
+    solution = [21 - 21*sqrt(2)/2]
+    assert solve(2*x + sqrt(2*x**2) - 21) == solution
+
+
+def test_issue_21942():
+    eq = -d + (a*c**(1 - e) + b**(1 - e)*(1 - a))**(1/(1 - e))
+    sol = solve(eq, c, simplify=False, check=False)
+    assert sol == [(b/b**e - b/(a*b**e) + d**(1 - e)/a)**(1/(1 - e))]

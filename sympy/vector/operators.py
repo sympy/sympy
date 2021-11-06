@@ -3,10 +3,10 @@ from sympy.core.expr import Expr
 from sympy.core import sympify, S, preorder_traversal
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.vector import Vector, VectorMul, VectorAdd, Cross, Dot
-from sympy.vector.scalar import BaseScalar
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.function import Derivative
-from sympy import Add, Mul
+from sympy.core.add import Add
+from sympy.core.mul import Mul
 
 
 def _get_coord_systems(expr):
@@ -362,6 +362,5 @@ def _diff_conditional(expr, base_scalar, coeff_1, coeff_2):
     """
     from sympy.vector.functions import express
     new_expr = express(expr, base_scalar.system, variables=True)
-    if base_scalar in new_expr.atoms(BaseScalar):
-        return Derivative(coeff_1 * coeff_2 * new_expr, base_scalar)
-    return S.Zero
+    arg = coeff_1 * coeff_2 * new_expr
+    return Derivative(arg, base_scalar) if arg else S.Zero

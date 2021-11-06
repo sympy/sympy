@@ -1,7 +1,8 @@
 from sympy.physics.units import DimensionSystem, joule, second, ampere
 from sympy.testing.pytest import warns_deprecated_sympy
 
-from sympy import Rational, S
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
 from sympy.physics.units.definitions import c, kg, m, s
 from sympy.physics.units.definitions.dimension_definitions import length, time
 from sympy.physics.units.quantities import Quantity

@@ -3,12 +3,24 @@ Some examples have been taken from:
 
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
-from sympy import (MatrixSymbol, Inverse, symbols, Determinant, Trace,
-                   sin, exp, cos, tan, log, S, sqrt,
-                   hadamard_product, DiagMatrix, OneMatrix,
-                   HadamardProduct, HadamardPower, KroneckerDelta, Sum,
-                   Rational)
-from sympy import MatAdd, Identity, MatMul, ZeroMatrix
+from sympy.concrete.summations import Sum
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.matrices.expressions.determinant import Determinant
+from sympy.matrices.expressions.diagonal import DiagMatrix
+from sympy.matrices.expressions.hadamard import (HadamardPower, HadamardProduct, hadamard_product)
+from sympy.matrices.expressions.inverse import Inverse
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.special import OneMatrix
+from sympy.matrices.expressions.trace import Trace
+from sympy.matrices.expressions.matadd import MatAdd
+from sympy.matrices.expressions.matmul import MatMul
+from sympy.matrices.expressions.special import (Identity, ZeroMatrix)
 from sympy.tensor.array.array_derivatives import ArrayDerivative
 from sympy.matrices.expressions import hadamard_power
 
@@ -359,7 +371,6 @@ def test_derivatives_matrix_norms():
 
 
 def test_derivatives_elementwise_applyfunc():
-    from sympy.matrices.expressions.diagonal import DiagMatrix
 
     expr = x.applyfunc(tan)
     assert expr.diff(x).dummy_eq(

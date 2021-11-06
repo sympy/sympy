@@ -1,4 +1,4 @@
-from sympy import binomial_coefficients, binomial_coefficients_list, multinomial_coefficients
+from sympy.ntheory.multinomial import (binomial_coefficients, binomial_coefficients_list, multinomial_coefficients)
 from sympy.ntheory.multinomial import multinomial_coefficients_iterator
 
 

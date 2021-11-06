@@ -186,7 +186,7 @@ def link(obj_files, out_file=None, shared=False, Runner=None,
 
 def link_py_so(obj_files, so_file=None, cwd=None, libraries=None,
                cplus=False, fort=False, **kwargs):
-    """ Link python extension module (shared object) for importing
+    """ Link Python extension module (shared object) for importing
 
     Parameters
     ==========
@@ -482,7 +482,7 @@ def any_cplus_src(srcs):
 
 def compile_link_import_py_ext(sources, extname=None, build_dir='.', compile_kwargs=None,
                                link_kwargs=None):
-    """ Compiles sources to a shared object (python extension) and imports it
+    """ Compiles sources to a shared object (Python extension) and imports it
 
     Sources in ``sources`` which is imported. If shared object is newer than the sources, they
     are not recompiled but instead it is imported.
@@ -505,7 +505,7 @@ def compile_link_import_py_ext(sources, extname=None, build_dir='.', compile_kwa
     Returns
     =======
 
-    The imported module from of the python extension.
+    The imported module from of the Python extension.
     """
     if extname is None:
         extname = os.path.splitext(os.path.basename(sources[-1]))[0]

@@ -7,9 +7,18 @@ from sympy.polys.partfrac import (
     apart_list, assemble_partfrac_list
 )
 
-from sympy import (S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda,
-                   Symbol, Dummy, factor, together, sqrt, Expr, Rational)
-from sympy.testing.pytest import raises, ON_TRAVIS, skip, XFAIL
+from sympy.core.expr import Expr
+from sympy.core.function import Lambda
+from sympy.core.numbers import (E, I, Rational, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.dense import Matrix
+from sympy.polys.polytools import (Poly, factor)
+from sympy.polys.rationaltools import together
+from sympy.polys.rootoftools import RootSum
+from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import x, y, a, b, c
 
 
@@ -110,11 +119,7 @@ def test_apart_extension():
         assert apart(f, x, extension={sqrt(2)}) == g
 
 
-# XXX: This is XFAIL just because it is slow
-@XFAIL
 def test_apart_extension_xfail():
-    if ON_TRAVIS:
-        skip('Too slow for Travis')
     f, g = _make_extension_example()
     assert apart(f, x, extension={sqrt(2)}) == g
 

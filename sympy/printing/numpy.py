@@ -234,7 +234,7 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_Identity(self, expr):
         shape = expr.shape
-        if all([dim.is_Integer for dim in shape]):
+        if all(dim.is_Integer for dim in shape):
             return "%s(%s)" % (self._module_format(self._module + '.eye'), self._print(expr.shape[0]))
         else:
             raise NotImplementedError("Symbolic matrix dimensions are not yet supported for identity matrices")
@@ -354,9 +354,9 @@ class SciPyPrinter(NumPyPrinter):
         super().__init__(settings=settings)
         self.language = "Python with SciPy and NumPy"
 
-    def _print_SparseMatrix(self, expr):
+    def _print_SparseRepMatrix(self, expr):
         i, j, data = [], [], []
-        for (r, c), v in expr._smat.items():
+        for (r, c), v in expr.todok().items():
             i.append(r)
             j.append(c)
             data.append(v)
@@ -366,7 +366,7 @@ class SciPyPrinter(NumPyPrinter):
             data=data, i=i, j=j, shape=expr.shape
         )
 
-    _print_ImmutableSparseMatrix = _print_SparseMatrix
+    _print_ImmutableSparseMatrix = _print_SparseRepMatrix
 
     # SciPy's lpmv has a different order of arguments from assoc_legendre
     def _print_assoc_legendre(self, expr):

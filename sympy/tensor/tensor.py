@@ -29,28 +29,29 @@ If there is a (anti)symmetric metric, the indices can be raised and
 lowered when the tensor is put in canonical form.
 """
 
-from typing import Any, Dict as tDict, List, Set
+from typing import Any, Dict as tDict, List, Set as tSet, Tuple as tTuple
 from functools import reduce
 
 from abc import abstractmethod, ABCMeta
 from collections import defaultdict
 import operator
 import itertools
-from sympy import Rational, prod, Integer, default_sort_key
+from sympy.core.mul import prod
+from sympy.core.numbers import (Integer, Rational)
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, \
     bsgs_direct_product, canonicalize, riemann_bsgs
 from sympy.core import Basic, Expr, sympify, Add, Mul, S
 from sympy.core.assumptions import ManagedProperties
-from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.containers import Tuple, Dict
-from sympy.core.decorators import deprecated
+from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol, symbols
 from sympy.core.sympify import CantSympify, _sympify
 from sympy.core.operations import AssocOp
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.matrices import eye
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.decorator import memoize_property
+from sympy.utilities.decorator import memoize_property, deprecated
 import warnings
 
 
@@ -379,7 +380,7 @@ def components_canon_args(components):
             numtyp.append([prev, 1])
     v = []
     for h, n in numtyp:
-        if h.comm == 0 or h.comm == 1:
+        if h.comm in (0, 1):
             comm = h.comm
         else:
             comm = TensorManager.get_comm(h.comm, h.comm)
@@ -469,9 +470,9 @@ class _TensorDataLazyEvaluator(CantSympify):
             #data_list = [self.data_from_tensor(i) for i in tensmul_args if isinstance(i, TensExpr)]
             data_list = [self.data_from_tensor(i) if isinstance(i, Tensor) else i.data for i in tensmul_args if isinstance(i, TensExpr)]
             coeff = prod([i for i in tensmul_args if not isinstance(i, TensExpr)])
-            if all([i is None for i in data_list]):
+            if all(i is None for i in data_list):
                 return None
-            if any([i is None for i in data_list]):
+            if any(i is None for i in data_list):
                 raise ValueError("Mixing tensors with associated components "\
                                  "data with tensors without components data")
             data_result = self.data_contract_dum(data_list, key.dum, key.ext_rank)
@@ -487,9 +488,9 @@ class _TensorDataLazyEvaluator(CantSympify):
                 else:
                     data_list.append(arg)
                     free_args_list.append([])
-            if all([i is None for i in data_list]):
+            if all(i is None for i in data_list):
                 return None
-            if any([i is None for i in data_list]):
+            if any(i is None for i in data_list):
                 raise ValueError("Mixing tensors with associated components "\
                                  "data with tensors without components data")
 
@@ -738,7 +739,7 @@ class _TensorDataLazyEvaluator(CantSympify):
     def parse_data(data):
         """
         Transform ``data`` to array. The parameter ``data`` may
-        contain data in various formats, e.g. nested lists, sympy ``Matrix``,
+        contain data in various formats, e.g. nested lists, SymPy ``Matrix``,
         and so on.
 
         Examples
@@ -2038,7 +2039,7 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
         Returns ndarray components data as a matrix, if components data are
         available and ndarray dimension does not exceed 2.
         """
-        from sympy import Matrix
+        from sympy.matrices.dense import Matrix
         deprecate_data()
         if 0 < self.rank <= 2:
             rows = self.data.shape[0]
@@ -2278,9 +2279,9 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
                 expected_shape = [tensor.dim for i in range(2)]
             else:
                 expected_shape = [index_type.dim for index_type in tensor.index_types]
-            if len(expected_shape) != array.rank() or (not all([dim1 == dim2 if
+            if len(expected_shape) != array.rank() or (not all(dim1 == dim2 if
                 dim1.is_number else True for dim1, dim2 in zip(expected_shape,
-                array.shape)])):
+                array.shape))):
                 raise ValueError("shapes for tensor %s expected to be %s, "\
                     "replacement array shape is %s" % (tensor, expected_shape,
                     array.shape))
@@ -2291,7 +2292,7 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
         return array
 
     def _check_add_Sum(self, expr, index_symbols):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         indices = self.get_indices()
         dum = self.dum
         sum_indices = [ (index_symbols[i], 0,
@@ -2467,13 +2468,13 @@ class TensAdd(TensExpr, AssocOp):
     def _tensAdd_check(args):
         # check that all addends have the same free indices
 
-        def get_indices_set(x):  # type: (Expr) -> Set[TensorIndex]
+        def get_indices_set(x):  # type: (Expr) -> tSet[TensorIndex]
             if isinstance(x, TensExpr):
                 return set(x.get_free_indices())
             return set()
 
-        indices0 = get_indices_set(args[0])  # type: Set[TensorIndex]
-        list_indices = [get_indices_set(arg) for arg in args[1:]]  # type: List[Set[TensorIndex]]
+        indices0 = get_indices_set(args[0])  # type: tSet[TensorIndex]
+        list_indices = [get_indices_set(arg) for arg in args[1:]]  # type: List[tSet[TensorIndex]]
         if not all(x == indices0 for x in list_indices):
             raise ValueError('all tensors must have the same indices')
 
@@ -2698,6 +2699,7 @@ class Tensor(TensExpr):
     is_commutative = False
 
     _index_structure = None  # type: _IndexStructure
+    args: tTuple[TensorHead, Tuple]
 
     def __new__(cls, tensor_head, indices, *, is_canon_bp=False, **kw_args):
         indices = cls._parse_indices(tensor_head, indices)
@@ -3070,7 +3072,7 @@ class Tensor(TensExpr):
         return self.contract_metric(metric)
 
     def _eval_rewrite_as_Indexed(self, tens, indices):
-        from sympy import Indexed
+        from sympy.tensor.indexed import Indexed
         # TODO: replace .args[0] with .name:
         index_symbols = [i.args[0] for i in self.get_indices()]
         expr = Indexed(tens.args[0], *index_symbols)
@@ -3252,7 +3254,7 @@ class TensMul(TensExpr, AssocOp):
     def _tensMul_contract_indices(args, replace_indices=True):
         replacements = [{} for _ in args]
 
-        #_index_order = all([_has_index_order(arg) for arg in args])
+        #_index_order = all(_has_index_order(arg) for arg in args)
 
         args_indices = [get_indices(arg) for arg in args]
         indices, free, free_names, dummy_data = TensMul._indices_to_free_dum(args_indices)
@@ -3571,7 +3573,7 @@ class TensMul(TensExpr, AssocOp):
             for j in range(n, i, -1):
                 c = cv[j-1].commutes_with(cv[j])
                 # if `c` is `None`, it does neither commute nor anticommute, skip:
-                if c not in [0, 1]:
+                if c not in (0, 1):
                     continue
                 typ1 = sorted(set(cv[j-1].component.index_types), key=lambda x: x.name)
                 typ2 = sorted(set(cv[j].component.index_types), key=lambda x: x.name)
@@ -3900,7 +3902,7 @@ class TensMul(TensExpr, AssocOp):
         return self.data.__iter__()
 
     def _eval_rewrite_as_Indexed(self, *args):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         index_symbols = [i.args[0] for i in self.get_indices()]
         args = [arg.args[0] if isinstance(arg, Sum) else arg for arg in args]
         expr = Mul.fromiter(args)

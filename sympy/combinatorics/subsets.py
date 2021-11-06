@@ -1,10 +1,9 @@
 from itertools import combinations
 
 from sympy.combinatorics.graycode import GrayCode
-from sympy.core import Basic
 
 
-class Subset(Basic):
+class Subset():
     """
     Represents a basic subset object.
 
@@ -59,10 +58,19 @@ class Subset(Basic):
             if elem not in superset:
                 raise ValueError('The superset provided is invalid as it does '
                                  'not contain the element {}'.format(elem))
-        obj = Basic.__new__(cls)
+        obj = object.__new__(cls)
         obj._subset = subset
         obj._superset = superset
         return obj
+
+    def __eq__(self, other):
+        """Return a boolean indicating whether a == b on the basis of
+        whether both objects are of the class Subset and if the values
+        of the subset and superset attributes are the same.
+        """
+        if not isinstance(other, Subset):
+            return NotImplemented
+        return self.subset == other.subset and self.superset == other.superset
 
     def iterate_binary(self, k):
         """
@@ -203,10 +211,10 @@ class Subset(Basic):
         i = self.superset_size - 1
         indices = Subset.subset_indices(self.subset, self.superset)
 
-        while i not in indices and i >= 0:
+        while i >= 0 and i not in indices:
             i = i - 1
 
-        if i - 1 in indices or i == 0:
+        if i == 0 or i - 1 in indices:
             indices.remove(i)
         else:
             if i >= 0:
@@ -507,7 +515,7 @@ class Subset(Basic):
         subset_from_bitlist
         """
         bitlist = ['0'] * len(superset)
-        if type(subset) is Subset:
+        if isinstance(subset, Subset):
             subset = subset.subset
         for i in Subset.subset_indices(subset, superset):
             bitlist[i] = '1'

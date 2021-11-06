@@ -11,11 +11,11 @@ import sys
 import os
 
 
-if sys.version_info < (3, 6):
-    sys.exit("This script requires Python 3.6 or newer")
+if sys.version_info < (3, 7):
+    sys.exit("This script requires Python 3.7 or newer")
 
 from subprocess import run, PIPE
-from distutils.version import LooseVersion
+from sympy.external.importtools import version_tuple
 from collections import defaultdict, OrderedDict
 
 def red(text):
@@ -41,7 +41,7 @@ from sympy.utilities.iterables import sift
 # check git version
 minimal = '1.8.4.2'
 git_ver = run(['git', '--version'], stdout=PIPE, encoding='utf-8').stdout[12:]
-if LooseVersion(git_ver) < LooseVersion(minimal):
+if version_tuple(git_ver) < version_tuple(minimal):
     print(yellow("Please use a git version >= %s" % minimal))
 
 def author_name(line):
@@ -101,6 +101,7 @@ if multi:
         print()
         for _, e in sorted(dups[k]):
             print('\t%s' % e)
+    sysexit = 1
 
 # warn for ambiguous names
 dups = defaultdict(list)
@@ -119,6 +120,7 @@ if multi:
         print()
         for e in sorted(dups[k]):
             print('\t%s' % e)
+    sysexit = 1
 
 bad_names = []
 bad_emails = []
@@ -139,6 +141,7 @@ if bad_names:
         """)))
     for i in bad_names:
         print("\t%s" % i)
+    sysexit = 1
 
 # TODO: Should we check for bad emails as well? Some people have empty email
 # addresses. The above check seems to catch people who get the name and email
@@ -215,5 +218,6 @@ if out != lines or not blankline:
         print(yellow('.mailmap lines were re-ordered.'))
     else:
         print(yellow('blank line added to end of .mailmap'))
+    sysexit = 1
 
 sys.exit(sysexit)

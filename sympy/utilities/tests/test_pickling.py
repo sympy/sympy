@@ -11,7 +11,7 @@ from sympy.core.core import BasicMeta
 from sympy.core.singleton import SingletonRegistry
 from sympy.core.symbol import Str, Dummy, Symbol, Wild
 from sympy.core.numbers import (E, I, pi, oo, zoo, nan, Integer,
-        Rational, Float)
+        Rational, Float, AlgebraicNumber)
 from sympy.core.relational import (Equality, GreaterThan, LessThan, Relational,
         StrictGreaterThan, StrictLessThan, Unequality)
 from sympy.core.add import Add
@@ -22,10 +22,11 @@ from sympy.core.function import Derivative, Function, FunctionClass, Lambda, \
 from sympy.sets.sets import Interval
 from sympy.core.multidimensional import vectorize
 
-from sympy.core.compatibility import HAS_GMPY
+from sympy.external.gmpy import HAS_GMPY
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy import symbols, S
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
 
 from sympy.external import import_module
 cloudpickle = import_module('cloudpickle')
@@ -35,6 +36,8 @@ excluded_attrs = {
     '_mhash',   # Cached after __hash__ is called but set to None after creation
     'is_EmptySet',  # Deprecated from SymPy 1.5. This can be removed when is_EmptySet is removed.
     'expr_free_symbols',  # Deprecated from SymPy 1.9. This can be removed when exr_free_symbols is removed.
+    '_mat', # Deprecated from SymPy 1.9. This can be removed when Matrix._mat is removed
+    '_smat', # Deprecated from SymPy 1.9. This can be removed when SparseMatrix._smat is removed
     }
 
 
@@ -113,6 +116,8 @@ def test_core_symbol():
 def test_core_numbers():
     for c in (Integer(2), Rational(2, 3), Float("1.2")):
         check(c)
+    for c in (AlgebraicNumber, AlgebraicNumber(sqrt(3))):
+        check(c, check_attr=False)
 
 
 def test_core_float_copy():
@@ -349,7 +354,10 @@ def test_plotting2():
     check(PlotAxes())
 
 #================== polys =======================
-from sympy import Poly, ZZ, QQ, lex
+from sympy.polys.domains.integerring import ZZ
+from sympy.polys.domains.rationalfield import QQ
+from sympy.polys.orderings import lex
+from sympy.polys.polytools import Poly
 
 def test_pickling_polys_polytools():
     from sympy.polys.polytools import PurePoly
@@ -491,11 +499,6 @@ def test_pickling_polys_domains():
     for c in (ExpressionDomain, ExpressionDomain()):
         check(c, check_attr=False)
 
-def test_pickling_polys_numberfields():
-    from sympy.polys.numberfields import AlgebraicNumber
-
-    for c in (AlgebraicNumber, AlgebraicNumber(sqrt(3))):
-        check(c, check_attr=False)
 
 def test_pickling_polys_orderings():
     from sympy.polys.orderings import (LexOrder, GradedLexOrder,

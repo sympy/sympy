@@ -1,6 +1,6 @@
 import sys
 sys._running_pytest = True  # type: ignore
-from distutils.version import LooseVersion as V
+from sympy.external.importtools import version_tuple
 
 import pytest
 from sympy.core.cache import clear_cache
@@ -70,6 +70,6 @@ def check_disabled(request):
         pytest.skip("test requirements not met.")
     elif getattr(request.module, 'ipython', False):
         # need to check version and options for ipython tests
-        if (V(pytest.__version__) < '2.6.3' and
+        if (version_tuple(pytest.__version__) < version_tuple('2.6.3') and
             pytest.config.getvalue('-s') != 'no'):
             pytest.skip("run py.test with -s or upgrade to newer version.")

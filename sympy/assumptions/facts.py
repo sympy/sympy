@@ -141,9 +141,8 @@ def generate_known_facts_dict(keys, fact):
     Examples
     ========
 
-    >>> from sympy import Q
+    >>> from sympy import Q, And, Implies
     >>> from sympy.assumptions.facts import generate_known_facts_dict
-    >>> from sympy.logic.boolalg import And, Implies
     >>> from sympy.abc import x
     >>> keys = [Q.even(x), Q.odd(x), Q.zero(x)]
     >>> fact = And(Implies(Q.even(x), ~Q.odd(x)),

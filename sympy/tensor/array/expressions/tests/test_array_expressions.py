@@ -1,37 +1,42 @@
 import random
 
-from sympy import symbols, ImmutableDenseNDimArray, tensorproduct, tensorcontraction, permutedims, MatrixSymbol, \
-    ZeroMatrix, sin, cos, DiagMatrix
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.expressions.diagonal import DiagMatrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.special import ZeroMatrix
+from sympy.tensor.array.arrayop import (permutedims, tensorcontraction, tensorproduct)
+from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 from sympy.combinatorics import Permutation
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, ArraySymbol, ArrayElement, \
     PermuteDims, ArrayContraction, ArrayTensorProduct, ArrayDiagonal, \
-    ArrayAdd, nest_permutation, ArrayElementwiseApplyFunc
+    ArrayAdd, nest_permutation, ArrayElementwiseApplyFunc, _EditArrayContraction, _ArgE
 from sympy.testing.pytest import raises
 
 i, j, k, l, m, n = symbols("i j k l m n")
 
 
-M = ArraySymbol("M", k, k)
-N = ArraySymbol("N", k, k)
-P = ArraySymbol("P", k, k)
-Q = ArraySymbol("Q", k, k)
+M = ArraySymbol("M", (k, k))
+N = ArraySymbol("N", (k, k))
+P = ArraySymbol("P", (k, k))
+Q = ArraySymbol("Q", (k, k))
 
-A = ArraySymbol("A", k, k)
-B = ArraySymbol("B", k, k)
-C = ArraySymbol("C", k, k)
-D = ArraySymbol("D", k, k)
+A = ArraySymbol("A", (k, k))
+B = ArraySymbol("B", (k, k))
+C = ArraySymbol("C", (k, k))
+D = ArraySymbol("D", (k, k))
 
-X = ArraySymbol("X", k, k)
-Y = ArraySymbol("Y", k, k)
+X = ArraySymbol("X", (k, k))
+Y = ArraySymbol("Y", (k, k))
 
-a = ArraySymbol("a", k, 1)
-b = ArraySymbol("b", k, 1)
-c = ArraySymbol("c", k, 1)
-d = ArraySymbol("d", k, 1)
+a = ArraySymbol("a", (k, 1))
+b = ArraySymbol("b", (k, 1))
+c = ArraySymbol("c", (k, 1))
+d = ArraySymbol("d", (k, 1))
 
 
 def test_array_symbol_and_element():
-    A = ArraySymbol("A", 2)
+    A = ArraySymbol("A", (2,))
     A0 = ArrayElement(A, (0,))
     A1 = ArrayElement(A, (1,))
     assert A.as_explicit() == ImmutableDenseNDimArray([A0, A1])
@@ -45,7 +50,7 @@ def test_array_symbol_and_element():
     # TODO: not yet supported:
     # assert A3.as_explicit() == Array([])
 
-    A = ArraySymbol("A", 2, 3, 4)
+    A = ArraySymbol("A", (2, 3, 4))
     Ae = A.as_explicit()
     assert Ae == ImmutableDenseNDimArray(
         [[[ArrayElement(A, (i, j, k)) for k in range(4)] for j in range(3)] for i in range(2)])
@@ -106,6 +111,12 @@ def test_arrayexpr_contraction_construction():
     indtup = cg._get_contraction_tuples()
     assert indtup == [[(0, 0), (1, 1)], [(0, 1), (2, 0)]]
     assert cg._contraction_tuples_to_contraction_indices(cg.expr, indtup) == [(0, 3), (1, 4)]
+
+    # Test removal of trivial contraction:
+    assert ArrayContraction(a, (1,)) == a
+    assert ArrayContraction(
+        ArrayTensorProduct(a, b), (0, 2), (1,), (3,)) == ArrayContraction(
+        ArrayTensorProduct(a, b), (0, 2))
 
 
 def test_arrayexpr_array_flatten():
@@ -178,12 +189,15 @@ def test_arrayexpr_array_flatten():
 
     expr1 = ArrayDiagonal(ArrayTensorProduct(X, A), (1, 2))
     expr2 = ArrayTensorProduct(expr1, a)
-    assert expr2 == PermuteDims(ArrayDiagonal(ArrayTensorProduct(X, A, a), (1, 2)), [0, 1, 3, 4, 2])
+    assert expr2 == PermuteDims(ArrayDiagonal(ArrayTensorProduct(X, A, a), (1, 2)), [0, 1, 4, 2, 3])
 
     expr1 = ArrayContraction(ArrayTensorProduct(X, A), (1, 2))
     expr2 = ArrayTensorProduct(expr1, a)
     assert isinstance(expr2, ArrayContraction)
     assert isinstance(expr2.expr, ArrayTensorProduct)
+
+    cg = ArrayTensorProduct(ArrayDiagonal(ArrayTensorProduct(A, X, Y), (0, 3), (1, 5)), a, b)
+    assert cg == PermuteDims(ArrayDiagonal(ArrayTensorProduct(A, X, Y, a, b), (0, 3), (1, 5)), [0, 1, 6, 7, 2, 3, 4, 5])
 
 
 def test_arrayexpr_array_diagonal():
@@ -273,8 +287,8 @@ def test_arrayexpr_split_multiple_contractions():
     X = MatrixSymbol("X", k, k)
 
     cg = ArrayContraction(ArrayTensorProduct(A.T, a, b, b.T, (A*X*b).applyfunc(cos)), (1, 2, 8), (5, 6, 9))
-    assert cg.split_multiple_contractions().dummy_eq(ArrayContraction(ArrayTensorProduct(DiagMatrix(a), (A*X*b).applyfunc(cos), A.T, b, b.T), (0, 2), (1, 5), (3, 7, 8)))
-    # assert recognize_matrix_expression(cg)
+    expected = ArrayContraction(ArrayTensorProduct(A.T, DiagMatrix(a), OneArray(1), b, b.T, (A*X*b).applyfunc(cos)), (1, 3), (2, 9), (6, 7, 10))
+    assert cg.split_multiple_contractions().dummy_eq(expected)
 
     # Check no overlap of lines:
 
@@ -523,6 +537,93 @@ def test_arrayexpr_array_expr_zero_array():
 
 def test_arrayexpr_array_expr_applyfunc():
 
-    A = ArraySymbol("A", 3, k, 2)
+    A = ArraySymbol("A", (3, k, 2))
     aaf = ArrayElementwiseApplyFunc(sin, A)
     assert aaf.shape == (3, k, 2)
+
+
+def test_edit_array_contraction():
+    cg = ArrayContraction(ArrayTensorProduct(A, B, C, D), (1, 2, 5))
+    ecg = _EditArrayContraction(cg)
+    assert ecg.to_array_contraction() == cg
+
+    ecg.args_with_ind[1], ecg.args_with_ind[2] = ecg.args_with_ind[2], ecg.args_with_ind[1]
+    assert ecg.to_array_contraction() == ArrayContraction(ArrayTensorProduct(A, C, B, D), (1, 3, 4))
+
+    ci = ecg.get_new_contraction_index()
+    new_arg = _ArgE(X)
+    new_arg.indices = [ci, ci]
+    ecg.args_with_ind.insert(2, new_arg)
+    assert ecg.to_array_contraction() == ArrayContraction(ArrayTensorProduct(A, C, X, B, D), (1, 3, 6), (4, 5))
+
+    assert ecg.get_contraction_indices() == [[1, 3, 6], [4, 5]]
+    assert [[tuple(j) for j in i] for i in ecg.get_contraction_indices_to_ind_rel_pos()] == [[(0, 1), (1, 1), (3, 0)], [(2, 0), (2, 1)]]
+    assert [list(i) for i in ecg.get_mapping_for_index(0)] == [[0, 1], [1, 1], [3, 0]]
+    assert [list(i) for i in ecg.get_mapping_for_index(1)] == [[2, 0], [2, 1]]
+    raises(ValueError, lambda: ecg.get_mapping_for_index(2))
+
+    ecg.args_with_ind.pop(1)
+    assert ecg.to_array_contraction() == ArrayContraction(ArrayTensorProduct(A, X, B, D), (1, 4), (2, 3))
+
+    ecg.args_with_ind[0].indices[1] = ecg.args_with_ind[1].indices[0]
+    ecg.args_with_ind[1].indices[1] = ecg.args_with_ind[2].indices[0]
+    assert ecg.to_array_contraction() == ArrayContraction(ArrayTensorProduct(A, X, B, D), (1, 2), (3, 4))
+
+    ecg.insert_after(ecg.args_with_ind[1], _ArgE(C))
+    assert ecg.to_array_contraction() == ArrayContraction(ArrayTensorProduct(A, X, C, B, D), (1, 2), (3, 6))
+
+
+def test_array_expressions_no_normalization():
+
+    tp = ArrayTensorProduct(M, N, P)
+
+    # ArrayTensorProduct:
+
+    expr = ArrayTensorProduct(tp, N, normalize=False)
+    assert str(expr) == "ArrayTensorProduct(ArrayTensorProduct(M, N, P), N)"
+
+    expr = ArrayTensorProduct(ArrayContraction(M, (0, 1)), N, normalize=False)
+    assert str(expr) == "ArrayTensorProduct(ArrayContraction(M, (0, 1)), N)"
+
+    expr = ArrayTensorProduct(ArrayDiagonal(M, (0, 1)), N, normalize=False)
+    assert str(expr) == "ArrayTensorProduct(ArrayDiagonal(M, (0, 1)), N)"
+
+    expr = ArrayTensorProduct(PermuteDims(M, [1, 0]), N, normalize=False)
+    assert str(expr) == "ArrayTensorProduct(PermuteDims(M, (0 1)), N)"
+
+    # ArrayContraction:
+
+    expr = ArrayContraction(ArrayContraction(tp, (0, 2)), (0, 1), normalize=False)
+    assert isinstance(expr, ArrayContraction)
+    assert isinstance(expr.expr, ArrayContraction)
+    assert str(expr) == "ArrayContraction(ArrayContraction(ArrayTensorProduct(M, N, P), (0, 2)), (0, 1))"
+
+    expr = ArrayContraction(ArrayDiagonal(tp, (0, 1)), (0, 1), normalize=False)
+    assert str(expr) == "ArrayContraction(ArrayDiagonal(ArrayTensorProduct(M, N, P), (0, 1)), (0, 1))"
+
+    expr = ArrayContraction(PermuteDims(M, [1, 0]), (0, 1), normalize=False)
+    assert str(expr) == "ArrayContraction(PermuteDims(M, (0 1)), (0, 1))"
+
+    # ArrayDiagonal:
+
+    expr = ArrayDiagonal(ArrayDiagonal(tp, (0, 2)), (0, 1), normalize=False)
+    assert str(expr) == "ArrayDiagonal(ArrayDiagonal(ArrayTensorProduct(M, N, P), (0, 2)), (0, 1))"
+
+    expr = ArrayDiagonal(ArrayContraction(tp, (0, 1)), (0, 1), normalize=False)
+    assert str(expr) == "ArrayDiagonal(ArrayContraction(ArrayTensorProduct(M, N, P), (0, 1)), (0, 1))"
+
+    expr = ArrayDiagonal(PermuteDims(M, [1, 0]), (0, 1), normalize=False)
+    assert str(expr) == "ArrayDiagonal(PermuteDims(M, (0 1)), (0, 1))"
+
+    # ArrayAdd:
+
+    expr = ArrayAdd(ArrayAdd(M, N), P, normalize=False)
+    assert str(expr) == "ArrayAdd(ArrayAdd(M, N), P)"
+
+    expr = ArrayAdd(M, ZeroArray(k, k), N, normalize=False)
+    assert str(expr) == "ArrayAdd(M, ZeroArray(k, k), N)"
+
+    # PermuteDims:
+
+    expr = PermuteDims(PermuteDims(M, [1, 0]), [1, 0], normalize=False)
+    assert str(expr) == "PermuteDims(PermuteDims(M, (0 1)), (0 1))"

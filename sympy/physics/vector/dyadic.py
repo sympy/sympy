@@ -1,6 +1,9 @@
 from sympy.core.backend import sympify, Add, ImmutableMatrix as Matrix
-from sympy.core.evalf import EvalfMixin, prec_to_dps
+from sympy.core.evalf import EvalfMixin
 from sympy.printing.defaults import Printable
+
+from mpmath.libmp.libmpf import prec_to_dps
+
 
 __all__ = ['Dyadic']
 
@@ -533,9 +536,10 @@ class Dyadic(Printable, EvalfMixin):
         if not self.args:
             return self
         new_args = []
+        dps = prec_to_dps(prec)
         for inlist in self.args:
             new_inlist = list(inlist)
-            new_inlist[0] = inlist[0].evalf(n=prec_to_dps(prec))
+            new_inlist[0] = inlist[0].evalf(n=dps)
             new_args.append(tuple(new_inlist))
         return Dyadic(new_args)
 

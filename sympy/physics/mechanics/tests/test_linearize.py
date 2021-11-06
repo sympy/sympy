@@ -1,5 +1,8 @@
-from sympy.core.backend import symbols, Matrix, cos, sin, atan, sqrt, Rational
-from sympy import solve, simplify, sympify
+from sympy.core.backend import (symbols, Matrix, cos, sin, atan, sqrt,
+    Rational, _simplify_matrix)
+from sympy.core.sympify import sympify
+from sympy.simplify.simplify import simplify
+from sympy.solvers.solvers import solve
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
     LagrangesMethod
@@ -257,7 +260,7 @@ def test_linearize_pendulum_lagrange_minimal():
     # Linearize
     A, B, inp_vec = LM.linearize([q1], [q1d], A_and_B=True)
 
-    assert A == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
+    assert _simplify_matrix(A) == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
     assert B == Matrix([])
 
 def test_linearize_pendulum_lagrange_nonminimal():
@@ -290,7 +293,7 @@ def test_linearize_pendulum_lagrange_nonminimal():
     # Perform the Linearization
     A, B, inp_vec = LM.linearize([q2], [q2d], [q1], [q1d],
             op_point=op_point, A_and_B=True)
-    assert A == Matrix([[0, 1], [-9.8/L, 0]])
+    assert _simplify_matrix(A) == Matrix([[0, 1], [-9.8/L, 0]])
     assert B == Matrix([])
 
 def test_linearize_rolling_disc_lagrange():

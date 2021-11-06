@@ -1,5 +1,6 @@
 from itertools import product
-from sympy import symbols, cos
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import cos
 from sympy.core.numbers import pi
 from sympy.codegen.scipy_nodes import cosm1
 

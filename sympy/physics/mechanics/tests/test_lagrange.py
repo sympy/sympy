@@ -1,8 +1,12 @@
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                     RigidBody, LagrangesMethod, Particle,
                                     inertia, Lagrangian)
-from sympy import symbols, pi, sin, cos, tan, simplify, Function, \
-        Derivative, Matrix
+from sympy.core.function import (Derivative, Function)
+from sympy.core.numbers import pi
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.matrices.dense import Matrix
+from sympy.simplify.simplify import simplify
 
 
 def test_disc_on_an_incline_plane():
@@ -121,7 +125,7 @@ def test_nonminimal_pendulum():
     assert LM.eom == eom_sol
     # Check multiplier solution
     lam_sol = Matrix([(19.6*q1 + 2*q1d**2 + 2*q2d**2)/(4*q1**2/m + 4*q2**2/m)])
-    assert LM.solve_multipliers(sol_type='Matrix') == lam_sol
+    assert simplify(LM.solve_multipliers(sol_type='Matrix')) == simplify(lam_sol)
 
 
 def test_dub_pen():

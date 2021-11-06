@@ -1,6 +1,21 @@
-from sympy import (Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda,
-    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
-    Pow, Or, true, false, Abs, pi, Range, Xor)
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.function import (Function, Lambda)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Integer, Rational, pi)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.logic.boolalg import (false, Or, true, Xor)
+from sympy.matrices.dense import Matrix
+from sympy.polys.polytools import Poly
+from sympy.printing.repr import srepr
+from sympy.sets.fancysets import Range
+from sympy.sets.sets import Interval
 from sympy.abc import x, y
 from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
     CantSympify)
@@ -11,7 +26,7 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
-from sympy.core.compatibility import HAS_GMPY
+from sympy.external.gmpy import HAS_GMPY
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 
@@ -237,19 +252,6 @@ def test_sympify_factorial():
     raises(SympifyError, lambda: sympify("x!!!"))
 
 
-def test_sage():
-    # how to effectivelly test for the _sage_() method without having SAGE
-    # installed?
-    assert hasattr(x, "_sage_")
-    assert hasattr(Integer(3), "_sage_")
-    assert hasattr(sin(x), "_sage_")
-    assert hasattr(cos(x), "_sage_")
-    assert hasattr(x**2, "_sage_")
-    assert hasattr(x + y, "_sage_")
-    assert hasattr(exp(x), "_sage_")
-    assert hasattr(log(x), "_sage_")
-
-
 def test_issue_3595():
     assert sympify("a_") == Symbol("a_")
     assert sympify("_a") == Symbol("_a")
@@ -455,7 +457,7 @@ def test_issue_3982():
 
 
 def test_S_sympify():
-    assert S(1)/2 == sympify(1)/2
+    assert S(1)/2 == sympify(1)/2 == S.Half
     assert (-2)**(S(1)/2) == sqrt(2)*I
 
 
@@ -722,22 +724,22 @@ def test_issue_14706():
     if not numpy:
         skip("numpy not installed.")
 
-    z1 = numpy.zeros((1, 1), dtype=numpy.float)
-    z2 = numpy.zeros((2, 2), dtype=numpy.float)
-    z3 = numpy.zeros((), dtype=numpy.float)
+    z1 = numpy.zeros((1, 1), dtype=numpy.float64)
+    z2 = numpy.zeros((2, 2), dtype=numpy.float64)
+    z3 = numpy.zeros((), dtype=numpy.float64)
 
-    y1 = numpy.ones((1, 1), dtype=numpy.float)
-    y2 = numpy.ones((2, 2), dtype=numpy.float)
-    y3 = numpy.ones((), dtype=numpy.float)
+    y1 = numpy.ones((1, 1), dtype=numpy.float64)
+    y2 = numpy.ones((2, 2), dtype=numpy.float64)
+    y3 = numpy.ones((), dtype=numpy.float64)
 
     assert numpy.all(x + z1 == numpy.full((1, 1), x))
     assert numpy.all(x + z2 == numpy.full((2, 2), x))
     assert numpy.all(z1 + x == numpy.full((1, 1), x))
     assert numpy.all(z2 + x == numpy.full((2, 2), x))
     for z in [z3,
-              numpy.int(0),
-              numpy.float(0),
-              numpy.complex(0)]:
+              numpy.int64(0),
+              numpy.float64(0),
+              numpy.complex64(0)]:
         assert x + z == x
         assert z + x == x
         assert isinstance(x + z, Symbol)
@@ -755,9 +757,9 @@ def test_issue_14706():
     assert numpy.all(y1 + x == numpy.full((1, 1), x + 1.0))
     assert numpy.all(y2 + x == numpy.full((2, 2), x + 1.0))
     for y_ in [y3,
-              numpy.int(1),
-              numpy.float(1),
-              numpy.complex(1)]:
+              numpy.int64(1),
+              numpy.float64(1),
+              numpy.complex64(1)]:
         assert x + y_ == y_ + x
         assert isinstance(x + y_, Add)
         assert isinstance(y_ + x, Add)
