@@ -3077,3 +3077,12 @@ def test_issue_22058():
 
 def test_issue_11184():
     assert solveset(20*sqrt(y**2 + (sqrt(-(y - 10)*(y + 10)) + 10)**2) - 60, y, S.Reals) is S.EmptySet
+
+
+def test_issue_21890():
+    x, y = symbols('x y', real=True)
+    sol = nonlinsolve([4*x**3*y**4 - 2*y, 4*x**4*y**3 - 2*x], x, y)
+    ans = {(2**(S(2)/3)/(2*y), y),
+        ((-2**(S(2)/3)/4 - 2**(S(2)/3)*sqrt(3)*I/4)/y, y),
+        ((-2**(S(2)/3)/4 + 2**(S(2)/3)*sqrt(3)*I/4)/y, y)}
+    assert sol == ans
