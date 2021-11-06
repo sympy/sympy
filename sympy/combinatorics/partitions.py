@@ -76,8 +76,8 @@ class Partition(FiniteSet):
 
         if not all(isinstance(part, FiniteSet) for part in args):
             raise ValueError(
-                "Each argument to Partition should be " \
-                "a list, set, or a FiniteSet")
+                "Each argument to Partition should be " "a list, set, or a FiniteSet"
+            )
 
         # sort so we have a canonical reference for RGS
         U = Union(*args)
@@ -112,8 +112,9 @@ class Partition(FiniteSet):
         if order is None:
             members = self.members
         else:
-            members = tuple(sorted(self.members,
-                             key=lambda w: default_sort_key(w, order)))
+            members = tuple(
+                sorted(self.members, key=lambda w: default_sort_key(w, order))
+            )
         return tuple(map(default_sort_key, (self.size, members, self.rank)))
 
     @property
@@ -128,8 +129,9 @@ class Partition(FiniteSet):
         [[1], [2, 3]]
         """
         if self._partition is None:
-            self._partition = sorted([sorted(p, key=default_sort_key)
-                                      for p in self.args])
+            self._partition = sorted(
+                [sorted(p, key=default_sort_key) for p in self.args]
+            )
         return self._partition
 
     def __add__(self, other):
@@ -151,9 +153,7 @@ class Partition(FiniteSet):
         """
         other = as_int(other)
         offset = self.rank + other
-        result = RGS_unrank((offset) %
-                            RGS_enum(self.size),
-                            self.size)
+        result = RGS_unrank((offset) % RGS_enum(self.size), self.size)
         return Partition.from_rgs(result, self.members)
 
     def __sub__(self, other):
@@ -262,8 +262,12 @@ class Partition(FiniteSet):
         for i, part in enumerate(partition):
             for j in part:
                 rgs[j] = i
-        return tuple([rgs[i] for i in sorted(
-            [i for p in partition for i in p], key=default_sort_key)])
+        return tuple(
+            [
+                rgs[i]
+                for i in sorted([i for p in partition for i in p], key=default_sort_key)
+            ]
+        )
 
     @classmethod
     def from_rgs(self, rgs, elements):
@@ -292,7 +296,7 @@ class Partition(FiniteSet):
         Partition({2}, {1, 4}, {3, 5})
         """
         if len(rgs) != len(elements):
-            raise ValueError('mismatch in rgs and element lengths')
+            raise ValueError("mismatch in rgs and element lengths")
         max_elem = max(rgs) + 1
         partition = [[] for i in range(max_elem)]
         j = 0
@@ -300,7 +304,7 @@ class Partition(FiniteSet):
             partition[i].append(elements[j])
             j += 1
         if not all(p for p in partition):
-            raise ValueError('some blocks of the partition were empty.')
+            raise ValueError("some blocks of the partition were empty.")
         return Partition(*partition)
 
 
@@ -376,7 +380,7 @@ class IntegerPartition(Basic):
                 if not v:
                     continue
                 k, v = as_int(k), as_int(v)
-                _.extend([k]*v)
+                _.extend([k] * v)
             partition = tuple(_)
         else:
             partition = tuple(sorted(map(as_int, partition), reverse=True))
@@ -430,8 +434,8 @@ class IntegerPartition(Basic):
             while left:
                 new -= 1
                 if left - new >= 0:
-                    d[new] += left//new
-                    left -= d[new]*new
+                    d[new] += left // new
+                    left -= d[new] * new
         return IntegerPartition(self.integer, d)
 
     def next_lex(self):
@@ -462,7 +466,7 @@ class IntegerPartition(Basic):
             else:
                 b = key[-2]
                 d[b + 1] += 1
-                d[1] = (d[b] - 1)*b
+                d[1] = (d[b] - 1) * b
                 d[b] = 0
         else:
             if d[a] > 1:
@@ -473,13 +477,13 @@ class IntegerPartition(Basic):
                 else:
                     a1 = a + 1
                     d[a1] += 1
-                    d[1] = d[a]*a - a1
+                    d[1] = d[a] * a - a1
                     d[a] = 0
             else:
                 b = key[-2]
                 b1 = b + 1
                 d[b1] += 1
-                need = d[b]*b + d[a]*a - b1
+                need = d[b] * b + d[a] * a - b1
                 d[a] = d[b] = 0
                 d[1] = need
         return IntegerPartition(self.integer, d)
@@ -518,7 +522,7 @@ class IntegerPartition(Basic):
         j = 1
         temp_arr = list(self.partition) + [0]
         k = temp_arr[0]
-        b = [0]*k
+        b = [0] * k
         while k > 0:
             while k > temp_arr[j]:
                 b[k - 1] = j
@@ -559,7 +563,7 @@ class IntegerPartition(Basic):
         """
         return list(reversed(self.partition)) <= list(reversed(other.partition))
 
-    def as_ferrers(self, char='#'):
+    def as_ferrers(self, char="#"):
         """
         Prints the ferrer diagram of a partition.
 
@@ -572,7 +576,7 @@ class IntegerPartition(Basic):
         #
         #
         """
-        return "\n".join([char*i for i in self.partition])
+        return "\n".join([char * i for i in self.partition])
 
     def __str__(self):
         return str(list(self.partition))
@@ -602,18 +606,18 @@ def random_integer_partition(n, seed=None):
 
     n = as_int(n)
     if n < 1:
-        raise ValueError('n must be a positive integer')
+        raise ValueError("n must be a positive integer")
 
     randint = _randint(seed)
 
     partition = []
-    while (n > 0):
+    while n > 0:
         k = randint(1, n)
-        mult = randint(1, n//k)
+        mult = randint(1, n // k)
         partition.append((k, mult))
-        n -= k*mult
+        n -= k * mult
     partition.sort(reverse=True)
-    partition = flatten([[k]*m for k, m in partition])
+    partition = flatten([[k] * m for k, m in partition])
     return partition
 
 
@@ -678,9 +682,9 @@ def RGS_enum(m):
     >>> assert len(s) == 15
 
     """
-    if (m < 1):
+    if m < 1:
         return 0
-    elif (m == 1):
+    elif m == 1:
         return 1
     else:
         return bell(m)
@@ -710,7 +714,7 @@ def RGS_unrank(rank, m):
     D = RGS_generalized(m)
     for i in range(2, m + 1):
         v = D[m - i, j]
-        cr = j*v
+        cr = j * v
         if cr <= rank:
             L[i] = j + 1
             rank -= cr
@@ -738,7 +742,7 @@ def RGS_rank(rgs):
     rank = 0
     D = RGS_generalized(rgs_size)
     for i in range(1, rgs_size):
-        n = len(rgs[(i + 1):])
+        n = len(rgs[(i + 1) :])
         m = max(rgs[0:i])
         rank += D[n, m + 1] * rgs[i]
     return rank
