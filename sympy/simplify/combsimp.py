@@ -97,9 +97,10 @@ def _gamma_as_comb(expr):
                         nd_fact_args[1 - m].remove(sum)
                         del nd_fact_args[m][j]
                         del nd_fact_args[m][i]
-
-                        rvd[binomial(sum, ai if count_ops(ai) <
-                                count_ops(aj) else aj)] += (
+                        n = sum
+                        k = ai if count_ops(ai) < count_ops(aj) else aj
+                        # XXX which binom version is valid?
+                        rvd[binomial(n, k)] += (
                                 -1 if m == 0 else 1)
                         break
                 else:

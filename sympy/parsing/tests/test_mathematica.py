@@ -62,7 +62,7 @@ def test_mathematica():
         'PrimeQ[5]': 'isprime(5)',
         'Factorial[x]': 'factorial(x)',
         'FactorialPower[x,y]': 'ff(x,y)',
-        'Binomial[x,y]': 'binomial(x,y,True)',
+        'Binomial[x,y]': 'binomial(x,y,1)',
         'Multinomial[x,y,z]': 'multinomial(x,y,z)'
         }
 

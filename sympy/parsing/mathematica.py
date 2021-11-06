@@ -61,7 +61,7 @@ class MathematicaParser:
         'PrimeQ[x]': 'isprime(x)',
         'Factorial[x]': 'factorial(x)',
         'FactorialPower[x,y]': 'ff(x,y)',
-        'Binomial[x,y]': 'binomial(x,y,True)',
+        'Binomial[x,y]': 'binomial(x,y,1)',
         'Multinomial[*x]': 'multinomial(*x)'
     }
 

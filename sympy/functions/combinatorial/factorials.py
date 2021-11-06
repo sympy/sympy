@@ -680,7 +680,7 @@ class RisingFactorial(CombinatorialFunction):
 
     def _eval_rewrite_as_binomial(self, x, k, **kwargs):
         if k.is_integer:
-            return factorial(k) * binomial(x + k - 1, k)
+            return factorial(k) * binomial(x + k - 1, k)  # XXX which binomial version is valid?
 
     def _eval_rewrite_as_tractable(self, x, k, limitvar=None, **kwargs):
         from sympy.functions.special.gamma_functions import gamma
@@ -828,7 +828,7 @@ class FallingFactorial(CombinatorialFunction):
 
     def _eval_rewrite_as_binomial(self, x, k, **kwargs):
         if k.is_integer:
-            return factorial(k) * binomial(x, k)
+            return factorial(k) * binomial(x, k)  # XXX which binom version is valid
 
     def _eval_rewrite_as_factorial(self, x, k, **kwargs):
         from sympy.functions.elementary.piecewise import Piecewise
@@ -862,7 +862,6 @@ ff = FallingFactorial
 
 class binomial(CombinatorialFunction):
     r"""Implementation of the binomial coefficient.
-
     In a strict combinatorial sense, the binomial coefficient gives
     the number of ways we can choose $k$ elements from a set of
     $n$ elements. In this case both arguments are nonnegative
@@ -872,25 +871,41 @@ class binomial(CombinatorialFunction):
     .. math:: \binom{n}{k} = \frac{n!}{k!(n - k)!}
        :label: 1
 
-    We've implemented Newton's Generalized Binomial Theorem :eq:`2`
-    here. It agrees with :eq:`1` when $k$ is a nonnegative integer
+    But the binomial can be generalization for arbitrary `n` and there
+    are two conventions. In the simpler convention, negative integer $k$ values
+    will give a return value of 0, regardless of the value of $n$. This
+    case is very useful when evaluating summations. It also maintains
+    the identity :eq:`2` and maintains the reflexive identity :eq:`3`
+    for positive integer $n$ but only for negative integer $n$ when
+    $n < k$ and $k < 0$.
+
+    .. math:: \binom{n}{k} == \binom{n-1}{k-1} + \binom{n-1}{k}
+       :label: 2
+    .. math:: \binom{n}{k} == \binom{n}{n - k}
+       :label: 3
+
+    In the other convention, the reflection symmetry (:eq:`3`) holds for all
+    integer $n$ and $k$ and identity :eq:`2` holds everywhere except when $n$
+    and $k$ are 0.
+
+    This other convention uses Newton's Generalized Binomial Theorem
+    :eq:`4` which agrees with :eq:`1` when $k$ is a nonnegative integer
     and also extends to arbitrary $n$. See [4]_ :
 
     .. math:: \binom{n}{k} = \frac{ff(n, k)}{k!}
-       :label: 2
+       :label: 4
 
-    Using :eq:`2`, one can interpret the binomial coefficient
+    Using :eq:`4`, one can interpret the binomial coefficient
     $\binom{n}{k}$ as the coefficient of $x^k, y^k, x^{(n - k)}, y^{(n - k)}$
     in the Series expansion of $(x + y)^n$ :
 
     .. math:: (x+y)^n = \sum_{k=0}^\infty \binom{n}{k} x^{n-k} y^k
-       :label: 3
+       :label: 5
 
-    When $n$ and $k$ are integers, the Cartestian Plane can be divided
+    When $n$ and $k$ are integers, the Cartesian Plane can be divided
     into six regions. See [3]_ and [5]_ :
 
     .. math::
-
         \binom{n}{k} =
             \begin{cases}
                 \binom{n}{k} & \qquad 0 \leq k \leq n \\
@@ -900,12 +915,12 @@ class binomial(CombinatorialFunction):
                 0 & \qquad k < 0 \leq n \\
                 0 & \qquad n < k < 0 \\
             \end{cases}
+       :label: 6
 
     Extension for non-integers is done using the gamma function.
     See [2]_ and [5]_ :
 
     .. math::
-
         \binom{n}{k} =
             \begin{cases}
                 \begin{cases}
@@ -914,8 +929,9 @@ class binomial(CombinatorialFunction):
                 \end{cases} \qquad \{n, k\} \subset \mathbb{Z} \\
             \frac{\Gamma(n + 1)}{\Gamma(k + 1)\Gamma(n - k + 1)} & \qquad otherwise \\
             \end{cases}
+       :label: 7
 
-    This Implementation agrees with the Knuth Gamma
+    This extension agrees with the Knuth Gamma
     Coefficients [3]_ when $\{n, k\} \subset \mathbb{Z}$,
     The Classical Extended Binomial Theorem [2]_ when
     $\{n\} \subset \mathbb{C}$, and with the Loeb and
@@ -930,9 +946,6 @@ class binomial(CombinatorialFunction):
 
     >>> binomial(15, 8)
     6435
-
-    >>> binomial(n, -1)
-    0
 
     Rows of Pascal's triangle can be generated with the binomial function:
 
@@ -954,10 +967,7 @@ class binomial(CombinatorialFunction):
     >>> [binomial(N, i) for i in range(1 - N)]
     [1, -4, 10, -20, 35]
 
-    >>> binomial(Rational(5, 4), 3)
-    -5/128
-    >>> binomial(Rational(-5, 4), 3)
-    -195/128
+    It is possible to see the polynomial expression for the binomial.
 
     >>> b = binomial(n, 3); b
     binomial(n, 3)
@@ -971,6 +981,47 @@ class binomial(CombinatorialFunction):
     >>> expand_func(b)
     n*(n - 2)*(n - 1)/6
 
+    The extended definition of the binomial applies to cases
+    when n (or k) are not integers:
+
+    >>> binomial(Rational(5, 4), 3)
+    -5/128
+    >>> binomial(Rational(-5, 4), 3)
+    -195/128
+
+    The Generalized Newton definition which calculates the binomial
+    for negative integer values of $k$ can be selected by passing a value
+    of 1 as the third argument. So, whereas the following fails for negative
+    $k$ less than $n$, it is always affirmed with the Generalized
+    Newton definition:
+
+    >>> reflex = lambda f, n, k: f(n, k) == f(n, n - k)
+    >>> gn_binomial = lambda n, k: binomial(n, k, 1)
+
+    >>> [reflex(binomial, -2, i) for i in (-3, -2, -1)]
+    [False, False, True]
+    >>> [reflex(gn_binomial, -2, i) for i in (-3, -2, -1)]
+    [True, True, True]
+
+    The Generalized definition also affirms the following identity except
+    when $n$ and $k$ are 0:
+
+    >>> check = lambda f, n, k: f(n, k) == f(n - 1, k - 1) + f(n - 1, k)
+
+    >>> check(binomial, 2, 3)
+    True
+    >>> check(gn_binomial, 2, 3)
+    True
+
+    >>> check(binomial, 0, 0)
+    True
+    >>> check(gn_binomial, 0, 0)
+    False
+
+    >>> check(binomial, 2, -3)
+    True
+    >>> check(gn_binomial, 2, -3)
+    True
 
     References
     ==========
@@ -997,12 +1048,12 @@ class binomial(CombinatorialFunction):
         if argindex == 1:
             # http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/01/
             n, k = self.args[:2]
-            return binomial(n, k)*(polygamma(0, n + 1) - \
+            return binomial(*self.args)*(polygamma(0, n + 1) - \
                 polygamma(0, n - k + 1))
         elif argindex == 2:
             # http://functions.wolfram.com/GammaBetaErf/Binomial/20/01/02/
             n, k = self.args[:2]
-            return binomial(n, k)*(polygamma(0, n - k + 1) - \
+            return binomial(*self.args)*(polygamma(0, n - k + 1) - \
                 polygamma(0, k + 1))
         else:
             raise ArgumentIndexError(self, argindex)
@@ -1033,24 +1084,25 @@ class binomial(CombinatorialFunction):
             if not res.has(ff) and res.is_number:
                 return _mexpand(res) if res else res
 
-    def __init__(self, n, k, binom=False, **hints):
+    def __init__(self, n, k, binom=0, **hints):
         """
         >>> from sympy import binomial
         >>> binomial(4, 2)
         6
-        >>> binomial(-49, -51, True)
+        >>> binomial(-49, -51, 1)
         1225
         """
+        from sympy.utilities.misc import as_int
         n, k = map(sympify, (n, k))
         self.n = n
         self.k = k
-        self.binom = bool(binom)
+        self.binom = as_int(binom)
 
     @classmethod
-    def eval(cls, n, k, binom=False):
+    def eval(cls, n, k, binom=0):
         from sympy import Pow
         n, k = map(sympify, (n, k))
-        if binom == False and k.is_negative:
+        if binom == 0 and k.is_negative:
             return S.Zero
         n_k = n - k
         nint, kint, n_kint = [int_like(i) for i in (n, k, n_k)]
@@ -1185,12 +1237,14 @@ class binomial(CombinatorialFunction):
             return
 
         with workprec(prec):
-            v = binomial(*args)
+            v = binomial(*args, self.binom)
 
         return v  # Expr._from_mpmath(v, prec)
 
     def _eval_Mod(self, q):
         n, k = self.args[:2]
+        if not self.binom and k.is_negative:
+            return S.Zero % q
         if any(int_like(x) is False for x in (n, k, q)):
             raise ValueError("Integers expected for binomial Mod")
 
@@ -1231,7 +1285,9 @@ class binomial(CombinatorialFunction):
                         # use Lucas Theorem
                         N, K = n, k
                         while N or K:
-                            res = res*binomial(N % aq, K % aq) % aq
+                            args = list(self.args)
+                            args[:2] = N % aq, K % aq
+                            res = res*binomial(*args) % aq
                             N, K = N // aq, K // aq
                     else:
                         # use Factorial Modulo
@@ -1373,6 +1429,9 @@ class binomial(CombinatorialFunction):
 
     def _eval_is_integer(self):
         n, k = self.args[:2]
+        if not self.binom and k.is_extended_negative:
+            # result is 0 so
+            return True
         if k.is_integer:
             if n.is_integer or k.is_negative:
                 return True
@@ -1401,6 +1460,9 @@ class binomial(CombinatorialFunction):
 
     def _eval_is_nonnegative(self):
         n, k = self.args[:2]
+        if not self.binom and k.is_extended_negative:
+            # result is 0 so
+            return True
         if (n - k).is_zero or k.is_zero or n.is_nonnegative:
             return True
         if n.is_negative:
@@ -1508,10 +1570,10 @@ class multinomial(CombinatorialFunction):
 
     @classmethod
     def _binomial(cls, *args, symbolic=True):
-        from sympy import binomial
+        if len(args) == 2 or len(args) == 3 and args[-1] == 0:
+            # XXX multinomial requires the generalized binomial
+            return binomial(sum(args), next(ordered(args)), 1)
 
-        if len(args) == 2:
-            return binomial(sum(args), next(ordered(args)), True)
         if all(i.is_number for i in args) or symbolic:
             if len(set(args)) == 1:
                 return factorial(sum(args))/factorial(args[0])**len(args)
@@ -1521,7 +1583,7 @@ class multinomial(CombinatorialFunction):
                     t += i
                     yield t
             rv = Mul(*[
-                binomial(j, k, True) for j, k in zip(runsum(args), args)])
+                binomial(j, k, 1) for j, k in zip(runsum(args), args)])
             if any(x.is_Float for x in args):
                 rv = _mexpand(rv)
             return rv
