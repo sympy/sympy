@@ -10,7 +10,7 @@ shuffle = random.shuffle
 uniform = random.uniform
 
 class Random():
-    def __call__(seed=None):
+    def __new__(cls, seed=None):
         random.seed(seed)
         return random
 

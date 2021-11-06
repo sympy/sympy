@@ -2321,7 +2321,7 @@ def random_derangement(t, choice=None, strict=True):
     A predictable result can be obtained by using a pseudorandom
     generator for the choice:
 
-    >>> from sympy.core.random import random
+    >>> from sympy.core.random import random, Random
     >>> random.seed(1)
     >>> c = Random(1).choice
     >>> d = [''.join(random_derangement(t, c)) for i in range(5)]

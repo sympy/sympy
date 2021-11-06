@@ -6,7 +6,7 @@ from sympy.polys.domains import ZZ
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient, multiplicity
 from sympy.utilities.misc import as_int
-from sympy.core.random import randint, Random
+from sympy.core.random import _randint
 
 from itertools import cycle, product
 
@@ -195,7 +195,7 @@ def _sqrt_mod_tonelli_shanks(a, p):
     t = p >> s
     # find a non-quadratic residue
     while 1:
-        d = randint(2, p - 1)
+        d = _randint(2, p - 1)
         r = legendre_symbol(d, p)
         if r == -1:
             break

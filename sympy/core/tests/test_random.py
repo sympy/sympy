@@ -1,7 +1,7 @@
 import random
 from sympy.core.symbol import Symbol, symbols
 from sympy.functions.elementary.trigonometric import sin, acos
-
+from sympy.abc import x
 
 def test_random():
     random.seed(42)
@@ -15,7 +15,7 @@ def test_random():
     for i in range(2):
         random.seed(28)
         m0, m1 = symbols('m_0 m_1', real=True)
-        result = acos(-m0/m1)
+        _ = acos(-m0/m1)
         got.add(random.uniform(0,1))
     assert len(got) == 1
 
