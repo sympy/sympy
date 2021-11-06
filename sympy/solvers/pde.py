@@ -56,8 +56,8 @@ allhints = (
     "1st_linear_constant_coeff_homogeneous",
     "1st_linear_constant_coeff",
     "1st_linear_constant_coeff_Integral",
-    "1st_linear_variable_coeff"
-    )
+    "1st_linear_variable_coeff",
+)
 
 
 def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
@@ -166,8 +166,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         solvefun = Function('F')
 
     # See the docstring of _desolve for more details.
-    hints = _desolve(eq, func=func, hint=hint, simplify=True,
-                     type='pde', **kwargs)
+    hints = _desolve(eq, func=func, hint=hint, simplify=True, type='pde', **kwargs)
     eq = hints.pop('eq', False)
     all_ = hints.pop('all', False)
 
@@ -177,12 +176,17 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         pdedict = {}
         failed_hints = {}
         gethints = classify_pde(eq, dict=True)
-        pdedict.update({'order': gethints['order'],
-                        'default': gethints['default']})
+        pdedict.update({'order': gethints['order'], 'default': gethints['default']})
         for hint in hints:
             try:
-                rv = _helper_simplify(eq, hint, hints[hint]['func'],
-                    hints[hint]['order'], hints[hint][hint], solvefun)
+                rv = _helper_simplify(
+                    eq,
+                    hint,
+                    hints[hint]['func'],
+                    hints[hint]['order'],
+                    hints[hint][hint],
+                    solvefun,
+                )
             except NotImplementedError as detail:
                 failed_hints[hint] = detail
             else:
@@ -191,8 +195,14 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         return pdedict
 
     else:
-        return _helper_simplify(eq, hints['hint'], hints['func'],
-                                hints['order'], hints[hints['hint']], solvefun)
+        return _helper_simplify(
+            eq,
+            hints['hint'],
+            hints['func'],
+            hints['order'],
+            hints[hints['hint']],
+            solvefun,
+        )
 
 
 def _helper_simplify(eq, hint, func, order, match, solvefun):
@@ -203,12 +213,12 @@ def _helper_simplify(eq, hint, func, order, match, solvefun):
     """
 
     if hint.endswith("_Integral"):
-        solvefunc = globals()[
-            "pde_" + hint[:-len("_Integral")]]
+        solvefunc = globals()["pde_" + hint[: -len("_Integral")]]
     else:
         solvefunc = globals()["pde_" + hint]
-    return _handle_Integral(solvefunc(eq, func, order,
-        match, solvefun), func, order, hint)
+    return _handle_Integral(
+        solvefunc(eq, func, order, match, solvefun), func, order, hint
+    )
 
 
 def _handle_Integral(expr, func, order, hint):
@@ -267,8 +277,10 @@ def classify_pde(eq, func=None, dict=False, *, prep=True, **kwargs):
     """
 
     if func and len(func.args) != 2:
-        raise NotImplementedError("Right now only partial "
-            "differential equations of two variables are supported")
+        raise NotImplementedError(
+            "Right now only partial "
+            "differential equations of two variables are supported"
+        )
 
     if prep or func is None:
         prep, func_ = _preprocess(eq, func)
@@ -283,14 +295,14 @@ def classify_pde(eq, func=None, dict=False, *, prep=True, **kwargs):
     f = func.func
     x = func.args[0]
     y = func.args[1]
-    fx = f(x,y).diff(x)
-    fy = f(x,y).diff(y)
+    fx = f(x, y).diff(x)
+    fy = f(x, y).diff(y)
 
     # TODO : For now pde.py uses support offered by the ode_order function
     # to find the order with respect to a multi-variable function. An
     # improvement could be to classify the order of the PDE on the basis of
     # individual variables.
-    order = ode_order(eq, f(x,y))
+    order = ode_order(eq, f(x, y))
 
     # hint:matchdict or hint:(tuple of matchdicts)
     # Also will contain "default":<default hint> and "order":order items.
@@ -305,43 +317,43 @@ def classify_pde(eq, func=None, dict=False, *, prep=True, **kwargs):
 
     eq = expand(eq)
 
-    a = Wild('a', exclude = [f(x,y)])
-    b = Wild('b', exclude = [f(x,y), fx, fy, x, y])
-    c = Wild('c', exclude = [f(x,y), fx, fy, x, y])
-    d = Wild('d', exclude = [f(x,y), fx, fy, x, y])
-    e = Wild('e', exclude = [f(x,y), fx, fy])
-    n = Wild('n', exclude = [x, y])
+    a = Wild('a', exclude=[f(x, y)])
+    b = Wild('b', exclude=[f(x, y), fx, fy, x, y])
+    c = Wild('c', exclude=[f(x, y), fx, fy, x, y])
+    d = Wild('d', exclude=[f(x, y), fx, fy, x, y])
+    e = Wild('e', exclude=[f(x, y), fx, fy])
+    n = Wild('n', exclude=[x, y])
     # Try removing the smallest power of f(x,y)
     # from the highest partial derivatives of f(x,y)
     reduced_eq = None
     if eq.is_Add:
-        var = set(combinations_with_replacement((x,y), order))
+        var = set(combinations_with_replacement((x, y), order))
         dummyvar = var.copy()
         power = None
         for i in var:
-            coeff = eq.coeff(f(x,y).diff(*i))
+            coeff = eq.coeff(f(x, y).diff(*i))
             if coeff != 1:
-                match = coeff.match(a*f(x,y)**n)
+                match = coeff.match(a * f(x, y) ** n)
                 if match and match[a]:
                     power = match[n]
                     dummyvar.remove(i)
                     break
             dummyvar.remove(i)
         for i in dummyvar:
-            coeff = eq.coeff(f(x,y).diff(*i))
+            coeff = eq.coeff(f(x, y).diff(*i))
             if coeff != 1:
-                match = coeff.match(a*f(x,y)**n)
+                match = coeff.match(a * f(x, y) ** n)
                 if match and match[a] and match[n] < power:
                     power = match[n]
         if power:
-            den = f(x,y)**power
-            reduced_eq = Add(*[arg/den for arg in eq.args])
+            den = f(x, y) ** power
+            reduced_eq = Add(*[arg / den for arg in eq.args])
     if not reduced_eq:
         reduced_eq = eq
 
     if order == 1:
         reduced_eq = collect(reduced_eq, f(x, y))
-        r = reduced_eq.match(b*fx + c*fy + d*f(x,y) + e)
+        r = reduced_eq.match(b * fx + c * fy + d * f(x, y) + e)
         if r:
             if not r[e]:
                 ## Linear first-order homogeneous partial-differential
@@ -349,19 +361,18 @@ def classify_pde(eq, func=None, dict=False, *, prep=True, **kwargs):
                 r.update({'b': b, 'c': c, 'd': d})
                 matching_hints["1st_linear_constant_coeff_homogeneous"] = r
             else:
-                if r[b]**2 + r[c]**2 != 0:
+                if r[b] ** 2 + r[c] ** 2 != 0:
                     ## Linear first-order general partial-differential
                     ## equation with constant coefficients
                     r.update({'b': b, 'c': c, 'd': d, 'e': e})
                     matching_hints["1st_linear_constant_coeff"] = r
-                    matching_hints[
-                        "1st_linear_constant_coeff_Integral"] = r
+                    matching_hints["1st_linear_constant_coeff_Integral"] = r
 
         else:
             b = Wild('b', exclude=[f(x, y), fx, fy])
             c = Wild('c', exclude=[f(x, y), fx, fy])
             d = Wild('d', exclude=[f(x, y), fx, fy])
-            r = reduced_eq.match(b*fx + c*fy + d*f(x,y) + e)
+            r = reduced_eq.match(b * fx + c * fy + d * f(x, y) + e)
             if r:
                 r.update({'b': b, 'c': c, 'd': d, 'e': e})
                 matching_hints["1st_linear_variable_coeff"] = r
@@ -436,20 +447,20 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
         try:
             _, func = _preprocess(pde.lhs)
         except ValueError:
-            funcs = [s.atoms(AppliedUndef) for s in (
-                sol if is_sequence(sol, set) else [sol])]
+            funcs = [
+                s.atoms(AppliedUndef) for s in (sol if is_sequence(sol, set) else [sol])
+            ]
             funcs = set().union(funcs)
             if len(funcs) != 1:
-                raise ValueError(
-                    'must pass func arg to checkpdesol for this case.')
+                raise ValueError('must pass func arg to checkpdesol for this case.')
             func = funcs.pop()
 
     # If the given solution is in the form of a list or a set
     # then return a list or set of tuples.
     if is_sequence(sol, set):
-        return type(sol)([checkpdesol(
-            pde, i, func=func,
-            solve_for_func=solve_for_func) for i in sol])
+        return type(sol)(
+            [checkpdesol(pde, i, func=func, solve_for_func=solve_for_func) for i in sol]
+        )
 
     # Convert solution into an equation
     if not isinstance(sol, Equality):
@@ -463,11 +474,13 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
         solved = solve(sol, func)
         if solved:
             if len(solved) == 1:
-                return checkpdesol(pde, Eq(func, solved[0]),
-                    func=func, solve_for_func=False)
+                return checkpdesol(
+                    pde, Eq(func, solved[0]), func=func, solve_for_func=False
+                )
             else:
-                return checkpdesol(pde, [Eq(func, t) for t in solved],
-                    func=func, solve_for_func=False)
+                return checkpdesol(
+                    pde, [Eq(func, t) for t in solved], func=func, solve_for_func=False
+                )
 
     # try direct substitution of the solution into the PDE and simplify
     if sol.lhs == func:
@@ -475,9 +488,13 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
         s = simplify(pde.subs(func, sol.rhs).doit())
         return s is S.Zero, s
 
-    raise NotImplementedError(filldedent('''
-        Unable to test if %s is a solution to %s.''' % (sol, pde)))
-
+    raise NotImplementedError(
+        filldedent(
+            '''
+        Unable to test if %s is a solution to %s.'''
+            % (sol, pde)
+        )
+    )
 
 
 def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
@@ -551,7 +568,10 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     b = match[match['b']]
     c = match[match['c']]
     d = match[match['d']]
-    return Eq(f(x,y), exp(-S(d)/(b**2 + c**2)*(b*x + c*y))*solvefun(c*x - b*y))
+    return Eq(
+        f(x, y),
+        exp(-S(d) / (b ** 2 + c ** 2) * (b * x + c * y)) * solvefun(c * x - b * y),
+    )
 
 
 def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
@@ -660,15 +680,18 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     c = match[match['c']]
     d = match[match['d']]
     e = -match[match['e']]
-    expterm = exp(-S(d)/(b**2 + c**2)*xi)
+    expterm = exp(-S(d) / (b ** 2 + c ** 2) * xi)
     functerm = solvefun(eta)
-    solvedict = solve((b*x + c*y - xi, c*x - b*y - eta), x, y)
+    solvedict = solve((b * x + c * y - xi, c * x - b * y - eta), x, y)
     # Integral should remain as it is in terms of xi,
     # doit() should be done in _handle_Integral.
-    genterm = (1/S(b**2 + c**2))*Integral(
-        (1/expterm*e).subs(solvedict), (xi, b*x + c*y))
-    return Eq(f(x,y), Subs(expterm*(functerm + genterm),
-        (eta, xi), (c*x - b*y, b*x + c*y)))
+    genterm = (1 / S(b ** 2 + c ** 2)) * Integral(
+        (1 / expterm * e).subs(solvedict), (xi, b * x + c * y)
+    )
+    return Eq(
+        f(x, y),
+        Subs(expterm * (functerm + genterm), (eta, xi), (c * x - b * y, b * x + c * y)),
+    )
 
 
 def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
@@ -739,31 +762,32 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     d = match[match['d']]
     e = -match[match['e']]
 
-
     if not d:
-         # To deal with cases like b*ux = e or c*uy = e
-         if not (b and c):
+        # To deal with cases like b*ux = e or c*uy = e
+        if not (b and c):
             if c:
                 try:
-                    tsol = integrate(e/c, y)
+                    tsol = integrate(e / c, y)
                 except NotImplementedError:
-                    raise NotImplementedError("Unable to find a solution"
-                        " due to inability of integrate")
+                    raise NotImplementedError(
+                        "Unable to find a solution" " due to inability of integrate"
+                    )
                 else:
-                    return Eq(f(x,y), solvefun(x) + tsol)
+                    return Eq(f(x, y), solvefun(x) + tsol)
             if b:
                 try:
-                    tsol = integrate(e/b, x)
+                    tsol = integrate(e / b, x)
                 except NotImplementedError:
-                    raise NotImplementedError("Unable to find a solution"
-                        " due to inability of integrate")
+                    raise NotImplementedError(
+                        "Unable to find a solution" " due to inability of integrate"
+                    )
                 else:
-                    return Eq(f(x,y), solvefun(y) + tsol)
+                    return Eq(f(x, y), solvefun(y) + tsol)
 
     if not c:
         # To deal with cases when c is 0, a simpler method is used.
         # The PDE reduces to b*(u.diff(x)) + d*u = e, which is a linear ODE in x
-        plode = f(x).diff(x)*b + d*f(x) - e
+        plode = f(x).diff(x) * b + d * f(x) - e
         sol = dsolve(plode, f(x))
         syms = sol.free_symbols - plode.free_symbols - {x, y}
         rhs = _simplify_variable_coeff(sol.rhs, syms, solvefun, y)
@@ -772,14 +796,14 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
     if not b:
         # To deal with cases when b is 0, a simpler method is used.
         # The PDE reduces to c*(u.diff(y)) + d*u = e, which is a linear ODE in y
-        plode = f(y).diff(y)*c + d*f(y) - e
+        plode = f(y).diff(y) * c + d * f(y) - e
         sol = dsolve(plode, f(y))
         syms = sol.free_symbols - plode.free_symbols - {x, y}
         rhs = _simplify_variable_coeff(sol.rhs, syms, solvefun, x)
         return Eq(f(x, y), rhs)
 
     dummy = Function('d')
-    h = (c/b).subs(y, dummy(x))
+    h = (c / b).subs(y, dummy(x))
     sol = dsolve(dummy(x).diff(x) - h, dummy(x))
     if isinstance(sol, list):
         sol = sol[0]
@@ -788,7 +812,7 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
         solsym = solsym.pop()
         etat = (solve(sol, solsym)[0]).subs(dummy(x), y)
         ysub = solve(eta - etat, y)[0]
-        deq = (b*(f(x).diff(x)) + d*f(x) - e).subs(y, ysub)
+        deq = (b * (f(x).diff(x)) + d * f(x) - e).subs(y, ysub)
         final = (dsolve(deq, f(x), hint='1st_linear')).rhs
         if isinstance(final, list):
             final = final[0]
@@ -797,8 +821,10 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
         return Eq(f(x, y), rhs)
 
     else:
-        raise NotImplementedError("Cannot solve the partial differential equation due"
-            " to inability of constantsimp")
+        raise NotImplementedError(
+            "Cannot solve the partial differential equation due"
+            " to inability of constantsimp"
+        )
 
 
 def _simplify_variable_coeff(sol, syms, func, funcarg):
@@ -899,7 +925,7 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     if not do_add:
         eq = 0
         for i in result.args:
-            eq += i/functions
+            eq += i / functions
         result = eq
 
     svar = subs_args[0]
@@ -1009,8 +1035,8 @@ def _separate(eq, dep, others):
         rhs -= term.expand()
     # Do the division
     fulldiv = reduce(operator.add, div)
-    lhs = simplify(lhs/fulldiv).expand()
-    rhs = simplify(rhs/fulldiv).expand()
+    lhs = simplify(lhs / fulldiv).expand()
+    rhs = simplify(rhs / fulldiv).expand()
     # ...and check whether we were successful :)
     if lhs.has(*others) or rhs.has(dep):
         return None

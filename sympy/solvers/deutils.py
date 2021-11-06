@@ -13,6 +13,7 @@ from sympy.core.function import Derivative, AppliedUndef
 from sympy.core.relational import Equality
 from sympy.core.symbol import Wild
 
+
 def _preprocess(expr, func=None, hint='_Integral'):
     """Prepare expr for solving by making sure that differentiation
     is done so that only func remains in unevaluated derivatives and
@@ -79,16 +80,21 @@ def _preprocess(expr, func=None, hint='_Integral'):
     if not func:
         funcs = set().union(*[d.atoms(AppliedUndef) for d in derivs])
         if len(funcs) != 1:
-            raise ValueError('The function cannot be '
-                'automatically detected for %s.' % expr)
+            raise ValueError(
+                'The function cannot be ' 'automatically detected for %s.' % expr
+            )
         func = funcs.pop()
     fvars = set(func.args)
     if hint is None:
         return expr, func
-    reps = [(d, d.doit()) for d in derivs if not hint.endswith('_Integral') or
-            d.has(func) or set(d.variables) & fvars]
+    reps = [
+        (d, d.doit())
+        for d in derivs
+        if not hint.endswith('_Integral') or d.has(func) or set(d.variables) & fvars
+    ]
     eq = expr.subs(reps)
     return eq, func
+
 
 def ode_order(expr, func):
     """
@@ -131,7 +137,10 @@ def ode_order(expr, func):
             order = max(order, ode_order(arg, func))
         return order
 
-def _desolve(eq, func=None, hint="default", ics=None, simplify=True, *, prep=True, **kwargs):
+
+def _desolve(
+    eq, func=None, hint="default", ics=None, simplify=True, *, prep=True, **kwargs
+):
     """This is a helper function to dsolve and pdsolve in the ode
     and pde modules.
 
@@ -192,12 +201,14 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, *, prep=Tru
 
     if type == 'ode':
         from sympy.solvers.ode import classify_ode, allhints
+
         classifier = classify_ode
         string = 'ODE '
         dummy = ''
 
     elif type == 'pde':
         from sympy.solvers.pde import classify_pde, allhints
+
         classifier = classify_pde
         string = 'PDE '
         dummy = 'p'
@@ -206,8 +217,18 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, *, prep=Tru
     # being called more than it needs to be by passing its results through
     # recursive calls.
     if kwargs.get('classify', True):
-        hints = classifier(eq, func, dict=True, ics=ics, xi=xi, eta=eta,
-        n=terms, x0=x0, hint=hint, prep=prep)
+        hints = classifier(
+            eq,
+            func,
+            dict=True,
+            ics=ics,
+            xi=xi,
+            eta=eta,
+            n=terms,
+            x0=x0,
+            hint=hint,
+            prep=prep,
+        )
 
     else:
         # Here is what all this means:
@@ -222,10 +243,9 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, *, prep=Tru
         #          hints in "all", this holds the match string for the current
         #          hint.
         # order:   The order of the DE, as determined by ode_order().
-        hints = kwargs.get('hint',
-                           {'default': hint,
-                            hint: kwargs['match'],
-                            'order': kwargs['order']})
+        hints = kwargs.get(
+            'hint', {'default': hint, hint: kwargs['match'], 'order': kwargs['order']}
+        )
     if not hints['default']:
         # classify_ode will set hints['default'] to None if no hints match.
         if hint not in allhints and hint != 'default':
@@ -236,28 +256,59 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, *, prep=Tru
         # ValueError
         elif hints['order'] == 0:
             raise ValueError(
-                str(eq) + " is not a solvable differential equation in " + str(func))
+                str(eq) + " is not a solvable differential equation in " + str(func)
+            )
         else:
             raise NotImplementedError(dummy + "solve" + ": Cannot solve " + str(eq))
     if hint == 'default':
-        return _desolve(eq, func, ics=ics, hint=hints['default'], simplify=simplify,
-                      prep=prep, x0=x0, classify=False, order=hints['order'],
-                      match=hints[hints['default']], xi=xi, eta=eta, n=terms, type=type)
+        return _desolve(
+            eq,
+            func,
+            ics=ics,
+            hint=hints['default'],
+            simplify=simplify,
+            prep=prep,
+            x0=x0,
+            classify=False,
+            order=hints['order'],
+            match=hints[hints['default']],
+            xi=xi,
+            eta=eta,
+            n=terms,
+            type=type,
+        )
     elif hint in ('all', 'all_Integral', 'best'):
         retdict = {}
         gethints = set(hints) - {'order', 'default', 'ordered_hints'}
         if hint == 'all_Integral':
             for i in hints:
                 if i.endswith('_Integral'):
-                    gethints.remove(i[:-len('_Integral')])
+                    gethints.remove(i[: -len('_Integral')])
             # special cases
-            for k in ["1st_homogeneous_coeff_best", "1st_power_series",
-                "lie_group", "2nd_power_series_ordinary", "2nd_power_series_regular"]:
+            for k in [
+                "1st_homogeneous_coeff_best",
+                "1st_power_series",
+                "lie_group",
+                "2nd_power_series_ordinary",
+                "2nd_power_series_regular",
+            ]:
                 if k in gethints:
                     gethints.remove(k)
         for i in gethints:
-            sol = _desolve(eq, func, ics=ics, hint=i, x0=x0, simplify=simplify, prep=prep,
-                classify=False, n=terms, order=hints['order'], match=hints[i], type=type)
+            sol = _desolve(
+                eq,
+                func,
+                ics=ics,
+                hint=i,
+                x0=x0,
+                simplify=simplify,
+                prep=prep,
+                classify=False,
+                n=terms,
+                order=hints['order'],
+                match=hints[i],
+                type=type,
+            )
             retdict[i] = sol
         retdict['all'] = True
         retdict['eq'] = eq

@@ -14,11 +14,10 @@ from sympy.core.function import diff, expand, _mexpand, expand_mul
 from sympy.core.relational import Eq
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy, Wild
-from sympy.functions import exp, cos, cosh, im, log, re, sin, sinh, \
-    atan2, conjugate
+from sympy.functions import exp, cos, cosh, im, log, re, sin, sinh, atan2, conjugate
 from sympy.integrals import Integral
-from sympy.polys import (Poly, RootOf, rootof, roots)
-from sympy.simplify import collect, simplify, separatevars, powsimp, trigsimp # type: ignore
+from sympy.polys import Poly, RootOf, rootof, roots
+from sympy.simplify import collect, simplify, separatevars, powsimp, trigsimp  # type: ignore
 from sympy.utilities import numbered_symbols
 from sympy.solvers.solvers import solve
 from sympy.matrices import wronskian
@@ -47,7 +46,7 @@ def _test_term(coeff, func, order):
     if coeff.is_Mul:
         if coeff.has(f(x)):
             return False
-        return x**order in coeff.args
+        return x ** order in coeff.args
     elif coeff.is_Pow:
         return coeff.as_base_exp() == (x, order)
     elif order == 1:
@@ -72,14 +71,14 @@ def _get_euler_characteristic_eq_sols(eq, func, match_obj):
 
     for i in match_obj:
         if i >= 0:
-            chareq += (match_obj[i]*diff(x**symbol, x, i)*x**-symbol).expand()
+            chareq += (match_obj[i] * diff(x ** symbol, x, i) * x ** -symbol).expand()
 
     chareq = Poly(chareq, symbol)
     chareqroots = [rootof(chareq, k) for k in range(chareq.degree())]
     collectterms = []
 
     # A generator of constants
-    constants = list(get_numbered_constants(eq, num=chareq.degree()*2))
+    constants = list(get_numbered_constants(eq, num=chareq.degree() * 2))
     constants.reverse()
 
     # Create a dict root: multiplicity or charroots
@@ -91,19 +90,24 @@ def _get_euler_characteristic_eq_sols(eq, func, match_obj):
     for root, multiplicity in charroots.items():
         for i in range(multiplicity):
             if isinstance(root, RootOf):
-                gsol += (x**root) * constants.pop()
+                gsol += (x ** root) * constants.pop()
                 if multiplicity != 1:
                     raise ValueError("Value should be 1")
                 collectterms = [(0, root, 0)] + collectterms
             elif root.is_real:
-                gsol += ln(x)**i*(x**root) * constants.pop()
+                gsol += ln(x) ** i * (x ** root) * constants.pop()
                 collectterms = [(i, root, 0)] + collectterms
             else:
                 reroot = re(root)
                 imroot = im(root)
-                gsol += ln(x)**i * (x**reroot) * (
-                    constants.pop() * sin(abs(imroot)*ln(x))
-                    + constants.pop() * cos(imroot*ln(x)))
+                gsol += (
+                    ln(x) ** i
+                    * (x ** reroot)
+                    * (
+                        constants.pop() * sin(abs(imroot) * ln(x))
+                        + constants.pop() * cos(imroot * ln(x))
+                    )
+                )
                 collectterms = [(i, reroot, imroot)] + collectterms
 
     gsol = Eq(f(x), gsol)
@@ -112,18 +116,20 @@ def _get_euler_characteristic_eq_sols(eq, func, match_obj):
     # Keep track of when to use sin or cos for nonzero imroot
     for i, reroot, imroot in collectterms:
         if imroot == 0:
-            gensols.append(ln(x)**i*x**reroot)
+            gensols.append(ln(x) ** i * x ** reroot)
         else:
-            sin_form = ln(x)**i*x**reroot*sin(abs(imroot)*ln(x))
+            sin_form = ln(x) ** i * x ** reroot * sin(abs(imroot) * ln(x))
             if sin_form in gensols:
-                cos_form = ln(x)**i*x**reroot*cos(imroot*ln(x))
+                cos_form = ln(x) ** i * x ** reroot * cos(imroot * ln(x))
                 gensols.append(cos_form)
             else:
                 gensols.append(sin_form)
     return gsol, gensols
 
 
-def _solve_variation_of_parameters(eq, func, roots, homogen_sol, order, match_obj, simplify_flag=True):
+def _solve_variation_of_parameters(
+    eq, func, roots, homogen_sol, order, match_obj, simplify_flag=True
+):
     r"""
     Helper function for the method of variation of parameters and nonhomogeneous euler eq.
 
@@ -149,23 +155,37 @@ def _solve_variation_of_parameters(eq, func, roots, homogen_sol, order, match_ob
 
     if simplify_flag:
         wr = simplify(wr)  # We need much better simplification for
-                        # some ODEs. See issue 4662, for example.
+        # some ODEs. See issue 4662, for example.
         # To reduce commonly occurring sin(x)**2 + cos(x)**2 to 1
         wr = trigsimp(wr, deep=True, recursive=True)
     if not wr:
         # The wronskian will be 0 iff the solutions are not linearly
         # independent.
-        raise NotImplementedError("Cannot find " + str(order) +
-        " solutions to the homogeneous equation necessary to apply " +
-        "variation of parameters to " + str(eq) + " (Wronskian == 0)")
+        raise NotImplementedError(
+            "Cannot find "
+            + str(order)
+            + " solutions to the homogeneous equation necessary to apply "
+            + "variation of parameters to "
+            + str(eq)
+            + " (Wronskian == 0)"
+        )
     if len(roots) != order:
-        raise NotImplementedError("Cannot find " + str(order) +
-        " solutions to the homogeneous equation necessary to apply " +
-        "variation of parameters to " +
-        str(eq) + " (number of terms != order)")
-    negoneterm = (-1)**(order)
+        raise NotImplementedError(
+            "Cannot find "
+            + str(order)
+            + " solutions to the homogeneous equation necessary to apply "
+            + "variation of parameters to "
+            + str(eq)
+            + " (number of terms != order)"
+        )
+    negoneterm = (-1) ** (order)
     for i in roots:
-        psol += negoneterm*Integral(wronskian([sol for sol in roots if sol != i], x)*r[-1]/wr, x)*i/r[order]
+        psol += (
+            negoneterm
+            * Integral(wronskian([sol for sol in roots if sol != i], x) * r[-1] / wr, x)
+            * i
+            / r[order]
+        )
         negoneterm *= -1
 
     if simplify_flag:
@@ -192,7 +212,7 @@ def _get_const_characteristic_eq_sols(r, func, order):
         if isinstance(i, str) or i < 0:
             pass
         else:
-            chareq += r[i]*symbol**i
+            chareq += r[i] * symbol ** i
 
     chareq = Poly(chareq, symbol)
     # Can't just call roots because it doesn't return rootof for unsolveable
@@ -211,7 +231,7 @@ def _get_const_characteristic_eq_sols(r, func, order):
     # This is necessary for constantsimp to work properly.
     collectterms = []
     gensols = []
-    conjugate_roots = [] # used to prevent double-use of conjugate roots
+    conjugate_roots = []  # used to prevent double-use of conjugate roots
     # Loop over roots in theorder provided by roots/rootof...
     for root in chareqroots:
         # but don't repoeat multiple roots.
@@ -220,7 +240,7 @@ def _get_const_characteristic_eq_sols(r, func, order):
         multiplicity = charroots.pop(root)
         for i in range(multiplicity):
             if chareq_is_complex:
-                gensols.append(x**i*exp(root*x))
+                gensols.append(x ** i * exp(root * x))
                 collectterms = [(i, root, 0)] + collectterms
                 continue
             reroot = re(root)
@@ -228,19 +248,19 @@ def _get_const_characteristic_eq_sols(r, func, order):
             if imroot.has(atan2) and reroot.has(atan2):
                 # Remove this condition when re and im stop returning
                 # circular atan2 usages.
-                gensols.append(x**i*exp(root*x))
+                gensols.append(x ** i * exp(root * x))
                 collectterms = [(i, root, 0)] + collectterms
             else:
                 if root in conjugate_roots:
                     collectterms = [(i, reroot, imroot)] + collectterms
                     continue
                 if imroot == 0:
-                    gensols.append(x**i*exp(reroot*x))
+                    gensols.append(x ** i * exp(reroot * x))
                     collectterms = [(i, reroot, 0)] + collectterms
                     continue
                 conjugate_roots.append(conjugate(root))
-                gensols.append(x**i*exp(reroot*x) * sin(abs(imroot) * x))
-                gensols.append(x**i*exp(reroot*x) * cos(    imroot  * x))
+                gensols.append(x ** i * exp(reroot * x) * sin(abs(imroot) * x))
+                gensols.append(x ** i * exp(reroot * x) * cos(imroot * x))
 
                 # This ordering is important
                 collectterms = [(i, reroot, imroot)] + collectterms
@@ -267,10 +287,10 @@ def _get_simplified_sol(sol, func, collectterms):
     sol = sol[0].rhs
     sol = expand_mul(sol)
     for i, reroot, imroot in collectterms:
-        sol = collect(sol, x**i*exp(reroot*x)*sin(abs(imroot)*x))
-        sol = collect(sol, x**i*exp(reroot*x)*cos(imroot*x))
+        sol = collect(sol, x ** i * exp(reroot * x) * sin(abs(imroot) * x))
+        sol = collect(sol, x ** i * exp(reroot * x) * cos(imroot * x))
     for i, reroot, imroot in collectterms:
-        sol = collect(sol, x**i*exp(reroot*x))
+        sol = collect(sol, x ** i * exp(reroot * x))
     sol = powsimp(sol)
     return Eq(f(x), sol)
 
@@ -338,17 +358,21 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
             return all(_test_term(i, x) for i in expr.args)
         elif expr.is_Function:
             if expr.func in (sin, cos, exp, sinh, cosh):
-                if expr.args[0].match(a*x + b):
+                if expr.args[0].match(a * x + b):
                     return True
                 else:
                     return False
             else:
                 return False
-        elif expr.is_Pow and expr.base.is_Symbol and expr.exp.is_Integer and \
-                expr.exp >= 0:
+        elif (
+            expr.is_Pow
+            and expr.base.is_Symbol
+            and expr.exp.is_Integer
+            and expr.exp >= 0
+        ):
             return True
         elif expr.is_Pow and expr.base.is_number:
-            if expr.exp.match(a*x + b):
+            if expr.exp.match(a * x + b):
                 return True
             else:
                 return False
@@ -366,6 +390,7 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
         coefficients (they are linearly dependent).  So if we collect these,
         we should have the terms of our trial function.
         """
+
         def _remove_coefficient(expr, x):
             r"""
             Returns the expression without a coefficient.
@@ -408,8 +433,8 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
         return exprs
 
     def is_homogeneous_solution(term):
-        r""" This function checks whether the given trialset contains any root
-            of homogenous equation"""
+        r"""This function checks whether the given trialset contains any root
+        of homogenous equation"""
         return expand(sub_func_doit(eq_homogeneous, func, term)).is_zero
 
     retdict['test'] = _test_term(expr, x)
@@ -425,7 +450,7 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
             act = _get_trial_set(i, x)
             if eq_homogeneous is not S.Zero:
                 while any(is_homogeneous_solution(ts) for ts in act):
-                    act = {x*ts for ts in act}
+                    act = {x * ts for ts in act}
             temp_set = temp_set.union(act)
 
         retdict['trialset'] = temp_set
@@ -462,20 +487,24 @@ def _solve_undetermined_coefficients(eq, func, order, match, trialset):
     x = func.args[0]
 
     if len(gensols) != order:
-        raise NotImplementedError("Cannot find " + str(order) +
-        " solutions to the homogeneous equation necessary to apply" +
-        " undetermined coefficients to " + str(eq) +
-        " (number of terms != order)")
+        raise NotImplementedError(
+            "Cannot find "
+            + str(order)
+            + " solutions to the homogeneous equation necessary to apply"
+            + " undetermined coefficients to "
+            + str(eq)
+            + " (number of terms != order)"
+        )
 
     trialfunc = 0
     for i in trialset:
         c = next(coeffs)
         coefflist.append(c)
-        trialfunc += c*i
+        trialfunc += c * i
 
     eqs = sub_func_doit(eq, f(x), trialfunc)
 
-    coeffsdict = dict(list(zip(trialset, [0]*(len(trialset) + 1))))
+    coeffsdict = dict(list(zip(trialset, [0] * (len(trialset) + 1))))
 
     eqs = _mexpand(eqs)
 
@@ -492,7 +521,8 @@ def _solve_undetermined_coefficients(eq, func, order, match, trialset):
         raise NotImplementedError(
             "Could not solve `%s` using the "
             "method of undetermined coefficients "
-            "(unable to solve for coefficients)." % eq)
+            "(unable to solve for coefficients)." % eq
+        )
 
     psol = trialfunc.subs(coeffvals)
 

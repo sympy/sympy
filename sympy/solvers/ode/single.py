@@ -3,6 +3,7 @@
 #
 
 import typing
+
 if typing.TYPE_CHECKING:
     from typing import ClassVar
 from typing import Dict as tDict, Type, Iterator, List, Optional
@@ -11,7 +12,15 @@ from .riccati import match_riccati, solve_riccati
 from sympy.core import Add, S, Pow, Rational
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
-from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, _mexpand
+from sympy.core.function import (
+    AppliedUndef,
+    Derivative,
+    diff,
+    Function,
+    expand,
+    Subs,
+    _mexpand,
+)
 from sympy.core.numbers import zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
@@ -20,35 +29,48 @@ from sympy.functions import exp, tan, log, sqrt, besselj, bessely, cbrt, airyai,
 from sympy.integrals import Integral
 from sympy.polys import Poly
 from sympy.polys.polytools import cancel, factor, degree
-from sympy.simplify import collect, simplify, separatevars, logcombine, posify # type: ignore
+from sympy.simplify import collect, simplify, separatevars, logcombine, posify  # type: ignore
 from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
 from sympy.solvers.solvers import solve
 from sympy.solvers.deutils import ode_order, _preprocess
 from sympy.polys.matrices.linsolve import _lin_eq2dict
 from sympy.polys.solvers import PolyNonlinearError
-from .hypergeometric import equivalence_hypergeometric, match_2nd_2F1_hypergeometric, \
-    get_sol_2F1_hypergeometric, match_2nd_hypergeometric
-from .nonhomogeneous import _get_euler_characteristic_eq_sols, _get_const_characteristic_eq_sols, \
-    _solve_undetermined_coefficients, _solve_variation_of_parameters, _test_term, _undetermined_coefficients_match, \
-        _get_simplified_sol
+from .hypergeometric import (
+    equivalence_hypergeometric,
+    match_2nd_2F1_hypergeometric,
+    get_sol_2F1_hypergeometric,
+    match_2nd_hypergeometric,
+)
+from .nonhomogeneous import (
+    _get_euler_characteristic_eq_sols,
+    _get_const_characteristic_eq_sols,
+    _solve_undetermined_coefficients,
+    _solve_variation_of_parameters,
+    _test_term,
+    _undetermined_coefficients_match,
+    _get_simplified_sol,
+)
 from .lie_group import _ode_lie_group
 
 
 class ODEMatchError(NotImplementedError):
     """Raised if a SingleODESolver is asked to solve an ODE it does not match"""
+
     pass
 
 
 def cached_property(func):
     '''Decorator to cache property method'''
     attrname = '_' + func.__name__
+
     def propfunc(self):
         val = getattr(self, attrname, None)
         if val is None:
             val = func(self)
             setattr(self, attrname, val)
         return val
+
     return property(propfunc)
 
 
@@ -119,10 +141,10 @@ class SingleODEProblem:
         if self.eq.is_Add:
             deriv_coef = self.eq.coeff(self.func.diff(self.sym, self.order))
             if deriv_coef not in (1, 0):
-                r = deriv_coef.match(a*self.func**c1)
+                r = deriv_coef.match(a * self.func ** c1)
                 if r and r[c1]:
-                    den = self.func**r[c1]
-                    reduced_eq = Add(*[arg/den for arg in self.eq.args])
+                    den = self.func ** r[c1]
+                    reduced_eq = Add(*[arg / den for arg in self.eq.args])
         if not reduced_eq:
             reduced_eq = expand(self.eq)
         return reduced_eq
@@ -202,7 +224,7 @@ class SingleODEProblem:
         """
         f = func.func
         x = func.args[0]
-        symset = {Derivative(f(x), x, i) for i in range(order+1)}
+        symset = {Derivative(f(x), x, i) for i in range(order + 1)}
         try:
             rhs, lhs_terms = _lin_eq2dict(eq, symset)
         except PolyNonlinearError:
@@ -210,7 +232,7 @@ class SingleODEProblem:
 
         if rhs.has(func) or any(c.has(func) for c in lhs_terms.values()):
             return None
-        terms = {i: lhs_terms.get(f(x).diff(x, i), S.Zero) for i in range(order+1)}
+        terms = {i: lhs_terms.get(f(x).diff(x, i), S.Zero) for i in range(order + 1)}
         terms[-1] = rhs
         return terms
 
@@ -332,7 +354,7 @@ class SinglePatternODESolver(SingleODESolver):
 
         if not pattern.coeff(df).has(Wild):
             eq = expand(eq / eq.coeff(df))
-        eq = eq.collect([f(x).diff(x), f(x)], func = cancel)
+        eq = eq.collect([f(x).diff(x), f(x)], func=cancel)
 
         self._wilds_match = match = eq.match(pattern)
         if match is not None:
@@ -404,6 +426,7 @@ class NthAlgebraic(SingleODESolver):
                         else:
                             toreplace = Derivative(toreplace, v)
                 return toreplace
+
             return eq.replace(Derivative, expand_diffx)
 
         # Restore derivatives in solution afterwards
@@ -520,7 +543,7 @@ class FirstExact(SinglePatternODESolver):
 
     def _equation(self, fx, x, order):
         P, Q = self.wilds()
-        return P + Q*fx.diff(x)
+        return P + Q * fx.diff(x)
 
     def _verify(self, fx) -> bool:
         P, Q = self.wilds()
@@ -544,8 +567,8 @@ class FirstExact(SinglePatternODESolver):
             # and historical notes - George E. Simmons
             # 2. https://math.okstate.edu/people/binegar/2233-S99/2233-l12.pdf
 
-            factor_n = cancel(numerator/n)
-            factor_m = cancel(-numerator/m)
+            factor_n = cancel(numerator / n)
+            factor_m = cancel(-numerator / m)
             if y not in factor_n.free_symbols:
                 # If (dP/dy - dQ/dx) / Q = f(x)
                 # then exp(integral(f(x))*equation becomes exact
@@ -577,8 +600,9 @@ class FirstExact(SinglePatternODESolver):
         m = m.subs(fx, y)
         n = n.subs(fx, y)
 
-        gen_sol = Eq(Subs(Integral(m, x)
-                          + Integral(n - Integral(m, x).diff(y), y), y, fx), C1)
+        gen_sol = Eq(
+            Subs(Integral(m, x) + Integral(n - Integral(m, x).diff(y), y), y, fx), C1
+        )
         return [gen_sol]
 
 
@@ -644,15 +668,16 @@ class FirstLinear(SinglePatternODESolver):
 
     def _equation(self, fx, x, order):
         P, Q = self.wilds()
-        return fx.diff(x) + P*fx - Q
+        return fx.diff(x) + P * fx - Q
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         P, Q = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
-        (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(fx, ((C1 + Integral(Q*exp(Integral(P, x)), x))
-            * exp(-Integral(P, x))))
+        (C1,) = self.ode_problem.get_numbered_constants(num=1)
+        gensol = Eq(
+            fx, ((C1 + Integral(Q * exp(Integral(P, x)), x)) * exp(-Integral(P, x)))
+        )
         return [gensol]
 
 
@@ -715,7 +740,7 @@ class AlmostLinear(SinglePatternODESolver):
 
     def _equation(self, fx, x, order):
         P, Q = self.wilds()
-        return P*fx.diff(x) + Q
+        return P * fx.diff(x) + Q
 
     def _verify(self, fx):
         a, b = self.wilds_match()
@@ -725,10 +750,14 @@ class AlmostLinear(SinglePatternODESolver):
         # The following conditions checks if the given equation is an almost-linear differential equation using the fact that
         # a(x)*(l(y))' / l(y)' is independent of l(y)
 
-        if b.diff(fx) != 0 and not simplify(b.diff(fx)/a).has(fx):
-            self.ly = factor_terms(b).as_independent(fx, as_Add=False)[1] # Gives the term containing fx i.e., l(y)
+        if b.diff(fx) != 0 and not simplify(b.diff(fx) / a).has(fx):
+            self.ly = factor_terms(b).as_independent(fx, as_Add=False)[
+                1
+            ]  # Gives the term containing fx i.e., l(y)
             self.ax = a / self.ly.diff(fx)
-            self.cx = -c  # cx is taken as -c(x) to simplify expression in the solution integral
+            self.cx = (
+                -c
+            )  # cx is taken as -c(x) to simplify expression in the solution integral
             self.bx = factor_terms(b) / self.ly
             return True
 
@@ -736,9 +765,19 @@ class AlmostLinear(SinglePatternODESolver):
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         x = self.ode_problem.sym
-        (C1,)  = self.ode_problem.get_numbered_constants(num=1)
-        gensol = Eq(self.ly, ((C1 + Integral((self.cx/self.ax)*exp(Integral(self.bx/self.ax, x)), x))
-                * exp(-Integral(self.bx/self.ax, x))))
+        (C1,) = self.ode_problem.get_numbered_constants(num=1)
+        gensol = Eq(
+            self.ly,
+            (
+                (
+                    C1
+                    + Integral(
+                        (self.cx / self.ax) * exp(Integral(self.bx / self.ax, x)), x
+                    )
+                )
+                * exp(-Integral(self.bx / self.ax, x))
+            ),
+        )
 
         return [gensol]
 
@@ -830,47 +869,53 @@ class Bernoulli(SinglePatternODESolver):
 
     def _equation(self, fx, x, order):
         P, Q, n = self.wilds()
-        return fx.diff(x) + P*fx - Q*fx**n
+        return fx.diff(x) + P * fx - Q * fx ** n
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         P, Q, n = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
-        if n==1:
-            gensol = Eq(log(fx), (
-            C1 + Integral((-P + Q), x)
-        ))
+        if n == 1:
+            gensol = Eq(log(fx), (C1 + Integral((-P + Q), x)))
         else:
-            gensol = Eq(fx**(1-n), (
-                (C1 - (n - 1) * Integral(Q*exp(-n*Integral(P, x))
-                            * exp(Integral(P, x)), x)
-                ) * exp(-(1 - n)*Integral(P, x)))
+            gensol = Eq(
+                fx ** (1 - n),
+                (
+                    (
+                        C1
+                        - (n - 1)
+                        * Integral(
+                            Q * exp(-n * Integral(P, x)) * exp(Integral(P, x)), x
+                        )
+                    )
+                    * exp(-(1 - n) * Integral(P, x))
+                ),
             )
         return [gensol]
 
 
 class Factorable(SingleODESolver):
     r"""
-        Solves equations having a solvable factor.
+    Solves equations having a solvable factor.
 
-        This function is used to solve the equation having factors. Factors may be of type algebraic or ode. It
-        will try to solve each factor independently. Factors will be solved by calling dsolve. We will return the
-        list of solutions.
+    This function is used to solve the equation having factors. Factors may be of type algebraic or ode. It
+    will try to solve each factor independently. Factors will be solved by calling dsolve. We will return the
+    list of solutions.
 
-        Examples
-        ========
+    Examples
+    ========
 
-        >>> from sympy import Function, dsolve, pprint
-        >>> from sympy.abc import x
-        >>> f = Function('f')
-        >>> eq = (f(x)**2-4)*(f(x).diff(x)+f(x))
-        >>> pprint(dsolve(eq, f(x)))
-                                        -x
-        [f(x) = 2, f(x) = -2, f(x) = C1*e  ]
+    >>> from sympy import Function, dsolve, pprint
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> eq = (f(x)**2-4)*(f(x).diff(x)+f(x))
+    >>> pprint(dsolve(eq, f(x)))
+                                    -x
+    [f(x) = 2, f(x) = -2, f(x) = C1*e  ]
 
 
-        """
+    """
     hint = "factorable"
     has_integral = False
 
@@ -880,18 +925,18 @@ class Factorable(SingleODESolver):
         x = self.ode_problem.sym
         df = f(x).diff(x)
         self.eqs = []
-        eq = eq_orig.collect(f(x), func = cancel)
+        eq = eq_orig.collect(f(x), func=cancel)
         eq = fraction(factor(eq))[0]
         factors = Mul.make_args(factor(eq))
-        roots = [fac.as_base_exp() for fac in factors if len(fac.args)!=0]
-        if len(roots)>1 or roots[0][1]>1:
+        roots = [fac.as_base_exp() for fac in factors if len(fac.args) != 0]
+        if len(roots) > 1 or roots[0][1] > 1:
             for base, expo in roots:
                 if base.has(f(x)):
                     self.eqs.append(base)
-            if len(self.eqs)>0:
+            if len(self.eqs) > 0:
                 return True
         roots = solve(eq, df)
-        if len(roots)>0:
+        if len(roots) > 0:
             self.eqs = [(df - root) for root in roots]
             # Avoid infinite recursion
             matches = self.eqs != [eq_orig]
@@ -899,7 +944,7 @@ class Factorable(SingleODESolver):
         for i in factors:
             if i.has(f(x)):
                 self.eqs.append(i)
-        return len(self.eqs)>0 and len(factors)>1
+        return len(self.eqs) > 0 and len(factors) > 1
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         func = self.ode_problem.func.func
@@ -918,8 +963,12 @@ class Factorable(SingleODESolver):
                     sols.append(sol)
 
         if sols == []:
-            raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
-                + " the factorable group method")
+            raise NotImplementedError(
+                "The given ODE "
+                + str(eq)
+                + " cannot be solved by"
+                + " the factorable group method"
+            )
         return sols
 
 
@@ -975,16 +1024,16 @@ class RiccatiSpecial(SinglePatternODESolver):
 
     def _equation(self, fx, x, order):
         a, b, c, d = self.wilds()
-        return a*fx.diff(x) + b*fx**2 + c*fx/x + d/x**2
+        return a * fx.diff(x) + b * fx ** 2 + c * fx / x + d / x ** 2
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         a, b, c, d = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
-        mu = sqrt(4*d*b - (a - c)**2)
+        mu = sqrt(4 * d * b - (a - c) ** 2)
 
-        gensol = Eq(fx, (a - c - mu*tan(mu/(2*a)*log(x) + C1))/(2*b*x))
+        gensol = Eq(fx, (a - c - mu * tan(mu / (2 * a) * log(x) + C1)) / (2 * b * x))
         return [gensol]
 
 
@@ -1031,7 +1080,7 @@ class RationalRiccati(SinglePatternODESolver):
 
     def _equation(self, fx, x, order):
         b0, b1, b2 = self.wilds()
-        return fx.diff(x) - b0 - b1*fx - b2*fx**2
+        return fx.diff(x) - b0 - b1 * fx - b2 * fx ** 2
 
     def _matches(self):
         eq = self.ode_problem.eq_expanded
@@ -1098,7 +1147,7 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
 
     def _wilds(self, f, x, order):
         fy = Wild('fy', exclude=[0, f(x).diff(x), f(x).diff(x, 2)])
-        return (fy, )
+        return (fy,)
 
     def _equation(self, fx, x, order):
         fy = self.wilds()[0]
@@ -1114,8 +1163,8 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
         u = Dummy('u')
         g = g.subs(fx, u)
         C1, C2 = self.ode_problem.get_numbered_constants(num=2)
-        inside = -2*Integral(g, u) + C1
-        lhs = Integral(1/sqrt(inside), (u, fx))
+        inside = -2 * Integral(g, u) + C1
+        lhs = Integral(1 / sqrt(inside), (u, fx))
         return [Eq(lhs, C2 + x), Eq(lhs, C2 - x)]
 
 
@@ -1192,14 +1241,14 @@ class Liouville(SinglePatternODESolver):
         # See Goldstein and Braun, "Advanced Methods for the Solution of
         # Differential Equations", pg. 98
         d, e, k = self.wilds()
-        return d*fx.diff(x, 2) + e*fx.diff(x)**2 + k*fx.diff(x)
+        return d * fx.diff(x, 2) + e * fx.diff(x) ** 2 + k * fx.diff(x)
 
     def _verify(self, fx):
         d, e, k = self.wilds_match()
         self.y = Dummy('y')
         x = self.ode_problem.sym
-        self.g = simplify(e/d).subs(fx, self.y)
-        self.h = simplify(k/d).subs(fx, self.y)
+        self.g = simplify(e / d).subs(fx, self.y)
+        self.h = simplify(k / d).subs(fx, self.y)
         if self.y in self.h.free_symbols or x in self.g.free_symbols:
             return False
         return True
@@ -1210,7 +1259,7 @@ class Liouville(SinglePatternODESolver):
         x = self.ode_problem.sym
         C1, C2 = self.ode_problem.get_numbered_constants(num=2)
         int = Integral(exp(Integral(self.g, self.y)), (self.y, None, fx))
-        gen_sol = Eq(int + C1*Integral(exp(-Integral(self.h, x)), x) + C2, 0)
+        gen_sol = Eq(int + C1 * Integral(exp(-Integral(self.h, x)), x) + C2, 0)
 
         return [gen_sol]
 
@@ -1281,7 +1330,7 @@ class Separable(SinglePatternODESolver):
 
     def _equation(self, fx, x, order):
         d, e = self.wilds()
-        return d + e*fx.diff(x)
+        return d + e * fx.diff(x)
 
     def _verify(self, fx):
         d, e = self.wilds_match()
@@ -1304,10 +1353,8 @@ class Separable(SinglePatternODESolver):
     def _get_general_solution(self, *, simplify_flag: bool = True):
         m1, m2, x, fx = self._get_match_object()
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
-        int = Integral(m2['coeff']*m2[self.y]/m1[self.y],
-        (self.y, None, fx))
-        gen_sol = Eq(int, Integral(-m1['coeff']*m1[x]/
-        m2[x], x) + C1)
+        int = Integral(m2['coeff'] * m2[self.y] / m1[self.y], (self.y, None, fx))
+        gen_sol = Eq(int, Integral(-m1['coeff'] * m1[x] / m2[x], x) + C1)
         return [gen_sol]
 
 
@@ -1385,9 +1432,9 @@ class SeparableReduced(Separable):
         for val in expr:
             if val.has(x):
                 if isinstance(val, Pow) and val.as_base_exp()[0] == x:
-                    return (val.as_base_exp()[1])
+                    return val.as_base_exp()[1]
                 elif val == x:
-                    return (val.as_base_exp()[1])
+                    return val.as_base_exp()[1]
                 else:
                     return self._degree(val.args, x)
         return 0
@@ -1411,14 +1458,16 @@ class SeparableReduced(Separable):
         for arg in exprs:
             if arg.has(x):
                 _, u = arg.as_independent(x, fx)
-                pow = self._degree((u.subs(fx, self.y), ), x)/self._degree((u.subs(fx, self.y), ), self.y)
+                pow = self._degree((u.subs(fx, self.y),), x) / self._degree(
+                    (u.subs(fx, self.y),), self.y
+                )
                 pows.add(pow)
         return pows
 
     def _verify(self, fx):
         num, den = self.wilds_match()
         x = self.ode_problem.sym
-        factor = simplify(x/fx*num/den)
+        factor = simplify(x / fx * num / den)
         # Try representing factor in terms of x^n*y
         # where n is lowest power of x in factor;
         # first remove terms like sqrt(2)*3 from factor.atoms(Mul)
@@ -1428,15 +1477,15 @@ class SeparableReduced(Separable):
         pows = self._powers(num)
         pows.update(self._powers(dem))
         pows = list(pows)
-        if(len(pows)==1) and pows[0]!=zoo:
+        if (len(pows) == 1) and pows[0] != zoo:
             self.t = Dummy('t')
             self.r2 = {'t': self.t}
-            num = num.subs(x**pows[0]*fx, self.t)
-            dem = dem.subs(x**pows[0]*fx, self.t)
-            test = num/dem
+            num = num.subs(x ** pows[0] * fx, self.t)
+            dem = dem.subs(x ** pows[0] * fx, self.t)
+            test = num / dem
             free = test.free_symbols
             if len(free) == 1 and free.pop() == self.t:
-                self.r2.update({'power' : pows[0], 'u' : test})
+                self.r2.update({'power': pows[0], 'u': test})
                 return True
             return False
         return False
@@ -1445,10 +1494,10 @@ class SeparableReduced(Separable):
         fx = self.ode_problem.func
         x = self.ode_problem.sym
         u = self.r2['u'].subs(self.r2['t'], self.y)
-        ycoeff = 1/(self.y*(self.r2['power'] - u))
-        m1 = {self.y: 1, x: -1/x, 'coeff': 1}
+        ycoeff = 1 / (self.y * (self.r2['power'] - u))
+        m1 = {self.y: 1, x: -1 / x, 'coeff': 1}
         m2 = {self.y: ycoeff, x: 1, 'coeff': 1}
-        return m1, m2, x, x**self.r2['power']*fx
+        return m1, m2, x, x ** self.r2['power'] * fx
 
 
 class HomogeneousCoeffSubsDepDivIndep(SinglePatternODESolver):
@@ -1539,7 +1588,7 @@ class HomogeneousCoeffSubsDepDivIndep(SinglePatternODESolver):
 
     def _equation(self, fx, x, order):
         d, e = self.wilds()
-        return d + e*fx.diff(x)
+        return d + e * fx.diff(x)
 
     def _verify(self, fx):
         self.d, self.e = self.wilds_match()
@@ -1551,7 +1600,7 @@ class HomogeneousCoeffSubsDepDivIndep(SinglePatternODESolver):
         orderb = homogeneous_order(self.e, x, self.y)
         if ordera == orderb and ordera is not None:
             self.u = Dummy('u')
-            if simplify((self.d + self.u*self.e).subs({x: 1, self.y: self.u})) != 0:
+            if simplify((self.d + self.u * self.e).subs({x: 1, self.y: self.u})) != 0:
                 return True
             return False
         return False
@@ -1567,9 +1616,7 @@ class HomogeneousCoeffSubsDepDivIndep(SinglePatternODESolver):
     def _get_general_solution(self, *, simplify_flag: bool = True):
         d, e, fx, x, u, u1, y, xarg, yarg = self._get_match_object()
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
-        int = Integral(
-            (-e/(d + u1*e)).subs({x: 1, y: u1}),
-            (u1, None, fx/x))
+        int = Integral((-e / (d + u1 * e)).subs({x: 1, y: u1}), (u1, None, fx / x))
         sol = logcombine(Eq(log(x), int + log(C1)), force=True)
         gen_sol = sol.subs(fx, u).subs(((u, u - yarg), (x, x - xarg), (u, fx)))
         return [gen_sol]
@@ -1666,7 +1713,7 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
 
     def _equation(self, fx, x, order):
         d, e = self.wilds()
-        return d + e*fx.diff(x)
+        return d + e * fx.diff(x)
 
     def _verify(self, fx):
         self.d, self.e = self.wilds_match()
@@ -1678,7 +1725,7 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
         orderb = homogeneous_order(self.e, x, self.y)
         if ordera == orderb and ordera is not None:
             self.u = Dummy('u')
-            if simplify((self.e + self.u*self.d).subs({x: self.u, self.y: 1})) != 0:
+            if simplify((self.e + self.u * self.d).subs({x: self.u, self.y: 1})) != 0:
                 return True
             return False
         return False
@@ -1694,13 +1741,15 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
     def _get_general_solution(self, *, simplify_flag: bool = True):
         d, e, fx, x, u, u1, y, xarg, yarg = self._get_match_object()
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
-        int = Integral(simplify((-d/(e + u1*d)).subs({x: u1, y: 1})), (u1, None, x/fx)) # type: ignore
+        int = Integral(simplify((-d / (e + u1 * d)).subs({x: u1, y: 1})), (u1, None, x / fx))  # type: ignore
         sol = logcombine(Eq(log(fx), int + log(C1)), force=True)
         gen_sol = sol.subs(fx, u).subs(((u, u - yarg), (x, x - xarg), (u, fx)))
         return [gen_sol]
 
 
-class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubsDepDivIndep):
+class HomogeneousCoeffBest(
+    HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubsDepDivIndep
+):
     r"""
     Returns the best solution to an ODE from the two hints
     ``1st_homogeneous_coeff_subs_dep_div_indep`` and
@@ -1746,7 +1795,9 @@ class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubs
     order = [1]
 
     def _verify(self, fx):
-        if HomogeneousCoeffSubsIndepDivDep._verify(self, fx) and HomogeneousCoeffSubsDepDivIndep._verify(self, fx):
+        if HomogeneousCoeffSubsIndepDivDep._verify(
+            self, fx
+        ) and HomogeneousCoeffSubsDepDivIndep._verify(self, fx):
             return True
         return False
 
@@ -1758,9 +1809,22 @@ class HomogeneousCoeffBest(HomogeneousCoeffSubsIndepDivDep, HomogeneousCoeffSubs
         sol2 = HomogeneousCoeffSubsDepDivIndep._get_general_solution(self)
         fx = self.ode_problem.func
         if simplify_flag:
-            sol1 = odesimp(self.ode_problem.eq, *sol1, fx, "1st_homogeneous_coeff_subs_indep_div_dep")
-            sol2 = odesimp(self.ode_problem.eq, *sol2, fx, "1st_homogeneous_coeff_subs_dep_div_indep")
-        return min([sol1, sol2], key=lambda x: ode_sol_simplicity(x, fx, trysolving=not simplify))
+            sol1 = odesimp(
+                self.ode_problem.eq,
+                *sol1,
+                fx,
+                "1st_homogeneous_coeff_subs_indep_div_dep",
+            )
+            sol2 = odesimp(
+                self.ode_problem.eq,
+                *sol2,
+                fx,
+                "1st_homogeneous_coeff_subs_dep_div_indep",
+            )
+        return min(
+            [sol1, sol2],
+            key=lambda x: ode_sol_simplicity(x, fx, trysolving=not simplify),
+        )
 
 
 class LinearCoefficients(HomogeneousCoeffBest):
@@ -1825,12 +1889,12 @@ class LinearCoefficients(HomogeneousCoeffBest):
 
     def _equation(self, fx, x, order):
         d, e = self.wilds()
-        return d + e*fx.diff(x)
+        return d + e * fx.diff(x)
 
     def _verify(self, fx):
         self.d, self.e = self.wilds_match()
         a, b = self.wilds()
-        F = self.d/self.e
+        F = self.d / self.e
         x = self.ode_problem.sym
         params = self._linear_coeff_match(F, fx)
         if params:
@@ -1843,7 +1907,7 @@ class LinearCoefficients(HomogeneousCoeffBest):
             reps = ((x, x + self.xarg), (u, u + self.yarg), (t, fx.diff(x)), (u, fx))
             dummy_eq = simplify(dummy_eq.subs(reps))
             # get the re-cast values for e and d
-            r2 = collect(expand(dummy_eq), [fx.diff(x), fx]).match(a*fx.diff(x) + b)
+            r2 = collect(expand(dummy_eq), [fx.diff(x), fx]).match(a * fx.diff(x) + b)
             if r2:
                 self.d, self.e = r2[b], r2[a]
                 orderd = homogeneous_order(self.d, x, fx)
@@ -1895,6 +1959,7 @@ class LinearCoefficients(HomogeneousCoeffBest):
         """
         f = func.func
         x = func.args[0]
+
         def abc(eq):
             r'''
             Internal function of _linear_coeff_match
@@ -1911,7 +1976,7 @@ class LinearCoefficients(HomogeneousCoeffBest):
             b = eq.coeff(f(x))
             if not b.is_Rational:
                 return
-            if eq == a*x + b*f(x) + c:
+            if eq == a * x + b * f(x) + c:
                 return a, b, c
 
         def match(arg):
@@ -1928,16 +1993,19 @@ class LinearCoefficients(HomogeneousCoeffBest):
                 m = abc(d)
                 if m is not None:
                     a2, b2, c2 = m
-                    d = a2*b1 - a1*b2
+                    d = a2 * b1 - a1 * b2
                     if (c1 or c2) and d:
                         return a1, b1, c1, a2, b2, c2, d
 
-        m = [fi.args[0] for fi in expr.atoms(Function) if fi.func != f and
-            len(fi.args) == 1 and not fi.args[0].is_Function] or {expr}
+        m = [
+            fi.args[0]
+            for fi in expr.atoms(Function)
+            if fi.func != f and len(fi.args) == 1 and not fi.args[0].is_Function
+        ] or {expr}
         m1 = match(m.pop())
         if m1 and all(match(mi) == m1 for mi in m):
             a1, b1, c1, a2, b2, c2, denom = m1
-            return (b2*c1 - b1*c2)/denom, (a1*c2 - a2*c1)/denom
+            return (b2 * c1 - b1 * c2) / denom, (a1 * c2 - a2 * c1) / denom
 
     def _get_match_object(self):
         fx = self.ode_problem.func
@@ -1978,7 +2046,7 @@ class NthOrderReducible(SingleODESolver):
         # Any ODE that can be solved with a substitution and
         # repeated integration e.g.:
         # `d^2/dx^2(y) + x*d/dx(y) = constant
-        #f'(x) must be finite for this to work
+        # f'(x) must be finite for this to work
         eq = self.ode_problem.eq_preprocessed
         func = self.ode_problem.func
         x = self.ode_problem.sym
@@ -1989,8 +2057,11 @@ class NthOrderReducible(SingleODESolver):
         """
         # ODE only handles functions of 1 variable so this affirms that state
         assert len(func.args) == 1
-        vc = [d.variable_count[0] for d in eq.atoms(Derivative)
-            if d.expr == func and len(d.variable_count) == 1]
+        vc = [
+            d.variable_count[0]
+            for d in eq.atoms(Derivative)
+            if d.expr == func and len(d.variable_count) == 1
+        ]
         ords = [c for v, c in vc if v == x]
         if len(ords) < 2:
             return False
@@ -2097,9 +2168,11 @@ class SecondHypergeometric(SingleODESolver):
             d = equivalence_hypergeometric(A, B, func)
             if d:
                 if d['type'] == "2F1":
-                    self.match_object = match_2nd_2F1_hypergeometric(d['I0'], d['k'], d['sing_point'], func)
+                    self.match_object = match_2nd_2F1_hypergeometric(
+                        d['I0'], d['k'], d['sing_point'], func
+                    )
                     if self.match_object is not None:
-                        self.match_object.update({'A':A, 'B':B})
+                        self.match_object.update({'A': A, 'B': B})
             # We can extend it for 1F1 and 0F1 type also.
         return self.match_object is not None
 
@@ -2109,8 +2182,12 @@ class SecondHypergeometric(SingleODESolver):
         if self.match_object['type'] == "2F1":
             sol = get_sol_2F1_hypergeometric(eq, func, self.match_object)
             if sol is None:
-                raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
-                    + " the hypergeometric method")
+                raise NotImplementedError(
+                    "The given ODE "
+                    + str(eq)
+                    + " cannot be solved by"
+                    + " the hypergeometric method"
+                )
 
         return [sol]
 
@@ -2201,7 +2278,7 @@ class NthLinearConstantCoeffHomogeneous(SingleODESolver):
         roots, collectterms = _get_const_characteristic_eq_sols(self.r, fx, order)
         # A generator of constants
         constants = self.ode_problem.get_numbered_constants(num=len(roots))
-        gsol = Add(*[i*j for (i, j) in zip(constants, roots)])
+        gsol = Add(*[i * j for (i, j) in zip(constants, roots)])
         gsol = Eq(fx, gsol)
         if simplify_flag:
             gsol = _get_simplified_sol([gsol], fx, collectterms)
@@ -2303,9 +2380,11 @@ class NthLinearConstantCoeffVariationOfParameters(SingleODESolver):
         roots, collectterms = _get_const_characteristic_eq_sols(self.r, f(x), order)
         # A generator of constants
         constants = self.ode_problem.get_numbered_constants(num=len(roots))
-        homogen_sol = Add(*[i*j for (i, j) in zip(constants, roots)])
+        homogen_sol = Add(*[i * j for (i, j) in zip(constants, roots)])
         homogen_sol = Eq(f(x), homogen_sol)
-        homogen_sol = _solve_variation_of_parameters(eq, f(x), roots, homogen_sol, order, self.r, simplify_flag)
+        homogen_sol = _solve_variation_of_parameters(
+            eq, f(x), roots, homogen_sol, order, self.r, simplify_flag
+        )
         if simplify_flag:
             homogen_sol = _get_simplified_sol([homogen_sol], f(x), collectterms)
         return [homogen_sol]
@@ -2381,7 +2460,9 @@ class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
         if order and self.r and not any(self.r[i].has(x) for i in self.r if i >= 0):
             if self.r[-1]:
                 eq_homogeneous = Add(eq, -self.r[-1])
-                undetcoeff = _undetermined_coefficients_match(self.r[-1], x, func, eq_homogeneous)
+                undetcoeff = _undetermined_coefficients_match(
+                    self.r[-1], x, func, eq_homogeneous
+                )
                 if undetcoeff['test']:
                     self.trialset = undetcoeff['trialset']
                     does_match = True
@@ -2395,9 +2476,11 @@ class NthLinearConstantCoeffUndeterminedCoefficients(SingleODESolver):
         roots, collectterms = _get_const_characteristic_eq_sols(self.r, f(x), order)
         # A generator of constants
         constants = self.ode_problem.get_numbered_constants(num=len(roots))
-        homogen_sol = Add(*[i*j for (i, j) in zip(constants, roots)])
+        homogen_sol = Add(*[i * j for (i, j) in zip(constants, roots)])
         homogen_sol = Eq(f(x), homogen_sol)
-        self.r.update({'list': roots, 'sol': homogen_sol, 'simpliy_flag': simplify_flag})
+        self.r.update(
+            {'list': roots, 'sol': homogen_sol, 'simpliy_flag': simplify_flag}
+        )
         gsol = _solve_undetermined_coefficients(eq, f(x), order, self.r, self.trialset)
         if simplify_flag:
             gsol = _get_simplified_sol([gsol], f(x), collectterms)
@@ -2485,10 +2568,9 @@ class NthLinearEulerEqHomogeneous(SingleODESolver):
 
         if order and match:
             coeff = match[order]
-            factor = x**order / coeff
-            self.r = {i: factor*match[i] for i in match}
-        if self.r and all(_test_term(self.r[i], f(x), i) for i in
-                          self.r if i >= 0):
+            factor = x ** order / coeff
+            self.r = {i: factor * match[i] for i in match}
+        if self.r and all(_test_term(self.r[i], f(x), i) for i in self.r if i >= 0):
             if not self.r[-1]:
                 does_match = True
         return does_match
@@ -2568,10 +2650,9 @@ class NthLinearEulerEqNonhomogeneousVariationOfParameters(SingleODESolver):
 
         if order and match:
             coeff = match[order]
-            factor = x**order / coeff
-            self.r = {i: factor*match[i] for i in match}
-        if self.r and all(_test_term(self.r[i], f(x), i) for i in
-                          self.r if i >= 0):
+            factor = x ** order / coeff
+            self.r = {i: factor * match[i] for i in match}
+        if self.r and all(_test_term(self.r[i], f(x), i) for i in self.r if i >= 0):
             if self.r[-1]:
                 does_match = True
 
@@ -2583,10 +2664,12 @@ class NthLinearEulerEqNonhomogeneousVariationOfParameters(SingleODESolver):
         x = self.ode_problem.sym
         order = self.ode_problem.order
         homogen_sol, roots = _get_euler_characteristic_eq_sols(eq, f(x), self.r)
-        self.r[-1] = self.r[-1]/self.r[order]
-        sol = _solve_variation_of_parameters(eq, f(x), roots, homogen_sol, order, self.r, simplify_flag)
+        self.r[-1] = self.r[-1] / self.r[order]
+        sol = _solve_variation_of_parameters(
+            eq, f(x), roots, homogen_sol, order, self.r, simplify_flag
+        )
 
-        return [Eq(f(x), homogen_sol.rhs + (sol.rhs - homogen_sol.rhs)*self.r[order])]
+        return [Eq(f(x), homogen_sol.rhs + (sol.rhs - homogen_sol.rhs) * self.r[order])]
 
 
 class NthLinearEulerEqNonhomogeneousUndeterminedCoefficients(SingleODESolver):
@@ -2649,10 +2732,9 @@ class NthLinearEulerEqNonhomogeneousUndeterminedCoefficients(SingleODESolver):
 
         if order and match:
             coeff = match[order]
-            factor = x**order / coeff
-            self.r = {i: factor*match[i] for i in match}
-        if self.r and all(_test_term(self.r[i], f(x), i) for i in
-                          self.r if i >= 0):
+            factor = x ** order / coeff
+            self.r = {i: factor * match[i] for i in match}
+        if self.r and all(_test_term(self.r[i], f(x), i) for i in self.r if i >= 0):
             if self.r[-1]:
                 e, re = posify(self.r[-1].subs(x, exp(x)))
                 undetcoeff = _undetermined_coefficients_match(e.subs(re), x)
@@ -2666,18 +2748,20 @@ class NthLinearEulerEqNonhomogeneousUndeterminedCoefficients(SingleODESolver):
         chareq, eq, symbol = S.Zero, S.Zero, Dummy('x')
         for i in self.r.keys():
             if i >= 0:
-                chareq += (self.r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
+                chareq += (self.r[i] * diff(x ** symbol, x, i) * x ** -symbol).expand()
 
-        for i in range(1, degree(Poly(chareq, symbol))+1):
-            eq += chareq.coeff(symbol**i)*diff(f(x), x, i)
+        for i in range(1, degree(Poly(chareq, symbol)) + 1):
+            eq += chareq.coeff(symbol ** i) * diff(f(x), x, i)
 
         if chareq.as_coeff_add(symbol)[0]:
-            eq += chareq.as_coeff_add(symbol)[0]*f(x)
+            eq += chareq.as_coeff_add(symbol)[0] * f(x)
         e, re = posify(self.r[-1].subs(x, exp(x)))
         eq += e.subs(re)
 
-        self.const_undet_instance = NthLinearConstantCoeffUndeterminedCoefficients(SingleODEProblem(eq, f(x), x))
-        sol = self.const_undet_instance.get_general_solution(simplify = simplify_flag)[0]
+        self.const_undet_instance = NthLinearConstantCoeffUndeterminedCoefficients(
+            SingleODEProblem(eq, f(x), x)
+        )
+        sol = self.const_undet_instance.get_general_solution(simplify=simplify_flag)[0]
         sol = sol.subs(x, log(x))
         sol = sol.subs(f(log(x)), f(x)).expand()
 
@@ -2725,31 +2809,29 @@ class SecondLinearBessel(SingleODESolver):
         order = self.ode_problem.order
         x = self.ode_problem.sym
         df = f.diff(x)
-        a = Wild('a', exclude=[f,df])
-        b = Wild('b', exclude=[x, f,df])
-        a4 = Wild('a4', exclude=[x,f,df])
-        b4 = Wild('b4', exclude=[x,f,df])
-        c4 = Wild('c4', exclude=[x,f,df])
-        d4 = Wild('d4', exclude=[x,f,df])
+        a = Wild('a', exclude=[f, df])
+        b = Wild('b', exclude=[x, f, df])
+        a4 = Wild('a4', exclude=[x, f, df])
+        b4 = Wild('b4', exclude=[x, f, df])
+        c4 = Wild('c4', exclude=[x, f, df])
+        d4 = Wild('d4', exclude=[x, f, df])
         a3 = Wild('a3', exclude=[f, df, f.diff(x, 2)])
         b3 = Wild('b3', exclude=[f, df, f.diff(x, 2)])
         c3 = Wild('c3', exclude=[f, df, f.diff(x, 2)])
-        deq = a3*(f.diff(x, 2)) + b3*df + c3*f
-        r = collect(eq,
-            [f.diff(x, 2), df, f]).match(deq)
+        deq = a3 * (f.diff(x, 2)) + b3 * df + c3 * f
+        r = collect(eq, [f.diff(x, 2), df, f]).match(deq)
         if order == 2 and r:
             if not all(r[key].is_polynomial() for key in r):
                 n, d = eq.as_numer_denom()
                 eq = expand(n)
-                r = collect(eq,
-                    [f.diff(x, 2), df, f]).match(deq)
+                r = collect(eq, [f.diff(x, 2), df, f]).match(deq)
 
         if r and r[a3] != 0:
             # leading coeff of f(x).diff(x, 2)
-            coeff = factor(r[a3]).match(a4*(x-b)**b4)
+            coeff = factor(r[a3]).match(a4 * (x - b) ** b4)
 
             if coeff:
-            # if coeff[b4] = 0 means constant coefficient
+                # if coeff[b4] = 0 means constant coefficient
                 if coeff[b4] == 0:
                     return False
                 point = coeff[b]
@@ -2757,16 +2839,16 @@ class SecondLinearBessel(SingleODESolver):
                 return False
 
             if point:
-                r[a3] = simplify(r[a3].subs(x, x+point))
-                r[b3] = simplify(r[b3].subs(x, x+point))
-                r[c3] = simplify(r[c3].subs(x, x+point))
+                r[a3] = simplify(r[a3].subs(x, x + point))
+                r[b3] = simplify(r[b3].subs(x, x + point))
+                r[c3] = simplify(r[c3].subs(x, x + point))
 
             # making a3 in the form of x**2
-            r[a3] = cancel(r[a3]/(coeff[a4]*(x)**(-2+coeff[b4])))
-            r[b3] = cancel(r[b3]/(coeff[a4]*(x)**(-2+coeff[b4])))
-            r[c3] = cancel(r[c3]/(coeff[a4]*(x)**(-2+coeff[b4])))
+            r[a3] = cancel(r[a3] / (coeff[a4] * (x) ** (-2 + coeff[b4])))
+            r[b3] = cancel(r[b3] / (coeff[a4] * (x) ** (-2 + coeff[b4])))
+            r[c3] = cancel(r[c3] / (coeff[a4] * (x) ** (-2 + coeff[b4])))
             # checking if b3 is of form c*(x-b)
-            coeff1 = factor(r[b3]).match(a4*(x))
+            coeff1 = factor(r[b3]).match(a4 * (x))
             if coeff1 is None:
                 return False
             # c3 maybe of very complex form so I am simply checking (a - b) form
@@ -2776,16 +2858,16 @@ class SecondLinearBessel(SingleODESolver):
             if _coeff2 is None:
                 return False
             # matching with standerd form for c3
-            coeff2 = factor(_coeff2[a]).match(c4**2*(x)**(2*a4))
+            coeff2 = factor(_coeff2[a]).match(c4 ** 2 * (x) ** (2 * a4))
             if coeff2 is None:
                 return False
 
             if _coeff2[b] == 0:
                 coeff2[d4] = 0
             else:
-                coeff2[d4] = factor(_coeff2[b]).match(d4**2)[d4]
+                coeff2[d4] = factor(_coeff2[b]).match(d4 ** 2)[d4]
 
-            self.rn = {'n':coeff2[d4], 'a4':coeff2[c4], 'd4':coeff2[a4]}
+            self.rn = {'n': coeff2[d4], 'a4': coeff2[c4], 'd4': coeff2[a4]}
             self.rn['c4'] = coeff1[a4]
             self.rn['b4'] = point
             return True
@@ -2799,10 +2881,20 @@ class SecondLinearBessel(SingleODESolver):
         c4 = self.rn['c4']
         d4 = self.rn['d4']
         b4 = self.rn['b4']
-        n = sqrt(n**2 + Rational(1, 4)*(c4 - 1)**2)
+        n = sqrt(n ** 2 + Rational(1, 4) * (c4 - 1) ** 2)
         (C1, C2) = self.ode_problem.get_numbered_constants(num=2)
-        return [Eq(f(x), ((x**(Rational(1-c4,2)))*(C1*besselj(n/d4,a4*x**d4/d4)
-            + C2*bessely(n/d4,a4*x**d4/d4))).subs(x, x-b4))]
+        return [
+            Eq(
+                f(x),
+                (
+                    (x ** (Rational(1 - c4, 2)))
+                    * (
+                        C1 * besselj(n / d4, a4 * x ** d4 / d4)
+                        + C2 * bessely(n / d4, a4 * x ** d4 / d4)
+                    )
+                ).subs(x, x - b4),
+            )
+        ]
 
 
 class SecondLinearAiry(SingleODESolver):
@@ -2832,15 +2924,15 @@ class SecondLinearAiry(SingleODESolver):
         order = self.ode_problem.order
         x = self.ode_problem.sym
         df = f.diff(x)
-        a4 = Wild('a4', exclude=[x,f,df])
-        b4 = Wild('b4', exclude=[x,f,df])
+        a4 = Wild('a4', exclude=[x, f, df])
+        b4 = Wild('b4', exclude=[x, f, df])
         match = self.ode_problem.get_linear_coefficients(eq, f, order)
         does_match = False
         if order == 2 and match and match[2] != 0:
             if match[1].is_zero:
-                self.rn = cancel(match[0]/match[2]).match(a4+b4*x)
+                self.rn = cancel(match[0] / match[2]).match(a4 + b4 * x)
                 if self.rn and self.rn[b4] != 0:
-                    self.rn = {'b':self.rn[a4],'m':self.rn[b4]}
+                    self.rn = {'b': self.rn[a4], 'm': self.rn[b4]}
                     does_match = True
         return does_match
 
@@ -2851,13 +2943,13 @@ class SecondLinearAiry(SingleODESolver):
         b = self.rn['b']
         m = self.rn['m']
         if m.is_positive:
-            arg = - b/cbrt(m)**2 - cbrt(m)*x
+            arg = -b / cbrt(m) ** 2 - cbrt(m) * x
         elif m.is_negative:
-            arg = - b/cbrt(-m)**2 + cbrt(-m)*x
+            arg = -b / cbrt(-m) ** 2 + cbrt(-m) * x
         else:
-            arg = - b/cbrt(-m)**2 + cbrt(-m)*x
+            arg = -b / cbrt(-m) ** 2 + cbrt(-m) * x
 
-        return [Eq(f(x), C1*airyai(arg) + C2*airybi(arg))]
+        return [Eq(f(x), C1 * airyai(arg) + C2 * airybi(arg))]
 
 
 class LieGroup(SingleODESolver):
@@ -2959,8 +3051,12 @@ class LieGroup(SingleODESolver):
                 desols.extend(sol)
 
         if desols == []:
-            raise NotImplementedError("The given ODE " + str(eq) + " cannot be solved by"
-                + " the lie group method")
+            raise NotImplementedError(
+                "The given ODE "
+                + str(eq)
+                + " cannot be solved by"
+                + " the lie group method"
+            )
         return desols
 
 
@@ -2992,7 +3088,7 @@ solver_map = {
     '2nd_nonlinear_autonomous_conserved': SecondNonlinearAutonomousConserved,
     'nth_algebraic': NthAlgebraic,
     'lie_group': LieGroup,
-    }
+}
 
 # Avoid circular import:
 from .ode import dsolve, ode_sol_simplicity, odesimp, homogeneous_order

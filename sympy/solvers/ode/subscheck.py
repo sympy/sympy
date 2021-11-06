@@ -1,5 +1,5 @@
 from sympy.core import S, Pow
-from sympy.core.function import (Derivative, AppliedUndef, diff)
+from sympy.core.function import Derivative, AppliedUndef, diff
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
@@ -36,7 +36,7 @@ def sub_func_doit(eq, func, new):
     x*(-1/(x**2*(z + 1/x)) + 1/(x**3*(z + 1/x)**2)) + 1/(x*(z + 1/x))
     ...- 1/(x**2*(z + 1/x)**2)
     """
-    reps= {func: new}
+    reps = {func: new}
     for d in eq.atoms(Derivative):
         if d.expr == func:
             reps[d] = new.diff(*d.variable_count)
@@ -119,18 +119,22 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         try:
             _, func = _preprocess(ode.lhs)
         except ValueError:
-            funcs = [s.atoms(AppliedUndef) for s in (
-                sol if is_sequence(sol, set) else [sol])]
+            funcs = [
+                s.atoms(AppliedUndef) for s in (sol if is_sequence(sol, set) else [sol])
+            ]
             funcs = set().union(*funcs)
             if len(funcs) != 1:
-                raise ValueError(
-                    'must pass func arg to checkodesol for this case.')
+                raise ValueError('must pass func arg to checkodesol for this case.')
             func = funcs.pop()
     if not isinstance(func, AppliedUndef) or len(func.args) != 1:
-        raise ValueError(
-            "func must be a function of one variable, not %s" % func)
+        raise ValueError("func must be a function of one variable, not %s" % func)
     if is_sequence(sol, set):
-        return type(sol)([checkodesol(ode, i, order=order, solve_for_func=solve_for_func) for i in sol])
+        return type(sol)(
+            [
+                checkodesol(ode, i, order=order, solve_for_func=solve_for_func)
+                for i in sol
+            ]
+        )
 
     if not isinstance(sol, Equality):
         sol = Eq(func, sol)
@@ -146,8 +150,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             eqs = [Eq(func, t) for t in rhs]
             if len(rhs) == 1:
                 eqs = eqs[0]
-            return checkodesol(ode, eqs, order=order,
-                solve_for_func=False)
+            return checkodesol(ode, eqs, order=order, solve_for_func=False)
 
     x = func.args[0]
 
@@ -160,11 +163,11 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         Oexpr = Oterm.expr
         assert isinstance(Oexpr, Pow)
         sorder = Oexpr.exp
-        assert Oterm == Order(x**sorder)
+        assert Oterm == Order(x ** sorder)
 
-        odesubs = (ode.lhs-ode.rhs).subs(func, solrhs).doit().expand()
+        odesubs = (ode.lhs - ode.rhs).subs(func, solrhs).doit().expand()
 
-        neworder = Order(x**(sorder - order))
+        neworder = Order(x ** (sorder - order))
         odesubs = odesubs + neworder
         assert odesubs.getO() == neworder
         residual = odesubs.removeO()
@@ -198,8 +201,10 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             # derivative is equal, this will only work for odes that are exact,
             # by definition.
             s = simplify(
-                trigsimp(diff(sol.lhs, x, order) - diff(sol.rhs, x, order)) -
-                trigsimp(ode.lhs) + trigsimp(ode.rhs))
+                trigsimp(diff(sol.lhs, x, order) - diff(sol.rhs, x, order))
+                - trigsimp(ode.lhs)
+                + trigsimp(ode.rhs)
+            )
             # s2 = simplify(
             #     diff(sol.lhs, x, order) - diff(sol.rhs, x, order) - \
             #     ode.lhs + ode.rhs)
@@ -282,8 +287,9 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     if not s:
         return (True, s)
     elif s is True:  # The code above never was able to change s
-        raise NotImplementedError("Unable to test if " + str(sol) +
-            " is a solution to " + str(ode) + ".")
+        raise NotImplementedError(
+            "Unable to test if " + str(sol) + " is a solution to " + str(ode) + "."
+        )
     else:
         return (False, s)
 
@@ -340,8 +346,10 @@ def checksysodesol(eqs, sols, func=None):
     (True, [0, 0])
 
     """
+
     def _sympify(eq):
         return list(map(sympify, eq if iterable(eq) else [eq]))
+
     eqs = _sympify(eqs)
     for i in range(len(eqs)):
         if isinstance(eqs[i], Equality):
@@ -351,17 +359,23 @@ def checksysodesol(eqs, sols, func=None):
         for eq in eqs:
             derivs = eq.atoms(Derivative)
             func = set().union(*[d.atoms(AppliedUndef) for d in derivs])
-            for func_ in  func:
+            for func_ in func:
                 funcs.append(func_)
         funcs = list(set(funcs))
-    if not all(isinstance(func, AppliedUndef) and len(func.args) == 1 for func in funcs)\
-    and len({func.args for func in funcs})!=1:
+    if (
+        not all(
+            isinstance(func, AppliedUndef) and len(func.args) == 1 for func in funcs
+        )
+        and len({func.args for func in funcs}) != 1
+    ):
         raise ValueError("func must be a function of one variable, not %s" % func)
     for sol in sols:
         if len(sol.atoms(AppliedUndef)) != 1:
             raise ValueError("solutions should have one function only")
     if len(funcs) != len({sol.lhs for sol in sols}):
-        raise ValueError("number of solutions provided does not match the number of equations")
+        raise ValueError(
+            "number of solutions provided does not match the number of equations"
+        )
     dictsol = dict()
     for sol in sols:
         func = list(sol.atoms(AppliedUndef))[0]

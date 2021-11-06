@@ -28,8 +28,7 @@ from sympy.functions import exp, log
 from sympy.integrals.integrals import integrate
 from sympy.polys import Poly
 from sympy.polys.polytools import cancel, div
-from sympy.simplify import (collect, powsimp,  # type: ignore
-    separatevars, simplify)
+from sympy.simplify import collect, powsimp, separatevars, simplify  # type: ignore
 from sympy.solvers import solve
 from sympy.solvers.pde import pdsolve
 
@@ -47,8 +46,8 @@ lie_heuristics = (
     "linear",
     "function_sum",
     "bivariate",
-    "chi"
-    )
+    "chi",
+)
 
 
 def _ode_lie_group_try_heuristic(eq, heuristic, func, match, inf):
@@ -72,9 +71,9 @@ def _ode_lie_group_try_heuristic(eq, heuristic, func, match, inf):
         # Since the first step while solving a PDE of form
         # a*(f(x, y).diff(x)) + b*(f(x, y).diff(y)) + c = 0
         # is to solve the ODE dy/dx = b/a
-        if simplify(etainf/xiinf) == h:
+        if simplify(etainf / xiinf) == h:
             continue
-        rpde = f(x, y).diff(x)*xiinf + f(x, y).diff(y)*etainf
+        rpde = f(x, y).diff(x) * xiinf + f(x, y).diff(y) * etainf
         r = pdsolve(rpde, func=f(x, y)).rhs
         s = pdsolve(rpde - 1, func=f(x, y)).rhs
         newcoord = [_lie_group_remove(coord) for coord in [r, s]]
@@ -93,14 +92,18 @@ def _ode_lie_group_try_heuristic(eq, heuristic, func, match, inf):
             sol = sol[0]
             xsub = sol[x]
             ysub = sol[y]
-            num = simplify(scoord.diff(x) + scoord.diff(y)*h)
-            denom = simplify(rcoord.diff(x) + rcoord.diff(y)*h)
+            num = simplify(scoord.diff(x) + scoord.diff(y) * h)
+            denom = simplify(rcoord.diff(x) + rcoord.diff(y) * h)
             if num and denom:
-                diffeq = simplify((num/denom).subs([(x, xsub), (y, ysub)]))
+                diffeq = simplify((num / denom).subs([(x, xsub), (y, ysub)]))
                 sep = separatevars(diffeq, symbols=[r, s], dict=True)
                 if sep:
                     # Trying to separate, r and s coordinates
-                    deq = integrate((1/sep[s]), s) + C1 - integrate(sep['coeff']*sep[r], r)
+                    deq = (
+                        integrate((1 / sep[s]), s)
+                        + C1
+                        - integrate(sep['coeff'] * sep[r], r)
+                    )
                     # Substituting and reverting back to original coordinates
                     deq = deq.subs([(r, rcoord), (s, scoord)])
                     try:
@@ -110,11 +113,10 @@ def _ode_lie_group_try_heuristic(eq, heuristic, func, match, inf):
                     else:
                         return [Eq(f(x), sol) for sol in sdeq]
 
-
-            elif denom: # (ds/dr) is zero which means s is constant
+            elif denom:  # (ds/dr) is zero which means s is constant
                 return [Eq(f(x), solve(scoord - C1, y)[0])]
 
-            elif num: # (dr/ds) is zero which means r is constant
+            elif num:  # (dr/ds) is zero which means r is constant
                 return [Eq(f(x), solve(rcoord - C1, y)[0])]
 
     # If nothing works, return solution as it is, without solving for y
@@ -123,7 +125,7 @@ def _ode_lie_group_try_heuristic(eq, heuristic, func, match, inf):
     return None
 
 
-def _ode_lie_group( s, func, order, match):
+def _ode_lie_group(s, func, order, match):
 
     heuristics = lie_heuristics
     inf = {}
@@ -136,7 +138,7 @@ def _ode_lie_group( s, func, order, match):
     etas = match['eta']
     y = match.pop('y', None)
     if y:
-        h = -simplify(match[match['d']]/match[match['e']])
+        h = -simplify(match[match['d']] / match[match['e']])
         y = y
     else:
         y = Dummy("y")
@@ -238,26 +240,29 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
         if not order:
             order = ode_order(eq, func)
         if order != 1:
-            raise NotImplementedError("Infinitesimals for only "
-                "first order ODE's have been implemented")
+            raise NotImplementedError(
+                "Infinitesimals for only " "first order ODE's have been implemented"
+            )
         else:
             df = func.diff(x)
             # Matching differential equation of the form a*df + b
-            a = Wild('a', exclude = [df])
-            b = Wild('b', exclude = [df])
+            a = Wild('a', exclude=[df])
+            b = Wild('b', exclude=[df])
             if match:  # Used by lie_group hint
                 h = match['h']
                 y = match['y']
             else:
-                match = collect(expand(eq), df).match(a*df + b)
+                match = collect(expand(eq), df).match(a * df + b)
                 if match:
-                    h = -simplify(match[b]/match[a])
+                    h = -simplify(match[b] / match[a])
                 else:
                     try:
                         sol = solve(eq, df)
                     except NotImplementedError:
-                        raise NotImplementedError("Infinitesimals for the "
-                            "first order ODE could not be found")
+                        raise NotImplementedError(
+                            "Infinitesimals for the "
+                            "first order ODE could not be found"
+                        )
                     else:
                         h = sol[0]  # Find infinitesimals for one solution
                 y = Dummy("y")
@@ -266,7 +271,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
             u = Dummy("u")
             hx = h.diff(x)
             hy = h.diff(y)
-            hinv = ((1/h).subs([(x, u), (y, x)])).subs(u, y)  # Inverse ODE
+            hinv = ((1 / h).subs([(x, u), (y, x)])).subs(u, y)  # Inverse ODE
             match = {'h': h, 'func': func, 'hx': hx, 'hy': hy, 'y': y, 'hinv': hinv}
             if hint == 'all':
                 xieta = []
@@ -278,8 +283,9 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
                 if xieta:
                     return xieta
                 else:
-                    raise NotImplementedError("Infinitesimals could not be found for "
-                        "the given ODE")
+                    raise NotImplementedError(
+                        "Infinitesimals could not be found for " "the given ODE"
+                    )
 
             elif hint == 'default':
                 for heuristic in lie_heuristics:
@@ -288,20 +294,22 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
                     if xieta:
                         return xieta
 
-                raise NotImplementedError("Infinitesimals could not be found for"
-                    " the given ODE")
+                raise NotImplementedError(
+                    "Infinitesimals could not be found for" " the given ODE"
+                )
 
             elif hint not in lie_heuristics:
-                 raise ValueError("Heuristic not recognized: " + hint)
+                raise ValueError("Heuristic not recognized: " + hint)
 
             else:
-                 function = globals()['lie_heuristic_' + hint]
-                 xieta = function(match, comp=True)
-                 if xieta:
-                     return xieta
-                 else:
-                     raise ValueError("Infinitesimals could not be found using the"
-                         " given heuristic")
+                function = globals()['lie_heuristic_' + hint]
+                xieta = function(match, comp=True)
+                if xieta:
+                    return xieta
+                else:
+                    raise ValueError(
+                        "Infinitesimals could not be found using the" " given heuristic"
+                    )
 
 
 def lie_heuristic_abaco1_simple(match, comp=False):
@@ -362,7 +370,7 @@ def lie_heuristic_abaco1_simple(match, comp=False):
             if comp and inf not in xieta:
                 xieta.append(inf)
 
-    factor = hy/h
+    factor = hy / h
     facsym = factor.free_symbols
     if x not in facsym:
         try:
@@ -376,7 +384,7 @@ def lie_heuristic_abaco1_simple(match, comp=False):
             if comp and inf not in xieta:
                 xieta.append(inf)
 
-    factor = -hx/h
+    factor = -hx / h
     facsym = factor.free_symbols
     if y not in facsym:
         try:
@@ -390,7 +398,7 @@ def lie_heuristic_abaco1_simple(match, comp=False):
             if comp and inf not in xieta:
                 xieta.append(inf)
 
-    factor = -hx/(h**2)
+    factor = -hx / (h ** 2)
     facsym = factor.free_symbols
     if x not in facsym:
         try:
@@ -406,6 +414,7 @@ def lie_heuristic_abaco1_simple(match, comp=False):
 
     if xieta:
         return xieta
+
 
 def lie_heuristic_abaco1_product(match, comp=False):
     r"""
@@ -447,29 +456,30 @@ def lie_heuristic_abaco1_product(match, comp=False):
     xi = Function('xi')(x, func)
     eta = Function('eta')(x, func)
 
-
-    inf = separatevars(((log(h).diff(y)).diff(x))/h**2, dict=True, symbols=[x, y])
+    inf = separatevars(((log(h).diff(y)).diff(x)) / h ** 2, dict=True, symbols=[x, y])
     if inf and inf['coeff']:
         fx = inf[x]
-        gy = simplify(fx*((1/(fx*h)).diff(x)))
+        gy = simplify(fx * ((1 / (fx * h)).diff(x)))
         gysyms = gy.free_symbols
         if x not in gysyms:
             gy = exp(integrate(gy, y))
-            inf = {eta: S.Zero, xi: (fx*gy).subs(y, func)}
+            inf = {eta: S.Zero, xi: (fx * gy).subs(y, func)}
             if not comp:
                 return [inf]
             if comp and inf not in xieta:
                 xieta.append(inf)
 
     u1 = Dummy("u1")
-    inf = separatevars(((log(hinv).diff(y)).diff(x))/hinv**2, dict=True, symbols=[x, y])
+    inf = separatevars(
+        ((log(hinv).diff(y)).diff(x)) / hinv ** 2, dict=True, symbols=[x, y]
+    )
     if inf and inf['coeff']:
         fx = inf[x]
-        gy = simplify(fx*((1/(fx*hinv)).diff(x)))
+        gy = simplify(fx * ((1 / (fx * hinv)).diff(x)))
         gysyms = gy.free_symbols
         if x not in gysyms:
             gy = exp(integrate(gy, y))
-            etaval = fx*gy
+            etaval = fx * gy
             etaval = (etaval.subs([(x, u1), (y, x)])).subs(u1, y)
             inf = {eta: etaval.subs(y, func), xi: S.Zero}
             if not comp:
@@ -479,6 +489,7 @@ def lie_heuristic_abaco1_product(match, comp=False):
 
     if xieta:
         return xieta
+
 
 def lie_heuristic_bivariate(match, comp=False):
     r"""
@@ -512,24 +523,39 @@ def lie_heuristic_bivariate(match, comp=False):
         # The maximum degree that the infinitesimals can take is
         # calculated by this technique.
         etax, etay, etad, xix, xiy, xid = symbols("etax etay etad xix xiy xid")
-        ipde = etax + (etay - xix)*h - xiy*h**2 - xid*hx - etad*hy
+        ipde = etax + (etay - xix) * h - xiy * h ** 2 - xid * hx - etad * hy
         num, denom = cancel(ipde).as_numer_denom()
         deg = Poly(num, x, y).total_degree()
         deta = Function('deta')(x, y)
         dxi = Function('dxi')(x, y)
-        ipde = (deta.diff(x) + (deta.diff(y) - dxi.diff(x))*h - (dxi.diff(y))*h**2
-            - dxi*hx - deta*hy)
+        ipde = (
+            deta.diff(x)
+            + (deta.diff(y) - dxi.diff(x)) * h
+            - (dxi.diff(y)) * h ** 2
+            - dxi * hx
+            - deta * hy
+        )
         xieq = Symbol("xi0")
         etaeq = Symbol("eta0")
 
         for i in range(deg + 1):
             if i:
-                xieq += Add(*[
-                    Symbol("xi_" + str(power) + "_" + str(i - power))*x**power*y**(i - power)
-                    for power in range(i + 1)])
-                etaeq += Add(*[
-                    Symbol("eta_" + str(power) + "_" + str(i - power))*x**power*y**(i - power)
-                    for power in range(i + 1)])
+                xieq += Add(
+                    *[
+                        Symbol("xi_" + str(power) + "_" + str(i - power))
+                        * x ** power
+                        * y ** (i - power)
+                        for power in range(i + 1)
+                    ]
+                )
+                etaeq += Add(
+                    *[
+                        Symbol("eta_" + str(power) + "_" + str(i - power))
+                        * x ** power
+                        * y ** (i - power)
+                        for power in range(i + 1)
+                    ]
+                )
             pden, denom = (ipde.subs({dxi: xieq, deta: etaeq}).doit()).as_numer_denom()
             pden = expand(pden)
 
@@ -548,9 +574,12 @@ def lie_heuristic_bivariate(match, comp=False):
                     # Scaling is done by substituting one for the parameters
                     # This can be any number except zero.
                     dict_ = {sym: 1 for sym in symset}
-                    inf = {eta: etared.subs(dict_).subs(y, func),
-                        xi: xired.subs(dict_).subs(y, func)}
+                    inf = {
+                        eta: etared.subs(dict_).subs(y, func),
+                        xi: xired.subs(dict_).subs(y, func),
+                    }
                     return [inf]
+
 
 def lie_heuristic_chi(match, comp=False):
     r"""
@@ -586,20 +615,25 @@ def lie_heuristic_chi(match, comp=False):
 
     if h.is_rational_function():
         schi, schix, schiy = symbols("schi, schix, schiy")
-        cpde = schix + h*schiy - hy*schi
+        cpde = schix + h * schiy - hy * schi
         num, denom = cancel(cpde).as_numer_denom()
         deg = Poly(num, x, y).total_degree()
 
         chi = Function('chi')(x, y)
         chix = chi.diff(x)
         chiy = chi.diff(y)
-        cpde = chix + h*chiy - hy*chi
+        cpde = chix + h * chiy - hy * chi
         chieq = Symbol("chi")
         for i in range(1, deg + 1):
-            chieq += Add(*[
-                Symbol("chi_" + str(power) + "_" + str(i - power))*x**power*y**(i - power)
-                for power in range(i + 1)])
-            cnum, cden = cancel(cpde.subs({chi : chieq}).doit()).as_numer_denom()
+            chieq += Add(
+                *[
+                    Symbol("chi_" + str(power) + "_" + str(i - power))
+                    * x ** power
+                    * y ** (i - power)
+                    for power in range(i + 1)
+                ]
+            )
+            cnum, cden = cancel(cpde.subs({chi: chieq}).doit()).as_numer_denom()
             cnum = expand(cnum)
             if cnum.is_polynomial(x, y) and cnum.is_Add:
                 cpoly = Poly(cnum, x, y).as_dict()
@@ -622,6 +656,7 @@ def lie_heuristic_chi(match, comp=False):
                         xic, etac = div(chieq, h)
                         inf = {eta: etac.subs(y, func), xi: -xic.subs(y, func)}
                         return [inf]
+
 
 def lie_heuristic_function_sum(match, comp=False):
     r"""
@@ -671,28 +706,28 @@ def lie_heuristic_function_sum(match, comp=False):
     eta = Function('eta')(x, func)
 
     for odefac in [h, hinv]:
-        factor = odefac*((1/odefac).diff(x, 2))
-        sep = separatevars((1/factor).diff(y), dict=True, symbols=[x, y])
+        factor = odefac * ((1 / odefac).diff(x, 2))
+        sep = separatevars((1 / factor).diff(y), dict=True, symbols=[x, y])
         if sep and sep['coeff'] and sep[x].has(x) and sep[y].has(y):
             k = Dummy("k")
             try:
-                gy = k*integrate(sep[y], y)
+                gy = k * integrate(sep[y], y)
             except NotImplementedError:
                 pass
             else:
-                fdd = 1/(k*sep[x]*sep['coeff'])
-                fx = simplify(fdd/factor - gy)
+                fdd = 1 / (k * sep[x] * sep['coeff'])
+                fx = simplify(fdd / factor - gy)
                 check = simplify(fx.diff(x, 2) - fdd)
                 if fx:
                     if not check:
                         fx = fx.subs(k, 1)
-                        gy = (gy/k)
+                        gy = gy / k
                     else:
                         sol = solve(check, k)
                         if sol:
                             sol = sol[0]
                             fx = fx.subs(k, sol)
-                            gy = (gy/k)*sol
+                            gy = (gy / k) * sol
                         else:
                             continue
                     if odefac == hinv:  # Inverse ODE
@@ -702,9 +737,9 @@ def lie_heuristic_function_sum(match, comp=False):
                     if etaval.is_Mul:
                         etaval = Mul(*[arg for arg in etaval.args if arg.has(x, y)])
                     if odefac == hinv:  # Inverse ODE
-                        inf = {eta: etaval.subs(y, func), xi : S.Zero}
+                        inf = {eta: etaval.subs(y, func), xi: S.Zero}
                     else:
-                        inf = {xi: etaval.subs(y, func), eta : S.Zero}
+                        inf = {xi: etaval.subs(y, func), eta: S.Zero}
                     if not comp:
                         return [inf]
                     else:
@@ -712,6 +747,7 @@ def lie_heuristic_function_sum(match, comp=False):
 
         if xieta:
             return xieta
+
 
 def lie_heuristic_abaco2_similar(match, comp=False):
     r"""
@@ -761,63 +797,64 @@ def lie_heuristic_abaco2_similar(match, comp=False):
     xi = Function('xi')(x, func)
     eta = Function('eta')(x, func)
 
-    factor = cancel(h.diff(y)/h.diff(y, 2))
+    factor = cancel(h.diff(y) / h.diff(y, 2))
     factorx = factor.diff(x)
     factory = factor.diff(y)
     if not factor.has(x) and not factor.has(y):
         A = Wild('A', exclude=[y])
         B = Wild('B', exclude=[y])
         C = Wild('C', exclude=[x, y])
-        match = h.match(A + B*exp(y/C))
+        match = h.match(A + B * exp(y / C))
         try:
-            tau = exp(-integrate(match[A]/match[C]), x)/match[B]
+            tau = exp(-integrate(match[A] / match[C]), x) / match[B]
         except NotImplementedError:
             pass
         else:
-            gx = match[A]*tau
+            gx = match[A] * tau
             return [{xi: tau, eta: gx}]
 
     else:
-        gamma = cancel(factorx/factory)
+        gamma = cancel(factorx / factory)
         if not gamma.has(y):
-            tauint = cancel((gamma*hy - gamma.diff(x) - hx)/(h + gamma))
+            tauint = cancel((gamma * hy - gamma.diff(x) - hx) / (h + gamma))
             if not tauint.has(y):
                 try:
                     tau = exp(integrate(tauint, x))
                 except NotImplementedError:
                     pass
                 else:
-                    gx = -tau*gamma
+                    gx = -tau * gamma
                     return [{xi: tau, eta: gx}]
 
-    factor = cancel(hinv.diff(y)/hinv.diff(y, 2))
+    factor = cancel(hinv.diff(y) / hinv.diff(y, 2))
     factorx = factor.diff(x)
     factory = factor.diff(y)
     if not factor.has(x) and not factor.has(y):
         A = Wild('A', exclude=[y])
         B = Wild('B', exclude=[y])
         C = Wild('C', exclude=[x, y])
-        match = h.match(A + B*exp(y/C))
+        match = h.match(A + B * exp(y / C))
         try:
-            tau = exp(-integrate(match[A]/match[C]), x)/match[B]
+            tau = exp(-integrate(match[A] / match[C]), x) / match[B]
         except NotImplementedError:
             pass
         else:
-            gx = match[A]*tau
+            gx = match[A] * tau
             return [{eta: tau.subs(x, func), xi: gx.subs(x, func)}]
 
     else:
-        gamma = cancel(factorx/factory)
+        gamma = cancel(factorx / factory)
         if not gamma.has(y):
-            tauint = cancel((gamma*hinv.diff(y) - gamma.diff(x) - hinv.diff(x))/(
-                hinv + gamma))
+            tauint = cancel(
+                (gamma * hinv.diff(y) - gamma.diff(x) - hinv.diff(x)) / (hinv + gamma)
+            )
             if not tauint.has(y):
                 try:
                     tau = exp(integrate(tauint, x))
                 except NotImplementedError:
                     pass
                 else:
-                    gx = -tau*gamma
+                    gx = -tau * gamma
                     return [{eta: tau.subs(x, func), xi: gx.subs(x, func)}]
 
 
@@ -874,27 +911,29 @@ def lie_heuristic_abaco2_unique_unknown(match, comp=False):
             funclist.append(function)
 
     for f in funclist:
-        frac = cancel(f.diff(y)/f.diff(x))
+        frac = cancel(f.diff(y) / f.diff(x))
         sep = separatevars(frac, dict=True, symbols=[x, y])
         if sep and sep['coeff']:
             xitry1 = sep[x]
-            etatry1 = -1/(sep[y]*sep['coeff'])
-            pde1 = etatry1.diff(y)*h - xitry1.diff(x)*h - xitry1*hx - etatry1*hy
+            etatry1 = -1 / (sep[y] * sep['coeff'])
+            pde1 = etatry1.diff(y) * h - xitry1.diff(x) * h - xitry1 * hx - etatry1 * hy
             if not simplify(pde1):
                 return [{xi: xitry1, eta: etatry1.subs(y, func)}]
-            xitry2 = 1/etatry1
-            etatry2 = 1/xitry1
-            pde2 = etatry2.diff(x) - (xitry2.diff(y))*h**2 - xitry2*hx - etatry2*hy
+            xitry2 = 1 / etatry1
+            etatry2 = 1 / xitry1
+            pde2 = (
+                etatry2.diff(x) - (xitry2.diff(y)) * h ** 2 - xitry2 * hx - etatry2 * hy
+            )
             if not simplify(expand(pde2)):
                 return [{xi: xitry2.subs(y, func), eta: etatry2}]
 
         else:
-            etatry = -1/frac
-            pde = etatry.diff(x) + etatry.diff(y)*h - hx - etatry*hy
+            etatry = -1 / frac
+            pde = etatry.diff(x) + etatry.diff(y) * h - hx - etatry * hy
             if not simplify(pde):
                 return [{xi: S.One, eta: etatry.subs(y, func)}]
             xitry = -frac
-            pde = -xitry.diff(x)*h -xitry.diff(y)*h**2 - xitry*hx -hy
+            pde = -xitry.diff(x) * h - xitry.diff(y) * h ** 2 - xitry * hx - hy
             if not simplify(expand(pde)):
                 return [{xi: xitry.subs(y, func), eta: S.One}]
 
@@ -921,8 +960,8 @@ def lie_heuristic_abaco2_unique_general(match, comp=False):
     eta = Function('eta')(x, func)
 
     A = hx.diff(y)
-    B = hy.diff(y) + hy**2
-    C = hx.diff(x) - hx**2
+    B = hy.diff(y) + hy ** 2
+    C = hx.diff(x) - hx ** 2
 
     if not (A and B and C):
         return
@@ -932,44 +971,56 @@ def lie_heuristic_abaco2_unique_general(match, comp=False):
     Axy = Ax.diff(y)
     Axx = Ax.diff(x)
     Ayy = Ay.diff(y)
-    D = simplify(2*Axy + hx*Ay - Ax*hy + (hx*hy + 2*A)*A)*A - 3*Ax*Ay
+    D = simplify(2 * Axy + hx * Ay - Ax * hy + (hx * hy + 2 * A) * A) * A - 3 * Ax * Ay
     if not D:
-        E1 = simplify(3*Ax**2 + ((hx**2 + 2*C)*A - 2*Axx)*A)
+        E1 = simplify(3 * Ax ** 2 + ((hx ** 2 + 2 * C) * A - 2 * Axx) * A)
         if E1:
-            E2 = simplify((2*Ayy + (2*B - hy**2)*A)*A - 3*Ay**2)
+            E2 = simplify((2 * Ayy + (2 * B - hy ** 2) * A) * A - 3 * Ay ** 2)
             if not E2:
                 E3 = simplify(
-                    E1*((28*Ax + 4*hx*A)*A**3 - E1*(hy*A + Ay)) - E1.diff(x)*8*A**4)
+                    E1 * ((28 * Ax + 4 * hx * A) * A ** 3 - E1 * (hy * A + Ay))
+                    - E1.diff(x) * 8 * A ** 4
+                )
                 if not E3:
-                    etaval = cancel((4*A**3*(Ax - hx*A) + E1*(hy*A - Ay))/(S(2)*A*E1))
+                    etaval = cancel(
+                        (4 * A ** 3 * (Ax - hx * A) + E1 * (hy * A - Ay))
+                        / (S(2) * A * E1)
+                    )
                     if x not in etaval:
                         try:
                             etaval = exp(integrate(etaval, y))
                         except NotImplementedError:
                             pass
                         else:
-                            xival = -4*A**3*etaval/E1
+                            xival = -4 * A ** 3 * etaval / E1
                             if y not in xival:
                                 return [{xi: xival, eta: etaval.subs(y, func)}]
 
     else:
-        E1 = simplify((2*Ayy + (2*B - hy**2)*A)*A - 3*Ay**2)
+        E1 = simplify((2 * Ayy + (2 * B - hy ** 2) * A) * A - 3 * Ay ** 2)
         if E1:
             E2 = simplify(
-                4*A**3*D - D**2 + E1*((2*Axx - (hx**2 + 2*C)*A)*A - 3*Ax**2))
+                4 * A ** 3 * D
+                - D ** 2
+                + E1 * ((2 * Axx - (hx ** 2 + 2 * C) * A) * A - 3 * Ax ** 2)
+            )
             if not E2:
                 E3 = simplify(
-                   -(A*D)*E1.diff(y) + ((E1.diff(x) - hy*D)*A + 3*Ay*D +
-                    (A*hx - 3*Ax)*E1)*E1)
+                    -(A * D) * E1.diff(y)
+                    + ((E1.diff(x) - hy * D) * A + 3 * Ay * D + (A * hx - 3 * Ax) * E1)
+                    * E1
+                )
                 if not E3:
-                    etaval = cancel(((A*hx - Ax)*E1 - (Ay + A*hy)*D)/(S(2)*A*D))
+                    etaval = cancel(
+                        ((A * hx - Ax) * E1 - (Ay + A * hy) * D) / (S(2) * A * D)
+                    )
                     if x not in etaval:
                         try:
                             etaval = exp(integrate(etaval, y))
                         except NotImplementedError:
                             pass
                         else:
-                            xival = -E1*etaval/D
+                            xival = -E1 * etaval / D
                             if y not in xival:
                                 return [{xi: xival, eta: etaval.subs(y, func)}]
 
@@ -1011,7 +1062,13 @@ def lie_heuristic_linear(match, comp=False):
     symbols = numbered_symbols("c", cls=Dummy)
     symlist = [next(symbols) for _ in islice(symbols, 6)]
     C0, C1, C2, C3, C4, C5 = symlist
-    pde = C3 + (C4 - C0)*h - (C0*x + C1*y + C2)*hx - (C3*x + C4*y + C5)*hy - C1*h**2
+    pde = (
+        C3
+        + (C4 - C0) * h
+        - (C0 * x + C1 * y + C2) * hx
+        - (C3 * x + C4 * y + C5) * hy
+        - C1 * h ** 2
+    )
     pde, denom = pde.as_numer_denom()
     pde = powsimp(expand(pde))
     if pde.is_Add:
@@ -1019,7 +1076,7 @@ def lie_heuristic_linear(match, comp=False):
         for term in terms:
             if term.is_Mul:
                 rem = Mul(*[m for m in term.args if not m.has(x, y)])
-                xypart = term/rem
+                xypart = term / rem
                 if xypart not in coeffdict:
                     coeffdict[xypart] = rem
                 else:
@@ -1037,9 +1094,9 @@ def lie_heuristic_linear(match, comp=False):
             soldict = soldict[0]
         subval = soldict.values()
         if any(t for t in subval):
-            onedict = dict(zip(symlist, [1]*6))
-            xival = C0*x + C1*func + C2
-            etaval = C3*x + C4*func + C5
+            onedict = dict(zip(symlist, [1] * 6))
+            xival = C0 * x + C1 * func + C2
+            etaval = C3 * x + C4 * func + C5
             xival = xival.subs(soldict)
             etaval = etaval.subs(soldict)
             xival = xival.subs(onedict)
@@ -1090,7 +1147,7 @@ def _lie_group_remove(coords):
         base, expr = coords.as_base_exp()
         base = _lie_group_remove(base)
         expr = _lie_group_remove(expr)
-        return base**expr
+        return base ** expr
     elif coords.is_Mul:
         mulargs = []
         coordargs = coords.args

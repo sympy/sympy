@@ -5,7 +5,7 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy
-from sympy.functions.elementary.exponential import (LambertW, exp, log)
+from sympy.functions.elementary.exponential import LambertW, exp, log
 from sympy.functions.elementary.miscellaneous import root
 from sympy.polys.polyroots import roots
 from sympy.polys.polytools import Poly, factor
@@ -33,7 +33,7 @@ def _filtered_gens(poly, symbol):
     """
     gens = {g for g in poly.gens if symbol in g.free_symbols}
     for g in list(gens):
-        ag = 1/g
+        ag = 1 / g
         if g in gens and ag in gens:
             if ag.as_numer_denom()[1] is not S.One:
                 g = ag
@@ -68,9 +68,17 @@ def _mostfunc(lhs, func, X=None):
     >>> _mostfunc(exp(x) + exp(x*y), exp, x)
     exp(x)
     """
-    fterms = [tmp for tmp in lhs.atoms(func) if (not X or
-        X.is_Symbol and X in tmp.free_symbols or
-        not X.is_Symbol and tmp.has(X))]
+    fterms = [
+        tmp
+        for tmp in lhs.atoms(func)
+        if (
+            not X
+            or X.is_Symbol
+            and X in tmp.free_symbols
+            or not X.is_Symbol
+            and tmp.has(X)
+        )
+    ]
     if len(fterms) == 1:
         return fterms[0]
     elif fterms:
@@ -103,7 +111,7 @@ def _linab(arg, symbol):
     ind, dep = arg.as_independent(symbol)
     if arg.is_Mul and dep.is_Add:
         a, b, x = _linab(dep, symbol)
-        return ind*a, ind*b, x
+        return ind * a, ind * b, x
     if not arg.is_Add:
         b = 0
         a, x = ind, dep
@@ -136,7 +144,7 @@ def _lambert(eq, x):
         other = -(-other).args[0]
         eq += other
     if not x in other.free_symbols:
-        return [] # violated assumptions
+        return []  # violated assumptions
     d, f, X2 = _linab(other, x)
     logterm = collect(eq - other, mainlog)
     a = logterm.as_coefficient(mainlog)
@@ -170,11 +178,11 @@ def _lambert(eq, x):
     # as `exp(A/p) = exp(A)**(1/p)`, where `p` is an Integer, are used.
 
     # calculating args for LambertW
-    num, den = ((c*d-b*f)/a/b).as_numer_denom()
+    num, den = ((c * d - b * f) / a / b).as_numer_denom()
     p, den = den.as_coeff_Mul()
-    e = exp(num/den)
+    e = exp(num / den)
     t = Dummy('t')
-    args = [d/(a*b)*t for t in roots(t**p - e, t).keys()]
+    args = [d / (a * b) * t for t in roots(t ** p - e, t).keys()]
 
     # calculating solutions from args
     for arg in args:
@@ -182,7 +190,7 @@ def _lambert(eq, x):
             w = LambertW(arg, k)
             if k and not w.is_real:
                 continue
-            rhs = -c/b + (a/d)*w
+            rhs = -c / b + (a / d) * w
 
             for xu in xusolns:
                 sol.append(xu.subs(u, rhs))
@@ -265,8 +273,7 @@ def _solve_lambert(f, symbol, gens):
         before obtaining the Lambert solutions.
 
         """
-        nlhs, plhs = [
-            expr.xreplace({t: sgn*symbol}) for sgn in (-1, 1)]
+        nlhs, plhs = [expr.xreplace({t: sgn * symbol}) for sgn in (-1, 1)]
         sols = _solve_lambert(nlhs, symbol, gens)
         if plhs != nlhs:
             sols.extend(_solve_lambert(plhs, symbol, gens))
@@ -280,9 +287,11 @@ def _solve_lambert(f, symbol, gens):
     nrhs, lhs = f.as_independent(symbol, as_Add=True)
     rhs = -nrhs
 
-    lamcheck = [tmp for tmp in gens
-                if (tmp.func in [exp, log] or
-                (tmp.is_Pow and symbol in tmp.exp.free_symbols))]
+    lamcheck = [
+        tmp
+        for tmp in gens
+        if (tmp.func in [exp, log] or (tmp.is_Pow and symbol in tmp.exp.free_symbols))
+    ]
     if not lamcheck:
         raise NotImplementedError()
 
@@ -292,17 +301,21 @@ def _solve_lambert(f, symbol, gens):
         # need this handling
         t = Dummy('t', **symbol.assumptions0)
         lhs = lhs.replace(
-            lambda i:  # find symbol**even
-                i.is_Pow and i.base == symbol and i.exp.is_even,
-            lambda i:  # replace t**even
-                t**i.exp)
+            lambda i: i.is_Pow  # find symbol**even
+            and i.base == symbol
+            and i.exp.is_even,
+            lambda i: t ** i.exp,  # replace t**even
+        )
 
         if lhs.is_Add and lhs.has(t):
             t_indep = lhs.subs(t, 0)
             t_term = lhs - t_indep
             _rhs = rhs - t_indep
-            if not t_term.is_Add and _rhs and not (
-                    t_term.has(S.ComplexInfinity, S.NaN)):
+            if (
+                not t_term.is_Add
+                and _rhs
+                and not (t_term.has(S.ComplexInfinity, S.NaN))
+            ):
                 eq = expand_log(log(t_term) - log(_rhs))
                 return _solve_even_degree_expr(eq, t, symbol)
         elif lhs.is_Mul and rhs:
@@ -344,16 +357,18 @@ def _solve_lambert(f, symbol, gens):
                 soln = _lambert(log(lhs) - log(rhs), symbol)
             elif lhs.is_Add:
                 other = lhs.subs(mainlog, 0)
-                if other and not other.is_Add and [
-                        tmp for tmp in other.atoms(Pow)
-                        if symbol in tmp.free_symbols]:
+                if (
+                    other
+                    and not other.is_Add
+                    and [tmp for tmp in other.atoms(Pow) if symbol in tmp.free_symbols]
+                ):
                     if not rhs:
                         diff = log(other) - log(other - lhs)
                     else:
                         diff = log(lhs - other) - log(rhs - other)
                     soln = _lambert(expand_log(diff), symbol)
                 else:
-                    #it's ready to go
+                    # it's ready to go
                     soln = _lambert(lhs - rhs, symbol)
 
     # For the next forms,
@@ -378,8 +393,10 @@ def _solve_lambert(f, symbol, gens):
                 other = lhs.subs(mainexp, 0)
                 mainterm = lhs - other
                 rhs = rhs - other
-                if (mainterm.could_extract_minus_sign() and
-                    rhs.could_extract_minus_sign()):
+                if (
+                    mainterm.could_extract_minus_sign()
+                    and rhs.could_extract_minus_sign()
+                ):
                     mainterm *= -1
                     rhs *= -1
                 diff = log(mainterm) - log(rhs)
@@ -407,8 +424,9 @@ def _solve_lambert(f, symbol, gens):
                 soln = _lambert(expand_log(diff), symbol)
 
     if not soln:
-        raise NotImplementedError('%s does not appear to have a solution in '
-            'terms of LambertW' % f)
+        raise NotImplementedError(
+            '%s does not appear to have a solution in ' 'terms of LambertW' % f
+        )
 
     return list(ordered(soln))
 
@@ -472,13 +490,13 @@ def bivariate_type(f, x, y, *, first=True):
     args = Add.make_args(p.as_expr())
     new = []
     for a in args:
-        a = _mexpand(a.subs(x, u/y))
+        a = _mexpand(a.subs(x, u / y))
         free = a.free_symbols
         if x in free or y in free:
             break
         new.append(a)
     else:
-        return x*y, Add(*new), u
+        return x * y, Add(*new), u
 
     def ok(f, v, c):
         new = _mexpand(f.subs(v, c))
@@ -489,20 +507,20 @@ def bivariate_type(f, x, y, *, first=True):
     new = []
     d = p.degree(x)
     if p.degree(y) == d:
-        a = root(p.coeff_monomial(x**d), d)
-        b = root(p.coeff_monomial(y**d), d)
-        new = ok(f, x, (u - b*y)/a)
+        a = root(p.coeff_monomial(x ** d), d)
+        b = root(p.coeff_monomial(y ** d), d)
+        new = ok(f, x, (u - b * y) / a)
         if new is not None:
-            return a*x + b*y, new, u
+            return a * x + b * y, new, u
 
     # f(a*x*y + b*y)
     new = []
     d = p.degree(x)
     if p.degree(y) == d:
         for itry in range(2):
-            a = root(p.coeff_monomial(x**d*y**d), d)
-            b = root(p.coeff_monomial(y**d), d)
-            new = ok(f, x, (u - b*y)/a/y)
+            a = root(p.coeff_monomial(x ** d * y ** d), d)
+            b = root(p.coeff_monomial(y ** d), d)
+            new = ok(f, x, (u - b * y) / a / y)
             if new is not None:
-                return a*x*y + b*y, new, u
+                return a * x * y + b * y, new, u
             x, y = y, x

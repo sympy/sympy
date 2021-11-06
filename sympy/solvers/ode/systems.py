@@ -5,22 +5,30 @@ from sympy.core.numbers import I
 from sympy.core.relational import Eq, Equality
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, Symbol
-from sympy.core.function import (expand_mul, expand, Derivative,
-                                 AppliedUndef, Function, Subs)
-from sympy.functions import (exp, im, cos, sin, re, Piecewise,
-                             piecewise_fold, sqrt, log)
+from sympy.core.function import (
+    expand_mul,
+    expand,
+    Derivative,
+    AppliedUndef,
+    Function,
+    Subs,
+)
+from sympy.functions import exp, im, cos, sin, re, Piecewise, piecewise_fold, sqrt, log
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.matrices import zeros, Matrix, NonSquareMatrixError, MatrixBase, eye
 from sympy.polys import Poly, together
-from sympy.simplify import collect, radsimp, signsimp # type: ignore
+from sympy.simplify import collect, radsimp, signsimp  # type: ignore
 from sympy.simplify.powsimp import powdenest, powsimp
 from sympy.simplify.ratsimp import ratsimp
 from sympy.simplify.simplify import simplify
 from sympy.sets.sets import FiniteSet
 from sympy.solvers.deutils import ode_order
 from sympy.solvers.solveset import NonlinearError, solveset
-from sympy.utilities.iterables import (connected_components, iterable,
-                                       strongly_connected_components)
+from sympy.utilities.iterables import (
+    connected_components,
+    iterable,
+    strongly_connected_components,
+)
 from sympy.utilities.misc import filldedent
 from sympy.integrals.integrals import Integral, integrate
 
@@ -31,11 +39,13 @@ def _get_func_order(eqs, funcs):
 
 class ODEOrderError(ValueError):
     """Raised by linear_ode_to_matrix if the system has the wrong order"""
+
     pass
 
 
 class ODENonlinearError(NonlinearError):
     """Raised by linear_ode_to_matrix if the system is nonlinear"""
+
     pass
 
 
@@ -53,7 +63,9 @@ def _simpsol(soleq):
     for coeff, monom in zip(p.coeffs(), p.monoms()):
         coeff = piecewise_fold(coeff)
         if type(coeff) is Piecewise:
-            coeff = Piecewise(*((ratsimp(coef).collect(syms), cond) for coef, cond in coeff.args))
+            coeff = Piecewise(
+                *((ratsimp(coef).collect(syms), cond) for coef, cond in coeff.args)
+            )
         else:
             coeff = ratsimp(coeff).collect(syms)
         monom = Mul(*(g ** i for g, i in zip(gens, monom)))
@@ -152,6 +164,7 @@ def simpsol(sol, wrt1, wrt2, doit=True):
 
     def simpdep(term, wrt1):
         """Normalise factors involving t with powsimp and recombine exp"""
+
         def canonicalise(a):
             # Using factor_terms here isn't quite right because it leads to things
             # like exp(t*(1+t)) that we don't want. We do want to cancel factors
@@ -294,7 +307,9 @@ def linodesolve_type(A, t, b=None):
     match = {}
     is_non_constant = not _matrix_is_constant(A, t)
     is_non_homogeneous = not (b is None or b.is_zero_matrix)
-    type = "type{}".format(int("{}{}".format(int(is_non_constant), int(is_non_homogeneous)), 2) + 1)
+    type = "type{}".format(
+        int("{}{}".format(int(is_non_constant), int(is_non_homogeneous)), 2) + 1
+    )
 
     B = None
     match.update({"type_of_equation": type, "antiderivative": B})
@@ -302,10 +317,14 @@ def linodesolve_type(A, t, b=None):
     if is_non_constant:
         B, is_commuting = _is_commutative_anti_derivative(A, t)
         if not is_commuting:
-            raise NotImplementedError(filldedent('''
+            raise NotImplementedError(
+                filldedent(
+                    '''
                 The system does not have a commutative antiderivative, it cannot be solved
                 by linodesolve.
-            '''))
+            '''
+                )
+            )
 
         match['antiderivative'] = B
         match.update(_first_order_type5_6_subs(A, t, b=b))
@@ -326,16 +345,26 @@ def _first_order_type5_6_subs(A, t, b=None):
 
         # Note: A simple way to check if a function is invertible
         # or not.
-        if isinstance(inverse, FiniteSet) and not inverse.has(Piecewise)\
-            and len(inverse) == 1:
+        if (
+            isinstance(inverse, FiniteSet)
+            and not inverse.has(Piecewise)
+            and len(inverse) == 1
+        ):
 
             A = factor_terms[1]
             if not is_homogeneous:
                 b = b / factor_terms[0]
                 b = b.subs(t, list(inverse)[0])
             type = "type{}".format(5 + (not is_homogeneous))
-            match.update({'func_coeff': A, 'tau': F_t,
-                          't_': t_, 'type_of_equation': type, 'rhs': b})
+            match.update(
+                {
+                    'func_coeff': A,
+                    'tau': F_t,
+                    't_': t_,
+                    'type_of_equation': type,
+                    'rhs': b,
+                }
+            )
 
     return match
 
@@ -635,7 +664,7 @@ def matrix_exp_jordan_form(A, t):
         where vijk is the kth vector in the jth chain for eigenvalue i.
         '''
         P, blocks = A.jordan_cells()
-        basis = [P[:,i] for i in range(P.shape[1])]
+        basis = [P[:, i] for i in range(P.shape[1])]
         n = 0
         chains = {}
         for b in blocks:
@@ -643,7 +672,7 @@ def matrix_exp_jordan_form(A, t):
             size = b.shape[0]
             if eigval not in chains:
                 chains[eigval] = []
-            chains[eigval].append(basis[n:n+size])
+            chains[eigval].append(basis[n : n + size])
             n += size
         return chains
 
@@ -665,12 +694,17 @@ def matrix_exp_jordan_form(A, t):
                 seen_conjugate.add(e.conjugate())
                 exprt = exp(re(e) * t)
                 imrt = im(e) * t
-                imblock = Matrix([[cos(imrt), sin(imrt)],
-                                  [-sin(imrt), cos(imrt)]])
-                expJblock2 = Matrix(n, n, lambda i,j:
-                        imblock * t**(j-i) / factorial(j-i) if j >= i
-                        else zeros(2, 2))
-                expJblock = Matrix(2*n, 2*n, lambda i,j: expJblock2[i//2,j//2][i%2,j%2])
+                imblock = Matrix([[cos(imrt), sin(imrt)], [-sin(imrt), cos(imrt)]])
+                expJblock2 = Matrix(
+                    n,
+                    n,
+                    lambda i, j: imblock * t ** (j - i) / factorial(j - i)
+                    if j >= i
+                    else zeros(2, 2),
+                )
+                expJblock = Matrix(
+                    2 * n, 2 * n, lambda i, j: expJblock2[i // 2, j // 2][i % 2, j % 2]
+                )
 
                 blocks.append(exprt * expJblock)
                 for i in range(n):
@@ -678,19 +712,18 @@ def matrix_exp_jordan_form(A, t):
                     vectors.append(im(chain[i]))
             else:
                 vectors.extend(chain)
-                fun = lambda i,j: t**(j-i)/factorial(j-i) if j >= i else 0
+                fun = lambda i, j: t ** (j - i) / factorial(j - i) if j >= i else 0
                 expJblock = Matrix(n, n, fun)
                 blocks.append(exp(e * t) * expJblock)
 
     expJ = Matrix.diag(*blocks)
-    P = Matrix(N, N, lambda i,j: vectors[j][i])
+    P = Matrix(N, N, lambda i, j: vectors[j][i])
 
     return P, expJ
 
 
 # Note: To add a docstring example with tau
-def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
-                tau=None):
+def linodesolve(A, t, b=None, B=None, type="auto", doit=False, tau=None):
     r"""
     System of n equations linear first-order differential equations
 
@@ -900,47 +933,79 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
     """
 
     if not isinstance(A, MatrixBase):
-        raise ValueError(filldedent('''\
+        raise ValueError(
+            filldedent(
+                '''\
             The coefficients of the system of ODEs should be of type Matrix
-        '''))
+        '''
+            )
+        )
 
     if not A.is_square:
-        raise NonSquareMatrixError(filldedent('''\
+        raise NonSquareMatrixError(
+            filldedent(
+                '''\
             The coefficient matrix must be a square
-        '''))
+        '''
+            )
+        )
 
     if b is not None:
         if not isinstance(b, MatrixBase):
-            raise ValueError(filldedent('''\
+            raise ValueError(
+                filldedent(
+                    '''\
                 The non-homogeneous terms of the system of ODEs should be of type Matrix
-            '''))
+            '''
+                )
+            )
 
         if A.rows != b.rows:
-            raise ValueError(filldedent('''\
+            raise ValueError(
+                filldedent(
+                    '''\
                 The system of ODEs should have the same number of non-homogeneous terms and the number of
                 equations
-            '''))
+            '''
+                )
+            )
 
     if B is not None:
         if not isinstance(B, MatrixBase):
-            raise ValueError(filldedent('''\
+            raise ValueError(
+                filldedent(
+                    '''\
                 The antiderivative of coefficients of the system of ODEs should be of type Matrix
-            '''))
+            '''
+                )
+            )
 
         if not B.is_square:
-            raise NonSquareMatrixError(filldedent('''\
+            raise NonSquareMatrixError(
+                filldedent(
+                    '''\
                 The antiderivative of the coefficient matrix must be a square
-            '''))
+            '''
+                )
+            )
 
         if A.rows != B.rows:
-            raise ValueError(filldedent('''\
+            raise ValueError(
+                filldedent(
+                    '''\
                         The coefficient matrix and its antiderivative should have same dimensions
-                    '''))
+                    '''
+                )
+            )
 
     if not any(type == "type{}".format(i) for i in range(1, 7)) and not type == "auto":
-        raise ValueError(filldedent('''\
+        raise ValueError(
+            filldedent(
+                '''\
                     The input type should be a valid one
-                '''))
+                '''
+            )
+        )
 
     n = A.rows
 
@@ -964,9 +1029,15 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
             if tau is None:
                 system_info = _first_order_type5_6_subs(A, t, b=b)
                 if not system_info:
-                    raise ValueError(filldedent('''
+                    raise ValueError(
+                        filldedent(
+                            '''
                         The system passed isn't {}.
-                    '''.format(type)))
+                    '''.format(
+                                type
+                            )
+                        )
+                    )
 
                 tau = system_info['tau']
                 t = system_info['t_']
@@ -980,7 +1051,11 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
         if type in ("type1", "type5"):
             sol_vector = P * (J * Cvect)
         else:
-            sol_vector = P * J * ((J.inv() * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
+            sol_vector = (
+                P
+                * J
+                * ((J.inv() * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
+            )
 
     else:
         if B is None:
@@ -989,7 +1064,9 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
         if type == "type3":
             sol_vector = B.exp() * Cvect
         else:
-            sol_vector = B.exp() * (((-B).exp() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
+            sol_vector = B.exp() * (
+                ((-B).exp() * b).applyfunc(lambda x: Integral(x, t)) + Cvect
+            )
 
     if is_transformed:
         sol_vector = sol_vector.subs(t, tau)
@@ -1078,7 +1155,10 @@ def canonical_odes(eqs, funcs, t):
 
     systems = []
     for eq in canon_eqs:
-        system = [Eq(func.diff(t, order[func]), eq[func.diff(t, order[func])]) for func in funcs]
+        system = [
+            Eq(func.diff(t, order[func]), eq[func.diff(t, order[func])])
+            for func in funcs
+        ]
         systems.append(system)
 
     return systems
@@ -1128,7 +1208,9 @@ def _is_commutative_anti_derivative(A, t):
 
     """
     B = integrate(A, t)
-    is_commuting = (B*A - A*B).applyfunc(expand).applyfunc(factor_terms).is_zero_matrix
+    is_commuting = (
+        (B * A - A * B).applyfunc(expand).applyfunc(factor_terms).is_zero_matrix
+    )
 
     is_commuting = False if is_commuting is None else is_commuting
 
@@ -1144,7 +1226,7 @@ def _factor_matrix(A, t):
             break
 
     if term is not None:
-        A_factored = (A/term).applyfunc(ratsimp)
+        A_factored = (A / term).applyfunc(ratsimp)
         can_factor = _matrix_is_constant(A_factored, t)
         term = (term, A_factored) if can_factor else None
 
@@ -1156,7 +1238,7 @@ def _is_second_order_type2(A, t):
     is_type2 = False
 
     if term is not None:
-        term = 1/term[0]
+        term = 1 / term[0]
         is_type2 = term.is_polynomial()
 
     if is_type2:
@@ -1169,10 +1251,10 @@ def _is_second_order_type2(A, t):
 
             a1 = powdenest(sqrt(a), force=True)
             c1 = powdenest(sqrt(e), force=True)
-            b1 = powdenest(sqrt(c - 2*a1*c1), force=True)
+            b1 = powdenest(sqrt(c - 2 * a1 * c1), force=True)
 
-            is_type2 = (b == 2*a1*b1) and (d == 2*b1*c1)
-            term = a1*t**2 + b1*t + c1
+            is_type2 = (b == 2 * a1 * b1) and (d == 2 * b1 * c1)
+            term = a1 * t ** 2 + b1 * t + c1
 
         else:
             is_type2 = False
@@ -1181,9 +1263,9 @@ def _is_second_order_type2(A, t):
 
 
 def _get_poly_coeffs(poly, order):
-    cs = [0 for _ in range(order+1)]
+    cs = [0 for _ in range(order + 1)]
     for c, m in zip(poly.coeffs(), poly.monoms()):
-        cs[-1-m[0]] = c
+        cs[-1 - m[0]] = c
     return cs
 
 
@@ -1206,19 +1288,28 @@ def _match_second_order_type(A1, A0, t, b=None):
     if _matrix_is_constant(A1, t) and _matrix_is_constant(A0, t):
         return match
 
-    if (A1 + A0*t).applyfunc(expand_mul).is_zero_matrix:
+    if (A1 + A0 * t).applyfunc(expand_mul).is_zero_matrix:
         match.update({"type_of_equation": "type1", "A1": A1})
 
     elif A1.is_zero_matrix and (b is None or b.is_zero_matrix):
         is_type2, term = _is_second_order_type2(A0, t)
         if is_type2:
             a, b, c = _get_poly_coeffs(Poly(term, t), 2)
-            A = (A0*(term**2).expand()).applyfunc(ratsimp) + (b**2/4 - a*c)*eye(n, n)
-            tau = integrate(1/term, t)
+            A = (A0 * (term ** 2).expand()).applyfunc(ratsimp) + (
+                b ** 2 / 4 - a * c
+            ) * eye(n, n)
+            tau = integrate(1 / term, t)
             t_ = Symbol("{}_".format(t))
-            match.update({"type_of_equation": "type2", "A0": A,
-                          "g(t)": sqrt(term), "tau": tau, "is_transformed": True,
-                          "t_": t_})
+            match.update(
+                {
+                    "type_of_equation": "type2",
+                    "A0": A,
+                    "g(t)": sqrt(term),
+                    "tau": tau,
+                    "is_transformed": True,
+                    "t_": t_,
+                }
+            )
 
     return match
 
@@ -1272,9 +1363,9 @@ def _second_order_subs_type1(A, b, funcs, t):
 
     """
 
-    U = Matrix([t*func.diff(t) - func for func in funcs])
+    U = Matrix([t * func.diff(t) - func for func in funcs])
 
-    sol = linodesolve(A, t, t*b)
+    sol = linodesolve(A, t, t * b)
     reduced_eqs = [Eq(u, s) for s, u in zip(sol, U)]
     reduced_eqs = canonical_odes(reduced_eqs, funcs, t)[0]
 
@@ -1324,7 +1415,10 @@ def _second_order_subs_type2(A, funcs, t_):
 
 
 def _is_euler_system(As, t):
-    return all(_matrix_is_constant((A*t**i).applyfunc(ratsimp), t) for i, A in enumerate(As))
+    return all(
+        _matrix_is_constant((A * t ** i).applyfunc(ratsimp), t)
+        for i, A in enumerate(As)
+    )
 
 
 def _classify_linear_system(eqs, funcs, t, is_canon=False):
@@ -1406,13 +1500,18 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
 
     # Check for len(funcs) == len(eqs)
     if len(funcs) != len(eqs):
-        raise ValueError("Number of functions given is not equal to the number of equations %s" % funcs)
+        raise ValueError(
+            "Number of functions given is not equal to the number of equations %s"
+            % funcs
+        )
 
     # ValueError when functions have more than one arguments
     for func in funcs:
         if len(func.args) != 1:
-            raise ValueError("dsolve() and classify_sysode() work with "
-            "functions of one variable only, not %s" % func)
+            raise ValueError(
+                "dsolve() and classify_sysode() work with "
+                "functions of one variable only, not %s" % func
+            )
 
     # Getting the func_dict and order using the helper
     # function
@@ -1432,10 +1531,7 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
             As, b = linear_ode_to_matrix(canon_eqs[0], funcs, t, system_order)
         else:
 
-            match = {
-                'is_implicit': True,
-                'canon_eqs': canon_eqs
-            }
+            match = {'is_implicit': True, 'canon_eqs': canon_eqs}
 
             return match
 
@@ -1458,7 +1554,7 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
         'order': order,
         'is_linear': is_linear,
         'is_homogeneous': is_homogeneous,
-        'is_general': True
+        'is_general': True,
     }
 
     if not is_homogeneous:
@@ -1507,15 +1603,27 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
             is_euler = _is_euler_system(As, t)
             if is_euler:
                 t_ = Symbol('{}_'.format(t))
-                match.update({'is_transformed': True, 'type_of_equation': 'type1',
-                              't_': t_})
+                match.update(
+                    {'is_transformed': True, 'type_of_equation': 'type1', 't_': t_}
+                )
             else:
                 is_jordan = lambda M: M == Matrix.jordan_block(M.shape[0], M[0, 0])
                 terms = _factor_matrix(As[-1], t)
-                if all(A.is_zero_matrix for A in As[1:-1]) and terms is not None and not is_jordan(terms[1]):
+                if (
+                    all(A.is_zero_matrix for A in As[1:-1])
+                    and terms is not None
+                    and not is_jordan(terms[1])
+                ):
                     P, J = terms[1].jordan_form()
-                    match.update({'type_of_equation': 'type2', 'J': J,
-                                  'f(t)': terms[0], 'P': P, 'is_transformed': True})
+                    match.update(
+                        {
+                            'type_of_equation': 'type2',
+                            'J': J,
+                            'f(t)': terms[0],
+                            'P': P,
+                            'is_transformed': True,
+                        }
+                    )
 
             if match['type_of_equation'] != 'type0' and is_second_order:
                 match.pop('is_second_order', None)
@@ -1523,6 +1631,7 @@ def _classify_linear_system(eqs, funcs, t, is_canon=False):
         match['is_higher_order'] = is_higher_order
 
         return match
+
 
 def _preprocess_eqs(eqs):
     processed_eqs = []
@@ -1537,7 +1646,7 @@ def _eqs2dict(eqs, funcs):
     eqsmap = {}
     funcset = set(funcs)
     for eq in eqs:
-        f1, = eq.lhs.atoms(AppliedUndef)
+        (f1,) = eq.lhs.atoms(AppliedUndef)
         f2s = (eq.rhs.atoms(AppliedUndef) - {f1}) & funcset
         eqsmap[f1] = f2s
         eqsorig[f1] = eq
@@ -1569,7 +1678,7 @@ def _combine_type1_subsystems(subsystem, funcs, t):
     indices = [i for i, sys in enumerate(zip(subsystem, funcs)) if _is_type1(sys, t)]
     remove = set()
     for ip, i in enumerate(indices):
-        for j in indices[ip+1:]:
+        for j in indices[ip + 1 :]:
             if any(eq2.has(funcs[i]) for eq2 in subsystem[j]):
                 subsystem[j] = subsystem[i] + subsystem[j]
                 remove.add(i)
@@ -1610,8 +1719,7 @@ def _linear_ode_solver(match):
     B = match.get('commutative_antiderivative', None)
     type = match['type_of_equation']
 
-    sol_vector = linodesolve(A, t, b=rhs, B=B,
-                             type=type, tau=tau)
+    sol_vector = linodesolve(A, t, b=rhs, B=B, type=type, tau=tau)
 
     sol = [Eq(f, s) for f, s in zip(funcs, sol_vector)]
 
@@ -1636,15 +1744,28 @@ def _higher_order_ode_solver(match):
     is_higher_order_type2 = is_transformed and type == "type2" and 'P' in match
 
     if is_second_order:
-        new_eqs, new_funcs = _second_order_to_first_order(eqs, funcs, t,
-                                                          A1=match.get("A1", None), A0=match.get("A0", None),
-                                                          b=match.get("rhs", None), type=type,
-                                                          t_=match.get("t_", None))
+        new_eqs, new_funcs = _second_order_to_first_order(
+            eqs,
+            funcs,
+            t,
+            A1=match.get("A1", None),
+            A0=match.get("A0", None),
+            b=match.get("rhs", None),
+            type=type,
+            t_=match.get("t_", None),
+        )
     else:
-        new_eqs, new_funcs = _higher_order_to_first_order(eqs, sysorder, t, funcs=funcs,
-                                                          type=type, J=match.get('J', None),
-                                                          f_t=match.get('f(t)', None),
-                                                          P=match.get('P', None), b=match.get('rhs', None))
+        new_eqs, new_funcs = _higher_order_to_first_order(
+            eqs,
+            sysorder,
+            t,
+            funcs=funcs,
+            type=type,
+            J=match.get('J', None),
+            f_t=match.get('f(t)', None),
+            P=match.get('P', None),
+            b=match.get('rhs', None),
+        )
 
     if is_transformed:
         t = match.get('t_', t)
@@ -1676,8 +1797,11 @@ def _higher_order_ode_solver(match):
 
     underscores = '__' if is_transformed else '_'
 
-    sol = _select_equations(sol, funcs,
-                            key=lambda x: Function(Dummy('{}{}0'.format(x.func.__name__, underscores)))(t))
+    sol = _select_equations(
+        sol,
+        funcs,
+        key=lambda x: Function(Dummy('{}{}0'.format(x.func.__name__, underscores)))(t),
+    )
 
     if match.get("is_transformed", False):
         if is_second_order_type2:
@@ -1723,7 +1847,9 @@ def _strong_component_solver(eqs, funcs, t):
             sol = dsolve(eqs[0], func=funcs[0])
             variables = Tuple(eqs[0]).free_symbols
             new_constants = [Dummy() for _ in range(ode_order(eqs[0], funcs[0]))]
-            sol = constant_renumber(sol, variables=variables, newconstants=new_constants)
+            sol = constant_renumber(
+                sol, variables=variables, newconstants=new_constants
+            )
             sol = [sol]
 
         # To add non-linear case here in future
@@ -1762,9 +1888,13 @@ def _weak_component_solver(wcc, t):
         scc_sol = _strong_component_solver(comp_eqs, funcs, t)
 
         if scc_sol is None:
-            raise NotImplementedError(filldedent('''
+            raise NotImplementedError(
+                filldedent(
+                    '''
                 The system of ODEs passed cannot be solved by dsolve_system.
-            '''))
+            '''
+                )
+            )
 
         # scc_sol: List of equations
         # scc_sol is a solution
@@ -1787,8 +1917,9 @@ def _component_solver(eqs, funcs, t):
     return sol
 
 
-def _second_order_to_first_order(eqs, funcs, t, type="auto", A1=None,
-                                 A0=None, b=None, t_=None):
+def _second_order_to_first_order(
+    eqs, funcs, t, type="auto", A1=None, A0=None, b=None, t_=None
+):
     r"""
     Expects the system to be in second order and in canonical form
 
@@ -1821,14 +1952,21 @@ def _second_order_to_first_order(eqs, funcs, t, type="auto", A1=None,
     is_a1 = A1 is None
     is_a0 = A0 is None
 
-    if (type == "type1" and is_a1) or (type == "type2" and is_a0)\
-        or (type == "auto" and (is_a1 or is_a0)):
+    if (
+        (type == "type1" and is_a1)
+        or (type == "type2" and is_a0)
+        or (type == "auto" and (is_a1 or is_a0))
+    ):
         (A2, A1, A0), b = linear_ode_to_matrix(eqs, funcs, t, 2)
 
         if not A2.is_Identity:
-            raise ValueError(filldedent('''
+            raise ValueError(
+                filldedent(
+                    '''
                 The system must be in its canonical form.
-            '''))
+            '''
+                )
+            )
 
     if type == "auto":
         match = _match_second_order_type(A1, A0, t)
@@ -1858,17 +1996,27 @@ def _higher_order_type2_to_sub_systems(J, f_t, funcs, t, max_order, b=None, P=No
 
     # Note: To add a test for this ValueError
     if J is None or f_t is None or not _matrix_is_constant(J, t):
-        raise ValueError(filldedent('''
+        raise ValueError(
+            filldedent(
+                '''
             Correctly input for args 'A' and 'f_t' for Linear, Higher Order,
             Type 2
-        '''))
+        '''
+            )
+        )
 
     if P is None and b is not None and not b.is_zero_matrix:
-        raise ValueError(filldedent('''
+        raise ValueError(
+            filldedent(
+                '''
             Provide the keyword 'P' for matrix P in A = P * J * P-1.
-        '''))
+        '''
+            )
+        )
 
-    new_funcs = Matrix([Function(Dummy('{}__0'.format(f.func.__name__)))(t) for f in funcs])
+    new_funcs = Matrix(
+        [Function(Dummy('{}__0'.format(f.func.__name__)))(t) for f in funcs]
+    )
     new_eqs = new_funcs.diff(t, max_order) - f_t * J * new_funcs
 
     if b is not None and not b.is_zero_matrix:
@@ -1918,13 +2066,22 @@ def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0", **
                 return coeffs
 
         for o in range(1, max_order + 1):
-            expr = free_function(log(t_)).diff(t_, o)*t_**o
+            expr = free_function(log(t_)).diff(t_, o) * t_ ** o
             coeff_dict = _get_coeffs_from_subs_expression(expr)
-            coeffs = [coeff_dict[order] if order in coeff_dict else 0 for order in range(o + 1)]
-            expr_to_subs = sum(free_function(t_).diff(t_, i) * c for i, c in
-                        enumerate(coeffs)) / t**o
-            subs_dict.update({f.diff(t, o): expr_to_subs.subs(free_function(t_), nf)
-                              for f, nf in zip(funcs, new_funcs)})
+            coeffs = [
+                coeff_dict[order] if order in coeff_dict else 0
+                for order in range(o + 1)
+            ]
+            expr_to_subs = (
+                sum(free_function(t_).diff(t_, i) * c for i, c in enumerate(coeffs))
+                / t ** o
+            )
+            subs_dict.update(
+                {
+                    f.diff(t, o): expr_to_subs.subs(free_function(t_), nf)
+                    for f, nf in zip(funcs, new_funcs)
+                }
+            )
 
         new_eqs = [eq.subs(subs_dict) for eq in eqs]
         new_sys_order = {nf: sys_order[f] for f, nf in zip(funcs, new_funcs)}
@@ -1964,7 +2121,7 @@ def _higher_order_to_first_order(eqs, sys_order, t, funcs=None, type="type0", **
             subs_dict[prev_func.diff(t, i)] = new_func
             new_funcs.append(new_func)
 
-            prev_f = subs_dict[prev_func.diff(t, i-1)]
+            prev_f = subs_dict[prev_func.diff(t, i - 1)]
             new_eq = Eq(prev_f.diff(t), new_func)
             new_eqs.append(new_eq)
 
@@ -2069,35 +2226,55 @@ def dsolve_system(eqs, funcs=None, t=None, ics=None, doit=False, simplify=True):
     from sympy.solvers.ode.ode import solve_ics, _extract_funcs, constant_renumber
 
     if not iterable(eqs):
-        raise ValueError(filldedent('''
+        raise ValueError(
+            filldedent(
+                '''
             List of equations should be passed. The input is not valid.
-        '''))
+        '''
+            )
+        )
 
     eqs = _preprocess_eqs(eqs)
 
     if funcs is not None and not isinstance(funcs, list):
-        raise ValueError(filldedent('''
+        raise ValueError(
+            filldedent(
+                '''
             Input to the funcs should be a list of functions.
-        '''))
+        '''
+            )
+        )
 
     if funcs is None:
         funcs = _extract_funcs(eqs)
 
     if any(len(func.args) != 1 for func in funcs):
-        raise ValueError(filldedent('''
+        raise ValueError(
+            filldedent(
+                '''
             dsolve_system can solve a system of ODEs with only one independent
             variable.
-        '''))
+        '''
+            )
+        )
 
     if len(eqs) != len(funcs):
-        raise ValueError(filldedent('''
+        raise ValueError(
+            filldedent(
+                '''
             Number of equations and number of functions do not match
-        '''))
+        '''
+            )
+        )
 
     if t is not None and not isinstance(t, Symbol):
-        raise ValueError(filldedent('''
+        raise ValueError(
+            filldedent(
+                '''
             The indepedent variable must be of type Symbol
-        '''))
+        '''
+            )
+        )
 
     if t is None:
         t = list(list(eqs[0].atoms(Derivative))[0].atoms(Symbol))[0]

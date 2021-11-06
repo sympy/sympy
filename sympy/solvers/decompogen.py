@@ -1,4 +1,4 @@
-from sympy.core import (Function, Pow, sympify, Expr)
+from sympy.core import Function, Pow, sympify, Expr
 from sympy.core.relational import Relational
 from sympy.core.singleton import S
 from sympy.polys import Poly, decompose

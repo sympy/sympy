@@ -4,15 +4,14 @@ from sympy.core import S
 from sympy.core.sorting import default_sort_key
 from sympy.polys import Poly, groebner, roots
 from sympy.polys.polytools import parallel_poly_from_expr
-from sympy.polys.polyerrors import (ComputationFailed,
-    PolificationFailed, CoercionFailed)
+from sympy.polys.polyerrors import ComputationFailed, PolificationFailed, CoercionFailed
 from sympy.simplify import rcollect
 from sympy.utilities import postfixes
 from sympy.utilities.misc import filldedent
 
 
 class SolveFailed(Exception):
-    """Raised when solver's conditions weren't met. """
+    """Raised when solver's conditions weren't met."""
 
 
 def solve_poly_system(seq, *gens, **args):
@@ -208,8 +207,9 @@ def solve_generic(polys, opt):
     >>> solve_generic([a, b], NewOption)
     [(0, 0), (1/4, -1/16)]
     """
+
     def _is_univariate(f):
-        """Returns True if 'f' is univariate in its last variable. """
+        """Returns True if 'f' is univariate in its last variable."""
         for monom in f.monoms():
             if any(monom[:-1]):
                 return False
@@ -217,7 +217,7 @@ def solve_generic(polys, opt):
         return True
 
     def _subs_root(f, gen, zero):
-        """Replace generator with a root so that the result is nice. """
+        """Replace generator with a root so that the result is nice."""
         p = f.as_expr({gen: zero})
 
         if f.degree(gen) >= 2:
@@ -226,7 +226,7 @@ def solve_generic(polys, opt):
         return p
 
     def _solve_reduced_system(system, gens, entry=False):
-        """Recursively solves reduced polynomial systems. """
+        """Recursively solves reduced polynomial systems."""
         if len(system) == len(gens) == 1:
             zeros = list(roots(system[0], gens[-1]).keys())
             return [(zero,) for zero in zeros]
@@ -242,18 +242,26 @@ def solve_generic(polys, opt):
         univariate = list(filter(_is_univariate, basis))
 
         if len(basis) < len(gens):
-            raise NotImplementedError(filldedent('''
+            raise NotImplementedError(
+                filldedent(
+                    '''
                 only zero-dimensional systems supported
                 (finite number of solutions)
-                '''))
+                '''
+                )
+            )
 
         if len(univariate) == 1:
             f = univariate.pop()
         else:
-            raise NotImplementedError(filldedent('''
+            raise NotImplementedError(
+                filldedent(
+                    '''
                 only zero-dimensional systems supported
                 (finite number of solutions)
-                '''))
+                '''
+                )
+            )
 
         gens = f.gens
         gen = gens[-1]
@@ -282,10 +290,14 @@ def solve_generic(polys, opt):
                 solutions.append(solution + (zero,))
 
         if solutions and len(solutions[0]) != len(gens):
-            raise NotImplementedError(filldedent('''
+            raise NotImplementedError(
+                filldedent(
+                    '''
                 only zero-dimensional systems supported
                 (finite number of solutions)
-                '''))
+                '''
+                )
+            )
         return solutions
 
     try:
