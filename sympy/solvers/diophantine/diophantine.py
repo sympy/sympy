@@ -1747,7 +1747,7 @@ def classify_diop(eq, _dict=True):
     )
 
 
-classify_diop.func_doc = """
+__DOC = """
     Helper routine used by diop_solve() to find information about ``eq``.
 
     Explanation
@@ -1785,9 +1785,10 @@ classify_diop.func_doc = """
     ([x, y, z], {1: 5, x: 1, y: 3, z: -4}, 'linear')
     >>> classify_diop(x**2 + y**2 - x*y + x + 5)
     ([x, y], {1: 5, x: 1, x**2: 1, y**2: 1, x*y: -1}, 'binary_quadratic')
-    """ % (  # type: ignore
-    "\n    * ".join(sorted(diop_known))
+    """ % "\n    * ".join(
+    sorted(diop_known)
 )
+classify_diop.func_doc = __DOC  # type: ignore[attr-defined]
 
 
 def diop_linear(eq, param=symbols("t", integer=True)):
