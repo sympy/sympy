@@ -88,13 +88,27 @@ def is_square(n, prep=True):
             return False
         if n in (0, 1):
             return True
-    m = n & 127
-    if not ((m*0x8bc40d7d) & (m*0xa1e2f5d1) & 0x14020a):
-        m = n % 63
-        if not ((m*0x3d491df7) & (m*0xc824a9f9) & 0x10f14008):
-            return integer_nthroot(n, 2)[1]
-    return False
-
+    # def magic(n):
+    #     s = {x**2 % n for x in range(n)}
+    #     return sum(1 << bit for bit in s)
+    # >>> print(hex(magic(128)))
+    # 0x2020212020202130202021202030213
+    # >>> print(hex(magic(99)))
+    # 0x209060049048220348a410213
+    # >>> print(hex(magic(91)))
+    # 0x102e403012a0c9862c14213
+    # >>> print(hex(magic(85)))
+    # 0x121065188e001c46298213
+    if not 0x2020212020202130202021202030213 & (1 << (n & 127)):
+        return False
+    m = n % (99 * 91 * 85)
+    if not 0x209060049048220348a410213 & (1 << (m % 99)):
+        return False
+    if not 0x102e403012a0c9862c14213 & (1 << (m % 91)):
+        return False
+    if not 0x121065188e001c46298213 & (1 << (m % 85)):
+        return False
+    return integer_nthroot(n, 2)[1]
 
 def _test(n, base, s, t):
     """Miller-Rabin strong pseudoprime test for one base.

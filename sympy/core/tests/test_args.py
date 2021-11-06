@@ -500,12 +500,6 @@ def test_sympy__combinatorics__graycode__GrayCode():
     assert _test_args(GrayCode(3, rank=1))
 
 
-def test_sympy__combinatorics__subsets__Subset():
-    from sympy.combinatorics.subsets import Subset
-    assert _test_args(Subset([0, 1], [0, 1, 2, 3]))
-    assert _test_args(Subset(['c', 'd'], ['a', 'b', 'c', 'd']))
-
-
 def test_sympy__combinatorics__permutations__Permutation():
     from sympy.combinatorics.permutations import Permutation
     assert _test_args(Permutation([0, 1, 2, 3]))
