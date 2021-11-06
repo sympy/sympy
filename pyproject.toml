@@ -1,0 +1,14 @@
+[tool.black]
+skip-string-normalization = true
+target-version = [
+    "py36",
+    "py37",
+    "py38",
+    "py39",
+]
+
+[tool.isort]
+profile = "black"
+src_paths = [
+    "sympy",
+]
