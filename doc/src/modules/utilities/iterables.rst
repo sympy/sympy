@@ -2,17 +2,6 @@
 Iterables
 =========
 
-cartes
-------
-
-Returns the cartesian product of sequences as a generator.
-
-Examples::
-    >>> from sympy.utilities.iterables import cartes
-    >>> list(cartes([1,2,3], 'ab'))
-    [(1, 'a'), (1, 'b'), (2, 'a'), (2, 'b'), (3, 'a'), (3, 'b')]
-
-
 
 variations
 ----------

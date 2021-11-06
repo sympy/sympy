@@ -1,8 +1,16 @@
-from sympy import (
-    Rational, gammasimp, factorial, gamma, binomial, pi, S,
-    sin, exp, Piecewise, powsimp, sqrt, simplify, symbols, cos, rf)
 
-from sympy.functions.combinatorial.factorials import multinomial
+from sympy.core.numbers import (Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.combinatorial.factorials import (rf, binomial, factorial, multinomial)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.gamma_functions import gamma
+from sympy.simplify.gammasimp import gammasimp
+from sympy.simplify.powsimp import powsimp
+from sympy.simplify.simplify import simplify
 
 from sympy.abc import x, y
 

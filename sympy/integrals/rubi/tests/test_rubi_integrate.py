@@ -13,8 +13,15 @@ if sys.version_info[:2] < (3, 6):
 
 from sympy.core.symbol import symbols, Symbol
 from sympy.functions import log
-from sympy import (sqrt, simplify, S, atanh, hyper, I, atan, pi, Sum, cos, sin,
-    log, atan)
+from sympy.concrete.summations import Sum
+from sympy.core.numbers import (I, pi)
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.hyperbolic import atanh
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (atan, cos, sin)
+from sympy.functions.special.hyper import hyper
+from sympy.simplify.simplify import simplify
 from sympy.integrals.rubi.utility_function import rubi_test
 from sympy.testing.pytest import SKIP
 

@@ -1,11 +1,17 @@
 from sympy.external import import_module
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.core import Integer, Float
-from sympy import Pow, Add, Integral, Mul, S, Function, E
+from sympy.core.add import Add
+from sympy.core.function import Function
+from sympy.core.mul import Mul
+from sympy.core.numbers import E
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.integrals.integrals import Integral
 from sympy.functions import exp as sym_exp
 import inspect
 import re
-from sympy import powsimp
+from sympy.simplify.powsimp import powsimp
 matchpy = import_module("matchpy")
 
 if matchpy:
@@ -193,7 +199,7 @@ def rubi_integrate(expr, var, showsteps=False):
     expr = expr.replace(sym_exp, rubi_exp)
     expr = process_trig(expr)
     expr = rubi_powsimp(expr)
-    if isinstance(expr, (int, Integer)) or isinstance(expr, (float, Float)):
+    if isinstance(expr, (int, Integer, float, Float)):
         return S(expr)*var
     if isinstance(expr, Add):
         results = 0

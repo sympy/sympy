@@ -1,6 +1,14 @@
-from sympy import (Symbol, Rational, Order, exp, ln, log, nan, oo, O, pi, I,
-    S, Integral, sin, cos, sqrt, conjugate, expand, transpose, symbols,
-    Function, Add)
+from sympy.core.add import Add
+from sympy.core.function import (Function, expand)
+from sympy.core.numbers import (I, Rational, nan, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (conjugate, transpose)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.integrals.integrals import Integral
+from sympy.series.order import O, Order
 from sympy.core.expr import unchanged
 from sympy.testing.pytest import raises
 from sympy.abc import w, x, y, z
@@ -45,7 +53,7 @@ def test_simple_2():
     assert Order(2*x)*x == Order(x**2)
     assert Order(2*x)/x == Order(1, x)
     assert Order(2*x)*x*exp(1/x) == Order(x**2*exp(1/x))
-    assert (Order(2*x)*x*exp(1/x)/ln(x)**3).expr == x**2*exp(1/x)*ln(x)**-3
+    assert (Order(2*x)*x*exp(1/x)/log(x)**3).expr == x**2*exp(1/x)*log(x)**-3
 
 
 def test_simple_3():
@@ -149,7 +157,7 @@ def test_add_1():
     assert Order(3*x - 2*x**2) == Order(x)
     assert Order(1 + x) == Order(1, x)
     assert Order(1 + 1/x) == Order(1/x)
-    assert Order(ln(x) + 1/ln(x)) == Order(ln(x))
+    assert Order(log(x) + 1/log(x)) == Order(log(x))
     assert Order(exp(1/x) + x) == Order(exp(1/x))
     assert Order(exp(1/x) + 1/x**20) == Order(exp(1/x))
 
@@ -277,7 +285,7 @@ def test_getO():
 
 
 def test_leading_term():
-    from sympy import digamma
+    from sympy.functions.special.gamma_functions import digamma
     assert O(1/digamma(1/x)) == O(1/log(x))
 
 
@@ -349,7 +357,7 @@ def test_order_at_infinity():
     assert Order(2*x, (x, oo))*x == Order(x**2, (x, oo))
     assert Order(2*x, (x, oo))/x == Order(1, (x, oo))
     assert Order(2*x, (x, oo))*x*exp(1/x) == Order(x**2*exp(1/x), (x, oo))
-    assert Order(2*x, (x, oo))*x*exp(1/x)/ln(x)**3 == Order(x**2*exp(1/x)*ln(x)**-3, (x, oo))
+    assert Order(2*x, (x, oo))*x*exp(1/x)/log(x)**3 == Order(x**2*exp(1/x)*log(x)**-3, (x, oo))
 
     assert Order(x, (x, oo)) + 1/x == 1/x + Order(x, (x, oo)) == Order(x, (x, oo))
     assert Order(x, (x, oo)) + 1 == 1 + Order(x, (x, oo)) == Order(x, (x, oo))
@@ -446,3 +454,11 @@ def test_issue_15539():
 
 def test_issue_18606():
     assert unchanged(Order, 0)
+
+
+def test_issue_22165():
+    assert O(log(x)).contains(2)
+
+
+def test_issue_9917():
+    assert O(x*sin(x) + 1, (x, oo)) == O(x, (x, oo))

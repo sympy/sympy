@@ -6,7 +6,7 @@ from sympy.physics.vector.printing import (vprint, vsprint, vpprint, vlatex,
                                            init_vprinting)
 from sympy.physics.mechanics.particle import Particle
 from sympy.physics.mechanics.rigidbody import RigidBody
-from sympy import simplify
+from sympy.simplify.simplify import simplify
 from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
                                 tan, AppliedUndef, S)
 
@@ -519,7 +519,7 @@ def find_dynamicsymbols(expression, exclude=None, reference_frame=None):
     Parameters
     ==========
 
-    expression : sympy expression
+    expression : SymPy expression
 
     exclude : iterable of dynamicsymbols, optional
 

@@ -58,7 +58,7 @@ Recall that the determinant of sylvester1(f, g, x) itself is
 called the resultant of f, g and serves as a criterion of whether
 the two polynomials have common roots or not.
 
-In sympy the resultant is computed with the function
+In SymPy the resultant is computed with the function
 resultant(f, g, x). This function does _not_ evaluate the
 determinant of sylvester(f, g, x, 1); instead, it returns
 the last member of the subresultant prs of f, g, multiplied
@@ -131,7 +131,7 @@ subresultant and modified subresultant prs respectively.
 
 2. Functions in the module:
 ===========================
-No function utilizes sympy's function prem().
+No function utilizes SymPy's function prem().
 
 2A. Matrices:
 =============
@@ -243,15 +243,25 @@ res_z(f, g, x)
 """
 
 
-
-from sympy import (Abs, degree, expand, eye, floor, LC, Matrix, nan, Poly, pprint)
-from sympy import (QQ, pquo, quo, prem, rem, S, sign, simplify, summation, var, zeros)
+from sympy.concrete.summations import summation
+from sympy.core.function import expand
+from sympy.core.numbers import nan
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy as var
+from sympy.functions.elementary.complexes import Abs, sign
+from sympy.functions.elementary.integers import floor
+from sympy.matrices.dense import eye, Matrix, zeros
+from sympy.printing.pretty.pretty import pretty_print as pprint
+from sympy.simplify.simplify import simplify
+from sympy.polys.domains import QQ
+from sympy.polys.polytools import degree, LC, Poly, pquo, quo, prem, rem
 from sympy.polys.polyerrors import PolynomialError
+
 
 def sylvester(f, g, x, method = 1):
     '''
       The input polynomials f, g are in Z[x] or in Q[x]. Let m = degree(f, x),
-      n = degree(g, x) and mx = max( m , n ).
+      n = degree(g, x) and mx = max(m, n).
 
       a. If method = 1 (default), computes sylvester1, Sylvester's matrix of 1840
           of dimension (m + n) x (m + n). The determinants of properly chosen
@@ -440,7 +450,7 @@ def subresultants_sylv(f, g, x):
         # evaluate determinants and form coefficients list
         coeff_L, k, l = [], Sp.rows, 0
         while l <= j:
-            coeff_L.append(Sp[ : , 0 : k].det())
+            coeff_L.append(Sp[:, 0:k].det())
             Sp.col_swap(k - 1, k + l)
             l += 1
 
@@ -508,7 +518,7 @@ def modified_subresultants_sylv(f, g, x):
         # evaluate determinants and form coefficients list
         coeff_L, k, l = [], Sp.rows, 0
         while l <= j:
-            coeff_L.append(Sp[ : , 0 : k].det())
+            coeff_L.append(Sp[:, 0:k].det())
             Sp.col_swap(k - 1, k + l)
             l += 1
 
@@ -610,7 +620,7 @@ def sign_seq(poly_seq, x):
 def bezout(p, q, x, method='bz'):
     """
     The input polynomials p, q are in Z[x] or in Q[x]. Let
-    mx = max( degree(p, x) , degree(q, x) ).
+    mx = max(degree(p, x), degree(q, x)).
 
     The default option bezout(p, q, x, method='bz') returns Bezout's
     symmetric matrix of p and q, of dimensions (mx) x (mx). The
@@ -764,7 +774,7 @@ def subresultants_bezout(p, q, x):
         M = B[0:j, :]
         k, coeff_L = j - 1, []
         while k <= degF - 1:
-            coeff_L.append(M[: ,0 : j].det())
+            coeff_L.append(M[:, 0:j].det())
             if k < degF - 1:
                 M.col_swap(j - 1, k + 1)
             k = k + 1
@@ -839,7 +849,7 @@ def modified_subresultants_bezout(p, q, x):
         M = B[0:j, :]
         k, coeff_L = j - 1, []
         while k <= degF - 1:
-            coeff_L.append(M[: ,0 : j].det())
+            coeff_L.append(M[:, 0:j].det())
             if k < degF - 1:
                 M.col_swap(j - 1, k + 1)
             k = k + 1
@@ -1495,7 +1505,7 @@ def modified_subresultants_pg(p, q, x):
         subres_l.append(- simplify(rho_1**degdif*a2* Abs(mul_fac_old) ) )
 
     # update Pell-Gordon variables
-    k =  var('k')
+    k = var('k')
     rho_list.append( sign(rho2))
     u =  summation(k, (k, 1, p_list[len(p_list) - 1]))
     u_list.append(u)
@@ -1554,7 +1564,7 @@ def modified_subresultants_pg(p, q, x):
             subres_l.append(- simplify(rho_1**degdif*a2* Abs(mul_fac_old) ) )
 
         # update Pell-Gordon variables
-        k =  var('k')
+        k = var('k')
         rho_list.append( sign(rho2))
         u =  summation(k, (k, 1, p_list[len(p_list) - 1]))
         u_list.append(u)

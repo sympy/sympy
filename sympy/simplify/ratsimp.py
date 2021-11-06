@@ -58,7 +58,7 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
         Ideal, http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.163.6984
         (specifically, the second algorithm)
     """
-    from sympy import solve
+    from sympy.solvers.solvers import solve
 
     debug('ratsimpmodprime', expr)
 
@@ -77,7 +77,7 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
         opt.domain = domain.get_field()
     else:
         raise DomainError(
-            "can't compute rational simplification over %s" % domain)
+            "Cannot compute rational simplification over %s" % domain)
 
     # compute only once
     leading_monomials = [g.LM(opt.order) for g in polys[2:]]

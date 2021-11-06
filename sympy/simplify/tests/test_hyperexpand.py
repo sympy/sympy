@@ -9,13 +9,27 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        hyperexpand, Hyper_Function, G_Function,
                        reduce_order_meijer,
                        build_hypergeometric_formula)
-from sympy import hyper, I, S, meijerg, Piecewise, Tuple, Sum, binomial, Expr
+from sympy.concrete.summations import Sum
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.numbers import I
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.combinatorial.factorials import binomial
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.hyper import (hyper, meijerg)
 from sympy.abc import z, a, b, c
 from sympy.testing.pytest import XFAIL, raises, slow, ON_TRAVIS, skip
 from sympy.testing.randtest import verify_numerically as tn
 
-from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
-                   gamma, sqrt, pi, erf, exp_polar, Rational)
+from sympy.core.numbers import (Rational, pi)
+from sympy.functions.elementary.exponential import (exp, exp_polar, log)
+from sympy.functions.elementary.hyperbolic import atanh
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (asin, cos, sin)
+from sympy.functions.special.bessel import besseli
+from sympy.functions.special.error_functions import erf
+from sympy.functions.special.gamma_functions import (gamma, lowergamma)
 
 
 def test_branch_bug():
@@ -41,7 +55,6 @@ def test_hyperexpand():
 
 
 def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
-    from sympy import exp_polar, exp
     r = hyperexpand(hyper(ap, bq, z))
     if r.has(hyper):
         return False
@@ -88,7 +101,7 @@ def test_roach_fail():
 
 
 def test_polynomial():
-    from sympy import oo
+    from sympy.core.numbers import oo
     assert hyperexpand(hyper([], [-1], z)) is oo
     assert hyperexpand(hyper([-2], [-1], z)) is oo
     assert hyperexpand(hyper([0, 0], [-1], z)) == 1
@@ -130,7 +143,7 @@ def test_hyperexpand_parametric():
 
 
 def test_shifted_sum():
-    from sympy import simplify
+    from sympy.simplify.simplify import simplify
     assert simplify(hyperexpand(z**4*hyper([2], [3, S('3/2')], -z**2))) \
         == z*sin(2*z) + (-z**2 + S.Half)*cos(2*z) - S.Half
 
@@ -323,7 +336,8 @@ def can_do_meijer(a1, a2, b1, b2, numeric=True):
     (at random values) and returns False if the test fails.
     Else it returns True.
     """
-    from sympy import unpolarify, expand
+    from sympy.core.function import expand
+    from sympy.functions.elementary.complexes import unpolarify
     r = hyperexpand(meijerg(a1, a2, b1, b2, z))
     if r.has(meijerg):
         return False
@@ -346,7 +360,8 @@ def can_do_meijer(a1, a2, b1, b2, numeric=True):
 
 @slow
 def test_meijerg_expand():
-    from sympy import gammasimp, simplify
+    from sympy.simplify.gammasimp import gammasimp
+    from sympy.simplify.simplify import simplify
     # from mpmath docs
     assert hyperexpand(meijerg([[], []], [[0], []], -z)) == exp(z)
 
@@ -411,7 +426,8 @@ def test_meijerg_expand():
 
 
 def test_meijerg_lookup():
-    from sympy import uppergamma, Si, Ci
+    from sympy.functions.special.error_functions import (Ci, Si)
+    from sympy.functions.special.gamma_functions import uppergamma
     assert hyperexpand(meijerg([a], [], [b, a], [], z)) == \
         z**b*exp(z)*gamma(-a + b + 1)*uppergamma(a - b, z)
     assert hyperexpand(meijerg([0], [], [0, 0], [], z)) == \
@@ -516,7 +532,7 @@ def test_meijerg_shift_operators():
 @slow
 def test_meijerg_confluence():
     def t(m, a, b):
-        from sympy import sympify, Piecewise
+        from sympy.core.sympify import sympify
         a, b = sympify([a, b])
         m_ = m
         m = hyperexpand(m)
@@ -556,7 +572,7 @@ def test_meijerg_confluence():
 
 def test_meijerg_with_Floats():
     # see issue #10681
-    from sympy import RR
+    from sympy.polys.domains.realfield import RR
     f = meijerg(((3.0, 1), ()), ((Rational(3, 2),), (0,)), z)
     a = -2.3632718012073
     g = a*z**Rational(3, 2)*hyper((-0.5, Rational(3, 2)), (Rational(5, 2),), z*exp_polar(I*pi))
@@ -564,7 +580,8 @@ def test_meijerg_with_Floats():
 
 
 def test_lerchphi():
-    from sympy import gammasimp, exp_polar, polylog, log, lerchphi
+    from sympy.functions.special.zeta_functions import (lerchphi, polylog)
+    from sympy.simplify.gammasimp import gammasimp
     assert hyperexpand(hyper([1, a], [a + 1], z)/a) == lerchphi(z, 1, a)
     assert hyperexpand(
         hyper([1, a, a], [a + 1, a + 1], z)/a**2) == lerchphi(z, 2, a)
@@ -602,7 +619,7 @@ def test_lerchphi():
         [1, a, a, a, b + 5], [a + 1, a + 1, a + 1, b], numerical=False)
 
     # test a bug
-    from sympy import Abs
+    from sympy.functions.elementary.complexes import Abs
     assert hyperexpand(hyper([S.Half, S.Half, S.Half, 1],
                              [Rational(3, 2), Rational(3, 2), Rational(3, 2)], Rational(1, 4))) == \
         Abs(-polylog(3, exp_polar(I*pi)/2) + polylog(3, S.Half))
@@ -622,7 +639,7 @@ def test_partial_simp():
             assert tn(func1, func2, z)
 
     # Now test that formulae are partially simplified.
-    from sympy.abc import a, b, z
+    a, b, z = symbols('a b z')
     assert hyperexpand(hyper([3, a], [1, b], z)) == \
         (-a*b/2 + a*z/2 + 2*a)*hyper([a + 1], [b], z) \
         + (a*b/2 - 2*a + 1)*hyper([a], [b], z)
@@ -651,7 +668,8 @@ def test_hyperexpand_special():
 
 
 def test_Mod1_behavior():
-    from sympy import Symbol, simplify, lowergamma
+    from sympy.core.symbol import Symbol
+    from sympy.simplify.simplify import simplify
     n = Symbol('n', integer=True)
     # Note: this should not hang.
     assert simplify(hyperexpand(meijerg([1], [], [n + 1], [0], z))) == \

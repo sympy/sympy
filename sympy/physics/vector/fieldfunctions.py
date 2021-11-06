@@ -1,4 +1,6 @@
-from sympy import diff, integrate, S
+from sympy.core.function import diff
+from sympy.core.singleton import S
+from sympy.integrals.integrals import integrate
 from sympy.physics.vector import Vector, express
 from sympy.physics.vector.frame import _check_frame
 from sympy.physics.vector.vector import _check_vector

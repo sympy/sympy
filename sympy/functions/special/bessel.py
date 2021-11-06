@@ -1,9 +1,15 @@
 from functools import wraps
 
-from sympy import Add, S, pi, I, Rational, Wild, cacheit, sympify
+from sympy.core import S
+from sympy.core.add import Add
+from sympy.core.cache import cacheit
+from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, _mexpand
 from sympy.core.logic import fuzzy_or, fuzzy_not
+from sympy.core.numbers import Rational, pi, I
 from sympy.core.power import Pow
+from sympy.core.symbol import Dummy, Wild
+from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.integers import ceiling
@@ -11,9 +17,11 @@ from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.complexes import re, im
-from sympy.functions.special.gamma_functions import gamma, digamma
+from sympy.functions.special.gamma_functions import gamma, digamma, uppergamma
 from sympy.functions.special.hyper import hyper
-from sympy.polys.orthopolys import spherical_bessel_fn as fn
+from sympy.polys.orthopolys import spherical_bessel_fn
+
+from mpmath import mp, workprec
 
 # TODO
 # o Scorer functions G1 and G2
@@ -179,7 +187,7 @@ class besselj(BesselBase):
                 return S.ComplexInfinity
             elif nu.is_imaginary:
                 return S.NaN
-        if z is S.Infinity or (z is S.NegativeInfinity):
+        if z in (S.Infinity, S.NegativeInfinity):
             return S.Zero
 
         if z.could_extract_minus_sign():
@@ -192,7 +200,7 @@ class besselj(BesselBase):
                 return I**(nu)*besseli(nu, newz)
 
         # branch handling:
-        from sympy import unpolarify
+        from sympy.functions.elementary.complexes import unpolarify
         if nu.is_integer:
             newz = unpolarify(z)
             if newz != z:
@@ -206,7 +214,7 @@ class besselj(BesselBase):
             return besselj(nnu, z)
 
     def _eval_rewrite_as_besseli(self, nu, z, **kwargs):
-        from sympy import polar_lift
+        from sympy.functions.elementary.complexes import polar_lift
         return exp(I*pi*nu/2)*besseli(nu, polar_lift(-I)*z)
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
@@ -312,7 +320,7 @@ class bessely(BesselBase):
                 return S.ComplexInfinity
             elif re(nu).is_zero:
                 return S.NaN
-        if z is S.Infinity or z is S.NegativeInfinity:
+        if z in (S.Infinity, S.NegativeInfinity):
             return S.Zero
 
         if nu.is_integer:
@@ -445,7 +453,7 @@ class besseli(BesselBase):
                 return S.ComplexInfinity
             elif nu.is_imaginary:
                 return S.NaN
-        if im(z) is S.Infinity or im(z) is S.NegativeInfinity:
+        if im(z) in (S.Infinity, S.NegativeInfinity):
             return S.Zero
 
         if z.could_extract_minus_sign():
@@ -458,7 +466,7 @@ class besseli(BesselBase):
                 return I**(-nu)*besselj(nu, -newz)
 
         # branch handling:
-        from sympy import unpolarify
+        from sympy.functions.elementary.complexes import unpolarify
         if nu.is_integer:
             newz = unpolarify(z)
             if newz != z:
@@ -472,7 +480,7 @@ class besseli(BesselBase):
             return besseli(nnu, z)
 
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
-        from sympy import polar_lift
+        from sympy.functions.elementary.complexes import polar_lift
         return exp(-I*pi*nu/2)*besselj(nu, polar_lift(I)*z)
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
@@ -701,12 +709,14 @@ class SphericalBesselBase(BesselBase):
 
 
 def _jn(n, z):
-    return fn(n, z)*sin(z) + (-1)**(n + 1)*fn(-n - 1, z)*cos(z)
+    return (spherical_bessel_fn(n, z)*sin(z) +
+            (S.NegativeOne)**(n + 1)*spherical_bessel_fn(-n - 1, z)*cos(z))
 
 
 def _yn(n, z):
     # (-1)**(n + 1) * _jn(-n - 1, z)
-    return (-1)**(n + 1) * fn(-n - 1, z)*sin(z) - fn(n, z)*cos(z)
+    return ((S.NegativeOne)**(n + 1) * spherical_bessel_fn(-n - 1, z)*sin(z) -
+            spherical_bessel_fn(n, z)*cos(z))
 
 
 class jn(SphericalBesselBase):
@@ -1077,12 +1087,11 @@ def jn_zeros(n, k, method="sympy", dps=15):
 
 
     """
-    from math import pi
+    from math import pi as math_pi
 
     if method == "sympy":
         from mpmath import besseljzero
         from mpmath.libmp.libmpf import dps_to_prec
-        from sympy import Expr
         prec = dps_to_prec(dps)
         return [Expr._from_mpmath(besseljzero(S(n + 0.5)._to_mpmath(prec),
                                               int(l)), prec)
@@ -1106,13 +1115,13 @@ def jn_zeros(n, k, method="sympy", dps=15):
         return root
 
     # we need to approximate the position of the first root:
-    root = n + pi
+    root = n + math_pi
     # determine the first root exactly:
     root = solver(f, root)
     roots = [root]
     for i in range(k - 1):
         # estimate the position of the next root using the last root + pi:
-        root = solver(f, root + pi)
+        root = solver(f, root + math_pi)
         roots.append(root)
     return roots
 
@@ -1596,8 +1605,6 @@ class airyaiprime(AiryBase):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from mpmath import mp, workprec
-        from sympy import Expr
         z = self.args[0]._to_mpmath(prec)
         with workprec(prec):
             res = mp.airyai(z, derivative=1)
@@ -1762,8 +1769,6 @@ class airybiprime(AiryBase):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from mpmath import mp, workprec
-        from sympy import Expr
         z = self.args[0]._to_mpmath(prec)
         with workprec(prec):
             res = mp.airybi(z, derivative=1)
@@ -1869,7 +1874,6 @@ class marcumq(Function):
 
     @classmethod
     def eval(cls, m, a, b):
-        from sympy import exp, uppergamma
         if a is S.Zero:
             if m is S.Zero and b is S.Zero:
                 return S.Zero
@@ -1893,7 +1897,6 @@ class marcumq(Function):
             return 1 - 1 / exp(a**2*S.Half)
 
     def fdiff(self, argindex=2):
-        from sympy import exp
         m, a, b = self.args
         if argindex == 2:
             return a * (-marcumq(m, a, b) + marcumq(1+m, a, b))
@@ -1903,19 +1906,18 @@ class marcumq(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Integral(self, m, a, b, **kwargs):
-        from sympy import Integral, exp, Dummy, oo
+        from sympy.integrals.integrals import Integral
         x = kwargs.get('x', Dummy('x'))
         return a ** (1 - m) * \
-               Integral(x**m * exp(-(x**2 + a**2)/2) * besseli(m-1, a*x), [x, b, oo])
+               Integral(x**m * exp(-(x**2 + a**2)/2) * besseli(m-1, a*x), [x, b, S.Infinity])
 
     def _eval_rewrite_as_Sum(self, m, a, b, **kwargs):
-        from sympy import Sum, exp, Dummy, oo
+        from sympy.concrete.summations import Sum
         k = kwargs.get('k', Dummy('k'))
-        return exp(-(a**2 + b**2) / 2) * Sum((a/b)**k * besseli(k, a*b), [k, 1-m, oo])
+        return exp(-(a**2 + b**2) / 2) * Sum((a/b)**k * besseli(k, a*b), [k, 1-m, S.Infinity])
 
     def _eval_rewrite_as_besseli(self, m, a, b, **kwargs):
         if a == b:
-            from sympy import exp
             if m == 1:
                 return (1 + exp(-a**2) * besseli(0, a**2)) / 2
             if m.is_Integer and m >= 2:

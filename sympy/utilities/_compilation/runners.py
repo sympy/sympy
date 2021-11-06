@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Optional, Tuple, Union
+from typing import Callable, Dict as tDict, Optional, Tuple as tTuple, Union as tUnion
 
 from collections import OrderedDict
 from distutils.errors import CompileError
@@ -51,17 +51,17 @@ class CompilerRunner:
     """
 
     # Subclass to vendor/binary dict
-    compiler_dict = None  # type: Dict[str, str]
+    compiler_dict = None  # type: tDict[str, str]
 
     # Standards should be a tuple of supported standards
     # (first one will be the default)
-    standards = None  # type: Tuple[Union[None, str], ...]
+    standards = None  # type: tTuple[tUnion[None, str], ...]
 
     # Subclass to dict of binary/formater-callback
-    std_formater = None  # type: Dict[str, Callable[[Optional[str]], str]]
+    std_formater = None  # type: tDict[str, Callable[[Optional[str]], str]]
 
     # subclass to be e.g. {'gcc': 'gnu', ...}
-    compiler_name_vendor_mapping = None  # type: Dict[str, str]
+    compiler_name_vendor_mapping = None  # type: tDict[str, str]
 
     def __init__(self, sources, out, flags=None, run_linker=True, compiler=None, cwd='.',
                  include_dirs=None, libraries=None, library_dirs=None, std=None, define=None,

@@ -1,14 +1,20 @@
-from sympy import (
-    symbols, expand, expand_func, nan, oo, Float, conjugate, diff,
-    re, im, O, exp_polar, polar_lift, gruntz, limit,
-    Symbol, I, integrate, Integral, S,
-    sqrt, sin, cos, sinc, sinh, cosh, exp, log, pi, EulerGamma,
-    erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv,
-    gamma, uppergamma,
-    Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
-    fresnels, fresnelc,
-    hyper, meijerg, E, Rational)
-
+from sympy.core.function import (diff, expand, expand_func)
+from sympy.core import EulerGamma
+from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (conjugate, im, polar_lift, re)
+from sympy.functions.elementary.exponential import (exp, exp_polar, log)
+from sympy.functions.elementary.hyperbolic import (cosh, sinh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin, sinc)
+from sympy.functions.special.error_functions import (Chi, Ci, E1, Ei, Li, Shi, Si, erf, erf2, erf2inv, erfc, erfcinv, erfi, erfinv, expint, fresnelc, fresnels, li)
+from sympy.functions.special.gamma_functions import (gamma, uppergamma)
+from sympy.functions.special.hyper import (hyper, meijerg)
+from sympy.integrals.integrals import (Integral, integrate)
+from sympy.series.gruntz import gruntz
+from sympy.series.limits import limit
+from sympy.series.order import O
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.special.error_functions import _erfs, _eis
@@ -25,7 +31,7 @@ def test_erf():
     assert erf(oo) == 1
     assert erf(-oo) == -1
 
-    assert erf(0) == 0
+    assert erf(0) is S.Zero
 
     assert erf(I*oo) == oo*I
     assert erf(-I*oo) == -oo*I
@@ -41,7 +47,8 @@ def test_erf():
     assert erf(erf2inv(0, erf(erfcinv(1 - erf(erfinv(x)))))) == x
 
     assert erf(I).is_real is False
-    assert erf(0).is_real is True
+    assert erf(0, evaluate=False).is_real
+    assert erf(0, evaluate=False).is_zero
 
     assert conjugate(erf(z)) == erf(conjugate(z))
 
@@ -118,7 +125,7 @@ def test__erfs():
 def test_erfc():
     assert erfc(nan) is nan
 
-    assert erfc(oo) == 0
+    assert erfc(oo) is S.Zero
     assert erfc(-oo) == 2
 
     assert erfc(0) == 1
@@ -130,7 +137,8 @@ def test_erfc():
     assert erfc(erfcinv(x)) == x
 
     assert erfc(I).is_real is False
-    assert erfc(0).is_real is True
+    assert erfc(0, evaluate=False).is_real
+    assert erfc(0, evaluate=False).is_zero is False
 
     assert erfc(erfinv(x)) == 1 - x
 
@@ -198,7 +206,8 @@ def test_erfi():
     assert erfi(I*erf2inv(0, x, evaluate=False)) == I*x # To cover code in erfi
 
     assert erfi(I).is_real is False
-    assert erfi(0).is_real is True
+    assert erfi(0, evaluate=False).is_real
+    assert erfi(0, evaluate=False).is_zero
 
     assert conjugate(erfi(z)) == erfi(conjugate(z))
 
@@ -269,7 +278,10 @@ def test_erf2():
     assert erf2(x, y).rewrite('expint') == erf(y).rewrite(expint)-erf(x).rewrite(expint)
 
     assert erf2(I, 0).is_real is False
-    assert erf2(0, 0).is_real is True
+    assert erf2(0, 0, evaluate=False).is_real
+    assert erf2(0, 0, evaluate=False).is_zero
+    assert erf2(x, x, evaluate=False).is_zero
+    assert erf2(x, y).is_zero is None
 
     assert expand_func(erf(x) + erf2(x, y)) == erf(y)
 
@@ -291,7 +303,7 @@ def test_erf2():
 
 
 def test_erfinv():
-    assert erfinv(0) == 0
+    assert erfinv(0) is S.Zero
     assert erfinv(1) is S.Infinity
     assert erfinv(nan) is S.NaN
     assert erfinv(-1) is S.NegativeInfinity
@@ -311,7 +323,7 @@ def test_erfinv_evalf():
 
 
 def test_erfcinv():
-    assert erfcinv(1) == 0
+    assert erfcinv(1) is S.Zero
     assert erfcinv(0) is S.Infinity
     assert erfcinv(nan) is S.NaN
 
@@ -513,7 +525,7 @@ def test_li():
     zp = Symbol("z", positive=True)
     zn = Symbol("z", negative=True)
 
-    assert li(0) == 0
+    assert li(0) is S.Zero
     assert li(1) is -oo
     assert li(oo) is oo
 
@@ -545,21 +557,21 @@ def test_li():
     assert li(z).rewrite(meijerg) == (-log(1/log(z))/2 - log(-log(z)) + log(log(z))/2 -
                                       meijerg(((), (1,)), ((0, 0), ()), -log(z)))
 
-    assert gruntz(1/li(z), z, oo) == 0
+    assert gruntz(1/li(z), z, oo) is S.Zero
     assert li(z).series(z) == log(z)**5/600 + log(z)**4/96 + log(z)**3/18 + log(z)**2/4 + \
             log(z) + log(log(z)) + EulerGamma
     raises(ArgumentIndexError, lambda: li(z).fdiff(2))
 
 
 def test_Li():
-    assert Li(2) == 0
+    assert Li(2) is S.Zero
     assert Li(oo) is oo
 
     assert isinstance(Li(z), Li)
 
     assert diff(Li(z), z) == 1/log(z)
 
-    assert gruntz(1/Li(z), z, oo) == 0
+    assert gruntz(1/Li(z), z, oo) is S.Zero
     assert Li(z).rewrite(li) == li(z) - li(2)
     assert Li(z).series(z) == \
         log(z)**5/600 + log(z)**4/96 + log(z)**3/18 + log(z)**2/4 + log(z) + log(log(z)) - li(2) + EulerGamma
@@ -637,7 +649,7 @@ def test_ci():
     assert Chi(exp_polar(2*I*pi)*x) == Chi(x) + 2*I*pi
     assert Ci(exp_polar(-2*I*pi)*x) == Ci(x) - 2*I*pi
 
-    assert Ci(oo) == 0
+    assert Ci(oo) is S.Zero
     assert Ci(-oo) == I*pi
     assert Chi(oo) is oo
     assert Chi(-oo) is oo
@@ -670,8 +682,8 @@ def test_ci():
 
 
 def test_fresnel():
-    assert fresnels(0) == 0
-    assert fresnels(oo) == S.Half
+    assert fresnels(0) is S.Zero
+    assert fresnels(oo) is S.Half
     assert fresnels(-oo) == Rational(-1, 2)
     assert fresnels(I*oo) == -I*S.Half
 
@@ -722,7 +734,7 @@ def test_fresnel():
         meijerg(((), (1,)), ((Rational(3, 4),),
         (Rational(1, 4), 0)), -pi**2*z**4/16)/(2*(-z)**Rational(3, 4)*(z**2)**Rational(3, 4))
 
-    assert fresnelc(0) == 0
+    assert fresnelc(0) is S.Zero
     assert fresnelc(oo) == S.Half
     assert fresnelc(-oo) == Rational(-1, 2)
     assert fresnelc(I*oo) == I*S.Half

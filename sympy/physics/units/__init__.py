@@ -10,7 +10,7 @@ to which we added a scale.
 Quantities are built from a factor and a unit, and are the basic objects that
 one will use when doing computations.
 
-All objects except systems and prefixes can be used in sympy expressions.
+All objects except systems and prefixes can be used in SymPy expressions.
 Note that as part of a CAS, various objects do not combine automatically
 under operations.
 

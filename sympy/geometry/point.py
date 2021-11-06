@@ -20,20 +20,23 @@ False
 import warnings
 
 from sympy.core import S, sympify, Expr
-from sympy.core.compatibility import is_sequence
+from sympy.core.add import Add
 from sympy.core.containers import Tuple
+from sympy.core.numbers import Float
+from sympy.core.parameters import global_parameters
 from sympy.simplify import nsimplify, simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import im
+from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.matrices import Matrix
-from sympy.core.numbers import Float
-from sympy.core.parameters import global_parameters
-from sympy.core.add import Add
-from sympy.utilities.iterables import uniq
+from sympy.matrices.expressions import Transpose
+from sympy.utilities.iterables import uniq, is_sequence
 from sympy.utilities.misc import filldedent, func_name, Undecidable
 
 from .entity import GeometryEntity
+
+from mpmath.libmp.libmpf import prec_to_dps
 
 
 class Point(GeometryEntity):
@@ -446,7 +449,7 @@ class Point(GeometryEntity):
             return False
         return all(a.equals(b) for a, b in zip(self, other))
 
-    def evalf(self, prec=None, **options):
+    def _eval_evalf(self, prec=15, **options):
         """Evaluate the coordinates of the point.
 
         This method will, where possible, create and return a new Point
@@ -474,7 +477,8 @@ class Point(GeometryEntity):
         Point2D(0.5, 1.5)
 
         """
-        coords = [x.evalf(prec, **options) for x in self.args]
+        dps = prec_to_dps(prec)
+        coords = [x.evalf(n=dps, **options) for x in self.args]
         return Point(*coords, evaluate=False)
 
     def intersection(self, other):
@@ -632,7 +636,7 @@ class Point(GeometryEntity):
             rv = (x1*y2 - x2*y1).equals(0)
             if rv is None:
                 raise Undecidable(filldedent(
-                    '''can't determine if %s is a scalar multiple of
+                    '''Cannot determine if %s is a scalar multiple of
                     %s''' % (s, o)))
 
         # if the vectors p1 and p2 are linearly dependent, then they must
@@ -852,7 +856,6 @@ class Point(GeometryEntity):
         and a distance of 1 from the origin"""
         return self / abs(self)
 
-    n = evalf
 
 class Point2D(Point):
     """A point in a 2-dimensional Euclidean space.
@@ -943,8 +946,6 @@ class Point2D(Point):
         Point2D(2, -1)
 
         """
-        from sympy import cos, sin, Point
-
         c = cos(angle)
         s = sin(angle)
 
@@ -1287,7 +1288,6 @@ class Point3D(Point):
         """
         if not (matrix.is_Matrix and matrix.shape == (4, 4)):
             raise ValueError("matrix must be a 4x4 matrix")
-        from sympy.matrices.expressions import Transpose
         x, y, z = self.args
         m = Transpose(matrix)
         return Point3D(*(Matrix(1, 4, [x, y, z, 1])*m).tolist()[0][:3])

@@ -1,4 +1,5 @@
-from sympy import Basic, Expr
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 
 from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
@@ -20,7 +21,7 @@ class RoundFunction(Function):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import im
+        from sympy.functions.elementary.complexes import im
         v = cls._eval_number(arg)
         if v is not None:
             return v
@@ -449,10 +450,11 @@ class frac(Function):
     """
     @classmethod
     def eval(cls, arg):
-        from sympy import AccumBounds, im
+        from sympy.calculus.util import AccumBounds
+        from sympy.functions.elementary.complexes import im
 
         def _eval(arg):
-            if arg is S.Infinity or arg is S.NegativeInfinity:
+            if arg in (S.Infinity, S.NegativeInfinity):
                 return AccumBounds(0, 1)
             if arg.is_integer:
                 return S.Zero

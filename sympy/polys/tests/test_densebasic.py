@@ -43,7 +43,7 @@ from sympy.polys.rings import ring
 from sympy.core.singleton import S
 from sympy.testing.pytest import raises
 
-from sympy import oo
+from sympy.core.numbers import oo
 
 f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 

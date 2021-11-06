@@ -34,3 +34,10 @@ Compound Sequences
 
 .. autoclass:: sympy.series.sequences::SeqMul
    :members:
+
+
+Recursive Sequences
+--------------------
+
+.. autoclass:: sympy.series.sequences::RecursiveSeq
+   :members:

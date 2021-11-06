@@ -5,7 +5,6 @@ import math
 from functools import reduce
 
 from sympy.core import S, I, pi
-from sympy.core.compatibility import ordered
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.logic import fuzzy_not
@@ -13,6 +12,7 @@ from sympy.core.mul import expand_2arg, Mul
 from sympy.core.numbers import Rational, igcd, comp
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core.sympify import sympify
 from sympy.functions import exp, sqrt, im, cos, acos, Piecewise
@@ -25,7 +25,7 @@ from sympy.polys.polyquinticconst import PolyQuintic
 from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.rationaltools import together
 from sympy.polys.specialpolys import cyclotomic_poly
-from sympy.simplify import simplify, powsimp
+from sympy.simplify.simplify import simplify, powsimp
 from sympy.utilities import public
 
 
@@ -244,7 +244,7 @@ def roots_quartic(f):
     There are many references for solving quartic expressions available [1-5].
     This reviewer has found that many of them require one to select from among
     2 or more possible sets of solutions and that some solutions work when one
-    is searching for real roots but don't work when searching for complex roots
+    is searching for real roots but do not work when searching for complex roots
     (though this is not always stated clearly). The following routine has been
     tested and found to be correct for 0, 2 or 4 complex roots.
 
@@ -694,6 +694,14 @@ def _integer_basis(poly):
 
     monoms = monoms[:-1]
     coeffs = coeffs[:-1]
+
+    # Special case for two-term polynominals
+    if len(monoms) == 1:
+        r = Pow(coeffs[0], S.One/monoms[0])
+        if r.is_Integer:
+            return int(r)
+        else:
+            return None
 
     divs = reversed(divisors(gcd_list(coeffs))[1:])
 

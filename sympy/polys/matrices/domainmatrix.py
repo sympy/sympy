@@ -10,12 +10,17 @@ as unifying matrices with different domains.
 
 """
 from functools import reduce
+from typing import Union as tUnion, Tuple as tTuple
+
 from sympy.core.sympify import _sympify
+
+from ..domains import Domain
 
 from ..constructor import construct_domain
 
-from .exceptions import (NonSquareMatrixError, ShapeError, DDMShapeError,
-        DDMDomainError, DDMFormatError, DDMBadInputError)
+from .exceptions import (DMNonSquareMatrixError, DMShapeError,
+                         DMDomainError, DMFormatError, DMBadInputError,
+                         DMNotAField)
 
 from .ddm import DDM
 
@@ -24,6 +29,26 @@ from .sdm import SDM
 from .domainscalar import DomainScalar
 
 from sympy.polys.domains import ZZ, EXRAW
+
+
+def DM(rows, domain):
+    """Convenient alias for DomainMatrix.from_list
+
+    Examples
+    =======
+
+    >>> from sympy import ZZ
+    >>> from sympy.polys.matrices import DM
+    >>> DM([[1, 2], [3, 4]], ZZ)
+    DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ)
+
+    See also
+    =======
+
+    DomainMatrix.from_list
+    """
+    return DomainMatrix.from_list(rows, domain)
+
 
 class DomainMatrix:
     r"""
@@ -34,7 +59,7 @@ class DomainMatrix:
 
     DomainMatrix uses :py:class:`~.Domain` for its internal representation
     which makes it more faster for many common operations
-    than current sympy Matrix class, but this advantage makes it not
+    than current SymPy Matrix class, but this advantage makes it not
     entirely compatible with Matrix.
     DomainMatrix could be found analogous to numpy arrays with "dtype".
     In the DomainMatrix, each matrix has a domain such as :ref:`ZZ`
@@ -74,6 +99,9 @@ class DomainMatrix:
     Poly
 
     """
+    rep: tUnion[SDM, DDM]
+    shape: tTuple[int, int]
+    domain: Domain
 
     def __new__(cls, rows, shape, domain, *, fmt=None):
         """
@@ -215,6 +243,53 @@ class DomainMatrix:
         self.domain = rep.domain
         return self
 
+
+    @classmethod
+    def from_list(cls, rows, domain):
+        r"""
+        Convert a list of lists into a DomainMatrix
+
+        Parameters
+        ==========
+
+        rows: list of lists
+            Each element of the inner lists should be either the single arg,
+            or tuple of args, that would be passed to the domain constructor
+            in order to form an element of the domain. See examples.
+
+        Returns
+        =======
+
+        DomainMatrix containing elements defined in rows
+
+        Examples
+        ========
+
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> from sympy import FF, QQ, ZZ
+        >>> A = DomainMatrix.from_list([[1, 0, 1], [0, 0, 1]], ZZ)
+        >>> A
+        DomainMatrix([[1, 0, 1], [0, 0, 1]], (2, 3), ZZ)
+        >>> B = DomainMatrix.from_list([[1, 0, 1], [0, 0, 1]], FF(7))
+        >>> B
+        DomainMatrix([[1 mod 7, 0 mod 7, 1 mod 7], [0 mod 7, 0 mod 7, 1 mod 7]], (2, 3), GF(7))
+        >>> C = DomainMatrix.from_list([[(1, 2), (3, 1)], [(1, 4), (5, 1)]], QQ)
+        >>> C
+        DomainMatrix([[1/2, 3], [1/4, 5]], (2, 2), QQ)
+
+        See Also
+        ========
+
+        from_list_sympy
+
+        """
+        nrows = len(rows)
+        ncols = 0 if not nrows else len(rows[0])
+        conv = lambda e: domain(*e) if isinstance(e, tuple) else domain(e)
+        domain_rows = [[conv(e) for e in row] for row in rows]
+        return DomainMatrix(domain_rows, (nrows, ncols), domain)
+
+
     @classmethod
     def from_list_sympy(cls, nrows, ncols, rows, **kwargs):
         r"""
@@ -291,9 +366,9 @@ class DomainMatrix:
 
         """
         if not all(0 <= r < nrows for r in elemsdict):
-            raise DDMBadInputError("Row out of range")
+            raise DMBadInputError("Row out of range")
         if not all(0 <= c < ncols for row in elemsdict.values() for c in row):
-            raise DDMBadInputError("Column out of range")
+            raise DMBadInputError("Column out of range")
 
         items_sympy = [_sympify(item) for row in elemsdict.values() for item in row.values()]
         domain, items_domain = cls.get_domain(items_sympy, **kwargs)
@@ -606,7 +681,31 @@ class DomainMatrix:
 
     @property
     def is_zero_matrix(self):
-        return all(self[i, j].element == self.domain.zero for i in range(self.shape[0]) for j in range(self.shape[1]))
+        return self.rep.is_zero_matrix()
+
+    @property
+    def is_upper(self):
+        """
+        Says whether this matrix is upper-triangular. True can be returned
+        even if the matrix is not square.
+        """
+        return self.rep.is_upper()
+
+    @property
+    def is_lower(self):
+        """
+        Says whether this matrix is lower-triangular. True can be returned
+        even if the matrix is not square.
+        """
+        return self.rep.is_lower()
+
+    @property
+    def is_square(self):
+        return self.shape[0] == self.shape[1]
+
+    def rank(self):
+        rref, pivots = self.rref()
+        return len(pivots)
 
     def hstack(A, *B):
         r"""Horizontally stack the given matrices.
@@ -735,13 +834,13 @@ class DomainMatrix:
     def _check(a, op, b, ashape, bshape):
         if a.domain != b.domain:
             msg = "Domain mismatch: %s %s %s" % (a.domain, op, b.domain)
-            raise DDMDomainError(msg)
+            raise DMDomainError(msg)
         if ashape != bshape:
             msg = "Shape mismatch: %s %s %s" % (a.shape, op, b.shape)
-            raise DDMShapeError(msg)
+            raise DMShapeError(msg)
         if a.rep.fmt != b.rep.fmt:
             msg = "Format mismatch: %s %s %s" % (a.rep.fmt, op, b.rep.fmt)
-            raise DDMFormatError(msg)
+            raise DMFormatError(msg)
 
     def add(A, B):
         r"""
@@ -762,7 +861,7 @@ class DomainMatrix:
         Raises
         ======
 
-        ShapeError
+        DMShapeError
             If the dimensions of the two DomainMatrix are not equal
 
         ValueError
@@ -812,7 +911,7 @@ class DomainMatrix:
         Raises
         ======
 
-        ShapeError
+        DMShapeError
             If the dimensions of the two DomainMatrix are not equal
 
         ValueError
@@ -1039,7 +1138,7 @@ class DomainMatrix:
         """
         nrows, ncols = A.shape
         if nrows != ncols:
-            raise NonSquareMatrixError('Power of a nonsquare matrix')
+            raise DMNonSquareMatrixError('Power of a nonsquare matrix')
         if n < 0:
             raise NotImplementedError('Negative powers')
         elif n == 0:
@@ -1166,19 +1265,75 @@ class DomainMatrix:
 
         """
         if not self.domain.is_Field:
-            raise ValueError('Not a field')
+            raise DMNotAField('Not a field')
         rref_ddm, pivots = self.rep.rref()
         return self.from_rep(rref_ddm), tuple(pivots)
 
-    def nullspace(self):
+    def columnspace(self):
         r"""
-        Returns the Null Space for the DomainMatrix
+        Returns the columnspace for the DomainMatrix
 
         Returns
         =======
 
         DomainMatrix
-            Null Space of the DomainMatrix
+            The columns of this matrix form a basis for the columnspace.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([
+        ...    [QQ(1), QQ(-1)],
+        ...    [QQ(2), QQ(-2)]], (2, 2), QQ)
+        >>> A.columnspace()
+        DomainMatrix([[1], [2]], (2, 1), QQ)
+
+        """
+        if not self.domain.is_Field:
+            raise DMNotAField('Not a field')
+        rref, pivots = self.rref()
+        rows, cols = self.shape
+        return self.extract(range(rows), pivots)
+
+    def rowspace(self):
+        r"""
+        Returns the rowspace for the DomainMatrix
+
+        Returns
+        =======
+
+        DomainMatrix
+            The rows of this matrix form a basis for the rowspace.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ
+        >>> from sympy.polys.matrices import DomainMatrix
+        >>> A = DomainMatrix([
+        ...    [QQ(1), QQ(-1)],
+        ...    [QQ(2), QQ(-2)]], (2, 2), QQ)
+        >>> A.rowspace()
+        DomainMatrix([[1, -1]], (1, 2), QQ)
+
+        """
+        if not self.domain.is_Field:
+            raise DMNotAField('Not a field')
+        rref, pivots = self.rref()
+        rows, cols = self.shape
+        return self.extract(range(len(pivots)), range(cols))
+
+    def nullspace(self):
+        r"""
+        Returns the nullspace for the DomainMatrix
+
+        Returns
+        =======
+
+        DomainMatrix
+            The rows of this matrix form a basis for the nullspace.
 
         Examples
         ========
@@ -1193,7 +1348,7 @@ class DomainMatrix:
 
         """
         if not self.domain.is_Field:
-            raise ValueError('Not a field')
+            raise DMNotAField('Not a field')
         return self.from_rep(self.rep.nullspace()[0])
 
     def inv(self):
@@ -1212,7 +1367,7 @@ class DomainMatrix:
         ValueError
             If the domain of DomainMatrix not a Field
 
-        NonSquareMatrixError
+        DMNonSquareMatrixError
             If the DomainMatrix is not a not Square DomainMatrix
 
         Examples
@@ -1234,10 +1389,10 @@ class DomainMatrix:
 
         """
         if not self.domain.is_Field:
-            raise ValueError('Not a field')
+            raise DMNotAField('Not a field')
         m, n = self.shape
         if m != n:
-            raise NonSquareMatrixError
+            raise DMNonSquareMatrixError
         inv = self.rep.inv()
         return self.from_rep(inv)
 
@@ -1272,7 +1427,7 @@ class DomainMatrix:
         """
         m, n = self.shape
         if m != n:
-            raise NonSquareMatrixError
+            raise DMNonSquareMatrixError
         return self.rep.det()
 
     def lu(self):
@@ -1310,7 +1465,7 @@ class DomainMatrix:
 
         """
         if not self.domain.is_Field:
-            raise ValueError('Not a field')
+            raise DMNotAField('Not a field')
         L, U, swaps = self.rep.lu()
         return self.from_rep(L), self.from_rep(U), swaps
 
@@ -1332,7 +1487,7 @@ class DomainMatrix:
         Raises
         ======
 
-        ShapeError
+        DMShapeError
             If the DomainMatrix A and rhs have different number of rows
 
         ValueError
@@ -1360,9 +1515,9 @@ class DomainMatrix:
 
         """
         if self.shape[0] != rhs.shape[0]:
-            raise ShapeError("Shape")
+            raise DMShapeError("Shape")
         if not self.domain.is_Field:
-            raise ValueError('Not a field')
+            raise DMNotAField('Not a field')
         sol = self.rep.lu_solve(rhs.rep)
         return self.from_rep(sol)
 
@@ -1370,9 +1525,9 @@ class DomainMatrix:
         # XXX: Not sure about this method or its signature. It is just created
         # because it is needed by the holonomic module.
         if A.shape[0] != b.shape[0]:
-            raise ShapeError("Shape")
+            raise DMShapeError("Shape")
         if A.domain != b.domain or not A.domain.is_Field:
-            raise ValueError('Not a field')
+            raise DMNotAField('Not a field')
         Aaug = A.hstack(b)
         Arref, pivots = Aaug.rref()
         particular = Arref.from_rep(Arref.rep.particular())
@@ -1395,7 +1550,7 @@ class DomainMatrix:
         Raises
         ======
 
-        NonSquareMatrixError
+        DMNonSquareMatrixError
             If the DomainMatrix is not a not Square DomainMatrix
 
         Examples
@@ -1413,7 +1568,7 @@ class DomainMatrix:
         """
         m, n = self.shape
         if m != n:
-            raise NonSquareMatrixError("not square")
+            raise DMNonSquareMatrixError("not square")
         return self.rep.charpoly()
 
     @classmethod
@@ -1470,7 +1625,7 @@ class DomainMatrix:
 
     @classmethod
     def ones(cls, shape, domain):
-        """Returns a zero DomainMatrix of size shape, belonging to the specified domain
+        """Returns a DomainMatrix of 1s, of size shape, belonging to the specified domain
 
         Examples
         ========

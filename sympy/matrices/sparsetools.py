@@ -1,8 +1,9 @@
-from sympy.core.compatibility import as_int
+from sympy.core.containers import Dict
+from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import is_sequence
-from sympy.utilities.misc import filldedent
+from sympy.utilities.misc import as_int, filldedent
 
-from .sparse import MutableSparseMatrix
+from .sparse import MutableSparseMatrix as SparseMatrix
 
 
 def _doktocsr(dok):
@@ -59,7 +60,7 @@ def _csrtodok(csr):
         indices = slice(IA[i], IA[i + 1])
         for l, m in zip(A[indices], JA[indices]):
             smat[i, m] = l
-    return MutableSparseMatrix(*shape, smat)
+    return SparseMatrix(*shape, smat)
 
 
 def banded(*args, **kwargs):
@@ -194,7 +195,6 @@ def banded(*args, **kwargs):
     [0, 0, 0, 0, 2, 1, 1],
     [0, 0, 0, 0, 0, 0, 1]])
     """
-    from sympy import Dict, Dummy, SparseMatrix
     try:
         if len(args) not in (1, 2, 3):
             raise TypeError

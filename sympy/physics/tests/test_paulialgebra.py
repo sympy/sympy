@@ -1,4 +1,5 @@
-from sympy import I, symbols
+from sympy.core.numbers import I
+from sympy.core.symbol import symbols
 from sympy.physics.paulialgebra import Pauli
 from sympy.testing.pytest import XFAIL
 from sympy.physics.quantum import TensorProduct

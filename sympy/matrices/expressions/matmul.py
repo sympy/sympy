@@ -1,6 +1,9 @@
-from sympy import Number
-from sympy.core import Mul, Basic, sympify, S
-from sympy.core.mul import mul
+from sympy.assumptions.ask import ask, Q
+from sympy.assumptions.refine import handlers_dict
+from sympy.core import Basic, sympify, S
+from sympy.core.mul import mul, Mul
+from sympy.core.numbers import Number, Integer
+from sympy.core.symbol import Dummy
 from sympy.functions import adjoint
 from sympy.strategies import (rm_id, unpack, typed, flatten, exhaust,
         do_one, new)
@@ -65,8 +68,13 @@ class MatMul(MatrixExpr, Mul):
         matrices = [arg for arg in self.args if arg.is_Matrix]
         return (matrices[0].rows, matrices[-1].cols)
 
+    def could_extract_minus_sign(self):
+        return self.args[0].could_extract_minus_sign()
+
     def _entry(self, i, j, expand=True, **kwargs):
-        from sympy import Dummy, Sum, Mul, ImmutableMatrix, Integer
+        # Avoid cyclic imports
+        from sympy.concrete.summations import Sum
+        from sympy.matrices.immutable import ImmutableMatrix
 
         coeff, matrices = self.as_coeff_matrices()
 
@@ -302,14 +310,12 @@ def factor_in_front(mul):
     return mul
 
 def combine_powers(mul):
-    """Combine consecutive powers with the same base into one
-
-    e.g. A*A**2 -> A**3
+    r"""Combine consecutive powers with the same base into one, e.g.
+    $$A \times A^2 \Rightarrow A^3$$
 
     This also cancels out the possible matrix inverses using the
-    knowledgebase of ``Inverse``.
-
-    e.g. Y * X * X.I -> Y
+    knowledgebase of :class:`~.Inverse`, e.g.,
+    $$ Y \times X \times X^{-1} \Rightarrow Y $$
     """
     factor, args = mul.as_coeff_matrices()
     new_args = [args[0]]
@@ -422,10 +428,6 @@ def only_squares(*matrices):
             out.append(MatMul(*matrices[start:i+1]).doit())
             start = i+1
     return out
-
-
-from sympy.assumptions.ask import ask, Q
-from sympy.assumptions.refine import handlers_dict
 
 
 def refine_MatMul(expr, assumptions):

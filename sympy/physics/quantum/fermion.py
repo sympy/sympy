@@ -1,6 +1,6 @@
 """Fermionic quantum operators."""
 
-from sympy import Integer
+from sympy.core.numbers import Integer
 from sympy.physics.quantum import Operator
 from sympy.physics.quantum import HilbertSpace, Ket, Bra
 from sympy.functions.special.tensor_functions import KroneckerDelta

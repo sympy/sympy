@@ -67,7 +67,7 @@ $VERSION_BUMP_PATTERNS = [
 
 @activity
 def mailmap_update():
-    with run_in_conda_env(['python=3.6', 'mpmath']):
+    with run_in_conda_env(['python=3.7', 'mpmath']):
         ./bin/mailmap_update.py
 
 @activity
@@ -82,14 +82,14 @@ def test_sympy():
 
 @activity(deps={'_version', 'mailmap_update'})
 def source_tarball():
-    with run_in_conda_env(['mpmath', 'python=3.6'], 'sympy-release'):
+    with run_in_conda_env(['mpmath', 'python=3.7'], 'sympy-release'):
         # Assumes this is run in Docker and git is already clean
         ./setup.py sdist --keep-temp
 
 
 @activity(deps={'_version', 'mailmap_update'})
 def wheel():
-    with run_in_conda_env(['mpmath', 'python=3.6', 'setuptools', 'pip', 'wheel'], 'sympy-release'):
+    with run_in_conda_env(['mpmath', 'python=3.7', 'setuptools', 'pip', 'wheel'], 'sympy-release'):
         # Assumes this is run in Docker and git is already clean
         ./setup.py bdist_wheel --keep-temp
 
@@ -124,14 +124,6 @@ def copy_release_files():
     cp dist/* /root/release/
 
 @activity(deps={'source_tarball'})
-def test_tarball35():
-    test_tarball('3.5')
-
-@activity(deps={'source_tarball'})
-def test_tarball36():
-    test_tarball('3.6')
-
-@activity(deps={'source_tarball'})
 def test_tarball37():
     test_tarball('3.7')
 
@@ -139,13 +131,9 @@ def test_tarball37():
 def test_tarball38():
     test_tarball('3.8')
 
-@activity(deps={'wheel'})
-def test_wheel35():
-    test_wheel('3.5')
-
-@activity(deps={'wheel'})
-def test_wheel36():
-    test_wheel('3.6')
+@activity(deps={'source_tarball'})
+def test_tarball39():
+    test_tarball('3.9')
 
 @activity(deps={'wheel'})
 def test_wheel37():
@@ -154,6 +142,10 @@ def test_wheel37():
 @activity(deps={'wheel'})
 def test_wheel38():
     test_wheel('3.8')
+
+@activity(deps={'wheel'})
+def test_wheel39():
+    test_wheel('3.9')
 
 @activity(deps={'source_tarball'})
 def compare_tar_against_git():
@@ -248,8 +240,8 @@ def test_tarball(py_version):
     Test that the tarball can be unpacked and installed, and that sympy
     imports in the install.
     """
-    if py_version not in {'3.5', '3.6', '3.7', '3.8'}: # TODO: Add win32
-        raise ValueError("release must be one of 3.5, 3.6, 3.7 or 3.8 not %s" % py_version)
+    if py_version not in {'3.7', '3.8', '3.9'}: # TODO: Add win32
+        raise ValueError("release must be one of 3.7, 3.8 or 3.9 not %s" % py_version)
 
 
     with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):
@@ -266,8 +258,8 @@ def test_wheel(py_version):
     """
     Test that the wheel can be installed, and that sympy imports in the install.
     """
-    if py_version not in {'3.5', '3.6', '3.7', '3.8'}: # TODO: Add win32
-        raise ValueError("release must be one of 3.5, 3.6, 3.7 or 3.8 not %s" % py_version)
+    if py_version not in {'3.7', '3.8', '3.9'}: # TODO: Add win32
+        raise ValueError("release must be one of 3.7, 3.8 or 3.9 not %s" % py_version)
 
 
     with run_in_conda_env(['python=%s' % py_version], 'test-install-%s' % py_version):

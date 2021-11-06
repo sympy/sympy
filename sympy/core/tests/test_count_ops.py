@@ -1,6 +1,16 @@
-from sympy import symbols, sin, exp, cos, Derivative, Integral, Basic, \
-    count_ops, S, And, I, pi, Eq, Or, Not, Xor, Nand, Nor, Implies, \
-    Equivalent, MatrixSymbol, Symbol, ITE, Rel, Rational, Sum
+from sympy.concrete.summations import Sum
+from sympy.core.basic import Basic
+from sympy.core.function import (Derivative, Function, count_ops)
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.relational import (Eq, Rel)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import (And, Equivalent, ITE, Implies, Nand,
+    Nor, Not, Or, Xor)
+from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.core.containers import Tuple
 
 x, y, z = symbols('x,y,z')
@@ -135,3 +145,11 @@ def test_issue_9324():
     n = Symbol('n', integer=True)
     M = MatrixSymbol('M', m + n, m * m)
     assert count(M[0, 1]) == 2
+
+
+def test_issue_21532():
+    f = Function('f')
+    g = Function('g')
+    FUNC_F, FUNC_G = symbols('FUNC_F, FUNC_G')
+    assert f(x).count_ops(visual=True) == FUNC_F
+    assert g(x).count_ops(visual=True) == FUNC_G

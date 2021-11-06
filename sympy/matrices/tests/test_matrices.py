@@ -2,10 +2,22 @@ import random
 import concurrent.futures
 from collections.abc import Hashable
 
-from sympy import (
-    Abs, Add, E, Float, I, Integer, Max, Min, Poly, Pow, PurePoly, Rational,
-    S, Symbol, cos, exp, log, nan, oo, pi, signsimp, simplify, sin,
-    sqrt, symbols, sympify, trigsimp, tan, sstr, diff, Function, expand, FiniteSet)
+from sympy.core.add import Add
+from sympy.core.function import (Function, diff, expand)
+from sympy.core.numbers import (E, Float, I, Integer, Rational, nan, oo, pi)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
+from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.polys.polytools import (Poly, PurePoly)
+from sympy.printing.str import sstr
+from sympy.sets.sets import FiniteSet
+from sympy.simplify.simplify import (signsimp, simplify)
+from sympy.simplify.trigsimp import trigsimp
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
     _simplify)
@@ -16,10 +28,9 @@ from sympy.matrices import (
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix,
     MatrixSymbol, dotprodsimp)
 from sympy.matrices.utilities import _dotprodsimp_state
-from sympy.core.compatibility import iterable
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.utilities.iterables import flatten, capture
+from sympy.utilities.iterables import flatten, capture, iterable
 from sympy.testing.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
@@ -230,7 +241,7 @@ def test_power():
 
     assert Matrix([[1, 0], [1, 1]])**S.Half == Matrix([[1, 0], [S.Half, 1]])
     assert Matrix([[1, 0], [1, 1]])**0.5 == Matrix([[1.0, 0], [0.5, 1.0]])
-    from sympy.abc import a, b, n
+    from sympy.abc import n
     assert Matrix([[1, a], [0, 1]])**n == Matrix([[1, a*n], [0, 1]])
     assert Matrix([[b, a], [0, b]])**n == Matrix([[b**n, a*b**(n-1)*n], [0, b**n]])
     assert Matrix([
@@ -2551,12 +2562,10 @@ def test_adjoint():
         assert ans == cls(dat).adjoint()
 
 def test_simplify_immutable():
-    from sympy import simplify, sin, cos
     assert simplify(ImmutableMatrix([[sin(x)**2 + cos(x)**2]])) == \
                     ImmutableMatrix([[1]])
 
 def test_replace():
-    from sympy import symbols, Function, Matrix
     F, G = symbols('F, G', cls=Function)
     K = Matrix(2, 2, lambda i, j: G(i+j))
     M = Matrix(2, 2, lambda i, j: F(i+j))
@@ -2564,7 +2573,6 @@ def test_replace():
     assert N == K
 
 def test_replace_map():
-    from sympy import symbols, Function, Matrix
     F, G = symbols('F, G', cls=Function)
     with warns_deprecated_sympy():
         K = Matrix(2, 2, [(G(0), {F(0): G(0)}), (G(1), {F(1): G(1)}),
@@ -2811,13 +2819,20 @@ def test_partial_pivoting():
     # partial pivoting with back substitution gives a perfect result
     # naive pivoting give an error ~1e-13, so anything better than
     # 1e-15 is good
-    mm=Matrix([[0.003 ,59.14, 59.17],[ 5.291, -6.13,46.78]])
-    assert (mm.rref()[0] - Matrix([[1.0,   0, 10.0], [  0, 1.0,  1.0]])).norm() < 1e-15
+    mm=Matrix([[0.003, 59.14, 59.17], [5.291, -6.13, 46.78]])
+    assert (mm.rref()[0] - Matrix([[1.0,   0, 10.0],
+                                   [  0, 1.0,  1.0]])).norm() < 1e-15
 
     # issue #11549
-    m_mixed = Matrix([[6e-17, 1.0, 4],[ -1.0,   0, 8],[    0,   0, 1]])
-    m_float = Matrix([[6e-17, 1.0, 4.],[ -1.0,   0., 8.],[    0.,   0., 1.]])
-    m_inv = Matrix([[  0,    -1.0,  8.0],[1.0, 6.0e-17, -4.0],[  0,       0,    1]])
+    m_mixed = Matrix([[6e-17, 1.0, 4],
+                      [ -1.0,   0, 8],
+                      [    0,   0, 1]])
+    m_float = Matrix([[6e-17,  1.0, 4.],
+                      [ -1.0,   0., 8.],
+                      [   0.,   0., 1.]])
+    m_inv = Matrix([[  0,    -1.0,  8.0],
+                    [1.0, 6.0e-17, -4.0],
+                    [  0,       0,    1]])
     # this example is numerically unstable and involves a matrix with a norm >= 8,
     # this comparing the difference of the results with 1e-15 is numerically sound.
     assert (m_mixed.inv() - m_inv).norm() < 1e-15
@@ -2838,7 +2853,7 @@ def test_iszero_substitution():
     assert m_rref[2,2] == 0
 
 def test_issue_11238():
-    from sympy import Point
+    from sympy.geometry.point import Point
     xx = 8*tan(pi*Rational(13, 45))/(tan(pi*Rational(13, 45)) + sqrt(3))
     yy = (-8*sqrt(3)*tan(pi*Rational(13, 45))**2 + 24*tan(pi*Rational(13, 45)))/(-3 + tan(pi*Rational(13, 45))**2)
     p1 = Point(0, 0)
@@ -2881,7 +2896,7 @@ def test_deprecated():
 
 
 def test_issue_14489():
-    from sympy import Mod
+    from sympy.core.mod import Mod
     A = Matrix([-1, 1, 2])
     B = Matrix([10, 20, -15])
 

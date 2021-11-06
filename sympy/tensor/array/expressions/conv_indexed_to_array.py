@@ -1,10 +1,17 @@
 from collections import defaultdict
 
-from sympy import Sum, Mul, KroneckerDelta, Indexed, IndexedBase, Add
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.numbers import Integer
+from sympy.core.power import Pow
+from sympy.core.sorting import default_sort_key
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.combinatorics import Permutation
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayDiagonal, \
-    ArrayContraction, ArrayTensorProduct, ArrayAdd
+    ArrayContraction, ArrayTensorProduct, ArrayAdd, get_shape, ArrayElement
 from sympy.tensor.array.expressions.utils import _get_argindex, _get_diagonal_indices
 
 
@@ -53,13 +60,39 @@ def convert_indexed_to_array(expr, first_indices=None):
     """
 
     result, indices = _convert_indexed_to_array(expr)
+
+    if any(isinstance(i, (int, Integer)) for i in indices):
+        result = ArrayElement(result, indices)
+        indices = []
+
     if not first_indices:
         return result
+
+    def _check_is_in(elem, indices):
+        if elem in indices:
+            return True
+        if any(elem in i for i in indices if isinstance(i, frozenset)):
+            return True
+        return False
+
+    repl = {j: i for i in indices if isinstance(i, frozenset) for j in i}
+    first_indices = [repl.get(i, i) for i in first_indices]
     for i in first_indices:
-        if i not in indices:
+        if not _check_is_in(i, indices):
             first_indices.remove(i)
-    first_indices.extend([i for i in indices if i not in first_indices])
-    permutation = [first_indices.index(i) for i in indices]
+    first_indices.extend([i for i in indices if not _check_is_in(i, first_indices)])
+
+    def _get_pos(elem, indices):
+        if elem in indices:
+            return indices.index(elem)
+        for i, e in enumerate(indices):
+            if not isinstance(e, frozenset):
+                continue
+            if elem in e:
+                return i
+        raise ValueError("not found")
+
+    permutation = [_get_pos(i, first_indices) for i in indices]
     return PermuteDims(result, permutation)
 
 
@@ -68,8 +101,20 @@ def _convert_indexed_to_array(expr):
         function = expr.function
         summation_indices = expr.variables
         subexpr, subindices = _convert_indexed_to_array(function)
+        subindicessets = {j: i for i in subindices if isinstance(i, frozenset) for j in i}
+        summation_indices = sorted(set([subindicessets.get(i, i) for i in summation_indices]), key=default_sort_key)
+        # TODO: check that Kronecker delta is only contracted to one other element:
+        kronecker_indices = set([])
+        if isinstance(function, Mul):
+            for arg in function.args:
+                if not isinstance(arg, KroneckerDelta):
+                    continue
+                arg_indices = sorted(set(arg.indices), key=default_sort_key)
+                if len(arg_indices) == 2:
+                    kronecker_indices.update(arg_indices)
+        kronecker_indices = sorted(kronecker_indices, key=default_sort_key)
         # Check dimensional consistency:
-        shape = subexpr.shape
+        shape = get_shape(subexpr)
         if shape:
             for ind, istart, iend in expr.limits:
                 i = _get_argindex(subindices, ind)
@@ -97,10 +142,13 @@ def _convert_indexed_to_array(expr):
 
         axes_contraction = defaultdict(list)
         for i, ind in enumerate(subindices):
-            if ind in summation_indices:
+            include = all(j not in kronecker_indices for j in ind) if isinstance(ind, frozenset) else ind not in kronecker_indices
+            if ind in summation_indices and include:
                 axes_contraction[ind].append(i)
                 subindices[i] = None
         for k, v in axes_contraction.items():
+            if any(i in kronecker_indices for i in k) if isinstance(k, frozenset) else k in kronecker_indices:
+                continue
             contraction_indices.append(tuple(v))
         free_indices = [i for i in subindices if i is not None]
         indices_ret = list(free_indices)
@@ -174,4 +222,10 @@ def _convert_indexed_to_array(expr):
             # Perform index permutations:
             args[i] = PermuteDims(args[i], permutation)
         return ArrayAdd(*args), index0
+    if isinstance(expr, Pow):
+        subexpr, subindices = _convert_indexed_to_array(expr.base)
+        if isinstance(expr.exp, (int, Integer)):
+            diags = zip(*[(2*i, 2*i + 1) for i in range(expr.exp)])
+            arr = ArrayDiagonal(ArrayTensorProduct(*[subexpr for i in range(expr.exp)]), *diags)
+            return arr, subindices
     return expr, ()

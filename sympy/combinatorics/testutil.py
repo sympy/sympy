@@ -240,7 +240,7 @@ def canonicalize_naive(g, dummies, sym, *v):
     """
     from sympy.combinatorics.perm_groups import PermutationGroup
     from sympy.combinatorics.tensor_can import gens_products, dummy_sgs
-    from sympy.combinatorics.permutations import Permutation, _af_rmul
+    from sympy.combinatorics.permutations import _af_rmul
     v1 = []
     for i in range(len(v)):
         base_i, gens_i, n_i, sym_i = v[i]

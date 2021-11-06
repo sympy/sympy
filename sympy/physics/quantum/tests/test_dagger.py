@@ -1,4 +1,9 @@
-from sympy import I, Matrix, symbols, conjugate, Expr, Integer, Mul
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Integer)
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.complexes import conjugate
+from sympy.matrices.dense import Matrix
 
 from sympy.physics.quantum.dagger import adjoint, Dagger
 from sympy.external import import_module

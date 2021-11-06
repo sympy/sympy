@@ -1,7 +1,7 @@
 __all__ = ['Linearizer']
 
 from sympy.core.backend import Matrix, eye, zeros
-from sympy import Dummy
+from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import flatten
 from sympy.physics.vector import dynamicsymbols
 from sympy.physics.mechanics.functions import msubs
@@ -95,6 +95,17 @@ class Linearizer:
         k = len(self.lams)
         dims = namedtuple('dims', ['l', 'm', 'n', 'o', 's', 'k'])
         self._dims = dims(l, m, n, o, s, k)
+
+        self._Pq = None
+        self._Pqi = None
+        self._Pqd = None
+        self._Pu = None
+        self._Pui = None
+        self._Pud = None
+        self._C_0 = None
+        self._C_1 = None
+        self._C_2 = None
+        self.perm_mat = None
 
         self._setup_done = False
 
