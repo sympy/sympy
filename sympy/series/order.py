@@ -497,6 +497,12 @@ class Order(Expr):
                 else:
                     return
             return Order(newexpr, *zip(newvars, newpt))
+        else:
+            point = list(self.point)
+            old_update = old + point[0]
+            new_update = new + point[0]
+            if old_update !=old and new_update !=new:
+                return self._eval_subs(old_update, new_update)
 
     def _eval_conjugate(self):
         expr = self.expr._eval_conjugate()
