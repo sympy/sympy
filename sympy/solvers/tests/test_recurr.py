@@ -12,9 +12,9 @@ from sympy.solvers.recurr import rsolve, rsolve_hyper, rsolve_poly, rsolve_ratio
 from sympy.testing.pytest import raises, slow
 from sympy.abc import a, b
 
-y = Function('y')
-n, k = symbols('n,k', integer=True)
-C0, C1, C2 = symbols('C0,C1,C2')
+y = Function("y")
+n, k = symbols("n,k", integer=True)
+C0, C1, C2 = symbols("C0,C1,C2")
 
 
 def test_rsolve_poly():
@@ -230,7 +230,7 @@ def test_rsolve():
 
 
 def test_rsolve_raises():
-    x = Function('x')
+    x = Function("x")
     raises(ValueError, lambda: rsolve(y(n) - y(k + 1), y(n)))
     raises(ValueError, lambda: rsolve(y(n) - y(n + 1), x(n)))
     raises(ValueError, lambda: rsolve(y(n) - x(n + 1), y(n)))
@@ -246,8 +246,8 @@ def test_issue_6844():
 
 
 def test_issue_18751():
-    r = Symbol('r', real=True, positive=True)
-    theta = Symbol('theta', real=True)
+    r = Symbol("r", real=True, positive=True)
+    theta = Symbol("theta", real=True)
     f = y(n) - 2 * r * cos(theta) * y(n - 1) + r ** 2 * y(n - 2)
     assert (
         rsolve(f, y(n))

@@ -18,15 +18,15 @@ from sympy.solvers.ode.ode import constantsimp, constant_renumber
 from sympy.testing.pytest import XFAIL
 
 
-x = Symbol('x')
-y = Symbol('y')
-z = Symbol('z')
-u2 = Symbol('u2')
-_a = Symbol('_a')
-C1 = Symbol('C1')
-C2 = Symbol('C2')
-C3 = Symbol('C3')
-f = Function('f')
+x = Symbol("x")
+y = Symbol("y")
+z = Symbol("z")
+u2 = Symbol("u2")
+_a = Symbol("_a")
+C1 = Symbol("C1")
+C2 = Symbol("C2")
+C3 = Symbol("C3")
+f = Function("f")
 
 
 def test_constant_mul():
@@ -153,16 +153,19 @@ def test_ode_solutions():
     assert constant_renumber(
         constantsimp(Eq(log(f(x) / C1) + 2 * exp(x / f(x)), 0), [C1])
     ) == Eq(log(C1 * f(x)) + 2 * exp(x / f(x)), 0)
-    assert constant_renumber(
-        constantsimp(
-            Eq(
-                log(x * sqrt(2) * sqrt(1 / x) * sqrt(f(x)) / C1)
-                + x ** 2 / (2 * f(x) ** 2),
-                0,
-            ),
-            [C1],
+    assert (
+        constant_renumber(
+            constantsimp(
+                Eq(
+                    log(x * sqrt(2) * sqrt(1 / x) * sqrt(f(x)) / C1)
+                    + x ** 2 / (2 * f(x) ** 2),
+                    0,
+                ),
+                [C1],
+            )
         )
-    ) == Eq(log(C1 * sqrt(x) * sqrt(f(x))) + x ** 2 / (2 * f(x) ** 2), 0)
+        == Eq(log(C1 * sqrt(x) * sqrt(f(x))) + x ** 2 / (2 * f(x) ** 2), 0)
+    )
     assert constant_renumber(
         constantsimp(
             Eq(

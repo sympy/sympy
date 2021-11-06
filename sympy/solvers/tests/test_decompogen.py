@@ -6,7 +6,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.testing.pytest import XFAIL, raises
 
-x, y = symbols('x y')
+x, y = symbols("x y")
 
 
 def test_decompogen():

@@ -32,8 +32,8 @@ from sympy.solvers.ode.riccati import (
     solve_riccati,
 )
 
-f = Function('f')
-x = symbols('x')
+f = Function("f")
+x = symbols("x")
 
 # These are the functions used to generate the tests
 # SHOULD NOT BE USED DIRECTLY IN TESTS
@@ -615,7 +615,7 @@ def test_construct_c_case_1():
                 + 8 * sqrt(3)
                 + 16,
                 x,
-                domain='QQ<sqrt(3)>',
+                domain="QQ<sqrt(3)>",
             ),
             (S(1) + sqrt(3)) / 2,
             [
@@ -879,17 +879,17 @@ def test_construct_d_case_5():
             [[sqrt(2) / 3, -sqrt(2) / 108], [-sqrt(2) / 3, sqrt(2) / 108]],
         ),
         (
-            Poly(3 * x ** 5 + x ** 4 - x ** 3 + x ** 2 - 2 * x - 2, x, domain='ZZ'),
+            Poly(3 * x ** 5 + x ** 4 - x ** 3 + x ** 2 - 2 * x - 2, x, domain="ZZ"),
             Poly(
                 9 * x ** 5 + 7 * x ** 4 + 3 * x ** 3 + 2 * x ** 2 + 5 * x + 7,
                 x,
-                domain='ZZ',
+                domain="ZZ",
             ),
             [[sqrt(3) / 3, -2 * sqrt(3) / 27], [-sqrt(3) / 3, 2 * sqrt(3) / 27]],
         ),
         (
-            Poly(x ** 2 - x + 1, x, domain='ZZ'),
-            Poly(3 * x ** 2 + 7 * x + 3, x, domain='ZZ'),
+            Poly(x ** 2 - x + 1, x, domain="ZZ"),
+            Poly(3 * x ** 2 + 7 * x + 3, x, domain="ZZ"),
             [[sqrt(3) / 3, -5 * sqrt(3) / 9], [-sqrt(3) / 3, 5 * sqrt(3) / 9]],
         ),
     ]
@@ -912,21 +912,21 @@ def test_construct_d_case_6():
     """
     tests = [
         (
-            Poly(-2 * x ** 2 - 5, x, domain='ZZ'),
-            Poly(4 * x ** 4 + 2 * x ** 2 + 10 * x + 2, x, domain='ZZ'),
+            Poly(-2 * x ** 2 - 5, x, domain="ZZ"),
+            Poly(4 * x ** 4 + 2 * x ** 2 + 10 * x + 2, x, domain="ZZ"),
             [[S(1) / 2 + I / 2], [S(1) / 2 - I / 2]],
         ),
         (
-            Poly(-2 * x ** 3 - 4 * x ** 2 - 2 * x - 5, x, domain='ZZ'),
+            Poly(-2 * x ** 3 - 4 * x ** 2 - 2 * x - 5, x, domain="ZZ"),
             Poly(
                 x ** 6 - x ** 5 + 2 * x ** 4 - 4 * x ** 3 - 5 * x ** 2 - 5 * x + 9,
                 x,
-                domain='ZZ',
+                domain="ZZ",
             ),
             [[1], [0]],
         ),
         (
-            Poly(-5 * x ** 3 + x ** 2 + 11 * x + 12, x, domain='ZZ'),
+            Poly(-5 * x ** 3 + x ** 2 + 11 * x + 12, x, domain="ZZ"),
             Poly(
                 6 * x ** 8
                 - 26 * x ** 7
@@ -938,7 +938,7 @@ def test_construct_d_case_6():
                 - 27 * x
                 - 42,
                 x,
-                domain='ZZ',
+                domain="ZZ",
             ),
             [[1], [0]],
         ),
@@ -1068,7 +1068,7 @@ def check_dummy_sol(eq, solse, dummy_sym):
     _, funcs = match_riccati(eq, f, x)
 
     sols = solve_riccati(f(x), x, *funcs)
-    C1 = Dummy('C1')
+    C1 = Dummy("C1")
     sols = [sol.subs(C1, dummy_sym) for sol in sols]
 
     assert all([x[0] for x in checkodesol(eq, sols)])
@@ -1091,7 +1091,7 @@ def test_solve_riccati():
 
     https://www3.risc.jku.at/publications/download/risc_5197/RISCReport15-19.pdf
     """
-    C0 = Dummy('C0')
+    C0 = Dummy("C0")
     # Type: 1st Order Rational Riccati, dy/dx = a + b*y + c*y**2,
     # a, b, c are rational functions of x
 
@@ -1349,7 +1349,7 @@ def test_solve_riccati_slow():
     1. eq - Riccati ODE to be solved.
     2. sol - Expected solution to the equation.
     """
-    C0 = Dummy('C0')
+    C0 = Dummy("C0")
     tests = [
         # Very large values of m (989 and 991)
         (

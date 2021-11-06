@@ -65,8 +65,8 @@ a, b, c, d, p, q, x, y, z, w, t, u, v, X, Y, Z = symbols(
     "a, b, c, d, p, q, x, y, z, w, t, u, v, X, Y, Z", integer=True
 )
 t_0, t_1, t_2, t_3, t_4, t_5, t_6 = symbols("t_:7", integer=True)
-m1, m2, m3 = symbols('m1:4', integer=True)
-n1 = symbols('n1', integer=True)
+m1, m2, m3 = symbols("m1:4", integer=True)
+n1 = symbols("n1", integer=True)
 
 
 def diop_simplify(eq):
@@ -97,47 +97,47 @@ def test_classify_diop():
     assert classify_diop(14 * x ** 2 + 15 * x - 42) == (
         [x],
         {1: -42, x: 15, x ** 2: 14},
-        'univariate',
+        "univariate",
     )
     assert classify_diop(x * y + z) == (
         [x, y, z],
         {x * y: 1, z: 1},
-        'inhomogeneous_ternary_quadratic',
+        "inhomogeneous_ternary_quadratic",
     )
     assert classify_diop(x * y + z + w + x ** 2) == (
         [w, x, y, z],
         {x * y: 1, w: 1, x ** 2: 1, z: 1},
-        'inhomogeneous_general_quadratic',
+        "inhomogeneous_general_quadratic",
     )
     assert classify_diop(x * y + x * z + x ** 2 + 1) == (
         [x, y, z],
         {x * y: 1, x * z: 1, x ** 2: 1, 1: 1},
-        'inhomogeneous_general_quadratic',
+        "inhomogeneous_general_quadratic",
     )
     assert classify_diop(x * y + z + w + 42) == (
         [w, x, y, z],
         {x * y: 1, w: 1, 1: 42, z: 1},
-        'inhomogeneous_general_quadratic',
+        "inhomogeneous_general_quadratic",
     )
     assert classify_diop(x * y + z * w) == (
         [w, x, y, z],
         {x * y: 1, w * z: 1},
-        'homogeneous_general_quadratic',
+        "homogeneous_general_quadratic",
     )
     assert classify_diop(x * y ** 2 + 1) == (
         [x, y],
         {x * y ** 2: 1, 1: 1},
-        'cubic_thue',
+        "cubic_thue",
     )
     assert classify_diop(x ** 4 + y ** 4 + z ** 4 - (1 + 16 + 81)) == (
         [x, y, z],
         {1: -98, x ** 4: 1, z ** 4: 1, y ** 4: 1},
-        'general_sum_of_even_powers',
+        "general_sum_of_even_powers",
     )
     assert classify_diop(x ** 2 + y ** 2 + z ** 2) == (
         [x, y, z],
         {x ** 2: 1, y ** 2: 1, z ** 2: 1},
-        'homogeneous_ternary_quadratic_normal',
+        "homogeneous_ternary_quadratic_normal",
     )
 
 
@@ -770,7 +770,7 @@ def test_general_pythagorean():
 
 def test_diop_general_sum_of_squares_quick():
     for i in range(3, 10):
-        assert check_solutions(sum(i ** 2 for i in symbols(':%i' % i)) - i)
+        assert check_solutions(sum(i ** 2 for i in symbols(":%i" % i)) - i)
 
     assert diop_general_sum_of_squares(x ** 2 + y ** 2 - 2) is None
     assert diop_general_sum_of_squares(x ** 2 + y ** 2 + z ** 2 + 2) == set()
@@ -779,7 +779,7 @@ def test_diop_general_sum_of_squares_quick():
     eq = u ** 2 + v ** 2 + x ** 2 + y ** 2 + z ** 2 - 1313
     assert len(diop_general_sum_of_squares(eq, 3)) == 3
     # issue 11016
-    var = symbols(':5') + (symbols('6', negative=True),)
+    var = symbols(":5") + (symbols("6", negative=True),)
     eq = Add(*[i ** 2 for i in var]) - 112
 
     base_soln = {
@@ -941,11 +941,11 @@ def test_assumptions():
     """
     # Test case taken from the below so question regarding assumptions in diophantine module
     # https://stackoverflow.com/questions/23301941/how-can-i-declare-natural-symbols-with-sympy
-    m, n = symbols('m n', integer=True, positive=True)
+    m, n = symbols("m n", integer=True, positive=True)
     diof = diophantine(n ** 2 + m * n - 500)
     assert diof == {(5, 20), (40, 10), (95, 5), (121, 4), (248, 2), (499, 1)}
 
-    a, b = symbols('a b', integer=True, positive=False)
+    a, b = symbols("a b", integer=True, positive=False)
     diof = diophantine(a * b + 2 * a + 3 * b - 6)
     assert diof == {(-15, -3), (-9, -4), (-7, -5), (-6, -6), (-5, -8), (-4, -14)}
 
@@ -1079,7 +1079,7 @@ def test_diop_sum_of_even_powers():
     assert diop_solve(eq) == {(3, 6, 6), (2, 4, 7)}
     assert diop_general_sum_of_even_powers(eq, 2) == {(3, 6, 6), (2, 4, 7)}
     raises(NotImplementedError, lambda: diop_general_sum_of_even_powers(-eq, 2))
-    neg = symbols('neg', negative=True)
+    neg = symbols("neg", negative=True)
     eq = x ** 4 + y ** 4 + neg ** 4 - 2673
     assert diop_general_sum_of_even_powers(eq) == {(-3, 6, 6)}
     assert diophantine(x ** 4 + y ** 4 + 2) == set()

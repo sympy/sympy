@@ -15,11 +15,11 @@ from sympy.functions import besselj, bessely
 from sympy.testing.pytest import raises, slow
 
 
-C0, C1, C2, C3, C4 = symbols('C0:5')
-u, x, y, z = symbols('u,x:z', real=True)
-f = Function('f')
-g = Function('g')
-h = Function('h')
+C0, C1, C2, C3, C4 = symbols("C0:5")
+u, x, y, z = symbols("u,x:z", real=True)
+f = Function("f")
+g = Function("g")
+h = Function("h")
 
 
 @slow
@@ -51,14 +51,28 @@ def test_checkodesol():
     assert checkodesol(
         diff(exp(f(x)) + x, x) * x, Eq(exp(f(x)) + x, 0), solve_for_func=False
     ) == (True, 0)
-    assert checkodesol(
-        f(x).diff(x, 2),
-        [Eq(f(x), C1 + C2 * x), Eq(f(x), C2 + C1 * x), Eq(f(x), C1 * x + C2 * x ** 2)],
-    ) == [(True, 0), (True, 0), (False, C2)]
-    assert checkodesol(
-        f(x).diff(x, 2),
-        {Eq(f(x), C1 + C2 * x), Eq(f(x), C2 + C1 * x), Eq(f(x), C1 * x + C2 * x ** 2)},
-    ) == {(True, 0), (True, 0), (False, C2)}
+    assert (
+        checkodesol(
+            f(x).diff(x, 2),
+            [
+                Eq(f(x), C1 + C2 * x),
+                Eq(f(x), C2 + C1 * x),
+                Eq(f(x), C1 * x + C2 * x ** 2),
+            ],
+        )
+        == [(True, 0), (True, 0), (False, C2)]
+    )
+    assert (
+        checkodesol(
+            f(x).diff(x, 2),
+            {
+                Eq(f(x), C1 + C2 * x),
+                Eq(f(x), C2 + C1 * x),
+                Eq(f(x), C1 * x + C2 * x ** 2),
+            },
+        )
+        == {(True, 0), (True, 0), (False, C2)}
+    )
     assert checkodesol(f(x).diff(x) - 1 / f(x) / 2, Eq(f(x) ** 2, x)) == [
         (True, 0),
         (True, 0),
@@ -83,8 +97,8 @@ def test_checkodesol():
 
 
 def test_checksysodesol():
-    x, y, z = symbols('x, y, z', cls=Function)
-    t = Symbol('t')
+    x, y, z = symbols("x, y, z", cls=Function)
+    t = Symbol("t")
     eq = (Eq(diff(x(t), t), 9 * y(t)), Eq(diff(y(t), t), 12 * x(t)))
     sol = [
         Eq(x(t), 9 * C1 * exp(-6 * sqrt(3) * t) + 9 * C2 * exp(6 * sqrt(3) * t)),

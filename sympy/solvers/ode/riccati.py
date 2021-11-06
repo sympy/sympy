@@ -648,7 +648,7 @@ def rational_laurent_series(num, den, x, r, m, n):
 
     # Equate coefficients for the first terms (base case)
     maxdegree = 1 + max(num.degree(), den.degree())
-    syms = symbols(f'a:{maxdegree}', cls=Dummy)
+    syms = symbols(f"a:{maxdegree}", cls=Dummy)
     diff = num - den * Poly(syms[::-1], x)
     coeff_diffs = diff.all_coeffs()[::-1][:maxdegree]
     (coeffs,) = linsolve(coeff_diffs, syms)
@@ -699,7 +699,7 @@ def solve_aux_eq(numa, dena, numy, deny, x, m):
     """
     # Assume that the solution is of the type
     # p(x) = C_0 + C_1*x + ... + C_{m-1}*x**(m-1) + x**m
-    psyms = symbols(f'C0:{m}', cls=Dummy)
+    psyms = symbols(f"C0:{m}", cls=Dummy)
     K = ZZ[psyms]
     psol = Poly(K.gens, x, domain=K) + Poly(x ** m, x, domain=K)
 
@@ -796,7 +796,7 @@ def get_gen_sol_from_part_sol(part_sols, a, x):
             u = exp(Integral(y2 - y1, x)).doit()
         # Introduce a constant
         else:
-            C1 = Dummy('C1')
+            C1 = Dummy("C1")
             u = C1 * exp(Integral(y2 - y1, x)).doit()
         if u == 1:
             return y2
@@ -806,7 +806,7 @@ def get_gen_sol_from_part_sol(part_sols, a, x):
     # of the general solution can be obtained directly
     else:
         y1, y2, y3 = part_sols[:3]
-        C1 = Dummy('C1')
+        C1 = Dummy("C1")
         return (C1 + 1) * y2 * (y1 - y3) / (C1 * y1 + y2 - (C1 + 1) * y3)
 
 
@@ -834,7 +834,7 @@ def solve_riccati(fx, x, b0, b1, b2, gensol=False):
 
     # Step 3 : a(x) is 0
     if num == 0:
-        presol.append(1 / (x + Dummy('C1')))
+        presol.append(1 / (x + Dummy("C1")))
 
     # Step 4 : a(x) is a non-zero constant
     elif x not in num.free_symbols.union(den.free_symbols):

@@ -35,7 +35,7 @@ def decompogen(f, symbol):
     """
     f = sympify(f)
     if not isinstance(f, Expr) or isinstance(f, Relational):
-        raise TypeError('expecting Expr but got: `%s`' % func_name(f))
+        raise TypeError("expecting Expr but got: `%s`" % func_name(f))
     if symbol not in f.free_symbols:
         return [f]
 

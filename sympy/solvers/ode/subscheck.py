@@ -45,7 +45,7 @@ def sub_func_doit(eq, func, new):
     return eq.xreplace(reps)
 
 
-def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
+def checkodesol(ode, sol, func=None, order="auto", solve_for_func=True):
     r"""
     Substitutes ``sol`` into ``ode`` and checks that the result is ``0``.
 
@@ -124,7 +124,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             ]
             funcs = set().union(*funcs)
             if len(funcs) != 1:
-                raise ValueError('must pass func arg to checkodesol for this case.')
+                raise ValueError("must pass func arg to checkodesol for this case.")
             func = funcs.pop()
     if not isinstance(func, AppliedUndef) or len(func.args) != 1:
         raise ValueError("func must be a function of one variable, not %s" % func)
@@ -141,7 +141,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     elif sol.rhs == func:
         sol = sol.reversed
 
-    if order == 'auto':
+    if order == "auto":
         order = ode_order(ode, func)
     solved = sol.lhs == func and not sol.rhs.has(func)
     if solve_for_func and not solved:
@@ -275,7 +275,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
                 # since solutions are obtained using force=True we test
                 # using the same level of assumptions
                 ## replace function with dummy so assumptions will work
-                _func = Dummy('func')
+                _func = Dummy("func")
                 num = num.subs(func, _func)
                 ## posify the expression
                 num, reps = posify(num)

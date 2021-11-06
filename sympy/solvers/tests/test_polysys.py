@@ -94,7 +94,7 @@ def test_solve_poly_system():
 
 
 def test_solve_biquadratic():
-    x0, y0, x1, y1, r = symbols('x0 y0 x1 y1 r')
+    x0, y0, x1, y1, r = symbols("x0 y0 x1 y1 r")
 
     f_1 = (x - 1) ** 2 + (y - 1) ** 2 - r ** 2
     f_2 = (x - 2) ** 2 + (y - 2) ** 2 - r ** 2

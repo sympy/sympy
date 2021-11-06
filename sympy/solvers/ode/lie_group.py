@@ -56,8 +56,8 @@ def _ode_lie_group_try_heuristic(eq, heuristic, func, match, inf):
     eta = Function("eta")
     f = func.func
     x = func.args[0]
-    y = match['y']
-    h = match['h']
+    y = match["y"]
+    h = match["h"]
     tempsol = []
     if not inf:
         try:
@@ -102,7 +102,7 @@ def _ode_lie_group_try_heuristic(eq, heuristic, func, match, inf):
                     deq = (
                         integrate((1 / sep[s]), s)
                         + C1
-                        - integrate(sep['coeff'] * sep[r], r)
+                        - integrate(sep["coeff"] * sep[r], r)
                     )
                     # Substituting and reverting back to original coordinates
                     deq = deq.subs([(r, rcoord), (s, scoord)])
@@ -134,11 +134,11 @@ def _ode_lie_group(s, func, order, match):
     df = func.diff(x)
     xi = Function("xi")
     eta = Function("eta")
-    xis = match['xi']
-    etas = match['eta']
-    y = match.pop('y', None)
+    xis = match["xi"]
+    etas = match["eta"]
+    y = match.pop("y", None)
     if y:
-        h = -simplify(match[match['d']] / match[match['e']])
+        h = -simplify(match[match["d"]] / match[match["e"]])
         y = y
     else:
         y = Dummy("y")
@@ -150,7 +150,7 @@ def _ode_lie_group(s, func, order, match):
         if checkinfsol(Eq(df, s), inf, func=f(x), order=1)[0][0]:
             heuristics = ["user_defined"] + list(heuristics)
 
-    match = {'h': h, 'y': y}
+    match = {"h": h, "y": y}
 
     # This is done so that if any heuristic raises a ValueError
     # another heuristic can be used.
@@ -162,7 +162,7 @@ def _ode_lie_group(s, func, order, match):
     return sol
 
 
-def infinitesimals(eq, func=None, order=None, hint='default', match=None):
+def infinitesimals(eq, func=None, order=None, hint="default", match=None):
     r"""
     The infinitesimal functions of an ordinary differential equation, `\xi(x,y)`
     and `\eta(x,y)`, are the infinitesimals of the Lie group of point transformations
@@ -246,11 +246,11 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
         else:
             df = func.diff(x)
             # Matching differential equation of the form a*df + b
-            a = Wild('a', exclude=[df])
-            b = Wild('b', exclude=[df])
+            a = Wild("a", exclude=[df])
+            b = Wild("b", exclude=[df])
             if match:  # Used by lie_group hint
-                h = match['h']
-                y = match['y']
+                h = match["h"]
+                y = match["y"]
             else:
                 match = collect(expand(eq), df).match(a * df + b)
                 if match:
@@ -272,11 +272,11 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
             hx = h.diff(x)
             hy = h.diff(y)
             hinv = ((1 / h).subs([(x, u), (y, x)])).subs(u, y)  # Inverse ODE
-            match = {'h': h, 'func': func, 'hx': hx, 'hy': hy, 'y': y, 'hinv': hinv}
-            if hint == 'all':
+            match = {"h": h, "func": func, "hx": hx, "hy": hy, "y": y, "hinv": hinv}
+            if hint == "all":
                 xieta = []
                 for heuristic in lie_heuristics:
-                    function = globals()['lie_heuristic_' + heuristic]
+                    function = globals()["lie_heuristic_" + heuristic]
                     inflist = function(match, comp=True)
                     if inflist:
                         xieta.extend([inf for inf in inflist if inf not in xieta])
@@ -287,9 +287,9 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
                         "Infinitesimals could not be found for " "the given ODE"
                     )
 
-            elif hint == 'default':
+            elif hint == "default":
                 for heuristic in lie_heuristics:
-                    function = globals()['lie_heuristic_' + heuristic]
+                    function = globals()["lie_heuristic_" + heuristic]
                     xieta = function(match, comp=False)
                     if xieta:
                         return xieta
@@ -302,7 +302,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
                 raise ValueError("Heuristic not recognized: " + hint)
 
             else:
-                function = globals()['lie_heuristic_' + hint]
+                function = globals()["lie_heuristic_" + hint]
                 xieta = function(match, comp=True)
                 if xieta:
                     return xieta
@@ -348,14 +348,14 @@ def lie_heuristic_abaco1_simple(match, comp=False):
     """
 
     xieta = []
-    y = match['y']
-    h = match['h']
-    func = match['func']
+    y = match["y"]
+    h = match["h"]
+    func = match["func"]
     x = func.args[0]
-    hx = match['hx']
-    hy = match['hy']
-    xi = Function('xi')(x, func)
-    eta = Function('eta')(x, func)
+    hx = match["hx"]
+    hy = match["hy"]
+    xi = Function("xi")(x, func)
+    eta = Function("eta")(x, func)
 
     hysym = hy.free_symbols
     if y not in hysym:
@@ -448,16 +448,16 @@ def lie_heuristic_abaco1_product(match, comp=False):
     """
 
     xieta = []
-    y = match['y']
-    h = match['h']
-    hinv = match['hinv']
-    func = match['func']
+    y = match["y"]
+    h = match["h"]
+    hinv = match["hinv"]
+    func = match["func"]
     x = func.args[0]
-    xi = Function('xi')(x, func)
-    eta = Function('eta')(x, func)
+    xi = Function("xi")(x, func)
+    eta = Function("eta")(x, func)
 
     inf = separatevars(((log(h).diff(y)).diff(x)) / h ** 2, dict=True, symbols=[x, y])
-    if inf and inf['coeff']:
+    if inf and inf["coeff"]:
         fx = inf[x]
         gy = simplify(fx * ((1 / (fx * h)).diff(x)))
         gysyms = gy.free_symbols
@@ -473,7 +473,7 @@ def lie_heuristic_abaco1_product(match, comp=False):
     inf = separatevars(
         ((log(hinv).diff(y)).diff(x)) / hinv ** 2, dict=True, symbols=[x, y]
     )
-    if inf and inf['coeff']:
+    if inf and inf["coeff"]:
         fx = inf[x]
         gy = simplify(fx * ((1 / (fx * hinv)).diff(x)))
         gysyms = gy.free_symbols
@@ -510,14 +510,14 @@ def lie_heuristic_bivariate(match, comp=False):
 
     """
 
-    h = match['h']
-    hx = match['hx']
-    hy = match['hy']
-    func = match['func']
+    h = match["h"]
+    hx = match["hx"]
+    hy = match["hy"]
+    func = match["func"]
     x = func.args[0]
-    y = match['y']
-    xi = Function('xi')(x, func)
-    eta = Function('eta')(x, func)
+    y = match["y"]
+    xi = Function("xi")(x, func)
+    eta = Function("eta")(x, func)
 
     if h.is_rational_function():
         # The maximum degree that the infinitesimals can take is
@@ -526,8 +526,8 @@ def lie_heuristic_bivariate(match, comp=False):
         ipde = etax + (etay - xix) * h - xiy * h ** 2 - xid * hx - etad * hy
         num, denom = cancel(ipde).as_numer_denom()
         deg = Poly(num, x, y).total_degree()
-        deta = Function('deta')(x, y)
-        dxi = Function('dxi')(x, y)
+        deta = Function("deta")(x, y)
+        dxi = Function("dxi")(x, y)
         ipde = (
             deta.diff(x)
             + (deta.diff(y) - dxi.diff(x)) * h
@@ -605,13 +605,13 @@ def lie_heuristic_chi(match, comp=False):
 
     """
 
-    h = match['h']
-    hy = match['hy']
-    func = match['func']
+    h = match["h"]
+    hy = match["hy"]
+    func = match["func"]
     x = func.args[0]
-    y = match['y']
-    xi = Function('xi')(x, func)
-    eta = Function('eta')(x, func)
+    y = match["y"]
+    xi = Function("xi")(x, func)
+    eta = Function("eta")(x, func)
 
     if h.is_rational_function():
         schi, schix, schiy = symbols("schi, schix, schiy")
@@ -619,7 +619,7 @@ def lie_heuristic_chi(match, comp=False):
         num, denom = cancel(cpde).as_numer_denom()
         deg = Poly(num, x, y).total_degree()
 
-        chi = Function('chi')(x, y)
+        chi = Function("chi")(x, y)
         chix = chi.diff(x)
         chiy = chi.diff(y)
         cpde = chix + h * chiy - hy * chi
@@ -697,25 +697,25 @@ def lie_heuristic_function_sum(match, comp=False):
     """
 
     xieta = []
-    h = match['h']
-    func = match['func']
-    hinv = match['hinv']
+    h = match["h"]
+    func = match["func"]
+    hinv = match["hinv"]
     x = func.args[0]
-    y = match['y']
-    xi = Function('xi')(x, func)
-    eta = Function('eta')(x, func)
+    y = match["y"]
+    xi = Function("xi")(x, func)
+    eta = Function("eta")(x, func)
 
     for odefac in [h, hinv]:
         factor = odefac * ((1 / odefac).diff(x, 2))
         sep = separatevars((1 / factor).diff(y), dict=True, symbols=[x, y])
-        if sep and sep['coeff'] and sep[x].has(x) and sep[y].has(y):
+        if sep and sep["coeff"] and sep[x].has(x) and sep[y].has(y):
             k = Dummy("k")
             try:
                 gy = k * integrate(sep[y], y)
             except NotImplementedError:
                 pass
             else:
-                fdd = 1 / (k * sep[x] * sep['coeff'])
+                fdd = 1 / (k * sep[x] * sep["coeff"])
                 fx = simplify(fdd / factor - gy)
                 check = simplify(fx.diff(x, 2) - fdd)
                 if fx:
@@ -787,23 +787,23 @@ def lie_heuristic_abaco2_similar(match, comp=False):
 
     """
 
-    h = match['h']
-    hx = match['hx']
-    hy = match['hy']
-    func = match['func']
-    hinv = match['hinv']
+    h = match["h"]
+    hx = match["hx"]
+    hy = match["hy"]
+    func = match["func"]
+    hinv = match["hinv"]
     x = func.args[0]
-    y = match['y']
-    xi = Function('xi')(x, func)
-    eta = Function('eta')(x, func)
+    y = match["y"]
+    xi = Function("xi")(x, func)
+    eta = Function("eta")(x, func)
 
     factor = cancel(h.diff(y) / h.diff(y, 2))
     factorx = factor.diff(x)
     factory = factor.diff(y)
     if not factor.has(x) and not factor.has(y):
-        A = Wild('A', exclude=[y])
-        B = Wild('B', exclude=[y])
-        C = Wild('C', exclude=[x, y])
+        A = Wild("A", exclude=[y])
+        B = Wild("B", exclude=[y])
+        C = Wild("C", exclude=[x, y])
         match = h.match(A + B * exp(y / C))
         try:
             tau = exp(-integrate(match[A] / match[C]), x) / match[B]
@@ -830,9 +830,9 @@ def lie_heuristic_abaco2_similar(match, comp=False):
     factorx = factor.diff(x)
     factory = factor.diff(y)
     if not factor.has(x) and not factor.has(y):
-        A = Wild('A', exclude=[y])
-        B = Wild('B', exclude=[y])
-        C = Wild('C', exclude=[x, y])
+        A = Wild("A", exclude=[y])
+        B = Wild("B", exclude=[y])
+        C = Wild("C", exclude=[x, y])
         match = h.match(A + B * exp(y / C))
         try:
             tau = exp(-integrate(match[A] / match[C]), x) / match[B]
@@ -889,14 +889,14 @@ def lie_heuristic_abaco2_unique_unknown(match, comp=False):
 
     """
 
-    h = match['h']
-    hx = match['hx']
-    hy = match['hy']
-    func = match['func']
+    h = match["h"]
+    hx = match["hx"]
+    hy = match["hy"]
+    func = match["func"]
     x = func.args[0]
-    y = match['y']
-    xi = Function('xi')(x, func)
-    eta = Function('eta')(x, func)
+    y = match["y"]
+    xi = Function("xi")(x, func)
+    eta = Function("eta")(x, func)
 
     funclist = []
     for atom in h.atoms(Pow):
@@ -913,9 +913,9 @@ def lie_heuristic_abaco2_unique_unknown(match, comp=False):
     for f in funclist:
         frac = cancel(f.diff(y) / f.diff(x))
         sep = separatevars(frac, dict=True, symbols=[x, y])
-        if sep and sep['coeff']:
+        if sep and sep["coeff"]:
             xitry1 = sep[x]
-            etatry1 = -1 / (sep[y] * sep['coeff'])
+            etatry1 = -1 / (sep[y] * sep["coeff"])
             pde1 = etatry1.diff(y) * h - xitry1.diff(x) * h - xitry1 * hx - etatry1 * hy
             if not simplify(pde1):
                 return [{xi: xitry1, eta: etatry1.subs(y, func)}]
@@ -951,13 +951,13 @@ def lie_heuristic_abaco2_unique_general(match, comp=False):
       ODE Patterns, pp. 10 - pp. 12
 
     """
-    hx = match['hx']
-    hy = match['hy']
-    func = match['func']
+    hx = match["hx"]
+    hy = match["hy"]
+    func = match["func"]
     x = func.args[0]
-    y = match['y']
-    xi = Function('xi')(x, func)
-    eta = Function('eta')(x, func)
+    y = match["y"]
+    xi = Function("xi")(x, func)
+    eta = Function("eta")(x, func)
 
     A = hx.diff(y)
     B = hy.diff(y) + hy ** 2
@@ -1049,14 +1049,14 @@ def lie_heuristic_linear(match, comp=False):
       ODE Patterns, pp. 10 - pp. 12
 
     """
-    h = match['h']
-    hx = match['hx']
-    hy = match['hy']
-    func = match['func']
+    h = match["h"]
+    hx = match["hx"]
+    hy = match["hy"]
+    func = match["func"]
     x = func.args[0]
-    y = match['y']
-    xi = Function('xi')(x, func)
-    eta = Function('eta')(x, func)
+    y = match["y"]
+    xi = Function("xi")(x, func)
+    eta = Function("eta")(x, func)
 
     coeffdict = {}
     symbols = numbered_symbols("c", cls=Dummy)

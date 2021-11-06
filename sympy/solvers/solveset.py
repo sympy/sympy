@@ -139,7 +139,7 @@ def _masked(f, *atoms):
     >>> f
     cos(cos(x) + 1)
     """
-    sym = numbered_symbols('a', cls=Dummy, real=True)
+    sym = numbered_symbols("a", cls=Dummy, real=True)
     mask = []
     for a in ordered(f.atoms(*atoms)):
         for i in mask:
@@ -251,13 +251,13 @@ def _invert_real(f, g_ys, symbol):
     if f == symbol:
         return (f, g_ys)
 
-    n = Dummy('n', real=True)
+    n = Dummy("n", real=True)
 
     if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
         return _invert_real(f.exp, imageset(Lambda(n, log(n)), g_ys), symbol)
 
     if (
-        hasattr(f, 'inverse')
+        hasattr(f, "inverse")
         and f.inverse() is not None
         and not isinstance(
             f,
@@ -365,7 +365,7 @@ def _invert_real(f, g_ys, symbol):
                 if isinstance(trig, (tan, cot)):
                     return (lambda a: n * pi + trig.inverse()(a),)
 
-            n = Dummy('n', integer=True)
+            n = Dummy("n", integer=True)
             invs = S.EmptySet
             for L in inv(f):
                 invs += Union(*[imageset(Lambda(n, L(g)), S.Integers) for g in g_ys])
@@ -380,7 +380,7 @@ def _invert_complex(f, g_ys, symbol):
     if f == symbol:
         return (f, g_ys)
 
-    n = Dummy('n')
+    n = Dummy("n")
 
     if f.is_Add:
         # f = g + h
@@ -406,7 +406,7 @@ def _invert_complex(f, g_ys, symbol):
                 return _invert_complex(base, g_ys, symbol)
 
     if (
-        hasattr(f, 'inverse')
+        hasattr(f, "inverse")
         and f.inverse() is not None
         and not isinstance(f, TrigonometricFunction)
         and not isinstance(f, HyperbolicFunction)
@@ -424,7 +424,7 @@ def _invert_complex(f, g_ys, symbol):
             # Further can be improved to `(d*exp(exp(...(exp(a*x**n + b*x**(n-1) + ... + f))...) + c)`.
             g_ys_expr = g_ys.lamda.expr
             g_ys_vars = g_ys.lamda.variables
-            k = Dummy('k{}'.format(len(g_ys_vars)))
+            k = Dummy("k{}".format(len(g_ys_vars)))
             g_ys_vars_1 = (k,) + g_ys_vars
             exp_invs = Union(
                 *[
@@ -493,7 +493,7 @@ def _invert_abs(f, g_ys, symbol):
         conditions = And(*[Contains(i, Interval(0, oo)) for i in unknown])
     else:
         conditions = True
-    n = Dummy('n', real=True)
+    n = Dummy("n", real=True)
     # this is slightly different than above: instead of solving
     # +/-f on positive values, here we solve for f on +/- g_ys
     g_x, values = _invert_real(
@@ -579,14 +579,14 @@ def _is_finite_with_finite_vars(f, domain=S.Complexes):
 
     def assumptions(s):
         A = s.assumptions0
-        A.setdefault('finite', A.get('finite', True))
+        A.setdefault("finite", A.get("finite", True))
         if domain.is_subset(S.Reals):
             # if this gets set it will make complex=True, too
-            A.setdefault('real', True)
+            A.setdefault("real", True)
         else:
             # don't change 'real' because being complex implies
             # nothing about being real
-            A.setdefault('complex', True)
+            A.setdefault("complex", True)
         return A
 
     reps = {s: Dummy(**assumptions(s)) for s in f.free_symbols}
@@ -680,9 +680,9 @@ def _solve_trig(f, symbol, domain):
         except ValueError:
             raise NotImplementedError(
                 filldedent(
-                    '''
+                    """
                 Solution to this kind of trigonometric equations
-                is yet to be implemented'''
+                is yet to be implemented"""
                 )
             )
     return sol
@@ -710,7 +710,7 @@ def _solve_trig1(f, symbol, domain):
 
     """
     # Prepare change of variable
-    x = Dummy('x')
+    x = Dummy("x")
     if _is_function_class_equation(HyperbolicFunction, f, symbol):
         cov = exp(x)
         inverter = invert_real if domain.is_subset(S.Reals) else invert_complex
@@ -747,7 +747,7 @@ def _solve_trig1(f, symbol, domain):
     f = f.rewrite(exp)
     f = together(f)
     g, h = fraction(f)
-    y = Dummy('y')
+    y = Dummy("y")
     g, h = g.expand(), h.expand()
     g, h = g.subs(cov, y), h.subs(cov, y)
     if g.has(x) or h.has(x):
@@ -827,7 +827,7 @@ def _solve_trig2(f, symbol, domain):
         except TypeError:
             return ConditionSet(symbol, Eq(f_original, 0), domain)
 
-    x = Dummy('x')
+    x = Dummy("x")
 
     # ilcm() and igcd() require more than one argument
     if len(numerators) > 1:
@@ -842,7 +842,7 @@ def _solve_trig2(f, symbol, domain):
     f = together(f)
 
     g, h = fraction(f)
-    y = Dummy('y')
+    y = Dummy("y")
     g, h = g.expand(), h.expand()
     g, h = g.subs(tan(x), y), h.subs(tan(x), y)
 
@@ -869,7 +869,7 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
     """
     result = None
     if f.is_polynomial(symbol):
-        solns = roots(f, symbol, cubics=True, quartics=True, quintics=True, domain='EX')
+        solns = roots(f, symbol, cubics=True, quartics=True, quintics=True, domain="EX")
         num_roots = sum(solns.values())
         if degree(f, symbol) <= num_roots:
             result = FiniteSet(*solns.keys())
@@ -899,7 +899,7 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
                 result = ConditionSet(symbol, Eq(f, 0), domain)
 
             if gen != symbol:
-                y = Dummy('y')
+                y = Dummy("y")
                 inverter = invert_real if domain.is_subset(S.Reals) else invert_complex
                 lhs, rhs_s = inverter(gen, y, symbol)
                 if lhs == symbol:
@@ -919,7 +919,7 @@ def _solve_as_poly(f, symbol, domain=S.Complexes):
                 s.atoms(Symbol, AppliedUndef) == set() and not isinstance(s, RootOf)
                 for s in result
             ):
-                s = Dummy('s')
+                s = Dummy("s")
                 result = imageset(Lambda(s, expand_complex(s)), result)
         if isinstance(result, FiniteSet) and domain != S.Complexes:
             # Avoid adding gratuitous intersections with S.Complexes. Actual
@@ -941,7 +941,7 @@ def _solve_radical(f, unradf, symbol, solveset_solver):
     else:
         y, yeq = cov
         if not solveset_solver(y - I, y):
-            yreal = Dummy('yreal', real=True)
+            yreal = Dummy("yreal", real=True)
             yeq = yeq.xreplace({y: yreal})
             eq = eq.xreplace({y: yreal})
             y = yreal
@@ -971,12 +971,12 @@ def _solve_abs(f, symbol, domain):
     if not domain.is_subset(S.Reals):
         raise ValueError(
             filldedent(
-                '''
+                """
             Absolute values cannot be inverted in the
-            complex domain.'''
+            complex domain."""
             )
         )
-    p, q, r = Wild('p'), Wild('q'), Wild('r')
+    p, q, r = Wild("p"), Wild("q"), Wild("r")
     pattern_match = f.match(p * Abs(q) + r) or {}
     f_p, f_q, f_r = [pattern_match.get(i, S.Zero) for i in (p, q, r)]
 
@@ -1488,7 +1488,7 @@ def _solve_modular(f, symbol, domain):
         # in future.
         return unsolved_result
 
-    n = Dummy('n', integer=True)
+    n = Dummy("n", integer=True)
     f_x, g_n = _invert_modular(modterm, rhs, n, symbol)
 
     if f_x == modterm and g_n == rhs:
@@ -2297,8 +2297,8 @@ def solveset(f, symbol=None, domain=S.Complexes):
         else:
             raise NotImplementedError(
                 filldedent(
-                    '''
-                relationship between value and 0 is unknown: %s'''
+                    """
+                relationship between value and 0 is unknown: %s"""
                     % b
                 )
             )
@@ -2309,9 +2309,9 @@ def solveset(f, symbol=None, domain=S.Complexes):
         elif free_symbols:
             raise ValueError(
                 filldedent(
-                    '''
+                    """
                 The independent variable must be specified for a
-                multivariate equation.'''
+                multivariate equation."""
                 )
             )
     elif not isinstance(symbol, Symbol):
@@ -2358,9 +2358,9 @@ def solveset_complex(f, symbol):
 
 
 def _solveset_multi(eqs, syms, domains):
-    '''Basic implementation of a multivariate solveset.
+    """Basic implementation of a multivariate solveset.
 
-    For internal use (not ready for public consumption)'''
+    For internal use (not ready for public consumption)"""
 
     rep = {}
     for sym, dom in zip(syms, domains):
@@ -2460,7 +2460,7 @@ def solvify(f, symbol, domain):
         result = []
 
     elif isinstance(solution_set, ConditionSet):
-        raise NotImplementedError('solveset is unable to solve this equation.')
+        raise NotImplementedError("solveset is unable to solve this equation.")
 
     elif isinstance(solution_set, FiniteSet):
         result = list(solution_set)
@@ -2567,7 +2567,7 @@ def linear_coeffs(eq, *syms, **_kw):
         if f in symset:
             d[f].append(m)
         elif f.is_Add:
-            d1 = linear_coeffs(f, *has, **{'dict': True})
+            d1 = linear_coeffs(f, *has, **{"dict": True})
             d[0].append(m * d1.pop(0))
             for xf, vf in d1.items():
                 d[xf].append(m * vf)
@@ -2579,7 +2579,7 @@ def linear_coeffs(eq, *syms, **_kw):
         if not _kw:
             return [d.get(s, S.Zero) for s in syms] + [d[0]]
         return d  # default is still list but this won't matter
-    raise NonlinearError('nonlinear term encountered: %s' % t)
+    raise NonlinearError("nonlinear term encountered: %s" % t)
 
 
 def linear_eq_to_matrix(equations, *symbols):
@@ -2663,29 +2663,29 @@ def linear_eq_to_matrix(equations, *symbols):
     if not symbols:
         raise ValueError(
             filldedent(
-                '''
+                """
             Symbols must be given, for which coefficients
             are to be found.
-            '''
+            """
             )
         )
 
-    if hasattr(symbols[0], '__iter__'):
+    if hasattr(symbols[0], "__iter__"):
         symbols = symbols[0]
 
     for i in symbols:
         if not isinstance(i, Symbol):
             raise ValueError(
                 filldedent(
-                    '''
+                    """
             Expecting a Symbol but got %s
-            '''
+            """
                     % i
                 )
             )
 
     if has_dups(symbols):
-        raise ValueError('Symbols must be unique')
+        raise ValueError("Symbols must be unique")
 
     equations = sympify(equations)
     if isinstance(equations, MatrixBase):
@@ -2695,10 +2695,10 @@ def linear_eq_to_matrix(equations, *symbols):
     elif not is_sequence(equations):
         raise ValueError(
             filldedent(
-                '''
+                """
             Equation(s) must be given as a sequence, Expr,
             Eq or Matrix.
-            '''
+            """
             )
         )
 
@@ -2883,14 +2883,14 @@ def linsolve(system, *symbols):
         return S.EmptySet
 
     # If second argument is an iterable
-    if symbols and hasattr(symbols[0], '__iter__'):
+    if symbols and hasattr(symbols[0], "__iter__"):
         symbols = symbols[0]
     sym_gen = isinstance(symbols, GeneratorType)
 
     b = None  # if we don't get b the input was bad
     # unpack system
 
-    if hasattr(system, '__iter__'):
+    if hasattr(system, "__iter__"):
 
         # 1). (A, b)
         if len(system) == 2 and isinstance(system[0], MatrixBase):
@@ -2901,11 +2901,11 @@ def linsolve(system, *symbols):
             if sym_gen or not symbols:
                 raise ValueError(
                     filldedent(
-                        '''
+                        """
                     When passing a system of equations, the explicit
                     symbols for which a solution is being sought must
                     be given as a sequence, too.
-                '''
+                """
                     )
                 )
 
@@ -2944,20 +2944,20 @@ def linsolve(system, *symbols):
         if any(set(symbols) & (A.free_symbols | b.free_symbols)):
             raise ValueError(
                 filldedent(
-                    '''
+                    """
                 At least one of the symbols provided
                 already appears in the system to be solved.
                 One way to avoid this is to use Dummy symbols in
                 the generator, e.g. numbered_symbols('%s', cls=Dummy)
-            '''
-                    % symbols[0].name.rstrip('1234567890')
+            """
+                    % symbols[0].name.rstrip("1234567890")
                 )
             )
 
     if not symbols:
         symbols = [Dummy() for _ in range(A.cols)]
         name = _uniquely_named_symbol(
-            'tau', (A, b), compare=lambda i: str(i).rstrip('1234567890')
+            "tau", (A, b), compare=lambda i: str(i).rstrip("1234567890")
         ).name
         gen = numbered_symbols(name)
     else:
@@ -3093,16 +3093,16 @@ def substitution(
 
     if not symbols:
         msg = (
-            'Symbols must be given, for which solution of the ' 'system is to be found.'
+            "Symbols must be given, for which solution of the " "system is to be found."
         )
         raise ValueError(filldedent(msg))
 
     if not is_sequence(symbols):
-        msg = 'symbols should be given as a sequence, e.g. a list.' 'Not type %s: %s'
+        msg = "symbols should be given as a sequence, e.g. a list." "Not type %s: %s"
         raise TypeError(filldedent(msg % (type(symbols), symbols)))
 
-    if not getattr(symbols[0], 'is_Symbol', False):
-        msg = 'Iterable of symbols must be given as ' 'second argument, not type %s: %s'
+    if not getattr(symbols[0], "is_Symbol", False):
+        msg = "Iterable of symbols must be given as " "second argument, not type %s: %s"
         raise ValueError(filldedent(msg % (type(symbols[0]), symbols[0])))
 
     # By default `all_symbols` will be same as `symbols`
@@ -3264,7 +3264,7 @@ def substitution(
     # end of def _restore_imgset()
 
     def _append_eq(eq, result, res, delete_soln, n=None):
-        u = Dummy('u')
+        u = Dummy("u")
         if n:
             eq = eq.subs(n, 0)
         satisfy = eq if eq in (True, False) else checksol(u, u, eq, minimal=True)
@@ -3809,16 +3809,16 @@ def nonlinsolve(system, *symbols):
 
     if not symbols:
         msg = (
-            'Symbols must be given, for which solution of the ' 'system is to be found.'
+            "Symbols must be given, for which solution of the " "system is to be found."
         )
         raise ValueError(filldedent(msg))
 
-    if hasattr(symbols[0], '__iter__'):
+    if hasattr(symbols[0], "__iter__"):
         symbols = symbols[0]
 
     if not is_sequence(symbols) or not symbols:
         msg = (
-            'Symbols must be given, for which solution of the ' 'system is to be found.'
+            "Symbols must be given, for which solution of the " "system is to be found."
         )
         raise IndexError(filldedent(msg))
 

@@ -37,8 +37,8 @@ inf = oo.evalf()
 
 
 def test_solve_poly_inequality():
-    assert psolve(Poly(0, x), '==') == [S.Reals]
-    assert psolve(Poly(1, x), '==') == [S.EmptySet]
+    assert psolve(Poly(0, x), "==") == [S.Reals]
+    assert psolve(Poly(1, x), "==") == [S.EmptySet]
     assert psolve(PurePoly(x + 1, x), ">") == [Interval(-1, oo, True, False)]
 
 
@@ -189,11 +189,14 @@ def test_reduce_rational_inequalities_real_relational():
         [[(x ** 2 + 3 * x + 2) / (x ** 2 - 16) >= 0]], x, relational=False
     ) == Union(Interval.open(-oo, -4), Interval(-2, -1), Interval.open(4, oo))
 
-    assert reduce_rational_inequalities(
-        [[((-2 * x - 10) * (3 - x)) / ((x ** 2 + 5) * (x - 2) ** 2) < 0]],
-        x,
-        relational=False,
-    ) == Union(Interval.open(-5, 2), Interval.open(2, 3))
+    assert (
+        reduce_rational_inequalities(
+            [[((-2 * x - 10) * (3 - x)) / ((x ** 2 + 5) * (x - 2) ** 2) < 0]],
+            x,
+            relational=False,
+        )
+        == Union(Interval.open(-5, 2), Interval.open(2, 3))
+    )
 
     assert reduce_rational_inequalities(
         [[(x + 1) / (x - 5) <= 0]], x, relational=False
@@ -237,7 +240,7 @@ def test_reduce_abs_inequalities():
         And(S(-2) < x, x < -1), And(S.Half < x, x < 4)
     )
 
-    nr = Symbol('nr', extended_real=False)
+    nr = Symbol("nr", extended_real=False)
     raises(TypeError, lambda: reduce_inequalities(abs(nr - 5) < 3))
     assert reduce_inequalities(x < 3, symbols=[x, nr]) == And(-oo < x, x < 3)
 
@@ -302,7 +305,7 @@ def test_issue_5526():
     assert reduce_inequalities(0 <= x + Integral(y ** 2, (y, 1, 3)) - 1, [x]) == (
         x >= -Integral(y ** 2, (y, 1, 3)) + 1
     )
-    f = Function('f')
+    f = Function("f")
     e = Sum(f(x), (x, 1, 3))
     assert reduce_inequalities(0 <= x + e + y ** 2, [x]) == (
         x >= -(y ** 2) - Sum(f(x), (x, 1, 3))
@@ -354,11 +357,11 @@ def test_solve_univariate_inequality():
     den = ((x - 1) * (x - 2)).expand()
     assert isolve((x - 1) / den <= 0, x) == (x > -oo) & (x < 2) & Ne(x, 1)
 
-    n = Dummy('n')
+    n = Dummy("n")
     raises(NotImplementedError, lambda: isolve(Abs(x) <= n, x, relational=False))
     c1 = Dummy("c1", positive=True)
     raises(NotImplementedError, lambda: isolve(n / c1 < 0, c1))
-    n = Dummy('n', negative=True)
+    n = Dummy("n", negative=True)
     assert isolve(n / c1 > -2, c1) == (-n / 2 < c1)
     assert isolve(n / c1 < 0, c1) == True
     assert isolve(n / c1 > 0, c1) == False
@@ -425,7 +428,7 @@ def test_slow_general_univariate():
 def test_issue_8545():
     eq = 1 - x - abs(1 - x)
     ans = And(Lt(1, x), Lt(x, oo))
-    assert reduce_abs_inequality(eq, '<', x) == ans
+    assert reduce_abs_inequality(eq, "<", x) == ans
     eq = 1 - x - sqrt((1 - x) ** 2)
     assert reduce_inequalities(eq < 0) == ans
 
@@ -441,13 +444,13 @@ def test_issue_10198():
     ) & Ne(x, 0)
 
     assert reduce_inequalities(abs(1 / sqrt(x)) - 1, x) == Eq(x, 1)
-    assert reduce_abs_inequality(-3 + 1 / abs(1 - 1 / x), '<', x) == Or(
+    assert reduce_abs_inequality(-3 + 1 / abs(1 - 1 / x), "<", x) == Or(
         And(-oo < x, x < 0),
         And(S.Zero < x, x < Rational(3, 4)),
         And(Rational(3, 2) < x, x < oo),
     )
     raises(
-        ValueError, lambda: reduce_abs_inequality(-3 + 1 / abs(1 - 1 / sqrt(x)), '<', x)
+        ValueError, lambda: reduce_abs_inequality(-3 + 1 / abs(1 - 1 / sqrt(x)), "<", x)
     )
 
 
@@ -468,7 +471,7 @@ def test_issue_10268():
 
 @XFAIL
 def test_isolve_Sets():
-    n = Dummy('n')
+    n = Dummy("n")
     assert isolve(Abs(x) <= n, x, relational=False) == Piecewise(
         (S.EmptySet, n < 0), (Interval(-n, n), True)
     )
@@ -477,10 +480,10 @@ def test_isolve_Sets():
 def test_integer_domain_relational_isolve():
 
     dom = FiniteSet(0, 3)
-    x = Symbol('x', zero=False)
+    x = Symbol("x", zero=False)
     assert isolve((x - 1) * (x - 2) * (x - 4) < 0, x, domain=dom) == Eq(x, 3)
 
-    x = Symbol('x')
+    x = Symbol("x")
     assert isolve(x + 2 < 0, x, domain=S.Integers) == (x <= -3) & (x > -oo) & Eq(
         Mod(x, 1), 0
     )
@@ -518,10 +521,10 @@ def test__solve_inequality():
         x * (x + 1) < S.Half
     )
     assert _solve_inequality(Eq(x * y, 1), x) == Eq(x * y, 1)
-    nz = Symbol('nz', nonzero=True)
+    nz = Symbol("nz", nonzero=True)
     assert _solve_inequality(Eq(x * nz, 1), x) == Eq(x, 1 / nz)
     assert _solve_inequality(x * nz < 1, x) == (x * nz < 1)
-    a = Symbol('a', positive=True)
+    a = Symbol("a", positive=True)
     assert _solve_inequality(a / x > 1, x) == (S.Zero < x) & (x < a)
     assert _solve_inequality(a / x > 1, x, linear=True) == (1 / x > 1 / a)
     # make sure to include conditions under which solution is valid
@@ -541,4 +544,4 @@ def test__pt():
     assert _pt(S.NegativeOne, -oo) == _pt(-oo, S.NegativeOne) == -2
     assert _pt(x, oo) == _pt(oo, x) == x + 1
     assert _pt(x, -oo) == _pt(-oo, x) == x - 1
-    raises(ValueError, lambda: _pt(Dummy('i', infinite=True), S.One))
+    raises(ValueError, lambda: _pt(Dummy("i", infinite=True), S.One))

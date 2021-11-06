@@ -151,7 +151,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
 
     d, b = int(d), int(b)
 
-    x = Dummy('x')
+    x = Dummy("x")
 
     degree_poly = S.Zero
 
@@ -160,7 +160,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
             degree_poly += terms[i][0] * FallingFactorial(x, i)
 
     nni_roots = list(
-        roots(degree_poly, x, filter='Z', predicate=lambda r: r >= 0).keys()
+        roots(degree_poly, x, filter="Z", predicate=lambda r: r >= 0).keys()
     )
 
     if nni_roots:
@@ -177,7 +177,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
 
     if N < 0:
         if homogeneous:
-            if hints.get('symbols', False):
+            if hints.get("symbols", False):
                 return (S.Zero, [])
             else:
                 return S.Zero
@@ -189,7 +189,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
         y = E = S.Zero
 
         for i in range(N + 1):
-            C.append(Symbol('C' + str(i + shift)))
+            C.append(Symbol("C" + str(i + shift)))
             y += C[i] * n ** i
 
         for i in range(r + 1):
@@ -206,7 +206,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
         A = r
         U = N + A + b + 1
 
-        nni_roots = list(roots(polys[r], filter='Z', predicate=lambda r: r >= 0).keys())
+        nni_roots = list(roots(polys[r], filter="Z", predicate=lambda r: r >= 0).keys())
 
         if nni_roots != []:
             a = max(nni_roots) + 1
@@ -301,7 +301,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
         if not homogeneous:
             h = Add(*[(g * p).expand() for g, p in zip(G, P)])
 
-        C = [Symbol('C' + str(i + shift)) for i in range(A)]
+        C = [Symbol("C" + str(i + shift)) for i in range(A)]
 
         g = lambda i: Add(*[c * _delta(q, i) for c, q in zip(C, Q)])
 
@@ -315,7 +315,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
 
             if not solutions:
                 if homogeneous:
-                    if hints.get('symbols', False):
+                    if hints.get("symbols", False):
                         return (S.Zero, [])
                     else:
                         return S.Zero
@@ -338,7 +338,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
 
             result += s.expand()
 
-    if hints.get('symbols', False):
+    if hints.get("symbols", False):
         return (result, C)
     else:
         return result
@@ -409,7 +409,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
     A, B = coeffs[r], coeffs[0]
     A = A.subs(n, n - r).expand()
 
-    h = Dummy('h')
+    h = Dummy("h")
 
     res = resultant(A, B.subs(n, n + h), n)
 
@@ -417,7 +417,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
         p, q = res.as_numer_denom()
         res = quo(p, q, h)
 
-    nni_roots = list(roots(res, h, filter='Z', predicate=lambda r: r >= 0).keys())
+    nni_roots = list(roots(res, h, filter="Z", predicate=lambda r: r >= 0).keys())
 
     if not nni_roots:
         return rsolve_poly(coeffs, f, n, **hints)
@@ -446,7 +446,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
         result = rsolve_poly(numers, f * Mul(*denoms), n, **hints)
 
         if result is not None:
-            if hints.get('symbols', False):
+            if hints.get("symbols", False):
                 return (simplify(result[0] / C), result[1])
             else:
                 return simplify(result / C)
@@ -567,7 +567,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
     else:
         result = S.Zero
 
-    Z = Dummy('Z')
+    Z = Dummy("Z")
 
     p, q = coeffs[0], coeffs[r].subs(n, n - r + 1)
 
@@ -648,7 +648,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
                     kernel.append(K)
 
     kernel.sort(key=default_sort_key)
-    sk = list(zip(numbered_symbols('C'), kernel))
+    sk = list(zip(numbered_symbols("C"), kernel))
 
     if sk:
         for C, ker in sk:
@@ -656,7 +656,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
     else:
         return None
 
-    if hints.get('symbols', False):
+    if hints.get("symbols", False):
         # XXX: This returns the symbols in a non-deterministic order
         symbols |= {s for s, k in sk}
         return (result, list(symbols))
@@ -720,11 +720,11 @@ def rsolve(f, y, init=None):
         f = f.lhs - f.rhs
 
     n = y.args[0]
-    k = Wild('k', exclude=(n,))
+    k = Wild("k", exclude=(n,))
 
     # Preprocess user input to allow things like
     # y(n) + a*(y(n + 1) + y(n - 1))/2
-    f = f.expand().collect(y.func(Wild('m', integer=True)))
+    f = f.expand().collect(y.func(Wild("m", integer=True)))
 
     h_part = defaultdict(list)
     i_part = []

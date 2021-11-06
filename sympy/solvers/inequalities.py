@@ -39,7 +39,7 @@ def solve_poly_inequality(poly, rel):
     solve_poly_inequalities
     """
     if not isinstance(poly, Poly):
-        raise ValueError('For efficiency reasons, `poly` should be a Poly instance')
+        raise ValueError("For efficiency reasons, `poly` should be a Poly instance")
     if poly.as_expr().is_number:
         t = Relational(poly.as_expr(), 0, rel)
         if t is S.true:
@@ -51,11 +51,11 @@ def solve_poly_inequality(poly, rel):
 
     reals, intervals = poly.real_roots(multiple=False), []
 
-    if rel == '==':
+    if rel == "==":
         for root, _ in reals:
             interval = Interval(root, root)
             intervals.append(interval)
-    elif rel == '!=':
+    elif rel == "!=":
         left = S.NegativeInfinity
 
         for right, _ in reals + [(S.Infinity, 1)]:
@@ -70,13 +70,13 @@ def solve_poly_inequality(poly, rel):
 
         eq_sign, equal = None, False
 
-        if rel == '>':
+        if rel == ">":
             eq_sign = +1
-        elif rel == '<':
+        elif rel == "<":
             eq_sign = -1
-        elif rel == '>=':
+        elif rel == ">=":
             eq_sign, equal = +1, True
-        elif rel == '<=':
+        elif rel == "<=":
             eq_sign, equal = -1, True
         else:
             raise ValueError("'%s' is not a valid relation" % rel)
@@ -153,7 +153,7 @@ def solve_rational_inequalities(eqs):
 
         for (numer, denom), rel in _eqs:
             numer_intervals = solve_poly_inequality(numer * denom, rel)
-            denom_intervals = solve_poly_inequality(denom, '==')
+            denom_intervals = solve_poly_inequality(denom, "==")
 
             intervals = []
 
@@ -228,12 +228,12 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
                 if expr.is_Relational:
                     expr, rel = expr.lhs - expr.rhs, expr.rel_op
                 else:
-                    expr, rel = expr, '=='
+                    expr, rel = expr, "=="
 
             if expr is S.true:
-                numer, denom, rel = S.Zero, S.One, '=='
+                numer, denom, rel = S.Zero, S.One, "=="
             elif expr is S.false:
-                numer, denom, rel = S.One, S.One, '=='
+                numer, denom, rel = S.One, S.One, "=="
             else:
                 numer, denom = expr.together().as_numer_denom()
 
@@ -242,10 +242,10 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
             except PolynomialError:
                 raise PolynomialError(
                     filldedent(
-                        '''
+                        """
                     only polynomials and rational functions are
                     supported in this context.
-                    '''
+                    """
                     )
                 )
 
@@ -267,7 +267,7 @@ def reduce_rational_inequalities(exprs, gen, relational=True):
     if eqs:
         solution &= solve_rational_inequalities(eqs)
         exclude = solve_rational_inequalities(
-            [[((d, d.one), '==') for i in eqs for ((n, d), _) in i if d.has(gen)]]
+            [[((d, d.one), "==") for i in eqs for ((n, d), _) in i if d.has(gen)]]
         )
         solution -= exclude
 
@@ -304,10 +304,10 @@ def reduce_abs_inequality(expr, rel, gen):
     if gen.is_extended_real is False:
         raise TypeError(
             filldedent(
-                '''
+                """
             Cannot solve inequalities with absolute values containing
             non-real variables.
-            '''
+            """
             )
         )
 
@@ -352,7 +352,7 @@ def reduce_abs_inequality(expr, rel, gen):
 
     exprs = _bottom_up_scan(expr)
 
-    mapping = {'<': '>', '<=': '>='}
+    mapping = {"<": ">", "<=": ">="}
     inequalities = []
 
     for expr, conds in exprs:
@@ -459,10 +459,10 @@ def solve_univariate_inequality(
     if domain.is_subset(S.Reals) is False:
         raise NotImplementedError(
             filldedent(
-                '''
+                """
         Inequalities in the complex domain are
         not supported. Try the real domain by
-        setting domain=S.Reals'''
+        setting domain=S.Reals"""
             )
         )
     elif domain is not S.Reals:
@@ -484,16 +484,16 @@ def solve_univariate_inequality(
         rv = S.EmptySet
         return rv if not relational else rv.as_relational(_gen)
     elif gen.is_extended_real is None:
-        gen = Dummy('gen', extended_real=True)
+        gen = Dummy("gen", extended_real=True)
         try:
             expr = expr.xreplace({_gen: gen})
         except TypeError:
             raise TypeError(
                 filldedent(
-                    '''
+                    """
                 When gen is real, the relational has a complex part
                 which leads to an invalid comparison like I < 0.
-                '''
+                """
                 )
             )
 
@@ -519,13 +519,13 @@ def solve_univariate_inequality(
             frange = function_range(e, gen, domain)
 
             rel = expr.rel_op
-            if rel in ('<', '<='):
+            if rel in ("<", "<="):
                 if expr.func(frange.sup, 0):
                     rv = domain
                 elif not expr.func(frange.inf, 0):
                     rv = S.EmptySet
 
-            elif rel in ('>', '>='):
+            elif rel in (">", ">="):
                 if expr.func(frange.inf, 0):
                     rv = domain
                 elif not expr.func(frange.sup, 0):
@@ -552,11 +552,11 @@ def solve_univariate_inequality(
                 # univariate anyway
                 raise NotImplementedError(
                     filldedent(
-                        '''
+                        """
                     The inequality, %s, cannot be solved using
                     solve_univariate_inequality.
-                    '''
-                        % expr.subs(gen, Symbol('x'))
+                    """
+                        % expr.subs(gen, Symbol("x"))
                     )
                 )
 
@@ -586,7 +586,7 @@ def solve_univariate_inequality(
                     if v.is_comparable:
                         return expr.func(v, 0)
                     # not comparable or couldn't be evaluated
-                    raise NotImplementedError('relationship did not evaluate: %s' % r)
+                    raise NotImplementedError("relationship did not evaluate: %s" % r)
 
             singularities = []
             for d in denoms(expr, gen):
@@ -594,7 +594,7 @@ def solve_univariate_inequality(
             if not continuous:
                 domain = continuous_domain(expanded_e, gen, domain)
 
-            include_x = '=' in expr.rel_op and expr.rel_op != '!='
+            include_x = "=" in expr.rel_op and expr.rel_op != "!="
 
             try:
                 discontinuities = set(
@@ -626,7 +626,7 @@ def solve_univariate_inequality(
                     except TypeError:
                         raise NotImplementedError
             except NotImplementedError:
-                raise NotImplementedError('sorting of these roots is not supported')
+                raise NotImplementedError("sorting of these roots is not supported")
 
             # If expr contains imaginary coefficients, only take real
             # values of x for which the imaginary part is 0
@@ -674,11 +674,11 @@ def solve_univariate_inequality(
                 if im_sol is S.EmptySet:
                     raise ValueError(
                         filldedent(
-                            '''
+                            """
                         %s contains imaginary parts which cannot be
                         made 0 for any value of %s satisfying the
                         inequality, leading to relations like I < 0.
-                        '''
+                        """
                             % (expr.subs(gen, _gen), _gen)
                         )
                     )
@@ -740,7 +740,7 @@ def _pt(start, end):
             or end.is_infinite
             and end.is_extended_positive is None
         ):
-            raise ValueError('cannot proceed with unsigned infinite values')
+            raise ValueError("cannot proceed with unsigned infinite values")
         if (
             end.is_infinite
             and end.is_extended_negative
@@ -913,7 +913,7 @@ def _solve_inequality(ie, s, linear=False):
         if (
             a.is_zero != False
             or a.is_negative == a.is_positive is None  # don't divide by potential 0
-            and ie.rel_op not in ('!=', '==')  # if sign is not known then
+            and ie.rel_op not in ("!=", "==")  # if sign is not known then
         ):  # reject if not Eq/Ne
             e = ef
             a = S.One
@@ -967,9 +967,9 @@ def _reduce_inequalities(inequalities, symbols):
             else:
                 raise NotImplementedError(
                     filldedent(
-                        '''
+                        """
                     inequality has more than one symbol of interest.
-                    '''
+                    """
                     )
                 )
 
@@ -1024,9 +1024,9 @@ def reduce_inequalities(inequalities, symbols=[]):
     if any(i.is_extended_real is False for i in symbols):
         raise TypeError(
             filldedent(
-                '''
+                """
             inequalities cannot contain symbols that are not real.
-            '''
+            """
             )
         )
 

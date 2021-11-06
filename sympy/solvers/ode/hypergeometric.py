@@ -1,4 +1,4 @@
-r'''
+r"""
 This module contains the implementation of the 2nd_hypergeometric hint for
 dsolve. This is an incomplete implementation of the algorithm described in [1].
 The algorithm solves 2nd order linear ODEs of the form
@@ -21,7 +21,7 @@ References
 .. [1] L. Chan, E.S. Cheb-Terrab, Non-Liouvillian solutions for second order
        linear ODEs, (2004).
        https://arxiv.org/abs/math-ph/0402063
-'''
+"""
 
 from sympy.core import S, Pow
 from sympy.core.function import expand
@@ -39,9 +39,9 @@ from sympy.solvers.ode.ode import get_numbered_constants
 def match_2nd_hypergeometric(eq, func):
     x = func.args[0]
     df = func.diff(x)
-    a3 = Wild('a3', exclude=[func, func.diff(x), func.diff(x, 2)])
-    b3 = Wild('b3', exclude=[func, func.diff(x), func.diff(x, 2)])
-    c3 = Wild('c3', exclude=[func, func.diff(x), func.diff(x, 2)])
+    a3 = Wild("a3", exclude=[func, func.diff(x), func.diff(x, 2)])
+    b3 = Wild("b3", exclude=[func, func.diff(x), func.diff(x, 2)])
+    c3 = Wild("c3", exclude=[func, func.diff(x), func.diff(x, 2)])
     deq = a3 * (func.diff(x, 2)) + b3 * df + c3 * func
     r = collect(eq, [func.diff(x, 2), func.diff(x), func]).match(deq)
     if r:
@@ -120,7 +120,7 @@ def equivalence_hypergeometric(A, B, func):
     # checking if equivalence is exists or not.
 
     if equivalence(max_num_pow, dem_pow) == "2F1":
-        return {'I0': I0, 'k': k, 'sing_point': sing_point, 'type': "2F1"}
+        return {"I0": I0, "k": k, "sing_point": sing_point, "type": "2F1"}
     else:
         return None
 
@@ -205,12 +205,12 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
     _b = (_r - _s) / 2
 
     rn = {
-        'a': simplify(_a),
-        'b': simplify(_b),
-        'c': simplify(_c),
-        'k': k,
-        'mobius': mob,
-        'type': "2F1",
+        "a": simplify(_a),
+        "b": simplify(_b),
+        "c": simplify(_c),
+        "k": k,
+        "mobius": mob,
+        "type": "2F1",
     }
     return rn
 
@@ -242,10 +242,10 @@ def get_sol_2F1_hypergeometric(eq, func, match_object):
     from sympy.polys.polytools import factor
 
     C0, C1 = get_numbered_constants(eq, num=2)
-    a = match_object['a']
-    b = match_object['b']
-    c = match_object['c']
-    A = match_object['A']
+    a = match_object["a"]
+    b = match_object["b"]
+    c = match_object["c"]
+    A = match_object["A"]
 
     sol = None
 
@@ -254,11 +254,14 @@ def get_sol_2F1_hypergeometric(eq, func, match_object):
             [a - c + 1, b - c + 1], [2 - c], x
         ) * x ** (1 - c)
     elif c == 1:
-        y2 = Integral(
-            exp(Integral((-(a + b + 1) * x + c) / (x ** 2 - x), x))
-            / (hyperexpand(hyper([a, b], [c], x)) ** 2),
-            x,
-        ) * hyper([a, b], [c], x)
+        y2 = (
+            Integral(
+                exp(Integral((-(a + b + 1) * x + c) / (x ** 2 - x), x))
+                / (hyperexpand(hyper([a, b], [c], x)) ** 2),
+                x,
+            )
+            * hyper([a, b], [c], x)
+        )
         sol = C0 * hyper([a, b], [c], x) + C1 * y2
     elif (c - a - b).is_integer == False:
         sol = C0 * hyper([a, b], [1 + a + b - c], 1 - x) + C1 * hyper(
@@ -267,23 +270,23 @@ def get_sol_2F1_hypergeometric(eq, func, match_object):
 
     if sol:
         # applying transformation in the solution
-        subs = match_object['mobius']
+        subs = match_object["mobius"]
         dtdx = simplify(1 / (subs.diff(x)))
         _B = ((a + b + 1) * x - c).subs(x, subs) * dtdx
         _B = factor(_B + ((x ** 2 - x).subs(x, subs)) * (dtdx.diff(x) * dtdx))
         _A = factor((x ** 2 - x).subs(x, subs) * (dtdx ** 2))
         e = exp(logcombine(Integral(cancel(_B / (2 * _A)), x), force=True))
-        sol = sol.subs(x, match_object['mobius'])
-        sol = sol.subs(x, x ** match_object['k'])
-        e = e.subs(x, x ** match_object['k'])
+        sol = sol.subs(x, match_object["mobius"])
+        sol = sol.subs(x, x ** match_object["k"])
+        e = e.subs(x, x ** match_object["k"])
 
         if not A.is_zero:
             e1 = Integral(A / 2, x)
             e1 = exp(logcombine(e1, force=True))
-            sol = cancel((e / e1) * x ** ((-match_object['k'] + 1) / 2)) * sol
+            sol = cancel((e / e1) * x ** ((-match_object["k"] + 1) / 2)) * sol
             sol = Eq(func, sol)
             return sol
 
-        sol = cancel((e) * x ** ((-match_object['k'] + 1) / 2)) * sol
+        sol = cancel((e) * x ** ((-match_object["k"] + 1) / 2)) * sol
         sol = Eq(func, sol)
     return sol

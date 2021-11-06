@@ -67,7 +67,7 @@ def _get_euler_characteristic_eq_sols(eq, func, match_obj):
     f = func.func
 
     # First, set up characteristic equation.
-    chareq, symbol = S.Zero, Dummy('x')
+    chareq, symbol = S.Zero, Dummy("x")
 
     for i in match_obj:
         if i >= 0:
@@ -206,7 +206,7 @@ def _get_const_characteristic_eq_sols(r, func, order):
     """
     x = func.args[0]
     # First, set up characteristic equation.
-    chareq, symbol = S.Zero, Dummy('x')
+    chareq, symbol = S.Zero, Dummy("x")
 
     for i in r.keys():
         if isinstance(i, str) or i < 0:
@@ -331,9 +331,9 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
     {'test': False}
 
     """
-    a = Wild('a', exclude=[x])
-    b = Wild('b', exclude=[x])
-    expr = powsimp(expr, combine='exp')  # exp(x)*exp(2*x + 1) => exp(3*x + 1)
+    a = Wild("a", exclude=[x])
+    b = Wild("b", exclude=[x])
+    expr = powsimp(expr, combine="exp")  # exp(x)*exp(2*x + 1) => exp(3*x + 1)
     retdict = {}
 
     def _test_term(expr, x):
@@ -437,8 +437,8 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
         of homogenous equation"""
         return expand(sub_func_doit(eq_homogeneous, func, term)).is_zero
 
-    retdict['test'] = _test_term(expr, x)
-    if retdict['test']:
+    retdict["test"] = _test_term(expr, x)
+    if retdict["test"]:
         # Try to generate a list of trial solutions that will have the
         # undetermined coefficients. Note that if any of these are not linearly
         # independent with any of the solutions to the homogeneous equation,
@@ -453,7 +453,7 @@ def _undetermined_coefficients_match(expr, x, func=None, eq_homogeneous=S.Zero):
                     act = {x * ts for ts in act}
             temp_set = temp_set.union(act)
 
-        retdict['trialset'] = temp_set
+        retdict["trialset"] = temp_set
     return retdict
 
 
@@ -479,10 +479,10 @@ def _solve_undetermined_coefficients(eq, func, order, match, trialset):
 
     """
     r = match
-    coeffs = numbered_symbols('a', cls=Dummy)
+    coeffs = numbered_symbols("a", cls=Dummy)
     coefflist = []
-    gensols = r['list']
-    gsol = r['sol']
+    gensols = r["list"]
+    gsol = r["sol"]
     f = func.func
     x = func.args[0]
 
@@ -511,9 +511,9 @@ def _solve_undetermined_coefficients(eq, func, order, match, trialset):
     for i in Add.make_args(eqs):
         s = separatevars(i, dict=True, symbols=[x])
         if coeffsdict.get(s[x]):
-            coeffsdict[s[x]] += s['coeff']
+            coeffsdict[s[x]] += s["coeff"]
         else:
-            coeffsdict[s[x]] = s['coeff']
+            coeffsdict[s[x]] = s["coeff"]
 
     coeffvals = solve(list(coeffsdict.values()), coefflist)
 

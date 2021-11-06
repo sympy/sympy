@@ -14,7 +14,7 @@ from sympy.core.relational import Equality
 from sympy.core.symbol import Wild
 
 
-def _preprocess(expr, func=None, hint='_Integral'):
+def _preprocess(expr, func=None, hint="_Integral"):
     """Prepare expr for solving by making sure that differentiation
     is done so that only func remains in unevaluated derivatives and
     (if hint doesn't end with _Integral) that doit is applied to all
@@ -81,7 +81,7 @@ def _preprocess(expr, func=None, hint='_Integral'):
         funcs = set().union(*[d.atoms(AppliedUndef) for d in derivs])
         if len(funcs) != 1:
             raise ValueError(
-                'The function cannot be ' 'automatically detected for %s.' % expr
+                "The function cannot be " "automatically detected for %s." % expr
             )
         func = funcs.pop()
     fvars = set(func.args)
@@ -90,7 +90,7 @@ def _preprocess(expr, func=None, hint='_Integral'):
     reps = [
         (d, d.doit())
         for d in derivs
-        if not hint.endswith('_Integral') or d.has(func) or set(d.variables) & fvars
+        if not hint.endswith("_Integral") or d.has(func) or set(d.variables) & fvars
     ]
     eq = expr.subs(reps)
     return eq, func
@@ -119,7 +119,7 @@ def ode_order(expr, func):
     3
 
     """
-    a = Wild('a', exclude=[func])
+    a = Wild("a", exclude=[func])
     if expr.match(a):
         return 0
 
@@ -193,30 +193,30 @@ def _desolve(
     # that identifies whether the function caller is an ordinary
     # or partial differential equation. Accordingly corresponding
     # changes are made in the function.
-    type = kwargs.get('type', None)
-    xi = kwargs.get('xi')
-    eta = kwargs.get('eta')
-    x0 = kwargs.get('x0', 0)
-    terms = kwargs.get('n')
+    type = kwargs.get("type", None)
+    xi = kwargs.get("xi")
+    eta = kwargs.get("eta")
+    x0 = kwargs.get("x0", 0)
+    terms = kwargs.get("n")
 
-    if type == 'ode':
+    if type == "ode":
         from sympy.solvers.ode import classify_ode, allhints
 
         classifier = classify_ode
-        string = 'ODE '
-        dummy = ''
+        string = "ODE "
+        dummy = ""
 
-    elif type == 'pde':
+    elif type == "pde":
         from sympy.solvers.pde import classify_pde, allhints
 
         classifier = classify_pde
-        string = 'PDE '
-        dummy = 'p'
+        string = "PDE "
+        dummy = "p"
 
     # Magic that should only be used internally.  Prevents classify_ode from
     # being called more than it needs to be by passing its results through
     # recursive calls.
-    if kwargs.get('classify', True):
+    if kwargs.get("classify", True):
         hints = classifier(
             eq,
             func,
@@ -244,46 +244,46 @@ def _desolve(
         #          hint.
         # order:   The order of the DE, as determined by ode_order().
         hints = kwargs.get(
-            'hint', {'default': hint, hint: kwargs['match'], 'order': kwargs['order']}
+            "hint", {"default": hint, hint: kwargs["match"], "order": kwargs["order"]}
         )
-    if not hints['default']:
+    if not hints["default"]:
         # classify_ode will set hints['default'] to None if no hints match.
-        if hint not in allhints and hint != 'default':
+        if hint not in allhints and hint != "default":
             raise ValueError("Hint not recognized: " + hint)
-        elif hint not in hints['ordered_hints'] and hint != 'default':
+        elif hint not in hints["ordered_hints"] and hint != "default":
             raise ValueError(string + str(eq) + " does not match hint " + hint)
         # If dsolve can't solve the purely algebraic equation then dsolve will raise
         # ValueError
-        elif hints['order'] == 0:
+        elif hints["order"] == 0:
             raise ValueError(
                 str(eq) + " is not a solvable differential equation in " + str(func)
             )
         else:
             raise NotImplementedError(dummy + "solve" + ": Cannot solve " + str(eq))
-    if hint == 'default':
+    if hint == "default":
         return _desolve(
             eq,
             func,
             ics=ics,
-            hint=hints['default'],
+            hint=hints["default"],
             simplify=simplify,
             prep=prep,
             x0=x0,
             classify=False,
-            order=hints['order'],
-            match=hints[hints['default']],
+            order=hints["order"],
+            match=hints[hints["default"]],
             xi=xi,
             eta=eta,
             n=terms,
             type=type,
         )
-    elif hint in ('all', 'all_Integral', 'best'):
+    elif hint in ("all", "all_Integral", "best"):
         retdict = {}
-        gethints = set(hints) - {'order', 'default', 'ordered_hints'}
-        if hint == 'all_Integral':
+        gethints = set(hints) - {"order", "default", "ordered_hints"}
+        if hint == "all_Integral":
             for i in hints:
-                if i.endswith('_Integral'):
-                    gethints.remove(i[: -len('_Integral')])
+                if i.endswith("_Integral"):
+                    gethints.remove(i[: -len("_Integral")])
             # special cases
             for k in [
                 "1st_homogeneous_coeff_best",
@@ -305,13 +305,13 @@ def _desolve(
                 prep=prep,
                 classify=False,
                 n=terms,
-                order=hints['order'],
+                order=hints["order"],
                 match=hints[i],
                 type=type,
             )
             retdict[i] = sol
-        retdict['all'] = True
-        retdict['eq'] = eq
+        retdict["all"] = True
+        retdict["eq"] = eq
         return retdict
     elif hint not in allhints:  # and hint not in ('default', 'ordered_hints'):
         raise ValueError("Hint not recognized: " + hint)
@@ -319,6 +319,6 @@ def _desolve(
         raise ValueError(string + str(eq) + " does not match hint " + hint)
     else:
         # Key added to identify the hint needed to solve the equation
-        hints['hint'] = hint
-    hints.update({'func': func, 'eq': eq})
+        hints["hint"] = hint
+    hints.update({"func": func, "eq": eq})
     return hints

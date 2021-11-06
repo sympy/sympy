@@ -156,7 +156,7 @@ def _lambert(eq, x):
         return []  # violated assumptions
 
     # invert the generator X1 so we have x(u)
-    u = Dummy('rhs')
+    u = Dummy("rhs")
     xusolns = solve(X1 - u, x)
 
     # There are infinitely many branches for LambertW
@@ -181,7 +181,7 @@ def _lambert(eq, x):
     num, den = ((c * d - b * f) / a / b).as_numer_denom()
     p, den = den.as_coeff_Mul()
     e = exp(num / den)
-    t = Dummy('t')
+    t = Dummy("t")
     args = [d / (a * b) * t for t in roots(t ** p - e, t).keys()]
 
     # calculating solutions from args
@@ -299,7 +299,7 @@ def _solve_lambert(f, symbol, gens):
         # replacing all even_degrees of symbol with dummy variable t
         # since these will need special handling; non-Add/Mul do not
         # need this handling
-        t = Dummy('t', **symbol.assumptions0)
+        t = Dummy("t", **symbol.assumptions0)
         lhs = lhs.replace(
             lambda i: i.is_Pow  # find symbol**even
             and i.base == symbol
@@ -425,7 +425,7 @@ def _solve_lambert(f, symbol, gens):
 
     if not soln:
         raise NotImplementedError(
-            '%s does not appear to have a solution in ' 'terms of LambertW' % f
+            "%s does not appear to have a solution in " "terms of LambertW" % f
         )
 
     return list(ordered(soln))
@@ -470,7 +470,7 @@ def bivariate_type(f, x, y, *, first=True):
 
     """
 
-    u = Dummy('u', positive=True)
+    u = Dummy("u", positive=True)
 
     if first:
         p = Poly(f, x, y)

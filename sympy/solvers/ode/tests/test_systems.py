@@ -33,11 +33,11 @@ from sympy.simplify.ratsimp import ratsimp
 from sympy.testing.pytest import ON_TRAVIS, raises, slow, skip, XFAIL
 
 
-C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
-x = symbols('x')
-f = Function('f')
-g = Function('g')
-h = Function('h')
+C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols("C0:11")
+x = symbols("x")
+f = Function("f")
+g = Function("g")
+h = Function("h")
 
 
 def test_linear_ode_to_matrix():
@@ -98,8 +98,8 @@ def test_linear_ode_to_matrix():
 
 
 def test__classify_linear_system():
-    x, y, z, w = symbols('x, y, z, w', cls=Function)
-    t, k, l = symbols('t k l')
+    x, y, z, w = symbols("x, y, z, w", cls=Function)
+    t, k, l = symbols("t k l")
     x1 = diff(x(t), t)
     y1 = diff(y(t), t)
     z1 = diff(z(t), t)
@@ -117,8 +117,8 @@ def test__classify_linear_system():
         (2 * y1 - 11 * t * x(t) + 3 * y(t) + t),
     )
     sol2 = {
-        'is_implicit': True,
-        'canon_eqs': [
+        "is_implicit": True,
+        "canon_eqs": [
             [
                 Eq(Derivative(x(t), t), -sqrt(-12 * x(t) / 5 + 6 * y(t) / 5)),
                 Eq(Derivative(y(t), t), 11 * t * x(t) / 2 - t / 2 - 3 * y(t) / 2),
@@ -150,19 +150,19 @@ def test__classify_linear_system():
         (z1 + w(t)),
     )
     answer_3 = {
-        'no_of_equation': 4,
-        'eq': (
+        "no_of_equation": 4,
+        "eq": (
             12 * x(t) - 6 * y(t) + 5 * Derivative(x(t), t),
             -11 * x(t) + 3 * y(t) + 2 * Derivative(y(t), t),
             z(t) + 5 * Derivative(w(t), t),
             w(t) + Derivative(z(t), t),
         ),
-        'func': [x(t), y(t), z(t), w(t)],
-        'order': {x(t): 1, y(t): 1, z(t): 1, w(t): 1},
-        'is_linear': True,
-        'is_constant': True,
-        'is_homogeneous': True,
-        'func_coeff': -Matrix(
+        "func": [x(t), y(t), z(t), w(t)],
+        "order": {x(t): 1, y(t): 1, z(t): 1, w(t): 1},
+        "is_linear": True,
+        "is_constant": True,
+        "is_homogeneous": True,
+        "func_coeff": -Matrix(
             [
                 [Rational(12, 5), Rational(-6, 5), 0, 0],
                 [Rational(-11, 2), Rational(3, 2), 0, 0],
@@ -170,8 +170,8 @@ def test__classify_linear_system():
                 [0, 0, Rational(1, 5), 0],
             ]
         ),
-        'type_of_equation': 'type1',
-        'is_general': True,
+        "type_of_equation": "type1",
+        "is_general": True,
     }
     assert _classify_linear_system(eqs_3, funcs_2, t) == answer_3
 
@@ -182,19 +182,19 @@ def test__classify_linear_system():
         (w1 - z(t)),
     )
     answer_4 = {
-        'no_of_equation': 4,
-        'eq': (
+        "no_of_equation": 4,
+        "eq": (
             12 * x(t) - 6 * y(t) + 5 * Derivative(x(t), t),
             -11 * x(t) + 3 * y(t) + 2 * Derivative(y(t), t),
             -w(t) + Derivative(z(t), t),
             -z(t) + Derivative(w(t), t),
         ),
-        'func': [x(t), y(t), z(t), w(t)],
-        'order': {x(t): 1, y(t): 1, z(t): 1, w(t): 1},
-        'is_linear': True,
-        'is_constant': True,
-        'is_homogeneous': True,
-        'func_coeff': -Matrix(
+        "func": [x(t), y(t), z(t), w(t)],
+        "order": {x(t): 1, y(t): 1, z(t): 1, w(t): 1},
+        "is_linear": True,
+        "is_constant": True,
+        "is_homogeneous": True,
+        "func_coeff": -Matrix(
             [
                 [Rational(12, 5), Rational(-6, 5), 0, 0],
                 [Rational(-11, 2), Rational(3, 2), 0, 0],
@@ -202,8 +202,8 @@ def test__classify_linear_system():
                 [0, 0, -1, 0],
             ]
         ),
-        'type_of_equation': 'type1',
-        'is_general': True,
+        "type_of_equation": "type1",
+        "is_general": True,
     }
     assert _classify_linear_system(eqs_4, funcs_2, t) == answer_4
 
@@ -214,20 +214,20 @@ def test__classify_linear_system():
         (w1 - z(t)),
     )
     answer_5 = {
-        'no_of_equation': 4,
-        'eq': (
+        "no_of_equation": 4,
+        "eq": (
             12 * x(t) - 6 * y(t) + 5 * Derivative(x(t), t) + Derivative(x(t), (t, 2)),
             -11 * x(t) + 3 * y(t) + 2 * Derivative(y(t), t),
             -w(t) + Derivative(z(t), t),
             -z(t) + Derivative(w(t), t),
         ),
-        'func': [x(t), y(t), z(t), w(t)],
-        'order': {x(t): 2, y(t): 1, z(t): 1, w(t): 1},
-        'is_linear': True,
-        'is_homogeneous': True,
-        'is_general': True,
-        'type_of_equation': 'type0',
-        'is_higher_order': True,
+        "func": [x(t), y(t), z(t), w(t)],
+        "order": {x(t): 2, y(t): 1, z(t): 1, w(t): 1},
+        "is_linear": True,
+        "is_homogeneous": True,
+        "is_general": True,
+        "type_of_equation": "type0",
+        "is_higher_order": True,
     }
     assert _classify_linear_system(eqs_5, funcs_2, t) == answer_5
 
@@ -237,36 +237,36 @@ def test__classify_linear_system():
         Eq(z1, 11 * x(t) - 7 * y(t)),
     )
     answer_6 = {
-        'no_of_equation': 3,
-        'eq': (
+        "no_of_equation": 3,
+        "eq": (
             Eq(Derivative(x(t), t), 3 * y(t) - 11 * z(t)),
             Eq(Derivative(y(t), t), -3 * x(t) + 7 * z(t)),
             Eq(Derivative(z(t), t), 11 * x(t) - 7 * y(t)),
         ),
-        'func': [x(t), y(t), z(t)],
-        'order': {x(t): 1, y(t): 1, z(t): 1},
-        'is_linear': True,
-        'is_constant': True,
-        'is_homogeneous': True,
-        'func_coeff': -Matrix([[0, -3, 11], [3, 0, -7], [-11, 7, 0]]),
-        'type_of_equation': 'type1',
-        'is_general': True,
+        "func": [x(t), y(t), z(t)],
+        "order": {x(t): 1, y(t): 1, z(t): 1},
+        "is_linear": True,
+        "is_constant": True,
+        "is_homogeneous": True,
+        "func_coeff": -Matrix([[0, -3, 11], [3, 0, -7], [-11, 7, 0]]),
+        "type_of_equation": "type1",
+        "is_general": True,
     }
 
     assert _classify_linear_system(eqs_6, funcs_2[:-1], t) == answer_6
 
     eqs_7 = (Eq(x1, y(t)), Eq(y1, x(t)))
     answer_7 = {
-        'no_of_equation': 2,
-        'eq': (Eq(Derivative(x(t), t), y(t)), Eq(Derivative(y(t), t), x(t))),
-        'func': [x(t), y(t)],
-        'order': {x(t): 1, y(t): 1},
-        'is_linear': True,
-        'is_constant': True,
-        'is_homogeneous': True,
-        'func_coeff': -Matrix([[0, -1], [-1, 0]]),
-        'type_of_equation': 'type1',
-        'is_general': True,
+        "no_of_equation": 2,
+        "eq": (Eq(Derivative(x(t), t), y(t)), Eq(Derivative(y(t), t), x(t))),
+        "func": [x(t), y(t)],
+        "order": {x(t): 1, y(t): 1},
+        "is_linear": True,
+        "is_constant": True,
+        "is_homogeneous": True,
+        "func_coeff": -Matrix([[0, -1], [-1, 0]]),
+        "type_of_equation": "type1",
+        "is_general": True,
     }
     assert _classify_linear_system(eqs_7, funcs, t) == answer_7
 
@@ -276,20 +276,20 @@ def test__classify_linear_system():
         Eq(z1, 5 * x(t) + 7 * y(t) + 9 * z(t)),
     )
     answer_8 = {
-        'no_of_equation': 3,
-        'eq': (
+        "no_of_equation": 3,
+        "eq": (
             Eq(Derivative(x(t), t), 21 * x(t)),
             Eq(Derivative(y(t), t), 17 * x(t) + 3 * y(t)),
             Eq(Derivative(z(t), t), 5 * x(t) + 7 * y(t) + 9 * z(t)),
         ),
-        'func': [x(t), y(t), z(t)],
-        'order': {x(t): 1, y(t): 1, z(t): 1},
-        'is_linear': True,
-        'is_constant': True,
-        'is_homogeneous': True,
-        'func_coeff': -Matrix([[-21, 0, 0], [-17, -3, 0], [-5, -7, -9]]),
-        'type_of_equation': 'type1',
-        'is_general': True,
+        "func": [x(t), y(t), z(t)],
+        "order": {x(t): 1, y(t): 1, z(t): 1},
+        "is_linear": True,
+        "is_constant": True,
+        "is_homogeneous": True,
+        "func_coeff": -Matrix([[-21, 0, 0], [-17, -3, 0], [-5, -7, -9]]),
+        "type_of_equation": "type1",
+        "is_general": True,
     }
 
     assert _classify_linear_system(eqs_8, funcs_2[:-1], t) == answer_8
@@ -300,20 +300,20 @@ def test__classify_linear_system():
         Eq(z1, 32 * x(t) + 41 * y(t) + 11 * z(t)),
     )
     answer_9 = {
-        'no_of_equation': 3,
-        'eq': (
+        "no_of_equation": 3,
+        "eq": (
             Eq(Derivative(x(t), t), 4 * x(t) + 5 * y(t) + 2 * z(t)),
             Eq(Derivative(y(t), t), x(t) + 13 * y(t) + 9 * z(t)),
             Eq(Derivative(z(t), t), 32 * x(t) + 41 * y(t) + 11 * z(t)),
         ),
-        'func': [x(t), y(t), z(t)],
-        'order': {x(t): 1, y(t): 1, z(t): 1},
-        'is_linear': True,
-        'is_constant': True,
-        'is_homogeneous': True,
-        'func_coeff': -Matrix([[-4, -5, -2], [-1, -13, -9], [-32, -41, -11]]),
-        'type_of_equation': 'type1',
-        'is_general': True,
+        "func": [x(t), y(t), z(t)],
+        "order": {x(t): 1, y(t): 1, z(t): 1},
+        "is_linear": True,
+        "is_constant": True,
+        "is_homogeneous": True,
+        "func_coeff": -Matrix([[-4, -5, -2], [-1, -13, -9], [-32, -41, -11]]),
+        "type_of_equation": "type1",
+        "is_general": True,
     }
     assert _classify_linear_system(eqs_9, funcs_2[:-1], t) == answer_9
 
@@ -323,26 +323,26 @@ def test__classify_linear_system():
         Eq(5 * z1, 3 * 4 * (x(t) - y(t))),
     )
     answer_10 = {
-        'no_of_equation': 3,
-        'eq': (
+        "no_of_equation": 3,
+        "eq": (
             Eq(3 * Derivative(x(t), t), 20 * y(t) - 20 * z(t)),
             Eq(4 * Derivative(y(t), t), -15 * x(t) + 15 * z(t)),
             Eq(5 * Derivative(z(t), t), 12 * x(t) - 12 * y(t)),
         ),
-        'func': [x(t), y(t), z(t)],
-        'order': {x(t): 1, y(t): 1, z(t): 1},
-        'is_linear': True,
-        'is_constant': True,
-        'is_homogeneous': True,
-        'func_coeff': -Matrix(
+        "func": [x(t), y(t), z(t)],
+        "order": {x(t): 1, y(t): 1, z(t): 1},
+        "is_linear": True,
+        "is_constant": True,
+        "is_homogeneous": True,
+        "func_coeff": -Matrix(
             [
                 [0, Rational(-20, 3), Rational(20, 3)],
                 [Rational(15, 4), 0, Rational(-15, 4)],
                 [Rational(-12, 5), Rational(12, 5), 0],
             ]
         ),
-        'type_of_equation': 'type1',
-        'is_general': True,
+        "type_of_equation": "type1",
+        "is_general": True,
     }
     assert _classify_linear_system(eqs_10, funcs_2[:-1], t) == answer_10
 
@@ -352,35 +352,35 @@ def test__classify_linear_system():
         Eq(z1, 11 * x(t) - 7 * y(t)),
     )
     sol11 = {
-        'no_of_equation': 3,
-        'eq': (
+        "no_of_equation": 3,
+        "eq": (
             Eq(Derivative(x(t), t), 3 * y(t) - 11 * z(t)),
             Eq(Derivative(y(t), t), -3 * x(t) + 7 * z(t)),
             Eq(Derivative(z(t), t), 11 * x(t) - 7 * y(t)),
         ),
-        'func': [x(t), y(t), z(t)],
-        'order': {x(t): 1, y(t): 1, z(t): 1},
-        'is_linear': True,
-        'is_constant': True,
-        'is_homogeneous': True,
-        'func_coeff': -Matrix([[0, -3, 11], [3, 0, -7], [-11, 7, 0]]),
-        'type_of_equation': 'type1',
-        'is_general': True,
+        "func": [x(t), y(t), z(t)],
+        "order": {x(t): 1, y(t): 1, z(t): 1},
+        "is_linear": True,
+        "is_constant": True,
+        "is_homogeneous": True,
+        "func_coeff": -Matrix([[0, -3, 11], [3, 0, -7], [-11, 7, 0]]),
+        "type_of_equation": "type1",
+        "is_general": True,
     }
     assert _classify_linear_system(eq11, funcs_2[:-1], t) == sol11
 
     eq12 = (Eq(Derivative(x(t), t), y(t)), Eq(Derivative(y(t), t), x(t)))
     sol12 = {
-        'no_of_equation': 2,
-        'eq': (Eq(Derivative(x(t), t), y(t)), Eq(Derivative(y(t), t), x(t))),
-        'func': [x(t), y(t)],
-        'order': {x(t): 1, y(t): 1},
-        'is_linear': True,
-        'is_constant': True,
-        'is_homogeneous': True,
-        'func_coeff': -Matrix([[0, -1], [-1, 0]]),
-        'type_of_equation': 'type1',
-        'is_general': True,
+        "no_of_equation": 2,
+        "eq": (Eq(Derivative(x(t), t), y(t)), Eq(Derivative(y(t), t), x(t))),
+        "func": [x(t), y(t)],
+        "order": {x(t): 1, y(t): 1},
+        "is_linear": True,
+        "is_constant": True,
+        "is_homogeneous": True,
+        "func_coeff": -Matrix([[0, -1], [-1, 0]]),
+        "type_of_equation": "type1",
+        "is_general": True,
     }
     assert _classify_linear_system(eq12, [x(t), y(t)], t) == sol12
 
@@ -390,20 +390,20 @@ def test__classify_linear_system():
         Eq(Derivative(z(t), t), 5 * x(t) + 7 * y(t) + 9 * z(t)),
     )
     sol13 = {
-        'no_of_equation': 3,
-        'eq': (
+        "no_of_equation": 3,
+        "eq": (
             Eq(Derivative(x(t), t), 21 * x(t)),
             Eq(Derivative(y(t), t), 17 * x(t) + 3 * y(t)),
             Eq(Derivative(z(t), t), 5 * x(t) + 7 * y(t) + 9 * z(t)),
         ),
-        'func': [x(t), y(t), z(t)],
-        'order': {x(t): 1, y(t): 1, z(t): 1},
-        'is_linear': True,
-        'is_constant': True,
-        'is_homogeneous': True,
-        'func_coeff': -Matrix([[-21, 0, 0], [-17, -3, 0], [-5, -7, -9]]),
-        'type_of_equation': 'type1',
-        'is_general': True,
+        "func": [x(t), y(t), z(t)],
+        "order": {x(t): 1, y(t): 1, z(t): 1},
+        "is_linear": True,
+        "is_constant": True,
+        "is_homogeneous": True,
+        "func_coeff": -Matrix([[-21, 0, 0], [-17, -3, 0], [-5, -7, -9]]),
+        "type_of_equation": "type1",
+        "is_general": True,
     }
     assert _classify_linear_system(eq13, [x(t), y(t), z(t)], t) == sol13
 
@@ -413,20 +413,20 @@ def test__classify_linear_system():
         Eq(Derivative(z(t), t), 32 * x(t) + 41 * y(t) + 11 * z(t)),
     )
     sol14 = {
-        'no_of_equation': 3,
-        'eq': (
+        "no_of_equation": 3,
+        "eq": (
             Eq(Derivative(x(t), t), 4 * x(t) + 5 * y(t) + 2 * z(t)),
             Eq(Derivative(y(t), t), x(t) + 13 * y(t) + 9 * z(t)),
             Eq(Derivative(z(t), t), 32 * x(t) + 41 * y(t) + 11 * z(t)),
         ),
-        'func': [x(t), y(t), z(t)],
-        'order': {x(t): 1, y(t): 1, z(t): 1},
-        'is_linear': True,
-        'is_constant': True,
-        'is_homogeneous': True,
-        'func_coeff': -Matrix([[-4, -5, -2], [-1, -13, -9], [-32, -41, -11]]),
-        'type_of_equation': 'type1',
-        'is_general': True,
+        "func": [x(t), y(t), z(t)],
+        "order": {x(t): 1, y(t): 1, z(t): 1},
+        "is_linear": True,
+        "is_constant": True,
+        "is_homogeneous": True,
+        "func_coeff": -Matrix([[-4, -5, -2], [-1, -13, -9], [-32, -41, -11]]),
+        "type_of_equation": "type1",
+        "is_general": True,
     }
     assert _classify_linear_system(eq14, [x(t), y(t), z(t)], t) == sol14
 
@@ -436,26 +436,26 @@ def test__classify_linear_system():
         Eq(5 * Derivative(z(t), t), 12 * x(t) - 12 * y(t)),
     )
     sol15 = {
-        'no_of_equation': 3,
-        'eq': (
+        "no_of_equation": 3,
+        "eq": (
             Eq(3 * Derivative(x(t), t), 20 * y(t) - 20 * z(t)),
             Eq(4 * Derivative(y(t), t), -15 * x(t) + 15 * z(t)),
             Eq(5 * Derivative(z(t), t), 12 * x(t) - 12 * y(t)),
         ),
-        'func': [x(t), y(t), z(t)],
-        'order': {x(t): 1, y(t): 1, z(t): 1},
-        'is_linear': True,
-        'is_constant': True,
-        'is_homogeneous': True,
-        'func_coeff': -Matrix(
+        "func": [x(t), y(t), z(t)],
+        "order": {x(t): 1, y(t): 1, z(t): 1},
+        "is_linear": True,
+        "is_constant": True,
+        "is_homogeneous": True,
+        "func_coeff": -Matrix(
             [
                 [0, Rational(-20, 3), Rational(20, 3)],
                 [Rational(15, 4), 0, Rational(-15, 4)],
                 [Rational(-12, 5), Rational(12, 5), 0],
             ]
         ),
-        'type_of_equation': 'type1',
-        'is_general': True,
+        "type_of_equation": "type1",
+        "is_general": True,
     }
     assert _classify_linear_system(eq15, [x(t), y(t), z(t)], t) == sol15
 
@@ -465,20 +465,20 @@ def test__classify_linear_system():
         Eq(diff(y(t), t), 2 * x(t) + 5 * y(t) + 23),
     )
     sol1 = {
-        'no_of_equation': 2,
-        'eq': (
+        "no_of_equation": 2,
+        "eq": (
             Eq(Derivative(x(t), t), x(t) + y(t) + 9),
             Eq(Derivative(y(t), t), 2 * x(t) + 5 * y(t) + 23),
         ),
-        'func': [x(t), y(t)],
-        'order': {x(t): 1, y(t): 1},
-        'is_linear': True,
-        'is_constant': True,
-        'is_homogeneous': False,
-        'is_general': True,
-        'func_coeff': -Matrix([[-1, -1], [-2, -5]]),
-        'rhs': Matrix([[9], [23]]),
-        'type_of_equation': 'type2',
+        "func": [x(t), y(t)],
+        "order": {x(t): 1, y(t): 1},
+        "is_linear": True,
+        "is_constant": True,
+        "is_homogeneous": False,
+        "is_general": True,
+        "func_coeff": -Matrix([[-1, -1], [-2, -5]]),
+        "rhs": Matrix([[9], [23]]),
+        "type_of_equation": "type2",
     }
     assert _classify_linear_system(eq1, funcs, t) == sol1
 
@@ -488,63 +488,63 @@ def test__classify_linear_system():
         Eq(diff(y(t), t), 2 * x(t) + 5 * t * y(t)),
     )
     sol1 = {
-        'no_of_equation': 2,
-        'eq': (
+        "no_of_equation": 2,
+        "eq": (
             Eq(Derivative(x(t), t), 5 * t * x(t) + 2 * y(t)),
             Eq(Derivative(y(t), t), 5 * t * y(t) + 2 * x(t)),
         ),
-        'func': [x(t), y(t)],
-        'order': {x(t): 1, y(t): 1},
-        'is_linear': True,
-        'is_constant': False,
-        'is_homogeneous': True,
-        'func_coeff': -Matrix([[-5 * t, -2], [-2, -5 * t]]),
-        'commutative_antiderivative': Matrix(
+        "func": [x(t), y(t)],
+        "order": {x(t): 1, y(t): 1},
+        "is_linear": True,
+        "is_constant": False,
+        "is_homogeneous": True,
+        "func_coeff": -Matrix([[-5 * t, -2], [-2, -5 * t]]),
+        "commutative_antiderivative": Matrix(
             [[5 * t ** 2 / 2, 2 * t], [2 * t, 5 * t ** 2 / 2]]
         ),
-        'type_of_equation': 'type3',
-        'is_general': True,
+        "type_of_equation": "type3",
+        "is_general": True,
     }
     assert _classify_linear_system(eq1, funcs, t) == sol1
 
     # Non constant coefficient non-homogeneous ODEs
     eq1 = [Eq(x1, x(t) + t * y(t) + t), Eq(y1, t * x(t) + y(t))]
     sol1 = {
-        'no_of_equation': 2,
-        'eq': [
+        "no_of_equation": 2,
+        "eq": [
             Eq(Derivative(x(t), t), t * y(t) + t + x(t)),
             Eq(Derivative(y(t), t), t * x(t) + y(t)),
         ],
-        'func': [x(t), y(t)],
-        'order': {x(t): 1, y(t): 1},
-        'is_linear': True,
-        'is_constant': False,
-        'is_homogeneous': False,
-        'is_general': True,
-        'func_coeff': -Matrix([[-1, -t], [-t, -1]]),
-        'commutative_antiderivative': Matrix([[t, t ** 2 / 2], [t ** 2 / 2, t]]),
-        'rhs': Matrix([[t], [0]]),
-        'type_of_equation': 'type4',
+        "func": [x(t), y(t)],
+        "order": {x(t): 1, y(t): 1},
+        "is_linear": True,
+        "is_constant": False,
+        "is_homogeneous": False,
+        "is_general": True,
+        "func_coeff": -Matrix([[-1, -t], [-t, -1]]),
+        "commutative_antiderivative": Matrix([[t, t ** 2 / 2], [t ** 2 / 2, t]]),
+        "rhs": Matrix([[t], [0]]),
+        "type_of_equation": "type4",
     }
     assert _classify_linear_system(eq1, funcs, t) == sol1
 
     eq2 = [Eq(x1, t * x(t) + t * y(t) + t), Eq(y1, t * x(t) + t * y(t) + cos(t))]
     sol2 = {
-        'no_of_equation': 2,
-        'eq': [
+        "no_of_equation": 2,
+        "eq": [
             Eq(Derivative(x(t), t), t * x(t) + t * y(t) + t),
             Eq(Derivative(y(t), t), t * x(t) + t * y(t) + cos(t)),
         ],
-        'func': [x(t), y(t)],
-        'order': {x(t): 1, y(t): 1},
-        'is_linear': True,
-        'is_homogeneous': False,
-        'is_general': True,
-        'rhs': Matrix([[t], [cos(t)]]),
-        'func_coeff': Matrix([[t, t], [t, t]]),
-        'is_constant': False,
-        'type_of_equation': 'type4',
-        'commutative_antiderivative': Matrix(
+        "func": [x(t), y(t)],
+        "order": {x(t): 1, y(t): 1},
+        "is_linear": True,
+        "is_homogeneous": False,
+        "is_general": True,
+        "rhs": Matrix([[t], [cos(t)]]),
+        "func_coeff": Matrix([[t, t], [t, t]]),
+        "is_constant": False,
+        "type_of_equation": "type4",
+        "commutative_antiderivative": Matrix(
             [[t ** 2 / 2, t ** 2 / 2], [t ** 2 / 2, t ** 2 / 2]]
         ),
     }
@@ -556,28 +556,28 @@ def test__classify_linear_system():
         Eq(z1, t * (x(t) + y(t) + z(t))),
     ]
     sol3 = {
-        'no_of_equation': 3,
-        'eq': [
+        "no_of_equation": 3,
+        "eq": [
             Eq(Derivative(x(t), t), t * (x(t) + y(t) + z(t) + 1)),
             Eq(Derivative(y(t), t), t * (x(t) + y(t) + z(t))),
             Eq(Derivative(z(t), t), t * (x(t) + y(t) + z(t))),
         ],
-        'func': [x(t), y(t), z(t)],
-        'order': {x(t): 1, y(t): 1, z(t): 1},
-        'is_linear': True,
-        'is_constant': False,
-        'is_homogeneous': False,
-        'is_general': True,
-        'func_coeff': -Matrix([[-t, -t, -t], [-t, -t, -t], [-t, -t, -t]]),
-        'commutative_antiderivative': Matrix(
+        "func": [x(t), y(t), z(t)],
+        "order": {x(t): 1, y(t): 1, z(t): 1},
+        "is_linear": True,
+        "is_constant": False,
+        "is_homogeneous": False,
+        "is_general": True,
+        "func_coeff": -Matrix([[-t, -t, -t], [-t, -t, -t], [-t, -t, -t]]),
+        "commutative_antiderivative": Matrix(
             [
                 [t ** 2 / 2, t ** 2 / 2, t ** 2 / 2],
                 [t ** 2 / 2, t ** 2 / 2, t ** 2 / 2],
                 [t ** 2 / 2, t ** 2 / 2, t ** 2 / 2],
             ]
         ),
-        'rhs': Matrix([[t], [0], [0]]),
-        'type_of_equation': 'type4',
+        "rhs": Matrix([[t], [0], [0]]),
+        "type_of_equation": "type4",
     }
     assert _classify_linear_system(eq3, funcs_2[:-1], t) == sol3
 
@@ -587,24 +587,24 @@ def test__classify_linear_system():
         Eq(z1, t * x(t) + y(t) + z(t) + t),
     ]
     sol4 = {
-        'no_of_equation': 3,
-        'eq': [
+        "no_of_equation": 3,
+        "eq": [
             Eq(Derivative(x(t), t), t * z(t) + x(t) + y(t) + 1),
             Eq(Derivative(y(t), t), t * y(t) + x(t) + z(t) + 10),
             Eq(Derivative(z(t), t), t * x(t) + t + y(t) + z(t)),
         ],
-        'func': [x(t), y(t), z(t)],
-        'order': {x(t): 1, y(t): 1, z(t): 1},
-        'is_linear': True,
-        'is_constant': False,
-        'is_homogeneous': False,
-        'is_general': True,
-        'func_coeff': -Matrix([[-1, -1, -t], [-1, -t, -1], [-t, -1, -1]]),
-        'commutative_antiderivative': Matrix(
+        "func": [x(t), y(t), z(t)],
+        "order": {x(t): 1, y(t): 1, z(t): 1},
+        "is_linear": True,
+        "is_constant": False,
+        "is_homogeneous": False,
+        "is_general": True,
+        "func_coeff": -Matrix([[-1, -1, -t], [-1, -t, -1], [-t, -1, -1]]),
+        "commutative_antiderivative": Matrix(
             [[t, t, t ** 2 / 2], [t, t ** 2 / 2, t], [t ** 2 / 2, t, t]]
         ),
-        'rhs': Matrix([[1], [10], [t]]),
-        'type_of_equation': 'type4',
+        "rhs": Matrix([[1], [10], [t]]),
+        "type_of_equation": "type4",
     }
     assert _classify_linear_system(eq4, funcs_2[:-1], t) == sol4
 
@@ -616,23 +616,23 @@ def test__classify_linear_system():
         Eq(w1, sum_terms),
     ]
     sol5 = {
-        'no_of_equation': 4,
-        'eq': [
+        "no_of_equation": 4,
+        "eq": [
             Eq(Derivative(x(t), t), t * (w(t) + x(t) + y(t) + z(t))),
             Eq(Derivative(y(t), t), t * (w(t) + x(t) + y(t) + z(t))),
             Eq(Derivative(z(t), t), t * (w(t) + x(t) + y(t) + z(t)) + 1),
             Eq(Derivative(w(t), t), t * (w(t) + x(t) + y(t) + z(t))),
         ],
-        'func': [x(t), y(t), z(t), w(t)],
-        'order': {x(t): 1, y(t): 1, z(t): 1, w(t): 1},
-        'is_linear': True,
-        'is_constant': False,
-        'is_homogeneous': False,
-        'is_general': True,
-        'func_coeff': -Matrix(
+        "func": [x(t), y(t), z(t), w(t)],
+        "order": {x(t): 1, y(t): 1, z(t): 1, w(t): 1},
+        "is_linear": True,
+        "is_constant": False,
+        "is_homogeneous": False,
+        "is_general": True,
+        "func_coeff": -Matrix(
             [[-t, -t, -t, -t], [-t, -t, -t, -t], [-t, -t, -t, -t], [-t, -t, -t, -t]]
         ),
-        'commutative_antiderivative': Matrix(
+        "commutative_antiderivative": Matrix(
             [
                 [t ** 2 / 2, t ** 2 / 2, t ** 2 / 2, t ** 2 / 2],
                 [t ** 2 / 2, t ** 2 / 2, t ** 2 / 2, t ** 2 / 2],
@@ -640,8 +640,8 @@ def test__classify_linear_system():
                 [t ** 2 / 2, t ** 2 / 2, t ** 2 / 2, t ** 2 / 2],
             ]
         ),
-        'rhs': Matrix([[0], [0], [1], [0]]),
-        'type_of_equation': 'type4',
+        "rhs": Matrix([[0], [0], [1], [0]]),
+        "type_of_equation": "type4",
     }
     assert _classify_linear_system(eq5, funcs_2, t) == sol5
 
@@ -667,8 +667,8 @@ def test__classify_linear_system():
         ),
     )
     sol1 = {
-        'no_of_equation': 2,
-        'eq': (
+        "no_of_equation": 2,
+        "eq": (
             Eq(
                 9 * x(t)
                 + 7 * y(t)
@@ -686,15 +686,15 @@ def test__classify_linear_system():
                 2 * exp(I * t),
             ),
         ),
-        'func': [x(t), y(t)],
-        'order': {x(t): 2, y(t): 2},
-        'is_linear': True,
-        'is_homogeneous': False,
-        'is_general': True,
-        'rhs': Matrix([[11 * exp(I * t)], [2 * exp(I * t)]]),
-        'type_of_equation': 'type0',
-        'is_second_order': True,
-        'is_higher_order': True,
+        "func": [x(t), y(t)],
+        "order": {x(t): 2, y(t): 2},
+        "is_linear": True,
+        "is_homogeneous": False,
+        "is_general": True,
+        "rhs": Matrix([[11 * exp(I * t)], [2 * exp(I * t)]]),
+        "type_of_equation": "type0",
+        "is_second_order": True,
+        "is_higher_order": True,
     }
     assert _classify_linear_system(eq1, funcs, t) == sol1
 
@@ -706,8 +706,8 @@ def test__classify_linear_system():
         Eq((4 * t ** 2 + 7 * t + 1) ** 2 * Derivative(y(t), (t, 2)), x(t) + 9 * y(t)),
     )
     sol2 = {
-        'no_of_equation': 2,
-        'eq': (
+        "no_of_equation": 2,
+        "eq": (
             Eq(
                 (4 * t ** 2 + 7 * t + 1) ** 2 * Derivative(x(t), (t, 2)),
                 5 * x(t) + 35 * y(t),
@@ -717,20 +717,20 @@ def test__classify_linear_system():
                 x(t) + 9 * y(t),
             ),
         ),
-        'func': [x(t), y(t)],
-        'order': {x(t): 2, y(t): 2},
-        'is_linear': True,
-        'is_homogeneous': True,
-        'is_general': True,
-        'type_of_equation': 'type2',
-        'A0': Matrix([[Rational(53, 4), 35], [1, Rational(69, 4)]]),
-        'g(t)': sqrt(4 * t ** 2 + 7 * t + 1),
-        'tau': sqrt(33) * log(t - sqrt(33) / 8 + Rational(7, 8)) / 33
+        "func": [x(t), y(t)],
+        "order": {x(t): 2, y(t): 2},
+        "is_linear": True,
+        "is_homogeneous": True,
+        "is_general": True,
+        "type_of_equation": "type2",
+        "A0": Matrix([[Rational(53, 4), 35], [1, Rational(69, 4)]]),
+        "g(t)": sqrt(4 * t ** 2 + 7 * t + 1),
+        "tau": sqrt(33) * log(t - sqrt(33) / 8 + Rational(7, 8)) / 33
         - sqrt(33) * log(t + sqrt(33) / 8 + Rational(7, 8)) / 33,
-        'is_transformed': True,
-        't_': t_,
-        'is_second_order': True,
-        'is_higher_order': True,
+        "is_transformed": True,
+        "t_": t_,
+        "is_second_order": True,
+        "is_higher_order": True,
     }
     assert _classify_linear_system(eq2, funcs, t) == sol2
 
@@ -743,8 +743,8 @@ def test__classify_linear_system():
         + Derivative(y(t), (t, 2)),
     )
     sol3 = {
-        'no_of_equation': 2,
-        'eq': (
+        "no_of_equation": 2,
+        "eq": (
             (t * Derivative(x(t), t) - x(t)) * log(t)
             + (t * Derivative(y(t), t) - y(t)) * exp(t)
             + Derivative(x(t), (t, 2)),
@@ -752,33 +752,33 @@ def test__classify_linear_system():
             + t * (t * Derivative(y(t), t) - y(t))
             + Derivative(y(t), (t, 2)),
         ),
-        'func': [x(t), y(t)],
-        'order': {x(t): 2, y(t): 2},
-        'is_linear': True,
-        'is_homogeneous': True,
-        'is_general': True,
-        'type_of_equation': 'type1',
-        'A1': Matrix([[-t * log(t), -t * exp(t)], [-(t ** 3), -(t ** 2)]]),
-        'is_second_order': True,
-        'is_higher_order': True,
+        "func": [x(t), y(t)],
+        "order": {x(t): 2, y(t): 2},
+        "is_linear": True,
+        "is_homogeneous": True,
+        "is_general": True,
+        "type_of_equation": "type1",
+        "A1": Matrix([[-t * log(t), -t * exp(t)], [-(t ** 3), -(t ** 2)]]),
+        "is_second_order": True,
+        "is_higher_order": True,
     }
     assert _classify_linear_system(eq3, funcs, t) == sol3
 
     eq4 = (Eq(x2, k * x(t) - l * y1), Eq(y2, l * x1 + k * y(t)))
     sol4 = {
-        'no_of_equation': 2,
-        'eq': (
+        "no_of_equation": 2,
+        "eq": (
             Eq(Derivative(x(t), (t, 2)), k * x(t) - l * Derivative(y(t), t)),
             Eq(Derivative(y(t), (t, 2)), k * y(t) + l * Derivative(x(t), t)),
         ),
-        'func': [x(t), y(t)],
-        'order': {x(t): 2, y(t): 2},
-        'is_linear': True,
-        'is_homogeneous': True,
-        'is_general': True,
-        'type_of_equation': 'type0',
-        'is_second_order': True,
-        'is_higher_order': True,
+        "func": [x(t), y(t)],
+        "order": {x(t): 2, y(t): 2},
+        "is_linear": True,
+        "is_homogeneous": True,
+        "is_general": True,
+        "type_of_equation": "type0",
+        "is_second_order": True,
+        "is_higher_order": True,
     }
     assert _classify_linear_system(eq4, funcs, t) == sol4
 
@@ -793,8 +793,8 @@ def test__classify_linear_system():
         Eq(-y * f(t) + Derivative(g(t), t), 0),
     ]
     sol1 = {
-        'is_implicit': True,
-        'canon_eqs': [
+        "is_implicit": True,
+        "canon_eqs": [
             [Eq(Derivative(f(t), t), -1), Eq(Derivative(g(t), t), y * f(t))],
             [Eq(Derivative(f(t), t), 3), Eq(Derivative(g(t), t), y * f(t))],
         ],
@@ -808,23 +808,23 @@ def test__classify_linear_system():
         Eq(Derivative(g(t), t), (f(t) + 2 * g(t)) / t),
     ]
     sol2 = {
-        'no_of_equation': 2,
-        'eq': [
+        "no_of_equation": 2,
+        "eq": [
             Eq(Derivative(f(t), t), (2 * f(t) + g(t) + 1) / t),
             Eq(Derivative(g(t), t), (f(t) + 2 * g(t)) / t),
         ],
-        'func': [f(t), g(t)],
-        'order': {f(t): 1, g(t): 1},
-        'is_linear': True,
-        'is_homogeneous': False,
-        'is_general': True,
-        'rhs': Matrix([[1], [0]]),
-        'func_coeff': Matrix([[2, 1], [1, 2]]),
-        'is_constant': False,
-        'type_of_equation': 'type6',
-        't_': t_,
-        'tau': log(t),
-        'commutative_antiderivative': Matrix(
+        "func": [f(t), g(t)],
+        "order": {f(t): 1, g(t): 1},
+        "is_linear": True,
+        "is_homogeneous": False,
+        "is_general": True,
+        "rhs": Matrix([[1], [0]]),
+        "func_coeff": Matrix([[2, 1], [1, 2]]),
+        "is_constant": False,
+        "type_of_equation": "type6",
+        "t_": t_,
+        "tau": log(t),
+        "commutative_antiderivative": Matrix(
             [[2 * log(t), log(t)], [log(t), 2 * log(t)]]
         ),
     }
@@ -835,23 +835,23 @@ def test__classify_linear_system():
         Eq(Derivative(g(t), t), (f(t) + 2 * g(t)) / t),
     ]
     sol3 = {
-        'no_of_equation': 2,
-        'eq': [
+        "no_of_equation": 2,
+        "eq": [
             Eq(Derivative(f(t), t), (2 * f(t) + g(t)) / t),
             Eq(Derivative(g(t), t), (f(t) + 2 * g(t)) / t),
         ],
-        'func': [f(t), g(t)],
-        'order': {f(t): 1, g(t): 1},
-        'is_linear': True,
-        'is_homogeneous': True,
-        'is_general': True,
-        'func_coeff': Matrix([[2, 1], [1, 2]]),
-        'is_constant': False,
-        'type_of_equation': 'type5',
-        't_': t_,
-        'rhs': Matrix([[0], [0]]),
-        'tau': log(t),
-        'commutative_antiderivative': Matrix(
+        "func": [f(t), g(t)],
+        "order": {f(t): 1, g(t): 1},
+        "is_linear": True,
+        "is_homogeneous": True,
+        "is_general": True,
+        "func_coeff": Matrix([[2, 1], [1, 2]]),
+        "is_constant": False,
+        "type_of_equation": "type5",
+        "t_": t_,
+        "rhs": Matrix([[0], [0]]),
+        "tau": log(t),
+        "commutative_antiderivative": Matrix(
             [[2 * log(t), log(t)], [log(t), 2 * log(t)]]
         ),
     }
@@ -862,7 +862,7 @@ def test_matrix_exp():
     from sympy.matrices.dense import Matrix, eye, zeros
     from sympy.solvers.ode.systems import matrix_exp
 
-    t = Symbol('t')
+    t = Symbol("t")
 
     for n in range(1, 6 + 1):
         assert matrix_exp(zeros(n), t) == eye(n)
@@ -998,8 +998,8 @@ def test_matrix_exp():
 
 
 def test_canonical_odes():
-    f, g, h = symbols('f g h', cls=Function)
-    x = symbols('x')
+    f, g, h = symbols("f g h", cls=Function)
+    x = symbols("x")
     funcs = [f(x), g(x), h(x)]
 
     eqs1 = [Eq(f(x).diff(x, x), f(x) + 2 * g(x)), Eq(g(x) + 1, g(x).diff(x) + f(x))]
@@ -1033,8 +1033,8 @@ def test_canonical_odes():
 
 def test_sysode_linear_neq_order1_type1():
 
-    f, g, x, y, h = symbols('f g x y h', cls=Function)
-    a, b, c, t = symbols('a b c t')
+    f, g, x, y, h = symbols("f g x y h", cls=Function)
+    a, b, c, t = symbols("a b c t")
 
     eqs1 = [Eq(Derivative(x(t), t), x(t)), Eq(Derivative(y(t), t), y(t))]
     sol1 = [Eq(x(t), C1 * exp(t)), Eq(y(t), C2 * exp(t))]
@@ -1233,13 +1233,13 @@ def test_sysode_linear_neq_order1_type1():
 @slow
 def test_sysode_linear_neq_order1_type1_slow():
 
-    t = Symbol('t')
-    Z0 = Function('Z0')
-    Z1 = Function('Z1')
-    Z2 = Function('Z2')
-    Z3 = Function('Z3')
+    t = Symbol("t")
+    Z0 = Function("Z0")
+    Z1 = Function("Z1")
+    Z2 = Function("Z2")
+    Z3 = Function("Z3")
 
-    k01, k10, k20, k21, k23, k30 = symbols('k01 k10 k20 k21 k23 k30')
+    k01, k10, k20, k21, k23, k30 = symbols("k01 k10 k20 k21 k23 k30")
 
     eqs1 = [
         Eq(
@@ -1276,9 +1276,9 @@ def test_sysode_linear_neq_order1_type1_slow():
     assert dsolve(eqs1) == sol1
     assert checksysodesol(eqs1, sol1) == (True, [0, 0, 0, 0])
 
-    x, y, z, u, v, w = symbols('x y z u v w', cls=Function)
-    k2, k3 = symbols('k2 k3')
-    a_b, a_c = symbols('a_b a_c', real=True)
+    x, y, z, u, v, w = symbols("x y z u v w", cls=Function)
+    k2, k3 = symbols("k2 k3")
+    a_b, a_c = symbols("a_b a_c", real=True)
 
     eqs2 = [
         Eq(Derivative(z(t), t), k2 * y(t)),
@@ -1478,8 +1478,8 @@ def test_sysode_linear_neq_order1_type1_slow():
     assert dsolve(eqs12) == sol12
     assert checksysodesol(eqs12, sol12) == (True, [0, 0, 0])
 
-    f, g, h = symbols('f, g, h', cls=Function)
-    a, b, c = symbols('a, b, c')
+    f, g, h = symbols("f, g, h", cls=Function)
+    a, b, c = symbols("a, b, c")
 
     # Regression test case for issue #15474
     # https://github.com/sympy/sympy/issues/15474
@@ -1860,9 +1860,9 @@ def test_sysode_linear_neq_order1_type1_slow():
 
 def test_sysode_linear_neq_order1_type2():
 
-    f, g, h, k = symbols('f g h k', cls=Function)
-    x, t, a, b, c, d, y = symbols('x t a b c d y')
-    k1, k2 = symbols('k1 k2')
+    f, g, h, k = symbols("f g h k", cls=Function)
+    x, t, a, b, c, d, y = symbols("x t a b c d y")
+    k1, k2 = symbols("k1 k2")
 
     eqs1 = [
         Eq(Derivative(f(x), x), f(x) + g(x) + 5),
@@ -2030,15 +2030,15 @@ def test_sysode_linear_neq_order1_type2():
 
     # test case for issue #19831
     # https://github.com/sympy/sympy/issues/19831
-    n = symbols('n', positive=True)
-    x0 = symbols('x_0')
-    t0 = symbols('t_0')
-    x_0 = symbols('x_0')
-    t_0 = symbols('t_0')
-    t = symbols('t')
-    x = Function('x')
-    y = Function('y')
-    T = symbols('T')
+    n = symbols("n", positive=True)
+    x0 = symbols("x_0")
+    t0 = symbols("t_0")
+    x_0 = symbols("x_0")
+    t_0 = symbols("t_0")
+    t = symbols("t")
+    x = Function("x")
+    y = Function("y")
+    T = symbols("T")
 
     eqs12 = [Eq(Derivative(y(t), t), x(t)), Eq(Derivative(x(t), t), n * (y(t) + 1))]
     sol12 = [
@@ -2274,9 +2274,9 @@ def test_sysode_linear_neq_order1_type2():
 
 def test_sysode_linear_neq_order1_type3():
 
-    f, g, h, k, x0, y0 = symbols('f g h k x0 y0', cls=Function)
-    x, t, a = symbols('x t a')
-    r = symbols('r', real=True)
+    f, g, h, k, x0, y0 = symbols("f g h k x0 y0", cls=Function)
+    x, t, a = symbols("x t a")
+    r = symbols("r", real=True)
 
     eqs1 = [
         Eq(Derivative(f(r), r), r * g(r) + f(r)),
@@ -2543,9 +2543,9 @@ def test_sysode_linear_neq_order1_type3():
 @slow
 def test_sysode_linear_neq_order1_type4():
 
-    f, g, h, k = symbols('f g h k', cls=Function)
-    x, t, a = symbols('x t a')
-    r = symbols('r', real=True)
+    f, g, h, k = symbols("f g h k", cls=Function)
+    x, t, a = symbols("x t a")
+    r = symbols("r", real=True)
 
     eqs1 = [
         Eq(diff(f(r), r), f(r) + r * g(r) + r ** 2),
@@ -2939,8 +2939,8 @@ def test_sysode_linear_neq_order1_type5_type6():
 
 
 def test_higher_order_to_first_order():
-    f, g = symbols('f g', cls=Function)
-    x = symbols('x')
+    f, g = symbols("f g", cls=Function)
+    x = symbols("x")
 
     eqs1 = [
         Eq(Derivative(f(x), (x, 2)), 2 * f(x) + g(x)),
@@ -3087,8 +3087,8 @@ def test_higher_order_to_first_order():
     assert dsolve(eqs8) == sol8
     assert checksysodesol(eqs8, sol8) == (True, [0, 0])
 
-    x, y = symbols('x, y', cls=Function)
-    t, l = symbols('t, l')
+    x, y = symbols("x, y", cls=Function)
+    t, l = symbols("t, l")
 
     eqs10 = [
         Eq(Derivative(x(t), (t, 2)), 5 * x(t) + 43 * y(t)),
@@ -3278,8 +3278,8 @@ def test_higher_order_to_first_order():
 
 @slow
 def test_higher_order_to_first_order_9():
-    f, g = symbols('f g', cls=Function)
-    x = symbols('x')
+    f, g = symbols("f g", cls=Function)
+    x = symbols("x")
 
     eqs9 = [
         f(x)
@@ -3352,11 +3352,11 @@ def test_higher_order_to_first_order_9():
 
 
 def test_higher_order_to_first_order_12():
-    f, g = symbols('f g', cls=Function)
-    x = symbols('x')
+    f, g = symbols("f g", cls=Function)
+    x = symbols("x")
 
-    x, y = symbols('x, y', cls=Function)
-    t, l = symbols('t, l')
+    x, y = symbols("x, y", cls=Function)
+    t, l = symbols("t, l")
 
     eqs12 = [
         Eq(4 * x(t) + Derivative(x(t), (t, 2)) + 8 * Derivative(y(t), t), 0),
@@ -3558,7 +3558,7 @@ def test_second_order_to_first_order_slow4():
 
 
 def test_component_division():
-    f, g, h, k = symbols('f g h k', cls=Function)
+    f, g, h, k = symbols("f g h k", cls=Function)
     x = symbols("x")
     funcs = [f(x), g(x), h(x), k(x)]
 
@@ -4236,8 +4236,8 @@ def test_linodesolve():
 
 @slow
 def test_linear_3eq_order1_type4_slow():
-    x, y, z = symbols('x, y, z', cls=Function)
-    t = Symbol('t')
+    x, y, z = symbols("x, y, z", cls=Function)
+    t = Symbol("t")
 
     f = t ** 3 + log(t)
     g = t ** 2 + sin(t)
@@ -4252,9 +4252,9 @@ def test_linear_3eq_order1_type4_slow():
 
 @slow
 def test_linear_neq_order1_type2_slow1():
-    i, r1, c1, r2, c2, t = symbols('i, r1, c1, r2, c2, t')
-    x1 = Function('x1')
-    x2 = Function('x2')
+    i, r1, c1, r2, c2, t = symbols("i, r1, c1, r2, c2, t")
+    x1 = Function("x1")
+    x2 = Function("x2")
 
     eq1 = r1 * c1 * Derivative(x1(t), t) + x1(t) - x2(t) - r1 * i
     eq2 = (
@@ -4308,8 +4308,8 @@ def test_linear_neq_order1_type2_slow_check():
 
 
 def _linear_3eq_order1_type4_long():
-    x, y, z = symbols('x, y, z', cls=Function)
-    t = Symbol('t')
+    x, y, z = symbols("x, y, z", cls=Function)
+    t = Symbol("t")
 
     f = t ** 3 + log(t)
     g = t ** 2 + sin(t)
@@ -4600,8 +4600,8 @@ def test_dsolve_system():
 
 def test_dsolve():
 
-    f, g = symbols('f g', cls=Function)
-    x, y = symbols('x y')
+    f, g = symbols("f g", cls=Function)
+    x, y = symbols("x y")
 
     eqs = [f(x).diff(x) - x, f(x).diff(x) + x]
     with raises(ValueError):
@@ -4642,8 +4642,8 @@ def test_higher_order1_slow1():
 
 
 def test_second_order_type2_slow1():
-    x, y, z = symbols('x, y, z', cls=Function)
-    t, l = symbols('t, l')
+    x, y, z = symbols("x, y, z", cls=Function)
+    t, l = symbols("t, l")
 
     eqs1 = [
         Eq(Derivative(x(t), (t, 2)), t * (2 * x(t) + y(t))),
@@ -4674,7 +4674,7 @@ def test_second_order_type2_slow1():
 def test_nonlinear_3eq_order1_type1():
     if ON_TRAVIS:
         skip("Too slow for travis.")
-    a, b, c = symbols('a b c')
+    a, b, c = symbols("a b c")
 
     eqs = [
         a * f(x).diff(x) - (b - c) * g(x) * h(x),
@@ -4728,10 +4728,10 @@ def test_nonlinear_3eq_order1_type5():
 
 
 def test_linear_2eq_order1():
-    x, y, z = symbols('x, y, z', cls=Function)
-    k, l, m, n = symbols('k, l, m, n', Integer=True)
-    t = Symbol('t')
-    x0, y0 = symbols('x0, y0', cls=Function)
+    x, y, z = symbols("x, y, z", cls=Function)
+    k, l, m, n = symbols("k, l, m, n", Integer=True)
+    t = Symbol("t")
+    x0, y0 = symbols("x0, y0", cls=Function)
 
     eq1 = (
         Eq(diff(x(t), t), x(t) + y(t) + 9),
@@ -4868,8 +4868,8 @@ def test_linear_2eq_order1():
 
 
 def test_nonlinear_2eq_order1():
-    x, y, z = symbols('x, y, z', cls=Function)
-    t = Symbol('t')
+    x, y, z = symbols("x, y, z", cls=Function)
+    t = Symbol("t")
     eq1 = (Eq(diff(x(t), t), x(t) * y(t) ** 3), Eq(diff(y(t), t), y(t) ** 5))
     sol1 = [
         Eq(x(t), C1 * exp((-1 / (4 * C2 + 4 * t)) ** (Rational(-1, 4)))),
@@ -4943,8 +4943,8 @@ def test_nonlinear_2eq_order1():
 
 @slow
 def test_nonlinear_3eq_order1():
-    x, y, z = symbols('x, y, z', cls=Function)
-    t, u = symbols('t u')
+    x, y, z = symbols("x, y, z", cls=Function)
+    t, u = symbols("t u")
     eq1 = (
         4 * diff(x(t), t) + 2 * y(t) * z(t),
         3 * diff(y(t), t) - z(t) * x(t),
@@ -5015,11 +5015,11 @@ def test_nonlinear_3eq_order1():
 
 
 def test_C1_function_9239():
-    t = Symbol('t')
-    C1 = Function('C1')
-    C2 = Function('C2')
-    C3 = Symbol('C3')
-    C4 = Symbol('C4')
+    t = Symbol("t")
+    C1 = Function("C1")
+    C2 = Function("C2")
+    C3 = Symbol("C3")
+    C4 = Symbol("C4")
     eq = (Eq(diff(C1(t), t), 9 * C2(t)), Eq(diff(C2(t), t), 12 * C1(t)))
     sol = [
         Eq(C1(t), 9 * C3 * exp(6 * sqrt(3) * t) + 9 * C4 * exp(-6 * sqrt(3) * t)),
@@ -5033,7 +5033,7 @@ def test_C1_function_9239():
 
 
 def test_dsolve_linsystem_symbol():
-    eps = Symbol('epsilon', positive=True)
+    eps = Symbol("epsilon", positive=True)
     eq1 = (Eq(diff(f(x), x), -eps * g(x)), Eq(diff(g(x), x), eps * f(x)))
     sol1 = [
         Eq(f(x), -C1 * eps * cos(eps * x) - C2 * eps * sin(eps * x)),

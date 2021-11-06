@@ -36,7 +36,7 @@ from sympy.utilities.iterables import (
 
 
 # these are imported with 'from sympy.solvers.diophantine import *
-__all__ = ['diophantine', 'classify_diop']
+__all__ = ["diophantine", "classify_diop"]
 
 
 class DiophantineSolutionSet(set):
@@ -181,7 +181,7 @@ class DiophantineEquationType:
             self.free_symbols.sort(key=default_sort_key)
 
         if not self.free_symbols:
-            raise ValueError('equation should have 1 or more free symbols')
+            raise ValueError("equation should have 1 or more free symbols")
 
         self.coeff = self.equation.as_coefficients_dict()
         if not all(_is_int(c) for c in self.coeff.values()):
@@ -206,11 +206,11 @@ class DiophantineEquationType:
     @property
     def parameters(self):
         if self._parameters is None:
-            self._parameters = symbols('t_:%i' % (self.n_parameters,), integer=True)
+            self._parameters = symbols("t_:%i" % (self.n_parameters,), integer=True)
         return self._parameters
 
     def solve(self, parameters=None, limit=None) -> DiophantineSolutionSet:
-        raise NotImplementedError('No solver has been written for %s.' % self.name)
+        raise NotImplementedError("No solver has been written for %s." % self.name)
 
     def pre_solve(self, parameters=None):
         if not self.matches():
@@ -246,7 +246,7 @@ class Univariate(DiophantineEquationType):
 
     """
 
-    name = 'univariate'
+    name = "univariate"
 
     def matches(self):
         return self.dimension == 1
@@ -288,7 +288,7 @@ class Linear(DiophantineEquationType):
 
     """
 
-    name = 'linear'
+    name = "linear"
 
     def matches(self):
         return self.total_degree == 1
@@ -317,7 +317,7 @@ class Linear(DiophantineEquationType):
             else:
                 return result
 
-        '''
+        """
         base_solution_linear() can solve diophantine equations of the form:
 
         a*x + b*y == c
@@ -357,7 +357,7 @@ class Linear(DiophantineEquationType):
 
         The arrays A and B are the arrays of integers used for
         'a' and 'b' in each of the n-1 bivariate equations we solve.
-        '''
+        """
 
         A = [coeff[v] for v in var]
         B = []
@@ -372,7 +372,7 @@ class Linear(DiophantineEquationType):
                 B.insert(0, gcd)
         B.append(A[-1])
 
-        '''
+        """
         Consider the trivariate linear equation:
 
         4*x_0 + 6*x_1 + 3*x_2 == 2
@@ -423,7 +423,7 @@ class Linear(DiophantineEquationType):
 
         This method is generalised for many variables, below.
 
-        '''
+        """
         solutions = []
         for i in range(len(B)):
             tot_x, tot_y = [], []
@@ -494,7 +494,7 @@ class BinaryQuadratic(DiophantineEquationType):
 
     """
 
-    name = 'binary_quadratic'
+    name = "binary_quadratic"
 
     def matches(self):
         return self.total_degree == 2 and self.dimension == 2
@@ -710,7 +710,7 @@ class InhomogeneousTernaryQuadratic(DiophantineEquationType):
 
     """
 
-    name = 'inhomogeneous_ternary_quadratic'
+    name = "inhomogeneous_ternary_quadratic"
 
     def matches(self):
         if not (self.total_degree == 2 and self.dimension == 3):
@@ -734,7 +734,7 @@ class HomogeneousTernaryQuadraticNormal(DiophantineEquationType):
 
     """
 
-    name = 'homogeneous_ternary_quadratic_normal'
+    name = "homogeneous_ternary_quadratic_normal"
 
     def matches(self):
         if not (self.total_degree == 2 and self.dimension == 3):
@@ -825,7 +825,7 @@ class HomogeneousTernaryQuadratic(DiophantineEquationType):
 
     """
 
-    name = 'homogeneous_ternary_quadratic'
+    name = "homogeneous_ternary_quadratic"
 
     def matches(self):
         if not (self.total_degree == 2 and self.dimension == 3):
@@ -965,7 +965,7 @@ class InhomogeneousGeneralQuadratic(DiophantineEquationType):
 
     """
 
-    name = 'inhomogeneous_general_quadratic'
+    name = "inhomogeneous_general_quadratic"
 
     def matches(self):
         if not (self.total_degree == 2 and self.dimension >= 3):
@@ -988,7 +988,7 @@ class HomogeneousGeneralQuadratic(DiophantineEquationType):
 
     """
 
-    name = 'homogeneous_general_quadratic'
+    name = "homogeneous_general_quadratic"
 
     def matches(self):
         if not (self.total_degree == 2 and self.dimension >= 3):
@@ -1035,7 +1035,7 @@ class GeneralSumOfSquares(DiophantineEquationType):
         http://www.proofwiki.org/wiki/Integer_as_Sum_of_Three_Squares
     """
 
-    name = 'general_sum_of_squares'
+    name = "general_sum_of_squares"
 
     def matches(self):
         if not (self.total_degree == 2 and self.dimension >= 3):
@@ -1089,7 +1089,7 @@ class GeneralPythagorean(DiophantineEquationType):
     {(-10*t**2 + 10*x**2 + 10*y**2 + 10*z**2, 15*t**2 + 15*x**2 + 15*y**2 + 15*z**2, 15*t*x, 12*t*y, 60*t*z)}
     """
 
-    name = 'general_pythagorean'
+    name = "general_pythagorean"
 
     def matches(self):
         if not (self.total_degree == 2 and self.dimension >= 3):
@@ -1177,7 +1177,7 @@ class CubicThue(DiophantineEquationType):
 
     """
 
-    name = 'cubic_thue'
+    name = "cubic_thue"
 
     def matches(self):
         return self.total_degree == 3 and self.dimension == 2
@@ -1201,7 +1201,7 @@ class GeneralSumOfEvenPowers(DiophantineEquationType):
 
     """
 
-    name = 'general_sum_of_even_powers'
+    name = "general_sum_of_even_powers"
 
     def matches(self):
         if not self.total_degree > 3:
@@ -1289,7 +1289,7 @@ def _remove_gcd(*x):
             return x
         g = igcd(*[i.as_content_primitive()[0] for i in fx])
     except TypeError:
-        raise TypeError('_remove_gcd(a,b,c) or _remove_gcd(*container)')
+        raise TypeError("_remove_gcd(a,b,c) or _remove_gcd(*container)")
     if g == 1:
         return x
     return tuple([i // g for i in x])
@@ -1398,7 +1398,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None, permute=False):
         var.sort(key=default_sort_key)
         if syms:
             if not is_sequence(syms):
-                raise TypeError('syms should be given as a sequence, e.g. a list')
+                raise TypeError("syms should be given as a sequence, e.g. a list")
             syms = [i for i in syms if i in var]
             if syms != var:
                 dict_sym_index = dict(zip(syms, range(len(syms))))
@@ -1425,8 +1425,8 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None, permute=False):
     except (GeneratorsNeeded, AssertionError):
         raise TypeError(
             filldedent(
-                '''
-    Equation should be a polynomial with Rational coefficients.'''
+                """
+    Equation should be a polynomial with Rational coefficients."""
             )
         )
 
@@ -1514,7 +1514,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None, permute=False):
                         # e.g 1. (x_val,y_val)=> (x_val,y_val), (-x_val,-y_val)
                         # 2. (-x_vall, y_val)=> (-x_val,y_val), (x_val,-y_val)
                         permute_few_signs = True
-        if t == 'general_sum_of_squares':
+        if t == "general_sum_of_squares":
             # trying to factor such expressions will sometimes hang
             terms = [(eq, 1)]
         else:
@@ -1552,7 +1552,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None, permute=False):
                 sols.add(merge_solution(var, var_t, sol))
 
         else:
-            raise NotImplementedError('unhandled type: %s' % eq_type)
+            raise NotImplementedError("unhandled type: %s" % eq_type)
 
     # remove null merge results
     if () in sols:
@@ -1699,16 +1699,16 @@ def diop_solve(eq, param=symbols("t", integer=True)):
     if eq_type is not None and eq_type not in diop_known:
         raise ValueError(
             filldedent(
-                '''
+                """
     Alhough this type of equation was identified, it is not yet
     handled. It should, however, be listed in `diop_known` at the
     top of this file. Developers should see comments at the end of
     `classify_diop`.
-            '''
+            """
             )
         )  # pragma: no cover
     else:
-        raise NotImplementedError('No solver has been written for %s.' % eq_type)
+        raise NotImplementedError("No solver has been written for %s." % eq_type)
 
 
 def classify_diop(eq, _dict=True):
@@ -1739,15 +1739,15 @@ def classify_diop(eq, _dict=True):
     #  * it should be passed to that handler in diop_solve
     raise NotImplementedError(
         filldedent(
-            '''
+            """
         This equation is not yet recognized or else has not been
         simplified sufficiently to put it in a form recognized by
-        diop_classify().'''
+        diop_classify()."""
         )
     )
 
 
-classify_diop.func_doc = '''
+classify_diop.func_doc = """
     Helper routine used by diop_solve() to find information about ``eq``.
 
     Explanation
@@ -1785,8 +1785,8 @@ classify_diop.func_doc = '''
     ([x, y, z], {1: 5, x: 1, y: 3, z: -4}, 'linear')
     >>> classify_diop(x**2 + y**2 - x*y + x + 5)
     ([x, y], {1: 5, x: 1, x**2: 1, y**2: 1, x*y: -1}, 'binary_quadratic')
-    ''' % (  # type: ignore
-    '\n    * '.join(sorted(diop_known))
+    """ % (  # type: ignore
+    "\n    * ".join(sorted(diop_known))
 )
 
 
@@ -1835,7 +1835,7 @@ def diop_linear(eq, param=symbols("t", integer=True)):
     if diop_type == Linear.name:
         parameters = None
         if param is not None:
-            parameters = symbols('%s_0:%i' % (param, len(var)), integer=True)
+            parameters = symbols("%s_0:%i" % (param, len(var)), integer=True)
 
         result = Linear(eq).solve(parameters=parameters)
 
@@ -3281,7 +3281,7 @@ def reconstruct(A, B, z):
     f = factorint(igcd(A, B))
     for p, e in f.items():
         if e != 1:
-            raise ValueError('a and b should be square-free')
+            raise ValueError("a and b should be square-free")
         z *= p
     return z
 
@@ -3505,7 +3505,7 @@ def holzer(x, y, z, a, b, c):
         # check that it's a solution
         if t1 + t2 != t3:
             if step == 0:
-                raise ValueError('bad starting solution')
+                raise ValueError("bad starting solution")
             break
         x_0, y_0, z_0 = x, y, z
         if max(t1, t2, t3) <= small:
@@ -3569,7 +3569,7 @@ def diop_general_pythagorean(eq, param=symbols("m", integer=True)):
         if param is None:
             params = None
         else:
-            params = symbols('%s1:%i' % (param, len(var)), integer=True)
+            params = symbols("%s1:%i" % (param, len(var)), integer=True)
         return list(GeneralPythagorean(eq).solve(parameters=params))[0]
 
 
@@ -3954,8 +3954,8 @@ def power_representation(n, p, k, zeros=False):
     if p < 1 or k < 1:
         raise ValueError(
             filldedent(
-                '''
-    Expecting positive integers for `(p, k)`, but got `(%s, %s)`'''
+                """
+    Expecting positive integers for `(p, k)`, but got `(%s, %s)`"""
                 % (p, k)
             )
         )
@@ -3993,8 +3993,8 @@ def power_representation(n, p, k, zeros=False):
             and k <= n
             and n - k in (13, 10, 7, 5, 4, 2, 1)
         ):
-            '''Todd G. Will, "When Is n^2 a Sum of k Squares?", [online].
-            Available: https://www.maa.org/sites/default/files/Will-MMz-201037918.pdf'''
+            """Todd G. Will, "When Is n^2 a Sum of k Squares?", [online].
+            Available: https://www.maa.org/sites/default/files/Will-MMz-201037918.pdf"""
             return
         if feasible is not True:  # it's prime and k == 2
             yield prime_as_sum_of_two_squares(n)
