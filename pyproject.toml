@@ -1,5 +1,4 @@
 [tool.black]
-skip-string-normalization = true
 target-version = [
     "py36",
     "py37",
