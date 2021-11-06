@@ -454,7 +454,7 @@ def test_issue_11230():
     assert not any(i.is_Mul for a in C for i in a.args)
 
     # random tests for the issue
-    from random import choice
+    from sympy.core.random import choice
     from sympy.core.function import expand_mul
     s = symbols('a:m')
     # 35 Mul tests, none of which should ever fail

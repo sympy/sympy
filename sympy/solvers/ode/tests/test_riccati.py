@@ -1,4 +1,4 @@
-from random import randint
+from sympy.core.random import randint
 from sympy.core.function import Function
 from sympy.core.mul import Mul
 from sympy.core.numbers import (I, Rational, oo)

@@ -10,7 +10,7 @@ from sympy.integrals.integrals import Integral
 from sympy.series.order import O
 from sympy.functions.special.elliptic_integrals import (elliptic_k as K,
     elliptic_f as F, elliptic_e as E, elliptic_pi as P)
-from sympy.testing.randtest import (test_derivative_numerically as td,
+from sympy.core.random import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
                                       verify_numerically as tn)
 from sympy.abc import z, m, n

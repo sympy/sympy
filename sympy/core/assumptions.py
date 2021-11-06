@@ -214,7 +214,7 @@ from .facts import FactRules, FactKB
 from .core import BasicMeta
 from .sympify import sympify
 
-from random import shuffle
+from sympy.core.random import shuffle
 
 
 _assume_rules = FactRules([

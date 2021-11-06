@@ -11,7 +11,7 @@ from sympy.series.order import O
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial
 from sympy.testing.pytest import raises
-from sympy.testing.randtest import (test_derivative_numerically as td,
+from sympy.core.random import (test_derivative_numerically as td,
                       random_complex_number as randcplx, verify_numerically)
 
 x = Symbol('x')

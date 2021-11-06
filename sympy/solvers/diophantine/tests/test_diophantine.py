@@ -658,7 +658,7 @@ def test_sum_of_three_squares():
 
 
 def test_sum_of_four_squares():
-    from random import randint
+    from sympy.core.random import randint
 
     # this should never fail
     n = randint(1, 100000000000000)

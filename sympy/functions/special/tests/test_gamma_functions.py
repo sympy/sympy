@@ -18,7 +18,7 @@ from sympy.series.order import O
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.testing.pytest import raises
-from sympy.testing.randtest import (test_derivative_numerically as td,
+from sympy.core.random import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
                                       verify_numerically as tn)
 
@@ -109,7 +109,7 @@ def test_gamma_series():
 
 
 def tn_branch(s, func):
-    from random import uniform
+    from sympy.core.random import uniform
     c = uniform(1, 5)
     expr = func(s, c*exp_polar(I*pi)) - func(s, c*exp_polar(-I*pi))
     eps = 1e-15

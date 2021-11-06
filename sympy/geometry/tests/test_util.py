@@ -73,7 +73,7 @@ def test_centroid():
 
 
 def test_farthest_points_closest_points():
-    from random import randint
+    from sympy.core.random import randint
     from sympy.utilities.iterables import subsets
 
     for how in (min, max):

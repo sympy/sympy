@@ -6,7 +6,7 @@ from sympy.geometry import (Circle, Ellipse, Point, Line, Parabola,
 from sympy.geometry.entity import scale, GeometryEntity
 from sympy.testing.pytest import raises
 
-from random import random
+from sympy.core.random import random
 
 
 def test_entity():

@@ -2313,7 +2313,6 @@ def random_derangement(t, choice=None, strict=True):
     ========
 
     >>> from sympy.utilities.iterables import random_derangement
-    >>> from random import Random
     >>> t = 'SymPy: a CAS in pure Python'
     >>> d = random_derangement(t)
     >>> all(i != j for i, j in zip(d, t))
@@ -2322,6 +2321,8 @@ def random_derangement(t, choice=None, strict=True):
     A predictable result can be obtained by using a pseudorandom
     generator for the choice:
 
+    >>> from sympy.core.random import random
+    >>> random.seed(1)
     >>> c = Random(1).choice
     >>> d = [''.join(random_derangement(t, c)) for i in range(5)]
     >>> assert len(set(d)) != 1  # we got different values

@@ -6,7 +6,7 @@ from sympy.polys.domains import ZZ
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient, multiplicity
 from sympy.utilities.misc import as_int
-from random import randint, Random
+from sympy.core.random import randint, Random
 
 from itertools import cycle, product
 
@@ -1196,13 +1196,11 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
 
     if order is None:
         order = n_order(b, n)
-    prng = Random()
-    if rseed is not None:
-        prng.seed(rseed)
+    randint = _randint(rseed)
 
     for i in range(retries):
-        aa = prng.randint(1, order - 1)
-        ba = prng.randint(1, order - 1)
+        aa = randint(1, order - 1)
+        ba = randint(1, order - 1)
         xa = pow(b, aa, n) * pow(a, ba, n) % n
 
         c = xa % 3

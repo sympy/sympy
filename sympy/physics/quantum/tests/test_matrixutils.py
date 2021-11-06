@@ -1,4 +1,4 @@
-from random import randint
+from sympy.core.random import randint
 
 from sympy.core.numbers import Integer
 from sympy.matrices.dense import (Matrix, ones, zeros)

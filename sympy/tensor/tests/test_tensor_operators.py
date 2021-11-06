@@ -9,7 +9,7 @@ from sympy.core.symbol import symbols
 from sympy.matrices.dense import diag
 from sympy.tensor.array import Array
 
-from random import randint
+from sympy.core.random import randint
 
 
 L = TensorIndexType("L")

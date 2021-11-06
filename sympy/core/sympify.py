@@ -6,7 +6,7 @@ if typing.TYPE_CHECKING:
 
 from inspect import getmro
 import string
-from random import choice
+from sympy.core.random import choice
 
 from .parameters import global_parameters
 

@@ -1,4 +1,4 @@
-from random import randrange
+from sympy.core.random import randrange
 
 from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        MeijerShiftA, MeijerShiftB, MeijerShiftC, MeijerShiftD,
@@ -20,7 +20,7 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.hyper import (hyper, meijerg)
 from sympy.abc import z, a, b, c
 from sympy.testing.pytest import XFAIL, raises, slow, ON_TRAVIS, skip
-from sympy.testing.randtest import verify_numerically as tn
+from sympy.core.random import verify_numerically as tn
 
 from sympy.core.numbers import (Rational, pi)
 from sympy.functions.elementary.exponential import (exp, exp_polar, log)

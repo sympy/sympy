@@ -379,7 +379,7 @@ def test_new_relational():
     assert (x < 0) != StrictLessThan(x, 1)
 
     # finally, some fuzz testing
-    from random import randint
+    from sympy.core.random import randint
     for i in range(100):
         while 1:
             strtype, length = (chr, 65535) if randint(0, 1) else (chr, 255)

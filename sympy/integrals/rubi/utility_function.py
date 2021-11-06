@@ -44,7 +44,7 @@ from sympy.simplify.radsimp import collect
 from sympy.simplify.simplify import fraction, simplify, cancel, powsimp, nsimplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import flatten
-from random import randint
+from sympy.core.random import randint
 
 
 class rubi_unevaluated_expr(UnevaluatedExpr):

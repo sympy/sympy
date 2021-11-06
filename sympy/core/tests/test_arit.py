@@ -21,7 +21,7 @@ from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
 from sympy.utilities.iterables import cartes
 from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
-from sympy.testing.randtest import verify_numerically
+from sympy.core.random import verify_numerically
 from sympy.functions.elementary.trigonometric import asin
 
 
