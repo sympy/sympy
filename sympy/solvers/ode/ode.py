@@ -250,10 +250,10 @@ from sympy.polys import (Poly, terms_gcd, PolynomialError, lcm)
 from sympy.polys.polytools import cancel
 from sympy.series import Order
 from sympy.series.series import series
-from sympy.simplify import (
+from sympy.simplify import (  # type: ignore
     collect,
     logcombine,
-    powsimp,  # type: ignore
+    powsimp,
     separatevars,
     simplify,
     cse

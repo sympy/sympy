@@ -28,9 +28,9 @@ from sympy.functions import exp, log
 from sympy.integrals.integrals import integrate
 from sympy.polys import Poly
 from sympy.polys.polytools import cancel, div
-from sympy.simplify import (
+from sympy.simplify import (  # type: ignore
     collect,
-    powsimp,  # type: ignore
+    powsimp,
     separatevars,
     simplify
 )

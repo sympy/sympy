@@ -1730,11 +1730,11 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
         d, e, fx, x, u, u1, y, xarg, yarg = self._get_match_object()
         (C1, ) = self.ode_problem.get_numbered_constants(num=1)
         int = Integral(
-            simplify((-d/(e + u1*d)).subs({
+            simplify((-d/(e + u1*d)).subs({  # type: ignore
                 x: u1,
                 y: 1
             })), (u1, None, x/fx)
-        )  # type: ignore
+        )
         sol = logcombine(Eq(log(fx), int + log(C1)), force=True)
         gen_sol = sol.subs(fx, u).subs(((u, u - yarg), (x, x - xarg), (u, fx)))
         return [gen_sol]

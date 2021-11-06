@@ -38,11 +38,11 @@ from sympy.functions.elementary.trigonometric import (
 )
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.ntheory.factor_ import divisors
-from sympy.simplify import (
+from sympy.simplify import (  # type: ignore
     simplify,
     collect,
     powsimp,
-    posify,  # type: ignore
+    posify,
     powdenest,
     nsimplify,
     denom,
