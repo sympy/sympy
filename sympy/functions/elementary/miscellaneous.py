@@ -604,14 +604,6 @@ class MinMaxBase(Expr, LatticeOp):
     def _is_connected(cls, x, y):
         """
         Check if x and y are connected somehow.
-
-        EXAMPLES
-        ========
-
-        >>> from sympy import nonlinsolve, exp
-        >>> from sympy.abc import x, y
-        >>> nonlinsolve([4*x**3*y**4 - 2*y, 4*x**4*y**3 - 2*x],x,y)
-        >>> nonlinsolve([(1 - 4*x**2)*exp(-2*x**2 - 2*y**2), -4*x*y*exp(-2*x**2)*exp(-2*y**2)], x,y)
         """
         for i in range(2):
             if x == y:
