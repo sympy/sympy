@@ -196,7 +196,6 @@ so that the solutions of the original equation are found using the
 solutions of the equation in its normal form.
 """
 
-
 from itertools import product
 from sympy.core import S
 from sympy.core.add import Add
@@ -262,6 +261,7 @@ def riccati_reduced(eq, f, x):
     # Normal form of Riccati ODE is f'(x) + f(x)^2 = a(x)
     return f(x).diff(x) + f(x)**2 - a
 
+
 def linsolve_dict(eq, syms):
     """
     Get the output of linsolve as a dict
@@ -271,7 +271,7 @@ def linsolve_dict(eq, syms):
     sol = linsolve(eq, syms)
     if not sol:
         return {}
-    return {k:v for k, v in zip(syms, list(sol)[0])}
+    return {k: v for k, v in zip(syms, list(sol)[0])}
 
 
 def match_riccati(eq, f, x):
@@ -319,8 +319,12 @@ def match_riccati(eq, f, x):
             return False, []
 
         # If b_0(x) contains f(x), it is not a Riccati ODE
-        if len(b0.atoms(f)) or not all((b2 != 0, b0.is_rational_function(x),
-            b1.is_rational_function(x), b2.is_rational_function(x))):
+        if len(b0.atoms(f)) or not all(
+            (
+                b2 != 0, b0.is_rational_function(x),
+                b1.is_rational_function(x), b2.is_rational_function(x)
+            )
+        ):
             return False, []
         return True, funcs
     return False, []
@@ -367,13 +371,13 @@ def inverse_transform_poly(num, den, x):
         # Denominator has greater degree. Substituting x with
         # 1/x would make the extra power go to the numerator
         if num.expr != 0:
-            num = num.transform(one, xpoly) * x**pwr
+            num = num.transform(one, xpoly)*x**pwr
             den = den.transform(one, xpoly)
     else:
         # Numerator has greater degree. Substituting x with
         # 1/x would make the extra power go to the denominator
         num = num.transform(one, xpoly)
-        den = den.transform(one, xpoly) * x**(-pwr)
+        den = den.transform(one, xpoly)*x**(-pwr)
     return num.cancel(den, include=True)
 
 
@@ -402,7 +406,8 @@ def limit_at_inf(num, den, x):
 def construct_c_case_1(num, den, x, pole):
     # Find the coefficient of 1/(x - pole)**2 in the
     # Laurent series expansion of a(x) about pole.
-    num1, den1 = (num*Poly((x - pole)**2, x, extension=True)).cancel(den, include=True)
+    num1, den1 = (num*Poly((x - pole)**2, x,
+                           extension=True)).cancel(den, include=True)
     r = (num1.subs(x, pole))/(den1.subs(x, pole))
 
     # If multiplicity is 2, the coefficient to be added
@@ -417,7 +422,7 @@ def construct_c_case_2(num, den, x, pole, mul):
     # relation mentioned in (5.14) in the thesis (Pg 80)
 
     # r_i = mul/2
-    ri = mul//2
+    ri = mul // 2
 
     # Find the Laurent series coefficients about the pole
     ser = rational_laurent_series(num, den, x, pole, mul, 6)
@@ -427,24 +432,24 @@ def construct_c_case_2(num, den, x, pole, mul):
     cplus = [0 for i in range(ri)]
 
     # Base Case
-    cplus[ri-1] = sqrt(ser[2*ri])
+    cplus[ri - 1] = sqrt(ser[2*ri])
 
     # Iterate backwards to find all coefficients
     s = ri - 1
     sm = 0
-    for s in range(ri-1, 0, -1):
+    for s in range(ri - 1, 0, -1):
         sm = 0
-        for j in range(s+1, ri):
-            sm += cplus[j-1]*cplus[ri+s-j-1]
-        if s!= 1:
-            cplus[s-1] = (ser[ri+s] - sm)/(2*cplus[ri-1])
+        for j in range(s + 1, ri):
+            sm += cplus[j - 1]*cplus[ri + s - j - 1]
+        if s != 1:
+            cplus[s - 1] = (ser[ri + s] - sm)/(2*cplus[ri - 1])
 
     # Memo for the minus case
     cminus = [-x for x in cplus]
 
     # Find the 0th coefficient in the recurrence
-    cplus[0] = (ser[ri+s] - sm - ri*cplus[ri-1])/(2*cplus[ri-1])
-    cminus[0] = (ser[ri+s] - sm  - ri*cminus[ri-1])/(2*cminus[ri-1])
+    cplus[0] = (ser[ri + s] - sm - ri*cplus[ri - 1])/(2*cplus[ri - 1])
+    cminus[0] = (ser[ri + s] - sm - ri*cminus[ri - 1])/(2*cminus[ri - 1])
 
     # Add both the plus and minus cases' coefficients
     if cplus != cminus:
@@ -487,26 +492,26 @@ def construct_c(num, den, x, poles, muls):
 
 def construct_d_case_4(ser, N):
     # Initialize an empty vector
-    dplus = [0 for i in range(N+2)]
+    dplus = [0 for i in range(N + 2)]
     # d_N = sqrt(a_{2*N})
     dplus[N] = sqrt(ser[2*N])
 
     # Use the recurrence relations to find
     # the value of d_s
-    for s in range(N-1, -2, -1):
+    for s in range(N - 1, -2, -1):
         sm = 0
-        for j in range(s+1, N):
-            sm += dplus[j]*dplus[N+s-j]
+        for j in range(s + 1, N):
+            sm += dplus[j]*dplus[N + s - j]
         if s != -1:
-            dplus[s] = (ser[N+s] - sm)/(2*dplus[N])
+            dplus[s] = (ser[N + s] - sm)/(2*dplus[N])
 
     # Coefficients for the case of d_N = -sqrt(a_{2*N})
     dminus = [-x for x in dplus]
 
     # The third equation in Eq 5.15 of the thesis is WRONG!
     # d_N must be replaced with N*d_N in that equation.
-    dplus[-1] = (ser[N+s] - N*dplus[N] - sm)/(2*dplus[N])
-    dminus[-1] = (ser[N+s] - N*dminus[N] - sm)/(2*dminus[N])
+    dplus[-1] = (ser[N + s] - N*dplus[N] - sm)/(2*dplus[N])
+    dminus[-1] = (ser[N + s] - N*dminus[N] - sm)/(2*dminus[N])
 
     if dplus != dminus:
         return [dplus, dminus]
@@ -549,7 +554,7 @@ def construct_d(num, den, x, val_inf):
     in the d-vector based on the valuation of the
     function at oo.
     """
-    N = -val_inf//2
+    N = -val_inf // 2
     # Multiplicity of oo as a pole
     mul = -val_inf if val_inf < 0 else 0
     ser = rational_laurent_series(num, den, x, oo, mul, 1)
@@ -633,7 +638,7 @@ def rational_laurent_series(num, den, x, r, m, n):
     # Equate coefficients for the first terms (base case)
     maxdegree = 1 + max(num.degree(), den.degree())
     syms = symbols(f'a:{maxdegree}', cls=Dummy)
-    diff = num - den * Poly(syms[::-1], x)
+    diff = num - den*Poly(syms[::-1], x)
     coeff_diffs = diff.all_coeffs()[::-1][:maxdegree]
     (coeffs, ) = linsolve(coeff_diffs, syms)
 
@@ -642,10 +647,13 @@ def rational_laurent_series(num, den, x, r, m, n):
     div, rec_rhs = recursion[0], recursion[1:]
     series = list(coeffs)
     while len(series) < n:
-        next_coeff = Add(*(c*series[-1-n] for n, c in enumerate(rec_rhs))) / div
+        next_coeff = Add(
+            *(c*series[-1 - n] for n, c in enumerate(rec_rhs))
+        )/div
         series.append(-next_coeff)
     series = {m - i: val for i, val in enumerate(series)}
     return series
+
 
 def compute_m_ybar(x, poles, choice, N):
     """
@@ -665,11 +673,11 @@ def compute_m_ybar(x, poles, choice, N):
     # as given in Step 9 of the Thesis (Pg 82)
     for i in range(len(poles)):
         for j in range(len(choice[i])):
-            ybar += choice[i][j]/(x - poles[i])**(j+1)
+            ybar += choice[i][j]/(x - poles[i])**(j + 1)
         m -= Poly(choice[i][0], x, extension=True)
 
     # Calculate the second summation for ybar
-    for i in range(N+1):
+    for i in range(N + 1):
         ybar += choice[-1][i]*x**i
     return (m.expr, ybar)
 
@@ -687,7 +695,9 @@ def solve_aux_eq(numa, dena, numy, deny, x, m):
     psol = Poly(K.gens, x, domain=K) + Poly(x**m, x, domain=K)
 
     # Eq (5.16) in Thesis - Pg 81
-    auxeq = (dena*(numy.diff(x)*deny - numy*deny.diff(x) + numy**2) - numa*deny**2)*psol
+    auxeq = (
+        dena*(numy.diff(x)*deny - numy*deny.diff(x) + numy**2) - numa*deny**2
+    )*psol
     if m >= 1:
         px = psol.diff(x)
         auxeq += px*(2*numy*deny*dena)
@@ -712,8 +722,12 @@ def remove_redundant_sols(sol1, sol2, x):
 
     syms1 = sol1.atoms(Symbol, Dummy)
     syms2 = sol2.atoms(Symbol, Dummy)
-    num1, den1 = [Poly(e, x, extension=True) for e in sol1.together().as_numer_denom()]
-    num2, den2 = [Poly(e, x, extension=True) for e in sol2.together().as_numer_denom()]
+    num1, den1 = [
+        Poly(e, x, extension=True) for e in sol1.together().as_numer_denom()
+    ]
+    num2, den2 = [
+        Poly(e, x, extension=True) for e in sol2.together().as_numer_denom()
+    ]
     # Cross multiply
     e = num1*den2 - den1*num2
     # Check if there are any constants
@@ -759,7 +773,7 @@ def get_gen_sol_from_part_sol(part_sols, a, x):
     elif len(part_sols) == 1:
         y1 = part_sols[0]
         i = exp(Integral(2*y1, x))
-        z = i * Integral(a/i, x)
+        z = i*Integral(a/i, x)
         z = z.doit()
         if a == 0 or z == 0:
             return y1
@@ -780,14 +794,14 @@ def get_gen_sol_from_part_sol(part_sols, a, x):
             u = C1*exp(Integral(y2 - y1, x)).doit()
         if u == 1:
             return y2
-        return (y2*u - y1)/(u - 1)
+        return (y2*u - y1)/(u-1)
 
     # In case of 3 particular solutions, a closed form
     # of the general solution can be obtained directly
     else:
         y1, y2, y3 = part_sols[:3]
         C1 = Dummy('C1')
-        return (C1 + 1)*y2*(y1 - y3)/(C1*y1 + y2 - (C1 + 1)*y3)
+        return (C1+1)*y2*(y1-y3)/(C1*y1 + y2 - (C1+1)*y3)
 
 
 def solve_riccati(fx, x, b0, b1, b2, gensol=False):
@@ -848,8 +862,11 @@ def solve_riccati(fx, x, b0, b1, b2, gensol=False):
         c.append(d)
         choices = product(*c)
         for choice in choices:
-            m, ybar = compute_m_ybar(x, poles, choice, -val_inf//2)
-            numy, deny = [Poly(e, x, extension=True) for e in ybar.together().as_numer_denom()]
+            m, ybar = compute_m_ybar(x, poles, choice, -val_inf // 2)
+            numy, deny = [
+                Poly(e, x, extension=True)
+                for e in ybar.together().as_numer_denom()
+            ]
             # Step 10 : Check if a valid solution exists. If yes, also check
             # if m is a non-negative integer
             if m.is_nonnegative == True and m.is_integer == True:
@@ -873,7 +890,7 @@ def solve_riccati(fx, x, b0, b1, b2, gensol=False):
     # Remove redundant solutions from the list of existing solutions
     remove = set()
     for i in range(len(presol)):
-        for j in range(i+1, len(presol)):
+        for j in range(i + 1, len(presol)):
             rem = remove_redundant_sols(presol[i], presol[j], x)
             if rem is not None:
                 remove.add(rem)
@@ -887,5 +904,10 @@ def solve_riccati(fx, x, b0, b1, b2, gensol=False):
         sols = [get_gen_sol_from_part_sol(sols, a, x)]
 
     # Inverse transform the particular solutions
-    presol = [Eq(fx, riccati_inverse_normal(y, x, b1, b2, bp).cancel(extension=True)) for y in sols]
+    presol = [
+        Eq(
+            fx,
+            riccati_inverse_normal(y, x, b1, b2, bp).cancel(extension=True)
+        ) for y in sols
+    ]
     return presol

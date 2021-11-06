@@ -31,15 +31,19 @@ def test_rsolve_poly():
 
 
 def test_rsolve_ratio():
-    solution = rsolve_ratio([-2*n**3 + n**2 + 2*n - 1, 2*n**3 + n**2 - 6*n,
-        -2*n**3 - 11*n**2 - 18*n - 9, 2*n**3 + 13*n**2 + 22*n + 8], 0, n)
+    solution = rsolve_ratio(
+        [
+            -2*n**3 + n**2 + 2*n - 1, 2*n**3 + n**2 - 6*n,
+            -2*n**3 - 11*n**2 - 18*n - 9, 2*n**3 + 13*n**2 + 22*n + 8
+        ], 0, n
+    )
 
     assert solution in [
         C1*((-2*n + 3)/(n**2 - 1))/3,
         (S.Half)*(C1*(-3 + 2*n)/(-1 + n**2)),
-        (S.Half)*(C1*( 3 - 2*n)/( 1 - n**2)),
+        (S.Half)*(C1*(3 - 2*n)/(1 - n**2)),
         (S.Half)*(C2*(-3 + 2*n)/(-1 + n**2)),
-        (S.Half)*(C2*( 3 - 2*n)/( 1 - n**2)),
+        (S.Half)*(C2*(3 - 2*n)/(1 - n**2)),
     ]
 
 
@@ -59,11 +63,12 @@ def test_rsolve_hyper():
         C1*rf(sqrt(k), n) + C0*rf(-sqrt(k), n),
     ]
 
-    assert rsolve_hyper(
-        [2*n*(n + 1), -n**2 - 3*n + 2, n - 1], 0, n) == C1*factorial(n) + C0*2**n
+    assert rsolve_hyper([2*n*(n+1), -n**2 - 3*n + 2, n - 1], 0,
+                        n) == C1*factorial(n) + C0*2**n
 
     assert rsolve_hyper(
-        [n + 2, -(2*n + 3)*(17*n**2 + 51*n + 39), n + 1], 0, n) == None
+        [n + 2, -(2*n + 3)*(17*n**2 + 51*n + 39), n + 1], 0, n
+    ) == None
 
     assert rsolve_hyper([-n - 1, -1, 1], 0, n) == None
 
@@ -73,9 +78,10 @@ def test_rsolve_hyper():
 
     assert rsolve_hyper([-1, 1], 3*(n + n**2), n).expand() == C0 + n**3 - n
 
-    assert rsolve_hyper([-a, 1],0,n).expand() == C0*a**n
+    assert rsolve_hyper([-a, 1], 0, n).expand() == C0*a**n
 
-    assert rsolve_hyper([-a, 0, 1], 0, n).expand() == (-1)**n*C1*a**(n/2) + C0*a**(n/2)
+    assert rsolve_hyper([-a, 0, 1], 0,
+                        n).expand() == (-1)**n*C1*a**(n/2) + C0*a**(n/2)
 
     assert rsolve_hyper([1, 1, 1], 0, n).expand() == \
         C0*(Rational(-1, 2) - sqrt(3)*I/2)**n + C1*(Rational(-1, 2) + sqrt(3)*I/2)**n
@@ -90,10 +96,13 @@ def recurrence_term(c, f):
 
 def test_rsolve_bulk():
     """Some bulk-generated tests."""
-    funcs = [ n, n + 1, n**2, n**3, n**4, n + n**2, 27*n + 52*n**2 - 3*
-        n**3 + 12*n**4 - 52*n**5 ]
-    coeffs = [ [-2, 1], [-2, -1, 1], [-1, 1, 1, -1, 1], [-n, 1], [n**2 -
-        n + 12, 1] ]
+    funcs = [
+        n, n + 1, n**2, n**3, n**4, n + n**2,
+        27*n + 52*n**2 - 3*n**3 + 12*n**4 - 52*n**5
+    ]
+    coeffs = [
+        [-2, 1], [-2, -1, 1], [-1, 1, 1, -1, 1], [-n, 1], [n**2 - n + 12, 1]
+    ]
     for p in funcs:
         # compute difference
         for c in coeffs:
@@ -123,7 +132,7 @@ def test_rsolve():
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 
-    f = (n - 1)*y(n + 2) - (n**2 + 3*n - 2)*y(n + 1) + 2*n*(n + 1)*y(n)
+    f = (n-1)*y(n + 2) - (n**2 + 3*n - 2)*y(n + 1) + 2*n*(n+1)*y(n)
     g = C1*factorial(n) + C0*2**n
     h = -3*factorial(n) + 3*2**n
 
@@ -160,7 +169,7 @@ def test_rsolve():
     f = y(n) - 1/n*y(n - 1) - 1
     assert rsolve(f, y(n)) is None
 
-    f = 2*y(n - 1) + (1 - n)*y(n)/n
+    f = 2*y(n - 1) + (1-n)*y(n)/n
 
     assert rsolve(f, y(n), {y(1): 1}) == 2**(n - 1)*n
     assert rsolve(f, y(n), {y(1): 2}) == 2**(n - 1)*n*2
@@ -168,11 +177,10 @@ def test_rsolve():
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 
-    f = (n - 1)*(n - 2)*y(n + 2) - (n + 1)*(n + 2)*y(n)
+    f = (n-1)*(n-2)*y(n + 2) - (n+1)*(n+2)*y(n)
 
-    assert rsolve(f, y(n), {y(3): 6, y(4): 24}) == n*(n - 1)*(n - 2)
-    assert rsolve(
-        f, y(n), {y(3): 6, y(4): -24}) == -n*(n - 1)*(n - 2)*(-1)**(n)
+    assert rsolve(f, y(n), {y(3): 6, y(4): 24}) == n*(n-1)*(n-2)
+    assert rsolve(f, y(n), {y(3): 6, y(4): -24}) == -n*(n-1)*(n-2)*(-1)**(n)
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 
@@ -192,11 +200,11 @@ def test_rsolve():
     Y = lambda i: sol.subs(n, i)
     assert (Y(n) + a*(Y(n + 1) + Y(n - 1))/2).expand().cancel() == 0
 
-    assert rsolve((k + 1)*y(k), y(k)) is None
-    assert (rsolve((k + 1)*y(k) + (k + 3)*y(k + 1) + (k + 5)*y(k + 2), y(k))
-            is None)
+    assert rsolve((k+1)*y(k), y(k)) is None
+    assert (rsolve((k+1)*y(k) + (k+3)*y(k + 1) + (k+5)*y(k + 2), y(k)) is None)
 
-    assert rsolve(y(n) + y(n + 1) + 2**n + 3**n, y(n)) == (-1)**n*C0 - 2**n/3 - 3**n/4
+    assert rsolve(y(n) + y(n + 1) + 2**n + 3**n,
+                  y(n)) == (-1)**n*C0 - 2**n/3 - 3**n/4
 
 
 def test_rsolve_raises():
@@ -218,36 +226,58 @@ def test_issue_6844():
 def test_issue_18751():
     r = Symbol('r', real=True, positive=True)
     theta = Symbol('theta', real=True)
-    f = y(n) - 2 * r * cos(theta) * y(n - 1) + r**2 * y(n - 2)
+    f = y(n) - 2*r*cos(theta)*y(n - 1) + r**2*y(n - 2)
     assert rsolve(f, y(n)) == \
         C0*(r*(cos(theta) - I*Abs(sin(theta))))**n + C1*(r*(cos(theta) + I*Abs(sin(theta))))**n
 
+
 def test_constant_naming():
     #issue 8697
-    assert rsolve(y(n+3) - y(n+2) - y(n+1) + y(n), y(n)) == (-1)**n*C0+C1+C2*n
-    assert rsolve(y(n+3)+3*y(n+2)+3*y(n+1)+y(n), y(n)).expand() == C0*(-1)**n + (-1)**n*C1*n + (-1)**n*C2*n**2
-    assert rsolve(y(n) - 2*y(n - 3) + 5*y(n - 2) - 4*y(n - 1),y(n),[1,3,8]) == 3*2**n - n - 2
+    assert rsolve(y(n + 3) - y(n + 2) - y(n + 1) + y(n),
+                  y(n)) == (-1)**n*C0 + C1 + C2*n
+    assert rsolve(y(n + 3) + 3*y(n + 2) + 3*y(n + 1) + y(n), y(n)
+                  ).expand() == C0*(-1)**n + (-1)**n*C1*n + (-1)**n*C2*n**2
+    assert rsolve(
+        y(n) - 2*y(n - 3) + 5*y(n - 2) - 4*y(n - 1), y(n), [1, 3, 8]
+    ) == 3*2**n - n - 2
 
     #issue 19630
-    assert rsolve(y(n+3) - 3*y(n+1) + 2*y(n), y(n), {y(1):0, y(2):8, y(3):-2}) == (-2)**n + 2*n
+    assert rsolve(
+        y(n + 3) - 3*y(n + 1) + 2*y(n), y(n), {
+            y(1): 0,
+            y(2): 8,
+            y(3): -2
+        }
+    ) == (-2)**n + 2*n
+
 
 @slow
 def test_issue_15751():
-    f = y(n) + 21*y(n + 1) - 273*y(n + 2) - 1092*y(n + 3) + 1820*y(n + 4) + 1092*y(n + 5) - 273*y(n + 6) - 21*y(n + 7) + y(n + 8)
+    f = y(n) + 21*y(n + 1) - 273*y(n + 2) - 1092*y(n + 3) + 1820*y(
+        n + 4
+    ) + 1092*y(n + 5) - 273*y(n + 6) - 21*y(n + 7) + y(n + 8)
     assert rsolve(f, y(n)) is not None
 
 
 def test_issue_17990():
     f = -10*y(n) + 4*y(n + 1) + 6*y(n + 2) + 46*y(n + 3)
     sol = rsolve(f, y(n))
-    expected = C0*((86*18**(S(1)/3)/69 + (-12 + (-1 + sqrt(3)*I)*(290412 +
-        3036*sqrt(9165))**(S(1)/3))*(1 - sqrt(3)*I)*(24201 + 253*sqrt(9165))**
-        (S(1)/3)/276)/((1 - sqrt(3)*I)*(24201 + 253*sqrt(9165))**(S(1)/3))
-        )**n + C1*((86*18**(S(1)/3)/69 + (-12 + (-1 - sqrt(3)*I)*(290412 + 3036
-        *sqrt(9165))**(S(1)/3))*(1 + sqrt(3)*I)*(24201 + 253*sqrt(9165))**
-        (S(1)/3)/276)/((1 + sqrt(3)*I)*(24201 + 253*sqrt(9165))**(S(1)/3))
-        )**n + C2*(-43*18**(S(1)/3)/(69*(24201 + 253*sqrt(9165))**(S(1)/3)) -
-        S(1)/23 + (290412 + 3036*sqrt(9165))**(S(1)/3)/138)**n
+    expected = C0*(
+        (
+            86*18**(S(1)/3)/69 +
+            (-12 + (-1 + sqrt(3)*I)*(290412 + 3036*sqrt(9165))**(S(1)/3))*
+            (1 - sqrt(3)*I)*(24201 + 253*sqrt(9165))**(S(1)/3)/276
+        )/((1 - sqrt(3)*I)*(24201 + 253*sqrt(9165))**(S(1)/3))
+    )**n + C1*(
+        (
+            86*18**(S(1)/3)/69 +
+            (-12 + (-1 - sqrt(3)*I)*(290412 + 3036*sqrt(9165))**(S(1)/3))*
+            (1 + sqrt(3)*I)*(24201 + 253*sqrt(9165))**(S(1)/3)/276
+        )/((1 + sqrt(3)*I)*(24201 + 253*sqrt(9165))**(S(1)/3))
+    )**n + C2*(
+        -43*18**(S(1)/3)/(69*(24201 + 253*sqrt(9165))**(S(1)/3)) - S(1)/23 +
+        (290412 + 3036*sqrt(9165))**(S(1)/3)/138
+    )**n
     assert sol == expected
     e = sol.subs({C0: 1, C1: 1, C2: 1, n: 1}).evalf()
     assert abs(e + 0.130434782608696) < 1e-13
