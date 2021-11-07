@@ -3274,9 +3274,9 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # one symbol's real soln, another symbol may have
                             # corresponding complex soln.
                             if not isinstance(soln, (ImageSet, ConditionSet)):
-                                soln += solveset_complex(eq2, sym)
-                    except NotImplementedError:
-                        # If sovleset is not able to solve equation `eq2`. Next
+                                soln += solveset_complex(eq2, sym)  # might give ValueError with Abs
+                    except (NotImplementedError, ValueError):
+                        # If solveset is not able to solve equation `eq2`. Next
                         # time we may get soln using next equation `eq2`
                         continue
                     if isinstance(soln, ConditionSet):

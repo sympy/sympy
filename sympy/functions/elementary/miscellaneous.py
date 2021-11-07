@@ -558,7 +558,6 @@ class MinMaxBase(Expr, LatticeOp):
         and check arguments for comparability
         """
         for arg in arg_sequence:
-
             # pre-filter, checking comparability of arguments
             if not isinstance(arg, Expr) or arg.is_extended_real is False or (
                     arg.is_number and
@@ -606,24 +605,24 @@ class MinMaxBase(Expr, LatticeOp):
         """
         Check if x and y are connected somehow.
         """
-        def hit(v, t, f):
-            if not v.is_Relational:
-                return t if v else f
         for i in range(2):
             if x == y:
                 return True
-            r = hit(x >= y, Max, Min)
-            if r is not None:
-                return r
-            r = hit(y <= x, Max, Min)
-            if r is not None:
-                return r
-            r = hit(x <= y, Min, Max)
-            if r is not None:
-                return r
-            r = hit(y >= x, Min, Max)
-            if r is not None:
-                return r
+            t, f = Max, Min
+            for op in "><":
+                for j in range(2):
+                    try:
+                        if op == ">":
+                            v = x >= y
+                        else:
+                            v = x <= y
+                    except TypeError:
+                        return False  # non-real arg
+                    if not v.is_Relational:
+                        return t if v else f
+                    t, f = f, t
+                    x, y = y, x
+                x, y = y, x  # run next pass with reversed order relative to start
             # simplification can be expensive, so be conservative
             # in what is attempted
             x = factor_terms(x - y)
