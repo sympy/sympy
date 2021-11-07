@@ -20,6 +20,8 @@ EXAMPLES
 >>> assert a == c
 >>> assert a != b  # remote possibility this will fail
 """
+from sympy.utilities.iterables import is_sequence
+from sympy.utilities.misc import as_int
 
 import random as _random
 rng = _random.Random()
@@ -128,10 +130,10 @@ def _randrange(seed=None):
     (0, 1)
     """
     if seed is None:
-        return random.randrange
+        return randrange
     elif isinstance(seed, int):
-        random.seed(seed)
-        return random.randrange
+        rng.seed(seed)
+        return randrange
     elif is_sequence(seed):
         seed = list(seed)  # make a copy
         seed.reverse()
@@ -178,10 +180,10 @@ def _randint(seed=None):
     (1, 2)
     """
     if seed is None:
-        return random.randint
+        return randint
     elif isinstance(seed, int):
-        random.seed(seed)
-        return random.randint
+        rng.seed(seed)
+        return randint
     elif is_sequence(seed):
         seed = list(seed)  # make a copy
         seed.reverse()
@@ -202,7 +204,3 @@ def _randint(seed=None):
         return give
     else:
         raise ValueError('_randint got an unexpected seed')
-
-
-from sympy.utilities.iterables import is_sequence
-from sympy.utilities.misc import as_int
