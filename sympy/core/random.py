@@ -1,18 +1,37 @@
 """When you need to use random, import it from here so there is only
-one generator working for SymPy."""
+one generator working for SymPy. Imports from here should behave the
+same as if they were being imported from Python's random module. But
+only the routines currently used in SymPy are included here. To use
+others import `rng` and access the method directly. For example, to
+capture the current state of the generator use `rng.getstate()`.
+
+There is intentionally no Random to import from here. If you want
+to control the state of the generator, import `seed` and call it
+with or without an argument to set the state.
+
+EXAMPLES
+========
+
+>>> from sympy.core.random import random, seed
+>>> assert random() < 1
+>>> seed(1); a = random()
+>>> b = random()
+>>> seed(1); c = random()
+>>> assert a == c
+>>> assert a != b  # remote possibility this will fail
+"""
 
 import random as _random
-random = _random.Random()
-randint = random.randint
-randrange = random.randrange
-choice = random.choice
-shuffle = random.shuffle
-uniform = random.uniform
+rng = _random.Random()
 
-class Random():
-    def __new__(cls, seed=None):
-        random.seed(seed)
-        return random
+seed = lambda s=None: rng.seed(s)
+
+choice = rng.choice
+random = rng.random
+randint = rng.randint
+randrange = rng.randrange
+shuffle = rng.shuffle
+uniform = rng.uniform
 
 def random_complex_number(a=2, b=-1, c=3, d=1, rational=False, tolerance=None):
     """
