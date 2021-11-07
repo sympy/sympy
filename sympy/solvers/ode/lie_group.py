@@ -554,14 +554,14 @@ def lie_heuristic_bivariate(match, comp=False):
             if i:
                 xieq += Add(
                     *[
-                        Symbol("xi_" + str(power) + "_" + str(i - power))*
-                        x**power*y**(i - power) for power in range(i + 1)
+                        Symbol("xi_" + str(power) + "_" + str(i - power))
+                        *x**power*y**(i - power) for power in range(i + 1)
                     ]
                 )
                 etaeq += Add(
                     *[
-                        Symbol("eta_" + str(power) + "_" + str(i - power))*
-                        x**power*y**(i - power) for power in range(i + 1)
+                        Symbol("eta_" + str(power) + "_" + str(i - power))
+                        *x**power*y**(i - power) for power in range(i + 1)
                     ]
                 )
             pden, denom = (ipde.subs({
@@ -638,8 +638,8 @@ def lie_heuristic_chi(match, comp=False):
         for i in range(1, deg + 1):
             chieq += Add(
                 *[
-                    Symbol("chi_" + str(power) + "_" + str(i - power))*
-                    x**power*y**(i - power) for power in range(i + 1)
+                    Symbol("chi_" + str(power) + "_" + str(i - power))*x**power
+                    *y**(i - power) for power in range(i + 1)
                 ]
             )
             cnum, cden = cancel(cpde.subs({
@@ -994,8 +994,8 @@ def lie_heuristic_abaco2_unique_general(match, comp=False):
             E2 = simplify((2*Ayy + (2*B - hy**2)*A)*A - 3*Ay**2)
             if not E2:
                 E3 = simplify(
-                    E1*((28*Ax + 4*hx*A)*A**3 - E1*(hy*A + Ay)) -
-                    E1.diff(x)*8*A**4
+                    E1*((28*Ax + 4*hx*A)*A**3 - E1*(hy*A + Ay))
+                    - E1.diff(x)*8*A**4
                 )
                 if not E3:
                     etaval = cancel(
@@ -1019,8 +1019,8 @@ def lie_heuristic_abaco2_unique_general(match, comp=False):
             )
             if not E2:
                 E3 = simplify(
-                    -(A*D)*E1.diff(y) +
-                    ((E1.diff(x) - hy*D)*A + 3*Ay*D + (A*hx - 3*Ax)*E1)*E1
+                    -(A*D)*E1.diff(y)
+                    + ((E1.diff(x) - hy*D)*A + 3*Ay*D + (A*hx - 3*Ax)*E1)*E1
                 )
                 if not E3:
                     etaval = cancel(
@@ -1074,8 +1074,8 @@ def lie_heuristic_linear(match, comp=False):
     symbols = numbered_symbols("c", cls=Dummy)
     symlist = [next(symbols) for _ in islice(symbols, 6)]
     C0, C1, C2, C3, C4, C5 = symlist
-    pde = C3 + (C4-C0)*h - (C0*x + C1*y +
-                            C2)*hx - (C3*x + C4*y + C5)*hy - C1*h**2
+    pde = C3 + (C4-C0)*h - (C0*x + C1*y
+                            + C2)*hx - (C3*x + C4*y + C5)*hy - C1*h**2
     pde, denom = pde.as_numer_denom()
     pde = powsimp(expand(pde))
     if pde.is_Add:

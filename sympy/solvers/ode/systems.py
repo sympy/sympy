@@ -303,8 +303,8 @@ def linodesolve_type(A, t, b=None):
     is_non_constant = not _matrix_is_constant(A, t)
     is_non_homogeneous = not (b is None or b.is_zero_matrix)
     type = "type{}".format(
-        int("{}{}".format(int(is_non_constant), int(is_non_homogeneous)), 2) +
-        1
+        int("{}{}".format(int(is_non_constant), int(is_non_homogeneous)), 2)
+        + 1
     )
 
     B = None
@@ -1293,8 +1293,9 @@ def _match_second_order_type(A1, A0, t, b=None):
         is_type2, term = _is_second_order_type2(A0, t)
         if is_type2:
             a, b, c = _get_poly_coeffs(Poly(term, t), 2)
-            A = (A0*(term**2).expand()).applyfunc(ratsimp) + (b**2/4 -
-                                                              a*c)*eye(n, n)
+            A = (A0*
+                 (term**
+                  2).expand()).applyfunc(ratsimp) + (b**2/4 - a*c)*eye(n, n)
             tau = integrate(1/term, t)
             t_ = Symbol("{}_".format(t))
             match.update(

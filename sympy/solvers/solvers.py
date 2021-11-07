@@ -1307,8 +1307,8 @@ def solve(f, *symbols, **flags):
                 filldedent(
                     """
                 \tWarning: assumptions concerning following solution(s)
-                cannot be checked:""" + '\n\t' +
-                    ', '.join(str(s) for s in got_None)
+                cannot be checked:""" + '\n\t'
+                    + ', '.join(str(s) for s in got_None)
                 )
             )
 
@@ -3653,22 +3653,22 @@ def unrad(eq, *syms, **flags):
                     # zz represents the unraded expression into which the
                     # specifics for this case are substituted
                     zz = (c-d)*(
-                        A**3*a**9 + 3*A**2*B*a**6*b**3 - 3*A**2*a**6*c**3 +
-                        9*A**2*a**6*c**2*d - 9*A**2*a**6*c*d**2 +
-                        3*A**2*a**6*d**3 + 3*A*B**2*a**3*b**6 +
-                        21*A*B*a**3*b**3*c**3 - 63*A*B*a**3*b**3*c**2*d +
-                        63*A*B*a**3*b**3*c*d**2 - 21*A*B*a**3*b**3*d**3 +
-                        3*A*a**3*c**6 - 18*A*a**3*c**5*d +
-                        45*A*a**3*c**4*d**2 - 60*A*a**3*c**3*d**3 +
-                        45*A*a**3*c**2*d**4 - 18*A*a**3*c*d**5 +
-                        3*A*a**3*d**6 + B**3*b**9 - 3*B**2*b**6*c**3 +
-                        9*B**2*b**6*c**2*d - 9*B**2*b**6*c*d**2 +
-                        3*B**2*b**6*d**3 + 3*B*b**3*c**6 - 18*B*b**3*c**5*d +
-                        45*B*b**3*c**4*d**2 - 60*B*b**3*c**3*d**3 +
-                        45*B*b**3*c**2*d**4 - 18*B*b**3*c*d**5 +
-                        3*B*b**3*d**6 - c**9 + 9*c**8*d - 36*c**7*d**2 +
-                        84*c**6*d**3 - 126*c**5*d**4 + 126*c**4*d**5 -
-                        84*c**3*d**6 + 36*c**2*d**7 - 9*c*d**8 + d**9
+                        A**3*a**9 + 3*A**2*B*a**6*b**3 - 3*A**2*a**6*c**3
+                        + 9*A**2*a**6*c**2*d - 9*A**2*a**6*c*d**2
+                        + 3*A**2*a**6*d**3 + 3*A*B**2*a**3*b**6
+                        + 21*A*B*a**3*b**3*c**3 - 63*A*B*a**3*b**3*c**2*d
+                        + 63*A*B*a**3*b**3*c*d**2 - 21*A*B*a**3*b**3*d**3
+                        + 3*A*a**3*c**6 - 18*A*a**3*c**5*d
+                        + 45*A*a**3*c**4*d**2 - 60*A*a**3*c**3*d**3
+                        + 45*A*a**3*c**2*d**4 - 18*A*a**3*c*d**5
+                        + 3*A*a**3*d**6 + B**3*b**9 - 3*B**2*b**6*c**3
+                        + 9*B**2*b**6*c**2*d - 9*B**2*b**6*c*d**2
+                        + 3*B**2*b**6*d**3 + 3*B*b**3*c**6 - 18*B*b**3*c**5*d
+                        + 45*B*b**3*c**4*d**2 - 60*B*b**3*c**3*d**3
+                        + 45*B*b**3*c**2*d**4 - 18*B*b**3*c*d**5
+                        + 3*B*b**3*d**6 - c**9 + 9*c**8*d - 36*c**7*d**2
+                        + 84*c**6*d**3 - 126*c**5*d**4 + 126*c**4*d**5
+                        - 84*c**3*d**6 + 36*c**2*d**7 - 9*c*d**8 + d**9
                     )
 
                     def _t(i):

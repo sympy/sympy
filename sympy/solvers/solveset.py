@@ -408,8 +408,8 @@ def _invert_complex(f, g_ys, symbol):
                     imageset(
                         Lambda(
                             (g_ys_vars_1, ), (
-                                I*(2*k*pi + arg(g_ys_expr)) +
-                                log(Abs(g_ys_expr))
+                                I*(2*k*pi + arg(g_ys_expr))
+                                + log(Abs(g_ys_expr))
                             )
                         ),
                         S.Integers**(len(g_ys_vars_1))

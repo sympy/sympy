@@ -1111,8 +1111,8 @@ def test_2nd_power_series_ordinary():
     assert classify_ode(eq) == ('2nd_power_series_ordinary', )
     sol = Eq(
         f(x),
-        C2*(-x**4/24 + x**3/6 + 1) + C1*x*(x**3/24 + x**2/6 - x/2 + 1) +
-        O(x**6)
+        C2*(-x**4/24 + x**3/6 + 1) + C1*x*
+        (x**3/24 + x**2/6 - x/2 + 1) + O(x**6)
     )
     assert dsolve(eq) == sol
     # FIXME: checkodesol fails for this solution...

@@ -67,16 +67,16 @@ def test_pde_separate_mul():
 
     # Laplace equation in cylindrical coords
     eq = Eq(
-        1/r*D(Phi(r, theta, z), r) + D(Phi(r, theta, z), r, 2) +
-        1/r**2*D(Phi(r, theta, z), theta, 2) + D(Phi(r, theta, z), z, 2),
+        1/r*D(Phi(r, theta, z), r) + D(Phi(r, theta, z), r, 2)
+        + 1/r**2*D(Phi(r, theta, z), theta, 2) + D(Phi(r, theta, z), z, 2),
         0
     )
     # Separate z
     res = pde_separate_mul(eq, Phi(r, theta, z), [Z(z), u(theta, r)])
     assert res == [
         D(Z(z), z, z)/Z(z),
-        -D(u(theta, r), r, r)/u(theta, r) - D(u(theta, r), r)/(r*u(theta, r)) -
-        D(u(theta, r), theta, theta)/(r**2*u(theta, r))
+        -D(u(theta, r), r, r)/u(theta, r) - D(u(theta, r), r)/
+        (r*u(theta, r)) - D(u(theta, r), theta, theta)/(r**2*u(theta, r))
     ]
     # Lets use the result to create a new equation...
     eq = Eq(res[1], c)

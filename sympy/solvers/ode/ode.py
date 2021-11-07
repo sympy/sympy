@@ -618,8 +618,8 @@ def dsolve(
                 ]
             else:
                 solvefunc = globals()[
-                    'sysode_nonlinear_%(no_of_equation)seq_order%(order)s' %
-                    match]
+                    'sysode_nonlinear_%(no_of_equation)seq_order%(order)s'
+                    % match]
             sols = solvefunc(match)
             if ics:
                 constants = Tuple(*sols).free_symbols - Tuple(*eq).free_symbols
@@ -2589,8 +2589,8 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
         if finaldict[term]:
             fact = term.args[0]
             series += (
-                finaldict[term].subs([(recurr(0), C0),
-                                      (recurr(1), C1)])*(x - x0)**fact
+                finaldict[term].subs([(recurr(0), C0), (recurr(1), C1)])*
+                (x - x0)**fact
             )
     series = collect(expand_mul(series), [C0, C1]) + Order(x**terms)
     return Eq(f(x), series)
@@ -2721,8 +2721,8 @@ def ode_2nd_power_series_regular(eq, func, order, match):
                 finalseries2 = (x - x0)**m2*finalseries2
             return Eq(
                 f(x),
-                collect(finalseries1 + finalseries2, [C0, C1]) +
-                Order(x**terms)
+                collect(finalseries1 + finalseries2, [C0, C1])
+                + Order(x**terms)
             )
 
 
@@ -3093,8 +3093,8 @@ def sysode_linear_2eq_order1(match_):
         r['k2'] = forcing[1]
     else:
         raise NotImplementedError(
-            "Only homogeneous problems are supported" +
-            " (and constant inhomogeneity)"
+            "Only homogeneous problems are supported"
+            + " (and constant inhomogeneity)"
         )
 
     if match_['type_of_equation'] == 'type6':
@@ -3440,8 +3440,8 @@ def _nonlinear_2eq_order1_type4(x, y, t, eq):
             Eq(
                 y(t),
                 dsolve(
-                    diff(V(t), t) - F2.subs(u, sols).subs(v, V(t))*
-                    G2.subs(v, V(t))*phi.subs(u, sols).subs(v, V(t))
+                    diff(V(t), t) - F2.subs(u, sols).subs(v, V(t))
+                    *G2.subs(v, V(t))*phi.subs(u, sols).subs(v, V(t))
                 ).rhs
             )
         )
@@ -3450,9 +3450,9 @@ def _nonlinear_2eq_order1_type4(x, y, t, eq):
             Eq(
                 x(t),
                 dsolve(
-                    diff(U(t), t) -
-                    F1.subs(u, U(t))*G1.subs(v, sols).subs(u, U(t))*
-                    phi.subs(v, sols).subs(u, U(t))
+                    diff(U(t), t)
+                    - F1.subs(u, U(t))*G1.subs(v, sols).subs(u, U(t))
+                    *phi.subs(v, sols).subs(u, U(t))
                 ).rhs
             )
         )
@@ -3696,40 +3696,40 @@ def _nonlinear_3eq_order1_type3(x, y, z, t, eq):
     y_zx = (C1 - a*u - c*w)/b
     x_yz = (C1 - b*v - c*w)/a
     y_x = dsolve(
-        diff(fv(u), u) - ((a*F3 - c*F1)/
-                          (c*F2 - b*F3)).subs(w, z_xy).subs(v, fv(u))
+        diff(fv(u), u)
+        - ((a*F3 - c*F1)/(c*F2 - b*F3)).subs(w, z_xy).subs(v, fv(u))
     ).rhs
     z_x = dsolve(
-        diff(fw(u), u) - ((b*F1 - a*F2)/
-                          (c*F2 - b*F3)).subs(v, y_zx).subs(w, fw(u))
+        diff(fw(u), u)
+        - ((b*F1 - a*F2)/(c*F2 - b*F3)).subs(v, y_zx).subs(w, fw(u))
     ).rhs
     z_y = dsolve(
-        diff(fw(v), v) - ((b*F1 - a*F2)/
-                          (a*F3 - c*F1)).subs(u, x_yz).subs(w, fw(v))
+        diff(fw(v), v)
+        - ((b*F1 - a*F2)/(a*F3 - c*F1)).subs(u, x_yz).subs(w, fw(v))
     ).rhs
     x_y = dsolve(
-        diff(fu(v), v) - ((c*F2 - b*F3)/
-                          (a*F3 - c*F1)).subs(w, z_xy).subs(u, fu(v))
+        diff(fu(v), v)
+        - ((c*F2 - b*F3)/(a*F3 - c*F1)).subs(w, z_xy).subs(u, fu(v))
     ).rhs
     y_z = dsolve(
-        diff(fv(w), w) - ((a*F3 - c*F1)/
-                          (b*F1 - a*F2)).subs(u, x_yz).subs(v, fv(w))
+        diff(fv(w), w)
+        - ((a*F3 - c*F1)/(b*F1 - a*F2)).subs(u, x_yz).subs(v, fv(w))
     ).rhs
     x_z = dsolve(
-        diff(fu(w), w) - ((c*F2 - b*F3)/
-                          (b*F1 - a*F2)).subs(v, y_zx).subs(u, fu(w))
+        diff(fu(w), w)
+        - ((c*F2 - b*F3)/(b*F1 - a*F2)).subs(v, y_zx).subs(u, fu(w))
     ).rhs
     sol1 = dsolve(
-        diff(fu(t), t) -
-        (c*F2 - b*F3).subs(v, y_x).subs(w, z_x).subs(u, fu(t))
+        diff(fu(t), t)
+        - (c*F2 - b*F3).subs(v, y_x).subs(w, z_x).subs(u, fu(t))
     ).rhs
     sol2 = dsolve(
-        diff(fv(t), t) -
-        (a*F3 - c*F1).subs(u, x_y).subs(w, z_y).subs(v, fv(t))
+        diff(fv(t), t)
+        - (a*F3 - c*F1).subs(u, x_y).subs(w, z_y).subs(v, fv(t))
     ).rhs
     sol3 = dsolve(
-        diff(fw(t), t) -
-        (b*F1 - a*F2).subs(u, x_z).subs(v, y_z).subs(w, fw(t))
+        diff(fw(t), t)
+        - (b*F1 - a*F2).subs(u, x_z).subs(v, y_z).subs(w, fw(t))
     ).rhs
     return [sol1, sol2, sol3]
 
@@ -3785,40 +3785,40 @@ def _nonlinear_3eq_order1_type4(x, y, z, t, eq):
     y_zx = sqrt((C1 - c*w**2 - a*u**2)/b)
     z_xy = sqrt((C1 - a*u**2 - b*v**2)/c)
     y_x = dsolve(
-        diff(v(u), u) - ((a*u*F3 - c*w*F1)/
-                         (c*w*F2 - b*v*F3)).subs(w, z_xy).subs(v, v(u))
+        diff(v(u), u)
+        - ((a*u*F3 - c*w*F1)/(c*w*F2 - b*v*F3)).subs(w, z_xy).subs(v, v(u))
     ).rhs
     z_x = dsolve(
-        diff(w(u), u) - ((b*v*F1 - a*u*F2)/
-                         (c*w*F2 - b*v*F3)).subs(v, y_zx).subs(w, w(u))
+        diff(w(u), u)
+        - ((b*v*F1 - a*u*F2)/(c*w*F2 - b*v*F3)).subs(v, y_zx).subs(w, w(u))
     ).rhs
     z_y = dsolve(
-        diff(w(v), v) - ((b*v*F1 - a*u*F2)/
-                         (a*u*F3 - c*w*F1)).subs(u, x_yz).subs(w, w(v))
+        diff(w(v), v)
+        - ((b*v*F1 - a*u*F2)/(a*u*F3 - c*w*F1)).subs(u, x_yz).subs(w, w(v))
     ).rhs
     x_y = dsolve(
-        diff(u(v), v) - ((c*w*F2 - b*v*F3)/
-                         (a*u*F3 - c*w*F1)).subs(w, z_xy).subs(u, u(v))
+        diff(u(v), v)
+        - ((c*w*F2 - b*v*F3)/(a*u*F3 - c*w*F1)).subs(w, z_xy).subs(u, u(v))
     ).rhs
     y_z = dsolve(
-        diff(v(w), w) - ((a*u*F3 - c*w*F1)/
-                         (b*v*F1 - a*u*F2)).subs(u, x_yz).subs(v, v(w))
+        diff(v(w), w)
+        - ((a*u*F3 - c*w*F1)/(b*v*F1 - a*u*F2)).subs(u, x_yz).subs(v, v(w))
     ).rhs
     x_z = dsolve(
-        diff(u(w), w) - ((c*w*F2 - b*v*F3)/
-                         (b*v*F1 - a*u*F2)).subs(v, y_zx).subs(u, u(w))
+        diff(u(w), w)
+        - ((c*w*F2 - b*v*F3)/(b*v*F1 - a*u*F2)).subs(v, y_zx).subs(u, u(w))
     ).rhs
     sol1 = dsolve(
-        diff(u(t), t) -
-        (c*w*F2 - b*v*F3).subs(v, y_x).subs(w, z_x).subs(u, u(t))
+        diff(u(t), t)
+        - (c*w*F2 - b*v*F3).subs(v, y_x).subs(w, z_x).subs(u, u(t))
     ).rhs
     sol2 = dsolve(
-        diff(v(t), t) -
-        (a*u*F3 - c*w*F1).subs(u, x_y).subs(w, z_y).subs(v, v(t))
+        diff(v(t), t)
+        - (a*u*F3 - c*w*F1).subs(u, x_y).subs(w, z_y).subs(v, v(t))
     ).rhs
     sol3 = dsolve(
-        diff(w(t), t) -
-        (b*v*F1 - a*u*F2).subs(u, x_z).subs(v, y_z).subs(w, w(t))
+        diff(w(t), t)
+        - (b*v*F1 - a*u*F2).subs(u, x_z).subs(v, y_z).subs(w, w(t))
     ).rhs
     return [sol1, sol2, sol3]
 
@@ -3866,40 +3866,40 @@ def _nonlinear_3eq_order1_type5(x, y, z, t, eq):
     y_zx = (C1*w**-c*u**-a)**-b
     z_xy = (C1*u**-a*v**-b)**-c
     y_x = dsolve(
-        diff(fv(u), u) - ((v*(a*F3 - c*F1))/
-                          (u*(c*F2 - b*F3))).subs(w, z_xy).subs(v, fv(u))
+        diff(fv(u), u)
+        - ((v*(a*F3 - c*F1))/(u*(c*F2 - b*F3))).subs(w, z_xy).subs(v, fv(u))
     ).rhs
     z_x = dsolve(
-        diff(fw(u), u) - ((w*(b*F1 - a*F2))/
-                          (u*(c*F2 - b*F3))).subs(v, y_zx).subs(w, fw(u))
+        diff(fw(u), u)
+        - ((w*(b*F1 - a*F2))/(u*(c*F2 - b*F3))).subs(v, y_zx).subs(w, fw(u))
     ).rhs
     z_y = dsolve(
-        diff(fw(v), v) - ((w*(b*F1 - a*F2))/
-                          (v*(a*F3 - c*F1))).subs(u, x_yz).subs(w, fw(v))
+        diff(fw(v), v)
+        - ((w*(b*F1 - a*F2))/(v*(a*F3 - c*F1))).subs(u, x_yz).subs(w, fw(v))
     ).rhs
     x_y = dsolve(
-        diff(fu(v), v) - ((u*(c*F2 - b*F3))/
-                          (v*(a*F3 - c*F1))).subs(w, z_xy).subs(u, fu(v))
+        diff(fu(v), v)
+        - ((u*(c*F2 - b*F3))/(v*(a*F3 - c*F1))).subs(w, z_xy).subs(u, fu(v))
     ).rhs
     y_z = dsolve(
-        diff(fv(w), w) - ((v*(a*F3 - c*F1))/
-                          (w*(b*F1 - a*F2))).subs(u, x_yz).subs(v, fv(w))
+        diff(fv(w), w)
+        - ((v*(a*F3 - c*F1))/(w*(b*F1 - a*F2))).subs(u, x_yz).subs(v, fv(w))
     ).rhs
     x_z = dsolve(
-        diff(fu(w), w) - ((u*(c*F2 - b*F3))/
-                          (w*(b*F1 - a*F2))).subs(v, y_zx).subs(u, fu(w))
+        diff(fu(w), w)
+        - ((u*(c*F2 - b*F3))/(w*(b*F1 - a*F2))).subs(v, y_zx).subs(u, fu(w))
     ).rhs
     sol1 = dsolve(
-        diff(fu(t), t) -
-        (u*(c*F2 - b*F3)).subs(v, y_x).subs(w, z_x).subs(u, fu(t))
+        diff(fu(t), t)
+        - (u*(c*F2 - b*F3)).subs(v, y_x).subs(w, z_x).subs(u, fu(t))
     ).rhs
     sol2 = dsolve(
-        diff(fv(t), t) -
-        (v*(a*F3 - c*F1)).subs(u, x_y).subs(w, z_y).subs(v, fv(t))
+        diff(fv(t), t)
+        - (v*(a*F3 - c*F1)).subs(u, x_y).subs(w, z_y).subs(v, fv(t))
     ).rhs
     sol3 = dsolve(
-        diff(fw(t), t) -
-        (w*(b*F1 - a*F2)).subs(u, x_z).subs(v, y_z).subs(w, fw(t))
+        diff(fw(t), t)
+        - (w*(b*F1 - a*F2)).subs(u, x_z).subs(v, y_z).subs(w, fw(t))
     ).rhs
     return [sol1, sol2, sol3]
 

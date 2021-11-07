@@ -207,8 +207,8 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             # derivative is equal, this will only work for odes that are exact,
             # by definition.
             s = simplify(
-                trigsimp(diff(sol.lhs, x, order) - diff(sol.rhs, x, order)) -
-                trigsimp(ode.lhs) + trigsimp(ode.rhs)
+                trigsimp(diff(sol.lhs, x, order) - diff(sol.rhs, x, order))
+                - trigsimp(ode.lhs) + trigsimp(ode.rhs)
             )
             # s2 = simplify(
             #     diff(sol.lhs, x, order) - diff(sol.rhs, x, order) - \
@@ -293,8 +293,8 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         return (True, s)
     elif s is True:  # The code above never was able to change s
         raise NotImplementedError(
-            "Unable to test if " + str(sol) + " is a solution to " + str(ode) +
-            "."
+            "Unable to test if " + str(sol) + " is a solution to " + str(ode)
+            + "."
         )
     else:
         return (False, s)

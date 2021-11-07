@@ -497,8 +497,8 @@ def test_2nd_2F1_hypergeometric_integral():
         (
             C1 +
             C2*Integral(exp(Integral((1 - x/2)/(x*(x-1)), x))/(1 - x/2)**2, x)
-        )*exp(Integral(1/(x-1), x)/4)*exp(-Integral(7/(x-1), x)/4)*
-        hyper((S(1)/2, -1), (1, ), x)
+        )*exp(Integral(1/(x-1), x)/4)*exp(-Integral(7/(x-1), x)/4)
+        *hyper((S(1)/2, -1), (1, ), x)
     )
     assert sol == dsolve(eq, hint='2nd_hypergeometric_Integral')
     assert checkodesol(eq, sol) == (True, 0)
@@ -726,8 +726,8 @@ def test_nth_order_linear_euler_eq_nonhomogeneous_variation_of_parameters():
     assert our_hint in classify_ode(eq, f(x))
 
     eq = Eq(
-        a*x**3*diff(f(x), x, 3) + b*x**2*diff(f(x), x, 2) + c*x*diff(f(x), x) +
-        d*f(x),
+        a*x**3*diff(f(x), x, 3) + b*x**2*diff(f(x), x, 2) + c*x*diff(f(x), x)
+        + d*f(x),
         x*log(x)
     )
     assert our_hint in classify_ode(eq, f(x))
@@ -763,16 +763,16 @@ def _get_examples_ode_sol_euler_homogeneous():
             },
             'euler_hom_04': {
                 'eq': Eq(
-                    6*f(x) - 6*diff(f(x), x)*x + 1*x**2*diff(f(x), x, x) +
-                    x**3*diff(f(x), x, x, x),
+                    6*f(x) - 6*diff(f(x), x)*x + 1*x**2*diff(f(x), x, x)
+                    + x**3*diff(f(x), x, x, x),
                     0
                 ),
                 'sol': [Eq(f(x), C1/x**2 + C2*x + C3*x**3)]
             },
             'euler_hom_05': {
                 'eq': Eq(
-                    -125*f(x) + 61*diff(f(x), x)*x - 12*x**2*diff(f(x), x, x) +
-                    x**3*diff(f(x), x, x, x),
+                    -125*f(x) + 61*diff(f(x), x)*x - 12*x**2*diff(f(x), x, x)
+                    + x**3*diff(f(x), x, x, x),
                     0
                 ),
                 'sol': [Eq(f(x), x**5*(C1 + C2*log(x) + C3*log(x)**2))]
@@ -782,8 +782,8 @@ def _get_examples_ode_sol_euler_homogeneous():
                 'sol': [Eq(f(x), C1*x**-3 + C2*x**3)]
             },
             'euler_hom_07': {
-                'eq': sin(x)*x**2*f(x).diff(x, 2) + sin(x)*x*f(x).diff(x) +
-                sin(x)*f(x),
+                'eq': sin(x)*x**2*f(x).diff(x, 2) + sin(x)*x*f(x).diff(x)
+                + sin(x)*f(x),
                 'sol': [Eq(f(x), C1*sin(log(x)) + C2*cos(log(x)))],
                 'XFAIL': [
                     '2nd_power_series_regular',
@@ -795,8 +795,8 @@ def _get_examples_ode_sol_euler_homogeneous():
                 'sol': [
                     Eq(
                         f(x),
-                        C1*x + C2*x**r1 + C3*x**r2 + C4*x**r3 + C5*x**r4 +
-                        C6*x**r5
+                        C1*x + C2*x**r1 + C3*x**r2 + C4*x**r3 + C5*x**r4
+                        + C6*x**r5
                     )
                 ],
                 'checkodesol_XFAIL': True
@@ -842,37 +842,37 @@ def _get_examples_ode_sol_euler_undetermined_coeff():
                 'sol': [
                     Eq(
                         f(x),
-                        C1/x**4 + C2*x**2 - Rational(1, 8)*log(x)**3 -
-                        Rational(3, 32)*log(x)**2 - Rational(1, 64)*log(x) -
-                        Rational(7, 256)
+                        C1/x**4 + C2*x**2 - Rational(1, 8)*log(x)**3
+                        - Rational(3, 32)*log(x)**2 - Rational(1, 64)*log(x)
+                        - Rational(7, 256)
                     )
                 ]
             },
             'euler_undet_05': {
                 'eq': Eq(
-                    x**3*diff(f(x), x, x, x) - 3*x**2*diff(f(x), x, x) +
-                    6*x*diff(f(x), x) - 6*f(x),
+                    x**3*diff(f(x), x, x, x) - 3*x**2*diff(f(x), x, x)
+                    + 6*x*diff(f(x), x) - 6*f(x),
                     log(x)
                 ),
                 'sol': [
                     Eq(
                         f(x),
-                        C1*x + C2*x**2 + C3*x**3 - Rational(1, 6)*log(x) -
-                        Rational(11, 36)
+                        C1*x + C2*x**2 + C3*x**3 - Rational(1, 6)*log(x)
+                        - Rational(11, 36)
                     )
                 ]
             },
 
             #Below examples were added for the issue: https://github.com/sympy/sympy/issues/5096
             'euler_undet_06': {
-                'eq': 2*x**2*f(x).diff(x, 2) + f(x) +
-                sqrt(2*x)*sin(log(2*x)/2),
+                'eq': 2*x**2*f(x).diff(x, 2) + f(x)
+                + sqrt(2*x)*sin(log(2*x)/2),
                 'sol': [
                     Eq(
                         f(x),
                         sqrt(x)*(
-                            C1*sin(log(x)/2) + C2*cos(log(x)/2) +
-                            sqrt(2)*log(x)*cos(log(2*x)/2)/2
+                            C1*sin(log(x)/2) + C2*cos(log(x)/2)
+                            + sqrt(2)*log(x)*cos(log(2*x)/2)/2
                         )
                     )
                 ]
@@ -882,8 +882,8 @@ def _get_examples_ode_sol_euler_undetermined_coeff():
                 'sol': [
                     Eq(
                         f(x),
-                        C1*sqrt(x)*sin(log(x)/2) + C2*sqrt(x)*cos(log(x)/2) -
-                        2*sin(log(2*x)/2)/5 - 4*cos(log(2*x)/2)/5
+                        C1*sqrt(x)*sin(log(x)/2) + C2*sqrt(x)*cos(log(x)/2)
+                        - 2*sin(log(2*x)/2)/5 - 4*cos(log(2*x)/2)/5
                     )
                 ]
             },
@@ -899,8 +899,8 @@ def _get_examples_ode_sol_euler_var_para():
         'examples': {
             'euler_var_01': {
                 'eq': Eq(
-                    x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) +
-                    2*f(x),
+                    x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x)
+                    + 2*f(x),
                     x**4
                 ),
                 'sol': [Eq(f(x), x*(C1 + C2*x + x**3/6))]
@@ -920,15 +920,15 @@ def _get_examples_ode_sol_euler_var_para():
             },
             'euler_var_03': {
                 'eq': Eq(
-                    x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) +
-                    2*f(x),
+                    x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x)
+                    + 2*f(x),
                     x**4*exp(x)
                 ),
                 'sol': [Eq(f(x), x*(C1 + C2*x + x*exp(x) - 2*exp(x)))]
             },
             'euler_var_04': {
-                'eq': x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x) +
-                2*f(x) - log(x),
+                'eq': x**2*Derivative(f(x), x, x) - 2*x*Derivative(f(x), x)
+                + 2*f(x) - log(x),
                 'sol': [Eq(f(x), C1*x + C2*x**2 + log(x)/2 + Rational(3, 4))]
             },
             'euler_var_05': {
@@ -1075,8 +1075,8 @@ def _get_examples_ode_sol_1st_linear():
                     Eq(
                         f(x),
                         (
-                            C1 + x*exp(x**2/2) -
-                            sqrt(2)*sqrt(pi)*erfi(sqrt(2)*x/2)/2
+                            C1 + x*exp(x**2/2)
+                            - sqrt(2)*sqrt(pi)*erfi(sqrt(2)*x/2)/2
                         )*exp(-x**2/2)
                     )
                 ],
@@ -1171,12 +1171,12 @@ def _get_examples_ode_sol_factorable():
                 'sol': [Eq(f(x), C1 - x), Eq(f(x), C1 + x)]
             },
             'fact_09': {
-                'eq': f(x)**2*Derivative(f(x), x)**6 -
-                2*f(x)**2*Derivative(f(x), x)**4 +
-                f(x)**2*Derivative(f(x), x)**2 -
-                2*f(x)*Derivative(f(x), x)**5 + 4*f(x)*Derivative(f(x), x)**3 -
-                2*f(x)*Derivative(f(x), x) + Derivative(f(x), x)**4 -
-                2*Derivative(f(x), x)**2 + 1,
+                'eq': f(x)**2*Derivative(f(x), x)**6
+                - 2*f(x)**2*Derivative(f(x), x)**4
+                + f(x)**2*Derivative(f(x), x)**2
+                - 2*f(x)*Derivative(f(x), x)**5 + 4*f(x)*Derivative(f(x), x)**3
+                - 2*f(x)*Derivative(f(x), x) + Derivative(f(x), x)**4
+                - 2*Derivative(f(x), x)**2 + 1,
                 'sol': [
                     Eq(f(x), C1 - x),
                     Eq(f(x), -sqrt(C1 + 2*x)),
@@ -1185,13 +1185,13 @@ def _get_examples_ode_sol_factorable():
                 ]
             },
             'fact_10': {
-                'eq': x**4*f(x)**2 + 2*x**4*f(x)*Derivative(f(x), (x, 2)) +
-                x**4*Derivative(f(x),
-                                (x, 2))**2 + 2*x**3*f(x)*Derivative(f(x), x) +
-                2*x**3*Derivative(f(x), x)*Derivative(f(x), (x, 2)) -
-                7*x**2*f(x)**2 - 7*x**2*f(x)*Derivative(f(x), (x, 2)) +
-                x**2*Derivative(f(x), x)**2 - 7*x*f(x)*Derivative(f(x), x) +
-                12*f(x)**2,
+                'eq': x**4*f(x)**2 + 2*x**4*f(x)*Derivative(f(x), (x, 2))
+                + x**4*Derivative(f(x),
+                                  (x, 2))**2 + 2*x**3*f(x)*Derivative(f(x), x)
+                + 2*x**3*Derivative(f(x), x)*Derivative(f(x), (x, 2))
+                - 7*x**2*f(x)**2 - 7*x**2*f(x)*Derivative(f(x), (x, 2))
+                + x**2*Derivative(f(x), x)**2 - 7*x*f(x)*Derivative(f(x), x)
+                + 12*f(x)**2,
                 'sol': [
                     Eq(f(x), C1*besselj(2, x) + C2*bessely(2, x)),
                     Eq(f(x), C1*besselj(sqrt(3), x) + C2*bessely(sqrt(3), x))
@@ -1295,12 +1295,12 @@ def _get_examples_ode_sol_almost_linear():
                 'sol': [
                     Eq(f(x), (C1*exp(3/x) - 1)**Rational(1, 3)),
                     Eq(
-                        f(x),
-                        (-1 - sqrt(3)*I)*(C1*exp(3/x) - 1)**Rational(1, 3)/2
+                        f(x), (-1 - sqrt(3)*I)*
+                        (C1*exp(3/x) - 1)**Rational(1, 3)/2
                     ),
                     Eq(
-                        f(x),
-                        (-1 + sqrt(3)*I)*(C1*exp(3/x) - 1)**Rational(1, 3)/2
+                        f(x), (-1 + sqrt(3)*I)*
+                        (C1*exp(3/x) - 1)**Rational(1, 3)/2
                     )
                 ],
             },
@@ -1320,8 +1320,8 @@ def _get_examples_ode_sol_almost_linear():
                 'sol': [Eq(f(x), log(C1/x - x*Rational(3, 2)))],
             },
             'almost_lin_05': {
-                'eq': x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) +
-                2,
+                'eq': x + A*
+                (x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2,
                 'sol': [
                     Eq(
                         f(x),
@@ -1347,8 +1347,8 @@ def _get_examples_ode_sol_liouville():
         'func': f(x),
         'examples': {
             'liouville_01': {
-                'eq': diff(f(x), x)/x + diff(f(x), x, x)/2 -
-                diff(f(x), x)**2/2,
+                'eq': diff(f(x), x)/x + diff(f(x), x, x)/2
+                - diff(f(x), x)**2/2,
                 'sol': [Eq(f(x), log(x/(C1 + C2*x)))],
             },
             'liouville_02': {
@@ -1358,23 +1358,23 @@ def _get_examples_ode_sol_liouville():
             'liouville_03': {
                 'eq': (
                     (
-                        diff(f(x), x)/x + diff(f(x), x, x)/2 -
-                        diff(f(x), x)**2/2
+                        diff(f(x), x)/x + diff(f(x), x, x)/2
+                        - diff(f(x), x)**2/2
                     )*exp(-f(x))/exp(f(x))
                 ).expand(),
                 'sol': [Eq(f(x), log(x/(C1 + C2*x)))]
             },
             'liouville_04': {
-                'eq': diff(f(x), x, x) + 1/f(x)*(diff(f(x), x))**2 +
-                1/x*diff(f(x), x),
+                'eq': diff(f(x), x, x) + 1/f(x)*
+                (diff(f(x), x))**2 + 1/x*diff(f(x), x),
                 'sol': [
                     Eq(f(x), -sqrt(C1 + C2*log(x))),
                     Eq(f(x), sqrt(C1 + C2*log(x)))
                 ],
             },
             'liouville_05': {
-                'eq': x*diff(f(x), x, x) + x/f(x)*diff(f(x), x)**2 +
-                x*diff(f(x), x),
+                'eq': x*diff(f(x), x, x) + x/f(x)*diff(f(x), x)**2
+                + x*diff(f(x), x),
                 'sol': [
                     Eq(f(x), -sqrt(C1 + C2*exp(-x))),
                     Eq(f(x), sqrt(C1 + C2*exp(-x)))
@@ -1395,8 +1395,8 @@ def _get_examples_ode_sol_liouville():
                 (n*f(x) + f(x)**2)*diff(f(x), x)**2 + diff(f(x), (x, 2)),
                 'sol': [
                     Eq(
-                        C1 + C2*lowergamma(Rational(1, 3), x**3/3) +
-                        NonElementaryIntegral(
+                        C1 + C2*lowergamma(Rational(1, 3), x**3/3)
+                        + NonElementaryIntegral(
                             exp(_y**3/3)*exp(_y**2*n/2), (_y, f(x))
                         ),
                         0
@@ -1993,8 +1993,8 @@ def _get_examples_ode_sol_separable():
                 'eq': exp(x + 1)*tan(f(x)) + cos(f(x))*f(x).diff(x),
                 'sol': [
                     Eq(
-                        E*exp(x) + log(cos(f(x)) - 1)/2 -
-                        log(cos(f(x)) + 1)/2 + cos(f(x)),
+                        E*exp(x) + log(cos(f(x)) - 1)/2 - log(cos(f(x)) + 1)/2
+                        + cos(f(x)),
                         C1
                     )
                 ],
@@ -2002,8 +2002,8 @@ def _get_examples_ode_sol_separable():
             },
             'separable_11': {
                 'eq': (
-                    x*cos(f(x)) + x**2*sin(f(x))*f(x).diff(x) -
-                    a**2*sin(f(x))*f(x).diff(x)
+                    x*cos(f(x)) + x**2*sin(f(x))*f(x).diff(x)
+                    - a**2*sin(f(x))*f(x).diff(x)
                 ),
                 'sol': [
                     Eq(f(x), -acos(C1*sqrt(-a**2 + x**2)) + 2*pi),
@@ -2088,9 +2088,9 @@ def _get_examples_ode_sol_separable():
                     Eq(
                         f(t),
                         (
-                            0.019588638589618023*
-                            exp(y*(C1 - 51.049999999999997*t)) +
                             0.019588638589618023
+                            *exp(y*(C1 - 51.049999999999997*t))
+                            + 0.019588638589618023
                         )/y
                     )
                 ],
@@ -2192,13 +2192,13 @@ def _get_examples_ode_sol_1st_exact():
                     Eq(
                         log(x),
                         C1 - 9*sqrt(1 + f(x)**2/x**2)*asinh(f(x)/x)/
-                        (-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2)) -
-                        9*sqrt(1 + f(x)**2/x**2)*log(
+                        (-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))
+                        - 9*sqrt(1 + f(x)**2/x**2)*log(
                             1 - sqrt(1 + f(x)**2/x**2)*f(x)/x + 2*f(x)**2/x**2
-                        )/(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2)) +
-                        9*asinh(f(x)/x)*f(x)/
-                        (x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))) +
-                        9*f(x)*log(
+                        )/(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2))
+                        + 9*asinh(f(x)/x)*f(x)/
+                        (x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2)))
+                        + 9*f(x)*log(
                             1 - sqrt(1 + f(x)**2/x**2)*f(x)/x + 2*f(x)**2/x**2
                         )/(x*(-27*f(x)/x + 27*sqrt(1 + f(x)**2/x**2)))
                     )
@@ -2334,25 +2334,25 @@ def _get_examples_ode_sol_nth_linear_var_of_parameters():
 
             # These were from issue: https://github.com/sympy/sympy/issues/15996
             'var_of_parameters_13': {
-                'eq': f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) -
-                2*x - exp(I*x),
+                'eq': f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) - 2*x
+                - exp(I*x),
                 'sol': [
                     Eq(
                         f(x),
                         C1 + x**2 + (
-                            C2 + x*(C3 - x/8 + 3*exp(I*x)/2 + 3*exp(-I*x)/2) +
-                            5*exp(2*I*x)/16 + 2*I*exp(I*x) - 2*I*exp(-I*x)
+                            C2 + x*(C3 - x/8 + 3*exp(I*x)/2 + 3*exp(-I*x)/2)
+                            + 5*exp(2*I*x)/16 + 2*I*exp(I*x) - 2*I*exp(-I*x)
                         )*sin(x) + (
                             C4 + x*
-                            (C5 + I*x/8 + 3*I*exp(I*x)/2 - 3*I*exp(-I*x)/2) +
-                            5*I*exp(2*I*x)/16 - 2*exp(I*x) - 2*exp(-I*x)
+                            (C5 + I*x/8 + 3*I*exp(I*x)/2 - 3*I*exp(-I*x)/2)
+                            + 5*I*exp(2*I*x)/16 - 2*exp(I*x) - 2*exp(-I*x)
                         )*cos(x) - I*exp(I*x)
                     )
                 ],
             },
             'var_of_parameters_14': {
-                'eq': f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x) -
-                exp(I*x),
+                'eq': f(x).diff(x, 5) + 2*f(x).diff(x, 3) + f(x).diff(x)
+                - exp(I*x),
                 'sol': [
                     Eq(
                         f(x),
@@ -2369,8 +2369,8 @@ def _get_examples_ode_sol_nth_linear_var_of_parameters():
                 'sol': [
                     Eq(
                         f(x), (C1 - x/3 + sin(2*x)/3)*sin(3*x) + (
-                            C2 + log(cos(x)) - 2*log(cos(x)**2)/3 +
-                            2*cos(x)**2/3
+                            C2 + log(cos(x)) - 2*log(cos(x)**2)/3
+                            + 2*cos(x)**2/3
                         )*cos(3*x)
                     )
                 ],
@@ -2424,8 +2424,8 @@ def _get_examples_ode_sol_2nd_linear_bessel():
                     Eq(
                         f(x),
                         (
-                            C1*besselj(sqrt(17)/4, x**2/2) +
-                            C2*bessely(sqrt(17)/4, x**2/2)
+                            C1*besselj(sqrt(17)/4, x**2/2)
+                            + C2*bessely(sqrt(17)/4, x**2/2)
                         )/sqrt(x)
                     )
                 ],
@@ -2474,8 +2474,8 @@ def _get_examples_ode_sol_2nd_linear_bessel():
                 'eq': f(x).diff(x, x) + 2/x*f(x).diff(x) + f(x),
                 'sol': [
                     Eq(
-                        f(x), (C1*besselj(S(1)/2, x) + C2*bessely(S(1)/2, x))/
-                        sqrt(x)
+                        f(x), (C1*besselj(S(1)/2, x) + C2*bessely(S(1)/2, x))
+                        /sqrt(x)
                     )
                 ],
             },
@@ -2490,13 +2490,13 @@ def _get_examples_ode_sol_2nd_2F1_hypergeometric():
         'func': f(x),
         'examples': {
             '2nd_2F1_hyper_01': {
-                'eq': x*(x-1)*f(x).diff(x, 2) + (S(3)/2 - 2*x)*f(x).diff(x) +
-                2*f(x),
+                'eq': x*(x-1)*f(x).diff(x, 2) +
+                (S(3)/2 - 2*x)*f(x).diff(x) + 2*f(x),
                 'sol': [
                     Eq(
                         f(x),
-                        C1*x**(S(5)/2)*hyper((S(3)/2, S(1)/2), (S(7)/2, ), x) +
-                        C2*hyper((-1, -2), (-S(3)/2, ), x)
+                        C1*x**(S(5)/2)*hyper((S(3)/2, S(1)/2), (S(7)/2, ), x)
+                        + C2*hyper((-1, -2), (-S(3)/2, ), x)
                     )
                 ],
             },
@@ -2507,8 +2507,8 @@ def _get_examples_ode_sol_2nd_2F1_hypergeometric():
                         f(x),
                         (
                             C1*(1 - x)**
-                            (S(5)/2)*hyper((S(1)/2, 2), (S(7)/2, ), 1 - x) +
-                            C2*hyper((-S(1)/2, -2), (-S(3)/2, ), 1 - x)
+                            (S(5)/2)*hyper((S(1)/2, 2), (S(7)/2, ), 1 - x)
+                            + C2*hyper((-S(1)/2, -2), (-S(3)/2, ), 1 - x)
                         )/(x - 1)**(S(5)/2)
                     )
                 ],
@@ -2521,8 +2521,8 @@ def _get_examples_ode_sol_2nd_2F1_hypergeometric():
                         f(x),
                         (
                             C1*(1 - x)**
-                            (S(11)/2)*hyper((S(1)/2, 2), (S(13)/2, ), 1 - x) +
-                            C2*hyper((-S(7)/2, -5), (-S(9)/2, ), 1 - x)
+                            (S(11)/2)*hyper((S(1)/2, 2), (S(13)/2, ), 1 - x)
+                            + C2*hyper((-S(7)/2, -5), (-S(9)/2, ), 1 - x)
                         )/(x - 1)**(S(11)/2)
                     )
                 ],
@@ -2536,9 +2536,9 @@ def _get_examples_ode_sol_2nd_2F1_hypergeometric():
                     Eq(
                         f(x),
                         x**(S(45)/98)*(
-                            C1*x**(S(4)/49)*
-                            hyper((S(1)/3, -S(1)/2), (S(9)/7, ), x**(S(2)/7)) +
-                            C2*hyper(
+                            C1*x**(S(4)/49)
+                            *hyper((S(1)/3, -S(1)/2), (S(9)/7, ), x**(S(2)/7))
+                            + C2*hyper(
                                 (S(1)/21, -S(11)/14), (S(5)/7, ), x**(S(2)/7)
                             )
                         )/(x**(S(2)/7) - 1)**(S(19)/84)
@@ -3228,20 +3228,20 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_subs_dep_div_indep():
                 'sol': [
                     Eq(
                         log(x),
-                        log(C1) + log(cos(f(x)/x) - 1)/2 -
-                        log(cos(f(x)/x) + 1)/2
+                        log(C1) + log(cos(f(x)/x) - 1)/2
+                        - log(cos(f(x)/x) + 1)/2
                     )
                 ],
                 'simplify_flag': False,
             },
             'dep_div_indep_03': {
-                'eq': x*exp(f(x)/x) - f(x)*sin(f(x)/x) +
-                x*sin(f(x)/x)*f(x).diff(x),
+                'eq': x*exp(f(x)/x) - f(x)*sin(f(x)/x)
+                + x*sin(f(x)/x)*f(x).diff(x),
                 'sol': [
                     Eq(
                         log(x),
-                        C1 + exp(-f(x)/x)*sin(f(x)/x)/2 +
-                        exp(-f(x)/x)*cos(f(x)/x)/2
+                        C1 + exp(-f(x)/x)*sin(f(x)/x)/2
+                        + exp(-f(x)/x)*cos(f(x)/x)/2
                     )
                 ],
                 'slow': True
@@ -3294,8 +3294,8 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_best():
                 'checkodesol_XFAIL': True,  #(because of LambertW?)
             },
             '1st_homogeneous_coeff_best_02': {
-                'eq': 2*f(x)*exp(x/f(x)) + f(x)*f(x).diff(x) -
-                2*x*exp(x/f(x))*f(x).diff(x),
+                'eq': 2*f(x)*exp(x/f(x)) + f(x)*f(x).diff(x)
+                - 2*x*exp(x/f(x))*f(x).diff(x),
                 'sol': [Eq(log(f(x)), C1 - 2*exp(x/f(x)))],
             },
 

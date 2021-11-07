@@ -267,8 +267,8 @@ def _desolve(
         # ValueError
         elif hints['order'] == 0:
             raise ValueError(
-                str(eq) + " is not a solvable differential equation in " +
-                str(func)
+                str(eq) + " is not a solvable differential equation in "
+                + str(func)
             )
         else:
             raise NotImplementedError(

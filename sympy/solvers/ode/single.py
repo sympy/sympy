@@ -950,8 +950,8 @@ class Factorable(SingleODESolver):
 
         if sols == []:
             raise NotImplementedError(
-                "The given ODE " + str(eq) + " cannot be solved by" +
-                " the factorable group method"
+                "The given ODE " + str(eq) + " cannot be solved by"
+                + " the factorable group method"
             )
         return sols
 
@@ -2187,8 +2187,8 @@ class SecondHypergeometric(SingleODESolver):
             sol = get_sol_2F1_hypergeometric(eq, func, self.match_object)
             if sol is None:
                 raise NotImplementedError(
-                    "The given ODE " + str(eq) + " cannot be solved by" +
-                    " the hypergeometric method"
+                    "The given ODE " + str(eq) + " cannot be solved by"
+                    + " the hypergeometric method"
                 )
 
         return [sol]
@@ -2925,8 +2925,8 @@ class SecondLinearBessel(SingleODESolver):
                 f(x),
                 (
                     (x**(Rational(1 - c4, 2)))*(
-                        C1*besselj(n/d4, a4*x**d4/d4) +
-                        C2*bessely(n/d4, a4*x**d4/d4)
+                        C1*besselj(n/d4, a4*x**d4/d4)
+                        + C2*bessely(n/d4, a4*x**d4/d4)
                     )
                 ).subs(x, x - b4)
             )
@@ -3088,8 +3088,8 @@ class LieGroup(SingleODESolver):
 
         if desols == []:
             raise NotImplementedError(
-                "The given ODE " + str(eq) + " cannot be solved by" +
-                " the lie group method"
+                "The given ODE " + str(eq) + " cannot be solved by"
+                + " the lie group method"
             )
         return desols
 

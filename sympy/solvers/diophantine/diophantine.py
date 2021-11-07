@@ -218,8 +218,8 @@ class DiophantineEquationType:
     def pre_solve(self, parameters=None):
         if not self.matches():
             raise ValueError(
-                "This equation does not match the %s equation type." %
-                self.name
+                "This equation does not match the %s equation type."
+                % self.name
             )
 
         if parameters is not None:
@@ -604,8 +604,8 @@ class BinaryQuadratic(DiophantineEquationType):
                 r = sqrt(discr)
                 u, v = symbols("u, v", integer=True)
                 eq = _mexpand(
-                    4*A*r*u*v + 4*A*D*(B*v + r*u + r*v - B*u) + 2*A*4*A*E*
-                    (u-v) + 4*A*r*4*A*F
+                    4*A*r*u*v + 4*A*D*(B*v + r*u + r*v - B*u)
+                    + 2*A*4*A*E*(u-v) + 4*A*r*4*A*F
                 )
 
                 solution = diop_solve(eq, t)

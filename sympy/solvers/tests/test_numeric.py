@@ -71,8 +71,8 @@ def test_nsolve():
     )  # just see that it works
     a = Symbol('a')
     assert abs(
-        nsolve(1/(0.001 + a)**3 - 6/
-               (0.9 - a)**3, a, 0.3) - mpf('0.31883011387318591')
+        nsolve(1/(0.001 + a)**3 - 6/(0.9 - a)**3, a, 0.3)
+        - mpf('0.31883011387318591')
     ) < 1e-15
 
 

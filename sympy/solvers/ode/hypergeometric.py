@@ -262,11 +262,11 @@ def get_sol_2F1_hypergeometric(eq, func, match_object):
         )*hyper([a, b], [c], x)
         sol = C0*hyper([a, b], [c], x) + C1*y2
     elif (c - a - b).is_integer == False:
-        sol = C0*hyper([a, b], [1 + a + b - c], 1 -
-                       x) + C1*hyper([c - a, c - b], [1 + c - a - b],
-                                     1 - x)*(1 - x)**(
-                                         c - a - b
-                                     )
+        sol = C0*hyper([a, b], [1 + a + b - c], 1
+                       - x) + C1*hyper([c - a, c - b], [1 + c - a - b],
+                                       1 - x)*(1 - x)**(
+                                           c - a - b
+                                       )
 
     if sol:
         # applying transformation in the solution

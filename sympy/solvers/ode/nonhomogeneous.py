@@ -102,8 +102,8 @@ def _get_euler_characteristic_eq_sols(eq, func, match_obj):
                 reroot = re(root)
                 imroot = im(root)
                 gsol += ln(x)**i*(x**reroot)*(
-                    constants.pop()*sin(abs(imroot)*ln(x)) +
-                    constants.pop()*cos(imroot*ln(x))
+                    constants.pop()*sin(abs(imroot)*ln(x))
+                    + constants.pop()*cos(imroot*ln(x))
                 )
                 collectterms = [(i, reroot, imroot)] + collectterms
 
@@ -159,16 +159,16 @@ def _solve_variation_of_parameters(
         # The wronskian will be 0 iff the solutions are not linearly
         # independent.
         raise NotImplementedError(
-            "Cannot find " + str(order) +
-            " solutions to the homogeneous equation necessary to apply " +
-            "variation of parameters to " + str(eq) + " (Wronskian == 0)"
+            "Cannot find " + str(order)
+            + " solutions to the homogeneous equation necessary to apply "
+            + "variation of parameters to " + str(eq) + " (Wronskian == 0)"
         )
     if len(roots) != order:
         raise NotImplementedError(
-            "Cannot find " + str(order) +
-            " solutions to the homogeneous equation necessary to apply " +
-            "variation of parameters to " + str(eq) +
-            " (number of terms != order)"
+            "Cannot find " + str(order)
+            + " solutions to the homogeneous equation necessary to apply "
+            + "variation of parameters to " + str(eq)
+            + " (number of terms != order)"
         )
     negoneterm = (-1)**(order)
     for i in roots:
@@ -474,10 +474,10 @@ def _solve_undetermined_coefficients(eq, func, order, match, trialset):
 
     if len(gensols) != order:
         raise NotImplementedError(
-            "Cannot find " + str(order) +
-            " solutions to the homogeneous equation necessary to apply" +
-            " undetermined coefficients to " + str(eq) +
-            " (number of terms != order)"
+            "Cannot find " + str(order)
+            + " solutions to the homogeneous equation necessary to apply"
+            + " undetermined coefficients to " + str(eq)
+            + " (number of terms != order)"
         )
 
     trialfunc = 0

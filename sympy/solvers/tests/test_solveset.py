@@ -589,8 +589,8 @@ def test_solve_sqrt_3():
                 (Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)
             )
         )/9 + sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3 + Rational(5, 3) + I*(
-            -sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3 -
-            sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 + 40*im(
+            -sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3
+            - sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 + 40*im(
                 1/(
                     (Rational(-1, 2) - sqrt(3)*I/2)*
                     (Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)
@@ -604,15 +604,15 @@ def test_solve_sqrt_3():
                 (Rational(-1, 2) + sqrt(3)*I/2)*
                 (Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)
             )
-        )/9 - sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3 -
-        sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3 + Rational(5, 3) + I*(
+        )/9 - sqrt(10)*cos(atan(3*sqrt(111)/251)/3)/3
+        - sqrt(30)*sin(atan(3*sqrt(111)/251)/3)/3 + Rational(5, 3) + I*(
             40*im(
                 1/(
                     (Rational(-1, 2) + sqrt(3)*I/2)*
                     (Rational(251, 27) + sqrt(111)*I/9)**Rational(1, 3)
                 )
-            )/9 - sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3 +
-            sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3
+            )/9 - sqrt(10)*sin(atan(3*sqrt(111)/251)/3)/3
+            + sqrt(30)*cos(atan(3*sqrt(111)/251)/3)/3
         )
     ]
 
@@ -626,17 +626,17 @@ def test_solve_sqrt_3():
     # the number of real roots will depend on the value of m: for m=1 there are 4
     # and for m=-1 there are none.
     eq = -sqrt((m - q)**2 + (-m/(2*q) + S.Half)**2) + sqrt(
-        (-m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - Rational(1, 4))**2 +
-        (m**2/2 - m - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - Rational(1, 4))**2
+        (-m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - Rational(1, 4))**2
+        + (m**2/2 - m - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - Rational(1, 4))**2
     )
     unsolved_object = ConditionSet(
         q,
         Eq(
             sqrt((m - q)**2 + (-m/(2*q) + S.Half)**2) - sqrt(
-                (-m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 -
-                 Rational(1, 4))**2 + (
-                     m**2/2 - m - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 -
-                     Rational(1, 4)
+                (-m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4
+                 - Rational(1, 4))**2 + (
+                     m**2/2 - m - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4
+                     - Rational(1, 4)
                  )**2
             ),
             0
@@ -1013,16 +1013,16 @@ def test_solve_trig():
             ImageSet(
                 Lambda(
                     n,
-                    2*n*pi + atan(sqrt(2)*sqrt(-1 + sqrt(17))/(1 - sqrt(17))) +
-                    pi
+                    2*n*pi + atan(sqrt(2)*sqrt(-1 + sqrt(17))/
+                                  (1 - sqrt(17))) + pi
                 ),
                 S.Integers
             ),
             ImageSet(
                 Lambda(
                     n,
-                    2*n*pi - atan(sqrt(2)*sqrt(-1 + sqrt(17))/(1 - sqrt(17))) +
-                    pi
+                    2*n*pi - atan(sqrt(2)*sqrt(-1 + sqrt(17))/
+                                  (1 - sqrt(17))) + pi
                 ),
                 S.Integers
             )
@@ -1115,8 +1115,8 @@ def test_solve_trig():
                     2*n*pi + 2*atan(
                         sqrt(
                             -2*2**Rational(1, 3)*
-                            (67 + 9*sqrt(57))**Rational(2, 3) +
-                            8*2**Rational(2, 3) + 11*
+                            (67 + 9*sqrt(57))**Rational(2, 3)
+                            + 8*2**Rational(2, 3) + 11*
                             (67 + 9*sqrt(57))**Rational(1, 3)
                         )/(3*(67 + 9*sqrt(57))**Rational(1, 6))
                     )
@@ -1129,8 +1129,8 @@ def test_solve_trig():
                     2*n*pi - 2*atan(
                         sqrt(
                             -2*2**Rational(1, 3)*
-                            (67 + 9*sqrt(57))**Rational(2, 3) +
-                            8*2**Rational(2, 3) + 11*
+                            (67 + 9*sqrt(57))**Rational(2, 3)
+                            + 8*2**Rational(2, 3) + 11*
                             (67 + 9*sqrt(57))**Rational(1, 3)
                         )/(3*(67 + 9*sqrt(57))**Rational(1, 6))
                     ) + 2*pi
@@ -1388,24 +1388,24 @@ def test_issue_9616():
             ImageSet(
                 Lambda(
                     n,
-                    I*(2*n*pi - atan(sqrt(2)*sqrt(S.Half + sqrt(2))) + pi) +
-                    log(sqrt(1 + sqrt(2)))
+                    I*(2*n*pi - atan(sqrt(2)*sqrt(S.Half + sqrt(2))) + pi)
+                    + log(sqrt(1 + sqrt(2)))
                 ),
                 S.Integers
             ),
             ImageSet(
                 Lambda(
                     n,
-                    I*(2*n*pi + pi) +
-                    log(-sqrt(2)/2 + sqrt(-S.Half + sqrt(2)))
+                    I*
+                    (2*n*pi + pi) + log(-sqrt(2)/2 + sqrt(-S.Half + sqrt(2)))
                 ),
                 S.Integers
             ),
             ImageSet(
                 Lambda(
                     n,
-                    I*(2*n*pi - pi + atan(sqrt(2)*sqrt(S.Half + sqrt(2)))) +
-                    log(sqrt(1 + sqrt(2)))
+                    I*(2*n*pi - pi + atan(sqrt(2)*sqrt(S.Half + sqrt(2))))
+                    + log(sqrt(1 + sqrt(2)))
                 ),
                 S.Integers
             )
@@ -1420,8 +1420,8 @@ def test_issue_9616():
                 ImageSet(
                     Lambda(
                         n,
-                        I*(2*n*pi + pi) +
-                        log(-sqrt(2)/2 + sqrt(-S.Half + sqrt(2)))
+                        I*(2*n*pi + pi)
+                        + log(-sqrt(2)/2 + sqrt(-S.Half + sqrt(2)))
                     ),
                     S.Integers
                 ),
@@ -1431,9 +1431,8 @@ def test_issue_9616():
                 ImageSet(
                     Lambda(
                         n,
-                        I*
-                        (2*n*pi - pi + atan(sqrt(2)*sqrt(S.Half + sqrt(2)))) +
-                        log(sqrt(1 + sqrt(2)))
+                        I*(2*n*pi - pi + atan(sqrt(2)*sqrt(S.Half + sqrt(2))))
+                        + log(sqrt(1 + sqrt(2)))
                     ),
                     S.Integers
                 ),
@@ -1443,9 +1442,8 @@ def test_issue_9616():
                 ImageSet(
                     Lambda(
                         n,
-                        I*
-                        (2*n*pi - atan(sqrt(2)*sqrt(S.Half + sqrt(2))) + pi) +
-                        log(sqrt(1 + sqrt(2)))
+                        I*(2*n*pi - atan(sqrt(2)*sqrt(S.Half + sqrt(2))) + pi)
+                        + log(sqrt(1 + sqrt(2)))
                     ),
                     S.Integers
                 ),
@@ -1496,15 +1494,15 @@ def test_solve_lambert():
     # issue 4739
     ans = solveset_real(3*x + 5 + 2**(-5*x + 3), x)
     assert ans == FiniteSet(
-        Rational(-5, 3) + LambertW(-10240*2**Rational(1, 3)*log(2)/3)/
-        (5*log(2))
+        Rational(-5, 3)
+        + LambertW(-10240*2**Rational(1, 3)*log(2)/3)/(5*log(2))
     )
 
     eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
     result = solveset_real(eq, x)
     ans = FiniteSet(
-        (log(2401) + 5*LambertW(-log(7**(7*3**Rational(1, 5)/5))))/(3*log(7))/
-        -1
+        (log(2401) + 5*LambertW(-log(7**(7*3**Rational(1, 5)/5))))/
+        (3*log(7))/ -1
     )
     assert result == ans
     assert solveset_real(eq.expand(), x) == result
@@ -2230,8 +2228,8 @@ def test_nonlinsolve_complex():
                 ImageSet(
                     Lambda(
                         n,
-                        I*(2*n*pi + arg(sin(2*n*I*pi - log(3)))) +
-                        log(Abs(sin(2*n*I*pi - log(3))))
+                        I*(2*n*pi + arg(sin(2*n*I*pi - log(3))))
+                        + log(Abs(sin(2*n*I*pi - log(3))))
                     ),
                     S.Integers
                 ),
@@ -2491,24 +2489,23 @@ def test_issue_12032():
         )/2 + sqrt(
             Abs(
                 -2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)) + 2/
-                (3*
-                 (Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) + 2/sqrt(
-                     -2/
-                     (3*
-                      (Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) + 2*
-                     (Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))
-                 )
+                (3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)))
+                + 2/sqrt(
+                    -2/(3*(Rational(1, 16) + sqrt(849)/144)**
+                        (Rational(1, 3))) + 2*
+                    (Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))
+                )
             )
         )/2,
         -sqrt(
             Abs(
                 -2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)) + 2/
-                (3*
-                 (Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) + 2/sqrt(
+                (3*(Rational(1, 16) + sqrt(849)/144)**
+                 (Rational(1, 3))) + 2/sqrt(
                      -2/
-                     (3*
-                      (Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) + 2*
-                     (Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))
+                     (3*(Rational(1, 16) + sqrt(849)/144)**
+                      (Rational(1, 3))) + 2*(Rational(1, 16) + sqrt(849)/144)**
+                     (Rational(1, 3))
                  )
             )
         )/2 - sqrt(
@@ -2521,9 +2518,8 @@ def test_issue_12032():
         )/2 - I*sqrt(
             Abs(
                 -2/sqrt(
-                    -2/
-                    (3*
-                     (Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) + 2*
+                    -2/(3*(Rational(1, 16) + sqrt(849)/144)**
+                        (Rational(1, 3))) + 2*
                     (Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))
                 ) - 2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)) + 2/
                 (3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)))
@@ -2535,9 +2531,8 @@ def test_issue_12032():
         )/2 + I*sqrt(
             Abs(
                 -2/sqrt(
-                    -2/
-                    (3*
-                     (Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))) + 2*
+                    -2/(3*(Rational(1, 16) + sqrt(849)/144)**
+                        (Rational(1, 3))) + 2*
                     (Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))
                 ) - 2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)) + 2/
                 (3*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)))
@@ -2810,49 +2805,49 @@ def test_issue_21022():
     ans = FiniteSet(
         (
             efg,
-            sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*
-            sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
+            sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)
+            *sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
             efg,
             16,
             8,
-            8 + sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*
-            sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
+            8 + sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)
+            *sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
             sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16,
             -8*sqrt(5)
         ),
         (
             efg,
-            sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*
-            sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
+            sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)
+            *sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
             efg,
             16,
             8,
-            8 + sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*
-            sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
+            8 + sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)
+            *sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
             sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16,
             8*sqrt(5)
         ),
         (
             efg,
-            -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*
-            sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
+            -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)
+            *sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
             efg,
             16,
             8,
-            -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*
-            sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16) + 8,
+            -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)
+            *sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16) + 8,
             sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16,
             -8*sqrt(5)
         ),
         (
             efg,
-            -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*
-            sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
+            -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)
+            *sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
             efg,
             16,
             8,
-            -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*
-            sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16) + 8,
+            -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)
+            *sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16) + 8,
             sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16,
             8*sqrt(5)
         )

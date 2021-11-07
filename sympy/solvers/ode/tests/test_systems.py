@@ -150,8 +150,8 @@ def test__classify_linear_system():
     assert _classify_linear_system(eqs_2_2, funcs, t) is None
 
     eqs_3 = (
-        5*x1 + 12*x(t) - 6*(y(t)), (2*y1 - 11*x(t) + 3*y(t)), (5*w1 + z(t)),
-        (z1 + w(t))
+        5*x1 + 12*x(t) - 6*
+        (y(t)), (2*y1 - 11*x(t) + 3*y(t)), (5*w1 + z(t)), (z1 + w(t))
     )
     answer_3 = {
         'no_of_equation': 4,
@@ -181,8 +181,8 @@ def test__classify_linear_system():
     assert _classify_linear_system(eqs_3, funcs_2, t) == answer_3
 
     eqs_4 = (
-        5*x1 + 12*x(t) - 6*(y(t)), (2*y1 - 11*x(t) + 3*y(t)), (z1 - w(t)),
-        (w1 - z(t))
+        5*x1 + 12*x(t) - 6*
+        (y(t)), (2*y1 - 11*x(t) + 3*y(t)), (z1 - w(t)), (w1 - z(t))
     )
     answer_4 = {
         'no_of_equation': 4,
@@ -212,14 +212,14 @@ def test__classify_linear_system():
     assert _classify_linear_system(eqs_4, funcs_2, t) == answer_4
 
     eqs_5 = (
-        5*x1 + 12*x(t) - 6*(y(t)) + x2, (2*y1 - 11*x(t) + 3*y(t)), (z1 - w(t)),
-        (w1 - z(t))
+        5*x1 + 12*x(t) - 6*
+        (y(t)) + x2, (2*y1 - 11*x(t) + 3*y(t)), (z1 - w(t)), (w1 - z(t))
     )
     answer_5 = {
         'no_of_equation': 4,
         'eq': (
-            12*x(t) - 6*y(t) + 5*Derivative(x(t), t) +
-            Derivative(x(t), (t, 2)),
+            12*x(t) - 6*y(t) + 5*Derivative(x(t), t)
+            + Derivative(x(t), (t, 2)),
             -11*x(t) + 3*y(t) + 2*Derivative(y(t), t),
             -w(t) + Derivative(z(t), t),
             -z(t) + Derivative(w(t), t)
@@ -691,13 +691,13 @@ def test__classify_linear_system():
 
     eq1 = (
         Eq(
-            9*x(t) + 7*y(t) + 4*Derivative(x(t), t) +
-            Derivative(x(t), (t, 2)) + 3*Derivative(y(t), t),
+            9*x(t) + 7*y(t) + 4*Derivative(x(t), t) + Derivative(x(t), (t, 2))
+            + 3*Derivative(y(t), t),
             11*exp(I*t)
         ),
         Eq(
-            3*x(t) + 12*y(t) + 5*Derivative(x(t), t) + 8*Derivative(y(t), t) +
-            Derivative(y(t), (t, 2)),
+            3*x(t) + 12*y(t) + 5*Derivative(x(t), t) + 8*Derivative(y(t), t)
+            + Derivative(y(t), (t, 2)),
             2*exp(I*t)
         )
     )
@@ -705,13 +705,13 @@ def test__classify_linear_system():
         'no_of_equation': 2,
         'eq': (
             Eq(
-                9*x(t) + 7*y(t) + 4*Derivative(x(t), t) +
-                Derivative(x(t), (t, 2)) + 3*Derivative(y(t), t),
+                9*x(t) + 7*y(t) + 4*Derivative(x(t), t)
+                + Derivative(x(t), (t, 2)) + 3*Derivative(y(t), t),
                 11*exp(I*t)
             ),
             Eq(
-                3*x(t) + 12*y(t) + 5*Derivative(x(t), t) +
-                8*Derivative(y(t), t) + Derivative(y(t), (t, 2)),
+                3*x(t) + 12*y(t) + 5*Derivative(x(t), t)
+                + 8*Derivative(y(t), t) + Derivative(y(t), (t, 2)),
                 2*exp(I*t)
             )
         ),
@@ -752,8 +752,8 @@ def test__classify_linear_system():
         'type_of_equation': 'type2',
         'A0': Matrix([[Rational(53, 4), 35], [1, Rational(69, 4)]]),
         'g(t)': sqrt(4*t**2 + 7*t + 1),
-        'tau': sqrt(33)*log(t - sqrt(33)/8 + Rational(7, 8))/33 -
-        sqrt(33)*log(t + sqrt(33)/8 + Rational(7, 8))/33,
+        'tau': sqrt(33)*log(t - sqrt(33)/8 + Rational(7, 8))/33
+        - sqrt(33)*log(t + sqrt(33)/8 + Rational(7, 8))/33,
         'is_transformed': True,
         't_': t_,
         'is_second_order': True,
@@ -1178,8 +1178,8 @@ def test_sysode_linear_neq_order1_type1():
     sol15 = [
         Eq(
             x(t),
-            -C1*a*exp(-t*sqrt(a*b))/sqrt(a*b) +
-            C2*a*exp(t*sqrt(a*b))/sqrt(a*b)
+            -C1*a*exp(-t*sqrt(a*b))/sqrt(a*b)
+            + C2*a*exp(t*sqrt(a*b))/sqrt(a*b)
         ),
         Eq(y(t), C1*exp(-t*sqrt(a*b)) + C2*exp(t*sqrt(a*b)))
     ]
@@ -1193,14 +1193,14 @@ def test_sysode_linear_neq_order1_type1():
     sol16 = [
         Eq(
             x(t),
-            -2*C1*b*exp(t*
-                        (a + sqrt(a**2 + 4*b*c))/2)/(a - sqrt(a**2 + 4*b*c)) -
-            2*C2*b*exp(t*(a - sqrt(a**2 + 4*b*c))/2)/(a + sqrt(a**2 + 4*b*c))
+            -2*C1*b*exp(t*(a + sqrt(a**2 + 4*b*c))/2)/(a - sqrt(a**2 + 4*b*c))
+            - 2*C2*b*exp(t*
+                         (a - sqrt(a**2 + 4*b*c))/2)/(a + sqrt(a**2 + 4*b*c))
         ),
         Eq(
             y(t),
-            C1*exp(t*(a + sqrt(a**2 + 4*b*c))/2) +
-            C2*exp(t*(a - sqrt(a**2 + 4*b*c))/2)
+            C1*exp(t*(a + sqrt(a**2 + 4*b*c))/2)
+            + C2*exp(t*(a - sqrt(a**2 + 4*b*c))/2)
         )
     ]
     assert dsolve(eqs16) == sol16
@@ -1215,8 +1215,9 @@ def test_sysode_linear_neq_order1_type1():
     sol17 = [
         Eq(
             x(t),
-            C1*a*exp(t*sqrt(a**2 + 1))/(sqrt(a**2 + 1) - 1) -
-            C2*a*exp(-t*sqrt(a**2 + 1))/(sqrt(a**2 + 1) + 1)
+            C1*a*exp(t*sqrt(a**2 + 1))/
+            (sqrt(a**2 + 1) - 1) - C2*a*exp(-t*sqrt(a**2 + 1))/
+            (sqrt(a**2 + 1) + 1)
         ),
         Eq(y(t), C1*exp(t*sqrt(a**2 + 1)) + C2*exp(-t*sqrt(a**2 + 1)))
     ]
@@ -1324,8 +1325,9 @@ def test_sysode_linear_neq_order1_type1_slow():
     sol3 = [
         Eq(
             u(t),
-            C3*exp(-2*t) + (C1/2 + sqrt(3)*C2/6)*cos(sqrt(3)*t) +
-            sin(sqrt(3)*t)*(sqrt(3)*C1/6 + C2*Rational(-1, 2))
+            C3*exp(-2*t) +
+            (C1/2 + sqrt(3)*C2/6)*cos(sqrt(3)*t) + sin(sqrt(3)*t)*
+            (sqrt(3)*C1/6 + C2*Rational(-1, 2))
         ),
         Eq(
             v(t), (C1/2 + sqrt(3)*C2/6)*cos(sqrt(3)*t) + sin(sqrt(3)*t)*
@@ -1504,8 +1506,8 @@ def test_sysode_linear_neq_order1_type1_slow():
     sol13 = [
         Eq(
             f(t),
-            C1*exp(t*(sqrt(a + 1) + 1))/(sqrt(a + 1) - 1) -
-            C2*exp(-t*(sqrt(a + 1) - 1))/(sqrt(a + 1) + 1)
+            C1*exp(t*(sqrt(a + 1) + 1))/
+            (sqrt(a + 1) - 1) - C2*exp(-t*(sqrt(a + 1) - 1))/(sqrt(a + 1) + 1)
         ),
         Eq(g(t), C1*exp(t*(sqrt(a + 1) + 1)) + C2*exp(-t*(sqrt(a + 1) - 1)))
     ]
@@ -1521,14 +1523,15 @@ def test_sysode_linear_neq_order1_type1_slow():
         Eq(
             f(t),
             2*C1 - sin(sqrt(29)*t)*
-            (sqrt(29)*C2*Rational(3, 25) + C3*Rational(-8, 25)) -
-            cos(sqrt(29)*t)*(C2*Rational(8, 25) + sqrt(29)*C3*Rational(3, 25))
+            (sqrt(29)*C2*Rational(3, 25) + C3*Rational(-8, 25))
+            - cos(sqrt(29)*t)*
+            (C2*Rational(8, 25) + sqrt(29)*C3*Rational(3, 25))
         ),
         Eq(
             g(t),
             C1*Rational(3, 2) + sin(sqrt(29)*t)*
-            (sqrt(29)*C2*Rational(4, 25) + C3*Rational(6, 25)) -
-            cos(sqrt(29)*t)*
+            (sqrt(29)*C2*Rational(4, 25) + C3*Rational(6, 25))
+            - cos(sqrt(29)*t)*
             (C2*Rational(6, 25) + sqrt(29)*C3*Rational(-4, 25))
         ),
         Eq(h(t), C1 + C2*cos(sqrt(29)*t) - C3*sin(sqrt(29)*t))
@@ -1545,15 +1548,15 @@ def test_sysode_linear_neq_order1_type1_slow():
         Eq(
             f(t),
             C1 - sin(sqrt(29)*t)*
-            (sqrt(29)*C2*Rational(6, 13) + C3*Rational(-16, 13)) -
-            cos(sqrt(29)*t)*
+            (sqrt(29)*C2*Rational(6, 13) + C3*Rational(-16, 13))
+            - cos(sqrt(29)*t)*
             (C2*Rational(16, 13) + sqrt(29)*C3*Rational(6, 13))
         ),
         Eq(
             g(t),
             C1 + sin(sqrt(29)*t)*
-            (sqrt(29)*C2*Rational(8, 39) + C3*Rational(16, 13)) -
-            cos(sqrt(29)*t)*
+            (sqrt(29)*C2*Rational(8, 39) + C3*Rational(16, 13))
+            - cos(sqrt(29)*t)*
             (C2*Rational(16, 13) + sqrt(29)*C3*Rational(-8, 39))
         ),
         Eq(h(t), C1 + C2*cos(sqrt(29)*t) - C3*sin(sqrt(29)*t))
@@ -1583,15 +1586,15 @@ def test_sysode_linear_neq_order1_type1_slow():
         Eq(
             x(t),
             C1*Rational(7, 3) - sin(sqrt(179)*t)*
-            (sqrt(179)*C2*Rational(11, 170) + C3*Rational(-21, 170)) -
-            cos(sqrt(179)*t)*
+            (sqrt(179)*C2*Rational(11, 170) + C3*Rational(-21, 170))
+            - cos(sqrt(179)*t)*
             (C2*Rational(21, 170) + sqrt(179)*C3*Rational(11, 170))
         ),
         Eq(
             y(t),
             C1*Rational(11, 3) + sin(sqrt(179)*t)*
-            (sqrt(179)*C2*Rational(7, 170) + C3*Rational(33, 170)) -
-            cos(sqrt(179)*t)*
+            (sqrt(179)*C2*Rational(7, 170) + C3*Rational(33, 170))
+            - cos(sqrt(179)*t)*
             (C2*Rational(33, 170) + sqrt(179)*C3*Rational(-7, 170))
         ),
         Eq(z(t), C1 + C2*cos(sqrt(179)*t) - C3*sin(sqrt(179)*t))
@@ -1607,13 +1610,15 @@ def test_sysode_linear_neq_order1_type1_slow():
     sol18 = [
         Eq(
             x(t),
-            C1 - sin(5*sqrt(2)*t)*(sqrt(2)*C2*Rational(4, 3) - C3) -
-            cos(5*sqrt(2)*t)*(C2 + sqrt(2)*C3*Rational(4, 3))
+            C1 - sin(5*sqrt(2)*t)*
+            (sqrt(2)*C2*Rational(4, 3) - C3) - cos(5*sqrt(2)*t)*
+            (C2 + sqrt(2)*C3*Rational(4, 3))
         ),
         Eq(
             y(t),
-            C1 + sin(5*sqrt(2)*t)*(sqrt(2)*C2*Rational(3, 4) + C3) -
-            cos(5*sqrt(2)*t)*(C2 + sqrt(2)*C3*Rational(-3, 4))
+            C1 + sin(5*sqrt(2)*t)*
+            (sqrt(2)*C2*Rational(3, 4) + C3) - cos(5*sqrt(2)*t)*
+            (C2 + sqrt(2)*C3*Rational(-3, 4))
         ),
         Eq(z(t), C1 + C2*cos(5*sqrt(2)*t) - C3*sin(5*sqrt(2)*t))
     ]
@@ -1684,8 +1689,9 @@ def test_sysode_linear_neq_order1_type1_slow():
     sol22 = [
         Eq(
             x(t),
-            C1*(39 - sqrt(1713))*exp(t*(sqrt(1713) + 43)/2)*Rational(-1, 24) +
-            C2*(39 + sqrt(1713))*exp(t*(43 - sqrt(1713))/2)*Rational(-1, 24)
+            C1*
+            (39 - sqrt(1713))*exp(t*(sqrt(1713) + 43)/2)*Rational(-1, 24) + C2*
+            (39 + sqrt(1713))*exp(t*(43 - sqrt(1713))/2)*Rational(-1, 24)
         ),
         Eq(
             y(t),
@@ -1701,15 +1707,14 @@ def test_sysode_linear_neq_order1_type1_slow():
     ]
     sol23 = [
         Eq(
-            x(t),
-            (C1/4 + sqrt(7)*C2/4)*cos(sqrt(7)*t/2)*exp(t*Rational(3, 2)) +
-            sin(sqrt(7)*t/2)*
+            x(t), (C1/4 + sqrt(7)*C2/4)*cos(sqrt(7)*t/2)*exp(t*Rational(3, 2))
+            + sin(sqrt(7)*t/2)*
             (sqrt(7)*C1/4 + C2*Rational(-1, 4))*exp(t*Rational(3, 2))
         ),
         Eq(
             y(t),
-            C1*cos(sqrt(7)*t/2)*exp(t*Rational(3, 2)) -
-            C2*sin(sqrt(7)*t/2)*exp(t*Rational(3, 2))
+            C1*cos(sqrt(7)*t/2)*exp(t*Rational(3, 2))
+            - C2*sin(sqrt(7)*t/2)*exp(t*Rational(3, 2))
         )
     ]
     assert dsolve(eqs23) == sol23
@@ -1739,18 +1744,18 @@ def test_sysode_linear_neq_order1_type1_slow():
         Eq(f(t), -3*C1 + 4*C2),
         Eq(
             g(t),
-            -2*C1 + 3*C2 - C3*exp(-2*t/(b*c)) +
-            C4*exp(-t*(sqrt(2) + 2)/(b*c)) + C5*exp(-t*(2 - sqrt(2))/(b*c))
+            -2*C1 + 3*C2 - C3*exp(-2*t/(b*c)) + C4*exp(-t*(sqrt(2) + 2)/(b*c))
+            + C5*exp(-t*(2 - sqrt(2))/(b*c))
         ),
         Eq(
             x(t),
-            -C1 + 2*C2 - sqrt(2)*C4*exp(-t*(sqrt(2) + 2)/(b*c)) +
-            sqrt(2)*C5*exp(-t*(2 - sqrt(2))/(b*c))
+            -C1 + 2*C2 - sqrt(2)*C4*exp(-t*(sqrt(2) + 2)/(b*c))
+            + sqrt(2)*C5*exp(-t*(2 - sqrt(2))/(b*c))
         ),
         Eq(
             y(t),
-            C2 + C3*exp(-2*t/(b*c)) + C4*exp(-t*(sqrt(2) + 2)/(b*c)) +
-            C5*exp(-t*(2 - sqrt(2))/(b*c))
+            C2 + C3*exp(-2*t/(b*c)) + C4*exp(-t*(sqrt(2) + 2)/(b*c))
+            + C5*exp(-t*(2 - sqrt(2))/(b*c))
         ),
         Eq(h(t), C1)
     ]
@@ -1898,9 +1903,8 @@ def test_sysode_linear_neq_order1_type2():
     sol5 = [
         Eq(
             f(x),
-            C1*(1 + sqrt(2))*exp(sqrt(2)*x) + C2*
-            (1 - sqrt(2))*exp(-sqrt(2)*x) + x*Rational(-5, 2) +
-            Rational(-5, 2)
+            C1*(1 + sqrt(2))*exp(sqrt(2)*x) + C2*(1 - sqrt(2))*exp(-sqrt(2)*x)
+            + x*Rational(-5, 2) + Rational(-5, 2)
         ),
         Eq(g(x), C1*exp(sqrt(2)*x) + C2*exp(-sqrt(2)*x) + x*Rational(-5, 2))
     ]
@@ -1936,14 +1940,13 @@ def test_sysode_linear_neq_order1_type2():
     sol8 = [
         Eq(
             f(t),
-            C1*exp(t)*sin(2*t) + C2*exp(t)*cos(2*t) + exp(t)*cos(2*t)**2 +
-            2*exp(t)*sin(2*t)*tan(t)/(tan(t)**2 + 1)
+            C1*exp(t)*sin(2*t) + C2*exp(t)*cos(2*t) + exp(t)*cos(2*t)**2
+            + 2*exp(t)*sin(2*t)*tan(t)/(tan(t)**2 + 1)
         ),
         Eq(
             g(t),
-            C1*exp(t)*cos(2*t) - C2*exp(t)*sin(2*t) -
-            exp(t)*sin(2*t)*cos(2*t) + 2*exp(t)*cos(2*t)*tan(t)/
-            (tan(t)**2 + 1)
+            C1*exp(t)*cos(2*t) - C2*exp(t)*sin(2*t) - exp(t)*sin(2*t)*cos(2*t)
+            + 2*exp(t)*cos(2*t)*tan(t)/(tan(t)**2 + 1)
         )
     ]
     assert dsolve(eqs8) == sol8
@@ -1959,21 +1962,21 @@ def test_sysode_linear_neq_order1_type2():
     sol9 = [
         Eq(
             f(t),
-            -C1*exp(-2*t/(a*b)) + C2*exp(-t*(sqrt(2) + 2)/(a*b)) +
-            C3*exp(-t*(2 - sqrt(2))/
-                   (a*b)) + Mul(Rational(1, 4), 3*c + d, evaluate=False)
+            -C1*exp(-2*t/(a*b)) + C2*exp(-t*(sqrt(2) + 2)/(a*b))
+            + C3*exp(-t*(2 - sqrt(2))/
+                     (a*b)) + Mul(Rational(1, 4), 3*c + d, evaluate=False)
         ),
         Eq(
             g(t),
             -sqrt(2)*C2*exp(-t*(sqrt(2) + 2)/
-                            (a*b)) + sqrt(2)*C3*exp(-t*(2 - sqrt(2))/(a*b)) +
-            Mul(Rational(1, 2), c + d, evaluate=False)
+                            (a*b)) + sqrt(2)*C3*exp(-t*(2 - sqrt(2))/(a*b))
+            + Mul(Rational(1, 2), c + d, evaluate=False)
         ),
         Eq(
             h(t),
-            C1*exp(-2*t/(a*b)) + C2*exp(-t*(sqrt(2) + 2)/(a*b)) +
-            C3*exp(-t*(2 - sqrt(2))/
-                   (a*b)) + Mul(Rational(1, 4), c + 3*d, evaluate=False)
+            C1*exp(-2*t/(a*b)) + C2*exp(-t*(sqrt(2) + 2)/(a*b))
+            + C3*exp(-t*(2 - sqrt(2))/
+                     (a*b)) + Mul(Rational(1, 4), c + 3*d, evaluate=False)
         )
     ]
     assert dsolve(eqs9) == sol9
@@ -2023,8 +2026,8 @@ def test_sysode_linear_neq_order1_type2():
     sol12 = [
         Eq(
             y(t),
-            C1*exp(sqrt(n)*t)*n**Rational(-1, 2) -
-            C2*exp(-sqrt(n)*t)*n**Rational(-1, 2) - 1
+            C1*exp(sqrt(n)*t)*n**Rational(-1, 2)
+            - C2*exp(-sqrt(n)*t)*n**Rational(-1, 2) - 1
         ),
         Eq(x(t), C1*exp(sqrt(n)*t) + C2*exp(-sqrt(n)*t))
     ]
@@ -2035,21 +2038,21 @@ def test_sysode_linear_neq_order1_type2():
         Eq(
             y(t),
             (
-                T*exp(-sqrt(n)*t_0)/2 + exp(-sqrt(n)*t_0)/2 +
-                x_0*exp(-sqrt(n)*t_0)/(2*sqrt(n))
+                T*exp(-sqrt(n)*t_0)/2 + exp(-sqrt(n)*t_0)/2
+                + x_0*exp(-sqrt(n)*t_0)/(2*sqrt(n))
             )*exp(sqrt(n)*t) + (
-                T*exp(sqrt(n)*t_0)/2 + exp(sqrt(n)*t_0)/2 -
-                x_0*exp(sqrt(n)*t_0)/(2*sqrt(n))
+                T*exp(sqrt(n)*t_0)/2 + exp(sqrt(n)*t_0)/2
+                - x_0*exp(sqrt(n)*t_0)/(2*sqrt(n))
             )*exp(-sqrt(n)*t) - 1
         ),
         Eq(
             x(t),
             (
-                T*sqrt(n)*exp(-sqrt(n)*t_0)/2 + sqrt(n)*exp(-sqrt(n)*t_0)/2 +
-                x_0*exp(-sqrt(n)*t_0)/2
+                T*sqrt(n)*exp(-sqrt(n)*t_0)/2 + sqrt(n)*exp(-sqrt(n)*t_0)/2
+                + x_0*exp(-sqrt(n)*t_0)/2
             )*exp(sqrt(n)*t) - (
-                T*sqrt(n)*exp(sqrt(n)*t_0)/2 + sqrt(n)*exp(sqrt(n)*t_0)/2 -
-                x_0*exp(sqrt(n)*t_0)/2
+                T*sqrt(n)*exp(sqrt(n)*t_0)/2 + sqrt(n)*exp(sqrt(n)*t_0)/2
+                - x_0*exp(sqrt(n)*t_0)/2
             )*exp(-sqrt(n)*t)
         )
     ]
@@ -2084,24 +2087,24 @@ def test_sysode_linear_neq_order1_type2():
     sol14 = [
         Eq(
             f(t),
-            sqrt(2)*C1*exp(t)*sin(sqrt(2)*t)/2 +
-            sqrt(2)*C2*exp(t)*cos(sqrt(2)*t)/2 +
-            sqrt(2)*exp(t)*sin(sqrt(2)*t)*Integral(
+            sqrt(2)*C1*exp(t)*sin(sqrt(2)*t)/2
+            + sqrt(2)*C2*exp(t)*cos(sqrt(2)*t)/2
+            + sqrt(2)*exp(t)*sin(sqrt(2)*t)*Integral(
                 -23*exp(-t)*sin(sqrt(2)*t)**2/cos(sqrt(2)*t) +
                 81*sqrt(2)*exp(-t)*sin(sqrt(2)*t) + 23*exp(-t)/cos(sqrt(2)*t),
                 t
-            )/2 + 185*sqrt(2)*sin(sqrt(2)*t)*cos(sqrt(2)*t)/6 -
-            58*cos(sqrt(2)*t)**2/3
+            )/2 + 185*sqrt(2)*sin(sqrt(2)*t)*cos(sqrt(2)*t)/6
+            - 58*cos(sqrt(2)*t)**2/3
         ),
         Eq(
             g(t),
-            C1*exp(t)*cos(sqrt(2)*t) - C2*exp(t)*sin(sqrt(2)*t) +
-            exp(t)*cos(sqrt(2)*t)*Integral(
+            C1*exp(t)*cos(sqrt(2)*t) - C2*exp(t)*sin(sqrt(2)*t)
+            + exp(t)*cos(sqrt(2)*t)*Integral(
                 -23*exp(-t)*sin(sqrt(2)*t)**2/cos(sqrt(2)*t) +
                 81*sqrt(2)*exp(-t)*sin(sqrt(2)*t) + 23*exp(-t)/cos(sqrt(2)*t),
                 t
-            ) - 185*sin(sqrt(2)*t)**2/3 +
-            58*sqrt(2)*sin(sqrt(2)*t)*cos(sqrt(2)*t)/3
+            ) - 185*sin(sqrt(2)*t)**2/3
+            + 58*sqrt(2)*sin(sqrt(2)*t)*cos(sqrt(2)*t)/3
         )
     ]
     assert dsolve(eq14) == sol14
@@ -2119,8 +2122,8 @@ def test_sysode_linear_neq_order1_type2():
         ),
         Eq(
             g(t),
-            C1*exp(t*(5 + sqrt(33))/2) + C2*exp(t*(5 - sqrt(33))/2) -
-            Mul(Rational(1, 2), 3*k1 - k2, evaluate=False)
+            C1*exp(t*(5 + sqrt(33))/2) + C2*exp(t*(5 - sqrt(33))/2)
+            - Mul(Rational(1, 2), 3*k1 - k2, evaluate=False)
         )
     ]
     assert dsolve(eq15) == sol15
@@ -2149,8 +2152,8 @@ def test_sysode_linear_neq_order1_type2():
         Eq(f(t), -2*C1 + k1*t),
         Eq(
             g(t),
-            C1 + C2*exp(2*t) - k1*t/2 -
-            Mul(Rational(1, 4), k1 + 2*k2, evaluate=False)
+            C1 + C2*exp(2*t) - k1*t/2
+            - Mul(Rational(1, 4), k1 + 2*k2, evaluate=False)
         )
     ]
     assert dsolve(eq19) == sol19
@@ -2205,13 +2208,13 @@ def test_sysode_linear_neq_order1_type2():
     sol25 = [
         Eq(
             f(t),
-            -2*C1 + C2*exp(7*t)/3 + 2*t*(3*k1 - k2)/7 -
-            Mul(Rational(1, 49), k1 + 2*k2, evaluate=False)
+            -2*C1 + C2*exp(7*t)/3 + 2*t*
+            (3*k1 - k2)/7 - Mul(Rational(1, 49), k1 + 2*k2, evaluate=False)
         ),
         Eq(
             g(t),
-            C1 + C2*exp(7*t) - t*(3*k1 - k2)/7 -
-            Mul(Rational(3, 49), k1 + 2*k2, evaluate=False)
+            C1 + C2*exp(7*t) - t*
+            (3*k1 - k2)/7 - Mul(Rational(3, 49), k1 + 2*k2, evaluate=False)
         )
     ]
     assert dsolve(eq25) == sol25
@@ -2252,15 +2255,15 @@ def test_sysode_linear_neq_order1_type3():
     sol2 = [
         Eq(
             f(x), (sqrt(17)*C1/17 + C2*
-                   (17 - 3*sqrt(17))/34)*exp(x**3*(3 + sqrt(17))/6 + x**2/2) -
-            exp(x**3*(3 - sqrt(17))/6 + x**2/2)*
+                   (17 - 3*sqrt(17))/34)*exp(x**3*(3 + sqrt(17))/6 + x**2/2)
+            - exp(x**3*(3 - sqrt(17))/6 + x**2/2)*
             (sqrt(17)*C1/17 + C2*(3*sqrt(17) + 17)*Rational(-1, 34))
         ),
         Eq(
             g(x),
             exp(x**3*(3 - sqrt(17))/6 + x**2/2)*
-            (C1*(17 - 3*sqrt(17))/34 + sqrt(17)*C2*Rational(-2, 17)) +
-            exp(x**3*(3 + sqrt(17))/6 + x**2/2)*
+            (C1*(17 - 3*sqrt(17))/34 + sqrt(17)*C2*Rational(-2, 17))
+            + exp(x**3*(3 + sqrt(17))/6 + x**2/2)*
             (C1*(3*sqrt(17) + 17)/34 + sqrt(17)*C2*Rational(2, 17))
         )
     ]
@@ -2397,10 +2400,10 @@ def test_sysode_linear_neq_order1_type3():
     ]
     sol10 = [
         Eq(
-            f(t), (C1*(77 - 9*sqrt(77))/154 + sqrt(77)*C2/77)*
-            exp(t**3*(sqrt(77) + 9)/6 + 5*t**2/2) +
-            (C1*(77 + 9*sqrt(77))/154 - sqrt(77)*C2/77)*
-            exp(t**3*(9 - sqrt(77))/6 + 5*t**2/2)
+            f(t), (C1*(77 - 9*sqrt(77))/154 + sqrt(77)*C2/77)
+            *exp(t**3*(sqrt(77) + 9)/6 + 5*t**2/2) +
+            (C1*(77 + 9*sqrt(77))/154 - sqrt(77)*C2/77)
+            *exp(t**3*(9 - sqrt(77))/6 + 5*t**2/2)
         ),
         Eq(
             g(t),
@@ -2421,8 +2424,8 @@ def test_sysode_linear_neq_order1_type3():
         Eq(
             f(t),
             C1*x0(t) + C2*x0(t)*Integral(
-                t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/
-                x0(t)**2,
+                t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))
+                /x0(t)**2,
                 t
             )
         ),
@@ -2430,8 +2433,8 @@ def test_sysode_linear_neq_order1_type3():
             g(t),
             C1*y0(t) + C2*(
                 y0(t)*Integral(
-                    t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/
-                    x0(t)**2,
+                    t**2*exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))
+                    /x0(t)**2,
                     t
                 ) + exp(Integral(5*t, t))*exp(Integral(9*t**2 + 5*t, t))/x0(t)
             )
@@ -2454,17 +2457,17 @@ def test_sysode_linear_neq_order1_type4():
     sol1 = [
         Eq(
             f(r),
-            C1*exp(r)*sin(r**2/2) + C2*exp(r)*cos(r**2/2) + exp(r)*sin(r**2/2)*
-            Integral(r**2*exp(-r)*sin(r**2/2) + r*exp(-r)*cos(r**2/2), r) +
-            exp(r)*cos(r**2/2)*
-            Integral(r**2*exp(-r)*cos(r**2/2) - r*exp(-r)*sin(r**2/2), r)
+            C1*exp(r)*sin(r**2/2) + C2*exp(r)*cos(r**2/2) + exp(r)*sin(r**2/2)
+            *Integral(r**2*exp(-r)*sin(r**2/2) + r*exp(-r)*cos(r**2/2), r)
+            + exp(r)*cos(r**2/2)
+            *Integral(r**2*exp(-r)*cos(r**2/2) - r*exp(-r)*sin(r**2/2), r)
         ),
         Eq(
             g(r),
-            C1*exp(r)*cos(r**2/2) - C2*exp(r)*sin(r**2/2) - exp(r)*sin(r**2/2)*
-            Integral(r**2*exp(-r)*cos(r**2/2) - r*exp(-r)*sin(r**2/2), r) +
-            exp(r)*cos(r**2/2)*
-            Integral(r**2*exp(-r)*sin(r**2/2) + r*exp(-r)*cos(r**2/2), r)
+            C1*exp(r)*cos(r**2/2) - C2*exp(r)*sin(r**2/2) - exp(r)*sin(r**2/2)
+            *Integral(r**2*exp(-r)*cos(r**2/2) - r*exp(-r)*sin(r**2/2), r)
+            + exp(r)*cos(r**2/2)
+            *Integral(r**2*exp(-r)*sin(r**2/2) + r*exp(-r)*cos(r**2/2), r)
         )
     ]
     assert dsolve(eqs1) == sol1
@@ -2477,17 +2480,17 @@ def test_sysode_linear_neq_order1_type4():
     sol2 = [
         Eq(
             f(r),
-            C1*exp(r)*sin(r**2/2) + C2*exp(r)*cos(r**2/2) + exp(r)*sin(r**2/2)*
-            Integral(r*exp(-r)*sin(r**2/2) + exp(-r)*log(r)*cos(r**2/2), r) +
-            exp(r)*cos(r**2/2)*
-            Integral(r*exp(-r)*cos(r**2/2) - exp(-r)*log(r)*sin(r**2/2), r)
+            C1*exp(r)*sin(r**2/2) + C2*exp(r)*cos(r**2/2) + exp(r)*sin(r**2/2)
+            *Integral(r*exp(-r)*sin(r**2/2) + exp(-r)*log(r)*cos(r**2/2), r)
+            + exp(r)*cos(r**2/2)
+            *Integral(r*exp(-r)*cos(r**2/2) - exp(-r)*log(r)*sin(r**2/2), r)
         ),
         Eq(
             g(r),
-            C1*exp(r)*cos(r**2/2) - C2*exp(r)*sin(r**2/2) - exp(r)*sin(r**2/2)*
-            Integral(r*exp(-r)*cos(r**2/2) - exp(-r)*log(r)*sin(r**2/2), r) +
-            exp(r)*cos(r**2/2)*
-            Integral(r*exp(-r)*sin(r**2/2) + exp(-r)*log(r)*cos(r**2/2), r)
+            C1*exp(r)*cos(r**2/2) - C2*exp(r)*sin(r**2/2) - exp(r)*sin(r**2/2)
+            *Integral(r*exp(-r)*cos(r**2/2) - exp(-r)*log(r)*sin(r**2/2), r)
+            + exp(r)*cos(r**2/2)
+            *Integral(r*exp(-r)*sin(r**2/2) + exp(-r)*log(r)*cos(r**2/2), r)
         )
     ]
     # XXX: dsolve hangs for this in integration
@@ -2502,27 +2505,27 @@ def test_sysode_linear_neq_order1_type4():
     sol3 = [
         Eq(
             f(x),
-            C1*Rational(-1, 3) + C2*Rational(-1, 3) + C3*Rational(2, 3) +
-            x**2/6 + x*Rational(-1, 3) +
-            (C1/3 + C2/3 + C3/3)*exp(x**2*Rational(3, 2)) +
-            sqrt(6)*sqrt(pi)*erf(sqrt(6)*x/2)*exp(x**2*Rational(3, 2))/18 +
-            Rational(-2, 9)
+            C1*Rational(-1, 3) + C2*Rational(-1, 3) + C3*Rational(2, 3)
+            + x**2/6 + x*Rational(-1, 3) +
+            (C1/3 + C2/3 + C3/3)*exp(x**2*Rational(3, 2))
+            + sqrt(6)*sqrt(pi)*erf(sqrt(6)*x/2)*exp(x**2*Rational(3, 2))/18
+            + Rational(-2, 9)
         ),
         Eq(
             g(x),
-            C1*Rational(2, 3) + C2*Rational(-1, 3) + C3*Rational(-1, 3) +
-            x**2/6 + x*Rational(-1, 3) +
-            (C1/3 + C2/3 + C3/3)*exp(x**2*Rational(3, 2)) +
-            sqrt(6)*sqrt(pi)*erf(sqrt(6)*x/2)*exp(x**2*Rational(3, 2))/18 +
-            Rational(-2, 9)
+            C1*Rational(2, 3) + C2*Rational(-1, 3) + C3*Rational(-1, 3)
+            + x**2/6 + x*Rational(-1, 3) +
+            (C1/3 + C2/3 + C3/3)*exp(x**2*Rational(3, 2))
+            + sqrt(6)*sqrt(pi)*erf(sqrt(6)*x/2)*exp(x**2*Rational(3, 2))/18
+            + Rational(-2, 9)
         ),
         Eq(
             h(x),
-            C1*Rational(-1, 3) + C2*Rational(2, 3) + C3*Rational(-1, 3) +
-            x**2*Rational(-1, 3) + x*Rational(2, 3) +
-            (C1/3 + C2/3 + C3/3)*exp(x**2*Rational(3, 2)) +
-            sqrt(6)*sqrt(pi)*erf(sqrt(6)*x/2)*exp(x**2*Rational(3, 2))/18 +
-            Rational(-2, 9)
+            C1*Rational(-1, 3) + C2*Rational(2, 3) + C3*Rational(-1, 3)
+            + x**2*Rational(-1, 3) + x*Rational(2, 3) +
+            (C1/3 + C2/3 + C3/3)*exp(x**2*Rational(3, 2))
+            + sqrt(6)*sqrt(pi)*erf(sqrt(6)*x/2)*exp(x**2*Rational(3, 2))/18
+            + Rational(-2, 9)
         )
     ]
     assert dsolve(eqs3) == sol3
@@ -2537,23 +2540,23 @@ def test_sysode_linear_neq_order1_type4():
         Eq(
             f(x),
             C1*Rational(-1, 3) + C2*Rational(-1, 3) + C3*Rational(2, 3) +
-            (C1/3 + C2/3 + C3/3)*exp(x**2*Rational(3, 2)) +
-            Integral(sin(x)*exp(x**2*Rational(-3, 2)), x)*
-            exp(x**2*Rational(3, 2))
+            (C1/3 + C2/3 + C3/3)*exp(x**2*Rational(3, 2))
+            + Integral(sin(x)*exp(x**2*Rational(-3, 2)), x)
+            *exp(x**2*Rational(3, 2))
         ),
         Eq(
             g(x),
             C1*Rational(2, 3) + C2*Rational(-1, 3) + C3*Rational(-1, 3) +
-            (C1/3 + C2/3 + C3/3)*exp(x**2*Rational(3, 2)) +
-            Integral(sin(x)*exp(x**2*Rational(-3, 2)), x)*
-            exp(x**2*Rational(3, 2))
+            (C1/3 + C2/3 + C3/3)*exp(x**2*Rational(3, 2))
+            + Integral(sin(x)*exp(x**2*Rational(-3, 2)), x)
+            *exp(x**2*Rational(3, 2))
         ),
         Eq(
             h(x),
             C1*Rational(-1, 3) + C2*Rational(2, 3) + C3*Rational(-1, 3) +
-            (C1/3 + C2/3 + C3/3)*exp(x**2*Rational(3, 2)) +
-            Integral(sin(x)*exp(x**2*Rational(-3, 2)), x)*
-            exp(x**2*Rational(3, 2))
+            (C1/3 + C2/3 + C3/3)*exp(x**2*Rational(3, 2))
+            + Integral(sin(x)*exp(x**2*Rational(-3, 2)), x)
+            *exp(x**2*Rational(3, 2))
         )
     ]
     assert dsolve(eqs4) == sol4
@@ -2568,27 +2571,27 @@ def test_sysode_linear_neq_order1_type4():
     sol5 = [
         Eq(
             f(x),
-            C1*Rational(-1, 4) + C2*Rational(-1, 4) + C3*Rational(-1, 4) +
-            C4*Rational(3, 4) + (C1/4 + C2/4 + C3/4 + C4/4)*exp(2*x**2) +
-            Rational(-1, 4)
+            C1*Rational(-1, 4) + C2*Rational(-1, 4) + C3*Rational(-1, 4)
+            + C4*Rational(3, 4) +
+            (C1/4 + C2/4 + C3/4 + C4/4)*exp(2*x**2) + Rational(-1, 4)
         ),
         Eq(
             g(x),
-            C1*Rational(3, 4) + C2*Rational(-1, 4) + C3*Rational(-1, 4) +
-            C4*Rational(-1, 4) + (C1/4 + C2/4 + C3/4 + C4/4)*exp(2*x**2) +
-            Rational(-1, 4)
+            C1*Rational(3, 4) + C2*Rational(-1, 4) + C3*Rational(-1, 4)
+            + C4*Rational(-1, 4) +
+            (C1/4 + C2/4 + C3/4 + C4/4)*exp(2*x**2) + Rational(-1, 4)
         ),
         Eq(
             h(x),
-            C1*Rational(-1, 4) + C2*Rational(3, 4) + C3*Rational(-1, 4) +
-            C4*Rational(-1, 4) + (C1/4 + C2/4 + C3/4 + C4/4)*exp(2*x**2) +
-            Rational(-1, 4)
+            C1*Rational(-1, 4) + C2*Rational(3, 4) + C3*Rational(-1, 4)
+            + C4*Rational(-1, 4) +
+            (C1/4 + C2/4 + C3/4 + C4/4)*exp(2*x**2) + Rational(-1, 4)
         ),
         Eq(
             k(x),
-            C1*Rational(-1, 4) + C2*Rational(-1, 4) + C3*Rational(3, 4) +
-            C4*Rational(-1, 4) + (C1/4 + C2/4 + C3/4 + C4/4)*exp(2*x**2) +
-            Rational(-1, 4)
+            C1*Rational(-1, 4) + C2*Rational(-1, 4) + C3*Rational(3, 4)
+            + C4*Rational(-1, 4) +
+            (C1/4 + C2/4 + C3/4 + C4/4)*exp(2*x**2) + Rational(-1, 4)
         )
     ]
     assert dsolve(eqs5) == sol5
@@ -2603,31 +2606,31 @@ def test_sysode_linear_neq_order1_type4():
     sol6 = [
         Eq(
             f(x),
-            C1*Rational(-1, 4) + C2*Rational(-1, 4) + C3*Rational(-1, 4) +
-            C4*Rational(3, 4) +
-            (C1/4 + C2/4 + C3/4 + C4/4)*exp(x**3*Rational(4, 3)) +
-            Rational(-1, 4)
+            C1*Rational(-1, 4) + C2*Rational(-1, 4) + C3*Rational(-1, 4)
+            + C4*Rational(3, 4) +
+            (C1/4 + C2/4 + C3/4 + C4/4)*exp(x**3*Rational(4, 3))
+            + Rational(-1, 4)
         ),
         Eq(
             g(x),
-            C1*Rational(3, 4) + C2*Rational(-1, 4) + C3*Rational(-1, 4) +
-            C4*Rational(-1, 4) +
-            (C1/4 + C2/4 + C3/4 + C4/4)*exp(x**3*Rational(4, 3)) +
-            Rational(-1, 4)
+            C1*Rational(3, 4) + C2*Rational(-1, 4) + C3*Rational(-1, 4)
+            + C4*Rational(-1, 4) +
+            (C1/4 + C2/4 + C3/4 + C4/4)*exp(x**3*Rational(4, 3))
+            + Rational(-1, 4)
         ),
         Eq(
             h(x),
-            C1*Rational(-1, 4) + C2*Rational(3, 4) + C3*Rational(-1, 4) +
-            C4*Rational(-1, 4) +
-            (C1/4 + C2/4 + C3/4 + C4/4)*exp(x**3*Rational(4, 3)) +
-            Rational(-1, 4)
+            C1*Rational(-1, 4) + C2*Rational(3, 4) + C3*Rational(-1, 4)
+            + C4*Rational(-1, 4) +
+            (C1/4 + C2/4 + C3/4 + C4/4)*exp(x**3*Rational(4, 3))
+            + Rational(-1, 4)
         ),
         Eq(
             k(x),
-            C1*Rational(-1, 4) + C2*Rational(-1, 4) + C3*Rational(3, 4) +
-            C4*Rational(-1, 4) +
-            (C1/4 + C2/4 + C3/4 + C4/4)*exp(x**3*Rational(4, 3)) +
-            Rational(-1, 4)
+            C1*Rational(-1, 4) + C2*Rational(-1, 4) + C3*Rational(3, 4)
+            + C4*Rational(-1, 4) +
+            (C1/4 + C2/4 + C3/4 + C4/4)*exp(x**3*Rational(4, 3))
+            + Rational(-1, 4)
         )
     ]
     assert dsolve(eqs6) == sol6
@@ -2726,8 +2729,8 @@ def test_sysode_linear_neq_order1_type5_type6():
     sol2 = [
         Eq(
             f(x),
-            C2*x**3 - x*(C1 + Rational(1, 4)) + x*log(x)*Rational(-1, 2) +
-            Rational(-2, 3)
+            C2*x**3 - x*
+            (C1 + Rational(1, 4)) + x*log(x)*Rational(-1, 2) + Rational(-2, 3)
         ),
         Eq(
             g(x),
@@ -2793,8 +2796,8 @@ def test_higher_order_to_first_order():
         ),
         Eq(
             g(x),
-            sqrt(2)*C1*exp(sqrt(2)*x)/2 +
-            sqrt(2)*C3*exp(-sqrt(2)*x)*Rational(-1, 2)
+            sqrt(2)*C1*exp(sqrt(2)*x)/2
+            + sqrt(2)*C3*exp(-sqrt(2)*x)*Rational(-1, 2)
         )
     ]
     assert dsolve(eqs4) == sol4
@@ -2829,13 +2832,13 @@ def test_higher_order_to_first_order():
     sol7 = [
         Eq(
             f(x),
-            -C1 - C2*x + sqrt(2)*C3*exp(sqrt(2)*x)/2 +
-            sqrt(2)*C4*exp(-sqrt(2)*x)*Rational(-1, 2) + Rational(-1, 2)
+            -C1 - C2*x + sqrt(2)*C3*exp(sqrt(2)*x)/2
+            + sqrt(2)*C4*exp(-sqrt(2)*x)*Rational(-1, 2) + Rational(-1, 2)
         ),
         Eq(
             g(x),
-            C1 + C2*x + sqrt(2)*C3*exp(sqrt(2)*x)/2 +
-            sqrt(2)*C4*exp(-sqrt(2)*x)*Rational(-1, 2) + Rational(-1, 2)
+            C1 + C2*x + sqrt(2)*C3*exp(sqrt(2)*x)/2
+            + sqrt(2)*C4*exp(-sqrt(2)*x)*Rational(-1, 2) + Rational(-1, 2)
         )
     ]
     assert dsolve(eqs7) == sol7
@@ -2853,8 +2856,8 @@ def test_higher_order_to_first_order():
         ),
         Eq(
             g(x),
-            -C1 - C3*x + C4*x**3*Rational(-1, 6) + x**4*Rational(-1, 12) -
-            x**2*(C2/2 + Rational(-1, 2))
+            -C1 - C3*x + C4*x**3*Rational(-1, 6) + x**4*Rational(-1, 12)
+            - x**2*(C2/2 + Rational(-1, 2))
         )
     ]
     assert dsolve(eqs8) == sol8
@@ -2871,20 +2874,20 @@ def test_higher_order_to_first_order():
         Eq(
             x(t),
             C1*
-            (61 - 9*sqrt(47))*sqrt(sqrt(47) + 7)*exp(-t*sqrt(sqrt(47) + 7))/2 +
-            C2*sqrt(7 - sqrt(47))*
+            (61 - 9*sqrt(47))*sqrt(sqrt(47) + 7)*exp(-t*sqrt(sqrt(47) + 7))/2
+            + C2*sqrt(7 - sqrt(47))*
             (61 + 9*sqrt(47))*exp(-t*sqrt(7 - sqrt(47)))/2 + C3*
-            (61 - 9*sqrt(47))*sqrt(sqrt(47) + 7)*exp(t*sqrt(sqrt(47) + 7))*
-            Rational(-1, 2) + C4*sqrt(7 - sqrt(47))*
+            (61 - 9*sqrt(47))*sqrt(sqrt(47) + 7)*exp(t*sqrt(sqrt(47) + 7))
+            *Rational(-1, 2) + C4*sqrt(7 - sqrt(47))*
             (61 + 9*sqrt(47))*exp(t*sqrt(7 - sqrt(47)))*Rational(-1, 2)
         ),
         Eq(
             y(t),
-            C1*(7 - sqrt(47))*sqrt(sqrt(47) + 7)*exp(-t*sqrt(sqrt(47) + 7))*
-            Rational(-1, 2) + C2*sqrt(7 - sqrt(47))*
+            C1*(7 - sqrt(47))*sqrt(sqrt(47) + 7)*exp(-t*sqrt(sqrt(47) + 7))
+            *Rational(-1, 2) + C2*sqrt(7 - sqrt(47))*
             (sqrt(47) + 7)*exp(-t*sqrt(7 - sqrt(47)))*Rational(-1, 2) + C3*
-            (7 - sqrt(47))*sqrt(sqrt(47) + 7)*exp(t*sqrt(sqrt(47) + 7))/2 +
-            C4*sqrt(7 - sqrt(47))*(sqrt(47) + 7)*exp(t*sqrt(7 - sqrt(47)))/2
+            (7 - sqrt(47))*sqrt(sqrt(47) + 7)*exp(t*sqrt(sqrt(47) + 7))/2
+            + C4*sqrt(7 - sqrt(47))*(sqrt(47) + 7)*exp(t*sqrt(7 - sqrt(47)))/2
         )
     ]
     assert dsolve(eqs10) == sol10
@@ -2898,17 +2901,17 @@ def test_higher_order_to_first_order():
         Eq(
             y(t),
             C1*(9 - sqrt(109))*sin(sqrt(2)*t*sqrt(9*sqrt(109) + 95)/2)/14 + C2*
-            (9 - sqrt(109))*cos(sqrt(2)*t*sqrt(9*sqrt(109) + 95)/2)*
-            Rational(-1, 14) + C3*
+            (9 - sqrt(109))*cos(sqrt(2)*t*sqrt(9*sqrt(109) + 95)/2)
+            *Rational(-1, 14) + C3*
             (9 + sqrt(109))*sin(sqrt(2)*t*sqrt(95 - 9*sqrt(109))/2)/14 + C4*
-            (9 + sqrt(109))*cos(sqrt(2)*t*sqrt(95 - 9*sqrt(109))/2)*
-            Rational(-1, 14)
+            (9 + sqrt(109))*cos(sqrt(2)*t*sqrt(95 - 9*sqrt(109))/2)
+            *Rational(-1, 14)
         ),
         Eq(
             x(t),
-            C1*(9 - sqrt(109))*cos(sqrt(2)*t*sqrt(9*sqrt(109) + 95)/2)*
-            Rational(-1, 14) + C2*(9 - sqrt(109))*
-            sin(sqrt(2)*t*sqrt(9*sqrt(109) + 95)/2)*Rational(-1, 14) + C3*
+            C1*(9 - sqrt(109))*cos(sqrt(2)*t*sqrt(9*sqrt(109) + 95)/2)
+            *Rational(-1, 14) + C2*(9 - sqrt(109))
+            *sin(sqrt(2)*t*sqrt(9*sqrt(109) + 95)/2)*Rational(-1, 14) + C3*
             (9 + sqrt(109))*cos(sqrt(2)*t*sqrt(95 - 9*sqrt(109))/2)/14 + C4*
             (9 + sqrt(109))*sin(sqrt(2)*t*sqrt(95 - 9*sqrt(109))/2)/14
         )
@@ -2928,17 +2931,17 @@ def test_higher_order_to_first_order():
     sol13 = [
         Eq(
             f(t),
-            C1*(sqrt(5) + 3)*Rational(-1, 2)*
-            t**(Rational(1, 2) + sqrt(5)*Rational(-1, 2)) +
-            C2*t**(Rational(1, 2) + sqrt(5)/2)*(3 - sqrt(5))*Rational(-1, 2) -
-            C3*t**(1 - sqrt(2))*(1 + sqrt(2)) - C4*t**(1 + sqrt(2))*
-            (1 - sqrt(2))
+            C1*(sqrt(5) + 3)*Rational(-1, 2)
+            *t**(Rational(1, 2) + sqrt(5)*Rational(-1, 2))
+            + C2*t**(Rational(1, 2) + sqrt(5)/2)*
+            (3 - sqrt(5))*Rational(-1, 2) - C3*t**(1 - sqrt(2))*
+            (1 + sqrt(2)) - C4*t**(1 + sqrt(2))*(1 - sqrt(2))
         ),
         Eq(
             g(t),
-            C1*(1 + sqrt(5))*Rational(-1, 2)*
-            t**(Rational(1, 2) + sqrt(5)*Rational(-1, 2)) +
-            C2*t**(Rational(1, 2) + sqrt(5)/2)*(1 - sqrt(5))*Rational(-1, 2)
+            C1*(1 + sqrt(5))*Rational(-1, 2)
+            *t**(Rational(1, 2) + sqrt(5)*Rational(-1, 2))
+            + C2*t**(Rational(1, 2) + sqrt(5)/2)*(1 - sqrt(5))*Rational(-1, 2)
         )
     ]
     assert dsolve(eqs13) == sol13
@@ -2970,20 +2973,20 @@ def test_higher_order_to_first_order():
         Eq(
             x(t),
             C1 - erf(sqrt(6)*t)*
-            (sqrt(6)*sqrt(pi)*C2/33 + sqrt(6)*sqrt(pi)*C3*Rational(-1, 44)) +
-            erfi(sqrt(5)*t)*(
-                sqrt(5)*sqrt(pi)*C2*Rational(2, 55) +
-                sqrt(5)*sqrt(pi)*C3*Rational(4, 55)
+            (sqrt(6)*sqrt(pi)*C2/33 + sqrt(6)*sqrt(pi)*C3*Rational(-1, 44))
+            + erfi(sqrt(5)*t)*(
+                sqrt(5)*sqrt(pi)*C2*Rational(2, 55)
+                + sqrt(5)*sqrt(pi)*C3*Rational(4, 55)
             )
         ),
         Eq(
             y(t),
             C4 + erf(sqrt(6)*t)*(
-                sqrt(6)*sqrt(pi)*C2*Rational(2, 33) +
-                sqrt(6)*sqrt(pi)*C3*Rational(-1, 22)
+                sqrt(6)*sqrt(pi)*C2*Rational(2, 33)
+                + sqrt(6)*sqrt(pi)*C3*Rational(-1, 22)
             ) + erfi(sqrt(5)*t)*(
-                sqrt(5)*sqrt(pi)*C2*Rational(3, 110) +
-                sqrt(5)*sqrt(pi)*C3*Rational(3, 55)
+                sqrt(5)*sqrt(pi)*C2*Rational(3, 110)
+                + sqrt(5)*sqrt(pi)*C3*Rational(3, 55)
             )
         )
     ]
@@ -2997,10 +3000,10 @@ def test_higher_order_to_first_order_9():
     x = symbols('x')
 
     eqs9 = [
-        f(x) + g(x) - 2*exp(I*x) + 2*Derivative(f(x), x) +
-        Derivative(f(x), (x, 2)),
-        f(x) + g(x) - 2*exp(I*x) + 2*Derivative(g(x), x) +
-        Derivative(g(x), (x, 2))
+        f(x) + g(x) - 2*exp(I*x) + 2*Derivative(f(x), x)
+        + Derivative(f(x), (x, 2)),
+        f(x) + g(x) - 2*exp(I*x) + 2*Derivative(g(x), x)
+        + Derivative(g(x), (x, 2))
     ]
     sol9 = [
         Eq(
@@ -3009,12 +3012,12 @@ def test_higher_order_to_first_order_9():
             (2+I)*exp(I*x)*sin(x)**2*Rational(-1, 5) +
             (1 - 2*I)*exp(I*x)*sin(x)*cos(x)*Rational(2, 5) +
             (4 - 3*I)*exp(I*x)*cos(x)**2/5 + exp(-x)*sin(x)*Integral(
-                -exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x) +
-                exp(x)*exp(I*x)/cos(x),
+                -exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x)
+                + exp(x)*exp(I*x)/cos(x),
                 x
             ) - exp(-x)*cos(x)*Integral(
-                -exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x) +
-                exp(x)*exp(I*x)/cos(x),
+                -exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x)
+                + exp(x)*exp(I*x)/cos(x),
                 x
             ) - exp(-x)*cos(x)*(C3/2 + C4*Rational(-1, 2))
         ),
@@ -3024,12 +3027,12 @@ def test_higher_order_to_first_order_9():
             (2+I)*exp(I*x)*sin(x)**2*Rational(-1, 5) +
             (1 - 2*I)*exp(I*x)*sin(x)*cos(x)*Rational(2, 5) +
             (4 - 3*I)*exp(I*x)*cos(x)**2/5 + exp(-x)*sin(x)*Integral(
-                -exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x) +
-                exp(x)*exp(I*x)/cos(x),
+                -exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x)
+                + exp(x)*exp(I*x)/cos(x),
                 x
             ) - exp(-x)*cos(x)*Integral(
-                -exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x) +
-                exp(x)*exp(I*x)/cos(x),
+                -exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x)
+                + exp(x)*exp(I*x)/cos(x),
                 x
             ) - exp(-x)*cos(x)*(C3/2 + C4*Rational(-1, 2))
         )
@@ -3081,17 +3084,17 @@ def test_second_order_to_first_order_2():
         Eq(
             f(x),
             C1*x + x*Integral(
-                C2*exp(-x_)*exp(I*exp(2*x_))/2 + C2*exp(-x_)*exp(-I*exp(2*x_))/
-                2 - I*C3*exp(-x_)*exp(I*exp(2*x_))/2 +
-                I*C3*exp(-x_)*exp(-I*exp(2*x_))/2, (x_, log(x))
+                C2*exp(-x_)*exp(I*exp(2*x_))/2 + C2*exp(-x_)*exp(-I*exp(2*x_))
+                /2 - I*C3*exp(-x_)*exp(I*exp(2*x_))/2
+                + I*C3*exp(-x_)*exp(-I*exp(2*x_))/2, (x_, log(x))
             )
         ),
         Eq(
             g(x),
             C4*x + x*Integral(
-                I*C2*exp(-x_)*exp(I*exp(2*x_))/2 - I*C2*exp(-x_)*
-                exp(-I*exp(2*x_))/2 + C3*exp(-x_)*exp(I*exp(2*x_))/2 +
-                C3*exp(-x_)*exp(-I*exp(2*x_))/2, (x_, log(x))
+                I*C2*exp(-x_)*exp(I*exp(2*x_))/2 - I*C2*exp(-x_)
+                *exp(-I*exp(2*x_))/2 + C3*exp(-x_)*exp(I*exp(2*x_))/2
+                + C3*exp(-x_)*exp(-I*exp(2*x_))/2, (x_, log(x))
             )
         )
     ]
@@ -3107,20 +3110,20 @@ def test_second_order_to_first_order_2():
         Eq(
             f(t),
             C1*t + t*Integral(
-                C2*exp(-t_)*exp(3*sqrt(7)*exp(2*t_)/2)/2 +
-                C2*exp(-t_)*exp(-3*sqrt(7)*exp(2*t_)/2)/2 +
-                3*sqrt(7)*C3*exp(-t_)*exp(3*sqrt(7)*exp(2*t_)/2)/14 -
-                3*sqrt(7)*C3*exp(-t_)*exp(-3*sqrt(7)*exp(2*t_)/2)/14,
+                C2*exp(-t_)*exp(3*sqrt(7)*exp(2*t_)/2)/2
+                + C2*exp(-t_)*exp(-3*sqrt(7)*exp(2*t_)/2)/2
+                + 3*sqrt(7)*C3*exp(-t_)*exp(3*sqrt(7)*exp(2*t_)/2)/14
+                - 3*sqrt(7)*C3*exp(-t_)*exp(-3*sqrt(7)*exp(2*t_)/2)/14,
                 (t_, log(t))
             )
         ),
         Eq(
             g(t),
             C4*t + t*Integral(
-                sqrt(7)*C2*exp(-t_)*exp(3*sqrt(7)*exp(2*t_)/2)/6 -
-                sqrt(7)*C2*exp(-t_)*exp(-3*sqrt(7)*exp(2*t_)/2)/6 +
-                C3*exp(-t_)*exp(3*sqrt(7)*exp(2*t_)/2)/2 +
-                C3*exp(-t_)*exp(-3*sqrt(7)*exp(2*t_)/2)/2, (t_, log(t))
+                sqrt(7)*C2*exp(-t_)*exp(3*sqrt(7)*exp(2*t_)/2)/6
+                - sqrt(7)*C2*exp(-t_)*exp(-3*sqrt(7)*exp(2*t_)/2)/6
+                + C3*exp(-t_)*exp(3*sqrt(7)*exp(2*t_)/2)/2
+                + C3*exp(-t_)*exp(-3*sqrt(7)*exp(2*t_)/2)/2, (t_, log(t))
             )
         )
     ]
@@ -3146,8 +3149,8 @@ def test_second_order_to_first_order_2():
         Eq(f(t), C1*sqrt(t**2)*exp(-1/t) - C2*sqrt(t**2)*exp(1/t)),
         Eq(
             g(t),
-            C3*sqrt(t**2)*exp(-sqrt(d)/t)*d**Rational(-1, 2) -
-            C4*sqrt(t**2)*exp(sqrt(d)/t)*d**Rational(-1, 2)
+            C3*sqrt(t**2)*exp(-sqrt(d)/t)*d**Rational(-1, 2)
+            - C4*sqrt(t**2)*exp(sqrt(d)/t)*d**Rational(-1, 2)
         )
     ]
     assert dsolve(eqs6) == sol6
@@ -3197,20 +3200,20 @@ def test_second_order_to_first_order_slow4():
         Eq(
             f(t),
             C1*t + t*Integral(
-                C2*exp(-t_)*exp(exp(t_)*cos(exp(t_)))*exp(-sin(exp(t_)))/2 +
-                C2*exp(-t_)*exp(-exp(t_)*cos(exp(t_)))*exp(sin(exp(t_)))/2 -
-                C3*exp(-t_)*exp(exp(t_)*cos(exp(t_)))*exp(-sin(exp(t_)))/2 +
-                C3*exp(-t_)*exp(-exp(t_)*cos(exp(t_)))*exp(sin(exp(t_)))/2,
+                C2*exp(-t_)*exp(exp(t_)*cos(exp(t_)))*exp(-sin(exp(t_)))/2
+                + C2*exp(-t_)*exp(-exp(t_)*cos(exp(t_)))*exp(sin(exp(t_)))/2
+                - C3*exp(-t_)*exp(exp(t_)*cos(exp(t_)))*exp(-sin(exp(t_)))/2
+                + C3*exp(-t_)*exp(-exp(t_)*cos(exp(t_)))*exp(sin(exp(t_)))/2,
                 (t_, log(t))
             )
         ),
         Eq(
             g(t),
             C4*t + t*Integral(
-                -C2*exp(-t_)*exp(exp(t_)*cos(exp(t_)))*exp(-sin(exp(t_)))/2 +
-                C2*exp(-t_)*exp(-exp(t_)*cos(exp(t_)))*exp(sin(exp(t_)))/2 +
-                C3*exp(-t_)*exp(exp(t_)*cos(exp(t_)))*exp(-sin(exp(t_)))/2 +
-                C3*exp(-t_)*exp(-exp(t_)*cos(exp(t_)))*exp(sin(exp(t_)))/2,
+                -C2*exp(-t_)*exp(exp(t_)*cos(exp(t_)))*exp(-sin(exp(t_)))/2
+                + C2*exp(-t_)*exp(-exp(t_)*cos(exp(t_)))*exp(sin(exp(t_)))/2
+                + C3*exp(-t_)*exp(exp(t_)*cos(exp(t_)))*exp(-sin(exp(t_)))/2
+                + C3*exp(-t_)*exp(-exp(t_)*cos(exp(t_)))*exp(sin(exp(t_)))/2,
                 (t_, log(t))
             )
         )
@@ -3451,8 +3454,8 @@ def test_component_division():
             C4*exp(x) + exp(x)*Integral(
                 (
                     C1*exp(x**2/2 - sqrt(2)*x)/2 + C1*exp(x**2/2 + sqrt(2)*x)/2
-                    - sqrt(2)*C2*exp(x**2/2 - sqrt(2)*x)/2 +
-                    sqrt(2)*C2*exp(x**2/2 + sqrt(2)*x)/2
+                    - sqrt(2)*C2*exp(x**2/2 - sqrt(2)*x)/2
+                    + sqrt(2)*C2*exp(x**2/2 + sqrt(2)*x)/2
                 )**4*exp(-x),
                 x
             )
@@ -3520,10 +3523,12 @@ def test_linodesolve():
     (A1, A0), b = linear_ode_to_matrix(ceq[0], func, t, 1)
     A = A0
     sol = [
-        C1*(-Rational(1, 2) + sqrt(5)/2)*exp(t*(-Rational(1, 2) + sqrt(5)/2)) +
-        C2*(-sqrt(5)/2 - Rational(1, 2))*exp(t*(-sqrt(5)/2 - Rational(1, 2))),
-        C1*exp(t*(-Rational(1, 2) + sqrt(5)/2)) +
-        C2*exp(t*(-sqrt(5)/2 - Rational(1, 2)))
+        C1*
+        (-Rational(1, 2) + sqrt(5)/2)*exp(t*
+                                          (-Rational(1, 2) + sqrt(5)/2)) + C2*
+        (-sqrt(5)/2 - Rational(1, 2))*exp(t*(-sqrt(5)/2 - Rational(1, 2))),
+        C1*exp(t*(-Rational(1, 2) + sqrt(5)/2))
+        + C2*exp(t*(-sqrt(5)/2 - Rational(1, 2)))
     ]
     assert constant_renumber(
         linodesolve(A, t), variables=Tuple(*eq).free_symbols
@@ -3570,9 +3575,9 @@ def test_linodesolve():
     (A1, A0), b = linear_ode_to_matrix(ceq[0], func, t, 1)
     A = A0
     sol = [
-        -C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 -
-        sqrt(5)*C2*exp(-sqrt(5)*t/2 - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 -
-        exp(-t/2 + sqrt(5)*t/2)*Integral(
+        -C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2
+        - sqrt(5)*C2*exp(-sqrt(5)*t/2 - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2
+        - exp(-t/2 + sqrt(5)*t/2)*Integral(
             t*exp(-sqrt(5)*t/2 + t/2)/
             (-5 + sqrt(5)) - sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/(-5 + sqrt(5)),
             t
@@ -3580,31 +3585,31 @@ def test_linodesolve():
             t*exp(-sqrt(5)*t/2 + t/2)/
             (-5 + sqrt(5)) - sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/(-5 + sqrt(5)),
             t
-        )/2 - sqrt(5)*exp(-sqrt(5)*t/2 - t/2)*
-        Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2 -
-        exp(-sqrt(5)*t/2 - t/2)*
-        Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2,
-        C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2) +
-        exp(-t/2 + sqrt(5)*t/2)*Integral(
+        )/2 - sqrt(5)*exp(-sqrt(5)*t/2 - t/2)
+        *Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2
+        - exp(-sqrt(5)*t/2 - t/2)
+        *Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)/2,
+        C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2)
+        + exp(-t/2 + sqrt(5)*t/2)*Integral(
             t*exp(-sqrt(5)*t/2 + t/2)/
             (-5 + sqrt(5)) - sqrt(5)*t*exp(-sqrt(5)*t/2 + t/2)/(-5 + sqrt(5)),
             t
-        ) + exp(-sqrt(5)*t/2 - t/2)*
-        Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)
+        ) + exp(-sqrt(5)*t/2 - t/2)
+        *Integral(-sqrt(5)*t*exp(t/2 + sqrt(5)*t/2)/5, t)
     ]
     assert constant_renumber(linodesolve(A, t, b=b), variables=[t]) == sol
 
     # non-homogeneous term assumed to be 0
     sol1 = [
-        -C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2 -
-        sqrt(5)*C2*exp(-sqrt(5)*t/2 - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2 -
-        exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 +
-        sqrt(5)*exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2 -
-        sqrt(5)*exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2 -
-        exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2,
-        C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2) +
-        exp(-t/2 + sqrt(5)*t/2)*Integral(0, t) +
-        exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)
+        -C1*exp(-t/2 + sqrt(5)*t/2)/2 + sqrt(5)*C1*exp(-t/2 + sqrt(5)*t/2)/2
+        - sqrt(5)*C2*exp(-sqrt(5)*t/2 - t/2)/2 - C2*exp(-sqrt(5)*t/2 - t/2)/2
+        - exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2
+        + sqrt(5)*exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)/2
+        - sqrt(5)*exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2
+        - exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)/2,
+        C1*exp(-t/2 + sqrt(5)*t/2) + C2*exp(-sqrt(5)*t/2 - t/2)
+        + exp(-t/2 + sqrt(5)*t/2)*Integral(0, t)
+        + exp(-sqrt(5)*t/2 - t/2)*Integral(0, t)
     ]
     assert constant_renumber(
         linodesolve(A, t, type="type2"), variables=[t]
@@ -3696,12 +3701,12 @@ def test_linodesolve():
     _x4 = 2*_x2*_x3/3
     _x5 = Integral(2*_x1*x/3 + _x1/3 - 2*x/3 + Rational(2, 3), x)
     sol = [
-        C1*_x2/3 - C1/3 + C2*_x2/3 - C2/3 + C3*_x2/3 + 2*C3/3 + _x2*_x5/3 +
-        _x3/3 + _x4 - _x5/3,
-        C1*_x2/3 + 2*C1/3 + C2*_x2/3 - C2/3 + C3*_x2/3 - C3/3 + _x2*_x5/3 +
-        _x3/3 + _x4 - _x5/3,
-        C1*_x2/3 - C1/3 + C2*_x2/3 + 2*C2/3 + C3*_x2/3 - C3/3 + _x2*_x5/3 -
-        2*_x3/3 + _x4 + 2*_x5/3,
+        C1*_x2/3 - C1/3 + C2*_x2/3 - C2/3 + C3*_x2/3 + 2*C3/3 + _x2*_x5/3
+        + _x3/3 + _x4 - _x5/3,
+        C1*_x2/3 + 2*C1/3 + C2*_x2/3 - C2/3 + C3*_x2/3 - C3/3 + _x2*_x5/3
+        + _x3/3 + _x4 - _x5/3,
+        C1*_x2/3 - C1/3 + C2*_x2/3 + 2*C2/3 + C3*_x2/3 - C3/3 + _x2*_x5/3
+        - 2*_x3/3 + _x4 + 2*_x5/3,
     ]
     assert constant_renumber(
         linodesolve(A, x, b=b), variables=Tuple(*eq).free_symbols
@@ -3882,24 +3887,24 @@ def _neq_order1_type4_slow3():
             f(x),
             (
                 C1/2 - I*C2/2 - I*Integral(
-                    x**2*exp(-x**2/2 - I*x)/2 + x**2*exp(-x**2/2 + I*x)/2 +
-                    I*exp(-x**2/2 - I*x)*sin(x)/2 -
-                    I*exp(-x**2/2 + I*x)*sin(x)/2,
+                    x**2*exp(-x**2/2 - I*x)/2 + x**2*exp(-x**2/2 + I*x)/2
+                    + I*exp(-x**2/2 - I*x)*sin(x)/2
+                    - I*exp(-x**2/2 + I*x)*sin(x)/2,
                     x
                 )/2 + Integral(
-                    -I*x**2*exp(-x**2/2 - I*x)/2 + I*x**2*exp(-x**2/2 + I*x)/2 +
-                    exp(-x**2/2 - I*x)*sin(x)/2 + exp(-x**2/2 + I*x)*sin(x)/2,
+                    -I*x**2*exp(-x**2/2 - I*x)/2 + I*x**2*exp(-x**2/2 + I*x)/2
+                    + exp(-x**2/2 - I*x)*sin(x)/2 + exp(-x**2/2 + I*x)*sin(x)/2,
                     x
                 )/2
             )*exp(x**2/2 + I*x) + (
                 C1/2 + I*C2/2 + I*Integral(
-                    x**2*exp(-x**2/2 - I*x)/2 + x**2*exp(-x**2/2 + I*x)/2 +
-                    I*exp(-x**2/2 - I*x)*sin(x)/2 -
-                    I*exp(-x**2/2 + I*x)*sin(x)/2,
+                    x**2*exp(-x**2/2 - I*x)/2 + x**2*exp(-x**2/2 + I*x)/2
+                    + I*exp(-x**2/2 - I*x)*sin(x)/2
+                    - I*exp(-x**2/2 + I*x)*sin(x)/2,
                     x
                 )/2 + Integral(
-                    -I*x**2*exp(-x**2/2 - I*x)/2 + I*x**2*exp(-x**2/2 + I*x)/2 +
-                    exp(-x**2/2 - I*x)*sin(x)/2 + exp(-x**2/2 + I*x)*sin(x)/2,
+                    -I*x**2*exp(-x**2/2 - I*x)/2 + I*x**2*exp(-x**2/2 + I*x)/2
+                    + exp(-x**2/2 - I*x)*sin(x)/2 + exp(-x**2/2 + I*x)*sin(x)/2,
                     x
                 )/2
             )*exp(x**2/2 - I*x)
@@ -3908,24 +3913,24 @@ def _neq_order1_type4_slow3():
             g(x),
             (
                 -I*C1/2 + C2/2 + Integral(
-                    x**2*exp(-x**2/2 - I*x)/2 + x**2*exp(-x**2/2 + I*x)/2 +
-                    I*exp(-x**2/2 - I*x)*sin(x)/2 -
-                    I*exp(-x**2/2 + I*x)*sin(x)/2,
+                    x**2*exp(-x**2/2 - I*x)/2 + x**2*exp(-x**2/2 + I*x)/2
+                    + I*exp(-x**2/2 - I*x)*sin(x)/2
+                    - I*exp(-x**2/2 + I*x)*sin(x)/2,
                     x
                 )/2 - I*Integral(
-                    -I*x**2*exp(-x**2/2 - I*x)/2 + I*x**2*exp(-x**2/2 + I*x)/2 +
-                    exp(-x**2/2 - I*x)*sin(x)/2 + exp(-x**2/2 + I*x)*sin(x)/2,
+                    -I*x**2*exp(-x**2/2 - I*x)/2 + I*x**2*exp(-x**2/2 + I*x)/2
+                    + exp(-x**2/2 - I*x)*sin(x)/2 + exp(-x**2/2 + I*x)*sin(x)/2,
                     x
                 )/2
             )*exp(x**2/2 - I*x) + (
                 I*C1/2 + C2/2 + Integral(
-                    x**2*exp(-x**2/2 - I*x)/2 + x**2*exp(-x**2/2 + I*x)/2 +
-                    I*exp(-x**2/2 - I*x)*sin(x)/2 -
-                    I*exp(-x**2/2 + I*x)*sin(x)/2,
+                    x**2*exp(-x**2/2 - I*x)/2 + x**2*exp(-x**2/2 + I*x)/2
+                    + I*exp(-x**2/2 - I*x)*sin(x)/2
+                    - I*exp(-x**2/2 + I*x)*sin(x)/2,
                     x
                 )/2 + I*Integral(
-                    -I*x**2*exp(-x**2/2 - I*x)/2 + I*x**2*exp(-x**2/2 + I*x)/2 +
-                    exp(-x**2/2 - I*x)*sin(x)/2 + exp(-x**2/2 + I*x)*sin(x)/2,
+                    -I*x**2*exp(-x**2/2 - I*x)/2 + I*x**2*exp(-x**2/2 + I*x)/2
+                    + exp(-x**2/2 - I*x)*sin(x)/2 + exp(-x**2/2 + I*x)*sin(x)/2,
                     x
                 )/2
             )*exp(x**2/2 + I*x)
@@ -4068,20 +4073,20 @@ def test_higher_order1_slow1():
 
     eq = [
         Eq(
-            diff(x(t), t, t),
-            (log(t) + t**2)*diff(x(t), t) + (log(t) + t**2)*3*diff(y(t), t)
+            diff(x(t), t, t), (log(t) + t**2)*diff(x(t), t) +
+            (log(t) + t**2)*3*diff(y(t), t)
         ),
         Eq(
-            diff(y(t), t, t),
-            (log(t) + t**2)*2*diff(x(t), t) + (log(t) + t**2)*9*diff(y(t), t)
+            diff(y(t), t, t), (log(t) + t**2)*2*diff(x(t), t) +
+            (log(t) + t**2)*9*diff(y(t), t)
         )
     ]
     sol, = dsolve_system(eq, simplify=False, doit=False)
     # The solution is too long to write out explicitly and checkodesol is too
     # slow so we test for particular values of t:
     for e in eq:
-        res = (e.lhs -
-               e.rhs).subs({
+        res = (e.lhs
+               - e.rhs).subs({
                    sol[0].lhs: sol[0].rhs, sol[1].lhs: sol[1].rhs
                })
         res = res.subs({d: d.doit(deep=False) for d in res.atoms(Derivative)})
@@ -4100,14 +4105,14 @@ def test_second_order_type2_slow1():
         Eq(
             x(t),
             I*C1*airyai(t*
-                        (2 - I)**(S(1)/3)) + I*C2*airybi(t*(2 - I)**(S(1)/3)) -
-            I*C3*airyai(t*
-                        (2 + I)**(S(1)/3)) - I*C4*airybi(t*(2 + I)**(S(1)/3))
+                        (2 - I)**(S(1)/3)) + I*C2*airybi(t*(2 - I)**(S(1)/3))
+            - I*C3*airyai(t*(2 + I)**(S(1)/3))
+            - I*C4*airybi(t*(2 + I)**(S(1)/3))
         ),
         Eq(
             y(t),
-            C1*airyai(t*(2 - I)**(S(1)/3)) + C2*airybi(t*(2 - I)**(S(1)/3)) +
-            C3*airyai(t*(2 + I)**(S(1)/3)) + C4*airybi(t*(2 + I)**(S(1)/3))
+            C1*airyai(t*(2 - I)**(S(1)/3)) + C2*airybi(t*(2 - I)**(S(1)/3))
+            + C3*airyai(t*(2 + I)**(S(1)/3)) + C4*airybi(t*(2 + I)**(S(1)/3))
         )
     ]
     assert dsolve(eqs1) == sol1
