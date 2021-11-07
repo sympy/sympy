@@ -338,12 +338,13 @@ def test_solve_conjugate():
 
 def test_solve_nonlinear():
     assert solve(x**2 - y**2, x, y, dict=True) == [{x: -y}, {x: y}]
-    assert solve(x**2 - y**2/exp(x), y, x,
-                 dict=True) == [{
-                     y: -x*sqrt(exp(x))
-                 }, {
-                     y: x*sqrt(exp(x))
-                 }]
+    assert solve(
+        x**2 - y**2/exp(x), y, x, dict=True
+    ) == [{
+        y: -x*sqrt(exp(x))
+    }, {
+        y: x*sqrt(exp(x))
+    }]
 
 
 def test_issue_8666():
@@ -1008,10 +1009,11 @@ def test_issue_5197():
     # The solution following should not contain {y: -x*exp(x/2)}
     assert solve(x**2 - y**2/exp(x), y, x, dict=True) == [{y: x*exp(x/2)}]
     x, y, z = symbols('x y z', positive=True)
-    assert solve(z**2*x**2 - z**2*y**2/exp(x), y, x, z,
-                 dict=True) == [{
-                     y: x*exp(x/2)
-                 }]
+    assert solve(
+        z**2*x**2 - z**2*y**2/exp(x), y, x, z, dict=True
+    ) == [{
+        y: x*exp(x/2)
+    }]
 
 
 def test_checking():
@@ -1073,7 +1075,9 @@ def test_issue_5132():
         ([y, z], {
         (-log(3), sqrt(-exp(2*x) - sin(log(3)))),
         (-log(3), -sqrt(-exp(2*x) - sin(log(3))))})
-    assert solve(eqs, x, z, set=True) == (
+    assert solve(
+        eqs, x, z, set=True
+    ) == (
         [x,
          z], {(x, sqrt(-exp(2*x) + sin(y))), (x, -sqrt(-exp(2*x) + sin(y)))}
     )
@@ -1086,8 +1090,9 @@ def test_issue_5132():
             (-log(3), -sqrt(-exp(2*x) - sin(log(3)))),
         (-log(3), sqrt(-exp(2*x) - sin(log(3))))}
     eqs = [exp(x)**2 - sin(y) + z, 1/exp(y) - 3]
-    assert solve(eqs,
-                 set=True) == ([y, z], {(-log(3), -exp(2*x) - sin(log(3)))})
+    assert solve(
+        eqs, set=True
+    ) == ([y, z], {(-log(3), -exp(2*x) - sin(log(3)))})
     assert solve(eqs, x, z, set=True) == ([x, z], {(x, -exp(2*x) + sin(y))})
     assert set(solve(eqs, x, y)) == {
         (log(-sqrt(-z - sin(log(3)))), -log(3)),
@@ -1865,7 +1870,9 @@ def test_exclude():
         C*V1*s + Vplus*(-2*C*s - 1/R), Vminus*(-1/Ri - 1/Rf) + Vout/Rf,
         C*Vplus*s + V1*(-C*s - 1/R) + Vout/R, -Vminus + Vplus
     ]
-    assert solve(eqs, exclude=s*C*R) == [
+    assert solve(
+        eqs, exclude=s*C*R
+    ) == [
         {
             Rf: Ri*(C*R*s + 1)**2/(C*R*s),
             Vminus: Vplus,
@@ -1881,7 +1888,9 @@ def test_exclude():
     ]
 
     # TODO: Investigate why currently solution [0] is preferred over [1].
-    assert solve(eqs, exclude=[Vplus, s, C]) in [
+    assert solve(
+        eqs, exclude=[Vplus, s, C]
+    ) in [
         [
             {
                 Vminus: Vplus,
@@ -2212,9 +2221,9 @@ def test_rewrite_trigh():
 
 def test_uselogcombine():
     eq = z - log(x) + log(y/(x*(-1 + y**2/x**2)))
-    assert solve(eq, x,
-                 force=True) == [-sqrt(y*(y - exp(z))),
-                                 sqrt(y*(y - exp(z)))]
+    assert solve(
+        eq, x, force=True
+    ) == [-sqrt(y*(y - exp(z))), sqrt(y*(y - exp(z)))]
     assert solve(log(x + 3) + log(1 + 3/x) - 3) in [
         [
             -3 + sqrt(-12 + exp(3))*exp(Rational(3, 2))/2 + exp(3)/2,
@@ -2849,16 +2858,24 @@ def test_issue_20902():
     f = (t/((1 + t)**2))
     assert solve(f.subs({
         t: 3*x + 2
-    }).diff(x) > 0, x) == (S(-1) < x) & (x < S(-1)/3)
+    }).diff(x) > 0, x) == (S(-1) < x) & (
+        x < S(-1)/3
+    )
     assert solve(f.subs({
         t: 3*x + 3
-    }).diff(x) > 0, x) == (S(-4)/3 < x) & (x < S(-2)/3)
+    }).diff(x) > 0, x) == (S(-4)/3 < x) & (
+        x < S(-2)/3
+    )
     assert solve(f.subs({
         t: 3*x + 4
-    }).diff(x) > 0, x) == (S(-5)/3 < x) & (x < S(-1))
+    }).diff(x) > 0, x) == (S(-5)/3 < x) & (
+        x < S(-1)
+    )
     assert solve(f.subs({
         t: 3*x + 2
-    }).diff(x) > 0, x) == (S(-1) < x) & (x < S(-1)/3)
+    }).diff(x) > 0, x) == (S(-1) < x) & (
+        x < S(-1)/3
+    )
 
 
 def test_issue_21034():

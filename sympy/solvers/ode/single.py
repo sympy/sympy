@@ -741,8 +741,9 @@ class AlmostLinear(SinglePatternODESolver):
         # a(x)*(l(y))' / l(y)' is independent of l(y)
 
         if b.diff(fx) != 0 and not simplify(b.diff(fx)/a).has(fx):
-            self.ly = factor_terms(b).as_independent(fx, as_Add=False)[
-                1]  # Gives the term containing fx i.e., l(y)
+            self.ly = factor_terms(b).as_independent(
+                fx, as_Add=False
+            )[1]  # Gives the term containing fx i.e., l(y)
             self.ax = a/self.ly.diff(fx)
             self.cx = -c  # cx is taken as -c(x) to simplify expression in the solution integral
             self.bx = factor_terms(b)/self.ly
@@ -1733,7 +1734,8 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
             simplify((-d/(e + u1*d)).subs({  # type: ignore
                 x: u1,
                 y: 1
-            })), (u1, None, x/fx)
+            })),
+            (u1, None, x/fx)
         )
         sol = logcombine(Eq(log(fx), int + log(C1)), force=True)
         gen_sol = sol.subs(fx, u).subs(((u, u - yarg), (x, x - xarg), (u, fx)))

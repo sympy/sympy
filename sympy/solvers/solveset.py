@@ -3241,8 +3241,9 @@ def substitution(
         u = Dummy('u')
         if n:
             eq = eq.subs(n, 0)
-        satisfy = eq if eq in (True,
-                               False) else checksol(u, u, eq, minimal=True)
+        satisfy = eq if eq in (True, False) else checksol(
+            u, u, eq, minimal=True
+        )
         if satisfy is False:
             delete_soln = True
             res = {}

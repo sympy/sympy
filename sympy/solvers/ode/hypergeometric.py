@@ -158,8 +158,9 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
         _delta = -gamma*sing_point[1]
         _gamma = alpha
         if len(sing_point) == 3:
-            _gamma = (_beta +
-                      sing_point[2]*alpha)/(sing_point[2] - sing_point[1])
+            _gamma = (_beta + sing_point[2]*alpha)/(
+                sing_point[2] - sing_point[1]
+            )
         mob = (alpha*x + beta)/(gamma*x + delta)
         mob = mob.subs(beta, _beta)
         mob = mob.subs(delta, _delta)
@@ -262,7 +263,9 @@ def get_sol_2F1_hypergeometric(eq, func, match_object):
     elif (c - a - b).is_integer == False:
         sol = C0*hyper([a, b], [1 + a + b - c], 1 -
                        x) + C1*hyper([c - a, c - b], [1 + c - a - b],
-                                     1 - x)*(1 - x)**(c - a - b)
+                                     1 - x)*(1 - x)**(
+                                         c - a - b
+                                     )
 
     if sol:
         # applying transformation in the solution

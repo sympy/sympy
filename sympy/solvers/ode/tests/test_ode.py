@@ -479,8 +479,9 @@ def test_solve_ics():
     assert dsolve(f(x).diff(x) - 1/f(x), f(x), ics={f(1): 2}) == \
         Eq(f(x), sqrt(2 * x + 2))
     assert dsolve(f(x).diff(x) - f(x), f(x), ics={f(0): 1}) == Eq(f(x), exp(x))
-    assert dsolve(f(x).diff(x) - f(x), f(x),
-                  ics={f(x).diff(x).subs(x, 0): 1}) == Eq(f(x), exp(x))
+    assert dsolve(
+        f(x).diff(x) - f(x), f(x), ics={f(x).diff(x).subs(x, 0): 1}
+    ) == Eq(f(x), exp(x))
     assert dsolve(
         f(x).diff(x, x) + f(x),
         f(x),
@@ -503,22 +504,24 @@ def test_solve_ics():
 
     # Test cases where dsolve returns two solutions.
     eq = (x**2*f(x)**2 - x).diff(x)
-    assert dsolve(eq, f(x), ics={f(1): 0}) == [
-                                     Eq(f(x), -sqrt(x - 1)/x),
-                                     Eq(f(x),
-                                        sqrt(x - 1)/x)
-                                 ]
-    assert dsolve(eq, f(x), ics={f(x).diff(x).subs(x, 1): 0}) == [
-                                     Eq(f(x), -sqrt(x - S.Half)/x),
-                                     Eq(f(x),
-                                        sqrt(x - S.Half)/x)
-                                 ]
+    assert dsolve(
+        eq, f(x), ics={f(1): 0}
+    ) == [Eq(f(x), -sqrt(x - 1)/x),
+          Eq(f(x),
+             sqrt(x - 1)/x)]
+    assert dsolve(
+        eq, f(x), ics={f(x).diff(x).subs(x, 1): 0}
+    ) == [Eq(f(x), -sqrt(x - S.Half)/x),
+          Eq(f(x),
+             sqrt(x - S.Half)/x)]
 
     eq = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
-    assert dsolve(eq, f(x), ics={f(0): 1}, hint='1st_exact', simplify=False
-                  ) == Eq(x*cos(f(x)) + f(x)**3/3, Rational(1, 3))
-    assert dsolve(eq, f(x), ics={f(0): 1}, hint='1st_exact', simplify=True
-                  ) == Eq(x*cos(f(x)) + f(x)**3/3, Rational(1, 3))
+    assert dsolve(
+        eq, f(x), ics={f(0): 1}, hint='1st_exact', simplify=False
+    ) == Eq(x*cos(f(x)) + f(x)**3/3, Rational(1, 3))
+    assert dsolve(
+        eq, f(x), ics={f(0): 1}, hint='1st_exact', simplify=True
+    ) == Eq(x*cos(f(x)) + f(x)**3/3, Rational(1, 3))
 
     assert solve_ics([Eq(f(x), C1*exp(x))], [f(x)], [C1], {f(0): 1}) == {C1: 1}
     assert solve_ics(

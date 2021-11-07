@@ -1404,23 +1404,23 @@ def classify_sysode(eq, funcs=None, **kwargs):
                         if coef != 0:
                             is_linear_ = False
                     else:
-                        if eqs.as_independent(diff(func, t, k),
-                                              as_Add=True)[1]:
+                        if eqs.as_independent(
+                            diff(func, t, k), as_Add=True
+                        )[1]:
                             is_linear_ = False
                 else:
                     for func_ in funcs:
                         if isinstance(func_, list):
                             for elem_func_ in func_:
-                                dep = func_coef[
-                                    j, func,
-                                    k].as_independent(elem_func_,
-                                                      as_Add=True)[1]
+                                dep = func_coef[j, func, k].as_independent(
+                                    elem_func_, as_Add=True
+                                )[1]
                                 if dep != 0:
                                     is_linear_ = False
                         else:
-                            dep = func_coef[
-                                j, func, k].as_independent(func_,
-                                                           as_Add=True)[1]
+                            dep = func_coef[j, func, k].as_independent(
+                                func_, as_Add=True
+                            )[1]
                             if dep != 0:
                                 is_linear_ = False
         return is_linear_
@@ -3154,8 +3154,9 @@ def _linear_2eq_order1_type6(x, y, t, r, eq):
                     break
 
     if p == 1:
-        equ = diff(x(t), t) - r['a']*x(t) - r[
-            'b']*(s*x(t) + C1*exp(-s*Integral(r['b'] - r['d']/s, t)))
+        equ = diff(x(t), t) - r['a']*x(t) - r['b']*(
+            s*x(t) + C1*exp(-s*Integral(r['b'] - r['d']/s, t))
+        )
         hint1 = classify_ode(equ)[1]
         sol1 = dsolve(equ, hint=hint1 + '_Integral').rhs
         sol2 = s*sol1 + C1*exp(-s*Integral(r['b'] - r['d']/s, t))

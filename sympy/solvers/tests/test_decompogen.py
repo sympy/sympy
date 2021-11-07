@@ -53,8 +53,9 @@ def test_compogen():
                     x) == sin(sqrt(cos(x**2 + 1)))
     assert compogen([Abs(x), x**2 + 3*x - 4, cos(x)],
                     x) == Abs(cos(x)**2 + 3*cos(x) - 4)
-    assert compogen([x**2 + x - sqrt(3)/2, sin(x)],
-                    x) == (sin(x)**2 + sin(x) - sqrt(3)/2)
+    assert compogen([x**2 + x - sqrt(3)/2, sin(x)], x) == (
+        sin(x)**2 + sin(x) - sqrt(3)/2
+    )
     assert compogen([Abs(x), 3*x + cos(y)**2 - 4, cos(x)], x) == \
         Abs(3*cos(x) + cos(y)**2 - 4)
     assert compogen([x**2 + 2*x + 1, x**2], x) == x**4 + 2*x**2 + 1

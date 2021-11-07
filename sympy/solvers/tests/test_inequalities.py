@@ -246,8 +246,11 @@ def test_reduce_inequalities_errors():
 
 def test__solve_inequalities():
     assert reduce_inequalities(x + y < 1, symbols=[x]) == (x < 1 - y)
-    assert reduce_inequalities(x + y >= 1,
-                               symbols=[x]) == (x < oo) & (x >= -y + 1)
+    assert reduce_inequalities(
+        x + y >= 1, symbols=[x]
+    ) == (x < oo) & (
+        x >= -y + 1
+    )
     assert reduce_inequalities(Eq(0, x - y), symbols=[x]) == Eq(x, y)
     assert reduce_inequalities(Ne(0, x - y), symbols=[x]) == Ne(x, y)
 
@@ -288,8 +291,9 @@ def test_issue_5526():
 
 
 def test_solve_univariate_inequality():
-    assert isolve(x**2 >= 4, x, relational=False
-                  ) == Union(Interval(-oo, -2), Interval(2, oo))
+    assert isolve(
+        x**2 >= 4, x, relational=False
+    ) == Union(Interval(-oo, -2), Interval(2, oo))
     assert isolve(x**2 >= 4, x) == Or(
         And(Le(2, x), Lt(x, oo)), And(Le(x, -2), Lt(-oo, x))
     )
@@ -478,8 +482,11 @@ def test__solve_inequality():
         for c in (0, 1):
             e = 2*fx - c > 0
             assert _solve_inequality(e, x, linear=True) == (fx > c/S(2))
-    assert _solve_inequality(2*x**2 + 2*x - 1 < 0, x,
-                             linear=True) == (x*(x+1) < S.Half)
+    assert _solve_inequality(
+        2*x**2 + 2*x - 1 < 0, x, linear=True
+    ) == (
+        x*(x+1) < S.Half
+    )
     assert _solve_inequality(Eq(x*y, 1), x) == Eq(x*y, 1)
     nz = Symbol('nz', nonzero=True)
     assert _solve_inequality(Eq(x*nz, 1), x) == Eq(x, 1/nz)

@@ -554,9 +554,9 @@ class BinaryQuadratic(DiophantineEquationType):
         elif discr == 0:
 
             if A == 0:
-                s = BinaryQuadratic(self.equation,
-                                    free_symbols=[y,
-                                                  x]).solve(parameters=[t, u])
+                s = BinaryQuadratic(
+                    self.equation, free_symbols=[y, x]
+                ).solve(parameters=[t, u])
                 for soln in s:
                     result.add((soln[1], soln[0]))
 
@@ -621,10 +621,9 @@ class BinaryQuadratic(DiophantineEquationType):
                             result.add((x_0, y_0))
 
             else:
-                s = BinaryQuadratic(self.equation,
-                                    free_symbols=var[::-1]).solve(
-                                        parameters=[t, u]
-                                    )  # Interchange x and y
+                s = BinaryQuadratic(
+                    self.equation, free_symbols=var[::-1]
+                ).solve(parameters=[t, u])  # Interchange x and y
                 while s:
                     result.add(s.pop()[::-1])  # and solution <--------+
 

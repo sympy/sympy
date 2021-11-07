@@ -868,8 +868,9 @@ def test_diopcoverage():
     assert base_solution_linear(0, 1, 2, t=None) == (0, 0)
     ans = (3*t - 1, -2*t + 1)
     assert base_solution_linear(4, 8, 12, t) == ans
-    assert base_solution_linear(4, 8, 12,
-                                t=None) == tuple(_.subs(t, 0) for _ in ans)
+    assert base_solution_linear(
+        4, 8, 12, t=None
+    ) == tuple(_.subs(t, 0) for _ in ans)
 
     assert cornacchia(1, 1, 20) is None
     assert cornacchia(1, 1, 5) == {(2, 1)}

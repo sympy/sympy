@@ -81,7 +81,9 @@ def test_rsolve_hyper():
     assert rsolve_hyper([-a, 1], 0, n).expand() == C0*a**n
 
     assert rsolve_hyper([-a, 0, 1], 0,
-                        n).expand() == (-1)**n*C1*a**(n/2) + C0*a**(n/2)
+                        n).expand() == (-1)**n*C1*a**(n/2) + C0*a**(
+                            n/2
+                        )
 
     assert rsolve_hyper([1, 1, 1], 0, n).expand() == \
         C0*(Rational(-1, 2) - sqrt(3)*I/2)**n + C1*(Rational(-1, 2) + sqrt(3)*I/2)**n

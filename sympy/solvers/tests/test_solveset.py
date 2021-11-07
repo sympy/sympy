@@ -820,8 +820,9 @@ def test_piecewise_solveset():
     assert solveset_real(absxm3 - y, x) == FiniteSet(-y + 3, y + 3)
 
     f = Piecewise(((x - 2)**2, x >= 0), (0, True))
-    assert solveset(f, x, domain=S.Reals
-                    ) == Union(FiniteSet(2), Interval(-oo, 0, True, True))
+    assert solveset(
+        f, x, domain=S.Reals
+    ) == Union(FiniteSet(2), Interval(-oo, 0, True, True))
 
     assert solveset(Piecewise((x + 1, x > 0), (I, True)) - I, x,
                     S.Reals) == Interval(-oo, 0)
@@ -1600,8 +1601,9 @@ def test_solveset():
     assert solveset(x**2 + f(0) + 1, x) == {-sqrt(-f(0) - 1), sqrt(-f(0) - 1)}
 
     # issue 19977
-    assert solveset(atan(log(x)) > 0, x,
-                    domain=Interval.open(0, oo)) == Interval.open(1, oo)
+    assert solveset(
+        atan(log(x)) > 0, x, domain=Interval.open(0, oo)
+    ) == Interval.open(1, oo)
 
 
 @_both_exp_pow
@@ -1721,22 +1723,22 @@ def test__solveset_multi():
 def test_conditionset():
     assert solveset(Eq(sin(x)**2 + cos(x)**2, 1), x, domain=S.Reals) is S.Reals
 
-    assert solveset(Eq(x**2 + x*sin(x), 1), x, domain=S.Reals).dummy_eq(
-        ConditionSet(x, Eq(x**2 + x*sin(x) - 1, 0), S.Reals)
-    )
+    assert solveset(
+        Eq(x**2 + x*sin(x), 1), x, domain=S.Reals
+    ).dummy_eq(ConditionSet(x, Eq(x**2 + x*sin(x) - 1, 0), S.Reals))
 
     assert dumeq(
         solveset(Eq(-I*(exp(I*x) - exp(-I*x))/2, 1), x),
         imageset(Lambda(n, 2*n*pi + pi/2), S.Integers)
     )
 
-    assert solveset(x + sin(x) > 1, x, domain=S.Reals).dummy_eq(
-        ConditionSet(x, x + sin(x) > 1, S.Reals)
-    )
+    assert solveset(
+        x + sin(x) > 1, x, domain=S.Reals
+    ).dummy_eq(ConditionSet(x, x + sin(x) > 1, S.Reals))
 
-    assert solveset(Eq(sin(Abs(x)), x), x, domain=S.Reals).dummy_eq(
-        ConditionSet(x, Eq(-x + sin(Abs(x)), 0), S.Reals)
-    )
+    assert solveset(
+        Eq(sin(Abs(x)), x), x, domain=S.Reals
+    ).dummy_eq(ConditionSet(x, Eq(-x + sin(Abs(x)), 0), S.Reals))
 
     assert solveset(y**x - z, x, S.Reals).dummy_eq(
         ConditionSet(x, Eq(y**x - z, 0), S.Reals)
@@ -2957,9 +2959,9 @@ def test_integer_domain_relational():
     assert solveset(eq6, x, S.Integers) == Range(1, 2, 1)
     assert solveset(eq7, x, S.Integers) == S.EmptySet
     assert solveset(eq8, x, domain=Range(0, 5)) == Range(0, 3, 1)
-    assert solveset(eq9, x,
-                    domain=Range(0,
-                                 5)) == Union(Range(0, 2, 1), Range(2, 5, 1))
+    assert solveset(
+        eq9, x, domain=Range(0, 5)
+    ) == Union(Range(0, 2, 1), Range(2, 5, 1))
 
     # test_issue_19794
     assert solveset(x + 2 < 0, x, S.Integers) == Range(-oo, -2, 1)
@@ -3072,8 +3074,9 @@ def test__is_finite_with_finite_vars():
 
 
 def test_issue_13550():
-    assert solveset(x**2 - 2*x - 15, symbol=x,
-                    domain=Interval(-oo, 0)) == FiniteSet(-3)
+    assert solveset(
+        x**2 - 2*x - 15, symbol=x, domain=Interval(-oo, 0)
+    ) == FiniteSet(-3)
 
 
 def test_issue_13849():

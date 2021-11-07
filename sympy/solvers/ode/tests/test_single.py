@@ -558,10 +558,12 @@ def test_nth_linear_constant_coeff_variation_of_parameters__integral():
     sol_simp = dsolve(eq, f(x), hint=our_hint, simplify=True)
     sol_nsimp = dsolve(eq, f(x), hint=our_hint, simplify=False)
     assert sol_simp != sol_nsimp
-    assert checkodesol(eq, sol_simp, order=5,
-                       solve_for_func=False) == (True, 0)
-    assert checkodesol(eq, sol_simp, order=5,
-                       solve_for_func=False) == (True, 0)
+    assert checkodesol(
+        eq, sol_simp, order=5, solve_for_func=False
+    ) == (True, 0)
+    assert checkodesol(
+        eq, sol_simp, order=5, solve_for_func=False
+    ) == (True, 0)
 
 
 @slow
