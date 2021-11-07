@@ -472,8 +472,7 @@ def bivariate_type(f, x, y, *, first=True):
         _y = Dummy()
         rv = bivariate_type(
             Poly(f.subs({
-                x: _x,
-                y: _y
+                x: _x, y: _y
             }), _x, _y), _x, _y, first=False
         )
         if rv:

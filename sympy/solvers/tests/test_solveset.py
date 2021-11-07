@@ -16,8 +16,20 @@ from sympy.functions.elementary.hyperbolic import (
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (
-    TrigonometricFunction, acos, acot, acsc, asec, asin, atan, atan2, cos, cot,
-    csc, sec, sin, tan
+    TrigonometricFunction,
+    acos,
+    acot,
+    acsc,
+    asec,
+    asin,
+    atan,
+    atan2,
+    cos,
+    cot,
+    csc,
+    sec,
+    sin,
+    tan
 )
 from sympy.functions.special.error_functions import (
     erf, erfc, erfcinv, erfinv
@@ -45,12 +57,29 @@ from sympy.physics.units import cm
 
 from sympy.solvers import solve
 from sympy.solvers.solveset import (
-    solveset_real, domain_check, solveset_complex, linear_eq_to_matrix,
-    linsolve, _is_function_class_equation, invert_real, invert_complex,
-    solveset, solve_decomposition, substitution, nonlinsolve, solvify,
-    _is_finite_with_finite_vars, _transolve, _is_exponential,
-    _solve_exponential, _is_logarithmic, _is_lambert, _solve_logarithm,
-    _term_factors, _is_modular, NonlinearError
+    solveset_real,
+    domain_check,
+    solveset_complex,
+    linear_eq_to_matrix,
+    linsolve,
+    _is_function_class_equation,
+    invert_real,
+    invert_complex,
+    solveset,
+    solve_decomposition,
+    substitution,
+    nonlinsolve,
+    solvify,
+    _is_finite_with_finite_vars,
+    _transolve,
+    _is_exponential,
+    _solve_exponential,
+    _is_logarithmic,
+    _is_lambert,
+    _solve_logarithm,
+    _term_factors,
+    _is_modular,
+    NonlinearError
 )
 
 from sympy.abc import (
@@ -187,8 +216,7 @@ def test_invert_complex():
     assert dumeq(
         invert_complex(exp(x), y, x), (
             x,
-            imageset(Lambda(n,
-                            I*(2*pi*n + arg(y)) + log(Abs(y))), S.Integers)
+            imageset(Lambda(n, I*(2*pi*n + arg(y)) + log(Abs(y))), S.Integers)
         )
     )
 
@@ -264,107 +292,83 @@ def test_is_function_class_equation():
         TrigonometricFunction, tan(x), x
     ) is True
     assert _is_function_class_equation(
-        TrigonometricFunction,
-        tan(x) - 1, x
+        TrigonometricFunction, tan(x) - 1, x
     ) is True
     assert _is_function_class_equation(
-        TrigonometricFunction,
-        tan(x) + sin(x), x
+        TrigonometricFunction, tan(x) + sin(x), x
     ) is True
     assert _is_function_class_equation(
-        TrigonometricFunction,
-        tan(x) + sin(x) - a, x
+        TrigonometricFunction, tan(x) + sin(x) - a, x
     ) is True
     assert _is_function_class_equation(
-        TrigonometricFunction,
-        sin(x)*tan(x) + sin(x), x
+        TrigonometricFunction, sin(x)*tan(x) + sin(x), x
     ) is True
     assert _is_function_class_equation(
-        TrigonometricFunction,
-        sin(x)*tan(x + a) + sin(x), x
+        TrigonometricFunction, sin(x)*tan(x + a) + sin(x), x
     ) is True
     assert _is_function_class_equation(
-        TrigonometricFunction,
-        sin(x)*tan(x*a) + sin(x), x
+        TrigonometricFunction, sin(x)*tan(x*a) + sin(x), x
     ) is True
     assert _is_function_class_equation(
-        TrigonometricFunction,
-        a*tan(x) - 1, x
+        TrigonometricFunction, a*tan(x) - 1, x
     ) is True
     assert _is_function_class_equation(
-        TrigonometricFunction,
-        tan(x)**2 + sin(x) - 1, x
+        TrigonometricFunction, tan(x)**2 + sin(x) - 1, x
     ) is True
     assert _is_function_class_equation(
-        TrigonometricFunction,
-        tan(x) + x, x
+        TrigonometricFunction, tan(x) + x, x
     ) is False
     assert _is_function_class_equation(
         TrigonometricFunction, tan(x**2), x
     ) is False
     assert _is_function_class_equation(
-        TrigonometricFunction,
-        tan(x**2) + sin(x), x
+        TrigonometricFunction, tan(x**2) + sin(x), x
     ) is False
     assert _is_function_class_equation(
-        TrigonometricFunction,
-        tan(x)**sin(x), x
+        TrigonometricFunction, tan(x)**sin(x), x
     ) is False
     assert _is_function_class_equation(
-        TrigonometricFunction,
-        tan(sin(x)) + sin(x), x
+        TrigonometricFunction, tan(sin(x)) + sin(x), x
     ) is False
     assert _is_function_class_equation(HyperbolicFunction, tanh(x), x) is True
     assert _is_function_class_equation(
-        HyperbolicFunction,
-        tanh(x) - 1, x
+        HyperbolicFunction, tanh(x) - 1, x
     ) is True
     assert _is_function_class_equation(
-        HyperbolicFunction,
-        tanh(x) + sinh(x), x
+        HyperbolicFunction, tanh(x) + sinh(x), x
     ) is True
     assert _is_function_class_equation(
-        HyperbolicFunction,
-        tanh(x) + sinh(x) - a, x
+        HyperbolicFunction, tanh(x) + sinh(x) - a, x
     ) is True
     assert _is_function_class_equation(
-        HyperbolicFunction,
-        sinh(x)*tanh(x) + sinh(x), x
+        HyperbolicFunction, sinh(x)*tanh(x) + sinh(x), x
     ) is True
     assert _is_function_class_equation(
-        HyperbolicFunction,
-        sinh(x)*tanh(x + a) + sinh(x), x
+        HyperbolicFunction, sinh(x)*tanh(x + a) + sinh(x), x
     ) is True
     assert _is_function_class_equation(
-        HyperbolicFunction,
-        sinh(x)*tanh(x*a) + sinh(x), x
+        HyperbolicFunction, sinh(x)*tanh(x*a) + sinh(x), x
     ) is True
     assert _is_function_class_equation(
-        HyperbolicFunction,
-        a*tanh(x) - 1, x
+        HyperbolicFunction, a*tanh(x) - 1, x
     ) is True
     assert _is_function_class_equation(
-        HyperbolicFunction,
-        tanh(x)**2 + sinh(x) - 1, x
+        HyperbolicFunction, tanh(x)**2 + sinh(x) - 1, x
     ) is True
     assert _is_function_class_equation(
-        HyperbolicFunction,
-        tanh(x) + x, x
+        HyperbolicFunction, tanh(x) + x, x
     ) is False
     assert _is_function_class_equation(
         HyperbolicFunction, tanh(x**2), x
     ) is False
     assert _is_function_class_equation(
-        HyperbolicFunction,
-        tanh(x**2) + sinh(x), x
+        HyperbolicFunction, tanh(x**2) + sinh(x), x
     ) is False
     assert _is_function_class_equation(
-        HyperbolicFunction,
-        tanh(x)**sinh(x), x
+        HyperbolicFunction, tanh(x)**sinh(x), x
     ) is False
     assert _is_function_class_equation(
-        HyperbolicFunction,
-        tanh(sinh(x)) + sinh(x), x
+        HyperbolicFunction, tanh(sinh(x)) + sinh(x), x
     ) is False
 
 
@@ -614,7 +618,8 @@ def test_solve_sqrt_3():
 
     assert sol._args[0] == FiniteSet(*fset)
     assert sol._args[1] == ConditionSet(
-        R, Eq(sqrt(2)*R*sqrt(1/(R+1)) + (R+1)*(sqrt(2)*sqrt(1/(R+1)) - 1), 0),
+        R,
+        Eq(sqrt(2)*R*sqrt(1/(R+1)) + (R+1)*(sqrt(2)*sqrt(1/(R+1)) - 1), 0),
         FiniteSet(*cset)
     )
 
@@ -633,8 +638,10 @@ def test_solve_sqrt_3():
                      m**2/2 - m - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 -
                      Rational(1, 4)
                  )**2
-            ), 0
-        ), S.Reals
+            ),
+            0
+        ),
+        S.Reals
     )
     assert solveset_real(eq, q) == unsolved_object
 
@@ -738,9 +745,11 @@ def test_solve_abs():
     sol = ConditionSet(
         x,
         And(
-            Contains(b, Interval(0, oo)), Contains(a + b, Interval(0, oo)),
+            Contains(b, Interval(0, oo)),
+            Contains(a + b, Interval(0, oo)),
             Contains(a - b, Interval(0, oo))
-        ), FiniteSet(-a - b - 3, -a + b - 3, a - b - 3, a + b - 3)
+        ),
+        FiniteSet(-a - b - 3, -a + b - 3, a - b - 3, a + b - 3)
     )
     eq = Abs(Abs(x + 3) - a) - b
     assert invert_real(eq, 0, x)[1] == sol
@@ -987,15 +996,15 @@ def test_solve_trig():
                 ImageSet(
                     Lambda(n, -I*(I*(2*n*pi + arg(-exp(-2*I*y))) + 2*im(y))),
                     S.Integers
-                ), S.Reals
+                ),
+                S.Reals
             )
         )
     )
 
     assert dumeq(
         solveset_real(sin(2*x)*cos(x) + cos(2*x)*sin(x) - 1, x),
-        ImageSet(Lambda(n,
-                        n*pi*Rational(2, 3) + pi/6), S.Integers)
+        ImageSet(Lambda(n, n*pi*Rational(2, 3) + pi/6), S.Integers)
     )
 
     assert dumeq(
@@ -1003,15 +1012,19 @@ def test_solve_trig():
         Union(
             ImageSet(
                 Lambda(
-                    n, 2*n*pi +
-                    atan(sqrt(2)*sqrt(-1 + sqrt(17))/(1 - sqrt(17))) + pi
-                ), S.Integers
+                    n,
+                    2*n*pi + atan(sqrt(2)*sqrt(-1 + sqrt(17))/(1 - sqrt(17))) +
+                    pi
+                ),
+                S.Integers
             ),
             ImageSet(
                 Lambda(
-                    n, 2*n*pi -
-                    atan(sqrt(2)*sqrt(-1 + sqrt(17))/(1 - sqrt(17))) + pi
-                ), S.Integers
+                    n,
+                    2*n*pi - atan(sqrt(2)*sqrt(-1 + sqrt(17))/(1 - sqrt(17))) +
+                    pi
+                ),
+                S.Integers
             )
         )
     )
@@ -1098,7 +1111,8 @@ def test_solve_trig():
         Union(
             ImageSet(
                 Lambda(
-                    n, 2*n*pi + 2*atan(
+                    n,
+                    2*n*pi + 2*atan(
                         sqrt(
                             -2*2**Rational(1, 3)*
                             (67 + 9*sqrt(57))**Rational(2, 3) +
@@ -1106,11 +1120,13 @@ def test_solve_trig():
                             (67 + 9*sqrt(57))**Rational(1, 3)
                         )/(3*(67 + 9*sqrt(57))**Rational(1, 6))
                     )
-                ), S.Integers
+                ),
+                S.Integers
             ),
             ImageSet(
                 Lambda(
-                    n, 2*n*pi - 2*atan(
+                    n,
+                    2*n*pi - 2*atan(
                         sqrt(
                             -2*2**Rational(1, 3)*
                             (67 + 9*sqrt(57))**Rational(2, 3) +
@@ -1118,7 +1134,8 @@ def test_solve_trig():
                             (67 + 9*sqrt(57))**Rational(1, 3)
                         )/(3*(67 + 9*sqrt(57))**Rational(1, 6))
                     ) + 2*pi
-                ), S.Integers
+                ),
+                S.Integers
             )
         )
     )
@@ -1170,16 +1187,16 @@ def test_solve_hyperbolic():
                 Lambda(n, 2*n*I*pi + log(sqrt(-2 + sqrt(5)))), S.Integers
             ),
             ImageSet(
-                Lambda(n,
-                       I*(2*n*pi + pi/2) + log(sqrt(2 + sqrt(5)))), S.Integers
+                Lambda(n, I*(2*n*pi + pi/2) + log(sqrt(2 + sqrt(5)))),
+                S.Integers
             ),
             ImageSet(
-                Lambda(n,
-                       I*(2*n*pi + pi) + log(sqrt(-2 + sqrt(5)))), S.Integers
+                Lambda(n, I*(2*n*pi + pi) + log(sqrt(-2 + sqrt(5)))),
+                S.Integers
             ),
             ImageSet(
-                Lambda(n,
-                       I*(2*n*pi - pi/2) + log(sqrt(2 + sqrt(5)))), S.Integers
+                Lambda(n, I*(2*n*pi - pi/2) + log(sqrt(2 + sqrt(5)))),
+                S.Integers
             )
         )
     )
@@ -1229,10 +1246,8 @@ def test_solve_hyperbolic():
     assert dumeq(
         solveset(cosh(9*x)),
         Union(
-            ImageSet(Lambda(n,
-                            I*(2*n*pi + pi/2)/9), S.Integers),
-            ImageSet(Lambda(n,
-                            I*(2*n*pi - pi/2)/9), S.Integers)
+            ImageSet(Lambda(n, I*(2*n*pi + pi/2)/9), S.Integers),
+            ImageSet(Lambda(n, I*(2*n*pi - pi/2)/9), S.Integers)
         )
     )
 
@@ -1285,7 +1300,8 @@ def test_solve_trig_hyp_symbolic():
     assert dumeq(
         solveset(sin(a*x), x),
         ConditionSet(
-            x, Ne(a, 0),
+            x,
+            Ne(a, 0),
             Union(
                 ImageSet(Lambda(n, (2*n*pi + pi)/a), S.Integers),
                 ImageSet(Lambda(n, 2*n*pi/a), S.Integers)
@@ -1296,7 +1312,8 @@ def test_solve_trig_hyp_symbolic():
     assert dumeq(
         solveset(cosh(x/a), x),
         ConditionSet(
-            x, Ne(a, 0),
+            x,
+            Ne(a, 0),
             Union(
                 ImageSet(Lambda(n, I*a*(2*n*pi + pi/2)), S.Integers),
                 ImageSet(Lambda(n, I*a*(2*n*pi - pi/2)), S.Integers)
@@ -1313,16 +1330,16 @@ def test_solve_trig_hyp_symbolic():
             Ne(b, 0) & Ne(a**2, 0),
             Union(
                 ImageSet(
-                    Lambda(n,
-                           sqrt(3)*pi*b*(2*n*pi + pi/2)/(2*a**2)), S.Integers
+                    Lambda(n, sqrt(3)*pi*b*(2*n*pi + pi/2)/(2*a**2)),
+                    S.Integers
                 ),
                 ImageSet(
-                    Lambda(n,
-                           sqrt(3)*pi*b*(2*n*pi - 5*pi/6)/(2*a**2)), S.Integers
+                    Lambda(n, sqrt(3)*pi*b*(2*n*pi - 5*pi/6)/(2*a**2)),
+                    S.Integers
                 ),
                 ImageSet(
-                    Lambda(n,
-                           sqrt(3)*pi*b*(2*n*pi - pi/6)/(2*a**2)), S.Integers
+                    Lambda(n, sqrt(3)*pi*b*(2*n*pi - pi/6)/(2*a**2)),
+                    S.Integers
                 )
             )
         )
@@ -1331,17 +1348,16 @@ def test_solve_trig_hyp_symbolic():
     assert dumeq(
         simplify(solveset(cot((1+I)*x) - cot((3 + 3*I)*x), x)),
         Union(
-            ImageSet(Lambda(n,
-                            pi*(1-I)*(4*n + 1)/4), S.Integers),
-            ImageSet(Lambda(n,
-                            pi*(1-I)*(4*n - 1)/4), S.Integers)
+            ImageSet(Lambda(n, pi*(1-I)*(4*n + 1)/4), S.Integers),
+            ImageSet(Lambda(n, pi*(1-I)*(4*n - 1)/4), S.Integers)
         )
     )
 
     assert dumeq(
         solveset(cosh((a**2 + 1)*x) - 3, x),
         ConditionSet(
-            x, Ne(a**2 + 1, 0),
+            x,
+            Ne(a**2 + 1, 0),
             Union(
                 ImageSet(
                     Lambda(n, (2*n*I*pi + log(3 - 2*sqrt(2)))/(a**2 + 1)),
@@ -1357,8 +1373,7 @@ def test_solve_trig_hyp_symbolic():
 
     ar = Symbol('ar', real=True)
     assert solveset(cosh((ar**2 + 1)*x) - 2, x, S.Reals) == FiniteSet(
-        log(sqrt(3) + 2)/(ar**2 + 1),
-        log(2 - sqrt(3))/(ar**2 + 1)
+        log(sqrt(3) + 2)/(ar**2 + 1), log(2 - sqrt(3))/(ar**2 + 1)
     )
 
 
@@ -1375,21 +1390,24 @@ def test_issue_9616():
                     n,
                     I*(2*n*pi - atan(sqrt(2)*sqrt(S.Half + sqrt(2))) + pi) +
                     log(sqrt(1 + sqrt(2)))
-                ), S.Integers
+                ),
+                S.Integers
             ),
             ImageSet(
                 Lambda(
                     n,
                     I*(2*n*pi + pi) +
                     log(-sqrt(2)/2 + sqrt(-S.Half + sqrt(2)))
-                ), S.Integers
+                ),
+                S.Integers
             ),
             ImageSet(
                 Lambda(
                     n,
                     I*(2*n*pi - pi + atan(sqrt(2)*sqrt(S.Half + sqrt(2)))) +
                     log(sqrt(1 + sqrt(2)))
-                ), S.Integers
+                ),
+                S.Integers
             )
         )
     )
@@ -1404,9 +1422,10 @@ def test_issue_9616():
                         n,
                         I*(2*n*pi + pi) +
                         log(-sqrt(2)/2 + sqrt(-S.Half + sqrt(2)))
-                    ), S.Integers
-                ), ImageSet(Lambda(n,
-                                   I*(2*n*pi + pi)/2), S.Integers)
+                    ),
+                    S.Integers
+                ),
+                ImageSet(Lambda(n, I*(2*n*pi + pi)/2), S.Integers)
             ),
             Complement(
                 ImageSet(
@@ -1415,9 +1434,10 @@ def test_issue_9616():
                         I*
                         (2*n*pi - pi + atan(sqrt(2)*sqrt(S.Half + sqrt(2)))) +
                         log(sqrt(1 + sqrt(2)))
-                    ), S.Integers
-                ), ImageSet(Lambda(n,
-                                   I*(2*n*pi + pi)/2), S.Integers)
+                    ),
+                    S.Integers
+                ),
+                ImageSet(Lambda(n, I*(2*n*pi + pi)/2), S.Integers)
             ),
             Complement(
                 ImageSet(
@@ -1426,17 +1446,19 @@ def test_issue_9616():
                         I*
                         (2*n*pi - atan(sqrt(2)*sqrt(S.Half + sqrt(2))) + pi) +
                         log(sqrt(1 + sqrt(2)))
-                    ), S.Integers
-                ), ImageSet(Lambda(n,
-                                   I*(2*n*pi + pi)/2), S.Integers)
+                    ),
+                    S.Integers
+                ),
+                ImageSet(Lambda(n, I*(2*n*pi + pi)/2), S.Integers)
             ),
             Complement(
                 ImageSet(
                     Lambda(
                         n, 2*n*I*pi + log(sqrt(2)/2 + sqrt(-S.Half + sqrt(2)))
-                    ), S.Integers
-                ), ImageSet(Lambda(n,
-                                   I*(2*n*pi + pi)/2), S.Integers)
+                    ),
+                    S.Integers
+                ),
+                ImageSet(Lambda(n, I*(2*n*pi + pi)/2), S.Integers)
             )
         )
     )
@@ -1865,7 +1887,8 @@ def test_linsolve():
     M = Matrix([[1, 2, 1, 1, 7], [1, 2, 2, -1, 12], [2, 4, 0, 6, 4]])
     system1 = A, B = M[:, :-1], M[:, -1]
     Eqns = [
-        x1 + 2*x2 + x3 + x4 - 7, x1 + 2*x2 + 2*x3 - x4 - 12,
+        x1 + 2*x2 + x3 + x4 - 7,
+        x1 + 2*x2 + 2*x3 - x4 - 12,
         2*x1 + 4*x2 + 6*x4 - 4
     ]
 
@@ -2056,8 +2079,7 @@ def test_nonlinsolve_basic():
     assert nonlinsolve([x**2 - 1], 1) == FiniteSet((x**2, ))
     assert nonlinsolve([x**2 - 1], x + y) == FiniteSet((S.EmptySet, ))
     assert nonlinsolve(
-        [Eq(1, x + y), Eq(1, -x + y - 1),
-         Eq(1, -x + y - 1)], x, y
+        [Eq(1, x + y), Eq(1, -x + y - 1), Eq(1, -x + y - 1)], x, y
     ) == FiniteSet((-S.Half, 3*S.Half))
 
 
@@ -2090,13 +2112,13 @@ def test_trig_system_fail():
     sys = [x + y - pi/2, sin(x) + sin(y) - 1]
     # solveset returns conditionset for sin(x) + sin(y) - 1
     soln_1 = (
-        ImageSet(Lambda(n, n*pi + pi/2),
-                 S.Integers), ImageSet(Lambda(n, n*pi), S.Integers)
+        ImageSet(Lambda(n, n*pi + pi/2), S.Integers),
+        ImageSet(Lambda(n, n*pi), S.Integers)
     )
     soln_1 = FiniteSet(soln_1)
     soln_2 = (
-        ImageSet(Lambda(n, n*pi),
-                 S.Integers), ImageSet(Lambda(n, n*pi + pi/2), S.Integers)
+        ImageSet(Lambda(n, n*pi), S.Integers),
+        ImageSet(Lambda(n, n*pi + pi/2), S.Integers)
     )
     soln_2 = FiniteSet(soln_2)
     soln = soln_1 + soln_2
@@ -2105,8 +2127,7 @@ def test_trig_system_fail():
     # Add more cases from here
     # http://www.vitutor.com/geometry/trigonometry/equations_systems.html#uno
     sys = [
-        sin(x) + sin(y) - (sqrt(3) + 1)/2,
-        sin(x) - sin(y) - (sqrt(3) - 1)/2
+        sin(x) + sin(y) - (sqrt(3) + 1)/2, sin(x) - sin(y) - (sqrt(3) - 1)/2
     ]
     soln_x = Union(
         ImageSet(Lambda(n, 2*n*pi + pi/3), S.Integers),
@@ -2184,23 +2205,26 @@ def test_nonlinsolve_using_substitution():
 def test_nonlinsolve_complex():
     n = Dummy('n')
     assert dumeq(
-        nonlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]), {
+        nonlinsolve([exp(x) - sin(y), 1/y - 3], [x, y]),
+        {
             (
                 ImageSet(
                     Lambda(n, 2*n*I*pi + log(sin(Rational(1, 3)))), S.Integers
-                ), Rational(1, 3)
+                ),
+                Rational(1, 3)
             )
         }
     )
 
     system = [exp(x) - sin(y), 1/exp(y) - 3]
     assert dumeq(
-        nonlinsolve(system, [x, y]), {
+        nonlinsolve(system, [x, y]),
+        {
             (
                 ImageSet(
-                    Lambda(n,
-                           I*(2*n*pi + pi) + log(sin(log(3)))), S.Integers
-                ), -log(3)
+                    Lambda(n, I*(2*n*pi + pi) + log(sin(log(3)))), S.Integers
+                ),
+                -log(3)
             ),
             (
                 ImageSet(
@@ -2208,18 +2232,21 @@ def test_nonlinsolve_complex():
                         n,
                         I*(2*n*pi + arg(sin(2*n*I*pi - log(3)))) +
                         log(Abs(sin(2*n*I*pi - log(3))))
-                    ), S.Integers
-                ), ImageSet(Lambda(n, 2*n*I*pi - log(3)), S.Integers)
+                    ),
+                    S.Integers
+                ),
+                ImageSet(Lambda(n, 2*n*I*pi - log(3)), S.Integers)
             )
         }
     )
 
     system = [exp(x) - sin(y), y**2 - 4]
     assert dumeq(
-        nonlinsolve(system, [x, y]), {
+        nonlinsolve(system, [x, y]),
+        {
             (
-                ImageSet(Lambda(n,
-                                I*(2*n*pi + pi) + log(sin(2))), S.Integers), -2
+                ImageSet(Lambda(n, I*(2*n*pi + pi) + log(sin(2))), S.Integers),
+                -2
             ), (ImageSet(Lambda(n, 2*n*I*pi + log(sin(2))), S.Integers), 2)
         }
     )
@@ -2304,7 +2331,8 @@ def test_issue_14642():
                      (S(1)/4)*cos(atan(S(172)/49)/2)/2)**2
                 )**(S(1)/6)
             )
-        ), -S(2)/3 - sqrt(3)*(
+        ),
+        -S(2)/3 - sqrt(3)*(
             (3*sqrt(3)*31985**(S(1)/4)*sin(atan(S(172)/49)/2)/2 + S(43)/2)**2 +
             (27 + 3*sqrt(3)*31985**(S(1)/4)*cos(atan(S(172)/49)/2)/2)**2
         )**(S(1)/6)*sin(
@@ -2354,7 +2382,8 @@ def test_issue_14642():
                     )
                 )/3
             )/6
-        ), -S(2)/3 - 4*re(
+        ),
+        -S(2)/3 - 4*re(
             1/(
                 (-S(1)/2 + sqrt(3)*I/2)*
                 (S(43)/2 + 27*I + sqrt(-256 + (43 + 54*I)**2)/2)**(S(1)/3)
@@ -2414,15 +2443,24 @@ def test_issue_13961():
     V = (ax, bx, cx, gx, jx, lx, mx, nx,
          q) = symbols('ax bx cx gx jx lx mx nx q')
     S = (
-        ax*q - lx*q - mx, ax - gx*q - lx, bx*q**2 + cx*q - jx*q - nx,
-        q*(-ax*q + lx*q + mx), q*(-ax + gx*q + lx)
+        ax*q - lx*q - mx,
+        ax - gx*q - lx,
+        bx*q**2 + cx*q - jx*q - nx,
+        q*(-ax*q + lx*q + mx),
+        q*(-ax + gx*q + lx)
     )
 
     sol = FiniteSet(
         (lx + mx/q, (-cx*q + jx*q + nx)/q**2, cx, mx/q**2, jx, lx, mx, nx, q),
         (
-            lx + mx/q,
-            (cx*q - jx*q - nx)/q**2* -1, cx, mx/q**2, jx, lx, mx, nx, q
+            lx + mx/q, (cx*q - jx*q - nx)/q**2* -1,
+            cx,
+            mx/q**2,
+            jx,
+            lx,
+            mx,
+            nx,
+            q
         )
     )
     assert nonlinsolve(S, *V) == sol
@@ -2461,7 +2499,8 @@ def test_issue_12032():
                      (Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3))
                  )
             )
-        )/2, -sqrt(
+        )/2,
+        -sqrt(
             Abs(
                 -2*(Rational(1, 16) + sqrt(849)/144)**(Rational(1, 3)) + 2/
                 (3*
@@ -2585,8 +2624,7 @@ def test_issue_5132_2():
     n = Dummy('n')
     soln_real = (log(-z**2 + sin(y))/2, z)
     lam = Lambda(
-        n,
-        I*(2*n*pi + arg(-z**2 + sin(y)))/2 + log(Abs(z**2 - sin(y)))/2
+        n, I*(2*n*pi + arg(-z**2 + sin(y)))/2 + log(Abs(z**2 - sin(y)))/2
     )
     img = ImageSet(lam, S.Integers)
     # not sure about the complex soln. But it looks correct.
@@ -2615,9 +2653,12 @@ def test_issue_5114_solveset():
     # problem was originally posed
     syms = [a, b, c, f, h, k, n]
     eqs = [
-        b + r/d - c/d, c*(1/d + 1/e + 1/g) - f/g - r/d,
-        f*(1/g + 1/i + 1/j) - c/g - h/i, h*(1/i + 1/l + 1/m) - f/i - k/m,
-        k*(1/m + 1/o + 1/p) - h/m - n/p, n*(1/p + 1/q) - k/p
+        b + r/d - c/d,
+        c*(1/d + 1/e + 1/g) - f/g - r/d,
+        f*(1/g + 1/i + 1/j) - c/g - h/i,
+        h*(1/i + 1/l + 1/m) - f/i - k/m,
+        k*(1/m + 1/o + 1/p) - h/m - n/p,
+        n*(1/p + 1/q) - k/p
     ]
     assert len(nonlinsolve(eqs, syms)) == 1
 
@@ -2629,7 +2670,8 @@ def _test_issue_5335():
     lam, a0, conc = symbols('lam a0 conc')
     eqs = [
         lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
-        a0*(1 - x/2)*x - 1*y - 0.743436700916726*y, x + y - conc
+        a0*(1 - x/2)*x - 1*y - 0.743436700916726*y,
+        x + y - conc
     ]
     sym = [x, y, a0]
     # there are 4 solutions but only two are valid
@@ -2637,7 +2679,8 @@ def _test_issue_5335():
     # float
     eqs = [
         lam + 2*y - a0*(1 - x/2)*x - 0.005*x/2*x,
-        a0*(1 - x/2)*x - 1*y - 0.743436700916726*y, x + y - conc
+        a0*(1 - x/2)*x - 1*y - 0.743436700916726*y,
+        x + y - conc
     ]
     sym = [x, y, a0]
     assert len(nonlinsolve(eqs, sym)) == 2
@@ -2768,35 +2811,50 @@ def test_issue_21022():
         (
             efg,
             sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*
-            sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16), efg,
-            16, 8,
+            sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
+            efg,
+            16,
+            8,
             8 + sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*
             sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
-            sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16, -8*sqrt(5)
-        ), (
+            sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16,
+            -8*sqrt(5)
+        ),
+        (
             efg,
             sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*
-            sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16), efg,
-            16, 8,
+            sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
+            efg,
+            16,
+            8,
             8 + sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*
             sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
-            sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16, 8*sqrt(5)
-        ), (
+            sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16,
+            8*sqrt(5)
+        ),
+        (
             efg,
             -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*
-            sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16), efg,
-            16, 8,
+            sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
+            efg,
+            16,
+            8,
             -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*
             sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16) + 8,
-            sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16, -8*sqrt(5)
-        ), (
+            sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16,
+            -8*sqrt(5)
+        ),
+        (
             efg,
             -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*
-            sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16), efg,
-            16, 8,
+            sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
+            efg,
+            16,
+            8,
             -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*
             sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16) + 8,
-            sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16, 8*sqrt(5)
+            sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16,
+            8*sqrt(5)
         )
     )
 
@@ -2813,7 +2871,8 @@ def test_issue_17940():
         Lambda(
             ((k1, n), ),
             I*(2*k1*pi + arg(2*n*I*pi + log(5))) + log(Abs(2*n*I*pi + log(5)))
-        ), ProductSet(S.Integers, S.Integers)
+        ),
+        ProductSet(S.Integers, S.Integers)
     )
     assert solveset(exp(exp(x)) - 5, x).dummy_eq(sol)
 
@@ -2877,8 +2936,7 @@ def test_issue_10214():
     ans = FiniteSet(-2**Rational(2, 3))
     assert solveset(x**(S(3)) + 4, x, S.Reals) == ans
     assert (x**(S(3)) + 4).subs(
-        x,
-        list(ans)[0]
+        x, list(ans)[0]
     ) == 0  # substituting ans and verifying the result.
     assert (x**(S(3)) + 4).subs(x, -(-2)**Rational(2, 3)) == 0
 
@@ -3051,8 +3109,7 @@ def test_issue_19506():
     assert solveset(eq).dummy_eq(
         Intersection(
             ConditionSet(C, Eq(im(C) + 1, 0), S.Complexes),
-            ConditionSet(C,
-                         re(C) > 0, S.Complexes)
+            ConditionSet(C, re(C) > 0, S.Complexes)
         )
     )
 
@@ -3099,8 +3156,7 @@ def test_issue_10158():
                     dom) == FiniteSet(-sqrt(10), sqrt(10))
     assert solveset(Max(Abs(x - 3) - 1, x + 2) - 3, x, dom) == FiniteSet(-1, 1)
     assert solveset(Abs(x - 1) - Abs(y), x,
-                    dom) == FiniteSet(-Abs(y) + 1,
-                                      Abs(y) + 1)
+                    dom) == FiniteSet(-Abs(y) + 1, Abs(y) + 1)
     assert solveset(Abs(x + 4*Abs(x + 1)), x,
                     dom) == FiniteSet(Rational(-4, 3), Rational(-4, 5))
     assert solveset(2*Abs(x + Abs(x + Max(3, x))) - 2, x,
@@ -3127,7 +3183,8 @@ def test_issue_14300():
             Lambda(
                 n,
                 -I*(2*n*pi + arg(-y + 1))/18000000 - log(Abs(y - 1))/18000000
-            ), S.Integers
+            ),
+            S.Integers
         )
     )
 
@@ -3225,8 +3282,7 @@ def test_exponential_complex():
 
     assert dumeq(
         solveset_complex(2**x + 4**x, x),
-        imageset(Lambda(n,
-                        I*(2*n*pi + pi)/log(2)), S.Integers)
+        imageset(Lambda(n, I*(2*n*pi + pi)/log(2)), S.Integers)
     )
     assert solveset_complex(x**z*y**z - 2,
                             z) == FiniteSet(log(2)/(log(x) + log(y)))
@@ -3244,12 +3300,10 @@ def test_exponential_complex():
     assert solveset_complex(eq, y) == FiniteSet(-a, a)
 
     union1 = imageset(
-        Lambda(n,
-               I*(2*n*pi - pi*Rational(2, 3))/log(2)), S.Integers
+        Lambda(n, I*(2*n*pi - pi*Rational(2, 3))/log(2)), S.Integers
     )
     union2 = imageset(
-        Lambda(n,
-               I*(2*n*pi + pi*Rational(2, 3))/log(2)), S.Integers
+        Lambda(n, I*(2*n*pi + pi*Rational(2, 3))/log(2)), S.Integers
     )
     assert dumeq(solveset(2**x + 4**x + 8**x, x), Union(union1, union2))
 
@@ -3311,8 +3365,7 @@ def test_exponential_symbols():
         Complement(FiniteSet((xr - zr)/log(2)), FiniteSet(0))
 
     assert solveset(a**x - b**x, x).dummy_eq(
-        ConditionSet(w,
-                     Ne(a, 0) & Ne(b, 0), FiniteSet(0))
+        ConditionSet(w, Ne(a, 0) & Ne(b, 0), FiniteSet(0))
     )
 
 
@@ -3593,7 +3646,8 @@ def test_solve_modular():
             ImageSet(
                 Lambda(n, Intersection({log(2*n + 1)/log(3)}, S.Integers)),
                 S.Naturals0
-            ), S.Integers
+            ),
+            S.Integers
         )
     )
     # Implemented for m without primitive root
@@ -3705,25 +3759,72 @@ def test_issue_18208():
     y0, y1, y2, y3, y4, y5, y6, y7, y8, y9, y10, y11 = variables
 
     eqs = [
-        x0 + x1 + x2 + x3 - 51, x0 + x1 + x4 + x5 - 46, x2 + x3 + x6 + x7 - 39,
-        x0 + x3 + x4 + x7 - 50, x1 + x2 + x5 + x6 - 35, x4 + x5 + x6 + x7 - 34,
-        x4 + x5 + x8 + x9 - 46, x10 + x11 + x6 + x7 - 23,
-        x11 + x4 + x7 + x8 - 25, x10 + x5 + x6 + x9 - 44,
-        x10 + x11 + x8 + x9 - 35, x12 + x13 + x8 + x9 - 35,
-        x10 + x11 + x14 + x15 - 29, x11 + x12 + x15 + x8 - 35,
-        x10 + x13 + x14 + x9 - 29, x12 + x13 + x14 + x15 - 29,
-        y0 + y1 + y2 + y3 - 55, y0 + y1 + y4 + y5 - 53, y2 + y3 + y6 + y7 - 56,
-        y0 + y3 + y4 + y7 - 57, y1 + y2 + y5 + y6 - 52, y4 + y5 + y6 + y7 - 54,
-        y4 + y5 + y8 + y9 - 48, y10 + y11 + y6 + y7 - 60, y11 + y4 + y7 + y8 -
-        51, y10 + y5 + y6 + y9 - 57, y10 + y11 + y8 + y9 - 54, x10 - 2,
-        x11 - 5, x12 - 1, x13 - 6, x14 - 1, x15 - 21, y0 - 12, y1 - 20
+        x0 + x1 + x2 + x3 - 51,
+        x0 + x1 + x4 + x5 - 46,
+        x2 + x3 + x6 + x7 - 39,
+        x0 + x3 + x4 + x7 - 50,
+        x1 + x2 + x5 + x6 - 35,
+        x4 + x5 + x6 + x7 - 34,
+        x4 + x5 + x8 + x9 - 46,
+        x10 + x11 + x6 + x7 - 23,
+        x11 + x4 + x7 + x8 - 25,
+        x10 + x5 + x6 + x9 - 44,
+        x10 + x11 + x8 + x9 - 35,
+        x12 + x13 + x8 + x9 - 35,
+        x10 + x11 + x14 + x15 - 29,
+        x11 + x12 + x15 + x8 - 35,
+        x10 + x13 + x14 + x9 - 29,
+        x12 + x13 + x14 + x15 - 29,
+        y0 + y1 + y2 + y3 - 55,
+        y0 + y1 + y4 + y5 - 53,
+        y2 + y3 + y6 + y7 - 56,
+        y0 + y3 + y4 + y7 - 57,
+        y1 + y2 + y5 + y6 - 52,
+        y4 + y5 + y6 + y7 - 54,
+        y4 + y5 + y8 + y9 - 48,
+        y10 + y11 + y6 + y7 - 60,
+        y11 + y4 + y7 + y8 - 51,
+        y10 + y5 + y6 + y9 - 57,
+        y10 + y11 + y8 + y9 - 54,
+        x10 - 2,
+        x11 - 5,
+        x12 - 1,
+        x13 - 6,
+        x14 - 1,
+        x15 - 21,
+        y0 - 12,
+        y1 - 20
     ]
 
     expected = [
-        38 - x3, x3 - 10, 23 - x3, x3, 12 - x7, x7 + 6, 16 - x7, x7, 8, 20, 2,
-        5, 1, 6, 1, 21, 12, 20, -y11 + y9 + 2, y11 - y9 + 21,
-        -y11 - y7 + y9 + 24, y11 + y7 - y9 - 3, 33 - y7, y7, 27 - y9, y9,
-        27 - y11, y11
+        38 - x3,
+        x3 - 10,
+        23 - x3,
+        x3,
+        12 - x7,
+        x7 + 6,
+        16 - x7,
+        x7,
+        8,
+        20,
+        2,
+        5,
+        1,
+        6,
+        1,
+        21,
+        12,
+        20,
+        -y11 + y9 + 2,
+        y11 - y9 + 21,
+        -y11 - y7 + y9 + 24,
+        y11 + y7 - y9 - 3,
+        33 - y7,
+        y7,
+        27 - y9,
+        y9,
+        27 - y11,
+        y11
     ]
 
     A, b = linear_eq_to_matrix(eqs, variables)
@@ -3756,9 +3857,34 @@ def test_issue_18208():
 
     nonlinsolve_expected = FiniteSet(
         (
-            38 - x3, x3 - 10, 23 - x3, x3, 12 - x7, x7 + 6, 16 - x7, x7, 8, 20,
-            2, 5, 1, 6, 1, 21, 12, 20, -y5 + y7 - 1, y5 - y7 + 24, 21 - y5, y5,
-            33 - y7, y7, 27 - y9, y9, -y5 + y7 - y9 + 24, y5 - y7 + y9 + 3
+            38 - x3,
+            x3 - 10,
+            23 - x3,
+            x3,
+            12 - x7,
+            x7 + 6,
+            16 - x7,
+            x7,
+            8,
+            20,
+            2,
+            5,
+            1,
+            6,
+            1,
+            21,
+            12,
+            20,
+            -y5 + y7 - 1,
+            y5 - y7 + 24,
+            21 - y5,
+            y5,
+            33 - y7,
+            y7,
+            27 - y9,
+            y9,
+            -y5 + y7 - y9 + 24,
+            y5 - y7 + y9 + 3
         )
     )
 
@@ -3774,30 +3900,100 @@ def test_substitution_with_infeasible_solution():
         p00, p01, p10, p11, c00, c01, c10, c11, m0, m1, m3, l0, l1, l2, l3
     ]
     system = [
-        -l0*c00 - l1*c01 + m0 + c00 + c01, -l0*c10 - l1*c11 + m1,
-        -l2*c00 - l3*c01 + c00 + c01, -l2*c10 - l3*c11 + m3,
-        -l0*p00 - l2*p10 + p00 + p10, -l1*p00 - l3*p10 + p00 + p10,
-        -l0*p01 - l2*p11, -l1*p01 - l3*p11, -a00 + c00*p00 + c10*p01,
-        -a01 + c01*p00 + c11*p01, -a10 + c00*p10 + c10*p11,
-        -a11 + c01*p10 + c11*p11, -m0*p00, -m1*p01, -m2*p10, -m3*p11, -m4*c00,
-        -m5*c01, -m6*c10, -m7*c11, m2, m4, m5, m6, m7
+        -l0*c00 - l1*c01 + m0 + c00 + c01,
+        -l0*c10 - l1*c11 + m1,
+        -l2*c00 - l3*c01 + c00 + c01,
+        -l2*c10 - l3*c11 + m3,
+        -l0*p00 - l2*p10 + p00 + p10,
+        -l1*p00 - l3*p10 + p00 + p10,
+        -l0*p01 - l2*p11,
+        -l1*p01 - l3*p11,
+        -a00 + c00*p00 + c10*p01,
+        -a01 + c01*p00 + c11*p01,
+        -a10 + c00*p10 + c10*p11,
+        -a11 + c01*p10 + c11*p11,
+        -m0*p00,
+        -m1*p01,
+        -m2*p10,
+        -m3*p11,
+        -m4*c00,
+        -m5*c01,
+        -m6*c10,
+        -m7*c11,
+        m2,
+        m4,
+        m5,
+        m6,
+        m7
     ]
     sol = FiniteSet(
         (
-            0, Complement(FiniteSet(p01), FiniteSet(0)), 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, l2, l3
+            0,
+            Complement(FiniteSet(p01), FiniteSet(0)),
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            l2,
+            l3
         ),
         (
-            p00, Complement(FiniteSet(p01), FiniteSet(0)), 0, p11, 0, 0, 0, 0,
-            0, 0, 0, 1, 1, -p01/p11, -p01/p11
+            p00,
+            Complement(FiniteSet(p01), FiniteSet(0)),
+            0,
+            p11,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            -p01/p11,
+            -p01/p11
         ),
         (
-            0, Complement(FiniteSet(p01), FiniteSet(0)), 0, p11, 0, 0, 0, 0, 0,
-            0, 0, 1, -l3*p11/p01, -p01/p11, l3
+            0,
+            Complement(FiniteSet(p01), FiniteSet(0)),
+            0,
+            p11,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            -l3*p11/p01,
+            -p01/p11,
+            l3
         ),
         (
-            0, Complement(FiniteSet(p01), FiniteSet(0)), 0, p11, 0, 0, 0, 0, 0,
-            0, 0, -l2*p11/p01, -l3*p11/p01, l2, l3
+            0,
+            Complement(FiniteSet(p01), FiniteSet(0)),
+            0,
+            p11,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -l2*p11/p01,
+            -l3*p11/p01,
+            l2,
+            l3
         ),
     )
     assert sol != nonlinsolve(system, solvefor)
@@ -3817,7 +4013,8 @@ def test_issue_18359():
         (
             Piecewise(
                 (0, x < 0), (Min(1, x)/2 - Min(2, x)/2 + Min(3, x)/2, True)
-            ), x >= 0
+            ),
+            x >= 0
         ), (0, True)
     )
     correct_result = Interval(1, 2)
@@ -3846,7 +4043,8 @@ def test_issue_17566_actual():
 def test_issue_17565():
     eq = Ge(
         2*(x - 2)**2/(3*(x + 1)**(Integer(1)/3)) + 2*(x-2)*
-        (x + 1)**(Integer(2)/3), 0
+        (x + 1)**(Integer(2)/3),
+        0
     )
     res = Union(Interval.Lopen(-1, -Rational(1, 4)), Interval(2, oo))
     assert solveset(eq, x, S.Reals) == res
@@ -3873,9 +4071,10 @@ def test_issue_16876():
         nonlinsolve([sin(x), 2*x - 4*y], x, y),
         FiniteSet(
             (
-                ImageSet(Lambda(n, 2*n*pi),
-                         S.Integers), ImageSet(Lambda(n, n*pi), S.Integers)
-            ), (
+                ImageSet(Lambda(n, 2*n*pi), S.Integers),
+                ImageSet(Lambda(n, n*pi), S.Integers)
+            ),
+            (
                 ImageSet(Lambda(n, 2*n*pi + pi), S.Integers),
                 ImageSet(Lambda(n, n*pi + pi/2), S.Integers)
             )

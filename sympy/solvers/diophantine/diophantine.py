@@ -29,7 +29,10 @@ from sympy.solvers.solveset import solveset_real
 from sympy.utilities import numbered_symbols
 from sympy.utilities.misc import as_int, filldedent
 from sympy.utilities.iterables import (
-    is_sequence, subsets, permute_signs, signed_permutations,
+    is_sequence,
+    subsets,
+    permute_signs,
+    signed_permutations,
     ordered_partitions
 )
 
@@ -1454,7 +1457,8 @@ def diophantine(
             ]
             permute_signs_check = [
                 HomogeneousTernaryQuadratic.name,
-                HomogeneousTernaryQuadraticNormal.name, BinaryQuadratic.name
+                HomogeneousTernaryQuadraticNormal.name,
+                BinaryQuadratic.name
             ]
             if t in permute_signs_for:
                 do_permute_signs_var = True
@@ -1543,14 +1547,18 @@ def diophantine(
         solution = diop_solve(base, param)
 
         if eq_type in [
-            Linear.name, HomogeneousTernaryQuadratic.name,
-            HomogeneousTernaryQuadraticNormal.name, GeneralPythagorean.name
+            Linear.name,
+            HomogeneousTernaryQuadratic.name,
+            HomogeneousTernaryQuadraticNormal.name,
+            GeneralPythagorean.name
         ]:
             sols.add(merge_solution(var, var_t, solution))
 
         elif eq_type in [
-            BinaryQuadratic.name, GeneralSumOfSquares.name,
-            GeneralSumOfEvenPowers.name, Univariate.name
+            BinaryQuadratic.name,
+            GeneralSumOfSquares.name,
+            GeneralSumOfEvenPowers.name,
+            Univariate.name
         ]:
             for sol in solution:
                 sols.add(merge_solution(var, var_t, sol))
@@ -2758,12 +2766,7 @@ def _transformation_to_DN(var, coeff):
 
                 # eq_3 = a*T*X**2 + A*Y**2 + f*T - A*C**2
                 coeff = {
-                    X**2: a*T,
-                    X*Y: 0,
-                    Y**2: A,
-                    X: 0,
-                    Y: 0,
-                    1: f*T - A*C**2
+                    X**2: a*T, X*Y: 0, Y**2: A, X: 0, Y: 0, 1: f*T - A*C**2
                 }
                 A_0, B_0 = _transformation_to_DN([X, Y], coeff)
                 return Matrix(2, 2, [
@@ -2939,7 +2942,8 @@ def transformation_to_normal(eq):
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type in (
-        "homogeneous_ternary_quadratic", "homogeneous_ternary_quadratic_normal"
+        "homogeneous_ternary_quadratic",
+        "homogeneous_ternary_quadratic_normal"
     ):
         return _transformation_to_normal(var, coeff)
 
@@ -3000,8 +3004,7 @@ def _transformation_to_normal(var, coeff):
 
         T_0 = _transformation_to_normal(_var, _coeff)
         return Matrix(
-            3, 3, [1, S(-B)/
-                   (2*A), S(-C)/(2*A), 0, 1, 0, 0, 0, 1]
+            3, 3, [1, S(-B)/(2*A), S(-C)/(2*A), 0, 1, 0, 0, 0, 1]
         )*T_0
 
     elif coeff[y*z] != 0:
@@ -3089,7 +3092,8 @@ def parametrize_ternary_quadratic(eq):
     var, coeff, diop_type = classify_diop(eq, _dict=False)
 
     if diop_type in (
-        "homogeneous_ternary_quadratic", "homogeneous_ternary_quadratic_normal"
+        "homogeneous_ternary_quadratic",
+        "homogeneous_ternary_quadratic_normal"
     ):
         x_0, y_0, z_0 = list(_diop_ternary_quadratic(var, coeff))[0]
         return _parametrize_ternary_quadratic((x_0, y_0, z_0), var, coeff)

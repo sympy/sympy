@@ -589,8 +589,11 @@ class FirstExact(SinglePatternODESolver):
 
         gen_sol = Eq(
             Subs(
-                Integral(m, x) + Integral(n - Integral(m, x).diff(y), y), y, fx
-            ), C1
+                Integral(m, x) + Integral(n - Integral(m, x).diff(y), y),
+                y,
+                fx
+            ),
+            C1
         )
         return [gen_sol]
 
@@ -755,7 +758,8 @@ class AlmostLinear(SinglePatternODESolver):
         x = self.ode_problem.sym
         (C1, ) = self.ode_problem.get_numbered_constants(num=1)
         gensol = Eq(
-            self.ly, (
+            self.ly,
+            (
                 (
                     C1 + Integral(
                         (self.cx/self.ax)*exp(Integral(self.bx/self.ax, x)), x
@@ -865,7 +869,8 @@ class Bernoulli(SinglePatternODESolver):
             gensol = Eq(log(fx), (C1 + Integral((-P + Q), x)))
         else:
             gensol = Eq(
-                fx**(1 - n), (
+                fx**(1 - n),
+                (
                     (
                         C1 - (n-1)*Integral(
                             Q*exp(-n*Integral(P, x))*exp(Integral(P, x)), x
@@ -1581,8 +1586,7 @@ class HomogeneousCoeffSubsDepDivIndep(SinglePatternODESolver):
             self.u = Dummy('u')
             if simplify(
                 (self.d + self.u*self.e).subs({
-                    x: 1,
-                    self.y: self.u
+                    x: 1, self.y: self.u
                 })
             ) != 0:
                 return True
@@ -1711,8 +1715,7 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
             self.u = Dummy('u')
             if simplify(
                 (self.e + self.u*self.d).subs({
-                    x: self.u,
-                    self.y: 1
+                    x: self.u, self.y: 1
                 })
             ) != 0:
                 return True
@@ -1732,8 +1735,7 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
         (C1, ) = self.ode_problem.get_numbered_constants(num=1)
         int = Integral(
             simplify((-d/(e + u1*d)).subs({  # type: ignore
-                x: u1,
-                y: 1
+                x: u1, y: 1
             })),
             (u1, None, x/fx)
         )
@@ -1805,11 +1807,15 @@ class HomogeneousCoeffBest(
         fx = self.ode_problem.func
         if simplify_flag:
             sol1 = odesimp(
-                self.ode_problem.eq, *sol1, fx,
+                self.ode_problem.eq,
+                *sol1,
+                fx,
                 "1st_homogeneous_coeff_subs_indep_div_dep"
             )
             sol2 = odesimp(
-                self.ode_problem.eq, *sol2, fx,
+                self.ode_problem.eq,
+                *sol2,
+                fx,
                 "1st_homogeneous_coeff_subs_dep_div_indep"
             )
         return min(
@@ -2916,7 +2922,8 @@ class SecondLinearBessel(SingleODESolver):
         (C1, C2) = self.ode_problem.get_numbered_constants(num=2)
         return [
             Eq(
-                f(x), (
+                f(x),
+                (
                     (x**(Rational(1 - c4, 2)))*(
                         C1*besselj(n/d4, a4*x**d4/d4) +
                         C2*bessely(n/d4, a4*x**d4/d4)

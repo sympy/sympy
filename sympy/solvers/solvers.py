@@ -16,8 +16,17 @@ from sympy.core import (S, Add, Symbol, Dummy, Expr, Mul)
 from sympy.core.assumptions import check_assumptions
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (
-    expand_mul, expand_log, Derivative, AppliedUndef, UndefinedFunction,
-    nfloat, Function, expand_power_exp, _mexpand, expand, expand_func
+    expand_mul,
+    expand_log,
+    Derivative,
+    AppliedUndef,
+    UndefinedFunction,
+    nfloat,
+    Function,
+    expand_power_exp,
+    _mexpand,
+    expand,
+    expand_func
 )
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import ilcm, Float, Rational
@@ -29,8 +38,21 @@ from sympy.core.traversal import preorder_traversal
 from sympy.logic.boolalg import And, Or, BooleanAtom
 
 from sympy.functions import (
-    log, exp, LambertW, cos, sin, tan, acos, asin, atan, Abs, re, im, arg,
-    sqrt, atan2
+    log,
+    exp,
+    LambertW,
+    cos,
+    sin,
+    tan,
+    acos,
+    asin,
+    atan,
+    Abs,
+    re,
+    im,
+    arg,
+    sqrt,
+    atan2
 )
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.trigonometric import (
@@ -965,7 +987,8 @@ def solve(f, *symbols, **flags):
         while True:
             was = fi
             fi = fi.replace(
-                Abs, lambda arg: separatevars(Abs(arg)).rewrite(Piecewise)
+                Abs,
+                lambda arg: separatevars(Abs(arg)).rewrite(Piecewise)
                 if arg.has(*symbols) else Abs(arg)
             )
             if was == fi:
@@ -1087,8 +1110,8 @@ def solve(f, *symbols, **flags):
     # Both xreplace and subs are needed below: xreplace to force substitution
     # inside Derivative, subs to handle non-straightforward substitutions
     non_inverts = [
-        (v, k.xreplace(swap_sym).subs(swap_sym))
-        for k, v in non_inverts.items()
+        (v, k.xreplace(swap_sym).subs(swap_sym)) for k,
+        v in non_inverts.items()
     ]
 
     # rationalize Floats
@@ -1175,14 +1198,16 @@ def solve(f, *symbols, **flags):
         if isinstance(solution, dict):
             solution = {
                 swap_sym.get(k, k): v.subs(swap_sym)
-                for k, v in solution.items()
+                for k,
+                v in solution.items()
             }
         elif solution and isinstance(solution,
                                      list) and isinstance(solution[0], dict):
             for i, sol in enumerate(solution):
                 solution[i] = {
                     swap_sym.get(k, k): v.subs(swap_sym)
-                    for k, v in sol.items()
+                    for k,
+                    v in sol.items()
                 }
 
     # undo the dictionary solutions returned when the system was only partially
@@ -2708,7 +2733,8 @@ def _tsolve(eq, sym, **flags):
                     # handles cases when bases are not equal and exp
                     # may or may not be equal
                     sol = _solve(
-                        exp(log(lhs.base)*lhs.exp) - exp(log(rhs)), sym,
+                        exp(log(lhs.base)*lhs.exp) - exp(log(rhs)),
+                        sym,
                         **flags
                     )
 

@@ -143,10 +143,8 @@ def test_ode_solutions():
     assert constant_renumber(constantsimp(C1*exp(2*x) + exp(x)*(C2 + C3), [C1, C2, C3])) == \
         constant_renumber(C1*exp(x) + C2*exp(2*x))
     assert constant_renumber(
-        constantsimp(Eq(f(x),
-                        I*C1*sinh(x/3) + C2*cosh(x/3)), [C1, C2])
-    ) == constant_renumber(Eq(f(x),
-                              C1*sinh(x/3) + C2*cosh(x/3)))
+        constantsimp(Eq(f(x), I*C1*sinh(x/3) + C2*cosh(x/3)), [C1, C2])
+    ) == constant_renumber(Eq(f(x), C1*sinh(x/3) + C2*cosh(x/3)))
     assert constant_renumber(constantsimp(Eq(f(x), acos((-C1)/cos(x))), [C1])) == \
         Eq(f(x), acos(C1/cos(x)))
     assert constant_renumber(

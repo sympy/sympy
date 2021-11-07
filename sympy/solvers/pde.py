@@ -52,8 +52,10 @@ from sympy.simplify.radsimp import collect
 import operator
 
 allhints = (
-    "1st_linear_constant_coeff_homogeneous", "1st_linear_constant_coeff",
-    "1st_linear_constant_coeff_Integral", "1st_linear_variable_coeff"
+    "1st_linear_constant_coeff_homogeneous",
+    "1st_linear_constant_coeff",
+    "1st_linear_constant_coeff_Integral",
+    "1st_linear_variable_coeff"
 )
 
 
@@ -179,15 +181,18 @@ def pdsolve(
         gethints = classify_pde(eq, dict=True)
         pdedict.update(
             {
-                'order': gethints['order'],
-                'default': gethints['default']
+                'order': gethints['order'], 'default': gethints['default']
             }
         )
         for hint in hints:
             try:
                 rv = _helper_simplify(
-                    eq, hint, hints[hint]['func'], hints[hint]['order'],
-                    hints[hint][hint], solvefun
+                    eq,
+                    hint,
+                    hints[hint]['func'],
+                    hints[hint]['order'],
+                    hints[hint][hint],
+                    solvefun
                 )
             except NotImplementedError as detail:
                 failed_hints[hint] = detail
@@ -198,8 +203,12 @@ def pdsolve(
 
     else:
         return _helper_simplify(
-            eq, hints['hint'], hints['func'], hints['order'],
-            hints[hints['hint']], solvefun
+            eq,
+            hints['hint'],
+            hints['func'],
+            hints['order'],
+            hints[hints['hint']],
+            solvefun
         )
 
 
@@ -576,8 +585,7 @@ def pde_1st_linear_constant_coeff_homogeneous(
     c = match[match['c']]
     d = match[match['d']]
     return Eq(
-        f(x, y),
-        exp(-S(d)/(b**2 + c**2)*(b*x + c*y))*solvefun(c*x - b*y)
+        f(x, y), exp(-S(d)/(b**2 + c**2)*(b*x + c*y))*solvefun(c*x - b*y)
     )
 
 

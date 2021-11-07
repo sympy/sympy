@@ -84,8 +84,8 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (
-        Eq(diff(x(t), t),
-           2*x(t) + 4*y(t)), Eq(diff(y(t), t), 12*x(t) + 41*y(t))
+        Eq(diff(x(t), t), 2*x(t) + 4*y(t)),
+        Eq(diff(y(t), t), 12*x(t) + 41*y(t))
     )
     sol = [Eq(x(t), 4*C1*exp(t*(-sqrt(1713)/2 + Rational(43, 2))) + 4*C2*exp(t*(sqrt(1713)/2 + \
     Rational(43, 2)))), Eq(y(t), C1*(-sqrt(1713)/2 + Rational(39, 2))*exp(t*(-sqrt(1713)/2 + \
@@ -99,8 +99,8 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (
-        Eq(diff(x(t), t),
-           x(t) + y(t) + 9), Eq(diff(y(t), t), 2*x(t) + 5*y(t) + 23)
+        Eq(diff(x(t), t), x(t) + y(t) + 9),
+        Eq(diff(y(t), t), 2*x(t) + 5*y(t) + 23)
     )
     sol = [Eq(x(t), C1*exp(t*(-sqrt(6) + 3)) + C2*exp(t*(sqrt(6) + 3)) - \
     Rational(22, 3)), Eq(y(t), C1*(-sqrt(6) + 2)*exp(t*(-sqrt(6) + 3)) + C2*(2 + \
@@ -108,16 +108,16 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (
-        Eq(diff(x(t), t),
-           x(t) + y(t) + 81), Eq(diff(y(t), t), -2*x(t) + y(t) + 23)
+        Eq(diff(x(t), t), x(t) + y(t) + 81),
+        Eq(diff(y(t), t), -2*x(t) + y(t) + 23)
     )
     sol = [Eq(x(t), (C1*sin(sqrt(2)*t) + C2*cos(sqrt(2)*t))*exp(t) - Rational(58, 3)), \
     Eq(y(t), (sqrt(2)*C1*cos(sqrt(2)*t) - sqrt(2)*C2*sin(sqrt(2)*t))*exp(t) - Rational(185, 3))]
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (
-        Eq(diff(x(t), t),
-           5*t*x(t) + 2*y(t)), Eq(diff(y(t), t), 2*x(t) + 5*t*y(t))
+        Eq(diff(x(t), t), 5*t*x(t) + 2*y(t)),
+        Eq(diff(y(t), t), 2*x(t) + 5*t*y(t))
     )
     sol = [Eq(x(t), (C1*exp(Integral(2, t).doit()) + C2*exp(-(Integral(2, t)).doit()))*\
     exp((Integral(5*t, t)).doit())), Eq(y(t), (C1*exp((Integral(2, t)).doit()) - \
@@ -125,8 +125,8 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (
-        Eq(diff(x(t), t),
-           5*t*x(t) + t**2*y(t)), Eq(diff(y(t), t), -t**2*x(t) + 5*t*y(t))
+        Eq(diff(x(t), t), 5*t*x(t) + t**2*y(t)),
+        Eq(diff(y(t), t), -t**2*x(t) + 5*t*y(t))
     )
     sol = [Eq(x(t), (C1*cos((Integral(t**2, t)).doit()) + C2*sin((Integral(t**2, t)).doit()))*\
     exp((Integral(5*t, t)).doit())), Eq(y(t), (-C1*sin((Integral(t**2, t)).doit()) + \
@@ -144,9 +144,8 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (
-        Eq(diff(x(t), t, t),
-           5*x(t) + 43*y(t)), Eq(diff(y(t), t, t),
-                                 x(t) + 9*y(t))
+        Eq(diff(x(t), t, t), 5*x(t) + 43*y(t)),
+        Eq(diff(y(t), t, t), x(t) + 9*y(t))
     )
     root0 = -sqrt(-sqrt(47) + 7)
     root1 = sqrt(-sqrt(47) + 7)
@@ -158,8 +157,8 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (
-        Eq(diff(x(t), t, t),
-           8*x(t) + 3*y(t) + 31), Eq(diff(y(t), t, t), 9*x(t) + 7*y(t) + 12)
+        Eq(diff(x(t), t, t), 8*x(t) + 3*y(t) + 31),
+        Eq(diff(y(t), t, t), 9*x(t) + 7*y(t) + 12)
     )
     root0 = -sqrt(-sqrt(109)/2 + Rational(15, 2))
     root1 = sqrt(-sqrt(109)/2 + Rational(15, 2))
@@ -171,8 +170,8 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (
-        Eq(diff(x(t), t, t) - 9*diff(y(t), t) + 7*x(t),
-           0), Eq(diff(y(t), t, t) + 9*diff(x(t), t) + 7*y(t), 0)
+        Eq(diff(x(t), t, t) - 9*diff(y(t), t) + 7*x(t), 0),
+        Eq(diff(y(t), t, t) + 9*diff(x(t), t) + 7*y(t), 0)
     )
     sol = [Eq(x(t), C1*cos(t*(Rational(9, 2) + sqrt(109)/2)) + C2*sin(t*(Rational(9, 2) + sqrt(109)/2)) + \
     C3*cos(t*(-sqrt(109)/2 + Rational(9, 2))) + C4*sin(t*(-sqrt(109)/2 + Rational(9, 2)))), Eq(y(t), -C1*sin(t*(Rational(9, 2) + sqrt(109)/2)) \
@@ -196,7 +195,8 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (
-        Eq(diff(x(t), t), 21*x(t)), Eq(diff(y(t), t), 17*x(t) + 3*y(t)),
+        Eq(diff(x(t), t), 21*x(t)),
+        Eq(diff(y(t), t), 17*x(t) + 3*y(t)),
         Eq(diff(z(t), t), 5*x(t) + 7*y(t) + 9*z(t))
     )
     sol = [Eq(x(t), C1*exp(21*t)), Eq(y(t), 17*C1*exp(21*t)/18 + C2*exp(3*t)), \
@@ -204,8 +204,8 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0, 0])
 
     eq = (
-        Eq(diff(x(t), t),
-           3*y(t) - 11*z(t)), Eq(diff(y(t), t), 7*z(t) - 3*x(t)),
+        Eq(diff(x(t), t), 3*y(t) - 11*z(t)),
+        Eq(diff(y(t), t), 7*z(t) - 3*x(t)),
         Eq(diff(z(t), t), 11*x(t) - 7*y(t))
     )
     sol = [Eq(x(t), 7*C0 + sqrt(179)*C1*cos(sqrt(179)*t) + (77*C1/3 + 130*C2/3)*sin(sqrt(179)*t)), \
@@ -214,8 +214,8 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0, 0])
 
     eq = (
-        Eq(3*diff(x(t), t),
-           4*5*(y(t) - z(t))), Eq(4*diff(y(t), t), 3*5*(z(t) - x(t))),
+        Eq(3*diff(x(t), t), 4*5*(y(t) - z(t))),
+        Eq(4*diff(y(t), t), 3*5*(z(t) - x(t))),
         Eq(5*diff(z(t), t), 3*4*(x(t) - y(t)))
     )
     sol = [Eq(x(t), C0 + 5*sqrt(2)*C1*cos(5*sqrt(2)*t) + (12*C1/5 + 164*C2/15)*sin(5*sqrt(2)*t)), \
@@ -224,8 +224,8 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0, 0])
 
     eq = (
-        Eq(diff(x(t), t),
-           4*x(t) - z(t)), Eq(diff(y(t), t), 2*x(t) + 2*y(t) - z(t)),
+        Eq(diff(x(t), t), 4*x(t) - z(t)),
+        Eq(diff(y(t), t), 2*x(t) + 2*y(t) - z(t)),
         Eq(diff(z(t), t), 3*x(t) + y(t))
     )
     sol = [Eq(x(t), C1*exp(2*t) + C2*t*exp(2*t) + C2*exp(2*t) + C3*t**2*exp(2*t)/2 + C3*t*exp(2*t) + C3*exp(2*t)), \
@@ -234,8 +234,8 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0, 0])
 
     eq = (
-        Eq(diff(x(t), t),
-           4*x(t) - y(t) - 2*z(t)), Eq(diff(y(t), t), 2*x(t) + y(t) - 2*z(t)),
+        Eq(diff(x(t), t), 4*x(t) - y(t) - 2*z(t)),
+        Eq(diff(y(t), t), 2*x(t) + y(t) - 2*z(t)),
         Eq(diff(z(t), t), 5*x(t) - 3*z(t))
     )
     sol = [Eq(x(t), C1*exp(2*t) + C2*(-sin(t) + 3*cos(t)) + C3*(3*sin(t) + cos(t))), \
@@ -257,10 +257,8 @@ def test_checksysodesol():
     assert checksysodesol(eq, sol) == (True, [0, 0])
 
     eq = (
-        Eq(x(t),
-           t*diff(x(t), t) + diff(x(t), t)*diff(y(t), t)),
-        Eq(y(t),
-           t*diff(y(t), t) + diff(y(t), t)**2)
+        Eq(x(t), t*diff(x(t), t) + diff(x(t), t)*diff(y(t), t)),
+        Eq(y(t), t*diff(y(t), t) + diff(y(t), t)**2)
     )
     sol = {Eq(x(t), C1*C2 + C1*t), Eq(y(t), C2**2 + C2*t)}
     assert checksysodesol(eq, sol) == (True, [0, 0])

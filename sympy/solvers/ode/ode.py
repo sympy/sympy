@@ -1089,8 +1089,7 @@ def classify_ode(
                 ):
                     boundary.update(
                         {
-                            'f0': funcarg.args[0],
-                            'f0val': ics[funcarg]
+                            'f0': funcarg.args[0], 'f0val': ics[funcarg]
                         }
                     )
                 else:
@@ -1169,9 +1168,7 @@ def classify_ode(
                     rseries = r.copy()
                     rseries.update(
                         {
-                            'terms': terms,
-                            'f0': point,
-                            'f0val': value
+                            'terms': terms, 'f0': point, 'f0val': value
                         }
                     )
                     matching_hints["1st_power_series"] = rseries
@@ -1183,16 +1180,14 @@ def classify_ode(
         # are analytic at x0.
         deq = a3*(f(x).diff(x, 2)) + b3*df + c3*f(x)
         r = collect(reduced_eq,
-                    [f(x).diff(x, 2), f(x).diff(x),
-                     f(x)]).match(deq)
+                    [f(x).diff(x, 2), f(x).diff(x), f(x)]).match(deq)
         ordinary = False
         if r:
             if not all(r[key].is_polynomial() for key in r):
                 n, d = reduced_eq.as_numer_denom()
                 reduced_eq = expand(n)
                 r = collect(reduced_eq,
-                            [f(x).diff(x, 2),
-                             f(x).diff(x), f(x)]).match(deq)
+                            [f(x).diff(x, 2), f(x).diff(x), f(x)]).match(deq)
         if r and r[a3] != 0:
             p = cancel(r[b3]/r[a3])  # Used below
             q = cancel(r[c3]/r[a3])  # Used below
@@ -1224,10 +1219,7 @@ def classify_ode(
                     check = q.subs(x, point)
                     if not check.has(oo, nan, zoo, -oo):
                         coeff_dict = {
-                            'p': p,
-                            'q': q,
-                            'x0': point,
-                            'terms': terms
+                            'p': p, 'q': q, 'x0': point, 'terms': terms
                         }
                         matching_hints["2nd_power_series_regular"] = coeff_dict
 

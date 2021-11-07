@@ -17,7 +17,10 @@ from sympy.solvers.ode import (classify_ode, homogeneous_order, dsolve)
 
 from sympy.solvers.ode.subscheck import checkodesol
 from sympy.solvers.ode.ode import (
-    classify_sysode, constant_renumber, constantsimp, get_numbered_constants,
+    classify_sysode,
+    constant_renumber,
+    constantsimp,
+    get_numbered_constants,
     solve_ics
 )
 
@@ -106,24 +109,43 @@ def test_dsolve_options():
     b = dsolve(eq, hint='all', simplify=False)
     c = dsolve(eq, hint='all_Integral')
     keys = [
-        '1st_exact', '1st_exact_Integral', '1st_homogeneous_coeff_best',
+        '1st_exact',
+        '1st_exact_Integral',
+        '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_dep_div_indep',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep',
-        '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear',
-        '1st_linear_Integral', 'Bernoulli', 'Bernoulli_Integral',
-        'almost_linear', 'almost_linear_Integral', 'best', 'best_hint',
-        'default', 'factorable', 'lie_group',
-        'nth_linear_euler_eq_homogeneous', 'order', 'separable',
+        '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
+        '1st_linear',
+        '1st_linear_Integral',
+        'Bernoulli',
+        'Bernoulli_Integral',
+        'almost_linear',
+        'almost_linear_Integral',
+        'best',
+        'best_hint',
+        'default',
+        'factorable',
+        'lie_group',
+        'nth_linear_euler_eq_homogeneous',
+        'order',
+        'separable',
         'separable_Integral'
     ]
     Integral_keys = [
         '1st_exact_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
-        '1st_linear_Integral', 'Bernoulli_Integral', 'almost_linear_Integral',
-        'best', 'best_hint', 'default', 'factorable',
-        'nth_linear_euler_eq_homogeneous', 'order', 'separable_Integral'
+        '1st_linear_Integral',
+        'Bernoulli_Integral',
+        'almost_linear_Integral',
+        'best',
+        'best_hint',
+        'default',
+        'factorable',
+        'nth_linear_euler_eq_homogeneous',
+        'order',
+        'separable_Integral'
     ]
     assert sorted(a.keys()) == keys
     assert a['order'] == ode_order(eq, f(x))
@@ -189,25 +211,44 @@ def test_classify_ode():
     assert classify_ode(f(x),
                         f(x)) == ('nth_algebraic', 'nth_algebraic_Integral')
     assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == (
-        'nth_algebraic', 'separable', '1st_exact', '1st_linear', 'Bernoulli',
+        'nth_algebraic',
+        'separable',
+        '1st_exact',
+        '1st_linear',
+        'Bernoulli',
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
-        '1st_homogeneous_coeff_subs_dep_div_indep', '1st_power_series',
-        'lie_group', 'nth_linear_constant_coeff_homogeneous',
-        'nth_linear_euler_eq_homogeneous', 'nth_algebraic_Integral',
-        'separable_Integral', '1st_exact_Integral', '1st_linear_Integral',
+        '1st_homogeneous_coeff_subs_dep_div_indep',
+        '1st_power_series',
+        'lie_group',
+        'nth_linear_constant_coeff_homogeneous',
+        'nth_linear_euler_eq_homogeneous',
+        'nth_algebraic_Integral',
+        'separable_Integral',
+        '1st_exact_Integral',
+        '1st_linear_Integral',
         'Bernoulli_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral'
     )
     assert classify_ode(f(x).diff(x)**2, f(x)) == (
-        'factorable', 'nth_algebraic', 'separable', '1st_exact', '1st_linear',
-        'Bernoulli', '1st_homogeneous_coeff_best',
+        'factorable',
+        'nth_algebraic',
+        'separable',
+        '1st_exact',
+        '1st_linear',
+        'Bernoulli',
+        '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
-        '1st_homogeneous_coeff_subs_dep_div_indep', '1st_power_series',
-        'lie_group', 'nth_linear_euler_eq_homogeneous',
-        'nth_algebraic_Integral', 'separable_Integral', '1st_exact_Integral',
-        '1st_linear_Integral', 'Bernoulli_Integral',
+        '1st_homogeneous_coeff_subs_dep_div_indep',
+        '1st_power_series',
+        'lie_group',
+        'nth_linear_euler_eq_homogeneous',
+        'nth_algebraic_Integral',
+        'separable_Integral',
+        '1st_exact_Integral',
+        '1st_linear_Integral',
+        'Bernoulli_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral'
     )
@@ -216,34 +257,55 @@ def test_classify_ode():
     b = classify_ode(f(x).diff(x)*f(x) + f(x)*f(x) - x*f(x), f(x))
     c = classify_ode(f(x).diff(x)/f(x) + f(x)/f(x) - x/f(x), f(x))
     assert a == (
-        '1st_exact', '1st_linear', 'Bernoulli', 'almost_linear',
-        '1st_power_series', "lie_group",
+        '1st_exact',
+        '1st_linear',
+        'Bernoulli',
+        'almost_linear',
+        '1st_power_series',
+        "lie_group",
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
-        '1st_exact_Integral', '1st_linear_Integral', 'Bernoulli_Integral',
+        '1st_exact_Integral',
+        '1st_linear_Integral',
+        'Bernoulli_Integral',
         'almost_linear_Integral',
         'nth_linear_constant_coeff_variation_of_parameters_Integral'
     )
     assert b == (
-        'factorable', '1st_linear', 'Bernoulli', '1st_power_series',
-        'lie_group', 'nth_linear_constant_coeff_undetermined_coefficients',
+        'factorable',
+        '1st_linear',
+        'Bernoulli',
+        '1st_power_series',
+        'lie_group',
+        'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
-        '1st_linear_Integral', 'Bernoulli_Integral',
+        '1st_linear_Integral',
+        'Bernoulli_Integral',
         'nth_linear_constant_coeff_variation_of_parameters_Integral'
     )
     assert c == (
-        'factorable', '1st_linear', 'Bernoulli', '1st_power_series',
-        'lie_group', 'nth_linear_constant_coeff_undetermined_coefficients',
+        'factorable',
+        '1st_linear',
+        'Bernoulli',
+        '1st_power_series',
+        'lie_group',
+        'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
-        '1st_linear_Integral', 'Bernoulli_Integral',
+        '1st_linear_Integral',
+        'Bernoulli_Integral',
         'nth_linear_constant_coeff_variation_of_parameters_Integral'
     )
 
     assert classify_ode(2*x*f(x)*f(x).diff(x) + (1+x)*f(x)**2 - exp(x),
                         f(x)) == (
-                            'factorable', '1st_exact', 'Bernoulli',
-                            'almost_linear', 'lie_group', '1st_exact_Integral',
-                            'Bernoulli_Integral', 'almost_linear_Integral'
+                            'factorable',
+                            '1st_exact',
+                            'Bernoulli',
+                            'almost_linear',
+                            'lie_group',
+                            '1st_exact_Integral',
+                            'Bernoulli_Integral',
+                            'almost_linear_Integral'
                         )
     assert 'Riccati_special_minus2' in \
         classify_ode(2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2), f(x))
@@ -259,16 +321,26 @@ def test_classify_ode():
         '1st_linear_Integral', 'Bernoulli_Integral')
     # preprocessing
     ans = (
-        'factorable', 'nth_algebraic', 'separable', '1st_exact', '1st_linear',
-        'Bernoulli', '1st_homogeneous_coeff_best',
+        'factorable',
+        'nth_algebraic',
+        'separable',
+        '1st_exact',
+        '1st_linear',
+        'Bernoulli',
+        '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
-        '1st_homogeneous_coeff_subs_dep_div_indep', '1st_power_series',
-        'lie_group', 'nth_linear_constant_coeff_undetermined_coefficients',
+        '1st_homogeneous_coeff_subs_dep_div_indep',
+        '1st_power_series',
+        'lie_group',
+        'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_euler_eq_nonhomogeneous_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         'nth_linear_euler_eq_nonhomogeneous_variation_of_parameters',
-        'nth_algebraic_Integral', 'separable_Integral', '1st_exact_Integral',
-        '1st_linear_Integral', 'Bernoulli_Integral',
+        'nth_algebraic_Integral',
+        'separable_Integral',
+        '1st_exact_Integral',
+        '1st_linear_Integral',
+        'Bernoulli_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
         'nth_linear_constant_coeff_variation_of_parameters_Integral',
@@ -316,8 +388,12 @@ def test_classify_ode():
     # test issue 22155
     a = classify_ode(f(x).diff(x) - exp(f(x) - x), f(x))
     assert a == (
-        'separable', '1st_exact', '1st_power_series', 'lie_group',
-        'separable_Integral', '1st_exact_Integral'
+        'separable',
+        '1st_exact',
+        '1st_power_series',
+        'lie_group',
+        'separable_Integral',
+        '1st_exact_Integral'
     )
 
 
@@ -448,10 +524,8 @@ def test_classify_sysode():
     assert classify_sysode(eq7) == sol7
 
     eq8 = (
-        Eq(x1,
-           P1(x(t))*Q1(y(t))*R(x(t), y(t), t)),
-        Eq(y1,
-           P1(x(t))*Q1(y(t))*R(x(t), y(t), t))
+        Eq(x1, P1(x(t))*Q1(y(t))*R(x(t), y(t), t)),
+        Eq(y1, P1(x(t))*Q1(y(t))*R(x(t), y(t), t))
     )
     sol8 = {'func': [x(t), y(t)], 'is_linear': False, 'type_of_equation': 'type4', 'eq': \
     [-P1(x(t))*Q1(y(t))*R(x(t), y(t), t) + Derivative(x(t), t), -P1(x(t))*Q1(y(t))*R(x(t), y(t), t) + \
@@ -486,34 +560,24 @@ def test_solve_ics():
         f(x).diff(x, x) + f(x),
         f(x),
         ics={
-            f(0): 1,
-            f(x).diff(x).subs(x, 0): 1
+            f(0): 1, f(x).diff(x).subs(x, 0): 1
         }
-    ) == Eq(f(x),
-            sin(x) + cos(x))
+    ) == Eq(f(x), sin(x) + cos(x))
     assert dsolve(
-        [f(x).diff(x) - f(x) + g(x),
-         g(x).diff(x) - g(x) - f(x)], [f(x), g(x)],
+        [f(x).diff(x) - f(x) + g(x), g(x).diff(x) - g(x) - f(x)], [f(x), g(x)],
         ics={
-            f(0): 1,
-            g(0): 0
+            f(0): 1, g(0): 0
         }
-    ) == [Eq(f(x),
-             exp(x)*cos(x)), Eq(g(x),
-                                exp(x)*sin(x))]
+    ) == [Eq(f(x), exp(x)*cos(x)), Eq(g(x), exp(x)*sin(x))]
 
     # Test cases where dsolve returns two solutions.
     eq = (x**2*f(x)**2 - x).diff(x)
     assert dsolve(
         eq, f(x), ics={f(1): 0}
-    ) == [Eq(f(x), -sqrt(x - 1)/x),
-          Eq(f(x),
-             sqrt(x - 1)/x)]
+    ) == [Eq(f(x), -sqrt(x - 1)/x), Eq(f(x), sqrt(x - 1)/x)]
     assert dsolve(
         eq, f(x), ics={f(x).diff(x).subs(x, 1): 0}
-    ) == [Eq(f(x), -sqrt(x - S.Half)/x),
-          Eq(f(x),
-             sqrt(x - S.Half)/x)]
+    ) == [Eq(f(x), -sqrt(x - S.Half)/x), Eq(f(x), sqrt(x - S.Half)/x)]
 
     eq = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
     assert dsolve(
@@ -525,25 +589,19 @@ def test_solve_ics():
 
     assert solve_ics([Eq(f(x), C1*exp(x))], [f(x)], [C1], {f(0): 1}) == {C1: 1}
     assert solve_ics(
-        [Eq(f(x),
-            C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {
-                f(0): 1,
-                f(pi/2): 1
-            }
+        [Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {
+            f(0): 1, f(pi/2): 1
+        }
     ) == {
-        C1: 1,
-        C2: 1
+        C1: 1, C2: 1
     }
 
     assert solve_ics(
-        [Eq(f(x),
-            C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {
-                f(0): 1,
-                f(x).diff(x).subs(x, 0): 1
-            }
+        [Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {
+            f(0): 1, f(x).diff(x).subs(x, 0): 1
+        }
     ) == {
-        C1: 1,
-        C2: 1
+        C1: 1, C2: 1
     }
 
     assert solve_ics([Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {f(0): 1}) == \
@@ -559,8 +617,7 @@ def test_solve_ics():
     K, r, f0 = symbols('K r f0')
     sol = Eq(f(x), K*f0*exp(r*x)/((-K + f0)*(f0*exp(r*x)/(-K + f0) - 1)))
     assert (
-        dsolve(Eq(f(x).diff(x),
-                  r*f(x)*(1 - f(x)/K)), f(x), ics={f(0): f0})
+        dsolve(Eq(f(x).diff(x), r*f(x)*(1 - f(x)/K)), f(x), ics={f(0): f0})
     ) == sol
 
     #Order dependent issues Refer to PR #16098
@@ -571,18 +628,18 @@ def test_solve_ics():
 
     # XXX: Ought to be ValueError
     raises(
-        ValueError, lambda: solve_ics(
-            [Eq(f(x),
-                C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {
-                    f(0): 1,
-                    f(pi): 1
-                }
+        ValueError,
+        lambda: solve_ics(
+            [Eq(f(x), C1*sin(x) + C2*cos(x))], [f(x)], [C1, C2], {
+                f(0): 1, f(pi): 1
+            }
         )
     )
 
     # Degenerate case. f'(0) is identically 0.
     raises(
-        ValueError, lambda: solve_ics(
+        ValueError,
+        lambda: solve_ics(
             [Eq(f(x), sqrt(C1 - x**2))], [f(x)], [C1],
             {f(x).diff(x).subs(x, 0): 0}
         )
@@ -612,10 +669,7 @@ def test_solve_ics():
     solved_constants1 = solve_ics(sols, funcs, constants, ics1)
     solved_constants2 = solve_ics(sols, funcs, constants, ics2)
     assert solved_constants1 == solved_constants2 == {
-        C1: 0,
-        C2: 0,
-        C3: L**2*q/(4*EI),
-        C4: -L*q/(6*EI)
+        C1: 0, C2: 0, C3: L**2*q/(4*EI), C4: -L*q/(6*EI)
     }
 
 
@@ -652,7 +706,9 @@ def test_homogeneous_order():
     assert homogeneous_order(x - y - x*sin(y/x), x, y) == 1
     assert homogeneous_order(
         (x*y + sqrt(x**4 + y**4) + x**2*(log(x) - log(y)))/
-        (pi*x**Rational(2, 3)*sqrt(y)**3), x, y
+        (pi*x**Rational(2, 3)*sqrt(y)**3),
+        x,
+        y
     ) == Rational(-1, 6)
     assert homogeneous_order(y/x*cos(y/x) - x/y*sin(y/x) + cos(y/x), x, y) == 0
     assert homogeneous_order(f(x), x, f(x)) == 1
@@ -711,8 +767,7 @@ def test_undetermined_coefficients_match():
     assert _undetermined_coefficients_match(
         sin(x)*x**2 + sin(x)*x + sin(x), x
     ) == {
-        'test': True,
-        'trialset': s
+        'test': True, 'trialset': s
     }
     assert _undetermined_coefficients_match(exp(2*x)*sin(x)*(x**2 + x + 1),
                                             x) == {
@@ -747,17 +802,22 @@ def test_undetermined_coefficients_match():
     ) == {
         'test': True,
         'trialset': {
-            x**2*cos(x)*exp(x), x,
-            cos(x), S.One,
+            x**2*cos(x)*exp(x),
+            x,
+            cos(x),
+            S.One,
             exp(x)*sin(x),
-            sin(x), x*exp(x)*sin(x), x*cos(x), x*cos(x)*exp(x), x*sin(x),
-            cos(x)*exp(x), x**2*exp(x)*sin(x)
+            sin(x),
+            x*exp(x)*sin(x),
+            x*cos(x),
+            x*cos(x)*exp(x),
+            x*sin(x),
+            cos(x)*exp(x),
+            x**2*exp(x)*sin(x)
         }
     }
     assert _undetermined_coefficients_match(4*x*sin(x - 2), x) == {
-        'trialset': {x*cos(x - 2), x*sin(x - 2),
-                     cos(x - 2),
-                     sin(x - 2)},
+        'trialset': {x*cos(x - 2), x*sin(x - 2), cos(x - 2), sin(x - 2)},
         'test': True,
     }
     assert _undetermined_coefficients_match(2**x*x, x) == \
@@ -835,20 +895,30 @@ def test_issue_4785():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
     assert classify_ode(eq, f(x)) == (
-        'factorable', '1st_exact', '1st_linear', 'almost_linear',
-        '1st_power_series', 'lie_group',
+        'factorable',
+        '1st_exact',
+        '1st_linear',
+        'almost_linear',
+        '1st_power_series',
+        'lie_group',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
-        '1st_exact_Integral', '1st_linear_Integral', 'almost_linear_Integral',
+        '1st_exact_Integral',
+        '1st_linear_Integral',
+        'almost_linear_Integral',
         'nth_linear_constant_coeff_variation_of_parameters_Integral'
     )
     # issue 4864
     eq = (x**2 + f(x)**2)*f(x).diff(x) - 2*x*f(x)
     assert classify_ode(eq, f(x)) == (
-        'factorable', '1st_exact', '1st_homogeneous_coeff_best',
+        'factorable',
+        '1st_exact',
+        '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
-        '1st_homogeneous_coeff_subs_dep_div_indep', '1st_power_series',
-        'lie_group', '1st_exact_Integral',
+        '1st_homogeneous_coeff_subs_dep_div_indep',
+        '1st_power_series',
+        'lie_group',
+        '1st_exact_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral'
     )
@@ -1017,7 +1087,9 @@ def test_2nd_power_series_ordinary():
 
     eq = (1 + x**2)*(f(x).diff(x, 2)) + 2*x*(f(x).diff(x)) - 2*f(x)
     assert classify_ode(eq) == (
-        'factorable', '2nd_hypergeometric', '2nd_hypergeometric_Integral',
+        'factorable',
+        '2nd_hypergeometric',
+        '2nd_hypergeometric_Integral',
         '2nd_power_series_ordinary'
     )
 
@@ -1115,8 +1187,7 @@ def test_issue_15913():
 def test_issue_16146():
     raises(
         ValueError,
-        lambda: dsolve([f(x).diff(x), g(x).diff(x)], [f(x), g(x),
-                                                      h(x)])
+        lambda: dsolve([f(x).diff(x), g(x).diff(x)], [f(x), g(x), h(x)])
     )
     raises(ValueError, lambda: dsolve([f(x).diff(x), g(x).diff(x)], [f(x)]))
 
@@ -1140,10 +1211,7 @@ def test_issue_13060():
     A, B = symbols("A B", cls=Function)
     t = Symbol("t")
     eq = [
-        Eq(Derivative(A(t), t),
-           A(t)*B(t)),
-        Eq(Derivative(B(t), t),
-           A(t)*B(t))
+        Eq(Derivative(A(t), t), A(t)*B(t)), Eq(Derivative(B(t), t), A(t)*B(t))
     ]
     sol = dsolve(eq)
     assert checkodesol(eq, sol) == (True, [0, 0])

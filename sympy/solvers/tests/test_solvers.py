@@ -181,8 +181,7 @@ def test_solve_args():
     assert solve([y, exp(x) + x]) == {x: -LambertW(1), y: 0}
     #     both fail
     assert solve((exp(x) - x, exp(y) - y)) == {
-        x: -LambertW(-1),
-        y: -LambertW(-1)
+        x: -LambertW(-1), y: -LambertW(-1)
     }
     # --  when symbols given
     solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
@@ -232,8 +231,7 @@ def test_solve_polynomial1():
     assert solve((x - y, x + y), [x, y]) == solution
 
     assert set(solve(x**3 - 15*x - 4,
-                     x)) == {-2 + 3**S.Half,
-                             S(4), -2 - 3**S.Half}
+                     x)) == {-2 + 3**S.Half, S(4), -2 - 3**S.Half}
 
     assert set(solve((x**2 - 1)**2 - a, x)) == \
         {sqrt(1 + sqrt(a)), -sqrt(1 + sqrt(a)),
@@ -407,11 +405,13 @@ def test_linear_system_xfail():
 def test_linear_system_function():
     a = Function('a')
     assert solve(
-        [a(0, 0) + a(0, 1) + a(1, 0) + a(1, 1), -a(1, 0) - a(1, 1)], a(0, 0),
-        a(0, 1), a(1, 0), a(1, 1)
+        [a(0, 0) + a(0, 1) + a(1, 0) + a(1, 1), -a(1, 0) - a(1, 1)],
+        a(0, 0),
+        a(0, 1),
+        a(1, 0),
+        a(1, 1)
     ) == {
-        a(1, 0): -a(1, 1),
-        a(0, 0): -a(0, 1)
+        a(1, 0): -a(1, 1), a(0, 0): -a(0, 1)
     }
 
 
@@ -448,80 +448,422 @@ def test_linear_system_symbols_doesnt_hang_2():
     M = Matrix(
         [
             [
-                66, 24, 39, 50, 88, 40, 37, 96, 16, 65, 31, 11, 37, 72, 16, 19,
-                55, 37, 28, 76
+                66,
+                24,
+                39,
+                50,
+                88,
+                40,
+                37,
+                96,
+                16,
+                65,
+                31,
+                11,
+                37,
+                72,
+                16,
+                19,
+                55,
+                37,
+                28,
+                76
             ],
             [
-                10, 93, 34, 98, 59, 44, 67, 74, 74, 94, 71, 61, 60, 23, 6, 2,
-                57, 8, 29, 78
+                10,
+                93,
+                34,
+                98,
+                59,
+                44,
+                67,
+                74,
+                74,
+                94,
+                71,
+                61,
+                60,
+                23,
+                6,
+                2,
+                57,
+                8,
+                29,
+                78
             ],
             [
-                19, 91, 57, 13, 64, 65, 24, 53, 77, 34, 85, 58, 87, 39, 39, 7,
-                36, 67, 91, 3
+                19,
+                91,
+                57,
+                13,
+                64,
+                65,
+                24,
+                53,
+                77,
+                34,
+                85,
+                58,
+                87,
+                39,
+                39,
+                7,
+                36,
+                67,
+                91,
+                3
             ],
             [
-                74, 70, 15, 53, 68, 43, 86, 83, 81, 72, 25, 46, 67, 17, 59, 25,
-                78, 39, 63, 6
+                74,
+                70,
+                15,
+                53,
+                68,
+                43,
+                86,
+                83,
+                81,
+                72,
+                25,
+                46,
+                67,
+                17,
+                59,
+                25,
+                78,
+                39,
+                63,
+                6
             ],
             [
-                69, 40, 67, 21, 67, 40, 17, 13, 93, 44, 46, 89, 62, 31, 30, 38,
-                18, 20, 12, 81
+                69,
+                40,
+                67,
+                21,
+                67,
+                40,
+                17,
+                13,
+                93,
+                44,
+                46,
+                89,
+                62,
+                31,
+                30,
+                38,
+                18,
+                20,
+                12,
+                81
             ],
             [
-                50, 22, 74, 76, 34, 45, 19, 76, 28, 28, 11, 99, 97, 82, 8, 46,
-                99, 57, 68, 35
+                50,
+                22,
+                74,
+                76,
+                34,
+                45,
+                19,
+                76,
+                28,
+                28,
+                11,
+                99,
+                97,
+                82,
+                8,
+                46,
+                99,
+                57,
+                68,
+                35
             ],
             [
-                58, 18, 45, 88, 10, 64, 9, 34, 90, 82, 17, 41, 43, 81, 45, 83,
-                22, 88, 24, 39
+                58,
+                18,
+                45,
+                88,
+                10,
+                64,
+                9,
+                34,
+                90,
+                82,
+                17,
+                41,
+                43,
+                81,
+                45,
+                83,
+                22,
+                88,
+                24,
+                39
             ],
             [
-                42, 21, 70, 68, 6, 33, 64, 81, 83, 15, 86, 75, 86, 17, 77, 34,
-                62, 72, 20, 24
+                42,
+                21,
+                70,
+                68,
+                6,
+                33,
+                64,
+                81,
+                83,
+                15,
+                86,
+                75,
+                86,
+                17,
+                77,
+                34,
+                62,
+                72,
+                20,
+                24
             ],
             [
-                7, 8, 2, 72, 71, 52, 96, 5, 32, 51, 31, 36, 79, 88, 25, 77, 29,
-                26, 33, 13
+                7,
+                8,
+                2,
+                72,
+                71,
+                52,
+                96,
+                5,
+                32,
+                51,
+                31,
+                36,
+                79,
+                88,
+                25,
+                77,
+                29,
+                26,
+                33,
+                13
             ],
             [
-                19, 31, 30, 85, 81, 39, 63, 28, 19, 12, 16, 49, 37, 66, 38, 13,
-                3, 71, 61, 51
+                19,
+                31,
+                30,
+                85,
+                81,
+                39,
+                63,
+                28,
+                19,
+                12,
+                16,
+                49,
+                37,
+                66,
+                38,
+                13,
+                3,
+                71,
+                61,
+                51
             ],
             [
-                29, 82, 80, 49, 26, 85, 1, 37, 2, 74, 54, 82, 26, 47, 54, 9,
-                35, 0, 99, 40
+                29,
+                82,
+                80,
+                49,
+                26,
+                85,
+                1,
+                37,
+                2,
+                74,
+                54,
+                82,
+                26,
+                47,
+                54,
+                9,
+                35,
+                0,
+                99,
+                40
             ],
             [
-                15, 49, 82, 91, 93, 57, 45, 25, 45, 97, 15, 98, 48, 52, 66, 24,
-                62, 54, 97, 37
+                15,
+                49,
+                82,
+                91,
+                93,
+                57,
+                45,
+                25,
+                45,
+                97,
+                15,
+                98,
+                48,
+                52,
+                66,
+                24,
+                62,
+                54,
+                97,
+                37
             ],
             [
-                62, 23, 73, 53, 52, 86, 28, 38, 0, 74, 92, 38, 97, 70, 71, 29,
-                26, 90, 67, 45
+                62,
+                23,
+                73,
+                53,
+                52,
+                86,
+                28,
+                38,
+                0,
+                74,
+                92,
+                38,
+                97,
+                70,
+                71,
+                29,
+                26,
+                90,
+                67,
+                45
             ],
             [
-                2, 32, 23, 24, 71, 37, 25, 71, 5, 41, 97, 65, 93, 13, 65, 45,
-                25, 88, 69, 50
+                2,
+                32,
+                23,
+                24,
+                71,
+                37,
+                25,
+                71,
+                5,
+                41,
+                97,
+                65,
+                93,
+                13,
+                65,
+                45,
+                25,
+                88,
+                69,
+                50
             ],
             [
-                40, 56, 1, 29, 79, 98, 79, 62, 37, 28, 45, 47, 3, 1, 32, 74,
-                98, 35, 84, 32
+                40,
+                56,
+                1,
+                29,
+                79,
+                98,
+                79,
+                62,
+                37,
+                28,
+                45,
+                47,
+                3,
+                1,
+                32,
+                74,
+                98,
+                35,
+                84,
+                32
             ],
             [
-                33, 15, 87, 79, 65, 9, 14, 63, 24, 19, 46, 28, 74, 20, 29, 96,
-                84, 91, 93, 1
+                33,
+                15,
+                87,
+                79,
+                65,
+                9,
+                14,
+                63,
+                24,
+                19,
+                46,
+                28,
+                74,
+                20,
+                29,
+                96,
+                84,
+                91,
+                93,
+                1
             ],
             [
-                97, 18, 12, 52, 1, 2, 50, 14, 52, 76, 19, 82, 41, 73, 51, 79,
-                13, 3, 82, 96
+                97,
+                18,
+                12,
+                52,
+                1,
+                2,
+                50,
+                14,
+                52,
+                76,
+                19,
+                82,
+                41,
+                73,
+                51,
+                79,
+                13,
+                3,
+                82,
+                96
             ],
             [
-                40, 28, 52, 10, 10, 71, 56, 78, 82, 5, 29, 48, 1, 26, 16, 18,
-                50, 76, 86, 52
+                40,
+                28,
+                52,
+                10,
+                10,
+                71,
+                56,
+                78,
+                82,
+                5,
+                29,
+                48,
+                1,
+                26,
+                16,
+                18,
+                50,
+                76,
+                86,
+                52
             ],
             [
-                38, 89, 83, 43, 29, 52, 90, 77, 57, 0, 67, 20, 81, 88, 48, 96,
-                88, 58, 14, 3
+                38,
+                89,
+                83,
+                43,
+                29,
+                52,
+                90,
+                77,
+                57,
+                0,
+                67,
+                20,
+                81,
+                88,
+                48,
+                96,
+                88,
+                58,
+                14,
+                3
             ]
         ]
     )
@@ -585,9 +927,7 @@ def test_linear_systemLU():
     M = Matrix([[1, 2, 0, 1], [1, 3, 2*n, 1], [4, -1, n**2, 1]])
 
     assert solve_linear_system_LU(M, [x, y, z]) == {
-        z: -3/(n**2 + 18*n),
-        x: 1 - 12*n/(n**2 + 18*n),
-        y: 6*n/(n**2 + 18*n)
+        z: -3/(n**2 + 18*n), x: 1 - 12*n/(n**2 + 18*n), y: 6*n/(n**2 + 18*n)
     }
 
 
@@ -611,10 +951,8 @@ def test_solve_transcendental():
             log(y/2 - sqrt(y**2 - 4)/2),
             log(y/2 + sqrt(y**2 - 4)/2),
         },
-        {log(y - sqrt(y**2 - 4)) - log(2),
-         log(y + sqrt(y**2 - 4)) - log(2)},
-        {log(y/2 - sqrt((y-2)*(y+2))/2),
-         log(y/2 + sqrt((y-2)*(y+2))/2)}
+        {log(y - sqrt(y**2 - 4)) - log(2), log(y + sqrt(y**2 - 4)) - log(2)},
+        {log(y/2 - sqrt((y-2)*(y+2))/2), log(y/2 + sqrt((y-2)*(y+2))/2)}
     ]
     assert solve(exp(x) - 3, x) == [log(3)]
     assert solve(Eq(exp(x), 3), x) == [log(3)]
@@ -647,8 +985,10 @@ def test_solve_transcendental():
     x9 = x3*sqrt(x8 - 5)
     x10 = x8 + 1
     ans = [
-        x7*(x0 - 5*LambertW(x2*(-x5 + x6))), x7*(x0 - 5*LambertW(x2*(x5+x6))),
-        x7*(x0 - 5*LambertW(x2*(x10-x9))), x7*(x0 - 5*LambertW(x2*(x10+x9))),
+        x7*(x0 - 5*LambertW(x2*(-x5 + x6))),
+        x7*(x0 - 5*LambertW(x2*(x5+x6))),
+        x7*(x0 - 5*LambertW(x2*(x10-x9))),
+        x7*(x0 - 5*LambertW(x2*(x10+x9))),
         x7*(x0 - 5*LambertW(-log(7**(7*x1/5))))
     ]
     assert result == ans, result
@@ -659,7 +999,8 @@ def test_solve_transcendental():
     assert solve(z*cos(2*x) - y, x) == [-acos(y/z)/2 + pi, acos(y/z)/2]
     assert solve(z*cos(sin(x)) - y, x) == [
         pi - asin(acos(y/z)),
-        asin(acos(y/z) - 2*pi) + pi, -asin(acos(y/z) - 2*pi),
+        asin(acos(y/z) - 2*pi) + pi,
+        -asin(acos(y/z) - 2*pi),
         asin(acos(y/z))
     ]
 
@@ -739,7 +1080,9 @@ def test_solve_for_functions_derivatives():
         [
             a11*x.diff(t) + a12*y.diff(t) - b1,
             a21*x.diff(t) + a22*y.diff(t) - b2
-        ], x.diff(t), y.diff(t)
+        ],
+        x.diff(t),
+        y.diff(t)
     )
     assert soln == {
         y.diff(t): (a11*b2 - a21*b1)/(a11*a22 - a12*a21),
@@ -772,8 +1115,7 @@ def test_solve_for_functions_derivatives():
     x = Symbol('x')
     f = Function('f')
     soln = solve(
-        [f(x).diff(x) + f(x).diff(x, 2) - 1,
-         f(x).diff(x) - f(x).diff(x, 2)],
+        [f(x).diff(x) + f(x).diff(x, 2) - 1, f(x).diff(x) - f(x).diff(x, 2)],
         f(x).diff(x),
         f(x).diff(x, 2)
     )
@@ -782,7 +1124,8 @@ def test_solve_for_functions_derivatives():
     soln = solve(
         [
             f(x).diff(x, 2) + f(x).diff(x, 3) - 1,
-            1 - f(x).diff(x, 2) - f(x).diff(x, 3), 1 - f(x).diff(x, 3)
+            1 - f(x).diff(x, 2) - f(x).diff(x, 3),
+            1 - f(x).diff(x, 3)
         ],
         f(x).diff(x, 2),
         f(x).diff(x, 3)
@@ -804,22 +1147,13 @@ def test_issue_3870():
     C = Matrix(2, 2, [1, 2, 3, 4])
 
     assert solve(A*B - C, [a, b, c, d]) == {
-        a: 1,
-        b: Rational(-1, 3),
-        c: 2,
-        d: -1
+        a: 1, b: Rational(-1, 3), c: 2, d: -1
     }
     assert solve([A*B - C], [a, b, c, d]) == {
-        a: 1,
-        b: Rational(-1, 3),
-        c: 2,
-        d: -1
+        a: 1, b: Rational(-1, 3), c: 2, d: -1
     }
     assert solve(Eq(A*B, C), [a, b, c, d]) == {
-        a: 1,
-        b: Rational(-1, 3),
-        c: 2,
-        d: -1
+        a: 1, b: Rational(-1, 3), c: 2, d: -1
     }
 
     assert solve([A*B - B*A], [a, b, c, d]) == {a: d, b: Rational(-2, 3)*c}
@@ -828,13 +1162,10 @@ def test_issue_3870():
 
     assert solve([Eq(A*B, B*A)], [a, b, c, d]) == {a: d, b: Rational(-2, 3)*c}
     assert solve([Eq(A*C, C*A)], [a, b, c, d]) == {
-        a: d - c,
-        b: Rational(2, 3)*c
+        a: d - c, b: Rational(2, 3)*c
     }
     assert solve([Eq(A*B, B*A), Eq(A*C, C*A)], [a, b, c, d]) == {
-        a: d,
-        b: 0,
-        c: 0
+        a: d, b: 0, c: 0
     }
 
 
@@ -985,8 +1316,7 @@ def test_PR1964():
             log(E*(Rational(-1, 2) - sqrt(3)*I/2)),
             log(E*(Rational(-1, 2) + sqrt(3)*I/2))
         ],
-        [1, log(-E/2 - sqrt(3)*E*I/2),
-         log(-E/2 + sqrt(3)*E*I/2)],
+        [1, log(-E/2 - sqrt(3)*E*I/2), log(-E/2 + sqrt(3)*E*I/2)],
     ]
 
     # coverage test
@@ -1030,8 +1360,7 @@ def test_issue_4671_4463_4467():
     assert solve(sqrt(x**2 - 1) -
                  2) in ([sqrt(5), -sqrt(5)], [-sqrt(5), sqrt(5)])
     assert solve((2**exp(y**2/x) + 2)/(x**2 + 15), y) == [
-        -sqrt(x*log(1 + I*pi/log(2))),
-        sqrt(x*log(1 + I*pi/log(2)))
+        -sqrt(x*log(1 + I*pi/log(2))), sqrt(x*log(1 + I*pi/log(2)))
     ]
 
     C1, C2 = symbols('C1 C2')
@@ -1111,7 +1440,8 @@ def test_issue_5335():
     a = 0.005
     b = 0.743436700916726
     eqs = [
-        lam + 2*y - a0*(1 - x/2)*x - a*x/2*x, a0*(1 - x/2)*x - 1*y - b*y,
+        lam + 2*y - a0*(1 - x/2)*x - a*x/2*x,
+        a0*(1 - x/2)*x - 1*y - b*y,
         x + y - conc
     ]
     sym = [x, y, a0]
@@ -1127,7 +1457,8 @@ def _test_issue_5335_float():
     a = 0.005
     b = 0.743436700916726
     eqs = [
-        lam + 2*y - a0*(1 - x/2)*x - a*x/2*x, a0*(1 - x/2)*x - 1*y - b*y,
+        lam + 2*y - a0*(1 - x/2)*x - a*x/2*x,
+        a0*(1 - x/2)*x - 1*y - b*y,
         x + y - conc
     ]
     sym = [x, y, a0]
@@ -1298,7 +1629,8 @@ def test_unrad1():
     assert solve(sqrt(x + root(x, 3)) + root(x - y, 5),
                  y) == [x + (x**Rational(1, 3) + x)**Rational(5, 2)]
     assert check(
-        unrad(sqrt(x) - root(x + 1, 3)*sqrt(x + 2) + 2), (
+        unrad(sqrt(x) - root(x + 1, 3)*sqrt(x + 2) + 2),
+        (
             s**10 + 8*s**8 + 24*s**6 - 12*s**5 - 22*s**4 - 160*s**3 -
             212*s**2 - 192*s - 56, [s, s**2 - x]
         )
@@ -1330,14 +1662,16 @@ def test_unrad1():
         (s**5 + s**3 + s - y, [s, s**5 - x - y])
     )
     assert check(
-        unrad(root(x - 1, 3) + root(x + 1, 5) + root(2, 5)), (
+        unrad(root(x - 1, 3) + root(x + 1, 5) + root(2, 5)),
+        (
             s**5 + 5*2**Rational(1, 5)*s**4 + s**3 +
             10*2**Rational(2, 5)*s**3 + 10*2**Rational(3, 5)*s**2 +
             5*2**Rational(4, 5)*s + 4, [s, s**3 - x + 1]
         )
     )
     raises(
-        NotImplementedError, lambda: unrad(
+        NotImplementedError,
+        lambda: unrad(
             (root(x, 2) + root(x, 3) + root(x, 4)).subs(x, x**5 - x + 1)
         )
     )
@@ -1370,20 +1704,23 @@ def test_unrad1():
 
     e = sqrt(x + root(x + 1, 2)) - root(x + 1, 3) - 2
     assert check(
-        unrad(e), (
+        unrad(e),
+        (
             s**6 - 2*s**5 - 7*s**4 - 3*s**3 + 26*s**2 + 40*s + 25,
             [s, s**3 - x - 1]
         )
     )
     assert check(
-        unrad(e, _reverse=True), (
+        unrad(e, _reverse=True),
+        (
             s**6 - 14*s**5 + 73*s**4 - 187*s**3 + 276*s**2 - 228*s + 89,
             [s, s**2 - x - sqrt(x + 1)]
         )
     )
     # this one needs r0, r1 reversal to work
     assert check(
-        unrad(sqrt(x + sqrt(root(x, 3) - 1)) - root(x, 6) - 2), (
+        unrad(sqrt(x + sqrt(root(x, 3) - 1)) - root(x, 6) - 2),
+        (
             s**12 - 2*s**8 - 8*s**7 - 8*s**6 + s**4 + 8*s**3 + 23*s**2 + 32*s +
             17, [s, s**6 - x]
         )
@@ -1437,7 +1774,8 @@ def test_unrad1():
     eq = root(x + 1, 3) - (root(x, 3) + root(x, 5))
     assert check(unrad(eq), (3*s**13 + 3*s**11 + s**9 - 1, [s, s**15 - x]))
     assert check(
-        unrad(eq - 2), (
+        unrad(eq - 2),
+        (
             3*s**13 + 3*s**11 + 6*s**10 + s**9 + 12*s**8 + 6*s**6 + 12*s**5 +
             12*s**3 + 7, [s, s**15 - x]
         )
@@ -1447,21 +1785,24 @@ def test_unrad1():
         (s*(4096*s**9 + 960*s**8 + 48*s**7 - s**6 - 1728), [s, s**4 - x - 1])
     )  # orig expr has two real roots: -1, -.389
     assert check(
-        unrad(root(x, 3) + root(x + 1, 4) - root(x + 2, 3)/2), (
+        unrad(root(x, 3) + root(x + 1, 4) - root(x + 2, 3)/2),
+        (
             343*s**13 + 2904*s**12 + 1344*s**11 + 512*s**10 - 1323*s**9 -
             3024*s**8 - 1728*s**7 + 1701*s**5 + 216*s**4 - 729*s,
             [s, s**4 - x - 1]
         )
     )  # orig expr has one real root: -0.048
     assert check(
-        unrad(root(x, 3)/2 - root(x + 1, 4) + root(x + 2, 3)), (
+        unrad(root(x, 3)/2 - root(x + 1, 4) + root(x + 2, 3)),
+        (
             729*s**13 - 216*s**12 + 1728*s**11 - 512*s**10 + 1701*s**9 -
             3024*s**8 + 1344*s**7 + 1323*s**5 - 2904*s**4 + 343*s,
             [s, s**4 - x - 1]
         )
     )  # orig expr has 2 real roots: -0.91, -0.15
     assert check(
-        unrad(root(x, 3)/2 - root(x + 1, 4) + root(x + 2, 3) - 2), (
+        unrad(root(x, 3)/2 - root(x + 1, 4) + root(x + 2, 3) - 2),
+        (
             729*s**13 + 1242*s**12 + 18496*s**10 + 129701*s**9 + 388602*s**8 +
             453312*s**7 - 612864*s**6 - 3337173*s**5 - 6332418*s**4 -
             7134912*s**3 - 5064768*s**2 - 2111913*s - 398034,
@@ -1510,15 +1851,18 @@ def test_unrad1():
         - 34) + 90)**2/4 - 39304/27) - 45)**(1/3))'''
     )
     assert check(
-        unrad(eq), (
+        unrad(eq),
+        (
             s* -(
                 -s**6 + sqrt(3)*s**6*I - 153*2**Rational(2, 3)*
                 3**Rational(1, 3)*s**4 + 51*12**Rational(1, 3)*s**4 -
                 102*2**Rational(2, 3)*3**Rational(5, 6)*s**4*I - 1620*s**3 +
                 1620*sqrt(3)*s**3*I + 13872*18**Rational(1, 3)*s**2 - 471648 +
                 471648*sqrt(3)*I
-            ), [
-                s, s**3 - 306*x - sqrt(3)*sqrt(31212*x**2 - 165240*x + 61484) +
+            ),
+            [
+                s,
+                s**3 - 306*x - sqrt(3)*sqrt(31212*x**2 - 165240*x + 61484) +
                 810
             ]
         )
@@ -1531,7 +1875,8 @@ def test_unrad1():
     )
     eq = root(x, 3) + root(y, 3) + root(x*y, 4)
     assert check(
-        unrad(eq), (
+        unrad(eq),
+        (
             s*y*(
                 -s**12 - 3*s**11*y - 3*s**10*y**2 - s**9*y**3 - 3*s**8*y**2 +
                 21*s**7*y**3 - 3*s**6*y**4 - 3*s**4*y**4 - 3*s**3*y**5 - y**6
@@ -1548,7 +1893,8 @@ def test_unrad1():
         -x**(S(1)/5) + x**(S(1)/3), -3**(S(1)/3) - (-1)**(S(3)/5)*3**(S(1)/5)
     )
     assert check(
-        unrad(eq), (
+        unrad(eq),
+        (
             -s**5 + s**3 - 3**(S(1)/3) -
             (-1)**(S(3)/5)*3**(S(1)/5), [s, s**15 - x]
         )
@@ -1624,9 +1970,12 @@ def test_issue_5114_solvers():
     # problem was originally posed
     syms = a, b, c, f, h, k, n
     eqs = [
-        b + r/d - c/d, c*(1/d + 1/e + 1/g) - f/g - r/d,
-        f*(1/g + 1/i + 1/j) - c/g - h/i, h*(1/i + 1/l + 1/m) - f/i - k/m,
-        k*(1/m + 1/o + 1/p) - h/m - n/p, n*(1/p + 1/q) - k/p
+        b + r/d - c/d,
+        c*(1/d + 1/e + 1/g) - f/g - r/d,
+        f*(1/g + 1/i + 1/j) - c/g - h/i,
+        h*(1/i + 1/l + 1/m) - f/i - k/m,
+        k*(1/m + 1/o + 1/p) - h/m - n/p,
+        n*(1/p + 1/q) - k/p
     ]
     assert len(solve(eqs, syms, manual=True, check=False, simplify=False)) == 1
 
@@ -1641,9 +1990,15 @@ def test_issue_5849():
     dI1, dI4, dQ2, dQ4, Q2, Q4 = symbols('dI1,dI4,dQ2,dQ4,Q2,Q4')
 
     e = (
-        I1 - I2 - I3, I3 - I4 - I5, I4 + I5 - I6, -I1 + I2 + I6,
-        -2*I1 - 2*I3 - 2*I5 - 3*I6 - dI1/2 + 12, -I4 + dQ4, -I2 + dQ2,
-        2*I3 + 2*I5 + 3*I6 - Q2, I4 - 2*I5 + 2*Q4 + dI4
+        I1 - I2 - I3,
+        I3 - I4 - I5,
+        I4 + I5 - I6,
+        -I1 + I2 + I6,
+        -2*I1 - 2*I3 - 2*I5 - 3*I6 - dI1/2 + 12,
+        -I4 + dQ4,
+        -I2 + dQ2,
+        2*I3 + 2*I5 + 3*I6 - Q2,
+        I4 - 2*I5 + 2*Q4 + dI4
     )
 
     ans = [
@@ -1684,9 +2039,15 @@ def test_issue_5849_matrix():
     dI1, dI4, dQ2, dQ4, Q2, Q4 = symbols('dI1,dI4,dQ2,dQ4,Q2,Q4')
 
     e = (
-        I1 - I2 - I3, I3 - I4 - I5, I4 + I5 - I6, -I1 + I2 + I6,
-        -2*I1 - 2*I3 - 2*I5 - 3*I6 - dI1/2 + 12, -I4 + dQ4, -I2 + dQ2,
-        2*I3 + 2*I5 + 3*I6 - Q2, I4 - 2*I5 + 2*Q4 + dI4
+        I1 - I2 - I3,
+        I3 - I4 - I5,
+        I4 + I5 - I6,
+        -I1 + I2 + I6,
+        -2*I1 - 2*I3 - 2*I5 - 3*I6 - dI1/2 + 12,
+        -I4 + dQ4,
+        -I2 + dQ2,
+        2*I3 + 2*I5 + 3*I6 - Q2,
+        I4 - 2*I5 + 2*Q4 + dI4
     )
     assert solve(e, I1, I4, Q2, Q4, dI1, dI4, dQ2, dQ4) == []
 
@@ -1709,28 +2070,13 @@ def test_issue_21882():
 
     answer = [
         {
-            a: 0,
-            f: 0,
-            b: 0,
-            d: 0,
-            c: 0,
-            g: 0
+            a: 0, f: 0, b: 0, d: 0, c: 0, g: 0
         },
         {
-            a: 0,
-            f: -d,
-            b: 0,
-            k: S(5)/6,
-            c: 0,
-            g: 0
+            a: 0, f: -d, b: 0, k: S(5)/6, c: 0, g: 0
         },
         {
-            a: -2*c,
-            f: 0,
-            b: c,
-            d: 0,
-            k: S(13)/18,
-            g: 0
+            a: -2*c, f: 0, b: c, d: 0, k: S(13)/18, g: 0
         },
     ]
 
@@ -1867,8 +2213,10 @@ def test_exclude():
         symbols('R, C, Ri, Vout, V1, Vminus, Vplus, s')
     Rf = symbols('Rf', positive=True)  # to eliminate Rf = 0 soln
     eqs = [
-        C*V1*s + Vplus*(-2*C*s - 1/R), Vminus*(-1/Ri - 1/Rf) + Vout/Rf,
-        C*Vplus*s + V1*(-C*s - 1/R) + Vout/R, -Vminus + Vplus
+        C*V1*s + Vplus*(-2*C*s - 1/R),
+        Vminus*(-1/Ri - 1/Rf) + Vout/Rf,
+        C*Vplus*s + V1*(-C*s - 1/R) + Vout/R,
+        -Vminus + Vplus
     ]
     assert solve(
         eqs, exclude=s*C*R
@@ -1880,10 +2228,7 @@ def test_exclude():
             Vout: C*R*Vplus*s + 3*Vplus + Vplus/(C*R*s)
         },
         {
-            Vplus: 0,
-            Vminus: 0,
-            V1: 0,
-            Vout: 0
+            Vplus: 0, Vminus: 0, V1: 0, Vout: 0
         },
     ]
 
@@ -1899,7 +2244,8 @@ def test_exclude():
                     Vout - 3*Vplus - sqrt(Vout**2 - 6*Vout*Vplus + 5*Vplus**2)
                 )/(2*C*Vplus*s),
                 Rf: Ri*(Vout-Vplus)/Vplus,
-            }, {
+            },
+            {
                 Vminus: Vplus,
                 V1: Vout/2 + Vplus/2 - sqrt((Vout - 5*Vplus)*(Vout-Vplus))/2,
                 R: (
@@ -1995,7 +2341,9 @@ def test_issue_6752():
 
 def test_issue_6792():
     assert solve(x*(x - 1)**2*(x+1)*(x**6 - x + 1)) == [
-        -1, 0, 1,
+        -1,
+        0,
+        1,
         CRootOf(x**6 - x + 1, 0),
         CRootOf(x**6 - x + 1, 1),
         CRootOf(x**6 - x + 1, 2),
@@ -2022,9 +2370,7 @@ def test_issues_6819_6820_6821_6248_8692():
     x = symbols('x')
     assert solve([re(x) - 1, im(x) - 2],
                  x) == [{
-                     re(x): 1,
-                     x: 1 + 2*I,
-                     im(x): 2
+                     re(x): 1, x: 1 + 2*I, im(x): 2
                  }]
 
     # check for 'dict' handling of solution
@@ -2093,8 +2439,7 @@ def test_lambert_multivariate():
     from sympy.abc import x, y
     assert _filtered_gens(Poly(x + 1/x + exp(x) + y), x) == {x, exp(x)}
     assert _lambert(x, x) == []
-    assert solve((x**2 - 2*x + 1).subs(x,
-                                       log(x) + 3*x)
+    assert solve((x**2 - 2*x + 1).subs(x, log(x) + 3*x)
                  ) == [LambertW(3*S.Exp1)/3]
     assert solve((x**2 - 2*x + 1).subs(x, (log(x) + 3*x)**2 - 1)) == \
           [LambertW(3*exp(-sqrt(2)))/3, LambertW(3*exp(sqrt(2)))/3]
@@ -2144,8 +2489,7 @@ def test_lambert_bivariate():
     assert solve(5*x - 1 + 3*exp(2 - 7*x), x) == \
         [Rational(1, 5) + LambertW(-21*exp(Rational(3, 5))/5)/7]
     assert solve((log(x) + x).subs(x, x**2 + 1)
-                 ) == [-I*sqrt(-LambertW(1) + 1),
-                       sqrt(-1 + LambertW(1))]
+                 ) == [-I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
     # check collection
     ax = a**(3*x + 5)
     ans = solve(3*log(ax) + b*log(ax) + ax, x)
@@ -2445,11 +2789,26 @@ def test_issue_8828():
 @slow
 def test_issue_2840_8155():
     assert solve(sin(3*x) + sin(6*x)) == [
-        0, pi*Rational(-5, 3), pi*Rational(-4, 3), -pi, pi*Rational(-2, 3),
-        pi*Rational(-4, 9), -pi/3, pi*Rational(-2, 9), pi*Rational(2, 9), pi/3,
-        pi*Rational(4, 9), pi*Rational(2, 3), pi, pi*Rational(4, 3),
-        pi*Rational(14, 9), pi*Rational(5, 3), pi*Rational(16, 9), 2*pi,
-        -2*I*log(-(-1)**Rational(1, 9)), -2*I*log(-(-1)**Rational(2, 9)),
+        0,
+        pi*Rational(-5, 3),
+        pi*Rational(-4, 3),
+        -pi,
+        pi*Rational(-2, 3),
+        pi*Rational(-4, 9),
+        -pi/3,
+        pi*Rational(-2, 9),
+        pi*Rational(2, 9),
+        pi/3,
+        pi*Rational(4, 9),
+        pi*Rational(2, 3),
+        pi,
+        pi*Rational(4, 3),
+        pi*Rational(14, 9),
+        pi*Rational(5, 3),
+        pi*Rational(16, 9),
+        2*pi,
+        -2*I*log(-(-1)**Rational(1, 9)),
+        -2*I*log(-(-1)**Rational(2, 9)),
         -2*I*log(-sin(pi/18) - I*cos(pi/18)),
         -2*I*log(-sin(pi/18) + I*cos(pi/18)),
         -2*I*log(sin(pi/18) - I*cos(pi/18)),
@@ -2484,8 +2843,12 @@ def test_issue_11538():
 def test_issue_12114():
     a, b, c, d, e, f, g = symbols('a,b,c,d,e,f,g')
     terms = [
-        1 + a*b + d*e, 1 + a*c + d*f, 1 + b*c + e*f, g - a**2 - d**2,
-        g - b**2 - e**2, g - c**2 - f**2
+        1 + a*b + d*e,
+        1 + a*c + d*f,
+        1 + b*c + e*f,
+        g - a**2 - d**2,
+        g - b**2 - e**2,
+        g - c**2 - f**2
     ]
     s = solve(terms, [a, b, c, d, e, f, g], dict=True)
     assert s == [
@@ -2496,35 +2859,40 @@ def test_issue_12114():
             d: f,
             e: f,
             g: -1
-        }, {
+        },
+        {
             a: sqrt(-f**2 - 1),
             b: sqrt(-f**2 - 1),
             c: sqrt(-f**2 - 1),
             d: f,
             e: f,
             g: -1
-        }, {
+        },
+        {
             a: -sqrt(3)*f/2 - sqrt(-f**2 + 2)/2,
             b: sqrt(3)*f/2 - sqrt(-f**2 + 2)/2,
             c: sqrt(-f**2 + 2),
             d: -f/2 + sqrt(-3*f**2 + 6)/2,
             e: -f/2 - sqrt(3)*sqrt(-f**2 + 2)/2,
             g: 2
-        }, {
+        },
+        {
             a: -sqrt(3)*f/2 + sqrt(-f**2 + 2)/2,
             b: sqrt(3)*f/2 + sqrt(-f**2 + 2)/2,
             c: -sqrt(-f**2 + 2),
             d: -f/2 - sqrt(-3*f**2 + 6)/2,
             e: -f/2 + sqrt(3)*sqrt(-f**2 + 2)/2,
             g: 2
-        }, {
+        },
+        {
             a: sqrt(3)*f/2 - sqrt(-f**2 + 2)/2,
             b: -sqrt(3)*f/2 - sqrt(-f**2 + 2)/2,
             c: sqrt(-f**2 + 2),
             d: -f/2 - sqrt(-3*f**2 + 6)/2,
             e: -f/2 + sqrt(3)*sqrt(-f**2 + 2)/2,
             g: 2
-        }, {
+        },
+        {
             a: sqrt(3)*f/2 + sqrt(-f**2 + 2)/2,
             b: -sqrt(3)*f/2 + sqrt(-f**2 + 2)/2,
             c: -sqrt(-f**2 + 2),
@@ -2579,19 +2947,43 @@ def test_denoms():
 def test_issue_12476():
     x0, x1, x2, x3, x4, x5 = symbols('x0 x1 x2 x3 x4 x5')
     eqns = [
-        x0**2 - x0, x0*x1 - x1, x0*x2 - x2, x0*x3 - x3, x0*x4 - x4, x0*x5 - x5,
-        x0*x1 - x1, -x0/3 + x1**2 - 2*x2/3, x1*x2 - x1/3 - x2/3 - x3/3,
-        x1*x3 - x2/3 - x3/3 - x4/3, x1*x4 - 2*x3/3 - x5/3, x1*x5 - x4,
-        x0*x2 - x2, x1*x2 - x1/3 - x2/3 - x3/3,
+        x0**2 - x0,
+        x0*x1 - x1,
+        x0*x2 - x2,
+        x0*x3 - x3,
+        x0*x4 - x4,
+        x0*x5 - x5,
+        x0*x1 - x1,
+        -x0/3 + x1**2 - 2*x2/3,
+        x1*x2 - x1/3 - x2/3 - x3/3,
+        x1*x3 - x2/3 - x3/3 - x4/3,
+        x1*x4 - 2*x3/3 - x5/3,
+        x1*x5 - x4,
+        x0*x2 - x2,
+        x1*x2 - x1/3 - x2/3 - x3/3,
         -x0/6 - x1/6 + x2**2 - x2/6 - x3/3 - x4/6,
-        -x1/6 + x2*x3 - x2/3 - x3/6 - x4/6 - x5/6, x2*x4 - x2/3 - x3/3 - x4/3,
-        x2*x5 - x3, x0*x3 - x3, x1*x3 - x2/3 - x3/3 - x4/3,
         -x1/6 + x2*x3 - x2/3 - x3/6 - x4/6 - x5/6,
-        -x0/6 - x1/6 - x2/6 + x3**2 - x3/3 - x4/6, -x1/3 - x2/3 + x3*x4 - x3/3,
-        -x2 + x3*x5, x0*x4 - x4, x1*x4 - 2*x3/3 - x5/3,
-        x2*x4 - x2/3 - x3/3 - x4/3, -x1/3 - x2/3 + x3*x4 - x3/3,
-        -x0/3 - 2*x2/3 + x4**2, -x1 + x4*x5, x0*x5 - x5, x1*x5 - x4,
-        x2*x5 - x3, -x2 + x3*x5, -x1 + x4*x5, -x0 + x5**2, x0 - 1
+        x2*x4 - x2/3 - x3/3 - x4/3,
+        x2*x5 - x3,
+        x0*x3 - x3,
+        x1*x3 - x2/3 - x3/3 - x4/3,
+        -x1/6 + x2*x3 - x2/3 - x3/6 - x4/6 - x5/6,
+        -x0/6 - x1/6 - x2/6 + x3**2 - x3/3 - x4/6,
+        -x1/3 - x2/3 + x3*x4 - x3/3,
+        -x2 + x3*x5,
+        x0*x4 - x4,
+        x1*x4 - 2*x3/3 - x5/3,
+        x2*x4 - x2/3 - x3/3 - x4/3,
+        -x1/3 - x2/3 + x3*x4 - x3/3,
+        -x0/3 - 2*x2/3 + x4**2,
+        -x1 + x4*x5,
+        x0*x5 - x5,
+        x1*x5 - x4,
+        x2*x5 - x3,
+        -x2 + x3*x5,
+        -x1 + x4*x5,
+        -x0 + x5**2,
+        x0 - 1
     ]
     sols = [
         {
@@ -2602,13 +2994,9 @@ def test_issue_12476():
             x1: Rational(-2, 3),
             x5: 1
         }, {
-            x0: 1,
-            x3: S.Half,
-            x2: Rational(-1, 2),
-            x4: 0,
-            x1: 0,
-            x5: -1
-        }, {
+            x0: 1, x3: S.Half, x2: Rational(-1, 2), x4: 0, x1: 0, x5: -1
+        },
+        {
             x0: 1,
             x3: Rational(-1, 3),
             x2: Rational(-1, 3),
@@ -2616,20 +3004,17 @@ def test_issue_12476():
             x1: Rational(1, 3),
             x5: 1
         }, {
-            x0: 1,
-            x3: 1,
-            x2: 1,
-            x4: 1,
-            x1: 1,
-            x5: 1
-        }, {
+            x0: 1, x3: 1, x2: 1, x4: 1, x1: 1, x5: 1
+        },
+        {
             x0: 1,
             x3: Rational(-1, 3),
             x2: Rational(1, 3),
             x4: sqrt(5)/3,
             x1: -sqrt(5)/3,
             x5: -1
-        }, {
+        },
+        {
             x0: 1,
             x3: Rational(-1, 3),
             x2: Rational(1, 3),
@@ -2656,9 +3041,15 @@ def test_issue_14721():
     k, h, a, b = symbols(':4')
     assert solve(
         [
-            -1 + (-k + 1)**2/b**2 + (-h - 1)**2/a**2, -1 + (-k + 1)**2/b**2 +
-            (-h + 1)**2/a**2, h, k + 2
-        ], h, k, a, b
+            -1 + (-k + 1)**2/b**2 + (-h - 1)**2/a**2,
+            -1 + (-k + 1)**2/b**2 + (-h + 1)**2/a**2,
+            h,
+            k + 2
+        ],
+        h,
+        k,
+        a,
+        b
     ) == [(0, -2, -b*sqrt(1/(b**2 - 9)), b), (0, -2, b*sqrt(1/(b**2 - 9)), b)]
     assert solve([h, h/a + 1/b**2 - 2, -h/2 + 1/b**2 - 2], a, h,
                  b) == [(a, 0, -sqrt(2)/2), (a, 0, sqrt(2)/2)]
@@ -2669,7 +3060,8 @@ def test_issue_14779():
     x = symbols('x', real=True)
     assert solve(
         sqrt(x**4 - 130*x**2 + 1089) + sqrt(x**4 - 130*x**2 + 3969) -
-        96*Abs(x)/x, x
+        96*Abs(x)/x,
+        x
     ) == [sqrt(130)]
 
 
@@ -2762,8 +3154,7 @@ def test_issue_12024():
 
 def test_issue_17452():
     assert solve((7**x)**x + pi, x) == [
-        -sqrt(log(pi) + I*pi)/sqrt(log(7)),
-        sqrt(log(pi) + I*pi)/sqrt(log(7))
+        -sqrt(log(pi) + I*pi)/sqrt(log(7)), sqrt(log(pi) + I*pi)/sqrt(log(7))
     ]
     assert solve(x**(x/11) + pi/11,
                  x) == [exp(LambertW(-11*log(11) + 11*log(pi) + 11*I*pi))]
@@ -2806,8 +3197,7 @@ def test_issue_11553():
     assert solve([eq1, eq2], x, y) == {x: -GoldenRatio, y: -1 + GoldenRatio}
     eq3 = x + 2 + TribonacciConstant
     assert solve([eq1, eq3], x, y) == {
-        x: -2 - TribonacciConstant,
-        y: 1 + TribonacciConstant
+        x: -2 - TribonacciConstant, y: 1 + TribonacciConstant
     }
 
 
@@ -2815,7 +3205,8 @@ def test_issue_19113_19102():
     t = S(1)/3
     solve(cos(x)**5 - sin(x)**5)
     assert solve(4*cos(x)**3 - 2*sin(x)**3) == [
-        atan(2**(t)), -atan(2**(t)*(1 - sqrt(3)*I)/2),
+        atan(2**(t)),
+        -atan(2**(t)*(1 - sqrt(3)*I)/2),
         -atan(2**(t)*(1 + sqrt(3)*I)/2)
     ]
     h = S.Half
@@ -2834,7 +3225,10 @@ def test_issue_19509():
     c = sqrt(5)/8
     d = sqrt(5)/4
     assert solve(1/(x - 1)**5 - 1) == [
-        2, -d + a - sqrt(-b + c), -d + a + sqrt(-b + c), d + a - sqrt(-b - c),
+        2,
+        -d + a - sqrt(-b + c),
+        -d + a + sqrt(-b + c),
+        d + a - sqrt(-b - c),
         d + a + sqrt(-b - c)
     ]
 
@@ -2882,9 +3276,7 @@ def test_issue_21034():
     a = symbols('a', real=True)
     system = [x - cosh(cos(4)), y - sinh(cos(a)), z - tanh(x)]
     assert solve(system, x, y, z) == {
-        x: cosh(cos(4)),
-        z: tanh(cosh(cos(4))),
-        y: sinh(cos(a))
+        x: cosh(cos(4)), z: tanh(cosh(cos(4))), y: sinh(cos(a))
     }
     #Constants inside hyperbolic functions should not be rewritten in terms of exp
     newsystem = [(exp(x) - exp(-x)) - tanh(x)*(exp(x) + exp(-x)) + x - 5]

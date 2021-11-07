@@ -5,7 +5,11 @@ from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.core import S
 from sympy.solvers.pde import (
-    pde_separate, pde_separate_add, pde_separate_mul, pdsolve, classify_pde,
+    pde_separate,
+    pde_separate_add,
+    pde_separate_mul,
+    pdsolve,
+    classify_pde,
     checkpdesol
 )
 from sympy.testing.pytest import raises
@@ -42,15 +46,13 @@ def test_pde_separate_mul():
 
     # Duplicate arguments in functions
     raises(
-        ValueError,
-        lambda: pde_separate_mul(eq, F(x, y, z), [X(x), u(z, z)])
+        ValueError, lambda: pde_separate_mul(eq, F(x, y, z), [X(x), u(z, z)])
     )
     # Wrong number of arguments
     raises(ValueError, lambda: pde_separate_mul(eq, F(x, y, z), [X(x), Y(y)]))
     # Wrong variables: [x, y] -> [x, z]
     raises(
-        ValueError,
-        lambda: pde_separate_mul(eq, F(x, y, z), [X(t), Y(x, y)])
+        ValueError, lambda: pde_separate_mul(eq, F(x, y, z), [X(t), Y(x, y)])
     )
 
     assert pde_separate_mul(eq, F(x, y, z), [Y(y), u(x, z)]) == \
@@ -66,7 +68,8 @@ def test_pde_separate_mul():
     # Laplace equation in cylindrical coords
     eq = Eq(
         1/r*D(Phi(r, theta, z), r) + D(Phi(r, theta, z), r, 2) +
-        1/r**2*D(Phi(r, theta, z), theta, 2) + D(Phi(r, theta, z), z, 2), 0
+        1/r**2*D(Phi(r, theta, z), theta, 2) + D(Phi(r, theta, z), z, 2),
+        0
     )
     # Separate z
     res = pde_separate_mul(eq, Phi(r, theta, z), [Z(z), u(theta, r)])
@@ -199,8 +202,7 @@ def test_pde_1st_linear_constant_coeff():
     eq = 2*u + -u.diff(x) + 3*u.diff(y) + sin(x)
     sol = pdsolve(eq)
     assert sol == Eq(
-        f(x, y),
-        F(3*x + y)*exp(x/5 - 3*y/5) - 2*sin(x)/5 - cos(x)/5
+        f(x, y), F(3*x + y)*exp(x/5 - 3*y/5) - 2*sin(x)/5 - cos(x)/5
     )
     assert classify_pde(eq) == (
         '1st_linear_constant_coeff', '1st_linear_constant_coeff_Integral'
@@ -229,8 +231,10 @@ def test_pdsolve_all():
     eq = u + u.diff(x) + u.diff(y) + x**2*y
     sol = pdsolve(eq, hint='all')
     keys = [
-        '1st_linear_constant_coeff', '1st_linear_constant_coeff_Integral',
-        'default', 'order'
+        '1st_linear_constant_coeff',
+        '1st_linear_constant_coeff_Integral',
+        'default',
+        'order'
     ]
     assert sorted(sol.keys()) == keys
     assert sol['order'] == 1

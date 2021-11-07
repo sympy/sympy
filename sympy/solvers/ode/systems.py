@@ -58,8 +58,8 @@ def _simpsol(soleq):
         if type(coeff) is Piecewise:
             coeff = Piecewise(
                 *(
-                    (ratsimp(coef).collect(syms), cond)
-                    for coef, cond in coeff.args
+                    (ratsimp(coef).collect(syms), cond) for coef,
+                    cond in coeff.args
                 )
             )
         else:
@@ -690,16 +690,20 @@ def matrix_exp_jordan_form(A, t):
                 exprt = exp(re(e)*t)
                 imrt = im(e)*t
                 imblock = Matrix(
-                    [[cos(imrt), sin(imrt)], [-sin(imrt),
-                                              cos(imrt)]]
+                    [[cos(imrt), sin(imrt)], [-sin(imrt), cos(imrt)]]
                 )
                 expJblock2 = Matrix(
-                    n, n, lambda i, j: imblock*t**(j - i)/factorial(j - i)
+                    n,
+                    n,
+                    lambda i,
+                    j: imblock*t**(j - i)/factorial(j - i)
                     if j >= i else zeros(2, 2)
                 )
                 expJblock = Matrix(
-                    2*n, 2*n,
-                    lambda i, j: expJblock2[i // 2, j // 2][i % 2, j % 2]
+                    2*n,
+                    2*n,
+                    lambda i,
+                    j: expJblock2[i // 2, j // 2][i % 2, j % 2]
                 )
 
                 blocks.append(exprt*expJblock)
@@ -1411,8 +1415,8 @@ def _second_order_subs_type2(A, funcs, t_):
 
 def _is_euler_system(As, t):
     return all(
-        _matrix_is_constant((A*t**i).applyfunc(ratsimp), t)
-        for i, A in enumerate(As)
+        _matrix_is_constant((A*t**i).applyfunc(ratsimp), t) for i,
+        A in enumerate(As)
     )
 
 
@@ -2093,7 +2097,8 @@ def _higher_order_to_first_order(
             subs_dict.update(
                 {
                     f.diff(t, o): expr_to_subs.subs(free_function(t_), nf)
-                    for f, nf in zip(funcs, new_funcs)
+                    for f,
+                    nf in zip(funcs, new_funcs)
                 }
             )
 

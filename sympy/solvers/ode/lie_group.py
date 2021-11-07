@@ -42,9 +42,15 @@ from sympy.solvers.deutils import _preprocess, ode_order
 from .ode import checkinfsol
 
 lie_heuristics = (
-    "abaco1_simple", "abaco1_product", "abaco2_similar",
-    "abaco2_unique_unknown", "abaco2_unique_general", "linear", "function_sum",
-    "bivariate", "chi"
+    "abaco1_simple",
+    "abaco1_product",
+    "abaco2_similar",
+    "abaco2_unique_unknown",
+    "abaco2_unique_general",
+    "linear",
+    "function_sum",
+    "bivariate",
+    "chi"
 )
 
 
@@ -273,12 +279,7 @@ def infinitesimals(eq, func=None, order=None, hint='default', match=None):
             hy = h.diff(y)
             hinv = ((1/h).subs([(x, u), (y, x)])).subs(u, y)  # Inverse ODE
             match = {
-                'h': h,
-                'func': func,
-                'hx': hx,
-                'hy': hy,
-                'y': y,
-                'hinv': hinv
+                'h': h, 'func': func, 'hx': hx, 'hy': hy, 'y': y, 'hinv': hinv
             }
             if hint == 'all':
                 xieta = []

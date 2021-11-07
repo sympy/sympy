@@ -321,8 +321,10 @@ def match_riccati(eq, f, x):
         # If b_0(x) contains f(x), it is not a Riccati ODE
         if len(b0.atoms(f)) or not all(
             (
-                b2 != 0, b0.is_rational_function(x),
-                b1.is_rational_function(x), b2.is_rational_function(x)
+                b2 != 0,
+                b0.is_rational_function(x),
+                b1.is_rational_function(x),
+                b2.is_rational_function(x)
             )
         ):
             return False, []

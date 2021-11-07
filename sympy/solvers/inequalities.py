@@ -628,7 +628,9 @@ def solve_univariate_inequality(
                     *(solns + singularities + list(discontinuities))
                 ).intersection(
                     Interval(
-                        domain.inf, domain.sup, domain.inf not in domain,
+                        domain.inf,
+                        domain.sup,
+                        domain.inf not in domain,
                         domain.sup not in domain
                     )
                 )

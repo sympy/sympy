@@ -53,8 +53,8 @@ def test_solve_poly_system():
 
     raises(NotImplementedError, lambda: solve_poly_system([x**3 - y**3], x, y))
     raises(
-        NotImplementedError, lambda:
-        solve_poly_system([z, -2*x*y**2 + x + y**2*z, y**2*(-z - 4) + 2])
+        NotImplementedError,
+        lambda:         solve_poly_system([z, -2*x*y**2 + x + y**2*z, y**2*(-z - 4) + 2])
     )
     raises(PolynomialError, lambda: solve_poly_system([1/x], x))
 

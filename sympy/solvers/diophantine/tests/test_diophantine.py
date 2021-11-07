@@ -12,18 +12,49 @@ from sympy.core.sorting import default_sort_key, ordered
 from sympy.functions.elementary.trigonometric import sin
 from sympy.solvers.diophantine import diophantine
 from sympy.solvers.diophantine.diophantine import (
-    diop_DN, diop_solve, diop_ternary_quadratic_normal,
-    diop_general_pythagorean, diop_ternary_quadratic, diop_linear,
-    diop_quadratic, diop_general_sum_of_squares,
-    diop_general_sum_of_even_powers, descent, diop_bf_DN, divisible,
-    equivalent, find_DN, ldescent, length, reconstruct, partition,
-    power_representation, prime_as_sum_of_two_squares, square_factor,
-    sum_of_four_squares, sum_of_three_squares, transformation_to_DN,
-    transformation_to_normal, classify_diop, base_solution_linear, cornacchia,
-    sqf_normal, gaussian_reduce, holzer, check_param,
-    parametrize_ternary_quadratic, sum_of_powers, sum_of_squares,
-    _diop_ternary_quadratic_normal, _nint_or_floor, _odd, _even, _remove_gcd,
-    _can_do_sum_of_squares, DiophantineSolutionSet, GeneralPythagorean,
+    diop_DN,
+    diop_solve,
+    diop_ternary_quadratic_normal,
+    diop_general_pythagorean,
+    diop_ternary_quadratic,
+    diop_linear,
+    diop_quadratic,
+    diop_general_sum_of_squares,
+    diop_general_sum_of_even_powers,
+    descent,
+    diop_bf_DN,
+    divisible,
+    equivalent,
+    find_DN,
+    ldescent,
+    length,
+    reconstruct,
+    partition,
+    power_representation,
+    prime_as_sum_of_two_squares,
+    square_factor,
+    sum_of_four_squares,
+    sum_of_three_squares,
+    transformation_to_DN,
+    transformation_to_normal,
+    classify_diop,
+    base_solution_linear,
+    cornacchia,
+    sqf_normal,
+    gaussian_reduce,
+    holzer,
+    check_param,
+    parametrize_ternary_quadratic,
+    sum_of_powers,
+    sum_of_squares,
+    _diop_ternary_quadratic_normal,
+    _nint_or_floor,
+    _odd,
+    _even,
+    _remove_gcd,
+    _can_do_sum_of_squares,
+    DiophantineSolutionSet,
+    GeneralPythagorean,
     BinaryQuadratic
 )
 
@@ -65,65 +96,51 @@ def test_classify_diop():
     raises(NotImplementedError, lambda: classify_diop(x**3 + y**3 + z**4 - 90))
     assert classify_diop(14*x**2 + 15*x -
                          42) == ([x], {
-                             1: -42,
-                             x: 15,
-                             x**2: 14
+                             1: -42, x: 15, x**2: 14
                          }, 'univariate')
     assert classify_diop(x*y + z) == (
         [x, y, z], {
-            x*y: 1,
-            z: 1
+            x*y: 1, z: 1
         }, 'inhomogeneous_ternary_quadratic'
     )
     assert classify_diop(x*y + z + w + x**2) == (
         [w, x, y, z], {
-            x*y: 1,
-            w: 1,
-            x**2: 1,
-            z: 1
-        }, 'inhomogeneous_general_quadratic'
+            x*y: 1, w: 1, x**2: 1, z: 1
+        },
+        'inhomogeneous_general_quadratic'
     )
     assert classify_diop(x*y + x*z + x**2 + 1) == (
         [x, y, z], {
-            x*y: 1,
-            x*z: 1,
-            x**2: 1,
-            1: 1
-        }, 'inhomogeneous_general_quadratic'
+            x*y: 1, x*z: 1, x**2: 1, 1: 1
+        },
+        'inhomogeneous_general_quadratic'
     )
     assert classify_diop(x*y + z + w + 42) == (
         [w, x, y, z], {
-            x*y: 1,
-            w: 1,
-            1: 42,
-            z: 1
-        }, 'inhomogeneous_general_quadratic'
+            x*y: 1, w: 1, 1: 42, z: 1
+        },
+        'inhomogeneous_general_quadratic'
     )
     assert classify_diop(x*y + z*w) == (
         [w, x, y, z], {
-            x*y: 1,
-            w*z: 1
+            x*y: 1, w*z: 1
         }, 'homogeneous_general_quadratic'
     )
     assert classify_diop(x*y**2 +
                          1) == ([x, y], {
-                             x*y**2: 1,
-                             1: 1
+                             x*y**2: 1, 1: 1
                          }, 'cubic_thue')
     assert classify_diop(x**4 + y**4 + z**4 - (1+16+81)) == (
         [x, y, z], {
-            1: -98,
-            x**4: 1,
-            z**4: 1,
-            y**4: 1
-        }, 'general_sum_of_even_powers'
+            1: -98, x**4: 1, z**4: 1, y**4: 1
+        },
+        'general_sum_of_even_powers'
     )
     assert classify_diop(x**2 + y**2 + z**2) == (
         [x, y, z], {
-            x**2: 1,
-            y**2: 1,
-            z**2: 1
-        }, 'homogeneous_ternary_quadratic_normal'
+            x**2: 1, y**2: 1, z**2: 1
+        },
+        'homogeneous_ternary_quadratic_normal'
     )
 
 
@@ -495,12 +512,10 @@ def test_diop_ternary_quadratic():
                                          z**2) == (None, None, None)
     assert diop_ternary_quadratic_normal(x**2 + y**2) is None
     raises(
-        ValueError, lambda: _diop_ternary_quadratic_normal(
+        ValueError,
+        lambda: _diop_ternary_quadratic_normal(
             (x, y, z), {
-                x*y: 1,
-                x**2: 2,
-                y**2: 3,
-                z**2: 0
+                x*y: 1, x**2: 2, y**2: 3, z**2: 0
             }
         )
     )
@@ -611,7 +626,8 @@ def test_diophantine():
            {(9, 7, 51)}
     assert diophantine(eq) == {
         (
-            891*p**2 + 9*q**2, -693*p**2 - 102*p*q + 7*q**2,
+            891*p**2 + 9*q**2,
+            -693*p**2 - 102*p*q + 7*q**2,
             5049*p**2 - 1386*p*q - 51*q**2
         )
     }
@@ -703,8 +719,8 @@ def test_diop_general_sum_of_squares_quick():
         (0, 1, 2, 3, 7, -7), (2, 2, 4, 4, 6, -6), (1, 1, 3, 4, 6, -7),
         (0, 2, 3, 3, 3, -9), (0, 0, 2, 2, 2, -10), (1, 1, 2, 3, 4, -9),
         (0, 1, 1, 2, 5, -9), (0, 0, 2, 6, 6, -6), (1, 3, 4, 5, 5, -6),
-        (0, 2, 2, 2, 6, -8), (0, 3, 3, 3, 6, -7), (0, 2, 3, 5, 5, -7),
-        (0, 1, 5, 5, 5, -6)
+        (0, 2, 2, 2, 6, -8), (0, 3, 3, 3, 6, -7), (0, 2, 3, 5, 5,
+                                                   -7), (0, 1, 5, 5, 5, -6)
     }
     assert diophantine(eq) == base_soln
     assert len(diophantine(eq, permute=True)) == 196800
@@ -742,8 +758,21 @@ def test_prime_as_sum_of_two_squares():
 
 def test_sum_of_three_squares():
     for i in [
-        0, 1, 2, 34, 123, 34304595905, 34304595905394941, 343045959052344, 800,
-        801, 802, 803, 804, 805, 806
+        0,
+        1,
+        2,
+        34,
+        123,
+        34304595905,
+        34304595905394941,
+        343045959052344,
+        800,
+        801,
+        802,
+        803,
+        804,
+        805,
+        806
     ]:
         a, b, c = sum_of_three_squares(i)
         assert a**2 + b**2 + c**2 == i
@@ -984,12 +1013,68 @@ def test_sum_of_squares_powers():
     assert list(sum_of_squares(8, 8)) == [(1, 1, 1, 1, 1, 1, 1, 1)]
 
     assert [len(list(sum_of_squares(i, 5, True))) for i in range(30)] == [
-        1, 1, 1, 1, 2, 2, 1, 1, 2, 2, 2, 2, 2, 3, 2, 1, 3, 3, 3, 3, 4, 3, 3, 2,
-        2, 4, 4, 4, 4, 5
+        1,
+        1,
+        1,
+        1,
+        2,
+        2,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        3,
+        2,
+        1,
+        3,
+        3,
+        3,
+        3,
+        4,
+        3,
+        3,
+        2,
+        2,
+        4,
+        4,
+        4,
+        4,
+        5
     ]
     assert [len(list(sum_of_squares(i, 5))) for i in range(30)] == [
-        0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 2, 1, 1, 1,
-        1, 1, 1, 1, 1, 3
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        0,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        2,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        3
     ]
     for i in range(30):
         s1 = set(sum_of_squares(i, 5, True))
@@ -1053,7 +1138,8 @@ def test_ternary_quadratic():
     p, q, r = ordered(S(s).free_symbols)
     assert s == {
         (
-            p**2 - 2*q**2, -2*p**2 + 4*p*q - 4*p*r - 4*q**2,
+            p**2 - 2*q**2,
+            -2*p**2 + 4*p*q - 4*p*r - 4*q**2,
             p**2 - 4*p*q + 2*q**2 - 4*q*r
         )
     }
@@ -1074,7 +1160,8 @@ def test_ternary_quadratic():
         2*p**2 - 2*p*q - q**2, 2*p**2 + 2*p*q - q**2, 2*p**2 - 2*p*q + 3*q**2
     )
     assert parametrize_ternary_quadratic(124*x**2 - 30*y**2 - 7729*z**2) == (
-        -1410*p**2 - 363263*q**2, 2700*p**2 + 30916*p*q - 695610*q**2,
+        -1410*p**2 - 363263*q**2,
+        2700*p**2 + 30916*p*q - 695610*q**2,
         -60*p**2 + 5400*p*q + 15458*q**2
     )
 

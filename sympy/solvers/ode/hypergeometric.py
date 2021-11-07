@@ -257,7 +257,8 @@ def get_sol_2F1_hypergeometric(eq, func, match_object):
     elif c == 1:
         y2 = Integral(
             exp(Integral((-(a + b + 1)*x + c)/(x**2 - x), x))/
-            (hyperexpand(hyper([a, b], [c], x))**2), x
+            (hyperexpand(hyper([a, b], [c], x))**2),
+            x
         )*hyper([a, b], [c], x)
         sol = C0*hyper([a, b], [c], x) + C1*y2
     elif (c - a - b).is_integer == False:

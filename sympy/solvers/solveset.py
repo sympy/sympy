@@ -26,8 +26,22 @@ from sympy.core.sympify import _sympify
 from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.simplify import powdenest, logcombine
 from sympy.functions import (
-    log, Abs, tan, cot, sin, cos, sec, csc, exp, acos, asin, acsc, asec, arg,
-    piecewise_fold, Piecewise
+    log,
+    Abs,
+    tan,
+    cot,
+    sin,
+    cos,
+    sec,
+    csc,
+    exp,
+    acos,
+    asin,
+    acsc,
+    asec,
+    arg,
+    piecewise_fold,
+    Piecewise
 )
 from sympy.functions.elementary.complexes import re, im
 from sympy.functions.elementary.trigonometric import (
@@ -36,8 +50,16 @@ from sympy.functions.elementary.trigonometric import (
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.logic.boolalg import And, BooleanTrue
 from sympy.sets import (
-    FiniteSet, EmptySet, imageset, Interval, Intersection, Union, ConditionSet,
-    ImageSet, Complement, Contains
+    FiniteSet,
+    EmptySet,
+    imageset,
+    Interval,
+    Intersection,
+    Union,
+    ConditionSet,
+    ImageSet,
+    Complement,
+    Contains
 )
 from sympy.sets.sets import Set, ProductSet
 from sympy.matrices import Matrix, MatrixBase
@@ -226,8 +248,7 @@ def _invert_real(f, g_ys, symbol):
         if len(f.args) > 1:
             raise ValueError("Only functions with one argument are supported.")
         return _invert_real(
-            f.args[0], imageset(Lambda(n,
-                                       f.inverse()(n)), g_ys), symbol
+            f.args[0], imageset(Lambda(n, f.inverse()(n)), g_ys), symbol
         )
 
     if isinstance(f, Abs):
@@ -371,8 +392,7 @@ def _invert_complex(f, g_ys, symbol):
         if len(f.args) > 1:
             raise ValueError("Only functions with one argument are supported.")
         return _invert_complex(
-            f.args[0], imageset(Lambda(n,
-                                       f.inverse()(n)), g_ys), symbol
+            f.args[0], imageset(Lambda(n, f.inverse()(n)), g_ys), symbol
         )
 
     if isinstance(f, exp) or (f.is_Pow and f.base == S.Exp1):
@@ -391,7 +411,8 @@ def _invert_complex(f, g_ys, symbol):
                                 I*(2*k*pi + arg(g_ys_expr)) +
                                 log(Abs(g_ys_expr))
                             )
-                        ), S.Integers**(len(g_ys_vars_1))
+                        ),
+                        S.Integers**(len(g_ys_vars_1))
                     )
                 ]
             )
@@ -400,9 +421,8 @@ def _invert_complex(f, g_ys, symbol):
             exp_invs = Union(
                 *[
                     imageset(
-                        Lambda(n,
-                               I*(2*n*pi + arg(g_y)) +
-                               log(Abs(g_y))), S.Integers
+                        Lambda(n, I*(2*n*pi + arg(g_y)) + log(Abs(g_y))),
+                        S.Integers
                     ) for g_y in g_ys if g_y != 0
                 ]
             )

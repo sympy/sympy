@@ -300,8 +300,11 @@ def _desolve(
                     gethints.remove(i[:-len('_Integral')])
             # special cases
             for k in [
-                "1st_homogeneous_coeff_best", "1st_power_series", "lie_group",
-                "2nd_power_series_ordinary", "2nd_power_series_regular"
+                "1st_homogeneous_coeff_best",
+                "1st_power_series",
+                "lie_group",
+                "2nd_power_series_ordinary",
+                "2nd_power_series_regular"
             ]:
                 if k in gethints:
                     gethints.remove(k)

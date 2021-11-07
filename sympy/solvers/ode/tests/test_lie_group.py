@@ -36,14 +36,11 @@ def test_heuristic1():
     i = infinitesimals(eq, hint='abaco1_simple')
     assert i == [
         {
-            eta(x, f(x)): exp(x**3/3),
-            xi(x, f(x)): 0
+            eta(x, f(x)): exp(x**3/3), xi(x, f(x)): 0
         }, {
-            eta(x, f(x)): f(x),
-            xi(x, f(x)): 0
+            eta(x, f(x)): f(x), xi(x, f(x)): 0
         }, {
-            eta(x, f(x)): 0,
-            xi(x, f(x)): x**(-2)
+            eta(x, f(x)): 0, xi(x, f(x)): x**(-2)
         }
     ]
     i1 = infinitesimals(eq1, hint='abaco1_simple')
@@ -53,19 +50,17 @@ def test_heuristic1():
     i3 = infinitesimals(eq3, hint='abaco1_simple')
     assert i3 == [
         {
-            eta(x, f(x)): 0,
-            xi(x, f(x)): 2*x + 1
+            eta(x, f(x)): 0, xi(x, f(x)): 2*x + 1
         }, {
-            eta(x, f(x)): 0,
-            xi(x, f(x)): 1/(exp(f(x)) - 2)
+            eta(x, f(x)): 0, xi(x, f(x)): 1/(exp(f(x)) - 2)
         }
     ]
     i4 = infinitesimals(eq4, hint='abaco1_simple')
     assert i4 == [
         {
-            eta(x, f(x)): 1,
-            xi(x, f(x)): 0
-        }, {
+            eta(x, f(x)): 1, xi(x, f(x)): 0
+        },
+        {
             eta(x, f(x)): 0,
             xi(x, f(x)): sqrt(a0 + a1*x + a2*x**2 + a3*x**3 + a4*x**4)
         }

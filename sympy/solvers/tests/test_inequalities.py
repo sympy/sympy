@@ -16,9 +16,12 @@ from sympy.logic.boolalg import (And, Or)
 from sympy.polys.polytools import (Poly, PurePoly)
 from sympy.sets.sets import (FiniteSet, Interval, Union)
 from sympy.solvers.inequalities import (
-    reduce_inequalities, solve_poly_inequality as psolve,
-    reduce_rational_inequalities, solve_univariate_inequality as isolve,
-    reduce_abs_inequality, _solve_inequality
+    reduce_inequalities,
+    solve_poly_inequality as psolve,
+    reduce_rational_inequalities,
+    solve_univariate_inequality as isolve,
+    reduce_abs_inequality,
+    _solve_inequality
 )
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
@@ -115,7 +118,8 @@ def test_reduce_poly_inequalities_real_interval():
     assert reduce_rational_inequalities(
         [[Lt(x**2 - 2, 0), Ne(x**2 - 1, 0)]], x, relational=False
     ) == Union(
-        Interval(-s, -1, True, True), Interval(-1, 1, True, True),
+        Interval(-s, -1, True, True),
+        Interval(-1, 1, True, True),
         Interval(1, s, True, True)
     )
 

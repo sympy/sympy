@@ -33,9 +33,13 @@ def test_rsolve_poly():
 def test_rsolve_ratio():
     solution = rsolve_ratio(
         [
-            -2*n**3 + n**2 + 2*n - 1, 2*n**3 + n**2 - 6*n,
-            -2*n**3 - 11*n**2 - 18*n - 9, 2*n**3 + 13*n**2 + 22*n + 8
-        ], 0, n
+            -2*n**3 + n**2 + 2*n - 1,
+            2*n**3 + n**2 - 6*n,
+            -2*n**3 - 11*n**2 - 18*n - 9,
+            2*n**3 + 13*n**2 + 22*n + 8
+        ],
+        0,
+        n
     )
 
     assert solution in [
@@ -99,7 +103,12 @@ def recurrence_term(c, f):
 def test_rsolve_bulk():
     """Some bulk-generated tests."""
     funcs = [
-        n, n + 1, n**2, n**3, n**4, n + n**2,
+        n,
+        n + 1,
+        n**2,
+        n**3,
+        n**4,
+        n + n**2,
         27*n + 52*n**2 - 3*n**3 + 12*n**4 - 52*n**5
     ]
     coeffs = [
@@ -246,9 +255,7 @@ def test_constant_naming():
     #issue 19630
     assert rsolve(
         y(n + 3) - 3*y(n + 1) + 2*y(n), y(n), {
-            y(1): 0,
-            y(2): 8,
-            y(3): -2
+            y(1): 0, y(2): 8, y(3): -2
         }
     ) == (-2)**n + 2*n
 
