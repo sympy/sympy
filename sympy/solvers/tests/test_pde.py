@@ -131,8 +131,8 @@ def test_checkpdesol():
     eq5 = 2*f(x, y) + 1*f(x, y).diff(x) + 3*f(x, y).diff(y)
     eq6 = f(x, y) + 1*f(x, y).diff(x) + 3*f(x, y).diff(y)
     assert checkpdesol(eq4, [pdsolve(eq5), pdsolve(eq6)]) == [
-        (False, (x-2)*F(3*x - y)*exp(-x/S(5) - 3*y/S(5))),
-        (False, (x-1)*F(3*x - y)*exp(-x/S(10) - 3*y/S(10)))
+        (False, (x - 2)*F(3*x - y)*exp(-x/S(5) - 3*y/S(5))),
+        (False, (x - 1)*F(3*x - y)*exp(-x/S(10) - 3*y/S(10)))
     ]
     for eq in [eq4, eq5, eq6]:
         assert checkpdesol(eq, pdsolve(eq))[0]
@@ -270,4 +270,4 @@ def test_pdsolve_variable_coeff():
 
     eq = exp(2*x)*(u.diff(y)) + y*u - u
     sol = pdsolve(eq, hint='1st_linear_variable_coeff')
-    assert sol == Eq(u, F(x)*exp(-y*(y-2)*exp(-2*x)/2))
+    assert sol == Eq(u, F(x)*exp(-y*(y - 2)*exp(-2*x)/2))

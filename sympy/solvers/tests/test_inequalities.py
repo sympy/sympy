@@ -315,11 +315,12 @@ def test_solve_univariate_inequality():
     assert isolve(x**3 - x**2 + x - 1 > 0, x, relational=False) == \
         Interval(1, oo, True)
     #issue 13105
-    assert isolve((x+I)*(x + 2*I) < 0, x) == Eq(x, 0)
-    assert isolve(((x-1)*(x-2) + I)*((x-1)*(x-2) + 2*I) < 0,
+    assert isolve((x + I)*(x + 2*I) < 0, x) == Eq(x, 0)
+    assert isolve(((x - 1)*(x - 2) + I)*((x - 1)*(x - 2) + 2*I) < 0,
                   x) == Or(Eq(x, 1), Eq(x, 2))
-    assert isolve((((x-1)*(x-2) + I)*((x-1)*(x-2) + 2*I))/(x-2) > 0,
-                  x) == Eq(x, 1)
+    assert isolve(
+        (((x - 1)*(x - 2) + I)*((x - 1)*(x - 2) + 2*I))/(x - 2) > 0, x
+    ) == Eq(x, 1)
     raises(ValueError, lambda: isolve((x**2 - 3*x*I + 2)/x < 0, x))
 
     # numerical testing in valid() is needed
@@ -329,8 +330,8 @@ def test_solve_univariate_inequality():
     # handle numerator and denominator; although these would be handled as
     # rational inequalities, these test confirm that the right thing is done
     # when the domain is EX (e.g. when 2 is replaced with sqrt(2))
-    assert isolve(1/(x-2) > 0, x) == And(S(2) < x, x < oo)
-    den = ((x-1)*(x-2)).expand()
+    assert isolve(1/(x - 2) > 0, x) == And(S(2) < x, x < oo)
+    den = ((x - 1)*(x - 2)).expand()
     assert isolve((x - 1)/den <= 0, x) == \
         (x > -oo) & (x < 2) & Ne(x, 1)
 
@@ -348,11 +349,11 @@ def test_solve_univariate_inequality():
     zero = cos(1)**2 + sin(1)**2 - 1
     raises(NotImplementedError, lambda: isolve(x**2 < zero, x))
     raises(NotImplementedError, lambda: isolve(x**2 < zero*I, x))
-    raises(NotImplementedError, lambda: isolve(1/(x-y) < 2, x))
-    raises(NotImplementedError, lambda: isolve(1/(x-y) < 0, x))
+    raises(NotImplementedError, lambda: isolve(1/(x - y) < 2, x))
+    raises(NotImplementedError, lambda: isolve(1/(x - y) < 0, x))
     raises(TypeError, lambda: isolve(x - I < 0, x))
 
-    zero = x**2 + x - x*(x+1)
+    zero = x**2 + x - x*(x + 1)
     assert isolve(zero < 0, x, relational=False) is S.EmptySet
     assert isolve(zero <= 0, x, relational=False) is S.Reals
 
@@ -452,7 +453,7 @@ def test_integer_domain_relational_isolve():
 
     dom = FiniteSet(0, 3)
     x = Symbol('x', zero=False)
-    assert isolve((x-1)*(x-2)*(x-4) < 0, x, domain=dom) == Eq(x, 3)
+    assert isolve((x - 1)*(x - 2)*(x - 4) < 0, x, domain=dom) == Eq(x, 3)
 
     x = Symbol('x')
     assert isolve(x + 2 < 0, x, domain=S.Integers) == \
@@ -482,14 +483,14 @@ def test__solve_inequality():
     assert _solve_inequality(Eq(2*x - 1, x), x) == Eq(x, 1)
     ie = Eq(S.One, y)
     assert _solve_inequality(ie, x) == ie
-    for fx in (x**2, exp(x), sin(x) + cos(x), x*(1+x)):
+    for fx in (x**2, exp(x), sin(x) + cos(x), x*(1 + x)):
         for c in (0, 1):
             e = 2*fx - c > 0
             assert _solve_inequality(e, x, linear=True) == (fx > c/S(2))
     assert _solve_inequality(
         2*x**2 + 2*x - 1 < 0, x, linear=True
     ) == (
-        x*(x+1) < S.Half
+        x*(x + 1) < S.Half
     )
     assert _solve_inequality(Eq(x*y, 1), x) == Eq(x*y, 1)
     nz = Symbol('nz', nonzero=True)

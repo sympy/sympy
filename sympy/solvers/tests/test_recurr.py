@@ -67,7 +67,7 @@ def test_rsolve_hyper():
         C1*rf(sqrt(k), n) + C0*rf(-sqrt(k), n),
     ]
 
-    assert rsolve_hyper([2*n*(n+1), -n**2 - 3*n + 2, n - 1], 0,
+    assert rsolve_hyper([2*n*(n + 1), -n**2 - 3*n + 2, n - 1], 0,
                         n) == C1*factorial(n) + C0*2**n
 
     assert rsolve_hyper(
@@ -143,7 +143,7 @@ def test_rsolve():
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 
-    f = (n-1)*y(n + 2) - (n**2 + 3*n - 2)*y(n + 1) + 2*n*(n+1)*y(n)
+    f = (n - 1)*y(n + 2) - (n**2 + 3*n - 2)*y(n + 1) + 2*n*(n + 1)*y(n)
     g = C1*factorial(n) + C0*2**n
     h = -3*factorial(n) + 3*2**n
 
@@ -180,7 +180,7 @@ def test_rsolve():
     f = y(n) - 1/n*y(n - 1) - 1
     assert rsolve(f, y(n)) is None
 
-    f = 2*y(n - 1) + (1-n)*y(n)/n
+    f = 2*y(n - 1) + (1 - n)*y(n)/n
 
     assert rsolve(f, y(n), {y(1): 1}) == 2**(n - 1)*n
     assert rsolve(f, y(n), {y(1): 2}) == 2**(n - 1)*n*2
@@ -188,10 +188,14 @@ def test_rsolve():
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 
-    f = (n-1)*(n-2)*y(n + 2) - (n+1)*(n+2)*y(n)
+    f = (n - 1)*(n - 2)*y(n + 2) - (n + 1)*(n + 2)*y(n)
 
-    assert rsolve(f, y(n), {y(3): 6, y(4): 24}) == n*(n-1)*(n-2)
-    assert rsolve(f, y(n), {y(3): 6, y(4): -24}) == -n*(n-1)*(n-2)*(-1)**(n)
+    assert rsolve(f, y(n), {y(3): 6, y(4): 24}) == n*(n - 1)*(n - 2)
+    assert rsolve(f, y(n), {
+        y(3): 6, y(4): -24
+    }) == -n*(n - 1)*(n - 2)*(-1)**(
+        n
+    )
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 
@@ -211,8 +215,11 @@ def test_rsolve():
     Y = lambda i: sol.subs(n, i)
     assert (Y(n) + a*(Y(n + 1) + Y(n - 1))/2).expand().cancel() == 0
 
-    assert rsolve((k+1)*y(k), y(k)) is None
-    assert (rsolve((k+1)*y(k) + (k+3)*y(k + 1) + (k+5)*y(k + 2), y(k)) is None)
+    assert rsolve((k + 1)*y(k), y(k)) is None
+    assert (
+        rsolve((k + 1)*y(k) + (k + 3)*y(k + 1) +
+               (k + 5)*y(k + 2), y(k)) is None
+    )
 
     assert rsolve(y(n) + y(n + 1) + 2**n + 3**n,
                   y(n)) == (-1)**n*C0 - 2**n/3 - 3**n/4

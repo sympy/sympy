@@ -1212,7 +1212,7 @@ def classify_ode(
             # at x0. It has a regular singular point at x0, if (b3/a3)*(x - x0)
             # and (c3/a3)*((x - x0)**2) are analytic at x0.
             if not ordinary:
-                p = cancel((x-point)*p)
+                p = cancel((x - point)*p)
                 check = p.subs(x, point)
                 if not check.has(oo, nan, zoo, -oo):
                     q = cancel(((x - point)**2)*q)
@@ -1645,8 +1645,11 @@ def check_nonlinear_3eq_order1(eq, func, func_coef):
         num2, den2 = r2[b].as_numer_denom()
         num3, den3 = r3[c].as_numer_denom()
         if solve(
-            [num1*u - den1*(v-w), num2*v - den2*(w-u), num3*w - den3*(u-v)],
-            [u, v]
+            [
+                num1*u - den1*(v - w),
+                num2*v - den2*(w - u),
+                num3*w - den3*(u - v)
+            ], [u, v]
         ):
             return 'type1'
     r = eq[0].match(diff(x(t), t) - y(t)*z(t)*f)
@@ -1659,11 +1662,14 @@ def check_nonlinear_3eq_order1(eq, func, func_coef):
         num2, den2 = r2[b].as_numer_denom()
         num3, den3 = r3[c].as_numer_denom()
         if solve(
-            [num1*u - den1*(v-w), num2*v - den2*(w-u), num3*w - den3*(u-v)],
-            [u, v]
+            [
+                num1*u - den1*(v - w),
+                num2*v - den2*(w - u),
+                num3*w - den3*(u - v)
+            ], [u, v]
         ):
             return 'type2'
-    r = eq[0].match(diff(x(t), t) - (F2-F3))
+    r = eq[0].match(diff(x(t), t) - (F2 - F3))
     if r:
         r1 = collect_const(r[F2]).match(c*F2)
         r1.update(collect_const(r[F3]).match(b*F3))
@@ -1691,7 +1697,7 @@ def check_nonlinear_3eq_order1(eq, func, func_coef):
             )
         if r1 and r2 and r3:
             return 'type4'
-    r = (diff(x(t), t) - eq[0]).match(x(t)*(F2-F3))
+    r = (diff(x(t), t) - eq[0]).match(x(t)*(F2 - F3))
     if r:
         r1 = collect_const(r[F2]).match(c*F2)
         r1.update(collect_const(r[F3]).match(b*F3))
@@ -2506,7 +2512,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     # an+1*n*(n - 1)*x**n.
     # A similar process is done with the first order and zeroth order term.
 
-    coefflist = [(recurr(n), r), (n*recurr(n), q), (n*(n-1)*recurr(n), p)]
+    coefflist = [(recurr(n), r), (n*recurr(n), q), (n*(n - 1)*recurr(n), p)]
     for index, coeff in enumerate(coefflist):
         if coeff[1]:
             f2 = powsimp(
@@ -2584,7 +2590,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
         startiter += 1
 
     # Post processing
-    series = C0 + C1*(x-x0)
+    series = C0 + C1*(x - x0)
     for term in finaldict:
         if finaldict[term]:
             fact = term.args[0]
@@ -2675,7 +2681,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
                         break
 
     p0, q0 = indicial
-    sollist = solve(m*(m-1) + m*p0 + q0, m)
+    sollist = solve(m*(m - 1) + m*p0 + q0, m)
     if sollist and isinstance(sollist,
                               list) and all(sol.is_real for sol in sollist):
         serdict1 = {}
@@ -2757,14 +2763,14 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
 
     pseries = serlist[0]
     qseries = serlist[1]
-    indicial = d*(d-1) + d*p0 + q0
+    indicial = d*(d - 1) + d*p0 + q0
     frobdict = {}
     for i in range(1, n + 1):
         num = c*(m*pseries[(i, )] + qseries[(i, )])
         for j in range(1, i):
             sym = Symbol("C" + str(j))
             num += frobdict[sym]*(
-                (m+j)*pseries[(i - j, )] + qseries[(i - j, )]
+                (m + j)*pseries[(i - j, )] + qseries[(i - j, )]
             )
 
         # Checking for cases when m1 - m2 is an integer. If num equals zero
@@ -2964,7 +2970,7 @@ def ode_1st_power_series(eq, func, order, match):
             # Derivative does not exist, not analytic
             return Eq(f(x), oo)
         elif hc:
-            series += hc*(x-point)
+            series += hc*(x - point)
 
     for factcount in range(2, terms):
         Fnew = F.diff(x) + F.diff(y)*h
@@ -3290,7 +3296,7 @@ def _nonlinear_2eq_order1_type1(x, y, t, eq):
     F = r[f].subs(x(t), u).subs(y(t), v)
     n = r[n]
     if n != 1:
-        phi = (C1 + (1-n)*Integral(1/g, v))**(1/(1-n))
+        phi = (C1 + (1 - n)*Integral(1/g, v))**(1/(1 - n))
     else:
         phi = C1*exp(Integral(1/g, v))
     phi = phi.doit()
@@ -3574,15 +3580,15 @@ def _nonlinear_3eq_order1_type1(x, y, z, t, eq):
     c = lcm(vals[0].as_numer_denom()[1], vals[1].as_numer_denom()[1])
     b = vals[0].subs(w, c)
     a = vals[1].subs(w, c)
-    y_x = sqrt(((c*C1 - C2) - a*(c-a)*x(t)**2)/(b*(c-b)))
-    z_x = sqrt(((b*C1 - C2) - a*(b-a)*x(t)**2)/(c*(b-c)))
-    z_y = sqrt(((a*C1 - C2) - b*(a-b)*y(t)**2)/(c*(a-c)))
-    x_y = sqrt(((c*C1 - C2) - b*(c-b)*y(t)**2)/(a*(c-a)))
-    x_z = sqrt(((b*C1 - C2) - c*(b-c)*z(t)**2)/(a*(b-a)))
-    y_z = sqrt(((a*C1 - C2) - c*(a-c)*z(t)**2)/(b*(a-b)))
-    sol1 = dsolve(a*diff(x(t), t) - (b-c)*y_x*z_x)
-    sol2 = dsolve(b*diff(y(t), t) - (c-a)*z_y*x_y)
-    sol3 = dsolve(c*diff(z(t), t) - (a-b)*x_z*y_z)
+    y_x = sqrt(((c*C1 - C2) - a*(c - a)*x(t)**2)/(b*(c - b)))
+    z_x = sqrt(((b*C1 - C2) - a*(b - a)*x(t)**2)/(c*(b - c)))
+    z_y = sqrt(((a*C1 - C2) - b*(a - b)*y(t)**2)/(c*(a - c)))
+    x_y = sqrt(((c*C1 - C2) - b*(c - b)*y(t)**2)/(a*(c - a)))
+    x_z = sqrt(((b*C1 - C2) - c*(b - c)*z(t)**2)/(a*(b - a)))
+    y_z = sqrt(((a*C1 - C2) - c*(a - c)*z(t)**2)/(b*(a - b)))
+    sol1 = dsolve(a*diff(x(t), t) - (b - c)*y_x*z_x)
+    sol2 = dsolve(b*diff(y(t), t) - (c - a)*z_y*x_y)
+    sol3 = dsolve(c*diff(z(t), t) - (a - b)*x_z*y_z)
     return [sol1, sol2, sol3]
 
 
@@ -3632,15 +3638,15 @@ def _nonlinear_3eq_order1_type2(x, y, z, t, eq):
     c = lcm(vals[0].as_numer_denom()[1], vals[1].as_numer_denom()[1])
     a = vals[0].subs(w, c)
     b = vals[1].subs(w, c)
-    y_x = sqrt(((c*C1 - C2) - a*(c-a)*x(t)**2)/(b*(c-b)))
-    z_x = sqrt(((b*C1 - C2) - a*(b-a)*x(t)**2)/(c*(b-c)))
-    z_y = sqrt(((a*C1 - C2) - b*(a-b)*y(t)**2)/(c*(a-c)))
-    x_y = sqrt(((c*C1 - C2) - b*(c-b)*y(t)**2)/(a*(c-a)))
-    x_z = sqrt(((b*C1 - C2) - c*(b-c)*z(t)**2)/(a*(b-a)))
-    y_z = sqrt(((a*C1 - C2) - c*(a-c)*z(t)**2)/(b*(a-b)))
-    sol1 = dsolve(a*diff(x(t), t) - (b-c)*y_x*z_x*r[f])
-    sol2 = dsolve(b*diff(y(t), t) - (c-a)*z_y*x_y*r[f])
-    sol3 = dsolve(c*diff(z(t), t) - (a-b)*x_z*y_z*r[f])
+    y_x = sqrt(((c*C1 - C2) - a*(c - a)*x(t)**2)/(b*(c - b)))
+    z_x = sqrt(((b*C1 - C2) - a*(b - a)*x(t)**2)/(c*(b - c)))
+    z_y = sqrt(((a*C1 - C2) - b*(a - b)*y(t)**2)/(c*(a - c)))
+    x_y = sqrt(((c*C1 - C2) - b*(c - b)*y(t)**2)/(a*(c - a)))
+    x_z = sqrt(((b*C1 - C2) - c*(b - c)*z(t)**2)/(a*(b - a)))
+    y_z = sqrt(((a*C1 - C2) - c*(a - c)*z(t)**2)/(b*(a - b)))
+    sol1 = dsolve(a*diff(x(t), t) - (b - c)*y_x*z_x*r[f])
+    sol2 = dsolve(b*diff(y(t), t) - (c - a)*z_y*x_y*r[f])
+    sol3 = dsolve(c*diff(z(t), t) - (a - b)*x_z*y_z*r[f])
     return [sol1, sol2, sol3]
 
 

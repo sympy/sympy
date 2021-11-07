@@ -605,7 +605,7 @@ class BinaryQuadratic(DiophantineEquationType):
                 u, v = symbols("u, v", integer=True)
                 eq = _mexpand(
                     4*A*r*u*v + 4*A*D*(B*v + r*u + r*v - B*u)
-                    + 2*A*4*A*E*(u-v) + 4*A*r*4*A*F
+                    + 2*A*4*A*E*(u - v) + 4*A*r*4*A*F
                 )
 
                 solution = diop_solve(eq, t)
@@ -675,7 +675,7 @@ class BinaryQuadratic(DiophantineEquationType):
                     T_k = T
                     U_k = U
 
-                    while (T_k-1) % L != 0 or U_k % L != 0:
+                    while (T_k - 1) % L != 0 or U_k % L != 0:
                         T_k, U_k = T_k*T + D*U_k*U, T_k*U + U_k*T
                         k += 1
 
@@ -2118,7 +2118,7 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
             else:
                 sol = []
 
-                for y in range(floor(sign(N)*(N-1)/(2*sD)) + 1):
+                for y in range(floor(sign(N)*(N - 1)/(2*sD)) + 1):
                     try:
                         sq, _exact = integer_nthroot(D*y**2 + N, 2)
                     except ValueError:
@@ -2308,7 +2308,7 @@ def _special_diop_DN(D, N):
 
     i = 0
     while True:
-        a = floor((P+sqrt_D)/Q)
+        a = floor((P + sqrt_D)/Q)
         P = a*Q - P
         Q = (D - P**2)//Q
         G2 = a*G1 + G0
@@ -2514,13 +2514,13 @@ def diop_bf_DN(D, N, t=symbols("t", integer=True)):
 
     elif N > 1:
         L1 = 0
-        L2 = integer_nthroot(int(N*(u-1)/(2*D)), 2)[0] + 1
+        L2 = integer_nthroot(int(N*(u - 1)/(2*D)), 2)[0] + 1
 
     elif N < -1:
         L1, _exact = integer_nthroot(-int(N/D), 2)
         if not _exact:
             L1 += 1
-        L2 = integer_nthroot(-int(N*(u+1)/(2*D)), 2)[0] + 1
+        L2 = integer_nthroot(-int(N*(u + 1)/(2*D)), 2)[0] + 1
 
     else:  # N = 0
         if D < 0:
@@ -3734,10 +3734,10 @@ def prime_as_sum_of_two_squares(p):
     else:
         b = 3
 
-        while pow(b, (p-1)//2, p) == 1:
+        while pow(b, (p - 1)//2, p) == 1:
             b = nextprime(b)
 
-    b = pow(b, (p-1)//4, p)
+    b = pow(b, (p - 1)//4, p)
     a = p
 
     while b**2 > p:
@@ -3827,7 +3827,7 @@ def sum_of_three_squares(n):
             N = (n - x**2)//2
             if isprime(N):
                 y, z = prime_as_sum_of_two_squares(N)
-                return _sorted_tuple(2**v*x, 2**v*(y+z), 2**v*abs(y - z))
+                return _sorted_tuple(2**v*x, 2**v*(y + z), 2**v*abs(y - z))
         return
 
     if n % 8 in (2, 6):
@@ -3997,7 +3997,7 @@ def power_representation(n, p, k, zeros=False):
             return  # Fermat: a**n + b**n = c**n has no solution for n > 2
 
     if n >= k:
-        a = integer_nthroot(n - (k-1), p)[0]
+        a = integer_nthroot(n - (k - 1), p)[0]
         for t in pow_rep_recursive(a, k, n, [], p):
             yield tuple(reversed(t))
 
@@ -4005,7 +4005,7 @@ def power_representation(n, p, k, zeros=False):
         a = integer_nthroot(n, p)[0]
         for i in range(1, k):
             for t in pow_rep_recursive(a, i, n, [], p):
-                yield tuple(reversed(t + (0, )*(k-i)))
+                yield tuple(reversed(t + (0, )*(k - i)))
 
 
 sum_of_powers = power_representation

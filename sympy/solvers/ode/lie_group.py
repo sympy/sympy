@@ -538,7 +538,7 @@ def lie_heuristic_bivariate(match, comp=False):
         # The maximum degree that the infinitesimals can take is
         # calculated by this technique.
         etax, etay, etad, xix, xiy, xid = symbols("etax etay etad xix xiy xid")
-        ipde = etax + (etay-xix)*h - xiy*h**2 - xid*hx - etad*hy
+        ipde = etax + (etay - xix)*h - xiy*h**2 - xid*hx - etad*hy
         num, denom = cancel(ipde).as_numer_denom()
         deg = Poly(num, x, y).total_degree()
         deta = Function('deta')(x, y)
@@ -829,7 +829,7 @@ def lie_heuristic_abaco2_similar(match, comp=False):
     else:
         gamma = cancel(factorx/factory)
         if not gamma.has(y):
-            tauint = cancel((gamma*hy - gamma.diff(x) - hx)/(h+gamma))
+            tauint = cancel((gamma*hy - gamma.diff(x) - hx)/(h + gamma))
             if not tauint.has(y):
                 try:
                     tau = exp(integrate(tauint, x))
@@ -860,7 +860,7 @@ def lie_heuristic_abaco2_similar(match, comp=False):
         if not gamma.has(y):
             tauint = cancel(
                 (gamma*hinv.diff(y) - gamma.diff(x) - hinv.diff(x))/
-                (hinv+gamma)
+                (hinv + gamma)
             )
             if not tauint.has(y):
                 try:
@@ -1074,8 +1074,8 @@ def lie_heuristic_linear(match, comp=False):
     symbols = numbered_symbols("c", cls=Dummy)
     symlist = [next(symbols) for _ in islice(symbols, 6)]
     C0, C1, C2, C3, C4, C5 = symlist
-    pde = C3 + (C4-C0)*h - (C0*x + C1*y
-                            + C2)*hx - (C3*x + C4*y + C5)*hy - C1*h**2
+    pde = C3 + (C4 - C0)*h - (C0*x + C1*y
+                              + C2)*hx - (C3*x + C4*y + C5)*hy - C1*h**2
     pde, denom = pde.as_numer_denom()
     pde = powsimp(expand(pde))
     if pde.is_Add:

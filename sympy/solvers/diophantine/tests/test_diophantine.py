@@ -85,8 +85,8 @@ def test_nosols():
 
 
 def test_univariate():
-    assert diop_solve((x-1)*(x - 2)**2) == {(1, ), (2, )}
-    assert diop_solve((x-1)*(x-2)) == {(1, ), (2, )}
+    assert diop_solve((x - 1)*(x - 2)**2) == {(1, ), (2, )}
+    assert diop_solve((x - 1)*(x - 2)) == {(1, ), (2, )}
 
 
 def test_classify_diop():
@@ -130,7 +130,7 @@ def test_classify_diop():
                          + 1) == ([x, y], {
                              x*y**2: 1, 1: 1
                          }, 'cubic_thue')
-    assert classify_diop(x**4 + y**4 + z**4 - (1+16+81)) == (
+    assert classify_diop(x**4 + y**4 + z**4 - (1 + 16 + 81)) == (
         [x, y, z], {
             1: -98, x**4: 1, z**4: 1, y**4: 1
         },
@@ -590,8 +590,8 @@ def test_descent():
 
 
 def test_diophantine():
-    assert check_solutions((x-y)*(y-z)*(z-x))
-    assert check_solutions((x-y)*(x**2 + y**2 - z**2))
+    assert check_solutions((x - y)*(y - z)*(z - x))
+    assert check_solutions((x - y)*(x**2 + y**2 - z**2))
     assert check_solutions((x - 3*y + 7*z)*(x**2 + y**2 - z**2))
     assert check_solutions(x**2 - 3*y**2 - 1)
     assert check_solutions(y**2 + 7*x*y)
@@ -704,7 +704,7 @@ def test_diop_general_sum_of_squares_quick():
 
     assert diop_general_sum_of_squares(x**2 + y**2 - 2) is None
     assert diop_general_sum_of_squares(x**2 + y**2 + z**2 + 2) == set()
-    eq = x**2 + y**2 + z**2 - (1+4+9)
+    eq = x**2 + y**2 + z**2 - (1 + 4 + 9)
     assert diop_general_sum_of_squares(eq) == \
            {(1, 2, 3)}
     eq = u**2 + v**2 + x**2 + y**2 + z**2 - 1313

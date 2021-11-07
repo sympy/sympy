@@ -491,13 +491,13 @@ def test_2nd_2F1_hypergeometric():
 
 
 def test_2nd_2F1_hypergeometric_integral():
-    eq = x*(x-1)*f(x).diff(x, 2) + (-1 + S(7)/2*x)*f(x).diff(x) + f(x)
+    eq = x*(x - 1)*f(x).diff(x, 2) + (-1 + S(7)/2*x)*f(x).diff(x) + f(x)
     sol = Eq(
         f(x),
         (
-            C1 +
-            C2*Integral(exp(Integral((1 - x/2)/(x*(x-1)), x))/(1 - x/2)**2, x)
-        )*exp(Integral(1/(x-1), x)/4)*exp(-Integral(7/(x-1), x)/4)
+            C1 + C2
+            *Integral(exp(Integral((1 - x/2)/(x*(x - 1)), x))/(1 - x/2)**2, x)
+        )*exp(Integral(1/(x - 1), x)/4)*exp(-Integral(7/(x - 1), x)/4)
         *hyper((S(1)/2, -1), (1, ), x)
     )
     assert sol == dsolve(eq, hint='2nd_hypergeometric_Integral')
@@ -1151,8 +1151,8 @@ def _get_examples_ode_sol_factorable():
             'fact_06': {
                 'eq': (f(x).diff(x, 2) - exp(f(x)))*f(x).diff(x),
                 'sol': [
-                    Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2+x)) - 1))),
-                    Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2-x)) - 1))),
+                    Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 + x)) - 1))),
+                    Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 - x)) - 1))),
                     Eq(f(x), C1)
                 ],
                 'slow': True,
@@ -1202,10 +1202,10 @@ def _get_examples_ode_sol_factorable():
                 'eq': (f(x).diff(x, 2) - exp(f(x)))*
                 (f(x).diff(x, 2) + exp(f(x))),
                 'sol': [
-                    Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2+x)) - 1))),
-                    Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2-x)) - 1))),
-                    Eq(f(x), log(C1/(1 - cos(C1*sqrt(-1/C1)*(C2+x))))),
-                    Eq(f(x), log(C1/(1 - cos(C1*sqrt(-1/C1)*(C2-x)))))
+                    Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 + x)) - 1))),
+                    Eq(f(x), log(C1/(cos(C1*sqrt(-1/C1)*(C2 - x)) - 1))),
+                    Eq(f(x), log(C1/(1 - cos(C1*sqrt(-1/C1)*(C2 + x))))),
+                    Eq(f(x), log(C1/(1 - cos(C1*sqrt(-1/C1)*(C2 - x)))))
                 ],
                 'dsolve_too_slow': True,
             },
@@ -1328,7 +1328,7 @@ def _get_examples_ode_sol_almost_linear():
                         (
                             C1 + Piecewise(
                                 (x, Eq(A + 1, 0)),
-                                ((-A*x + A - x - 1)*exp(x)/(A+1), True)
+                                ((-A*x + A - x - 1)*exp(x)/(A + 1), True)
                             )
                         )*exp(-x)
                     )
@@ -2016,7 +2016,7 @@ def _get_examples_ode_sol_separable():
                 'sol': [Eq(f(x), C1/cos(x))],
             },
             'separable_13': {
-                'eq': (x-1)*cos(f(x))*f(x).diff(x) - 2*x*sin(f(x)),
+                'eq': (x - 1)*cos(f(x))*f(x).diff(x) - 2*x*sin(f(x)),
                 'sol': [
                     Eq(f(x), pi - asin(C1*(x**2 - 2*x + 1)*exp(2*x))),
                     Eq(f(x), asin(C1*(x**2 - 2*x + 1)*exp(2*x)))
@@ -2057,8 +2057,8 @@ def _get_examples_ode_sol_separable():
                 ],
             },
             'separable_20': {
-                'eq': (1-x)*f(x).diff(x) - x*(f(x) + 1),
-                'sol': [Eq(f(x), (C1*exp(-x) - x + 1)/(x-1))],
+                'eq': (1 - x)*f(x).diff(x) - x*(f(x) + 1),
+                'sol': [Eq(f(x), (C1*exp(-x) - x + 1)/(x - 1))],
             },
             'separable_21': {
                 'eq': f(x)*diff(f(x), x) + x - 3*x*f(x)**2,
@@ -2228,7 +2228,7 @@ def _get_examples_ode_sol_1st_exact():
                 ],
             },
             '1st_exact_11': {
-                'eq': (x+2)*sin(f(x)) + f(x).diff(x)*x*cos(f(x)),
+                'eq': (x + 2)*sin(f(x)) + f(x).diff(x)*x*cos(f(x)),
                 'sol': [
                     Eq(f(x), -asin(C1*exp(-x)/x**2) + pi),
                     Eq(f(x), asin(C1*exp(-x)/x**2))
@@ -2459,11 +2459,11 @@ def _get_examples_ode_sol_2nd_linear_bessel():
                 ],
             },
             '2nd_lin_bessel_10': {
-                'eq': (x - 2)**2*(f(x).diff(x, 2)) - (x-2)*f(x).diff(x) + 4*
+                'eq': (x - 2)**2*(f(x).diff(x, 2)) - (x - 2)*f(x).diff(x) + 4*
                 (x - 2)**2*f(x),
                 'sol': [
                     Eq(
-                        f(x), (x-2)*
+                        f(x), (x - 2)*
                         (C1*besselj(1, 2*x - 4) + C2*bessely(1, 2*x - 4))
                     )
                 ],
@@ -2490,7 +2490,7 @@ def _get_examples_ode_sol_2nd_2F1_hypergeometric():
         'func': f(x),
         'examples': {
             '2nd_2F1_hyper_01': {
-                'eq': x*(x-1)*f(x).diff(x, 2) +
+                'eq': x*(x - 1)*f(x).diff(x, 2) +
                 (S(3)/2 - 2*x)*f(x).diff(x) + 2*f(x),
                 'sol': [
                     Eq(
@@ -2501,7 +2501,8 @@ def _get_examples_ode_sol_2nd_2F1_hypergeometric():
                 ],
             },
             '2nd_2F1_hyper_02': {
-                'eq': x*(x-1)*f(x).diff(x, 2) + (S(7)/2*x)*f(x).diff(x) + f(x),
+                'eq': x*(x - 1)*f(x).diff(x, 2) +
+                (S(7)/2*x)*f(x).diff(x) + f(x),
                 'sol': [
                     Eq(
                         f(x),
@@ -2514,7 +2515,7 @@ def _get_examples_ode_sol_2nd_2F1_hypergeometric():
                 ],
             },
             '2nd_2F1_hyper_03': {
-                'eq': x*(x-1)*f(x).diff(x, 2) +
+                'eq': x*(x - 1)*f(x).diff(x, 2) +
                 (S(3) + S(7)/2*x)*f(x).diff(x) + f(x),
                 'sol': [
                     Eq(
@@ -3273,7 +3274,7 @@ def _get_examples_ode_sol_linear_coefficients():
         'func': f(x),
         'examples': {
             'linear_coeff_01': {
-                'eq': f(x).diff(x) + (3 + 2*f(x))/(x+3),
+                'eq': f(x).diff(x) + (3 + 2*f(x))/(x + 3),
                 'sol': [Eq(f(x), C1/(x**2 + 6*x + 9) - Rational(3, 2))],
             },
         }
@@ -3329,7 +3330,9 @@ def _get_examples_ode_sol_1st_homogeneous_coeff_best():
             },
             '1st_homogeneous_coeff_best_07': {
                 'eq': x**2 + f(x)**2 - 2*x*f(x)*f(x).diff(x),
-                'sol': [Eq(f(x), -sqrt(x*(C1+x))), Eq(f(x), sqrt(x*(C1+x)))],
+                'sol': [
+                    Eq(f(x), -sqrt(x*(C1 + x))), Eq(f(x), sqrt(x*(C1 + x)))
+                ],
             },
             '1st_homogeneous_coeff_best_08': {
                 'eq': f(x)**2 + (x*sqrt(f(x)**2 - x**2) - x*f(x))*f(x).diff(x),

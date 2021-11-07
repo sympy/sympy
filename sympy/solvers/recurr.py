@@ -129,8 +129,8 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
 
     coeffs = [Poly(coeff, n) for coeff in coeffs]
 
-    polys = [Poly(0, n)]*(r+1)
-    terms = [(S.Zero, S.NegativeInfinity)]*(r+1)
+    polys = [Poly(0, n)]*(r + 1)
+    terms = [(S.Zero, S.NegativeInfinity)]*(r + 1)
 
     for i in range(r + 1):
         for j in range(i, r + 1):
@@ -237,7 +237,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
             I = _one_vector(d + 1)
 
             for k in range(1, d + 1):
-                I[k] = I[k - 1]*(x+i-k+1)/k
+                I[k] = I[k - 1]*(x + i - k + 1)/k
 
             alpha[i] = S.Zero
 
@@ -295,7 +295,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
         P, Q = _one_vector(U), _zero_vector(A)
 
         for i in range(1, U):
-            P[i] = (P[i - 1]*(n-a-i+1)/i).expand()
+            P[i] = (P[i - 1]*(n - a - i + 1)/i).expand()
 
         for i in range(A):
             Q[i] = Add(*[(v*p).expand() for v, p in zip(V[:, i], P)])
@@ -426,7 +426,7 @@ def rsolve_ratio(coeffs, f, n, **hints):
     if not nni_roots:
         return rsolve_poly(coeffs, f, n, **hints)
     else:
-        C, numers = S.One, [S.Zero]*(r+1)
+        C, numers = S.One, [S.Zero]*(r + 1)
 
         for i in range(int(max(nni_roots)), -1, -1):
             d = gcd(A, B.subs(n, n + i), n)
@@ -545,7 +545,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
         for i, g in enumerate(inhomogeneous):
             coeff, polys = S.One, coeffs[:]
-            denoms = [S.One]*(r+1)
+            denoms = [S.One]*(r + 1)
 
             s = hypersimp(g, n)
 

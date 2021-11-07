@@ -797,14 +797,14 @@ def get_gen_sol_from_part_sol(part_sols, a, x):
             u = C1*exp(Integral(y2 - y1, x)).doit()
         if u == 1:
             return y2
-        return (y2*u - y1)/(u-1)
+        return (y2*u - y1)/(u - 1)
 
     # In case of 3 particular solutions, a closed form
     # of the general solution can be obtained directly
     else:
         y1, y2, y3 = part_sols[:3]
         C1 = Dummy('C1')
-        return (C1+1)*y2*(y1-y3)/(C1*y1 + y2 - (C1+1)*y3)
+        return (C1 + 1)*y2*(y1 - y3)/(C1*y1 + y2 - (C1 + 1)*y3)
 
 
 def solve_riccati(fx, x, b0, b1, b2, gensol=False):

@@ -19,14 +19,14 @@ def test_nsolve_fail():
     # Sometimes it is better to use the numerator (issue 4829)
     # but sometimes it is not (issue 11768) so leave this to
     # the discretion of the user
-    ans = nsolve(x**2/(1-x)/(1 - 2*x)**2 - 100, x, 0)
+    ans = nsolve(x**2/(1 - x)/(1 - 2*x)**2 - 100, x, 0)
     assert ans > 0.46 and ans < 0.47
 
 
 def test_nsolve_denominator():
     x = symbols('x')
     # Test that nsolve uses the full expression (numerator and denominator).
-    ans = nsolve((x**2 + 3*x + 2)/(x+2), -2.1)
+    ans = nsolve((x**2 + 3*x + 2)/(x + 2), -2.1)
     # The root -2 was divided out, so make sure we don't find it.
     assert ans == -1.0
 
@@ -55,7 +55,7 @@ def test_nsolve():
     y = Symbol('y')
     z = Symbol('z')
     f1 = -x + 2*y
-    f2 = (x**2 + x*(y**2 - 2) - 4*y)/(x+4)
+    f2 = (x**2 + x*(y**2 - 2) - 4*y)/(x + 4)
     f3 = sqrt(x**2 + y**2)*z
     f = Matrix((f1, f2, f3)).T
     F = lambdify((x, y, z), f.T, modules='mpmath')

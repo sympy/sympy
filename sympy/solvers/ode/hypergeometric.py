@@ -141,12 +141,13 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
     gamma = Wild("gamma")
     delta = Wild("delta")
     # I0 of the standerd 2F1 equation.
-    I0 = ((a-b+1)*(a-b-1)*x**2 + 2*((1-a-b)*c + 2*a*b)*x + c*
-          (c-2))/(4*x**2*(x - 1)**2)
+    I0 = (
+        (a - b + 1)*(a - b - 1)*x**2 + 2*((1 - a - b)*c + 2*a*b)*x + c*(c - 2)
+    )/(4*x**2*(x - 1)**2)
     if sing_point != [0, 1]:
         # If singular point is [0, 1] then we have standerd equation.
         eqs = []
-        sing_eqs = [-beta/alpha, -delta/gamma, (delta-beta)/(alpha-gamma)]
+        sing_eqs = [-beta/alpha, -delta/gamma, (delta - beta)/(alpha - gamma)]
         # making equations for the finding the mobius transformation
         for i in range(3):
             if i < len(sing_point):
@@ -182,7 +183,9 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
     I0_num, I0_dem = I0.as_numer_denom()
     # collecting coeff of (x**2, x), of the standerd equation.
     # substituting (a-b) = s, (a+b) = r
-    dict_I0 = {x**2: s**2 - 1, x: (2*(1-r)*c + (r+s)*(r-s)), 1: c*(c-2)}
+    dict_I0 = {
+        x**2: s**2 - 1, x: (2*(1 - r)*c + (r + s)*(r - s)), 1: c*(c - 2)
+    }
     # collecting coeff of (x**2, x) from I0 of the given equation.
     dict_I.update(collect(expand(cancel(I*I0_dem)), [x**2, x], evaluate=False))
     eqs = []
@@ -201,8 +204,8 @@ def match_2nd_2F1_hypergeometric(I, k, sing_point, func):
         _c = min(list(roots(eqs[2], c)))
     _s = factor(sqrt(eqs[0].lhs + 1))
     _r = _c - factor(sqrt(_c**2 + _s**2 + eqs[1].lhs - 2*_c))
-    _a = (_r+_s)/2
-    _b = (_r-_s)/2
+    _a = (_r + _s)/2
+    _b = (_r - _s)/2
 
     rn = {
         'a': simplify(_a),
@@ -272,7 +275,7 @@ def get_sol_2F1_hypergeometric(eq, func, match_object):
         # applying transformation in the solution
         subs = match_object['mobius']
         dtdx = simplify(1/(subs.diff(x)))
-        _B = ((a+b+1)*x - c).subs(x, subs)*dtdx
+        _B = ((a + b + 1)*x - c).subs(x, subs)*dtdx
         _B = factor(_B + ((x**2 - x).subs(x, subs))*(dtdx.diff(x)*dtdx))
         _A = factor((x**2 - x).subs(x, subs)*(dtdx**2))
         e = exp(logcombine(Integral(cancel(_B/(2*_A)), x), force=True))

@@ -751,7 +751,7 @@ def solve_univariate_inequality(
 def _pt(start, end):
     """Return a point between start and end"""
     if not start.is_infinite and not end.is_infinite:
-        pt = (start+end)/2
+        pt = (start + end)/2
     elif start.is_infinite and end.is_infinite:
         pt = S.Zero
     else:

@@ -296,17 +296,18 @@ def test_classify_ode():
         'nth_linear_constant_coeff_variation_of_parameters_Integral'
     )
 
-    assert classify_ode(2*x*f(x)*f(x).diff(x) + (1+x)*f(x)**2 - exp(x),
-                        f(x)) == (
-                            'factorable',
-                            '1st_exact',
-                            'Bernoulli',
-                            'almost_linear',
-                            'lie_group',
-                            '1st_exact_Integral',
-                            'Bernoulli_Integral',
-                            'almost_linear_Integral'
-                        )
+    assert classify_ode(
+        2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)
+    ) == (
+        'factorable',
+        '1st_exact',
+        'Bernoulli',
+        'almost_linear',
+        'lie_group',
+        '1st_exact_Integral',
+        'Bernoulli_Integral',
+        'almost_linear_Integral'
+    )
     assert 'Riccati_special_minus2' in \
         classify_ode(2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2), f(x))
     raises(
@@ -376,7 +377,7 @@ def test_classify_ode():
     assert sorted(classify_ode(Eq(f(x).diff(x), 0), f(x), dict=True).keys()) == \
         ['default', 'nth_linear_constant_coeff_homogeneous', 'order']
     a = classify_ode(
-        2*x*f(x)*f(x).diff(x) + (1+x)*f(x)**2 - exp(x),
+        2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x),
         f(x),
         dict=True,
         hint='Bernoulli'
@@ -940,9 +941,9 @@ def test_constant_renumber_order_issue_5308():
     assert constant_renumber(C1*x + C2*y) == \
         constant_renumber(C1*y + C2*x) == \
         C1*x + C2*y
-    e = C1*(C2+x)*(C3+y)
+    e = C1*(C2 + x)*(C3 + y)
     for a, b, c in variations([C1, C2, C3], 3):
-        assert constant_renumber(a*(b+x)*(c+y)) == e
+        assert constant_renumber(a*(b + x)*(c + y)) == e
 
 
 def test_constant_renumber():
@@ -1056,7 +1057,9 @@ def test_series():
     assert checkodesol(eq, sol, order=1)[0]
 
     eq = f(x).diff(x) - sin(x*f(x))
-    sol = Eq(f(x), (x - 2)**2*(1 + sin(4))*cos(4) + (x-2)*sin(4) + 2 + O(x**3))
+    sol = Eq(
+        f(x), (x - 2)**2*(1 + sin(4))*cos(4) + (x - 2)*sin(4) + 2 + O(x**3)
+    )
     assert dsolve(eq, hint='1st_power_series', ics={f(2): 2}, n=3) == sol
     # FIXME: The solution here should be O((x-2)**3) so is incorrect
     #assert checkodesol(eq, sol, order=1)[0]
@@ -1161,7 +1164,7 @@ def test_2nd_power_series_regular():
     assert dsolve(eq, f(x), hint="2nd_power_series_regular") == sol
     assert checkodesol(eq, sol) == (True, 0)
 
-    eq = f(x).diff(x, 2) + ((1-x)/x)*f(x).diff(x) + (a/x)*f(x)
+    eq = f(x).diff(x, 2) + ((1 - x)/x)*f(x).diff(x) + (a/x)*f(x)
     sol = Eq(f(x), C1*(-a*x**5*(a - 4)*(a - 3)*(a - 2)*(a - 1)/14400 + \
         a*x**4*(a - 3)*(a - 2)*(a - 1)/576 - a*x**3*(a - 2)*(a - 1)/36 + \
         a*x**2*(a - 1)/4 - a*x + 1) + O(x**6))

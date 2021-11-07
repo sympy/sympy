@@ -2854,7 +2854,7 @@ def _tsolve(eq, sym, **flags):
         eq_down = expand_log(expand_power_exp(eq)).subs(
             dict(list(zip(up_or_log, [0]*len(up_or_log))))
         )
-        eq = expand_power_exp(factor(eq_down, deep=True) + (eq-eq_down))
+        eq = expand_power_exp(factor(eq_down, deep=True) + (eq - eq_down))
         rhs, lhs = _invert(eq, sym)
         if lhs.has(sym):
             try:
@@ -3652,7 +3652,7 @@ def unrad(eq, *syms, **flags):
                     a, b, c, d, A, B = [Dummy(i) for i in 'abcdAB']
                     # zz represents the unraded expression into which the
                     # specifics for this case are substituted
-                    zz = (c-d)*(
+                    zz = (c - d)*(
                         A**3*a**9 + 3*A**2*B*a**6*b**3 - 3*A**2*a**6*c**3
                         + 9*A**2*a**6*c**2*d - 9*A**2*a**6*c*d**2
                         + 3*A**2*a**6*d**3 + 3*A*B**2*a**3*b**6

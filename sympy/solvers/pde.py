@@ -704,7 +704,7 @@ def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
                )*Integral((1/expterm*e).subs(solvedict), (xi, b*x + c*y))
     return Eq(
         f(x, y),
-        Subs(expterm*(functerm+genterm), (eta, xi), (c*x - b*y, b*x + c*y))
+        Subs(expterm*(functerm + genterm), (eta, xi), (c*x - b*y, b*x + c*y))
     )
 
 

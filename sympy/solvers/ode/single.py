@@ -872,7 +872,7 @@ class Bernoulli(SinglePatternODESolver):
                 fx**(1 - n),
                 (
                     (
-                        C1 - (n-1)*Integral(
+                        C1 - (n - 1)*Integral(
                             Q*exp(-n*Integral(P, x))*exp(Integral(P, x)), x
                         )
                     )*exp(-(1 - n)*Integral(P, x))
