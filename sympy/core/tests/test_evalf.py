@@ -642,7 +642,7 @@ def test_evalf_with_zoo():
     assert (0 ** x).evalf(subs={x: -1 + I}) == nan
     assert Mul(2, Pow(0, -1, evaluate=False), evaluate=False).evalf() == zoo  # issue 21147
     assert Mul(x, 1/x, evaluate=False).evalf(subs={x: 0}) == Mul(x, 1/x, evaluate=False).subs(x, 0) == nan
-    assert Mul(1/x, 1/x, evaluate=False).evalf(subs={x: 0})
+    assert Mul(1/x, 1/x, evaluate=False).evalf(subs={x: 0}) == zoo
     assert Mul(1/x, Abs(1/x), evaluate=False).evalf(subs={x: 0}) == zoo
     assert Abs(zoo, evaluate=False).evalf() == oo
     assert re(zoo, evaluate=False).evalf() == nan
