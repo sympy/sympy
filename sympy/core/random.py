@@ -24,12 +24,11 @@ EXAMPLES
 import random as _random
 rng = _random.Random()
 
-seed = lambda s=None: rng.seed(s)
-
 choice = rng.choice
 random = rng.random
 randint = rng.randint
 randrange = rng.randrange
+seed = rng.seed
 shuffle = rng.shuffle
 uniform = rng.uniform
 
