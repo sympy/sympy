@@ -498,7 +498,7 @@ def test_2nd_2F1_hypergeometric_integral():
             C1 + C2
             *Integral(exp(Integral((1 - x/2)/(x*(x - 1)), x))/(1 - x/2)**2, x)
         )*exp(Integral(1/(x - 1), x)/4)*exp(-Integral(7/(x - 1), x)/4)
-        *hyper((S(1)/2, -1), (1, ), x)
+        *hyper((S(1)/2, -1), (1,), x)
     )
     assert sol == dsolve(eq, hint='2nd_hypergeometric_Integral')
     assert checkodesol(eq, sol) == (True, 0)
@@ -2495,8 +2495,8 @@ def _get_examples_ode_sol_2nd_2F1_hypergeometric():
                 'sol': [
                     Eq(
                         f(x),
-                        C1*x**(S(5)/2)*hyper((S(3)/2, S(1)/2), (S(7)/2, ), x)
-                        + C2*hyper((-1, -2), (-S(3)/2, ), x)
+                        C1*x**(S(5)/2)*hyper((S(3)/2, S(1)/2), (S(7)/2,), x)
+                        + C2*hyper((-1, -2), (-S(3)/2,), x)
                     )
                 ],
             },
@@ -2508,8 +2508,8 @@ def _get_examples_ode_sol_2nd_2F1_hypergeometric():
                         f(x),
                         (
                             C1*(1 - x)**
-                            (S(5)/2)*hyper((S(1)/2, 2), (S(7)/2, ), 1 - x)
-                            + C2*hyper((-S(1)/2, -2), (-S(3)/2, ), 1 - x)
+                            (S(5)/2)*hyper((S(1)/2, 2), (S(7)/2,), 1 - x)
+                            + C2*hyper((-S(1)/2, -2), (-S(3)/2,), 1 - x)
                         )/(x - 1)**(S(5)/2)
                     )
                 ],
@@ -2522,8 +2522,8 @@ def _get_examples_ode_sol_2nd_2F1_hypergeometric():
                         f(x),
                         (
                             C1*(1 - x)**
-                            (S(11)/2)*hyper((S(1)/2, 2), (S(13)/2, ), 1 - x)
-                            + C2*hyper((-S(7)/2, -5), (-S(9)/2, ), 1 - x)
+                            (S(11)/2)*hyper((S(1)/2, 2), (S(13)/2,), 1 - x)
+                            + C2*hyper((-S(7)/2, -5), (-S(9)/2,), 1 - x)
                         )/(x - 1)**(S(11)/2)
                     )
                 ],
@@ -2538,9 +2538,9 @@ def _get_examples_ode_sol_2nd_2F1_hypergeometric():
                         f(x),
                         x**(S(45)/98)*(
                             C1*x**(S(4)/49)
-                            *hyper((S(1)/3, -S(1)/2), (S(9)/7, ), x**(S(2)/7))
+                            *hyper((S(1)/3, -S(1)/2), (S(9)/7,), x**(S(2)/7))
                             + C2*hyper(
-                                (S(1)/21, -S(11)/14), (S(5)/7, ), x**(S(2)/7)
+                                (S(1)/21, -S(11)/14), (S(5)/7,), x**(S(2)/7)
                             )
                         )/(x**(S(2)/7) - 1)**(S(19)/84)
                     )

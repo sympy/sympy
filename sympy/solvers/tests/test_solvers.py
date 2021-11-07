@@ -913,11 +913,11 @@ def test_linear_system_symbols_doesnt_hang_2():
         /18999819388126922721593374609813539528
     }
 
-    eqs = list(M*Matrix(syms + (1, )))
+    eqs = list(M*Matrix(syms + (1,)))
     assert solve(eqs, syms) == sol
 
     y = Symbol('y')
-    eqs = list(y*M*Matrix(syms + (1, )))
+    eqs = list(y*M*Matrix(syms + (1,)))
     assert solve(eqs, syms) == sol
 
 
@@ -2306,9 +2306,9 @@ def test_issue_6528():
 def test_overdetermined():
     x = symbols('x', real=True)
     eqs = [Abs(4*x - 7) - 5, Abs(3 - 8*x) - 1]
-    assert solve(eqs, x) == [(S.Half, )]
-    assert solve(eqs, x, manual=True) == [(S.Half, )]
-    assert solve(eqs, x, manual=True, check=False) == [(S.Half, ), (S(3), )]
+    assert solve(eqs, x) == [(S.Half,)]
+    assert solve(eqs, x, manual=True) == [(S.Half,)]
+    assert solve(eqs, x, manual=True, check=False) == [(S.Half,), (S(3),)]
 
 
 def test_issue_6605():
@@ -2359,7 +2359,7 @@ def test_issues_6819_6820_6821_6248_8692():
     # issue 6821
     x, y = symbols('x y', real=True)
     assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
-    assert solve([abs(x) - 2, arg(x) - pi], x) == [(-2, )]
+    assert solve([abs(x) - 2, arg(x) - pi], x) == [(-2,)]
     assert set(solve(abs(x - 7) - 8)) == {-S.One, S(15)}
 
     # issue 8692

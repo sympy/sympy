@@ -1995,7 +1995,7 @@ def _solve_system(exprs, symbols, **flags):
                     complexity = (
                         ep.degree(), len(coeff_syms & rv), len(coeff_syms)
                     )
-                return complexity + (default_sort_key(sym), )
+                return complexity + (default_sort_key(sym),)
 
             if sort:
                 rv = sorted(rv, key=key)
@@ -2433,7 +2433,7 @@ def solve_linear_system(system, *symbols, **flags):
     assert system.shape[1] == len(symbols) + 1
 
     # This is just a wrapper for solve_lin_sys
-    eqs = list(system*Matrix(symbols + (-1, )))
+    eqs = list(system*Matrix(symbols + (-1,)))
     eqs, ring = sympy_eqs_to_ring(eqs, symbols)
     sol = solve_lin_sys(eqs, ring, _raw=False)
     if sol is not None:

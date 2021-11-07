@@ -87,8 +87,8 @@ def equivalence_hypergeometric(A, B, func):
                     _pow.update(_power_counting(val.args))
         return _pow
 
-    pow_num = _power_counting((num, ))
-    pow_dem = _power_counting((dem, ))
+    pow_num = _power_counting((num,))
+    pow_dem = _power_counting((dem,))
     pow_dem.update(pow_num)
 
     _pow = pow_dem
@@ -101,7 +101,7 @@ def equivalence_hypergeometric(A, B, func):
     I0 = factor(cancel(powdenest(I0.subs(x, x**(S(1)/k)), force=True)))
     num, dem = I0.as_numer_denom()
 
-    max_num_pow = max(_power_counting((num, )))
+    max_num_pow = max(_power_counting((num,)))
     dem_args = dem.args
     sing_point = []
     dem_pow = []

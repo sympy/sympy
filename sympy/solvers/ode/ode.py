@@ -814,7 +814,7 @@ def solve_ics(sols, funcs, constants, ics):
             elif isinstance(funcarg, Derivative):
                 deriv = funcarg
                 x0 = funcarg.variables[0]
-                variables = (x, )*len(funcarg.variables)
+                variables = (x,)*len(funcarg.variables)
                 matching_func = deriv.subs(x0, x)
             if variables not in diff_variables:
                 for sol in sols:
@@ -2757,8 +2757,8 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
             dict_ = Poly(list(ordered(tseries.args))[:-1], x).as_dict()
         # Fill in with zeros, if coefficients are zero.
         for i in range(n + 1):
-            if (i, ) not in dict_:
-                dict_[(i, )] = S.Zero
+            if (i,) not in dict_:
+                dict_[(i,)] = S.Zero
         serlist.append(dict_)
 
     pseries = serlist[0]
@@ -2766,11 +2766,11 @@ def _frobenius(n, m, p0, q0, p, q, x0, x, c, check=None):
     indicial = d*(d - 1) + d*p0 + q0
     frobdict = {}
     for i in range(1, n + 1):
-        num = c*(m*pseries[(i, )] + qseries[(i, )])
+        num = c*(m*pseries[(i,)] + qseries[(i,)])
         for j in range(1, i):
             sym = Symbol("C" + str(j))
             num += frobdict[sym]*(
-                (m + j)*pseries[(i - j, )] + qseries[(i - j, )]
+                (m + j)*pseries[(i - j,)] + qseries[(i - j,)]
             )
 
         # Checking for cases when m1 - m2 is an integer. If num equals zero

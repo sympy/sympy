@@ -643,7 +643,7 @@ def rational_laurent_series(num, den, x, r, m, n):
     syms = symbols(f'a:{maxdegree}', cls=Dummy)
     diff = num - den*Poly(syms[::-1], x)
     coeff_diffs = diff.all_coeffs()[::-1][:maxdegree]
-    (coeffs, ) = linsolve(coeff_diffs, syms)
+    (coeffs,) = linsolve(coeff_diffs, syms)
 
     # Use the recursion relation for the rest
     recursion = den.all_coeffs()[::-1]

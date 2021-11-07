@@ -85,8 +85,8 @@ def test_nosols():
 
 
 def test_univariate():
-    assert diop_solve((x - 1)*(x - 2)**2) == {(1, ), (2, )}
-    assert diop_solve((x - 1)*(x - 2)) == {(1, ), (2, )}
+    assert diop_solve((x - 1)*(x - 2)**2) == {(1,), (2,)}
+    assert diop_solve((x - 1)*(x - 2)) == {(1,), (2,)}
 
 
 def test_classify_diop():
@@ -145,16 +145,16 @@ def test_classify_diop():
 
 
 def test_linear():
-    assert diop_solve(x) == (0, )
-    assert diop_solve(1*x) == (0, )
-    assert diop_solve(3*x) == (0, )
-    assert diop_solve(x + 1) == (-1, )
-    assert diop_solve(2*x + 1) == (None, )
-    assert diop_solve(2*x + 4) == (-2, )
+    assert diop_solve(x) == (0,)
+    assert diop_solve(1*x) == (0,)
+    assert diop_solve(3*x) == (0,)
+    assert diop_solve(x + 1) == (-1,)
+    assert diop_solve(2*x + 1) == (None,)
+    assert diop_solve(2*x + 4) == (-2,)
     assert diop_solve(y + x) == (t_0, -t_0)
     assert diop_solve(y + x + 0) == (t_0, -t_0)
     assert diop_solve(y + x - 0) == (t_0, -t_0)
-    assert diop_solve(0*x - y - 5) == (-5, )
+    assert diop_solve(0*x - y - 5) == (-5,)
     assert diop_solve(3*y + 2*x - 5) == (3*t_0 - 5, -2*t_0 + 5)
     assert diop_solve(2*x - 3*y - 5) == (3*t_0 - 5, 2*t_0 - 5)
     assert diop_solve(-2*x - 3*y - 5) == (3*t_0 + 5, -2*t_0 - 5)
@@ -710,7 +710,7 @@ def test_diop_general_sum_of_squares_quick():
     eq = u**2 + v**2 + x**2 + y**2 + z**2 - 1313
     assert len(diop_general_sum_of_squares(eq, 3)) == 3
     # issue 11016
-    var = symbols(':5') + (symbols('6', negative=True), )
+    var = symbols(':5') + (symbols('6', negative=True),)
     eq = Add(*[i**2 for i in var]) - 112
 
     base_soln = {
@@ -827,9 +827,9 @@ def test_power_representation():
     raises(ValueError, lambda: list(power_representation(2, 0, 2)))
     raises(ValueError, lambda: list(power_representation(2, 2, 0)))
     assert list(power_representation(-1, 2, 2)) == []
-    assert list(power_representation(1, 1, 1)) == [(1, )]
+    assert list(power_representation(1, 1, 1)) == [(1,)]
     assert list(power_representation(3, 2, 1)) == []
-    assert list(power_representation(4, 2, 1)) == [(2, )]
+    assert list(power_representation(4, 2, 1)) == [(2,)]
     assert list(power_representation(3**4, 4, 6, zeros=True)) == \
         [(1, 2, 2, 2, 2, 2), (0, 0, 0, 0, 0, 3)]
     assert list(power_representation(3**4, 4, 5, zeros=False)) == []
@@ -1005,7 +1005,7 @@ def test_sum_of_squares_powers():
     assert list(sum_of_squares(2, 3)) == []
     assert list(sum_of_squares(0, 3, True)) == [(0, 0, 0)]
     assert list(sum_of_squares(0, 3)) == []
-    assert list(sum_of_squares(4, 1)) == [(2, )]
+    assert list(sum_of_squares(4, 1)) == [(2,)]
     assert list(sum_of_squares(5, 1)) == []
     assert list(sum_of_squares(50, 2)) == [(5, 5), (1, 7)]
     assert list(sum_of_squares(11, 5,
@@ -1086,12 +1086,12 @@ def test_sum_of_squares_powers():
     raises(ValueError, lambda: list(sum_of_powers(2, 1, -1)))
     assert list(sum_of_powers(-2, 3, 2)) == [(-1, -1)]
     assert list(sum_of_powers(-2, 4, 2)) == []
-    assert list(sum_of_powers(2, 1, 1)) == [(2, )]
+    assert list(sum_of_powers(2, 1, 1)) == [(2,)]
     assert list(sum_of_powers(2, 1, 3, True)) == [(0, 0, 2), (0, 1, 1)]
     assert list(sum_of_powers(5, 1, 2, True)) == [(0, 5), (1, 4), (2, 3)]
     assert list(sum_of_powers(6, 2, 2)) == []
     assert list(sum_of_powers(3**5, 3, 1)) == []
-    assert list(sum_of_powers(3**6, 3, 1)) == [(9, )] and (9**3 == 3**6)
+    assert list(sum_of_powers(3**6, 3, 1)) == [(9,)] and (9**3 == 3**6)
     assert list(sum_of_powers(2**1000, 5, 2)) == []
 
 
@@ -1171,13 +1171,13 @@ def test_diophantine_solution_set():
     assert set(s1) == set()
     assert s1.symbols == ()
     assert s1.parameters == ()
-    raises(ValueError, lambda: s1.add((x, )))
+    raises(ValueError, lambda: s1.add((x,)))
     assert list(s1.dict_iterator()) == []
 
     s2 = DiophantineSolutionSet([x, y], [t, u])
     assert s2.symbols == (x, y)
     assert s2.parameters == (t, u)
-    raises(ValueError, lambda: s2.add((1, )))
+    raises(ValueError, lambda: s2.add((1,)))
     s2.add((3, 4))
     assert set(s2) == {(3, 4)}
     s2.update((3, 4), (-1, u))

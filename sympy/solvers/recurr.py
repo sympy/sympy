@@ -137,7 +137,7 @@ def rsolve_poly(coeffs, f, n, shift=0, **hints):
             polys[i] += coeffs[j]*(binomial(j, i).as_poly(n))
 
         if not polys[i].is_zero:
-            (exp, ), coeff = polys[i].LT()
+            (exp,), coeff = polys[i].LT()
             terms[i] = (coeff, exp)
 
     d = b = terms[0][1]
@@ -728,7 +728,7 @@ def rsolve(f, y, init=None):
         f = f.lhs - f.rhs
 
     n = y.args[0]
-    k = Wild('k', exclude=(n, ))
+    k = Wild('k', exclude=(n,))
 
     # Preprocess user input to allow things like
     # y(n) + a*(y(n + 1) + y(n - 1))/2

@@ -1663,7 +1663,7 @@ def test__solveset_multi():
 
     # Basic univariate case:
     assert _solveset_multi([x**2 - 1], [x],
-                           [S.Reals]) == FiniteSet((1, ), (-1, ))
+                           [S.Reals]) == FiniteSet((1,), (-1,))
 
     # Linear systems of two equations
     assert _solveset_multi([x + y, x + 1], [x, y],
@@ -1678,8 +1678,8 @@ def test__solveset_multi():
     assert dumeq(
         _solveset_multi([x + y], [x, y], [Reals, Reals]),
         Union(
-            ImageSet(Lambda(((x, ), ), (x, -x)), ProductSet(Reals)),
-            ImageSet(Lambda(((y, ), ), (-y, y)), ProductSet(Reals))
+            ImageSet(Lambda(((x,),), (x, -x)), ProductSet(Reals)),
+            ImageSet(Lambda(((y,),), (-y, y)), ProductSet(Reals))
         )
     )
     assert _solveset_multi(
@@ -1709,10 +1709,10 @@ def test__solveset_multi():
     assert dumeq(
         _solveset_multi([x**2 - y**2], [x, y], [Reals, Reals]),
         Union(
-            ImageSet(Lambda(((x, ), ), (x, -Abs(x))), ProductSet(Reals)),
-            ImageSet(Lambda(((x, ), ), (x, Abs(x))), ProductSet(Reals)),
-            ImageSet(Lambda(((y, ), ), (-Abs(y), y)), ProductSet(Reals)),
-            ImageSet(Lambda(((y, ), ), (Abs(y), y)), ProductSet(Reals))
+            ImageSet(Lambda(((x,),), (x, -Abs(x))), ProductSet(Reals)),
+            ImageSet(Lambda(((x,),), (x, Abs(x))), ProductSet(Reals)),
+            ImageSet(Lambda(((y,),), (-Abs(y), y)), ProductSet(Reals)),
+            ImageSet(Lambda(((y,),), (Abs(y), y)), ProductSet(Reals))
         )
     )
     assert _solveset_multi(
@@ -1732,12 +1732,12 @@ def test__solveset_multi():
         ),
         Union(
             ImageSet(
-                Lambda(((r, ), ), (r, 0)),
-                ImageSet(Lambda(r, (r, )), Interval(0, 1))
+                Lambda(((r,),), (r, 0)),
+                ImageSet(Lambda(r, (r,)), Interval(0, 1))
             ),
             ImageSet(
-                Lambda(((theta, ), ), (0, theta)),
-                ImageSet(Lambda(theta, (theta, )), Interval(0, pi))
+                Lambda(((theta,),), (0, theta)),
+                ImageSet(Lambda(theta, (theta,)), Interval(0, pi))
             )
         )
     )
@@ -1907,7 +1907,7 @@ def test_linsolve():
     raises(ValueError, lambda: linsolve(Eqns))
     raises(ValueError, lambda: linsolve(x1))
     raises(ValueError, lambda: linsolve(x1, x2))
-    raises(ValueError, lambda: linsolve((A, ), x1, x2))
+    raises(ValueError, lambda: linsolve((A,), x1, x2))
     raises(ValueError, lambda: linsolve(A, B, x1, x2))
 
     #raise ValueError if equations are non-linear in given variables
@@ -1971,7 +1971,7 @@ def test_linsolve():
 
     # Issue #12604
     f = Function('f')
-    assert linsolve([f(x) - 5], f(x)) == FiniteSet((5, ))
+    assert linsolve([f(x) - 5], f(x)) == FiniteSet((5,))
 
     # Issue #14860
     from sympy.physics.units import meter, newton, kilo
@@ -1992,7 +1992,7 @@ def test_linsolve():
     # XXX: The case below should give the same as for [0]
     # assert linsolve([], [x]) == {(x,)}
     assert linsolve([], [x]) is S.EmptySet
-    assert linsolve([0], [x]) == {(x, )}
+    assert linsolve([0], [x]) == {(x,)}
     assert linsolve([x], [x, y]) == {(0, y)}
     assert linsolve([x, 0], [x, y]) == {(0, y)}
 
@@ -2007,7 +2007,7 @@ def test_linsolve_large_sparse():
         ys = symbols('y:{}'.format(n))
         syms = xs + ys
         eqs = []
-        sol = (-S.Half, )*n + (S.Half, )*n
+        sol = (-S.Half,)*n + (S.Half,)*n
         for xi, yi in zip(xs, ys):
             eqs.extend([xi + yi, xi - yi + 1])
         return eqs, syms, FiniteSet(sol)
@@ -2060,10 +2060,10 @@ def test_nonlinsolve_basic():
 
     system = [x, y - x - 5]
     assert nonlinsolve([x], [x, y]) == FiniteSet((0, y))
-    assert nonlinsolve(system, [y]) == FiniteSet((x + 5, ))
-    soln = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers), )
+    assert nonlinsolve(system, [y]) == FiniteSet((x + 5,))
+    soln = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),)
     assert dumeq(nonlinsolve([sin(x) - 1], [x]), FiniteSet(tuple(soln)))
-    assert nonlinsolve([x**2 - 1], [x]) == FiniteSet((-1, ), (1, ))
+    assert nonlinsolve([x**2 - 1], [x]) == FiniteSet((-1,), (1,))
 
     soln = FiniteSet((y, y))
     assert nonlinsolve([x - y, 0], x, y) == soln
@@ -2075,10 +2075,10 @@ def test_nonlinsolve_basic():
     assert nonlinsolve([f(x), 0], f(x), f(y)) == FiniteSet((0, f(y)))
     A = Indexed('A', x)
     assert nonlinsolve([A, 0], A, y) == FiniteSet((0, y))
-    assert nonlinsolve([x**2 - 1], [sin(x)]) == FiniteSet((S.EmptySet, ))
-    assert nonlinsolve([x**2 - 1], sin(x)) == FiniteSet((S.EmptySet, ))
-    assert nonlinsolve([x**2 - 1], 1) == FiniteSet((x**2, ))
-    assert nonlinsolve([x**2 - 1], x + y) == FiniteSet((S.EmptySet, ))
+    assert nonlinsolve([x**2 - 1], [sin(x)]) == FiniteSet((S.EmptySet,))
+    assert nonlinsolve([x**2 - 1], sin(x)) == FiniteSet((S.EmptySet,))
+    assert nonlinsolve([x**2 - 1], 1) == FiniteSet((x**2,))
+    assert nonlinsolve([x**2 - 1], x + y) == FiniteSet((S.EmptySet,))
     assert nonlinsolve(
         [Eq(1, x + y), Eq(1, -x + y - 1), Eq(1, -x + y - 1)], x, y
     ) == FiniteSet((-S.Half, 3*S.Half))
@@ -2102,7 +2102,7 @@ def test_trig_system():
     # TODO: add more simple testcases when solveset returns
     # simplified soln for Trig eq
     assert nonlinsolve([sin(x) - 1, cos(x) - 1], x) == S.EmptySet
-    soln1 = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers), )
+    soln1 = (ImageSet(Lambda(n, 2*n*pi + pi/2), S.Integers),)
     soln = FiniteSet(soln1)
     assert dumeq(nonlinsolve([sin(x) - 1, cos(x)], x), soln)
 
@@ -2867,7 +2867,7 @@ def test_issue_17940():
     k1 = Dummy('k1')
     sol = ImageSet(
         Lambda(
-            ((k1, n), ),
+            ((k1, n),),
             I*(2*k1*pi + arg(2*n*I*pi + log(5))) + log(Abs(2*n*I*pi + log(5)))
         ),
         ProductSet(S.Integers, S.Integers)
@@ -4114,7 +4114,7 @@ def test_issue_19144():
     soln_eq2 = nonlinsolve(eq2, [x, y])
     assert soln_eq2 == soln_expr2 == soln2
     # denominators that cancel in expression
-    assert nonlinsolve([Eq(x + 1/x, 1/x)], [x]) == FiniteSet((S.EmptySet, ))
+    assert nonlinsolve([Eq(x + 1/x, 1/x)], [x]) == FiniteSet((S.EmptySet,))
 
 
 def test_issue_19814():

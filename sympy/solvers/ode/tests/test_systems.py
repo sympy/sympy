@@ -3244,13 +3244,10 @@ def test_component_division():
     assert checksysodesol(eqs1, sol1) == (True, [0, 0, 0, 0])
 
     components1 = {
-        (
-            (Eq(Derivative(f(x), x),
-                2*f(x)), ), (Eq(Derivative(g(x), x), f(x)), )
-        ),
+        ((Eq(Derivative(f(x), x), 2*f(x)),), (Eq(Derivative(g(x), x), f(x)),)),
         (
             (Eq(Derivative(h(x), x),
-                h(x)), ), (Eq(Derivative(k(x), x), h(x)**4 + k(x)), )
+                h(x)),), (Eq(Derivative(k(x), x), h(x)**4 + k(x)),)
         )
     }
     eqsdict1 = (
@@ -3292,11 +3289,11 @@ def test_component_division():
         frozenset(
             [
                 (Eq(Derivative(f(x), x),
-                    2*f(x)), ), (Eq(Derivative(g(x), x), f(x)), ),
-                (Eq(Derivative(k(x), x), f(x)**4 + k(x)), )
+                    2*f(x)),), (Eq(Derivative(g(x), x), f(x)),),
+                (Eq(Derivative(k(x), x), f(x)**4 + k(x)),)
             ]
         ),
-        frozenset([(Eq(Derivative(h(x), x), h(x)), )])
+        frozenset([(Eq(Derivative(h(x), x), h(x)),)])
     }
     eqsdict2 = (
         {
@@ -3337,12 +3334,12 @@ def test_component_division():
         frozenset(
             [
                 (Eq(Derivative(f(x), x),
-                    2*f(x)), ), (Eq(Derivative(g(x), x), x + f(x)), ),
-                (Eq(Derivative(k(x), x), f(x)**4 + k(x)), )
+                    2*f(x)),), (Eq(Derivative(g(x), x), x + f(x)),),
+                (Eq(Derivative(k(x), x), f(x)**4 + k(x)),)
             ]
         ),
         frozenset([
-            (Eq(Derivative(h(x), x), h(x)), ),
+            (Eq(Derivative(h(x), x), h(x)),),
         ])
     }
     eqsdict3 = (
@@ -3406,7 +3403,7 @@ def test_component_division():
             ])
         ), (frozenset([
             Eq(Derivative(h(x), x), h(x)),
-        ]), )
+        ]),)
     }
     eqsdict4 = (
         {
@@ -3474,7 +3471,7 @@ def test_component_division():
             ])
         ), (frozenset([
             Eq(Derivative(h(x), x), h(x)),
-        ]), )
+        ]),)
     }
     eqsdict5 = (
         {

@@ -581,7 +581,7 @@ class FirstExact(SinglePatternODESolver):
         m, n = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
-        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
+        (C1,) = self.ode_problem.get_numbered_constants(num=1)
         y = Dummy('y')
 
         m = m.subs(fx, y)
@@ -666,7 +666,7 @@ class FirstLinear(SinglePatternODESolver):
         P, Q = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
-        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
+        (C1,) = self.ode_problem.get_numbered_constants(num=1)
         gensol = Eq(
             fx,
             ((C1 + Integral(Q*exp(Integral(P, x)), x))*exp(-Integral(P, x)))
@@ -756,7 +756,7 @@ class AlmostLinear(SinglePatternODESolver):
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         x = self.ode_problem.sym
-        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
+        (C1,) = self.ode_problem.get_numbered_constants(num=1)
         gensol = Eq(
             self.ly,
             (
@@ -864,7 +864,7 @@ class Bernoulli(SinglePatternODESolver):
         P, Q, n = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
-        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
+        (C1,) = self.ode_problem.get_numbered_constants(num=1)
         if n == 1:
             gensol = Eq(log(fx), (C1 + Integral((-P + Q), x)))
         else:
@@ -1014,7 +1014,7 @@ class RiccatiSpecial(SinglePatternODESolver):
         a, b, c, d = self.wilds_match()
         fx = self.ode_problem.func
         x = self.ode_problem.sym
-        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
+        (C1,) = self.ode_problem.get_numbered_constants(num=1)
         mu = sqrt(4*d*b - (a - c)**2)
 
         gensol = Eq(fx, (a - c - mu*tan(mu/(2*a)*log(x) + C1))/(2*b*x))
@@ -1131,7 +1131,7 @@ class SecondNonlinearAutonomousConserved(SinglePatternODESolver):
 
     def _wilds(self, f, x, order):
         fy = Wild('fy', exclude=[0, f(x).diff(x), f(x).diff(x, 2)])
-        return (fy, )
+        return (fy,)
 
     def _equation(self, fx, x, order):
         fy = self.wilds()[0]
@@ -1336,7 +1336,7 @@ class Separable(SinglePatternODESolver):
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         m1, m2, x, fx = self._get_match_object()
-        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
+        (C1,) = self.ode_problem.get_numbered_constants(num=1)
         int = Integral(m2['coeff']*m2[self.y]/m1[self.y], (self.y, None, fx))
         gen_sol = Eq(int, Integral(-m1['coeff']*m1[x]/m2[x], x) + C1)
         return [gen_sol]
@@ -1442,8 +1442,8 @@ class SeparableReduced(Separable):
         for arg in exprs:
             if arg.has(x):
                 _, u = arg.as_independent(x, fx)
-                pow = self._degree((u.subs(fx, self.y), ), x)/self._degree(
-                    (u.subs(fx, self.y), ), self.y
+                pow = self._degree((u.subs(fx, self.y),), x)/self._degree(
+                    (u.subs(fx, self.y),), self.y
                 )
                 pows.add(pow)
         return pows
@@ -1603,7 +1603,7 @@ class HomogeneousCoeffSubsDepDivIndep(SinglePatternODESolver):
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         d, e, fx, x, u, u1, y, xarg, yarg = self._get_match_object()
-        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
+        (C1,) = self.ode_problem.get_numbered_constants(num=1)
         int = Integral((-e/(d + u1*e)).subs({x: 1, y: u1}), (u1, None, fx/x))
         sol = logcombine(Eq(log(x), int + log(C1)), force=True)
         gen_sol = sol.subs(fx, u).subs(((u, u - yarg), (x, x - xarg), (u, fx)))
@@ -1732,7 +1732,7 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         d, e, fx, x, u, u1, y, xarg, yarg = self._get_match_object()
-        (C1, ) = self.ode_problem.get_numbered_constants(num=1)
+        (C1,) = self.ode_problem.get_numbered_constants(num=1)
         int = Integral(
             simplify((-d/(e + u1*d)).subs({  # type: ignore
                 x: u1, y: 1

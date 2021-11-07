@@ -206,7 +206,7 @@ class DiophantineEquationType:
     def parameters(self):
         if self._parameters is None:
             self._parameters = symbols(
-                't_:%i' % (self.n_parameters, ), integer=True
+                't_:%i' % (self.n_parameters,), integer=True
             )
         return self._parameters
 
@@ -263,7 +263,7 @@ class Univariate(DiophantineEquationType):
         )
         for i in solveset_real(self.equation,
                                self.free_symbols[0]).intersect(S.Integers):
-            result.add((i, ))
+            result.add((i,))
         return result
 
 
@@ -317,7 +317,7 @@ class Linear(DiophantineEquationType):
         if len(var) == 1:
             q, r = divmod(c, coeff[var[0]])
             if not r:
-                result.add((q, ))
+                result.add((q,))
                 return result
             else:
                 return result
@@ -1951,7 +1951,7 @@ def diop_univariate(eq):
 
     if diop_type == Univariate.name:
         return {
-            (int(i), )
+            (int(i),)
             for i in solveset_real(eq, var[0]).intersect(S.Integers)
         }
 
@@ -3700,7 +3700,7 @@ def partition(n, k=None, zeros=False):
         for m in range(1, k + 1):
             for i in ordered_partitions(n, m):
                 i = tuple(i)
-                yield (0, )*(k - len(i)) + i
+                yield (0,)*(k - len(i)) + i
 
 
 def prime_as_sum_of_two_squares(p):
@@ -3957,19 +3957,19 @@ def power_representation(n, p, k, zeros=False):
 
     if n == 0:
         if zeros:
-            yield (0, )*k
+            yield (0,)*k
         return
 
     if k == 1:
         if p == 1:
-            yield (n, )
+            yield (n,)
         else:
             be = perfect_power(n)
             if be:
                 b, e = be
                 d, r = divmod(e, p)
                 if not r:
-                    yield (b**d, )
+                    yield (b**d,)
         return
 
     if p == 1:
@@ -4005,7 +4005,7 @@ def power_representation(n, p, k, zeros=False):
         a = integer_nthroot(n, p)[0]
         for i in range(1, k):
             for t in pow_rep_recursive(a, i, n, [], p):
-                yield tuple(reversed(t + (0, )*(k - i)))
+                yield tuple(reversed(t + (0,)*(k - i)))
 
 
 sum_of_powers = power_representation

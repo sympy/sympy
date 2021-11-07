@@ -230,7 +230,7 @@ def solve_generic(polys, opt):
         """Recursively solves reduced polynomial systems. """
         if len(system) == len(gens) == 1:
             zeros = list(roots(system[0], gens[-1]).keys())
-            return [(zero, ) for zero in zeros]
+            return [(zero,) for zero in zeros]
 
         basis = groebner(system, gens, polys=True)
 
@@ -273,7 +273,7 @@ def solve_generic(polys, opt):
             return []
 
         if len(basis) == 1:
-            return [(zero, ) for zero in zeros]
+            return [(zero,) for zero in zeros]
 
         solutions = []
 
@@ -288,7 +288,7 @@ def solve_generic(polys, opt):
                     new_system.append(eq)
 
             for solution in _solve_reduced_system(new_system, new_gens):
-                solutions.append(solution + (zero, ))
+                solutions.append(solution + (zero,))
 
         if solutions and len(solutions[0]) != len(gens):
             raise NotImplementedError(
@@ -373,7 +373,7 @@ def solve_triangulated(polys, *gens, **args):
     solutions = set()
 
     for zero in zeros:
-        solutions.add(((zero, ), dom))
+        solutions.add(((zero,), dom))
 
     var_seq = reversed(gens[:-1])
     vars_seq = postfixes(gens[1:])
@@ -385,7 +385,7 @@ def solve_triangulated(polys, *gens, **args):
             H, mapping = [], list(zip(vars, values))
 
             for g in G:
-                _vars = (var, ) + vars
+                _vars = (var,) + vars
 
                 if g.has_only_gens(*_vars) and g.degree(var) != 0:
                     h = g.ltrim(var).eval(dict(mapping))
@@ -402,7 +402,7 @@ def solve_triangulated(polys, *gens, **args):
                 else:
                     dom_zero = dom
 
-                _solutions.add(((zero, ) + values, dom_zero))
+                _solutions.add(((zero,) + values, dom_zero))
 
         solutions = _solutions
 

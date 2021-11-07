@@ -333,7 +333,7 @@ def _invert_real(f, g_ys, symbol):
             def inv(trig):
                 if isinstance(trig, (sin, csc)):
                     F = asin if isinstance(trig, sin) else acsc
-                    return (lambda a: n*pi + (-1)**n*F(a), )
+                    return (lambda a: n*pi + (-1)**n*F(a),)
                 if isinstance(trig, (cos, sec)):
                     F = acos if isinstance(trig, cos) else asec
                     return (
@@ -341,7 +341,7 @@ def _invert_real(f, g_ys, symbol):
                         lambda a: 2*n*pi - F(a),
                     )
                 if isinstance(trig, (tan, cot)):
-                    return (lambda a: n*pi + trig.inverse()(a), )
+                    return (lambda a: n*pi + trig.inverse()(a),)
 
             n = Dummy('n', integer=True)
             invs = S.EmptySet
@@ -402,12 +402,12 @@ def _invert_complex(f, g_ys, symbol):
             g_ys_expr = g_ys.lamda.expr
             g_ys_vars = g_ys.lamda.variables
             k = Dummy('k{}'.format(len(g_ys_vars)))
-            g_ys_vars_1 = (k, ) + g_ys_vars
+            g_ys_vars_1 = (k,) + g_ys_vars
             exp_invs = Union(
                 *[
                     imageset(
                         Lambda(
-                            (g_ys_vars_1, ), (
+                            (g_ys_vars_1,), (
                                 I*(2*k*pi + arg(g_ys_expr))
                                 + log(Abs(g_ys_expr))
                             )
@@ -1025,7 +1025,7 @@ def solve_decomposition(f, symbol, domain):
 
         else:
             if isinstance(y_s, ImageSet):
-                iter_iset = (y_s, )
+                iter_iset = (y_s,)
 
             elif isinstance(y_s, Union):
                 iter_iset = y_s.args
@@ -1040,7 +1040,7 @@ def solve_decomposition(f, symbol, domain):
                     Eq(iset.lamda.expr, g), symbol, domain
                 )
                 dummy_var = tuple(iset.lamda.expr.free_symbols)[0]
-                (base_set, ) = iset.base_sets
+                (base_set,) = iset.base_sets
                 if isinstance(new_solutions, FiniteSet):
                     new_exprs = new_solutions
 
@@ -2261,7 +2261,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
         raise ValueError("%s is not a valid SymPy expression" % f)
 
     if not isinstance(symbol, (Expr, Relational)) and symbol is not None:
-        raise ValueError("%s is not a valid SymPy symbol" % (symbol, ))
+        raise ValueError("%s is not a valid SymPy symbol" % (symbol,))
 
     if not isinstance(domain, Set):
         raise ValueError("%s is not a valid domain" % (domain))
@@ -2361,7 +2361,7 @@ def _solveset_multi(eqs, syms, domains):
         domain = domains[0]
         solsets = [solveset(eq, sym, domain) for eq in eqs]
         solset = Intersection(*solsets)
-        return ImageSet(Lambda((sym, ), (sym, )), solset).doit()
+        return ImageSet(Lambda((sym,), (sym,)), solset).doit()
 
     eqs = sorted(eqs, key=lambda eq: len(eq.free_symbols & set(syms)))
 
@@ -2381,7 +2381,7 @@ def _solveset_multi(eqs, syms, domains):
                 for s in sol:
                     eqsp_sub = [eq.subs(sym, s) for eq in eqsp]
                     sol_others = _solveset_multi(eqsp_sub, symsp, domainsp)
-                    fun = Lambda((symsp, ), symsp[:i] + (s, ) + symsp[i:])
+                    fun = Lambda((symsp,), symsp[:i] + (s,) + symsp[i:])
                     sols.append(ImageSet(fun, sol_others).doit())
             else:
                 all_handled = False
@@ -2453,7 +2453,7 @@ def solvify(f, symbol, domain):
             solutions = S.EmptySet
             iter_solutions = ()
             if isinstance(solution_set, ImageSet):
-                iter_solutions = (solution_set, )
+                iter_solutions = (solution_set,)
             elif isinstance(solution_set, Union):
                 if all(isinstance(i, ImageSet) for i in solution_set.args):
                     iter_solutions = solution_set.args
@@ -3374,7 +3374,7 @@ def substitution(
                         res[key_res] = value_res.lamda.expr
                         original_imageset[key_res] = value_res
                         dummy_n = value_res.lamda.expr.atoms(Dummy).pop()
-                        (base, ) = value_res.base_sets
+                        (base,) = value_res.base_sets
                         imgset_yes = (dummy_n, base)
                 # update eq with everything that is known so far
                 eq2 = eq.subs(res).expand()
@@ -3571,7 +3571,7 @@ def substitution(
 def _solveset_work(system, symbols):
     soln = solveset(system[0], symbols[0])
     if isinstance(soln, FiniteSet):
-        _soln = FiniteSet(*[tuple((s, )) for s in soln])
+        _soln = FiniteSet(*[tuple((s,)) for s in soln])
         return _soln
     else:
         return FiniteSet(tuple(FiniteSet(soln)))
