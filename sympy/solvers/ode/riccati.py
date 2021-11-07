@@ -425,7 +425,7 @@ def construct_c_case_2(num, den, x, pole, mul):
     # relation mentioned in (5.14) in the thesis (Pg 80)
 
     # r_i = mul/2
-    ri = mul // 2
+    ri = mul//2
 
     # Find the Laurent series coefficients about the pole
     ser = rational_laurent_series(num, den, x, pole, mul, 6)
@@ -557,7 +557,7 @@ def construct_d(num, den, x, val_inf):
     in the d-vector based on the valuation of the
     function at oo.
     """
-    N = -val_inf // 2
+    N = -val_inf//2
     # Multiplicity of oo as a pole
     mul = -val_inf if val_inf < 0 else 0
     ser = rational_laurent_series(num, den, x, oo, mul, 1)
@@ -865,7 +865,7 @@ def solve_riccati(fx, x, b0, b1, b2, gensol=False):
         c.append(d)
         choices = product(*c)
         for choice in choices:
-            m, ybar = compute_m_ybar(x, poles, choice, -val_inf // 2)
+            m, ybar = compute_m_ybar(x, poles, choice, -val_inf//2)
             numy, deny = [
                 Poly(e, x, extension=True)
                 for e in ybar.together().as_numer_denom()

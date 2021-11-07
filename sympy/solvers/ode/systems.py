@@ -703,7 +703,7 @@ def matrix_exp_jordan_form(A, t):
                     2*n,
                     2*n,
                     lambda i,
-                    j: expJblock2[i // 2, j // 2][i % 2, j % 2]
+                    j: expJblock2[i//2, j//2][i % 2, j % 2]
                 )
 
                 blocks.append(exprt*expJblock)

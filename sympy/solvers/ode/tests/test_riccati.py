@@ -594,7 +594,7 @@ def test_construct_d_case_4():
     )]
     for num, den, mul, d in tests:
         ser = rational_laurent_series(num, den, x, oo, mul, 1)
-        assert construct_d_case_4(ser, mul // 2) == d
+        assert construct_d_case_4(ser, mul//2) == d
 
 
 def test_construct_d_case_5():

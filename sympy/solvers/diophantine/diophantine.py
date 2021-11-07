@@ -367,12 +367,12 @@ class Linear(DiophantineEquationType):
         B = []
         if len(var) > 2:
             B.append(igcd(A[-2], A[-1]))
-            A[-2] = A[-2] // B[0]
-            A[-1] = A[-1] // B[0]
+            A[-2] = A[-2]//B[0]
+            A[-1] = A[-1]//B[0]
             for i in range(len(A) - 3, 0, -1):
                 gcd = igcd(B[0], A[i])
-                B[0] = B[0] // gcd
-                A[i] = A[i] // gcd
+                B[0] = B[0]//gcd
+                A[i] = A[i]//gcd
                 B.insert(0, gcd)
         B.append(A[-1])
         '''
@@ -565,8 +565,8 @@ class BinaryQuadratic(DiophantineEquationType):
 
             else:
                 g = sign(A)*igcd(A, C)
-                a = A // g
-                c = C // g
+                a = A//g
+                c = C//g
                 e = sign(B/A)
 
                 sqa = isqrt(a)
@@ -795,9 +795,9 @@ class HomogeneousTernaryQuadraticNormal(DiophantineEquationType):
 
         sq_lcm = ilcm(sqf_of_a, sqf_of_b, sqf_of_c)
 
-        x_0 = abs(x_0*sq_lcm // sqf_of_a)
-        y_0 = abs(y_0*sq_lcm // sqf_of_b)
-        z_0 = abs(z_0*sq_lcm // sqf_of_c)
+        x_0 = abs(x_0*sq_lcm//sqf_of_a)
+        y_0 = abs(y_0*sq_lcm//sqf_of_b)
+        z_0 = abs(z_0*sq_lcm//sqf_of_c)
 
         result.add(_remove_gcd(x_0, y_0, z_0))
         return result
@@ -1148,7 +1148,7 @@ class GeneralPythagorean(DiophantineEquationType):
                 lcm = ilcm(lcm, sqrt(abs(coeff[v**2])))
             else:
                 s = sqrt(coeff[v**2])
-                lcm = ilcm(lcm, s if _odd(s) else s // 2)
+                lcm = ilcm(lcm, s if _odd(s) else s//2)
 
         for i, v in enumerate(var):
             sol[i] = (lcm*sol[i])/sqrt(abs(coeff[v**2]))
@@ -1295,7 +1295,7 @@ def _remove_gcd(*x):
         raise TypeError('_remove_gcd(a,b,c) or _remove_gcd(*container)')
     if g == 1:
         return x
-    return tuple([i // g for i in x])
+    return tuple([i//g for i in x])
 
 
 def _rational_pq(a, b):
@@ -1306,7 +1306,7 @@ def _rational_pq(a, b):
 def _nint_or_floor(p, q):
     # return nearest int to p/q; in case of tie return floor(p/q)
     w, r = divmod(p, q)
-    if abs(r) <= abs(q) // 2:
+    if abs(r) <= abs(q)//2:
         return w
     return w + 1
 
@@ -2091,7 +2091,7 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
         elif N > 0:
             sol = []
             for d in divisors(square_factor(N)):
-                sols = cornacchia(1, -D, N // d**2)
+                sols = cornacchia(1, -D, N//d**2)
                 if sols:
                     for x, y in sols:
                         sol.append((d*x, d*y))
@@ -2188,10 +2188,10 @@ def diop_DN(D, N, t=symbols("t", integer=True)):
                         fs.append(d)
 
                 for f in fs:
-                    m = N // f**2
+                    m = N//f**2
 
                     zs = sqrt_mod(D, abs(m), all_roots=True)
-                    zs = [i for i in zs if i <= abs(m) // 2]
+                    zs = [i for i in zs if i <= abs(m)//2]
 
                     if abs(m) != 2:
                         zs = zs + [-i for i in zs if i]  # omit dupl 0
@@ -2310,7 +2310,7 @@ def _special_diop_DN(D, N):
     while True:
         a = floor((P+sqrt_D)/Q)
         P = a*Q - P
-        Q = (D - P**2) // Q
+        Q = (D - P**2)//Q
         G2 = a*G1 + G0
         B2 = a*B1 + B0
 
@@ -2371,7 +2371,7 @@ def cornacchia(a, b, m):
         return None
 
     for t in v:
-        if t < m // 2:
+        if t < m//2:
             continue
 
         u, r = t, m
@@ -2384,7 +2384,7 @@ def cornacchia(a, b, m):
         m1 = m - a*r**2
 
         if m1 % b == 0:
-            m1 = m1 // b
+            m1 = m1//b
             s, _exact = integer_nthroot(m1, 2)
             if _exact:
                 if a == b and r < s:
@@ -3222,7 +3222,7 @@ def sqf_normal(a, b, c, steps=False):
     """
     ABC = _remove_gcd(a, b, c)
     sq = tuple(square_factor(i) for i in ABC)
-    sqf = A, B, C = tuple([i // j**2 for i, j in zip(ABC, sq)])
+    sqf = A, B, C = tuple([i//j**2 for i, j in zip(ABC, sq)])
     pc = igcd(A, B)
     A /= pc
     B /= pc
@@ -3266,7 +3266,7 @@ def square_factor(a):
     sympy.ntheory.factor_.core
     """
     f = a if isinstance(a, dict) else factorint(a)
-    return Mul(*[p**(e // 2) for p, e in f.items()])
+    return Mul(*[p**(e//2) for p, e in f.items()])
 
 
 def reconstruct(A, B, z):
@@ -3333,7 +3333,7 @@ def ldescent(A, B):
 
     r = sqrt_mod(A, B)
 
-    Q = (r**2 - A) // B
+    Q = (r**2 - A)//B
 
     if Q == 0:
         B_0 = 1
@@ -3343,7 +3343,7 @@ def ldescent(A, B):
         B_0 = None
 
         for i in div:
-            sQ, _exact = integer_nthroot(abs(Q) // i, 2)
+            sQ, _exact = integer_nthroot(abs(Q)//i, 2)
             if _exact:
                 B_0, d = sign(Q)*i, sQ
                 break
@@ -3397,9 +3397,9 @@ def descent(A, B):
     w = sqrt_mod(A, B)
     x_0, z_0 = gaussian_reduce(w, A, B)
 
-    t = (x_0**2 - A*z_0**2) // B
+    t = (x_0**2 - A*z_0**2)//B
     t_2 = square_factor(t)
-    t_1 = t // t_2**2
+    t_1 = t//t_2**2
 
     x_1, z_1, y_1 = descent(A, t_1)
 
@@ -3434,7 +3434,7 @@ def gaussian_reduce(w, a, b):
         u, v = v, u
 
     while norm(u, w, a, b) > norm(v, w, a, b):
-        k = dot(u, v, w, a, b) // dot(v, v, w, a, b)
+        k = dot(u, v, w, a, b)//dot(v, v, w, a, b)
         u, v = v, (u[0] - k*v[0], u[1] - k*v[1])
 
     u, v = v, u
@@ -3492,7 +3492,7 @@ def holzer(x, y, z, a, b, c):
     if _odd(c):
         k = 2*c
     else:
-        k = c // 2
+        k = c//2
 
     small = a*b*c
     step = 0
@@ -3518,7 +3518,7 @@ def holzer(x, y, z, a, b, c):
             w = _nint_or_floor(p, q)
             assert abs(w - r) <= S.Half
         else:
-            w = p // q  # floor
+            w = p//q  # floor
             if _odd(a*u + b*v + c*w):
                 w += 1
             assert abs(w - r) <= S.One
@@ -3734,10 +3734,10 @@ def prime_as_sum_of_two_squares(p):
     else:
         b = 3
 
-        while pow(b, (p-1) // 2, p) == 1:
+        while pow(b, (p-1)//2, p) == 1:
             b = nextprime(b)
 
-    b = pow(b, (p-1) // 4, p)
+    b = pow(b, (p-1)//4, p)
     a = p
 
     while b**2 > p:
@@ -3824,7 +3824,7 @@ def sum_of_three_squares(n):
         s = s if _odd(s) else s - 1
 
         for x in range(s, -1, -2):
-            N = (n - x**2) // 2
+            N = (n - x**2)//2
             if isprime(N):
                 y, z = prime_as_sum_of_two_squares(N)
                 return _sorted_tuple(2**v*x, 2**v*(y+z), 2**v*abs(y - z))
@@ -4104,7 +4104,7 @@ def _can_do_sum_of_squares(n, k):
                     return False
             return True
     if k == 3:
-        if (n // 4**multiplicity(4, n)) % 8 == 7:
+        if (n//4**multiplicity(4, n)) % 8 == 7:
             return False
     # every number can be written as a sum of 4 squares; for k > 4 partitions
     # can be 0
