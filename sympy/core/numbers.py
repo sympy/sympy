@@ -2721,10 +2721,6 @@ class Zero(IntegerConstant, metaclass=Singleton):
     def __bool__(self):
         return False
 
-    def as_coeff_Mul(self, rational=False):  # XXX this routine should be deleted
-        """Efficiently extract the coefficient of a summation. """
-        return S.One, self
-
 
 class One(IntegerConstant, metaclass=Singleton):
     """The number one.
