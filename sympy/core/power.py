@@ -224,7 +224,7 @@ class Pow(Expr):
     +--------------+---------+-----------------------------------------------+
     | zoo**-1      | 0.0     |                                               |
     +--------------+---------+-----------------------------------------------+
-    | b**zoo       | nan     | Because b**z has no limit as z -> zoo         |
+    | b**zoo       | nan     | Because b**e has no limit as e -> zoo         |
     +--------------+---------+-----------------------------------------------+
     | oo**oo       | oo      |                                               |
     +--------------+---------+-----------------------------------------------+
@@ -238,12 +238,13 @@ class Pow(Expr):
     |              |         | oo. If e is I, then the limit does not exist  |
     |              |         | and nan is used to indicate that.             |
     +--------------+---------+-----------------------------------------------+
-    | b**(1+I) and | zoo     | If the real part of e is positive, then the   |
+    | b**e    with | zoo     | If the real part of e is positive, then the   |
     | b = +/-oo    |         | limit of abs(x**e) is oo. So the limit value  |
-    |              |         | is zoo. (-oo)**(1+I) simplifies to zoo.       |
+    | and re(e)>0  |         | is zoo. (-oo)**(1+I) simplifies to zoo.       |
     +--------------+---------+-----------------------------------------------+
-    | b**(-1+I) and| 0.0     | If the real part of e is negative, then the   |
-    | b = +/-oo    |         | limit is 0.                                   |
+    | b**e     with| 0.0     | If the real part of e is negative, then the   |
+    | b = +/-oo and|         | limit is 0.                                   |
+    | re(e) < 0    |         |                                               |
     +--------------+---------+-----------------------------------------------+
 
     Because symbolic computations are more flexible than floating point
