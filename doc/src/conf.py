@@ -38,6 +38,8 @@ redirects = {
     "special_topics/finite_diff_derivatives.rst": "explanation/finite_diff_derivatives.html",
     "special_topics/intro.rst": "explanation/index.html",
     "special_topics/index.rst": "explanation/index.html",
+    "modules/index.rst": "reference/public/index.html",
+    "modules/physics/index.rst": "reference/physics/index.html",
 }
 
 # Use this to use pngmath instead
