@@ -2204,5 +2204,11 @@ def test_abc():
     assert(isinstance(z, numbers.Rational))
     assert(isinstance(z, nums.Integral))
 
+
 def test_floordiv():
     assert S(2)//S.Half == 4
+
+
+def test_negation():
+    assert -S.Zero is S.Zero
+    assert -Float(0) is not S.Zero and -Float(0) == 0

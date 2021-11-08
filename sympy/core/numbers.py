@@ -1277,6 +1277,8 @@ class Float(Number):
         return self._mpf_ != fzero
 
     def __neg__(self):
+        if not self:
+            return self
         return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
 
     @_sympifyit('other', NotImplemented)
