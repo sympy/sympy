@@ -18,7 +18,7 @@ from sympy.utilities.iterables import (is_sequence, iterable,
 from sympy.utilities.misc import filldedent
 
 
-__doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
+__doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow','paddle']}
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
@@ -93,6 +93,7 @@ SCIPY_TRANSLATIONS = {}  # type: tDict[str, str]
 CUPY_TRANSLATIONS = {}  # type: tDict[str, str]
 
 TENSORFLOW_TRANSLATIONS = {}  # type: tDict[str, str]
+PADDLE_TRANSLATIONS = {} # type: tDict[str, str] change
 
 NUMEXPR_TRANSLATIONS = {}  # type: tDict[str, str]
 
@@ -814,6 +815,8 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
             from sympy.printing.lambdarepr import NumExprPrinter as Printer # type: ignore
         elif _module_present('tensorflow', namespaces):
             from sympy.printing.tensorflow import TensorflowPrinter as Printer # type: ignore
+        elif _module_present('paddle', namespaces):
+            from sympy.printing.paddle import paddle.static.Print as Printer # type: ignore. 有点问题
         elif _module_present('sympy', namespaces):
             from sympy.printing.pycode import SymPyPrinter as Printer # type: ignore
         else:
@@ -859,6 +862,8 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
     funcname = '_lambdifygenerated'
     if _module_present('tensorflow', namespaces):
         funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter
+    elif _module_present('paddle', namespaces):
+        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter 有问题
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
