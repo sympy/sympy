@@ -1102,7 +1102,7 @@ def _merge_mins_maxs(mins, maxs):
         maxs = [maxs]
     else:
         maxs = maxs.args
-    return [i - j for i in mins for j in maxs]
+    return [_factorize_linear(i - j) for i in mins for j in maxs]
 
 
 def _fourier_motzkin(inequalities):
@@ -1196,6 +1196,27 @@ def _fourier_motzkin_extension(inequalities):
     return res
 
 
+def _factorize_linear(expr):
+    """Factorize linear expression
+
+    Examples
+    ========
+    >>> from sympy.solvers.inequalities import _factorize_linear
+    >>> from sympy.abc import x, y, z
+    >>> from sympy import expand
+    >>> from sympy import sqrt,exp
+    
+    >>> expr= x - sqrt(3)*(-x + sqrt(3)*(-2*x - z - 1)/3 - exp(4))/3
+    >>> factorize_linear(expr)
+    x*(sqrt(3)/3 + 5/3) + z/3 + 1/3 + sqrt(3)*exp(4)/3
+    """
+    res=0
+    expr=expand(expr)
+    for symbol in expr.free_symbols:
+        res+=(expr.coeff(symbol)*symbol)
+    return res+expr.func(*[term for term in expr.args if not term.free_symbols])
+        
+
 def solve_linear_inequalities(inequalities):
     """Solve a system of linear inequalities
 
@@ -1240,6 +1261,9 @@ def solve_linear_inequalities(inequalities):
     y = -1 is valid because: Min(2*x/3 + z/3 + 1/3, x + 2*z - 2) > -1 > -x - 3*z - 4
     """
     eqs = list(ordered(inequalities))
+    eqs=inequalities
     eqs, res1 = _fourier_motzkin(eqs)
     res2 = _fourier_motzkin_extension(eqs)
     return {**res1, **res2}
+
+
