@@ -932,7 +932,6 @@ class Mul(Expr, AssocOp):
         return Add.make_args(added)  # it may have collapsed down to one term
 
     def _eval_expand_mul(self, **hints):
-        from sympy.simplify.radsimp import fraction
 
         # Handle things like 1/(x*(x + 1)), which are automatically converted
         # to 1/x*1/(x + 1)
@@ -1597,7 +1596,6 @@ class Mul(Expr, AssocOp):
         if is_integer:
             if self.is_zero:
                 return False
-            from sympy.simplify.radsimp import fraction
             n, d = fraction(self)
             if d.is_Integer and d.is_even:
                 from sympy.ntheory.factor_ import trailing
@@ -1631,7 +1629,6 @@ class Mul(Expr, AssocOp):
         if is_integer:
             return fuzzy_not(self.is_odd)
 
-        from sympy.simplify.radsimp import fraction
         n, d = fraction(self)
         if n.is_Integer and n.is_even:
             # if minimal power of 2 in den vs num is not
@@ -1665,7 +1662,6 @@ class Mul(Expr, AssocOp):
         from sympy.functions.elementary.complexes import sign
         from sympy.ntheory.factor_ import multiplicity
         from sympy.simplify.powsimp import powdenest
-        from sympy.simplify.radsimp import fraction
 
         if not old.is_Mul:
             return None
@@ -2166,6 +2162,107 @@ def expand_2arg(e):
                 return _unevaluated_Add(*[c*ri for ri in r.args])
         return e
     return bottom_up(e, do)
+
+
+def fraction(expr, exact=False):
+    """Returns a pair with expression's numerator and denominator.
+       If the given expression is not a fraction then this function
+       will return the tuple (expr, 1).
+
+       This function will not make any attempt to simplify nested
+       fractions or to do any term rewriting at all.
+
+       If only one of the numerator/denominator pair is needed then
+       use numer(expr) or denom(expr) functions respectively.
+
+       >>> from sympy import fraction, Rational, Symbol
+       >>> from sympy.abc import x, y
+
+       >>> fraction(x/y)
+       (x, y)
+       >>> fraction(x)
+       (x, 1)
+
+       >>> fraction(1/y**2)
+       (1, y**2)
+
+       >>> fraction(x*y/2)
+       (x*y, 2)
+       >>> fraction(Rational(1, 2))
+       (1, 2)
+
+       This function will also work fine with assumptions:
+
+       >>> k = Symbol('k', negative=True)
+       >>> fraction(x * y**k)
+       (x, y**(-k))
+
+       If we know nothing about sign of some exponent and ``exact``
+       flag is unset, then structure this exponent's structure will
+       be analyzed and pretty fraction will be returned:
+
+       >>> from sympy import exp, Mul
+       >>> fraction(2*x**(-y))
+       (2, x**y)
+
+       >>> fraction(exp(-x))
+       (1, exp(x))
+
+       >>> fraction(exp(-x), exact=True)
+       (exp(-x), 1)
+
+       The ``exact`` flag will also keep any unevaluated Muls from
+       being evaluated:
+
+       >>> u = Mul(2, x + 1, evaluate=False)
+       >>> fraction(u)
+       (2*x + 2, 1)
+       >>> fraction(u, exact=True)
+       (2*(x  + 1), 1)
+    """
+    from sympy.functions.elementary.exponential import exp
+    from sympy.core.power import Pow
+    expr = sympify(expr)
+
+    numer, denom = [], []
+
+    for term in Mul.make_args(expr):
+        if term.is_commutative and (term.is_Pow or isinstance(term, exp)):
+            b, ex = term.as_base_exp()
+            if ex.is_negative:
+                if ex is S.NegativeOne:
+                    denom.append(b)
+                elif exact:
+                    if ex.is_constant():
+                        denom.append(Pow(b, -ex))
+                    else:
+                        numer.append(term)
+                else:
+                    denom.append(Pow(b, -ex))
+            elif ex.is_positive:
+                numer.append(term)
+            elif not exact and ex.is_Mul:
+                n, d = term.as_numer_denom()
+                if n != 1:
+                    numer.append(n)
+                denom.append(d)
+            else:
+                numer.append(term)
+        elif term.is_Rational and not term.is_Integer:
+            if term.p != 1:
+                numer.append(term.p)
+            denom.append(term.q)
+        else:
+            numer.append(term)
+    return Mul(*numer, evaluate=not exact), Mul(*denom, evaluate=not exact)
+
+
+def numer(expr):
+    return fraction(expr)[0]
+
+
+def denom(expr):
+    return fraction(expr)[1]
 
 
 from .numbers import Rational

@@ -61,7 +61,7 @@ from .core import (sympify, SympifyError, cacheit, Basic, Atom,
         expand_power_base, expand_power_exp, arity, PrecisionExhausted, N,
         evalf, Tuple, Dict, gcd_terms, factor_terms, factor_nc, evaluate,
         Catalan, EulerGamma, GoldenRatio, TribonacciConstant, bottom_up, use,
-        postorder_traversal, default_sort_key, ordered)
+        postorder_traversal, default_sort_key, ordered, fraction, numer, denom)
 
 from .logic import (to_cnf, to_dnf, to_nnf, And, Or, Not, Xor, Nand, Nor,
         Implies, Equivalent, ITE, POSform, SOPform, simplify_logic, bool_map,
@@ -156,7 +156,7 @@ from .discrete import (fft, ifft, ntt, intt, fwht, ifwht, mobius_transform,
 from .simplify import (simplify, hypersimp, hypersimilar, logcombine,
         separatevars, posify, besselsimp, kroneckersimp, signsimp,
         nsimplify, FU, fu, sqrtdenest, cse, epath, EPath, hyperexpand,
-        collect, rcollect, radsimp, collect_const, fraction, numer, denom,
+        collect, rcollect, radsimp, collect_const,
         trigsimp, exptrigsimp, powsimp, powdenest, combsimp, gammasimp,
         ratsimp, ratsimpmodprime)
 

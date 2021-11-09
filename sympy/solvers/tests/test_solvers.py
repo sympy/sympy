@@ -2,7 +2,7 @@ from sympy.assumptions.ask import (Q, ask)
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import (Derivative, Function, diff)
-from sympy.core.mul import Mul
+from sympy.core.mul import Mul, denom
 from sympy.core import (GoldenRatio, TribonacciConstant)
 from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
 from sympy.core.relational import (Eq, Gt, Lt, Ne)
@@ -23,7 +23,6 @@ from sympy.matrices.dense import Matrix
 from sympy.matrices import SparseMatrix
 from sympy.polys.polytools import Poly
 from sympy.printing.str import sstr
-from sympy.simplify.radsimp import denom
 from sympy.solvers.solvers import (nsolve, solve, solve_linear)
 
 from sympy.core.function import nfloat

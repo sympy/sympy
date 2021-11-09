@@ -12,7 +12,7 @@ from .numbers import Number, Float, Rational, Integer, NumberSymbol, \
     RealNumber, igcd, ilcm, seterr, E, I, nan, oo, pi, zoo, \
     AlgebraicNumber, comp, mod_inverse
 from .power import Pow, integer_nthroot, integer_log
-from .mul import Mul, prod
+from .mul import Mul, prod, fraction, numer, denom
 from .add import Add
 from .mod import Mod
 from .relational import ( Rel, Eq, Ne, Lt, Le, Gt, Ge,
@@ -60,7 +60,7 @@ __all__ = [
 
     'Pow', 'integer_nthroot', 'integer_log',
 
-    'Mul', 'prod',
+    'Mul', 'prod', 'fraction', 'numer', 'denom',
 
     'Add',
 

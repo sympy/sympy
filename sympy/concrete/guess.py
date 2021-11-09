@@ -5,6 +5,7 @@ from sympy.utilities import public
 from sympy.core import Function, Symbol
 from sympy.core.numbers import Zero
 from sympy.concrete.products import (Product, product)
+from sympy.core.mul import denom
 from sympy.core.numbers import (Integer, Rational)
 from sympy.core.symbol import symbols
 from sympy.core.sympify import sympify
@@ -12,7 +13,6 @@ from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import integrate
 from sympy.polys.polytools import lcm
-from sympy.simplify.radsimp import denom
 from sympy.polys.polyfuncs import rational_interpolate as rinterp
 
 @public

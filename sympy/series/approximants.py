@@ -89,7 +89,7 @@ def approximants(l, X=Symbol('x'), simplify=False):
         # yield result
         from sympy.polys.polytools import lcm
         from sympy.simplify import simplify as simp
-        from sympy.simplify.radsimp import denom
+        from sympy.core.mul import denom
         c = 1
         for x in p:
             c = lcm(c, denom(x))

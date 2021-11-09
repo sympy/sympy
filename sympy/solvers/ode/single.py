@@ -12,6 +12,7 @@ from sympy.core import Add, S, Pow, Rational
 from sympy.core.exprtools import factor_terms
 from sympy.core.expr import Expr
 from sympy.core.function import AppliedUndef, Derivative, diff, Function, expand, Subs, _mexpand
+from sympy.core.mul import fraction
 from sympy.core.numbers import zoo
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Dummy, Wild
@@ -21,7 +22,6 @@ from sympy.integrals import Integral
 from sympy.polys import Poly
 from sympy.polys.polytools import cancel, factor, degree
 from sympy.simplify import collect, simplify, separatevars, logcombine, posify # type: ignore
-from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
 from sympy.solvers.solvers import solve
 from sympy.solvers.deutils import ode_order, _preprocess

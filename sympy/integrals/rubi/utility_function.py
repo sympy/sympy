@@ -13,7 +13,7 @@ from sympy.core.evalf import N
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, WildFunction, expand, expand_trig)
-from sympy.core.mul import Mul
+from sympy.core.mul import Mul, fraction
 from sympy.core.numbers import (E, Float, I, Integer, Rational, oo, pi, zoo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -41,7 +41,7 @@ from sympy.polys.polytools import (discriminant, factor, gcd, lcm, poly, sqf, sq
 from sympy.sets.sets import FiniteSet
 from sympy.simplify.powsimp import powdenest
 from sympy.simplify.radsimp import collect
-from sympy.simplify.simplify import fraction, simplify, cancel, powsimp, nsimplify
+from sympy.simplify.simplify import simplify, cancel, powsimp, nsimplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import flatten
 from random import randint

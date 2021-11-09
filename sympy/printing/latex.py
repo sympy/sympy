@@ -499,7 +499,7 @@ class LatexPrinter(Printer):
 
     def _print_Mul(self, expr):
         from sympy.physics.units import Quantity
-        from sympy.simplify import fraction
+        from sympy.core.mul import fraction
         separator = self._settings['mul_symbol_latex']
         numbersep = self._settings['mul_symbol_latex_numbers']
 

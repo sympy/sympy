@@ -2039,7 +2039,7 @@ class PrettyPrinter(Printer):
         return s
 
     def _print_Pow(self, power):
-        from sympy.simplify.simplify import fraction
+        from sympy.core.mul import fraction
         b, e = power.as_base_exp()
         if power.is_commutative:
             if e is S.NegativeOne:

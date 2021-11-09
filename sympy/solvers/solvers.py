@@ -20,6 +20,7 @@ from sympy.core.function import (expand_mul, expand_log, Derivative,
                                  Function, expand_power_exp, _mexpand, expand,
                                  expand_func)
 from sympy.core.logic import fuzzy_not
+from sympy.core.mul import denom, fraction
 from sympy.core.numbers import ilcm, Float, Rational
 from sympy.core.power import integer_log, Pow
 from sympy.core.relational import Relational, Eq, Ne
@@ -36,8 +37,7 @@ from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.ntheory.factor_ import divisors
 from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
-    powdenest, nsimplify, denom, logcombine, sqrtdenest, fraction,
-    separatevars)
+    powdenest, nsimplify, logcombine, sqrtdenest, separatevars)
 from sympy.integrals.integrals import Integral
 from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1, TR2i

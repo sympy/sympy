@@ -3131,7 +3131,7 @@ def count_ops(expr, visual=False):
     from sympy.concrete.summations import Sum
     from sympy.integrals.integrals import Integral
     from sympy.logic.boolalg import BooleanFunction
-    from sympy.simplify.radsimp import fraction
+    from sympy.core.mul import fraction
 
     expr = sympify(expr)
     if isinstance(expr, Expr) and not expr.is_Relational:

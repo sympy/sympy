@@ -3592,7 +3592,7 @@ class Expr(Basic, EvalfMixin):
         more information.
 
         """
-        from sympy.simplify.radsimp import fraction
+        from sympy.core.mul import fraction
 
         hints.update(power_base=power_base, power_exp=power_exp, mul=mul,
            log=log, multinomial=multinomial, basic=basic)

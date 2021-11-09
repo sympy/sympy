@@ -6,7 +6,7 @@ from sympy.concrete.gosper import gosper_sum
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, expand
-from sympy.core.mul import Mul
+from sympy.core.mul import Mul, denom
 from sympy.core.numbers import Float
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -23,7 +23,7 @@ from sympy.series.limitseq import limit_seq
 from sympy.series.order import O
 from sympy.series.residues import residue
 from sympy.sets.sets import FiniteSet
-from sympy.simplify import denom, simplify
+from sympy.simplify import simplify
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.powsimp import powsimp
 from sympy.solvers import solve
@@ -1242,7 +1242,8 @@ def eval_sum_symbolic(f, limits):
 def _eval_sum_hyper(f, i, a):
     """ Returns (res, cond). Sums from a to oo. """
     from sympy.functions import hyper
-    from sympy.simplify import hyperexpand, hypersimp, fraction
+    from sympy.simplify import hyperexpand, hypersimp
+    from sympy.core.mul import fraction
     from sympy.polys.polytools import Poly, factor
 
     if a != 0:
