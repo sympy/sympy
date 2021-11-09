@@ -315,6 +315,7 @@ def test_tensordiagonal():
     from sympy.matrices.dense import eye
     expr = Array(range(9)).reshape(3, 3)
     raises(ValueError, lambda: tensordiagonal(expr, [0], [1]))
+    raises(ValueError, lambda: tensordiagonal(expr, [0, 0]))
     assert tensordiagonal(eye(3), [0, 1]) == Array([1, 1, 1])
     assert tensordiagonal(expr, [0, 1]) == Array([0, 4, 8])
     x, y, z = symbols("x y z")
