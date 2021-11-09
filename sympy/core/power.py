@@ -11,7 +11,7 @@ from .function import (expand_complex, expand_multinomial,
     expand_mul, _mexpand, PoleError)
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
 from .parameters import global_parameters
-from .relational import is_ge, is_gt, is_lt
+from .relational import is_gt, is_lt
 from .kind import NumberKind, UndefinedKind
 from sympy.external.gmpy import HAS_GMPY, gmpy
 from sympy.utilities.iterables import sift
@@ -299,9 +299,7 @@ class Pow(Expr):
             if e is S.Infinity:
                 if is_gt(b, S.One):
                     return S.Infinity
-                if is_ge(b, S.Zero) and is_lt(b, S.One):
-                    return S.Zero
-                if is_gt(b, S.NegativeOne) and is_lt(b, S.Zero):
+                if is_gt(b, S.NegativeOne) and is_lt(b, S.One):
                     return S.Zero
                 if is_lt(b, S.NegativeOne):
                     if b.is_finite:
