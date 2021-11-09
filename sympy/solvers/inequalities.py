@@ -1201,6 +1201,7 @@ def _factorize_linear(expr):
 
     Examples
     ========
+    
     >>> from sympy.solvers.inequalities import _factorize_linear
     >>> from sympy.abc import x, y, z
     >>> from sympy import expand
@@ -1216,6 +1217,35 @@ def _factorize_linear(expr):
         res+=(expr.coeff(symbol)*symbol)
     return res+expr.func(*[term for term in expr.args if not term.free_symbols])
         
+def _is_linear(expr):
+    """
+    Return True if expr is linear, False otherwise.
+    
+    Examples
+    ========
+    
+    >>> from sympy import diff
+    >>> from sympy.abc import x, y, z
+    >>> expr1=x**2 + y + 2
+    >>> _is_linear(expr1)
+    False
+    >>> expr2=3*x - y + 5
+    >>> _is_linear(expr2)
+    True
+    """
+    try:
+        vars=expr.free_symbols
+        for x in vars:
+            for y in vars:
+                try: 
+                    if not Eq(diff(expr, x, y), 0):
+                        return False
+                except TypeError:
+                    return False
+        return True
+    except:
+        return True
+
 
 def solve_linear_inequalities(inequalities):
     """Solve a system of linear inequalities
@@ -1239,6 +1269,7 @@ def solve_linear_inequalities(inequalities):
     >>> from sympy.solvers.inequalities import solve_linear_inequalities
     >>> from sympy.abc import x, y, z
 
+
     >>> eq1 = 2*x - 3*y + z + 1
     >>> eq2 = x - y + 2*z - 2
     >>> eq3 = x + y + 3*z + 4
@@ -1260,10 +1291,16 @@ def solve_linear_inequalities(inequalities):
     z = 1 is valid because: x > 1 > Max(-x/2 - 13/10, -2*x/5 - 2/5)
     y = -1 is valid because: Min(2*x/3 + z/3 + 1/3, x + 2*z - 2) > -1 > -x - 3*z - 4
     """
+    for eq in inequalities:
+        if not(_is_linear(eq)):
+            raise ValueError('NonlinearError: Nonlinear inequality found: solve_linear_inequalities() is only for linear inequalities')
+  
     eqs = list(ordered(inequalities))
-    eqs=inequalities
     eqs, res1 = _fourier_motzkin(eqs)
     res2 = _fourier_motzkin_extension(eqs)
     return {**res1, **res2}
+
+
+
 
 
