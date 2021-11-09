@@ -109,7 +109,7 @@ MODULES = {
         "from sympy.functions import *",
         "from sympy.matrices import *",
         "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
-    "paddle": (PADDLE,PADDLE_DEFAULT,{},("import paddle")), #my change
+    "paddle": (PADDLE,PADDLE_DEFAULT,{},("import paddle")),
     "numexpr" : (NUMEXPR, NUMEXPR_DEFAULT, NUMEXPR_TRANSLATIONS,
                  ("import_module('numexpr')", )),
 }
