@@ -1,3 +1,4 @@
+from typing import Tuple as tTuple
 from collections import defaultdict
 from functools import cmp_to_key, reduce
 from itertools import product
@@ -153,6 +154,8 @@ class Mul(Expr, AssocOp):
 
     """
     __slots__ = ()
+
+    args: tTuple[Expr]
 
     is_Mul = True
 

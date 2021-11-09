@@ -2595,6 +2595,9 @@ class atan(InverseTrigonometricFunction):
     .. [3] http://functions.wolfram.com/ElementaryFunctions/ArcTan
 
     """
+
+    args: tTuple[Expr]
+
     _singularities = (S.ImaginaryUnit, -S.ImaginaryUnit)
 
     def fdiff(self, argindex=1):

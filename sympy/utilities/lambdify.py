@@ -3,7 +3,7 @@ This module provides convenient functions to transform SymPy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from typing import Any, Dict as tDict, Iterable
+from typing import Any, Dict as tDict, Iterable, Union as tUnion, TYPE_CHECKING
 
 import builtins
 import inspect
@@ -17,6 +17,9 @@ from sympy.utilities.iterables import (is_sequence, iterable,
     NotIterable)
 from sympy.utilities.misc import filldedent
 
+
+if TYPE_CHECKING:
+    import sympy.core.expr
 
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
@@ -174,8 +177,9 @@ def _import(module, reload=False):
 # linecache.
 _lambdify_generated_counter = 1
 
+
 @doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
-def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
+def lambdify(args: tUnion[Iterable, 'sympy.core.expr.Expr'], expr: 'sympy.core.expr.Expr', modules=None, printer=None, use_imps=True,
              dummify=False, cse=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
@@ -753,6 +757,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
     and SciPy namespaces.
     """
     from sympy.core.symbol import Symbol
+    from sympy.core.expr import Expr
 
     # If the user hasn't specified any modules, use what is available.
     if modules is None:
@@ -832,13 +837,12 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
                 ).warn()
 
     # Get the names of the args, for creating a docstring
-    if not iterable(args):
-        args = (args,)
+    iterable_args: Iterable = (args,) if isinstance(args, Expr) else args
     names = []
 
     # Grab the callers frame, for getting the names by inspection (if needed)
     callers_local_vars = inspect.currentframe().f_back.f_locals.items() # type: ignore
-    for n, var in enumerate(args):
+    for n, var in enumerate(iterable_args):
         if hasattr(var, 'name'):
             names.append(var.name)
         else:
@@ -865,7 +869,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         cses, _expr = cse(expr)
     else:
         cses, _expr = (), expr
-    funcstr = funcprinter.doprint(funcname, args, _expr, cses=cses)
+    funcstr = funcprinter.doprint(funcname, iterable_args, _expr, cses=cses)
 
     # Collect the module imports from the code printers.
     imp_mod_lines = []

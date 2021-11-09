@@ -7,7 +7,7 @@ Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
 
-from typing import Callable, Dict as tDict
+from typing import Callable, Dict as tDict, Tuple as tTuple
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
@@ -461,6 +461,8 @@ class bernoulli(Function):
     .. [4] http://mathworld.wolfram.com/BernoulliPolynomial.html
 
     """
+
+    args: tTuple[Integer]
 
     # Calculates B_n for positive even n
     @staticmethod

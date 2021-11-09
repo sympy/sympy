@@ -1,3 +1,4 @@
+from typing import Tuple as tTuple
 from collections import defaultdict
 from functools import cmp_to_key, reduce
 from operator import attrgetter
@@ -167,6 +168,8 @@ class Add(Expr, AssocOp):
     """
 
     __slots__ = ()
+
+    args: tTuple[Expr, ...]
 
     is_Add = True
 

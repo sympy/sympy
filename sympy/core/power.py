@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Tuple as tTuple
 from math import log as _log, sqrt as _sqrt
 from itertools import product
 
@@ -268,6 +268,8 @@ class Pow(Expr):
     is_Pow = True
 
     __slots__ = ('is_commutative',)
+
+    args: tTuple[Expr, Expr]
 
     @cacheit
     def __new__(cls, b, e, evaluate=None):

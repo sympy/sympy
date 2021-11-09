@@ -5,7 +5,7 @@ import math
 import re as regex
 import sys
 from functools import lru_cache
-from typing import Set as tSet
+from typing import Set as tSet, Tuple as tTuple
 
 from .containers import Tuple
 from .sympify import (SympifyError, converter, sympify, _convert_numpy_types, _sympify,
@@ -1017,6 +1017,8 @@ class Float(Number):
     """
     __slots__ = ('_mpf_', '_prec')
 
+    _mpf_: tTuple[int, int, int, int]
+
     # A Float represents many real numbers,
     # both rational and irrational.
     is_rational = None
@@ -1583,6 +1585,9 @@ class Rational(Number):
     is_number = True
 
     __slots__ = ('p', 'q')
+
+    p: int
+    q: int
 
     is_Rational = True
 
