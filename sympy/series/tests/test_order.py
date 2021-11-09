@@ -177,7 +177,7 @@ def test_multivar_0a():
 
 def test_multivar_1():
     assert Order(x + y).expr == x + y
-    assert Order(x + 2*y).expr == x + 2*y
+    assert Order(x + 2*y).expr == x + y
     assert (Order(x + y) + x).expr == (x + y)
     assert (Order(x + y) + x**2) == Order(x + y)
     assert (Order(x + y) + 1/x) == 1/x + Order(x + y)
@@ -239,7 +239,7 @@ def test_order_leadterm():
 
 def test_order_symbols():
     e = x*y*sin(x)*Integral(x, (x, 1, 2))
-    assert O(e) == O(x*y*sin(x), x, y)
+    assert O(e) == O(x**2*y, x, y)
     assert O(e, x) == O(x**2)
 
 
