@@ -93,7 +93,7 @@ SCIPY_TRANSLATIONS = {}  # type: tDict[str, str]
 CUPY_TRANSLATIONS = {}  # type: tDict[str, str]
 
 TENSORFLOW_TRANSLATIONS = {}  # type: tDict[str, str]
-PADDLE_TRANSLATIONS = {} # type: tDict[str, str] change
+PADDLE_TRANSLATIONS = {} # type: tDict[str, str]
 
 NUMEXPR_TRANSLATIONS = {}  # type: tDict[str, str]
 
