@@ -1258,6 +1258,9 @@ class _EvaluatorPrinter:
 
         return ['{} = {}'.format(unpack_lhs(unpackto), arg)]
 
+class _PaddleEvaluatorPrinter(_EvaluatorPrinter):
+    
+
 class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
     def _print_unpacking(self, lvalues, rvalue):
         """Generate argument unpacking code.
