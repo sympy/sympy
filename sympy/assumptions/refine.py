@@ -1,4 +1,4 @@
-from typing import Dict, Callable
+from typing import Dict as tDict, Callable
 
 from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
 from sympy.core.logic import fuzzy_not
@@ -401,4 +401,4 @@ handlers_dict = {
     'arg': refine_arg,
     'sign': refine_sign,
     'MatrixElement': refine_matrixelement
-}  # type: Dict[str, Callable[[Expr, Boolean], Expr]]
+}  # type: tDict[str, Callable[[Expr, Boolean], Expr]]

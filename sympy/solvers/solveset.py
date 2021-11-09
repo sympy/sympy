@@ -33,7 +33,7 @@ from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.logic.boolalg import And, BooleanTrue
-from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
+from sympy.sets import (FiniteSet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set, ProductSet
 from sympy.matrices import Matrix, MatrixBase
@@ -203,7 +203,7 @@ def invert_real(f_x, y, x):
 def _invert_real(f, g_ys, symbol):
     """Helper function for _invert."""
 
-    if f == symbol:
+    if f == symbol or g_ys is S.EmptySet:
         return (f, g_ys)
 
     n = Dummy('n', real=True)
@@ -287,14 +287,14 @@ def _invert_real(f, g_ys, symbol):
                 if b:
                     return _invert_real(expo, FiniteSet(s), symbol)
                 else:
-                    return _invert_real(expo, S.EmptySet, symbol)
+                    return (expo, S.EmptySet)
             elif base.is_zero:
                 one = Eq(rhs, 1)
                 if one == S.true:
                     # special case: 0**x - 1
                     return _invert_real(expo, FiniteSet(0), symbol)
                 elif one == S.false:
-                    return _invert_real(expo, S.EmptySet, symbol)
+                    return (expo, S.EmptySet)
 
 
     if isinstance(f, TrigonometricFunction):
@@ -323,7 +323,7 @@ def _invert_real(f, g_ys, symbol):
 def _invert_complex(f, g_ys, symbol):
     """Helper function for _invert."""
 
-    if f == symbol:
+    if f == symbol or g_ys is S.EmptySet:
         return (f, g_ys)
 
     n = Dummy('n')
@@ -370,12 +370,13 @@ def _invert_complex(f, g_ys, symbol):
             g_ys_vars_1 = (k,) + g_ys_vars
             exp_invs = Union(*[imageset(Lambda((g_ys_vars_1,), (I*(2*k*pi + arg(g_ys_expr))
                                          + log(Abs(g_ys_expr)))), S.Integers**(len(g_ys_vars_1)))])
+            return _invert_complex(f.exp, exp_invs, symbol)
 
         elif isinstance(g_ys, FiniteSet):
             exp_invs = Union(*[imageset(Lambda(n, I*(2*n*pi + arg(g_y)) +
                                                log(Abs(g_y))), S.Integers)
                                for g_y in g_ys if g_y != 0])
-        return _invert_complex(f.exp, exp_invs, symbol)
+            return _invert_complex(f.exp, exp_invs, symbol)
 
     return (f, g_ys)
 
@@ -955,10 +956,10 @@ def solve_decomposition(f, symbol, domain):
             elif isinstance(y_s, Union):
                 iter_iset = y_s.args
 
-            elif y_s is EmptySet:
+            elif y_s is S.EmptySet:
                 # y_s is not in the range of g in g_s, so no solution exists
                 #in the given domain
-                return EmptySet
+                return S.EmptySet
 
             for iset in iter_iset:
                 new_solutions = solveset(Eq(iset.lamda.expr, g), symbol, domain)
@@ -1008,12 +1009,12 @@ def _solveset(f, symbol, domain, _check=False):
     solver = lambda f, x, domain=domain: _solveset(f, x, domain)
     inverter = lambda f, rhs, symbol: _invert(f, rhs, symbol, domain)
 
-    result = EmptySet
+    result = S.EmptySet
 
     if f.expand().is_zero:
         return domain
     elif not f.has(symbol):
-        return EmptySet
+        return S.EmptySet
     elif f.is_Mul and all(_is_finite_with_finite_vars(m, domain)
             for m in f.args):
         # if f(x) and g(x) are both finite we can say that the solution of
@@ -1271,7 +1272,7 @@ def _invert_modular(modterm, rhs, n, symbol):
 
     if abs(rhs) >= abs(m):
         # if rhs has value greater than value of m.
-        return symbol, EmptySet
+        return symbol, S.EmptySet
 
     if a == symbol:
         return symbol, ImageSet(Lambda(n, m*n + rhs), S.Integers)
@@ -1318,10 +1319,10 @@ def _invert_modular(modterm, rhs, n, symbol):
             try:
                 remainder_list = nthroot_mod(rhs, expo, m, all_roots=True)
                 if remainder_list == []:
-                    return symbol, EmptySet
+                    return symbol, S.EmptySet
             except (ValueError, NotImplementedError):
                 return modterm, rhs
-            g_n = EmptySet
+            g_n = S.EmptySet
             for rem in remainder_list:
                 g_n += ImageSet(Lambda(n, m*n + rem), S.Integers)
             return base, g_n
@@ -1409,7 +1410,7 @@ def _solve_modular(f, symbol, domain):
         base_sets = g_n.base_sets
         sol_set = _solveset(f_x - lamda_expr, symbol, S.Integers)
         if isinstance(sol_set, FiniteSet):
-            tmp_sol = EmptySet
+            tmp_sol = S.EmptySet
             for sol in sol_set:
                 tmp_sol += ImageSet(Lambda(lamda_vars, sol), *base_sets)
             sol_set = tmp_sol
@@ -3274,9 +3275,9 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                             # one symbol's real soln, another symbol may have
                             # corresponding complex soln.
                             if not isinstance(soln, (ImageSet, ConditionSet)):
-                                soln += solveset_complex(eq2, sym)
-                    except NotImplementedError:
-                        # If sovleset is not able to solve equation `eq2`. Next
+                                soln += solveset_complex(eq2, sym)  # might give ValueError with Abs
+                    except (NotImplementedError, ValueError):
+                        # If solveset is not able to solve equation `eq2`. Next
                         # time we may get soln using next equation `eq2`
                         continue
                     if isinstance(soln, ConditionSet):
@@ -3680,7 +3681,7 @@ def nonlinsolve(system, *symbols):
 
         # positive dimensional system
         res = _handle_positive_dimensional(polys, symbols, denominators)
-        if res is EmptySet and any(not p.domain.is_Exact for p in polys):
+        if res is S.EmptySet and any(not p.domain.is_Exact for p in polys):
             raise NotImplementedError("Equation not in exact domain. Try converting to rational")
         else:
             return res

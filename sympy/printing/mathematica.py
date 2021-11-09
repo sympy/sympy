@@ -2,7 +2,7 @@
 Mathematica code printer
 """
 
-from typing import Any, Dict, Set, Tuple
+from typing import Any, Dict as tDict, Set as tSet, Tuple as tTuple
 
 from sympy.core import Basic, Expr, Float
 from sympy.core.sorting import default_sort_key
@@ -133,10 +133,10 @@ class MCodePrinter(CodePrinter):
         'user_functions': {},
         'human': True,
         'allow_unknown_functions': False,
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
 
-    _number_symbols = set()  # type: Set[Tuple[Expr, Float]]
-    _not_supported = set()  # type: Set[Basic]
+    _number_symbols = set()  # type: tSet[tTuple[Expr, Float]]
+    _not_supported = set()  # type: tSet[Basic]
 
     def __init__(self, settings={}):
         """Register function mappings supplied by user"""

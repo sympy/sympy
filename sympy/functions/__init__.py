@@ -10,7 +10,7 @@ from sympy.functions.combinatorial.factorials import (factorial, factorial2,
 from sympy.functions.combinatorial.numbers import (carmichael, fibonacci, lucas, tribonacci,
         harmonic, bernoulli, bell, euler, catalan, genocchi, partition, motzkin)
 from sympy.functions.elementary.miscellaneous import (sqrt, root, Min, Max,
-        Id, real_root, cbrt)
+        Id, real_root, cbrt, Rem)
 from sympy.functions.elementary.complexes import (re, im, sign, Abs,
         conjugate, arg, polar_lift, periodic_argument, unbranched_argument,
         principal_branch, transpose, adjoint, polarify, unpolarify)
@@ -55,7 +55,7 @@ __all__ = [
     'carmichael', 'fibonacci', 'lucas', 'motzkin', 'tribonacci', 'harmonic',
     'bernoulli', 'bell', 'euler', 'catalan', 'genocchi', 'partition',
 
-    'sqrt', 'root', 'Min', 'Max', 'Id', 'real_root', 'cbrt',
+    'sqrt', 'root', 'Min', 'Max', 'Id', 'real_root', 'cbrt', 'Rem',
 
     're', 'im', 'sign', 'Abs', 'conjugate', 'arg', 'polar_lift',
     'periodic_argument', 'unbranched_argument', 'principal_branch',

@@ -1,9 +1,10 @@
 import itertools
 from collections import defaultdict
-from typing import Tuple, Union, FrozenSet, Dict, List, Optional
+from typing import Tuple as tTuple, Union as tUnion, FrozenSet, Dict as tDict, List, Optional
 from functools import singledispatch
 from itertools import accumulate
 
+from sympy import MatMul, Basic
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
@@ -24,7 +25,7 @@ from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayD
 from sympy.tensor.array.expressions.utils import _get_mapping_from_subranks
 
 
-def _get_candidate_for_matmul_from_contraction(scan_indices: List[Optional[int]], remaining_args: List[_ArgE]) -> Tuple[Optional[_ArgE], bool, int]:
+def _get_candidate_for_matmul_from_contraction(scan_indices: List[Optional[int]], remaining_args: List[_ArgE]) -> tTuple[Optional[_ArgE], bool, int]:
 
     scan_indices_int: List[int] = [i for i in scan_indices if i is not None]
     if len(scan_indices_int) == 0:
@@ -129,6 +130,43 @@ def _support_function_tp1_recognize(contraction_indices, args):
     return editor.to_array_contraction()
 
 
+def _find_trivial_matrices_rewrite(expr: ArrayTensorProduct):
+    # If there are matrices of trivial shape in the tensor product (i.e. shape
+    # (1, 1)), try to check if there is a suitable non-trivial MatMul where the
+    # expression can be inserted.
+
+    # For example, if "a" has shape (1, 1) and "b" has shape (k, 1), the
+    # expressions "ArrayTensorProduct(a, b*b.T)" can be rewritten as
+    # "b*a*b.T"
+
+    trivial_matrices = []
+    pos: Optional[int] = None
+    first: Optional[MatrixExpr] = None
+    second: Optional[MatrixExpr] = None
+    removed: List[int] = []
+    counter: int = 0
+    args: List[Optional[Basic]] = [i for i in expr.args]
+    for i, arg in enumerate(expr.args):
+        if isinstance(arg, MatrixExpr):
+            if arg.shape == (1, 1):
+                trivial_matrices.append(arg)
+                args[i] = None
+                removed.extend([counter, counter+1])
+            elif pos is None and isinstance(arg, MatMul):
+                margs = arg.args
+                for j, e in enumerate(margs):
+                    if isinstance(e, MatrixExpr) and e.shape[1] == 1:
+                        pos = i
+                        first = MatMul.fromiter(margs[:j+1])
+                        second = MatMul.fromiter(margs[j+1:])
+                        break
+        counter += get_rank(arg)
+    if pos is None:
+        return expr, []
+    args[pos] = (first*MatMul.fromiter(i for i in trivial_matrices)*second).doit()
+    return ArrayTensorProduct(*[i for i in args if i is not None]), removed
+
+
 @singledispatch
 def _array2matrix(expr):
     return expr
@@ -156,8 +194,12 @@ def _(expr: ArrayContraction):
     if not isinstance(expr, ArrayContraction):
         return _array2matrix(expr)
     subexpr = expr.expr
-    contraction_indices: Tuple[Tuple[int]] = expr.contraction_indices
-    if contraction_indices == ((0,), (1,)):
+    contraction_indices: tTuple[tTuple[int]] = expr.contraction_indices
+    if contraction_indices == ((0,), (1,)) or (
+        contraction_indices == ((0,),) and subexpr.shape[1] == 1
+    ) or (
+        contraction_indices == ((1,),) and subexpr.shape[0] == 1
+    ):
         shape = subexpr.shape
         subexpr = _array2matrix(subexpr)
         if isinstance(subexpr, MatrixExpr):
@@ -365,7 +407,11 @@ def _(expr: ArrayTensorProduct):
         else:
             newargs.append(arg)
             pending = None
-    return _a2m_tensor_product(*newargs), sorted(removed)
+    newexpr, newremoved = _a2m_tensor_product(*newargs), sorted(removed)
+    if isinstance(newexpr, ArrayTensorProduct):
+        newexpr, newremoved2 = _find_trivial_matrices_rewrite(newexpr)
+        newremoved = _combine_removed(-1, newremoved, newremoved2)
+    return newexpr, newremoved
 
 
 @_remove_trivial_dims.register(ArrayAdd) # type: ignore
@@ -646,12 +692,12 @@ def _a2m_transpose(arg):
         return Transpose(arg).doit()
 
 
-def identify_hadamard_products(expr: Union[ArrayContraction, ArrayDiagonal]):
+def identify_hadamard_products(expr: tUnion[ArrayContraction, ArrayDiagonal]):
 
     editor: _EditArrayContraction = _EditArrayContraction(expr)
 
-    map_contr_to_args: Dict[FrozenSet, List[_ArgE]] = defaultdict(list)
-    map_ind_to_inds: Dict[Optional[int], int] = defaultdict(int)
+    map_contr_to_args: tDict[FrozenSet, List[_ArgE]] = defaultdict(list)
+    map_ind_to_inds: tDict[Optional[int], int] = defaultdict(int)
     for arg_with_ind in editor.args_with_ind:
         for ind in arg_with_ind.indices:
             map_ind_to_inds[ind] += 1

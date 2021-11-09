@@ -5,7 +5,7 @@ The most important function here is srepr that returns a string so that the
 relation eval(srepr(expr))=expr holds in an appropriate environment.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 from sympy.core.function import AppliedUndef
 from sympy.core.mul import Mul
@@ -20,7 +20,7 @@ class ReprPrinter(Printer):
     _default_settings = {
         "order": None,
         "perm_cyclic" : True,
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
 
     def reprify(self, args, sep):
         """

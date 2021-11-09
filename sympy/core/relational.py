@@ -1,4 +1,4 @@
-from typing import Dict, Union, Type
+from typing import Dict as tDict, Union as tUnion, Type
 
 from .basic import Atom, Basic
 from .sorting import ordered
@@ -85,7 +85,7 @@ class Relational(Boolean, EvalfMixin):
     """
     __slots__ = ()
 
-    ValidRelationOperator = {}  # type: Dict[Union[str, None], Type[Relational]]
+    ValidRelationOperator = {}  # type: tDict[tUnion[str, None], Type[Relational]]
 
     is_Relational = True
 

@@ -112,6 +112,12 @@ def test_arrayexpr_contraction_construction():
     assert indtup == [[(0, 0), (1, 1)], [(0, 1), (2, 0)]]
     assert cg._contraction_tuples_to_contraction_indices(cg.expr, indtup) == [(0, 3), (1, 4)]
 
+    # Test removal of trivial contraction:
+    assert ArrayContraction(a, (1,)) == a
+    assert ArrayContraction(
+        ArrayTensorProduct(a, b), (0, 2), (1,), (3,)) == ArrayContraction(
+        ArrayTensorProduct(a, b), (0, 2))
+
 
 def test_arrayexpr_array_flatten():
 

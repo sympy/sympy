@@ -1178,8 +1178,8 @@ class AccumulationBounds(AtomicExpr):
                 if other.args == (-oo, oo):
                     return other
                 v = set()
-                for i in self.args:
-                    vi = other*i
+                for a in self.args:
+                    vi = other*a
                     for i in vi.args or (vi,):
                         v.add(i)
                 return AccumBounds(Min(*v), Max(*v))

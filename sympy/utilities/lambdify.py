@@ -3,7 +3,7 @@ This module provides convenient functions to transform SymPy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from typing import Any, Dict, Iterable
+from typing import Any, Dict as tDict, Iterable
 
 import builtins
 import inspect
@@ -22,14 +22,14 @@ __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
 # Default namespaces, letting us define translations that can't be defined
 # by simple variable maps, like I => 1j
-MATH_DEFAULT = {}  # type: Dict[str, Any]
-MPMATH_DEFAULT = {}  # type: Dict[str, Any]
-NUMPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
-SCIPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
-CUPY_DEFAULT = {"I": 1j}  # type: Dict[str, Any]
-TENSORFLOW_DEFAULT = {}  # type: Dict[str, Any]
-SYMPY_DEFAULT = {}  # type: Dict[str, Any]
-NUMEXPR_DEFAULT = {}  # type: Dict[str, Any]
+MATH_DEFAULT = {}  # type: tDict[str, Any]
+MPMATH_DEFAULT = {}  # type: tDict[str, Any]
+NUMPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
+SCIPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
+CUPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
+TENSORFLOW_DEFAULT = {}  # type: tDict[str, Any]
+SYMPY_DEFAULT = {}  # type: tDict[str, Any]
+NUMEXPR_DEFAULT = {}  # type: tDict[str, Any]
 
 # These are the namespaces the lambda functions will use.
 # These are separate from the names above because they are modified
@@ -86,13 +86,13 @@ MPMATH_TRANSLATIONS = {
 
 NUMPY_TRANSLATIONS = {
     "Heaviside": "heaviside",
-    }  # type: Dict[str, str]
-SCIPY_TRANSLATIONS = {}  # type: Dict[str, str]
-CUPY_TRANSLATIONS = {}  # type: Dict[str, str]
+    }  # type: tDict[str, str]
+SCIPY_TRANSLATIONS = {}  # type: tDict[str, str]
+CUPY_TRANSLATIONS = {}  # type: tDict[str, str]
 
-TENSORFLOW_TRANSLATIONS = {}  # type: Dict[str, str]
+TENSORFLOW_TRANSLATIONS = {}  # type: tDict[str, str]
 
-NUMEXPR_TRANSLATIONS = {}  # type: Dict[str, str]
+NUMEXPR_TRANSLATIONS = {}  # type: tDict[str, str]
 
 # Available modules:
 MODULES = {
@@ -785,7 +785,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
             raise TypeError("numexpr must be the only item in 'modules'")
         namespaces += list(modules)
     # fill namespace with first having highest priority
-    namespace = {} # type: Dict[str, Any]
+    namespace = {} # type: tDict[str, Any]
     for m in namespaces[::-1]:
         buf = _get_namespace(m)
         namespace.update(buf)
@@ -886,7 +886,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
     # Provide lambda expression with builtins, and compatible implementation of range
     namespace.update({'builtins':builtins, 'range':range})
 
-    funclocals = {} # type: Dict[str, Any]
+    funclocals = {} # type: tDict[str, Any]
     global _lambdify_generated_counter
     filename = '<lambdifygenerated-%s>' % _lambdify_generated_counter
     _lambdify_generated_counter += 1

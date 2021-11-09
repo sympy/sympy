@@ -3,7 +3,7 @@ from collections import defaultdict, Counter
 from functools import reduce
 import itertools
 from itertools import accumulate
-from typing import Optional, List, Dict, Tuple as tTuple
+from typing import Optional, List, Dict as tDict, Tuple as tTuple
 
 import typing
 
@@ -899,6 +899,11 @@ class ArrayContraction(_CodegenArrayAbstract):
         if isinstance(expr, ArrayAdd):
             return self._ArrayContraction_denest_ArrayAdd(expr, *contraction_indices)
 
+        # Check single index contractions on 1-dimensional axes:
+        contraction_indices = [i for i in contraction_indices if len(i) > 1 or get_shape(expr)[i[0]] != 1]
+        if len(contraction_indices) == 0:
+            return expr
+
         return self.func(expr, *contraction_indices, normalize=False)
 
     def __mul__(self, other):
@@ -1024,8 +1029,8 @@ class ArrayContraction(_CodegenArrayAbstract):
             # Also consider the case of diagonal matrices being contracted:
             current_dimension = self.expr.shape[links[0]]
 
-            not_vectors: Tuple[_ArgE, int] = []
-            vectors: Tuple[_ArgE, int] = []
+            not_vectors: tTuple[_ArgE, int] = []
+            vectors: tTuple[_ArgE, int] = []
             for arg_ind, rel_ind in positions:
                 arg = editor.args_with_ind[arg_ind]
                 mat = arg.element
@@ -1508,7 +1513,7 @@ class _EditArrayContraction:
         return self.number_of_contraction_indices - 1
 
     def refresh_indices(self):
-        updates: Dict[int, int] = {}
+        updates: tDict[int, int] = {}
         for arg_with_ind in self.args_with_ind:
             updates.update({i: -1 for i in arg_with_ind.indices if i is not None})
         for i, e in enumerate(sorted(updates)):

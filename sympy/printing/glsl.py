@@ -1,4 +1,4 @@
-from typing import Set
+from typing import Set as tSet
 
 from sympy.core import Basic, S
 from sympy.core.function import Lambda
@@ -33,7 +33,7 @@ class GLSLPrinter(CodePrinter):
     Additional settings:
     'use_operators': Boolean (should the printer use operators for +,-,*, or functions?)
     """
-    _not_supported = set()  # type: Set[Basic]
+    _not_supported = set()  # type: tSet[Basic]
     printmethod = "_glsl"
     language = "GLSL"
 

@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 from sympy.testing.pytest import raises
 from sympy.assumptions.ask import Q
@@ -27,7 +27,7 @@ x, y = symbols('x,y')
 
 # eval(srepr(expr)) == expr has to succeed in the right environment. The right
 # environment is the scope of "from sympy import *" for most cases.
-ENV = {"Str": Str}  # type: Dict[str, Any]
+ENV = {"Str": Str}  # type: tDict[str, Any]
 exec("from sympy import *", ENV)
 
 

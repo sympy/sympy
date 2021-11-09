@@ -5,7 +5,7 @@ import math
 import re as regex
 import sys
 from functools import lru_cache
-from typing import Set
+from typing import Set as tSet
 
 from .containers import Tuple
 from .sympify import (SympifyError, converter, sympify, _convert_numpy_types, _sympify,
@@ -22,20 +22,18 @@ from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, gmpy
 from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
-from mpmath.libmp import bitcount
+from mpmath.libmp import bitcount, round_nearest as rnd
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from mpmath.ctx_mp import mpnumeric
 from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
-    prec_to_dps)
+    prec_to_dps, dps_to_prec)
 from sympy.utilities.misc import as_int, debug, filldedent
 from .parameters import global_parameters
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-
-rnd = mlib.round_nearest
 
 _LOG2 = math.log(2)
 
@@ -1095,7 +1093,7 @@ class Float(Number):
                     if num.is_Integer and isint:
                         dps = max(dps, len(str(num).lstrip('-')))
                     dps = max(15, dps)
-                    precision = mlib.libmpf.dps_to_prec(dps)
+                    precision = dps_to_prec(dps)
         elif precision == '' and dps is None or precision is None and dps == '':
             if not isinstance(num, str):
                 raise ValueError('The null string can only be used when '
@@ -1111,7 +1109,7 @@ class Float(Number):
                     num, dps = _decimal_to_Rational_prec(Num)
                     if num.is_Integer and isint:
                         dps = max(dps, len(str(num).lstrip('-')))
-                        precision = mlib.libmpf.dps_to_prec(dps)
+                        precision = dps_to_prec(dps)
                     ok = True
             if ok is None:
                 raise ValueError('string-float not recognized: %s' % num)
@@ -1122,7 +1120,7 @@ class Float(Number):
         # precision.
 
         if precision is None or precision == '':
-            precision = mlib.libmpf.dps_to_prec(dps)
+            precision = dps_to_prec(dps)
 
         precision = int(precision)
 
@@ -1279,6 +1277,8 @@ class Float(Number):
         return self._mpf_ != fzero
 
     def __neg__(self):
+        if not self:
+            return self
         return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
 
     @_sympifyit('other', NotImplemented)
@@ -1341,10 +1341,10 @@ class Float(Number):
                   -> p**r*(sin(Pi*r) + cos(Pi*r)*I)
         """
         if self == 0:
-            if expt.is_positive:
-                return S.Zero
-            if expt.is_negative:
-                return S.Infinity
+            if expt.is_extended_positive:
+                return self
+            if expt.is_extended_negative:
+                return S.ComplexInfinity
         if isinstance(expt, Number):
             if isinstance(expt, Integer):
                 prec = self._prec
@@ -2518,7 +2518,7 @@ class AlgebraicNumber(Expr):
     # Optional alias symbol is not free.
     # Actually, alias should be a Str, but some methods
     # expect that it be an instance of Expr.
-    free_symbols: Set[Basic] = set()
+    free_symbols: tSet[Basic] = set()
 
     def __new__(cls, expr, coeffs=None, alias=None, **args):
         """Construct a new algebraic number. """
@@ -2699,9 +2699,9 @@ class Zero(IntegerConstant, metaclass=Singleton):
         return S.Zero
 
     def _eval_power(self, expt):
-        if expt.is_positive:
+        if expt.is_extended_positive:
             return self
-        if expt.is_negative:
+        if expt.is_extended_negative:
             return S.ComplexInfinity
         if expt.is_extended_real is False:
             return S.NaN
@@ -2720,10 +2720,6 @@ class Zero(IntegerConstant, metaclass=Singleton):
 
     def __bool__(self):
         return False
-
-    def as_coeff_Mul(self, rational=False):  # XXX this routine should be deleted
-        """Efficiently extract the coefficient of a summation. """
-        return S.One, self
 
 
 class One(IntegerConstant, metaclass=Singleton):
@@ -3186,7 +3182,14 @@ class NegativeInfinity(Number, metaclass=Singleton):
                 else:
                     return S.Infinity
 
-            return S.NegativeOne**expt*S.Infinity**expt
+            inf_part = S.Infinity**expt
+            s_part = S.NegativeOne**expt
+            if inf_part == 0 and s_part.is_finite:
+                return inf_part
+            if (inf_part is S.ComplexInfinity and
+                    s_part.is_finite and not s_part.is_zero):
+                return S.ComplexInfinity
+            return s_part*inf_part
 
     def _as_mpf_val(self, prec):
         return mlib.fninf
@@ -3480,6 +3483,7 @@ class NumberSymbol(AtomicExpr):
 
     def __hash__(self):
         return super().__hash__()
+
 
 class Exp1(NumberSymbol, metaclass=Singleton):
     r"""The `e` constant.

@@ -717,7 +717,6 @@ class tanh(HyperbolicFunction):
             return self.args[0].is_negative
 
     def _eval_is_finite(self):
-        from sympy.functions.elementary.hyperbolic import sinh
         from sympy.functions.elementary.trigonometric import cos
         arg = self.args[0]
 

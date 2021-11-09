@@ -75,6 +75,7 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
         if isinstance(exp, Integer) and exp > 0:
             return convert_matrix_to_array(HadamardProduct.fromiter(base for i in range(exp)))
         else:
-            raise NotImplementedError("conversion of Hadamard symbolic power is currently not supported")
+            d = Dummy("d")
+            return ArrayElementwiseApplyFunc(Lambda(d, d**exp), base)
     else:
         return expr

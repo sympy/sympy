@@ -2,7 +2,7 @@
 
 import typing
 if typing.TYPE_CHECKING:
-    from typing import Any, Callable, Dict, Type
+    from typing import Any, Callable, Dict as tDict, Type
 
 from inspect import getmro
 import string
@@ -26,7 +26,7 @@ class SympifyError(ValueError):
 
 
 # See sympify docstring.
-converter = {}  # type: Dict[Type[Any], Callable[[Any], Basic]]
+converter = {}  # type: tDict[Type[Any], Callable[[Any], Basic]]
 
 
 class CantSympify:

@@ -883,6 +883,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         from .containers import Dict
         from .symbol import Dummy, Symbol
+        from sympy.polys.polyutils import illegal
 
         unordered = False
         if len(args) == 1:
@@ -918,6 +919,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             # skip if there is no change
             sequence[i] = None if _aresame(*s) else tuple(s)
         sequence = list(filter(None, sequence))
+        simultaneous = kwargs.pop('simultaneous', False)
 
         if unordered:
             from .sorting import _nodes, default_sort_key
@@ -933,8 +935,16 @@ class Basic(Printable, metaclass=ManagedProperties):
                 default_sort_key,
                 )))
             sequence = [(k, sequence[k]) for k in k]
+            # do infinities first
+            if not simultaneous:
+                redo = []
+                for i in range(len(sequence)):
+                    if sequence[i][1] in illegal:  # nan, zoo and +/-oo
+                        redo.append(i)
+                for i in reversed(redo):
+                    sequence.insert(0, sequence.pop(i))
 
-        if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
+        if simultaneous:  # XXX should this be the default for dict subs?
             reps = {}
             rv = self
             kwargs['hack2'] = True

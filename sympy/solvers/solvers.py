@@ -2875,11 +2875,8 @@ def nsolve(*args, dict=False, **kwargs):
             "solver".'''))
 
     if 'prec' in kwargs:
-        prec = kwargs.pop('prec')
         import mpmath
-        mpmath.mp.dps = prec
-    else:
-        prec = None
+        mpmath.mp.dps = kwargs.pop('prec')
 
     # keyword argument to return result as a dictionary
     as_dict = dict

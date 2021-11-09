@@ -17,7 +17,7 @@ SymPy is case sensitive. So, fcode adds underscores to variable names when
 it is necessary to make them different for Fortran.
 """
 
-from typing import Dict, Any
+from typing import Dict as tDict, Any
 
 from collections import defaultdict
 from itertools import chain
@@ -105,7 +105,7 @@ class FCodePrinter(CodePrinter):
         'contract': True,
         'standard': 77,
         'name_mangling' : True,
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
 
     _operators = {
         'and': '.and.',

@@ -2,7 +2,7 @@
 A MathML printer.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
@@ -14,7 +14,6 @@ from sympy.printing.precedence import \
 from sympy.printing.pretty.pretty_symbology import greek_unicode
 from sympy.printing.printer import Printer, print_function
 
-import mpmath.libmp as mlib
 from mpmath.libmp import prec_to_dps, repr_dps, to_str as mlib_to_str
 
 
@@ -38,7 +37,7 @@ class MathMLPrinterBase(Printer):
         "root_notation": True,
         "symbol_names": {},
         "mul_symbol_mathml_numbers": '&#xB7;',
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
 
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
@@ -1174,7 +1173,7 @@ class MathMLPresentationPrinter(MathMLPrinterBase):
     def _print_Float(self, expr):
         # Based off of that in StrPrinter
         dps = prec_to_dps(expr._prec)
-        str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=True)
+        str_real = mlib_to_str(expr._mpf_, dps, strip_zeros=True)
 
         # Must always have a mul symbol (as 2.5 10^{20} just looks odd)
         # thus we use the number separator

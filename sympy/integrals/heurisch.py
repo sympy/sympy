@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict as tDict, List
 
 from itertools import permutations
 from functools import reduce
@@ -87,7 +87,7 @@ def components(f, x):
     return result
 
 # name -> [] of symbols
-_symbols_cache = {}  # type: Dict[str, List[Dummy]]
+_symbols_cache = {}  # type: tDict[str, List[Dummy]]
 
 
 # NB @cacheit is not convenient here

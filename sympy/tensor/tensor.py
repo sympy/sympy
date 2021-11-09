@@ -29,7 +29,7 @@ If there is a (anti)symmetric metric, the indices can be raised and
 lowered when the tensor is put in canonical form.
 """
 
-from typing import Any, Dict as tDict, List, Set, Tuple as tTuple
+from typing import Any, Dict as tDict, List, Set as tSet, Tuple as tTuple
 from functools import reduce
 
 from abc import abstractmethod, ABCMeta
@@ -2468,13 +2468,13 @@ class TensAdd(TensExpr, AssocOp):
     def _tensAdd_check(args):
         # check that all addends have the same free indices
 
-        def get_indices_set(x):  # type: (Expr) -> Set[TensorIndex]
+        def get_indices_set(x):  # type: (Expr) -> tSet[TensorIndex]
             if isinstance(x, TensExpr):
                 return set(x.get_free_indices())
             return set()
 
-        indices0 = get_indices_set(args[0])  # type: Set[TensorIndex]
-        list_indices = [get_indices_set(arg) for arg in args[1:]]  # type: List[Set[TensorIndex]]
+        indices0 = get_indices_set(args[0])  # type: tSet[TensorIndex]
+        list_indices = [get_indices_set(arg) for arg in args[1:]]  # type: List[tSet[TensorIndex]]
         if not all(x == indices0 for x in list_indices):
             raise ValueError('all tensors must have the same indices')
 
