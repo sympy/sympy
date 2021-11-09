@@ -862,8 +862,6 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
     funcname = '_lambdifygenerated'
     if _module_present('tensorflow', namespaces):
         funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter
-    elif _module_present('paddle', namespaces):
-        funcprinter = _PaddleEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter 有问题
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
@@ -1257,9 +1255,6 @@ class _EvaluatorPrinter:
                 unpack_lhs(val) if iterable(val) else val for val in lvalues))
 
         return ['{} = {}'.format(unpack_lhs(unpackto), arg)]
-
-class _PaddleEvaluatorPrinter(_EvaluatorPrinter):
-    
 
 class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
     def _print_unpacking(self, lvalues, rvalue):
