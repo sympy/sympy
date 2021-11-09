@@ -66,8 +66,8 @@ the user must provide a complete representation of the free
 body diagrams that themselves represent the system, with which this code can
 provide equations of motion in a form amenable to numerical integration. Step
 5 above amounts to arduous algebra for even fairly simple multi-body systems.
-Thus, it is desirable to use a symbolic math package, such as Sympy, to
-perform this step. It is for this reason that this module is a part of Sympy.
+Thus, it is desirable to use a symbolic math package, such as SymPy, to
+perform this step. It is for this reason that this module is a part of SymPy.
 Step 4 amounts to this specific module, sympy.physics.mechanics.
 
 

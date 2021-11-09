@@ -1,11 +1,9 @@
 """Tools for solving inequalities and systems of inequalities. """
 
 from sympy.core import Symbol, Dummy, sympify
-from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Eq, Ge, Lt
-from sympy.sets import Interval
-from sympy.sets.sets import FiniteSet, Union, EmptySet, Intersection
+from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
 
@@ -13,7 +11,7 @@ from sympy.functions import Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
-from sympy.utilities.iterables import sift
+from sympy.utilities.iterables import sift, iterable
 from sympy.utilities.misc import filldedent
 
 
@@ -449,7 +447,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Interval.open(0, pi)
 
     """
-    from sympy import im
+    from sympy.functions.elementary.complexes import im
     from sympy.calculus.util import (continuous_domain, periodicity,
         function_range)
     from sympy.solvers.solvers import denoms
@@ -509,13 +507,13 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             frange = function_range(e, gen, domain)
 
             rel = expr.rel_op
-            if rel == '<' or rel == '<=':
+            if rel in ('<', '<='):
                 if expr.func(frange.sup, 0):
                     rv = domain
                 elif not expr.func(frange.inf, 0):
                     rv = S.EmptySet
 
-            elif rel == '>' or rel == '>=':
+            elif rel in ('>', '>='):
                 if expr.func(frange.inf, 0):
                     rv = domain
                 elif not expr.func(frange.sup, 0):
@@ -641,7 +639,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     im_sol = S.Reals
                     check = False
 
-                if isinstance(im_sol, EmptySet):
+                if im_sol is S.EmptySet:
                     raise ValueError(filldedent('''
                         %s contains imaginary parts which cannot be
                         made 0 for any value of %s satisfying the

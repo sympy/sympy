@@ -118,13 +118,23 @@ from sympy.integrals.rubi.utility_function import (
         CoshIntegral, Rule, Erf, PolyGamma, ExpIntegralEi, ExpIntegralE, LogGamma , UtilityOperator, Factorial,
         Zeta, ProductLog, DerivativeDivides, HypergeometricPFQ, IntHide, OneQ
     )
-from sympy import (Integral, S, sqrt, And, Or, Integer, Float, Mod, I, Abs, simplify, Mul, Add, Pow)
+from sympy.core.add import Add
+from sympy.core.mod import Mod
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Integer)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import (And, Or)
+from sympy.simplify.simplify import simplify
 from sympy.integrals.rubi.symbol import WC
 from sympy.core.symbol import symbols, Symbol
 from sympy.functions import (sin, cos, tan, cot, csc, sec, sqrt, erf, exp, log)
 from sympy.functions.elementary.hyperbolic import (acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch)
 from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec)
-from sympy import pi as Pi
+from sympy.core.numbers import pi as Pi
 from sympy.integrals.rubi.rubi import rubi_integrate
 a, b, c, d, e, f, m, n, x, u , k, p, r, s, t, i, j= symbols('a b c d e f m n x u k p r s t i j')
 A, B, C, D, a, b, c, d, e, f, g, h, y, z, m, n, p, q, u, v, w, F = symbols('A B C D a b c d e f g h y z m n p q u v w F', )

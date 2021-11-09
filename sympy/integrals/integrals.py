@@ -1,9 +1,9 @@
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
+from sympy.core.exprtools import factor_terms
 from sympy.core.function import diff
 from sympy.core.logic import fuzzy_bool
 from sympy.core.mul import Mul
@@ -19,16 +19,21 @@ from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
-from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
+from sympy.integrals.meijerint import (meijerint_definite, meijerint_indefinite,
+                                       _debug)
+from sympy.integrals.deltafunctions import deltaintegrate
+from sympy.integrals.rationaltools import ratint
 from sympy.matrices import MatrixBase
 from sympy.polys import Poly, PolynomialError
-from sympy.series import limit
-from sympy.series.order import Order
 from sympy.series.formal import FormalPowerSeries
+from sympy.series.limits import limit
+from sympy.series.order import Order
 from sympy.simplify.fu import sincos_to_sum
+from sympy.simplify.simplify import simplify
 from sympy.tensor.functions import shape
-from sympy.utilities.misc import filldedent
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import is_sequence
+from sympy.utilities.misc import filldedent
 
 
 class Integral(AddWithLimits):
@@ -559,7 +564,6 @@ class Integral(AddWithLimits):
                         try:
                             res = meijerint_definite(function, x, a, b)
                         except NotImplementedError:
-                            from sympy.integrals.meijerint import _debug
                             _debug('NotImplementedError '
                                 'from meijerint_definite')
                             res = None
@@ -567,7 +571,12 @@ class Integral(AddWithLimits):
                             f, cond = res
                             if conds == 'piecewise':
                                 u = self.func(function, (x, a, b))
-                                return Piecewise((f, cond), (u, True))
+                                # if Piecewise modifies cond too
+                                # much it may not be recognized by
+                                # _condsimp pattern matching so just
+                                # turn off all evaluation
+                                return Piecewise((f, cond), (u, True),
+                                    evaluate=False)
                             elif conds == 'separate':
                                 if len(self.limits) != 1:
                                     raise ValueError(filldedent('''
@@ -894,11 +903,8 @@ class Integral(AddWithLimits):
              method. Set heurisch=False to not use it.
 
         """
-        from sympy.integrals.deltafunctions import deltaintegrate
-        from sympy.integrals.singularityfunctions import singularityintegrate
-        from sympy.integrals.heurisch import heurisch as heurisch_, heurisch_wrapper
-        from sympy.integrals.rationaltools import ratint
-        from sympy.integrals.risch import risch_integrate
+
+        from sympy.integrals.risch import risch_integrate, NonElementaryIntegral
 
         if risch:
             try:
@@ -920,7 +926,7 @@ class Integral(AddWithLimits):
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
         # It is important to make this check first, otherwise the other code
-        # will return a sympy expression instead of a Polynomial.
+        # will return a SymPy expression instead of a Polynomial.
         #
         # see Polynomial for details.
         if isinstance(f, Poly) and not (manual or meijerg or risch):
@@ -959,7 +965,6 @@ class Integral(AddWithLimits):
                     # the Risch algorithm, then use the original function to
                     # integrate, instead of re-written one
                     if result == 0:
-                        from sympy.integrals.risch import NonElementaryIntegral
                         return NonElementaryIntegral(f, x).doit(risch=False)
                     else:
                         return result + i.doit(risch=False)
@@ -1050,6 +1055,7 @@ class Integral(AddWithLimits):
                     continue
 
                 # g(x) has at least a Singularity Function term
+                from sympy.integrals.singularityfunctions import singularityintegrate
                 h = singularityintegrate(g, x)
                 if h is not None:
                     parts.append(coeff * h)
@@ -1071,6 +1077,8 @@ class Integral(AddWithLimits):
 
                 # fall back to heurisch
                 if heurisch is not False:
+                    from sympy.integrals.heurisch import (heurisch as heurisch_,
+                                                          heurisch_wrapper)
                     try:
                         if conds == 'piecewise':
                             h = heurisch_wrapper(g, x, hints=[])
@@ -1089,7 +1097,6 @@ class Integral(AddWithLimits):
                 try:
                     h = meijerint_indefinite(g, x)
                 except NotImplementedError:
-                    from sympy.integrals.meijerint import _debug
                     _debug('NotImplementedError from meijerint_definite')
                 if h is not None:
                     parts.append(coeff * h)
@@ -1179,9 +1186,6 @@ class Integral(AddWithLimits):
         return integrate(leading_term, *self.args[1:])
 
     def _eval_simplify(self, **kwargs):
-        from sympy.core.exprtools import factor_terms
-        from sympy.simplify.simplify import simplify
-
         expr = factor_terms(self)
         if isinstance(expr, Integral):
             return expr.func(*[simplify(i, **kwargs) for i in expr.args])
@@ -1361,7 +1365,6 @@ class Integral(AddWithLimits):
         .. [1] https://en.wikipedia.org/wiki/Cauchy_principal_value
         .. [2] http://mathworld.wolfram.com/CauchyPrincipalValue.html
         """
-        from sympy.calculus import singularities
         if len(self.limits) != 1 or len(list(self.limits[0])) != 3:
             raise ValueError("You need to insert a variable, lower_limit, and upper_limit correctly to calculate "
                              "cauchy's principal value")
@@ -1371,11 +1374,12 @@ class Integral(AddWithLimits):
                              "cauchy's principal value. Also, a and b need to be comparable.")
         if a == b:
             return S.Zero
+        from sympy.calculus import singularities
         r = Dummy('r')
         f = self.function
         singularities_list = [s for s in singularities(f, x) if s.is_comparable and a <= s <= b]
         for i in singularities_list:
-            if (i == b) or (i == a):
+            if i in (a, b):
                 raise ValueError(
                     'The principal value is not defined in the given interval due to singularity at %d.' % (i))
         F = integrate(f, x, **kwargs)
@@ -1535,7 +1539,7 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
     gamma(a + 1)
 
     >>> integrate(x**a*exp(-x), (x, 0, oo), conds='separate')
-    (gamma(a + 1), -re(a) < 1)
+    (gamma(a + 1), re(a) > -1)
 
     See Also
     ========

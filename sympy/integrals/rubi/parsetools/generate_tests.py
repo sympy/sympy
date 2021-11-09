@@ -1,5 +1,5 @@
 from sympy.integrals.rubi.parsetools.parse import generate_sympy_from_parsed, parse_full_form, rubi_printer
-from sympy import sympify
+from sympy.core.sympify import sympify
 from sympy.integrals.rubi.utility_function import List, If
 import os, inspect
 

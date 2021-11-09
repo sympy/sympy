@@ -1,3 +1,4 @@
+from sympy.core.assumptions import check_assumptions
 from sympy.core.logic import fuzzy_and
 from sympy.core.sympify import _sympify
 from sympy.sets.sets import Set
@@ -54,7 +55,6 @@ class MatrixSet(Set):
     @classmethod
     def _check_dim(cls, dim):
         """Helper function to check invalid matrix dimensions"""
-        from sympy.core.assumptions import check_assumptions
         ok = check_assumptions(dim, integer=True, nonnegative=True)
         if ok is False:
             raise ValueError(

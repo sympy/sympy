@@ -35,6 +35,7 @@ from math import gcd
 from decimal import Decimal
 from fractions import Fraction
 import sys
+from typing import Tuple as tTuple, Type
 
 
 # Used for __hash__
@@ -351,6 +352,7 @@ class PythonMPQ:
         else:
             return NotImplemented
 
+    _compatible_types: tTuple[Type, ...] = ()
 
 #
 # These are the types that PythonMPQ will interoperate with for operations

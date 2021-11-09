@@ -1,6 +1,13 @@
-from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
-                   zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I,
-                   exp_polar, polar_lift, O, stieltjes, Abs, Sum, oo, riemann_xi)
+from sympy.concrete.summations import Sum
+from sympy.core.function import expand_func
+from sympy.core.numbers import (Float, I, Rational, nan, oo, pi, zoo)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.complexes import (Abs, polar_lift)
+from sympy.functions.elementary.exponential import (exp, exp_polar, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.zeta_functions import (dirichlet_eta, lerchphi, polylog, riemann_xi, stieltjes, zeta)
+from sympy.series.order import O
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.combinatorial.numbers import bernoulli, factorial
 from sympy.testing.pytest import raises
@@ -105,7 +112,7 @@ def test_rewriting():
 
 
 def test_derivatives():
-    from sympy import Derivative
+    from sympy.core.function import Derivative
     assert zeta(x, a).diff(x) == Derivative(zeta(x, a), x)
     assert zeta(x, a).diff(a) == -x*zeta(x + 1, a)
     assert lerchphi(
@@ -183,7 +190,7 @@ def test_polylog_values():
             assert verify_numerically(polylog(s, z), polylog(s, z, evaluate=False),
                                       z, a=2, b=-2, c=5, d=2)
 
-    from sympy import Integral
+    from sympy.integrals.integrals import Integral
     assert polylog(0, Integral(1, (x, 0, 1))) == -S.Half
 
 

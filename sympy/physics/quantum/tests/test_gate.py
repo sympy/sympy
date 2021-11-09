@@ -1,4 +1,8 @@
-from sympy import exp, symbols, sqrt, I, pi, Mul, Integer, Wild, Rational
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Integer, Rational, pi)
+from sympy.core.symbol import (Wild, symbols)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices import Matrix, ImmutableMatrix
 
 from sympy.physics.quantum.gate import (XGate, YGate, ZGate, random_circuit,

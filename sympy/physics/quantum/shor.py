@@ -10,8 +10,10 @@ Todo:
 import math
 import random
 
-from sympy import Mul, S
-from sympy import log, sqrt
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.numbers import igcd
 from sympy.ntheory import continued_fraction_periodic as continued_fraction
 from sympy.utilities.iterables import variations

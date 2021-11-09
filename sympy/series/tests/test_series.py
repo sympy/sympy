@@ -1,5 +1,14 @@
-from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, PoleError, log, sqrt, N, Symbol, Subs, pi, symbols, atan, LambertW, Rational
+from sympy.core.evalf import N
+from sympy.core.function import (Derivative, Function, PoleError, Subs)
+from sympy.core.numbers import (E, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import (LambertW, exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (atan, cos, sin)
+from sympy.integrals.integrals import Integral
+from sympy.series.order import O
+from sympy.series.series import series
 from sympy.abc import x, y, n, k
 from sympy.testing.pytest import raises
 from sympy.series.gruntz import calculate_series
@@ -142,7 +151,8 @@ def test_issue_3978():
             x**2*Subs(Derivative(TestF(x), x, x), x, 0)/2 + O(x**3)
 
 from sympy.series.acceleration import richardson, shanks
-from sympy import Sum, Integer
+from sympy.concrete.summations import Sum
+from sympy.core.numbers import Integer
 
 
 def test_acceleration():

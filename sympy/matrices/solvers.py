@@ -746,7 +746,7 @@ def _solve(M, rhs, method='GJ'):
         for solving the system will be suggested.
     """
 
-    if method == 'GJ' or method == 'GE':
+    if method in ('GJ', 'GE'):
         try:
             soln, param = M.gauss_jordan_solve(rhs)
 

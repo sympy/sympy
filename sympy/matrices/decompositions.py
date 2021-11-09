@@ -1,5 +1,6 @@
 import copy
 
+from sympy.core import S
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.miscellaneous import Min, sqrt
 from sympy.functions.elementary.complexes import sign
@@ -124,9 +125,9 @@ def _liupc(M):
     References
     ==========
 
-    Symbolic Sparse Cholesky Factorization using Elimination Trees,
-    Jeroen Van Grondelle (1999)
-    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
+    .. [1] Symbolic Sparse Cholesky Factorization using Elimination Trees,
+           Jeroen Van Grondelle (1999)
+           http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
     """
     # Algorithm 2.4, p 17 of reference
 
@@ -172,9 +173,9 @@ def _row_structure_symbolic_cholesky(M):
     References
     ==========
 
-    Symbolic Sparse Cholesky Factorization using Elimination Trees,
-    Jeroen Van Grondelle (1999)
-    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
+    .. [1] Symbolic Sparse Cholesky Factorization using Elimination Trees,
+           Jeroen Van Grondelle (1999)
+           http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
     """
 
     R, parent = M.liupc()
@@ -596,7 +597,7 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
         A function which determines if a given expression is zero.
 
         The function should be a callable that takes a single
-        sympy expression and returns a 3-valued boolean value
+        SymPy expression and returns a 3-valued boolean value
         ``True``, ``False``, or ``None``.
 
         It is internally used by the pivot searching algorithm.
@@ -607,8 +608,8 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
         A function that simplifies the input.
 
         If this is specified as a function, this function should be
-        a callable that takes a single sympy expression and returns
-        an another sympy expression that is algebraically
+        a callable that takes a single SymPy expression and returns
+        an another SymPy expression that is algebraically
         equivalent.
 
         If ``None``, it indicates that the pivot search algorithm
@@ -691,7 +692,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         A function which determines if a given expression is zero.
 
         The function should be a callable that takes a single
-        sympy expression and returns a 3-valued boolean value
+        SymPy expression and returns a 3-valued boolean value
         ``True``, ``False``, or ``None``.
 
         It is internally used by the pivot searching algorithm.
@@ -702,8 +703,8 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         A function that simplifies the input.
 
         If this is specified as a function, this function should be
-        a callable that takes a single sympy expression and returns
-        an another sympy expression that is algebraically
+        a callable that takes a single SymPy expression and returns
+        an another SymPy expression that is algebraically
         equivalent.
 
         If ``None``, it indicates that the pivot search algorithm
@@ -937,7 +938,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         # https://github.com/sympy/sympy/issues/9796
         pass
 
-    if M.rows == 0 or M.cols == 0:
+    if S.Zero in M.shape:
         # Define LU decomposition of a matrix with no entries as a matrix
         # of the same dimensions with all zero entries.
         return M.zeros(M.rows, M.cols), []

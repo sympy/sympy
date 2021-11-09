@@ -1,7 +1,9 @@
-from sympy import Order, limit, lcm_list, Piecewise
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.polys.polytools import lcm_list
+from sympy.series.limits import limit
+from sympy.series.order import Order
 from sympy.core import Add, Mul, Pow, S
 from sympy.core.basic import Basic
-from sympy.core.compatibility import iterable
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import diff, expand_mul
 from sympy.core.kind import NumberKind
@@ -18,12 +20,13 @@ from sympy.functions.elementary.trigonometric import (
 from sympy.logic.boolalg import And
 from sympy.polys.polytools import degree
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
-                             Complement, EmptySet)
+                             Complement)
 from sympy.sets.fancysets import ImageSet
 from sympy.simplify.simplify import simplify
 from sympy.solvers.decompogen import compogen, decompogen
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
+from sympy.utilities.iterables import iterable
 from sympy.multipledispatch import dispatch
 
 
@@ -37,18 +40,17 @@ def continuous_domain(f, symbol, domain):
     Parameters
     ==========
 
-    f : Expr
+    f : :py:class:`~.Expr`
         The concerned function.
-    symbol : Symbol
+    symbol : :py:class:`~.Symbol`
         The variable for which the intervals are to be determined.
-    domain : Interval
+    domain : :py:class:`~.Interval`
         The domain over which the continuity of the symbol has to be checked.
 
     Examples
     ========
 
-    >>> from sympy import Symbol, S, tan, log, pi, sqrt
-    >>> from sympy.sets import Interval
+    >>> from sympy import Interval, Symbol, S, tan, log, pi, sqrt
     >>> from sympy.calculus.util import continuous_domain
     >>> x = Symbol('x')
     >>> continuous_domain(1/x, x, S.Reals)
@@ -63,7 +65,7 @@ def continuous_domain(f, symbol, domain):
     Returns
     =======
 
-    Interval
+    :py:class:`~.Interval`
         Union of all intervals where the function is continuous.
 
     Raises
@@ -105,18 +107,17 @@ def function_range(f, symbol, domain):
     Parameters
     ==========
 
-    f : Expr
+    f : :py:class:`~.Expr`
         The concerned function.
-    symbol : Symbol
+    symbol : :py:class:`~.Symbol`
         The variable for which the range of function is to be determined.
-    domain : Interval
+    domain : :py:class:`~.Interval`
         The domain under which the range of the function has to be found.
 
     Examples
     ========
 
-    >>> from sympy import Symbol, S, exp, log, pi, sqrt, sin, tan
-    >>> from sympy.sets import Interval
+    >>> from sympy import Interval, Symbol, S, exp, log, pi, sqrt, sin, tan
     >>> from sympy.calculus.util import function_range
     >>> x = Symbol('x')
     >>> function_range(sin(x), x, Interval(0, 2*pi))
@@ -135,7 +136,7 @@ def function_range(f, symbol, domain):
     Returns
     =======
 
-    Interval
+    :py:class:`~.Interval`
         Union of all ranges for all intervals under domain where function is
         continuous.
 
@@ -149,7 +150,7 @@ def function_range(f, symbol, domain):
     """
     from sympy.solvers.solveset import solveset
 
-    if isinstance(domain, EmptySet):
+    if domain is S.EmptySet:
         return S.EmptySet
 
     period = periodicity(f, symbol)
@@ -234,13 +235,14 @@ def function_range(f, symbol, domain):
 
 def not_empty_in(finset_intersection, *syms):
     """
-    Finds the domain of the functions in `finite_set` in which the
-    `finite_set` is not-empty
+    Finds the domain of the functions in ``finset_intersection`` in which the
+    ``finite_set`` is not-empty
 
     Parameters
     ==========
 
-    finset_intersection : The unevaluated intersection of FiniteSet containing
+    finset_intersection : Intersection of FiniteSet
+                        The unevaluated intersection of FiniteSet containing
                         real-valued functions with Union of Sets
     syms : Tuple of symbols
             Symbol for which domain is to be found
@@ -350,11 +352,11 @@ def periodicity(f, symbol, check=False):
     Parameters
     ==========
 
-    f : Expr.
+    f : :py:class:`~.Expr`.
         The concerned function.
-    symbol : Symbol
+    symbol : :py:class:`~.Symbol`
         The variable for which the period is to be determined.
-    check : Boolean, optional
+    check : bool, optional
         The flag to verify whether the value being returned is a period or not.
 
     Returns
@@ -362,8 +364,8 @@ def periodicity(f, symbol, check=False):
 
     period
         The period of the function is returned.
-        `None` is returned when the function is aperiodic or has a complex period.
-        The value of `0` is returned as the period of a constant function.
+        ``None`` is returned when the function is aperiodic or has a complex period.
+        The value of $0$ is returned as the period of a constant function.
 
     Raises
     ======
@@ -377,19 +379,18 @@ def periodicity(f, symbol, check=False):
 
     Currently, we do not support functions with a complex period.
     The period of functions having complex periodic values such
-    as `exp`, `sinh` is evaluated to `None`.
+    as ``exp``, ``sinh`` is evaluated to ``None``.
 
     The value returned might not be the "fundamental" period of the given
     function i.e. it may not be the smallest periodic value of the function.
 
-    The verification of the period through the `check` flag is not reliable
+    The verification of the period through the ``check`` flag is not reliable
     due to internal simplification of the given expression. Hence, it is set
-    to `False` by default.
+    to ``False`` by default.
 
     Examples
     ========
-    >>> from sympy import Symbol, sin, cos, tan, exp
-    >>> from sympy.calculus.util import periodicity
+    >>> from sympy import periodicity, Symbol, sin, cos, tan, exp
     >>> x = Symbol('x')
     >>> f = sin(x) + sin(2*x) + sin(3*x)
     >>> periodicity(f, x)
@@ -522,7 +523,7 @@ def periodicity(f, symbol, check=False):
             for index, g in enumerate(reversed(g_s)):
                 start_index = num_of_gs - 1 - index
                 g = compogen(g_s[start_index:], symbol)
-                if g != orig_f and g != f: # Fix for issue 12620
+                if g not in (orig_f, f): # Fix for issue 12620
                     period = periodicity(g, symbol)
                     if period is not None:
                         break
@@ -545,10 +546,10 @@ def _periodicity(args, symbol):
     Parameters
     ==========
 
-    args : Tuple of Symbol
+    args : Tuple of :py:class:`~.Symbol`
         All the symbols present in a function.
 
-    symbol : Symbol
+    symbol : :py:class:`~.Symbol`
         The symbol over which the function is to be evaluated.
 
     Returns
@@ -557,7 +558,7 @@ def _periodicity(args, symbol):
     period
         The least common period of the function for all the symbols
         of the function.
-        None if for at least one of the symbols the function is aperiodic
+        ``None`` if for at least one of the symbols the function is aperiodic.
 
     """
     periods = []
@@ -592,13 +593,13 @@ def lcim(numbers):
     =======
 
     number
-        lcim if it exists, otherwise `None` for incommensurable numbers.
+        lcim if it exists, otherwise ``None`` for incommensurable numbers.
 
     Examples
     ========
 
-    >>> from sympy import S, pi
     >>> from sympy.calculus.util import lcim
+    >>> from sympy import S, pi
     >>> lcim([S(1)/2, S(3)/4, S(5)/6])
     15/2
     >>> lcim([2*pi, 3*pi, pi, pi/2])
@@ -626,25 +627,25 @@ def lcim(numbers):
     return result
 
 def is_convex(f, *syms, domain=S.Reals):
-    """Determines the  convexity of the function passed in the argument.
+    r"""Determines the  convexity of the function passed in the argument.
 
     Parameters
     ==========
 
-    f : Expr
+    f : :py:class:`~.Expr`
         The concerned function.
-    syms : Tuple of symbols
+    syms : Tuple of :py:class:`~.Symbol`
         The variables with respect to which the convexity is to be determined.
-    domain : Interval, optional
+    domain : :py:class:`~.Interval`, optional
         The domain over which the convexity of the function has to be checked.
         If unspecified, S.Reals will be the default domain.
 
     Returns
     =======
 
-    Boolean
-        The method returns `True` if the function is convex otherwise it
-        returns `False`.
+    bool
+        The method returns ``True`` if the function is convex otherwise it
+        returns ``False``.
 
     Raises
     ======
@@ -656,9 +657,9 @@ def is_convex(f, *syms, domain=S.Reals):
     =====
 
     To determine concavity of a function pass `-f` as the concerned function.
-    To determine logarithmic convexity of a function pass log(f) as
+    To determine logarithmic convexity of a function pass `\log(f)` as
     concerned function.
-    To determine logartihmic concavity of a function pass -log(f) as
+    To determine logartihmic concavity of a function pass `-\log(f)` as
     concerned function.
 
     Currently, convexity check of multivariate functions is not handled.
@@ -666,8 +667,7 @@ def is_convex(f, *syms, domain=S.Reals):
     Examples
     ========
 
-    >>> from sympy import symbols, exp, oo, Interval
-    >>> from sympy.calculus.util import is_convex
+    >>> from sympy import is_convex, symbols, exp, oo, Interval
     >>> x = symbols('x')
     >>> is_convex(exp(x), x)
     True
@@ -705,26 +705,25 @@ def stationary_points(f, symbol, domain=S.Reals):
     Parameters
     ==========
 
-    f : Expr
+    f : :py:class:`~.Expr`
         The concerned function.
-    symbol : Symbol
+    symbol : :py:class:`~.Symbol`
         The variable for which the stationary points are to be determined.
-    domain : Interval
+    domain : :py:class:`~.Interval`
         The domain over which the stationary points have to be checked.
-        If unspecified, S.Reals will be the default domain.
+        If unspecified, ``S.Reals`` will be the default domain.
 
     Returns
     =======
 
     Set
         A set of stationary points for the function. If there are no
-        stationary point, an EmptySet is returned.
+        stationary point, an :py:class:`~.EmptySet` is returned.
 
     Examples
     ========
 
-    >>> from sympy import Symbol, S, sin, pi, pprint, stationary_points
-    >>> from sympy.sets import Interval
+    >>> from sympy import Interval, Symbol, S, sin, pi, pprint, stationary_points
     >>> x = Symbol('x')
 
     >>> stationary_points(1/x, x, S.Reals)
@@ -741,7 +740,7 @@ def stationary_points(f, symbol, domain=S.Reals):
     """
     from sympy.solvers.solveset import solveset
 
-    if isinstance(domain, EmptySet):
+    if domain is S.EmptySet:
         return S.EmptySet
 
     domain = continuous_domain(f, symbol, domain)
@@ -757,13 +756,13 @@ def maximum(f, symbol, domain=S.Reals):
     Parameters
     ==========
 
-    f : Expr
+    f : :py:class:`~.Expr`
         The concerned function.
-    symbol : Symbol
+    symbol : :py:class:`~.Symbol`
         The variable for maximum value needs to be determined.
-    domain : Interval
+    domain : :py:class:`~.Interval`
         The domain over which the maximum have to be checked.
-        If unspecified, then Global maximum is returned.
+        If unspecified, then the global maximum is returned.
 
     Returns
     =======
@@ -774,8 +773,7 @@ def maximum(f, symbol, domain=S.Reals):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, sin, cos, pi, maximum
-    >>> from sympy.sets import Interval
+    >>> from sympy import Interval, Symbol, S, sin, cos, pi, maximum
     >>> x = Symbol('x')
 
     >>> f = -x**2 + 2*x + 5
@@ -790,7 +788,7 @@ def maximum(f, symbol, domain=S.Reals):
 
     """
     if isinstance(symbol, Symbol):
-        if isinstance(domain, EmptySet):
+        if domain is S.EmptySet:
             raise ValueError("Maximum value not defined for empty domain.")
 
         return function_range(f, symbol, domain).sup
@@ -805,13 +803,13 @@ def minimum(f, symbol, domain=S.Reals):
     Parameters
     ==========
 
-    f : Expr
+    f : :py:class:`~.Expr`
         The concerned function.
-    symbol : Symbol
+    symbol : :py:class:`~.Symbol`
         The variable for minimum value needs to be determined.
-    domain : Interval
+    domain : :py:class:`~.Interval`
         The domain over which the minimum have to be checked.
-        If unspecified, then Global minimum is returned.
+        If unspecified, then the global minimum is returned.
 
     Returns
     =======
@@ -822,8 +820,7 @@ def minimum(f, symbol, domain=S.Reals):
     Examples
     ========
 
-    >>> from sympy import Symbol, S, sin, cos, minimum
-    >>> from sympy.sets import Interval
+    >>> from sympy import Interval, Symbol, S, sin, cos, minimum
     >>> x = Symbol('x')
 
     >>> f = x**2 + 2*x + 5
@@ -838,7 +835,7 @@ def minimum(f, symbol, domain=S.Reals):
 
     """
     if isinstance(symbol, Symbol):
-        if isinstance(domain, EmptySet):
+        if domain is S.EmptySet:
             raise ValueError("Minimum value not defined for empty domain.")
 
         return function_range(f, symbol, domain).inf
@@ -856,7 +853,7 @@ class AccumulationBounds(AtomicExpr):
     The intended meaning of AccummulationBounds is to give an approximate
     location of the accumulation points of a real function at a limit point.
 
-    Let `a` and `b` be reals such that a <= b.
+    Let `a` and `b` be reals such that `a \le b`.
 
     `\left\langle a, b\right\rangle = \{x \in \mathbb{R} \mid a \le x \le b\}`
 
@@ -889,7 +886,7 @@ class AccumulationBounds(AtomicExpr):
 
     `X - Y = \{ x-y \mid x \in X \cap y \in Y\}`
 
-    `X * Y = \{ x*y \mid x \in X \cap y \in Y\}`
+    `X \times Y = \{ x \times y \mid x \in X \cap y \in Y\}`
 
     When an AccumBounds is raised to a negative power, if 0 is contained
     between the bounds then an infinite range is returned, otherwise if an
@@ -963,7 +960,7 @@ class AccumulationBounds(AtomicExpr):
     >>> AccumBounds(-2, -1)**(S(1)/2)
     sqrt(AccumBounds(-2, -1))
 
-    Note: `<a, b>^2` is not same as `<a, b>*<a, b>`
+    Note: `\left\langle a, b\right\rangle^2` is not same as `\left\langle a, b\right\rangle \times \left\langle a, b\right\rangle`
 
     >>> AccumBounds(-1, 1)**2
     AccumBounds(0, 1)
@@ -975,7 +972,7 @@ class AccumulationBounds(AtomicExpr):
     False
 
     Some elementary functions can also take AccumulationBounds as input.
-    A function `f` evaluated for some real AccumulationBounds `<a, b>`
+    A function `f` evaluated for some real AccumulationBounds `\left\langle a, b \right\rangle`
     is defined as `f(\left\langle a, b\right\rangle) = \{ f(x) \mid a \le x \le b \}`
 
     >>> sin(AccumBounds(pi/6, pi/3))
@@ -1181,8 +1178,8 @@ class AccumulationBounds(AtomicExpr):
                 if other.args == (-oo, oo):
                     return other
                 v = set()
-                for i in self.args:
-                    vi = other*i
+                for a in self.args:
+                    vi = other*a
                     for i in vi.args or (vi,):
                         v.add(i)
                 return AccumBounds(Min(*v), Max(*v))
@@ -1260,7 +1257,7 @@ class AccumulationBounds(AtomicExpr):
                         return AccumBounds(self.min / other.max, oo)
 
             elif other.is_extended_real:
-                if other is S.Infinity or other is S.NegativeInfinity:
+                if other in (S.Infinity, S.NegativeInfinity):
                     if self == AccumBounds(-oo, oo):
                         return AccumBounds(-oo, oo)
                     if self.max is S.Infinity:
@@ -1428,8 +1425,8 @@ class AccumulationBounds(AtomicExpr):
 
     def __contains__(self, other):
         """
-        Returns True if other is contained in self, where other
-        belongs to extended real numbers, False if not contained,
+        Returns ``True`` if other is contained in self, where other
+        belongs to extended real numbers, ``False`` if not contained,
         otherwise TypeError is raised.
 
         Examples
@@ -1450,7 +1447,7 @@ class AccumulationBounds(AtomicExpr):
         """
         other = _sympify(other)
 
-        if other is S.Infinity or other is S.NegativeInfinity:
+        if other in (S.Infinity, S.NegativeInfinity):
             if self.min is S.NegativeInfinity or self.max is S.Infinity:
                 return True
             return False
@@ -1463,7 +1460,7 @@ class AccumulationBounds(AtomicExpr):
     def intersection(self, other):
         """
         Returns the intersection of 'self' and 'other'.
-        Here other can be an instance of FiniteSet or AccumulationBounds.
+        Here other can be an instance of :py:class:`~.FiniteSet` or AccumulationBounds.
 
         Parameters
         ==========
@@ -1476,7 +1473,7 @@ class AccumulationBounds(AtomicExpr):
         =======
 
         AccumulationBounds
-            Intersection of 'self' and 'other'.
+            Intersection of ``self`` and ``other``.
 
         Examples
         ========
@@ -1545,11 +1542,11 @@ def _eval_is_le(lhs, rhs): # noqa:F811
 def _eval_is_le(lhs, rhs): # noqa: F811
 
     """
-    Returns True if range of values attained by `self` AccumulationBounds
-    object is greater than the range of values attained by `other`,
-    where other may be any value of type AccumulationBounds object or
-    extended real number value, False if `other` satisfies
-    the same property, else an unevaluated Relational.
+    Returns ``True `` if range of values attained by ``lhs`` AccumulationBounds
+    object is greater than the range of values attained by ``rhs``,
+    where ``rhs`` may be any value of type AccumulationBounds object or
+    extended real number value, ``False`` if ``rhs`` satisfies
+    the same property, else an unevaluated :py:class:`~.Relational`.
 
     Examples
     ========
@@ -1583,11 +1580,11 @@ def _eval_is_ge(lhs, rhs): # noqa:F811
 @dispatch(AccumulationBounds, Expr)  # type:ignore
 def _eval_is_ge(lhs, rhs): # noqa: F811
     """
-    Returns True if range of values attained by `lhs` AccumulationBounds
-    object is less that the range of values attained by `rhs`, where
+    Returns ``True`` if range of values attained by ``lhs`` AccumulationBounds
+    object is less that the range of values attained by ``rhs``, where
     other may be any value of type AccumulationBounds object or extended
-    real number value, False if `rhs` satisfies the same
-    property, else an unevaluated Relational.
+    real number value, ``False`` if ``rhs`` satisfies the same
+    property, else an unevaluated :py:class:`~.Relational`.
 
     Examples
     ========

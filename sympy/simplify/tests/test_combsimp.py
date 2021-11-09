@@ -1,6 +1,8 @@
-from sympy import (
-    combsimp, factorial, gamma, binomial, FallingFactorial, RisingFactorial,
-    symbols, Rational)
+from sympy.core.numbers import Rational
+from sympy.core.symbol import symbols
+from sympy.functions.combinatorial.factorials import (FallingFactorial, RisingFactorial, binomial, factorial)
+from sympy.functions.special.gamma_functions import gamma
+from sympy.simplify.combsimp import combsimp
 from sympy.abc import x
 
 

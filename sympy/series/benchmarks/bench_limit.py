@@ -1,4 +1,6 @@
-from sympy import Symbol, limit, oo
+from sympy.core.numbers import oo
+from sympy.core.symbol import Symbol
+from sympy.series.limits import limit
 
 x = Symbol('x')
 

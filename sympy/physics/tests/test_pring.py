@@ -1,5 +1,9 @@
 from sympy.physics.pring import wavefunction, energy
-from sympy import pi, integrate, sqrt, exp, simplify, I
+from sympy.core.numbers import (I, pi)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.integrals.integrals import integrate
+from sympy.simplify.simplify import simplify
 from sympy.abc import m, x, r
 from sympy.physics.quantum.constants import hbar
 

@@ -13,7 +13,9 @@ from sympy.polys.polyerrors import GeneratorsError, \
 from sympy.testing.pytest import raises
 from sympy.core import Symbol, symbols
 
-from sympy import sqrt, pi, oo, exp
+from sympy.core.numbers import (oo, pi)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
 
 def test_PolyRing___init__():
     x, y, z, t = map(Symbol, "xyzt")

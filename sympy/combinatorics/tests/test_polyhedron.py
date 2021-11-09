@@ -1,4 +1,5 @@
-from sympy import symbols, FiniteSet
+from sympy.core.symbol import symbols
+from sympy.sets.sets import FiniteSet
 from sympy.combinatorics.polyhedron import (Polyhedron,
     tetrahedron, cube as square, octahedron, dodecahedron, icosahedron,
     cube_faces)

@@ -46,9 +46,20 @@ Authors
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 
 """
-from sympy import (Integer, pi, sqrt, sympify, Dummy, S, Sum, Ynm, zeros,
-                   Function, sin, cos, exp, I, factorial, binomial,
-                   Add, ImmutableMatrix)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.function import Function
+from sympy.core.numbers import (I, Integer, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.spherical_harmonics import Ynm
+from sympy.matrices.dense import zeros
+from sympy.matrices.immutable import ImmutableMatrix
 
 # This list of precomputed factorials is needed to massively
 # accelerate future calculations of the various coefficients
@@ -805,7 +816,7 @@ def wigner_d_small(J, beta):
     Explanation
     ===========
 
-    J : An integer, half-integer, or sympy symbol for the total angular
+    J : An integer, half-integer, or SymPy symbol for the total angular
         momentum of the angular momentum space being rotated.
     beta : A real number representing the Euler angle of rotation about
         the so-called line of nodes. See [Edmonds74]_.
@@ -943,7 +954,7 @@ def wigner_d(J, alpha, beta, gamma):
     ===========
 
     J :
-        An integer, half-integer, or sympy symbol for the total angular
+        An integer, half-integer, or SymPy symbol for the total angular
         momentum of the angular momentum space being rotated.
     alpha, beta, gamma - Real numbers representing the Euler.
         Angles of rotation about the so-called vertical, line of nodes, and

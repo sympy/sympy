@@ -2,7 +2,9 @@
 Tests for the sympy.polys.matrices.eigen module
 """
 
-from sympy import S, Matrix, sqrt
+from sympy.core.singleton import S
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.dense import Matrix
 
 from sympy.polys.agca.extensions import FiniteExtension
 from sympy.polys.domains import QQ

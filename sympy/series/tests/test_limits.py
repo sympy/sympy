@@ -1,12 +1,24 @@
 from itertools import product
 
-from sympy import (
-    limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling, sinh, diff,
-    atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I, E, besselj,
-    tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
-    binomial, simplify, frac, sec, zoo, fresnelc, fresnels, real_root,
-    acos, erf, erfc, erfi, LambertW, factorial, digamma, uppergamma, re,
-    Ei, EulerGamma, asin, atanh, acot, acoth, asec, acsc, cbrt, besselk)
+from sympy.concrete.summations import Sum
+from sympy.core.function import (Function, diff)
+from sympy.core import EulerGamma
+from sympy.core.numbers import (E, I, Rational, oo, pi, zoo)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.combinatorial.factorials import (binomial, factorial, subfactorial)
+from sympy.functions.elementary.complexes import (Abs, re, sign)
+from sympy.functions.elementary.exponential import (LambertW, exp, log)
+from sympy.functions.elementary.hyperbolic import (acoth, atanh, sinh)
+from sympy.functions.elementary.integers import (ceiling, floor, frac)
+from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
+from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, sec, sin, tan)
+from sympy.functions.special.bessel import (besselj, besselk)
+from sympy.functions.special.error_functions import (Ei, erf, erfc, erfi, fresnelc, fresnels)
+from sympy.functions.special.gamma_functions import (digamma, gamma, uppergamma)
+from sympy.integrals.integrals import (Integral, integrate)
+from sympy.series.limits import (Limit, limit)
+from sympy.simplify.simplify import simplify
 
 from sympy.calculus.util import AccumBounds
 from sympy.core.mul import Mul
@@ -280,7 +292,9 @@ def test_series_AccumBounds():
     assert limit(sin(k) - sin(k)*cos(k), k, oo) == AccumBounds(-2, 2)
 
     # test for issue #9934
-    t1 = Mul(AccumBounds(-S(3)/2 + cos(1)/2, cos(1)/2 + S.Half), 1/(-1 + cos(1)))
+    lo = (-3 + cos(1))/2
+    hi = (1 + cos(1))/2
+    t1 = Mul(AccumBounds(lo, hi), 1/(-1 + cos(1)), evaluate=False)
     assert limit(simplify(Sum(cos(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t1
 
     t2 = Mul(AccumBounds(-1 + sin(1)/2, sin(1)/2 + 1), 1/(1 - cos(1)))
@@ -593,13 +607,16 @@ def test_issue_8481():
     limit(lamda**k * exp(-lamda) / factorial(k), k, oo) == 0
 
 
-def test_issue_8635():
+def test_issue_8635_18176():
     x = Symbol('x', real=True)
     k = Symbol('k', positive=True)
     assert limit(x**n - x**(n - 0), x, oo) == 0
     assert limit(x**n - x**(n - 5), x, oo) == oo
     assert limit(x**n - x**(n - 2.5), x, oo) == oo
     assert limit(x**n - x**(n - k - 1), x, oo) == oo
+    x = Symbol('x', positive=True)
+    assert limit(x**n - x**(n - 1), x, oo) == oo
+    assert limit(x**n - x**(n + 2), x, oo) == -oo
 
 
 def test_issue_8730():
@@ -897,6 +914,10 @@ def test_issue_18508():
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0) == sqrt(2)
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='+') == sqrt(2)
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='-') == -sqrt(2)
+
+
+def test_issue_18521():
+    raises(NotImplementedError, lambda: limit(exp((2 - n) * x), x, oo))
 
 
 def test_issue_18969():

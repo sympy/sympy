@@ -1,4 +1,5 @@
-from sympy import sin, cos, pi
+from sympy.core.numbers import pi
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.parametricregion import ParametricRegion, parametric_region_list
 from sympy.geometry import Point, Segment, Curve, Ellipse, Line, Parabola, Polygon

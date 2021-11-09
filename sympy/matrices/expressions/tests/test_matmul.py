@@ -8,7 +8,9 @@ from sympy.matrices.expressions.special import GenericIdentity
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
         MatMul, combine_powers, any_zeros, unpack, only_squares)
 from sympy.strategies import null_safe
-from sympy import refine, Q, Symbol
+from sympy.assumptions.ask import Q
+from sympy.assumptions.refine import refine
+from sympy.core.symbol import Symbol
 
 from sympy.testing.pytest import XFAIL
 

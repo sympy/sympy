@@ -14,12 +14,13 @@ from sympy.core.sympify import sympify
 from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
                         Add)
 from sympy.core.containers import Tuple
-from sympy.core.numbers import I, Number, Rational, oo
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
-                                expand_log)
+                                expand_log, _mexpand, expand_trig)
 from sympy.core.mod import Mod
-from sympy.core.numbers import igcd
+from sympy.core.numbers import igcd, I, Number, Rational, oo, ilcm
+from sympy.core.power import integer_log
 from sympy.core.relational import Eq, Ne, Relational
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
 from sympy.simplify.simplify import simplify, fraction, trigsimp
@@ -27,10 +28,11 @@ from sympy.simplify import powdenest, logcombine
 from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
                              piecewise_fold, Piecewise)
+from sympy.functions.elementary.complexes import re, im
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, BooleanTrue
 from sympy.sets import (FiniteSet, EmptySet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
 from sympy.sets.sets import Set, ProductSet
@@ -50,9 +52,9 @@ from sympy.solvers.solvers import (checksol, denoms, unrad,
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
-from sympy.utilities.iterables import numbered_symbols, has_dups
+from sympy.utilities.iterables import (numbered_symbols, has_dups,
+                                       is_sequence)
 from sympy.calculus.util import periodicity, continuous_domain
-from sympy.core.compatibility import ordered, default_sort_key, is_sequence
 
 from types import GeneratorType
 from collections import defaultdict
@@ -107,29 +109,33 @@ def _masked(f, *atoms):
 
 def _invert(f_x, y, x, domain=S.Complexes):
     r"""
-    Reduce the complex valued equation ``f(x) = y`` to a set of equations
-    ``{g(x) = h_1(y), g(x) = h_2(y), ..., g(x) = h_n(y) }`` where ``g(x)`` is
-    a simpler function than ``f(x)``.  The return value is a tuple ``(g(x),
-    set_h)``, where ``g(x)`` is a function of ``x`` and ``set_h`` is
-    the set of function ``{h_1(y), h_2(y), ..., h_n(y)}``.
-    Here, ``y`` is not necessarily a symbol.
+    Reduce the complex valued equation $f(x) = y$ to a set of equations
 
-    The ``set_h`` contains the functions, along with the information
+    $$\left\{g(x) = h_1(y),\  g(x) = h_2(y),\ \dots,\  g(x) = h_n(y) \right\}$$
+
+    where $g(x)$ is a simpler function than $f(x)$.  The return value is a tuple
+    $(g(x), \mathrm{set}_h)$, where $g(x)$ is a function of $x$ and $\mathrm{set}_h$ is
+    the set of function $\left\{h_1(y), h_2(y), \dots, h_n(y)\right\}$.
+    Here, $y$ is not necessarily a symbol.
+
+    $\mathrm{set}_h$ contains the functions, along with the information
     about the domain in which they are valid, through set
-    operations. For instance, if ``y = Abs(x) - n`` is inverted
-    in the real domain, then ``set_h`` is not simply
-    `{-n, n}` as the nature of `n` is unknown; rather, it is:
-    `Intersection([0, oo) {n}) U Intersection((-oo, 0], {-n})`
+    operations. For instance, if :math:`y = |x| - n` is inverted
+    in the real domain, then $\mathrm{set}_h$ is not simply
+    $\{-n, n\}$ as the nature of `n` is unknown; rather, it is:
+
+    $$ \left(\left[0, \infty\right) \cap \left\{n\right\}\right) \cup
+                       \left(\left(-\infty, 0\right] \cap \left\{- n\right\}\right)$$
 
     By default, the complex domain is used which means that inverting even
-    seemingly simple functions like ``exp(x)`` will give very different
+    seemingly simple functions like $\exp(x)$ will give very different
     results from those obtained in the real domain.
-    (In the case of ``exp(x)``, the inversion via ``log`` is multi-valued
+    (In the case of $\exp(x)$, the inversion via $\log$ is multi-valued
     in the complex domain, having infinitely many branches.)
 
     If you are working with real values only (or you are not sure which
     function to use) you should probably set the domain to
-    ``S.Reals`` (or use `invert\_real` which does that automatically).
+    ``S.Reals`` (or use ``invert_real`` which does that automatically).
 
 
     Examples
@@ -188,7 +194,7 @@ invert_complex = _invert
 
 def invert_real(f_x, y, x):
     """
-    Inverts a real-valued function. Same as ``_invert``, but sets
+    Inverts a real-valued function. Same as :func:`invert_complex`, but sets
     the domain to ``S.Reals`` before inverting.
     """
     return _invert(f_x, y, x, S.Reals)
@@ -277,7 +283,6 @@ def _invert_real(f, g_ys, symbol):
                 return _invert_real(expo,
                     imageset(Lambda(n, log(n, base, evaluate=False)), g_ys), symbol)
             elif base.is_negative:
-                from sympy.core.power import integer_log
                 s, b = integer_log(rhs, base)
                 if b:
                     return _invert_real(expo, FiniteSet(s), symbol)
@@ -381,11 +386,11 @@ def _invert_abs(f, g_ys, symbol):
     Returns the complete result of inverting an absolute value
     function along with the conditions which must also be satisfied.
 
-    If it is certain that all these conditions are met, a `FiniteSet`
+    If it is certain that all these conditions are met, a :class:`~.FiniteSet`
     of all possible solutions is returned. If any condition cannot be
-    satisfied, an `EmptySet` is returned. Otherwise, a `ConditionSet`
-    of the solutions, with all the required conditions specified, is
-    returned.
+    satisfied, an :class:`~.EmptySet` is returned. Otherwise, a
+    :class:`~.ConditionSet` of the solutions, with all the required conditions
+    specified, is returned.
 
     """
     if not g_ys.is_FiniteSet:
@@ -567,7 +572,6 @@ def _is_function_class_equation(func_class, f, symbol):
 
 def _solve_as_rational(f, symbol, domain):
     """ solve rational functions"""
-    from sympy.core.function import _mexpand
     f = together(_mexpand(f, recursive=True), deep=True)
     g, h = fraction(f)
     if not h.has(symbol):
@@ -708,7 +712,6 @@ def _solve_trig1(f, symbol, domain):
 def _solve_trig2(f, symbol, domain):
     """Secondary helper to solve trigonometric equations,
     called when first helper fails """
-    from sympy import ilcm, expand_trig
     f = trigsimp(f)
     f_original = f
     trig_functions = f.atoms(sin, cos, tan, sec, cot, csc)
@@ -985,7 +988,6 @@ def _solveset(f, symbol, domain, _check=False):
     given symbol."""
     # _check controls whether the answer is checked or not
     from sympy.simplify.simplify import signsimp
-    from sympy.logic.boolalg import BooleanTrue
 
     if isinstance(f, BooleanTrue):
         return domain
@@ -1025,7 +1027,6 @@ def _solveset(f, symbol, domain, _check=False):
             _is_function_class_equation(HyperbolicFunction, f, symbol):
         result = _solve_trig(f, symbol, domain)
     elif isinstance(f, arg):
-        from sympy.functions.elementary.complexes import re, im
         a = f.args[0]
         result = Intersection(_solveset(re(a) > 0, symbol, domain),
                               _solveset(im(a), symbol, domain))
@@ -1360,8 +1361,7 @@ def _solve_modular(f, symbol, domain):
     ========
 
     >>> from sympy.solvers.solveset import _solve_modular as solve_modulo
-    >>> from sympy import S, Symbol, sin, Intersection, Interval
-    >>> from sympy.core.mod import Mod
+    >>> from sympy import S, Symbol, sin, Intersection, Interval, Mod
     >>> x = Symbol('x')
     >>> solve_modulo(Mod(5*x - 8, 7) - 3, x, S.Integers)
     ImageSet(Lambda(_n, 7*_n + 5), Integers)
@@ -1542,8 +1542,6 @@ def _solve_exponential(lhs, rhs, symbol, domain):
 
     a_base, a_exp = a_term.as_base_exp()
     b_base, b_exp = b_term.as_base_exp()
-
-    from sympy.functions.elementary.complexes import im
 
     if domain.is_subset(S.Reals):
         conditions = And(
@@ -2083,11 +2081,11 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     Set
         A set of values for `symbol` for which `f` is True or is equal to
-        zero. An `EmptySet` is returned if `f` is False or nonzero.
-        A `ConditionSet` is returned as unsolved object if algorithms
+        zero. An :class:`~.EmptySet` is returned if `f` is False or nonzero.
+        A :class:`~.ConditionSet` is returned as unsolved object if algorithms
         to evaluate complete solution are not yet implemented.
 
-    `solveset` claims to be complete in the solution set that it returns.
+    ``solveset`` claims to be complete in the solution set that it returns.
 
     Raises
     ======
@@ -2106,7 +2104,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
 
     Python interprets 0 and 1 as False and True, respectively, but
     in this function they refer to solutions of an expression. So 0 and 1
-    return the Domain and EmptySet, respectively, while True and False
+    return the domain and EmptySet, respectively, while True and False
     return the opposite (as they are assumed to be solutions of relational
     expressions).
 
@@ -2135,7 +2133,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     >>> pprint(solveset(exp(x) - 1, x), use_unicode=False)
     {2*n*I*pi | n in Integers}
 
-    * If you want to use `solveset` to solve the equation in the
+    * If you want to use ``solveset`` to solve the equation in the
       real domain, provide a real domain. (Using ``solveset_real``
       does this automatically.)
 
@@ -2152,7 +2150,7 @@ def solveset(f, symbol=None, domain=S.Complexes):
     >>> pprint(solveset(p**2 - 4))
     {-2, 2}
 
-    When a conditionSet is returned, symbols with assumptions that
+    When a :class:`~.ConditionSet` is returned, symbols with assumptions that
     would alter the set are replaced with more generic symbols:
 
     >>> i = Symbol('i', imaginary=True)
@@ -2474,7 +2472,7 @@ def linear_eq_to_matrix(equations, *symbols):
     r"""
     Converts a given System of Equations into Matrix form.
     Here `equations` must be a linear system of equations in
-    `symbols`. Element M[i, j] corresponds to the coefficient
+    `symbols`. Element ``M[i, j]`` corresponds to the coefficient
     of the jth symbol in the ith equation.
 
     The Matrix form corresponds to the augmented matrix form.
@@ -2484,16 +2482,18 @@ def linear_eq_to_matrix(equations, *symbols):
     .. math:: 3x +  y +  z  = -6
     .. math:: 2x + 4y + 9z  = 2
 
-    This system would return `A` & `b` as given below:
+    This system will return $A$ and $b$ as:
 
-    ::
-
-         [ 4  2  3 ]          [ 1 ]
-     A = [ 3  1  1 ]   b  =   [-6 ]
-         [ 2  4  9 ]          [ 2 ]
+    $$ A = \left[\begin{array}{ccc}
+        4 & 2 & 3 \\
+        3 & 1 & 1 \\
+        2 & 4 & 9
+        \end{array}\right] \ \  b = \left[\begin{array}{c}
+        1 \\ -6 \\ 2
+        \end{array}\right] $$
 
     The only simplification performed is to convert
-    `Eq(a, b) -> a - b`.
+    ``Eq(a, b)`` $\Rightarrow a - b$.
 
     Raises
     ======
@@ -2588,43 +2588,55 @@ def linear_eq_to_matrix(equations, *symbols):
 
 def linsolve(system, *symbols):
     r"""
-    Solve system of N linear equations with M variables; both
+    Solve system of $N$ linear equations with $M$ variables; both
     underdetermined and overdetermined systems are supported.
     The possible number of solutions is zero, one or infinite.
     Zero solutions throws a ValueError, whereas infinite
     solutions are represented parametrically in terms of the given
-    symbols. For unique solution a FiniteSet of ordered tuples
+    symbols. For unique solution a :class:`~.FiniteSet` of ordered tuples
     is returned.
 
-    All Standard input formats are supported:
-    For the given set of Equations, the respective input types
+    All standard input formats are supported:
+    For the given set of equations, the respective input types
     are given below:
 
     .. math:: 3x + 2y -   z = 1
     .. math:: 2x - 2y + 4z = -2
     .. math:: 2x -   y + 2z = 0
 
-    * Augmented Matrix Form, `system` given below:
+    * Augmented matrix form, ``system`` given below:
+
+    $$ \text{system} = \left[{array}{cccc}
+        3 &  2 & -1 &  1\\
+        2 & -2 &  4 & -2\\
+        2 & -1 &  2 &  0
+        \end{array}\right] $$
 
     ::
 
-              [3   2  -1  1]
-     system = [2  -2   4 -2]
-              [2  -1   2  0]
+        system = Matrix([[3, 2, -1, 1], [2, -2, 4, -2], [2, -1, 2, 0]])
 
-    * List Of Equations Form
-
-    `system  =  [3x + 2y - z - 1, 2x - 2y + 4z + 2, 2x - y + 2z]`
-
-    * Input A & b Matrix Form (from Ax = b) are given as below:
+    * List of equations form
 
     ::
 
-         [3   2  -1 ]         [  1 ]
-     A = [2  -2   4 ]    b =  [ -2 ]
-         [2  -1   2 ]         [  0 ]
+        system  =  [3x + 2y - z - 1, 2x - 2y + 4z + 2, 2x - y + 2z]
 
-    `system = (A, b)`
+    * Input $A$ and $b$ in matrix form (from $Ax = b$) are given as:
+
+    $$ A = \left[\begin{array}{ccc}
+        3 &  2 & -1 \\
+        2 & -2 &  4 \\
+        2 & -1 &  2
+        \end{array}\right] \ \  b = \left[\begin{array}{c}
+        1 \\ -2 \\ 0
+        \end{array}\right] $$
+
+    ::
+
+        A = Matrix([[3, 2, -1], [2, -2, 4], [2, -1, 2]])
+        b = Matrix([[1], [-2], [0]])
+        system = (A, b)
 
     Symbols can always be passed but are actually only needed
     when 1) a system of equations is being passed and 2) the
@@ -2687,19 +2699,19 @@ def linsolve(system, *symbols):
     {(z - 1, 2 - 2*z, z)}
 
     If no symbols are given, internally generated symbols will be used.
-    The `tau0` in the 3rd position indicates (as before) that the 3rd
-    variable -- whatever it's named -- can take on any value:
+    The ``tau0`` in the third position indicates (as before) that the third
+    variable -- whatever it is named -- can take on any value:
 
     >>> linsolve((A, b))
     {(tau0 - 1, 2 - 2*tau0, tau0)}
 
-    * List of Equations as input
+    * List of equations as input
 
     >>> Eqns = [3*x + 2*y - z - 1, 2*x - 2*y + 4*z + 2, - x + y/2 - z]
     >>> linsolve(Eqns, x, y, z)
     {(1, -2, -2)}
 
-    * Augmented Matrix as input
+    * Augmented matrix as input
 
     >>> aug = Matrix([[2, 1, 3, 1], [2, 6, 8, 3], [6, 8, 18, 5]])
     >>> aug
@@ -2852,7 +2864,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
                  exclude=[], all_symbols=None):
     r"""
      Solves the `system` using substitution method. It is used in
-     `nonlinsolve`. This will be called from `nonlinsolve` when any
+     :func:`~.nonlinsolve`. This will be called from :func:`~.nonlinsolve` when any
      equation(s) is non polynomial equation.
 
     Parameters
@@ -2897,18 +2909,17 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
         The input is not valid.
         The symbols are not given.
     AttributeError
-        The input symbols are not `Symbol` type.
+        The input symbols are not :class:`~.Symbol` type.
 
     Examples
     ========
 
-    >>> from sympy.core.symbol import symbols
+    >>> from sympy import symbols, substitution
     >>> x, y = symbols('x, y', real=True)
-    >>> from sympy.solvers.solveset import substitution
     >>> substitution([x + y], [x], [{y: 1}], [y], set([]), [x, y])
     {(-1, 1)}
 
-    * when you want soln should not satisfy eq `x + 1 = 0`
+    * When you want a soln not satisfying $x + 1 = 0$
 
     >>> substitution([x + y], [x], [{y: 1}], [y], set([x + 1]), [y, x])
     EmptySet
@@ -3193,7 +3204,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
     def _solve_using_known_values(result, solver):
         """Solves the system using already known solution
         (result contains the dict <symbol: value>).
-        solver is `solveset_complex` or `solveset_real`.
+        solver is :func:`~.solveset_complex` or :func:`~.solveset_real`.
         """
         # stores imageset <expr: imageset(Lambda(n, expr), base)>.
         soln_imageset = {}
@@ -3469,12 +3480,12 @@ def _separate_poly_nonpoly(system, symbols):
 
 def nonlinsolve(system, *symbols):
     r"""
-    Solve system of N nonlinear equations with M variables, which means both
+    Solve system of $N$ nonlinear equations with $M$ variables, which means both
     under and overdetermined systems are supported. Positive dimensional
     system is also supported (A system with infinitely many solutions is said
-    to be positive-dimensional). In Positive dimensional system solution will
+    to be positive-dimensional). In a positive dimensional system the solution will
     be dependent on at least one symbol. Returns both real solution
-    and complex solution(If system have). The possible number of solutions
+    and complex solution (if they exist). The possible number of solutions
     is zero, one or infinite.
 
     Parameters
@@ -3488,28 +3499,31 @@ def nonlinsolve(system, *symbols):
     Returns
     =======
 
-    A FiniteSet of ordered tuple of values of `symbols` for which the `system`
+    A :class:`~.FiniteSet` of ordered tuple of values of `symbols` for which the `system`
     has solution. Order of values in the tuple is same as symbols present in
     the parameter `symbols`.
 
-    Please note that general FiniteSet is unordered, the solution returned
-    here is not simply a FiniteSet of solutions, rather it is a FiniteSet of
-    ordered tuple, i.e. the first & only argument to FiniteSet is a tuple of
-    solutions, which is ordered, & hence the returned solution is ordered.
+    Please note that general :class:`~.FiniteSet` is unordered, the solution
+    returned here is not simply a :class:`~.FiniteSet` of solutions, rather it
+    is a :class:`~.FiniteSet` of ordered tuple, i.e. the first and only
+    argument to :class:`~.FiniteSet` is a tuple of solutions, which is
+    ordered, and, hence ,the returned solution is ordered.
 
     Also note that solution could also have been returned as an ordered tuple,
-    FiniteSet is just a wrapper `{}` around the tuple. It has no other
+    FiniteSet is just a wrapper ``{}`` around the tuple. It has no other
     significance except for the fact it is just used to maintain a consistent
     output format throughout the solveset.
 
-    For the given set of Equations, the respective input types
+    For the given set of equations, the respective input types
     are given below:
 
-    .. math:: x*y - 1 = 0
-    .. math:: 4*x**2 + y**2 - 5 = 0
+    .. math:: xy - 1 = 0
+    .. math:: 4x^2 + y^2 - 5 = 0
 
-    `system  = [x*y - 1, 4*x**2 + y**2 - 5]`
-    `symbols = [x, y]`
+    ::
+
+       system  = [x*y - 1, 4*x**2 + y**2 - 5]
+       symbols = [x, y]
 
     Raises
     ======
@@ -3523,8 +3537,7 @@ def nonlinsolve(system, *symbols):
     Examples
     ========
 
-    >>> from sympy.core.symbol import symbols
-    >>> from sympy.solvers.solveset import nonlinsolve
+    >>> from sympy import symbols, nonlinsolve
     >>> x, y, z = symbols('x, y, z', real=True)
     >>> nonlinsolve([x*y - 1, 4*x**2 + y**2 - 5], [x, y])
     {(-1, -1), (-1/2, -2), (1/2, 2), (1, 1)}
@@ -3549,7 +3562,7 @@ def nonlinsolve(system, *symbols):
     {(2 - y, y)}
 
     2. If some of the equations are non-polynomial then `nonlinsolve`
-    will call the `substitution` function and return real and complex solutions,
+    will call the ``substitution`` function and return real and complex solutions,
     if present.
 
     >>> from sympy import exp, sin
@@ -3559,23 +3572,23 @@ def nonlinsolve(system, *symbols):
 
     3. If system is non-linear polynomial and zero-dimensional then it
     returns both solution (real and complex solutions, if present) using
-    `solve_poly_system`:
+    :func:`~.solve_poly_system`:
 
     >>> from sympy import sqrt
     >>> nonlinsolve([x**2 - 2*y**2 -2, x*y - 2], [x, y])
     {(-2, -1), (2, 1), (-sqrt(2)*I, sqrt(2)*I), (sqrt(2)*I, -sqrt(2)*I)}
 
-    4. `nonlinsolve` can solve some linear (zero or positive dimensional)
-    system (because it uses the `groebner` function to get the
-    groebner basis and then uses the `substitution` function basis as the
+    4. ``nonlinsolve`` can solve some linear (zero or positive dimensional)
+    system (because it uses the :func:`sympy.polys.polytools.groebner` function to get the
+    groebner basis and then uses the ``substitution`` function basis as the
     new `system`). But it is not recommended to solve linear system using
-    `nonlinsolve`, because `linsolve` is better for general linear systems.
+    ``nonlinsolve``, because :func:`~.linsolve` is better for general linear systems.
 
     >>> nonlinsolve([x + 2*y -z - 3, x - y - 4*z + 9, y + z - 4], [x, y, z])
     {(3*z - 5, 4 - z, z)}
 
     5. System having polynomial equations and only real solution is
-    solved using `solve_poly_system`:
+    solved using :func:`~.solve_poly_system`:
 
     >>> e1 = sqrt(x**2 + y**2) - 10
     >>> e2 = sqrt(y**2 + (-x + 10)**2) - 3
@@ -3586,15 +3599,15 @@ def nonlinsolve(system, *symbols):
     >>> nonlinsolve([x**2 + 2/y - 2, x + y - 3], [y, x])
     {(2, 1), (2 - sqrt(5), 1 + sqrt(5)), (2 + sqrt(5), 1 - sqrt(5))}
 
-    6. It is better to use symbols instead of Trigonometric Function or
-    Function (e.g. replace `sin(x)` with symbol, replace `f(x)` with symbol
-    and so on. Get soln from `nonlinsolve` and then using `solveset` get
-    the value of `x`)
+    6. It is better to use symbols instead of trigonometric functions or
+    :class:`~.Function`. For example, replace $\sin(x)$ with a symbol, replace
+    $f(x)$ with a symbol and so on. Get a solution from ``nonlinsolve`` and then
+    use :func:`~.solveset` to get the value of $x$.
 
-    How nonlinsolve is better than old solver `_solve_system` :
-    ===========================================================
+    How nonlinsolve is better than old solver ``_solve_system`` :
+    =============================================================
 
-    1. A positive dimensional system solver : nonlinsolve can return
+    1. A positive dimensional system solver: nonlinsolve can return
     solution for positive dimensional system. It finds the
     Groebner Basis of the positive dimensional system(calling it as
     basis) then we can start solving equation(having least number of
@@ -3603,23 +3616,22 @@ def nonlinsolve(system, *symbols):
     terms of minimum variables. Here the important thing is how we
     are substituting the known values and in which equations.
 
-    2. Real and Complex both solutions : nonlinsolve returns both real
+    2. Real and complex solutions: nonlinsolve returns both real
     and complex solution. If all the equations in the system are polynomial
-    then using `solve_poly_system` both real and complex solution is returned.
+    then using :func:`~.solve_poly_system` both real and complex solution is returned.
     If all the equations in the system are not polynomial equation then goes to
-    `substitution` method with this polynomial and non polynomial equation(s),
+    ``substitution`` method with this polynomial and non polynomial equation(s),
     to solve for unsolved variables. Here to solve for particular variable
     solveset_real and solveset_complex is used. For both real and complex
-    solution function `_solve_using_know_values` is used inside `substitution`
-    function.(`substitution` function will be called when there is any non
-    polynomial equation(s) is present). When solution is valid then add its
-    general solution in the final result.
+    solution ``_solve_using_know_values`` is used inside ``substitution``
+    (``substitution`` will be called when any non-polynomial equation is present).
+    If a solution is valid its general solution is added to the final result.
 
-    3. Complement and Intersection will be added if any : nonlinsolve maintains
-    dict for complements and Intersections. If solveset find complements or/and
-    Intersection with any Interval or set during the execution of
-    `substitution` function, then complement or/and Intersection for that
-    variable is added before returning final solution.
+    3. :class:`~.Complement` and :class:`~.Intersection` will be added:
+    nonlinsolve maintains dict for complements and intersections. If solveset
+    find complements or/and intersections with any interval or set during the
+    execution of ``substitution`` function, then complement or/and
+    intersection for that variable is added before returning final solution.
 
     """
     from sympy.polys.polytools import is_zero_dimensional

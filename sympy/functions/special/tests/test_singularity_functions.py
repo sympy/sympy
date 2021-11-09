@@ -1,8 +1,12 @@
-from sympy import (
-    nan, pi, symbols, DiracDelta, Symbol, diff,
-    Piecewise, I, Eq, Derivative, oo, SingularityFunction, Heaviside,
-    Float, O
-)
+from sympy.core.function import (Derivative, diff)
+from sympy.core.numbers import (Float, I, nan, oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.delta_functions import (DiracDelta, Heaviside)
+from sympy.functions.special.singularity_functions import SingularityFunction
+from sympy.series.order import O
+
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError

@@ -1,6 +1,9 @@
 from sympy.core.sympify import _sympify
 from sympy.matrices.expressions import MatrixExpr
-from sympy import S, I, sqrt, exp
+from sympy.core.numbers import I
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
 
 
 class DFT(MatrixExpr):

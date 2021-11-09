@@ -1,6 +1,9 @@
 """Tests for sho1d.py"""
 
-from sympy import Integer, Symbol, sqrt, I, S
+from sympy.core.numbers import (I, Integer)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.quantum import Dagger
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum import Commutator

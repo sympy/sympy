@@ -1,9 +1,17 @@
 import string
 
-from sympy import (
-    Symbol, symbols, Dummy, S, Sum, Rational, oo, pi, I, floor, limit,
-    expand_func, diff, EulerGamma, cancel, re, im, Product, carmichael,
-    TribonacciConstant)
+from sympy.concrete.products import Product
+from sympy.concrete.summations import Sum
+from sympy.core.function import (diff, expand_func)
+from sympy.core import (EulerGamma, TribonacciConstant)
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.combinatorial.numbers import carmichael
+from sympy.functions.elementary.complexes import (im, re)
+from sympy.functions.elementary.integers import floor
+from sympy.polys.polytools import cancel
+from sympy.series.limits import limit
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
     genocchi, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
@@ -14,9 +22,7 @@ from sympy.core.expr import unchanged
 from sympy.core.numbers import GoldenRatio, Integer
 
 from sympy.testing.pytest import XFAIL, raises, nocache_fail
-
-
-x = Symbol('x')
+from sympy.abc import x
 
 
 def test_carmichael():
@@ -210,6 +216,13 @@ def test_harmonic():
     assert harmonic(oo, 1) is oo
     assert harmonic(oo, 2) == (pi**2)/6
     assert harmonic(oo, 3) == zeta(3)
+    assert harmonic(oo, Dummy(negative=True)) is S.NaN
+    ip = Dummy(integer=True, positive=True)
+    if (1/ip <= 1) is True:  #---------------------------------+
+        assert None, 'delete this if-block and the next line' #|
+    ip = Dummy(even=True, positive=True)  #--------------------+
+    assert harmonic(oo, 1/ip) is oo
+    assert harmonic(oo, 1 + ip) is zeta(1 + ip)
 
     assert harmonic(0, m) == 0
 
@@ -358,7 +371,7 @@ def test_euler_polynomials():
     assert euler(3, x) == x**3 - (3*x**2)/2 + Rational(1, 4)
     m = Symbol('m')
     assert isinstance(euler(m, x), euler)
-    from sympy import Float
+    from sympy.core.numbers import Float
     A = Float('-0.46237208575048694923364757452876131e8')  # from Maple
     B = euler(19, S.Pi.evalf(32))
     assert abs((A - B)/A) < 1e-31  # expect low relative error
@@ -677,3 +690,55 @@ def test_motzkin():
     raises(ValueError, lambda: motzkin.find_motzkin_numbers_in_range(-2,7))
     raises(ValueError, lambda: motzkin.find_motzkin_numbers_in_range(13,7))
     raises(ValueError, lambda: motzkin.find_first_n_motzkins(112.8))
+
+
+def test_nD_derangements():
+    from sympy.utilities.iterables import (partitions, multiset,
+        multiset_derangements, multiset_permutations)
+    from sympy.functions.combinatorial.numbers import nD
+
+    got = []
+    for i in partitions(8, k=4):
+        s = []
+        it = 0
+        for k, v in i.items():
+            for i in range(v):
+                s.extend([it]*k)
+                it += 1
+        ms = multiset(s)
+        c1 = sum(1 for i in multiset_permutations(s) if
+            all(i != j for i, j in zip(i, s)))
+        assert c1 == nD(ms) == nD(ms, 0) == nD(ms, 1)
+        v = [tuple(i) for i in multiset_derangements(s)]
+        c2 = len(v)
+        assert c2 == len(set(v))
+        assert c1 == c2
+        got.append(c1)
+    assert got == [1, 4, 6, 12, 24, 24, 61, 126, 315, 780, 297, 772,
+        2033, 5430, 14833]
+
+    assert nD('1112233456', brute=True) == nD('1112233456') == 16356
+    assert nD('') == nD([]) == nD({}) == 0
+    assert nD({1: 0}) == 0
+    raises(ValueError, lambda: nD({1: -1}))
+    assert nD('112') == 0
+    assert nD(i='112') == 0
+    assert [nD(n=i) for i in range(6)] == [0, 0, 1, 2, 9, 44]
+    assert nD((i for i in range(4))) == nD('0123') == 9
+    assert nD(m=(i for i in range(4))) == 3
+    assert nD(m={0: 1, 1: 1, 2: 1, 3: 1}) == 3
+    assert nD(m=[0, 1, 2, 3]) == 3
+    raises(TypeError, lambda: nD(m=0))
+    raises(TypeError, lambda: nD(-1))
+    assert nD({-1: 1, -2: 1}) == 1
+    assert nD(m={0: 3}) == 0
+    raises(ValueError, lambda: nD(i='123', n=3))
+    raises(ValueError, lambda: nD(i='123', m=(1,2)))
+    raises(ValueError, lambda: nD(n=0, m=(1,2)))
+    raises(ValueError, lambda: nD({1: -1}))
+    raises(ValueError, lambda: nD(m={-1: 1, 2: 1}))
+    raises(ValueError, lambda: nD(m={1: -1, 2: 1}))
+    raises(ValueError, lambda: nD(m=[-1, 2]))
+    raises(TypeError, lambda: nD({1: x}))
+    raises(TypeError, lambda: nD(m={1: x}))
+    raises(TypeError, lambda: nD(m={x: 1}))
