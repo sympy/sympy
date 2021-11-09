@@ -815,8 +815,6 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
             from sympy.printing.lambdarepr import NumExprPrinter as Printer # type: ignore
         elif _module_present('tensorflow', namespaces):
             from sympy.printing.tensorflow import TensorflowPrinter as Printer # type: ignore
-        elif _module_present('paddle', namespaces):
-            from sympy.printing.paddle import PaddlePrinter as Printer # type: ignore. 有点问题
         elif _module_present('sympy', namespaces):
             from sympy.printing.pycode import SymPyPrinter as Printer # type: ignore
         else:
