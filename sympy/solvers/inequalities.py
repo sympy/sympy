@@ -1006,7 +1006,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     return rv.xreplace({v: k for k, v in recast.items()})
 
 
-def _find_pivot(inequalities):
+def _find_pivot(inequalities,vars):
     """
     Return a variable that has at least two coefficients with opposite
     sign in a system of inequalities.
@@ -1023,12 +1023,14 @@ def _find_pivot(inequalities):
     >>> eq4 = x - z
 
     >>> inequalities = [eq1, eq2, eq3, eq4]
-    >>> _find_pivot(inequalities)
+    >>> vars={x,y,z}
+    >>> _find_pivot(inequalities,symbols)
     y
     """
     memory = {}
     for eq in inequalities:
-        for symbol in eq.free_symbols:
+        symbols=vars.intersection(eq.free_symbols)
+        for symbol in symbols:
             if not (symbol in memory.keys()):
                 memory[symbol] = [False, False]
             coeff = eq.coeff(symbol)
@@ -1076,7 +1078,7 @@ def _split_min_max(inequalities, pivot):
     return Min(*lower_than), Max(*greater_than), extra
 
 
-def _merge_mins_maxs(mins, maxs):
+def _merge_mins_maxs(mins, maxs,symbols):
     """Build the system of inequalities which verify that all equations
     of maxs are greater than those of mins.
 
@@ -1089,7 +1091,7 @@ def _merge_mins_maxs(mins, maxs):
 
     >>> maxs = -x - 3*z - 4
     >>> mins = Min((2*x + z + 1)/3, x + 2*z - 2)
-
+    >>> symbols = {x,z}
     >>> _merge_mins_maxs(mins, maxs)
     [2*x + 5*z + 2, 5*x/3 + 10*z/3 + 13/3]
     """
@@ -1102,10 +1104,10 @@ def _merge_mins_maxs(mins, maxs):
         maxs = [maxs]
     else:
         maxs = maxs.args
-    return [_factorize_linear(i - j) for i in mins for j in maxs]
+    return [_factorize_linear(i - j,symbols) for i in mins for j in maxs]
 
 
-def _fourier_motzkin(inequalities):
+def _fourier_motzkin(inequalities,symbols):
     """Eliminate variables of system of linear inequalities by using
     Fourier-Motzkin elimination algorithm
 
@@ -1119,6 +1121,7 @@ def _fourier_motzkin(inequalities):
     >>> eq2 = x - y + 2*z - 2
     >>> eq3 = x + y + 3*z + 4
     >>> eq4 = x - z
+    >>> symbols = {x,y,z}
 
     >>> ie, d = _fourier_motzkin([eq1, eq2, eq3, eq4])
     >>> ie
@@ -1129,17 +1132,17 @@ def _fourier_motzkin(inequalities):
     >>> d[z]
     (x > z, z > Max(-x/2 - 13/10, -2*x/5 - 2/5))
     """
-    pivot = _find_pivot(inequalities)
+    pivot = _find_pivot(inequalities,symbols)
     res = {}
     while pivot != None:
         mins, maxs, extra = _split_min_max(inequalities, pivot)
         res[pivot] = (mins > pivot, pivot > maxs)
-        inequalities = _merge_mins_maxs(mins, maxs) + extra
-        pivot = _find_pivot(inequalities)
+        inequalities = _merge_mins_maxs(mins, maxs,symbols) + extra
+        pivot = _find_pivot(inequalities,symbols)
     return inequalities, res
 
 
-def _pick_var(inequalities):
+def _pick_var(inequalities,vars):
     """Return a free variable of the system of inequalities
 
     Examples
@@ -1152,17 +1155,19 @@ def _pick_var(inequalities):
     >>> eq2 = x - y + 2*z - 2
     >>> eq3 = x + y + 3*z + 4
     >>> eq4 = x - z
+    >>> vars={x,y,z}
 
     >>> inequalities = [eq1, eq2, eq3, eq4]
     >>> _pick_var(inequalities)
     x
     """
     for eq in inequalities:  # should already be in canonical order
-        for symb in ordered(eq.free_symbols):  # make selection canonical
+        symbols=vars.intersection(eq.free_symbols)
+        for symb in ordered(symbols):  # make selection canonical
             return symb
 
 
-def _fourier_motzkin_extension(inequalities):
+def _fourier_motzkin_extension(inequalities,symbols):
     """Extension of the Fourier-Motzkin algorithm to the case where
     inequalities do not contain variables that have at least two
     coefficients with opposite sign.
@@ -1177,6 +1182,7 @@ def _fourier_motzkin_extension(inequalities):
     >>> eq2 = x - y + 2*z - 2
     >>> eq3 = x - y + 3*z + 4
     >>> eq4 = x + z
+    >>> symbols = {x,y,z}
 
     >>> d = _fourier_motzkin_extension([eq1, eq2, eq3, eq4])
     >>> assert set(d) == {x}
@@ -1187,16 +1193,16 @@ def _fourier_motzkin_extension(inequalities):
     """
 
     res = {}
-    pivot = _pick_var(inequalities)
+    pivot = _pick_var(inequalities,symbols)
     while pivot and inequalities:
         mins, maxs, extra = _split_min_max(inequalities, pivot)
         res[pivot] = (mins > pivot, pivot > maxs)
         inequalities = extra
-        pivot = _pick_var(inequalities)
+        pivot = _pick_var(inequalities,symbols)
     return res
 
 
-def _factorize_linear(expr):
+def _factorize_linear(expr,vars):
     """Factorize linear expression
 
     Examples
@@ -1206,6 +1212,7 @@ def _factorize_linear(expr):
     >>> from sympy.abc import x, y, z
     >>> from sympy import expand
     >>> from sympy import sqrt,exp
+    >>> vars = {x,y,z}
     
     >>> expr= x - sqrt(3)*(-x + sqrt(3)*(-2*x - z - 1)/3 - exp(4))/3
     >>> factorize_linear(expr)
@@ -1213,11 +1220,12 @@ def _factorize_linear(expr):
     """
     res=0
     expr=expand(expr)
-    for symbol in expr.free_symbols:
+    symbols=vars.intersection(expr.free_symbols)
+    for symbol in symbols:
         res+=(expr.coeff(symbol)*symbol)
-    return res+expr.func(*[term for term in expr.args if not term.free_symbols])
+    return res+expr.func(*[term for term in expr.args if not symbols])
         
-def _is_linear(expr):
+def _is_linear(expr,vars):
     """
     Return True if expr is linear, False otherwise.
     
@@ -1226,6 +1234,9 @@ def _is_linear(expr):
     
     >>> from sympy import diff
     >>> from sympy.abc import x, y, z
+
+    >>> vars = {x,y,z}
+    
     >>> expr1=x**2 + y + 2
     >>> _is_linear(expr1)
     False
@@ -1234,7 +1245,6 @@ def _is_linear(expr):
     True
     """
     try:
-        vars=expr.free_symbols
         for x in vars:
             for y in vars:
                 try: 
@@ -1247,7 +1257,7 @@ def _is_linear(expr):
         return True
 
 
-def solve_linear_inequalities(inequalities):
+def solve_linear_inequalities(inequalities,symbols):
     """Solve a system of linear inequalities
 
     Parameters
@@ -1275,6 +1285,8 @@ def solve_linear_inequalities(inequalities):
     >>> eq3 = x + y + 3*z + 4
     >>> eq4 = x - z
 
+    >>> symbols = {x,y,z}
+
     >>> d = solve_linear_inequalities([eq1, eq2, eq3, eq4])
     >>> assert set(d) == set([x, y, z])
     >>> d[x]
@@ -1288,18 +1300,18 @@ def solve_linear_inequalities(inequalities):
     ===========
 
     x = 2 is valid because: oo > 2 > -2/7
-    z = 1 is valid because: x > 1 > Max(-x/2 - 13/10, -2*x/5 - 2/5)
-    y = -1 is valid because: Min(2*x/3 + z/3 + 1/3, x + 2*z - 2) > -1 > -x - 3*z - 4
+    y = -1 is valid because: Min(x + 1/3, 3*x - 2) > -1 > -4*x - 4
+    z = 1 is valid because: x > 1 > Max(-2*x + 3*y - 1, -x/2 + y/2 + 1, -x/3 - y/3 - 4/3)
+    
     """
     for eq in inequalities:
-        if not(_is_linear(eq)):
+        if not(_is_linear(eq,symbols)):
             raise ValueError('NonlinearError: Nonlinear inequality found: solve_linear_inequalities() is only for linear inequalities')
   
     eqs = list(ordered(inequalities))
-    eqs, res1 = _fourier_motzkin(eqs)
-    res2 = _fourier_motzkin_extension(eqs)
+    eqs, res1 = _fourier_motzkin(eqs,symbols)
+    res2 = _fourier_motzkin_extension(eqs,symbols)
     return {**res1, **res2}
-
 
 
 
