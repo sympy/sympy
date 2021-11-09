@@ -1302,7 +1302,6 @@ def solve_linear_inequalities(inequalities,symbols):
     x = 2 is valid because: oo > 2 > -2/7
     y = -1 is valid because: Min(x + 1/3, 3*x - 2) > -1 > -4*x - 4
     z = 1 is valid because: x > 1 > Max(-2*x + 3*y - 1, -x/2 + y/2 + 1, -x/3 - y/3 - 4/3)
-    
     """
     for eq in inequalities:
         if not(_is_linear(eq,symbols)):
