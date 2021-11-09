@@ -29,7 +29,7 @@ SCIPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
 CUPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
 TENSORFLOW_DEFAULT = {}  # type: tDict[str, Any]
 SYMPY_DEFAULT = {}  # type: tDict[str, Any]
-PADDLE_DEFAULT = {} # type: tDict[str, Any] mychange
+PADDLE_DEFAULT = {} # type: tDict[str, Any]
 NUMEXPR_DEFAULT = {}  # type: tDict[str, Any]
 
 # These are the namespaces the lambda functions will use.
@@ -43,7 +43,7 @@ SCIPY = SCIPY_DEFAULT.copy()
 CUPY = CUPY_DEFAULT.copy()
 TENSORFLOW = TENSORFLOW_DEFAULT.copy()
 SYMPY = SYMPY_DEFAULT.copy()
-PADDLE = PADDLE_DEFAULT.copy() #mychange
+PADDLE = PADDLE_DEFAULT.copy()
 NUMEXPR = NUMEXPR_DEFAULT.copy()
 
 
