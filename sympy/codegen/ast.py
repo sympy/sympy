@@ -10,6 +10,10 @@ AST Type Tree
 ::
 
   *Basic*
+       |
+       |
+   CodegenAST
+       |
        |--->AssignmentBase
        |             |--->Assignment
        |             |--->AugmentedAssignment
@@ -23,38 +27,36 @@ AST Type Tree
        |
        |
        |--->Token
-       |        |--->Attribute
-       |        |--->For
-       |        |--->String
-       |        |       |--->QuotedString
-       |        |       |--->Comment
-       |        |--->Type
-       |        |       |--->IntBaseType
-       |        |       |              |--->_SizedIntType
-       |        |       |                               |--->SignedIntType
-       |        |       |                               |--->UnsignedIntType
-       |        |       |--->FloatBaseType
-       |        |                        |--->FloatType
-       |        |                        |--->ComplexBaseType
-       |        |                                           |--->ComplexType
-       |        |--->Node
-       |        |       |--->Variable
-       |        |       |           |---> Pointer
-       |        |       |--->FunctionPrototype
-       |        |                            |--->FunctionDefinition
-       |        |--->Element
-       |        |--->Declaration
-       |        |--->While
-       |        |--->Scope
-       |        |--->Stream
-       |        |--->Print
-       |        |--->FunctionCall
-       |        |--->BreakToken
-       |        |--->ContinueToken
-       |        |--->NoneToken
-       |
-       |--->Statement
-       |--->Return
+                |--->Attribute
+                |--->For
+                |--->String
+                |       |--->QuotedString
+                |       |--->Comment
+                |--->Type
+                |       |--->IntBaseType
+                |       |              |--->_SizedIntType
+                |       |                               |--->SignedIntType
+                |       |                               |--->UnsignedIntType
+                |       |--->FloatBaseType
+                |                        |--->FloatType
+                |                        |--->ComplexBaseType
+                |                                           |--->ComplexType
+                |--->Node
+                |       |--->Variable
+                |       |           |---> Pointer
+                |       |--->FunctionPrototype
+                |                            |--->FunctionDefinition
+                |--->Element
+                |--->Declaration
+                |--->While
+                |--->Scope
+                |--->Stream
+                |--->Print
+                |--->FunctionCall
+                |--->BreakToken
+                |--->ContinueToken
+                |--->NoneToken
+                |--->Return
 
 
 Predefined types
@@ -124,7 +126,7 @@ There is a function constructing a loop (or a complete function) like this in
 
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict as tDict, List
 
 from collections import defaultdict
 
@@ -158,7 +160,11 @@ def _mk_Tuple(args):
     return Tuple(*args)
 
 
-class Token(Basic):
+class CodegenAST(Basic):
+    pass
+
+
+class Token(CodegenAST):
     """ Base class for the AST types.
 
     Explanation
@@ -177,7 +183,7 @@ class Token(Basic):
     """
 
     __slots__ = ()
-    defaults = {}  # type: Dict[str, Any]
+    defaults = {}  # type: tDict[str, Any]
     not_in_args = []  # type: List[str]
     indented_args = ['body']
 
@@ -240,7 +246,7 @@ class Token(Basic):
             val for attr, val in zip(cls.__slots__, attrvals)
             if attr not in cls.not_in_args
         ]
-        obj = Basic.__new__(cls, *basic_args)
+        obj = CodegenAST.__new__(cls, *basic_args)
 
         # Set attributes
         for attr, arg in zip(cls.__slots__, attrvals):
@@ -394,7 +400,7 @@ class NoneToken(Token):
 none = NoneToken()
 
 
-class AssignmentBase(Basic):
+class AssignmentBase(CodegenAST):
     """ Abstract base class for Assignment and AugmentedAssignment.
 
     Attributes:
@@ -581,7 +587,7 @@ def aug_assign(lhs, op, rhs):
     return augassign_classes[op](lhs, rhs)
 
 
-class CodeBlock(Basic):
+class CodeBlock(CodegenAST):
     """
     Represents a block of code.
 
@@ -631,7 +637,7 @@ class CodeBlock(Basic):
                 left_hand_sides.append(lhs)
                 right_hand_sides.append(rhs)
 
-        obj = Basic.__new__(cls, *args)
+        obj = CodegenAST.__new__(cls, *args)
 
         obj.left_hand_sides = Tuple(*left_hand_sides)
         obj.right_hand_sides = Tuple(*right_hand_sides)
@@ -931,7 +937,7 @@ class Node(Token):
 
     __slots__ = ('attrs',)
 
-    defaults = {'attrs': Tuple()}  # type: Dict[str, Any]
+    defaults = {'attrs': Tuple()}  # type: tDict[str, Any]
 
     _construct_attrs = staticmethod(_mk_Tuple)
 
@@ -1809,8 +1815,27 @@ class FunctionDefinition(FunctionPrototype):
         return cls(body=body, **func_proto.kwargs())
 
 
-class Return(Basic):
-    """ Represents a return command in the code. """
+class Return(Token):
+    """ Represents a return command in the code.
+
+    Parameters
+    ==========
+
+    return : Basic
+
+    Examples
+    ========
+
+    >>> from sympy.codegen.ast import Return
+    >>> from sympy.printing.pycode import pycode
+    >>> from sympy import Symbol
+    >>> x = Symbol('x')
+    >>> print(pycode(Return(x)))
+    return x
+
+    """
+    __slots__ = ('return',)
+    _construct_return=staticmethod(_sympify)
 
 
 class FunctionCall(Token, Expr):

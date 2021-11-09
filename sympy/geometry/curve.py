@@ -9,12 +9,13 @@ Curve
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core import sympify, diff
 from sympy.core.containers import Tuple
-from sympy.core.evalf import prec_to_dps
 from sympy.core.symbol import _symbol
 from sympy.geometry.entity import GeometryEntity, GeometrySet
 from sympy.geometry.point import Point
 from sympy.integrals import integrate
 from sympy.utilities.iterables import is_sequence
+
+from mpmath.libmp.libmpf import prec_to_dps
 
 
 class Curve(GeometrySet):

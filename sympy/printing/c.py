@@ -11,7 +11,7 @@ source code files that are compilable without further modifications.
 
 """
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict as tDict, Tuple as tTuple
 
 from functools import wraps
 from itertools import chain
@@ -160,7 +160,7 @@ class C89CodePrinter(CodePrinter):
         'dereference': set(),
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
 
     type_aliases = {
         real: float64,
@@ -183,7 +183,7 @@ class C89CodePrinter(CodePrinter):
         uint16: 'int16_t',
         uint32: 'int32_t',
         uint64: 'int64_t',
-    }  # type: Dict[Type, Any]
+    }  # type: tDict[Type, Any]
 
     type_headers = {
         bool_: {'stdbool.h'},
@@ -198,7 +198,7 @@ class C89CodePrinter(CodePrinter):
     }
 
     # Macros needed to be defined when using a Type
-    type_macros = {}  # type: Dict[Type, Tuple[str, ...]]
+    type_macros = {}  # type: tDict[Type, tTuple[str, ...]]
 
     type_func_suffixes = {
         float32: 'f',
@@ -220,7 +220,7 @@ class C89CodePrinter(CodePrinter):
 
     _ns = ''  # namespace, C++ uses 'std::'
     # known_functions-dict to copy
-    _kf = known_functions_C89  # type: Dict[str, Any]
+    _kf = known_functions_C89  # type: tDict[str, Any]
 
     def __init__(self, settings=None):
         settings = settings or {}
@@ -645,7 +645,7 @@ class C99CodePrinter(C89CodePrinter):
     }.items()))
 
     # known_functions-dict to copy
-    _kf = known_functions_C99  # type: Dict[str, Any]
+    _kf = known_functions_C99  # type: tDict[str, Any]
 
     # functions with versions with 'f' and 'l' suffixes:
     _prec_funcs = ('fabs fmod remainder remquo fma fmax fmin fdim nan exp exp2'

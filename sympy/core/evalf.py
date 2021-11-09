@@ -3,7 +3,7 @@ Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
 
-from typing import Tuple
+from typing import Tuple as tTuple
 
 import math
 
@@ -12,7 +12,7 @@ from mpmath import (
     make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc, workprec)
 from mpmath import inf as mpmath_inf
 from mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
-        fnan, fnone, fone, fzero, mpf_abs, mpf_add,
+        fnan, finf, fninf, fnone, fone, fzero, mpf_abs, mpf_add,
         mpf_atan, mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt,
         mpf_mul, mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin,
         mpf_sqrt, normalize, round_nearest, to_int, to_str)
@@ -206,6 +206,8 @@ def complex_accuracy(result):
     In the worst case (re and im equal), this is wrong by a factor
     sqrt(2), or by log2(sqrt(2)) = 0.5 bit.
     """
+    if result is S.ComplexInfinity:
+        return INF
     re, im, re_acc, im_acc = result
     if not im:
         if not re:
@@ -221,8 +223,10 @@ def complex_accuracy(result):
 
 
 def get_abs(expr, prec, options):
-    re, im, re_acc, im_acc = evalf(expr, prec + 2, options)
-
+    result = evalf(expr, prec + 2, options)
+    if result is S.ComplexInfinity:
+        return finf, None, prec, None
+    re, im, re_acc, im_acc = result
     if not re:
         re, re_acc, im, im_acc = im, im_acc, re, re_acc
     if im:
@@ -246,6 +250,8 @@ def get_complex_part(expr, no, prec, options):
     i = 0
     while 1:
         res = evalf(expr, workprec, options)
+        if res is S.ComplexInfinity:
+            return fnan, None, prec, None
         value, accuracy = res[no::2]
         # XXX is the last one correct? Consider re((1+I)**2).n()
         if (not value) or accuracy >= prec or -value[2] > prec:
@@ -289,6 +295,8 @@ def chop_parts(value, prec):
     """
     Chop off tiny real or complex parts.
     """
+    if value is S.ComplexInfinity:
+        return value
     re, im, re_acc, im_acc = value
     # Method 1: chop based on absolute value
     if re and re not in _infs_nan and (fastlog(re) < -prec + 4):
@@ -323,7 +331,10 @@ def get_integer_part(expr, no, options, return_ints=False):
     from sympy.functions.elementary.complexes import re, im
     # The expression is likely less than 2^30 or so
     assumed_size = 30
-    ire, iim, ire_acc, iim_acc = evalf(expr, assumed_size, options)
+    result = evalf(expr, assumed_size, options)
+    if result is S.ComplexInfinity:
+        raise ValueError("Cannot get integer part of Complex Infinity")
+    ire, iim, ire_acc, iim_acc = result
 
     # We now know the size, so we can calculate how much extra precision
     # (if any) is needed to get within the nearest integer
@@ -532,10 +543,17 @@ def evalf_add(v, prec, options):
         options['maxprec'] = min(oldmaxprec, 2*prec)
 
         terms = [evalf(arg, prec + 10, options) for arg in v.args]
+        n = terms.count(S.ComplexInfinity)
+        if n >= 2:
+            return fnan, None, prec, None
         re, re_acc = add_terms(
-            [a[0::2] for a in terms if a[0]], prec, target_prec)
+            [a[0::2] for a in terms if isinstance(a, tuple) and a[0]], prec, target_prec)
         im, im_acc = add_terms(
-            [a[1::2] for a in terms if a[1]], prec, target_prec)
+            [a[1::2] for a in terms if isinstance(a, tuple) and a[1]], prec, target_prec)
+        if n == 1:
+            if re in (finf, fninf, fnan) or im in (finf, fninf, fnan):
+                return fnan, None, prec, None
+            return S.ComplexInfinity
         acc = complex_accuracy((re, im, re_acc, im_acc))
         if acc >= target_prec:
             if options.get('verbose'):
@@ -568,19 +586,30 @@ def evalf_mul(v, prec, options):
     args = list(v.args)
 
     # see if any argument is NaN or oo and thus warrants a special return
+    has_zero = False
     special = []
     from .numbers import Float
     for arg in args:
-        arg = evalf(arg, prec, options)
-        if arg[0] is None:
+        result = evalf(arg, prec, options)
+        if result is S.ComplexInfinity:
+            special.append(result)
             continue
-        arg = Float._new(arg[0], 1)
-        if arg is S.NaN or arg.is_infinite:
-            special.append(arg)
+        if result[0] is None:
+            if result[1] is None:
+                has_zero = True
+            continue
+        num = Float._new(result[0], 1)
+        if num is S.NaN:
+            return fnan, None, prec, None
+        if num.is_infinite:
+            special.append(num)
     if special:
+        if has_zero:
+            return fnan, None, prec, None
         from .mul import Mul
-        special = Mul(*special)
-        return evalf(special, prec + 4, {})
+        return evalf(Mul(*special), prec + 4, {})
+    if has_zero:
+        return None, None, None, None
 
     # With guard digits, multiplication in the real case does not destroy
     # accuracy. This is also true in the complex case when considering the
@@ -688,7 +717,12 @@ def evalf_pow(v, prec, options):
         # Exponentiation by p magnifies relative error by |p|, so the
         # base must be evaluated with increased precision if p is large
         prec += int(math.log(abs(p), 2))
-        re, im, re_acc, im_acc = evalf(base, prec + 5, options)
+        result = evalf(base, prec + 5, options)
+        if result is S.ComplexInfinity:
+            if p < 0:
+                return None, None, None, None
+            return result
+        re, im, re_acc, im_acc = result
         # Real to integer power
         if re and not im:
             return mpf_pow_int(re, p, target_prec), None, target_prec, None
@@ -706,15 +740,25 @@ def evalf_pow(v, prec, options):
                 return None, mpf_neg(z), None, target_prec
         # Zero raised to an integer power
         if not re:
+            if p < 0:
+                return S.ComplexInfinity
             return None, None, None, None
         # General complex number to arbitrary integer power
         re, im = libmp.mpc_pow_int((re, im), p, prec)
         # Assumes full accuracy in input
         return finalize_complex(re, im, target_prec)
 
+    result = evalf(base, prec + 5, options)
+    if result is S.ComplexInfinity:
+        if exp.is_Rational:
+            if exp < 0:
+                return None, None, None, None
+            return result
+        raise NotImplementedError
+
     # Pure square root
     if exp is S.Half:
-        xre, xim, _, _ = evalf(base, prec + 5, options)
+        xre, xim, _, _ = result
         # General complex square root
         if xim:
             re, im = libmp.mpc_sqrt((xre or fzero, xim), prec)
@@ -730,7 +774,10 @@ def evalf_pow(v, prec, options):
     # We first evaluate the exponent to find its magnitude
     # This determines the working precision that must be used
     prec += 10
-    yre, yim, _, _ = evalf(exp, prec, options)
+    result = evalf(exp, prec, options)
+    if result is S.ComplexInfinity:
+        return fnan, None, prec, None
+    yre, yim, _, _ = result
     # Special cases: x**0
     if not (yre or yim):
         return fone, None, prec, None
@@ -752,6 +799,10 @@ def evalf_pow(v, prec, options):
     xre, xim, _, _ = evalf(base, prec + 5, options)
     # 0**y
     if not (xre or xim):
+        if yim:
+            return fnan, None, prec, None
+        if yre[0] == 1:  # y < 0
+            return S.ComplexInfinity
         return None, None, None, None
 
     # (real ** complex) or (complex ** complex)
@@ -846,7 +897,10 @@ def evalf_log(expr, prec, options):
         return evalf(expr, prec, options)
     arg = expr.args[0]
     workprec = prec + 10
-    xre, xim, xacc, _ = evalf(arg, workprec, options)
+    result = evalf(arg, workprec, options)
+    if result is S.ComplexInfinity:
+        return result
+    xre, xim, xacc, _ = result
 
     # evalf can return NoneTypes if chop=True
     # issue 18516, 19623
@@ -1203,11 +1257,11 @@ def hypsum(expr, n, start, prec):
 
 def evalf_prod(expr, prec, options):
     if all((l[1] - l[2]).is_Integer for l in expr.limits):
-        re, im, re_acc, im_acc = evalf(expr.doit(), prec=prec, options=options)
+        result = evalf(expr.doit(), prec=prec, options=options)
     else:
         from sympy.concrete.summations import Sum
-        re, im, re_acc, im_acc = evalf(expr.rewrite(Sum), prec=prec, options=options)
-    return re, im, re_acc, im_acc
+        result = evalf(expr.rewrite(Sum), prec=prec, options=options)
+    return result
 
 
 def evalf_sum(expr, prec, options):
@@ -1285,7 +1339,8 @@ def _create_evalf_table():
     from sympy.concrete.summations import Sum
     from .add import Add
     from .mul import Mul
-    from .numbers import Exp1, Float, Half, ImaginaryUnit, Integer, NaN, NegativeOne, One, Pi, Rational, Zero
+    from .numbers import Exp1, Float, Half, ImaginaryUnit, Integer, NaN, NegativeOne, One, Pi, Rational, \
+        Zero, ComplexInfinity
     from .power import Pow
     from .symbol import Dummy, Symbol
     from sympy.functions.elementary.complexes import Abs, im, re
@@ -1307,6 +1362,7 @@ def _create_evalf_table():
         Exp1: lambda x, prec, options: (mpf_e(prec), None, prec, None),
         ImaginaryUnit: lambda x, prec, options: (None, fone, None, prec),
         NegativeOne: lambda x, prec, options: (fnone, None, prec, None),
+        ComplexInfinity: lambda x, prec, options: S.ComplexInfinity,
         NaN: lambda x, prec, options: (fnan, None, prec, None),
 
         exp: lambda x, prec, options: evalf_pow(
@@ -1405,7 +1461,7 @@ def evalf(x, prec, options):
 
     if options.get("verbose"):
         print("### input", x)
-        print("### output", to_str(r[0] or fzero, 50))
+        print("### output", to_str(r[0] or fzero, 50) if isinstance(r, tuple) else r)
         print("### raw", r) # r[0], r[2]
         print()
     chop = options.get('chop', False)
@@ -1428,7 +1484,7 @@ def evalf(x, prec, options):
 class EvalfMixin:
     """Mixin class adding evalf capabililty."""
 
-    __slots__ = ()  # type: Tuple[str, ...]
+    __slots__ = ()  # type: tTuple[str, ...]
 
     def evalf(self, n=15, subs=None, maxn=100, chop=False, strict=False, quad=None, verbose=False):
         """
@@ -1536,6 +1592,8 @@ class EvalfMixin:
             except NotImplementedError:
                 # Probably contains symbols or unknown functions
                 return v
+        if result is S.ComplexInfinity:
+            return result
         re, im, re_acc, im_acc = result
         if re is S.NaN or im is S.NaN:
             return S.NaN
@@ -1571,7 +1629,10 @@ class EvalfMixin:
         if hasattr(self, '_as_mpf_val'):
             return make_mpf(self._as_mpf_val(prec))
         try:
-            re, im, _, _ = evalf(self, prec, {})
+            result = evalf(self, prec, {})
+            if result is S.ComplexInfinity:
+                raise NotImplementedError
+            re, im, _, _ = result
             if im:
                 if not re:
                     re = fzero

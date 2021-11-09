@@ -30,7 +30,7 @@ There are three types of functions implemented in SymPy:
 
 """
 
-from typing import Any, Dict as tDict, Optional, Set as tSet, Tuple as tTuple, Union
+from typing import Any, Dict as tDict, Optional, Set as tSet, Tuple as tTuple, Union as tUnion
 from collections.abc import Iterable
 
 from .add import Add
@@ -57,7 +57,7 @@ from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
 from sympy.utilities.misc import as_int, filldedent, func_name
 
 import mpmath
-import mpmath.libmp as mlib
+from mpmath.libmp.libmpf import prec_to_dps
 
 import inspect
 from collections import Counter
@@ -477,7 +477,7 @@ class Function(Application, Expr):
             pr2 = min(cls._should_evalf(a) for a in result.args)
             if pr2 > 0:
                 pr = max(cls._should_evalf(a) for a in result.args)
-                result = result.evalf(mlib.libmpf.prec_to_dps(pr))
+                result = result.evalf(prec_to_dps(pr))
 
         return result
 
@@ -632,7 +632,7 @@ class Function(Application, Expr):
 
         return fuzzy_not(type(self).is_singular(arg.subs(x, a)))
 
-    _singularities = None  # type: Union[FuzzyBool, tTuple[Expr, ...]]
+    _singularities = None  # type: tUnion[FuzzyBool, tTuple[Expr, ...]]
 
     @classmethod
     def is_singular(cls, a):
@@ -1635,7 +1635,7 @@ class Derivative(Expr):
 
         def eval(x):
             f0 = self.expr.subs(z, Expr._from_mpmath(x, prec=mpmath.mp.prec))
-            f0 = f0.evalf(mlib.libmpf.prec_to_dps(mpmath.mp.prec))
+            f0 = f0.evalf(prec_to_dps(mpmath.mp.prec))
             return f0._to_mpmath(mpmath.mp.prec)
         return Expr._from_mpmath(mpmath.diff(eval,
                                              z0._to_mpmath(mpmath.mp.prec)),
@@ -2075,7 +2075,6 @@ class Lambda(Expr):
         return self.signature == self.expr
 
     def _eval_evalf(self, prec):
-        from .evalf import prec_to_dps
         return self.func(self.args[0], self.args[1].evalf(n=prec_to_dps(prec)))
 
 

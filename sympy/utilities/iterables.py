@@ -2168,13 +2168,238 @@ def generate_involutions(n):
             yield p
 
 
+def multiset_derangements(s):
+    """Generate derangements of the elements of s *in place*.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import multiset_derangements, uniq
+
+    Because the derangements of multisets (not sets) are generated
+    in place, copies of the return value must be made if a collection
+    of derangements is desired or else all values will be the same:
+
+    >>> list(uniq([i for i in multiset_derangements('1233')]))
+    [['3', '3', '2', '1']]
+    >>> [i.copy() for i in multiset_derangements('1233')]
+    [['3', '3', '1', '2'], ['3', '3', '2', '1']]
+    """
+    ms = multiset(s)
+    mx = max(ms.values())
+    n = len(s)
+    # special cases
+
+    # 0) impossible case
+    if mx*2 > n:
+        return
+
+    # 1) singletons
+    if len(ms) == n:
+        for p in generate_derangements(s):
+            yield p
+        return
+
+    for M in ms:
+        if ms[M] == mx:
+            break
+    inonM = [i for i in range(n) if s[i] != M]
+    iM = [i for i in range(n) if s[i] == M]
+    rv = [None]*n
+
+    # 2) half are the same
+    if 2*mx == n:
+        for i in inonM:
+            rv[i] = M
+        for p in multiset_permutations([s[i] for i in inonM]):
+            for i, pi in zip(iM, p):
+                rv[i] = pi
+            yield rv
+        return
+
+    # 3) single repeat covers all but 1 of the non-repeats
+    if n - 2*mx == 1 and len(ms.values()) - 1 == n - mx:
+        for i in range(len(inonM)):
+            i1 = inonM[i]
+            ifill = inonM[:i] + inonM[i+1:]
+            for j in ifill:
+                rv[j] = M
+            rv[i1] = s[i1]
+            for p in permutations([s[j] for j in ifill]):
+                for j, pi in zip(iM, p):
+                    rv[j] = pi
+                for j in iM:
+                    rv[j], rv[i1] = rv[i1], rv[j]
+                    yield rv
+                    i1 = j
+        return
+
+    def finish_derangements():
+        """Place the last two elements into the partially completed
+        derangement, and yield the results.
+        In non-recursive version, this will be inlined, but a little
+        easier to understand as a function for now.
+        """
+
+        a = take[1][0]  # penultimate element
+        a_ct = take[1][1]
+        b = take[0][0]  # last element to be placed
+        b_ct = take[0][1]
+
+        # split the indexes of the not-already-assigned elemements of rv into
+        # three categories
+        forced_a = []  # positions which must have an a
+        forced_b = []  # positions which must have a b
+        open_free = []  # positions which could take either
+        for i in range(len(s)):
+            if rv[i] is None:
+                if s[i] == a:
+                    forced_b.append(i)
+                elif s[i] == b:
+                    forced_a.append(i)
+                else:
+                    open_free.append(i)
+
+        if len(forced_a) > a_ct or len(forced_b) > b_ct:
+            # No derangement possible
+            return
+        for i in forced_a:
+            rv[i] = a
+        for i in forced_b:
+            rv[i] = b
+        for a_place in subsets(open_free, a_ct - len(forced_a)):
+            for a_pos in a_place:
+                rv[a_pos] = a
+            for i in open_free:
+                if rv[i] is None:  # anything not in the subset is set to b
+                    rv[i] = b
+            yield rv
+            # Clean up/undo the final placements
+            for i in open_free:
+                rv[i] = None
+        # additional cleanup - clear forced_a, forced_b
+        for i in forced_a:
+            rv[i] = None
+        for i in forced_b:
+            rv[i] = None
+
+    def iopen(v):
+        return [i for i in range(n) if rv[i] is None and s[i] != v]
+
+    def do(j):
+        if j == -1:
+            yield rv
+        else:
+            M, mx = take[j]
+            for i in subsets(iopen(M), mx):
+                for ii in i:
+                    rv[ii] = M
+                yield from do(j - 1)
+                for ii in i:
+                    rv[ii] = None
+    take = sorted(ms.items(), key=lambda x:(x[1], x[0]))
+    yield from do(len(take) - 1)
+
+
+def random_derangement(t, choice=None, strict=True):
+    """Return a list of elements in which none are in the same positions
+    as they were originally. If an element fills more than half of the positions
+    then an error will be raised since no derangement is possible. To obtain
+    a derangement of as many items as possible--with some of the most numerous
+    remaining in their original positions--pass `strict=False`. To produce a
+    pseudorandom derangment, pass a pseudorandom selector like `Random(seed).choice`.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import random_derangement
+    >>> from random import Random
+    >>> t = 'SymPy: a CAS in pure Python'
+    >>> d = random_derangement(t)
+    >>> all(i != j for i, j in zip(d, t))
+    True
+
+    A predictable result can be obtained by using a pseudorandom
+    generator for the choice:
+
+    >>> c = Random(1).choice
+    >>> d = [''.join(random_derangement(t, c)) for i in range(5)]
+    >>> assert len(set(d)) != 1  # we got different values
+
+    By resetting c, the same sequence can be obtained:
+
+    >>> c = Random(1).choice
+    >>> d2 = [''.join(random_derangement(t, c)) for i in range(5)]
+    >>> assert d == d2
+    """
+    if choice is None:
+        import secrets
+        choice = secrets.choice
+    def shuffle(rv):
+        '''Knuth shuffle'''
+        for i in range(len(rv) - 1, 0, -1):
+            x = choice(rv[:i + 1])
+            j = rv.index(x)
+            rv[i], rv[j] = rv[j], rv[i]
+    def pick(rv, n):
+        '''shuffle rv and return the first n values
+        '''
+        shuffle(rv)
+        return rv[:n]
+    ms = multiset(t)
+    tot = len(t)
+    ms = sorted(ms.items(), key=lambda x: x[1])
+  # if there are not enough spaces for the most
+  # plentiful element to move to then some of them
+  # will have to stay in place
+    M, mx = ms[-1]
+    n = len(t)
+    xs = 2*mx - tot
+    if xs > 0:
+        if strict:
+            raise ValueError('no derangement possible')
+        opts = [i for (i, c) in enumerate(t) if c == ms[-1][0]]
+        pick(opts, xs)
+        stay = sorted(opts[:xs])
+        rv = list(t)
+        for i in reversed(stay):
+            rv.pop(i)
+        rv = random_derangement(rv, choice)
+        for i in stay:
+            rv.insert(i, ms[-1][0])
+        return ''.join(rv) if type(t) is str else rv
+  # the normal derangement calculated from here
+    if n == len(ms):
+      # approx 1/3 will succeed
+        rv = list(t)
+        while True:
+            shuffle(rv)
+            if all(i != j for i,j in zip(rv, t)):
+                break
+    else:
+      # general case
+        rv = [None]*n
+        while True:
+            j = 0
+            while j > -len(ms):  # do most numerous first
+                j -= 1
+                e, c = ms[j]
+                opts = [i for i in range(n) if rv[i] is None and t[i] != e]
+                if len(opts) < c:
+                    for i in range(n):
+                        rv[i] = None
+                    break # try again
+                pick(opts, c)
+                for i in range(c):
+                    rv[opts[i]] = e
+            else:
+                return rv
+    return rv
+
+
 def generate_derangements(perm):
     """
-    Routine to generate unique derangements.
-
-    TODO: This will be rewritten to use the
-    ECO operator approach once the permutations
-    branch is in master.
+    Routine to generate unique derangements or sets or multisets.
 
     Examples
     ========
@@ -2195,9 +2420,21 @@ def generate_derangements(perm):
     sympy.functions.combinatorial.factorials.subfactorial
 
     """
-    for p in multiset_permutations(perm):
-        if not any(i == j for i, j in zip(perm, p)):
-            yield p
+    if not has_dups(perm):
+        s = perm
+        if len(perm) == 2:
+            yield [s[1],s[0]]
+            return
+        if len(perm) == 3:
+            yield [s[1],s[2],s[0]]
+            yield [s[2],s[0],s[1]]
+            return
+        for p in permutations(s):
+            if not any(i == j for i, j in zip(p, s)):
+                yield list(p)
+    else:
+        for p in multiset_derangements(perm):
+            yield list(p)
 
 
 def necklaces(n, k, free=False):

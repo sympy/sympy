@@ -651,7 +651,7 @@ class Expr(Basic, EvalfMixin):
         if expr.is_zero:
             return True
 
-        # Don't attempt subsitution or differentiation with non-number symbols
+        # Don't attempt substitution or differentiation with non-number symbols
         wrt_number = {sym for sym in wrt if sym.kind is NumberKind}
 
         # try numerical evaluation to see if we get two different values
@@ -700,9 +700,6 @@ class Expr(Basic, EvalfMixin):
                 if not (pure_complex(deriv, or_real=True)):
                     if flags.get('failing_number', False):
                         return failing_number
-                    elif deriv.free_symbols:
-                        # dead line provided _random returns None in such cases
-                        return None
                 return False
         cd = check_denominator_zeros(self)
         if cd is True:
@@ -751,6 +748,12 @@ class Expr(Basic, EvalfMixin):
             # if there is no expanding to be done after simplifying
             # then this can't be a zero
             return False
+
+        factors = diff.as_coeff_mul()[1]
+        if len(factors) > 1:  # avoid infinity recursion
+            fac_zero = [fac.equals(0) for fac in factors]
+            if None not in fac_zero:  # every part can be decided
+                return any(fac_zero)
 
         constant = diff.is_constant(simplify=False, failing_number=True)
 

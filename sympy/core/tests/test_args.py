@@ -139,6 +139,10 @@ def test_sympy__assumptions__wrapper__AssumptionsWrapper():
     from sympy.assumptions.wrapper import AssumptionsWrapper
     assert _test_args(AssumptionsWrapper(x, Q.positive(x)))
 
+@SKIP("abstract Class")
+def test_sympy__codegen__ast__CodegenAST():
+    from sympy.codegen.ast import CodegenAST
+    assert _test_args(CodegenAST())
 
 @SKIP("abstract Class")
 def test_sympy__codegen__ast__AssignmentBase():
@@ -494,12 +498,6 @@ def test_sympy__combinatorics__graycode__GrayCode():
     # an integer is given and returned from GrayCode as the arg
     assert _test_args(GrayCode(3, start='100'))
     assert _test_args(GrayCode(3, rank=1))
-
-
-def test_sympy__combinatorics__subsets__Subset():
-    from sympy.combinatorics.subsets import Subset
-    assert _test_args(Subset([0, 1], [0, 1, 2, 3]))
-    assert _test_args(Subset(['c', 'd'], ['a', 'b', 'c', 'd']))
 
 
 def test_sympy__combinatorics__permutations__Permutation():
@@ -2213,6 +2211,11 @@ def test_sympy__functions__elementary__miscellaneous__Min():
 @SKIP("abstract class")
 def test_sympy__functions__elementary__miscellaneous__MinMaxBase():
     pass
+
+
+def test_sympy__functions__elementary__miscellaneous__Rem():
+    from sympy.functions.elementary.miscellaneous import Rem
+    assert _test_args(Rem(x, 2))
 
 
 def test_sympy__functions__elementary__piecewise__ExprCondPair():

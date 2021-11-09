@@ -9,7 +9,7 @@ Contains
 from sympy.core.expr import Expr
 from sympy.core.relational import Eq
 from sympy.core import S, pi, sympify
-from sympy.core.evalf import prec_to_dps, N
+from sympy.core.evalf import N
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
@@ -29,6 +29,8 @@ from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.misc import filldedent, func_name
+
+from mpmath.libmp.libmpf import prec_to_dps
 
 import random
 

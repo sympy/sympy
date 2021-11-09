@@ -590,8 +590,8 @@ def _parts_rule(integrand, symbol):
                 for a in dv.args)):
                     accept = True
             else:
-                for rule in liate_rules[index + 1:]:
-                    r = rule(integrand)
+                for lrule in liate_rules[index + 1:]:
+                    r = lrule(integrand)
                     if r and r[0].subs(dummy, 1).equals(dv):
                         accept = True
                         break
