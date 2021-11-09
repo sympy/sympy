@@ -29,6 +29,7 @@ SCIPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
 CUPY_DEFAULT = {"I": 1j}  # type: tDict[str, Any]
 TENSORFLOW_DEFAULT = {}  # type: tDict[str, Any]
 SYMPY_DEFAULT = {}  # type: tDict[str, Any]
+PADDLE_DEFAULT = {} # type: tDict[str, Any] mychange
 NUMEXPR_DEFAULT = {}  # type: tDict[str, Any]
 
 # These are the namespaces the lambda functions will use.
@@ -42,6 +43,7 @@ SCIPY = SCIPY_DEFAULT.copy()
 CUPY = CUPY_DEFAULT.copy()
 TENSORFLOW = TENSORFLOW_DEFAULT.copy()
 SYMPY = SYMPY_DEFAULT.copy()
+PADDLE = PADDLE_DEFAULT.copy() #mychange
 NUMEXPR = NUMEXPR_DEFAULT.copy()
 
 
@@ -106,6 +108,7 @@ MODULES = {
         "from sympy.functions import *",
         "from sympy.matrices import *",
         "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
+    "paddle": (PADDLE,PADDLE_DEFAULT,{},("import paddle")), #my change
     "numexpr" : (NUMEXPR, NUMEXPR_DEFAULT, NUMEXPR_TRANSLATIONS,
                  ("import_module('numexpr')", )),
 }
@@ -174,7 +177,8 @@ def _import(module, reload=False):
 # linecache.
 _lambdify_generated_counter = 1
 
-@doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
+#change in next line
+@doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow','paddle',), python_version=(3,))
 def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
              dummify=False, cse=False):
     """Convert a SymPy expression into a function that allows for fast
