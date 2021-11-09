@@ -816,7 +816,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         elif _module_present('tensorflow', namespaces):
             from sympy.printing.tensorflow import TensorflowPrinter as Printer # type: ignore
         elif _module_present('paddle', namespaces):
-            from sympy.printing.paddle import paddle.static.Print as Printer # type: ignore. 有点问题
+            from sympy.printing.paddle import PaddlePrinter as Printer # type: ignore. 有点问题
         elif _module_present('sympy', namespaces):
             from sympy.printing.pycode import SymPyPrinter as Printer # type: ignore
         else:
@@ -863,7 +863,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
     if _module_present('tensorflow', namespaces):
         funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter
     elif _module_present('paddle', namespaces):
-        funcprinter = _TensorflowEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter 有问题
+        funcprinter = _PaddleEvaluatorPrinter(printer, dummify) # type: _EvaluatorPrinter 有问题
     else:
         funcprinter = _EvaluatorPrinter(printer, dummify)
 
