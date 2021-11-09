@@ -1797,16 +1797,17 @@ def test_issue_5843():
 
 def test_is_constant():
     from sympy.solvers.solvers import checksol
-    Sum(x, (x, 1, 10)).is_constant() is True
-    Sum(x, (x, 1, n)).is_constant() is False
-    Sum(x, (x, 1, n)).is_constant(y) is True
-    Sum(x, (x, 1, n)).is_constant(n) is False
-    Sum(x, (x, 1, n)).is_constant(x) is True
+    assert Sum(x, (x, 1, 10)).is_constant() is True
+    assert Sum(x, (x, 1, n)).is_constant() is False
+    assert Sum(x, (x, 1, n)).is_constant(y) is True
+    assert Sum(x, (x, 1, n)).is_constant(n) is False
+    assert Sum(x, (x, 1, n)).is_constant(x) is True
     eq = a*cos(x)**2 + a*sin(x)**2 - a
-    eq.is_constant() is True
+    assert eq.is_constant() is True
     assert eq.subs({x: pi, a: 2}) == eq.subs({x: pi, a: 3}) == 0
     assert x.is_constant() is False
     assert x.is_constant(y) is True
+    assert log(x/y).is_constant() is False
 
     assert checksol(x, x, Sum(x, (x, 1, n))) is False
     assert checksol(x, x, Sum(x, (x, 1, n))) is False
@@ -1852,7 +1853,7 @@ def test_equals():
         2*sqrt(2)*x**(S(3)/2)*(1 + 1/(2*x))**(S(5)/2)/(-6 - 3/x)
     ans = sqrt(2*x + 1)*(6*x**2 + x - 1)/15
     diff = i - ans
-    assert diff.equals(0) is False
+    assert diff.equals(0) is None  # should be False, but previously this was False due to wrong intermediate result
     assert diff.subs(x, Rational(-1, 2)/2) == 7*sqrt(2)/120
     # there are regions for x for which the expression is True, for
     # example, when x < -1/2 or x > 0 the expression is zero
@@ -2084,7 +2085,7 @@ def test_issue_6325():
         (a + b*t)**2 + (c + t*z)**2))/sqrt((a + b*t)**2 + (c + t*z)**2)
     e = sqrt((a + b*t)**2 + (c + z*t)**2)
     assert diff(e, t, 2) == ans
-    e.diff(t, 2) == ans
+    assert e.diff(t, 2) == ans
     assert diff(e, t, 2, simplify=False) != ans
 
 
