@@ -247,6 +247,8 @@ Prime Decomposition
    :members:
 
    .. automethod:: PrimeIdeal.__init__
+   .. automethod:: PrimeIdeal.__add__
+   .. automethod:: PrimeIdeal.__mul__
 
 
 p-adic Valuation

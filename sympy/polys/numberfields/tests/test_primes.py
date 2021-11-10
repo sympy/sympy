@@ -138,8 +138,6 @@ def test_decomp_5():
             assert len(P) == 2
             assert all(P[i].e == 1 and P[i].f == 1 for i in range(2))
             assert prod(Pi**Pi.e for Pi in P) == p * ZK
-            # Test printing:
-            assert repr(P[0]) == '[ (2, (3*x + 1)/2) e=1, f=1 ]'
         else:
             assert d % 8 == 5
             assert len(P) == 1
@@ -229,3 +227,23 @@ def test_PrimeIdeal_eq():
     assert P0.f == 6
     assert P0.as_submodule() == 5 * P0.ZK
     assert P0 != 5
+
+
+def test_PrimeIdeal_add():
+    T = Poly(cyclotomic_poly(7))
+    P0 = prime_decomp(7, T)[0]
+    # Adding ideals computes their GCD, so adding the ramified prime dividing
+    # 7 to 7 itself should reproduce this prime (as a submodule).
+    assert P0 + 7 * P0.ZK == P0.as_submodule()
+
+
+def test_pretty_printing():
+    d = -7
+    T = Poly(x ** 2 - d)
+    rad = {}
+    ZK, dK = round_two(T, radicals=rad)
+    p = 2
+    P = prime_decomp(p, T, dK=dK, ZK=ZK, radical=rad.get(p))
+    assert repr(P[0]) == '[ (2, (3*x + 1)/2) e=1, f=1 ]'
+    assert P[0].pretty(field_gen=theta) == '[ (2, (3*theta + 1)/2) e=1, f=1 ]'
+    assert P[0].pretty(field_gen=theta, just_gens=True) == '(2, (3*theta + 1)/2)'

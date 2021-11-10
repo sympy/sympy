@@ -70,26 +70,144 @@ class PrimeIdeal(IntegerPowerable):
         self._test_factor = None
         self.e = e if e is not None else self.valuation(p * ZK)
 
-    def pretty(self, theta=None):
-        theta = theta or symbols('x')
+    def pretty(self, field_gen=None, just_gens=False):
+        """
+        Print a representation of this prime ideal.
+
+        Examples
+        ========
+
+        >>> from sympy import cyclotomic_poly, QQ
+        >>> from sympy.abc import x, zeta
+        >>> T = cyclotomic_poly(7, x)
+        >>> K = QQ.algebraic_field((T, zeta))
+        >>> P = K.primes_above(11)
+        >>> print(P[0].pretty())
+        [ (11, x**3 + 5*x**2 + 4*x - 1) e=1, f=3 ]
+        >>> print(P[0].pretty(field_gen=zeta))
+        [ (11, zeta**3 + 5*zeta**2 + 4*zeta - 1) e=1, f=3 ]
+        >>> print(P[0].pretty(field_gen=zeta, just_gens=True))
+        (11, zeta**3 + 5*zeta**2 + 4*zeta - 1)
+
+        Parameters
+        ==========
+
+        field_gen : :py:class:`~.Symbol`, ``None``, optional (default=None)
+            The symbol to use for the generator of the field. This will appear
+            in our representation of ``self.alpha``. If ``None``, we use the
+            variable of the defining polynomial of ``self.ZK``.
+        just_gens : bool, optional (default=False)
+            If ``True``, just print the "(p, alpha)" part, showing "just the
+            generators" of the prime ideal. Otherwise, print a string of the
+            form "[ (p, alpha) e=..., f=... ]", giving the ramification index
+            and inertia degree, along with the generators.
+
+        """
+        field_gen = field_gen or self.ZK.parent.T.gen
         p, alpha, e, f = self.p, self.alpha, self.e, self.f
-        alpha_rep = str(alpha.numerator(x=theta).as_expr())
+        alpha_rep = str(alpha.numerator(x=field_gen).as_expr())
         if alpha.denom > 1:
             alpha_rep = f'({alpha_rep})/{alpha.denom}'
-        return f'[ ({p}, {alpha_rep}) e={e}, f={f} ]'
+        gens = f'({p}, {alpha_rep})'
+        if just_gens:
+            return gens
+        return f'[ {gens} e={e}, f={f} ]'
 
     def __repr__(self):
         return self.pretty()
 
     def as_submodule(self):
-        return self.p * self.ZK + self.alpha * self.ZK
+        r"""
+        Represent this prime ideal as a :py:class:`~.Submodule`.
+
+        Explanation
+        ===========
+
+        The :py:class:`~.PrimeIdeal` class serves to bundle information about
+        a prime ideal, such as its inertia degree, ramification index, and
+        two-generator representation, as well as to offer helpful methods like
+        :py:meth:`~.PrimeIdeal.valuation` and
+        :py:meth:`~.PrimeIdeal.test_factor`.
+
+        However, in order to be added and multiplied by other ideals or
+        rational numbers, it must first be converted into a
+        :py:class:`~.Submodule`, which is a class that supports these
+        operations.
+
+        In many cases, the user need not perform this conversion deliberately,
+        since it is automatically performed by the arithmetic operator methods
+        :py:meth:`~.PrimeIdeal.__add__` and :py:meth:`~.PrimeIdeal.__mul__`.
+
+        Raising a :py:class:`~.PrimeIdeal` to a non-negative integer power is
+        also supported.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, cyclotomic_poly, prime_decomp
+        >>> T = Poly(cyclotomic_poly(7))
+        >>> P0 = prime_decomp(7, T)[0]
+        >>> print(P0**6 == 7*P0.ZK)
+        True
+
+        Note that, on both sides of the equation above, we had a
+        :py:class:`~.Submodule`. In the next equation we recall that adding
+        ideals yields their GCD. This time, we need a deliberate conversion
+        to :py:class:`~.Submodule` on the right:
+
+        >>> print(P0 + 7*P0.ZK == P0.as_submodule())
+        True
+
+        Returns
+        =======
+
+        :py:class:`~.Submodule`
+            Will be equal to ``self.p * self.ZK + self.alpha * self.ZK``.
+
+        See Also
+        ========
+
+        __add__
+        __mul__
+
+        """
+        M = self.p * self.ZK + self.alpha * self.ZK
+        # Pre-set expensive boolean properties whose value we already know:
+        M._starts_with_unity = False
+        M._is_sq_maxrank_HNF = True
+        return M
 
     def __eq__(self, other):
         if isinstance(other, PrimeIdeal):
             return self.as_submodule() == other.as_submodule()
         return NotImplemented
 
+    def __add__(self, other):
+        """
+        Convert to a :py:class:`~.Submodule` and add to another
+        :py:class:`~.Submodule`.
+
+        See Also
+        ========
+
+        as_submodule
+
+        """
+        return self.as_submodule() + other
+
+    __radd__ = __add__
+
     def __mul__(self, other):
+        """
+        Convert to a :py:class:`~.Submodule` and multiply by another
+        :py:class:`~.Submodule` or a rational number.
+
+        See Also
+        ========
+
+        as_submodule
+
+        """
         return self.as_submodule() * other
 
     __rmul__ = __mul__
@@ -122,12 +240,18 @@ class PrimeIdeal(IntegerPowerable):
 
     def valuation(self, I):
         r"""
-        Compute the $\mathfrak{p}$-adic valuation of integral ideal I.
+        Compute the $\mathfrak{p}$-adic valuation of integral ideal I at this
+        prime ideal.
 
         Parameters
         ==========
 
         I : :py:class:`~.Submodule`
+
+        See Also
+        ========
+
+        prime_valuation
 
         """
         return prime_valuation(I, self)
@@ -211,6 +335,11 @@ def prime_valuation(I, P):
     =======
 
     int
+
+    See Also
+    ========
+
+    .PrimeIdeal.valuation
 
     References
     ==========
