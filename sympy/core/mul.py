@@ -863,7 +863,7 @@ class Mul(Expr, AssocOp):
         other = []
         coeffr = []
         coeffi = []
-        addterms = S.One
+        addterms = []
         for a in self.args:
             r, i = a.as_real_imag()
             if i.is_zero:
@@ -878,8 +878,12 @@ class Mul(Expr, AssocOp):
                         del other[i]
                         break
                 else:
+                    if a.is_number:
+                        # go ahead and keep separation rather
+                        # than recomputing later
+                        a = r + S.ImaginaryUnit*i
                     if a.is_Add:
-                        addterms *= a
+                        addterms.append(a)
                     else:
                         other.append(a)
             else:
@@ -895,7 +899,7 @@ class Mul(Expr, AssocOp):
             imco = S.Zero
         reco = self.func(*(coeffr + coeffi))
         r, i = (reco*re(m), reco*im(m))
-        if addterms == 1:
+        if not addterms:
             if m == 1:
                 if imco.is_zero:
                     return (reco, S.Zero)
@@ -905,7 +909,8 @@ class Mul(Expr, AssocOp):
                 return (r, i)
             return (-imco*i, imco*r)
         from .function import expand_mul
-        addre, addim = expand_mul(addterms, deep=False).as_real_imag()
+        addre, addim = expand_mul(Mul(*addterms, evaluate=False
+            ), deep=False).as_real_imag()
         if imco is S.Zero:
             return (r*addre - i*addim, i*addre + r*addim)
         else:
