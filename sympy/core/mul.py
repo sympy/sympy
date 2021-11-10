@@ -1438,9 +1438,71 @@ class Mul(Expr, AssocOp):
             all(arg.is_polar or arg.is_positive for arg in self.args)
 
     def _eval_is_extended_real(self):
+        # >>> ns = Tuple(0, 1, I, 1 + I, 1 - I, oo)
+        # >>> m=eye(len(ns))
+        # >>> for i in ns:
+        # ...   for j in ns:
+        # ...     ix = ns.index(i), ns.index(j)
+        # ...     m[ix] = {None:0,True:1,False:-1}[(i/j).is_extended_real]
+        # ...
+        # >>> m           +--------> 1
+        # Matrix([      /   \       -1
+        # [ 0,  1,  1,  1,  1, 1],  -1
+        # [-1,  1, -1, -1, -1, 1],   0
+        # [-1, -1,  1, -1, -1, 1],  -1
+        # [-1, -1, -1,  0, -1, 1],\\
+        # [-1, -1, -1, -1,  0, 1],// -1, -1, -1, 0, 1
+        # [ 1,  1, -1, -1, -1, 0]])
+        n, d = fraction(self, exact=True)
+        if not d.is_Integer:
+            nri = lambda x: x.is_complex and x.is_extended_real is False and x.is_imaginary is False
+            if n.is_zero:
+                if d.is_zero is False and (d.is_complex or d.is_infinite):
+                    return True
+            elif n.is_extended_real:
+                if d.is_zero:
+                    return False
+                if n.is_zero is False:
+                    if d.is_extended_real and d.is_zero is False:
+                        return True
+                    if d.is_infinite:
+                        return True
+                    if d.is_imaginary or nri(d) or d.is_infinite:
+                        return False
+            elif n.is_imaginary:
+                if d.is_infinite:
+                    return True
+                if d.is_finite:
+                    if d.is_imaginary:
+                        return True
+                    if d.is_extended_real or nri(d):
+                        return False
+            elif nri(n):
+                if d.is_infinite:
+                    return True
+                if d.is_imaginary:
+                    return False
+            elif n.is_infinite:
+                if d.is_infinite:
+                    return
+                if n.is_extended_real:
+                    if d.is_zero is False:
+                        if d.is_extended_real:
+                            return True
+                        if d.is_imaginary:
+                            return False
+                        if d.is_extended_real is False and d.is_imaginary is False:
+                            return False
+                # I*oo and zoo have the same assumptions except I*oo is polar and zoo.is_polar is None
+                # oo + I*oo is None for {'transcendental', 'finite', 'complex', 'infinite', 'algebraic'} but otherwise the same as zoo
+                if n == S.ImaginaryUnit*S.Infinity or n == S.ImaginaryUnit*S.NegativeInfinity:
+                    if d.is_zero is False and d.is_extended_real:
+                        return True
+            return
         return self._eval_real_imag(True)
 
     def _eval_real_imag(self, real):
+        # no args in denominator
         zero = False
         t_not_re_im = None
 
