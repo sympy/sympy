@@ -1,14 +1,20 @@
-"""Tests for numberfield isomorphisms. """
+"""Tests for the subfield problem and allied problems. """
 
 from sympy.core.numbers import (AlgebraicNumber, I, Rational)
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.testing.pytest import raises
-from sympy.polys.numberfields.isomorphism import (
+from sympy.polys.numberfields.subfield import (
     is_isomorphism_possible,
     field_isomorphism_pslq,
     field_isomorphism,
+    primitive_element,
+    to_number_field,
 )
+from sympy.polys.polyerrors import IsomorphismFailed
+from sympy.polys.polytools import Poly
+from sympy.testing.pytest import raises
+
+from sympy.abc import x
 
 Q = Rational
 
@@ -231,3 +237,47 @@ def test_field_isomorphism():
 
     assert is_isomorphism_possible(a, b) is False
     assert field_isomorphism(a, b) is None
+
+
+def test_primitive_element():
+    assert primitive_element([sqrt(2)], x) == (x**2 - 2, [1])
+    assert primitive_element(
+        [sqrt(2), sqrt(3)], x) == (x**4 - 10*x**2 + 1, [1, 1])
+
+    assert primitive_element([sqrt(2)], x, polys=True) == (Poly(x**2 - 2, domain='QQ'), [1])
+    assert primitive_element([sqrt(
+        2), sqrt(3)], x, polys=True) == (Poly(x**4 - 10*x**2 + 1, domain='QQ'), [1, 1])
+
+    assert primitive_element(
+        [sqrt(2)], x, ex=True) == (x**2 - 2, [1], [[1, 0]])
+    assert primitive_element([sqrt(2), sqrt(3)], x, ex=True) == \
+        (x**4 - 10*x**2 + 1, [1, 1], [[Q(1, 2), 0, -Q(9, 2), 0], [-
+         Q(1, 2), 0, Q(11, 2), 0]])
+
+    assert primitive_element(
+        [sqrt(2)], x, ex=True, polys=True) == (Poly(x**2 - 2, domain='QQ'), [1], [[1, 0]])
+    assert primitive_element([sqrt(2), sqrt(3)], x, ex=True, polys=True) == \
+        (Poly(x**4 - 10*x**2 + 1, domain='QQ'), [1, 1], [[Q(1, 2), 0, -Q(9, 2),
+         0], [-Q(1, 2), 0, Q(11, 2), 0]])
+
+    assert primitive_element([sqrt(2)], polys=True) == (Poly(x**2 - 2), [1])
+
+    raises(ValueError, lambda: primitive_element([], x, ex=False))
+    raises(ValueError, lambda: primitive_element([], x, ex=True))
+
+    # Issue 14117
+    a, b = I*sqrt(2*sqrt(2) + 3), I*sqrt(-2*sqrt(2) + 3)
+    assert primitive_element([a, b, I], x) == (x**4 + 6*x**2 + 1, [1, 0, 0])
+
+
+def test_to_number_field():
+    assert to_number_field(sqrt(2)) == AlgebraicNumber(sqrt(2))
+    assert to_number_field(
+        [sqrt(2), sqrt(3)]) == AlgebraicNumber(sqrt(2) + sqrt(3))
+
+    a = AlgebraicNumber(sqrt(2) + sqrt(3), [S.Half, S.Zero, Rational(-9, 2), S.Zero])
+
+    assert to_number_field(sqrt(2), sqrt(2) + sqrt(3)) == a
+    assert to_number_field(sqrt(2), AlgebraicNumber(sqrt(2) + sqrt(3))) == a
+
+    raises(IsomorphismFailed, lambda: to_number_field(sqrt(2), sqrt(3)))

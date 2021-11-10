@@ -16,7 +16,6 @@ from sympy.sets.sets import FiniteSet
 from sympy.geometry.point import Point2D
 from sympy.polys.numberfields.minpoly import (
     minimal_polynomial,
-    primitive_element,
     _choose_factor,
     _minpoly_op_algebraic_element,
     _separate_sq,
@@ -329,37 +328,6 @@ def test_choose_factor():
     # Test that this does not enter an infinite loop:
     bad_factors = [Poly(x-2, x), Poly(x+2, x)]
     raises(NotImplementedError, lambda: _choose_factor(bad_factors, x, sqrt(3)))
-
-
-def test_primitive_element():
-    assert primitive_element([sqrt(2)], x) == (x**2 - 2, [1])
-    assert primitive_element(
-        [sqrt(2), sqrt(3)], x) == (x**4 - 10*x**2 + 1, [1, 1])
-
-    assert primitive_element([sqrt(2)], x, polys=True) == (Poly(x**2 - 2, domain='QQ'), [1])
-    assert primitive_element([sqrt(
-        2), sqrt(3)], x, polys=True) == (Poly(x**4 - 10*x**2 + 1, domain='QQ'), [1, 1])
-
-    assert primitive_element(
-        [sqrt(2)], x, ex=True) == (x**2 - 2, [1], [[1, 0]])
-    assert primitive_element([sqrt(2), sqrt(3)], x, ex=True) == \
-        (x**4 - 10*x**2 + 1, [1, 1], [[Q(1, 2), 0, -Q(9, 2), 0], [-
-         Q(1, 2), 0, Q(11, 2), 0]])
-
-    assert primitive_element(
-        [sqrt(2)], x, ex=True, polys=True) == (Poly(x**2 - 2, domain='QQ'), [1], [[1, 0]])
-    assert primitive_element([sqrt(2), sqrt(3)], x, ex=True, polys=True) == \
-        (Poly(x**4 - 10*x**2 + 1, domain='QQ'), [1, 1], [[Q(1, 2), 0, -Q(9, 2),
-         0], [-Q(1, 2), 0, Q(11, 2), 0]])
-
-    assert primitive_element([sqrt(2)], polys=True) == (Poly(x**2 - 2), [1])
-
-    raises(ValueError, lambda: primitive_element([], x, ex=False))
-    raises(ValueError, lambda: primitive_element([], x, ex=True))
-
-    # Issue 14117
-    a, b = I*sqrt(2*sqrt(2) + 3), I*sqrt(-2*sqrt(2) + 3)
-    assert primitive_element([a, b, I], x) == (x**4 + 6*x**2 + 1, [1, 0, 0])
 
 
 def test_minpoly_fraction_field():
