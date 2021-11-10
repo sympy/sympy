@@ -3,6 +3,7 @@
 from sympy.core.function import expand
 from sympy.core import (GoldenRatio, TribonacciConstant)
 from sympy.core.numbers import (AlgebraicNumber, I, Rational, oo, pi)
+from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import (cbrt, sqrt)
@@ -17,6 +18,9 @@ from sympy.polys.numberfields.minpoly import (
     minimal_polynomial,
     primitive_element,
     _choose_factor,
+    _minpoly_op_algebraic_element,
+    _separate_sq,
+    _minpoly_groebner,
 )
 from sympy.polys.partfrac import apart
 from sympy.polys.polyerrors import (
@@ -268,12 +272,16 @@ def test_minpoly_compose():
     assert minimal_polynomial(sin(pi/9), x) == 64*x**6 - 96*x**4 + 36*x**2 - 3
     assert minimal_polynomial(sin(pi/11), x) == 1024*x**10 - 2816*x**8 + \
             2816*x**6 - 1232*x**4 + 220*x**2 - 11
+    assert minimal_polynomial(sin(pi/21), x) == 4096*x**12 - 11264*x**10 + \
+           11264*x**8 - 4992*x**6 + 960*x**4 - 64*x**2 + 1
+    assert minimal_polynomial(cos(pi/9), x) == 8*x**3 - 6*x + 1
 
     ex = 2**Rational(1, 3)*exp(Rational(2, 3)*I*pi)
     assert minimal_polynomial(ex, x) == x**3 - 2
 
     raises(NotAlgebraic, lambda: minimal_polynomial(cos(pi*sqrt(2)), x))
     raises(NotAlgebraic, lambda: minimal_polynomial(sin(pi*sqrt(2)), x))
+    raises(NotAlgebraic, lambda: minimal_polynomial(exp(1.618*I*pi), x))
     raises(NotAlgebraic, lambda: minimal_polynomial(exp(I*pi*sqrt(2)), x))
 
     # issue 5934
@@ -444,3 +452,23 @@ def test_issue_20163():
         (sqrt(3) - I)/(2*x - sqrt(3) + I)/6 - \
         (sqrt(3) + I)/(2*x - sqrt(3) - I)/6 + \
         I/(x + I)/6 - I/(x - I)/6
+
+
+def test_separate_sq_not_impl():
+    raises(NotImplementedError, lambda: _separate_sq(x**(S(1)/3) + x))
+
+
+def test_minpoly_op_algebraic_element_not_impl():
+    raises(NotImplementedError,
+           lambda: _minpoly_op_algebraic_element(Pow, sqrt(2), sqrt(3), x, QQ))
+
+
+def test_minpoly_groebner():
+    assert _minpoly_groebner(S(2)/3, x, Poly) == 3*x - 2
+    assert _minpoly_groebner(
+        (sqrt(2) + 3)*(sqrt(2) + 1), x, Poly) == x**2 - 10*x - 7
+    assert _minpoly_groebner((sqrt(2) + 3)**(S(1)/3)*(sqrt(2) + 1)**(S(1)/3),
+                             x, Poly) == x**6 - 10*x**3 - 7
+    assert _minpoly_groebner((sqrt(2) + 3)**(-S(1)/3)*(sqrt(2) + 1)**(S(1)/3),
+                             x, Poly) == 7*x**6 - 2*x**3 - 1
+    raises(NotAlgebraic, lambda: _minpoly_groebner(pi**2, x, Poly))

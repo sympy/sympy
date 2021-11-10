@@ -132,9 +132,9 @@ def _separate_sq(p):
                 a.append((y, S.One))
             else:
                 raise NotImplementedError
-            continue
-        T, F = sift(y.args, is_sqrt, binary=True)
-        a.append((Mul(*F), Mul(*T)**2))
+        else:
+            T, F = sift(y.args, is_sqrt, binary=True)
+            a.append((Mul(*F), Mul(*T)**2))
     a.sort(key=lambda z: z[1])
     if a[-1][1] is S.One:
         # there are no surds
@@ -486,9 +486,9 @@ def _minpoly_exp(ex, x):
     Returns the minimal polynomial of ``exp(ex)``
     """
     c, a = ex.args[0].as_coeff_Mul()
-    q = sympify(c.q)
     if a == I*pi:
         if c.is_rational:
+            q = sympify(c.q)
             if c.p == 1 or c.p == -1:
                 if q == 3:
                     return x**2 - x + 1
