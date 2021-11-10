@@ -6,7 +6,7 @@ follows:
 
 * **Subfield Problem:**
 
-  Given two number fields $\mathbb{Q}(\alhpa)$, $\mathbb{Q}(\beta)$
+  Given two number fields $\mathbb{Q}(\alpha)$, $\mathbb{Q}(\beta)$
   via the minimal polynomials for their generators $\alpha$ and $\beta$, decide
   whether one field is isomorphic to a subfield of the other.
 
