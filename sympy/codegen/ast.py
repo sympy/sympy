@@ -335,12 +335,11 @@ class Token(CodegenAST):
         else:
             return kwargs
 
-    @property
-    def func(self):
-        if self.is_Atom:
-            return lambda: self
+    def func(self, *args, **kwargs):
+        if self.is_Atom and not kwargs:
+            return self
         else:
-            return super().func
+            return super().func(*args, **kwargs)
 
 class BreakToken(Token):
     """ Represents 'break' in C/Python ('exit' in Fortran).
