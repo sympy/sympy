@@ -1301,6 +1301,7 @@ def test_mul_with_den():
     xr = Symbol('xr', extended_real=True)
     nz = Symbol('nz', extended_real=True, zero=False)
     nr = Symbol('Z', complex=True, extended_real=False)  # finite
+    ni = Symbol('Z', complex=True, imaginary=False)  # finite
     Z = Symbol('Z', complex=True, extended_real=False, imaginary=False)  # finite
 
     assert (O/x).is_zero is None
@@ -1329,6 +1330,7 @@ def test_mul_with_den():
     assert (Z/xr).is_zero is None
     assert (Z/nz).is_zero is False
     assert (nr/nz).is_zero is False
+    assert (ni/nz).is_zero is None
 
     assert (O/x).is_imaginary is None  # nan.is_imaginary is None and 0/0 is nan
     assert (O/i).is_imaginary is False
@@ -1356,6 +1358,7 @@ def test_mul_with_den():
     assert (Z/xr).is_imaginary is False
     assert (Z/nz).is_imaginary is False
     assert (nr/nz).is_imaginary is None
+    assert (ni/nz).is_imaginary is False
 
     assert (O/x).is_extended_real is None  # nan.is_extended_real is None and 0/0 is nan
     assert (O/i).is_extended_real is True
@@ -1383,6 +1386,7 @@ def test_mul_with_den():
     assert (Z/xr).is_extended_real is None
     assert (Z/nz).is_extended_real is False
     assert (nr/nz).is_extended_real is False
+    assert (ni/nz).is_extended_real is None
 
     assert (x/i).is_real is None
     assert (x/xr).is_real is None
@@ -1405,3 +1409,4 @@ def test_mul_with_den():
     assert (Z/xr).is_real is None
     assert (Z/nz).is_real is False
     assert (nr/nz).is_real is False
+    assert (ni/nz).is_real is None

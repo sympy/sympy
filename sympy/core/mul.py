@@ -1598,7 +1598,10 @@ class Mul(Expr, AssocOp):
                     if nri(d):
                         return False
             elif nri(n):
-                if d.is_zero or d.is_extended_real or d.is_imaginary or d.is_infinite:
+                if d.is_extended_real or d.is_imaginary or d.is_infinite:
+                    return False
+            elif n.is_imaginary is False:
+                if d.is_extended_real or d.is_infinite:
                     return False
             elif n.is_infinite:
                 if d.is_infinite:
