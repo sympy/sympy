@@ -859,6 +859,7 @@ class Mul(Expr, AssocOp):
         return S.One, self
 
     def as_real_imag(self, deep=True, **hints):
+        from sympy.core.function import Function
         from sympy.functions.elementary.complexes import Abs, im, re
         other = []
         coeffr = []
@@ -878,9 +879,12 @@ class Mul(Expr, AssocOp):
                         del other[i]
                         break
                 else:
-                    if a.is_number:
+                    if a.is_number and not a.atoms(Function):
                         # go ahead and keep separation rather
-                        # than recomputing later
+                        # than recomputing later; limit to non-Function
+                        # forms else recursion for something like
+                        # >>> sqrt(1 - 4*I).as_real_imag()
+                        # (17**(1/4)*cos(atan(4)/2), -17**(1/4)*sin(atan(4)/2))
                         a = r + S.ImaginaryUnit*i
                     if a.is_Add:
                         addterms.append(a)
@@ -1465,11 +1469,12 @@ class Mul(Expr, AssocOp):
             elif n.is_extended_real:
                 if d.is_zero:
                     return False
-                if n.is_zero is False:
-                    if d.is_extended_real and d.is_zero is False:
+                if d.is_extended_real:
+                    if d.is_zero is False:
                         return True
                     if d.is_infinite:
                         return True
+                if n.is_zero is False:
                     if d.is_imaginary or nri(d) or d.is_infinite:
                         return False
             elif n.is_imaginary:
@@ -1484,6 +1489,13 @@ class Mul(Expr, AssocOp):
                 if d.is_infinite:
                     return True
                 if d.is_imaginary:
+                    return False
+                if d.is_extended_real and d.is_zero is False:
+                    return False
+            elif n.is_extended_real is False:
+                if d.is_infinite:
+                    return True
+                if d.is_extended_real and d.is_zero is False:
                     return False
             elif n.is_infinite:
                 if d.is_infinite:

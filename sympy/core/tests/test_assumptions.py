@@ -1300,6 +1300,7 @@ def test_mul_with_den():
     i = Symbol('i', imaginary=True)  # is finite
     xr = Symbol('xr', extended_real=True)
     nz = Symbol('nz', extended_real=True, zero=False)
+    nr = Symbol('Z', complex=True, extended_real=False)  # finite
     Z = Symbol('Z', complex=True, extended_real=False, imaginary=False)  # finite
 
     assert (O/x).is_zero is None
@@ -1326,7 +1327,8 @@ def test_mul_with_den():
     assert (Z/x).is_zero is None
     assert (Z/i).is_zero is False
     assert (Z/xr).is_zero is None
-    assert (Z/nz).is_zero is None
+    assert (Z/nz).is_zero is False
+    assert (nr/nz).is_zero is False
 
     assert (O/x).is_imaginary is None  # nan.is_imaginary is None and 0/0 is nan
     assert (O/i).is_imaginary is False
@@ -1353,6 +1355,7 @@ def test_mul_with_den():
     assert (Z/i).is_imaginary is False
     assert (Z/xr).is_imaginary is False
     assert (Z/nz).is_imaginary is False
+    assert (nr/nz).is_imaginary is None
 
     assert (O/x).is_extended_real is None  # nan.is_extended_real is None and 0/0 is nan
     assert (O/i).is_extended_real is True
@@ -1369,7 +1372,7 @@ def test_mul_with_den():
     assert (i/Z).is_extended_real is False
     assert (xr/x).is_extended_real is None
     assert (xr/i).is_extended_real is None
-    assert (xr/nz).is_extended_real is None
+    assert (xr/nz).is_extended_real is True
     assert (xr/Z).is_extended_real is None
     assert (nz/x).is_extended_real is None
     assert (nz/i).is_extended_real is False
@@ -1378,7 +1381,8 @@ def test_mul_with_den():
     assert (Z/x).is_extended_real is None
     assert (Z/i).is_extended_real is False
     assert (Z/xr).is_extended_real is None
-    assert (Z/nz).is_extended_real is None
+    assert (Z/nz).is_extended_real is False
+    assert (nr/nz).is_extended_real is False
 
     assert (x/i).is_real is None
     assert (x/xr).is_real is None
@@ -1399,4 +1403,5 @@ def test_mul_with_den():
     assert (Z/x).is_real is None
     assert (Z/i).is_real is False
     assert (Z/xr).is_real is None
-    assert (Z/nz).is_real is None
+    assert (Z/nz).is_real is False
+    assert (nr/nz).is_real is False

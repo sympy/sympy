@@ -556,6 +556,16 @@ def test_issue_10323():
 
 def test_AssocOp_Function():
     # the first arg of Min is not comparable in the imaginary part
+    # unless it is allowed to evaluate/auto-simplify. With evaluation
+    # the first arg is -sqrt(3)*cos(pi/18)/3 + sin(pi/18) + 2 and
+    # the second is -sqrt(3)*cos(pi/18)/3 - sin(pi/18) + 2 so the
+    # min is easily selected. In unevaluated form, they are not
+    # distinguished unless higher evaluation is used: let a and b be
+    # the two args of the Min as they appear below.
+    # a._eval_evalf(i) for i in range(2,10)]
+    #[0.e+0, 0.e+0, 0.e+0, 2.0 - 0.03*I, 2., 2., 2., 1.6]
+    #>>> [b._eval_evalf(i) for i in range(2,10)]
+    #[0.e+0, 0.e+0 + 0.e-1*I, 0.e+0, 1.0 + 0.02*I, 1.0 + 0.008*I, 1., 1.0 - 0.002*I, 1.3]
     raises(ValueError, lambda: S('''
     Min(-sqrt(3)*cos(pi/18)/6 + re(1/((-1/2 - sqrt(3)*I/2)*(1/6 +
     sqrt(3)*I/18)**(1/3)))/3 + sin(pi/18)/2 + 2 + I*(-cos(pi/18)/2 -
@@ -563,7 +573,7 @@ def test_AssocOp_Function():
     sqrt(3)*I/18)**(1/3)))/3), re(1/((-1/2 + sqrt(3)*I/2)*(1/6 +
     sqrt(3)*I/18)**(1/3)))/3 - sqrt(3)*cos(pi/18)/6 - sin(pi/18)/2 + 2 +
     I*(im(1/((-1/2 + sqrt(3)*I/2)*(1/6 + sqrt(3)*I/18)**(1/3)))/3 -
-    sqrt(3)*sin(pi/18)/6 + cos(pi/18)/2))'''))
+    sqrt(3)*sin(pi/18)/6 + cos(pi/18)/2))''', evaluate=False))
     # if that is changed so a non-comparable number remains as
     # an arg, then the Min/Max instantiation needs to be changed
     # to watch out for non-comparable args when making simplifications
