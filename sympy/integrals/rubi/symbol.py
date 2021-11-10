@@ -2,14 +2,8 @@ from sympy.external import import_module
 matchpy = import_module("matchpy")
 from sympy.utilities.decorator import doctest_depends_on
 
-if matchpy:
-    from matchpy import Wildcard
-else:
-    class Wildcard:
-        def __init__(self, min_length, fixed_size, variable_name, optional):
-            pass
-
 from sympy.core.symbol import Symbol
+from sympy.utilities.matchpy_connector import Wildcard
 
 @doctest_depends_on(modules=('matchpy',))
 class matchpyWC(Wildcard, Symbol):
