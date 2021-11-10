@@ -69,3 +69,7 @@ class BaseScalar(AtomicExpr):
 
     def _sympystr(self, printer):
         return self._name
+
+    def func(self, *args):
+        return self.__new__(self.__class__, *args, pretty_str =
+                self._pretty_form[1:], latex_str = self._latex_form[2:])

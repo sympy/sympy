@@ -225,6 +225,13 @@ class BaseDyadic(Dyadic, AtomicExpr):
         return "({}|{})".format(
             printer._print(self.args[0]), printer._print(self.args[1]))
 
+    #this should not be needed, but this class is indicated as an atom
+    #eventhough, it has `Basic` args, this makes the argument invariance
+    #behave as if it is an atom. It might be better to redesign this class
+    #since it uses conflicting designs.
+    @property
+    def func(self):
+        return lambda *args, **kwargs: self
 
 class DyadicMul(BasisDependentMul, Dyadic):
     """ Products of scalars and BaseDyadics """
