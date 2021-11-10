@@ -1302,6 +1302,11 @@ def test_mul_with_den():
     nz = Symbol('nz', extended_real=True, zero=False)
     Z = Symbol('Z', complex=True, extended_real=False, imaginary=False)  # finite
 
+    assert (O/x).is_zero is None
+    assert (O/i).is_zero is True
+    assert (O/xr).is_zero is None
+    assert (O/nz).is_zero is True
+    assert (O/Z).is_zero is True
     assert (x/i).is_zero is None
     assert (x/xr).is_zero is None
     assert (x/nz).is_zero is None
@@ -1323,27 +1328,37 @@ def test_mul_with_den():
     assert (Z/xr).is_zero is None
     assert (Z/nz).is_zero is None
 
-    assert (x/i)._eval_is_imaginary() is None
-    assert (x/xr)._eval_is_imaginary() is None
-    assert (x/nz)._eval_is_imaginary() is None
-    assert (x/Z)._eval_is_imaginary() is None
-    assert (i/x)._eval_is_imaginary() is None
-    assert (i/xr)._eval_is_imaginary() is None
-    assert (i/nz)._eval_is_imaginary() is None
-    assert (i/Z)._eval_is_imaginary() is False
-    assert (xr/x)._eval_is_imaginary() is None
-    assert (xr/i)._eval_is_imaginary() is None
-    assert (xr/nz)._eval_is_imaginary() is False
-    assert (xr/Z)._eval_is_imaginary() is False
-    assert (nz/x)._eval_is_imaginary() is None
-    assert (nz/i)._eval_is_imaginary() is None
-    assert (nz/xr)._eval_is_imaginary() is False
-    assert (nz/Z)._eval_is_imaginary() is False
-    assert (Z/x)._eval_is_imaginary() is None
-    assert (Z/i)._eval_is_imaginary() is False
-    assert (Z/xr)._eval_is_imaginary() is False
-    assert (Z/nz)._eval_is_imaginary() is False
+    assert (O/x).is_imaginary is None  # nan.is_imaginary is None and 0/0 is nan
+    assert (O/i).is_imaginary is False
+    assert (O/xr).is_imaginary is None
+    assert (O/nz).is_imaginary is False
+    assert (O/Z).is_imaginary is False
+    assert (x/i).is_imaginary is None
+    assert (x/xr).is_imaginary is None
+    assert (x/nz).is_imaginary is None
+    assert (x/Z).is_imaginary is None
+    assert (i/x).is_imaginary is None
+    assert (i/xr).is_imaginary is None
+    assert (i/nz).is_imaginary is None
+    assert (i/Z).is_imaginary is False
+    assert (xr/x).is_imaginary is None
+    assert (xr/i).is_imaginary is None
+    assert (xr/nz).is_imaginary is False
+    assert (xr/Z).is_imaginary is False
+    assert (nz/x).is_imaginary is None
+    assert (nz/i).is_imaginary is None
+    assert (nz/xr).is_imaginary is False
+    assert (nz/Z).is_imaginary is False
+    assert (Z/x).is_imaginary is None
+    assert (Z/i).is_imaginary is False
+    assert (Z/xr).is_imaginary is False
+    assert (Z/nz).is_imaginary is False
 
+    assert (O/x).is_extended_real is None  # nan.is_extended_real is None and 0/0 is nan
+    assert (O/i).is_extended_real is True
+    assert (O/xr).is_extended_real is None
+    assert (O/nz).is_extended_real is True
+    assert (O/Z).is_extended_real is True
     assert (x/i).is_extended_real is None
     assert (x/xr).is_extended_real is None
     assert (x/nz).is_extended_real is None

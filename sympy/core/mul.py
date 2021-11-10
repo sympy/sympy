@@ -1330,7 +1330,10 @@ class Mul(Expr, AssocOp):
 
     def _eval_is_zero(self):
         n, d = fraction(self, exact=True)
-        if d != 1:
+        if not d.is_Integer:
+            if n.is_zero:
+                if d.is_zero is False:
+                    return True
             if d.is_finite is None:
                 return
             if n.is_zero is False:
