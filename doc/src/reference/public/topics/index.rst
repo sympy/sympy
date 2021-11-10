@@ -4,10 +4,6 @@
 Topics
 ======
 
-.. topic:: Topics
-
-   Contains method docstrings for several modules. Subcategories include : "Plotting", "Polynomials", "Geometry", "Category Theory", "Cryptography", "Differential", "Holonomic", "Lie Algebra", and "Stats".
-
 **Contents**
 
 .. toctree::

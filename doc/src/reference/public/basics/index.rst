@@ -4,10 +4,6 @@
 Basics
 =======
 
-.. topic:: Basics
-
-   Contains method docstrings for the basic modules. Subcategories include: "absolute basics", "manipulation", "assumptions", "functions", "simplification", "calculus", "solvers", and some other subcategories.
-
 **Contents**
 
 .. toctree::

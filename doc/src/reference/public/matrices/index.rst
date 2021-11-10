@@ -4,10 +4,6 @@
 Matrices
 ========
 
-.. topic:: Matrices
-
-   Contains method docstrings for the matrices, tensor and vector modules.
-
 **Contents**
 
 .. toctree::

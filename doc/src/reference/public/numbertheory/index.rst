@@ -3,10 +3,6 @@
 ===============
 Code Generation
 ===============
-
-.. topic:: Code Generation
-
-   Contains doc strings for the Number theory methods.
    
 **Contents**
 

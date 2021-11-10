@@ -4,10 +4,6 @@
 Logic
 ======
 
-.. topic:: Logic
-
-   Contains method docstrings for the logic and sets modules.
-
 **Contents**
 
 .. toctree::

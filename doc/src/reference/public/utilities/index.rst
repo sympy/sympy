@@ -4,11 +4,6 @@
 Utilities
 ==========
 
-.. topic:: Utilities
-
-   Contains docstrings for methods of several utility modules. Subcategories
-   include: "Interactive", "Parsing", "Printing", "Testing", "Utilities".
-
 **Contents**
 
 .. toctree::
