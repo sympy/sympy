@@ -225,3 +225,9 @@ def test_field_isomorphism():
 
     assert field_isomorphism(sqrt(2), sqrt(3), fast=False) is None
     assert field_isomorphism(sqrt(3), sqrt(2), fast=False) is None
+
+    a = AlgebraicNumber(sqrt(2))
+    b = AlgebraicNumber(2 ** (S(1) / 3))
+
+    assert is_isomorphism_possible(a, b) is False
+    assert field_isomorphism(a, b) is None
