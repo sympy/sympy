@@ -31,3 +31,4 @@ Contents
     literature.rst
     solvers.rst
     domainmatrix.rst
+    numberfields.rst
