@@ -1545,6 +1545,52 @@ class Mul(Expr, AssocOp):
             return real  # doesn't matter what zero is
 
     def _eval_is_imaginary(self):
+        # >>> ns = Tuple(0,1,I,1+I,1-I,oo)
+        # >>> m = zeros(len(ns))
+        # >>> for i in ns:
+        # ...   for j in ns:
+        # ...     ix = ns.index(i), ns.index(j)
+        # ...     m[ix] = {None:0,True:1,False:-1}[(i/j).is_imaginary]
+        # ...
+        # >>> m           +----------+
+        # Matrix([      /   \        |
+        # [ 0, -1, -1, -1, -1, -1],  |
+        # [-1, -1,  1, -1, -1, -1],  |
+        # [-1,  1, -1, -1, -1, -1],  \
+        # [-1, -1, -1,  0, -1, -1],}\_ becomes -1, -1, -1, 0, -1
+        # [-1, -1, -1, -1,  0, -1],}/
+        # [-1, -1, -1, -1, -1,  0]])
+        n, d = fraction(self, exact=True)
+        if not d.is_Integer:
+            nri = lambda x: x.is_complex and x.is_extended_real is False and x.is_imaginary is False
+            if n.is_zero:
+                if d.is_zero is False and (d.is_complex or d.is_infinite):
+                    return False
+            elif n.is_extended_real:
+                if n.is_zero is False and n.is_infinite is False and d.is_imaginary:
+                    return True
+                if d.is_extended_real or nri(d) or d.is_infinite:
+                    return False
+            elif n.is_imaginary:
+                if d.is_zero:
+                    return False
+                elif d.is_zero is False:
+                    if d.is_extended_real:
+                        if d.is_finite:
+                            return True
+                        if d.is_infinite:
+                            return False
+                    if nri(d):
+                        return False
+            elif nri(n):
+                if d.is_zero or d.is_extended_real or d.is_imaginary or d.is_infinite:
+                    return False
+            elif n.is_infinite:
+                if d.is_infinite:
+                    return
+                if d.is_finite:
+                    return False  # no way to make inf into finite for imaginary
+            return
         z = self.is_zero
         if z:
             return False
@@ -1607,7 +1653,7 @@ class Mul(Expr, AssocOp):
                 return
             if a is None:
                 return
-        if all(x.is_real for x in self.args):
+        if all(x.is_real for x in self.args):  # XXX real or extended_real?
             return False
 
     def _eval_is_extended_positive(self):
