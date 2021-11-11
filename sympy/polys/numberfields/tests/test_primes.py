@@ -1,4 +1,4 @@
-from sympy import QQ, ZZ
+from sympy import QQ, ZZ, S
 from sympy.abc import x, theta
 from sympy.core.mul import prod
 from sympy.ntheory import factorint
@@ -12,6 +12,7 @@ from sympy.polys.numberfields.primes import (
     prime_decomp, _two_elt_rep,
     _check_formal_conditions_for_maximal_order,
 )
+from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.testing.pytest import raises
 
 
@@ -247,3 +248,22 @@ def test_pretty_printing():
     assert repr(P[0]) == '[ (2, (3*x + 1)/2) e=1, f=1 ]'
     assert P[0].pretty(field_gen=theta) == '[ (2, (3*theta + 1)/2) e=1, f=1 ]'
     assert P[0].pretty(field_gen=theta, just_gens=True) == '(2, (3*theta + 1)/2)'
+
+
+def test_PrimeIdeal_reduce_poly():
+    T = Poly(cyclotomic_poly(7, x))
+    k = QQ.algebraic_field((T, x))
+    P = k.primes_above(11)
+    frp = P[0]
+    B = [k.to_sympy(a) for a in k.integral_basis()]
+    assert [frp.reduce_poly(b, x) for b in B] == [
+        1, x, x ** 2, -5 * x ** 2 - 4 * x + 1, -x ** 2 - x - 5,
+        4 * x ** 2 - x - 1]
+
+    Q = k.primes_above(19)
+    frq = Q[0]
+    assert frq.alpha.equiv(0)
+    assert frq.reduce_poly(20*x**2 + 10) == x**2 - 9
+
+    raises(GeneratorsNeeded, lambda: frp.reduce_poly(S(1)))
+    raises(NotImplementedError, lambda: frp.reduce_poly(1))

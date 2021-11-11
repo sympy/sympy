@@ -1,12 +1,13 @@
 """Prime ideals in number fields. """
 
 from sympy.core.symbol import symbols
+from sympy.core.expr import Expr
 from sympy.polys.polytools import Poly
 from sympy.polys.domains.finitefield import FF
 from sympy.polys.domains.rationalfield import QQ
 from sympy.polys.domains.integerring import ZZ
 from sympy.polys.matrices.domainmatrix import DomainMatrix
-from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.polyerrors import CoercionFailed, GeneratorsNeeded
 from sympy.polys.polyutils import IntegerPowerable
 from sympy.utilities.decorator import public
 from .basis import round_two, nilradical_mod_p
@@ -255,6 +256,79 @@ class PrimeIdeal(IntegerPowerable):
 
         """
         return prime_valuation(I, self)
+
+    def reduce_poly(self, f, gen=None):
+        r"""
+        Reduce a univariate :py:class:`~.Poly` *f*, or an :py:class:`~.Expr`
+        expressing the same, modulo this :py:class:`~.PrimeIdeal`.
+
+        Explanation
+        ===========
+
+        If our second generator $\alpha$ is zero, then we simply reduce the
+        coefficients of *f* mod the rational prime $p$ lying under this ideal.
+
+        Otherwise we first reduce *f* mod $\alpha$ (as a polynomial in the same
+        variable as *f*), and then mod $p$.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ, cyclotomic_poly, symbols
+        >>> zeta = symbols('zeta')
+        >>> Phi = cyclotomic_poly(7, zeta)
+        >>> k = QQ.algebraic_field((Phi, zeta))
+        >>> P = k.primes_above(11)
+        >>> frp = P[0]
+        >>> B = [k.to_sympy(a) for a in k.integral_basis()]
+        >>> print([frp.reduce_poly(b, zeta) for b in B])
+        [1, zeta, zeta**2, -5*zeta**2 - 4*zeta + 1, -zeta**2 - zeta - 5,
+         4*zeta**2 - zeta - 1]
+
+        Parameters
+        ==========
+
+        f : :py:class:`~.Poly`, :py:class:`~.Expr`
+            The univariate polynomial to be reduced.
+
+        gen : :py:class:`~.Symbol`, None, optional (default=None)
+            Symbol to use as the variable in the polynomials. If *f* is a
+            :py:class:`~.Poly` or a non-constant :py:class:`~.Expr`, this
+            replaces its variable. If *f* is a constant :py:class:`~.Expr`,
+            then *gen* must be supplied.
+
+        Returns
+        =======
+
+        :py:class:`~.Poly`, :py:class:`~.Expr`
+            Type is same as that of given *f*. If returning a
+            :py:class:`~.Poly`, its domain will be the finite field
+            $\mathbb{F}_p$.
+
+        Raises
+        ======
+
+        GeneratorsNeeded
+            If *f* is a constant :py:class:`~.Expr` and *gen* is ``None``.
+        NotImplementedError
+            If *f* is other than :py:class:`~.Poly` or :py:class:`~.Expr`,
+            or is not univariate.
+
+        """
+        if isinstance(f, Expr):
+            try:
+                g = Poly(f)
+            except GeneratorsNeeded as e:
+                if gen is None:
+                    raise e from None
+                g = Poly(f, gen)
+            return self.reduce_poly(g).as_expr()
+        if isinstance(f, Poly) and f.is_univariate:
+            a = self.alpha.poly(f.gen)
+            if a != 0:
+                f = f.rem(a)
+            return f.set_modulus(self.p)
+        raise NotImplementedError
 
 
 def _compute_test_factor(p, gens, ZK):
