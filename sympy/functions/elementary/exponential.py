@@ -1,3 +1,6 @@
+from typing import Tuple as tTuple
+
+from sympy.core.expr import Expr
 from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
@@ -613,6 +616,9 @@ class log(Function):
     exp
 
     """
+
+    args: tTuple[Expr]
+
     _singularities = (S.Zero, S.ComplexInfinity)
 
     def fdiff(self, argindex=1):

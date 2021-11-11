@@ -1,8 +1,11 @@
+from typing import Tuple as tTuple
+
 from sympy.calculus.singularities import is_decreasing
 from sympy.calculus.util import AccumulationBounds
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
 from sympy.concrete.gosper import gosper_sum
+from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, expand
@@ -30,6 +33,7 @@ from sympy.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.utilities.iterables import sift
 import itertools
+
 
 class Sum(AddWithLimits, ExprWithIntLimits):
     r"""
@@ -165,6 +169,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     """
 
     __slots__ = ('is_commutative',)
+
+    limits: tTuple[tTuple[Symbol, Expr, Expr]]
 
     def __new__(cls, function, *symbols, **assumptions):
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
