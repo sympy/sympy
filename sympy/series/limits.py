@@ -197,6 +197,46 @@ class Limit(Expr):
             return S.ComplexInfinity
 
 
+    def return_piecewise(expr, z0, cdir):
+        """Helper function to evaluate limits when the point z0, is passed as a Symbol.
+        Returns the limit in piecewise form over the complete real number line from
+        Negative Infinity to Positive Infinity.
+
+        Note:This method is currently implemented for expressions having finite discontinuities.
+
+        Examples
+        ========
+
+        >>> from sympy import limit, sin, log
+        >>> from sympy.abc import x, z
+        >>> limit(sin(x)/x, x, z)
+        Piecewise((1, Eq(z, 0)), (sin(z)/z, True))
+        >>> limit(log(x + 1)/x, x, z)
+        Piecewise((0, Eq(z, -oo)), (oo, Eq(z, -1)), (1, Eq(z, 0)), (0, Eq(z, oo)), (log(z + 1)/z, True))
+        >>> limit(1/(5 - x)**3, x, z, dir="-")
+        Piecewise((oo, Eq(z, 5)), ((5 - z)**(-3), True))
+
+        """
+        from sympy import singularities, Eq, Piecewise, FiniteSet, oo
+        if isinstance(singularities(expr, z0), FiniteSet):
+            piecewise_list = []
+            if cdir == 1:
+                dir = "+"
+            elif cdir == -1:
+                dir = "-"
+            if limit(expr, z0, -oo) != expr.subs(z0, -oo):
+                piecewise_list += [(limit(expr, z0, -oo),Eq(z0, -oo))]
+            for singularity in singularities(expr, z0):
+                piecewise_list.append((limit(expr, z0, singularity, dir),Eq(z0, singularity)))
+            if limit(expr, z0, oo) != expr.subs(z0, oo):
+                piecewise_list += [(limit(expr, z0, oo),Eq(z0, oo))]
+            piecewise_list += [(expr,True)]
+            expr = Piecewise(*piecewise_list)
+            return expr
+        else:
+            return expr
+
+
     def doit(self, **hints):
         """Evaluates the limit.
 
@@ -283,6 +323,8 @@ class Limit(Expr):
                 if ex > 0:
                     return S.Zero
                 elif ex == 0:
+                    if z0.is_Symbol and not z0 in e.free_symbols:
+                        coeff = Limit.return_piecewise(coeff, z0, cdir)
                     return coeff
                 if str(dir) == "+" or not(int(ex) & 1):
                     return S.Infinity*sign(coeff)
@@ -315,6 +357,8 @@ class Limit(Expr):
                 if ex.is_positive:
                     return S.Zero
                 elif ex == 0:
+                    if z0.is_Symbol and not z0 in e.free_symbols:
+                        coeff = Limit.return_piecewise(coeff, z0, cdir)
                     return coeff
                 elif ex.is_negative:
                     if ex.is_integer:
@@ -360,4 +404,6 @@ class Limit(Expr):
             if r is None:
                 return self
 
+        if z0.is_Symbol and not z0 in e.free_symbols:
+            r = Limit.return_piecewise(r, z0, cdir)
         return r
