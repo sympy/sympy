@@ -10,7 +10,11 @@ References
 .. [1] https://en.wikipedia.org/wiki/Pauli_matrices
 """
 
-from sympy import Symbol, I, Mul, Pow, Add
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.numbers import I
+from sympy.core.power import Pow
+from sympy.core.symbol import Symbol
 from sympy.physics.quantum import TensorProduct
 
 __all__ = ['evaluate_pauli_product']

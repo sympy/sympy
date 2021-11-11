@@ -1,17 +1,20 @@
-from sympy import (
-    symbols, Identity, cos, ZeroMatrix, OneMatrix, sqrt, HadamardProduct)
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import cos
+from sympy.matrices.expressions.hadamard import HadamardProduct
+from sympy.matrices.expressions.special import (Identity, OneMatrix, ZeroMatrix)
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 from sympy.tensor.array.expressions.conv_array_to_matrix import _support_function_tp1_recognize, \
     _array_diag2contr_diagmatrix, convert_array_to_matrix, _remove_trivial_dims, _array2matrix, \
     _combine_removed, identify_removable_identity_matrices, _array_contraction_to_diagonal_multiple_identity
-from sympy import MatrixSymbol
+from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.combinatorics import Permutation
 from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
 from sympy.matrices import Trace, MatMul, Transpose
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, \
     ArrayTensorProduct, ArrayAdd, PermuteDims, ArrayDiagonal, \
-    ArrayContraction, ArrayElement
+    ArrayContraction, ArrayElement, ArraySymbol
 from sympy.testing.pytest import raises
 
 
@@ -389,6 +392,19 @@ def test_arrayexpr_convert_array_to_matrix_remove_trivial_dims():
     ret, removed = _remove_trivial_dims(cg)
     assert ret == PermuteDims(ArrayContraction(ArrayTensorProduct(A, B, C, M), (3, 4)), [0, 2, 3, 4, 5, 1])
     assert removed == []
+
+    # Trivial matrices are sometimes inserted into MatMul expressions:
+
+    cg = ArrayTensorProduct(b*b.T, a.T*a)
+    ret, removed = _remove_trivial_dims(cg)
+    assert ret == b*a.T*a*b.T
+    assert removed == [2, 3]
+
+    Xs = ArraySymbol("X", (3, 2, k))
+    cg = ArrayTensorProduct(M, Xs, b.T*c, a*a.T, b*b.T, c.T*d)
+    ret, removed = _remove_trivial_dims(cg)
+    assert ret == ArrayTensorProduct(M, Xs, a*b.T*c*c.T*d*a.T, b*b.T)
+    assert removed == [5, 6, 11, 12]
 
 
 def test_arrayexpr_convert_array_to_matrix_diag2contraction_diagmatrix():

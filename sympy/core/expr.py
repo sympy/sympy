@@ -8,10 +8,11 @@ from .singleton import S
 from .evalf import EvalfMixin, pure_complex, DEFAULT_MAXPREC
 from .decorators import call_highest_priority, sympify_method_args, sympify_return
 from .cache import cacheit
-from .compatibility import as_int, default_sort_key
+from .sorting import default_sort_key
 from .kind import NumberKind
-from sympy.utilities.misc import func_name
-from sympy.utilities.iterables import has_variety
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.misc import as_int, func_name, filldedent
+from sympy.utilities.iterables import has_variety, sift
 from mpmath.libmp import mpf_log, prec_to_dps
 from mpmath.libmp.libintmath import giant_steps
 
@@ -416,8 +417,7 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import Integral, cos, sin, pi
-        >>> from sympy.core.function import Function
+        >>> from sympy import Function, Integral, cos, sin, pi
         >>> from sympy.abc import x
         >>> f = Function('f')
 
@@ -651,7 +651,7 @@ class Expr(Basic, EvalfMixin):
         if expr.is_zero:
             return True
 
-        # Don't attempt subsitution or differentiation with non-number symbols
+        # Don't attempt substitution or differentiation with non-number symbols
         wrt_number = {sym for sym in wrt if sym.kind is NumberKind}
 
         # try numerical evaluation to see if we get two different values
@@ -700,9 +700,6 @@ class Expr(Basic, EvalfMixin):
                 if not (pure_complex(deriv, or_real=True)):
                     if flags.get('failing_number', False):
                         return failing_number
-                    elif deriv.free_symbols:
-                        # dead line provided _random returns None in such cases
-                        return None
                 return False
         cd = check_denominator_zeros(self)
         if cd is True:
@@ -751,6 +748,12 @@ class Expr(Basic, EvalfMixin):
             # if there is no expanding to be done after simplifying
             # then this can't be a zero
             return False
+
+        factors = diff.as_coeff_mul()[1]
+        if len(factors) > 1:  # avoid infinity recursion
+            fac_zero = [fac.equals(0) for fac in factors]
+            if None not in fac_zero:  # every part can be decided
+                return any(fac_zero)
 
         constant = diff.is_constant(simplify=False, failing_number=True)
 
@@ -1873,7 +1876,6 @@ class Expr(Basic, EvalfMixin):
         from .symbol import Symbol
         from .add import _unevaluated_Add
         from .mul import _unevaluated_Mul
-        from sympy.utilities.iterables import sift
 
         if self.is_zero:
             return S.Zero, S.Zero
@@ -2460,7 +2462,6 @@ class Expr(Basic, EvalfMixin):
         >>> t.free_symbols
         {x, y}
         """
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
         SymPyDeprecationWarning(feature="expr_free_symbols method",
                                 issue=21494,
                                 deprecated_since_version="1.9").warn()
@@ -2488,7 +2489,7 @@ class Expr(Basic, EvalfMixin):
 
         To put something in canonical form wrt to sign, use `signsimp`:
 
-        >>> from sympy.simplify.simplify import signsimp
+        >>> from sympy import signsimp
         >>> signsimp(x*(y - x))
         -x*(x - y)
         >>> _.could_extract_minus_sign()
@@ -3384,7 +3385,6 @@ class Expr(Basic, EvalfMixin):
         never call this method directly (use .nseries() instead), so you do not
         have to write docstrings for _eval_nseries().
         """
-        from sympy.utilities.misc import filldedent
         raise NotImplementedError(filldedent("""
                      The _eval_nseries method should be added to
                      %s to give terms up to O(x**n) at x=0
@@ -3497,7 +3497,6 @@ class Expr(Basic, EvalfMixin):
             l = l.subs(log(x), d)
         c, e = l.as_coeff_exponent(x)
         if x in c.free_symbols:
-            from sympy.utilities.misc import filldedent
             raise ValueError(filldedent("""
                 cannot compute leadterm(%s, %s). The coefficient
                 should have been free of %s but got %s""" % (self, x, x, c)))
@@ -3964,7 +3963,6 @@ class AtomicExpr(Atom, Expr):
 
     @property
     def expr_free_symbols(self):
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
         SymPyDeprecationWarning(feature="expr_free_symbols method",
                                 issue=21494,
                                 deprecated_since_version="1.9").warn()

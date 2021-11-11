@@ -1,3 +1,6 @@
+from typing import Tuple as tTuple
+
+from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
@@ -185,6 +188,8 @@ class Product(ExprWithIntLimits):
     """
 
     __slots__ = ('is_commutative',)
+
+    limits: tTuple[tTuple[Symbol, Expr, Expr]]
 
     def __new__(cls, function, *symbols, **assumptions):
         obj = ExprWithIntLimits.__new__(cls, function, *symbols, **assumptions)

@@ -1,16 +1,45 @@
 # -*- coding: utf-8 -*-
-from sympy import (
-    Add, And, Basic, Derivative, Dict, Eq, Equivalent, FF,
-    FiniteSet, Function, Ge, Gt, I, Implies, Integral, SingularityFunction,
-    Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
-    Pow, Product, QQ, RR, Rational, Ray, rootof, RootSum, S,
-    Segment, Subs, Sum, Symbol, Tuple, Trace, Xor, ZZ, conjugate,
-    groebner, oo, pi, symbols, ilex, grlex, Range, Contains,
-    SeqPer, SeqFormula, SeqAdd, SeqMul, fourier_series, fps, ITE,
-    Complement, Interval, Intersection, Union, EulerGamma, GoldenRatio,
-    LambertW, airyai, airybi, airyaiprime, airybiprime, fresnelc, fresnels,
-    Heaviside, dirichlet_eta, diag, MatrixSlice)
-
+from sympy.concrete.products import Product
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.containers import (Dict, Tuple)
+from sympy.core.function import (Derivative, Function, Lambda, Subs)
+from sympy.core.mul import Mul
+from sympy.core import (EulerGamma, GoldenRatio)
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.power import Pow
+from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import conjugate
+from sympy.functions.elementary.exponential import LambertW
+from sympy.functions.special.bessel import (airyai, airyaiprime, airybi, airybiprime)
+from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.error_functions import (fresnelc, fresnels)
+from sympy.functions.special.singularity_functions import SingularityFunction
+from sympy.functions.special.zeta_functions import dirichlet_eta
+from sympy.geometry.line import (Ray, Segment)
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import (And, Equivalent, ITE, Implies, Nand, Nor, Not, Or, Xor)
+from sympy.matrices.dense import (Matrix, diag)
+from sympy.matrices.expressions.slice import MatrixSlice
+from sympy.matrices.expressions.trace import Trace
+from sympy.polys.domains.finitefield import FF
+from sympy.polys.domains.integerring import ZZ
+from sympy.polys.domains.rationalfield import QQ
+from sympy.polys.domains.realfield import RR
+from sympy.polys.orderings import (grlex, ilex)
+from sympy.polys.polytools import groebner
+from sympy.polys.rootoftools import (RootSum, rootof)
+from sympy.series.formal import fps
+from sympy.series.fourier import fourier_series
+from sympy.series.limits import Limit
+from sympy.series.order import O
+from sympy.series.sequences import (SeqAdd, SeqFormula, SeqMul, SeqPer)
+from sympy.sets.contains import Contains
+from sympy.sets.fancysets import Range
+from sympy.sets.sets import (Complement, FiniteSet, Intersection, Interval, Union)
 from sympy.codegen.ast import (Assignment, AddAugmentedAssignment,
     SubAugmentedAssignment, MulAugmentedAssignment, DivAugmentedAssignment, ModAugmentedAssignment)
 from sympy.core.expr import UnevaluatedExpr
@@ -33,7 +62,7 @@ from sympy.physics.control.lti import (TransferFunction, Feedback, TransferFunct
 from sympy.physics.units import joule, degree
 from sympy.printing.pretty import pprint, pretty as xpretty
 from sympy.printing.pretty.pretty_symbology import center_accent, is_combining
-from sympy import ConditionSet
+from sympy.sets.conditionset import ConditionSet
 
 from sympy.sets import ImageSet, ProductSet
 from sympy.sets.setexpr import SetExpr
@@ -377,6 +406,7 @@ def test_pretty_Permutation():
     assert xpretty(p1, perm_cyclic=False, use_unicode=False) == \
     "/0 1 2 3 4\\\n"\
     "\\0 2 1 4 3/"
+
 
 def test_pretty_basic():
     assert pretty( -Rational(1)/2 ) == '-1/2'
@@ -4403,7 +4433,7 @@ def test_pretty_ConditionSet():
     assert upretty(condset) == ucode_str
 
 def test_pretty_ComplexRegion():
-    from sympy import ComplexRegion
+    from sympy.sets.fancysets import ComplexRegion
     cregion = ComplexRegion(Interval(3, 5)*Interval(4, 6))
     ascii_str = '{x + y*I | x, y in [3, 5] x [4, 6]}'
     ucode_str = '{x + y⋅ⅈ │ x, y ∊ [3, 5] × [4, 6]}'
@@ -6645,7 +6675,7 @@ def test_pretty_Complement():
 
 
 def test_pretty_SymmetricDifference():
-    from sympy import SymmetricDifference
+    from sympy.sets.sets import SymmetricDifference
     assert upretty(SymmetricDifference(Interval(2,3), Interval(3,5), \
            evaluate = False)) == '[2, 3] ∆ [3, 5]'
     with raises(NotImplementedError):
@@ -7354,7 +7384,7 @@ def test_matrixSymbolBold():
     def boldpretty(expr):
         return xpretty(expr, use_unicode=True, wrap_line=False, mat_symbol_style="bold")
 
-    from sympy import trace
+    from sympy.matrices.expressions.trace import trace
     A = MatrixSymbol("A", 2, 2)
     assert boldpretty(trace(A)) == 'tr(𝐀)'
 
@@ -7399,7 +7429,7 @@ def test_center_accent():
 
 
 def test_imaginary_unit():
-    from sympy import pretty # As it is redefined above
+    from sympy.printing.pretty import pretty  # b/c it was redefined above
     assert pretty(1 + I, use_unicode=False) == '1 + I'
     assert pretty(1 + I, use_unicode=True) == '1 + ⅈ'
     assert pretty(1 + I, use_unicode=False, imaginary_unit='j') == '1 + I'

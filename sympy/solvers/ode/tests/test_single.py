@@ -32,9 +32,22 @@ Functions that are for internal use:
    ODEs which raises exception.
 
 """
-from sympy import (acos, acosh, asin, asinh, atan, cos, Derivative, Dummy, diff, cbrt,
-    E, Eq, exp, hyper, I, im, Integral, integrate, LambertW, log, Mul, Ne, pi, Piecewise, Rational,
-    re, rootof, S, sin, sinh, cosh, tan, tanh, sec, sqrt, symbols, Ei, erfi)
+from sympy.core.function import (Derivative, diff)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (E, I, Rational, pi)
+from sympy.core.relational import (Eq, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions.elementary.complexes import (im, re)
+from sympy.functions.elementary.exponential import (LambertW, exp, log)
+from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import (cbrt, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sec, sin, tan)
+from sympy.functions.special.error_functions import (Ei, erfi)
+from sympy.functions.special.hyper import hyper
+from sympy.integrals.integrals import (Integral, integrate)
+from sympy.polys.rootoftools import rootof
 
 from sympy.core import Function, Symbol
 from sympy.functions import airyai, airybi, besselj, bessely, lowergamma
@@ -1046,7 +1059,7 @@ def _get_examples_ode_sol_factorable():
 
 @_add_example_keys
 def _get_examples_ode_sol_almost_linear():
-    from sympy import Ei
+    from sympy.functions.special.error_functions import Ei
     A = Symbol('A', positive=True)
     f = Function('f')
     d = f(x).diff(x)

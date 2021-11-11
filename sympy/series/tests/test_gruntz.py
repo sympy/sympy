@@ -1,5 +1,14 @@
-from sympy import Symbol, exp, log, oo, Rational, I, sin, gamma, loggamma, S, \
-    atan, acot, pi, cancel, E, erf, sqrt, zeta, cos, digamma, Integer, Ei, EulerGamma
+from sympy.core import EulerGamma
+from sympy.core.numbers import (E, I, Integer, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acot, atan, cos, sin)
+from sympy.functions.special.error_functions import (Ei, erf)
+from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma)
+from sympy.functions.special.zeta_functions import zeta
+from sympy.polys.polytools import cancel
 from sympy.functions.elementary.hyperbolic import cosh, coth, sinh, tanh
 from sympy.series.gruntz import compare, mrv, rewrite, mrv_leadterm, gruntz, \
     sign

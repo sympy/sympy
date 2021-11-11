@@ -127,7 +127,7 @@ def check_files(files, file_check, exclusions=set(), pattern=None):
 
 def test_files():
     """
-    This test tests all files in sympy and checks that:
+    This test tests all files in SymPy and checks that:
       o no lines contains a trailing whitespace
       o no lines end with \r\n
       o no line uses tabs instead of spaces
@@ -215,7 +215,7 @@ def test_files():
         "%(sep)squantum%(sep)s__init__.py" % sepd,
         "%(sep)spolys%(sep)s__init__.py" % sepd,
         "%(sep)spolys%(sep)sdomains%(sep)s__init__.py" % sepd,
-        # interactive sympy executes ``from sympy import *``:
+        # interactive SymPy executes ``from sympy import *``:
         "%(sep)sinteractive%(sep)ssession.py" % sepd,
         # isympy.py executes ``from sympy import *``:
         "%(sep)sisympy.py" % sepd,

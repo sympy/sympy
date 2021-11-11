@@ -1,4 +1,7 @@
-from sympy import symbols, S, log, Rational
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import log
 from sympy.external import import_module
 from sympy.physics.quantum.density import Density, entropy, fidelity
 from sympy.physics.quantum.state import Ket, TimeDepKet

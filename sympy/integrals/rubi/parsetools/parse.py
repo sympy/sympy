@@ -30,7 +30,10 @@ References
 import re
 import os
 import inspect
-from sympy import sympify, Function, Set, Symbol
+from sympy.core.function import Function
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.sets.sets import Set
 from sympy.printing import StrPrinter
 from sympy.utilities.misc import debug
 

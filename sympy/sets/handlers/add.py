@@ -1,4 +1,6 @@
-from sympy import symbols, S, oo
+from sympy.core.numbers import oo
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
 
 from sympy.core import Basic, Expr
 from sympy.core.numbers import Infinity, NegativeInfinity

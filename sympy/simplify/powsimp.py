@@ -3,7 +3,7 @@ from functools import reduce
 
 from sympy.core.function import expand_log, count_ops
 from sympy.core import sympify, Basic, Dummy, S, Add, Mul, Pow, expand_mul, factor_terms
-from sympy.core.compatibility import ordered, default_sort_key
+from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.numbers import Integer, Rational
 from sympy.core.mul import prod, _keep_coeff
 from sympy.core.rules import Transform

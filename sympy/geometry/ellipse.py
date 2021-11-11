@@ -6,13 +6,14 @@ Contains
 
 """
 
-from sympy import Expr, Eq
+from sympy.core.expr import Expr
+from sympy.core.relational import Eq
 from sympy.core import S, pi, sympify
-from sympy.core.evalf import prec_to_dps, N
+from sympy.core.evalf import N
 from sympy.core.parameters import global_parameters
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational, oo
-from sympy.core.compatibility import ordered
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, uniquely_named_symbol, _symbol
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max
@@ -28,6 +29,8 @@ from sympy.polys.polyutils import _not_a_coeff, _nsort
 from sympy.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.misc import filldedent, func_name
+
+from mpmath.libmp.libmpf import prec_to_dps
 
 import random
 
@@ -422,7 +425,7 @@ class Ellipse(GeometrySet):
         Returns
         =======
 
-        equation : sympy expression
+        equation : SymPy expression
 
         See Also
         ========
@@ -493,7 +496,7 @@ class Ellipse(GeometrySet):
         Returns
         =======
 
-        equation : sympy expression
+        equation : SymPy expression
 
         Examples
         ========
@@ -1353,7 +1356,7 @@ class Ellipse(GeometrySet):
         Returns
         =======
 
-        I_xx, I_yy, I_xy : number or sympy expression
+        I_xx, I_yy, I_xy : number or SymPy expression
             I_xx, I_yy are second moment of area of an ellise.
             I_xy is product moment of area of an ellipse.
 
@@ -1495,7 +1498,7 @@ class Circle(Ellipse):
     ==========
 
     center : Point
-    radius : number or sympy expression
+    radius : number or SymPy expression
     points : sequence of three Points
     equation : equation of a circle
 
@@ -1698,7 +1701,7 @@ class Circle(Ellipse):
         Returns
         =======
 
-        radius : number or sympy expression
+        radius : number or SymPy expression
 
         See Also
         ========

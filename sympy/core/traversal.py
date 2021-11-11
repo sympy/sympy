@@ -1,6 +1,8 @@
 from .basic import Basic
-from .compatibility import iterable, ordered
+from .sorting import ordered
 from .sympify import sympify
+from sympy.utilities.iterables import iterable
+
 
 
 class preorder_traversal:
@@ -18,7 +20,7 @@ class preorder_traversal:
 
     Parameters
     ==========
-    node : sympy expression
+    node : SymPy expression
         The expression to traverse.
     keys : (default None) sort key(s)
         The key(s) used to sort args of Basic objects. When None, args of Basic
@@ -29,14 +31,13 @@ class preorder_traversal:
 
     Yields
     ======
-    subtree : sympy expression
+    subtree : SymPy expression
         All of the subtrees in the tree.
 
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.core.traversal import preorder_traversal
+    >>> from sympy import preorder_traversal, symbols
     >>> x, y, z = symbols('x y z')
 
     The nodes are returned in the order that they are encountered unless key
@@ -83,8 +84,7 @@ class preorder_traversal:
         Examples
         ========
 
-        >>> from sympy.core import symbols
-        >>> from sympy.core.traversal import preorder_traversal
+        >>> from sympy import preorder_traversal, symbols
         >>> x, y, z = symbols('x y z')
         >>> pt = preorder_traversal((x+y*z)*z)
         >>> for i in pt:
@@ -202,7 +202,7 @@ def postorder_traversal(node, keys=None):
     Parameters
     ==========
 
-    node : sympy expression
+    node : SymPy expression
         The expression to traverse.
     keys : (default None) sort key(s)
         The key(s) used to sort args of Basic objects. When None, args of Basic
@@ -213,13 +213,13 @@ def postorder_traversal(node, keys=None):
 
     Yields
     ======
-    subtree : sympy expression
+    subtree : SymPy expression
         All of the subtrees in the tree.
 
     Examples
     ========
 
-    >>> from sympy.core.traversal import postorder_traversal
+    >>> from sympy import postorder_traversal
     >>> from sympy.abc import w, x, y, z
 
     The nodes are returned in the order that they are encountered unless key

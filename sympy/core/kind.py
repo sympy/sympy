@@ -210,14 +210,13 @@ class KindDispatcher:
 
     Multiplication between numbers return number.
 
-    >>> from sympy import Mul
-    >>> from sympy.core import NumberKind
+    >>> from sympy import NumberKind, Mul
     >>> Mul._kind_dispatcher(NumberKind, NumberKind)
     NumberKind
 
     Multiplication between number and unknown-kind object returns unknown kind.
 
-    >>> from sympy.core import UndefinedKind
+    >>> from sympy import UndefinedKind
     >>> Mul._kind_dispatcher(NumberKind, UndefinedKind)
     UndefinedKind
 

@@ -1,7 +1,30 @@
-from sympy import (Abs, Add, atan, ceiling, cos, E, Eq, exp, factor,
-    factorial, fibonacci, floor, Function, GoldenRatio, I, Integral,
-    integrate, log, Mul, N, oo, pi, Pow, product, Product, tan,
-    Rational, S, Sum, simplify, sin, sqrt, sstr, sympify, Symbol, Max, nfloat, cosh, acosh, acos)
+import math
+
+from sympy.concrete.products import (Product, product)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.evalf import N
+from sympy.core.function import (Function, nfloat)
+from sympy.core.mul import Mul
+from sympy.core import (GoldenRatio)
+from sympy.core.numbers import (E, I, Rational, oo, zoo, nan, pi)
+from sympy.core.power import Pow
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.combinatorial.numbers import fibonacci
+from sympy.functions.elementary.complexes import (Abs, re, im)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (acosh, cosh)
+from sympy.functions.elementary.integers import (ceiling, floor)
+from sympy.functions.elementary.miscellaneous import (Max, sqrt)
+from sympy.functions.elementary.trigonometric import (acos, atan, cos, sin, tan)
+from sympy.integrals.integrals import (Integral, integrate)
+from sympy.polys.polytools import factor
+from sympy.printing.str import sstr
+from sympy.simplify.simplify import simplify
 from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
     scaled_zero, get_integer_part, as_mpmath, evalf)
@@ -17,6 +40,7 @@ def NS(e, n=15, **options):
 
 
 def test_evalf_helpers():
+    from mpmath.libmp import finf
     assert complex_accuracy((from_float(2.0), None, 35, None)) == 35
     assert complex_accuracy((from_float(2.0), from_float(10.0), 35, 100)) == 37
     assert complex_accuracy(
@@ -24,6 +48,9 @@ def test_evalf_helpers():
     assert complex_accuracy((from_float(2.0), from_float(10.0), 100, 35)) == 35
     assert complex_accuracy(
         (from_float(2.0), from_float(1000.0), 100, 35)) == 35
+    assert complex_accuracy(finf) == math.inf
+    assert complex_accuracy(zoo) == math.inf
+    raises(ValueError, lambda: get_integer_part(zoo, 1, {}))
 
 
 def test_evalf_basic():
@@ -71,7 +98,7 @@ def test_evalf_complex_bug():
 def test_evalf_complex_powers():
     assert NS('(E+pi*I)**100000000000000000') == \
         '-3.58896782867793e+61850354284995199 + 4.58581754997159e+61850354284995199*I'
-    # XXX: rewrite if a+a*I simplification introduced in sympy
+    # XXX: rewrite if a+a*I simplification introduced in SymPy
     #assert NS('(pi + pi*I)**2') in ('0.e-15 + 19.7392088021787*I', '0.e-16 + 19.7392088021787*I')
     assert NS('(pi + pi*I)**2', chop=True) == '19.7392088021787*I'
     assert NS(
@@ -376,12 +403,13 @@ def test_issue_5486():
 
 
 def test_issue_5486_bug():
-    from sympy import I, Expr
+    from sympy.core.expr import Expr
+    from sympy.core.numbers import I
     assert abs(Expr._from_mpmath(I._to_mpmath(15), 15) - I) < 1.0e-15
 
 
 def test_bugs():
-    from sympy import polar_lift, re
+    from sympy.functions.elementary.complexes import (polar_lift, re)
 
     assert abs(re((1 + I)**2)) < 1e-15
 
@@ -433,7 +461,7 @@ def test_issue_4806():
 
 
 def test_evalf_mul():
-    # sympy should not try to expand this; it should be handled term-wise
+    # SymPy should not try to expand this; it should be handled term-wise
     # in evalf through mpmath
     assert NS(product(1 + sqrt(n)*I, (n, 1, 500)), 1) == '5.e+567 + 2.e+568*I'
 
@@ -474,8 +502,7 @@ def test_issue_6632_evalf():
 
 def test_issue_4945():
     from sympy.abc import H
-    from sympy import zoo
-    assert (H/0).evalf(subs={H:1}) == zoo*H
+    assert (H/0).evalf(subs={H:1}) == zoo
 
 
 def test_evalf_integral():
@@ -516,7 +543,7 @@ def test_issue_17681():
 
 
 def test_issue_9326():
-    from sympy import Dummy
+    from sympy.core.symbol import Dummy
     d1 = Dummy('d')
     d2 = Dummy('d')
     e = d1 + d2
@@ -595,7 +622,8 @@ def test_issue_17421():
 
 
 def test_issue_20291():
-    from sympy import FiniteSet, Complement, Intersection, Reals, EmptySet
+    from sympy.sets import EmptySet, Reals
+    from sympy.sets.sets import (Complement, FiniteSet, Intersection)
     a = Symbol('a')
     b = Symbol('b')
     A = FiniteSet(a, b)
@@ -605,3 +633,28 @@ def test_issue_20291():
 
     sol = Complement(Intersection(FiniteSet(-b/2 - sqrt(b**2-4*pi)/2), Reals), FiniteSet(0))
     assert sol.evalf(subs={b: 1}) == EmptySet
+
+
+def test_evalf_with_zoo():
+    assert (1/x).evalf(subs={x: 0}) == zoo  # issue 8242
+    assert (-1/x).evalf(subs={x: 0}) == zoo  # PR 16150
+    assert (0 ** x).evalf(subs={x: -1}) == zoo  # PR 16150
+    assert (0 ** x).evalf(subs={x: -1 + I}) == nan
+    assert Mul(2, Pow(0, -1, evaluate=False), evaluate=False).evalf() == zoo  # issue 21147
+    assert Mul(x, 1/x, evaluate=False).evalf(subs={x: 0}) == Mul(x, 1/x, evaluate=False).subs(x, 0) == nan
+    assert Mul(1/x, 1/x, evaluate=False).evalf(subs={x: 0}) == zoo
+    assert Mul(1/x, Abs(1/x), evaluate=False).evalf(subs={x: 0}) == zoo
+    assert Abs(zoo, evaluate=False).evalf() == oo
+    assert re(zoo, evaluate=False).evalf() == nan
+    assert im(zoo, evaluate=False).evalf() == nan
+    assert Add(zoo, zoo, evaluate=False).evalf() == nan
+    assert Add(oo, zoo, evaluate=False).evalf() == nan
+    assert Pow(zoo, -1, evaluate=False).evalf() == 0
+    assert Pow(zoo, Rational(-1, 3), evaluate=False).evalf() == 0
+    assert Pow(zoo, Rational(1, 3), evaluate=False).evalf() == zoo
+    assert Pow(zoo, S.Half, evaluate=False).evalf() == zoo
+    assert Pow(zoo, 2, evaluate=False).evalf() == zoo
+    assert Pow(0, zoo, evaluate=False).evalf() == nan
+    assert log(zoo, evaluate=False).evalf() == zoo
+    assert zoo.evalf(chop=True) == zoo
+    assert x.evalf(subs={x: zoo}) == zoo

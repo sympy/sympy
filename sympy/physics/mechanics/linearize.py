@@ -1,7 +1,7 @@
 __all__ = ['Linearizer']
 
 from sympy.core.backend import Matrix, eye, zeros
-from sympy import Dummy
+from sympy.core.symbol import Dummy
 from sympy.utilities.iterables import flatten
 from sympy.physics.vector import dynamicsymbols
 from sympy.physics.mechanics.functions import msubs

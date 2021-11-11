@@ -6,7 +6,8 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
-from sympy.core.numbers import oo
+from sympy.core.mod import Mod
+from sympy.core.numbers import oo, igcd, Rational
 from sympy.core.relational import Eq, is_eq
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
@@ -45,7 +46,6 @@ class Rationals(Set, metaclass=Singleton):
         return other.is_rational
 
     def __iter__(self):
-        from sympy.core.numbers import igcd, Rational
         yield S.Zero
         yield S.One
         yield S.NegativeOne
@@ -626,7 +626,7 @@ class Range(Set):
             dif = stop - start
             n = dif/step
             if n.is_Rational:
-                from sympy import floor
+                from sympy.functions.elementary.integers import floor
                 if dif == 0:
                     null = True
                 else:  # (x, x + 5, 2) or (x, 3*x, x)
@@ -978,7 +978,6 @@ class Range(Set):
 
     def as_relational(self, x):
         """Rewrite a Range in terms of equalities and logic operators. """
-        from sympy.core.mod import Mod
         if self.start.is_infinite:
             assert not self.stop.is_infinite  # by instantiation
             a = self.reversed.start
@@ -1513,9 +1512,3 @@ class Complexes(CartesianComplexRegion, metaclass=Singleton):
 
     def __new__(cls):
         return Set.__new__(cls)
-
-    def __str__(self):
-        return "S.Complexes"
-
-    def __repr__(self):
-        return "S.Complexes"

@@ -1,8 +1,8 @@
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
-from sympy.core.compatibility import is_sequence
 from sympy.external import import_module
 from sympy.printing.printer import Printer
+from sympy.utilities.iterables import is_sequence
 import sympy
 from functools import partial
 
@@ -305,7 +305,7 @@ class TheanoPrinter(Printer):
         return self._print(expr, dtypes=dtypes, broadcastables=broadcastables)
 
 
-global_cache = {}  # type: Dict[Any, Any]
+global_cache = {}  # type: tDict[Any, Any]
 
 
 def theano_code(expr, cache=None, **kwargs):

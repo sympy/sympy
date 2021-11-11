@@ -1,4 +1,11 @@
-from sympy import (Symbol, exp, log, sqrt, O, oo, sin, cos, PoleError, S)
+from sympy.core.function import PoleError
+from sympy.core.numbers import oo
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.series.order import O
 from sympy.abc import x
 
 from sympy.testing.pytest import raises

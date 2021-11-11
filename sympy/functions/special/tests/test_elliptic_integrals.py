@@ -1,5 +1,13 @@
-from sympy import (S, Symbol, pi, I, oo, zoo, sin, sqrt, tan, gamma,
-    atanh, hyper, meijerg, O, Dummy, Integral, Rational)
+from sympy.core.numbers import (I, Rational, oo, pi, zoo)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.functions.elementary.hyperbolic import atanh
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (sin, tan)
+from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.hyper import (hyper, meijerg)
+from sympy.integrals.integrals import Integral
+from sympy.series.order import O
 from sympy.functions.special.elliptic_integrals import (elliptic_k as K,
     elliptic_f as F, elliptic_e as E, elliptic_pi as P)
 from sympy.testing.randtest import (test_derivative_numerically as td,

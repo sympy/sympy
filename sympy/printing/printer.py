@@ -30,7 +30,7 @@ While looking for the method, it follows these steps:
     its own latex, mathml, str and repr methods, but it turned out that it
     is hard to produce a high quality printer, if all the methods are spread
     out that far. Therefore all printing code was combined into the different
-    printers, which works great for built-in sympy objects, but not that
+    printers, which works great for built-in SymPy objects, but not that
     good for user defined classes where it is inconvenient to patch the
     printers.
 
@@ -81,7 +81,7 @@ in a shorter form.
 
 .. code-block:: python
 
-    from sympy import Symbol
+    from sympy.core.symbol import Symbol
     from sympy.printing.latex import LatexPrinter, print_latex
     from sympy.core.function import UndefinedFunction, Function
 
@@ -210,12 +210,13 @@ an expression when customizing a printer. Mistakes include:
 """
 
 import sys
-from typing import Any, Dict, Type
+from typing import Any, Dict as tDict, Type
 import inspect
 from contextlib import contextmanager
 from functools import cmp_to_key, update_wrapper
 
-from sympy import Basic, Add
+from sympy.core.add import Add
+from sympy.core.basic import Basic
 
 from sympy.core.core import BasicMeta
 from sympy.core.function import AppliedUndef, UndefinedFunction, Function
@@ -241,9 +242,9 @@ class Printer:
     for your custom class then see the example above: printer_example_ .
     """
 
-    _global_settings = {}  # type: Dict[str, Any]
+    _global_settings = {}  # type: tDict[str, Any]
 
-    _default_settings = {}  # type: Dict[str, Any]
+    _default_settings = {}  # type: tDict[str, Any]
 
     printmethod = None  # type: str
 
@@ -387,8 +388,8 @@ def print_function(print_cls):
     """ A decorator to replace kwargs with the printer settings in __signature__ """
     def decorator(f):
         if sys.version_info < (3, 9):
-            # We have to create a subclass so that `help` actually shows the docstring in older python versions.
-            # IPython and Sphinx do not need this, only a raw python console.
+            # We have to create a subclass so that `help` actually shows the docstring in older Python versions.
+            # IPython and Sphinx do not need this, only a raw Python console.
             cls = type(f'{f.__qualname__}_PrintFunction', (_PrintFunction,), dict(__doc__=f.__doc__))
         else:
             cls = _PrintFunction

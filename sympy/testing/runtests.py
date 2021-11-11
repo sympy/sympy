@@ -149,7 +149,7 @@ def convert_to_native_paths(lst):
 
 def get_sympy_dir():
     """
-    Returns the root sympy directory and set the global value
+    Returns the root SymPy directory and set the global value
     indicating whether the system is case sensitive or not.
     """
     this_file = os.path.abspath(__file__)
@@ -159,7 +159,8 @@ def get_sympy_dir():
 
 
 def setup_pprint():
-    from sympy import pprint_use_unicode, init_printing
+    from sympy.interactive.printing import init_printing
+    from sympy.printing.pretty.pretty import pprint_use_unicode
     import sympy.interactive.printing as interactive_printing
 
     # force pprint to be in ascii mode in doctests
@@ -439,7 +440,7 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
     >>> sympy.test(split='1/2')  # doctest: +SKIP
 
     The ``time_balance`` option can be passed in conjunction with ``split``.
-    If ``time_balance=True`` (the default for ``sympy.test``), sympy will attempt
+    If ``time_balance=True`` (the default for ``sympy.test``), SymPy will attempt
     to split the tests such that each split takes equal time.  This heuristic
     for balancing is based on pre-recorded test data.
 
@@ -575,7 +576,7 @@ def _test(*paths,
 
 def doctest(*paths, subprocess=True, rerun=0, **kwargs):
     r"""
-    Runs doctests in all \*.py files in the sympy directory which match
+    Runs doctests in all \*.py files in the SymPy directory which match
     any of the given strings in ``paths`` or all tests if paths=[].
 
     Notes:
@@ -764,7 +765,7 @@ def _doctest(*paths, **kwargs):
     Returns 0 if tests passed and 1 if they failed.  See the docstrings of
     ``doctest()`` and ``test()`` for more information.
     """
-    from sympy import pprint_use_unicode
+    from sympy.printing.pretty.pretty import pprint_use_unicode
 
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
@@ -1338,7 +1339,7 @@ class SymPyTests:
     def get_test_files(self, dir, pat='test_*.py'):
         """
         Returns the list of test_*.py (default) files at or below directory
-        ``dir`` relative to the sympy home directory.
+        ``dir`` relative to the SymPy home directory.
         """
         dir = os.path.join(self._root_dir, convert_to_native_paths([dir])[0])
 
@@ -1379,7 +1380,7 @@ class SymPyDocTests:
 
         from io import StringIO
         import sympy.interactive.printing as interactive_printing
-        from sympy import pprint_use_unicode
+        from sympy.printing.pretty.pretty import pprint_use_unicode
 
         rel_name = filename[len(self._root_dir) + 1:]
         dirname, file = os.path.split(filename)

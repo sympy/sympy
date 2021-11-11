@@ -16,9 +16,14 @@ Medium Term Todo:
 from itertools import chain
 import random
 
-from sympy import Add, I, Integer, Mul, Pow, sqrt, Tuple
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Integer)
+from sympy.core.power import Pow
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.numbers import Number
-from sympy.core.compatibility import is_sequence
+from sympy.core.sorting import default_sort_key
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
@@ -32,7 +37,7 @@ from sympy.physics.quantum.matrixcache import matrix_cache
 
 from sympy.matrices.matrices import MatrixBase
 
-from sympy.utilities import default_sort_key
+from sympy.utilities.iterables import is_sequence
 
 __all__ = [
     'Gate',
@@ -1220,7 +1225,7 @@ def gate_sort(circuit):
                 first_base, first_exp = circ_array[i].as_base_exp()
                 second_base, second_exp = circ_array[i + 1].as_base_exp()
 
-                # Use sympy's hash based sorting. This is not mathematical
+                # Use SymPy's hash based sorting. This is not mathematical
                 # sorting, but is rather based on comparing hashes of objects.
                 # See Basic.compare for details.
                 if first_base.compare(second_base) > 0:

@@ -4,28 +4,32 @@ from collections import defaultdict
 import inspect
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import iterable, ordered
 from sympy.core.containers import Tuple
-from sympy.core.decorators import (deprecated, sympify_method_args,
-    sympify_return)
-from sympy.core.evalf import EvalfMixin, prec_to_dps
-from sympy.core.parameters import global_parameters
+from sympy.core.decorators import sympify_method_args, sympify_return
+from sympy.core.evalf import EvalfMixin
 from sympy.core.expr import Expr
+from sympy.core.function import Lambda
 from sympy.core.logic import (FuzzyBool, fuzzy_bool, fuzzy_or, fuzzy_and,
     fuzzy_not)
-from sympy.core.numbers import Float
+from sympy.core.numbers import Float, Integer
 from sympy.core.operations import LatticeOp
+from sympy.core.parameters import global_parameters
 from sympy.core.relational import Eq, Ne, is_lt
 from sympy.core.singleton import Singleton, S
-from sympy.core.symbol import Symbol, Dummy, uniquely_named_symbol
+from sympy.core.sorting import ordered
+from sympy.core.symbol import symbols, Symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.sets.contains import Contains
-from sympy.utilities import subsets
+from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import iproduct, sift, roundrobin
+from sympy.utilities.iterables import (iproduct, sift, roundrobin, iterable,
+                                       subsets)
 from sympy.utilities.misc import func_name, filldedent
+
 from mpmath import mpi, mpf
+
+from mpmath.libmp.libmpf import prec_to_dps
 
 
 tfn = defaultdict(lambda: None, {
@@ -209,7 +213,7 @@ class Set(Basic, EvalfMixin):
         elif isinstance(other, Complement):
             return Complement(other.args[0], Union(other.args[1], self), evaluate=False)
 
-        elif isinstance(other, EmptySet):
+        elif other is S.EmptySet:
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
@@ -1563,6 +1567,7 @@ class Complement(Set):
     is_Complement = True
 
     def __new__(cls, a, b, evaluate=True):
+        a, b = map(_sympify, (a, b))
         if evaluate:
             return Complement.reduce(a, b)
 
@@ -2106,7 +2111,7 @@ class DisjointUnion(Set):
         where ``set`` is the element in ``sets`` at index = ``i``
         """
 
-        dj_union = EmptySet()
+        dj_union = S.EmptySet
         index = 0
         for set_i in sets:
             if isinstance(set_i, Set):
@@ -2148,7 +2153,6 @@ class DisjointUnion(Set):
 
     def __iter__(self):
         if self.is_iterable:
-            from sympy.core.numbers import Integer
 
             iters = []
             for i, s in enumerate(self.sets):
@@ -2235,7 +2239,6 @@ def imageset(*args):
     sympy.sets.fancysets.ImageSet
 
     """
-    from sympy.core import Lambda
     from sympy.sets.fancysets import ImageSet
     from sympy.sets.setexpr import set_function
 
@@ -2322,7 +2325,7 @@ def is_function_invertible_in_set(func, setv):
     Checks whether function ``func`` is invertible when the domain is
     restricted to set ``setv``.
     """
-    from sympy import exp, log
+    from sympy.functions.elementary.exponential import (exp, log)
     # Functions known to always be invertible:
     if func in (exp, log):
         return True
@@ -2484,7 +2487,6 @@ def _handle_finite_sets(op, x, y, commutative):
 
 def _apply_operation(op, x, y, commutative):
     from sympy.sets import ImageSet
-    from sympy import symbols,Lambda
     d = Dummy('d')
 
     out = _handle_finite_sets(op, x, y, commutative)

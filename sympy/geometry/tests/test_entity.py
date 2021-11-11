@@ -1,4 +1,6 @@
-from sympy import Symbol, Rational, S, pi
+from sympy.core.numbers import (Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.geometry import (Circle, Ellipse, Point, Line, Parabola,
     Polygon, Ray, RegularPolygon, Segment, Triangle, Plane, Curve)
 from sympy.geometry.entity import scale, GeometryEntity

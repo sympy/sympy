@@ -1,6 +1,8 @@
 """Tests for numberfield isomorphisms. """
 
-from sympy import S, Rational, AlgebraicNumber, sqrt, I
+from sympy.core.numbers import (AlgebraicNumber, I, Rational)
+from sympy.core.singleton import S
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.testing.pytest import raises
 from sympy.polys.numberfields.isomorphism import (
     is_isomorphism_possible,

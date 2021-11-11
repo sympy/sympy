@@ -1,5 +1,5 @@
-from sympy.core.decorators import deprecated
 from sympy.core.traversal import use as _use
+from sympy.utilities.decorator import deprecated
 
 use = deprecated(
     useinstead="sympy.core.traversal.use",

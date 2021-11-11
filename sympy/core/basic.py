@@ -5,12 +5,16 @@ from itertools import chain, zip_longest
 from typing import Set, Tuple
 
 from .assumptions import BasicMeta, ManagedProperties
-from .decorators import deprecated
 from .cache import cacheit
 from .sympify import _sympify, sympify, SympifyError
-from .compatibility import iterable, ordered
+from .sorting import ordered
 from .kind import Kind, UndefinedKind
 from ._print_helpers import Printable
+
+from sympy.utilities.decorator import deprecated
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import iterable, numbered_symbols
+from sympy.utilities.misc import filldedent, func_name
 
 from inspect import getmro
 
@@ -19,7 +23,6 @@ def as_Basic(expr):
     """Return expr as a Basic instance using strict sympify
     or raise a TypeError; this is just a wrapper to _sympify,
     raising a TypeError instead of a SympifyError."""
-    from sympy.utilities.misc import func_name
     try:
         return _sympify(expr)
     except SympifyError:
@@ -132,7 +135,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     def __reduce_ex__(self, protocol):
         if protocol < 2:
-            msg = "Only pickle protocol 2 or higher is supported by sympy"
+            msg = "Only pickle protocol 2 or higher is supported by SymPy"
             raise NotImplementedError(msg)
         return super().__reduce_ex__(protocol)
 
@@ -291,7 +294,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         Examples
         ========
 
-        >>> from sympy.core import S, I
+        >>> from sympy import S, I
 
         >>> sorted([S(1)/2, I, -I], key=lambda x: x.sort_key())
         [1/2, -I, I]
@@ -459,7 +462,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         Be careful to check your assumptions when using the implicit option
         since ``S(1).is_Integer = True`` but ``type(S(1))`` is ``One``, a special type
-        of sympy atom, while ``type(S(2))`` is type ``Integer`` and will find all
+        of SymPy atom, while ``type(S(2))`` is type ``Integer`` and will find all
         integers in an expression:
 
         >>> from sympy import S
@@ -470,7 +473,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         {1, 2}
 
         Finally, arguments to atoms() can select more than atomic atoms: any
-        sympy type (loaded in core/__init__.py) can be listed as an argument
+        SymPy type (loaded in core/__init__.py) can be listed as an argument
         and those types of "atoms" as found in scanning the arguments of the
         expression recursively:
 
@@ -514,7 +517,6 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @property
     def expr_free_symbols(self):
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
         SymPyDeprecationWarning(feature="expr_free_symbols method",
                                 issue=21494,
                                 deprecated_since_version="1.9").warn()
@@ -580,7 +582,6 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> Lambda(x, 2*x).canonical_variables
         {x: _0}
         """
-        from sympy.utilities.iterables import numbered_symbols
         if not hasattr(self, 'bound_symbols'):
             return {}
         dums = numbered_symbols('_')
@@ -882,10 +883,11 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         from .containers import Dict
         from .symbol import Dummy, Symbol
-        from sympy.utilities.misc import filldedent
+        from sympy.polys.polyutils import illegal
 
         unordered = False
         if len(args) == 1:
+
             sequence = args[0]
             if isinstance(sequence, set):
                 unordered = True
@@ -917,9 +919,10 @@ class Basic(Printable, metaclass=ManagedProperties):
             # skip if there is no change
             sequence[i] = None if _aresame(*s) else tuple(s)
         sequence = list(filter(None, sequence))
+        simultaneous = kwargs.pop('simultaneous', False)
 
         if unordered:
-            from .compatibility import _nodes, default_sort_key
+            from .sorting import _nodes, default_sort_key
             sequence = dict(sequence)
             # order so more complex items are first and items
             # of identical complexity are ordered so
@@ -932,8 +935,16 @@ class Basic(Printable, metaclass=ManagedProperties):
                 default_sort_key,
                 )))
             sequence = [(k, sequence[k]) for k in k]
+            # do infinities first
+            if not simultaneous:
+                redo = []
+                for i in range(len(sequence)):
+                    if sequence[i][1] in illegal:  # nan, zoo and +/-oo
+                        redo.append(i)
+                for i in reversed(redo):
+                    sequence.insert(0, sequence.pop(i))
 
-        if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
+        if simultaneous:  # XXX should this be the default for dict subs?
             reps = {}
             rv = self
             kwargs['hack2'] = True
@@ -1190,7 +1201,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         Note ``has`` is a structural algorithm with no knowledge of
         mathematics. Consider the following half-open interval:
 
-        >>> from sympy.sets import Interval
+        >>> from sympy import Interval
         >>> i = Interval.Lopen(0, 5); i
         Interval.Lopen(0, 5)
         >>> i.args
@@ -1620,8 +1631,6 @@ class Basic(Printable, metaclass=ManagedProperties):
         {p_: 2/x**2}
 
         """
-        from sympy.utilities.misc import filldedent
-
         pattern = sympify(pattern)
         # match non-bound symbols
         canonical = lambda x: x if x.is_Symbol else x.as_dummy()

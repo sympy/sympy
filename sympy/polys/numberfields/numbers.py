@@ -1,6 +1,7 @@
 """Algebraic numbers -- forms of expression, and isolation."""
 
-from sympy import AlgebraicNumber, sympify
+from sympy.core.numbers import AlgebraicNumber
+from sympy.core.sympify import sympify
 from sympy.polys.numberfields.isomorphism import field_isomorphism
 from sympy.polys.numberfields.minpoly import minpoly, primitive_element
 from sympy.polys.polyerrors import IsomorphismFailed

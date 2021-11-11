@@ -1,6 +1,9 @@
 """Isomorphisms of number fields."""
 
-from sympy import S, AlgebraicNumber, Add, sympify
+from sympy.core.add import Add
+from sympy.core.numbers import AlgebraicNumber
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
 from sympy.ntheory import sieve
 from sympy.polys.polytools import Poly, factor_list
 from sympy.utilities import public

@@ -8,7 +8,7 @@ RUN apt-get update \
 
 RUN conda config --add channels conda-forge
 RUN conda config --set always_yes yes
-RUN conda install python=3.6 rever requests requests-oauthlib \
+RUN conda install python=3.7 rever requests requests-oauthlib \
     && conda clean --all
 RUN conda info
 RUN /opt/conda/bin/pip install xonda

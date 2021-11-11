@@ -1,4 +1,3 @@
-from sympy.core.compatibility import as_int
 from sympy.core.function import Function
 from sympy.core.numbers import igcd, igcdex, mod_inverse
 from sympy.core.power import isqrt
@@ -6,6 +5,7 @@ from sympy.core.singleton import S
 from sympy.polys.domains import ZZ
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient, multiplicity
+from sympy.utilities.misc import as_int
 from random import randint, Random
 
 from itertools import cycle, product

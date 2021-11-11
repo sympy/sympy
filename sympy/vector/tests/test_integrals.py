@@ -1,4 +1,7 @@
-from sympy import sin, cos, pi, S, sqrt
+from sympy.core.numbers import pi
+from sympy.core.singleton import S
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.testing.pytest import raises
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.integrals import ParametricIntegral, vector_integrate

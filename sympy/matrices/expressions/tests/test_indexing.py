@@ -1,9 +1,19 @@
-from sympy import (symbols, MatrixSymbol, MatPow, BlockMatrix, KroneckerDelta,
-                   Identity, ZeroMatrix, ImmutableMatrix, eye, Sum, Dummy, trace,
-                   Symbol, sqrt, Trace, OneMatrix, HadamardPower)
+from sympy.concrete.summations import Sum
+from sympy.core.symbol import symbols, Symbol, Dummy
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.matrices.dense import eye
+from sympy.matrices.expressions.blockmatrix import BlockMatrix
+from sympy.matrices.expressions.hadamard import HadamardPower
+from sympy.matrices.expressions.matexpr import (MatrixSymbol,
+    MatrixExpr, MatrixElement)
+from sympy.matrices.expressions.matpow import MatPow
+from sympy.matrices.expressions.special import (ZeroMatrix, Identity,
+    OneMatrix)
+from sympy.matrices.expressions.trace import Trace, trace
+from sympy.matrices.immutable import ImmutableMatrix
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
-from sympy.testing.pytest import raises, XFAIL
-from sympy.matrices.expressions.matexpr import MatrixElement, MatrixExpr
+from sympy.testing.pytest import XFAIL, raises
 
 k, l, m, n = symbols('k l m n', integer=True)
 i, j = symbols('i j', integer=True)

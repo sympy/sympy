@@ -3,9 +3,9 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
+from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import sympify
 from sympy.matrices import Matrix
-from sympy.utilities import default_sort_key
 
 
 def _is_scalar(e):
@@ -79,7 +79,7 @@ def _rearrange_args(l):
 class Tr(Expr):
     """ Generic Trace operation than can trace over:
 
-    a) sympy matrix
+    a) SymPy matrix
     b) operators
     c) outer products
 
@@ -112,7 +112,7 @@ class Tr(Expr):
 
         Parameters
         ==========
-        args = sympy expression
+        args = SymPy expression
         indices = tuple/list if indices, optional
 
         """

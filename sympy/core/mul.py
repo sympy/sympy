@@ -1,3 +1,4 @@
+from typing import Tuple as tTuple
 from collections import defaultdict
 from functools import cmp_to_key, reduce
 from itertools import product
@@ -14,6 +15,7 @@ from .parameters import global_parameters
 from .kind import KindDispatcher
 from .traversal import bottom_up
 
+from sympy.utilities.iterables import sift
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -153,6 +155,8 @@ class Mul(Expr, AssocOp):
     """
     __slots__ = ()
 
+    args: tTuple[Expr]
+
     is_Mul = True
 
     _args_type = Expr
@@ -191,7 +195,7 @@ class Mul(Expr, AssocOp):
 
         Notes
         =====
-            * In an expression like ``a*b*c``, python process this through sympy
+            * In an expression like ``a*b*c``, Python process this through SymPy
               as ``Mul(Mul(a, b), c)``. This can have undesirable consequences.
 
               -  Sometimes terms are not combined as one would like:
@@ -831,7 +835,6 @@ class Mul(Expr, AssocOp):
     @cacheit
     def as_coeff_mul(self, *deps, rational=True, **kwargs):
         if deps:
-            from sympy.utilities.iterables import sift
             l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
             return self._new_rawargs(*l2), tuple(l1)
         args = self.args

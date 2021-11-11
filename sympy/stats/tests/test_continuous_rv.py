@@ -1,10 +1,29 @@
-from sympy import E as e
-from sympy import (Symbol, Abs, exp, expint, S, pi, simplify, Interval, erf, erfc, Ne,
-                   EulerGamma, Eq, log, lowergamma, uppergamma, symbols, sqrt, And,
-                   gamma, beta, Piecewise, Integral, sin, cos, tan, atan, sinh, cosh,
-                   besseli, floor, expand_func, Rational, I, re, Lambda, asin,
-                   im, lambdify, hyper, diff, Or, Mul, sign, Dummy, Sum,
-                   factorial, binomial, erfi, besselj, besselk)
+from sympy.concrete.summations import Sum
+from sympy.core.function import (Lambda, diff, expand_func)
+from sympy.core.mul import Mul
+from sympy.core import EulerGamma
+from sympy.core.numbers import (E as e, I, Rational, pi)
+from sympy.core.relational import (Eq, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.complexes import (Abs, im, re, sign)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (cosh, sinh)
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (asin, atan, cos, sin, tan)
+from sympy.functions.special.bessel import (besseli, besselj, besselk)
+from sympy.functions.special.beta_functions import beta
+from sympy.functions.special.error_functions import (erf, erfc, erfi, expint)
+from sympy.functions.special.gamma_functions import (gamma, lowergamma, uppergamma)
+from sympy.functions.special.hyper import hyper
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import (And, Or)
+from sympy.sets.sets import Interval
+from sympy.simplify.simplify import simplify
+from sympy.utilities.lambdify import lambdify
 from sympy.functions.special.error_functions import erfinv
 from sympy.functions.special.hyper import meijerg
 from sympy.sets.sets import FiniteSet, Complement, Intersection
@@ -492,7 +511,7 @@ def test_cauchy():
     assert median(X) == FiniteSet(x0)
 
 def test_chi():
-    from sympy import I
+    from sympy.core.numbers import I
     k = Symbol("k", integer=True)
 
     X = Chi('x', k)

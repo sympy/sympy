@@ -30,7 +30,7 @@ There are three types of functions implemented in SymPy:
 
 """
 
-from typing import Any, Dict as tDict, Optional, Set as tSet, Tuple as tTuple, Union
+from typing import Any, Dict as tDict, Optional, Set as tSet, Tuple as tTuple, Union as tUnion
 from collections.abc import Iterable
 
 from .add import Add
@@ -49,13 +49,15 @@ from .rules import Transform
 from .singleton import S
 from .sympify import sympify
 
-from sympy.utilities import default_sort_key
+from .sorting import default_sort_key, ordered
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import has_dups, sift, iterable, is_sequence, as_int, ordered
-from sympy.utilities.misc import filldedent
+from sympy.utilities.iterables import (has_dups, sift, iterable,
+    is_sequence, uniq, topological_sort)
+from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
+from sympy.utilities.misc import as_int, filldedent, func_name
 
 import mpmath
-import mpmath.libmp as mlib
+from mpmath.libmp.libmpf import prec_to_dps
 
 import inspect
 from collections import Counter
@@ -127,8 +129,7 @@ def arity(cls):
     Examples
     ========
 
-    >>> from sympy.core.function import arity
-    >>> from sympy import log
+    >>> from sympy import arity, log
     >>> arity(lambda x: x)
     1
     >>> arity(log)
@@ -219,7 +220,7 @@ class FunctionClass(ManagedProperties):
         Examples
         ========
 
-        >>> from sympy.core.function import Function
+        >>> from sympy import Function
         >>> f = Function('f')
 
         If the function can take any number of arguments, the set of whole
@@ -476,7 +477,7 @@ class Function(Application, Expr):
             pr2 = min(cls._should_evalf(a) for a in result.args)
             if pr2 > 0:
                 pr = max(cls._should_evalf(a) for a in result.args)
-                result = result.evalf(mlib.libmpf.prec_to_dps(pr))
+                result = result.evalf(prec_to_dps(pr))
 
         return result
 
@@ -543,7 +544,6 @@ class Function(Application, Expr):
                 return None
 
             if not hasattr(mpmath, fname):
-                from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
                 fname = MPMATH_TRANSLATIONS.get(fname, None)
                 if fname is None:
                     return None
@@ -632,7 +632,7 @@ class Function(Application, Expr):
 
         return fuzzy_not(type(self).is_singular(arg.subs(x, a)))
 
-    _singularities = None  # type: Union[FuzzyBool, tTuple[Expr, ...]]
+    _singularities = None  # type: tUnion[FuzzyBool, tTuple[Expr, ...]]
 
     @classmethod
     def is_singular(cls, a):
@@ -1541,7 +1541,6 @@ class Derivative(Expr):
         >>> assert vsort0(dfx, y) == [y, dfx]
         >>> assert vsort0(dfx, x) == [dfx, x]
         """
-        from sympy.utilities.iterables import uniq, topological_sort
         if not vc:
             return []
         vc = list(vc)
@@ -1636,7 +1635,7 @@ class Derivative(Expr):
 
         def eval(x):
             f0 = self.expr.subs(z, Expr._from_mpmath(x, prec=mpmath.mp.prec))
-            f0 = f0.evalf(mlib.libmpf.prec_to_dps(mpmath.mp.prec))
+            f0 = f0.evalf(prec_to_dps(mpmath.mp.prec))
             return f0._to_mpmath(mpmath.mp.prec)
         return Expr._from_mpmath(mpmath.diff(eval,
                                              z0._to_mpmath(mpmath.mp.prec)),
@@ -2076,7 +2075,6 @@ class Lambda(Expr):
         return self.signature == self.expr
 
     def _eval_evalf(self, prec):
-        from .evalf import prec_to_dps
         return self.func(self.args[0], self.args[1].evalf(n=prec_to_dps(prec)))
 
 
@@ -3134,7 +3132,6 @@ def count_ops(expr, visual=False):
     from sympy.integrals.integrals import Integral
     from sympy.logic.boolalg import BooleanFunction
     from sympy.simplify.radsimp import fraction
-    from sympy.utilities.misc import func_name
 
     expr = sympify(expr)
     if isinstance(expr, Expr) and not expr.is_Relational:
@@ -3286,9 +3283,8 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     Examples
     ========
 
-    >>> from sympy.core.function import nfloat
+    >>> from sympy import nfloat, cos, pi, sqrt
     >>> from sympy.abc import x, y
-    >>> from sympy import cos, pi, sqrt
     >>> nfloat(x**4 + x/2 + cos(pi/3) + 1 + sqrt(y))
     x**4 + 0.5*x + sqrt(y) + 1.5
     >>> nfloat(x**4 + sqrt(y), exponent=True)

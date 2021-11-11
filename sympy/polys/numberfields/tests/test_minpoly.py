@@ -1,12 +1,18 @@
 """Tests for minimal polynomials. """
 
-from sympy import (S, Rational, AlgebraicNumber, Poly, sqrt, I, oo, expand,
-    pi, cos, sin, tan, exp, GoldenRatio, TribonacciConstant, cbrt)
+from sympy.core.function import expand
+from sympy.core import (GoldenRatio, TribonacciConstant)
+from sympy.core.numbers import (AlgebraicNumber, I, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import (cbrt, sqrt)
+from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.polys.polytools import Poly
 from sympy.solvers.solveset import nonlinsolve
 from sympy.geometry import Circle, intersection
 from sympy.testing.pytest import raises, slow
 from sympy.sets.sets import FiniteSet
-from sympy import Point2D
+from sympy.geometry.point import Point2D
 from sympy.polys.numberfields.minpoly import (
     minimal_polynomial,
     primitive_element,
@@ -190,7 +196,8 @@ def test_minimal_polynomial_hi_prec():
 
 
 def test_minimal_polynomial_sq():
-    from sympy import Add, expand_multinomial
+    from sympy.core.add import Add
+    from sympy.core.function import expand_multinomial
     p = expand_multinomial((1 + 5*sqrt(2) + 2*sqrt(3))**3)
     mp = minimal_polynomial(p**Rational(1, 3), x)
     assert mp == x**4 - 4*x**3 - 118*x**2 + 244*x + 1321

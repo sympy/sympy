@@ -6,9 +6,20 @@ from sympy.sets.sets import (FiniteSet, Interval, Union, imageset,
                              Intersection, ProductSet, Contains)
 from sympy.sets.conditionset import ConditionSet
 from sympy.simplify.simplify import simplify
-from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-                   Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye,
-                   Dummy, floor, And, Eq)
+from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
+from sympy.core.function import Lambda
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.logic.boolalg import And
+from sympy.matrices.dense import eye
 from sympy.testing.pytest import XFAIL, raises
 from sympy.abc import x, y, t, z
 from sympy.core.mod import Mod
@@ -652,8 +663,8 @@ def test_Complex():
     assert S.Complexes.union(S.Reals) == S.Complexes
     assert S.Complexes == ComplexRegion(S.Reals*S.Reals)
     assert (S.Complexes == ComplexRegion(Interval(1, 2)*Interval(3, 4))) == False
-    assert str(S.Complexes) == "S.Complexes"
-    assert repr(S.Complexes) == "S.Complexes"
+    assert str(S.Complexes) == "Complexes"
+    assert repr(S.Complexes) == "Complexes"
 
 
 def take(n, iterable):

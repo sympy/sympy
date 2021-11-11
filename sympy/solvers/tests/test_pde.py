@@ -1,5 +1,8 @@
-from sympy import (Derivative as D, Eq, exp, sin,
-    Function, Symbol, symbols, cos, log)
+from sympy.core.function import (Derivative as D, Function)
+from sympy.core.relational import Eq
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.core import S
 from sympy.solvers.pde import (pde_separate, pde_separate_add, pde_separate_mul,
     pdsolve, classify_pde, checkpdesol)

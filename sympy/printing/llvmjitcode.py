@@ -8,7 +8,8 @@ import ctypes
 
 from sympy.external import import_module
 from sympy.printing.printer import Printer
-from sympy import S, IndexedBase
+from sympy.core.singleton import S
+from sympy.tensor.indexed import IndexedBase
 from sympy.utilities.decorator import doctest_depends_on
 
 llvmlite = import_module('llvmlite')

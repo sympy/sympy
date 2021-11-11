@@ -1,4 +1,5 @@
-from sympy import symbols, S
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
 from sympy.parsing.ast_parser import parse_expr
 from sympy.testing.pytest import raises
 from sympy.core.sympify import SympifyError

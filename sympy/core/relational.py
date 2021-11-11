@@ -1,8 +1,7 @@
-from typing import Dict, Union, Type
+from typing import Dict as tDict, Union as tUnion, Type
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from .basic import Atom, Basic
-from .compatibility import ordered
+from .sorting import ordered
 from .evalf import EvalfMixin
 from .function import AppliedUndef
 from .singleton import S
@@ -10,6 +9,9 @@ from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
 from .logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
 from sympy.logic.boolalg import Boolean, BooleanAtom
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import sift
+from sympy.utilities.misc import filldedent
 
 __all__ = (
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
@@ -41,6 +43,20 @@ def _canonical(cond):
     # the tests so I've removed it...
 
 
+def _canonical_coeff(rel):
+    # return -2*x + 1 < 0 as x > 1/2
+    # XXX make this part of Relational.canonical?
+    rel = rel.canonical
+    if not rel.is_Relational or rel.rhs.is_Boolean:
+        return rel  # Eq(x, True)
+    b, l = rel.lhs.as_coeff_Add(rational=True)
+    m, lhs = l.as_coeff_Mul(rational=True)
+    rhs = (rel.rhs - b)/m
+    if m < 0:
+        return rel.reversed.func(lhs, rhs)
+    return rel.func(lhs, rhs)
+
+
 class Relational(Boolean, EvalfMixin):
     """Base class for all relation types.
 
@@ -69,7 +85,7 @@ class Relational(Boolean, EvalfMixin):
     """
     __slots__ = ()
 
-    ValidRelationOperator = {}  # type: Dict[Union[str, None], Type[Relational]]
+    ValidRelationOperator = {}  # type: tDict[tUnion[str, None], Type[Relational]]
 
     is_Relational = True
 
@@ -96,7 +112,6 @@ class Relational(Boolean, EvalfMixin):
             # Note: Symbol is a subclass of Boolean but is considered
             # acceptable here.
             if any(map(_nontrivBool, (lhs, rhs))):
-                from sympy.utilities.misc import filldedent
                 raise TypeError(filldedent('''
                     A Boolean argument can only be used in
                     Eq and Ne; all other relationals expect
@@ -846,7 +861,7 @@ class GreaterThan(_Greater):
     and will make it similarly more robust to client code changes:
 
     >>> from sympy import GreaterThan, StrictGreaterThan
-    >>> from sympy import LessThan,    StrictLessThan
+    >>> from sympy import LessThan, StrictLessThan
     >>> from sympy import And, Ge, Gt, Le, Lt, Rel, S
     >>> from sympy.abc import x, y, z
     >>> from sympy.core.relational import Relational
@@ -1434,7 +1449,6 @@ def is_eq(lhs, rhs, assumptions=None):
         # Try to split real/imaginary parts and equate them
         I = S.ImaginaryUnit
 
-        from sympy.utilities.iterables import sift
         def split_real_imag(expr):
             real_imag = lambda t: (
                 'real' if is_extended_real(t, assumptions) else

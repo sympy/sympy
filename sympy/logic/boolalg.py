@@ -7,13 +7,13 @@ from itertools import chain, combinations, product
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import ordered
 from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.function import Application, Derivative
 from sympy.core.kind import NumberKind
 from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
+from sympy.core.sorting import ordered
 from sympy.core.sympify import converter, _sympify, sympify
 from sympy.core.kind import BooleanKind
 from sympy.utilities.iterables import sift, ibin
@@ -169,7 +169,12 @@ class Boolean(Basic):
                             as_set is not implemented for relationals
                             with periodic solutions
                             '''))
-                return self.subs(reps)._eval_as_set()
+                new = self.subs(reps)
+                if new.func != self.func:
+                    return new.as_set()  # restart with new obj
+                else:
+                    return new._eval_as_set()
+
             return self._eval_as_set()
         else:
             raise NotImplementedError("Sorry, as_set has not yet been"
@@ -446,7 +451,10 @@ class BooleanFunction(Application, Boolean):
     is_Boolean = True
 
     def _eval_simplify(self, **kwargs):
-        rv = self.func(*[a.simplify(**kwargs) for a in self.args])
+        rv = simplify_univariate(self)
+        if not isinstance(rv, BooleanFunction):
+            return rv.simplify(**kwargs)
+        rv = rv.func(*[a.simplify(**kwargs) for a in rv.args])
         return simplify_logic(rv)
 
     def simplify(self, **kwargs):
@@ -3167,3 +3175,53 @@ def simplify_patterns_xor():
                       And(Lt(a, Max(b, c)), Ge(a, Min(b, c)))),
                      )
     return _matchers_xor
+
+
+def simplify_univariate(expr):
+    """return a simplified version of univariate boolean expression, else ``expr``"""
+    from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.core.relational import Eq, Ne
+    if not isinstance(expr, BooleanFunction):
+        return expr
+    if expr.atoms(Eq, Ne):
+        return expr
+    c = expr
+    free = c.free_symbols
+    if len(free) != 1:
+        return c
+    x = free.pop()
+    ok, i = Piecewise((0, c), evaluate=False
+            )._intervals(x, err_on_Eq=True)
+    if not ok:
+        return c
+    if not i:
+        return S.false
+    args = []
+    for a, b, _, _ in i:
+        if a is S.NegativeInfinity:
+            if b is S.Infinity:
+                c = S.true
+            else:
+                if c.subs(x, b) == True:
+                    c = (x <= b)
+                else:
+                    c = (x < b)
+        else:
+            incl_a = (c.subs(x, a) == True)
+            incl_b = (c.subs(x, b) == True)
+            if incl_a and incl_b:
+                if b.is_infinite:
+                    c = (x >= a)
+                else:
+                    c = And(a <= x, x <= b)
+            elif incl_a:
+                c = And(a <= x, x < b)
+            elif incl_b:
+                if b.is_infinite:
+                    c = (x > a)
+                else:
+                    c = And(a < x, x <= b)
+            else:
+                c = And(a < x, x < b)
+        args.append(c)
+    return Or(*args)

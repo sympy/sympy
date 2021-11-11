@@ -1,8 +1,8 @@
+from typing import Tuple as tTuple
 from collections import defaultdict
 from functools import cmp_to_key, reduce
 from operator import attrgetter
 from .basic import Basic
-from .compatibility import is_sequence
 from .parameters import global_parameters
 from .logic import _fuzzy_group, fuzzy_or, fuzzy_not
 from .singleton import S
@@ -11,6 +11,7 @@ from .cache import cacheit
 from .numbers import ilcm, igcd
 from .expr import Expr
 from .kind import UndefinedKind
+from sympy.utilities.iterables import is_sequence, sift
 
 # Key for sorting commutative args in canonical order
 _args_sortkey = cmp_to_key(Basic.compare)
@@ -167,6 +168,8 @@ class Add(Expr, AssocOp):
     """
 
     __slots__ = ()
+
+    args: tTuple[Expr, ...]
 
     is_Add = True
 
@@ -453,7 +456,6 @@ class Add(Expr, AssocOp):
         (0, (7*x,))
         """
         if deps:
-            from sympy.utilities.iterables import sift
             l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
             return self._new_rawargs(*l2), tuple(l1)
         coeff, notrat = self.args[0].as_coeff_add()
@@ -1223,7 +1225,7 @@ class Add(Expr, AssocOp):
 
     @property
     def _sorted_args(self):
-        from .compatibility import default_sort_key
+        from .sorting import default_sort_key
         return tuple(sorted(self.args, key=default_sort_key))
 
     def _eval_difference_delta(self, n, step):

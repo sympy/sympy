@@ -1,8 +1,16 @@
 """Tests for algorithms for computing symbolic roots of polynomials. """
 
-from sympy import (S, symbols, Symbol, Wild, Rational, sqrt,
-    powsimp, sin, cos, pi, I, Interval, re, im, exp, ZZ, Piecewise,
-    acos, root, conjugate)
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, Wild, symbols)
+from sympy.functions.elementary.complexes import (conjugate, im, re)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import (root, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, cos, sin)
+from sympy.polys.domains.integerring import ZZ
+from sympy.sets.sets import Interval
+from sympy.simplify.powsimp import powsimp
 
 from sympy.polys import Poly, cyclotomic_poly, intervals, nroots, rootof
 

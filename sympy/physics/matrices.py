@@ -1,7 +1,8 @@
 """Known matrices related to physics"""
 
-from sympy import Matrix, I
-from sympy.core.decorators import deprecated
+from sympy.core.numbers import I
+from sympy.matrices.dense import MutableDenseMatrix as Matrix
+from sympy.utilities.decorator import deprecated
 
 
 def msigma(i):

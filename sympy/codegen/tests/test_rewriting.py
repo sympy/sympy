@@ -1,5 +1,12 @@
 import tempfile
-from sympy import Abs, log, exp, cos, S, Symbol, Pow, sin, MatrixSymbol, sinc, pi
+from sympy.core.numbers import pi
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.trigonometric import (cos, sin, sinc)
+from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.assumptions import assuming, Q
 from sympy.external import import_module
 from sympy.printing.codeprinter import ccode

@@ -3,8 +3,8 @@ opportunities.
 """
 from sympy.core import Add, Basic, Mul
 from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
 from sympy.core.traversal import preorder_traversal
-from sympy.utilities.iterables import default_sort_key
 
 
 def sub_pre(e):

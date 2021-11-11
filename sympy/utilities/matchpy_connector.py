@@ -11,7 +11,16 @@ from sympy.functions import (log, sin, cos, tan, cot, csc, sec, erf, gamma, uppe
 from sympy.functions.elementary.hyperbolic import acosh, asinh, atanh, acoth, acsch, asech, cosh, sinh, tanh, coth, sech, csch
 from sympy.functions.elementary.trigonometric import atan, acsc, asin, acot, acos, asec
 from sympy.functions.special.error_functions import fresnelc, fresnels, erfc, erfi, Ei
-from sympy import (Basic, Mul, Add, Pow, Integral, exp, Symbol, Expr, srepr, Equality, Unequality)
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.relational import (Equality, Unequality)
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import exp
+from sympy.integrals.integrals import Integral
+from sympy.printing.repr import srepr
 from sympy.utilities.decorator import doctest_depends_on
 
 matchpy = import_module("matchpy")

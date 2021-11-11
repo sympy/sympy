@@ -1,5 +1,7 @@
 from itertools import product
-from sympy import symbols, exp, log, S
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import (exp, log)
 from sympy.printing.repr import srepr
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 

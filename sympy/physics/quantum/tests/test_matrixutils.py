@@ -1,6 +1,7 @@
 from random import randint
 
-from sympy import Matrix, zeros, ones, Integer
+from sympy.core.numbers import Integer
+from sympy.matrices.dense import (Matrix, ones, zeros)
 
 from sympy.physics.quantum.matrixutils import (
     to_sympy, to_numpy, to_scipy_sparse, matrix_tensor_product,

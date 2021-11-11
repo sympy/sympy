@@ -1,9 +1,14 @@
-from sympy import I, sqrt, log, exp, sin, asin, factorial, Mod, pi, oo
+from sympy.core.mod import Mod
+from sympy.core.numbers import (I, oo, pi)
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (asin, sin)
+from sympy.simplify.simplify import simplify
 from sympy.core import Symbol, S, Rational, Integer, Dummy, Wild, Pow
 from sympy.core.assumptions import (assumptions, check_assumptions,
     failing_assumptions, common_assumptions)
 from sympy.core.facts import InconsistentAssumptions
-from sympy import simplify
 
 from sympy.testing.pytest import raises, XFAIL
 
@@ -909,7 +914,7 @@ def test_Mul_is_infinite():
     i = Symbol('i', infinite=True)
     z = Dummy(zero=True)
     nzf = Dummy(finite=True, zero=False)
-    from sympy import Mul
+    from sympy.core.mul import Mul
     assert (x*f).is_finite is None
     assert (x*i).is_finite is None
     assert (f*i).is_finite is None
@@ -938,7 +943,7 @@ def test_Add_is_infinite():
     i2 = Symbol('i2', infinite=True)
     z = Dummy(zero=True)
     nzf = Dummy(finite=True, zero=False)
-    from sympy import Add
+    from sympy.core.add import Add
     assert (x+f).is_finite is None
     assert (x+i).is_finite is None
     assert (f+i).is_finite is False

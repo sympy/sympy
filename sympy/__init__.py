@@ -13,8 +13,8 @@ See the webpage for more information and documentation:
 
 
 import sys
-if sys.version_info < (3, 6):
-    raise ImportError("Python version 3.6 or above is required for SymPy.")
+if sys.version_info < (3, 7):
+    raise ImportError("Python version 3.7 or above is required for SymPy.")
 del sys
 
 
@@ -61,7 +61,7 @@ from .core import (sympify, SympifyError, cacheit, Basic, Atom,
         expand_power_base, expand_power_exp, arity, PrecisionExhausted, N,
         evalf, Tuple, Dict, gcd_terms, factor_terms, factor_nc, evaluate,
         Catalan, EulerGamma, GoldenRatio, TribonacciConstant, bottom_up, use,
-        postorder_traversal)
+        postorder_traversal, default_sort_key, ordered)
 
 from .logic import (to_cnf, to_dnf, to_nnf, And, Or, Not, Xor, Nand, Nor,
         Implies, Equivalent, ITE, POSform, SOPform, simplify_logic, bool_map,
@@ -110,7 +110,7 @@ from .series import (Order, O, limit, Limit, gruntz, series, approximants,
 from .functions import (factorial, factorial2, rf, ff, binomial,
         RisingFactorial, FallingFactorial, subfactorial, carmichael,
         fibonacci, lucas, motzkin, tribonacci, harmonic, bernoulli, bell, euler,
-        catalan, genocchi, partition, sqrt, root, Min, Max, Id, real_root,
+        catalan, genocchi, partition, sqrt, root, Min, Max, Id, real_root, Rem,
         cbrt, re, im, sign, Abs, conjugate, arg, polar_lift,
         periodic_argument, unbranched_argument, principal_branch, transpose,
         adjoint, polarify, unpolarify, sin, cos, tan, sec, csc, cot, sinc,
@@ -162,7 +162,7 @@ from .simplify import (simplify, hypersimp, hypersimilar, logcombine,
 
 from .sets import (Set, Interval, Union, EmptySet, FiniteSet, ProductSet,
         Intersection, DisjointUnion, imageset, Complement, SymmetricDifference, ImageSet,
-        Range, ComplexRegion, Reals, Contains, ConditionSet, Ordinal,
+        Range, ComplexRegion, Complexes, Reals, Contains, ConditionSet, Ordinal,
         OmegaPower, ord0, PowerSet, Naturals, Naturals0, UniversalSet,
         Integers, Rationals)
 
@@ -175,8 +175,7 @@ from .solvers import (solve, solve_linear_system, solve_linear_system_LU,
         pdsolve, classify_pde, checkpdesol, ode_order, reduce_inequalities,
         reduce_abs_inequality, reduce_abs_inequalities, solve_poly_inequality,
         solve_rational_inequalities, solve_univariate_inequality, decompogen,
-        solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution,
-        Complexes)
+        solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution)
 
 from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
         casoratian, diag, eye, hessian, jordan_cell, list2numpy, matrix2numpy,
@@ -202,7 +201,7 @@ from .geometry import (Point, Point2D, Point3D, Line, Ray, Segment, Line2D,
 from .utilities import (flatten, group, take, subsets, variations,
         numbered_symbols, cartes, capture, dict_merge, prefixes, postfixes,
         sift, topological_sort, unflatten, has_dups, has_variety, reshape,
-        default_sort_key, ordered, rotations, filldedent, lambdify, source,
+        rotations, filldedent, lambdify, source,
         threaded, xthreaded, public, memoize_property, timed)
 
 from .integrals import (integrate, Integral, line_integrate, mellin_transform,
@@ -270,7 +269,7 @@ __all__ = [
     'expand_power_exp', 'arity', 'PrecisionExhausted', 'N', 'evalf', 'Tuple',
     'Dict', 'gcd_terms', 'factor_terms', 'factor_nc', 'evaluate', 'Catalan',
     'EulerGamma', 'GoldenRatio', 'TribonacciConstant', 'bottom_up', 'use',
-    'postorder_traversal',
+    'postorder_traversal', 'default_sort_key', 'ordered',
 
     # sympy.logic
     'to_cnf', 'to_dnf', 'to_nnf', 'And', 'Or', 'Not', 'Xor', 'Nand', 'Nor',
@@ -327,7 +326,7 @@ __all__ = [
     'factorial', 'factorial2', 'rf', 'ff', 'binomial', 'RisingFactorial',
     'FallingFactorial', 'subfactorial', 'carmichael', 'fibonacci', 'lucas',
     'motzkin', 'tribonacci', 'harmonic', 'bernoulli', 'bell', 'euler', 'catalan',
-    'genocchi', 'partition', 'sqrt', 'root', 'Min', 'Max', 'Id', 'real_root',
+    'genocchi', 'partition', 'sqrt', 'root', 'Min', 'Max', 'Id', 'real_root', 'Rem',
     'cbrt', 're', 'im', 'sign', 'Abs', 'conjugate', 'arg', 'polar_lift',
     'periodic_argument', 'unbranched_argument', 'principal_branch',
     'transpose', 'adjoint', 'polarify', 'unpolarify', 'sin', 'cos', 'tan',
@@ -390,8 +389,8 @@ __all__ = [
     'Set', 'Interval', 'Union', 'EmptySet', 'FiniteSet', 'ProductSet',
     'Intersection', 'imageset', 'DisjointUnion', 'Complement', 'SymmetricDifference',
     'ImageSet', 'Range', 'ComplexRegion', 'Reals', 'Contains', 'ConditionSet',
-    'Ordinal', 'OmegaPower', 'ord0', 'PowerSet', 'Reals', 'Naturals',
-    'Naturals0', 'UniversalSet', 'Integers', 'Rationals',
+    'Ordinal', 'OmegaPower', 'ord0', 'PowerSet', 'Naturals',
+    'Naturals0', 'UniversalSet', 'Integers', 'Rationals', 'Complexes',
 
     # sympy.solvers
     'solve', 'solve_linear_system', 'solve_linear_system_LU',
@@ -405,7 +404,7 @@ __all__ = [
     'reduce_abs_inequality', 'reduce_abs_inequalities',
     'solve_poly_inequality', 'solve_rational_inequalities',
     'solve_univariate_inequality', 'decompogen', 'solveset', 'linsolve',
-    'linear_eq_to_matrix', 'nonlinsolve', 'substitution', 'Complexes',
+    'linear_eq_to_matrix', 'nonlinsolve', 'substitution',
 
     # sympy.matrices
     'ShapeError', 'NonSquareMatrixError', 'GramSchmidt', 'casoratian', 'diag',
@@ -435,9 +434,8 @@ __all__ = [
     'flatten', 'group', 'take', 'subsets', 'variations', 'numbered_symbols',
     'cartes', 'capture', 'dict_merge', 'prefixes', 'postfixes', 'sift',
     'topological_sort', 'unflatten', 'has_dups', 'has_variety', 'reshape',
-    'default_sort_key', 'ordered', 'rotations', 'filldedent', 'lambdify',
-    'source', 'threaded', 'xthreaded', 'public', 'memoize_property', 'test',
-    'doctest', 'timed',
+    'rotations', 'filldedent', 'lambdify', 'source', 'threaded', 'xthreaded',
+    'public', 'memoize_property', 'timed',
 
     # sympy.integrals
     'integrate', 'Integral', 'line_integrate', 'mellin_transform',
@@ -494,7 +492,7 @@ __all__ = [
 
 #===========================================================================#
 #                                                                           #
-# XXX: The names below were importable before sympy 1.6 using               #
+# XXX: The names below were importable before SymPy 1.6 using               #
 #                                                                           #
 #          from sympy import *                                              #
 #                                                                           #

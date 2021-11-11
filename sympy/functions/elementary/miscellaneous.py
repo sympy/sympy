@@ -1,22 +1,24 @@
-from sympy.core import Function, S, sympify
+from sympy.core import Function, S, sympify, NumberKind
 from sympy.utilities.iterables import sift
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import ordered
 from sympy.core.operations import LatticeOp, ShortCircuit
 from sympy.core.function import (Application, Lambda,
     ArgumentIndexError)
 from sympy.core.expr import Expr
+from sympy.core.exprtools import factor_terms
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
 from sympy.core.relational import Eq, Relational
 from sympy.core.singleton import Singleton
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy
 from sympy.core.rules import Transform
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.core.traversal import walk
+from sympy.core.numbers import Integer
 from sympy.logic.boolalg import And, Or
 
 
@@ -557,7 +559,6 @@ class MinMaxBase(Expr, LatticeOp):
         and check arguments for comparability
         """
         for arg in arg_sequence:
-
             # pre-filter, checking comparability of arguments
             if not isinstance(arg, Expr) or arg.is_extended_real is False or (
                     arg.is_number and
@@ -605,25 +606,24 @@ class MinMaxBase(Expr, LatticeOp):
         """
         Check if x and y are connected somehow.
         """
-        from sympy.core.exprtools import factor_terms
-        def hit(v, t, f):
-            if not v.is_Relational:
-                return t if v else f
         for i in range(2):
             if x == y:
                 return True
-            r = hit(x >= y, Max, Min)
-            if r is not None:
-                return r
-            r = hit(y <= x, Max, Min)
-            if r is not None:
-                return r
-            r = hit(x <= y, Min, Max)
-            if r is not None:
-                return r
-            r = hit(y >= x, Min, Max)
-            if r is not None:
-                return r
+            t, f = Max, Min
+            for op in "><":
+                for j in range(2):
+                    try:
+                        if op == ">":
+                            v = x >= y
+                        else:
+                            v = x <= y
+                    except TypeError:
+                        return False  # non-real arg
+                    if not v.is_Relational:
+                        return t if v else f
+                    t, f = f, t
+                    x, y = y, x
+                x, y = y, x  # run next pass with reversed order relative to start
             # simplification can be expensive, so be conservative
             # in what is attempted
             x = factor_terms(x - y)
@@ -775,7 +775,7 @@ class Max(MinMaxBase, Application):
     identity = S.NegativeInfinity
 
     def fdiff( self, argindex ):
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
@@ -787,7 +787,7 @@ class Max(MinMaxBase, Application):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         return Add(*[j*Mul(*[Heaviside(j - i) for i in args if i!=j]) \
                 for j in args])
 
@@ -838,7 +838,7 @@ class Min(MinMaxBase, Application):
     identity = S.Infinity
 
     def fdiff( self, argindex ):
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         n = len(self.args)
         if 0 < argindex and argindex <= n:
             argindex -= 1
@@ -850,7 +850,7 @@ class Min(MinMaxBase, Application):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Heaviside(self, *args, **kwargs):
-        from sympy import Heaviside
+        from sympy.functions.special.delta_functions import Heaviside
         return Add(*[j*Mul(*[Heaviside(i-j) for i in args if i!=j]) \
                 for j in args])
 
@@ -865,3 +865,61 @@ class Min(MinMaxBase, Application):
 
     def _eval_is_negative(self):
         return fuzzy_or(a.is_negative for a in self.args)
+
+
+class Rem(Function):
+    """Returns the remainder when ``p`` is divided by ``q`` where ``p`` is finite
+    and ``q`` is not equal to zero. The result, ``p - int(p/q)*q``, has the same sign
+    as the divisor.
+
+    Parameters
+    ==========
+
+    p : Expr
+        Dividend.
+
+    q : Expr
+        Divisor.
+
+    Notes
+    =====
+
+    ``Rem`` corresponds to the ``%`` operator in C.
+
+    Examples
+    ========
+
+    >>> from sympy.abc import x, y
+    >>> from sympy import Rem
+    >>> Rem(x**3, y)
+    Rem(x**3, y)
+    >>> Rem(x**3, y).subs({x: -5, y: 3})
+    -2
+
+    See Also
+    ========
+
+    Mod
+    """
+    kind = NumberKind
+
+    @classmethod
+    def eval(cls, p, q):
+        def doit(p, q):
+            """ the function remainder if both p,q are numbers
+                and q is not zero
+            """
+
+            if q.is_zero:
+                raise ZeroDivisionError("Division by zero")
+            if p is S.NaN or q is S.NaN or p.is_finite is False or q.is_finite is False:
+                return S.NaN
+            if p is S.Zero or p in (q, -q) or (p.is_integer and q == 1):
+                return S.Zero
+
+            if q.is_Number:
+                if p.is_Number:
+                    return p - Integer(p/q)*q
+        rv = doit(p, q)
+        if rv is not None:
+            return rv

@@ -1,9 +1,13 @@
 from textwrap import dedent
 from itertools import islice, product
 
-from sympy import symbols, Integer, Dummy, Basic, Matrix, factorial
+from sympy.core.basic import Basic
+from sympy.core.numbers import Integer
+from sympy.core.sorting import ordered
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.matrices.dense import Matrix
 from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
-from sympy.core.compatibility import iterable
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
     cartes, common_prefix, common_suffix, connected_components, dict_merge,
@@ -11,10 +15,11 @@ from sympy.utilities.iterables import (
     generate_involutions, generate_oriented_forest, group, has_dups, ibin,
     iproduct, kbins, minlex, multiset, multiset_combinations,
     multiset_partitions, multiset_permutations, necklaces, numbered_symbols,
-    ordered, partitions, permutations, postfixes,
+    partitions, permutations, postfixes,
     prefixes, reshape, rotate_left, rotate_right, runs, sift,
     strongly_connected_components, subsets, take, topological_sort, unflatten,
-    uniq, variations, ordered_partitions, rotations, is_palindromic)
+    uniq, variations, ordered_partitions, rotations, is_palindromic, iterable,
+    NotIterable, multiset_derangements)
 from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
@@ -542,6 +547,19 @@ def test_derangements():
     assert list(generate_derangements([0, 1, 2, 2])) == [
         [2, 2, 0, 1], [2, 2, 1, 0]]
     assert list(generate_derangements('ba')) == [list('ab')]
+    # multiset_derangements
+    D = multiset_derangements
+    assert list(D('abb')) == []
+    assert [''.join(i) for i in D('ab')] == ['ba']
+    assert [''.join(i) for i in D('abc')] == ['bca', 'cab']
+    assert [''.join(i) for i in D('aabb')] == ['bbaa']
+    assert [''.join(i) for i in D('aabbcccc')] == [
+        'ccccaabb', 'ccccabab', 'ccccabba', 'ccccbaab', 'ccccbaba',
+        'ccccbbaa']
+    assert [''.join(i) for i in D('aabbccc')] == [
+        'cccabba', 'cccabab', 'cccaabb', 'ccacbba', 'ccacbab',
+        'ccacabb', 'cbccbaa', 'cbccaba', 'cbccaab', 'bcccbaa',
+        'bcccaba', 'bcccaab']
 
 
 def test_necklaces():
@@ -815,3 +833,40 @@ def test_ibin():
     assert list(ibin(2, '', str=True)) == ['00', '01', '10', '11']
     raises(ValueError, lambda: ibin(-.5))
     raises(ValueError, lambda: ibin(2, 1))
+
+
+def test_iterable():
+    assert iterable(0) is False
+    assert iterable(1) is False
+    assert iterable(None) is False
+
+    class Test1(NotIterable):
+        pass
+
+    assert iterable(Test1()) is False
+
+    class Test2(NotIterable):
+        _iterable = True
+
+    assert iterable(Test2()) is True
+
+    class Test3:
+        pass
+
+    assert iterable(Test3()) is False
+
+    class Test4:
+        _iterable = True
+
+    assert iterable(Test4()) is True
+
+    class Test5:
+        def __iter__(self):
+            yield 1
+
+    assert iterable(Test5()) is True
+
+    class Test6(Test5):
+        _iterable = False
+
+    assert iterable(Test6()) is False

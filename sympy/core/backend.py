@@ -13,14 +13,27 @@ if USE_SYMENGINE:
     from symengine.lib.symengine_wrapper import gcd as igcd
     from symengine import AppliedUndef
 else:
-    from sympy import (Symbol, Integer, sympify, S,
-        SympifyError, exp, log, gamma, sqrt, I, E, pi, Matrix,
-        sin, cos, tan, cot, csc, sec, asin, acos, atan, acot, acsc, asec,
-        sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth,
-        lambdify, symarray, diff, zeros, eye, diag, ones,
-        expand, Function, symbols, var, Add, Mul, Derivative,
-        ImmutableMatrix, MatrixBase, Rational, Basic, igcd)
-    from sympy.core.function import AppliedUndef
+    from sympy.core.add import Add
+    from sympy.core.basic import Basic
+    from sympy.core.function import (diff, Function, AppliedUndef,
+        expand, Derivative)
+    from sympy.core.mul import Mul
+    from sympy.core.numbers import igcd, pi, I, Integer, Rational, E
+    from sympy.core.singleton import S
+    from sympy.core.symbol import Symbol, var, symbols
+    from sympy.core.sympify import SympifyError, sympify
+    from sympy.functions.elementary.exponential import log, exp
+    from sympy.functions.elementary.hyperbolic import (coth, sinh,
+        acosh, acoth, tanh, asinh, atanh, cosh)
+    from sympy.functions.elementary.miscellaneous import sqrt
+    from sympy.functions.elementary.trigonometric import (csc,
+        asec, cos, atan, sec, acot, asin, tan, sin, cot, acsc, acos)
+    from sympy.functions.special.gamma_functions import gamma
+    from sympy.matrices.dense import (eye, zeros, diag, Matrix,
+        ones, symarray)
+    from sympy.matrices.immutable import ImmutableMatrix
+    from sympy.matrices.matrices import MatrixBase
+    from sympy.utilities.lambdify import lambdify
 
 
 #

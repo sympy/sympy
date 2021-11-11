@@ -8,7 +8,7 @@ from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.core import Tuple
-from sympy import glsl_code
+from sympy.printing.glsl import glsl_code
 import textwrap
 
 x, y, z = symbols('x,y,z')

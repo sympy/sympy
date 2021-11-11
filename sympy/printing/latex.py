@@ -2,7 +2,7 @@
 A Printer which converts an expression into its LaTeX equivalent.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 import itertools
 
@@ -11,6 +11,8 @@ from sympy.core.alphabets import greeks
 from sympy.core.containers import Tuple
 from sympy.core.function import AppliedUndef, Derivative
 from sympy.core.operations import AssocOp
+from sympy.core.power import Pow
+from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import SympifyError
 from sympy.logic.boolalg import true
 
@@ -20,10 +22,8 @@ from sympy.printing.printer import Printer, print_function
 from sympy.printing.conventions import split_super_sub, requires_partial
 from sympy.printing.precedence import precedence, PRECEDENCE
 
-import mpmath.libmp as mlib
-from mpmath.libmp import prec_to_dps
+from mpmath.libmp.libmpf import prec_to_dps, to_str as mlib_to_str
 
-from sympy.core.compatibility import default_sort_key
 from sympy.utilities.iterables import has_variety
 
 import re
@@ -31,7 +31,7 @@ import re
 # Hand-picked functions which can be used directly in both LaTeX and MathJax
 # Complete list at
 # https://docs.mathjax.org/en/latest/tex.html#supported-latex-commands
-# This variable only contains those functions which sympy uses.
+# This variable only contains those functions which SymPy uses.
 accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
                             'sinh', 'cosh', 'tanh', 'sqrt', 'ln', 'log', 'sec',
                             'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
@@ -161,7 +161,7 @@ class LatexPrinter(Printer):
         "parenthesize_super": True,
         "min": None,
         "max": None,
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
 
     def __init__(self, settings=None):
         Printer.__init__(self, settings)
@@ -306,7 +306,9 @@ class LatexPrinter(Printer):
         ``first=True`` specifies that this expr is the first to appear in
         a Mul.
         """
-        from sympy import Integral, Product, Sum
+        from sympy.concrete.products import Product
+        from sympy.concrete.summations import Sum
+        from sympy.integrals.integrals import Integral
 
         if expr.is_Mul:
             if not first and expr.could_extract_minus_sign():
@@ -443,7 +445,7 @@ class LatexPrinter(Printer):
         strip = False if self._settings['full_prec'] else True
         low = self._settings["min"] if "min" in self._settings else None
         high = self._settings["max"] if "max" in self._settings else None
-        str_real = mlib.to_str(expr._mpf_, dps, strip_zeros=strip, min_fixed=low, max_fixed=high)
+        str_real = mlib_to_str(expr._mpf_, dps, strip_zeros=strip, min_fixed=low, max_fixed=high)
 
         # Must always have a mul symbol (as 2.5 10^{20} just looks odd)
         # thus we use the number separator
@@ -496,7 +498,6 @@ class LatexPrinter(Printer):
         return r"\triangle %s" % self.parenthesize(func, PRECEDENCE['Mul'])
 
     def _print_Mul(self, expr):
-        from sympy.core.power import Pow
         from sympy.physics.units import Quantity
         from sympy.simplify import fraction
         separator = self._settings['mul_symbol_latex']
@@ -1049,7 +1050,7 @@ class LatexPrinter(Printer):
         return self._do_exponent(tex, exp)
 
     def _print_Not(self, e):
-        from sympy import Equivalent, Implies
+        from sympy.logic.boolalg import (Equivalent, Implies)
         if isinstance(e.args[0], Equivalent):
             return self._print_Equivalent(e.args[0], r"\not\Leftrightarrow")
         if isinstance(e.args[0], Implies):
@@ -1690,7 +1691,7 @@ class LatexPrinter(Printer):
             return r"%s^{\dagger}" % self._print(mat)
 
     def _print_MatMul(self, expr):
-        from sympy import MatMul
+        from sympy.matrices.expressions.matmul import MatMul
 
         parens = lambda x: self.parenthesize(x, precedence_traditional(expr),
                                              False)

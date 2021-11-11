@@ -1,4 +1,5 @@
-from sympy import Integer, Rational, Tuple
+from sympy.core.containers import Tuple
+from sympy.core.numbers import (Integer, Rational)
 import sympy.polys
 
 from math import gcd
@@ -120,7 +121,7 @@ def egyptian_fraction(r, algorithm="Greedy"):
     prefix, rem = egypt_harmonic(r)
     if rem == 0:
         return prefix
-    # work in python ints
+    # work in Python ints
     x, y = rem.p, rem.q
     # assert x < y and gcd(x, y) = 1
 

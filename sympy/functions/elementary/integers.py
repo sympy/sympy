@@ -1,4 +1,7 @@
-from sympy import Basic, Expr
+from typing import Tuple as tTuple
+
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 
 from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
@@ -18,9 +21,11 @@ from sympy.multipledispatch import dispatch
 class RoundFunction(Function):
     """The base class for rounding functions."""
 
+    args: tTuple[Expr]
+
     @classmethod
     def eval(cls, arg):
-        from sympy import im
+        from sympy.functions.elementary.complexes import im
         v = cls._eval_number(arg)
         if v is not None:
             return v
@@ -449,7 +454,8 @@ class frac(Function):
     """
     @classmethod
     def eval(cls, arg):
-        from sympy import AccumBounds, im
+        from sympy.calculus.util import AccumBounds
+        from sympy.functions.elementary.complexes import im
 
         def _eval(arg):
             if arg in (S.Infinity, S.NegativeInfinity):

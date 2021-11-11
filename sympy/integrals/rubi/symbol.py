@@ -9,7 +9,7 @@ else:
         def __init__(self, min_length, fixed_size, variable_name, optional):
             pass
 
-from sympy import Symbol
+from sympy.core.symbol import Symbol
 
 @doctest_depends_on(modules=('matchpy',))
 class matchpyWC(Wildcard, Symbol):

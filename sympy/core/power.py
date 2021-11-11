@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Tuple as tTuple
 from math import log as _log, sqrt as _sqrt
 from itertools import product
 
@@ -10,12 +10,13 @@ from .evalf import PrecisionExhausted
 from .function import (expand_complex, expand_multinomial,
     expand_mul, _mexpand, PoleError)
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
-from .compatibility import as_int
 from .parameters import global_parameters
+from .relational import is_gt, is_lt
 from .kind import NumberKind, UndefinedKind
 from sympy.external.gmpy import HAS_GMPY, gmpy
 from sympy.utilities.iterables import sift
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.misc import as_int
 from sympy.multipledispatch import Dispatcher
 
 from mpmath.libmp import sqrtrem as mpmath_sqrtrem
@@ -244,7 +245,7 @@ class Pow(Expr):
     | -oo**(-1+I)  |         | limit is 0.                                   |
     +--------------+---------+-----------------------------------------------+
 
-    Because symbolic computations are more flexible that floating point
+    Because symbolic computations are more flexible than floating point
     calculations and we prefer to never return an incorrect answer,
     we choose not to conform to all IEEE 754 conventions.  This helps
     us avoid extra test-case code in the calculation of limits.
@@ -267,6 +268,8 @@ class Pow(Expr):
     is_Pow = True
 
     __slots__ = ('is_commutative',)
+
+    args: tTuple[Expr, Expr]
 
     @cacheit
     def __new__(cls, b, e, evaluate=None):
@@ -293,10 +296,18 @@ class Pow(Expr):
             ).warn()
 
         if evaluate:
-            if b is S.Zero and e is S.NegativeInfinity:
-                return S.ComplexInfinity
             if e is S.ComplexInfinity:
                 return S.NaN
+            if e is S.Infinity:
+                if is_gt(b, S.One):
+                    return S.Infinity
+                if is_gt(b, S.NegativeOne) and is_lt(b, S.One):
+                    return S.Zero
+                if is_lt(b, S.NegativeOne):
+                    if b.is_finite:
+                        return S.ComplexInfinity
+                    if b.is_finite is False:
+                        return S.NaN
             if e is S.Zero:
                 return S.One
             elif e is S.One:
@@ -1898,7 +1909,7 @@ class Pow(Expr):
             m, me = m.as_base_exp()
             if m is S.One or me == e:  # probably always true
                 # return the following, not return c, m*Pow(t, e)
-                # which would change Pow into Mul; we let sympy
+                # which would change Pow into Mul; we let SymPy
                 # decide what to do by using the unevaluated Mul, e.g
                 # should it stay as sqrt(2 + 2*sqrt(5)) or become
                 # sqrt(2)*sqrt(1 + sqrt(5))
