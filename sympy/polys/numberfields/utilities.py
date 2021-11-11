@@ -10,7 +10,43 @@ from mpmath import mp
 
 @public
 def isolate(alg, eps=None, fast=False):
-    """Give a rational isolating interval for an algebraic number. """
+    """
+    Find a rational isolating interval for a real algebraic number.
+
+    Examples
+    ========
+
+    >>> from sympy import isolate, sqrt, Rational
+    >>> print(isolate(sqrt(2)))  # doctest: +SKIP
+    (1, 2)
+    >>> print(isolate(sqrt(2), eps=Rational(1, 100)))
+    (24/17, 17/12)
+
+    Parameters
+    ==========
+
+    alg : str, int, :py:class:`~.Expr`
+        The algebraic number to be isolated. Must be a real number, to use this
+        particular function. However, see also :py:meth:`.Poly.intervals`,
+        which isolates complex roots when you pass ``all=True``.
+    eps : positive element of :ref:`QQ`, None, optional (default=None)
+        Precision to be passed to :py:meth:`.Poly.refine_root`
+    fast : boolean, optional (default=False)
+        Say whether fast refinement procedure should be used.
+        (Will be passed to :py:meth:`.Poly.refine_root`.)
+
+    Returns
+    =======
+
+    Pair of rational numbers defining an isolating interval for the given
+    algebraic number.
+
+    See Also
+    ========
+
+    .Poly.intervals
+
+    """
     alg = sympify(alg)
 
     if alg.is_Rational:

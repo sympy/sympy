@@ -36,3 +36,11 @@ The Subfield Problem
 .. autofunction:: primitive_element
 
 .. autofunction:: to_number_field
+
+
+Utilities
+=========
+
+.. currentmodule:: sympy.polys.numberfields.utilities
+
+.. autofunction:: isolate
