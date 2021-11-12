@@ -303,12 +303,13 @@ def _(expr: ArrayAdd):
 def _(expr: ArrayElementwiseApplyFunc):
     subexpr = _array2matrix(expr.expr)
     if isinstance(subexpr, MatrixExpr):
-        d = expr.function.bound_symbols[0]
-        w = Wild("w", exclude=[d])
-        p = Wild("p", exclude=[d])
-        m = expr.function.expr.match(w*d**p)
-        if m is not None:
-            return m[w]*HadamardPower(subexpr, m[p])
+        if subexpr.shape != (1, 1):
+            d = expr.function.bound_symbols[0]
+            w = Wild("w", exclude=[d])
+            p = Wild("p", exclude=[d])
+            m = expr.function.expr.match(w*d**p)
+            if m is not None:
+                return m[w]*HadamardPower(subexpr, m[p])
         return ElementwiseApplyFunction(expr.function, subexpr)
     else:
         return ArrayElementwiseApplyFunc(expr.function, subexpr)
