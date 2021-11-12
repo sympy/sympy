@@ -217,19 +217,19 @@ class Limit(Expr):
         Piecewise((oo, Eq(z, 5)), ((5 - z)**(-3), True))
 
         """
-        from sympy import singularities, Eq, Piecewise, FiniteSet, oo
+        from sympy import singularities, Eq, Piecewise, FiniteSet
         if isinstance(singularities(expr, z0), FiniteSet):
             piecewise_list = []
             if cdir == 1:
                 dir = "+"
             elif cdir == -1:
                 dir = "-"
-            if limit(expr, z0, -oo) != expr.subs(z0, -oo):
-                piecewise_list += [(limit(expr, z0, -oo),Eq(z0, -oo))]
+            if limit(expr, z0, S.NegativeInfinity) != expr.subs(z0, S.NegativeInfinity):
+                piecewise_list += [(limit(expr, z0, S.NegativeInfinity),Eq(z0, S.NegativeInfinity))]
             for singularity in singularities(expr, z0):
                 piecewise_list.append((limit(expr, z0, singularity, dir),Eq(z0, singularity)))
-            if limit(expr, z0, oo) != expr.subs(z0, oo):
-                piecewise_list += [(limit(expr, z0, oo),Eq(z0, oo))]
+            if limit(expr, z0, S.Infinity) != expr.subs(z0, S.Infinity):
+                piecewise_list += [(limit(expr, z0, S.Infinity),Eq(z0, S.Infinity))]
             piecewise_list += [(expr,True)]
             expr = Piecewise(*piecewise_list)
             return expr
