@@ -4,12 +4,12 @@ from typing import Tuple as tTuple, Union as tUnion, FrozenSet, Dict as tDict, L
 from functools import singledispatch
 from itertools import accumulate
 
-from sympy import MatMul, Basic
+from sympy import MatMul, Basic, Wild
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.matrices.expressions.diagonal import DiagMatrix
-from sympy.matrices.expressions.hadamard import hadamard_product
+from sympy.matrices.expressions.hadamard import hadamard_product, HadamardPower
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import (Identity, ZeroMatrix, OneMatrix)
 from sympy.matrices.expressions.trace import Trace
@@ -303,6 +303,13 @@ def _(expr: ArrayAdd):
 def _(expr: ArrayElementwiseApplyFunc):
     subexpr = _array2matrix(expr.expr)
     if isinstance(subexpr, MatrixExpr):
+        if subexpr.shape != (1, 1):
+            d = expr.function.bound_symbols[0]
+            w = Wild("w", exclude=[d])
+            p = Wild("p", exclude=[d])
+            m = expr.function.expr.match(w*d**p)
+            if m is not None:
+                return m[w]*HadamardPower(subexpr, m[p])
         return ElementwiseApplyFunction(expr.function, subexpr)
     else:
         return ArrayElementwiseApplyFunc(expr.function, subexpr)
@@ -509,7 +516,7 @@ def _(expr: ElementwiseApplyFunction):
     if subexpr.shape == (1, 1):
         # TODO: move this to ElementwiseApplyFunction
         return expr.function(subexpr), removed + [0, 1]
-    return ElementwiseApplyFunction(expr.function, subexpr)
+    return ElementwiseApplyFunction(expr.function, subexpr), []
 
 
 @_remove_trivial_dims.register(ArrayElementwiseApplyFunc) # type: ignore
