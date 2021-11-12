@@ -1,7 +1,8 @@
+
 from sympy.core.numbers import (Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
-from sympy.functions.combinatorial.factorials import (rf, binomial, factorial)
+from sympy.functions.combinatorial.factorials import (rf, binomial, factorial, multinomial)
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
@@ -11,11 +12,12 @@ from sympy.simplify.gammasimp import gammasimp
 from sympy.simplify.powsimp import powsimp
 from sympy.simplify.simplify import simplify
 
-from sympy.abc import x, y, n, k
+from sympy.abc import x, y
 
 
 def test_gammasimp():
     R = Rational
+    n, k = symbols('n k', nonnegative=True)
 
     # was part of test_combsimp_gamma() in test_combsimp.py
     assert gammasimp(gamma(x)) == gamma(x)
@@ -40,7 +42,6 @@ def test_gammasimp():
     assert gammasimp(factorial(n + 2)) == gamma(n + 3)
     assert gammasimp(binomial(n, k)) == \
         gamma(n + 1)/(gamma(k + 1)*gamma(-k + n + 1))
-
     assert powsimp(gammasimp(
         gamma(x)*gamma(x + S.Half)*gamma(y)/gamma(x + y))) == \
         2**(-2*x + 1)*sqrt(pi)*gamma(2*x)*gamma(y)/gamma(x + y)
@@ -49,9 +50,11 @@ def test_gammasimp():
     assert simplify(
         gamma(S.Half + x/2)*gamma(1 + x/2)/gamma(1 + x)/sqrt(pi)*2**x) == 1
     assert gammasimp(gamma(Rational(-1, 4))*gamma(Rational(-3, 4))) == 16*sqrt(2)*pi/3
-
     assert powsimp(gammasimp(gamma(2*x)/gamma(x))) == \
         2**(2*x - 1)*gamma(x + S.Half)/sqrt(pi)
+
+    assert gammasimp(multinomial(n, k, k)) == \
+        gamma(2*k + n + 1)/(gamma(k + 1)**2*gamma(n + 1))
 
     # issue 6792
     e = (-gamma(k)*gamma(k + 2) + gamma(k + 1)**2)/gamma(k)**2
@@ -96,7 +99,7 @@ def test_gammasimp():
         gamma(n + 3)/(gamma(k + 3.0)*gamma(-k + n + 1))
 
     # issue 11548
-    assert gammasimp(binomial(0, x)) == sin(pi*x)/(pi*x)
+    assert gammasimp(binomial(0, k)) == sin(pi*k)/(pi*k)
 
     e = gamma(n + Rational(1, 3))*gamma(n + R(2, 3))
     assert gammasimp(e) == e

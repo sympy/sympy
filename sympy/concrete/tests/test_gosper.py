@@ -2,16 +2,18 @@
 
 from sympy.core.numbers import (Rational, pi)
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol
+from sympy.core.symbol import Symbol, symbols
 from sympy.functions.combinatorial.factorials import (binomial, factorial)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys.polytools import Poly
 from sympy.simplify.simplify import simplify
-from sympy.abc import a, b, j, k, m, n, r, x
 from sympy.concrete.gosper import gosper_normal, gosper_sum, gosper_term
 
+from sympy.abc import a, b, m, x
+
+n, k = symbols('n k', nonnegative=True)
 
 def test_gosper_normal():
     eq = 4*n + 5, 2*(4*n + 1)*(2*n + 3), n
@@ -70,9 +72,9 @@ def test_gosper_sum_indefinite():
 
 
 def test_gosper_sum_parametric():
-    assert gosper_sum(binomial(S.Half, m - j + 1)*binomial(S.Half, m + j), (j, 1, n)) == \
-        n*(1 + m - n)*(-1 + 2*m + 2*n)*binomial(S.Half, 1 + m - n)* \
-        binomial(S.Half, m + n)/(m*(1 + 2*m))
+    assert gosper_sum(binomial(S.Half, n - k + 1)*binomial(S.Half, n + k), (k, 1, n)) == \
+        n*(1 + n - n)*(-1 + 2*n + 2*n)*binomial(S.Half, 1 + n - n)* \
+        binomial(S.Half, n + n)/(n*(1 + 2*n))
 
 
 def test_gosper_sum_algebraic():
@@ -140,21 +142,21 @@ def test_gosper_sum_AeqB_part1():
 
 def test_gosper_sum_AeqB_part2():
     f2a = n**2*a**n
-    f2b = (n - r/2)*binomial(r, n)
+    f2b = (n - k/2)*binomial(k, n)
     f2c = factorial(n - 1)**2/(factorial(n - x)*factorial(n + x))
 
     g2a = -a*(a + 1)/(a - 1)**3 + a**(
-        m + 1)*(a**2*m**2 - 2*a*m**2 + m**2 - 2*a*m + 2*m + a + 1)/(a - 1)**3
-    g2b = (m - r)*binomial(r, m)/2
+        n + 1)*(a**2*n**2 - 2*a*n**2 + n**2 - 2*a*n + 2*n + a + 1)/(a - 1)**3
+    g2b = (n - k)*binomial(k, n)/2
     ff = factorial(1 - x)*factorial(1 + x)
     g2c = 1/ff*(
-        1 - 1/x**2) + factorial(m)**2/(x**2*factorial(m - x)*factorial(m + x))
+        1 - 1/x**2) + factorial(n)**2/(x**2*factorial(n - x)*factorial(n + x))
 
-    g = gosper_sum(f2a, (n, 0, m))
+    g = gosper_sum(f2a, (n, 0, n))
     assert g is not None and simplify(g - g2a) == 0
-    g = gosper_sum(f2b, (n, 0, m))
+    g = gosper_sum(f2b, (n, 0, n))
     assert g is not None and simplify(g - g2b) == 0
-    g = gosper_sum(f2c, (n, 1, m))
+    g = gosper_sum(f2c, (n, 1, n))
     assert g is not None and simplify(g - g2c) == 0
 
 

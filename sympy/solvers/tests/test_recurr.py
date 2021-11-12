@@ -13,7 +13,7 @@ from sympy.testing.pytest import raises, slow
 from sympy.abc import a, b
 
 y = Function('y')
-n, k = symbols('n,k', integer=True)
+n, k = symbols('n, k', integer=True)
 C0, C1, C2 = symbols('C0,C1,C2')
 
 

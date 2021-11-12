@@ -1890,6 +1890,13 @@ def test_equals():
     assert z.equals(0)
 
 
+@XFAIL
+def test_issue_19143():
+    j = symbols('j', zero=True)
+    assert (4**j).equals(1) is not False
+    assert (4**j).is_constant is not False
+
+
 def test_random():
     from sympy.functions.combinatorial.numbers import lucas
     from sympy.simplify.simplify import posify

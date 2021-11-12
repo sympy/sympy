@@ -339,9 +339,9 @@ def test_composite_sums():
 
 
 def test_hypergeometric_sums():
-    assert summation(
-        binomial(2*k, k)/4**k, (k, 0, n)) == (1 + 2*n)*binomial(2*n, n)/4**n
-    assert summation(binomial(2*k, k)/5**k, (k, -oo, oo)) == sqrt(5)
+    n, k = symbols('n k', nonnegative=True)
+    assert summation(binomial(2*k, k)/4**k, (k, 0, n)) == (1 + 2*n)*binomial(2*n, n)/4**n
+    assert summation(binomial(2*k, k)/5**k, (k, 0, oo)) == sqrt(5)
 
 
 def test_other_sums():
@@ -1184,10 +1184,10 @@ def test_issue_14640():
 
 
 def test_issue_15943():
+    n, k = symbols('n k', nonnegative=True)
     s = Sum(binomial(n, k)*factorial(n - k), (k, 0, n)).doit().rewrite(gamma)
-    assert s == -E*(n + 1)*gamma(n + 1)*lowergamma(n + 1, 1)/gamma(n + 2
-        ) + E*gamma(n + 1)
-    assert s.simplify() == E*(factorial(n) - lowergamma(n + 1, 1))
+    assert s == -E*(n + 1)*gamma(n + 1)*lowergamma(n + 1, 1)/gamma(n + 2) + E*gamma(n + 1)
+    assert s.simplify() == E*(gamma(n + 1) - lowergamma(n + 1, 1))
 
 
 def test_Sum_dummy_eq():
@@ -1355,11 +1355,33 @@ def test_empty_sequence():
 
 
 def test_issue_8016():
-    k = Symbol('k', integer=True)
-    n, m = symbols('n, m', integer=True, positive=True)
+    # in order to let the binomials simplify to gamma without
+    # restriction we need to declare the symbols as non-integer
+    k, m, n = symbols('k m n', integer=False, positive=True)
     s = Sum(binomial(m, k)*binomial(m, n - k)*(-1)**k, (k, 0, n))
-    assert s.doit().simplify() == \
-        cos(pi*n/2)*gamma(m + 1)/gamma(n/2 + 1)/gamma(m - n/2 + 1)
+    ans = gamma(1 - n/2)*gamma(m + 1)/(
+        gamma(1 - n)*gamma(n + 1)*gamma(m - n/2 + 1))
+    assert s.doit() == ans
+    # simplification with non-integer is not the same as with integer
+    got1 = ans.simplify()
+    assert got1 == -sin(pi*n)*gamma(-n/2)*gamma(m + 1)/(
+        2*pi*gamma(m - n/2 + 1))
+    oldn = n
+    oldm = m
+    m, n = symbols('m n', integer=True)
+    reps = {oldn: n, oldm: m}
+    # if the non-integers are replaced with integers, the answer is 0
+    assert got1.subs(reps) == 0
+    # if we replace non-integers with integers *before* simplification
+    # we get a different simplification
+    got2 = ans.subs(reps).simplify()
+    assert got2 == 2**n*sqrt(pi)*gamma(m + 1)/(
+        gamma((1 - n)/2)*gamma(n + 1)*gamma(m - n/2 + 1))
+    # make symbols the same as in got1 and show equivalence
+    got2_with_old = got2.xreplace({n: oldn, m: oldm})
+    # (it works better to prove the two are the same by computing the
+    # ratio of 1 then the difference of 0)
+    assert (got1/got2_with_old).simplify() == 1
 
 
 def test_issue_14313():

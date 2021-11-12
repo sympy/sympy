@@ -107,7 +107,7 @@ from .series import (Order, O, limit, Limit, gruntz, series, approximants,
         residue, EmptySequence, SeqPer, SeqFormula, sequence, SeqAdd, SeqMul,
         fourier_series, fps, difference_delta, limit_seq)
 
-from .functions import (factorial, factorial2, rf, ff, binomial,
+from .functions import (factorial, factorial2, rf, ff, binomial, multinomial,
         RisingFactorial, FallingFactorial, subfactorial, carmichael,
         fibonacci, lucas, motzkin, tribonacci, harmonic, bernoulli, bell, euler,
         catalan, genocchi, partition, sqrt, root, Min, Max, Id, real_root, Rem,
@@ -323,7 +323,8 @@ __all__ = [
     'SeqMul', 'fourier_series', 'fps', 'difference_delta', 'limit_seq',
 
     # sympy.functions
-    'factorial', 'factorial2', 'rf', 'ff', 'binomial', 'RisingFactorial',
+    'factorial', 'factorial2', 'rf', 'ff', 'binomial', 'multinomial',
+    'RisingFactorial',
     'FallingFactorial', 'subfactorial', 'carmichael', 'fibonacci', 'lucas',
     'motzkin', 'tribonacci', 'harmonic', 'bernoulli', 'bell', 'euler', 'catalan',
     'genocchi', 'partition', 'sqrt', 'root', 'Min', 'Max', 'Id', 'real_root', 'Rem',
