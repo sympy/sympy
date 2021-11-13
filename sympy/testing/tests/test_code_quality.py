@@ -157,7 +157,8 @@ def line_with_bare_expr(code):
     >>> f('a == 1')
     0
     >>> f('if a == 1:\n b = 1')
-    >>> f('if a == 1:\n b == 1')  # XXX need to figure this out
+
+        >> f('if a == 1:\n b == 1')  # XXX need to figure this out
     1
     """
     tree = ast.parse(code)
