@@ -216,15 +216,20 @@ class Add(Expr, AssocOp):
                         # e.g. 3 + ...
         order_factors = []
 
-        extra = []
-        saw_inf = None
-        _nan = [S.NaN], [], None
+        saw_inf = None  # flag to consult when encountering zoo
+
+        extra, seq = sift(seq, lambda _: isinstance(_, MatExpr), binary=True)
+        def _nan():
+            if extra:
+                extra.insert(0, S.NaN)
+                return [] extra, None
+            return [S.NaN], [], None
 
         for o in seq:
 
             if o.is_infinite:
                 if saw_inf and S.ComplexInfinity in (o, coeff):
-                    return _nan
+                    return _nan()
                 if saw_inf is None:
                     saw_inf = True
                 if o is S.ComplexInfinity:
@@ -247,19 +252,16 @@ class Add(Expr, AssocOp):
             # 3 or NaN
             elif o.is_Number:
                 if o is S.NaN:
-                    return _nan
+                    return _nan()
                 elif coeff.is_Number or isinstance(coeff, AccumBounds):
                     coeff += o
+                    if coeff is S.NaN:
+                        return _nan()
                 # XXX ignore Number if coeff is TensExpr?
                 continue
 
             elif isinstance(o, AccumBounds):
                 coeff = o.__add__(coeff)
-                continue
-
-            elif isinstance(o, MatrixExpr):
-                # can't add 0 to Matrix so make sure coeff is not 0
-                extra.append(o)
                 continue
 
             elif isinstance(o, TensExpr):
@@ -300,7 +302,7 @@ class Add(Expr, AssocOp):
             if s in terms:
                 terms[s] += c
                 if terms[s] is S.NaN:
-                    return _nan
+                    return _nan()
             else:
                 terms[s] = c
 
@@ -339,14 +341,7 @@ class Add(Expr, AssocOp):
             newseq = [f for f in newseq if not (f.is_extended_nonpositive or f.is_real)]
 
         if coeff is S.ComplexInfinity:
-            # zoo might be
-            #   infinite_real + finite_im
-            #   finite_real + infinite_im
-            #   infinite_real + infinite_im
-            # addition of a finite real or imaginary number won't be able to
-            # change the zoo nature; adding an infinite qualtity would result
-            # in a NaN condition if it had sign opposite of the infinite
-            # portion of zoo, e.g., infinite_real - infinite_real.
+            # ignore all real entities
             newseq = [c for c in newseq if c.is_extended_real is None]
 
         # process O(x)
