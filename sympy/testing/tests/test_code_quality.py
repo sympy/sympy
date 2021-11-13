@@ -132,9 +132,9 @@ class _BareExpr(ast.NodeVisitor):
     or a comparison that is not in an if-block, assertion or string."""
     def visit_Expr(self, node):
         if isinstance(node.value, (ast.BinOp, ast.Compare)):
-            return node.lineno
+            assert None, message_bare_expr % ('', node.lineno)
     def visit_If(self, node):
-        pass
+        pass  # XXX need to visit the non-condition lines
     def visit_Assert(self, node):
         pass
 
@@ -142,9 +142,30 @@ class _BareExpr(ast.NodeVisitor):
 BareExpr = _BareExpr()
 
 
-def line_with_bare_expr(test_file):
-    tree = ast.parse(test_file)
-    return BareExpr.visit(tree)
+def line_with_bare_expr(code):
+    """return None or else 0-based line number of code on which
+    a bare expression appeared.
+
+    EXAMPLES
+    ========
+
+    >>> from sympy.testing.tests.test_code_quality import line_with_bare_expr as f
+    >>> f('''a += 1
+    ... a = 1
+    ... a + 1''')
+    2
+    >>> f('a == 1')
+    0
+    >>> f('if a == 1:\n b = 1')
+    >>> f('if a == 1:\n b == 1')  # XXX need to figure this out
+    1
+    """
+    tree = ast.parse(code)
+    try:
+        BareExpr.visit(tree)
+    except Assertion error as msg:
+        assert msg.startswith(message_bare_expr.split(':', 1))
+        return msg.rsplit(' ', 1)  # the line numbers
 
 
 def test_files():
