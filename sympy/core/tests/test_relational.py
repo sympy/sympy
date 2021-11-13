@@ -854,6 +854,7 @@ def test_canonical():
     assert [i.canonical for i in c] == c
     assert [i.reversed.canonical for i in c] == c
     assert not any(i.lhs.is_Number and not i.rhs.is_Number for i in c)
+    assert Eq(y < x, x > y).canonical is S.true
 
 
 @XFAIL
