@@ -170,8 +170,8 @@ def test_files():
             _test_this_file_encoding(fname, test_file)
 
     def test_this_file(fname, test_file):
-        bare = line_with_bare_expr(test_file.read())
-        if bare is not None:
+        idx = line_with_bare_expr(test_file.read())
+        if idx is not None:
             assert False, message_bare_expr % (fname, idx + 1)
         test_file.seek(0)  # restore reader to head
 
