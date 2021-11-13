@@ -38,6 +38,7 @@ message_test_suite_def = "Function should start with 'test_' or '_': %s, line %s
 message_duplicate_test = "This is a duplicate test function: %s, line %s"
 message_self_assignments = "File contains assignments to self/cls: %s, line %s."
 message_func_is = "File contains '.func is': %s, line %s."
+message_bare_expr = "File contains bare expression: %s, line %s."
 
 implicit_test_re = re.compile(r'^\s*(>>> )?(\.\.\. )?from .* import .*\*')
 str_raise_re = re.compile(
@@ -125,6 +126,27 @@ def check_files(files, file_check, exclusions=set(), pattern=None):
             file_check(fname)
 
 
+class _BareExpr(ast.NodeVisitor):
+    """ast analyzer to return the line number corresponding to the
+    line on which a bare expression appears if it is a binary op
+    or a comparison that is not in an if-block, assertion or string."""
+    def visit_Expr(self, node):
+        if isinstance(node.value, (ast.BinOp, ast.Compare)):
+            return node.lineno
+    def visit_If(self, node):
+        pass
+    def visit_Assert(self, node):
+        pass
+
+
+BareExpr = _BareExpr()
+
+
+def line_with_bare_expr(test_file):
+    tree = ast.parse(test_file)
+    return BareExpr.visit(tree)
+
+
 def test_files():
     """
     This test tests all files in SymPy and checks that:
@@ -138,6 +160,7 @@ def test_files():
       o no duplicate function names that start with test_
       o no assignments to self variable in class methods
       o no lines contain ".func is" except in the test suite
+      o there is no do-nothing expression like `a == b` or `x + 1`
     """
 
     def test(fname):
@@ -147,6 +170,10 @@ def test_files():
             _test_this_file_encoding(fname, test_file)
 
     def test_this_file(fname, test_file):
+        bare = line_with_bare_expr(test_file)
+        if bare is not None:
+            assert False, message_bare_expr % (fname, idx + 1)
+
         line = None  # to flag the case where there were no lines in file
         tests = 0
         test_set = set()
