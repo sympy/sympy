@@ -191,6 +191,7 @@ class Add(Expr, AssocOp):
         ========
 
         sympy.core.mul.Mul.flatten
+
         """
         from sympy.calculus.util import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
@@ -279,7 +280,7 @@ class Add(Expr, AssocOp):
             elif o.is_Pow:
                 b, e = o.as_base_exp()
                 if b.is_Number and (e.is_Integer or
-                                    (e.is_Rational and e.is_negative)):
+                                   (e.is_Rational and e.is_negative)):
                     seq.append(b**e)
                     continue
                 c, s = S.One, o
