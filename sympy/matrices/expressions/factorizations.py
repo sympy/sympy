@@ -1,34 +1,52 @@
 from sympy.matrices.expressions import MatrixExpr
-from sympy import Q
+from sympy.assumptions.ask import Q
 
 class Factorization(MatrixExpr):
     arg = property(lambda self: self.args[0])
     shape = property(lambda self: self.arg.shape)  # type: ignore
 
 class LofLU(Factorization):
-    predicates = Q.lower_triangular,
+    @property
+    def predicates(self):
+        return (Q.lower_triangular,)
 class UofLU(Factorization):
-    predicates = Q.upper_triangular,
+    @property
+    def predicates(self):
+        return (Q.upper_triangular,)
 
 class LofCholesky(LofLU): pass
 class UofCholesky(UofLU): pass
 
 class QofQR(Factorization):
-    predicates = Q.orthogonal,
+    @property
+    def predicates(self):
+        return (Q.orthogonal,)
 class RofQR(Factorization):
-    predicates = Q.upper_triangular,
+    @property
+    def predicates(self):
+        return (Q.upper_triangular,)
 
 class EigenVectors(Factorization):
-    predicates = Q.orthogonal,
+    @property
+    def predicates(self):
+        return (Q.orthogonal,)
 class EigenValues(Factorization):
-    predicates = Q.diagonal,
+    @property
+    def predicates(self):
+        return (Q.diagonal,)
 
 class UofSVD(Factorization):
-    predicates = Q.orthogonal,
+    @property
+    def predicates(self):
+        return (Q.orthogonal,)
 class SofSVD(Factorization):
-    predicates = Q.diagonal,
+    @property
+    def predicates(self):
+        return (Q.diagonal,)
 class VofSVD(Factorization):
-    predicates = Q.orthogonal,
+    @property
+    def predicates(self):
+        return (Q.orthogonal,)
 
 
 def lu(expr):

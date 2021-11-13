@@ -26,8 +26,11 @@ class RootSystem(Basic):
     Therefore, we see that the simple roots span the root space of a given
     simple Lie algebra.
 
-    References: https://en.wikipedia.org/wiki/Root_system
-                Lie Algebras and Representation Theory - Humphreys
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Root_system
+    .. [2] Lie Algebras and Representation Theory - Humphreys
 
     """
 

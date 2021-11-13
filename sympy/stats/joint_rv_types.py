@@ -1,9 +1,27 @@
-from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, besselk, gamma, Interval,
-                   Range, factorial, Mul, Integer,
-                   Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum,
-                   Intersection, Matrix, symbols, Product, IndexedBase)
+from sympy.concrete.products import Product
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.function import Lambda
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Integer, Rational, pi)
+from sympy.core.power import Pow
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (rf, factorial)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.bessel import besselk
+from sympy.functions.special.gamma_functions import gamma
+from sympy.matrices.dense import (Matrix, ones)
+from sympy.sets.fancysets import Range
+from sympy.sets.sets import (Intersection, Interval)
+from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.matrices import ImmutableMatrix, MatrixSymbol
 from sympy.matrices.expressions.determinant import det
+from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.stats.joint_rv import JointDistribution, JointPSpace, MarginalDistribution
 from sympy.stats.rv import _value_check, random_symbols
 
@@ -38,7 +56,7 @@ def marginal_distribution(rv, *indices):
 
     rv: A random variable with a joint probability distribution.
     indices: component indices or the indexed random symbol
-        for whom the joint distribution is to be calculated
+        for which the joint distribution is to be calculated
 
     Returns
     =======
@@ -87,7 +105,7 @@ def JointRV(symbol, pdf, _set=None):
     as the first argument
 
     NOTE: As of now, the set for each component for a `JointRV` is
-    equal to the set of all integers, which can not be changed.
+    equal to the set of all integers, which cannot be changed.
 
     Examples
     ========
@@ -138,19 +156,22 @@ class MultivariateNormalDistribution(JointDistribution):
     def check(mu, sigma):
         _value_check(mu.shape[0] == sigma.shape[0],
             "Size of the mean vector and covariance matrix are incorrect.")
-        #check if covariance matrix is positive definite or not.
+        #check if covariance matrix is positive semi definite or not.
         if not isinstance(sigma, MatrixSymbol):
-            _value_check(sigma.is_positive_definite,
-            "The covariance matrix must be positive definite. ")
+            _value_check(sigma.is_positive_semidefinite,
+            "The covariance matrix must be positive semi definite. ")
 
     def pdf(self, *args):
         mu, sigma = self.mu, self.sigma
         k = mu.shape[0]
-        args = ImmutableMatrix(args)
+        if len(args) == 1 and args[0].is_Matrix:
+            args = args[0]
+        else:
+            args = ImmutableMatrix(args)
         x = args - mu
-        return  S.One/sqrt((2*pi)**(k)*det(sigma))*exp(
-            Rational(-1, 2)*x.transpose()*(sigma.inv()*\
-                x))[0]
+        density = S.One/sqrt((2*pi)**(k)*det(sigma))*exp(
+            Rational(-1, 2)*x.transpose()*(sigma.inv()*x))
+        return MatrixElement(density, 0, 0)
 
     def _marginal_distribution(self, indices, sym):
         sym = ImmutableMatrix([Indexed(sym, i) for i in indices])
@@ -176,8 +197,9 @@ def MultivariateNormal(name, mu, sigma):
     ==========
 
     mu : List representing the mean or the mean vector
-    sigma : Positive definite square matrix
+    sigma : Positive semidefinite square matrix
         Represents covariance Matrix
+        If `sigma` is noninvertible then only sampling is supported currently
 
     Returns
     =======
@@ -188,17 +210,32 @@ def MultivariateNormal(name, mu, sigma):
     ========
 
     >>> from sympy.stats import MultivariateNormal, density, marginal_distribution
-    >>> from sympy import symbols
+    >>> from sympy import symbols, MatrixSymbol
     >>> X = MultivariateNormal('X', [3, 4], [[2, 1], [1, 2]])
     >>> y, z = symbols('y z')
     >>> density(X)(y, z)
-    sqrt(3)*exp((3/2 - y/2)*(2*y/3 - z/3 - 2/3) + (2 - z/2)*(-y/3 + 2*z/3 - 5/3))/(6*pi)
+    sqrt(3)*exp(-y**2/3 + y*z/3 + 2*y/3 - z**2/3 + 5*z/3 - 13/3)/(6*pi)
     >>> density(X)(1, 2)
     sqrt(3)*exp(-4/3)/(6*pi)
     >>> marginal_distribution(X, X[1])(y)
-    exp((2 - y/2)*(y/2 - 2))/(2*sqrt(pi))
+    exp(-(y - 4)**2/4)/(2*sqrt(pi))
     >>> marginal_distribution(X, X[0])(y)
-    exp((3/2 - y/2)*(y/2 - 3/2))/(2*sqrt(pi))
+    exp(-(y - 3)**2/4)/(2*sqrt(pi))
+
+    The example below shows that it is also possible to use
+    symbolic parameters to define the MultivariateNormal class.
+
+    >>> n = symbols('n', integer=True, positive=True)
+    >>> Sg = MatrixSymbol('Sg', n, n)
+    >>> mu = MatrixSymbol('mu', n, 1)
+    >>> obs = MatrixSymbol('obs', n, 1)
+    >>> X = MultivariateNormal('X', mu, Sg)
+
+    The density of a multivariate normal can be
+    calculated using a matrix argument, as shown below.
+
+    >>> density(X)(obs)
+    (exp(((1/2)*mu.T - (1/2)*obs.T)*Sg**(-1)*(-mu + obs))/sqrt((2*pi)**n*Determinant(Sg)))[0, 0]
 
     References
     ==========
@@ -239,9 +276,10 @@ class MultivariateLaplaceDistribution(JointDistribution):
         x = (mu_T*sigma_inv*mu)[0]
         y = (args_T*sigma_inv*args)[0]
         v = 1 - k/2
-        return S(2)/((2*pi)**(S(k)/2)*sqrt(det(sigma)))\
-        *(y/(2 + x))**(S(v)/2)*besselk(v, sqrt((2 + x)*(y)))\
-        *exp((args_T*sigma_inv*mu)[0])
+        return (2 * (y/(2 + x))**(v/2) * besselk(v, sqrt((2 + x)*y)) *
+                exp((args_T * sigma_inv * mu)[0]) /
+                ((2 * pi)**(k/2) * sqrt(det(sigma))))
+
 
 def MultivariateLaplace(name, mu, sigma):
     """
@@ -580,7 +618,7 @@ def MultivariateEwens(syms, n, theta):
     >>> a2 = Symbol('a2', positive=True)
     >>> ed = MultivariateEwens('E', 2, 1)
     >>> density(ed)(a1, a2)
-    Piecewise((2**(-a2)/(factorial(a1)*factorial(a2)), Eq(a1 + 2*a2, 2)), (0, True))
+    Piecewise((1/(2**a2*factorial(a1)*factorial(a2)), Eq(a1 + 2*a2, 2)), (0, True))
     >>> marginal_distribution(ed, ed[0])(a1)
     Piecewise((1/factorial(a1), Eq(a1, 2)), (0, True))
 
@@ -662,8 +700,8 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     >>> y = symbols('y_1:4', positive=True)
     >>> Gd = GeneralizedMultivariateLogGamma('G', d, v, l, mu)
     >>> density(Gd)(y[0], y[1], y[2])
-    Sum(2**(-n)*exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) - exp(y_2) -
-    exp(y_3))/gamma(n + 1)**3, (n, 0, oo))/2
+    Sum(exp((n + 1)*(y_1 + y_2 + y_3) - exp(y_1) - exp(y_2) -
+    exp(y_3))/(2**n*gamma(n + 1)**3), (n, 0, oo))/2
 
     References
     ==========
@@ -799,7 +837,7 @@ def Multinomial(syms, n, *p):
     Examples
     ========
 
-    >>> from sympy.stats import density,  Multinomial, marginal_distribution
+    >>> from sympy.stats import density, Multinomial, marginal_distribution
     >>> from sympy import symbols
     >>> x1, x2, x3 = symbols('x1, x2, x3', nonnegative=True, integer=True)
     >>> p1, p2, p3 = symbols('p1, p2, p3', positive=True)

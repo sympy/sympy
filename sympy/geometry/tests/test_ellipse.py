@@ -1,9 +1,17 @@
-from sympy import Eq, Rational, S, Symbol, symbols, pi, sqrt, oo, Point2D, Segment2D, Abs, sec
+from sympy.core.numbers import (Rational, oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sec
+from sympy.geometry.line import Segment2D
+from sympy.geometry.point import Point2D
 from sympy.geometry import (Circle, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment,
                             Triangle, intersection)
 from sympy.testing.pytest import raises, slow
-from sympy import integrate
+from sympy.integrals.integrals import integrate
 from sympy.functions.special.elliptic_integrals import elliptic_e
 from sympy.functions.elementary.miscellaneous import Max
 
@@ -157,6 +165,12 @@ def test_ellipse_geom():
     assert Circle(Point(5, 5), 2).tangent_lines(Point(5 - 2*sqrt(2), 5)) == \
         [Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 - sqrt(2))),
      Line(Point(5 - 2*sqrt(2), 5), Point(5 - sqrt(2), 5 + sqrt(2))), ]
+    assert Circle(Point(5, 5), 5).tangent_lines(Point(4, 0)) == \
+        [Line(Point(4, 0), Point(Rational(40, 13), Rational(5, 13))),
+     Line(Point(4, 0), Point(5, 0))]
+    assert Circle(Point(5, 5), 5).tangent_lines(Point(0, 6)) == \
+        [Line(Point(0, 6), Point(0, 7)),
+        Line(Point(0, 6), Point(Rational(5, 13), Rational(90, 13)))]
 
     # for numerical calculations, we shouldn't demand exact equality,
     # so only test up to the desired precision

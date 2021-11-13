@@ -1,9 +1,20 @@
-from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    Max, Min, Float, DisjointUnion,
-    FiniteSet, Intersection, imageset, I, true, false, ProductSet,
-    sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
-    Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix, Range, Add, symbols, zoo, Rational)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.function import Lambda
+from sympy.core.numbers import (Float, I, Rational, nan, oo, pi, zoo)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.logic.boolalg import (false, true)
+from sympy.matrices.dense import Matrix
+from sympy.polys.rootoftools import rootof
+from sympy.sets.contains import Contains
+from sympy.sets.fancysets import (ImageSet, Range)
+from sympy.sets.sets import (Complement, DisjointUnion, FiniteSet, Intersection, Interval, ProductSet, Set, SymmetricDifference, Union, imageset)
 from mpmath import mpi
 
 from sympy.core.expr import unchanged
@@ -13,6 +24,7 @@ from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.abc import x, y, z, m, n
 
+EmptySet = S.EmptySet
 
 def test_imageset():
     ints = S.Integers
@@ -28,7 +40,7 @@ def test_imageset():
     assert (r, r) in imageset(x, (x, x), S.Reals)
     assert 1 + I in imageset(x, x + I, S.Reals)
     assert {1} not in imageset(x, (x,), S.Reals)
-    assert (1, 1) not in imageset(x, (x,) , S.Reals)
+    assert (1, 1) not in imageset(x, (x,), S.Reals)
     raises(TypeError, lambda: imageset(x, ints))
     raises(ValueError, lambda: imageset(x, y, z, ints))
     raises(ValueError, lambda: imageset(Lambda(x, cos(x)), y))
@@ -371,6 +383,7 @@ def test_set_operations_nonsets():
 
 
 def test_complement():
+    assert Complement({1, 2}, {1}) == {2}
     assert Interval(0, 1).complement(S.Reals) == \
         Union(Interval(-oo, 0, True, True), Interval(1, oo, True, True))
     assert Interval(0, 1, True, False).complement(S.Reals) == \
@@ -724,7 +737,8 @@ def test_is_subset():
     assert Range(3).is_subset(FiniteSet(0, 1, n)) is None
     assert Range(n, n + 2).is_subset(FiniteSet(n, n + 1)) is True
     assert Range(5).is_subset(Interval(0, 4, right_open=True)) is False
-
+    #issue 19513
+    assert imageset(Lambda(n, 1/n), S.Integers).is_subset(S.Reals) is None
 
 def test_is_proper_subset():
     assert Interval(0, 1).is_proper_subset(Interval(0, 2)) is True
@@ -917,6 +931,10 @@ def test_Union_as_relational():
         Or(And(Le(0, x), Le(x, 1)), Eq(x, 2))
     assert (Interval(0, 1, True, True) + FiniteSet(1)).as_relational(x) == \
         And(Lt(0, x), Le(x, 1))
+    assert Or(x < 0, x > 0).as_set().as_relational(x) == \
+        And((x > -oo), (x < oo), Ne(x, 0))
+    assert (Interval.Ropen(1, 3) + Interval.Lopen(3, 5)
+        ).as_relational(x) == And((x > 1), (x < 5), Ne(x, 3))
 
 
 def test_Intersection_as_relational():
@@ -1093,7 +1111,6 @@ def test_Interval_free_symbols():
 
 
 def test_image_interval():
-    from sympy.core.numbers import Rational
     x = Symbol('x', real=True)
     a = Symbol('a', real=True)
     assert imageset(x, 2*x, Interval(-2, 1)) == Interval(-4, 2)
@@ -1276,12 +1293,12 @@ def test_SymmetricDifference():
 
     assert SymmetricDifference(FiniteSet(0, 1, 2, 3, 4, 5), \
             FiniteSet(2, 4, 6, 8, 10)) == FiniteSet(0, 1, 3, 5, 6, 8, 10)
-    assert SymmetricDifference(FiniteSet(2, 3, 4), FiniteSet(2, 3 , 4 , 5)) \
+    assert SymmetricDifference(FiniteSet(2, 3, 4), FiniteSet(2, 3, 4 ,5)) \
             == FiniteSet(5)
     assert FiniteSet(1, 2, 3, 4, 5) ^ FiniteSet(1, 2, 5, 6) == \
             FiniteSet(3, 4, 6)
-    assert Set(1, 2 , 3) ^ Set(2, 3, 4) == Union(Set(1, 2, 3) - Set(2, 3, 4), \
-            Set(2, 3, 4) - Set(1, 2, 3))
+    assert Set(S(1), S(2), S(3)) ^ Set(S(2), S(3), S(4)) == Union(Set(S(1), S(2), S(3)) - Set(S(2), S(3), S(4)), \
+            Set(S(2), S(3), S(4)) - Set(S(1), S(2), S(3)))
     assert Interval(0, 4) ^ Interval(2, 5) == Union(Interval(0, 4) - \
             Interval(2, 5), Interval(2, 5) - Interval(0, 4))
 
@@ -1607,6 +1624,23 @@ def test_issue_19378():
     assert Eq(c, b).simplify() is S.true
     assert Eq(a, c).simplify() is S.false
     assert Eq({1}, {x}).simplify() == Eq({1}, {x})
+
+def test_intersection_symbolic():
+    n = Symbol('n')
+    # These should not throw an error
+    assert isinstance(Intersection(Range(n), Range(100)), Intersection)
+    assert isinstance(Intersection(Range(n), Interval(1, 100)), Intersection)
+    assert isinstance(Intersection(Range(100), Interval(1, n)), Intersection)
+
+
+@XFAIL
+def test_intersection_symbolic_failing():
+    n = Symbol('n', integer=True, positive=True)
+    assert Intersection(Range(10, n), Range(4, 500, 5)) == Intersection(
+        Range(14, n), Range(14, 500, 5))
+    assert Intersection(Interval(10, n), Range(4, 500, 5)) == Intersection(
+        Interval(14, n), Range(14, 500, 5))
+
 
 def test_issue_20379():
     #https://github.com/sympy/sympy/issues/20379

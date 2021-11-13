@@ -65,7 +65,7 @@ class _global_parameters(local):
             clear_cache()
         return super().__setattr__(name, value)
 
-global_parameters = _global_parameters(evaluate=True, distribute=True)
+global_parameters = _global_parameters(evaluate=True, distribute=True, exp_is_pow=False)
 
 @contextmanager
 def evaluate(x):
@@ -84,8 +84,8 @@ def evaluate(x):
     Examples
     ========
 
+    >>> from sympy import evaluate
     >>> from sympy.abc import x
-    >>> from sympy.core.parameters import evaluate
     >>> print(x + x)
     2*x
     >>> with evaluate(False):
@@ -132,3 +132,30 @@ def distribute(x):
         yield
     finally:
         global_parameters.distribute = old
+
+
+@contextmanager
+def _exp_is_pow(x):
+    """
+    Control whether `e^x` should be represented as ``exp(x)`` or a ``Pow(E, x)``.
+
+    Examples
+    ========
+
+    >>> from sympy import exp
+    >>> from sympy.abc import x
+    >>> from sympy.core.parameters import _exp_is_pow
+    >>> with _exp_is_pow(True): print(type(exp(x)))
+    <class 'sympy.core.power.Pow'>
+    >>> with _exp_is_pow(False): print(type(exp(x)))
+    exp
+    """
+    old = global_parameters.exp_is_pow
+
+    clear_cache()
+    try:
+        global_parameters.exp_is_pow = x
+        yield
+    finally:
+        clear_cache()
+        global_parameters.exp_is_pow = old

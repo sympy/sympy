@@ -1,11 +1,13 @@
-from sympy import S, simplify
+from sympy.core.singleton import S
+from sympy.simplify.simplify import simplify
 from sympy.core import Basic, diff
+from sympy.core.sorting import default_sort_key
 from sympy.matrices import Matrix
 from sympy.vector import (CoordSys3D, Vector, ParametricRegion,
                         parametric_region_list, ImplicitRegion)
 from sympy.vector.operators import _get_coord_sys_from_expr
 from sympy.integrals import Integral, integrate
-from sympy.utilities.iterables import topological_sort, default_sort_key
+from sympy.utilities.iterables import topological_sort
 from sympy.geometry.entity import GeometryEntity
 
 
@@ -174,7 +176,7 @@ def vector_integrate(field, *region):
     >>> from sympy.vector import ImplicitRegion
     >>> c2 = ImplicitRegion((x, y), (x - 2)**2 + (y - 1)**2 - 9)
     >>> vector_integrate(1, c2)
-    12*pi
+    6*pi
 
     Integral of fields with respect to base scalars:
 

@@ -36,7 +36,7 @@ def groebner(seq, ring, method=None):
         try:
             orig, ring = ring, ring.clone(domain=domain.get_field())
         except DomainError:
-            raise DomainError("can't compute a Groebner basis over %s" % domain)
+            raise DomainError("Cannot compute a Groebner basis over %s" % domain)
         else:
             seq = [ s.set_ring(ring) for s in seq ]
 
@@ -830,7 +830,7 @@ def groebner_lcm(f, g):
     basis = groebner([F, G], t_ring)
 
     def is_independent(h, j):
-        return all(not monom[j] for monom in h.monoms())
+        return not any(monom[j] for monom in h.monoms())
 
     H = [ h for h in basis if is_independent(h, 0) ]
 

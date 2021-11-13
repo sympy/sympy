@@ -15,7 +15,9 @@ the following function types in the given ``Interval``:
 
 """
 
-from sympy import S, Symbol
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.solvers.solveset import solveset
 from sympy.utilities.misc import filldedent
@@ -66,25 +68,23 @@ def singularities(expression, symbol, domain=None):
     Examples
     ========
 
-    >>> from sympy.calculus.singularities import singularities
-    >>> from sympy import Symbol, log
+    >>> from sympy import singularities, Symbol, log
     >>> x = Symbol('x', real=True)
     >>> y = Symbol('y', real=False)
     >>> singularities(x**2 + x + 1, x)
     EmptySet
     >>> singularities(1/(x + 1), x)
-    FiniteSet(-1)
+    {-1}
     >>> singularities(1/(y**2 + 1), y)
-    FiniteSet(I, -I)
+    {-I, I}
     >>> singularities(1/(y**3 + 1), y)
-    FiniteSet(-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2)
+    {-1, 1/2 - sqrt(3)*I/2, 1/2 + sqrt(3)*I/2}
     >>> singularities(log(x), x)
-    FiniteSet(0)
+    {0}
 
     """
     from sympy.functions.elementary.exponential import log
     from sympy.functions.elementary.trigonometric import sec, csc, cot, tan, cos
-    from sympy.core.power import Pow
 
     if domain is None:
         domain = S.Reals if symbol.is_real else S.Complexes

@@ -167,4 +167,10 @@ ConditionSet
 ^^^^^^^^^^^^
 
 .. autoclass:: ConditionSet
-    :members:
+   :members:
+
+Relations on sets
+^^^^^^^^^^^^^^^^^
+
+.. autoclass:: Contains
+   :members:

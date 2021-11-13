@@ -1,15 +1,26 @@
-from itertools import product as cartes
+from itertools import product
 
-from sympy import (
-    limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
-    atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I,
-    tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
-    binomial, simplify, frac, Float, sec, zoo, fresnelc, fresnels,
-    acos, erf, erfc, erfi, LambertW, factorial, digamma, uppergamma,
-    Ei, EulerGamma, asin, atanh, acot, acoth, asec, acsc, cbrt, besselk)
+from sympy.concrete.summations import Sum
+from sympy.core.function import (Function, diff)
+from sympy.core import EulerGamma
+from sympy.core.numbers import (E, I, Rational, oo, pi, zoo)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.combinatorial.factorials import (binomial, factorial, subfactorial)
+from sympy.functions.elementary.complexes import (Abs, re, sign)
+from sympy.functions.elementary.exponential import (LambertW, exp, log)
+from sympy.functions.elementary.hyperbolic import (acoth, atanh, sinh)
+from sympy.functions.elementary.integers import (ceiling, floor, frac)
+from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
+from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, sec, sin, tan)
+from sympy.functions.special.bessel import (besselj, besselk)
+from sympy.functions.special.error_functions import (Ei, erf, erfc, erfi, fresnelc, fresnels)
+from sympy.functions.special.gamma_functions import (digamma, gamma, uppergamma)
+from sympy.integrals.integrals import (Integral, integrate)
+from sympy.series.limits import (Limit, limit)
+from sympy.simplify.simplify import simplify
 
 from sympy.calculus.util import AccumBounds
-from sympy.core.add import Add
 from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
@@ -36,7 +47,7 @@ def test_basic1():
     assert limit((1 + x)**(1 + sqrt(2)), x, 0) == 1
     assert limit((1 + x)**oo, x, 0) == Limit((x + 1)**oo, x, 0)
     assert limit((1 + x)**oo, x, 0, dir='-') == Limit((x + 1)**oo, x, 0, dir='-')
-    assert limit((1 + x + y)**oo, x, 0, dir='-') == Limit((x + y + 1)**oo, x, 0, dir='-')
+    assert limit((1 + x + y)**oo, x, 0, dir='-') == Limit((1 + x + y)**oo, x, 0, dir='-')
     assert limit(y/x/log(x), x, 0) == -oo*sign(y)
     assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
     assert limit(gamma(1/x + 3), x, oo) == 2
@@ -74,7 +85,7 @@ def test_basic1():
     assert limit(1/sqrt(x), x, 0, dir='-') == (-oo)*I
     assert limit(x**2, x, 0, dir='-') == 0
     assert limit(sqrt(x), x, 0, dir='-') == 0
-    assert limit(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))
+    assert limit(x**-pi, x, 0, dir='-') == -oo*(-1)**(1 - pi)
     assert limit((1 + cos(x))**oo, x, 0) == Limit((cos(x) + 1)**oo, x, 0)
 
 
@@ -102,6 +113,26 @@ def test_basic4():
     assert integrate(1/(x**3 + 1), (x, 0, oo)) == 2*pi*sqrt(3)/9
 
 
+def test_log():
+    # https://github.com/sympy/sympy/issues/21598
+    a, b, c = symbols('a b c', positive=True)
+    A = log(a/b) - (log(a) - log(b))
+    assert A.limit(a, oo) == 0
+    assert (A * c).limit(a, oo) == 0
+
+    tau, x = symbols('tau x', positive=True)
+    # The value of manualintegrate in the issue
+    expr = tau**2*((tau - 1)*(tau + 1)*log(x + 1)/(tau**2 + 1)**2 + 1/((tau**2\
+            + 1)*(x + 1)) - (-2*tau*atan(x/tau) + (tau**2/2 - 1/2)*log(tau**2\
+            + x**2))/(tau**2 + 1)**2)
+    assert limit(expr, x, oo) == pi*tau**3/(tau**2 + 1)**2
+
+
+def test_piecewise():
+    # https://github.com/sympy/sympy/issues/18363
+    assert limit((real_root(x - 6, 3) + 2)/(x + 2), x, -2, '+') == Rational(1, 12)
+
+
 def test_basic5():
     class my(Function):
         @classmethod
@@ -112,7 +143,7 @@ def test_basic5():
 
 
 def test_issue_3885():
-    assert limit(x*y + x*z, z, 2) == x*(y + 2)
+    assert limit(x*y + x*z, z, 2) == x*y + 2*x
 
 
 def test_Limit():
@@ -134,6 +165,10 @@ def test_floor():
     assert limit(floor(x), x, 2, "-") == 1
     assert limit(floor(x), x, 248, "+") == 248
     assert limit(floor(x), x, 248, "-") == 247
+
+    # https://github.com/sympy/sympy/issues/14478
+    assert limit(x*floor(3/x)/2, x, 0, '+') == Rational(3, 2)
+    assert limit(floor(x + 1/2) - floor(x), x, oo) == AccumBounds(-S.Half, S(3)/2)
 
 
 def test_floor_requires_robust_assumptions():
@@ -161,6 +196,10 @@ def test_ceiling():
     assert limit(ceiling(x), x, 248, "+") == 249
     assert limit(ceiling(x), x, 248, "-") == 248
 
+    # https://github.com/sympy/sympy/issues/14478
+    assert limit(x*ceiling(3/x)/2, x, 0, '+') == Rational(3, 2)
+    assert limit(ceiling(x + 1/2) - ceiling(x), x, oo) == AccumBounds(-S.Half, S(3)/2)
+
 
 def test_ceiling_requires_robust_assumptions():
     assert limit(ceiling(sin(x)), x, 0, "+") == 1
@@ -179,11 +218,35 @@ def test_atan():
     assert limit(atan(x) + sqrt(x + 1) - sqrt(x), x, oo) == pi/2
 
 
-def test_abs():
+def test_set_signs():
     assert limit(abs(x), x, 0) == 0
     assert limit(abs(sin(x)), x, 0) == 0
     assert limit(abs(cos(x)), x, 0) == 1
     assert limit(abs(sin(x + 1)), x, 0) == sin(1)
+
+    # https://github.com/sympy/sympy/issues/9449
+    assert limit((Abs(x + y) - Abs(x - y))/(2*x), x, 0) == sign(y)
+
+    # https://github.com/sympy/sympy/issues/12398
+    assert limit(Abs(log(x)/x**3), x, oo) == 0
+    assert limit(x*(Abs(log(x)/x**3)/Abs(log(x + 1)/(x + 1)**3) - 1), x, oo) == 3
+
+    # https://github.com/sympy/sympy/issues/18501
+    assert limit(Abs(log(x - 1)**3 - 1), x, 1, '+') == oo
+
+    # https://github.com/sympy/sympy/issues/18997
+    assert limit(Abs(log(x)), x, 0) == oo
+    assert limit(Abs(log(Abs(x))), x, 0) == oo
+
+    # https://github.com/sympy/sympy/issues/19026
+    z = Symbol('z', positive=True)
+    assert limit(Abs(log(z) + 1)/log(z), z, oo) == 1
+
+    # https://github.com/sympy/sympy/issues/20704
+    assert limit(z*(Abs(1/z + y) - Abs(y - 1/z))/2, z, 0) == 0
+
+    # https://github.com/sympy/sympy/issues/21606
+    assert limit(cos(z)/sign(z), z, pi, '-') == -1
 
 
 def test_heuristic():
@@ -221,7 +284,7 @@ def test_doit():
     assert l.doit() is oo
 
 
-def test_AccumBounds():
+def test_series_AccumBounds():
     assert limit(sin(k) - sin(k + 1), k, oo) == AccumBounds(-2, 2)
     assert limit(cos(k) - cos(k + 1) + 1, k, oo) == AccumBounds(-1, 3)
 
@@ -229,15 +292,20 @@ def test_AccumBounds():
     assert limit(sin(k) - sin(k)*cos(k), k, oo) == AccumBounds(-2, 2)
 
     # test for issue #9934
-    t1 = Mul(S.Half, 1/(-1 + cos(1)), Add(AccumBounds(-3, 1), cos(1)))
+    lo = (-3 + cos(1))/2
+    hi = (1 + cos(1))/2
+    t1 = Mul(AccumBounds(lo, hi), 1/(-1 + cos(1)), evaluate=False)
     assert limit(simplify(Sum(cos(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t1
 
-    t2 = Mul(S.Half, Add(AccumBounds(-2, 2), sin(1)), 1/(-cos(1) + 1))
+    t2 = Mul(AccumBounds(-1 + sin(1)/2, sin(1)/2 + 1), 1/(1 - cos(1)))
     assert limit(simplify(Sum(sin(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t2
 
-    assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)
-    assert limit(((sin(x) + 1)/2)**x, x, oo) == AccumBounds(0, oo)
-    # Possible improvement: AccumBounds(0, 1)
+    assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)  # wolfram gives (0, 1)
+    assert limit(((sin(x) + 1)/2)**x, x, oo) == AccumBounds(0, oo)  # wolfram says 0
+
+    # https://github.com/sympy/sympy/issues/12312
+    e = 2**(-x)*(sin(x) + 1)**x
+    assert limit(e, x, oo) == AccumBounds(0, oo)
 
 
 @XFAIL
@@ -247,8 +315,10 @@ def test_doit2():
     # limit() breaks on the contained Integral.
     assert l.doit(deep=False) == l
 
+
 def test_issue_2929():
     assert limit((x * exp(x))/(exp(x) - 1), x, -oo) == 0
+
 
 def test_issue_3792():
     assert limit((1 - cos(x))/x**2, x, S.Half) == 4 - 4*cos(S.Half)
@@ -276,6 +346,11 @@ def test_issue_5164():
     assert limit(x**(-0.5), x, 4) == S(4)**(-0.5)
 
 
+def test_issue_5383():
+    func = (1.0 * 1 + 1.0 * x)**(1.0 * 1 / x)
+    assert limit(func, x, 0) == E
+
+
 def test_issue_14793():
     expr = ((x + S(1)/2) * log(x) - x + log(2*pi)/2 - \
         log(factorial(x)) + S(1)/(12*x))*x**3
@@ -284,10 +359,10 @@ def test_issue_14793():
 
 def test_issue_5183():
     # using list(...) so py.test can recalculate values
-    tests = list(cartes([x, -x],
-                        [-1, 1],
-                        [2, 3, S.Half, Rational(2, 3)],
-                        ['-', '+']))
+    tests = list(product([x, -x],
+                         [-1, 1],
+                         [2, 3, S.Half, Rational(2, 3)],
+                         ['-', '+']))
     results = (oo, oo, -oo, oo, -oo*I, oo, -oo*(-1)**Rational(1, 3), oo,
                0, 0, 0, 0, 0, 0, 0, 0,
                oo, oo, oo, -oo, oo, -oo*I, oo, -oo*(-1)**Rational(1, 3),
@@ -323,9 +398,9 @@ def test_issue_5229():
 
 def test_issue_4546():
     # using list(...) so py.test can recalculate values
-    tests = list(cartes([cot, tan],
-                        [-pi/2, 0, pi/2, pi, pi*Rational(3, 2)],
-                        ['-', '+']))
+    tests = list(product([cot, tan],
+                         [-pi/2, 0, pi/2, pi, pi*Rational(3, 2)],
+                         ['-', '+']))
     results = (0, 0, -oo, oo, 0, 0, -oo, oo, 0, 0,
                oo, -oo, 0, 0, oo, -oo, 0, 0, oo, -oo)
     assert len(tests) == len(results)
@@ -366,13 +441,10 @@ def test_newissue():
 
 
 def test_extended_real_line():
-    assert limit(x - oo, x, oo) is -oo
-    assert limit(oo - x, x, -oo) is oo
-    assert limit(x**2/(x - 5) - oo, x, oo) is -oo
-    assert limit(1/(x + sin(x)) - oo, x, 0) is -oo
-    assert limit(oo/x, x, oo) is oo
-    assert limit(x - oo + 1/x, x, oo) is -oo
-    assert limit(x - oo + 1/x, x, 0) is -oo
+    assert limit(x - oo, x, oo) == Limit(x - oo, x, oo)
+    assert limit(1/(x + sin(x)) - oo, x, 0) == Limit(1/(x + sin(x)) - oo, x, 0)
+    assert limit(oo/x, x, oo) == Limit(oo/x, x, oo)
+    assert limit(x - oo + 1/x, x, oo) == Limit(x - oo + 1/x, x, oo)
 
 
 @XFAIL
@@ -409,11 +481,10 @@ def test_issue_5740():
 def test_issue_6366():
     n = Symbol('n', integer=True, positive=True)
     r = (n + 1)*x**(n + 1)/(x**(n + 1) - 1) - x/(x - 1)
-    assert limit(r, x, 1) == n/2
+    assert limit(r, x, 1).cancel() == n/2
 
 
 def test_factorial():
-    from sympy import factorial, E
     f = factorial(x)
     assert limit(f, x, oo) is oo
     assert limit(x/f, x, oo) == 0
@@ -421,14 +492,12 @@ def test_factorial():
     # https://en.wikipedia.org/wiki/Stirling's_approximation
     assert limit(f/(sqrt(2*pi*x)*(x/E)**x), x, oo) == 1
     assert limit(f, x, -oo) == factorial(-oo)
-    assert limit(f, x, x**2) == factorial(x**2)
-    assert limit(f, x, -x**2) == factorial(-x**2)
 
 
 def test_issue_6560():
     e = (5*x**3/4 - x*Rational(3, 4) + (y*(3*x**2/2 - S.Half) +
                              35*x**4/8 - 15*x**2/4 + Rational(3, 8))/(2*(y + 1)))
-    assert limit(e, y, oo) == (5*x**3 + 3*x**2 - 3*x - 1)/4
+    assert limit(e, y, oo) == 5*x**3/4 + 3*x**2/4 - 3*x/4 - Rational(1, 4)
 
 @XFAIL
 def test_issue_5172():
@@ -502,7 +571,7 @@ def test_branch_cuts():
 def test_issue_6364():
     a = Symbol('a')
     e = z/(1 - sqrt(1 + z)*sin(a)**2 - sqrt(1 - z)*cos(a)**2)
-    assert limit(e, z, 0).simplify() == 2/cos(2*a)
+    assert limit(e, z, 0) == 1/(cos(a)**2 - S.Half)
 
 
 def test_issue_4099():
@@ -538,8 +607,28 @@ def test_issue_8481():
     limit(lamda**k * exp(-lamda) / factorial(k), k, oo) == 0
 
 
+def test_issue_8635_18176():
+    x = Symbol('x', real=True)
+    k = Symbol('k', positive=True)
+    assert limit(x**n - x**(n - 0), x, oo) == 0
+    assert limit(x**n - x**(n - 5), x, oo) == oo
+    assert limit(x**n - x**(n - 2.5), x, oo) == oo
+    assert limit(x**n - x**(n - k - 1), x, oo) == oo
+    x = Symbol('x', positive=True)
+    assert limit(x**n - x**(n - 1), x, oo) == oo
+    assert limit(x**n - x**(n + 2), x, oo) == -oo
+
+
 def test_issue_8730():
     assert limit(subfactorial(x), x, oo) is oo
+
+
+def test_issue_9252():
+    n = Symbol('n', integer=True)
+    c = Symbol('c', positive=True)
+    assert limit((log(n))**(n/log(n)) / (1 + c)**n, n, oo) == 0
+    # limit should depend on the value of c
+    raises(NotImplementedError, lambda: limit((log(n))**(n/log(n)) / c**n, n, oo))
 
 
 def test_issue_9558():
@@ -584,7 +673,7 @@ def test_issue_11879():
 def test_limit_with_Float():
     k = symbols("k")
     assert limit(1.0 ** k, k, oo) == 1
-    assert limit(0.3*1.0**k, k, oo) == Float(0.3)
+    assert limit(0.3*1.0**k, k, oo) == Rational(3, 10)
 
 
 def test_issue_10610():
@@ -593,11 +682,6 @@ def test_issue_10610():
 
 def test_issue_6599():
     assert limit((n + cos(n))/n, n, oo) == 1
-
-
-def test_issue_12398():
-    assert limit(Abs(log(x)/x**3), x, oo) == 0
-    assert limit(x*(Abs(log(x)/x**3)/Abs(log(x + 1)/(x + 1)**3) - 1), x, oo) == 3
 
 
 def test_issue_12555():
@@ -614,7 +698,7 @@ def test_issue_12769():
         2*F0**(b + 1)*K**(2*b)*a*r*s0*(b**2 - 2*b + 1) - \
         2*F0**(b + 1)*K**(b + 1)*a**2*(b - 1))/((b - 1)*(b**2 - 2*b + 1))))*(b*r -  b - r + 1)
 
-    assert fx.subs(K, F0).cancel().together() == limit(fx, K, F0).together()
+    assert fx.subs(K, F0).factor(deep=True) == limit(fx, K, F0).factor(deep=True)
 
 
 def test_issue_13332():
@@ -645,15 +729,15 @@ def test_issue_13382():
 
 
 def test_issue_13403():
-    assert limit(x*(-1 + (x + log(x + 1) + 1)/(x + log(x))), x ,oo) == 1
+    assert limit(x*(-1 + (x + log(x + 1) + 1)/(x + log(x))), x, oo) == 1
 
 
 def test_issue_13416():
-    assert limit((-x**3*log(x)**3 + (x - 1)*(x + 1)**2*log(x + 1)**3)/(x**2*log(x)**3), x ,oo) == 1
+    assert limit((-x**3*log(x)**3 + (x - 1)*(x + 1)**2*log(x + 1)**3)/(x**2*log(x)**3), x, oo) == 1
 
 
 def test_issue_13462():
-    assert limit(n**2*(2*n*(-(1 - 1/(2*n))**x + 1) - x - (-x**2/4 + x/4)/n), n, oo) == x*(x - 2)*(x - 1)/24
+    assert limit(n**2*(2*n*(-(1 - 1/(2*n))**x + 1) - x - (-x**2/4 + x/4)/n), n, oo) == x**3/24 - x**2/8 + x/12
 
 
 def test_issue_13750():
@@ -702,7 +786,7 @@ def test_issue_15282():
 
 
 def test_issue_15984():
-    assert limit((-x + log(exp(x) + 1))/x, x, oo, dir='-').doit() == 0
+    assert limit((-x + log(exp(x) + 1))/x, x, oo, dir='-') == 0
 
 
 def test_issue_13571():
@@ -710,7 +794,7 @@ def test_issue_13571():
 
 
 def test_issue_13575():
-    assert limit(acos(erfi(x)), x, 1).cancel() == acos(-I*erf(I))
+    assert limit(acos(erfi(x)), x, 1) == acos(erfi(S.One))
 
 
 def test_issue_17325():
@@ -724,7 +808,6 @@ def test_issue_10978():
     assert LambertW(x).limit(x, 0) == 0
 
 
-@XFAIL
 def test_issue_14313_comment():
     assert limit(floor(n/2), n, oo) is oo
 
@@ -745,7 +828,7 @@ def test_issue_14590():
 
 def test_issue_14393():
     a, b = symbols('a b')
-    assert limit((x**b - y**b)/(x**a - y**a), x, y) == b*y**(-a)*y**b/a
+    assert limit((x**b - y**b)/(x**a - y**a), x, y) == b*y**(-a + b)/a
 
 
 def test_issue_14556():
@@ -796,6 +879,11 @@ def test_issue_17792():
     assert limit(factorial(n)/sqrt(n)*(exp(1)/n)**n, n, oo) == sqrt(2)*sqrt(pi)
 
 
+def test_issue_18118():
+    assert limit(sign(sin(x)), x, 0, "-") == -1
+    assert limit(sign(sin(x)), x, 0, "+") == 1
+
+
 def test_issue_18306():
     assert limit(sin(sqrt(x))/sqrt(sin(x)), x, 0, '+') == 1
 
@@ -822,14 +910,14 @@ def test_issue_18482():
     assert limit((2*exp(3*x)/(exp(2*x) + 1))**(1/x), x, oo) == exp(1)
 
 
-def test_issue_18501():
-    assert limit(Abs(log(x - 1)**3 - 1), x, 1, '+') == oo
-
-
 def test_issue_18508():
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0) == sqrt(2)
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='+') == sqrt(2)
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='-') == -sqrt(2)
+
+
+def test_issue_18521():
+    raises(NotImplementedError, lambda: limit(exp((2 - n) * x), x, oo))
 
 
 def test_issue_18969():
@@ -840,16 +928,6 @@ def test_issue_18969():
 
 def test_issue_18992():
     assert limit(n/(factorial(n)**(1/n)), n, oo) == exp(1)
-
-
-def test_issue_18997():
-    assert limit(Abs(log(x)), x, 0) == oo
-    assert limit(Abs(log(Abs(x))), x, 0) == oo
-
-
-def test_issue_19026():
-    x = Symbol('x', positive=True)
-    assert limit(Abs(log(x) + 1)/log(x), x, oo) == 1
 
 
 def test_issue_19067():
@@ -864,7 +942,7 @@ def test_issue_19586():
 def test_issue_13715():
     n = Symbol('n')
     p = Symbol('p', zero=True)
-    assert limit(n + p, n, 0) == p
+    assert limit(n + p, n, 0) == 0
 
 
 def test_issue_15055():
@@ -875,6 +953,25 @@ def test_issue_16708():
     m, vi = symbols('m vi', positive=True)
     B, ti, d = symbols('B ti d')
     assert limit((B*ti*vi - sqrt(m)*sqrt(-2*B*d*vi + m*(vi)**2) + m*vi)/(B*vi), B, 0) == (d + ti*vi)/vi
+
+
+def test_issue_19453():
+    beta = Symbol("beta", real=True, positive=True)
+    h = Symbol("h", real=True, positive=True)
+    m = Symbol("m", real=True, positive=True)
+    w = Symbol("omega", real=True, positive=True)
+    g = Symbol("g", real=True, positive=True)
+
+    e = exp(1)
+    q = 3*h**2*beta*g*e**(0.5*h*beta*w)
+    p = m**2*w**2
+    s = e**(h*beta*w) - 1
+    Z = -q/(4*p*s) - q/(2*p*s**2) - q*(e**(h*beta*w) + 1)/(2*p*s**3)\
+            + e**(0.5*h*beta*w)/s
+    E = -diff(log(Z), beta)
+
+    assert limit(E - 0.5*h*w, beta, oo) == 0
+    assert limit(E.simplify() - 0.5*h*w, beta, oo) == 0
 
 
 def test_issue_19739():
@@ -906,3 +1003,67 @@ def test_issue_7535():
     assert oo*(1/sin(oo)) == AccumBounds(-oo, oo)
     assert oo*(1/sin(-oo)) == AccumBounds(-oo, oo)
     assert -oo*(1/sin(oo)) == AccumBounds(-oo, oo)
+
+
+def test_issue_20365():
+    assert limit(((x + 1)**(1/x) - E)/x, x, 0) == -E/2
+
+
+def test_issue_21031():
+    assert limit(((1 + x)**(1/x) - (1 + 2*x)**(1/(2*x)))/asin(x), x, 0) == E/2
+
+
+def test_issue_21038():
+    assert limit(sin(pi*x)/(3*x - 12), x, 4) == pi/3
+
+
+def test_issue_20578():
+    expr = abs(x) * sin(1/x)
+    assert limit(expr,x,0,'+') == 0
+    assert limit(expr,x,0,'-') == 0
+    assert limit(expr,x,0,'+-') == 0
+
+
+def test_issue_21415():
+    exp = (x-1)*cos(1/(x-1))
+    assert exp.limit(x,1) == 0
+    assert exp.expand().limit(x,1) == 0
+
+
+def test_issue_21530():
+    assert limit(sinh(n + 1)/sinh(n), n, oo) == E
+
+
+def test_issue_21550():
+    r = (sqrt(5) - 1)/2
+    assert limit((x - r)/(x**2 + x - 1), x, r) == sqrt(5)/5
+
+
+def test_issue_21661():
+    out = limit((x**(x + 1) * (log(x) + 1) + 1) / x, x, 11)
+    assert out == S(3138428376722)/11 + 285311670611*log(11)
+
+
+def test_issue_21701():
+    assert limit((besselj(z, x)/x**z).subs(z, 7), x, 0) == S(1)/645120
+
+
+def test_issue_21721():
+    a = Symbol('a', real=True)
+    I = integrate(1/(pi*(1 + (x - a)**2)), x)
+    assert I.limit(x, oo) == S.Half
+
+
+def test_issue_21756():
+    term = (1 - exp(-2*I*pi*z))/(1 - exp(-2*I*pi*z/5))
+    assert term.limit(z, 0) == 5
+    assert re(term).limit(z, 0) == 5
+
+
+def test_issue_21785():
+    a = Symbol('a')
+    assert sqrt((-a**2 + x**2)/(1 - x**2)).limit(a, 1, '-') == I
+
+
+def test_issue_22181():
+    assert limit((-1)**x * 2**(-x), x, oo) == 0

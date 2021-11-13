@@ -9,7 +9,9 @@ Springer 1999. (Shanks transformation: pp. 368-375, Richardson
 extrapolation: pp. 375-377.)
 """
 
-from sympy import factorial, Integer, S
+from sympy.core.numbers import Integer
+from sympy.core.singleton import S
+from sympy.functions.combinatorial.factorials import factorial
 
 
 def richardson(A, k, n, N):

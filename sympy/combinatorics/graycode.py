@@ -281,7 +281,7 @@ class GrayCode(Basic):
         '100'
         """
         rv = self._current or '0'
-        if type(rv) is not str:
+        if not isinstance(rv, str):
             rv = bin(rv)[2:]
         return rv.rjust(self.n, '0')
 

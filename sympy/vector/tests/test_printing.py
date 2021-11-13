@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-from sympy import Integral, latex, Function
-from sympy import pretty as xpretty
+from sympy.core.function import Function
+from sympy.integrals.integrals import Integral
+from sympy.printing.latex import latex
+from sympy.printing.pretty import pretty as xpretty
 from sympy.vector import CoordSys3D, Vector, express
 from sympy.abc import a, b, c
 from sympy.testing.pytest import XFAIL

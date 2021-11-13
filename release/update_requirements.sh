@@ -31,10 +31,10 @@ pip install -U pip wheel
 
 pip install\
   mpmath\
-  'matplotlib>=2.2'\
-  'numpy==1.18.5'\
+  matplotlib\
+  numpy\
   scipy\
-  theano\
+  aesara\
   ipython\
   symengine\
   tensorflow\
@@ -46,6 +46,7 @@ pip install\
   'antlr4-python3-runtime==4.7.*'\
   sphinx\
   sphinx-math-dollar\
+  sphinx-reredirects\
   #
 
 pip freeze > requirements.txt

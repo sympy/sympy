@@ -1,9 +1,29 @@
 '''Functions returning normal forms of matrices'''
 
-from sympy.matrices.dense import diag, zeros
+from sympy.polys.polytools import Poly
+from sympy.polys.matrices import DomainMatrix
+from sympy.polys.matrices.normalforms import (
+        smith_normal_form as _snf,
+        invariant_factors as _invf,
+        hermite_normal_form as _hnf,
+    )
 
 
-def smith_normal_form(m, domain = None):
+def _to_domain(m, domain=None):
+    """Convert Matrix to DomainMatrix"""
+    # XXX: deprecated support for RawMatrix:
+    ring = getattr(m, "ring", None)
+    m = m.applyfunc(lambda e: e.as_expr() if isinstance(e, Poly) else e)
+
+    dM = DomainMatrix.from_Matrix(m)
+
+    domain = domain or ring
+    if domain is not None:
+        dM = dM.convert_to(domain)
+    return dM
+
+
+def smith_normal_form(m, domain=None):
     '''
     Return the Smith Normal Form of a matrix `m` over the ring `domain`.
     This will only work if the ring is a principal ideal domain.
@@ -11,25 +31,18 @@ def smith_normal_form(m, domain = None):
     Examples
     ========
 
-    >>> from sympy.polys.solvers import RawMatrix as Matrix
-    >>> from sympy.polys.domains import ZZ
+    >>> from sympy import Matrix, ZZ
     >>> from sympy.matrices.normalforms import smith_normal_form
     >>> m = Matrix([[12, 6, 4], [3, 9, 6], [2, 16, 14]])
-    >>> setattr(m, "ring", ZZ)
-    >>> print(smith_normal_form(m))
+    >>> print(smith_normal_form(m, domain=ZZ))
     Matrix([[1, 0, 0], [0, 10, 0], [0, 0, -30]])
 
     '''
-    invs = invariant_factors(m, domain=domain)
-    smf = diag(*invs)
-    n = len(invs)
-    if m.rows > n:
-        smf = smf.row_insert(m.rows, zeros(m.rows-n, m.cols))
-    elif m.cols > n:
-        smf = smf.col_insert(m.cols, zeros(m.rows, m.cols-n))
-    return smf
+    dM = _to_domain(m, domain)
+    return _snf(dM).to_Matrix()
 
-def invariant_factors(m, domain = None):
+
+def invariant_factors(m, domain=None):
     '''
     Return the tuple of abelian invariants for a matrix `m`
     (as in the Smith-Normal form)
@@ -37,107 +50,74 @@ def invariant_factors(m, domain = None):
     References
     ==========
 
-    [1] https://en.wikipedia.org/wiki/Smith_normal_form#Algorithm
-    [2] http://sierra.nmsu.edu/morandi/notes/SmithNormalForm.pdf
+    .. [1] https://en.wikipedia.org/wiki/Smith_normal_form#Algorithm
+    .. [2] http://sierra.nmsu.edu/morandi/notes/SmithNormalForm.pdf
 
     '''
-    if not domain:
-        if not (hasattr(m, "ring") and m.ring.is_PID):
-            raise ValueError(
-                "The matrix entries must be over a principal ideal domain")
-        else:
-            domain = m.ring
+    dM = _to_domain(m, domain)
+    factors = _invf(dM)
+    factors = tuple(dM.domain.to_sympy(f) for f in factors)
+    # XXX: deprecated.
+    if hasattr(m, "ring"):
+        if m.ring.is_PolynomialRing:
+            K = m.ring
+            to_poly = lambda f: Poly(f, K.symbols, domain=K.domain)
+            factors = tuple(to_poly(f) for f in factors)
+    return factors
 
-    if len(m) == 0:
-        return ()
 
-    m = m[:, :]
+def hermite_normal_form(A, *, D=None, check_rank=False):
+    r'''
+    Compute the Hermite Normal Form of a Matrix *A* of integers.
 
-    def add_rows(m, i, j, a, b, c, d):
-        # replace m[i, :] by a*m[i, :] + b*m[j, :]
-        # and m[j, :] by c*m[i, :] + d*m[j, :]
-        for k in range(m.cols):
-            e = m[i, k]
-            m[i, k] = a*e + b*m[j, k]
-            m[j, k] = c*e + d*m[j, k]
+    Parameters
+    ==========
 
-    def add_columns(m, i, j, a, b, c, d):
-        # replace m[:, i] by a*m[:, i] + b*m[:, j]
-        # and m[:, j] by c*m[:, i] + d*m[:, j]
-        for k in range(m.rows):
-            e = m[k, i]
-            m[k, i] = a*e + b*m[k, j]
-            m[k, j] = c*e + d*m[k, j]
+    A: $m \times n$ Matrix of integers.
 
-    def clear_column(m):
-        # make m[1:, 0] zero by row and column operations
-        if m[0,0] == 0:
-            return m
-        pivot = m[0, 0]
-        for j in range(1, m.rows):
-            if m[j, 0] == 0:
-                continue
-            d, r = domain.div(m[j,0], pivot)
-            if r == 0:
-                add_rows(m, 0, j, 1, 0, -d, 1)
-            else:
-                a, b, g = domain.gcdex(pivot, m[j,0])
-                d_0 = domain.div(m[j, 0], g)[0]
-                d_j = domain.div(pivot, g)[0]
-                add_rows(m, 0, j, a, b, d_0, -d_j)
-                pivot = g
-        return m
+    D: positive integer (optional)
+        Let $W$ be the HNF of *A*. If known in advance, a positive integer *D*
+        being any multiple of $\det(W)$ may be provided. In this case, if *A*
+        also has rank $m$, then we may use an alternative algorithm that works
+        mod *D* in order to prevent coefficient explosion.
 
-    def clear_row(m):
-        # make m[0, 1:] zero by row and column operations
-        if m[0] == 0:
-            return m
-        pivot = m[0, 0]
-        for j in range(1, m.cols):
-            if m[0, j] == 0:
-                continue
-            d, r = domain.div(m[0, j], pivot)
-            if r == 0:
-                add_columns(m, 0, j, 1, 0, -d, 1)
-            else:
-                a, b, g = domain.gcdex(pivot, m[0, j])
-                d_0 = domain.div(m[0, j], g)[0]
-                d_j = domain.div(pivot, g)[0]
-                add_columns(m, 0, j, a, b, d_0, -d_j)
-                pivot = g
-        return m
+    check_rank: boolean (default ``False``)
+        The basic assumption is that, if you pass a value for *D*, then
+        you already believe that *A* has rank $m$, so we do not waste time
+        checking it for you. If you do want this to be checked (and the
+        ordinary, non-modulo *D* algorithm to be used if the check fails), then
+        set *check_rank* to ``True``.
 
-    # permute the rows and columns until m[0,0] is non-zero if possible
-    ind = [i for i in range(m.rows) if m[i,0] != 0]
-    if ind and ind[0] != 0:
-        m = m.permute_rows([[0, ind[0]]])
-    else:
-        ind = [j for j in range(m.cols) if m[0,j] != 0]
-        if ind and ind[0] != 0:
-            m = m.permute_cols([[0, ind[0]]])
+    Returns
+    =======
 
-    # make the first row and column except m[0,0] zero
-    while (any([m[0,i] != 0 for i in range(1,m.cols)]) or
-           any([m[i,0] != 0 for i in range(1,m.rows)])):
-        m = clear_column(m)
-        m = clear_row(m)
+    Matrix
+        The HNF of matrix *A*.
 
-    if 1 in m.shape:
-        invs = ()
-    else:
-        invs = invariant_factors(m[1:,1:], domain=domain)
+    Raises
+    ======
 
-    if m[0,0]:
-        result = [m[0,0]]
-        result.extend(invs)
-        # in case m[0] doesn't divide the invariants of the rest of the matrix
-        for i in range(len(result)-1):
-            if result[i] and domain.div(result[i+1], result[i])[1] != 0:
-                g = domain.gcd(result[i+1], result[i])
-                result[i+1] = domain.div(result[i], g)[0]*result[i+1]
-                result[i] = g
-            else:
-                break
-    else:
-        result = invs + (m[0,0],)
-    return tuple(result)
+    :obj:`sympy.polys.matrices.exceptions.DMDomainError`
+        If the domain of the matrix is not :ref:`ZZ`.
+
+    :obj:`sympy.polys.matrices.exceptions.DMShapeError`
+        If the mod *D* algorithm is used but the matrix has more rows than
+        columns.
+
+    Examples
+    ========
+
+    >>> from sympy import Matrix
+    >>> from sympy.matrices.normalforms import hermite_normal_form
+    >>> m = Matrix([[12, 6, 4], [3, 9, 6], [2, 16, 14]])
+    >>> print(hermite_normal_form(m))
+    Matrix([[10, 0, 2], [0, 15, 3], [0, 0, 2]])
+
+    References
+    ==========
+
+    [1] Cohen, H. *A Course in Computational Algebraic Number Theory.*
+    (See Algorithms 2.4.5 and 2.4.8.)
+
+    '''
+    return _hnf(A._rep, D=D, check_rank=check_rank).to_Matrix()

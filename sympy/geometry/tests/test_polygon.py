@@ -1,13 +1,17 @@
-from sympy import (Abs, Rational, Float, S, Symbol, symbols, cos, sin, pi, sqrt, \
-                    oo, acos)
+from sympy.core.numbers import (Float, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, cos, sin)
 from sympy.functions.elementary.trigonometric import tan
-from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D, \
-                            Polygon, Ray, RegularPolygon, Segment, Triangle, \
+from sympy.geometry import (Circle, Ellipse, GeometryError, Point, Point2D,
+                            Polygon, Ray, RegularPolygon, Segment, Triangle,
                             are_similar, convex_hull, intersection, Line, Ray2D)
 from sympy.testing.pytest import raises, slow, warns
 from sympy.testing.randtest import verify_numerically
 from sympy.geometry.polygon import rad, deg
-from sympy import integrate
+from sympy.integrals.integrals import integrate
 
 
 def feq(a, b):
@@ -163,7 +167,7 @@ def test_polygon():
         if isinstance(var, Point):
             assert var == Point(0, 0)
         else:
-            assert var == 5 or var == 10 or var == pi / 3
+            assert var in (5, 10, pi / 3)
     assert p1 != Point(0, 0)
     assert p1 != p5
 

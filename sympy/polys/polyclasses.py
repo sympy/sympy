@@ -1,7 +1,7 @@
 """OO layer for several polynomial representations. """
 
 
-from sympy import oo
+from sympy.core.numbers import oo
 from sympy.core.sympify import CantSympify
 from sympy.polys.polyerrors import CoercionFailed, NotReversible, NotInvertible
 from sympy.polys.polyutils import PicklableWithSlots
@@ -26,8 +26,6 @@ class GenericPoly(PicklableWithSlots):
     def _perify_factors(per, result, include):
         if include:
             coeff, factors = result
-        else:
-            coeff = result
 
         factors = [ (per(g), k) for g, k in factors ]
 
@@ -148,6 +146,7 @@ class DMP(PicklableWithSlots, CantSympify):
 
     def __init__(self, rep, dom, lev=None, ring=None):
         if lev is not None:
+            # Not possible to check with isinstance
             if type(rep) is dict:
                 rep = dmp_from_dict(rep, lev, dom)
             elif type(rep) is not list:
@@ -169,7 +168,7 @@ class DMP(PicklableWithSlots, CantSympify):
     def unify(f, g):
         """Unify representations of two multivariate polynomials. """
         if not isinstance(g, DMP) or f.lev != g.lev:
-            raise UnificationFailed("can't unify %s with %s" % (f, g))
+            raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
         if f.dom == g.dom and f.ring == g.ring:
             return f.lev, f.dom, f.per, f.rep, g.rep
@@ -815,7 +814,7 @@ class DMP(PicklableWithSlots, CantSympify):
                     return dup_isolate_all_roots_sqf(f.rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
         else:
             raise PolynomialError(
-                "can't isolate roots of a multivariate polynomial")
+                "Cannot isolate roots of a multivariate polynomial")
 
     def refine_root(f, s, t, eps=None, steps=None, fast=False):
         """
@@ -828,7 +827,7 @@ class DMP(PicklableWithSlots, CantSympify):
             return dup_refine_real_root(f.rep, s, t, f.dom, eps=eps, steps=steps, fast=fast)
         else:
             raise PolynomialError(
-                "can't refine a root of a multivariate polynomial")
+                "Cannot refine a root of a multivariate polynomial")
 
     def count_real_roots(f, inf=None, sup=None):
         """Return the number of real roots of ``f`` in ``[inf, sup]``. """
@@ -1143,7 +1142,7 @@ class DMF(PicklableWithSlots, CantSympify):
     def poly_unify(f, g):
         """Unify a multivariate fraction and a polynomial. """
         if not isinstance(g, DMP) or f.lev != g.lev:
-            raise UnificationFailed("can't unify %s with %s" % (f, g))
+            raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
         if f.dom == g.dom and f.ring == g.ring:
             return (f.lev, f.dom, f.per, (f.num, f.den), g.rep)
@@ -1178,7 +1177,7 @@ class DMF(PicklableWithSlots, CantSympify):
     def frac_unify(f, g):
         """Unify representations of two multivariate fractions. """
         if not isinstance(g, DMF) or f.lev != g.lev:
-            raise UnificationFailed("can't unify %s with %s" % (f, g))
+            raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
         if f.dom == g.dom and f.ring == g.ring:
             return (f.lev, f.dom, f.per, (f.num, f.den),
@@ -1313,8 +1312,11 @@ class DMF(PicklableWithSlots, CantSympify):
     def pow(f, n):
         """Raise ``f`` to a non-negative power ``n``. """
         if isinstance(n, int):
-            return f.per(dmp_pow(f.num, n, f.lev, f.dom),
-                         dmp_pow(f.den, n, f.lev, f.dom), cancel=False)
+            num, den = f.num, f.den
+            if n < 0:
+                num, den, n = den, num, -n
+            return f.per(dmp_pow(num, n, f.lev, f.dom),
+                         dmp_pow(den, n, f.lev, f.dom), cancel=False)
         else:
             raise TypeError("``int`` expected, got %s" % type(n))
 
@@ -1534,7 +1536,7 @@ class ANP(PicklableWithSlots, CantSympify):
     def unify(f, g):
         """Unify representations of two algebraic numbers. """
         if not isinstance(g, ANP) or f.mod != g.mod:
-            raise UnificationFailed("can't unify %s with %s" % (f, g))
+            raise UnificationFailed("Cannot unify %s with %s" % (f, g))
 
         if f.dom == g.dom:
             return f.dom, f.per, f.rep, g.rep, f.mod
@@ -1669,6 +1671,9 @@ class ANP(PicklableWithSlots, CantSympify):
     def is_ground(f):
         """Returns ``True`` if ``f`` is an element of the ground domain. """
         return not f.rep or len(f.rep) == 1
+
+    def __pos__(f):
+        return f
 
     def __neg__(f):
         return f.neg()

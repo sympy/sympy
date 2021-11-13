@@ -4,8 +4,12 @@ Several methods to simplify expressions involving unit objects.
 from functools import reduce
 from collections.abc import Iterable
 
-from sympy import Add, Mul, Pow, Tuple, sympify
-from sympy.core.compatibility import ordered
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.sorting import ordered
+from sympy.core.sympify import sympify
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.physics.units.dimensions import Dimension
 from sympy.physics.units.prefixes import Prefix
@@ -14,7 +18,7 @@ from sympy.utilities.iterables import sift
 
 
 def _get_conversion_matrix_for_expr(expr, target_units, unit_system):
-    from sympy import Matrix
+    from sympy.matrices.dense import Matrix
 
     dimension_system = unit_system.get_dimension_system()
 
@@ -82,7 +86,7 @@ def convert_to(expr, target_units, unit_system="SI"):
     Conversion to Planck units:
 
     >>> convert_to(atomic_mass_constant, [gravitational_constant, speed_of_light, hbar]).n()
-    7.62963085040767e-20*gravitational_constant**(-0.5)*hbar**0.5*speed_of_light**0.5
+    7.62963087839509e-20*hbar**0.5*speed_of_light**0.5/gravitational_constant**0.5
 
     """
     from sympy.physics.units import UnitSystem

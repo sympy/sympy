@@ -1,6 +1,10 @@
 """Pauli operators and states"""
 
-from sympy import I, Mul, Add, Pow, exp, Integer
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Integer)
+from sympy.core.power import Pow
+from sympy.functions.elementary.exponential import exp
 from sympy.physics.quantum import Operator, Ket, Bra
 from sympy.physics.quantum import ComplexSpace
 from sympy.matrices import Matrix
@@ -433,7 +437,7 @@ class SigmaZKet(Ket):
     """
 
     def __new__(cls, n):
-        if n not in [0, 1]:
+        if n not in (0, 1):
             raise ValueError("n must be 0 or 1")
         return Ket.__new__(cls, n)
 
@@ -497,7 +501,7 @@ class SigmaZBra(Bra):
     """
 
     def __new__(cls, n):
-        if n not in [0, 1]:
+        if n not in (0, 1):
             raise ValueError("n must be 0 or 1")
         return Bra.__new__(cls, n)
 

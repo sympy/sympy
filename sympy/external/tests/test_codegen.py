@@ -304,8 +304,13 @@ def test_basic_codegen():
 
 def test_intrinsic_math1_codegen():
     # not included: log10
-    from sympy import acos, asin, atan, ceiling, cos, cosh, floor, log, ln, \
-        sin, sinh, sqrt, tan, tanh, N
+    from sympy.core.evalf import N
+    from sympy.functions import ln
+    from sympy.functions.elementary.exponential import log
+    from sympy.functions.elementary.hyperbolic import (cosh, sinh, tanh)
+    from sympy.functions.elementary.integers import (ceiling, floor)
+    from sympy.functions.elementary.miscellaneous import sqrt
+    from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, tan)
     name_expr = [
         ("test_fabs", abs(x)),
         ("test_acos", acos(x)),
@@ -337,7 +342,8 @@ def test_intrinsic_math1_codegen():
 
 def test_instrinsic_math2_codegen():
     # not included: frexp, ldexp, modf, fmod
-    from sympy import atan2, N
+    from sympy.core.evalf import N
+    from sympy.functions.elementary.trigonometric import atan2
     name_expr = [
         ("test_atan2", atan2(x, y)),
         ("test_pow", x**y),
@@ -352,7 +358,8 @@ def test_instrinsic_math2_codegen():
 
 
 def test_complicated_codegen():
-    from sympy import sin, cos, tan, N
+    from sympy.core.evalf import N
+    from sympy.functions.elementary.trigonometric import (cos, sin, tan)
     name_expr = [
         ("test1", ((sin(x) + cos(y) + tan(z))**7).expand()),
         ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))),

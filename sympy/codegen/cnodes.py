@@ -30,7 +30,7 @@ def sizeof(arg):
 
     >>> from sympy.codegen.ast import real
     >>> from sympy.codegen.cnodes import sizeof
-    >>> from sympy.printing import ccode
+    >>> from sympy import ccode
     >>> ccode(sizeof(real))
     'sizeof(double)'
     """
@@ -49,9 +49,8 @@ class Label(Node):
     Examples
     ========
 
-    >>> from sympy import Symbol
+    >>> from sympy import ccode, Symbol
     >>> from sympy.codegen.cnodes import Label, PreIncrement
-    >>> from sympy.printing import ccode
     >>> print(ccode(Label('foo')))
     foo:
     >>> print(ccode(Label('bar', [PreIncrement(Symbol('a'))])))
@@ -85,7 +84,7 @@ class PreDecrement(Basic):
 
     >>> from sympy.abc import x
     >>> from sympy.codegen.cnodes import PreDecrement
-    >>> from sympy.printing import ccode
+    >>> from sympy import ccode
     >>> ccode(PreDecrement(x))
     '--(x)'
 

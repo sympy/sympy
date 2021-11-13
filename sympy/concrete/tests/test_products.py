@@ -1,8 +1,17 @@
-from sympy import (symbols, Symbol, product, combsimp, factorial, rf, sqrt, cos,
-                   Function, Product, Rational, Sum, oo, exp, log, S, pi,
-                   KroneckerDelta)
+from sympy.concrete.products import (Product, product)
+from sympy.concrete.summations import Sum
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.numbers import (Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.combinatorial.factorials import (rf, factorial)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.simplify.combsimp import combsimp
+from sympy.simplify.simplify import simplify
 from sympy.testing.pytest import raises
-from sympy import simplify
 
 a, k, n, m, x = symbols('a,k,n,m,x', integer=True)
 f = Function('f')
@@ -22,7 +31,7 @@ def test_karr_convention():
     #
     # It is important to note that he defines all products with
     # the upper limit being *exclusive*.
-    # In contrast, sympy and the usual mathematical notation has:
+    # In contrast, SymPy and the usual mathematical notation has:
     #
     # prod_{i = a}^b f(i) = f(a) * f(a+1) * ... * f(b-1) * f(b)
     #
@@ -382,3 +391,12 @@ def test_rewrite_Sum():
 def test_KroneckerDelta_Product():
     y = Symbol('y')
     assert Product(x*KroneckerDelta(x, y), (x, 0, 1)).doit() == 0
+
+def test_issue_20848():
+    _i = Dummy('i')
+    t, y, z = symbols('t y z')
+    assert diff(Product(x, (y, 1, z)), x).as_dummy() == Sum(Product(x, (y, 1, _i - 1))*Product(x, (y, _i + 1, z)), (_i, 1, z)).as_dummy()
+    assert diff(Product(x, (y, 1, z)), x).doit() == x**z*z/x
+    assert diff(Product(x, (y, x, z)), x) == Derivative(Product(x, (y, x, z)), x)
+    assert diff(Product(t, (x, 1, z)), x) == S(0)
+    assert Product(sin(n*x), (n, -1, 1)).diff(x).doit() == S(0)

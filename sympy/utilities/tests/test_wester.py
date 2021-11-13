@@ -6,21 +6,70 @@ See also http://math.unm.edu/~wester/cas_review.html for detailed output of
 each tested system.
 """
 
-from sympy import (Rational, symbols, Dummy, factorial, sqrt, log, exp, oo, zoo,
-    product, binomial, rf, pi, gamma, igcd, factorint, radsimp, combsimp,
-    npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
-    I, trigsimp, tan, sin, cos, cot, diff, nan, limit, EulerGamma, polygamma,
-    bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
-    im, DiracDelta, chebyshevt, legendre_poly, polylog, series, O,
-    atan, sinh, cosh, tanh, floor, ceiling, solve, asinh, acot, csc, sec,
-    LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, ZZ,
-    Poly, expand_func, E, Q, And, Lt, Min, ask, refine, AlgebraicNumber,
-    continued_fraction_iterator as cf_i, continued_fraction_periodic as cf_p,
-    continued_fraction_convergents as cf_c, continued_fraction_reduce as cf_r,
-    FiniteSet, elliptic_e, elliptic_f, powsimp, hessian, wronskian, fibonacci,
-    sign, Lambda, Piecewise, Subs, residue, Derivative, logcombine, Symbol,
-    Intersection, Union, EmptySet, Interval, idiff, ImageSet, acos, Max,
-    MatMul, conjugate)
+from sympy.assumptions.ask import Q, ask
+from sympy.assumptions.refine import refine
+from sympy.concrete.products import product
+from sympy.core import EulerGamma
+from sympy.core.evalf import N
+from sympy.core.function import (Derivative, Function, Lambda, Subs,
+    diff, expand, expand_func)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (AlgebraicNumber, E, I, Rational, igcd,
+    nan, oo, pi, zoo)
+from sympy.core.relational import Eq, Lt
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy, Symbol, symbols
+from sympy.functions.combinatorial.factorials import (rf, binomial,
+    factorial, factorial2)
+from sympy.functions.combinatorial.numbers import bernoulli, fibonacci
+from sympy.functions.elementary.complexes import (conjugate, im, re,
+    sign)
+from sympy.functions.elementary.exponential import LambertW, exp, log
+from sympy.functions.elementary.hyperbolic import (asinh, cosh, sinh,
+    tanh)
+from sympy.functions.elementary.integers import ceiling, floor
+from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, acot, asin,
+    atan, cos, cot, csc, sec, sin, tan)
+from sympy.functions.special.bessel import besselj
+from sympy.functions.special.delta_functions import DiracDelta
+from sympy.functions.special.elliptic_integrals import (elliptic_e,
+    elliptic_f)
+from sympy.functions.special.gamma_functions import gamma, polygamma
+from sympy.functions.special.hyper import hyper
+from sympy.functions.special.polynomials import (assoc_legendre,
+    chebyshevt)
+from sympy.functions.special.zeta_functions import polylog
+from sympy.geometry.util import idiff
+from sympy.logic.boolalg import And
+from sympy.matrices.dense import hessian, wronskian
+from sympy.matrices.expressions.matmul import MatMul
+from sympy.ntheory.continued_fraction import (
+    continued_fraction_convergents as cf_c,
+    continued_fraction_iterator as cf_i, continued_fraction_periodic as
+    cf_p, continued_fraction_reduce as cf_r)
+from sympy.ntheory.factor_ import factorint, totient
+from sympy.ntheory.generate import primerange
+from sympy.ntheory.partitions_ import npartitions
+from sympy.polys.domains.integerring import ZZ
+from sympy.polys.orthopolys import legendre_poly
+from sympy.polys.partfrac import apart
+from sympy.polys.polytools import Poly, factor, gcd, resultant
+from sympy.series.limits import limit
+from sympy.series.order import O
+from sympy.series.residues import residue
+from sympy.series.series import series
+from sympy.sets.fancysets import ImageSet
+from sympy.sets.sets import FiniteSet, Intersection, Interval, Union
+from sympy.simplify.combsimp import combsimp
+from sympy.simplify.hyperexpand import hyperexpand
+from sympy.simplify.powsimp import powdenest, powsimp
+from sympy.simplify.radsimp import radsimp
+from sympy.simplify.simplify import logcombine, simplify
+from sympy.simplify.sqrtdenest import sqrtdenest
+from sympy.simplify.trigsimp import trigsimp
+from sympy.solvers.solvers import solve
 
 import mpmath
 from sympy.functions.combinatorial.numbers import stirling
@@ -55,6 +104,7 @@ from sympy.series.fourier import fourier_series
 from sympy.calculus.util import minimum
 
 
+EmptySet = S.EmptySet
 R = Rational
 x, y, z = symbols('x y z')
 i, j, k, l, m, n = symbols('i j k l m n', integer=True)
@@ -110,7 +160,7 @@ def test_C3():
     assert (factorial2(10), factorial2(9)) == (3840, 945)
 
 
-# Base conversions; not really implemented by sympy
+# Base conversions; not really implemented by SymPy
 # Whatever. Take credit!
 def test_C4():
     assert 0xABC == 2748
@@ -1006,7 +1056,7 @@ def test_M26():
 def test_M27():
     x = symbols('x', real=True)
     b = symbols('b', real=True)
-    with assuming(Q.is_true(sin(cos(1/E**2) + 1) + b > 0)):
+    with assuming(sin(cos(1/E**2) + 1) + b > 0):
         # TODO: Replace solve with solveset
         solve(log(acos(asin(x**R(2, 3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/E**2))**R(3/2), b + sin(1 + cos(1/E**2))**R(3/2)]
 
@@ -1152,50 +1202,52 @@ def test_M39():
 
 
 def test_N1():
-    assert ask(Q.is_true(E**pi > pi**E))
+    assert ask(E**pi > pi**E)
 
 
 @XFAIL
 def test_N2():
     x = symbols('x', real=True)
-    assert ask(Q.is_true(x**4 - x + 1 > 0)) is True
-    assert ask(Q.is_true(x**4 - x + 1 > 1)) is False
+    assert ask(x**4 - x + 1 > 0) is True
+    assert ask(x**4 - x + 1 > 1) is False
 
 
 @XFAIL
 def test_N3():
     x = symbols('x', real=True)
-    assert ask(Q.is_true(And(Lt(-1, x), Lt(x, 1))), Q.is_true(abs(x) < 1 ))
+    assert ask(And(Lt(-1, x), Lt(x, 1)), abs(x) < 1 )
 
 @XFAIL
 def test_N4():
     x, y = symbols('x y', real=True)
-    assert ask(Q.is_true(2*x**2 > 2*y**2), Q.is_true((x > y) & (y > 0))) is True
+    assert ask(2*x**2 > 2*y**2, (x > y) & (y > 0)) is True
 
 
 @XFAIL
 def test_N5():
     x, y, k = symbols('x y k', real=True)
-    assert ask(Q.is_true(k*x**2 > k*y**2), Q.is_true((x > y) & (y > 0) & (k > 0))) is True
+    assert ask(k*x**2 > k*y**2, (x > y) & (y > 0) & (k > 0)) is True
 
 
+@slow
 @XFAIL
 def test_N6():
     x, y, k, n = symbols('x y k n', real=True)
-    assert ask(Q.is_true(k*x**n > k*y**n), Q.is_true((x > y) & (y > 0) & (k > 0) & (n > 0))) is True
+    assert ask(k*x**n > k*y**n, (x > y) & (y > 0) & (k > 0) & (n > 0)) is True
 
 
 @XFAIL
 def test_N7():
     x, y = symbols('x y', real=True)
-    assert ask(Q.is_true(y > 0), Q.is_true((x > 1) & (y >= x - 1))) is True
+    assert ask(y > 0, (x > 1) & (y >= x - 1)) is True
 
 
 @XFAIL
+@slow
 def test_N8():
     x, y, z = symbols('x y z', real=True)
-    assert ask(Q.is_true((x == y) & (y == z)),
-               Q.is_true((x >= y) & (y >= z) & (z >= x)))
+    assert ask(Eq(x, y) & Eq(y, z),
+               (x >= y) & (y >= z) & (z >= x))
 
 
 def test_N9():
@@ -2441,6 +2493,7 @@ def test_W8():
 
 
 @XFAIL
+@slow
 def test_W9():
     # Integrand with a residue at infinity => -2 pi [sin(pi/5) + sin(2pi/5)]
     # (principal value)   [Levinson and Redheffer, p. 234] *)
@@ -2537,7 +2590,7 @@ def test_W22():
 def test_W23():
     a, b = symbols('a b', real=True, positive=True)
     r1 = integrate(integrate(x/(x**2 + y**2), (x, a, b)), (y, -oo, oo))
-    assert r1.collect(pi) == pi*(-a + b)
+    assert r1.collect(pi).cancel() == -pi*a + pi*b
 
 
 def test_W23b():
@@ -2746,7 +2799,7 @@ def test_X18():
     #                          /                 k!
     #                         -----
     #
-    # Now, sympy returns
+    # Now, SymPy returns
     #      oo
     #    _____
     #    \    `

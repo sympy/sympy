@@ -2,18 +2,21 @@ from collections import defaultdict
 
 from sympy import SYMPY_DEBUG
 
-from sympy.core import expand_power_base, sympify, Add, S, Mul, Derivative, Pow, symbols, expand_mul
-from sympy.core.add import _unevaluated_Add
-from sympy.core.compatibility import iterable, ordered, default_sort_key
-from sympy.core.parameters import global_parameters
+from sympy.core import sympify, S, Mul, Derivative, Pow
+from sympy.core.add import _unevaluated_Add, Add
+from sympy.core.assumptions import assumptions
 from sympy.core.exprtools import Factors, gcd_terms
-from sympy.core.function import _mexpand
-from sympy.core.mul import _keep_coeff, _unevaluated_Mul
-from sympy.core.numbers import Rational
+from sympy.core.function import _mexpand, expand_mul, expand_power_base
+from sympy.core.mul import _keep_coeff, _unevaluated_Mul, _mulsort
+from sympy.core.numbers import Rational, zoo, nan
+from sympy.core.parameters import global_parameters
+from sympy.core.sorting import ordered, default_sort_key
+from sympy.core.symbol import Dummy, Wild, symbols
 from sympy.functions import exp, sqrt, log
 from sympy.functions.elementary.complexes import Abs
 from sympy.polys import gcd
 from sympy.simplify.sqrtdenest import sqrtdenest
+from sympy.utilities.iterables import iterable, sift
 
 
 
@@ -32,7 +35,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     will be searched for in the expression's terms.
 
     The input expression is not expanded by :func:`collect`, so user is
-    expected to provide an expression is an appropriate form. This makes
+    expected to provide an expression in an appropriate form. This makes
     :func:`collect` more predictable as there is no magic happening behind the
     scenes. However, it is important to note, that powers of products are
     converted to products of powers using the :func:`~.expand_power_base`
@@ -160,9 +163,6 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
 
     collect_const, collect_sqrt, rcollect
     """
-    from sympy.core.assumptions import assumptions
-    from sympy.utilities.iterables import sift
-    from sympy.core.symbol import Dummy, Wild
     expr = sympify(expr)
     syms = [sympify(i) for i in (syms if iterable(syms) else [syms])]
     # replace syms[i] if it is not x, -x or has Wild symbols
@@ -239,7 +239,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
          - sexpr is the base expression
          - rat_expo is the rational exponent that sexpr is raised to
          - sym_expo is the symbolic exponent that sexpr is raised to
-         - deriv contains the derivatives the the expression
+         - deriv contains the derivatives of the expression
 
          For example, the output of x would be (x, 1, None, None)
          the output of 2**x would be (2, 1, x, None).
@@ -253,7 +253,15 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
             else:
                 sexpr = expr.base
 
-            if expr.exp.is_Number:
+            if expr.base == S.Exp1:
+                arg = expr.exp
+                if arg.is_Rational:
+                    sexpr, rat_expo = S.Exp1, arg
+                elif arg.is_Mul:
+                    coeff, tail = arg.as_coeff_Mul(rational=True)
+                    sexpr, rat_expo = exp(tail), coeff
+
+            elif expr.exp.is_Number:
                 rat_expo = expr.exp
             else:
                 coeff, tail = expr.exp.as_coeff_Mul()
@@ -263,7 +271,7 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
                 else:
                     sym_expo = expr.exp
         elif isinstance(expr, exp):
-            arg = expr.args[0]
+            arg = expr.exp
             if arg.is_Rational:
                 sexpr, rat_expo = S.Exp1, arg
             elif arg.is_Mul:
@@ -568,7 +576,6 @@ def collect_abs(expr):
     Abs(1/x)
     """
     def _abs(mul):
-      from sympy.core.mul import _mulsort
       c, nc = mul.args_cnc()
       a = []
       o = []
@@ -612,7 +619,7 @@ def collect_const(expr, *vars, Numbers=True):
     Parameters
     ==========
 
-    expr : sympy expression
+    expr : SymPy expression
         This parameter defines the expression the expression from which
         terms with similar coefficients are to be collected. A non-Add
         expression is returned as it is.
@@ -944,7 +951,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
                 # in general, only 4 terms can be removed with repeated squaring
                 # but other considerations can guide selection of radical terms
                 # so that radicals are removed
-                if all([x.is_Integer and (y**2).is_Rational for x, y in rterms]):
+                if all(x.is_Integer and (y**2).is_Rational for x, y in rterms):
                     nd, d = rad_rationalize(S.One, Add._from_args(
                         [sqrt(x)*y for x, y in rterms]))
                     n *= nd
@@ -958,6 +965,8 @@ def radsimp(expr, symbolic=True, max_terms=4):
             n *= num
             d *= num
             d = powdenest(_mexpand(d), force=symbolic)
+            if d.has(S.Zero, nan, zoo):
+                return expr
             if d.is_Atom:
                 break
 

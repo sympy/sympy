@@ -1,8 +1,6 @@
 """Singleton mechanism"""
 
 
-from typing import Any, Dict, Type
-
 from .core import Registry
 from .assumptions import ManagedProperties
 from .sympify import sympify
@@ -171,26 +169,14 @@ class Singleton(ManagedProperties):
     subclasses to have a different metaclass than the superclass, except the
     subclass may use a subclassed metaclass).
     """
+    def __init__(cls, *args, **kwargs):
+        super().__init__(cls, *args, **kwargs)
+        cls._instance = obj = Basic.__new__(cls)
+        cls.__new__ = lambda cls: obj
+        cls.__getnewargs__ = lambda obj: ()
+        cls.__getstate__ = lambda obj: None
+        S.register(cls)
 
-    _instances = {}  # type: Dict[Type[Any], Any]
-    "Maps singleton classes to their instances."
 
-    def __new__(cls, *args, **kwargs):
-        result = super().__new__(cls, *args, **kwargs)
-        S.register(result)
-        return result
-
-    def __call__(self, *args, **kwargs):
-        # Called when application code says SomeClass(), where SomeClass is a
-        # class of which Singleton is the metaclas.
-        # __call__ is invoked first, before __new__() and __init__().
-        if self not in Singleton._instances:
-            Singleton._instances[self] = \
-                super().__call__(*args, **kwargs)
-                # Invokes the standard constructor of SomeClass.
-        return Singleton._instances[self]
-
-        # Inject pickling support.
-        def __getnewargs__(self):
-            return ()
-        self.__getnewargs__ = __getnewargs__
+# Delayed to avoid cyclic import
+from .basic import Basic

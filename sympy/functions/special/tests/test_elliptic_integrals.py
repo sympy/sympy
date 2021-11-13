@@ -1,5 +1,13 @@
-from sympy import (S, Symbol, pi, I, oo, zoo, sin, sqrt, tan, gamma,
-    atanh, hyper, meijerg, O, Dummy, Integral, Rational)
+from sympy.core.numbers import (I, Rational, oo, pi, zoo)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.functions.elementary.hyperbolic import atanh
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (sin, tan)
+from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.hyper import (hyper, meijerg)
+from sympy.integrals.integrals import Integral
+from sympy.series.order import O
 from sympy.functions.special.elliptic_integrals import (elliptic_k as K,
     elliptic_f as F, elliptic_e as E, elliptic_pi as P)
 from sympy.testing.randtest import (test_derivative_numerically as td,
@@ -152,10 +160,15 @@ def test_P():
     assert P(n, m).diff(n) == (E(m) + (m - n)*K(m)/n +
         (n**2 - m)*P(n, m)/n)/(2*(m - n)*(n - 1))
     assert P(n, m).diff(m) == (E(m)/(m - 1) + P(n, m))/(2*(n - m))
-    rx, ry = randcplx(), randcplx()
-    assert td(P(n, rx, ry), n)
-    assert td(P(rx, z, ry), z)
-    assert td(P(rx, ry, m), m)
+
+    # These tests fail due to
+    # https://github.com/fredrik-johansson/mpmath/issues/571#issuecomment-777201962
+    # https://github.com/sympy/sympy/issues/20933#issuecomment-777080385
+    #
+    # rx, ry = randcplx(), randcplx()
+    # assert td(P(n, rx, ry), n)
+    # assert td(P(rx, z, ry), z)
+    # assert td(P(rx, ry, m), m)
 
     assert P(n, z, m).series(z) == z + z**3*(m/6 + n/3) + \
         z**5*(3*m**2/40 + m*n/10 - m/30 + n**2/5 - n/15) + O(z**6)

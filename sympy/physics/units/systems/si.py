@@ -11,7 +11,9 @@ from sympy.physics.units import DimensionSystem, Dimension, dHg0
 
 from sympy.physics.units.quantities import Quantity
 
-from sympy import Rational, pi, sqrt, S
+from sympy.core.numbers import (Rational, pi)
+from sympy.core.singleton import S
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units.definitions.dimension_definitions import (
     acceleration, action, current, impedance, length, mass, time, velocity,
     amount_of_substance, temperature, information, frequency, force, pressure,

@@ -2,11 +2,13 @@
 
 from random import uniform, Random, randrange, randint
 
-from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.containers import Tuple
+from sympy.core.function import Derivative
 from sympy.core.numbers import comp, I
 from sympy.core.symbol import Symbol
 from sympy.simplify.simplify import nsimplify
+from sympy.utilities.iterables import is_sequence
+from sympy.utilities.misc import as_int
 
 
 def random_complex_number(a=2, b=-1, c=3, d=1, rational=False, tolerance=None):
@@ -70,7 +72,6 @@ def test_derivative_numerically(f, z, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     >>> td(sin(x), x)
     True
     """
-    from sympy.core.function import Derivative
     z0 = random_complex_number(a, b, c, d)
     f1 = f.diff(z).subs(z, z0)
     f2 = Derivative(f, z).doit_numerically(z0)
