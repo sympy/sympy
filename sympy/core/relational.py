@@ -266,7 +266,7 @@ class Relational(Boolean, EvalfMixin):
         >>> (-y < -x).canonical
         x < y
         """
-        args = [i.canonical if isinstance(i, Relational) else i for i in self.args]
+        args = tuple([i.canonical if isinstance(i, Relational) else i for i in self.args])
         r = self
         if r.rhs.is_number:
             if r.rhs.is_Number and r.lhs.is_Number and r.lhs > r.rhs:
