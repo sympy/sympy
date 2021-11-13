@@ -218,7 +218,7 @@ class Add(Expr, AssocOp):
 
         saw_inf = None  # flag to consult when encountering zoo
 
-        extra, seq = sift(seq, lambda _: isinstance(_, MatExpr), binary=True)
+        extra, seq = sift(seq, lambda _: isinstance(_, MatrixExpr), binary=True)
         def _nan():
             if extra:
                 extra.insert(0, S.NaN)
