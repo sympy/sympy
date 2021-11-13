@@ -983,10 +983,10 @@ def test_CC_double():
 def test_gaussian_domains():
     I = S.ImaginaryUnit
     a, b, c, d = [ZZ_I.convert(x) for x in (5, 2 + I, 3 - I, 5 - 5)]
-    ZZ_I.gcd(a, b) == b
-    ZZ_I.gcd(a, c) == b
-    ZZ_I.lcm(a, b) == a
-    ZZ_I.lcm(a, c) == d
+    assert ZZ_I.gcd(a, b) == b
+    assert ZZ_I.gcd(a, c) == b
+    assert ZZ_I.lcm(a, b) == a
+    assert ZZ_I.lcm(a, c) == d
     assert ZZ_I(3, 4) != QQ_I(3, 4)  # XXX is this right or should QQ->ZZ if possible?
     assert ZZ_I(3, 0) != 3           # and should this go to Integer?
     assert QQ_I(S(3)/4, 0) != S(3)/4 # and this to Rational?

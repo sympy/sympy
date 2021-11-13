@@ -79,8 +79,8 @@ def test_replace_arrays_partial_derivative():
     assert expr.replace_with_arrays({A(-i): [x, y], L: diag(1, -1)}, [i, -j]) == Array([[1, 0], [0, 1]])
 
     expr = PartialDerivative(A(-i), A(-j))
-    expr.get_free_indices() == [-i, j]
-    expr.get_indices() == [-i, j]
+    assert expr.get_free_indices() == [-i, j]
+    assert expr.get_indices() == [-i, j]
     assert expr.replace_with_arrays({A(-i): [x, y]}, [-i, j]) == Array([[1, 0], [0, 1]])
     assert expr.replace_with_arrays({A(-i): [x, y], L: diag(1, 1)}, [-i, j]) == Array([[1, 0], [0, 1]])
     assert expr.replace_with_arrays({A(-i): [x, y], L: diag(1, -1)}, [-i, j]) == Array([[1, 0], [0, 1]])

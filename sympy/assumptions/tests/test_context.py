@@ -24,7 +24,7 @@ def test_assuming_nested():
 def test_finally():
     try:
         with assuming(Q.integer(x)):
-            1/0
+            _ = 1/0
     except ZeroDivisionError:
         pass
     assert not ask(Q.integer(x))

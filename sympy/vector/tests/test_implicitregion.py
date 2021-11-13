@@ -21,15 +21,15 @@ def test_ImplicitRegion():
 
 def test_regular_point():
     r1 = ImplicitRegion((x,), x**2 - 16)
-    r1.regular_point() == (-4,)
+    assert r1.regular_point() == (-4,)
     c1 = ImplicitRegion((x, y), x**2 + y**2 - 4)
-    c1.regular_point() == (2, 0)
+    assert c1.regular_point() == (2, 0)
     c2 = ImplicitRegion((x, y), (x - S(5)/2)**2 + y**2 - (S(1)/4)**2)
-    c2.regular_point() == (11/4, 0)
+    assert c2.regular_point() == (11/4, 0)
     c3 = ImplicitRegion((x, y), (y - 5)**2  - 16*(x - 5))
-    c3.regular_point() == (5, 5)
+    assert c3.regular_point() == (5, 5)
     r2 = ImplicitRegion((x, y), x**2 - 4*x*y - 3*y**2 + 4*x + 8*y - 5)
-    r2.regular_point == (4/7, 13/21)
+    assert r2.regular_point == (4/7, 13/21)
     r3 = ImplicitRegion((x, y), x**2 - 2*x*y + 3*y**2 - 2*x - 5*y + 3/2)
     raises(ValueError, lambda: r3.regular_point())
 
@@ -85,7 +85,7 @@ def test_rational_parametrization():
     assert sphere.rational_parametrization(parameters=(s, t)) == (2/(s**2 + t**2 + 1), 2*t/(s**2 + t**2 + 1), 2*s/(s**2 + t**2 + 1))
 
     conic = ImplicitRegion((x, y), Eq(x**2 + 4*x*y + 3*y**2 + x - y + 10, 0))
-    conic.rational_parametrization(t) == (17/2 + 4/(3*t**2 + 4*t + 1), 4*t/(3*t**2 + 4*t + 1) - 11/2)
+    assert conic.rational_parametrization(t) == (17/2 + 4/(3*t**2 + 4*t + 1), 4*t/(3*t**2 + 4*t + 1) - 11/2)
 
     r1 = ImplicitRegion((x, y), y**2 - x**3 + x)
     raises(NotImplementedError, lambda: r1.rational_parametrization())

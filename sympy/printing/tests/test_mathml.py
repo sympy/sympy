@@ -1249,7 +1249,7 @@ def test_print_AssocOp():
         identity = 0
 
     expr = TestAssocOp(1, 2)
-    mpp.doprint(expr) == \
+    assert mpp.doprint(expr) == \
         '<mrow><mi>testassocop</mi><mn>2</mn><mn>1</mn></mrow>'
 
 

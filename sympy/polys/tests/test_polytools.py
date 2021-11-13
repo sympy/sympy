@@ -104,11 +104,11 @@ def _strict_eq(a, b):
 def test_Poly_mixed_operations():
     p = Poly(x, x)
     with warns_deprecated_sympy():
-        p * exp(x)
+        _ = p * exp(x)
     with warns_deprecated_sympy():
-        p + exp(x)
+        _ = p + exp(x)
     with warns_deprecated_sympy():
-        p - exp(x)
+        _ = p - exp(x)
 
 
 def test_Poly_from_dict():
@@ -697,7 +697,7 @@ def test_Poly_add():
 
     assert Poly(1, x) + x == Poly(x + 1, x)
     with warns_deprecated_sympy():
-        Poly(1, x) + sin(x)
+        _ = Poly(1, x) + sin(x)
 
     assert Poly(x, x) + 1 == Poly(x + 1, x)
     assert 1 + Poly(x, x) == Poly(x + 1, x)
@@ -714,7 +714,7 @@ def test_Poly_sub():
 
     assert Poly(1, x) - x == Poly(1 - x, x)
     with warns_deprecated_sympy():
-        Poly(1, x) - sin(x)
+        _ = Poly(1, x) - sin(x)
 
     assert Poly(x, x) - 1 == Poly(x - 1, x)
     assert 1 - Poly(x, x) == Poly(1 - x, x)
@@ -731,7 +731,7 @@ def test_Poly_mul():
 
     assert Poly(1, x) * x == Poly(x, x)
     with warns_deprecated_sympy():
-        Poly(1, x) * sin(x)
+        _ = Poly(1, x) * sin(x)
 
     assert Poly(x, x) * 2 == Poly(2*x, x)
     assert 2 * Poly(x, x) == Poly(2*x, x)

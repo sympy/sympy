@@ -1058,7 +1058,7 @@ def test_M27():
     b = symbols('b', real=True)
     with assuming(sin(cos(1/E**2) + 1) + b > 0):
         # TODO: Replace solve with solveset
-        solve(log(acos(asin(x**R(2, 3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/E**2))**R(3/2), b + sin(1 + cos(1/E**2))**R(3/2)]
+        assert solve(log(acos(asin(x**R(2, 3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/E**2))**R(3/2), b + sin(1 + cos(1/E**2))**R(3/2)]
 
 
 @XFAIL
@@ -1765,7 +1765,7 @@ def test_P38():
               [0, 0, 0],
               [0, 0, 0]])
     #raises ValueError: Matrix det == 0; not invertible
-    M**S.Half
+    _ = M**S.Half
 
 
 @XFAIL

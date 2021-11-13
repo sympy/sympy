@@ -165,7 +165,7 @@ def test_prde_cancel_liouvillian():
     p0 = Poly(0, t, field=True)
     h, A = prde_cancel_liouvillian(Poly(-1/(x - 1), t), [Poly(-x + 1, t), Poly(1, t)], 1, DE)
     V = A.nullspace()
-    h == [p0, p0, Poly((x - 1)*t, t), p0, p0, p0, p0, p0, p0, p0, Poly(x - 1, t), Poly(-x**2 + x, t), p0, p0, p0, p0]
+    assert h == [p0, p0, Poly((x - 1)*t, t), p0, p0, p0, p0, p0, p0, p0, Poly(x - 1, t), Poly(-x**2 + x, t), p0, p0, p0, p0]
     assert A.rank() == 16
     assert (Matrix([h])*V[0][:16, :]) == Matrix([[Poly(0, t, domain='QQ(x)')]])
 

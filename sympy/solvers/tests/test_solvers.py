@@ -172,7 +172,7 @@ def test_solve_args():
     assert solve(
         (exp(x) - x, exp(y) - y)) == {x: -LambertW(-1), y: -LambertW(-1)}
     # --  when symbols given
-    solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
+    assert solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
     # symbol is a number
     assert solve(x**2 - pi, pi) == [x**2]
     # no equations

@@ -103,7 +103,7 @@ def test_farthest_points_closest_points():
         for points in (p1, p2, p3, p4, p5, s, dup):
             d = how(i.distance(j) for i, j in subsets(points, 2))
             ans = a, b = list(func(*points))[0]
-            a.distance(b) == d
+            assert a.distance(b) == d
             assert ans == _ordered_points(ans)
 
         # if the following ever fails, the above tests were not sufficient
@@ -114,7 +114,7 @@ def test_farthest_points_closest_points():
         points = list(points)
         d = how(i.distance(j) for i, j in subsets(points, 2))
         ans = a, b = list(func(*points))[0]
-        a.distance(b) == d
+        assert a.distance(b) == d
         assert ans == _ordered_points(ans)
 
     # equidistant points

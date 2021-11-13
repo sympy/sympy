@@ -1063,7 +1063,7 @@ def test_simplify():
     M = Matrix([[eq]])
     M.simplify()
     assert M == Matrix([[eq]])
-    M.simplify(ratio=oo) == M
+    assert M.simplify(ratio=oo) == M
     assert M == Matrix([[eq.simplify(ratio=oo)]])
 
 
@@ -1995,9 +1995,9 @@ def test_diff_by_matrix():
 
     # Test different notations:
 
-    fxyz.diff(x).diff(y).diff(x) == fxyz.diff(((x, y, z),), 3)[0, 1, 0]
-    fxyz.diff(z).diff(y).diff(x) == fxyz.diff(((x, y, z),), 3)[2, 1, 0]
-    fxyz.diff([[x, y, z]], ((z, y, x),)) == Array([[fxyz.diff(i).diff(j) for i in (x, y, z)] for j in (z, y, x)])
+    assert fxyz.diff(x).diff(y).diff(x) == fxyz.diff(((x, y, z),), 3)[0, 1, 0]
+    assert fxyz.diff(z).diff(y).diff(x) == fxyz.diff(((x, y, z),), 3)[2, 1, 0]
+    assert fxyz.diff([[x, y, z]], ((z, y, x),)) == Array([[fxyz.diff(i).diff(j) for i in (x, y, z)] for j in (z, y, x)])
 
     # Test scalar derived by matrix remains matrix:
     res = x.diff(Matrix([[x, y]]))

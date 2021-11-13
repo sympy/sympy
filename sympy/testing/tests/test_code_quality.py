@@ -149,6 +149,8 @@ def line_with_bare_expr(code):
     EXAMPLES
     ========
 
+    XXX these are not being tested
+
     >>> from sympy.testing.tests.test_code_quality import line_with_bare_expr as f
     >>> f('''a += 1
     ... a = 1
@@ -158,7 +160,7 @@ def line_with_bare_expr(code):
     0
     >>> f('if a == 1:\n b = 1')
 
-        >> f('if a == 1:\n b == 1')  # XXX need to figure this out
+    >> f('if a == 1:\n b == 1')  # XXX need to figure this out
     1
     """
     tree = ast.parse(code)
@@ -194,7 +196,7 @@ def test_files():
             _test_this_file_encoding(fname, test_file)
 
     def test_this_file(fname, test_file):
-        idx = line_with_bare_expr(test_file.read())
+        idx = line_with_bare_expr(test_file.read()) if 'bench' not in fname else None  # XXX what should be done about bench tests
         if idx is not None:
             assert False, message_bare_expr % (fname, idx + 1)
         test_file.seek(0)  # restore reader to head
