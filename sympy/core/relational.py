@@ -111,7 +111,8 @@ class Relational(Boolean, EvalfMixin):
             # other than Eq/Ne;
             # Note: Symbol is a subclass of Boolean but is considered
             # acceptable here.
-            if any(map(_nontrivBool, (lhs, rhs))):
+            if any(map(_nontrivBool, (lhs, rhs))) or isinstance(lhs, Relational
+                    ) or isinstance(rhs, Relational)):
                 raise TypeError(filldedent('''
                     A Boolean argument can only be used in
                     Eq and Ne; all other relationals expect
@@ -266,7 +267,7 @@ class Relational(Boolean, EvalfMixin):
         >>> (-y < -x).canonical
         x < y
         """
-        args = self.args
+        args = [i.canonical if isinstance(i, Relational) else i for i in self.args]
         r = self
         if r.rhs.is_number:
             if r.rhs.is_Number and r.lhs.is_Number and r.lhs > r.rhs:
