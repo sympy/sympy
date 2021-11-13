@@ -265,9 +265,20 @@ class Relational(Boolean, EvalfMixin):
         x < -y
         >>> (-y < -x).canonical
         x < y
+
+        The canonicalization is recursively applied:
+
+        >>> from sympy import Eq
+        >>> Eq(x < y, y > x).canonical
+        True
         """
         args = tuple([i.canonical if isinstance(i, Relational) else i for i in self.args])
-        r = self
+        if args != self.args:
+            r = self.func(*args)
+            if not isinstance(r, Relational):
+                return r
+        else:
+            r = self
         if r.rhs.is_number:
             if r.rhs.is_Number and r.lhs.is_Number and r.lhs > r.rhs:
                 r = r.reversed
