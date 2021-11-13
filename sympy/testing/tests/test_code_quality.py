@@ -38,6 +38,7 @@ message_test_suite_def = "Function should start with 'test_' or '_': %s, line %s
 message_duplicate_test = "This is a duplicate test function: %s, line %s"
 message_self_assignments = "File contains assignments to self/cls: %s, line %s."
 message_func_is = "File contains '.func is': %s, line %s."
+message_bare_expr = "File contains bare expression: %s, line %s."
 
 implicit_test_re = re.compile(r'^\s*(>>> )?(\.\.\. )?from .* import .*\*')
 str_raise_re = re.compile(
@@ -125,6 +126,51 @@ def check_files(files, file_check, exclusions=set(), pattern=None):
             file_check(fname)
 
 
+class _BareExpr(ast.NodeVisitor):
+    """ast analyzer to return the line number corresponding to the
+    line on which a bare expression appears if it is a binary op
+    or a comparison that is not in an if-block, assertion or string."""
+    def visit_Expr(self, node):
+        if isinstance(node.value, (ast.BinOp, ast.Compare)):
+            assert None, message_bare_expr % ('', node.lineno)
+    def visit_If(self, node):
+        pass  # XXX need to visit the non-condition lines
+    def visit_Assert(self, node):
+        pass
+
+
+BareExpr = _BareExpr()
+
+
+def line_with_bare_expr(code):
+    """return None or else 0-based line number of code on which
+    a bare expression appeared.
+
+    EXAMPLES
+    ========
+
+    >>> from sympy.testing.tests.test_code_quality import line_with_bare_expr as f
+    >>> f('''a += 1
+    ... a = 1
+    ... a + 1''')
+    2
+    >>> f('a == 1')
+    0
+    >>> f('if a == 1:\n b = 1')
+
+        >> f('if a == 1:\n b == 1')  # XXX need to figure this out
+    1
+    """
+    tree = ast.parse(code)
+    try:
+        BareExpr.visit(tree)
+    except AssertionError as msg:
+        assert msg.args
+        msg = msg.args[0]
+        assert msg.startswith(message_bare_expr.split(':', 1)[0])
+        return int(msg.rsplit(' ', 1)[1].rstrip('.'))  # the line numbers
+
+
 def test_files():
     """
     This test tests all files in SymPy and checks that:
@@ -138,6 +184,7 @@ def test_files():
       o no duplicate function names that start with test_
       o no assignments to self variable in class methods
       o no lines contain ".func is" except in the test suite
+      o there is no do-nothing expression like `a == b` or `x + 1`
     """
 
     def test(fname):
@@ -147,6 +194,11 @@ def test_files():
             _test_this_file_encoding(fname, test_file)
 
     def test_this_file(fname, test_file):
+        idx = line_with_bare_expr(test_file.read())
+        if idx is not None:
+            assert False, message_bare_expr % (fname, idx + 1)
+        test_file.seek(0)  # restore reader to head
+
         line = None  # to flag the case where there were no lines in file
         tests = 0
         test_set = set()
