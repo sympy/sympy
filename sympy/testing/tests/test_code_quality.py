@@ -164,7 +164,7 @@ def line_with_bare_expr(code):
     tree = ast.parse(code)
     try:
         BareExpr.visit(tree)
-    except Assertionerror as msg:
+    except AssertionError as msg:
         assert msg.startswith(message_bare_expr.split(':', 1))
         return msg.rsplit(' ', 1)  # the line numbers
 
