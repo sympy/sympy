@@ -3,9 +3,7 @@ from collections import defaultdict, Counter
 from functools import reduce
 import itertools
 from itertools import accumulate
-from typing import Optional, List, Dict as tDict, Tuple as tTuple
-
-import typing
+from typing import Iterable, Optional, List, Dict as tDict, Tuple as tTuple, Union as tUnion, overload
 
 from sympy import Integer
 from sympy.core.basic import Basic
@@ -13,6 +11,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import (Function, Lambda)
 from sympy.core.mul import Mul
+from sympy.core.numbers import One, Zero
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import (Dummy, Symbol)
@@ -41,21 +40,14 @@ class ArraySymbol(_ArrayExpr):
     Symbol representing an array expression
     """
 
-    def __new__(cls, symbol, shape: typing.Iterable) -> "ArraySymbol":
+    name = property(lambda self: self._args[0])
+    shape: Tuple = property(lambda self: self._args[1])  # type: ignore[assignment]
+
+    def __new__(cls, symbol, shape: Iterable) -> "ArraySymbol":
         if isinstance(symbol, str):
             symbol = Symbol(symbol)
-        # symbol = _sympify(symbol)
-        shape = Tuple(*map(_sympify, shape))
-        obj = Expr.__new__(cls, symbol, shape)
-        return obj
-
-    @property
-    def name(self):
-        return self._args[0]
-
-    @property
-    def shape(self):
-        return self._args[1]
+        sympified_shape = Tuple(*map(_sympify, shape))
+        return Expr.__new__(cls, symbol, sympified_shape)
 
     def __getitem__(self, item):
         return ArrayElement(self, item)
@@ -71,7 +63,11 @@ class ArrayElement(_ArrayExpr):
     """
     An element of an array.
     """
-    def __new__(cls, name, indices):
+
+    name = property(lambda self: self._args[0])
+    indices: Tuple = property(lambda self: self._args[1])  # type: ignore[assignment]
+
+    def __new__(cls, name, indices) -> "ArrayElement":
         if isinstance(name, str):
             name = Symbol(name)
         name = _sympify(name)
@@ -81,16 +77,7 @@ class ArrayElement(_ArrayExpr):
                 raise ValueError("shape is out of bounds")
         if any((i < 0) == True for i in indices):
             raise ValueError("shape contains negative values")
-        obj = Expr.__new__(cls, name, indices)
-        return obj
-
-    @property
-    def name(self):
-        return self._args[0]
-
-    @property
-    def indices(self):
-        return self._args[1]
+        return Expr.__new__(cls, name, indices)
 
 
 class ZeroArray(_ArrayExpr):
@@ -98,16 +85,21 @@ class ZeroArray(_ArrayExpr):
     Symbolic array of zeros. Equivalent to ``ZeroMatrix`` for matrices.
     """
 
-    def __new__(cls, *shape):
+    shape: Tuple = property(lambda self: self._args[0])  # type: ignore[assignment]
+
+    @overload
+    def __new__(cls, shape: tTuple[()]) -> "Zero":  # type: ignore[misc]
+        ...
+
+    @overload
+    def __new__(cls, shape: Iterable) -> "ZeroArray":
+        ...
+
+    def __new__(cls, shape):
         if len(shape) == 0:
             return S.Zero
-        shape = map(_sympify, shape)
-        obj = Expr.__new__(cls, *shape)
-        return obj
-
-    @property
-    def shape(self):
-        return self._args
+        sympified_shape = Tuple(*map(_sympify, shape))
+        return Expr.__new__(cls, sympified_shape)
 
     def as_explicit(self):
         if not all(i.is_Integer for i in self.shape):
@@ -120,21 +112,28 @@ class OneArray(_ArrayExpr):
     Symbolic array of ones.
     """
 
-    def __new__(cls, *shape):
+    shape: Tuple = property(lambda self: self._args[0])  # type: ignore[assignment]
+
+    @overload
+    def __new__(cls, shape: tTuple[()]) -> "One":  # type: ignore[misc]
+        ...
+
+    @overload
+    def __new__(cls, shape: Iterable) -> "OneArray":
+        ...
+
+    def __new__(cls, shape):
         if len(shape) == 0:
             return S.One
-        shape = map(_sympify, shape)
-        obj = Expr.__new__(cls, *shape)
-        return obj
-
-    @property
-    def shape(self):
-        return self._args
+        sympified_shape = Tuple(*map(_sympify, shape))
+        return Expr.__new__(cls, sympified_shape)
 
     def as_explicit(self):
         if not all(i.is_Integer for i in self.shape):
             raise ValueError("Cannot return explicit form for symbolic shape.")
-        return ImmutableDenseNDimArray([S.One for i in range(reduce(operator.mul, self.shape))]).reshape(*self.shape)
+        return ImmutableDenseNDimArray(
+            [S.One for i in range(reduce(operator.mul, self.shape))]
+        ).reshape(*self.shape)
 
 
 class _CodegenArrayAbstract(Basic):
@@ -224,7 +223,7 @@ class ArrayTensorProduct(_CodegenArrayAbstract):
         # If any object is a ZeroArray, return a ZeroArray:
         if any(isinstance(arg, (ZeroArray, ZeroMatrix)) for arg in args):
             shapes = reduce(operator.add, [get_shape(i) for i in args], ())
-            return ZeroArray(*shapes)
+            return ZeroArray(shapes)
 
         # If there are contraction objects inside, transform the whole
         # expression into `ArrayContraction`:
@@ -306,7 +305,7 @@ class ArrayAdd(_CodegenArrayAbstract):
         if len(args) == 0:
             if any(i for i in shapes if i is None):
                 raise NotImplementedError("cannot handle addition of ZeroMatrix/ZeroArray and undefined shape object")
-            return ZeroArray(*shapes[0])
+            return ZeroArray(shapes[0])
         elif len(args) == 1:
             return args[0]
         return self.func(*args, normalize=False)
@@ -424,7 +423,7 @@ class PermuteDims(_CodegenArrayAbstract):
         if isinstance(expr, ArrayTensorProduct):
             expr, permutation = self._PermuteDims_denestarg_ArrayTensorProduct(expr, permutation)
         if isinstance(expr, (ZeroArray, ZeroMatrix)):
-            return ZeroArray(*[expr.shape[i] for i in permutation.array_form])
+            return ZeroArray([expr.shape[i] for i in permutation.array_form])
         plist = permutation.array_form
         if plist == sorted(plist):
             return expr
@@ -712,8 +711,8 @@ class ArrayDiagonal(_CodegenArrayAbstract):
         if isinstance(expr, PermuteDims):
             return self._ArrayDiagonal_denest_PermuteDims(expr, *diagonal_indices)
         if isinstance(expr, (ZeroArray, ZeroMatrix)):
-            positions, shape = self._get_positions_shape(expr.shape, diagonal_indices)
-            return ZeroArray(*shape)
+            _, shape = self._get_positions_shape(expr.shape, diagonal_indices)
+            return ZeroArray(shape)
         return self.func(expr, *diagonal_indices, normalize=False)
 
     @staticmethod
@@ -1038,7 +1037,7 @@ class ArrayContraction(_CodegenArrayAbstract):
             #
             # Examples:
             #
-            # * `A_ij b_j0 C_jk` ===> `A*DiagMatrix(b)*C \otimes OneArray(1)` with permutation (1 2)
+            # * `A_ij b_j0 C_jk` ===> `A*DiagMatrix(b)*C \otimes OneArray(shape=[1])` with permutation (1 2)
             #
             # Care for:
             # - matrix being diagonalized (i.e. `A_ii`)
@@ -1097,7 +1096,7 @@ class ArrayContraction(_CodegenArrayAbstract):
             last_vec.indices[rel_ind] = new_index
 
         for v in onearray_insert:
-            editor.insert_after(v, _ArgE(OneArray(1), [None]))
+            editor.insert_after(v, _ArgE(OneArray(shape=[1]), [None]))
 
         return editor.to_array_contraction()
 
@@ -1197,7 +1196,7 @@ class ArrayContraction(_CodegenArrayAbstract):
     def _ArrayContraction_denest_ZeroArray(cls, expr, *contraction_indices):
         contraction_indices_flat = [j for i in contraction_indices for j in i]
         shape = [e for i, e in enumerate(expr.shape) if i not in contraction_indices_flat]
-        return ZeroArray(*shape)
+        return ZeroArray(shape)
 
     @classmethod
     def _ArrayContraction_denest_ArrayAdd(cls, expr, *contraction_indices):
@@ -1474,7 +1473,7 @@ class _EditArrayContraction:
     by calling the ``.to_array_contraction()`` method.
     """
 
-    def __init__(self, base_array: typing.Union[ArrayContraction, ArrayDiagonal, ArrayTensorProduct]):
+    def __init__(self, base_array: tUnion[ArrayContraction, ArrayDiagonal, ArrayTensorProduct]):
 
         expr: Basic
         diagonalized: tTuple[tTuple[int, ...], ...]
@@ -1708,7 +1707,7 @@ class _EditArrayContraction:
         self._track_permutation[index_destination].extend(self._track_permutation[index_element]) # type: ignore
         self._track_permutation.pop(index_element) # type: ignore
 
-    def get_absolute_free_range(self, arg: _ArgE) -> typing.Tuple[int, int]:
+    def get_absolute_free_range(self, arg: _ArgE) -> tTuple[int, int]:
         """
         Return the range of the free indices of the arg as absolute positions
         among all free indices.
@@ -1721,7 +1720,7 @@ class _EditArrayContraction:
             counter += number_free_indices
         raise IndexError("argument not found")
 
-    def get_absolute_range(self, arg: _ArgE) -> typing.Tuple[int, int]:
+    def get_absolute_range(self, arg: _ArgE) -> tTuple[int, int]:
         """
         Return the absolute range of indices for arg, disregarding dummy
         indices.

@@ -23,7 +23,7 @@ def array_derive(expr, x):
 
 @array_derive.register(Expr) # type: ignore
 def _(expr: Expr, x: Expr):
-    return ZeroArray(*x.shape)
+    return ZeroArray(x.shape)
 
 
 @array_derive.register(ArrayTensorProduct) # type: ignore
@@ -63,7 +63,7 @@ def _(expr: ArraySymbol, x: Expr):
             ArrayTensorProduct.fromiter(Identity(i) for i in expr.shape),
             [2*i for i in range(len(expr.shape))] + [2*i+1 for i in range(len(expr.shape))]
         )
-    return ZeroArray(*(x.shape + expr.shape))
+    return ZeroArray(shape=(x.shape + expr.shape))
 
 
 @array_derive.register(MatrixSymbol) # type: ignore
@@ -74,12 +74,12 @@ def _(expr: MatrixSymbol, x: Expr):
             ArrayTensorProduct(Identity(m), Identity(n)),
             [0, 2, 1, 3]
         )
-    return ZeroArray(*(x.shape + expr.shape))
+    return ZeroArray(shape=(x.shape + expr.shape))
 
 
 @array_derive.register(Identity) # type: ignore
 def _(expr: Identity, x: Expr):
-    return ZeroArray(*(x.shape + expr.shape))
+    return ZeroArray(shape=(x.shape + expr.shape))
 
 
 @array_derive.register(Transpose) # type: ignore
