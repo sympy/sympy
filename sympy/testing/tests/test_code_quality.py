@@ -167,8 +167,8 @@ def line_with_bare_expr(code):
     except AssertionError as msg:
         assert msg.args
         msg = msg.args[0]
-        assert msg.startswith(message_bare_expr.split(':', 1))
-        return msg.rsplit(' ', 1)  # the line numbers
+        assert msg.startswith(message_bare_expr.split(':', 1)[0])
+        return int(msg.rsplit(' ', 1)[1])  # the line numbers
 
 
 def test_files():
