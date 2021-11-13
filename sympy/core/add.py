@@ -222,7 +222,7 @@ class Add(Expr, AssocOp):
         def _nan():
             if extra:
                 extra.insert(0, S.NaN)
-                return [] extra, None
+                return [], extra, None
             return [S.NaN], [], None
 
         for o in seq:
