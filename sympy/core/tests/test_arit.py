@@ -2118,6 +2118,10 @@ def test_add_flatten():
     b = oo - I*oo
     assert a + b is nan
     assert a - b is nan
+    # cf issue #22453
+    for i in (oo, I*oo, a, b):
+        assert zoo + i is nan
+        assert zoo - i is nan
     # FIXME: This evaluates as:
     #   >>> 1/a
     #   0*(oo + oo*I)
