@@ -1127,7 +1127,7 @@ class Expr(Basic, EvalfMixin):
         None
 
         """
-        from sympy.polys.polyerrors import PolynomialError
+        from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
         from sympy.polys.polytools import Poly
 
         try:
@@ -1137,7 +1137,9 @@ class Expr(Basic, EvalfMixin):
                 return None
             else:
                 return poly
-        except PolynomialError:
+        except (PolynomialError, GeneratorsNeeded):
+            # PolynomialError is caught for e.g. exp(x).as_poly(x)
+            # GeneratorsNeeded is caught for e.g. S(2).as_poly()
             return None
 
     def as_ordered_terms(self, order=None, data=False):
