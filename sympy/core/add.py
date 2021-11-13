@@ -179,19 +179,13 @@ class Add(Expr, AssocOp):
     def flatten(cls, seq):
         """
         Takes the sequence "seq" of nested Adds and returns a flatten list.
-
         Returns: (commutative_part, noncommutative_part, order_symbols)
-
         Applies associativity, all terms are commutable with respect to
         addition.
-
         NB: the removal of 0 is already handled by AssocOp.__new__
-
         See also
         ========
-
         sympy.core.mul.Mul.flatten
-
         """
         from sympy.calculus.util import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
@@ -217,8 +211,18 @@ class Add(Expr, AssocOp):
         order_factors = []
 
         extra = []
+        saw_inf = None
+        _nan = [S.NaN], [], None
 
         for o in seq:
+
+            if o.is_infinite:
+                if saw_inf and S.ComplexInfinity in (o, coeff):
+                    return _nan
+                if saw_inf is None:
+                    saw_inf = True
+                if o is S.ComplexInfinity:
+                    coeff = S.ComplexInfinity
 
             # O(x)
             if o.is_Order:
@@ -236,15 +240,11 @@ class Add(Expr, AssocOp):
 
             # 3 or NaN
             elif o.is_Number:
-                if (o is S.NaN or coeff is S.ComplexInfinity and
-                        o.is_finite is False) and not extra:
-                    # we know for sure the result will be nan
-                    return [S.NaN], [], None
-                if coeff.is_Number or isinstance(coeff, AccumBounds):
+                if o is S.NaN:
+                    return _nan
+                elif coeff.is_Number or isinstance(coeff, AccumBounds):
                     coeff += o
-                    if coeff is S.NaN and not extra:
-                        # we know for sure the result will be nan
-                        return [S.NaN], [], None
+                # XXX ignore Number if coeff is TensExpr?
                 continue
 
             elif isinstance(o, AccumBounds):
@@ -258,13 +258,6 @@ class Add(Expr, AssocOp):
 
             elif isinstance(o, TensExpr):
                 coeff = o.__add__(coeff) if coeff else o
-                continue
-
-            elif o is S.ComplexInfinity:
-                if coeff.is_finite is False and not extra:
-                    # we know for sure the result will be nan
-                    return [S.NaN], [], None
-                coeff = S.ComplexInfinity
                 continue
 
             # Add([...])
@@ -281,7 +274,7 @@ class Add(Expr, AssocOp):
             elif o.is_Pow:
                 b, e = o.as_base_exp()
                 if b.is_Number and (e.is_Integer or
-                                   (e.is_Rational and e.is_negative)):
+                                    (e.is_Rational and e.is_negative)):
                     seq.append(b**e)
                     continue
                 c, s = S.One, o
@@ -300,9 +293,8 @@ class Add(Expr, AssocOp):
             # 2*x**2 + 3*x**2  ->  5*x**2
             if s in terms:
                 terms[s] += c
-                if terms[s] is S.NaN and not extra:
-                    # we know for sure the result will be nan
-                    return [S.NaN], [], None
+                if terms[s] is S.NaN:
+                    return _nan
             else:
                 terms[s] = c
 
@@ -349,8 +341,7 @@ class Add(Expr, AssocOp):
             # change the zoo nature; adding an infinite qualtity would result
             # in a NaN condition if it had sign opposite of the infinite
             # portion of zoo, e.g., infinite_real - infinite_real.
-            newseq = [c for c in newseq if not (c.is_finite and
-                                                c.is_extended_real is not None)]
+            newseq = [c for c in newseq if c.is_extended_real is None]
 
         # process O(x)
         if order_factors:
