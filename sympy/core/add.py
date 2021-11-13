@@ -179,12 +179,17 @@ class Add(Expr, AssocOp):
     def flatten(cls, seq):
         """
         Takes the sequence "seq" of nested Adds and returns a flatten list.
+
         Returns: (commutative_part, noncommutative_part, order_symbols)
+
         Applies associativity, all terms are commutable with respect to
         addition.
+
         NB: the removal of 0 is already handled by AssocOp.__new__
+
         See also
         ========
+
         sympy.core.mul.Mul.flatten
         """
         from sympy.calculus.util import AccumBounds
