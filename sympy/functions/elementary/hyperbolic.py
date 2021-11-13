@@ -1198,7 +1198,7 @@ class asinh(InverseHyperbolicFunction):
                 k = (n - 1) // 2
                 R = RisingFactorial(S.Half, k)
                 F = factorial(k)
-                return (-1)**k * R / F * x**n / n
+                return S.NegativeOne**k * R / F * x**n / n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.series.order import Order

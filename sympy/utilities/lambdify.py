@@ -11,10 +11,12 @@ import keyword
 import textwrap
 import linecache
 
+# Required despite static analysis claiming it is not used
+from sympy.external import import_module # noqa:F401
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import (is_sequence, iterable,
-    NotIterable)
+    NotIterable, flatten)
 from sympy.utilities.misc import filldedent
 
 
@@ -123,8 +125,6 @@ def _import(module, reload=False):
     These dictionaries map names of Python functions to their equivalent in
     other modules.
     """
-    # Required despite static analysis claiming it is not used
-    from sympy.external import import_module # noqa:F401
     try:
         namespace, namespace_default, translations, import_commands = MODULES[
             module]
@@ -992,7 +992,6 @@ def lambdastr(args, expr, printer=None, dummify=None):
     from sympy.core.function import (Derivative, Function)
     from sympy.core.symbol import (Dummy, Symbol)
     from sympy.core.sympify import sympify
-    from sympy.utilities.iterables import flatten
 
     if printer is not None:
         if inspect.isfunction(printer):
@@ -1173,10 +1172,8 @@ class _EvaluatorPrinter:
         from sympy.core.basic import Basic
         from sympy.core.sorting import ordered
         from sympy.core.function import (Derivative, Function)
-        from sympy.core.symbol import Dummy
-        from sympy.utilities.iterables import flatten
+        from sympy.core.symbol import Dummy, uniquely_named_symbol
         from sympy.matrices import DeferredVector
-        from sympy.core.symbol import uniquely_named_symbol
         from sympy.core.expr import Expr
 
         # Args of type Dummy can cause name collisions with args
@@ -1260,7 +1257,6 @@ class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
         This method is used when the input value is not interable,
         but can be indexed (see issue #14655).
         """
-        from sympy.utilities.iterables import flatten
 
         def flat_indexes(elems):
             n = 0

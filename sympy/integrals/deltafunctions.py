@@ -187,7 +187,7 @@ def deltaintegrate(f, x):
                 n = (0 if len(deltaterm.args)==1 else deltaterm.args[1])
                 m = 0
                 while n >= 0:
-                    r = (-1)**n*rest_mult.diff(x, n).subs(x, point)
+                    r = S.NegativeOne**n*rest_mult.diff(x, n).subs(x, point)
                     if r.is_zero:
                         n -= 1
                         m += 1

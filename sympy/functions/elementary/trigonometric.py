@@ -388,7 +388,7 @@ class sin(TrigonometricFunction):
                 p = previous_terms[-2]
                 return -p*x**2/(n*(n - 1))
             else:
-                return (-1)**(n//2)*x**(n)/factorial(n)
+                return S.NegativeOne**(n//2)*x**n/factorial(n)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.args[0]
@@ -465,10 +465,10 @@ class sin(TrigonometricFunction):
 
                 # See http://mathworld.wolfram.com/Multiple-AngleFormulas.html
                 if n.is_odd:
-                    return (-1)**((n - 1)/2)*chebyshevt(n, sin(x))
+                    return S.NegativeOne**((n - 1)/2)*chebyshevt(n, sin(x))
                 else:
-                    return expand_mul((-1)**(n/2 - 1)*cos(x)*chebyshevu(n -
-                        1, sin(x)), deep=False)
+                    return expand_mul(S.NegativeOne**(n/2 - 1)*cos(x)*
+                                      chebyshevu(n - 1, sin(x)), deep=False)
             pi_coeff = _pi_coeff(arg)
             if pi_coeff is not None:
                 if pi_coeff.is_Rational:
@@ -483,7 +483,7 @@ class sin(TrigonometricFunction):
         n = x0/S.Pi
         if n.is_integer:
             lt = (arg - n*S.Pi).as_leading_term(x)
-            return ((-1)**n)*lt
+            return (S.NegativeOne**n)*lt
         if x0 is S.ComplexInfinity:
             x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
         if x0 in [S.Infinity, S.NegativeInfinity]:
@@ -722,7 +722,7 @@ class cos(TrigonometricFunction):
                 p = previous_terms[-2]
                 return -p*x**2/(n*(n - 1))
             else:
-                return (-1)**(n//2)*x**(n)/factorial(n)
+                return S.NegativeOne**(n//2)*x**n/factorial(n)
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         arg = self.args[0]
@@ -941,7 +941,7 @@ class cos(TrigonometricFunction):
         n = (x0 + S.Pi/2)/S.Pi
         if n.is_integer:
             lt = (arg - n*S.Pi + S.Pi/2).as_leading_term(x)
-            return ((-1)**n)*lt
+            return (S.NegativeOne**n)*lt
         if x0 is S.ComplexInfinity:
             x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
         if x0 in [S.Infinity, S.NegativeInfinity]:
@@ -1173,7 +1173,7 @@ class tan(TrigonometricFunction):
             B = bernoulli(n + 1)
             F = factorial(n + 1)
 
-            return (-1)**a*b*(b - 1)*B/F*x**n
+            return S.NegativeOne**a*b*(b - 1)*B/F*x**n
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         i = self.args[0].limit(x, 0)*2/S.Pi
@@ -1484,7 +1484,7 @@ class cot(TrigonometricFunction):
             B = bernoulli(n + 1)
             F = factorial(n + 1)
 
-            return (-1)**((n + 1)//2)*2**(n + 1)*B/F*x**n
+            return S.NegativeOne**((n + 1)//2)*2**(n + 1)*B/F*x**n
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         i = self.args[0].limit(x, 0)/S.Pi
@@ -1824,7 +1824,7 @@ class sec(ReciprocalTrigonometricFunction):
         else:
             x = sympify(x)
             k = n//2
-            return (-1)**k*euler(2*k)/factorial(2*k)*x**(2*k)
+            return S.NegativeOne**k*euler(2*k)/factorial(2*k)*x**(2*k)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         arg = self.args[0]
@@ -1832,7 +1832,7 @@ class sec(ReciprocalTrigonometricFunction):
         n = (x0 + S.Pi/2)/S.Pi
         if n.is_integer:
             lt = (arg - n*S.Pi + S.Pi/2).as_leading_term(x)
-            return ((-1)**n)/lt
+            return (S.NegativeOne**n)/lt
         return self.func(x0)
 
 
@@ -1919,7 +1919,7 @@ class csc(ReciprocalTrigonometricFunction):
         else:
             x = sympify(x)
             k = n//2 + 1
-            return ((-1)**(k - 1)*2*(2**(2*k - 1) - 1)*
+            return (S.NegativeOne**(k - 1)*2*(2**(2*k - 1) - 1)*
                     bernoulli(2*k)*x**(2*k - 1)/factorial(2*k))
 
 
@@ -2685,7 +2685,7 @@ class atan(InverseTrigonometricFunction):
             return S.Zero
         else:
             x = sympify(x)
-            return (-1)**((n - 1)//2)*x**n/n
+            return S.NegativeOne**((n - 1)//2)*x**n/n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.functions.elementary.complexes import (im, re)
@@ -2882,7 +2882,7 @@ class acot(InverseTrigonometricFunction):
             return S.Zero
         else:
             x = sympify(x)
-            return (-1)**((n + 1)//2)*x**n/n
+            return S.NegativeOne**((n + 1)//2)*x**n/n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.functions.elementary.complexes import (im, re)
