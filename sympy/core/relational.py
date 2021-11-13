@@ -111,8 +111,7 @@ class Relational(Boolean, EvalfMixin):
             # other than Eq/Ne;
             # Note: Symbol is a subclass of Boolean but is considered
             # acceptable here.
-            if any(map(_nontrivBool, (lhs, rhs))) or isinstance(lhs, Relational
-                    ) or isinstance(rhs, Relational)):
+            if any(map(_nontrivBool, (lhs, rhs))):
                 raise TypeError(filldedent('''
                     A Boolean argument can only be used in
                     Eq and Ne; all other relationals expect
