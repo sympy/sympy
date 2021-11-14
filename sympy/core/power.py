@@ -316,7 +316,7 @@ class Pow(Expr):
                 return S.ComplexInfinity
             elif e.__class__.__name__ == "AccumulationBounds":
                 if b == S.Exp1:
-                    from sympy.calculus.util import AccumBounds
+                    from sympy.calculus.accumulationbounds import AccumBounds
                     return AccumBounds(Pow(b, e.min), Pow(b, e.max))
             # autosimplification if base is a number and exp odd/even
             # if base is Number then the base will end up positive; we
@@ -823,7 +823,7 @@ class Pow(Expr):
         return self.base.is_polar
 
     def _eval_subs(self, old, new):
-        from sympy.calculus.util import AccumBounds
+        from sympy.calculus.accumulationbounds import AccumBounds
 
         if isinstance(self.exp, AccumBounds):
             b = self.base.subs(old, new)

@@ -16,6 +16,7 @@ from sympy.core.symbol import Wild, Dummy
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
+from sympy.sets.setexpr import SetExpr
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -272,7 +273,6 @@ class exp(ExpBase, metaclass=ExpMeta):
     @classmethod
     def eval(cls, arg):
         from sympy.calculus import AccumBounds
-        from sympy.sets.setexpr import SetExpr
         from sympy.matrices.matrices import MatrixBase
         from sympy.functions.elementary.complexes import (im, re)
         from sympy.simplify.simplify import logcombine
@@ -640,7 +640,6 @@ class log(Function):
     def eval(cls, arg, base=None):
         from sympy.functions.elementary.complexes import unpolarify
         from sympy.calculus import AccumBounds
-        from sympy.sets.setexpr import SetExpr
         from sympy.functions.elementary.complexes import Abs
 
         arg = sympify(arg)

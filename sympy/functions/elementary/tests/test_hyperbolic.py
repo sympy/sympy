@@ -1,4 +1,4 @@
-from sympy.calculus.util import AccumBounds
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.function import (expand_mul, expand_trig)
 from sympy.core.numbers import (E, I, Integer, Rational, nan, oo, pi, zoo)
 from sympy.core.singleton import S

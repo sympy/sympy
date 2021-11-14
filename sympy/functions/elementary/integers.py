@@ -159,7 +159,7 @@ class floor(RoundFunction):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
         if arg0.is_infinite:
-            from sympy.calculus.util import AccumBounds
+            from sympy.calculus.accumulationbounds import AccumBounds
             from sympy.series.order import Order
             s = arg._eval_nseries(x, n, logx, cdir)
             o = Order(1, (x, 0)) if n <= 0 else AccumBounds(-1, 0)
@@ -317,7 +317,7 @@ class ceiling(RoundFunction):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
         if arg0.is_infinite:
-            from sympy.calculus.util import AccumBounds
+            from sympy.calculus.accumulationbounds import AccumBounds
             from sympy.series.order import Order
             s = arg._eval_nseries(x, n, logx, cdir)
             o = Order(1, (x, 0)) if n <= 0 else AccumBounds(0, 1)
@@ -454,7 +454,7 @@ class frac(Function):
     """
     @classmethod
     def eval(cls, arg):
-        from sympy.calculus.util import AccumBounds
+        from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.functions.elementary.complexes import im
 
         def _eval(arg):

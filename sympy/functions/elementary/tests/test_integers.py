@@ -1,4 +1,4 @@
-from sympy.calculus.util import AccumBounds
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo)
 from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
 from sympy.core.singleton import S

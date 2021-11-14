@@ -1,4 +1,4 @@
-from sympy.calculus.util import AccumBounds
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.concrete.summations import Sum
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple

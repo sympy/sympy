@@ -16,6 +16,7 @@ from sympy.functions.elementary.hyperbolic import (acoth, asinh, atanh, cosh,
     coth, HyperbolicFunction, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import sqrt, Min, Max
 from sympy.functions.elementary.piecewise import Piecewise
+from sympy.sets.setexpr import SetExpr
 from sympy.sets.sets import FiniteSet
 from sympy.utilities.iterables import numbered_symbols
 
@@ -263,8 +264,7 @@ class sin(TrigonometricFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy.calculus import AccumBounds
-        from sympy.sets.setexpr import SetExpr
+        from sympy.calculus.accumulationbounds import AccumBounds
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -477,7 +477,7 @@ class sin(TrigonometricFunction):
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.functions.elementary.complexes import re
-        from sympy.calculus.util import AccumBounds
+        from sympy.calculus.accumulationbounds import AccumBounds
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         n = x0/S.Pi
@@ -566,8 +566,7 @@ class cos(TrigonometricFunction):
     @classmethod
     def eval(cls, arg):
         from sympy.functions.special.polynomials import chebyshevt
-        from sympy.calculus.util import AccumBounds
-        from sympy.sets.setexpr import SetExpr
+        from sympy.calculus.accumulationbounds import AccumBounds
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -935,7 +934,7 @@ class cos(TrigonometricFunction):
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.functions.elementary.complexes import re
-        from sympy.calculus.util import AccumBounds
+        from sympy.calculus.accumulationbounds import AccumBounds
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         n = (x0 + S.Pi/2)/S.Pi
@@ -1026,7 +1025,7 @@ class tan(TrigonometricFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy.calculus.util import AccumBounds
+        from sympy.calculus.accumulationbounds import AccumBounds
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -1362,7 +1361,7 @@ class cot(TrigonometricFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy.calculus.util import AccumBounds
+        from sympy.calculus.accumulationbounds import AccumBounds
         if arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
@@ -2643,7 +2642,7 @@ class atan(InverseTrigonometricFunction):
                 return -S.Pi/4
 
         if arg is S.ComplexInfinity:
-            from sympy.calculus.util import AccumBounds
+            from sympy.calculus.accumulationbounds import AccumBounds
             return AccumBounds(-S.Pi/2, S.Pi/2)
 
         if arg.could_extract_minus_sign():

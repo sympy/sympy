@@ -1418,7 +1418,7 @@ class atanh(InverseHyperbolicFunction):
                 return -cls(-arg)
         else:
             if arg is S.ComplexInfinity:
-                from sympy.calculus.util import AccumBounds
+                from sympy.calculus.accumulationbounds import AccumBounds
                 return S.ImaginaryUnit*AccumBounds(-S.Pi/2, S.Pi/2)
 
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
@@ -1669,7 +1669,7 @@ class asech(InverseHyperbolicFunction):
                 return cst_table[arg]
 
         if arg is S.ComplexInfinity:
-            from sympy.calculus.util import AccumBounds
+            from sympy.calculus.accumulationbounds import AccumBounds
             return S.ImaginaryUnit*AccumBounds(-S.Pi/2, S.Pi/2)
 
         if arg.is_zero:

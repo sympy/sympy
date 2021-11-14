@@ -930,7 +930,7 @@ class Expr(Basic, EvalfMixin):
         respectively.
 
         """
-        from sympy.calculus.util import AccumBounds
+        from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.functions.elementary.exponential import log
         from sympy.series.limits import limit, Limit
         from sympy.sets.sets import Interval
@@ -3954,7 +3954,7 @@ class AtomicExpr(Atom, Expr):
         return True
 
     def _eval_is_meromorphic(self, x, a):
-        from sympy.calculus.util import AccumBounds
+        from sympy.calculus.accumulationbounds import AccumBounds
         return (not self.is_Number or self.is_finite) and not isinstance(self, AccumBounds)
 
     def _eval_is_algebraic_expr(self, syms):

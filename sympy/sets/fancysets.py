@@ -13,8 +13,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
 from sympy.core.sympify import _sympify, sympify, converter
 from sympy.logic.boolalg import And, Or
-from sympy.sets.sets import (Set, Interval, Union, FiniteSet,
-    ProductSet)
+from .sets import Set, Interval, Union, FiniteSet, ProductSet
 from sympy.utilities.misc import filldedent
 
 
@@ -294,8 +293,7 @@ class ImageSet(Set):
     ========
 
     >>> from sympy import Symbol, S, pi, Dummy, Lambda
-    >>> from sympy.sets.sets import FiniteSet, Interval
-    >>> from sympy.sets.fancysets import ImageSet
+    >>> from sympy import FiniteSet, ImageSet, Interval
 
     >>> x = Symbol('x')
     >>> N = S.Naturals
@@ -1118,9 +1116,7 @@ class ComplexRegion(Set):
     Examples
     ========
 
-    >>> from sympy.sets.fancysets import ComplexRegion
-    >>> from sympy.sets import Interval
-    >>> from sympy import S, I, Union
+    >>> from sympy import ComplexRegion, Interval, S, I, Union
     >>> a = Interval(2, 3)
     >>> b = Interval(4, 6)
     >>> c1 = ComplexRegion(a*b)  # Rectangular Form
@@ -1379,9 +1375,7 @@ class CartesianComplexRegion(ComplexRegion):
     Examples
     ========
 
-    >>> from sympy.sets.fancysets import ComplexRegion
-    >>> from sympy.sets.sets import Interval
-    >>> from sympy import I
+    >>> from sympy import ComplexRegion, I, Interval
     >>> region = ComplexRegion(Interval(1, 3) * Interval(4, 6))
     >>> 2 + 5*I in region
     True
@@ -1435,8 +1429,7 @@ class PolarComplexRegion(ComplexRegion):
     Examples
     ========
 
-    >>> from sympy.sets.fancysets import ComplexRegion, Interval
-    >>> from sympy import oo, pi, I
+    >>> from sympy import ComplexRegion, Interval, oo, pi, I
     >>> rset = Interval(0, oo)
     >>> thetaset = Interval(0, pi)
     >>> upper_half_plane = ComplexRegion(rset * thetaset, polar=True)

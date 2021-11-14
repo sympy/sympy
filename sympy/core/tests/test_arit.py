@@ -2380,7 +2380,7 @@ def test_issue_21034():
 
 
 def test_issue_22021():
-    from sympy.calculus.util import AccumBounds
+    from sympy.calculus.accumulationbounds import AccumBounds
     # these objects are special cases in Mul
     from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
     L = TensorIndexType("L")

@@ -267,7 +267,7 @@ class Mul(Expr, AssocOp):
               Removal of 1 from the sequence is already handled by AssocOp.__new__.
         """
 
-        from sympy.calculus.util import AccumBounds
+        from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
         rv = None
         if len(seq) == 2:

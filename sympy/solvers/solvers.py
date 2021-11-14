@@ -54,7 +54,6 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from mpmath import findroot
 
 from sympy.solvers.polysys import solve_poly_system
-from sympy.solvers.inequalities import reduce_inequalities
 
 from types import GeneratorType
 from collections import defaultdict
@@ -830,6 +829,8 @@ def solve(f, *symbols, **flags):
     dsolve: For solving differential equations
 
     """
+    from .inequalities import reduce_inequalities
+
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
     ###########################################################################

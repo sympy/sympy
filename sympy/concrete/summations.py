@@ -1,7 +1,7 @@
 from typing import Tuple as tTuple
 
 from sympy.calculus.singularities import is_decreasing
-from sympy.calculus.util import AccumulationBounds
+from sympy.calculus.accumulationbounds import AccumulationBounds
 from .expr_with_intlimits import ExprWithIntLimits
 from .expr_with_limits import AddWithLimits
 from .gosper import gosper_sum
