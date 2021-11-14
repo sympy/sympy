@@ -12,7 +12,7 @@ from sympy.functions.special.gamma_functions import gamma
 from sympy.series.limitseq import limit_seq
 from sympy.series.limitseq import difference_delta as dd
 from sympy.testing.pytest import raises, XFAIL
-from sympy.calculus.util import AccumulationBounds
+from sympy.calculus.accumulationbounds import AccumulationBounds
 
 n, m, k = symbols('n m k', integer=True)
 

@@ -1374,7 +1374,9 @@ class Integral(AddWithLimits):
                              "cauchy's principal value. Also, a and b need to be comparable.")
         if a == b:
             return S.Zero
-        from sympy.calculus import singularities
+
+        from sympy.calculus.singularities import singularities
+
         r = Dummy('r')
         f = self.function
         singularities_list = [s for s in singularities(f, x) if s.is_comparable and a <= s <= b]
