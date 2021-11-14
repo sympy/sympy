@@ -61,6 +61,7 @@ from sympy.functions.special.error_functions import (erf, erfc, erfi, Ei,
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper, meijerg
 from sympy.functions.special.singularity_functions import SingularityFunction
+from .integrals import Integral
 from sympy.logic.boolalg import And, Or, BooleanAtom, Not, BooleanFunction
 from sympy.polys import cancel, factor
 from sympy.simplify.fu import sincos_to_sum
@@ -1565,8 +1566,6 @@ def _rewrite_single(f, x, recursive=True):
     # to avoid infinite recursion, we have to force the two g functions case
 
     def my_integrator(f, x):
-        from sympy.integrals.integrals import Integral
-
         r = _meijerint_definite_4(f, x, only_double=True)
         if r is not None:
             res, cond = r
@@ -1693,7 +1692,6 @@ def meijerint_indefinite(f, x):
 
 def _meijerint_indefinite_1(f, x):
     """ Helper that does not attempt any substitution. """
-    from sympy.integrals.integrals import Integral
     _debug('Trying to compute the indefinite integral of', f, 'wrt', x)
 
     gs = _rewrite1(f, x)
