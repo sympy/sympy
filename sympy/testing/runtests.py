@@ -39,6 +39,7 @@ from inspect import unwrap
 
 from sympy.core.cache import clear_cache
 from sympy.external import import_module
+from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
 
 IS_WINDOWS = (os.name == 'nt')
 ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
@@ -2175,7 +2176,6 @@ class PyTestReporter(Reporter):
         self.write("architecture:       %s\n" % ARCH)
         from sympy.core.cache import USE_CACHE
         self.write("cache:              %s\n" % USE_CACHE)
-        from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
         version = ''
         if GROUND_TYPES =='gmpy':
             if HAS_GMPY == 1:

@@ -511,7 +511,7 @@ class exp(ExpBase, metaclass=ExpMeta):
         # powsimp may introduce unexpanded (-1)**Rational; see PR #17201
         simplerat = lambda x: x.is_Rational and x.q in [3, 4, 6]
         w = Wild('w', properties=[simplerat])
-        r = r.replace((-1)**w, expand_complex((-1)**w))
+        r = r.replace(S.NegativeOne**w, expand_complex(S.NegativeOne**w))
         return r
 
     def _taylor(self, x, n):
@@ -1027,7 +1027,7 @@ class log(Function):
         pk = pterms
 
         while k*d < n:
-            coeff = -(-1)**k/k
+            coeff = -S.NegativeOne**k/k
             for ex in pk:
                 terms[ex] = terms.get(ex, S.Zero) + coeff*pk[ex]
             pk = mul(pk, pterms)

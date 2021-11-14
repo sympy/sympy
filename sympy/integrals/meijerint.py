@@ -174,7 +174,7 @@ def _create_lookup_table(table):
     # Section 8.5.5
     def make_log1(subs):
         N = subs[n]
-        return [((-1)**N*factorial(N),
+        return [(S.NegativeOne**N*factorial(N),
                  meijerg([], [1]*(N + 1), [0]*(N + 1), [], t))]
 
     def make_log2(subs):

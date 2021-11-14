@@ -302,7 +302,7 @@ def _invert_real(f, g_ys, symbol):
             def inv(trig):
                 if isinstance(trig, (sin, csc)):
                     F = asin if isinstance(trig, sin) else acsc
-                    return (lambda a: n*pi + (-1)**n*F(a),)
+                    return (lambda a: n*pi + S.NegativeOne**n*F(a),)
                 if isinstance(trig, (cos, sec)):
                     F = acos if isinstance(trig, cos) else asec
                     return (

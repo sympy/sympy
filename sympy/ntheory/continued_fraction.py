@@ -236,7 +236,7 @@ def continued_fraction_reduce(cf):
                 break
             yield nxt
 
-    a = Integer(0)
+    a = S.Zero
     for a in continued_fraction_convergents(untillist(cf)):
         pass
 
@@ -342,8 +342,8 @@ def continued_fraction_convergents(cf):
     continued_fraction_iterator
 
     """
-    p_2, q_2 = Integer(0), Integer(1)
-    p_1, q_1 = Integer(1), Integer(0)
+    p_2, q_2 = S.Zero, S.One
+    p_1, q_1 = S.One, S.Zero
     for a in cf:
         p, q = a*p_1 + p_2, a*q_1 + q_2
         p_2, q_2 = p_1, q_1

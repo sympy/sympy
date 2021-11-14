@@ -24,7 +24,7 @@ from sympy.printing.defaults import Printable
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import flatten, NotIterable, is_sequence
+from sympy.utilities.iterables import flatten, NotIterable, is_sequence, reshape
 from sympy.utilities.misc import as_int, filldedent
 
 from .common import (
@@ -972,7 +972,6 @@ class MatrixBase(MatrixDeprecated,
         from sympy.matrices import SparseMatrix
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.matrices.expressions.blockmatrix import BlockMatrix
-        from sympy.utilities.iterables import reshape
 
         flat_list = None
 

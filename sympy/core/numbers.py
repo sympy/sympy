@@ -3962,7 +3962,7 @@ class Catalan(NumberSymbol, metaclass=Singleton):
         from .symbol import Dummy
         from sympy.concrete.summations import Sum
         k = Dummy('k', integer=True, nonnegative=True)
-        return Sum((-1)**k / (2*k+1)**2, (k, 0, S.Infinity))
+        return Sum(S.NegativeOne**k / (2*k+1)**2, (k, 0, S.Infinity))
 
 
 class ImaginaryUnit(AtomicExpr, metaclass=Singleton):

@@ -186,9 +186,9 @@ class Qubit(QubitState, Ket):
 
     def _eval_innerproduct_QubitBra(self, bra, **hints):
         if self.label == bra.label:
-            return Integer(1)
+            return S.One
         else:
-            return Integer(0)
+            return S.Zero
 
     def _represent_default_basis(self, **options):
         return self._represent_ZGate(None, **options)

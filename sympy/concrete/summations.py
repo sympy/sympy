@@ -563,7 +563,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             pass
 
         ### ------------- alternating series test ----------- ###
-        dict_val = sequence_term.match((-1)**(sym + p)*q)
+        dict_val = sequence_term.match(S.NegativeOne**(sym + p)*q)
         if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
             return S.true
 
@@ -1477,7 +1477,7 @@ def eval_sum_residue(f, i_a_b):
         alternating = False
         numer, denom = match
     else:
-        match = match_rational(f / (-1)**i, i)
+        match = match_rational(f / S.NegativeOne**i, i)
         if match:
             alternating = True
             numer, denom = match
@@ -1521,7 +1521,7 @@ def eval_sum_residue(f, i_a_b):
             return None
 
         if alternating:
-            f = (-1)**i * ((-1)**shift * numer.as_expr() / denom.as_expr())
+            f = S.NegativeOne**i * (S.NegativeOne**shift * numer.as_expr() / denom.as_expr())
         else:
             f = numer.as_expr() / denom.as_expr()
         return eval_sum_residue(f, (i, a-shift, b-shift))

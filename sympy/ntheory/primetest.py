@@ -6,6 +6,7 @@ Primality testing
 from sympy.core.numbers import igcd
 from sympy.core.power import integer_nthroot
 from sympy.core.sympify import sympify
+from sympy.external.gmpy import HAS_GMPY
 from sympy.utilities.misc import as_int
 
 from mpmath.libmp import bitcount as _bitlength
@@ -585,7 +586,6 @@ def isprime(n):
     # If we have GMPY2, skip straight to step 3 and do a strong BPSW test.
     # This should be a bit faster than our step 2, and for large values will
     # be a lot faster than our step 3 (C+GMP vs. Python).
-    from sympy.external.gmpy import HAS_GMPY
     if HAS_GMPY == 2:
         from gmpy2 import is_strong_prp, is_strong_selfridge_prp
         return is_strong_prp(n, 2) and is_strong_selfridge_prp(n)
