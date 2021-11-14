@@ -1,5 +1,6 @@
 from sympy.core import cacheit, Dummy, Ne, Integer, Rational, S, Wild
 from sympy.functions import binomial, sin, cos, Piecewise
+from .integrals import integrate
 
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
 
@@ -59,7 +60,6 @@ def trigintegrate(f, x, conds='piecewise'):
     sympy.integrals.integrals.Integral.doit
     sympy.integrals.integrals.Integral
     """
-    from sympy.integrals.integrals import integrate
     pat, a, n, m = _pat_sincos(x)
 
     f = f.rewrite('sincos')

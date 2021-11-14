@@ -51,11 +51,13 @@ from sympy.functions.special.polynomials import (chebyshevt, chebyshevu,
     legendre, hermite, laguerre, assoc_laguerre, gegenbauer, jacobi,
     OrthogonalPolynomial)
 from sympy.functions.special.zeta_functions import polylog
+from .integrals import Integral
 from sympy.logic.boolalg import And
 from sympy.ntheory.factor_ import divisors
 from sympy.polys.polytools import degree
 from sympy.simplify.radsimp import fraction
 from sympy.simplify.simplify import simplify
+from sympy.solvers.solvers import solve
 from sympy.strategies.core import switch, do_one, null_safe, condition
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
@@ -637,8 +639,6 @@ def parts_rule(integral):
         u, dv, v, du, v_step = result
         debug("u : {}, dv : {}, v : {}, du : {}, v_step: {}".format(u, dv, v, du, v_step))
         steps.append(result)
-
-        from .integrals import Integral
 
         if isinstance(v, Integral):
             return
@@ -1468,7 +1468,6 @@ def eval_trigsubstitution(theta, func, rewritten, substep, restriction, integran
     trig_function = list(func.find(TrigonometricFunction))
     assert len(trig_function) == 1
     trig_function = trig_function[0]
-    from sympy.solvers.solvers import solve
     relation = solve(symbol - func, trig_function)
     assert len(relation) == 1
     numer, denom = fraction(relation[0])
@@ -1625,7 +1624,6 @@ def eval_elliptic_e(a, d, integrand, symbol):
 
 @evaluates(DontKnowRule)
 def eval_dontknowrule(integrand, symbol):
-    from .integrals import Integral
     return Integral(integrand, symbol)
 
 def _manualintegrate(rule):
