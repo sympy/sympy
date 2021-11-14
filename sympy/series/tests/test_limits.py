@@ -308,6 +308,15 @@ def test_series_AccumBounds():
     assert limit(e, x, oo) == AccumBounds(0, oo)
 
 
+def test_pull_request_22491():
+    assert limit(1/asin(x), x, 0, dir = '+') == oo
+    assert limit(1/asin(x), x, 0, dir = '-') == -oo
+    assert limit(1/sinh(x), x, 0, dir = '+') == oo
+    assert limit(1/sinh(x), x, 0, dir = '-') == -oo
+    assert limit(log(1/x) + 1/sin(x), x, 0, dir = '+') == oo
+    assert limit(log(1/x) + 1/x, x, 0, dir = '+') == oo
+
+
 @XFAIL
 def test_doit2():
     f = Integral(2 * x, x)
