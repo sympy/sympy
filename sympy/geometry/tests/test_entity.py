@@ -6,8 +6,6 @@ from sympy.geometry import (Circle, Ellipse, Point, Line, Parabola,
 from sympy.geometry.entity import scale, GeometryEntity
 from sympy.testing.pytest import raises
 
-from random import random
-
 
 def test_entity():
     x = Symbol('x', real=True)
@@ -85,8 +83,10 @@ def test_reflect_entity_overrides():
     assert c.area == -cr.area
 
     pent = RegularPolygon((1, 2), 1, 5)
-    l = Line(pent.vertices[1],
-        slope=Rational(random() - .5, random() - .5))
+    slope = S.ComplexInfinity
+    while slope is S.ComplexInfinity:
+        slope = Rational(*(x._random()/2).as_real_imag())
+    l = Line(pent.vertices[1], slope=slope)
     rpent = pent.reflect(l)
     assert rpent.center == pent.center.reflect(l)
     rvert = [i.reflect(l) for i in pent.vertices]

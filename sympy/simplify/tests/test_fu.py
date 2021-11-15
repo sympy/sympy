@@ -12,7 +12,7 @@ from sympy.simplify.fu import (
     TR111, TR2, TR2i, TR3, TR5, TR6, TR7, TR8, TR9, TRmorrie, _TR56 as T,
     TRpower, hyper_as_trig, fu, process_common_addends, trig_split,
     as_f_sign_1)
-from sympy.testing.randtest import verify_numerically
+from sympy.core.random import verify_numerically
 from sympy.abc import a, b, c, x, y, z
 
 

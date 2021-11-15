@@ -1,4 +1,4 @@
-from random import randrange, choice
+from sympy.core.random import randrange, choice
 from math import log
 from sympy.ntheory import primefactors
 from sympy.core.symbol import Symbol
@@ -15,7 +15,7 @@ from sympy.core import Basic
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.ntheory import sieve
 from sympy.utilities.iterables import has_variety, is_sequence, uniq
-from sympy.testing.randtest import _randrange
+from sympy.core.random import _randrange
 from itertools import islice
 from sympy.core.sympify import _sympify
 rmul = Permutation.rmul_with_af

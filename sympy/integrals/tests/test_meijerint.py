@@ -16,7 +16,7 @@ from sympy.integrals.meijerint import (_rewrite_single, _rewrite1,
     meijerint_indefinite, _inflate_g, _create_lookup_table,
     meijerint_definite, meijerint_inversion)
 from sympy.testing.pytest import slow
-from sympy.testing.randtest import (verify_numerically,
+from sympy.core.random import (verify_numerically,
         random_complex_number as randcplx)
 from sympy.abc import x, y, a, b, c, d, s, t, z
 
@@ -338,7 +338,7 @@ def test_inversion_exp_real_nonreal_shift():
 
 @slow
 def test_lookup_table():
-    from random import uniform, randrange
+    from sympy.core.random import uniform, randrange
     from sympy.core.add import Add
     from sympy.integrals.meijerint import z as z_dummy
     table = {}

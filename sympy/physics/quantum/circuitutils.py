@@ -406,7 +406,7 @@ def random_reduce(circuit, gate_ids, seed=None):
         given by the list
 
     """
-    from sympy.testing.randtest import _randrange
+    from sympy.core.random import _randrange
 
     if not gate_ids:
         return circuit
@@ -460,7 +460,7 @@ def random_insert(circuit, choices, seed=None):
     Indices for insertion should be [0, n] if n is the length of the
     circuit.
     """
-    from sympy.testing.randtest import _randrange
+    from sympy.core.random import _randrange
 
     if not choices:
         return circuit

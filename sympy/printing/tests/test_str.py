@@ -1,6 +1,6 @@
 from sympy.algebras.quaternion import Quaternion
 from sympy.assumptions.ask import Q
-from sympy.calculus.util import AccumBounds
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.combinatorics.partitions import Partition
 from sympy.concrete.summations import (Sum, summation)
 from sympy.core.add import Add

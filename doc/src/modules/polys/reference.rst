@@ -95,21 +95,6 @@ Domain constructors
 
 .. autofunction:: construct_domain
 
-Algebraic number fields
-=======================
-
-.. currentmodule:: sympy.polys.numberfields
-
-.. autofunction:: minimal_polynomial
-.. autofunction:: minpoly
-.. autofunction:: primitive_element
-.. autofunction:: field_isomorphism
-.. autofunction:: to_number_field
-.. autofunction:: isolate
-
-.. autoclass:: AlgebraicNumber
-   :members:
-
 Monomials encoded as tuples
 ===========================
 

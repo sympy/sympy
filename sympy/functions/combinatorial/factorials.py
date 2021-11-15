@@ -7,7 +7,7 @@ from sympy.core.function import Function, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi, I
 from sympy.core.relational import Eq
-from sympy.external.gmpy import HAS_GMPY
+from sympy.external.gmpy import HAS_GMPY, gmpy
 from sympy.ntheory import sieve
 from sympy.polys.polytools import Poly
 
@@ -165,7 +165,6 @@ class factorial(CombinatorialFunction):
 
                     # GMPY factorial is faster, use it when available
                     elif HAS_GMPY:
-                        from sympy.external.gmpy import gmpy
                         result = gmpy.fac(n)
 
                     else:
@@ -363,7 +362,8 @@ class subfactorial(CombinatorialFunction):
     def _eval_rewrite_as_gamma(self, arg, piecewise=True, **kwargs):
         from sympy.functions.elementary.exponential import exp
         from sympy.functions.special.gamma_functions import (gamma, lowergamma)
-        return ((-1)**(arg + 1)*exp(-I*pi*arg)*lowergamma(arg + 1, -1) + gamma(arg + 1))*exp(-1)
+        return (S.NegativeOne**(arg + 1)*exp(-I*pi*arg)*lowergamma(arg + 1, -1)
+                + gamma(arg + 1))*exp(-1)
 
     def _eval_rewrite_as_uppergamma(self, arg, **kwargs):
         from sympy.functions.special.gamma_functions import uppergamma
@@ -623,11 +623,11 @@ class RisingFactorial(CombinatorialFunction):
         from sympy.functions.special.gamma_functions import gamma
         if not piecewise:
             if (x <= 0) == True:
-                return (-1)**k*gamma(1 - x) / gamma(-k - x + 1)
+                return S.NegativeOne**k*gamma(1 - x) / gamma(-k - x + 1)
             return gamma(x + k) / gamma(x)
         return Piecewise(
             (gamma(x + k) / gamma(x), x > 0),
-            ((-1)**k*gamma(1 - x) / gamma(-k - x + 1), True))
+            (S.NegativeOne**k*gamma(1 - x) / gamma(-k - x + 1), True))
 
     def _eval_rewrite_as_FallingFactorial(self, x, k, **kwargs):
         return FallingFactorial(x + k - 1, k)
@@ -637,7 +637,7 @@ class RisingFactorial(CombinatorialFunction):
         if x.is_integer and k.is_integer:
             return Piecewise(
                 (factorial(k + x - 1)/factorial(x - 1), x > 0),
-                ((-1)**k*factorial(-x)/factorial(-k - x), True))
+                (S.NegativeOne**k*factorial(-x)/factorial(-k - x), True))
 
     def _eval_rewrite_as_binomial(self, x, k, **kwargs):
         if k.is_integer:
@@ -650,7 +650,7 @@ class RisingFactorial(CombinatorialFunction):
             if k_lim is S.Infinity:
                 return (gamma(x + k).rewrite('tractable', deep=True) / gamma(x))
             elif k_lim is S.NegativeInfinity:
-                return ((-1)**k*gamma(1 - x) / gamma(-k - x + 1).rewrite('tractable', deep=True))
+                return (S.NegativeOne**k*gamma(1 - x) / gamma(-k - x + 1).rewrite('tractable', deep=True))
         return self.rewrite(gamma).rewrite('tractable', deep=True)
 
     def _eval_is_integer(self):
@@ -778,11 +778,11 @@ class FallingFactorial(CombinatorialFunction):
         from sympy.functions.special.gamma_functions import gamma
         if not piecewise:
             if (x < 0) == True:
-                return (-1)**k*gamma(k - x) / gamma(-x)
+                return S.NegativeOne**k*gamma(k - x) / gamma(-x)
             return gamma(x + 1) / gamma(x - k + 1)
         return Piecewise(
             (gamma(x + 1) / gamma(x - k + 1), x >= 0),
-            ((-1)**k*gamma(k - x) / gamma(-x), True))
+            (S.NegativeOne**k*gamma(k - x) / gamma(-x), True))
 
     def _eval_rewrite_as_RisingFactorial(self, x, k, **kwargs):
         return rf(x - k + 1, k)
@@ -796,14 +796,14 @@ class FallingFactorial(CombinatorialFunction):
         if x.is_integer and k.is_integer:
             return Piecewise(
                 (factorial(x)/factorial(-k + x), x >= 0),
-                ((-1)**k*factorial(k - x - 1)/factorial(-x - 1), True))
+                (S.NegativeOne**k*factorial(k - x - 1)/factorial(-x - 1), True))
 
     def _eval_rewrite_as_tractable(self, x, k, limitvar=None, **kwargs):
         from sympy.functions.special.gamma_functions import gamma
         if limitvar:
             k_lim = k.subs(limitvar, S.Infinity)
             if k_lim is S.Infinity:
-                return ((-1)**k*gamma(k - x).rewrite('tractable', deep=True) / gamma(-x))
+                return (S.NegativeOne**k*gamma(k - x).rewrite('tractable', deep=True) / gamma(-x))
             elif k_lim is S.NegativeInfinity:
                 return (gamma(x + 1) / gamma(x - k + 1).rewrite('tractable', deep=True))
         return self.rewrite(gamma).rewrite('tractable', deep=True)
@@ -928,7 +928,6 @@ class binomial(CombinatorialFunction):
                     k = n - k
 
                 if HAS_GMPY:
-                    from sympy.external.gmpy import gmpy
                     return Integer(gmpy.bincoef(n, k))
 
                 d, result = n - k, 1

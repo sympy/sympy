@@ -1,3 +1,4 @@
+from typing import Tuple as tTuple
 from collections import defaultdict
 from functools import cmp_to_key, reduce
 from operator import attrgetter
@@ -168,6 +169,8 @@ class Add(Expr, AssocOp):
 
     __slots__ = ()
 
+    args: tTuple[Expr, ...]
+
     is_Add = True
 
     _args_type = Expr
@@ -190,7 +193,7 @@ class Add(Expr, AssocOp):
         sympy.core.mul.Mul.flatten
 
         """
-        from sympy.calculus.util import AccumBounds
+        from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
         from sympy.tensor.tensor import TensExpr
         rv = None

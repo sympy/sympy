@@ -7,7 +7,7 @@ Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
 
-from typing import Callable, Dict as tDict
+from typing import Callable, Dict as tDict, Tuple as tTuple
 
 from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
@@ -28,6 +28,7 @@ from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.ntheory import isprime
 from sympy.ntheory.primetest import is_square
 from sympy.utilities.enumerative import MultisetPartitionTraverser
+from sympy.utilities.iterables import multiset, multiset_derangements, iterable
 from sympy.utilities.memoization import recurrence_memo
 from sympy.utilities.misc import as_int
 
@@ -461,6 +462,8 @@ class bernoulli(Function):
     .. [4] http://mathworld.wolfram.com/BernoulliPolynomial.html
 
     """
+
+    args: tTuple[Integer]
 
     # Calculates B_n for positive even n
     @staticmethod
@@ -1036,7 +1039,8 @@ class euler(Function):
             k = Dummy("k", integer=True)
             j = Dummy("j", integer=True)
             n = n / 2
-            Em = (S.ImaginaryUnit * Sum(Sum(binomial(k, j) * ((-1)**j * (k - 2*j)**(2*n + 1)) /
+            Em = (S.ImaginaryUnit * Sum(Sum(binomial(k, j) * (S.NegativeOne**j *
+                                                              (k - 2*j)**(2*n + 1)) /
                   (2**k*S.ImaginaryUnit**k * k), (j, 0, k)), (k, 1, 2*n + 1)))
             return Em
         if x:
@@ -1863,7 +1867,7 @@ def stirling(n, k, d=None, kind=2, signed=False):
         return _eval_stirling2(n - d + 1, k - d + 1)
     elif signed:
         # kind is ignored -- only kind=1 is supported
-        return (-1)**(n - k)*_eval_stirling1(n, k)
+        return S.NegativeOne**(n - k)*_eval_stirling1(n, k)
 
     if kind == 1:
         return _eval_stirling1(n, k)
@@ -2215,7 +2219,6 @@ def nD(i=None, brute=None, *, n=None, m=None):
     >>> assert nD('abc') == nD(m=(1,1,1)) == nD(m={1:3}) == 2
 
     """
-    from sympy.utilities.iterables import multiset, multiset_derangements, iterable
     from sympy.integrals.integrals import integrate
     from sympy.functions.elementary.exponential import exp
     from sympy.functions.special.polynomials import laguerre

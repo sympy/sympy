@@ -12,7 +12,7 @@ from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.common import NonSquareMatrixError
-from sympy.matrices.matrices import MatrixKind
+from sympy.matrices.matrices import MatrixKind, MatrixBase
 from sympy.multipledispatch import dispatch
 from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
@@ -512,7 +512,26 @@ Basic._constructor_postprocessor_mapping[MatrixExpr] = {
 }
 
 
-def _matrix_derivative(expr, x):
+def _matrix_derivative(expr, x, old_algorithm=False):
+
+    if isinstance(expr, MatrixBase) or isinstance(x, MatrixBase):
+        # Do not use array expressions for explicit matrices:
+        old_algorithm = True
+
+    if old_algorithm:
+        return _matrix_derivative_old_algorithm(expr, x)
+
+    from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+    from sympy.tensor.array.expressions.arrayexpr_derivatives import array_derive
+    from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
+
+    array_expr = convert_matrix_to_array(expr)
+    diff_array_expr = array_derive(array_expr, x)
+    diff_matrix_expr = convert_array_to_matrix(diff_array_expr)
+    return diff_matrix_expr
+
+
+def _matrix_derivative_old_algorithm(expr, x):
     from sympy.tensor.array.array_derivatives import ArrayDerivative
     lines = expr._eval_derivative_matrix_lines(x)
 

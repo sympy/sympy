@@ -19,8 +19,8 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import symbols, Symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, converter
+from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import And, Or, Not, Xor, true, false
-from sympy.sets.contains import Contains
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import (iproduct, sift, roundrobin, iterable,
@@ -327,6 +327,7 @@ class Set(Basic, EvalfMixin):
         >>> _ is S.true
         False
         """
+        from .contains import Contains
         other = sympify(other, strict=True)
 
         c = self._contains(other)
@@ -1220,14 +1221,12 @@ class Union(Set, LatticeOp):
     def _inf(self):
         # We use Min so that sup is meaningful in combination with symbolic
         # interval end points.
-        from sympy.functions.elementary.miscellaneous import Min
         return Min(*[set.inf for set in self.args])
 
     @property
     def _sup(self):
         # We use Max so that sup is meaningful in combination with symbolic
         # end points.
-        from sympy.functions.elementary.miscellaneous import Max
         return Max(*[set.sup for set in self.args])
 
     @property
@@ -1895,12 +1894,10 @@ class FiniteSet(Set):
 
     @property
     def _inf(self):
-        from sympy.functions.elementary.miscellaneous import Min
         return Min(*self)
 
     @property
     def _sup(self):
-        from sympy.functions.elementary.miscellaneous import Max
         return Max(*self)
 
     @property
@@ -2239,8 +2236,8 @@ def imageset(*args):
     sympy.sets.fancysets.ImageSet
 
     """
-    from sympy.sets.fancysets import ImageSet
-    from sympy.sets.setexpr import set_function
+    from .fancysets import ImageSet
+    from .setexpr import set_function
 
     if len(args) < 2:
         raise ValueError('imageset expects at least 2 args, got: %s' % len(args))
@@ -2325,7 +2322,7 @@ def is_function_invertible_in_set(func, setv):
     Checks whether function ``func`` is invertible when the domain is
     restricted to set ``setv``.
     """
-    from sympy.functions.elementary.exponential import (exp, log)
+    from sympy.functions.elementary.exponential import exp, log
     # Functions known to always be invertible:
     if func in (exp, log):
         return True
@@ -2486,7 +2483,7 @@ def _handle_finite_sets(op, x, y, commutative):
         return None
 
 def _apply_operation(op, x, y, commutative):
-    from sympy.sets import ImageSet
+    from .fancysets import ImageSet
     d = Dummy('d')
 
     out = _handle_finite_sets(op, x, y, commutative)

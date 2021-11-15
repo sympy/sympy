@@ -37,7 +37,7 @@ from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
 
 from sympy.testing.pytest import slow, XFAIL, SKIP, raises
-from sympy.testing.randtest import verify_numerically as tn
+from sympy.core.random import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, e, k, h, p, x, y, z, t, q, m, R
 
@@ -128,6 +128,7 @@ def test_solve_args():
     # no symbol to solve for
     assert solve(42) == solve(42, x) == []
     assert solve([1, 2]) == []
+    assert solve([sqrt(2)],[x]) == []
     # duplicate symbols removed
     assert solve((x - 3, y + 2), x, y, x) == {x: 3, y: -2}
     # unordered symbols

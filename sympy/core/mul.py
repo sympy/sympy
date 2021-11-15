@@ -1,3 +1,4 @@
+from typing import Tuple as tTuple
 from collections import defaultdict
 from functools import cmp_to_key, reduce
 from itertools import product
@@ -154,6 +155,8 @@ class Mul(Expr, AssocOp):
     """
     __slots__ = ()
 
+    args: tTuple[Expr]
+
     is_Mul = True
 
     _args_type = Expr
@@ -264,7 +267,7 @@ class Mul(Expr, AssocOp):
               Removal of 1 from the sequence is already handled by AssocOp.__new__.
         """
 
-        from sympy.calculus.util import AccumBounds
+        from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.matrices.expressions import MatrixExpr
         rv = None
         if len(seq) == 2:
