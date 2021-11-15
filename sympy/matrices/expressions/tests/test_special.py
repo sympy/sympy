@@ -128,11 +128,11 @@ def test_ZeroMatrix():
 
     assert ZeroMatrix(n, n)**0 == Identity(n)
     with raises(NonSquareMatrixError):
-        _ = Z**0
+        Z**0
     with raises(NonSquareMatrixError):
-        _ = Z**1
+        Z**1
     with raises(NonSquareMatrixError):
-        _ = Z**2
+        Z**2
 
     assert ZeroMatrix(3, 3).as_explicit() == ImmutableDenseMatrix.zeros(3, 3)
 
@@ -158,13 +158,13 @@ def test_OneMatrix():
 
     assert OneMatrix(n, n) ** 0 == Identity(n)
     with raises(NonSquareMatrixError):
-        _ = U ** 0
+        U ** 0
     with raises(NonSquareMatrixError):
-        _ = U ** 1
+        U ** 1
     with raises(NonSquareMatrixError):
-        _ = U ** 2
+        U ** 2
     with raises(ShapeError):
-        _ = a + U
+        a + U
 
     U = OneMatrix(n, n)
     assert U[1, 2] == 1

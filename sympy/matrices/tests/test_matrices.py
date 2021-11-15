@@ -1063,7 +1063,7 @@ def test_simplify():
     M = Matrix([[eq]])
     M.simplify()
     assert M == Matrix([[eq]])
-    assert M.simplify(ratio=oo) == M
+    M.simplify(ratio=oo)
     assert M == Matrix([[eq.simplify(ratio=oo)]])
 
 

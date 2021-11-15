@@ -570,7 +570,7 @@ def test_first_moment():
     assert p2.first_moment_of_area((a/8, b/6)) == (-25*a*b**2/648, -5*a**2*b/768)
 
     p2 = Polygon((0, 0), (12, 0), (12, 30))
-    assert p2.first_moment_of_area() == (1600/3, -640/3)
+    assert p2.first_moment_of_area() == (S(1600)/3, -S(640)/3)
 
 
 def test_section_modulus_and_polar_second_moment_of_area():

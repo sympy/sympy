@@ -982,7 +982,7 @@ def test_CC_double():
 
 def test_gaussian_domains():
     I = S.ImaginaryUnit
-    a, b, c, d = [ZZ_I.convert(x) for x in (5, 2 + I, 3 - I, 5 - 5)]
+    a, b, c, d = [ZZ_I.convert(x) for x in (5, 2 + I, 3 - I, 5 - 5*I)]
     assert ZZ_I.gcd(a, b) == b
     assert ZZ_I.gcd(a, c) == b
     assert ZZ_I.lcm(a, b) == a

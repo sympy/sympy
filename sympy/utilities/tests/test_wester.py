@@ -84,7 +84,6 @@ from sympy.matrices import Matrix, GramSchmidt, eye
 from sympy.matrices.expressions.blockmatrix import BlockMatrix, block_collapse
 from sympy.matrices.expressions import MatrixSymbol, ZeroMatrix
 from sympy.physics.quantum import Commutator
-from sympy.assumptions import assuming
 from sympy.polys.rings import PolyRing
 from sympy.polys.fields import FracField
 from sympy.polys.solvers import solve_lin_sys
@@ -1056,9 +1055,11 @@ def test_M26():
 def test_M27():
     x = symbols('x', real=True)
     b = symbols('b', real=True)
-    with assuming(sin(cos(1/E**2) + 1) + b > 0):
-        # TODO: Replace solve with solveset
-        assert solve(log(acos(asin(x**R(2, 3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/E**2))**R(3/2), b + sin(1 + cos(1/E**2))**R(3/2)]
+    # TODO: Replace solve with solveset which gives both [+/- current answer]
+    # note that there is a typo in this test in the wester.pdf; there is no
+    # real solution for the equation as it appears in wester.pdf
+    assert solve(log(acos(asin(x**R(2, 3) - b)) - 1) + 2, x
+        ) == [(b + sin(cos(exp(-2) + 1)))**R(3, 2)]
 
 
 @XFAIL
@@ -1764,9 +1765,13 @@ def test_P38():
     M=Matrix([[0, 1, 0],
               [0, 0, 0],
               [0, 0, 0]])
-    #raises ValueError: Matrix det == 0; not invertible
-    _ = M**S.Half
 
+    with raises(AssertionError):
+        # raises ValueError: Matrix det == 0; not invertible
+        M**S.Half
+        # if it doesn't raise then this assertion will be
+        # raised and the test will be flagged as not XFAILing
+        assert None
 
 @XFAIL
 def test_P39():

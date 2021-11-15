@@ -92,7 +92,7 @@ def test_addition():
 
     assert A + ZeroMatrix(n, m) - A == ZeroMatrix(n, m)
     with raises(TypeError):
-        _ = ZeroMatrix(n,m) + S.Zero
+        ZeroMatrix(n,m) + S.Zero
 
 
 def test_multiplication():

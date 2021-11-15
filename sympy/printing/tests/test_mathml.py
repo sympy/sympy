@@ -1250,7 +1250,7 @@ def test_print_AssocOp():
 
     expr = TestAssocOp(1, 2)
     assert mpp.doprint(expr) == \
-        '<mrow><mi>testassocop</mi><mn>2</mn><mn>1</mn></mrow>'
+        '<mrow><mi>testassocop</mi><mn>1</mn><mn>2</mn></mrow>'
 
 
 def test_print_basic():
