@@ -1,11 +1,9 @@
 import operator
-from collections import defaultdict, Counter
+from collections import Counter, abc, defaultdict
 from functools import reduce
 import itertools
 from itertools import accumulate
-from typing import Optional, List, Dict as tDict, Tuple as tTuple
-
-import typing
+from typing import Iterable, Optional, List, Dict as tDict, Tuple as tTuple, Union as tUnion, overload
 
 from sympy import Integer
 from sympy.core.basic import Basic
@@ -41,7 +39,7 @@ class ArraySymbol(_ArrayExpr):
     Symbol representing an array expression
     """
 
-    def __new__(cls, symbol, shape: typing.Iterable) -> "ArraySymbol":
+    def __new__(cls, symbol, shape: Iterable) -> "ArraySymbol":
         if isinstance(symbol, str):
             symbol = Symbol(symbol)
         # symbol = _sympify(symbol)
@@ -57,8 +55,25 @@ class ArraySymbol(_ArrayExpr):
     def shape(self):
         return self._args[1]
 
-    def __getitem__(self, item):
-        return ArrayElement(self, item)
+    @overload
+    def __getitem__(self, key: tUnion[Basic, int]) -> "ArrayElement":
+        ...
+
+    @overload
+    def __getitem__(self, key: tTuple[tUnion[Basic, int], ...]) -> "ArrayElement":
+        ...
+
+    def __getitem__(self, key):
+        if isinstance(key, abc.Iterable):
+            indices = key
+        else:
+            indices = (key,)
+        if len(indices) != len(self.shape):
+            raise ValueError(
+                f"Number of indices ({len(indices)}) is not the same"
+                f" as shape size ({len(self.shape)})."
+            )
+        return ArrayElement(self, indices)
 
     def as_explicit(self):
         if not all(i.is_Integer for i in self.shape):
@@ -71,6 +86,7 @@ class ArrayElement(_ArrayExpr):
     """
     An element of an array.
     """
+
     def __new__(cls, name, indices):
         if isinstance(name, str):
             name = Symbol(name)
@@ -78,9 +94,11 @@ class ArrayElement(_ArrayExpr):
         indices = _sympify(tuple(indices))
         if hasattr(name, "shape"):
             if any((i >= s) == True for i, s in zip(indices, name.shape)):
-                raise ValueError("shape is out of bounds")
+                raise IndexError("Some of the indices are out of bounds of the shape")
+        if any((i.is_integer) == False for i in indices):
+            raise IndexError("Not all indices are integer")
         if any((i < 0) == True for i in indices):
-            raise ValueError("shape contains negative values")
+            raise IndexError("Some of the indices are negative")
         obj = Expr.__new__(cls, name, indices)
         return obj
 
@@ -134,7 +152,9 @@ class OneArray(_ArrayExpr):
     def as_explicit(self):
         if not all(i.is_Integer for i in self.shape):
             raise ValueError("Cannot return explicit form for symbolic shape.")
-        return ImmutableDenseNDimArray([S.One for i in range(reduce(operator.mul, self.shape))]).reshape(*self.shape)
+        return ImmutableDenseNDimArray(
+            [S.One for i in range(reduce(operator.mul, self.shape))]
+        ).reshape(*self.shape)
 
 
 class _CodegenArrayAbstract(Basic):
@@ -1474,7 +1494,7 @@ class _EditArrayContraction:
     by calling the ``.to_array_contraction()`` method.
     """
 
-    def __init__(self, base_array: typing.Union[ArrayContraction, ArrayDiagonal, ArrayTensorProduct]):
+    def __init__(self, base_array: tUnion[ArrayContraction, ArrayDiagonal, ArrayTensorProduct]):
 
         expr: Basic
         diagonalized: tTuple[tTuple[int, ...], ...]
@@ -1708,7 +1728,7 @@ class _EditArrayContraction:
         self._track_permutation[index_destination].extend(self._track_permutation[index_element]) # type: ignore
         self._track_permutation.pop(index_element) # type: ignore
 
-    def get_absolute_free_range(self, arg: _ArgE) -> typing.Tuple[int, int]:
+    def get_absolute_free_range(self, arg: _ArgE) -> tTuple[int, int]:
         """
         Return the range of the free indices of the arg as absolute positions
         among all free indices.
@@ -1721,7 +1741,7 @@ class _EditArrayContraction:
             counter += number_free_indices
         raise IndexError("argument not found")
 
-    def get_absolute_range(self, arg: _ArgE) -> typing.Tuple[int, int]:
+    def get_absolute_range(self, arg: _ArgE) -> tTuple[int, int]:
         """
         Return the absolute range of indices for arg, disregarding dummy
         indices.
