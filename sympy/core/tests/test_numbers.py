@@ -2212,3 +2212,10 @@ def test_floordiv():
 def test_negation():
     assert -S.Zero is S.Zero
     assert -Float(0) is not S.Zero and -Float(0) == 0
+
+
+def test_nan_is_Number():
+    # if this fails, remove code that handles nan within
+    # an if-block for Numbers (as in lin 253 of add.py at
+    # the time this test was added)
+    assert S.NaN.is_Number
