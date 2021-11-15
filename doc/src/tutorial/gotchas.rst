@@ -144,18 +144,20 @@ discussed in more detail later.
 
 is_commutative == False:
 ========================
-Passing commutative = False as arguments with some operations, may lead to not expected answers.
-for ex:
+
+Passing commutative = False as argument in some operations, may lead to unexpected answers.
+For ex:
 	>>> x,y = symbols("x y")
 	>>> a,b = symbols("a b",commutative = True)
 	>>> c,d = symbols('c d',commutative = False)
 	>>> pprint((x**(a+b)).expand())
 	    a  b
 	   x ⋅x 
-	>>> pprint((x**(c+d)).expand())
-	  a + b
+	>>> pprint((x**(c+d)).expand())  
+	  c + d
 	 x
-
+	
+you are expanding c+d not (x**(c+d)).
 
 Similar behaviour can be seen when non commutative symbols are used with powsimp
 	>>>pprint(powsimp(x**a*x**b))
