@@ -126,42 +126,57 @@ def check_files(files, file_check, exclusions=set(), pattern=None):
             file_check(fname)
 
 
-class _BareExpr(ast.NodeVisitor):
-    """ast analyzer to return the line number corresponding to the
+class _Visit(ast.NodeVisitor):
+    """return the line number corresponding to the
     line on which a bare expression appears if it is a binary op
-    or a comparison that is not in an if-block, assertion or string."""
+    or a comparison that is not in a with block.
+
+    EXAMPLES
+    ========
+
+    >>> import ast
+    >>> class _Visit(ast.NodeVisitor):
+    ...     def visit_Expr(self, node):
+    ...         if isinstance(node.value, (ast.BinOp, ast.Compare)):
+    ...             print(node.lineno)
+    ...     def visit_With(self, node):
+    ...         pass  # no checking there
+    ...
+    >>> code='''x = 1    # line 1
+    ... for i in range(3):
+    ...     x == 2       # <-- 3
+    ... if x == 2:
+    ...     x == 3       # <-- 5
+    ...     x + 1        # <-- 6
+    ...     x = 1
+    ...     if x == 1:
+    ...         print(1)
+    ... while x != 1:
+    ...     x == 1       # <-- 11
+    ... with raises(TypeError):
+    ...     c == 1
+    ...     raise TypeError
+    ... assert x == 1
+    ... '''
+    >>> _Visit().visit(ast.parse(code))
+    3
+    5
+    6
+    11
+    """
     def visit_Expr(self, node):
         if isinstance(node.value, (ast.BinOp, ast.Compare)):
             assert None, message_bare_expr % ('', node.lineno)
-    def visit_If(self, node):
-        pass  # XXX need to visit the non-condition lines
-    def visit_Assert(self, node):
+    def visit_With(self, node):
         pass
 
 
-BareExpr = _BareExpr()
+BareExpr = _Visit()
 
 
 def line_with_bare_expr(code):
     """return None or else 0-based line number of code on which
     a bare expression appeared.
-
-    EXAMPLES
-    ========
-
-    XXX these are not being tested
-
-    >>> from sympy.testing.tests.test_code_quality import line_with_bare_expr as f
-    >>> f('''a += 1
-    ... a = 1
-    ... a + 1''')
-    2
-    >>> f('a == 1')
-    0
-    >>> f('if a == 1:\n b = 1')
-
-    >> f('if a == 1:\n b == 1')  # XXX need to figure this out
-    1
     """
     tree = ast.parse(code)
     try:
@@ -170,7 +185,7 @@ def line_with_bare_expr(code):
         assert msg.args
         msg = msg.args[0]
         assert msg.startswith(message_bare_expr.split(':', 1)[0])
-        return int(msg.rsplit(' ', 1)[1].rstrip('.'))  # the line numbers
+        return int(msg.rsplit(' ', 1)[1].rstrip('.'))  # the line number
 
 
 def test_files():
@@ -196,10 +211,14 @@ def test_files():
             _test_this_file_encoding(fname, test_file)
 
     def test_this_file(fname, test_file):
-        idx = line_with_bare_expr(test_file.read()) if 'bench' not in fname else None  # XXX what should be done about bench tests
+        idx = None
+        code = test_file.read()
+        test_file.seek(0)  # restore reader to head
+        py = fname if sep not in fname else fname.rsplit(sep, 1)[-1]
+        if py.startswith('test_'):
+            idx = line_with_bare_expr(code)
         if idx is not None:
             assert False, message_bare_expr % (fname, idx + 1)
-        test_file.seek(0)  # restore reader to head
 
         line = None  # to flag the case where there were no lines in file
         tests = 0
