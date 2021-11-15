@@ -21,7 +21,6 @@ from sympy.functions.elementary.trigonometric import cos, sin, tan
 from sympy.ntheory.factor_ import divisors
 from sympy.utilities.iterables import subsets
 
-from sympy.polys.densetools import dup_eval
 from sympy.polys.domains import ZZ, QQ, FractionField
 from sympy.polys.orthopolys import dup_chebyshevt
 from sympy.polys.polyerrors import (
@@ -132,9 +131,9 @@ def _separate_sq(p):
                 a.append((y, S.One))
             else:
                 raise NotImplementedError
-            continue
-        T, F = sift(y.args, is_sqrt, binary=True)
-        a.append((Mul(*F), Mul(*T)**2))
+        else:
+            T, F = sift(y.args, is_sqrt, binary=True)
+            a.append((Mul(*F), Mul(*T)**2))
     a.sort(key=lambda z: z[1])
     if a[-1][1] is S.One:
         # there are no surds
@@ -486,9 +485,9 @@ def _minpoly_exp(ex, x):
     Returns the minimal polynomial of ``exp(ex)``
     """
     c, a = ex.args[0].as_coeff_Mul()
-    q = sympify(c.q)
     if a == I*pi:
         if c.is_rational:
+            q = sympify(c.q)
             if c.p == 1 or c.p == -1:
                 if q == 3:
                     return x**2 - x + 1
@@ -845,71 +844,7 @@ def _minpoly_groebner(ex, x, cls):
     return result
 
 
-minpoly = minimal_polynomial
-
-
-def _switch_domain(g, K):
-    # An algebraic relation f(a, b) = 0 over Q can also be written
-    # g(b) = 0 where g is in Q(a)[x] and h(a) = 0 where h is in Q(b)[x].
-    # This function transforms g into h where Q(b) = K.
-    frep = g.rep.inject()
-    hrep = frep.eject(K, front=True)
-
-    return g.new(hrep, g.gens[0])
-
-
-def _linsolve(p):
-    # Compute root of linear polynomial.
-    c, d = p.rep.rep
-    return -d/c
-
-
 @public
-def primitive_element(extension, x=None, *, ex=False, polys=False):
-    """Construct a common number field for all extensions. """
-    if not extension:
-        raise ValueError("Cannot compute primitive element for empty extension")
-
-    if x is not None:
-        x, cls = sympify(x), Poly
-    else:
-        x, cls = Dummy('x'), PurePoly
-
-    if not ex:
-        gen, coeffs = extension[0], [1]
-        g = minimal_polynomial(gen, x, polys=True)
-        for ext in extension[1:]:
-            _, factors = factor_list(g, extension=ext)
-            g = _choose_factor(factors, x, gen)
-            s, _, g = g.sqf_norm()
-            gen += s*ext
-            coeffs.append(s)
-
-        if not polys:
-            return g.as_expr(), coeffs
-        else:
-            return cls(g), coeffs
-
-    gen, coeffs = extension[0], [1]
-    f = minimal_polynomial(gen, x, polys=True)
-    K = QQ.algebraic_field((f, gen))  # incrementally constructed field
-    reps = [K.unit]  # representations of extension elements in K
-    for ext in extension[1:]:
-        p = minimal_polynomial(ext, x, polys=True)
-        L = QQ.algebraic_field((p, ext))
-        _, factors = factor_list(f, domain=L)
-        f = _choose_factor(factors, x, gen)
-        s, g, f = f.sqf_norm()
-        gen += s*ext
-        coeffs.append(s)
-        K = QQ.algebraic_field((f, gen))
-        h = _switch_domain(g, K)
-        erep = _linsolve(h.gcd(p))  # ext as element of K
-        ogen = K.unit - s*erep  # old gen as element of K
-        reps = [dup_eval(_.rep, ogen, K) for _ in reps] + [erep]
-
-    H = [_.rep for _ in reps]
-    if not polys:
-        return f.as_expr(), coeffs, H
-    else:
-        return f, coeffs, H
+def minpoly(ex, x=None, compose=True, polys=False, domain=None):
+    """This is a synonym for :py:func:`~.minimal_polynomial`."""
+    return minimal_polynomial(ex, x=x, compose=compose, polys=polys, domain=domain)

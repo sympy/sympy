@@ -1,5 +1,5 @@
 from sympy.algebras.quaternion import Quaternion
-from sympy.calculus.util import AccumBounds
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.combinatorics.permutations import Cycle, Permutation, AppliedPermutation
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum

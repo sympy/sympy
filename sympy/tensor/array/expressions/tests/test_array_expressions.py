@@ -207,6 +207,18 @@ def test_arrayexpr_array_diagonal():
     cg = ArrayDiagonal(ArrayTensorProduct(M, N, P), (4, 1), (2, 0))
     assert cg == ArrayDiagonal(ArrayTensorProduct(M, N, P), (1, 4), (0, 2))
 
+    cg = ArrayDiagonal(ArrayTensorProduct(M, N), (1, 2), (3,), allow_trivial_diags=True)
+    assert cg == PermuteDims(ArrayDiagonal(ArrayTensorProduct(M, N), (1, 2)), [0, 2, 1])
+
+    Ax = ArraySymbol("Ax", shape=(1, 2, 3, 4, 3, 5, 6, 2, 7))
+    cg = ArrayDiagonal(Ax, (1, 7), (3,), (2, 4), (6,), allow_trivial_diags=True)
+    assert cg == PermuteDims(ArrayDiagonal(Ax, (1, 7), (2, 4)), [0, 2, 4, 5, 1, 6, 3])
+
+    cg = ArrayDiagonal(M, (0,), allow_trivial_diags=True)
+    assert cg == PermuteDims(M, [1, 0])
+
+    raises(ValueError, lambda: ArrayDiagonal(M, (0, 0)))
+
 
 def test_arrayexpr_array_shape():
     expr = ArrayTensorProduct(M, N, P, Q)

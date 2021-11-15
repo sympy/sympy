@@ -12,12 +12,15 @@ PAPER        =
 SVGFILES = $(wildcard src/modules/physics/vector/*.svg) $(wildcard src/modules/physics/mechanics/examples/*.svg) $(wildcard src/modules/vector/*.svg)
 PDFFILES = $(SVGFILES:%.svg=%.pdf)
 
+# This must be set for the recursive make pdf build to work in make latexpdf
+export LATEXMKOPTS = -halt-on-error -xelatex
+
 ALLSPHINXOPTS = -d _build/doctrees $(SPHINXOPTS) src
 ALLSPHINXOPTSapi = -d _build/doctrees-api $(SPHINXOPTS) api
 ALLSPHINXOPTSlatex = -d _build/doctrees-latex -D latex_element.papersize=$(PAPER)paper \
                 $(SPHINXOPTS) src
 
-.PHONY: changes cheatsheet clean help html htmlapi htmlhelp info latex \
+.PHONY: changes cheatsheet clean help html htmlapi htmlhelp info latex latexpdf \
         linkcheck livehtml texinfo web logo man
 
 .SUFFIXES: .pdf .svg
@@ -86,6 +89,9 @@ latex: $(PDFFILES)
 	@echo "Build finished; the LaTeX files are in _build/latex."
 	@echo "Set the environment variable LATEXMKOPTS='-xelatex -silent'"
 	@echo "And run \`make all' in that directory to run these through xelatex."
+
+latexpdf: latex
+	$(MAKE) -C _build/latex
 
 .svg.pdf:
 	dbus-run-session inkscape --file=$< --export-area-drawing --without-gui --export-pdf=$@

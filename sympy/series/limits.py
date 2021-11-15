@@ -1,3 +1,4 @@
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import Float
@@ -74,7 +75,6 @@ def heuristics(e, z, z0, dir):
     works only for simple limits, but it is fast.
     """
 
-    from sympy.calculus.util import AccumBounds
     rv = None
     if abs(z0) is S.Infinity:
         rv = limit(e.subs(z, 1/z), z, S.Zero, "+" if z0 is S.Infinity else "-")

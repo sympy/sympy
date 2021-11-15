@@ -2,7 +2,7 @@
 
 from sympy.utilities import public
 
-from sympy.core import Function, Symbol
+from sympy.core import Function, Symbol, S
 from sympy.core.numbers import Zero
 from sympy.concrete.products import (Product, product)
 from sympy.core.mul import denom
@@ -303,7 +303,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     # Exponential Generating Function (egf)
     if 'egf' in types:
         # Transform sequence (division by factorial)
-        w, f = [], Integer(1)
+        w, f = [], S.One
         for i, k in enumerate(v):
             f *= i if i else 1
             w.append(k/f)
@@ -319,7 +319,7 @@ def guess_generating_function(v, X=Symbol('x'), types=['all'], maxsqrtn=2):
     # Logarithmic Generating Function (lgf)
     if 'lgf' in types:
         # Transform sequence (multiplication by (-1)^(n+1) / n)
-        w, f = [], Integer(-1)
+        w, f = [], S.NegativeOne
         for i, k in enumerate(v):
             f = -f
             w.append(f*k/Integer(i+1))

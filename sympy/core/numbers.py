@@ -5,7 +5,7 @@ import math
 import re as regex
 import sys
 from functools import lru_cache
-from typing import Set as tSet
+from typing import Set as tSet, Tuple as tTuple
 
 from .containers import Tuple
 from .sympify import (SympifyError, converter, sympify, _convert_numpy_types, _sympify,
@@ -1017,6 +1017,8 @@ class Float(Number):
     """
     __slots__ = ('_mpf_', '_prec')
 
+    _mpf_: tTuple[int, int, int, int]
+
     # A Float represents many real numbers,
     # both rational and irrational.
     is_rational = None
@@ -1277,6 +1279,8 @@ class Float(Number):
         return self._mpf_ != fzero
 
     def __neg__(self):
+        if not self:
+            return self
         return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
 
     @_sympifyit('other', NotImplemented)
@@ -1339,10 +1343,10 @@ class Float(Number):
                   -> p**r*(sin(Pi*r) + cos(Pi*r)*I)
         """
         if self == 0:
-            if expt.is_positive:
-                return S.Zero
-            if expt.is_negative:
-                return S.Infinity
+            if expt.is_extended_positive:
+                return self
+            if expt.is_extended_negative:
+                return S.ComplexInfinity
         if isinstance(expt, Number):
             if isinstance(expt, Integer):
                 prec = self._prec
@@ -1581,6 +1585,9 @@ class Rational(Number):
     is_number = True
 
     __slots__ = ('p', 'q')
+
+    p: int
+    q: int
 
     is_Rational = True
 
@@ -2697,9 +2704,9 @@ class Zero(IntegerConstant, metaclass=Singleton):
         return S.Zero
 
     def _eval_power(self, expt):
-        if expt.is_positive:
+        if expt.is_extended_positive:
             return self
-        if expt.is_negative:
+        if expt.is_extended_negative:
             return S.ComplexInfinity
         if expt.is_extended_real is False:
             return S.NaN
@@ -2718,10 +2725,6 @@ class Zero(IntegerConstant, metaclass=Singleton):
 
     def __bool__(self):
         return False
-
-    def as_coeff_Mul(self, rational=False):  # XXX this routine should be deleted
-        """Efficiently extract the coefficient of a summation. """
-        return S.One, self
 
 
 class One(IntegerConstant, metaclass=Singleton):
@@ -3184,7 +3187,14 @@ class NegativeInfinity(Number, metaclass=Singleton):
                 else:
                     return S.Infinity
 
-            return S.NegativeOne**expt*S.Infinity**expt
+            inf_part = S.Infinity**expt
+            s_part = S.NegativeOne**expt
+            if inf_part == 0 and s_part.is_finite:
+                return inf_part
+            if (inf_part is S.ComplexInfinity and
+                    s_part.is_finite and not s_part.is_zero):
+                return S.ComplexInfinity
+            return s_part*inf_part
 
     def _as_mpf_val(self, prec):
         return mlib.fninf
@@ -3478,6 +3488,7 @@ class NumberSymbol(AtomicExpr):
 
     def __hash__(self):
         return super().__hash__()
+
 
 class Exp1(NumberSymbol, metaclass=Singleton):
     r"""The `e` constant.
@@ -3951,7 +3962,7 @@ class Catalan(NumberSymbol, metaclass=Singleton):
         from .symbol import Dummy
         from sympy.concrete.summations import Sum
         k = Dummy('k', integer=True, nonnegative=True)
-        return Sum((-1)**k / (2*k+1)**2, (k, 0, S.Infinity))
+        return Sum(S.NegativeOne**k / (2*k+1)**2, (k, 0, S.Infinity))
 
 
 class ImaginaryUnit(AtomicExpr, metaclass=Singleton):

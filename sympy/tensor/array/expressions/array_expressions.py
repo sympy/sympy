@@ -7,6 +7,7 @@ from typing import Optional, List, Dict as tDict, Tuple as tTuple
 
 import typing
 
+from sympy import Integer
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
@@ -662,7 +663,7 @@ class ArrayDiagonal(_CodegenArrayAbstract):
 
         shape = get_shape(expr)
         if shape is not None:
-            cls._validate(expr, *diagonal_indices)
+            cls._validate(expr, *diagonal_indices, **kwargs)
             # Get new shape:
             positions, shape = cls._get_positions_shape(shape, diagonal_indices)
         else:
@@ -680,6 +681,30 @@ class ArrayDiagonal(_CodegenArrayAbstract):
     def _normalize(self):
         expr = self.expr
         diagonal_indices = self.diagonal_indices
+        trivial_diags = [i for i in diagonal_indices if len(i) == 1]
+        if len(trivial_diags) > 0:
+            trivial_pos = {e[0]: i for i, e in enumerate(diagonal_indices) if len(e) == 1}
+            diag_pos = {e: i for i, e in enumerate(diagonal_indices) if len(e) > 1}
+            diagonal_indices_short = [i for i in diagonal_indices if len(i) > 1]
+            rank1 = get_rank(self)
+            rank2 = len(diagonal_indices)
+            rank3 = rank1 - rank2
+            inv_permutation = []
+            counter1: int = 0
+            indices_down = ArrayDiagonal._push_indices_down(diagonal_indices_short, list(range(rank1)), get_rank(expr))
+            for i in indices_down:
+                if i in trivial_pos:
+                    inv_permutation.append(rank3 + trivial_pos[i])
+                elif isinstance(i, (Integer, int)):
+                    inv_permutation.append(counter1)
+                    counter1 += 1
+                else:
+                    inv_permutation.append(rank3 + diag_pos[i])
+            permutation = _af_invert(inv_permutation)
+            if len(diagonal_indices_short) > 0:
+                return PermuteDims(ArrayDiagonal(expr, *diagonal_indices_short), permutation)
+            else:
+                return PermuteDims(expr, permutation)
         if isinstance(expr, ArrayAdd):
             return self._ArrayDiagonal_denest_ArrayAdd(expr, *diagonal_indices)
         if isinstance(expr, ArrayDiagonal):
@@ -692,7 +717,7 @@ class ArrayDiagonal(_CodegenArrayAbstract):
         return self.func(expr, *diagonal_indices, normalize=False)
 
     @staticmethod
-    def _validate(expr, *diagonal_indices):
+    def _validate(expr, *diagonal_indices, **kwargs):
         # Check that no diagonalization happens on indices with mismatched
         # dimensions:
         shape = get_shape(expr)
@@ -701,8 +726,10 @@ class ArrayDiagonal(_CodegenArrayAbstract):
                 raise ValueError("index is larger than expression shape")
             if len({shape[j] for j in i}) != 1:
                 raise ValueError("diagonalizing indices of different dimensions")
-            if len(i) <= 1:
+            if not kwargs.get("allow_trivial_diags", False) and len(i) <= 1:
                 raise ValueError("need at least two axes to diagonalize")
+            if len(set(i)) != len(i):
+                raise ValueError("axis index cannot be repeated")
 
     @staticmethod
     def _remove_trivial_dimensions(shape, *diagonal_indices):

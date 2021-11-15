@@ -242,6 +242,8 @@ def tensordiagonal(array, *diagonal_axes):
     if isinstance(array, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)):
         return ArrayDiagonal(array, *diagonal_axes)
 
+    ArrayDiagonal._validate(array, *diagonal_axes)
+
     array, remaining_indices, remaining_shape, diagonal_deltas = _util_contraction_diagonal(array, *diagonal_axes)
 
     # Compute the diagonalized array:

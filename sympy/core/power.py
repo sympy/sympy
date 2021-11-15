@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Tuple as tTuple
 from math import log as _log, sqrt as _sqrt
 from itertools import product
 
@@ -11,6 +11,7 @@ from .function import (expand_complex, expand_multinomial,
     expand_mul, _mexpand, PoleError)
 from .logic import fuzzy_bool, fuzzy_not, fuzzy_and, fuzzy_or
 from .parameters import global_parameters
+from .relational import is_gt, is_lt
 from .kind import NumberKind, UndefinedKind
 from sympy.external.gmpy import HAS_GMPY, gmpy
 from sympy.utilities.iterables import sift
@@ -244,7 +245,7 @@ class Pow(Expr):
     | -oo**(-1+I)  |         | limit is 0.                                   |
     +--------------+---------+-----------------------------------------------+
 
-    Because symbolic computations are more flexible that floating point
+    Because symbolic computations are more flexible than floating point
     calculations and we prefer to never return an incorrect answer,
     we choose not to conform to all IEEE 754 conventions.  This helps
     us avoid extra test-case code in the calculation of limits.
@@ -267,6 +268,8 @@ class Pow(Expr):
     is_Pow = True
 
     __slots__ = ('is_commutative',)
+
+    args: tTuple[Expr, Expr]
 
     @cacheit
     def __new__(cls, b, e, evaluate=None):
@@ -293,10 +296,18 @@ class Pow(Expr):
             ).warn()
 
         if evaluate:
-            if b is S.Zero and e is S.NegativeInfinity:
-                return S.ComplexInfinity
             if e is S.ComplexInfinity:
                 return S.NaN
+            if e is S.Infinity:
+                if is_gt(b, S.One):
+                    return S.Infinity
+                if is_gt(b, S.NegativeOne) and is_lt(b, S.One):
+                    return S.Zero
+                if is_lt(b, S.NegativeOne):
+                    if b.is_finite:
+                        return S.ComplexInfinity
+                    if b.is_finite is False:
+                        return S.NaN
             if e is S.Zero:
                 return S.One
             elif e is S.One:
@@ -305,7 +316,7 @@ class Pow(Expr):
                 return S.ComplexInfinity
             elif e.__class__.__name__ == "AccumulationBounds":
                 if b == S.Exp1:
-                    from sympy.calculus.util import AccumBounds
+                    from sympy.calculus.accumulationbounds import AccumBounds
                     return AccumBounds(Pow(b, e.min), Pow(b, e.max))
             # autosimplification if base is a number and exp odd/even
             # if base is Number then the base will end up positive; we
@@ -812,7 +823,7 @@ class Pow(Expr):
         return self.base.is_polar
 
     def _eval_subs(self, old, new):
-        from sympy.calculus.util import AccumBounds
+        from sympy.calculus.accumulationbounds import AccumBounds
 
         if isinstance(self.exp, AccumBounds):
             b = self.base.subs(old, new)

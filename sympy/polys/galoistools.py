@@ -1,7 +1,7 @@
 """Dense univariate polynomials with coefficients in Galois fields. """
 
 
-from random import uniform
+from sympy.core.random import uniform
 from math import ceil as _ceil, sqrt as _sqrt
 
 from sympy.core.mul import prod

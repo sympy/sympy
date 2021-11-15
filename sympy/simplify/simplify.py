@@ -8,7 +8,7 @@ from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand,
     nfloat, expand_mul, expand)
 from sympy.core.mul import fraction
-from sympy.core.numbers import Float, I, pi, Rational, Integer
+from sympy.core.numbers import Float, I, pi, Rational
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
 from sympy.core.sorting import ordered
@@ -594,7 +594,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         doit=kwargs.get('doit', doit))
     # no routine for Expr needs to check for is_zero
     if isinstance(expr, Expr) and expr.is_zero:
-        return S.Zero
+        return S.Zero if not expr.is_Number else expr
 
     _eval_simplify = getattr(expr, '_eval_simplify', None)
     if _eval_simplify is not None:
@@ -1588,7 +1588,7 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
                     d = Pow(10, int(mpmath.log(fl)/mpmath.log(10)))
                     r = Rational(str(fl/d))*d
                 else:
-                    r = Integer(0)
+                    r = S.Zero
         reps[key] = r
     return p.subs(reps, simultaneous=True)
 

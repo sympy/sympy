@@ -1,7 +1,8 @@
+from sympy import Lambda, S, Dummy
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import cos
-from sympy.matrices.expressions.hadamard import HadamardProduct
+from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.matrices.expressions.hadamard import HadamardProduct, HadamardPower
 from sympy.matrices.expressions.special import (Identity, OneMatrix, ZeroMatrix)
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
@@ -14,7 +15,7 @@ from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
 from sympy.matrices import Trace, MatMul, Transpose
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, \
     ArrayTensorProduct, ArrayAdd, PermuteDims, ArrayDiagonal, \
-    ArrayContraction, ArrayElement, ArraySymbol
+    ArrayContraction, ArrayElement, ArraySymbol, ArrayElementwiseApplyFunc
 from sympy.testing.pytest import raises
 
 
@@ -42,6 +43,7 @@ c = MatrixSymbol("c", k, 1)
 d = MatrixSymbol("d", k, 1)
 
 x = MatrixSymbol("x", k, 1)
+y = MatrixSymbol("y", k, 1)
 
 
 def test_arrayexpr_convert_array_to_matrix():
@@ -292,8 +294,14 @@ def test_arrayexpr_convert_array_to_implicit_matmul():
     cg = ArrayTensorProduct(a, b)
     assert convert_array_to_matrix(cg) == a * b.T
 
+    cg = ArrayTensorProduct(a, b, I)
+    assert convert_array_to_matrix(cg) == ArrayTensorProduct(a*b.T, I)
+
+    cg = ArrayTensorProduct(I, a, b)
+    assert convert_array_to_matrix(cg) == ArrayTensorProduct(I, a*b.T)
+
     cg = ArrayTensorProduct(a, I, b)
-    assert convert_array_to_matrix(cg) == a * b.T
+    assert convert_array_to_matrix(cg) == ArrayTensorProduct(a, I, b)
 
     cg = ArrayContraction(ArrayTensorProduct(I, I), (1, 2))
     assert convert_array_to_matrix(cg) == I
@@ -310,16 +318,16 @@ def test_arrayexpr_convert_array_to_matrix_remove_trivial_dims():
     assert _remove_trivial_dims(ArrayTensorProduct(a, b.T)) == (a * b.T, [1, 2])
     assert _remove_trivial_dims(ArrayTensorProduct(a.T, b.T)) == (a * b.T, [0, 2])
 
-    assert _remove_trivial_dims(ArrayTensorProduct(I, a.T, b.T)) == (a * b.T, [0, 1, 2, 4])
-    assert _remove_trivial_dims(ArrayTensorProduct(a.T, I, b.T)) == (a * b.T, [0, 2, 3, 4])
+    assert _remove_trivial_dims(ArrayTensorProduct(I, a.T, b.T)) == (ArrayTensorProduct(I, a * b.T), [2, 4])
+    assert _remove_trivial_dims(ArrayTensorProduct(a.T, I, b.T)) == (ArrayTensorProduct(a.T, I, b.T), [])
 
-    assert _remove_trivial_dims(ArrayTensorProduct(a, I)) == (a, [2, 3])
-    assert _remove_trivial_dims(ArrayTensorProduct(I, a)) == (a, [0, 1])
+    assert _remove_trivial_dims(ArrayTensorProduct(a, I)) == (ArrayTensorProduct(a, I), [])
+    assert _remove_trivial_dims(ArrayTensorProduct(I, a)) == (ArrayTensorProduct(I, a), [])
 
     assert _remove_trivial_dims(ArrayTensorProduct(a.T, b.T, c, d)) == (
         ArrayTensorProduct(a * b.T, c * d.T), [0, 2, 5, 7])
     assert _remove_trivial_dims(ArrayTensorProduct(a.T, I, b.T, c, d, I)) == (
-        ArrayTensorProduct(a * b.T, c * d.T, I), [0, 2, 3, 4, 7, 9])
+        ArrayTensorProduct(a.T, I, b*c.T, d, I), [4, 7])
 
     # Addition:
 
@@ -332,10 +340,10 @@ def test_arrayexpr_convert_array_to_matrix_remove_trivial_dims():
     assert _remove_trivial_dims(cg) == (a * b.T, [2, 3])
 
     cg = PermuteDims(ArrayTensorProduct(a, I, b), Permutation(5)(1, 2, 3, 4))
-    assert _remove_trivial_dims(cg) == (a * b.T, [1, 2, 4, 5])
+    assert _remove_trivial_dims(cg) == (cg, [])
 
     cg = PermuteDims(ArrayTensorProduct(I, b, a), Permutation(5)(1, 2, 4, 5, 3))
-    assert _remove_trivial_dims(cg) == (b * a.T, [0, 3, 4, 5])
+    assert _remove_trivial_dims(cg) == (PermuteDims(ArrayTensorProduct(I, b * a.T), [0, 2, 3, 1]), [4, 5])
 
     # Diagonal:
 
@@ -405,6 +413,15 @@ def test_arrayexpr_convert_array_to_matrix_remove_trivial_dims():
     ret, removed = _remove_trivial_dims(cg)
     assert ret == ArrayTensorProduct(M, Xs, a*b.T*c*c.T*d*a.T, b*b.T)
     assert removed == [5, 6, 11, 12]
+
+    cg = ArrayDiagonal(ArrayTensorProduct(I, I1, x), (1, 4), (3, 5))
+    assert _remove_trivial_dims(cg) == (PermuteDims(ArrayDiagonal(ArrayTensorProduct(I, x), (1, 2)), Permutation(1, 2)), [1])
+
+    expr = ArrayDiagonal(ArrayTensorProduct(x, I, y), (0, 2))
+    assert _remove_trivial_dims(expr) == (PermuteDims(ArrayTensorProduct(DiagMatrix(x), y), [1, 2, 3, 0]), [0])
+
+    expr = ArrayDiagonal(ArrayTensorProduct(x, I, y), (0, 2), (3, 4))
+    assert _remove_trivial_dims(expr) == (expr, [])
 
 
 def test_arrayexpr_convert_array_to_matrix_diag2contraction_diagmatrix():
@@ -569,6 +586,9 @@ def test_convert_array_to_hadamard_products():
     cg = ArrayDiagonal(ArrayTensorProduct(M, N, P), (0, 3, 4), (1, 2, 5))
     assert convert_array_to_matrix(cg) == HadamardProduct(M, P, N.T)
 
+    cg = ArrayDiagonal(ArrayTensorProduct(I, I1, x), (1, 4), (3, 5))
+    assert convert_array_to_matrix(cg) == DiagMatrix(x)
+
 
 def test_identify_removable_identity_matrices():
 
@@ -628,3 +648,20 @@ def test_convert_array_element_to_matrix():
 
     expr = ArrayElement(ArrayTensorProduct(M, N), (i, j, m, n))
     assert convert_array_to_matrix(expr) == expr
+
+
+def test_convert_array_elementwise_function_to_matrix():
+
+    d = Dummy("d")
+
+    expr = ArrayElementwiseApplyFunc(Lambda(d, sin(d)), x.T*y)
+    assert convert_array_to_matrix(expr) == sin(x.T*y)
+
+    expr = ArrayElementwiseApplyFunc(Lambda(d, d**2), x.T*y)
+    assert convert_array_to_matrix(expr) == (x.T*y)**2
+
+    expr = ArrayElementwiseApplyFunc(Lambda(d, sin(d)), x)
+    assert convert_array_to_matrix(expr).dummy_eq(x.applyfunc(sin))
+
+    expr = ArrayElementwiseApplyFunc(Lambda(d, 1 / (2 * sqrt(d))), x)
+    assert convert_array_to_matrix(expr) == S.Half * HadamardPower(x, -S.Half)

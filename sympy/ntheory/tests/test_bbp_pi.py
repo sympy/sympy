@@ -1,4 +1,4 @@
-from random import randint
+from sympy.core.random import randint
 
 from sympy.ntheory.bbp_pi import pi_hex_digits
 from sympy.testing.pytest import raises

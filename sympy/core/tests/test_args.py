@@ -843,8 +843,8 @@ def test_sympy__sandbox__indexed_integrals__IndexedIntegral():
     assert _test_args(IndexedIntegral(A[i], A[j]))
 
 
-def test_sympy__calculus__util__AccumulationBounds():
-    from sympy.calculus.util import AccumulationBounds
+def test_sympy__calculus__accumulationbounds__AccumulationBounds():
+    from sympy.calculus.accumulationbounds import AccumulationBounds
     assert _test_args(AccumulationBounds(0, 1))
 
 
@@ -2211,6 +2211,11 @@ def test_sympy__functions__elementary__miscellaneous__Min():
 @SKIP("abstract class")
 def test_sympy__functions__elementary__miscellaneous__MinMaxBase():
     pass
+
+
+def test_sympy__functions__elementary__miscellaneous__Rem():
+    from sympy.functions.elementary.miscellaneous import Rem
+    assert _test_args(Rem(x, 2))
 
 
 def test_sympy__functions__elementary__piecewise__ExprCondPair():

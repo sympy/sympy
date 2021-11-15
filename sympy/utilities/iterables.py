@@ -2307,13 +2307,13 @@ def random_derangement(t, choice=None, strict=True):
     then an error will be raised since no derangement is possible. To obtain
     a derangement of as many items as possible--with some of the most numerous
     remaining in their original positions--pass `strict=False`. To produce a
-    pseudorandom derangment, pass a pseudorandom selector like `Random(seed).choice`.
+    pseudorandom derangment, pass a pseudorandom selector like `choice` (see
+    below).
 
     Examples
     ========
 
     >>> from sympy.utilities.iterables import random_derangement
-    >>> from random import Random
     >>> t = 'SymPy: a CAS in pure Python'
     >>> d = random_derangement(t)
     >>> all(i != j for i, j in zip(d, t))
@@ -2322,13 +2322,14 @@ def random_derangement(t, choice=None, strict=True):
     A predictable result can be obtained by using a pseudorandom
     generator for the choice:
 
-    >>> c = Random(1).choice
+    >>> from sympy.core.random import seed, choice as c
+    >>> seed(1)
     >>> d = [''.join(random_derangement(t, c)) for i in range(5)]
     >>> assert len(set(d)) != 1  # we got different values
 
-    By resetting c, the same sequence can be obtained:
+    By reseeding, the same sequence can be obtained:
 
-    >>> c = Random(1).choice
+    >>> seed(1)
     >>> d2 = [''.join(random_derangement(t, c)) for i in range(5)]
     >>> assert d == d2
     """

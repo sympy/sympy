@@ -38,6 +38,7 @@ t = Symbol('t', real=False)
 _ninf = float(-oo)
 _inf = float(oo)
 
+
 def same_and_same_prec(a, b):
     # stricter matching for Floats
     return a == b and a._prec == b._prec
@@ -247,12 +248,14 @@ def test_igcd_lehmer():
     # swapping argmument
     assert igcd_lehmer(1, 2) == igcd_lehmer(2, 1)
 
+
 def test_igcd2():
     # short loop
     assert igcd2(2**100 - 1, 2**99 - 1) == 1
     # Lehmer's algorithm
     a, b = int(fibonacci(10001)), int(fibonacci(10000))
     assert igcd2(a, b) == 1
+
 
 def test_ilcm():
     assert ilcm(0, 0) == 0
@@ -603,12 +606,14 @@ def test_Float():
     for i, a in zip(u, v):
         assert Float(i) is a
 
+
 def test_zero_not_false():
     # https://github.com/sympy/sympy/issues/20796
     assert (S(0.0) == S.false) is False
     assert (S.false == S(0.0)) is False
     assert (S(0) == S.false) is False
     assert (S.false == S(0)) is False
+
 
 @conserve_mpmath_dps
 def test_float_mpf():
@@ -622,11 +627,13 @@ def test_float_mpf():
 
     assert Float(mp_pi, 100) == Float(mp_pi._mpf_, 100) == pi.evalf(100)
 
+
 def test_Float_RealElement():
     repi = RealField(dps=100)(pi.evalf(100))
     # We still have to pass the precision because Float doesn't know what
     # RealElement is, but make sure it keeps full precision from the result.
     assert Float(repi, 100) == pi.evalf(100)
+
 
 def test_Float_default_to_highprec_from_str():
     s = str(pi.evalf(128))
@@ -1092,7 +1099,7 @@ def test_powers_Integer():
     assert S.One ** S.Infinity is S.NaN
     assert S.NegativeOne** S.Infinity is S.NaN
     assert S(2) ** S.Infinity is S.Infinity
-    assert S(-2)** S.Infinity == S.Infinity + S.Infinity * S.ImaginaryUnit
+    assert S(-2)** S.Infinity == zoo
     assert S(0) ** S.Infinity is S.Zero
 
     # check Nan
@@ -1199,8 +1206,7 @@ def test_powers_Rational():
     assert S.Half ** S.Infinity == 0
     assert Rational(3, 2) ** S.Infinity is S.Infinity
     assert Rational(-1, 2) ** S.Infinity == 0
-    assert Rational(-3, 2) ** S.Infinity == \
-        S.Infinity + S.Infinity * S.ImaginaryUnit
+    assert Rational(-3, 2) ** S.Infinity == zoo
 
     # check Nan
     assert Rational(3, 4) ** S.NaN is S.NaN
@@ -1640,6 +1646,7 @@ def test_conversion_to_mpmath():
     assert mpmath.mpmathify(pi.evalf(100) + pi.evalf(100)*I) == mpmath.pi + mpmath.pi*mpmath.j
     assert mpmath.mpmathify(pi.evalf(100)*I) == mpmath.pi*mpmath.j
 
+
 def test_relational():
     # real
     x = S(.1)
@@ -1820,11 +1827,13 @@ def test_Catalan_EulerGamma_prec():
     assert f._prec == 20
     assert n._as_mpf_val(20) == f._mpf_
 
+
 def test_Catalan_rewrite():
     k = Dummy('k', integer=True, nonnegative=True)
     assert Catalan.rewrite(Sum).dummy_eq(
             Sum((-1)**k/(2*k + 1)**2, (k, 0, oo)))
     assert Catalan.rewrite() == Catalan
+
 
 def test_bool_eq():
     assert 0 == False
@@ -1888,9 +1897,11 @@ def test_issue_6349():
     assert Float('23000', '')._prec == 20
     assert Float('-23000', '')._prec == 20
 
+
 def test_mpf_norm():
     assert mpf_norm((1, 0, 1, 0), 10) == mpf('0')._mpf_
     assert Float._new((1, 0, 1, 0), 10)._mpf_ == mpf('0')._mpf_
+
 
 def test_latex():
     assert latex(pi) == r"\pi"
@@ -2093,11 +2104,13 @@ def test_comparisons_with_unknown_type():
         raises(TypeError, lambda: n >= bar)
         raises(TypeError, lambda: bar <= n)
 
+
 def test_NumberSymbol_comparison():
     from sympy.core.tests.test_relational import rel_check
     rpi = Rational('905502432259640373/288230376151711744')
     fpi = Float(float(pi))
     assert rel_check(rpi, fpi)
+
 
 def test_Integer_precision():
     # Make sure Integer inputs for keyword args work
@@ -2105,6 +2118,7 @@ def test_Integer_precision():
     assert Float('1.0', precision=Integer(15))._prec == 15
     assert type(Float('1.0', precision=Integer(15))._prec) == int
     assert sympify(srepr(Float('1.0', precision=15))) == Float('1.0', precision=15)
+
 
 def test_numpy_to_float():
     from sympy.testing.pytest import skip
@@ -2132,16 +2146,19 @@ def test_numpy_to_float():
     raises(TypeError, lambda: Float(np.complex64(1+2j)))
     raises(TypeError, lambda: Float(np.complex128(1+2j)))
 
+
 def test_Integer_ceiling_floor():
     a = Integer(4)
 
     assert a.floor() == a
     assert a.ceiling() == a
 
+
 def test_ComplexInfinity():
     assert zoo.floor() is zoo
     assert zoo.ceiling() is zoo
     assert zoo**zoo is S.NaN
+
 
 def test_Infinity_floor_ceiling_power():
     assert oo.floor() is oo
@@ -2149,9 +2166,11 @@ def test_Infinity_floor_ceiling_power():
     assert oo**S.NaN is S.NaN
     assert oo**zoo is S.NaN
 
+
 def test_One_power():
     assert S.One**12 is S.One
     assert S.NegativeOne**S.NaN is S.NaN
+
 
 def test_NegativeInfinity():
     assert (-oo).floor() is -oo
@@ -2159,12 +2178,14 @@ def test_NegativeInfinity():
     assert (-oo)**11 is -oo
     assert (-oo)**12 is oo
 
+
 def test_issue_6133():
     raises(TypeError, lambda: (-oo < None))
     raises(TypeError, lambda: (S(-2) < None))
     raises(TypeError, lambda: (oo < None))
     raises(TypeError, lambda: (oo > None))
     raises(TypeError, lambda: (S(2) < None))
+
 
 def test_abc():
     x = numbers.Float(5)
@@ -2183,5 +2204,11 @@ def test_abc():
     assert(isinstance(z, numbers.Rational))
     assert(isinstance(z, nums.Integral))
 
+
 def test_floordiv():
     assert S(2)//S.Half == 4
+
+
+def test_negation():
+    assert -S.Zero is S.Zero
+    assert -Float(0) is not S.Zero and -Float(0) == 0

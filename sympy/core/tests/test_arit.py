@@ -19,11 +19,12 @@ from sympy.sets.sets import FiniteSet
 
 from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
-from sympy.utilities.iterables import cartes
+from sympy.utilities.iterables import permutations
 from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
-from sympy.testing.randtest import verify_numerically
+from sympy.core.random import verify_numerically
 from sympy.functions.elementary.trigonometric import asin
 
+from itertools import product
 
 a, c, x, y, z = symbols('a,c,x,y,z')
 b = Symbol("b", positive=True)
@@ -2254,7 +2255,7 @@ def test_mul_zero_detection():
                     assert e.is_zero is False
 
 
-    for iz, ib in cartes(*[[True, False, None]]*2):
+    for iz, ib in product(*[[True, False, None]]*2):
         z = Dummy('z', nonzero=iz)
         b = Dummy('f', finite=ib)
         e = Mul(z, b, evaluate=False)
@@ -2271,7 +2272,7 @@ def test_mul_zero_detection():
         else:
             assert e.is_extended_real is True
 
-    for iz, ib in cartes(*[[True, False, None]]*2):
+    for iz, ib in product(*[[True, False, None]]*2):
         z = Dummy('z', nonzero=iz, extended_real=True)
         b = Dummy('b', finite=ib, extended_real=True)
         e = Mul(z, b, evaluate=False)
@@ -2379,8 +2380,7 @@ def test_issue_21034():
 
 
 def test_issue_22021():
-    from sympy.calculus.util import AccumBounds
-    from sympy.utilities.iterables import permutations
+    from sympy.calculus.accumulationbounds import AccumBounds
     # these objects are special cases in Mul
     from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
     L = TensorIndexType("L")

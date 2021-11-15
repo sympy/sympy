@@ -51,11 +51,10 @@ from sympy.polys.matrices.linsolve import _linsolve
 from sympy.solvers.solvers import (checksol, denoms, unrad,
     _simple_dens, recast_to_symbols)
 from sympy.solvers.polysys import solve_poly_system
-from sympy.solvers.inequalities import solve_univariate_inequality
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import (numbered_symbols, has_dups,
                                        is_sequence)
-from sympy.calculus.util import periodicity, continuous_domain
+from sympy.calculus.util import periodicity, continuous_domain, function_range
 
 from types import GeneratorType
 from collections import defaultdict
@@ -303,7 +302,7 @@ def _invert_real(f, g_ys, symbol):
             def inv(trig):
                 if isinstance(trig, (sin, csc)):
                     F = asin if isinstance(trig, sin) else acsc
-                    return (lambda a: n*pi + (-1)**n*F(a),)
+                    return (lambda a: n*pi + S.NegativeOne**n*F(a),)
                 if isinstance(trig, (cos, sec)):
                     F = acos if isinstance(trig, cos) else asec
                     return (
@@ -894,6 +893,7 @@ def _solve_abs(f, symbol, domain):
 
     if not (f_p.is_zero or f_q.is_zero):
         domain = continuous_domain(f_q, symbol, domain)
+        from .inequalities import solve_univariate_inequality
         q_pos_cond = solve_univariate_inequality(f_q >= 0, symbol,
                                                  relational=False, domain=domain, continuous=True)
         q_neg_cond = q_pos_cond.complement(domain)
@@ -931,7 +931,6 @@ def solve_decomposition(f, symbol, domain):
 
     """
     from sympy.solvers.decompogen import decompogen
-    from sympy.calculus.util import function_range
     # decompose the given function
     g_s = decompogen(f, symbol)
     # `y_s` represents the set of values for which the function `g` is to be
@@ -1043,6 +1042,7 @@ def _solveset(f, symbol, domain, _check=False):
         result = solver(Add(f.lhs, - f.rhs, evaluate=False), symbol, domain)
 
     elif f.is_Relational:
+        from .inequalities import solve_univariate_inequality
         try:
             result = solve_univariate_inequality(
             f, symbol, domain=domain, relational=False)
