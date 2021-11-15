@@ -13,7 +13,7 @@ core subpackage are documented below.
 :ref:`Basics <basic_modules>`
 -------------------------------------------------------
 
-   Contains method docstrings for the basic modules. Subcategories include: *absolute basics*, 
+   Contains a description of operations for the basic modules. Subcategories include: *absolute basics*, 
    *manipulation*, *assumptions*, *functions*, *simplification*, *calculus*, *solvers*, and some 
    other subcategories.
 
@@ -31,28 +31,28 @@ core subpackage are documented below.
 :ref:`Logic <logic>`
 -------------------------------------------------------
 
-   Contains method docstrings for the *logic* and *sets* modules.
+   Contains method details for the *logic* and *sets* modules.
 
 ..  rst-class:: column
 
 :ref:`Matrices <matrices_modules>`
 -------------------------------------------------------
 
-   Contains method docstrings for the matrices, tensor and vector modules.
+   Discusses methods for the matrices, tensor and vector modules.
 
 ..  rst-class:: column
 
 :ref:`Number Theory <numtheory_module>`
 -------------------------------------------------------
 
-   Contains doc strings for the Number theory methods.
+   Documents methods for the Number theory module.
 
 ..  rst-class:: column
 
 :ref:`Physics <physics-docs>`
 -------------------------------------------------------
 
-   Contains doc strings for Physics methods.
+   Contains documentation for Physics methods.
 
 ..  rst-class:: column
 
