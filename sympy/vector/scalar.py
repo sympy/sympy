@@ -1,6 +1,6 @@
 from sympy.core import Expr, S
 from sympy.core.basic import Basic
-from sympy.core.symbol import Str, Symbol
+from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.printing.precedence import PRECEDENCE
