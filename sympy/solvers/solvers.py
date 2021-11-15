@@ -44,6 +44,7 @@ from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly
 from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
+from sympy.polys.polyutils import illegal as _illegal
 from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent, debug
@@ -61,6 +62,8 @@ from itertools import product
 
 import warnings
 
+
+illegal = set(_illegal)
 
 def recast_to_symbols(eqs, symbols):
     """
@@ -232,6 +235,8 @@ def checksol(f, symbol, sol=None, **flags):
            make positive all symbols without assumptions regarding sign.
 
     """
+    from sympy.simplify.radsimp import numer
+    from sympy.core.function import mexpand
     from sympy.physics.units import Unit
 
     minimal = flags.get('minimal', False)
@@ -279,10 +284,6 @@ def checksol(f, symbol, sol=None, **flags):
         # if f(y) == 0, x=3 does not set f(y) to zero...nor does it not
         return None
 
-    illegal = {S.NaN,
-               S.ComplexInfinity,
-               S.Infinity,
-               S.NegativeInfinity}
     if any(sympify(v).atoms() & illegal for k, v in sol.items()):
         return False
 
@@ -302,8 +303,8 @@ def checksol(f, symbol, sol=None, **flags):
                 if not val.is_constant(*list(sol.keys()), simplify=not minimal):
                     return False
                 # there are free symbols -- simple expansion might work
+                val = numer(mexpand(val))
                 _, val = val.as_content_primitive()
-                val = _mexpand(val.as_numer_denom()[0], recursive=True)
         elif attempt == 2:
             if minimal:
                 return

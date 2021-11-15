@@ -1,7 +1,7 @@
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
-from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.function import (Derivative, Function, diff, mexpand)
 from sympy.core.mul import Mul
 from sympy.core import (GoldenRatio, TribonacciConstant)
 from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
@@ -2433,3 +2433,12 @@ def test_solver_flags():
     root = solve(x**5 + x**2 - x - 1, cubics=False)
     rad = solve(x**5 + x**2 - x - 1, cubics=True)
     assert root != rad
+
+
+@slow
+def test_issue_8516():
+    eqs, v = [x +y + z - a, x*y + y*z + x*z - b, x*y*z - c], [x, y, z]
+    sol = solve(eqs, v, manual=True, simplify=False)
+    assert len(sol) == 6
+    assert not any(mexpand(e.xreplace(dict(zip(v, s))), _recursive=True)
+        for s in sol for e in eqs)
