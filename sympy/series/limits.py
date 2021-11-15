@@ -24,7 +24,7 @@ def limit(e, z, z0, dir="+"):
         Other symbols are treated as constants. Multivariate limits
         are not supported.
 
-    z0 : the value toward which ``z`` tends. Can be any expression,
+    z0 : the value or the symbolic point toward which ``z`` tends. Can be any expression,
         including ``oo`` and ``-oo``.
 
     dir : string, optional (default: "+")
@@ -37,8 +37,8 @@ def limit(e, z, z0, dir="+"):
     Examples
     ========
 
-    >>> from sympy import limit, sin, oo
-    >>> from sympy.abc import x
+    >>> from sympy import limit, sin, cos, oo
+    >>> from sympy.abc import x, z
     >>> limit(sin(x)/x, x, 0)
     1
     >>> limit(1/x, x, 0) # default dir='+'
@@ -49,6 +49,12 @@ def limit(e, z, z0, dir="+"):
     zoo
     >>> limit(1/x, x, oo)
     0
+    >>> limit(sin(x)/x, x, z)
+    Piecewise((1, Eq(z, 0)), (sin(z)/z, True))
+    >>> limit((1- cos(x))/x**2, x, z)
+    Piecewise((1/2, Eq(z, 0)), (-(cos(z) - 1)/z**2, True))
+    >>> limit(1/(5 - x)**3, x, z, dir="-")
+    Piecewise((oo, Eq(z, 5)), ((5 - z)**(-3), True))
 
     Notes
     =====
@@ -128,12 +134,12 @@ def heuristics(e, z, z0, dir):
     return rv
 
 
-def return_piecewise(expr, z0, cdir):
+def _limit_for_symbolic_point(expr, z0, cdir):
     """Helper function to evaluate limits when the point, ``z0``, is passed as a Symbol.
     Returns the limit in piecewise form over the complete real number line from
     Negative Infinity to Positive Infinity.
 
-    Note:This method is currently implemented for expressions having finite discontinuities.
+    Note: This method is currently implemented for expressions having finite discontinuities.
 
     Examples
     ========
@@ -150,7 +156,10 @@ def return_piecewise(expr, z0, cdir):
     Piecewise((oo, Eq(z, 5)), ((5 - z)**(-3), True))
 
     """
-    from sympy import singularities, Eq, Piecewise, FiniteSet
+    from sympy.calculus.singularities import singularities
+    from sympy.core.relational import Eq
+    from sympy.functions.elementary.piecewise import Piecewise
+    from sympy.sets.sets import FiniteSet
     if isinstance(singularities(expr, z0), FiniteSet):
         piecewise_list = []
         if cdir == 1:
@@ -325,7 +334,7 @@ class Limit(Expr):
                     return S.Zero
                 elif ex == 0:
                     if z0.is_Symbol and not z0 in e.free_symbols:
-                        coeff = return_piecewise(coeff, z0, cdir)
+                        return _limit_for_symbolic_point(coeff, z0, cdir)
                     return coeff
                 if str(dir) == "+" or not(int(ex) & 1):
                     return S.Infinity*sign(coeff)
@@ -359,7 +368,7 @@ class Limit(Expr):
                     return S.Zero
                 elif ex == 0:
                     if z0.is_Symbol and not z0 in e.free_symbols:
-                        coeff = return_piecewise(coeff, z0, cdir)
+                        return _limit_for_symbolic_point(coeff, z0, cdir)
                     return coeff
                 elif ex.is_negative:
                     if ex.is_integer:
@@ -406,5 +415,5 @@ class Limit(Expr):
                 return self
 
         if z0.is_Symbol and not z0 in e.free_symbols:
-            r = return_piecewise(r, z0, cdir)
+            return _limit_for_symbolic_point(r, z0, cdir)
         return r

@@ -310,7 +310,7 @@ def test_series_AccumBounds():
     assert limit(e, x, oo) == AccumBounds(0, oo)
 
 
-def test_return_piecewise():
+def test_limit_for_symbolic_point():
     assert limit(sin(x)/x, x, z) == Piecewise((1, Eq(z, 0)), (sin(z)/z, True))
     assert limit(1/x, x, z) == Piecewise((oo, Eq(z, 0)), (1/z, True))
     assert limit((x**3 + 2*x + 1)/(x**2 -1), x, z) == Piecewise((-oo, Eq(z, -oo)), (oo, Eq(z, -1) | Eq(z, 1) | Eq(z, oo)), ((z**3 + 2*z + 1)/(z**2 - 1), True))
