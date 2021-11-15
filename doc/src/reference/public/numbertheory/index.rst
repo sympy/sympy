@@ -1,7 +1,7 @@
 .. _numtheory_module:
 
 ===============
-Code Generation
+Number Theory
 ===============
    
 **Contents**

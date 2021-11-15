@@ -1,26 +1,10 @@
 .. _reference:
 
-====================
-SymPy API Reference
-====================
+=======================
+Reference Documentation
+=======================
 
-.. module:: sympy
-
-This page has a detailed description of the SymPy API, categorized as ``public`` and
-``internal`` for public and private modules respectively. It discusses 
-what the different functions and modules do, their arguments and return values.
-For complete documentation including how to get started, 
-see `documentation overview <https://docs.sympy.org>`_.
-
-The public API documentation is further subdivided into eight categories for easy
-navigation. The documentation for the public API is manually implemented using 
-``autoapi`` directives while ``autosummary`` is used for auto generation of
-the internal API documentation.
-
-Public API Reference
-=====================
-
-This section contains a summary of the public SymPy modules, that is to say
+This section contains a summary of SymPy modules, that is to say
 functions and methods. All functions and objects implemented in the ``sympy``
 core subpackage are documented below.
 
