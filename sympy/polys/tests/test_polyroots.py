@@ -23,7 +23,7 @@ from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polyutils import _nsort
 
 from sympy.testing.pytest import raises, slow
-from sympy.testing.randtest import verify_numerically
+from sympy.core.random import verify_numerically
 import mpmath
 from itertools import product
 

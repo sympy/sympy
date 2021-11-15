@@ -1,5 +1,5 @@
 from collections import deque
-from random import randint
+from sympy.core.random import randint
 
 from sympy.external import import_module
 from sympy.core.basic import Basic
