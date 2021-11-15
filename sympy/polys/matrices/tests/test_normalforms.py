@@ -1,6 +1,6 @@
 from sympy.testing.pytest import raises
 
-from sympy import Symbol
+from sympy.core.symbol import Symbol
 from sympy.polys.matrices.normalforms import (
     invariant_factors, smith_normal_form,
     hermite_normal_form, _hermite_normal_form, _hermite_normal_form_modulo_D)

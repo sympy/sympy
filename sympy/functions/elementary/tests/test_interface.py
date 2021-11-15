@@ -1,6 +1,10 @@
 # This test file tests the SymPy function interface, that people use to create
 # their own new functions. It should be as easy as possible.
-from sympy import Function, sympify, sin, cos, limit, tanh
+from sympy.core.function import Function
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.hyperbolic import tanh
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.series.limits import limit
 from sympy.abc import x
 
 

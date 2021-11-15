@@ -3,15 +3,14 @@ from collections import defaultdict
 from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify,
                         expand_func, Function, Dummy, Expr, factor_terms,
                         expand_power_exp, Eq)
-from sympy.core.compatibility import iterable, ordered, as_int
-from sympy.core.decorators import deprecated
 from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand,
     nfloat, expand_mul, expand)
-from sympy.core.numbers import Float, I, pi, Rational, Integer
+from sympy.core.numbers import Float, I, pi, Rational
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
+from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympify
 from sympy.core.traversal import bottom_up as _bottom_up, walk as _walk
 from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
@@ -33,7 +32,9 @@ from sympy.simplify.powsimp import powsimp
 from sympy.simplify.radsimp import radsimp, fraction, collect_abs
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
-from sympy.utilities.iterables import has_variety, sift, subsets
+from sympy.utilities.decorator import deprecated
+from sympy.utilities.iterables import has_variety, sift, subsets, iterable
+from sympy.utilities.misc import as_int
 
 import mpmath
 
@@ -592,7 +593,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         doit=kwargs.get('doit', doit))
     # no routine for Expr needs to check for is_zero
     if isinstance(expr, Expr) and expr.is_zero:
-        return S.Zero
+        return S.Zero if not expr.is_Number else expr
 
     _eval_simplify = getattr(expr, '_eval_simplify', None)
     if _eval_simplify is not None:
@@ -705,7 +706,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         # automatically passed to gammasimp
         expr = combsimp(expr)
 
-    from sympy import Sum, Product, Integral
+    from sympy.concrete.products import Product
+    from sympy.concrete.summations import Sum
+    from sympy.integrals.integrals import Integral
 
     if expr.has(Sum):
         expr = sum_simplify(expr, **kwargs)
@@ -1584,7 +1587,7 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
                     d = Pow(10, int(mpmath.log(fl)/mpmath.log(10)))
                     r = Rational(str(fl/d))*d
                 else:
-                    r = Integer(0)
+                    r = S.Zero
         reps[key] = r
     return p.subs(reps, simultaneous=True)
 

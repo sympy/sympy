@@ -1,15 +1,30 @@
-from sympy import (Basic, Symbol, sin, cos, atan, exp, sqrt, Rational,
-        Float, re, pi, sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols,
-        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, floor, Poly,
-        FiniteSet
-)
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.mod import Mod
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Integer, Rational, comp, nan,
+    oo, pi, zoo)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.complexes import (im, re, sign)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import (Max, sqrt)
+from sympy.functions.elementary.trigonometric import (atan, cos, sin)
+from sympy.polys.polytools import Poly
+from sympy.sets.sets import FiniteSet
+
 from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
-from sympy.utilities.iterables import cartes
+from sympy.utilities.iterables import permutations
 from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
-from sympy.testing.randtest import verify_numerically
+from sympy.core.random import verify_numerically
 from sympy.functions.elementary.trigonometric import asin
 
+from itertools import product
 
 a, c, x, y, z = symbols('a,c,x,y,z')
 b = Symbol("b", positive=True)
@@ -2039,7 +2054,7 @@ def test_issue_6001():
 
 
 def test_polar():
-    from sympy import polar_lift
+    from sympy.functions.elementary.complexes import polar_lift
     p = Symbol('p', polar=True)
     x = Symbol('x')
     assert p.is_polar
@@ -2240,7 +2255,7 @@ def test_mul_zero_detection():
                     assert e.is_zero is False
 
 
-    for iz, ib in cartes(*[[True, False, None]]*2):
+    for iz, ib in product(*[[True, False, None]]*2):
         z = Dummy('z', nonzero=iz)
         b = Dummy('f', finite=ib)
         e = Mul(z, b, evaluate=False)
@@ -2257,7 +2272,7 @@ def test_mul_zero_detection():
         else:
             assert e.is_extended_real is True
 
-    for iz, ib in cartes(*[[True, False, None]]*2):
+    for iz, ib in product(*[[True, False, None]]*2):
         z = Dummy('z', nonzero=iz, extended_real=True)
         b = Dummy('b', finite=ib, extended_real=True)
         e = Mul(z, b, evaluate=False)
@@ -2301,7 +2316,7 @@ def test_Mul_does_not_distribute_infinity():
 
 
 def test_issue_8247_8354():
-    from sympy import tan
+    from sympy.functions.elementary.trigonometric import tan
     z = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
     assert z.is_positive is False  # it's 0
     z = S('''-2**(1/3)*(3*sqrt(93) + 29)**2 - 4*(3*sqrt(93) + 29)**(4/3) +
@@ -2365,8 +2380,7 @@ def test_issue_21034():
 
 
 def test_issue_22021():
-    from sympy.calculus.util import AccumBounds
-    from sympy.utilities.iterables import permutations
+    from sympy.calculus.accumulationbounds import AccumBounds
     # these objects are special cases in Mul
     from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
     L = TensorIndexType("L")

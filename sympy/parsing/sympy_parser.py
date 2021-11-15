@@ -10,10 +10,10 @@ import unicodedata
 from io import StringIO
 
 from sympy.assumptions.ask import AssumptionKeys
-from sympy.core.compatibility import iterable
 from sympy.core.basic import Basic
 from sympy.core import Symbol
 from sympy.core.function import arity, Function
+from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import filldedent, func_name
 
 
@@ -589,7 +589,7 @@ def auto_symbol(tokens, local_dict, global_dict):
 
 
 def lambda_notation(tokens, local_dict, global_dict):
-    """Substitutes "lambda" with its Sympy equivalent Lambda().
+    """Substitutes "lambda" with its SymPy equivalent Lambda().
     However, the conversion doesn't take place if only "lambda"
     is passed because that is a syntax error.
 
@@ -931,12 +931,13 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         with ``from sympy import *``; provide this parameter to override
         this behavior (for instance, to parse ``"Q & S"``).
 
-    transformations : tuple, optional
+    transformations : tuple or str, optional
         A tuple of transformation functions used to modify the tokens of the
         parsed expression before evaluation. The default transformations
         convert numeric literals into their SymPy equivalents, convert
         undefined variables into SymPy symbols, and allow the use of standard
-        mathematical factorial notation (e.g. ``x!``).
+        mathematical factorial notation (e.g. ``x!``). Selection via
+        string is available (see below).
 
     evaluate : bool, optional
         When False, the order of the arguments will remain as they were in the
@@ -975,6 +976,62 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     >>> b.args
     (x, 1)
 
+    Note, however, that when these expressions are printed they will
+    appear the same:
+
+    >>> assert str(a) == str(b)
+
+    As a convenience, transformations can be seen by printing ``transformations``:
+
+    >>> from sympy.parsing.sympy_parser import transformations
+
+    >>> print(transformations)
+    0: lambda_notation
+    1: auto_symbol
+    2: repeated_decimals
+    3: auto_number
+    4: factorial_notation
+    5: implicit_multiplication_application
+    6: convert_xor
+    7: implicit_application
+    8: implicit_multiplication
+    9: convert_equals_signs
+    10: function_exponentiation
+    11: rationalize
+
+    The ``T`` object provides a way to select these transformations:
+
+    >>> from sympy.parsing.sympy_parser import T
+
+    If you print it, you will see the same list as shown above.
+
+    >>> str(T) == str(transformations)
+    True
+
+    Standard slicing will return a tuple of transformations:
+
+    >>> T[:5] == standard_transformations
+    True
+
+    So ``T`` can be used to specify the parsing transformations:
+
+    >>> parse_expr("2x", transformations=T[:5])
+    Traceback (most recent call last):
+    ...
+    SyntaxError: invalid syntax
+    >>> parse_expr("2x", transformations=T[:6])
+    2*x
+    >>> parse_expr('.3', transformations=T[3, 11])
+    3/10
+    >>> parse_expr('.3x', transformations=T[:])
+    3*x/10
+
+    As a further convenience, strings 'implicit' and 'all' can be used
+    to select 0-5 and all the transformations, respectively.
+
+    >>> parse_expr('.3x', transformations='all')
+    3*x/10
+
     See Also
     ========
 
@@ -995,6 +1052,13 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         raise TypeError('expecting global_dict to be a dict')
 
     transformations = transformations or ()
+    if type(transformations) is str:
+        if transformations == 'all':
+            transformations = T[:]
+        elif transformations == 'implicit':
+            transformations = T[:6]
+        else:
+            raise ValueError('unknown transformation group name')
     if transformations:
         if not iterable(transformations):
             raise TypeError(
@@ -1130,3 +1194,51 @@ class EvaluateFalseTransformer(ast.NodeTransformer):
         if isinstance(node.func, ast.Name) and node.func.id in self.functions:
             new_node.keywords.append(ast.keyword(arg='evaluate', value=ast.NameConstant(value=False, ctx=ast.Load())))
         return new_node
+
+
+_transformation = {  # items can be added but never re-ordered
+0: lambda_notation,
+1: auto_symbol,
+2: repeated_decimals,
+3: auto_number,
+4: factorial_notation,
+5: implicit_multiplication_application,
+6: convert_xor,
+7: implicit_application,
+8: implicit_multiplication,
+9: convert_equals_signs,
+10: function_exponentiation,
+11: rationalize}
+
+transformations = '\n'.join('%s: %s' % (i, func_name(f)) for i, f in _transformation.items())
+
+
+class _T():
+    """class to retrieve transformations from a given slice
+
+    EXAMPLES
+    ========
+
+    >>> from sympy.parsing.sympy_parser import T, standard_transformations
+    >>> assert T[:5] == standard_transformations
+    """
+    def __init__(self):
+        self.N = len(_transformation)
+
+    def __str__(self):
+        return transformations
+
+    def __getitem__(self, t):
+        if not type(t) is tuple:
+            t = (t,)
+        i = []
+        for ti in t:
+            if type(ti) is int:
+                i.append(range(self.N)[ti])
+            elif type(ti) is slice:
+                i.extend(list(range(*ti.indices(self.N))))
+            else:
+                raise TypeError('unexpected slice arg')
+        return tuple([_transformation[_] for _ in i])
+
+T = _T()

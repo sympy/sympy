@@ -72,7 +72,7 @@ array (perhaps just a matter of preference).
 '''
 
 import math
-from sympy.core.compatibility import as_int
+from sympy.utilities.misc import as_int
 
 
 def _series(j, n, prec=14):

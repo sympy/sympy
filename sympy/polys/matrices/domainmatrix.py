@@ -10,7 +10,11 @@ as unifying matrices with different domains.
 
 """
 from functools import reduce
+from typing import Union as tUnion, Tuple as tTuple
+
 from sympy.core.sympify import _sympify
+
+from ..domains import Domain
 
 from ..constructor import construct_domain
 
@@ -55,7 +59,7 @@ class DomainMatrix:
 
     DomainMatrix uses :py:class:`~.Domain` for its internal representation
     which makes it more faster for many common operations
-    than current sympy Matrix class, but this advantage makes it not
+    than current SymPy Matrix class, but this advantage makes it not
     entirely compatible with Matrix.
     DomainMatrix could be found analogous to numpy arrays with "dtype".
     In the DomainMatrix, each matrix has a domain such as :ref:`ZZ`
@@ -95,6 +99,9 @@ class DomainMatrix:
     Poly
 
     """
+    rep: tUnion[SDM, DDM]
+    shape: tTuple[int, int]
+    domain: Domain
 
     def __new__(cls, rows, shape, domain, *, fmt=None):
         """

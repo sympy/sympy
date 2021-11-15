@@ -1,8 +1,8 @@
 from sympy.core.function import Add, ArgumentIndexError, Function
 from sympy.core.power import Pow
 from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
 from sympy.functions.elementary.exponential import exp, log
-from sympy.utilities import default_sort_key
 
 
 def _logaddexp(x1, x2, *, evaluate=True):

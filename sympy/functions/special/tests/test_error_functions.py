@@ -1,14 +1,20 @@
-from sympy import (
-    symbols, expand, expand_func, nan, oo, Float, conjugate, diff,
-    re, im, O, exp_polar, polar_lift, gruntz, limit,
-    Symbol, I, integrate, Integral, S,
-    sqrt, sin, cos, sinc, sinh, cosh, exp, log, pi, EulerGamma,
-    erf, erfc, erfi, erf2, erfinv, erfcinv, erf2inv,
-    gamma, uppergamma,
-    Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
-    fresnels, fresnelc,
-    hyper, meijerg, E, Rational)
-
+from sympy.core.function import (diff, expand, expand_func)
+from sympy.core import EulerGamma
+from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (conjugate, im, polar_lift, re)
+from sympy.functions.elementary.exponential import (exp, exp_polar, log)
+from sympy.functions.elementary.hyperbolic import (cosh, sinh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin, sinc)
+from sympy.functions.special.error_functions import (Chi, Ci, E1, Ei, Li, Shi, Si, erf, erf2, erf2inv, erfc, erfcinv, erfi, erfinv, expint, fresnelc, fresnels, li)
+from sympy.functions.special.gamma_functions import (gamma, uppergamma)
+from sympy.functions.special.hyper import (hyper, meijerg)
+from sympy.integrals.integrals import (Integral, integrate)
+from sympy.series.gruntz import gruntz
+from sympy.series.limits import limit
+from sympy.series.order import O
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.functions.special.error_functions import _erfs, _eis
@@ -349,7 +355,7 @@ def test_erf2inv():
 
 
 def mytn(expr1, expr2, expr3, x, d=0):
-    from sympy.testing.randtest import verify_numerically, random_complex_number
+    from sympy.core.random import verify_numerically, random_complex_number
     subs = {}
     for a in expr1.free_symbols:
         if a != x:
@@ -359,7 +365,7 @@ def mytn(expr1, expr2, expr3, x, d=0):
 
 
 def mytd(expr1, expr2, x):
-    from sympy.testing.randtest import test_derivative_numerically, \
+    from sympy.core.random import test_derivative_numerically, \
         random_complex_number
     subs = {}
     for a in expr1.free_symbols:
@@ -369,7 +375,7 @@ def mytd(expr1, expr2, x):
 
 
 def tn_branch(func, s=None):
-    from random import uniform
+    from sympy.core.random import uniform
 
     def fn(x):
         if s is None:
@@ -502,7 +508,7 @@ def test__eis():
 
 def tn_arg(func):
     def test(arg, e1, e2):
-        from random import uniform
+        from sympy.core.random import uniform
         v = uniform(1, 5)
         v1 = func(arg*x).subs(x, v).n()
         v2 = func(e1*v + e2*1e-15).n()
@@ -770,7 +776,7 @@ def test_fresnel():
         meijerg(((), (1,)), ((Rational(1, 4),),
         (Rational(3, 4), 0)), -pi**2*z**4/16)/(2*(-z)**Rational(1, 4)*(z**2)**Rational(1, 4))
 
-    from sympy.testing.randtest import verify_numerically
+    from sympy.core.random import verify_numerically
 
     verify_numerically(re(fresnels(z)), fresnels(z).as_real_imag()[0], z)
     verify_numerically(im(fresnels(z)), fresnels(z).as_real_imag()[1], z)

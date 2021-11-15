@@ -28,7 +28,7 @@ Various authors (such as Taussky, Zimmer, Pohst and Zassenhaus, or Cohen)
 have articulated the main goals of computational algebraic number theory in
 different ways, but invariably the list centers around a certain essential set
 of tasks. As a goal for the ``numberfields`` module in SymPy, we may set the
-following list, based on [Cohen93]_ (Sec. 4.9.3).
+following list, based on [Cohen93]_, Sec. 4.9.3.
 
 For a number field $K = \mathbb{Q}(\theta)$, whose ring of algebraic integers
 is denoted $\mathbb{Z}_K$, compute:
@@ -44,25 +44,27 @@ is denoted $\mathbb{Z}_K$, compute:
 9. decide whether a given ideal is principal, and if so compute a generator.
 
 As a foundation, and to support our basic ability to define and work with
-number fields and algebraic numbers, we also set the following problems:
+number fields and algebraic numbers, we also set the following problems,
+following [Cohen93]_, Sec. 4.5.
 
 10. Given an algebraic number -- expressed by radicals and rational operations,
     or even as a special value of a transcendental function -- determine its
     minimal polynomial over $\mathbb{Q}$.
-11. Given an irreducible polynomial, distinguish its roots as elements of
-    $\mathbb{C}$ by computing isolating intervals.
-12. The Primitive Element Problem: Given several algebraic numbers
-    $\alpha_1, \ldots, \alpha_m$, compute a single algebraic number $\theta$
-    such that $\mathbb{Q}(\alpha_1, \ldots, \alpha_m) = \mathbb{Q}(\theta)$.
-13. The Field Isomorphism Problem: Decide whether two number fields
-    $\mathbb{Q}(\alpha)$, $\mathbb{Q}(\beta)$ are isomorphic.
-14. The Field Membership Problem: Given two algebraic numbers $\alpha$,
+11. The Subfield Problem: Given two number fields $\mathbb{Q}(\alpha)$,
+    $\mathbb{Q}(\beta)$ via the minimal polynomials for their generators
+    $\alpha$ and $\beta$, decide whether one field is isomorphic to a subfield
+    of the other, and if so exhibit an embedding.
+12. The Field Membership Problem: Given two algebraic numbers $\alpha$,
     $\beta$, decide whether $\alpha \in \mathbb{Q}(\beta)$, and if so write
     $\alpha = f(\beta)$ for some $f(x) \in \mathbb{Q}[x]$.
+13. The Primitive Element Problem: Given several algebraic numbers
+    $\alpha_1, \ldots, \alpha_m$, compute a single algebraic number $\theta$
+    such that $\mathbb{Q}(\alpha_1, \ldots, \alpha_m) = \mathbb{Q}(\theta)$.
 
-At present only a subset of the tasks enumerated in the lists above is yet
-supported in SymPy, and if you are interested in expanding support, you are
-encouraged to contribute!
+At present only a subset of the tasks enumerated above is yet supported in
+SymPy, and if you are interested in expanding support, you are encouraged to
+contribute! An excellent source, providing solutions to all the remaining
+problems (as well as those already solved) is [Cohen93]_.
 
 At time of writing, the existing solutions to the above problems are found
 in the following places:
@@ -73,12 +75,67 @@ Task                               Implementation
 (1) integral basis                 :py:func:`~.round_two`
 (2) prime decomposition            :py:func:`~.prime_decomp`
 (3) $\mathfrak{p}$-adic valuation  :py:func:`~.prime_valuation`
-(10) find min poly                 :py:func:`~.minpoly`
-(11) isolating intervals           :py:func:`~.isolate`
-(12) primitive element             :py:func:`~.primitive_element`
-(13) field isomorphism             :py:func:`~.field_isomorphism`
-(14) field membership              :py:func:`~.to_number_field`
+(10) find minimal polynomial       :py:func:`~.minimal_polynomial`
+(11) subfield                      :py:func:`~.field_isomorphism`
+(12) field membership              :py:func:`~.to_number_field`
+(13) primitive element             :py:func:`~.primitive_element`
 =================================  ======================================
+
+
+Solving the Main Problems
+=========================
+
+Integral Basis
+--------------
+.. _IntegralBasis:
+
+.. currentmodule:: sympy.polys.numberfields.basis
+.. autofunction:: round_two
+
+
+Prime Decomposition
+-------------------
+.. _PrimeDecomposition:
+
+.. currentmodule:: sympy.polys.numberfields.primes
+.. autofunction:: prime_decomp
+.. autoclass:: PrimeIdeal
+   :members:
+
+   .. automethod:: PrimeIdeal.__init__
+   .. automethod:: PrimeIdeal.__add__
+   .. automethod:: PrimeIdeal.__mul__
+
+
+p-adic Valuation
+----------------
+.. _pAdicValuation:
+
+.. currentmodule:: sympy.polys.numberfields.primes
+.. autofunction:: prime_valuation
+
+
+Finding Minimal Polynomials
+---------------------------
+.. _MinimalPolynomials:
+
+.. currentmodule:: sympy.polys.numberfields.minpoly
+.. autofunction:: minimal_polynomial
+.. autofunction:: minpoly
+
+
+The Subfield Problem
+--------------------
+.. _SubfieldProblem:
+
+.. automodule:: sympy.polys.numberfields.subfield
+
+.. autofunction:: field_isomorphism
+
+.. autofunction:: primitive_element
+
+.. autofunction:: to_number_field
+
 
 
 Internals
@@ -88,9 +145,8 @@ Algebraic number fields
 -----------------------
 
 Algebraic number fields are represented in SymPy by the
-:py:class:`~.AlgebraicField` class, which is a part of the
-polynomial domains system.
-
+:py:class:`~.AlgebraicField` class, which is a part of
+:ref:`the polynomial domains system<polys-domainsref>`.
 
 
 Representing algebraic numbers
@@ -98,7 +154,7 @@ Representing algebraic numbers
 
 There are several different ways to represent algebraic numbers, and different
 forms may be preferable for different computational tasks.
-See [Cohen93]_ Section 4.2.
+See [Cohen93]_, Sec. 4.2.
 
 
 As number field elements
@@ -107,32 +163,13 @@ As number field elements
 In SymPy, there is a distinction between number and expression classes defined
 in the :py:mod:`sympy.core.numbers` module on the one hand, and domains and
 domain elements defined in the :py:mod:`~sympy.polys` module on the other.
+This is explained in more detail :ref:`here<polys-domainsintro>`.
 
 When it comes to algebraic numbers, the :py:mod:`sympy.core.numbers` module
 offers the :py:class:`~.AlgebraicNumber` class, while the
 :py:mod:`~sympy.polys` module offers the
 :py:class:`~sympy.polys.polyclasses.ANP` class. This is the type of domain
 elements belonging to the :py:class:`~.AlgebraicField` domain.
-
-
-As points in the complex plane
-``````````````````````````````
-
-The minimal polynomial for an algebraic number determines it only up to
-conjugacy; in other words, the number and all its conjugates are algebraically
-indistinguishable.
-
-In order to select a particular conjugate, we can identify
-it with a point in the complex plane. This means identifying two real
-intervals, one on the real axis and one on the imaginary axis, such that
-exactly one root of the given irreducible polynomial over $\mathbb{Q}$ lies
-within the complex region so defined.
-
-Support for this in SymPy is currently limited. The :py:func:`~.isolate`
-function is currently applicable only to algebraic numbers lying on the
-real line.
-
-.. autofunction:: isolate
 
 
 As elements of finitely-generated modules
@@ -227,60 +264,7 @@ Utilities
 .. autofunction:: coeff_search
 .. autofunction:: supplement_a_subspace
 
-
-Solving the Main Problems
-=========================
-
-Integral Basis
---------------
-
-.. currentmodule:: sympy.polys.numberfields
-.. autofunction:: round_two
-
-
-Prime Decomposition
--------------------
-
-.. autofunction:: prime_decomp
-.. currentmodule:: sympy.polys.numberfields.primes
-.. autoclass:: PrimeIdeal
-   :members:
-
-   .. automethod:: PrimeIdeal.__init__
-   .. automethod:: PrimeIdeal.__add__
-   .. automethod:: PrimeIdeal.__mul__
-
-
-p-adic Valuation
-----------------
-
-.. currentmodule:: sympy.polys.numberfields
-.. autofunction:: prime_valuation
-
-
-Finding Minimal Polynomials
----------------------------
-
-.. autofunction:: minimal_polynomial
-.. autofunction:: minpoly
-
-
-The Primitive Element Problem
------------------------------
-
-.. autofunction:: primitive_element
-
-
-The Field Isomorphism Problem
------------------------------
-
-.. autofunction:: field_isomorphism
-
-
-The Field Membership Problem
-----------------------------
-
-.. autofunction:: to_number_field
+.. autofunction:: isolate
 
 
 

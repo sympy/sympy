@@ -1,22 +1,22 @@
 """Computational algebraic field theory. """
 
 __all__ = [
-    'minpoly', 'minimal_polynomial', 'primitive_element',
+    'minpoly', 'minimal_polynomial',
 
-    'field_isomorphism',
+    'field_isomorphism', 'primitive_element', 'to_number_field',
 
-    'to_number_field', 'isolate',
+    'isolate',
 
     'round_two',
 
     'prime_decomp', 'prime_valuation',
 ]
 
-from .minpoly import minpoly, minimal_polynomial, primitive_element
+from .minpoly import minpoly, minimal_polynomial
 
-from .isomorphism import field_isomorphism
+from .subfield import field_isomorphism, primitive_element, to_number_field
 
-from .numbers import to_number_field, isolate
+from .utilities import isolate
 
 from .basis import round_two
 

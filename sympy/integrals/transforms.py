@@ -1,16 +1,17 @@
 """ Integral Transforms """
-from functools import reduce
+from functools import reduce, wraps
 from itertools import repeat
 
 from sympy.core import S, pi
 from sympy.core.add import Add
-from sympy.core.compatibility import iterable, ordered
 from sympy.core.function import (AppliedUndef, count_ops, expand,
                                  expand_complex, expand_mul, Function, Lambda)
 from sympy.core.mul import Mul
 from sympy.core.numbers import igcd, ilcm
 from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Dummy, symbols, Wild
+from sympy.core.traversal import postorder_traversal
 from sympy.functions.combinatorial.factorials import factorial, rf
 from sympy.functions.elementary.complexes import (re, arg, Abs, polar_lift,
                                                   periodic_argument)
@@ -36,8 +37,8 @@ from sympy.polys.rootoftools import CRootOf, RootSum
 from sympy.simplify import simplify, hyperexpand
 from sympy.simplify.powsimp import powdenest
 from sympy.solvers.inequalities import _solve_inequality
-from sympy.utilities import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import iterable
 
 
 ##########################################################################
@@ -231,8 +232,6 @@ def _noconds_(default):
     argument of this function).
     """
     def make_wrapper(func):
-        from sympy.core.decorators import wraps
-
         @wraps(func)
         def wrapper(*args, noconds=default, **kwargs):
             res = func(*args, **kwargs)
@@ -841,7 +840,6 @@ class InverseMellinTransform(IntegralTransform):
         return a, b
 
     def _compute_transform(self, F, s, x, **hints):
-        from sympy.utilities.iterables import postorder_traversal
         global _allowed
         if _allowed is None:
             _allowed = {
@@ -884,7 +882,7 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
     an unevaluated :class:`InverseMellinTransform` object.
 
     Note that this function will assume x to be positive and real, regardless
-    of the sympy assumptions!
+    of the SymPy assumptions!
 
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.
@@ -1391,7 +1389,7 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     an unevaluated :class:`InverseLaplaceTransform` object.
 
     Note that this function will always assume `t` to be real,
-    regardless of the sympy assumption on `t`.
+    regardless of the SymPy assumption on `t`.
 
     For a description of possible hints, refer to the docstring of
     :func:`sympy.integrals.transforms.IntegralTransform.doit`.

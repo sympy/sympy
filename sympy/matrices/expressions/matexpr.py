@@ -1,17 +1,18 @@
 from typing import Tuple as tTuple
 from functools import wraps
 
-from sympy.core import S, Symbol, Integer, Basic, Expr, Mul, Add
+from sympy.core import S, Integer, Basic, Mul, Add
 from sympy.core.assumptions import check_assumptions
-from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.decorators import call_highest_priority
+from sympy.core.expr import Expr, ExprBuilder
 from sympy.core.logic import FuzzyBool
-from sympy.core.symbol import Str
+from sympy.core.symbol import Str, Dummy, symbols, Symbol
 from sympy.core.sympify import SympifyError, _sympify
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions import conjugate, adjoint
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.common import NonSquareMatrixError
-from sympy.matrices.matrices import MatrixKind
+from sympy.matrices.matrices import MatrixKind, MatrixBase
 from sympy.multipledispatch import dispatch
 from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
@@ -54,7 +55,7 @@ class MatrixExpr(Expr):
     """
 
     # Should not be considered iterable by the
-    # sympy.core.compatibility.iterable function. Subclass that actually are
+    # sympy.utilities.iterables.iterable function. Subclass that actually are
     # iterable (i.e., explicit matrices) should set this to True.
     _iterable = False
 
@@ -74,7 +75,7 @@ class MatrixExpr(Expr):
     is_symbol = False
     is_scalar = False
 
-    kind = MatrixKind()
+    kind: MatrixKind = MatrixKind()
 
     def __new__(cls, *args, **kwargs):
         args = map(_sympify, args)
@@ -454,6 +455,7 @@ class MatrixExpr(Expr):
         from .applyfunc import ElementwiseApplyFunction
         return ElementwiseApplyFunction(func, self)
 
+
 @dispatch(MatrixExpr, Expr)
 def _eval_is_eq(lhs, rhs): # noqa:F811
     return False
@@ -510,7 +512,26 @@ Basic._constructor_postprocessor_mapping[MatrixExpr] = {
 }
 
 
-def _matrix_derivative(expr, x):
+def _matrix_derivative(expr, x, old_algorithm=False):
+
+    if isinstance(expr, MatrixBase) or isinstance(x, MatrixBase):
+        # Do not use array expressions for explicit matrices:
+        old_algorithm = True
+
+    if old_algorithm:
+        return _matrix_derivative_old_algorithm(expr, x)
+
+    from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+    from sympy.tensor.array.expressions.arrayexpr_derivatives import array_derive
+    from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
+
+    array_expr = convert_matrix_to_array(expr)
+    diff_array_expr = array_derive(array_expr, x)
+    diff_matrix_expr = convert_array_to_matrix(diff_array_expr)
+    return diff_matrix_expr
+
+
+def _matrix_derivative_old_algorithm(expr, x):
     from sympy.tensor.array.array_derivatives import ArrayDerivative
     lines = expr._eval_derivative_matrix_lines(x)
 
@@ -567,7 +588,7 @@ class MatrixElement(Expr):
 
     def __new__(cls, name, n, m):
         n, m = map(_sympify, (n, m))
-        from sympy import MatrixBase
+        from sympy.matrices.matrices import MatrixBase
         if isinstance(name, (MatrixBase,)):
             if n.is_Integer and m.is_Integer:
                 return name[n, m]
@@ -593,10 +614,9 @@ class MatrixElement(Expr):
         return self.args[1:]
 
     def _eval_derivative(self, v):
-        from sympy import Sum, symbols, Dummy
 
         if not isinstance(v, MatrixElement):
-            from sympy import MatrixBase
+            from sympy.matrices.matrices import MatrixBase
             if isinstance(self.parent, MatrixBase):
                 return self.parent.diff(v)[self.i, self.j]
             return S.Zero
@@ -610,6 +630,7 @@ class MatrixElement(Expr):
                    KroneckerDelta(self.args[2], v.args[2], (0, n-1))
 
         if isinstance(M, Inverse):
+            from sympy.concrete.summations import Sum
             i, j = self.args[1:]
             i1, i2 = symbols("z1, z2", cls=Dummy)
             Y = M.args[0]
@@ -750,7 +771,6 @@ class _LeftRightArgs:
 
     @staticmethod
     def _build(expr):
-        from sympy.core.expr import ExprBuilder
         if isinstance(expr, ExprBuilder):
             return expr.build()
         if isinstance(expr, list):
@@ -805,7 +825,6 @@ class _LeftRightArgs:
         return rank
 
     def _multiply_pointer(self, pointer, other):
-        from sympy.core.expr import ExprBuilder
         from ...tensor.array.expressions.array_expressions import ArrayTensorProduct
         from ...tensor.array.expressions.array_expressions import ArrayContraction
 
@@ -834,7 +853,7 @@ class _LeftRightArgs:
 
 
 def _make_matrix(x):
-    from sympy import ImmutableDenseMatrix
+    from sympy.matrices.immutable import ImmutableDenseMatrix
     if isinstance(x, MatrixExpr):
         return x
     return ImmutableDenseMatrix([[x]])

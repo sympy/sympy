@@ -1,6 +1,8 @@
 from sympy.core.backend import (symbols, Matrix, cos, sin, atan, sqrt,
     Rational, _simplify_matrix)
-from sympy import solve, simplify, sympify
+from sympy.core.sympify import sympify
+from sympy.simplify.simplify import simplify
+from sympy.solvers.solvers import solve
 from sympy.physics.mechanics import dynamicsymbols, ReferenceFrame, Point,\
     dot, cross, inertia, KanesMethod, Particle, RigidBody, Lagrangian,\
     LagrangesMethod

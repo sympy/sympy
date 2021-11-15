@@ -22,6 +22,10 @@ class CompilerNotFoundError(FileNotFoundError):
     pass
 
 
+class CompileError (Exception):
+    """Failure to compile one or more C/C++ source files."""
+
+
 def get_abspath(path, cwd='.'):
     """ Returns the aboslute path.
 
@@ -200,7 +204,7 @@ def pyx_is_cplus(path):
     return False
 
 def import_module_from_file(filename, only_if_newer_than=None):
-    """ Imports python extension (from shared object file)
+    """ Imports Python extension (from shared object file)
 
     Provide a list of paths in `only_if_newer_than` to check
     timestamps of dependencies. import_ raises an ImportError
@@ -250,7 +254,7 @@ def import_module_from_file(filename, only_if_newer_than=None):
 def find_binary_of_command(candidates):
     """ Finds binary first matching name among candidates.
 
-    Calls `find_executable` from distuils for provided candidates and returns
+    Calls ``which`` from shutils for provided candidates and returns
     first hit.
 
     Parameters
@@ -264,11 +268,12 @@ def find_binary_of_command(candidates):
 
     CompilerNotFoundError if no candidates match.
     """
-    from distutils.spawn import find_executable
+    from shutil import which
     for c in candidates:
-        binary_path = find_executable(c)
+        binary_path = which(c)
         if c and binary_path:
             return c, binary_path
+
     raise CompilerNotFoundError('No binary located for candidates: {}'.format(candidates))
 
 

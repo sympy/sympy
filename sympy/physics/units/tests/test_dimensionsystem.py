@@ -1,6 +1,7 @@
 from sympy.testing.pytest import warns_deprecated_sympy
 
-from sympy import Matrix, eye, symbols
+from sympy.core.symbol import symbols
+from sympy.matrices.dense import (Matrix, eye)
 from sympy.physics.units.definitions.dimension_definitions import (
     action, current, length, mass, time,
     velocity)

@@ -10,7 +10,12 @@ from sympy.core.symbol import symbols, Symbol, Dummy
 from sympy.core.sympify import SympifyError
 from sympy.core.function import Function, Lambda
 
-from sympy import sin, Q, cos, gamma, Tuple, Integral, Sum
+from sympy.assumptions.ask import Q
+from sympy.concrete.summations import Sum
+from sympy.core.containers import Tuple
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.gamma_functions import gamma
+from sympy.integrals.integrals import Integral
 from sympy.functions.elementary.exponential import exp
 from sympy.testing.pytest import raises
 from sympy.core import I, pi
@@ -282,7 +287,7 @@ def test_canonical_variables():
 
 
 def test_replace_exceptions():
-    from sympy import Wild
+    from sympy.core.symbol import Wild
     x, y = symbols('x y')
     e = (x**2 + x*y)
     raises(TypeError, lambda: e.replace(sin, 2))

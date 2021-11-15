@@ -12,7 +12,6 @@ from sympy.functions.elementary.trigonometric import (
 from sympy.polys import Poly
 from sympy.series.order import O
 from sympy.sets import FiniteSet
-from sympy.core.expr import unchanged
 from sympy.core.power import power
 from sympy.testing.pytest import warns_deprecated_sympy, _both_exp_pow
 
@@ -270,10 +269,15 @@ def test_zero():
     assert 0**(x - 2) != S.Infinity**(2 - x)
     assert 0**(2*x*y) == 0**(x*y)
     assert 0**(-2*x*y) == S.ComplexInfinity**(x*y)
+    assert Float(0)**2 is not S.Zero
+    assert Float(0)**2 == 0.0
+    assert Float(0)**-2 is zoo
+    assert Float(0)**oo is S.Zero
 
     #Test issue 19572
     assert 0 ** -oo is zoo
     assert power(0, -oo) is zoo
+    assert Float(0)**-oo is zoo
 
 def test_pow_as_base_exp():
     x = Symbol('x')
@@ -318,7 +322,7 @@ def test_issue_6100_12942_4473():
 
 
 def test_issue_6208():
-    from sympy import root
+    from sympy.functions.elementary.miscellaneous import root
     assert sqrt(33**(I*Rational(9, 10))) == -33**(I*Rational(9, 20))
     assert root((6*I)**(2*I), 3).as_base_exp()[1] == Rational(1, 3)  # != 2*I/3
     assert root((6*I)**(I/3), 3).as_base_exp()[1] == I/9
@@ -555,8 +559,15 @@ def test_issue_14815():
 
 
 def test_issue_18509():
-    assert unchanged(Mul, oo, 1/pi**oo)
-    assert (1/pi**oo).is_extended_positive == False
+    x = Symbol('x', prime=True)
+    assert x**oo is oo
+    assert (1/x)**oo is S.Zero
+    assert (-1/x)**oo is S.Zero
+    assert (-x)**oo is zoo
+    assert (-oo)**(-1 + I) is S.Zero
+    assert (-oo)**(1 + I) is zoo
+    assert (oo)**(-1 + I) is S.Zero
+    assert (oo)**(1 + I) is zoo
 
 
 def test_issue_18762():

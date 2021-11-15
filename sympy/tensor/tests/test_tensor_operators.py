@@ -4,10 +4,12 @@ from sympy.tensor.toperators import PartialDerivative
 from sympy.tensor.tensor import (TensorIndexType,
                                  tensor_indices,
                                  TensorHead, tensor_heads)
-from sympy import symbols, diag
-from sympy import Array, Rational
+from sympy.core.numbers import Rational
+from sympy.core.symbol import symbols
+from sympy.matrices.dense import diag
+from sympy.tensor.array import Array
 
-from random import randint
+from sympy.core.random import randint
 
 
 L = TensorIndexType("L")

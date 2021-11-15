@@ -3,7 +3,10 @@ import sys
 from subprocess import Popen, PIPE
 import os
 
-from sympy.utilities.misc import translate, replace, ordinal, rawlines, strlines
+from sympy.core.singleton import S
+from sympy.testing.pytest import raises
+from sympy.utilities.misc import translate, replace, ordinal, rawlines, strlines, as_int
+
 
 def test_translate():
     abc = 'abc'
@@ -118,3 +121,21 @@ def test_debug_output():
     err = err.decode('ascii')
     expected = 'substituted: -x*(1 - cos(x)), u: 1/x, u_var: _u'
     assert expected in err, err
+
+
+def test_as_int():
+    raises(ValueError, lambda : as_int(True))
+    raises(ValueError, lambda : as_int(1.1))
+    raises(ValueError, lambda : as_int([]))
+    raises(ValueError, lambda : as_int(S.NaN))
+    raises(ValueError, lambda : as_int(S.Infinity))
+    raises(ValueError, lambda : as_int(S.NegativeInfinity))
+    raises(ValueError, lambda : as_int(S.ComplexInfinity))
+    # for the following, limited precision makes int(arg) == arg
+    # but the int value is not necessarily what a user might have
+    # expected; Q.prime is more nuanced in its response for
+    # expressions which might be complex representations of an
+    # integer. This is not -- by design -- as_ints role.
+    raises(ValueError, lambda : as_int(1e23))
+    raises(ValueError, lambda : as_int(S('1.'+'0'*20+'1')))
+    assert as_int(True, strict=False) == 1

@@ -1,4 +1,7 @@
-from sympy import MatrixSymbol, symbols, Identity, sin, cos
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.special import Identity
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayTensorProduct, \
     PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, ArrayContraction
@@ -15,7 +18,7 @@ B = MatrixSymbol("B", k, k)
 C = MatrixSymbol("C", k, k)
 D = MatrixSymbol("D", k, k)
 
-A1 = ArraySymbol("A", 3, 2, k)
+A1 = ArraySymbol("A", (3, 2, k))
 
 
 def test_arrayexpr_derivatives1():

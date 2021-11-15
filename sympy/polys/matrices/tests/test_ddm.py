@@ -1,5 +1,5 @@
 from sympy.testing.pytest import raises
-from sympy.core.compatibility import HAS_GMPY
+from sympy.external.gmpy import HAS_GMPY
 
 from sympy.polys import ZZ, QQ
 
