@@ -289,13 +289,89 @@ class Module:
 
     def represent(self, elt):
         """
-        Represent an element of an ancestor module as an integer-linear
-        combination over the generators of this module.
+        Represent a module element as an integer-linear combination over the
+        generators of this module.
+
+        Explanation
+        ===========
+
+        In our system, to "represent" always means to write a
+        :py:class:`~.ModuleElement` as a :ref:`ZZ`-linear combination over the
+        generators of the present :py:class:`~.Module`. Furthermore, the
+        incoming :py:class:`~.ModuleElement` must belong to an ancestor of
+        the present :py:class:`~.Module` (or to the present
+        :py:class:`~.Module` itself).
+
+        The most common application is to represent a
+        :py:class:`~.ModuleElement` in a :py:class:`~.Submodule`. For example,
+        this is involved in computing multiplication tables.
+
+        On the other hand, representing in a :py:class:`~.PowerBasis`, is an
+        odd case, and one which tends not to arise in practice, except for
+        example when using a :py:class:`~.ModuleEndomorphism` on a
+        :py:class:`~.PowerBasis`.
+
+        In such a case, (1) the incoming :py:class:`~.ModuleElement` must
+        belong to the :py:class:`~.PowerBasis` itself (since the latter has no
+        proper ancestors) and (2) it is "representable" iff it belongs to
+        $\mathbb{Z}[\theta]$ (although generally a
+        :py:class:`~.PowerBasisElement` may represent any element of
+        $\mathbb{Q}(\theta)$, i.e. any algebraic number).
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, cyclotomic_poly
+        >>> from sympy.polys.numberfields.modules import PowerBasis, to_col
+        >>> from sympy.abc import zeta
+        >>> T = Poly(cyclotomic_poly(5))
+        >>> A = PowerBasis(T)
+        >>> a = A(to_col([2, 4, 6, 8]))
+
+        The :py:class:`~.ModuleElement` `a` has all even coefficients.
+        If we represent ``a`` in the submodule ``B = 2*A``, the coefficients in
+        the column vector will be halved:
+
+        >>> B = A.submodule_from_gens([2*A(i) for i in range(4)])
+        >>> b = B.represent(a)
+        >>> print(b.transpose())  # doctest: +SKIP
+        DomainMatrix([[1, 2, 3, 4]], (1, 4), ZZ)
+
+        However, the element of ``B`` so defined still represents the same
+        algebraic number:
+
+        >>> print(a.poly(zeta).as_expr())
+        8*zeta**3 + 6*zeta**2 + 4*zeta + 2
+        >>> print(B(b).over_power_basis().poly(zeta).as_expr())
+        8*zeta**3 + 6*zeta**2 + 4*zeta + 2
+
+        Parameters
+        ==========
+
+        elt : :py:class:`~.ModuleElement`
+            The module element to be represented. Must belong to some ancestor
+            module of this module (including this module itself).
+
+        Returns
+        =======
+
+        :py:class:`~.DomainMatrix` over :ref:`ZZ`
+            This will be a column vector, representing the coefficients of a
+            linear combination of this module's generators, which equals the
+            given element.
+
+        Raises
+        ======
+
+        ClosureFailure
+            If the given element cannot be represented as a :ref:`ZZ`-linear
+            combination over this module.
 
         See Also
         ========
 
-        Module
+        .Submodule.represent
+        .PowerBasis.represent
 
         """
         raise NotImplementedError
@@ -493,7 +569,8 @@ class Module:
             If True, we will reduce the matrix into Hermite Normal Form before
             forming the :py:class:`~.Submodule`.
         hnf_modulus : int, None, optional (default=None)
-            Modulus for use in the HNF reduction algorithm.
+            Modulus for use in the HNF reduction algorithm. See
+            :py:func:`~sympy.polys.matrices.normalforms.hermite_normal_form`.
 
         Returns
         =======
@@ -639,32 +716,13 @@ class PowerBasis(Module):
 
     def represent(self, elt):
         r"""
-        Represent a :py:class:`~.ModuleElement` over this power basis.
-
-        Explanation
-        ===========
-
-        In our system, to "represent" always means to write a
-        :py:class:`~.ModuleElement` as a :ref:`ZZ`-linear combination over the
-        generators of the present :py:class:`~.Module`. Furthermore, the
-        incoming :py:class:`~.ModuleElement` must belong to an ancestor of
-        the present :py:class:`~.Module`.
-
-        Therefore, when the present :py:class:`~.Module` is a
-        :py:class:`~.PowerBasis`, it is an odd case, and one which tends not to
-        arise in practice, except maybe when using a
-        :py:class:`~.ModuleEndomorphism` on a :py:class:`~.PowerBasis`.
-
-        In such a case, (1) the incoming :py:class:`~.ModuleElement` must
-        belong to the :py:class:`~.PowerBasis` itself (since the latter has no
-        proper ancestors) and (2) it is "representable" iff it belongs to
-        $\mathbb{Z}(\theta)$ (although generally a
-        :py:class:`~.PowerBasisElement` may represent any element of
-        $\mathbb{Q}(\theta)$, i.e. any algebraic number).
+        Represent a module element as an integer-linear combination over the
+        generators of this module.
 
         See Also
         ========
 
+        .Module.represent
         .Submodule.represent
 
         """
@@ -885,31 +943,14 @@ class Submodule(Module, IntegerPowerable):
 
     def represent(self, elt):
         """
-        Represent a :py:class:`~.ModuleElement` belonging to an ancestor
-        module, as a :ref:`ZZ`-linear combination over the generators of this
-        submodule.
+        Represent a module element as an integer-linear combination over the
+        generators of this module.
 
-        Parameters
-        ==========
+        See Also
+        ========
 
-        elt : :py:class:`~.ModuleElement`
-            The module element to be represented. Must belong to some ancestor
-            module of this submodule (including this submodule itself).
-
-        Returns
-        =======
-
-        :py:class:`~.DomainMatrix` over :ref:`ZZ`
-            This will be a column vector, representing the coefficients of a
-            linear combination of this submodule's generators, which equals the
-            given element.
-
-        Raises
-        ======
-
-        ClosureFailure
-            If the given element cannot be represented as a :ref:`ZZ`-linear
-            combination over this submodule.
+        .Module.represent
+        .PowerBasis.represent
 
         """
         if elt.module == self:
@@ -962,7 +1003,8 @@ class Submodule(Module, IntegerPowerable):
             Hermite Normal Form.
         hnf_modulus : :ref:`ZZ`, None, optional
             If a positive integer is provided, use this as modulus in the
-            HNF reduction.
+            HNF reduction. See
+            :py:func:`~sympy.polys.matrices.normalforms.hermite_normal_form`.
 
         Returns
         =======
@@ -1010,7 +1052,8 @@ class Submodule(Module, IntegerPowerable):
             Hermite Normal Form.
         hnf_modulus : :ref:`ZZ`, None, optional
             If a positive integer is provided, use this as modulus in the
-            HNF reduction.
+            HNF reduction. See
+            :py:func:`~sympy.polys.matrices.normalforms.hermite_normal_form`.
 
         Returns
         =======
@@ -1415,26 +1458,51 @@ class ModuleElement(IntegerPowerable):
     def __rfloordiv__(self, a):
         return a // self.over_power_basis()
 
-    def __mod__(self, a):
+    def __mod__(self, m):
         r"""
-        Reducing a :py:class:`~.ModuleElement` mod an integer *a* reduces all
-        numerator coeffs mod $d a$, where $d$ is the denominator of the
+        Reducing a :py:class:`~.ModuleElement` mod an integer *m* reduces all
+        numerator coeffs mod $d m$, where $d$ is the denominator of the
         :py:class:`~.ModuleElement`.
 
         Explanation
         ===========
 
-        For example, if this :py:class:`~.ModuleElement` represents the number
+        Recall that a :py:class:`~.ModuleElement` $b$ represents a
+        $\mathbb{Q}$-linear combination over the basis elements
+        $\{\beta_0, \beta_1, \ldots, \beta_{n-1}\}$ of a module $B$. It uses a
+        common denominator $d$, so that the representation is in the form
+        $b=\frac{c_0 \beta_0 + c_1 \beta_1 + \cdots + c_{n-1} \beta_{n-1}}{d}$,
+        with $d$ and all $c_i$ in $\mathbb{Z}$, and $d > 0$.
 
-        $\frac{15 a_1 + a_0}{2} = \frac{a_1 + a_0}{2} + 7 a_1$
+        If we want to work modulo $m B$, this means we want to reduce the
+        coefficients of $b$ mod $m$. We can think of reducing an arbitrary
+        rational number $r/s$ mod $m$ as adding or subtracting an integer
+        multiple of $m$ so that the result is positive and less than $m$.
+        But this is equivalent to reducing $r$ mod $m \cdot s$.
 
-        then reducing mod 7 should mean throwing away that part that is a poly
-        in the basis elements $a_i$, with content divisible by 7. But this is
-        achieved by reducing our coeffs mod $2 \times 7$.
+        Examples
+        ========
+
+        >>> from sympy import Poly, cyclotomic_poly
+        >>> from sympy.polys.numberfields.modules import PowerBasis
+        >>> T = Poly(cyclotomic_poly(5))
+        >>> A = PowerBasis(T)
+        >>> a = (A(0) + 15*A(1))//2
+        >>> print(a)
+        [1, 15, 0, 0]/2
+
+        Here, ``a`` represents the number $\frac{1 + 15\zeta}{2}$. If we reduce
+        mod 7,
+
+        >>> print(a % 7)
+        [1, 1, 0, 0]/2
+
+        we get $\frac{1 + \zeta}{2}$. Effectively, we subtracted $7 \zeta$.
+        But it was achieved by reducing the numerator coefficients mod $14$.
         """
-        if is_int(a):
-            m = a * self.denom
-            col = to_col([c % m for c in self.coeffs])
+        if is_int(m):
+            M = m * self.denom
+            col = to_col([c % M for c in self.coeffs])
             return type(self)(self.module, col, denom=self.denom)
         return NotImplemented
 
@@ -1671,6 +1739,61 @@ class EndomorphismRing:
         This method supports calculating such matrices $A$, by representing
         an element of this endomorphism ring first as a matrix, and then
         stacking that matrix's columns into a single column.
+
+        Examples
+        ========
+
+        Note that in this example we print matrix transposes, to make their
+        columns easier to inspect.
+
+        >>> from sympy import Poly, cyclotomic_poly
+        >>> from sympy.polys.numberfields.modules import PowerBasis
+        >>> from sympy.polys.numberfields.modules import ModuleHomomorphism
+        >>> T = Poly(cyclotomic_poly(5))
+        >>> M = PowerBasis(T)
+        >>> E = M.endomorphism_ring()
+
+        Let $\zeta$ be a primitive 5th root of unity, a generator of our field,
+        and consider the inner endomorphism $\tau$ on the ring of integers,
+        induced by $\zeta$:
+
+        >>> zeta = M(1)
+        >>> tau = E.inner_endomorphism(zeta)
+        >>> tau.matrix().transpose()  # doctest: +SKIP
+        DomainMatrix(
+            [[0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1], [-1, -1, -1, -1]],
+            (4, 4), ZZ)
+
+        The matrix representation of $\tau$ is as expected. The first column
+        shows that multiplying by $\zeta$ carries $1$ to $\zeta$, the second
+        column that it carries $\zeta$ to $\zeta^2$, and so forth.
+
+        The ``represent`` method of the endomorphism ring ``E`` stacks these
+        into a single column:
+
+        >>> E.represent(tau).transpose()  # doctest: +SKIP
+        DomainMatrix(
+            [[0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, -1, -1, -1, -1]],
+            (1, 16), ZZ)
+
+        This is useful when we want to consider a homomorphism $\varphi$ having
+        ``E`` as codomain:
+
+        >>> phi = ModuleHomomorphism(M, E, lambda x: E.inner_endomorphism(x))
+
+        and we want to compute the matrix of such a homomorphism:
+
+        >>> phi.matrix().transpose()  # doctest: +SKIP
+        DomainMatrix(
+            [[1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+            [0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, -1, -1, -1, -1],
+            [0, 0, 1, 0, 0, 0, 0, 1, -1, -1, -1, -1, 1, 0, 0, 0],
+            [0, 0, 0, 1, -1, -1, -1, -1, 1, 0, 0, 0, 0, 1, 0, 0]],
+            (4, 16), ZZ)
+
+        Note that the stacked matrix of $\tau$ occurs as the second column in
+        this example. This is because $\zeta$ is the second basis element of
+        ``M``, and $\varphi(\zeta) = \tau$.
 
         Parameters
         ==========
