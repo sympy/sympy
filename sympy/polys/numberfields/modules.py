@@ -1278,7 +1278,7 @@ class ModuleElement(IntegerPowerable):
         """
         return isinstance(other, ModuleElement) and other.module == self.module
 
-    def make_compat(self, other):
+    def unify(self, other):
         """
         Try to make a compatible pair of :py:class:`~.ModuleElement`, one
         equivalent to this one, and one equivalent to the other.
@@ -1338,7 +1338,7 @@ class ModuleElement(IntegerPowerable):
         if self == other:
             return True
         elif isinstance(other, ModuleElement):
-            a, b = self.make_compat(other)
+            a, b = self.unify(other)
             if a is None:
                 return False
             return a == b
@@ -1372,7 +1372,7 @@ class ModuleElement(IntegerPowerable):
             col = to_col([u * a + v * b for a, b in zip(self.coeffs, other.coeffs)])
             return type(self)(self.module, col, denom=m).reduced()
         elif isinstance(other, ModuleElement):
-            a, b = self.make_compat(other)
+            a, b = self.unify(other)
             if a is None:
                 return NotImplemented
             return a + b
@@ -1426,7 +1426,7 @@ class ModuleElement(IntegerPowerable):
             d = self.denom * other.denom
             return self.from_int_list(self.module, C, denom=d)
         elif isinstance(other, ModuleElement):
-            a, b = self.make_compat(other)
+            a, b = self.unify(other)
             if a is None:
                 return NotImplemented
             return a * b
