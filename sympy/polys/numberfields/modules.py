@@ -288,7 +288,7 @@ class Module:
         return None
 
     def represent(self, elt):
-        """
+        r"""
         Represent a module element as an integer-linear combination over the
         generators of this module.
 
@@ -306,7 +306,7 @@ class Module:
         :py:class:`~.ModuleElement` in a :py:class:`~.Submodule`. For example,
         this is involved in computing multiplication tables.
 
-        On the other hand, representing in a :py:class:`~.PowerBasis`, is an
+        On the other hand, representing in a :py:class:`~.PowerBasis` is an
         odd case, and one which tends not to arise in practice, except for
         example when using a :py:class:`~.ModuleEndomorphism` on a
         :py:class:`~.PowerBasis`.
@@ -328,7 +328,7 @@ class Module:
         >>> A = PowerBasis(T)
         >>> a = A(to_col([2, 4, 6, 8]))
 
-        The :py:class:`~.ModuleElement` `a` has all even coefficients.
+        The :py:class:`~.ModuleElement` ``a`` has all even coefficients.
         If we represent ``a`` in the submodule ``B = 2*A``, the coefficients in
         the column vector will be halved:
 
@@ -1758,7 +1758,7 @@ class EndomorphismRing:
         Examples
         ========
 
-        Note that in this example we print matrix transposes, to make their
+        Note that in these examples we print matrix transposes, to make their
         columns easier to inspect.
 
         >>> from sympy import Poly, cyclotomic_poly

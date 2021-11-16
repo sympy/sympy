@@ -1,8 +1,8 @@
 r"""
-Functions in this module solve the "Subfield Problem" and allied problems, for
-algebraic number fields.
+Functions in ``polys.numberfields.subfield`` solve the "Subfield Problem" and
+allied problems, for algebraic number fields.
 
-Following Cohen (see [Cohen93] Section 4.5), we can define the main problem as
+Following Cohen (see [Cohen93]_ Section 4.5), we can define the main problem as
 follows:
 
 * **Subfield Problem:**
