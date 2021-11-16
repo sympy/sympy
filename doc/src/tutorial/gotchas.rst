@@ -142,38 +142,6 @@ discussed in more detail later.
 
 .. _tutorial_gotchas_equals:
 
-is_commutative == False:
-========================
-
-Passing commutative = False as argument in some operations, may lead to unexpected answers.
-For ex:
-	>>> x,y = symbols("x y")
-	>>> a,b = symbols("a b",commutative = True)
-	>>> c,d = symbols('c d',commutative = False)
-	>>> pprint((x**(a+b)).expand())
-	    a  b
-	   x ⋅x 
-	>>> pprint((x**(c+d)).expand())  
-	  c + d
-	 x
-	
-you are expanding c+d not (x**(c+d)).
-
-Similar behaviour can be seen when non commutative symbols are used with powsimp
-	>>>pprint(powsimp(x**a*x**b))
-	  a + b
-	 x
-	>>>pprint(powsimp(x**c*x**d))
-	  c  d
-	 x ⋅x
-In some cases it might be impossible to determine the behaviour of a function if non commutative symbols are taken.
-
-
-See also:
-	There's a function defined by sympy "is_commutative" to define if an expression is commutative or not.
-	https://github.com/sympy/sympy/blob/master/sympy/functions/elementary/piecewise.py
-
-
 
 
 Equals signs
