@@ -2,10 +2,11 @@ from typing import Type
 
 from sympy.core.add import Add
 from sympy.core.assumptions import StdFactKB
-from sympy.core.expr import AtomicExpr, Expr
+from sympy.core.expr import Expr, Basic
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
+from sympy.core.symbol import Str
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
@@ -345,7 +346,7 @@ class Vector(BasisDependent):
             raise TypeError("Invalid division involving a vector")
 
 
-class BaseVector(Vector, AtomicExpr):
+class BaseVector(Vector):
     """
     Class to denote a base vector.
 
@@ -358,8 +359,10 @@ class BaseVector(Vector, AtomicExpr):
             pretty_str = "x{}".format(index)
         if latex_str is None:
             latex_str = "x_{}".format(index)
-        pretty_str = str(pretty_str)
-        latex_str = str(latex_str)
+        if not isinstance(pretty_str, Basic):
+            pretty_str = Str(pretty_str)
+        if not isinstance(latex_str, Basic):
+            latex_str = Str(latex_str)
         # Verify arguments
         if index not in range(0, 3):
             raise ValueError("index must be 0, 1 or 2")
@@ -367,14 +370,14 @@ class BaseVector(Vector, AtomicExpr):
             raise TypeError("system should be a CoordSys3D")
         name = system._vector_names[index]
         # Initialize an object
-        obj = super().__new__(cls, S(index), system)
+        obj = super().__new__(cls, S(index), system, pretty_str, latex_str)
         # Assign important attributes
         obj._base_instance = obj
         obj._components = {obj: S.One}
         obj._measure_number = S.One
         obj._name = system._name + '.' + name
-        obj._pretty_form = '' + pretty_str
-        obj._latex_form = latex_str
+        obj._pretty_form = '' + pretty_str.name
+        obj._latex_form = latex_str.name
         obj._system = system
         # The _id is used for printing purposes
         obj._id = (index, system)
@@ -395,13 +398,11 @@ class BaseVector(Vector, AtomicExpr):
     def _sympystr(self, printer):
         return self._name
 
+    _sympyrepr = _sympystr
+
     @property
     def free_symbols(self):
         return {self}
-
-    def func(self, *args):
-        return self.__new__(self.__class__, *args, pretty_str =
-                self._pretty_form[1:], latex_str = self._latex_form[2:])
 
 
 class VectorAdd(BasisDependentAdd, Vector):
@@ -474,9 +475,9 @@ class Cross(Vector):
     >>> v1 = R.i + R.j + R.k
     >>> v2 = R.x * R.i + R.y * R.j + R.z * R.k
     >>> Cross(v1, v2)
-    Cross(R.i + R.j + R.k, R.x*R.i + R.y*R.j + R.z*R.k)
+    -Cross(R.x*R.i + R.y*R.j + R.z*R.k, R.i + R.j + R.k)
     >>> Cross(v1, v2).doit()
-    (-R.y + R.z)*R.i + (R.x - R.z)*R.j + (-R.x + R.y)*R.k
+    (-R.x + R.y)*R.k + (R.x - R.z)*R.j + (-R.y + R.z)*R.i
 
     """
 
@@ -508,7 +509,7 @@ class Dot(Expr):
     >>> v1 = R.i + R.j + R.k
     >>> v2 = a * R.i + b * R.j + c * R.k
     >>> Dot(v1, v2)
-    Dot(R.i + R.j + R.k, a*R.i + b*R.j + c*R.k)
+    Dot(a*R.i + b*R.j + c*R.k, R.i + R.j + R.k)
     >>> Dot(v1, v2).doit()
     a + b + c
 
