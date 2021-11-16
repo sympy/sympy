@@ -1,6 +1,5 @@
 """Prime ideals in number fields. """
 
-from sympy.core.symbol import symbols
 from sympy.core.expr import Expr
 from sympy.polys.polytools import Poly
 from sympy.polys.domains.finitefield import FF
