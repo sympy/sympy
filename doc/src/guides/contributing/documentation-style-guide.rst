@@ -1,4 +1,3 @@
-
 General Guidelines
 --------------------
 
@@ -171,6 +170,19 @@ collective documents, tutorials, and guides that teach users how to use SymPy.
 Reference documentation should go in the docstrings and be pulled into the RST
 with autodoc. The RST itself should only have narrative style documentation
 that is not a reference for a single specific function.
+
+Documentation using Markdown
+----------------------------
+
+Narrative documentation can be written using either Restructured Text
+(``.rst``) or Markdown (``.md``). Markdown documentation uses `MyST
+<https://myst-parser.readthedocs.io/en/latest/index.html>`_. See `this guide
+<https://myst-parser.readthedocs.io/en/latest/syntax/syntax.html>`_ for more
+information on how to write documents in MArkdown. Markdown is only supported
+for narrative documentation. Docstrings should continue to use RST syntax. Any
+part of this style guide that is not specific to RST syntax should still apply
+to Markdown documents.
+
 
 .. _style_guide_best_practices_for_writing_documentation:
 
