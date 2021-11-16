@@ -7,13 +7,13 @@ from sympy.core.sympify import SympifyError
 def test_parse_expr():
     a, b = symbols('a, b')
     # tests issue_16393
-    parse_expr('a + b', {}) == a + b
+    assert parse_expr('a + b', {}) == a + b
     raises(SympifyError, lambda: parse_expr('a + ', {}))
 
     # tests Transform.visit_Num
-    parse_expr('1 + 2', {}) == S(3)
-    parse_expr('1 + 2.0', {}) == S(3.0)
+    assert parse_expr('1 + 2', {}) == S(3)
+    assert parse_expr('1 + 2.0', {}) == S(3.0)
 
     # tests Transform.visit_Name
-    parse_expr('Rational(1, 2)', {}) == S(1)/2
-    parse_expr('a', {'a': a}) == a
+    assert parse_expr('Rational(1, 2)', {}) == S(1)/2
+    assert parse_expr('a', {'a': a}) == a

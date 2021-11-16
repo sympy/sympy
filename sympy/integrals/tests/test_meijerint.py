@@ -152,7 +152,7 @@ def test_meijerint():
         b**(a + 1)/(a + 1)
 
     # This tests various conditions and expansions:
-    meijerint_definite((x + 1)**3*exp(-x), x, 0, oo) == (16, True)
+    assert meijerint_definite((x + 1)**3*exp(-x), x, 0, oo) == (16, True)
 
     # Again, how about simplifications?
     sigma, mu = symbols('sigma mu', positive=True)

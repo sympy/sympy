@@ -892,7 +892,7 @@ def test_as_independent():
     eq = Add(x, -x, 2, -3, evaluate=False)
     assert eq.as_independent(x) == (-1, Add(x, -x, evaluate=False))
     eq = Mul(x, 1/x, 2, -3, evaluate=False)
-    eq.as_independent(x) == (-6, Mul(x, 1/x, evaluate=False))
+    assert eq.as_independent(x) == (-6, Mul(x, 1/x, evaluate=False))
 
     assert (x*y).as_independent(z, as_Add=True) == (x*y, 0)
 

@@ -604,7 +604,7 @@ def test_issue_8433():
 def test_issue_8481():
     k = Symbol('k', integer=True, nonnegative=True)
     lamda = Symbol('lamda', real=True, positive=True)
-    limit(lamda**k * exp(-lamda) / factorial(k), k, oo) == 0
+    assert limit(lamda**k * exp(-lamda) / factorial(k), k, oo) == 0
 
 
 def test_issue_8635_18176():

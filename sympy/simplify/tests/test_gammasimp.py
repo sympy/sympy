@@ -67,8 +67,8 @@ def test_gammasimp():
     assert gammasimp(e**2/gamma(k + 1)) == k/gamma(k)
     a = R(1, 2) + R(1, 3)
     b = a + R(1, 3)
-    assert gammasimp(gamma(2*k)/gamma(k)*gamma(k + a)*gamma(k + b))
-    3*2**(2*k + 1)*3**(-3*k - 2)*sqrt(pi)*gamma(3*k + R(3, 2))/2
+    assert gammasimp(gamma(2*k)/gamma(k)*gamma(k + a)*gamma(k + b)
+        ) == 3*2**(2*k + 1)*3**(-3*k - 2)*sqrt(pi)*gamma(3*k + R(3, 2))/2
 
     # issue 9699
     assert gammasimp((x + 1)*factorial(x)/gamma(y)) == gamma(x + 2)/gamma(y)
