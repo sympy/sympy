@@ -852,11 +852,11 @@ def probability(condition, given_condition=None, numsamples=None,
 class Density(Basic):
     expr = property(lambda self: self.args[0])
 
-    def __new__(self, expr, condition = None):
+    def __new__(cls, expr, condition = None):
         if condition is None:
-            obj = Basic.__new__(expr)
+            obj = Basic.__new__(cls, expr)
         else:
-            obj = Basic.__new__(expr, condition)
+            obj = Basic.__new__(cls, expr, condition)
         return obj
 
     @property
