@@ -69,8 +69,8 @@ for x in v:
     d.append(x | N.k)  # type: ignore
 s = 3*N.x**2*C.y  # type: ignore
 upretty_s = """\
-         2\n\
-3⋅y_C⋅x_N \
+     2    \n\
+3⋅x_N ⋅y_C\
 """
 pretty_s = """\
          2\n\
@@ -79,8 +79,8 @@ pretty_s = """\
 
 # This is the pretty form for ((a**2 + b)*N.i + 3*(C.y - c)*N.k) | N.k
 upretty_d_7 = """\
-⎛ 2    ⎞                                     \n\
-⎝a  + b⎠ (i_N|k_N)  + (3⋅y_C - 3⋅c) (k_N|k_N)\
+⎛ 2    ⎞                                      \n\
+⎝a  + b⎠ (i_N|k_N)  + (-3⋅c + 3⋅y_C) (k_N|k_N)\
 """
 pretty_d_7 = """\
 / 2    \\ (i_N|k_N) + (3*y_C - 3*c) (k_N|k_N)\n\
@@ -95,7 +95,7 @@ def test_str_printing():
     assert str(v[3]) == 'N.i + N.j'
     assert str(v[8]) == 'N.j + (C.x**2 - Integral(f(b), b))*N.k'
     assert str(v[9]) == 'C.k + N.i'
-    assert str(s) == '3*C.y*N.x**2'
+    assert str(s) == '3*N.x**2*C.y'
     assert str(d[0]) == '0'
     assert str(d[1]) == '(N.i|N.k)'
     assert str(d[4]) == 'a*(N.i|N.k)'
@@ -141,12 +141,12 @@ def test_latex_printing():
     assert latex(v[2]) == '- \\mathbf{\\hat{i}_{N}}'
     assert latex(v[5]) == ('(a)\\mathbf{\\hat{i}_{N}} + ' +
                            '(- b)\\mathbf{\\hat{j}_{N}}')
-    assert latex(v[6]) == ('(\\mathbf{{x}_{N}} + a^{2})\\mathbf{\\hat{i}_' +
+    assert latex(v[6]) == ('(a^{2} + \\mathbf{{x}_{N}})\\mathbf{\\hat{i}_' +
                           '{N}} + \\mathbf{\\hat{k}_{N}}')
     assert latex(v[8]) == ('\\mathbf{\\hat{j}_{N}} + (\\mathbf{{x}_' +
                            '{C}}^{2} - \\int f{\\left(b \\right)}\\,' +
                            ' db)\\mathbf{\\hat{k}_{N}}')
-    assert latex(s) == '3 \\mathbf{{y}_{C}} \\mathbf{{x}_{N}}^{2}'
+    assert latex(s) == '3 \\mathbf{{x}_{N}}^{2} \\mathbf{{y}_{C}}'
     assert latex(d[0]) == '(\\mathbf{\\hat{0}}|\\mathbf{\\hat{0}})'
     assert latex(d[4]) == ('(a)(\\mathbf{\\hat{i}_{N}}{|}\\mathbf' +
                            '{\\hat{k}_{N}})')

@@ -80,10 +80,10 @@ def test_coordinate_vars():
     """
     A = CoordSys3D('A')
     # Note that the name given on the lhs is different from A.x._name
-    assert BaseScalar(0, A, 'A_x', r'\mathbf{{x}_{A}}') == A.x
-    assert BaseScalar(1, A, 'A_y', r'\mathbf{{y}_{A}}') == A.y
-    assert BaseScalar(2, A, 'A_z', r'\mathbf{{z}_{A}}') == A.z
-    assert BaseScalar(0, A, 'A_x', r'\mathbf{{x}_{A}}').__hash__() == A.x.__hash__()
+    assert BaseScalar(0, A, 'x_A', r'\mathbf{{x}_{A}}') == A.x
+    assert BaseScalar(1, A, 'y_A', r'\mathbf{{y}_{A}}') == A.y
+    assert BaseScalar(2, A, 'z_A', r'\mathbf{{z}_{A}}') == A.z
+    assert BaseScalar(0, A, 'x_A', r'\mathbf{{x}_{A}}').__hash__() == A.x.__hash__()
     assert isinstance(A.x, BaseScalar) and \
            isinstance(A.y, BaseScalar) and \
            isinstance(A.z, BaseScalar)

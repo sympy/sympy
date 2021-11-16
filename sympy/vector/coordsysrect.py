@@ -595,7 +595,7 @@ class CoordSys3D(Basic):
         >>> q = Symbol('q')
         >>> B = A.orient_new_axis('B', q, A.k)
         >>> A.scalar_map(B)
-        {A.x: B.x*cos(q) - B.y*sin(q), A.y: B.x*sin(q) + B.y*cos(q), A.z: B.z}
+        {A.x: -sin(q)*B.y + cos(q)*B.x, A.y: sin(q)*B.x + cos(q)*B.y, A.z: B.z}
 
         """
 
@@ -1014,7 +1014,7 @@ class CoordSys3D(Basic):
         >>> a = CoordSys3D('a')
         >>> b = a.create_new('b', transformation='spherical')
         >>> b.transformation_to_parent()
-        (b.r*sin(b.theta)*cos(b.phi), b.r*sin(b.phi)*sin(b.theta), b.r*cos(b.theta))
+        (sin(b.theta)*cos(b.phi)*b.r, sin(b.theta)*sin(b.phi)*b.r, cos(b.theta)*b.r)
         >>> b.transformation_from_parent()
         (sqrt(a.x**2 + a.y**2 + a.z**2), acos(a.z/sqrt(a.x**2 + a.y**2 + a.z**2)), atan2(a.y, a.x))
 

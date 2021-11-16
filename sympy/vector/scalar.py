@@ -1,5 +1,6 @@
-from sympy.core import Expr, S
+from sympy.core import S
 from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.printing.pretty.stringpict import prettyForm
@@ -71,3 +72,4 @@ class BaseScalar(Expr):
 
     def _sympystr(self, printer):
         return self._name
+    _sympyrepr = _sympystr

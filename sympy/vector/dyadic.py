@@ -3,7 +3,6 @@ from typing import Type
 from sympy.vector.basisdependent import (BasisDependent, BasisDependentAdd,
                                          BasisDependentMul, BasisDependentZero)
 from sympy.core import S, Pow
-from sympy.core.expr import AtomicExpr
 from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 import sympy.vector
 
@@ -191,7 +190,7 @@ class Dyadic(BasisDependent):
             raise TypeError("Cannot divide by a dyadic")
 
 
-class BaseDyadic(Dyadic, AtomicExpr):
+class BaseDyadic(Dyadic):
     """
     Class to denote a base dyadic tensor component.
     """
@@ -224,14 +223,7 @@ class BaseDyadic(Dyadic, AtomicExpr):
     def _sympystr(self, printer):
         return "({}|{})".format(
             printer._print(self.args[0]), printer._print(self.args[1]))
-
-    #this should not be needed, but this class is indicated as an atom
-    #eventhough, it has `Basic` args, this makes the argument invariance
-    #behave as if it is an atom. It might be better to redesign this class
-    #since it uses conflicting designs.
-    @property
-    def func(self):
-        return lambda *args, **kwargs: self
+    _sympyrepr = _sympystr
 
 class DyadicMul(BasisDependentMul, Dyadic):
     """ Products of scalars and BaseDyadics """
