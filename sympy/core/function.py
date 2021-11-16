@@ -2839,17 +2839,12 @@ def _mexpand(expr, recursive=False):
 def mexpand(e, _recursive=False):
     """efficiently expand the numerator of an expression"""
     from sympy.simplify.cse_main import cse
-    for i in range(2):
-        r, e = cse(e, list=False)
-        for r in reversed(r):
-            e = _mexpand(e, recursive=_recursive).xreplace(dict([r]))
-        e, d = e.as_numer_denom()
-        if not i:
-            den = d
-        if not r:
-            e = _mexpand(e, recursive=_recursive)
-            break
-    return e/den
+    r, e = cse(e, list=False)
+    for r in reversed(r):
+        e = _mexpand(e, recursive=_recursive).xreplace(dict([r]))
+    e, d = e.as_numer_denom()
+    e = _mexpand(e, recursive=_recursive)
+    return e/d
 
 
 # These are simple wrappers around single hints.

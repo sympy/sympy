@@ -300,11 +300,11 @@ def checksol(f, symbol, sol=None, **flags):
                 return False
         elif attempt == 1:
             if not val.is_number:
+                # there are free symbols -- simple expansion might work
+                val = numer(mexpand(val, _recursive=True))
+                _, val = val.as_content_primitive()
                 if not val.is_constant(*list(sol.keys()), simplify=not minimal):
                     return False
-                # there are free symbols -- simple expansion might work
-                val = numer(mexpand(val))
-                _, val = val.as_content_primitive()
         elif attempt == 2:
             if minimal:
                 return
