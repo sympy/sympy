@@ -18,7 +18,7 @@ from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_log, Derivative,
                                  AppliedUndef, UndefinedFunction, nfloat,
                                  Function, expand_power_exp, _mexpand, expand,
-                                 expand_func)
+                                 expand_func, mexpand)
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import ilcm, Float, Rational
 from sympy.core.power import integer_log, Pow
@@ -38,6 +38,7 @@ from sympy.ntheory.factor_ import divisors
 from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
     powdenest, nsimplify, denom, logcombine, sqrtdenest, fraction,
     separatevars)
+from sympy.simplify.radsimp import numer
 from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1, TR2i
 from sympy.matrices.common import NonInvertibleMatrixError
@@ -235,8 +236,6 @@ def checksol(f, symbol, sol=None, **flags):
            make positive all symbols without assumptions regarding sign.
 
     """
-    from sympy.simplify.radsimp import numer
-    from sympy.core.function import mexpand
     from sympy.physics.units import Unit
 
     minimal = flags.get('minimal', False)
@@ -303,6 +302,8 @@ def checksol(f, symbol, sol=None, **flags):
                 # there are free symbols -- simple expansion might work
                 val = numer(mexpand(val, _recursive=True))
                 _, val = val.as_content_primitive()
+                # if there are many ops, the numerical tests can be
+                # slower than the expansion to 0 with mexpand
                 if not val.is_constant(*list(sol.keys()), simplify=not minimal):
                     return False
         elif attempt == 2:

@@ -2116,22 +2116,22 @@ def test_issue_12114():
                   c: -sqrt(-f**2 - 1), d: f, e: f, g: -1},
                  {a: sqrt(-f**2 - 1), b: sqrt(-f**2 - 1),
                   c: sqrt(-f**2 - 1), d: f, e: f, g: -1},
-                 {a: -sqrt(3)*f/2 - sqrt(-f**2 + 2)/2,
-                  b: sqrt(3)*f/2 - sqrt(-f**2 + 2)/2, c: sqrt(-f**2 + 2),
-                  d: -f/2 + sqrt(-3*f**2 + 6)/2,
-                  e: -f/2 - sqrt(3)*sqrt(-f**2 + 2)/2, g: 2},
-                 {a: -sqrt(3)*f/2 + sqrt(-f**2 + 2)/2,
-                  b: sqrt(3)*f/2 + sqrt(-f**2 + 2)/2, c: -sqrt(-f**2 + 2),
-                  d: -f/2 - sqrt(-3*f**2 + 6)/2,
-                  e: -f/2 + sqrt(3)*sqrt(-f**2 + 2)/2, g: 2},
-                 {a: sqrt(3)*f/2 - sqrt(-f**2 + 2)/2,
-                  b: -sqrt(3)*f/2 - sqrt(-f**2 + 2)/2, c: sqrt(-f**2 + 2),
-                  d: -f/2 - sqrt(-3*f**2 + 6)/2,
-                  e: -f/2 + sqrt(3)*sqrt(-f**2 + 2)/2, g: 2},
-                 {a: sqrt(3)*f/2 + sqrt(-f**2 + 2)/2,
-                  b: -sqrt(3)*f/2 + sqrt(-f**2 + 2)/2, c: -sqrt(-f**2 + 2),
-                  d: -f/2 + sqrt(-3*f**2 + 6)/2,
-                  e: -f/2 - sqrt(3)*sqrt(-f**2 + 2)/2, g: 2}]
+                 {a: -sqrt(3)*f/2 - sqrt(2 - f**2)/2,
+                  b: sqrt(3)*f/2 - sqrt(2 - f**2)/2, c: sqrt(2 - f**2),
+                  d: -f/2 + sqrt(6 - 3*f**2)/2,
+                  e: -f/2 - sqrt(6 - 3*f**2)/2, g: 2},
+                 {a: -sqrt(3)*f/2 + sqrt(2 - f**2)/2,
+                  b: sqrt(3)*f/2 + sqrt(2 - f**2)/2, c: -sqrt(2 - f**2),
+                  d: -f/2 - sqrt(6 - 3*f**2)/2,
+                  e: -f/2 + sqrt(6 - 3*f**2)/2, g: 2},
+                 {a: sqrt(3)*f/2 - sqrt(2 - f**2)/2,
+                  b: -sqrt(3)*f/2 - sqrt(2 - f**2)/2, c: sqrt(2 - f**2),
+                  d: -f/2 - sqrt(6 - 3*f**2)/2,
+                  e: -f/2 + sqrt(6 - 3*f**2)/2, g: 2},
+                 {a: sqrt(3)*f/2 + sqrt(2 - f**2)/2,
+                  b: -sqrt(3)*f/2 + sqrt(2 - f**2)/2, c: -sqrt(2 - f**2),
+                  d: -f/2 + sqrt(6 - 3*f**2)/2,
+                  e: -f/2 - sqrt(6 - 3*f**2)/2, g: 2}]
 
 
 def test_inf():
@@ -2437,8 +2437,23 @@ def test_solver_flags():
 
 @slow
 def test_issue_8516():
-    eqs, v = [x +y + z - a, x*y + y*z + x*z - b, x*y*z - c], [x, y, z]
-    sol = solve(eqs, v, manual=True, simplify=False)
-    assert len(sol) == 6
-    assert not any(mexpand(e.xreplace(dict(zip(v, s))), _recursive=True)
-        for s in sol for e in eqs)
+    eqs, v = [x + y + z - a, x*y + y*z + x*z - b, x*y*z - c], [x, y, z]
+    sol = solve(eqs, v, manual=True, simplify=False, check=False)
+    # the checker, if used, removes 2 of 8 solutions
+    #
+    # x,y,z = permutations of 1,2,3 when a,b,c = 6,11,6
+    # but it takes about 3X longer to show this by substitution
+    # and evaluation with these roots than it does to simply
+    # demonstrate that the solutions satisfy the original equation
+    # for 6 of the roots. So not this:
+    # reps = {a:6, b: 11, c: 6}
+    # for s in sol:
+    #     print([i.xreplace(reps).n(2) for i in s])
+    # but this:
+    nroots = 0
+    for s in sol:
+        reps = dict(zip((x, y, z), s))
+        if [mexpand(e.xreplace(reps), _recursive=True)
+                for e in eqs].count(0) == 3:
+            nroots += 1
+    assert nroots == 6
