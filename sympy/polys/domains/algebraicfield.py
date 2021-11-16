@@ -211,8 +211,8 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     >>> K
     QQ<exp(2*I*pi/7)>
     >>> K.primes_above(11)
-    [[ (11, x**3 + 5*x**2 + 4*x - 1) e=1, f=3 ],
-     [ (11, x**3 - 4*x**2 - 5*x - 1) e=1, f=3 ]]
+    [[ (11, _x**3 + 5*_x**2 + 4*_x - 1) e=1, f=3 ],
+     [ (11, _x**3 - 4*_x**2 - 5*_x - 1) e=1, f=3 ]]
 
     Notes
     =====
