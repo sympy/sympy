@@ -45,7 +45,7 @@ from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDomain
 from sympy.stats.compound_rv import CompoundPSpace
 from sympy.stats.symbolic_probability import Probability
 from sympy.testing.pytest import raises, XFAIL, slow, ignore_warnings
-from sympy.testing.randtest import verify_numerically as tn
+from sympy.core.random import verify_numerically as tn
 
 oo = S.Infinity
 
@@ -93,7 +93,7 @@ def test_ContinuousDomain():
     X = Normal('x', 0, 1)
     assert where(X**2 <= 1).set == Interval(-1, 1)
     assert where(X**2 <= 1).symbol == X.symbol
-    where(And(X**2 <= 1, X >= 0)).set == Interval(0, 1)
+    assert where(And(X**2 <= 1, X >= 0)).set == Interval(0, 1)
     raises(ValueError, lambda: where(sin(X) > 1))
 
     Y = given(X, X >= 0)

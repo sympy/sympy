@@ -4,12 +4,12 @@ from typing import Tuple as tTuple, Union as tUnion, FrozenSet, Dict as tDict, L
 from functools import singledispatch
 from itertools import accumulate
 
-from sympy import MatMul, Basic
+from sympy import MatMul, Basic, Wild
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.matrices.expressions.diagonal import DiagMatrix
-from sympy.matrices.expressions.hadamard import hadamard_product
+from sympy.matrices.expressions.hadamard import hadamard_product, HadamardPower
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import (Identity, ZeroMatrix, OneMatrix)
 from sympy.matrices.expressions.trace import Trace
@@ -21,7 +21,7 @@ from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayDiagonal, \
     ArrayTensorProduct, OneArray, get_rank, _get_subrank, ZeroArray, ArrayContraction, \
     ArrayAdd, _CodegenArrayAbstract, get_shape, ArrayElementwiseApplyFunc, _ArrayExpr, _EditArrayContraction, _ArgE, \
-    ArrayElement
+    ArrayElement, _array_tensor_product, _array_contraction, _array_diagonal, _array_add, _permute_dims
 from sympy.tensor.array.expressions.utils import _get_mapping_from_subranks
 
 
@@ -76,7 +76,7 @@ def _support_function_tp1_recognize(contraction_indices, args):
     if len(contraction_indices) == 0:
         return _a2m_tensor_product(*args)
 
-    ac = ArrayContraction(ArrayTensorProduct(*args), *contraction_indices)
+    ac = _array_contraction(_array_tensor_product(*args), *contraction_indices)
     editor = _EditArrayContraction(ac)
     editor.track_permutation_start()
 
@@ -136,7 +136,7 @@ def _find_trivial_matrices_rewrite(expr: ArrayTensorProduct):
     # expression can be inserted.
 
     # For example, if "a" has shape (1, 1) and "b" has shape (k, 1), the
-    # expressions "ArrayTensorProduct(a, b*b.T)" can be rewritten as
+    # expressions "_array_tensor_product(a, b*b.T)" can be rewritten as
     # "b*a*b.T"
 
     trivial_matrices = []
@@ -164,7 +164,7 @@ def _find_trivial_matrices_rewrite(expr: ArrayTensorProduct):
     if pos is None:
         return expr, []
     args[pos] = (first*MatMul.fromiter(i for i in trivial_matrices)*second).doit()
-    return ArrayTensorProduct(*[i for i in args if i is not None]), removed
+    return _array_tensor_product(*[i for i in args if i is not None]), removed
 
 
 @singledispatch
@@ -205,12 +205,12 @@ def _(expr: ArrayContraction):
         if isinstance(subexpr, MatrixExpr):
             return OneMatrix(1, shape[0])*subexpr*OneMatrix(shape[1], 1)
     if isinstance(subexpr, ArrayTensorProduct):
-        newexpr = ArrayContraction(_array2matrix(subexpr), *contraction_indices)
+        newexpr = _array_contraction(_array2matrix(subexpr), *contraction_indices)
         contraction_indices = newexpr.contraction_indices
         if any(i > 2 for i in newexpr.subranks):
-            addends = ArrayAdd(*[_a2m_tensor_product(*j) for j in itertools.product(*[i.args if isinstance(i,
+            addends = _array_add(*[_a2m_tensor_product(*j) for j in itertools.product(*[i.args if isinstance(i,
                                                                                                                              ArrayAdd) else [i] for i in expr.expr.args])])
-            newexpr = ArrayContraction(addends, *contraction_indices)
+            newexpr = _array_contraction(addends, *contraction_indices)
         if isinstance(newexpr, ArrayAdd):
             ret = _array2matrix(newexpr)
             return ret
@@ -223,12 +223,12 @@ def _(expr: ArrayContraction):
             assert expr.contraction_indices == ((0, 1),)
             return _a2m_trace(ret)
         else:
-            return ArrayContraction(ret, *expr.contraction_indices)
+            return _array_contraction(ret, *expr.contraction_indices)
 
 
 @_array2matrix.register(ArrayDiagonal) # type: ignore
 def _(expr: ArrayDiagonal):
-    pexpr = ArrayDiagonal(_array2matrix(expr.expr), *expr.diagonal_indices)
+    pexpr = _array_diagonal(_array2matrix(expr.expr), *expr.diagonal_indices)
     pexpr = identify_hadamard_products(pexpr)
     if isinstance(pexpr, ArrayDiagonal):
         pexpr = _array_diag2contr_diagmatrix(pexpr)
@@ -265,7 +265,7 @@ def _(expr: PermuteDims):
             else:
                 raise NotImplementedError()
         newargs = [i[0] for i in newargs]
-        return PermuteDims(_a2m_tensor_product(*scalars, *newargs), _af_invert(newperm))
+        return _permute_dims(_a2m_tensor_product(*scalars, *newargs), _af_invert(newperm))
     elif isinstance(expr.expr, ArrayContraction):
         mat_mul_lines = _array2matrix(expr.expr)
         if not isinstance(mat_mul_lines, ArrayTensorProduct):
@@ -282,7 +282,7 @@ def _(expr: PermuteDims):
             p1 = permuted[2*i]
             p2 = permuted[2*i+1]
             if p1 // 2 != p2 // 2:
-                return PermuteDims(mat_mul_lines, permutation)
+                return _permute_dims(mat_mul_lines, permutation)
             pos = p1 // 2
             if p1 > p2:
                 args_array[i] = _a2m_transpose(mat_mul_lines.args[pos])
@@ -303,6 +303,13 @@ def _(expr: ArrayAdd):
 def _(expr: ArrayElementwiseApplyFunc):
     subexpr = _array2matrix(expr.expr)
     if isinstance(subexpr, MatrixExpr):
+        if subexpr.shape != (1, 1):
+            d = expr.function.bound_symbols[0]
+            w = Wild("w", exclude=[d])
+            p = Wild("p", exclude=[d])
+            m = expr.function.expr.match(w*d**p)
+            if m is not None:
+                return m[w]*HadamardPower(subexpr, m[p])
         return ElementwiseApplyFunction(expr.function, subexpr)
     else:
         return ArrayElementwiseApplyFunc(expr.function, subexpr)
@@ -343,24 +350,11 @@ def _(expr: ArrayTensorProduct):
             removed.extend(rem)
             newargs.append(rarg)
             continue
-        elif getattr(arg, "is_Identity", False):
+        elif getattr(arg, "is_Identity", False) and arg.shape == (1, 1):
             if arg.shape == (1, 1):
                 # Ignore identity matrices of shape (1, 1) - they are equivalent to scalar 1.
                 removed.extend(current_range)
-                continue
-            k = arg.shape[0]
-            if pending == k:
-                # OK, there is already
-                removed.extend(current_range)
-                continue
-            elif pending is None:
-                newargs.append(arg)
-                pending = k
-                prev_i = i
-            else:
-                pending = k
-                prev_i = i
-                newargs.append(arg)
+            continue
         elif arg.shape == (1, 1):
             arg, _ = _remove_trivial_dims(arg)
             # Matrix is equivalent to scalar:
@@ -382,11 +376,6 @@ def _(expr: ArrayTensorProduct):
                 newargs.append(arg)
             elif pending == k:
                 prev = newargs[-1]
-                if prev.is_Identity:
-                    removed.extend([cumul[prev_i], cumul[prev_i]+1])
-                    newargs[-1] = arg
-                    prev_i = i
-                    continue
                 if prev.shape[0] == 1:
                     d1 = cumul[prev_i]
                     prev = _a2m_transpose(prev)
@@ -432,7 +421,7 @@ def _(expr: PermuteDims):
     premoved = [pinv[i] for i in subremoved]
     p2 = [e - shift[e] for i, e in enumerate(p) if e not in subremoved]
     # TODO: check if subremoved should be permuted as well...
-    newexpr = PermuteDims(subexpr, p2)
+    newexpr = _permute_dims(subexpr, p2)
     premoved = sorted(premoved)
     if newexpr != expr:
         newexpr, removed2 = _remove_trivial_dims(_array2matrix(newexpr))
@@ -463,7 +452,35 @@ def _(expr: ArrayContraction):
     # Shift removed2:
     removed2 = ArrayContraction._push_indices_up(expr.contraction_indices, removed2)
     removed = _combine_removed(rank1, removed1, removed2)
-    return ArrayContraction(newexpr, *new_contraction_indices), list(removed)
+    return _array_contraction(newexpr, *new_contraction_indices), list(removed)
+
+
+def _remove_diagonalized_identity_matrices(expr: ArrayDiagonal):
+    assert isinstance(expr, ArrayDiagonal)
+    editor = _EditArrayContraction(expr)
+    mapping = {i: {j for j in editor.args_with_ind if i in j.indices} for i in range(-1, -1-editor.number_of_diagonal_indices, -1)}
+    removed = []
+    counter: int = 0
+    for i, arg_with_ind in enumerate(editor.args_with_ind):
+        counter += len(arg_with_ind.indices)
+        if isinstance(arg_with_ind.element, Identity):
+            if None in arg_with_ind.indices and any(i is not None and (i < 0) == True for i in arg_with_ind.indices):
+                diag_ind = [j for j in arg_with_ind.indices if j is not None][0]
+                other = [j for j in mapping[diag_ind] if j != arg_with_ind][0]
+                if not isinstance(other.element, MatrixExpr):
+                    continue
+                if 1 not in other.element.shape:
+                    continue
+                if None not in other.indices:
+                    continue
+                editor.args_with_ind[i].element = None
+                none_index = other.indices.index(None)
+                other.element = DiagMatrix(other.element)
+                other_range = editor.get_absolute_range(other)
+                removed.extend([other_range[0] + none_index])
+    editor.args_with_ind = [i for i in editor.args_with_ind if i.element is not None]
+    removed = ArrayDiagonal._push_indices_up(expr.diagonal_indices, removed, get_rank(expr.expr))
+    return editor.to_array_contraction(), removed
 
 
 @_remove_trivial_dims.register(ArrayDiagonal) # type: ignore
@@ -480,8 +497,17 @@ def _(expr: ArrayDiagonal):
     removed = sorted({i for i in removed})
     # If there are single axes to diagonalize remaining, it means that their
     # corresponding dimension has been removed, they no longer need diagonalization:
-    new_diag_indices = [i for i in new_diag_indices if len(i) > 1]
-    return ArrayDiagonal(newexpr, *new_diag_indices), removed
+    new_diag_indices = [i for i in new_diag_indices if len(i) > 0]
+    if len(new_diag_indices) > 0:
+        newexpr2 = _array_diagonal(newexpr, *new_diag_indices, allow_trivial_diags=True)
+    else:
+        newexpr2 = newexpr
+    if isinstance(newexpr2, ArrayDiagonal):
+        newexpr3, removed2 = _remove_diagonalized_identity_matrices(newexpr2)
+        removed = _combine_removed(-1, removed, removed2)
+        return newexpr3, removed
+    else:
+        return newexpr2, removed
 
 
 @_remove_trivial_dims.register(ElementwiseApplyFunction) # type: ignore
@@ -490,7 +516,7 @@ def _(expr: ElementwiseApplyFunction):
     if subexpr.shape == (1, 1):
         # TODO: move this to ElementwiseApplyFunction
         return expr.function(subexpr), removed + [0, 1]
-    return ElementwiseApplyFunction(expr.function, subexpr)
+    return ElementwiseApplyFunction(expr.function, subexpr), []
 
 
 @_remove_trivial_dims.register(ArrayElementwiseApplyFunc) # type: ignore
@@ -510,10 +536,9 @@ def convert_array_to_matrix(expr):
     ========
 
     >>> from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array
-    >>> from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
+    >>> from sympy.tensor.array import tensorcontraction, tensorproduct
     >>> from sympy import MatrixSymbol, Sum
     >>> from sympy.abc import i, j, k, l, N
-    >>> from sympy.tensor.array.expressions.array_expressions import ArrayContraction
     >>> from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
     >>> from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
     >>> A = MatrixSymbol("A", N, N)
@@ -571,7 +596,7 @@ def convert_array_to_matrix(expr):
     If more than one line of matrix multiplications is detected, return
     separate matrix multiplication factors embedded in a tensor product object:
 
-    >>> cg = ArrayContraction(ArrayTensorProduct(A, B, C, D), (1, 2), (5, 6))
+    >>> cg = tensorcontraction(tensorproduct(A, B, C, D), (1, 2), (5, 6))
     >>> convert_array_to_matrix(cg)
     ArrayTensorProduct(A*B, C*D)
 
@@ -630,10 +655,10 @@ def _array_diag2contr_diagmatrix(expr: ArrayDiagonal):
         diag_indices_new = [i for i in diag_indices if i is not None]
         cumul = list(accumulate([0] + [get_rank(arg) for arg in args]))
         contr_indices2 = [tuple(cumul[a] + b for a, b in i) for i in contr_indices]
-        tc = ArrayContraction(
-            ArrayTensorProduct(*args), *contr_indices2
+        tc = _array_contraction(
+            _array_tensor_product(*args), *contr_indices2
         )
-        td = ArrayDiagonal(tc, *diag_indices_new)
+        td = _array_diagonal(tc, *diag_indices_new)
         return td
     return expr
 
@@ -643,8 +668,8 @@ def _a2m_mul(*args):
         from sympy.matrices.expressions.matmul import MatMul
         return MatMul(*args).doit()
     else:
-        return ArrayContraction(
-            ArrayTensorProduct(*args),
+        return _array_contraction(
+            _array_tensor_product(*args),
             *[(2*i-1, 2*i) for i in range(1, len(args))]
         )
 
@@ -665,7 +690,7 @@ def _a2m_tensor_product(*args):
             arrays = [scalar] + arrays
         else:
             arrays[0] *= scalar
-    return ArrayTensorProduct(*arrays)
+    return _array_tensor_product(*arrays)
 
 
 def _a2m_add(*args):
@@ -673,12 +698,12 @@ def _a2m_add(*args):
         from sympy.matrices.expressions.matadd import MatAdd
         return MatAdd(*args).doit()
     else:
-        return ArrayAdd(*args)
+        return _array_add(*args)
 
 
 def _a2m_trace(arg):
     if isinstance(arg, _CodegenArrayAbstract):
-        return ArrayContraction(arg, (0, 1))
+        return _array_contraction(arg, (0, 1))
     else:
         from sympy.matrices.expressions.trace import Trace
         return Trace(arg)
@@ -686,7 +711,7 @@ def _a2m_trace(arg):
 
 def _a2m_transpose(arg):
     if isinstance(arg, _CodegenArrayAbstract):
-        return PermuteDims(arg, [1, 0])
+        return _permute_dims(arg, [1, 0])
     else:
         from sympy.matrices.expressions.transpose import Transpose
         return Transpose(arg).doit()
@@ -876,7 +901,7 @@ def remove_identity_matrices(expr: ArrayContraction):
             permutation.append(counter)
             counter += 1
             counter2 += 1
-    ret_expr2 = PermuteDims(ret_expr, _af_invert(permutation))
+    ret_expr2 = _permute_dims(ret_expr, _af_invert(permutation))
     return ret_expr2, removed
 
 

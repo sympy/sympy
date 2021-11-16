@@ -73,11 +73,11 @@ def test_centroid():
 
 
 def test_farthest_points_closest_points():
-    from random import randint
+    from sympy.core.random import randint
     from sympy.utilities.iterables import subsets
 
     for how in (min, max):
-        if how is min:
+        if how == min:
             func = closest_points
         else:
             func = farthest_points
@@ -100,10 +100,10 @@ def test_farthest_points_closest_points():
         x = Symbol('x', positive=True)
         s = [Point2D(a) for a in ((x, 1), (x + 3, 2), (x + 2, 2))]
 
-        for points in (p1, p2, p3, p4, p5, s, dup):
-            d = how(i.distance(j) for i, j in subsets(points, 2))
+        for points in (p1, p2, p3, p4, p5, dup, s):
+            d = how(i.distance(j) for i, j in subsets(set(points), 2))
             ans = a, b = list(func(*points))[0]
-            a.distance(b) == d
+            assert a.distance(b) == d
             assert ans == _ordered_points(ans)
 
         # if the following ever fails, the above tests were not sufficient
@@ -114,7 +114,7 @@ def test_farthest_points_closest_points():
         points = list(points)
         d = how(i.distance(j) for i, j in subsets(points, 2))
         ans = a, b = list(func(*points))[0]
-        a.distance(b) == d
+        assert a.distance(b) == d
         assert ans == _ordered_points(ans)
 
     # equidistant points

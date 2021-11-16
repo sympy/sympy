@@ -20,7 +20,7 @@ from sympy.integrals.integrals import (Integral, integrate)
 from sympy.series.limits import (Limit, limit)
 from sympy.simplify.simplify import simplify
 
-from sympy.calculus.util import AccumBounds
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
@@ -604,7 +604,7 @@ def test_issue_8433():
 def test_issue_8481():
     k = Symbol('k', integer=True, nonnegative=True)
     lamda = Symbol('lamda', real=True, positive=True)
-    limit(lamda**k * exp(-lamda) / factorial(k), k, oo) == 0
+    assert limit(lamda**k * exp(-lamda) / factorial(k), k, oo) == 0
 
 
 def test_issue_8635_18176():

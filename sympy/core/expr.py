@@ -491,13 +491,13 @@ class Expr(Basic, EvalfMixin):
         See Also
         ========
 
-        sympy.testing.randtest.random_complex_number
+        sympy.core.random.random_complex_number
         """
 
         free = self.free_symbols
         prec = 1
         if free:
-            from sympy.testing.randtest import random_complex_number
+            from sympy.core.random import random_complex_number
             a, c, b, d = re_min, re_max, im_min, im_max
             reps = dict(list(zip(free, [random_complex_number(a, b, c, d, rational=True)
                            for zi in free])))
@@ -930,7 +930,7 @@ class Expr(Basic, EvalfMixin):
         respectively.
 
         """
-        from sympy.calculus.util import AccumBounds
+        from sympy.calculus.accumulationbounds import AccumBounds
         from sympy.functions.elementary.exponential import log
         from sympy.series.limits import limit, Limit
         from sympy.sets.sets import Interval
@@ -1127,7 +1127,7 @@ class Expr(Basic, EvalfMixin):
         None
 
         """
-        from sympy.polys.polyerrors import PolynomialError
+        from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded
         from sympy.polys.polytools import Poly
 
         try:
@@ -1137,7 +1137,9 @@ class Expr(Basic, EvalfMixin):
                 return None
             else:
                 return poly
-        except PolynomialError:
+        except (PolynomialError, GeneratorsNeeded):
+            # PolynomialError is caught for e.g. exp(x).as_poly(x)
+            # GeneratorsNeeded is caught for e.g. S(2).as_poly()
             return None
 
     def as_ordered_terms(self, order=None, data=False):
@@ -3952,7 +3954,7 @@ class AtomicExpr(Atom, Expr):
         return True
 
     def _eval_is_meromorphic(self, x, a):
-        from sympy.calculus.util import AccumBounds
+        from sympy.calculus.accumulationbounds import AccumBounds
         return (not self.is_Number or self.is_finite) and not isinstance(self, AccumBounds)
 
     def _eval_is_algebraic_expr(self, syms):

@@ -4,7 +4,7 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import Identity
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayTensorProduct, \
-    PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, ArrayContraction
+    PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, ArrayContraction, _permute_dims
 from sympy.tensor.array.expressions.arrayexpr_derivatives import array_derive
 
 k = symbols("k")
@@ -28,7 +28,7 @@ def test_arrayexpr_derivatives1():
 
     cg = ArrayTensorProduct(A, X, B)
     res = array_derive(cg, X)
-    assert res == PermuteDims(
+    assert res == _permute_dims(
         ArrayTensorProduct(I, A, I, B),
         [0, 4, 2, 3, 1, 5, 6, 7])
 

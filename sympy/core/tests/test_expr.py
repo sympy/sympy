@@ -892,7 +892,7 @@ def test_as_independent():
     eq = Add(x, -x, 2, -3, evaluate=False)
     assert eq.as_independent(x) == (-1, Add(x, -x, evaluate=False))
     eq = Mul(x, 1/x, 2, -3, evaluate=False)
-    eq.as_independent(x) == (-6, Mul(x, 1/x, evaluate=False))
+    assert eq.as_independent(x) == (-6, Mul(x, 1/x, evaluate=False))
 
     assert (x*y).as_independent(z, as_Add=True) == (x*y, 0)
 
@@ -1171,6 +1171,10 @@ def test_as_poly_as_expr():
     p = Poly(f, x, y)
 
     assert p.as_poly() == p
+
+    # https://github.com/sympy/sympy/issues/20610
+    assert S(2).as_poly() is None
+    assert sqrt(2).as_poly(extension=True) is None
 
     raises(AttributeError, lambda: Tuple(x, x).as_poly(x))
     raises(AttributeError, lambda: Tuple(x ** 2, x, y).as_poly(x))

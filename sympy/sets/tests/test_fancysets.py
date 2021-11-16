@@ -1,9 +1,10 @@
 
 from sympy.core.expr import unchanged
+from sympy.sets.contains import Contains
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
 from sympy.sets.sets import (FiniteSet, Interval, Union, imageset,
-                             Intersection, ProductSet, Contains)
+                             Intersection, ProductSet)
 from sympy.sets.conditionset import ConditionSet
 from sympy.simplify.simplify import simplify
 from sympy.core.basic import Basic

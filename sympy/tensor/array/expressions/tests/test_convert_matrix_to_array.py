@@ -8,7 +8,7 @@ from sympy.matrices.expressions.special import Identity
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayContraction, \
-    PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc
+    PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, _array_contraction, _array_tensor_product
 from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 
@@ -42,14 +42,14 @@ def test_arrayexpr_convert_matrix_to_array():
     assert convert_matrix_to_array(expr) == result
 
     expr = M*N*M
-    result = ArrayContraction(ArrayTensorProduct(M, N, M), (1, 2), (3, 4))
+    result = _array_contraction(ArrayTensorProduct(M, N, M), (1, 2), (3, 4))
     assert convert_matrix_to_array(expr) == result
 
     expr = Transpose(M)
     assert convert_matrix_to_array(expr) == PermuteDims(M, [1, 0])
 
     expr = M*Transpose(N)
-    assert convert_matrix_to_array(expr) == ArrayContraction(ArrayTensorProduct(M, PermuteDims(N, [1, 0])), (1, 2))
+    assert convert_matrix_to_array(expr) == _array_contraction(_array_tensor_product(M, PermuteDims(N, [1, 0])), (1, 2))
 
     expr = 3*M*N
     res = convert_matrix_to_array(expr)

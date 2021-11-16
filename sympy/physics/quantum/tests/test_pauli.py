@@ -152,8 +152,8 @@ def test_printing():
 
 
 def test_represent():
-    represent(sx) == Matrix([[0, 1], [1, 0]])
-    represent(sy) == Matrix([[0, -I], [I, 0]])
-    represent(sz) == Matrix([[1, 0], [0, -1]])
-    represent(sm) == Matrix([[0, 0], [1, 0]])
-    represent(sp) == Matrix([[0, 1], [0, 0]])
+    assert represent(sx) == Matrix([[0, 1], [1, 0]])
+    assert represent(sy) == Matrix([[0, -I], [I, 0]])
+    assert represent(sz) == Matrix([[1, 0], [0, -1]])
+    assert represent(sm) == Matrix([[0, 0], [1, 0]])
+    assert represent(sp) == Matrix([[0, 1], [0, 0]])

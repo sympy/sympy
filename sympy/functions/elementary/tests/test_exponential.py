@@ -1,5 +1,5 @@
 from sympy.assumptions.refine import refine
-from sympy.calculus.util import AccumBounds
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
 from sympy.core.function import expand_log

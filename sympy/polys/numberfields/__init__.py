@@ -3,17 +3,17 @@
 __all__ = [
     'AlgebraicNumber',
 
-    'minpoly', 'minimal_polynomial', 'primitive_element',
+    'minpoly', 'minimal_polynomial',
 
-    'field_isomorphism',
+    'field_isomorphism', 'primitive_element', 'to_number_field',
 
-    'to_number_field', 'isolate',
+    'isolate',
 ]
 
 from sympy.core.numbers import AlgebraicNumber
 
-from .minpoly import minpoly, minimal_polynomial, primitive_element
+from .minpoly import minpoly, minimal_polynomial
 
-from .isomorphism import field_isomorphism
+from .subfield import field_isomorphism, primitive_element, to_number_field
 
-from .numbers import to_number_field, isolate
+from .utilities import isolate

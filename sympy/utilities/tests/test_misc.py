@@ -10,9 +10,9 @@ from sympy.utilities.misc import translate, replace, ordinal, rawlines, strlines
 
 def test_translate():
     abc = 'abc'
-    translate(abc, None, 'a') == 'bc'
-    translate(abc, None, '') == 'abc'
-    translate(abc, {'a': 'x'}, 'c') == 'xb'
+    assert translate(abc, None, 'a') == 'bc'
+    assert translate(abc, None, '') == 'abc'
+    assert translate(abc, {'a': 'x'}, 'c') == 'xb'
     assert translate(abc, {'a': 'bc'}, 'c') == 'bcb'
     assert translate(abc, {'ab': 'x'}, 'c') == 'x'
     assert translate(abc, {'ab': ''}, 'c') == ''

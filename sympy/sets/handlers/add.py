@@ -1,9 +1,7 @@
-from sympy.core.numbers import oo
+from sympy.core.numbers import oo, Infinity, NegativeInfinity
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
-
 from sympy.core import Basic, Expr
-from sympy.core.numbers import Infinity, NegativeInfinity
 from sympy.multipledispatch import dispatch
 from sympy.sets import Interval, FiniteSet
 

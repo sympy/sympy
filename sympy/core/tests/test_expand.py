@@ -11,7 +11,7 @@ from sympy.simplify.radsimp import expand_numer
 from sympy.core.function import expand, expand_multinomial, expand_power_base
 
 from sympy.testing.pytest import raises
-from sympy.testing.randtest import verify_numerically
+from sympy.core.random import verify_numerically
 
 from sympy.abc import x, y, z
 

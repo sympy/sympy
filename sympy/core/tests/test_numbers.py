@@ -526,9 +526,9 @@ def test_Float():
     raises(ValueError, lambda: Float(.12500000000000001, ''))
 
     # allow spaces
-    Float('123 456.123 456') == Float('123456.123456')
-    Integer('123 456') == Integer('123456')
-    Rational('123 456.123 456') == Rational('123456.123456')
+    assert Float('123 456.123 456') == Float('123456.123456')
+    assert Integer('123 456') == Integer('123456')
+    assert Rational('123 456.123 456') == Rational('123456.123456')
     assert Float(' .3e2') == Float('0.3e2')
 
     # allow underscore

@@ -1,3 +1,5 @@
+from typing import Tuple as tTuple
+
 from sympy.concrete.expr_with_limits import AddWithLimits
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -17,12 +19,7 @@ from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.complexes import Abs, sign
 from sympy.functions.elementary.miscellaneous import Min, Max
-from sympy.integrals.manualintegrate import manualintegrate
-from sympy.integrals.trigonometry import trigintegrate
-from sympy.integrals.meijerint import (meijerint_definite, meijerint_indefinite,
-                                       _debug)
-from sympy.integrals.deltafunctions import deltaintegrate
-from sympy.integrals.rationaltools import ratint
+from .rationaltools import ratint
 from sympy.matrices import MatrixBase
 from sympy.polys import Poly, PolynomialError
 from sympy.series.formal import FormalPowerSeries
@@ -30,6 +27,7 @@ from sympy.series.limits import limit
 from sympy.series.order import Order
 from sympy.simplify.fu import sincos_to_sum
 from sympy.simplify.simplify import simplify
+from sympy.solvers.solvers import solve, posify
 from sympy.tensor.functions import shape
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import is_sequence
@@ -40,6 +38,8 @@ class Integral(AddWithLimits):
     """Represents unevaluated integral."""
 
     __slots__ = ('is_commutative',)
+
+    args: tTuple[Expr, Tuple]
 
     def __new__(cls, function, *symbols, **assumptions):
         """Create an unevaluated integral.
@@ -262,7 +262,6 @@ class Integral(AddWithLimits):
         sympy.concrete.expr_with_limits.ExprWithLimits.variables : Lists the integration variables
         as_dummy : Replace integration variables with dummy ones
         """
-        from sympy.solvers.solvers import solve, posify
         d = Dummy('d')
 
         xfree = x.free_symbols.intersection(self.variables)
@@ -399,7 +398,6 @@ class Integral(AddWithLimits):
         sympy.integrals.rationaltools.ratint
         as_sum : Approximate the integral using a sum
         """
-        from sympy.concrete.summations import Sum
         if not hints.get('integrals', True):
             return self
 
@@ -435,6 +433,7 @@ class Integral(AddWithLimits):
 
         # hacks to handle integrals of
         # nested summations
+        from sympy.concrete.summations import Sum
         if isinstance(self.function, Sum):
             if any(v in self.function.limits[0] for v in self.variables):
                 raise ValueError('Limit of the sum cannot be an integration variable.')
@@ -905,6 +904,7 @@ class Integral(AddWithLimits):
         """
 
         from sympy.integrals.risch import risch_integrate, NonElementaryIntegral
+        from sympy.integrals.manualintegrate import manualintegrate
 
         if risch:
             try:
@@ -1054,8 +1054,8 @@ class Integral(AddWithLimits):
                     parts.append(coeff * h)
                     continue
 
+                from .singularityfunctions import singularityintegrate
                 # g(x) has at least a Singularity Function term
-                from sympy.integrals.singularityfunctions import singularityintegrate
                 h = singularityintegrate(g, x)
                 if h is not None:
                     parts.append(coeff * h)
@@ -1374,7 +1374,9 @@ class Integral(AddWithLimits):
                              "cauchy's principal value. Also, a and b need to be comparable.")
         if a == b:
             return S.Zero
-        from sympy.calculus import singularities
+
+        from sympy.calculus.singularities import singularities
+
         r = Dummy('r')
         f = self.function
         singularities_list = [s for s in singularities(f, x) if s.is_comparable and a <= s <= b]
@@ -1620,3 +1622,8 @@ def line_integrate(field, curve, vars):
 @shape.register(Integral)
 def _(expr):
     return shape(expr.function)
+
+# Delayed imports
+from .deltafunctions import deltaintegrate
+from .meijerint import meijerint_definite, meijerint_indefinite, _debug
+from .trigonometry import trigintegrate

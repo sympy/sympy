@@ -160,12 +160,12 @@ def tensorcontraction(array, *contraction_axes):
     [a*e + b*g, a*f + b*h],
     [c*e + d*g, c*f + d*h]])
     """
-    from sympy.tensor.array.expressions.array_expressions import ArrayContraction
+    from sympy.tensor.array.expressions.array_expressions import _array_contraction
     from sympy.tensor.array.expressions.array_expressions import _CodegenArrayAbstract
     from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
     from sympy.matrices.expressions.matexpr import MatrixSymbol
     if isinstance(array, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)):
-        return ArrayContraction(array, *contraction_axes)
+        return _array_contraction(array, *contraction_axes)
 
     array, remaining_indices, remaining_shape, summed_deltas = _util_contraction_diagonal(array, *contraction_axes)
 
@@ -237,10 +237,10 @@ def tensordiagonal(array, *diagonal_axes):
 
     from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
     from sympy.tensor.array.expressions.array_expressions import _CodegenArrayAbstract
-    from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
+    from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal, _array_diagonal
     from sympy.matrices.expressions.matexpr import MatrixSymbol
     if isinstance(array, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)):
-        return ArrayDiagonal(array, *diagonal_axes)
+        return _array_diagonal(array, *diagonal_axes)
 
     ArrayDiagonal._validate(array, *diagonal_axes)
 
@@ -374,10 +374,10 @@ def permutedims(expr, perm):
 
     from sympy.tensor.array.expressions.array_expressions import _ArrayExpr
     from sympy.tensor.array.expressions.array_expressions import _CodegenArrayAbstract
-    from sympy.tensor.array.expressions.array_expressions import PermuteDims
+    from sympy.tensor.array.expressions.array_expressions import _permute_dims
     from sympy.matrices.expressions.matexpr import MatrixSymbol
     if isinstance(expr, (_ArrayExpr, _CodegenArrayAbstract, MatrixSymbol)):
-        return PermuteDims(expr, perm)
+        return _permute_dims(expr, perm)
 
     if not isinstance(expr, NDimArray):
         expr = ImmutableDenseNDimArray(expr)

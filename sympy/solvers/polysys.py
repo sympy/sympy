@@ -328,7 +328,7 @@ def solve_triangulated(polys, *gens, **args):
     Examples
     ========
 
-    >>> from sympy.solvers.polysys import solve_triangulated
+    >>> from sympy import solve_triangulated
     >>> from sympy.abc import x, y, z
 
     >>> F = [x**2 + y + z - 1, x + y**2 + z - 1, x + y + z**2 - 1]

@@ -10,9 +10,10 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import (piecewise_fold,
     Piecewise)
 from sympy.logic.boolalg import BooleanFunction
-from sympy.tensor.indexed import Idx
+from sympy.matrices.matrices import MatrixBase
 from sympy.sets.sets import Interval, Set
 from sympy.sets.fancysets import Range
+from sympy.tensor.indexed import Idx
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift, is_sequence
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -573,8 +574,6 @@ class AddWithLimits(ExprWithLimits):
         return self
 
     def _eval_expand_basic(self, **hints):
-        from sympy.matrices.matrices import MatrixBase
-
         summand = self.function.expand(**hints)
         if summand.is_Add and summand.is_commutative:
             return Add(*[self.func(i, *self.limits) for i in summand.args])

@@ -1,13 +1,13 @@
+from sympy.core import Basic, Expr
 from sympy.core.function import Lambda
-from sympy.core.numbers import oo
+from sympy.core.numbers import oo, Infinity, NegativeInfinity, Zero, Integer
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import (Max, Min)
-from sympy.sets.sets import Set
-from sympy.core import Basic, Expr, Integer
-from sympy.core.numbers import Infinity, NegativeInfinity, Zero
+from sympy.sets.fancysets import ImageSet
+from sympy.sets.setexpr import set_div
+from sympy.sets.sets import Set, Interval, FiniteSet, Union
 from sympy.multipledispatch import dispatch
-from sympy.sets import Interval, FiniteSet, Union, ImageSet
 
 
 _x, _y = symbols("x y")
@@ -101,5 +101,4 @@ def _set_pow(b, e): # noqa:F811
 
 @dispatch(Interval, NegativeInfinity)  # type: ignore # noqa:F811
 def _set_pow(b, e): # noqa:F811
-    from sympy.sets.setexpr import set_div
     return _set_pow(set_div(S.One, b), oo)

@@ -35,6 +35,8 @@ from sympy.functions.special.beta_functions import beta as beta_fn
 from sympy.stats.frv import (SingleFiniteDistribution,
                              SingleFinitePSpace)
 from sympy.stats.rv import _value_check, Density, is_random
+from sympy.utilities.iterables import multiset
+from sympy.utilities.misc import filldedent
 
 
 __all__ = ['FiniteRV',
@@ -130,8 +132,6 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
         # not using _value_check since there is a
         # suggestion for the user
         if len(set(args)) != len(args):
-            from sympy.utilities.iterables import multiset
-            from sympy.utilities.misc import filldedent
             weights = multiset(args)
             n = Integer(len(args))
             for k in weights:

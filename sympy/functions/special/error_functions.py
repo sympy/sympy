@@ -179,7 +179,7 @@ class erf(Function):
             if len(previous_terms) > 2:
                 return -previous_terms[-2] * x**2 * (n - 2)/(n*k)
             else:
-                return 2*(-1)**k * x**n/(n*factorial(k)*sqrt(S.Pi))
+                return 2*S.NegativeOne**k * x**n/(n*factorial(k)*sqrt(S.Pi))
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -258,8 +258,8 @@ class erf(Function):
             ex = -ex # as x->1/x for aseries
             if ex.is_positive:
                 newn = ceiling(n/ex)
-                s = [(-1)**k * factorial2(2*k - 1) / (z**(2*k + 1) * 2**k)
-                        for k in range(0, newn)] + [Order(1/z**newn, x)]
+                s = [S.NegativeOne**k * factorial2(2*k - 1) / (z**(2*k + 1) * 2**k)
+                     for k in range(0, newn)] + [Order(1/z**newn, x)]
                 return S.One - (exp(-z**2)/sqrt(pi)) * Add(*s)
 
         return super(erf, self)._eval_aseries(n, args0, x, logx)
@@ -400,7 +400,7 @@ class erfc(Function):
             if len(previous_terms) > 2:
                 return -previous_terms[-2] * x**2 * (n - 2)/(n*k)
             else:
-                return -2*(-1)**k * x**n/(n*factorial(k)*sqrt(S.Pi))
+                return -2*S.NegativeOne**k * x**n/(n*factorial(k)*sqrt(S.Pi))
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -1362,7 +1362,7 @@ class expint(Function):
             if not nu > 0:
                 return
             return expint(nu, z) \
-                - 2*pi*I*n*(-1)**(nu - 1)/factorial(nu - 1)*unpolarify(z)**(nu - 1)
+                - 2*pi*I*n*S.NegativeOne**(nu - 1)/factorial(nu - 1)*unpolarify(z)**(nu - 1)
         else:
             return (exp(2*I*pi*nu*n) - 1)*z**(nu - 1)*gamma(1 - nu) + expint(nu, z)
 
@@ -1420,7 +1420,7 @@ class expint(Function):
 
         if point is S.Infinity:
             z = self.args[1]
-            s = [(-1)**k * RisingFactorial(nu, k) / z**k for k in range(0, n)] + [Order(1/z**n, x)]
+            s = [S.NegativeOne**k * RisingFactorial(nu, k) / z**k for k in range(0, n)] + [Order(1/z**n, x)]
             return (exp(-z)/z) * Add(*s)
 
         return super(expint, self)._eval_aseries(n, args0, x, logx)
@@ -1894,9 +1894,9 @@ class Si(TrigonometricIntegral):
         # Expansion at oo
         if point is S.Infinity:
             z = self.args[0]
-            p = [(-1)**k * factorial(2*k) / z**(2*k)
+            p = [S.NegativeOne**k * factorial(2*k) / z**(2*k)
                     for k in range(0, int((n - 1)/2))] + [Order(1/z**n, x)]
-            q = [(-1)**k * factorial(2*k + 1) / z**(2*k + 1)
+            q = [S.NegativeOne**k * factorial(2*k + 1) / z**(2*k + 1)
                     for k in range(0, int(n/2) - 1)] + [Order(1/z**n, x)]
             return pi/2 - (cos(z)/z)*Add(*p) - (sin(z)/z)*Add(*q)
 
@@ -2031,9 +2031,9 @@ class Ci(TrigonometricIntegral):
         # Expansion at oo
         if point is S.Infinity:
             z = self.args[0]
-            p = [(-1)**k * factorial(2*k) / z**(2*k)
+            p = [S.NegativeOne**k * factorial(2*k) / z**(2*k)
                     for k in range(0, int((n - 1)/2))] + [Order(1/z**n, x)]
-            q = [(-1)**k * factorial(2*k + 1) / z**(2*k + 1)
+            q = [S.NegativeOne**k * factorial(2*k + 1) / z**(2*k + 1)
                     for k in range(0, int(n/2) - 1)] + [Order(1/z**n, x)]
             return (sin(z)/z)*Add(*p) - (cos(z)/z)*Add(*q)
 
@@ -2456,10 +2456,10 @@ class fresnels(FresnelIntegral):
 
             # expansion of S(x) = S1(x*sqrt(pi/2)), see reference[5] page 1-8
             # as only real infinities are dealt with, sin and cos are O(1)
-            p = [(-1)**k * factorial(4*k + 1) /
+            p = [S.NegativeOne**k * factorial(4*k + 1) /
                  (2**(2*k + 2) * z**(4*k + 3) * 2**(2*k)*factorial(2*k))
                  for k in range(0, n) if 4*k + 3 < n]
-            q = [1/(2*z)] + [(-1)**k * factorial(4*k - 1) /
+            q = [1/(2*z)] + [S.NegativeOne**k * factorial(4*k - 1) /
                  (2**(2*k + 1) * z**(4*k + 1) * 2**(2*k - 1)*factorial(2*k - 1))
                  for k in range(1, n) if 4*k + 1 < n]
 
@@ -2612,10 +2612,10 @@ class fresnelc(FresnelIntegral):
 
             # expansion of C(x) = C1(x*sqrt(pi/2)), see reference[5] page 1-8
             # as only real infinities are dealt with, sin and cos are O(1)
-            p = [(-1)**k * factorial(4*k + 1) /
+            p = [S.NegativeOne**k * factorial(4*k + 1) /
                  (2**(2*k + 2) * z**(4*k + 3) * 2**(2*k)*factorial(2*k))
                  for k in range(0, n) if 4*k + 3 < n]
-            q = [1/(2*z)] + [(-1)**k * factorial(4*k - 1) /
+            q = [1/(2*z)] + [S.NegativeOne**k * factorial(4*k - 1) /
                  (2**(2*k + 1) * z**(4*k + 1) * 2**(2*k - 1)*factorial(2*k - 1))
                  for k in range(1, n) if 4*k + 1 < n]
 
