@@ -12,7 +12,7 @@
 # file to trim down the width and/or height.
 
 if [ $# -ne 2 ]; then
-  echo "Usage: ./svg2pdf.bash input.svg output.pdf" 1>&2
+  echo "Usage: ./convert-svg-to-pdf.sh input.svg output.pdf" 1>&2
   exit 1
 fi
 
