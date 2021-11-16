@@ -187,7 +187,7 @@ from sympy.polys.domains.integerring import ZZ
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 from sympy.polys.matrices.exceptions import DMBadInputError
 from sympy.polys.matrices.normalforms import hermite_normal_form
-from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.polyerrors import CoercionFailed, UnificationFailed
 from sympy.polys.polyutils import IntegerPowerable
 from .exceptions import ClosureFailure, MissingUnityError
 from .utilities import AlgIntPowers, is_int, is_rat, get_num_denom
@@ -1293,9 +1293,15 @@ class ModuleElement(IntegerPowerable):
         =======
 
         Pair ``(e1, e2)``
-            Either each of ``e1, e2`` is a :py:class:`~.ModuleElement` and they
-            belong to the same :py:class:`~.Module`, or else both are ``None``,
-            if no common ancestor could be found.
+            Each ``ei`` is a :py:class:`~.ModuleElement`, they belong to the
+            same :py:class:`~.Module`, ``e1`` is equivalent to ``self``, and
+            ``e2`` is equivalent to ``other``.
+
+        Raises
+        ======
+
+        UnificationFailed
+            If ``self`` and ``other`` have no common ancestor module.
 
         """
         if self.module == other.module:
@@ -1303,7 +1309,7 @@ class ModuleElement(IntegerPowerable):
         nca = self.module.nearest_common_ancestor(other.module)
         if nca is not None:
             return self.to_ancestor(nca), other.to_ancestor(nca)
-        return None, None
+        raise UnificationFailed(f"Cannot unify {self} with {other}")
 
     def __eq__(self, other):
         if self.is_compat(other):
@@ -1319,10 +1325,12 @@ class ModuleElement(IntegerPowerable):
         Explanation
         ===========
 
-        When *other* is another :py:class:`~.ModuleElement`, the test for
-        equivalence requires not just that the two elements represent the same
-        algebraic number, but that they have the same :py:class:`~.PowerBasis`
-        ancestor.
+        This method is intended to check equivalence only in those cases in
+        which it is easy to test; namely, when *other* is either a
+        :py:class:`~.ModuleElement` that can be unified with this one (i.e. one
+        which shares a common :py:class:`~.PowerBasis` ancestor), or else a
+        rational number (which is easy because every :py:class:`~.PowerBasis`
+        represents every rational number).
 
         Parameters
         ==========
@@ -1330,17 +1338,22 @@ class ModuleElement(IntegerPowerable):
         other : int, :ref:`ZZ`, :ref:`QQ`, :py:class:`~.ModuleElement`
 
         Returns
-        -------
+        =======
 
         bool
+
+        Raises
+        ======
+
+        UnificationFailed
+            If ``self`` and ``other`` do not share a common
+            :py:class:`~.PowerBasis` ancestor.
 
         """
         if self == other:
             return True
         elif isinstance(other, ModuleElement):
             a, b = self.unify(other)
-            if a is None:
-                return False
             return a == b
         elif is_rat(other):
             if isinstance(self, PowerBasisElement):
@@ -1372,8 +1385,9 @@ class ModuleElement(IntegerPowerable):
             col = to_col([u * a + v * b for a, b in zip(self.coeffs, other.coeffs)])
             return type(self)(self.module, col, denom=m).reduced()
         elif isinstance(other, ModuleElement):
-            a, b = self.unify(other)
-            if a is None:
+            try:
+                a, b = self.unify(other)
+            except UnificationFailed:
                 return NotImplemented
             return a + b
         elif is_rat(other):
@@ -1426,8 +1440,9 @@ class ModuleElement(IntegerPowerable):
             d = self.denom * other.denom
             return self.from_int_list(self.module, C, denom=d)
         elif isinstance(other, ModuleElement):
-            a, b = self.unify(other)
-            if a is None:
+            try:
+                a, b = self.unify(other)
+            except UnificationFailed:
                 return NotImplemented
             return a * b
         elif is_rat(other):

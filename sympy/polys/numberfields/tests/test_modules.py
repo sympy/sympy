@@ -10,6 +10,7 @@ from sympy.polys.numberfields.modules import (
     find_min_poly, is_sq_maxrank_HNF, make_mod_elt, to_col,
 )
 from sympy.polys.numberfields.utilities import is_int
+from sympy.polys.polyerrors import UnificationFailed
 from sympy.testing.pytest import raises
 
 
@@ -479,8 +480,7 @@ def test_ModuleElement_compatibility():
 
     U = Poly(cyclotomic_poly(7, x))
     Z = PowerBasis(U)
-    u, v = C(0).unify(Z(1))
-    assert u is None and v is None
+    raises(UnificationFailed, lambda: C(0).unify(Z(1)))
 
 
 def test_ModuleElement_eq():
@@ -511,7 +511,8 @@ def test_ModuleElement_equiv():
 
     U = Poly(cyclotomic_poly(7, x))
     Z = PowerBasis(U)
-    assert e.equiv(Z(0)) is False
+    raises(UnificationFailed, lambda: e.equiv(Z(0)))
+
     assert e.equiv(3.14) is False
 
 
