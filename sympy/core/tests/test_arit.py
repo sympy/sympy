@@ -2401,3 +2401,13 @@ def test_issue_22021():
 
 def test_issue_22244():
     assert -(zoo*x) == zoo*x
+
+
+def test_issue_22453():
+    e = Symbol('e', positive=True)
+    for i in (oo + I*oo, oo - I*oo, -oo + I*oo, -oo - I*oo):
+        assert i**(1 + e) is S.NaN
+        assert unchanged(Pow, i, e)
+    assert 1/(oo + I*oo) is S.NaN
+    r, i = [Dummy(infinite=True, extended_real=True) for _ in range(2)]
+    assert 1/(r + I*i) is S.NaN

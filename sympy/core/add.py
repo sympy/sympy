@@ -478,8 +478,13 @@ class Add(Expr, AssocOp):
     # issue 5524.
 
     def _eval_power(self, e):
+        from .evalf import pure_complex
+        from .relational import is_eq
+        if e.is_zero is False and is_eq(e, S.One
+                    ) is False and all(_.is_infinite for _
+                    in self.as_real_imag()):
+            return S.NaN
         if e.is_Rational and self.is_number:
-            from .evalf import pure_complex
             ri = pure_complex(self)
             if ri:
                 r, i = ri
