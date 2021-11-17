@@ -273,7 +273,9 @@ class Limit(Expr):
 
         if e.is_meromorphic(z, z0):
             if abs(z0) is S.Infinity:
-                newe = e.subs(z, -1/z)
+                newe = e.subs(z, 1/z)
+                # cdir changes sign as oo- should become 0+
+                cdir = -cdir
             else:
                 newe = e.subs(z, z + z0)
             try:
@@ -329,7 +331,7 @@ class Limit(Expr):
                         if cdir == 1:
                             return S.Infinity*sign(coeff)
                         elif cdir == -1:
-                            return S.NegativeInfinity*sign(coeff)*S.NegativeOne**(S.One + ex)
+                            return S.Infinity*sign(coeff)*S.NegativeOne**ex
                         else:
                             return S.ComplexInfinity
 
