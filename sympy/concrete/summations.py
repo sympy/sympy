@@ -7,8 +7,6 @@ from .expr_with_limits import AddWithLimits
 from .gosper import gosper_sum
 from sympy.core.expr import Expr
 from sympy.core.add import Add
-from sympy.core.function import Derivative
-from sympy.core.numbers import Float
 from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, expand
 from sympy.core.mul import Mul
