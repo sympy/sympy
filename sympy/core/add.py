@@ -218,6 +218,8 @@ class Add(Expr, AssocOp):
 
         extra = []
 
+        saw_Ioo = False
+
         for o in seq:
 
             # O(x)
@@ -236,15 +238,8 @@ class Add(Expr, AssocOp):
 
             # 3 or NaN
             elif o.is_Number:
-                if (o is S.NaN or coeff is S.ComplexInfinity and
-                        o.is_finite is False) and not extra:
-                    # we know for sure the result will be nan
-                    return [S.NaN], [], None
                 if coeff.is_Number or isinstance(coeff, AccumBounds):
                     coeff += o
-                    if coeff is S.NaN and not extra:
-                        # we know for sure the result will be nan
-                        return [S.NaN], [], None
                 continue
 
             elif isinstance(o, AccumBounds):
@@ -261,10 +256,8 @@ class Add(Expr, AssocOp):
                 continue
 
             elif o is S.ComplexInfinity:
-                if coeff.is_finite is False and not extra:
-                    # we know for sure the result will be nan
-                    return [S.NaN], [], None
-                coeff = S.ComplexInfinity
+                if coeff is not S.NaN:
+                    coeff = o
                 continue
 
             # Add([...])
@@ -276,15 +269,8 @@ class Add(Expr, AssocOp):
             # Mul([...])
             elif o.is_Mul:
                 c, s = o.as_coeff_Mul()
-
-            # check for unevaluated Pow, e.g. 2**3 or 2**(-1/2)
-            elif o.is_Pow:
-                b, e = o.as_base_exp()
-                if b.is_Number and (e.is_Integer or
-                                   (e.is_Rational and e.is_negative)):
-                    seq.append(b**e)
-                    continue
-                c, s = S.One, o
+                if s is S.ImaginaryUnit and c.is_infinite:
+                    saw_Ioo = True
 
             else:
                 # everything else
@@ -300,11 +286,14 @@ class Add(Expr, AssocOp):
             # 2*x**2 + 3*x**2  ->  5*x**2
             if s in terms:
                 terms[s] += c
-                if terms[s] is S.NaN and not extra:
-                    # we know for sure the result will be nan
-                    return [S.NaN], [], None
+                if terms[s] is S.NaN:
+                    coeff = S.NaN
             else:
                 terms[s] = c
+
+        # delayed until here to account for all extra
+        if coeff is S.NaN and not extra:
+            return [S.NaN], [], None
 
         # now let's construct new args:
         # [2*x**2, x**3, 7*x**4, pi, ...]
@@ -341,16 +330,10 @@ class Add(Expr, AssocOp):
             newseq = [f for f in newseq if not (f.is_extended_nonpositive or f.is_real)]
 
         if coeff is S.ComplexInfinity:
-            # zoo might be
-            #   infinite_real + finite_im
-            #   finite_real + infinite_im
-            #   infinite_real + infinite_im
-            # addition of a finite real or imaginary number won't be able to
-            # change the zoo nature; adding an infinite qualtity would result
-            # in a NaN condition if it had sign opposite of the infinite
-            # portion of zoo, e.g., infinite_real - infinite_real.
-            newseq = [c for c in newseq if not (c.is_finite and
-                                                c.is_extended_real is not None)]
+            if saw_Ioo:
+                return [S.NaN], [], None
+            # ignore all real entities
+            newseq = [c for c in newseq if c.is_extended_real is None]
 
         # process O(x)
         if order_factors:

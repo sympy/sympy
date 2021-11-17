@@ -2119,14 +2119,20 @@ def test_add_flatten():
     b = oo - I*oo
     assert a + b is nan
     assert a - b is nan
-    # FIXME: This evaluates as:
-    #   >>> 1/a
-    #   0*(oo + oo*I)
-    # which should not simplify to 0. Should be fixed in Pow.eval
-    #assert (1/a).simplify() == (1/b).simplify() == 0
+    # cf issue #22453
+    for i in (oo, I*oo, a, b):
+        assert zoo + i is nan, (i, zoo+i)
+        assert zoo - i is nan
+        assert i + zoo is nan, (i, i+zoo)
+        assert i - zoo is nan
+    assert zoo + pi is zoo
+    assert pi + zoo is zoo
+    assert zoo - pi is zoo
+    assert pi - zoo is zoo
+    assert Add(oo, -oo, zoo) is nan
 
     a = Pow(2, 3, evaluate=False)
-    assert a + a == 16
+    assert a + a == 16, a+a
 
 
 def test_issue_5160_6087_6089_6090():
