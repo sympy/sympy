@@ -3424,6 +3424,8 @@ class ComplexInfinity(AtomicExpr, metaclass=Singleton):
             if other in (S.NaN, S.Infinity, S.NegativeInfinity):
                 return S.NaN
             return self
+        if other is self:
+            return S.NaN
         return AtomicExpr.__add__(self, other)
 
     @_sympifyit('other', NotImplemented)
@@ -3432,6 +3434,8 @@ class ComplexInfinity(AtomicExpr, metaclass=Singleton):
             if other in (S.NaN, S.Infinity, S.NegativeInfinity):
                 return S.NaN
             return self
+        if other is self:
+            return S.NaN
         return AtomicExpr.__sub__(self, other)
 
     @_sympifyit('other', NotImplemented)
