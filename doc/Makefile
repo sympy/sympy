@@ -6,7 +6,7 @@ RST2HTML     = rst2html
 # You can set these variables from the command line.
 SPHINXOPTS   =
 SPHINXVER    = 0.5
-SPHINXBUILD  = PYTHONPATH=..:$(PYTHONPATH) sphinx-build
+SPHINXBUILD  = sphinx-build
 PAPER        =
 
 SVGFILES = $(wildcard src/modules/physics/vector/*.svg) $(wildcard src/modules/physics/mechanics/examples/*.svg) $(wildcard src/modules/vector/*.svg)
