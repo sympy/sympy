@@ -1414,4 +1414,3 @@ def test_mul_with_den():
     n = Symbol('n', extended_nonzero=True)
     d = Symbol('d', finite=False)
     assert (n/d).is_zero is None  # could be oo/oo->nan->None for is_zero
-Out[7]: False
