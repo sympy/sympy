@@ -11,7 +11,7 @@ from sympy.functions.special.bessel import (jn, yn, besselj, bessely, besseli,
                                             airybi, airyaiprime, airybiprime)
 from sympy.testing.pytest import XFAIL
 
-from sympy import julia_code
+from sympy.printing.julia import julia_code
 
 x, y, z = symbols('x,y,z')
 

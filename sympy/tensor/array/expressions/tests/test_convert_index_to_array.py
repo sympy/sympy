@@ -1,7 +1,13 @@
-from sympy import Sum, MatrixSymbol, Identity, symbols, IndexedBase, KroneckerDelta
+from sympy.concrete.summations import Sum
+from sympy.core.symbol import symbols
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.special import Identity
+from sympy.tensor.indexed import IndexedBase
 from sympy.combinatorics import Permutation
 from sympy.tensor.array.expressions.array_expressions import ArrayContraction, ArrayTensorProduct, \
-    ArrayDiagonal, ArrayAdd, PermuteDims
+    ArrayDiagonal, ArrayAdd, PermuteDims, ArrayElement, _array_tensor_product, _array_contraction, _array_diagonal, \
+    _array_add, _permute_dims
 from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
 from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array, _convert_indexed_to_array
 from sympy.testing.pytest import raises
@@ -39,7 +45,7 @@ def test_arrayexpr_convert_index_to_array_support_function():
     expr = M[i, j] + M[j, i]
     assert _convert_indexed_to_array(expr) == (ArrayAdd(M, PermuteDims(M, Permutation([1, 0]))), (i, j))
     expr = (M*N*P)[i, j]
-    assert _convert_indexed_to_array(expr) == (ArrayContraction(ArrayTensorProduct(M, N, P), (1, 2), (3, 4)), (i, j))
+    assert _convert_indexed_to_array(expr) == (_array_contraction(ArrayTensorProduct(M, N, P), (1, 2), (3, 4)), (i, j))
     expr = expr.function  # Disregard summation in previous expression
     ret1, ret2 = _convert_indexed_to_array(expr)
     assert ret1 == ArrayDiagonal(ArrayTensorProduct(M, N, P), (1, 2), (3, 4))
@@ -49,14 +55,14 @@ def test_arrayexpr_convert_index_to_array_support_function():
     expr = KroneckerDelta(i, j)*KroneckerDelta(j, k)*M[i, l]
     assert _convert_indexed_to_array(expr) == (M, ({i, j, k}, l))
     expr = KroneckerDelta(j, k)*(M[i, j]*N[k, l] + N[i, j]*M[k, l])
-    assert _convert_indexed_to_array(expr) == (ArrayDiagonal(ArrayAdd(
+    assert _convert_indexed_to_array(expr) == (_array_diagonal(_array_add(
             ArrayTensorProduct(M, N),
-            PermuteDims(ArrayTensorProduct(M, N), Permutation(0, 2)(1, 3))
+            _permute_dims(ArrayTensorProduct(M, N), Permutation(0, 2)(1, 3))
         ), (1, 2)), (i, l, frozenset({j, k})))
     expr = KroneckerDelta(j, m)*KroneckerDelta(m, k)*(M[i, j]*N[k, l] + N[i, j]*M[k, l])
-    assert _convert_indexed_to_array(expr) == (ArrayDiagonal(ArrayAdd(
+    assert _convert_indexed_to_array(expr) == (_array_diagonal(_array_add(
             ArrayTensorProduct(M, N),
-            PermuteDims(ArrayTensorProduct(M, N), Permutation(0, 2)(1, 3))
+            _permute_dims(ArrayTensorProduct(M, N), Permutation(0, 2)(1, 3))
         ), (1, 2)), (i, l, frozenset({j, m, k})))
     expr = KroneckerDelta(i, j)*KroneckerDelta(j, k)*KroneckerDelta(k,m)*M[i, 0]*KroneckerDelta(m, n)
     assert _convert_indexed_to_array(expr) == (M, ({i, j, k, m, n}, 0))
@@ -77,15 +83,15 @@ def test_arrayexpr_convert_indexed_to_array_expression():
 
     expr = M*N*M
     elem = expr[i, j]
-    result = ArrayContraction(ArrayTensorProduct(M, M, N), (1, 4), (2, 5))
+    result = _array_contraction(_array_tensor_product(M, M, N), (1, 4), (2, 5))
     cg = convert_indexed_to_array(elem)
     assert cg == result
 
     cg = convert_indexed_to_array((M * N * P)[i, j])
-    assert cg == ArrayContraction(ArrayTensorProduct(M, N, P), (1, 2), (3, 4))
+    assert cg == _array_contraction(ArrayTensorProduct(M, N, P), (1, 2), (3, 4))
 
     cg = convert_indexed_to_array((M * N.T * P)[i, j])
-    assert cg == ArrayContraction(ArrayTensorProduct(M, N, P), (1, 3), (2, 4))
+    assert cg == _array_contraction(ArrayTensorProduct(M, N, P), (1, 3), (2, 4))
 
     expr = -2*M*N
     elem = expr[i, j]
@@ -98,7 +104,7 @@ def test_arrayexpr_convert_indexed_to_array_and_back_to_matrix():
     expr = a.T*b
     elem = expr[0, 0]
     cg = convert_indexed_to_array(elem)
-    assert cg == ArrayContraction(ArrayTensorProduct(a, b), (0, 2))
+    assert cg == ArrayElement(ArrayContraction(ArrayTensorProduct(a, b), (0, 2)), [0, 0])
 
     expr = M[i,j] + N[i,j]
     p1, p2 = _convert_indexed_to_array(expr)

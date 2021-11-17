@@ -1,34 +1,51 @@
+from typing import Tuple as tTuple
+
 from sympy.calculus.singularities import is_decreasing
-from sympy.calculus.util import AccumulationBounds
-from sympy.concrete.expr_with_limits import AddWithLimits
-from sympy.concrete.expr_with_intlimits import ExprWithIntLimits
-from sympy.concrete.gosper import gosper_sum
+from sympy.calculus.accumulationbounds import AccumulationBounds
+from .expr_with_intlimits import ExprWithIntLimits
+from .expr_with_limits import AddWithLimits
+from .gosper import gosper_sum
+from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.function import Derivative
 from sympy.core.numbers import Float
+from sympy.core.containers import Tuple
+from sympy.core.function import Derivative, expand
 from sympy.core.mul import Mul
+from sympy.core.numbers import Float
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Wild, Symbol
-from sympy.functions.special.zeta_functions import zeta
+from sympy.core.sorting import ordered
+from sympy.core.symbol import Dummy, Wild, Symbol, symbols
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.combinatorial.numbers import bernoulli, harmonic
+from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cot, csc
+from sympy.functions.special.hyper import hyper
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.functions.special.zeta_functions import zeta
+from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import And
-from sympy.polys import apart, together
+from sympy.polys.partfrac import apart
 from sympy.polys.polyerrors import PolynomialError, PolificationFailed
-from sympy.polys.polytools import parallel_poly_from_expr
+from sympy.polys.polytools import parallel_poly_from_expr, Poly, factor
+from sympy.polys.rationaltools import together
 from sympy.series.limitseq import limit_seq
 from sympy.series.order import O
 from sympy.series.residues import residue
-from sympy.sets.sets import FiniteSet
-from sympy.simplify import denom
+from sympy.sets.sets import FiniteSet, Interval
 from sympy.simplify.combsimp import combsimp
+from sympy.simplify.hyperexpand import hyperexpand
 from sympy.simplify.powsimp import powsimp
-from sympy.simplify.simplify import nsimplify
-from sympy.solvers import solve
+from sympy.simplify.radsimp import denom, fraction
+from sympy.simplify.simplify import (factor_sum, sum_combine, simplify,
+                                     nsimplify, hypersimp)
+from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.utilities.iterables import sift
 import itertools
+
 
 class Sum(AddWithLimits, ExprWithIntLimits):
     r"""
@@ -164,6 +181,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
     """
 
     __slots__ = ('is_commutative',)
+
+    limits: tTuple[tTuple[Symbol, Expr, Expr]]
 
     def __new__(cls, function, *symbols, **assumptions):
         obj = AddWithLimits.__new__(cls, function, *symbols, **assumptions)
@@ -322,8 +341,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         return Sum(f, (k, upper + 1, new_upper)).doit()
 
     def _eval_simplify(self, **kwargs):
-        from sympy.simplify.simplify import factor_sum, sum_combine
-        from sympy.core.function import expand
 
         # split the function into adds
         terms = Add.make_args(expand(self.function))
@@ -403,7 +420,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         There are various tests employed to check the convergence like
         divergence test, root test, integral test, alternating series test,
         comparison tests, Dirichlet tests. It returns true if Sum is convergent
-        and false if divergent and NotImplementedError if it can not be checked.
+        and false if divergent and NotImplementedError if it cannot be checked.
 
         References
         ==========
@@ -430,7 +447,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Sum.is_absolutely_convergent()
         sympy.concrete.products.Product.is_convergent()
         """
-        from sympy import Interval, Integral, log, symbols, simplify
         p, q, r = symbols('p q r', cls=Wild)
 
         sym = self.limits[0][0]
@@ -555,7 +571,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             pass
 
         ### ------------- alternating series test ----------- ###
-        dict_val = sequence_term.match((-1)**(sym + p)*q)
+        dict_val = sequence_term.match(S.NegativeOne**(sym + p)*q)
         if not dict_val[p].has(sym) and is_decreasing(dict_val[q], interval):
             return S.true
 
@@ -716,9 +732,6 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         With a nonzero eps specified, the summation is ended
         as soon as the remainder term is less than the epsilon.
         """
-        from sympy.functions import bernoulli, factorial
-        from sympy.integrals import Integral
-
         m = int(m)
         n = int(n)
         f = self.function
@@ -771,8 +784,14 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         for k in range(1, n + 2):
             ga, gb = fpoint(g)
             term = bernoulli(2*k)/factorial(2*k)*(gb - ga)
-            if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
+            if k > n:
                 break
+            if eps and term:
+                term_evalf = term.evalf(3)
+                if term_evalf is S.NaN:
+                    return S.NaN, S.NaN
+                if abs(term_evalf) < eps:
+                    break
             s += term
             g = g.diff(i, 2, simplify=False)
         return s + iterm, abs(term)
@@ -983,9 +1002,6 @@ def telescopic(L, R, limits):
 
 
 def eval_sum(f, limits):
-    from sympy.concrete.delta import deltasummation, _has_simple_delta
-    from sympy.functions import KroneckerDelta
-
     (i, a, b) = limits
     if f.is_zero:
         return S.Zero
@@ -1007,6 +1023,7 @@ def eval_sum(f, limits):
             return f.func(*newargs)
 
     if f.has(KroneckerDelta):
+        from .delta import deltasummation, _has_simple_delta
         f = f.replace(
             lambda x: isinstance(x, Sum),
             lambda x: x.factor()
@@ -1092,8 +1109,6 @@ def eval_sum_direct(expr, limits):
 
 
 def eval_sum_symbolic(f, limits):
-    from sympy.functions import harmonic, bernoulli
-
     f_orig = f
     (i, a, b) = limits
     if not f.has(i):
@@ -1208,7 +1223,6 @@ def eval_sum_symbolic(f, limits):
         r = gosper_sum(f, (i, a, b))
 
         if isinstance(r, (Mul,Add)):
-            from sympy import ordered, Tuple
             non_limit = r.free_symbols - Tuple(*limits[1:]).free_symbols
             den = denom(together(r))
             den_sym = non_limit & den.free_symbols
@@ -1244,11 +1258,6 @@ def eval_sum_symbolic(f, limits):
 
 def _eval_sum_hyper(f, i, a):
     """ Returns (res, cond). Sums from a to oo. """
-    from sympy.functions import hyper
-    from sympy.simplify import hyperexpand, hypersimp, fraction, simplify
-    from sympy.polys.polytools import Poly, factor
-    from sympy.core.numbers import Float
-
     if a != 0:
         return _eval_sum_hyper(f.subs(i, i + a), i, 0)
 
@@ -1262,7 +1271,6 @@ def _eval_sum_hyper(f, i, a):
         return None
 
     if isinstance(hs, Float):
-        from sympy.simplify.simplify import nsimplify
         hs = nsimplify(hs)
 
     numer, denom = fraction(factor(hs))
@@ -1354,7 +1362,7 @@ def eval_sum_residue(f, i_a_b):
     Notes
     =====
 
-    If $f(n), g(n)$ are polynomials with $\deg(g(n)) - \deg(f(n)) >= 2$,
+    If $f(n), g(n)$ are polynomials with $\deg(g(n)) - \deg(f(n)) \ge 2$,
     some infinite summations can be computed by the following residue
     evaluations.
 
@@ -1475,7 +1483,7 @@ def eval_sum_residue(f, i_a_b):
         alternating = False
         numer, denom = match
     else:
-        match = match_rational(f / (-1)**i, i)
+        match = match_rational(f / S.NegativeOne**i, i)
         if match:
             alternating = True
             numer, denom = match
@@ -1519,7 +1527,7 @@ def eval_sum_residue(f, i_a_b):
             return None
 
         if alternating:
-            f = (-1)**i * ((-1)**shift * numer.as_expr() / denom.as_expr())
+            f = S.NegativeOne**i * (S.NegativeOne**shift * numer.as_expr() / denom.as_expr())
         else:
             f = numer.as_expr() / denom.as_expr()
         return eval_sum_residue(f, (i, a-shift, b-shift))

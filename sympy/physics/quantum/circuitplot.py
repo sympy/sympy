@@ -14,9 +14,9 @@ Todo:
 * Write some tests/examples!
 """
 
-from typing import List, Dict
+from typing import List, Dict as tDict
 
-from sympy import Mul
+from sympy.core.mul import Mul
 from sympy.external import import_module
 from sympy.physics.quantum.gate import Gate, OneQubitGate, CGate, CGateS
 from sympy.core.core import BasicMeta
@@ -56,7 +56,7 @@ class CircuitPlot:
     not_radius = 0.15
     swap_delta = 0.05
     labels = []  # type: List[str]
-    inits = {}  # type: Dict[str, str]
+    inits = {}  # type: tDict[str, str]
     label_buffer = 0.5
 
     def __init__(self, c, nqubits, **kwargs):

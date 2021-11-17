@@ -68,6 +68,9 @@ class MatMul(MatrixExpr, Mul):
         matrices = [arg for arg in self.args if arg.is_Matrix]
         return (matrices[0].rows, matrices[-1].cols)
 
+    def could_extract_minus_sign(self):
+        return self.args[0].could_extract_minus_sign()
+
     def _entry(self, i, j, expand=True, **kwargs):
         # Avoid cyclic imports
         from sympy.concrete.summations import Sum
@@ -307,14 +310,12 @@ def factor_in_front(mul):
     return mul
 
 def combine_powers(mul):
-    """Combine consecutive powers with the same base into one
-
-    e.g. A*A**2 -> A**3
+    r"""Combine consecutive powers with the same base into one, e.g.
+    $$A \times A^2 \Rightarrow A^3$$
 
     This also cancels out the possible matrix inverses using the
-    knowledgebase of ``Inverse``.
-
-    e.g. Y * X * X.I -> Y
+    knowledgebase of :class:`~.Inverse`, e.g.,
+    $$ Y \times X \times X^{-1} \Rightarrow Y $$
     """
     factor, args = mul.as_coeff_matrices()
     new_args = [args[0]]

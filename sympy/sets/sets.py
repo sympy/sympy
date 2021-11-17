@@ -1,31 +1,35 @@
 from typing import Optional
-
+from functools import reduce
 from collections import defaultdict
 import inspect
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import iterable, ordered, reduce
 from sympy.core.containers import Tuple
-from sympy.core.decorators import (deprecated, sympify_method_args,
-    sympify_return)
-from sympy.core.evalf import EvalfMixin, prec_to_dps
-from sympy.core.parameters import global_parameters
+from sympy.core.decorators import sympify_method_args, sympify_return
+from sympy.core.evalf import EvalfMixin
 from sympy.core.expr import Expr
+from sympy.core.function import Lambda
 from sympy.core.logic import (FuzzyBool, fuzzy_bool, fuzzy_or, fuzzy_and,
     fuzzy_not)
-from sympy.core.numbers import Float
+from sympy.core.numbers import Float, Integer
 from sympy.core.operations import LatticeOp
+from sympy.core.parameters import global_parameters
 from sympy.core.relational import Eq, Ne, is_lt
 from sympy.core.singleton import Singleton, S
-from sympy.core.symbol import Symbol, Dummy, uniquely_named_symbol
+from sympy.core.sorting import ordered
+from sympy.core.symbol import symbols, Symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, converter
+from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import And, Or, Not, Xor, true, false
-from sympy.sets.contains import Contains
-from sympy.utilities import subsets
+from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import iproduct, sift, roundrobin
+from sympy.utilities.iterables import (iproduct, sift, roundrobin, iterable,
+                                       subsets)
 from sympy.utilities.misc import func_name, filldedent
+
 from mpmath import mpi, mpf
+
+from mpmath.libmp.libmpf import prec_to_dps
 
 
 tfn = defaultdict(lambda: None, {
@@ -209,7 +213,7 @@ class Set(Basic, EvalfMixin):
         elif isinstance(other, Complement):
             return Complement(other.args[0], Union(other.args[1], self), evaluate=False)
 
-        elif isinstance(other, EmptySet):
+        elif other is S.EmptySet:
             return S.EmptySet
 
         elif isinstance(other, FiniteSet):
@@ -323,6 +327,7 @@ class Set(Basic, EvalfMixin):
         >>> _ is S.true
         False
         """
+        from .contains import Contains
         other = sympify(other, strict=True)
 
         c = self._contains(other)
@@ -648,7 +653,8 @@ class Set(Basic, EvalfMixin):
         raise NotImplementedError("(%s)._measure" % self)
 
     def _eval_evalf(self, prec):
-        return self.func(*[arg.evalf(n=prec_to_dps(prec)) for arg in self.args])
+        dps = prec_to_dps(prec)
+        return self.func(*[arg.evalf(n=dps) for arg in self.args])
 
     @sympify_return([('other', 'Set')], NotImplemented)
     def __add__(self, other):
@@ -901,7 +907,7 @@ class Interval(Set):
     Notes
     =====
     - Only real end points are supported
-    - ``Interval(a, b)`` with `a > b` will return the empty set
+    - ``Interval(a, b)`` with $a > b$ will return the empty set
     - Use the ``evalf()`` method to turn an Interval into an mpmath
       ``mpi`` interval instance
 
@@ -955,7 +961,7 @@ class Interval(Set):
     @property
     def start(self):
         """
-        The left end point of the interval`.
+        The left end point of the interval.
 
         This property takes the same value as the ``inf`` property.
 
@@ -1215,14 +1221,12 @@ class Union(Set, LatticeOp):
     def _inf(self):
         # We use Min so that sup is meaningful in combination with symbolic
         # interval end points.
-        from sympy.functions.elementary.miscellaneous import Min
         return Min(*[set.inf for set in self.args])
 
     @property
     def _sup(self):
         # We use Max so that sup is meaningful in combination with symbolic
         # end points.
-        from sympy.functions.elementary.miscellaneous import Max
         return Max(*[set.sup for set in self.args])
 
     @property
@@ -1538,7 +1542,7 @@ class Complement(Set):
     r"""Represents the set difference or relative complement of a set with
     another set.
 
-    `A - B = \{x \in A \mid x \notin B\}`
+    $$A - B = \{x \in A \mid x \notin B\}$$
 
 
     Examples
@@ -1562,6 +1566,7 @@ class Complement(Set):
     is_Complement = True
 
     def __new__(cls, a, b, evaluate=True):
+        a, b = map(_sympify, (a, b))
         if evaluate:
             return Complement.reduce(a, b)
 
@@ -1889,12 +1894,10 @@ class FiniteSet(Set):
 
     @property
     def _inf(self):
-        from sympy.functions.elementary.miscellaneous import Min
         return Min(*self)
 
     @property
     def _sup(self):
-        from sympy.functions.elementary.miscellaneous import Max
         return Max(*self)
 
     @property
@@ -1912,7 +1915,8 @@ class FiniteSet(Set):
         return (hash(self) - hash(other))
 
     def _eval_evalf(self, prec):
-        return FiniteSet(*[elem.evalf(n=prec_to_dps(prec)) for elem in self])
+        dps = prec_to_dps(prec)
+        return FiniteSet(*[elem.evalf(n=dps) for elem in self])
 
     def _eval_simplify(self, **kwargs):
         from sympy.simplify import simplify
@@ -2104,7 +2108,7 @@ class DisjointUnion(Set):
         where ``set`` is the element in ``sets`` at index = ``i``
         """
 
-        dj_union = EmptySet()
+        dj_union = S.EmptySet
         index = 0
         for set_i in sets:
             if isinstance(set_i, Set):
@@ -2146,7 +2150,6 @@ class DisjointUnion(Set):
 
     def __iter__(self):
         if self.is_iterable:
-            from sympy.core.numbers import Integer
 
             iters = []
             for i, s in enumerate(self.sets):
@@ -2193,7 +2196,7 @@ def imageset(*args):
     Explanation
     ===========
 
-    If this function can't compute the image, it returns an
+    If this function cannot compute the image, it returns an
     unevaluated ImageSet object.
 
     .. math::
@@ -2233,9 +2236,8 @@ def imageset(*args):
     sympy.sets.fancysets.ImageSet
 
     """
-    from sympy.core import Lambda
-    from sympy.sets.fancysets import ImageSet
-    from sympy.sets.setexpr import set_function
+    from .fancysets import ImageSet
+    from .setexpr import set_function
 
     if len(args) < 2:
         raise ValueError('imageset expects at least 2 args, got: %s' % len(args))
@@ -2320,7 +2322,7 @@ def is_function_invertible_in_set(func, setv):
     Checks whether function ``func`` is invertible when the domain is
     restricted to set ``setv``.
     """
-    from sympy import exp, log
+    from sympy.functions.elementary.exponential import exp, log
     # Functions known to always be invertible:
     if func in (exp, log):
         return True
@@ -2481,8 +2483,7 @@ def _handle_finite_sets(op, x, y, commutative):
         return None
 
 def _apply_operation(op, x, y, commutative):
-    from sympy.sets import ImageSet
-    from sympy import symbols,Lambda
+    from .fancysets import ImageSet
     d = Dummy('d')
 
     out = _handle_finite_sets(op, x, y, commutative)

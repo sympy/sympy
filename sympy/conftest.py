@@ -3,7 +3,9 @@ sys._running_pytest = True  # type: ignore
 from sympy.external.importtools import version_tuple
 
 import pytest
-from sympy.core.cache import clear_cache
+from sympy.core.cache import clear_cache, USE_CACHE
+from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
+from sympy.utilities.misc import ARCH
 import re
 
 sp = re.compile(r'([0-9]+)/([1-9][0-9]*)')
@@ -26,11 +28,8 @@ def process_split(config, items):
 
 
 def pytest_report_header(config):
-    from sympy.utilities.misc import ARCH
     s = "architecture: %s\n" % ARCH
-    from sympy.core.cache import USE_CACHE
     s += "cache:        %s\n" % USE_CACHE
-    from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
     version = ''
     if GROUND_TYPES =='gmpy':
         if HAS_GMPY == 1:

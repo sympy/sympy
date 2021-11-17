@@ -354,7 +354,7 @@ class SciPyPrinter(NumPyPrinter):
         super().__init__(settings=settings)
         self.language = "Python with SciPy and NumPy"
 
-    def _print_SparseMatrix(self, expr):
+    def _print_SparseRepMatrix(self, expr):
         i, j, data = [], [], []
         for (r, c), v in expr.todok().items():
             i.append(r)
@@ -366,7 +366,7 @@ class SciPyPrinter(NumPyPrinter):
             data=data, i=i, j=j, shape=expr.shape
         )
 
-    _print_ImmutableSparseMatrix = _print_SparseMatrix
+    _print_ImmutableSparseMatrix = _print_SparseRepMatrix
 
     # SciPy's lpmv has a different order of arguments from assoc_legendre
     def _print_assoc_legendre(self, expr):

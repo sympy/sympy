@@ -7,7 +7,6 @@ import random
 import math
 
 from sympy.core import sympify
-from sympy.core.compatibility import as_int, SYMPY_INTS
 from sympy.core.containers import Dict
 from sympy.core.evalf import bitcount
 from sympy.core.expr import Expr
@@ -15,12 +14,14 @@ from sympy.core.function import Function
 from sympy.core.logic import fuzzy_and
 from sympy.core.mul import Mul, prod
 from sympy.core.numbers import igcd, ilcm, Rational, Integer
-from sympy.core.power import integer_nthroot, Pow
+from sympy.core.power import integer_nthroot, Pow, integer_log
 from sympy.core.singleton import S
+from sympy.external.gmpy import SYMPY_INTS
 from .primetest import isprime
 from .generate import sieve, primerange, nextprime
 from .digits import digits
-from sympy.utilities.misc import filldedent
+from sympy.utilities.iterables import flatten
+from sympy.utilities.misc import as_int, filldedent
 from .ecm import _ecm_one_factor
 
 # Note: This list should be updated whenever new Mersenne primes are found.
@@ -151,7 +152,6 @@ def smoothness_p(n, m=-1, power=0, visual=None):
 
     factorint, smoothness
     """
-    from sympy.utilities import flatten
 
     # visual must be True, False or other (stored as None)
     if visual in (1, 0):
@@ -251,11 +251,10 @@ def multiplicity(p, n):
     Examples
     ========
 
-    >>> from sympy.ntheory import multiplicity
-    >>> from sympy.core.numbers import Rational as R
+    >>> from sympy import multiplicity, Rational
     >>> [multiplicity(5, n) for n in [8, 5, 25, 125, 250]]
     [0, 1, 2, 3, 3]
-    >>> multiplicity(3, R(1, 9))
+    >>> multiplicity(3, Rational(1, 9))
     -2
 
     Note: when checking for the multiplicity of a number in a
@@ -698,8 +697,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     work had a gcd value not equal to ``n`` but equal to one of the
     factors:
 
-        >>> from sympy.core.numbers import ilcm, igcd
-        >>> from sympy import factorint, Pow
+        >>> from sympy import ilcm, igcd, factorint, Pow
         >>> M = 1
         >>> for i in range(2, 256):
         ...     M = ilcm(M, i)
@@ -727,7 +725,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     Examples
     ========
 
-    With the default smoothness bound, this number can't be cracked:
+    With the default smoothness bound, this number cannot be cracked:
 
         >>> from sympy.ntheory import pollard_pm1
         >>> pollard_pm1(21477639576571)
@@ -764,7 +762,7 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
     conditions apply then the power-smoothness will be about p/2 or p. The more
     realistic is that there will be a large prime factor next to p requiring
     a B value on the order of p/2. Although primes may have been searched for
-    up to this level, the p/2 is a factor of p - 1, something that we don't
+    up to this level, the p/2 is a factor of p - 1, something that we do not
     know. The modular.math reference below states that 15% of numbers in the
     range of 10**15 to 15**15 + 10**4 are 10**6 power smooth so a B of 10**6
     will fail 85% of the time in that range. From 10**8 to 10**8 + 10**3 the
@@ -1427,8 +1425,7 @@ def factorrat(rat, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     the prime factors of ``r`` as keys and their respective multiplicities
     as values. For example:
 
-    >>> from sympy.ntheory import factorrat
-    >>> from sympy.core.symbol import S
+    >>> from sympy import factorrat, S
     >>> factorrat(S(8)/9)    # 8/9 = (2**3) * (3**-2)
     {2: 3, 3: -2}
     >>> factorrat(S(-1)/987)    # -1/789 = -1 * (3**-1) * (7**-1) * (47**-1)
@@ -2366,7 +2363,6 @@ def is_perfect(n):
     .. [2] https://en.wikipedia.org/wiki/Perfect_number
 
     """
-    from sympy.core.power import integer_log
 
     n = as_int(n)
     if _isperfect(n):
@@ -2443,7 +2439,6 @@ def is_mersenne_prime(n):
     .. [1] http://mathworld.wolfram.com/MersennePrime.html
 
     """
-    from sympy.core.power import integer_log
 
     n = as_int(n)
     if _ismersenneprime(n):

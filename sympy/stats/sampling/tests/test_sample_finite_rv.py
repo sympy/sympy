@@ -1,4 +1,5 @@
-from sympy import S, Rational
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
 from sympy.external import import_module
 from sympy.stats import Binomial, sample, Die, FiniteRV, DiscreteUniform, Bernoulli, BetaBinomial, Hypergeometric, \
     Rademacher

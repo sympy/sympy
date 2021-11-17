@@ -1,6 +1,9 @@
 import random
 from sympy.core.numbers import I
-from sympy import symbols, Symbol, Rational, sqrt, Poly
+from sympy.core.numbers import Rational
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.polys.polytools import Poly
 from sympy.matrices import Matrix, eye, ones
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
@@ -408,4 +411,4 @@ def test_charpoly():
     assert n.charpoly() == Poly(x**4 - 167*x**3 + 8811*x**2 - 173457*x + 1080540, x)
 
     n = Matrix(3, 3, [x, 0, 0, a, y, 0, b, c, z])
-    assert n.charpoly() == Poly(t**3 - (x+y+z)*t**2 + t*(x*y+y*z+x*z) - x*y*z , t)
+    assert n.charpoly() == Poly(t**3 - (x+y+z)*t**2 + t*(x*y+y*z+x*z) - x*y*z, t)
