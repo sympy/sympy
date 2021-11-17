@@ -1,5 +1,15 @@
-from sympy import (Abs, Add, Function, Number, Rational, S, Symbol,
-                   diff, exp, integrate, log, sin, sqrt, symbols)
+import warnings
+
+from sympy.core.add import Add
+from sympy.core.function import (Function, diff)
+from sympy.core.numbers import (Number, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
+from sympy.integrals.integrals import integrate
 from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
                                  volume, kilometer, joule)
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
@@ -457,10 +467,10 @@ def test_issue_14932():
 
 def test_issue_14547():
     # the root issue is that an argument with dimensions should
-    # not raise an error when the the `arg - 1` calculation is
+    # not raise an error when the `arg - 1` calculation is
     # performed in the assumptions system
     from sympy.physics.units import foot, inch
-    from sympy import Eq
+    from sympy.core.relational import Eq
     assert log(foot).is_zero is None
     assert log(foot).is_positive is None
     assert log(foot).is_nonnegative is None
@@ -484,3 +494,18 @@ def test_deprecated_quantity_methods():
         step.set_scale_factor(2*meter)
         assert convert_to(step, centimeter) == 200*centimeter
         assert convert_to(1000*step/second, kilometer/second) == 2*kilometer/second
+
+def test_issue_22164():
+    warnings.simplefilter("error")
+    dm = Quantity("dm")
+    SI.set_quantity_dimension(dm, length)
+    SI.set_quantity_scale_factor(dm, 1)
+
+    bad_exp = Quantity("bad_exp")
+    SI.set_quantity_dimension(bad_exp, length)
+    SI.set_quantity_scale_factor(bad_exp, 1)
+
+    expr = dm ** bad_exp
+
+    # deprecation warning is not expected here
+    SI._collect_factor_and_dimension(expr)

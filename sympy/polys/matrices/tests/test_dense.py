@@ -8,7 +8,7 @@ from sympy.polys.matrices.dense import (
         ddm_iadd, ddm_isub, ddm_ineg, ddm_imatmul, ddm_imul, ddm_irref,
         ddm_idet, ddm_iinv, ddm_ilu, ddm_ilu_split, ddm_ilu_solve, ddm_berk)
 from sympy.polys.matrices.exceptions import (
-        DDMShapeError, NonInvertibleMatrixError, NonSquareMatrixError)
+    DMShapeError, DMNonInvertibleMatrixError, DMNonSquareMatrixError)
 
 
 def test_ddm_transpose():
@@ -147,7 +147,7 @@ def test_ddm_inv():
 
     A = [[QQ(1), QQ(2)]]
     Ainv = [[QQ(0), QQ(0)]]
-    raises(NonSquareMatrixError, lambda: ddm_iinv(Ainv, A, QQ))
+    raises(DMNonSquareMatrixError, lambda: ddm_iinv(Ainv, A, QQ))
 
     A = [[QQ(1, 1), QQ(2, 1)], [QQ(3, 1), QQ(4, 1)]]
     Ainv = [[QQ(0), QQ(0)], [QQ(0), QQ(0)]]
@@ -157,7 +157,7 @@ def test_ddm_inv():
 
     A = [[QQ(1, 1), QQ(2, 1)], [QQ(2, 1), QQ(4, 1)]]
     Ainv = [[QQ(0), QQ(0)], [QQ(0), QQ(0)]]
-    raises(NonInvertibleMatrixError, lambda: ddm_iinv(Ainv, A, QQ))
+    raises(DMNonInvertibleMatrixError, lambda: ddm_iinv(Ainv, A, QQ))
 
 
 def test_ddm_ilu():
@@ -293,7 +293,7 @@ def test_ddm_ilu_solve():
 
     # Overdetermined, inconsistent
     b = DDM([[QQ(1)], [QQ(2)], [QQ(4)]], (3, 1), QQ)
-    raises(NonInvertibleMatrixError, lambda: ddm_ilu_solve(x, L, U, swaps, b))
+    raises(DMNonInvertibleMatrixError, lambda: ddm_ilu_solve(x, L, U, swaps, b))
 
     # Square, noninvertible
     # A = DDM([[QQ(1), QQ(2)], [QQ(1), QQ(2)]], (2, 2), QQ)
@@ -301,7 +301,7 @@ def test_ddm_ilu_solve():
     L = [[QQ(1), QQ(0)], [QQ(1), QQ(1)]]
     swaps = []
     b = DDM([[QQ(1)], [QQ(2)]], (2, 1), QQ)
-    raises(NonInvertibleMatrixError, lambda: ddm_ilu_solve(x, L, U, swaps, b))
+    raises(DMNonInvertibleMatrixError, lambda: ddm_ilu_solve(x, L, U, swaps, b))
 
     # Underdetermined
     # A = DDM([[QQ(1), QQ(2)]], (1, 2), QQ)
@@ -313,7 +313,7 @@ def test_ddm_ilu_solve():
 
     # Shape mismatch
     b3 = DDM([[QQ(1)], [QQ(2)], [QQ(3)]], (3, 1), QQ)
-    raises(DDMShapeError, lambda: ddm_ilu_solve(x, L, U, swaps, b3))
+    raises(DMShapeError, lambda: ddm_ilu_solve(x, L, U, swaps, b3))
 
     # Empty shape mismatch
     U = [[QQ(1)]]
@@ -321,7 +321,7 @@ def test_ddm_ilu_solve():
     swaps = []
     x = [[QQ(1)]]
     b = []
-    raises(DDMShapeError, lambda: ddm_ilu_solve(x, L, U, swaps, b))
+    raises(DMShapeError, lambda: ddm_ilu_solve(x, L, U, swaps, b))
 
     # Empty system
     U = []
@@ -342,4 +342,4 @@ def test_ddm_charpoly():
     assert ddm_berk(A, ZZ) == Avec
 
     A = DDM([[ZZ(1), ZZ(2)]], (1, 2), ZZ)
-    raises(DDMShapeError, lambda: ddm_berk(A, ZZ))
+    raises(DMShapeError, lambda: ddm_berk(A, ZZ))

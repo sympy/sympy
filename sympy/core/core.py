@@ -60,7 +60,7 @@ class Registry:
     def __delattr__(self, name):
         delattr(self.__class__, name)
 
-#A set containing all sympy class objects
+#A set containing all SymPy class objects
 all_classes = set()
 
 

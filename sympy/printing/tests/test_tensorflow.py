@@ -1,5 +1,6 @@
 import random
-from sympy import symbols, Derivative
+from sympy.core.function import Derivative
+from sympy.core.symbol import symbols
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
     PermuteDims, ArrayDiagonal
 from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt

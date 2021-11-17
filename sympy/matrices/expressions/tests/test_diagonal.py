@@ -1,6 +1,11 @@
 from sympy.matrices.expressions import MatrixSymbol
 from sympy.matrices.expressions.diagonal import DiagonalMatrix, DiagonalOf, DiagMatrix, diagonalize_vector
-from sympy import Symbol, ask, Q, KroneckerDelta, Identity, Matrix, MatMul
+from sympy.assumptions.ask import (Q, ask)
+from sympy.core.symbol import Symbol
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions.matmul import MatMul
+from sympy.matrices.expressions.special import Identity
 from sympy.testing.pytest import raises
 
 

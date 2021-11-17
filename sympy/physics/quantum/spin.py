@@ -1,8 +1,19 @@
 """Quantum mechanical angular momemtum."""
 
-from sympy import (Add, binomial, cos, exp, Expr, factorial, I, Integer, Mul,
-                   pi, Rational, S, sin, simplify, sqrt, Sum, symbols, sympify,
-                   Tuple, Dummy)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Integer, Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.simplify.simplify import simplify
 from sympy.matrices import zeros
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.pretty.pretty_symbology import pretty_symbol

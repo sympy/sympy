@@ -1,7 +1,11 @@
-from sympy import Abs, S, Symbol, symbols, I, Rational, PurePoly, Float
+from sympy.core.numbers import (Float, I, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.polys.polytools import PurePoly
 from sympy.matrices import \
     Matrix, MutableSparseMatrix, ImmutableSparseMatrix, SparseMatrix, eye, \
-    ones, zeros, ShapeError
+    ones, zeros, ShapeError, NonSquareMatrixError
 from sympy.testing.pytest import raises
 
 
@@ -675,6 +679,13 @@ def test_sparse_solve():
 
 
 def test_lower_triangular_solve():
+    raises(NonSquareMatrixError, lambda:
+        SparseMatrix([[1, 2]]).lower_triangular_solve(Matrix([[1, 2]])))
+    raises(ShapeError, lambda:
+        SparseMatrix([[1, 2], [0, 4]]).lower_triangular_solve(Matrix([1])))
+    raises(ValueError, lambda:
+        SparseMatrix([[1, 2], [3, 4]]).lower_triangular_solve(Matrix([[1, 2], [3, 4]])))
+
     a, b, c, d = symbols('a:d')
     u, v, w, x = symbols('u:x')
 
@@ -688,6 +699,13 @@ def test_lower_triangular_solve():
 
 
 def test_upper_triangular_solve():
+    raises(NonSquareMatrixError, lambda:
+        SparseMatrix([[1, 2]]).upper_triangular_solve(Matrix([[1, 2]])))
+    raises(ShapeError, lambda:
+        SparseMatrix([[1, 2], [0, 4]]).upper_triangular_solve(Matrix([1])))
+    raises(TypeError, lambda:
+        SparseMatrix([[1, 2], [3, 4]]).upper_triangular_solve(Matrix([[1, 2], [3, 4]])))
+
     a, b, c, d = symbols('a:d')
     u, v, w, x = symbols('u:x')
 

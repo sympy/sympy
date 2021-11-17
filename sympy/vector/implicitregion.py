@@ -1,6 +1,12 @@
-from sympy import S, Rational, gcd, sqrt, sign, symbols, Complement
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.polys.polytools import gcd
+from sympy.sets.sets import Complement
 from sympy.core import Basic, Tuple, diff, expand, Eq, Integer
-from sympy.core.compatibility import ordered
+from sympy.core.sorting import ordered
 from sympy.core.symbol import _symbol
 from sympy.solvers import solveset, nonlinsolve, diophantine
 from sympy.polys import total_degree
@@ -465,7 +471,7 @@ class ImplicitRegion(Basic):
         elif len(self.variables) == 3:
 
             parameter1, parameter2 = parameters
-            if parameter1 == 'r' or parameter2 == 'r':
+            if 'r' in parameters:
                 # To avoid name conflict between parameters
                 r = _symbol('r_', real=True)
             else:

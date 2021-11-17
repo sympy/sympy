@@ -1,6 +1,7 @@
 """For more tests on satisfiability, see test_dimacs"""
 
-from sympy import symbols, Q
+from sympy.assumptions.ask import Q
+from sympy.core.symbol import symbols
 from sympy.logic.boolalg import And, Implies, Equivalent, true, false
 from sympy.logic.inference import literal_symbol, \
      pl_true, satisfiable, valid, entails, PropKB
@@ -214,7 +215,7 @@ def test_pl_true():
 
 
 def test_pl_true_wrong_input():
-    from sympy import pi
+    from sympy.core.numbers import pi
     raises(ValueError, lambda: pl_true('John Cleese'))
     raises(ValueError, lambda: pl_true(42 + pi + pi ** 2))
     raises(ValueError, lambda: pl_true(42))
@@ -284,7 +285,7 @@ def test_satisfiable_bool():
 def test_satisfiable_all_models():
     from sympy.abc import A, B
     assert next(satisfiable(False, all_models=True)) is False
-    assert list(satisfiable((A >> ~A) & A , all_models=True)) == [False]
+    assert list(satisfiable((A >> ~A) & A, all_models=True)) == [False]
     assert list(satisfiable(True, all_models=True)) == [{true: true}]
 
     models = [{A: True, B: False}, {A: False, B: True}]
@@ -305,7 +306,7 @@ def test_satisfiable_all_models():
     # This is a santiy test to check that only the required number
     # of solutions are generated. The expr below has 2**100 - 1 models
     # which would time out the test if all are generated at once.
-    from sympy import numbered_symbols
+    from sympy.utilities.iterables import numbered_symbols
     from sympy.logic.boolalg import Or
     sym = numbered_symbols()
     X = [next(sym) for i in range(100)]

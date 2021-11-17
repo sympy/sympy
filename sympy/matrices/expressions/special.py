@@ -220,7 +220,7 @@ class OneMatrix(MatrixExpr):
         return self._is_1x1() == True
 
     def as_explicit(self):
-        from sympy import ImmutableDenseMatrix
+        from sympy.matrices.immutable import ImmutableDenseMatrix
         return ImmutableDenseMatrix.ones(*self.shape)
 
     def doit(self, **hints):
@@ -257,7 +257,7 @@ class OneMatrix(MatrixExpr):
         elif condition == False:
             return S.Zero
         else:
-            from sympy import Determinant
+            from sympy.matrices.expressions.determinant import Determinant
             return Determinant(self)
 
     def _eval_inverse(self):

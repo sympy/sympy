@@ -2,7 +2,9 @@
 Physical quantities.
 """
 
-from sympy import AtomicExpr, Symbol, sympify
+from sympy.core.expr import AtomicExpr
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
 from sympy.physics.units.dimensions import _QuantityMapper
 from sympy.physics.units.prefixes import Prefix
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -28,7 +30,7 @@ class Quantity(AtomicExpr):
             name = Symbol(name)
 
         # For Quantity(name, dim, scale, abbrev) to work like in the
-        # old version of Sympy:
+        # old version of SymPy:
         if not isinstance(abbrev, str) and not \
                    isinstance(abbrev, Symbol):
             dimension, scale_factor, abbrev = abbrev, dimension, scale_factor

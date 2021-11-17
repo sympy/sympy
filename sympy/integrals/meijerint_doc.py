@@ -2,12 +2,15 @@
     be displayed in the sphinx documentation. """
 
 
-from typing import Any, Dict, List, Tuple, Type
+from typing import Any, Dict as tDict, List, Tuple as tTuple, Type
 
 from sympy.integrals.meijerint import _create_lookup_table
-from sympy import latex, Eq, Add, Symbol
+from sympy.core.add import Add
+from sympy.core.relational import Eq
+from sympy.core.symbol import Symbol
+from sympy.printing.latex import latex
 
-t = {}  # type: Dict[Tuple[Type, ...], List[Any]]
+t = {}  # type: tDict[tTuple[Type, ...], List[Any]]
 _create_lookup_table(t)
 
 doc = ""

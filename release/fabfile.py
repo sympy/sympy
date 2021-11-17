@@ -139,7 +139,7 @@ def prepare_apt():
     # Be sure to use the Python 2 pip
     sudo("/usr/bin/pip install twine")
     # Needed to build the docs
-    sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra librsvg2-bin docbook2x")
+    sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra librsvg2-bin docbook2x dbus")
     # Our Ubuntu is too old to include Python 3.3
     sudo("apt-get -y install python-software-properties")
     sudo("add-apt-repository -y ppa:fkrull/deadsnakes")
@@ -424,7 +424,7 @@ git_whitelist = {
     # This is just a distribute version of setup.py. Used mainly for setup.py
     # develop, which we don't care about in the release tarball
     'setupegg.py',
-    # Example on how to use tox to test Sympy. For development.
+    # Example on how to use tox to test SymPy. For development.
     'tox.ini.sample',
     }
 
