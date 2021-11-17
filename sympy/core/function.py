@@ -2822,30 +2822,85 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
 
 # This is a special application of two hints
 
-def _mexpand(expr, recursive=False):
-    # expand multinomials and then expand products; this may not always
-    # be sufficient to give a fully expanded expression (see
-    # test_issue_8247_8354 in test_arit)
-    if expr is None:
-        return
-    was = None
-    while was != expr:
-        was, expr = expr, expand_mul(expand_multinomial(expr))
-        if not recursive:
-            break
-    return expr
+def mexpand(expr, recursive=False, *, numer=None, denom=None, frac=None):
+    """expand multinomials and then expand products in ``expr``.
+
+    If recursive is False, this may not always be sufficient to
+    give a fully expanded expression.
+
+    To target expansion only on the numerator or denominator, set
+    ``numer`` or ``denom`` to True, respectively. To keep numerator
+    and denominator over each other and expand each, make `frac`` True.
+
+    EXAMPLES
+    ========
+
+    >>> from sympy.core.function import mexpand
+    >>> from sympy.abc import x
+    >>> eq = ((x + 1)**2 + 1)/(x + 1)**2
+    >>> mexpand(eq, numer=True)
+    (x**2 + 2*x + 2)/(x + 1)**2
+    >>> mexpand(eq, denom=True)
+    ((x + 1)**2 + 1)/(x**2 + 2*x + 2)
+    >>> mexpand(eq, frac=True)
+    1
+    >>> mexpand(eq)
+    x**2/(x**2 + 2*x + 1) + 2*x/(x**2 + 2*x + 1) + 2/(x**2 + 2*x + 1)
+
+    See Also
+    ========
+    mexpand_cse
+    """
+    from sympy.simplify.radsimp import fraction
+    def do(expr):
+        was = None
+        while was != expr:
+            was, expr = expr, expand_mul(expand_multinomial(expr))
+            if not recursive:
+                break
+        return expr
+    n, d = fraction(sympify(expr), exact=True)
+    both = False
+    if frac or numer is None and denom is None:
+        both = numer = denom = True
+    if numer:
+        n = do(n)
+    if denom:
+        if not d.is_Atom:
+            d = do(d)
+    if n.is_Add and both and not frac:
+        return n.func(*[i/d for i in n.args])
+    return n/d
 
 
-def mexpand(e, _recursive=False):
-    """efficiently expand the numerator of an expression"""
+def mexpand_cse(e, _final_denom=True):
+    """return a recursively expanded expression using
+    multinomial and product expansions, but introduce
+    any repeated subexpressions 1 at a time while doing so.
+    Unlike `mexpand`, the results here will always be
+    expressed as a rational expression (but common factors
+    will not necessarily be automatically be cancelled).
+
+    EXAMPLES
+    ========
+
+    >>> from sympy.core.function import mexpand_cse, mexpand
+    >>> from sympy.abc import x
+    >>> eq = 1 + (x + 1)**2/(1 - (x + 1)**2)
+    >>> mexpand_cse(eq)
+    1/(-x**2 - 2*x)
+    >>> mexpand(eq)
+    x**2/(-x**2 - 2*x) + 2*x/(-x**2 - 2*x) + 1 + 1/(-x**2 - 2*x)
+    """
     from sympy.simplify.cse_main import cse
     r, e = cse(e, list=False)
     for r in reversed(r):
-        e = _mexpand(e, recursive=_recursive).xreplace(dict([r]))
+        e = mexpand(e, recursive=True).xreplace(dict([r]))
     e, d = e.as_numer_denom()
-    e = _mexpand(e, recursive=_recursive)
+    e = mexpand(e, recursive=True)
+    if _final_denom:
+        d = mexpand(d, recursive=True)
     return e/d
-
 
 # These are simple wrappers around single hints.
 

@@ -1,7 +1,7 @@
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
-from sympy.core.function import (Derivative, Function, diff, mexpand)
+from sympy.core.function import (Derivative, Function, diff, mexpand_cse)
 from sympy.core.mul import Mul
 from sympy.core import (GoldenRatio, TribonacciConstant)
 from sympy.core.numbers import (E, Float, I, Rational, oo, pi)

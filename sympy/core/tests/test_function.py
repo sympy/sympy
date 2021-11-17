@@ -21,7 +21,7 @@ from sympy.matrices.dense import Matrix
 from sympy.printing.str import sstr
 from sympy.series.order import O
 from sympy.tensor.indexed import Indexed
-from sympy.core.function import (PoleError, _mexpand, arity,
+from sympy.core.function import (PoleError, mexpand, arity,
         BadSignatureError, BadArgumentsError)
 from sympy.core.parameters import _exp_is_pow
 from sympy.core.sympify import sympify
@@ -1030,9 +1030,14 @@ def test_issue_7688():
 
 def test_mexpand():
     from sympy.abc import x
-    assert _mexpand(None) is None
-    assert _mexpand(1) is S.One
-    assert _mexpand(x*(x + 1)**2) == (x*(x + 1)**2).expand()
+    assert mexpand(None) is None
+    assert mexpand(1) is S.One
+    assert mexpand(x*(x + 1)**2) == (x*(x + 1)**2).expand()
+    n, d = (x + 1)**2, (x - 1)**2
+    xn, xd = x**2 + 2*x + 1, x**2 - 2*x + 1
+    assert mexpand(n/d) == xn/xd
+    assert mexpand(n/d, numer=True) == xn/d
+    assert mexpand(n/d, denom=True) == n/xd
 
 
 def test_issue_8469():
