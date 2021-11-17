@@ -2948,6 +2948,8 @@ class Infinity(Number, metaclass=Singleton):
             if other in (S.NegativeInfinity, S.NaN):
                 return S.NaN
             return self
+        if other is S.ComplexInfinity:
+            return S.NaN
         return Number.__add__(self, other)
     __radd__ = __add__
 
@@ -2957,10 +2959,14 @@ class Infinity(Number, metaclass=Singleton):
             if other in (S.Infinity, S.NaN):
                 return S.NaN
             return self
+        if other is S.ComplexInfinity:
+            return S.NaN
         return Number.__sub__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __rsub__(self, other):
+        if other is S.ComplexInfinity:
+            return S.NaN
         return (-self).__add__(other)
 
     @_sympifyit('other', NotImplemented)
@@ -3412,6 +3418,38 @@ class ComplexInfinity(AtomicExpr, metaclass=Singleton):
     def ceiling(self):
         return self
 
+    @_sympifyit('other', NotImplemented)
+    def __add__(self, other):
+        if isinstance(other, Number) and global_parameters.evaluate:
+            if other in (S.NaN, S.Infinity, S.NegativeInfinity):
+                return S.NaN
+            return self
+        return AtomicExpr.__add__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __sub__(self, other):
+        if isinstance(other, Number) and global_parameters.evaluate:
+            if other in (S.NaN, S.Infinity, S.NegativeInfinity):
+                return S.NaN
+            return self
+        return AtomicExpr.__sub__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __radd__(self, other):
+        if isinstance(other, Number) and global_parameters.evaluate:
+            if other in (S.NaN, S.Infinity, S.NegativeInfinity):
+                return S.NaN
+            return self
+        return AtomicExpr.__radd__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __rsub__(self, other):
+        if isinstance(other, Number) and global_parameters.evaluate:
+            if other in (S.NaN, S.Infinity, S.NegativeInfinity):
+                return S.NaN
+            return self
+        return AtomicExpr.__rsub__(self, other)
+
     @staticmethod
     def __neg__():
         return S.ComplexInfinity
@@ -3485,6 +3523,28 @@ class NumberSymbol(AtomicExpr):
     def __int__(self):
         # subclass with appropriate return value
         raise NotImplementedError
+
+    @_sympifyit('other', NotImplemented)
+    def __add__(self, other):
+        if isinstance(other, Number) and global_parameters.evaluate:
+            if other is S.NaN:
+                return S.NaN
+            elif other is S.Infinity:
+                return S.Infinity
+            elif other is S.NegativeInfinity:
+                return S.NegativeInfinity
+        return AtomicExpr.__add__(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def __sub__(self, other):
+        if isinstance(other, Number) and global_parameters.evaluate:
+            if other is S.NaN:
+                return S.NaN
+            elif other is S.Infinity:
+                return S.NegativeInfinity
+            elif other is S.NegativeInfinity:
+                return S.Infinity
+        return AtomicExpr.__sub__(self, other)
 
     def __hash__(self):
         return super().__hash__()
