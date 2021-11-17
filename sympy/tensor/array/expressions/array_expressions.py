@@ -107,7 +107,7 @@ class ArrayElement(_ArrayExpr):
         if s.name != self.name:
             return S.Zero
 
-        return KroneckerDelta(s.indices[0], self.indices[0])*KroneckerDelta(s.indices[1], self.indices[1])
+        return Mul.fromiter(KroneckerDelta(i, j) for i, j in zip(self.indices, s.indices))
 
 
 class ZeroArray(_ArrayExpr):
