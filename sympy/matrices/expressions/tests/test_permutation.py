@@ -8,7 +8,7 @@ from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix, Identity
 from sympy.matrices.expressions.permutation import \
     MatrixPermute, PermutationMatrix
 from sympy.testing.pytest import raises
-from sympy import Symbol
+from sympy.core.symbol import Symbol
 
 
 def test_PermutationMatrix_basic():

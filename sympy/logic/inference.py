@@ -1,7 +1,7 @@
 """Inference in propositional logic"""
 
-from sympy.logic.boolalg import And, Not, conjuncts, to_cnf
-from sympy.core.compatibility import ordered
+from sympy.logic.boolalg import And, Not, conjuncts, to_cnf, BooleanFunction
+from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
 from sympy.external.importtools import import_module
 
@@ -173,7 +173,7 @@ def pl_true(expr, model=None, deep=False):
     """
 
     from sympy.core.symbol import Symbol
-    from sympy.logic.boolalg import BooleanFunction
+
     boolean = (True, False)
 
     def _validate(expr):

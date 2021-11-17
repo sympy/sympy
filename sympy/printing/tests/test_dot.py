@@ -1,6 +1,10 @@
 from sympy.printing.dot import (purestr, styleof, attrprint, dotnode,
         dotedges, dotprint)
-from sympy import Symbol, Integer, Basic, Expr, srepr, Float, symbols
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr
+from sympy.core.numbers import (Float, Integer)
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.printing.repr import srepr
 from sympy.abc import x
 
 
@@ -88,7 +92,7 @@ def test_dotprint_depth():
     assert "depth" not in text
 
 def test_Matrix_and_non_basics():
-    from sympy import MatrixSymbol
+    from sympy.matrices.expressions.matexpr import MatrixSymbol
     n = Symbol('n')
     assert dotprint(MatrixSymbol('X', n, n)) == \
 """digraph{

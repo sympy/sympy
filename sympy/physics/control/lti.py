@@ -1,6 +1,16 @@
-from sympy import Basic, Add, Mul, Pow, degree, Symbol, expand, cancel, Expr, roots
+from typing import Type
+
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr
+from sympy.core.function import expand
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.symbol import Symbol
+from sympy.polys.polyroots import roots
+from sympy.polys.polytools import (cancel, degree)
 from sympy.core.containers import Tuple
-from sympy.core.evalf import EvalfMixin, prec_to_dps
+from sympy.core.evalf import EvalfMixin
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, ComplexInfinity
 from sympy.core.symbol import Dummy
@@ -9,6 +19,8 @@ from sympy.polys import Poly, rootof
 from sympy.series import limit
 from sympy.matrices import ImmutableMatrix, eye
 from sympy.matrices.expressions import MatMul, MatAdd
+
+from mpmath.libmp.libmpf import prec_to_dps
 
 __all__ = ['TransferFunction', 'Series', 'MIMOSeries', 'Parallel', 'MIMOParallel',
     'Feedback', 'MIMOFeedback', 'TransferFunctionMatrix']
@@ -25,6 +37,9 @@ def _roots(poly, var):
 
 class LinearTimeInvariant(Basic, EvalfMixin):
     """A common class for all the Linear Time-Invariant Dynamical Systems."""
+
+    _clstype: Type
+
     # Users should not directly interact with this class.
     def __new__(cls, *system, **kwargs):
         if cls is LinearTimeInvariant:
@@ -2673,7 +2688,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
             expr_mat_arg.append(temp)
 
         if isinstance(arg, (list, Tuple)):
-            # Making nested Tuple (sympy.core.containers.Tuple) from nested list or nested python tuple
+            # Making nested Tuple (sympy.core.containers.Tuple) from nested list or nested Python tuple
             arg = Tuple(*(Tuple(*r, sympify=False) for r in arg), sympify=False)
 
         obj = super(TransferFunctionMatrix, cls).__new__(cls, arg)
@@ -2922,7 +2937,8 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
 
     def _eval_evalf(self, prec):
         """Calls evalf() on each transfer function in the transfer function matrix"""
-        mat = self._expr_mat.applyfunc(lambda a: a.evalf(n=prec_to_dps(prec)))
+        dps = prec_to_dps(prec)
+        mat = self._expr_mat.applyfunc(lambda a: a.evalf(n=dps))
         return _to_TFM(mat, self.var)
 
     def _eval_simplify(self, **kwargs):

@@ -1,6 +1,10 @@
 from functools import wraps
 
-from sympy import Matrix, eye, Integer, expand, Indexed, Sum
+from sympy.concrete.summations import Sum
+from sympy.core.function import expand
+from sympy.core.numbers import Integer
+from sympy.matrices.dense import (Matrix, eye)
+from sympy.tensor.indexed import Indexed
 from sympy.combinatorics import Permutation
 from sympy.core import S, Rational, Symbol, Basic, Add
 from sympy.core.containers import Tuple
@@ -499,7 +503,7 @@ def test_TensExpr():
     raises(ValueError, lambda: S.One/(A(c, d) + g(c, d)))
     raises(ValueError, lambda: A(a, b) + A(a, c))
 
-    A(a, b) + B(a, b) # assigned to t for below
+    #t = A(a, b) + B(a, b) # assigned to t for below
     #raises(NotImplementedError, lambda: TensExpr.__mul__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__add__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__radd__(t, 'a'))

@@ -3,8 +3,12 @@ This module implements a method to find
 Euler-Lagrange Equations for given Lagrangian.
 """
 from itertools import combinations_with_replacement
-from sympy import Function, sympify, diff, Eq, S, Symbol, Derivative
-from sympy.core.compatibility import iterable
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.utilities.iterables import iterable
 
 
 def euler_equations(L, funcs=(), vars=()):
@@ -18,8 +22,8 @@ def euler_equations(L, funcs=(), vars=()):
         The Lagrangian that should be a function of the functions listed
         in the second argument and their derivatives.
 
-        For example, in the case of two functions `f(x,y)`, `g(x,y)` and
-        two independent variables `x`, `y` the Lagrangian would have the form:
+        For example, in the case of two functions $f(x,y)$, $g(x,y)$ and
+        two independent variables $x$, $y$ the Lagrangian has the form:
 
             .. math:: L\left(f(x,y),g(x,y),\frac{\partial f(x,y)}{\partial x},
                       \frac{\partial f(x,y)}{\partial y},
@@ -28,7 +32,7 @@ def euler_equations(L, funcs=(), vars=()):
 
         In many cases it is not necessary to provide anything, except the
         Lagrangian, it will be auto-detected (and an error raised if this
-        couldn't be done).
+        cannot be done).
 
     funcs : Function or an iterable of Functions
         The functions that the Lagrangian depends on. The Euler equations
@@ -46,8 +50,7 @@ def euler_equations(L, funcs=(), vars=()):
     Examples
     ========
 
-    >>> from sympy import Symbol, Function
-    >>> from sympy.calculus.euler import euler_equations
+    >>> from sympy import euler_equations, Symbol, Function
     >>> x = Function('x')
     >>> t = Symbol('t')
     >>> L = (x(t).diff(t))**2/2 - x(t)**2/2

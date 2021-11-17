@@ -17,14 +17,15 @@ Segment3D
 
 """
 
-from sympy.core import Expr, S, sympify
-from sympy.core.compatibility import ordered
 from sympy.core.containers import Tuple
-from sympy.core.decorators import deprecated
 from sympy.core.evalf import N
+from sympy.core.expr import Expr
 from sympy.core.numbers import Rational, oo
 from sympy.core.relational import Eq
-from sympy.core.symbol import _symbol, Dummy
+from sympy.core.singleton import S
+from sympy.core.sorting import ordered
+from sympy.core.symbol import _symbol, Dummy, uniquely_named_symbol
+from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
 from .entity import GeometryEntity, GeometrySet
@@ -33,9 +34,10 @@ from .point import Point, Point3D
 from .util import find, intersection
 from sympy.logic.boolalg import And
 from sympy.matrices import Matrix
-from sympy.sets import Intersection
+from sympy.sets.sets import Intersection
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solveset import linear_coeffs
+from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import Undecidable, filldedent
 
@@ -1094,7 +1096,7 @@ class Line(LinearEntity):
 
     p1 : Point
     p2 : Point
-    slope : sympy expression
+    slope : SymPy expression
     direction_ratio : list
     equation : equation of a line
 
@@ -1155,14 +1157,27 @@ class Line(LinearEntity):
     """
     def __new__(cls, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
-            x = kwargs.get('x', 'x')
-            y = kwargs.get('y', 'y')
+            missing = uniquely_named_symbol('?', args).name
+            if not kwargs:
+                x = 'x'
+                y = 'y'
+            else:
+                x = kwargs.pop('x', missing)
+                y = kwargs.pop('y', missing)
+            if kwargs:
+                raise ValueError('expecting only x and y as keywords')
+
             equation = args[0]
             if isinstance(equation, Eq):
                 equation = equation.lhs - equation.rhs
-            xin, yin = x, y
-            x = find(x, equation) or Dummy()
-            y = find(y, equation) or Dummy()
+
+            def find_or_missing(x):
+                try:
+                    return find(x, equation)
+                except ValueError:
+                    return missing
+            x = find_or_missing(x)
+            y = find_or_missing(y)
 
             a, b, c = linear_coeffs(equation, x, y)
 
@@ -1170,7 +1185,8 @@ class Line(LinearEntity):
                 return Line((0, -c/b), slope=-a/b)
             if a:
                 return Line((-c/a, 0), slope=oo)
-            raise ValueError('neither %s nor %s were found in the equation' % (xin, yin))
+
+            raise ValueError('not found in equation: %s' % (set('xy') - {x, y}))
 
         else:
             if len(args) > 0:
@@ -1553,7 +1569,7 @@ class Segment(LinearEntity):
     Attributes
     ==========
 
-    length : number or sympy expression
+    length : number or SymPy expression
     midpoint : Point
 
     See Also
@@ -1649,7 +1665,7 @@ class Segment(LinearEntity):
                 # use the triangle inequality
                 d1, d2 = other - self.p1, other - self.p2
                 d = self.p2 - self.p1
-                # without the call to simplify, sympy cannot tell that an expression
+                # without the call to simplify, SymPy cannot tell that an expression
                 # like (a+b)*(a/2+b/2) is always non-negative.  If it cannot be
                 # determined, raise an Undecidable error
                 try:
@@ -1915,7 +1931,7 @@ class LinearEntity2D(LinearEntity):
         Returns
         =======
 
-        slope : number or sympy expression
+        slope : number or SymPy expression
 
         See Also
         ========
@@ -1954,7 +1970,7 @@ class Line2D(LinearEntity2D, Line):
 
     p1 : Point
     pt : Point
-    slope : sympy expression
+    slope : SymPy expression
 
     See Also
     ========
@@ -2088,7 +2104,7 @@ class Line2D(LinearEntity2D, Line):
         Returns
         =======
 
-        equation : sympy expression
+        equation : SymPy expression
 
         See Also
         ========
@@ -2331,7 +2347,7 @@ class Segment2D(LinearEntity2D, Segment):
     Attributes
     ==========
 
-    length : number or sympy expression
+    length : number or SymPy expression
     midpoint : Point
 
     See Also
@@ -2547,7 +2563,7 @@ class Line3D(LinearEntity3D, Line):
                 feature="equation() no longer needs 'k'",
                 issue=13742,
                 deprecated_since_version="1.2").warn()
-        from sympy import solve
+        from sympy.solvers.solvers import solve
         x, y, z, k = [_symbol(i, real=True) for i in (x, y, z, 'k')]
         p1, p2 = self.points
         d1, d2, d3 = p1.direction_ratio(p2)
@@ -2739,7 +2755,7 @@ class Segment3D(LinearEntity3D, Segment):
     Attributes
     ==========
 
-    length : number or sympy expression
+    length : number or SymPy expression
     midpoint : Point3D
 
     See Also

@@ -1,5 +1,12 @@
-from sympy import (symbols, Symbol, sinh, diff, Function, Derivative, Matrix, Rational, S,
-                   I, Eq, sqrt, Mul, pi)
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.hyperbolic import sinh
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.dense import Matrix
 from sympy.core.containers import Tuple
 from sympy.functions import exp, cos, sin, log, tan, Ci, Si, erf, erfi
 from sympy.matrices import dotprodsimp, NonSquareMatrixError

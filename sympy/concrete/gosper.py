@@ -1,10 +1,10 @@
 """Gosper's algorithm for hypergeometric summation. """
 
 from sympy.core import S, Dummy, symbols
-from sympy.core.compatibility import is_sequence
 from sympy.polys import Poly, parallel_poly_from_expr, factor
 from sympy.solvers import solve
 from sympy.simplify import hypersimp
+from sympy.utilities.iterables import is_sequence
 
 
 def gosper_normal(f, g, n, polys=True):
@@ -101,7 +101,7 @@ def gosper_term(f, n):
     ========
 
     >>> from sympy.concrete.gosper import gosper_term
-    >>> from sympy.functions import factorial
+    >>> from sympy import factorial
     >>> from sympy.abc import n
 
     >>> gosper_term((4*n + 1)*factorial(n)/factorial(2*n + 1), n)
@@ -181,7 +181,7 @@ def gosper_sum(f, k):
     ========
 
     >>> from sympy.concrete.gosper import gosper_sum
-    >>> from sympy.functions import factorial
+    >>> from sympy import factorial
     >>> from sympy.abc import n, k
 
     >>> f = (4*k + 1)*factorial(k)/factorial(2*k + 1)

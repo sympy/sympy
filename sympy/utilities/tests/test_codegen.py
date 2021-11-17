@@ -1,8 +1,10 @@
 from io import StringIO
 
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
-from sympy import erf, Integral, Symbol
-from sympy import Equality
+from sympy.core.relational import Equality
+from sympy.core.symbol import Symbol
+from sympy.functions.special.error_functions import erf
+from sympy.integrals.integrals import Integral
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.utilities.codegen import (
     codegen, make_routine, CCodeGen, C89CodeGen, C99CodeGen, InputArgument,
@@ -69,7 +71,7 @@ def test_empty_c_code_with_comment():
     assert source[:82] == (
         "/******************************************************************************\n *"
     )
-          #   "                    Code generated with sympy 0.7.2-git                    "
+          #   "                    Code generated with SymPy 0.7.2-git                    "
     assert source[158:] == (                                                              "*\n"
             " *                                                                            *\n"
             " *              See http://www.sympy.org/ for more information.               *\n"
@@ -213,8 +215,12 @@ def test_no_results_c():
 
 def test_ansi_math1_codegen():
     # not included: log10
-    from sympy import (acos, asin, atan, ceiling, cos, cosh, floor, log, ln,
-        sin, sinh, sqrt, tan, tanh, Abs)
+    from sympy.functions.elementary.complexes import Abs
+    from sympy.functions.elementary.exponential import log
+    from sympy.functions.elementary.hyperbolic import (cosh, sinh, tanh)
+    from sympy.functions.elementary.integers import (ceiling, floor)
+    from sympy.functions.elementary.miscellaneous import sqrt
+    from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, tan)
     x = symbols('x')
     name_expr = [
         ("test_fabs", Abs(x)),
@@ -226,7 +232,7 @@ def test_ansi_math1_codegen():
         ("test_cosh", cosh(x)),
         ("test_floor", floor(x)),
         ("test_log", log(x)),
-        ("test_ln", ln(x)),
+        ("test_ln", log(x)),
         ("test_sin", sin(x)),
         ("test_sinh", sinh(x)),
         ("test_sqrt", sqrt(x)),
@@ -269,7 +275,7 @@ def test_ansi_math1_codegen():
 
 def test_ansi_math2_codegen():
     # not included: frexp, ldexp, modf, fmod
-    from sympy import atan2
+    from sympy.functions.elementary.trigonometric import atan2
     x, y = symbols('x,y')
     name_expr = [
         ("test_atan2", atan2(x, y)),
@@ -292,7 +298,7 @@ def test_ansi_math2_codegen():
 
 
 def test_complicated_codegen():
-    from sympy import sin, cos, tan
+    from sympy.functions.elementary.trigonometric import (cos, sin, tan)
     x, y, z = symbols('x,y,z')
     name_expr = [
         ("test1", ((sin(x) + cos(y) + tan(z))**7).expand()),
@@ -361,7 +367,7 @@ def test_complicated_codegen():
 
 def test_loops_c():
     from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
+    from sympy.core.symbol import symbols
     n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
@@ -428,7 +434,7 @@ def test_partial_loops_c():
     # check that loop boundaries are determined by Idx, and array strides
     # determined by shape of IndexedBase object.
     from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
+    from sympy.core.symbol import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     A = IndexedBase('A', shape=(m, p))
     x = IndexedBase('x')
@@ -469,7 +475,8 @@ def test_partial_loops_c():
 
 
 def test_output_arg_c():
-    from sympy import sin, cos, Equality
+    from sympy.core.relational import Equality
+    from sympy.functions.elementary.trigonometric import (cos, sin)
     x, y, z = symbols("x,y,z")
     r = make_routine("foo", [Equality(y, sin(x)), cos(x)])
     c = C89CodeGen()
@@ -489,7 +496,8 @@ def test_output_arg_c():
 
 
 def test_output_arg_c_reserved_words():
-    from sympy import sin, cos, Equality
+    from sympy.core.relational import Equality
+    from sympy.functions.elementary.trigonometric import (cos, sin)
     x, y, z = symbols("if, while, z")
     r = make_routine("foo", [Equality(y, sin(x)), cos(x)])
     c = C89CodeGen()
@@ -654,7 +662,7 @@ def test_empty_f_code_with_header():
     assert source[:82] == (
         "!******************************************************************************\n!*"
     )
-          #   "                    Code generated with sympy 0.7.2-git                    "
+          #   "                    Code generated with SymPy 0.7.2-git                    "
     assert source[158:] == (                                                              "*\n"
             "!*                                                                            *\n"
             "!*              See http://www.sympy.org/ for more information.               *\n"
@@ -798,8 +806,11 @@ def test_no_results_f():
 
 def test_intrinsic_math_codegen():
     # not included: log10
-    from sympy import (acos, asin, atan, cos, cosh, log, ln, sin, sinh, sqrt,
-            tan, tanh, Abs)
+    from sympy.functions.elementary.complexes import Abs
+    from sympy.functions.elementary.exponential import log
+    from sympy.functions.elementary.hyperbolic import (cosh, sinh, tanh)
+    from sympy.functions.elementary.miscellaneous import sqrt
+    from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, tan)
     x = symbols('x')
     name_expr = [
         ("test_abs", Abs(x)),
@@ -809,7 +820,7 @@ def test_intrinsic_math_codegen():
         ("test_cos", cos(x)),
         ("test_cosh", cosh(x)),
         ("test_log", log(x)),
-        ("test_ln", ln(x)),
+        ("test_ln", log(x)),
         ("test_sin", sin(x)),
         ("test_sinh", sinh(x)),
         ("test_sqrt", sqrt(x)),
@@ -973,7 +984,7 @@ def test_intrinsic_math_codegen():
 
 def test_intrinsic_math2_codegen():
     # not included: frexp, ldexp, modf, fmod
-    from sympy import atan2
+    from sympy.functions.elementary.trigonometric import atan2
     x, y = symbols('x,y')
     name_expr = [
         ("test_atan2", atan2(x, y)),
@@ -1018,7 +1029,7 @@ def test_intrinsic_math2_codegen():
 
 
 def test_complicated_codegen_f95():
-    from sympy import sin, cos, tan
+    from sympy.functions.elementary.trigonometric import (cos, sin, tan)
     x, y, z = symbols('x,y,z')
     name_expr = [
         ("test1", ((sin(x) + cos(y) + tan(z))**7).expand()),
@@ -1081,7 +1092,7 @@ def test_complicated_codegen_f95():
 
 def test_loops():
     from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
+    from sympy.core.symbol import symbols
 
     n, m = symbols('n,m', integer=True)
     A, x, y = map(IndexedBase, 'Axy')
@@ -1156,7 +1167,7 @@ def test_dummy_loops_f95():
 
 def test_loops_InOut():
     from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
+    from sympy.core.symbol import symbols
 
     i, j, n, m = symbols('i,j,n,m', integer=True)
     A, x, y = symbols('A,x,y')
@@ -1207,7 +1218,7 @@ def test_partial_loops_f():
     # check that loop boundaries are determined by Idx, and array strides
     # determined by shape of IndexedBase object.
     from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
+    from sympy.core.symbol import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     A = IndexedBase('A', shape=(m, p))
     x = IndexedBase('x')
@@ -1251,7 +1262,8 @@ def test_partial_loops_f():
 
 
 def test_output_arg_f():
-    from sympy import sin, cos, Equality
+    from sympy.core.relational import Equality
+    from sympy.functions.elementary.trigonometric import (cos, sin)
     x, y, z = symbols("x,y,z")
     r = make_routine("foo", [Equality(y, sin(x)), cos(x)])
     c = FCodeGen()
@@ -1270,7 +1282,7 @@ def test_output_arg_f():
 
 def test_inline_function():
     from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
+    from sympy.core.symbol import symbols
     n, m = symbols('n m', integer=True)
     A, x, y = map(IndexedBase, 'Axy')
     i = Idx('i', m)

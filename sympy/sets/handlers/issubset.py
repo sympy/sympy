@@ -1,4 +1,5 @@
-from sympy import S, Symbol
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.core.logic import fuzzy_and, fuzzy_bool, fuzzy_not, fuzzy_or
 from sympy.core.relational import Eq
 from sympy.sets.sets import FiniteSet, Interval, Set, Union, ProductSet

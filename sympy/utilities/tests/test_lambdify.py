@@ -4,13 +4,29 @@ import inspect
 
 import mpmath
 from sympy.testing.pytest import raises
-from sympy import (
-    symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
-    Float, Lambda, Piecewise, exp, E, Integral, oo, I, Abs, Function,
-    true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
-    digamma, RisingFactorial, besselj, bessely, besseli, besselk, S, beta,
-    betainc, betainc_regularized, fresnelc, fresnels)
+from sympy.concrete.summations import Sum
+from sympy.core.function import (Function, Lambda, diff)
+from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions.combinatorial.factorials import (RisingFactorial, factorial)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.hyperbolic import acosh
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, cos, sin, sinc, tan)
+from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely)
+from sympy.functions.special.beta_functions import (beta, betainc, betainc_regularized)
+from sympy.functions.special.error_functions import (erf, erfc, fresnelc, fresnels)
+from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma)
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
+from sympy.matrices.expressions.dotproduct import DotProduct
+from sympy.tensor.indexed import IndexedBase
+from sympy.utilities.lambdify import lambdify
 from sympy.core.expr import UnevaluatedExpr
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
@@ -154,7 +170,7 @@ def test_math_lambda():
     prec = 1e-15
     assert -prec < f(0.2) - sin02 < prec
     raises(TypeError, lambda: f(x))
-           # if this succeeds, it can't be a python math function
+           # if this succeeds, it can't be a Python math function
 
 
 @conserve_mpmath_dps
@@ -702,7 +718,7 @@ def test_tensorflow_complexes():
     with tensorflow.compat.v1.Session() as s:
         # For versions before
         # https://github.com/tensorflow/tensorflow/issues/30029
-        # resolved, using python numeric types may not work
+        # resolved, using Python numeric types may not work
         a = tensorflow.constant(1+2j)
         assert func1(a).eval(session=s) == 1
         assert func2(a).eval(session=s) == 2
@@ -857,7 +873,7 @@ def test_dummification():
     t = symbols('t')
     F = Function('F')
     G = Function('G')
-    #"\alpha" is not a valid python variable name
+    #"\alpha" is not a valid Python variable name
     #lambdify should sub in a dummy for it, and return
     #without a syntax error
     alpha = symbols(r'\alpha')
