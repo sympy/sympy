@@ -1343,10 +1343,11 @@ class Mul(Expr, AssocOp):
                     return True
             if d.is_finite is None:
                 return
-            if n.is_zero is False:
-                return False
-            if n.is_finite and d.is_infinite:
-                return True
+            if n.is_finite:
+                if d.is_infinite:
+                    return True
+                if d.is_infinite is not None and n.is_zero is False:
+                    return False
         zero = infinite = False
         for a in self.args:
             z = a.is_zero
