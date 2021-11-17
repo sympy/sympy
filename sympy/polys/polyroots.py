@@ -6,7 +6,7 @@ from functools import reduce
 
 from sympy.core import S, I, pi
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import _mexpand
+from sympy.core.function import mexpand
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import expand_2arg, Mul
 from sympy.core.numbers import Rational, igcd, comp
@@ -305,9 +305,9 @@ def roots_quartic(f):
     else:
         a2 = a**2
         e = b - 3*a2/8
-        f = _mexpand(c + a*(a2/8 - b/2))
+        f = mexpand(c + a*(a2/8 - b/2))
         aon4 = a/4
-        g = _mexpand(d - aon4*(a*(3*a2/64 - b/4) + c))
+        g = mexpand(d - aon4*(a*(3*a2/64 - b/4) + c))
 
         if f.is_zero:
             y1, y2 = [sqrt(tmp) for tmp in
@@ -340,7 +340,7 @@ def roots_quartic(f):
             # whether a Piecewise is returned or not
             # depends on knowing p, so try to put
             # in a simple form
-            p = _mexpand(p)
+            p = mexpand(p)
 
 
             # p == 0 case

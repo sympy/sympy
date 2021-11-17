@@ -1,6 +1,6 @@
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.function import mexpand
+from sympy.core.function import mexpand_cse
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Float, I, Integer, Rational, comp, nan,
@@ -2332,8 +2332,8 @@ def test_issue_8247_8354():
         72*(3*sqrt(93) + 29)**(2/3)*(81*sqrt(93) + 783) + (162*sqrt(93) +
         1566)*((3*sqrt(93) + 29)**(1/3)*(-2**(2/3)*(3*sqrt(93) + 29)**(1/3) -
         2) - 2*2**(1/3))**2''')
-    assert z.is_positive is False  # it's 0 (and a single _mexpand isn't enough)
-    assert mexpand(z) == 0
+    assert z.is_positive is False  # it's 0 (and a single mexpand isn't enough)
+    assert mexpand_cse(z, _final_denom=False) == 0
 
 
 def test_Add_is_zero():

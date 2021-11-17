@@ -6,7 +6,7 @@ from sympy.core import sympify, S, Mul, Derivative, Pow
 from sympy.core.add import _unevaluated_Add, Add
 from sympy.core.assumptions import assumptions
 from sympy.core.exprtools import Factors, gcd_terms
-from sympy.core.function import _mexpand, expand_mul, expand_power_base
+from sympy.core.function import mexpand, expand_mul, expand_power_base
 from sympy.core.mul import _keep_coeff, _unevaluated_Mul, _mulsort
 from sympy.core.numbers import Rational, zoo, nan
 from sympy.core.parameters import global_parameters
@@ -908,7 +908,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
 
         # flatten it and collect radicals after checking for special
         # conditions
-        d = _mexpand(d)
+        d = mexpand(d)
 
         # did it change?
         if d.is_Atom:
@@ -964,7 +964,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
             num = powsimp(_num(rterms))
             n *= num
             d *= num
-            d = powdenest(_mexpand(d), force=symbolic)
+            d = powdenest(mexpand(d), force=symbolic)
             if d.has(S.Zero, nan, zoo):
                 return expr
             if d.is_Atom:
@@ -1016,8 +1016,8 @@ def rad_rationalize(num, den):
         return num, den
     g, a, b = split_surds(den)
     a = a*sqrt(g)
-    num = _mexpand((a - b)*num)
-    den = _mexpand(a**2 - b**2)
+    num = mexpand((a - b)*num)
+    den = mexpand(a**2 - b**2)
     return rad_rationalize(num, den)
 
 

@@ -10,7 +10,7 @@ instances in other classes for using them it is better to keep it here as separa
 """
 from collections import defaultdict
 from sympy.core import Add, S
-from sympy.core.function import diff, expand, _mexpand, expand_mul
+from sympy.core.function import diff, expand, mexpand, expand_mul
 from sympy.core.relational import Eq
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy, Wild
@@ -477,7 +477,7 @@ def _solve_undetermined_coefficients(eq, func, order, match, trialset):
 
     coeffsdict = dict(list(zip(trialset, [0]*(len(trialset) + 1))))
 
-    eqs = _mexpand(eqs)
+    eqs = mexpand(eqs)
 
     for i in Add.make_args(eqs):
         s = separatevars(i, dict=True, symbols=[x])

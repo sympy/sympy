@@ -1849,7 +1849,7 @@ class Derivative(Expr):
         We can also specify the discretized values to be used in a
         sequence:
 
-        >>> f(x).diff(x).as_finite_difference([x, x+h, x+2*h])
+        >>> f(x).diff(x).as_finite_difference([x, x + h, x + 2*h])
         -3*f(x)/(2*h) + 2*f(h + x)/h - f(2*h + x)/(2*h)
 
         The algorithm is not restricted to use equidistant spacing, nor
@@ -1857,8 +1857,8 @@ class Derivative(Expr):
         an expression estimating the derivative at an offset:
 
         >>> e, sq2 = exp(1), sqrt(2)
-        >>> xl = [x-h, x+h, x+e*h]
-        >>> f(x).diff(x, 1).as_finite_difference(xl, x+h*sq2)  # doctest: +ELLIPSIS
+        >>> xl = [x - h, x + h, x + e*h]
+        >>> f(x).diff(x, 1).as_finite_difference(xl, x + h*sq2)  # doctest: +ELLIPSIS
         2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/...
 
         To approximate ``Derivative`` around ``x0`` using a non-equidistant
@@ -1866,7 +1866,7 @@ class Derivative(Expr):
         functions to ``points``:
 
         >>> dx = Function('dx')
-        >>> f(x).diff(x).as_finite_difference(points=dx(x), x0=x-h)
+        >>> f(x).diff(x).as_finite_difference(points=dx(x), x0=x - h)
         -f(-h + x - dx(-h + x)/2)/dx(-h + x) + f(-h + x + dx(-h + x)/2)/dx(-h + x)
 
         Partial derivatives are also supported:
@@ -2915,7 +2915,7 @@ def expand_mul(expr, deep=True):
 
     >>> from sympy import symbols, expand_mul, exp, log
     >>> x, y = symbols('x,y', positive=True)
-    >>> expand_mul(exp(x+y)*(x+y)*log(x*y**2))
+    >>> expand_mul(exp(x + y)*(x + y)*log(x*y**2))
     x*exp(x + y)*log(x*y**2) + y*exp(x + y)*log(x*y**2)
 
     """
@@ -2951,7 +2951,7 @@ def expand_log(expr, deep=True, force=False, factor=False):
 
     >>> from sympy import symbols, expand_log, exp, log
     >>> x, y = symbols('x,y', positive=True)
-    >>> expand_log(exp(x+y)*(x+y)*log(x*y**2))
+    >>> expand_log(exp(x + y)*(x + y)*log(x*y**2))
     (x + y)*(log(x) + 2*log(y))*exp(x + y)
 
     """
@@ -3001,7 +3001,7 @@ def expand_trig(expr, deep=True):
 
     >>> from sympy import expand_trig, sin
     >>> from sympy.abc import x, y
-    >>> expand_trig(sin(x+y)*(x+y))
+    >>> expand_trig(sin(x + y)*(x + y))
     (x + y)*(sin(x)*cos(y) + sin(y)*cos(x))
 
     """
@@ -3080,14 +3080,14 @@ def expand_power_base(expr, deep=True, force=False):
     Notice that sums are left untouched. If this is not the desired behavior,
     apply full ``expand()`` to the expression:
 
-    >>> expand_power_base(((x+y)*z)**2)
+    >>> expand_power_base(((x + y)*z)**2)
     z**2*(x + y)**2
-    >>> (((x+y)*z)**2).expand()
+    >>> (((x + y)*z)**2).expand()
     x**2*z**2 + 2*x*y*z**2 + y**2*z**2
 
-    >>> expand_power_base((2*y)**(1+z))
+    >>> expand_power_base((2*y)**(1 + z))
     2**(z + 1)*y**(z + 1)
-    >>> ((2*y)**(1+z)).expand()
+    >>> ((2*y)**(1 + z)).expand()
     2*2**z*y*y**z
 
     See Also

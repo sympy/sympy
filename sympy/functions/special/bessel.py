@@ -4,7 +4,7 @@ from sympy.core import S
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
 from sympy.core.expr import Expr
-from sympy.core.function import Function, ArgumentIndexError, _mexpand
+from sympy.core.function import Function, ArgumentIndexError, mexpand
 from sympy.core.logic import fuzzy_or, fuzzy_not
 from sympy.core.numbers import Rational, pi, I
 from sympy.core.power import Pow
@@ -254,13 +254,13 @@ class besselj(BesselBase):
             r = (z/2)._eval_nseries(x, n, logx, cdir).removeO()
             if r is S.Zero:
                 return o
-            t = (_mexpand(r**2) + o).removeO()
+            t = (mexpand(r**2) + o).removeO()
 
             term = r**nu/gamma(nu + 1)
             s = [term]
             for k in range(1, (newn + 1)//2):
                 term *= -t/(k*(nu + k))
-                term = (_mexpand(term) + o).removeO()
+                term = (mexpand(term) + o).removeO()
                 s.append(term)
             return Add(*s) + o
 
@@ -376,14 +376,14 @@ class bessely(BesselBase):
             r = (z/2)._eval_nseries(x, n, logx, cdir).removeO()
             if r is S.Zero:
                 return o
-            t = (_mexpand(r**2) + o).removeO()
+            t = (mexpand(r**2) + o).removeO()
 
             if nu > S.One:
                 term = r**(-nu)*factorial(nu - 1)/pi
                 b.append(term)
                 for k in range(1, nu - 1):
                     term *= t*(nu - k - 1)/k
-                    term = (_mexpand(term) + o).removeO()
+                    term = (mexpand(term) + o).removeO()
                     b.append(term)
 
             p = r**nu/(pi*factorial(nu))
@@ -391,7 +391,7 @@ class bessely(BesselBase):
             c.append(term)
             for k in range(1, (newn + 1)//2):
                 p *= -t/(k*(k + nu))
-                p = (_mexpand(p) + o).removeO()
+                p = (mexpand(p) + o).removeO()
                 term = p*(digamma(k + nu + 1) + digamma(k + 1))
                 c.append(term)
             return a - Add(*b) - Add(*c) # Order term comes from a

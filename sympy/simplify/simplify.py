@@ -5,7 +5,7 @@ from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify,
                         expand_power_exp, Eq)
 from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
-from sympy.core.function import (expand_log, count_ops, _mexpand,
+from sympy.core.function import (expand_log, count_ops, mexpand,
     nfloat, expand_mul, expand)
 from sympy.core.numbers import Float, I, pi, Rational
 from sympy.core.relational import Relational
@@ -643,7 +643,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     expr = _bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
     expr = Mul(*powsimp(expr).as_content_primitive())
     _e = cancel(expr)
-    expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
+    expr1 = shorter(_e, mexpand(_e).cancel())  # issue 6829
     expr2 = shorter(together(expr, deep=True), together(expr1, deep=True))
 
     if ratio is S.Infinity:
@@ -978,7 +978,7 @@ def _nthroot_solve(p, n, prec):
     for sol in sols:
         if abs(sol - pn).n() < 1./10**prec:
             sol = sqrtdenest(sol)
-            if _mexpand(sol**n) == p:
+            if mexpand(sol**n) == p:
                 return sol
 
 
@@ -1379,11 +1379,11 @@ def nthroot(expr, n, max_len=4, prec=15):
     if expr < 0 and n % 2 == 1:
         p = (-expr)**Rational(1, n)
         a = nsimplify(p, constants=surds)
-        res = a if _mexpand(a**n) == _mexpand(-expr) else p
+        res = a if mexpand(a**n) == mexpand(-expr) else p
         return -res
     a = nsimplify(p, constants=surds)
-    if _mexpand(a) is not _mexpand(p) and _mexpand(a**n) == _mexpand(expr):
-        return _mexpand(a)
+    if mexpand(a) is not mexpand(p) and mexpand(a**n) == mexpand(expr):
+        return mexpand(a)
     expr = _nthroot_solve(expr, n, prec)
     if expr is None:
         return p

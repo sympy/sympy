@@ -14,7 +14,7 @@ from sympy.core.sympify import sympify
 from sympy.functions import sqrt, cbrt
 
 from sympy.core.exprtools import Factors
-from sympy.core.function import _mexpand
+from sympy.core.function import mexpand
 from sympy.core.traversal import preorder_traversal
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -152,7 +152,7 @@ def _separate_sq(p):
             a2.append(y*z**S.Half)
     p1 = Add(*a1)
     p2 = Add(*a2)
-    p = _mexpand(p1**2) - _mexpand(p2**2)
+    p = mexpand(p1**2) - mexpand(p2**2)
     return p
 
 def _minimal_polynomial_sq(p, n, x):
@@ -301,7 +301,7 @@ def _invertx(p, x):
 
 def _muly(p, x, y):
     """
-    Returns ``_mexpand(y**deg*p.subs({x:x / y}))``
+    Returns ``mexpand(y**deg*p.subs({x:x / y}))``
     """
     p1 = poly_from_expr(p, x)[0]
 
@@ -442,7 +442,7 @@ def _minpoly_cos(ex, x):
                 q = sympify(c.q)
                 if q.is_prime:
                     s = _minpoly_sin(ex, x)
-                    return _mexpand(s.subs({x:sqrt((1 - x)/2)}))
+                    return mexpand(s.subs({x:sqrt((1 - x)/2)}))
 
             # for a = pi*p/q, cos(q*a) =T_q(cos(a)) = (-1)**p
             n = int(c.q)
@@ -677,7 +677,7 @@ def minimal_polynomial(ex, x=None, compose=True, polys=False, domain=None):
     ex = sympify(ex)
     if ex.is_number:
         # not sure if it's always needed but try it for numbers (issue 8354)
-        ex = _mexpand(ex, recursive=True)
+        ex = mexpand(ex, recursive=True)
     for expr in preorder_traversal(ex):
         if expr.is_AlgebraicNumber:
             compose = False

@@ -17,7 +17,7 @@ from sympy.core.assumptions import check_assumptions
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_log, Derivative,
                                  AppliedUndef, UndefinedFunction, nfloat,
-                                 Function, expand_power_exp, _mexpand, expand,
+                                 Function, expand_power_exp, mexpand_cse, expand,
                                  expand_func, mexpand)
 from sympy.core.logic import fuzzy_not
 from sympy.core.numbers import ilcm, Float, Rational
@@ -300,7 +300,7 @@ def checksol(f, symbol, sol=None, **flags):
         elif attempt == 1:
             if not val.is_number:
                 # there are free symbols -- simple expansion might work
-                val = numer(mexpand(val, _recursive=True))
+                val = numer(mexpand_cse(val, _final_denom=False))
                 _, val = val.as_content_primitive()
                 # if there are many ops, the numerical tests can be
                 # slower than the expansion to 0 with mexpand
@@ -318,7 +318,7 @@ def checksol(f, symbol, sol=None, **flags):
             if flags.get('force', True):
                 val, reps = posify(val)
                 # expansion may work now, so try again and check
-                exval = _mexpand(val, recursive=True)
+                exval = mexpand(val, recursive=True)
                 if exval.is_number:
                     # we can decide now
                     val = exval
@@ -3249,7 +3249,7 @@ def unrad(eq, *syms, **flags):
 
         # remove constants and powers of factors since these don't change
         # the location of the root; XXX should factor or factor_terms be used?
-        eq = factor_terms(_mexpand(eq.as_numer_denom()[0], recursive=True), clear=True)
+        eq = factor_terms(mexpand(eq.as_numer_denom()[0], recursive=True), clear=True)
         if eq.is_Mul:
             args = []
             for f in eq.args:
@@ -3304,7 +3304,7 @@ def unrad(eq, *syms, **flags):
     # preconditioning
     eq = powdenest(factor_terms(eq, radical=True, clear=True))
     eq = eq.as_numer_denom()[0]
-    eq = _mexpand(eq, recursive=True)
+    eq = mexpand(eq, recursive=True)
     if eq.is_number:
         return
 

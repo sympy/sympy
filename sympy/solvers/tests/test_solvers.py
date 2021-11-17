@@ -1077,7 +1077,7 @@ def test_unrad1():
     assert solve(sqrt(17*x - sqrt(x**2 - 5)) - 7) == [3]
     assert solve(sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))) == []
 
-    # don't posify the expression in unrad and do use _mexpand
+    # don't posify the expression in unrad and do use mexpand
     z = sqrt(2*x + 1)/sqrt(x) - sqrt(2 + 1/x)
     p = posify(z)[0]
     assert solve(p) == []
@@ -2453,7 +2453,7 @@ def test_issue_8516():
     nroots = 0
     for s in sol:
         reps = dict(zip((x, y, z), s))
-        if [mexpand(e.xreplace(reps), _recursive=True)
+        if [mexpand_cse(e.xreplace(reps), _final_denom=False)
                 for e in eqs].count(0) == 3:
             nroots += 1
     assert nroots == 6

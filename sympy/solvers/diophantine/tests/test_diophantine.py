@@ -7,7 +7,7 @@ from sympy.core.symbol import symbols
 from sympy.matrices.dense import Matrix
 from sympy.ntheory.factor_ import factorint
 from sympy.simplify.powsimp import powsimp
-from sympy.core.function import _mexpand
+from sympy.core.function import mexpand
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.functions.elementary.trigonometric import sin
 from sympy.solvers.diophantine import diophantine
@@ -37,7 +37,7 @@ n1 = symbols('n1', integer=True)
 
 
 def diop_simplify(eq):
-    return _mexpand(powsimp(_mexpand(eq)))
+    return mexpand(powsimp(mexpand(eq)))
 
 
 def test_input_format():
