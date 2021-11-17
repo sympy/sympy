@@ -50,6 +50,7 @@ clean:
 	-rm -rf sphinx
 	-rm -f $(PDFFILES)
 
+html: $(BUILDDIR)/html/pics/*.png
 html: SPHINXOPTS += -W --keep-going
 html: $(BUILDDIR)/logo/sympy-notailtext-favicon.ico
 	mkdir -p $(SOURCEDIR)/.static
@@ -57,9 +58,12 @@ html: $(BUILDDIR)/logo/sympy-notailtext-favicon.ico
 	mkdir -p $(BUILDDIR)/doctrees
 	mkdir -p $(SOURCEDIR)/modules
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/html
-	cp -r src/pics _build/html/
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
+$(BUILDDIR)/html/pics/*.png: $(SOURCEDIR)/pics/*.png
+	mkdir -p $(BUILDDIR)/html
+	cp -r $(SOURCEDIR)/pics $(BUILDDIR)/html/
 
 htmlapi:
 	mkdir -p api/.static
