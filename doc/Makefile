@@ -149,11 +149,12 @@ info:
 man: man/isympy.xml
 	docbook2x-man --to-stdout $< > man/isympy.1
 
-_build/logo/sympy-notailtext-favicon.ico: logo
+logo: $(BUILDDIR)/logo/*.png
 
-logo: src/logo/sympy.svg
-	rm -rf _build/logo
-	mkdir -p _build/logo
+$(BUILDDIR)/logo/sympy-notailtext-favicon.ico: logo
+
+$(BUILDDIR)/logo/*.png: $(SOURCEDIR)/logo/sympy.svg
+	mkdir -p $(BUILDDIR)/logo
 	$(PYTHON) ./generate_logos.py -d
 	@echo
 	@echo "Logo generated."
