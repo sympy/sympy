@@ -1,5 +1,7 @@
-from sympy import (Symbol, Wild, GreaterThan, LessThan, StrictGreaterThan,
-    StrictLessThan, pi, I, Rational, sympify, symbols, Dummy)
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.relational import (GreaterThan, LessThan, StrictGreaterThan, StrictLessThan)
+from sympy.core.symbol import (Dummy, Symbol, Wild, symbols)
+from sympy.core.sympify import sympify  # can't import as S yet
 from sympy.core.symbol import uniquely_named_symbol, _symbol, Str
 
 from sympy.testing.pytest import raises
@@ -53,7 +55,7 @@ def test_Dummy_force_dummy_index():
 
 
 def test_lt_gt():
-    from sympy import sympify as S
+    S = sympify
     x, y = Symbol('x'), Symbol('y')
 
     assert (x >= y) == GreaterThan(x, y)
@@ -101,7 +103,6 @@ def test_no_len():
 
 def test_ineq_unequal():
     S = sympify
-
     x, y, z = symbols('x,y,z')
 
     e = (
@@ -161,6 +162,7 @@ def test_ineq_unequal():
 
 
 def test_Wild_properties():
+    S = sympify
     # these tests only include Atoms
     x = Symbol("x")
     y = Symbol("y")
@@ -168,7 +170,7 @@ def test_Wild_properties():
     k = Symbol("k", integer=True)
     n = Symbol("n", integer=True, positive=True)
 
-    given_patterns = [ x, y, p, k, -k, n, -n, sympify(-3), sympify(3),
+    given_patterns = [ x, y, p, k, -k, n, -n, S(-3), S(3),
                        pi, Rational(3, 2), I ]
 
     integerp = lambda k: k.is_integer

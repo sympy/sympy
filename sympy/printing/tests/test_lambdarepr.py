@@ -1,5 +1,12 @@
-from sympy import symbols, sin, Matrix, Interval, Piecewise, Sum, lambdify, \
-                  Expr, sqrt
+from sympy.concrete.summations import Sum
+from sympy.core.expr import Expr
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import sin
+from sympy.matrices.dense import MutableDenseMatrix as Matrix
+from sympy.sets.sets import Interval
+from sympy.utilities.lambdify import lambdify
 from sympy.testing.pytest import raises
 
 from sympy.printing.tensorflow import TensorflowPrinter
@@ -18,13 +25,11 @@ def test_basic():
 
 
 def test_matrix():
-    A = Matrix([[x, y], [y*x, z**2]])
-    # assert lambdarepr(A) == "ImmutableDenseMatrix([[x, y], [x*y, z**2]])"
     # Test printing a Matrix that has an element that is printed differently
-    # with the LambdaPrinter than in the StrPrinter.
-    p = Piecewise((x, True), evaluate=False)
-    A = Matrix([p])
-    assert lambdarepr(A) == "ImmutableDenseMatrix([[((x))]])"
+    # with the LambdaPrinter than with the StrPrinter.
+    e = x % 2
+    assert lambdarepr(e) != str(e)
+    assert lambdarepr(Matrix([e])) == 'ImmutableDenseMatrix([[x % 2]])'
 
 
 def test_piecewise():
@@ -32,11 +37,6 @@ def test_piecewise():
     # correct number of parentheses. It will give a SyntaxError if there aren't.
 
     h = "lambda x: "
-
-    p = Piecewise((x, True), evaluate=False)
-    l = lambdarepr(p)
-    eval(h + l)
-    assert l == "((x))"
 
     p = Piecewise((x, x < 0))
     l = lambdarepr(p)

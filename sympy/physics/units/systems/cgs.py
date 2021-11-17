@@ -1,4 +1,5 @@
-from sympy import sqrt, S
+from sympy.core.singleton import S
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import UnitSystem, centimeter, gram, second, coulomb, charge, speed_of_light, current, mass, \
     length, voltage, magnetic_density, magnetic_flux
 from sympy.physics.units.definitions import coulombs_constant

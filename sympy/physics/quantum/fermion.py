@@ -1,6 +1,7 @@
 """Fermionic quantum operators."""
 
-from sympy import Integer
+from sympy.core.numbers import Integer
+from sympy.core.singleton import S
 from sympy.physics.quantum import Operator
 from sympy.physics.quantum import HilbertSpace, Ket, Bra
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -52,7 +53,7 @@ class FermionOp(Operator):
             raise ValueError('1 or 2 parameters expected, got %s' % args)
 
         if len(args) == 1:
-            args = (args[0], Integer(1))
+            args = (args[0], S.One)
 
         if len(args) == 2:
             args = (args[0], Integer(args[1]))
@@ -62,7 +63,7 @@ class FermionOp(Operator):
     def _eval_commutator_FermionOp(self, other, **hints):
         if 'independent' in hints and hints['independent']:
             # [c, d] = 0
-            return Integer(0)
+            return S.Zero
 
         return None
 
@@ -70,7 +71,7 @@ class FermionOp(Operator):
         if self.name == other.name:
             # {a^\dagger, a} = 1
             if not self.is_annihilation and other.is_annihilation:
-                return Integer(1)
+                return S.One
 
         elif 'independent' in hints and hints['independent']:
             # {c, d} = 2 * c * d, because [c, d] = 0 for independent operators
@@ -83,7 +84,7 @@ class FermionOp(Operator):
         return 2 * self * other
 
     def _eval_commutator_BosonOp(self, other, **hints):
-        return Integer(0)
+        return S.Zero
 
     def _eval_adjoint(self):
         return FermionOp(str(self.name), not self.is_annihilation)
@@ -145,12 +146,12 @@ class FermionFockKet(Ket):
             if self.n == 1:
                 return FermionFockKet(0)
             else:
-                return Integer(0)
+                return S.Zero
         else:
             if self.n == 0:
                 return FermionFockKet(1)
             else:
-                return Integer(0)
+                return S.Zero
 
 
 class FermionFockBra(Bra):

@@ -1,7 +1,17 @@
-from sympy import (acosh, cos, Derivative, diff,
-    Eq, exp, Function, I, Integral, log, O, pi,
-    Rational, S, sin, sqrt, Subs, Symbol, tan,
-    symbols, Poly, re, im, atan2, collect)
+from sympy.core.function import (Derivative, Function, Subs, diff)
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (im, re)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import acosh
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (atan2, cos, sin, tan)
+from sympy.integrals.integrals import Integral
+from sympy.polys.polytools import Poly
+from sympy.series.order import O
+from sympy.simplify.radsimp import collect
 
 from sympy.solvers.ode import (classify_ode,
     homogeneous_order, dsolve)

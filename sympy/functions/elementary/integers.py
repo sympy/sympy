@@ -1,4 +1,7 @@
-from sympy import Basic, Expr
+from typing import Tuple as tTuple
+
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr
 
 from sympy.core import Add, S
 from sympy.core.evalf import get_integer_part, PrecisionExhausted
@@ -18,9 +21,11 @@ from sympy.multipledispatch import dispatch
 class RoundFunction(Function):
     """The base class for rounding functions."""
 
+    args: tTuple[Expr]
+
     @classmethod
     def eval(cls, arg):
-        from sympy import im
+        from sympy.functions.elementary.complexes import im
         v = cls._eval_number(arg)
         if v is not None:
             return v
@@ -154,7 +159,7 @@ class floor(RoundFunction):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
         if arg0.is_infinite:
-            from sympy.calculus.util import AccumBounds
+            from sympy.calculus.accumulationbounds import AccumBounds
             from sympy.series.order import Order
             s = arg._eval_nseries(x, n, logx, cdir)
             o = Order(1, (x, 0)) if n <= 0 else AccumBounds(-1, 0)
@@ -312,7 +317,7 @@ class ceiling(RoundFunction):
         arg = self.args[0]
         arg0 = arg.subs(x, 0)
         if arg0.is_infinite:
-            from sympy.calculus.util import AccumBounds
+            from sympy.calculus.accumulationbounds import AccumBounds
             from sympy.series.order import Order
             s = arg._eval_nseries(x, n, logx, cdir)
             o = Order(1, (x, 0)) if n <= 0 else AccumBounds(0, 1)
@@ -449,10 +454,11 @@ class frac(Function):
     """
     @classmethod
     def eval(cls, arg):
-        from sympy import AccumBounds, im
+        from sympy.calculus.accumulationbounds import AccumBounds
+        from sympy.functions.elementary.complexes import im
 
         def _eval(arg):
-            if arg is S.Infinity or arg is S.NegativeInfinity:
+            if arg in (S.Infinity, S.NegativeInfinity):
                 return AccumBounds(0, 1)
             if arg.is_integer:
                 return S.Zero

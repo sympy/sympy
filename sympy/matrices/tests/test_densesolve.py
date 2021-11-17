@@ -4,8 +4,8 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 with ignore_warnings(SymPyDeprecationWarning):
     from sympy.matrices.densesolve import LU_solve, rref_solve, cholesky_solve
 
-from sympy import Dummy
-from sympy import QQ
+from sympy.core.symbol import Dummy
+from sympy.polys.domains.rationalfield import QQ
 
 def test_LU_solve():
     x, y, z = Dummy('x'), Dummy('y'), Dummy('z')

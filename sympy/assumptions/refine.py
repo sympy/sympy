@@ -1,6 +1,7 @@
-from typing import Dict, Callable
+from typing import Dict as tDict, Callable
 
-from sympy.core import S, Add, Expr, Basic, Mul
+from sympy.core import S, Add, Expr, Basic, Mul, Pow, Rational
+from sympy.core.logic import fuzzy_not
 from sympy.logic.boolalg import Boolean
 
 from sympy.assumptions import ask, Q  # type: ignore
@@ -83,8 +84,7 @@ def refine_abs(expr, assumptions):
     -x
 
     """
-    from sympy.core.logic import fuzzy_not
-    from sympy import Abs
+    from sympy.functions.elementary.complexes import Abs
     arg = expr.args[0]
     if ask(Q.real(arg), assumptions) and \
             fuzzy_not(ask(Q.negative(arg), assumptions)):
@@ -133,7 +133,6 @@ def refine_Pow(expr, assumptions):
     (-1)**(x + 1)
 
     """
-    from sympy.core import Pow, Rational
     from sympy.functions.elementary.complexes import Abs
     from sympy.functions import sign
     if isinstance(expr.base, Abs):
@@ -379,8 +378,7 @@ def refine_matrixelement(expr, assumptions):
     ========
 
     >>> from sympy.assumptions.refine import refine_matrixelement
-    >>> from sympy import Q
-    >>> from sympy.matrices.expressions.matexpr import MatrixSymbol
+    >>> from sympy import MatrixSymbol, Q
     >>> X = MatrixSymbol('X', 3, 3)
     >>> refine_matrixelement(X[0, 1], Q.symmetric(X))
     X[0, 1]
@@ -403,4 +401,4 @@ handlers_dict = {
     'arg': refine_arg,
     'sign': refine_sign,
     'MatrixElement': refine_matrixelement
-}  # type: Dict[str, Callable[[Expr, Boolean], Expr]]
+}  # type: tDict[str, Callable[[Expr, Boolean], Expr]]

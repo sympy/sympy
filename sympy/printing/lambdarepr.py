@@ -1,17 +1,18 @@
 from .pycode import (
     PythonCodePrinter,
-    MpmathPrinter,  # MpmathPrinter is imported for backward compatibility
+    MpmathPrinter,
 )
 from .numpy import NumPyPrinter  # NumPyPrinter is imported for backward compatibility
-from sympy.utilities import default_sort_key
+from sympy.core.sorting import default_sort_key
 
 
 __all__ = [
     'PythonCodePrinter',
-    'MpmathPrinter',
+    'MpmathPrinter',  # MpmathPrinter is published for backward compatibility
     'NumPyPrinter',
     'LambdaPrinter',
     'NumPyPrinter',
+    'IntervalPrinter',
     'lambdarepr',
 ]
 
@@ -64,7 +65,7 @@ class LambdaPrinter(PythonCodePrinter):
         return str(expr)
 
     def _print_Pow(self, expr, **kwargs):
-        # XXX Temporary workaround. Should python math printer be
+        # XXX Temporary workaround. Should Python math printer be
         # isolated from PythonCodePrinter?
         return super(PythonCodePrinter, self)._print_Pow(expr, **kwargs)
 
@@ -72,7 +73,7 @@ class LambdaPrinter(PythonCodePrinter):
 # numexpr works by altering the string passed to numexpr.evaluate
 # rather than by populating a namespace.  Thus a special printer...
 class NumExprPrinter(LambdaPrinter):
-    # key, value pairs correspond to sympy name and numexpr name
+    # key, value pairs correspond to SymPy name and numexpr name
     # functions not appearing in this dict will raise a TypeError
     printmethod = "_numexprcode"
 
@@ -161,7 +162,7 @@ class NumExprPrinter(LambdaPrinter):
                         expr.__class__.__name__)
 
     # blacklist all Matrix printing
-    _print_SparseMatrix = \
+    _print_SparseRepMatrix = \
     _print_MutableSparseMatrix = \
     _print_ImmutableSparseMatrix = \
     _print_Matrix = \
@@ -170,7 +171,7 @@ class NumExprPrinter(LambdaPrinter):
     _print_ImmutableMatrix = \
     _print_ImmutableDenseMatrix = \
     blacklisted
-    # blacklist some python expressions
+    # blacklist some Python expressions
     _print_list = \
     _print_tuple = \
     _print_Tuple = \
@@ -181,6 +182,22 @@ class NumExprPrinter(LambdaPrinter):
     def doprint(self, expr):
         lstr = super().doprint(expr)
         return "evaluate('%s', truediv=True)" % lstr
+
+
+class IntervalPrinter(MpmathPrinter, LambdaPrinter):
+    """Use ``lambda`` printer but print numbers as ``mpi`` intervals. """
+
+    def _print_Integer(self, expr):
+        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Integer(expr)
+
+    def _print_Rational(self, expr):
+        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Rational(expr)
+
+    def _print_Half(self, expr):
+        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Rational(expr)
+
+    def _print_Pow(self, expr):
+        return super(MpmathPrinter, self)._print_Pow(expr, rational=True)
 
 
 for k in NumExprPrinter._numexpr_functions:

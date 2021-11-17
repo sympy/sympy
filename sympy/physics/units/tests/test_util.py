@@ -1,4 +1,9 @@
-from sympy import Pow, Tuple, pi, sstr, sympify, symbols
+from sympy.core.containers import Tuple
+from sympy.core.numbers import pi
+from sympy.core.power import Pow
+from sympy.core.symbol import symbols
+from sympy.core.sympify import sympify
+from sympy.printing.str import sstr
 from sympy.physics.units import (
     G, centimeter, coulomb, day, degree, gram, hbar, hour, inch, joule, kelvin,
     kilogram, kilometer, length, meter, mile, minute, newton, planck,

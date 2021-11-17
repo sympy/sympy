@@ -1,4 +1,5 @@
 from sympy.core.numbers import igcd, mod_inverse
+from sympy.core.power import integer_nthroot
 from sympy.ntheory.residue_ntheory import _sqrt_mod_prime_power
 from sympy.ntheory import isprime
 from math import log, sqrt
@@ -82,7 +83,7 @@ def _generate_factor_base(prime_bound, n):
     prime_bound : upper prime bound of the factor_base
     n : integer to be factored
     """
-    from sympy import sieve
+    from sympy.ntheory.generate import sieve
     factor_base = []
     idx_1000, idx_5000 = None, None
     for prime in sieve.primerange(1, prime_bound):
@@ -186,7 +187,7 @@ def _initialize_ith_poly(N, factor_base, i, g, B):
     g : (i - 1)th polynomial
     B : array that stores a//q_l*gamma
     """
-    from sympy import ceiling
+    from sympy.functions.elementary.integers import ceiling
     v = 1
     j = i
     while(j % 2 == 0):
@@ -412,7 +413,6 @@ def _find_factor(dependent_rows, mark, gauss_matrix, index, smooth_relations, N)
     smooth_relations : Smooth relations vectors matrix
     N : Number to be factored
     """
-    from sympy import integer_nthroot
     idx_in_smooth = dependent_rows[index][1]
     independent_u = [smooth_relations[idx_in_smooth][0]]
     independent_v = [smooth_relations[idx_in_smooth][1]]

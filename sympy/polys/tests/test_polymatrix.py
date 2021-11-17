@@ -3,7 +3,10 @@ from sympy.testing.pytest import raises
 from sympy.polys.polymatrix import PolyMatrix
 from sympy.polys import Poly
 
-from sympy import S, QQ, ZZ, Matrix
+from sympy.core.singleton import S
+from sympy.matrices.dense import Matrix
+from sympy.polys.domains.integerring import ZZ
+from sympy.polys.domains.rationalfield import QQ
 
 from sympy.abc import x, y
 

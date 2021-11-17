@@ -38,7 +38,7 @@ class Program(Token):
     >>> from sympy.codegen.ast import Print
     >>> from sympy.codegen.fnodes import Program
     >>> prog = Program('myprogram', [Print([42])])
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> print(fcode(prog, source_format='free'))
     program myprogram
         print *, 42
@@ -57,7 +57,7 @@ class use_rename(Token):
     ========
 
     >>> from sympy.codegen.fnodes import use_rename, use
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> ren = use_rename("thingy", "convolution2d")
     >>> print(fcode(ren, source_format='free'))
     thingy => convolution2d
@@ -83,7 +83,7 @@ class use(Token):
     ========
 
     >>> from sympy.codegen.fnodes import use
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> fcode(use('signallib'), source_format='free')
     'use signallib'
     >>> fcode(use('signallib', [('metric', 'snr')]), source_format='free')
@@ -106,7 +106,7 @@ class Module(Token):
     ========
 
     >>> from sympy.codegen.fnodes import Module
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> print(fcode(Module('signallib', ['implicit none'], []), source_format='free'))
     module signallib
     implicit none
@@ -130,10 +130,9 @@ class Subroutine(Node):
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import fcode, symbols
     >>> from sympy.codegen.ast import Print
     >>> from sympy.codegen.fnodes import Subroutine
-    >>> from sympy.printing import fcode
     >>> x, y = symbols('x y', real=True)
     >>> sub = Subroutine('mysub', [x, y], [Print([x**2 + y**2, x*y])])
     >>> print(fcode(sub, source_format='free', standard=2003))
@@ -162,7 +161,7 @@ class SubroutineCall(Token):
     ========
 
     >>> from sympy.codegen.fnodes import SubroutineCall
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> fcode(SubroutineCall('mysub', 'x y'.split()))
     '       call mysub(x, y)'
 
@@ -178,10 +177,9 @@ class Do(Token):
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import fcode, symbols
     >>> from sympy.codegen.ast import aug_assign, Print
     >>> from sympy.codegen.fnodes import Do
-    >>> from sympy.printing import fcode
     >>> i, n = symbols('i n', integer=True)
     >>> r = symbols('r', real=True)
     >>> body = [aug_assign(r, '+', 1/i), Print([i, r])]
@@ -216,7 +214,7 @@ class ArrayConstructor(Token):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.fnodes import ArrayConstructor
     >>> ac = ArrayConstructor([1, 2, 3])
     >>> fcode(ac, standard=95, source_format='free')
@@ -261,7 +259,7 @@ class Extent(Basic):
 
     >>> from sympy.codegen.fnodes import Extent
     >>> e = Extent(-3, 3)  # -3, -2, -1, 0, 1, 2, 3
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> fcode(e, source_format='free')
     '-3:3'
     >>> from sympy.codegen.ast import Variable, real
@@ -295,7 +293,7 @@ def dimension(*args):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.fnodes import dimension, intent_in
     >>> dim = dimension('2', ':')  # 2 rows, runtime determined number of columns
     >>> from sympy.codegen.ast import Variable, integer
@@ -344,7 +342,7 @@ def array(symbol, dim, intent=None, *, attrs=(), value=None, type=None):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.ast import integer, real
     >>> from sympy.codegen.fnodes import array
     >>> arr = array('a', '*', 'in', type=integer)
@@ -381,7 +379,7 @@ def allocated(array):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.fnodes import allocated
     >>> alloc = allocated('x')
     >>> fcode(alloc, source_format='free')
@@ -404,7 +402,7 @@ def lbound(array, dim=None, kind=None):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.fnodes import lbound
     >>> lb = lbound('arr', dim=2)
     >>> fcode(lb, source_format='free')
@@ -440,7 +438,7 @@ def shape(source, kind=None):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.fnodes import shape
     >>> shp = shape('x')
     >>> fcode(shp, source_format='free')
@@ -460,8 +458,7 @@ def size(array, dim=None, kind=None):
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode, Symbol
     >>> from sympy.codegen.ast import FunctionDefinition, real, Return
     >>> from sympy.codegen.fnodes import array, sum_, size
     >>> a = Symbol('a', real=True)
@@ -512,8 +509,7 @@ def bind_C(name=None):
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode, Symbol
     >>> from sympy.codegen.ast import FunctionDefinition, real, Return
     >>> from sympy.codegen.fnodes import array, sum_, bind_C
     >>> a = Symbol('a', real=True)
@@ -539,7 +535,7 @@ class GoTo(Token):
 
     >>> from sympy.codegen.fnodes import GoTo
     >>> go = GoTo([10, 20, 30], 'i')
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> fcode(go, source_format='free')
     'go to (10, 20, 30), i'
 
@@ -566,7 +562,7 @@ class FortranReturn(Token):
     ========
 
     >>> from sympy.codegen.fnodes import FortranReturn
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> fcode(FortranReturn('x'))
     '       return x'
 

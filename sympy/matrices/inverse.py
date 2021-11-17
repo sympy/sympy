@@ -329,7 +329,7 @@ def _inv_block(M, iszerofunc=_iszero):
     inverse_CH
     inverse_LDL
     """
-    from sympy import BlockMatrix
+    from sympy.matrices.expressions.blockmatrix import BlockMatrix
     i = M.shape[0]
     if i <= 20 :
         return M.inv(method="LU", iszerofunc=_iszero)

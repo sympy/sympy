@@ -31,7 +31,7 @@ from sympy.functions import exp, sqrt, hyper
 from sympy.integrals import Integral
 from sympy.polys import roots, gcd
 from sympy.polys.polytools import cancel, factor
-from sympy.simplify import collect, simplify, logcombine
+from sympy.simplify import collect, simplify, logcombine # type: ignore
 from sympy.simplify.powsimp import powdenest
 from sympy.solvers.ode.ode import get_numbered_constants
 
@@ -223,7 +223,7 @@ def equivalence(max_num_pow, dem_pow):
 def get_sol_2F1_hypergeometric(eq, func, match_object):
     x = func.args[0]
     from sympy.simplify.hyperexpand import hyperexpand
-    from sympy import factor
+    from sympy.polys.polytools import factor
     C0, C1 = get_numbered_constants(eq, num=2)
     a = match_object['a']
     b = match_object['b']

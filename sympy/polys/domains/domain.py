@@ -4,13 +4,16 @@
 from typing import Any, Optional, Type
 
 from sympy.core import Basic, sympify
-from sympy.core.compatibility import HAS_GMPY, is_sequence, ordered
-from sympy.core.decorators import deprecated
+from sympy.core.sorting import default_sort_key, ordered
+from sympy.external.gmpy import HAS_GMPY
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
 from sympy.polys.polyutils import _unify_gens, _not_a_coeff
-from sympy.utilities import default_sort_key, public
+from sympy.utilities import public
+from sympy.utilities.decorator import deprecated
+from sympy.utilities.iterables import is_sequence
+
 
 @public
 class Domain:
@@ -409,14 +412,17 @@ class Domain:
 
     def convert(self, element, base=None):
         """Convert ``element`` to ``self.dtype``. """
-        if _not_a_coeff(element):
-            raise CoercionFailed('%s is not in any domain' % element)
 
         if base is not None:
+            if _not_a_coeff(element):
+                raise CoercionFailed('%s is not in any domain' % element)
             return self.convert_from(element, base)
 
         if self.of_type(element):
             return element
+
+        if _not_a_coeff(element):
+            raise CoercionFailed('%s is not in any domain' % element)
 
         from sympy.polys.domains import ZZ, QQ, RealField, ComplexField
 
@@ -505,7 +511,7 @@ class Domain:
         =======
 
         expr: Expr
-            A normal sympy expression of type :py:class:`~.Expr`.
+            A normal SymPy expression of type :py:class:`~.Expr`.
 
         Examples
         ========
@@ -586,7 +592,7 @@ class Domain:
         ==========
 
         expr: Expr
-            A normal sympy expression of type :py:class:`~.Expr`.
+            A normal SymPy expression of type :py:class:`~.Expr`.
 
         Returns
         =======

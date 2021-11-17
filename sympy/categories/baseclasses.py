@@ -1,7 +1,7 @@
 from sympy.core import S, Basic, Dict, Symbol, Tuple, sympify
-from sympy.core.compatibility import iterable
 from sympy.core.symbol import Str
 from sympy.sets import Set, FiniteSet, EmptySet
+from sympy.utilities.iterables import iterable
 
 
 class Class(Set):
@@ -618,8 +618,8 @@ class Diagram(Basic):
     References
     ==========
 
-    [Pare1970] B. Pareigis: Categories and functors.  Academic Press,
-    1970.
+    [Pare1970] B. Pareigis: Categories and functors.  Academic Press, 1970.
+
     """
     @staticmethod
     def _set_dict_union(dictionary, key, value):
