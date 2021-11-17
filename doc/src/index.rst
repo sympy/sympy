@@ -33,7 +33,7 @@ installation instructons, a basic introduction to Sympy operations and common go
 These are step-by-step intructions on how to do different key developer tasks. It details
 instructions on installing SymPy from source for development. The development setup and workflow
 is also discussed with elaborate details on debugging, building the docs, and general guidelines
-on wrting documentation and docstrings.
+on writing documentation and docstrings.
 
 
 ..  rst-class:: column clearfix
@@ -44,8 +44,6 @@ on wrting documentation and docstrings.
 Intermediate SymPy users and developers should reference this category of documentation
 for common pitfalls and advanced topics. The core SymPy features like variables, functions,
 symbolic expressions are detailed but it does not completely exhaust all SymPy operations.
-Other special topics, namely, **finite differential approximations to derivative** and
-**classification of SymPy objects** are also discussed.
 
 
 ..  rst-class:: column
@@ -55,9 +53,6 @@ Other special topics, namely, **finite differential approximations to derivative
 
 This category has a detailed description of the SymPy API, it discusses
 what the different functions and modules do, their arguments and return values.
-For complete documentation including how to get started,
-see `documentation overview <https://docs.sympy.org>`_.
-
 
 ..  rst-class:: clearfix row custom-headings
 
