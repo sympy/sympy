@@ -16,6 +16,9 @@ import os
 import subprocess
 from datetime import datetime
 
+# Make sure we import sympy from git
+sys.path.insert(0, os.path.abspath('../..'))
+
 import sympy
 
 # If your extensions are in another directory, add it here.
