@@ -416,7 +416,15 @@ def signsimp(expr, evaluate=None):
 
 
 def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, doit=True, **kwargs):
-    """Simplifies the given expression.
+    """
+    Simplifies the given expression.
+
+    Parameters
+    ==========
+
+    expr: the expression that needs to be simplified
+    ratio: ratio constraint for (result length)/(input length)
+    measure: the total number of operations in the expression
 
     Explanation
     ===========
