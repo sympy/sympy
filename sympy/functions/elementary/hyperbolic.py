@@ -1677,7 +1677,7 @@ class asech(InverseHyperbolicFunction):
 
     @staticmethod
     @cacheit
-    def expansion_term(n, x, *previous_terms):
+    def taylor_term(n, x, *previous_terms):
         if n == 0:
             return log(2 / x)
         elif n < 0 or n % 2 == 1:
@@ -1692,6 +1692,15 @@ class asech(InverseHyperbolicFunction):
                 R = RisingFactorial(S.Half, k) *  n
                 F = factorial(k) * n // 2 * n // 2
                 return -1 * R / F * x**n / 4
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.series.order import Order
+        arg = self.args[0].as_leading_term(x)
+
+        if x in arg.free_symbols and Order(1, x).contains(arg):
+            return -1*log(arg)
+        else:
+            return self.func(arg)
 
     def inverse(self, argindex=1):
         """
@@ -1794,6 +1803,33 @@ class acsch(InverseHyperbolicFunction):
 
         if arg.could_extract_minus_sign():
             return -cls(-arg)
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n == 0:
+            return log(2 / x)
+        elif n < 0 or n % 2 == 1:
+            return S.Zero
+        else:
+            x = sympify(x)
+            if len(previous_terms) > 2 and n > 2:
+                p = previous_terms[-2]
+                return p * (n - 1)**2 // (n // 2)**2 * x**2 / 4
+            else:
+                k = n // 2
+                R = RisingFactorial(S.Half, k) *  n
+                F = factorial(k) * n // 2 * n // 2
+                return S.NegativeOne**(k +1) * R / F * x**n / 4
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.series.order import Order
+        arg = self.args[0].as_leading_term(x)
+
+        if x in arg.free_symbols and Order(1, x).contains(arg):
+            return -1*log(arg)
+        else:
+            return self.func(arg)
 
     def inverse(self, argindex=1):
         """

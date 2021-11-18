@@ -713,9 +713,11 @@ def test_asech():
 
 def test_asech_series():
     x = Symbol('x')
-    t6 = asech(x).expansion_term(6, x)
+    assert asech(x).series(x, 0, 8) == \
+        log(2) - log(x) - x**2/4 - 3*x**4/32 - 5*x**6/96 + O(x**8)
+    t6 = asech(x).taylor_term(6, x)
     assert t6 == -5*x**6/96
-    assert asech(x).expansion_term(8, x, t6, 0) == -35*x**8/1024
+    assert asech(x).taylor_term(8, x, t6, 0) == -35*x**8/1024
 
 
 def test_asech_rewrite():
@@ -791,6 +793,15 @@ def test_acsch_infinities():
     assert acsch(oo) == 0
     assert acsch(-oo) == 0
     assert acsch(zoo) == 0
+
+
+def test_acsch_series():
+    x = Symbol('x')
+    assert acsch(x).series(x, 0, 8) == \
+        log(2) - log(x) + x**2/4 - 3*x**4/32 + 5*x**6/96 + O(x**8)
+    t6 = acsch(x).taylor_term(6, x)
+    assert t6 == 5*x**6/96
+    assert acsch(x).taylor_term(10, x, t6, 0) == 63*x**10/2560
 
 
 def test_acsch_rewrite():
@@ -953,6 +964,8 @@ def test_leading_term():
     assert coth(x).as_leading_term(x) == 1/x
     assert acosh(x).as_leading_term(x) == I*pi/2
     assert acoth(x).as_leading_term(x) == I*pi/2
+    assert asech(x).as_leading_term(x) == -log(x)
+    assert acsch(x).as_leading_term(x) == -log(x)
     for func in [sinh, tanh, asinh, atanh]:
         assert func(x).as_leading_term(x) == x
     for func in [sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth]:

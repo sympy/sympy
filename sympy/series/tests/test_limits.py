@@ -9,7 +9,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.combinatorial.factorials import (binomial, factorial, subfactorial)
 from sympy.functions.elementary.complexes import (Abs, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
-from sympy.functions.elementary.hyperbolic import (acoth, atanh, sinh)
+from sympy.functions.elementary.hyperbolic import (acoth, atanh, sinh, asech, acsch)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, sec, sin, tan)
@@ -639,6 +639,12 @@ def test_issue_10801():
     # make sure limits work with binomial
     assert limit(16**k / (k * binomial(2*k, k)**2), k, oo) == pi
 
+
+def test_issue_10868():
+    assert limit(log(x)+asech(x),x,0, dir = '+') == log(2)
+    assert limit(log(x)+asech(x),x,0, dir = '-') == log(2) + 2*I*pi
+    assert limit(log(x)+acsch(x),x,0, dir = '+') == log(2)
+    assert limit(log(x)+acsch(x),x,0, dir = '-') == -oo
 
 def test_issue_10976():
     s, x = symbols('s x', real=True)
