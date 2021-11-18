@@ -1341,13 +1341,12 @@ class Mul(Expr, AssocOp):
             if n.is_zero:
                 if d.is_zero is False:
                     return True
-            if d.is_finite is None:
-                return
-            if n.is_finite:
+            elif n.is_finite:
                 if d.is_infinite:
                     return True
-                if d.is_infinite is not None and n.is_zero is False:
+                if d.is_finite and n.is_zero is False:
                     return False
+            return
         zero = infinite = False
         for a in self.args:
             z = a.is_zero
@@ -1466,6 +1465,11 @@ class Mul(Expr, AssocOp):
         # [ 1,  1, -1, -1, -1, 0]])
         n, d = fraction(self, exact=True)
         if not d.is_Integer:
+            # check for indeterminants
+            if None in (n.is_infinite, d.is_infinite):
+                return
+            if None in (n.is_zero, d.is_zero):
+                return
             nri = lambda x: x.is_complex and x.is_extended_real is False and x.is_imaginary is False
             if n.is_zero:
                 if d.is_zero is False and (d.is_complex or d.is_infinite):
@@ -1581,6 +1585,11 @@ class Mul(Expr, AssocOp):
         # [-1, -1, -1, -1, -1,  0]])
         n, d = fraction(self, exact=True)
         if not d.is_Integer:
+            # check for indeterminants
+            if None in (n.is_infinite, d.is_infinite):
+                return
+            if None in (n.is_zero, d.is_zero):
+                return
             nri = lambda x: x.is_complex and x.is_extended_real is False and x.is_imaginary is False
             if n.is_zero:
                 if d.is_zero is False and (d.is_complex or d.is_infinite):
