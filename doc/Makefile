@@ -23,8 +23,8 @@ ALLSPHINXOPTSapi = -d $(BUILDDIR)/doctrees-api $(SPHINXOPTS) api
 ALLSPHINXOPTSlatex = -d $(BUILDDIR)/doctrees-latex -D latex_element.papersize=$(PAPER)paper \
                 $(SPHINXOPTS) src
 
-.PHONY: changes cheatsheet clean help html htmlapi htmlhelp info latex latexpdf \
-        linkcheck livehtml texinfo web logo man
+.PHONY: changes cheatsheet clean help html htmlapi htmlhelp info latex \
+        pdflatex latexpdf pdf linkcheck livehtml texinfo web logo man
 
 .SUFFIXES: .pdf .svg
 
@@ -97,7 +97,7 @@ latex: $(PDFFILES)
 	@echo "Set the environment variable LATEXMKOPTS='-xelatex -silent'"
 	@echo "And run \`make all' in that directory to run these through xelatex."
 
-latexpdf: latex
+pdf pdflatex latexpdf: latex
 	$(MAKE) -C $(BUILDDIR)/latex
 
 .svg.pdf:
