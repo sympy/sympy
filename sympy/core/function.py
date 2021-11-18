@@ -2837,15 +2837,25 @@ def mexpand(expr, recursive=False, *, numer=None, denom=None, frac=None):
 
     >>> from sympy.core.function import mexpand
     >>> from sympy.abc import x
-    >>> eq = ((x + 1)**2 + 1)/(x + 1)**2
-    >>> mexpand(eq, numer=True)
-    (x**2 + 2*x + 2)/(x + 1)**2
-    >>> mexpand(eq, denom=True)
-    ((x + 1)**2 + 1)/(x**2 + 2*x + 2)
+    >>> eq = (x - 1)**2/(1 - x)**2
     >>> mexpand(eq, frac=True)
     1
+    >>> mexpand(eq, numer=True)
+    (x**2 - 2*x + 1)/(1 - x)**2
+    >>> mexpand(eq, denom=True)
+    (x - 1)**2/(x**2 - 2*x + 1)
     >>> mexpand(eq)
-    x**2/(x**2 + 2*x + 1) + 2*x/(x**2 + 2*x + 1) + 2/(x**2 + 2*x + 1)
+    x**2/(x**2 - 2*x + 1) - 2*x/(x**2 - 2*x + 1) + 1/(x**2 - 2*x + 1)
+
+    >>> eq -= 1
+    >>> mexpand(eq, frac=True)
+    0
+    >>> mexpand(eq, numer=True)
+    0
+    >>> mexpand(eq, denom=True)
+    -1 + (x - 1)**2/(1 - x)**2
+    >>> mexpand(eq)
+    0
 
     See Also
     ========
