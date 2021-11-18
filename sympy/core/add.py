@@ -480,10 +480,14 @@ class Add(Expr, AssocOp):
     def _eval_power(self, e):
         from .evalf import pure_complex
         from .relational import is_eq
-        if e.is_zero is False and is_eq(e, S.One
-                    ) is False and all(_.is_infinite for _
-                    in self.as_real_imag()):
-            return S.NaN
+        if len(self.args) == 2 and all(_.is_infinite for _ in self.args):
+            if e.is_zero is False and is_eq(e, S.One) is False:
+                a, b = self.args
+                if not a.coeff(S.ImaginaryUnit):
+                    a, b = b, a
+                ico = a.coeff(S.ImaginaryUnit)
+                if ico and ico.is_extended_real and b.is_extended_real:
+                    return S.NaN
         if e.is_Rational and self.is_number:
             ri = pure_complex(self)
             if ri:
