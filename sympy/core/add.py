@@ -480,7 +480,7 @@ class Add(Expr, AssocOp):
     def _eval_power(self, e):
         from .evalf import pure_complex
         from .relational import is_eq
-        if len(self.args) == 2 and all(_.is_infinite for _ in self.args):
+        if len(self.args) == 2 and any(_.is_infinite for _ in self.args):
             if e.is_zero is False and is_eq(e, S.One) is False:
                 a, b = self.args
                 if not a.coeff(S.ImaginaryUnit):
