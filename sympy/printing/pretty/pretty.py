@@ -20,7 +20,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.pretty.pretty_symbology import hobj, vobj, xobj, \
     xsym, pretty_symbol, pretty_atom, pretty_use_unicode, greek_unicode, U, \
-    pretty_try_use_unicode,  annotated
+    pretty_try_use_unicode,  annotated, capital_script
 
 # rename for usage from outside
 pprint_use_unicode = pretty_use_unicode
@@ -2039,7 +2039,7 @@ class PrettyPrinter(Printer):
         return s
 
     def _print_Pow(self, power):
-        from sympy.simplify.simplify import fraction
+        from sympy.simplify.radsimp import fraction
         b, e = power.as_base_exp()
         if power.is_commutative:
             if e is S.NegativeOne:
@@ -2820,6 +2820,55 @@ class PrettyPrinter(Printer):
 
     def _print_Str(self, s):
         return self._print(s.name)
+
+    def _print_unified_transform(self, expr, s, inverse=False):
+        if self._use_unicode:
+            name = "".join(capital_script(c) for c in s)
+        else:
+            name = s
+        tvar = self._print(expr.args[1])
+        f = self._print(expr.args[0])
+        var = self._print(expr.args[2])
+        prettyFunc = prettyForm(name)
+        pform_arg = prettyForm(" "*tvar.width())
+        pform_arg = prettyForm(*pform_arg.below(tvar))
+        prettyFunc = prettyForm(*prettyFunc.right(pform_arg))
+        prettyArgs = prettyForm(*f.parens('[', ']'))
+        prettyArgs2 = prettyForm(*var.parens())
+        pform = prettyForm(
+            binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs, prettyArgs2))
+        return pform
+
+    def _print_MellinTransform(self, expr):
+        return self._print_unified_transform(expr, 'M')
+
+    def _print_InverseMellinTransform(self, expr):
+        return self._print_unified_transform(expr, 'M', True)
+
+    def _print_LaplaceTransform(self, expr):
+        return self._print_unified_transform(expr, 'L')
+
+    def _print_InverseLaplaceTransform(self, expr):
+        return self._print_unified_transform(expr, 'L', True)
+
+    def _print_FourierTransform(self, expr):
+        return self._print_unified_transform(expr, 'F')
+
+    def _print_InverseFourierTransform(self, expr):
+        return self._print_unified_transform(expr, 'F', True)
+
+    def _print_SineTransform(self, expr):
+        return self._print_unified_transform(expr, 'SIN')
+
+    def _print_InverseSineTransform(self, expr):
+        return self._print_UnifiedTransform(expr, 'SIN', True)
+
+    def _print_CosineTransform(self, expr):
+        return self._print_UnifiedTransform(expr, 'COS')
+
+    def _print_InverseCosineTransform(self, expr):
+        return self._print_UnifiedTransform(expr, 'COS', True)
+
 
 
 @print_function(PrettyPrinter)
