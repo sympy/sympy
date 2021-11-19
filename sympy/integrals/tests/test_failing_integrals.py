@@ -1,10 +1,18 @@
 # A collection of failing integrals from the issues.
 
-from sympy import (
-    integrate, I, Integral, exp, oo, pi, sign, sqrt, sin, cos, Piecewise,
-    tan, S, log, gamma, sinh, sec, acos, atan, sech, csch, DiracDelta, Rational,
-    symbols
-)
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (csch, sech, sinh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, atan, cos, sec, sin, tan)
+from sympy.functions.special.delta_functions import DiracDelta
+from sympy.functions.special.gamma_functions import gamma
+from sympy.integrals.integrals import (Integral, integrate)
+
 
 from sympy.testing.pytest import XFAIL, SKIP, slow, skip, ON_TRAVIS
 

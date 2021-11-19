@@ -26,7 +26,7 @@ def test_Trace():
     assert conjugate(Trace(A)) == trace(Adjoint(A))
     assert transpose(Trace(A)) == Trace(A)
 
-    A / Trace(A)  # Make sure this is possible
+    _ = A / Trace(A)  # Make sure this is possible
 
     # Some easy simplifications
     assert trace(Identity(5)) == 5
@@ -103,3 +103,11 @@ def test_trace_normalize():
     assert Trace(B*A) != Trace(A*B)
     assert Trace(B*A)._normalize() == Trace(A*B)
     assert Trace(B*A.T)._normalize() == Trace(A*B.T)
+
+
+def test_trace_as_explicit():
+    raises(ValueError, lambda: Trace(A).as_explicit())
+
+    X = MatrixSymbol("X", 3, 3)
+    assert Trace(X).as_explicit() == X[0, 0] + X[1, 1] + X[2, 2]
+    assert Trace(eye(3)).as_explicit() == 3

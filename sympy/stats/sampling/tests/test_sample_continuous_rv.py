@@ -1,4 +1,7 @@
-from sympy import exp, Interval, oo, Symbol
+from sympy.core.numbers import oo
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import exp
+from sympy.sets.sets import Interval
 from sympy.external import import_module
 from sympy.stats import Beta, Chi, Normal, Gamma, Exponential, LogNormal, Pareto, ChiSquared, Uniform, sample, \
     BetaPrime, Cauchy, GammaInverse, GaussianInverse, StudentT, Weibull, density, ContinuousRV

@@ -1,4 +1,5 @@
-from sympy.core.compatibility import clock
+from time import perf_counter
+
 
 import pyglet.gl as pgl
 
@@ -79,7 +80,7 @@ class PlotWindow(ManagedWindow):
         calc_verts_pos, calc_verts_len = 0, 0
         calc_cverts_pos, calc_cverts_len = 0, 0
 
-        should_update_caption = (clock() - self.last_caption_update >
+        should_update_caption = (perf_counter() - self.last_caption_update >
                                  self.caption_update_interval)
 
         if len(self.plot._functions.values()) == 0:
@@ -127,7 +128,7 @@ class PlotWindow(ManagedWindow):
         if should_update_caption:
             self.update_caption(calc_verts_pos, calc_verts_len,
                                 calc_cverts_pos, calc_cverts_len)
-            self.last_caption_update = clock()
+            self.last_caption_update = perf_counter()
 
         if self.plot._screenshot:
             self.plot._screenshot._execute_saving()

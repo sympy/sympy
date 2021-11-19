@@ -13,8 +13,10 @@ from sympy.testing.pytest import raises, skip
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError,
     split_symbols, implicit_multiplication, convert_equals_signs,
-    convert_xor, function_exponentiation,
-    implicit_multiplication_application,
+    convert_xor, function_exponentiation, lambda_notation, auto_symbol,
+    repeated_decimals, implicit_multiplication_application,
+    auto_number, factorial_notation, implicit_application,
+    _transformation, T
     )
 
 
@@ -168,6 +170,22 @@ def test_recursive_evaluate_false_10560():
         assert parse_expr(text, evaluate=False) == parse_expr(result, evaluate=False)
 
 
+def test_function_evaluate_false():
+    inputs = [
+        'Abs(0)', 'im(0)', 're(0)', 'sign(0)', 'arg(0)', 'conjugate(0)',
+        'acos(0)', 'acot(0)', 'acsc(0)', 'asec(0)', 'asin(0)', 'atan(0)',
+        'acosh(0)', 'acoth(0)', 'acsch(0)', 'asech(0)', 'asinh(0)', 'atanh(0)',
+        'cos(0)', 'cot(0)', 'csc(0)', 'sec(0)', 'sin(0)', 'tan(0)',
+        'cosh(0)', 'coth(0)', 'csch(0)', 'sech(0)', 'sinh(0)', 'tanh(0)',
+        'exp(0)', 'log(0)', 'sqrt(0)',
+    ]
+    for case in inputs:
+        expr = parse_expr(case, evaluate=False)
+        assert case == str(expr) != str(expr.doit())
+    assert str(parse_expr('ln(0)', evaluate=False)) == 'log(0)'
+    assert str(parse_expr('cbrt(0)', evaluate=False)) == '0**(1/3)'
+
+
 def test_issue_10773():
     inputs = {
     '-10/5': '(-10)/5',
@@ -259,8 +277,8 @@ def test_unicode_names():
 
 def test_python3_features():
     # Make sure the tokenizer can handle Python 3-only features
-    if sys.version_info < (3, 6):
-        skip("test_python3_features requires Python 3.6 or newer")
+    if sys.version_info < (3, 7):
+        skip("test_python3_features requires Python 3.7 or newer")
 
 
     assert parse_expr("123_456") == 123456
@@ -277,3 +295,26 @@ def test_issue_19501():
         standard_transformations +
         (implicit_multiplication_application,)))
     assert eq.free_symbols == {x}
+
+
+def test_parsing_definitions():
+    from sympy.abc import x
+    assert len(_transformation) == 12  # if this changes, extend below
+    assert _transformation[0] == lambda_notation
+    assert _transformation[1] == auto_symbol
+    assert _transformation[2] == repeated_decimals
+    assert _transformation[3] == auto_number
+    assert _transformation[4] == factorial_notation
+    assert _transformation[5] == implicit_multiplication_application
+    assert _transformation[6] == convert_xor
+    assert _transformation[7] == implicit_application
+    assert _transformation[8] == implicit_multiplication
+    assert _transformation[9] == convert_equals_signs
+    assert _transformation[10] == function_exponentiation
+    assert _transformation[11] == rationalize
+    assert T[:5] == T[0,1,2,3,4] == standard_transformations
+    t = _transformation
+    assert T[-1, 0] == (t[len(t) - 1], t[0])
+    assert T[:5, 8] == standard_transformations + (t[8],)
+    assert parse_expr('0.3x^2', transformations='all') == 3*x**2/10
+    assert parse_expr('sin 3x', transformations='implicit') == sin(3*x)

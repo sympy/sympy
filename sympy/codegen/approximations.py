@@ -1,5 +1,5 @@
 import math
-from sympy import Interval
+from sympy.sets.sets import Interval
 from sympy.calculus.singularities import is_increasing, is_decreasing
 from sympy.codegen.rewriting import Optimization
 from sympy.core.function import UndefinedFunction

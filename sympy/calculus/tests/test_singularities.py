@@ -1,4 +1,8 @@
-from sympy import Symbol, exp, log, oo, S, I, sqrt, Rational
+from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.calculus.singularities import (
     singularities,
     is_increasing,

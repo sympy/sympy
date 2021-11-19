@@ -22,11 +22,11 @@ division with // and %:
     >>> Fraction(2, 3) % Fraction(1, 4)
     1/6
 
-For the QQ domain we don't want this behaviour because there should be no
-remainder when dividing rational numbers. SymPy doesn't make use of this
+For the QQ domain we do not want this behaviour because there should be no
+remainder when dividing rational numbers. SymPy does not make use of this
 aspect of mpq when gmpy2 is installed. Since this class is a fallback for that
-case we don't bother implementing e.g. __mod__ so that we can be sure we
-aren't using it when gmpy2 is installed either.
+case we do not bother implementing e.g. __mod__ so that we can be sure we
+are not using it when gmpy2 is installed either.
 """
 
 
@@ -35,6 +35,7 @@ from math import gcd
 from decimal import Decimal
 from fractions import Fraction
 import sys
+from typing import Tuple as tTuple, Type
 
 
 # Used for __hash__
@@ -351,6 +352,7 @@ class PythonMPQ:
         else:
             return NotImplemented
 
+    _compatible_types: tTuple[Type, ...] = ()
 
 #
 # These are the types that PythonMPQ will interoperate with for operations

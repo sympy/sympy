@@ -15,8 +15,13 @@ from typing import Dict as tDict
 import collections
 from functools import reduce
 
-from sympy import (Matrix, S, Symbol, sympify, Basic, Tuple, Dict,
-    default_sort_key)
+from sympy.core.basic import Basic
+from sympy.core.containers import (Dict, Tuple)
+from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.matrices.dense import Matrix
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
@@ -299,7 +304,7 @@ class Dimension(Expr):
         return all(dpow.is_Integer for dpow in dim_sys.get_dimensional_dependencies(self).values())
 
 
-# Create dimensions according the the base units in MKSA.
+# Create dimensions according to the base units in MKSA.
 # For other unit systems, they can be derived by transforming the base
 # dimensional dependency dictionary.
 
@@ -452,7 +457,7 @@ class DimensionSystem(Basic, _QuantityMapper):
                 return self.get_dimensional_dependencies(result)
             elif result.func == name.func:
                 if isinstance(name, TrigonometricFunction):
-                    if dicts[0] == {} or dicts[0] == {Symbol('angle'): 1}:
+                    if dicts[0] in ({}, {Symbol('angle'): 1}):
                         return {}
                     else:
                         raise TypeError("The input argument for the function {} must be dimensionless or have dimensions of angle.".format(name.func))

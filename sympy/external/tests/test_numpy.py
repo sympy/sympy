@@ -15,8 +15,11 @@ else:
     disabled = True
 
 
-from sympy import (Rational, Symbol, list2numpy, matrix2numpy, sin, Float,
-        Matrix, lambdify, symarray, symbols, Integer)
+from sympy.core.numbers import (Float, Integer, Rational)
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.trigonometric import sin
+from sympy.matrices.dense import (Matrix, list2numpy, matrix2numpy, symarray)
+from sympy.utilities.lambdify import lambdify
 import sympy
 
 import mpmath
@@ -31,16 +34,16 @@ from sympy.testing.pytest import raises
 
 def test_systematic_basic():
     def s(sympy_object, numpy_array):
-        sympy_object + numpy_array
-        numpy_array + sympy_object
-        sympy_object - numpy_array
-        numpy_array - sympy_object
-        sympy_object * numpy_array
-        numpy_array * sympy_object
-        sympy_object / numpy_array
-        numpy_array / sympy_object
-        sympy_object ** numpy_array
-        numpy_array ** sympy_object
+        _ = [sympy_object + numpy_array,
+        numpy_array + sympy_object,
+        sympy_object - numpy_array,
+        numpy_array - sympy_object,
+        sympy_object * numpy_array,
+        numpy_array * sympy_object,
+        sympy_object / numpy_array,
+        numpy_array / sympy_object,
+        sympy_object ** numpy_array,
+        numpy_array ** sympy_object]
     x = Symbol("x")
     y = Symbol("y")
     sympy_objs = [
@@ -285,7 +288,7 @@ def test_lambdify_transl():
 
 
 def test_symarray():
-    """Test creation of numpy arrays of sympy symbols."""
+    """Test creation of numpy arrays of SymPy symbols."""
 
     import numpy as np
     import numpy.testing as npt

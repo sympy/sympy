@@ -1,5 +1,9 @@
-from sympy import (
-    I, Rational, S, Symbol, simplify, symbols, sympify, expand_mul)
+from sympy.core.function import expand_mul
+from sympy.core.numbers import (I, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.simplify.simplify import simplify
 from sympy.matrices.matrices import (ShapeError, NonSquareMatrixError)
 from sympy.matrices import (
     ImmutableMatrix, Matrix, eye, ones, ImmutableDenseMatrix, dotprodsimp)
@@ -548,8 +552,8 @@ def test_linsolve_underdetermined_AND_gauss_jordan_solve():
                           [tau4]])
 
     # https://github.com/sympy/sympy/issues/19815
-    sol_2 = A[ : , : -1 ] * sol_1 - A[ : , -1 ]
-    assert sol_2 == Matrix([[0] , [0] , [0]])
+    sol_2 = A[:, : -1 ] * sol_1 - A[:, -1 ]
+    assert sol_2 == Matrix([[0], [0], [0]])
 
 
 def test_solve():
