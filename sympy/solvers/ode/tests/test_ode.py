@@ -24,6 +24,7 @@ from sympy.solvers.ode.nonhomogeneous import _undetermined_coefficients_match
 from sympy.solvers.ode.single import LinearCoefficients
 from sympy.solvers.deutils import ode_order
 from sympy.testing.pytest import XFAIL, raises, slow
+from sympy.utilities.misc import filldedent
 
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
@@ -1036,10 +1037,11 @@ def test_issue_22523():
     C1, C2 = symbols('C1,C2')
     sol = dsolve(eqn, hint='2nd_power_series_ordinary')
     # there is no r(2.0) in this result
-    assert sol == Eq(rho(s), C2*(1 - 4.0*s**4*sqrt(N - 1.0)/N + 0.666666666666667*s**4/N
+    assert filldedent(sol) == filldedent(str('''
+        Eq(rho(s), C2*(1 - 4.0*s**4*sqrt(N - 1.0)/N + 0.666666666666667*s**4/N
         - 2.66666666666667*s**3*sqrt(N - 1.0)/N - 2.0*s**2*sqrt(N - 1.0)/N +
         9.33333333333333*s**4*sqrt(N - 1.0)/N**2 - 0.666666666666667*s**4/N**2
         + 2.66666666666667*s**3*sqrt(N - 1.0)/N**2 -
         5.33333333333333*s**4*sqrt(N - 1.0)/N**3) + C1*s*(1.0 -
         1.33333333333333*s**3*sqrt(N - 1.0)/N - 0.666666666666667*s**2*sqrt(N
-        - 1.0)/N + 1.33333333333333*s**3*sqrt(N - 1.0)/N**2) + O(s**6))
+        - 1.0)/N + 1.33333333333333*s**3*sqrt(N - 1.0)/N**2) + O(s**6))'''))
