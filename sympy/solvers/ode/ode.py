@@ -956,7 +956,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     x = func.args[0]
     f = func.func
     y = Dummy('y')
-    terms = n
+    terms = 5 if n is None else n
 
     order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)
@@ -2318,8 +2318,8 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     n = Dummy("n", integer=True)
     s = Wild("s")
     k = Wild("k", exclude=[x])
-    x0 = match.get('x0')
-    terms = match.get('terms', 5)
+    x0 = match['x0']
+    terms = match['terms']
     p = match[match['a3']]
     q = match[match['b3']]
     r = match[match['c3']]
@@ -2479,8 +2479,8 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     f = func.func
     C0, C1 = get_numbered_constants(eq, num=2)
     m = Dummy("m")  # for solving the indicial equation
-    x0 = match.get('x0')
-    terms = match.get('terms', 5)
+    x0 = match['x0']
+    terms = match['terms']
     p = match['p']
     q = match['q']
 
@@ -2759,9 +2759,9 @@ def ode_1st_power_series(eq, func, order, match):
     y = match['y']
     f = func.func
     h = -match[match['d']]/match[match['e']]
-    point = match.get('f0')
-    value = match.get('f0val')
-    terms = match.get('terms')
+    point = match['f0']
+    value = match['f0val']
+    terms = match['terms']
 
     # First term
     F = h
