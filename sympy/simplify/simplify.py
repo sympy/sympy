@@ -51,16 +51,16 @@ def separatevars(expr, symbols=[], dict=False, force=False):
         An expression that needs to have its variables separated.
     symbols : symbols in the expression
        The symbols that the expression has.
-    dict : ``True`` | ``False`` | ``None``
-        If dict=True then the separated terms will be returned in
+    dict : True | False | None
+        If ``dict=True`` then the separated terms will be returned in
         a dictionary keyed to their corresponding symbols. By default,
         all symbols in the expression will appear as keys; if symbols
         are provided, then all those symbols will be used as keys, and
         any terms in the expression containing other symbols or non-symbols
         will be returned keyed to the string ‘coeff’. (Passing None for
         symbols will return the expression in a dictionary keyed to ‘coeff’.)
-    force : ``True`` | ``False`` | ``None``
-        If force=True, then bases of powers will be separated regardless of
+    force : True | False | None
+        If ``force=True``, then bases of powers will be separated regardless of
         assumptions on the symbols involved.
 
     Explanation
