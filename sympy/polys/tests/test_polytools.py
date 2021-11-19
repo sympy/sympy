@@ -71,7 +71,7 @@ from sympy.functions.elementary.hyperbolic import tanh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import sin
-from sympy.matrices.dense import Matrix
+from sympy.matrices.dense import Matrix, eye
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.polys.rootoftools import rootof
 from sympy.utilities.iterables import iterable
@@ -3086,6 +3086,20 @@ def test_cancel():
     assert cancel(1 + p3) == 1 + p4
     assert cancel((x**2 - 1)/(x + 1)*p3) == (x - 1)*p4
     assert cancel((x**2 - 1)/(x + 1) + p3) == (x - 1) + p4
+
+    # issue 4077
+    m = Matrix([
+        [ 0, -1,  0,  0,  0,  0, -1,  0,  0],
+        [-1,  x, -1,  0,  0,  0,  0, -1,  0],
+        [ 0, -1,  x,  0,  0,  0,  0,  0, -1],
+        [ 0,  0,  0,  x, -1,  0, -1,  0,  0],
+        [ 0,  0,  0, -1,  x, -1,  0, -1,  0],
+        [ 0,  0,  0,  0, -1,  0,  0,  0, -1],
+        [-1,  0,  0, -1,  0,  0,  x, -1,  0],
+        [ 0, -1,  0,  0, -1,  0, -1,  0, -1],
+        [ 0,  0, -1,  0,  0, -1,  0, -1,  x]])
+    eq = m.row_join(eye(9)).rref()[0][0, 11]
+    assert cancel(eq) == -1/(2*x)  # this should return very quickly (< 1 sec)
 
     # issue 9363
     M = MatrixSymbol('M', 5, 5)

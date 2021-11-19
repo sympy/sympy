@@ -6671,11 +6671,12 @@ def cancel(f, *gens, **args):
     >>> together(_)
     (x + 2)/2
     """
+    from sympy.simplify.simplify import signsimp
     from sympy.functions.elementary.piecewise import Piecewise
     from sympy.polys.rings import sring
     options.allowed_flags(args, ['polys'])
 
-    f = sympify(f)
+    f = signsimp(sympify(f))
     opt = {}
     if 'polys' in args:
         opt['polys'] = args['polys']
