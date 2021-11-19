@@ -1267,7 +1267,7 @@ def test_check_assumptions():
 
 
 def test_failing_assumptions():
-    x = Symbol('x', real=True, positive=True)
+    x = Symbol('x', positive=True)
     y = Symbol('y')
     assert failing_assumptions(6*x + y, **x.assumptions0) == \
     {'real': None, 'imaginary': None, 'complex': None, 'hermitian': None,

@@ -1091,7 +1091,7 @@ def test_Pow_is_integer():
 
 def test_Pow_is_real():
     x = Symbol('x', real=True)
-    y = Symbol('y', real=True, positive=True)
+    y = Symbol('y', positive=True)
 
     assert (x**2).is_real is True
     assert (x**3).is_real is True

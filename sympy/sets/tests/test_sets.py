@@ -131,7 +131,7 @@ def test_interval_arguments():
 
 
     assert isinstance(Interval(0, Symbol('a')), Interval)
-    assert Interval(Symbol('a', real=True, positive=True), 0) == S.EmptySet
+    assert Interval(Symbol('a', positive=True), 0) == S.EmptySet
     raises(ValueError, lambda: Interval(0, S.ImaginaryUnit))
     raises(ValueError, lambda: Interval(0, Symbol('z', extended_real=False)))
     raises(ValueError, lambda: Interval(x, x + S.ImaginaryUnit))
@@ -1049,7 +1049,7 @@ def test_product_basic():
 
 
 def test_real():
-    x = Symbol('x', real=True, finite=True)
+    x = Symbol('x', real=True)
 
     I = Interval(0, 5)
     J = Interval(10, 20)

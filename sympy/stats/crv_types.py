@@ -2587,8 +2587,8 @@ def LogLogistic(name, alpha, beta):
     >>> from sympy.stats import LogLogistic, density, cdf, quantile
     >>> from sympy import Symbol, pprint
 
-    >>> alpha = Symbol("alpha", real=True, positive=True)
-    >>> beta = Symbol("beta", real=True, positive=True)
+    >>> alpha = Symbol("alpha", positive=True)
+    >>> beta = Symbol("beta", positive=True)
     >>> p = Symbol("p")
     >>> z = Symbol("z", positive=True)
 

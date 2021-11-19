@@ -125,7 +125,7 @@ def Psi_nlm(n, l, m, r, phi, theta, Z=1):
 
     >>> from sympy.physics.hydrogen import Psi_nlm
     >>> from sympy import Symbol
-    >>> r=Symbol("r", real=True, positive=True)
+    >>> r=Symbol("r", positive=True)
     >>> phi=Symbol("phi", real=True)
     >>> theta=Symbol("theta", real=True)
     >>> Z=Symbol("Z", positive=True, integer=True, nonzero=True)
