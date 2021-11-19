@@ -427,6 +427,9 @@ def trigsimp(expr, **opts):
     """
     reduces expression by using known trig identities
 
+    Parameters
+    ==========
+        expr : the expression to simplify
     Explanation
     ===========
 
