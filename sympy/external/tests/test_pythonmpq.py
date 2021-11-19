@@ -7,6 +7,7 @@ installed run the same tests for both.
 from fractions import Fraction
 from decimal import Decimal
 import pickle
+from typing import Callable, List, Tuple, Type
 
 from sympy.testing.pytest import raises
 
@@ -16,6 +17,7 @@ from sympy.external.pythonmpq import PythonMPQ
 # If gmpy2 is installed then run the tests for both mpq and PythonMPQ.
 # That should ensure consistency between the implementation here and mpq.
 #
+rational_types: List[Tuple[Callable, Type, Callable, Type]]
 rational_types = [(PythonMPQ, PythonMPQ, int, int)]
 try:
     from gmpy2 import mpq, mpz

@@ -1,4 +1,4 @@
-from sympy import Trace
+from sympy.matrices.expressions.trace import Trace
 from sympy.testing.pytest import raises, slow
 from sympy.matrices.expressions.blockmatrix import (
     block_collapse, bc_matmul, bc_block_plus_ident, BlockDiagMatrix,
@@ -127,7 +127,8 @@ def test_BlockMatrix_trace():
 def test_BlockMatrix_Determinant():
     A, B, C, D = [MatrixSymbol(s, 3, 3) for s in 'ABCD']
     X = BlockMatrix([[A, B], [C, D]])
-    from sympy import assuming, Q
+    from sympy.assumptions.ask import Q
+    from sympy.assumptions.assume import assuming
     with assuming(Q.invertible(A)):
         assert det(X) == det(A) * det(X.schur('A'))
 

@@ -1,9 +1,19 @@
-from sympy import (
-    Symbol, Dummy, diff, Derivative, Rational, roots, S, sqrt, hyper,
-    cos, gamma, conjugate, factorial, pi, oo, zoo, binomial, RisingFactorial,
-    legendre, assoc_legendre, chebyshevu, chebyshevt, chebyshevt_root,
-    chebyshevu_root, laguerre, assoc_laguerre, laguerre_poly, hermite,
-    gegenbauer, jacobi, jacobi_normalized, Sum, floor, exp)
+from sympy.concrete.summations import Sum
+from sympy.core.function import (Derivative, diff)
+from sympy.core.numbers import (Rational, oo, pi, zoo)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.functions.combinatorial.factorials import (RisingFactorial, binomial, factorial)
+from sympy.functions.elementary.complexes import conjugate
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import cos
+from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.hyper import hyper
+from sympy.functions.special.polynomials import (assoc_laguerre, assoc_legendre, chebyshevt, chebyshevt_root, chebyshevu, chebyshevu_root, gegenbauer, hermite, jacobi, jacobi_normalized, laguerre, legendre)
+from sympy.polys.orthopolys import laguerre_poly
+from sympy.polys.polyroots import roots
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError

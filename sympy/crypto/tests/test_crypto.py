@@ -22,7 +22,7 @@ from sympy.polys.domains import FF
 
 from sympy.testing.pytest import raises, warns
 
-from random import randrange
+from sympy.core.random import randrange
 
 def test_encipher_railfence():
     assert encipher_railfence("hello world",2) == "hlowrdel ol"

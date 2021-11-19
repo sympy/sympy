@@ -1,4 +1,8 @@
-from sympy import Sieve, sieve, Symbol, S, limit, I, zoo, nan, Rational
+from sympy.core.numbers import (I, Rational, nan, zoo)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.ntheory.generate import (sieve, Sieve)
+from sympy.series.limits import limit
 
 from sympy.ntheory import isprime, totient, mobius, randprime, nextprime, prevprime, \
     primerange, primepi, prime, primorial, composite, compositepi, reduced_totient
@@ -23,7 +27,7 @@ def test_prime():
     raises(ValueError, lambda: prime(0))
     sieve.extend(3000)
     assert prime(401) == 2749
-    raises(ValueError , lambda: prime(-1))
+    raises(ValueError, lambda: prime(-1))
 
 
 def test_primepi():

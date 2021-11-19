@@ -58,7 +58,7 @@ def python(expr, **settings):
         else:
             newsymbolname = symbolname
 
-        # Escape symbol names that are reserved python keywords
+        # Escape symbol names that are reserved Python keywords
         if kw.iskeyword(newsymbolname):
             while True:
                 newsymbolname += "_"
@@ -71,7 +71,7 @@ def python(expr, **settings):
 
     for functionname in printer.functions:
         newfunctionname = functionname
-        # Escape function names that are reserved python keywords
+        # Escape function names that are reserved Python keywords
         if kw.iskeyword(newfunctionname):
             while True:
                 newfunctionname += "_"

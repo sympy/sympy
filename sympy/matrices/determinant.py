@@ -7,7 +7,7 @@ from sympy.core.mul import Mul
 from sympy.polys import PurePoly, cancel
 from sympy.simplify.simplify import (simplify as _simplify,
     dotprodsimp as _dotprodsimp)
-from sympy import sympify
+from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.numbers import nC
 from sympy.polys.matrices.domainmatrix import DomainMatrix
 
@@ -82,7 +82,7 @@ def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):
             continue
         simped = simpfunc(x)
         is_zero = iszerofunc(simped)
-        if is_zero == True or is_zero == False:
+        if is_zero in (True, False):
             newly_determined.append((i, simped))
         if is_zero == False:
             return (i, simped, False, newly_determined)
@@ -446,7 +446,7 @@ def _cofactor(M, i, j, method="berkowitz"):
     if not M.is_square or M.rows < 1:
         raise NonSquareMatrixError()
 
-    return (-1)**((i + j) % 2) * M.minor(i, j, method)
+    return S.NegativeOne**((i + j) % 2) * M.minor(i, j, method)
 
 
 def _cofactor_matrix(M, method="berkowitz"):
@@ -535,8 +535,8 @@ def _per(M):
         sub_len = len(subset)
         for i in range(m):
              prod *= sum([M[i, j] for j in subset])
-        perm += prod * (-1)**sub_len * nC(n - sub_len, m - sub_len)
-    perm *= (-1)**m
+        perm += prod * S.NegativeOne**sub_len * nC(n - sub_len, m - sub_len)
+    perm *= S.NegativeOne**m
     perm = sympify(perm)
     return perm.simplify()
 

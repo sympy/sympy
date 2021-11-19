@@ -1,7 +1,7 @@
 from sympy.unify.core import Compound, Variable, CondVariable, allcombinations
 from sympy.unify import core
 
-a,b,c = 'abc'
+a,b,c = 'a', 'b', 'c'
 w,x,y,z = map(Variable, 'wxyz')
 
 C = Compound

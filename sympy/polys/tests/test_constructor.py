@@ -5,8 +5,12 @@ from sympy.polys.domains import ZZ, QQ, ZZ_I, QQ_I, RR, CC, EX
 from sympy.polys.domains.realfield import RealField
 from sympy.polys.domains.complexfield import ComplexField
 
-from sympy import (
-    S, sqrt, sin, exp, Float, E, I, GoldenRatio, pi, Catalan, Rational)
+from sympy.core import (Catalan, GoldenRatio)
+from sympy.core.numbers import (E, Float, I, Rational, pi)
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
 from sympy.abc import x, y
 
 

@@ -1,4 +1,6 @@
-from sympy import Q, ask, Symbol, DiagMatrix, DiagonalMatrix
+from sympy.assumptions.ask import (Q, ask)
+from sympy.core.symbol import Symbol
+from sympy.matrices.expressions.diagonal import (DiagMatrix, DiagonalMatrix)
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions import (MatrixSymbol, Identity, ZeroMatrix,
         OneMatrix, Trace, MatrixSlice, Determinant, BlockMatrix, BlockDiagMatrix)

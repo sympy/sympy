@@ -1,5 +1,7 @@
 from sympy.matrices.expressions.factorizations import lu, LofCholesky, qr, svd
-from sympy import Symbol, MatrixSymbol, ask, Q
+from sympy.assumptions.ask import (Q, ask)
+from sympy.core.symbol import Symbol
+from sympy.matrices.expressions.matexpr import MatrixSymbol
 
 n = Symbol('n')
 X = MatrixSymbol('X', n, n)

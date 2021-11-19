@@ -1,10 +1,14 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy import I, S, sqrt, sin, oo, Poly, Float, Integer, Rational, pi, exp, E
+from sympy.core.numbers import (E, Float, I, Integer, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
+from sympy.polys.polytools import Poly
 from sympy.abc import x, y, z
 
-from sympy.utilities.iterables import cartes
-from sympy.core.compatibility import HAS_GMPY
+from sympy.external.gmpy import HAS_GMPY
 
 from sympy.polys.domains import (ZZ, QQ, RR, CC, FF, GF, EX, EXRAW, ZZ_gmpy,
     ZZ_python, QQ_gmpy, QQ_python)
@@ -27,6 +31,8 @@ from sympy.polys.polyerrors import (
 from sympy.polys.polyutils import illegal
 
 from sympy.testing.pytest import raises
+
+from itertools import product
 
 ALG = QQ.algebraic_field(sqrt(2), sqrt(3))
 
@@ -577,8 +583,8 @@ def test_Domain_convert():
 
     def check_domains(K1, K2):
         K3 = K1.unify(K2)
-        check_element(K3.convert_from(K1.one,  K1), K3.one , K1, K2, K3)
-        check_element(K3.convert_from(K2.one,  K2), K3.one , K1, K2, K3)
+        check_element(K3.convert_from( K1.one, K1),  K3.one, K1, K2, K3)
+        check_element(K3.convert_from( K2.one, K2),  K3.one, K1, K2, K3)
         check_element(K3.convert_from(K1.zero, K1), K3.zero, K1, K2, K3)
         check_element(K3.convert_from(K2.zero, K2), K3.zero, K1, K2, K3)
 
@@ -616,7 +622,7 @@ def test_Domain_convert():
     K3 = QQ[x]
     K4 = ZZ[x]
     Ks = [K1, K2, K3, K4]
-    for Ka, Kb in cartes(Ks, Ks):
+    for Ka, Kb in product(Ks, Ks):
         assert Ka.convert_from(Kb.from_sympy(x), Kb) == Ka.from_sympy(x)
 
     assert K2.convert_from(QQ(1, 2), QQ) == K2(QQ(1, 2))
@@ -976,11 +982,11 @@ def test_CC_double():
 
 def test_gaussian_domains():
     I = S.ImaginaryUnit
-    a, b, c, d = [ZZ_I.convert(x) for x in (5, 2 + I, 3 - I, 5 - 5)]
-    ZZ_I.gcd(a, b) == b
-    ZZ_I.gcd(a, c) == b
-    ZZ_I.lcm(a, b) == a
-    ZZ_I.lcm(a, c) == d
+    a, b, c, d = [ZZ_I.convert(x) for x in (5, 2 + I, 3 - I, 5 - 5*I)]
+    assert ZZ_I.gcd(a, b) == b
+    assert ZZ_I.gcd(a, c) == b
+    assert ZZ_I.lcm(a, b) == a
+    assert ZZ_I.lcm(a, c) == d
     assert ZZ_I(3, 4) != QQ_I(3, 4)  # XXX is this right or should QQ->ZZ if possible?
     assert ZZ_I(3, 0) != 3           # and should this go to Integer?
     assert QQ_I(S(3)/4, 0) != S(3)/4 # and this to Rational?

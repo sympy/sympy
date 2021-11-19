@@ -5,8 +5,8 @@ from sympy.core.relational import Equality, Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise
-from sympy.functions.elementary.trigonometric import sin
-from sympy.sets.sets import (EmptySet, Interval, Union)
+from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.sets.sets import (Interval, Union)
 from sympy.simplify.simplify import simplify
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or,
@@ -14,16 +14,15 @@ from sympy.logic.boolalg import (
     distribute_or_over_and, distribute_and_over_or,
     eliminate_implications, is_nnf, is_cnf, is_dnf, simplify_logic,
     to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
-    BooleanAtom, is_literal, term_to_integer, integer_to_term,
+    BooleanAtom, is_literal, term_to_integer,
     truth_table, as_Boolean, to_anf, is_anf, distribute_xor_over_and,
     anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial,
     _check_pair, _convert_to_varsSOP, _convert_to_varsPOS, Exclusive,)
 from sympy.assumptions.cnf import CNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
-from sympy.utilities.iterables import cartes
 
-from itertools import combinations, permutations
+from itertools import combinations, permutations, product
 
 A, B, C, D = symbols('A:D')
 a, b, c, d, e, w, x, y, z = symbols('a:e w:z')
@@ -242,7 +241,7 @@ def test_equals():
     raises(NotImplementedError, lambda: (A & B).equals(A > B))
 
 
-def test_simplification():
+def test_simplification_boolalg():
     """
     Test working of simplification methods.
     """
@@ -312,6 +311,9 @@ def test_simplification():
     e = And(A, b)
     assert simplify_logic(e) == A & ~x & ~y
     raises(ValueError, lambda: simplify_logic(A & (B | C), form='blabla'))
+    assert simplify(Or(x <= y, And(x < y, z))) == (x <= y)
+    assert simplify(Or(x <= y, And(y > x, z))) == (x <= y)
+    assert simplify(Or(x >= y, And(y < x, z))) == (x >= y)
 
     # Check that expressions with nine variables or more are not simplified
     # (without the force-flag)
@@ -760,7 +762,7 @@ def test_true_false():
     assert ~true is false
     assert ~false is true
 
-    for T, F in cartes([True, true], [False, false]):
+    for T, F in product((True, true), (False, false)):
         assert And(T, F) is false
         assert And(F, T) is false
         assert And(F, F) is false
@@ -867,11 +869,13 @@ def test_bool_as_set():
     assert Not(And(x > 2, x < 3)).as_set() == \
         Union(Interval(-oo, 2), Interval(3, oo))
     assert true.as_set() == S.UniversalSet
-    assert false.as_set() == EmptySet()
+    assert false.as_set() is S.EmptySet
     assert x.as_set() == S.UniversalSet
     assert And(Or(x < 1, x > 3), x < 2).as_set() == Interval.open(-oo, 1)
     assert And(x < 1, sin(x) < 3).as_set() == (x < 1).as_set()
     raises(NotImplementedError, lambda: (sin(x) < 1).as_set())
+    # watch for object morph in as_set
+    assert Eq(-1, cos(2*x)**2/sin(2*x)**2).as_set() is S.EmptySet
 
 
 @XFAIL
@@ -924,12 +928,6 @@ def test_term_to_integer():
     assert term_to_integer([1, 0, 1, 0, 0, 1, 0]) == 82
     assert term_to_integer('0010101000111001') == 10809
 
-
-def test_integer_to_term():
-    assert integer_to_term(777) == [1, 1, 0, 0, 0, 0, 1, 0, 0, 1]
-    assert integer_to_term(123, 3) == [1, 1, 1, 1, 0, 1, 1]
-    assert integer_to_term(456, 16) == [0, 0, 0, 0, 0, 0, 0, 1,
-                                        1, 1, 0, 0, 1, 0, 0, 0]
 
 def test_issue_21971():
     a, b, c, d = symbols('a b c d')
@@ -1160,7 +1158,7 @@ def test_issue_16803():
     n = symbols('n')
     # No simplification done, but should not raise an exception
     assert ((n > 3) | (n < 0) | ((n > 0) & (n < 3))).simplify() == \
-        ((n > 3) | (n < 0) | ((n > 0) & (n < 3)))
+        (n > 3) | (n < 0) | ((n > 0) & (n < 3))
 
 
 def test_issue_17530():

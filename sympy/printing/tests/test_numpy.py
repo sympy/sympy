@@ -1,8 +1,14 @@
-from sympy import (
-    Piecewise, lambdify, Equality, Unequality, Sum, Mod, sqrt,
-    MatrixSymbol, BlockMatrix, Identity
-)
-from sympy import eye
+from sympy.concrete.summations import Sum
+from sympy.core.mod import Mod
+from sympy.core.relational import (Equality, Unequality)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.matrices.expressions.blockmatrix import BlockMatrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.special import Identity
+from sympy.utilities.lambdify import lambdify
+
+from sympy.matrices.dense import eye
 from sympy.abc import x, i, j, a, b, c, d
 from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
@@ -311,7 +317,7 @@ def test_issue_17006():
 
     assert (f(ma) == mr).all()
 
-    from sympy import symbols
+    from sympy.core.symbol import symbols
     n = symbols('n', integer=True)
     N = MatrixSymbol("M", n, n)
     raises(NotImplementedError, lambda: lambdify(N, N + Identity(n)))

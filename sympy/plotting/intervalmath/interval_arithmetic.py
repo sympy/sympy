@@ -17,7 +17,7 @@ The module uses numpy for speed which cannot be achieved with mpmath.
 # and hence is slow, while numpy evaluations are orders of magnitude
 # faster.
 
-# Q: Why create a separate class for intervals? Why not use sympy's
+# Q: Why create a separate class for intervals? Why not use SymPy's
 # Interval Sets?
 # A: The functionalities that will be required for plotting is quite
 # different from what Interval Sets implement.

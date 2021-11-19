@@ -1,4 +1,9 @@
-from sympy import S, Basic, exp, multigamma, pi, prod
+from sympy.core.basic import Basic
+from sympy.core.mul import prod
+from sympy.core.numbers import pi
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.special.gamma_functions import multigamma
 from sympy.core.sympify import sympify, _sympify
 from sympy.matrices import (ImmutableMatrix, Inverse, Trace, Determinant,
                             MatrixSymbol, MatrixBase, Transpose, MatrixSet,
@@ -233,7 +238,7 @@ class MatrixGammaDistribution(MatrixDistribution):
 
     @staticmethod
     def check(alpha, beta, scale_matrix):
-        if not isinstance(scale_matrix , MatrixSymbol):
+        if not isinstance(scale_matrix, MatrixSymbol):
             _value_check(scale_matrix.is_positive_definite, "The shape "
                 "matrix must be positive definite.")
         _value_check(scale_matrix.is_square, "Should "
@@ -251,7 +256,7 @@ class MatrixGammaDistribution(MatrixDistribution):
         return self.scale_matrix.shape
 
     def pdf(self, x):
-        alpha , beta , scale_matrix = self.alpha, self.beta, self.scale_matrix
+        alpha, beta, scale_matrix = self.alpha, self.beta, self.scale_matrix
         p = scale_matrix.shape[0]
         if isinstance(x, list):
             x = ImmutableMatrix(x)
@@ -320,7 +325,7 @@ class WishartDistribution(MatrixDistribution):
 
     @staticmethod
     def check(n, scale_matrix):
-        if not isinstance(scale_matrix , MatrixSymbol):
+        if not isinstance(scale_matrix, MatrixSymbol):
             _value_check(scale_matrix.is_positive_definite, "The shape "
                 "matrix must be positive definite.")
         _value_check(scale_matrix.is_square, "Should "
@@ -403,10 +408,10 @@ class MatrixNormalDistribution(MatrixDistribution):
 
     @staticmethod
     def check(location_matrix, scale_matrix_1, scale_matrix_2):
-        if not isinstance(scale_matrix_1 , MatrixSymbol):
+        if not isinstance(scale_matrix_1, MatrixSymbol):
             _value_check(scale_matrix_1.is_positive_definite, "The shape "
                 "matrix must be positive definite.")
-        if not isinstance(scale_matrix_2 , MatrixSymbol):
+        if not isinstance(scale_matrix_2, MatrixSymbol):
             _value_check(scale_matrix_2.is_positive_definite, "The shape "
                 "matrix must be positive definite.")
         _value_check(scale_matrix_1.is_square, "Scale matrix 1 should be "
@@ -430,7 +435,7 @@ class MatrixNormalDistribution(MatrixDistribution):
         return self.location_matrix.shape
 
     def pdf(self, x):
-        M , U , V = self.location_matrix, self.scale_matrix_1, self.scale_matrix_2
+        M, U, V = self.location_matrix, self.scale_matrix_1, self.scale_matrix_2
         n, p = M.shape
         if isinstance(x, list):
             x = ImmutableMatrix(x)
@@ -529,7 +534,7 @@ class MatrixStudentTDistribution(MatrixDistribution):
         return self.location_matrix.shape
 
     def pdf(self, x):
-        from sympy import eye
+        from sympy.matrices.dense import eye
         if isinstance(x, list):
             x = ImmutableMatrix(x)
         if not isinstance(x, (MatrixBase, MatrixSymbol)):
