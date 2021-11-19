@@ -500,6 +500,13 @@ def calculate_series(e, x, logx=None):
         t = factor_terms(cancel(t, expand=False))
         # XXX try t = bottom_up(t, lambda x: cancel(x, expand=False)) instead of the two calls
 
+        # not sure if the has to be generalized to expand all exp
+        # but it is sufficient for the failing test of
+        # limit((2*exp(3*x)/(exp(2*x) + 1))**(1/x), x, oo) == E
+        if isinstance(t, exp):
+            from sympy.core.function import expand_power_exp, expand_mul
+            t = expand_power_exp(t.func(expand_mul(t.exp)))
+
         if t.has(exp) and t.has(log):
             t = powdenest(t)
 
