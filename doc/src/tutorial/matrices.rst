@@ -241,32 +241,32 @@ the random matrix generation functions, e.g.
 Find a :ref:`full list of random matrices <matrices-random>`.
 
     >>> from sympy.matrices.random import rand
-    >>> rand.seed(1)
+    >>> rand.seed(0)
 
     >>> from sympy.matrices.random import invertible, triangular, orthogonal
     >>> from sympy import simplify
 
     >>> M = invertible(3)  # only integer entries
     >>> M
-    ⎡-1  -1  -1⎤
-    ⎢          ⎥
-    ⎢-2  -1  -1⎥
-    ⎢          ⎥
-    ⎣0   0   1 ⎦
+    ⎡1  1  0⎤
+    ⎢       ⎥
+    ⎢1  2  0⎥
+    ⎢       ⎥
+    ⎣0  2  1⎦
     >>> M.inv()
-    ⎡1   -1  0 ⎤
-    ⎢          ⎥
-    ⎢-2  1   -1⎥
-    ⎢          ⎥
-    ⎣0   0   1 ⎦
+    ⎡2   -1  0⎤
+    ⎢         ⎥
+    ⎢-1  1   0⎥
+    ⎢         ⎥
+    ⎣2   -2  1⎦
 
-    >>> M = invertible(3, domain=(sqrt(2),))  # entries as sums and products of sqrt(2) and 1
+    >>> M = invertible(3, scalars=(sqrt(2),))  # entries as sums and products of sqrt(2) and 1
     >>> M
-    ⎡1   0    √2  ⎤
-    ⎢             ⎥
-    ⎢√2  1  √2 + 2⎥
-    ⎢             ⎥
-    ⎣0   0    1   ⎦
+    ⎡1   0   0 ⎤
+    ⎢          ⎥
+    ⎢0   1  -√2⎥
+    ⎢          ⎥
+    ⎣√2  0  -1 ⎦
     >>> simplify(M.inv()*M)
     ⎡1  0  0⎤
     ⎢       ⎥
@@ -275,33 +275,31 @@ Find a :ref:`full list of random matrices <matrices-random>`.
     ⎣0  0  1⎦
 
 
-    >>> M = triangular(3, domain=(1, sqrt(2)))
+    >>> M = triangular(3, scalars=(1, sqrt(2)))
     >>> M
-    ⎡1  1 + √2  0 ⎤
-    ⎢             ⎥
-    ⎢0    1     0 ⎥
-    ⎢             ⎥
-    ⎣0    0     -1⎦
+    ⎡-1  0  0 ⎤
+    ⎢         ⎥
+    ⎢0   1  1 ⎥
+    ⎢         ⎥
+    ⎣0   0  -1⎦
     >>> M.inv()
-    ⎡1  -√2 - 1  0 ⎤
-    ⎢              ⎥
-    ⎢0     1     0 ⎥
-    ⎢              ⎥
-    ⎣0     0     -1⎦
+    ⎡-1  0  0 ⎤
+    ⎢         ⎥
+    ⎢0   1  1 ⎥
+    ⎢         ⎥
+    ⎣0   0  -1⎦
 
-    >>> M = orthogonal(3, length=6)
+    >>> M = orthogonal(3, length=6, seed=1)
     >>> M
-    ⎡ √2   √2       ⎤
-    ⎢ ──   ──    0  ⎥
-    ⎢ 2    2        ⎥
-    ⎢               ⎥
-    ⎢           -√2 ⎥
-    ⎢-1/2  1/2  ────⎥
-    ⎢            2  ⎥
-    ⎢               ⎥
-    ⎢            √2 ⎥
-    ⎢-1/2  1/2   ── ⎥
-    ⎣            2  ⎦
+    ⎡-1   0     0  ⎤
+    ⎢              ⎥
+    ⎢     √2   -√2 ⎥
+    ⎢0    ──   ────⎥
+    ⎢     2     2  ⎥
+    ⎢              ⎥
+    ⎢    -√2   -√2 ⎥
+    ⎢0   ────  ────⎥
+    ⎣     2     2  ⎦
     >>> M.T*M
     ⎡1  0  0⎤
     ⎢       ⎥
@@ -313,18 +311,18 @@ And symbolic matrices work, too.
 
     >>> from sympy import symbols, cos, sin
     >>> phi = symbols('phi')
-    >>> domain = cos(phi), sin(phi)
-    >>> M = orthogonal(3, domain=domain, length=1)
+    >>> scalars = cos(phi), sin(phi)
+    >>> M = orthogonal(3, scalars=scalars, length=1)
     >>> M
-    ⎡                      _____________   ⎤
-    ⎢                     ╱        2       ⎥
-    ⎢     sin(φ)       -╲╱  1 - sin (φ)   0⎥
+    ⎡1         0                  0        ⎤
     ⎢                                      ⎥
-    ⎢   _____________                      ⎥
-    ⎢  ╱        2                          ⎥
-    ⎢╲╱  1 - sin (φ)        sin(φ)        0⎥
+    ⎢                         _____________⎥
+    ⎢                        ╱        2    ⎥
+    ⎢0       cos(φ)       -╲╱  1 - cos (φ) ⎥
     ⎢                                      ⎥
-    ⎣       0                  0          1⎦
+    ⎢      _____________                   ⎥
+    ⎢     ╱        2                       ⎥
+    ⎣0  ╲╱  1 - cos (φ)        cos(φ)      ⎦
     >>> M.T*M
     ⎡1  0  0⎤
     ⎢       ⎥
@@ -336,23 +334,23 @@ Using matrices to construct a matrix with integer entries
 which has an inverse with integer entries, too.
 
     >>> from sympy.matrices.random import invertible
-    >>> A = invertible(4, domain=(1,-1))
+    >>> A = invertible(4, scalars=(1,-1))
     >>> A
-    ⎡1  0  0  1⎤
-    ⎢          ⎥
-    ⎢1  1  0  1⎥
-    ⎢          ⎥
-    ⎢0  0  1  0⎥
-    ⎢          ⎥
-    ⎣0  0  0  1⎦
+    ⎡1  0  0   1⎤
+    ⎢           ⎥
+    ⎢0  1  1   2⎥
+    ⎢           ⎥
+    ⎢0  0  1   0⎥
+    ⎢           ⎥
+    ⎣1  0  -1  2⎦
     >>> A.inv()
-    ⎡1   0  0  -1⎤
-    ⎢            ⎥
-    ⎢-1  1  0  0 ⎥
-    ⎢            ⎥
-    ⎢0   0  1  0 ⎥
-    ⎢            ⎥
-    ⎣0   0  0  1 ⎦
+    ⎡2   0  -1  -1⎤
+    ⎢             ⎥
+    ⎢2   1  -3  -2⎥
+    ⎢             ⎥
+    ⎢0   0  1   0 ⎥
+    ⎢             ⎥
+    ⎣-1  0  1   1 ⎦
 
 Using matrices to construct a quadric,
 a quadratic equation in multiple variables
@@ -364,15 +362,21 @@ a quadratic equation in multiple variables
     >>> D = diag(1, 2, 3)
     >>> S = orthogonal(3, length=6)
     >>> S.T * D * S
-    ⎡2  0  1⎤
-    ⎢       ⎥
-    ⎢0  2  0⎥
-    ⎢       ⎥
-    ⎣1  0  2⎦
+    ⎡      -√2     ⎤
+    ⎢ 2    ────  0 ⎥
+    ⎢       2      ⎥
+    ⎢              ⎥
+    ⎢-√2         √2⎥
+    ⎢────   2    ──⎥
+    ⎢ 2          2 ⎥
+    ⎢              ⎥
+    ⎢       √2     ⎥
+    ⎢ 0     ──   2 ⎥
+    ⎣       2      ⎦
     >>> q = expand(xyz.T * S.T * D * S * xyz)[0, 0].as_expr()
     >>> q
-       2              2      2
-    2⋅x  + 2⋅x⋅z + 2⋅y  + 2⋅z
+       2               2               2
+    2⋅x  - √2⋅x⋅y + 2⋅y  + √2⋅y⋅z + 2⋅z
 
 Advanced Methods
 ================

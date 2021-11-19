@@ -15,8 +15,8 @@ In order to setup distinct mathematical problems, like
 
 specific types of matrices are required.
 
-A purely random generation of matrix entries does not grant any
-specific shape or property of the matrix.
+A purely random generation of matrix entries, as :func:`randMatrix``
+does not guarantee any specific shape or property of the matrix.
 So, those matrices have to be created carefully using
 classical classification theorems of linear algebra.
 
@@ -68,7 +68,7 @@ There are three different types of matrix generators:
 
  2. *compound matrices* are build as a multiplication of several base matrices.
     Since by this the entries of the base matrices are chosen randomly
-    but can be controlled by **domain** arguments.
+    but can be controlled by **scalars** arguments.
 
     - :py:func:`permutation <sympy.matrices.random.permutation>` as product of
       :py:func:`transposition <sympy.matrices.random.transposition>` matrices
@@ -136,11 +136,11 @@ There are three different types of matrix generators:
 
 
 In addition to the type of matrix, also the type of entries (as a commutative ring with one)
-to be able to define values (**domain**) can be specified,
+to be able to define values (**scalars**) can be specified,
 from which the value entries (**scalar**) of the basic matrices are randomly generated.
 
 Because the complexity and amount of entries in the generated compound matrices
-in addition to the **domain**, also by the number of base matrices multiplied for generation
+in addition to the **scalars**, also by the number of base matrices multiplied for generation
 This can be set using the argument **length**.
 
 Normal forms as well as conjugate types have the arg **spec** to provide a spectrum of eigenvalues.
@@ -267,38 +267,38 @@ as ``random.Random()`` does.
     [ 0,  sqrt(2)/2, -sqrt(2)/2],
     [ 0, -sqrt(2)/2, -sqrt(2)/2]])
 
-4. For sampling matrix entries from ``spec``, ``domain`` or ``units`` arguments
+4. For sampling matrix entries from ``spec``, ``scalars`` or ``units`` arguments
 all these can be *random number generator*, too.
 At least they should provide some method ``sample``
 drawing a list of **k** random items (*without putting back*) via ``sample(k)``.
 
-    >>> class Domain(list):
+    >>> class Scalars(list):
     ...     rng = Random()
     ...     def sample(self, k):
     ...         return self.rng.sample(self, k)
 
     >>> from sympy import sqrt
     >>> from sympy.matrices.random import rand, orthogonal
-    >>> domain = Domain([(sqrt(2) / 2, sqrt(2) / 2), (0, -1)])
+    >>> scalars = Scalars([(sqrt(2) / 2, sqrt(2) / 2), (0, -1)])
 
     >>> # to obtain the same result, seed must use the same random number generator
     >>> # since seed is used for drawing indices, too.
-    >>> domain.rng.seed(1)
-    >>> orthogonal(3, domain=domain, seed=domain.rng)
+    >>> scalars.rng.seed(1)
+    >>> orthogonal(3, scalars=scalars, seed=scalars.rng)
     Matrix([
     [-1,          0,          0],
     [ 0,  sqrt(2)/2, -sqrt(2)/2],
     [ 0, -sqrt(2)/2, -sqrt(2)/2]])
 
-    >>> domain.rng.seed(2)
-    >>> orthogonal(3, domain=domain, seed=domain.rng)
+    >>> scalars.rng.seed(2)
+    >>> orthogonal(3, scalars=scalars, seed=scalars.rng)
     Matrix([
     [0, -1,  0],
     [0,  0, -1],
     [1,  0,  0]])
 
-    >>> domain.rng.seed(1)
-    >>> orthogonal(3, domain=domain, seed=domain.rng)
+    >>> scalars.rng.seed(1)
+    >>> orthogonal(3, scalars=scalars, seed=scalars.rng)
     Matrix([
     [-1,          0,          0],
     [ 0,  sqrt(2)/2, -sqrt(2)/2],
