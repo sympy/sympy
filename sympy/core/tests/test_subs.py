@@ -895,4 +895,3 @@ def test_guard_against_indeterminate_evaluation():
     assert eq.subs([(y, oo), (x, 1)]) is S.NaN
     assert eq.subs({x: 1, y: oo}) is S.NaN
     assert eq.subs([(x, 1), (y, oo)], simultaneous=True) is S.NaN
-
