@@ -169,7 +169,7 @@ Deprecation warnings should go directly after the Single-Sentence Summary, so
 as to notify users right away. Deprecation warnings should be written as a note
 in the Sphinx directive::
 
-    .. note:: Deprecated in Sympy 0.7.1.
+    .. note:: Deprecated in SymPy 0.7.1.
 
 2. Explanation Section
 ^^^^^^^^^^^^^^^^^^^^^^^

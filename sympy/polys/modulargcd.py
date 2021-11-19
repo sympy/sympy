@@ -1,4 +1,4 @@
-from sympy import Dummy
+from sympy.core.symbol import Dummy
 from sympy.ntheory import nextprime
 from sympy.ntheory.modular import crt
 from sympy.polys.domains import PolynomialRing

@@ -8,7 +8,11 @@ Todo:
 * Implement _represent_ZGate in OracleGate
 """
 
-from sympy import floor, pi, sqrt, sympify, eye
+from sympy.core.numbers import pi
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.dense import eye
 from sympy.core.numbers import NegativeOne
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qexpr import QuantumError

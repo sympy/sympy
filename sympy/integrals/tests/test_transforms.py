@@ -7,12 +7,26 @@ from sympy.integrals.transforms import (mellin_transform,
     LaplaceTransform, FourierTransform, SineTransform, CosineTransform,
     InverseLaplaceTransform, InverseFourierTransform,
     InverseSineTransform, InverseCosineTransform, IntegralTransformError)
-from sympy import (
-    gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi, arg,
-    cos, S, Abs, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
-    EulerGamma, erf, erfc, besselj, bessely, besseli, besselk,
-    exp_polar, unpolarify, Function, expint, expand_mul, Rational,
-    gammasimp, trigsimp, atan, sinh, cosh, Ne, periodic_argument, atan2)
+from sympy.core.function import (Function, expand_mul)
+from sympy.core import EulerGamma
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.relational import Eq, Ne
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.complexes import (Abs, arg, re, unpolarify)
+from sympy.functions.elementary.exponential import (exp, exp_polar, log)
+from sympy.functions.elementary.hyperbolic import (cosh, sinh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (atan, atan2, cos, sin, tan)
+from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely)
+from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.error_functions import (erf, erfc, expint)
+from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.hyper import meijerg
+from sympy.simplify.gammasimp import gammasimp
+from sympy.simplify.hyperexpand import hyperexpand
+from sympy.simplify.trigsimp import trigsimp
 from sympy.testing.pytest import XFAIL, slow, skip, raises, warns_deprecated_sympy
 from sympy.matrices import Matrix, eye
 from sympy.abc import x, s, a, b, c, d
@@ -20,7 +34,7 @@ nu, beta, rho = symbols('nu beta rho')
 
 
 def test_undefined_function():
-    from sympy import Function, MellinTransform
+    from sympy.integrals.transforms import MellinTransform
     f = Function('f')
     assert mellin_transform(f(x), x, s) == MellinTransform(f(x), x, s)
     assert mellin_transform(f(x) + exp(-x), x, s) == \
@@ -31,14 +45,13 @@ def test_undefined_function():
 
 
 def test_free_symbols():
-    from sympy import Function
     f = Function('f')
     assert mellin_transform(f(x), x, s).free_symbols == {s}
     assert mellin_transform(f(x)*a, x, s).free_symbols == {s, a}
 
 
 def test_as_integral():
-    from sympy import Function, Integral
+    from sympy.integrals.integrals import Integral
     f = Function('f')
     assert mellin_transform(f(x), x, s).rewrite('Integral') == \
         Integral(x**(s - 1)*f(x), (x, 0, oo))
@@ -87,7 +100,7 @@ def test_mellin_transform_fail():
 
 
 def test_mellin_transform():
-    from sympy import Max, Min
+    from sympy.functions.elementary.miscellaneous import (Max, Min)
     MT = mellin_transform
 
     bpos = symbols('b', positive=True)
@@ -102,18 +115,15 @@ def test_mellin_transform():
         (gamma(beta)*gamma(s)/gamma(beta + s), (0, oo), re(beta) > 0)
     assert MT((x - 1)**(beta - 1)*Heaviside(x - 1), x, s) == \
         (gamma(beta)*gamma(1 - beta - s)/gamma(1 - s),
-            (-oo, -re(beta) + 1), re(beta) > 0)
+            (-oo, 1 - re(beta)), re(beta) > 0)
 
     assert MT((1 + x)**(-rho), x, s) == \
         (gamma(s)*gamma(rho - s)/gamma(rho), (0, re(rho)), True)
 
-    # TODO also the conditions should be simplified, e.g.
-    # And(re(rho) - 1 < 0, re(rho) < 1) should just be
-    # re(rho) < 1
     assert MT(abs(1 - x)**(-rho), x, s) == (
         2*sin(pi*rho/2)*gamma(1 - rho)*
         cos(pi*(rho/2 - s))*gamma(s)*gamma(rho-s)/pi,
-        (0, re(rho)), And(re(rho) - 1 < 0, re(rho) < 1))
+        (0, re(rho)), re(rho) < 1)
     mt = MT((1 - x)**(beta - 1)*Heaviside(1 - x)
             + a*(x - 1)**(beta - 1)*Heaviside(x - 1), x, s)
     assert mt[1], mt[2] == ((0, -re(beta) + 1), re(beta) > 0)
@@ -122,12 +132,12 @@ def test_mellin_transform():
         pi*b**(a + s - 1)*sin(pi*a)/(sin(pi*s)*sin(pi*(a + s)))
     assert MT((x**a - bpos**a)/(x - bpos), x, s) == \
         (pi*bpos**(a + s - 1)*sin(pi*a)/(sin(pi*s)*sin(pi*(a + s))),
-            (Max(-re(a), 0), Min(1 - re(a), 1)), True)
+            (Max(0, -re(a)), Min(1, 1 - re(a))), True)
 
     expr = (sqrt(x + b**2) + b)**a
     assert MT(expr.subs(b, bpos), x, s) == \
         (-a*(2*bpos)**(a + 2*s)*gamma(s)*gamma(-a - 2*s)/gamma(-a - s + 1),
-         (0, -re(a)/2), True)
+            (0, -re(a)/2), True)
 
     expr = (sqrt(x + b**2) + b)**a/sqrt(x + b**2)
     assert MT(expr.subs(b, bpos), x, s) == \
@@ -170,7 +180,7 @@ def test_mellin_transform2():
 
 @slow
 def test_mellin_transform_bessel():
-    from sympy import Max
+    from sympy.functions.elementary.miscellaneous import Max
     MT = mellin_transform
 
     # 8.4.19
@@ -267,7 +277,10 @@ def test_mellin_transform_bessel():
 
 @slow
 def test_expint():
-    from sympy import E1, expint, Max, re, lerchphi, Symbol, simplify, Si, Ci, Ei
+    from sympy.functions.elementary.miscellaneous import Max
+    from sympy.functions.special.error_functions import (Ci, E1, Ei, Si)
+    from sympy.functions.special.zeta_functions import lerchphi
+    from sympy.simplify.simplify import simplify
     aneg = Symbol('a', negative=True)
     u = Symbol('u', polar=True)
 
@@ -314,8 +327,11 @@ def test_expint():
 
 @slow
 def test_inverse_mellin_transform():
-    from sympy import (sin, simplify, Max, Min, expand,
-                       powsimp, exp_polar, cos, cot)
+    from sympy.core.function import expand
+    from sympy.functions.elementary.miscellaneous import (Max, Min)
+    from sympy.functions.elementary.trigonometric import cot
+    from sympy.simplify.powsimp import powsimp
+    from sympy.simplify.simplify import simplify
     IMT = inverse_mellin_transform
 
     assert IMT(gamma(s), s, x, (0, oo)) == exp(-x)
@@ -387,7 +403,9 @@ def test_inverse_mellin_transform():
 
     # TODO
     def mysimp(expr):
-        from sympy import expand, logcombine, powsimp
+        from sympy.core.function import expand
+        from sympy.simplify.powsimp import powsimp
+        from sympy.simplify.simplify import logcombine
         return expand(
             powsimp(logcombine(expr, force=True), force=True, deep=True),
             force=True).replace(exp_polar, exp)
@@ -450,7 +468,8 @@ def test_inverse_mellin_transform():
 
 @slow
 def test_laplace_transform():
-    from sympy import fresnels, fresnelc, DiracDelta
+    from sympy.functions.special.delta_functions import DiracDelta
+    from sympy.functions.special.error_functions import (fresnelc, fresnels)
     LT = laplace_transform
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
@@ -464,7 +483,7 @@ def test_laplace_transform():
 
     # test a bug
     spos = symbols('s', positive=True)
-    assert LT(exp(t), t, spos)[:2] == (1/(spos - 1), 1)
+    assert LT(exp(t), t, spos) == (1/(spos - 1), 0, spos > 1)
 
     # basic tests from wikipedia
     assert LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) == \
@@ -477,11 +496,11 @@ def test_laplace_transform():
     assert LT((exp(2*t) - 1)*exp(-b - t)*Heaviside(t)/2, t, s, noconds=True) \
         == exp(-b)/(s**2 - 1)
 
-    assert LT(exp(t), t, s)[:2] == (1/(s - 1), 1)
-    assert LT(exp(2*t), t, s)[:2] == (1/(s - 2), 2)
-    assert LT(exp(a*t), t, s)[:2] == (1/(s - a), a)
+    assert LT(exp(t), t, s) == (1/(s - 1), 0, abs(s) > 1)
+    assert LT(exp(2*t), t, s) == (1/(s - 2), 0, abs(s) > 2)
+    assert LT(exp(a*t), t, s) == (1/(s - a), a, Ne(s/a, 1))
 
-    assert LT(log(t/a), t, s) == ((log(a*s) + EulerGamma)/s/-1, 0, True)
+    assert LT(log(t/a), t, s) == (-(log(a*s) + EulerGamma)/s, 0, True)
 
     assert LT(erf(t), t, s) == (erfc(s/2)*exp(s**2/4)/s, 0, True)
 
@@ -534,9 +553,6 @@ def test_laplace_transform():
         ((2*sin(s**2/(2*pi))*fresnelc(s/pi) - 2*cos(s**2/(2*pi))*fresnels(s/pi)
         + sqrt(2)*cos(s**2/(2*pi) + pi/4))/(2*s), 0, True))
 
-    # What is this testing:
-    Ne(1/s, 1) & (0 < cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1)
-
     Mt = Matrix([[exp(t), t*exp(-t)], [t*exp(-t), exp(t)]])
     Ms = Matrix([[    1/(s - 1), (s + 1)**(-2)],
                  [(s + 1)**(-2),     1/(s - 1)]])
@@ -544,14 +560,14 @@ def test_laplace_transform():
     # The default behaviour for Laplace tranform of a Matrix returns a Matrix
     # of Tuples and is deprecated:
     with warns_deprecated_sympy():
-        Ms_conds = Matrix([[(1/(s - 1), 1, s > 1), ((s + 1)**(-2), 0, True)],
-                           [((s + 1)**(-2), 0, True), (1/(s - 1), 1, s > 1)]])
+        Ms_conds = Matrix([[(1/(s - 1), 0, Abs(s) > 1), ((s + 1)**(-2),
+            0, True)], [((s + 1)**(-2), 0, True), (1/(s - 1), 0, Abs(s) > 1)]])
     with warns_deprecated_sympy():
         assert LT(Mt, t, s) == Ms_conds
 
     # The new behavior is to return a tuple of a Matrix and the convergence
     # conditions for the matrix as a whole:
-    assert LT(Mt, t, s, legacy_matrix=False) == (Ms, 1, s > 1)
+    assert LT(Mt, t, s, legacy_matrix=False) == (Ms, 0, Abs(s) > 1)
 
     # With noconds=True the transformed matrix is returned without conditions
     # either way:
@@ -560,23 +576,24 @@ def test_laplace_transform():
 
 
 @slow
-def test_issue_8368_7173():
+def test_issue_8368t_7173():
     LT = laplace_transform
     # hyperbolic
-    assert LT(sinh(x), x, s) == (1/(s**2 - 1), 1, s > 1)
-    assert LT(cosh(x), x, s) == (s/(s**2 - 1), 1, s > 1)
+    assert LT(sinh(x), x, s) == (1/(s**2 - 1), 0, abs(s) > 1)
+    assert LT(cosh(x), x, s) == (s/(s**2 - 1), -oo, s**2 > 1)
     assert LT(sinh(x + 3), x, s) == (
-        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 1, s > 1)
+        (-s + (s + 1)*exp(6) + 1)*exp(-3)/(s - 1)/(s + 1)/2, 0, Abs(s) > 1)
     assert LT(sinh(x)*cosh(x), x, s) == (
-        1/(s**2 - 4), 2, s > 2)
+        1/(s**2 - 4), 0, Abs(s) > 2)
     # trig (make sure they are not being rewritten in terms of exp)
     assert LT(cos(x + 3), x, s) == ((s*cos(3) - sin(3))/(s**2 + 1), 0, True)
 
 
 @slow
 def test_inverse_laplace_transform():
-    from sympy import sinh, cosh, besselj, besseli, simplify, factor_terms,\
-        DiracDelta
+    from sympy.core.exprtools import factor_terms
+    from sympy.functions.special.delta_functions import DiracDelta
+    from sympy.simplify.simplify import simplify
     ILT = inverse_laplace_transform
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t')
@@ -634,7 +651,7 @@ def test_inverse_laplace_transform():
         Matrix([[exp(t)*Heaviside(t), 0], [0, exp(2*t)*Heaviside(t)]])
 
 def test_inverse_laplace_transform_delta():
-    from sympy import DiracDelta
+    from sympy.functions.special.delta_functions import DiracDelta
     ILT = inverse_laplace_transform
     t = symbols('t')
     assert ILT(2, s, t) == 2*DiracDelta(t)
@@ -648,7 +665,8 @@ def test_inverse_laplace_transform_delta():
 
 
 def test_inverse_laplace_transform_delta_cond():
-    from sympy import DiracDelta, Eq, im, Heaviside
+    from sympy.functions.elementary.complexes import im
+    from sympy.functions.special.delta_functions import DiracDelta
     ILT = inverse_laplace_transform
     t = symbols('t')
     r = Symbol('r', real=True)
@@ -667,7 +685,9 @@ def test_inverse_laplace_transform_delta_cond():
         Heaviside(t) + Heaviside(r + t), True)
 
 def test_fourier_transform():
-    from sympy import simplify, expand, expand_complex, factor, expand_trig
+    from sympy.core.function import (expand, expand_complex, expand_trig)
+    from sympy.polys.polytools import factor
+    from sympy.simplify.simplify import simplify
     FT = fourier_transform
     IFT = inverse_fourier_transform
 
@@ -723,8 +743,6 @@ def test_fourier_transform():
 
 
 def test_sine_transform():
-    from sympy import EulerGamma
-
     t = symbols("t")
     w = symbols("w")
     a = symbols("a")
@@ -751,7 +769,7 @@ def test_sine_transform():
         sqrt(2)*w/(sqrt(pi)*(a**2 + w**2)), w, t) == exp(-a*t)
 
     assert sine_transform(
-        log(t)/t, t, w) == -sqrt(2)*sqrt(pi)*(log(w**2) + 2*EulerGamma)/4
+        log(t)/t, t, w) == sqrt(2)*sqrt(pi)*-(log(w**2) + 2*EulerGamma)/4
 
     assert sine_transform(
         t*exp(-a*t**2), t, w) == sqrt(2)*w*exp(-w**2/(4*a))/(4*a**Rational(3, 2))
@@ -760,7 +778,7 @@ def test_sine_transform():
 
 
 def test_cosine_transform():
-    from sympy import Si, Ci
+    from sympy.functions.special.error_functions import (Ci, Si)
 
     t = symbols("t")
     w = symbols("w")
@@ -802,8 +820,6 @@ def test_cosine_transform():
 
 
 def test_hankel_transform():
-    from sympy import gamma, sqrt, exp
-
     r = Symbol("r")
     k = Symbol("k")
     nu = Symbol("nu")
@@ -853,7 +869,7 @@ def test_issue_8882():
 
 
 def test_issue_7173():
-    from sympy import cse
+    from sympy.simplify.cse_main import cse
     x0, x1, x2, x3 = symbols('x:4')
     ans = laplace_transform(sinh(a*x)*cosh(a*x), x, s)
     r, e = cse(ans)
@@ -869,7 +885,7 @@ def test_issue_7173():
 
 
 def test_issue_8514():
-    from sympy import simplify
+    from sympy.simplify.simplify import simplify
     a, b, c, = symbols('a b c', positive=True)
     t = symbols('t', positive=True)
     ft = simplify(inverse_laplace_transform(1/(a*s**2+b*s+c),s, t))

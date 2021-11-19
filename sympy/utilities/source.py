@@ -2,7 +2,7 @@
 This module adds several functions for interactive source code inspection.
 """
 
-from sympy.core.decorators import deprecated
+from sympy.utilities.decorator import deprecated
 
 import inspect
 

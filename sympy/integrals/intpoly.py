@@ -137,12 +137,12 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
 
 def strip(monom):
     if monom.is_zero:
-        return 0, 0
+        return S.Zero, S.Zero
     elif monom.is_number:
-        return monom, 1
+        return monom, S.One
     else:
         coeff = LC(monom)
-        return coeff, S(monom) / coeff
+        return coeff, monom / coeff
 
 
 def main_integrate3d(expr, facets, vertices, hp_params, max_degree=None):
@@ -533,7 +533,7 @@ def left_integral2D(m, index, facets, x0, expr, gens):
     value = S.Zero
     for j in range(0, m):
         intersect = ()
-        if j == (index - 1) % m or j == (index + 1) % m:
+        if j in ((index - 1) % m, (index + 1) % m):
             intersect = intersection(facets[index], facets[j], "segment2D")
         if intersect:
             distance_origin = norm(tuple(map(lambda x, y: x - y,

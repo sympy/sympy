@@ -1,18 +1,19 @@
 import itertools
 
 from sympy.core import S
+from sympy.core.add import Add
 from sympy.core.containers import Tuple
-from sympy.core.function import _coeff_isneg
+from sympy.core.function import Function
 from sympy.core.mul import Mul
 from sympy.core.numbers import Number, Rational
 from sympy.core.power import Pow
+from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import SympifyError
 from sympy.printing.conventions import requires_partial
 from sympy.printing.precedence import PRECEDENCE, precedence, precedence_traditional
 from sympy.printing.printer import Printer, print_function
 from sympy.printing.str import sstr
-from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import has_variety
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -223,11 +224,11 @@ class PrettyPrinter(Printer):
 
         l = self._print(e.lhs)
         r = self._print(e.rhs)
-        pform = prettyForm(*stringPict.next(l, op, r))
+        pform = prettyForm(*stringPict.next(l, op, r), binding=prettyForm.OPEN)
         return pform
 
     def _print_Not(self, e):
-        from sympy import Equivalent, Implies
+        from sympy.logic.boolalg import (Equivalent, Implies)
         if self._use_unicode:
             arg = e.args[0]
             pform = self._print(arg)
@@ -571,7 +572,7 @@ class PrettyPrinter(Printer):
                 if not wid or len(s) > wid:
                     return s
                 need = wid - len(s)
-                if how == '<^>' or how == "<" or how not in list('<^>'):
+                if how in ('<^>', "<") or how not in list('<^>'):
                     return s + ' '*need
                 half = need//2
                 lead = ' '*half
@@ -785,7 +786,6 @@ class PrettyPrinter(Printer):
 
     def _print_MatrixElement(self, expr):
         from sympy.matrices import MatrixSymbol
-        from sympy import Symbol
         if (isinstance(expr.parent, MatrixSymbol)
                 and expr.i.is_number and expr.j.is_number):
             return self._print(
@@ -865,7 +865,7 @@ class PrettyPrinter(Printer):
                 s = pform     # First element
             else:
                 coeff = item.as_coeff_mmul()[0]
-                if _coeff_isneg(S(coeff)):
+                if S(coeff).could_extract_minus_sign():
                     s = prettyForm(*stringPict.next(s, ' '))
                     pform = self._print(item)
                 else:
@@ -876,7 +876,9 @@ class PrettyPrinter(Printer):
 
     def _print_MatMul(self, expr):
         args = list(expr.args)
-        from sympy import Add, MatAdd, HadamardProduct, KroneckerProduct
+        from sympy.matrices.expressions.hadamard import HadamardProduct
+        from sympy.matrices.expressions.kronecker import KroneckerProduct
+        from sympy.matrices.expressions.matadd import MatAdd
         for i, a in enumerate(args):
             if (isinstance(a, (Add, MatAdd, HadamardProduct, KroneckerProduct))
                     and len(expr.args) > 1):
@@ -920,7 +922,9 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_HadamardProduct(self, expr):
-        from sympy import MatAdd, MatMul, HadamardProduct
+        from sympy.matrices.expressions.hadamard import HadamardProduct
+        from sympy.matrices.expressions.matadd import MatAdd
+        from sympy.matrices.expressions.matmul import MatMul
         if self._use_unicode:
             delim = pretty_atom('Ring')
         else:
@@ -945,7 +949,8 @@ class PrettyPrinter(Printer):
         return pretty_base**pretty_circ_exp
 
     def _print_KroneckerProduct(self, expr):
-        from sympy import MatAdd, MatMul
+        from sympy.matrices.expressions.matadd import MatAdd
+        from sympy.matrices.expressions.matmul import MatMul
         if self._use_unicode:
             delim = ' \N{N-ARY CIRCLED TIMES OPERATOR} '
         else:
@@ -1179,7 +1184,7 @@ class PrettyPrinter(Printer):
         return prettyForm('\n'.join([s[:-3] for s in strs]))
 
     def _print_NDimArray(self, expr):
-        from sympy import ImmutableMatrix
+        from sympy.matrices.immutable import ImmutableMatrix
 
         if expr.rank() == 0:
             return self._print(expr[()])
@@ -1759,7 +1764,6 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def _print_expint(self, e):
-        from sympy import Function
         if e.args[0].is_Integer and self._use_unicode:
             return self._print_Function(Function('E_%s' % e.args[0])(e.args[1]))
         return self._print_Function(e)
@@ -1864,7 +1868,7 @@ class PrettyPrinter(Printer):
             return prettyForm(binding=prettyForm.NEG, *p)
 
         for i, term in enumerate(terms):
-            if term.is_Mul and _coeff_isneg(term):
+            if term.is_Mul and term.could_extract_minus_sign():
                 coeff, other = term.as_coeff_mul(rational=False)
                 if coeff == -1:
                     negterm = Mul(*other, evaluate=False)
@@ -1958,25 +1962,9 @@ class PrettyPrinter(Printer):
             else:
                 a.append(item)
 
-        from sympy import Integral, Piecewise, Product, Sum
-
-        # Convert to pretty forms. Add parens to Add instances if there
-        # is more than one term in the numer/denom
-        for i in range(0, len(a)):
-            if (a[i].is_Add and len(a) > 1) or (i != len(a) - 1 and
-                    isinstance(a[i], (Integral, Piecewise, Product, Sum))):
-                a[i] = prettyForm(*self._print(a[i]).parens())
-            elif a[i].is_Relational:
-                a[i] = prettyForm(*self._print(a[i]).parens())
-            else:
-                a[i] = self._print(a[i])
-
-        for i in range(0, len(b)):
-            if (b[i].is_Add and len(b) > 1) or (i != len(b) - 1 and
-                    isinstance(b[i], (Integral, Piecewise, Product, Sum))):
-                b[i] = prettyForm(*self._print(b[i]).parens())
-            else:
-                b[i] = self._print(b[i])
+        # Convert to pretty forms. Parentheses are added by `__mul__`.
+        a = [self._print(ai) for ai in a]
+        b = [self._print(bi) for bi in b]
 
         # Construct a pretty form
         if len(b) == 0:
@@ -2706,7 +2694,6 @@ class PrettyPrinter(Printer):
 
     def _print_DiagramGrid(self, grid):
         from sympy.matrices import Matrix
-        from sympy import Symbol
         matrix = Matrix([[grid[i, j] if grid[i, j] else Symbol(" ")
                           for j in range(grid.width)]
                          for i in range(grid.height)])

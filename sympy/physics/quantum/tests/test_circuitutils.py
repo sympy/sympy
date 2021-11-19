@@ -1,4 +1,6 @@
-from sympy import Symbol, Integer, Mul
+from sympy.core.mul import Mul
+from sympy.core.numbers import Integer
+from sympy.core.symbol import Symbol
 from sympy.utilities import numbered_symbols
 from sympy.physics.quantum.gate import X, Y, Z, H, CNOT, CGate
 from sympy.physics.quantum.identitysearch import bfs_identity_search
