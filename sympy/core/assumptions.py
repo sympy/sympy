@@ -346,7 +346,7 @@ def failing_assumptions(expr, **assumptions):
     >>> x = Symbol('x', positive=True)
     >>> y = Symbol('y')
     >>> failing_assumptions(6*x + y, positive=True)
-    {'positive': None, 'real': None}
+    {'positive': None}
 
     >>> failing_assumptions(x**2 - 1, positive=True)
     {'positive': None}
