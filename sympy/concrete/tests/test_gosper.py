@@ -48,15 +48,15 @@ def test_gosper_sum():
     assert gosper_sum((
         -1)**k*binomial(n, k), (k, 0, m)) == -(-1)**m*(m - n)*binomial(n, m)/n
 
-    assert gosper_sum((4*k + 1)*factorial(k)/factorial(2*k + 1), (k, 0, n)) == \
-        (2*factorial(2*n + 1) - factorial(n))/factorial(2*n + 1)
+    assert gosper_sum((4*k + 1)*factorial(k)/factorial(2*k + 1), (k, 0, n)
+        ) == (2*factorial(2*n + 1) - factorial(n))/factorial(2*n + 1)
 
     # issue 6033:
     assert gosper_sum(
-        n*(n + a + b)*a**n*b**n/(factorial(n + a)*factorial(n + b)), \
-        (n, 0, m)).simplify() == -exp(m*log(a) + m*log(b))*gamma(a + 1) \
-        *gamma(b + 1)/(gamma(a)*gamma(b)*gamma(a + m + 1)*gamma(b + m + 1)) \
-        + 1/(gamma(a)*gamma(b))
+        n*(n + a + b)*a**n*b**n/(factorial(n + a)*factorial(n + b)),
+        (n, 0, m)).simplify() == -(a*b)**m*gamma(a + 1)*gamma(b + 1)/(
+            gamma(a)*gamma(b)*gamma(a + m + 1)*gamma(b + m + 1)) + 1/(
+            gamma(a)*gamma(b))
 
 
 def test_gosper_sum_indefinite():

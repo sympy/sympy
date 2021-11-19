@@ -133,7 +133,7 @@ def test_log():
     expr = tau**2*((tau - 1)*(tau + 1)*log(x + 1)/(tau**2 + 1)**2 + 1/((tau**2\
             + 1)*(x + 1)) - (-2*tau*atan(x/tau) + (tau**2/2 - 1/2)*log(tau**2\
             + x**2))/(tau**2 + 1)**2)
-    assert limit(expr, x, oo) == pi*tau**3/(tau**2 + 1)**2
+    assert limit(expr, x, oo) == pi*tau**3/(tau**4 + 2*tau**2 + 1)
 
 
 def test_piecewise():
