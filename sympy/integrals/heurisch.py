@@ -1,6 +1,7 @@
-from typing import Dict, List
+from typing import Dict as tDict, List
 
 from itertools import permutations
+from functools import reduce
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
@@ -10,6 +11,7 @@ from sympy.core.basic import sympify
 from sympy.core.numbers import Rational, pi, I
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
+from sympy.core.sorting import ordered
 
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
 from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
@@ -35,7 +37,6 @@ from sympy.polys.rings import PolyRing
 from sympy.polys.solvers import solve_lin_sys
 from sympy.polys.constructor import construct_domain
 
-from sympy.core.compatibility import reduce, ordered
 from sympy.integrals.integrals import integrate
 
 
@@ -86,7 +87,7 @@ def components(f, x):
     return result
 
 # name -> [] of symbols
-_symbols_cache = {}  # type: Dict[str, List[Dummy]]
+_symbols_cache = {}  # type: tDict[str, List[Dummy]]
 
 
 # NB @cacheit is not convenient here
@@ -120,8 +121,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     Examples
     ========
 
-    >>> from sympy.core import symbols
-    >>> from sympy.functions import cos
+    >>> from sympy import cos, symbols
     >>> from sympy.integrals.heurisch import heurisch, heurisch_wrapper
     >>> n, x = symbols('n x')
     >>> heurisch(cos(n*x), x)
@@ -702,7 +702,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                 pass # ignore trivial numbers
             elif expr in syms:
                 pass # ignore variables
-            elif not expr.has(*syms):
+            elif not expr.free_symbols & syms:
                 non_syms.add(expr)
             elif expr.is_Add or expr.is_Mul or expr.is_Pow:
                 list(map(find_non_syms, expr.args))
@@ -729,8 +729,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         if solution is None:
             return None
         else:
-            return candidate.subs(solution).subs(
-                list(zip(poly_coeffs, [S.Zero]*len(poly_coeffs))))
+            return candidate.xreplace(solution).xreplace(
+                dict(zip(poly_coeffs, [S.Zero]*len(poly_coeffs))))
 
     if not (F.free_symbols - set(V)):
         solution = _integrate('Q')
@@ -742,7 +742,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     if solution is not None:
         antideriv = solution.subs(rev_mapping)
-        antideriv = cancel(antideriv).expand(force=True)
+        antideriv = cancel(antideriv).expand()
 
         if antideriv.is_Add:
             antideriv = antideriv.as_independent(x)[1]

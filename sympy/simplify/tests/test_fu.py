@@ -1,12 +1,18 @@
-from sympy import (
-    Add, Mul, S, Symbol, cos, cot, pi, I, sin, sqrt, tan, root, csc, sec,
-    powsimp, symbols, sinh, cosh, tanh, coth, sech, csch, Dummy, Rational)
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.hyperbolic import (cosh, coth, csch, sech, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import (root, sqrt)
+from sympy.functions.elementary.trigonometric import (cos, cot, csc, sec, sin, tan)
+from sympy.simplify.powsimp import powsimp
 from sympy.simplify.fu import (
     L, TR1, TR10, TR10i, TR11, _TR11, TR12, TR12i, TR13, TR14, TR15, TR16,
     TR111, TR2, TR2i, TR3, TR5, TR6, TR7, TR8, TR9, TRmorrie, _TR56 as T,
     TRpower, hyper_as_trig, fu, process_common_addends, trig_split,
     as_f_sign_1)
-from sympy.testing.randtest import verify_numerically
+from sympy.core.random import verify_numerically
 from sympy.abc import a, b, c, x, y, z
 
 
@@ -69,7 +75,7 @@ def test_TR3():
 
 def test__TR56():
     h = lambda x: 1 - x
-    assert T(sin(x)**3, sin, cos, h, 4, False) == sin(x)**3
+    assert T(sin(x)**3, sin, cos, h, 4, False) == sin(x)*(-cos(x)**2 + 1)
     assert T(sin(x)**10, sin, cos, h, 4, False) == sin(x)**10
     assert T(sin(x)**6, sin, cos, h, 6, False) == (-cos(x)**2 + 1)**3
     assert T(sin(x)**6, sin, cos, h, 6, True) == sin(x)**6
@@ -288,6 +294,9 @@ def test_fu():
     # issue #18059:
     assert fu(cos(x) + sqrt(sin(x)**2)) == cos(x) + sqrt(sin(x)**2)
 
+    assert fu((-14*sin(x)**3 + 35*sin(x) + 6*sqrt(3)*cos(x)**3 + 9*sqrt(3)*cos(x))/((cos(2*x) + 4))) == \
+        7*sin(x) + 3*sqrt(3)*cos(x)
+
 
 def test_objective():
     assert fu(sin(x)/cos(x), measure=lambda x: x.count_ops()) == \
@@ -300,7 +309,7 @@ def test_process_common_addends():
     # this tests that the args are not evaluated as they are given to do
     # and that key2 works when key1 is False
     do = lambda x: Add(*[i**(i%2) for i in x.args])
-    process_common_addends(Add(*[1, 2, 3, 4], evaluate=False), do,
+    assert process_common_addends(Add(*[1, 2, 3, 4], evaluate=False), do,
         key2=lambda x: x%2, key1=False) == 1**1 + 3**1 + 2**0 + 4**0
 
 
@@ -352,6 +361,9 @@ def test_TRmorrie():
     # issue 17063
     eq = cos(x)/cos(x/2)
     assert TRmorrie(eq) == eq
+    # issue #20430
+    eq = cos(x/2)*sin(x/2)*cos(x)**3
+    assert TRmorrie(eq) == sin(2*x)*cos(x)**2/4
 
 
 def test_TRpower():
@@ -364,7 +376,7 @@ def test_TRpower():
 
 
 def test_hyper_as_trig():
-    from sympy.simplify.fu import _osborne as o, _osbornei as i, TR12
+    from sympy.simplify.fu import _osborne, _osbornei
 
     eq = sinh(x)**2 + cosh(x)**2
     t, f = hyper_as_trig(eq)
@@ -373,24 +385,24 @@ def test_hyper_as_trig():
     assert f(TR12(e)) == (tanh(x) + tanh(y))/(tanh(x)*tanh(y) + 1)
 
     d = Dummy()
-    assert o(sinh(x), d) == I*sin(x*d)
-    assert o(tanh(x), d) == I*tan(x*d)
-    assert o(coth(x), d) == cot(x*d)/I
-    assert o(cosh(x), d) == cos(x*d)
-    assert o(sech(x), d) == sec(x*d)
-    assert o(csch(x), d) == csc(x*d)/I
+    assert _osborne(sinh(x), d) == I*sin(x*d)
+    assert _osborne(tanh(x), d) == I*tan(x*d)
+    assert _osborne(coth(x), d) == cot(x*d)/I
+    assert _osborne(cosh(x), d) == cos(x*d)
+    assert _osborne(sech(x), d) == sec(x*d)
+    assert _osborne(csch(x), d) == csc(x*d)/I
     for func in (sinh, cosh, tanh, coth, sech, csch):
         h = func(pi)
-        assert i(o(h, d), d) == h
+        assert _osbornei(_osborne(h, d), d) == h
     # /!\ the _osborne functions are not meant to work
     # in the o(i(trig, d), d) direction so we just check
     # that they work as they are supposed to work
-    assert i(cos(x*y + z), y) == cosh(x + z*I)
-    assert i(sin(x*y + z), y) == sinh(x + z*I)/I
-    assert i(tan(x*y + z), y) == tanh(x + z*I)/I
-    assert i(cot(x*y + z), y) == coth(x + z*I)*I
-    assert i(sec(x*y + z), y) == sech(x + z*I)
-    assert i(csc(x*y + z), y) == csch(x + z*I)*I
+    assert _osbornei(cos(x*y + z), y) == cosh(x + z*I)
+    assert _osbornei(sin(x*y + z), y) == sinh(x + z*I)/I
+    assert _osbornei(tan(x*y + z), y) == tanh(x + z*I)/I
+    assert _osbornei(cot(x*y + z), y) == coth(x + z*I)*I
+    assert _osbornei(sec(x*y + z), y) == sech(x + z*I)
+    assert _osbornei(csc(x*y + z), y) == csch(x + z*I)*I
 
 
 def test_TR12i():

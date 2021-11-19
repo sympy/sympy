@@ -54,6 +54,8 @@ def test_subset():
     raises(ValueError, lambda: Subset(['a'], ['b', 'c']))
     raises(ValueError, lambda: Subset.subset_from_bitlist(['a', 'b'], '010'))
 
+    assert Subset(['a'], ['a', 'b']) != Subset(['b'], ['a', 'b'])
+    assert Subset(['a'], ['a', 'b']) != Subset(['a'], ['a', 'c'])
 
 def test_ksubsets():
     assert list(ksubsets([1, 2, 3], 2)) == [(1, 2), (1, 3), (2, 3)]

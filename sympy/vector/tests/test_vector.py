@@ -1,7 +1,12 @@
-from sympy.core import Rational
+from sympy.core import Rational, S
 from sympy.simplify import simplify, trigsimp
-from sympy import pi, sqrt, symbols, ImmutableMatrix as Matrix, \
-     sin, cos, Function, Integral, Derivative, diff
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.numbers import pi
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.integrals.integrals import Integral
+from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 from sympy.vector.vector import Vector, BaseVector, VectorAdd, \
      VectorMul, VectorZero
 from sympy.vector.coordsysrect import CoordSys3D
@@ -220,9 +225,10 @@ def test_projection():
     v3 = 0*i + 0*j
     assert v1.projection(v1) == i + j + k
     assert v1.projection(v2) == Rational(7, 3)*C.i + Rational(7, 3)*C.j + Rational(7, 3)*C.k
-    assert v1.projection(v1, scalar=True) == 1
+    assert v1.projection(v1, scalar=True) == S.One
     assert v1.projection(v2, scalar=True) == Rational(7, 3)
     assert v3.projection(v1) == Vector.zero
+    assert v3.projection(v1, scalar=True) == S.Zero
 
 
 def test_vector_diff_integrate():

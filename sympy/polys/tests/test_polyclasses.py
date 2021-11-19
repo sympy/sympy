@@ -401,6 +401,10 @@ def test_DMF_arithmetics():
 
     assert g.pow(3) == g**3 == h
 
+    h = DMF(([[1, 0]], [[1]]), ZZ)
+
+    assert g.pow(-1) == g**-1 == h
+
 
 def test_ANP___init__():
     rep = [QQ(1), QQ(1)]

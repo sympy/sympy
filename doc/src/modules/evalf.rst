@@ -392,7 +392,7 @@ Here are several more advanced examples:
         1
     ----------
     5*pi
-    ---- + 2*E
+    ---- + 2*e
      7
     >>> nsimplify(cos(atan('1/3')))
         ____

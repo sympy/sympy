@@ -1,4 +1,4 @@
-from sympy import Derivative
+from sympy.core.function import Derivative
 from sympy.core.function import UndefinedFunction, AppliedUndef
 from sympy.core.symbol import Symbol
 from sympy.interactive.printing import init_printing
@@ -78,8 +78,8 @@ class VectorLatexPrinter(LatexPrinter):
         expr = der_expr.expr
         red = expr.atoms(AppliedUndef)
         syms = der_expr.variables
-        test1 = not all([True for i in red if i.free_symbols == {t}])
-        test2 = not all([(t == i) for i in syms])
+        test1 = not all(True for i in red if i.free_symbols == {t})
+        test2 = not all(t == i for i in syms)
         if test1 or test2:
             return super()._print_Derivative(der_expr)
 
@@ -198,7 +198,7 @@ def vprint(expr, **settings):
 
     outstr = vsprint(expr, **settings)
 
-    from sympy.core.compatibility import builtins
+    import builtins
     if (outstr != 'None'):
         builtins._ = outstr
         print(outstr)

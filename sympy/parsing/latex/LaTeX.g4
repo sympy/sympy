@@ -1,6 +1,6 @@
 /*
  ANTLR4 LaTeX Math Grammar
- 
+
  Ported from latex2sympy by @augustt198 https://github.com/augustt198/latex2sympy See license in
  LICENSE.txt
  */
@@ -107,6 +107,7 @@ L_CEIL: '\\lceil';
 R_CEIL: '\\rceil';
 
 FUNC_SQRT: '\\sqrt';
+FUNC_OVERLINE: '\\overline';
 
 CMD_TIMES: '\\times';
 CMD_CDOT: '\\cdot';
@@ -284,6 +285,7 @@ func:
 		| additive
 	)
 	| FUNC_SQRT (L_BRACKET root = expr R_BRACKET)? L_BRACE base = expr R_BRACE
+	| FUNC_OVERLINE L_BRACE base = expr R_BRACE
 	| (FUNC_SUM | FUNC_PROD) (subeq supexpr | supexpr subeq) mp
 	| FUNC_LIM limit_sub mp;
 

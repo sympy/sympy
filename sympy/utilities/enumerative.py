@@ -419,6 +419,23 @@ class MultisetPartitionTraverser():
         self.k1 = 0
         self.k2 = 0
         self.p1 = 0
+        self.pstack = None
+        self.f = None
+        self.lpart = 0
+        self.discarded = 0
+        # dp_stack is list of lists of (part_key, start_count) pairs
+        self.dp_stack = []
+
+        # dp_map is map part_key-> count, where count represents the
+        # number of multiset which are descendants of a part with this
+        # key, **or any of its decrements**
+
+        # Thus, when we find a part in the map, we add its count
+        # value to the running total, cut off the enumeration, and
+        # backtrack
+
+        if not hasattr(self, 'dp_map'):
+            self.dp_map = {}
 
     def db_trace(self, msg):
         """Useful for understanding/debugging the algorithms.  Not
@@ -1076,19 +1093,9 @@ class MultisetPartitionTraverser():
         """
         # number of partitions so far in the enumeration
         self.pcount = 0
+
         # dp_stack is list of lists of (part_key, start_count) pairs
         self.dp_stack = []
-
-        # dp_map is map part_key-> count, where count represents the
-        # number of multiset which are descendants of a part with this
-        # key, **or any of its decrements**
-
-        # Thus, when we find a part in the map, we add its count
-        # value to the running total, cut off the enumeration, and
-        # backtrack
-
-        if not hasattr(self, 'dp_map'):
-            self.dp_map = {}
 
         self._initialize_enumeration(multiplicities)
         pkey = part_key(self.top_part())

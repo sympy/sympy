@@ -1,8 +1,8 @@
+""" The module contains implemented functions for interval arithmetic."""
+from functools import reduce
+
 from sympy.plotting.intervalmath import interval
 from sympy.external import import_module
-from sympy.core.compatibility import reduce
-""" The module contains implemented functions for interval arithmetic."""
-
 
 
 def Abs(x):

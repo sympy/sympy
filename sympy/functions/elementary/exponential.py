@@ -1,17 +1,22 @@
+from typing import Tuple as tTuple
+
+from sympy.core.expr import Expr
 from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
-from sympy.core.function import (Function, ArgumentIndexError, _coeff_isneg,
-        expand_mul)
+from sympy.core.function import (Function, ArgumentIndexError, expand_log,
+    expand_mul, FunctionClass, PoleError, expand_multinomial, expand_complex)
 from sympy.core.logic import fuzzy_and, fuzzy_not, fuzzy_or
 from sympy.core.mul import Mul
-from sympy.core.numbers import Integer, Rational
+from sympy.core.numbers import Integer, Rational, pi, I
+from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Wild, Dummy
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
+from sympy.sets.setexpr import SetExpr
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -30,6 +35,10 @@ class ExpBase(Function):
     unbranched = True
     _singularities = (S.ComplexInfinity,)
 
+    @property
+    def kind(self):
+        return self.exp.kind
+
     def inverse(self, argindex=1):
         """
         Returns the inverse function of ``exp(x)``.
@@ -43,7 +52,7 @@ class ExpBase(Function):
         Examples
         ========
 
-        >>> from sympy.functions import exp
+        >>> from sympy import exp
         >>> from sympy.abc import x
         >>> exp(-x).as_numer_denom()
         (1, exp(x))
@@ -55,7 +64,7 @@ class ExpBase(Function):
         exp = self.exp
         neg_exp = exp.is_negative
         if not neg_exp and not (-exp).is_negative:
-            neg_exp = _coeff_isneg(exp)
+            neg_exp = exp.could_extract_minus_sign()
         if neg_exp:
             return S.One, self.func(-exp)
         return self, S.One
@@ -74,16 +83,16 @@ class ExpBase(Function):
         return self.func(1), Mul(*self.args)
 
     def _eval_adjoint(self):
-        return self.func(self.args[0].adjoint())
+        return self.func(self.exp.adjoint())
 
     def _eval_conjugate(self):
-        return self.func(self.args[0].conjugate())
+        return self.func(self.exp.conjugate())
 
     def _eval_transpose(self):
-        return self.func(self.args[0].transpose())
+        return self.func(self.exp.transpose())
 
     def _eval_is_finite(self):
-        arg = self.args[0]
+        arg = self.exp
         if arg.is_infinite:
             if arg.is_extended_negative:
                 return True
@@ -104,7 +113,7 @@ class ExpBase(Function):
             return s.is_rational
 
     def _eval_is_zero(self):
-        return (self.args[0] is S.NegativeInfinity)
+        return self.exp is S.NegativeInfinity
 
     def _eval_power(self, other):
         """exp(arg)**e -> exp(arg*e) if assumptions allow it.
@@ -113,7 +122,8 @@ class ExpBase(Function):
         return Pow._eval_power(Pow(b, e, evaluate=False), other)
 
     def _eval_expand_power_exp(self, **hints):
-        from sympy import Sum, Product
+        from sympy.concrete.products import Product
+        from sympy.concrete.summations import Sum
         arg = self.args[0]
         if arg.is_Add and arg.is_commutative:
             return Mul.fromiter(self.func(x) for x in arg.args)
@@ -169,7 +179,7 @@ class exp_polar(ExpBase):
 
     def _eval_evalf(self, prec):
         """ Careful! any evalf of polar numbers is flaky """
-        from sympy import im, pi, re
+        from sympy.functions.elementary.complexes import (im, re)
         i = im(self.args[0])
         try:
             bad = (i <= -pi or i > pi)
@@ -197,16 +207,22 @@ class exp_polar(ExpBase):
         return ExpBase.as_base_exp(self)
 
 
-class exp(ExpBase):
+class ExpMeta(FunctionClass):
+    def __instancecheck__(cls, instance):
+        if exp in instance.__class__.__mro__:
+            return True
+        return isinstance(instance, Pow) and instance.base is S.Exp1
+
+
+class exp(ExpBase, metaclass=ExpMeta):
     """
     The exponential function, :math:`e^x`.
 
     Examples
     ========
 
-    >>> from sympy.functions import exp
+    >>> from sympy import exp, I, pi
     >>> from sympy.abc import x
-    >>> from sympy import I, pi
     >>> exp(x)
     exp(x)
     >>> exp(x).diff(x)
@@ -257,10 +273,14 @@ class exp(ExpBase):
     @classmethod
     def eval(cls, arg):
         from sympy.calculus import AccumBounds
-        from sympy.sets.setexpr import SetExpr
         from sympy.matrices.matrices import MatrixBase
-        from sympy import im, logcombine, re
-        if arg.is_Number:
+        from sympy.functions.elementary.complexes import (im, re)
+        from sympy.simplify.simplify import logcombine
+        if isinstance(arg, MatrixBase):
+            return arg.exp()
+        elif global_parameters.exp_is_pow:
+            return Pow(S.Exp1, arg)
+        elif arg.is_Number:
             if arg is S.NaN:
                 return S.NaN
             elif arg.is_zero:
@@ -353,9 +373,6 @@ class exp(ExpBase):
             if out or argchanged:
                 return Mul(*out)*cls(Add(*add), evaluate=False)
 
-        elif isinstance(arg, MatrixBase):
-            return arg.exp()
-
         if arg.is_zero:
             return S.One
 
@@ -390,9 +407,8 @@ class exp(ExpBase):
         Examples
         ========
 
-        >>> from sympy import I
+        >>> from sympy import exp, I
         >>> from sympy.abc import x
-        >>> from sympy.functions import exp
         >>> exp(x).as_real_imag()
         (exp(re(x))*cos(im(x)), exp(re(x))*sin(im(x)))
         >>> exp(1).as_real_imag()
@@ -408,12 +424,12 @@ class exp(ExpBase):
         sympy.functions.elementary.complexes.re
         sympy.functions.elementary.complexes.im
         """
-        import sympy
+        from sympy.functions.elementary.trigonometric import cos, sin
         re, im = self.args[0].as_real_imag()
         if deep:
             re = re.expand(deep, **hints)
             im = im.expand(deep, **hints)
-        cos, sin = sympy.cos(im), sympy.sin(im)
+        cos, sin = cos(im), sin(im)
         return (exp(re)*cos, exp(re)*sin)
 
     def _eval_subs(self, old, new):
@@ -445,39 +461,42 @@ class exp(ExpBase):
         return fuzzy_or(complex_extended_negative(self.args[0]))
 
     def _eval_is_algebraic(self):
-        s = self.func(*self.args)
-        if s.func == self.func:
-            if fuzzy_not(self.exp.is_zero):
-                if self.exp.is_algebraic:
-                    return False
-                elif (self.exp/S.Pi).is_rational:
-                    return False
-        else:
-            return s.is_algebraic
+        if (self.exp / S.Pi / S.ImaginaryUnit).is_rational:
+            return True
+        if fuzzy_not(self.exp.is_zero):
+            if self.exp.is_algebraic:
+                return False
+            elif (self.exp / S.Pi).is_rational:
+                return False
 
     def _eval_is_extended_positive(self):
-        if self.args[0].is_extended_real:
+        if self.exp.is_extended_real:
             return not self.args[0] is S.NegativeInfinity
-        elif self.args[0].is_imaginary:
+        elif self.exp.is_imaginary:
             arg2 = -S.ImaginaryUnit * self.args[0] / S.Pi
             return arg2.is_even
 
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import ceiling, limit, oo, Order, powsimp, Wild, expand_complex
-        arg = self.args[0]
+        from sympy.functions.elementary.integers import ceiling
+        from sympy.series.limits import limit
+        from sympy.series.order import Order
+        from sympy.simplify.powsimp import powsimp
+        arg = self.exp
         arg_series = arg._eval_nseries(x, n=n, logx=logx)
         if arg_series.is_Order:
             return 1 + arg_series
         arg0 = limit(arg_series.removeO(), x, 0)
-        if arg0 in [-oo, oo]:
+        if arg0 is S.NegativeInfinity:
+            return Order(x**n, x)
+        if arg0 is S.Infinity:
             return self
         t = Dummy("t")
         nterms = n
         try:
-            cf = Order(arg.as_leading_term(x), x).getn()
-        except NotImplementedError:
+            cf = Order(arg.as_leading_term(x, logx=logx), x).getn()
+        except (NotImplementedError, PoleError):
             cf = 0
         if cf and cf > 0:
             nterms = ceiling(n/cf)
@@ -492,7 +511,7 @@ class exp(ExpBase):
         # powsimp may introduce unexpanded (-1)**Rational; see PR #17201
         simplerat = lambda x: x.is_Rational and x.q in [3, 4, 6]
         w = Wild('w', properties=[simplerat])
-        r = r.replace((-1)**w, expand_complex((-1)**w))
+        r = r.replace(S.NegativeOne**w, expand_complex(S.NegativeOne**w))
         return r
 
     def _taylor(self, x, n):
@@ -504,39 +523,27 @@ class exp(ExpBase):
             l.append(g.removeO())
         return Add(*l)
 
-    def _eval_as_leading_term(self, x, cdir=0):
-        from sympy import Order
-        arg = self.args[0]
-        if arg.is_Add:
-            return Mul(*[exp(f).as_leading_term(x) for f in arg.args])
-        arg_1 = arg.as_leading_term(x)
-        if Order(x, x).contains(arg_1):
-            return S.One
-        if Order(1, x).contains(arg_1):
-            return exp(arg_1)
-        ####################################################
-        # The correct result here should be 'None'.        #
-        # Indeed arg in not bounded as x tends to 0.       #
-        # Consequently the series expansion does not admit #
-        # the leading term.                                #
-        # For compatibility reasons, the return value here #
-        # is the original function, i.e. exp(arg),         #
-        # instead of None.                                 #
-        ####################################################
-        return exp(arg)
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0].cancel().as_leading_term(x, logx=logx)
+        arg0 = arg.subs(x, 0)
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0)
+        if arg0.is_infinite is False:
+            return exp(arg0)
+        raise PoleError("Cannot expand %s around 0" % (self))
 
     def _eval_rewrite_as_sin(self, arg, **kwargs):
-        from sympy import sin
+        from sympy.functions.elementary.trigonometric import sin
         I = S.ImaginaryUnit
         return sin(I*arg + S.Pi/2) - I*sin(I*arg)
 
     def _eval_rewrite_as_cos(self, arg, **kwargs):
-        from sympy import cos
+        from sympy.functions.elementary.trigonometric import cos
         I = S.ImaginaryUnit
         return cos(I*arg) + I*cos(I*arg + S.Pi/2)
 
     def _eval_rewrite_as_tanh(self, arg, **kwargs):
-        from sympy import tanh
+        from sympy.functions.elementary.hyperbolic import tanh
         return (1 + tanh(arg/2))/(1 - tanh(arg/2))
 
     def _eval_rewrite_as_sqrt(self, arg, **kwargs):
@@ -561,9 +568,9 @@ def match_real_imag(expr):
 
     ``match_real_imag`` returns a tuple containing the real and imaginary
     parts of expr or (None, None) if direct matching is not possible. Contrary
-    to ``re()``, ``im()``, ``as_real_imag()``, this helper won't force things
+    to ``re()``, ``im()``, ``as_real_imag()``, this helper will not force things
     by returning expressions themselves containing ``re()`` or ``im()`` and it
-    doesn't expand its argument either.
+    does not expand its argument either.
 
     """
     r_, i_ = expr.as_independent(S.ImaginaryUnit, as_Add=True)
@@ -609,6 +616,9 @@ class log(Function):
     exp
 
     """
+
+    args: tTuple[Expr]
+
     _singularities = (S.Zero, S.ComplexInfinity)
 
     def fdiff(self, argindex=1):
@@ -628,9 +638,8 @@ class log(Function):
 
     @classmethod
     def eval(cls, arg, base=None):
-        from sympy import unpolarify
+        from sympy.functions.elementary.complexes import unpolarify
         from sympy.calculus import AccumBounds
-        from sympy.sets.setexpr import SetExpr
         from sympy.functions.elementary.complexes import Abs
 
         arg = sympify(arg)
@@ -671,11 +680,13 @@ class log(Function):
             elif arg.is_Rational and arg.p == 1:
                 return -cls(arg.q)
 
+        if arg.is_Pow and arg.base is S.Exp1 and arg.exp.is_extended_real:
+            return arg.exp
         I = S.ImaginaryUnit
-        if isinstance(arg, exp) and arg.args[0].is_extended_real:
-            return arg.args[0]
-        elif isinstance(arg, exp) and arg.args[0].is_number:
-            r_, i_ = match_real_imag(arg.args[0])
+        if isinstance(arg, exp) and arg.exp.is_extended_real:
+            return arg.exp
+        elif isinstance(arg, exp) and arg.exp.is_number:
+            r_, i_ = match_real_imag(arg.exp)
             if i_ and i_.is_comparable:
                 i_ %= 2*S.Pi
                 if i_ > S.Pi:
@@ -784,7 +795,7 @@ class log(Function):
         r"""
         Returns the next term in the Taylor series expansion of `\log(1+x)`.
         """
-        from sympy import powsimp
+        from sympy.simplify.powsimp import powsimp
         if n < 0:
             return S.Zero
         x = sympify(x)
@@ -797,7 +808,8 @@ class log(Function):
         return (1 - 2*(n % 2)) * x**(n + 1)/(n + 1)
 
     def _eval_expand_log(self, deep=True, **hints):
-        from sympy import unpolarify, expand_log, factorint
+        from sympy.functions.elementary.complexes import unpolarify
+        from sympy.ntheory.factor_ import factorint
         from sympy.concrete import Sum, Product
         force = hints.get('force', False)
         factor = hints.get('factor', False)
@@ -872,9 +884,8 @@ class log(Function):
         Examples
         ========
 
-        >>> from sympy import I
+        >>> from sympy import I, log
         >>> from sympy.abc import x
-        >>> from sympy.functions import log
         >>> log(x).as_real_imag()
         (log(Abs(x)), arg(x))
         >>> log(I).as_real_imag()
@@ -885,7 +896,7 @@ class log(Function):
         (log(Abs(x)), arg(I*x))
 
         """
-        from sympy import Abs, arg
+        from sympy.functions.elementary.complexes import (Abs, arg)
         sarg = self.args[0]
         if deep:
             sarg = self.args[0].expand(deep, **hints)
@@ -945,7 +956,10 @@ class log(Function):
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
-        from sympy import im, cancel, I, Order, logcombine
+        from sympy.functions.elementary.complexes import im
+        from sympy.polys.polytools import cancel
+        from sympy.series.order import Order
+        from sympy.simplify.simplify import logcombine
         from itertools import product
         if not logx:
             logx = log(x)
@@ -978,7 +992,7 @@ class log(Function):
         try:
             a, b = arg.leadterm(x)
             s = arg.nseries(x, n=n+b, logx=logx)
-        except (ValueError, NotImplementedError):
+        except (ValueError, NotImplementedError, PoleError):
             s = arg.nseries(x, n=n, logx=logx)
             while s.is_Order:
                 n += 1
@@ -1012,7 +1026,7 @@ class log(Function):
         pk = pterms
 
         while k*d < n:
-            coeff = -(-1)**k/k
+            coeff = -S.NegativeOne**k/k
             for ex in pk:
                 terms[ex] = terms.get(ex, S.Zero) + coeff*pk[ex]
             pk = mul(pk, pterms)
@@ -1028,17 +1042,23 @@ class log(Function):
             res -= 2*I*S.Pi
         return res + Order(x**n, x)
 
-    def _eval_as_leading_term(self, x, cdir=0):
-        from sympy import I, im
-        arg = self.args[0].together()
-        x0 = arg.subs(x, 0)
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.functions.elementary.complexes import (im, re)
+        arg0 = self.args[0].together()
+
+        arg = arg0.as_leading_term(x, cdir=cdir)
+        x0 = arg0.subs(x, 0)
+        if (x0 is S.NaN and logx is None):
+            x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
+        if x0 in (S.NegativeInfinity, S.Infinity):
+            raise PoleError("Cannot expand %s around 0" % (self))
         if x0 == 1:
-            return (arg - S.One).as_leading_term(x)
+            return (arg0 - S.One).as_leading_term(x)
         if cdir != 0:
-            cdir = self.args[0].dir(x, cdir)
-        if x0.is_real and x0.is_negative and im(cdir) < 0:
-            return self.func(x0) -2*I*S.Pi
-        return self.func(arg.as_leading_term(x))
+            cdir = arg0.dir(x, cdir)
+        if x0.is_real and x0.is_negative and im(cdir).is_negative:
+            return self.func(x0) - 2*I*S.Pi
+        return self.func(arg)
 
 
 class LambertW(Function):
@@ -1163,9 +1183,18 @@ class LambertW(Function):
         else:
             return s.is_algebraic
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        if len(self.args) == 1:
+            arg = self.args[0]
+            arg0 = arg.subs(x, 0).cancel()
+            if not arg0.is_zero:
+                return self.func(arg0)
+            return arg.as_leading_term(x)
+
     def _eval_nseries(self, x, n, logx, cdir=0):
         if len(self.args) == 1:
-            from sympy import Order, ceiling, expand_multinomial
+            from sympy.functions.elementary.integers import ceiling
+            from sympy.series.order import Order
             arg = self.args[0].nseries(x, n=n, logx=logx)
             lt = arg.compute_leading_term(x, logx=logx)
             lte = 1
@@ -1184,8 +1213,6 @@ class LambertW(Function):
     def _eval_is_zero(self):
         x = self.args[0]
         if len(self.args) == 1:
-            k = S.Zero
+            return x.is_zero
         else:
-            k = self.args[1]
-        if x.is_zero and k.is_zero:
-            return True
+            return fuzzy_and([x.is_zero, self.args[1].is_zero])

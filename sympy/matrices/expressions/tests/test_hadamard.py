@@ -1,4 +1,6 @@
-from sympy import Identity, OneMatrix, ZeroMatrix, Matrix, MatAdd
+from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions.matadd import MatAdd
+from sympy.matrices.expressions.special import (Identity, OneMatrix, ZeroMatrix)
 from sympy.core import symbols
 from sympy.testing.pytest import raises
 
@@ -105,7 +107,6 @@ def test_hadamard_power():
 
 
 def test_hadamard_power_explicit():
-    from sympy.matrices import Matrix
     A = MatrixSymbol('A', 2, 2)
     B = MatrixSymbol('B', 2, 2)
     a, b = symbols('a b')

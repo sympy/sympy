@@ -1,6 +1,9 @@
 from sympy.core.backend import sympify, Add, ImmutableMatrix as Matrix
-from sympy.core.evalf import EvalfMixin, prec_to_dps
+from sympy.core.evalf import EvalfMixin
 from sympy.printing.defaults import Printable
+
+from mpmath.libmp.libmpf import prec_to_dps
+
 
 __all__ = ['Dyadic']
 
@@ -533,9 +536,56 @@ class Dyadic(Printable, EvalfMixin):
         if not self.args:
             return self
         new_args = []
+        dps = prec_to_dps(prec)
         for inlist in self.args:
             new_inlist = list(inlist)
-            new_inlist[0] = inlist[0].evalf(n=prec_to_dps(prec))
+            new_inlist[0] = inlist[0].evalf(n=dps)
+            new_args.append(tuple(new_inlist))
+        return Dyadic(new_args)
+
+    def xreplace(self, rule):
+        """
+        Replace occurrences of objects within the measure numbers of the Dyadic.
+
+        Parameters
+        ==========
+
+        rule : dict-like
+            Expresses a replacement rule.
+
+        Returns
+        =======
+
+        Dyadic
+            Result of the replacement.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, pi
+        >>> from sympy.physics.vector import ReferenceFrame, outer
+        >>> N = ReferenceFrame('N')
+        >>> D = outer(N.x, N.x)
+        >>> x, y, z = symbols('x y z')
+        >>> ((1 + x*y) * D).xreplace({x: pi})
+        (pi*y + 1)*(N.x|N.x)
+        >>> ((1 + x*y) * D).xreplace({x: pi, y: 2})
+        (1 + 2*pi)*(N.x|N.x)
+
+        Replacements occur only if an entire node in the expression tree is
+        matched:
+
+        >>> ((x*y + z) * D).xreplace({x*y: pi})
+        (z + pi)*(N.x|N.x)
+        >>> ((x*y*z) * D).xreplace({x*y: pi})
+        x*y*z*(N.x|N.x)
+
+        """
+
+        new_args = []
+        for inlist in self.args:
+            new_inlist = list(inlist)
+            new_inlist[0] = new_inlist[0].xreplace(rule)
             new_args.append(tuple(new_inlist))
         return Dyadic(new_args)
 

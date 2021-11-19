@@ -38,17 +38,12 @@ def build_html(docsdir, outputdir, version):
 
 def build_latex(docsdir, outputdir, version):
     run('make', 'clean', cwd=docsdir)
-    run('make', 'latex', cwd=docsdir)
+    run('make', 'latexpdf', cwd=docsdir)
 
-    latexdir = join(docsdir, '_build', 'latex')
-    env = os.environ.copy()
-    env['LATEXMKOPTS'] = '-xelatex -silent'
-    run('make', 'clean', cwd=latexdir, env=env)
-    run('make', 'all', cwd=latexdir, env=env)
-
-    filename = 'sympy-%s.pdf' % (version,)
-    src = join('doc', '_build', 'latex', filename)
-    dst = join(outputdir, filename)
+    srcfilename = 'sympy-%s.pdf' % (version,)
+    dstfilename = 'sympy-docs-pdf-%s.pdf' % (version,)
+    src = join('doc', '_build', 'latex', srcfilename)
+    dst = join(outputdir, dstfilename)
     shutil.copyfile(src, dst)
 
 

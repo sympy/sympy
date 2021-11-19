@@ -1,6 +1,6 @@
 from sympy.core import Mul
-from sympy.core.basic import preorder_traversal
 from sympy.core.function import count_ops
+from sympy.core.traversal import preorder_traversal, bottom_up
 from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions import gamma
 from sympy.simplify.gammasimp import gammasimp, _gammasimp
@@ -65,8 +65,6 @@ def _gamma_as_comb(expr):
     """
 
     expr = expr.rewrite(factorial)
-
-    from .simplify import bottom_up
 
     def f(rv):
         if not rv.is_Mul:

@@ -1,14 +1,43 @@
-from sympy import (Add, Basic, Expr, S, Symbol, Wild, Float, Integer, Rational, I,
-                   sin, cos, tan, exp, log, nan, oo, sqrt, symbols, Integral, sympify,
-                   WildFunction, Poly, Function, Derivative, Number, pi, NumberSymbol, zoo,
-                   Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
-                   simplify, together, collect, factorial, apart, combsimp, factor, refine,
-                   cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-                   exp_polar, expand, diff, O, Heaviside, Si, Max, UnevaluatedExpr,
-                   integrate, gammasimp, Gt)
-from sympy.core.expr import ExprBuilder, unchanged
-from sympy.core.function import AppliedUndef
+from sympy.assumptions.refine import refine
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
+from sympy.core.expr import (ExprBuilder, unchanged, Expr,
+    UnevaluatedExpr)
+from sympy.core.function import (Function, expand, WildFunction,
+    AppliedUndef, Derivative, diff)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (NumberSymbol, E, zoo, oo, Float, I,
+    Rational, nan, Integer, Number, pi)
+from sympy.core.power import Pow
+from sympy.core.relational import Ge, Lt, Gt, Le
+from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
+from sympy.core.symbol import Symbol, symbols, Dummy, Wild
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.exponential import exp_polar, exp, log
+from sympy.functions.elementary.miscellaneous import sqrt, Max
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import tan, sin, cos
+from sympy.functions.special.delta_functions import (Heaviside,
+    DiracDelta)
+from sympy.functions.special.error_functions import Si
+from sympy.functions.special.gamma_functions import gamma
+from sympy.integrals.integrals import integrate, Integral
 from sympy.physics.secondquant import FockState
+from sympy.polys.partfrac import apart
+from sympy.polys.polytools import factor, cancel, Poly
+from sympy.polys.rationaltools import together
+from sympy.series.order import O
+from sympy.simplify.combsimp import combsimp
+from sympy.simplify.gammasimp import gammasimp
+from sympy.simplify.powsimp import powsimp
+from sympy.simplify.radsimp import collect, radsimp
+from sympy.simplify.ratsimp import ratsimp
+from sympy.simplify.simplify import simplify, nsimplify
+from sympy.simplify.trigsimp import trigsimp
 from sympy.physics.units import meter
 
 from sympy.testing.pytest import raises, XFAIL
@@ -102,7 +131,7 @@ class F1_1(DummyNumber):
 i5 = I5()
 f1_1 = F1_1()
 
-# basic sympy objects
+# basic SymPy objects
 basic_objs = [
     Rational(2),
     Float("1.3"),
@@ -334,7 +363,7 @@ def test_cooperative_operations():
 
 
 def test_relational():
-    from sympy import Lt
+    from sympy.core.relational import Lt
     assert (pi < 3) is S.false
     assert (pi <= 3) is S.false
     assert (pi > 3) is S.true
@@ -349,7 +378,6 @@ def test_relational():
 
 
 def test_relational_assumptions():
-    from sympy import Lt, Gt, Le, Ge
     m1 = Symbol("m1", nonnegative=False)
     m2 = Symbol("m2", positive=False)
     m3 = Symbol("m3", nonpositive=False)
@@ -441,6 +469,19 @@ def test_as_leading_term():
 
     raises(ValueError, lambda: (x + 1).as_leading_term(1))
 
+    # https://github.com/sympy/sympy/issues/21177
+    f = -3*x + (x + Rational(3, 2) - sqrt(3)*S.ImaginaryUnit/2)**2\
+        - Rational(3, 2) + 3*sqrt(3)*S.ImaginaryUnit/2
+    assert f.as_leading_term(x) == \
+        (12*sqrt(3)*x - 12*S.ImaginaryUnit*x)/(4*sqrt(3) + 12*S.ImaginaryUnit)
+
+    # https://github.com/sympy/sympy/issues/21245
+    f = 1 - x - x**2
+    fi = (1 + sqrt(5))/2
+    assert f.subs(x, y + 1/fi).as_leading_term(y) == \
+        (-576*sqrt(5)*y - 1280*y)/(256*sqrt(5) + 576)
+
+
 def test_leadterm2():
     assert (x*cos(1)*cos(1 + sin(1)) + sin(1 + sin(1))).leadterm(x) == \
            (sin(1 + sin(1)), 0)
@@ -457,7 +498,7 @@ def test_as_leading_term2():
 
 def test_as_leading_term3():
     assert (2 + pi + x).as_leading_term(x) == 2 + pi
-    assert (2*x + pi*x + x**2).as_leading_term(x) == (2 + pi)*x
+    assert (2*x + pi*x + x**2).as_leading_term(x) == 2*x + pi*x
 
 
 def test_as_leading_term4():
@@ -851,7 +892,7 @@ def test_as_independent():
     eq = Add(x, -x, 2, -3, evaluate=False)
     assert eq.as_independent(x) == (-1, Add(x, -x, evaluate=False))
     eq = Mul(x, 1/x, 2, -3, evaluate=False)
-    eq.as_independent(x) == (-6, Mul(x, 1/x, evaluate=False))
+    assert eq.as_independent(x) == (-6, Mul(x, 1/x, evaluate=False))
 
     assert (x*y).as_independent(z, as_Add=True) == (x*y, 0)
 
@@ -1131,6 +1172,10 @@ def test_as_poly_as_expr():
 
     assert p.as_poly() == p
 
+    # https://github.com/sympy/sympy/issues/20610
+    assert S(2).as_poly() is None
+    assert sqrt(2).as_poly(extension=True) is None
+
     raises(AttributeError, lambda: Tuple(x, x).as_poly(x))
     raises(AttributeError, lambda: Tuple(x ** 2, x, y).as_poly(x))
 
@@ -1237,6 +1282,11 @@ def test_as_coeff_exponent():
 
 
 def test_extractions():
+    for base in (2, S.Exp1):
+        assert Pow(base**x, 3, evaluate=False
+            ).extract_multiplicatively(base**x) == base**(2*x)
+        assert (base**(5*x)).extract_multiplicatively(
+            base**(3*x)) == base**(2*x)
     assert ((x*y)**3).extract_multiplicatively(x**2 * y) == x*y**2
     assert ((x*y)**3).extract_multiplicatively(x**4 * y) is None
     assert (2*x).extract_multiplicatively(2) == x
@@ -1296,12 +1346,10 @@ def test_extractions():
         (-x + y).could_extract_minus_sign()
     assert (1 - x - y).could_extract_minus_sign() is True
     assert (1 - x + y).could_extract_minus_sign() is False
-    assert ((-x - x*y)/y).could_extract_minus_sign() is True
-    assert (-(x + x*y)/y).could_extract_minus_sign() is True
+    assert ((-x - x*y)/y).could_extract_minus_sign() is False
     assert ((x + x*y)/(-y)).could_extract_minus_sign() is True
     assert ((x + x*y)/y).could_extract_minus_sign() is False
-    assert (x*(-x - x**3)).could_extract_minus_sign() is True
-    assert ((-x - y)/(x + y)).could_extract_minus_sign() is True
+    assert ((-x - y)/(x + y)).could_extract_minus_sign() is False
 
     class sign_invariant(Function, Expr):
         nargs = 1
@@ -1310,13 +1358,12 @@ def test_extractions():
     foo = sign_invariant(x)
     assert foo == -foo
     assert foo.could_extract_minus_sign() is False
-    # The results of each of these will vary on different machines, e.g.
-    # the first one might be False and the other (then) is true or vice versa,
-    # so both are included.
-    assert ((-x - y)/(x - y)).could_extract_minus_sign() is False or \
-           ((-x - y)/(y - x)).could_extract_minus_sign() is False
     assert (x - y).could_extract_minus_sign() is False
     assert (-x + y).could_extract_minus_sign() is True
+    assert (x - 1).could_extract_minus_sign() is False
+    assert (1 - x).could_extract_minus_sign() is True
+    assert (sqrt(2) - 1).could_extract_minus_sign() is True
+    assert (1 - sqrt(2)).could_extract_minus_sign() is False
     # check that result is canonical
     eq = (3*x + 15*y).extract_multiplicatively(3)
     assert eq.args == eq.func(*eq.args).args
@@ -1399,10 +1446,17 @@ def test_coeff():
     assert (n*m + m*n*m).coeff(n, right=True) == m  # = (1 + m)*n*m
     assert (n*m + m*n).coeff(n) == 0
     assert (n*m + o*m*n).coeff(m*n) == o
-    assert (n*m + o*m*n).coeff(m*n, right=1) == 1
-    assert (n*m + n*m*n).coeff(n*m, right=1) == 1 + n  # = n*m*(n + 1)
+    assert (n*m + o*m*n).coeff(m*n, right=True) == 1
+    assert (n*m + n*m*n).coeff(n*m, right=True) == 1 + n  # = n*m*(n + 1)
 
     assert (x*y).coeff(z, 0) == x*y
+
+    assert (x*n + y*n + z*m).coeff(n) == x + y
+    assert (n*m + n*o + o*l).coeff(n, right=True) == m + o
+    assert (x*n*m*n + y*n*m*o + z*l).coeff(m, right=True) == x*n + y*o
+    assert (x*n*m*n + x*n*m*o + z*l).coeff(m, right=True) == n + o
+    assert (x*n*m*n + x*n*m*o + z*l).coeff(m) == x*n
+
 
 def test_coeff2():
     r, kappa = symbols('r, kappa')
@@ -1560,7 +1614,6 @@ def test_floordiv():
 
 
 def test_as_coeff_Mul():
-    assert S.Zero.as_coeff_Mul() == (S.One, S.Zero)
     assert Integer(3).as_coeff_Mul() == (Integer(3), Integer(1))
     assert Rational(3, 4).as_coeff_Mul() == (Rational(3, 4), Integer(1))
     assert Float(5.0).as_coeff_Mul() == (Float(5.0), Integer(1))
@@ -1701,14 +1754,11 @@ def test_eval_interval():
     assert exp(x)._eval_interval(*Tuple(x, 0, 1)) == exp(1) - exp(0)
 
     # issue 4199
-    # first subs and limit gives NaN
     a = x/y
-    assert a._eval_interval(x, S.Zero, oo)._eval_interval(y, oo, S.Zero) is S.NaN
-    # second subs and limit gives NaN
-    assert a._eval_interval(x, S.Zero, oo)._eval_interval(y, S.Zero, oo) is S.NaN
-    # difference gives S.NaN
+    raises(NotImplementedError, lambda: a._eval_interval(x, S.Zero, oo)._eval_interval(y, oo, S.Zero))
+    raises(NotImplementedError, lambda: a._eval_interval(x, S.Zero, oo)._eval_interval(y, S.Zero, oo))
     a = x - y
-    assert a._eval_interval(x, S.One, oo)._eval_interval(y, oo, S.One) is S.NaN
+    raises(NotImplementedError, lambda: a._eval_interval(x, S.One, oo)._eval_interval(y, oo, S.One))
     raises(ValueError, lambda: x._eval_interval(x, None, None))
     a = -y*Heaviside(x - y)
     assert a._eval_interval(x, -oo, oo) == -y
@@ -1750,16 +1800,17 @@ def test_issue_5843():
 
 def test_is_constant():
     from sympy.solvers.solvers import checksol
-    Sum(x, (x, 1, 10)).is_constant() is True
-    Sum(x, (x, 1, n)).is_constant() is False
-    Sum(x, (x, 1, n)).is_constant(y) is True
-    Sum(x, (x, 1, n)).is_constant(n) is False
-    Sum(x, (x, 1, n)).is_constant(x) is True
+    assert Sum(x, (x, 1, 10)).is_constant() is True
+    assert Sum(x, (x, 1, n)).is_constant() is False
+    assert Sum(x, (x, 1, n)).is_constant(y) is True
+    assert Sum(x, (x, 1, n)).is_constant(n) is False
+    assert Sum(x, (x, 1, n)).is_constant(x) is True
     eq = a*cos(x)**2 + a*sin(x)**2 - a
-    eq.is_constant() is True
+    assert eq.is_constant() is True
     assert eq.subs({x: pi, a: 2}) == eq.subs({x: pi, a: 3}) == 0
     assert x.is_constant() is False
     assert x.is_constant(y) is True
+    assert log(x/y).is_constant() is False
 
     assert checksol(x, x, Sum(x, (x, 1, n))) is False
     assert checksol(x, x, Sum(x, (x, 1, n))) is False
@@ -1805,7 +1856,7 @@ def test_equals():
         2*sqrt(2)*x**(S(3)/2)*(1 + 1/(2*x))**(S(5)/2)/(-6 - 3/x)
     ans = sqrt(2*x + 1)*(6*x**2 + x - 1)/15
     diff = i - ans
-    assert diff.equals(0) is False
+    assert diff.equals(0) is None  # should be False, but previously this was False due to wrong intermediate result
     assert diff.subs(x, Rational(-1, 2)/2) == 7*sqrt(2)/120
     # there are regions for x for which the expression is True, for
     # example, when x < -1/2 or x > 0 the expression is zero
@@ -1844,7 +1895,8 @@ def test_equals():
 
 
 def test_random():
-    from sympy import posify, lucas
+    from sympy.functions.combinatorial.numbers import lucas
+    from sympy.simplify.simplify import posify
     assert posify(x)[0]._random() is not None
     assert lucas(n)._random(2, -2, 0, -1, 1) is None
 
@@ -1853,8 +1905,6 @@ def test_random():
 
 
 def test_round():
-    from sympy.abc import x
-
     assert str(Float('0.1249999').round(2)) == '0.12'
     d20 = 12345678901234567890
     ans = S(d20).round(2)
@@ -2038,7 +2088,7 @@ def test_issue_6325():
         (a + b*t)**2 + (c + t*z)**2))/sqrt((a + b*t)**2 + (c + t*z)**2)
     e = sqrt((a + b*t)**2 + (c + z*t)**2)
     assert diff(e, t, 2) == ans
-    e.diff(t, 2) == ans
+    assert e.diff(t, 2) == ans
     assert diff(e, t, 2, simplify=False) != ans
 
 
@@ -2102,6 +2152,14 @@ def test_ExprBuilder():
     eb.args.extend([x, x])
     assert eb.build() == x**2
 
+
+def test_issue_22020():
+    from sympy.parsing.sympy_parser import parse_expr
+    x = parse_expr("log((2*V/3-V)/C)/-(R+r)*C")
+    y = parse_expr("log((2*V/3-V)/C)/-(R+r)*2")
+    assert x.equals(y) is False
+
+
 def test_non_string_equality():
     # Expressions should not compare equal to strings
     x = symbols('x')
@@ -2122,3 +2180,9 @@ def test_non_string_equality():
 
     assert (x == BadRepr()) is False
     assert (x != BadRepr()) is True
+
+
+def test_21494():
+    from sympy.testing.pytest import warns_deprecated_sympy
+    with warns_deprecated_sympy():
+        assert x.expr_free_symbols == {x}

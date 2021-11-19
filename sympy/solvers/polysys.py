@@ -1,12 +1,13 @@
 """Solvers of systems of polynomial equations. """
 
 from sympy.core import S
+from sympy.core.sorting import default_sort_key
 from sympy.polys import Poly, groebner, roots
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.polyerrors import (ComputationFailed,
     PolificationFailed, CoercionFailed)
 from sympy.simplify import rcollect
-from sympy.utilities import default_sort_key, postfixes
+from sympy.utilities import postfixes
 from sympy.utilities.misc import filldedent
 
 
@@ -240,6 +241,12 @@ def solve_generic(polys, opt):
 
         univariate = list(filter(_is_univariate, basis))
 
+        if len(basis) < len(gens):
+            raise NotImplementedError(filldedent('''
+                only zero-dimensional systems supported
+                (finite number of solutions)
+                '''))
+
         if len(univariate) == 1:
             f = univariate.pop()
         else:
@@ -321,7 +328,7 @@ def solve_triangulated(polys, *gens, **args):
     Examples
     ========
 
-    >>> from sympy.solvers.polysys import solve_triangulated
+    >>> from sympy import solve_triangulated
     >>> from sympy.abc import x, y, z
 
     >>> F = [x**2 + y + z - 1, x + y**2 + z - 1, x + y + z**2 - 1]

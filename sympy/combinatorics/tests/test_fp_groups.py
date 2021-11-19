@@ -1,4 +1,4 @@
-from sympy import S
+from sympy.core.singleton import S
 from sympy.combinatorics.fp_groups import (FpGroup, low_index_subgroups,
                                    reidemeister_presentation, FpSubgroup,
                                            simplify_presentation)
@@ -196,7 +196,6 @@ def test_fp_subgroup():
     _test_subgroup(K, T, S)
 
 def test_permutation_methods():
-    from sympy.combinatorics.fp_groups import FpSubgroup
     F, x, y = free_group("x, y")
     # DihedralGroup(8)
     G = FpGroup(F, [x**2, y**8, x*y*x**-1*y])

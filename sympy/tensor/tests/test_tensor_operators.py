@@ -4,10 +4,12 @@ from sympy.tensor.toperators import PartialDerivative
 from sympy.tensor.tensor import (TensorIndexType,
                                  tensor_indices,
                                  TensorHead, tensor_heads)
-from sympy import symbols, diag
-from sympy import Array, Rational
+from sympy.core.numbers import Rational
+from sympy.core.symbol import symbols
+from sympy.matrices.dense import diag
+from sympy.tensor.array import Array
 
-from random import randint
+from sympy.core.random import randint
 
 
 L = TensorIndexType("L")
@@ -77,8 +79,8 @@ def test_replace_arrays_partial_derivative():
     assert expr.replace_with_arrays({A(-i): [x, y], L: diag(1, -1)}, [i, -j]) == Array([[1, 0], [0, 1]])
 
     expr = PartialDerivative(A(-i), A(-j))
-    expr.get_free_indices() == [-i, j]
-    expr.get_indices() == [-i, j]
+    assert expr.get_free_indices() == [-i, j]
+    assert expr.get_indices() == [-i, j]
     assert expr.replace_with_arrays({A(-i): [x, y]}, [-i, j]) == Array([[1, 0], [0, 1]])
     assert expr.replace_with_arrays({A(-i): [x, y], L: diag(1, 1)}, [-i, j]) == Array([[1, 0], [0, 1]])
     assert expr.replace_with_arrays({A(-i): [x, y], L: diag(1, -1)}, [-i, j]) == Array([[1, 0], [0, 1]])

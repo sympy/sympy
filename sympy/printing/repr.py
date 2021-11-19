@@ -5,7 +5,7 @@ The most important function here is srepr that returns a string so that the
 relation eval(srepr(expr))=expr holds in an appropriate environment.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 from sympy.core.function import AppliedUndef
 from sympy.core.mul import Mul
@@ -20,7 +20,7 @@ class ReprPrinter(Printer):
     _default_settings = {
         "order": None,
         "perm_cyclic" : True,
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
 
     def reprify(self, args, sep):
         """
@@ -100,6 +100,13 @@ class ReprPrinter(Printer):
         r += '(%s)' % ', '.join([self._print(a) for a in expr.args])
         return r
 
+    def _print_Heaviside(self, expr):
+        # Same as _print_Function but uses pargs to suppress default value for
+        # 2nd arg.
+        r = self._print(expr.func)
+        r += '(%s)' % ', '.join([self._print(a) for a in expr.pargs])
+        return r
+
     def _print_FunctionClass(self, expr):
         if issubclass(expr, AppliedUndef):
             return 'Function(%r)' % (expr.__name__)
@@ -121,6 +128,9 @@ class ReprPrinter(Printer):
     def _print_Integer(self, expr):
         return 'Integer(%i)' % expr.p
 
+    def _print_Complexes(self, expr):
+        return 'Complexes'
+
     def _print_Integers(self, expr):
         return 'Integers'
 
@@ -130,11 +140,17 @@ class ReprPrinter(Printer):
     def _print_Naturals0(self, expr):
         return 'Naturals0'
 
+    def _print_Rationals(self, expr):
+        return 'Rationals'
+
     def _print_Reals(self, expr):
         return 'Reals'
 
     def _print_EmptySet(self, expr):
         return 'EmptySet'
+
+    def _print_UniversalSet(self, expr):
+        return 'UniversalSet'
 
     def _print_EmptySequence(self, expr):
         return 'EmptySequence'
@@ -228,23 +244,25 @@ class ReprPrinter(Printer):
         if d == {}:
             return "%s(%s, %s)" % (
                 expr.__class__.__name__,
-                self._print(expr.coordinate_system),
+                self._print(expr.coord_sys),
                 self._print(expr.index)
             )
         else:
             attr = ['%s=%s' % (k, v) for k, v in d.items()]
             return "%s(%s, %s, %s)" % (
                 expr.__class__.__name__,
-                self._print(expr.coordinate_system),
+                self._print(expr.coord_sys),
                 self._print(expr.index),
                 ', '.join(attr)
             )
 
     def _print_Predicate(self, expr):
-        return "%s(%s)" % (expr.__class__.__name__, self._print(expr.name))
+        return "Q.%s" % expr.name
 
     def _print_AppliedPredicate(self, expr):
-        return "%s(%s, %s)" % (expr.__class__.__name__, expr.func, expr.arg)
+        # will be changed to just expr.args when args overriding is removed
+        args = expr._args
+        return "%s(%s)" % (expr.__class__.__name__, self.reprify(args, ", "))
 
     def _print_str(self, expr):
         return repr(expr)

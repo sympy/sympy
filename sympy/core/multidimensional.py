@@ -4,7 +4,7 @@ Provides functionality for multidimensional usage of scalar-functions.
 Read the vectorize docstring for more details.
 """
 
-from sympy.core.decorators import wraps
+from functools import wraps
 
 
 def apply_on_element(f, args, kwargs, n):
@@ -66,8 +66,7 @@ class vectorize:
     Examples
     ========
 
-    >>> from sympy import diff, sin, symbols, Function
-    >>> from sympy.core.multidimensional import vectorize
+    >>> from sympy import vectorize, diff, sin, symbols, Function
     >>> x, y, z = symbols('x y z')
     >>> f, g, h = list(map(Function, 'fgh'))
 

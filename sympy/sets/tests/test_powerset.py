@@ -128,3 +128,14 @@ def test_powerset_method():
     # Not finite sets
     A = Interval(0, 1)
     assert A.powerset() == PowerSet(A)
+
+def test_is_subset():
+    # covers line 101-102
+    # initalize powerset(1), which is a subset of powerset(1,2)
+    subset = PowerSet(FiniteSet(1))
+    pset = PowerSet(FiniteSet(1, 2))
+    bad_set = PowerSet(FiniteSet(2, 3))
+    # assert "subset" is subset of pset == True
+    assert subset.is_subset(pset)
+    # assert "bad_set" is subset of pset == False
+    assert not pset.is_subset(bad_set)

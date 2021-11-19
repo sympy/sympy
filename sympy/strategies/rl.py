@@ -8,9 +8,12 @@ from .util import new
 # Functions that create rules
 
 def rm_id(isid, new=new):
-    """ Create a rule to remove identities
+    """ Create a rule to remove identities.
 
-    isid - fn :: x -> Bool  --- whether or not this element is an identity
+    isid - fn :: x -> Bool  --- whether or not this element is an identity.
+
+    Examples
+    ========
 
     >>> from sympy.strategies import rm_id
     >>> from sympy import Basic
@@ -37,7 +40,10 @@ def rm_id(isid, new=new):
     return ident_remove
 
 def glom(key, count, combine):
-    """ Create a rule to conglomerate identical args
+    """ Create a rule to conglomerate identical args.
+
+    Examples
+    ========
 
     >>> from sympy.strategies import glom
     >>> from sympy import Add
@@ -73,7 +79,10 @@ def glom(key, count, combine):
     return conglomerate
 
 def sort(key, new=new):
-    """ Create a rule to sort by a key function
+    """ Create a rule to sort by a key function.
+
+    Examples
+    ========
 
     >>> from sympy.strategies import sort
     >>> from sympy import Basic
@@ -146,7 +155,10 @@ def flatten(expr, new=new):
     return new(expr.__class__, *args)
 
 def rebuild(expr):
-    """ Rebuild a SymPy tree
+    """ Rebuild a SymPy tree.
+
+    Explanation
+    ===========
 
     This function recursively calls constructors in the expression tree.
     This forces canonicalization and removes ugliness introduced by the use of

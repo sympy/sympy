@@ -207,7 +207,7 @@ def _desolve(eq, func=None, hint="default", ics=None, simplify=True, *, prep=Tru
     # recursive calls.
     if kwargs.get('classify', True):
         hints = classifier(eq, func, dict=True, ics=ics, xi=xi, eta=eta,
-        n=terms, x0=x0, prep=prep)
+        n=terms, x0=x0, hint=hint, prep=prep)
 
     else:
         # Here is what all this means:

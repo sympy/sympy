@@ -54,19 +54,18 @@ from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.relational import Equality
 from sympy.core.add import Add
 from sympy.core.mul import Mul
-from sympy.core import sympify
+from sympy.core.sorting import default_sort_key
+from sympy.core.sympify import sympify
 
 from sympy.simplify import simplify, hypersimp, hypersimilar  # type: ignore
 from sympy.solvers import solve, solve_undetermined_coeffs
 from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
 from sympy.functions import binomial, factorial, FallingFactorial, RisingFactorial
 from sympy.matrices import Matrix, casoratian
-from sympy.concrete import product
-from sympy.core.compatibility import default_sort_key
 from sympy.utilities.iterables import numbered_symbols
 
 
-def rsolve_poly(coeffs, f, n, **hints):
+def rsolve_poly(coeffs, f, n, shift=0, **hints):
     r"""
     Given linear recurrence operator `\operatorname{L}` of order
     `k` with polynomial coefficients and inhomogeneous equation
@@ -188,7 +187,7 @@ def rsolve_poly(coeffs, f, n, **hints):
         y = E = S.Zero
 
         for i in range(N + 1):
-            C.append(Symbol('C' + str(i)))
+            C.append(Symbol('C' + str(i + shift)))
             y += C[i] * n**i
 
         for i in range(r + 1):
@@ -301,7 +300,7 @@ def rsolve_poly(coeffs, f, n, **hints):
         if not homogeneous:
             h = Add(*[(g*p).expand() for g, p in zip(G, P)])
 
-        C = [Symbol('C' + str(i)) for i in range(A)]
+        C = [Symbol('C' + str(i + shift)) for i in range(A)]
 
         g = lambda i: Add(*[c*_delta(q, i) for c, q in zip(C, Q)])
 
@@ -510,6 +509,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     .. [2] M. Petkovsek, H. S. Wilf, D. Zeilberger, A = B, 1996.
     """
+    from sympy.concrete import product
+
     coeffs = list(map(sympify, coeffs))
 
     f = sympify(f)
@@ -618,7 +619,14 @@ def rsolve_hyper(coeffs, f, n, **hints):
             if z.is_zero:
                 continue
 
-            (C, s) = rsolve_poly([polys[i].as_expr()*z**i for i in range(r + 1)], 0, n, symbols=True)
+            recurr_coeffs = [polys[i].as_expr()*z**i for i in range(r + 1)]
+            if d == 0 and 0 != Add(*[recurr_coeffs[j]*j for j in range(1, r + 1)]):
+                # faster inline check (than calling rsolve_poly) for a
+                # constant solution to a constant coefficient recurrence.
+                C = Symbol("C" + str(len(symbols)))
+                s = [C]
+            else:
+                C, s = rsolve_poly(recurr_coeffs, 0, n, len(symbols), symbols=True)
 
             if C is not None and C is not S.Zero:
                 symbols |= set(s)
@@ -793,7 +801,7 @@ def rsolve(f, y, init=None):
 
     solution, symbols = result
 
-    if init == {} or init == []:
+    if init in ({}, []):
         init = None
 
     if symbols and init is not None:

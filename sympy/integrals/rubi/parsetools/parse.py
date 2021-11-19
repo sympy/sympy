@@ -30,7 +30,10 @@ References
 import re
 import os
 import inspect
-from sympy import sympify, Function, Set, Symbol
+from sympy.core.function import Function
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.sets.sets import Set
 from sympy.printing import StrPrinter
 from sympy.utilities.misc import debug
 
@@ -158,7 +161,6 @@ def parse_full_form(wmexpr):
             if last_expr != '':
                 stack[-1].append(last_expr)
             stack.pop()
-            current_pos = stack[-1]
         elif match.group() == '[':
             stack[-1].append([last_expr])
             stack.append(stack[-1][-1])
@@ -289,7 +291,7 @@ def parse_freeq(l, x, cons_index, cons_dict, cons_import, symbols=None):
     return '', cons, cons_index
 
 
-def generate_sympy_from_parsed(parsed, wild=False, symbols=[], replace_Int=False):
+def generate_sympy_from_parsed(parsed, wild=False, symbols=(), replace_Int=False):
     """
     Parses list into Python syntax.
 
@@ -710,9 +712,7 @@ def rubi_rule_parser(fullform, header=None, module_name='rubi_object'):
             rules.append(i)
     parsed = downvalues_rules(rules, header, cons_dict, cons_index, index)
     result = parsed[0].strip() + '\n'
-    cons_index = parsed[1]
     cons += parsed[2]
-    index = parsed[3]
     # Replace temporary variables by actual values
     for i in temporary_variable_replacement:
         cons = cons.replace(temporary_variable_replacement[i], i)

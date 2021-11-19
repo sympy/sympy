@@ -2,17 +2,17 @@ from sympy.core import S
 from sympy.core.relational import Eq, Ne
 from sympy.logic.boolalg import BooleanFunction
 from sympy.utilities.misc import func_name
+from .sets import Set
 
 
 class Contains(BooleanFunction):
     """
-    Asserts that x is an element of the set S
+    Asserts that x is an element of the set S.
 
     Examples
     ========
 
-    >>> from sympy import Symbol, Integer, S
-    >>> from sympy.sets.contains import Contains
+    >>> from sympy import Symbol, Integer, S, Contains
     >>> Contains(Integer(2), S.Integers)
     True
     >>> Contains(Integer(-2), S.Naturals)
@@ -28,7 +28,6 @@ class Contains(BooleanFunction):
     """
     @classmethod
     def eval(cls, x, s):
-        from sympy.sets.sets import Set
 
         if not isinstance(s, Set):
             raise TypeError('expecting Set, not %s' % func_name(s))

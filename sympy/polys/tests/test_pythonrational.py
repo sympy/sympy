@@ -4,36 +4,36 @@ from sympy.polys.domains import PythonRational as QQ
 from sympy.testing.pytest import raises
 
 def test_PythonRational__init__():
-    assert QQ(0).p == 0
-    assert QQ(0).q == 1
-    assert QQ(0, 1).p == 0
-    assert QQ(0, 1).q == 1
-    assert QQ(0, -1).p == 0
-    assert QQ(0, -1).q == 1
+    assert QQ(0).numerator == 0
+    assert QQ(0).denominator == 1
+    assert QQ(0, 1).numerator == 0
+    assert QQ(0, 1).denominator == 1
+    assert QQ(0, -1).numerator == 0
+    assert QQ(0, -1).denominator == 1
 
-    assert QQ(1).p == 1
-    assert QQ(1).q == 1
-    assert QQ(1, 1).p == 1
-    assert QQ(1, 1).q == 1
-    assert QQ(-1, -1).p == 1
-    assert QQ(-1, -1).q == 1
+    assert QQ(1).numerator == 1
+    assert QQ(1).denominator == 1
+    assert QQ(1, 1).numerator == 1
+    assert QQ(1, 1).denominator == 1
+    assert QQ(-1, -1).numerator == 1
+    assert QQ(-1, -1).denominator == 1
 
-    assert QQ(-1).p == -1
-    assert QQ(-1).q == 1
-    assert QQ(-1, 1).p == -1
-    assert QQ(-1, 1).q == 1
-    assert QQ( 1, -1).p == -1
-    assert QQ( 1, -1).q == 1
+    assert QQ(-1).numerator == -1
+    assert QQ(-1).denominator == 1
+    assert QQ(-1, 1).numerator == -1
+    assert QQ(-1, 1).denominator == 1
+    assert QQ( 1, -1).numerator == -1
+    assert QQ( 1, -1).denominator == 1
 
-    assert QQ(1, 2).p == 1
-    assert QQ(1, 2).q == 2
-    assert QQ(3, 4).p == 3
-    assert QQ(3, 4).q == 4
+    assert QQ(1, 2).numerator == 1
+    assert QQ(1, 2).denominator == 2
+    assert QQ(3, 4).numerator == 3
+    assert QQ(3, 4).denominator == 4
 
-    assert QQ(2, 2).p == 1
-    assert QQ(2, 2).q == 1
-    assert QQ(2, 4).p == 1
-    assert QQ(2, 4).q == 2
+    assert QQ(2, 2).numerator == 1
+    assert QQ(2, 2).denominator == 1
+    assert QQ(2, 4).numerator == 1
+    assert QQ(2, 4).denominator == 2
 
 def test_PythonRational__hash__():
     assert hash(QQ(0)) == hash(0)

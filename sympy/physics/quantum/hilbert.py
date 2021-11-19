@@ -5,12 +5,15 @@ Authors:
 * Matt Curry
 """
 
-from sympy import Basic, Interval, oo, sympify
-from sympy.printing.pretty.stringpict import prettyForm
+from functools import reduce
 
+from sympy.core.basic import Basic
+from sympy.core.numbers import oo
+from sympy.core.sympify import sympify
+from sympy.sets.sets import Interval
+from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.qexpr import QuantumError
 
-from sympy.core.compatibility import reduce
 
 __all__ = [
     'HilbertSpaceError',
@@ -185,7 +188,7 @@ class ComplexSpace(HilbertSpace):
 class L2(HilbertSpace):
     """The Hilbert space of square integrable functions on an interval.
 
-    An L2 object takes in a single sympy Interval argument which represents
+    An L2 object takes in a single SymPy Interval argument which represents
     the interval its functions (vectors) are defined on.
 
     Examples

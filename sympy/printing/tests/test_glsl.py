@@ -1,14 +1,15 @@
 from sympy.core import (pi, symbols, Rational, Integer, GoldenRatio, EulerGamma,
                         Catalan, Lambda, Dummy, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.functions import Piecewise, sin, cos, Abs, exp, ceiling, sqrt
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.printing.glsl import GLSLPrinter
 from sympy.printing.str import StrPrinter
 from sympy.utilities.lambdify import implemented_function
 from sympy.tensor import IndexedBase, Idx
 from sympy.matrices import Matrix, MatrixSymbol
 from sympy.core import Tuple
-from sympy import glsl_code
+from sympy.printing.glsl import glsl_code
+import textwrap
 
 x, y, z = symbols('x,y,z')
 
@@ -22,6 +23,8 @@ def test_print_without_operators():
     assert glsl_code(x*(y+z),use_operators = False) == 'mul(x, add(y, z))'
     assert glsl_code(x*(y+z),use_operators = False) == 'mul(x, add(y, z))'
     assert glsl_code(x*(y+z**y**0.5),use_operators = False) == 'mul(x, add(y, pow(z, sqrt(y))))'
+    assert glsl_code(-x-y, use_operators=False, zero='zero()') == 'sub(zero(), add(x, y))'
+    assert glsl_code(-x-y, use_operators=False) == 'sub(0.0, add(x, y))'
 
 def test_glsl_code_sqrt():
     assert glsl_code(sqrt(x)) == "sqrt(x)"
@@ -151,8 +154,6 @@ def test_glsl_code_settings():
 
 
 def test_glsl_code_Indexed():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o = symbols('n m o', integer=True)
     i, j, k = Idx('i', n), Idx('j', m), Idx('k', o)
     p = GLSLPrinter()
@@ -215,8 +216,6 @@ def test_dummy_loops():
 
 
 def test_glsl_code_loops_add():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m = symbols('n m', integer=True)
     A = IndexedBase('A')
     x = IndexedBase('x')
@@ -240,8 +239,6 @@ def test_glsl_code_loops_add():
 
 
 def test_glsl_code_loops_multiple_contractions():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -270,8 +267,6 @@ def test_glsl_code_loops_multiple_contractions():
 
 
 def test_glsl_code_loops_addfactor():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -301,8 +296,6 @@ def test_glsl_code_loops_addfactor():
 
 
 def test_glsl_code_loops_multiple_terms():
-    from sympy.tensor import IndexedBase, Idx
-    from sympy import symbols
     n, m, o, p = symbols('n m o p', integer=True)
     a = IndexedBase('a')
     b = IndexedBase('b')
@@ -398,6 +391,101 @@ def test_Matrices_1x7():
     A = Matrix([1,2,3,4,5,6,7])
     assert gl(A) == 'float[7](1, 2, 3, 4, 5, 6, 7)'
     assert gl(A.transpose()) == 'float[7](1, 2, 3, 4, 5, 6, 7)'
+
+def test_Matrices_1x7_array_type_int():
+    gl = glsl_code
+    A = Matrix([1,2,3,4,5,6,7])
+    assert gl(A, array_type='int') == 'int[7](1, 2, 3, 4, 5, 6, 7)'
+
+def test_Tuple_array_type_custom():
+    gl = glsl_code
+    A = symbols('a b c')
+    assert gl(A, array_type='AbcType', glsl_types=False) == 'AbcType[3](a, b, c)'
+
+def test_Matrices_1x7_spread_assign_to_symbols():
+    gl = glsl_code
+    A = Matrix([1,2,3,4,5,6,7])
+    assign_to = symbols('x.a x.b x.c x.d x.e x.f x.g')
+    assert gl(A, assign_to=assign_to) == textwrap.dedent('''\
+        x.a = 1;
+        x.b = 2;
+        x.c = 3;
+        x.d = 4;
+        x.e = 5;
+        x.f = 6;
+        x.g = 7;'''
+    )
+
+def test_spread_assign_to_nested_symbols():
+    gl = glsl_code
+    expr = ((1,2,3), (1,2,3))
+    assign_to = (symbols('a b c'), symbols('x y z'))
+    assert gl(expr, assign_to=assign_to) == textwrap.dedent('''\
+        a = 1;
+        b = 2;
+        c = 3;
+        x = 1;
+        y = 2;
+        z = 3;'''
+    )
+
+def test_spread_assign_to_deeply_nested_symbols():
+    gl = glsl_code
+    a, b, c, x, y, z = symbols('a b c x y z')
+    expr = (((1,2),3), ((1,2),3))
+    assign_to = (((a, b), c), ((x, y), z))
+    assert gl(expr, assign_to=assign_to) == textwrap.dedent('''\
+        a = 1;
+        b = 2;
+        c = 3;
+        x = 1;
+        y = 2;
+        z = 3;'''
+    )
+
+def test_matrix_of_tuples_spread_assign_to_symbols():
+    gl = glsl_code
+    with warns_deprecated_sympy():
+        expr = Matrix([[(1,2),(3,4)],[(5,6),(7,8)]])
+    assign_to = (symbols('a b'), symbols('c d'), symbols('e f'), symbols('g h'))
+    assert gl(expr, assign_to) == textwrap.dedent('''\
+        a = 1;
+        b = 2;
+        c = 3;
+        d = 4;
+        e = 5;
+        f = 6;
+        g = 7;
+        h = 8;'''
+    )
+
+def test_cannot_assign_to_cause_mismatched_length():
+    expr = (1, 2)
+    assign_to = symbols('x y z')
+    raises(ValueError, lambda: glsl_code(expr, assign_to))
+
+def test_matrix_4x4_assign():
+    gl = glsl_code
+    expr = MatrixSymbol('A',4,4) * MatrixSymbol('B',4,4) + MatrixSymbol('C',4,4)
+    assign_to = MatrixSymbol('X',4,4)
+    assert gl(expr, assign_to=assign_to) == textwrap.dedent('''\
+        X[0][0] = A[0][0]*B[0][0] + A[0][1]*B[1][0] + A[0][2]*B[2][0] + A[0][3]*B[3][0] + C[0][0];
+        X[0][1] = A[0][0]*B[0][1] + A[0][1]*B[1][1] + A[0][2]*B[2][1] + A[0][3]*B[3][1] + C[0][1];
+        X[0][2] = A[0][0]*B[0][2] + A[0][1]*B[1][2] + A[0][2]*B[2][2] + A[0][3]*B[3][2] + C[0][2];
+        X[0][3] = A[0][0]*B[0][3] + A[0][1]*B[1][3] + A[0][2]*B[2][3] + A[0][3]*B[3][3] + C[0][3];
+        X[1][0] = A[1][0]*B[0][0] + A[1][1]*B[1][0] + A[1][2]*B[2][0] + A[1][3]*B[3][0] + C[1][0];
+        X[1][1] = A[1][0]*B[0][1] + A[1][1]*B[1][1] + A[1][2]*B[2][1] + A[1][3]*B[3][1] + C[1][1];
+        X[1][2] = A[1][0]*B[0][2] + A[1][1]*B[1][2] + A[1][2]*B[2][2] + A[1][3]*B[3][2] + C[1][2];
+        X[1][3] = A[1][0]*B[0][3] + A[1][1]*B[1][3] + A[1][2]*B[2][3] + A[1][3]*B[3][3] + C[1][3];
+        X[2][0] = A[2][0]*B[0][0] + A[2][1]*B[1][0] + A[2][2]*B[2][0] + A[2][3]*B[3][0] + C[2][0];
+        X[2][1] = A[2][0]*B[0][1] + A[2][1]*B[1][1] + A[2][2]*B[2][1] + A[2][3]*B[3][1] + C[2][1];
+        X[2][2] = A[2][0]*B[0][2] + A[2][1]*B[1][2] + A[2][2]*B[2][2] + A[2][3]*B[3][2] + C[2][2];
+        X[2][3] = A[2][0]*B[0][3] + A[2][1]*B[1][3] + A[2][2]*B[2][3] + A[2][3]*B[3][3] + C[2][3];
+        X[3][0] = A[3][0]*B[0][0] + A[3][1]*B[1][0] + A[3][2]*B[2][0] + A[3][3]*B[3][0] + C[3][0];
+        X[3][1] = A[3][0]*B[0][1] + A[3][1]*B[1][1] + A[3][2]*B[2][1] + A[3][3]*B[3][1] + C[3][1];
+        X[3][2] = A[3][0]*B[0][2] + A[3][1]*B[1][2] + A[3][2]*B[2][2] + A[3][3]*B[3][2] + C[3][2];
+        X[3][3] = A[3][0]*B[0][3] + A[3][1]*B[1][3] + A[3][2]*B[2][3] + A[3][3]*B[3][3] + C[3][3];'''
+    )
 
 def test_1xN_vecs():
     gl = glsl_code
