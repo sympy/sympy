@@ -1,7 +1,8 @@
 r"""
-Solve the "Subfield Problem" and allied problems, for algebraic number fields.
+Functions in ``polys.numberfields.subfield`` solve the "Subfield Problem" and
+allied problems, for algebraic number fields.
 
-Following Cohen (see [Cohen93] Section 4.5), we can define the problem as
+Following Cohen (see [Cohen93]_ Section 4.5), we can define the main problem as
 follows:
 
 * **Subfield Problem:**
@@ -29,8 +30,6 @@ well:
   Given two algebraic numbers $\alpha$,
   $\beta$, decide whether $\alpha \in \mathbb{Q}(\beta)$, and if so write
   $\alpha = f(\beta)$ for some $f(x) \in \mathbb{Q}[x]$.
-
-This module provides solutions to all these problems.
 """
 
 from sympy.core.add import Add
