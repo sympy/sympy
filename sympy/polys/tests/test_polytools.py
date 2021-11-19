@@ -3088,18 +3088,12 @@ def test_cancel():
     assert cancel((x**2 - 1)/(x + 1) + p3) == (x - 1) + p4
 
     # issue 4077
-    m = Matrix([
-        [ 0, -1,  0,  0,  0,  0, -1,  0,  0],
-        [-1,  x, -1,  0,  0,  0,  0, -1,  0],
-        [ 0, -1,  x,  0,  0,  0,  0,  0, -1],
-        [ 0,  0,  0,  x, -1,  0, -1,  0,  0],
-        [ 0,  0,  0, -1,  x, -1,  0, -1,  0],
-        [ 0,  0,  0,  0, -1,  0,  0,  0, -1],
-        [-1,  0,  0, -1,  0,  0,  x, -1,  0],
-        [ 0, -1,  0,  0, -1,  0, -1,  0, -1],
-        [ 0,  0, -1,  0,  0, -1,  0, -1,  x]])
-    eq = m.row_join(eye(9)).rref()[0][0, 11]
-    assert cancel(eq) == -1/(2*x)  # this should return very quickly (< 1 sec)
+    n = -1 + 1/x
+    z = n/x/(-n)**2 - 1/n/x
+    # z is zero so it's derivative should be zero
+    zd = z.diff()
+    assert zd != 0  # if it is, use the explicit expression
+    assert cancel(zd) == 0
 
     # issue 9363
     M = MatrixSymbol('M', 5, 5)
