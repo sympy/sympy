@@ -1,5 +1,7 @@
 from sympy.series import approximants
-from sympy import lucas, fibonacci, symbols, binomial
+from sympy.core.symbol import symbols
+from sympy.functions.combinatorial.factorials import binomial
+from sympy.functions.combinatorial.numbers import (fibonacci, lucas)
 
 
 def test_approximants():

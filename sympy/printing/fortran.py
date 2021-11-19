@@ -1,7 +1,7 @@
 """
 Fortran code printer
 
-The FCodePrinter converts single sympy expressions into single Fortran
+The FCodePrinter converts single SymPy expressions into single Fortran
 expressions, using the functions defined in the Fortran 77 standard where
 possible. Some useful pointers to Fortran can be found on wikipedia:
 
@@ -17,7 +17,7 @@ SymPy is case sensitive. So, fcode adds underscores to variable names when
 it is necessary to make them different for Fortran.
 """
 
-from typing import Dict, Any
+from typing import Dict as tDict, Any
 
 from collections import defaultdict
 from itertools import chain
@@ -66,7 +66,7 @@ known_functions = {
 
 
 class FCodePrinter(CodePrinter):
-    """A printer to convert sympy expressions to strings of Fortran code"""
+    """A printer to convert SymPy expressions to strings of Fortran code"""
     printmethod = "_fcode"
     language = "Fortran"
 
@@ -105,7 +105,7 @@ class FCodePrinter(CodePrinter):
         'contract': True,
         'standard': 77,
         'name_mangling' : True,
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
 
     _operators = {
         'and': '.and.',
@@ -202,7 +202,7 @@ class FCodePrinter(CodePrinter):
         return open_lines, close_lines
 
     def _print_sign(self, expr):
-        from sympy import Abs
+        from sympy.functions.elementary.complexes import Abs
         arg, = expr.args
         if arg.is_integer:
             new_expr = merge(0, isign(1, arg), Eq(arg, 0))
@@ -602,7 +602,7 @@ class FCodePrinter(CodePrinter):
         tabwidth = 3
         new_code = []
         for i, line in enumerate(code):
-            if line == '' or line == '\n':
+            if line in ('', '\n'):
                 new_code.append(line)
                 continue
             level -= decrease[i]

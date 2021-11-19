@@ -1,4 +1,11 @@
-from sympy import (Symbol, exp, log, sqrt, O, oo, sin, cos, PoleError)
+from sympy.core.function import PoleError
+from sympy.core.numbers import oo
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.series.order import O
 from sympy.abc import x
 
 from sympy.testing.pytest import raises
@@ -22,6 +29,12 @@ def test_simple():
 
     e = exp(sin(1/x + exp(-exp(x)))) - exp(sin(1/x))
     assert e.aseries(x, n=4) == (-1/(2*x**3) + 1/x + 1 + O(x**(-4), (x, oo)))*exp(-exp(x))
+
+    e3 = lambda x:exp(exp(exp(x)))
+    e = e3(x)/e3(x - 1/e3(x))
+    assert e.aseries(x, n=3) == 1 + exp(x + exp(x))*exp(-exp(exp(x)))\
+            + ((-exp(x)/2 - S.Half)*exp(x + exp(x))\
+            + exp(2*x + 2*exp(x))/2)*exp(-2*exp(exp(x))) + O(exp(-3*exp(exp(x))), (x, oo))
 
     e = exp(exp(x)) * (exp(sin(1/x + 1/exp(exp(x)))) - exp(sin(1/x)))
     assert e.aseries(x, n=4) == -1/(2*x**3) + 1/x + 1 + O(x**(-4), (x, oo))

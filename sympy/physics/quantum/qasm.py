@@ -1,6 +1,6 @@
 """
 
-qasm.py - Functions to parse a set of qasm commands into a Sympy Circuit.
+qasm.py - Functions to parse a set of qasm commands into a SymPy Circuit.
 
 Examples taken from Chuang's page: http://www.media.mit.edu/quanta/qasm2circ/
 

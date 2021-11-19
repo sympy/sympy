@@ -62,7 +62,7 @@ def parse_latex(sympy):
     antlr4 = import_module('antlr4', warn_not_installed=True)
 
     if None in [antlr4, MathErrorListener]:
-        raise ImportError("LaTeX parsing requires the antlr4 python package,"
+        raise ImportError("LaTeX parsing requires the antlr4 Python package,"
                           " provided by pip (antlr4-python2-runtime or"
                           " antlr4-python3-runtime) or"
                           " conda (antlr-python-runtime)")

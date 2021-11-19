@@ -14,14 +14,14 @@ from sympy.utilities import numbered_symbols, take, public
 
 @public
 def symmetrize(F, *gens, **args):
-    """
+    r"""
     Rewrite a polynomial in terms of elementary symmetric polynomials.
 
     A symmetric polynomial is a multivariate polynomial that remains invariant
-    under any variable permutation, i.e., if ``f = f(x_1, x_2, ..., x_n)``,
-    then ``f = f(x_{i_1}, x_{i_2}, ..., x_{i_n})``, where
-    ``(i_1, i_2, ..., i_n)`` is a permutation of ``(1, 2, ..., n)`` (an
-    element of the group ``S_n``).
+    under any variable permutation, i.e., if `f = f(x_1, x_2, \dots, x_n)`,
+    then `f = f(x_{i_1}, x_{i_2}, \dots, x_{i_n})`, where
+    `(i_1, i_2, \dots, i_n)` is a permutation of `(1, 2, \dots, n)` (an
+    element of the group `S_n`).
 
     Returns a tuple of symmetric polynomials ``(f1, f2, ..., fn)`` such that
     ``f = f1 + f2 + ... + fn``.
@@ -360,7 +360,7 @@ def viete(f, roots=None, *gens, **args):
 
     if n < 1:
         raise ValueError(
-            "can't derive Viete's formulas for a constant polynomial")
+            "Cannot derive Viete's formulas for a constant polynomial")
 
     if roots is None:
         roots = numbered_symbols('r', start=1)

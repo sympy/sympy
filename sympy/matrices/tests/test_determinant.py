@@ -1,6 +1,9 @@
 import random
 from sympy.core.numbers import I
-from sympy import symbols, Symbol, Rational, sqrt, Poly
+from sympy.core.numbers import Rational
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.polys.polytools import Poly
 from sympy.matrices import Matrix, eye, ones
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises
@@ -9,14 +12,27 @@ from sympy.functions.combinatorial.factorials import factorial, subfactorial
 
 
 def test_determinant():
+    M = Matrix()
 
-    for M in [Matrix(), Matrix([[1]])]:
-        assert (
-            M.det() ==
-            M._eval_det_bareiss() ==
-            M._eval_det_berkowitz() ==
-            M._eval_det_lu() ==
-            1)
+    assert M.det() == 1
+    # Evaluating these directly because they are never reached via M.det()
+    assert M._eval_det_bareiss() == 1
+    assert M._eval_det_berkowitz() == 1
+    assert M._eval_det_lu() == 1
+
+    M = Matrix([ [0] ])
+
+    assert M.det() == 0
+    assert M._eval_det_bareiss() == 0
+    assert M._eval_det_berkowitz() == 0
+    assert M._eval_det_lu() == 0
+
+    M = Matrix([ [5] ])
+
+    assert M.det() == 5
+    assert M._eval_det_bareiss() == 5
+    assert M._eval_det_berkowitz() == 5
+    assert M._eval_det_lu() == 5
 
     M = Matrix(( (-3,  2),
                  ( 8, -5) ))
@@ -395,4 +411,4 @@ def test_charpoly():
     assert n.charpoly() == Poly(x**4 - 167*x**3 + 8811*x**2 - 173457*x + 1080540, x)
 
     n = Matrix(3, 3, [x, 0, 0, a, y, 0, b, c, z])
-    assert n.charpoly() == Poly(t**3 - (x+y+z)*t**2 + t*(x*y+y*z+x*z) - x*y*z , t)
+    assert n.charpoly() == Poly(t**3 - (x+y+z)*t**2 + t*(x*y+y*z+x*z) - x*y*z, t)

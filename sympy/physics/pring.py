@@ -1,4 +1,7 @@
-from sympy import sqrt, exp, S, pi, I
+from sympy.core.numbers import (I, pi)
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.quantum.constants import hbar
 
 

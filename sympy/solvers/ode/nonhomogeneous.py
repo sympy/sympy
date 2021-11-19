@@ -10,15 +10,16 @@ instances in other classes for using them it is better to keep it here as separa
 """
 from collections import defaultdict
 from sympy.core import Add, S
-from sympy.core.function import  diff, expand, _mexpand, expand_mul
+from sympy.core.function import diff, expand, _mexpand, expand_mul
 from sympy.core.relational import Eq
+from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy, Wild
 from sympy.functions import exp, cos, cosh, im, log, re, sin, sinh, \
     atan2, conjugate
 from sympy.integrals import Integral
 from sympy.polys import (Poly, RootOf, rootof, roots)
-from sympy.simplify import collect, simplify, separatevars, powsimp, trigsimp
-from sympy.utilities import numbered_symbols, default_sort_key
+from sympy.simplify import collect, simplify, separatevars, powsimp, trigsimp # type: ignore
+from sympy.utilities import numbered_symbols
 from sympy.solvers.solvers import solve
 from sympy.matrices import wronskian
 from .subscheck import sub_func_doit
@@ -162,7 +163,7 @@ def _solve_variation_of_parameters(eq, func, roots, homogen_sol, order, match_ob
         " solutions to the homogeneous equation necessary to apply " +
         "variation of parameters to " +
         str(eq) + " (number of terms != order)")
-    negoneterm = (-1)**(order)
+    negoneterm = S.NegativeOne**(order)
     for i in roots:
         psol += negoneterm*Integral(wronskian([sol for sol in roots if sol != i], x)*r[-1]/wr, x)*i/r[order]
         negoneterm *= -1
@@ -188,7 +189,7 @@ def _get_const_characteristic_eq_sols(r, func, order):
     chareq, symbol = S.Zero, Dummy('x')
 
     for i in r.keys():
-        if type(i) == str or i < 0:
+        if isinstance(i, str) or i < 0:
             pass
         else:
             chareq += r[i]*symbol**i

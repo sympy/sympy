@@ -21,7 +21,7 @@ from sympy.matrices import (Matrix, diag, eye,
 from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import flatten
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
-from sympy import Array
+from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray as Array
 
 from sympy.abc import x, y, z
 
@@ -182,7 +182,7 @@ def test_get_diag_blocks2():
 
 def test_shape():
     m = ShapingOnlyMatrix(1, 2, [0, 0])
-    m.shape == (1, 2)
+    assert m.shape == (1, 2)
 
 
 def test_reshape():
@@ -789,6 +789,15 @@ def test_multiplication():
         assert c[0, 1] == 2*5
         assert c[1, 0] == 3*5
         assert c[1, 1] == 0
+
+    # https://github.com/sympy/sympy/issues/22353
+    A = Matrix(ones(3, 1))
+    _h = -Rational(1, 2)
+    B = Matrix([_h, _h, _h])
+    assert A.multiply_elementwise(B) == Matrix([
+        [_h],
+        [_h],
+        [_h]])
 
 
 def test_matmul():

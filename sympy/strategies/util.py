@@ -1,4 +1,4 @@
-from sympy import Basic
+from sympy.core.basic import Basic
 
 new = Basic.__new__
 

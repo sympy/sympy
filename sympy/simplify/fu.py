@@ -1,16 +1,17 @@
 from collections import defaultdict
 
 from sympy.core.add import Add
-from sympy.core.basic import S
-from sympy.core.compatibility import ordered
 from sympy.core.expr import Expr
 from sympy.core.exprtools import Factors, gcd_terms, factor_terms
 from sympy.core.function import expand_mul
 from sympy.core.mul import Mul
 from sympy.core.numbers import pi, I
 from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
+from sympy.core.traversal import bottom_up
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.hyperbolic import (
     cosh, sinh, tanh, coth, sech, csch, HyperbolicFunction)
@@ -18,7 +19,6 @@ from sympy.functions.elementary.trigonometric import (
     cos, sin, tan, cot, sec, csc, sqrt, TrigonometricFunction)
 from sympy.ntheory.factor_ import perfect_power
 from sympy.polys.polytools import factor
-from sympy.simplify.simplify import bottom_up
 from sympy.strategies.tree import greedy
 from sympy.strategies.core import identity, debug
 
@@ -952,8 +952,6 @@ def TR12i(rv):
     >>> TR12i(eq.expand())
     -3*tan(a + b)*tan(a + c)/(2*(tan(a) + tan(b) - 1))
     """
-    from sympy import factor
-
     def f(rv):
         if not (rv.is_Add or rv.is_Mul or rv.is_Pow):
             return rv
@@ -1501,14 +1499,14 @@ def TRpower(rv):
                 rv = 2**(1-n)*Add(*[binomial(n, k)*cos((n - 2*k)*x)
                     for k in range((n + 1)/2)])
             elif n.is_odd and isinstance(b, sin):
-                rv = 2**(1-n)*(-1)**((n-1)/2)*Add(*[binomial(n, k)*
-                    (-1)**k*sin((n - 2*k)*x) for k in range((n + 1)/2)])
+                rv = 2**(1-n)*S.NegativeOne**((n-1)/2)*Add(*[binomial(n, k)*
+                    S.NegativeOne**k*sin((n - 2*k)*x) for k in range((n + 1)/2)])
             elif n.is_even and isinstance(b, cos):
                 rv = 2**(1-n)*Add(*[binomial(n, k)*cos((n - 2*k)*x)
                     for k in range(n/2)])
             elif n.is_even and isinstance(b, sin):
-                rv = 2**(1-n)*(-1)**(n/2)*Add(*[binomial(n, k)*
-                    (-1)**k*cos((n - 2*k)*x) for k in range(n/2)])
+                rv = 2**(1-n)*S.NegativeOne**(n/2)*Add(*[binomial(n, k)*
+                    S.NegativeOne**k*cos((n - 2*k)*x) for k in range(n/2)])
             if n.is_even:
                 rv += 2**(-n)*binomial(n, n/2)
         return rv

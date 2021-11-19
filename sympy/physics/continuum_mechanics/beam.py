@@ -4,20 +4,30 @@ singularity functions in mechanics.
 """
 
 from sympy.core import S, Symbol, diff, symbols
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.function import (Derivative, Function)
+from sympy.core.mul import Mul
+from sympy.core.relational import Eq
+from sympy.core.sympify import sympify
 from sympy.solvers import linsolve
+from sympy.solvers.ode.ode import dsolve
+from sympy.solvers.solvers import solve
 from sympy.printing import sstr
 from sympy.functions import SingularityFunction, Piecewise, factorial
-from sympy.core import sympify
 from sympy.integrals import integrate
 from sympy.series import limit
 from sympy.plotting import plot, PlotGrid
 from sympy.geometry.entity import GeometryEntity
 from sympy.external import import_module
-from sympy import lambdify, Add
-from sympy.core.compatibility import iterable
+from sympy.sets.sets import Interval
+from sympy.utilities.lambdify import lambdify
 from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.iterables import iterable
 
 numpy = import_module('numpy', import_kwargs={'fromlist':['arange']})
+
+
 
 class Beam:
     """
@@ -27,8 +37,8 @@ class Beam:
     and their material.
 
     .. note::
-       While solving a beam bending problem, a user should choose its
-       own sign convention and should stick to it. The results will
+       A consistent sign convention must be used while solving a beam
+       bending problem; the results will
        automatically follow the chosen sign convention. However, the
        chosen sign convention must respect the rule that, on the positive
        side of beam's axis (in respect to current section), a loading force
@@ -72,8 +82,8 @@ class Beam:
     (7*x - SingularityFunction(x, 0, 3)/2 + SingularityFunction(x, 2, 4)/4 - 3*SingularityFunction(x, 4, 3)/2)/(E*I)
     >>> b.deflection().rewrite(Piecewise)
     (7*x - Piecewise((x**3, x > 0), (0, True))/2
-         - 3*Piecewise(((x - 4)**3, x - 4 > 0), (0, True))/2
-         + Piecewise(((x - 2)**4, x - 2 > 0), (0, True))/4)/(E*I)
+         - 3*Piecewise(((x - 4)**3, x > 4), (0, True))/2
+         + Piecewise(((x - 2)**4, x > 2), (0, True))/4)/(E*I)
     """
 
     def __init__(self, length, elastic_modulus, second_moment, area=Symbol('A'), variable=Symbol('x'), base_char='C'):
@@ -659,8 +669,8 @@ class Beam:
         >>> from sympy import symbols
         >>> E, I = symbols('E, I')
         >>> l=symbols('l', positive=True)
-        >>> b1=Beam(l ,E,I)
-        >>> b2=Beam(2*l ,E,I)
+        >>> b1=Beam(l, E, I)
+        >>> b2=Beam(2*l, E, I)
         >>> b=b1.join(b2,"hinge")
         >>> M1, A1, M2, A2, P = symbols('M1 A1 M2 A2 P')
         >>> b.apply_load(A1,0,-1)
@@ -877,7 +887,6 @@ class Beam:
     def max_shear_force(self):
         """Returns maximum Shear force and its coordinate
         in the Beam object."""
-        from sympy import solve, Mul, Interval
         shear_curve = self.shear_force()
         x = self.variable
 
@@ -962,7 +971,6 @@ class Beam:
     def max_bmoment(self):
         """Returns maximum Shear force and its coordinate
         in the Beam object."""
-        from sympy import solve, Mul, Interval
         bending_curve = self.bending_moment()
         x = self.variable
 
@@ -1041,7 +1049,6 @@ class Beam:
         >>> b.point_cflexure()
         [10/3]
         """
-        from sympy import solve
 
         # To restrict the range within length of the Beam
         moment_curve = Piecewise((float("nan"), self.variable<=0),
@@ -1256,7 +1263,6 @@ class Beam:
         Returns point of max deflection and its corresponding deflection value
         in a Beam object.
         """
-        from sympy import solve
 
         # To restrict the range within length of the Beam
         slope_curve = Piecewise((float("nan"), self.variable<=0),
@@ -1989,7 +1995,7 @@ class Beam:
         x = self.variable
         l = self.length
 
-        _ , moment = self._solve_for_ild_equations()
+        _, moment = self._solve_for_ild_equations()
 
         moment_curve1 = value*(distance-x) - limit(moment, x, distance)
         moment_curve2= (limit(moment, x, l)-limit(moment, x, distance))-value*(l-x)
@@ -2128,7 +2134,6 @@ class Beam:
         x = self.variable
 
         # checking whether length is an expression in terms of any Symbol.
-        from sympy import Expr
         if isinstance(self.length, Expr):
             l = list(self.length.atoms(Symbol))
             # assigning every Symbol a default value of 10
@@ -2268,7 +2273,7 @@ class Beam:
                 elif(plus == 1):
                     fill = {'x': y, 'y1': y1(y), 'y2': y2, 'color':'darkkhaki'}
                 else:
-                    fill = {'x': y, 'y1': y1_(y), 'y2': y2 , 'color':'darkkhaki'}
+                    fill = {'x': y, 'y1': y1_(y), 'y2': y2, 'color':'darkkhaki'}
         return annotations, markers, load_eq, load_eq1, fill
 
 
@@ -2304,8 +2309,8 @@ class Beam3D(Beam):
     with unequal values of Second moment along different axes.
 
     .. note::
-       While solving a beam bending problem, a user should choose its
-       own sign convention and should stick to it. The results will
+       A consistent sign convention must be used while solving a beam
+       bending problem; the results will
        automatically follow the chosen sign convention.
        This class assumes that any kind of distributed load/moment is
        applied through out the span of a beam.
@@ -2352,7 +2357,8 @@ class Beam3D(Beam):
 
     """
 
-    def __init__(self, length, elastic_modulus, shear_modulus , second_moment, area, variable=Symbol('x')):
+    def __init__(self, length, elastic_modulus, shear_modulus, second_moment,
+                 area, variable=Symbol('x')):
         """Initializes the class.
 
         Parameters
@@ -2667,7 +2673,6 @@ class Beam3D(Beam):
         return self.bending_moment()[0]
 
     def solve_slope_deflection(self):
-        from sympy import dsolve, Function, Derivative, Eq
         x = self.variable
         l = self.length
         E = self.elastic_modulus
@@ -3346,7 +3351,6 @@ class Beam3D(Beam):
 
         elif dir == 'z':
             dir_num = 2
-        from sympy import solve
 
         if not self.shear_force()[dir_num]:
             return (0,0)
@@ -3422,8 +3426,6 @@ class Beam3D(Beam):
 
         elif dir == 'z':
             dir_num = 2
-
-        from sympy import solve
 
         if not self.bending_moment()[dir_num]:
             return (0,0)
@@ -3501,7 +3503,6 @@ class Beam3D(Beam):
 
         elif dir == 'z':
             dir_num = 2
-        from sympy import solve
 
         if not self.deflection()[dir_num]:
             return (0,0)

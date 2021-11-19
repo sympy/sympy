@@ -107,3 +107,48 @@ This builds a local version of the documentation in ``doc/_build/html`` in your
 web browser.
 
 Open ``_build/html/index.html``.
+
+PDF Documentation
+^^^^^^^^^^^^^^^^^
+
+.. note::
+
+   It is not necessary for the majority of contributors to build the PDF
+   documentation. The PDF documentation will be built automatically on GitHub
+   Actions on pull requests. PDF documentation for each release is included on
+   the `GitHub releases page <https://github.com/sympy/sympy/releases>`_.
+
+   If the PDF documentation build fails on GitHub Actions, 99% of the time
+   this is due to bad LaTeX math formatting. Double check that any math you
+   have added is formatted correctly, and make sure you use \`\`double
+   backticks\`\` for code (\`single backticks\` will render as math, not
+   code). See the resources in the :ref:`style guide
+   <style_guide_latex_recommendations>` for tips on formatting LaTeX math.
+
+Building the PDF documentation requires a few extra dependencies. First you
+will need to have a TeXLive installation that includes XeLaTeX and latexmk.
+You will also need to have Chrome or Chromium installed, as it is used to
+convert some SVG files for the PDF.
+
+On Ubuntu, you can install these with::
+
+    apt-get install chromium-browser texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra latexmk lmodern
+
+On Mac, you can use::
+
+    brew install texlive
+
+and also make sure the `Google Chrome browser
+<https://www.google.com/chrome/>`_ is installed in ``/Applications``.
+
+To build the pdf docs run::
+
+    cd doc
+
+    make latexpdf
+
+The resulting PDF will be in::
+
+    _build/latex/sympy-<version>.pdf
+
+where ``<version>`` is the SymPy version (e.g., ``sympy-1.10.dev.pdf``).
