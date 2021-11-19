@@ -120,6 +120,7 @@ from functools import reduce
 
 from sympy.core import Basic, S, Mul, PoleError
 from sympy.core.cache import cacheit
+from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import ilcm, I, oo
 from sympy.core.symbol import Dummy, Wild
 from sympy.core.traversal import bottom_up
@@ -496,7 +497,8 @@ def calculate_series(e, x, logx=None):
         # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p). No current simplification
         # methods reduce this to 0 while not expanding polynomials.
         t = bottom_up(t, lambda w: getattr(w, 'normal', lambda: w)())
-        t = cancel(t, expand=False).factor()
+        t = factor_terms(cancel(t, expand=False))
+        # XXX try t = bottom_up(t, lambda x: cancel(x, expand=False)) instead of the two calls
 
         if t.has(exp) and t.has(log):
             t = powdenest(t)
