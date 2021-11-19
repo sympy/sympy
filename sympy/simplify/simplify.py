@@ -440,9 +440,21 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     Parameters
     ==========
 
-    expr: the expression that needs to be simplified
-    ratio: ratio constraint for (result length)/(input length)
-    measure: the total number of operations in the expression
+    expr : expression to simplify
+        The expression that needs to be simplified.
+    ratio : float
+        Ratio constraint for (result length)/(input length).
+    measure : Function
+        Funcion used to evaluate the complexity of an expression. The function shoudl be such that if ``a``
+        is more complex than ``b``, then ``measure(a) > measure(b)``.
+    rational : True | False | None
+        If True, Floats will be recast as Rationals before simplificaiton. If ``rational=None``, Floats will be recast
+        as Rationals, but the result will be recast as Floats. If ``rational=False``, nothing will be done to the Floats.
+    inverse : True | False
+        If ``inverse=True``, it will be assumed that a composition of inverse functions, such as ``sin`` and ``asin``
+        can be cancelled in any order.
+    doit : True | False
+        If ``doit=True``, simplify will call ``doit()`` before returning.
 
     Explanation
     ===========

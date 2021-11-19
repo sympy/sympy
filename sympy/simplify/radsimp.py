@@ -1023,9 +1023,21 @@ def rad_rationalize(num, den):
 
 
 def fraction(expr, exact=False):
-    """Returns a pair with expression's numerator and denominator.
-       If the given expression is not a fraction then this function
-       will return the tuple (expr, 1).
+
+    """
+    Returns a pair with expression's numerator and denominator.
+    If the given expression is not a fraction then this function will return the tuple (expr, 1).
+
+    Parameters
+    ==========
+    expr : expression in consideration
+        The expression that needs to be returned as a fraction.
+    exact : True | False
+        If ``exact=True``, a fraction will be returned without making any attempts at simplification.
+
+    Explanation
+    ===========
+
 
        This function will not make any attempt to simplify nested
        fractions or to do any term rewriting at all.

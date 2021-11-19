@@ -6,9 +6,14 @@ from sympy.polys.monomials import Monomial, monomial_div
 from sympy.polys.polyerrors import DomainError, PolificationFailed
 from sympy.utilities.misc import debug
 
+
 def ratsimp(expr):
     """
     Put an expression over a common denominator, cancel and reduce.
+
+    Parameters
+    ==========
+        expr: the expression to evaluate
 
     Examples
     ========
@@ -23,9 +28,9 @@ def ratsimp(expr):
     try:
         Q, r = reduced(f, [g], field=True, expand=False)
     except ComputationFailed:
-        return f/g
+        return f / g
 
-    return Add(*Q) + cancel(r/g)
+    return Add(*Q) + cancel(r / g)
 
 
 def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
@@ -92,7 +97,7 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
             return [1]
         S = []
         for mi in combinations_with_replacement(range(len(opt.gens)), n):
-            m = [0]*len(opt.gens)
+            m = [0] * len(opt.gens)
             for i in mi:
                 m[i] += 1
             if all(monomial_div(m, lmg) is None for lmg in
@@ -199,7 +204,7 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
     denom = reduced(denom, G, opt.gens, order=opt.order)[1]
 
     if polynomial:
-        return (num/denom).cancel()
+        return (num / denom).cancel()
 
     c, d, allsol = _ratsimpmodprime(
         Poly(num, opt.gens, domain=opt.domain), Poly(denom, opt.gens, domain=opt.domain), [])
@@ -218,4 +223,4 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
     else:
         r = Rational(1)
 
-    return (c*r.q)/(d*r.p)
+    return (c * r.q) / (d * r.p)
