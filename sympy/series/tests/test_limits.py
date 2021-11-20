@@ -85,8 +85,16 @@ def test_basic1():
     assert limit(1/sqrt(x), x, 0, dir='-') == (-oo)*I
     assert limit(x**2, x, 0, dir='-') == 0
     assert limit(sqrt(x), x, 0, dir='-') == 0
-    assert limit(x**-pi, x, 0, dir='-') == -oo*(-1)**(1 - pi)
+    assert limit(x**-pi, x, 0, dir='-') == oo/(-1)**pi
     assert limit((1 + cos(x))**oo, x, 0) == Limit((cos(x) + 1)**oo, x, 0)
+
+    # test pull request 22491
+    assert limit(1/asin(x), x, 0, dir = '+') == oo
+    assert limit(1/asin(x), x, 0, dir = '-') == -oo
+    assert limit(1/sinh(x), x, 0, dir = '+') == oo
+    assert limit(1/sinh(x), x, 0, dir = '-') == -oo
+    assert limit(log(1/x) + 1/sin(x), x, 0, dir = '+') == oo
+    assert limit(log(1/x) + 1/x, x, 0, dir = '+') == oo
 
 
 def test_basic2():
