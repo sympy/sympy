@@ -20,7 +20,6 @@ EXAMPLES
 >>> assert a == c
 >>> assert a != b  # remote possibility this will fail
 """
-from .sympify import _sympify
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import as_int
 
@@ -72,8 +71,8 @@ def verify_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     >>> tn(sin(x)**2 + cos(x)**2, 1, x)
     True
     """
-    from sympy.core.symbol import Symbol
     from sympy.core.numbers import comp
+    from .sympify import _sympify
     f = _sympify(f)
     g = _sympify(g)
     if z is not None:
