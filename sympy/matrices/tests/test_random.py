@@ -22,7 +22,7 @@ phi, psi = symbols('phi psi')
 rand.seed(1)
 
 
-class Domain(list):
+class Scalars(list):
     rnd = random.Random(1)
 
     def sample(self, k):
@@ -380,10 +380,10 @@ def test_invertible():
         m = invertible(d)
         assert _is_eye(m.inv() * m, TEST_PRECISION)
 
-        m = invertible(d, domain=(0.5, 2.), units=(0.1, 1.))
+        m = invertible(d, scalars=(0.5, 2.), units=(0.1, 1.))
         assert _is_eye(m.inv() * m, TEST_PRECISION)
 
-        m = invertible(d, domain=(1, phi))
+        m = invertible(d, scalars=(1, phi))
         assert _is_eye(m.inv() * m)
 
 
@@ -460,7 +460,7 @@ def test_orthogonal():
         assert _is_eye(m.T * m, TEST_PRECISION)
         assert abs(m.evalf().det()) - 1 < TEST_PRECISION
 
-        m = orthogonal(d, spec=_random._rotation_domain).evalf()
+        m = orthogonal(d, spec=_random._rotation_scalars).evalf()
         assert _is_eye(m.T * m, TEST_PRECISION)
         assert abs(m.evalf().det()) - 1 < TEST_PRECISION
 
@@ -500,12 +500,12 @@ def test_normal():
             repr(simplify(m.T * m - m * m.T))
 
         z = 1 + 3 * I
-        c = normal(d, spec=(1, 2 * I, 3), domain=(z/abs(z),), length=d)
+        c = normal(d, spec=(1, 2 * I, 3), scalars=(z/abs(z),), length=d)
         assert _is_zeros(c.H * c - c * c.H), \
             repr(simplify(m.H * m - m * m.H))
 
         z = complex(3, 1)
-        c = normal(d, spec, domain=(z/abs(z),), length=d)
+        c = normal(d, spec, scalars=(z/abs(z),), length=d)
         assert _is_zeros(c.H * c - c * c.H, TEST_EPSILON), \
             repr(simplify(m.H * m - m * m.H))
 
@@ -518,14 +518,14 @@ def test_symmetric():
         m = symmetric(d,)
         assert m.T == m
 
-        m = symmetric(d, domain=(4,))
+        m = symmetric(d, scalars=(4,))
         assert m.T == m
 
 
 def test_hermite():
     z = complex(1, 2)
     for d in TEST_DIMS:
-        m = hermite(d, domain=(z,))
+        m = hermite(d, scalars=(z,))
         assert m.H == m
 
 
@@ -548,19 +548,19 @@ def test_raise():
 def test_sample():
     seed = 11
     rnd = random.Random(seed)
-    domain = tuple(range(10, 25))
+    scalars = tuple(range(10, 25))
     for d in TEST_DIMS:
-        m = diagonal_normal(d, spec=Domain(domain))
+        m = diagonal_normal(d, spec=Scalars(scalars))
         for i in range(d):
-            assert m[i, i] in domain
+            assert m[i, i] in scalars
 
-        m = diagonal_normal(d, spec=domain, seed=rnd)
+        m = diagonal_normal(d, spec=scalars, seed=rnd)
         for i in range(d):
-            assert m[i, i] in domain
+            assert m[i, i] in scalars
 
-        m = diagonal_normal(d, spec=domain, seed=seed)
+        m = diagonal_normal(d, spec=scalars, seed=seed)
         for i in range(d):
-            assert m[i, i] in domain
+            assert m[i, i] in scalars
 
 
 def test_seed():
@@ -577,11 +577,11 @@ def test_seed():
 
     _isometry_spec_ = isometry_normal, orthogonal, unitary
 
-    _elementary_domain_ = triangular, invertible, singular, \
+    _elementary_scalars_ = triangular, invertible, singular, \
           idempotent, nilpotent, diagonalizable, trigonalizable, \
           symmetric, hermite, square,
 
-    _isometry_domain_ = orthogonal, unitary, normal
+    _isometry_scalars_ = orthogonal, unitary, normal
 
     seed = 101
     rnd = random.Random(seed)
@@ -628,7 +628,7 @@ def test_seed():
         for matrix in _spec_:
             # 4. spec as random
             first, second = list(), list()
-            spec = Domain(range(100))
+            spec = Scalars(range(100))
             for s in seeds:
                 spec.rnd.seed(s)
                 first.append(matrix(d, spec=spec, seed=spec.rnd))
@@ -639,9 +639,9 @@ def test_seed():
                 assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
 
         for matrix in _isometry_spec_:
-            # 4. domain/units as random
+            # 4. scalars/units as random
             first, second = list(), list()
-            spec = Domain((sqrt(2)/2, 0))
+            spec = Scalars((sqrt(2)/2, 0))
             for s in seeds:
                 spec.rnd.seed(s)
                 first.append(matrix(d, spec=spec, seed=spec.rnd))
@@ -651,29 +651,29 @@ def test_seed():
             for a, b in zip(first, second):
                 assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
 
-        for matrix in _elementary_domain_:
-            # 4. domain/units as random
+        for matrix in _elementary_scalars_:
+            # 4. scalars/units as random
             first, second = list(), list()
-            domain = Domain(range(10))
-            units = Domain(range(-5, 5))
+            scalars = Scalars(range(10))
+            units = Scalars(range(-5, 5))
             for s in seeds:
-                domain.rnd.seed(s)
-                first.append(matrix(d, domain=domain, units=units, seed=domain.rnd))
+                scalars.rnd.seed(s)
+                first.append(matrix(d, scalars=scalars, units=units, seed=scalars.rnd))
             for s in seeds:
-                domain.rnd.seed(s)
-                second.append(matrix(d, domain=domain, units=units, seed=domain.rnd))
+                scalars.rnd.seed(s)
+                second.append(matrix(d, scalars=scalars, units=units, seed=scalars.rnd))
             for a, b in zip(first, second):
                 assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
 
-        for matrix in _isometry_domain_:
-            # 4. domain/units as random
+        for matrix in _isometry_scalars_:
+            # 4. scalars/units as random
             first, second = list(), list()
-            domain = Domain((sqrt(2)/2, 0))
+            scalars = Scalars((sqrt(2)/2, 0))
             for s in seeds:
-                domain.rnd.seed(s)
-                first.append(matrix(d, domain=domain, seed=domain.rnd))
+                scalars.rnd.seed(s)
+                first.append(matrix(d, scalars=scalars, seed=scalars.rnd))
             for s in seeds:
-                domain.rnd.seed(s)
-                second.append(matrix(d, domain=domain, seed=domain.rnd))
+                scalars.rnd.seed(s)
+                second.append(matrix(d, scalars=scalars, seed=scalars.rnd))
             for a, b in zip(first, second):
                 assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
