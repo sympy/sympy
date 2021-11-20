@@ -20,11 +20,11 @@ This is because here the expansion is not true in general, so SymPy does not per
 
 Here's a proof which shows:
 
-	>>>pprint(exp(a + b).expand())
+	>>> pprint(exp(a + b).expand())
 		a  b
 	          ℯ ⋅ℯ 		
 
-	>>>pprint(exp(a)*exp(b))
+	>>> pprint(exp(a)*exp(b))
 		a  b
 	          ℯ ⋅ℯ 
 	
@@ -33,11 +33,11 @@ i.e exp(a+b) = exp(a)*exp(b)
 However proof doesn't work for general a,b.
 Since if a,b = non-commutative,
 
-	>>>pprint(exp(a + b).expand() )
-	  a + b
-	 ℯ 
+	>>> pprint(exp(a + b).expand() )
+		  a + b
+		 ℯ 
 
-	>>>pprint(exp(a)*exp(b))
+	>>> pprint(exp(a)*exp(b))
 	  a  b
 	 ℯ ⋅ℯ
 
@@ -71,13 +71,13 @@ https://www.physicsforums.com/threads/proof-of-commutative-property-in-exponenti
 
 Similar behaviour can be seen when non commutative symbols are used with powsimp
 
-	>>>pprint(powsimp(x**a*x**b))
-	  a + b
-	 x
+	>>> pprint(powsimp(x**a*x**b))
+	   a + b
+	  x
 
-	>>>pprint(powsimp(x**c*x**d))
-	  c  d
-	 x ⋅x
+	>>> pprint(powsimp(x**c*x**d))
+	   c  d
+	  x ⋅x
 
 In some cases it might be impossible to determine the behaviour of a function if non commutative symbols are taken.
 
