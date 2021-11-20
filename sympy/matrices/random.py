@@ -264,12 +264,12 @@ def super_elementary_matrix(dim,
 
 
 def complex_to_real(mat=None):
-    r""" returns real version of a complex matrix
+    r""" returns real version 2n x 2n of a complex matrix n x n
 
     Explanation
     ===========
     Any complex vector space $V$ with basis $(b_1, \dots, b_n)$
-    can be seen as a real vector space $V^{prime}$ with basis
+    can be seen as a real vector space $V^{\prime}$ with basis
     $(b_1, b_1 \ i, \dots, b_n, b_n \ i)$
     of dimension $2 \ n$.
 
@@ -1472,24 +1472,29 @@ def square(dim,
            units=_elementary_units,
            length=None,
            seed=None):
-    r"""a square matrix n x n
+    r"""a square matrix n x n with a given rank
 
     Explanation
     ===========
-    A square matrix represents an endomorphism
-    in n dimensional vector space. It can be constructed as
+    A full rank square matrix has **rank=dim**.
+    Such a matrix is constructed as
     product of :func:`elementary` matrices.
 
-    It is constructed from an :func:`invertible` matrix $\mathbf{S}$
-    of which $r$ basis columns are randomly choosen
-    and the $n-r$ columes are build as linear combinations
+    If **rank** is less than **dim**,
+    it is constructed from a full rank matrix $S$
+    by choosing randomly $r$ basis columns
+    and build $n-r$ columes as a linear combinations
     of the basis colums.
+
+    Such a square matrix $S$ represents an endomorphism
+    $$f_S:V \rightarrow V, x \mapsto S\cdot x$$
+    of a $n$ dimensional vector space $V$.
 
     Parameters
     ==========
     dim : integer
         dimension of matrix
-    rank : integer (optional with default dim)
+    rank : integer (optional with default **dim**)
         rank of matrix
     scalars : tuple or list of symbols (optional)
         default values for random choosen scalar of
@@ -1543,9 +1548,8 @@ def invertible(dim,
 
     Explanation
     ===========
-    An invertible matrix represents an isomorphism
-    in n dimensional vector space. It can be constructed as
-    product of :func:`elementary` matrices.
+
+    Same as :func:`square` but with full rank, i.e. **rank=dim**.
 
     Parameters
     ==========
@@ -1601,19 +1605,12 @@ def singular(dim,
              units=_elementary_units,
              length=None,
              seed=None):
-    r"""a singular square matrix n x n of a given rank.
+    r"""a singular square matrix n x n with a given rank.
 
     Explanation
     ===========
-    A singular matrix is non-invertible and has determinant of zero.
 
-    A matrix of rank $r$ has $r$ linear independend rows
-    (i.e. a row space of dimension $r$).
-
-    It is constructed from an :func:`invertible` matrix $\mathbf{S}$
-    of which $r$ basis columns are randomly choosen
-    and the $n-r$ columes are build as linear combinations
-    of the basis colums.
+    Same as :func:`square` but with rank defaulting to $dim-1$.
 
     Examples
     ========
@@ -1633,7 +1630,7 @@ def singular(dim,
     ==========
     dim : integer
         dimension of matrix
-    rank : integer (optional with default dim-1)
+    rank : integer (optional with default **dim**-1)
         rank of matrix
     scalars : tuple or list of symbols (optional)
         default values for random choosen scalars of

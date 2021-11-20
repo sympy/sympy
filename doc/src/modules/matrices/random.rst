@@ -32,7 +32,10 @@ Generators on different types of matrices are presented below.
    but do not generate proper pre-defined distribution.
    These matrices can be useful for testing algorithms
 
-There are three different types of matrix generators:
+Generating Random Matrices
+--------------------------
+
+There are three different ways of matrix generation.
 
    - the *base matrices* which form the atomic building block of the later
    - the *compound matrices* which are simply products of base matrices of given types
@@ -307,8 +310,62 @@ drawing a list of **k** random items (*without putting back*) via ``sample(k)``.
 
 
 Random Matrix Generation Functions Reference
---------------------------------------------
+============================================
 
-.. automodule:: sympy.matrices.random
-   :members:
-   :member-order: bysource
+Base Matrices
+-------------
+
+.. autofunction:: sympy.matrices.random.projection
+.. autofunction:: sympy.matrices.random.jordan
+.. autofunction:: sympy.matrices.random.transposition
+.. autofunction:: sympy.matrices.random.permutation
+.. autofunction:: sympy.matrices.random.elementary
+.. autofunction:: sympy.matrices.random.rotation
+.. autofunction:: sympy.matrices.random.reflection
+
+Matrices in Normal Form
+-----------------------
+
+.. autofunction:: sympy.matrices.random.diagonal_normal
+.. autofunction:: sympy.matrices.random.jordan_normal
+.. autofunction:: sympy.matrices.random.isometry_normal
+
+
+Compound Matrices
+-----------------
+
+.. autofunction:: sympy.matrices.random.triangular
+.. autofunction:: sympy.matrices.random.square
+.. autofunction:: sympy.matrices.random.invertible
+.. autofunction:: sympy.matrices.random.singular
+
+
+Conjugate Matrices
+------------------
+
+.. autofunction:: sympy.matrices.random.idempotent
+.. autofunction:: sympy.matrices.random.nilpotent
+.. autofunction:: sympy.matrices.random.diagonalizable
+.. autofunction:: sympy.matrices.random.trigonalizable
+
+
+Conjugate Matrices by Isometries
+--------------------------------
+
+.. autofunction:: sympy.matrices.random.orthogonal
+.. autofunction:: sympy.matrices.random.unitary
+.. autofunction:: sympy.matrices.random.normal
+
+
+Symmetric or Complex Adjoined Matrices
+--------------------------------------
+
+.. autofunction:: sympy.matrices.random.symmetric
+.. autofunction:: sympy.matrices.random.hermite
+
+
+Useful Functions
+----------------
+
+.. autofunction:: sympy.matrices.random.complex_to_real
+.. autofunction:: sympy.matrices.random.regular_to_singular
