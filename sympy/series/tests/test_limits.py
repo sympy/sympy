@@ -88,6 +88,14 @@ def test_basic1():
     assert limit(x**-pi, x, 0, dir='-') == oo/(-1)**pi
     assert limit((1 + cos(x))**oo, x, 0) == Limit((cos(x) + 1)**oo, x, 0)
 
+    # test pull request 22491
+    assert limit(1/asin(x), x, 0, dir = '+') == oo
+    assert limit(1/asin(x), x, 0, dir = '-') == -oo
+    assert limit(1/sinh(x), x, 0, dir = '+') == oo
+    assert limit(1/sinh(x), x, 0, dir = '-') == -oo
+    assert limit(log(1/x) + 1/sin(x), x, 0, dir = '+') == oo
+    assert limit(log(1/x) + 1/x, x, 0, dir = '+') == oo
+
 
 def test_basic2():
     assert limit(x**x, x, 0, dir="+") == 1
@@ -306,15 +314,6 @@ def test_series_AccumBounds():
     # https://github.com/sympy/sympy/issues/12312
     e = 2**(-x)*(sin(x) + 1)**x
     assert limit(e, x, oo) == AccumBounds(0, oo)
-
-
-def test_pull_request_22491():
-    assert limit(1/asin(x), x, 0, dir = '+') == oo
-    assert limit(1/asin(x), x, 0, dir = '-') == -oo
-    assert limit(1/sinh(x), x, 0, dir = '+') == oo
-    assert limit(1/sinh(x), x, 0, dir = '-') == -oo
-    assert limit(log(1/x) + 1/sin(x), x, 0, dir = '+') == oo
-    assert limit(log(1/x) + 1/x, x, 0, dir = '+') == oo
 
 
 @XFAIL
