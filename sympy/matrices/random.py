@@ -1698,7 +1698,7 @@ def idempotent(dim,
     ==========
     dim : integer
         dimension of matrix
-    rank : integer (optional with default ``dim``)
+    rank : integer (optional with default **dim**)
         see :func:`projection`
     scalars : tuple or list of symbols (optional)
         see :func:`invertible`
@@ -1770,7 +1770,7 @@ def nilpotent(dim,
     ==========
     dim : integer
         dimension of matrix
-    rank : integer (optional with default dim)
+    rank : integer (optional with default **dim**
         rank of the matrix
     scalars : tuple or list of symbols (optional)
         see :func:`invertible`
