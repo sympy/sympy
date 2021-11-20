@@ -20,6 +20,7 @@ EXAMPLES
 >>> assert a == c
 >>> assert a != b  # remote possibility this will fail
 """
+from .sympify import _sympify
 from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import as_int
 
@@ -73,9 +74,12 @@ def verify_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     """
     from sympy.core.symbol import Symbol
     from sympy.core.numbers import comp
-    from sympy.core.containers import Tuple
-    f, g, z = Tuple(f, g, z)
-    z = [z] if isinstance(z, Symbol) else (f.free_symbols | g.free_symbols)
+    f = _sympify(f)
+    g = _sympify(g)
+    if z is not None:
+        z = _sympify(z)
+    else:
+        z = f.free_symbols | g.free_symbols
     reps = list(zip(z, [random_complex_number(a, b, c, d) for _ in z]))
     z1 = f.subs(reps).n()
     z2 = g.subs(reps).n()

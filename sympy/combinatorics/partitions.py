@@ -84,6 +84,7 @@ class Partition(FiniteSet):
         if dups or len(U) < sum(len(arg) for arg in args):
             raise ValueError("Partition contained duplicate elements.")
 
+        args = (_sympify(arg) for arg in args)
         obj = FiniteSet.__new__(cls, *args)
         obj.members = tuple(U)
         obj.size = len(U)
@@ -193,7 +194,7 @@ class Partition(FiniteSet):
         >>> a <= b
         True
         """
-        return self.sort_key() <= sympify(other).sort_key()
+        return bool(self.sort_key() <= sympify(other).sort_key())
 
     def __lt__(self, other):
         """
@@ -210,7 +211,7 @@ class Partition(FiniteSet):
         >>> a < b
         True
         """
-        return self.sort_key() < sympify(other).sort_key()
+        return bool(self.sort_key() < sympify(other).sort_key())
 
     @property
     def rank(self):
@@ -392,6 +393,9 @@ class IntegerPartition(Basic):
         if any(i < 1 for i in partition):
             raise ValueError("All integer summands must be greater than one")
 
+        integer = _sympify(integer)
+        partition = _sympify(partition)
+
         obj = Basic.__new__(cls, integer, partition)
         obj.partition = list(partition)
         obj.integer = integer
@@ -543,7 +547,7 @@ class IntegerPartition(Basic):
         >>> a == b
         False
         """
-        return list(reversed(self.partition)) < list(reversed(other.partition))
+        return bool(list(reversed(self.partition)) < list(reversed(other.partition)))
 
     def __le__(self, other):
         """Return True if self is less than other when the partition
@@ -557,7 +561,7 @@ class IntegerPartition(Basic):
         >>> a <= a
         True
         """
-        return list(reversed(self.partition)) <= list(reversed(other.partition))
+        return bool(list(reversed(self.partition)) <= list(reversed(other.partition)))
 
     def as_ferrers(self, char='#'):
         """

@@ -1,4 +1,5 @@
 from sympy.core import Basic
+from sympy.core.sympify import _sympify
 
 import random
 
@@ -85,6 +86,7 @@ class GrayCode(Basic):
                 'Gray code dimension must be a positive integer, not %i' % n)
         n = int(n)
         args = (n,) + args
+        args = (_sympify(arg) for arg in args)
         obj = Basic.__new__(cls, *args)
         if 'start' in kw_args:
             obj._current = kw_args["start"]
@@ -190,7 +192,7 @@ class GrayCode(Basic):
             'not be greater than %i' % (len(graycode_bin), bits))
         self._current = int(current, 2)
         graycode_int = int(''.join(graycode_bin), 2)
-        for i in range(graycode_int, 1 << bits):
+        for i in range(graycode_int, 1 << int(bits)):
             if self._skip:
                 self._skip = False
             else:

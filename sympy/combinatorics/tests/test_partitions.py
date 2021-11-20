@@ -35,10 +35,10 @@ def test_partition():
     assert l == [c, a, b]
 
     assert (a == b) is False
-    assert a <= b
+    assert (a <= b) is True
     assert (a > b) is False
     assert a != b
-    assert a < b
+    assert (a < b) is True
 
     assert (a + 2).partition == [[1, 2], [3, 4]]
     assert (b - 1).partition == [[1, 2, 4], [3]]
@@ -67,7 +67,7 @@ def test_integer_partition():
     assert a.integer == d.integer
     assert a.conjugate == [3, 2, 2, 1]
     assert (a == b) is False
-    assert a <= b
+    assert (a <= b) is True
     assert (a > b) is False
     assert a != b
 
