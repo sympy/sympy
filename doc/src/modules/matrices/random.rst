@@ -15,7 +15,8 @@ In order to setup distinct mathematical problems, like
 
 specific types of matrices are required.
 
-A purely random generation of matrix entries, as :func:`randMatrix``
+A purely random generation of matrix entries, as
+:py:func:`randMatrix <sympy.matrices.dense.randMatrix>`
 does not guarantee any specific shape or property of the matrix.
 So, those matrices have to be created carefully using
 classical classification theorems of linear algebra.
