@@ -164,7 +164,7 @@ class Piecewise(Function):
         If there is a single arg with a True condition, its
         corresponding expression will be returned.
 
-        EXAMPLES
+        Examples
         ========
 
         >>> from sympy import Piecewise

@@ -2832,7 +2832,7 @@ def mexpand(expr, recursive=False, *, numer=None, denom=None, frac=None):
     ``numer`` or ``denom`` to True, respectively. To keep numerator
     and denominator over each other and expand each, make `frac`` True.
 
-    EXAMPLES
+    Examples
     ========
 
     >>> from sympy.core.function import mexpand
@@ -2887,20 +2887,30 @@ def mexpand_cse(e, _final_denom=True):
     """return a recursively expanded expression using
     multinomial and product expansions, but introduce
     any repeated subexpressions 1 at a time while doing so.
-    Unlike `mexpand`, the results here will always be
-    expressed as a rational expression (but common factors
-    will not necessarily be automatically be cancelled).
 
-    EXAMPLES
+    Examples
     ========
 
     >>> from sympy.core.function import mexpand_cse, mexpand
     >>> from sympy.abc import x
     >>> eq = 1 + (x + 1)**2/(1 - (x + 1)**2)
+
+    Besides expanding incrementally, ``mexpand_cse`` will always
+    attempt to return the input as a rational expression:
+
     >>> mexpand_cse(eq)
     1/(-x**2 - 2*x)
+
+    By contrast, ``mexpand`` does not do so: if the expression is
+    not already expressed as a fraction, it will not be returned as
+    one:
+
     >>> mexpand(eq)
     x**2/(-x**2 - 2*x) + 2*x/(-x**2 - 2*x) + 1 + 1/(-x**2 - 2*x)
+
+    See Also
+    ========
+    mexpand
     """
     from sympy.simplify.cse_main import cse
     r, e = cse(e, list=False)

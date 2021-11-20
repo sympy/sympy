@@ -1226,7 +1226,7 @@ transformations = '\n'.join('%s: %s' % (i, func_name(f)) for i, f in _transforma
 class _T():
     """class to retrieve transformations from a given slice
 
-    EXAMPLES
+    Examples
     ========
 
     >>> from sympy.parsing.sympy_parser import T, standard_transformations

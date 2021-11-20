@@ -9,7 +9,7 @@ There is intentionally no Random to import from here. If you want
 to control the state of the generator, import `seed` and call it
 with or without an argument to set the state.
 
-EXAMPLES
+Examples
 ========
 
 >>> from sympy.core.random import random, seed

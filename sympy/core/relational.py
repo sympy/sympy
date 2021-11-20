@@ -215,7 +215,7 @@ class Relational(Boolean, EvalfMixin):
     def weak(self):
         """return the non-strict version of the inequality or self
 
-        EXAMPLES
+        Examples
         ========
 
         >>> from sympy.abc import x
@@ -230,7 +230,7 @@ class Relational(Boolean, EvalfMixin):
     def strict(self):
         """return the strict version of the inequality or self
 
-        EXAMPLES
+        Examples
         ========
 
         >>> from sympy.abc import x
