@@ -3,8 +3,9 @@ is_commutative == False:
 
 Passing commutative = False as argument in some operations, may lead to unexpected answers.
 
-For ex:
+	>>> from sympy import *
 
+For ex:
 	>>> x,y = symbols("x y")
 	>>> a,b = symbols("a b",commutative = True)
 	>>> c,d = symbols('c d',commutative = False)
@@ -15,7 +16,7 @@ For ex:
 	  c + d
 	 x
 	
-So x**(a + b) ! = (x**a*x**b) when a and b are non commutative.
+So x**(a + b) != (x**a*x**b) when a and b are non commutative.
 This is because here the expansion is not true in general, so SymPy does not perform it.
 
 Here's a proof which shows:
