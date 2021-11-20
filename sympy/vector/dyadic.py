@@ -225,6 +225,9 @@ class BaseDyadic(Dyadic, AtomicExpr):
         return "({}|{})".format(
             printer._print(self.args[0]), printer._print(self.args[1]))
 
+    @property
+    def func(self):
+        return self.__class__
 
 class DyadicMul(BasisDependentMul, Dyadic):
     """ Products of scalars and BaseDyadics """

@@ -13,6 +13,9 @@ class BaseScalar(AtomicExpr):
     Unicode pretty forms in Python 2 should use the `u` prefix.
 
     """
+    @property
+    def func(self):
+        return self.__class__
 
     def __new__(cls, index, system, pretty_str=None, latex_str=None):
         from sympy.vector.coordsysrect import CoordSys3D

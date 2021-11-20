@@ -399,6 +399,9 @@ class BaseVector(Vector, AtomicExpr):
     def free_symbols(self):
         return {self}
 
+    @property
+    def func(self):
+        return self.__class__
 
 class VectorAdd(BasisDependentAdd, Vector):
     """

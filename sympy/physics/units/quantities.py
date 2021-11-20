@@ -21,6 +21,10 @@ class Quantity(AtomicExpr):
     is_nonzero = True
     _diff_wrt = True
 
+    @property
+    def func(self):
+        return self.__class__
+
     def __new__(cls, name, abbrev=None, dimension=None, scale_factor=None,
                 latex_repr=None, pretty_unicode_repr=None,
                 pretty_ascii_repr=None, mathml_presentation_repr=None,

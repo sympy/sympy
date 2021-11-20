@@ -1943,6 +1943,9 @@ class Atom(Basic):
         raise AttributeError('Atoms have no args. It might be necessary'
         ' to make a check for Atoms in the calling code.')
 
+    @property
+    def func(self):
+        return lambda: self
 
 def _aresame(a, b):
     """Return True if a and b are structurally the same, else False.
