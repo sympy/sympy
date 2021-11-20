@@ -1,6 +1,6 @@
 from sympy.core import Add, Mul, Pow, S
 from sympy.core.basic import Basic
-from sympy.core.expr import AtomicExpr, Expr
+from sympy.core.expr import Expr
 from sympy.core.numbers import _sympifyit, oo, zoo
 from sympy.core.relational import is_le, is_lt, is_ge, is_gt
 from sympy.core.sympify import _sympify
@@ -11,7 +11,7 @@ from sympy.series.order import Order
 from sympy.sets.sets import FiniteSet
 
 
-class AccumulationBounds(AtomicExpr):
+class AccumulationBounds(Expr):
     r"""
     # Note AccumulationBounds has an alias: AccumBounds
 
