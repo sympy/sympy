@@ -19,7 +19,7 @@ sudo apt install\
        	dvipng\
        	librsvg2-bin\
    	imagemagick\
-	inkscape\
+	chromium-browser\
 	libcanberra-gtk-module\
        	docbook2x\
 	graphviz\

@@ -82,7 +82,7 @@ def test_point():
     assert p3.intersection(line) == []
     assert Point.intersection(Point(0, 0, 0), Point(0, 0)) == [Point(0, 0, 0)]
 
-    x_pos = Symbol('x', real=True, positive=True)
+    x_pos = Symbol('x', positive=True)
     p2_1 = Point(x_pos, 0)
     p2_2 = Point(0, x_pos)
     p2_3 = Point(-x_pos, 0)

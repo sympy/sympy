@@ -192,7 +192,7 @@ def test_piecewise_free_symbols():
 
 
 def test_piecewise_integrate1():
-    x, y = symbols('x y', real=True, finite=True)
+    x, y = symbols('x y', real=True)
 
     f = Piecewise(((x - 2)**2, x >= 0), (1, True))
     assert integrate(f, (x, -2, 2)) == Rational(14, 3)
@@ -375,10 +375,10 @@ def test_piecewise_integrate3_inequality_conditions():
 
 @slow
 def test_piecewise_integrate4_symbolic_conditions():
-    a = Symbol('a', real=True, finite=True)
-    b = Symbol('b', real=True, finite=True)
-    x = Symbol('x', real=True, finite=True)
-    y = Symbol('y', real=True, finite=True)
+    a = Symbol('a', real=True)
+    b = Symbol('b', real=True)
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
     p0 = Piecewise((0, Or(x < a, x > b)), (1, True))
     p1 = Piecewise((0, x < a), (0, x > b), (1, True))
     p2 = Piecewise((0, x > b), (0, x < a), (1, True))
@@ -476,7 +476,7 @@ def test_piecewise_simplify():
     # issue 18634
     d = Symbol("d", integer=True)
     n = Symbol("n", integer=True)
-    t = Symbol("t", real=True, positive=True)
+    t = Symbol("t", positive=True)
     expr = Piecewise((-d + 2*n, Eq(1/t, 1)), (t**(1 - 4*n)*t**(4*n - 1)*(-d + 2*n), True))
     assert expr.simplify() == -d + 2*n
 
@@ -931,10 +931,10 @@ def test_issue_5227():
 
 
 def test_issue_10137():
-    a = Symbol('a', real=True, finite=True)
-    b = Symbol('b', real=True, finite=True)
-    x = Symbol('x', real=True, finite=True)
-    y = Symbol('y', real=True, finite=True)
+    a = Symbol('a', real=True)
+    b = Symbol('b', real=True)
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
     p0 = Piecewise((0, Or(x < a, x > b)), (1, True))
     p1 = Piecewise((0, Or(a > x, b < x)), (1, True))
     assert integrate(p0, (x, y, oo)) == integrate(p1, (x, y, oo))

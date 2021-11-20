@@ -634,7 +634,7 @@ def test_exgaussian():
 def test_exponential():
     rate = Symbol('lambda', positive=True)
     X = Exponential('x', rate)
-    p = Symbol("p", positive=True, real=True, finite=True)
+    p = Symbol("p", positive=True, real=True)
 
     assert E(X) == 1/rate
     assert variance(X) == 1/rate**2
@@ -960,14 +960,14 @@ def test_maxwell():
 
 def test_Moyal():
     mu = Symbol('mu',real=False)
-    sigma = Symbol('sigma', real=True, positive=True)
+    sigma = Symbol('sigma', positive=True)
     raises(ValueError, lambda: Moyal('M',mu, sigma))
 
     mu = Symbol('mu', real=True)
-    sigma = Symbol('sigma', real=True, negative=True)
+    sigma = Symbol('sigma', negative=True)
     raises(ValueError, lambda: Moyal('M',mu, sigma))
 
-    sigma = Symbol('sigma', real=True, positive=True)
+    sigma = Symbol('sigma', positive=True)
     M = Moyal('M', mu, sigma)
     assert density(M)(z) == sqrt(2)*exp(-exp((mu - z)/sigma)/2
                         - (-mu + z)/(2*sigma))/(2*sqrt(pi)*sigma)

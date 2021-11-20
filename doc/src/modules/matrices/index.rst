@@ -18,4 +18,5 @@ Contents:
    sparsetools.rst
    immutablematrices.rst
    expressions.rst
+   normalforms.rst
    random.rst

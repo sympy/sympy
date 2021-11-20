@@ -61,7 +61,7 @@ jobs:
         apt:
           packages:
             - graphviz
-            - inkscape
+            - chromium-browser
             - texlive
             - texlive-xetex
             - texlive-fonts-recommended

@@ -425,8 +425,8 @@ def test_frac():
     n_i = Symbol('p_i', integer=True, negative=True)
     np_i = Symbol('np_i', integer=True, nonpositive=True)
     nn_i = Symbol('nn_i', integer=True, nonnegative=True)
-    p_r = Symbol('p_r', real=True, positive=True)
-    n_r = Symbol('n_r', real=True, negative=True)
+    p_r = Symbol('p_r', positive=True)
+    n_r = Symbol('n_r', negative=True)
     np_r = Symbol('np_r', real=True, nonpositive=True)
     nn_r = Symbol('nn_r', real=True, nonnegative=True)
 

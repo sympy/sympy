@@ -968,6 +968,10 @@ def test_nfloat():
         [Float('3.0', precision=53), Float('4.0', precision=53)]])
     assert _aresame(nfloat(A), B)
 
+    # issue 22524
+    f = Function('f')
+    assert not nfloat(f(2)).atoms(Float)
+
 
 def test_issue_7068():
     from sympy.abc import a, b
