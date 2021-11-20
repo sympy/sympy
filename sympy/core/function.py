@@ -2808,7 +2808,8 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     ========
 
     expand_log, expand_mul, expand_multinomial, expand_complex, expand_trig,
-    expand_power_base, expand_power_exp, expand_func, sympy.simplify.hyperexpand.hyperexpand
+    expand_power_base, expand_power_exp, expand_func, mexpand, mexpand_cse,
+    sympy.simplify.hyperexpand.hyperexpand
 
     """
     # don't modify this; modify the Expr.expand method
@@ -2859,7 +2860,7 @@ def mexpand(expr, recursive=False, *, numer=None, denom=None, frac=None):
 
     See Also
     ========
-    mexpand_cse
+    mexpand_cse, expand
     """
     from sympy.simplify.radsimp import fraction
     def do(expr):
@@ -2910,7 +2911,7 @@ def mexpand_cse(e, _final_denom=True):
 
     See Also
     ========
-    mexpand
+    mexpand, expand
     """
     from sympy.simplify.cse_main import cse
     r, e = cse(e, list=False)
