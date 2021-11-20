@@ -1124,7 +1124,7 @@ def test_issue_4199():
 
 
 def test_issue_3940():
-    a, b, c, d = symbols('a:d', positive=True, finite=True)
+    a, b, c, d = symbols('a:d', positive=True)
     assert integrate(exp(-x**2 + I*c*x), x) == \
         -sqrt(pi)*exp(-c**2/4)*erf(I*c/2 - x)/2
     assert integrate(exp(a*x**2 + b*x + c), x) == \
@@ -1632,7 +1632,7 @@ def test_issue_4311_fast():
 
 
 def test_integrate_with_complex_constants():
-    K = Symbol('K', real=True, positive=True)
+    K = Symbol('K', positive=True)
     x = Symbol('x', real=True)
     m = Symbol('m', real=True)
     t = Symbol('t', real=True)
@@ -1673,7 +1673,7 @@ def test_issue_8614():
 
 @slow
 def test_issue_15494():
-    s = symbols('s', real=True, positive=True)
+    s = symbols('s', positive=True)
 
     integrand = (exp(s/2) - 2*exp(1.6*s) + exp(s))*exp(s)
     solution = integrate(integrand, s)

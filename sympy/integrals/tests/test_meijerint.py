@@ -743,7 +743,7 @@ def test_issue_10681():
 
 def test_issue_13536():
     from sympy.core.symbol import Symbol
-    a = Symbol('a', real=True, positive=True)
+    a = Symbol('a', positive=True)
     assert integrate(1/x**2, (x, oo, a)) == -1/a
 
 

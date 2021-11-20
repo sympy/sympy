@@ -603,7 +603,7 @@ def test_issue_8433():
 
 def test_issue_8481():
     k = Symbol('k', integer=True, nonnegative=True)
-    lamda = Symbol('lamda', real=True, positive=True)
+    lamda = Symbol('lamda', positive=True)
     assert limit(lamda**k * exp(-lamda) / factorial(k), k, oo) == 0
 
 
@@ -956,11 +956,11 @@ def test_issue_16708():
 
 
 def test_issue_19453():
-    beta = Symbol("beta", real=True, positive=True)
-    h = Symbol("h", real=True, positive=True)
-    m = Symbol("m", real=True, positive=True)
-    w = Symbol("omega", real=True, positive=True)
-    g = Symbol("g", real=True, positive=True)
+    beta = Symbol("beta", positive=True)
+    h = Symbol("h", positive=True)
+    m = Symbol("m", positive=True)
+    w = Symbol("omega", positive=True)
+    g = Symbol("g", positive=True)
 
     e = exp(1)
     q = 3*h**2*beta*g*e**(0.5*h*beta*w)

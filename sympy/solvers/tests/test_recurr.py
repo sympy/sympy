@@ -216,7 +216,7 @@ def test_issue_6844():
 
 
 def test_issue_18751():
-    r = Symbol('r', real=True, positive=True)
+    r = Symbol('r', positive=True)
     theta = Symbol('theta', real=True)
     f = y(n) - 2 * r * cos(theta) * y(n - 1) + r**2 * y(n - 2)
     assert rsolve(f, y(n)) == \
