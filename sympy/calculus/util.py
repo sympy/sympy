@@ -5,7 +5,7 @@ from sympy.core.function import diff, expand_mul
 from sympy.core.kind import NumberKind
 from sympy.core.mod import Mod
 from sympy.core.relational import Relational
-from sympy.core.symbol import Symbol, Dummy
+from sympy.core.symbol import Symbol, Dummy, _dummy_with_inherited_properties_from_domain
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import Abs, im, re
 from sympy.functions.elementary.exponential import exp, log
