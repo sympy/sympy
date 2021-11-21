@@ -1,4 +1,7 @@
-from sympy import Matrix, symbols, MatrixSymbol, NDimArray
+from sympy.core.symbol import symbols
+from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.tensor.array.ndim_array import NDimArray
 from sympy.matrices.common import MatrixCommon
 from sympy.tensor.array.array_derivatives import ArrayDerivative
 

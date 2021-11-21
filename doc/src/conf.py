@@ -16,6 +16,9 @@ import os
 import subprocess
 from datetime import datetime
 
+# Make sure we import sympy from git
+sys.path.insert(0, os.path.abspath('../..'))
+
 import sympy
 
 # If your extensions are in another directory, add it here.
@@ -31,8 +34,13 @@ extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
               'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive']
 
 redirects = {
-    "install.rst": "getting_started/install.html",
-    "documentation-style-guide.rst": "contributing/documentation-style-guide.html",
+    "install.rst": "guides/getting_started/install.html",
+    "documentation-style-guide.rst": "guides/contributing/documentation-style-guide.html",
+    "gotchas.rst": "explanation/gotchas.html",
+    "special_topics/classification.rst": "explanation/classification.html",
+    "special_topics/finite_diff_derivatives.rst": "explanation/finite_diff_derivatives.html",
+    "special_topics/intro.rst": "explanation/index.html",
+    "special_topics/index.rst": "explanation/index.html",
 }
 
 # Use this to use pngmath instead
@@ -49,17 +57,12 @@ nitpick_ignore = [
 # To stop docstrings inheritance.
 autodoc_inherit_docstrings = False
 
-# MathJax file, which is free to use.  See https://www.mathjax.org/#gettingstarted
-# As explained in the link using latest.js will get the latest version even
-# though it says 2.7.5.
-mathjax_path = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML-full'
-
 # See https://www.sympy.org/sphinx-math-dollar/
-mathjax_config = {
-    'tex2jax': {
-        'inlineMath': [ ["\\(","\\)"] ],
-        'displayMath': [["\\[","\\]"] ],
-    },
+mathjax3_config = {
+  "tex": {
+    "inlineMath": [['\\(', '\\)']],
+    "displayMath": [["\\[", "\\]"]],
+  }
 }
 
 # Add any paths that contain templates here, relative to this directory.

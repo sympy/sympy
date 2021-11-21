@@ -108,7 +108,7 @@ Coset Enumeration: The Todd-Coxeter Algorithm
 
 This section describes the use of coset enumeration techniques in SymPy. The
 algorithm used for coset enumeration procedure is Todd-Coxeter algorithm and
-is developed in Sympy using [Ho05] and [CDHW73]. The reader should consult
+is developed in SymPy using [Ho05] and [CDHW73]. The reader should consult
 [CDHW73] and [Hav91] for a general description of the algorithm.
 
 We have two strategies of coset enumeration *relator-based* and

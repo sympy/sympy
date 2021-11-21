@@ -8,9 +8,15 @@ This module has all the classes and functions related to waves in optics.
 
 __all__ = ['TWave']
 
-from sympy import (sympify, pi, sin, cos, sqrt, Number, Symbol, S,
-    symbols, Derivative, atan2)
 from sympy.core.expr import Expr
+from sympy.core.function import Derivative, Function
+from sympy.core.numbers import (Number, pi, I)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (atan2, cos, sin)
 from sympy.physics.units import speed_of_light, meter, second
 
 
@@ -278,7 +284,7 @@ class TWave(Expr):
                 raise NotImplementedError("Interference of waves with different frequencies"
                     " has not been implemented.")
         else:
-            raise TypeError(type(other).__name__ + " and TWave objects can't be added.")
+            raise TypeError(type(other).__name__ + " and TWave objects cannot be added.")
 
     def __mul__(self, other):
         """
@@ -288,7 +294,7 @@ class TWave(Expr):
         if isinstance(other, Number):
             return TWave(self._amplitude*other, *self.args[1:])
         else:
-            raise TypeError(type(other).__name__ + " and TWave objects can't be multiplied.")
+            raise TypeError(type(other).__name__ + " and TWave objects cannot be multiplied.")
 
     def __sub__(self, other):
         return self.__add__(-1*other)
@@ -314,12 +320,10 @@ class TWave(Expr):
             - self.angular_velocity*Symbol('t') + self._phase)
 
     def _eval_rewrite_as_pde(self, *args, **kwargs):
-        from sympy import Function
         mu, epsilon, x, t = symbols('mu, epsilon, x, t')
         E = Function('E')
         return Derivative(E(x, t), x, 2) + mu*epsilon*Derivative(E(x, t), t, 2)
 
     def _eval_rewrite_as_exp(self, *args, **kwargs):
-        from sympy import exp, I
         return self._amplitude*exp(I*(self.wavenumber*Symbol('x')
             - self.angular_velocity*Symbol('t') + self._phase))

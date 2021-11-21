@@ -1,5 +1,12 @@
-from sympy import (S, symbols, I, atan, log, Poly, sqrt, simplify,
-    integrate, Rational, Dummy)
+from sympy.core.numbers import (I, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import atan
+from sympy.integrals.integrals import integrate
+from sympy.polys.polytools import Poly
+from sympy.simplify.simplify import simplify
 
 from sympy.integrals.rationaltools import ratint, ratint_logpart, log_to_atan
 
@@ -135,7 +142,7 @@ def test_issue_5981():
     assert integrate(1/(u**2 + 1)) == atan(u)
 
 def test_issue_10488():
-    a,b,c,x = symbols('a b c x', real=True, positive=True)
+    a,b,c,x = symbols('a b c x', positive=True)
     assert integrate(x/(a*x+b),x) == x/a - b*log(a*x + b)/a**2
 
 

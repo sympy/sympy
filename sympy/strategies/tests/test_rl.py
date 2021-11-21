@@ -1,7 +1,7 @@
-from sympy import S
+from sympy.core.singleton import S
 from sympy.strategies.rl import (rm_id, glom, flatten, unpack, sort, distribute,
         subs, rebuild)
-from sympy import Basic
+from sympy.core.basic import Basic
 
 def test_rm_id():
     rmzeros = rm_id(lambda x: x == 0)
@@ -10,7 +10,7 @@ def test_rm_id():
     assert rmzeros(Basic(2, 1)) == Basic(2, 1)
 
 def test_glom():
-    from sympy import Add
+    from sympy.core.add import Add
     from sympy.abc import x
     key     = lambda x: x.as_coeff_Mul()[1]
     count   = lambda x: x.as_coeff_Mul()[0]
@@ -42,7 +42,9 @@ def test_distribute():
     assert distribute_t12(T1(1, 2, 3)) == T1(1, 2, 3)
 
 def test_distribute_add_mul():
-    from sympy import Add, Mul, symbols
+    from sympy.core.add import Add
+    from sympy.core.mul import Mul
+    from sympy.core.symbol import symbols
     x, y = symbols('x, y')
     expr = Mul(2, Add(x, y), evaluate=False)
     expected = Add(Mul(2, x), Mul(2, y))
@@ -55,6 +57,6 @@ def test_subs():
     assert rl(3) == 3
 
 def test_rebuild():
-    from sympy import Add
+    from sympy.core.add import Add
     expr = Basic.__new__(Add, S(1), S(2))
     assert rebuild(expr) == 3

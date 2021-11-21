@@ -23,31 +23,30 @@ which case it will just return a Poly in t, or in k(t), in which case it
 will return the fraction (fa, fd). Other variable names probably come
 from the names used in Bronstein's book.
 """
+from types import GeneratorType
+from functools import reduce
 
-from sympy import real_roots, default_sort_key
-from sympy.abc import z
 from sympy.core.function import Lambda
-from sympy.core.numbers import ilcm, oo, I
 from sympy.core.mul import Mul
+from sympy.core.numbers import ilcm, I, oo
 from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol, Dummy
-from sympy.core.compatibility import ordered
-from sympy.integrals.heurisch import _symbols
-
-from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
-    Piecewise, sin, tan)
-
-from sympy.functions import sinh, cosh, tanh, coth
-from sympy.integrals import Integral, integrate
-
-from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError
-
+from sympy.core.sorting import ordered, default_sort_key
+from sympy.core.symbol import Dummy, Symbol
+from sympy.functions.elementary.exponential import log, exp
+from sympy.functions.elementary.hyperbolic import (cosh, coth, sinh,
+    tanh)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (atan, sin, cos,
+    tan, acot, cot, asin, acos)
+from .integrals import integrate, Integral
+from .heurisch import _symbols
+from sympy.polys.polyerrors import DomainError, PolynomialError
+from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
+    reduced)
+from sympy.polys.rootoftools import RootSum
 from sympy.utilities.iterables import numbered_symbols
-
-from types import GeneratorType
-from functools import reduce
 
 
 def integer_powers(exprs):
@@ -93,10 +92,10 @@ def integer_powers(exprs):
 
     terms = {}
     for term in exprs:
-        for j in terms:
-            a = cancel(term/j)
+        for trm, trm_list in terms.items():
+            a = cancel(term/trm)
             if a.is_Rational:
-                terms[j].append((term, a))
+                trm_list.append((term, a))
                 break
         else:
             terms[term] = [(term, S.One)]
@@ -107,11 +106,11 @@ def integer_powers(exprs):
     # multiple of the base term, and the content of the integers is 1.
 
     newterms = {}
-    for term in terms:
+    for term, term_list in terms.items():
         common_denom = reduce(ilcm, [i.as_numer_denom()[1] for _, i in
-            terms[term]])
+            term_list])
         newterm = term/common_denom
-        newmults = [(i, j*common_denom) for i, j in terms[term]]
+        newmults = [(i, j*common_denom) for i, j in term_list]
         newterms[newterm] = newmults
 
     return sorted(iter(newterms.items()), key=lambda item: item[0].sort_key())
@@ -297,6 +296,8 @@ class DifferentialExtension:
         """
         Rewrite exps/pows for better processing.
         """
+        from .prde import is_deriv_k
+
         # Pre-preparsing.
         #################
         # Get all exp arguments, so we can avoid ahead of time doing
@@ -308,8 +309,6 @@ class DifferentialExtension:
         # to a**(Rational*b) before doing anything else.  Note that the
         # _exp_part code can generate terms of this form, so we do need to
         # do this at each pass (or else modify it to not do that).
-
-        from sympy.integrals.prde import is_deriv_k
 
         ratpows = [i for i in self.newf.atoms(Pow).union(self.newf.atoms(exp))
             if (i.base.is_Pow or isinstance(i.base, exp) and i.exp.is_Rational)]
@@ -462,8 +461,7 @@ class DifferentialExtension:
         way around an algebraic extension (e.g., exp(log(x)/2)), it will raise
         NotImplementedError.
         """
-        from sympy.integrals.prde import is_log_deriv_k_t_radical
-
+        from .prde import is_log_deriv_k_t_radical
         new_extension = False
         restart = False
         expargs = [i.exp for i in exps]
@@ -573,8 +571,7 @@ class DifferentialExtension:
         way, so this function does not ever return None or raise
         NotImplementedError.
         """
-        from sympy.integrals.prde import is_deriv_k
-
+        from .prde import is_deriv_k
         new_extension = False
         logargs = [i.args[0] for i in logs]
         for arg in ordered(logargs):
@@ -629,8 +626,8 @@ class DifferentialExtension:
             self.backsubs, self.exts, self.extargs)
 
     # NOTE: this printing doesn't follow the Python's standard
-    # eval(repr(DE)) == DE, where DE is the DifferentialExtension object
-    # , also this printing is supposed to contain all the important
+    # eval(repr(DE)) == DE, where DE is the DifferentialExtension object,
+    # also this printing is supposed to contain all the important
     # attributes of a DifferentialExtension object
     def __repr__(self):
         # no need to have GeneratorType object printed in it
@@ -712,7 +709,7 @@ class DifferentialExtension:
         ===========
 
         This makes the working differential extension larger.  self.level is
-        given relative to the end of the list (-1, -2, etc.), so we don't need
+        given relative to the end of the list (-1, -2, etc.), so we do not need
         do worry about it when building the extension.
         """
         if self.level >= -1:
@@ -733,7 +730,7 @@ class DifferentialExtension:
         ===========
 
         This makes the working differential extension smaller.  self.level is
-        given relative to the end of the list (-1, -2, etc.), so we don't need
+        given relative to the end of the list (-1, -2, etc.), so we do not need
         do worry about it when building the extension.
         """
         if self.level <= -len(self.T):
@@ -820,7 +817,7 @@ def frac_in(f, t, *, cancel=False, **kwargs):
     where fa and fd are either basic expressions or Polys, and f == fa/fd.
     **kwargs are applied to Poly.
     """
-    if type(f) is tuple:
+    if isinstance(f, tuple):
         fa, fd = f
         f = fa.as_expr()/fd.as_expr()
     fa, fd = f.as_expr().as_numer_denom()
@@ -1086,22 +1083,23 @@ def hermite_reduce(a, d, DE):
     gd = Poly(1, DE.t)
 
     dd = derivation(d, DE)
-    dm = gcd(d, dd).as_poly(DE.t)
-    ds, r = d.div(dm)
+    dm = gcd(d.to_field(), dd.to_field()).as_poly(DE.t)
+    ds, _ = d.div(dm)
 
-    while dm.degree(DE.t)>0:
+    while dm.degree(DE.t) > 0:
 
         ddm = derivation(dm, DE)
-        dm2 = gcd(dm, ddm)
-        dms, r = dm.div(dm2)
+        dm2 = gcd(dm.to_field(), ddm.to_field())
+        dms, _ = dm.div(dm2)
         ds_ddm = ds.mul(ddm)
-        ds_ddm_dm, r = ds_ddm.div(dm)
+        ds_ddm_dm, _ = ds_ddm.div(dm)
 
-        b, c = gcdex_diophantine(-ds_ddm_dm.as_poly(DE.t), dms.as_poly(DE.t), a.as_poly(DE.t))
+        b, c = gcdex_diophantine(-ds_ddm_dm.as_poly(DE.t),
+            dms.as_poly(DE.t), a.as_poly(DE.t))
         b, c = b.as_poly(DE.t), c.as_poly(DE.t)
 
         db = derivation(b, DE).as_poly(DE.t)
-        ds_dms, r = ds.div(dms)
+        ds_dms, _ = ds.div(dms)
         a = c.as_poly(DE.t) - db.mul(ds_dms).as_poly(DE.t)
 
         ga = ga*dm + b*gd
@@ -1109,11 +1107,10 @@ def hermite_reduce(a, d, DE):
         ga, gd = ga.cancel(gd, include=True)
         dm = dm2
 
-    d = ds
-    q, r = a.div(d)
+    q, r = a.div(ds)
     ga, gd = ga.cancel(gd, include=True)
 
-    r, d = r.cancel(d, include=True)
+    r, d = r.cancel(ds, include=True)
     rra = q*fs[1] + fp*fs[1] + fs[0]
     rrd = fs[1]
     rra, rrd = rra.cancel(rrd, include=True)
@@ -1158,6 +1155,7 @@ def laurent_series(a, d, F, n, DE):
     if F.degree()==0:
         return 0
     Z = _symbols('z', n)
+    z = Symbol('z')
     Z.insert(0, z)
     delta_a = Poly(0, DE.t)
     delta_d = Poly(1, DE.t)
@@ -1165,8 +1163,8 @@ def laurent_series(a, d, F, n, DE):
     E = d.quo(F**n)
     ha, hd = (a, E*Poly(z**n, DE.t))
     dF = derivation(F,DE)
-    B, G = gcdex_diophantine(E, F, Poly(1,DE.t))
-    C, G = gcdex_diophantine(dF, F, Poly(1,DE.t))
+    B, _ = gcdex_diophantine(E, F, Poly(1,DE.t))
+    C, _ = gcdex_diophantine(dF, F, Poly(1,DE.t))
 
     # initialization
     F_store = F
@@ -1194,7 +1192,7 @@ def laurent_series(a, d, F, n, DE):
         Dhd = Poly(j + 1, DE.t)*hd**2
         ha, hd = Dha, Dhd
 
-        Ff, Fr = F.div(gcd(F, Q))
+        Ff, _ = F.div(gcd(F, Q))
         F_stara, F_stard = frac_in(Ff, DE.t)
         if F_stara.degree(DE.t) - F_stard.degree(DE.t) > 0:
             QBC = Poly(Q, DE.t)*B**(1 + j)*C**(n + j)
@@ -1220,18 +1218,19 @@ def recognize_derivative(a, d, DE, z=None):
     """
     flag =True
     a, d = a.cancel(d, include=True)
-    q, r = a.div(d)
+    _, r = a.div(d)
     Np, Sp = splitfactor_sqf(d, DE, coefficientD=True, z=z)
 
     j = 1
-    for (s, i) in Sp:
-       delta_a, delta_d, H = laurent_series(r, d, s, j, DE)
-       g = gcd(d, H[-1]).as_poly()
-       if g is not d:
-             flag = False
-             break
-       j = j + 1
+    for s, _ in Sp:
+        delta_a, delta_d, H = laurent_series(r, d, s, j, DE)
+        g = gcd(d, H[-1]).as_poly()
+        if g is not d:
+            flag = False
+            break
+        j = j + 1
     return flag
+
 
 def recognize_log_derivative(a, d, DE, z=None):
     """
@@ -1245,16 +1244,16 @@ def recognize_log_derivative(a, d, DE, z=None):
 
     z = z or Dummy('z')
     a, d = a.cancel(d, include=True)
-    p, a = a.div(d)
+    _, a = a.div(d)
 
     pz = Poly(z, DE.t)
     Dd = derivation(d, DE)
     q = a - pz*Dd
-    r, R = d.resultant(q, includePRS=True)
+    r, _ = d.resultant(q, includePRS=True)
     r = Poly(r, z)
     Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z)
 
-    for s, i in Sp:
+    for s, _ in Sp:
         # TODO also consider the complex roots
         # incase we have complex roots it should turn the flag false
         a = real_roots(s.as_poly(z))
@@ -1297,7 +1296,7 @@ def residue_reduce(a, d, DE, z=None, invert=True):
 
     if a.is_zero:
         return ([], True)
-    p, a = a.div(d)
+    _, a = a.div(d)
 
     pz = Poly(z, DE.t)
 
@@ -1388,14 +1387,13 @@ def integrate_primitive_polynomial(p, DE):
     True, or r = p - Dq does not have an elementary integral over k(t) if b is
     False.
     """
-    from sympy.integrals.prde import limited_integrate
-
     Zero = Poly(0, DE.t)
     q = Poly(0, DE.t)
 
     if not p.expr.has(DE.t):
         return (Zero, p, True)
 
+    from .prde import limited_integrate
     while True:
         if not p.expr.has(DE.t):
             return (q, p, True)
@@ -1483,8 +1481,6 @@ def integrate_hyperexponential_polynomial(p, DE, z):
     k[t, 1/t] and a bool b in {True, False} such that p - Dq in k if b is True,
     or p - Dq does not have an elementary integral over k(t) if b is False.
     """
-    from sympy.integrals.rde import rischDE
-
     t1 = DE.t
     dtt = DE.d.exquo(Poly(DE.t, DE.t))
     qa = Poly(0, DE.t)
@@ -1493,6 +1489,8 @@ def integrate_hyperexponential_polynomial(p, DE, z):
 
     if p.is_zero:
         return(qa, qd, b)
+
+    from sympy.integrals.rde import rischDE
 
     with DecrementLevel(DE):
         for i in range(-p.degree(z), p.degree(t1) + 1):

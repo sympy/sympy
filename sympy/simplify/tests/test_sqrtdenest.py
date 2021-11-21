@@ -1,5 +1,10 @@
-from sympy import (
-    sqrt, root, Symbol, sqrtdenest, Integral, cos, Rational, I, Integer, Mul)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Integer, Rational)
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.miscellaneous import (root, sqrt)
+from sympy.functions.elementary.trigonometric import cos
+from sympy.integrals.integrals import Integral
+from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.sqrtdenest import (
     _subsets as subsets, _sqrt_numeric_denest)
 

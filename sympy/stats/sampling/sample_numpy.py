@@ -17,65 +17,65 @@ def do_sample_numpy(dist, size, rand_state):
 
 # CRV:
 
-@do_sample_numpy.register(BetaDistribution)
+@do_sample_numpy.register(BetaDistribution) # type: ignore
 def _(dist: BetaDistribution, size, rand_state):
     return rand_state.beta(a=float(dist.alpha), b=float(dist.beta), size=size)
 
 
-@do_sample_numpy.register(ChiSquaredDistribution)
+@do_sample_numpy.register(ChiSquaredDistribution) # type: ignore
 def _(dist: ChiSquaredDistribution, size, rand_state):
     return rand_state.chisquare(df=float(dist.k), size=size)
 
 
-@do_sample_numpy.register(ExponentialDistribution)
+@do_sample_numpy.register(ExponentialDistribution) # type: ignore
 def _(dist: ExponentialDistribution, size, rand_state):
     return rand_state.exponential(1 / float(dist.rate), size=size)
 
 
-@do_sample_numpy.register(GammaDistribution)
+@do_sample_numpy.register(GammaDistribution) # type: ignore
 def _(dist: GammaDistribution, size, rand_state):
     return rand_state.gamma(float(dist.k), float(dist.theta), size=size)
 
 
-@do_sample_numpy.register(LogNormalDistribution)
+@do_sample_numpy.register(LogNormalDistribution) # type: ignore
 def _(dist: LogNormalDistribution, size, rand_state):
     return rand_state.lognormal(float(dist.mean), float(dist.std), size=size)
 
 
-@do_sample_numpy.register(NormalDistribution)
+@do_sample_numpy.register(NormalDistribution) # type: ignore
 def _(dist: NormalDistribution, size, rand_state):
     return rand_state.normal(float(dist.mean), float(dist.std), size=size)
 
 
-@do_sample_numpy.register(ParetoDistribution)
+@do_sample_numpy.register(ParetoDistribution) # type: ignore
 def _(dist: ParetoDistribution, size, rand_state):
     return (numpy.random.pareto(a=float(dist.alpha), size=size) + 1) * float(dist.xm)
 
 
-@do_sample_numpy.register(UniformDistribution)
+@do_sample_numpy.register(UniformDistribution) # type: ignore
 def _(dist: UniformDistribution, size, rand_state):
     return rand_state.uniform(low=float(dist.left), high=float(dist.right), size=size)
 
 
 # DRV:
 
-@do_sample_numpy.register(GeometricDistribution)
+@do_sample_numpy.register(GeometricDistribution) # type: ignore
 def _(dist: GeometricDistribution, size, rand_state):
     return rand_state.geometric(p=float(dist.p), size=size)
 
 
-@do_sample_numpy.register(PoissonDistribution)
+@do_sample_numpy.register(PoissonDistribution) # type: ignore
 def _(dist: PoissonDistribution, size, rand_state):
     return rand_state.poisson(lam=float(dist.lamda), size=size)
 
 
-@do_sample_numpy.register(ZetaDistribution)
+@do_sample_numpy.register(ZetaDistribution) # type: ignore
 def _(dist: ZetaDistribution, size, rand_state):
     return rand_state.zipf(a=float(dist.s), size=size)
 
 
 # FRV:
 
-@do_sample_numpy.register(BinomialDistribution)
+@do_sample_numpy.register(BinomialDistribution) # type: ignore
 def _(dist: BinomialDistribution, size, rand_state):
     return rand_state.binomial(n=int(dist.n), p=float(dist.p), size=size)

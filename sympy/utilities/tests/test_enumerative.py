@@ -19,7 +19,7 @@ def part_range_filter(partition_iterator, lb, ub):
     Arguments
     =========
 
-    lb, and ub are a range (in the python slice sense) on the lpart
+    lb, and ub are a range (in the Python slice sense) on the lpart
     variable returned from a multiset partition enumeration.  Recall
     that lpart is 0-based (it points to the topmost part on the part
     stack), so if you want to return parts of sizes 2,3,4,5 you would

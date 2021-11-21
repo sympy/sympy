@@ -382,7 +382,7 @@ def _QRsolve(M, b):
 
     This method is slower (approximately by a factor of 2) but
     more stable for floating-point arithmetic than the LUsolve method.
-    However, LUsolve usually uses an exact arithmetic, so you don't need
+    However, LUsolve usually uses an exact arithmetic, so you do not need
     to use QRsolve.
 
     This is mainly for educational purposes and symbolic matrices, for real
@@ -746,7 +746,7 @@ def _solve(M, rhs, method='GJ'):
         for solving the system will be suggested.
     """
 
-    if method == 'GJ' or method == 'GE':
+    if method in ('GJ', 'GE'):
         try:
             soln, param = M.gauss_jordan_solve(rhs)
 

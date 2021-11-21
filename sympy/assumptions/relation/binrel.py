@@ -1,9 +1,10 @@
 """
 General binary relations.
 """
+from typing import Optional
 
-from sympy import S
-from sympy.assumptions import AppliedPredicate, ask, Predicate, Q
+from sympy.core.singleton import S
+from sympy.assumptions import AppliedPredicate, ask, Predicate, Q  # type: ignore
 from sympy.core.kind import BooleanKind
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.logic.boolalg import conjuncts, Not
@@ -73,8 +74,8 @@ class BinaryRelation(Predicate):
     .. [1] https://en.wikipedia.org/wiki/Reflexive_relation
     """
 
-    is_reflexive = None
-    is_symmetric = None
+    is_reflexive: Optional[bool] = None
+    is_symmetric: Optional[bool] = None
 
     def __call__(self, *args):
         if not len(args) == 2:

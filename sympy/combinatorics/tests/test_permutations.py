@@ -473,7 +473,6 @@ def test_printing_cyclic():
 
 
 def test_printing_non_cyclic():
-    from sympy.printing import sstr, srepr
     p1 = Permutation([0, 1, 2, 3, 4, 5])
     assert srepr(p1, perm_cyclic=False) == 'Permutation([], size=6)'
     assert sstr(p1, perm_cyclic=False) == 'Permutation([], size=6)'

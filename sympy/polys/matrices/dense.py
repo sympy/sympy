@@ -37,9 +37,9 @@ the elements of the matrix:
 from operator import mul
 
 from .exceptions import (
-    DDMShapeError,
-    NonInvertibleMatrixError,
-    NonSquareMatrixError,
+    DMShapeError,
+    DMNonInvertibleMatrixError,
+    DMNonSquareMatrixError,
     )
 
 
@@ -197,13 +197,13 @@ def ddm_iinv(ainv, a, K):
         return
     n = len(a[0])
     if m != n:
-        raise NonSquareMatrixError
+        raise DMNonSquareMatrixError
 
     eye = [[K.one if i==j else K.zero for j in range(n)] for i in range(n)]
     Aaug = [row + eyerow for row, eyerow in zip(a, eye)]
     pivots = ddm_irref(Aaug)
     if pivots != list(range(n)):
-        raise NonInvertibleMatrixError('Matrix det == 0; not invertible.')
+        raise DMNonInvertibleMatrixError('Matrix det == 0; not invertible.')
     ainv[:] = [row[n:] for row in Aaug]
 
 
@@ -262,11 +262,11 @@ def ddm_ilu_solve(x, L, U, swaps, b):
 
     m2 = len(b)
     if not m2:
-        raise DDMShapeError("Shape mismtch")
+        raise DMShapeError("Shape mismtch")
     o = len(b[0])
 
     if m != m2:
-        raise DDMShapeError("Shape mismtch")
+        raise DMShapeError("Shape mismtch")
     if m < n:
         raise NotImplementedError("Underdetermined")
 
@@ -288,13 +288,13 @@ def ddm_ilu_solve(x, L, U, swaps, b):
         for i in range(n, m):
             for j in range(o):
                 if y[i][j]:
-                    raise NonInvertibleMatrixError
+                    raise DMNonInvertibleMatrixError
 
     # Solve Ux = y
     for k in range(o):
         for i in reversed(range(n)):
             if not U[i][i]:
-                raise NonInvertibleMatrixError
+                raise DMNonInvertibleMatrixError
             rhs = y[i][k]
             for j in range(i+1, n):
                 rhs -= U[i][j] * x[j][k]
@@ -308,7 +308,7 @@ def ddm_berk(M, K):
     n = len(M[0])
 
     if m != n:
-        raise DDMShapeError("Not square")
+        raise DMShapeError("Not square")
 
     if n == 1:
         return [[K.one], [-M[0][0]]]

@@ -1,13 +1,26 @@
-from sympy import (sin, cos, atan2, log, exp, gamma, conjugate, sqrt,
-                   factorial, Integral, Piecewise, Add, diff, symbols, S,
-                   Float, Dummy, Eq, Range, Catalan, EulerGamma, E,
-                   GoldenRatio, I, pi, Function, Rational, Integer, Lambda,
-                   sign, Mod)
+from sympy.core.add import Add
+from sympy.core.function import (Function, Lambda, diff)
+from sympy.core.mod import Mod
+from sympy.core import (Catalan, EulerGamma, GoldenRatio)
+from sympy.core.numbers import (E, Float, I, Integer, Rational, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.complexes import (conjugate, sign)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (atan2, cos, sin)
+from sympy.functions.special.gamma_functions import gamma
+from sympy.integrals.integrals import Integral
+from sympy.sets.fancysets import Range
 
 from sympy.codegen import For, Assignment, aug_assign
 from sympy.codegen.ast import Declaration, Variable, float32, float64, \
         value_const, real, bool_, While, FunctionPrototype, FunctionDefinition, \
         integer, Return
+from sympy.core.expr import UnevaluatedExpr
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or, Not, Equivalent, Xor
 from sympy.matrices import Matrix, MatrixSymbol
@@ -15,6 +28,18 @@ from sympy.printing.fortran import fcode, FCodePrinter
 from sympy.tensor import IndexedBase, Idx
 from sympy.utilities.lambdify import implemented_function
 from sympy.testing.pytest import raises, warns_deprecated_sympy
+
+
+def test_UnevaluatedExpr():
+    p, q, r = symbols("p q r", real=True)
+    q_r = UnevaluatedExpr(q + r)
+    expr = abs(exp(p+q_r))
+    assert fcode(expr, source_format="free") == "exp(p + (q + r))"
+    x, y, z = symbols("x y z")
+    y_z = UnevaluatedExpr(y + z)
+    expr2 = abs(exp(x+y_z))
+    assert fcode(expr2, human=False)[2].lstrip() == "exp(re(x) + re(y + z))"
+    assert fcode(expr2, user_functions={"re": "realpart"}).lstrip() == "exp(realpart(x) + realpart(y + z))"
 
 
 def test_printmethod():

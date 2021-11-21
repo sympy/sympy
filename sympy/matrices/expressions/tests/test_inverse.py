@@ -3,7 +3,8 @@ from sympy.matrices.expressions import MatrixSymbol, Inverse, MatPow, ZeroMatrix
 from sympy.matrices.common import NonSquareMatrixError, NonInvertibleMatrixError
 from sympy.matrices import eye, Identity
 from sympy.testing.pytest import raises
-from sympy import refine, Q
+from sympy.assumptions.ask import Q
+from sympy.assumptions.refine import refine
 
 n, m, l = symbols('n m l', integer=True)
 A = MatrixSymbol('A', n, m)

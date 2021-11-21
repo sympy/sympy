@@ -1,6 +1,9 @@
 """Implementation of :class:`AlgebraicField` class. """
 
 
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
@@ -89,7 +92,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     to create instances which then support the operations ``+,-,*,**,/``. The
     :py:meth:`~.Domain.algebraic_field` method is used to construct a
     particular :ref:`QQ(a)` domain. The :py:meth:`~.Domain.from_sympy` method
-    can be used to create domain elements from normal sympy expressions.
+    can be used to create domain elements from normal SymPy expressions.
 
     >>> K = QQ.algebraic_field(sqrt(2))
     >>> K
@@ -178,6 +181,39 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     >>> K.mod
     DMP([1, 0, -10, 0, 1], QQ, None)
 
+    The `discriminant`_ of the field can be obtained from the
+    :py:meth:`~.discriminant` method, and an `integral basis`_ from the
+    :py:meth:`~.integral_basis` method as a list of :py:class:`~.ANP`
+    instances. The maximal order, or ring of integers, of the field can also be
+    obtained from the :py:meth:`~.maximal_order` method, as a
+    :py:class:`~sympy.polys.numberfields.modules.Submodule`.
+
+    >>> zeta5 = exp(2*I*pi/5)
+    >>> K = QQ.algebraic_field(zeta5)
+    >>> K
+    QQ<exp(2*I*pi/5)>
+    >>> K.discriminant()
+    125
+    >>> K = QQ.algebraic_field(sqrt(5))
+    >>> K
+    QQ<sqrt(5)>
+    >>> [K.to_sympy(a) for a in K.integral_basis()]
+    [1, 1/2 + sqrt(5)/2]
+    >>> K.maximal_order()
+    Submodule[[2, 0], [1, 1]]/2
+
+    The factorization of a rational prime into prime ideals of the field is
+    computed by the :py:meth:`~.primes_above` method, which returns a list
+    of :py:class:`~sympy.polys.numberfields.primes.PrimeIdeal` instances.
+
+    >>> zeta7 = exp(2*I*pi/7)
+    >>> K = QQ.algebraic_field(zeta7)
+    >>> K
+    QQ<exp(2*I*pi/7)>
+    >>> K.primes_above(11)
+    [[ (11, _x**3 + 5*_x**2 + 4*_x - 1) e=1, f=3 ],
+     [ (11, _x**3 - 4*_x**2 - 5*_x - 1) e=1, f=3 ]]
+
     Notes
     =====
 
@@ -192,6 +228,8 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
     .. _algebraic number field: https://en.wikipedia.org/wiki/Algebraic_number_field
     .. _algebraic numbers: https://en.wikipedia.org/wiki/Algebraic_number
+    .. _discriminant: https://en.wikipedia.org/wiki/Discriminant_of_an_algebraic_number_field
+    .. _integral basis: https://en.wikipedia.org/wiki/Algebraic_number_field#Integral_basis
     .. _minimal polynomial: https://en.wikipedia.org/wiki/Minimal_polynomial_(field_theory)
     .. _primitive element: https://en.wikipedia.org/wiki/Primitive_element_theorem
     """
@@ -252,6 +290,10 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
         self.zero = self.dtype.zero(self.mod.rep, dom)
         self.one = self.dtype.one(self.mod.rep, dom)
+
+        self._maximal_order = None
+        self._discriminant = None
+        self._nilradicals_mod_p = {}
 
     def new(self, element):
         return self.dtype(element, self.mod.rep, self.dom)
@@ -362,15 +404,73 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         """Convert a GaussianRational element 'a' to ``dtype``. """
         return K1.from_sympy(K0.to_sympy(a))
 
+    def _do_round_two(self):
+        from sympy.polys.numberfields.basis import round_two
+        ZK, dK = round_two(self.ext.minpoly, radicals=self._nilradicals_mod_p)
+        self._maximal_order = ZK
+        self._discriminant = dK
+
+    def maximal_order(self):
+        """
+        Compute the maximal order, or ring of integers, of the field.
+
+        Returns
+        =======
+
+        :py:class:`~sympy.polys.numberfields.modules.Submodule`.
+
+        See Also
+        ========
+
+        integral_basis()
+
+        """
+        if self._maximal_order is None:
+            self._do_round_two()
+        return self._maximal_order
+
+    def integral_basis(self):
+        r"""
+        Get an integral basis for the field.
+
+        Returns
+        =======
+
+        List of :py:class:`~.ANP` instances.
+
+        See Also
+        ========
+
+        maximal_order()
+
+        """
+        ZK = self.maximal_order()
+        M = ZK.QQ_matrix
+        return [self.dtype(list(reversed(M[:, j].flat())), self.mod.rep, self.dom)
+                for j in range(M.shape[1])]
+
+    def discriminant(self):
+        """Get the discriminant of the field."""
+        if self._discriminant is None:
+            self._do_round_two()
+        return self._discriminant
+
+    def primes_above(self, p):
+        """Compute the prime ideals lying above a given rational prime *p*."""
+        from sympy.polys.numberfields.primes import prime_decomp
+        ZK = self.maximal_order()
+        dK = self.discriminant()
+        rad = self._nilradicals_mod_p.get(p)
+        return prime_decomp(p, ZK=ZK, dK=dK, radical=rad)
+
 
 def _make_converter(K):
     """Construct the converter to convert back to Expr"""
-    # Precompute the effect of converting to sympy and expanding expressions
+    # Precompute the effect of converting to SymPy and expanding expressions
     # like (sqrt(2) + sqrt(3))**2. Asking Expr to do the expansion on every
     # conversion from K to Expr is slow. Here we compute the expansions for
     # each power of the generator and collect together the resulting algebraic
     # terms and the rational coefficients into a matrix.
-    from sympy import Add, S
 
     gen = K.ext.as_expr()
     todom = K.dom.from_sympy
@@ -384,7 +484,7 @@ def _make_converter(K):
         powers.append((gen * powers[-1]).expand())
 
     # Collect the rational coefficients and algebraic Expr that can
-    # map the ANP coefficients into an expanded sympy expression
+    # map the ANP coefficients into an expanded SymPy expression
     terms = [dict(t.as_coeff_Mul()[::-1] for t in Add.make_args(p)) for p in powers]
     algebraics = set().union(*terms)
     matrix = [[todom(t.get(a, S.Zero)) for t in terms] for a in algebraics]
@@ -393,7 +493,6 @@ def _make_converter(K):
 
     def converter(a):
         """Convert a to Expr using converter"""
-        from sympy import Add, Mul
         ai = a.rep[::-1]
         tosympy = K.dom.to_sympy
         coeffs_dom = [sum(mij*aj for mij, aj in zip(mi, ai)) for mi in matrix]

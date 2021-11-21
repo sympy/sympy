@@ -71,6 +71,7 @@ sphinxcontrib-htmlhelp==2.0.0
 sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.5
+sphinx-reredirects==0.0.1
 symengine==0.7.2
 tensorboard==2.6.0
 tensorboard-data-server==0.6.1
