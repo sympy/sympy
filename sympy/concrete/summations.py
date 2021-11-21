@@ -15,7 +15,6 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Wild, Symbol, symbols, _dummy_with_inherited_properties_concrete
-from sympy.functions.special.zeta_functions import zeta
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
 from sympy.functions.elementary.exponential import log
