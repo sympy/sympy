@@ -895,3 +895,13 @@ def test_guard_against_indeterminate_evaluation():
     assert eq.subs([(y, oo), (x, 1)]) is S.NaN
     assert eq.subs({x: 1, y: oo}) is S.NaN
     assert eq.subs([(x, 1), (y, oo)], simultaneous=True) is S.NaN
+
+
+def test_issue_22529():
+    R = Rational
+    assert [(x**(i*S.Half)).subs(x**2, y) for i in range(2, 7)] == [
+        x, x**R(3, 2), y, x**R(5, 2), x**3]
+    r = Symbol('r', positive=True)
+    assert [(r**(i*S.Half)).subs(r**2, y) for i in range(2, 7)] == [
+        sqrt(y), y**R(3, 4), y, y**R(5, 4), y**R(3, 2)]
+    assert sqrt(exp(x*I)).subs(x, 5) == -exp(5*I/2)

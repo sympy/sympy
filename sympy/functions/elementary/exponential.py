@@ -17,6 +17,7 @@ from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
 from sympy.sets.setexpr import SetExpr
+from sympy.utilities.misc import as_int
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -115,11 +116,21 @@ class ExpBase(Function):
     def _eval_is_zero(self):
         return self.exp is S.NegativeInfinity
 
+    def combines(self, pow):
+        try:
+            as_int(pow, strict=False)
+            return S.One
+        except ValueError:
+            # treat like Pow
+            b, e = self.as_base_exp()
+            return Pow(b, e, evaluate=False).combines(pow)
+
     def _eval_power(self, other):
         """exp(arg)**e -> exp(arg*e) if assumptions allow it.
         """
-        b, e = self.as_base_exp()
-        return Pow._eval_power(Pow(b, e, evaluate=False), other)
+        c = self.combines(other)
+        if c:
+            return c*self.func(self.args[0]*other)
 
     def _eval_expand_power_exp(self, **hints):
         from sympy.concrete.products import Product
@@ -193,8 +204,8 @@ class exp_polar(ExpBase):
             return re(res)
         return res
 
-    def _eval_power(self, other):
-        return self.func(self.args[0]*other)
+    def combines(self, other):
+        return S.One
 
     def _eval_is_extended_real(self):
         if self.args[0].is_extended_real:
