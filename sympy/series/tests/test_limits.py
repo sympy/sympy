@@ -641,10 +641,9 @@ def test_issue_10801():
 
 
 def test_issue_10868():
-    assert limit(log(x)+asech(x),x,0, dir = '+') == log(2)
-    assert limit(log(x)+asech(x),x,0, dir = '-') == log(2) + 2*I*pi
-    assert limit(log(x)+acsch(x),x,0, dir = '+') == log(2)
-    assert limit(log(x)+acsch(x),x,0, dir = '-') == -oo
+    assert limit(log(x)+asech(x),x,0, dir = '+-') == log(2)
+    assert limit(log(x)+acsch(x),x,0, dir = '+-') == log(2)
+
 
 def test_issue_10976():
     s, x = symbols('s x', real=True)

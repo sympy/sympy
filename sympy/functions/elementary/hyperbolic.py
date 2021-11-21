@@ -681,13 +681,17 @@ class tanh(HyperbolicFunction):
         return 1/coth(arg)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
+        arg0 = arg.subs(x, 0)
 
-        if x in arg.free_symbols and Order(1, x).contains(arg):
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+        if arg0.is_zero:
             return arg
+        elif arg0.is_finite:
+            return self.func(arg0)
         else:
-            return self.func(arg)
+            return self
 
     def _eval_is_real(self):
         arg = self.args[0]
@@ -883,13 +887,17 @@ class coth(HyperbolicFunction):
             return self.args[0].is_negative
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
+        arg0 = arg.subs(x, 0)
 
-        if x in arg.free_symbols and Order(1, x).contains(arg):
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+        if arg0.is_zero:
             return 1/arg
+        elif arg0.is_finite:
+            return self.func(arg0)
         else:
-            return self.func(arg)
+            return self
 
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
@@ -1201,13 +1209,17 @@ class asinh(InverseHyperbolicFunction):
                 return S.NegativeOne**k * R / F * x**n / n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
+        arg0 = arg.subs(x, 0)
 
-        if x in arg.free_symbols and Order(1, x).contains(arg):
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+        if arg0.is_zero:
             return arg
+        elif arg0.is_finite:
+            return self.func(arg0)
         else:
-            return self.func(arg)
+            return self
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return log(x + sqrt(x**2 + 1))
@@ -1348,13 +1360,17 @@ class acosh(InverseHyperbolicFunction):
                 return -R / F * S.ImaginaryUnit * x**n / n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
+        arg0 = arg.subs(x, 0)
 
-        if x in arg.free_symbols and Order(1, x).contains(arg):
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+        if arg0.is_zero:
             return S.ImaginaryUnit*S.Pi/2
+        elif arg0.is_finite:
+            return self.func(arg0)
         else:
-            return self.func(arg)
+            return self
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return log(x + sqrt(x + 1) * sqrt(x - 1))
@@ -1456,13 +1472,17 @@ class atanh(InverseHyperbolicFunction):
             return x**n / n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
+        arg0 = arg.subs(x, 0)
 
-        if x in arg.free_symbols and Order(1, x).contains(arg):
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+        if arg0.is_zero:
             return arg
+        elif arg0.is_finite:
+            return self.func(arg0)
         else:
-            return self.func(arg)
+            return self
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return (log(1 + x) - log(1 - x)) / 2
@@ -1554,13 +1574,17 @@ class acoth(InverseHyperbolicFunction):
             return x**n / n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
+        arg0 = arg.subs(x, 0)
 
-        if x in arg.free_symbols and Order(1, x).contains(arg):
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+        if arg0.is_zero:
             return S.ImaginaryUnit*S.Pi/2
+        elif arg0.is_finite:
+            return self.func(arg0)
         else:
-            return self.func(arg)
+            return self
 
     def _eval_rewrite_as_log(self, x, **kwargs):
         return (log(1 + 1/x) - log(1 - 1/x)) / 2
@@ -1694,13 +1718,18 @@ class asech(InverseHyperbolicFunction):
                 return -1 * R / F * x**n / 4
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
+        arg0 = arg.subs(x, 0)
 
-        if x in arg.free_symbols and Order(1, x).contains(arg):
-            return -1*log(arg)
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+        if arg0.is_zero:
+            c, e = arg.as_coeff_exponent(x)
+            return log(2) - log(c) - e*log(x)
+        elif arg0.is_finite:
+            return self.func(arg0)
         else:
-            return self.func(arg)
+            return self
 
     def inverse(self, argindex=1):
         """
@@ -1823,13 +1852,18 @@ class acsch(InverseHyperbolicFunction):
                 return S.NegativeOne**(k +1) * R / F * x**n / 4
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
+        arg0 = arg.subs(x, 0)
 
-        if x in arg.free_symbols and Order(1, x).contains(arg):
-            return -1*log(arg)
+        if arg0 is S.NaN:
+            arg0 = arg.limit(x, 0, dir='-' if cdir.is_negative else '+')
+        if arg0.is_zero:
+            c, e = arg.as_coeff_exponent(x)
+            return log(2) - log(c) - e*log(x)
+        elif arg0.is_finite:
+            return self.func(arg0)
         else:
-            return self.func(arg)
+            return self
 
     def inverse(self, argindex=1):
         """

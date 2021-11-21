@@ -964,8 +964,8 @@ def test_leading_term():
     assert coth(x).as_leading_term(x) == 1/x
     assert acosh(x).as_leading_term(x) == I*pi/2
     assert acoth(x).as_leading_term(x) == I*pi/2
-    assert asech(x).as_leading_term(x) == -log(x)
-    assert acsch(x).as_leading_term(x) == -log(x)
+    assert asech(x).as_leading_term(x) == -log(x) + log(2)
+    assert acsch(x).as_leading_term(x) == -log(x) + log(2)
     for func in [sinh, tanh, asinh, atanh]:
         assert func(x).as_leading_term(x) == x
     for func in [sinh, cosh, tanh, coth, asinh, acosh, atanh, acoth]:
