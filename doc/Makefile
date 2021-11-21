@@ -101,7 +101,7 @@ pdf pdflatex latexpdf: latex
 	$(MAKE) -C $(BUILDDIR)/latex
 
 .svg.pdf:
-	dbus-run-session inkscape --file=$< --export-area-drawing --without-gui --export-pdf=$@
+	./convert-svg-to-pdf.sh $< $@
 
 changes:
 	mkdir -p $(BUILDDIR)/changes $(BUILDDIR)/doctrees

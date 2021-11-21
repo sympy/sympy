@@ -439,7 +439,7 @@ def test_conjugate():
     n = Symbol('n')
     z = Symbol('z', extended_real=False)
     x = Symbol('x', extended_real=True)
-    y = Symbol('y', real=True, positive=True)
+    y = Symbol('y', positive=True)
     t = Symbol('t', negative=True)
 
     for f in [besseli, besselj, besselk, bessely, hankel1, hankel2]:

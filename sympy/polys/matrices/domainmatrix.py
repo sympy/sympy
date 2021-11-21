@@ -443,7 +443,9 @@ class DomainMatrix:
         Parameters
         ==========
 
-        K : Represents the desired domain or field
+        K : Represents the desired domain or field.
+            Alternatively, ``None`` may be passed, in which case this method
+            just returns a copy of this DomainMatrix.
 
         Returns
         =======
@@ -464,6 +466,8 @@ class DomainMatrix:
         DomainMatrix([[1, 2], [3, 4]], (2, 2), ZZ_I)
 
         """
+        if K is None:
+            return self.copy()
         return self.from_rep(self.rep.convert_to(K))
 
     def to_sympy(self):
@@ -1081,7 +1085,7 @@ class DomainMatrix:
 
     def __truediv__(A, lamda):
         """ Method for Scalar Divison"""
-        if isinstance(lamda, int):
+        if isinstance(lamda, int) or ZZ.of_type(lamda):
             lamda = DomainScalar(ZZ(lamda), ZZ)
 
         if not isinstance(lamda, DomainScalar):

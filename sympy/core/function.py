@@ -3277,8 +3277,9 @@ def count_ops(expr, visual=False):
 
 def nfloat(expr, n=15, exponent=False, dkeys=False):
     """Make all Rationals in expr Floats except those in exponents
-    (unless the exponents flag is set to True). When processing
-    dictionaries, do not modify the keys unless ``dkeys=True``.
+    (unless the exponents flag is set to True) and those in undefined
+    functions. When processing dictionaries, do not modify the keys
+    unless ``dkeys=True``.
 
     Examples
     ========
@@ -3359,7 +3360,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
 
     return rv.xreplace(Transform(
         lambda x: x.func(*nfloat(x.args, n, exponent)),
-        lambda x: isinstance(x, Function)))
+        lambda x: isinstance(x, Function) and not isinstance(x, AppliedUndef)))
 
 
 from .symbol import Dummy, Symbol
