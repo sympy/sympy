@@ -71,6 +71,11 @@ def _sample(scalars, k=None, rng=None):
 
 # === matrix and complex number framework wrapper ===
 
+# use wrapper functions for get and set matrix entries
+# to be reusable for other frameworks
+# (like numpy, mpmath or other.) later on.
+
+
 def _get_value(o, i, j):
     return o[i, j]
 
@@ -1064,12 +1069,10 @@ def jordan_normal(dim,
     Finally, each $\lambda$ of each Jordan block will be an eigenvalue.
 
     To set the eigenvalues and block sizes use **spec**.
+    Simply provide a sequence of pairs *(eigenvalue, block size)*,
+    i.e. tuple of length 2.
 
-    As long as an eigenvalue is repeated in **spec**
-    it mandates the same *Jordan* block.
-    Such a *Jordan* block is interrupted by **None** entries.
-
-    E.g. **spec** = (1,1,2, None, 2) would lead to
+    For example **spec** = [(1,2),(2,1),(2,1)]  would lead to
 
     .. math::
 
@@ -1081,11 +1084,15 @@ def jordan_normal(dim,
             0 & 0 & 0 & 2
         \end{array}\right]
 
-    Alternatively, a sequence of pairs *(eigenvalue, block size)*,
-    i.e. tuple of length 2, can be provided.
+    Alternatively (sometimes more handy),
+    a simple list of eigenvalues would work, too.
 
-    So the above example is equivalent to
-    **spec** = [(1,2),(2,1),(2,1)].
+    As long as an eigenvalue is repeated in **spec**
+    it mandates the same *Jordan* block until
+    the values changes or the sequence of eigenvalues
+    is interrupted by a **None** entry.
+
+    So the above example is equivalent to **spec** = (1,1,2, None, 2)
 
     .. math::
 
@@ -1481,13 +1488,13 @@ def square(dim,
     product of :func:`elementary` matrices.
 
     If **rank** is less than **dim**,
-    it is constructed from a full rank matrix $S$
+    it is constructed from a full rank matrix $\mathbf{S}$
     by choosing randomly $r$ basis columns
     and build $n-r$ columes as a linear combinations
     of the basis colums.
 
-    Such a square matrix $S$ represents an endomorphism
-    $$f_S:V \rightarrow V, x \mapsto S\cdot x$$
+    Such a square matrix $\mathbf{S}$ represents an endomorphism
+    $$f_S:V \rightarrow V, v \mapsto \mathbf{S}\cdot v$$
     of a $n$ dimensional vector space $V$.
 
     Parameters
