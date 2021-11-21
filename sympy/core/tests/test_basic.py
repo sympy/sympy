@@ -273,7 +273,7 @@ def test_as_dummy():
     for T in (Symbol, Dummy):
         d = T('x', real=True)
         D = d.as_dummy()
-        assert D != d and D.func == Dummy and D.is_real is None
+        assert D != d and type(D) == Dummy and D.is_real is None
     assert Dummy().as_dummy().is_commutative
     assert Dummy(commutative=False).as_dummy().is_commutative is False
 
