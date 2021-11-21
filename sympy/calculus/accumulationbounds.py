@@ -181,6 +181,7 @@ class AccumulationBounds(Expr):
     """
 
     is_extended_real = True
+    is_number = False
 
     def __new__(cls, min, max):
 
