@@ -1893,7 +1893,7 @@ def __remove_linear_redundancies(expr, Cs):
         f = lambda i: isinstance(i, Number) or i in Cs
         if isinstance(lhs, Symbol) and lhs in Cs:
             rhs, lhs = lhs, rhs
-        if lhs.func in (Add, Symbol) and rhs.func in (Add, Symbol):
+        if lhs.__class__ in (Add, Symbol) and rhs.__class__ in (Add, Symbol):
             dlhs = sift([lhs] if isinstance(lhs, AtomicExpr) else lhs.args, f)
             drhs = sift([rhs] if isinstance(rhs, AtomicExpr) else rhs.args, f)
             for i in [True, False]:
@@ -1903,7 +1903,7 @@ def __remove_linear_redundancies(expr, Cs):
             # this calculation can be simplified
             lhs = Add(*dlhs[False]) - Add(*drhs[False])
             rhs = Add(*drhs[True]) - Add(*dlhs[True])
-        elif lhs.func in (Mul, Symbol) and rhs.func in (Mul, Symbol):
+        elif lhs.__class__ in (Mul, Symbol) and rhs.__class__ in (Mul, Symbol):
             dlhs = sift([lhs] if isinstance(lhs, AtomicExpr) else lhs.args, f)
             if True in dlhs:
                 if False not in dlhs:
