@@ -167,16 +167,14 @@ def _limit_for_symbolic_point(expr, z0, cdir):
         elif cdir == -1:
             dir = "-"
         if limit(expr, z0, S.NegativeInfinity) != expr.subs(z0, S.NegativeInfinity):
-            piecewise_list += [(limit(expr, z0, S.NegativeInfinity),Eq(z0, S.NegativeInfinity))]
+            piecewise_list.append((limit(expr, z0, S.NegativeInfinity), Eq(z0, S.NegativeInfinity)))
         for singularity in singularities(expr, z0):
-            piecewise_list.append((limit(expr, z0, singularity, dir),Eq(z0, singularity)))
+            piecewise_list.append((limit(expr, z0, singularity, dir), Eq(z0, singularity)))
         if limit(expr, z0, S.Infinity) != expr.subs(z0, S.Infinity):
-            piecewise_list += [(limit(expr, z0, S.Infinity),Eq(z0, S.Infinity))]
-        piecewise_list += [(expr,True)]
+            piecewise_list.append((limit(expr, z0, S.Infinity), Eq(z0, S.Infinity)))
+        piecewise_list.append((expr,True))
         expr = Piecewise(*piecewise_list)
-        return expr
-    else:
-        return expr
+    return expr
 
 class Limit(Expr):
     """Represents an unevaluated limit.
