@@ -1006,7 +1006,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     return rv.xreplace({v: k for k, v in recast.items()})
 
 
-def _find_pivot(inequalities,vars):
+def _find_pivot(inequalities,symbols):
     """
     Return a variable that has at least two coefficients with opposite
     sign in a system of inequalities.
@@ -1017,20 +1017,20 @@ def _find_pivot(inequalities,vars):
     >>> from sympy.solvers.inequalities import _find_pivot
     >>> from sympy.abc import x, y, z
 
+    >>> symbols = {x,y,z}
     >>> eq1 = 2*x - 3*y + z + 1
     >>> eq2 = x - y + 2*z - 2
     >>> eq3 = x + y + 3*z + 4
     >>> eq4 = x - z
 
     >>> inequalities = [eq1, eq2, eq3, eq4]
-    >>> vars={x,y,z}
     >>> _find_pivot(inequalities,symbols)
     y
     """
     memory = {}
     for eq in inequalities:
-        symbols=vars.intersection(eq.free_symbols)
-        for symbol in symbols:
+        symbols=symbols.intersection(eq.free_symbols)
+        for symbol in eq.free_symbols:
             if not (symbol in memory.keys()):
                 memory[symbol] = [False, False]
             coeff = eq.coeff(symbol)
@@ -1089,10 +1089,11 @@ def _merge_mins_maxs(mins, maxs,symbols):
     >>> from sympy.abc import x, z
     >>> from sympy import Min
 
+    >>> symbols = {x,z}
     >>> maxs = -x - 3*z - 4
     >>> mins = Min((2*x + z + 1)/3, x + 2*z - 2)
-    >>> symbols = {x,z}
-    >>> _merge_mins_maxs(mins, maxs)
+
+    >>> _merge_mins_maxs(mins, maxs,symbols)
     [2*x + 5*z + 2, 5*x/3 + 10*z/3 + 13/3]
     """
     if not isinstance(mins, Min):
@@ -1117,13 +1118,13 @@ def _fourier_motzkin(inequalities,symbols):
     >>> from sympy.solvers.inequalities import _fourier_motzkin
     >>> from sympy.abc import x, y, z
 
+    >>> symbols = {x,y,z}
     >>> eq1 = 2*x - 3*y + z + 1
     >>> eq2 = x - y + 2*z - 2
     >>> eq3 = x + y + 3*z + 4
     >>> eq4 = x - z
-    >>> symbols = {x,y,z}
 
-    >>> ie, d = _fourier_motzkin([eq1, eq2, eq3, eq4])
+    >>> ie, d = _fourier_motzkin([eq1, eq2, eq3, eq4],symbols)
     >>> ie
     [3*x/2 + 13/10, 7*x/5 + 2/5]
     >>> assert set(d) == set([y, z])
@@ -1142,7 +1143,7 @@ def _fourier_motzkin(inequalities,symbols):
     return inequalities, res
 
 
-def _pick_var(inequalities,vars):
+def _pick_var(inequalities,symbols):
     """Return a free variable of the system of inequalities
 
     Examples
@@ -1151,18 +1152,18 @@ def _pick_var(inequalities,vars):
     >>> from sympy.solvers.inequalities import _pick_var
     >>> from sympy.abc import x, y, z
 
+    >>> symbols = {x,y,z}
     >>> eq1 = 2*x - 3*y + z + 1
     >>> eq2 = x - y + 2*z - 2
     >>> eq3 = x + y + 3*z + 4
     >>> eq4 = x - z
-    >>> vars={x,y,z}
 
     >>> inequalities = [eq1, eq2, eq3, eq4]
-    >>> _pick_var(inequalities)
+    >>> _pick_var(inequalities,symbols)
     x
     """
     for eq in inequalities:  # should already be in canonical order
-        symbols=vars.intersection(eq.free_symbols)
+        symbols=symbols.intersection(eq.free_symbols)
         for symb in ordered(symbols):  # make selection canonical
             return symb
 
@@ -1178,18 +1179,16 @@ def _fourier_motzkin_extension(inequalities,symbols):
     >>> from sympy.solvers.inequalities import _fourier_motzkin_extension
     >>> from sympy.abc import x, y, z
 
+    >>> symbols = {x,y,z}
     >>> eq1 = 2*x - 3*y + z + 1
     >>> eq2 = x - y + 2*z - 2
     >>> eq3 = x - y + 3*z + 4
-    >>> eq4 = x + z
-    >>> symbols = {x,y,z}
+    >>> eq4 = x - z
 
-    >>> d = _fourier_motzkin_extension([eq1, eq2, eq3, eq4])
+    >>> d = _fourier_motzkin_extension([eq1, eq2, eq3, eq4],symbols)
     >>> assert set(d) == {x}
     >>> d[x]
-    (oo > x, x > Max(-z, y - 3*z - 4, y - 2*z + 2, 3*y/2 - z/2 - 1/2))
-    >>> _fourier_motzkin_extension([x - 3, 5 - x])
-    {x: (5 > x, x > 3)}
+    (oo > x, x > Max(z, -y - 3*z - 4, y - 2*z + 2, 3*y/2 - z/2 - 1/2))
     """
 
     res = {}
@@ -1202,7 +1201,7 @@ def _fourier_motzkin_extension(inequalities,symbols):
     return res
 
 
-def _factorize_linear(expr,vars):
+def _factorize_linear(expr,symbols):
     """Factorize linear expression
 
     Examples
@@ -1212,20 +1211,20 @@ def _factorize_linear(expr,vars):
     >>> from sympy.abc import x, y, z
     >>> from sympy import expand
     >>> from sympy import sqrt,exp
-    >>> vars = {x,y,z}
-    
+
+    symbols = {x,z}
     >>> expr= x - sqrt(3)*(-x + sqrt(3)*(-2*x - z - 1)/3 - exp(4))/3
-    >>> factorize_linear(expr)
+    >>> _factorize_linear(expr,symbols)
     x*(sqrt(3)/3 + 5/3) + z/3 + 1/3 + sqrt(3)*exp(4)/3
     """
     res=0
     expr=expand(expr)
-    symbols=vars.intersection(expr.free_symbols)
+    symbols=symbols.intersection(expr.free_symbols)
     for symbol in symbols:
         res+=(expr.coeff(symbol)*symbol)
-    return res+expr.func(*[term for term in expr.args if not symbols])
+    return res+expr.func(*[term for term in expr.args if not term.free_symbols])
         
-def _is_linear(expr,vars):
+def _is_linear(expr,symbols):
     """
     Return True if expr is linear, False otherwise.
     
@@ -1234,17 +1233,16 @@ def _is_linear(expr,vars):
     
     >>> from sympy import diff
     >>> from sympy.abc import x, y, z
-
-    >>> vars = {x,y,z}
-    
+    >>> symbols = {x,y}
     >>> expr1=x**2 + y + 2
-    >>> _is_linear(expr1)
+    >>> _is_linear(expr1,symbols)
     False
     >>> expr2=3*x - y + 5
-    >>> _is_linear(expr2)
+    >>> _is_linear(expr2,symbols)
     True
     """
     try:
+        vars=symbols
         for x in vars:
             for y in vars:
                 try: 
@@ -1286,8 +1284,8 @@ def solve_linear_inequalities(inequalities,symbols):
     >>> eq4 = x - z
 
     >>> symbols = {x,y,z}
-
-    >>> d = solve_linear_inequalities([eq1, eq2, eq3, eq4])
+    
+    >>> d = solve_linear_inequalities([eq1, eq2, eq3, eq4],symbols)
     >>> assert set(d) == set([x, y, z])
     >>> d[x]
     (oo > x, x > -2/7)
@@ -1300,8 +1298,8 @@ def solve_linear_inequalities(inequalities,symbols):
     ===========
 
     x = 2 is valid because: oo > 2 > -2/7
-    y = -1 is valid because: Min(x + 1/3, 3*x - 2) > -1 > -4*x - 4
-    z = 1 is valid because: x > 1 > Max(-2*x + 3*y - 1, -x/2 + y/2 + 1, -x/3 - y/3 - 4/3)
+    y = 1 is valid because: Min(x + 1/3, 3*x - 2) > 1 > -4*x - 4
+    z = 1.5 is valid because: x > 1.5 > Max(-2*x + 3*y - 1, -x/2 + y/2 + 1, -x/3 - y/3 - 4/3)
     """
     for eq in inequalities:
         if not(_is_linear(eq,symbols)):
@@ -1313,5 +1311,15 @@ def solve_linear_inequalities(inequalities,symbols):
     return {**res1, **res2}
 
 
+from sympy.abc import x, y, z
+from sympy import expand,oo
 
-
+eq1 = 2*x - 3*y + z + 1
+eq2 = x - y + 2*z - 2
+eq3 = x + y + 3*z + 4
+eq4 = x - z
+symbols = {x,y,z}
+d = solve_linear_inequalities([eq1, eq2, eq3, eq4],symbols)
+assert str(d[x])=="(oo > x, x > -2/7)"
+assert str(d[y])=="(Min(x + 1/3, 3*x - 2) > y, y > -4*x - 4)"
+assert str(d[z])=="(x > z, z > Max(-2*x + 3*y - 1, -x/2 + y/2 + 1, -x/3 - y/3 - 4/3))"
