@@ -10,8 +10,8 @@ For ex:
 	>>> a,b = symbols("a b",commutative = True)
 	>>> c,d = symbols('c d',commutative = False)
 	>>> pprint((x**(a+b)).expand())
-	    a  b
-	   x ⋅x 
+		a  b
+	       x ⋅x 
 	>>> pprint((x**(c+d)).expand())  
 	  c + d
 	 x
@@ -22,12 +22,12 @@ This is because here the expansion is not true in general, so SymPy does not per
 Here's a proof which shows:
 
 	>>> pprint(exp(a + b).expand())
-		a  b
-	          ℯ ⋅ℯ 		
+            a  b
+              ℯ ⋅ℯ
 
 	>>> pprint(exp(a)*exp(b))
-		a  b
-	          ℯ ⋅ℯ 
+            a  b
+              ℯ ⋅ℯ 
 	
 i.e exp(a+b) = exp(a)*exp(b)
 
@@ -35,14 +35,15 @@ However proof doesn't work for general a,b.
 Since if a,b = non-commutative,
 
 	>>> pprint(exp(a + b).expand() )
-		  a + b
-		 ℯ 
-
+		 
+	  a + b
+             ℯ 
 	>>> pprint(exp(a)*exp(b))
-	  a  b
-	 ℯ ⋅ℯ
+	      a  b
+	     ℯ ⋅ℯ
 
 i.e exp(a+b) != exp(a)*exp(b)
+
 To explain the above proof we can also consider 2 non-commutating matrices.
 
 	>>> A = Matrix([[0, 1], [1, 0]])
@@ -52,14 +53,17 @@ To explain the above proof we can also consider 2 non-commutating matrices.
 	Matrix([
 	[                 exp(1 - sqrt(2))/2 + exp(1 + sqrt(2))/2, -sqrt(2)*exp(1 - sqrt(2))/2 + sqrt(2)*exp(1 + sqrt(2))/2],
 	[-sqrt(2)*exp(1 - sqrt(2))/4 + sqrt(2)*exp(1 + sqrt(2))/4,                  exp(1 - sqrt(2))/2 + exp(1 + sqrt(2))/2]])
+	
 	>>> exp(A)*exp(B)
 	Matrix([
 	[ E*(exp(-1)/2 + E/2), E*(-exp(-1)/2 + E/2) + E*(exp(-1)/2 + E/2)],
 	[E*(-exp(-1)/2 + E/2), E*(-exp(-1)/2 + E/2) + E*(exp(-1)/2 + E/2)]])
+	
 	>>> A*B
 	Matrix([
 	[0, 1],
 	[1, 1]])
+	
 	>>> B*A
 	Matrix([
 	[1, 1],
@@ -77,9 +81,8 @@ Similar behaviour can be seen when non commutative symbols are used with powsimp
 	  x
 
 	>>> pprint(powsimp(x**c*x**d))
-	   c  d
-	  x ⋅x
-
+	       c  d
+	      x ⋅x
 In some cases it might be impossible to determine the behaviour of a function if non commutative symbols are taken.
 
 
