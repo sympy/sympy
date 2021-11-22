@@ -512,7 +512,10 @@ class Piecewise(Function):
                 cond = (x < b)
             else:
                 cond = (x <= b)
-            args.append((sum, cond))
+            if sum.has(oo, -oo, S.ComplexInfinity, Undefined):
+                args.append((anti, cond))
+            else:
+                args.append((sum, cond))
         return Piecewise(*args)
 
     def _eval_interval(self, sym, a, b, _first=True):
