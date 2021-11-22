@@ -512,8 +512,9 @@ class Piecewise(Function):
                 cond = (x < b)
             else:
                 cond = (x <= b)
-            if sum.has(oo, -oo, S.ComplexInfinity, Undefined):
+            if sum.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, Undefined):
                 args.append((anti, cond))
+                sum = S.Zero
             else:
                 args.append((sum, cond))
         return Piecewise(*args)
