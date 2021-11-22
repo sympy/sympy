@@ -312,8 +312,9 @@ class ExprWithLimits(Expr):
         # should be returned, e.g. don't return set() if the
         # function is zero -- treat it like an unevaluated expression.
         function, limits = self.function, self.limits
-        # mask off non-symbol integration variables
-        reps = {i[0]: i[0] if isinstance(i[0], Symbol) else Dummy()
+        # mask off non-symbol integration variables that have
+        # more than themself as a free symbol
+        reps = {i[0]: i[0] if i[0].free_symbols == {i[0]} else Dummy()
             for i in self.limits}
         function = function.xreplace(reps)
         isyms = function.free_symbols
