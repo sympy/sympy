@@ -489,7 +489,7 @@ class Add(Expr, AssocOp):
                 ico = b.coeff(S.ImaginaryUnit)
                 if ico and ico.is_extended_real and a.is_extended_real:
                     if e.is_extended_negative:
-                        return S.NaN
+                        return S.Zero
                     if e.is_extended_positive:
                         return S.ComplexInfinity
             return
