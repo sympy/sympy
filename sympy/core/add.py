@@ -482,12 +482,17 @@ class Add(Expr, AssocOp):
         from .relational import is_eq
         if len(self.args) == 2 and any(_.is_infinite for _ in self.args):
             if e.is_zero is False and is_eq(e, S.One) is False:
+                # looking for literal a + I*b
                 a, b = self.args
-                if not a.coeff(S.ImaginaryUnit):
+                if a.coeff(S.ImaginaryUnit):
                     a, b = b, a
-                ico = a.coeff(S.ImaginaryUnit)
-                if ico and ico.is_extended_real and b.is_extended_real:
-                    return S.NaN
+                ico = b.coeff(S.ImaginaryUnit)
+                if ico and ico.is_extended_real and a.is_extended_real:
+                    if e.is_extended_negative:
+                        return S.NaN
+                    if e.is_extended_positive:
+                        return S.ComplexInfinity
+            return
         if e.is_Rational and self.is_number:
             ri = pure_complex(self)
             if ri:
