@@ -470,15 +470,15 @@ def test_as_leading_term():
     raises(ValueError, lambda: (x + 1).as_leading_term(1))
 
     # https://github.com/sympy/sympy/issues/21177
-    f = -3*x + (x + Rational(3, 2) - sqrt(3)*S.ImaginaryUnit/2)**2\
+    e = -3*x + (x + Rational(3, 2) - sqrt(3)*S.ImaginaryUnit/2)**2\
         - Rational(3, 2) + 3*sqrt(3)*S.ImaginaryUnit/2
-    assert f.as_leading_term(x) == \
+    assert e.as_leading_term(x) == \
         (12*sqrt(3)*x - 12*S.ImaginaryUnit*x)/(4*sqrt(3) + 12*S.ImaginaryUnit)
 
     # https://github.com/sympy/sympy/issues/21245
-    f = 1 - x - x**2
-    fi = (1 + sqrt(5))/2
-    assert f.subs(x, y + 1/fi).as_leading_term(y) == \
+    e = 1 - x - x**2
+    d = (1 + sqrt(5))/2
+    assert e.subs(x, y + 1/d).as_leading_term(y) == \
         (-576*sqrt(5)*y - 1280*y)/(256*sqrt(5) + 576)
 
 
@@ -1735,15 +1735,16 @@ def test_as_ordered_terms():
     assert ( 4 - 3*I).as_ordered_terms() == [4, -3*I]
     assert (-4 - 3*I).as_ordered_terms() == [-4, -3*I]
 
-    f = x**2*y**2 + x*y**4 + y + 2
+    e = x**2*y**2 + x*y**4 + y + 2
 
-    assert f.as_ordered_terms(order="lex") == [x**2*y**2, x*y**4, y, 2]
-    assert f.as_ordered_terms(order="grlex") == [x*y**4, x**2*y**2, y, 2]
-    assert f.as_ordered_terms(order="rev-lex") == [2, y, x*y**4, x**2*y**2]
-    assert f.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
+    assert e.as_ordered_terms(order="lex") == [x**2*y**2, x*y**4, y, 2]
+    assert e.as_ordered_terms(order="grlex") == [x*y**4, x**2*y**2, y, 2]
+    assert e.as_ordered_terms(order="rev-lex") == [2, y, x*y**4, x**2*y**2]
+    assert e.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
 
     k = symbols('k')
     assert k.as_ordered_terms(data=True) == ([(k, ((1.0, 0.0), (1,), ()))], [k])
+
 
 def test_sort_key_atomic_expr():
     from sympy.physics.units import m, s
