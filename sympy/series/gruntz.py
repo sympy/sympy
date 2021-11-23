@@ -120,7 +120,6 @@ from functools import reduce
 
 from sympy.core import Basic, S, Mul, PoleError
 from sympy.core.cache import cacheit
-from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import ilcm, I, oo
 from sympy.core.symbol import Dummy, Wild
 from sympy.core.traversal import bottom_up
@@ -494,18 +493,18 @@ def calculate_series(e, x, logx=None):
 
     for t in e.lseries(x, logx=logx):
         # bottom_up function is required for a specific case - when e is
-        # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p). No current simplification
-        # methods reduce this to 0 while not expanding polynomials.
-        t = bottom_up(t, lambda w: getattr(w, 'normal', lambda: w)())
-        t = factor_terms(cancel(t, expand=False))
-        # XXX try t = bottom_up(t, lambda x: cancel(x, expand=False)) instead of the two calls
-
-        # not sure if the has to be generalized to expand all exp
-        # but it is sufficient for the failing test of
-        # limit((2*exp(3*x)/(exp(2*x) + 1))**(1/x), x, oo) == E
-        if isinstance(t, exp):
-            from sympy.core.function import expand_power_exp, expand_mul
-            t = expand_power_exp(t.func(expand_mul(t.exp)))
+        # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p)
+        t = bottom_up(t, lambda w:
+            getattr(w, 'normal', lambda: w)())
+        # And the expression
+        # `(-sin(1/x) + sin((x + exp(x))*exp(-x)/x))*exp(x)`
+        # from the first test of test_gruntz_eval_special needs to
+        # be expanded. But other forms need to be have at least
+        # factor_terms applied. `factor` accomplishes both and is
+        # faster than using `factor_terms` for the gruntz suite. It
+        # does not appear that use of `cancel` is necessary.
+        # t = cancel(t, expand=False)
+        t = t.factor()
 
         if t.has(exp) and t.has(log):
             t = powdenest(t)
