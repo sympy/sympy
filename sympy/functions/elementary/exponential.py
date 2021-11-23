@@ -128,6 +128,9 @@ class ExpBase(Function):
         """
         if self.combines(other):
             return self.func(self.args[0]*other)
+        # allow for more general combining, e.g.
+        # sqrt(exp(5*I)) = -exp(5*I/2)
+        return Pow._eval_power(Pow(*self.as_base_exp()), other)
 
     def _eval_expand_power_exp(self, **hints):
         from sympy.concrete.products import Product
