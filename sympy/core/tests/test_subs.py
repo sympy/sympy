@@ -904,4 +904,5 @@ def test_issue_22529():
     r = Symbol('r', positive=True)
     assert [(r**(i*S.Half)).subs(r**2, y) for i in range(2, 7)] == [
         sqrt(y), y**R(3, 4), y, y**R(5, 4), y**R(3, 2)]
-    assert sqrt(exp(x*I)).subs(x, 5) == -exp(5*I/2)
+    # XXX how can this be made -exp(5*I/2)
+    assert sqrt(exp(x*I)).subs(x, 5) == sqrt(exp(5*I))

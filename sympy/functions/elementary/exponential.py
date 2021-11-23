@@ -119,18 +119,15 @@ class ExpBase(Function):
     def combines(self, pow):
         try:
             as_int(pow, strict=False)
-            return S.One
+            return True
         except ValueError:
-            # treat like Pow
-            b, e = self.as_base_exp()
-            return Pow(b, e, evaluate=False).combines(pow)
+            return self.args[0].is_real
 
     def _eval_power(self, other):
         """exp(arg)**e -> exp(arg*e) if assumptions allow it.
         """
-        c = self.combines(other)
-        if c:
-            return c*self.func(self.args[0]*other)
+        if self.combines(other):
+            return self.func(self.args[0]*other)
 
     def _eval_expand_power_exp(self, **hints):
         from sympy.concrete.products import Product
@@ -205,7 +202,7 @@ class exp_polar(ExpBase):
         return res
 
     def combines(self, other):
-        return S.One
+        return True
 
     def _eval_is_extended_real(self):
         if self.args[0].is_extended_real:

@@ -823,32 +823,14 @@ class Pow(Expr):
         return self.base.is_polar
 
     def combines(self, x):
-        """return +/-1 if ``(b**e)**x == +/-b**(e*x)`` else None"""
+        """return True if ``(b**e)**x == b**(e*x)`` else False"""
         try:
             as_int(x, strict=False)
-            return S.One
+            return True
         except ValueError:
             b, e = self.as_base_exp()
-            p = Pow._eval_power(
-                Pow(b, e, evaluate=False), x)
-            if p is None:
-                return
-            c = S.One
-            # we might get Pow or -Pow
-            if p.is_Mul:
-                if p.args[0] == -1 and len(p.args) == 2:
-                    p = p.args[1]
-                    c = -c
-                else:
-                    return
-            # trickier input involving numbers could collapse;
-            # leave that out unless it is needed, e.g.
-            # Pow(1, x)**y -> 1 or nan and the result will
-            # match the result of 1**(x*y) unless x,y=0,oo
-            # >>> (1*oo)**0,1**(0*oo)
-            # (1, nan)
-            if p.as_base_exp()[0] == b:
-                return c
+            # These conditions ensure that (b**e)**f == b**(e*f) for any f
+            return b.is_positive and e.is_real or b.is_nonnegative and e.is_nonnegative
 
     def _eval_subs(self, old, new):
         from sympy.calculus.accumulationbounds import AccumBounds
@@ -885,7 +867,7 @@ class Pow(Expr):
                 if old.is_commutative:
                     # Allow fractional powers for commutative objects
                     pow = coeff1/coeff2
-                    return bool(old.combines(pow)), pow, None
+                    return old.combines(pow), pow, None
                 else:
                     # With noncommutative symbols, substitute only integer powers
                     if not isinstance(terms1, tuple):
