@@ -275,7 +275,7 @@ def test_minpoly_compose():
            11264*x**8 - 4992*x**6 + 960*x**4 - 64*x**2 + 1
     assert minimal_polynomial(cos(pi/9), x) == 8*x**3 - 6*x + 1
 
-    ex = 2**Rational(1, 3)*exp(Rational(2, 3)*I*pi)
+    ex = 2**Rational(1, 3)*exp(2*I*pi/3)
     assert minimal_polynomial(ex, x) == x**3 - 2
 
     raises(NotAlgebraic, lambda: minimal_polynomial(cos(pi*sqrt(2)), x))
