@@ -478,8 +478,22 @@ class Add(Expr, AssocOp):
     # issue 5524.
 
     def _eval_power(self, e):
+        from .evalf import pure_complex
+        from .relational import is_eq
+        if len(self.args) == 2 and any(_.is_infinite for _ in self.args):
+            if e.is_zero is False and is_eq(e, S.One) is False:
+                # looking for literal a + I*b
+                a, b = self.args
+                if a.coeff(S.ImaginaryUnit):
+                    a, b = b, a
+                ico = b.coeff(S.ImaginaryUnit)
+                if ico and ico.is_extended_real and a.is_extended_real:
+                    if e.is_extended_negative:
+                        return S.Zero
+                    if e.is_extended_positive:
+                        return S.ComplexInfinity
+            return
         if e.is_Rational and self.is_number:
-            from .evalf import pure_complex
             ri = pure_complex(self)
             if ri:
                 r, i = ri
