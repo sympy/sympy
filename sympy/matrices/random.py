@@ -7,7 +7,6 @@ from ..functions import sqrt as _sqrt, re as _re, im as _im, \
 from ..tensor import shape as _shape
 from .dense import eye as _eye
 from .inverse import _inv
-from . import Matrix
 
 __all__ = 'projection', 'jordan', 'transposition', \
           'permutation', 'elementary', 'rotation', 'reflection', \
@@ -25,13 +24,15 @@ _EPS = 1e-15
 
 # === random number generator functions ===
 
+
 rand = Random()
 r""" default random number generator
 
     Explanation
     ===========
 
-    the module default random generator which is a instance of ``random.Random()``.
+    the module default random generator
+    which is a instance of ``random.Random()``.
     Hence, the state can be set by invoking ``rand.seed()``.
 
 
@@ -71,15 +72,7 @@ def _sample(scalars, k=None, rng=None):
     return smpl if k else smpl[0]
 
 
-# === matrix and complex number framework wrapper ===
-
-# use wrapper functions for get and set matrix entries
-# to be reusable for other frameworks
-# (like numpy, mpmath or other.) later on.
-
-
-def _get_value(o, i, j):
-    return o[i, j]
+# === helper ===
 
 
 def _set_value(o, i, j, v):
@@ -151,8 +144,8 @@ def super_elementary_matrix(dim,
 
     and $ad + bc \neq 0$.
 
-    This includes elementary matrices of matrix operation for Gauss elimination.
-    So multiplication with $A$ gives for
+    This includes elementary matrices of matrix operation
+    for Gauss elimination. So multiplication with $A$ gives for
 
     * $a=0=d$ and $b=1=-c$ a *transposition*, i.e. swapping rows $i$ and $j$
     * $a=1$, $d=\lambda$ and $b=0=-c$ this matrix describes scaling the
@@ -235,7 +228,7 @@ def super_elementary_matrix(dim,
 
     if row == col:
         # identity or _multiply by scalar
-        _set_value(obj, row, col, value or 1)
+        obj[row, col] = value or 1
         if scalars:
             raise ValueError(
                 "if row==col no further args than value may be supplied.")
@@ -243,19 +236,19 @@ def super_elementary_matrix(dim,
         # elementary
         if value is None:
             # transposition
-            _set_value(obj, row, row, 0)
-            _set_value(obj, row, col, 1)
-            _set_value(obj, col, row, 1)
-            _set_value(obj, col, col, 0)
+            obj[row, row] = 0
+            obj[row, col] = 1
+            obj[col, row] = 1
+            obj[col, col] = 0
         else:
             # add scalar multiple to another
-            _set_value(obj, row, col, value)
+            obj[row, col] = value
     elif len(scalars) == 3:
-        _set_value(obj, row, row, value)
+        obj[row, row] = value
         y, v, u = scalars
-        _set_value(obj, row, col, y)
-        _set_value(obj, col, row, -v)
-        _set_value(obj, col, col, u)
+        obj[row, col] = y
+        obj[col, row] = -v
+        obj[col, col] = u
     else:
         msg = "either no, one or three additional scalars arguments " \
               "may be supplied, but not %i"
@@ -325,12 +318,12 @@ def complex_to_real(mat=None):
     obj = super_elementary_matrix(2 * dim)
     for i in range(dim):
         for j in range(dim):
-            z_value = _get_value(mat, i, j)
+            z_value = mat[i, j]
             a, b = _re(z_value), _im(z_value)
-            _set_value(obj, 2 * i, 2 * j, a)
-            _set_value(obj, 2 * i, 2 * j + 1, b)
-            _set_value(obj, 2 * i + 1, 2 * j, -b)
-            _set_value(obj, 2 * i + 1, 2 * j + 1, a)
+            obj[2 * i, 2 * j] = a
+            obj[2 * i, 2 * j + 1] = b
+            obj[2 * i + 1, 2 * j] = -b
+            obj[2 * i + 1, 2 * j + 1] = a
     return obj
 
 
@@ -350,7 +343,7 @@ def regular_to_singular(mat, rank=None, rng=None):
         \mathbf{B}
         = \mathbf{D} \cdot
         (\mathbf{I} + \mathbf{A} \cdot (\mathbf{I}-\mathbf{D}))
-        = \mathbf{D} + \mathbf{D} \cdot \mathbf{A} \cdot (\mathbf{I}-\mathbf{D})
+        = \mathbf{D} + \mathbf{D} \cdot \mathbf{A} \cdot(\mathbf{I}-\mathbf{D})
 
     is of rank $r$, too.  Some for $\mathbf{A}\cdot\mathbf{B}$
     which contains $r$ columns with $\mathbf{A}$.
@@ -443,10 +436,12 @@ def projection(dim,
     seed : random seed (optional)
 
         * either seed of a random number generator, i.e.
-          ``NoneType``, ``int``, ``float``, ``str``, ``bytes`` or ``bytearray``,
+          ``NoneType``, ``int``, ``float``, ``str``, ``bytes``
+          or ``bytearray``,
         * or a random number generator itself,
           i.e. it should be an instance of ``random.Random``,
-        * or at least have ``sample(population, k)`` instance method implemented
+        * or at least have ``sample(population, k)``
+          instance method implemented
           with same signature using the first two argumnents
           as ``random.Random``,
           i.e. drawing (*without putting back*) a list of **k** random items
@@ -465,7 +460,7 @@ def projection(dim,
     start, end = sorted(index)
     for i in range(dim):
         v = 1 if start <= i < end else 0
-        _set_value(obj, i, i, v)
+        obj[i, i] = v
     return obj
 
 
@@ -540,10 +535,10 @@ def jordan(dim,
         if scalar is None else scalar
     obj = _eye(dim)
     start, end = sorted(index)
-    _set_value(obj, start, start, scalar)
+    obj[start, start] = scalar
     for i in range(start + 1, end):
-        _set_value(obj, i - 1, i, 1)
-        _set_value(obj, i, i, scalar)
+        obj[i - 1, i] = 1
+        obj[i, i] = scalar
     return obj
 
 
@@ -657,8 +652,8 @@ def permutation(dim,
     perm = perm or _sample(range(dim), dim, rng=rng)
     obj = _eye(dim)
     for i, j in enumerate(perm):
-        _set_value(obj, i, i, 0)  # aka zeros(dim)
-        _set_value(obj, i, j, 1)
+        obj[i, i] = 0  # aka zeros(dim)
+        obj[i, j] = 1
     return obj  # aka _eye(dim).permute(perm)
 
 
@@ -695,7 +690,8 @@ def elementary(dim,
     and $ad - bc \neq 0$.
     So multiplication with $\mathbf{A}$ gives for
 
-    * $a=0=d$ and $b=1=-c$ a :func:`transposition`, i.e. swapping rows $i$ and $j$
+    * $a=0=d$ and $b=1=-c$ a :func:`transposition`,
+      i.e. swapping rows $i$ and $j$
     * $a=1$, $d=\lambda$ and $b=0=-c$ this matrix describes scaling the
       row $j$ by $\lambda$
     * $a=1=d$, $b=\mu$, $-c=0$ adding the $\mu$ multiple
@@ -837,11 +833,11 @@ def rotation(dim,
     i.e. a special unitary matrix,
 
     >>> w, u = z * z, z * I
-    >>> c, s = simplify(z * re(u)), simplify(w * im(u))
-    >>> c, s
+    >>> cos_x, sin_x = simplify(z * re(u)), simplify(w * im(u))
+    >>> cos_x, sin_x
     (-1/2 - I/2, sqrt(2)*I/2)
 
-    >>> r = rotation(3, scalar=(c, s))
+    >>> r = rotation(3, scalar=(cos_x, sin_x))
     >>> r
     Matrix([
     [ -1/2 - I/2, sqrt(2)*I/2, 0],
@@ -1066,7 +1062,7 @@ def diagonal_normal(dim,
     else:
         obj = _eye(dim)
         for start, scalar in enumerate(spec):
-            _set_value(obj, start, start, scalar)
+            obj[start, start] = scalar
         return obj  # eq. to gauss_jordan(dim, rank, eigenvalue_set, dim)
 
 
@@ -1236,10 +1232,10 @@ def jordan_normal(dim,
         start = 0
         for scalar, size in spec:
             end = min(dim, start + size)
-            _set_value(obj, start, start, scalar)
+            obj[start, start] = scalar
             for i in range(start + 1, end):
-                _set_value(obj, i - 1, i, 1)
-                _set_value(obj, i, i, scalar)
+                obj[i - 1, i] = 1
+                obj[i, i] = scalar
             if end == dim:
                 break
             start = end
@@ -1418,13 +1414,13 @@ def isometry_normal(dim,
                 break
             if len(s) == 1:
                 scalar, = s
-                _set_value(obj, start, start, scalar)
+                obj[start, start] = scalar
             else:
                 c, s = s
-                _set_value(obj, start, start, c)
-                _set_value(obj, start, start + 1, s)
-                _set_value(obj, start + 1, start, -1 * s)
-                _set_value(obj, start + 1, start + 1, c)
+                obj[start, start] = c
+                obj[start, start + 1] = s
+                obj[start + 1, start] = -1 * s
+                obj[start + 1, start + 1] = c
             start = end
         return obj
 
@@ -2147,7 +2143,7 @@ def unitary(dim,
 
     Examples
     ========
-    >>> from sympy import sqrt, I, simplify, re, expand, simplify
+    >>> from sympy import sqrt, I, simplify, expand
     >>> from sympy.matrices.random import rand, unitary
     >>> rand.seed(1)
     >>> u = unitary(3)
@@ -2159,14 +2155,14 @@ def unitary(dim,
 
     >>> s = sqrt(2)/2
     >>> z = simplify(s + s * I)
-    >>> spec = [-1, z, -z]
-    >>> unitary(3, spec=spec, length=0)  # no more random
+    >>> spec_u = [-1, z, -z]
+    >>> unitary(3, spec=spec_u, length=0)  # no more random
     Matrix([
     [-1,                       0,                        0],
     [ 0, sqrt(2)/2 + sqrt(2)*I/2,                        0],
     [ 0,                       0, -sqrt(2)/2 - sqrt(2)*I/2]])
 
-    >>> u = simplify(unitary(3, spec=spec))
+    >>> u = simplify(unitary(3, spec=spec_u))
     >>> u
     Matrix([
     [(1 - I)*(-1 - sqrt(2)*I - I)/4,         1/4 - I/4 + sqrt(2)*I/4,        1/4 - sqrt(2)*I/4 + I/4],
@@ -2300,9 +2296,8 @@ def normal(dim,
     True
 
     >>> cos_a = sin_a = sqrt(2) / 2
-    >>> spec = 1, 2, 3
-    >>> scalars = cos_a, sin_a, -1
-    >>> n = simplify(normal(3, spec=spec, scalars=scalars))
+    >>> spec_n = 1, 2, 3
+    >>> n = simplify(normal(3, spec=spec_n, scalars=(cos_a, sin_a, -1)))
     >>> n
     Matrix([
     [1,    0,    0],
@@ -2312,7 +2307,7 @@ def normal(dim,
     >>> ev = n.eigenvals()
     >>> sorted(ev)
     [1, 2, 3]
-    >>> all(v in ev for v in spec)
+    >>> all(v in ev for v in spec_n)
     True
     >>> expand(n.T * n - n * n.T) == zeros(3)
     True
