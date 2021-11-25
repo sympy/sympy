@@ -1,7 +1,7 @@
 import random
 
 from sympy import Matrix, diag, eye, zeros, cartes, \
-    I, cos, simplify, symbols, sqrt
+    I, cos, simplify, symbols, sqrt, expand
 from sympy.matrices.random import super_elementary_matrix
 from sympy.matrices.random import jordan, jordan_normal, \
     complex_to_real, invertible, regular_to_singular, diagonal_normal, \
@@ -470,24 +470,24 @@ def test_orthogonal():
 
 def test_unitary():
     for d in list(TEST_DIMS)[1::3]:
-        i = unitary(d, (1,), length=0)
+        i = expand(unitary(d, (1,), length=0))
         assert _is_eye(i), repr(i)
 
-        m = unitary(d)
+        m = expand(unitary(d))
         assert _is_eye(m.H * m, TEST_EPSILON), repr(simplify(m.H * m))
         assert _is_eye(m.H * m), repr((m.H * m).evalf())
         assert abs(abs(m.det()) - 1) < TEST_EPSILON
 
         z = complex(1, 2)
-        m = unitary(d, spec=(z / abs(z),), length=d)
+        m = expand(unitary(d, spec=(z / abs(z),), length=d))
         assert _is_eye(m.H * m, TEST_EPSILON), repr(simplify(m.H * m))
         assert abs(m.evalf().det()) - 1 < TEST_PRECISION
 
         z = 2 + 3 * I
-        m = unitary(d, spec=(z / abs(z),), length=d)
+        m = expand(unitary(d, spec=(z / abs(z),), length=d))
         assert _is_eye(m.H * m), repr(simplify(m.H * m))
 
-        m = unitary(d, spec=(sqrt(2) / 2,), length=d)
+        m = expand(unitary(d, spec=(sqrt(2) / 2,), length=d))
         assert _is_eye(m.H * m), repr(simplify(m.H * m))
 
 
@@ -500,12 +500,13 @@ def test_normal():
             repr(simplify(m.T * m - m * m.T))
 
         z = 1 + 3 * I
-        c = normal(d, spec=(1, 2 * I, 3), scalars=(z/abs(z),), length=d)
+        c = expand(
+            normal(d, spec=(1, 2 * I, 3), scalars=(z/abs(z),), length=d))
         assert _is_zeros(c.H * c - c * c.H), \
             repr(simplify(m.H * m - m * m.H))
 
         z = complex(3, 1)
-        c = normal(d, spec, scalars=(z/abs(z),), length=d)
+        c = expand(normal(d, spec, scalars=(z/abs(z),), length=d))
         assert _is_zeros(c.H * c - c * c.H, TEST_EPSILON), \
             repr(simplify(m.H * m - m * m.H))
 
@@ -641,7 +642,8 @@ def test_seed():
         for matrix in _isometry_spec_:
             # 4. scalars/units as random
             first, second = list(), list()
-            spec = Scalars((sqrt(2)/2, 0))
+            z = sqrt(2)/2 + sqrt(2)/2 * I
+            spec = Scalars((z, -1, z*z))
             for s in seeds:
                 spec.rnd.seed(s)
                 first.append(matrix(d, spec=spec, seed=spec.rnd))

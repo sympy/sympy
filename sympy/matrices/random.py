@@ -6,6 +6,8 @@ from ..functions import sqrt as _sqrt, re as _re, im as _im, \
     transpose as _t, adjoint as _c
 from ..tensor import shape as _shape
 from .dense import eye as _eye
+from .inverse import _inv
+from . import Matrix
 
 __all__ = 'projection', 'jordan', 'transposition', \
           'permutation', 'elementary', 'rotation', 'reflection', \
@@ -84,10 +86,6 @@ def _set_value(o, i, j, v):
     o[i, j] = v
 
 
-def _inv(o):
-    return o.inv()
-
-
 def _cs(scalar, real=True, rng=None):
     if isinstance(scalar, (tuple, list)) and len(scalar) == 2:
         c, s = scalar
@@ -124,8 +122,8 @@ _elementary_units = _elementary_scalars
 _rotation_scalars = (_sqrt(2) / 2, _sqrt(2) / 2), (0, -1),
 _unitary_scalars = tuple(c * 1 + s * _i for c, s in _rotation_scalars)
 
-
 # === fundamental constructor ===
+
 
 def super_elementary_matrix(dim,
                             index=None,
@@ -785,7 +783,7 @@ def rotation(dim,
 
     Examples
     ========
-    >>> from sympy import sqrt, cos, symbols, eye, I
+    >>> from sympy import sqrt, cos, symbols, eye, I, re, im, expand, simplify
     >>> from sympy.matrices.random import rand, rotation
     >>> rand.seed(1)
 
@@ -822,7 +820,7 @@ def rotation(dim,
     works with symbols too
 
     >>> cos_phi = cos(symbols('phi'))
-    >>> r =rotation(3, scalar=cos_phi)
+    >>> r = rotation(3, scalar=cos_phi)
     >>> r
     Matrix([
     [              cos(phi), 0, sqrt(1 - cos(phi)**2)],
@@ -834,6 +832,31 @@ def rotation(dim,
 
     >>> r.T * r == eye(3)
     True
+
+    as well to give complex rotations,
+    i.e. a special unitary matrix,
+
+    >>> w, u = z * z, z * I
+    >>> c, s = simplify(z * re(u)), simplify(w * im(u))
+    >>> c, s
+    (-1/2 - I/2, sqrt(2)*I/2)
+
+    >>> r = rotation(3, scalar=(c, s))
+    >>> r
+    Matrix([
+    [ -1/2 - I/2, sqrt(2)*I/2, 0],
+    [sqrt(2)*I/2,  -1/2 + I/2, 0],
+    [          0,           0, 1]])
+
+    >>> r.det()
+    1
+
+    >>> expand(r.H * r)
+    Matrix([
+    [1, 0, 0],
+    [0, 1, 0],
+    [0, 0, 1]])
+
 
     Parameters
     ==========
@@ -872,7 +895,10 @@ def rotation(dim,
     index = index or _sample(range(dim), 2, rng=rng)
     scalar = scalar or _sample(_rotation_scalars, rng=rng)
     c, s = _cs(scalar, rng=rng)
-    return super_elementary_matrix(dim, index, c, s, s, c)
+    if _is_complex(c) or _is_complex(s):
+        return super_elementary_matrix(dim, index, c, s, _c(s), _c(c))
+    else:
+        return super_elementary_matrix(dim, index, c, s, s, c)
 
 
 def reflection(dim,
@@ -1404,6 +1430,7 @@ def isometry_normal(dim,
 
 
 # === compound matrices, i.e. product of base matrices ===
+
 
 def triangular(dim,
                rank=None,
@@ -1979,6 +2006,7 @@ def trigonalizable(dim,
 
 # === matrices conjugate by isometries ==
 
+
 def orthogonal(dim,
                spec=None,
                scalars=_rotation_scalars,
@@ -2088,11 +2116,17 @@ def unitary(dim,
     Explanation
     ===========
     An unitary matrix is an isometry
-    in n dimensional unitary space (complex vectorspace with Hermite form).
-    Constructed as product $\mathbf{A}=\mathbf{UDV}$
-    of two orthogonal matrices $\mathbf{U}$ an $\mathbf{V}$
-    and a diagonal unitary martix $\mathbf{D}$ (see :func:`isometry_normal`.
-    All entries are taken from **scalars**.
+    in n dimensional unitary space
+    (complex vectorspace with Hermite form).
+
+    Constructed as
+    product of random complex :func:`rotation`
+    and complex :func:`reflection` matrices,
+    i.e. where the $\sin$ and $\cos$ pair are
+    actural complex numers $a, b$ such that $a^2+b^2=1$.
+
+    Those pairs are constructed from three comples units
+    $z, w, u$ by $a=z*\re(u)$ and $b=w*\im(u)$.
 
     But if **spec** is given, another diagonal unitary matrix $\mathbf{D}'$ is
     build with entries from **spec**.
@@ -2113,58 +2147,39 @@ def unitary(dim,
 
     Examples
     ========
-    >>> from sympy import sqrt, I, simplify, re
+    >>> from sympy import sqrt, I, simplify, re, expand, simplify
     >>> from sympy.matrices.random import rand, unitary
     >>> rand.seed(1)
     >>> u = unitary(3)
-    >>> simplify(u)
+    >>> expand(u)
     Matrix([
-    [sqrt(2)*(-1 - 2*I)/4,            sqrt(2)/4, sqrt(2)*(-1 - I)/4],
-    [           sqrt(2)/4, sqrt(2)*(-1 - 2*I)/4, sqrt(2)*(-1 - I)/4],
-    [                 I/2,                  I/2,         -1/2 - I/2]])
-
-    >>> u = unitary(3, scalars=(-1,))
-    >>> simplify(u)
-    Matrix([
-    [-1,  0,  0],
-    [ 0, -1,  0],
-    [ 0,  0, -1]])
+    [                   -I/2,               -1/4 - I/4,              1/4 - 3*I/4],
+    [sqrt(2)/4 + sqrt(2)*I/4, -sqrt(2)/4 - sqrt(2)*I/2,               -sqrt(2)/4],
+    [              sqrt(2)/2,  sqrt(2)/4 + sqrt(2)*I/4, -sqrt(2)/4 - sqrt(2)*I/4]])
 
     >>> s = sqrt(2)/2
     >>> z = simplify(s + s * I)
-    >>> z
-    sqrt(2)*(1 + I)/2
-    >>> abs(z)
-    1
-    >>> spec = [-1, z, 1]
+    >>> spec = [-1, z, -z]
     >>> unitary(3, spec=spec, length=0)  # no more random
     Matrix([
-    [-1,                       0, 0],
-    [ 0, sqrt(2)/2 + sqrt(2)*I/2, 0],
-    [ 0,                       0, 1]])
+    [-1,                       0,                        0],
+    [ 0, sqrt(2)/2 + sqrt(2)*I/2,                        0],
+    [ 0,                       0, -sqrt(2)/2 - sqrt(2)*I/2]])
 
-    >>> u = unitary(3, spec=spec)
-    >>> simplify(u)
+    >>> u = simplify(unitary(3, spec=spec))
+    >>> u
     Matrix([
-    [1/4 - I/4 + sqrt(2)*(2 + I)/4,  0, 1/4 - I/4 + sqrt(2)*I/4],
-    [                            0, -1,                       0],
-    [     -1/4 - sqrt(2)*I/4 + I/4,  0, 3/4 + I/4 + sqrt(2)*I/4]])
-    >>> simplify(u * u.H)
+    [(1 - I)*(-1 - sqrt(2)*I - I)/4,         1/4 - I/4 + sqrt(2)*I/4,        1/4 - sqrt(2)*I/4 + I/4],
+    [      -1/4 - sqrt(2)*I/4 + I/4,  (1 - I)*(-1 - I + sqrt(2)*I)/8, (1 - I)*(-3 - sqrt(2) - 3*I)/8],
+    [        -sqrt(2)/4 + 1/4 - I/4, (1 - I)*(3 - 3*I - sqrt(2)*I)/8, (1 - I)*(-1 - I + sqrt(2)*I)/8]])
+    >>> expand(u * u.H)
     Matrix([
     [1, 0, 0],
     [0, 1, 0],
     [0, 0, 1]])
 
     >>> simplify(u.det())
-    sqrt(2)*(-1 - I)/2
-
-    >>> ev = u.eigenvals(simplify=True, multiple=True)
-    >>> ev = sorted(ev, key=(lambda x: re(x.evalf())))
-    >>> ev
-    [-1, sqrt(2)*I*(1 - I)/2, 1]
-    >>> # check if spec and ev coincide
-    >>> not any(simplify(x-y) for x, y in zip(spec, ev))
-    True
+    I
 
     Parameters
     ==========
@@ -2183,7 +2198,7 @@ def unitary(dim,
         * or just cosine value $c$ (then, a corresponding
           sin value $s$ will be drawn randomly).
 
-    scalars : tuple or list of symbols (optional),
+    scalars : tuple or list of symbols with norm 1 (optional),
         default values for random choosen scalar of
         rotations to build the orthogonal matrix
         see :func:`orthogonal`
@@ -2204,14 +2219,15 @@ def unitary(dim,
         if length == 0:
             return _eye(dim)
         length = length or 2 * dim
-
-        half = int(length / 2)
-        u = orthogonal(dim, scalars=scalars, length=half, seed=rng)
-        d = isometry_normal(dim, scalars, real=False, seed=rng)
-        v = orthogonal(dim,
-                       scalars=scalars, length=length - half, seed=rng)
-        return _multiply(u, d, v)
-
+        # draw triples of complex units $(z,w,u)$ such that by
+        # $c=z*\re(u)$ and $s=w*\im(u)$ each rotation
+        # yields a complex rotation matrix
+        if len(scalars) < 3:
+            scalars = scalars + scalars + scalars
+        csc = (lambda z, w, u: (z * _re(u), w * _im(u)))
+        scalars = [csc(*_sample(scalars, k=3, rng=rng)) for _ in range(length)]
+        items = [rotation(dim, scalar=s, seed=rng) for s in scalars]
+        return _multiply(*items)
     normal_form = isometry_normal(dim, spec, real=False, seed=rng)
     s = unitary(dim, scalars=scalars, length=length, seed=rng)
     return _multiply(_c(s), normal_form, s)
@@ -2261,7 +2277,7 @@ def normal(dim,
     Examples
     ========
 
-    >>> from sympy import I, zeros, expand
+    >>> from sympy import I, zeros, expand, simplify, sqrt
     >>> from sympy.matrices.random import rand, normal
     >>> rand.seed(44)
 
@@ -2271,13 +2287,33 @@ def normal(dim,
     [-sqrt(2)/2,       -1/2,        1/2],
     [-sqrt(2)/2,        1/2,       -1/2]])
 
-    >>> n = normal(3, spec=(1 + I, 2 * I, 3))
+    >>> n = simplify(normal(3, spec=(1 + I, 2 * I, 3)))
+    >>> n
+    Matrix([
+    [1 + I,                           0,                           0],
+    [    0,                     3/2 + I, sqrt(2)*(1 - I)*(2 + 3*I)/4],
+    [    0, sqrt(2)*(1 - I)*(3 - 2*I)/4,                     3/2 + I]])
+
     >>> expand(n.T * n - n * n.T) == zeros(3)  # different sample may give True
     False
     >>> expand(n.H * n - n * n.H) == zeros(3)
     True
 
-    >>> n = normal(3, spec=(1, 2, 3))
+    >>> cos_a = sin_a = sqrt(2) / 2
+    >>> spec = 1, 2, 3
+    >>> scalars = cos_a, sin_a, -1
+    >>> n = simplify(normal(3, spec=spec, scalars=scalars))
+    >>> n
+    Matrix([
+    [1,    0,    0],
+    [0,  5/2, -1/2],
+    [0, -1/2,  5/2]])
+
+    >>> ev = n.eigenvals()
+    >>> sorted(ev)
+    [1, 2, 3]
+    >>> all(v in ev for v in spec)
+    True
     >>> expand(n.T * n - n * n.T) == zeros(3)
     True
     >>> expand(n.H * n - n * n.H) == zeros(3)
@@ -2317,6 +2353,7 @@ def normal(dim,
 
 
 # === symmetric or complex adjoined matrices ===
+
 
 def symmetric(dim,
               scalars=_elementary_scalars,
