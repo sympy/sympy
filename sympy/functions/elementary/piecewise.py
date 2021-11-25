@@ -503,13 +503,12 @@ class Piecewise(Function):
             else:
                 sum = sum.subs(x, a)
                 if sum.has(*illegal):
+                    sum = S.Zero
+                e = anti._eval_interval(x, a, x)
+                if e.has(*illegal):
                     sum = anti
                 else:
-                    e = anti._eval_interval(x, a, x)
-                    if e.has(*illegal):
-                        sum = anti
-                    else:
-                        sum += e
+                    sum += e
             # see if we know whether b is contained in original
             # condition
             if b is S.Infinity:
