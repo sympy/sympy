@@ -502,10 +502,8 @@ class Piecewise(Function):
                 sum = anti
             else:
                 sum = sum.subs(x, a)
-                if sum.has(*illegal):
-                    sum = S.Zero
                 e = anti._eval_interval(x, a, x)
-                if e.has(*illegal):
+                if sum.has(*illegal) or e.has(*illegal):
                     sum = anti
                 else:
                     sum += e

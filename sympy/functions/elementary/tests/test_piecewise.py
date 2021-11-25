@@ -883,7 +883,7 @@ def test_holes():
     assert Piecewise((1, x < 2)).integrate(x) == Piecewise(
         (x, x < 2), (nan, True))
     assert Piecewise((1, And(x > 1, x < 2))).integrate(x) == Piecewise(
-        (nan, x < 1), (x - 1, x < 2), (nan, True))
+        (nan, x < 1), (x, x < 2), (nan, True))
     assert Piecewise((1, And(x > 1, x < 2))).integrate((x, 0, 3)) is nan
     assert Piecewise((1, And(x > 0, x < 4))).integrate((x, 1, 3)) == 2
 
