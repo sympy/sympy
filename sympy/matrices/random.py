@@ -2116,13 +2116,18 @@ def unitary(dim,
     (complex vectorspace with Hermite form).
 
     Constructed as
-    product of random complex :func:`rotation`
-    and complex :func:`reflection` matrices,
-    i.e. where the $\sin$ and $\cos$ pair are
-    actural complex numers $a, b$ such that $a^2+b^2=1$.
+    product of random complex :func:`rotation` matrices $\mathbf{A}$,
+    i.e. where the $\sin$ and $\cos$ pair is
+    actural a pair of complex numbers $a, b$ such that $|a|^2+|b|^2=1$.
+    So,
 
-    Those pairs are constructed from three comples units
-    $z, w, u$ by $a=z*\re(u)$ and $b=w*\im(u)$.
+    .. math::
+
+        \left[\begin{array}{cc}a & b \\ -\bar{b} & \bar{a} \end{array}\right]
+        \in SU(2).
+
+    Those pairs $b$ and $b$ are constructed from three complexs units
+    $z, w, u$ by $a=z*\operatorname{Re}(u)$ and $b=w*\operatorname{Im}(u)$.
 
     But if **spec** is given, another diagonal unitary matrix $\mathbf{D}'$ is
     build with entries from **spec**.
@@ -2260,15 +2265,15 @@ def normal(dim,
 
         \mathbf{A} = \mathbf{U \cdot D \cdot U}^H
 
-    The entries of $\mathbf{D}$ are taken from **spec**
+    The entries of $\mathbf{D}$, which are eigenvalues,
+    are taken from **spec**
     and the entries to build $\mathbf{U}$ are taken from **scalars**.
+
 
     Since **orthogonal** matrices are **unitary**,
     $\mathbf{U}$ will be **orthogonal**
-    if **scalars** has only eal entries.
-
-    So the final *normal* matrix will be real
-    if **spec** consists only of real entries, too.
+    if **scalars** has only real entries.
+    So the final *normal* matrix will be real, too.
 
     Examples
     ========
