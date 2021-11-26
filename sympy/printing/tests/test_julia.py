@@ -212,7 +212,8 @@ def test_containers():
     assert julia_code(Tuple(*[1, 2, 3])) == "(1, 2, 3)"
     assert julia_code((1, x*y, (3, x**2))) == "(1, x.*y, (3, x.^2))"
     # scalar, matrix, empty matrix and empty list
-    assert julia_code((1, eye(3), Matrix(0, 0, []), [])) == "(1, [1 0 0;\n0 1 0;\n0 0 1], zeros(0, 0), Any[])"
+    from sympy.codegen.pynodes import List
+    assert julia_code((1, eye(3), Matrix(0, 0, []), List())) == "(1, [1 0 0;\n0 1 0;\n0 0 1], zeros(0, 0), Any[])"
 
 
 def test_julia_noninline():

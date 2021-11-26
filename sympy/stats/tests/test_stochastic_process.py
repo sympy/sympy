@@ -186,7 +186,7 @@ def test_DiscreteMarkovChain():
     Y7 = DiscreteMarkovChain('Y', trans_probs=TO7)
     tuples = Y7.communication_classes()
     classes, recurrence, periods = list(zip(*tuples))
-    assert classes == ([1, 3], [0, 2], [4])
+    assert classes == ((1, 3), (0, 2), (4,))
     assert recurrence == (True, False, False)
     assert periods == (2, 1, 1)
 
@@ -199,7 +199,7 @@ def test_DiscreteMarkovChain():
     Y8 = DiscreteMarkovChain('Y', trans_probs=TO8)
     tuples = Y8.communication_classes()
     classes, recurrence, periods = list(zip(*tuples))
-    assert classes == ([0, 3], [1, 2, 5, 4])
+    assert classes == ((0, 3), (1, 2, 5, 4))
     assert recurrence == (True, False)
     assert periods == (2, 2)
 
@@ -216,7 +216,7 @@ def test_DiscreteMarkovChain():
     Y9 = DiscreteMarkovChain('Y', trans_probs=TO9)
     tuples = Y9.communication_classes()
     classes, recurrence, periods = list(zip(*tuples))
-    assert classes == ([0, 3, 6, 7], [1], [2, 8, 9], [5], [4])
+    assert classes == ((0, 3, 6, 7), (1,), (2, 8, 9), (5,), (4,))
     assert recurrence == (True, True, False, True, False)
     assert periods == (1, 1, 1, 1, 1)
 
@@ -294,7 +294,7 @@ def test_DiscreteMarkovChain():
     Y10 = DiscreteMarkovChain('Y', [1, 2, 3], TO2)
     tuples = Y10.communication_classes()
     classes, recurrence, periods = list(zip(*tuples))
-    assert classes == ([1], [2, 3])
+    assert classes == ((1,), (2, 3))
     assert recurrence == (True, False)
     assert periods == (1, 1)
     assert Y10.canonical_form() == ([1, 2, 3], TO2)

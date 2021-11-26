@@ -50,11 +50,7 @@ class Tuple(Basic):
 
     def __new__(cls, *args, **kwargs):
         if kwargs.get('sympify', True):
-            args = tuple((sympify(arg) for arg in args))
-        for arg in args:
-            if isinstance(arg, list):
-                msg = "Tuple should not contain list as arguments: {0}".format(arg)
-                warnings.warn( DeprecationWarning(msg))
+            args = tuple((Tuple(*arg) if isinstance(arg, list) else sympify(arg) for arg in args))
         obj = Basic.__new__(cls, *args)
         return obj
 
