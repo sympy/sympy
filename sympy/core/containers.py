@@ -50,6 +50,9 @@ class Tuple(Basic):
     def __new__(cls, *args, **kwargs):
         if kwargs.get('sympify', True):
             args = (sympify(arg) for arg in args)
+        for arg in args:
+            if isinstance(arg, list):
+                raise TypeError("Tuple should not contain list as arguments")
         obj = Basic.__new__(cls, *args)
         return obj
 
