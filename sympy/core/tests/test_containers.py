@@ -42,6 +42,10 @@ def test_Tuple():
     assert Tuple.fromiter(x for x in range(4)) == Tuple(0, 1, 2, 3)
     assert st2.fromiter(st2.args) == st2
 
+    #see issue 22550
+    assert Tuple([1, 2, [3, 4]]) == Tuple(Tuple(1, 2, Tuple(3, 4)))
+    assert Tuple([1, 2], 3) == Tuple(Tuple(1, 2), 3)
+
 
 def test_Tuple_contains():
     t1, t2 = Tuple(1), Tuple(2)
