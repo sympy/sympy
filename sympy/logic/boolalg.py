@@ -345,6 +345,9 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     def __hash__(self):
         return hash(True)
 
+    def __eq__(self, other):
+        return other is True or other is true
+
     @property
     def negated(self):
         return S.false
@@ -412,6 +415,9 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
 
     def __hash__(self):
         return hash(False)
+
+    def __eq__(self, other):
+        return other is False or other is false
 
     @property
     def negated(self):
