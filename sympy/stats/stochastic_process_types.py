@@ -996,7 +996,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         >>> for states, is_recurrent, period in classes:
         ...     states, is_recurrent, period
         ((1, 2), True, 2)
-        ((3), False, 1)
+        ((3,), False, 1)
 
         From this we can see that states ``1`` and ``2``
         communicate, are recurrent and have a period
