@@ -883,7 +883,7 @@ def test_holes():
     assert Piecewise((1, x < 2)).integrate(x) == Piecewise(
         (x, x < 2), (nan, True))
     assert Piecewise((1, And(x > 1, x < 2))).integrate(x) == Piecewise(
-        (nan, x < 1), (x - 1, x < 2), (nan, True))
+        (nan, x < 1), (x, x < 2), (nan, True))
     assert Piecewise((1, And(x > 1, x < 2))).integrate((x, 0, 3)) is nan
     assert Piecewise((1, And(x > 0, x < 4))).integrate((x, 1, 3)) == 2
 
@@ -1447,3 +1447,9 @@ def test_piecewise_eval():
         ) == (x >= -3) & (x <= oo)
     assert f(Piecewise((x, (Abs(arg(a)) <= 1) | (Abs(arg(a)) < 1)))
         ) == (Abs(arg(a)) <= 1) | (Abs(arg(a)) < 1)
+
+
+def test_issue_22533():
+    x = Symbol('x', real=True)
+    f = Piecewise((-1 / x, x <= 0), (1 / x, True))
+    assert integrate(f, x) == Piecewise((-log(x), x <= 0), (log(x), True))
