@@ -15,6 +15,7 @@ from .sympify import _sympify, sympify, converter, SympifyError
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import as_int
 
+import warnings
 
 class Tuple(Basic):
     """
@@ -49,10 +50,11 @@ class Tuple(Basic):
 
     def __new__(cls, *args, **kwargs):
         if kwargs.get('sympify', True):
-            args = (sympify(arg) for arg in args)
+            args = tuple((sympify(arg) for arg in args))
         for arg in args:
             if isinstance(arg, list):
-                raise TypeError("Tuple should not contain list as arguments")
+                msg = "Tuple should not contain list as arguments: {0}".format(arg)
+                warnings.warn( DeprecationWarning(msg))
         obj = Basic.__new__(cls, *args)
         return obj
 
