@@ -615,7 +615,7 @@ def _denest_pow(eq):
     from sympy.simplify.simplify import logcombine
 
     b, e = eq.as_base_exp()
-    if b.is_Pow or isinstance(b.func, exp) and e != 1:
+    if b.is_Pow or isinstance(b, exp) and e != 1:
         new = b._eval_power(e)
         if new is not None:
             eq = new

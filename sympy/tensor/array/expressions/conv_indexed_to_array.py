@@ -10,8 +10,9 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.combinatorics import Permutation
 from sympy.matrices.expressions.matexpr import MatrixElement
-from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayDiagonal, \
-    ArrayContraction, ArrayTensorProduct, ArrayAdd, get_shape, ArrayElement
+from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal, \
+    get_shape, ArrayElement, _array_tensor_product, _array_diagonal, _array_contraction, _array_add, \
+    _permute_dims
 from sympy.tensor.array.expressions.utils import _get_argindex, _get_diagonal_indices
 
 
@@ -93,7 +94,7 @@ def convert_indexed_to_array(expr, first_indices=None):
         raise ValueError("not found")
 
     permutation = [_get_pos(i, first_indices) for i in indices]
-    return PermuteDims(result, permutation)
+    return _permute_dims(result, permutation)
 
 
 def _convert_indexed_to_array(expr):
@@ -136,7 +137,7 @@ def _convert_indexed_to_array(expr):
                 if ind in summation_indices:
                     pass
             if diagonal_indices:
-                subexpr = ArrayDiagonal(subexpr.expr, *diagonal_indices)
+                subexpr = _array_diagonal(subexpr.expr, *diagonal_indices)
             else:
                 subexpr = subexpr.expr
 
@@ -153,7 +154,7 @@ def _convert_indexed_to_array(expr):
         free_indices = [i for i in subindices if i is not None]
         indices_ret = list(free_indices)
         indices_ret.sort(key=lambda x: free_indices.index(x))
-        return ArrayContraction(
+        return _array_contraction(
                 subexpr,
                 *contraction_indices,
                 free_indices=free_indices
@@ -186,23 +187,23 @@ def _convert_indexed_to_array(expr):
             newindices.append(loc_indices)
         flattened_indices = [kronecker_delta_repl.get(j, j) for i in newindices for j in i]
         diagonal_indices, ret_indices = _get_diagonal_indices(flattened_indices)
-        tp = ArrayTensorProduct(*newargs)
+        tp = _array_tensor_product(*newargs)
         if diagonal_indices:
-            return (ArrayDiagonal(tp, *diagonal_indices), ret_indices)
+            return _array_diagonal(tp, *diagonal_indices), ret_indices
         else:
             return tp, ret_indices
     if isinstance(expr, MatrixElement):
         indices = expr.args[1:]
         diagonal_indices, ret_indices = _get_diagonal_indices(indices)
         if diagonal_indices:
-            return (ArrayDiagonal(expr.args[0], *diagonal_indices), ret_indices)
+            return _array_diagonal(expr.args[0], *diagonal_indices), ret_indices
         else:
             return expr.args[0], ret_indices
     if isinstance(expr, Indexed):
         indices = expr.indices
         diagonal_indices, ret_indices = _get_diagonal_indices(indices)
         if diagonal_indices:
-            return (ArrayDiagonal(expr.base, *diagonal_indices), ret_indices)
+            return _array_diagonal(expr.base, *diagonal_indices), ret_indices
         else:
             return expr.args[0], ret_indices
     if isinstance(expr, IndexedBase):
@@ -220,12 +221,12 @@ def _convert_indexed_to_array(expr):
                 raise NotImplementedError("indices must be the same")
             permutation = Permutation([index0.index(j) for j in indices[i]])
             # Perform index permutations:
-            args[i] = PermuteDims(args[i], permutation)
-        return ArrayAdd(*args), index0
+            args[i] = _permute_dims(args[i], permutation)
+        return _array_add(*args), index0
     if isinstance(expr, Pow):
         subexpr, subindices = _convert_indexed_to_array(expr.base)
         if isinstance(expr.exp, (int, Integer)):
             diags = zip(*[(2*i, 2*i + 1) for i in range(expr.exp)])
-            arr = ArrayDiagonal(ArrayTensorProduct(*[subexpr for i in range(expr.exp)]), *diags)
+            arr = _array_diagonal(_array_tensor_product(*[subexpr for i in range(expr.exp)]), *diags)
             return arr, subindices
     return expr, ()

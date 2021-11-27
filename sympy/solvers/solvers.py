@@ -38,16 +38,13 @@ from sympy.ntheory.factor_ import divisors
 from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
     powdenest, nsimplify, denom, logcombine, sqrtdenest, fraction,
     separatevars)
-from sympy.integrals.integrals import Integral
 from sympy.simplify.sqrtdenest import sqrt_depth
 from sympy.simplify.fu import TR1, TR2i
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly
 from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
-
 from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
-
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent, debug
 from sympy.utilities.iterables import (connected_components,
@@ -57,7 +54,6 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from mpmath import findroot
 
 from sympy.solvers.polysys import solve_poly_system
-from sympy.solvers.inequalities import reduce_inequalities
 
 from types import GeneratorType
 from collections import defaultdict
@@ -833,6 +829,8 @@ def solve(f, *symbols, **flags):
     dsolve: For solving differential equations
 
     """
+    from .inequalities import reduce_inequalities
+
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
     ###########################################################################
@@ -2128,6 +2126,8 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     symbols = symbols.difference(exclude)
     if not symbols:
         return S.Zero, S.One
+
+    from sympy.integrals.integrals import Integral
 
     # derivatives are easy to do but tricky to analyze to see if they
     # are going to disallow a linear solution, so for simplicity we
@@ -3514,5 +3514,7 @@ def unrad(eq, *syms, **flags):
     eq, cov = _canonical(eq, cov)
     return eq, cov
 
+
+# Delayed imports
 from sympy.solvers.bivariate import (
     bivariate_type, _solve_lambert, _filtered_gens)

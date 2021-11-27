@@ -7,7 +7,7 @@ from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand,
     nfloat, expand_mul, expand)
-from sympy.core.numbers import Float, I, pi, Rational, Integer
+from sympy.core.numbers import Float, I, pi, Rational
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
 from sympy.core.sorting import ordered
@@ -1587,7 +1587,7 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
                     d = Pow(10, int(mpmath.log(fl)/mpmath.log(10)))
                     r = Rational(str(fl/d))*d
                 else:
-                    r = Integer(0)
+                    r = S.Zero
         reps[key] = r
     return p.subs(reps, simultaneous=True)
 

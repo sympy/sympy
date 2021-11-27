@@ -207,7 +207,7 @@ class gamma(Function):
 
         if x0.is_integer and x0.is_nonpositive:
             n = -x0
-            res = (-1)**n/self.func(n + 1)
+            res = S.NegativeOne**n/self.func(n + 1)
             return res/(arg + n).as_leading_term(x)
         elif not x0.is_infinite:
             return self.func(x0)
@@ -313,7 +313,7 @@ class lowergamma(Function):
                 return lowergamma(a, nx)
         elif a.is_integer and a.is_nonpositive:
             if n != 0:
-                return 2*pi*I*n*(-1)**(-a)/factorial(-a) + lowergamma(a, nx)
+                return 2*pi*I*n*S.NegativeOne**(-a)/factorial(-a) + lowergamma(a, nx)
         elif n != 0:
             return exp(2*pi*I*n*a)*lowergamma(a, nx)
 
@@ -332,7 +332,7 @@ class lowergamma(Function):
                         return gamma(a)*(lowergamma(S.Half, x)/sqrt(pi) - exp(-x)*Add(*[x**(k - S.Half)/gamma(S.Half + k) for k in range(1, a + S.Half)]))
 
                 if not a.is_Integer:
-                    return (-1)**(S.Half - a)*pi*erf(sqrt(x))/gamma(1 - a) + exp(-x)*Add(*[x**(k + a - 1)*gamma(a)/gamma(a + k) for k in range(1, Rational(3, 2) - a)])
+                    return S.NegativeOne**(S.Half - a)*pi*erf(sqrt(x))/gamma(1 - a) + exp(-x)*Add(*[x**(k + a - 1)*gamma(a)/gamma(a + k) for k in range(1, Rational(3, 2) - a)])
 
         if x.is_zero:
             return S.Zero
@@ -500,7 +500,7 @@ class uppergamma(Function):
                 return uppergamma(a, nx)
         elif a.is_integer and a.is_nonpositive:
             if n != 0:
-                return -2*pi*I*n*(-1)**(-a)/factorial(-a) + uppergamma(a, nx)
+                return -2*pi*I*n*S.NegativeOne**(-a)/factorial(-a) + uppergamma(a, nx)
         elif n != 0:
             return gamma(a)*(1 - exp(2*pi*I*n*a)) + exp(2*pi*I*n*a)*uppergamma(a, nx)
 
@@ -516,14 +516,20 @@ class uppergamma(Function):
                 b = a - 1
                 if b.is_positive:
                     if a.is_integer:
-                        return exp(-z) * factorial(b) * Add(*[z**k / factorial(k) for k in range(a)])
+                        return exp(-z) * factorial(b) * Add(*[z**k / factorial(k)
+                                                              for k in range(a)])
                     else:
-                        return gamma(a) * erfc(sqrt(z)) + (-1)**(a - S(3)/2) * exp(-z) * sqrt(z) * Add(*[gamma(-S.Half - k) * (-z)**k / gamma(1-a) for k in range(a - S.Half)])
+                        return (gamma(a) * erfc(sqrt(z)) +
+                                S.NegativeOne**(a - S(3)/2) * exp(-z) * sqrt(z)
+                                * Add(*[gamma(-S.Half - k) * (-z)**k / gamma(1-a)
+                                        for k in range(a - S.Half)]))
                 elif b.is_Integer:
                     return expint(-b, z)*unpolarify(z)**(b + 1)
 
                 if not a.is_Integer:
-                    return (-1)**(S.Half - a) * pi*erfc(sqrt(z))/gamma(1-a) - z**a * exp(-z) * Add(*[z**k * gamma(a) / gamma(a+k+1) for k in range(S.Half - a)])
+                    return (S.NegativeOne**(S.Half - a) * pi*erfc(sqrt(z))/gamma(1-a)
+                            - z**a * exp(-z) * Add(*[z**k * gamma(a) / gamma(a+k+1)
+                                                     for k in range(S.Half - a)]))
 
         if a.is_zero and z.is_positive:
             return -Ei(-z)
@@ -737,7 +743,7 @@ class polygamma(Function):
 
             if n.is_positive:
                 if z is S.Half:
-                    return (-1)**(n + 1)*factorial(n)*(2**(n + 1) - 1)*zeta(n + 1)
+                    return S.NegativeOne**(n + 1)*factorial(n)*(2**(n + 1) - 1)*zeta(n + 1)
 
             if n is S.NegativeOne:
                 return loggamma(z)
@@ -758,9 +764,9 @@ class polygamma(Function):
                             return S.ComplexInfinity
                         else:
                             if n.is_zero:
-                                return -S.EulerGamma + harmonic(z - 1, 1)
+                                return harmonic(z - 1, 1) - S.EulerGamma
                             elif n.is_odd:
-                                return (-1)**(n + 1)*factorial(n)*zeta(n + 1, z)
+                                return S.NegativeOne**(n + 1)*factorial(n)*zeta(n + 1, z)
 
         if n.is_zero:
             if z is S.NaN:
@@ -796,7 +802,7 @@ class polygamma(Function):
                     else:
                         tail = -Add(*[Pow(
                             z + i, e) for i in range(0, int(-coeff))])
-                    return polygamma(n, z - coeff) + (-1)**n*factorial(n)*tail
+                    return polygamma(n, z - coeff) + S.NegativeOne**n*factorial(n)*tail
 
             elif z.is_Mul:
                 coeff, z = z.as_two_terms()
@@ -831,7 +837,7 @@ class polygamma(Function):
     def _eval_rewrite_as_zeta(self, n, z, **kwargs):
         if n.is_integer:
             if (n - S.One).is_nonnegative:
-                return (-1)**(n + 1)*factorial(n)*zeta(n + 1, z)
+                return S.NegativeOne**(n + 1)*factorial(n)*zeta(n + 1, z)
 
     def _eval_rewrite_as_harmonic(self, n, z, **kwargs):
         if n.is_integer:

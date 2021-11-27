@@ -503,7 +503,7 @@ def test_TensExpr():
     raises(ValueError, lambda: S.One/(A(c, d) + g(c, d)))
     raises(ValueError, lambda: A(a, b) + A(a, c))
 
-    A(a, b) + B(a, b) # assigned to t for below
+    #t = A(a, b) + B(a, b) # assigned to t for below
     #raises(NotImplementedError, lambda: TensExpr.__mul__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__add__(t, 'a'))
     #raises(NotImplementedError, lambda: TensExpr.__radd__(t, 'a'))

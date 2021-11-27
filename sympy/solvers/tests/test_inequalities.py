@@ -15,7 +15,7 @@ from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, Or)
 from sympy.polys.polytools import (Poly, PurePoly)
 from sympy.sets.sets import (FiniteSet, Interval, Union)
-from sympy.solvers.inequalities import (reduce_inequalities,
+from sympy.solvers.inequalities import (solve_linear_inequalities,reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
                                         solve_univariate_inequality as isolve,

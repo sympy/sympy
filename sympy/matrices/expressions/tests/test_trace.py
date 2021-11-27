@@ -26,7 +26,7 @@ def test_Trace():
     assert conjugate(Trace(A)) == trace(Adjoint(A))
     assert transpose(Trace(A)) == Trace(A)
 
-    A / Trace(A)  # Make sure this is possible
+    _ = A / Trace(A)  # Make sure this is possible
 
     # Some easy simplifications
     assert trace(Identity(5)) == 5

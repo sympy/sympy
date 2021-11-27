@@ -163,7 +163,7 @@ def _solve_variation_of_parameters(eq, func, roots, homogen_sol, order, match_ob
         " solutions to the homogeneous equation necessary to apply " +
         "variation of parameters to " +
         str(eq) + " (number of terms != order)")
-    negoneterm = (-1)**(order)
+    negoneterm = S.NegativeOne**(order)
     for i in roots:
         psol += negoneterm*Integral(wronskian([sol for sol in roots if sol != i], x)*r[-1]/wr, x)*i/r[order]
         negoneterm *= -1

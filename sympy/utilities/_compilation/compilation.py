@@ -5,8 +5,7 @@ import subprocess
 import sys
 import tempfile
 import warnings
-from distutils.errors import CompileError
-from distutils.sysconfig import get_config_var, get_config_vars
+from sysconfig import get_config_var, get_config_vars, get_path
 
 from .runners import (
     CCompilerRunner,
@@ -16,10 +15,8 @@ from .runners import (
 from .util import (
     get_abspath, make_dirs, copy, Glob, ArbitraryDepthGlob,
     glob_at_depth, import_module_from_file, pyx_is_cplus,
-    sha256_of_string, sha256_of_file
+    sha256_of_string, sha256_of_file, CompileError
 )
-
-sharedext = get_config_var('EXT_SUFFIX')
 
 if os.name == 'posix':
     objext = '.o'
@@ -149,7 +146,7 @@ def link(obj_files, out_file=None, shared=False, Runner=None,
     if out_file is None:
         out_file, ext = os.path.splitext(os.path.basename(obj_files[-1]))
         if shared:
-            out_file += sharedext
+            out_file += get_config_var('EXT_SUFFIX')
 
     if not Runner:
         if fort:
@@ -228,8 +225,7 @@ def link_py_so(obj_files, so_file=None, cwd=None, libraries=None,
         # Don't use the default code below
         pass
     else:
-        from distutils import sysconfig
-        if sysconfig.get_config_var('Py_ENABLE_SHARED'):
+        if get_config_var('Py_ENABLE_SHARED'):
             cfgDict = get_config_vars()
             kwargs['linkline'] = kwargs.get('linkline', []) + [cfgDict['PY_LDFLAGS']] # PY_LDFLAGS or just LDFLAGS?
             library_dirs += [cfgDict['LIBDIR']]
@@ -350,8 +346,7 @@ def src2obj(srcpath, Runner=None, objpath=None, cwd=None, inc_py=False, **kwargs
 
     include_dirs = kwargs.pop('include_dirs', [])
     if inc_py:
-        from distutils.sysconfig import get_python_inc
-        py_inc_dir = get_python_inc()
+        py_inc_dir = get_path('include')
         if py_inc_dir not in include_dirs:
             include_dirs.append(py_inc_dir)
 

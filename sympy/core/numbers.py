@@ -5,7 +5,7 @@ import math
 import re as regex
 import sys
 from functools import lru_cache
-from typing import Set as tSet
+from typing import Set as tSet, Tuple as tTuple
 
 from .containers import Tuple
 from .sympify import (SympifyError, converter, sympify, _convert_numpy_types, _sympify,
@@ -1017,6 +1017,8 @@ class Float(Number):
     """
     __slots__ = ('_mpf_', '_prec')
 
+    _mpf_: tTuple[int, int, int, int]
+
     # A Float represents many real numbers,
     # both rational and irrational.
     is_rational = None
@@ -1583,6 +1585,9 @@ class Rational(Number):
     is_number = True
 
     __slots__ = ('p', 'q')
+
+    p: int
+    q: int
 
     is_Rational = True
 
@@ -3957,7 +3962,7 @@ class Catalan(NumberSymbol, metaclass=Singleton):
         from .symbol import Dummy
         from sympy.concrete.summations import Sum
         k = Dummy('k', integer=True, nonnegative=True)
-        return Sum((-1)**k / (2*k+1)**2, (k, 0, S.Infinity))
+        return Sum(S.NegativeOne**k / (2*k+1)**2, (k, 0, S.Infinity))
 
 
 class ImaginaryUnit(AtomicExpr, metaclass=Singleton):

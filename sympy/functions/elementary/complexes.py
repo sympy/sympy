@@ -1,3 +1,5 @@
+from typing import Tuple as tTuple
+
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
@@ -59,6 +61,8 @@ class re(Function):
 
     im
     """
+
+    args: tTuple[Expr]
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
@@ -179,6 +183,8 @@ class im(Function):
 
     re
     """
+
+    args: tTuple[Expr]
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
@@ -497,6 +503,8 @@ class Abs(Function):
 
     sign, conjugate
     """
+
+    args: tTuple[Expr]
 
     is_extended_real = True
     is_extended_negative = False

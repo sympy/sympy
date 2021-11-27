@@ -267,6 +267,7 @@ def test_String():
     assert st == String('foobar')
     assert st.text == 'foobar'
     assert st.func(**st.kwargs()) == st
+    assert st.func(*st.args) == st
 
 
     class Signifier(String):

@@ -3,7 +3,7 @@ This module provides convenient functions to transform SymPy expressions to
 lambda functions which can be used to calculate numerical values very fast.
 """
 
-from typing import Any, Dict as tDict, Iterable
+from typing import Any, Dict as tDict, Iterable, Union as tUnion, TYPE_CHECKING
 
 import builtins
 import inspect
@@ -11,12 +11,17 @@ import keyword
 import textwrap
 import linecache
 
+# Required despite static analysis claiming it is not used
+from sympy.external import import_module # noqa:F401
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import (is_sequence, iterable,
-    NotIterable)
+    NotIterable, flatten)
 from sympy.utilities.misc import filldedent
 
+
+if TYPE_CHECKING:
+    import sympy.core.expr
 
 __doctest_requires__ = {('lambdify',): ['numpy', 'tensorflow']}
 
@@ -120,8 +125,6 @@ def _import(module, reload=False):
     These dictionaries map names of Python functions to their equivalent in
     other modules.
     """
-    # Required despite static analysis claiming it is not used
-    from sympy.external import import_module # noqa:F401
     try:
         namespace, namespace_default, translations, import_commands = MODULES[
             module]
@@ -174,8 +177,9 @@ def _import(module, reload=False):
 # linecache.
 _lambdify_generated_counter = 1
 
+
 @doctest_depends_on(modules=('numpy', 'scipy', 'tensorflow',), python_version=(3,))
-def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
+def lambdify(args: tUnion[Iterable, 'sympy.core.expr.Expr'], expr: 'sympy.core.expr.Expr', modules=None, printer=None, use_imps=True,
              dummify=False, cse=False):
     """Convert a SymPy expression into a function that allows for fast
     numeric evaluation.
@@ -753,6 +757,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
     and SciPy namespaces.
     """
     from sympy.core.symbol import Symbol
+    from sympy.core.expr import Expr
 
     # If the user hasn't specified any modules, use what is available.
     if modules is None:
@@ -832,13 +837,12 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
                 ).warn()
 
     # Get the names of the args, for creating a docstring
-    if not iterable(args):
-        args = (args,)
+    iterable_args: Iterable = (args,) if isinstance(args, Expr) else args
     names = []
 
     # Grab the callers frame, for getting the names by inspection (if needed)
     callers_local_vars = inspect.currentframe().f_back.f_locals.items() # type: ignore
-    for n, var in enumerate(args):
+    for n, var in enumerate(iterable_args):
         if hasattr(var, 'name'):
             names.append(var.name)
         else:
@@ -865,7 +869,7 @@ def lambdify(args: Iterable, expr, modules=None, printer=None, use_imps=True,
         cses, _expr = cse(expr)
     else:
         cses, _expr = (), expr
-    funcstr = funcprinter.doprint(funcname, args, _expr, cses=cses)
+    funcstr = funcprinter.doprint(funcname, iterable_args, _expr, cses=cses)
 
     # Collect the module imports from the code printers.
     imp_mod_lines = []
@@ -988,7 +992,6 @@ def lambdastr(args, expr, printer=None, dummify=None):
     from sympy.core.function import (Derivative, Function)
     from sympy.core.symbol import (Dummy, Symbol)
     from sympy.core.sympify import sympify
-    from sympy.utilities.iterables import flatten
 
     if printer is not None:
         if inspect.isfunction(printer):
@@ -1169,10 +1172,8 @@ class _EvaluatorPrinter:
         from sympy.core.basic import Basic
         from sympy.core.sorting import ordered
         from sympy.core.function import (Derivative, Function)
-        from sympy.core.symbol import Dummy
-        from sympy.utilities.iterables import flatten
+        from sympy.core.symbol import Dummy, uniquely_named_symbol
         from sympy.matrices import DeferredVector
-        from sympy.core.symbol import uniquely_named_symbol
         from sympy.core.expr import Expr
 
         # Args of type Dummy can cause name collisions with args
@@ -1256,7 +1257,6 @@ class _TensorflowEvaluatorPrinter(_EvaluatorPrinter):
         This method is used when the input value is not interable,
         but can be indexed (see issue #14655).
         """
-        from sympy.utilities.iterables import flatten
 
         def flat_indexes(elems):
             n = 0

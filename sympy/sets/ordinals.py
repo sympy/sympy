@@ -61,7 +61,7 @@ class Ordinal(Basic):
 
     Examples
     ========
-    >>> from sympy.sets import Ordinal, OmegaPower
+    >>> from sympy import Ordinal, OmegaPower
     >>> from sympy.sets.ordinals import omega
     >>> w = omega
     >>> w.is_limit_ordinal

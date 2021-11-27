@@ -20,7 +20,7 @@ from sympy.integrals.integrals import (Integral, integrate)
 from sympy.series.limits import (Limit, limit)
 from sympy.simplify.simplify import simplify
 
-from sympy.calculus.util import AccumBounds
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
@@ -85,8 +85,16 @@ def test_basic1():
     assert limit(1/sqrt(x), x, 0, dir='-') == (-oo)*I
     assert limit(x**2, x, 0, dir='-') == 0
     assert limit(sqrt(x), x, 0, dir='-') == 0
-    assert limit(x**-pi, x, 0, dir='-') == -oo*(-1)**(1 - pi)
+    assert limit(x**-pi, x, 0, dir='-') == oo/(-1)**pi
     assert limit((1 + cos(x))**oo, x, 0) == Limit((cos(x) + 1)**oo, x, 0)
+
+    # test pull request 22491
+    assert limit(1/asin(x), x, 0, dir = '+') == oo
+    assert limit(1/asin(x), x, 0, dir = '-') == -oo
+    assert limit(1/sinh(x), x, 0, dir = '+') == oo
+    assert limit(1/sinh(x), x, 0, dir = '-') == -oo
+    assert limit(log(1/x) + 1/sin(x), x, 0, dir = '+') == oo
+    assert limit(log(1/x) + 1/x, x, 0, dir = '+') == oo
 
 
 def test_basic2():
@@ -603,8 +611,8 @@ def test_issue_8433():
 
 def test_issue_8481():
     k = Symbol('k', integer=True, nonnegative=True)
-    lamda = Symbol('lamda', real=True, positive=True)
-    limit(lamda**k * exp(-lamda) / factorial(k), k, oo) == 0
+    lamda = Symbol('lamda', positive=True)
+    assert limit(lamda**k * exp(-lamda) / factorial(k), k, oo) == 0
 
 
 def test_issue_8635_18176():
@@ -956,11 +964,11 @@ def test_issue_16708():
 
 
 def test_issue_19453():
-    beta = Symbol("beta", real=True, positive=True)
-    h = Symbol("h", real=True, positive=True)
-    m = Symbol("m", real=True, positive=True)
-    w = Symbol("omega", real=True, positive=True)
-    g = Symbol("g", real=True, positive=True)
+    beta = Symbol("beta", positive=True)
+    h = Symbol("h", positive=True)
+    m = Symbol("m", positive=True)
+    w = Symbol("omega", positive=True)
+    g = Symbol("g", positive=True)
 
     e = exp(1)
     q = 3*h**2*beta*g*e**(0.5*h*beta*w)

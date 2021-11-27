@@ -471,7 +471,7 @@ def test_issue_17256():
     r1 = s1.xreplace({x:a})
     r2 = s2.xreplace({x:a})
 
-    r1.doit() == r2.doit()
+    assert r1.doit() == r2.doit()
     s1 = Sum(x + 1, (x, 0, 9))
     s2 = Sum(x + 1, (x, Range(10)))
     a = Symbol('a')

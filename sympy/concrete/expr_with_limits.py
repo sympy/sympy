@@ -10,9 +10,10 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import (piecewise_fold,
     Piecewise)
 from sympy.logic.boolalg import BooleanFunction
-from sympy.tensor.indexed import Idx
+from sympy.matrices.matrices import MatrixBase
 from sympy.sets.sets import Interval, Set
 from sympy.sets.fancysets import Range
+from sympy.tensor.indexed import Idx
 from sympy.utilities import flatten
 from sympy.utilities.iterables import sift, is_sequence
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -311,18 +312,25 @@ class ExprWithLimits(Expr):
         # should be returned, e.g. don't return set() if the
         # function is zero -- treat it like an unevaluated expression.
         function, limits = self.function, self.limits
+        # mask off non-symbol integration variables that have
+        # more than themself as a free symbol
+        reps = {i[0]: i[0] if i[0].free_symbols == {i[0]} else Dummy()
+            for i in self.limits}
+        function = function.xreplace(reps)
         isyms = function.free_symbols
         for xab in limits:
+            v = reps[xab[0]]
             if len(xab) == 1:
-                isyms.add(xab[0])
+                isyms.add(v)
                 continue
             # take out the target symbol
-            if xab[0] in isyms:
-                isyms.remove(xab[0])
+            if v in isyms:
+                isyms.remove(v)
             # add in the new symbols
             for i in xab[1:]:
                 isyms.update(i.free_symbols)
-        return isyms
+        reps = {v: k for k, v in reps.items()}
+        return set([reps.get(_, _) for _ in isyms])
 
     @property
     def is_number(self):
@@ -573,8 +581,6 @@ class AddWithLimits(ExprWithLimits):
         return self
 
     def _eval_expand_basic(self, **hints):
-        from sympy.matrices.matrices import MatrixBase
-
         summand = self.function.expand(**hints)
         if summand.is_Add and summand.is_commutative:
             return Add(*[self.func(i, *self.limits) for i in summand.args])

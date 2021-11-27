@@ -523,6 +523,12 @@ _known_functions_mpmath = dict(_in_mpmath, **{
     'fresnels': 'fresnels',
     'sign': 'sign',
     'loggamma': 'loggamma',
+    'hyper': 'hyper',
+    'meijerg': 'meijerg',
+    'besselj': 'besselj',
+    'bessely': 'bessely',
+    'besseli': 'besseli',
+    'besselk': 'besselk',
 })
 _known_constants_mpmath = {
     'Exp1': 'e',

@@ -18,9 +18,8 @@ def decompogen(f, symbol):
     Examples
     ========
 
-    >>> from sympy.solvers.decompogen import decompogen
     >>> from sympy.abc import x
-    >>> from sympy import sqrt, sin, cos
+    >>> from sympy import decompogen, sqrt, sin, cos
     >>> decompogen(sin(cos(x)), x)
     [sin(x), cos(x)]
     >>> decompogen(sin(x)**2 + sin(x) + 1, x)

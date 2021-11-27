@@ -1,4 +1,4 @@
-from sympy.calculus.util import AccumBounds
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
@@ -21,6 +21,7 @@ from sympy.simplify.simplify import nsimplify
 from sympy.core.basic import _aresame
 from sympy.testing.pytest import XFAIL
 from sympy.abc import a, x, y, z, t
+
 
 def test_subs():
     n3 = Rational(3)
@@ -47,6 +48,7 @@ def test_subs_Matrix():
     assert Mul(Matrix([[3]]), x).subs(x, 2.0) == Matrix([[6.0]])
     # Does not raise a TypeError, see comment on the MatAdd postprocessor
     assert Add(Matrix([[3]]), x).subs(x, 2.0) == Add(Matrix([[3]]), 2.0)
+
 
 def test_subs_AccumBounds():
     e = x
@@ -481,6 +483,7 @@ def test_add():
     assert Add(*[AccumBounds(-1, 1), oo]) == oo
     assert Add(*[oo, AccumBounds(-1, 1)]) == oo
 
+
 def test_subs_issue_4009():
     assert (I*Symbol('a')).subs(1, 2) == I*Symbol('a')
 
@@ -879,9 +882,16 @@ def test_issue_19558():
     assert (sin(x) + cos(x)).subs(x, oo) == AccumBounds(-2, 2)
 
 
+
+def test_issue_22033():
+    xr = Symbol('xr', real=True)
+    e = (1/xr)
+    assert e.subs(xr**2, y) == e
+
+
 def test_guard_against_indeterminate_evaluation():
     eq = x**y
     assert eq.subs([(x, 1), (y, oo)]) == 1  # because 1**y == 1
     assert eq.subs([(y, oo), (x, 1)]) is S.NaN
     assert eq.subs({x: 1, y: oo}) is S.NaN
-    assert eq.subs([(x, 1), (y, oo)],simultaneous=True) is S.NaN
+    assert eq.subs([(x, 1), (y, oo)], simultaneous=True) is S.NaN
