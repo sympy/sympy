@@ -310,7 +310,7 @@ class Piecewise(Function):
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         for e, c in self.args:
-            if c == True or c.subs(x, 0) == True:
+            if (cdir == -1 and c.subs(x, -1e-3)) or (cdir == 1 and c.subs(x, 1e-3)):
                 return e.as_leading_term(x)
 
     def _eval_adjoint(self):

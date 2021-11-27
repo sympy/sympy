@@ -621,8 +621,11 @@ class Function(Application, Expr):
         return fuzzy_and(a.is_commutative for a in self.args)
 
     def _eval_is_meromorphic(self, x, a):
+        from sympy.functions.elementary.piecewise import Piecewise
         if not self.args:
             return True
+        if isinstance(self, Piecewise) and any((arg.has(x) or arg[0].is_number) for arg in self.args[1:]):
+            return False
         if any(arg.has(x) for arg in self.args[1:]):
             return False
 
