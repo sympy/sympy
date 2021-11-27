@@ -482,9 +482,9 @@ class Order(Expr):
                             e2 = sol.args[1]
                             sol = set(e1) - set(e2)
                         try:
-                            res = [dict(zip((d, ), sol))]
+                            res = [dict(zip((d,), sol))]
                         except TypeError:
-                            raise NotImplementedError("sympy is unable to solve the following equation: {} = 0".format(sol_str))
+                            raise NotImplementedError("SymPy is unable to solve the following equation: {} = 0".format(sol_str))
                         else:
                             point = d.subs(res[0]).limit(old, self.point[i])
                     newvars[i] = var
@@ -501,7 +501,7 @@ class Order(Expr):
             point = list(self.point)
             old_update = old + point[0]
             new_update = new + point[0]
-            if old_update !=old and new_update !=new:
+            if old_update != old and new_update != new:
                 return self._eval_subs(old_update, new_update)
 
     def _eval_conjugate(self):
