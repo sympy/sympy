@@ -710,12 +710,12 @@ class SphericalBesselBase(BesselBase):
 
 def _jn(n, z):
     return (spherical_bessel_fn(n, z)*sin(z) +
-            (S.NegativeOne)**(n + 1)*spherical_bessel_fn(-n - 1, z)*cos(z))
+            S.NegativeOne**(n + 1)*spherical_bessel_fn(-n - 1, z)*cos(z))
 
 
 def _yn(n, z):
     # (-1)**(n + 1) * _jn(-n - 1, z)
-    return ((S.NegativeOne)**(n + 1) * spherical_bessel_fn(-n - 1, z)*sin(z) -
+    return (S.NegativeOne**(n + 1) * spherical_bessel_fn(-n - 1, z)*sin(z) -
             spherical_bessel_fn(n, z)*cos(z))
 
 
@@ -794,10 +794,10 @@ class jn(SphericalBesselBase):
         return sqrt(pi/(2*z)) * besselj(nu + S.Half, z)
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
-        return (-1)**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
+        return S.NegativeOne**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
 
     def _eval_rewrite_as_yn(self, nu, z, **kwargs):
-        return (-1)**(nu) * yn(-nu - 1, z)
+        return S.NegativeOne**(nu) * yn(-nu - 1, z)
 
     def _expand(self, **hints):
         return _jn(self.order, self.argument)
@@ -856,14 +856,14 @@ class yn(SphericalBesselBase):
     """
     @assume_integer_order
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
-        return (-1)**(nu+1) * sqrt(pi/(2*z)) * besselj(-nu - S.Half, z)
+        return S.NegativeOne**(nu+1) * sqrt(pi/(2*z)) * besselj(-nu - S.Half, z)
 
     @assume_integer_order
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
         return sqrt(pi/(2*z)) * bessely(nu + S.Half, z)
 
     def _eval_rewrite_as_jn(self, nu, z, **kwargs):
-        return (-1)**(nu + 1) * jn(-nu - 1, z)
+        return S.NegativeOne**(nu + 1) * jn(-nu - 1, z)
 
     def _expand(self, **hints):
         return _yn(self.order, self.argument)
@@ -882,7 +882,7 @@ class SphericalHankelBase(SphericalBesselBase):
         # yn as besselj: (-1)**(nu+1) * sqrt(pi/(2*z)) * besselj(-nu - S.Half, z)
         hks = self._hankel_kind_sign
         return sqrt(pi/(2*z))*(besselj(nu + S.Half, z) +
-                               hks*I*(-1)**(nu+1)*besselj(-nu - S.Half, z))
+                               hks*I*S.NegativeOne**(nu+1)*besselj(-nu - S.Half, z))
 
     @assume_integer_order
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
@@ -890,7 +890,7 @@ class SphericalHankelBase(SphericalBesselBase):
         # jn as bessely: (-1)**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
         # yn as bessely: sqrt(pi/(2*z)) * bessely(nu + S.Half, z)
         hks = self._hankel_kind_sign
-        return sqrt(pi/(2*z))*((-1)**nu*bessely(-nu - S.Half, z) +
+        return sqrt(pi/(2*z))*(S.NegativeOne**nu*bessely(-nu - S.Half, z) +
                                hks*I*bessely(nu + S.Half, z))
 
     def _eval_rewrite_as_yn(self, nu, z, **kwargs):

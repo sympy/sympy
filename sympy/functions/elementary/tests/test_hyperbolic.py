@@ -1,4 +1,4 @@
-from sympy.calculus.util import AccumBounds
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.function import (expand_mul, expand_trig)
 from sympy.core.numbers import (E, I, Integer, Rational, nan, oo, pi, zoo)
 from sympy.core.singleton import S
@@ -857,7 +857,7 @@ def test_atanh():
     assert atanh(tanh(pi/2)) == pi/2
     assert atanh(tanh(pi)) == pi
     assert atanh(tanh(-3 + 7*I)) == -3 - 2*I*pi + 7*I
-    assert atanh(tanh(9 - I*Rational(2, 3))) == 9 - I*Rational(2, 3)
+    assert atanh(tanh(9 - I*2/3)) == 9 - I*2/3
     assert atanh(tanh(-32 - 123*I)) == -32 - 123*I + 39*I*pi
 
 

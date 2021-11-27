@@ -214,7 +214,7 @@ from .facts import FactRules, FactKB
 from .core import BasicMeta
 from .sympify import sympify
 
-from random import shuffle
+from sympy.core.random import shuffle
 
 
 _assume_rules = FactRules([
@@ -343,10 +343,10 @@ def failing_assumptions(expr, **assumptions):
 
     >>> from sympy import failing_assumptions, Symbol
 
-    >>> x = Symbol('x', real=True, positive=True)
+    >>> x = Symbol('x', positive=True)
     >>> y = Symbol('y')
-    >>> failing_assumptions(6*x + y, real=True, positive=True)
-    {'positive': None, 'real': None}
+    >>> failing_assumptions(6*x + y, positive=True)
+    {'positive': None}
 
     >>> failing_assumptions(x**2 - 1, positive=True)
     {'positive': None}
@@ -386,14 +386,14 @@ def check_assumptions(expr, against=None, **assume):
     True
     >>> check_assumptions(pi, real=True, integer=False)
     True
-    >>> check_assumptions(pi, real=True, negative=True)
+    >>> check_assumptions(pi, negative=True)
     False
     >>> check_assumptions(exp(I*pi/7), real=False)
     True
-    >>> x = Symbol('x', real=True, positive=True)
-    >>> check_assumptions(2*x + 1, real=True, positive=True)
+    >>> x = Symbol('x', positive=True)
+    >>> check_assumptions(2*x + 1, positive=True)
     True
-    >>> check_assumptions(-2*x - 5, real=True, positive=True)
+    >>> check_assumptions(-2*x - 5, positive=True)
     False
 
     To check assumptions of *expr* against another variable or expression,

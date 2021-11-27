@@ -109,7 +109,10 @@ if matchpy:
 else:
     class Wildcard: # type: ignore
         def __init__(self, min_length, fixed_size, variable_name, optional):
-            pass
+            self.min_count = min_length
+            self.fixed_size = fixed_size
+            self.variable_name = variable_name
+            self.optional = optional
 
 
 @doctest_depends_on(modules=('matchpy',))

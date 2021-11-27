@@ -27,7 +27,7 @@ from sympy.polys.domains import FF
 from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
-from sympy.testing.randtest import _randrange, _randint
+from sympy.core.random import _randrange, _randint
 
 
 class NonInvertibleCipherWarning(RuntimeWarning):
@@ -2571,7 +2571,7 @@ def elgamal_private_key(digit=10, seed=None):
     =====
 
     For testing purposes, the ``seed`` parameter may be set to control
-    the output of this routine. See sympy.testing.randtest._randrange.
+    the output of this routine. See sympy.core.random._randrange.
 
     Examples
     ========
@@ -2656,7 +2656,7 @@ def encipher_elgamal(i, key, seed=None):
     =====
 
     For testing purposes, the ``seed`` parameter may be set to control
-    the output of this routine. See sympy.testing.randtest._randrange.
+    the output of this routine. See sympy.core.random._randrange.
 
     Examples
     ========
@@ -2764,7 +2764,7 @@ def dh_private_key(digit=10, seed=None):
     =====
 
     For testing purposes, the ``seed`` parameter may be set to control
-    the output of this routine. See sympy.testing.randtest._randrange.
+    the output of this routine. See sympy.core.random._randrange.
 
     Examples
     ========

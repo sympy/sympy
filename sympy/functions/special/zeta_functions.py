@@ -528,10 +528,10 @@ class zeta(Function):
         if z.is_integer:
             if a.is_Integer:
                 if z.is_negative:
-                    zeta = (-1)**z * bernoulli(-z + 1)/(-z + 1)
+                    zeta = S.NegativeOne**z * bernoulli(-z + 1)/(-z + 1)
                 elif z.is_even and z.is_positive:
                     B, F = bernoulli(z), factorial(z)
-                    zeta = ((-1)**(z/2+1) * 2**(z - 1) * B * pi**z) / F
+                    zeta = (S.NegativeOne**(z/2+1) * 2**(z - 1) * B * pi**z) / F
                 else:
                     return
 

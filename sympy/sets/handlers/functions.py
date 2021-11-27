@@ -10,8 +10,8 @@ from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.logic.boolalg import true
 from sympy.multipledispatch import dispatch
 from sympy.sets import (imageset, Interval, FiniteSet, Union, ImageSet,
-    Intersection, Range)
-from sympy.sets.sets import EmptySet
+    Intersection, Range, Complement)
+from sympy.sets.sets import EmptySet, is_function_invertible_in_set
 from sympy.sets.fancysets import Integers, Naturals, Reals
 from sympy.functions.elementary.exponential import match_real_imag
 
@@ -33,7 +33,6 @@ def _set_function(f, x): # noqa:F811
 def _set_function(f, x): # noqa:F811
     from sympy.solvers.solveset import solveset
     from sympy.series import limit
-    from sympy.sets import Complement
     # TODO: handle functions with infinitely many solutions (eg, sin, tan)
     # TODO: handle multivariate functions
 
@@ -135,7 +134,6 @@ def _set_function(f, x): # noqa:F811
 
 @dispatch(FunctionUnion, Intersection)  # type: ignore # noqa:F811
 def _set_function(f, x): # noqa:F811
-    from sympy.sets.sets import is_function_invertible_in_set
     # If the function is invertible, intersect the maps of the sets.
     if is_function_invertible_in_set(f, x):
         return Intersection(*(imageset(f, arg) for arg in x.args))

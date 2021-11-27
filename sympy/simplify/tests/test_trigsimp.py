@@ -379,7 +379,7 @@ def test_issue_15129_trigsimp_methods():
 
 def test_exptrigsimp():
     def valid(a, b):
-        from sympy.testing.randtest import verify_numerically as tn
+        from sympy.core.random import verify_numerically as tn
         if not (tn(a, b) and a == b):
             return False
         return True

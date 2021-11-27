@@ -19,7 +19,8 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.solvers.solveset import solveset
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.trigonometric import sec, csc, cot, tan, cos
 from sympy.utilities.misc import filldedent
 
 
@@ -83,8 +84,7 @@ def singularities(expression, symbol, domain=None):
     {0}
 
     """
-    from sympy.functions.elementary.exponential import log
-    from sympy.functions.elementary.trigonometric import sec, csc, cot, tan, cos
+    from sympy.solvers.solveset import solveset
 
     if domain is None:
         domain = S.Reals if symbol.is_real else S.Complexes
@@ -140,6 +140,8 @@ def monotonicity_helper(expression, predicate, interval=S.Reals, symbol=None):
         is varied in ``range``, False otherwise.
 
     """
+    from sympy.solvers.solveset import solveset
+
     expression = sympify(expression)
     free = expression.free_symbols
 
@@ -372,6 +374,8 @@ def is_monotonic(expression, interval=S.Reals, symbol=None):
     True
 
     """
+    from sympy.solvers.solveset import solveset
+
     expression = sympify(expression)
 
     free = expression.free_symbols

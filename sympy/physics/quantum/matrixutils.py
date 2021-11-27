@@ -1,7 +1,8 @@
 """Utilities to deal with sympy.Matrix, numpy and scipy.sparse."""
 
 from sympy.core.expr import Expr
-from sympy.core.numbers import (I, Integer)
+from sympy.core.numbers import I
+from sympy.core.singleton import S
 from sympy.matrices.matrices import MatrixBase
 from sympy.matrices import eye, zeros
 from sympy.external import import_module
@@ -269,7 +270,7 @@ def matrix_to_zero(e):
     """Convert a zero matrix to the scalar zero."""
     if isinstance(e, MatrixBase):
         if zeros(*e.shape) == e:
-            e = Integer(0)
+            e = S.Zero
     elif isinstance(e, numpy_ndarray):
         e = _numpy_matrix_to_zero(e)
     elif isinstance(e, scipy_sparse_matrix):

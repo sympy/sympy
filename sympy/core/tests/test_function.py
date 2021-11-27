@@ -623,8 +623,7 @@ def test_issue_5399():
 
 
 def test_derivative_numerically():
-    from random import random
-    z0 = random() + I*random()
+    z0 = x._random()
     assert abs(Derivative(sin(x), x).doit_numerically(z0) - cos(z0)) < 1e-15
 
 
@@ -968,6 +967,10 @@ def test_nfloat():
         [[Float('1.0', precision=53), Float('2.0', precision=53)],
         [Float('3.0', precision=53), Float('4.0', precision=53)]])
     assert _aresame(nfloat(A), B)
+
+    # issue 22524
+    f = Function('f')
+    assert not nfloat(f(2)).atoms(Float)
 
 
 def test_issue_7068():

@@ -182,7 +182,7 @@ def test_get_diag_blocks2():
 
 def test_shape():
     m = ShapingOnlyMatrix(1, 2, [0, 0])
-    m.shape == (1, 2)
+    assert m.shape == (1, 2)
 
 
 def test_reshape():

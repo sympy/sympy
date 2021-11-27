@@ -129,8 +129,8 @@ def test_getitem():
 
 def test_iterator():
     array = ImmutableDenseNDimArray(range(4), (2, 2))
-    array[0] == ImmutableDenseNDimArray([0, 1])
-    array[1] == ImmutableDenseNDimArray([2, 3])
+    assert array[0] == ImmutableDenseNDimArray([0, 1])
+    assert array[1] == ImmutableDenseNDimArray([2, 3])
 
     array = array.reshape(4)
     j = 0
@@ -201,7 +201,7 @@ def test_ndim_array_converting():
     dense_array = ImmutableDenseNDimArray([1, 2, 3, 4], (2, 2))
     alist = dense_array.tolist()
 
-    alist == [[1, 2], [3, 4]]
+    assert alist == [[1, 2], [3, 4]]
 
     matrix = dense_array.tomatrix()
     assert (isinstance(matrix, Matrix))

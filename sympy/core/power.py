@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Tuple as tTuple
 from math import log as _log, sqrt as _sqrt
 from itertools import product
 
@@ -269,6 +269,8 @@ class Pow(Expr):
 
     __slots__ = ('is_commutative',)
 
+    args: tTuple[Expr, Expr]
+
     @cacheit
     def __new__(cls, b, e, evaluate=None):
         if evaluate is None:
@@ -314,7 +316,7 @@ class Pow(Expr):
                 return S.ComplexInfinity
             elif e.__class__.__name__ == "AccumulationBounds":
                 if b == S.Exp1:
-                    from sympy.calculus.util import AccumBounds
+                    from sympy.calculus.accumulationbounds import AccumBounds
                     return AccumBounds(Pow(b, e.min), Pow(b, e.max))
             # autosimplification if base is a number and exp odd/even
             # if base is Number then the base will end up positive; we
@@ -821,7 +823,7 @@ class Pow(Expr):
         return self.base.is_polar
 
     def _eval_subs(self, old, new):
-        from sympy.calculus.util import AccumBounds
+        from sympy.calculus.accumulationbounds import AccumBounds
 
         if isinstance(self.exp, AccumBounds):
             b = self.base.subs(old, new)
@@ -859,9 +861,10 @@ class Pow(Expr):
                         as_int(pow, strict=False)
                         combines = True
                     except ValueError:
-                        combines = isinstance(Pow._eval_power(
-                            Pow(*old.as_base_exp(), evaluate=False),
-                            pow), (Pow, exp, Symbol))
+                        b, e = old.as_base_exp()
+                        # These conditions ensure that (b**e)**f == b**(e*f) for any f
+                        combines = b.is_positive and e.is_real or b.is_nonnegative and e.is_nonnegative
+
                     return combines, pow, None
                 else:
                     # With noncommutative symbols, substitute only integer powers

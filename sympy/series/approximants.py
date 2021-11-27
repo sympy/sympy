@@ -1,4 +1,4 @@
-from sympy.core.numbers import Integer
+from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.utilities import public
 
@@ -55,15 +55,15 @@ def approximants(l, X=Symbol('x'), simplify=False):
     function mpmath.pade
 
     """
-    p1, q1 = [Integer(1)], [Integer(0)]
-    p2, q2 = [Integer(0)], [Integer(1)]
+    p1, q1 = [S.One], [S.Zero]
+    p2, q2 = [S.Zero], [S.One]
     while len(l):
         b = 0
         while l[b]==0:
             b += 1
             if b == len(l):
                 return
-        m = [Integer(1)/l[b]]
+        m = [S.One/l[b]]
         for k in range(b+1, len(l)):
             s = 0
             for j in range(b, k):

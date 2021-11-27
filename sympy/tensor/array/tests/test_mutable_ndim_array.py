@@ -108,8 +108,8 @@ def test_reshape():
 
 def test_iterator():
     array = MutableDenseNDimArray(range(4), (2, 2))
-    array[0] == MutableDenseNDimArray([0, 1])
-    array[1] == MutableDenseNDimArray([2, 3])
+    assert array[0] == MutableDenseNDimArray([0, 1])
+    assert array[1] == MutableDenseNDimArray([2, 3])
 
     array = array.reshape(4)
     j = 0
@@ -206,7 +206,7 @@ def test_ndim_array_converting():
     dense_array = MutableDenseNDimArray([1, 2, 3, 4], (2, 2))
     alist = dense_array.tolist()
 
-    alist == [[1, 2], [3, 4]]
+    assert alist == [[1, 2], [3, 4]]
 
     matrix = dense_array.tomatrix()
     assert (isinstance(matrix, Matrix))
