@@ -1065,7 +1065,6 @@ def _split_min_max(inequalities, pivot):
     >>> _split_min_max(inequalities, pivot)
     (Min(2*x/3 + z/3 + 1/3, x + 2*z - 2), -x - 3*z - 4, [x - z])
     """
-
     greater_than = []
     lower_than = []
     extra = []
@@ -1192,7 +1191,6 @@ def _fourier_motzkin_extension(inequalities,symbols):
     >>> d[x]
     (oo > x, x > Max(z, -y - 3*z - 4, y - 2*z + 2, 3*y/2 - z/2 - 1/2))
     """
-
     res = {}
     pivot = _pick_var(inequalities,symbols)
     while pivot and inequalities:
