@@ -1205,8 +1205,7 @@ def _factorize_linear(expr,symbols):
     >>> from sympy.abc import x, y, z
     >>> from sympy import expand
     >>> from sympy import sqrt,exp
-
-    symbols = {x,z}
+    >>> symbols = {x,z}
     >>> expr= x - sqrt(3)*(-x + sqrt(3)*(-2*x - z - 1)/3 - exp(4))/3
     >>> _factorize_linear(expr,symbols)
     x*(sqrt(3)/3 + 5/3) + z/3 + 1/3 + sqrt(3)*exp(4)/3
