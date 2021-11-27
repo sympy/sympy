@@ -1311,15 +1311,4 @@ def solve_linear_inequalities(inequalities,symbols):
     return {**res1, **res2}
 
 
-from sympy.abc import x, y, z
-from sympy import expand,oo
 
-eq1 = 2*x - 3*y + z + 1
-eq2 = x - y + 2*z - 2
-eq3 = x + y + 3*z + 4
-eq4 = x - z
-symbols = {x,y,z}
-d = solve_linear_inequalities([eq1, eq2, eq3, eq4],symbols)
-assert str(d[x])=="(oo > x, x > -2/7)"
-assert str(d[y])=="(Min(x + 1/3, 3*x - 2) > y, y > -4*x - 4)"
-assert str(d[z])=="(x > z, z > Max(-2*x + 3*y - 1, -x/2 + y/2 + 1, -x/3 - y/3 - 4/3))"
