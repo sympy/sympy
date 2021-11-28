@@ -319,7 +319,7 @@ class Piecewise(Function):
         ========
         >>> from sympy import csc, log, Piecewise
         >>> from sympy.abc import x
-        >>> f = Piecewise((csc(1/x), x < 1), (2*x**2 + 1, x<5), (log(x), True))
+        >>> f = Piecewise((csc(1/x), x < 1), (2*x**2 + 1, x < 5), (log(x), True))
         >>> f.is_meromorphic(x, 0)
         False
         >>> f.is_meromorphic(x, 1)
