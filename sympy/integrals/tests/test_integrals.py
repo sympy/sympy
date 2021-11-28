@@ -1208,7 +1208,7 @@ def test_atom_bug():
 def test_limit_bug():
     z = Symbol('z', zero=False)
     assert integrate(sin(x*y*z), (x, 0, pi), (y, 0, pi)).together() == \
-        (log(pi*z) - Ci(pi**2*z) + EulerGamma + log(pi))/z
+        (log(z) - Ci(pi**2*z) + EulerGamma + 2*log(pi))/z
 
 
 def test_issue_4703():
@@ -1712,8 +1712,7 @@ def test_issue_17473():
 def test_issue_17671():
     assert integrate(log(log(x)) / x**2, [x, 1, oo]) == -EulerGamma
     assert integrate(log(log(x)) / x**3, [x, 1, oo]) == -log(2)/2 - EulerGamma/2
-    assert integrate(log(log(x)) / x**10, [x, 1, oo]
-        ) == -log(9)/9 - EulerGamma/9
+    assert integrate(log(log(x)) / x**10, [x, 1, oo]) == -2*log(3)/9 - EulerGamma/9
 
 
 def test_issue_2975():

@@ -489,7 +489,6 @@ def calculate_series(e, x, logx=None):
 
     This is a place that fails most often, so it is in its own function.
     """
-    from sympy.polys import cancel
 
     for t in e.lseries(x, logx=logx):
         # bottom_up function is required for a specific case - when e is
