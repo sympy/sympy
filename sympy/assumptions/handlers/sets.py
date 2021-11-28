@@ -3,7 +3,7 @@ Handlers for predicates related to set membership: integer, rational, etc.
 """
 
 from sympy.assumptions import Q, ask
-from sympy.core import Add, Basic, Expr, Mul, Pow
+from sympy.core import Add, Basic, Expr, Mul, Pow, S
 from sympy.core.numbers import (AlgebraicNumber, ComplexInfinity, Exp1, Float,
     GoldenRatio, ImaginaryUnit, Infinity, Integer, NaN, NegativeInfinity,
     Number, NumberSymbol, Pi, pi, Rational, TribonacciConstant, E)
@@ -292,7 +292,7 @@ def _(expr, assumptions):
         # can be determined by replacing exp(i*I*pi) with (-1)**i.
         i = expr.base.exp/I/pi
         if ask(Q.integer(2*i), assumptions):
-            return ask(Q.real(((-1)**i)**expr.exp), assumptions)
+            return ask(Q.real((S.NegativeOne**i)**expr.exp), assumptions)
         return
 
     if ask(Q.imaginary(expr.base), assumptions):
@@ -578,7 +578,7 @@ def _(expr, assumptions):
                 return False
             i = expr.base.exp/I/pi
             if ask(Q.integer(2*i), assumptions):
-                return ask(Q.imaginary(((-1)**i)**expr.exp), assumptions)
+                return ask(Q.imaginary((S.NegativeOne**i)**expr.exp), assumptions)
 
     if ask(Q.imaginary(expr.base), assumptions):
         if ask(Q.integer(expr.exp), assumptions):

@@ -262,9 +262,9 @@ def test_moment_generating_functions():
 
 def test_Or():
     X = Geometric('X', S.Half)
-    P(Or(X < 3, X > 4)) == Rational(13, 16)
-    P(Or(X > 2, X > 1)) == P(X > 1)
-    P(Or(X >= 3, X < 3)) == 1
+    assert P(Or(X < 3, X > 4)) == Rational(13, 16)
+    assert P(Or(X > 2, X > 1)) == P(X > 1)
+    assert P(Or(X >= 3, X < 3)) == 1
 
 
 def test_where():

@@ -6,9 +6,12 @@ if typing.TYPE_CHECKING:
 
 from inspect import getmro
 import string
-from random import choice
+from sympy.core.random import choice
 
 from .parameters import global_parameters
+
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import iterable
 
 
 class SympifyError(ValueError):
@@ -434,8 +437,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     if strict:
         raise SympifyError(a)
 
-    from sympy.utilities.iterables import iterable
-
     if iterable(a):
         try:
             return type(a)([sympify(x, locals=locals, convert_xor=convert_xor,
@@ -449,7 +450,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
             a = str(a)
         except Exception as exc:
             raise SympifyError(a, exc)
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
         SymPyDeprecationWarning(
             feature="String fallback in sympify",
             useinstead= \

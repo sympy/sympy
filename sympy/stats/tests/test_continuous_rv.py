@@ -45,7 +45,7 @@ from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDomain
 from sympy.stats.compound_rv import CompoundPSpace
 from sympy.stats.symbolic_probability import Probability
 from sympy.testing.pytest import raises, XFAIL, slow, ignore_warnings
-from sympy.testing.randtest import verify_numerically as tn
+from sympy.core.random import verify_numerically as tn
 
 oo = S.Infinity
 
@@ -93,7 +93,7 @@ def test_ContinuousDomain():
     X = Normal('x', 0, 1)
     assert where(X**2 <= 1).set == Interval(-1, 1)
     assert where(X**2 <= 1).symbol == X.symbol
-    where(And(X**2 <= 1, X >= 0)).set == Interval(0, 1)
+    assert where(And(X**2 <= 1, X >= 0)).set == Interval(0, 1)
     raises(ValueError, lambda: where(sin(X) > 1))
 
     Y = given(X, X >= 0)
@@ -185,7 +185,7 @@ def test_characteristic_function():
     Z = Exponential('z', 5)
     cf = characteristic_function(Z)
     assert cf(0) == 1
-    assert cf(1).expand() == Rational(25, 26) + I*Rational(5, 26)
+    assert cf(1).expand() == Rational(25, 26) + I*5/26
 
     X = GaussianInverse('x', 1, 1)
     cf = characteristic_function(X)
@@ -634,7 +634,7 @@ def test_exgaussian():
 def test_exponential():
     rate = Symbol('lambda', positive=True)
     X = Exponential('x', rate)
-    p = Symbol("p", positive=True, real=True, finite=True)
+    p = Symbol("p", positive=True, real=True)
 
     assert E(X) == 1/rate
     assert variance(X) == 1/rate**2
@@ -960,14 +960,14 @@ def test_maxwell():
 
 def test_Moyal():
     mu = Symbol('mu',real=False)
-    sigma = Symbol('sigma', real=True, positive=True)
+    sigma = Symbol('sigma', positive=True)
     raises(ValueError, lambda: Moyal('M',mu, sigma))
 
     mu = Symbol('mu', real=True)
-    sigma = Symbol('sigma', real=True, negative=True)
+    sigma = Symbol('sigma', negative=True)
     raises(ValueError, lambda: Moyal('M',mu, sigma))
 
-    sigma = Symbol('sigma', real=True, positive=True)
+    sigma = Symbol('sigma', positive=True)
     M = Moyal('M', mu, sigma)
     assert density(M)(z) == sqrt(2)*exp(-exp((mu - z)/sigma)/2
                         - (-mu + z)/(2*sigma))/(2*sqrt(pi)*sigma)

@@ -1198,7 +1198,7 @@ class asinh(InverseHyperbolicFunction):
                 k = (n - 1) // 2
                 R = RisingFactorial(S.Half, k)
                 F = factorial(k)
-                return (-1)**k * R / F * x**n / n
+                return S.NegativeOne**k * R / F * x**n / n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.series.order import Order
@@ -1418,7 +1418,7 @@ class atanh(InverseHyperbolicFunction):
                 return -cls(-arg)
         else:
             if arg is S.ComplexInfinity:
-                from sympy.calculus.util import AccumBounds
+                from sympy.calculus.accumulationbounds import AccumBounds
                 return S.ImaginaryUnit*AccumBounds(-S.Pi/2, S.Pi/2)
 
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
@@ -1669,7 +1669,7 @@ class asech(InverseHyperbolicFunction):
                 return cst_table[arg]
 
         if arg is S.ComplexInfinity:
-            from sympy.calculus.util import AccumBounds
+            from sympy.calculus.accumulationbounds import AccumBounds
             return S.ImaginaryUnit*AccumBounds(-S.Pi/2, S.Pi/2)
 
         if arg.is_zero:

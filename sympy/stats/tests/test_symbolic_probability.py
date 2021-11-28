@@ -139,7 +139,7 @@ def test_probability_rewrite():
 
 def test_symbolic_Moment():
     mu = symbols('mu', real=True)
-    sigma = symbols('sigma', real=True, positive=True)
+    sigma = symbols('sigma', positive=True)
     x = symbols('x')
     X = Normal('X', mu, sigma)
     M = Moment(X, 4, 2)
@@ -158,7 +158,7 @@ def test_symbolic_Moment():
 
 def test_symbolic_CentralMoment():
     mu = symbols('mu', real=True)
-    sigma = symbols('sigma', real=True, positive=True)
+    sigma = symbols('sigma', positive=True)
     x = symbols('x')
     X = Normal('X', mu, sigma)
     CM = CentralMoment(X, 6)

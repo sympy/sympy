@@ -79,4 +79,4 @@ def test_guess():
         1)), (i1, 1, i0 - 1))]
     assert guess([1, 0, 2]) == []
     x, y = symbols('x y')
-    guess([1, 2, 6, 24, 120], variables=[x, y]) == [RisingFactorial(2, x - 1)]
+    assert guess([1, 2, 6, 24, 120], variables=[x, y]) == [RisingFactorial(2, x - 1)]

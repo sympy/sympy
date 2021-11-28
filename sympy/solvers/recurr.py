@@ -62,7 +62,6 @@ from sympy.solvers import solve, solve_undetermined_coeffs
 from sympy.polys import Poly, quo, gcd, lcm, roots, resultant
 from sympy.functions import binomial, factorial, FallingFactorial, RisingFactorial
 from sympy.matrices import Matrix, casoratian
-from sympy.concrete import product
 from sympy.utilities.iterables import numbered_symbols
 
 
@@ -510,6 +509,8 @@ def rsolve_hyper(coeffs, f, n, **hints):
 
     .. [2] M. Petkovsek, H. S. Wilf, D. Zeilberger, A = B, 1996.
     """
+    from sympy.concrete import product
+
     coeffs = list(map(sympify, coeffs))
 
     f = sympify(f)

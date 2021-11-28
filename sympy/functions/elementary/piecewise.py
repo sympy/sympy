@@ -8,6 +8,7 @@ from sympy.core.sorting import ordered
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
     true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
+from sympy.polys.polyutils import illegal
 from sympy.utilities.iterables import uniq, sift, common_prefix
 from sympy.utilities.misc import filldedent, func_name
 
@@ -501,9 +502,11 @@ class Piecewise(Function):
                 sum = anti
             else:
                 sum = sum.subs(x, a)
-                if sum == Undefined:
-                    sum = 0
-                sum += anti._eval_interval(x, a, x)
+                e = anti._eval_interval(x, a, x)
+                if sum.has(*illegal) or e.has(*illegal):
+                    sum = anti
+                else:
+                    sum += e
             # see if we know whether b is contained in original
             # condition
             if b is S.Infinity:

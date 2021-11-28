@@ -16,6 +16,9 @@ import os
 import subprocess
 from datetime import datetime
 
+# Make sure we import sympy from git
+sys.path.insert(0, os.path.abspath('../..'))
+
 import sympy
 
 # If your extensions are in another directory, add it here.
@@ -54,17 +57,12 @@ nitpick_ignore = [
 # To stop docstrings inheritance.
 autodoc_inherit_docstrings = False
 
-# MathJax file, which is free to use.  See https://www.mathjax.org/#gettingstarted
-# As explained in the link using latest.js will get the latest version even
-# though it says 2.7.5.
-mathjax_path = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML-full'
-
 # See https://www.sympy.org/sphinx-math-dollar/
-mathjax_config = {
-    'tex2jax': {
-        'inlineMath': [ ["\\(","\\)"] ],
-        'displayMath': [["\\[","\\]"] ],
-    },
+mathjax3_config = {
+  "tex": {
+    "inlineMath": [['\\(', '\\)']],
+    "displayMath": [["\\[", "\\]"]],
+  }
 }
 
 # Add any paths that contain templates here, relative to this directory.

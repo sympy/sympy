@@ -1,3 +1,6 @@
+from typing import Tuple as tTuple
+
+from sympy.core.expr import Expr
 from sympy.core import sympify
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
@@ -13,6 +16,7 @@ from sympy.core.symbol import Wild, Dummy
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
+from sympy.sets.setexpr import SetExpr
 
 # NOTE IMPORTANT
 # The series expansion code in this file is an important part of the gruntz
@@ -269,7 +273,6 @@ class exp(ExpBase, metaclass=ExpMeta):
     @classmethod
     def eval(cls, arg):
         from sympy.calculus import AccumBounds
-        from sympy.sets.setexpr import SetExpr
         from sympy.matrices.matrices import MatrixBase
         from sympy.functions.elementary.complexes import (im, re)
         from sympy.simplify.simplify import logcombine
@@ -508,7 +511,7 @@ class exp(ExpBase, metaclass=ExpMeta):
         # powsimp may introduce unexpanded (-1)**Rational; see PR #17201
         simplerat = lambda x: x.is_Rational and x.q in [3, 4, 6]
         w = Wild('w', properties=[simplerat])
-        r = r.replace((-1)**w, expand_complex((-1)**w))
+        r = r.replace(S.NegativeOne**w, expand_complex(S.NegativeOne**w))
         return r
 
     def _taylor(self, x, n):
@@ -613,6 +616,9 @@ class log(Function):
     exp
 
     """
+
+    args: tTuple[Expr]
+
     _singularities = (S.Zero, S.ComplexInfinity)
 
     def fdiff(self, argindex=1):
@@ -634,7 +640,6 @@ class log(Function):
     def eval(cls, arg, base=None):
         from sympy.functions.elementary.complexes import unpolarify
         from sympy.calculus import AccumBounds
-        from sympy.sets.setexpr import SetExpr
         from sympy.functions.elementary.complexes import Abs
 
         arg = sympify(arg)
@@ -1021,7 +1026,7 @@ class log(Function):
         pk = pterms
 
         while k*d < n:
-            coeff = -(-1)**k/k
+            coeff = -S.NegativeOne**k/k
             for ex in pk:
                 terms[ex] = terms.get(ex, S.Zero) + coeff*pk[ex]
             pk = mul(pk, pterms)

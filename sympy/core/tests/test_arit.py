@@ -19,11 +19,12 @@ from sympy.sets.sets import FiniteSet
 
 from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
-from sympy.utilities.iterables import cartes
+from sympy.utilities.iterables import permutations
 from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
-from sympy.testing.randtest import verify_numerically
+from sympy.core.random import verify_numerically
 from sympy.functions.elementary.trigonometric import asin
 
+from itertools import product
 
 a, c, x, y, z = symbols('a,c,x,y,z')
 b = Symbol("b", positive=True)
@@ -1090,7 +1091,7 @@ def test_Pow_is_integer():
 
 def test_Pow_is_real():
     x = Symbol('x', real=True)
-    y = Symbol('y', real=True, positive=True)
+    y = Symbol('y', positive=True)
 
     assert (x**2).is_real is True
     assert (x**3).is_real is True
@@ -1809,7 +1810,7 @@ def test_Mod():
     assert Mod(1, nan) is nan
     assert Mod(nan, nan) is nan
 
-    Mod(0, x) == 0
+    assert Mod(0, x) == 0
     with raises(ZeroDivisionError):
         Mod(x, 0)
 
@@ -1917,13 +1918,13 @@ def test_Mod():
     assert (factorial(n + 4) % (n + 5)).func is Mod
 
     # Wilson's theorem
-    factorial(18042, evaluate=False) % 18043 == 18042
+    assert factorial(18042, evaluate=False) % 18043 == 18042
     p = Symbol('n', prime=True)
-    factorial(p - 1) % p == p - 1
-    factorial(p - 1) % -p == -1
-    (factorial(3, evaluate=False) % 4).doit() == 2
+    assert factorial(p - 1) % p == p - 1
+    assert factorial(p - 1) % -p == -1
+    assert (factorial(3, evaluate=False) % 4).doit() == 2
     n = Symbol('n', composite=True, odd=True)
-    factorial(n - 1) % n == 0
+    assert factorial(n - 1) % n == 0
 
     # symbolic with known parity
     n = Symbol('n', even=True)
@@ -1955,7 +1956,7 @@ def test_Mod():
     from sympy.functions.elementary.piecewise import Piecewise
 
     x_r, y_r = symbols('x_r y_r', real=True)
-    (Piecewise((x_r, y_r > x_r), (y_r, True)) / z) % 1
+    assert (Piecewise((x_r, y_r > x_r), (y_r, True)) / z) % 1
     expr = exp(sinh(Piecewise((x_r, y_r > x_r), (y_r, True)) / z))
     expr.subs({1: 1.0})
     sinh(Piecewise((x_r, y_r > x_r), (y_r, True)) * z ** -1.0).is_zero
@@ -2254,7 +2255,7 @@ def test_mul_zero_detection():
                     assert e.is_zero is False
 
 
-    for iz, ib in cartes(*[[True, False, None]]*2):
+    for iz, ib in product(*[[True, False, None]]*2):
         z = Dummy('z', nonzero=iz)
         b = Dummy('f', finite=ib)
         e = Mul(z, b, evaluate=False)
@@ -2271,7 +2272,7 @@ def test_mul_zero_detection():
         else:
             assert e.is_extended_real is True
 
-    for iz, ib in cartes(*[[True, False, None]]*2):
+    for iz, ib in product(*[[True, False, None]]*2):
         z = Dummy('z', nonzero=iz, extended_real=True)
         b = Dummy('b', finite=ib, extended_real=True)
         e = Mul(z, b, evaluate=False)
@@ -2379,8 +2380,7 @@ def test_issue_21034():
 
 
 def test_issue_22021():
-    from sympy.calculus.util import AccumBounds
-    from sympy.utilities.iterables import permutations
+    from sympy.calculus.accumulationbounds import AccumBounds
     # these objects are special cases in Mul
     from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
     L = TensorIndexType("L")
@@ -2401,3 +2401,20 @@ def test_issue_22021():
 
 def test_issue_22244():
     assert -(zoo*x) == zoo*x
+
+
+def test_issue_22453():
+    from sympy.utilities.iterables import cartes
+    e = Symbol('e', extended_positive=True)
+    for a, b in cartes(*[[oo, -oo, 3]]*2):
+        if a == b == 3:
+            continue
+        i = a + I*b
+        assert i**(1 + e) is S.ComplexInfinity
+        assert i**-e is S.Zero
+        assert unchanged(Pow, i, e)
+    assert 1/(oo + I*oo) is S.Zero
+    r, i = [Dummy(infinite=True, extended_real=True) for _ in range(2)]
+    assert 1/(r + I*i) is S.Zero
+    assert 1/(3 + I*i) is S.Zero
+    assert 1/(r + I*3) is S.Zero

@@ -1499,14 +1499,14 @@ def TRpower(rv):
                 rv = 2**(1-n)*Add(*[binomial(n, k)*cos((n - 2*k)*x)
                     for k in range((n + 1)/2)])
             elif n.is_odd and isinstance(b, sin):
-                rv = 2**(1-n)*(-1)**((n-1)/2)*Add(*[binomial(n, k)*
-                    (-1)**k*sin((n - 2*k)*x) for k in range((n + 1)/2)])
+                rv = 2**(1-n)*S.NegativeOne**((n-1)/2)*Add(*[binomial(n, k)*
+                    S.NegativeOne**k*sin((n - 2*k)*x) for k in range((n + 1)/2)])
             elif n.is_even and isinstance(b, cos):
                 rv = 2**(1-n)*Add(*[binomial(n, k)*cos((n - 2*k)*x)
                     for k in range(n/2)])
             elif n.is_even and isinstance(b, sin):
-                rv = 2**(1-n)*(-1)**(n/2)*Add(*[binomial(n, k)*
-                    (-1)**k*cos((n - 2*k)*x) for k in range(n/2)])
+                rv = 2**(1-n)*S.NegativeOne**(n/2)*Add(*[binomial(n, k)*
+                    S.NegativeOne**k*cos((n - 2*k)*x) for k in range(n/2)])
             if n.is_even:
                 rv += 2**(-n)*binomial(n, n/2)
         return rv

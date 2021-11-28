@@ -1,9 +1,10 @@
 
 from sympy.core.expr import unchanged
+from sympy.sets.contains import Contains
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
 from sympy.sets.sets import (FiniteSet, Interval, Union, imageset,
-                             Intersection, ProductSet, Contains)
+                             Intersection, ProductSet)
 from sympy.sets.conditionset import ConditionSet
 from sympy.simplify.simplify import simplify
 from sympy.core.basic import Basic
@@ -880,8 +881,8 @@ def test_ComplexRegion_contains():
     r1 = Interval(0, 1)
     theta1 = Interval(0, 2*S.Pi)
     c3 = ComplexRegion(r1*theta1, polar=True)
-    assert (0.5 + I*Rational(6, 10)) in c3
-    assert (S.Half + I*Rational(6, 10)) in c3
+    assert (0.5 + I*6/10) in c3
+    assert (S.Half + I*6/10) in c3
     assert (S.Half + .6*I) in c3
     assert (0.5 + .6*I) in c3
     assert I in c3

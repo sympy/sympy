@@ -12,8 +12,9 @@ from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.matrices.expressions.matexpr import MatrixExpr
-from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal, ArrayTensorProduct, \
-    PermuteDims, ArrayAdd, ArrayContraction, ArrayElementwiseApplyFunc
+from sympy.tensor.array.expressions.array_expressions import \
+    ArrayElementwiseApplyFunc, _array_tensor_product, _array_contraction, \
+    _array_diagonal, _array_add, _permute_dims
 
 
 def convert_matrix_to_array(expr: Basic) -> Basic:
@@ -26,35 +27,35 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
             else:
                 args_nonmat.append(convert_matrix_to_array(arg))
         contractions = [(2*i+1, 2*i+2) for i in range(len(args)-1)]
-        scalar = ArrayTensorProduct.fromiter(args_nonmat) if args_nonmat else S.One
+        scalar = _array_tensor_product(*args_nonmat) if args_nonmat else S.One
         if scalar == 1:
-            tprod = ArrayTensorProduct(
+            tprod = _array_tensor_product(
                 *[convert_matrix_to_array(arg) for arg in args])
         else:
-            tprod = ArrayTensorProduct(
+            tprod = _array_tensor_product(
                 scalar,
                 *[convert_matrix_to_array(arg) for arg in args])
-        return ArrayContraction(
+        return _array_contraction(
                 tprod,
                 *contractions
         )
     elif isinstance(expr, MatAdd):
-        return ArrayAdd(
+        return _array_add(
                 *[convert_matrix_to_array(arg) for arg in expr.args]
         )
     elif isinstance(expr, Transpose):
-        return PermuteDims(
+        return _permute_dims(
                 convert_matrix_to_array(expr.args[0]), [1, 0]
         )
     elif isinstance(expr, Trace):
         inner_expr: MatrixExpr = convert_matrix_to_array(expr.arg) # type: ignore
-        return ArrayContraction(inner_expr, (0, len(inner_expr.shape) - 1))
+        return _array_contraction(inner_expr, (0, len(inner_expr.shape) - 1))
     elif isinstance(expr, Mul):
-        return ArrayTensorProduct.fromiter(convert_matrix_to_array(i) for i in expr.args)
+        return _array_tensor_product(*[convert_matrix_to_array(i) for i in expr.args])
     elif isinstance(expr, Pow):
         base = convert_matrix_to_array(expr.base)
         if (expr.exp > 0) == True:
-            return ArrayTensorProduct.fromiter(base for i in range(expr.exp))
+            return _array_tensor_product(*[base for i in range(expr.exp)])
         else:
             return expr
     elif isinstance(expr, MatPow):
@@ -67,9 +68,9 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
         else:
             return expr
     elif isinstance(expr, HadamardProduct):
-        tp = ArrayTensorProduct.fromiter([convert_matrix_to_array(arg) for arg in expr.args])
+        tp = _array_tensor_product(*[convert_matrix_to_array(arg) for arg in expr.args])
         diag = [[2*i for i in range(len(expr.args))], [2*i+1 for i in range(len(expr.args))]]
-        return ArrayDiagonal(tp, *diag)
+        return _array_diagonal(tp, *diag)
     elif isinstance(expr, HadamardPower):
         base, exp = expr.args
         if isinstance(exp, Integer) and exp > 0:

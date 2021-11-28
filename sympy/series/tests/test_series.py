@@ -223,7 +223,7 @@ def test_issue_12578():
 
 
 def test_issue_12791():
-    beta = symbols('beta', real=True, positive=True)
+    beta = symbols('beta', positive=True)
     theta, varphi = symbols('theta varphi', real=True)
 
     expr = (-beta**2*varphi*sin(theta) + beta**2*cos(theta) + \
