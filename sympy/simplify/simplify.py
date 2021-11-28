@@ -301,6 +301,13 @@ def hypersimp(f, k):
        integer sequences which have equivalent representation in terms
        of gamma special function.
 
+       Parameters
+       ==========
+       f : a function
+            A function that has k as its term, i.e. f(k).
+       k : a term
+            A term in the function f(k).
+
        Explanation
        ===========
 
@@ -345,6 +352,15 @@ def hypersimp(f, k):
 def hypersimilar(f, g, k):
     """
     Returns True if ``f`` and ``g`` are hyper-similar.
+
+    Parameters
+    ==========
+    f : a function
+        A function that has k as its term, i.e. f(k).
+    g : a function
+        A function that has k as its term, i.e. g(k).
+    k : a term
+        A term in the function f(k) and g(k).
 
     Explanation
     ===========
@@ -1201,7 +1217,12 @@ def kroneckersimp(expr):
     """
     Simplify expressions with KroneckerDelta.
 
-    The only simplification currently attempted is to identify multiplicative cancellation:
+    The only simplification currently attempted is to identify multiplicative cancellation.
+
+    Parameters
+    ==========
+    expr : an expresison
+        An expression that needs to be simplified.
 
     Examples
     ========
@@ -1251,6 +1272,11 @@ def kroneckersimp(expr):
 def besselsimp(expr):
     """
     Simplify bessel-type functions.
+
+    Parameters
+    ==========
+    expr : an expresison
+        A bessel-type expression that needs to be simplified.
 
     Explanation
     ===========
@@ -1430,6 +1456,26 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     if ``rational=True``, then replace Floats with their Rational equivalents. If
     no change is made and rational is not False then Floats will at least be
     converted to Rationals.
+
+    Parameters
+    ==========
+    expr : an expression
+        A expression that needs to be simplified.
+    constants
+    tolerance : True | False
+        A lower tolerance may be set to find less exact matches.
+        If no tolerance is given then the least precise value will
+        set the tolerance (e.g. Floats default to 15 digits of precision,
+        so would be tolerance=10**-15).
+    full : True | False
+        If full=True, a more extensive search is performed (this is useful
+        to find simpler numbers when the tolerance is set low).
+    rational : True | False | None
+        If rational=True, then replace Floats with their Rational equivalents.
+    rational_conversion : base10 | exact
+        If rational_conversion=’base10’ (the default), then convert floats to
+        rationals using their base-10 (string) representation. When rational_conversion=’exact’
+        it uses the exact, base-2 representation.
 
     Explanation
     ===========
