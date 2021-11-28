@@ -29,7 +29,7 @@ b21 = Basic(b2, b1)
 def test__aresame():
     assert not _aresame(Basic([]), Basic())
     assert not _aresame(Basic([]), Basic(()))
-    assert not _aresame(Basic(2), Basic(2.))
+    assert not _aresame(Basic(S(2)), Basic(S(2.)))
 
 
 def test_structure():
@@ -255,7 +255,7 @@ def test_atomic():
     assert _atomic(g(x + h(x))) == {g(x + h(x))}
     assert _atomic(g(x + h(x)), recursive=True) == {h(x), x, g(x + h(x))}
     assert _atomic(1) == set()
-    assert _atomic(Basic(1,2)) == {Basic(1, 2)}
+    assert _atomic(Basic(S(1), S(2))) == set()
 
 
 def test_as_dummy():
