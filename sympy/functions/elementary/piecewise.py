@@ -5,6 +5,7 @@ from sympy.core.parameters import global_parameters
 from sympy.core.relational import (Lt, Gt, Eq, Ne, Relational,
     _canonical, _canonical_coeff)
 from sympy.core.sorting import ordered
+from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
     true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
@@ -304,6 +305,36 @@ class Piecewise(Function):
                     c = c.doit(**hints)
             newargs.append((e, c))
         return self.func(*newargs)
+
+    def is_meromorphic(self, x, a):
+        """
+        This method tests whether a Piecewise expression is meromorphic
+        as a function of the given symbol ``x`` at the point ``a``.
+
+        This method is intended as a quick test that will return
+        None if no decision can be made without simplification or
+        more detailed analysis.
+
+        Examples
+        ========
+        >>> from sympy import csc, log, Piecewise
+        >>> from sympy.abc import x
+        >>> f = Piecewise((csc(1/x), x < 1), (2*x**2 + 1, x<5), (log(x), True))
+        >>> f.is_meromorphic(x, 0)
+        False
+        >>> f.is_meromorphic(x, 1)
+        True
+        >>> f.is_meromorphic(x, 10)
+        True
+
+        """
+        if not x.is_symbol:
+            raise TypeError("{} should be of symbol type".format(x))
+        a = sympify(a)
+
+        for arg in self.args:
+            if arg[1].subs(x, a):
+                return arg[0]._eval_is_meromorphic(x, a)
 
     def _eval_simplify(self, **kwargs):
         return piecewise_simplify(self, **kwargs)

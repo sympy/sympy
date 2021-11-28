@@ -13,7 +13,7 @@ from sympy.functions.elementary.complexes import (Abs, adjoint, arg, conjugate, 
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import (Piecewise, piecewise_fold)
-from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.elementary.trigonometric import (cos, sin, csc)
 from sympy.functions.special.delta_functions import (DiracDelta, Heaviside)
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.integrals.integrals import (Integral, integrate)
@@ -441,6 +441,13 @@ def test_piecewise_integrate4_symbolic_conditions():
 def test_piecewise_integrate5_independent_conditions():
     p = Piecewise((0, Eq(y, 0)), (x*y, True))
     assert integrate(p, (x, 1, 3)) == Piecewise((0, Eq(y, 0)), (4*y, True))
+
+
+def test_piecewise_meromorphic():
+    p = Piecewise((csc(1/x), x < 1), (2*x**2 + 1, x < 5), (log(x), True))
+    assert p.is_meromorphic(x, 0) == False
+    assert p.is_meromorphic(x, 1) == True
+    assert p.is_meromorphic(x, 10) == True
 
 
 def test_piecewise_simplify():
