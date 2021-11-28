@@ -461,7 +461,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
     ratio : float
         Ratio constraint for (result length)/(input length).
     measure : Function
-        Funcion used to evaluate the complexity of an expression. The function shoudl be such that if ``a``
+        Function used to evaluate the complexity of an expression. The function shoudl be such that if ``a``
         is more complex than ``b``, then ``measure(a) > measure(b)``.
     rational : True | False | None
         If True, Floats will be recast as Rationals before simplificaiton. If ``rational=None``, Floats will be recast
