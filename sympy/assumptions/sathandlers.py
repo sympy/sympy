@@ -182,7 +182,7 @@ class ClassFactRegistry:
     def __call__(self, expr):
         ret = set()
 
-        handlers1, handlers2 = self[expr.func]
+        handlers1, handlers2 = self[type(expr)]
 
         for h in handlers1:
             ret.add(h(expr))
