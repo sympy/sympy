@@ -6647,7 +6647,7 @@ def nth_power_roots_poly(f, n, *gens, **args):
 
 
 @public
-def cancel(f, *gens, **args):
+def cancel(f, *gens, _signsimp=True, **args):
     """
     Cancel common factors in a rational function ``f``.
 
@@ -6671,11 +6671,14 @@ def cancel(f, *gens, **args):
     >>> together(_)
     (x + 2)/2
     """
+    from sympy.simplify.simplify import signsimp
     from sympy.functions.elementary.piecewise import Piecewise
     from sympy.polys.rings import sring
     options.allowed_flags(args, ['polys'])
 
     f = sympify(f)
+    if _signsimp:
+        f = signsimp(f)
     opt = {}
     if 'polys' in args:
         opt['polys'] = args['polys']

@@ -489,14 +489,21 @@ def calculate_series(e, x, logx=None):
 
     This is a place that fails most often, so it is in its own function.
     """
-    from sympy.polys import cancel
 
     for t in e.lseries(x, logx=logx):
         # bottom_up function is required for a specific case - when e is
-        # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p). No current simplification
-        # methods reduce this to 0 while not expanding polynomials.
-        t = bottom_up(t, lambda w: getattr(w, 'normal', lambda: w)())
-        t = cancel(t, expand=False).factor()
+        # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p)
+        t = bottom_up(t, lambda w:
+            getattr(w, 'normal', lambda: w)())
+        # And the expression
+        # `(-sin(1/x) + sin((x + exp(x))*exp(-x)/x))*exp(x)`
+        # from the first test of test_gruntz_eval_special needs to
+        # be expanded. But other forms need to be have at least
+        # factor_terms applied. `factor` accomplishes both and is
+        # faster than using `factor_terms` for the gruntz suite. It
+        # does not appear that use of `cancel` is necessary.
+        # t = cancel(t, expand=False)
+        t = t.factor()
 
         if t.has(exp) and t.has(log):
             t = powdenest(t)

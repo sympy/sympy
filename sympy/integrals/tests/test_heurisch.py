@@ -220,8 +220,8 @@ def test_heurisch_wrapper():
         (-log(x - y)/(2*y) + log(x + y)/(2*y), Ne(y, 0)), (1/x, True))
     # issue 6926
     f = sqrt(x**2/((y - x)*(y + x)))
-    assert heurisch_wrapper(f, x) == x*sqrt(x**2/(-x**2 + y**2)) \
-    - y**2*sqrt(x**2/(-x**2 + y**2))/x
+    assert heurisch_wrapper(f, x) == x*sqrt(-x**2/(x**2 - y**2)) \
+    - y**2*sqrt(-x**2/(x**2 - y**2))/x
 
 def test_issue_3609():
     assert heurisch(1/(x * (1 + log(x)**2)), x) == atan(log(x))
