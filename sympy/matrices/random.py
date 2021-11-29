@@ -2439,7 +2439,6 @@ def hermite(dim,
 
     Explanation
     ===========
-    
     A *Hermintian* matrix is a matrix such that $\mathbf{A}^H = \mathbf{A}$,
     where $\mathbf{A}^H$ means complex adjoint matrix,
     i.e. the transposed matrix with complex conjugate entries.
