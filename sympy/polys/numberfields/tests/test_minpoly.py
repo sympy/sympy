@@ -422,6 +422,11 @@ def test_issue_20163():
         I/(x + I)/6 - I/(x - I)/6
 
 
+def test_issue_22559():
+    alpha = AlgebraicNumber(sqrt(2))
+    assert minimal_polynomial(alpha**3, x) == x**2 - 8
+
+
 def test_separate_sq_not_impl():
     raises(NotImplementedError, lambda: _separate_sq(x**(S(1)/3) + x))
 
