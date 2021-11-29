@@ -166,6 +166,18 @@ def _limit_for_symbolic_point(expr, z0, cdir):
             dir = "+"
         elif cdir == -1:
             dir = "-"
+        elif cdir == 0:
+            cond = []
+            dir = "-"
+            left_limit = _limit_for_symbolic_point(expr, z0, -1)
+            dir = "+"
+            right_limit = _limit_for_symbolic_point(expr, z0, +1)
+            for LHL, RHL in zip(left_limit.args, right_limit.args):
+                if LHL != RHL:
+                    cond.append(LHL[1])
+            if cond:
+                raise ValueError("Limit at following equalities do not exist : %s" % (cond))
+            return left_limit
         if limit(expr, z0, S.NegativeInfinity) != expr.subs(z0, S.NegativeInfinity):
             piecewise_list.append((limit(expr, z0, S.NegativeInfinity), Eq(z0, S.NegativeInfinity)))
         for singularity in singularities(expr, z0):
@@ -175,6 +187,7 @@ def _limit_for_symbolic_point(expr, z0, cdir):
         piecewise_list.append((expr,True))
         expr = Piecewise(*piecewise_list)
     return expr
+
 
 class Limit(Expr):
     """Represents an unevaluated limit.
@@ -243,6 +256,36 @@ class Limit(Expr):
                 return exp(res)
         if base_lim is S.NegativeInfinity and ex_lim is S.Infinity:
             return S.ComplexInfinity
+
+
+    def _limit_from_leading_term(self, coeff, ex, e, z, z0, cdir):
+        """Helper function to evaluate limits using the leading term of the
+        expression after transforming the point, ``z0`` to 0.
+        """
+        if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+            return self
+        if not coeff.has(z):
+            if ex.is_positive:
+                return S.Zero
+            elif ex == 0:
+                if z0.is_Symbol and not z0 in e.free_symbols:
+                    return _limit_for_symbolic_point(coeff, z0, cdir)
+                return coeff
+            elif ex.is_negative:
+                if ex.is_integer:
+                    if cdir == 1 or ex.is_even:
+                        return S.Infinity*sign(coeff)
+                    elif cdir == -1:
+                        return S.NegativeInfinity*sign(coeff)
+                    else:
+                        return S.ComplexInfinity
+                else:
+                    if cdir == 1:
+                        return S.Infinity*sign(coeff)
+                    elif cdir == -1:
+                        return S.Infinity*sign(coeff)*S.NegativeOne**ex
+                    else:
+                        return S.ComplexInfinity
 
 
     def doit(self, **hints):
@@ -331,18 +374,9 @@ class Limit(Expr):
             except ValueError:
                 pass
             else:
-                if ex > 0:
-                    return S.Zero
-                elif ex == 0:
-                    if z0.is_Symbol and not z0 in e.free_symbols:
-                        return _limit_for_symbolic_point(coeff, z0, cdir)
-                    return coeff
-                if cdir == 1 or not(int(ex) & 1):
-                    return S.Infinity*sign(coeff)
-                elif cdir == -1:
-                    return S.NegativeInfinity*sign(coeff)
-                else:
-                    return S.ComplexInfinity
+                res = self._limit_from_leading_term(coeff, ex, e, z, z0, cdir)
+                if not res is None:
+                    return res
 
         if abs(z0) is S.Infinity:
             if e.is_Mul:
@@ -362,30 +396,9 @@ class Limit(Expr):
                 if r is not None:
                     return r
         else:
-            if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
-                return self
-            if not coeff.has(z):
-                if ex.is_positive:
-                    return S.Zero
-                elif ex == 0:
-                    if z0.is_Symbol and not z0 in e.free_symbols:
-                        return _limit_for_symbolic_point(coeff, z0, cdir)
-                    return coeff
-                elif ex.is_negative:
-                    if ex.is_integer:
-                        if cdir == 1 or ex.is_even:
-                            return S.Infinity*sign(coeff)
-                        elif cdir == -1:
-                            return S.NegativeInfinity*sign(coeff)
-                        else:
-                            return S.ComplexInfinity
-                    else:
-                        if cdir == 1:
-                            return S.Infinity*sign(coeff)
-                        elif cdir == -1:
-                            return S.Infinity*sign(coeff)*S.NegativeOne**ex
-                        else:
-                            return S.ComplexInfinity
+            res = self._limit_from_leading_term(coeff, ex, e, z, z0, cdir)
+            if not res is None:
+                return res
 
         # gruntz fails on factorials but works with the gamma function
         # If no factorial term is present, e should remain unchanged.
