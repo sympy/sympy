@@ -235,7 +235,7 @@ class ArrayComprehension(Basic):
             if isinstance(sup, list):
                 sup = Tuple(*sup)
             else:
-                sup = _sympify(sup)                
+                sup = _sympify(sup)
             new_limits.append(Tuple(var, inf, sup))
             if any((not isinstance(i, Expr)) or i.atoms(Symbol, Integer) != i.atoms()
                                                                 for i in [inf, sup]):
