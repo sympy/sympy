@@ -2509,9 +2509,24 @@ converter[int] = Integer
 
 
 class AlgebraicNumber(Expr):
-    """Class for representing algebraic numbers in SymPy. """
+    r"""
+    Class for representing algebraic numbers in SymPy.
 
-    __slots__ = ('rep', 'root', 'alias', 'minpoly')
+    Symbolically, an instance of this class represents an element
+    $\alpha \in \mathbb{Q}(\theta) \hookrightarrow \mathbb{C}$. That is, the
+    algebraic number $\alpha$ is represented as an element of a particular
+    number field $\mathbb{Q}(\theta)$, with a particular embedding of this
+    field into the complex numbers.
+
+    Formally, the primitive element $\theta$ is given by two data points: (1)
+    its minimal polynomial (which defines $\mathbb{Q}(\theta)$), and (2) a
+    particular complex number that is a root of this polynomial (which defines
+    the embedding $\mathbb{Q}(\theta) \hookrightarrow \mathbb{C}$). Finally,
+    the algebraic number $\alpha$ which we represent is then given by the
+    coefficients of a polynomial in $\theta$.
+    """
+
+    __slots__ = ('rep', 'root', 'alias', 'minpoly', '_own_minpoly')
 
     is_AlgebraicNumber = True
     is_algebraic = True
@@ -2526,7 +2541,97 @@ class AlgebraicNumber(Expr):
     free_symbols: tSet[Basic] = set()
 
     def __new__(cls, expr, coeffs=None, alias=None, **args):
-        """Construct a new algebraic number. """
+        r"""
+        Construct a new algebraic number $\alpha$ belonging to a number field
+        $k = \mathbb{Q}(\theta)$.
+
+        Parameters
+        ==========
+
+        expr : :py:class:`~.Expr`, or pair (m, r)
+            This defines the primitive element $\theta$ of the number field
+            $k$. If *expr* is an :py:class:`~.AlgebraicNumber`, then our
+            primitive element $\theta$ will be the same as that of *expr*.
+            If it is any other type of :py:class:`~.Expr`, then it itself will
+            be our primitive element. Therefore it must express an algebraic
+            quantity, and we will compute its minimal polynomial.
+            Otherwise *expr* must be an ordered pair
+            $(m, r)$ giving the minimal polynomial $m$, and a root $r$
+            thereof, which together define $\theta$. In this case $m$ may be
+            either a univariate :py:class:`~.Poly` or any :py:class:`~.Expr`
+            which represents the same, while $r$ must be some
+            :py:class:`~.Expr` representing a complex number that is a root of
+            $m$, including both explicit expressions, and instances of
+            :py:class:`~.ComplexRootOf`.
+
+        coeffs : list, :py:class:`~.ANP`, None, optional (default=None)
+            This defines the algebraic number $\alpha$ as an element of $k$,
+            as a linear combination of falling powers of $\theta$.
+            If a list, the elements should be integers or rational numbers.
+            If an :py:class:`~.ANP`, we take its coefficients (using its
+            :py:meth:`~.ANP.to_list()` method). If ``None``, then the list of
+            coefficients defaults to ``[1, 0]``, meaning that $\alpha = \theta$
+            is the primitive element of the field.
+
+        alias : str, :py:class:`~.Symbol`, None, optional (default=None)
+            This is a way to provide a name for the primitive element. We
+            described several ways in which the *expr* argument can define the
+            value of the primitive element, but none of these methods gave it
+            a name. Here, for example, *alias* could be set as
+            ``Symbol('theta')``, in order to make this symbol appear when
+            $\alpha$ is rendered as a polynomial, using the
+            :py:meth:`~.as_poly()` method.
+
+        Examples
+        ========
+
+        >>> from sympy import AlgebraicNumber, sqrt, CRootOf, S
+        >>> from sympy.abc import x, theta
+
+        *expr* an explicit algebraic number, *coeffs* ``None``:
+
+        >>> a0 = AlgebraicNumber(sqrt(2) + sqrt(3))
+        >>> a0.minpoly_of_elt().as_expr(x)
+        x**4 - 10*x**2 + 1
+        >>> a0.n(10)
+        3.146264370
+
+        *expr* an explicit algebraic number, *coeffs* given:
+
+        >>> a1 = AlgebraicNumber(sqrt(2) + sqrt(3), [S(1)/2, 0, S(-9)/2, 0])
+        >>> a1.minpoly_of_elt().as_expr(x)
+        x**2 - 2
+        >>> a1.n(10)
+        1.414213562
+        >>> a1.primitive_elt()
+        sqrt(2) + sqrt(3)
+
+        *expr* an :py:class:`~.AlgebraicNumber` instance, *alias* provided:
+
+        >>> a2 = AlgebraicNumber(a0, [S(1)/2, 0, S(-9)/2, 0], alias=theta)
+        >>> a2.primitive_elt() == a0
+        True
+        >>> a2.as_expr() == a1.as_expr()
+        True
+        >>> a1.as_poly().as_expr()
+        _x**3/2 - 9*_x/2
+        >>> a2.as_poly().as_expr()
+        theta**3/2 - 9*theta/2
+
+        *expr* a pair (poly, explicit root):
+
+        >>> f = x**2 - x - 1
+        >>> a3 = AlgebraicNumber((f, (1 + sqrt(5))/2))
+        >>> a3.primitive_elt().n(10)
+        1.618033989
+
+        *expr* a pair (poly, implicit root):
+
+        >>> a4 = AlgebraicNumber((f, CRootOf(f, -1)))
+        >>> a4.primitive_elt().n(10)
+        1.618033989
+
+        """
         from sympy.polys.polyclasses import ANP, DMP
         from sympy.polys.numberfields import minimal_polynomial
 
@@ -2575,6 +2680,8 @@ class AlgebraicNumber(Expr):
         obj.root = root
         obj.alias = alias
         obj.minpoly = minpoly
+
+        obj._own_minpoly = None
 
         return obj
 
@@ -2640,6 +2747,119 @@ class AlgebraicNumber(Expr):
                 if measure(r) < ratio*measure(self.root):
                     return AlgebraicNumber(r)
         return self
+
+    @property
+    def is_primitive_elt(self):
+        r"""
+        Say whether this algebraic number $\alpha \in \mathbb{Q}(\theta)$ is
+        equal to the primitive element $\theta$ for its field.
+        """
+        return self.coeffs() == [1, 0]
+
+    def primitive_elt(self):
+        r"""
+        Get the primitive element $\theta$ for the number field
+        $\mathbb{Q}(\theta)$ to which this algebraic number $\alpha$ belongs.
+
+        Returns
+        =======
+
+        AlgebraicNumber
+
+        """
+        if self.is_primitive_elt:
+            return self
+        return AlgebraicNumber(self, coeffs=[1, 0])
+
+    def to_primitive_elt(self, prec=15):
+        r"""
+        Convert ``self`` to an :py:class:`~.AlgebraicNumber` instance that is
+        equal to its own primitive element.
+
+        Explanation
+        ===========
+
+        Since an :py:class:`~.AlgebraicNumber` stores both the minimal
+        polynomial, and a particular root value, for its primitive element,
+        it is sometimes more convenient to work with instances that equal their
+        own primitive element.
+
+        Examples
+        ========
+
+        >>> from sympy import sqrt, to_number_field
+        >>> from sympy.abc import x
+        >>> a = to_number_field(sqrt(2), sqrt(2) + sqrt(3))
+
+        The :py:class:`~.AlgebraicNumber` ``a`` represents the number
+        $\sqrt{2}$ in the field $\mathbb{Q}(\sqrt{2} + \sqrt{3})$. Rendering
+        ``a`` as a polynomial,
+
+        >>> a.as_poly().as_expr(x)
+        x**3/2 - 9*x/2
+
+        reflects the fact that $\sqrt{2} = \theta^3/2 - 9 \theta/2$, where
+        $\theta = \sqrt{2} + \sqrt{3}$.
+
+        ``a`` is not equal to its own primitive element. Its minpoly
+
+        >>> a.minpoly.as_poly().as_expr(x)
+        x**4 - 10*x**2 + 1
+
+        is that of $\theta$.
+
+        Converting to a primitive element,
+
+        >>> a_prim = a.to_primitive_elt()
+        >>> a_prim.minpoly.as_poly().as_expr(x)
+        x**2 - 2
+
+        we obtain an :py:class:`~.AlgebraicNumber` whose ``minpoly`` is that of
+        the number itself.
+
+        Parameters
+        ==========
+
+        prec : int, optional (default=15)
+            Decimal places of precision for determining to which root of its
+            minimal polynomial this number is equal.
+
+        Returns
+        =======
+
+        AlgebraicNumber
+
+        See Also
+        ========
+
+        is_primitive_elt
+
+        """
+        if self.is_primitive_elt:
+            return self
+        m = self.minpoly_of_elt()
+        r0 = self.n(prec)
+        closest_root, min_distance = None, oo
+        for r in m.all_roots():
+            d = abs(r0 - r.n(prec))
+            if d < min_distance:
+                min_distance = d
+                closest_root = r
+        return AlgebraicNumber((m, closest_root))
+
+    def minpoly_of_elt(self):
+        r"""
+        Compute the minimal polynomial for the element
+        $\alpha \in \mathbb{Q}(\theta)$ we represent.
+        """
+        if self._own_minpoly is None:
+            if self.is_primitive_elt:
+                self._own_minpoly = self.minpoly
+            else:
+                from sympy.polys.numberfields.minpoly import minpoly
+                theta = self.primitive_elt()
+                self._own_minpoly = minpoly(self.as_expr(theta), polys=True)
+        return self._own_minpoly
 
 
 class RationalConstant(Rational):
