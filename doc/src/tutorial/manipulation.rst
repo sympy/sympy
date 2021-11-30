@@ -316,7 +316,7 @@ func
 Usually it is the same as the class of the object (though there are exceptions
 to this rule).
 
-Two notes about ``func``.  First, the class of an object need not be the same
+Three notes about ``func``.  First, the class of an object need not be the same
 as the one used to create it.  For example
 
     >>> expr = Add(x, x)
@@ -334,19 +334,25 @@ x)``, i.e., ``2*x``, which is a ``Mul``.   SymPy classes make heavy use of the
 ``__new__`` class constructor, which, unlike ``__init__``, allows a different
 class to be returned from the constructor.
 
-Second, some classes are special-cased, usually for efficiency reasons
+Second, atoms return a ``lambda`` function that takes no arguments and returns
+the original function.
+    >>> Integer(2).func
+    <function Atom.func.<locals>.<lambda> at 0x7f6ebed97ee0>
+
+Third, some classes are special-cased, usually for efficiency reasons
 [#singleton-fn]_.
 
     >>> Integer(2).func
+    <function Atom.func.<locals>.<lambda> at 0x7f6ebed97ee0>
+    >>> type(Integer(2))
     <class 'sympy.core.numbers.Integer'>
     >>> Integer(0).func
     <class 'sympy.core.numbers.Zero'>
     >>> Integer(-1).func
     <class 'sympy.core.numbers.NegativeOne'>
 
-For the most part, these issues will not bother us.  The special classes
-``Zero``, ``One``, ``NegativeOne``, and so on are subclasses of ``Integer``,
-so as long as you use ``isinstance``, it will not be an issue.
+It is thus better to use ``type`` than ``func`` if you want to use
+``isinstance``.
 
 args
 ----
