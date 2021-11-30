@@ -50,12 +50,6 @@ class Tuple(Basic):
     def __new__(cls, *args, **kwargs):
         if kwargs.get('sympify', True):
             args = (sympify(arg) for arg in args)
-        #if kwargs.get('denest_lists', False):
-        #    args = (Tuple(*arg) if isinstance(arg, list) else arg for arg in args)
-        args = tuple(args)
-        for arg in args:
-            if isinstance(arg, list):
-                warnings.warn(DeprecationWarning('Tuple',arg))
         obj = Basic.__new__(cls, *args)
         return obj
 
