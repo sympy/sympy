@@ -14,7 +14,6 @@ from .sorting import default_sort_key
 from .sympify import _sympify, sympify, converter, SympifyError
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import as_int
-import warnings
 
 class Tuple(Basic):
     """
