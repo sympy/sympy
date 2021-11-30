@@ -2479,13 +2479,13 @@ def _get_examples_ode_sol_nth_linear_constant_coeff_homogeneous():
 
     'lin_const_coeff_hom_06': {
         'eq': Eq(f(x).diff(x, 2) + 2*f(x).diff(x) - f(x), 0),
-        'sol': [Eq(f(x), C1*exp(x*(-1 + sqrt(2))) + C2*exp(x*(-sqrt(2) - 1)))],
+        'sol': [Eq(f(x), C1*exp(x*(-1 + sqrt(2))) + C2*exp(-x*(sqrt(2) + 1)))],
         'slow': True,
     },
 
     'lin_const_coeff_hom_07': {
         'eq': diff(f(x), x, 3) + diff(f(x), x, 2) - 10*diff(f(x), x) - 6*f(x),
-        'sol': [Eq(f(x), C1*exp(3*x) + C2*exp(x*(-2 - sqrt(2))) + C3*exp(x*(-2 + sqrt(2))))],
+        'sol': [Eq(f(x), C1*exp(3*x) + C3*exp(-x*(2 + sqrt(2))) + C2*exp(x*(-2 + sqrt(2))))],
         'slow': True,
     },
 
