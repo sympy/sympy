@@ -6,7 +6,7 @@ from functools import reduce
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
-from sympy.core.symbol import Wild, Dummy
+from sympy.core.symbol import Wild, Dummy, Symbol
 from sympy.core.basic import sympify
 from sympy.core.numbers import Rational, pi, I
 from sympy.core.relational import Eq, Ne
@@ -64,7 +64,7 @@ def components(f, x):
     """
     result = set()
 
-    if x in f.free_symbols:
+    if f.has_free(x):
         if f.is_symbol and f.is_commutative:
             result.add(f)
         elif f.is_Function or f.is_Derivative:
@@ -136,7 +136,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     """
     from sympy.solvers.solvers import solve, denoms
     f = sympify(f)
-    if x not in f.free_symbols:
+    if not f.has_free(x):
         return f*x
 
     res = heurisch(f, x, rewrite, hints, mappings, retries, degree_offset,
@@ -378,7 +378,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         if f.has(Abs, re, im, sign, Heaviside, DiracDelta, floor, ceiling, arg):
             return
 
-    if x not in f.free_symbols:
+    if not f.has_free(x):
         return f*x
 
     if not f.is_Add:
@@ -702,7 +702,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                 pass # ignore trivial numbers
             elif expr in syms:
                 pass # ignore variables
-            elif not expr.free_symbols & syms:
+            elif not expr.has_free(*syms):
                 non_syms.add(expr)
             elif expr.is_Add or expr.is_Mul or expr.is_Pow:
                 list(map(find_non_syms, expr.args))
@@ -732,7 +732,14 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             return candidate.xreplace(solution).xreplace(
                 dict(zip(poly_coeffs, [S.Zero]*len(poly_coeffs))))
 
-    if not (F.free_symbols - set(V)):
+    if all(isinstance(_, Symbol) for _ in V):
+        more_free = F.free_symbols - set(V)
+    else:
+        Fd = F.as_dummy()
+        more_free = Fd.xreplace(dict(zip(V, (Dummy() for _ in V)))
+            ).free_symbols & Fd.free_symbols
+    if not more_free:
+        # all free generators are identified in V
         solution = _integrate('Q')
 
         if solution is None:

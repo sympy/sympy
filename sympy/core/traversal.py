@@ -5,6 +5,65 @@ from sympy.utilities.iterables import iterable
 
 
 
+def iterargs(expr):
+    """Yield the args of a Basic object in a breadth-first traversal.
+    Depth-traversal stops if `arg.args` is either empty or is not
+    an iterable.
+
+    Examples
+    ========
+
+    >>> from sympy import Integral, Function
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> from sympy.core.traversal import iterargs
+    >>> list(iterargs(Integral(f(x), (f(x), 1))))
+    [Integral(f(x), (f(x), 1)), f(x), (f(x), 1), x, f(x), 1, x]
+
+    See Also
+    ========
+    iterfreeargs, preorder_traversal
+    """
+    args = [expr]
+    for i in args:
+        yield i
+        try:
+            args.extend(i.args)
+        except TypeError:
+            pass
+
+
+def iterfreeargs(expr):
+    """Yield the args of a Basic object in a breadth-first traversal.
+    Depth-traversal stops if `arg.args` is either empty or is not
+    an iterable. The bound objects of an expression will be returned
+    as canonical variables.
+
+    Examples
+    ========
+
+    >>> from sympy import Integral, Function
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> from sympy.core.traversal import iterfreeargs
+    >>> list(iterfreeargs(Integral(f(x), (f(x), 1))))
+    [Integral(f(x), (f(x), 1)), _0, (_0, 1), _0, 1]
+
+    See Also
+    ========
+    iterargs, preorder_traversal
+    """
+    args = [expr]
+    for i in args:
+        yield i
+        if hasattr(i, 'bound_symbols'):
+            i = i.as_dummy()
+        try:
+            args.extend(i.args)
+        except TypeError:
+            pass
+
+
 class preorder_traversal:
     """
     Do a pre-order traversal of a tree.
@@ -86,10 +145,10 @@ class preorder_traversal:
 
         >>> from sympy import preorder_traversal, symbols
         >>> x, y, z = symbols('x y z')
-        >>> pt = preorder_traversal((x+y*z)*z)
+        >>> pt = preorder_traversal((x + y*z)*z)
         >>> for i in pt:
         ...     print(i)
-        ...     if i == x+y*z:
+        ...     if i == x + y*z:
         ...             pt.skip()
         z*(x + y*z)
         z

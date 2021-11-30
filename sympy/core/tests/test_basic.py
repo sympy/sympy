@@ -112,7 +112,11 @@ def test_has():
     assert b21.has(Basic)
     assert not b1.has(b21, b3)
     assert not b21.has()
+    assert not b21.has(type)
     raises(SympifyError, lambda: Symbol("x").has("x"))
+    # if this fails, then it will not be necessary to
+    # test for types by equality in _has
+    assert Tuple(Function('f')).has(Function('f'))
 
 
 def test_subs():

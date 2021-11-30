@@ -2078,7 +2078,7 @@ class Expr(Basic, EvalfMixin):
 
         """
         if deps:
-            if not self.has(*deps):
+            if not self.has_free(*deps):
                 return self, tuple()
         return S.Zero, (self,)
 
@@ -2576,11 +2576,6 @@ class Expr(Basic, EvalfMixin):
             res *= exp_polar(newexp)
         return res, n
 
-    def _eval_is_polynomial(self, syms):
-        if self.free_symbols.intersection(syms) == set():
-            return True
-        return False
-
     def is_polynomial(self, *syms):
         r"""
         Return True if self is a polynomial in syms and False otherwise.
@@ -2642,17 +2637,14 @@ class Expr(Basic, EvalfMixin):
             syms = set(map(sympify, syms))
         else:
             syms = self.free_symbols
+        return self._eval_is_polynomial(syms)
 
-        if syms.intersection(self.free_symbols) == set():
+    def _eval_is_polynomial(self, syms):
+        if not self.has_free(*syms):
             # constant polynomial
             return True
         else:
-            return self._eval_is_polynomial(syms)
-
-    def _eval_is_rational_function(self, syms):
-        if self.free_symbols.intersection(syms) == set():
-            return True
-        return False
+            return False
 
     def is_rational_function(self, *syms):
         """
@@ -2713,11 +2705,12 @@ class Expr(Basic, EvalfMixin):
         else:
             syms = self.free_symbols
 
-        if syms.intersection(self.free_symbols) == set():
-            # constant rational function
+        return self._eval_is_rational_function(syms)
+
+    def _eval_is_rational_function(self, syms):
+        if not self.has_free(*syms):
             return True
-        else:
-            return self._eval_is_rational_function(syms)
+        return False
 
     def _eval_is_meromorphic(self, x, a):
         # Default implementation, return True for constants.

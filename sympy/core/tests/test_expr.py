@@ -1593,6 +1593,18 @@ def test_free_symbols():
     assert (meter**x).free_symbols == {x}
 
 
+def test_has_free():
+    assert x.has_free(x)
+    assert not x.has_free(y)
+    assert (x + y).has_free(x)
+    assert (x + y).has_free(*(x, z))
+    assert f(x).has_free(x)
+    assert f(x).has_free(f(x))
+    assert Integral(f(x), (f(x), 1, y)).has_free(y)
+    assert not Integral(f(x), (f(x), 1, y)).has_free(x)
+    assert not Integral(f(x), (f(x), 1, y)).has_free(f(x))
+
+
 def test_issue_5300():
     x = Symbol('x', commutative=False)
     assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3

@@ -1228,31 +1228,90 @@ class Basic(Printable, metaclass=ManagedProperties):
         False
 
         """
-        return any(self._has(pattern) for pattern in patterns)
+        return self._has(iterargs, *patterns)
 
-    def _has(self, pattern):
-        """Helper for .has()"""
-        from .function import UndefinedFunction, Function
-        if isinstance(pattern, UndefinedFunction):
-            return any(pattern in (f, f.func)
-                       for f in self.atoms(Function, UndefinedFunction))
+    @cacheit
+    def has_free(self, *patterns):
+        """return True if self has object(s) ``x`` as a free expression
+        else False.
 
-        if isinstance(pattern, BasicMeta):
-            subtrees = _preorder_traversal(self)
-            return any(isinstance(arg, pattern) for arg in subtrees)
+        Examples
+        ========
 
-        pattern = _sympify(pattern)
+        >>> from sympy import Integral, Function
+        >>> from sympy.abc import x, y
+        >>> f = Function('f')
+        >>> g = Function('g')
+        >>> expr = Integral(f(x), (f(x), 1, g(y)))
+        >>> expr.free_symbols
+        {y}
+        >>> expr.has_free(g(y))
+        True
+        >>> expr.has_free(*(x, f(x)))
+        False
 
-        _has_matcher = getattr(pattern, '_has_matcher', None)
-        if _has_matcher is not None:
-            match = _has_matcher()
-            return any(match(arg) for arg in _preorder_traversal(self))
-        else:
-            return any(arg == pattern for arg in _preorder_traversal(self))
+        This works for subexpressions and types, too:
 
-    def _has_matcher(self):
-        """Helper for .has()"""
-        return lambda other: self == other
+        >>> expr.has_free(g)
+        True
+        >>> (x + y + 1).has_free(y + 1)
+        True
+
+        """
+        return self._has(iterfreeargs, *patterns)
+
+    def _has(self, iterargs, *patterns):
+        # separate out types and unhashable objects
+        type_set = set()  # only types
+        p_set = set()  # all patterns so Tuple(f, Add).has(f) will pass
+        other = []
+        for p in patterns:
+            if isinstance(p, type):
+                if not isinstance(p, BasicMeta):
+                    continue  # ignore this type
+                type_set.add(p)
+                p_set.add(p)
+            else:
+                if not isinstance(p, Basic):
+                    p = _sympify(p)
+                try:
+                    p_set.add(p)
+                except TypeError:
+                    other.append(p)
+
+        # do fast tests for equality
+        if type_set:
+            if any(type(i) in type_set for i in iterargs(self)):
+                return True
+        if p_set:
+            for i in iterargs(self):
+                try:
+                    if i in p_set:
+                        return True
+                except TypeError:
+                    pass  # unhashable, e.g. PermutationGroup([(0 2 1)])
+
+        # do subclass testing
+        if type_set:
+            for i in iterargs(self):
+                if any(isinstance(i, t) for t in type_set):
+                    return True
+            # remove types from p_set since they won't have matchers
+            p_set -= type_set
+
+        # use matcher if defined, e.g. operations defines
+        # matcher that checks for exact subset containment,
+        # (x + y + 1).has(x + 1) -> True
+        other.extend(p_set)
+        for i in other:
+            if not hasattr(i, '_has_matcher'):
+                continue
+            match = i._has_matcher()
+            if any(match(arg) for arg in iterargs(self)):
+                return True
+
+        # no success
+        return False
 
     def replace(self, query, value, map=False, simultaneous=True, exact=None):
         """
@@ -2054,7 +2113,8 @@ def _make_find_query(query):
 
 # Delayed to avoid cyclic import
 from .singleton import S
-from .traversal import preorder_traversal as _preorder_traversal
+from .traversal import (preorder_traversal as _preorder_traversal,
+   iterargs, iterfreeargs)
 
 preorder_traversal = deprecated(
     useinstead="sympy.core.traversal.preorder_traversal",

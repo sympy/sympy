@@ -2438,10 +2438,13 @@ def linear_coeffs(eq, *syms, **_kw):
     ...
     NonlinearError: nonlinear term encountered: x*(y + 1)
     """
+    from sympy.core.traversal import iterfreeargs
     d = defaultdict(list)
     eq = _sympify(eq)
     symset = set(syms)
-    has = eq.free_symbols & symset
+    if len(symset) != len(syms):
+        raise ValueError('duplicate symbols given')
+    has = set(iterfreeargs(eq)) & symset
     if not has:
         return [S.Zero]*len(syms) + [eq]
     c, terms = eq.as_coeff_add(*has)
@@ -2464,7 +2467,7 @@ def linear_coeffs(eq, *syms, **_kw):
         for k, v in d.items():
             d[k] = Add(*v)
         if not _kw:
-            return [d.get(s, S.Zero) for s in syms] + [d[0]]
+            return [d.get(s, S.Zero) for s in syms]+ [d[0]]
         return d  # default is still list but this won't matter
     raise NonlinearError('nonlinear term encountered: %s' % t)
 
