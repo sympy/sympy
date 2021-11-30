@@ -312,18 +312,25 @@ class ExprWithLimits(Expr):
         # should be returned, e.g. don't return set() if the
         # function is zero -- treat it like an unevaluated expression.
         function, limits = self.function, self.limits
+        # mask off non-symbol integration variables that have
+        # more than themself as a free symbol
+        reps = {i[0]: i[0] if i[0].free_symbols == {i[0]} else Dummy()
+            for i in self.limits}
+        function = function.xreplace(reps)
         isyms = function.free_symbols
         for xab in limits:
+            v = reps[xab[0]]
             if len(xab) == 1:
-                isyms.add(xab[0])
+                isyms.add(v)
                 continue
             # take out the target symbol
-            if xab[0] in isyms:
-                isyms.remove(xab[0])
+            if v in isyms:
+                isyms.remove(v)
             # add in the new symbols
             for i in xab[1:]:
                 isyms.update(i.free_symbols)
-        return isyms
+        reps = {v: k for k, v in reps.items()}
+        return set([reps.get(_, _) for _ in isyms])
 
     @property
     def is_number(self):

@@ -2248,13 +2248,13 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         |    [  -    -----]    [-  -]   |     [  -    -----]
         \    [  1      s  ]{t} [1  1]{t}/     [  1      s  ]{t}
         >>> pprint(F_1.doit(), use_unicode=False)
-        [               -s                         1 - s       ]
-        [             -------                   -----------    ]
-        [             6*s - 1                   s*(1 - 6*s)    ]
-        [                                                      ]
-        [25*s*(s - 1) + 5*(1 - s)*(6*s - 1)  (s - 1)*(6*s + 24)]
-        [----------------------------------  ------------------]
-        [        (1 - s)*(6*s - 1)              s*(6*s - 1)    ]{t}
+        [  -s           s - 1       ]
+        [-------     -----------    ]
+        [6*s - 1     s*(6*s - 1)    ]
+        [                           ]
+        [5*s - 5  (s - 1)*(6*s + 24)]
+        [-------  ------------------]
+        [6*s - 1     s*(6*s - 1)    ]{t}
 
         If the user wants the resultant ``TransferFunctionMatrix`` object without
         canceling the common factors then the ``cancel`` kwarg should be passed ``False``.
@@ -2273,16 +2273,16 @@ class MIMOFeedback(MIMOLinearTimeInvariant):
         the ``expand`` kwarg should be passed as ``True``.
 
         >>> pprint(F_1.doit(expand=True), use_unicode=False)
-        [       -s               1 - s      ]
-        [     -------          ----------   ]
-        [     6*s - 1               2       ]
-        [                      - 6*s  + s   ]
-        [                                   ]
-        [     2                2            ]
-        [- 5*s  + 10*s - 5  6*s  + 18*s - 24]
-        [-----------------  ----------------]
-        [      2                   2        ]
-        [ - 6*s  + 7*s - 1      6*s  - s    ]{t}
+        [  -s          s - 1      ]
+        [-------      --------    ]
+        [6*s - 1         2        ]
+        [             6*s  - s    ]
+        [                         ]
+        [            2            ]
+        [5*s - 5  6*s  + 18*s - 24]
+        [-------  ----------------]
+        [6*s - 1         2        ]
+        [             6*s  - s    ]{t}
 
         """
         _mat = self.sensitivity * self.sys1.doit()._expr_mat

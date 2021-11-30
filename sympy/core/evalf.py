@@ -1488,8 +1488,7 @@ def evalf(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
     """
     from sympy.functions.elementary.complexes import re as re_, im as im_
     try:
-        rf = evalf_table[x.__class__]
-        r = rf(x, prec, options)
+        rf = evalf_table[type(x)]
     except KeyError:
         # Fall back to ordinary evalf if possible
         if 'subs' in options:

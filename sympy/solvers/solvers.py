@@ -2666,7 +2666,7 @@ def _tsolve(eq, sym, **flags):
             if lhs.func in multi_inverses:
                 # sin(x) = 1/3 -> x - asin(1/3) & x - (pi - asin(1/3))
                 soln = []
-                for i in multi_inverses[lhs.func](rhs):
+                for i in multi_inverses[type(lhs)](rhs):
                     soln.extend(_solve(lhs.args[0] - i, sym, **flags))
                 return list(ordered(soln))
             elif lhs.func == LambertW:
