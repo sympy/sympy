@@ -770,11 +770,22 @@ def rotation(dim,
     Explanation
     ===========
     The matrix decribes in n dimensional Euclidian space
-    a rotation of $(i,j)$ plane given by a single rotation square
+    a rotation of $(i,j)$ plane given by a single rotation square matrix
+    $\mathbf{R}=\mathbf{R(c,s)}$ with entries like the identiy matrix but
 
     .. math::
 
-        \left[\begin{array}{cc} c & s \\ -s & c \end{array}\right]
+        R_{ii} = c, \quad R_{ij} = s, \quad R_{ji} = -s, \quad R_{jj} = c
+
+    with $|c|^2+|s|^2=1$.
+    Usually $s, c$ are $\sin\phi$ and $\cos\phi$ for some angle $\phi$.
+
+    In two dimensions this leads to
+
+    .. math::
+
+        \mathbf{R(c,s)} =
+        \left[\begin{array}{cc} c & s \\ -s & c \end{array}\right].
 
 
     Examples
@@ -1857,7 +1868,7 @@ def diagonalizable(dim,
 
     .. math::
 
-        \mathbf{S}^{-1} \cdot \mathbf{D} \cdot \mathbf{S}
+        \mathbf{S} \cdot \mathbf{D} \cdot \mathbf{S}^{-1}
 
     of an :func:`invertible` matrix $\mathbf{S}$ and
     a :func:`diagonal_normal` matrix of given rank
@@ -1941,7 +1952,7 @@ def trigonalizable(dim,
 
     .. math::
 
-        \mathbf{S}^{-1} \cdot \mathbf{T} \cdot \mathbf{S}
+        \mathbf{S} \cdot \mathbf{T} \cdot \mathbf{S}^{-1}
 
     of an invertible matrix $\mathbf{S}$ and a *Jordan* matrix $\mathbf{T}$
     and eigenvalues (diagonal entries) from **spec**.
@@ -2115,9 +2126,9 @@ def unitary(dim,
     in n dimensional unitary space
     (complex vectorspace with Hermite form).
 
-    Constructed as
-    product of random complex :func:`rotation` matrices $\mathbf{A}$,
-    i.e. where the $\sin$ and $\cos$ pair is
+    Constructed as product
+    of random complex :func:`rotation` matrices $\mathbf{A(a,b)}$,
+    i.e. where the $s,c$ pair of \mathbf{R(c,s)} is
     actural a pair of complex numbers $a, b$ such that $|a|^2+|b|^2=1$.
     So,
 
@@ -2129,22 +2140,22 @@ def unitary(dim,
     Those pairs $b$ and $b$ are constructed from three complexs units
     $z, w, u$ by $a=z*\operatorname{Re}(u)$ and $b=w*\operatorname{Im}(u)$.
 
-    But if **spec** is given, another diagonal unitary matrix $\mathbf{D}'$ is
-    build with entries from **spec**.
-    Note, to give an *unitary* matrix,
-    **spec** must consist of roots of units only.
-    A root of units is a complex number $z$,
-    s.th. $|z| = z * \bar{z} = 1$.
-
-    Finally, the resulting unitar matrix $\mathbf{B}$ is given as
+    But if **spec** is given,
+    the resulting *unitary* matrix $\mathbf{V}$ is constructed as
 
     .. math::
 
-        \mathbf{B} = \mathbf{A}^H \mathbf{D}' \mathbf{A}
-        = \mathbf{V}^H \mathbf{D}^H \mathbf{U}^H \mathbf{D}' \mathbf{UDV}
+        \mathbf{V} = \mathbf{U} \cdot \mathbf{D} \cdot \mathbf{U}^H
 
-    (see Fuehr/Rzeszotnik, "A note on factoring unitary matrices", 2018
-    https://doi.org/10.1016%2Fj.laa.2018.02.017)
+
+    where a diagonal unitary matrix $\mathbf{D}$ is
+    build with entries from **spec**
+    and $U$ is a unitary matrix given as a product of matrices
+    $\mathbf{A(a,b)}$ as described above.
+
+    Note, to give an *unitary* matrix,
+    **spec** must consist of complex roots of units only,
+    i.e. complex munbers $z$, s.th. $|z| = z * \bar{z} = 1$.
 
     Examples
     ========
@@ -2243,6 +2254,7 @@ def normal(dim,
 
     Explanation
     ===========
+
     By definition for a *normal* matrix $\mathbf{A}$
 
     .. math::
@@ -2250,30 +2262,39 @@ def normal(dim,
         \mathbf{A}^H \cdot \mathbf{A} = \mathbf{A} \cdot \mathbf{A}^H
 
     holds. Note, this extends the notion of
-    an :func:`unitary` matrix $\mathbf{U}$
-    since $\mathbf{U}^H \cdot \mathbf{U}
-    = \mathbf{I} = \mathbf{U} \cdot \mathbf{U}^H$.
-
-    A matrix $\mathbf{A}$ is *normal* if and only if it is diagonalizable
-    by an *unitary* matrix $\mathbf{U}$,
-    i.e. $\mathbf{U}^H \cdot \mathbf{A} \cdot \mathbf{U} = \mathbf{D}$
-    with diagonal matrix $\mathbf{D}$.
-
-    Hence, since $\mathbf{U}^H = \mathbf{U}^{-1}$,
+    an *unitary* matrix $\mathbf{U}$
+    since
 
     .. math::
 
-        \mathbf{A} = \mathbf{U \cdot D \cdot U}^H
+        \mathbf{U}^H \cdot \mathbf{U}
+        = \mathbf{I}
+        = \mathbf{U} \cdot \mathbf{U}^H.
 
-    The entries of $\mathbf{D}$, which are eigenvalues,
-    are taken from **spec**
-    and the entries to build $\mathbf{U}$ are taken from **scalars**.
+    A matrix $\mathbf{A}$ is *normal* if and only if it is diagonalizable
+    by an *unitary* matrix $\mathbf{U}$, i.e.
+    $\mathbf{U}^H \cdot \mathbf{A} \cdot \mathbf{U} = \mathbf{D}$
+    with diagonal matrix $\mathbf{D}$.
+    Since $\mathbf{U}^H = \mathbf{U}^{-1}$
+    a *normal* matrix is constructed as
 
+    .. math::
 
-    Since **orthogonal** matrices are **unitary**,
-    $\mathbf{U}$ will be **orthogonal**
-    if **scalars** has only real entries.
-    So the final *normal* matrix will be real, too.
+        \mathbf{A} = \mathbf{U} \cdot \mathbf{D} \cdot \mathbf{U}^H.
+
+    The entries of $\mathbf{D}$, which are actually eigenvalues,
+    are taken from **spec**,
+    while the entries to build $\mathbf{U}$ are taken from **scalars**,
+    see :func:`unitary` for details.
+
+    Since *orthogonal* matrices are *unitary*,
+    $\mathbf{U}$ will be *orthogonal*
+    if **scalars** consists of real entries only.
+    So the final matrix $\mathbf{A}$ will be real, too.
+
+    Moreover, $\mathbf{A}$ will be symmetric
+    but in contrast to :func:`symmetric`
+    with a given spectrum of eigenvalues from **spec**.
 
     Examples
     ========
