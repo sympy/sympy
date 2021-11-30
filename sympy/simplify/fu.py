@@ -243,7 +243,7 @@ def TR3(rv):
             return rv
         if (rv.args[0] - S.Pi/4).is_positive is (S.Pi/2 - rv.args[0]).is_positive is True:
             fmap = {cos: sin, sin: cos, tan: cot, cot: tan, sec: csc, csc: sec}
-            rv = fmap[rv.func](S.Pi/2 - rv.args[0])
+            rv = fmap[type(rv)](S.Pi/2 - rv.args[0])
         return rv
 
     return bottom_up(rv, f)
@@ -445,12 +445,12 @@ def TR8(rv, first=True):
         args = {cos: [], sin: [], None: []}
         for a in ordered(Mul.make_args(rv)):
             if a.func in (cos, sin):
-                args[a.func].append(a.args[0])
+                args[type(a)].append(a.args[0])
             elif (a.is_Pow and a.exp.is_Integer and a.exp > 0 and \
                     a.base.func in (cos, sin)):
                 # XXX this is ok but pathological expression could be handled
                 # more efficiently as in TRmorrie
-                args[a.base.func].extend([a.base.args[0]]*a.exp)
+                args[type(a.base)].extend([a.base.args[0]]*a.exp)
             else:
                 args[None].append(a)
         c = args[cos]
@@ -869,7 +869,7 @@ def _TR11(rv):
                 b, e = fi.as_base_exp()
                 if e.is_Integer and e > 0:
                     if b.func in (cos, sin):
-                        args[b.func].add(b.args[0])
+                        args[type(b)].add(b.args[0])
             return args
         num_args, den_args = map(sincos_args, rv.as_numer_denom())
         def handle_match(rv, num_args, den_args):
@@ -1076,7 +1076,7 @@ def TR13(rv):
         args = {tan: [], cot: [], None: []}
         for a in ordered(Mul.make_args(rv)):
             if a.func in (tan, cot):
-                args[a.func].append(a.args[0])
+                args[type(a)].append(a.args[0])
             else:
                 args[None].append(a)
         t = args[tan]
