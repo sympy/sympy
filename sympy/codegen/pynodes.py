@@ -1,4 +1,4 @@
-from .abstract_nodes import List
+from .abstract_nodes import List as AbstractList
 
-class List(List):
+class List(AbstractList):
     pass
