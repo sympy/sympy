@@ -2187,11 +2187,10 @@ def truth_table(expr, variables, input=True):
 
     table = product((0, 1), repeat=len(variables))
     for term in table:
-        term = list(term)
         value = expr.xreplace(dict(zip(variables, term)))
 
         if input:
-            yield term, value
+            yield list(term), value
         else:
             yield value
 
@@ -2506,6 +2505,10 @@ def SOPform(variables, minterms, dontcares=None):
         if d in minterms:
             raise ValueError('%s in minterms is also in dontcares' % d)
 
+    return _sop_form(variables, minterms, dontcares)
+
+
+def _sop_form(variables, minterms, dontcares):
     new = _simplified_pairs(minterms + dontcares)
     essential = _rem_redundancy(new, minterms)
     return Or(*[_convert_to_varsSOP(x, variables) for x in essential])
@@ -2898,21 +2901,52 @@ def simplify_logic(expr, form=None, deep=True, force=False):
     # get variables in case not deep or after doing
     # deep simplification since they may have changed
     variables = _find_predicates(expr)
+    # Replace variables with Dummys in case there are Relationals to possibly
+    # reduce the number of variables
+    repl = dict()
+    undo = dict()
+    from sympy.core.relational import Relational
+    if expr.has(Relational):
+        from sympy.core.symbol import Dummy
+        while variables:
+            d = Dummy()
+            var = variables.pop()
+            undo[d] = var
+            repl[var] = d
+            nvar = ~var
+            if nvar in variables:
+                repl[nvar] = ~d
+                variables -= set([nvar])
+
+    expr = expr.xreplace(repl)
+    # Get new variables after replacing
+    variables = _find_predicates(expr)
     if not force and len(variables) > 8:
-        return expr
+        return expr.xreplace(undo)
     # group into constants and variable values
     c, v = sift(ordered(variables), lambda x: x in (True, False), binary=True)
     variables = c + v
     truthtable = []
     # standardize constants to be 1 or 0 in keeping with truthtable
     c = [1 if i == True else 0 for i in c]
-    for t in product((0, 1), repeat=len(v)):
-        if expr.xreplace(dict(zip(v, t))) == True:
-            truthtable.append(c + list(t))
+    truthtable = _get_truthtable(v, expr, c)
     big = len(truthtable) >= (2 ** (len(variables) - 1))
     if form == 'dnf' or form is None and big:
-        return SOPform(variables, truthtable)
-    return POSform(variables, truthtable)
+        return _sop_form(variables, truthtable, []).xreplace(undo)
+    return POSform(variables, truthtable).xreplace(undo)
+
+
+def _get_truthtable(variables, expr, const):
+    """ Return a list of all combinations leading to a True result for ``expr``.
+    """
+    def _get_tt(inputs):
+        if variables:
+            v = variables.pop()
+            tab = [[i[0].xreplace({v: false}), [0] + i[1]] for i in inputs if i[0] is not false]
+            tab.extend([[i[0].xreplace({v: true}), [1] + i[1]] for i in inputs if i[0] is not false])
+            return _get_tt(tab)
+        return inputs
+    return [const + k[1] for k in _get_tt([[expr, []]]) if k[0]]
 
 
 def _finger(eq):
