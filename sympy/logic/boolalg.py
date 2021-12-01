@@ -2909,14 +2909,15 @@ def simplify_logic(expr, form=None, deep=True, force=False):
     if expr.has(Relational):
         from sympy.core.symbol import Dummy
         while variables:
-            d = Dummy()
             var = variables.pop()
-            undo[d] = var
-            repl[var] = d
-            nvar = var.negated
-            if nvar in variables:
-                repl[nvar] = ~d
-                variables.remove(nvar)
+            if var.is_Relational:
+                d = Dummy()
+                undo[d] = var
+                repl[var] = d
+                nvar = var.negated
+                if nvar in variables:
+                    repl[nvar] = Not(d)
+                    variables.remove(nvar)
 
     expr = expr.xreplace(repl)
     # Get new variables after replacing
