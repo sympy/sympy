@@ -415,8 +415,7 @@ def test_block_lu_decomposition():
     #LU decomposition
     L, U = X.LUdecomposition()
     assert block_collapse(L*U) == X
-    
-    
+
 def test_issue_21866():
     n  = 10
     I  = Identity(n)
