@@ -312,47 +312,8 @@ important attributes, ``func``, and ``args``.
 func
 ----
 
-``func`` is the head of the object. For example, ``(x*y).func`` is ``Mul``.
-Usually it is the same as the class of the object (though there are exceptions
-to this rule).
-
-Three notes about ``func``.  First, the class of an object need not be the same
-as the one used to create it.  For example
-
-    >>> expr = Add(x, x)
-    >>> expr.func
-    <class 'sympy.core.mul.Mul'>
-
-We created ``Add(x, x)``, so we might expect ``expr.func`` to be ``Add``, but
-instead we got ``Mul``.  Why is that?  Let's take a closer look at ``expr``.
-
-    >>> expr
-    2*x
-
-``Add(x, x)``, i.e., ``x + x``, was automatically converted into ``Mul(2,
-x)``, i.e., ``2*x``, which is a ``Mul``.   SymPy classes make heavy use of the
-``__new__`` class constructor, which, unlike ``__init__``, allows a different
-class to be returned from the constructor.
-
-Second, atoms return a ``lambda`` function that takes no arguments and returns
-the original function.
-    >>> Integer(2).func
-    <function Atom.func.<locals>.<lambda> at 0x7f6ebed97ee0>
-
-Third, some classes are special-cased, usually for efficiency reasons
-[#singleton-fn]_.
-
-    >>> Integer(2).func
-    <function Atom.func.<locals>.<lambda> at 0x7f6ebed97ee0>
-    >>> type(Integer(2))
-    <class 'sympy.core.numbers.Integer'>
-    >>> Integer(0).func
-    <class 'sympy.core.numbers.Zero'>
-    >>> Integer(-1).func
-    <class 'sympy.core.numbers.NegativeOne'>
-
-It is thus better to use ``type`` than ``func`` if you want to use
-``isinstance``.
+``func`` is a callable which accepts the same number of arguments as stored
+in ``_args`` of the object.
 
 args
 ----
