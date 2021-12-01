@@ -2915,7 +2915,7 @@ def simplify_logic(expr, form=None, deep=True, force=False):
             repl[var] = d
             nvar = var.negated
             if nvar in variables:
-                repl[nvar] = d.negated
+                repl[nvar] = ~d
                 variables.remove(nvar)
 
     expr = expr.xreplace(repl)
