@@ -2609,6 +2609,8 @@ class Expr(Basic, EvalfMixin):
         False
         >>> (f(x) + 1).is_polynomial(f(x))
         True
+        >>> (1/f(x) + 1).is_polynomial(f(x))
+        False
 
         >>> n = Symbol('n', nonnegative=True, integer=True)
         >>> (x**n + 1).is_polynomial(x)

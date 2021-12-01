@@ -624,6 +624,8 @@ def test_is_polynomial():
     assert (
         (x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial(x, y) is False
 
+    assert (1/f(x) + 1).is_polynomial(f(x)) is False
+
 
 def test_is_rational_function():
     assert Integer(1).is_rational_function() is True
