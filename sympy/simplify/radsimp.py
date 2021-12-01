@@ -1030,7 +1030,8 @@ def fraction(expr, exact=False):
 
     Parameters
     ==========
-    expr : expression in consideration
+    
+    expr : Basic | iterable
         The expression that needs to be returned as a fraction.
     exact : True | False
         If ``exact=True``, a fraction will be returned without making any attempts at simplification.

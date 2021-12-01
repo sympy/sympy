@@ -104,6 +104,14 @@ def sqrtdenest(expr, max_iter=3):
     if possible, otherwise returns the expr unchanged. This is based on the
     algorithms of [1].
 
+    Parameters
+    ==========
+
+    expr : Basic | iterable
+        The expression to simplify.
+    max_iter : int
+        The maximum number of iterations to perform when simplifing a square root.
+
     Examples
     ========
 

@@ -429,7 +429,10 @@ def trigsimp(expr, **opts):
 
     Parameters
     ==========
-        expr : the expression to simplify
+
+    expr : Basic | iterable
+        The expression to simplify.
+
     Explanation
     ===========
 

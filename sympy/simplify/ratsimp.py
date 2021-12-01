@@ -13,7 +13,9 @@ def ratsimp(expr):
 
     Parameters
     ==========
-        expr: the expression to evaluate
+    
+    expr: Basic | iterable
+        The expression to simplify.
 
     Examples
     ========
@@ -41,8 +43,11 @@ def ratsimpmodprime(expr, G, *gens, quick=True, polynomial=False, **args):
 
     Parameters
     ==========
-    expr : the expression to consider
-    G : Groebner basis of the ideal
+
+    expr : Basic | iterable
+        the expression to consider.
+    G : GroebnerBasis
+        Groebner basis of the ideal.
     quick : True | False
         Perform the simplification quickly?
     polynomial : True | False

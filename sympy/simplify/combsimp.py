@@ -13,6 +13,12 @@ def combsimp(expr):
     r"""
     Simplify combinatorial expressions.
 
+    Parameters
+    ==========
+
+    expr : Basic | iterable
+        The expression to simplify.
+
     Explanation
     ===========
 
