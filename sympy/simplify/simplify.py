@@ -239,6 +239,11 @@ def posify(eq):
     dictionary containing the mapping between the old and new
     symbols.
 
+    Parameters
+    ==========
+    eq : an equation
+        An equation (with generic symbols made positive).
+
     Explanation
     ===========
 
@@ -1044,6 +1049,14 @@ def logcombine(expr, force=False):
     combination but if ``a`` is a symbol with no assumptions the change will
     take place.
 
+    Parameters
+    ==========
+    expr : A logarithmic expression
+        A logarithmic expression that needs to be simplified.
+    force : True | False
+        If ``force=True`` then the assumptions above will be assumed to hold if
+        there is no assumption already in place on a quantity.
+
     Examples
     ========
 
@@ -1468,13 +1481,13 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
         set the tolerance (e.g. Floats default to 15 digits of precision,
         so would be tolerance=10**-15).
     full : True | False
-        If full=True, a more extensive search is performed (this is useful
+        If ``full=True``, a more extensive search is performed (this is useful
         to find simpler numbers when the tolerance is set low).
     rational : True | False | None
-        If rational=True, then replace Floats with their Rational equivalents.
+        If ``rational=True``, then replace Floats with their Rational equivalents.
     rational_conversion : base10 | exact
-        If rational_conversion=’base10’ (the default), then convert floats to
-        rationals using their base-10 (string) representation. When rational_conversion=’exact’
+        If ``rational_conversion=base10`` (the default), then convert floats to
+        rationals using their base-10 (string) representation. When ``rational_conversion=exact``
         it uses the exact, base-2 representation.
 
     Explanation
