@@ -4,6 +4,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. module:: sympy
+
 Welcome to SymPy's documentation!
 ----------------------------------
 
@@ -21,7 +23,8 @@ This is the central page for all of SymPy's documentation.
 :ref:`SymPy Tutorials <tutorial>`
 -------------------------------------------------------
 
-*Master SymPy concepts and features*
+Tutorials introduce Sympy features to people who are new to the project. It includes
+installation instructons, a basic introduction to Sympy operations and common gotchas.
 
 
 ..  rst-class:: column
@@ -29,7 +32,10 @@ This is the central page for all of SymPy's documentation.
 :ref:`How-to Guides <guides>`
 -------------------------------------------------------
 
-*Step-by-step intructions on how to do different key developer tasks*
+These are step-by-step intructions on how to do different key developer tasks. It details
+instructions on installing SymPy from source for development. The development setup and workflow
+is also discussed with elaborate details on debugging, building the docs, and general guidelines
+on writing documentation and docstrings.
 
 
 ..  rst-class:: column clearfix
@@ -37,7 +43,9 @@ This is the central page for all of SymPy's documentation.
 :ref:`Explanation <explanation>`
 -------------------------------------------------------
 
-*Common pitfalls and advanced topics*
+Intermediate SymPy users and developers should reference this category of documentation
+for common pitfalls and advanced topics. The core SymPy features like variables, functions,
+symbolic expressions are detailed but it does not completely exhaust all SymPy operations.
 
 
 ..  rst-class:: column
@@ -45,8 +53,8 @@ This is the central page for all of SymPy's documentation.
 :ref:`SymPy API Reference <reference>`
 -------------------------------------------------------
 
-*SymPy internal and public modules*
-
+This category has a detailed description of the SymPy API, it discusses
+what the different functions and modules do, their arguments and return values.
 
 ..  rst-class:: clearfix row custom-headings
 

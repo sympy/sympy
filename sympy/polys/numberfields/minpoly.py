@@ -742,6 +742,33 @@ def _minpoly_groebner(ex, x, cls):
         return a
 
     def bottom_up_scan(ex):
+        """
+        Transform a given algebraic expression *ex* into a multivariate
+        polynomial, by introducing fresh variables with defining equations.
+
+        Explanation
+        ===========
+
+        The critical elements of the algebraic expression *ex* are root
+        extractions, instances of :py:class:`~.AlgebraicNumber`, and negative
+        powers.
+
+        When we encounter a root extraction or an :py:class:`~.AlgebraicNumber`
+        we replace this expression with a fresh variable ``a_i``, and record
+        the defining polynomial for ``a_i``. For example, if ``a_0**(1/3)``
+        occurs, we will replace it with ``a_1``, and record the new defining
+        polynomial ``a_1**3 - a_0``.
+
+        When we encounter a negative power we transform it into a positive
+        power by algebraically inverting the base. This means computing the
+        minimal polynomial in ``x`` for the base, inverting ``x`` modulo this
+        poly (which generates a new polynomial) and then substituting the
+        original base expression for ``x`` in this last polynomial.
+
+        We return the transformed expression, and we record the defining
+        equations for new symbols using the ``update_mapping()`` function.
+
+        """
         if ex.is_Atom:
             if ex is S.ImaginaryUnit:
                 if ex not in mapping:
@@ -774,7 +801,10 @@ def _minpoly_groebner(ex, x, cls):
                 expr = base**exp
 
                 if expr not in mapping:
-                    return update_mapping(expr, 1/exp, -base)
+                    if exp.is_Integer:
+                        return expr.expand()
+                    else:
+                        return update_mapping(expr, 1 / exp, -base)
                 else:
                     return symbols[expr]
         elif ex.is_AlgebraicNumber:

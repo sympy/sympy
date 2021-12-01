@@ -402,7 +402,9 @@ def signsimp(expr, evaluate=None):
     expr = sympify(expr)
     if not isinstance(expr, (Expr, Relational)) or expr.is_Atom:
         return expr
-    e = sub_post(sub_pre(expr))
+    # get rid of an pre-existing unevaluation regarding sign
+    e = expr.replace(lambda x: x.is_Mul and -(-x) != x, lambda x: -(-x))
+    e = sub_post(sub_pre(e))
     if not isinstance(e, (Expr, Relational)) or e.is_Atom:
         return e
     if e.is_Add:
@@ -412,7 +414,7 @@ def signsimp(expr, evaluate=None):
             return Mul(S.NegativeOne, -rv, evaluate=False)
         return rv
     if evaluate:
-        e = e.xreplace({m: -(-m) for m in e.atoms(Mul) if -(-m) != m})
+        e = e.replace(lambda x: x.is_Mul and -(-x) != x, lambda x: -(-x))
     return e
 
 
