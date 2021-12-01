@@ -1,7 +1,7 @@
 from collections import defaultdict
 from functools import reduce
 
-from sympy.core.function import expand_log, count_ops
+from sympy.core.function import expand_log, count_ops, _coeff_isneg
 from sympy.core import sympify, Basic, Dummy, S, Add, Mul, Pow, expand_mul, factor_terms
 from sympy.core.sorting import ordered, default_sort_key
 from sympy.core.numbers import Integer, Rational
@@ -402,6 +402,11 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         for b, e in c_powers:
             if deep:
                 e = recurse(e)
+            if e.is_Add and (b.is_positive or e.is_integer):
+                e = factor_terms(e)
+                if _coeff_isneg(e):
+                    e = -e
+                    b = 1/b
             c_exp[e].append(b)
         del c_powers
 
