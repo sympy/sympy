@@ -1,5 +1,4 @@
 from .cartan_type import CartanType
-from sympy.core.backend import Basic
 from sympy.core.basic import Atom
 
 class RootSystem(Atom):
@@ -45,7 +44,7 @@ class RootSystem(Atom):
         cartan_type attribute of the RootSystem instance.
 
         """
-        obj = Basic.__new__(cls)
+        obj = Atom.__new__(cls)
         obj.cartan_type = CartanType(cartantype)
         return obj
 

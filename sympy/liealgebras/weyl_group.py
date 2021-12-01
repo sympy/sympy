@@ -2,7 +2,7 @@
 
 from .cartan_type import CartanType
 from mpmath import fac
-from sympy.core.backend import Matrix, eye, Rational, Basic, igcd
+from sympy.core.backend import Matrix, eye, Rational, igcd
 from sympy.core.basic import Atom
 
 class WeylGroup(Atom):
@@ -17,7 +17,7 @@ class WeylGroup(Atom):
     """
 
     def __new__(cls, cartantype):
-        obj = Basic.__new__(cls)
+        obj = Atom.__new__(cls)
         obj.cartan_type = CartanType(cartantype)
         return obj
 
