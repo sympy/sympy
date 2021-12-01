@@ -2493,7 +2493,7 @@ def SOPform(variables, minterms, dontcares=None):
     .. [1] https://en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
-    if minterms == []:
+    if not minterms:
         return false
 
     variables = tuple(map(sympify, variables))
@@ -2569,7 +2569,7 @@ def POSform(variables, minterms, dontcares=None):
     .. [1] https://en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
-    if minterms == []:
+    if not minterms:
         return false
 
     variables = tuple(map(sympify, variables))
@@ -2891,33 +2891,30 @@ def simplify_logic(expr, form=None, deep=True, force=False):
         if form_ok and all(is_literal(a)
                 for a in expr.args):
             return expr
+    from sympy.core.relational import Relational
     if deep:
-        variables = _find_predicates(expr)
+        variables = expr.atoms(Relational)
         from sympy.simplify.simplify import simplify
         s = tuple(map(simplify, variables))
         expr = expr.xreplace(dict(zip(variables, s)))
     if not isinstance(expr, BooleanFunction):
         return expr
-    # get variables in case not deep or after doing
-    # deep simplification since they may have changed
-    variables = _find_predicates(expr)
-    # Replace variables with Dummys in case there are Relationals to possibly
+    # Replace Relationals with Dummys to possibly
     # reduce the number of variables
     repl = dict()
     undo = dict()
-    from sympy.core.relational import Relational
-    if expr.has(Relational):
-        from sympy.core.symbol import Dummy
-        while variables:
-            var = variables.pop()
-            if var.is_Relational:
-                d = Dummy()
-                undo[d] = var
-                repl[var] = d
-                nvar = var.negated
-                if nvar in variables:
-                    repl[nvar] = Not(d)
-                    variables.remove(nvar)
+    from sympy.core.symbol import Dummy
+    variables = expr.atoms(Relational)
+    while variables:
+        var = variables.pop()
+        if var.is_Relational:
+            d = Dummy()
+            undo[d] = var
+            repl[var] = d
+            nvar = var.negated
+            if nvar in variables:
+                repl[nvar] = Not(d)
+                variables.remove(nvar)
 
     expr = expr.xreplace(repl)
     # Get new variables after replacing
