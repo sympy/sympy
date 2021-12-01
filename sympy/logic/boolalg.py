@@ -657,7 +657,7 @@ class BooleanFunction(Application, Boolean):
                 # Remove the old relationals
                 del Rel[j]
                 del Rel[i]
-                if dominatingvalue is None or newrel != ~dominatingvalue:
+                if dominatingvalue is None or newrel != Not(dominatingvalue):
                     # Insert the new one (no need to insert a value that will
                     # not affect the result)
                     Rel.append(newrel)
@@ -1015,30 +1015,30 @@ class Not(BooleanFunction):
         func, args = expr.func, expr.args
 
         if func == And:
-            return Or._to_nnf(*[~arg for arg in args], simplify=simplify)
+            return Or._to_nnf(*[Not(arg) for arg in args], simplify=simplify)
 
         if func == Or:
-            return And._to_nnf(*[~arg for arg in args], simplify=simplify)
+            return And._to_nnf(*[Not(arg) for arg in args], simplify=simplify)
 
         if func == Implies:
             a, b = args
-            return And._to_nnf(a, ~b, simplify=simplify)
+            return And._to_nnf(a, Not(b), simplify=simplify)
 
         if func == Equivalent:
-            return And._to_nnf(Or(*args), Or(*[~arg for arg in args]),
+            return And._to_nnf(Or(*args), Or(*[Not(arg) for arg in args]),
                                simplify=simplify)
 
         if func == Xor:
             result = []
             for i in range(1, len(args)+1, 2):
                 for neg in combinations(args, i):
-                    clause = [~s if s in neg else s for s in args]
+                    clause = [Not(s) if s in neg else s for s in args]
                     result.append(Or(*clause))
             return And._to_nnf(*result, simplify=simplify)
 
         if func == ITE:
             a, b, c = args
-            return And._to_nnf(Or(a, ~c), Or(~a, ~b), simplify=simplify)
+            return And._to_nnf(Or(a, Not(c)), Or(Not(a), Not(b)), simplify=simplify)
 
         raise ValueError("Illegal operator %s in expression" % func)
 
@@ -1145,7 +1145,7 @@ class Xor(BooleanFunction):
         args = []
         for i in range(0, len(self.args)+1, 2):
             for neg in combinations(self.args, i):
-                clause = [~s if s in neg else s for s in self.args]
+                clause = [Not(s) if s in neg else s for s in self.args]
                 args.append(Or(*clause))
         return And._to_nnf(*args, simplify=simplify)
 
@@ -1352,7 +1352,7 @@ class Implies(BooleanFunction):
 
     def to_nnf(self, simplify=True):
         a, b = self.args
-        return Or._to_nnf(~a, b, simplify=simplify)
+        return Or._to_nnf(Not(a), b, simplify=simplify)
 
     def to_anf(self, deep=True):
         a, b = self.args
@@ -1416,7 +1416,7 @@ class Equivalent(BooleanFunction):
             return And(*argset)
         if False in argset:
             argset.discard(False)
-            return And(*[~arg for arg in argset])
+            return And(*[Not(arg) for arg in argset])
         _args = frozenset(argset)
         obj = super().__new__(cls, _args)
         obj._argset = _args
@@ -1432,8 +1432,8 @@ class Equivalent(BooleanFunction):
     def to_nnf(self, simplify=True):
         args = []
         for a, b in zip(self.args, self.args[1:]):
-            args.append(Or(~a, b))
-        args.append(Or(~self.args[-1], self.args[0]))
+            args.append(Or(Not(a), b))
+        args.append(Or(Not(self.args[-1]), self.args[0]))
         return And._to_nnf(*args, simplify=simplify)
 
     def to_anf(self, deep=True):
@@ -1496,14 +1496,14 @@ class ITE(BooleanFunction):
                 elif a.rhs is S.true:
                     a = a.lhs
                 elif a.lhs is S.false:
-                    a = ~a.rhs
+                    a = Not(a.rhs)
                 elif a.rhs is S.false:
-                    a = ~a.lhs
+                    a = Not(a.lhs)
                 else:
                     # binary can only equal True or False
                     a = S.false
                 if isinstance(_a, Ne):
-                    a = ~a
+                    a = Not(a)
         else:
             a, b, c = BooleanFunction.binary_check_and_simplify(
                 a, b, c)
@@ -1524,11 +1524,11 @@ class ITE(BooleanFunction):
             if S.true in a.args:
                 a = a.lhs if a.rhs is S.true else a.rhs
             elif S.false in a.args:
-                a = ~a.lhs if a.rhs is S.false else ~a.rhs
+                a = Not(a.lhs) if a.rhs is S.false else Not(a.rhs)
             else:
                 _a = None
             if _a is not None and isinstance(_a, Ne):
-                a = ~a
+                a = Not(a)
         if a is S.true:
             return b
         if a is S.false:
@@ -1547,7 +1547,7 @@ class ITE(BooleanFunction):
 
     def to_nnf(self, simplify=True):
         a, b, c = self.args
-        return And._to_nnf(Or(~a, b), Or(a, c), simplify=simplify)
+        return And._to_nnf(Or(Not(a), b), Or(a, c), simplify=simplify)
 
     def _eval_as_set(self):
         return self.to_nnf().as_set()
