@@ -601,7 +601,7 @@ def evalf_add(v: 'Add', prec: int, options: OPT_DICT) -> TMP_RES:
 
         terms = [evalf(arg, prec + 10, options) for arg in v.args]
         # remove any None so they won't be sympified during comparison
-        n = filter(None, terms).count(S.ComplexInfinity)
+        n = [term for term in terms if not isinstance(term, tuple)].count(S.ComplexInfinity)
         if n >= 2:
             return fnan, None, prec, None
         re, re_acc = add_terms(
