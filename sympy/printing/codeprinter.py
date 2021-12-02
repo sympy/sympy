@@ -134,8 +134,19 @@ class CodePrinter(StrPrinter):
                         type(self).__name__, type(assign_to)))
             return Assignment(assign_to, expr)
 
+        #for codeprinting, all lists should be converted to abstract_nodes.Lists.
+        from sympy.codegen.abstract_nodes import List
+        store_list_converter=converter.get(list, None)
+        converter[list]=lambda x: List(*x)
+
         expr = _handle_assign_to(expr, assign_to)
-        expr = _convert_python_lists(expr)
+
+        #restore previous behaviour
+        if store_list_converter is None:
+            del converter[list]
+        else:
+            converter[list] = store_list_converter
+
         # Remove re(...) nodes due to UnevaluatedExpr.is_real always is None:
         expr = self._handle_UnevaluatedExpr(expr)
 
