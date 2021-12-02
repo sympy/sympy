@@ -83,3 +83,6 @@ sample.tex
 
 # pytest related data file for slow tests
 .ci/durations.log
+
+# Stub .rst files generated from sphinx autosummary.
+_generated

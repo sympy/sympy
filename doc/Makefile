@@ -13,6 +13,7 @@ SOURCEDIR    = src
 
 SVGFILES = $(wildcard src/modules/physics/vector/*.svg) $(wildcard src/modules/physics/mechanics/examples/*.svg) $(wildcard src/modules/vector/*.svg)
 PDFFILES = $(SVGFILES:%.svg=%.pdf)
+RSTSTUBFILES := $(shell find . -name "_generated")
 
 # This must be set for the recursive make pdf build to work in make latexpdf
 export LATEXMKOPTS = -halt-on-error -xelatex
@@ -49,6 +50,7 @@ clean:
 	-rm -rf $(BUILDDIR)
 	-rm -rf sphinx
 	-rm -f $(PDFFILES)
+	-rm -rf $(RSTSTUBFILES)
 
 html: $(BUILDDIR)/html/pics/*.png
 html: SPHINXOPTS += -W --keep-going
