@@ -1,7 +1,6 @@
 import itertools
 from collections.abc import Iterable
 
-from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.function import diff
 from sympy.core.singleton import S
@@ -407,7 +406,7 @@ def permutedims(expr, perm):
     return type(expr)(new_array, new_shape)
 
 
-class Flatten(Basic):
+class Flatten():
     '''
     Flatten an iterable object to a list in a lazy-evaluation way.
 
