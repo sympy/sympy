@@ -9,7 +9,6 @@ from sympy.core.function import Lambda
 from sympy.core.mul import _keep_coeff
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Symbol
-from sympy.core.sympify import converter
 from sympy.functions.elementary.complexes import re
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
