@@ -600,7 +600,8 @@ def evalf_add(v: 'Add', prec: int, options: OPT_DICT) -> TMP_RES:
         options['maxprec'] = min(oldmaxprec, 2*prec)
 
         terms = [evalf(arg, prec + 10, options) for arg in v.args]
-        n = sum([term.count(S.ComplexInfinity) for term in terms])
+        # remove any None so they won't be sympified during comparison
+        n = filter(None, terms).count(S.ComplexInfinity)
         if n >= 2:
             return fnan, None, prec, None
         re, re_acc = add_terms(
