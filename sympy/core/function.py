@@ -1269,20 +1269,18 @@ class Derivative(Expr):
                         expression, the variable(s) of differentiation
                         must be supplied to differentiate %s''' % expr))
 
-        # Standardize the variables by sympifying them:
-        variables = list(sympify(variables))
-
         # Split the list of variables into a list of the variables we are diff
         # wrt, where each element of the list has the form (s, count) where
         # s is the entity to diff wrt and count is the order of the
         # derivative.
         variable_count = []
         array_likes = (tuple, list, Tuple)
+        integer_likes = (int, Integer)
 
         from sympy.tensor.array import Array, NDimArray
 
         for i, v in enumerate(variables):
-            if isinstance(v, Integer):
+            if isinstance(v, integer_likes):
                 if i == 0:
                     raise ValueError("First variable cannot be a number: %i" % v)
                 count = v
