@@ -51,8 +51,14 @@ def python(expr, **settings):
     # Returning found symbols and functions
     renamings = {}
     for symbolname in printer.symbols:
-        newsymbolname = symbolname
-        # Escape symbol names that are reserved python keywords
+        # Remove curly braces from subscripted variables
+        if '{' in symbolname:
+            newsymbolname = symbolname.replace('{', '').replace('}', '')
+            renamings[sympy.Symbol(symbolname)] = newsymbolname
+        else:
+            newsymbolname = symbolname
+
+        # Escape symbol names that are reserved Python keywords
         if kw.iskeyword(newsymbolname):
             while True:
                 newsymbolname += "_"
@@ -65,7 +71,7 @@ def python(expr, **settings):
 
     for functionname in printer.functions:
         newfunctionname = functionname
-        # Escape function names that are reserved python keywords
+        # Escape function names that are reserved Python keywords
         if kw.iskeyword(newfunctionname):
             while True:
                 newfunctionname += "_"

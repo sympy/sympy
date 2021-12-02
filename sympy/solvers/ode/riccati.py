@@ -113,10 +113,10 @@ the equation. `y(x)` must have the form -
 
 .. math:: y(x) = \sum_{i=1}^{n} \sum_{j=1}^{r_i} \frac{c_{ij}}{(x - x_i)^j} + \sum_{i=1}^{m} \frac{1}{x - \chi_i} + \sum_{i=0}^{N} d_i x^i
 
-where `x_1, x_2, ..., x_n` are non-movable poles of `a(x)`,
-`\chi_1, \chi_2, ..., \chi_m` are movable poles of `a(x)`, and the values
-of `N, n, r_1, r_2, ..., r_n` can be determined from `a(x)`. The
-coefficient vectors `(d_0, d_1, ..., d_N)` and `(c_{i1}, c_{i2}, ..., c_{i r_i})`
+where `x_1, x_2, \dots, x_n` are non-movable poles of `a(x)`,
+`\chi_1, \chi_2, \dots, \chi_m` are movable poles of `a(x)`, and the values
+of `N, n, r_1, r_2, \dots, r_n` can be determined from `a(x)`. The
+coefficient vectors `(d_0, d_1, \dots, d_N)` and `(c_{i1}, c_{i2}, \dots, c_{i r_i})`
 can be determined from `a(x)`. We will have 2 choices each of these vectors
 and part of the procedure is figuring out which of the 2 should be used
 to get the solution correctly.
@@ -315,12 +315,12 @@ def match_riccati(eq, f, x):
         funcs = [b0, b1, b2]
 
         # Check if coefficients are not symbols and floats
-        if any([len(x.atoms(Symbol)) > 1 or len(x.atoms(Float)) for x in [b0, b1, b2]]):
+        if any(len(x.atoms(Symbol)) > 1 or len(x.atoms(Float)) for x in funcs):
             return False, []
 
         # If b_0(x) contains f(x), it is not a Riccati ODE
-        if len(b0.atoms(f)) or not all([b2 != 0, b0.is_rational_function(x), \
-            b1.is_rational_function(x), b2.is_rational_function(x)]):
+        if len(b0.atoms(f)) or not all((b2 != 0, b0.is_rational_function(x),
+            b1.is_rational_function(x), b2.is_rational_function(x))):
             return False, []
         return True, funcs
     return False, []
@@ -347,7 +347,7 @@ def check_necessary_conds(val_inf, muls):
     greater than 1.
     """
     return (val_inf >= 2 or (val_inf <= 0 and val_inf%2 == 0)) and \
-        all([mul == 1 or (mul%2 == 0 and mul >= 2) for mul in muls])
+        all(mul == 1 or (mul%2 == 0 and mul >= 2) for mul in muls)
 
 
 def inverse_transform_poly(num, den, x):
@@ -409,7 +409,7 @@ def construct_c_case_1(num, den, x, pole):
     # in the c-vector is c = (1 +- sqrt(1 + 4*r))/2
     if r != -S(1)/4:
         return [[(1 + sqrt(1 + 4*r))/2], [(1 - sqrt(1 + 4*r))/2]]
-    return [[S(1)/2]]
+    return [[S.Half]]
 
 
 def construct_c_case_2(num, den, x, pole, mul):
@@ -540,7 +540,7 @@ def construct_d_case_6(num, den, x):
     # d_(-1) = (1 +- sqrt(1 + 4*s_oo))/2
     if s_inf != -S(1)/4:
         return [[(1 + sqrt(1 + 4*s_inf))/2], [(1 - sqrt(1 + 4*s_inf))/2]]
-    return [[S(1)/2]]
+    return [[S.Half]]
 
 
 def construct_d(num, den, x, val_inf):
@@ -698,7 +698,7 @@ def solve_aux_eq(numa, dena, numy, deny, x, m):
         return psol, linsolve_dict(auxeq.all_coeffs(), psyms), True
     else:
         # m == 0 . Check if 1 (x**0) is a solution to the auxiliary equation
-        return S(1), auxeq, auxeq == 0
+        return S.One, auxeq, auxeq == 0
 
 
 def remove_redundant_sols(sol1, sol2, x):

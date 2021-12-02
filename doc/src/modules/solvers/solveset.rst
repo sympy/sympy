@@ -22,7 +22,7 @@ issues
    * Multiple solutions: `x^2 = 1`
    * No Solution: `x^2 + 1 = 0 ; x \in \mathbb{R}`
    * Interval of solution: `\lfloor x \rfloor = 0`
-   * Infinitely many solutions: `sin(x) = 0`
+   * Infinitely many solutions: `\sin(x) = 0`
    * Multivariate functions with point solutions: `x^2 + y^2 = 0`
    * Multivariate functions with non-point solution: `x^2 + y^2 = 1`
    * System of equations: `x + y = 1` and `x - y = 0`
@@ -43,7 +43,7 @@ Why Solveset?
 
 * ``solveset`` has a cleaner input and output interface: ``solveset`` returns
   a set object and a set object takes care of all types of output. For
-  cases where it doesn't "know" all the solutions a ``ConditionSet`` with a partial
+  cases where it does not "know" all the solutions a ``ConditionSet`` with a partial
   solution is returned. For input it only takes the equation, the variables
   to solve for and the optional argument ``domain`` over which the equation is to
   be solved.
@@ -66,22 +66,22 @@ SymPy has a well developed sets module, which can represent most of the set
 containers in Mathematics such as:
 
 
- * ``FiniteSet``
+ * :class:`~.FiniteSet`
 
    Represents a finite set of discrete numbers.
 
 
- * ``Interval``
+ * :class:`~.Interval`
 
    Represents a real interval as a set.
 
 
- * ``ProductSet``
+ * :class:`~.ProductSet`
 
    Represents a Cartesian product of sets.
 
 
- * ``ImageSet``
+ * :class:`~.ImageSet`
 
    Represents the image of a set under a mathematical function
 
@@ -91,46 +91,46 @@ containers in Mathematics such as:
     >>> 4 in squares
     True
 
- * ``ComplexRegion``
+ * :class:`~.ComplexRegion`
 
    Represents the set of all complex numbers in a region in the Argand plane.
 
 
- * ``ConditionSet``
+ * :class:`~.ConditionSet`
 
    Represents the set of elements, which satisfies a given condition.
 
 
 Also, the predefined set classes such as:
 
- * ``Naturals`` `\mathbb{N}`
+ * :class:`~.Naturals`, $\mathbb{N}
 
    Represents the natural numbers (or counting numbers), which are all
    positive integers starting from 1.
 
 
- * ``Naturals0`` `\mathbb{N_0}`
+ * :class:`~.Naturals0`, $\mathbb{N_0}$
 
    Represents the whole numbers, which are all the non-negative integers,
    inclusive of 0.
 
 
- * ``Integers`` `\mathbb{Z}`
+ * :class:`~.Integers`, $\mathbb{Z}$
 
    Represents all integers: positive, negative and zero.
 
 
- * ``Reals`` `\mathbb{R}`
+ * :class:`~.Reals`, $\mathbb{R}$
 
    Represents the set of all real numbers.
 
 
- * ``Complexes`` `\mathbb{C}`
+ * :class:`~.Complexes`, $\mathbb{C}$
 
    Represents the set of all complex numbers.
 
 
- * ``EmptySet`` `\phi`
+ * :class:`~.EmptySet`, $\emptyset$
 
    Represents the empty set.
 
@@ -182,9 +182,9 @@ For example:
 
  >>> from sympy import FiniteSet
  >>> FiniteSet(1, 2, 3)   # Unordered
- FiniteSet(1, 2, 3)
+ {1, 2, 3}
  >>> FiniteSet((1, 2, 3))  # Ordered
- FiniteSet((1, 2, 3))
+ {(1, 2, 3)}
 
 
 Why not use dicts as output?
@@ -256,7 +256,7 @@ What is this domain argument about?
     >>> from sympy import solveset, S
     >>> from sympy.abc import x
     >>> solveset(x**2 + 1, x) # domain=S.Complexes is default
-    FiniteSet(I, -I)
+    {-I, I}
     >>> solveset(x**2 + 1, x, domain=S.Reals)
     EmptySet
 
@@ -552,12 +552,12 @@ Solving an equation like `x^2 == 1` can be done as follows::
     >>> from sympy import Symbol, Eq
     >>> x = Symbol('x')
     >>> solveset(Eq(x**2, 1), x)
-    FiniteSet(-1, 1)
+    {-1, 1}
 
 Or one may manually rewrite the equation as an expression equal to 0::
 
     >>> solveset(x**2 - 1, x)
-    FiniteSet(-1, 1)
+    {-1, 1}
 
 The first argument for :func:`solveset` is an expression (equal to zero) or an equation and the second argument
 is the symbol that we want to solve the equation for.

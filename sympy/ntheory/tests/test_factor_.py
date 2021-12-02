@@ -1,4 +1,10 @@
-from sympy import Mul, S, Pow, Symbol, summation, Dict, factorial as fac
+from sympy.concrete.summations import summation
+from sympy.core.containers import Dict
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.combinatorial.factorials import factorial as fac
 from sympy.core.evalf import bitcount
 from sympy.core.numbers import Integer, Rational
 
@@ -13,7 +19,7 @@ from sympy.ntheory.factor_ import (smoothness, smoothness_p, proper_divisors,
     mersenne_prime_exponent, is_perfect, is_mersenne_prime, is_abundant,
     is_deficient, is_amicable, dra, drm)
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, slow
 
 from sympy.utilities.iterables import capture
 
@@ -152,6 +158,7 @@ def test_perfect_power():
         assert m and m[1] == 2 or d == 1 or d == 3, (d, m)
 
 
+@slow
 def test_factorint():
     assert primefactors(123456) == [2, 3, 643]
     assert factorint(0) == {0: 1}

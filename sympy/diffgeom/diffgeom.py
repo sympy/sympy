@@ -1,4 +1,4 @@
-from typing import Any, Set
+from typing import Any, Set as tSet
 
 from functools import reduce
 from itertools import permutations
@@ -15,7 +15,6 @@ from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.functions import factorial
 from sympy.matrices import ImmutableDenseMatrix as Matrix
-from sympy.simplify import simplify
 from sympy.solvers import solve
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -736,23 +735,38 @@ class CoordinateSymbol(Symbol):
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import symbols, Lambda, Matrix, sqrt, atan2, cos, sin
     >>> from sympy.diffgeom import Manifold, Patch, CoordSystem
     >>> m = Manifold('M', 2)
     >>> p = Patch('P', m)
-    >>> _x, _y = symbols('x y', nonnegative=True)
+    >>> x, y = symbols('x y', real=True)
+    >>> r, theta = symbols('r theta', nonnegative=True)
+    >>> relation_dict = {
+    ... ('Car2D', 'Pol'): Lambda((x, y), Matrix([sqrt(x**2 + y**2), atan2(y, x)])),
+    ... ('Pol', 'Car2D'): Lambda((r, theta), Matrix([r*cos(theta), r*sin(theta)]))
+    ... }
+    >>> Car2D = CoordSystem('Car2D', p, [x, y], relation_dict)
+    >>> Pol = CoordSystem('Pol', p, [r, theta], relation_dict)
+    >>> x, y = Car2D.symbols
 
-    >>> C = CoordSystem('C', p, [_x, _y])
-    >>> x, y = C.symbols
+    ``CoordinateSymbol`` contains its coordinate symbol and index.
 
     >>> x.name
     'x'
-    >>> x.coord_sys == C
+    >>> x.coord_sys == Car2D
     True
     >>> x.index
     0
-    >>> x.is_nonnegative
+    >>> x.is_real
     True
+
+    You can transform ``CoordinateSymbol`` into other coordinate system using
+    ``rewrite()`` method.
+
+    >>> x.rewrite(Pol)
+    r*cos(theta)
+    >>> sqrt(x**2 + y**2).rewrite(Pol).simplify()
+    r
 
     """
     def __new__(cls, coord_sys, index, **assumptions):
@@ -769,6 +783,11 @@ class CoordinateSymbol(Symbol):
         return (
             self.coord_sys, self.index
         ) + tuple(sorted(self.assumptions0.items()))
+
+    def _eval_rewrite(self, rule, args, **hints):
+        if isinstance(rule, CoordSystem):
+            return rule.transform(self.coord_sys)[self.index]
+        return super()._eval_rewrite(rule, args, **hints)
 
 
 class Point(Basic):
@@ -952,7 +971,7 @@ class BaseScalarField(Expr):
         return simplify(coords[self._index]).doit()
 
     # XXX Workaround for limitations on the content of args
-    free_symbols = set()  # type: Set[Any]
+    free_symbols = set()  # type: tSet[Any]
 
     def doit(self):
         return self
@@ -1107,7 +1126,7 @@ class Commutator(Expr):
 
     >>> from sympy.diffgeom.rn import R2_p, R2_r
     >>> from sympy.diffgeom import Commutator
-    >>> from sympy.simplify import simplify
+    >>> from sympy import simplify
 
     >>> fx, fy = R2_r.base_scalars()
     >>> e_x, e_y = R2_r.base_vectors()
@@ -2054,8 +2073,7 @@ def metric_to_Christoffel_1st(expr):
         raise ValueError(
             'The two-form representing the metric is not symmetric.')
     coord_sys = _find_coords(expr).pop()
-    deriv_matrices = [matrix.applyfunc(lambda a: d(a))
-                      for d in coord_sys.base_vectors()]
+    deriv_matrices = [matrix.applyfunc(d) for d in coord_sys.base_vectors()]
     indices = list(range(coord_sys.dim))
     christoffel = [[[(deriv_matrices[k][i, j] + deriv_matrices[j][i, k] - deriv_matrices[i][j, k])/2
                      for k in indices]
@@ -2225,8 +2243,14 @@ class _deprecated_container:
         self.warn()
         return super().__contains__(key)
 
+
 class _deprecated_list(_deprecated_container, list):
     pass
 
+
 class _deprecated_dict(_deprecated_container, dict):
     pass
+
+
+# Import at end to avoid cyclic imports
+from sympy.simplify.simplify import simplify

@@ -74,8 +74,8 @@ order of 10 nano-seconds per element. Unfortunately numpy incurs some start-up
 time and introduces an overhead of a few microseconds.
 
 CuPy is a NumPy-compatible array library that mainly runs on CUDA, but has 
-increasing support for other GPUs manufacturer. It can in many cases be used as 
-a drop-in replacement for numpy. It is particu
+increasing support for other GPU manufacturers. It can in many cases be used as 
+a drop-in replacement for numpy.
 
     >>> f = lambdify(x, expr, "cupy")
     >>> import cupy as cp

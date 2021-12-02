@@ -4,12 +4,23 @@
 # -Implement new simpifications
 """Clebsch-Gordon Coefficients."""
 
-from sympy import (Add, expand, Eq, Expr, Mul, Piecewise, Pow, sqrt, Sum,
-                   symbols, sympify, Wild)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.function import expand
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Wild, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.wigner import clebsch_gordan, wigner_3j, wigner_6j, wigner_9j
+from sympy.printing.precedence import PRECEDENCE
 
 __all__ = [
     'CG',
@@ -97,7 +108,7 @@ class Wigner3j(Expr):
 
     @property
     def is_symbolic(self):
-        return not all([arg.is_number for arg in self.args])
+        return not all(arg.is_number for arg in self.args)
 
     # This is modified from the _print_Matrix method
     def _pretty(self, printer, *args):
@@ -159,14 +170,16 @@ class CG(Wigner3j):
     coefficients are defined as [1]_:
 
     .. math ::
-        C^{j_1,m_1}_{j_2,m_2,j_3,m_3} = \left\langle j_1,m_1;j_2,m_2 | j_3,m_3\right\rangle
+        C^{j_3,m_3}_{j_1,m_1,j_2,m_2} = \left\langle j_1,m_1;j_2,m_2 | j_3,m_3\right\rangle
 
     Parameters
     ==========
 
-    j1, m1, j2, m2, j3, m3 : Number, Symbol
-        Terms determining the angular momentum of coupled angular momentum
-        systems.
+    j1, m1, j2, m2 : Number, Symbol
+        Angular momenta of states 1 and 2.
+
+    j3, m3: Number, Symbol
+        Total angular momentum of the coupled system.
 
     Examples
     ========
@@ -180,6 +193,11 @@ class CG(Wigner3j):
         CG(3/2, 3/2, 1/2, -1/2, 1, 1)
         >>> cg.doit()
         sqrt(3)/2
+        >>> CG(j1=S(1)/2, m1=-S(1)/2, j2=S(1)/2, m2=+S(1)/2, j3=1, m3=0).doit()
+        sqrt(2)/2
+
+
+    Compare [2]_.
 
     See Also
     ========
@@ -190,7 +208,12 @@ class CG(Wigner3j):
     ==========
 
     .. [1] Varshalovich, D A, Quantum Theory of Angular Momentum. 1988.
+    .. [2] `Clebsch-Gordan Coefficients, Spherical Harmonics, and d Functions
+        <https://pdg.lbl.gov/2020/reviews/rpp2020-rev-clebsch-gordan-coefs.pdf>`_
+        in P.A. Zyla *et al.* (Particle Data Group), Prog. Theor. Exp. Phys.
+        2020, 083C01 (2020).
     """
+    precedence = PRECEDENCE["Pow"] - 1
 
     def doit(self, **hints):
         if self.is_symbolic:
@@ -260,7 +283,7 @@ class Wigner6j(Expr):
 
     @property
     def is_symbolic(self):
-        return not all([arg.is_number for arg in self.args])
+        return not all(arg.is_number for arg in self.args)
 
     # This is modified from the _print_Matrix method
     def _pretty(self, printer, *args):
@@ -361,7 +384,7 @@ class Wigner9j(Expr):
 
     @property
     def is_symbolic(self):
-        return not all([arg.is_number for arg in self.args])
+        return not all(arg.is_number for arg in self.args)
 
     # This is modified from the _print_Matrix method
     def _pretty(self, printer, *args):
@@ -632,7 +655,7 @@ def _check_cg_simp(expr, simp, sign, lt, term_list, variables, dep_variables, bu
             if not sympify(index_expr.subs(sub_dep).subs(sub_2)).is_number:
                 continue
             cg_index[index_expr.subs(sub_dep).subs(sub_2)] = j, expr.subs(lt, 1).subs(sub_dep).subs(sub_2), lt.subs(sub_2), sign.subs(sub_dep).subs(sub_2)
-        if all(i is not None for i in cg_index):
+        if not any(i is None for i in cg_index):
             min_lt = min(*[ abs(term[2]) for term in cg_index ])
             indices = [ term[0] for term in cg_index]
             indices.sort()
@@ -706,7 +729,7 @@ def _check_varsh_sum_872_4(e):
         return (KroneckerDelta(c, cp)*KroneckerDelta(gamma, gammap)).subs(match1)
     match2 = e.match(Sum(cg1**2, (alpha, -a, a), (beta, -b, b)))
     if match2 is not None and len(match2) == 4:
-        return 1
+        return S.One
     return e
 
 
@@ -715,7 +738,7 @@ def _cg_list(term):
         return (term,), 1, 1
     cg = []
     coeff = 1
-    if not (isinstance(term, Mul) or isinstance(term, Pow)):
+    if not isinstance(term, (Mul, Pow)):
         raise NotImplementedError('term must be CG, Add, Mul or Pow')
     if isinstance(term, Pow) and sympify(term.exp).is_number:
         if sympify(term.exp).is_number:

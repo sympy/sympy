@@ -2244,7 +2244,7 @@ def test_check_old_assumption():
     assert ask(Q.real(x)) is None
     assert ask(Q.complex(x)) is True
 
-    x = symbols('x', positive=True, finite=True)
+    x = symbols('x', positive=True)
     assert ask(Q.positive(x)) is True
     assert ask(Q.negative(x)) is False
     assert ask(Q.real(x)) is True
@@ -2322,7 +2322,6 @@ def test_custom_AskHandler():
     class MersenneHandler(AskHandler):
         @staticmethod
         def Integer(expr, assumptions):
-            from sympy import log
             if ask(Q.integer(log(expr + 1, 2))):
                 return True
         @staticmethod
@@ -2347,7 +2346,6 @@ def test_custom_AskHandler():
         Q.mersenne = MersennePredicate()
         @Q.mersenne.register(Integer)
         def _(expr, assumptions):
-            from sympy import log
             if ask(Q.integer(log(expr + 1, 2))):
                 return True
         @Q.mersenne.register(Symbol)

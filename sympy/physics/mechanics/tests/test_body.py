@@ -36,6 +36,8 @@ def test_custom_rigid_body():
     assert rigid_body.mass == rigidbody_mass
     assert rigid_body.inertia == (body_inertia, rigidbody_masscenter)
 
+    assert rigid_body.is_rigidbody
+
     assert hasattr(rigid_body, 'masscenter')
     assert hasattr(rigid_body, 'mass')
     assert hasattr(rigid_body, 'frame')
@@ -60,6 +62,8 @@ def test_particle_body():
     assert hasattr(particle_body, 'frame')
     assert hasattr(particle_body, 'masscenter')
     assert hasattr(particle_body, 'mass')
+
+    assert not particle_body.is_rigidbody
 
 
 def test_particle_body_add_force():
@@ -236,13 +240,13 @@ def test_remove_load():
     f2 = B.y
     B.apply_force(f1, P1)
     B.apply_force(f2, P2)
-    B.loads == [(P1, f1), (P2, f2)]
+    assert B.loads == [(P1, f1), (P2, f2)]
     B.remove_load(P2)
-    B.loads == [(P1, f1)]
+    assert B.loads == [(P1, f1)]
     B.apply_torque(f1.cross(f2))
-    B.loads == [(P1, f1), (B.frame, f1.cross(f2))]
+    assert B.loads == [(P1, f1), (B.frame, f1.cross(f2))]
     B.remove_load()
-    B.loads == [(P1, f1)]
+    assert B.loads == [(P1, f1)]
 
 def test_apply_loads_on_multi_degree_freedom_holonomic_system():
     """Example based on: https://pydy.readthedocs.io/en/latest/examples/multidof-holonomic.html"""

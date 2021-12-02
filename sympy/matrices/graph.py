@@ -64,6 +64,11 @@ def _strongly_connected_components(M):
     if not M.is_square:
         raise NonSquareMatrixError
 
+    # RepMatrix uses the more efficient DomainMatrix.scc() method
+    rep = getattr(M, '_rep', None)
+    if rep is not None:
+        return rep.scc()
+
     V = range(M.rows)
     E = sorted(M.todok().keys())
     return strongly_connected_components((V, E))

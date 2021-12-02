@@ -69,12 +69,12 @@ class TypeE(Standard_Cartan):
             root[0] = 1
             return root
         else:
-            if i == 7 or i == 8 and n == 6:
+            if i in (7, 8) and n == 6:
                 raise ValueError("E6 only has six simple roots!")
             if i == 8 and n == 7:
                 raise ValueError("E7 has only 7 simple roots!")
 
-            return self.basic_root(i-3, i-2)
+            return self.basic_root(i - 3, i - 2)
 
     def positive_roots(self):
         """

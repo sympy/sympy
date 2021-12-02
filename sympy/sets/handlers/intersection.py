@@ -1,11 +1,18 @@
-from sympy import (S, Dummy, Lambda, symbols, Interval, Intersection, Set,
-                   EmptySet, FiniteSet, Union, ComplexRegion, Mul)
+from sympy.core.function import Lambda, expand_complex
+from sympy.core.mul import Mul
+from sympy.core.numbers import ilcm
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.sets.fancysets import ComplexRegion
+from sympy.sets.sets import (FiniteSet, Intersection, Interval, Set, Union)
 from sympy.multipledispatch import dispatch
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import (Integers, Naturals, Reals, Range,
     ImageSet, Rationals)
-from sympy.sets.sets import UniversalSet, imageset, ProductSet
+from sympy.sets.sets import EmptySet, UniversalSet, imageset, ProductSet
 from sympy.simplify.radsimp import numer
+
 
 @dispatch(ConditionSet, ConditionSet)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
@@ -80,14 +87,15 @@ def intersection_sets(a, b): # noqa:F811
 
 @dispatch(Range, Interval)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
-    from sympy.functions.elementary.integers import floor, ceiling
-    if not all(i.is_number for i in b.args[:2]):
+    # Check that there are no symbolic arguments
+    if not all(i.is_number for i in a.args + b.args[:2]):
         return
 
     # In case of null Range, return an EmptySet.
     if a.size == 0:
         return S.EmptySet
 
+    from sympy.functions.elementary.integers import floor, ceiling
     # trim down to self's size, and represent
     # as a Range with step 1.
     start = ceiling(max(b.inf, a.inf))
@@ -104,9 +112,9 @@ def intersection_sets(a, b): # noqa:F811
 
 @dispatch(Range, Range)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
-    from sympy.solvers.diophantine.diophantine import diop_linear
-    from sympy.core.numbers import ilcm
-    from sympy import sign
+    # Check that there are no symbolic range arguments
+    if not all(all(v.is_number for v in r.args) for r in [a, b]):
+        return None
 
     # non-overlap quick exits
     if not b:
@@ -132,6 +140,9 @@ def intersection_sets(a, b): # noqa:F811
         return b
     if r2.start.is_infinite:
         return a
+
+    from sympy.solvers.diophantine.diophantine import diop_linear
+    from sympy.functions.elementary.complexes import sign
 
     # this equation represents the values of the Range;
     # it's a linear equation
@@ -263,9 +274,8 @@ def intersection_sets(self, other): # noqa:F811
             # Among those, there is one type of solution set that is
             # not helpful here: multiple parametric solutions.
             if len(solns) == 0:
-                return EmptySet
-            elif any(not isinstance(s, int) and s.free_symbols
-                     for tupl in solns for s in tupl):
+                return S.EmptySet
+            elif any(s.free_symbols for tupl in solns for s in tupl):
                 if len(solns) == 1:
                     soln, solm = solns[0]
                     (t,) = soln.free_symbols
@@ -277,9 +287,7 @@ def intersection_sets(self, other): # noqa:F811
                 return FiniteSet(*(fn.subs(n, s[0]) for s in solns))
 
     if other == S.Reals:
-        from sympy.core.function import expand_complex
         from sympy.solvers.solvers import denoms, solve_linear
-        from sympy.core.relational import Eq
 
         def _solution_union(exprs, sym):
             # return a union of linear solutions to i in expr;
@@ -441,7 +449,7 @@ def intersection_sets(a, b): # noqa:F811
 
     return Interval(start, end, left_open, right_open)
 
-@dispatch(type(EmptySet), Set)  # type: ignore # noqa:F811
+@dispatch(EmptySet, Set)  # type: ignore # noqa:F811
 def intersection_sets(a, b): # noqa:F811
     return S.EmptySet
 

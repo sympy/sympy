@@ -45,7 +45,7 @@ Examples
 So we can divide all the functions into comparability classes (x and x^2
 belong to one class, exp(x) and exp(-x) belong to some other class). In
 principle, we could compare any two functions, but in our algorithm, we
-don't compare anything below the class 2~3~-5 (for example log(x) is
+do not compare anything below the class 2~3~-5 (for example log(x) is
 below this), so we set 2~3~-5 as the lowest comparability class.
 
 Given the function f, we find the list of most rapidly varying (mrv set)
@@ -118,10 +118,13 @@ debug this function to figure out the exact problem.
 """
 from functools import reduce
 
-from sympy import cacheit
-from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul, PoleError, expand_mul
+from sympy.core import Basic, S, Mul, PoleError, expand_mul
+from sympy.core.cache import cacheit
+from sympy.core.numbers import ilcm, I, oo
+from sympy.core.symbol import Dummy, Wild
+from sympy.core.traversal import bottom_up
 
-from sympy.functions import log, exp
+from sympy.functions import log, exp, sign as _sign
 from sympy.series.order import Order
 from sympy.simplify import logcombine
 from sympy.simplify.powsimp import powsimp, powdenest
@@ -129,8 +132,8 @@ from sympy.simplify.powsimp import powsimp, powdenest
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
-timeit = timethis('gruntz')
 
+timeit = timethis('gruntz')
 
 
 def compare(a, b, x):
@@ -380,7 +383,6 @@ def sign(e, x):
     for x sufficiently large. [If e is constant, of course, this is just
     the same thing as the sign of e.]
     """
-    from sympy import sign as _sign
     if not isinstance(e, Basic):
         raise TypeError("e should be an instance of Basic")
 
@@ -480,8 +482,6 @@ def calculate_series(e, x, logx=None):
     """ Calculates at least one term of the series of ``e`` in ``x``.
     This is a place that fails most often, so it is in its own function.
     """
-    from sympy.polys import cancel
-    from sympy.simplify import bottom_up
 
     SymPyDeprecationWarning(
         feature="calculate_series",
@@ -491,10 +491,18 @@ def calculate_series(e, x, logx=None):
     ).warn()
     for t in e.lseries(x, logx=logx):
         # bottom_up function is required for a specific case - when e is
-        # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p). No current simplification
-        # methods reduce this to 0 while not expanding polynomials.
-        t = bottom_up(t, lambda w: getattr(w, 'normal', lambda: w)())
-        t = cancel(t, expand=False).factor()
+        # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p)
+        t = bottom_up(t, lambda w:
+            getattr(w, 'normal', lambda: w)())
+        # And the expression
+        # `(-sin(1/x) + sin((x + exp(x))*exp(-x)/x))*exp(x)`
+        # from the first test of test_gruntz_eval_special needs to
+        # be expanded. But other forms need to be have at least
+        # factor_terms applied. `factor` accomplishes both and is
+        # faster than using `factor_terms` for the gruntz suite. It
+        # does not appear that use of `cancel` is necessary.
+        # t = cancel(t, expand=False)
+        t = t.factor()
 
         if t.has(exp) and t.has(log):
             t = powdenest(t)
@@ -532,7 +540,7 @@ def mrv_leadterm(e, x):
     # For limits of complex functions, the algorithm would have to be
     # improved, or just find limits of Re and Im components separately.
     #
-    w = Dummy("w", real=True, positive=True)
+    w = Dummy("w", positive=True)
     f, logw = rewrite(exps, Omega, x, w)
     try:
         lt = f.leadterm(w, logx=logw)
@@ -562,13 +570,16 @@ def build_expression_tree(Omega, rewrites):
     This function builds the tree, rewrites then sorts the nodes.
     """
     class Node:
+        def __init__(self):
+            self.before = []
+            self.expr = None
+            self.var = None
         def ht(self):
             return reduce(lambda x, y: x + y,
                           [x.ht() for x in self.before], 1)
     nodes = {}
     for expr, v in Omega:
         n = Node()
-        n.before = []
         n.var = v
         n.expr = expr
         nodes[v] = n
@@ -594,11 +605,11 @@ def rewrite(e, Omega, x, wsym):
     for examples and correct results.
     """
     from sympy import AccumBounds, ilcm
-    from sympy.simplify import bottom_up
+    from sympy.core.traversal import bottom_up
     if not isinstance(Omega, SubsSet):
         raise TypeError("Omega should be an instance of SubsSet")
     if len(Omega) == 0:
-        raise ValueError("Length can not be 0")
+        raise ValueError("Length cannot be 0")
     # all items in Omega must be exponentials
     for t in Omega.keys():
         if not isinstance(t, exp):
@@ -649,7 +660,7 @@ def rewrite(e, Omega, x, wsym):
     if sig == 1:
         logw = -logw  # log(w)->log(1/w)=-log(w)
 
-    # Some parts of sympy have difficulty computing series expansions with
+    # Some parts of SymPy have difficulty computing series expansions with
     # non-integral exponents. The following heuristic improves the situation:
     exponent = reduce(ilcm, denominators, 1)
     f = f.subs({wsym: wsym**exponent})

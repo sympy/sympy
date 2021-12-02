@@ -13,14 +13,16 @@ from sympy.printing.pycode import (
     MpmathPrinter, PythonCodePrinter, pycode, SymPyPrinter
 )
 from sympy.printing.numpy import NumPyPrinter, SciPyPrinter
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, skip
 from sympy.tensor import IndexedBase
-from sympy.testing.pytest import skip
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import loggamma
+from sympy.parsing.latex import parse_latex
+
 
 x, y, z = symbols('x y z')
 p = IndexedBase("p")
+
 
 def test_PythonCodePrinter():
     prntr = PythonCodePrinter()
@@ -29,6 +31,8 @@ def test_PythonCodePrinter():
 
     assert prntr.doprint(x**y) == 'x**y'
     assert prntr.doprint(Mod(x, 2)) == 'x % 2'
+    assert prntr.doprint(-Mod(x, y)) == '-(x % y)'
+    assert prntr.doprint(Mod(-x, y)) == '(-x) % y'
     assert prntr.doprint(And(x, y)) == 'x and y'
     assert prntr.doprint(Or(x, y)) == 'x or y'
     assert not prntr.module_imports
@@ -50,6 +54,9 @@ def test_PythonCodePrinter():
     assert prntr.doprint(sign(x)) == '(0.0 if x == 0 else math.copysign(1, x))'
     assert prntr.doprint(p[0, 1]) == 'p[0, 1]'
     assert prntr.doprint(KroneckerDelta(x,y)) == '(1 if x == y else 0)'
+
+    assert prntr.doprint((2,3)) == "(2, 3)"
+    assert prntr.doprint([2,3]) == "[2, 3]"
 
 
 def test_PythonCodePrinter_standard():
@@ -80,9 +87,13 @@ def test_MpmathPrinter():
 
 
 def test_NumPyPrinter():
-    from sympy import (Lambda, ZeroMatrix, OneMatrix, FunctionMatrix,
-        HadamardProduct, KroneckerProduct, Adjoint, DiagonalOf,
-        DiagMatrix, DiagonalMatrix)
+    from sympy.core.function import Lambda
+    from sympy.matrices.expressions.adjoint import Adjoint
+    from sympy.matrices.expressions.diagonal import (DiagMatrix, DiagonalMatrix, DiagonalOf)
+    from sympy.matrices.expressions.funcmatrix import FunctionMatrix
+    from sympy.matrices.expressions.hadamard import HadamardProduct
+    from sympy.matrices.expressions.kronecker import KroneckerProduct
+    from sympy.matrices.expressions.special import (OneMatrix, ZeroMatrix)
     from sympy.abc import a, b
     p = NumPyPrinter()
     assert p.doprint(sign(x)) == 'numpy.sign(x)'
@@ -130,16 +141,17 @@ def test_issue_18770():
     if not numpy:
         skip("numpy not installed.")
 
-    from sympy import lambdify, Min, Max
+    from sympy.functions.elementary.miscellaneous import (Max, Min)
+    from sympy.utilities.lambdify import lambdify
 
     expr1 = Min(0.1*x + 3, x + 1, 0.5*x + 1)
     func = lambdify(x, expr1, "numpy")
-    assert (func(numpy.linspace(0, 3, 3)) == [1.0 , 1.75, 2.5 ]).all()
+    assert (func(numpy.linspace(0, 3, 3)) == [1.0, 1.75, 2.5 ]).all()
     assert  func(4) == 3
 
-    expr1 = Max(x**2 , x**3)
+    expr1 = Max(x**2, x**3)
     func = lambdify(x,expr1, "numpy")
-    assert (func(numpy.linspace(-1 , 2, 4)) == [1, 0, 1, 8] ).all()
+    assert (func(numpy.linspace(-1, 2, 4)) == [1, 0, 1, 8] ).all()
     assert func(4) == 64
 
 
@@ -165,6 +177,17 @@ def test_pycode_reserved_words():
     raises(ValueError, lambda: pycode(s1 + s2, error_on_reserved=True))
     py_str = pycode(s1 + s2)
     assert py_str in ('else_ + if_', 'if_ + else_')
+
+
+def test_issue_20762():
+    antlr4 = import_module("antlr4")
+    if not antlr4:
+        skip('antlr not installed.')
+    # Make sure pycode removes curly braces from subscripted variables
+    expr = parse_latex(r'a_b \cdot b')
+    assert pycode(expr) == 'a_b*b'
+    expr = parse_latex(r'a_{11} \cdot b')
+    assert pycode(expr) == 'a_11*b'
 
 
 def test_sqrt():
@@ -199,7 +222,7 @@ def test_sqrt():
 
 
 def test_frac():
-    from sympy import frac
+    from sympy.functions.elementary.integers import frac
 
     expr = frac(x)
 
@@ -250,7 +273,7 @@ def test_NumPyPrinter_print_seq():
 
 
 def test_issue_16535_16536():
-    from sympy import lowergamma, uppergamma
+    from sympy.functions.special.gamma_functions import (lowergamma, uppergamma)
 
     a = symbols('a')
     expr1 = lowergamma(a, x)
@@ -270,7 +293,8 @@ def test_issue_16535_16536():
 
 
 def test_Integral():
-    from sympy import Integral, exp
+    from sympy.functions.elementary.exponential import exp
+    from sympy.integrals.integrals import Integral
 
     single = Integral(exp(-x), (x, 0, oo))
     double = Integral(x**2*exp(x*y), (x, -z, z), (y, 0, z))
@@ -291,7 +315,7 @@ def test_Integral():
 
 
 def test_fresnel_integrals():
-    from sympy import fresnelc, fresnels
+    from sympy.functions.special.error_functions import (fresnelc, fresnels)
 
     expr1 = fresnelc(x)
     expr2 = fresnels(x)
@@ -314,7 +338,7 @@ def test_fresnel_integrals():
 
 
 def test_beta():
-    from sympy import beta
+    from sympy.functions.special.beta_functions import beta
 
     expr = beta(x, y)
 
@@ -334,7 +358,7 @@ def test_beta():
     assert prntr.doprint(expr) ==  'mpmath.beta(x, y)'
 
 def test_airy():
-    from sympy import airyai, airybi
+    from sympy.functions.special.bessel import (airyai, airybi)
 
     expr1 = airyai(x)
     expr2 = airybi(x)
@@ -352,7 +376,7 @@ def test_airy():
     assert "Not supported" in prntr.doprint(expr2)
 
 def test_airy_prime():
-    from sympy import airyaiprime, airybiprime
+    from sympy.functions.special.bessel import (airyaiprime, airybiprime)
 
     expr1 = airyaiprime(x)
     expr2 = airybiprime(x)

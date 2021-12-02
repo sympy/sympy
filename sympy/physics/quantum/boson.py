@@ -1,6 +1,11 @@
 """Bosonic quantum operators."""
 
-from sympy import Mul, Integer, exp, sqrt, conjugate
+from sympy.core.mul import Mul
+from sympy.core.numbers import Integer
+from sympy.core.singleton import S
+from sympy.functions.elementary.complexes import conjugate
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.quantum import Operator
 from sympy.physics.quantum import HilbertSpace, FockSpace, Ket, Bra, IdentityOperator
 from sympy.functions.special.tensor_functions import KroneckerDelta
@@ -55,7 +60,7 @@ class BosonOp(Operator):
             raise ValueError('1 or 2 parameters expected, got %s' % args)
 
         if len(args) == 1:
-            args = (args[0], Integer(1))
+            args = (args[0], S.One)
 
         if len(args) == 2:
             args = (args[0], Integer(args[1]))
@@ -66,16 +71,16 @@ class BosonOp(Operator):
         if self.name == other.name:
             # [a^\dagger, a] = -1
             if not self.is_annihilation and other.is_annihilation:
-                return Integer(-1)
+                return S.NegativeOne
 
         elif 'independent' in hints and hints['independent']:
             # [a, b] = 0
-            return Integer(0)
+            return S.Zero
 
         return None
 
     def _eval_commutator_FermionOp(self, other, **hints):
-        return Integer(0)
+        return S.Zero
 
     def _eval_anticommutator_BosonOp(self, other, **hints):
         if 'independent' in hints and hints['independent']:
@@ -214,7 +219,7 @@ class BosonCoherentKet(Ket):
 
     def _eval_innerproduct_BosonCoherentBra(self, bra, **hints):
         if self.alpha == bra.alpha:
-            return Integer(1)
+            return S.One
         else:
             return exp(-(abs(self.alpha)**2 + abs(bra.alpha)**2 - 2 * conjugate(bra.alpha) * self.alpha)/2)
 

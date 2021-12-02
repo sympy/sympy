@@ -111,7 +111,7 @@ doctest_list = [
 
 ]
 
-if not (sympy.test(*test_list, blacklist=blacklist) and sympy.doctest(*doctest_list)):
+if not (sympy.test(*test_list, verbose=True, blacklist=blacklist) and sympy.doctest(*doctest_list)):
     raise TestsFailedError('Tests failed')
 
 
@@ -126,12 +126,4 @@ import sympy
 # applied, so no hash randomization here.
 if not (sympy.test('sympy/plotting', 'sympy/physics/quantum/tests/test_circuitplot.py',
     subprocess=False) and sympy.doctest('sympy/plotting', subprocess=False)):
-    raise TestsFailedError('Tests failed')
-
-
-print('Testing SYMENGINE')
-import sympy
-if not sympy.test('sympy/physics/mechanics'):
-    raise TestsFailedError('Tests failed')
-if not sympy.test('sympy/liealgebras'):
     raise TestsFailedError('Tests failed')

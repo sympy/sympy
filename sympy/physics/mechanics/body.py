@@ -133,6 +133,7 @@ class Body(RigidBody, Particle):  # type: ignore
             self.frame = frame
             self.masscenter = masscenter
             Particle.__init__(self, name, masscenter, _mass)
+            self._central_inertia = None
         else:
             RigidBody.__init__(self, name, masscenter, frame, _mass, _inertia)
 
@@ -154,6 +155,58 @@ class Body(RigidBody, Particle):  # type: ignore
     def z(self):
         """The basis Vector for the Body, in the z direction. """
         return self.frame.z
+
+    @property
+    def is_rigidbody(self):
+        if self.central_inertia is not None:
+            return True
+        return False
+
+    def kinetic_energy(self, frame):
+        """Kinetic energy of the body.
+
+        Parameters
+        ==========
+
+        frame : ReferenceFrame or Body
+            The Body's angular velocity and the velocity of it's mass
+            center are typically defined with respect to an inertial frame but
+            any relevant frame in which the velocities are known can be supplied.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import Body, ReferenceFrame, Point
+        >>> from sympy import symbols
+        >>> m, v, r, omega = symbols('m v r omega')
+        >>> N = ReferenceFrame('N')
+        >>> O = Point('O')
+        >>> P = Body('P', masscenter=O, mass=m)
+        >>> P.masscenter.set_vel(N, v * N.y)
+        >>> P.kinetic_energy(N)
+        m*v**2/2
+
+        >>> N = ReferenceFrame('N')
+        >>> b = ReferenceFrame('b')
+        >>> b.set_ang_vel(N, omega * b.x)
+        >>> P = Point('P')
+        >>> P.set_vel(N, v * N.x)
+        >>> B = Body('B', masscenter=P, frame=b)
+        >>> B.kinetic_energy(N)
+        B_ixx*omega**2/2 + B_mass*v**2/2
+
+        See Also
+        ========
+
+        sympy.physics.mechanics : Particle, RigidBody
+
+        """
+        if isinstance(frame, Body):
+            frame = Body.frame
+        if self.is_rigidbody:
+            return RigidBody(self.name, self.masscenter, self.frame, self.mass,
+                            (self.central_inertia, self.masscenter)).kinetic_energy(frame)
+        return Particle(self.name, self.masscenter, self.mass).kinetic_energy(frame)
 
     def apply_force(self, force, point=None, reaction_body=None, reaction_point=None):
         """Add force to the body(s).

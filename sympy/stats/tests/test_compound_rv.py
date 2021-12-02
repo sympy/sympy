@@ -1,5 +1,17 @@
-from sympy import (symbols, S, erf, sqrt, pi, exp, gamma, Interval, oo, beta,
-                    Eq, Piecewise, Integral, Abs, arg, Dummy, Sum, factorial)
+from sympy.concrete.summations import Sum
+from sympy.core.numbers import (oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.beta_functions import beta
+from sympy.functions.special.error_functions import erf
+from sympy.functions.special.gamma_functions import gamma
+from sympy.integrals.integrals import Integral
+from sympy.sets.sets import Interval
 from sympy.stats import (Normal, P, E, density, Gamma, Poisson, Rayleigh,
                         variance, Bernoulli, Beta, Uniform, cdf)
 from sympy.stats.compound_rv import CompoundDistribution, CompoundPSpace
@@ -9,8 +21,17 @@ from sympy.stats.frv_types import BernoulliDistribution
 from sympy.testing.pytest import raises, ignore_warnings
 from sympy.stats.joint_rv_types import MultivariateNormalDistribution
 
+from sympy.abc import x
 
-x = symbols('x')
+
+# helpers for testing troublesome unevaluated expressions
+flat = lambda s: ''.join(str(s).split())
+streq = lambda *a: len(set(map(flat, a))) == 1
+assert streq(x, x)
+assert streq(x, 'x')
+assert not streq(x, x + 1)
+
+
 def test_normal_CompoundDist():
     X = Normal('X', 1, 2)
     Y = Normal('X', X, 4)
@@ -57,31 +78,33 @@ def test_unevaluated_CompoundDist():
     # evaluated completely in sympy.
     R = Rayleigh('R', 4)
     X = Normal('X', 3, R)
-    _k = Dummy('k')
-    exprd = Piecewise((exp(S(3)/4 - x/4)/8, 2*Abs(arg(x - 3)) <= pi/2),
-    (sqrt(2)*Integral(exp(-(_k**4 + 16*(x - 3)**2)/(32*_k**2)),
-    (_k, 0, oo))/(32*sqrt(pi)), True))
-    assert (density(X)(x).simplify()).dummy_eq(exprd.simplify())
+    ans = '''
+        Piecewise(((-sqrt(pi)*sinh(x/4 - 3/4) + sqrt(pi)*cosh(x/4 - 3/4))/(
+        8*sqrt(pi)), Abs(arg(x - 3)) <= pi/4), (Integral(sqrt(2)*exp(-(x - 3)
+        **2/(2*R**2))*exp(-R**2/32)/(32*sqrt(pi)), (R, 0, oo)), True))'''
+    assert streq(density(X)(x), ans)
 
-    expre = Integral(_k*Integral(sqrt(2)*exp(-_k**2/32)*exp(-(_k - 3)**2/(2*_k**2)
-    )/(32*sqrt(pi)), (_k, 0, oo)), (_k, -oo, oo))
+    expre = '''
+        Integral(X*Integral(sqrt(2)*exp(-(X-3)**2/(2*R**2))*exp(-R**2/32)/(32*
+        sqrt(pi)),(R,0,oo)),(X,-oo,oo))'''
     with ignore_warnings(UserWarning): ### TODO: Restore tests once warnings are removed
-        assert E(X, evaluate=False).rewrite(Integral).dummy_eq(expre)
+        assert streq(E(X, evaluate=False).rewrite(Integral), expre)
 
     X = Poisson('X', 1)
     Y = Poisson('Y', X)
     Z = Poisson('Z', Y)
-    exprd = exp(-1)*Sum(exp(-Y)*Y**x*Sum(exp(-X)*X**Y/(factorial(X)*factorial(Y)
-                ), (X, 0, oo)), (Y, 0, oo))/factorial(x)
-    assert density(Z)(x).simplify() == exprd
+    exprd = Sum(exp(-Y)*Y**x*Sum(exp(-1)*exp(-X)*X**Y/(factorial(X)*factorial(Y)
+                ), (X, 0, oo))/factorial(x), (Y, 0, oo))
+    assert density(Z)(x) == exprd
 
     N = Normal('N', 1, 2)
     M = Normal('M', 3, 4)
     D = Normal('D', M, N)
-    exprd = Integral(sqrt(2)*exp(-(_k - 1)**2/8)*Integral(exp(-(-_k + x
-    )**2/(2*_k**2))*exp(-(_k - 3)**2/32)/(8*pi*_k)
-    , (_k, -oo, oo))/(4*sqrt(pi)), (_k, -oo, oo))
-    assert density(D, evaluate=False)(x).dummy_eq(exprd)
+    exprd = '''
+        Integral(sqrt(2)*exp(-(N-1)**2/8)*Integral(exp(-(x-M)**2/(2*N**2))*exp
+        (-(M-3)**2/32)/(8*pi*N),(M,-oo,oo))/(4*sqrt(pi)),(N,-oo,oo))'''
+    assert streq(density(D, evaluate=False)(x), exprd)
+
 
 def test_Compound_Distribution():
     X = Normal('X', 2, 4)

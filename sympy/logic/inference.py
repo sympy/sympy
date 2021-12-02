@@ -1,7 +1,7 @@
 """Inference in propositional logic"""
 
-from sympy.logic.boolalg import And, Not, conjuncts, to_cnf
-from sympy.core.compatibility import ordered
+from sympy.logic.boolalg import And, Not, conjuncts, to_cnf, BooleanFunction
+from sympy.core.sorting import ordered
 from sympy.core.sympify import sympify
 from sympy.external.importtools import import_module
 
@@ -132,7 +132,7 @@ def valid(expr):
     return not satisfiable(Not(expr))
 
 
-def pl_true(expr, model={}, deep=False):
+def pl_true(expr, model=None, deep=False):
     """
     Returns whether the given assignment is a model or not.
 
@@ -173,7 +173,7 @@ def pl_true(expr, model={}, deep=False):
     """
 
     from sympy.core.symbol import Symbol
-    from sympy.logic.boolalg import BooleanFunction
+
     boolean = (True, False)
 
     def _validate(expr):
@@ -188,6 +188,8 @@ def pl_true(expr, model={}, deep=False):
     expr = sympify(expr)
     if not _validate(expr):
         raise ValueError("%s is not a valid boolean expression" % expr)
+    if not model:
+        model = {}
     model = {k: v for k, v in model.items() if v in boolean}
     result = expr.subs(model)
     if result in boolean:
@@ -203,7 +205,7 @@ def pl_true(expr, model={}, deep=False):
     return None
 
 
-def entails(expr, formula_set={}):
+def entails(expr, formula_set=None):
     """
     Check whether the given expr_set entail an expr.
     If formula_set is empty then it returns the validity of expr.
@@ -228,7 +230,10 @@ def entails(expr, formula_set={}):
     .. [1] https://en.wikipedia.org/wiki/Logical_consequence
 
     """
-    formula_set = list(formula_set)
+    if formula_set:
+        formula_set = list(formula_set)
+    else:
+        formula_set = []
     formula_set.append(Not(expr))
     return not satisfiable(And(*formula_set))
 

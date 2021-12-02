@@ -1,10 +1,11 @@
-from sympy import Basic
-from sympy import S
+from sympy.core.basic import Basic
+from sympy.core.containers import (Dict, Tuple)
 from sympy.core.expr import Expr
-from sympy.core.numbers import Integer
-from sympy.core.sympify import sympify
 from sympy.core.kind import Kind, NumberKind, UndefinedKind
-from sympy.core.compatibility import SYMPY_INTS
+from sympy.core.numbers import Integer
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.printing.defaults import Printable
 
 import itertools
@@ -51,7 +52,7 @@ class ArrayKind(Kind):
     the element kind. Use ``is`` with specifying the element kind.
 
     >>> from sympy.tensor.array import ArrayKind
-    >>> from sympy.core.kind import NumberKind
+    >>> from sympy.core import NumberKind
     >>> boolA = NDimArray([True, False])
     >>> isinstance(boolA.kind, ArrayKind)
     True
@@ -71,6 +72,15 @@ class ArrayKind(Kind):
 
     def __repr__(self):
         return "ArrayKind(%s)" % self.element_kind
+
+    @classmethod
+    def _union(cls, kinds) -> 'ArrayKind':
+        elem_kinds = set(e.kind for e in kinds)
+        if len(elem_kinds) == 1:
+            elemkind, = elem_kinds
+        else:
+            elemkind = UndefinedKind
+        return ArrayKind(elemkind)
 
 
 class NDimArray(Printable):
@@ -133,15 +143,6 @@ class NDimArray(Printable):
         from sympy.tensor.array import ImmutableDenseNDimArray
         return ImmutableDenseNDimArray(iterable, shape, **kwargs)
 
-    @property
-    def kind(self):
-        elem_kinds = set(e.kind for e in self._array)
-        if len(elem_kinds) == 1:
-            elemkind, = elem_kinds
-        else:
-            elemkind = UndefinedKind
-        return ArrayKind(elemkind)
-
     def _parse_index(self, index):
         if isinstance(index, (SYMPY_INTS, Integer)):
             raise ValueError("Only a tuple index is accepted")
@@ -174,7 +175,7 @@ class NDimArray(Printable):
     def _check_symbolic_index(self, index):
         # Check if any index is symbolic:
         tuple_index = (index if isinstance(index, tuple) else (index,))
-        if any([(isinstance(i, Expr) and (not i.is_number)) for i in tuple_index]):
+        if any((isinstance(i, Expr) and (not i.is_number)) for i in tuple_index):
             for i, nth_dim in zip(tuple_index, self.shape):
                 if ((i < 0) == True) or ((i >= nth_dim) == True):
                     raise ValueError("index out of range")
@@ -207,7 +208,6 @@ class NDimArray(Printable):
     def _handle_ndarray_creation_inputs(cls, iterable=None, shape=None, **kwargs):
         from sympy.matrices.matrices import MatrixBase
         from sympy.tensor.array import SparseNDimArray
-        from sympy import Dict, Tuple
 
         if shape is None:
             if iterable is None:
@@ -217,16 +217,16 @@ class NDimArray(Printable):
             elif isinstance(iterable, SparseNDimArray):
                 return iterable._shape, iterable._sparse_array
 
+            # Construct N-dim array from another N-dim array:
+            elif isinstance(iterable, NDimArray):
+                shape = iterable.shape
+
             # Construct N-dim array from an iterable (numpy arrays included):
             elif isinstance(iterable, Iterable):
                 iterable, shape = cls._scan_iterable_shape(iterable)
 
             # Construct N-dim array from a Matrix:
             elif isinstance(iterable, MatrixBase):
-                shape = iterable.shape
-
-            # Construct N-dim array from another N-dim array:
-            elif isinstance(iterable, NDimArray):
                 shape = iterable.shape
 
             else:
@@ -246,7 +246,7 @@ class NDimArray(Printable):
         if isinstance(shape, (SYMPY_INTS, Integer)):
             shape = (shape,)
 
-        if any([not isinstance(dim, (SYMPY_INTS, Integer)) for dim in shape]):
+        if not all(isinstance(dim, (SYMPY_INTS, Integer)) for dim in shape):
             raise TypeError("Shape should contain integers only.")
 
         return tuple(shape), iterable

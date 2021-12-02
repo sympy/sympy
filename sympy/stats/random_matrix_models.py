@@ -1,5 +1,17 @@
-from sympy import (Basic, exp, pi, Lambda, Trace, S, MatrixSymbol, Integral,
-                   gamma, Product, Dummy, Sum, Abs, IndexedBase, I)
+from sympy.concrete.products import Product
+from sympy.concrete.summations import Sum
+from sympy.core.basic import Basic
+from sympy.core.function import Lambda
+from sympy.core.numbers import (I, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.special.gamma_functions import gamma
+from sympy.integrals.integrals import Integral
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.trace import Trace
+from sympy.tensor.indexed import IndexedBase
 from sympy.core.sympify import _sympify
 from sympy.stats.rv import _symbol_converter, Density, RandomMatrixSymbol, is_random
 from sympy.stats.joint_rv_types import JointDistributionHandmade
@@ -407,8 +419,8 @@ def JointEigenDistribution(mat):
 
     """
     eigenvals = mat.eigenvals(multiple=True)
-    if any(not is_random(eigenval) for eigenval in set(eigenvals)):
-        raise ValueError("Eigen values don't have any random expression, "
+    if not all(is_random(eigenval) for eigenval in set(eigenvals)):
+        raise ValueError("Eigen values do not have any random expression, "
                          "joint distribution cannot be generated.")
     return JointDistributionHandmade(*eigenvals)
 

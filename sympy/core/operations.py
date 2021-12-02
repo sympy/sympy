@@ -1,15 +1,15 @@
 from operator import attrgetter
-from typing import Tuple, Type
+from typing import Tuple as tTuple, Type
 from collections import defaultdict
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy.core.sympify import _sympify as _sympify_, sympify
-from sympy.core.basic import Basic
-from sympy.core.cache import cacheit
-from sympy.core.compatibility import ordered
-from sympy.core.logic import fuzzy_and
-from sympy.core.parameters import global_parameters
+from .sympify import _sympify as _sympify_, sympify
+from .basic import Basic
+from .cache import cacheit
+from .sorting import ordered
+from .logic import fuzzy_and
+from .parameters import global_parameters
 from sympy.utilities.iterables import sift
 from sympy.multipledispatch.dispatcher import (Dispatcher,
     ambiguity_register_error_ignore_dup,
@@ -39,14 +39,12 @@ class AssocOp(Basic):
 
     # for performance reason, we don't let is_commutative go to assumptions,
     # and keep it right here
-    __slots__ = ('is_commutative',)  # type: Tuple[str, ...]
+    __slots__ = ('is_commutative',)  # type: tTuple[str, ...]
 
     _args_type = None  # type: Type[Basic]
 
     @cacheit
     def __new__(cls, *args, evaluate=None, _sympify=True):
-        from sympy import Order
-
         # Allow faster processing by passing ``_sympify=False``, if all arguments
         # are already sympified.
         if _sympify:
@@ -55,9 +53,9 @@ class AssocOp(Basic):
         # Disallow non-Expr args in Add/Mul
         typ = cls._args_type
         if typ is not None:
-            from sympy.core.relational import Relational
+            from .relational import Relational
             if any(isinstance(arg, Relational) for arg in args):
-                raise TypeError("Relational can not be used in %s" % cls.__name__)
+                raise TypeError("Relational cannot be used in %s" % cls.__name__)
 
             # This should raise TypeError once deprecation period is over:
             if not all(isinstance(arg, typ) for arg in args):
@@ -88,6 +86,7 @@ class AssocOp(Basic):
         obj = cls._exec_constructor_postprocessors(obj)
 
         if order_symbols is not None:
+            from sympy.series.order import Order
             return Order(obj, *order_symbols)
         return obj
 
@@ -175,7 +174,7 @@ class AssocOp(Basic):
         # c_part, nc_part, order_symbols
         return [], new_seq, None
 
-    def _matches_commutative(self, expr, repl_dict={}, old=False):
+    def _matches_commutative(self, expr, repl_dict=None, old=False):
         """
         Matches Add/Mul "pattern" to an expression "expr".
 
@@ -215,11 +214,12 @@ class AssocOp(Basic):
 
         """
         # make sure expr is Expr if pattern is Expr
-        from .expr import Add, Expr
-        from sympy import Mul
-        repl_dict = repl_dict.copy()
+        from .expr import Expr
         if isinstance(self, Expr) and not isinstance(expr, Expr):
             return None
+
+        if repl_dict is None:
+            repl_dict = dict()
 
         # handle simple patterns
         if self == expr:
@@ -285,6 +285,7 @@ class AssocOp(Basic):
                 if self.is_Mul:
                     # make e**i look like Mul
                     if expr.is_Pow and expr.exp.is_Integer:
+                        from .mul import Mul
                         if expr.exp > 0:
                             expr = Mul(*[expr.base, expr.base**(expr.exp - 1)], evaluate=False)
                         else:
@@ -296,6 +297,7 @@ class AssocOp(Basic):
                     # make i*e look like Add
                     c, e = expr.as_coeff_Mul()
                     if abs(c) > 1:
+                        from .add import Add
                         if c > 0:
                             expr = Add(*[e, (c - 1)*e], evaluate=False)
                         else:

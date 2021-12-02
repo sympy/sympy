@@ -1,4 +1,8 @@
-from sympy import Symbol, log, sqrt, sin, S
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
 from sympy.plotting.textplot import textplot_str
 
 

@@ -52,7 +52,7 @@ class SingularityFunction(Function):
     >>> diff(SingularityFunction(x, 4, 0), x, 2)
     SingularityFunction(x, 4, -2)
     >>> SingularityFunction(x, 4, 5).rewrite(Piecewise)
-    Piecewise(((x - 4)**5, x - 4 > 0), (0, True))
+    Piecewise(((x - 4)**5, x > 4), (0, True))
     >>> expr = SingularityFunction(x, a, n)
     >>> y = Symbol('y', positive=True)
     >>> n = Symbol('n', nonnegative=True)
@@ -65,11 +65,11 @@ class SingularityFunction(Function):
 
     >>> expr = SingularityFunction(x, 4, 5) + SingularityFunction(x, -3, -1) - SingularityFunction(x, 0, -2)
     >>> expr.rewrite(Heaviside)
-    (x - 4)**5*Heaviside(x - 4, 1/2) + DiracDelta(x + 3) - DiracDelta(x, 1)
+    (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
     >>> expr.rewrite(DiracDelta)
-    (x - 4)**5*Heaviside(x - 4, 1/2) + DiracDelta(x + 3) - DiracDelta(x, 1)
+    (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
     >>> expr.rewrite('HeavisideDiracDelta')
-    (x - 4)**5*Heaviside(x - 4, 1/2) + DiracDelta(x + 3) - DiracDelta(x, 1)
+    (x - 4)**5*Heaviside(x - 4) + DiracDelta(x + 3) - DiracDelta(x, 1)
 
     See Also
     ========
@@ -105,7 +105,7 @@ class SingularityFunction(Function):
             x = sympify(self.args[0])
             a = sympify(self.args[1])
             n = sympify(self.args[2])
-            if n == 0 or n == -1:
+            if n in (S.Zero, S.NegativeOne):
                 return self.func(x, a, n-1)
             elif n.is_positive:
                 return n*self.func(x, a, n-1)
@@ -174,7 +174,7 @@ class SingularityFunction(Function):
             return S.Zero
         if n.is_nonnegative and shift.is_extended_nonnegative:
             return (x - a)**n
-        if n == -1 or n == -2:
+        if n in (S.NegativeOne, -2):
             if shift.is_negative or shift.is_extended_positive:
                 return S.Zero
             if shift.is_zero:
@@ -189,7 +189,7 @@ class SingularityFunction(Function):
         a = self.args[1]
         n = sympify(self.args[2])
 
-        if n == -1 or n == -2:
+        if n in (S.NegativeOne, -2):
             return Piecewise((oo, Eq((x - a), 0)), (0, True))
         elif n.is_nonnegative:
             return Piecewise(((x - a)**n, (x - a) > 0), (0, True))
