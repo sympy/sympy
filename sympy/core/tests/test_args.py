@@ -2895,52 +2895,42 @@ def test_sympy__liealgebras__cartan_type__CartanType_generator():
     from sympy.liealgebras.cartan_type import CartanType_generator
     assert _test_args(CartanType_generator("A2"))
 
-@XFAIL
 def test_sympy__liealgebras__cartan_type__Standard_Cartan():
     from sympy.liealgebras.cartan_type import Standard_Cartan
     assert _test_args(Standard_Cartan("A", 2))
 
-@XFAIL
 def test_sympy__liealgebras__weyl_group__WeylGroup():
     from sympy.liealgebras.weyl_group import WeylGroup
     assert _test_args(WeylGroup("B4"))
 
-@XFAIL
 def test_sympy__liealgebras__root_system__RootSystem():
     from sympy.liealgebras.root_system import RootSystem
     assert _test_args(RootSystem("A2"))
 
-@XFAIL
 def test_sympy__liealgebras__type_a__TypeA():
     from sympy.liealgebras.type_a import TypeA
     assert _test_args(TypeA(2))
 
-@XFAIL
 def test_sympy__liealgebras__type_b__TypeB():
     from sympy.liealgebras.type_b import TypeB
     assert _test_args(TypeB(4))
 
-@XFAIL
 def test_sympy__liealgebras__type_c__TypeC():
     from sympy.liealgebras.type_c import TypeC
     assert _test_args(TypeC(4))
 
-@XFAIL
 def test_sympy__liealgebras__type_d__TypeD():
     from sympy.liealgebras.type_d import TypeD
     assert _test_args(TypeD(4))
 
-@XFAIL
 def test_sympy__liealgebras__type_e__TypeE():
     from sympy.liealgebras.type_e import TypeE
     assert _test_args(TypeE(6))
 
-@XFAIL
 def test_sympy__liealgebras__type_f__TypeF():
     from sympy.liealgebras.type_f import TypeF
     assert _test_args(TypeF(4))
 
-@XFAIL
 def test_sympy__liealgebras__type_g__TypeG():
     from sympy.liealgebras.type_g import TypeG
     assert _test_args(TypeG(2))
