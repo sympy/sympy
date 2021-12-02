@@ -604,8 +604,7 @@ def rewrite(e, Omega, x, wsym):
     Returns the rewritten e in terms of w and log(w). See test_rewrite1()
     for examples and correct results.
     """
-    from sympy import AccumBounds, ilcm
-    from sympy.core.traversal import bottom_up
+    from sympy import AccumBounds
     if not isinstance(Omega, SubsSet):
         raise TypeError("Omega should be an instance of SubsSet")
     if len(Omega) == 0:
