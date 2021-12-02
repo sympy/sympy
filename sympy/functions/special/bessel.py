@@ -508,7 +508,6 @@ class besseli(BesselBase):
         import sage.all as sage
         return sage.bessel_I(self.args[0]._sage_(), self.args[1]._sage_())
 
-      
 class besselk(BesselBase):
     r"""
     Modified Bessel function of the second kind.
