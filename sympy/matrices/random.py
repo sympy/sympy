@@ -75,10 +75,6 @@ def _sample(scalars, k=None, rng=None):
 # === helper ===
 
 
-def _set_value(o, i, j, v):
-    o[i, j] = v
-
-
 def _cs(scalar, real=True, rng=None):
     if isinstance(scalar, (tuple, list)) and len(scalar) == 2:
         c, s = scalar
