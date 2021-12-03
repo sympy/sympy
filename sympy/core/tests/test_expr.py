@@ -1131,7 +1131,9 @@ def test_has_tuple():
     assert not Tuple(f, g).has(x)
     assert Tuple(f, g).has(f)
     assert not Tuple(f, g).has(h)
-    assert Tuple(True).has(True) is True  # .has(1) will also be True
+    assert Tuple(True).has(True)
+    assert Tuple(True).has(S.true)
+    assert not Tuple(True).has(1)
 
 
 def test_has_units():

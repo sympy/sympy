@@ -1,15 +1,15 @@
-from sympy.combinatorics.perm_groups import (PermutationGroup,
-    _orbit_transversal, Coset, SymmetricPermutationGroup)
+from sympy.core.containers import Tuple
+from sympy.combinatorics.generators import rubik_cube_generators
+from sympy.combinatorics.homomorphisms import is_isomorphic
 from sympy.combinatorics.named_groups import SymmetricGroup, CyclicGroup,\
     DihedralGroup, AlternatingGroup, AbelianGroup, RubikGroup
+from sympy.combinatorics.perm_groups import (PermutationGroup,
+    _orbit_transversal, Coset, SymmetricPermutationGroup)
 from sympy.combinatorics.permutations import Permutation
-from sympy.testing.pytest import skip, XFAIL
-from sympy.combinatorics.generators import rubik_cube_generators
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _verify_normal_closure
-from sympy.testing.pytest import slow
-from sympy.combinatorics.homomorphisms import is_isomorphic
+from sympy.testing.pytest import skip, XFAIL, slow, raises
 
 rmul = Permutation.rmul
 
@@ -31,6 +31,13 @@ def test_has():
     b = Permutation([0, 2, 1, 3, 4])
     assert PermutationGroup(a, b).degree == \
         PermutationGroup(a, b).degree == 6
+
+    # this must be tested by equality since
+    # containment in a set cannot be checked since
+    # g is not hashable
+    g = PermutationGroup(Permutation(0, 2, 1))
+    raises(TypeError, lambda: {g})
+    assert Tuple(1, g).has(g)
 
 
 def test_generate():

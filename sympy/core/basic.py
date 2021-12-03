@@ -1266,38 +1266,37 @@ class Basic(Printable, metaclass=ManagedProperties):
         p_set = set()  # all patterns so Tuple(f, Add).has(f) will pass
         other = []
         for p in patterns:
-            if isinstance(p, type):
-                if not isinstance(p, BasicMeta):
-                    continue  # ignore this type
+            if isinstance(p, BasicMeta):
                 type_set.add(p)
-                p_set.add(p)
-            else:
-                if not isinstance(p, Basic):
+                p_set.add(p)  # to allow check for Tuple(f).has(f)
+                continue
+            if not isinstance(p, Basic):
+                try:
                     p = _sympify(p)
-                try:
-                    p_set.add(p)
-                except TypeError:
-                    other.append(p)
+                except SympifyError:
+                    continue  # Basic won't have this in it
+            try:
+                p_set.add(p)
+            except TypeError:
+                other.append(p)
 
-        # do fast tests for equality
-        if type_set:
-            if any(type(i) in type_set for i in iterargs(self)):
-                return True
-        if p_set:
-            for i in iterargs(self):
-                try:
-                    if i in p_set:
-                        return True
-                except TypeError:
-                    pass  # unhashable, e.g. PermutationGroup([(0 2 1)])
-
-        # do subclass testing
-        if type_set:
-            for i in iterargs(self):
-                if any(isinstance(i, t) for t in type_set):
+        for i in iterargs(self):
+            try:
+                if i in p_set:
                     return True
-            # remove types from p_set since they won't have matchers
-            p_set -= type_set
+            except TypeError:
+                pass  # unhashable, e.g. PermutationGroup([(0 2 1)])
+            if type(i) in type_set or any(isinstance(i, t) for t in type_set):
+                return True
+            # checking unhashables by equality; we don't give all
+            # Basic a default `_has_matcher` routine, otherwise we
+            # would have to repeat the fast equality test that was
+            # just done with `i in p_set`
+            if any(i == o for o in other):
+                return True
+
+        # remove types from p_set since they won't have matchers
+        p_set -= type_set
 
         # use matcher if defined, e.g. operations defines
         # matcher that checks for exact subset containment,

@@ -3,22 +3,20 @@ of Basic or Atom."""
 
 import collections
 
+from sympy.assumptions.ask import Q
 from sympy.core.basic import (Basic, Atom, as_Basic,
     _atomic, _aresame)
+from sympy.core.containers import Tuple
+from sympy.core.function import Function, Lambda
+from sympy.core.numbers import I, pi
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Symbol, Dummy
-from sympy.core.sympify import SympifyError
-from sympy.core.function import Function, Lambda
-
-from sympy.assumptions.ask import Q
 from sympy.concrete.summations import Sum
-from sympy.core.containers import Tuple
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import Integral
 from sympy.functions.elementary.exponential import exp
 from sympy.testing.pytest import raises
-from sympy.core import I, pi
 
 b1 = Basic()
 b2 = Basic(b1)
@@ -112,11 +110,8 @@ def test_has():
     assert b21.has(Basic)
     assert not b1.has(b21, b3)
     assert not b21.has()
-    assert not b21.has(type)
-    raises(SympifyError, lambda: Symbol("x").has("x"))
-    # if this fails, then it will not be necessary to
-    # test for types by equality in _has
-    assert Tuple(Function('f')).has(Function('f'))
+    assert not b21.has(str)
+    assert not Symbol("x").has("x")
 
 
 def test_subs():
