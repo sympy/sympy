@@ -225,7 +225,11 @@ class BaseDyadic(Dyadic, AtomicExpr):
         return "({}|{})".format(
             printer._print(self.args[0]), printer._print(self.args[1]))
 
-    @property
+# XXX: This method is only needed because BaseDyadic is a subclass
+# of AtomExpr even though it is not really an AtomExpr. If BaseDyadic
+# was fixed to not subclass AtomExpr then this func method could be
+# deleted.
+@property
     def func(self):
         return self.__class__
 

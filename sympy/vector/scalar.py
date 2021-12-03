@@ -13,6 +13,11 @@ class BaseScalar(AtomicExpr):
     Unicode pretty forms in Python 2 should use the `u` prefix.
 
     """
+
+# XXX: This method is only needed because BaseScalar is a subclass
+# of AtomicExpr even though it is not really an AtomExpr. If BaseScalar
+# was fixed to not subclass AtomiExpr then this func method could be
+# deleted.
     @property
     def func(self):
         return self.__class__
