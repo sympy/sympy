@@ -477,4 +477,4 @@ class Flatten(Printable):
         return self.__next__()
 
     def _sympystr(self, printer):
-        return 'Flatten(' + printer._print(self._iter) + ')'
+        return self.__name__ + '(' + printer._print(self._iter) + ')'
