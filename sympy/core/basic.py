@@ -4,8 +4,9 @@ from collections.abc import Mapping
 from itertools import chain, zip_longest
 from typing import Set, Tuple
 
-from .assumptions import BasicMeta, ManagedProperties
+from .assumptions import ManagedProperties
 from .cache import cacheit
+from .core import BasicMeta
 from .sympify import _sympify, sympify, SympifyError
 from .sorting import ordered
 from .kind import Kind, UndefinedKind

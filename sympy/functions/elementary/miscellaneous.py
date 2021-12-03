@@ -132,9 +132,7 @@ def sqrt(arg, evaluate=None):
     >>> func_name(sqrt(x))
     'Pow'
     >>> sqrt(x).has(sqrt)
-    Traceback (most recent call last):
-      ...
-    sympy.core.sympify.SympifyError: SympifyError: <function sqrt at 0x10e8900d0>
+    False
 
     To find ``sqrt`` look for ``Pow`` with an exponent of ``1/2``:
 
