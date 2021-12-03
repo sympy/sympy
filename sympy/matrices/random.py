@@ -2,6 +2,8 @@ from random import Random
 
 from ..core import I as _i
 from ..core.mul import Mul as _multiply
+from ..core.random import rng as rand
+from ..core.sympify import _sympify
 from ..functions import sqrt as _sqrt, re as _re, im as _im, \
     transpose as _t, adjoint as _c
 from ..tensor import shape as _shape
@@ -58,7 +60,7 @@ r""" default random number generator
 def _rand(seed=None):
     if hasattr(seed, 'sample'):
         return seed
-    return rand if seed is None else Random(seed)
+    return rand if seed is None else rand.seed(seed)
 
 
 def _sample(scalars, k=None, rng=None):
@@ -67,6 +69,8 @@ def _sample(scalars, k=None, rng=None):
         smpl = scalars.sample(_k)
     elif hasattr(rng, 'sample'):
         smpl = rng.sample(scalars, _k)
+    elif rng:
+        smpl = rng(scalars, _k)
     else:
         smpl = rand.sample(scalars, _k)
     return smpl if k else smpl[0]
@@ -76,6 +80,7 @@ def _sample(scalars, k=None, rng=None):
 
 
 def _cs(scalar, real=True, rng=None):
+
     if isinstance(scalar, (tuple, list)) and len(scalar) == 2:
         c, s = scalar
     elif _is_complex(scalar):
