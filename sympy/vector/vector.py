@@ -399,7 +399,7 @@ class BaseVector(Vector, AtomicExpr):
     def free_symbols(self):
         return {self}
 
-# XXX: This method is only needed because Vector is a subclass of 
+# XXX: This method is only needed because Vector is a subclass of
 # AtomicExpr even though it is not really an AtomExpr. If Vector was
 # fixed to not subclass AtomiExpr then this func method could be deleted.
     @property
