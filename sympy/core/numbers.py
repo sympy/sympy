@@ -2771,7 +2771,7 @@ class AlgebraicNumber(Expr):
             return self
         return AlgebraicNumber(self, coeffs=[1, 0])
 
-    def to_primitive_elt(self, prec=15):
+    def to_primitive_elt(self, radicals=True):
         r"""
         Convert ``self`` to an :py:class:`~.AlgebraicNumber` instance that is
         equal to its own primitive element.
@@ -2820,9 +2820,11 @@ class AlgebraicNumber(Expr):
         Parameters
         ==========
 
-        prec : int, optional (default=15)
-            Decimal places of precision for determining to which root of its
-            minimal polynomial this number is equal.
+        radicals : boolean, optional (default=True)
+            If ``True``, then we will try to return an
+            :py:class:`~.AlgebraicNumber` whose ``root`` is an expression
+            in radicals. If that is not possible (or if *radicals* is
+            ``False``), ``root`` will be a :py:class:`~.ComplexRootOf`.
 
         Returns
         =======
@@ -2838,14 +2840,8 @@ class AlgebraicNumber(Expr):
         if self.is_primitive_elt:
             return self
         m = self.minpoly_of_elt()
-        r0 = self.n(prec)
-        closest_root, min_distance = None, oo
-        for r in m.all_roots():
-            d = abs(r0 - r.n(prec))
-            if d < min_distance:
-                min_distance = d
-                closest_root = r
-        return AlgebraicNumber((m, closest_root))
+        r = self.to_root(radicals=radicals)
+        return AlgebraicNumber((m, r))
 
     def minpoly_of_elt(self):
         r"""
@@ -2860,6 +2856,60 @@ class AlgebraicNumber(Expr):
                 theta = self.primitive_elt()
                 self._own_minpoly = minpoly(self.as_expr(theta), polys=True)
         return self._own_minpoly
+
+    def to_root(self, radicals=True):
+        """
+        Convert to an :py:class:`~.Expr` that is not an
+        :py:class:`~.AlgebraicNumber`, specifically, either a
+        :py:class:`~.ComplexRootOf`, or, optionally and where possible, an
+        expression in radicals.
+
+        Parameters
+        ==========
+
+        radicals : boolean, optional (default=True)
+            If ``True``, then we will try to return the root as an expression
+            in radicals. If that is not possible, we will return a
+            :py:class:`~.ComplexRootOf`.
+
+        """
+        if self.is_primitive_elt and not isinstance(self.root, AlgebraicNumber):
+            return self.root
+        m = self.minpoly_of_elt()
+        roots = m.all_roots(radicals=radicals)
+        root = None
+        if all(hasattr(r, "_get_interval") for r in roots):
+            root = self._to_root_by_intervals(roots)
+        if root is not None:
+            return root
+        return self._to_root_by_distance(roots)
+
+    def _to_root_by_intervals(self, roots):
+        intervals = [r._get_interval() for r in roots]
+        D0 = int(max(i.max_denom for i in intervals))
+        # Make n more than the number of decimal places in D0. This is to
+        # eliminate false positives, i.e. cases where we appear to belong to
+        # an interval but only due to rounding errors.
+        n = math.ceil(D0.bit_length()/3.3) + 2
+        c = self.evalf(n).as_real_imag()
+        for j, i in enumerate(intervals):
+            if c in i:
+                return roots[j]
+        return None
+
+    def _to_root_by_distance(self, roots, max_prec=160):
+        # Compare sympy.polys.numberfields.minpoly._choose_factor()
+        prec1 = 10
+        while prec1 <= max_prec:
+            r0 = self.evalf(prec1)
+            candidates = [(abs(r0 - r.evalf(prec1)), j)
+                          for j, r in enumerate(roots)]
+            can = sorted(candidates)
+            (a, ix), (b, _) = can[:2]
+            if b > a * 10 ** 6:
+                return roots[ix]
+            prec1 *= 2
+        raise NotImplementedError("Could not locate root.")
 
 
 class RationalConstant(Rational):
