@@ -2687,7 +2687,7 @@ class TransferFunctionMatrix(MIMOLinearTimeInvariant):
                 temp.append(element.to_expr())
             expr_mat_arg.append(temp)
 
-        if isinstance(arg, (list, Tuple)):
+        if isinstance(arg, (tuple, list, Tuple)):
             # Making nested Tuple (sympy.core.containers.Tuple) from nested list or nested Python tuple
             arg = Tuple(*(Tuple(*r, sympify=False) for r in arg), sympify=False)
 
