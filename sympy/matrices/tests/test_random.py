@@ -324,9 +324,9 @@ def test_isometry_normal():
     m = isometry_normal(4, spec=((1, 0), (1, 0)))
     assert _is_eye(m), repr(m)
 
-    m = isometry_normal(3, spec=((0, -1), (0, 1)))
+    m = isometry_normal(3, spec=((0, 1), 1))
     n = Matrix([[0, 1, 0], [-1, 0, 0], [0, 0, 1]])
-    assert _is_zeros(m - n), repr(m)
+    assert _is_zeros(m - n), repr(m) + repr(n)
 
     for d in TEST_DIMS:
         m = isometry_normal(d, spec=(I,))
@@ -570,8 +570,8 @@ def test_seed():
           diagonal_normal, jordan_normal, isometry_normal, \
           triangular, invertible, singular, \
           idempotent, nilpotent, diagonalizable, trigonalizable, \
-          orthogonal, unitary, normal, \
-          symmetric, hermite, square,
+          orthogonal, normal, \
+          symmetric, hermite, square, unitary,
 
     _spec_ = diagonal_normal, jordan_normal, \
           diagonalizable, trigonalizable, normal
@@ -593,12 +593,12 @@ def test_seed():
             first, second = list(), list()
             for s in seeds:
                 rand.seed(s)
-                first.append(matrix(d))
+                first.append((s, expand(matrix(d))))
             for s in seeds:
                 rand.seed(s)
-                second.append(matrix(d))
-            for a, b in zip(first, second):
-                assert a == b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
+                second.append((s, expand(matrix(d))))
+            for (seed_a, a), (seed_b, b) in zip(first, second):
+                assert a == b,  str(seeds) + ' ' + str(seed_a) + ' ' + str(seed_b) + ' ' + matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
             # for a, b in zip(first, reversed(second)):
             #     assert a != b, matrix.__name__ + '\n' + repr(a) + '\n' + repr(b)
 
