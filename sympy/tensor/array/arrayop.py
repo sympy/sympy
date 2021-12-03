@@ -1,6 +1,7 @@
 import itertools
 from collections.abc import Iterable
 
+from sympy.core._print_helpers import Printable
 from sympy.core.containers import Tuple
 from sympy.core.function import diff
 from sympy.core.singleton import S
@@ -406,7 +407,7 @@ def permutedims(expr, perm):
     return type(expr)(new_array, new_shape)
 
 
-class Flatten():
+class Flatten(Printable):
     '''
     Flatten an iterable object to a list in a lazy-evaluation way.
 
@@ -474,3 +475,6 @@ class Flatten():
 
     def next(self):
         return self.__next__()
+
+    def _sympystr(self, printer):
+        return 'Flatten(' + printer._print(self._iter) + ')'
