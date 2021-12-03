@@ -18,14 +18,13 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
     Parameters
     ==========
- 
     expr : Basic | iterable
         The expression to simplify.
     deep : True | False
         If ``deep=True`` then ``powsimp()`` will also simplify arguments of functions.
     combine : str
-        You can make powsimp() only combine bases or only combine exponents by setting ``combine=’base’`` or
-        ``combine=’exp’``. The default is ``combine=’all’``, which does both. In this case, ``exp`` is evaluated first.
+        You can make powsimp() only combine bases or only combine exponents by setting ``combine=base`` or
+        ``combine=exp``. The default is ``combine=all``, which does both. In this case, ``exp`` is evaluated first.
     force : True | False
         If ``force=True`` then bases will be combined without checking for assumptions,
         e.g. ``sqrt(x)*sqrt(y) -> sqrt(x*y)`` which is not true if ``x`` and ``y`` are both negative.
@@ -512,11 +511,10 @@ def powdenest(eq, force=False, polar=False):
 
     Parameters
     ==========
-
     eq : Basic | iterable
         The expression to simplify.
     force : True | False
-        If ``force=True`` then symbols that are not explicitly negative behave as 
+        If ``force=True`` then symbols that are not explicitly negative behave as
         though they are positive, resulting in more denesting.
     polar : True | False
         If ``polar=True``, the algorithm will perform simplifications on the Riemann surface

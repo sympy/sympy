@@ -13,7 +13,6 @@ def ratsimp(expr):
 
     Parameters
     ==========
-    
     expr: Basic | iterable
         The expression to simplify.
 
