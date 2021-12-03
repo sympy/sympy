@@ -1,8 +1,6 @@
 Matrices (linear algebra)
 =========================
 
-.. module:: sympy.matrices.matrices
-
 Creating Matrices
 -----------------
 
@@ -523,87 +521,57 @@ So there is quite a bit that can be done with the module including eigenvalues,
 eigenvectors, nullspace calculation, cofactor expansion tools, and so on. From
 here one might want to look over the ``matrices.py`` file for all functionality.
 
-MatrixDeterminant Class Reference
----------------------------------
-.. autoclass:: MatrixDeterminant
-   :members:
+Matrix Baseclasses Reference
+----------------------------
 
-MatrixReductions Class Reference
---------------------------------
-.. autoclass:: MatrixReductions
-   :members:
+.. autosummary::
+   :toctree: ref
 
-MatrixSubspaces Class Reference
--------------------------------
-.. autoclass:: MatrixSubspaces
-   :members:
-
-MatrixEigen Class Reference
----------------------------
-.. autoclass:: MatrixEigen
-   :members:
-
-MatrixCalculus Class Reference
-------------------------------
-.. autoclass:: MatrixCalculus
-   :members:
-
-MatrixBase Class Reference
---------------------------
-.. autoclass:: MatrixBase
-   :members:
+   sympy.matrices.matrices.MatrixBase
+   sympy.matrices.matrices.MatrixCalculus
+   sympy.matrices.matrices.MatrixDeterminant
+   sympy.matrices.matrices.MatrixEigen
+   sympy.matrices.matrices.MatrixReductions
+   sympy.matrices.matrices.MatrixSubspaces
 
 Matrix Exceptions Reference
 ---------------------------
 
-.. autoclass:: MatrixError
-   :members:
+.. autosummary::
+   :toctree: ref
 
-.. autoclass:: ShapeError
-   :members:
-
-.. autoclass:: NonSquareMatrixError
-   :members:
-
+   sympy.matrices.matrices.MatrixError
+   ~sympy.matrices.matrices.NonSquareMatrixError
+   ~sympy.matrices.matrices.ShapeError
 
 Matrix Functions Reference
 --------------------------
 
-.. autofunction:: sympy.matrices.dense::matrix_multiply_elementwise
+.. autosummary::
+   :toctree: ref
 
-.. autofunction:: sympy.matrices.dense::zeros
-
-.. autofunction:: sympy.matrices.dense::ones
-
-.. autofunction:: sympy.matrices.dense::eye
-
-.. autofunction:: sympy.matrices.dense::diag
-
-.. autofunction:: sympy.matrices.dense::jordan_cell
-
-.. autofunction:: sympy.matrices.dense::hessian
-
-.. autofunction:: sympy.matrices.dense::GramSchmidt
-
-.. autofunction:: sympy.matrices.dense::wronskian
-
-.. autofunction:: sympy.matrices.dense::casoratian
-
-.. autofunction:: sympy.matrices.dense::randMatrix
+   ~sympy.matrices.dense.GramSchmidt
+   ~sympy.matrices.dense.casoratian
+   ~sympy.matrices.dense.diag
+   ~sympy.matrices.dense.eye
+   ~sympy.matrices.dense.hessian
+   ~sympy.matrices.dense.jordan_cell
+   ~sympy.matrices.dense.matrix_multiply_elementwise
+   ~sympy.matrices.dense.ones
+   ~sympy.matrices.dense.randMatrix
+   ~sympy.matrices.dense.wronskian
+   ~sympy.matrices.dense.zeros
 
 Numpy Utility Functions Reference
 ---------------------------------
 
-.. autofunction:: sympy.matrices.dense::list2numpy
+.. autosummary::
+   :toctree: ref
 
-.. autofunction:: sympy.matrices.dense::matrix2numpy
-
-.. autofunction:: sympy.matrices.dense::symarray
-
-.. autofunction:: sympy.matrices.dense::rot_axis1
-
-.. autofunction:: sympy.matrices.dense::rot_axis2
-
-.. autofunction:: sympy.matrices.dense::rot_axis3
-
-.. autofunction:: a2idx
+   sympy.matrices.matrices.a2idx
+   ~sympy.matrices.dense.list2numpy
+   ~sympy.matrices.dense.matrix2numpy
+   ~sympy.matrices.dense.rot_axis1
+   ~sympy.matrices.dense.rot_axis2
+   ~sympy.matrices.dense.rot_axis3
+   ~sympy.matrices.dense.symarray
