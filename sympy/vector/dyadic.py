@@ -229,7 +229,7 @@ class BaseDyadic(Dyadic, AtomicExpr):
 # of AtomExpr even though it is not really an AtomExpr. If BaseDyadic
 # was fixed to not subclass AtomExpr then this func method could be
 # deleted.
-@property
+    @property
     def func(self):
         return self.__class__
 
