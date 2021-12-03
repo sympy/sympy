@@ -1128,9 +1128,10 @@ def test_has_tuple():
     assert not Tuple(f(x), g(x)).has(y)
     assert Tuple(f(x), g(x)).has(f)
     assert Tuple(f(x), g(x)).has(f(x))
-    assert not Tuple(f, g).has(x)
-    assert Tuple(f, g).has(f)
-    assert not Tuple(f, g).has(h)
+    # XXX to be deprecated
+    #assert not Tuple(f, g).has(x)
+    #assert Tuple(f, g).has(f)
+    #assert not Tuple(f, g).has(h)
     assert Tuple(True).has(True)
     assert Tuple(True).has(S.true)
     assert not Tuple(True).has(1)

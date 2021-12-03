@@ -1264,12 +1264,11 @@ class Basic(Printable, metaclass=ManagedProperties):
     def _has(self, iterargs, *patterns):
         # separate out types and unhashable objects
         type_set = set()  # only types
-        p_set = set()  # all patterns so Tuple(f, Add).has(f) will pass
+        p_set = set()  # hashable non-types
         other = []
         for p in patterns:
             if isinstance(p, BasicMeta):
                 type_set.add(p)
-                p_set.add(p)  # to allow check for Tuple(f).has(f)
                 continue
             if not isinstance(p, Basic):
                 try:
@@ -1286,7 +1285,7 @@ class Basic(Printable, metaclass=ManagedProperties):
                 if i in p_set:
                     return True
             except TypeError:
-                pass  # unhashable, e.g. PermutationGroup([(0 2 1)])
+                pass  # unhashable i, e.g. PermutationGroup([(0 2 1)])
             if type(i) in type_set or any(isinstance(i, t) for t in type_set):
                 return True
             # checking unhashables by equality; we don't give all
