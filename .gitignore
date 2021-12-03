@@ -85,4 +85,4 @@ sample.tex
 .ci/durations.log
 
 # Stub .rst files generated from sphinx autosummary.
-_generated
+doc/src/**/ref/
