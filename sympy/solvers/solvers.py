@@ -1051,7 +1051,7 @@ def solve(f, *symbols, **flags):
                     p.is_Pow and not implicit or
                     p.is_Function and not implicit) and p.func not in (re, im):
                 continue
-            elif not p in seen:
+            elif p not in seen:
                 seen.add(p)
                 if p.free_symbols & symset:
                     non_inverts.add(p)

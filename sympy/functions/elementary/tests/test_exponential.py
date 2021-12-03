@@ -465,7 +465,7 @@ def test_log_hashing():
 
     e = log(log(x))
     assert e.func is log
-    assert not x.func is log
+    assert x.func is not log
     assert hash(log(log(x))) != hash(x)
     assert e != x
 

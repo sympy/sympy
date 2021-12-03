@@ -162,7 +162,7 @@ def test_Dict():
     assert set(d.values()) == {S.One, S(2), S(3)}
     assert d.get(5, 'default') == 'default'
     assert d.get('5', 'default') == 'default'
-    assert x in d and z in d and not 5 in d and not '5' in d
+    assert x in d and z in d and 5 not in d and '5' not in d
     assert d.has(x) and d.has(1)  # SymPy Basic .has method
 
     # Test input types

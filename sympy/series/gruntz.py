@@ -207,7 +207,7 @@ class SubsSet(dict):
         return super().__repr__() + ', ' + self.rewrites.__repr__()
 
     def __getitem__(self, key):
-        if not key in self:
+        if key not in self:
             self[key] = Dummy()
         return dict.__getitem__(self, key)
 

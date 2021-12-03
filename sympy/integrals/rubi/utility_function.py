@@ -2177,7 +2177,7 @@ def RationalFunctionExpand(expr, x):
 
 def ExpandIntegrand(expr, x, extra=None):
     expr = replace_pow_exp(expr)
-    if not extra is None:
+    if extra is not None:
         extra, x = x, extra
         w = ExpandIntegrand(extra, x)
         r = NonfreeTerms(w, x)
