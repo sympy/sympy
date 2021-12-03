@@ -2171,3 +2171,7 @@ def test_21494():
     from sympy.testing.pytest import warns_deprecated_sympy
     with warns_deprecated_sympy():
         assert x.expr_free_symbols == {x}
+
+
+def test_Expr__eq__iterable_handling():
+    assert x != range(3)
