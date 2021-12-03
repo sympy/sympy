@@ -627,12 +627,12 @@ class FpSubgroup(DefaultPrinting):
                         # add the product of the words to the list is necessary
                         if r1**-1 == s2 and not (p1*p2).is_identity:
                             new = _process(p1*p2)
-                            if not new in gens:
+                            if new not in gens:
                                 gens.extend(new)
 
                         if r2**-1 == s1 and not (p2*p1).is_identity:
                             new = _process(p2*p1)
-                            if not new in gens:
+                            if new not in gens:
                                 gens.extend(new)
 
                 self._min_words = gens

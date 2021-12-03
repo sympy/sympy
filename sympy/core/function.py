@@ -1437,7 +1437,7 @@ class Derivative(Expr):
                 # of all others
                 clashing = not (isinstance(old_v, Derivative) or \
                     isinstance(old_v, AppliedUndef))
-                if not v in expr.free_symbols and not clashing:
+                if v not in expr.free_symbols and not clashing:
                     return expr.diff(v)  # expr's version of 0
                 if not old_v.is_scalar and not hasattr(
                         old_v, '_eval_derivative'):

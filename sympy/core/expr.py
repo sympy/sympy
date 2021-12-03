@@ -3371,7 +3371,7 @@ class Expr(Basic, EvalfMixin):
         exp(logx*y)
 
         """
-        if x and not x in self.free_symbols:
+        if x and x not in self.free_symbols:
             return self
         if x is None or x0 or dir != '+':  # {see XPOS above} or (x.is_positive == x.is_negative == None):
             return self.series(x, x0, n, dir, cdir=cdir)

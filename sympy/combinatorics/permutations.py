@@ -1877,7 +1877,7 @@ class Permutation(Atom):
 
         next_lex, unrank_lex, cardinality, length, order, size
         """
-        if not self._rank is None:
+        if self._rank is not None:
             return self._rank
         rank = 0
         rho = self.array_form[:]

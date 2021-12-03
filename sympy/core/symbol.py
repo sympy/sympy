@@ -349,7 +349,7 @@ class Symbol(AtomicExpr, Boolean):
     def is_constant(self, *wrt, **flags):
         if not wrt:
             return False
-        return not self in wrt
+        return self not in wrt
 
     @property
     def free_symbols(self):

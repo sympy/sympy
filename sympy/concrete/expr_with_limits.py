@@ -146,7 +146,7 @@ def _process_limits(*symbols, discrete=None):
                 newsymbol = V[0]
                 if len(V) == 3:
                     # general case
-                    if V[2] is None and not V[1] is None:
+                    if V[2] is None and V[1] is not None:
                         orientation *= -1
                     V = [newsymbol] + [i for i in V[1:] if i is not None]
 

@@ -172,7 +172,7 @@ class Subset():
             else:
                 indices.remove(i)
                 i = i - 1
-                while not i in indices and i >= 0:
+                while i >= 0 and i not in indices:
                     i = i - 1
                 if i >= 0:
                     indices.remove(i)
