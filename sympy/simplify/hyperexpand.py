@@ -2028,7 +2028,6 @@ def _hyperexpand(func,
         C = apply_operators(f.C.subs(f.z, z0), ops,
                             make_derivative_operator(f.M.subs(f.z, z0), z0))
         from sympy import eye
-        from sympy import eye
         C = apply_operators(C, ops0,
                             make_derivative_operator(f.M.subs(f.z, z0)
                                                      + prem * eye(f.M.shape[0]), z0))
