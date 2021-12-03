@@ -62,16 +62,13 @@ from functools import reduce
 
 from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
-                        EulerGamma, oo, zoo, expand_func, Add, nan, Expr,
-                        Rational)
+    EulerGamma, oo, zoo, expand_func, Add, nan, Expr, Rational)
 from sympy.core.compatibility import default_sort_key
 from sympy.core.mod import Mod
-from sympy.functions import (exp, sqrt, root, log, lowergamma, cos, besseli,
-                             gamma, uppergamma, expint, erf, sin, besselj, Ei,
-                             Ci, Si, Shi, sinh, cosh, Chi, fresnels, fresnelc,
-                             polar_lift, exp_polar, floor, ceiling, rf,
-                             factorial, lerchphi, Piecewise, re, elliptic_k,
-                             elliptic_e)
+from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
+        besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
+        sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, floor, ceiling,
+        rf, factorial, lerchphi, Piecewise, re, elliptic_k, elliptic_e)
 from sympy.functions.elementary.complexes import polarify, unpolarify
 from sympy.functions.special.hyper import (
     hyper, HyperRep_atanh, HyperRep_power1, HyperRep_power2, HyperRep_log1,
@@ -2031,10 +2028,10 @@ def _hyperexpand(func,
         C = apply_operators(f.C.subs(f.z, z0), ops,
                             make_derivative_operator(f.M.subs(f.z, z0), z0))
         from sympy import eye
-        C = apply_operators(
-            C, ops0,
-            make_derivative_operator(
-                f.M.subs(f.z, z0) + prem * eye(f.M.shape[0]), z0))
+        from sympy import eye
+        C = apply_operators(C, ops0,
+                            make_derivative_operator(f.M.subs(f.z, z0)
+                                                     + prem * eye(f.M.shape[0]), z0))
 
         if premult == 1:
             C = C.applyfunc(make_simp(z0))
