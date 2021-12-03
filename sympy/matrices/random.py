@@ -99,9 +99,8 @@ def _cs(scalar, real=True, rng=None):
 
 
 def _is_complex(z):
-    return isinstance(z, complex) or \
-           (getattr(z, 'is_complex', False) is True and
-            getattr(z, 'is_real', True) is False)
+    z = _sympify(z)
+    return z.is_complex and not z.is_real
 
 
 def _is_abs_one(x):
