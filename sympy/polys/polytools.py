@@ -6736,7 +6736,7 @@ def cancel(f, *gens, _signsimp=True, **args):
             return f.xreplace(dict(reps))
 
     c, (P, Q) = 1, F.cancel(G)
-    if opt.get('polys', False) and not 'gens' in opt:
+    if opt.get('polys', False) and 'gens' not in opt:
         opt['gens'] = R.symbols
 
     if not isinstance(f, (tuple, Tuple)):
