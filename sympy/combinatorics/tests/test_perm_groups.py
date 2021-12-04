@@ -32,11 +32,7 @@ def test_has():
     assert PermutationGroup(a, b).degree == \
         PermutationGroup(a, b).degree == 6
 
-    # this must be tested by equality since
-    # containment in a set cannot be checked since
-    # g is not hashable
     g = PermutationGroup(Permutation(0, 2, 1))
-    raises(TypeError, lambda: {g})
     assert Tuple(1, g).has(g)
 
 

@@ -30,7 +30,7 @@ from sympy.simplify.radsimp import collect
 from sympy.logic.boolalg import And, Or
 from sympy.utilities.iterables import uniq
 
-from sympy.polys import quo, gcd, lcm, factor, cancel, PolynomialError
+from sympy.polys import quo, gcd, lcm, factor_list, cancel, PolynomialError
 from sympy.polys.monomials import itermonomials
 from sympy.polys.polyroots import root_factors
 
@@ -611,37 +611,29 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     reducibles = set()
 
     for poly in polys:
-        if poly.has(*V):
-            try:
-                factorization = factor(poly, greedy=True)
-            except PolynomialError:
-                factorization = poly
-
-            if factorization.is_Mul:
-                factors = factorization.args
-            else:
-                factors = (factorization, )
-
-            for fact in factors:
-                if fact.is_Pow:
-                    reducibles.add(fact.base)
-                else:
-                    reducibles.add(fact)
+        coeff, factors = factor_list(poly, *V)
+        reducibles.add(coeff)
+        for fact, mul in factors:
+            reducibles.add(fact)
 
     def _integrate(field=None):
-        irreducibles = set()
         atans = set()
         pairs = set()
-        setV = set(V)
 
-        for poly in reducibles:
-            did = 0
-            for z in setV & set(iterfreeargs(poly)):
-                s = set(root_factors(poly, z, filter=field))
-                irreducibles |= s
-                did += 1
-            if did not in (0, 1):
-                assert len(s) == 1, ('poly should have been univariate or linear', poly)
+        if field == 'Q':
+            irreducibles = set(reducibles)
+        else:
+            setV = set(V)
+            irreducibles = set()
+            for poly in reducibles:
+                zV = setV & set(iterfreeargs(poly))
+                for z in zV:
+                    s = set(root_factors(poly, z, filter=field))
+                    irreducibles |= s
+                    if len(s) > 1:
+                        # poly expected to be univariate
+                        # or linear
+                        assert len(zV) == 1
 
         log_part, atan_part = [], []
 
