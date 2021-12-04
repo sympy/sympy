@@ -72,10 +72,13 @@ def verify_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     True
     """
     from sympy.core.symbol import Symbol
+    from sympy.core.sympify import sympify
     from sympy.core.numbers import comp
-    from sympy.core.containers import Tuple
-    f, g, z = Tuple(f, g, z)
-    z = [z] if isinstance(z, Symbol) else (f.free_symbols | g.free_symbols)
+    f, g = (sympify(i) for i in (f, g))
+    if z is None:
+        z = f.free_symbols | g.free_symbols
+    elif isinstance(z, Symbol):
+        z = [z]
     reps = list(zip(z, [random_complex_number(a, b, c, d) for _ in z]))
     z1 = f.subs(reps).n()
     z2 = g.subs(reps).n()

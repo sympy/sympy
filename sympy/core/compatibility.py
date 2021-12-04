@@ -8,7 +8,8 @@ here for easy import.
 from .sorting import ordered as _ordered, _nodes as __nodes, default_sort_key as _default_sort_key
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.misc import as_int as _as_int
-from sympy.utilities.iterables import iterable as _iterable, is_sequence as _is_sequence
+from sympy.utilities.iterables import (iterable as _iterable,
+    is_sequence as _is_sequence, NotIterable as _notiterable)
 
 
 default_sort_key = deprecated(useinstead="sympy.core.sorting.default_sort_key",
@@ -33,3 +34,6 @@ is_sequence = deprecated(useinstead="sympy.utilities.iterables.is_sequence",
 
 iterable = deprecated(useinstead="sympy.utilities.iterables.iterable",
     deprecated_since_version="1.10", issue=22352)(_iterable)
+
+NotIterable = deprecated(useinstead="sympy.utilities.iterables.NotIterable",
+    deprecated_since_version="1.10", issue=22352)(_notiterable)
