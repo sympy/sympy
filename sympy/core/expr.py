@@ -146,11 +146,11 @@ class Expr(Basic, EvalfMixin):
         return self._args
 
     def __eq__(self, other):
-        assert not iterable(self), 'needs __eq__ definition'
         if not isinstance(other, Basic):
-            if iterable(other):
-                # XXX assume that an iterable with a _sympy_
-                # method will not sympify to a non-iterable
+            if iterable(other) and not hasattr(other, '_sympy_'):
+                # XXX iterable self should have it's own __eq__
+                # method if the path gives a false negative
+                # comparison
                 return False
             try:
                 other = _sympify(other)
