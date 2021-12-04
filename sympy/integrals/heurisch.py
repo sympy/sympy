@@ -310,8 +310,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     recursive Risch algorithm in such case.  It's an open question if
     this algorithm can be made a full decision procedure.
 
-    This is an internal integrator procedure. You should use toplevel
-    'integrate' function in most cases,  as this procedure needs some
+    This is an internal integrator procedure. You should use top level
+    'integrate' function in most cases, as this procedure needs some
     preprocessing steps and otherwise may fail.
 
     Specification
@@ -610,7 +610,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     reducibles = set()
 
-    for poly in polys:
+    for poly in ordered(polys):
         coeff, factors = factor_list(poly, *V)
         reducibles.add(coeff)
         for fact, mul in factors:
@@ -625,19 +625,16 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         else:
             setV = set(V)
             irreducibles = set()
-            for poly in reducibles:
+            for poly in ordered(reducibles):
                 zV = setV & set(iterfreeargs(poly))
-                for z in zV:
+                for z in ordered(zV):
                     s = set(root_factors(poly, z, filter=field))
                     irreducibles |= s
-                    if len(s) > 1:
-                        # poly expected to be univariate
-                        # or linear
-                        assert len(zV) == 1
+                    break
 
         log_part, atan_part = [], []
 
-        for poly in list(irreducibles):
+        for poly in ordered(irreducibles):
             m = collect(poly, I, evaluate=False)
             y = m.get(I, S.Zero)
             if y:
