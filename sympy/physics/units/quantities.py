@@ -21,6 +21,10 @@ class Quantity(AtomicExpr):
     is_nonzero = True
     _diff_wrt = True
 
+# XXX: This method is only needed because Quantity is a subclass of 
+# AtomicExpr even though it is not really an AtomicExpr. If Quantity
+# was fixed to not subclass AtomicExpr then this func method could be
+# deleted.
     @property
     def func(self):
         return self.__class__

@@ -698,9 +698,6 @@ class AccumulationBounds(Expr):
         if other.min <= self.min and other.max >= self.min:
             return AccumBounds(other.min, Max(self.max, other.max))
 
-    @property
-    def func(self):
-        return self.__class__
 
 @dispatch(AccumulationBounds, AccumulationBounds) # type: ignore # noqa:F811
 def _eval_is_le(lhs, rhs): # noqa:F811
