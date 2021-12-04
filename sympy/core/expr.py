@@ -155,7 +155,7 @@ class Expr(Basic, EvalfMixin):
             try:
                 other = _sympify(other)
             except (SympifyError, SyntaxError):
-                return False
+                return NotImplemented
         if not isinstance(other, Expr):
             return False
         # check for pure number expr
