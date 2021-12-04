@@ -12,7 +12,7 @@ from .sorting import default_sort_key
 from .kind import NumberKind
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import as_int, func_name, filldedent
-from sympy.utilities.iterables import has_variety, sift, iterable
+from sympy.utilities.iterables import has_variety, sift, iterable, NotIterable
 from mpmath.libmp import mpf_log, prec_to_dps
 from mpmath.libmp.libintmath import giant_steps
 
@@ -147,7 +147,8 @@ class Expr(Basic, EvalfMixin):
 
     def __eq__(self, other):
         if not isinstance(other, Basic):
-            if iterable(other) and not hasattr(other, '_sympy_'):
+            if iterable(other, exclude=(str, NotIterable)
+                    ) and not hasattr(other, '_sympy_'):
                 # XXX iterable self should have it's own __eq__
                 # method if the path gives a false negative
                 # comparison
