@@ -1265,7 +1265,6 @@ class Basic(Printable, metaclass=ManagedProperties):
         # separate out types and unhashable objects
         type_set = set()  # only types
         p_set = set()  # hashable non-types
-        other = []
         for p in patterns:
             if isinstance(p, BasicMeta):
                 type_set.add(p)
@@ -1275,34 +1274,19 @@ class Basic(Printable, metaclass=ManagedProperties):
                     p = _sympify(p)
                 except SympifyError:
                     continue  # Basic won't have this in it
-            try:
-                p_set.add(p)
-            except TypeError:
-                other.append(p)
-
-        for i in iterargs(self):
-            try:
-                if i in p_set:
-                    return True
-            except TypeError:
-                pass  # unhashable i, e.g. PermutationGroup([(0 2 1)])
+            p_set.add(p)  # fails if object defines __eq__ but
+                          # doesn't define __hash__
+                                  #
+        for i in iterargs(self):  #
+            if i in p_set:        # <--- here, too
+                return True
             if type(i) in type_set or any(isinstance(i, t) for t in type_set):
                 return True
-            # checking unhashables by equality; we don't give all
-            # Basic a default `_has_matcher` routine, otherwise we
-            # would have to repeat the fast equality test that was
-            # just done with `i in p_set`
-            if any(i == o for o in other):
-                return True
-
-        # remove types from p_set since they won't have matchers
-        p_set -= type_set
 
         # use matcher if defined, e.g. operations defines
         # matcher that checks for exact subset containment,
         # (x + y + 1).has(x + 1) -> True
-        other.extend(p_set)
-        for i in other:
+        for i in p_set - type_set:  # types don't have matchers
             if not hasattr(i, '_has_matcher'):
                 continue
             match = i._has_matcher()

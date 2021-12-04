@@ -9,7 +9,7 @@ from sympy.combinatorics.permutations import Permutation
 from sympy.combinatorics.polyhedron import tetrahedron as Tetra, cube
 from sympy.combinatorics.testutil import _verify_bsgs, _verify_centralizer,\
     _verify_normal_closure
-from sympy.testing.pytest import skip, XFAIL, slow, raises
+from sympy.testing.pytest import skip, XFAIL, slow
 
 rmul = Permutation.rmul
 
@@ -79,10 +79,14 @@ def test_equality():
     g_1 = PermutationGroup(p_1, p_2)
     g_2 = PermutationGroup(p_3, p_4)
     g_3 = PermutationGroup(p_2, p_1)
+    g_4 = PermutationGroup(p_1, p_2)
 
-    assert g_1 == g_2
+    assert g_1 != g_2
     assert g_1.generators != g_2.generators
-    assert g_1 == g_3
+    assert g_1.equals(g_2)
+    assert g_1 != g_3
+    assert g_1.equals(g_3)
+    assert g_1 == g_4
 
 
 def test_stabilizer():
