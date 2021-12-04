@@ -322,7 +322,7 @@ class Piecewise(Function):
         >>> f = Piecewise((csc(1/x), x < 1), (2*x**2 + 1, x < 5), (log(x), True))
         >>> f.is_meromorphic(x, 0)
         False
-        >>> f.is_meromorphic(x, 1)
+        >>> f.is_meromorphic(x, 2)
         True
         >>> f.is_meromorphic(x, 10)
         True
@@ -331,18 +331,62 @@ class Piecewise(Function):
         if not x.is_symbol:
             raise TypeError("{} should be of symbol type".format(x))
         a = sympify(a)
+        upper_bound_list, lower_bound_list = [], []
+        for l, u, e, i in self._intervals(x)[1]:
+            upper_bound_list.append(u)
+            lower_bound_list.append(l)
 
-        for arg in self.args:
-            if arg[1].subs(x, a):
-                return arg[0]._eval_is_meromorphic(x, a)
+        if a not in lower_bound_list and a not in upper_bound_list:
+            for bound in self.as_expr_set_pairs():
+                if a in bound[1]:
+                    return bound[0]._eval_is_meromorphic(x, a)
+        else:
+            return None
 
     def _eval_simplify(self, **kwargs):
         return piecewise_simplify(self, **kwargs)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        for e, c in self.args:
-            if (cdir == -1 and c.subs(x, -1e-3)) or ((cdir == 1 or cdir == 0) and c.subs(x, 1e-3)):
-                return e.as_leading_term(x)
+        upper_bound_list, cond_list, lower_bound_list = [], [], []
+        for a, b, e, i in self._intervals(x)[1]:
+            upper_bound_list.append(b)
+            cond_list.append(e)
+            lower_bound_list.append(a)
+        upper = list(zip(cond_list, upper_bound_list))
+        lower = list(zip(cond_list, lower_bound_list))
+
+        # Check whether 0 is the upper boundary of a piece.
+        # If yes, we consider that piece and the next one for evaluation.
+        if S.Zero in upper_bound_list:
+            for i, pair in enumerate(upper):
+                if pair[1].is_zero:
+                    if cdir == -1:
+                        return pair[0].as_leading_term(x)
+                    else:
+                        return upper[i + 1][0].as_leading_term(x)
+
+        # Check whether 0 is the lower boundary of a piece.
+        # If yes, we consider that piece and the previous one for evaluation.
+        if S.Zero in lower_bound_list:
+            for i, pair in enumerate(lower):
+                if pair[1].is_zero:
+                    if cdir == -1:
+                        return lower[i - 1][0].as_leading_term(x)
+                    else:
+                        return pair[0].as_leading_term(x)
+
+        # Check whether 0 lies in the Interval of any piece.
+        # If yes, we consider that piece for evaluation.
+        for bound in self.as_expr_set_pairs():
+            if S.Zero in bound[1] and not S.Zero in bound[1].boundary:
+                return bound[0].as_leading_term(x)
+
+    def _at_infinity(self, x):
+        at_infinity = []
+        for i, pair in enumerate(self.as_expr_set_pairs()):
+            if pair[1].inf is S.NegativeInfinity or pair[1].sup is S.Infinity:
+                at_infinity.append(self.args[i])
+        return Piecewise(*tuple(at_infinity))
 
     def _eval_adjoint(self):
         return self.func(*[(e.adjoint(), c) for e, c in self.args])

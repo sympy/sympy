@@ -5,6 +5,7 @@ from sympy.core.numbers import Float
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, sign)
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.gamma_functions import gamma
 from sympy.polys import PolynomialError, factor
 from sympy.series.order import Order
@@ -297,6 +298,8 @@ class Limit(Expr):
         if abs(z0) is S.Infinity:
             if e.is_Mul:
                 e = factor_terms(e)
+            if isinstance(e, Piecewise):
+                e = e._at_infinity(z)
             newe = e.subs(z, 1/z)
             # cdir changes sign as oo- should become 0+
             cdir = -cdir
