@@ -446,7 +446,7 @@ def test_piecewise_integrate5_independent_conditions():
 def test_piecewise_meromorphic():
     p = Piecewise((csc(1/x), x < 1), (2*x**2 + 1, x < 5), (log(x), True))
     assert p.is_meromorphic(x, 0) == False
-    assert p.is_meromorphic(x, 1) == True
+    assert p.is_meromorphic(x, 2) == True
     assert p.is_meromorphic(x, 10) == True
 
 
