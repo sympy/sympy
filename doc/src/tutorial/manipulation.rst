@@ -306,20 +306,15 @@ Recursing through an Expression Tree
 
 Now that you know how expression trees work in SymPy, let's look at how to dig
 our way through an expression tree.  Every object in SymPy has two very
-important attributes, ``func``, and ``args``.
+important attributes, ``args``, and ``func``.
 
-
-func
-----
-
-``func`` is a callable which accepts the same number of arguments as stored
-in ``_args`` of the object.
-
-args
-----
 
 ``args`` are the top-level arguments of the object.  ``(x*y).args`` would be
-``(x, y)``.  Let's look at some examples
+``(x, y)``.  
+``func`` is a callable which accepts the same number of arguments as ``args``
+and returns a SymPy object with the same type.
+
+Let's look at some examples
 
     >>> expr = 3*y**2*x
     >>> expr.func
@@ -335,6 +330,9 @@ that we can completely reconstruct ``expr`` from its ``func`` and its
     3*x*y**2
     >>> expr == expr.func(*expr.args)
     True
+
+Since ``func`` returns an object with the same type and its ``args`` are the
+same, structural equality is ensured.
 
 Note that although we entered ``3*y**2*x``, the ``args`` are ``(3, x, y**2)``.
 In a ``Mul``, the Rational coefficient will come first in the ``args``, but
