@@ -384,8 +384,13 @@ class Piecewise(Function):
     def _at_infinity(self, x):
         at_infinity = []
         for i, pair in enumerate(self.as_expr_set_pairs()):
-            if pair[1].inf is S.NegativeInfinity or pair[1].sup is S.Infinity:
+            if pair[1].inf is S.NegativeInfinity:
                 at_infinity.append(self.args[i])
+                break
+        for i, pair in enumerate(self.as_expr_set_pairs()):
+            if pair[1].sup is S.Infinity:
+                at_infinity.append(self.args[i])
+                break
         return Piecewise(*tuple(at_infinity))
 
     def _eval_adjoint(self):
