@@ -2539,8 +2539,9 @@ class AlgebraicNumber(Expr):
                 from sympy.polys.polytools import Poly
                 minpoly = Poly(minpoly)
         elif expr.is_AlgebraicNumber:
-            assert coeffs is None
-            minpoly, root, coeffs = expr.minpoly, expr.root, expr.coeffs()
+            minpoly, root, _coeffs = expr.minpoly, expr.root, expr.coeffs()
+            if coeffs is None:
+                coeffs = _coeffs
         else:
             minpoly, root = minimal_polynomial(
                 expr, args.get('gen'), polys=True), expr
