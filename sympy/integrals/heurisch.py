@@ -12,6 +12,7 @@ from sympy.core.numbers import Rational, pi, I
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
+from sympy.core.traversal import iterfreeargs
 
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
 from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
@@ -631,16 +632,16 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         irreducibles = set()
         atans = set()
         pairs = set()
+        setV = set(V)
 
         for poly in reducibles:
-            for z in poly.free_symbols:
-                if z in V:
-                    break  # should this be: `irreducibles |= \
-            else:          # set(root_factors(poly, z, filter=field))`
-                continue   # and the line below deleted?
-                           #               |
-                           #               V
-            irreducibles |= set(root_factors(poly, z, filter=field))
+            did = 0
+            for z in setV & set(iterfreeargs(poly)):
+                s = set(root_factors(poly, z, filter=field))
+                irreducibles |= s
+                did += 1
+            if did not in (0, 1):
+                assert len(s) == 1, ('poly should have been univariate or linear', poly)
 
         log_part, atan_part = [], []
 
