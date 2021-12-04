@@ -30,7 +30,7 @@ def iterargs(expr):
         try:
             args.extend(i.args)
         except TypeError:
-            pass
+            pass  # for cases like f being an arg
 
 
 def iterfreeargs(expr, _first=True):
@@ -63,7 +63,7 @@ def iterfreeargs(expr, _first=True):
         try:
             args.extend(i.args)
         except TypeError:
-            pass
+            pass  # for cases like f being an arg
 
 
 
