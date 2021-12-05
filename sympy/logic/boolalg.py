@@ -203,7 +203,8 @@ class Boolean(Basic):
         else:
             return super().__eq__(other)
 
-    __hash__ = Basic.__hash__
+    def __hash__(self):
+        return Basic.__hash__()
 
 
 class BooleanAtom(Boolean):

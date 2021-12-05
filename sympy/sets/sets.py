@@ -701,7 +701,8 @@ class Set(Basic, EvalfMixin):
             return self == _sympify(other)
         return super().__eq__(other)
 
-    __hash__ = Basic.__hash__
+    def __hash__(self):
+        return Basic.__hash__()
 
 
 class ProductSet(Set):
