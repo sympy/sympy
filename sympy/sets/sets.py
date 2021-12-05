@@ -702,7 +702,7 @@ class Set(Basic, EvalfMixin):
         return super().__eq__(other)
 
     def __hash__(self):
-        return Basic.__hash__()
+        return Basic.__hash__(self)
 
 
 class ProductSet(Set):

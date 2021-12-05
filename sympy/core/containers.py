@@ -311,7 +311,7 @@ class Dict(Basic):
             return super().__eq__(other)
 
     def __hash__(self):
-        return Tuple.__hash__()
+        return Tuple.__hash__(self)
 
 # this handles dict, defaultdict, OrderedDict
 converter[dict] = lambda d: Dict(*d.items())
