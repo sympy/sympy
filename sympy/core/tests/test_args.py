@@ -495,7 +495,6 @@ def test_sympy__codegen__abstract_nodes__List():
     from sympy.codegen.abstract_nodes import List
     assert _test_args(List(1, 2, 3))
 
-@XFAIL
 def test_sympy__combinatorics__graycode__GrayCode():
     from sympy.combinatorics.graycode import GrayCode
     # an integer is given and returned from GrayCode as the arg
@@ -536,7 +535,6 @@ def test_sympy__combinatorics__polyhedron__Polyhedron():
     assert _test_args(Polyhedron(corners, faces, pgroup))
 
 
-@XFAIL
 def test_sympy__combinatorics__prufer__Prufer():
     from sympy.combinatorics.prufer import Prufer
     assert _test_args(Prufer([[0, 1], [0, 2], [0, 3]], 4))
@@ -547,7 +545,6 @@ def test_sympy__combinatorics__partitions__Partition():
     assert _test_args(Partition([1]))
 
 
-@XFAIL
 def test_sympy__combinatorics__partitions__IntegerPartition():
     from sympy.combinatorics.partitions import IntegerPartition
     assert _test_args(IntegerPartition([1]))

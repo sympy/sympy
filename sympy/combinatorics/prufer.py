@@ -1,4 +1,6 @@
 from sympy.core import Basic
+from sympy.core.containers import Tuple
+from sympy.core.sympify import _sympify
 from sympy.utilities.iterables import flatten, iterable
 from sympy.utilities.misc import as_int
 
@@ -359,6 +361,8 @@ class Prufer(Basic):
         [[0, 1], [1, 3], [2, 3]]
 
         """
+        arg0 = Tuple(*[Tuple(*arg) if isinstance(arg, list) else _sympify(arg) for arg in args[0]])
+        args = (arg0,) + tuple(_sympify(arg) for arg in args[1:])
         ret_obj = Basic.__new__(cls, *args, **kw_args)
         args = [list(args[0])]
         if args[0] and iterable(args[0][0]):
