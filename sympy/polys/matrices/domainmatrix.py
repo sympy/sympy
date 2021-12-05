@@ -1641,7 +1641,7 @@ class DomainMatrix:
 
         """
         return cls.from_rep(DDM.ones(shape, domain))
-
+#ping
     def __eq__(A, B):
         r"""
         Checks for two DomainMatrix matrices to be equal or not

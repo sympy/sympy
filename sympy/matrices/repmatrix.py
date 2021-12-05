@@ -46,7 +46,7 @@ class RepMatrix(MatrixBase):
     #
 
     _rep: DomainMatrix
-
+#ping
     def __eq__(self, other):
         # Skip sympify for mutable matrices...
         if not isinstance(other, RepMatrix):

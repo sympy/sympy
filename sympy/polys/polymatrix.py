@@ -186,7 +186,7 @@ class MutablePolyDenseMatrix:
             return to_poly(dm[i, j].element)
         else:
             return self.from_dm(dm[i, j])
-
+#ping
     def __eq__(self, other):
         if not isinstance(self, type(other)):
             return NotImplemented

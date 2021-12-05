@@ -766,7 +766,7 @@ class Number(AtomicExpr):
             elif other in (S.Infinity, S.NegativeInfinity):
                 return S.Zero
         return AtomicExpr.__truediv__(self, other)
-
+#ping
     def __eq__(self, other):
         raise NotImplementedError('%s needs .__eq__() method' %
             (self.__class__.__name__))
@@ -1375,7 +1375,7 @@ class Float(Number):
         if self._mpf_ == fzero:
             return 0
         return int(mlib.to_int(self._mpf_))  # uses round_fast = round_down
-
+#ping
     def __eq__(self, other):
         from sympy.logic.boolalg import Boolean
         try:
@@ -1873,7 +1873,7 @@ class Rational(Number):
 
     def __ceil__(self):
         return self.ceiling()
-
+#ping
     def __eq__(self, other):
         try:
             other = _sympify(other)
@@ -2244,7 +2244,7 @@ class Integer(Rational):
                 return Integer(other.p % self.p)
             return Rational.__rmod__(self, other)
         return Rational.__rmod__(self, other)
-
+#ping
     def __eq__(self, other):
         if isinstance(other, int):
             return (self.p == other)
@@ -3036,7 +3036,7 @@ class Infinity(Number, metaclass=Singleton):
 
     def __hash__(self):
         return super().__hash__()
-
+#ping
     def __eq__(self, other):
         return other is S.Infinity or other == float('inf')
 
@@ -3202,7 +3202,7 @@ class NegativeInfinity(Number, metaclass=Singleton):
 
     def __hash__(self):
         return super().__hash__()
-
+#ping
     def __eq__(self, other):
         return other is S.NegativeInfinity or other == float('-inf')
 
@@ -3333,7 +3333,7 @@ class NaN(Number, metaclass=Singleton):
 
     def __hash__(self):
         return super().__hash__()
-
+#ping
     def __eq__(self, other):
         # NaN is structurally equal to another NaN
         return other is S.NaN
@@ -3457,7 +3457,7 @@ class NumberSymbol(AtomicExpr):
 
     def _eval_evalf(self, prec):
         return Float._new(self._as_mpf_val(prec), prec)
-
+#ping
     def __eq__(self, other):
         try:
             other = _sympify(other)
