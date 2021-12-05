@@ -2842,7 +2842,9 @@ class AlgebraicNumber(Expr):
         Say whether this algebraic number $\alpha \in \mathbb{Q}(\theta)$ is
         equal to the primitive element $\theta$ for its field.
         """
-        return self.coeffs() == [1, 0]
+        c = self.coeffs()
+        # Second case occurs if self.minpoly is linear:
+        return c == [1, 0] or c == [self.root]
 
     def primitive_elt(self):
         r"""

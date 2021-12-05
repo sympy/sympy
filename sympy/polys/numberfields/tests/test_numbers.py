@@ -161,6 +161,9 @@ def test_AlgebraicNumber():
     assert a.to_root() == sqrt(2)
     assert b.to_root() == 2
 
+    a = AlgebraicNumber(2)
+    assert a.is_primitive_elt is True
+
 
 def test_to_algebraic_integer():
     a = AlgebraicNumber(sqrt(3), gen=x).to_algebraic_integer()
