@@ -304,6 +304,13 @@ class Dict(Basic):
     def _sorted_args(self):
         return tuple(sorted(self.args, key=default_sort_key))
 
+    def __eq__(self, other):
+        if isinstance(other, dict):
+            return self == _sympify(other)
+        else:
+            return super().__eq__(other)
+
+    __hash__ = Tuple.__hash__
 
 # this handles dict, defaultdict, OrderedDict
 converter[dict] = lambda d: Dict(*d.items())

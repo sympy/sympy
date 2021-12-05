@@ -146,19 +146,9 @@ class Expr(Basic, EvalfMixin):
         return self._args
 
     def __eq__(self, other):
-        if not isinstance(other, Basic):
-            if iterable(other, exclude=(str, NotIterable)
-                    ) and not hasattr(other, '_sympy_'):
-                # XXX iterable self should have it's own __eq__
-                # method if the path gives a false negative
-                # comparison
-                return False
-            try:
-                other = _sympify(other)
-            except (SympifyError, SyntaxError):
-                return NotImplemented
+        # This is not responsible for comparisons with non Expr
         if not isinstance(other, Expr):
-            return False
+            return super().__eq__(other)
         # check for pure number expr
         if  not (self.is_Number and other.is_Number) and (
                 type(self) != type(other)):

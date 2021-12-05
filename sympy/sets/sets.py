@@ -696,6 +696,13 @@ class Set(Basic, EvalfMixin):
             raise TypeError('did not evaluate to a bool: %r' % c)
         return b
 
+    def __eq__(self, other):
+        if isinstance(other, (set, frozenset)):
+            return self == _sympify(other)
+        return super().__eq__(other)
+
+    __hash__ = Basic.__hash__
+
 
 class ProductSet(Set):
     """

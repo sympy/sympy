@@ -341,26 +341,11 @@ class Basic(Printable, metaclass=ManagedProperties):
         if self is other:
             return True
 
-        tself = type(self)
-        tother = type(other)
-        if tself is not tother:
-            try:
-                other = _sympify(other)
-                tother = type(other)
-            except SympifyError:
-                return NotImplemented
-
-            # As long as we have the ordering of classes (sympy.core),
-            # comparing types will be slow in Python 2, because it uses
-            # __cmp__. Until we can remove it
-            # (https://github.com/sympy/sympy/issues/4269), we only compare
-            # types in Python 2 directly if they actually have __ne__.
-            if type(tself).__ne__ is not type.__ne__:
-                if tself != tother:
-                    return False
-            elif tself is not tother:
-                return False
-
+        if not isinstance(other, Basic) and hasattr(other, '_sympy_'):
+            return self == _sympify(other)
+        if type(self) is not type(other):
+            #print("not implemented:", type(self), type(other))
+            return NotImplemented
         return self._hashable_content() == other._hashable_content()
 
     def __ne__(self, other):

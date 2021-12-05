@@ -197,6 +197,14 @@ class Boolean(Basic):
             return false
         return None
 
+    def __eq__(self, other):
+        if isinstance(other, bool):
+            return self == _sympify(other)
+        else:
+            return super().__eq__(other)
+
+    __hash__ = Basic.__hash__
+
 
 class BooleanAtom(Boolean):
     """
