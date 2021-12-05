@@ -145,25 +145,6 @@ class Expr(Basic, EvalfMixin):
         been defined by a class. See note about this in Basic.__eq__."""
         return self._args
 
-    def __eq__(self, other):
-        # This is not responsible for comparisons with non Expr
-        if not isinstance(other, Expr):
-            return super().__eq__(other)
-        # check for pure number expr
-        if  not (self.is_Number and other.is_Number) and (
-                type(self) != type(other)):
-            return False
-        a, b = self._hashable_content(), other._hashable_content()
-        if a != b:
-            return False
-        # check number *in* an expression
-        for a, b in zip(a, b):
-            if not isinstance(a, Expr):
-                continue
-            if a.is_Number and type(a) != type(b):
-                return False
-        return True
-
     # ***************
     # * Arithmetics *
     # ***************
