@@ -2582,10 +2582,7 @@ class AlgebraicNumber(Expr):
             which represents the same, while $r$ (which defines ``root``) must
             be some :py:class:`~.Expr` representing a complex number that is a
             root of $m$, including both explicit expressions in radicals, and
-            instances of :py:class:`~.ComplexRootOf`. If $r$ is an
-            :py:class:`~.AlgebraicNumber` it will be converted into another
-            type of :py:class:`~.Expr`, in order to be consistent with modes of
-            construction **(1)** and **(2)**.
+            instances of :py:class:`~.ComplexRootOf`.
 
         coeffs : list, :py:class:`~.ANP`, None, optional (default=None)
             This defines the algebraic number $\alpha$ as an element of $k$,
@@ -2721,8 +2718,6 @@ class AlgebraicNumber(Expr):
             if not minpoly.is_Poly:
                 from sympy.polys.polytools import Poly
                 minpoly = Poly(minpoly)
-            if root.is_AlgebraicNumber:
-                root = root.to_root(minpoly=minpoly)
         elif expr.is_AlgebraicNumber:
             minpoly, root, rep0, alias0 = (expr.minpoly, expr.root,
                                            expr.rep, expr.alias)
