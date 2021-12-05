@@ -2857,7 +2857,7 @@ class AlgebraicNumber(Expr):
                 self._own_minpoly = minpoly(self.as_expr(theta), polys=True)
         return self._own_minpoly
 
-    def to_root(self, radicals=True):
+    def to_root(self, radicals=True, minpoly=None):
         """
         Convert to an :py:class:`~.Expr` that is not an
         :py:class:`~.AlgebraicNumber`, specifically, either a
@@ -2872,11 +2872,17 @@ class AlgebraicNumber(Expr):
             in radicals. If that is not possible, we will return a
             :py:class:`~.ComplexRootOf`.
 
+        minpoly : :py:class:`~.Poly`
+            If the minimal polynomial for `self` has been pre-computed, it can
+            be passed in order to save time.
+
         """
         if self.is_primitive_elt and not isinstance(self.root, AlgebraicNumber):
             return self.root
-        m = self.minpoly_of_elt()
+        m = minpoly or self.minpoly_of_elt()
         roots = m.all_roots(radicals=radicals)
+        if len(roots) == 1:
+            return roots[0]
         root = None
         if all(hasattr(r, "_get_interval") for r in roots):
             root = self._to_root_by_intervals(roots)
