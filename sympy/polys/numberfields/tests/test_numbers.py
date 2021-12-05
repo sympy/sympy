@@ -150,6 +150,17 @@ def test_AlgebraicNumber():
     a = AlgebraicNumber(sqrt(2), [1, 2, 3])
     assert a.args == (sqrt(2), Tuple(1, 2, 3))
 
+    a = AlgebraicNumber(sqrt(2), [1, 2])
+    b = AlgebraicNumber(a)
+    assert a == b
+    assert not isinstance(b.root, AlgebraicNumber)
+
+    a = AlgebraicNumber(sqrt(2) + sqrt(3), [S(1)/2, 0, S(-9)/2, 0])
+    b = AlgebraicNumber(a, [1, 0, 0])
+    assert b.root == a.root
+    assert a.to_root() == sqrt(2)
+    assert b.to_root() == 2
+
 
 def test_to_algebraic_integer():
     a = AlgebraicNumber(sqrt(3), gen=x).to_algebraic_integer()

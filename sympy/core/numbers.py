@@ -2545,24 +2545,47 @@ class AlgebraicNumber(Expr):
         Construct a new algebraic number $\alpha$ belonging to a number field
         $k = \mathbb{Q}(\theta)$.
 
+        There are four instance attributes to be determined:
+
+        ===========  ============================================================================
+        Attribute    Type/Meaning
+        ===========  ============================================================================
+        ``root``     :py:class:`~.Expr` for $\theta$ as a complex number
+        ``minpoly``  :py:class:`~.Poly`, the minimal polynomial of $\theta$
+        ``rep``      :py:class:`~sympy.polys.polyclasses.DMP` giving $\alpha$ as poly in $\theta$
+        ``alias``    :py:class:`~.Symbol` for $\theta$, or ``None``
+        ===========  ============================================================================
+
+        See Parameters section for how they are determined.
+
         Parameters
         ==========
 
-        expr : :py:class:`~.Expr`, or pair (m, r)
-            This defines the primitive element $\theta$ of the number field
-            $k$. If *expr* is an :py:class:`~.AlgebraicNumber`, then our
-            primitive element $\theta$ will be the same as that of *expr*.
-            If it is any other type of :py:class:`~.Expr`, then it itself will
-            be our primitive element. Therefore it must express an algebraic
-            quantity, and we will compute its minimal polynomial.
-            Otherwise *expr* must be an ordered pair
-            $(m, r)$ giving the minimal polynomial $m$, and a root $r$
-            thereof, which together define $\theta$. In this case $m$ may be
-            either a univariate :py:class:`~.Poly` or any :py:class:`~.Expr`
-            which represents the same, while $r$ must be some
-            :py:class:`~.Expr` representing a complex number that is a root of
-            $m$, including both explicit expressions, and instances of
-            :py:class:`~.ComplexRootOf`.
+        expr : :py:class:`~.Expr`, or pair $(m, r)$
+            There are three distinct modes of construction, depending on what
+            is passed as *expr*.
+
+            **(1)** *expr* is an :py:class:`~.AlgebraicNumber`:
+            In this case we begin by copying
+            all four instance attributes from *expr*. If *coeffs* were also
+            given, we compose the two coeff polynomials (see below).
+
+            **(2)** *expr* is any other type of :py:class:`~.Expr`:
+            Then ``root`` will equal *expr*. Therefore it
+            must express an algebraic quantity, and we will compute its
+            ``minpoly``.
+
+            **(3)** *expr* is an ordered pair $(m, r)$ giving the
+            minimal polynomial $m$, and a root $r$ thereof, which together
+            define $\theta$. In this case $m$ (which defines ``minpoly``) may
+            be either a univariate :py:class:`~.Poly` or any :py:class:`~.Expr`
+            which represents the same, while $r$ (which defines ``root``) must
+            be some :py:class:`~.Expr` representing a complex number that is a
+            root of $m$, including both explicit expressions in radicals, and
+            instances of :py:class:`~.ComplexRootOf`. If $r$ is an
+            :py:class:`~.AlgebraicNumber` it will be converted into another
+            type of :py:class:`~.Expr`, in order to be consistent with modes of
+            construction **(1)** and **(2)**.
 
         coeffs : list, :py:class:`~.ANP`, None, optional (default=None)
             This defines the algebraic number $\alpha$ as an element of $k$,
@@ -2571,7 +2594,10 @@ class AlgebraicNumber(Expr):
             If an :py:class:`~.ANP`, we take its coefficients (using its
             :py:meth:`~.ANP.to_list()` method). If ``None``, then the list of
             coefficients defaults to ``[1, 0]``, meaning that $\alpha = \theta$
-            is the primitive element of the field.
+            is the primitive element of the field. If *expr* was an
+            :py:class:`~.AlgebraicNumber`, let $g(x)$ be its coeff polynomial,
+            and let $f(x)$ be the polynomial given by *coeffs*. Then
+            ``self.rep`` will represent the composition $(f \circ g)(x)$.
 
         alias : str, :py:class:`~.Symbol`, None, optional (default=None)
             This is a way to provide a name for the primitive element. We
@@ -2585,66 +2611,121 @@ class AlgebraicNumber(Expr):
         Examples
         ========
 
+        Recall that we are constructing an algebraic number as a field element
+        $\alpha \in \mathbb{Q}(\theta)$.
+
         >>> from sympy import AlgebraicNumber, sqrt, CRootOf, S
-        >>> from sympy.abc import x, theta
+        >>> from sympy.abc import x
 
-        *expr* an explicit algebraic number, *coeffs* ``None``:
+        Example (1): $\alpha = \theta = \sqrt{2}$
 
-        >>> a0 = AlgebraicNumber(sqrt(2) + sqrt(3))
-        >>> a0.minpoly_of_elt().as_expr(x)
-        x**4 - 10*x**2 + 1
-        >>> a0.n(10)
-        3.146264370
-
-        *expr* an explicit algebraic number, *coeffs* given:
-
-        >>> a1 = AlgebraicNumber(sqrt(2) + sqrt(3), [S(1)/2, 0, S(-9)/2, 0])
+        >>> a1 = AlgebraicNumber(sqrt(2))
         >>> a1.minpoly_of_elt().as_expr(x)
         x**2 - 2
-        >>> a1.n(10)
+        >>> a1.evalf(10)
         1.414213562
-        >>> a1.primitive_elt()
+
+        Example (2): $\alpha = 3 \sqrt{2} - 5$, $\theta = \sqrt{2}$. We can
+        either build on the last example:
+
+        >>> a2 = AlgebraicNumber(a1, [3, -5])
+        >>> a2.as_expr()
+        -5 + 3*sqrt(2)
+
+        or start from scratch:
+
+        >>> a2 = AlgebraicNumber(sqrt(2), [3, -5])
+        >>> a2.as_expr()
+        -5 + 3*sqrt(2)
+
+        Example (3): $\alpha = 6 \sqrt{2} - 11$, $\theta = \sqrt{2}$. Again we
+        can build on the previous example, and we see that the coeff polys are
+        composed:
+
+        >>> a3 = AlgebraicNumber(a2, [2, -1])
+        >>> a3.as_expr()
+        -11 + 6*sqrt(2)
+
+        reflecting the fact that $(2x - 1) \circ (3x - 5) = 6x - 11$.
+
+        Example (4): $\alpha = \sqrt{2}$, $\theta = \sqrt{2} + \sqrt{3}$. The
+        easiest way is to use the :py:func:`~.to_number_field()` function:
+
+        >>> from sympy import to_number_field
+        >>> a4 = to_number_field(sqrt(2), sqrt(2) + sqrt(3))
+        >>> a4.minpoly_of_elt().as_expr(x)
+        x**2 - 2
+        >>> a4.to_root()
+        sqrt(2)
+        >>> a4.primitive_elt()
+        sqrt(2) + sqrt(3)
+        >>> a4.coeffs()
+        [1/2, 0, -9/2, 0]
+
+        but if you already knew the right coefficients, you could construct it
+        directly:
+
+        >>> a4 = AlgebraicNumber(sqrt(2) + sqrt(3), [S(1)/2, 0, S(-9)/2, 0])
+        >>> a4.to_root()
+        sqrt(2)
+        >>> a4.primitive_elt()
         sqrt(2) + sqrt(3)
 
-        *expr* an :py:class:`~.AlgebraicNumber` instance, *alias* provided:
+        Example (5): Construct the Golden Ratio as an element of the 5th
+        cyclotomic field, supposing we already know its coefficients. This time
+        we introduce the alias $\zeta$ for the primitive element of the field:
 
-        >>> a2 = AlgebraicNumber(a0, [S(1)/2, 0, S(-9)/2, 0], alias=theta)
-        >>> a2.primitive_elt() == a0
-        True
-        >>> a2.as_expr() == a1.as_expr()
-        True
-        >>> a1.as_poly().as_expr()
-        _x**3/2 - 9*_x/2
-        >>> a2.as_poly().as_expr()
-        theta**3/2 - 9*theta/2
+        >>> from sympy import cyclotomic_poly
+        >>> from sympy.abc import zeta
+        >>> a5 = AlgebraicNumber(CRootOf(cyclotomic_poly(5), -1),
+        ...                  [-1, -1, 0, 0], alias=zeta)
+        >>> a5.as_poly().as_expr()
+        -zeta**3 - zeta**2
+        >>> a5.evalf()
+        1.61803398874989
 
-        *expr* a pair (poly, explicit root):
+        (The index ``-1`` to ``CRootOf`` selects the complex root with the
+        largest real and imaginary parts, which in this case is
+        $\mathrm{e}^{2i\pi/5}$. See :py:class:`~.ComplexRootOf`.)
 
-        >>> f = x**2 - x - 1
-        >>> a3 = AlgebraicNumber((f, (1 + sqrt(5))/2))
-        >>> a3.primitive_elt().n(10)
-        1.618033989
+        Example (6): Building on the last example, construct the number
+        $2 \phi \in \mathbb{Q}(\phi)$, where $\phi$ is the Golden Ratio:
 
-        *expr* a pair (poly, implicit root):
+        >>> from sympy.abc import phi
+        >>> a6 = AlgebraicNumber(a5.to_root(), coeffs=[2, 0], alias=phi)
+        >>> a6.as_poly().as_expr()
+        2*phi
+        >>> a6.primitive_elt().evalf()
+        1.61803398874989
 
-        >>> a4 = AlgebraicNumber((f, CRootOf(f, -1)))
-        >>> a4.primitive_elt().n(10)
-        1.618033989
+        Note that we needed to use ``a5.to_root()``, since passing ``a5`` as the
+        first argument would still have constructed the number $2 \phi$, but
+        it would have been in the field $\mathbb{Q}(\zeta)$:
+
+        >>> a6_wrong = AlgebraicNumber(a5, coeffs=[2, 0])
+        >>> a6_wrong.as_poly().as_expr()
+        -2*zeta**3 - 2*zeta**2
+        >>> a6_wrong.primitive_elt().evalf()
+        0.309016994374947 + 0.951056516295154*I
 
         """
         from sympy.polys.polyclasses import ANP, DMP
         from sympy.polys.numberfields import minimal_polynomial
 
         expr = sympify(expr)
+        rep0 = None
+        alias0 = None
 
         if isinstance(expr, (tuple, Tuple)):
             minpoly, root = expr
-
             if not minpoly.is_Poly:
                 from sympy.polys.polytools import Poly
                 minpoly = Poly(minpoly)
+            if root.is_AlgebraicNumber:
+                root = root.to_root(minpoly=minpoly)
         elif expr.is_AlgebraicNumber:
-            minpoly, root = expr.minpoly, expr.root
+            minpoly, root, rep0, alias0 = (expr.minpoly, expr.root,
+                                           expr.rep, expr.alias)
         else:
             minpoly, root = minimal_polynomial(
                 expr, args.get('gen'), polys=True), expr
@@ -2659,15 +2740,22 @@ class AlgebraicNumber(Expr):
                 rep = DMP.from_list(coeffs.to_list(), 0, dom)
                 scoeffs = Tuple(*coeffs.to_list())
 
-            if rep.degree() >= minpoly.degree():
-                rep = rep.rem(minpoly.rep)
-
         else:
             rep = DMP.from_list([1, 0], 0, dom)
             scoeffs = Tuple(1, 0)
 
+        if rep0 is not None:
+            from sympy.polys.densetools import dup_compose
+            c = dup_compose(rep.rep, rep0.rep, dom)
+            rep = DMP.from_list(c, 0, dom)
+            scoeffs = Tuple(*c)
+
+        if rep.degree() >= minpoly.degree():
+            rep = rep.rem(minpoly.rep)
+
         sargs = (root, scoeffs)
 
+        alias = alias0 or alias
         if alias is not None:
             from .symbol import Symbol
             if not isinstance(alias, Symbol):
@@ -2769,7 +2857,7 @@ class AlgebraicNumber(Expr):
         """
         if self.is_primitive_elt:
             return self
-        return AlgebraicNumber(self, coeffs=[1, 0])
+        return AlgebraicNumber((self.minpoly, self.root), coeffs=[1, 0])
 
     def to_primitive_elt(self, radicals=True):
         r"""
@@ -2779,10 +2867,9 @@ class AlgebraicNumber(Expr):
         Explanation
         ===========
 
-        Since an :py:class:`~.AlgebraicNumber` stores both the minimal
-        polynomial, and a particular root value, for its primitive element,
-        it is sometimes more convenient to work with instances that equal their
-        own primitive element.
+        If we represent $\alpha \in \mathbb{Q}(\theta)$, $\alpha \neq \theta$,
+        construct a new :py:class:`~.AlgebraicNumber` that represents
+        $\alpha \in \mathbb{Q}(\alpha)$.
 
         Examples
         ========
