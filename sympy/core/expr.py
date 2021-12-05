@@ -2,7 +2,7 @@ from typing import Tuple as tTuple
 from collections.abc import Iterable
 from functools import reduce
 
-from .sympify import sympify, _sympify, SympifyError
+from .sympify import sympify, _sympify
 from .basic import Basic, Atom
 from .singleton import S
 from .evalf import EvalfMixin, pure_complex, DEFAULT_MAXPREC
@@ -12,7 +12,7 @@ from .sorting import default_sort_key
 from .kind import NumberKind
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import as_int, func_name, filldedent
-from sympy.utilities.iterables import has_variety, sift, iterable, NotIterable
+from sympy.utilities.iterables import has_variety, sift
 from mpmath.libmp import mpf_log, prec_to_dps
 from mpmath.libmp.libintmath import giant_steps
 
