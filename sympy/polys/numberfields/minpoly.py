@@ -437,7 +437,7 @@ def _minpoly_cos(ex, x):
                 if c.q == 7:
                     return 8*x**3 - 4*x**2 - 4*x + 1
                 if c.q == 9:
-                    return 8*x**3 - 6*x + 1
+                    return 8*x**3 - 6*x - 1
             elif c.p == 2:
                 q = sympify(c.q)
                 if q.is_prime:
