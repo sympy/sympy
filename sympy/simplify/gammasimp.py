@@ -1,10 +1,11 @@
 from sympy.core import Function, S, Mul, Pow, Add
 from sympy.core.sorting import ordered, default_sort_key
-from sympy.core.function import count_ops, expand_func
+from sympy.core.function import count_ops, expand_func, AppliedUndef
+from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions import gamma, sqrt, sin
 from sympy.polys import factor, cancel
-
+from sympy.simplify.radsimp import fraction
 from sympy.utilities.iterables import sift, uniq
 
 
@@ -74,6 +75,16 @@ def _gammasimp(expr, as_comb):
     docstring of gammasimp for more information. This was part of
     combsimp() in combsimp.py.
     """
+    # compute_ST will be looking for Functions and we don't want
+    # it looking for undefined functions: issue 22606
+    f = expr.atoms(AppliedUndef)
+    if f:
+        dum, fun, simp = zip(*[
+            (Dummy(), fi, fi.func(*[
+                _gammasimp(a, as_comb) for a in fi.args]))
+            for fi in f])
+        s = _gammasimp(expr.xreplace(dict(zip(fun, dum))), as_comb)
+        return s.xreplace(dict(zip(dum, simp)))
 
     expr = expr.replace(gamma,
         lambda n: _rf(1, (n - 1).expand()))
@@ -114,7 +125,7 @@ def _gammasimp(expr, as_comb):
 
     expr = expr.replace(binomial, rule)
 
-    def rule_gamma(expr, level=0):
+    def rule_gamma(expr, level=-1):
         """ Simplify products of gamma functions further. """
 
         if expr.is_Atom:
@@ -138,6 +149,29 @@ def _gammasimp(expr, as_comb):
             if x.is_Pow and (x.exp.is_integer or x.base.is_positive):
                 return gamma_factor(x.base)
             return False
+
+        # distribution pre-step
+        if level == -1:
+            n, d = fraction(expr, exact=True)
+            def distr(d, n):
+                # divide and Add arg in n by symbolic d and return
+                # else return None
+                if not d.is_number:
+                    n = list(Mul.make_args(n))
+                    for i, f in enumerate(n):
+                        if f.is_Add:
+                            n[i] = n[i].func(*[i/d for i in n[i].args])
+                            was = Mul(*n)
+                            return was
+            if not d.has(gamma):
+                did = distr(d, n)
+                if did is not None:
+                    return rule_gamma(did, level + 1)
+            elif not n.has(gamma):
+                did = distr(n, d)
+                if did is not None:
+                    return 1/rule_gamma(did, level + 1)
+            level += 1 # continue with level 0
 
         # recursion step
         if level == 0:
@@ -463,8 +497,8 @@ def _gammasimp(expr, as_comb):
             / Mul(*[gamma(g) for g in denom_gammas]) \
             * Mul(*numer_others) / Mul(*denom_others)
 
-    # (for some reason we cannot use Basic.replace in this case)
     was = factor(expr)
+    # (for some reason we cannot use Basic.replace in this case)
     expr = rule_gamma(was)
     if expr != was:
         expr = factor(expr)

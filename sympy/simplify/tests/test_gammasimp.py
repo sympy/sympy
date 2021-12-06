@@ -1,3 +1,4 @@
+from sympy.core.function import Function
 from sympy.core.numbers import (Rational, pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
@@ -112,4 +113,13 @@ def test_gammasimp():
     assert gammasimp(e) == e
 
     p = symbols("p", integer=True, positive=True)
-    assert gammasimp(gamma(-p+4)) == gamma(-p+4)
+    assert gammasimp(gamma(-p + 4)) == gamma(-p + 4)
+
+
+def test_issue_22606():
+    fx = Function('f')(x)
+    eq = x + gamma(y)
+    assert gammasimp(eq) == eq
+    assert eq == gammasimp(eq.subs(x, fx)).subs(fx, x)
+    assert 1/gammasimp(1/eq) == eq
+    assert gammasimp(fx.subs(x, eq)).args[0] == eq
