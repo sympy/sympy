@@ -127,7 +127,7 @@ class Expr(Basic, EvalfMixin):
 
         return expr.class_key(), args, exp, coeff
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         # hash cannot be cached using cache_it because infinite recurrence
         # occurs as hash is needed for setting cache dictionary keys
         h = self._mhash
@@ -146,7 +146,22 @@ class Expr(Basic, EvalfMixin):
         return self._args
 
     def __eq__(self, other):
-        return super().__eq__(other)
+        if not isinstance(other, Expr):
+            return super().__eq__(other)
+        # check for pure number expr
+        if  not (self.is_Number and other.is_Number) and (
+                type(self) != type(other)):
+            return False
+        a, b = self._hashable_content(), other._hashable_content()
+        if a != b:
+            return False
+        # check number *in* an expression
+        for a, b in zip(a, b):
+            if not isinstance(a, Expr):
+                continue
+            if a.is_Number and type(a) != type(b):
+                return False
+        return True
 
     # ***************
     # * Arithmetics *
