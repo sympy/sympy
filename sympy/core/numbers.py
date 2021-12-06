@@ -2750,7 +2750,7 @@ class AlgebraicNumber(Expr):
 
         sargs = (root, scoeffs)
 
-        alias = alias0 or alias
+        alias = alias or alias0
         if alias is not None:
             from .symbol import Symbol
             if not isinstance(alias, Symbol):
