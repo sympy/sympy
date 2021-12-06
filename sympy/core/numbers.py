@@ -2566,9 +2566,9 @@ class AlgebraicNumber(Expr):
             is passed as *expr*.
 
             **(1)** *expr* is an :py:class:`~.AlgebraicNumber`:
-            In this case we begin by copying
-            all four instance attributes from *expr*. If *coeffs* were also
-            given, we compose the two coeff polynomials (see below).
+            In this case we begin by copying all four instance attributes from
+            *expr*. If *coeffs* were also given, we compose the two coeff
+            polynomials (see below). If an *alias* was given, it overrides.
 
             **(2)** *expr* is any other type of :py:class:`~.Expr`:
             Then ``root`` will equal *expr*. Therefore it
@@ -2576,25 +2576,28 @@ class AlgebraicNumber(Expr):
             ``minpoly``.
 
             **(3)** *expr* is an ordered pair $(m, r)$ giving the
-            minimal polynomial $m$, and a root $r$ thereof, which together
-            define $\theta$. In this case $m$ (which defines ``minpoly``) may
-            be either a univariate :py:class:`~.Poly` or any :py:class:`~.Expr`
-            which represents the same, while $r$ (which defines ``root``) must
-            be some :py:class:`~.Expr` representing a complex number that is a
-            root of $m$, including both explicit expressions in radicals, and
-            instances of :py:class:`~.ComplexRootOf`.
+            ``minpoly`` $m$, and a ``root`` $r$ thereof, which together
+            define $\theta$. In this case $m$ may be either a univariate
+            :py:class:`~.Poly` or any :py:class:`~.Expr` which represents the
+            same, while $r$ must be some :py:class:`~.Expr` representing a
+            complex number that is a root of $m$, including both explicit
+            expressions in radicals, and instances of
+            :py:class:`~.ComplexRootOf` or :py:class:`~.AlgebraicNumber`.
 
         coeffs : list, :py:class:`~.ANP`, None, optional (default=None)
-            This defines the algebraic number $\alpha$ as an element of $k$,
-            as a linear combination of falling powers of $\theta$.
+            This defines ``rep``, giving the algebraic number $\alpha$ as a
+            polynomial in $\theta$.
+
             If a list, the elements should be integers or rational numbers.
             If an :py:class:`~.ANP`, we take its coefficients (using its
             :py:meth:`~.ANP.to_list()` method). If ``None``, then the list of
             coefficients defaults to ``[1, 0]``, meaning that $\alpha = \theta$
-            is the primitive element of the field. If *expr* was an
-            :py:class:`~.AlgebraicNumber`, let $g(x)$ be its coeff polynomial,
-            and let $f(x)$ be the polynomial given by *coeffs*. Then
-            ``self.rep`` will represent the composition $(f \circ g)(x)$.
+            is the primitive element of the field.
+
+            If *expr* was an :py:class:`~.AlgebraicNumber`, let $g(x)$ be its
+            ``rep`` polynoial, and let $f(x)$ be the polynomial defined by
+            *coeffs*. Then ``self.rep`` will represent the composition
+            $(f \circ g)(x)$.
 
         alias : str, :py:class:`~.Symbol`, None, optional (default=None)
             This is a way to provide a name for the primitive element. We
@@ -2602,7 +2605,7 @@ class AlgebraicNumber(Expr):
             value of the primitive element, but none of these methods gave it
             a name. Here, for example, *alias* could be set as
             ``Symbol('theta')``, in order to make this symbol appear when
-            $\alpha$ is rendered as a polynomial, using the
+            $\alpha$ is printed, or rendered as a polynomial, using the
             :py:meth:`~.as_poly()` method.
 
         Examples
@@ -2695,9 +2698,9 @@ class AlgebraicNumber(Expr):
         >>> a6.primitive_elt().evalf()
         1.61803398874989
 
-        Note that we needed to use ``a5.to_root()``, since passing ``a5`` as the
-        first argument would still have constructed the number $2 \phi$, but
-        it would have been in the field $\mathbb{Q}(\zeta)$:
+        Note that we needed to use ``a5.to_root()``, since passing ``a5`` as
+        the first argument would have constructed the number $2 \phi$ as an
+        element of the field $\mathbb{Q}(\zeta)$:
 
         >>> a6_wrong = AlgebraicNumber(a5, coeffs=[2, 0])
         >>> a6_wrong.as_poly().as_expr()
@@ -2715,6 +2718,7 @@ class AlgebraicNumber(Expr):
 
         if isinstance(expr, (tuple, Tuple)):
             minpoly, root = expr
+
             if not minpoly.is_Poly:
                 from sympy.polys.polytools import Poly
                 minpoly = Poly(minpoly)
