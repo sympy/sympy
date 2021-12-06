@@ -686,6 +686,7 @@ class MinMaxBase(Expr, LatticeOp):
     _eval_is_transcendental = lambda s: _torf(i.is_transcendental for i in s.args)
     _eval_is_zero = lambda s: _torf(i.is_zero for i in s.args)
 
+
 class Max(MinMaxBase, Application):
     """
     Return, if possible, the maximum value of the list.
@@ -803,6 +804,20 @@ class Max(MinMaxBase, Application):
     def _eval_is_negative(self):
         return fuzzy_and(a.is_negative for a in self.args)
 
+    def _eval_refine(self, assumptions):
+        from sympy.assumptions.ask import ask
+        to_remove = []
+        for i in self.args:
+            for j in self.args:
+                if i != j and i not in to_remove and j not in to_remove:
+                    if ask(i >= j, assumptions):
+                        to_remove.append(j)
+        new_args = []
+        for i in self.args:
+            if i not in to_remove:
+                new_args.append(i)
+        return Max(*new_args, evaluate=False)
+
 
 class Min(MinMaxBase, Application):
     """
@@ -865,6 +880,20 @@ class Min(MinMaxBase, Application):
 
     def _eval_is_negative(self):
         return fuzzy_or(a.is_negative for a in self.args)
+
+    def _eval_refine(self, assumptions):
+        from sympy.assumptions.ask import ask
+        to_remove = []
+        for i in self.args:
+            for j in self.args:
+                if i != j and i not in to_remove and j not in to_remove:
+                    if ask(i <= j, assumptions):
+                        to_remove.append(j)
+        new_args = []
+        for i in self.args:
+            if i not in to_remove:
+                new_args.append(i)
+        return Min(*new_args, evaluate=False)
 
 
 class Rem(Function):
