@@ -1,13 +1,15 @@
 from sympy.core.basic import Basic
-from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.containers import Tuple, Dict
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import symbols
 from sympy.core.singleton import S
 from sympy.core.function import expand
 from sympy.core.numbers import I
 from sympy.integrals.integrals import Integral
-from sympy.polys.polytools import factor
-from sympy.core.traversal import preorder_traversal, use, postorder_traversal
+from sympy.polys.polytools import factor, cancel
+from sympy.core.traversal import (preorder_traversal, use,
+    postorder_traversal, bottom_up)
 from sympy.functions.elementary.piecewise import ExprCondPair, Piecewise
 
 b1 = Basic()
@@ -84,3 +86,12 @@ def test_postorder_traversal():
         ]
     assert list(postorder_traversal(('abc', ('d', 'ef')))) == [
         'abc', 'd', 'ef', ('d', 'ef'), ('abc', ('d', 'ef'))]
+
+
+def test_Dict_Tuple():
+    x = symbols('x')
+    n1 = (x - 1)/(1 - x)
+    assert bottom_up(Dict({1: n1}), cancel,
+        lambda x: isinstance(x, Expr)) == Dict({1: -1})
+    assert bottom_up(Tuple(n1), cancel,
+        lambda x: isinstance(x, Expr)) == Tuple(-1)
