@@ -8,12 +8,13 @@ This module has all the classes and functions related to waves in optics.
 
 __all__ = ['TWave']
 
+from sympy.core.basic import Basic
 from sympy.core.expr import Expr
 from sympy.core.function import Derivative, Function
 from sympy.core.numbers import (Number, pi, I)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
-from sympy.core.sympify import sympify
+from sympy.core.sympify import _sympify, sympify
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (atan2, cos, sin)
@@ -85,32 +86,39 @@ class TWave(Expr):
 
     """
 
-    def __init__(
-            self,
+    def __new__(
+            cls,
             amplitude,
             frequency=None,
             phase=S.Zero,
             time_period=None,
             n=Symbol('n')):
-        frequency = sympify(frequency)
-        amplitude = sympify(amplitude)
-        phase = sympify(phase)
-        time_period = sympify(time_period)
-        n = sympify(n)
-        self._frequency = frequency
-        self._amplitude = amplitude
-        self._phase = phase
-        self._time_period = time_period
-        self._n = n
         if time_period is not None:
-            self._frequency = 1/self._time_period
+            time_period = _sympify(time_period)
+            _frequency = S.One/time_period
         if frequency is not None:
-            self._time_period = 1/self._frequency
+            frequency = _sympify(frequency)
+            _time_period = S.One/frequency
             if time_period is not None:
-                if frequency != 1/time_period:
+                if frequency != S.One/time_period:
                     raise ValueError("frequency and time_period should be consistent.")
         if frequency is None and time_period is None:
             raise ValueError("Either frequency or time period is needed.")
+        if frequency is None:
+            frequency = _frequency
+        if time_period is None:
+            time_period = _time_period
+
+        amplitude = _sympify(amplitude)
+        phase = _sympify(phase)
+        n = sympify(n)
+        obj = Basic.__new__(cls, amplitude, frequency, phase, time_period, n)
+        obj._frequency = frequency
+        obj._amplitude = amplitude
+        obj._phase = phase
+        obj._time_period = time_period
+        obj._n = n
+        return obj
 
     @property
     def frequency(self):

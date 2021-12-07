@@ -120,7 +120,13 @@ class Basic(Printable, metaclass=ManagedProperties):
         obj = object.__new__(cls)
         obj._assumptions = cls.default_assumptions
         obj._mhash = None  # will be set by __hash__ method.
-
+        for arg in args:
+            if not isinstance(arg, Basic):
+                if not cls.args == Basic.args:
+                    continue
+                else:
+                    msg = "Basic only accepts Basics as arguments: {},{},{}".format(cls,arg, type(arg))
+                    raise TypeError(msg)
         obj._args = args  # all items in args must be Basic objects
         return obj
 

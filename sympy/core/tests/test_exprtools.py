@@ -209,7 +209,7 @@ def test_gcd_terms():
     # but a Basic sequence is treated as a container
     assert gcd_terms(Tuple(*args)) != newf
     assert gcd_terms(Basic(Tuple(S(1), 3*y + 3*x*y), Tuple(S(1), S(3)))) == \
-        Basic((S(1), 3*y*(x + 1)), (S(1), S(3)))
+        Basic(Tuple(S(1), 3*y*(x + 1)), Tuple(S(1), S(3)))
     # but we shouldn't change keys of a dictionary or some may be lost
     assert gcd_terms(Dict((x*(1 + y), S(2)), (x + x*y, y + x*y))) == \
         Dict({x*(y + 1): S(2), x + x*y: y*(1 + x)})

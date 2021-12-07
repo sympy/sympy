@@ -27,8 +27,7 @@ b21 = Basic(b2, b1)
 
 
 def test__aresame():
-    assert not _aresame(Basic([]), Basic())
-    assert not _aresame(Basic([]), Basic(()))
+    assert not _aresame(Basic(Tuple()), Basic())
     assert not _aresame(Basic(S(2)), Basic(S(2.)))
 
 

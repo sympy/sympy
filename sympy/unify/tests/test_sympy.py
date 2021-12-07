@@ -22,13 +22,13 @@ def test_deconstruct():
               Compound(Add, (1, Variable(x)))
 
 def test_construct():
-    expr     = Compound(Basic, (1, 2, 3))
+    expr     = Compound(Basic, (S(1), S(2), S(3)))
     expected = Basic(S(1), S(2), S(3))
     assert construct(expr) == expected
 
 def test_nested():
     expr = Basic(S(1), Basic(S(2)), S(3))
-    cmpd = Compound(Basic, (1, Compound(Basic, (2,)), 3))
+    cmpd = Compound(Basic, (S(1), Compound(Basic, Tuple(2)), S(3)))
     assert deconstruct(expr) == cmpd
     assert construct(cmpd) == expr
 

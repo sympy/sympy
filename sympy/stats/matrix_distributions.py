@@ -190,7 +190,8 @@ class MatrixDistribution(Distribution, NamedArgsMixin):
     Abstract class for Matrix Distribution.
     """
     def __new__(cls, *args):
-        args = list(map(sympify, args))
+        args = [ImmutableMatrix(arg) if isinstance(arg, list) 
+                else _sympify(arg) for arg in args]
         return Basic.__new__(cls, *args)
 
     @staticmethod
