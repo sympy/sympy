@@ -2595,7 +2595,7 @@ class AlgebraicNumber(Expr):
             is the primitive element of the field.
 
             If *expr* was an :py:class:`~.AlgebraicNumber`, let $g(x)$ be its
-            ``rep`` polynoial, and let $f(x)$ be the polynomial defined by
+            ``rep`` polynomial, and let $f(x)$ be the polynomial defined by
             *coeffs*. Then ``self.rep`` will represent the composition
             $(f \circ g)(x)$.
 
