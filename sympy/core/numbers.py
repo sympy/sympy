@@ -38,6 +38,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 _LOG2 = math.log(2)
 
+number_types=[]
 
 def comp(z1, z2, tol=None):
     """Return a bool indicating whether the error between z1 and z2
@@ -1378,9 +1379,9 @@ class Float(Number):
 #ping
     def __eq__(self, other):
         from sympy.logic.boolalg import Boolean
-        try:
+        if type(other) in number_types:
             other = _sympify(other)
-        except SympifyError:
+        if not isinstance(other, Basic):
             return NotImplemented
         if isinstance(other, Boolean):
             return False
@@ -1482,7 +1483,8 @@ class Float(Number):
 
 # Add sympify converters
 converter[float] = converter[decimal.Decimal] = Float
-
+number_types.append(float)
+nubmer_types.append(decimal.Decimal)
 # this is here to work nicely in Sage
 RealNumber = Float
 
@@ -1875,9 +1877,9 @@ class Rational(Number):
         return self.ceiling()
 #ping
     def __eq__(self, other):
-        try:
+        if type(other) in number_types:
             other = _sympify(other)
-        except SympifyError:
+        if not isinstance(other, Basic):
             return NotImplemented
         if not isinstance(other, Number):
             # S(0) == S.false is False
@@ -2507,7 +2509,7 @@ class Integer(Rational):
 
 # Add sympify converters
 converter[int] = Integer
-
+number_types.append(int)
 
 class AlgebraicNumber(Expr):
     """Class for representing algebraic numbers in SymPy. """
@@ -3459,9 +3461,9 @@ class NumberSymbol(AtomicExpr):
         return Float._new(self._as_mpf_val(prec), prec)
 #ping
     def __eq__(self, other):
-        try:
+        if type(other) in number_types:
             other = _sympify(other)
-        except SympifyError:
+        if not isinstance(other, Basic):
             return NotImplemented
         if self is other:
             return True
@@ -4059,6 +4061,7 @@ def sympify_fractions(f):
     return Rational(f.numerator, f.denominator, 1)
 
 converter[fractions.Fraction] = sympify_fractions
+number_types.append(fractions.Fraction)
 
 if HAS_GMPY:
     def sympify_mpz(x):
@@ -4072,26 +4075,28 @@ if HAS_GMPY:
 
     converter[type(gmpy.mpz(1))] = sympify_mpz
     converter[type(gmpy.mpq(1, 2))] = sympify_mpq
-
+    number_types.append(type(gmpy.mpz(1)))
+    number_types.append(type(gmpy.mpq(1, 2)))
 
 def sympify_mpmath_mpq(x):
     p, q = x._mpq_
     return Rational(p, q, 1)
 
 converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
-
+number_types.append(type(mpmath.rational.mpq(1, 2)))
 
 def sympify_mpmath(x):
     return Expr._from_mpmath(x, x.context.prec)
 
 converter[mpnumeric] = sympify_mpmath
-
+number_types.append(mpnumeric)
 
 def sympify_complex(a):
     real, imag = list(map(sympify, (a.real, a.imag)))
     return real + S.ImaginaryUnit*imag
 
 converter[complex] = sympify_complex
+number_types.append(complex)
 
 from .power import Pow, integer_nthroot
 from .mul import Mul
