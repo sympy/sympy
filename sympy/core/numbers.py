@@ -38,7 +38,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 _LOG2 = math.log(2)
 
-number_types=[]
+number_types:list[type] = []
 
 def comp(z1, z2, tol=None):
     """Return a bool indicating whether the error between z1 and z2
@@ -1484,7 +1484,7 @@ class Float(Number):
 # Add sympify converters
 converter[float] = converter[decimal.Decimal] = Float
 number_types.append(float)
-nubmer_types.append(decimal.Decimal)
+number_types.append(decimal.Decimal)
 # this is here to work nicely in Sage
 RealNumber = Float
 
