@@ -1318,22 +1318,23 @@ def is_ge(lhs, rhs, assumptions=None):
         if _lhs.is_extended_real and _rhs.is_extended_real:
             if (_lhs.is_infinite and _lhs.is_extended_positive) or (_rhs.is_infinite and _rhs.is_extended_negative):
                 return True
+            if _lhs.is_extended_nonnegative and _rhs.is_extended_nonpositive:
+                return True
             diff = lhs - rhs
             if diff is not S.NaN:
                 rv = is_extended_nonnegative(diff, assumptions)
                 if rv is not None:
                     return rv
         # Decomposition may help for certain assumptions
-        if assumptions is not None:
-            from sympy.assumptions import ask, Q
-            gt_retval = ask(Q.gt(lhs, rhs), assumptions)
-            if gt_retval:
-                return True
-            eq_retval = ask(Q.eq(lhs, rhs), assumptions)
-            if eq_retval:
-                return True
-            if fuzzy_or([gt_retval, eq_retval]) is False:
-                return False
+        # if assumptions is not None:
+            # eq_retval = is_eq(lhs, rhs, assumptions)
+            # if eq_retval:
+            #    return True
+            # gt_retval = is_gt(lhs, rhs, assumptions)
+            # if gt_retval:
+            #     return True
+            # if fuzzy_or([gt_retval, eq_retval]) is False:
+            #     return False
 
 
 def is_neq(lhs, rhs, assumptions=None):

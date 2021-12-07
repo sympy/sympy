@@ -805,12 +805,12 @@ class Max(MinMaxBase, Application):
         return fuzzy_and(a.is_negative for a in self.args)
 
     def _eval_refine(self, assumptions):
-        from sympy.assumptions.ask import ask
+        from sympy.assumptions.ask import ask, Q
         to_remove = []
         for i in self.args:
             for j in self.args:
                 if i != j and i not in to_remove and j not in to_remove:
-                    if ask(i >= j, assumptions):
+                    if ask(Q.ge(i, j), assumptions):
                         to_remove.append(j)
         new_args = []
         for i in self.args:
