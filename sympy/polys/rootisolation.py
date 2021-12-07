@@ -1746,7 +1746,7 @@ class RealInterval:
 
     def __contains__(self, item):
         """
-        Say whether a complex number belongs to this interval.
+        Say whether a complex number belongs to this real interval.
 
         Parameters
         ==========
@@ -2033,7 +2033,8 @@ class ComplexInterval:
 
     def __contains__(self, item):
         """
-        Say whether a complex number belongs to this interval.
+        Say whether a complex number belongs to this complex rectangular
+        region.
 
         Parameters
         ==========

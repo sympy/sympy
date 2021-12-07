@@ -2933,8 +2933,16 @@ class AlgebraicNumber(Expr):
 
     def minpoly_of_elt(self):
         r"""
-        Compute the minimal polynomial for the element
-        $\alpha \in \mathbb{Q}(\theta)$ we represent.
+        Compute the minimal polynomial for this algebraic number.
+
+        Explanation
+        ===========
+
+        Recall that we represent an element $\alpha \in \mathbb{Q}(\theta)$.
+        Our instance attribute ``self.minpoly`` is the minimal polynomial for
+        our primitive element $\theta$. This method computes the minimal
+        polynomial for $\alpha$.
+
         """
         if self._own_minpoly is None:
             if self.is_primitive_elt:
