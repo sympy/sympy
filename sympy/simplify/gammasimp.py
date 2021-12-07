@@ -125,7 +125,7 @@ def _gammasimp(expr, as_comb):
 
     expr = expr.replace(binomial, rule)
 
-    def rule_gamma(expr, level=-1):
+    def rule_gamma(expr, level=0):
         """ Simplify products of gamma functions further. """
 
         if expr.is_Atom:
@@ -149,29 +149,6 @@ def _gammasimp(expr, as_comb):
             if x.is_Pow and (x.exp.is_integer or x.base.is_positive):
                 return gamma_factor(x.base)
             return False
-
-        # distribution pre-step
-        if level == -1:
-            n, d = fraction(expr, exact=True)
-            def distr(d, n):
-                # divide and Add arg in n by symbolic d and return
-                # else return None
-                if not d.is_number:
-                    n = list(Mul.make_args(n))
-                    for i, f in enumerate(n):
-                        if f.is_Add:
-                            n[i] = n[i].func(*[i/d for i in n[i].args])
-                            was = Mul(*n)
-                            return was
-            if not d.has(gamma):
-                did = distr(d, n)
-                if did is not None:
-                    return rule_gamma(did, level + 1)
-            elif not n.has(gamma):
-                did = distr(n, d)
-                if did is not None:
-                    return 1/rule_gamma(did, level + 1)
-            level += 1 # continue with level 0
 
         # recursion step
         if level == 0:
