@@ -162,8 +162,8 @@ class Expr(Basic, EvalfMixin):
                 continue
             if a.is_Number and type(a) != type(b):
                 result = False
-        if not result is super().__eq__(other):
-            print(result, super().__eq__(other))
+        if not result is Basic.__eq__(self, other):
+            raise TypeError(result, Basic.__eq__(self, other), type(self), type(other), self.__repr__(), other.__repr__())
         return result
 
     # ***************
