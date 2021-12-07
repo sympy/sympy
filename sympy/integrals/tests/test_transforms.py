@@ -119,7 +119,7 @@ def test_mellin_transform():
 
     assert MT(abs(1 - x)**(-rho), x, s) == (
         2*sin(pi*rho/2)*gamma(1 - rho)*
-        cos(pi*(rho/2 - s))*gamma(s)*gamma(rho-s)/pi,
+        cos(pi*(s - rho/2))*gamma(s)*gamma(rho-s)/pi,
         (0, re(rho)), re(rho) < 1)
     mt = MT((1 - x)**(beta - 1)*Heaviside(1 - x)
             + a*(x - 1)**(beta - 1)*Heaviside(x - 1), x, s)

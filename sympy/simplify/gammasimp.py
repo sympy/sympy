@@ -38,7 +38,7 @@ def gammasimp(expr):
     It then reduces the number of prefactors by absorbing them into gammas
     where possible and expands gammas with rational argument.
 
-    All transformation rules can be found (or was derived from) here:
+    All transformation rules can be found (or were derived from) here:
 
     .. [1] http://functions.wolfram.com/GammaBetaErf/Pochhammer/17/01/02/
     .. [2] http://functions.wolfram.com/GammaBetaErf/Pochhammer/27/01/0005/
@@ -59,7 +59,23 @@ def gammasimp(expr):
     """
 
     expr = expr.rewrite(gamma)
-    return _gammasimp(expr, as_comb = False)
+    # compute_ST will be looking for Functions and we don't want
+    # it looking for non-gamma/binomial functions: issue 22606
+    # NOTE: functions should not be replaced with dummies if they
+    # have bound symbols
+    f = expr.atoms(Function)
+    # take out gammas
+    f -= {i for i in f if isinstance(i, gamma)}
+    # keep only those without bound symbols
+    f = f & expr.as_dummy().atoms(Function)
+    if f:
+        dum, fun, simp = zip(*[
+            (Dummy(), fi, fi.func(*[
+                _gammasimp(a, as_comb=False) for a in fi.args]))
+            for fi in f])
+        s = _gammasimp(expr.xreplace(dict(zip(fun, dum))), as_comb=False)
+        return s.xreplace(dict(zip(dum, simp)))
+    return _gammasimp(expr, as_comb=False)
 
 
 def _gammasimp(expr, as_comb):
@@ -74,18 +90,6 @@ def _gammasimp(expr, as_comb):
     docstring of gammasimp for more information. This was part of
     combsimp() in combsimp.py.
     """
-    # compute_ST will be looking for Functions and we don't want
-    # it looking for non-gamma/binomial functions: issue 22606
-    f = expr.atoms(Function)
-    f = f - set([fi for fi in f if isinstance(fi, (gamma, binomial))])
-    if f:
-        dum, fun, simp = zip(*[
-            (Dummy(), fi, fi.func(*[
-                _gammasimp(a, as_comb) for a in fi.args]))
-            for fi in f])
-        s = _gammasimp(expr.xreplace(dict(zip(fun, dum))), as_comb)
-        return s.xreplace(dict(zip(dum, simp)))
-
     expr = expr.replace(gamma,
         lambda n: _rf(1, (n - 1).expand()))
 
