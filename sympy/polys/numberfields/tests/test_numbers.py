@@ -163,7 +163,7 @@ def test_AlgebraicNumber():
     assert b.to_root() == 2
 
     a = AlgebraicNumber(2)
-    assert a.is_primitive_elt is True
+    assert a.is_primitive_element is True
 
 
 def test_to_algebraic_integer():

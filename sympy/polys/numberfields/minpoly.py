@@ -809,7 +809,7 @@ def _minpoly_groebner(ex, x, cls):
                     return symbols[expr]
         elif ex.is_AlgebraicNumber:
             if ex not in mapping:
-                return update_mapping(ex, ex.minpoly_of_elt())
+                return update_mapping(ex, ex.minpoly_of_element())
             else:
                 return symbols[ex]
 
@@ -840,7 +840,7 @@ def _minpoly_groebner(ex, x, cls):
     inverted = False
     ex = expand_multinomial(ex)
     if ex.is_AlgebraicNumber:
-        return ex.minpoly_of_elt().as_expr(x)
+        return ex.minpoly_of_element().as_expr(x)
     elif ex.is_Rational:
         result = ex.q*x - ex.p
     else:

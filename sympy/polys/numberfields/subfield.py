@@ -209,8 +209,8 @@ def field_isomorphism(a, b, *, fast=True):
     if not b.is_AlgebraicNumber:
         b = AlgebraicNumber(b)
 
-    a = a.to_primitive_elt()
-    b = b.to_primitive_elt()
+    a = a.to_primitive_element()
+    b = b.to_primitive_element()
 
     if a == b:
         return a.coeffs()

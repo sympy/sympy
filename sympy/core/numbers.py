@@ -2620,7 +2620,7 @@ class AlgebraicNumber(Expr):
         Example (1): $\alpha = \theta = \sqrt{2}$
 
         >>> a1 = AlgebraicNumber(sqrt(2))
-        >>> a1.minpoly_of_elt().as_expr(x)
+        >>> a1.minpoly_of_element().as_expr(x)
         x**2 - 2
         >>> a1.evalf(10)
         1.414213562
@@ -2653,11 +2653,11 @@ class AlgebraicNumber(Expr):
 
         >>> from sympy import to_number_field
         >>> a4 = to_number_field(sqrt(2), sqrt(2) + sqrt(3))
-        >>> a4.minpoly_of_elt().as_expr(x)
+        >>> a4.minpoly_of_element().as_expr(x)
         x**2 - 2
         >>> a4.to_root()
         sqrt(2)
-        >>> a4.primitive_elt()
+        >>> a4.primitive_element()
         sqrt(2) + sqrt(3)
         >>> a4.coeffs()
         [1/2, 0, -9/2, 0]
@@ -2668,7 +2668,7 @@ class AlgebraicNumber(Expr):
         >>> a4 = AlgebraicNumber(sqrt(2) + sqrt(3), [S(1)/2, 0, S(-9)/2, 0])
         >>> a4.to_root()
         sqrt(2)
-        >>> a4.primitive_elt()
+        >>> a4.primitive_element()
         sqrt(2) + sqrt(3)
 
         Example (5): Construct the Golden Ratio as an element of the 5th
@@ -2695,7 +2695,7 @@ class AlgebraicNumber(Expr):
         >>> a6 = AlgebraicNumber(a5.to_root(), coeffs=[2, 0], alias=phi)
         >>> a6.as_poly().as_expr()
         2*phi
-        >>> a6.primitive_elt().evalf()
+        >>> a6.primitive_element().evalf()
         1.61803398874989
 
         Note that we needed to use ``a5.to_root()``, since passing ``a5`` as
@@ -2705,7 +2705,7 @@ class AlgebraicNumber(Expr):
         >>> a6_wrong = AlgebraicNumber(a5, coeffs=[2, 0])
         >>> a6_wrong.as_poly().as_expr()
         -2*zeta**3 - 2*zeta**2
-        >>> a6_wrong.primitive_elt().evalf()
+        >>> a6_wrong.primitive_element().evalf()
         0.309016994374947 + 0.951056516295154*I
 
         """
@@ -2836,7 +2836,7 @@ class AlgebraicNumber(Expr):
         return self
 
     @property
-    def is_primitive_elt(self):
+    def is_primitive_element(self):
         r"""
         Say whether this algebraic number $\alpha \in \mathbb{Q}(\theta)$ is
         equal to the primitive element $\theta$ for its field.
@@ -2845,7 +2845,7 @@ class AlgebraicNumber(Expr):
         # Second case occurs if self.minpoly is linear:
         return c == [1, 0] or c == [self.root]
 
-    def primitive_elt(self):
+    def primitive_element(self):
         r"""
         Get the primitive element $\theta$ for the number field
         $\mathbb{Q}(\theta)$ to which this algebraic number $\alpha$ belongs.
@@ -2856,11 +2856,11 @@ class AlgebraicNumber(Expr):
         AlgebraicNumber
 
         """
-        if self.is_primitive_elt:
+        if self.is_primitive_element:
             return self
         return AlgebraicNumber((self.minpoly, self.root), coeffs=[1, 0])
 
-    def to_primitive_elt(self, radicals=True):
+    def to_primitive_element(self, radicals=True):
         r"""
         Convert ``self`` to an :py:class:`~.AlgebraicNumber` instance that is
         equal to its own primitive element.
@@ -2898,7 +2898,7 @@ class AlgebraicNumber(Expr):
 
         Converting to a primitive element,
 
-        >>> a_prim = a.to_primitive_elt()
+        >>> a_prim = a.to_primitive_element()
         >>> a_prim.minpoly.as_poly().as_expr(x)
         x**2 - 2
 
@@ -2922,16 +2922,16 @@ class AlgebraicNumber(Expr):
         See Also
         ========
 
-        is_primitive_elt
+        is_primitive_element
 
         """
-        if self.is_primitive_elt:
+        if self.is_primitive_element:
             return self
-        m = self.minpoly_of_elt()
+        m = self.minpoly_of_element()
         r = self.to_root(radicals=radicals)
         return AlgebraicNumber((m, r))
 
-    def minpoly_of_elt(self):
+    def minpoly_of_element(self):
         r"""
         Compute the minimal polynomial for this algebraic number.
 
@@ -2945,11 +2945,11 @@ class AlgebraicNumber(Expr):
 
         """
         if self._own_minpoly is None:
-            if self.is_primitive_elt:
+            if self.is_primitive_element:
                 self._own_minpoly = self.minpoly
             else:
                 from sympy.polys.numberfields.minpoly import minpoly
-                theta = self.primitive_elt()
+                theta = self.primitive_element()
                 self._own_minpoly = minpoly(self.as_expr(theta), polys=True)
         return self._own_minpoly
 
@@ -2973,9 +2973,9 @@ class AlgebraicNumber(Expr):
             be passed in order to save time.
 
         """
-        if self.is_primitive_elt and not isinstance(self.root, AlgebraicNumber):
+        if self.is_primitive_element and not isinstance(self.root, AlgebraicNumber):
             return self.root
-        m = minpoly or self.minpoly_of_elt()
+        m = minpoly or self.minpoly_of_element()
         roots = m.all_roots(radicals=radicals)
         if len(roots) == 1:
             return roots[0]
