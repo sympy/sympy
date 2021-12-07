@@ -149,19 +149,22 @@ class Expr(Basic, EvalfMixin):
         if not isinstance(other, Expr):
             return super().__eq__(other)
         # check for pure number expr
+        result = True
         if  not (self.is_Number and other.is_Number) and (
                 type(self) != type(other)):
-            return False
+            result = False
         a, b = self._hashable_content(), other._hashable_content()
         if a != b:
-            return False
+            result = False
         # check number *in* an expression
         for a, b in zip(a, b):
             if not isinstance(a, Expr):
                 continue
             if a.is_Number and type(a) != type(b):
-                return False
-        return True
+                result = False
+        if not result == super().__eq__(other):
+            print(self, other, type(self), type(other))
+        return result
 
     # ***************
     # * Arithmetics *
