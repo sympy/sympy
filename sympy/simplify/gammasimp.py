@@ -1,11 +1,10 @@
 from sympy.core import Function, S, Mul, Pow, Add
 from sympy.core.sorting import ordered, default_sort_key
-from sympy.core.function import count_ops, expand_func, AppliedUndef
+from sympy.core.function import count_ops, expand_func
 from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions import gamma, sqrt, sin
 from sympy.polys import factor, cancel
-from sympy.simplify.radsimp import fraction
 from sympy.utilities.iterables import sift, uniq
 
 
@@ -76,8 +75,9 @@ def _gammasimp(expr, as_comb):
     combsimp() in combsimp.py.
     """
     # compute_ST will be looking for Functions and we don't want
-    # it looking for undefined functions: issue 22606
-    f = expr.atoms(AppliedUndef)
+    # it looking for non-gamma/binomial functions: issue 22606
+    f = expr.atoms(Function)
+    f = f - set([fi for fi in f if isinstance(fi, (gamma, binomial))])
     if f:
         dum, fun, simp = zip(*[
             (Dummy(), fi, fi.func(*[
