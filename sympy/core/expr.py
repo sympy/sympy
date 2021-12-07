@@ -145,26 +145,27 @@ class Expr(Basic, EvalfMixin):
         been defined by a class. See note about this in Basic.__eq__."""
         return self._args
 
-    def __eq__(self, other):
-        if not isinstance(other, Expr):
-            return super().__eq__(other)
-        # check for pure number expr
-        result = True
-        if  not (self.is_Number and other.is_Number) and (
-                type(self) != type(other)):
-            result = False
-        a, b = self._hashable_content(), other._hashable_content()
-        if a != b:
-            result = False
-        # check number *in* an expression
-        for a, b in zip(a, b):
-            if not isinstance(a, Expr):
-                continue
-            if a.is_Number and type(a) != type(b):
-                result = False
-        if not result is Basic.__eq__(self, other):
-            raise TypeError(result, Basic.__eq__(self, other), type(self), type(other), self.__repr__(), other.__repr__())
-        return result
+    #def __eq__(self, other):
+    #    if not isinstance(other, Expr):
+    #        return super().__eq__(other)
+    #    # check for pure number expr
+    #    result = True
+    #    if  not (self.is_Number and other.is_Number) and (
+    #            type(self) != type(other)):
+    #        result = False
+    #    a, b = self._hashable_content(), other._hashable_content()
+    #    if a != b:
+    #        result = False
+    #    # check number *in* an expression
+    #    for a, b in zip(a, b):
+    #        if not isinstance(a, Expr):
+    #            continue
+    #        if a.is_Number and type(a) != type(b):
+    #            result = False
+    #    if not result is Basic.__eq__(self, other):
+    #        raise TypeError(result, Basic.__eq__(self, other), type(self), type(other), self.__repr__(), other.__repr__(),
+    #                type(self) is type(other))
+    #    return result
 
     # ***************
     # * Arithmetics *

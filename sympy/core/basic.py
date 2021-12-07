@@ -343,9 +343,9 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         if not isinstance(other, Basic) and hasattr(other, '_sympy_'):
             return self == _sympify(other)
-        if type(self) is not type(other):
+        if type(self) != type(other):
             #print("not implemented:", type(self), type(other))
-            return False
+            return NotImplemented
         return self._hashable_content() == other._hashable_content()
 
     def __ne__(self, other):
