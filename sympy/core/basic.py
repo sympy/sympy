@@ -341,12 +341,26 @@ class Basic(Printable, metaclass=ManagedProperties):
         if self is other:
             return True
 
-        if not isinstance(other, Basic) and hasattr(other, '_sympy_'):
-            return self == _sympify(other)
-        if type(self) != type(other):
-            #print("not implemented:", type(self), type(other))
-            return NotImplemented
-        return self._hashable_content() == other._hashable_content()
+        if not isinstance(other, Basic):
+            if hasattr(other, '_sympy_'):
+                return self == _sympify(other)
+            else:
+                return NotImplemented
+
+        if  not (self.is_Number and other.is_Number) and (
+                type(self) != type(other)):
+            return False
+
+        a, b = self._hashable_content(), other._hashable_content()
+        if a != b:
+            return False
+        # check number *in* an expression
+        for a, b in zip(a, b):
+            if not isinstance(a, Basic):
+                continue
+            if a.is_Number and type(a) != type(b):
+                return False
+        return True
 
     def __ne__(self, other):
         """``a != b``  -> Compare two symbolic trees and see whether they are different
