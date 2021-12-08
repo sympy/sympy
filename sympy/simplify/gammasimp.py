@@ -1,8 +1,7 @@
 from sympy.core import Function, S, Mul, Pow, Add
 from sympy.core.sorting import ordered, default_sort_key
-from sympy.core.function import count_ops, expand_func
+from sympy.core.function import expand_func
 from sympy.core.symbol import Dummy
-from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions import gamma, sqrt, sin
 from sympy.polys import factor, cancel
 from sympy.utilities.iterables import sift, uniq
@@ -99,35 +98,6 @@ def _gammasimp(expr, as_comb):
     else:
         expr = expr.replace(_rf,
             lambda a, b: gamma(a + b)/gamma(a))
-
-    def rule(n, k):
-        coeff, rewrite = S.One, False
-
-        cn, _n = n.as_coeff_Add()
-
-        if _n and cn.is_Integer and cn:
-            coeff *= _rf(_n + 1, cn)/_rf(_n - k + 1, cn)
-            rewrite = True
-            n = _n
-
-        # this sort of binomial has already been removed by
-        # rising factorials but is left here in case the order
-        # of rule application is changed
-        if k.is_Add:
-            ck, _k = k.as_coeff_Add()
-            if _k and ck.is_Integer and ck:
-                coeff *= _rf(n - ck - _k + 1, ck)/_rf(_k + 1, ck)
-                rewrite = True
-                k = _k
-
-        if count_ops(k) > count_ops(n - k):
-            rewrite = True
-            k = n - k
-
-        if rewrite:
-            return coeff*binomial(n, k)
-
-    expr = expr.replace(binomial, rule)
 
     def rule_gamma(expr, level=0):
         """ Simplify products of gamma functions further. """
