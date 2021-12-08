@@ -8,7 +8,7 @@ from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import (Derivative, Function, Lambda, Subs, diff)
 from sympy.core.mod import Mod
 from sympy.core.mul import Mul
-from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi)
+from sympy.core.numbers import (AlgebraicNumber, Float, I, Integer, Rational, oo, pi)
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -187,6 +187,13 @@ def test_latex_basic():
         r"\left(x + 1\right)^{\frac{3}{4}}"
     assert latex((x + 1)**Rational(3, 4), fold_frac_powers=True) == \
         r"\left(x + 1\right)^{3/4}"
+    assert latex(AlgebraicNumber(sqrt(2))) == r"\sqrt{2}"
+    assert latex(AlgebraicNumber(sqrt(2), [3, -7])) == r"-7 + 3 \sqrt{2}"
+    assert latex(AlgebraicNumber(sqrt(2), alias='alpha')) == r"\alpha"
+    assert latex(AlgebraicNumber(sqrt(2), [3, -7], alias='alpha')) == \
+        r"3 \alpha - 7"
+    assert latex(AlgebraicNumber(2**(S(1)/3), [1, 3, -7], alias='beta')) == \
+           r"\beta^{2} + 3 \beta - 7"
 
     assert latex(1.5e20*x) == r"1.5 \cdot 10^{20} x"
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"
