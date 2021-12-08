@@ -281,3 +281,9 @@ def test_to_number_field():
     assert to_number_field(sqrt(2), AlgebraicNumber(sqrt(2) + sqrt(3))) == a
 
     raises(IsomorphismFailed, lambda: to_number_field(sqrt(2), sqrt(3)))
+
+
+def test_issue_22561():
+    a = to_number_field(sqrt(2), sqrt(2) + sqrt(3))
+    b = to_number_field(sqrt(2), sqrt(2) + sqrt(5))
+    assert field_isomorphism(a, b) == [1, 0]
