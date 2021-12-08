@@ -491,8 +491,10 @@ def test_sympy__codegen__scipy_nodes__cosm1():
     from sympy.codegen.scipy_nodes import cosm1
     assert _test_args(cosm1(x))
 
+def test_sympy__codegen__abstract_nodes__List():
+    from sympy.codegen.abstract_nodes import List
+    assert _test_args(List(1, 2, 3))
 
-@XFAIL
 def test_sympy__combinatorics__graycode__GrayCode():
     from sympy.combinatorics.graycode import GrayCode
     # an integer is given and returned from GrayCode as the arg
@@ -533,7 +535,6 @@ def test_sympy__combinatorics__polyhedron__Polyhedron():
     assert _test_args(Polyhedron(corners, faces, pgroup))
 
 
-@XFAIL
 def test_sympy__combinatorics__prufer__Prufer():
     from sympy.combinatorics.prufer import Prufer
     assert _test_args(Prufer([[0, 1], [0, 2], [0, 3]], 4))
@@ -544,7 +545,6 @@ def test_sympy__combinatorics__partitions__Partition():
     assert _test_args(Partition([1]))
 
 
-@XFAIL
 def test_sympy__combinatorics__partitions__IntegerPartition():
     from sympy.combinatorics.partitions import IntegerPartition
     assert _test_args(IntegerPartition([1]))
@@ -2895,52 +2895,42 @@ def test_sympy__liealgebras__cartan_type__CartanType_generator():
     from sympy.liealgebras.cartan_type import CartanType_generator
     assert _test_args(CartanType_generator("A2"))
 
-@XFAIL
 def test_sympy__liealgebras__cartan_type__Standard_Cartan():
     from sympy.liealgebras.cartan_type import Standard_Cartan
     assert _test_args(Standard_Cartan("A", 2))
 
-@XFAIL
 def test_sympy__liealgebras__weyl_group__WeylGroup():
     from sympy.liealgebras.weyl_group import WeylGroup
     assert _test_args(WeylGroup("B4"))
 
-@XFAIL
 def test_sympy__liealgebras__root_system__RootSystem():
     from sympy.liealgebras.root_system import RootSystem
     assert _test_args(RootSystem("A2"))
 
-@XFAIL
 def test_sympy__liealgebras__type_a__TypeA():
     from sympy.liealgebras.type_a import TypeA
     assert _test_args(TypeA(2))
 
-@XFAIL
 def test_sympy__liealgebras__type_b__TypeB():
     from sympy.liealgebras.type_b import TypeB
     assert _test_args(TypeB(4))
 
-@XFAIL
 def test_sympy__liealgebras__type_c__TypeC():
     from sympy.liealgebras.type_c import TypeC
     assert _test_args(TypeC(4))
 
-@XFAIL
 def test_sympy__liealgebras__type_d__TypeD():
     from sympy.liealgebras.type_d import TypeD
     assert _test_args(TypeD(4))
 
-@XFAIL
 def test_sympy__liealgebras__type_e__TypeE():
     from sympy.liealgebras.type_e import TypeE
     assert _test_args(TypeE(6))
 
-@XFAIL
 def test_sympy__liealgebras__type_f__TypeF():
     from sympy.liealgebras.type_f import TypeF
     assert _test_args(TypeF(4))
 
-@XFAIL
 def test_sympy__liealgebras__type_g__TypeG():
     from sympy.liealgebras.type_g import TypeG
     assert _test_args(TypeG(2))
@@ -4446,12 +4436,6 @@ def test_sympy__tensor__array__array_comprehension__ArrayComprehensionMap():
     from sympy.tensor.array.array_comprehension import ArrayComprehensionMap
     arrcomma = ArrayComprehensionMap(lambda: 0, (x, 1, 5))
     assert _test_args(arrcomma)
-
-def test_sympy__tensor__array__arrayop__Flatten():
-    from sympy.tensor.array.arrayop import Flatten
-    from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
-    fla = Flatten(ImmutableDenseNDimArray(range(24)).reshape(2, 3, 4))
-    assert _test_args(fla)
 
 
 def test_sympy__tensor__array__array_derivatives__ArrayDerivative():

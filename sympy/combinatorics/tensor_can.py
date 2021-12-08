@@ -763,7 +763,7 @@ def canonicalize(g, dummies, msym, *v):
     """
     from sympy.combinatorics.testutil import canonicalize_naive
     if not isinstance(msym, list):
-        if not msym in (0, 1, None):
+        if msym not in (0, 1, None):
             raise ValueError('msym must be 0, 1 or None')
         num_types = 1
     else:

@@ -12,7 +12,7 @@ from .sorting import default_sort_key
 from .kind import NumberKind
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import as_int, func_name, filldedent
-from sympy.utilities.iterables import has_variety, sift
+from sympy.utilities.iterables import has_variety, sift, iterable, NotIterable
 from mpmath.libmp import mpf_log, prec_to_dps
 from mpmath.libmp.libintmath import giant_steps
 
@@ -146,11 +146,18 @@ class Expr(Basic, EvalfMixin):
         return self._args
 
     def __eq__(self, other):
-        try:
-            other = _sympify(other)
-            if not isinstance(other, Expr):
+        if not isinstance(other, Basic):
+            if iterable(other, exclude=(str, NotIterable)
+                    ) and not hasattr(other, '_sympy_'):
+                # XXX iterable self should have it's own __eq__
+                # method if the path gives a false negative
+                # comparison
                 return False
-        except (SympifyError, SyntaxError):
+            try:
+                other = _sympify(other)
+            except (SympifyError, SyntaxError):
+                return NotImplemented
+        if not isinstance(other, Expr):
             return False
         # check for pure number expr
         if  not (self.is_Number and other.is_Number) and (
@@ -3383,7 +3390,7 @@ class Expr(Basic, EvalfMixin):
         exp(logx*y)
 
         """
-        if x and not x in self.free_symbols:
+        if x and x not in self.free_symbols:
             return self
         if x is None or x0 or dir != '+':  # {see XPOS above} or (x.is_positive == x.is_negative == None):
             return self.series(x, x0, n, dir, cdir=cdir)

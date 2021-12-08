@@ -458,7 +458,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if isinstance(proposition, AppliedPredicate):
         key, args = proposition.function, proposition.arguments
     elif proposition.func in binrelpreds:
-        key, args = binrelpreds[proposition.func], proposition.args
+        key, args = binrelpreds[type(proposition)], proposition.args
     else:
         key, args = Q.is_true, (proposition,)
 

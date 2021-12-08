@@ -39,7 +39,10 @@ def find(x, equation):
     x
     >>> find('x', Dummy('x'))
     _x
-    >>> Dummy('x').name == 'x'
+
+    The dummy symbol is returned since it has a matching name:
+
+    >>> _.name == 'x'
     True
     >>> find(x, Dummy('x'))
     Traceback (most recent call last):
