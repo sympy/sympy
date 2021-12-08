@@ -74,9 +74,7 @@ def gammasimp(expr):
             for fi in f])
         d = expr.xreplace(dict(zip(fun, dum)))
         if not d.has(gamma):
-            # match side-effect of _gammasimp since this is
-            # the expected state in the calling routine
-            return factor(expr)
+            return expr  # avoid side effects like factoring
         return _gammasimp(d, as_comb=False).xreplace(dict(zip(dum, simp)))
     return _gammasimp(expr, as_comb=False)
 
