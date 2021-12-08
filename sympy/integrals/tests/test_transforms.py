@@ -1,5 +1,5 @@
 from sympy.integrals.transforms import (mellin_transform,
-    inverse_mellin_transform, laplace_transform,
+    inverse_mellin_transform, laplace_transform, laplace_transform_replace_ic,
     inverse_laplace_transform, fourier_transform, inverse_fourier_transform,
     sine_transform, inverse_sine_transform,
     cosine_transform, inverse_cosine_transform,
@@ -473,6 +473,8 @@ def test_laplace_transform():
     t, w, x = symbols('t, w, x')
     f = Function("f")
     g = Function("g")
+    y = Function("Y")
+    Y = Function("Y")
 
     # Test rule-base evaluation according to
     # http://eqworld.ipmnet.ru/en/auxiliary/inttrans/
@@ -704,6 +706,14 @@ def test_laplace_transform():
     assert inverse_laplace_transform(
         f(w), w, t, plane=0) == InverseLaplaceTransform(f(w), w, t, 0)
     assert LT(f(t)*g(t), t, s) == LaplaceTransform(f(t)*g(t), t, s)
+
+    # The following test confirms that issue #17098 is solved
+    F, _, _ = laplace_transform(diff(y(t), t, 2)
+                                + y(t)
+                                - 4*(Heaviside(t - 1)
+                                - Heaviside(t - 2)), t, s)
+    G = laplace_transform_replace_ic(F, y, Y, t, s, [1, 0])
+    assert (G == s**2*Y(s) - s + Y(s) - 4*exp(-s)/s + 4*exp(-2*s)/s)
 
     # additional basic tests from wikipedia
     assert LT((t - a)**b*exp(-c*(t - a))*Heaviside(t - a), t, s) == \

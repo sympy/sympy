@@ -5,7 +5,7 @@ from sympy.core import S, pi, I
 from sympy.core.add import Add
 from sympy.core.function import (AppliedUndef, count_ops, Derivative, expand,
                                  expand_complex, expand_mul, Function, Lambda,
-                                 WildFunction)
+                                 Subs, WildFunction)
 from sympy.core.mul import Mul
 from sympy.core.numbers import igcd, ilcm
 from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality, Eq
@@ -1161,6 +1161,80 @@ def _laplace_transform(f, t, s_, simplify=True):
         F = _simplifyconds(F, s, a)
         aux = _simplifyconds(aux, s, a)
     return _simplify(F.subs(s, s_), simplify), sbs(a), _canonical(sbs(aux))
+
+def laplace_transform_replace_ic(expr, f, F, t, s, ic):
+    r"""
+    Public helper function for solving differential equations using the
+    Laplace transform.
+
+    Explanation
+    ===========
+
+    When a differential equation is transformed, it contains unevaluated
+    expressions of forms like ``LaplaceTransform(f(t), t, s)``, ``f(0)``, and
+    ``Subs(Derivative(f(t), (t, k)), t, 0)``.
+
+    This function takes `t` and `s` as the time and frequency variables and
+    `f` and `F` as the time and frequency function names.  The list `ic`
+    contains the initial conditions of $f(t)$ in ascending derivative order,
+    i.e., the initial value of ``f(t)``, of ``Derivative(f(t), (t, 1))``, of
+    ``Derivative(f(t), (t, 2))``, etc.
+
+    This function then makes all necessary substitutions in the expression
+    `expr`.
+
+    Example
+    =======
+
+    Assume we have a spring with spring constant $k$, a mass $m_1$ hanging on it,
+    and a damping constant $D$.  A second mass $m_2$ is connected to the main
+    mass, and at $t=0$ it is dropped. We need to solve the following
+    differential equation for the function $x(t)$:
+
+    .. math::
+        m_1\frac{\mathrm{d}^2}{\mathrm{d}t^2}x(t)
+        + D\frac{\mathrm{d}}{\mathrm{d}t}x(t) + kx(t) = 0
+
+    for the initial conditions $x(0)=km_2$ and $x'(0)=0$. This can be
+    done as follows:
+
+    >>> from sympy.integrals.transforms import laplace_transform, laplace_transform_replace_ic
+    >>> from sympy.core import diff
+    >>> from sympy.core.function import Function
+    >>> from sympy.core.symbol import symbols
+    >>> from sympy.solvers.solvers import solve
+    >>> x = Function('x')
+    >>> X = Function('X')
+    >>> s, t = symbols('s, t')
+    >>> m1, m2, D, k = symbols('m1, m2, D, k', positive=True)
+    >>> diffeq = m1*diff(x(t), t, 2) + D*diff(x(t), t) + k*x(t)
+    >>> print(diffeq)
+    D*Derivative(x(t), t) + k*x(t) + m1*Derivative(x(t), (t, 2))
+    >>> Diffeq = laplace_transform(diffeq, t, s)
+    >>> print(Diffeq)
+    k*LaplaceTransform(x(t), t, s) + s**2*LaplaceTransform(x(t), t, s) + s*LaplaceTransform(x(t), t, s) - s*x(0) - x(0) - Subs(Derivative(x(t), t), t, 0)
+    >>> ic = [m2*k, 0]
+    >>> Diffeq_ic = laplace_transform_replace_ic(Diffeq, x, X, t, s, ic)
+    >>> print(Diffeq_ic)
+    -k*m2*s - k*m2 + k*X(s) + s**2*X(s) + s*X(s)
+    >>> X_sol = solve(Diffeq_ic, X(s))
+    >>> print(X_sol)
+    [k*m2*(s + 1)/(k + s**2 + s)]
+    """
+
+    res = expr.subs(LaplaceTransform(f(t), t, s), F(s))
+    k=0
+    for c in ic:
+        if k == 0:
+            res = res.subs(f(0), c)
+        else:
+            if k == 1:
+                res = res.subs(Subs(Derivative(f(t), t), t, 0), c)
+            else:
+                res = res.subs(Subs(Derivative(f(t), (t, k)), t, 0), c)
+        k+=1
+    return res
+
 
 def _laplace_deep_collect(f, t):
     """
