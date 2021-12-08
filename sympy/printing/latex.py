@@ -611,6 +611,12 @@ class LatexPrinter(Printer):
             tex += ")"
         return tex
 
+    def _print_AlgebraicNumber(self, expr):
+        if expr.is_aliased:
+            return self._print(expr.as_poly().as_expr())
+        else:
+            return self._print(expr.as_expr())
+
     def _print_Pow(self, expr):
         # Treat x**Rational(1,n) as special case
         if expr.exp.is_Rational and abs(expr.exp.p) == 1 and expr.exp.q != 1 \
