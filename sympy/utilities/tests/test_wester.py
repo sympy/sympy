@@ -2933,7 +2933,6 @@ def test_Y4():
     assert F == (1 - exp(-6*sqrt(s)))/s
 
 
-@XFAIL
 def test_Y5_Y6():
 # Solve y'' + y = 4 [H(t - 1) - H(t - 2)], y(0) = 1, y'(0) = 0 where H is the
 # Heaviside (unit step) function (the RHS describes a pulse of magnitude 4 and
@@ -2949,10 +2948,9 @@ def test_Y5_Y6():
                                 + y(t)
                                 - 4*(Heaviside(t - 1)
                                 - Heaviside(t - 2)), t, s)
-    # Laplace transform for diff() not calculated
-    # https://github.com/sympy/sympy/issues/7176
-    assert (F == s**2*LaplaceTransform(y(t), t, s) - s
-            + LaplaceTransform(y(t), t, s) - 4*exp(-s)/s + 4*exp(-2*s)/s)
+    assert (F == s**2*LaplaceTransform(y(t), t, s) - s*y(0) +
+            LaplaceTransform(y(t), t, s) - Subs(Derivative(y(t), t), t, 0) -
+            4*exp(-s)/s + 4*exp(-2*s)/s)
 # TODO implement second part of test case
 # Now, solve for Y(s) and then take the inverse Laplace transform
 #   => Y(s) = s/(s^2 + 1) + 4 [1/s - s/(s^2 + 1)] [e^(-s) - e^(-2 s)]
