@@ -58,13 +58,16 @@ def gammasimp(expr):
     """
 
     expr = expr.rewrite(gamma)
+
     # compute_ST will be looking for Functions and we don't want
-    # it looking for non-gamma/binomial functions: issue 22606
-    # NOTE: functions should not be replaced with dummies if they
-    # have bound symbols
+    # it looking for non-gamma functions: issue 22606
+    # so we mask free, non-gamma functions
     f = expr.atoms(Function)
     # take out gammas
-    f -= {i for i in f if isinstance(i, gamma)}
+    gammas = {i for i in f if isinstance(i, gamma)}
+    if not gammas:
+        return expr  # avoid side effects like factoring
+    f -= gammas
     # keep only those without bound symbols
     f = f & expr.as_dummy().atoms(Function)
     if f:
@@ -73,9 +76,8 @@ def gammasimp(expr):
                 _gammasimp(a, as_comb=False) for a in fi.args]))
             for fi in f])
         d = expr.xreplace(dict(zip(fun, dum)))
-        if not d.has(gamma):
-            return expr  # avoid side effects like factoring
         return _gammasimp(d, as_comb=False).xreplace(dict(zip(dum, simp)))
+
     return _gammasimp(expr, as_comb=False)
 
 
