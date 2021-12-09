@@ -66,7 +66,7 @@ class QubitState(State):
 
         # Turn strings into tuple of strings
         if len(args) == 1 and isinstance(args[0], str):
-            args = tuple(args[0])
+            args = tuple( S.Zero if qb == "0" else S.One for qb in args[0])
 
         args = sympify(args)
 
