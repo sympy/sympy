@@ -17,6 +17,6 @@ a module break down.
    :maxdepth: 2
 
    getting_started/index.rst
-   contributing/index.rst
    assumptions.rst
    booleans.rst
+   contributing/index.rst
