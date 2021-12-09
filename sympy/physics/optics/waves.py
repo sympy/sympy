@@ -74,7 +74,7 @@ class TWave(Expr):
     >>> w3 = w1 + w2  # Superposition of two waves
     >>> w3
     TWave(sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2) + A2**2), f,
-        atan2(A1*sin(phi1) + A2*sin(phi2), A1*cos(phi1) + A2*cos(phi2)))
+        atan2(A1*sin(phi1) + A2*sin(phi2), A1*cos(phi1) + A2*cos(phi2)), 1/f, n)
     >>> w3.amplitude
     sqrt(A1**2 + 2*A1*A2*cos(phi1 - phi2) + A2**2)
     >>> w3.phase
@@ -113,12 +113,24 @@ class TWave(Expr):
         phase = _sympify(phase)
         n = sympify(n)
         obj = Basic.__new__(cls, amplitude, frequency, phase, time_period, n)
-        obj._frequency = frequency
-        obj._amplitude = amplitude
-        obj._phase = phase
-        obj._time_period = time_period
-        obj._n = n
         return obj
+
+    @property
+    def amplitude(self):
+        """
+        Returns the amplitude of the wave.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.optics import TWave
+        >>> A, phi, f = symbols('A, phi, f')
+        >>> w = TWave(A, f, phi)
+        >>> w.amplitude
+        A
+        """
+        return self.args[0]
 
     @property
     def frequency(self):
@@ -136,7 +148,25 @@ class TWave(Expr):
         >>> w.frequency
         f
         """
-        return self._frequency
+        return self.args[1]
+
+    @property
+    def phase(self):
+        """
+        Returns the phase angle of the wave,
+        in radians.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.optics import TWave
+        >>> A, phi, f = symbols('A, phi, f')
+        >>> w = TWave(A, f, phi)
+        >>> w.phase
+        phi
+        """
+        return self.args[2]
 
     @property
     def time_period(self):
@@ -154,7 +184,14 @@ class TWave(Expr):
         >>> w.time_period
         1/f
         """
-        return self._time_period
+        return self.args[3]
+
+    @property
+    def n(self):
+        """
+        Returns the refractive index of the medium
+        """
+        return self.args[4]
 
     @property
     def wavelength(self):
@@ -173,42 +210,8 @@ class TWave(Expr):
         >>> w.wavelength
         299792458*meter/(second*f*n)
         """
-        return c/(self._frequency*self._n)
+        return c/(self.frequency*self.n)
 
-    @property
-    def amplitude(self):
-        """
-        Returns the amplitude of the wave.
-
-        Examples
-        ========
-
-        >>> from sympy import symbols
-        >>> from sympy.physics.optics import TWave
-        >>> A, phi, f = symbols('A, phi, f')
-        >>> w = TWave(A, f, phi)
-        >>> w.amplitude
-        A
-        """
-        return self._amplitude
-
-    @property
-    def phase(self):
-        """
-        Returns the phase angle of the wave,
-        in radians.
-
-        Examples
-        ========
-
-        >>> from sympy import symbols
-        >>> from sympy.physics.optics import TWave
-        >>> A, phi, f = symbols('A, phi, f')
-        >>> w = TWave(A, f, phi)
-        >>> w.phase
-        phi
-        """
-        return self._phase
 
     @property
     def speed(self):
@@ -227,7 +230,7 @@ class TWave(Expr):
         >>> w.speed
         299792458*meter/(second*n)
         """
-        return self.wavelength*self._frequency
+        return self.wavelength*self.frequency
 
     @property
     def angular_velocity(self):
@@ -245,7 +248,7 @@ class TWave(Expr):
         >>> w.angular_velocity
         2*pi*f
         """
-        return 2*pi*self._frequency
+        return 2*pi*self.frequency
 
     @property
     def wavenumber(self):
@@ -278,15 +281,15 @@ class TWave(Expr):
         The type of interference will depend on their phase angles.
         """
         if isinstance(other, TWave):
-            if self._frequency == other._frequency and self.wavelength == other.wavelength:
-                return TWave(sqrt(self._amplitude**2 + other._amplitude**2 + 2 *
-                                  self._amplitude*other._amplitude*cos(
-                                      self._phase - other.phase)),
-                             self._frequency,
-                             atan2(self._amplitude*sin(self._phase)
-                             + other._amplitude*sin(other._phase),
-                             self._amplitude*cos(self._phase)
-                             + other._amplitude*cos(other._phase))
+            if self.frequency == other.frequency and self.wavelength == other.wavelength:
+                return TWave(sqrt(self.amplitude**2 + other.amplitude**2 + 2 *
+                                  self.amplitude*other.amplitude*cos(
+                                      self.phase - other.phase)),
+                             self.frequency,
+                             atan2(self.amplitude*sin(self.phase)
+                             + other.amplitude*sin(other.phase),
+                             self.amplitude*cos(self.phase)
+                             + other.amplitude*cos(other.phase))
                              )
             else:
                 raise NotImplementedError("Interference of waves with different frequencies"
@@ -300,7 +303,7 @@ class TWave(Expr):
         """
         other = sympify(other)
         if isinstance(other, Number):
-            return TWave(self._amplitude*other, *self.args[1:])
+            return TWave(self.amplitude*other, *self.args[1:])
         else:
             raise TypeError(type(other).__name__ + " and TWave objects cannot be multiplied.")
 
@@ -320,12 +323,12 @@ class TWave(Expr):
         return (-self).__radd__(other)
 
     def _eval_rewrite_as_sin(self, *args, **kwargs):
-        return self._amplitude*sin(self.wavenumber*Symbol('x')
-            - self.angular_velocity*Symbol('t') + self._phase + pi/2, evaluate=False)
+        return self.amplitude*sin(self.wavenumber*Symbol('x')
+            - self.angular_velocity*Symbol('t') + self.phase + pi/2, evaluate=False)
 
     def _eval_rewrite_as_cos(self, *args, **kwargs):
-        return self._amplitude*cos(self.wavenumber*Symbol('x')
-            - self.angular_velocity*Symbol('t') + self._phase)
+        return self.amplitude*cos(self.wavenumber*Symbol('x')
+            - self.angular_velocity*Symbol('t') + self.phase)
 
     def _eval_rewrite_as_pde(self, *args, **kwargs):
         mu, epsilon, x, t = symbols('mu, epsilon, x, t')
@@ -333,5 +336,5 @@ class TWave(Expr):
         return Derivative(E(x, t), x, 2) + mu*epsilon*Derivative(E(x, t), t, 2)
 
     def _eval_rewrite_as_exp(self, *args, **kwargs):
-        return self._amplitude*exp(I*(self.wavenumber*Symbol('x')
-            - self.angular_velocity*Symbol('t') + self._phase))
+        return self.amplitude*exp(I*(self.wavenumber*Symbol('x')
+            - self.angular_velocity*Symbol('t') + self.phase))
