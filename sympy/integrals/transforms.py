@@ -1258,7 +1258,7 @@ def _laplace_deep_collect(f, t):
 def _laplace_build_rules(t, s):
     """
     This is an internal helper function that returns the table of Laplace
-    transfrom rules in terms of the time variable `t` and the frequency
+    transform rules in terms of the time variable `t` and the frequency
     variable `s`.  It is used by `_laplace_apply_rules`.
     """
     a = Wild('a', exclude=[t])
