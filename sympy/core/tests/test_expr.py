@@ -263,10 +263,12 @@ class NonExpr(Basic, NonBasic):
     pass
 
 
-class SpecialOp(Basic):
+class SpecialOp():
     '''Represents the results of operations with NonBasic and NonExpr'''
     def __new__(cls, op, arg1, arg2):
-        return Basic.__new__(cls, op, arg1, arg2)
+        obj = object.__new__(cls)
+        obj.args = (op, arg1, arg2)
+        return obj
 
 
 class NonArithmetic(Basic):
