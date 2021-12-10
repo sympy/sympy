@@ -1968,6 +1968,13 @@ class FiniteSet(Set):
             raise TypeError("Invalid comparison of set with %s" % func_name(other))
         return self.is_proper_subset(other)
 
+    def __eq__(self, other):
+        if isinstance(other, (set, frozenset)):
+            return self._args_set == other
+        return super().__eq__(other)
+
+    def __hash__(self):
+        return Basic.__hash__(self)
 
 converter[set] = lambda x: FiniteSet(*x)
 converter[frozenset] = lambda x: FiniteSet(*x)
