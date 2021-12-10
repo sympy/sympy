@@ -65,9 +65,11 @@ class QubitState(State):
             return args[0].qubit_values
 
         # Turn strings into tuple of strings
+        print(args,args[0])
         if len(args) == 1 and isinstance(args[0], str):
             args = tuple( S.Zero if qb == "0" else S.One for qb in args[0])
-
+        else:
+            args = tuple( S.Zero if qb == "0" else S.One if qb == "1" else qb for qb in args)
         args = tuple(_sympify(arg) for arg in args)
 
         # Validate input (must have 0 or 1 input)
