@@ -170,23 +170,25 @@ class FourierSeries(SeriesBase):
     def an(self):
         p = Wild("p")
         q = Wild("q")
+        n = Dummy('n')
         try:
             gen_term = self.args[2][1].formula.match(p*cos(q))[p]
         except TypeError:
             return self.args[2][1]
         else:
-            return SeqFormula(gen_term, (1, oo))
+            return SeqFormula(gen_term, (n, 1, oo))
 
     @property
     def bn(self):
         p = Wild("p")
         q = Wild("q")
+        n = Dummy('n')
         try:
             gen_term = self.args[2][2].formula.match(p*sin(q))[p]
         except TypeError:
             return self.args[2][2]
         else:
-            return SeqFormula(gen_term, (1, oo))
+            return SeqFormula(gen_term, (n, 1, oo))
 
     @property
     def interval(self):
