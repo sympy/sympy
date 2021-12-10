@@ -74,7 +74,7 @@ def gammasimp(expr):
         dum, fun, simp = zip(*[
             (Dummy(), fi, fi.func(*[
                 _gammasimp(a, as_comb=False) for a in fi.args]))
-            for fi in f])
+            for fi in ordered(f)])
         d = expr.xreplace(dict(zip(fun, dum)))
         return _gammasimp(d, as_comb=False).xreplace(dict(zip(dum, simp)))
 
