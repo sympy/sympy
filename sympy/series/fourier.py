@@ -165,7 +165,7 @@ class FourierSeries(SeriesBase):
     @property
     def sin_sequence(self):
         return self.args[2][2]
-    
+
     @property
     def an(self):
         p = Wild("p")
@@ -176,7 +176,7 @@ class FourierSeries(SeriesBase):
             return self.args[2][1]
         else:
             return SeqFormula(gen_term, (1, oo))
-        
+
     @property
     def bn(self):
         p = Wild("p")
