@@ -328,10 +328,10 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         If a class that overrides __eq__() needs to retain the
         implementation of __hash__() from a parent class, the
-        interpreter must be told this explicitly by setting __hash__ =
-        <ParentClass>.__hash__. Otherwise the inheritance of __hash__()
-        will be blocked, just as if __hash__ had been explicitly set to
-        None.
+        interpreter must be told this explicitly by setting 
+        __hash__ : Callable[[object], int] = <ParentClass>.__hash__. 
+        Otherwise the inheritance of __hash__() will be blocked, 
+        just as if __hash__ had been explicitly set to None.
 
         References
         ==========

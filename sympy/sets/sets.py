@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Callable
 from functools import reduce
 from collections import defaultdict
 import inspect
@@ -1973,8 +1973,7 @@ class FiniteSet(Set):
             return self._args_set == other
         return super().__eq__(other)
 
-    def __hash__(self):
-        return Basic.__hash__(self)
+    __hash__ : Callable[[object], int] = Basic.__hash___
 
 converter[set] = lambda x: FiniteSet(*x)
 converter[frozenset] = lambda x: FiniteSet(*x)
