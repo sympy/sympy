@@ -214,7 +214,7 @@ from .facts import FactRules, FactKB, InconsistentAssumptions
 from .core import BasicMeta
 from .sympify import sympify
 
-from sympy.core.random import shuffle
+from sympy.core.random import rng_assumptions
 
 
 _assume_rules = FactRules([
@@ -548,7 +548,7 @@ def _ask(fact, obj):
 
     # Try assumption's prerequisites
     prereq = list(_assume_rules.prereq[fact])
-    shuffle(prereq)
+    rng_assumptions.shuffle(prereq)
     for pk in prereq:
         if pk in assumptions:
             continue

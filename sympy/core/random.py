@@ -25,6 +25,7 @@ from sympy.utilities.misc import as_int
 
 import random as _random
 rng = _random.Random()
+rng_assumptions = _random.Random()
 
 choice = rng.choice
 random = rng.random
@@ -33,6 +34,11 @@ randrange = rng.randrange
 seed = rng.seed
 shuffle = rng.shuffle
 uniform = rng.uniform
+
+def seed(intseed):
+    rng.seed(intseed)
+    rng_assumptions.seed(intseed)
+
 
 def random_complex_number(a=2, b=-1, c=3, d=1, rational=False, tolerance=None):
     """
