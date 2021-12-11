@@ -626,6 +626,8 @@ def test_is_polynomial():
     assert (
         (x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial(x, y) is False
 
+    assert (1/f(x) + 1).is_polynomial(f(x)) is False
+
 
 def test_is_rational_function():
     assert Integer(1).is_rational_function() is True
@@ -1128,10 +1130,13 @@ def test_has_tuple():
     assert not Tuple(f(x), g(x)).has(y)
     assert Tuple(f(x), g(x)).has(f)
     assert Tuple(f(x), g(x)).has(f(x))
-    assert not Tuple(f, g).has(x)
-    assert Tuple(f, g).has(f)
-    assert not Tuple(f, g).has(h)
-    assert Tuple(True).has(True) is True  # .has(1) will also be True
+    # XXX to be deprecated
+    #assert not Tuple(f, g).has(x)
+    #assert Tuple(f, g).has(f)
+    #assert not Tuple(f, g).has(h)
+    assert Tuple(True).has(True)
+    assert Tuple(True).has(S.true)
+    assert not Tuple(True).has(1)
 
 
 def test_has_units():
@@ -1593,6 +1598,18 @@ def test_free_symbols():
     assert (-Integral(x, (x, 1, y))).free_symbols == {y}
     assert meter.free_symbols == set()
     assert (meter**x).free_symbols == {x}
+
+
+def test_has_free():
+    assert x.has_free(x)
+    assert not x.has_free(y)
+    assert (x + y).has_free(x)
+    assert (x + y).has_free(*(x, z))
+    assert f(x).has_free(x)
+    assert f(x).has_free(f(x))
+    assert Integral(f(x), (f(x), 1, y)).has_free(y)
+    assert not Integral(f(x), (f(x), 1, y)).has_free(x)
+    assert not Integral(f(x), (f(x), 1, y)).has_free(f(x))
 
 
 def test_issue_5300():

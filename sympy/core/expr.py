@@ -2085,7 +2085,7 @@ class Expr(Basic, EvalfMixin):
 
         """
         if deps:
-            if not self.has(*deps):
+            if not self.has_free(*deps):
                 return self, tuple()
         return S.Zero, (self,)
 
@@ -2583,11 +2583,6 @@ class Expr(Basic, EvalfMixin):
             res *= exp_polar(newexp)
         return res, n
 
-    def _eval_is_polynomial(self, syms):
-        if self.free_symbols.intersection(syms) == set():
-            return True
-        return False
-
     def is_polynomial(self, *syms):
         r"""
         Return True if self is a polynomial in syms and False otherwise.
@@ -2606,7 +2601,7 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import Symbol
+        >>> from sympy import Symbol, Function
         >>> x = Symbol('x')
         >>> ((x**2 + 1)**4).is_polynomial(x)
         True
@@ -2614,7 +2609,15 @@ class Expr(Basic, EvalfMixin):
         True
         >>> (2**x + 1).is_polynomial(x)
         False
-
+        >>> (2**x + 1).is_polynomial(2**x)
+        True
+        >>> f = Function('f')
+        >>> (f(x) + 1).is_polynomial(x)
+        False
+        >>> (f(x) + 1).is_polynomial(f(x))
+        True
+        >>> (1/f(x) + 1).is_polynomial(f(x))
+        False
 
         >>> n = Symbol('n', nonnegative=True, integer=True)
         >>> (x**n + 1).is_polynomial(x)
@@ -2649,17 +2652,18 @@ class Expr(Basic, EvalfMixin):
             syms = set(map(sympify, syms))
         else:
             syms = self.free_symbols
+            if not syms:
+                return True
 
-        if syms.intersection(self.free_symbols) == set():
+        return self._eval_is_polynomial(syms)
+
+    def _eval_is_polynomial(self, syms):
+        if self in syms:
+            return True
+        if not self.has_free(*syms):
             # constant polynomial
             return True
-        else:
-            return self._eval_is_polynomial(syms)
-
-    def _eval_is_rational_function(self, syms):
-        if self.free_symbols.intersection(syms) == set():
-            return True
-        return False
+        # subclasses should return True or False
 
     def is_rational_function(self, *syms):
         """
@@ -2719,16 +2723,17 @@ class Expr(Basic, EvalfMixin):
             syms = set(map(sympify, syms))
         else:
             syms = self.free_symbols
+            if not syms:
+                return True
 
-        if syms.intersection(self.free_symbols) == set():
-            # constant rational function
+        return self._eval_is_rational_function(syms)
+
+    def _eval_is_rational_function(self, syms):
+        if self in syms:
             return True
-        else:
-            return self._eval_is_rational_function(syms)
-
-    def _eval_is_meromorphic(self, x, a):
-        # Default implementation, return True for constants.
-        return None if self.has(x) else True
+        if not self.has_free(*syms):
+            return True
+        # subclasses should return True or False
 
     def is_meromorphic(self, x, a):
         """
@@ -2791,10 +2796,12 @@ class Expr(Basic, EvalfMixin):
 
         return self._eval_is_meromorphic(x, a)
 
-    def _eval_is_algebraic_expr(self, syms):
-        if self.free_symbols.intersection(syms) == set():
+    def _eval_is_meromorphic(self, x, a):
+        if self == x:
             return True
-        return False
+        if not self.has_free(x):
+            return True
+        # subclasses should return True or False
 
     def is_algebraic_expr(self, *syms):
         """
@@ -2842,12 +2849,17 @@ class Expr(Basic, EvalfMixin):
             syms = set(map(sympify, syms))
         else:
             syms = self.free_symbols
+            if not syms:
+                return True
 
-        if syms.intersection(self.free_symbols) == set():
-            # constant algebraic expression
+        return self._eval_is_algebraic_expr(syms)
+
+    def _eval_is_algebraic_expr(self, syms):
+        if self in syms:
             return True
-        else:
-            return self._eval_is_algebraic_expr(syms)
+        if not self.has_free(*syms):
+            return True
+        # subclasses should return True or False
 
     ###################################################################################
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################
