@@ -1350,7 +1350,7 @@ class Derivative(Expr):
         if len(variable_count) == 0:
             return expr
 
-        evaluate = kwargs.get('evaluate', False)
+        evaluate = kwargs.get('evaluate', None)
 
         if evaluate:
             if isinstance(expr, Derivative):
@@ -1397,10 +1397,12 @@ class Derivative(Expr):
             variable_count = cls._sort_variable_count(variable_count)
 
         # denest
-        if isinstance(expr, Derivative):
+        if evaluate is not False and isinstance(expr, Derivative):
             variable_count = list(expr.variable_count) + variable_count
             expr = expr.expr
-            return _derivative_dispatch(expr, *variable_count, **kwargs)
+            return cls(expr, *variable_count, **kwargs)
+
+        #Correction :Fixes not checking evaluate=False condition.
 
         # we return here if evaluate is False or if there is no
         # _eval_derivative method
