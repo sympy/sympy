@@ -2,7 +2,7 @@
 from collections import defaultdict
 from collections.abc import Mapping
 from itertools import chain, zip_longest
-from typing import Set, Tuple
+from typing import Set, Tuple, Any
 
 from .assumptions import ManagedProperties
 from .cache import cacheit
@@ -82,6 +82,7 @@ class Basic(Printable, metaclass=ManagedProperties):
                 )
 
     _args: 'Tuple[Basic, ...]'
+    _mhash: 'Any'
 
     # To be overridden with True in the appropriate subclasses
     is_number = False
@@ -140,7 +141,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             raise NotImplementedError(msg)
         return super().__reduce_ex__(protocol)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         # hash cannot be cached using cache_it because infinite recurrence
         # occurs as hash is needed for setting cache dictionary keys
         h = self._mhash
@@ -354,10 +355,20 @@ class Basic(Printable, metaclass=ManagedProperties):
             except (SympifyError, SyntaxError):
                 return NotImplemented
 
-        if type(self) != type(other):
-            return NotImplemented
-
-        return self._hashable_content() == other._hashable_content()
+        # check for pure number expr
+        if  not (self.is_Number and other.is_Number) and (
+                type(self) != type(other)):
+            return False
+        a, b = self._hashable_content(), other._hashable_content()
+        if a != b:
+            return False
+        # check number *in* an expression
+        for a, b in zip(a, b):
+            if not isinstance(a, Basic):
+                continue
+            if a.is_Number and type(a) != type(b):
+                return False
+        return True
 
     def __ne__(self, other):
         """``a != b``  -> Compare two symbolic trees and see whether they are different
