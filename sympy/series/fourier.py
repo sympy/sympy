@@ -172,9 +172,9 @@ class FourierSeries(SeriesBase):
         q = Wild("q")
         n = Dummy('n')
         try:
-            gen_term = self.args[2][1].formula.match(p*cos(q))[p]
+            gen_term = self.cos_sequence.formula.match(p*cos(q))[p]
         except TypeError:
-            return self.args[2][1]
+            return self.cos_sequence
         else:
             return SeqFormula(gen_term, (n, 1, oo))
 
@@ -184,9 +184,9 @@ class FourierSeries(SeriesBase):
         q = Wild("q")
         n = Dummy('n')
         try:
-            gen_term = self.args[2][2].formula.match(p*sin(q))[p]
+            gen_term = self.sin_sequence.formula.match(p*sin(q))[p]
         except TypeError:
-            return self.args[2][2]
+            return self.sin_sequence
         else:
             return SeqFormula(gen_term, (n, 1, oo))
 
