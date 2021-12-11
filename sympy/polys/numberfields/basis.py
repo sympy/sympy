@@ -122,7 +122,7 @@ def round_two(T, radicals=None):
     Submodule[[2, 0, 0], [0, 2, 0], [0, 1, 1]]/2
     >>> print(K.discriminant())
     -503
-    >>> print([K.to_sympy(a) for a in K.integral_basis()])
+    >>> print(K.integral_basis(fmt='sympy'))
     [1, theta, theta**2/2 + theta/2]
 
     Calling directly:

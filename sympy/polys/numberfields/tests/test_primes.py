@@ -255,7 +255,7 @@ def test_PrimeIdeal_reduce_poly():
     k = QQ.algebraic_field((T, x))
     P = k.primes_above(11)
     frp = P[0]
-    B = [k.to_sympy(a) for a in k.integral_basis()]
+    B = k.integral_basis(fmt='sympy')
     assert [frp.reduce_poly(b, x) for b in B] == [
         1, x, x ** 2, -5 * x ** 2 - 4 * x + 1, -x ** 2 - x - 5,
         4 * x ** 2 - x - 1]
