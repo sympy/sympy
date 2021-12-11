@@ -4,7 +4,7 @@ those who explicitly didn't want to be mentioned. People with a * next
 to their names are not found in the metadata of the git history. This
 file is generated automatically by running `./bin/authors_update.py`.
 
-There are a total of 1129 authors.
+There are a total of 1125 authors.
 
 Ondřej Čertík <ondrej@certik.cz>
 Fabian Pedregosa <fabian@fseoane.net>
@@ -203,7 +203,7 @@ Aleksandar Makelov <amakelov@college.harvard.edu>
 Sachin Irukula <sachin.irukula@gmail.com>
 Raphael Michel <webmaster@raphaelmichel.de>
 Ashwini Oruganti <ashwini.oruganti@gmail.com>
-Andreas Kloeckner <inform@tiker.net>
+Andreas Klöckner <inform@tiker.net>
 Prateek Papriwal <papriwalprateek@gmail.com>
 Arpit Goyal <agmps18@gmail.com>
 Angadh Nanjangud <angadh.n@gmail.com>
@@ -518,6 +518,7 @@ Leonid Kovalev <leonidvkovalev@gmail.com>
 Josh Burkart <jburkart@gmail.com>
 Dimitra Konomi <t8130064@dias.aueb.gr>
 Christina Zografou <t8130048@dias.aueb.gr>
+Alex Lindsay <alexlindsay239@gmail.com>
 Fiach Antaw <fiach.antaw+github@gmail.com>
 Langston Barrett <langston.barrett@gmail.com>
 Krit Karan <kritkaran.b13@iiits.in>
@@ -1108,20 +1109,16 @@ Evgenia Karunus <lakesare@gmail.com>
 RDxR10 <risirajdey@gmail.com>
 lastcodestanding <rohang71604@gmail.com>
 Andrey Lekar <andrey_lekar@adoriasoft.com>
-blackyblack <andrey_lekar@adoriasoft.com>
 Abbas <42001049+iam-abbas@users.noreply.github.com>
-mohajain <45903778+mohajain@users.noreply.github.com>
 anutosh491 <andersonbhat491@gmail.com>
 Steve Kieffer <sk@skieffer.info>
 Paul Spiering <paul@spiering.org>
-praneeeth <praneethratna@gmail.com>
 Pieter Gijsbers <p.gijsbers@tue.nl>
 ThePauliPrinciple <35560762+ThePauliPrinciple@users.noreply.github.com>
 Wang Ran (汪然) <wangr@smail.nju.edu.cn>
 naelsondouglas <naelson17@gmail.com>
 jhonsnow456 <thakuraman22july@gmail.com>
 Aman Thakur <54764701+jhonsnow456@users.noreply.github.com>
-Alex Lindsay <alexlindsay239@gmail.com>
 S. Hanko <suzy.hanko@gmail.com>
 sweeneyde <sweeney.427@osu.edu>
 gurpartap0306 <dhaliwal.gurpartap@gmail.com>
@@ -1131,7 +1128,6 @@ scimax <max.kellermeier@hotmail.de>
 Nikhil Date <nikhil.s.date@gmail.com>
 Joannah Nanjekye <jnanjekye@python.org>
 Kuldeep Borkar Jr <kuldeepborkarjr765@gmail.com>
-Andreas Klöckner <inform@tiker.net>
 AkuBrain <76952313+Franck2111@users.noreply.github.com>
 Leo Battle <leowbattle@gmail.com>
 Advait <apote2050@gmail.com>
