@@ -13,7 +13,7 @@ from ._print_helpers import Printable
 
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import iterable, numbered_symbols
+from sympy.utilities.iterables import iterable, numbered_symbols, NotIterable
 from sympy.utilities.misc import filldedent, func_name
 
 from inspect import getmro
@@ -328,10 +328,10 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         If a class that overrides __eq__() needs to retain the
         implementation of __hash__() from a parent class, the
-        interpreter must be told this explicitly by setting __hash__ =
-        <ParentClass>.__hash__. Otherwise the inheritance of __hash__()
-        will be blocked, just as if __hash__ had been explicitly set to
-        None.
+        interpreter must be told this explicitly by setting
+        __hash__ : Callable[[object], int] = <ParentClass>.__hash__.
+        Otherwise the inheritance of __hash__() will be blocked,
+        just as if __hash__ had been explicitly set to None.
 
         References
         ==========
@@ -342,9 +342,15 @@ class Basic(Printable, metaclass=ManagedProperties):
             return True
 
         if not isinstance(other, Basic):
+            if iterable(other, exclude=(str, NotIterable)
+                    ) and not hasattr(other, '_sympy_'):
+                # XXX iterable self should have it's own __eq__
+                # method if the path gives a false negative
+                # comparison
+                return False
             try:
                 other = _sympify(other)
-            except SympifyError:
+            except (SympifyError, SyntaxError):
                 return NotImplemented
 
         if type(self) != type(other):

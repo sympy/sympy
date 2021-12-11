@@ -8,6 +8,7 @@
 
 from collections import OrderedDict
 from collections.abc import MutableSet
+from typing import Any, Callable
 
 from .basic import Basic
 from .sorting import default_sort_key
@@ -304,6 +305,12 @@ class Dict(Basic):
     def _sorted_args(self):
         return tuple(sorted(self.args, key=default_sort_key))
 
+    def __eq__(self, other):
+        if isinstance(other, dict):
+            return self == Dict(other)
+        return super().__eq__(other)
+
+    __hash__ : Callable[[Basic], Any] = Basic.__hash__
 
 # this handles dict, defaultdict, OrderedDict
 converter[dict] = lambda d: Dict(*d.items())

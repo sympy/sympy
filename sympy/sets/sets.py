@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Callable, Optional
 from functools import reduce
 from collections import defaultdict
 import inspect
@@ -1968,6 +1968,12 @@ class FiniteSet(Set):
             raise TypeError("Invalid comparison of set with %s" % func_name(other))
         return self.is_proper_subset(other)
 
+    def __eq__(self, other):
+        if isinstance(other, (set, frozenset)):
+            return self._args_set == other
+        return super().__eq__(other)
+
+    __hash__ : Callable[[Basic], Any] = Basic.__hash__
 
 converter[set] = lambda x: FiniteSet(*x)
 converter[frozenset] = lambda x: FiniteSet(*x)
