@@ -841,8 +841,7 @@ class Pow(Expr):
 
             For noncommutative objects, `pow` will be an integer, and a factor
             `Pow(old.base, remainder_pow)` needs to be included. If there is
-            no such factor, None is returned. For commutative objects,
-            remainder_pow is always None.
+            no such factor, None is returned.
 
             cti are the coefficient and terms of an exponent of self or old
             In this _eval_subs routine a change like (b**(2*x)).subs(b**x, y)
@@ -855,17 +854,10 @@ class Pow(Expr):
             coeff2, terms2 = ct2
             if terms1 == terms2:
                 if old.is_commutative:
-                    # Allow fractional powers for commutative objects
-                    pow = coeff1/coeff2
-                    try:
-                        as_int(pow, strict=False)
-                        combines = True
-                    except ValueError:
-                        b, e = old.as_base_exp()
-                        # These conditions ensure that (b**e)**f == b**(e*f) for any f
-                        combines = b.is_positive and e.is_real or b.is_nonnegative and e.is_nonnegative
-
-                    return combines, pow, None
+                    print("iscommutative")
+                    pow = coeff1//coeff2
+                    remainder_pow = coeff1%coeff2
+                    return True, pow, remainder_pow
                 else:
                     # With noncommutative symbols, substitute only integer powers
                     if not isinstance(terms1, tuple):
