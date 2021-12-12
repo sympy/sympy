@@ -642,3 +642,16 @@ def test_powers_of_I():
         1, sqrt(I), I, sqrt(I)**3, -1, -sqrt(I), -I, -sqrt(I)**3,
         1, sqrt(I), I, sqrt(I)**3, -1]
     assert sqrt(I)**(S(9)/2) == -I**(S(1)/4)
+
+def test_issue_22249():
+    x = Symbol('x')
+    y = Symbol('y')
+    z = Symbol('z')
+    assert (x**1).subs(x**2, y) ==  x
+    assert (x**2).subs(x**2, y) == y
+    assert (x**3).subs(x**2, y) == x*y
+    assert (x**4).subs(x**2, y) ==y**2
+    assert (x**5).subs(x**2, y) == x*y**2
+    assert (x**8).subs(x**3,z) == x**2*z**2
+    assert (x**4 + x*y).subs(x**2,y) == y**2 + x*y
+    assert (x**4 + x**2).subs(x**2,y) == y**2 + y
