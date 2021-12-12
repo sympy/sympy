@@ -272,7 +272,7 @@ def is_decreasing(expression, interval=S.Reals, symbol=None):
     >>> from sympy import is_decreasing
     >>> from sympy.abc import x, y
     >>> from sympy import S, Interval, oo
-    >>> is_decreasing(1/(x**2 - 3*x), Interval.open(1.5, 3))
+    >>> is_decreasing(1/(x**2 - 3*x), Interval.open(S(3)/2, 3))
     True
     >>> is_decreasing(1/(x**2 - 3*x), Interval.Lopen(3, oo))
     True
