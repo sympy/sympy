@@ -854,7 +854,6 @@ class Pow(Expr):
             coeff2, terms2 = ct2
             if terms1 == terms2:
                 if old.is_commutative:
-                    print("iscommutative")
                     pow = coeff1//coeff2
                     remainder_pow = coeff1%coeff2
                     return True, pow, remainder_pow
