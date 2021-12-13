@@ -914,6 +914,9 @@ class String(Atom, Token):
     def func(self):
         return lambda: self
 
+    def _latex(self, printer):
+        return r'\texttt{{"{}"}}'.format(self.text)
+
 class QuotedString(String):
     """ Represents a string which should be printed with quotes. """
 
@@ -1128,6 +1131,10 @@ class Type(Token):
             raise ValueError("Casting gives a significantly different value.")
 
         return new_val
+
+    def _latex(self, printer):
+        return r"\text{{{}}}\left(\texttt{{{}}}\right)".format(self.__class__.__name__,
+                                                               self.name.text)
 
 
 class IntBaseType(Type):
