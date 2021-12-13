@@ -17,15 +17,6 @@
 #
 # The documentation will be built in SYMPY_ROOT's doc/_build/html directory.
 #
-# To view the docs, you can run a simple web server on a port of your choice
-# with, e.g.
-#
-#   $ cd SYMPY_ROOT/doc/_build/html
-#   $ python -m http.server 8888
-#
-# then navigate your browser to http://localhost:8888 (or substitute the port
-# you chose).
-#
 ###############################################################################
 
 FROM python:3.8.12-slim-buster
