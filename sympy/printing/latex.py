@@ -2029,7 +2029,7 @@ class LatexPrinter(Printer):
         if hasattr(d, 'as_boolean'):
             return '\\text{Domain: }' + self._print(d.as_boolean())
         elif hasattr(d, 'set'):
-            return ('\\text{Domain: }' + self._print(d.symbols) + '\\text{ in }' +
+            return ('\\text{Domain: }' + self._print(d.symbols) + ' \\in ' +
                     self._print(d.set))
         elif hasattr(d, 'symbols'):
             return '\\text{Domain on }' + self._print(d.symbols)
@@ -2469,6 +2469,18 @@ class LatexPrinter(Printer):
             arg1 = self._print(expr.args[1])
             result = "W{0}_{{{1}}}\\left({2}\\right)".format(exp, arg1, arg0)
         return result
+
+    def _print_Expectation(self, expr):
+        return r"E\left[{}\right]".format(self._print(expr.args[0]))
+
+    def _print_Variance(self, expr):
+        return r"\operatorname{{var}}\left({}\right)".format(self._print(expr.args[0]))
+
+    def _print_Covariance(self, expr):
+        return r"\operatorname{{cov}}\left({}\right)".format(", ".join(self._print(arg) for arg in expr.args))
+
+    def _print_Probability(self, expr):
+        return r"P\left({}\right)".format(self._print(expr.args[0]))
 
     def _print_Morphism(self, morphism):
         domain = self._print(morphism.domain)
