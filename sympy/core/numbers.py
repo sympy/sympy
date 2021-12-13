@@ -4327,9 +4327,9 @@ class Catalan(NumberSymbol, metaclass=Singleton):
     Explanation
     ===========
 
-    `K = 0.91596559\ldots` is given by the infinite series
+    $G = 0.91596559\ldots$ is given by the infinite series
 
-    .. math:: K = \sum_{k=0}^{\infty} \frac{(-1)^k}{(2k+1)^2}
+    .. math:: G = \sum_{k=0}^{\infty} \frac{(-1)^k}{(2k+1)^2}
 
     Catalan is a singleton, and can be accessed by ``S.Catalan``.
 
@@ -4379,6 +4379,9 @@ class Catalan(NumberSymbol, metaclass=Singleton):
         from sympy.concrete.summations import Sum
         k = Dummy('k', integer=True, nonnegative=True)
         return Sum(S.NegativeOne**k / (2*k+1)**2, (k, 0, S.Infinity))
+
+    def _latex(self, printer):
+        return "G"
 
 
 class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
