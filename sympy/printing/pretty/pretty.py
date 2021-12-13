@@ -1855,6 +1855,9 @@ class PrettyPrinter(Printer):
             return prettyForm(pretty_symbol('gamma'))
         return self._print(Symbol("EulerGamma"))
 
+    def _print_Catalan(self, expr):
+        return self._print(Symbol("G"))
+
     def _print_Mod(self, expr):
         pform = self._print(expr.args[0])
         if pform.binding > prettyForm.MUL:
