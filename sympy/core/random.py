@@ -38,7 +38,6 @@ def seed(intseed):
     rng.seed(intseed)
     rng_assumptions.seed(intseed)
 
-seed = rng.seed
 
 def random_complex_number(a=2, b=-1, c=3, d=1, rational=False, tolerance=None):
     """
