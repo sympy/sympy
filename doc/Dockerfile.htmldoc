@@ -1,0 +1,41 @@
+###############################################################################
+# This Dockerfile can be used to build an image where the HTML version of the
+# docs for SymPy can be built.
+#
+# If SYMPY_ROOT is the directory where the sympy repository lives, then you can
+# build the image with
+#
+#   $ cd SYMPY_ROOT
+#   $ docker build -f doc/Dockerfile.htmldoc -t sympy_htmldoc ./release
+#
+# Once the image is built, you can build the docs at any time (and from any
+# directory) using
+#
+#   $ docker run --rm -v /absolute/path/to/SYMPY_ROOT:/sympy sympy_htmldoc
+#
+# (substitute the actual absolute filesystem path to SYMPY_ROOT).
+#
+# The documentation will be built in SYMPY_ROOT's doc/_build/html directory.
+#
+# To view the docs, you can run a simple web server on a port of your choice
+# with, e.g.
+#
+#   $ cd SYMPY_ROOT/doc/_build/html
+#   $ python -m http.server 8888
+#
+# then navigate your browser to http://localhost:8888 (or substitute the port
+# you chose).
+#
+###############################################################################
+
+FROM python:3.8.12-slim-buster
+
+RUN apt-get update
+RUN apt-get install -y make librsvg2-bin imagemagick graphviz git
+
+COPY requirements.txt /tmp
+RUN egrep "phinx|mpmath|matplotlib" /tmp/requirements.txt > /tmp/req_min.txt
+RUN pip install --upgrade pip
+RUN pip install -r /tmp/req_min.txt
+
+CMD cd /sympy/doc; make html
