@@ -451,8 +451,10 @@ class AnnihilateBoson(BosonicOperator, Annihilator):
         return "AnnihilateBoson(%s)" % self.state
 
     def _latex(self, printer):
-        return "b_{%s}" % self.state.name
-
+        if self.state is S.Zero:
+            return "b_{0}"
+        else:
+            return "b_{%s}" % self.state.name
 
 class CreateBoson(BosonicOperator, Creator):
     """
@@ -490,7 +492,10 @@ class CreateBoson(BosonicOperator, Creator):
         return "CreateBoson(%s)" % self.state
 
     def _latex(self, printer):
-        return "{b^\\dagger_{%s}}" % self.state.name
+        if self.state is S.Zero:
+            return "{b^\\dagger_{0}}"
+        else:
+            return "{b^\\dagger_{%s}}" % self.state.name
 
 B = AnnihilateBoson
 Bd = CreateBoson
@@ -805,7 +810,10 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         return "AnnihilateFermion(%s)" % self.state
 
     def _latex(self, printer):
-        return "a_{%s}" % self.state.name
+        if self.state is S.Zero:
+            return "a_{0}"
+        else:
+            return "a_{%s}" % self.state.name
 
 
 class CreateFermion(FermionicOperator, Creator):
@@ -951,7 +959,10 @@ class CreateFermion(FermionicOperator, Creator):
         return "CreateFermion(%s)" % self.state
 
     def _latex(self, printer):
-        return "{a^\\dagger_{%s}}" % self.state.name
+        if self.state is S.Zero:
+            return "{a^\\dagger_{0}}"
+        else:
+            return "{a^\\dagger_{%s}}" % self.state.name
 
 Fd = CreateFermion
 F = AnnihilateFermion
@@ -991,13 +1002,16 @@ class FockState(Expr):
         return ("FockState(%r)") % (self.args)
 
     def __str__(self):
-        return "%s%r%s" % (self.lbracket, self._labels(), self.rbracket)
+        return "%s%r%s" % (getattr(self, 'lbracket', ""), self._labels(), getattr(self, 'rbracket', ""))
 
     def _labels(self):
         return self.args[0]
 
     def __len__(self):
         return len(self.args[0])
+
+    def _latex(self, printer):
+        return "%s%s%s" % (getattr(self, 'lbracket_latex', ""), printer._print(self._labels()), getattr(self, 'rbracket_latex', ""))
 
 
 class BosonState(FockState):
@@ -1254,6 +1268,8 @@ class FockStateKet(FockState):
     """
     lbracket = '|'
     rbracket = '>'
+    lbracket_latex = r'\left|'
+    rbracket_latex = r'\right\rangle'
 
 
 class FockStateBra(FockState):
@@ -1262,6 +1278,8 @@ class FockStateBra(FockState):
     """
     lbracket = '<'
     rbracket = '|'
+    lbracket_latex = r'\left\langle'
+    rbracket_latex = r'\right|'
 
     def __mul__(self, other):
         if isinstance(other, FockStateKet):
