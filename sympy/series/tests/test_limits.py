@@ -928,13 +928,6 @@ def test_issue_18521():
     raises(NotImplementedError, lambda: limit(exp((2 - n) * x), x, oo))
 
 
-def test_issue_18707():
-    n = Symbol('n')
-    p = Symbol('p', positive=True, real=True, nonzero=True)
-    assert limit(1/(p**n), n, S.Infinity) == exp(-oo*sign(log(p)))
-    assert limit(1/(p**(-n)), n, S.Infinity) == exp(oo*sign(log(p)))
-
-
 def test_issue_18969():
     a, b = symbols('a b', positive=True)
     assert limit(LambertW(a), a, b) == LambertW(b)
