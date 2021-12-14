@@ -396,7 +396,8 @@ class Set(Basic, EvalfMixin):
         # XXX: We shouldn't do this. A query like this should be handled
         # without evaluating new Set objects. It should be the other way round
         # so that the intersect method uses is_subset for evaluation.
-        if self.intersect(other) == self:
+        intersect = self.intersect(other)
+        if intersect == self:
             return True
 
     def _eval_is_subset(self, other):
@@ -1154,6 +1155,13 @@ class Interval(Set):
                 return None
             return false
 
+    def is_subset(self, other):
+        is_subset = super().is_subset(other)
+        if isinstance(other, Interval) and is_subset is None:
+            intersect = self.intersect(other)
+            if Eq(intersect.right, self.right) == True and Eq(intersect.left, self.left) == True:
+                return True
+        return subset
 
 class Union(Set, LatticeOp):
     """
@@ -1364,7 +1372,6 @@ class Intersection(Set, LatticeOp):
         if evaluate:
             args = list(cls._new_args_filter(args))
             return simplify_intersection(args)
-
         args = list(ordered(args, Set._infimum_key))
 
         obj = Basic.__new__(cls, *args)
@@ -2445,7 +2452,6 @@ def simplify_intersection(args):
             args.remove(s)
             other_sets = args + [s.args[0]]
             return Complement(Intersection(*other_sets), s.args[1])
-
 
     from sympy.sets.handlers.intersection import intersection_sets
 
