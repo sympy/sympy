@@ -281,7 +281,7 @@ def run_in_subprocess_with_hash_randomization(
         return p.returncode
 
 
-def run_all_tests(test_args=(), test_kwargs=None,
+def run_all_tests(test_basic_subclasses=(), test_kwargs=None,
                   doctest_args=(), doctest_kwargs=None,
                   examples_args=(), examples_kwargs=None):
     """
@@ -299,7 +299,7 @@ def run_all_tests(test_args=(), test_kwargs=None,
     For example, to run the solvers tests with colors turned off:
 
     >>> from sympy.testing.runtests import run_all_tests
-    >>> run_all_tests(test_args=("solvers",),
+    >>> run_all_tests(test_basic_subclasses=("solvers",),
     ... test_kwargs={"colors:False"}) # doctest: +SKIP
 
     """
@@ -311,7 +311,7 @@ def run_all_tests(test_args=(), test_kwargs=None,
 
     try:
         # Regular tests
-        if not test(*test_args, **test_kwargs):
+        if not test(*test_basic_subclasses, **test_kwargs):
             # some regular test fails, so set the tests_successful
             # flag to false and continue running the doctests
             tests_successful = False
