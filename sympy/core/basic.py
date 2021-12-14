@@ -1271,11 +1271,11 @@ class Basic(Printable, metaclass=ManagedProperties):
                     continue  # Basic won't have this in it
             p_set.add(p)  # fails if object defines __eq__ but
                           # doesn't define __hash__
-                                  #
+        types = tuple(type_set)   #
         for i in iterargs(self):  #
             if i in p_set:        # <--- here, too
                 return True
-            if type(i) in type_set or any(isinstance(i, t) for t in type_set):
+            if isinstance(i, types):
                 return True
 
         # use matcher if defined, e.g. operations defines
