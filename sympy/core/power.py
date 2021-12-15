@@ -1894,7 +1894,7 @@ class Pow(Expr):
             #= b**(iceh)*b**(r/cehq)*b**(ce*t)
             #= b**(iceh)*b**(ce*t + r/cehq)
             h, t = pe.as_coeff_Add()
-            if h.is_Rational:
+            if h.is_Rational and b != S.Zero:
                 ceh = ce*h
                 c = self.func(b, ceh)
                 r = S.Zero
