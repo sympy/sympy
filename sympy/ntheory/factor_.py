@@ -435,9 +435,9 @@ def perfect_power(n, candidates=None, big=True, factor=True):
 
     Rationals are also recognized:
 
-    >>> perfect_power(Rational(1/2)**3)
+    >>> perfect_power(Rational(1, 2)**3)
     (1/2, 3)
-    >>> perfect_power(Rational(-3/2)**3)
+    >>> perfect_power(Rational(-3, 2)**3)
     (-3/2, 3)
 
     Notes

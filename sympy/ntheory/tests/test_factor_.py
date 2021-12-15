@@ -160,8 +160,8 @@ def test_perfect_power():
     # negatives and non-integer rationals
     assert perfect_power(-4) is False
     assert perfect_power(-8) == (-2, 3)
-    assert perfect_power(Rational(1/2)**3) == (S.Half, 3)
-    assert perfect_power(Rational(-3/2)**3) == (-3*S.Half, 3)
+    assert perfect_power(Rational(1, 2)**3) == (S.Half, 3)
+    assert perfect_power(Rational(-3, 2)**3) == (-3*S.Half, 3)
 
 
 @slow
