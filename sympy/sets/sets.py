@@ -1161,7 +1161,7 @@ class Interval(Set):
             intersect = self.intersect(other)
             if Eq(intersect.right, self.right) == True and Eq(intersect.left, self.left) == True:
                 return True
-        return subset
+        return is_subset
 
 class Union(Set, LatticeOp):
     """
