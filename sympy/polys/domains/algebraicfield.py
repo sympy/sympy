@@ -183,8 +183,10 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
     The `discriminant`_ of the field can be obtained from the
     :py:meth:`~.discriminant` method, and an `integral basis`_ from the
-    :py:meth:`~.integral_basis` method as a list of :py:class:`~.ANP`
-    instances. The maximal order, or ring of integers, of the field can also be
+    :py:meth:`~.integral_basis` method. The latter returns a list of
+    :py:class:`~.ANP` instances by default, but can be made to return instances
+    of :py:class:`~.Expr` or :py:class:`~.AlgebraicNumber` by passing a ``fmt``
+    argument. The maximal order, or ring of integers, of the field can also be
     obtained from the :py:meth:`~.maximal_order` method, as a
     :py:class:`~sympy.polys.numberfields.modules.Submodule`.
 
@@ -197,7 +199,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     >>> K = QQ.algebraic_field(sqrt(5))
     >>> K
     QQ<sqrt(5)>
-    >>> [K.to_sympy(a) for a in K.integral_basis()]
+    >>> K.integral_basis(fmt='sympy')
     [1, 1/2 + sqrt(5)/2]
     >>> K.maximal_order()
     Submodule[[2, 0], [1, 1]]/2
@@ -313,8 +315,17 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \ldots)`. """
         return AlgebraicField(self.dom, *((self.ext,) + extension))
 
+    def to_alg_num(self, a):
+        """Convert ``a`` of ``dtype`` to an :py:class:`~.AlgebraicNumber`. """
+        theta = self.ext
+        # `self.ext.root` may be an `AlgebraicNumber`, in which case we should
+        # use it instead of `self.ext`, in case it has an `alias`.
+        if hasattr(theta.root, "field_element"):
+            theta = theta.root
+        return theta.field_element(a)
+
     def to_sympy(self, a):
-        """Convert ``a`` to a SymPy object. """
+        """Convert ``a`` of ``dtype`` to a SymPy object. """
         # Precompute a converter to be reused:
         if not hasattr(self, '_converter'):
             self._converter = _make_converter(self)
@@ -429,25 +440,62 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
             self._do_round_two()
         return self._maximal_order
 
-    def integral_basis(self):
+    def integral_basis(self, fmt=None):
         r"""
         Get an integral basis for the field.
 
-        Returns
-        =======
+        Parameters
+        ==========
 
-        List of :py:class:`~.ANP` instances.
+        fmt : str, None, optional (default=None)
+            If ``None``, return a list of :py:class:`~.ANP` instances.
+            If ``"sympy"``, convert each element of the list to an
+            :py:class:`~.Expr`, using ``self.to_sympy()``.
+            If ``"alg"``, convert each element of the list to an
+            :py:class:`~.AlgebraicNumber`, using ``self.to_alg_num()``.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ, AlgebraicNumber, sqrt
+        >>> alpha = AlgebraicNumber(sqrt(5), alias='alpha')
+        >>> k = QQ.algebraic_field(alpha)
+        >>> B0 = k.integral_basis()
+        >>> B1 = k.integral_basis(fmt='sympy')
+        >>> B2 = k.integral_basis(fmt='alg')
+        >>> print(B0[1])  # doctest: +SKIP
+        ANP([mpq(1,2), mpq(1,2)], [mpq(1,1), mpq(0,1), mpq(-5,1)], QQ)
+        >>> print(B1[1])
+        1/2 + alpha/2
+        >>> print(B2[1])
+        alpha/2 + 1/2
+
+        In the last two cases we get legible expressions, which print somewhat
+        differently because of the different types involved:
+
+        >>> print(type(B1[1]))
+        <class 'sympy.core.add.Add'>
+        >>> print(type(B2[1]))
+        <class 'sympy.core.numbers.AlgebraicNumber'>
 
         See Also
         ========
 
+        to_sympy()
+        to_alg_num()
         maximal_order()
 
         """
         ZK = self.maximal_order()
         M = ZK.QQ_matrix
-        return [self.dtype(list(reversed(M[:, j].flat())), self.mod.rep, self.dom)
-                for j in range(M.shape[1])]
+        n = M.shape[1]
+        B = [self.new(list(reversed(M[:, j].flat()))) for j in range(n)]
+        if fmt == 'sympy':
+            return [self.to_sympy(b) for b in B]
+        elif fmt == 'alg':
+            return [self.to_alg_num(b) for b in B]
+        return B
+
 
     def discriminant(self):
         """Get the discriminant of the field."""

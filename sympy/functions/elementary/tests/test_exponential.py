@@ -190,7 +190,7 @@ def test_exp_rewrite():
 
     n = Symbol('n', integer=True)
 
-    assert Sum((exp(pi*I/2)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == Rational(4, 5) + I*Rational(2, 5)
+    assert Sum((exp(pi*I/2)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == Rational(4, 5) + I*2/5
     assert Sum((exp(pi*I/4)/2)**n, (n, 0, oo)).rewrite(sqrt).doit() == 1/(1 - sqrt(2)*(1 + I)/4)
     assert (Sum((exp(pi*I/3)/2)**n, (n, 0, oo)).rewrite(sqrt).doit().cancel()
             == 4*I/(sqrt(3) + 3*I))
@@ -465,7 +465,7 @@ def test_log_hashing():
 
     e = log(log(x))
     assert e.func is log
-    assert not x.func is log
+    assert x.func is not log
     assert hash(log(log(x))) != hash(x)
     assert e != x
 

@@ -210,7 +210,7 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
 
                         monom[indices[base]] = exp
                     except KeyError:
-                        if not factor.free_symbols.intersection(opt.gens):
+                        if not factor.has_free(*opt.gens):
                             coeff.append(factor)
                         else:
                             raise PolynomialError("%s contains an element of "

@@ -45,6 +45,9 @@ from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import a, b, c, n, t, u, x, y, z
 
 
+f, g, h = symbols('f,g,h', cls=Function)
+
+
 class DummyNumber:
     """
     Minimal implementation of a number that works with SymPy.
@@ -260,10 +263,12 @@ class NonExpr(Basic, NonBasic):
     pass
 
 
-class SpecialOp(Basic):
+class SpecialOp():
     '''Represents the results of operations with NonBasic and NonExpr'''
     def __new__(cls, op, arg1, arg2):
-        return Basic.__new__(cls, op, arg1, arg2)
+        obj = object.__new__(cls)
+        obj.args = (op, arg1, arg2)
+        return obj
 
 
 class NonArithmetic(Basic):
@@ -470,15 +475,15 @@ def test_as_leading_term():
     raises(ValueError, lambda: (x + 1).as_leading_term(1))
 
     # https://github.com/sympy/sympy/issues/21177
-    f = -3*x + (x + Rational(3, 2) - sqrt(3)*S.ImaginaryUnit/2)**2\
+    e = -3*x + (x + Rational(3, 2) - sqrt(3)*S.ImaginaryUnit/2)**2\
         - Rational(3, 2) + 3*sqrt(3)*S.ImaginaryUnit/2
-    assert f.as_leading_term(x) == \
+    assert e.as_leading_term(x) == \
         (12*sqrt(3)*x - 12*S.ImaginaryUnit*x)/(4*sqrt(3) + 12*S.ImaginaryUnit)
 
     # https://github.com/sympy/sympy/issues/21245
-    f = 1 - x - x**2
-    fi = (1 + sqrt(5))/2
-    assert f.subs(x, y + 1/fi).as_leading_term(y) == \
+    e = 1 - x - x**2
+    d = (1 + sqrt(5))/2
+    assert e.subs(x, y + 1/d).as_leading_term(y) == \
         (-576*sqrt(5)*y - 1280*y)/(256*sqrt(5) + 576)
 
 
@@ -562,7 +567,6 @@ def test_atoms():
         {1 + x*(2 + y) + exp(3 + z), 2 + y, 3 + z}
 
     # issue 6132
-    f = Function('f')
     e = (f(x) + sin(x) + 2)
     assert e.atoms(AppliedUndef) == \
         {f(x)}
@@ -622,6 +626,8 @@ def test_is_polynomial():
     assert (
         (x**2)*(y**2) + x*(y**2) + y*x + exp(x)).is_polynomial(x, y) is False
 
+    assert (1/f(x) + 1).is_polynomial(f(x)) is False
+
 
 def test_is_rational_function():
     assert Integer(1).is_rational_function() is True
@@ -663,10 +669,10 @@ def test_is_meromorphic():
     assert g.is_meromorphic(x, zoo) is False
 
     n = Symbol('n', integer=True)
-    h = sin(1/x)**n*x
-    assert h.is_meromorphic(x, 0) is False
-    assert h.is_meromorphic(x, 1) is True
-    assert h.is_meromorphic(x, zoo) is False
+    e = sin(1/x)**n*x
+    assert e.is_meromorphic(x, 0) is False
+    assert e.is_meromorphic(x, 1) is True
+    assert e.is_meromorphic(x, zoo) is False
 
     e = log(x)**pi
     assert e.is_meromorphic(x, 0) is False
@@ -899,22 +905,21 @@ def test_as_independent():
 @XFAIL
 def test_call_2():
     # TODO UndefinedFunction does not subclass Expr
-    f = Function('f')
     assert (2*f)(x) == 2*f(x)
 
 
 def test_replace():
-    f = log(sin(x)) + tan(sin(x**2))
+    e = log(sin(x)) + tan(sin(x**2))
 
-    assert f.replace(sin, cos) == log(cos(x)) + tan(cos(x**2))
-    assert f.replace(
+    assert e.replace(sin, cos) == log(cos(x)) + tan(cos(x**2))
+    assert e.replace(
         sin, lambda a: sin(2*a)) == log(sin(2*x)) + tan(sin(2*x**2))
 
     a = Wild('a')
     b = Wild('b')
 
-    assert f.replace(sin(a), cos(a)) == log(cos(x)) + tan(cos(x**2))
-    assert f.replace(
+    assert e.replace(sin(a), cos(a)) == log(cos(x)) + tan(cos(x**2))
+    assert e.replace(
         sin(a), lambda a: sin(2*a)) == log(sin(2*x)) + tan(sin(2*x**2))
     # test exact
     assert (2*x).replace(a*x + b, b - a, exact=True) == 2*x
@@ -957,7 +962,6 @@ def test_replace():
 
     # https://groups.google.com/forum/#!topic/sympy/8wCgeC95tz0
     n1, n2, n3 = symbols('n1:4', commutative=False)
-    f = Function('f')
     assert (n1*f(n2)).replace(f, lambda x: x) == n1*n2
     assert (n3*f(n2)).replace(f, lambda x: x) == n3*n2
 
@@ -1013,15 +1017,12 @@ def test_count():
     assert expr.count(sin(a)) == 1
     assert expr.count(lambda u: type(u) is sin) == 1
 
-    f = Function('f')
     assert f(x).count(f(x)) == 1
     assert f(x).diff(x).count(f(x)) == 1
     assert f(x).diff(x).count(x) == 2
 
 
 def test_has_basics():
-    f = Function('f')
-    g = Function('g')
     p = Wild('p')
 
     assert sin(x).has(x)
@@ -1072,8 +1073,6 @@ def test_has_multiple():
 
 def test_has_piecewise():
     f = (x*y + 3/y)**(3 + 2)
-    g = Function('g')
-    h = Function('h')
     p = Piecewise((g(x), x < -1), (1, x <= 1), (f, True))
 
     assert p.has(x)
@@ -1125,20 +1124,19 @@ def test_has_integrals():
 
 
 def test_has_tuple():
-    f = Function('f')
-    g = Function('g')
-    h = Function('h')
-
     assert Tuple(x, y).has(x)
     assert not Tuple(x, y).has(z)
     assert Tuple(f(x), g(x)).has(x)
     assert not Tuple(f(x), g(x)).has(y)
     assert Tuple(f(x), g(x)).has(f)
     assert Tuple(f(x), g(x)).has(f(x))
-    assert not Tuple(f, g).has(x)
-    assert Tuple(f, g).has(f)
-    assert not Tuple(f, g).has(h)
-    assert Tuple(True).has(True) is True  # .has(1) will also be True
+    # XXX to be deprecated
+    #assert not Tuple(f, g).has(x)
+    #assert Tuple(f, g).has(f)
+    #assert not Tuple(f, g).has(h)
+    assert Tuple(True).has(True)
+    assert Tuple(True).has(S.true)
+    assert not Tuple(True).has(1)
 
 
 def test_has_units():
@@ -1276,7 +1274,6 @@ def test_as_coeff_exponent():
         (log(2)/(2 + pi), 0)
     # issue 4784
     D = Derivative
-    f = Function('f')
     fx = D(f(x), x)
     assert fx.as_coeff_exponent(f(x)) == (fx, 0)
 
@@ -1406,7 +1403,6 @@ def test_coeff():
     assert (2*(n1 + n2)*n2).coeff(n1 + n2, right=1) == n2
     assert (2*(n1 + n2)*n2).coeff(n1 + n2, right=0) == 2
 
-    f = Function('f')
     assert (2*f(x) + 3*f(x).diff(x)).coeff(f(x)) == 2
 
     expr = z*(x + y)**2
@@ -1604,6 +1600,18 @@ def test_free_symbols():
     assert (meter**x).free_symbols == {x}
 
 
+def test_has_free():
+    assert x.has_free(x)
+    assert not x.has_free(y)
+    assert (x + y).has_free(x)
+    assert (x + y).has_free(*(x, z))
+    assert f(x).has_free(x)
+    assert f(x).has_free(f(x))
+    assert Integral(f(x), (f(x), 1, y)).has_free(y)
+    assert not Integral(f(x), (f(x), 1, y)).has_free(x)
+    assert not Integral(f(x), (f(x), 1, y)).has_free(f(x))
+
+
 def test_issue_5300():
     x = Symbol('x', commutative=False)
     assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3
@@ -1650,7 +1658,6 @@ def test_as_coeff_Add():
 
 
 def test_expr_sorting():
-    f, g = symbols('f,g', cls=Function)
 
     exprs = [1/x**2, 1/x, sqrt(sqrt(x)), sqrt(x), x, sqrt(x)**3, x**2]
     assert sorted(exprs, key=default_sort_key) == exprs
@@ -1694,7 +1701,6 @@ def test_expr_sorting():
 
 
 def test_as_ordered_factors():
-    f, g = symbols('f,g', cls=Function)
 
     assert x.as_ordered_factors() == [x]
     assert (2*x*x**n*sin(x)*cos(x)).as_ordered_factors() \
@@ -1712,7 +1718,6 @@ def test_as_ordered_factors():
 
 
 def test_as_ordered_terms():
-    f, g = symbols('f,g', cls=Function)
 
     assert x.as_ordered_terms() == [x]
     assert (sin(x)**2*cos(x) + sin(x)*cos(x)**2 + 1).as_ordered_terms() \
@@ -1735,15 +1740,16 @@ def test_as_ordered_terms():
     assert ( 4 - 3*I).as_ordered_terms() == [4, -3*I]
     assert (-4 - 3*I).as_ordered_terms() == [-4, -3*I]
 
-    f = x**2*y**2 + x*y**4 + y + 2
+    e = x**2*y**2 + x*y**4 + y + 2
 
-    assert f.as_ordered_terms(order="lex") == [x**2*y**2, x*y**4, y, 2]
-    assert f.as_ordered_terms(order="grlex") == [x*y**4, x**2*y**2, y, 2]
-    assert f.as_ordered_terms(order="rev-lex") == [2, y, x*y**4, x**2*y**2]
-    assert f.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
+    assert e.as_ordered_terms(order="lex") == [x**2*y**2, x*y**4, y, 2]
+    assert e.as_ordered_terms(order="grlex") == [x*y**4, x**2*y**2, y, 2]
+    assert e.as_ordered_terms(order="rev-lex") == [2, y, x*y**4, x**2*y**2]
+    assert e.as_ordered_terms(order="rev-grlex") == [2, y, x**2*y**2, x*y**4]
 
     k = symbols('k')
     assert k.as_ordered_terms(data=True) == ([(k, ((1.0, 0.0), (1,), ()))], [k])
+
 
 def test_sort_key_atomic_expr():
     from sympy.physics.units import m, s
@@ -1814,7 +1820,6 @@ def test_is_constant():
 
     assert checksol(x, x, Sum(x, (x, 1, n))) is False
     assert checksol(x, x, Sum(x, (x, 1, n))) is False
-    f = Function('f')
     assert f(1).is_constant
     assert checksol(x, x, f(x)) is False
 
@@ -1972,7 +1977,6 @@ def test_round():
     assert a.round(30) == Float('2.999999999999999999999999999', '')
 
     raises(TypeError, lambda: x.round())
-    f = Function('f')
     raises(TypeError, lambda: f(1).round())
 
     # exact magnitude of 10
@@ -2013,17 +2017,17 @@ def test_round():
 
     # check that types match
     for i in range(2):
-        f = float(i)
+        fi = float(i)
         # 2 args
         assert all(type(round(i, p)) is int for p in (-1, 0, 1))
         assert all(S(i).round(p).is_Integer for p in (-1, 0, 1))
-        assert all(type(round(f, p)) is float for p in (-1, 0, 1))
-        assert all(S(f).round(p).is_Float for p in (-1, 0, 1))
+        assert all(type(round(fi, p)) is float for p in (-1, 0, 1))
+        assert all(S(fi).round(p).is_Float for p in (-1, 0, 1))
         # 1 arg (p is None)
         assert type(round(i)) is int
         assert S(i).round().is_Integer
-        assert type(round(f)) is int
-        assert S(f).round().is_Integer
+        assert type(round(fi)) is int
+        assert S(fi).round().is_Integer
 
 
 def test_held_expression_UnevaluatedExpr():
@@ -2186,3 +2190,7 @@ def test_21494():
     from sympy.testing.pytest import warns_deprecated_sympy
     with warns_deprecated_sympy():
         assert x.expr_free_symbols == {x}
+
+
+def test_Expr__eq__iterable_handling():
+    assert x != range(3)

@@ -1,5 +1,6 @@
 from sympy.core.add import Add
 from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.logic.boolalg import And
@@ -10,7 +11,7 @@ from sympy.unify.usympy import (deconstruct, construct, unify, is_associative,
 from sympy.abc import x, y, z, n
 
 def test_deconstruct():
-    expr     = Basic(1, 2, 3)
+    expr     = Basic(S(1), S(2), S(3))
     expected = Compound(Basic, (1, 2, 3))
     assert deconstruct(expr) == expected
 
@@ -22,18 +23,18 @@ def test_deconstruct():
               Compound(Add, (1, Variable(x)))
 
 def test_construct():
-    expr     = Compound(Basic, (1, 2, 3))
-    expected = Basic(1, 2, 3)
+    expr     = Compound(Basic, (S(1), S(2), S(3)))
+    expected = Basic(S(1), S(2), S(3))
     assert construct(expr) == expected
 
 def test_nested():
-    expr = Basic(1, Basic(2), 3)
-    cmpd = Compound(Basic, (1, Compound(Basic, (2,)), 3))
+    expr = Basic(S(1), Basic(S(2)), S(3))
+    cmpd = Compound(Basic, (S(1), Compound(Basic, Tuple(2)), S(3)))
     assert deconstruct(expr) == cmpd
     assert construct(cmpd) == expr
 
 def test_unify():
-    expr = Basic(1, 2, 3)
+    expr = Basic(S(1), S(2), S(3))
     a, b, c = map(Symbol, 'abc')
     pattern = Basic(a, b, c)
     assert list(unify(expr, pattern, {}, (a, b, c))) == [{a: 1, b: 2, c: 3}]
@@ -41,10 +42,10 @@ def test_unify():
             [{a: 1, b: 2, c: 3}]
 
 def test_unify_variables():
-    assert list(unify(Basic(1, 2), Basic(1, x), {}, variables=(x,))) == [{x: 2}]
+    assert list(unify(Basic(S(1), S(2)), Basic(S(1), x), {}, variables=(x,))) == [{x: 2}]
 
 def test_s_input():
-    expr = Basic(1, 2)
+    expr = Basic(S(1), S(2))
     a, b = map(Symbol, 'ab')
     pattern = Basic(a, b)
     assert list(unify(expr, pattern, {}, (a, b))) == [{a: 1, b: 2}]

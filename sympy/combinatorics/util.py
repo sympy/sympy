@@ -101,7 +101,7 @@ def _check_cycles_alt_sym(perm):
     total_len = 0
     used = set()
     for i in range(n//2):
-        if not i in used and i < n//2 - total_len:
+        if i not in used and i < n//2 - total_len:
             current_len = 1
             used.add(i)
             j = i

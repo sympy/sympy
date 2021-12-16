@@ -246,7 +246,7 @@ class Plane(GeometryEntity):
             line = sol[0]
             for i in planes[1:]:
                 l = first.intersection(i)
-                if not l or not l[0] in line:
+                if not l or l[0] not in line:
                     return False
             return True
 

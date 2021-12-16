@@ -1,7 +1,7 @@
 from .cartan_type import CartanType
-from sympy.core.backend import Basic
+from sympy.core.basic import Atom
 
-class RootSystem(Basic):
+class RootSystem(Atom):
     """Represent the root system of a simple Lie algebra
 
     Every simple Lie algebra has a unique root system.  To find the root
@@ -44,7 +44,7 @@ class RootSystem(Basic):
         cartan_type attribute of the RootSystem instance.
 
         """
-        obj = Basic.__new__(cls, cartantype)
+        obj = Atom.__new__(cls)
         obj.cartan_type = CartanType(cartantype)
         return obj
 

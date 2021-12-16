@@ -918,17 +918,17 @@ def test_M6():
 
 def test_M7():
     # TODO: Replace solve with solveset, as of now test fails for solveset
-    sol = solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
-        226*x**2 - 140*x + 46, x)
-    assert [s.simplify() for s in sol] == [
-        1 - sqrt(-6 - 2*I*sqrt(3 + 4*sqrt(3)))/2,
-        1 + sqrt(-6 - 2*I*sqrt(3 + 4*sqrt(3)))/2,
-        1 - sqrt(-6 + 2*I*sqrt(3 + 4*sqrt(3)))/2,
-        1 + sqrt(-6 + 2*I*sqrt(3 + 4*sqrt (3)))/2,
-        1 - sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2,
-        1 + sqrt(-6 + 2*sqrt(-3 + 4*sqrt(3)))/2,
-        1 - sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2,
-        1 + sqrt(-6 - 2*sqrt(-3 + 4*sqrt(3)))/2]
+    assert set(solve(x**8 - 8*x**7 + 34*x**6 - 92*x**5 + 175*x**4 - 236*x**3 +
+        226*x**2 - 140*x + 46, x)) == set([
+        1 - sqrt(2)*I*sqrt(-sqrt(-3 + 4*sqrt(3)) + 3)/2,
+        1 - sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
+        1 - sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
+        1 - sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
+        1 + sqrt(2)*I*sqrt(sqrt(-3 + 4*sqrt(3)) + 3)/2,
+        1 + sqrt(2)*sqrt(-3 - I*sqrt(3 + 4*sqrt(3)))/2,
+        1 + sqrt(2)*sqrt(-3 + I*sqrt(3 + 4*sqrt(3)))/2,
+        1 + sqrt(2)*I*sqrt(-sqrt(-3 + 4*sqrt(3)) + 3)/2,
+        ])
 
 
 @XFAIL  # There are an infinite number of solutions.
@@ -2383,7 +2383,7 @@ def test_V8_V9():
 
 
 def test_V10():
-    assert integrate(1/(3 + 3*cos(x) + 4*sin(x)), x) == log(tan(x/2) + R(3, 4))/4
+    assert integrate(1/(3 + 3*cos(x) + 4*sin(x)), x) == log(4*tan(x/2) + 3)/4
 
 
 def test_V11():
@@ -2915,7 +2915,7 @@ def test_Y2():
     w = symbols('w', real=True)
     s = symbols('s')
     f = inverse_laplace_transform(s/(s**2 + (w - 1)**2), s, t)
-    assert f == cos(t*w - t)
+    assert f == cos(t*(w - 1))
 
 
 def test_Y3():
@@ -2933,7 +2933,6 @@ def test_Y4():
     assert F == (1 - exp(-6*sqrt(s)))/s
 
 
-@XFAIL
 def test_Y5_Y6():
 # Solve y'' + y = 4 [H(t - 1) - H(t - 2)], y(0) = 1, y'(0) = 0 where H is the
 # Heaviside (unit step) function (the RHS describes a pulse of magnitude 4 and
@@ -2949,10 +2948,9 @@ def test_Y5_Y6():
                                 + y(t)
                                 - 4*(Heaviside(t - 1)
                                 - Heaviside(t - 2)), t, s)
-    # Laplace transform for diff() not calculated
-    # https://github.com/sympy/sympy/issues/7176
-    assert (F == s**2*LaplaceTransform(y(t), t, s) - s
-            + LaplaceTransform(y(t), t, s) - 4*exp(-s)/s + 4*exp(-2*s)/s)
+    assert (F == s**2*LaplaceTransform(y(t), t, s) - s*y(0) +
+            LaplaceTransform(y(t), t, s) - Subs(Derivative(y(t), t), t, 0) -
+            4*exp(-s)/s + 4*exp(-2*s)/s)
 # TODO implement second part of test case
 # Now, solve for Y(s) and then take the inverse Laplace transform
 #   => Y(s) = s/(s^2 + 1) + 4 [1/s - s/(s^2 + 1)] [e^(-s) - e^(-2 s)]

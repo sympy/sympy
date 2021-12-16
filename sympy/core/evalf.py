@@ -1381,7 +1381,7 @@ def evalf_symbol(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
             return None, None, None, None
         return val._mpf_, None, prec, None
     else:
-        if not '_cache' in options:
+        if '_cache' not in options:
             options['_cache'] = {}
         cache = options['_cache']
         cached, cached_prec = cache.get(x, (None, MINUS_INF))
@@ -1488,7 +1488,7 @@ def evalf(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
     """
     from sympy.functions.elementary.complexes import re as re_, im as im_
     try:
-        rf = evalf_table[x.func]
+        rf = evalf_table[type(x)]
         r = rf(x, prec, options)
     except KeyError:
         # Fall back to ordinary evalf if possible
