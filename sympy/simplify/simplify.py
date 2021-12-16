@@ -1107,7 +1107,7 @@ def logcombine(expr, force=False):
 
         # logs that have oppositely signed coefficients can divide
         for k in ordered(list(log1.keys())):
-            if not k in log1:  # already popped as -k
+            if k not in log1:  # already popped as -k
                 continue
             if -k in log1:
                 # figure out which has the minus sign; the one with
@@ -1504,7 +1504,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
             expr = sympify(newexpr)
             if x and not expr:  # don't let x become 0
                 raise ValueError
-            if expr.is_finite is False and not xv in [mpmath.inf, mpmath.ninf]:
+            if expr.is_finite is False and xv not in [mpmath.inf, mpmath.ninf]:
                 raise ValueError
             return expr
         finally:

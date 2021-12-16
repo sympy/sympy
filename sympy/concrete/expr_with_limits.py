@@ -141,12 +141,12 @@ def _process_limits(*symbols, discrete=None):
                     raise NotImplementedError(
                         'expecting Range' if discrete else
                         'Relational or single Interval' )
-            V = sympify(flatten(V))  # a list of sympified elements
+            V = sympify(flatten(V))  # list of sympified elements/None
             if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
                 newsymbol = V[0]
                 if len(V) == 3:
                     # general case
-                    if V[2] is None and not V[1] is None:
+                    if V[2] is None and V[1] is not None:
                         orientation *= -1
                     V = [newsymbol] + [i for i in V[1:] if i is not None]
 

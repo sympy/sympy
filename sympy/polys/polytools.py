@@ -5930,12 +5930,12 @@ def _sorted_factors(factors, method):
         def key(obj):
             poly, exp = obj
             rep = poly.rep.rep
-            return (exp, len(rep), len(poly.gens), rep)
+            return (exp, len(rep), len(poly.gens), str(poly.domain), rep)
     else:
         def key(obj):
             poly, exp = obj
             rep = poly.rep.rep
-            return (len(rep), len(poly.gens), exp, rep)
+            return (len(rep), len(poly.gens), exp, str(poly.domain), rep)
 
     return sorted(factors, key=key)
 
@@ -6736,7 +6736,7 @@ def cancel(f, *gens, _signsimp=True, **args):
             return f.xreplace(dict(reps))
 
     c, (P, Q) = 1, F.cancel(G)
-    if opt.get('polys', False) and not 'gens' in opt:
+    if opt.get('polys', False) and 'gens' not in opt:
         opt['gens'] = R.symbols
 
     if not isinstance(f, (tuple, Tuple)):

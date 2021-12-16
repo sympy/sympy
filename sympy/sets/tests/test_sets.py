@@ -316,14 +316,14 @@ def test_Complement():
                       Interval(1, 3)) == \
         Union(Interval(0, 1, False, True), FiniteSet(4))
 
-    assert not 3 in Complement(Interval(0, 5), Interval(1, 4), evaluate=False)
+    assert 3 not in Complement(Interval(0, 5), Interval(1, 4), evaluate=False)
     assert -1 in Complement(S.Reals, S.Naturals, evaluate=False)
-    assert not 1 in Complement(S.Reals, S.Naturals, evaluate=False)
+    assert 1 not in Complement(S.Reals, S.Naturals, evaluate=False)
 
     assert Complement(S.Integers, S.UniversalSet) == EmptySet
     assert S.UniversalSet.complement(S.Integers) == EmptySet
 
-    assert (not 0 in S.Reals.intersect(S.Integers - FiniteSet(0)))
+    assert (0 not in S.Reals.intersect(S.Integers - FiniteSet(0)))
 
     assert S.EmptySet - S.Integers == S.EmptySet
 
@@ -1601,8 +1601,8 @@ def test_DisjointUnion_len():
 
 def test_issue_20089():
     B = FiniteSet(FiniteSet(1, 2), FiniteSet(1))
-    assert not 1 in B
-    assert not 1.0 in B
+    assert 1 not in B
+    assert 1.0 not in B
     assert not Eq(1, FiniteSet(1, 2))
     assert FiniteSet(1) in B
     A = FiniteSet(1, 2)

@@ -145,7 +145,7 @@ def test_ccode_exceptions():
     gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=False)
     assert 'not supported in c' in gamma_c89.lower()
     gamma_c89 = ccode(gamma(x), standard='C89', allow_unknown_functions=True)
-    assert not 'not supported in c' in gamma_c89.lower()
+    assert 'not supported in c' not in gamma_c89.lower()
 
 
 def test_ccode_functions2():

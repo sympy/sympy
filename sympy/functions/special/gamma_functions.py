@@ -539,7 +539,7 @@ class uppergamma(Function):
 
     def _eval_conjugate(self):
         z = self.args[1]
-        if not z in (S.Zero, S.NegativeInfinity):
+        if z not in (S.Zero, S.NegativeInfinity):
             return self.func(self.args[0].conjugate(), z.conjugate())
 
     def _eval_is_meromorphic(self, x, a):
@@ -1043,7 +1043,7 @@ class loggamma(Function):
 
     def _eval_conjugate(self):
         z = self.args[0]
-        if not z in (S.Zero, S.NegativeInfinity):
+        if z not in (S.Zero, S.NegativeInfinity):
             return self.func(z.conjugate())
 
     def fdiff(self, argindex=1):

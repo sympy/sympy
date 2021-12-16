@@ -690,7 +690,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
             rv = _remove_redundant_solutions(eq, rv, order, func.args[0])
         if len(rv) == 1:
             rv = rv[0]
-    if ics and not 'power_series' in hint:
+    if ics and 'power_series' not in hint:
         if isinstance(rv, (Expr, Eq)):
             solved_constants = solve_ics([rv], [r['func']], cons(rv), ics)
             rv = rv.subs(solved_constants)
@@ -770,10 +770,9 @@ def solve_ics(sols, funcs, constants, ics):
                 x0 = funcarg.variables[0]
                 variables = (x,)*len(funcarg.variables)
                 matching_func = deriv.subs(x0, x)
-            if variables not in diff_variables:
-                for sol in sols:
-                    if sol.has(deriv.expr.func):
-                        diff_sols.append(Eq(sol.lhs.diff(*variables), sol.rhs.diff(*variables)))
+            for sol in sols:
+                if sol.has(deriv.expr.func):
+                    diff_sols.append(Eq(sol.lhs.diff(*variables), sol.rhs.diff(*variables)))
             diff_variables.add(variables)
             S = diff_sols
         else:

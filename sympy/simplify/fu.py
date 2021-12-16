@@ -594,7 +594,7 @@ def TR10(rv, first=True):
     """
 
     def f(rv):
-        if not rv.func in (cos, sin):
+        if rv.func not in (cos, sin):
             return rv
 
         f = rv.func
@@ -798,7 +798,7 @@ def TR11(rv, base=None):
     """
 
     def f(rv):
-        if not rv.func in (cos, sin):
+        if rv.func not in (cos, sin):
             return rv
 
         if base:
@@ -807,7 +807,7 @@ def TR11(rv, base=None):
             co = S.One
             if t.is_Mul:
                 co, t = t.as_coeff_Mul()
-            if not t.func in (cos, sin):
+            if t.func not in (cos, sin):
                 return rv
             if rv.args[0] == t.args[0]:
                 c = cos(base)

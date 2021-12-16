@@ -399,9 +399,9 @@ def multiplicity_in_factorial(p, n):
 
 def perfect_power(n, candidates=None, big=True, factor=True):
     """
-    Return ``(b, e)`` such that ``n`` == ``b**e`` if ``n`` is a
-    perfect power with ``e > 1``, else ``False``. A ValueError is
-    raised if ``n`` is not an integer or is not positive.
+    Return ``(b, e)`` such that ``n`` == ``b**e`` if ``n`` is a unique
+    perfect power with ``e > 1``, else ``False`` (e.g. 1 is not a
+    perfect power). A ValueError is raised if ``n`` is not Rational.
 
     By default, the base is recursively decomposed and the exponents
     collected so the largest possible ``e`` is sought. If ``big=False``
@@ -420,11 +420,25 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     Examples
     ========
 
-    >>> from sympy import perfect_power
+    >>> from sympy import perfect_power, Rational
     >>> perfect_power(16)
     (2, 4)
     >>> perfect_power(16, big=False)
     (4, 2)
+
+    Negative numbers can only have odd perfect powers:
+
+    >>> perfect_power(-4)
+    False
+    >>> perfect_power(-8)
+    (-2, 3)
+
+    Rationals are also recognized:
+
+    >>> perfect_power(Rational(1, 2)**3)
+    (1/2, 3)
+    >>> perfect_power(Rational(-3, 2)**3)
+    (-3/2, 3)
 
     Notes
     =====
@@ -452,10 +466,34 @@ def perfect_power(n, candidates=None, big=True, factor=True):
     sympy.core.power.integer_nthroot
     sympy.ntheory.primetest.is_square
     """
+    if isinstance(n, Rational) and not n.is_Integer:
+        p, q = n.as_numer_denom()
+        if p is S.One:
+            pp = perfect_power(q)
+            if pp:
+                pp = (n.func(1, pp[0]), pp[1])
+        else:
+            pp = perfect_power(p)
+            if pp:
+                num, e = pp
+                pq = perfect_power(q, [e])
+                if pq:
+                    den, _ = pq
+                    pp = n.func(num, den), e
+        return pp
+
     n = as_int(n)
-    if n < 3:
-        if n < 1:
-            raise ValueError('expecting positive n')
+    if n < 0:
+        pp = perfect_power(-n)
+        if pp:
+            b, e = pp
+            if e % 2:
+                return -b, e
+        return False
+
+    if n <= 3:
+        # no unique exponent for 0, 1
+        # 2 and 3 have exponents of 1
         return False
     logn = math.log(n, 2)
     max_possible = int(logn) + 2  # only check values less than this

@@ -279,7 +279,7 @@ class PrimeIdeal(IntegerPowerable):
         >>> k = QQ.algebraic_field((Phi, zeta))
         >>> P = k.primes_above(11)
         >>> frp = P[0]
-        >>> B = [k.to_sympy(a) for a in k.integral_basis()]
+        >>> B = k.integral_basis(fmt='sympy')
         >>> print([frp.reduce_poly(b, zeta) for b in B])
         [1, zeta, zeta**2, -5*zeta**2 - 4*zeta + 1, -zeta**2 - zeta - 5,
          4*zeta**2 - zeta - 1]
