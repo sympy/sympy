@@ -12,12 +12,14 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import speed_of_light, u0, e0
 
-c = speed_of_light.convert_to(meter / second)
-_e0mksa = e0.convert_to(ampere ** 2 * second ** 4 / (kilogram * meter ** 3))
-_u0mksa = u0.convert_to(meter * kilogram / (ampere ** 2 * second ** 2))
+
+c = speed_of_light.convert_to(meter/second)
+_e0mksa = e0.convert_to(ampere**2*second**4/(kilogram*meter**3))
+_u0mksa = u0.convert_to(meter*kilogram/(ampere**2*second**2))
 
 
 class Medium(Basic):
+
     """
     This class represents an optical medium. The prime reason to implement this is
     to facilitate refraction, Fermat's principle, etc.
@@ -69,20 +71,20 @@ class Medium(Basic):
     def __new__(cls, name, permittivity=None, permeability=None, n=None):
         if n is not None:
             if permittivity is not None and permeability is None:
-                permeability = n ** 2 / (c ** 2 * permittivity)
+                permeability = n**2/(c**2*permittivity)
             if permeability is not None and permittivity is None:
-                permittivity = n ** 2 / (c ** 2 * permeability)
+                permittivity = n**2/(c**2*permeability)
             if permittivity is not None and permittivity is not None:
-                expr = abs(n - c * sqrt(permittivity * permeability))
-                expr = expr.subs({meter: 1, second: 1})
-                if len(expr.free_symbols) ==0 and expr > 1e-6:
+                expr = abs(n - c*sqrt(permittivity*permeability))
+                expr = expr.subs({meter: 1, second: 1}, 1)
+                if len(expr.free_symbols) == 0 and expr > 1e-6:
                     raise ValueError("Values are not consistent.")
         elif permittivity is not None and permeability is not None:
-            n = c * sqrt(permittivity * permeability)
+            n = c*sqrt(permittivity*permeability)
         elif permittivity is None and permeability is None:
             permittivity = _e0mksa
             permeability = _u0mksa
-            n = c * sqrt(permittivity * permeability)
+            n = c*sqrt(permittivity*permeability)
         args = list(map(sympify, (permittivity, permeability, n)))
         obj = super().__new__(cls, name, *args)
         obj._permittivity = args[0]
@@ -114,7 +116,7 @@ class Medium(Basic):
         149896229*pi*kilogram*meter**2/(1250000*ampere**2*second**3)
 
         """
-        return sqrt(self._permeability / self._permittivity)
+        return sqrt(self._permeability/self._permittivity)
 
     @property
     def speed(self):
@@ -134,9 +136,9 @@ class Medium(Basic):
 
         """
         if self._permittivity is not None and self._permeability is not None:
-            return 1 / sqrt(self._permittivity * self._permeability)
+            return 1/sqrt(self._permittivity*self._permeability)
         else:
-            return c / self._n
+            return c/self._n
 
     @property
     def refractive_index(self):
@@ -152,7 +154,7 @@ class Medium(Basic):
         1
 
         """
-        return (c / self.speed)
+        return (c/self.speed)
 
     @property
     def permittivity(self):
@@ -189,7 +191,7 @@ class Medium(Basic):
     def __str__(self):
         from sympy.printing import sstr
         return type(self).__name__ + ': ' + sstr([self._permittivity,
-                                                  self._permeability, self._n])
+                self._permeability, self._n])
 
     def __lt__(self, other):
         """
@@ -197,11 +199,11 @@ class Medium(Basic):
         """
         return self.refractive_index < other.refractive_index
 
-    def __gt__(self, other):
-        return not self < other
-
     def __eq__(self, other):
         return self.refractive_index == other.refractive_index
+
+    def __gt__(self, other):
+        return not self < other
 
     def __ne__(self, other):
         return not self == other
