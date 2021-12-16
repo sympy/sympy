@@ -5930,12 +5930,12 @@ def _sorted_factors(factors, method):
         def key(obj):
             poly, exp = obj
             rep = poly.rep.rep
-            return (exp, len(rep), len(poly.gens), rep)
+            return (exp, len(rep), len(poly.gens), str(poly.domain), rep)
     else:
         def key(obj):
             poly, exp = obj
             rep = poly.rep.rep
-            return (len(rep), len(poly.gens), exp, rep)
+            return (len(rep), len(poly.gens), exp, str(poly.domain), rep)
 
     return sorted(factors, key=key)
 
@@ -6647,7 +6647,7 @@ def nth_power_roots_poly(f, n, *gens, **args):
 
 
 @public
-def cancel(f, *gens, **args):
+def cancel(f, *gens, _signsimp=True, **args):
     """
     Cancel common factors in a rational function ``f``.
 
@@ -6671,11 +6671,14 @@ def cancel(f, *gens, **args):
     >>> together(_)
     (x + 2)/2
     """
+    from sympy.simplify.simplify import signsimp
     from sympy.functions.elementary.piecewise import Piecewise
     from sympy.polys.rings import sring
     options.allowed_flags(args, ['polys'])
 
     f = sympify(f)
+    if _signsimp:
+        f = signsimp(f)
     opt = {}
     if 'polys' in args:
         opt['polys'] = args['polys']
@@ -6733,7 +6736,7 @@ def cancel(f, *gens, **args):
             return f.xreplace(dict(reps))
 
     c, (P, Q) = 1, F.cancel(G)
-    if opt.get('polys', False) and not 'gens' in opt:
+    if opt.get('polys', False) and 'gens' not in opt:
         opt['gens'] = R.symbols
 
     if not isinstance(f, (tuple, Tuple)):

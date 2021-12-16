@@ -319,8 +319,11 @@ class Collector(DefaultPrinting):
         ...     sym = w[0]
         ...     perm = free_to_perm[sym]
         ...     G2 = PermutationGroup([perm] + G2.generators)
-        >>> G1 == G2
-        True
+
+        The two are not identical, but they are equivalent:
+
+        >>> G1.equals(G2), G1 == G2
+        (True, False)
 
         See Also
         ========

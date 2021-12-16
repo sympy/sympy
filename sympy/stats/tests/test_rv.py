@@ -311,7 +311,7 @@ def test_NamedArgsMixin():
     class Foo(Basic, NamedArgsMixin):
         _argnames = 'foo', 'bar'
 
-    a = Foo(1, 2)
+    a = Foo(S(1), S(2))
 
     assert a.foo == 1
     assert a.bar == 2
@@ -321,7 +321,7 @@ def test_NamedArgsMixin():
     class Bar(Basic, NamedArgsMixin):
         pass
 
-    raises(AttributeError, lambda: Bar(1, 2).foo)
+    raises(AttributeError, lambda: Bar(S(1), S(2)).foo)
 
 def test_density_constant():
     assert density(3)(2) == 0

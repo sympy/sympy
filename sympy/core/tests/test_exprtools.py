@@ -208,11 +208,11 @@ def test_gcd_terms():
     assert gcd_terms(set(args)) == newf
     # but a Basic sequence is treated as a container
     assert gcd_terms(Tuple(*args)) != newf
-    assert gcd_terms(Basic(Tuple(1, 3*y + 3*x*y), Tuple(1, 3))) == \
-        Basic((1, 3*y*(x + 1)), (1, 3))
+    assert gcd_terms(Basic(Tuple(S(1), 3*y + 3*x*y), Tuple(S(1), S(3)))) == \
+        Basic(Tuple(S(1), 3*y*(x + 1)), Tuple(S(1), S(3)))
     # but we shouldn't change keys of a dictionary or some may be lost
-    assert gcd_terms(Dict((x*(1 + y), 2), (x + x*y, y + x*y))) == \
-        Dict({x*(y + 1): 2, x + x*y: y*(1 + x)})
+    assert gcd_terms(Dict((x*(1 + y), S(2)), (x + x*y, y + x*y))) == \
+        Dict({x*(y + 1): S(2), x + x*y: y*(1 + x)})
 
     assert gcd_terms((2*x + 2)**3 + (2*x + 2)**2) == 4*(x + 1)**2*(2*x + 3)
 
@@ -316,6 +316,11 @@ def test_factor_terms():
         assert factor_terms(F(x, (y, 1, 10))) == x * F(1, (y, 1, 10))
         assert factor_terms(F(x, (y, 1, 10)) + x) == x * (1 + F(1, (y, 1, 10)))
         assert factor_terms(F(x*y + x*y**2, (y, 1, 10))) == x*F(y*(y + 1), (y, 1, 10))
+
+    # expressions involving Pow terms with base 0
+    assert factor_terms(0**(x - 2) - 1) == 0**(x - 2) - 1
+    assert factor_terms(0**(x + 2) - 1) == 0**(x + 2) - 1
+    assert factor_terms((0**(x + 2) - 1).subs(x,-2)) == 0
 
 
 def test_xreplace():

@@ -1,4 +1,4 @@
-from sympy.core import Basic
+from sympy.core import Basic, Integer
 
 import random
 
@@ -83,7 +83,7 @@ class GrayCode(Basic):
         if n < 1 or int(n) != n:
             raise ValueError(
                 'Gray code dimension must be a positive integer, not %i' % n)
-        n = int(n)
+        n = Integer(n)
         args = (n,) + args
         obj = Basic.__new__(cls, *args)
         if 'start' in kw_args:

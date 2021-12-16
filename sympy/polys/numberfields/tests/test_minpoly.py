@@ -273,9 +273,9 @@ def test_minpoly_compose():
             2816*x**6 - 1232*x**4 + 220*x**2 - 11
     assert minimal_polynomial(sin(pi/21), x) == 4096*x**12 - 11264*x**10 + \
            11264*x**8 - 4992*x**6 + 960*x**4 - 64*x**2 + 1
-    assert minimal_polynomial(cos(pi/9), x) == 8*x**3 - 6*x + 1
+    assert minimal_polynomial(cos(pi/9), x) == 8*x**3 - 6*x - 1
 
-    ex = 2**Rational(1, 3)*exp(Rational(2, 3)*I*pi)
+    ex = 2**Rational(1, 3)*exp(2*I*pi/3)
     assert minimal_polynomial(ex, x) == x**3 - 2
 
     raises(NotAlgebraic, lambda: minimal_polynomial(cos(pi*sqrt(2)), x))
@@ -420,6 +420,18 @@ def test_issue_20163():
         (sqrt(3) - I)/(2*x - sqrt(3) + I)/6 - \
         (sqrt(3) + I)/(2*x - sqrt(3) - I)/6 + \
         I/(x + I)/6 - I/(x - I)/6
+
+
+def test_issue_22559():
+    alpha = AlgebraicNumber(sqrt(2))
+    assert minimal_polynomial(alpha**3, x) == x**2 - 8
+
+
+def test_issue_22561():
+    a = AlgebraicNumber(sqrt(2) + sqrt(3), [S(1) / 2, 0, S(-9) / 2, 0], gen=x)
+    assert a.as_expr() == sqrt(2)
+    assert minimal_polynomial(a, x) == x**2 - 2
+    assert minimal_polynomial(a**3, x) == x**2 - 8
 
 
 def test_separate_sq_not_impl():

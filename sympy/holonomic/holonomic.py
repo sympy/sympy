@@ -719,7 +719,7 @@ class HolonomicFunction:
             else:
                 y0[i] = y1[i]
         for i in y2:
-            if not i in y1:
+            if i not in y1:
                 y0[i] = y2[i]
         return HolonomicFunction(sol, self.x, self.x0, y0)
 

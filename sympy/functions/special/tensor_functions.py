@@ -205,7 +205,7 @@ class KroneckerDelta(Function):
     def _eval_power(self, expt):
         if expt.is_positive:
             return self
-        if expt.is_negative and not -expt is S.One:
+        if expt.is_negative and expt is not S.NegativeOne:
             return 1/self
 
     @property
