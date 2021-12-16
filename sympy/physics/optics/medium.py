@@ -3,11 +3,11 @@
 
 * Medium
 """
-from sympy import Basic
 from sympy.physics.units import second, meter, kilogram, ampere
 
 __all__ = ['Medium']
 
+from sympy.core import Basic
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import speed_of_light, u0, e0
