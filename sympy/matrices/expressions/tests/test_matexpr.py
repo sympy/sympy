@@ -48,10 +48,14 @@ def test_matrix_symbol_creation():
     raises(ValueError, lambda: MatrixSymbol('A', n, n))
 
 
-def test_shape():
+def test_matexpr_properties():
     assert A.shape == (n, m)
     assert (A*B).shape == (n, l)
     raises(ShapeError, lambda: B*A)
+    assert A[0, 1].indices == (0, 1)
+    assert A[0, 1].name == 'A[0, 1]'
+    assert A[0, 0].symbol == A
+    assert A[0, 0].symbol.name == 'A'
 
 
 def test_matexpr():

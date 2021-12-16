@@ -601,6 +601,14 @@ class MatrixElement(Expr):
         obj = Expr.__new__(cls, name, n, m)
         return obj
 
+    @property
+    def name(self):
+        return str(self)
+
+    @property
+    def symbol(self):
+        return self.args[0]
+
     def doit(self, **kwargs):
         deep = kwargs.get('deep', True)
         if deep:
