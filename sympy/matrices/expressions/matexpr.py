@@ -6,6 +6,7 @@ from sympy.core.assumptions import check_assumptions
 from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr, ExprBuilder
 from sympy.core.logic import FuzzyBool
+from sympy.core.relational import is_le
 from sympy.core.symbol import Str, Dummy, symbols, Symbol
 from sympy.core.sympify import SympifyError, _sympify
 from sympy.external.gmpy import SYMPY_INTS
@@ -589,10 +590,14 @@ class MatrixElement(Expr):
     def __new__(cls, name, n, m):
         n, m = map(_sympify, (n, m))
         from sympy.matrices.matrices import MatrixBase
-        if isinstance(name, (MatrixBase,)):
+        if isinstance(name, MatrixBase):
             if n.is_Integer and m.is_Integer:
                 return name[n, m]
-        if isinstance(name, str):
+        elif isinstance(name, MatrixSymbol):
+            r, c = name.shape
+            if is_le(r, n) or is_le(c, m):
+                raise IndexError('indices out of bounds')
+        elif isinstance(name, str):
             name = Symbol(name)
         else:
             name = _sympify(name)
