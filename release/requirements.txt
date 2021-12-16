@@ -32,12 +32,14 @@ Jinja2==3.0.1
 keras==2.6.0
 Keras-Preprocessing==1.1.2
 kiwisolver==1.3.1
+linkify-it-py
 llvmlite==0.37.0
 Markdown==3.3.4
 MarkupSafe==2.0.1
 matplotlib==3.4.3
 matplotlib-inline==0.1.2
 mpmath==1.2.1
+myst-parser
 numexpr==2.7.3
 numpy==1.19.5
 oauthlib==3.1.1
