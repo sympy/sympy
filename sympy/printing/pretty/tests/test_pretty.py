@@ -21,6 +21,7 @@ from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.zeta_functions import dirichlet_eta
 from sympy.geometry.line import (Ray, Segment)
 from sympy.integrals.integrals import Integral
+from sympy.integrals.transforms import LaplaceTransform, SineTransform
 from sympy.logic.boolalg import (And, Equivalent, ITE, Implies, Nand, Nor, Not, Or, Xor)
 from sympy.matrices.dense import (Matrix, diag)
 from sympy.matrices.expressions.slice import MatrixSlice
@@ -7657,6 +7658,25 @@ def test_issue_18272():
 def test_Str():
     from sympy.core.symbol import Str
     assert pretty(Str('x')) == 'x'
+
+
+def test_transforms():
+    e = LaplaceTransform(a, b, c)
+    assert pretty(e) == \
+    'L [a](c)\n'\
+    ' b      '
+    assert upretty(e) == \
+    'ℒ [a](c)\n'\
+    ' b      '
+
+    e = SineTransform(a, b, c)
+    assert pretty(e) == \
+    'SIN [a](c)\n'\
+    '   b      '
+    assert upretty(e) == \
+    '𝒮ℐ𝒩 [a](c)\n'\
+    '   b      '
+
 
 def test_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField

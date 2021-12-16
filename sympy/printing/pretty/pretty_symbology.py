@@ -637,3 +637,15 @@ def line_width(line):
     separate symbols and thus shouldn't be counted
     """
     return len(line.translate(_remove_combining))
+
+
+def capital_script(c):
+    if c in 'BEFHILMPR':
+        return U('SCRIPT CAPITAL {}'.format(c))
+    return U('MATHEMATICAL SCRIPT CAPITAL {}'.format(c))
+
+
+def small_script(c):
+    if c in 'eglo':
+        return U('SCRIPT SMALL {}'.format(c))
+    return U('MATHEMATICAL SCRIPT SMALL {}'.format(c))
