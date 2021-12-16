@@ -29,9 +29,11 @@ sys.path = ['ext'] + sys.path
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
-              'sphinx.ext.mathjax', 'numpydoc', 'sympylive', 'sphinx_reredirects',
-              'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.autosummary',
+              'sphinx.ext.linkcode', 'sphinx_math_dollar',
+              'sphinx.ext.mathjax', 'numpydoc', 'sympylive',
+              'sphinx_reredirects', 'sphinx.ext.graphviz',
+              'matplotlib.sphinxext.plot_directive']
 
 redirects = {
     "install.rst": "guides/getting_started/install.html",
@@ -47,6 +49,8 @@ redirects = {
 
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
+
+autosummary_generate = True
 
 # Enable warnings for all bad cross references. These are turned into errors
 # with the -W flag in the Makefile.

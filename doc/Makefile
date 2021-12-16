@@ -13,6 +13,7 @@ SOURCEDIR    = src
 
 SVGFILES = $(wildcard src/modules/physics/vector/*.svg) $(wildcard src/modules/physics/mechanics/examples/*.svg) $(wildcard src/modules/vector/*.svg)
 PDFFILES = $(SVGFILES:%.svg=%.pdf)
+RSTSTUBFILES := $(shell find . -name "ref")
 
 # This must be set for the recursive make pdf build to work in make latexpdf
 export LATEXMKOPTS = -halt-on-error -xelatex
@@ -49,6 +50,7 @@ clean:
 	-rm -rf $(BUILDDIR)
 	-rm -rf sphinx
 	-rm -f $(PDFFILES)
+	-rm -rf $(RSTSTUBFILES)
 
 html: $(BUILDDIR)/html/pics/*.png
 html: SPHINXOPTS += -W --keep-going
@@ -116,8 +118,9 @@ linkcheck:
 	@echo "Link check complete; look for any errors in the above output " \
 	      "or in $(BUILDDIR)/linkcheck/output.txt."
 
-livehtml: html
-	sphinx-autobuild --open-browser --watch .. --port 0 -b html $(ALLSPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/html
+livehtml: $(BUILDDIR)/html/pics/*.png
+livehtml: $(BUILDDIR)/logo/sympy-notailtext-favicon.ico
+	sphinx-autobuild --open-browser --watch .. --re-ignore 'src/modules/.*/ref/' --ignore '_build/*' --port 0 -b html $(ALLSPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/html
 
 cheatsheet: $(BUILDDIR)/cheatsheet/cheatsheet.pdf $(BUILDDIR)/cheatsheet/combinatoric_cheatsheet.pdf
 
