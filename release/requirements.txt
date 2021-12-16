@@ -4,7 +4,6 @@ alabaster==0.7.12
 antlr4-python3-runtime==4.7.2
 appnope==0.1.2
 astunparse==1.6.3
-autowrap==0.22.3
 Babel==2.9.1
 backcall==0.2.0
 cachetools==4.2.2
