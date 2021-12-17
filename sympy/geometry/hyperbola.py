@@ -73,7 +73,7 @@ class Hyperbola(GeometrySet):
     Examples
     ========
 
-    >>> from sympy import Hyperbola, Point, Rational
+    >>> from sympy import Hyperbola, Point
     >>> h1 = Hyperbola(Point(0, 0), 5, 3)
     >>> h1.hradius, h1.vradius
     (5, 3)
@@ -204,7 +204,7 @@ class Hyperbola(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Hyperbola, sqrt
+        >>> from sympy import Point, Hyperbola
         >>> p1 = Point(0, 0)
         >>> h1 = Hyperbola(Point(0, 0), 5, 3)
         >>> h1.eccentricity
@@ -244,7 +244,7 @@ class Hyperbola(GeometrySet):
         >>> h = Hyperbola((0, 0), 3, 2)
         >>> h.encloses_point((0, 0))
         True
-        >>> h.encloses_point(e.arbitrary_point(t).subs(t, S.Half))
+        >>> h.encloses_point(h.arbitrary_point(t).subs(t, S.Half))
         False
         >>> h.encloses_point((4, 0))
         False
@@ -298,7 +298,7 @@ class Hyperbola(GeometrySet):
         Examples
         ========
 
-        >>> from sympy import Point, Hyperbola, pi
+        >>> from sympy import Point, Hyperbola
         >>> from sympy.abc import x, y
         >>> h1 = Hyperbola(Point(1, 0), 3, 2)
         >>> eq1 = h1.equation(x, y); eq1
