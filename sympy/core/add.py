@@ -944,6 +944,15 @@ class Add(Expr, AssocOp):
                     return self.func(-new, coeff_self, coeff_old,
                                *[s._subs(old, new) for s in ret_set])
 
+            # c*(a + b).subs(a + b, x) -> c*x (c being the multiplicative constant)
+            c = self.as_content_primitive()[0]
+            if not c is S.One:
+                add_term = self.extract_multiplicatively(c)
+                if not add_term is None:
+                    expr = add_term._eval_subs(old, new)
+                    if not expr is None:
+                        return c*expr
+
     def removeO(self):
         args = [a for a in self.args if not a.is_Order]
         return self._new_rawargs(*args)
