@@ -3,11 +3,14 @@
 
 * Medium
 """
+import functools
+
 from sympy.physics.units import second, meter, kilogram, ampere
 
 __all__ = ['Medium']
 
-from sympy.core import Basic
+from sympy.core.basic import Basic
+from sympy.core.symbol import Str
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import speed_of_light, u0, e0
@@ -69,6 +72,13 @@ class Medium(Basic):
     """
 
     def __new__(cls, name, permittivity=None, permeability=None, n=None):
+
+        if not name:
+            raise ValueError("A Category cannot have an empty name.")
+
+        if not isinstance(name, Str):
+            name = Str(name)
+
         if n is not None:
             if permittivity is not None and permeability is None:
                 permeability = n**2/(c**2*permittivity)
@@ -87,6 +97,7 @@ class Medium(Basic):
             n = c*sqrt(permittivity*permeability)
         args = list(map(sympify, (permittivity, permeability, n)))
         obj = super().__new__(cls, name, *args)
+        obj.name = name
         obj._permittivity = args[0]
         obj._permeability = args[1]
         obj._n = args[2]
