@@ -25,7 +25,7 @@ RUN apt-get update
 RUN apt-get install -y make librsvg2-bin imagemagick graphviz git
 
 COPY requirements.txt /tmp
-RUN egrep "phinx|mpmath|matplotlib" /tmp/requirements.txt > /tmp/req_min.txt
+RUN egrep "phinx|mpmath|matplotlib|myst|linkify" /tmp/requirements.txt > /tmp/req_min.txt
 RUN pip install --upgrade pip
 RUN pip install -r /tmp/req_min.txt
 
