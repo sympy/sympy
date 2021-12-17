@@ -27,6 +27,7 @@ use:
 conda update sympy
 ```
 
+(installation-git)=
 ## Git
 
 If you wish to contribute to SymPy or like to get the latest updates as they
@@ -86,7 +87,8 @@ log(x)
 
 For a starter guide on using SymPy effectively, refer to the {ref}`tutorial`.
 
-## Mpmath
+(mpmath-install)=
+## mpmath
 
 Versions of SymPy prior to 1.0 included [mpmath], but it now depends on it as
 an external dependency.  If you installed SymPy with Anaconda, it will already
