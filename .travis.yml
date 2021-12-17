@@ -144,7 +144,7 @@ before_install:
         fi
     fi
   - if [[ "${TEST_SPHINX}" == "true" ]]; then
-    pip install sphinx "docutils" doctr matplotlib sphinx-math-dollar sphinx-reredirects;
+    pip install sphinx "docutils" doctr matplotlib sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py;
     fi
   - if [[ "${BENCHMARK}" == "true" ]]; then
     pip install asv;

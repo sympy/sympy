@@ -14,7 +14,7 @@ Debian/Ubuntu
 For Debian/Ubuntu::
 
    apt-get install python3-sphinx texlive-latex-recommended dvipng librsvg2-bin imagemagick docbook2x graphviz
-   python -m pip install sphinx-math-dollar
+   python -m pip install sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py
 
 If you get mpmath error, install python-mpmath package::
 
@@ -32,7 +32,7 @@ prerequisites::
 
    dnf install python3-sphinx librsvg2 ImageMagick docbook2X texlive-dvipng-bin
    texlive-scheme-medium librsvg2-tools
-   python -m pip install sphinx-math-dollar
+   python -m pip install sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py
 
 If you get mpmath error, install python3-mpmath package::
 
@@ -53,11 +53,11 @@ Then install these packages with homebrew::
 
 Install these packages with either pip or conda::
 
-   python -m pip install mpmath matplotlib sphinx sphinx-math-dollar sphinx-reredirects
+   python -m pip install mpmath matplotlib sphinx sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py
 
 Or::
 
-   conda install -c conda-forge mpmath matplotlib sphinx sphinx-math-dollar sphinx-reredirects
+   conda install -c conda-forge mpmath matplotlib sphinx sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py
 
 Making your Sphinx build successful on the Windows system is tricky because
 some dependencies like ``dvipng`` or ``docbook2x`` are not available.
