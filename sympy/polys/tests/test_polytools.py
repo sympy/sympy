@@ -3125,7 +3125,7 @@ def test_cancel():
         1/x)**2) - 1/(x**2*(x - 1/x)) - 2/x)) + (x - 1/x)/((x*(2*x - (-x +
         1/x)/(x**2*(x - 1/x)**2) - 1/(x**2*(x - 1/x)) - 2/x))) - 1/x''',
         evaluate=False)
-    assert cancel(q, _signsimp=False) == -1/(2*x)
+    assert cancel(q, _signsimp=False) is S.NaN
     assert q.subs(x, 2) is S.NaN
     assert signsimp(q) is S.NaN
 
