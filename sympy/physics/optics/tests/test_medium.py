@@ -9,6 +9,7 @@ c = speed_of_light.convert_to(m/s)
 e0 = e0.convert_to(A**2*s**4/(kg*m**3))
 u0 = u0.convert_to(m*kg/(A**2*s**2))
 
+
 def test_medium():
     m1 = Medium('m1')
     assert m1.intrinsic_impedance == sqrt(u0/e0)

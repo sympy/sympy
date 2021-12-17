@@ -3,8 +3,6 @@
 
 * Medium
 """
-import functools
-
 from sympy.physics.units import second, meter, kilogram, ampere
 
 __all__ = ['Medium']
@@ -72,7 +70,6 @@ class Medium(Basic):
     """
 
     def __new__(cls, name, permittivity=None, permeability=None, n=None):
-
         if not name:
             raise ValueError("A Category cannot have an empty name.")
 
@@ -210,11 +207,11 @@ class Medium(Basic):
         """
         return self.refractive_index < other.refractive_index
 
-    def __eq__(self, other):
-        return self.refractive_index == other.refractive_index
-
     def __gt__(self, other):
         return not self < other
+
+    def __eq__(self, other):
+        return self.refractive_index == other.refractive_index
 
     def __ne__(self, other):
         return not self == other
