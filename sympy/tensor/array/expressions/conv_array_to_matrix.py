@@ -285,9 +285,9 @@ def _(expr: PermuteDims):
                 return _permute_dims(mat_mul_lines, permutation)
             pos = p1 // 2
             if p1 > p2:
-                args_array[i] = _a2m_transpose(mat_mul_lines.args[pos])
+                args_array[i] = _a2m_transpose(mat_mul_lines.args[pos])  # type: ignore
             else:
-                args_array[i] = mat_mul_lines.args[pos]
+                args_array[i] = mat_mul_lines.args[pos]  # type: ignore
         return _a2m_tensor_product(*args_array)
     else:
         return expr
@@ -491,13 +491,13 @@ def _(expr: ArrayDiagonal):
     for old_diag_tuple, new_diag_tuple in new_diag_indices.items():
         if len(new_diag_tuple) == 1:
             removed = [i for i in removed if i not in old_diag_tuple]
-    new_diag_indices = [tuple(j - shifts[j] for j in i) for i in new_diag_indices.values()]
+    new_diag_indices = [tuple(j - shifts[j] for j in i) for i in new_diag_indices.values()]  # type: ignore
     rank = get_rank(expr.expr)
     removed = ArrayDiagonal._push_indices_up(expr.diagonal_indices, removed, rank)
     removed = sorted({i for i in removed})
     # If there are single axes to diagonalize remaining, it means that their
     # corresponding dimension has been removed, they no longer need diagonalization:
-    new_diag_indices = [i for i in new_diag_indices if len(i) > 0]
+    new_diag_indices = [i for i in new_diag_indices if len(i) > 0]  # type: ignore
     if len(new_diag_indices) > 0:
         newexpr2 = _array_diagonal(newexpr, *new_diag_indices, allow_trivial_diags=True)
     else:
