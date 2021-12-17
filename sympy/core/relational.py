@@ -82,11 +82,12 @@ class Relational(Boolean, EvalfMixin):
     >>> Rel(y, x + x**2, '==')
     Eq(y, x**2 + x)
 
-     A relation's type can be defined upon creation using ``rop``.
+    A relation's type can be defined upon creation using ``rop``.
     The relation type of an exising expression can be obtained
     using its ``rel_op`` property.
     Here is a table of all the relation types, along with their
     ``rop`` and ``rel_op`` values:
+
     +---------------------+----------------------------+------------+
     |Relation             |``rop``                     |``rel_op``  |
     +=====================+============================+============+
@@ -102,6 +103,7 @@ class Relational(Boolean, EvalfMixin):
     +---------------------+----------------------------+------------+
     |``StrictLessThan``   |``<`` or ``lt``             |``<``       |
     +---------------------+----------------------------+------------+
+
     For example, setting ``rop`` to ``==`` produces an
     ``Equality`` relation, ``Eq()``.
     So does setting ``rop`` to ``eq``, or leaving ``rop`` unspecified.
@@ -110,6 +112,7 @@ class Relational(Boolean, EvalfMixin):
     different relation type.
     For example, the fourth ``Rel()`` below using ``lt`` for ``rop``
     produces a ``StrictLessThan`` inequality:
+
     >>> from sympy import Rel
     >>> from sympy.abc import x, y
     >>> Rel(y, x + x**2, '==')
@@ -125,6 +128,7 @@ class Relational(Boolean, EvalfMixin):
     get its ``rel_op`` property.
     For example, ``rel_op`` is ``==`` for the ``Equality`` relation above,
     and ``<`` for the strict less than inequality above:
+
     >>> from sympy import Rel
     >>> from sympy.abc import x, y
     >>> my_equality = Rel(y, x + x**2, '==')
