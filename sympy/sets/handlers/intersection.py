@@ -4,6 +4,7 @@ from sympy.core.numbers import ilcm
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
+from sympy.core.sorting import ordered
 from sympy.sets.fancysets import ComplexRegion
 from sympy.sets.sets import (FiniteSet, Intersection, Interval, Set, Union)
 from sympy.multipledispatch import dispatch
@@ -426,7 +427,10 @@ def intersection_sets(a, b): # noqa:F811
             start = a.start
             left_open = a.left_open
         else:
-            start = a.start
+            #this is to ensure that if Eq(a.start,b.start) but
+            #type(a.start) != type(b.start) the order of a and b
+            #does not matter for the result
+            start = list(ordered([a,b]))[0].start
             left_open = a.left_open or b.left_open
 
         if a.end < b.end:
@@ -436,7 +440,7 @@ def intersection_sets(a, b): # noqa:F811
             end = b.end
             right_open = b.right_open
         else:
-            end = a.end
+            end = list(ordered([a,b]))[0].end
             right_open = a.right_open or b.right_open
 
         if end - start == 0 and (left_open or right_open):

@@ -396,8 +396,7 @@ class Set(Basic, EvalfMixin):
         # XXX: We shouldn't do this. A query like this should be handled
         # without evaluating new Set objects. It should be the other way round
         # so that the intersect method uses is_subset for evaluation.
-        intersect = self.intersect(other)
-        if intersect == self:
+        if self.intersect(other) == self:
             return True
 
     def _eval_is_subset(self, other):
@@ -1155,13 +1154,6 @@ class Interval(Set):
                 return None
             return false
 
-    def is_subset(self, other):
-        is_subset = super().is_subset(other)
-        if isinstance(other, Interval) and is_subset is None:
-            intersect = self.intersect(other)
-            if Eq(intersect.right, self.right) == True and Eq(intersect.left, self.left) == True:
-                return True
-        return is_subset
 
 class Union(Set, LatticeOp):
     """
