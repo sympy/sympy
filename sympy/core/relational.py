@@ -120,6 +120,7 @@ class Relational(Boolean, EvalfMixin):
         Eq(y, x**2 + x)
     >>> Rel(y, x + x**2, 'lt')
         y < x**2 + x
+
     To obtain the relation type of an exising expression,
     get its ``rel_op`` property.
     For example, ``rel_op`` is ``==`` for the ``Equality`` relation above,
