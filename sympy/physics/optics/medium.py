@@ -70,9 +70,6 @@ class Medium(Basic):
     """
 
     def __new__(cls, name, permittivity=None, permeability=None, n=None):
-        if not name:
-            raise ValueError("A Category cannot have an empty name.")
-
         if not isinstance(name, Str):
             name = Str(name)
 
