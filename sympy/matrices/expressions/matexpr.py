@@ -593,6 +593,7 @@ class MatrixElement(Expr):
         if isinstance(name, MatrixBase):
             if n.is_Integer and m.is_Integer:
                 return name[n, m]
+            name = _sympify(name)  # change mutable into immutable
         elif isinstance(name, MatrixSymbol):
             r, c = name.shape
             if is_le(r, n) or is_le(c, m):
