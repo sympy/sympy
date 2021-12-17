@@ -3,8 +3,6 @@
 
 * Medium
 """
-import functools
-
 from sympy.physics.units import second, meter, kilogram, ampere
 
 __all__ = ['Medium']
