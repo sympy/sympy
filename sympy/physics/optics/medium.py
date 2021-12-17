@@ -3,6 +3,8 @@
 
 * Medium
 """
+import functools
+
 from sympy.physics.units import second, meter, kilogram, ampere
 
 __all__ = ['Medium']
@@ -86,7 +88,8 @@ class Medium(Basic):
             permeability = _u0mksa
             n = c*sqrt(permittivity*permeability)
         args = list(map(sympify, (permittivity, permeability, n)))
-        obj = super().__new__(cls, name, *args)
+        obj = super().__new__(cls, *args)
+        obj.name = name
         obj._permittivity = args[0]
         obj._permeability = args[1]
         obj._n = args[2]
@@ -187,6 +190,10 @@ class Medium(Basic):
 
         """
         return self._permeability
+
+    @property
+    def func(self, *args):
+        return functools.partial(self.__new__, Medium, '')
 
     def __str__(self):
         from sympy.printing import sstr
