@@ -76,15 +76,21 @@ class Medium(Basic):
         if n is not None:
             if permittivity is not None and permeability is None:
                 permeability = n**2/(c**2*permittivity)
-            if permeability is not None and permittivity is None:
+            elif permeability is not None and permittivity is None:
                 permittivity = n**2/(c**2*permeability)
-            if permittivity is not None and permittivity is not None:
+            elif permittivity is not None and permittivity is not None:
                 expr = abs(n - c*sqrt(permittivity*permeability))
                 expr = expr.subs({meter: 1, second: 1})
                 if len(expr.free_symbols) == 0 and expr > 1e-6:
                     raise ValueError("Values are not consistent.")
+            else:
+                raise ValueError("At least one of permittivity and permeability must not be None if n is not None")
         elif permittivity is not None and permeability is not None:
             n = c*sqrt(permittivity*permeability)
+        elif permittivity is not None and permeability is None:
+            raise ValueError("At least one of n and permeability must not be None if permittivity is not None")
+        elif permittivity is None and permeability is not None:
+            raise ValueError("At least one of n and permittivity must not be None if permeability is not None")
         elif permittivity is None and permeability is None:
             permittivity = _e0mksa
             permeability = _u0mksa
