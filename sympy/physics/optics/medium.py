@@ -76,7 +76,7 @@ class Medium(Basic):
                 permittivity = n**2/(c**2*permeability)
             if permittivity is not None and permittivity is not None:
                 expr = abs(n - c*sqrt(permittivity*permeability))
-                expr = expr.subs({meter: 1, second: 1}, 1)
+                expr = expr.subs({meter: 1, second: 1})
                 if len(expr.free_symbols) == 0 and expr > 1e-6:
                     raise ValueError("Values are not consistent.")
         elif permittivity is not None and permeability is not None:
