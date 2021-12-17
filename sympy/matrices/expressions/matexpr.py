@@ -608,10 +608,6 @@ class MatrixElement(Expr):
         return obj
 
     @property
-    def name(self):
-        return str(self)
-
-    @property
     def symbol(self):
         return self.args[0]
 

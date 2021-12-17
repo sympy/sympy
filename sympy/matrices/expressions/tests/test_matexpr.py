@@ -53,7 +53,6 @@ def test_matexpr_properties():
     assert (A*B).shape == (n, l)
     raises(ShapeError, lambda: B*A)
     assert A[0, 1].indices == (0, 1)
-    assert A[0, 1].name == 'A[0, 1]'
     assert A[0, 0].symbol == A
     assert A[0, 0].symbol.name == 'A'
 
