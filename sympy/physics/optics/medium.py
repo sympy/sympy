@@ -9,7 +9,7 @@ __all__ = ['Medium']
 
 from sympy.core.basic import Basic
 from sympy.core.symbol import Str
-from sympy.core.sympify import sympify
+from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import speed_of_light, u0, e0
 
@@ -89,7 +89,7 @@ class Medium(Basic):
             permittivity = _e0mksa
             permeability = _u0mksa
             n = c*sqrt(permittivity*permeability)
-        args = list(map(sympify, (permittivity, permeability, n)))
+        args = list(map(_sympify, (permittivity, permeability, n)))
         obj = super().__new__(cls, name, *args)
         obj.name = name
         obj._permittivity = args[0]
