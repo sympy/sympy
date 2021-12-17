@@ -94,6 +94,7 @@ from sympy.printing.rust import RustCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
 from sympy.matrices import (MatrixSymbol, ImmutableMatrix, MatrixBase,
                             MatrixExpr, MatrixSlice)
+from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.utilities.iterables import is_sequence
 
 
@@ -185,7 +186,9 @@ class Routine:
             else:
                 local_symbols.add(r)
 
-        symbols = {s.label if isinstance(s, Idx) else s for s in symbols}
+        symbols = {s.label if isinstance(s, Idx) else
+            (s.symbol if isinstance(s, MatrixElement) else
+            s) for s in symbols}
 
         # Check that all symbols in the expressions are covered by
         # InputArguments/InOutArguments---subset because user could
@@ -646,6 +649,8 @@ class CodeGen:
                 new_symbols.remove(symbol)
                 new_symbols.update(symbol.args[1].free_symbols)
             if isinstance(symbol, Indexed):
+                new_symbols.remove(symbol)
+            if isinstance(symbol, MatrixElement):
                 new_symbols.remove(symbol)
         symbols = new_symbols
 

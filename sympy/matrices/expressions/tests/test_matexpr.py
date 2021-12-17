@@ -184,8 +184,9 @@ def test_dense_conversion():
     assert Matrix(X) == Matrix(2, 2, lambda i, j: X[i, j])
 
 
-def test_free_symbols():
+def test_matexpr_free_symbols():
     assert (C*D).free_symbols == {C, D}
+    assert C[x, 0].free_symbols == {C, x, C[x, 0]}
 
 
 def test_zero_matmul():

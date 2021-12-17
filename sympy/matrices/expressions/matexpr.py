@@ -627,6 +627,10 @@ class MatrixElement(Expr):
     def indices(self):
         return self.args[1:]
 
+    @property
+    def free_symbols(self):
+        return {self}.union(*[i.free_symbols for i in self.args])
+
     def _eval_derivative(self, v):
 
         if not isinstance(v, MatrixElement):
