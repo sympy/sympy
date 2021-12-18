@@ -771,7 +771,7 @@ class Hyperbola(GeometrySet):
         sympy.geometry.entity.GeometryEntity
         Examples
         ========
-        >>> from sympy import Hyperbola, Point, Line
+        >>> from sympy import Hyperbola, Point, Line, Point2D
         >>> h = Hyperbola(Point(0, 0), 5, 7)
         >>> h.intersection(Point(0, 0))
         []
