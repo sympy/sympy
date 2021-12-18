@@ -97,8 +97,9 @@ def test_trace_constant_factor():
     assert trace(MatMul(2, X)) == 10
 
 
-def test_rewrite():
+def test_trace_rewrite():
     assert trace(A).rewrite(Sum) == Sum(A[i, i], (i, 0, n - 1))
+    assert trace(eye(3)).rewrite(Sum) == 3
 
 
 def test_trace_normalize():

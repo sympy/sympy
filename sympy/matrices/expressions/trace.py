@@ -5,7 +5,6 @@ from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import uniquely_named_symbol
 from sympy.core.sympify import sympify
 from sympy.matrices.matrices import MatrixBase
-from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.common import NonSquareMatrixError
 
 
@@ -147,7 +146,7 @@ class Trace(Expr):
         from sympy.concrete.summations import Sum
         i = uniquely_named_symbol('i', expr)
         s = Sum(self.arg[i, i], (i, 0, self.arg.rows - 1))
-        if not isinstance(expr, MatrixExpr):
+        if all(i.is_Integer for i in expr.shape):
             s = s.doit()
         return s
 
