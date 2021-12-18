@@ -33,7 +33,7 @@ from sympy.core.sympify import _sympify
 
 
 class _ArrayExpr(Expr):
-    pass
+    shape : tTuple[Expr, ...]
 
 
 class ArraySymbol(_ArrayExpr):
@@ -1571,7 +1571,7 @@ class _EditArrayContraction:
                 args_with_ind[arg_pos].indices[rel_pos] = i
         self.args_with_ind: List[_ArgE] = args_with_ind
         self.number_of_contraction_indices: int = len(contraction_indices)
-        self._track_permutation: Optional[List[List[int]]] = None
+        self._track_permutation: List[List[int]] = None # type: ignore
 
         mapping = _get_mapping_from_subranks(base_array.subranks)
 
