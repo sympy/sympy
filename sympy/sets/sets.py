@@ -1364,6 +1364,7 @@ class Intersection(Set, LatticeOp):
         if evaluate:
             args = list(cls._new_args_filter(args))
             return simplify_intersection(args)
+
         args = list(ordered(args, Set._infimum_key))
 
         obj = Basic.__new__(cls, *args)
@@ -2444,6 +2445,7 @@ def simplify_intersection(args):
             args.remove(s)
             other_sets = args + [s.args[0]]
             return Complement(Intersection(*other_sets), s.args[1])
+
 
     from sympy.sets.handlers.intersection import intersection_sets
 
