@@ -18,7 +18,7 @@ from .entity import GeometryEntity, GeometrySet
 from .exceptions import GeometryError
 from .ellipse import Circle, Ellipse
 from .line import Line, Segment, Ray2D, Segment2D, Line2D, LinearEntity3D
-from .point import Point
+from .point import Point, Point2D, Point3D
 from .polygon import Polygon
 from sympy.solvers import solve
 from sympy.utilities.misc import filldedent, func_name
@@ -771,7 +771,7 @@ class Hyperbola(GeometrySet):
         sympy.geometry.entity.GeometryEntity
         Examples
         ========
-        >>> from sympy import Hyperbola, Point, Line, Point2D
+        >>> from sympy import Hyperbola, Point, Line, Point2D, Ellipse
         >>> h = Hyperbola(Point(0, 0), 5, 7)
         >>> h.intersection(Point(0, 0))
         []
@@ -822,3 +822,71 @@ class Hyperbola(GeometrySet):
             raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
             raise TypeError('Intersection not handled for %s' % func_name(o))
+
+    def is_tangent(self, o):
+        """Is `o` tangent to the hyperbola?
+
+        Parameters
+        ==========
+
+        o : GeometryEntity
+            A LinearEntity or Polygon
+
+        Raises
+        ======
+
+        NotImplementedError
+            When the wrong type of argument is supplied.
+
+        Returns
+        =======
+
+        is_tangent: boolean
+            True if o is tangent to the hyperbola, False otherwise.
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Hyperbola, Line
+        >>> p0, p1, p2 = Point(0, 0), Point(3, 0), Point(3, 3)
+        >>> h1 = Hyperbola(p0, 3, 2)
+        >>> l1 = Line(p1, p2)
+        >>> h1.is_tangent(l1)
+        True
+
+        """
+        if isinstance(o, Point2D):
+            return False
+        elif isinstance(o, Line2D):
+            hit = self.intersection(o)
+            if not hit:
+                return False
+            if len(hit) == 1:
+                return True
+            # might return None if it can't decide
+            return hit[0].equals(hit[1])
+        elif isinstance(o, Ray2D):
+            intersect = self.intersection(o)
+            if len(intersect) == 1:
+                return intersect[0] != o.source and not self.encloses_point(o.source)
+            else:
+                return False
+        elif isinstance(o, (Segment2D, Polygon)):
+            all_tangents = False
+            segments = o.sides if isinstance(o, Polygon) else [o]
+            for segment in segments:
+                intersect = self.intersection(segment)
+                if len(intersect) == 1:
+                    if not any(intersect[0] in i for i in segment.points) \
+                        and not any(self.encloses_point(i) for i in segment.points):
+                        all_tangents = True
+                        continue
+                    else:
+                        return False
+                else:
+                    return all_tangents
+            return all_tangents
+        elif isinstance(o, (LinearEntity3D, Point3D)):
+            raise TypeError('Entity must be two dimensional, not three dimensional')
+        else:
+            raise TypeError('Is_tangent not handled for %s' % func_name(o))
