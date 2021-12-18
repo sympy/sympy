@@ -2254,6 +2254,10 @@ class LatexPrinter(Printer):
             self._print(s.base_set),
             self._print(s.condition))
 
+    def _print_PowerSet(self, expr):
+        arg_print = self._print(expr.args[0])
+        return r"\mathcal{{P}}\left({}\right)".format(arg_print)
+
     def _print_ComplexRegion(self, s):
         vars_print = ', '.join([self._print(var) for var in s.variables])
         return r"\left\{%s\; \middle|\; %s \in %s \right\}" % (
@@ -2384,6 +2388,25 @@ class LatexPrinter(Printer):
         else:
             return r"\operatorname{%s} {\left(%s\right)}" % (cls,
                                                              ", ".join(args))
+
+    def _print_OrdinalOmega(self, expr):
+        return r"\omega"
+
+    def _print_OmegaPower(self, expr):
+        exp, mul = expr.args
+        if mul != 1:
+            if exp != 1:
+                return r"{} \omega^{{{}}}".format(mul, exp)
+            else:
+                return r"{} \omega".format(mul)
+        else:
+            if exp != 1:
+                return r"\omega^{{{}}}".format(exp)
+            else:
+                return r"\omega"
+
+    def _print_Ordinal(self, expr):
+        return " + ".join([self._print(arg) for arg in expr.args])
 
     def _print_PolyElement(self, poly):
         mul_symbol = self._settings['mul_symbol_latex']
