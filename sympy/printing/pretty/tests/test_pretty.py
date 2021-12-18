@@ -66,6 +66,9 @@ from sympy.sets.conditionset import ConditionSet
 
 from sympy.sets import ImageSet, ProductSet
 from sympy.sets.setexpr import SetExpr
+from sympy.stats.crv_types import Normal
+from sympy.stats.symbolic_probability import (Covariance, Expectation,
+                                              Probability, Variance)
 from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
                                 MutableDenseNDimArray, MutableSparseNDimArray, tensorproduct)
 from sympy.tensor.functions import TensorProduct
@@ -3608,6 +3611,7 @@ def test_diffgeom_print_WedgeProduct():
     from sympy.diffgeom import WedgeProduct
     wp = WedgeProduct(R2.dx, R2.dy)
     assert upretty(wp) == "ⅆ x∧ⅆ y"
+    assert pretty(wp) == r"d x/\d y"
 
 
 def test_Adjoint():
@@ -7628,6 +7632,7 @@ def test_issue_17857():
     assert pretty(Range(-oo, oo)) == '{..., -1, 0, 1, ...}'
     assert pretty(Range(oo, -oo, -1)) == '{..., 1, 0, -1, ...}'
 
+
 def test_issue_18272():
     x = Symbol('x')
     n = Symbol('n')
@@ -7657,6 +7662,19 @@ def test_issue_18272():
 def test_Str():
     from sympy.core.symbol import Str
     assert pretty(Str('x')) == 'x'
+
+
+
+def test_symbolic_probability():
+    mu = symbols("mu")
+    sigma = symbols("sigma", positive=True)
+    X = Normal("X", mu, sigma)
+    assert pretty(Expectation(X)) == r'E[X]'
+    assert pretty(Variance(X)) == r'Var(X)'
+    assert pretty(Probability(X > 0)) == r'P(X > 0)'
+    Y = Normal("Y", mu, sigma)
+    assert pretty(Covariance(X, Y)) == 'Cov(X, Y)'
+
 
 def test_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField

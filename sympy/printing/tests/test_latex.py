@@ -63,6 +63,9 @@ from sympy.sets.contains import Contains
 from sympy.sets.fancysets import (ComplexRegion, ImageSet, Range)
 from sympy.sets.sets import (FiniteSet, Interval, Union, Intersection, Complement, SymmetricDifference, ProductSet)
 from sympy.sets.setexpr import SetExpr
+from sympy.stats.crv_types import Normal
+from sympy.stats.symbolic_probability import (Covariance, Expectation,
+                                              Probability, Variance)
 from sympy.tensor.array import (ImmutableDenseNDimArray,
                                 ImmutableSparseNDimArray,
                                 MutableSparseNDimArray,
@@ -1735,7 +1738,7 @@ def test_latex_RandomDomain():
         r"\text{Domain: }0 \leq a \wedge 0 \leq b \wedge a < \infty \wedge b < \infty"
 
     assert latex(RandomDomain(FiniteSet(x), FiniteSet(1, 2))) == \
-        r'\text{Domain: }\left\{x\right\}\text{ in }\left\{1, 2\right\}'
+        r'\text{Domain: }\left\{x\right\} \in \left\{1, 2\right\}'
 
 def test_PrettyPoly():
     from sympy.polys.domains import QQ
@@ -2612,6 +2615,17 @@ def test_issue_15353():
         r'\left\{\left( x, \  a\right)\; \middle|\; \left( x, \  a\right) \in ' \
         r'\mathbb{C}^{2} \wedge \sin{\left(a x \right)} = 0 \wedge ' \
         r'\cos{\left(a x \right)} = 0 \right\}'
+
+
+def test_latex_symbolic_probability():
+    mu = symbols("mu")
+    sigma = symbols("sigma", positive=True)
+    X = Normal("X", mu, sigma)
+    assert latex(Expectation(X)) == r'\operatorname{E}\left[X\right]'
+    assert latex(Variance(X)) == r'\operatorname{Var}\left(X\right)'
+    assert latex(Probability(X > 0)) == r'\operatorname{P}\left(X > 0\right)'
+    Y = Normal("Y", mu, sigma)
+    assert latex(Covariance(X, Y)) == r'\operatorname{Cov}\left(X, Y\right)'
 
 
 def test_trace():
