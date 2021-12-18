@@ -9,16 +9,19 @@ from sympy.core import S, sympify
 from sympy.core.evalf import N
 from sympy.core.logic import fuzzy_bool
 from sympy.core.numbers import Rational
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, _symbol, symbols
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max
 from sympy.functions.elementary.trigonometric import sec, tan
 from .entity import GeometryEntity, GeometrySet
 from .exceptions import GeometryError
-from .ellipse import Circle
-from .line import Segment
+from .ellipse import Circle, Ellipse
+from .line import Line, Segment, Ray2D, Segment2D, Line2D, LinearEntity3D
 from .point import Point
-from sympy.utilities.misc import filldedent
+from .polygon import Polygon
+from sympy.solvers import solve
+from sympy.utilities.misc import filldedent, func_name
 
 
 class Hyperbola(GeometrySet):
@@ -89,7 +92,7 @@ class Hyperbola(GeometrySet):
             y = Dummy('y', real=True)
 
             res = self.equation(x, y).subs({x: o.x, y: o.y})
-            return trigsimp(simplify(res)) is S.Zero
+            return trigsimp(simplify(res)).is_zero
         elif isinstance(o, Hyperbola):
             return self == o
         return False
@@ -583,6 +586,54 @@ class Hyperbola(GeometrySet):
         """
         return self.major * (self.eccentricity ** 2 - 1)
 
+    def asymptote(self, slope="+"):
+        """
+        Returns asymptote of the hyperbola. By deafult returns the asymptote with positive slope
+
+        An asymptote to a curve is defined as a line such that the distance between
+        the curve and the line approaches zero as one or both of the x or y coordinates tends
+        to infinity.
+
+        Returns
+        =======
+
+        asymptote : expression
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Hyperbola
+        >>> p1 = Point(0, 0)
+        >>> h1 = Hyperbola(p1, 3, 1)
+        >>> h1.asymptote()
+        -x/3 + y
+        >>> h1.asymptote(slope = '-')
+        x/3 + y
+        >>> h2 = Hyperbola(Point(1, 0), 3, 2)
+        >>> h2.asymptote()
+        -2*x/3 + y + 2/3
+        >>> h2.asymptote(slope = '-')
+        2*x/3 + y - 2/3
+
+        References
+        ==========
+
+        .. [1] https://en.wikipedia.org/wiki/Hyperbola#Asymptotes
+
+        """
+
+        x = _symbol('x', real=True)
+        y = _symbol('y', real=True)
+
+        dx = x - self.center.x
+        dy = y - self.center.y
+
+        if str(slope) == "-":
+            asymptote = dy + (self.vradius * dx / self.hradius)
+        else:
+            asymptote = dy - (self.vradius * dx / self.hradius)
+        return asymptote
+
     def arbitrary_point(self, parameter='t'):
         """A parameterized point on the hyperbola.
 
@@ -701,3 +752,73 @@ class Hyperbola(GeometrySet):
         t1 = (self.hradius*(x - self.center.x))**Rational(2, 3)
         t2 = (self.vradius*(y - self.center.y))**Rational(2, 3)
         return t1 - t2 - (self.hradius**2 + self.vradius**2)**Rational(2, 3)
+
+    def intersection(self, o):
+        """The intersection of this hyperbola and another geometrical entity
+        `o`.
+        Parameters
+        ==========
+        o : GeometryEntity
+        Returns
+        =======
+        intersection : list of GeometryEntity objects
+        Notes
+        -----
+        Currently supports intersections with Point, Line, Segment, Ray
+        Circle, Ellipse and Hyperbola types.
+        See Also
+        ========
+        sympy.geometry.entity.GeometryEntity
+        Examples
+        ========
+        >>> from sympy import Hyperbola, Point, Line
+        >>> h = Hyperbola(Point(0, 0), 5, 7)
+        >>> h.intersection(Point(0, 0))
+        []
+        >>> h.intersection(Point(5, 0))
+        [Point2D(5, 0)]
+        >>> h.intersection(Line(Point(0,0), Point(1, 0)))
+        [Point2D(-5, 0), Point2D(5, 0)]
+        >>> h.intersection(Line(Point(0,0), Point(0, 1)))
+        []
+        >>> # Checking for intersection with Asymptotes
+        >>> h.intersection(Line(Point(0,0), Point(5, 7)))
+        []
+        >>> h1 = Hyperbola(Point(-1, 0), 4, 3)
+        >>> h1.intersection(Hyperbola(Point(1, 0), 4, 3))
+        []
+        >>> h1.intersection(h)
+        [Point2D(-5, 0), Point2D(3245/559, -84*sqrt(755)/559), Point2D(3245/559, 84*sqrt(755)/559)]
+        >>> h1.intersection(Ellipse(Point(-1, 0), 4, 3))
+        [Point2D(-5, 0), Point2D(3, 0)]
+        >>> h1.intersection(Hyperbola(Point2D(0, -1), 4, 3))
+        [Point2D(-1/2 + 2*sqrt(4081)/21, -3*sqrt(4081)/56 - 1/2), Point2D(-2*sqrt(4081)/21 - 1/2, -1/2 + 3*sqrt(4081)/56)]
+        """
+        # TODO: Replace solve with nonlinsolve, when nonlinsolve will be able to solve in real domain
+        x = Dummy('x', real=True)
+        y = Dummy('y', real=True)
+
+        if isinstance(o, Point):
+            if o in self:
+                return [o]
+            else:
+                return []
+
+        elif isinstance(o, (Segment2D, Ray2D)):
+            hyperbola_equation = self.equation(x, y)
+            result = solve([hyperbola_equation, Line(o.points[0], o.points[1]).equation(x, y)], [x, y])
+            return list(ordered([Point(i) for i in result if i in o]))
+
+        elif isinstance(o, Polygon):
+            return o.intersection(self)
+
+        elif isinstance(o, (Hyperbola, Line2D, Ellipse)):
+            if o == self:
+                return self
+            else:
+                hyperbola_equation = self.equation(x, y)
+                return list(ordered([Point(i) for i in solve([hyperbola_equation, o.equation(x, y)], [x, y])]))
+        elif isinstance(o, LinearEntity3D):
+            raise TypeError('Entity must be two dimensional, not three dimensional')
+        else:
+            raise TypeError('Intersection not handled for %s' % func_name(o))
