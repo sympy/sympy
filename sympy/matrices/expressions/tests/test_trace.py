@@ -8,6 +8,8 @@ from sympy.matrices.expressions import (
 )
 from sympy.matrices.expressions.special import OneMatrix
 from sympy.testing.pytest import raises
+from sympy.abc import i
+
 
 n = symbols('n', integer=True)
 A = MatrixSymbol('A', n, n)
@@ -96,7 +98,7 @@ def test_trace_constant_factor():
 
 
 def test_rewrite():
-    assert isinstance(trace(A).rewrite(Sum), Sum)
+    assert trace(A).rewrite(Sum) == Sum(A[i, i], (i, 0, n - 1))
 
 
 def test_trace_normalize():

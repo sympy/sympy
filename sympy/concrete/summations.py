@@ -1308,10 +1308,10 @@ def eval_sum_hyper(f, i_a_b):
                 return Piecewise(res, (old_sum, True))
         else:
             res1 = _eval_sum_hyper(f, i, a)
-            try:
-                res2 = _eval_sum_hyper(f, i, b + 1)
-            except IndexError:  # for f = Trace (or other matexpr?)
-                res2 = None
+            # this will fail if an indexed object gets sent
+            # here -- so don't send such objects here (i.e.
+            # fix at the call, not here
+            res2 = _eval_sum_hyper(f, i, b + 1)
             if res1 is None or res2 is None:
                 return None
             (res1, cond1), (res2, cond2) = res1, res2
