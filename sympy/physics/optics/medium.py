@@ -8,7 +8,7 @@ from sympy.physics.units import second, meter, kilogram, ampere
 __all__ = ['Medium']
 
 from sympy.core.basic import Basic
-from sympy.core.symbol import Str
+from sympy.core.symbol import Str, Dummy
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import speed_of_light, u0, e0
@@ -84,7 +84,8 @@ class Medium(Basic):
                 if len(expr.free_symbols) == 0 and expr > 1e-6:
                     raise ValueError("Values are not consistent.")
             else:
-                raise ValueError("At least one of permittivity and permeability must not be None if n is not None")
+                permittivity = n*_e0mksa
+                permeability = n*_u0mksa
         elif permittivity is not None and permeability is not None:
             n = c*sqrt(permittivity*permeability)
         elif permittivity is not None and permeability is None:
@@ -146,7 +147,7 @@ class Medium(Basic):
         True
 
         """
-        if self._permittivity is not None and self._permeability is not None:
+        if not isinstance(self._permittivity, Dummy) and not isinstance(self._permeability, Dummy):
             return 1/sqrt(self._permittivity*self._permeability)
         else:
             return c/self._n
