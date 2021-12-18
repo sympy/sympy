@@ -2471,16 +2471,16 @@ class LatexPrinter(Printer):
         return result
 
     def _print_Expectation(self, expr):
-        return r"E\left[{}\right]".format(self._print(expr.args[0]))
+        return r"\operatorname{{E}}\left[{}\right]".format(self._print(expr.args[0]))
 
     def _print_Variance(self, expr):
-        return r"\operatorname{{var}}\left({}\right)".format(self._print(expr.args[0]))
+        return r"\operatorname{{Var}}\left({}\right)".format(self._print(expr.args[0]))
 
     def _print_Covariance(self, expr):
-        return r"\operatorname{{cov}}\left({}\right)".format(", ".join(self._print(arg) for arg in expr.args))
+        return r"\operatorname{{Cov}}\left({}\right)".format(", ".join(self._print(arg) for arg in expr.args))
 
     def _print_Probability(self, expr):
-        return r"P\left({}\right)".format(self._print(expr.args[0]))
+        return r"\operatorname{{P}}\left({}\right)".format(self._print(expr.args[0]))
 
     def _print_Morphism(self, morphism):
         domain = self._print(morphism.domain)

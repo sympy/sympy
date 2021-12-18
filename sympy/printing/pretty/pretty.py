@@ -1682,10 +1682,10 @@ class PrettyPrinter(Printer):
         return self._print_Function(e, func_name="W")
 
     def _print_Covariance(self, e):
-        return self._print_Function(e, func_name="cov")
+        return self._print_Function(e, func_name="Cov")
 
     def _print_Variance(self, e):
-        return self._print_Function(e, func_name="var")
+        return self._print_Function(e, func_name="Var")
 
     def _print_Probability(self, e):
         return self._print_Function(e, func_name="P")
