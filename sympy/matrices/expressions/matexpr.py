@@ -6,7 +6,6 @@ from sympy.core.assumptions import check_assumptions
 from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr, ExprBuilder
 from sympy.core.logic import FuzzyBool
-from sympy.core.relational import is_le
 from sympy.core.symbol import Str, Dummy, symbols, Symbol
 from sympy.core.sympify import SympifyError, _sympify
 from sympy.external.gmpy import SYMPY_INTS
@@ -275,8 +274,8 @@ class MatrixExpr(Expr):
             return isinstance(idx, (int, Integer, Symbol, Expr))
         return (is_valid(i) and is_valid(j) and
                 (self.rows is None or
-                (0 <= i) != False and (i < self.rows) != False) and
-                (0 <= j) != False and (j < self.cols) != False)
+                (i >= -self.rows) != False and (i < self.rows) != False) and
+                (j >= -self.cols) != False and (j < self.cols) != False)
 
     def __getitem__(self, key):
         if not isinstance(key, tuple) and isinstance(key, slice):
@@ -595,9 +594,8 @@ class MatrixElement(Expr):
                 return name[n, m]
             name = _sympify(name)  # change mutable into immutable
         elif isinstance(name, MatrixSymbol):
-            r, c = name.shape
-            if is_le(r, n) or is_le(c, m):
-                raise IndexError('indices out of bounds')
+            if not name.valid_index(n, m):
+                raise IndexError('indices out of range')
         elif isinstance(name, str):
             name = Symbol(name)
         else:
