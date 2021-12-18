@@ -28,6 +28,7 @@ from sympy.logic.boolalg import And
 from sympy.polys.partfrac import apart
 from sympy.polys.polyerrors import PolynomialError, PolificationFailed
 from sympy.polys.polytools import parallel_poly_from_expr, Poly, factor
+from sympy.polys.polyutils import illegal
 from sympy.polys.rationaltools import together
 from sympy.series.limitseq import limit_seq
 from sympy.series.order import O
@@ -1295,6 +1296,9 @@ def _eval_sum_hyper(f, i, a):
 def eval_sum_hyper(f, i_a_b):
     i, a, b = i_a_b
 
+    if not f.is_hypergeometric(i):
+        return
+
     if (b - a).is_Integer:
         # We are never going to do better than doing the sum in the obvious way
         return None
@@ -1308,9 +1312,12 @@ def eval_sum_hyper(f, i_a_b):
                 return Piecewise(res, (old_sum, True))
         else:
             res1 = _eval_sum_hyper(f, i, a)
-            # this will fail if an indexed object gets sent
-            # here -- so don't send such objects here (i.e.
-            # fix at the call, not here
+            # a calling routine may have reasonably checked
+            # that neither limit causes evaluation issues,
+            # but now we are testing 1 past the upper limit
+            # so check here if this should be avoided:
+            if f.subs(i, b + 1).has(*illegal):
+                return
             res2 = _eval_sum_hyper(f, i, b + 1)
             if res1 is None or res2 is None:
                 return None

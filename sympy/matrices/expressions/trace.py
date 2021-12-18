@@ -146,9 +146,7 @@ class Trace(Expr):
         from sympy.concrete.summations import Sum
         i = uniquely_named_symbol('i', expr)
         s = Sum(self.arg[i, i], (i, 0, self.arg.rows - 1))
-        if all(i.is_Integer for i in expr.shape):
-            s = s.doit()
-        return s
+        return s.doit()
 
 
 def trace(expr):

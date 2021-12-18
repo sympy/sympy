@@ -29,7 +29,6 @@ from sympy.sets.sets import Interval
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.simplify import simplify
 from sympy.tensor.indexed import (Idx, Indexed, IndexedBase)
-from sympy.abc import a, b, c, d, k, m, x, y, z
 from sympy.concrete.summations import (
     telescopic, _dummy_with_inherited_properties_concrete, eval_sum_residue)
 from sympy.concrete.expr_with_intlimits import ReorderError
@@ -38,6 +37,7 @@ from sympy.testing.pytest import XFAIL, raises, slow
 from sympy.matrices import (Matrix, SparseMatrix,
     ImmutableDenseMatrix, ImmutableSparseMatrix)
 from sympy.core.mod import Mod
+from sympy.abc import a, b, c, d, k, m, x, y, z
 
 n = Symbol('n', integer=True)
 f, g = symbols('f g', cls=Function)
@@ -1586,3 +1586,9 @@ def test_process_limits():
         raises(TypeError, lambda: D(x, x > 0))
         raises(ValueError, lambda: D(x, Interval(1, 3)))
         raises(NotImplementedError, lambda: D(x, (x, union)))
+
+
+def test_pr_22677():
+    b = Symbol('b', integer=True, positive=True)
+    assert not summation(1/(x - b)**2, (x, 0, b - 1)).has(
+        S.ComplexInfinity)
