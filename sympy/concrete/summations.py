@@ -1296,7 +1296,7 @@ def _eval_sum_hyper(f, i, a):
 def eval_sum_hyper(f, i_a_b):
     i, a, b = i_a_b
 
-    if not f.is_hypergeometric(i):
+    if f.is_hypergeometric(i) is False:
         return
 
     if (b - a).is_Integer:
@@ -1316,7 +1316,8 @@ def eval_sum_hyper(f, i_a_b):
             # that neither limit causes evaluation issues,
             # but now we are testing 1 past the upper limit
             # so check here if this should be avoided:
-            if f.subs(i, b + 1).has(*illegal):
+            n_illegal = lambda x: sum(x.count(_) for _ in illegal)
+            if n_illegal(f) < n_illegal(f.subs(i, b + 1)):
                 return
             res2 = _eval_sum_hyper(f, i, b + 1)
             if res1 is None or res2 is None:
