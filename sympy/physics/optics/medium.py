@@ -8,7 +8,7 @@ from sympy.physics.units import second, meter, kilogram, ampere
 __all__ = ['Medium']
 
 from sympy.core.basic import Basic
-from sympy.core.symbol import Str, Dummy
+from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import speed_of_light, u0, e0
@@ -147,7 +147,7 @@ class Medium(Basic):
         True
 
         """
-        if not isinstance(self._permittivity, Dummy) and not isinstance(self._permeability, Dummy):
+        if self._permittivity is not None and self._permeability is not None:
             return 1/sqrt(self._permittivity*self._permeability)
         else:
             return c/self._n
