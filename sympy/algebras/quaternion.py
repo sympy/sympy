@@ -760,7 +760,7 @@ class Quaternion(Expr):
                           [m20, m21, m22, m23], [m30, m31, m32, m33]])
 
     def scalar_part(self):
-        """Returns scalar part($\mathbf{S}(q)$) of the quaternion q.
+        r"""Returns scalar part($\mathbf{S}(q)$) of the quaternion q.
 
         Explanation
         ===========
@@ -780,7 +780,7 @@ class Quaternion(Expr):
         return self.a
 
     def vector_part(self):
-        """
+        r"""
         Returns vector part($\mathbf{V}(q)$) of the quaternion q.
 
         Explanation
@@ -805,7 +805,7 @@ class Quaternion(Expr):
         return Quaternion(0, self.b, self.c, self.d)
 
     def axis(self):
-        """
+        r"""
         Returns the axis($\mathbf{Ax}(q)$) of the quaternion.
 
         Explanation
@@ -1106,7 +1106,7 @@ class Quaternion(Expr):
         return (self*other + other*self).is_zero_quaternion()
 
     def index_vector(self):
-        """
+        r"""
         Returns the index vector of the quaternion.
 
         Explanation
