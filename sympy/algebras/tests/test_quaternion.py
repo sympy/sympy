@@ -5,7 +5,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import (Abs, conjugate, im, re, sign)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin)
+from sympy.functions.elementary.trigonometric import (acos, asin, cos, sin, atan2, atan)
 from sympy.integrals.integrals import integrate
 from sympy.matrices.dense import Matrix
 from sympy.simplify.trigsimp import trigsimp
