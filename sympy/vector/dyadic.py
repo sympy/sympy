@@ -225,6 +225,10 @@ class BaseDyadic(Dyadic, AtomicExpr):
         return "({}|{})".format(
             printer._print(self.args[0]), printer._print(self.args[1]))
 
+    def _sympyrepr(self, printer):
+        return "BaseDyadic({}, {})".format(
+            printer._print(self.args[0]), printer._print(self.args[1]))
+
 
 class DyadicMul(BasisDependentMul, Dyadic):
     """ Products of scalars and BaseDyadics """

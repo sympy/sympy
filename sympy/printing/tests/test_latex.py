@@ -1279,6 +1279,15 @@ def test_latex_list():
     assert latex(ll) == r'\left[ \omega_{1}, \  a, \  \alpha\right]'
 
 
+def test_latex_NumberSymbols():
+    assert latex(S.Catalan) == "G"
+    assert latex(S.EulerGamma) == r"\gamma"
+    assert latex(S.Exp1) == "e"
+    assert latex(S.GoldenRatio) == r"\phi"
+    assert latex(S.Pi) == r"\pi"
+    assert latex(S.TribonacciConstant) == r"\text{TribonacciConstant}"
+
+
 def test_latex_rational():
     # tests issue 3973
     assert latex(-Rational(1, 2)) == r"- \frac{1}{2}"
@@ -1975,6 +1984,12 @@ def test_Identity():
     from sympy.matrices.expressions.special import Identity
     assert latex(Identity(1), mat_symbol_style='plain') == r"\mathbb{I}"
     assert latex(Identity(1), mat_symbol_style='bold') == r"\mathbf{I}"
+
+
+def test_latex_DFT_IDFT():
+    from sympy.matrices.expressions.fourier import DFT, IDFT
+    assert latex(DFT(13)) == r"\text{DFT}_{13}"
+    assert latex(IDFT(x)) == r"\text{IDFT}_{x}"
 
 
 def test_boolean_args_order():

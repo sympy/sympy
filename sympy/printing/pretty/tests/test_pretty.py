@@ -6,7 +6,7 @@ from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
 from sympy.core.function import (Derivative, Function, Lambda, Subs)
 from sympy.core.mul import Mul
-from sympy.core import (EulerGamma, GoldenRatio)
+from sympy.core import (EulerGamma, GoldenRatio, Catalan)
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.power import Pow
 from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
@@ -1134,6 +1134,11 @@ def test_EulerGamma():
 def test_GoldenRatio():
     assert pretty(GoldenRatio) == str(GoldenRatio) == "GoldenRatio"
     assert upretty(GoldenRatio) == "φ"
+
+
+def test_Catalan():
+    assert pretty(Catalan) == upretty(Catalan) == "G"
+
 
 def test_pretty_relational():
     expr = Eq(x, y)

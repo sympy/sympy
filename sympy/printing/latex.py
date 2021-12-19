@@ -2557,6 +2557,10 @@ class LatexPrinter(Printer):
         mat = self._print(expr._expr_mat)
         return r"%s_\tau" % mat
 
+    def _print_DFT(self, expr):
+        return r"\text{{{}}}_{{{}}}".format(expr.__class__.__name__, expr.n)
+    _print_IDFT = _print_DFT
+
     def _print_NamedMorphism(self, morphism):
         pretty_name = self._print(Symbol(morphism.name))
         pretty_morphism = self._print_Morphism(morphism)
