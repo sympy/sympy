@@ -760,8 +760,7 @@ class Quaternion(Expr):
                           [m20, m21, m22, m23], [m30, m31, m32, m33]])
 
     def scalar_part(self):
-        """
-        Returns scalar part($\mathbf{S}(q)$) of the quaternion q.
+        """Returns scalar part($\mathbf{S}(q)$) of the quaternion q.
 
         Explanation
         ===========
