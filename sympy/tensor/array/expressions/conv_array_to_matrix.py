@@ -283,11 +283,10 @@ def _(expr: PermuteDims):
             p2 = permuted[2*i+1]
             if p1 // 2 != p2 // 2:
                 return _permute_dims(mat_mul_lines, permutation)
-            posi = p1 // 2
             if p1 > p2:
-                args_array[i] = _a2m_transpose(mat_mul_lines.args[posi])
+                args_array[i] = _a2m_transpose(mat_mul_lines.args[p1 // 2])
             else:
-                args_array[i] = mat_mul_lines.args[posi]
+                args_array[i] = mat_mul_lines.args[p1 // 2]
         return _a2m_tensor_product(*args_array)
     else:
         return expr
@@ -956,7 +955,7 @@ def _array_contraction_to_diagonal_multiple_identity(expr: ArrayContraction):
                 flag = True
                 break
             free_pos = list(range(*editor.get_absolute_free_range(id1)))[0]
-            editor._track_permutation[-1].append(free_pos)
+            editor._track_permutation[-1].append(free_pos) # type: ignore
             id1.element = None
             flag = False
             break
@@ -970,7 +969,7 @@ def _array_contraction_to_diagonal_multiple_identity(expr: ArrayContraction):
     for j, e in enumerate(editor.args_with_ind):
         if e.element is None:
             editor._track_permutation[j] = None # type: ignore
-    editor._track_permutation = [i for i in editor._track_permutation if i is not None]
+    editor._track_permutation = [i for i in editor._track_permutation if i is not None] # type: ignore
     # Renumber permutation array form in order to deal with deleted positions:
     remap = {e: i for i, e in enumerate(sorted({k for j in editor._track_permutation for k in j}))}
     editor._track_permutation = [[remap[j] for j in i] for i in editor._track_permutation]
