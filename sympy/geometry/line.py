@@ -2100,7 +2100,7 @@ class Line2D(LinearEntity2D, Line):
             The name to use for the x-axis, default value is 'x'.
         y : str, optional
             The name to use for the y-axis, default value is 'y'.
-            
+
         Returns
         =======
 
