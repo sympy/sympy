@@ -82,6 +82,62 @@ class Relational(Boolean, EvalfMixin):
     >>> Rel(y, x + x**2, '==')
     Eq(y, x**2 + x)
 
+    A relation's type can be defined upon creation using ``rop``.
+    The relation type of an exising expression can be obtained
+    using its ``rel_op`` property.
+    Here is a table of all the relation types, along with their
+    ``rop`` and ``rel_op`` values:
+
+    +---------------------+----------------------------+------------+
+    |Relation             |``rop``                     |``rel_op``  |
+    +=====================+============================+============+
+    |``Equality``         |``==`` or ``eq`` or ``None``|``==``      |
+    +---------------------+----------------------------+------------+
+    |``Unequality``       |``!=`` or ``ne``            |``!=``      |
+    +---------------------+----------------------------+------------+
+    |``GreaterThan``      |``>=`` or ``ge``            |``>=``      |
+    +---------------------+----------------------------+------------+
+    |``LessThan``         |``<=`` or ``le``            |``<=``      |
+    +---------------------+----------------------------+------------+
+    |``StrictGreaterThan``|``>`` or ``gt``             |``>``       |
+    +---------------------+----------------------------+------------+
+    |``StrictLessThan``   |``<`` or ``lt``             |``<``       |
+    +---------------------+----------------------------+------------+
+
+    For example, setting ``rop`` to ``==`` produces an
+    ``Equality`` relation, ``Eq()``.
+    So does setting ``rop`` to ``eq``, or leaving ``rop`` unspecified.
+    That is, the first three ``Rel()`` below all produce the same result.
+    Using a ``rop`` from a different row in the table produces a
+    different relation type.
+    For example, the fourth ``Rel()`` below using ``lt`` for ``rop``
+    produces a ``StrictLessThan`` inequality:
+
+    >>> from sympy import Rel
+    >>> from sympy.abc import x, y
+    >>> Rel(y, x + x**2, '==')
+        Eq(y, x**2 + x)
+    >>> Rel(y, x + x**2, 'eq')
+        Eq(y, x**2 + x)
+    >>> Rel(y, x + x**2)
+        Eq(y, x**2 + x)
+    >>> Rel(y, x + x**2, 'lt')
+        y < x**2 + x
+
+    To obtain the relation type of an exising expression,
+    get its ``rel_op`` property.
+    For example, ``rel_op`` is ``==`` for the ``Equality`` relation above,
+    and ``<`` for the strict less than inequality above:
+
+    >>> from sympy import Rel
+    >>> from sympy.abc import x, y
+    >>> my_equality = Rel(y, x + x**2, '==')
+    >>> my_equality.rel_op
+        '=='
+    >>> my_inequality = Rel(y, x + x**2, 'lt')
+    >>> my_inequality.rel_op
+        '<'
+
     """
     __slots__ = ()
 
