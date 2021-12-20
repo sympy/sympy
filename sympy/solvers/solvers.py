@@ -2219,7 +2219,10 @@ def minsolve_linear_system(system, *symbols, **flags):
             if len(k.free_symbols) != 1:
                 determined[x] = S.Zero
             else:
-                val = solve(k)[0]
+                val = solve(k)
+                if not val:
+                    return {}
+                val = val[0]
                 if val == 0 and all(v.subs(x, val) == 0 for v in s.values()):
                     determined[x] = S.One
                 else:
