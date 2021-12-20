@@ -61,6 +61,8 @@ from sympy.series.sequences import (SeqAdd, SeqFormula, SeqMul, SeqPer)
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.contains import Contains
 from sympy.sets.fancysets import (ComplexRegion, ImageSet, Range)
+from sympy.sets.ordinals import Ordinal, OrdinalOmega, OmegaPower
+from sympy.sets.powerset import PowerSet
 from sympy.sets.sets import (FiniteSet, Interval, Union, Intersection, Complement, SymmetricDifference, ProductSet)
 from sympy.sets.setexpr import SetExpr
 from sympy.stats.crv_types import Normal
@@ -1021,6 +1023,20 @@ def test_latex_productset():
     assert latex(line**10) == r"%s^{10}" % latex(line)
     assert latex((line * bigline * fset).flatten()) == r"%s \times %s \times %s" % (
         latex(line), latex(bigline), latex(fset))
+
+
+def test_latex_powerset():
+    fset = FiniteSet(1, 2, 3)
+    assert latex(PowerSet(fset)) == r'\mathcal{P}\left(\left\{1, 2, 3\right\}\right)'
+
+
+def test_latex_ordinals():
+    w = OrdinalOmega()
+    assert latex(w) == r"\omega"
+    wp = OmegaPower(2, 3)
+    assert latex(wp) == r'3 \omega^{2}'
+    assert latex(Ordinal(wp, OmegaPower(1, 1))) == r'3 \omega^{2} + \omega'
+    assert latex(Ordinal(OmegaPower(2, 1), OmegaPower(1, 2))) == r'\omega^{2} + 2 \omega'
 
 
 def test_set_operators_parenthesis():
