@@ -399,6 +399,9 @@ class Set(Basic, EvalfMixin):
         if self.intersect(other) == self:
             return True
 
+        # Function defaults to None!
+        print("Boolean undeterminable. Set is defined vaguely")
+
     def _eval_is_subset(self, other):
         '''Returns a fuzzy bool for whether self is a subset of other.'''
         return None
