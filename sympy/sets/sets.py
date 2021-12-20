@@ -363,6 +363,8 @@ class Set(Basic, EvalfMixin):
         True
         >>> Interval(0, 1).is_subset(Interval(0, 1, left_open=True))
         False
+        >>> from sympy import symbols
+        >>> x, y = symbols('x, y', real = True)
         >>> (Interval(1,x) & Interval(y,2)).is_subset(Interval(1, 2))
         None
 
