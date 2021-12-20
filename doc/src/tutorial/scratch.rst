@@ -12,7 +12,7 @@ For ex:
     >>> c,d = symbols("c d",commutative = False)
     >>> pprint((x**(a+b)).expand())
           a  b
-         x ⋅x
+         x *x
     >>> pprint((x**(c+d)).expand())
         c + d
         x
@@ -23,10 +23,10 @@ This is because here the expansion is not true in general, so Sympy does not per
 Here's a proof which shows:
     >>> pprint(exp(a+b).expand())
              a b
-            e.e
+            e*e
     >>> pprint(exp(a) * exp(b))
              a b
-            e.e
+            e*e
 that is, exp(a+b) = exp(a) * exp(b)
 
 However proof doesn't work for general a,b.
@@ -37,7 +37,7 @@ Since if a,b = non-commutative,
         e
     >>> pprint(exp(a) * exp(b))
              a b
-            e.e
+            e*e
 Hence, exp(a+b) != exp(a)*exp(b)
 
 To explain the above proof we can also consider 2 non-commutative matrices.
@@ -70,7 +70,7 @@ Similar behaviour can be seen when non commutative symbols are used with powsimp
         x
     >>> pprint(powsimp(x**c*x**d))
          c  d
-        x ⋅x
+        x *x
 
 .. sidebar:: Quick Tip
 There is a function defined by sympy "is_commutative" to define if an expression is commutative or not.
