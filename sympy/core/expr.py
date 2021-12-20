@@ -2,7 +2,7 @@ from typing import Tuple as tTuple
 from collections.abc import Iterable
 from functools import reduce
 
-from .sympify import sympify, _sympify, SympifyError
+from .sympify import sympify, _sympify
 from .basic import Basic, Atom
 from .singleton import S
 from .evalf import EvalfMixin, pure_complex, DEFAULT_MAXPREC
@@ -12,7 +12,7 @@ from .sorting import default_sort_key
 from .kind import NumberKind
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import as_int, func_name, filldedent
-from sympy.utilities.iterables import has_variety, sift, iterable, NotIterable
+from sympy.utilities.iterables import has_variety, sift
 from mpmath.libmp import mpf_log, prec_to_dps
 from mpmath.libmp.libintmath import giant_steps
 
@@ -127,15 +127,6 @@ class Expr(Basic, EvalfMixin):
 
         return expr.class_key(), args, exp, coeff
 
-    def __hash__(self) -> int:
-        # hash cannot be cached using cache_it because infinite recurrence
-        # occurs as hash is needed for setting cache dictionary keys
-        h = self._mhash
-        if h is None:
-            h = hash((type(self).__name__,) + self._hashable_content())
-            self._mhash = h
-        return h
-
     def _hashable_content(self):
         """Return a tuple of information about self that can be used to
         compute the hash. If a class defines additional attributes,
@@ -144,35 +135,6 @@ class Expr(Basic, EvalfMixin):
         Defining more than _hashable_content is necessary if __eq__ has
         been defined by a class. See note about this in Basic.__eq__."""
         return self._args
-
-    def __eq__(self, other):
-        if not isinstance(other, Basic):
-            if iterable(other, exclude=(str, NotIterable)
-                    ) and not hasattr(other, '_sympy_'):
-                # XXX iterable self should have it's own __eq__
-                # method if the path gives a false negative
-                # comparison
-                return False
-            try:
-                other = _sympify(other)
-            except (SympifyError, SyntaxError):
-                return NotImplemented
-        if not isinstance(other, Expr):
-            return False
-        # check for pure number expr
-        if  not (self.is_Number and other.is_Number) and (
-                type(self) != type(other)):
-            return False
-        a, b = self._hashable_content(), other._hashable_content()
-        if a != b:
-            return False
-        # check number *in* an expression
-        for a, b in zip(a, b):
-            if not isinstance(a, Expr):
-                continue
-            if a.is_Number and type(a) != type(b):
-                return False
-        return True
 
     # ***************
     # * Arithmetics *

@@ -124,7 +124,7 @@ def test_piecewise1():
     assert p6.subs(x, n) == Undefined
 
     # Test evalf
-    assert p.evalf() == p
+    assert p.evalf() == Piecewise((-1.0, x < -1), (x**2, x < 0), (log(x), True))
     assert p.evalf(subs={x: -2}) == -1
     assert p.evalf(subs={x: -1}) == 1
     assert p.evalf(subs={x: 1}) == log(1)
