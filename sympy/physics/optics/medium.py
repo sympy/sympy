@@ -12,6 +12,7 @@ from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import speed_of_light, u0, e0
+from sympy.printing import sstr
 
 
 c = speed_of_light.convert_to(meter/second)
@@ -76,18 +77,20 @@ class Medium(Basic):
         if n is not None:
             if permittivity is not None and permeability is None:
                 permeability = n**2/(c**2*permittivity)
+                return MediumPP(name, _sympify(permittivity), _sympify(permeability))
             elif permeability is not None and permittivity is None:
                 permittivity = n**2/(c**2*permeability)
+                return MediumPP(name, _sympify(permittivity), _sympify(permeability))
             elif permittivity is not None and permittivity is not None:
-                expr = abs(n - c*sqrt(permittivity*permeability))
+                expr = abs(n - c * sqrt(permittivity * permeability))
                 expr = expr.subs({meter: 1, second: 1})
                 if len(expr.free_symbols) == 0 and expr > 1e-6:
                     raise ValueError("Values are not consistent.")
+                return MediumPP(name, _sympify(permittivity), _sympify(permeability))
             else:
-                permittivity = n*_e0mksa
-                permeability = n*_u0mksa
+                return MediumN(name, _sympify(n))
         elif permittivity is not None and permeability is not None:
-            n = c*sqrt(permittivity*permeability)
+            return MediumPP(name, _sympify(permittivity), _sympify(permeability))
         elif permittivity is not None and permeability is None:
             raise ValueError("At least one of n and permeability must not be None if permittivity is not None")
         elif permittivity is None and permeability is not None:
@@ -95,13 +98,82 @@ class Medium(Basic):
         elif permittivity is None and permeability is None:
             permittivity = _e0mksa
             permeability = _u0mksa
-            n = c*sqrt(permittivity*permeability)
-        args = list(map(_sympify, (permittivity, permeability, n)))
-        obj = super().__new__(cls, name, *args)
+            return MediumPP(name, _sympify(permittivity), _sympify(permeability))
+
+    @property
+    def speed(self):
+        """
+        Returns speed of the electromagnetic wave travelling in the medium.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.optics import Medium
+        >>> m = Medium('m')
+        >>> m.speed
+        299792458*meter/second
+        >>> m2 = Medium('m2', n=1)
+        >>> m.speed == m2.speed
+        True
+
+        """
+        return c / self.n
+
+    @property
+    def refractive_index(self):
+        """
+        Returns refractive index of the medium.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.optics import Medium
+        >>> m = Medium('m')
+        >>> m.refractive_index
+        1
+
+        """
+        return (c/self.speed)
+
+    def __lt__(self, other):
+        """
+        Compares based on refractive index of the medium.
+        """
+        return self.refractive_index < other.refractive_index
+
+    def __gt__(self, other):
+        return not self < other
+
+    def __eq__(self, other):
+        return self.refractive_index == other.refractive_index
+
+    def __ne__(self, other):
+        return not self == other
+
+
+class MediumN(Medium):
+
+    def __new__(cls, name, n):
+        obj = super(Medium, cls).__new__(cls, name, n)
         obj.name = name
-        obj._permittivity = args[0]
-        obj._permeability = args[1]
-        obj._n = args[2]
+        obj._n = n
+        return obj
+
+    @property
+    def n(self):
+        return self._n
+
+    def __str__(self):
+        return type(self).__name__ + ': ' + sstr([self.n])
+
+
+class MediumPP(Medium):
+
+    def __new__(cls, name, permittivity, permeability):
+        obj = super(Medium, cls).__new__(cls, name, permittivity, permeability)
+        obj.name = name
+        obj._permittivity = permittivity
+        obj._permeability = permeability
         return obj
 
     @property
@@ -128,45 +200,7 @@ class Medium(Basic):
         149896229*pi*kilogram*meter**2/(1250000*ampere**2*second**3)
 
         """
-        return sqrt(self._permeability/self._permittivity)
-
-    @property
-    def speed(self):
-        """
-        Returns speed of the electromagnetic wave travelling in the medium.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.optics import Medium
-        >>> m = Medium('m')
-        >>> m.speed
-        299792458*meter/second
-        >>> m2 = Medium('m2', n=1)
-        >>> m.speed == m2.speed
-        True
-
-        """
-        if self._permittivity is not None and self._permeability is not None:
-            return 1/sqrt(self._permittivity*self._permeability)
-        else:
-            return c/self._n
-
-    @property
-    def refractive_index(self):
-        """
-        Returns refractive index of the medium.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.optics import Medium
-        >>> m = Medium('m')
-        >>> m.refractive_index
-        1
-
-        """
-        return (c/self.speed)
+        return sqrt(self._permeability / self._permittivity)
 
     @property
     def permittivity(self):
@@ -200,22 +234,11 @@ class Medium(Basic):
         """
         return self._permeability
 
+    @property
+    def n(self):
+        return c*sqrt(self.permittivity*self.permeability)
+
     def __str__(self):
-        from sympy.printing import sstr
         return type(self).__name__ + ': ' + sstr([self._permittivity,
-                self._permeability, self._n])
+                self._permeability, self.n])
 
-    def __lt__(self, other):
-        """
-        Compares based on refractive index of the medium.
-        """
-        return self.refractive_index < other.refractive_index
-
-    def __gt__(self, other):
-        return not self < other
-
-    def __eq__(self, other):
-        return self.refractive_index == other.refractive_index
-
-    def __ne__(self, other):
-        return not self == other
