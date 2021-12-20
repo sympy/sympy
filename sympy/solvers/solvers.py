@@ -1906,15 +1906,16 @@ def _solve_system(exprs, symbols, **flags):
                 rv = sorted(rv, key=key)
             return rv
 
-        solved_syms = set(solved_syms)  # set of symbols we have solved for
         legal = set(symbols)  # what we are interested in
         # sort so equation with the fewest potential symbols is first
         u = Dummy()  # used in solution checking
+        solved_syms = set()  # ignore for sake of ordering
         for eq in ordered(failed, lambda _: len(_ok_syms(_))):
             newresult = []
             bad_results = []
             got_s = set()
             hit = False
+            solved_syms = set()  # reset for each equation
             for r in result:
                 # update eq with everything that is known so far
                 eq2 = eq.subs(r)
