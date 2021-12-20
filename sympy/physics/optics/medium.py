@@ -5,7 +5,7 @@
 """
 from sympy.physics.units import second, meter, kilogram, ampere
 
-__all__ = ['Medium', 'MediumN', 'MediumPP']
+__all__ = ['Medium']
 
 from sympy.core.basic import Basic
 from sympy.core.symbol import Str
