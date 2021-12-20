@@ -366,7 +366,6 @@ class Set(Basic, EvalfMixin):
         >>> from sympy import symbols
         >>> x, y = symbols('x, y', real = True)
         >>> (Interval(1,x) & Interval(y,2)).is_subset(Interval(1, 2))
-        # Returns nothing
 
         """
         if not isinstance(other, Set):
