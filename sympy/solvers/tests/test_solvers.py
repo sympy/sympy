@@ -1611,6 +1611,9 @@ def test_high_order_roots():
 
 
 def test_minsolve_linear_system():
+    raises(ValueError, lambda: solve(x - 1, particular=True))
+    raises(ValueError, lambda: solve([x - 1], quick=False))
+    raises(ValueError, lambda: solve([x - 1], quick=True))
     def count(dic):
         return len([x for x in dic.values() if x == 0])
     assert count(solve([x + y + z, y + z + a + t], particular=True, quick=True)) \
@@ -1637,7 +1640,8 @@ def test_minsolve_linear_system():
     B = Matrix([[2], [-2], [0], [0], [0], [0], [0], [0], [0],
         [0], [0], [0]])
     eqs = A@v-B
-    assert solve(eqs) == solve(eqs, particular=True) == []
+    assert solve(eqs) == []
+    raises(NotImplementedError, lambda: solve(eqs, particular=True))
 
 
 def test_real_roots():
@@ -2463,3 +2467,5 @@ def test_solver_flags():
 def test_issue_22717():
     assert solve((-y**2 + log(y**2/x) + 2, -2*x*y + 2*x/y)) == [
         {y: -1, x: E}, {y: 1, x: E}]
+    raises(ValueError, lambda: solve(x + 1, particular=True))
+    raises(ValueError, lambda: solve([x + 1], quick=True))

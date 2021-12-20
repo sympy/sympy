@@ -847,13 +847,21 @@ def solve(f, *symbols, **flags):
     def _sympified_list(w):
         return list(map(sympify, w if iterable(w) else [w]))
     bare_f = not iterable(f)
+
+    # check flag usage
+    if flags.get('particular', False):
+        if bare_f:
+            raise ValueError(
+                "pass f as a list when using 'particular=True'")
+    elif flags.get('quick', None) is not None:
+        raise ValueError(
+            "set 'particular=True' when the 'quick' flag.")
+
     ordered_symbols = (symbols and
                        symbols[0] and
                        (isinstance(symbols[0], Symbol) or
                         is_sequence(symbols[0],
-                        include=GeneratorType)
-                       )
-                      )
+                        include=GeneratorType)))
     f, symbols = (_sympified_list(w) for w in [f, symbols])
     if isinstance(f, list):
         f = [s for s in f if s is not S.true and s is not True]
@@ -2221,7 +2229,7 @@ def minsolve_linear_system(system, *symbols, **flags):
             else:
                 val = solve(k)
                 if not val:
-                    return {}
+                    raise NotImplementedError('assumptions may have prohibited finding a solution')
                 val = val[0]
                 if val == 0 and all(v.subs(x, val) == 0 for v in s.values()):
                     determined[x] = S.One
