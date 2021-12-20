@@ -241,4 +241,3 @@ class MediumPP(Medium):
     def __str__(self):
         return type(self).__name__ + ': ' + sstr([self._permittivity,
                 self._permeability, self.n])
-
