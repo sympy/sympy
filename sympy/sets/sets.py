@@ -353,6 +353,7 @@ class Set(Basic, EvalfMixin):
     def is_subset(self, other):
         """
         Returns True if ``self`` is a subset of ``other``.
+        Returns None if ``self`` or ``other`` is a vaguely defined set.
 
         Examples
         ========
@@ -362,6 +363,8 @@ class Set(Basic, EvalfMixin):
         True
         >>> Interval(0, 1).is_subset(Interval(0, 1, left_open=True))
         False
+        >>> (Interval(1,x) & Interval(y,2)).is_subset(Interval(1, 2))
+        None
 
         """
         if not isinstance(other, Set):
