@@ -510,7 +510,7 @@ def test_sympy__combinatorics__permutations__AppliedPermutation():
     from sympy.combinatorics.permutations import Permutation
     from sympy.combinatorics.permutations import AppliedPermutation
     p = Permutation([0, 1, 2, 3])
-    assert _test_args(AppliedPermutation(p, 1))
+    assert _test_args(AppliedPermutation(p, x))
 
 def test_sympy__combinatorics__perm_groups__PermutationGroup():
     from sympy.combinatorics.permutations import Permutation
@@ -1945,7 +1945,7 @@ def test_sympy__functions__combinatorial__factorials__binomial():
 
 def test_sympy__functions__combinatorial__factorials__subfactorial():
     from sympy.functions.combinatorial.factorials import subfactorial
-    assert _test_args(subfactorial(1))
+    assert _test_args(subfactorial(x))
 
 
 def test_sympy__functions__combinatorial__factorials__factorial():
@@ -2500,7 +2500,7 @@ def test_sympy__functions__special__error_functions__li():
 
 def test_sympy__functions__special__error_functions__Li():
     from sympy.functions.special.error_functions import Li
-    assert _test_args(Li(2))
+    assert _test_args(Li(5))
 
 
 @SKIP("abstract class")
@@ -2540,7 +2540,7 @@ def test_sympy__functions__special__gamma_functions__gamma():
 
 def test_sympy__functions__special__gamma_functions__loggamma():
     from sympy.functions.special.gamma_functions import loggamma
-    assert _test_args(loggamma(2))
+    assert _test_args(loggamma(x))
 
 
 def test_sympy__functions__special__gamma_functions__lowergamma():
@@ -4056,6 +4056,7 @@ def test_sympy__physics__secondquant__BosonicOperator():
 
 def test_sympy__physics__secondquant__Commutator():
     from sympy.physics.secondquant import Commutator
+    x, y = symbols('x y', commutative=False)
     assert _test_args(Commutator(x, y))
 
 
@@ -4076,8 +4077,7 @@ def test_sympy__physics__secondquant__Creator():
 
 def test_sympy__physics__secondquant__Dagger():
     from sympy.physics.secondquant import Dagger
-    from sympy.core.numbers import I
-    assert _test_args(Dagger(2*I))
+    assert _test_args(Dagger(x))
 
 
 def test_sympy__physics__secondquant__FermionState():
@@ -4479,7 +4479,9 @@ def test_sympy__tensor__functions__TensorProduct():
 def test_sympy__tensor__indexed__Idx():
     from sympy.tensor.indexed import Idx
     assert _test_args(Idx('test'))
-    assert _test_args(Idx(1, (0, 10)))
+    assert _test_args(Idx('test', (0, 10)))
+    assert _test_args(Idx('test', 2))
+    assert _test_args(Idx('test', x))
 
 
 def test_sympy__tensor__indexed__Indexed():
@@ -4776,7 +4778,6 @@ def test_sympy__diffgeom__diffgeom__LieDerivative():
     assert _test_args(LieDerivative(v, d))
 
 
-@XFAIL
 def test_sympy__diffgeom__diffgeom__BaseCovarDerivativeOp():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseCovarDerivativeOp
     cs = CoordSystem('name', Patch('name', Manifold('name', 3)), [a, b, c])
@@ -4800,10 +4801,9 @@ def test_sympy__categories__baseclasses__Object():
     assert _test_args(Object("A"))
 
 
-@XFAIL
+@SKIP("abstract class")
 def test_sympy__categories__baseclasses__Morphism():
-    from sympy.categories import Object, Morphism
-    assert _test_args(Morphism(Object("A"), Object("B")))
+    pass
 
 
 def test_sympy__categories__baseclasses__IdentityMorphism():
@@ -5322,7 +5322,7 @@ def test_sympy__integrals__rubi__utility_function__Util_Coefficient():
 
 def test_sympy__integrals__rubi__utility_function__Gamma():
     from sympy.integrals.rubi.utility_function import Gamma
-    assert _test_args(Gamma(5))
+    assert _test_args(Gamma(x))
 
 
 def test_sympy__integrals__rubi__utility_function__Util_Part():
@@ -5333,7 +5333,7 @@ def test_sympy__integrals__rubi__utility_function__Util_Part():
 
 def test_sympy__integrals__rubi__utility_function__PolyGamma():
     from sympy.integrals.rubi.utility_function import PolyGamma
-    assert _test_args(PolyGamma(1, 1))
+    assert _test_args(PolyGamma(1, x))
 
 
 def test_sympy__integrals__rubi__utility_function__ProductLog():
@@ -5343,7 +5343,7 @@ def test_sympy__integrals__rubi__utility_function__ProductLog():
 
 def test_sympy__combinatorics__schur_number__SchurNumber():
     from sympy.combinatorics.schur_number import SchurNumber
-    assert _test_args(SchurNumber(1))
+    assert _test_args(SchurNumber(x))
 
 
 def test_sympy__combinatorics__perm_groups__SymmetricPermutationGroup():
