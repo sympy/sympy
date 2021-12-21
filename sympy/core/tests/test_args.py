@@ -935,7 +935,7 @@ def test_sympy__sets__sets__DisjointUnion():
 
 def test_sympy__physics__quantum__trace__Tr():
     from sympy.physics.quantum.trace import Tr
-    a, b = symbols('a b')
+    a, b = symbols('a b', commutative=False)
     assert _test_args(Tr(a + b))
 
 
@@ -2136,11 +2136,11 @@ def test_sympy__functions__elementary__hyperbolic__atanh():
 
 def test_sympy__functions__elementary__hyperbolic__asech():
     from sympy.functions.elementary.hyperbolic import asech
-    assert _test_args(asech(2))
+    assert _test_args(asech(x))
 
 def test_sympy__functions__elementary__hyperbolic__acsch():
     from sympy.functions.elementary.hyperbolic import acsch
-    assert _test_args(acsch(2))
+    assert _test_args(acsch(x))
 
 def test_sympy__functions__elementary__hyperbolic__cosh():
     from sympy.functions.elementary.hyperbolic import cosh
@@ -2172,10 +2172,9 @@ def test_sympy__functions__elementary__hyperbolic__tanh():
     assert _test_args(tanh(2))
 
 
-@SKIP("does this work at all?")
+@SKIP("abstract class")
 def test_sympy__functions__elementary__integers__RoundFunction():
-    from sympy.functions.elementary.integers import RoundFunction
-    assert _test_args(RoundFunction())
+    pass
 
 
 def test_sympy__functions__elementary__integers__ceiling():
@@ -2257,12 +2256,12 @@ def test_sympy__functions__elementary__trigonometric__asin():
 
 def test_sympy__functions__elementary__trigonometric__asec():
     from sympy.functions.elementary.trigonometric import asec
-    assert _test_args(asec(2))
+    assert _test_args(asec(x))
 
 
 def test_sympy__functions__elementary__trigonometric__acsc():
     from sympy.functions.elementary.trigonometric import acsc
-    assert _test_args(acsc(2))
+    assert _test_args(acsc(x))
 
 
 def test_sympy__functions__elementary__trigonometric__atan():
@@ -2698,7 +2697,7 @@ def test_sympy__functions__special__polynomials__OrthogonalPolynomial():
 
 def test_sympy__functions__special__polynomials__jacobi():
     from sympy.functions.special.polynomials import jacobi
-    assert _test_args(jacobi(x, 2, 2, 2))
+    assert _test_args(jacobi(x, y, 2, 2))
 
 
 def test_sympy__functions__special__polynomials__gegenbauer():
@@ -2758,7 +2757,7 @@ def test_sympy__functions__special__spherical_harmonics__Ynm():
 
 def test_sympy__functions__special__spherical_harmonics__Znm():
     from sympy.functions.special.spherical_harmonics import Znm
-    assert _test_args(Znm(1, 1, x, y))
+    assert _test_args(Znm(x, y, 1, 1))
 
 
 def test_sympy__functions__special__tensor_functions__LeviCivita():
@@ -3973,6 +3972,7 @@ def test_sympy__physics__quantum__state__Wavefunction():
 
 def test_sympy__physics__quantum__tensorproduct__TensorProduct():
     from sympy.physics.quantum.tensorproduct import TensorProduct
+    x, y = symbols("x y", commutative=False)
     assert _test_args(TensorProduct(x, y))
 
 
