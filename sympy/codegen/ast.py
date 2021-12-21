@@ -915,7 +915,8 @@ class String(Atom, Token):
         return lambda: self
 
     def _latex(self, printer):
-        return r'\texttt{{"{}"}}'.format(self.text)
+        from sympy.printing.latex import latex_escape
+        return r'\texttt{{"{}"}}'.format(latex_escape(self.text))
 
 class QuotedString(String):
     """ Represents a string which should be printed with quotes. """
@@ -1133,8 +1134,10 @@ class Type(Token):
         return new_val
 
     def _latex(self, printer):
-        return r"\text{{{}}}\left(\texttt{{{}}}\right)".format(self.__class__.__name__,
-                                                               self.name.text)
+        from sympy.printing.latex import latex_escape
+        type_name = latex_escape(self.__class__.__name__)
+        name = latex_escape(self.name.text)
+        return r"\text{{{}}}\left(\texttt{{{}}}\right)".format(type_name, name)
 
 
 class IntBaseType(Type):
