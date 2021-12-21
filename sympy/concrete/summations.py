@@ -1311,17 +1311,15 @@ def eval_sum_hyper(f, i_a_b):
             if res is not None:
                 return Piecewise(res, (old_sum, True))
         else:
-            res1 = _eval_sum_hyper(f, i, a)
-            # a calling routine may have reasonably checked
-            # that neither limit causes evaluation issues,
-            # but now we are testing 1 past the upper limit
-            # so check here if this should be avoided:
             n_illegal = lambda x: sum(x.count(_) for _ in illegal)
-            if n_illegal(f) < n_illegal(f.subs(i, b + 1)):
+            had = n_illegal(f)
+            # check that no extra illegals are introduced
+            res1 = _eval_sum_hyper(f, i, a)
+            if res1 is None or n_illegal(res1) > had:
                 return
             res2 = _eval_sum_hyper(f, i, b + 1)
-            if res1 is None or res2 is None:
-                return None
+            if res2 is None or n_illegal(res2) > had:
+                return
             (res1, cond1), (res2, cond2) = res1, res2
             cond = And(cond1, cond2)
             if cond == False:
