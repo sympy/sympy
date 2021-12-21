@@ -26,7 +26,7 @@ from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma)
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
 from sympy.matrices.expressions.dotproduct import DotProduct
-from sympy.tensor.array import derive_by_array
+from sympy.tensor.array import derive_by_array, Array
 from sympy.tensor.indexed import IndexedBase
 from sympy.utilities.lambdify import lambdify
 from sympy.core.expr import UnevaluatedExpr
@@ -1344,6 +1344,16 @@ def test_issue_22739():
     F = lambdify((x1, x2), f, modules='numpy')
     point = {x1: 1, x2: 2}
     assert abs(f.subs(point) - F(*point.values())) <= 1e-10
+
+
+def test_issue_19764():
+    if not numpy:
+        skip("numpy not installed")
+
+    expr = Array([x, x**2])
+    f = lambdify(x, expr, 'numpy')
+
+    assert f(1).__class__ == numpy.ndarray
 
 
 def test_fresnel_integrals_scipy():
