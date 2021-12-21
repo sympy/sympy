@@ -3,7 +3,7 @@ What’s Next
 
 Congratulations on finishing the SymPy tutorial!
 
-The next step to help you get started is to go to the :ref:`How-to Guides <guides>` for instructions on how to do different key developer tasks.
+If you are a developer interested in using SymPy in your code, please visit the :ref:`How-to Guides <guides>` which discuss key developer tasks.
 
 Intermediate SymPy users and developers might want to visit the :ref:`Explanation <explanation>` section for common pitfalls and advanced topics.
 
