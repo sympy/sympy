@@ -357,9 +357,13 @@ class LatexPrinter(Printer):
             return expr
 
     def _print_Basic(self, expr):
-        ls = [self._print(o) for o in expr.args]
-        return self._deal_with_super_sub(expr.__class__.__name__) + \
-            r"\left(%s\right)" % ", ".join(ls)
+        name = self._deal_with_super_sub(expr.__class__.__name__)
+        if expr.args:
+            ls = [self._print(o) for o in expr.args]
+            s = r"\operatorname{{{}}}\left({}\right)"
+            return s.format(name, ", ".join(ls))
+        else:
+            return r"\text{{{}}}".format(name)
 
     def _print_bool(self, e):
         return r"\text{%s}" % e
@@ -2796,7 +2800,7 @@ class LatexPrinter(Printer):
         return str(expr)
 
     def _print_Predicate(self, expr):
-        return str(expr)
+        return r"\operatorname{{Q}}_{{\text{{{}}}}}".format(latex_escape(str(expr.name)))
 
     def _print_AppliedPredicate(self, expr):
         pred = expr.function

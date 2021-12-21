@@ -2688,11 +2688,11 @@ def test_print_basic():
         result.__class__.__name__ = 'UnimplementedExpr_x^1'
         return result
 
-    assert latex(unimplemented_expr(x)) == r'UnimplementedExpr\left(x\right)'
+    assert latex(unimplemented_expr(x)) == r'\operatorname{UnimplementedExpr}\left(x\right)'
     assert latex(unimplemented_expr(x**2)) == \
-        r'UnimplementedExpr\left(x^{2}\right)'
+        r'\operatorname{UnimplementedExpr}\left(x^{2}\right)'
     assert latex(unimplemented_expr_sup_sub(x)) == \
-        r'UnimplementedExpr^{1}_{x}\left(x\right)'
+        r'\operatorname{UnimplementedExpr^{1}_{x}}\left(x\right)'
 
 
 def test_MatrixSymbol_bold():
