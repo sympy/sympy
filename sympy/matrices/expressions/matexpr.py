@@ -589,19 +589,21 @@ class MatrixElement(Expr):
     def __new__(cls, name, n, m):
         n, m = map(_sympify, (n, m))
         from sympy.matrices.matrices import MatrixBase
-        if isinstance(name, MatrixBase):
-            if n.is_Integer and m.is_Integer:
-                return name[n, m]
-            name = _sympify(name)  # change mutable into immutable
-        elif isinstance(name, MatrixSymbol):
-            if not name.valid_index(n, m):
-                raise IndexError('indices out of range')
-        elif isinstance(name, str):
+        if isinstance(name, str):
             name = Symbol(name)
         else:
-            name = _sympify(name)
-            if not isinstance(name.kind, MatrixKind):
-                raise TypeError("First argument of MatrixElement should be a matrix")
+            if isinstance(name, MatrixBase):
+                if n.is_Integer and m.is_Integer:
+                    return name[n, m]
+                name = _sympify(name)  # change mutable into immutable
+            else:
+                name = _sympify(name)
+                if not isinstance(name.kind, MatrixKind):
+                    raise TypeError("First argument of MatrixElement should be a matrix")
+            # since we are creating an unevaluated object
+            # we test now if the indices are not valid
+            if not name.valid_index(n, m):
+                raise IndexError('indices out of range')
         obj = Expr.__new__(cls, name, n, m)
         return obj
 

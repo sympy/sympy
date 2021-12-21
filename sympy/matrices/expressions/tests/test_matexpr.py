@@ -96,6 +96,8 @@ def test_matexpr_subs():
     assert W[2, 1].subs(W, Z) == Z[2, 1]
     # but not in the second position
     raises(IndexError, lambda: W[2, 2].subs(W, Z))
+    # any matrix should raise if invalid
+    raises(IndexError, lambda: W[2, 2].subs(W, zeros(2)))
 
     A = SparseMatrix([[1, 2], [3, 4]])
     B = Matrix([[1, 2], [3, 4]])
