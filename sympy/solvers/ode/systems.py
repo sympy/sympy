@@ -980,7 +980,7 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
         if type in ("type1", "type5"):
             sol_vector = P * (J * Cvect)
         else:
-            sol_vector = P * J * ((J.inv() * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
+            sol_vector = P * J * ((simplify(J.inv()) * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
 
     else:
         if B is None:
