@@ -26,7 +26,7 @@ def mathml2latex(equation):
     tex = tex.replace('$', '')
     expr = parse_latex(tex)
     new_expr = pycode(expr)
-    print(new_expr)
+    return new_expr
 
 
 
