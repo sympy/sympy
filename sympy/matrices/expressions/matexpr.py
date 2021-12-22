@@ -600,9 +600,7 @@ class MatrixElement(Expr):
                 name = _sympify(name)
                 if not isinstance(name.kind, MatrixKind):
                     raise TypeError("First argument of MatrixElement should be a matrix")
-            # since we are creating an unevaluated object
-            # we test now if the indices are not valid
-            if not name.valid_index(n, m):
+            if not getattr(name, 'valid_index', lambda n, m: True)(n, m):
                 raise IndexError('indices out of range')
         obj = Expr.__new__(cls, name, n, m)
         return obj
