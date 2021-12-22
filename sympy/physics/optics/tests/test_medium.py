@@ -45,5 +45,5 @@ def test_medium():
                 < 1e-20*kg*m/(A**2*s**2)
     m6 = Medium('m6', None, mu, n)
     assert m6.permittivity == n**2/(c**2*mu)
-    assert Medium('m7') == Medium('m8', e0, u0) # test for equality
+    assert Medium('m7').refractive_index == Medium('m8', e0, u0).refractive_index # test for equality
     raises(ValueError, lambda:Medium('m9', e0, u0, 2))

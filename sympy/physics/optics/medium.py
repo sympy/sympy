@@ -12,7 +12,6 @@ from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.units import speed_of_light, u0, e0
-from sympy.printing import sstr
 
 
 c = speed_of_light.convert_to(meter/second)
@@ -82,23 +81,20 @@ class Medium(Basic):
                 permittivity = n**2/(c**2*permeability)
                 return MediumPP(name, _sympify(permittivity), _sympify(permeability))
             elif permittivity is not None and permittivity is not None:
-                expr = abs(n - c * sqrt(permittivity * permeability))
-                expr = expr.subs({meter: 1, second: 1})
-                if len(expr.free_symbols) == 0 and expr > 1e-6:
-                    raise ValueError("Values are not consistent.")
-                return MediumPP(name, _sympify(permittivity), _sympify(permeability))
+                raise ValueError("Specifying all of permittivity, permeability, and n is not allowed")
             else:
                 return MediumN(name, _sympify(n))
         elif permittivity is not None and permeability is not None:
             return MediumPP(name, _sympify(permittivity), _sympify(permeability))
-        elif permittivity is not None and permeability is None:
-            raise ValueError("At least one of n and permeability must not be None if permittivity is not None")
-        elif permittivity is None and permeability is not None:
-            raise ValueError("At least one of n and permittivity must not be None if permeability is not None")
         elif permittivity is None and permeability is None:
-            permittivity = _e0mksa
-            permeability = _u0mksa
-            return MediumPP(name, _sympify(permittivity), _sympify(permeability))
+            return MediumPP(name, _e0mksa, _u0mksa)
+        else:
+            raise ValueError("Arguments are underspecified. Either specify n or any two of permittivity, "
+                             "permeability, and n")
+
+    @property
+    def name(self):
+        return self.args[0]
 
     @property
     def speed(self):
@@ -144,9 +140,6 @@ class Medium(Basic):
     def __gt__(self, other):
         return not self < other
 
-    def __eq__(self, other):
-        return self.refractive_index == other.refractive_index
-
     def __ne__(self, other):
         return not self == other
 
@@ -155,25 +148,17 @@ class MediumN(Medium):
 
     def __new__(cls, name, n):
         obj = super(Medium, cls).__new__(cls, name, n)
-        obj.name = name
-        obj._n = n
         return obj
 
     @property
     def n(self):
-        return self._n
-
-    def __str__(self):
-        return type(self).__name__ + ': ' + sstr([self.n])
+        return self.args[1]
 
 
 class MediumPP(Medium):
 
     def __new__(cls, name, permittivity, permeability):
         obj = super(Medium, cls).__new__(cls, name, permittivity, permeability)
-        obj.name = name
-        obj._permittivity = permittivity
-        obj._permeability = permeability
         return obj
 
     @property
@@ -200,7 +185,7 @@ class MediumPP(Medium):
         149896229*pi*kilogram*meter**2/(1250000*ampere**2*second**3)
 
         """
-        return sqrt(self._permeability / self._permittivity)
+        return sqrt(self.permeability / self.permittivity)
 
     @property
     def permittivity(self):
@@ -216,7 +201,7 @@ class MediumPP(Medium):
         625000*ampere**2*second**4/(22468879468420441*pi*kilogram*meter**3)
 
         """
-        return self._permittivity
+        return self.args[1]
 
     @property
     def permeability(self):
@@ -232,12 +217,8 @@ class MediumPP(Medium):
         pi*kilogram*meter/(2500000*ampere**2*second**2)
 
         """
-        return self._permeability
+        return self.args[2]
 
     @property
     def n(self):
         return c*sqrt(self.permittivity*self.permeability)
-
-    def __str__(self):
-        return type(self).__name__ + ': ' + sstr([self._permittivity,
-                self._permeability, self.n])

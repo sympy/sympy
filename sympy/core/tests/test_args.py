@@ -4919,13 +4919,15 @@ def test_sympy__physics__optics__medium__Medium():
     from sympy.physics.optics import Medium
     assert _test_args(Medium('m'))
 
-@SKIP('should not be instantiated directly (only indirectly through instantiating Medium')
-def test_sympy__physics__optics__medium__MediumN():
-    pass
 
-@SKIP('should not be instantiated directly (only indirectly through instantiating Medium')
+def test_sympy__physics__optics__medium__MediumN():
+    from sympy.physics.optics.medium import Medium
+    assert _test_args(Medium('m', n=2))
+
+
 def test_sympy__physics__optics__medium__MediumPP():
-    pass
+    from sympy.physics.optics.medium import Medium
+    assert _test_args(Medium('m', permittivity=2, permeability=2))
 
 
 def test_sympy__tensor__array__expressions__array_expressions__ArrayContraction():
