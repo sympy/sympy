@@ -28,7 +28,7 @@ arithmetic. It is used under the hood whenever SymPy calculates the
 floating-point value of a function, e.g., when using
 [evalf](sympy.core.evalf.EvalfMixin.evalf).
 
-SymPy cannot function with mpmath and will fail to import if it is not
+SymPy cannot function without mpmath and will fail to import if it is not
 installed. If you get an error like
 
 ```
@@ -74,25 +74,95 @@ automatically by certain core functions that operate on integers, such as the
 
 ### Interactive Use
 
+SymPy is designed to be used both interactively and as a library. When used
+interactively, SymPy is able to interface with IPython and Jupyter notebooks.
+
 #### IPython
 
-#### Jupyter Notebook
+The {func}`~.init_session` function and
+`isympy` command will automatically start IPython if it is installed. In
+addition to the usual benefits of using [IPython](https://ipython.org/), this
+enables interactive plotting with matplotlib. Also some flags such as
+`auto_symbols` and `auto_int_to_Integer` will only work in IPython.
 
-### LaTeX Parsing
+The `IPython` package is required to run some of the tests in sympy/interactive.
+
+#### Jupyter Notebook and Qt Console
+
+SymPy expressions automatically print using MathJax in the [Jupyter
+Notebook](https://jupyter.org/) and with LaTeX [Qt
+Console](https://qtconsole.readthedocs.io/en/stable/) (if
+[LaTeX](dependencies-latex) is installed).
+
+### Printing
+
+The {func}`~.preview` function automatically converts SymPy expressions into
+images rendered with LaTeX. `preview()` can either save the image to a file or
+show it with a viewer.
+
+(dependencies-latex)=
+#### LaTeX
+
+A $\LaTeX$ distributions such as [TeXLive](https://tug.org/texlive/) or
+[MiKTeX](https://miktex.org/) is required for {func}`~.preview` to function.
+
+### Parsing
+
+Several functions in the {mod}`sympy.parsing` submodule require external
+dependencies to function. Note that not all parsers require external modules
+at this time. The Python ({func}`~.parse_expr`), Mathematca
+({func}`~.mathematica`), and Maxima ({func}`~.parse_maxima`) parsers do not
+require any external dependencies.
 
 #### antlr-python-runtime
 
-#### python-clang
+[Antlr](https://www.antlr.org/) is used for the {func}`~.parse_latex` and
+[Autolev](autolev_parser) parsers. They both require the Antlr Python runtime
+to be installed. The package for this is called `antlr4-python-runtime` with
+conda and `antlr4-python3-runtime` with pip). Also be aware that the version
+of the Antlr Python runtime must match the version that was used to compile
+the LaTeX and Autolev parsers (4.7).
+
+#### Clang Python Bindings
+
+The C parser (`sympy.parsing.c.parse_c`) requires the Clang Python bindings.
+The package for this is called `python-clang` with conda and `clang` with pip.
+
+#### lfortran
+
+The Fortran parser (in `sympy.parsing.fortran`) requires
+[LFortran](https://lfortran.org/).
 
 ### Logic
 
+The {func}`~.satisfiable` function includes a pure Python implementation of
+the DPLL satisfiability algorithm. But it can optionally use faster C SAT
+solvers if they are installed. Note that `satisfiable()` is also used by
+{func}`~.ask`.
+
 #### pycosat
+
+[Pycosat](https://pypi.org/project/pycosat/) is used automatically if it is
+installed. The use of pycosat can be forced by using `satisfiable(algorithm='pycosat')`.
 
 #### pysat
 
+[Pysat](https://pysathq.github.io/) is a library which wraps many SAT solvers.
+It can also be used as a backend to `satisfiable()`. Presently, only
+[Minisat](http://minisat.se/MiniSat.html) is implemented, using
+`satisfiable(algorithm=minisat22')`.
+
 ### Plotting
 
+The {mod}`sympy.plotting.plot` module makes heavy use of external plotting
+libraries to render plots. The primarly plotting module that is supported is
+Matplotlib.
+
 #### matplotlib
+
+Most plotting functionality requires the [Matplotlib](https://matplotlib.org/)
+plotting library. Without Matplotlib installed, most plotting functions will
+either fail or give rudimentary [text plots](textplot)
 
 #### pyglet
 
