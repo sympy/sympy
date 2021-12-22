@@ -18,7 +18,7 @@ from sympy.printing.pycode import pycode
 # </math>"""
 # and returns the python equation as output i.e (x/y)+z
 
-def mathml2latex(equation):
+def mathml2python(equation):
     dom = etree.fromstring(equation)
     xslt_root = etree.parse("../../utilities/mathml/data/mmltex.xsl")
     transform = etree.XSLT(xslt_root)
