@@ -83,11 +83,11 @@ def flatten(iterable, levels=None, cls=None):  # noqa: F811
     If cls argument is specified, it will only flatten instances of that
     class, for example:
 
-    >>> from sympy.core import Basic
+    >>> from sympy.core import Basic, S
     >>> class MyOp(Basic):
     ...     pass
     ...
-    >>> flatten([MyOp(1, MyOp(2, 3))], cls=MyOp)
+    >>> flatten([MyOp(S(1), MyOp(S(2), S(3)))], cls=MyOp)
     [1, 2, 3]
 
     adapted from https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks
