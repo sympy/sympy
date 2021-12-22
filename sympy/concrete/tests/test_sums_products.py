@@ -1186,9 +1186,8 @@ def test_issue_14640():
 
 def test_issue_15943():
     s = Sum(binomial(n, k)*factorial(n - k), (k, 0, n)).doit().rewrite(gamma)
-    assert s == Sum(gamma(n + 1)/gamma(k + 1), (k, 0, n))
-    s = s.doit()
-    assert s == (-E*(n + 1)*lowergamma(n + 1, 1)/factorial(n + 1) + E)*gamma(n + 1)
+    assert s == -E*(n + 1)*gamma(n + 1)*lowergamma(n + 1, 1)/gamma(n + 2
+        ) + E*gamma(n + 1)
     assert s.simplify() == E*(factorial(n) - lowergamma(n + 1, 1))
 
 
