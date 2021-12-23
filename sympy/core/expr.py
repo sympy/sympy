@@ -289,11 +289,13 @@ class Expr(Basic, EvalfMixin):
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rmod__')
     def __mod__(self, other):
+        from sympy.functions.elementary.integers import Mod
         return Mod(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__mod__')
     def __rmod__(self, other):
+        from sympy.functions.elementary.integers import Mod
         return Mod(other, self)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
@@ -312,13 +314,13 @@ class Expr(Basic, EvalfMixin):
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__rdivmod__')
     def __divmod__(self, other):
-        from sympy.functions.elementary.integers import floor
+        from sympy.functions.elementary.integers import floor, Mod
         return floor(self / other), Mod(self, other)
 
     @sympify_return([('other', 'Expr')], NotImplemented)
     @call_highest_priority('__divmod__')
     def __rdivmod__(self, other):
-        from sympy.functions.elementary.integers import floor
+        from sympy.functions.elementary.integers import floor, Mod
         return floor(other / self), Mod(other, self)
 
     def __int__(self):
@@ -733,6 +735,7 @@ class Expr(Basic, EvalfMixin):
         used to return True or False.
 
         """
+        from sympy.functions.elementary.integers import Mod
         from sympy.simplify.simplify import nsimplify, simplify
         from sympy.solvers.solvers import solve
         from sympy.polys.polyerrors import NotAlgebraic
@@ -4125,6 +4128,5 @@ from .mul import Mul
 from .add import Add
 from .power import Pow
 from .function import Function, _derivative_dispatch
-from .mod import Mod
 from .exprtools import factor_terms
 from .numbers import Integer, Rational

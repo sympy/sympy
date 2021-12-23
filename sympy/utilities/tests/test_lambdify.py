@@ -332,6 +332,7 @@ def test_trig():
 
 
 def test_integral():
+    from sympy import Integral
     f = Lambda(x, exp(-x**2))
     l = lambdify(y, Integral(f(x), (x, y, oo)))
     d = l(-oo)

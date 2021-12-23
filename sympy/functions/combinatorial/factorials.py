@@ -1,13 +1,14 @@
 from typing import List
 from functools import reduce
 
-from sympy.core import S, sympify, Dummy, Mod
+from sympy.core import S, sympify, Dummy
 from sympy.core.cache import cacheit
 from sympy.core.function import Function, ArgumentIndexError, PoleError
 from sympy.core.logic import fuzzy_and
 from sympy.core.numbers import Integer, pi, I
 from sympy.core.relational import Eq
 from sympy.external.gmpy import HAS_GMPY, gmpy
+from sympy.functions.elementary.integers import Mod
 from sympy.ntheory import sieve
 from sympy.polys.polytools import Poly
 

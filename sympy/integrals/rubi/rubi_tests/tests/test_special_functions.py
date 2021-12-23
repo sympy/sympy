@@ -118,12 +118,12 @@ if matchpy:
         Zeta, ProductLog, DerivativeDivides, HypergeometricPFQ, IntHide, OneQ, Null, exp, log, Discriminant
     )
     from sympy.core.add import Add
-    from sympy.core.mod import Mod
     from sympy.core.mul import Mul
     from sympy.core.numbers import (Float, I, Integer)
     from sympy.core.power import Pow
     from sympy.core.singleton import S
     from sympy.functions.elementary.complexes import Abs
+    from sympy.functions.elementary.integers import Mod
     from sympy.functions.elementary.miscellaneous import sqrt
     from sympy.integrals.integrals import Integral
     from sympy.logic.boolalg import (And, Or)

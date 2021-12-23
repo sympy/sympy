@@ -6863,7 +6863,7 @@ def test_pretty_primeomega():
 
 
 def test_pretty_Mod():
-    from sympy.core import Mod
+    from sympy.functions.elementary.integers import Mod
 
     ascii_str1 = "x mod 7"
     ucode_str1 = "x mod 7"

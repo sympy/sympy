@@ -1,6 +1,5 @@
 from sympy.core.add import Add
 from sympy.core.function import (Function, Lambda, diff)
-from sympy.core.mod import Mod
 from sympy.core import (Catalan, EulerGamma, GoldenRatio)
 from sympy.core.numbers import (E, Float, I, Integer, Rational, pi)
 from sympy.core.relational import Eq
@@ -9,6 +8,7 @@ from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (conjugate, sign)
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import Mod
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (atan2, cos, sin)

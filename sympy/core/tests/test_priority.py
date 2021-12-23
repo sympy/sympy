@@ -1,9 +1,8 @@
 from sympy.core.decorators import call_highest_priority
 from sympy.core.expr import Expr
-from sympy.core.mod import Mod
 from sympy.core.numbers import Integer
 from sympy.core.symbol import Symbol
-from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.integers import floor, Mod
 
 
 class Higher(Integer):

@@ -524,7 +524,7 @@ class Pow(Expr):
                     return Integer(pow(b, phi + e%phi, m))
                 return Integer(pow(b, e, m))
 
-            from .mod import Mod
+            from sympy.functions.elementary.integers import Mod
 
             if isinstance(base, Pow) and base.is_integer and base.is_number:
                 base = Mod(base, q)

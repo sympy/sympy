@@ -1,7 +1,7 @@
 from sympy.core import (S, pi, oo, symbols, Rational, Integer,
                         GoldenRatio, EulerGamma, Catalan, Lambda, Dummy,
-                        Eq, Ne, Le, Lt, Gt, Ge, Mod)
-from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
+                        Eq, Ne, Le, Lt, Gt, Ge)
+from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, Mod, sqrt,
                              sign, floor)
 from sympy.logic import ITE
 from sympy.testing.pytest import raises

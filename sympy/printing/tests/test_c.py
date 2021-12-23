@@ -1,11 +1,11 @@
 from sympy.core import (
-    S, pi, oo, symbols, Rational, Integer, Float, Mod, GoldenRatio, EulerGamma, Catalan,
+    S, pi, oo, symbols, Rational, Integer, Float, GoldenRatio, EulerGamma, Catalan,
     Lambda, Dummy, nan, Mul, Pow, UnevaluatedExpr
 )
 from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
 from sympy.functions import (
     Abs, acos, acosh, asin, asinh, atan, atanh, atan2, ceiling, cos, cosh, erf,
-    erfc, exp, floor, gamma, log, loggamma, Max, Min, Piecewise, sign, sin, sinh,
+    erfc, exp, floor, gamma, log, loggamma, Max, Mod, Min, Piecewise, sign, sin, sinh,
     sqrt, tan, tanh, fibonacci, lucas
 )
 from sympy.sets import Range

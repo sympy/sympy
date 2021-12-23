@@ -1,8 +1,8 @@
 from sympy.core import (pi, oo, symbols, Rational, Integer, GoldenRatio,
                         EulerGamma, Catalan, Lambda, Dummy, S, Eq, Ne, Le,
-                        Lt, Gt, Ge, Mod)
+                        Lt, Gt, Ge)
 from sympy.functions import (Piecewise, sin, cos, Abs, exp, ceiling, sqrt,
-                             sinh, cosh, tanh, asin, acos, acosh, Max, Min)
+                             sinh, cosh, tanh, asin, acos, acosh, Max, Min, Mod)
 from sympy.testing.pytest import raises
 from sympy.printing.jscode import JavascriptCodePrinter
 from sympy.utilities.lambdify import implemented_function

@@ -7,12 +7,12 @@ from functools import reduce
 from operator import add, mul, lt, le, gt, ge
 
 from sympy.core.expr import Expr
-from sympy.core.mod import Mod
 from sympy.core.numbers import Exp1
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import CantSympify, sympify
 from sympy.functions.elementary.exponential import ExpBase
+from sympy.functions.elementary.integers import Mod
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.fractionfield import FractionField
 from sympy.polys.domains.polynomialring import PolynomialRing

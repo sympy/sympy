@@ -16,7 +16,6 @@ from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
 from sympy.core.containers import Tuple
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand, expand_trig)
-from sympy.core.mod import Mod
 from sympy.core.numbers import igcd, I, Number, Rational, oo, ilcm
 from sympy.core.power import integer_log
 from sympy.core.relational import Eq, Ne, Relational
@@ -29,6 +28,7 @@ from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
                              acos, asin, acsc, asec, arg,
                              piecewise_fold, Piecewise)
 from sympy.functions.elementary.complexes import re, im
+from sympy.functions.elementary.integers import Mod
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.miscellaneous import real_root

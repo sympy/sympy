@@ -14,7 +14,6 @@ from .numbers import Number, Float, Rational, Integer, NumberSymbol, \
 from .power import Pow, integer_nthroot, integer_log
 from .mul import Mul, prod
 from .add import Add
-from .mod import Mod
 from .relational import ( Rel, Eq, Ne, Lt, Le, Gt, Ge,
     Equality, GreaterThan, LessThan, Unequality, StrictGreaterThan,
     StrictLessThan )
@@ -63,8 +62,6 @@ __all__ = [
     'Mul', 'prod',
 
     'Add',
-
-    'Mod',
 
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge', 'Equality', 'GreaterThan',
     'LessThan', 'Unequality', 'StrictGreaterThan', 'StrictLessThan',

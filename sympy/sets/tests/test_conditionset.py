@@ -2,12 +2,12 @@ from sympy.core.expr import unchanged
 from sympy.sets import (ConditionSet, Intersection, FiniteSet,
     EmptySet, Union, Contains, ImageSet)
 from sympy.core.function import (Function, Lambda)
-from sympy.core.mod import Mod
 from sympy.core.numbers import (oo, pi)
 from sympy.core.relational import (Eq, Ne)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.integers import Mod
 from sympy.functions.elementary.trigonometric import (asin, sin)
 from sympy.logic.boolalg import And
 from sympy.matrices.dense import Matrix

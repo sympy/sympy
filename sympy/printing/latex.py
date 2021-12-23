@@ -6,7 +6,7 @@ from typing import Any, Dict as tDict
 
 import itertools
 
-from sympy.core import Add, Float, Mod, Mul, Number, S, Symbol
+from sympy.core import Add, Float, Mul, Number, S, Symbol
 from sympy.core.alphabets import greeks
 from sympy.core.containers import Tuple
 from sympy.core.function import AppliedUndef, Derivative
@@ -15,6 +15,7 @@ from sympy.core.power import Pow
 from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import SympifyError
 from sympy.logic.boolalg import true
+from sympy.functions.elementary.integers import Mod
 
 # sympy.printing imports
 from sympy.printing.precedence import precedence_traditional

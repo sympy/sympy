@@ -1,7 +1,7 @@
-from sympy.core.mod import Mod
 from sympy.core.numbers import (I, oo, pi)
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import Mod
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (asin, sin)
 from sympy.simplify.simplify import simplify
