@@ -131,20 +131,24 @@ class Medium(Basic):
         """
         return (c/self.speed)
 
-    def __lt__(self, other):
-        """
-        Compares based on refractive index of the medium.
-        """
-        return self.refractive_index < other.refractive_index
-
-    def __gt__(self, other):
-        return not self < other
-
-    def __ne__(self, other):
-        return not self == other
-
 
 class MediumN(Medium):
+
+    """
+    Represents an optical medium for which only the refractive index is known.
+    Useful for simple ray optics.
+
+    This class should never be instantiated directly.
+    Instead it should be instantiated indirectly by instantiating Medium with
+    only n specified.
+
+    Examples
+    ========
+    >>> from sympy.physics.optics import Medium
+    >>> m = Medium('m', n=2)
+    >>> m
+    MediumN(m, 2)
+    """
 
     def __new__(cls, name, n):
         obj = super(Medium, cls).__new__(cls, name, n)
@@ -156,6 +160,27 @@ class MediumN(Medium):
 
 
 class MediumPP(Medium):
+    """
+    Represents an optical medium for which the permittivity and permeability are known.
+
+    This class should never be instantiated directly. Instead it should be
+    instantiated indirectly by instantiating Medium with any two of
+    permittivity, permeability, and n specified, or by not specifying any
+    of permittivity, permeability, or n, in which case default values for
+    permittivity and permeability will be used.
+
+    Examples
+    ========
+    >>> from sympy.physics.optics import Medium
+    >>> from sympy.abc import epsilon, mu
+    >>> m1 = Medium('m1', permittivity=epsilon, permeability=mu)
+    >>> m1
+    MediumPP(m, epsilon, mu)
+    >>> m2 = Medium('m2')
+    >>> m2
+    MediumPP(m2, 625000*ampere**2*second**4/(22468879468420441*pi*kilogram*meter**3), pi*kilogram*meter/(2500000*ampere**2*second**2))
+    """
+
 
     def __new__(cls, name, permittivity, permeability):
         obj = super(Medium, cls).__new__(cls, name, permittivity, permeability)
