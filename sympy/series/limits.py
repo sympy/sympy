@@ -320,7 +320,7 @@ class Limit(Expr):
                 elif ex == 0:
                     return coeff
                 elif ex.is_negative:
-                    if ex.is_integer and isinstance(ex,Mul) is False:
+                    if ex.is_integer:
                         if cdir == 1 or ex.is_even:
                             return S.Infinity*sign(coeff)
                         elif cdir == -1:
