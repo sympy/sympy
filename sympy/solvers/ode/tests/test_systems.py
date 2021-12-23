@@ -1090,10 +1090,9 @@ def test_sysode_linear_neq_order1_type2():
     # https://github.com/sympy/sympy/issues/8567
     eqs8 = [Eq(Derivative(f(t), t), f(t) + 2*g(t)),
             Eq(Derivative(g(t), t), -2*f(t) + g(t) + 2*exp(t))]
-    sol8 = [Eq(f(t), C1*exp(t)*sin(2*t) + C2*exp(t)*cos(2*t) + exp(t)*cos(2*t)**2 +
-             2*exp(t)*sin(2*t)*tan(t)/(tan(t)**2 + 1)),
-            Eq(g(t), C1*exp(t)*cos(2*t) - C2*exp(t)*sin(2*t) - exp(t)*sin(2*t)*cos(2*t) +
-             2*exp(t)*cos(2*t)*tan(t)/(tan(t)**2 + 1))]
+    sol8 = [Eq(f(t), C1*exp(t)*sin(2*t) + C2*exp(t)*cos(2*t)
+                + exp(t)*sin(2*t)**2 + exp(t)*cos(2*t)**2),
+            Eq(g(t), C1*exp(t)*cos(2*t) - C2*exp(t)*sin(2*t))]
     assert dsolve(eqs8) == sol8
     assert checksysodesol(eqs8, sol8) == (True, [0, 0])
 
@@ -1174,14 +1173,11 @@ def test_sysode_linear_neq_order1_type2():
 
     eq14 = [Eq(Derivative(f(t), t), f(t) + g(t) + 81),
             Eq(Derivative(g(t), t), -2*f(t) + g(t) + 23)]
-    sol14 = [Eq(f(t), sqrt(2)*C1*exp(t)*sin(sqrt(2)*t)/2 + sqrt(2)*C2*exp(t)*cos(sqrt(2)*t)/2 +
-              sqrt(2)*exp(t)*sin(sqrt(2)*t)*Integral(-23*exp(-t)*sin(sqrt(2)*t)**2/cos(sqrt(2)*t) +
-              81*sqrt(2)*exp(-t)*sin(sqrt(2)*t) + 23*exp(-t)/cos(sqrt(2)*t), t)/2 +
-              185*sqrt(2)*sin(sqrt(2)*t)*cos(sqrt(2)*t)/6 - 58*cos(sqrt(2)*t)**2/3),
-             Eq(g(t), C1*exp(t)*cos(sqrt(2)*t) - C2*exp(t)*sin(sqrt(2)*t) +
-              exp(t)*cos(sqrt(2)*t)*Integral(-23*exp(-t)*sin(sqrt(2)*t)**2/cos(sqrt(2)*t) +
-              81*sqrt(2)*exp(-t)*sin(sqrt(2)*t) + 23*exp(-t)/cos(sqrt(2)*t), t) -
-              185*sin(sqrt(2)*t)**2/3 + 58*sqrt(2)*sin(sqrt(2)*t)*cos(sqrt(2)*t)/3)]
+    sol14 = [Eq(f(t), sqrt(2)*C1*exp(t)*sin(sqrt(2)*t)/2
+                    + sqrt(2)*C2*exp(t)*cos(sqrt(2)*t)/2
+                    - 58*sin(sqrt(2)*t)**2/3 - 58*cos(sqrt(2)*t)**2/3),
+             Eq(g(t), C1*exp(t)*cos(sqrt(2)*t) - C2*exp(t)*sin(sqrt(2)*t)
+                    - 185*sin(sqrt(2)*t)**2/3 - 185*cos(sqrt(2)*t)**2/3)]
     assert dsolve(eq14) == sol14
     assert checksysodesol(eq14, sol14) == (True, [0,0])
 
@@ -1273,7 +1269,32 @@ def test_sysode_linear_neq_order1_type2():
     assert dsolve(eq26) == sol26
     assert checksysodesol(eq26 , sol26) == (True , [0,0])
 
+    # Test Case added for issue #22715
+    # https://github.com/sympy/sympy/issues/22715
 
+    import sympy as sym
+
+    def eqnsubs(eqns, vartosub, valtosub):
+        subeqn = eqns.copy()
+        sublist = list(zip(vartosub, valtosub))
+        for idx, eqn in enumerate(subeqn):
+            subeqn[idx] = subeqn[idx].subs(sublist)
+        return subeqn
+
+    sym.var('a b c d e f t')
+    sym.var('x y', cls=sym.Function)
+
+    eqn1 = sym.Eq(sym.diff(x(t),t),a*x(t)+b*y(t)+c)
+    eqn2 = sym.Eq(sym.diff(y(t),t),d*x(t)+e*y(t)+f)
+    eqns = [eqn1, eqn2]
+
+    eq27 = eqnsubs(eqns, (a, b, c, d, e, f), (0, -1, 10, 5, -2, 3))
+    sol27 = [Eq(x(t), (C1/5 - 2*C2/5)*exp(-t)*cos(2*t) -
+         (2*C1/5 + C2/5)*exp(-t)*sin(2*t) + 17*sin(2*t)**2/5 + 17*cos(2*t)**2/5),
+          Eq(y(t), C1*exp(-t)*cos(2*t) - C2*exp(-t)*sin(2*t) + 10*sin(2*t)**2 +
+           10*cos(2*t)**2)]
+    assert dsolve(eq27) == sol27
+    assert checksysodesol(eq27 , sol27) == (True , [0,0])
 
 def test_sysode_linear_neq_order1_type3():
 
