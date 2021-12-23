@@ -1,8 +1,11 @@
 import os
-from lxml import etree
 from sympy.parsing.latex import parse_latex
 from sympy import *
 from sympy.printing.pycode import pycode
+from sympy.utilities.decorator import doctest_depends_on
+
+
+__doctest_requires__ = {('mathml2python'): ['lxml']}
 
 # this function will take mathml input 
 # for eg. 
@@ -18,7 +21,9 @@ from sympy.printing.pycode import pycode
 # </math>"""
 # and returns the python equation as output i.e (x/y)+z
 
+@doctest_depends_on(modules=('lxml',))
 def mathml2python(equation):
+    from lxml import etree
     dom = etree.fromstring(equation)
     xslt_root = etree.parse("../../utilities/mathml/data/mmltex.xsl")
     transform = etree.XSLT(xslt_root)
