@@ -8,7 +8,7 @@ from sympy.functions.elementary.hyperbolic import sinh
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.dense import Matrix
 from sympy.core.containers import Tuple
-from sympy.functions import exp, cos, sin, log, tan, Ci, Si, erf, erfi
+from sympy.functions import exp, cos, sin, log, Ci, Si, erf, erfi
 from sympy.matrices import dotprodsimp, NonSquareMatrixError
 from sympy.solvers.ode import dsolve
 from sympy.solvers.ode.ode import constant_renumber
@@ -1274,8 +1274,8 @@ def test_sysode_linear_neq_order1_type2():
 
     import sympy as sym
 
-    sym.var('a b c d e f t')
-    sym.var('x y', cls=sym.Function)
+    a, b, c, d, e, f, t = symbols('a b c d e f t')
+    x, y = symbols('x y', cls=Function)
 
     eqn1 = sym.Eq(sym.diff(x(t),t),a*x(t)+b*y(t)+c)
     eqn2 = sym.Eq(sym.diff(y(t),t),d*x(t)+e*y(t)+f)
