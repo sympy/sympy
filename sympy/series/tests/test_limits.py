@@ -615,11 +615,6 @@ def test_issue_8481():
     assert limit(lamda**k * exp(-lamda) / factorial(k), k, oo) == 0
 
 
-def test_issue_8634():
-    n = Symbol('n', integer=True, positive=True)
-    x=Symbol('x')
-    assert limit(x**n, x, -oo) == oo/(-1)**n
-
 
 def test_issue_8635_18176():
     x = Symbol('x', real=True)
