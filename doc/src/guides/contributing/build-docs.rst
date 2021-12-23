@@ -14,8 +14,9 @@ build a Docker image containing them.
 Docker
 ~~~~~~
 
-If you have Docker, then instead of following the OS-specific installation
-instructions below, you may choose to build a Docker image::
+If you have `Docker <https://docs.docker.com/engine/install/>`_, then instead of
+following the OS-specific installation instructions below, you may choose to
+build a Docker image::
 
    cd doc
    docker build -f Dockerfile.htmldoc -t sympy_htmldoc .
