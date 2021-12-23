@@ -147,7 +147,7 @@ class MediumN(Medium):
     >>> from sympy.physics.optics import Medium
     >>> m = Medium('m', n=2)
     >>> m
-    MediumN(m, 2)
+    MediumN(Str('m'), 2)
     """
 
     def __new__(cls, name, n):
@@ -175,10 +175,10 @@ class MediumPP(Medium):
     >>> from sympy.abc import epsilon, mu
     >>> m1 = Medium('m1', permittivity=epsilon, permeability=mu)
     >>> m1
-    MediumPP(m, epsilon, mu)
+    MediumPP(Str('m1'), epsilon, mu)
     >>> m2 = Medium('m2')
     >>> m2
-    MediumPP(m2, 625000*ampere**2*second**4/(22468879468420441*pi*kilogram*meter**3), pi*kilogram*meter/(2500000*ampere**2*second**2))
+    MediumPP(Str('m2'), 625000*ampere**2*second**4/(22468879468420441*pi*kilogram*meter**3), pi*kilogram*meter/(2500000*ampere**2*second**2))
     """
 
 
