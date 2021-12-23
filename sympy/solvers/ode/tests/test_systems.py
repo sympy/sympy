@@ -1274,21 +1274,15 @@ def test_sysode_linear_neq_order1_type2():
 
     import sympy as sym
 
-    def eqnsubs(eqns, vartosub, valtosub):
-        subeqn = eqns.copy()
-        sublist = list(zip(vartosub, valtosub))
-        for idx, eqn in enumerate(subeqn):
-            subeqn[idx] = subeqn[idx].subs(sublist)
-        return subeqn
-
     sym.var('a b c d e f t')
     sym.var('x y', cls=sym.Function)
 
     eqn1 = sym.Eq(sym.diff(x(t),t),a*x(t)+b*y(t)+c)
     eqn2 = sym.Eq(sym.diff(y(t),t),d*x(t)+e*y(t)+f)
-    eqns = [eqn1, eqn2]
-
-    eq27 = eqnsubs(eqns, (a, b, c, d, e, f), (0, -1, 10, 5, -2, 3))
+    eq27 = [eqn1, eqn2]
+    sublist = list(zip((a, b, c, d, e, f), (0, -1, 10, 5, -2, 3)))
+    for idx, eqn in enumerate(eq27):
+        eq27[idx] = eq27[idx].subs(sublist)
     sol27 = [Eq(x(t), (C1/5 - 2*C2/5)*exp(-t)*cos(2*t) -
          (2*C1/5 + C2/5)*exp(-t)*sin(2*t) + 17*sin(2*t)**2/5 + 17*cos(2*t)**2/5),
           Eq(y(t), C1*exp(-t)*cos(2*t) - C2*exp(-t)*sin(2*t) + 10*sin(2*t)**2 +
