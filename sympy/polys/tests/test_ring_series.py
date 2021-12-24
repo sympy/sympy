@@ -229,7 +229,7 @@ def test_nth_root():
     assert rs_nth_root(1 + x*y + x**2*y**3, 3, x, 5) == -x**4*y**6/9 + \
         5*x**4*y**5/27 - 10*x**4*y**4/243 - 2*x**3*y**4/9 + 5*x**3*y**3/81 + \
         x**2*y**3/3 - x**2*y**2/9 + x*y/3 + 1
-    assert rs_nth_root(8*x, 3, x, 3) == 2*x**QQ(1, 3)
+    assert rs_nth_root(8*x, 3, x, 3) == 2*x**(QQ(1, 3))
     assert rs_nth_root(8*x + x**2 + x**3, 3, x, 3) == x**QQ(4,3)/12 + 2*x**QQ(1,3)
     r = rs_nth_root(8*x + x**2*y + x**3, 3, x, 4)
     assert r == -x**QQ(7,3)*y**2/288 + x**QQ(7,3)/12 + x**QQ(4,3)*y/12 + 2*x**QQ(1,3)
