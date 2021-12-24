@@ -1272,9 +1272,7 @@ def test_sysode_linear_neq_order1_type2():
     # Test Case added for issue #22715
     # https://github.com/sympy/sympy/issues/22715
 
-    eqn1 = Eq(diff(x(t),t),-1*y(t)+10)
-    eqn2 = Eq(diff(y(t),t),5*x(t)-2*y(t)+3)
-    eq27 = [eqn1, eqn2]
+    eq27 = [Eq(diff(x(t),t),-1*y(t)+10), Eq(diff(y(t),t),5*x(t)-2*y(t)+3)]
     sol27 = [Eq(x(t), (C1/5 - 2*C2/5)*exp(-t)*cos(2*t) -
          (2*C1/5 + C2/5)*exp(-t)*sin(2*t) + 17*sin(2*t)**2/5 + 17*cos(2*t)**2/5),
           Eq(y(t), C1*exp(-t)*cos(2*t) - C2*exp(-t)*sin(2*t) + 10*sin(2*t)**2 +
@@ -1647,10 +1645,12 @@ def test_higher_order_to_first_order_9():
 
     eqs9 = [f(x) + g(x) - 2*exp(I*x) + 2*Derivative(f(x), x) + Derivative(f(x), (x, 2)),
             f(x) + g(x) - 2*exp(I*x) + 2*Derivative(g(x), x) + Derivative(g(x), (x, 2))]
-    sol9 =  [Eq(f(x), -C1 + C2*exp(-2*x)/2 - (C3/2 - C4/2)*exp(-x)*cos(x) + (C3/2 + C4/2)*exp(-x)*sin(x) +
-             2*(1 - 2*I)*exp(I*x)*sin(x)**2/5 + 2*(1 - 2*I)*exp(I*x)*cos(x)**2/5), Eq(g(x), C1 - C2*exp(-2*x)/2 -
-              (C3/2 - C4/2)*exp(-x)*cos(x) + (C3/2 + C4/2)*exp(-x)*sin(x) + 2*(1 - 2*I)*exp(I*x)*sin(x)**2/5 +
-               2*(1 - 2*I)*exp(I*x)*cos(x)**2/5)]
+    sol9 =  [Eq(f(x), -C1 + C2*exp(-2*x)/2 - (C3/2 - C4/2)*exp(-x)*cos(x)
+                    + (C3/2 + C4/2)*exp(-x)*sin(x) + 2*((1 - 2*I)*exp(I*x)*sin(x)**2/5)
+                    + 2*((1 - 2*I)*exp(I*x)*cos(x)**2/5)),
+            Eq(g(x), C1 - C2*exp(-2*x)/2 - (C3/2 - C4/2)*exp(-x)*cos(x)
+                    + (C3/2 + C4/2)*exp(-x)*sin(x) + 2*((1 - 2*I)*exp(I*x)*sin(x)**2/5)
+                    + 2*((1 - 2*I)*exp(I*x)*cos(x)**2/5))]
     assert dsolve(eqs9) == sol9
     assert checksysodesol(eqs9, sol9) == (True, [0, 0])
 
