@@ -1281,6 +1281,7 @@ def test_sysode_linear_neq_order1_type2():
     assert dsolve(eq27) == sol27
     assert checksysodesol(eq27 , sol27) == (True , [0,0])
 
+
 def test_sysode_linear_neq_order1_type3():
 
     f, g, h, k, x0 , y0 = symbols('f g h k x0 y0', cls=Function)
