@@ -1273,10 +1273,11 @@ def test_sysode_linear_neq_order1_type2():
     # https://github.com/sympy/sympy/issues/22715
 
     eq27 = [Eq(diff(x(t),t),-1*y(t)+10), Eq(diff(y(t),t),5*x(t)-2*y(t)+3)]
-    sol27 = [Eq(x(t), (C1/5 - 2*C2/5)*exp(-t)*cos(2*t) -
-         (2*C1/5 + C2/5)*exp(-t)*sin(2*t) + 17*sin(2*t)**2/5 + 17*cos(2*t)**2/5),
-          Eq(y(t), C1*exp(-t)*cos(2*t) - C2*exp(-t)*sin(2*t) + 10*sin(2*t)**2 +
-           10*cos(2*t)**2)]
+    sol27 = [Eq(x(t), (C1/5 - 2*C2/5)*exp(-t)*cos(2*t)
+                    - (2*C1/5 + C2/5)*exp(-t)*sin(2*t)
+                    + 17*sin(2*t)**2/5 + 17*cos(2*t)**2/5),
+            Eq(y(t), C1*exp(-t)*cos(2*t) - C2*exp(-t)*sin(2*t)
+                    + 10*sin(2*t)**2 + 10*cos(2*t)**2)]
     assert dsolve(eq27) == sol27
     assert checksysodesol(eq27 , sol27) == (True , [0,0])
 
