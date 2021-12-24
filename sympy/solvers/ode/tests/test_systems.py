@@ -1647,18 +1647,10 @@ def test_higher_order_to_first_order_9():
 
     eqs9 = [f(x) + g(x) - 2*exp(I*x) + 2*Derivative(f(x), x) + Derivative(f(x), (x, 2)),
             f(x) + g(x) - 2*exp(I*x) + 2*Derivative(g(x), x) + Derivative(g(x), (x, 2))]
-    sol9 = [Eq(f(x), -C1 + C2*exp(-2*x)/2 + (C3/2 + C4/2)*exp(-x)*sin(x) + (2 +
-             I)*exp(I*x)*sin(x)**2*Rational(-1, 5) + (1 - 2*I)*exp(I*x)*sin(x)*cos(x)*Rational(2, 5) + (4 -
-             3*I)*exp(I*x)*cos(x)**2/5 + exp(-x)*sin(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) +
-             exp(x)*exp(I*x)*sin(x) + exp(x)*exp(I*x)/cos(x), x) -
-             exp(-x)*cos(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x) +
-             exp(x)*exp(I*x)/cos(x), x) - exp(-x)*cos(x)*(C3/2 + C4*Rational(-1, 2))),
-            Eq(g(x), C1 + C2*exp(-2*x)*Rational(-1, 2) + (C3/2 + C4/2)*exp(-x)*sin(x) + (2 +
-             I)*exp(I*x)*sin(x)**2*Rational(-1, 5) + (1 - 2*I)*exp(I*x)*sin(x)*cos(x)*Rational(2, 5) + (4 -
-             3*I)*exp(I*x)*cos(x)**2/5 + exp(-x)*sin(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) +
-             exp(x)*exp(I*x)*sin(x) + exp(x)*exp(I*x)/cos(x), x) -
-             exp(-x)*cos(x)*Integral(-exp(x)*exp(I*x)*sin(x)**2/cos(x) + exp(x)*exp(I*x)*sin(x) +
-             exp(x)*exp(I*x)/cos(x), x) - exp(-x)*cos(x)*(C3/2 + C4*Rational(-1, 2)))]
+    sol9 =  [Eq(f(x), -C1 + C2*exp(-2*x)/2 - (C3/2 - C4/2)*exp(-x)*cos(x) + (C3/2 + C4/2)*exp(-x)*sin(x) +
+             2*(1 - 2*I)*exp(I*x)*sin(x)**2/5 + 2*(1 - 2*I)*exp(I*x)*cos(x)**2/5), Eq(g(x), C1 - C2*exp(-2*x)/2 -
+              (C3/2 - C4/2)*exp(-x)*cos(x) + (C3/2 + C4/2)*exp(-x)*sin(x) + 2*(1 - 2*I)*exp(I*x)*sin(x)**2/5 +
+               2*(1 - 2*I)*exp(I*x)*cos(x)**2/5)]
     assert dsolve(eqs9) == sol9
     assert checksysodesol(eqs9, sol9) == (True, [0, 0])
 
