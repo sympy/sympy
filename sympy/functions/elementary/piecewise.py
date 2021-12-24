@@ -1218,19 +1218,26 @@ def piecewise_simplify_arguments(expr, **kwargs):
 
     # simplify conditions
     f1 = expr.args[0].cond.free_symbols
+    args = None
     if len(f1) == 1 and not expr.atoms(Eq):
         x = f1.pop()
         # this won't return intervals involving Eq
         # and it won't handle symbols treated as
         # booleans
         ok, abe_ = expr._intervals(x, err_on_Eq=True)
+        def include(c, x, a):
+            "return True if c.subs(x, a) is True, else False"
+            try:
+                return c.subs(x, a) == True
+            except TypeError:
+                return False
         if ok:
             args = []
             covered = S.EmptySet
             for a, b, e, i in abe_:
                 c = expr.args[i].cond
-                incl_a = (c.subs(x, a) == True)
-                incl_b = (c.subs(x, b) == True)
+                incl_a = include(c, x, a)
+                incl_b = include(c, x, b)
                 iv = Interval(a, b, not incl_a, not incl_b)
                 cset = iv - covered
                 if not cset:
@@ -1267,7 +1274,7 @@ def piecewise_simplify_arguments(expr, **kwargs):
                 args.append((e, c))
             if not S.Reals.is_subset(covered):
                 args.append((Undefined, True))
-    else:
+    if args is None:
         args = list(expr.args)
         for i in range(len(args)):
             e, c  = args[i]
@@ -1286,9 +1293,11 @@ def piecewise_simplify_arguments(expr, **kwargs):
             if newe != e:
                 e = newe
         args[i] = (e, c)
+
     # restore kwargs flag
     if doit is not None:
         kwargs['doit'] = doit
+
     return Piecewise(*args)
 
 
