@@ -75,11 +75,15 @@ class Medium(Basic):
 
         if n is not None:
             if permittivity is not None and permeability is None:
+                permittivity = _sympify(permittivity)
+                n = _sympify(n)
                 permeability = n**2/(c**2*permittivity)
-                return MediumPP(name, _sympify(permittivity), _sympify(permeability))
+                return MediumPP(name, permittivity, permeability)
             elif permeability is not None and permittivity is None:
+                permeability = _sympify(permeability)
+                n = _sympify(n)
                 permittivity = n**2/(c**2*permeability)
-                return MediumPP(name, _sympify(permittivity), _sympify(permeability))
+                return MediumPP(name, permittivity, permeability)
             elif permittivity is not None and permittivity is not None:
                 raise ValueError("Specifying all of permittivity, permeability, and n is not allowed")
             else:
