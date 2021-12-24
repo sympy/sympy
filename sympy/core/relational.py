@@ -83,7 +83,7 @@ class Relational(Boolean, EvalfMixin):
     Eq(y, x**2 + x)
 
     A relation's type can be defined upon creation using ``rop``.
-    The relation type of an exising expression can be obtained
+    The relation type of an existing expression can be obtained
     using its ``rel_op`` property.
     Here is a table of all the relation types, along with their
     ``rop`` and ``rel_op`` values:
@@ -124,7 +124,7 @@ class Relational(Boolean, EvalfMixin):
     >>> Rel(y, x + x**2, 'lt')
         y < x**2 + x
 
-    To obtain the relation type of an exising expression,
+    To obtain the relation type of an existing expression,
     get its ``rel_op`` property.
     For example, ``rel_op`` is ``==`` for the ``Equality`` relation above,
     and ``<`` for the strict less than inequality above:
