@@ -20,6 +20,7 @@ from datetime import datetime
 sys.path.insert(0, os.path.abspath('../..'))
 
 import sympy
+import sphinx_rtd_theme
 
 # If your extensions are in another directory, add it here.
 sys.path = ['ext'] + sys.path
@@ -32,7 +33,7 @@ sys.path = ['ext'] + sys.path
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
               'sphinx.ext.mathjax', 'numpydoc', 'sympylive', 'sphinx_reredirects',
               'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive',
-              'myst_parser'
+              'myst_parser',  'sphinx_rtd_theme'
               ]
 
 redirects = {
@@ -142,7 +143,8 @@ html_static_path = ['_static']
 html_last_updated_fmt = '%b %d, %Y'
 
 # was classic
-html_theme = "classic"
+# html_theme = "classic"
+html_theme = "sphinx_rtd_theme"
 
 html_logo = '_static/sympylogo.png'
 html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
