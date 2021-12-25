@@ -920,7 +920,7 @@ class Quaternion(Expr):
 
 
     def arc_coplanar(self, other):
-        r"""
+        """
         Returns True if the transformation arcs represented by the input quaternions happen in the same plane.
 
         Explanation
