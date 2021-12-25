@@ -184,7 +184,7 @@ class Ynm(Function):
                 return self.expand(func=True)
             elif Abs(m) > n:
                 return S.Zero
-        return self.expand(func=True)        
+        return self.expand(func=True)
 
     def _eval_rewrite_as_sin(self, n, m, theta, phi, **kwargs):
         return self.rewrite(cos)
@@ -198,7 +198,7 @@ class Ynm(Function):
             elif Abs(m) < n:
                 term = S.Zero
         else:
-            term = simplify(self.expand(func=True))              
+            term = simplify(self.expand(func=True))
         # We can do this because of the range of theta
         term = term.xreplace({Abs(sin(theta)):sin(theta)})
         return simplify(trigsimp(term))
@@ -208,7 +208,7 @@ class Ynm(Function):
         if all(map(lambda x: x.is_integer, (n, m, theta, phi))):
             if theta in S.Reals and phi in S.Reals:
                 return S.NegativeOne**m * self.func(n, -m, theta, phi)
-        return S.NegativeOne**m * self.func(n, -m, theta, phi)        
+        return S.NegativeOne**m * self.func(n, -m, theta, phi)
 
     def as_real_imag(self, deep=True, **hints):
         # TODO: Handle deep and hints
