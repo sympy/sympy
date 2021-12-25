@@ -920,7 +920,7 @@ class Quaternion(Expr):
 
 
     def arc_coplanar(self, other):
-        """
+        r"""
         Returns True if the transformation arcs represented by the input quaternions happen in the same plane.
 
         Explanation
@@ -968,7 +968,7 @@ class Quaternion(Expr):
 
     @classmethod
     def vector_coplanar(cls, q1, q2, q3):
-        """
+        r"""
         Returns True if the axis of the pure quaternions seen as 3D vectors
         q1, q2, and q3 are coplanar.
 
