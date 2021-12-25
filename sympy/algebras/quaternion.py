@@ -393,6 +393,7 @@ class Quaternion(Expr):
         q = self
         return q * (1/q.norm())
 
+
     def inverse(self):
         """Returns the inverse of the quaternion."""
         q = self
@@ -765,7 +766,7 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Given a quaternion $q = a + bi + cj + dk$ and returns $\mathbf{S}(q) = a$
+        Given a quaternion $q = a + bi + cj + dk$, returns $\mathbf{S}(q) = a$
 
         Examples
         ========
@@ -786,7 +787,7 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Given a quaternion $q = a + bi + cj + dk$ and returns $\mathbf{V}(q) = bi + cj + dk$
+        Given a quaternion $q = a + bi + cj + dk$, returns $\mathbf{V}(q) = bi + cj + dk$
 
         Examples
         ========
@@ -811,7 +812,8 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Given a quaternion $q = a + bi + cj + dk$ and returns $\mathbf{Ax}(q)$ ie normalized versor (vector part) of that quaternion.
+        Given a quaternion $q = a + bi + cj + dk$, returns $\mathbf{Ax}(q)$  i.e., the versor of the vector part of that quaternion
+        equal to $\mathbf{U}[\mathbf{V}(q)]$
         The axis is always an imaginary unit with square equal to $-1 + 0i + 0j + 0k$.
 
         Examples
@@ -899,7 +901,7 @@ class Quaternion(Expr):
         ===========
 
         Given a quaternion ``q = a + b*i + c*j + d*k`` where a, b, c and d
-        are real numbers and returns angle of the quaternion given by
+        are real numbers, returns the angle of the quaternion given by
 
         .. math::
             angle := atan2(\sqrt{b^2 + c^2 + d^2}, {a})
@@ -919,13 +921,13 @@ class Quaternion(Expr):
 
     def arc_coplanar(self, other):
         """
-        Returns True if the plane of the two quaternions are coplanar.
+        Returns True if the transformation arcs represented by the input quaternions happen in the same plane.
 
         Explanation
         ===========
 
-        checks if the 3D vectors written as quaternions are in the same plane which means
-        the axes of 3D vectors are parallel.
+        Two quaternions are said to be coplanar (in this arc sense) when their axes are parallel.
+        The plane of a quaternion is the one normal to its axis.
 
         Parameters
         ==========
@@ -935,9 +937,9 @@ class Quaternion(Expr):
         Returns
         =======
 
-        True : if the plane of the two quaternions are coplanar
-        False : if the plane of the two quaternions are not coplanar
-        None : if the plane of the two quaternions are coplanar is unknown.
+        True : if the planes of the two quaternions are the same, apart from its orientation/sign.
+        False : if the planes of the two quaternions are not the same, apart from its orientation/sign.
+        None : if plane of either of the quaternion is unknown.
 
         Examples
         ========
@@ -960,7 +962,7 @@ class Quaternion(Expr):
 
         """
         if (self.is_zero_quaternion()) or (other.is_zero_quaternion()):
-            raise ValueError('Neither of the given quaternions must be 0')
+            raise ValueError('Neither of the given quaternions can be 0')
 
         return fuzzy_or([(self.axis() - other.axis()).is_zero_quaternion(), (self.axis() + other.axis()).is_zero_quaternion()])
 
@@ -973,7 +975,8 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Three pure quaternions are vector coplanar if the quaternions seens as 3D vectors are arc coplanar.
+        Three pure quaternions are vector coplanar if the quaternions seens as 3D vectors are coplanar.
+        Denoted by $q_1 \mathbin{|\mskip-1mu|\mskip-1mu|} q_2, q_3$ #comma is part of notation as it is ternary
 
         Parameters
         ==========
@@ -1029,7 +1032,7 @@ class Quaternion(Expr):
         ===========
 
         Two pure quaternions are called parallel when their vector product is commutative which
-        implies that the quaternion seen as 3D vectors have same direction.
+        implies that the quaternions seen as 3D vectors have same direction.
 
         Parameters
         ==========
@@ -1112,7 +1115,7 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Index vector is given by $mod(q)$ multiplied by $\mathbf{Ax}(q)$ where Ax(q) is the axis of the quaternion q,
+        Index vector is given by $\mathbf{T}(q)$ multiplied by $\mathbf{Ax}(q)$ where Ax(q) is the axis of the quaternion q,
         and mod(q) is the `norm` (magnitude) of the quaternion.
 
         Returns
