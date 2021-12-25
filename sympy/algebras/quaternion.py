@@ -766,7 +766,7 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Given a quaternion $q = a + bi + cj + dk$, returns $\mathbf{S}(q) = a$
+        Given a quaternion $q = a + bi + cj + dk$, returns $\mathbf{S}(q) = a$.
 
         Examples
         ========
@@ -787,7 +787,7 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Given a quaternion $q = a + bi + cj + dk$, returns $\mathbf{V}(q) = bi + cj + dk$
+        Given a quaternion $q = a + bi + cj + dk$, returns $\mathbf{V}(q) = bi + cj + dk$.
 
         Examples
         ========
@@ -900,7 +900,7 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Given a quaternion ``q = a + b*i + c*j + d*k`` where a, b, c and d
+        Given a quaternion $q = a + b*i + c*j + d*k$ where a, b, c and d
         are real numbers, returns the angle of the quaternion given by
 
         .. math::
@@ -976,7 +976,7 @@ class Quaternion(Expr):
         ===========
 
         Three pure quaternions are vector coplanar if the quaternions seens as 3D vectors are coplanar.
-        Denoted by $q_1 \mathbin{|\mskip-1mu|\mskip-1mu|} q_2, q_3$ #comma is part of notation as it is ternary
+        Denoted by $q_1 \mathbin{|\mskip-1mu|\mskip-1mu|} q_2, q_3$.
 
         Parameters
         ==========
@@ -1115,8 +1115,8 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Index vector is given by $\mathbf{T}(q)$ multiplied by $\mathbf{Ax}(q)$ where Ax(q) is the axis of the quaternion q,
-        and mod(q) is the `norm` (magnitude) of the quaternion.
+        Index vector is given by $\mathbf{T}(q)$ multiplied by $\mathbf{Ax}(q)$ where $Ax(q)$ is the axis of the quaternion q,
+        and mod(q) is the $norm$ (magnitude) of the quaternion.
 
         Returns
         =======
