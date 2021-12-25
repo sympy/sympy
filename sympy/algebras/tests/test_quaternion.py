@@ -149,6 +149,7 @@ def test_quaternion_functions():
 
     assert q1.axis() == Quaternion(0, 2*sqrt(29)/29, 3*sqrt(29)/29, 4*sqrt(29)/29)
     assert q1.axis().pow(2) == Quaternion(-1, 0, 0, 0)
+    assert q0.axis().scalar_part() == 0
     assert q.axis() == Quaternion(0, x/sqrt(x**2 + y**2 + z**2), y/sqrt(x**2 + y**2 + z**2), z/sqrt(x**2 + y**2 + z**2))
 
     assert q0.is_pure() == True
