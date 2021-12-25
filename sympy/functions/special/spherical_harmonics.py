@@ -179,9 +179,10 @@ class Ynm(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, m, theta, phi, **kwargs):
-        # TODO: Make sure n \in N
-        # TODO: Assert |m| <= n ortherwise we should return 0
-        return self.expand(func=True)
+        if n in S.Naturals and Abs(m) <= n:
+            return self.expand(func=True)
+        elif Abs(m) > n:
+            return S.Zero
 
     def _eval_rewrite_as_sin(self, n, m, theta, phi, **kwargs):
         return self.rewrite(cos)
@@ -189,17 +190,18 @@ class Ynm(Function):
     def _eval_rewrite_as_cos(self, n, m, theta, phi, **kwargs):
         # This method can be expensive due to extensive use of simplification!
         from sympy.simplify import simplify, trigsimp
-        # TODO: Make sure n \in N
-        # TODO: Assert |m| <= n ortherwise we should return 0
-        term = simplify(self.expand(func=True))
+        if n in S.Naturals and Abs(m) <= n:
+            term = simplify(self.expand(func=True))
+        elif Abs(m) < n:
+            term = S.Zero
         # We can do this because of the range of theta
         term = term.xreplace({Abs(sin(theta)):sin(theta)})
         return simplify(trigsimp(term))
 
     def _eval_conjugate(self):
-        # TODO: Make sure theta \in R and phi \in R
         n, m, theta, phi = self.args
-        return S.NegativeOne**m * self.func(n, -m, theta, phi)
+        if theta in S.Reals and phi in S.Reals:
+            return S.NegativeOne**m * self.func(n, -m, theta, phi)
 
     def as_real_imag(self, deep=True, **hints):
         # TODO: Handle deep and hints
