@@ -976,7 +976,6 @@ class Quaternion(Expr):
         ===========
 
         Three pure quaternions are vector coplanar if the quaternions seens as 3D vectors are coplanar.
-        Denoted by $q_1 \mathbin{|\mskip-1mu|\mskip-1mu|} q_2, q_3$.
 
         Parameters
         ==========
