@@ -165,7 +165,7 @@ html_theme = "press"
 #html_theme = "sphinxdoc"
 
 # html_theme_path = ["../../.venv/"]
-html_theme_path = ["."]
+# html_theme_path = ["."]
 # html_theme_path = ["sphinx_press_theme"]
 
 html_logo = '_static/sympylogo.png'
