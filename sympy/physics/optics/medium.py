@@ -72,6 +72,7 @@ class Medium(Basic):
     def __new__(cls, name, permittivity=None, permeability=None, n=None):
         if not isinstance(name, Str):
             name = Str(name)
+
         permittivity = _sympify(permittivity) if permittivity is not None else permittivity
         permeability = _sympify(permeability) if permeability is not None else permeability
         n = _sympify(n) if n is not None else n
