@@ -27,7 +27,7 @@ def sympy_dir():
     return Path(__file__).resolve().parent.parent
 
 # put sympy on the path
-sys.path.insert(0, sympy_dir())
+sys.path.insert(0, str(sympy_dir()))
 import sympy
 from sympy.utilities.misc import filldedent
 from sympy.external.importtools import version_tuple
