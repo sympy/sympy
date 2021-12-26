@@ -72,24 +72,23 @@ class Medium(Basic):
     def __new__(cls, name, permittivity=None, permeability=None, n=None):
         if not isinstance(name, Str):
             name = Str(name)
+        permittivity = _sympify(permittivity) if permittivity is not None else permittivity
+        permeability = _sympify(permeability) if permeability is not None else permeability
+        n = _sympify(n) if n is not None else n
 
         if n is not None:
             if permittivity is not None and permeability is None:
-                permittivity = _sympify(permittivity)
-                n = _sympify(n)
                 permeability = n**2/(c**2*permittivity)
                 return MediumPP(name, permittivity, permeability)
             elif permeability is not None and permittivity is None:
-                permeability = _sympify(permeability)
-                n = _sympify(n)
                 permittivity = n**2/(c**2*permeability)
                 return MediumPP(name, permittivity, permeability)
             elif permittivity is not None and permittivity is not None:
                 raise ValueError("Specifying all of permittivity, permeability, and n is not allowed")
             else:
-                return MediumN(name, _sympify(n))
+                return MediumN(name, n)
         elif permittivity is not None and permeability is not None:
-            return MediumPP(name, _sympify(permittivity), _sympify(permeability))
+            return MediumPP(name, permittivity, permeability)
         elif permittivity is None and permeability is None:
             return MediumPP(name, _e0mksa, _u0mksa)
         else:
