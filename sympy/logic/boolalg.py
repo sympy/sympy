@@ -2741,7 +2741,7 @@ def _find_predicates(expr):
     return set().union(*(map(_find_predicates, expr.args)))
 
 
-def simplify_logic(expr, form=None, deep=True, force=False):
+def simplify_logic(expr, form=None, deep=True, force=False, dontcare=None):
     """
     This function simplifies a boolean function to its simplified version
     in SOP or POS form. The return type is an :py:class:`~.Or` or
@@ -2768,6 +2768,13 @@ def simplify_logic(expr, form=None, deep=True, force=False):
         only symbolical simplification (controlled by ``deep``) is
         made. By setting ``force`` to ``True``, this limit is removed. Be
         aware that this can lead to very long simplification times.
+
+    dontcare : Boolean expression
+        Optimize expression under the assumption that this expression is false.
+        This is useful in e.g. Piecewise conditions, where later confitions
+        are subject to the previous conditions being false. Hence, if a previous
+        condition is And(A, B), the simplification of expr can be made with
+        don't cares for And(A, B).
 
     Examples
     ========
@@ -2815,6 +2822,8 @@ def simplify_logic(expr, form=None, deep=True, force=False):
     undo = {}
     from sympy.core.symbol import Dummy
     variables = expr.atoms(Relational)
+    if dontcare is not None:
+        variables.update(dontcare.atoms(Relational))
     while variables:
         var = variables.pop()
         if var.is_Relational:
@@ -2826,36 +2835,56 @@ def simplify_logic(expr, form=None, deep=True, force=False):
                 repl[nvar] = Not(d)
                 variables.remove(nvar)
 
+    if dontcare is not None:
+        dontcare = dontcare.xreplace(repl)
+
     expr = expr.xreplace(repl)
 
     # Get new variables after replacing
     variables = _find_predicates(expr)
     if not force and len(variables) > 8:
         return expr.xreplace(undo)
+    if dontcare is not None:
+        # Add variables from dontcare
+        dcvariables = _find_predicates(dontcare)
+        variables.update(dcvariables)
+        # if too many restore to variables only
+        if not force and len(variables) > 8:
+            variables = _find_predicates(expr)
+            dontcare = None
     # group into constants and variable values
     c, v = sift(ordered(variables), lambda x: x in (True, False), binary=True)
     variables = c + v
-    truthtable = []
     # standardize constants to be 1 or 0 in keeping with truthtable
     c = [1 if i == True else 0 for i in c]
     truthtable = _get_truthtable(v, expr, c)
+    if dontcare is not None:
+        dctruthtable = _get_truthtable(v, dontcare, c)
+        truthtable = [t for t in truthtable if t not in dctruthtable]
+    else:
+        dctruthtable = []
     big = len(truthtable) >= (2 ** (len(variables) - 1))
     if form == 'dnf' or form is None and big:
-        return _sop_form(variables, truthtable, []).xreplace(undo)
-    return POSform(variables, truthtable).xreplace(undo)
+        return _sop_form(variables, truthtable, dctruthtable).xreplace(undo)
+    return POSform(variables, truthtable, dctruthtable).xreplace(undo)
 
 
 def _get_truthtable(variables, expr, const):
     """ Return a list of all combinations leading to a True result for ``expr``.
     """
+    _variables = variables.copy()
     def _get_tt(inputs):
-        if variables:
-            v = variables.pop()
+        if _variables:
+            v = _variables.pop()
             tab = [[i[0].xreplace({v: false}), [0] + i[1]] for i in inputs if i[0] is not false]
             tab.extend([[i[0].xreplace({v: true}), [1] + i[1]] for i in inputs if i[0] is not false])
             return _get_tt(tab)
         return inputs
-    return [const + k[1] for k in _get_tt([[expr, []]]) if k[0]]
+    res = [const + k[1] for k in _get_tt([[expr, []]]) if k[0]]
+    if res == [[]]:
+        return []
+    else:
+        return res
 
 
 def _finger(eq):

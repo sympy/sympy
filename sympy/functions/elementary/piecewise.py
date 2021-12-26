@@ -1581,8 +1581,10 @@ def _piecewise_simplify_conditions(args, measure, ratio):
     prevcond = S.false
     prevnewcond = S.false
     for expr, cond in args:
-        newcond = (cond & ~cummulatedcond).simplify()
+        newcond = simplify_logic(cond, dontcare=cummulatedcond)
         shortcond = shorter(newcond, cond)
+        newcond = (cond & ~cummulatedcond).simplify()
+        shortcond = shorter(newcond, shortcond)
         if shortcond != False and shortcond not in [prevcond, prevnewcond]:
             newargs.append((expr, shortcond))
         cummulatedcond = (cummulatedcond | shortcond).simplify()

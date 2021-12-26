@@ -1274,6 +1274,10 @@ def test_gateinputcount():
     raises(TypeError, lambda: gateinputcount(a*b))
 
 
+def test_simplify_logic_dontcare():
+    assert simplify_logic((a & b) | c | d, dontcare=(a & b)) == c | d
+
+
 def test_refine():
     # relational
     assert not refine(x < 0, ~(x < 0))

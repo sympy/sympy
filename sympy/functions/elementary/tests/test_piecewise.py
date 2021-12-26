@@ -1611,6 +1611,18 @@ def test_issue_17283():
     assert eq.simplify() == Piecewise((0, x <= 1), (2, True))
 
 
+def test_issue_22066():
+    x   = symbols("x")
+    L   = symbols("L", nonzero = True)
+    k, l = symbols("k, l",   integer=True, nonnegative = True )
+
+    integral = Integral(cos((x*k*pi)/L) * cos( (x*l*pi) / L), (x, -L, L))
+    res = Piecewise((2*L, Eq(k, 0) & Eq(l, 0)),
+                    (L, Eq(k, l) | Eq(k, -l)),
+                    (0, True))
+    assert integral.doit().simplify() == res
+
+
 @slow
 def test_issue_21481():
     b, e = symbols('b e')
