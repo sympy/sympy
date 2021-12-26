@@ -15,27 +15,22 @@ from __future__ import print_function
 
 import sys
 import os
+from pathlib import Path
+from subprocess import run, PIPE
+from collections import OrderedDict, defaultdict
+from argparse import ArgumentParser
 
 if sys.version_info < (3, 7):
     sys.exit("This script requires Python 3.7 or newer")
 
-from pathlib import Path
-from subprocess import run, PIPE
-from sympy.external.importtools import version_tuple
-from collections import OrderedDict, defaultdict
-from argparse import ArgumentParser
-
-
 def sympy_dir():
     return Path(__file__).resolve().parent.parent
 
-
 # put sympy on the path
-sys.path.insert(0, sympy_dir().parent)
-
-
+sys.path.insert(0, sympy_dir())
 import sympy
 from sympy.utilities.misc import filldedent
+from sympy.external.importtools import version_tuple
 
 
 def main(*args):
