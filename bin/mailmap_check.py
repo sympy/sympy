@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-A tool to generate AUTHORS. We started tracking authors before moving
-to git, so we have to do some manual rearrangement of the git history
-authors in order to get the order in AUTHORS. bin/mailmap_update.py
-should be run before committing the results.
+A tool to generate AUTHORS. We started tracking authors before moving to git,
+so we have to do some manual rearrangement of the git history authors in order
+to get the order in AUTHORS. bin/mailmap_check.py should be run before
+committing the results.
+
+See here for instructions on using this script:
+https://github.com/sympy/sympy/wiki/Development-workflow
 """
 
 from __future__ import unicode_literals
