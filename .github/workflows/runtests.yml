@@ -74,7 +74,7 @@ jobs:
   # --------------------------- check authors ---------------------- #
 
   authors:
-    #needs: code-quality
+    needs: code-quality
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
