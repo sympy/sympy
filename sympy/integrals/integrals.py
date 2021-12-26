@@ -808,7 +808,7 @@ class Integral(AddWithLimits):
             u = Dummy('u')
             arg = f.subs(x, u).diff(sym).subs(u, x)
             if arg:
-                rv += self.func(arg, Tuple(x, a, b))
+                rv += self.func(arg, (x, a, b))
         return rv
 
     def _eval_integral(self, f, x, meijerg=None, risch=None, manual=None,

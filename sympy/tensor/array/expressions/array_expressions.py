@@ -33,7 +33,7 @@ from sympy.core.sympify import _sympify
 
 
 class _ArrayExpr(Expr):
-    pass
+    shape : tTuple[Expr, ...]
 
 
 class ArraySymbol(_ArrayExpr):

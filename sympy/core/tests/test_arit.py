@@ -2418,3 +2418,8 @@ def test_issue_22453():
     assert 1/(r + I*i) is S.Zero
     assert 1/(3 + I*i) is S.Zero
     assert 1/(r + I*3) is S.Zero
+
+
+def test_issue_22613():
+    assert (0**(x - 2)).as_content_primitive() == (1, 0**(x - 2))
+    assert (0**(x + 2)).as_content_primitive() == (1, 0**(x + 2))

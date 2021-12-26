@@ -456,7 +456,7 @@ class Add(Expr, AssocOp):
         (0, (7*x,))
         """
         if deps:
-            l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
+            l1, l2 = sift(self.args, lambda x: x.has_free(*deps), binary=True)
             return self._new_rawargs(*l2), tuple(l1)
         coeff, notrat = self.args[0].as_coeff_add()
         if coeff is not S.Zero:

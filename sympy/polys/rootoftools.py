@@ -167,7 +167,12 @@ class ComplexRootOf(RootOf):
     """Represents an indexed complex root of a polynomial.
 
     Roots of a univariate polynomial separated into disjoint
-    real or complex intervals and indexed in a fixed order.
+    real or complex intervals and indexed in a fixed order:
+
+    * real roots come first and are sorted in increasing order;
+    * complex roots come next and are sorted primarily by increasing
+      real part, secondarily by increasing imaginary part.
+
     Currently only rational coefficients are allowed.
     Can be imported as ``CRootOf``. To avoid confusion, the
     generator must be a Symbol.

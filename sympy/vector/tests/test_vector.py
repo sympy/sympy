@@ -245,3 +245,11 @@ def test_vector_diff_integrate():
 def test_vector_args():
     raises(ValueError, lambda: BaseVector(3, C))
     raises(TypeError, lambda: BaseVector(0, Vector.zero))
+
+
+def test_srepr():
+    from sympy.printing.repr import srepr
+    res = "CoordSys3D(Str('C'), Tuple(ImmutableDenseMatrix([[Integer(1), "\
+            "Integer(0), Integer(0)], [Integer(0), Integer(1), Integer(0)], "\
+            "[Integer(0), Integer(0), Integer(1)]]), VectorZero())).i"
+    assert srepr(C.i) == res

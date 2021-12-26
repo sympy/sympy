@@ -816,8 +816,10 @@ def solve(f, *symbols, **flags):
             guaranteed to find the largest number of zeros possible).
         cubics=True (default)
             Return explicit solutions when cubic expressions are encountered.
+            When False, quartics and quintics are disabled, too.
         quartics=True (default)
             Return explicit solutions when quartic expressions are encountered.
+            When False, quintics are disabled, too.
         quintics=True (default)
             Return explicit solutions (if possible) when quintic expressions
             are encountered.
@@ -830,6 +832,15 @@ def solve(f, *symbols, **flags):
 
     """
     from .inequalities import reduce_inequalities
+
+    # set solver types explicitly; as soon as one is False
+    # all the rest will be False
+    ###########################################################################
+
+    hints = ('cubics', 'quartics', 'quintics')
+    default = True
+    for k in hints:
+        default = flags.setdefault(k, bool(flags.get(k, default)))
 
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
@@ -1617,8 +1628,8 @@ def _solve(f, *symbols, **flags):
                 soln = None
                 deg = poly.degree()
                 flags['tsolve'] = True
-                solvers = {k: flags.get(k, True) for k in
-                    ('cubics', 'quartics', 'quintics')}
+                hints = ('cubics', 'quartics', 'quintics')
+                solvers = {h: flags.get(h) for h in hints}
                 soln = roots(poly, **solvers)
                 if sum(soln.values()) < deg:
                     # e.g. roots(32*x**5 + 400*x**4 + 2032*x**3 +
