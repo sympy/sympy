@@ -1,0 +1,3 @@
+[sphinx.html_themes]
+press = sphinx_press_theme
+

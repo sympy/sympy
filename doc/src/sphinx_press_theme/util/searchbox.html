@@ -1,0 +1,12 @@
+<div id="searchbox" class="searchbox" role="search">
+  <div class="caption"><span class="caption-text">{{ _('Quick search') }}</span>
+    <div class="searchformwrapper">
+      <form class="search" action="{{ pathto('search') }}" method="get">
+        <input type="text" name="q" />
+        <input type="submit" value="{{ _('Search') }}" />
+        <input type="hidden" name="check_keywords" value="yes" />
+        <input type="hidden" name="area" value="default" />
+      </form>
+    </div>
+  </div>
+</div>

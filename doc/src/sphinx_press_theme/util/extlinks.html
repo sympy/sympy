@@ -1,0 +1,11 @@
+{# external links, i.e. #}
+{% if theme_external_links %}
+  {% for (label, url) in theme_external_links %}
+    <div class="nav-item">
+      <a href="{{ url }}"
+        class="nav-link external">
+          {{ label }} <outboundlink></outboundlink>
+      </a>
+    </div>
+  {% endfor %}
+{% endif %}

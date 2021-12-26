@@ -1,0 +1,29 @@
+<div class="sidebar-links" role="navigation" aria-label="main navigation">
+  {% for toc in toctree_data %}
+    <div class="sidebar-group">
+      <p class="caption">
+        <span class="caption-text"><a href="{{ toc.href }}">{{toc.title}}</a></span>
+      </p>
+      <ul class="{% if toc.current %}current{% endif %}">
+        {% for entry in toc.entries %}
+          <li class="toctree-l1 {% if entry.current %}current{% endif %}">
+            {% if entry.ext_resource %}
+              <a href="{{ pathto(entry.name, 1) }}" class="reference">{{entry.title}} <outboundlink></outboundlink></a>
+            {% else %}
+              <a href="{{ pathto(entry.name) }}" class="reference internal {% if entry.current %}current{% endif %}">{{entry.title}}</a>
+            {% endif %}
+
+            {% if entry.children %}
+              <ul>
+                {% for entry2 in entry.children %}
+                  <li class="toctree-l2"><a href="{{entry2.href}}" class="reference internal">{{entry2.title}}</a></li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </li>
+
+        {% endfor %}
+      </ul>
+    </div>
+  {% endfor %}
+</div>

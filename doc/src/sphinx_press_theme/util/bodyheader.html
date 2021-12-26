@@ -1,0 +1,16 @@
+<div class="body-header" role="navigation" aria-label="navigation">
+  {% block breadcrumbs %}
+  <ul class="breadcrumbs">
+    <li><a href="{{ pathto(master_doc) }}">{{ _('Docs') }}</a> &raquo;</li>
+    {% for doc in parents %}
+      <li><a href="{{ doc.link|e }}">{{ doc.title }}</a> &raquo;</li>
+    {% endfor %}
+    <li>{{ title }}</li>
+  </ul>
+  {% endblock %}
+
+  {% block body_header_nav %}
+    {%- include "util/pagenav.html" %}
+  {% endblock %}
+</div>
+<hr>

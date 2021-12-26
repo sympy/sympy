@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html {% if language is not none %} lang="{{ language }}"{% endif %}>
+  <head>
+    <meta charset="{{ encoding }}">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    {{- metatags }}
+    {%- block htmltitle %}
+      <title>{{ title|striptags|e }}{{ titlesuffix }}</title>
+    {%- endblock %}
+    {# <meta name="description" content="{{ description }}"> #}
+    {%- block css %}
+      {%- for css in css_files %}
+        {%- if css|attr("rel") %}
+          <link rel="{{ css.rel }}" href="{{ pathto(css.filename, 1) }}" type="text/css"{% if css.title is not none %} title="{{ css.title }}"{% endif %} />
+        {%- else %}
+          <link rel="stylesheet" href="{{ pathto(css, 1) }}" type="text/css" />
+      {%- endif %}
+    {%- endfor %}
+    {%- endblock %}
+
+    {%- block scripts %}
+      {# FIXME: use link-preload #}
+      <!-- sphinx script_files -->
+      {%- for scriptfile in script_files %}
+        {{ js_tag(scriptfile) }}
+      {%- endfor %}
+
+      {# press js #}
+      <!-- bundled in js (rollup iife) -->
+      <!-- <script src="{{ pathto('_static/theme-vendors.js', 1)}}"></script> -->
+      <script src="{{ pathto('_static/theme.js', 1)}}" defer></script>
+    {%- endblock %}
+    {%- if pageurl %}
+      <link rel="canonical" href="{{ pageurl }}" />
+    {%- endif %}
+    {# TODO: opensearch #}
+    {%- if favicon %}
+      <link rel="shortcut icon" href="{{ pathto('_static/' + favicon, 1) }}"/>
+    {%- endif %}
+
+    {%- include "util/linktags.html" %}
+    {%- block extrahead %} {% endblock %}
+  </head>
+
+  <body>
+    <div id="app">
+    <div class="theme-container" :class="pageClasses">
+    {%- block container %}
+      {%- block header %}{%- include "util/navbar.html" %}{% endblock %}
+
+      {# close sidebar when clicked out of it #}
+      <div class="sidebar-mask" @click="toggleSidebar(false)">
+      </div>
+
+      {%- block sidebar %}
+        <sidebar @toggle-sidebar="toggleSidebar">
+          {# sidebar navlinks displayed only on mobile #}
+          <navlinks>
+            {% block side_links %}
+              {%- include "util/navlinks.html" %}
+              {%- include "util/extlinks.html" %}
+            {% endblock %}
+          </navlinks>
+          {%- if sidebars != None %}
+            {%- for sidebartemplate in sidebars %}
+              {%- include sidebartemplate %}
+            {%- endfor %}
+          {%- endif %}
+        </sidebar>
+      {%- endblock %}
+
+      <page>
+        {%- block document %}
+          {% block body_header %}
+            {%- include "util/bodyheader.html" %}
+          {%- endblock body_header %}
+          <div class="content" role="main" v-pre>
+            {% block body %} {% endblock %}
+          </div>
+          <div class="page-nav">
+            <div class="inner">
+              {%- block footer %}
+                {%- include "util/pagenav.html" %}
+                {%- include "util/footer.html" %}
+              {%- endblock footer %}
+            </div>
+          </div>
+        {%- endblock %}
+      </page>
+
+    {%- endblock container %}
+    </div></div>
+    {% block footer_scripts %}
+    {% endblock %}
+  </body>
+</html>
