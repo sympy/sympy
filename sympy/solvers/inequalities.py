@@ -1215,11 +1215,11 @@ def _factorize_linear(expr,symbols):
     for symbol in symbols:
         res+=(expr.coeff(symbol)*symbol)
     return res+expr.func(*[term for term in expr.args if not term.free_symbols])
-        
+
 def _is_linear(expr,symbols):
     """
     Return True if expr is linear, False otherwise.
-    
+
     Examples
     ========
 
@@ -1269,14 +1269,13 @@ def solve_linear_inequalities(inequalities,symbols):
     >>> from sympy.solvers.inequalities import solve_linear_inequalities
     >>> from sympy.abc import x, y, z
 
-
     >>> eq1 = 2*x - 3*y + z + 1
     >>> eq2 = x - y + 2*z - 2
     >>> eq3 = x + y + 3*z + 4
     >>> eq4 = x - z
 
     >>> symbols = {x,y,z}
-    
+
     >>> d = solve_linear_inequalities([eq1, eq2, eq3, eq4],symbols)
     >>> assert set(d) == set([x, y, z])
     >>> d[x]
