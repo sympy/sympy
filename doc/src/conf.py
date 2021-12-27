@@ -24,21 +24,6 @@ import sympy
 # If your extensions are in another directory, add it here.
 sys.path = ['ext'] + sys.path
 
-sys.path = ['.venv/lib/python3.9/site-packages'] + sys.path
-sys.path = ['/Users/jemonat/Projects/sympy/.venv/lib/python3.9/site-packages'] + sys.path
-
-sys.path = ['.venv/lib/python3.9/site-packages/furo'] + sys.path
-sys.path = ['/Users/jemonat/Projects/sympy/.venv/lib/python3.9/site-packages/furo'] + sys.path
-
-sys.path = ['.venv/lib/python3.9/site-packages/furo/theme'] + sys.path
-sys.path = ['/Users/jemonat/Projects/sympy/.venv/lib/python3.9/site-packages/furo/theme'] + sys.path
-
-sys.path = ['.venv/lib/python3.9/site-packages/furo/theme/furo'] + sys.path
-sys.path = ['/Users/jemonat/Projects/sympy/.venv/lib/python3.9/site-packages/fur/theme/furo'] + sys.path
-
-print('sys.path from doc/src/conf.py:')
-print(sys.path)
-
 # General configuration
 # ---------------------
 
@@ -164,7 +149,6 @@ html_last_updated_fmt = '%b %d, %Y'
 html_theme = "press"
 # html_theme = "sphinx_press_theme"
 # html_theme = "sphinx-press-theme"
-#html_theme = "sphinxdoc"
 
 # html_theme_path = ["../../.venv/"]
 # html_theme_path = ["."]
