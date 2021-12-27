@@ -29,5 +29,3 @@ RUN pip install --upgrade pip
 RUN pip install -r /tmp/requirements.txt
 
 CMD cd /sympy/doc; make html
-#CMD cd /sympy/doc; make html -T
-#CMD cd /sympy/doc; sphinx-build -b html -T
