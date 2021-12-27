@@ -1194,13 +1194,12 @@ def _fourier_motzkin_extension(inequalities,symbols):
         pivot = _pick_var(inequalities,symbols)
     return res
 
-
 def _factorize_linear(expr,symbols):
     """Factorize linear expression
 
     Examples
     ========
-    
+
     >>> from sympy.solvers.inequalities import _factorize_linear
     >>> from sympy.abc import x, y, z
     >>> from sympy import expand
@@ -1223,7 +1222,7 @@ def _is_linear(expr,symbols):
     
     Examples
     ========
-    
+
     >>> from sympy import diff
     >>> from sympy.abc import x, y, z
     >>> symbols = {x,y}
