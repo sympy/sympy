@@ -1295,7 +1295,7 @@ def solve_linear_inequalities(inequalities,symbols):
     for eq in inequalities:
         if not(_is_linear(eq,symbols)):
             raise ValueError('NonlinearError: Nonlinear inequality found: solve_linear_inequalities() is only for linear inequalities')
-  
+
     eqs = list(ordered(inequalities))
     eqs, res1 = _fourier_motzkin(eqs,symbols)
     res2 = _fourier_motzkin_extension(eqs,symbols)
