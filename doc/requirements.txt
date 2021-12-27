@@ -12,4 +12,6 @@ sphinxcontrib-htmlhelp==2.0.0
 sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.5
+sphinx-press-theme
+sphinx_press_theme
 sphinx-reredirects==0.0.1

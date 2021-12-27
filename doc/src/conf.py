@@ -162,11 +162,14 @@ html_last_updated_fmt = '%b %d, %Y'
 # was classic
 # html_theme = "classic"
 html_theme = "press"
+# html_theme = "sphinx_press_theme"
+# html_theme = "sphinx-press-theme"
 #html_theme = "sphinxdoc"
 
 # html_theme_path = ["../../.venv/"]
 # html_theme_path = ["."]
 # html_theme_path = ["sphinx_press_theme"]
+# html_theme_path = ["sphinx-press-theme"]
 
 html_logo = '_static/sympylogo.png'
 html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
