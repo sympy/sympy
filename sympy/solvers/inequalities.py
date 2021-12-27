@@ -4,12 +4,10 @@ from sympy.calculus.util import (continuous_domain, periodicity,
     function_range)
 from sympy.core import Symbol, Dummy, sympify
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import expand_mul
 from sympy.core.relational import Relational, Eq, Ge, Lt
 from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
-from sympy.functions import Abs
 from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.complexes import im, Abs
@@ -1203,8 +1201,7 @@ def _factorize_linear(expr,symbols):
     ========
 
     >>> from sympy.solvers.inequalities import _factorize_linear
-    >>> from sympy.abc import x, y, z
-    >>> from sympy import expand
+    >>> from sympy.abc import x,z
     >>> from sympy import sqrt,exp
     >>> symbols = {x,z}
     >>> expr= x - sqrt(3)*(-x + sqrt(3)*(-2*x - z - 1)/3 - exp(4))/3
@@ -1225,8 +1222,7 @@ def _is_linear(expr,symbols):
     Examples
     ========
 
-    >>> from sympy import diff
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.abc import x, y
     >>> symbols = {x,y}
     >>> expr1=x**2 + y + 2
     >>> _is_linear(expr1,symbols)
@@ -1244,7 +1240,6 @@ def _is_linear(expr,symbols):
                         return False
                 except TypeError:
                     return False
-        return True
     except:
         return True
 
