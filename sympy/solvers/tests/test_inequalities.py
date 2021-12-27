@@ -24,7 +24,7 @@ from sympy.solvers.inequalities import (solve_linear_inequalities,reduce_inequal
 from sympy.polys.rootoftools import rootof
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
-from sympy.abc import x, y
+from sympy.abc import x, y, z
 
 from sympy.core.mod import Mod
 

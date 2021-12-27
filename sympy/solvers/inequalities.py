@@ -19,6 +19,8 @@ from sympy.polys.polyutils import _nsort
 from sympy.solvers.solveset import solvify, solveset
 from sympy.utilities.iterables import sift, iterable
 from sympy.utilities.misc import filldedent
+from sympy import expand,diff
+
 
 
 def solve_poly_inequality(poly, rel):
