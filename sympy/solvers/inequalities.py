@@ -1300,6 +1300,3 @@ def solve_linear_inequalities(inequalities,symbols):
     eqs, res1 = _fourier_motzkin(eqs,symbols)
     res2 = _fourier_motzkin_extension(eqs,symbols)
     return {**res1, **res2}
-
-
-
