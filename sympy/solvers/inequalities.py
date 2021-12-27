@@ -1237,7 +1237,7 @@ def _is_linear(expr,symbols):
         vars=symbols
         for x in vars:
             for y in vars:
-                try: 
+                try:
                     if not Eq(diff(expr, x, y), 0):
                         return False
                 except TypeError:
