@@ -1,12 +1,12 @@
-from sympy.core import S, diff, Tuple, Dummy, Mul
+from sympy.core import S, diff, Tuple, Mul
 from sympy.core.basic import Basic, as_Basic
-from sympy.core.function import Function, UndefinedFunction, count_ops
+from sympy.core.function import Function, count_ops
 from sympy.core.numbers import Rational, NumberSymbol, _illegal
 from sympy.core.parameters import global_parameters
 from sympy.core.relational import (Lt, Gt, Eq, Ne, Relational,
     _canonical, _canonical_coeff)
 from sympy.core.sorting import ordered
-from sympy.core.symbol import Symbol, Dummy
+from sympy.core.symbol import Dummy
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
     true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
@@ -1231,6 +1231,8 @@ def piecewise_simplify(expr, **kwargs):
     args = _piecewise_simplify_or_and_eq(args, measure, ratio)
     args = _piecewise_collapse_arguments(args)
     args = _piecewise_simplify_conditions(args, measure, ratio)
+    # Run again in case any conditions turns into simplifiable form
+    args = _piecewise_simplify_and_eq(args)
     # Should be after _piecewise_simplify_conditions as this
     # turns x > y & x < y into x ~= y
     args = _piecewise_simplify_ne(args)
@@ -1247,6 +1249,9 @@ def _piecewise_simplify_and_eq(args):
     -> Piecewise((0, And(Eq(n, 0), Eq(m, 0))), (1, True))
     """
     for i, (expr, cond) in enumerate(args):
+        if isinstance(cond, Or) and cond.has(Eq):
+            # Rewrite to cnf form
+            cond = simplify_logic(cond, form='cnf')
         if isinstance(cond, And):
             eqs, other = sift(cond.args,
                 lambda i: isinstance(i, Eq), binary=True)
@@ -1264,7 +1269,7 @@ def _piecewise_simplify_and_eq(args):
                     eqs[j + 1:] = [ei.subs(*e.args) for ei in eqs[j + 1:]]
                     other = [ei.subs(*e.args) for ei in other]
             cond = And(*(eqs + other))
-            args[i] = args[i].func(expr, cond)
+            args[i] = (expr, cond)
     return args
 
 
@@ -1300,7 +1305,7 @@ def _piecewise_simplify_eq_next_segment(args):
                 # Set the expression for the Not equal section to the same
                 # as the next. These will be merged when creating the new
                 # Piecewise
-                args[i] = args[i].func(args[i+1][0], cond)
+                args[i] = (args[i+1][0], cond)
             else:
                 # Update the expression that we compare against
                 prevexpr = expr
@@ -1402,7 +1407,6 @@ def piecewise_exclusive(expr, *, skip_nan=False, deep=True):
         return make_exclusive(*expr.args)
     else:
         return expr
-    return Piecewise(*args)
 
 
 def _piecewise_simplify_or_and_eq(args, measure, ratio):
@@ -1434,10 +1438,7 @@ def _piecewise_simplify_or_and_eq(args, measure, ratio):
                         for e in eqs:
                             # these blessed lhs objects behave like Symbols
                             # and the rhs are simple replacements for the "symbols"
-                            if isinstance(e.lhs, (Symbol, UndefinedFunction)) and \
-                                isinstance(e.rhs,
-                                    (Rational, NumberSymbol,
-                                    Symbol, UndefinedFunction)):
+                            if _blessed(e):
                                 _prevexpr = _prevexpr.subs(*e.args)
                                 _expr = _expr.subs(*e.args)
                     if _prevexpr == _expr:
@@ -1449,8 +1450,8 @@ def _piecewise_simplify_or_and_eq(args, measure, ratio):
                     anythingchanged = True
                     newcond = Or(*(terms))
                     movecond = Or(*(movedterms))
-                    newargs[i] = newargs[i].func(expr, newcond)
-                    newargs[i+1] = newargs[i+1].func(prevexpr, Or(newargs[i+1].cond, movecond))
+                    newargs[i] = (expr, newcond)
+                    newargs[i+1] = (prevexpr, Or(newargs[i+1].cond, movecond))
         prevexpr = expr
     if anythingchanged:
         oldcost = sum([measure(cond) for expr, cond in args])
@@ -1465,6 +1466,8 @@ def _piecewise_simplify_ne(args):
     See if not equal expressions happens to evaluate to the
     same function as in the next piecewise segment for the not equal condition.
     """
+    if not any(cond.has(Ne) for (expr, cond) in args):
+        return args
     prevexpr = None
     prevcond = None
     for i, (expr, cond) in list(enumerate(args)):
@@ -1484,10 +1487,7 @@ def _piecewise_simplify_ne(args):
                 for ne in neqs:
                     # these blessed lhs objects behave like Symbols
                     # and the rhs are simple replacements for the "symbols"
-                    if isinstance(ne.lhs, (Symbol, UndefinedFunction)) and \
-                        isinstance(ne.rhs,
-                            (Rational, NumberSymbol,
-                            Symbol, UndefinedFunction)):
+                    if _blessed(ne):
                         _prevexpr = _prevexpr.subs(*ne.args)
                         _expr = _expr.subs(*ne.args)
             # Did it evaluate to the same?
@@ -1535,7 +1535,7 @@ def _piecewise_simplify_identical_expressions(args):
             # Directly after
             cumcond = S.false
         else:
-            cumcond = And(*[args[k][1] for k in range(c0 + 1, c1)])
+            cumcond = Or(*[args[k][1] for k in range(c0 + 1, c1)])
         lasttrue = (args[-1][1] == S.true)  # Remember if last condition is True
         # Update condition
         args[c0] = (args[c0][0],
@@ -1581,9 +1581,9 @@ def _piecewise_simplify_conditions(args, measure, ratio):
     prevcond = S.false
     prevnewcond = S.false
     for expr, cond in args:
-        newcond = simplify_logic(cond, dontcare=cummulatedcond)
-        shortcond = shorter(newcond, cond)
         newcond = (cond & ~cummulatedcond).simplify()
+        shortcond = shorter(newcond, cond)
+        newcond = simplify_logic(shortcond, form='cnf', dontcare=cummulatedcond)
         shortcond = shorter(newcond, shortcond)
         if shortcond != False and shortcond not in [prevcond, prevnewcond]:
             newargs.append((expr, shortcond))

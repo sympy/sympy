@@ -1115,16 +1115,9 @@ def test_issue_4517():
 def test_issue_4527():
     k, m = symbols('k m', integer=True)
     assert integrate(sin(k*x)*sin(m*x), (x, 0, pi)).simplify() == \
-        Piecewise((0, Eq(k, 0) | Eq(m, 0)),
-                  (-pi/2, Eq(k, -m) | (Eq(k, 0) & Eq(m, 0))),
-                  (pi/2, Eq(k, m) | (Eq(k, 0) & Eq(m, 0))),
-                  (0, True))
-    # Should be possible to further simplify to:
-    # Piecewise(
-    #    (0, Eq(k, 0) | Eq(m, 0)),
-    #    (-pi/2, Eq(k, -m)),
-    #    (pi/2, Eq(k, m)),
-    #    (0, True))
+        Piecewise((0, Eq(k, 0) | Eq(m, 0) | (Ne(k, m) & Ne(k, -m))),
+                  (-pi/2, Eq(k, -m)),
+                  (pi/2, True))
     assert integrate(sin(k*x)*sin(m*x), (x,)) == Piecewise(
         (0, And(Eq(k, 0), Eq(m, 0))),
         (-x*sin(m*x)**2/2 - x*cos(m*x)**2/2 + sin(m*x)*cos(m*x)/(2*m), Eq(k, -m)),
@@ -1360,7 +1353,7 @@ def test_issue_4492():
     assert simplify(integrate(x**2 * sqrt(5 - x**2), x)).factor(
         deep=True) == Piecewise(
         (I*(2*x**5 - 15*x**3 + 25*x - 25*sqrt(x**2 - 5)*acosh(sqrt(5)*x/5)) /
-            (8*sqrt(x**2 - 5)), (x > sqrt(5)) | (x < -sqrt(5))),
+            (8*sqrt(x**2 - 5)), Abs(x) > sqrt(5)),
         ((2*x**5 - 15*x**3 + 25*x - 25*sqrt(5 - x**2)*asin(sqrt(5)*x/5)) /
             (-8*sqrt(-x**2 + 5)), True))
 

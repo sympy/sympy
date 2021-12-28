@@ -1603,6 +1603,14 @@ def test_piecewise_simplify4():
     assert p.simplify() == Piecewise(
             (1, ((x >= 0) & (x < y)) | ((x >= y) & (y >= 0))),
             (0, x >= y))
+    assert Piecewise((x, Ne(x, 1)), (1, True)).simplify() == x
+
+
+def test_issue_8453():
+    assert Piecewise((1, x>0),(2, x>=0),(3, True)).simplify() == Piecewise(
+        (1, x > 0), (2, Eq(x, 0)), (3, True))
+    assert Piecewise((1, x>0),(2, x>2),(3, True)).simplify() == Piecewise(
+        (1, x > 0), (3, True))
 
 
 def test_issue_17283():
@@ -1621,6 +1629,12 @@ def test_issue_22066():
                     (L, Eq(k, l) | Eq(k, -l)),
                     (0, True))
     assert integral.doit().simplify() == res
+
+
+def test_issue_22148():
+    x, y = symbols('x y', real=True, positive=True)
+    pw = Piecewise((0, (x > 1) & (x - y >= 1)), (3, x - y >= 1), (0, True))
+    assert pw.simplify() == 0
 
 
 @slow

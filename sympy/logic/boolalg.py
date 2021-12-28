@@ -3344,6 +3344,7 @@ def _simplify_patterns_or():
     # Relationals patterns should be in alphabetical order
     # (pattern1, pattern2, simplified)
     # Do not use Ge, Gt
+    # reca = 1/a
     _matchers_or = ((Tuple(Le(b, a), Le(a, b)), S.true),
                     #(Tuple(Le(b, a), Lt(a, b)), S.true),
                     (Tuple(Le(b, a), Ne(a, b)), S.true),
@@ -3358,10 +3359,13 @@ def _simplify_patterns_or():
                     (Tuple(Lt(b, a), Ne(a, b)), Ne(a, b)),
                     (Tuple(Le(a, b), Lt(a, b)), Le(a, b)),
                     #(Tuple(Lt(a, b), Ne(a, b)), Ne(a, b)),
+                    # Reciprocal
+                    # (Tuple(Lt(a, b), Lt(reca, b)), ITE(Eq(b, 1), Ne(a, 1), Or(Lt(reca, b), Lt(a, b)))),
+                    # (Tuple(Le(a, b), Le(reca, b)), ITE(Eq(b, 1), S.true, Or(Le(reca, b), Le(a, b)))),
                     # Min/Max/ITE
                     (Tuple(Le(b, a), Le(c, a)), Ge(a, Min(b, c))),
                     #(Tuple(Ge(b, a), Ge(c, a)), Ge(Min(b, c), a)),
-                    (Tuple(Le(b, a), Lt(c, a)), ITE(b > c, Gt(a, c), Ge(a, b))),
+                    (Tuple(Le(b, a), Lt(c, a)), ITE(b > c, Lt(c, a), Le(b, a))),
                     (Tuple(Lt(b, a), Lt(c, a)), Gt(a, Min(b, c))),
                     #(Tuple(Gt(b, a), Gt(c, a)), Gt(Min(b, c), a)),
                     (Tuple(Le(a, b), Le(a, c)), Le(a, Max(b, c))),
