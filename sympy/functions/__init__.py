@@ -69,7 +69,7 @@ __all__ = [
     'sinh', 'cosh', 'tanh', 'coth', 'sech', 'csch', 'asinh', 'acosh', 'atanh',
     'acoth', 'asech', 'acsch',
 
-    'floor', 'ceiling', 'frac', 'Mod'
+    'floor', 'ceiling', 'frac', 'Mod',
 
     'Piecewise', 'piecewise_fold',
 
