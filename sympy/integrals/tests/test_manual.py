@@ -568,4 +568,3 @@ def test_issue_22757():
     assert manualintegrate(csc(x)**2, y) == y * csc(x)**2
 
     assert manualintegrate(sin(x) + cos(x), y) == y * (sin(x) + cos(x))
-
