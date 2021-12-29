@@ -93,6 +93,23 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(sin(3*x)*sec(x), x) == \
         -3*log(cos(x)) + 2*log(cos(x)**2) - 2*cos(x)**2
 
+def tests_manualintegrate_trigonometry_differential():
+    assert manualintegrate(sin(x), y) == y * sin(x)
+    assert manualintegrate(cos(x), y) == y * cos(x)
+    assert manualintegrate(tan(x), y) == y * tan(x)
+    assert manualintegrate(cot(x), y) == y * cot(x)
+    assert manualintegrate(sec(x), y) == y * sec(x)
+    assert manualintegrate(csc(x), y) == y * csc(x)
+
+    assert manualintegrate(sin(x) * cos(x), y) == y * sin(x) * cos(x)
+    assert manualintegrate(-sec(x) * tan(x), y) == y * -sec(x) * tan(x)
+    assert manualintegrate(csc(x) * cot(x), y) == y * csc(x) * cot(x)
+    assert manualintegrate(sec(x)**2, y) == y * sec(x)**2
+    assert manualintegrate(csc(x)**2, y) == y * csc(x)**2
+
+    assert manualintegrate(sin(x) + cos(x), y) == y * (sin(x) + cos(x))
+
+
 
 @slow
 def test_manualintegrate_trigpowers():
