@@ -93,24 +93,6 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(sin(3*x)*sec(x), x) == \
         -3*log(cos(x)) + 2*log(cos(x)**2) - 2*cos(x)**2
 
-def tests_manualintegrate_trigonometry_differential():
-    assert manualintegrate(sin(x), y) == y * sin(x)
-    assert manualintegrate(cos(x), y) == y * cos(x)
-    assert manualintegrate(tan(x), y) == y * tan(x)
-    assert manualintegrate(cot(x), y) == y * cot(x)
-    assert manualintegrate(sec(x), y) == y * sec(x)
-    assert manualintegrate(csc(x), y) == y * csc(x)
-
-    assert manualintegrate(sin(x) * cos(x), y) == y * sin(x) * cos(x)
-    assert manualintegrate(-sec(x) * tan(x), y) == y * -sec(x) * tan(x)
-    assert manualintegrate(csc(x) * cot(x), y) == y * csc(x) * cot(x)
-    assert manualintegrate(sec(x)**2, y) == y * sec(x)**2
-    assert manualintegrate(csc(x)**2, y) == y * csc(x)**2
-
-    assert manualintegrate(sin(x) + cos(x), y) == y * (sin(x) + cos(x))
-
-
-
 @slow
 def test_manualintegrate_trigpowers():
     assert manualintegrate(sin(x)**2 * cos(x), x) == sin(x)**3 / 3
@@ -570,3 +552,20 @@ def test_quadratic_denom():
     assert manualintegrate(f, x) == 5*log(3*x**2 - 2*x + 8)/6 + 11*sqrt(23)*atan(3*sqrt(23)*(x - Rational(1, 3))/23)/69
     g = 3/(2*x**2 + 3*x + 1)
     assert manualintegrate(g, x) == 3*log(4*x + 2) - 3*log(4*x + 4)
+
+def test_issue_22757():
+    assert manualintegrate(sin(x), y) == y * sin(x)
+    assert manualintegrate(cos(x), y) == y * cos(x)
+    assert manualintegrate(tan(x), y) == y * tan(x)
+    assert manualintegrate(cot(x), y) == y * cot(x)
+    assert manualintegrate(sec(x), y) == y * sec(x)
+    assert manualintegrate(csc(x), y) == y * csc(x)
+
+    assert manualintegrate(sin(x) * cos(x), y) == y * sin(x) * cos(x)
+    assert manualintegrate(-sec(x) * tan(x), y) == y * -sec(x) * tan(x)
+    assert manualintegrate(csc(x) * cot(x), y) == y * csc(x) * cot(x)
+    assert manualintegrate(sec(x)**2, y) == y * sec(x)**2
+    assert manualintegrate(csc(x)**2, y) == y * csc(x)**2
+
+    assert manualintegrate(sin(x) + cos(x), y) == y * (sin(x) + cos(x))
+
