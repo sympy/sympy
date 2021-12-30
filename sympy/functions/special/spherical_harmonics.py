@@ -1,6 +1,7 @@
 from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.numbers import I, pi
+from sympy.core.relational import is_le
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
@@ -36,8 +37,8 @@ class Ynm(Function):
 
     >>> from sympy import Ynm, Symbol, simplify
     >>> from sympy.abc import n,m
-    >>> theta = Symbol("theta")
-    >>> phi = Symbol("phi")
+    >>> theta = Symbol("theta", real=True)
+    >>> phi = Symbol("phi", real=True)
 
     >>> Ynm(n, m, theta, phi)
     Ynm(n, m, theta, phi)
@@ -90,8 +91,8 @@ class Ynm(Function):
 
     >>> from sympy import Ynm, Symbol, diff
     >>> from sympy.abc import n,m
-    >>> theta = Symbol("theta")
-    >>> phi = Symbol("phi")
+    >>> theta = Symbol("theta", real=True)
+    >>> phi = Symbol("phi", real=True)
 
     >>> diff(Ynm(n, m, theta, phi), theta)
     m*cot(theta)*Ynm(n, m, theta, phi) + sqrt((-m + n)*(m + n + 1))*exp(-I*phi)*Ynm(n, m + 1, theta, phi)
@@ -103,8 +104,8 @@ class Ynm(Function):
 
     >>> from sympy import Ynm, Symbol, conjugate
     >>> from sympy.abc import n,m
-    >>> theta = Symbol("theta")
-    >>> phi = Symbol("phi")
+    >>> theta = Symbol("theta", real=True)
+    >>> phi = Symbol("phi", real=True)
 
     >>> conjugate(Ynm(n, m, theta, phi))
     (-1)**(2*m)*exp(-2*I*m*phi)*Ynm(n, m, theta, phi)
@@ -114,8 +115,8 @@ class Ynm(Function):
 
     >>> from sympy import Ynm, Symbol, expand_func
     >>> from sympy.abc import n,m
-    >>> theta = Symbol("theta")
-    >>> phi = Symbol("phi")
+    >>> theta = Symbol("theta", real=True)
+    >>> phi = Symbol("phi", real=True)
 
     >>> expand_func(Ynm(n, m, theta, phi))
     sqrt((2*n + 1)*factorial(-m + n)/factorial(m + n))*exp(I*m*phi)*assoc_legendre(n, m, cos(theta))/(2*sqrt(pi))
@@ -179,10 +180,11 @@ class Ynm(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, m, theta, phi, **kwargs):
-        if n.is_integer and n in S.Naturals:
-            if Abs(m) <= n:
+        if n in S.Naturals:
+            c = is_le(Abs(m), n)
+            if c == True:
                 return self.expand(func=True)
-            else:
+            elif c == False:
                 return S.Zero
 
     def _eval_rewrite_as_sin(self, n, m, theta, phi, **kwargs):
@@ -191,23 +193,21 @@ class Ynm(Function):
     def _eval_rewrite_as_cos(self, n, m, theta, phi, **kwargs):
         # This method can be expensive due to extensive use of simplification!
         from sympy.simplify import simplify, trigsimp
-        if n.is_integer and n in S.Naturals:
-            if Abs(m) <= n:
+        if n in S.Naturals:
+            c = is_le(Abs(m), n)
+            if c == True:
                 term = simplify(self.expand(func=True))
-            else:
+            elif c == False:
                 term = S.Zero
         # We can do this because of the range of theta
         term = term.xreplace({Abs(sin(theta)):sin(theta)})
         return simplify(trigsimp(term))
 
     def _eval_conjugate(self):
+        # TODO: Make sure theta \in R and phi \in R
         n, m, theta, phi = self.args
-        if all(map(lambda x: x.is_Number, (theta, phi))):
-            if theta and phi in S.Reals:
-                return S.NegativeOne**m * self.func(n, -m, theta, phi)
-            else:
-                return None
         return S.NegativeOne**m * self.func(n, -m, theta, phi)
+
 
     def as_real_imag(self, deep=True, **hints):
         # TODO: Handle deep and hints
