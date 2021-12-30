@@ -23,20 +23,6 @@ def test_hyperbola_equation_using_slope():
     assert str(h3.equation(_slope=2)) == str(-(-2*x + y - 3)**2/20 + (x + 2*y - 11)**2/180 - 1)
 
 
-def test_hyperbola_equation_using_branch():
-    from sympy.abc import x, y
-
-    h1 = Hyperbola(Point(1, 0), 3, 2)
-    assert h1.equation() == str(-y**2/4 + (x/3 - 1/3)**2 - 1)
-    assert h1.equation(branch = 'left') == str(x + 3*sqrt(y**2 + 4)/2 - 1)
-    assert h1.equation(branch = 'right') == str(x - 3*sqrt(y**2 + 4)/2 - 1)
-
-    h2 = Hyperbola(Point(0, 0), 4, 1)
-    assert h2.equation() == str((2*x - 2)**2 - (y - 1)**2 - 1)
-    assert h2.equation(branch = 'left') == str(x + sqrt((y - 1)**2 + 1)/2 - 1)
-    assert h2.equation(branch = 'right') == str(x - sqrt((y - 1)**2 + 1)/2 - 1)
-
-
 @slow
 def test_hyperbola_geom():
     x = Symbol('x', real=True)
