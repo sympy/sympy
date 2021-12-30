@@ -915,7 +915,7 @@ class LatexPrinter(Printer):
                 if inv_trig_style == "abbreviated":
                     pass
                 elif inv_trig_style == "full":
-                    func = "arc" + func[1:]
+                    func = ("ar" if func[-1] == "h" else "arc") + func[1:]
                 elif inv_trig_style == "power":
                     func = func[1:]
                     inv_trig_power_case = True
