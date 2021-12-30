@@ -1,8 +1,11 @@
 from sympy.core.numbers import Rational
+from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import cos
 from sympy.geometry.point import Point2D
-from sympy.geometry import (Circle, Hyperbola, Point)
+from sympy.geometry import (Circle, GeometryError, Hyperbola, Point)
+from sympy.testing.pytest import raises
 from sympy.functions.elementary.miscellaneous import Max
 
 
@@ -17,6 +20,27 @@ def test_hyperbola_equation_using_slope():
 
     h3 = Hyperbola(Point(1, 5), 6, 2)
     assert str(h3.equation(_slope=2)) == str(-(-2*x + y - 3)**2/20 + (x + 2*y - 11)**2/180 - 1)
+
+
+def test_construction():
+    h1 = Hyperbola(hradius=2, vradius=1, eccentricity=None)
+    assert h1.eccentricity == sqrt(5)/2
+
+    h2 = Hyperbola(hradius=2, vradius=None, eccentricity=sqrt(5)/2)
+    assert h2.vradius == 1
+
+    h3 = Hyperbola(hradius=None, vradius=1, eccentricity=sqrt(5)/2)
+    assert h3.hradius == 2
+
+    #tests for eccentricity < 1
+    raises(GeometryError, lambda: Hyperbola(Point(3, 1), hradius=3, eccentricity = S(1)/2))
+    raises(GeometryError, lambda: Hyperbola(Point(3, 1), hradius=3, eccentricity = cos(5)))
+    raises(GeometryError, lambda: Hyperbola(Point(3, 1), hradius=3, eccentricity = S.Pi - S(3)))
+    raises(GeometryError, lambda: Hyperbola(Point(3, 1), hradius=3, eccentricity = -3))
+
+    #tests for eccentricity = 1
+    #if hradius, vradius is not defined
+    raises(GeometryError, lambda: Hyperbola(None, None, 1, eccentricity = 1))
 
 
 def test_auxiliary_circle():
