@@ -647,6 +647,10 @@ def test_Sum_doit():
     assert Sum(3 - sqrt(x) , (x, 1, oo)).doit() == -oo
     assert Sum(1/(sqrt(x)) - 3, (x, 1, oo)).doit() == -oo
     assert Sum(x**3 - x**2, (x, 1, oo)).doit() == oo
+    assert Sum(sqrt(x) - 1/x, (x, 1, oo)).doit() == oo
+    assert Sum(sqrt(x) - x, (x, 1, oo)).doit() == -oo
+    assert Sum(3 - sqrt(x) + x, (x, 1, oo)).doit() == oo
+    assert Sum(1/x - 3 + sqrt(x) - x**2, (x, 1, oo)).doit() == -oo
     assert Sum(sqrt(x), (x, 1, 3)).doit() == 1 + sqrt(2) + sqrt(3)
     assert Sum(x**(-1) , (x, 1, n)).doit() == harmonic(n)
     assert Sum(x**(-1) , (x, 1, oo)).doit() == oo

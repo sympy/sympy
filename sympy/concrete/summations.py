@@ -10,7 +10,7 @@ from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, expand
 from sympy.core.mul import Mul
-from sympy.core.numbers import Float
+from sympy.core.numbers import Float, Integer
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
@@ -1153,11 +1153,21 @@ def eval_sum_symbolic(f, limits):
             s = eval_sum_symbolic(with_i, (i, a, b))
             if s:
                 if s in (S.NegativeInfinity, S.Infinity) and (b - a + 1) is S.Infinity:
-                    preferred_component = max(abs(f.subs(i, a)), abs(f.subs(i, S.Infinity)))
-                    if preferred_component > abs(without_i):
-                        return s
+                    preferred_expr = O(f, (i, S.Infinity)).expr
+                    if isinstance(preferred_expr, Integer):
+                        exp = 0
                     else:
-                        return without_i * S.Infinity
+                        exp = preferred_expr.as_base_exp()[1]
+                    for arg in f.args:
+                        if isinstance(arg, Integer):
+                            arg_exp = 0
+                        else:
+                            arg_exp = abs(arg).as_base_exp()[1]
+                        if arg_exp == exp:
+                            term = arg
+                            break
+                    if term is not None:
+                        return Sum(term, (i, a, b)).doit()
                 else:
                     r = without_i*(b - a + 1) + s
                     if r is not S.NaN:
@@ -1168,6 +1178,20 @@ def eval_sum_symbolic(f, limits):
             rsum = eval_sum_symbolic(R, (i, a, b))
 
             if None not in (lsum, rsum):
+                if (lsum is S.Infinity and rsum is S.NegativeInfinity) or \
+                   (lsum is S.NegativeInfinity and rsum is S.Infinity):
+                    preferred_expr = O(f, (i, S.Infinity)).expr
+                    exp = preferred_expr.as_base_exp()[1]
+                    for arg in f.args:
+                        if isinstance(arg, Integer):
+                            arg_exp = 0
+                        else:
+                            arg_exp = abs(arg).as_base_exp()[1]
+                        if arg_exp == exp:
+                            term = arg
+                            break
+                    if term is not None:
+                        return Sum(term, (i, a, b)).doit()
                 r = lsum + rsum
                 if r is not S.NaN:
                     return r
