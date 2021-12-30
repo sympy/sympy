@@ -948,9 +948,9 @@ class Add(Expr, AssocOp):
             c = self.as_content_primitive()[0]
             if not c is S.One:
                 add_term = self.extract_multiplicatively(c)
-                if not add_term is None:
+                if add_term is not None:
                     expr = add_term._eval_subs(old, new)
-                    if not expr is None:
+                    if expr is not None:
                         return c*expr
 
     def removeO(self):
