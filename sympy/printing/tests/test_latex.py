@@ -1937,7 +1937,9 @@ def test_Adjoint():
     assert latex(Adjoint(Transpose(X))) == r'\left(X^{T}\right)^{\dagger}'
     assert latex(Transpose(Adjoint(X))) == r'\left(X^{\dagger}\right)^{T}'
     assert latex(Transpose(Adjoint(X) + Y)) == r'\left(X^{\dagger} + Y\right)^{T}'
-
+    # Issue 20959
+    Mx = MatrixSymbol('M^x', 2, 2)
+    assert latex(Adjoint(Mx)) == r'\left(M^{x}\right)^{\dagger}'
 
 def test_Transpose():
     from sympy.matrices import Transpose, MatPow, HadamardPower
@@ -1950,6 +1952,9 @@ def test_Transpose():
     assert latex(HadamardPower(Transpose(X), 2)) == r'\left(X^{T}\right)^{\circ {2}}'
     assert latex(Transpose(MatPow(X, 2))) == r'\left(X^{2}\right)^{T}'
     assert latex(MatPow(Transpose(X), 2)) == r'\left(X^{T}\right)^{2}'
+    # Issue 20959
+    Mx = MatrixSymbol('M^x', 2, 2)
+    assert latex(Transpose(Mx)) == r'\left(M^{x}\right)^{T}'
 
 
 def test_Hadamard():
@@ -1974,6 +1979,20 @@ def test_Hadamard():
 
     assert latex(HadamardPower(X, n+1)) == \
         r'X^{\circ \left({n + 1}\right)}'
+
+
+def test_MatPow():
+    from sympy.matrices.expressions import MatPow
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
+    assert latex(MatPow(X, 2)) == 'X^{2}'
+    assert latex(MatPow(X*X, 2)) == '\\left(X^{2}\\right)^{2}'
+    assert latex(MatPow(X*Y, 2)) == '\\left(X Y\\right)^{2}'
+    assert latex(MatPow(X + Y, 2)) == '\\left(X + Y\\right)^{2}'
+    assert latex(MatPow(X + X, 2)) == '\\left(2 X\\right)^{2}'
+    # Issue 20959
+    Mx = MatrixSymbol('M^x', 2, 2)
+    assert latex(MatPow(Mx, 2)) == r'\left(M^{x}\right)^{2}'
 
 
 def test_ElementwiseApplyFunction():

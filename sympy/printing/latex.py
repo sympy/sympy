@@ -1686,7 +1686,11 @@ class LatexPrinter(Printer):
         if not isinstance(mat, MatrixSymbol):
             return r"\left(%s\right)^{T}" % self._print(mat)
         else:
-            return "%s^{T}" % self.parenthesize(mat, precedence_traditional(expr), True)
+            s = self.parenthesize(mat, precedence_traditional(expr), True)
+            if '^' in s:
+                return r"\left(%s\right)^{T}" % s
+            else:
+                return "%s^{T}" % s
 
     def _print_Trace(self, expr):
         mat = expr.arg
@@ -1698,7 +1702,11 @@ class LatexPrinter(Printer):
         if not isinstance(mat, MatrixSymbol):
             return r"\left(%s\right)^{\dagger}" % self._print(mat)
         else:
-            return r"%s^{\dagger}" % self._print(mat)
+            s = self.parenthesize(mat, precedence_traditional(expr), True)
+            if '^' in s:
+                return r"\left(%s\right)^{\dagger}" % s
+            else:
+                return r"%s^{\dagger}" % s
 
     def _print_MatMul(self, expr):
         from sympy.matrices.expressions.matmul import MatMul
@@ -1766,7 +1774,11 @@ class LatexPrinter(Printer):
             return "\\left(%s\\right)^{%s}" % (self._print(base),
                                               self._print(exp))
         else:
-            return "%s^{%s}" % (self._print(base), self._print(exp))
+            base_str = self._print(base)
+            if '^' in base_str:
+                return r"\left(%s\right)^{%s}" % (base_str, self._print(exp))
+            else:
+                return "%s^{%s}" % (base_str, self._print(exp))
 
     def _print_MatrixSymbol(self, expr):
         return self._print_Symbol(expr, style=self._settings[
