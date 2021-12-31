@@ -1066,7 +1066,6 @@ class LatexPrinter(Printer):
             return r"%s^{%s}" % (tex, exp)
         else:
             return tex
-    _print_Determinant = _print_Abs
 
     def _print_re(self, expr, exp=None):
         if self._settings['gothic_re_im']:
@@ -1753,6 +1752,16 @@ class LatexPrinter(Printer):
             return '- ' + ' '.join(map(parens, args))
         else:
             return ' '.join(map(parens, args))
+
+    def _print_Determinant(self, expr, exp=None):
+        mat_delim_backup = self._settings['mat_delim']
+        self._settings['mat_delim'] = ''
+        tex = r"\left|{%s}\right|" % self._print(expr.args[0])
+        self._settings['mat_delim'] = mat_delim_backup
+        if exp is not None:
+            return r"%s^{%s}" % (tex, exp)
+        else:
+            return tex
 
     def _print_Mod(self, expr, exp=None):
         if exp is not None:
