@@ -1231,17 +1231,15 @@ def _is_linear(expr,symbols):
     >>> _is_linear(expr2,symbols)
     True
     """
-    try:
-        vars=symbols
-        for x in vars:
-            for y in vars:
-                try:
-                    if not Eq(diff(expr, x, y), 0):
-                        return False
-                except TypeError:
+    vars=symbols
+    for x in vars:
+        for y in vars:
+            try:
+                if not Eq(diff(expr, x, y), 0):
                     return False
-    except:
-        return True
+            except TypeError:
+                return False
+    return True
 
 
 def solve_linear_inequalities(inequalities,symbols):
