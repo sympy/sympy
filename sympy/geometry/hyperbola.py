@@ -8,9 +8,9 @@ Contains
 from sympy.core import S, sympify
 from sympy.core.evalf import N
 from sympy.core.logic import fuzzy_bool
-from sympy.core.numbers import Rational
+from sympy.core.numbers import Rational, oo
 from sympy.core.sorting import ordered
-from sympy.core.symbol import Dummy, _symbol, symbols
+from sympy.core.symbol import Dummy, uniquely_named_symbol, _symbol, symbols
 from sympy.simplify import simplify, trigsimp
 from sympy.functions.elementary.miscellaneous import sqrt, Max
 from sympy.functions.elementary.trigonometric import sec, tan
@@ -141,7 +141,8 @@ class Hyperbola(GeometrySet):
         """Is the other GeometryEntity the same as this hyperbola?"""
         return isinstance(o, Hyperbola) and (self.center == o.center and
                                            self.hradius == o.hradius and
-                                           self.vradius == o.vradius)
+                                           self.vradius == o.vradius and
+                                           self.foci == o.foci)
 
     def __hash__(self):
         return super().__hash__()
@@ -381,19 +382,9 @@ class Hyperbola(GeometrySet):
         """
         c = self.center
         hr, vr = self.hradius, self.vradius
-        if hr == vr:
-        # TODO: Implement Rectangular Hyperbola class for representing standard Rectangular Hyperbola Eq(x*y - c**2, 0)
-            pass
 
-        # calculate focus distance manually, since focus_distance calls this
-        # routine
-        fd = sqrt(self.major**2 + self.minor**2)
-        if hr == self.minor:
-            # foci on the y-axis
-            return (c + Point(0, -fd), c + Point(0, fd))
-        elif hr == self.major:
-            # foci on the x-axis
-            return (c + Point(-fd, 0), c + Point(fd, 0))
+        fd = sqrt(hr**2 + vr**2)
+        return (c + Point(-fd, 0), c + Point(fd, 0))
 
     @property
     def focus_distance(self):
@@ -904,3 +895,92 @@ class Hyperbola(GeometrySet):
             raise TypeError('Entity must be two dimensional, not three dimensional')
         else:
             raise TypeError('Is_tangent not handled for %s' % func_name(o))
+
+    def reflect(self, line):
+        """Override GeometryEntity.reflect since the radius
+        is not a GeometryEntity.
+
+        Examples
+        ========
+
+        >>> from sympy import Hyperbola, Line, Point
+        >>> Hyperbola(Point(3, 4), 1, 3).reflect(Line(Point(0, -4), Point(5, 0)))
+        Traceback (most recent call last):
+        ...
+        NotImplementedError:
+        General Hyperbola is not supported but the equation of the reflected
+        Hyperbola is given by the zeros of: f(x, y) = (9*x/41 + 40*y/41 +
+        37/41)**2 - (40*x/123 - 3*y/41 - 364/123)**2 - 1
+
+        Notes
+        =====
+
+        Until the general hyperbola (with no axis parallel to the x-axis) is
+        supported a NotImplemented error is raised and the equation whose
+        zeros define the rotated hyperbola is given.
+
+        """
+
+        if line.slope in (0, oo):
+            c = self.center
+            c = c.reflect(line)
+            return self.func(c, -self.hradius, self.vradius)
+        else:
+            x, y = [uniquely_named_symbol(
+                name, (self, line), modify=lambda s: '_' + s, real=True)
+                for name in 'xy']
+            expr = self.equation(x, y)
+            p = Point(x, y).reflect(line)
+            result = expr.subs(zip((x, y), p.args
+                                   ), simultaneous=True)
+            raise NotImplementedError(filldedent(
+                'General Hyperbola is not supported but the equation '
+                'of the reflected Hyperbola is given by the zeros of: ' +
+                "f(%s, %s) = %s" % (str(x), str(y), str(result))))
+
+    def rotate(self, angle=0, pt=None):
+        """Rotate ``angle`` radians counterclockwise about Point ``pt``.
+
+        Note: since the general hyperbola is not supported, only rotations that
+        are integer multiples of pi/2 are allowed.
+
+        Examples
+        ========
+
+        >>> from sympy import Hyperbola, pi
+        >>> Hyperbola((1, 0), 2, 1).rotate(pi/2)
+        Hyperbola(Point2D(0, 1), 1, 2)
+        >>> Hyperbola((1, 0), 2, 1).rotate(pi)
+        Hyperbola(Point2D(-1, 0), 2, 1)
+        """
+        if self.hradius == self.vradius:
+            # TODO : would require Rectangular Hyperbola Class or a Conjugate Hyperbola Class
+            pass
+        if (angle/S.Pi).is_integer:
+            return super().rotate(angle, pt)
+        if (2*angle/S.Pi).is_integer:
+            return self.func(self.center.rotate(angle, pt), self.vradius, self.hradius)
+        raise NotImplementedError('Only rotations of pi/2 are currently supported for Hyperbola.')
+
+    def scale(self, x=1, y=1, pt=None):
+        """Override GeometryEntity.scale since it is the major and minor
+        axes which must be scaled and they are not GeometryEntities.
+
+        Examples
+        ========
+
+        >>> from sympy import Hyperbola, Point
+        >>> Hyperbola((0, 0), 2, 1).scale(2, 4)
+        Hyperbola(Point2D(0, 0), 4, 4)
+        >>> Hyperbola((0, 0), 2, 1).scale(2)
+        Hyperbola(Point2D(0, 0), 4, 1)
+        >>> Hyperbola((0, 0), 2, 1).scale(2, 3, Point(1, 1))
+        Hyperbola(Point2D(-1, -2), 4, 3)
+        """
+        c = self.center
+        if pt:
+            pt = Point(pt, dim=2)
+            return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
+        h = self.hradius
+        v = self.vradius
+        return self.func(c.scale(x, y), hradius=h*x, vradius=v*y)
