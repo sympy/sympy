@@ -1940,6 +1940,16 @@ def test_Tr():
     assert latex(t) == r'\operatorname{tr}\left(A B\right)'
 
 
+def test_Determinant():
+    from sympy.matrices import Determinant, Inverse
+    m = Matrix(((1, 2), (3, 4)))
+    assert latex(Determinant(m)) == '\\left|{\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}}\\right|'
+    assert latex(Determinant(Inverse(m))) == \
+    '\\left|{\\left(\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right)^{-1}}\\right|'
+    X = MatrixSymbol('X', 3, 3)
+    assert latex(Determinant(X)) == '\\left|{X}\\right|'
+
+
 def test_Adjoint():
     from sympy.matrices import Adjoint, Inverse, Transpose
     X = MatrixSymbol('X', 2, 2)
