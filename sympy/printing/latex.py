@@ -1683,7 +1683,7 @@ class LatexPrinter(Printer):
     def _print_Transpose(self, expr):
         mat = expr.arg
         from sympy.matrices import MatrixSymbol
-        if not isinstance(mat, MatrixSymbol):
+        if not isinstance(mat, MatrixSymbol) and mat.is_MatrixExpr:
             return r"\left(%s\right)^{T}" % self._print(mat)
         else:
             s = self.parenthesize(mat, precedence_traditional(expr), True)
@@ -1699,7 +1699,7 @@ class LatexPrinter(Printer):
     def _print_Adjoint(self, expr):
         mat = expr.arg
         from sympy.matrices import MatrixSymbol
-        if not isinstance(mat, MatrixSymbol):
+        if not isinstance(mat, MatrixSymbol) and mat.is_MatrixExpr:
             return r"\left(%s\right)^{\dagger}" % self._print(mat)
         else:
             s = self.parenthesize(mat, precedence_traditional(expr), True)

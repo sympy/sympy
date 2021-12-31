@@ -1937,9 +1937,14 @@ def test_Adjoint():
     assert latex(Adjoint(Transpose(X))) == r'\left(X^{T}\right)^{\dagger}'
     assert latex(Transpose(Adjoint(X))) == r'\left(X^{\dagger}\right)^{T}'
     assert latex(Transpose(Adjoint(X) + Y)) == r'\left(X^{\dagger} + Y\right)^{T}'
+    m = Matrix(((1, 2), (3, 4)))
+    assert latex(Adjoint(m)) == '\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right]^{\\dagger}'
+    assert latex(Adjoint(m+X)) == \
+        '\\left(\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] + X\\right)^{\\dagger}'
     # Issue 20959
     Mx = MatrixSymbol('M^x', 2, 2)
     assert latex(Adjoint(Mx)) == r'\left(M^{x}\right)^{\dagger}'
+
 
 def test_Transpose():
     from sympy.matrices import Transpose, MatPow, HadamardPower
@@ -1952,6 +1957,10 @@ def test_Transpose():
     assert latex(HadamardPower(Transpose(X), 2)) == r'\left(X^{T}\right)^{\circ {2}}'
     assert latex(Transpose(MatPow(X, 2))) == r'\left(X^{2}\right)^{T}'
     assert latex(MatPow(Transpose(X), 2)) == r'\left(X^{T}\right)^{2}'
+    m = Matrix(((1, 2), (3, 4)))
+    assert latex(Transpose(m)) == '\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right]^{T}'
+    assert latex(Transpose(m+X)) == \
+        '\\left(\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] + X\\right)^{T}'
     # Issue 20959
     Mx = MatrixSymbol('M^x', 2, 2)
     assert latex(Transpose(Mx)) == r'\left(M^{x}\right)^{T}'

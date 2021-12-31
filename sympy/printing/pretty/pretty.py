@@ -841,7 +841,7 @@ class PrettyPrinter(Printer):
     def _print_Transpose(self, expr):
         pform = self._print(expr.arg)
         from sympy.matrices import MatrixSymbol
-        if not isinstance(expr.arg, MatrixSymbol):
+        if not isinstance(expr.arg, MatrixSymbol) and expr.arg.is_MatrixExpr:
             pform = prettyForm(*pform.parens())
         pform = pform**(prettyForm('T'))
         return pform
@@ -853,7 +853,7 @@ class PrettyPrinter(Printer):
         else:
             dag = prettyForm('+')
         from sympy.matrices import MatrixSymbol
-        if not isinstance(expr.arg, MatrixSymbol):
+        if not isinstance(expr.arg, MatrixSymbol) and expr.arg.is_MatrixExpr:
             pform = prettyForm(*pform.parens())
         pform = pform**dag
         return pform

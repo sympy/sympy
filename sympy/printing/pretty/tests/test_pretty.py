@@ -3650,6 +3650,18 @@ def test_Adjoint():
         "    †\n⎛ T⎞ \n⎝X ⎠ "
     assert upretty(Transpose(Adjoint(X))) == \
         "    T\n⎛ †⎞ \n⎝X ⎠ "
+    m = Matrix(((1, 2), (3, 4)))
+    assert upretty(Adjoint(m)) == \
+        '      †\n'\
+        '⎡1  2⎤ \n'\
+        '⎢    ⎥ \n'\
+        '⎣3  4⎦ '
+    assert upretty(Adjoint(m+X)) == \
+        '            †\n'\
+        '⎛⎡1  2⎤    ⎞ \n'\
+        '⎜⎢    ⎥ + X⎟ \n'\
+        '⎝⎣3  4⎦    ⎠ '
+
 
 def test_pretty_Trace_issue_9044():
     X = Matrix([[1, 2], [3, 4]])
