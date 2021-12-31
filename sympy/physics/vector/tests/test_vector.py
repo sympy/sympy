@@ -1,4 +1,7 @@
-from sympy import symbols, pi, sin, cos, Float, ImmutableMatrix as Matrix
+from sympy.core.numbers import (Float, pi)
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.immutable import ImmutableDenseMatrix as Matrix
 from sympy.physics.vector import ReferenceFrame, Vector, dynamicsymbols, dot
 from sympy.abc import x, y, z
 from sympy.testing.pytest import raises

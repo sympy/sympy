@@ -1,4 +1,7 @@
-from sympy import Basic, Expr, S, sympify
+from sympy.core.basic import Basic
+from sympy.core.expr import Expr
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
 from sympy.matrices.common import NonSquareMatrixError
 
 

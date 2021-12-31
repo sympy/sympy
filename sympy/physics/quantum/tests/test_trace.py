@@ -1,5 +1,7 @@
-from sympy import symbols, Matrix, Tuple
-from sympy.core.trace import Tr
+from sympy.core.containers import Tuple
+from sympy.core.symbol import symbols
+from sympy.matrices.dense import Matrix
+from sympy.physics.quantum.trace import Tr
 from sympy.testing.pytest import raises
 
 

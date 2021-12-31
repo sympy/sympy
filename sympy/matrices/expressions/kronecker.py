@@ -295,7 +295,7 @@ def matrix_kronecker_product(*matrices):
     References
     ==========
 
-    [1] https://en.wikipedia.org/wiki/Kronecker_product
+    .. [1] https://en.wikipedia.org/wiki/Kronecker_product
     """
     # Make sure we have a sequence of Matrices
     if not all(isinstance(m, MatrixBase) for m in matrices):

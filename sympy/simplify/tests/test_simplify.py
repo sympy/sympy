@@ -1,18 +1,36 @@
-from sympy import (
-    Abs, acos, Add, asin, atan, Basic, binomial, besselsimp,
-    cos, cosh, count_ops, csch, diff, E,
-    Eq, erf, exp, exp_polar, expand, expand_multinomial, factor,
-    factorial, Float, Function, gamma, GoldenRatio, hyper,
-    hypersimp, I, Integral, integrate, KroneckerDelta, log, logcombine, Lt,
-    Matrix, MatrixSymbol, Mul, nsimplify, oo, pi, Piecewise, Poly, posify, rad,
-    Rational, S, separatevars, signsimp, simplify, sign, sin,
-    sinc, sinh, solve, sqrt, Sum, Symbol, symbols, sympify, tan,
-    zoo, And, Gt, Ge, Le, Or, eye, Derivative)
-from sympy.core.mul import _keep_coeff
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.basic import Basic
 from sympy.core.expr import unchanged
-from sympy.simplify.simplify import nthroot, inversecombine
-from sympy.testing.pytest import XFAIL, slow, _both_exp_pow
+from sympy.core.function import (count_ops, diff, expand, expand_multinomial, Function, Derivative)
+from sympy.core.mul import Mul, _keep_coeff
+from sympy.core import GoldenRatio
+from sympy.core.numbers import (E, Float, I, oo, pi, Rational, zoo)
+from sympy.core.relational import (Eq, Lt, Gt, Ge, Le)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.complexes import (Abs, sign)
+from sympy.functions.elementary.exponential import (exp, exp_polar, log)
+from sympy.functions.elementary.hyperbolic import (cosh, csch, sinh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan)
+from sympy.functions.special.error_functions import erf
+from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.hyper import hyper
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.geometry.polygon import rad
+from sympy.integrals.integrals import (Integral, integrate)
+from sympy.logic.boolalg import (And, Or)
+from sympy.matrices.dense import (Matrix, eye)
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.polys.polytools import (factor, Poly)
+from sympy.simplify.simplify import (besselsimp, hypersimp, inversecombine, logcombine, nsimplify, nthroot, posify, separatevars, signsimp, simplify)
+from sympy.solvers.solvers import solve
 
+from sympy.testing.pytest import XFAIL, slow, _both_exp_pow
 from sympy.abc import x, y, z, t, a, b, c, d, e, f, g, h, i, n
 
 
@@ -606,7 +624,8 @@ def test_signsimp():
 
 
 def test_besselsimp():
-    from sympy import besselj, besseli, cosine_transform, bessely
+    from sympy.functions.special.bessel import (besseli, besselj, bessely)
+    from sympy.integrals.transforms import cosine_transform
     assert besselsimp(exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))) == \
         besselj(y, z)
     assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \
@@ -700,7 +719,8 @@ def test_inequality_no_auto_simplify():
 
 
 def test_issue_9398():
-    from sympy import Number, cancel
+    from sympy.core.numbers import Number
+    from sympy.polys.polytools import cancel
     assert cancel(1e-14) != 0
     assert cancel(1e-14*I) != 0
 
@@ -893,10 +913,13 @@ def test_issue_21869():
     assert expr.simplify() == S.false
 
 
-def test_issue_7971():
+def test_issue_7971_21740():
     z = Integral(x, (x, 1, 1))
     assert z != 0
     assert simplify(z) is S.Zero
+    assert simplify(S.Zero) is S.Zero
+    z = simplify(Float(0))
+    assert z is not S.Zero and z == 0
 
 
 @slow

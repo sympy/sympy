@@ -1,9 +1,17 @@
 import os
 from tempfile import TemporaryDirectory
 
-from sympy import (
-    pi, sin, cos, Symbol, Integral, Sum, sqrt, log, exp, Ne, oo, LambertW, I,
-    meijerg, exp_polar, Piecewise, And, real_root)
+from sympy.concrete.summations import Sum
+from sympy.core.numbers import (I, oo, pi)
+from sympy.core.relational import Ne
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, log)
+from sympy.functions.elementary.miscellaneous import (real_root, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.hyper import meijerg
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import And
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
 from sympy.external import import_module
@@ -575,7 +583,7 @@ def test_issue_11764():
 
     x = Symbol('x')
     p = plot_parametric(cos(x), sin(x), (x, 0, 2 * pi), aspect_ratio=(1,1), show=False)
-    p.aspect_ratio == (1, 1)
+    assert p.aspect_ratio == (1, 1)
     # Random number of segments, probably more than 100, but we want to see
     # that there are segments generated, as opposed to when the bug was present
     assert len(p[0].get_data()[0]) >= 30

@@ -2,7 +2,11 @@
 
 from functools import reduce
 
-from sympy import Symbol, Tuple, Mul, sympify, default_sort_key
+from sympy.core.sorting import default_sort_key
+from sympy.core.containers import Tuple
+from sympy.core.mul import Mul
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
 from sympy.utilities import numbered_symbols
 from sympy.physics.quantum.gate import Gate
 
@@ -402,7 +406,7 @@ def random_reduce(circuit, gate_ids, seed=None):
         given by the list
 
     """
-    from sympy.testing.randtest import _randrange
+    from sympy.core.random import _randrange
 
     if not gate_ids:
         return circuit
@@ -456,7 +460,7 @@ def random_insert(circuit, choices, seed=None):
     Indices for insertion should be [0, n] if n is the length of the
     circuit.
     """
-    from sympy.testing.randtest import _randrange
+    from sympy.core.random import _randrange
 
     if not choices:
         return circuit

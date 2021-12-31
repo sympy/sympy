@@ -25,13 +25,16 @@ jobs:
         with:
           python-version: '3.9'
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath flake8
+      - run: pip install mpmath flake8 mypy
 
       - name: Basic code quality tests
         run: bin/test quality
 
       - name: Run flake8 on the sympy package
         run: flake8 sympy
+
+      - name: Run mypy on the sympy package
+        run: mypy sympy
 
       - name: Detect invalid escapes like '\e'
         run: python -We:invalid -We::SyntaxWarning -m compileall -f -q sympy/
@@ -190,7 +193,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.10.0-rc.1 - 3.10', 'pypy-3.7']
+        python-version: ['3.7', '3.8', '3.10.0-rc.1 - 3.10', 'pypy-3.7']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -208,7 +211,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.10.0-rc.1 - 3.10', 'pypy-3.7']
+        python-version: ['3.7', '3.8', '3.10.0-rc.1 - 3.10', 'pypy-3.7']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -226,7 +229,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.10.0-rc.1 - 3.10', 'pypy-3.7']
+        python-version: ['3.7', '3.8', '3.10.0-rc.1 - 3.10', 'pypy-3.7']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2

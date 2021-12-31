@@ -1,11 +1,21 @@
-from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan, asin, acos,
-                   Symbol, Integral, integrate, pi, Dummy, Derivative,
-                   diff, I, sqrt, erf, Piecewise, Ne, symbols, Rational,
-                   And, Heaviside, S, asinh, acosh, atanh, acoth, expand,
-                   Function, jacobi, gegenbauer, chebyshevt, chebyshevu,
-                   legendre, hermite, laguerre, assoc_laguerre, uppergamma, li,
-                   Ei, Ci, Si, Chi, Shi, fresnels, fresnelc, polylog, erfi,
-                   sinh, cosh, elliptic_f, elliptic_e, asec, acsc, acot)
+from sympy.core.function import (Derivative, Function, diff, expand)
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.relational import Ne
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (acosh, acoth, asinh, atanh, cosh, sinh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, csc, sec, sin, tan)
+from sympy.functions.special.delta_functions import Heaviside
+from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f)
+from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, erf, erfi, fresnelc, fresnels, li)
+from sympy.functions.special.gamma_functions import uppergamma
+from sympy.functions.special.polynomials import (assoc_laguerre, chebyshevt, chebyshevu, gegenbauer, hermite, jacobi, laguerre, legendre)
+from sympy.functions.special.zeta_functions import polylog
+from sympy.integrals.integrals import (Integral, integrate)
+from sympy.logic.boolalg import And
 from sympy.integrals.manualintegrate import (manualintegrate, find_substitutions,
     _parts_rule, integral_steps, contains_dont_know, manual_subs)
 from sympy.testing.pytest import raises, slow

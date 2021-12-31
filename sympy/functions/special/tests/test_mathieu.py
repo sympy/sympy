@@ -1,5 +1,8 @@
-from sympy import (sqrt, sin, cos, diff, conjugate,
-                   mathieus, mathieuc, mathieusprime, mathieucprime)
+from sympy.core.function import diff
+from sympy.functions.elementary.complexes import conjugate
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.mathieu_functions import (mathieuc, mathieucprime, mathieus, mathieusprime)
 
 from sympy.abc import a, q, z
 

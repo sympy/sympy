@@ -2,16 +2,40 @@ from __future__ import print_function, division
 import random
 
 import itertools
-from typing import Sequence as tSequence, Union as tUnion, List as tList, Tuple as tTuple
+from typing import (Sequence as tSequence, Union as tUnion, List as tList,
+        Tuple as tTuple, Set as tSet)
 
-from sympy import (Matrix, MatrixSymbol, S, Indexed, Basic, Tuple, Range,
-                   Set, And, Eq, FiniteSet, ImmutableMatrix, Integer, igcd,
-                   Lambda, Mul, Dummy, IndexedBase, Add, Interval, oo,
-                   linsolve, eye, Or, Not, Intersection, factorial, Contains,
-                   Union, Expr, Function, exp, cacheit, sqrt, pi, gamma,
-                   Ge, Piecewise, Symbol, NonSquareMatrixError, EmptySet,
-                   ceiling, MatrixBase, ConditionSet, ones, zeros, Identity,
-                   Rational, Lt, Gt, Le, Ne, BlockMatrix, Sum)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import (Function, Lambda)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Integer, Rational, igcd, oo, pi)
+from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.integers import ceiling
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.gamma_functions import gamma
+from sympy.logic.boolalg import (And, Not, Or)
+from sympy.matrices.common import NonSquareMatrixError
+from sympy.matrices.dense import (Matrix, eye, ones, zeros)
+from sympy.matrices.expressions.blockmatrix import BlockMatrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.special import Identity
+from sympy.matrices.immutable import ImmutableMatrix
+from sympy.sets.conditionset import ConditionSet
+from sympy.sets.contains import Contains
+from sympy.sets.fancysets import Range
+from sympy.sets.sets import (FiniteSet, Intersection, Interval, Set, Union)
+from sympy.solvers.solveset import linsolve
+from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -28,6 +52,8 @@ from sympy.stats.frv_types import Bernoulli, BernoulliDistribution, FiniteRV
 from sympy.stats.drv_types import Poisson, PoissonDistribution
 from sympy.stats.crv_types import Normal, NormalDistribution, Gamma, GammaDistribution
 from sympy.core.sympify import _sympify, sympify
+
+EmptySet = S.EmptySet
 
 __all__ = [
     'StochasticProcess',
@@ -82,26 +108,28 @@ def _state_converter(itr: tSequence) -> tUnion[Tuple, Range]:
     Helper function for converting list/tuple/set/Range/Tuple/FiniteSet
     to tuple/Range.
     """
+    itr_ret: tUnion[Tuple, Range]
+
     if isinstance(itr, (Tuple, set, FiniteSet)):
-        itr = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
+        itr_ret = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
 
     elif isinstance(itr, (list, tuple)):
         # check if states are unique
         if len(set(itr)) != len(itr):
             raise ValueError('The state space must have unique elements.')
-        itr = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
+        itr_ret = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
 
     elif isinstance(itr, Range):
-        # the only ordered set in sympy I know of
+        # the only ordered set in SymPy I know of
         # try to convert to tuple
         try:
-            itr = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
+            itr_ret = Tuple(*(sympify(i) if isinstance(i, str) else i for i in itr))
         except (TypeError, ValueError):
-            pass
+            itr_ret = itr
 
     else:
         raise TypeError("%s is not an instance of list/tuple/set/Range/Tuple/FiniteSet." % (itr))
-    return itr
+    return itr_ret
 
 def _sym_sympify(arg):
     """
@@ -112,7 +140,7 @@ def _sym_sympify(arg):
     Parameters
     =========
 
-    arg: The parameter to be converted to be used in Sympy.
+    arg: The parameter to be converted to be used in SymPy.
 
     Returns
     =======
@@ -168,6 +196,7 @@ class StochasticProcess(Basic):
     @property
     def state_space(self) -> tUnion[FiniteSet, Range]:
         if not isinstance(self.args[1], (FiniteSet, Range)):
+            assert isinstance(self.args[1], Tuple)
             return FiniteSet(*self.args[1])
         return self.args[1]
 
@@ -347,10 +376,10 @@ class MarkovProcess(StochasticProcess):
         """
         The number of states in the Markov Chain.
         """
-        return _sympify(self.args[2].shape[0])
+        return _sympify(self.args[2].shape[0]) # type: ignore
 
     @property
-    def _state_index(self) -> Range:
+    def _state_index(self):
         """
         Returns state index as Range.
         """
@@ -910,12 +939,11 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
     index_set = S.Naturals0
 
     def __new__(cls, sym, state_space=None, trans_probs=None):
-        # type: (Basic, tUnion[str, Symbol], tSequence, tUnion[MatrixBase, MatrixSymbol]) -> DiscreteMarkovChain
         sym = _symbol_converter(sym)
 
         state_space, trans_probs = MarkovProcess._sanity_checks(state_space, trans_probs)
 
-        obj = Basic.__new__(cls, sym, state_space, trans_probs)
+        obj = Basic.__new__(cls, sym, state_space, trans_probs) # type: ignore
         indices = dict()
         if isinstance(obj.number_of_states, Integer):
             for index, state in enumerate(obj._state_index):
@@ -924,7 +952,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return obj
 
     @property
-    def transition_probabilities(self) -> tUnion[MatrixBase, MatrixSymbol]:
+    def transition_probabilities(self):
         """
         Transition probabilities of discrete Markov chain,
         either an instance of Matrix or MatrixSymbol.
@@ -1024,7 +1052,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             # end recurrent check
 
             # begin breadth-first search
-            non_tree_edge_values = set()
+            non_tree_edge_values: tSet[int] = set()
             visited = {class_[0]}
             newly_visited = {class_[0]}
             level = {class_[0]: 0}
@@ -1221,7 +1249,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
         # numeric matrix version
         a = Matrix(trans_probs - Identity(n)).T
-        a[0, 0:n] = ones(1, n)
+        a[0, 0:n] = ones(1, n) # type: ignore
         b = zeros(n, 1)
         b[0, 0] = 1
 
@@ -1331,7 +1359,7 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
                 t_states += states
 
         states = r_states + t_states
-        indexes = [self.index_of[state] for state in states]
+        indexes = [self.index_of[state] for state in states] # type: ignore
 
         A = Matrix(len(r_states), len(r_states),
                    lambda i, j: trans_probs[indexes[i], indexes[j]])
@@ -1875,7 +1903,7 @@ def get_timerv_swaps(expr, condition):
     Parameters
     ==========
 
-    expr: Sympy Expression
+    expr: SymPy Expression
         Expression containing Random Indexed Symbols with variable time stamps
     condition: Relational/Boolean Expression
         Expression containing time bounds of variable time stamps in expr

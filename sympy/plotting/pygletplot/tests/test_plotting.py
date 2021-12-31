@@ -9,7 +9,9 @@ if not pyglet_gl or not pyglet_window:
     disabled = True
 
 
-from sympy import symbols, sin, cos, log
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.trigonometric import (cos, sin)
 x, y, z = symbols('x, y, z')
 
 
@@ -81,6 +83,6 @@ def _test_plot_log():
 def test_plot_integral():
     # Make sure it doesn't treat x as an independent variable
     from sympy.plotting.pygletplot import PygletPlot
-    from sympy import Integral
+    from sympy.integrals.integrals import Integral
     p = PygletPlot(Integral(z*x, (x, 1, z), (z, 1, y)), visible=False)
     p.wait_for_calculations()

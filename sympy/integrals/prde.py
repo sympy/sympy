@@ -555,7 +555,7 @@ def param_poly_rischDE(a, b, q, n, DE):
 
         else:
             # Liouvillian cases
-            if DE.case == 'primitive' or DE.case == 'exp':
+            if DE.case in ('primitive', 'exp'):
                 return prde_cancel_liouvillian(b, q, n, DE)
             else:
                 raise NotImplementedError("non-linear and hypertangent "

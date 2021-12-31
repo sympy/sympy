@@ -1,7 +1,7 @@
 """OO layer for several polynomial representations. """
 
 
-from sympy import oo
+from sympy.core.numbers import oo
 from sympy.core.sympify import CantSympify
 from sympy.polys.polyerrors import CoercionFailed, NotReversible, NotInvertible
 from sympy.polys.polyutils import PicklableWithSlots

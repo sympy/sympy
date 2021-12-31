@@ -10,10 +10,17 @@ from sympy.polys.polyerrors import (
     PolynomialError,
 )
 
-from sympy import (
-    S, sqrt, I, Rational, Float, Lambda, log, exp, tan, Function, Eq,
-    solve, legendre_poly, Integral
-)
+from sympy.core.function import (Function, Lambda)
+from sympy.core.numbers import (Float, I, Rational)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import tan
+from sympy.integrals.integrals import Integral
+from sympy.polys.orthopolys import legendre_poly
+from sympy.solvers.solvers import solve
+
 
 from sympy.testing.pytest import raises, slow
 from sympy.core.expr import unchanged
@@ -153,8 +160,8 @@ def test_CRootOf___eval_Eq__():
             assert Eq(r, s) is S.true
     eq = x**3 + x + 1
     sol = solve(eq)
-    assert [Eq(rootof(eq, i), j) for i in range(3) for j in sol] == [
-        False, False, True, False, True, False, True, False, False]
+    assert [Eq(rootof(eq, i), j) for i in range(3) for j in sol
+        ].count(True) == 3
     assert Eq(rootof(eq, 0), 1 + S.ImaginaryUnit) == False
 
 
