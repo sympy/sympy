@@ -10,16 +10,25 @@ from sympy.testing.pytest import raises, slow
 from sympy.functions.elementary.miscellaneous import Max
 
 
-def test_hyperbola_equation_using_slope():
+def test_hyperbola_equation_using_slope_and_branch():
     from sympy.abc import x, y
 
     h1 = Hyperbola(Point(1, 0), 3, 2)
+    assert str(h1.equation()) == str((x/3 - Rational(1, 3))**2 - y**2/4 - 1)
+    assert str(h1.equation(branch='left')) == str(x + 3*sqrt(y**2 + 4)/2 - 1)
+    assert str(h1.equation(branch='right')) == str(x - 3*sqrt(y**2 + 4)/2 - 1)
     assert str(h1.equation(_slope=1)) == str(-(-x + y + 1)**2/8 + (x + y - 1)**2/18 - 1)
 
     h2 = Hyperbola(Point(0, 0), 4, 1)
+    assert str(h2.equation()) == str(x**2/16 - y**2 - 1)
+    assert str(h2.equation(branch='left')) == str(x + 4*sqrt(y**2 + 1))
+    assert str(h2.equation(branch='right')) == str(x - 4*sqrt(y**2 + 1))
     assert str(h2.equation(_slope=1)) == str(-(-x + y)**2/2 + (x + y)**2/32 - 1)
 
     h3 = Hyperbola(Point(1, 5), 6, 2)
+    assert str(h3.equation()) == str((x/6 - Rational(1, 6))**2 - (y/2 - Rational(5, 2))**2 - 1)
+    assert str(h3.equation(branch='left')) == str(x + 3*sqrt((y - 5)**2 + 4) - 1)
+    assert str(h3.equation(branch='right')) == str(x - 3*sqrt((y - 5)**2 + 4) - 1)
     assert str(h3.equation(_slope=2)) == str(-(-2*x + y - 3)**2/20 + (x + 2*y - 11)**2/180 - 1)
 
 
@@ -27,9 +36,13 @@ def test_hyperbola_equation_using_slope():
 def test_hyperbola_geom():
     x = Symbol('x', real=True)
     y = Symbol('y', real=True)
+    t = Symbol('t', real=True)
+    a = Symbol('a', real=True)
+    b = Symbol('b', real=True)
     half = S.Half
     p1 = Point(0, 0)
     p2 = Point(1, 1)
+    p3 = Point(1, 0)
     h1 = Hyperbola(p1, 1, 1)
     h2 = Hyperbola(p2, half, 1)
     c1 = Circle(p1, 1)
@@ -39,14 +52,52 @@ def test_hyperbola_geom():
     raises(ValueError, lambda: Ellipse())
 
     # Basic Stuff
-    assert Ellipse(None, 1, 1).center == Point(0, 0)
     assert h1 != c1
     assert h1 != h2
     assert h1 != l1
+    assert p1 not in h1
+    assert p3 in h1
+    assert h1 in h1
+    assert h2 in h2
 
+    # Center
+    assert Hyperbola(None, 1, 1).center == Point(0, 0)
+    assert h1.center == p1
+    assert h2.center == p2
+
+    # Hyperbola with major/minor axis as 0
     assert Hyperbola((1, 1), 0, 0) == Point(1, 1)
     assert Hyperbola((1, 1), 1, 0) == Segment(Point(0, 1), Point(2, 1))
     assert Hyperbola((1, 1), 0, 1) == Segment(Point(1, 0), Point(1, 2))
+
+    # Minor and Major axis
+    assert h1.major == 1
+    assert h2.major == 1
+    assert Hyperbola(p1, a, b).major == a
+    assert Hyperbola(p1, a, b).minor == b
+    assert Hyperbola(p2, t, t + 1).major == t + 1
+    assert Hyperbola(p2, t, t + 1).minor == t
+
+    # Foci and Focal distance
+    f1, f2 = Point2D(-2*sqrt(5), 0), Point2D(2*sqrt(5), 0)
+    h4 = Hyperbola(Point(0, 0), 4, 2)
+    assert h4.focus_distance == 2*sqrt(5)
+    assert h4.foci in [(f1, f2), (f2, f1)]
+
+    # Checking Formulae for Properties
+    major = 3
+    minor = 1
+    h5 = Hyperbola(p2, minor, major)
+    assert h5.focus_distance == sqrt(major**2 + minor**2)
+    ecc = h5.focus_distance / major
+    assert h5.eccentricity == ecc
+    assert h5.semilatus_rectum == major*(-1 + ecc ** 2)
+    # independent of orientation
+    h5 = Hyperbola(p2, major, minor)
+    assert h5.focus_distance == sqrt(major**2 + minor**2)
+    ecc = h5.focus_distance / major
+    assert h5.eccentricity == ecc
+    assert h5.semilatus_rectum == major*(-1 + ecc ** 2)
 
     # Encloses
     assert h1.encloses(Segment(Point(-0.5, -0.5), Point(0.5, 0.5))) is True
@@ -61,11 +112,6 @@ def test_hyperbola_geom():
     assert h2.arbitrary_point() in h2
     raises(ValueError, lambda: Hyperbola(Point(x, y), 1, 1).arbitrary_point(parameter='x'))
 
-    # Foci
-    f1, f2 = Point2D(-2*sqrt(5), 0), Point2D(2*sqrt(5), 0)
-    h4 = Hyperbola(Point(0, 0), 4, 2)
-    assert h4.foci in [(f1, f2), (f2, f1)]
-
     # Tangents
     p1_2 = p2 + Point(half, 0)
     p1_3 = p2 + Point(0, 1)
@@ -73,21 +119,6 @@ def test_hyperbola_geom():
     assert h2.is_tangent(Line(p1_3, p2 + Point(half, 1))) is False
     # Checking if asymptote is tangent
     assert h1.is_tangent(Line(Point(0, 0), Point(1, 1))) is False
-
-    # Properties
-    major = 3
-    minor = 1
-    h5 = Hyperbola(p2, minor, major)
-    assert h5.focus_distance == sqrt(major**2 + minor**2)
-    ecc = h5.focus_distance / major
-    assert h5.eccentricity == ecc
-    assert h5.semilatus_rectum == major*(-1 + ecc ** 2)
-    # independent of orientation
-    h5 = Hyperbola(p2, major, minor)
-    assert h5.focus_distance == sqrt(major**2 + minor**2)
-    ecc = h5.focus_distance / major
-    assert h5.eccentricity == ecc
-    assert h5.semilatus_rectum == major*(-1 + ecc ** 2)
 
     # Intersection
     l1 = Line(Point(1, -5), Point(1, 5))

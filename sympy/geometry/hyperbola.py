@@ -86,26 +86,6 @@ class Hyperbola(GeometrySet):
 
     """
 
-    def __contains__(self, o):
-        if isinstance(o, Point):
-            x = Dummy('x', real=True)
-            y = Dummy('y', real=True)
-
-            res = self.equation(x, y).subs({x: o.x, y: o.y})
-            return trigsimp(simplify(res)).is_zero
-        elif isinstance(o, Hyperbola):
-            return self == o
-        return False
-
-    def __eq__(self, o):
-        """Is the other GeometryEntity the same as this hyperbola?"""
-        return isinstance(o, Hyperbola) and (self.center == o.center and
-                                           self.hradius == o.hradius and
-                                           self.vradius == o.vradius)
-
-    def __hash__(self):
-        return super().__hash__()
-
     def __new__(
         cls, center=None, hradius=None, vradius=None, eccentricity=None, **kwargs):
         hradius = sympify(hradius)
@@ -145,6 +125,26 @@ class Hyperbola(GeometrySet):
             raise GeometryError("Invalid value encountered when computing hradius / vradius.")
 
         return GeometryEntity.__new__(cls, center, hradius, vradius, **kwargs)
+
+    def __contains__(self, o):
+        if isinstance(o, Point):
+            x = Dummy('x', real=True)
+            y = Dummy('y', real=True)
+
+            res = self.equation(x, y).subs({x: o.x, y: o.y})
+            return trigsimp(simplify(res)).is_zero
+        elif isinstance(o, Hyperbola):
+            return self == o
+        return False
+
+    def __eq__(self, o):
+        """Is the other GeometryEntity the same as this hyperbola?"""
+        return isinstance(o, Hyperbola) and (self.center == o.center and
+                                           self.hradius == o.hradius and
+                                           self.vradius == o.vradius)
+
+    def __hash__(self):
+        return super().__hash__()
 
     def _svg(self, scale_factor=1., fill_color="#66cc99"):
         """Returns SVG hyperbola element for the Hyperbola.
@@ -261,7 +261,6 @@ class Hyperbola(GeometrySet):
         x - 3*sqrt(y**2 + 4)/2 - 1
         >>> h1.equation(x, y, branch = 'left')
         x + 3*sqrt(y**2 + 4)/2 - 1
-
         """
 
         x = _symbol(x, real=True)
@@ -272,27 +271,27 @@ class Hyperbola(GeometrySet):
 
         if branch is None:
             if _slope is not None:
-                L = (dy - _slope*dx)**2
-                l = (_slope*dy + dx)**2
-                h = 1 + _slope**2
-                b = h*self.major**2
-                a = h*self.minor**2
-                expr = l/b - L/a - 1
+                L = (dy - _slope * dx) ** 2
+                l = (_slope * dy + dx) ** 2
+                h = 1 + _slope ** 2
+                b = h * self.major ** 2
+                a = h * self.minor ** 2
+                expr = l / b - L / a - 1
             else:
                 t1 = (dx/self.hradius)**2
                 t2 = (dy/self.vradius)**2
                 expr = t1 - t2 - 1
             return expr
-
-        if _slope is None:
-            if str(branch) == "left":
-                expr = dx + (self.hradius * sqrt((dy)**2 + (self.vradius)**2) / self.vradius)
-            elif str(branch) == "right":
-                expr = dx - (self.hradius * sqrt((dy)**2 + (self.vradius)**2) / self.vradius)
-            return expr
         else:
-            #TODO :Implement branches when hyperbola is constructed using _slope
-            pass
+            if _slope is None:
+                if str(branch) == 'left':
+                    expr = dx + (self.hradius * sqrt((dy)**2 + (self.vradius)**2) / self.vradius)
+                if str(branch) == 'right':
+                    expr = dx - (self.hradius * sqrt((dy)**2 + (self.vradius)**2) / self.vradius)
+                return expr
+            else:
+                #TODO :Implement branches when hyperbola is constructed using _slope
+                pass
 
     def encloses_point(self, p):
         """
