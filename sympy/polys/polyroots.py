@@ -888,27 +888,27 @@ def roots(f, *gens,
                 raise PolynomialError("generator must be a Symbol")
             else:
                 f = F
-            if f.length == 2 and f.degree() != 1:
+            if f.length() == 2 and f.degree() != 1:
                 # check for foo**n factors in the constant
                 n = f.degree()
                 npow_bases = []
                 others = []
                 expr = f.as_expr()
-                con = expr.as_independent(*gens)[0]
+                con, dep = expr.as_independent(*f.gens)
                 for p in Mul.make_args(con):
-                    if p.is_Pow and not p.exp % n:
+                    if p.is_Pow and not p.exp % n and p.exp > n:
                         npow_bases.append(p.base**(p.exp/n))
                     else:
                         others.append(p)
-                    if npow_bases:
-                        b = Mul(*npow_bases)
-                        B = Dummy()
-                        d = roots(Poly(expr - con + B**n*Mul(*others), *gens,
-                            **flags), *gens, **flags)
-                        rv = {}
-                        for k, v in d.items():
-                            rv[k.subs(B, b)] = v
-                        return rv
+                if npow_bases:
+                    b = Mul(*npow_bases)
+                    B = Dummy()
+                    d = roots(Poly(dep + B**n*Mul(*others), *f.gens,
+                        **flags), *f.gens, **flags)
+                    rv = {}
+                    for k, v in d.items():
+                        rv[k.subs(B, b)] = v
+                    return rv
 
         except GeneratorsNeeded:
             if multiple:
