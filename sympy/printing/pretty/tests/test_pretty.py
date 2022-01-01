@@ -17,6 +17,8 @@ from sympy.functions.elementary.exponential import LambertW
 from sympy.functions.special.bessel import (airyai, airyaiprime, airybi, airybiprime)
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.special.error_functions import (fresnelc, fresnels)
+from sympy.functions.special.elliptic_integrals import (JacobiEllipticFunction,
+                                                        JacobiTheta)
 from sympy.functions.special.singularity_functions import SingularityFunction
 from sympy.functions.special.zeta_functions import dirichlet_eta
 from sympy.geometry.line import (Ray, Segment)
@@ -7609,6 +7611,12 @@ def test_pretty_misc_functions():
     assert upretty(Heaviside(x, y)) == 'θ(x, y)'
     assert pretty(dirichlet_eta(x)) == 'dirichlet_eta(x)'
     assert upretty(dirichlet_eta(x)) == 'η(x)'
+    assert pretty(JacobiEllipticFunction("dn", x, y)) == 'dn(x, y)'
+    assert upretty(JacobiEllipticFunction("dn", x, y)) == 'dn(x, y)'
+    assert pretty(JacobiTheta(1, x, y)) == 'theta (x, y)\n'\
+                                           '     1      '
+    assert upretty(JacobiTheta(1, x, y)) == 'ϑ (x, y)\n'\
+                                            ' 1      '
 
 
 def test_hadamard_power():

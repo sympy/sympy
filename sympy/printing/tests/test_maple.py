@@ -7,6 +7,8 @@ from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
                             HadamardProduct, SparseMatrix)
 from sympy.functions.special.bessel import besseli
+from sympy.functions.special.elliptic_integrals import (JacobiEllipticFunction,
+                                                        JacobiTheta)
 
 from sympy.printing.maple import maple_code
 
@@ -382,3 +384,5 @@ def test_automatic_rewrites():
 def test_specfun():
     assert maple_code('asin(x)') == 'arcsin(x)'
     assert maple_code(besseli(x, y)) == 'BesselI(x, y)'
+    assert maple_code(JacobiTheta(1, 1, 2)) == 'JacobiTheta1(1, 2)'
+    assert maple_code(JacobiEllipticFunction("sn", 1, 2)) == 'JacobiSN(1, 2)'

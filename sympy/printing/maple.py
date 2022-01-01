@@ -217,6 +217,12 @@ class MapleCodePrinter(CodePrinter):
     def _print_SparseRepMatrix(self, expr):
         return self._get_matrix(expr, sparse=True)
 
+    def _print_JacobiTheta(self, expr):
+        return "JacobiTheta{}({})".format(expr.type_val, ', '.join(self.doprint(a) for a in expr.vals))
+
+    def _print_JacobiEllipticFunction(self, expr):
+        return "Jacobi{}({})".format(str(expr.type_str).upper(), ', '.join(self.doprint(a) for a in expr.vals))
+
     def _print_Identity(self, expr):
         if isinstance(expr.rows, (Integer, IntegerConstant)):
             return self._print(sympy.SparseMatrix(expr))

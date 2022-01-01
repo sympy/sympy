@@ -2596,7 +2596,7 @@ class PrettyPrinter(Printer):
         return pform
 
     def _print_number_function(self, e, name):
-        # Print name_arg[0] for one argument or name_arg[0](arg[1])
+        # Print name_arg[0] for one argument or name_arg[0](arg[1], arg[2], ...)
         # for more than one argument
         pform = prettyForm(name)
         arg = self._print(e.args[0])
@@ -2605,10 +2605,10 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.right(pform_arg))
         if len(e.args) == 1:
             return pform
-        m, x = e.args
+        args = e.args[1:]
         # TODO: copy-pasted from _print_Function: can we do better?
         prettyFunc = pform
-        prettyArgs = prettyForm(*self._print_seq([x]).parens())
+        prettyArgs = prettyForm(*self._print_seq(args).parens())
         pform = prettyForm(
             binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
         pform.prettyFunc = prettyFunc
@@ -2640,6 +2640,15 @@ class PrettyPrinter(Printer):
             return self._print_number_function(e, '\N{GREEK SMALL LETTER GAMMA}')
         else:
             return self._print_number_function(e, "stieltjes")
+
+    def _print_JacobiTheta(self, e):
+        if self._use_unicode:
+            return self._print_number_function(e, '\N{GREEK THETA SYMBOL}')
+        else:
+            return self._print_number_function(e, "theta")
+
+    def _print_JacobiEllipticFunction(self, e):
+        return self._helper_print_function(e.func, e.vals, func_name=str(e.type_str))
 
     def _print_KroneckerDelta(self, e):
         pform = self._print(e.args[0])

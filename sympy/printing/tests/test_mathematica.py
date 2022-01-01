@@ -10,7 +10,8 @@ from sympy.functions import (exp, sin, cos, fresnelc, fresnels, conjugate, Max,
                              FallingFactorial, harmonic, atan2, sec, acsc,
                              hermite, laguerre, assoc_laguerre, jacobi,
                              gegenbauer, chebyshevt, chebyshevu, legendre,
-                             assoc_legendre, Li, LambertW)
+                             assoc_legendre, Li, LambertW,
+                             JacobiEllipticFunction, JacobiTheta)
 
 from sympy.printing.mathematica import mathematica_code as mcode
 
@@ -81,6 +82,8 @@ def test_Function():
     assert mcode(LambertW(x)) == "ProductLog[x]"
     assert mcode(LambertW(x, -1)) == "ProductLog[-1, x]"
     assert mcode(LambertW(x, y)) == "ProductLog[y, x]"
+    assert mcode(JacobiEllipticFunction("sn", 1, 2)) == 'JacobiSN[1, 2]'
+    assert mcode(JacobiTheta(1, 1, 2)) == 'EllipticTheta[1, 1, 2]'
 
 
 def test_special_polynomials():

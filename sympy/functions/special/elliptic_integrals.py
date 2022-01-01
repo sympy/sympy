@@ -512,7 +512,7 @@ class JacobiEllipticFunction(Function):
 
     @property
     def type_str(self):
-        return self.args[0]
+        return str(self.args[0])
 
     @property
     def vals(self):
