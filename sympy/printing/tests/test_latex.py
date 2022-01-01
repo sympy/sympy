@@ -469,7 +469,7 @@ def test_latex_functions():
     assert latex(acsc(x), inv_trig_style="full") == \
         r"\operatorname{arccsc}{\left(x \right)}"
     assert latex(asinh(x), inv_trig_style="full") == \
-        r"\operatorname{arcsinh}{\left(x \right)}"
+        r"\operatorname{arsinh}{\left(x \right)}"
 
     assert latex(factorial(k)) == r"k!"
     assert latex(factorial(-k)) == r"\left(- k\right)!"
