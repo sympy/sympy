@@ -381,4 +381,3 @@ class bell_sequence(Function):
                 A[k - 1] += A[k]
             R[n + 1] = A[0]
         return sympify(R)
-
