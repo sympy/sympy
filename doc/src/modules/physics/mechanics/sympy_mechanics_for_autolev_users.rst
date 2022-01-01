@@ -58,7 +58,7 @@ Some Key Differences
 |                                   | on the popular scientific Python  |
 |                                   | stack such as NumPy, SciPy,       |
 |                                   | IPython, matplotlib, Cython and   |
-|                                   | Theano.                           |
+|                                   | Aesara.                           |
 +-----------------------------------+-----------------------------------+
 ||                                  ||                                  |
 | Autolev uses 1 (one) based        | Python uses 0 (zero) based        |

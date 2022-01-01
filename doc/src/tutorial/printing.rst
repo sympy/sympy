@@ -22,7 +22,7 @@ There are several printers available in SymPy.  The most common ones are
 - Dot
 
 In addition to these, there are also "printers" that can output SymPy objects
-to code, such as C, Fortran, Javascript, Theano, and Python.  These are not
+to code, such as C, Fortran, Javascript, and Python.  These are not
 discussed in this tutorial.
 
 Setting up Pretty Printing
