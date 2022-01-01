@@ -1183,7 +1183,7 @@ def _fourier_motzkin_extension(inequalities,symbols):
     >>> d = _fourier_motzkin_extension([eq1, eq2, eq3, eq4],symbols)
     >>> assert set(d) == {x}
     >>> d[x]
-    (oo > x, x > Max(z, -y - 3*z - 4, y - 2*z + 2, 3*y/2 - z/2 - 1/2))
+    (oo > x, x > Max(z, y - 3*z - 4, y - 2*z + 2, 3*y/2 - z/2 - 1/2))
     """
     res = {}
     pivot = _pick_var(inequalities,symbols)
@@ -1222,6 +1222,7 @@ def _is_linear(expr,symbols):
     Examples
     ========
 
+    >>> from sympy.solvers.inequalities import _is_linear
     >>> from sympy.abc import x, y
     >>> symbols = {x,y}
     >>> expr1=x**2 + y + 2
