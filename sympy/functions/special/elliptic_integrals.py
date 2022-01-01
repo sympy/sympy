@@ -1,14 +1,19 @@
 """ Elliptic Integrals. """
 
-from sympy.core import S, pi, I, Rational
+from sympy.core import S
+from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError
-from sympy.core.symbol import Dummy
+from sympy.core.numbers import Rational, Integer, pi, I
+from sympy.core.symbol import Dummy, Str
 from sympy.functions.elementary.complexes import sign
-from sympy.functions.elementary.hyperbolic import atanh
+from sympy.functions.elementary.hyperbolic import atanh, sech, tanh
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import sin, tan
+from sympy.functions.elementary.trigonometric import cos, sin, tan
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper, meijerg
+
+from mpmath import mp, workprec
+
 
 class elliptic_k(Function):
     r"""
@@ -443,3 +448,86 @@ class elliptic_pi(Function):
             n, z, m = self.args
         t = Dummy('t')
         return Integral(1/((1 - n*sin(t)**2)*sqrt(1 - m*sin(t)**2)), (t, 0, z))
+
+
+class JacobiTheta(Function):
+    """
+    Base class for Jacobi theta function $\vartheta_n(z,q)$, where $n=1,2,3,4$.
+    """
+
+    def __new__(cls, type_val, z, q=0):
+        if not isinstance(type_val, (int, Integer)) or type_val <= 0 or type_val >= 5:
+            raise ValueError("First argument, the type, must be an integer" \
+                             "between 1 and 4.")
+        if q is None:
+            return super().__new__(cls, type_val, 0, z)
+
+        return super().__new__(cls, type_val, z, q)
+
+    @property
+    def vals(self):
+        return self.args[1:3]
+
+    @property
+    def type_val(self):
+        return self.args[0]
+
+    def _latex(self, printer):
+        args = ", ".join(printer._print(arg) for arg in self.vals)
+        return r"\vartheta_{}\left({}\right)".format(self.type_val, args)
+
+
+    @classmethod
+    def eval(cls, type_val, z, q):
+        q0vals = {1 : S.Zero, 2 : S.Zero, 3 : S.One, 4 : S.One}
+        if q.is_zero:
+            return q0vals[type_val]
+
+
+class JacobiEllipticFunction(Function):
+    """
+    Base class for Jacobi elliptic functions.
+    """
+    def __new__(cls, type_str, u, m):
+        if not isinstance(type_str, (str, Str)) or len(type_str) != 2 or any(x not in 'cdns' for x in type_str):
+            raise ValueError("First argument must be a string with exactly two"\
+                             " characters from c, d, n, s.")
+
+        return super().__new__(cls, Str(str(type_str)), u, m)
+
+    def _eval_evalf(self, prec):
+        if all(x.is_number for x in self.args):
+            u = self.args[1]._to_mpmath(prec)
+            m = self.args[2]._to_mpmath(prec)
+            with workprec(prec):
+                res = mp.ellipfun(self.type_str, u, m)
+            return Expr._from_mpmath(res, prec)
+        else:
+            return self
+
+    def _latex(self, printer):
+        args = ", ".join(printer._print(arg) for arg in self.vals)
+        return r"\operatorname{{{}}}\left({}\right)".format(self.type_str, args)
+
+
+    @property
+    def type_str(self):
+        return self.args[0]
+
+    @property
+    def vals(self):
+        return self.args[1:3]
+
+    @classmethod
+    def eval(cls, type_str, u, m):
+        utmp = Dummy()
+        u0vals = {'c' : S.One, 'd' : S.One, 'n' : S.One, 's' : S.Zero}
+        m0vals = {'c' : cos(utmp), 'd' : S.One, 'n' : S.One, 's' : sin(utmp)}
+        m1vals = {'c' : sech(utmp), 'd' : sech(utmp), 'n' : S.One, 's' : tanh(utmp)}
+        c1, c2 = str(type_str)
+        if u.is_zero:
+            return u0vals[c1]/u0vals[c2]
+        if m.is_zero:
+            return (m0vals[c1]/m0vals[c2]).subs(utmp, u)
+        if m == S.One:
+            return (m1vals[c1]/m1vals[c2]).subs(utmp, u)
