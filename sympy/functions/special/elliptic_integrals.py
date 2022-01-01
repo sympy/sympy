@@ -489,7 +489,8 @@ class JacobiEllipticFunction(Function):
     Base class for Jacobi elliptic functions.
     """
     def __new__(cls, type_str, u, m):
-        if not isinstance(type_str, (str, Str)) or len(type_str) != 2 or any(x not in 'cdns' for x in type_str):
+        if (not isinstance(type_str, (str, Str)) or len(type_str) != 2
+            or any(x not in 'cdns' for x in str(type_str))):
             raise ValueError("First argument must be a string with exactly two"\
                              " characters from c, d, n, s.")
 
