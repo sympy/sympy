@@ -1945,7 +1945,7 @@ class Atom(Basic):
 
     @property
     def func(self):
-        return lambda: self
+        return lambda *args: type(self)(*args) if args else self
 
 def _aresame(a, b):
     """Return True if a and b are structurally the same, else False.
