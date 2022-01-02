@@ -15,7 +15,6 @@ from .line import (Line, Ray, Segment, Line3D, LinearEntity, LinearEntity3D,
 from .point import Point, Point3D
 from sympy.matrices import Matrix
 from sympy.polys.polytools import cancel
-from sympy.simplify.simplify import simplify
 from sympy.solvers import solve, linsolve
 from sympy.utilities.iterables import uniq, is_sequence
 from sympy.utilities.misc import filldedent, func_name, Undecidable
@@ -327,7 +326,7 @@ class Plane(GeometryEntity):
         if isinstance(o, Plane):
             a = self.equation()
             b = o.equation()
-            return simplify(a / b).is_constant()
+            return cancel(a/b).is_constant()
         else:
             return False
 
