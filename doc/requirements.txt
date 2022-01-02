@@ -1,3 +1,4 @@
+furo
 linkify-it-py
 matplotlib==3.4.3
 matplotlib-inline==0.1.2
