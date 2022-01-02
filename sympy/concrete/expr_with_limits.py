@@ -141,7 +141,7 @@ def _process_limits(*symbols, discrete=None):
                     raise NotImplementedError(
                         'expecting Range' if discrete else
                         'Relational or single Interval' )
-            V = sympify(flatten(V))  # a list of sympified elements
+            V = sympify(flatten(V))  # list of sympified elements/None
             if isinstance(V[0], (Symbol, Idx)) or getattr(V[0], '_diff_wrt', False):
                 newsymbol = V[0]
                 if len(V) == 3:

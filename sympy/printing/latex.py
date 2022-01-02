@@ -357,9 +357,13 @@ class LatexPrinter(Printer):
             return expr
 
     def _print_Basic(self, expr):
-        ls = [self._print(o) for o in expr.args]
-        return self._deal_with_super_sub(expr.__class__.__name__) + \
-            r"\left(%s\right)" % ", ".join(ls)
+        name = self._deal_with_super_sub(expr.__class__.__name__)
+        if expr.args:
+            ls = [self._print(o) for o in expr.args]
+            s = r"\operatorname{{{}}}\left({}\right)"
+            return s.format(name, ", ".join(ls))
+        else:
+            return r"\text{{{}}}".format(name)
 
     def _print_bool(self, e):
         return r"\text{%s}" % e
@@ -610,6 +614,12 @@ class LatexPrinter(Printer):
         if include_parens:
             tex += ")"
         return tex
+
+    def _print_AlgebraicNumber(self, expr):
+        if expr.is_aliased:
+            return self._print(expr.as_poly().as_expr())
+        else:
+            return self._print(expr.as_expr())
 
     def _print_Pow(self, expr):
         # Treat x**Rational(1,n) as special case
@@ -2023,7 +2033,7 @@ class LatexPrinter(Printer):
         if hasattr(d, 'as_boolean'):
             return '\\text{Domain: }' + self._print(d.as_boolean())
         elif hasattr(d, 'set'):
-            return ('\\text{Domain: }' + self._print(d.symbols) + '\\text{ in }' +
+            return ('\\text{Domain: }' + self._print(d.symbols) + ' \\in ' +
                     self._print(d.set))
         elif hasattr(d, 'symbols'):
             return '\\text{Domain on }' + self._print(d.symbols)
@@ -2248,6 +2258,10 @@ class LatexPrinter(Printer):
             self._print(s.base_set),
             self._print(s.condition))
 
+    def _print_PowerSet(self, expr):
+        arg_print = self._print(expr.args[0])
+        return r"\mathcal{{P}}\left({}\right)".format(arg_print)
+
     def _print_ComplexRegion(self, s):
         vars_print = ', '.join([self._print(var) for var in s.variables])
         return r"\left\{%s\; \middle|\; %s \in %s \right\}" % (
@@ -2379,6 +2393,25 @@ class LatexPrinter(Printer):
             return r"\operatorname{%s} {\left(%s\right)}" % (cls,
                                                              ", ".join(args))
 
+    def _print_OrdinalOmega(self, expr):
+        return r"\omega"
+
+    def _print_OmegaPower(self, expr):
+        exp, mul = expr.args
+        if mul != 1:
+            if exp != 1:
+                return r"{} \omega^{{{}}}".format(mul, exp)
+            else:
+                return r"{} \omega".format(mul)
+        else:
+            if exp != 1:
+                return r"\omega^{{{}}}".format(exp)
+            else:
+                return r"\omega"
+
+    def _print_Ordinal(self, expr):
+        return " + ".join([self._print(arg) for arg in expr.args])
+
     def _print_PolyElement(self, poly):
         mul_symbol = self._settings['mul_symbol_latex']
         return poly.str(self, PRECEDENCE, "{%s}^{%d}", mul_symbol)
@@ -2464,6 +2497,18 @@ class LatexPrinter(Printer):
             result = "W{0}_{{{1}}}\\left({2}\\right)".format(exp, arg1, arg0)
         return result
 
+    def _print_Expectation(self, expr):
+        return r"\operatorname{{E}}\left[{}\right]".format(self._print(expr.args[0]))
+
+    def _print_Variance(self, expr):
+        return r"\operatorname{{Var}}\left({}\right)".format(self._print(expr.args[0]))
+
+    def _print_Covariance(self, expr):
+        return r"\operatorname{{Cov}}\left({}\right)".format(", ".join(self._print(arg) for arg in expr.args))
+
+    def _print_Probability(self, expr):
+        return r"\operatorname{{P}}\left({}\right)".format(self._print(expr.args[0]))
+
     def _print_Morphism(self, morphism):
         domain = self._print(morphism.domain)
         codomain = self._print(morphism.codomain)
@@ -2538,6 +2583,10 @@ class LatexPrinter(Printer):
     def _print_TransferFunctionMatrix(self, expr):
         mat = self._print(expr._expr_mat)
         return r"%s_\tau" % mat
+
+    def _print_DFT(self, expr):
+        return r"\text{{{}}}_{{{}}}".format(expr.__class__.__name__, expr.n)
+    _print_IDFT = _print_DFT
 
     def _print_NamedMorphism(self, morphism):
         pretty_name = self._print(Symbol(morphism.name))
@@ -2751,7 +2800,7 @@ class LatexPrinter(Printer):
         return str(expr)
 
     def _print_Predicate(self, expr):
-        return str(expr)
+        return r"\operatorname{{Q}}_{{\text{{{}}}}}".format(latex_escape(str(expr.name)))
 
     def _print_AppliedPredicate(self, expr):
         pred = expr.function

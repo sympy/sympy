@@ -2599,6 +2599,9 @@ def test_factor():
     assert factor(f, deep=True) == factor(f, deep=True, fraction=True)
     assert factor(f, deep=True, fraction=False) == 5*x + 3*exp(2)*exp(-7*x)
 
+    assert factor_list(x**3 - x*y**2, t, w, x) == (
+        1, [(x, 1), (x - y, 1), (x + y, 1)])
+
 
 def test_factor_large():
     f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567
@@ -3122,7 +3125,7 @@ def test_cancel():
         1/x)**2) - 1/(x**2*(x - 1/x)) - 2/x)) + (x - 1/x)/((x*(2*x - (-x +
         1/x)/(x**2*(x - 1/x)**2) - 1/(x**2*(x - 1/x)) - 2/x))) - 1/x''',
         evaluate=False)
-    assert cancel(q, _signsimp=False) == -1/(2*x)
+    assert cancel(q, _signsimp=False) is S.NaN
     assert q.subs(x, 2) is S.NaN
     assert signsimp(q) is S.NaN
 

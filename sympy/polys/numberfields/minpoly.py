@@ -437,7 +437,7 @@ def _minpoly_cos(ex, x):
                 if c.q == 7:
                     return 8*x**3 - 4*x**2 - 4*x + 1
                 if c.q == 9:
-                    return 8*x**3 - 6*x + 1
+                    return 8*x**3 - 6*x - 1
             elif c.p == 2:
                 q = sympify(c.q)
                 if q.is_prime:
@@ -808,10 +808,10 @@ def _minpoly_groebner(ex, x, cls):
                 else:
                     return symbols[expr]
         elif ex.is_AlgebraicNumber:
-            if ex.root not in mapping:
-                return update_mapping(ex.root, ex.minpoly)
+            if ex not in mapping:
+                return update_mapping(ex, ex.minpoly_of_element())
             else:
-                return symbols[ex.root]
+                return symbols[ex]
 
         raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
 
@@ -840,7 +840,7 @@ def _minpoly_groebner(ex, x, cls):
     inverted = False
     ex = expand_multinomial(ex)
     if ex.is_AlgebraicNumber:
-        return ex.minpoly.as_expr(x)
+        return ex.minpoly_of_element().as_expr(x)
     elif ex.is_Rational:
         result = ex.q*x - ex.p
     else:

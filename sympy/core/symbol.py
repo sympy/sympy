@@ -132,13 +132,14 @@ def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptio
     Parameters
     ==========
 
-        xname : a string or a Symbol (when symbol xname <- str(xname))
+        xname : a string or a Symbol
 
         compare : a single arg function that takes a symbol and returns
             a string to be compared with xname (the default is the str
             function which indicates how the name will look when it
             is printed, e.g. this includes underscores that appear on
-            Dummy symbols)
+            Dummy symbols). When ``xname`` is a Symbol, ``compare`` will
+            be used to supply the value for ``xname``.
 
         modify : a single arg function that changes its string argument
             in some way (the default is to append numbers)
@@ -165,7 +166,7 @@ def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptio
     default = None
     if is_sequence(xname):
         xname, default = xname
-    x = str(xname)
+    x = compare(xname)
     if not exprs:
         return _symbol(x, default, **assumptions)
     if not is_sequence(exprs):

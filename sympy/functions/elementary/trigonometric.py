@@ -3331,7 +3331,7 @@ class atan2(InverseTrigonometricFunction):
     .. math::
 
         \operatorname{atan2}(y, x) =
-            -i\log\left(\frac{x + iy}{\sqrt{x**2 + y**2}}\right)
+            -i\log\left(\frac{x + iy}{\sqrt{x^2 + y^2}}\right)
 
     Examples
     ========

@@ -287,13 +287,15 @@ class StrPrinter(Printer):
                     e = Mul._from_args(dargs)
                 d[i] = Pow(di.base, e, evaluate=False) if e - 1 else di.base
 
+            pre = []
             # don't parenthesize first factor if negative
-            if n[0].could_extract_minus_sign():
+            if n and n[0].could_extract_minus_sign():
                 pre = [str(n.pop(0))]
-            else:
-                pre = []
+
             nfactors = pre + [self.parenthesize(a, prec, strict=False)
                 for a in n]
+            if not nfactors:
+                nfactors = ['1']
 
             # don't parenthesize first of denominator unless singleton
             if len(d) > 1 and d[0].could_extract_minus_sign():

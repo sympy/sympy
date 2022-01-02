@@ -424,7 +424,8 @@ class SeqExpr(SeqBase):
 
     >>> from sympy.series.sequences import SeqExpr
     >>> from sympy.abc import x
-    >>> s = SeqExpr((1, 2, 3), (x, 0, 10))
+    >>> from sympy.core.containers import Tuple
+    >>> s = SeqExpr(Tuple(1, 2, 3), Tuple(x, 0, 10))
     >>> s.gen
     (1, 2, 3)
     >>> s.interval
