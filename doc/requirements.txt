@@ -5,6 +5,7 @@ mpmath==1.2.1
 myst-parser
 Sphinx==4.1.2
 sphinx-math-dollar==1.2
+sphinx_press_theme
 sphinx-reredirects==0.0.1
 sphinxcontrib-applehelp==1.0.2
 sphinxcontrib-devhelp==1.0.2

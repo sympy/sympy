@@ -141,19 +141,9 @@ html_static_path = ['_static']
 # using the given strftime format.
 html_last_updated_fmt = '%b %d, %Y'
 
-#print('html_theme_path from doc/src/conf.py:')
-#print(html_theme_path)
-
 # was classic
 # html_theme = "classic"
 html_theme = "press"
-# html_theme = "sphinx_press_theme"
-# html_theme = "sphinx-press-theme"
-
-# html_theme_path = ["../../.venv/"]
-# html_theme_path = ["."]
-# html_theme_path = ["sphinx_press_theme"]
-# html_theme_path = ["sphinx-press-theme"]
 
 html_logo = '_static/sympylogo.png'
 html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
