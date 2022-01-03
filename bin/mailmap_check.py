@@ -52,10 +52,6 @@ def main(*args):
         print(red(msg))
         return 1
 
-    # compare to old lines and stop if no changes were made
-    lines_authors = make_authors_file_lines(git_people)
-    old_lines_authors = read_lines(authors_path())
-
     lines_mailmap = read_lines(mailmap_path())
 
     def key(line):
@@ -131,6 +127,9 @@ def main(*args):
     else:
         print(green("No changes needed in .mailmap"))
 
+    # Check if changes to AUTHORS file are also needed
+    lines_authors = make_authors_file_lines(git_people)
+    old_lines_authors = read_lines(authors_path())
     update_authors_file(lines_authors, old_lines_authors, args.update_authors)
 
     return int(problems)
@@ -263,8 +262,7 @@ def make_authors_file_lines(git_people):
         to their names are not found in the metadata of the git history. This
         file is generated automatically by running `./bin/authors_update.py`.
         """).lstrip()
-    fmt = """There are a total of {authors_count} authors."""
-    header_extra = fmt.format(authors_count=len(git_people))
+    header_extra = f"There are a total of {len(git_people)} authors."""
     lines = header.splitlines()
     lines.append('')
     lines.append(header_extra)
