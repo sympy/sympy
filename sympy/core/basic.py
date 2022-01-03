@@ -2,10 +2,11 @@
 from collections import defaultdict
 from collections.abc import Mapping
 from itertools import chain, zip_longest
-from typing import Set, Tuple
+from typing import Set, Tuple, Any
 
-from .assumptions import BasicMeta, ManagedProperties
+from .assumptions import ManagedProperties
 from .cache import cacheit
+from .core import BasicMeta
 from .sympify import _sympify, sympify, SympifyError
 from .sorting import ordered
 from .kind import Kind, UndefinedKind
@@ -13,7 +14,7 @@ from ._print_helpers import Printable
 
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import iterable, numbered_symbols
+from sympy.utilities.iterables import iterable, numbered_symbols, NotIterable
 from sympy.utilities.misc import filldedent, func_name
 
 from inspect import getmro
@@ -81,6 +82,7 @@ class Basic(Printable, metaclass=ManagedProperties):
                 )
 
     _args: 'Tuple[Basic, ...]'
+    _mhash: 'Any'
 
     # To be overridden with True in the appropriate subclasses
     is_number = False
@@ -139,7 +141,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             raise NotImplementedError(msg)
         return super().__reduce_ex__(protocol)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         # hash cannot be cached using cache_it because infinite recurrence
         # occurs as hash is needed for setting cache dictionary keys
         h = self._mhash
@@ -328,10 +330,10 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         If a class that overrides __eq__() needs to retain the
         implementation of __hash__() from a parent class, the
-        interpreter must be told this explicitly by setting __hash__ =
-        <ParentClass>.__hash__. Otherwise the inheritance of __hash__()
-        will be blocked, just as if __hash__ had been explicitly set to
-        None.
+        interpreter must be told this explicitly by setting
+        __hash__ : Callable[[object], int] = <ParentClass>.__hash__.
+        Otherwise the inheritance of __hash__() will be blocked,
+        just as if __hash__ had been explicitly set to None.
 
         References
         ==========
@@ -342,15 +344,31 @@ class Basic(Printable, metaclass=ManagedProperties):
             return True
 
         if not isinstance(other, Basic):
+            if iterable(other, exclude=(str, NotIterable)
+                    ) and not hasattr(other, '_sympy_'):
+                # XXX iterable self should have it's own __eq__
+                # method if the path gives a false negative
+                # comparison
+                return False
             try:
                 other = _sympify(other)
-            except SympifyError:
+            except (SympifyError, SyntaxError):
                 return NotImplemented
 
-        if type(self) != type(other):
-            return NotImplemented
-
-        return self._hashable_content() == other._hashable_content()
+        # check for pure number expr
+        if  not (self.is_Number and other.is_Number) and (
+                type(self) != type(other)):
+            return False
+        a, b = self._hashable_content(), other._hashable_content()
+        if a != b:
+            return False
+        # check number *in* an expression
+        for a, b in zip(a, b):
+            if not isinstance(a, Basic):
+                continue
+            if a.is_Number and type(a) != type(b):
+                return False
+        return True
 
     def __ne__(self, other):
         """``a != b``  -> Compare two symbolic trees and see whether they are different
@@ -1217,31 +1235,72 @@ class Basic(Printable, metaclass=ManagedProperties):
         False
 
         """
-        return any(self._has(pattern) for pattern in patterns)
+        return self._has(iterargs, *patterns)
 
-    def _has(self, pattern):
-        """Helper for .has()"""
-        from .function import UndefinedFunction, Function
-        if isinstance(pattern, UndefinedFunction):
-            return any(pattern in (f, f.func)
-                       for f in self.atoms(Function, UndefinedFunction))
+    @cacheit
+    def has_free(self, *patterns):
+        """return True if self has object(s) ``x`` as a free expression
+        else False.
 
-        if isinstance(pattern, BasicMeta):
-            subtrees = _preorder_traversal(self)
-            return any(isinstance(arg, pattern) for arg in subtrees)
+        Examples
+        ========
 
-        pattern = _sympify(pattern)
+        >>> from sympy import Integral, Function
+        >>> from sympy.abc import x, y
+        >>> f = Function('f')
+        >>> g = Function('g')
+        >>> expr = Integral(f(x), (f(x), 1, g(y)))
+        >>> expr.free_symbols
+        {y}
+        >>> expr.has_free(g(y))
+        True
+        >>> expr.has_free(*(x, f(x)))
+        False
 
-        _has_matcher = getattr(pattern, '_has_matcher', None)
-        if _has_matcher is not None:
-            match = _has_matcher()
-            return any(match(arg) for arg in _preorder_traversal(self))
-        else:
-            return any(arg == pattern for arg in _preorder_traversal(self))
+        This works for subexpressions and types, too:
 
-    def _has_matcher(self):
-        """Helper for .has()"""
-        return lambda other: self == other
+        >>> expr.has_free(g)
+        True
+        >>> (x + y + 1).has_free(y + 1)
+        True
+
+        """
+        return self._has(iterfreeargs, *patterns)
+
+    def _has(self, iterargs, *patterns):
+        # separate out types and unhashable objects
+        type_set = set()  # only types
+        p_set = set()  # hashable non-types
+        for p in patterns:
+            if isinstance(p, BasicMeta):
+                type_set.add(p)
+                continue
+            if not isinstance(p, Basic):
+                try:
+                    p = _sympify(p)
+                except SympifyError:
+                    continue  # Basic won't have this in it
+            p_set.add(p)  # fails if object defines __eq__ but
+                          # doesn't define __hash__
+        types = tuple(type_set)   #
+        for i in iterargs(self):  #
+            if i in p_set:        # <--- here, too
+                return True
+            if isinstance(i, types):
+                return True
+
+        # use matcher if defined, e.g. operations defines
+        # matcher that checks for exact subset containment,
+        # (x + y + 1).has(x + 1) -> True
+        for i in p_set - type_set:  # types don't have matchers
+            if not hasattr(i, '_has_matcher'):
+                continue
+            match = i._has_matcher()
+            if any(match(arg) for arg in iterargs(self)):
+                return True
+
+        # no success
+        return False
 
     def replace(self, query, value, map=False, simultaneous=True, exact=None):
         """
@@ -2043,7 +2102,8 @@ def _make_find_query(query):
 
 # Delayed to avoid cyclic import
 from .singleton import S
-from .traversal import preorder_traversal as _preorder_traversal
+from .traversal import (preorder_traversal as _preorder_traversal,
+   iterargs, iterfreeargs)
 
 preorder_traversal = deprecated(
     useinstead="sympy.core.traversal.preorder_traversal",

@@ -77,10 +77,10 @@ def unify(x, y, s=None, variables=(), **kwargs):
     ========
 
     >>> from sympy.unify.usympy import unify
-    >>> from sympy import Basic
+    >>> from sympy import Basic, S
     >>> from sympy.abc import x, y, z, p, q
 
-    >>> next(unify(Basic(1, 2), Basic(1, x), variables=[x]))
+    >>> next(unify(Basic(S(1), S(2)), Basic(S(1), x), variables=[x]))
     {x: 2}
 
     >>> expr = 2*x + y + z

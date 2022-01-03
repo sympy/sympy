@@ -20,11 +20,13 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acos, cos, sin, sinc, tan)
 from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely)
 from sympy.functions.special.beta_functions import (beta, betainc, betainc_regularized)
+from sympy.functions.special.delta_functions import (Heaviside)
 from sympy.functions.special.error_functions import (erf, erfc, fresnelc, fresnels)
 from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma)
 from sympy.integrals.integrals import Integral
 from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
 from sympy.matrices.expressions.dotproduct import DotProduct
+from sympy.tensor.array import derive_by_array, Array
 from sympy.tensor.indexed import IndexedBase
 from sympy.utilities.lambdify import lambdify
 from sympy.core.expr import UnevaluatedExpr
@@ -1319,6 +1321,39 @@ def test_issue_16536():
     f2 = uppergamma(a, x)
     F = lambdify((a, x), f2, modules='scipy')
     assert abs(uppergamma(1, 3) - F(1, 3)) <= 1e-10
+
+
+def test_issue_22726():
+    if not numpy:
+        skip("numpy not installed")
+
+    x1, x2 = symbols('x1 x2')
+    f = Max(S.Zero, Min(x1, x2))
+    g = derive_by_array(f, (x1, x2))
+    G = lambdify((x1, x2), g, modules='numpy')
+    point = {x1: 1, x2: 2}
+    assert (abs(g.subs(point) - G(*point.values())) <= 1e-10).all()
+
+
+def test_issue_22739():
+    if not numpy:
+        skip("numpy not installed")
+
+    x1, x2 = symbols('x1 x2')
+    f = Heaviside(Min(x1, x2))
+    F = lambdify((x1, x2), f, modules='numpy')
+    point = {x1: 1, x2: 2}
+    assert abs(f.subs(point) - F(*point.values())) <= 1e-10
+
+
+def test_issue_19764():
+    if not numpy:
+        skip("numpy not installed")
+
+    expr = Array([x, x**2])
+    f = lambdify(x, expr, 'numpy')
+
+    assert f(1).__class__ == numpy.ndarray
 
 
 def test_fresnel_integrals_scipy():

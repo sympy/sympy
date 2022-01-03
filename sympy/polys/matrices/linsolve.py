@@ -203,7 +203,7 @@ def _lin_eq2dict(a, symset):
             return  coeff * terms_coeff, terms
     elif a.is_Equality:
         return _lin_eq2dict(a.lhs - a.rhs, symset)
-    elif not a.free_symbols & symset:
+    elif not a.has_free(*symset):
         return a, {}
     else:
         raise PolyNonlinearError

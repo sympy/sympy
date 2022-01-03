@@ -2835,6 +2835,50 @@ class AlgebraicNumber(Expr):
                     return AlgebraicNumber(r)
         return self
 
+    def field_element(self, coeffs):
+        r"""
+        Form another element of the same number field.
+
+        Explanation
+        ===========
+
+        If we represent $\alpha \in \mathbb{Q}(\theta)$, form another element
+        $\beta \in \mathbb{Q}(\theta)$ of the same number field.
+
+        Parameters
+        ==========
+
+        coeffs : list, :py:class:`~.ANP`
+            Like the *coeffs* arg to the class
+            :py:meth:`constructor<.AlgebraicNumber.__new__>`, defines the
+            new element as a polynomial in the primitive element.
+
+            If a list, the elements should be integers or rational numbers.
+            If an :py:class:`~.ANP`, we take its coefficients (using its
+            :py:meth:`~.ANP.to_list()` method).
+
+        Examples
+        ========
+
+        >>> from sympy import AlgebraicNumber, sqrt
+        >>> a = AlgebraicNumber(sqrt(5), [-1, 1])
+        >>> b = a.field_element([3, 2])
+        >>> print(a)
+        1 - sqrt(5)
+        >>> print(b)
+        2 + 3*sqrt(5)
+        >>> print(b.primitive_element() == a.primitive_element())
+        True
+
+        See Also
+        ========
+
+        .AlgebraicNumber.__new__()
+
+        """
+        return AlgebraicNumber(
+            (self.minpoly, self.root), coeffs=coeffs, alias=self.alias)
+
     @property
     def is_primitive_element(self):
         r"""
@@ -2858,7 +2902,7 @@ class AlgebraicNumber(Expr):
         """
         if self.is_primitive_element:
             return self
-        return AlgebraicNumber((self.minpoly, self.root), coeffs=[1, 0])
+        return self.field_element([1, 0])
 
     def to_primitive_element(self, radicals=True):
         r"""
@@ -4283,9 +4327,9 @@ class Catalan(NumberSymbol, metaclass=Singleton):
     Explanation
     ===========
 
-    `K = 0.91596559\ldots` is given by the infinite series
+    $G = 0.91596559\ldots$ is given by the infinite series
 
-    .. math:: K = \sum_{k=0}^{\infty} \frac{(-1)^k}{(2k+1)^2}
+    .. math:: G = \sum_{k=0}^{\infty} \frac{(-1)^k}{(2k+1)^2}
 
     Catalan is a singleton, and can be accessed by ``S.Catalan``.
 
@@ -4335,6 +4379,9 @@ class Catalan(NumberSymbol, metaclass=Singleton):
         from sympy.concrete.summations import Sum
         k = Dummy('k', integer=True, nonnegative=True)
         return Sum(S.NegativeOne**k / (2*k+1)**2, (k, 0, S.Infinity))
+
+    def _latex(self, printer):
+        return "G"
 
 
 class ImaginaryUnit(AtomicExpr, metaclass=Singleton):

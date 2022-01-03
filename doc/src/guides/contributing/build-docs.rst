@@ -8,13 +8,29 @@ Start by installing the required dependencies for the documentation.
 Required dependencies
 ^^^^^^^^^^^^^^^^^^^^^^
 
+You can either install the dependencies locally on your machine, or you can
+build a Docker image containing them.
+
+Docker
+~~~~~~
+
+If you have `Docker <https://docs.docker.com/engine/install/>`_, then instead of
+following the OS-specific installation instructions below, you may choose to
+build a Docker image::
+
+   cd doc
+   docker build -f Dockerfile.htmldoc -t sympy_htmldoc .
+
+If you choose this option, you can now skip down to the "Build the Docs"
+section below.
+
 Debian/Ubuntu
 ~~~~~~~~~~~~~~~
 
 For Debian/Ubuntu::
 
    apt-get install python3-sphinx texlive-latex-recommended dvipng librsvg2-bin imagemagick docbook2x graphviz
-   python -m pip install sphinx-math-dollar
+   python -m pip install sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py
 
 If you get mpmath error, install python-mpmath package::
 
@@ -32,7 +48,7 @@ prerequisites::
 
    dnf install python3-sphinx librsvg2 ImageMagick docbook2X texlive-dvipng-bin
    texlive-scheme-medium librsvg2-tools
-   python -m pip install sphinx-math-dollar
+   python -m pip install sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py
 
 If you get mpmath error, install python3-mpmath package::
 
@@ -53,11 +69,11 @@ Then install these packages with homebrew::
 
 Install these packages with either pip or conda::
 
-   python -m pip install mpmath matplotlib sphinx sphinx-math-dollar sphinx-reredirects
+   python -m pip install mpmath matplotlib sphinx sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py
 
 Or::
 
-   conda install -c conda-forge mpmath matplotlib sphinx sphinx-math-dollar sphinx-reredirects
+   conda install -c conda-forge mpmath matplotlib sphinx sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py
 
 Making your Sphinx build successful on the Windows system is tricky because
 some dependencies like ``dvipng`` or ``docbook2x`` are not available.
@@ -89,24 +105,36 @@ users.
 Build the Docs
 ^^^^^^^^^^^^^^^
 
-The documentation can be built by running the ``makefile`` in the ``doc``
-subdirectory.
+Docker
+~~~~~~
 
-To start, in your preferred web browser, use the drop down menu and select
-“open file” to navigate into the sympy/doc folder saved on your computer. In
-the doc folder, select the _build folder, then the html folder, and in the html
-folder, open the index.html file.
+If you chose to build using Docker, and followed the instructions above to
+build the ``sympy_htmldoc`` image, then you can build the docs with::
 
-To build the HTML documentation, run::
+   docker run --rm -v /absolute/path/to/sympy:/sympy sympy_htmldoc
+
+(Be sure to substitute the actual absolute filesystem path to sympy!) This
+command can be run from any directory.
+
+Local Installation
+~~~~~~~~~~~~~~~~~~
+
+If you chose to follow OS-specific instructions above and installed the
+required dependencies locally, the documentation can be built by running the
+``makefile`` in the ``doc`` subdirectory::
 
    cd doc
-
    make html
 
-This builds a local version of the documentation in ``doc/_build/html`` in your
-web browser.
 
-Open ``_build/html/index.html``.
+View the Docs
+^^^^^^^^^^^^^
+
+Once you have built the docs, the generated files will be found under
+``doc/_build/html``. To view them in your preferred web browser, use the drop
+down menu and select “open file”, navigate into the ``sympy/doc/_build/html``
+folder, and open the ``index.html`` file.
+
 
 PDF Documentation
 ^^^^^^^^^^^^^^^^^

@@ -149,8 +149,15 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_Piecewise(self, expr):
         "Piecewise function printer"
+        from sympy.logic.boolalg import ITE, simplify_logic
+        def print_cond(cond):
+            """ Problem having an ITE in the cond. """
+            if cond.has(ITE):
+                return self._print(simplify_logic(cond))
+            else:
+                return self._print(cond)
         exprs = '[{}]'.format(','.join(self._print(arg.expr) for arg in expr.args))
-        conds = '[{}]'.format(','.join(self._print(arg.cond) for arg in expr.args))
+        conds = '[{}]'.format(','.join(print_cond(arg.cond) for arg in expr.args))
         # If [default_value, True] is a (expr, cond) sequence in a Piecewise object
         #     it will behave the same as passing the 'default' kwarg to select()
         #     *as long as* it is the last element in expr.args.
@@ -300,6 +307,14 @@ class NumPyPrinter(PythonCodePrinter):
 
     def _print_ArrayAdd(self, expr):
         return self._expand_fold_binary_op(self._module + '.add', expr.args)
+
+    def _print_NDimArray(self, expr):
+        if len(expr.shape) == 1:
+            return self._module + '.array(' + self._print(expr.args[0]) + ')'
+        if len(expr.shape) == 2:
+            return self._print(expr.tomatrix())
+        # Should be possible to extend to more dimensions
+        return CodePrinter._print_not_supported(self, expr)
 
     _print_lowergamma = CodePrinter._print_not_supported
     _print_uppergamma = CodePrinter._print_not_supported

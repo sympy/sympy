@@ -19,7 +19,7 @@ from sympy.multipledispatch import dispatch
 
 
 class RoundFunction(Function):
-    """The base class for rounding functions."""
+    """Abstract base class for rounding functions."""
 
     args: tTuple[Expr]
 
@@ -77,6 +77,10 @@ class RoundFunction(Function):
             return ipart + spart
         else:
             return ipart + cls(spart, evaluate=False)
+
+    @classmethod
+    def _eval_number(cls, arg):
+        raise NotImplementedError()
 
     def _eval_is_finite(self):
         return self.args[0].is_finite
