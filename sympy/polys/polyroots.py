@@ -1147,4 +1147,3 @@ def root_factors(f, *gens, filter=None, **args):
         factors = [ f.as_expr() for f in factors ]
 
     return factors
-                                
