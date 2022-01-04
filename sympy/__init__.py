@@ -11,6 +11,8 @@ See the webpage for more information and documentation:
 
 """
 
+# trivial modification
+
 
 import sys
 if sys.version_info < (3, 7):
