@@ -814,3 +814,20 @@ def test_issue_8615():
     a = Line3D(Point3D(6, 5, 0), Point3D(6, -6, 0))
     b = Line3D(Point3D(6, -1, 19/10), Point3D(6, -1, 0))
     assert a.intersection(b) == [Point3D(6, -1, 0)]
+
+
+def test_nearest_points():
+    t = Symbol('t')
+    f = Line.nearest_points
+    #Collinear case
+    l1 = Line(Point(0, 0, 0), Point(-1, 1, -1))
+    l1c = Line(Point(0, 0, 0), Point(1, -1, 1))
+    assert f(l1, l1c) == (0, Point3D(-t, t, -t))
+    #Parallel 3-D case
+    l2 = Line(Point(0, 0, -1), Point(-1, 1, -1))
+    l2p = Line(Point(1, 0, -1), Point(0, 1, -1))
+    assert f(l2, l2p) == (sqrt(2)/2, [Point3D(-t, t, -1), Point3D(1/2 - t, t + 1/2, -1)])
+    #Random case
+    l3 = Line(Point(0, 0, 0), Point(-1, 1, 0))
+    l4 = Line(Point(1, 0, 1), Point(1, 1, 1))
+    assert f(l3, l4) == (1, [Point3D(1, -1, 0), Point3D(1, -1, 1)])
