@@ -1281,11 +1281,12 @@ class Line(LinearEntity):
         return self.perpendicular_segment(other).length
 
     def nearest_points(l1, l2):
-        """return the closest distance of separation between l1 and l2
+        """
+        return the closest distance of separation between l1 and l2
         and the points connecting the lines with that distance of
         separation.
-        Examples
 
+        Examples
         ========
 
         >>> from sympy import Line, Point
