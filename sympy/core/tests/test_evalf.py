@@ -27,7 +27,7 @@ from sympy.printing.str import sstr
 from sympy.simplify.simplify import simplify
 from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
-    scaled_zero, get_integer_part, as_mpmath, evalf)
+    scaled_zero, get_integer_part, as_mpmath, evalf, fastlog10_for_expr)
 from mpmath import inf, ninf
 from mpmath.libmp.libmpf import from_float
 from sympy.core.expr import unchanged
@@ -51,6 +51,23 @@ def test_evalf_helpers():
     assert complex_accuracy(finf) == math.inf
     assert complex_accuracy(zoo) == math.inf
     raises(ValueError, lambda: get_integer_part(zoo, 1, {}))
+
+
+def test_fastlog10_for_expr():
+    cases = [
+        Rational(1, 123),
+        -Rational(1, 123),
+        Rational(1234),
+        -Rational(1234),
+        Rational(9999),
+        -Rational(9999),
+        Rational(10**15 + 1, 10**15),
+        -Rational(10**15 + 1, 10**15),
+        sqrt(2),
+        5 + 5*I,
+    ]
+    for v in cases:
+        assert 10**fastlog10_for_expr(v) > abs(v)
 
 
 def test_evalf_basic():

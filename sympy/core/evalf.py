@@ -149,6 +149,20 @@ def fastlog(x: Optional[MPF_TUP]) -> tUnion[int, Any]:
     return x[2] + x[3]
 
 
+def fastlog10_for_expr(v: 'Expr'):
+    """
+    Quickly compute a positive integer m such that 10^m > |v|, for any
+    :py:class:`~.Expr` *v*.
+    """
+    # Do `.evalf(1)` before taking `abs`, or else `abs` can be very slow.
+    # Taking `.evalf(1)` can make the value smaller in magnitude, but we make
+    # up for it by adding 1 at the end.
+    a = abs(v.evalf(1))
+    b = int(math.ceil(a)).bit_length()
+    c = math.ceil(b / LG10)
+    return c + 1
+
+
 def pure_complex(v: 'Expr', or_real=False) -> Optional[tTuple['Expr', 'Expr']]:
     """Return a and b if v matches a + I*b where b is not zero and
     a and b are Numbers, else None. If `or_real` is True then 0 will
