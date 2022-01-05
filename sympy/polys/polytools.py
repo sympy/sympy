@@ -10,7 +10,7 @@ from sympy.core import (
 from sympy.core.basic import Basic
 from sympy.core.decorators import _sympifyit
 from sympy.core.exprtools import Factors, factor_nc, factor_terms
-from sympy.core.evalf import pure_complex
+from sympy.core.evalf import pure_complex, fastlog10_for_expr
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.numbers import ilcm, I, Integer, Rational
@@ -3896,6 +3896,55 @@ class Poly(Basic):
         else:
             from sympy.functions.elementary.miscellaneous import sqrt
             return sqrt(lb)
+
+    def root_comparison_tools(f):
+        """
+        Produce a threshold ``eps`` and custom evalf function ``evalf_`` such
+        that two roots ``a``, ``b`` of this polynomial must be equal if
+        ``abs(evalf_(a) - evalf_(b)) < eps``.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, cyclotomic_poly, exp, I, pi
+        >>> f = Poly(cyclotomic_poly(5))
+        >>> eps, evalf_ = f.root_comparison_tools()
+        >>> print(eps)
+        2/7
+        >>> r0 = exp(2*I*pi/5)
+        >>> R0 = evalf_(r0)
+        >>> print(R0)  # doctest: +SKIP
+        0.309 + 0.9511*I
+        >>> check = lambda r: abs(evalf_(r) - R0) < eps
+        >>> indices = [i for i, r in enumerate(f.all_roots()) if check(r)]
+        >>> print(indices)
+        [3]
+
+        Raises
+        ======
+
+        DomainError
+            If the domain of the polynomial is not a subring of the complex
+            numbers.
+        MultivariatePolynomialError
+            If the polynomial is not univariate.
+
+        """
+        delta = f.root_separation_lower_bound()
+        eps = delta / 3
+
+        # Pick n large enough to guarantee 10^n > 1/eps.
+        L = fastlog10_for_expr
+        n = L(1/eps)
+
+        # Make a custom evalf function that guarantees rounding error < 10^(-n).
+        # This means we want more than n places to the right of the decimal
+        # point. `L(x)` gets us past any places to the left of the point.
+        evalf_ = lambda x: x.evalf(L(x) + n + 1)
+
+        # Then we will have |a - evalf_(a)| < eps and |b - evalf_(b)| < eps,
+        # so |evalf_(a) - evalf_(b)| < eps implies |a - b| < 3*eps = delta.
+        return eps, evalf_
 
     def cancel(f, g, include=False):
         """
