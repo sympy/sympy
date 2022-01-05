@@ -89,10 +89,7 @@ class Ynm(Function):
     We can differentiate the functions with respect
     to both angles:
 
-    >>> from sympy import Ynm, Symbol, diff
-    >>> from sympy.abc import n,m
-    >>> theta = Symbol("theta", real=True)
-    >>> phi = Symbol("phi", real=True)
+    >>> from sympy import diff
 
     >>> diff(Ynm(n, m, theta, phi), theta)
     m*cot(theta)*Ynm(n, m, theta, phi) + sqrt((-m + n)*(m + n + 1))*exp(-I*phi)*Ynm(n, m + 1, theta, phi)
@@ -102,10 +99,7 @@ class Ynm(Function):
 
     Further we can compute the complex conjugation:
 
-    >>> from sympy import Ynm, Symbol, conjugate
-    >>> from sympy.abc import n,m
-    >>> theta = Symbol("theta", real=True)
-    >>> phi = Symbol("phi", real=True)
+    >>> from sympy import conjugate
 
     >>> conjugate(Ynm(n, m, theta, phi))
     (-1)**(2*m)*exp(-2*I*m*phi)*Ynm(n, m, theta, phi)
@@ -113,10 +107,7 @@ class Ynm(Function):
     To get back the well known expressions in spherical
     coordinates, we use full expansion:
 
-    >>> from sympy import Ynm, Symbol, expand_func
-    >>> from sympy.abc import n,m
-    >>> theta = Symbol("theta", real=True)
-    >>> phi = Symbol("phi", real=True)
+    >>> from sympy import expand_func
 
     >>> expand_func(Ynm(n, m, theta, phi))
     sqrt((2*n + 1)*factorial(-m + n)/factorial(m + n))*exp(I*m*phi)*assoc_legendre(n, m, cos(theta))/(2*sqrt(pi))
@@ -184,7 +175,7 @@ class Ynm(Function):
             c = is_le(Abs(m), n)
             if c == True:
                 return self.expand(func=True)
-            elif c == False:
+            if c == False:
                 return S.Zero
 
     def _eval_rewrite_as_sin(self, n, m, theta, phi, **kwargs):
@@ -197,7 +188,7 @@ class Ynm(Function):
             c = is_le(Abs(m), n)
             if c == True:
                 term = simplify(self.expand(func=True))
-            elif c == False:
+            if c == False:
                 term = S.Zero
         # We can do this because of the range of theta
         term = term.xreplace({Abs(sin(theta)):sin(theta)})
@@ -207,7 +198,6 @@ class Ynm(Function):
         # TODO: Make sure theta \in R and phi \in R
         n, m, theta, phi = self.args
         return S.NegativeOne**m * self.func(n, -m, theta, phi)
-
 
     def as_real_imag(self, deep=True, **hints):
         # TODO: Handle deep and hints
