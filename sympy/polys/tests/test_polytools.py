@@ -2975,6 +2975,30 @@ def test_nth_power_roots_poly():
     raises(MultivariatePolynomialError, lambda: nth_power_roots_poly(
         x + y, 2, x, y))
 
+
+def test_root_bounds():
+    def check(f, c):
+        lb, ub = f.root_bounds()
+        r = sqrt(abs(c))
+        assert lb <= r <= ub
+        # Check: same results as long as the non-zero roots are the same:
+        g = x * f
+        assert g.root_bounds() == (lb, ub)
+
+    for c in [2, 1e10, 1e-10, -5, 5 + 12*I]:
+        f = Poly(x**2 - c)
+        check(f, c)
+
+    f = Poly(x**2 - sqrt(2), extension=sqrt(2))
+    check(f, sqrt(2))
+
+    raises(DomainError, lambda: Poly(x + 1, domain=FF(7)).root_bounds())
+    raises(DomainError, lambda: Poly(y*x + 1, domain=ZZ[y]).root_bounds())
+    raises(MultivariatePolynomialError,
+           lambda: Poly(x*y + 1, domain=ZZ).root_bounds())
+    raises(PolynomialError, lambda: Poly(2*x**3).root_bounds())
+
+
 def test_torational_factor_list():
     p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
     assert _torational_factor_list(p, x) == (-2, [

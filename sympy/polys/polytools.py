@@ -3773,6 +3773,67 @@ class Poly(Basic):
 
         return r.replace(t, x)
 
+    def root_bounds(f):
+        """
+        Compute lower and upper bounds on the magnitude of the nonzero roots of
+        this polynomial.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 - 2).root_bounds()
+        (2/3, 3)
+        >>> (x * Poly(x**2 - 2)).root_bounds()
+        (2/3, 3)
+
+        Returns
+        =======
+
+        Pair ``(lb, ub)`` of :py:class:`~.Expr`
+            Gives the lower bound and upper bound. These bounds will be
+            rational if the domain of the polynomial is :ref:`ZZ` or :ref:`QQ`.
+
+        Raises
+        ======
+
+        DomainError
+            If the domain of the polynomial is not a subring of the complex
+            numbers.
+        MultivariatePolynomialError
+            If the polynomial is not univariate.
+        PolynomialError
+            If the polynomial is a monomial, since in such a case it has no
+            nonzero roots.
+
+        Notes
+        =====
+
+        The domain of the polynomial must be a subring of the complex numbers.
+        We use the `Cauchy bound`_.
+
+        .. _Cauchy bound: https://en.wikipedia.org/wiki/Geometrical_properties_of_polynomial_roots#Lagrange's_and_Cauchy's_bounds
+
+        """
+        dom = f.get_domain()
+        if dom.is_FiniteField or not dom.is_Numerical:
+            raise DomainError("Cannot compute root bounds over %s" % dom)
+        if f.is_multivariate:
+            raise MultivariatePolynomialError(
+                "Must be a univariate polynomial")
+        if f.is_monomial:
+            raise PolynomialError("Monomial has no nonzero roots")
+
+        coeffs = f.all_coeffs()
+        while coeffs[-1] == 0:
+            coeffs.pop()
+        lc, tc = coeffs[0], coeffs[-1]
+        ub = 1 + max(abs(n / lc) for n in coeffs[1:])
+        lb_inv = 1 + max(abs(n / tc) for n in coeffs[:-1])
+
+        return 1/lb_inv, ub
+
     def cancel(f, g, include=False):
         """
         Cancel common factors in a rational function ``f/g``.
