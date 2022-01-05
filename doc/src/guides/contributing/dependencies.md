@@ -32,7 +32,7 @@ floating-point value of a function, e.g., when using
 SymPy cannot function without mpmath and will fail to import if it is not
 installed. If you get an error like
 
-```
+```pytb
 ImportError: SymPy now depends on mpmath as an external library. See
 https://docs.sympy.org/latest/install.html#mpmath for more information.
 ```
