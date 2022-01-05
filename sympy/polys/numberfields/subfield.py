@@ -138,7 +138,7 @@ def field_isomorphism_pslq(a, b):
 def field_isomorphism_factor(a, b):
     """Construct field isomorphism via factorization. """
     _, factors = factor_list(a.minpoly, extension=b)
-    A = None
+    A, eps, evalf_ = None, None, None
     for f, _ in factors:
         if f.degree() == 1:
             # Any linear factor f(x) represents _some conjugate of_ a in QQ(b).
@@ -153,8 +153,9 @@ def field_isomorphism_factor(a, b):
             root = Add(*terms)
             # Check whether we got the number a
             if A is None:
-                A = a.root.evalf(chop=True)
-            if root.evalf(chop=True) == A:
+                eps, evalf_ = a.minpoly.root_comparison_tools()
+                A = evalf_(a)
+            if abs(evalf_(root) - A) < eps:
                 return coeffs
 
     # If none of the linear factors represented a in QQ(b), then in fact a is
