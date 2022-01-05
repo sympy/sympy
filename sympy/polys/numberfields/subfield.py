@@ -45,7 +45,7 @@ from sympy.polys.polyerrors import IsomorphismFailed
 from sympy.polys.polytools import Poly, PurePoly, factor_list
 from sympy.utilities import public
 
-from mpmath import pslq, mp
+from mpmath import MPContext
 
 
 def is_isomorphism_possible(a, b):
@@ -88,6 +88,7 @@ def field_isomorphism_pslq(a, b):
     g = b.minpoly.replace(f.gen)
 
     n, m, prev = 100, b.minpoly.degree(), None
+    ctx = MPContext()
 
     for i in range(1, 5):
         A = a.root.evalf(n)
@@ -95,12 +96,8 @@ def field_isomorphism_pslq(a, b):
 
         basis = [1, B] + [ B**i for i in range(2, m) ] + [-A]
 
-        dps = mp.dps
-        try:
-            mp.dps = n
-            coeffs = pslq(basis, maxcoeff=int(1e10), maxsteps=1000)
-        finally:
-            mp.dps = dps
+        ctx.dps = n
+        coeffs = ctx.pslq(basis, maxcoeff=int(1e10), maxsteps=1000)
 
         if coeffs is None:
             # PSLQ can't find an integer linear combination. Give up.
