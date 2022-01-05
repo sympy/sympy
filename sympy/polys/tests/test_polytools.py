@@ -2999,6 +2999,36 @@ def test_root_bounds():
     raises(PolynomialError, lambda: Poly(2*x**3).root_bounds())
 
 
+def test_root_separation_lower_bound():
+    for e in [
+        x**3,
+        (x - 1)**3,
+        x**2 - 2,
+        x ** 2 + x + 1,
+    ]:
+        f = Poly(e)
+        eps = f.root_separation_lower_bound()
+        assert eps.is_rational
+
+        roots = f.all_roots()
+        seps = set()
+        for i, r in enumerate(roots):
+            for s in roots[i+1:]:
+                seps.add(abs(r.evalf() - s.evalf()))
+        assert eps <= min(seps)
+
+    f = Poly(x**2 - sqrt(2), extension=sqrt(2))
+    eps = f.root_separation_lower_bound()
+    assert eps <= 2*2**(1/4)
+
+    raises(DomainError,
+           lambda: Poly(x + 1, domain=FF(7)).root_separation_lower_bound())
+    raises(DomainError,
+           lambda: Poly(y * x + 1, domain=ZZ[y]).root_separation_lower_bound())
+    raises(MultivariatePolynomialError,
+           lambda: Poly(x * y + 1, domain=ZZ).root_separation_lower_bound())
+
+
 def test_torational_factor_list():
     p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
     assert _torational_factor_list(p, x) == (-2, [
@@ -3009,6 +3039,7 @@ def test_torational_factor_list():
 
     p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + 2**Rational(1, 4))}))
     assert _torational_factor_list(p, x) is None
+
 
 def test_cancel():
     assert cancel(0) == 0

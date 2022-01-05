@@ -13,7 +13,8 @@ from sympy.core.exprtools import Factors, factor_nc, factor_terms
 from sympy.core.evalf import pure_complex
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
-from sympy.core.numbers import ilcm, I, Integer
+from sympy.core.numbers import ilcm, I, Integer, Rational
+from sympy.core.power import isqrt
 from sympy.core.relational import Relational, Equality
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
@@ -3833,6 +3834,68 @@ class Poly(Basic):
         lb_inv = 1 + max(abs(n / tc) for n in coeffs[:-1])
 
         return 1/lb_inv, ub
+
+    def root_separation_lower_bound(f):
+        """
+        Compute a lower bound on the minimum distance between any two
+        roots of this polynomial.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly
+        >>> from sympy.abc import x
+        >>> Poly(x**2 - 2).root_separation_lower_bound()
+        1
+        >>> (x * Poly(x**2 - 2)).root_separation_lower_bound()
+        12/17
+
+        Returns
+        =======
+
+        :py:class:`~.Expr`
+            A non-negative lower bound which will be positive if all the roots
+            are distinct, and rational if the coefficients of the polynomial
+            are rational.
+
+        Raises
+        ======
+
+        DomainError
+            If the domain of the polynomial is not a subring of the complex
+            numbers.
+        MultivariatePolynomialError
+            If the polynomial is not univariate.
+
+        """
+        dom = f.get_domain()
+        if dom.is_FiniteField or not dom.is_Numerical:
+            raise DomainError("Cannot compute root bounds over %s" % dom)
+        if f.is_multivariate:
+            raise MultivariatePolynomialError(
+                "Must be a univariate polynomial")
+        if f.is_monomial:
+            return Integer(0)
+
+        x = f.gen
+        y = Dummy('y')
+        g = f.subs(x, x + y)
+        h = Poly(resultant(f, g, gens=[x, y]), domain=f.domain)
+        # If f has roots ri, the roots of h are all the ri - rj.
+
+        if h.is_monomial:
+            # In this case all roots of f are the same.
+            return Integer(0)
+
+        lb, _ = h.root_bounds()
+
+        # Since h is an even function, can improve bound with square root.
+        if lb.is_rational:
+            # Preserve rational bound
+            return Rational(isqrt(lb.p*lb.q) + 1, lb.q)
+        else:
+            from sympy.functions.elementary.miscellaneous import sqrt
+            return sqrt(lb)
 
     def cancel(f, g, include=False):
         """
