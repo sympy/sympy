@@ -349,8 +349,6 @@ class BaseVector(Vector, AtomicExpr):
     """
     Class to denote a base vector.
 
-    Unicode pretty forms in Python 2 should use the prefix ``u``.
-
     """
 
     def __new__(cls, index, system, pretty_str=None, latex_str=None):

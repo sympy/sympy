@@ -786,12 +786,6 @@ def test_namespace_order():
 
     assert if2(1) == 'function g'
 
-def test_namespace_type():
-    # lambdify had a bug where it would reject modules of type unicode
-    # on Python 2.
-    x = sympy.Symbol('x')
-    lambdify(x, x, modules='math')
-
 
 def test_imps():
     # Here we check if the default returned functions are anonymous - in

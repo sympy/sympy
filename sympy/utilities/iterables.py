@@ -2625,8 +2625,6 @@ def kbins(l, k, ordered=None):
     Examples
     ========
 
-    >>> from __future__ import print_function
-
     The default is to give the items in the same order, but grouped
     into k partitions without any reordering:
 
