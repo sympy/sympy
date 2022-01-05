@@ -116,12 +116,12 @@ require any external dependencies.
 
 #### antlr-python-runtime
 
-[Antlr](https://www.antlr.org/) is used for the {func}`~.parse_latex` and
-[Autolev](autolev_parser) parsers. They both require the Antlr Python runtime
-to be installed. The package for this is called `antlr4-python-runtime` with
-conda and `antlr4-python3-runtime` with pip). Also be aware that the version
-of the Antlr Python runtime must match the version that was used to compile
-the LaTeX and Autolev parsers (4.7).
+[Antlr](https://www.antlr.org/) is used for the {func}`LaTeX parser
+<sympy.parsing.latex.parse_latex>` and [Autolev](autolev_parser) parsers. They
+both require the Antlr Python runtime to be installed. The package for this is
+called `antlr4-python-runtime` with conda and `antlr4-python3-runtime` with
+pip). Also be aware that the version of the Antlr Python runtime must match
+the version that was used to compile the LaTeX and Autolev parsers (4.7).
 
 #### Clang Python Bindings
 
@@ -155,7 +155,7 @@ It can also be used as a backend to `satisfiable()`. Presently, only
 ### Plotting
 
 The {mod}`sympy.plotting.plot` module makes heavy use of external plotting
-libraries to render plots. The primarly plotting module that is supported is
+libraries to render plots. The primarily plotting module that is supported is
 Matplotlib.
 
 #### matplotlib
