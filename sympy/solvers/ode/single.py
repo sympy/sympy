@@ -830,7 +830,7 @@ class Bernoulli(SinglePatternODESolver):
 
     def _equation(self, fx, x, order):
         P, Q, n = self.wilds()
-        return fx.diff(x) + P*fx - Q*fx**n
+        return fx.diff(x) + P*fx + Q*fx**n
 
     def _get_general_solution(self, *, simplify_flag: bool = True):
         P, Q, n = self.wilds_match()
@@ -839,11 +839,11 @@ class Bernoulli(SinglePatternODESolver):
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
         if n==1:
             gensol = Eq(log(fx), (
-            C1 + Integral((-P + Q), x)
+            C1 + Integral((-P - Q), x)
         ))
         else:
             gensol = Eq(fx**(1-n), (
-                (C1 - (n - 1) * Integral(Q*exp(-n*Integral(P, x))
+                (C1 - (n - 1) * Integral(-Q*exp(-n*Integral(P, x))
                             * exp(Integral(P, x)), x)
                 ) * exp(-(1 - n)*Integral(P, x)))
             )
