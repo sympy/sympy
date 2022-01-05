@@ -1059,3 +1059,15 @@ def test_issue_22604():
     assert x1sol == Eq(x1(t), sqrt(3 - sqrt(5))*(sqrt(10) + 5*sqrt(2))*cos(sqrt(2)*t*sqrt(3 - sqrt(5))/2)/20 + \
                        (-5*sqrt(2) + sqrt(10))*sqrt(sqrt(5) + 3)*cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/20)
     assert x2sol == Eq(x2(t), (sqrt(5) + 5)*cos(sqrt(2)*t*sqrt(3 - sqrt(5))/2)/10 + (5 - sqrt(5))*cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/10)
+
+def test_issue_22462():
+    de = Eq(f(x).diff(x), -20*f(x)**2 - 500*f(x)/7200)
+    assert classify_ode(de, f(x)) == ('factorable', 'separable', '1st_exact',
+        'Bernoulli', '1st_rational_riccati', '1st_power_series', 'lie_group',
+        'separable_Integral', '1st_exact_Integral', 'Bernoulli_Integral')
+    assert dsolve(de, hint = "Bernoulli") == Eq(f(x), 1/(symbols('C1')*exp(5*x/72) - 288))
+
+    de2 = Eq(f(x).diff(x), -2*f(x)**2 - 5*f(x)/7)
+    assert classify_ode(de2, f(x)) == ('factorable', 'separable', '1st_exact',
+        'Bernoulli', '1st_rational_riccati', '1st_power_series',
+        'lie_group', 'separable_Integral', '1st_exact_Integral', 'Bernoulli_Integral')
