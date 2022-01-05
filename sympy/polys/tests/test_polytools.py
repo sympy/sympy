@@ -2985,9 +2985,9 @@ def test_root_bounds():
         g = x * f
         assert g.root_bounds() == (lb, ub)
 
-    for c in [2, 1e10, 1e-10, -5, 5 + 12*I]:
-        f = Poly(x**2 - c)
-        check(f, c)
+    for c0 in [2, 1e10, 1e-10, -5, 5 + 12*I]:
+        f = Poly(x**2 - c0)
+        check(f, c0)
 
     f = Poly(x**2 - sqrt(2), extension=sqrt(2))
     check(f, sqrt(2))
