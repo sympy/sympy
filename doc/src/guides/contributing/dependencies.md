@@ -65,35 +65,30 @@ These dependencies are not required for SymPy to function, but it is
 recommended that all users install them if they can, as they will improve the
 general performance of SymPy.
 
-#### gmpy2
-
-[gmpy2](https://gmpy2.readthedocs.io/en/latest/intro.html) is a Python wrapper
-for the GMP multiple-precision library. It provides large integers that are
-faster than the built-in Python `int`. When gmpy2 is installed, it is used
-automatically by certain core functions that operate on integers, such as the
-[polys](polys-docs). See {ref}`polys-domainsref` for more details.
+- **gmpy2**: [gmpy2](https://gmpy2.readthedocs.io/en/latest/intro.html) is a
+  Python wrapper for the GMP multiple-precision library. It provides large
+  integers that are faster than the built-in Python `int`. When gmpy2 is
+  installed, it is used automatically by certain core functions that operate
+  on integers, such as the [polys](polys-docs). See {ref}`polys-domainsref`
+  for more details.
 
 ### Interactive Use
 
 SymPy is designed to be used both interactively and as a library. When used
 interactively, SymPy is able to interface with IPython and Jupyter notebooks.
 
-#### IPython
+- **IPython**: The {func}`~.init_session` function and `isympy` command will
+  automatically start IPython if it is installed. In addition to the usual
+  benefits of using [IPython](https://ipython.org/), this enables interactive
+  plotting with matplotlib. Also some flags such as `auto_symbols` and
+  `auto_int_to_Integer` will only work in IPython.
 
-The {func}`~.init_session` function and
-`isympy` command will automatically start IPython if it is installed. In
-addition to the usual benefits of using [IPython](https://ipython.org/), this
-enables interactive plotting with matplotlib. Also some flags such as
-`auto_symbols` and `auto_int_to_Integer` will only work in IPython.
+  The `IPython` package is required to run some of the tests in sympy/interactive.
 
-The `IPython` package is required to run some of the tests in sympy/interactive.
-
-#### Jupyter Notebook and Qt Console
-
-SymPy expressions automatically print using MathJax in the [Jupyter
-Notebook](https://jupyter.org/) and with LaTeX [Qt
-Console](https://qtconsole.readthedocs.io/en/stable/) (if
-[LaTeX](dependencies-latex) is installed).
+- **Jupyter Notebook and Qt Console**: SymPy expressions automatically print
+  using MathJax in the [Jupyter Notebook](https://jupyter.org/) and with LaTeX
+  [Qt Console](https://qtconsole.readthedocs.io/en/stable/) (if
+  [LaTeX](dependencies-latex) is installed).
 
 ### Printing
 
@@ -102,9 +97,7 @@ images rendered with LaTeX. `preview()` can either save the image to a file or
 show it with a viewer.
 
 (dependencies-latex)=
-#### LaTeX
-
-A $\LaTeX$ distributions such as [TeXLive](https://tug.org/texlive/) or
+- **LaTeX**: A $\LaTeX$ distributions such as [TeXLive](https://tug.org/texlive/) or
 [MiKTeX](https://miktex.org/) is required for {func}`~.preview` to function.
 
 ### Parsing
@@ -115,24 +108,20 @@ at this time. The Python ({func}`~.parse_expr`), Mathematca
 ({func}`~.mathematica`), and Maxima ({func}`~.parse_maxima`) parsers do not
 require any external dependencies.
 
-#### antlr-python-runtime
+- **antlr-python-runtime**: [Antlr](https://www.antlr.org/) is used for the
+  {func}`LaTeX parser <sympy.parsing.latex.parse_latex>` and
+  [Autolev](autolev_parser) parsers. They both require the Antlr Python
+  runtime to be installed. The package for this is called
+  `antlr4-python-runtime` with conda and `antlr4-python3-runtime` with pip).
+  Also be aware that the version of the Antlr Python runtime must match the
+  version that was used to compile the LaTeX and Autolev parsers (4.7).
 
-[Antlr](https://www.antlr.org/) is used for the {func}`LaTeX parser
-<sympy.parsing.latex.parse_latex>` and [Autolev](autolev_parser) parsers. They
-both require the Antlr Python runtime to be installed. The package for this is
-called `antlr4-python-runtime` with conda and `antlr4-python3-runtime` with
-pip). Also be aware that the version of the Antlr Python runtime must match
-the version that was used to compile the LaTeX and Autolev parsers (4.7).
+- **Clang Python Bindings**: The C parser (`sympy.parsing.c.parse_c`) requires
+  the Clang Python bindings. The package for this is called `python-clang`
+  with conda and `clang` with pip.
 
-#### Clang Python Bindings
-
-The C parser (`sympy.parsing.c.parse_c`) requires the Clang Python bindings.
-The package for this is called `python-clang` with conda and `clang` with pip.
-
-#### lfortran
-
-The Fortran parser (in `sympy.parsing.fortran`) requires
-[LFortran](https://lfortran.org/).
+- **lfortran**: The Fortran parser (in `sympy.parsing.fortran`) requires
+  [LFortran](https://lfortran.org/).
 
 ### Logic
 
@@ -141,17 +130,14 @@ the DPLL satisfiability algorithm. But it can optionally use faster C SAT
 solvers if they are installed. Note that `satisfiable()` is also used by
 {func}`~.ask`.
 
-#### pycosat
+- **pycosat**: [Pycosat](https://pypi.org/project/pycosat/) is used
+  automatically if it is installed. The use of pycosat can be forced by using
+  `satisfiable(algorithm='pycosat')`.
 
-[Pycosat](https://pypi.org/project/pycosat/) is used automatically if it is
-installed. The use of pycosat can be forced by using `satisfiable(algorithm='pycosat')`.
-
-#### pysat
-
-[Pysat](https://pysathq.github.io/) is a library which wraps many SAT solvers.
-It can also be used as a backend to `satisfiable()`. Presently, only
-[Minisat](http://minisat.se/MiniSat.html) is implemented, using
-`satisfiable(algorithm=minisat22')`.
+- **pysat**: [Pysat](https://pysathq.github.io/) is a library which wraps many
+  SAT solvers. It can also be used as a backend to `satisfiable()`. Presently,
+  only [Minisat](http://minisat.se/MiniSat.html) is implemented, using
+  `satisfiable(algorithm=minisat22')`.
 
 ### Plotting
 
@@ -159,20 +145,18 @@ The {mod}`sympy.plotting.plot` module makes heavy use of external plotting
 libraries to render plots. The primarily plotting module that is supported is
 Matplotlib.
 
-#### matplotlib
+- **matplotlib**: Most plotting functionality requires the
+  [Matplotlib](https://matplotlib.org/) plotting library. Without Matplotlib
+  installed, most plotting functions will either fail or give rudimentary
+  [text plots](textplot)
 
-Most plotting functionality requires the [Matplotlib](https://matplotlib.org/)
-plotting library. Without Matplotlib installed, most plotting functions will
-either fail or give rudimentary [text plots](textplot)
+- **pyglet**: SymPy has a submodule {mod}`sympy.plotting.pygletplot` that can
+  be used to interface with the [pyglet](http://pyglet.org/) module to do 2D
+  and 3D plotting.
 
-#### pyglet
+### lambdify
 
-SymPy has a submodule {mod}`sympy.plotting.pygletplot` that can be used to
-interface with the [pyglet](http://pyglet.org/) module to do 2D and 3D plotting.
-
-## lambdify
-
-{func}`lambdify` is a function that converts SymPy expressions into functions
+{func}`~.lambdify` is a function that converts SymPy expressions into functions
 that can be evaluated numerically using various libraries as backends.
 `lambdify` is the primary vehicle by which users interface between SymPy and
 these libraries. It is the standard way to convert a symbolic SymPy expression
@@ -185,98 +169,84 @@ These libraries are enabled as backends in `lambdify` with build-in
 translations to convert SymPy expressions into the appropriate functions for
 those libraries.
 
-#### NumPy
+- **NumPy**: By default, if it is installed, `lambdify` creates functions
+  using [NumPy](https://numpy.org/) (if NumPy is not installed, `lambdify`
+  produces functions using the standard library
+  [math](https://docs.python.org/3/library/math.html) module, although this
+  behavior is primarily provided for backwards compatibility).
 
-By default, if it is installed, `lambdify` creates functions using
-[NumPy](https://numpy.org/) (if NumPy is not installed, `lambdify` produces
-functions using the standard library
-[math](https://docs.python.org/3/library/math.html) module, although this
-behavior is primarily provided for backwards compatibility).
+- **SciPy**: If [SciPy](https://scipy.org/) is installed, `lambdify` will use
+  it automatically. SciPy is needed to lambdify certain [special
+  functions](https://docs.scipy.org/doc/scipy/reference/special.html) that are
+  not included in NumPy.
 
-#### SciPy
+- **CuPy**: [CuPy](https://cupy.dev/) is a library that provides a NumPy
+  compatible interface for CUDA GPUs. `lambdify` can produce CuPy compatible
+  functions using `lambdify(modules='cupy')`.
 
-If [SciPy](https://scipy.org/) is installed, `lambdify` will use it
-automatically. SciPy is needed to lambdify certain [special
-functions](https://docs.scipy.org/doc/scipy/reference/special.html) that are
-not included in NumPy.
+- **TensorFlow**: [TensorFlow](https://www.tensorflow.org/) is a popular
+  machine learning library. `lambdify` can produce TensorFlow compatible
+  functions using `lambdify(modules='tensorflow')`.
 
-#### CuPy
+- **NumExpr**: [NumExpr](https://github.com/pydata/numexpr) is a fast
+  numerical expression evaluator for NumPy. `lambdify` can produce TensorFlow
+  compatible functions using `lambdify(modules='numexpr')`.
 
-[CuPy](https://cupy.dev/) is a library that provides a NumPy compatible
-interface for CUDA GPUs. `lambdify` can produce CuPy compatible functions
-using `lambdify(modules='cupy')`.
-
-#### TensorFlow
-
-[TensorFlow](https://www.tensorflow.org/) is a popular machine learning
-library. `lambdify` can produce TensorFlow compatible functions using `lambdify(modules='tensorflow')`.
-
-#### NumExpr
-
-[NumExpr](https://github.com/pydata/numexpr) is a fast numerical expression evaluator for NumPy. `lambdify` can produce TensorFlow compatible functions using `lambdify(modules='numexpr')`.
-
-#### mpmath
-
-`lambdify` can also produce mpmath compatible functions. Note that mpmath is
-already a [required dependency](dependencies-mpmath) of SymPy. This
-functionality is useful for converting a SymPy expression to a function for
-use with pure mpmath.
+- **mpmath**: `lambdify` can also produce mpmath compatible functions. Note
+  that mpmath is already a [required dependency](dependencies-mpmath) of
+  SymPy. This functionality is useful for converting a SymPy expression to a
+  function for use with pure mpmath.
 
 ### Code Generation
 
-#### NumPy
+- **NumPy**: TODO
 
-#### Cython
+- **Cython**: TODO
 
-#### Aesara
+- **Aesara**: TODO
 
-#### pymc3
+- **pymc3**: TODO
 
-#### llvmlite
+- **llvmlite**: TODO
 
-#### Wurlitzer
-
-[Wurlitzer](https://github.com/minrk/wurlitzer) is a Python package that
-allows capturing output from C extensions. It is used by some of the tests in
-the `sympy.codegen` submodule. It is only used by the test suite. It is not
-used by any end-user functionality. If it is not installed, some tests will be
-skipped.
+- **Wurlitzer**: [Wurlitzer](https://github.com/minrk/wurlitzer) is a Python
+  package that allows capturing output from C extensions. It is used by some
+  of the tests in the `sympy.codegen` submodule. It is only used by the test
+  suite. It is not used by any end-user functionality. If it is not installed,
+  some tests will be skipped.
 
 ### Optional SymEngine Backend
 
-#### python-symengine
+- **python-symengine**: [SymEngine](https://symengine.org/) is a fast symbolic
+  manipulation library, written in C++. The SymEngine Python bindings may be
+  used as an optional backend for SymPy core. To do this, first install the
+  SymEngine Python bindings (with `pip install symengine` or `conda install -c
+  conda-forge python-symengine`) and run SymPy with the `USE_SYMENGINE=1`
+  environment variable.
 
-[SymEngine](https://symengine.org/) is a fast symbolic manipulation library,
-written in C++. The SymEngine Python bindings may be used as an optional
-backend for SymPy core. To do this, first install the SymEngine Python
-bindings (with `pip install symengine` or `conda install -c conda-forge
-python-symengine`) and run SymPy with the `USE_SYMENGINE=1` environment variable.
+  Presently, the SymEngine backend is only used by the
+  [sympy.physics.mechanics](classical_mechanics) and
+  [sympy.liealgebras](lie-algebras) modules, although you can also interface
+  with SymPy's SymEngine backend directly by importing things from
+  `sympy.core.backend`:
 
-Presently, the SymEngine backend is only used by the
-[sympy.physics.mechanics](classical_mechanics) and
-[sympy.liealgebras](lie-algebras) modules, although you can also interface
-with SymPy's SymEngine backend directly by importing things from
-`sympy.core.backend`:
+  ```
+  >>> from sympy.core.backend import Symbol
+  >>> # This will create a SymEngine Symbol object if the USE_SYMENGINE
+  >>> # environment variable is configured. Otherwise it will be an ordinary
+  >>> # SymPy Symbol object.
+  >>> x = Symbol('x')
+  ```
 
-```
->>> from sympy.core.backend import Symbol
->>> # This will create a SymEngine Symbol object if the USE_SYMENGINE
->>> # environment variable is configured. Otherwise it will be an ordinary
->>> # SymPy Symbol object.
->>> x = Symbol('x')
-```
-
-SymEngine backend support is still experimental, so certain SymPy functions
-may not work correctly when it is enabled.
+  SymEngine backend support is still experimental, so certain SymPy functions
+  may not work correctly when it is enabled.
 
 ### Experimental Rubi Integrator
 
-#### MatchPy
-
-[MatchPy](https://matchpy.readthedocs.io/en/latest/) is a library for doing
-pattern matching. It is used in the experimental sympy.integrals.rubi module,
-but presently, it is not used anywhere else in SymPy. SymPy and MatchPy are
-able to interface with each other.
+- **MatchPy**: [MatchPy](https://matchpy.readthedocs.io/en/latest/) is a
+  library for doing pattern matching. It is used in the experimental
+  sympy.integrals.rubi module, but presently, it is not used anywhere else in
+  SymPy. SymPy and MatchPy are able to interface with each other.
 
 ### Sage
 
@@ -313,11 +283,9 @@ CI](https://github.com/sympy/sympy/actions), so it is not generally necessary
 to run them yourself as a contributor unless you want to reproduce the
 benchmarks results on your computer or add a new benchmark to the suite.
 
-#### asv
-
-[Airspeed Velocity](https://asv.readthedocs.io/en/stable/) is the package used
-for running the benchmarks. Note that the package name that you install is
-`asv`.
+- **asv**: [Airspeed Velocity](https://asv.readthedocs.io/en/stable/) is the
+  package used for running the benchmarks. Note that the package name that you
+  install is `asv`.
 
 ### Running the tests
 
@@ -328,21 +296,17 @@ either by using the `sympy.testing.pytest.skip()` function or by setting `skip
 = True` to skip the entire test file. Optional modules in tests and SymPy
 library code should be imported with `import_module()`.
 
-#### pytest
+- **pytest**: [Pytest](https://docs.pytest.org/) is not a required dependency
+  for the SymPy test suite. SymPy has its own test runner, which can be
+  accessed via the `bin/test` script in the SymPy source directory or the
+  {func}`~.test` function.
 
-[Pytest](https://docs.pytest.org/) is not a required dependency for the SymPy
-test suite. SymPy has its own test runner, which can be accessed via the
-`bin/test` script in the SymPy source directory or the {func}`~.test`
-function.
+  However, if you prefer to use pytest, you can use it to run the tests as
+  well. Tests should use the wrappers in {mod}`sympy.testing.pytest` instead
+  of using pytest functions directly.
 
-However, if you prefer to use pytest, you can use it to run the tests as well.
-Tests should use the wrappers in {mod}`sympy.testing.pytest` instead of using
-pytest functions directly.
-
-#### Cloudpickle
-
-The [cloudpickle](https://github.com/cloudpipe/cloudpickle) package can be
-used to more effectively pickle SymPy objects than the built-in Python
-[pickle](https://docs.python.org/3/library/pickle.html). Some tests in
-`sympy.utilities.tests.test_pickling.py` depend on cloudpickle to run. It is
-not otherwise required for any SymPy function.
+- **Cloudpickle**: The [cloudpickle](https://github.com/cloudpipe/cloudpickle)
+  package can be used to more effectively pickle SymPy objects than the
+  built-in Python [pickle](https://docs.python.org/3/library/pickle.html).
+  Some tests in `sympy.utilities.tests.test_pickling.py` depend on cloudpickle
+  to run. It is not otherwise required for any SymPy function.
