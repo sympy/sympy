@@ -21,6 +21,7 @@ or [libraries.io](https://libraries.io/pypi/sympy/dependents).
 
 SymPy only has one hard dependency, which is required for it to work: mpmath.
 
+(dependencies-mpmath)=
 ### mpmath
 
 [mpmath](https://mpmath.org/) is a pure Python package for arbitrary precision
@@ -166,17 +167,60 @@ either fail or give rudimentary [text plots](textplot)
 
 #### pyglet
 
-### lambdify
+SymPy has a submodule {mod}`sympy.plotting.pygletplot` that can be used to
+interface with the [pyglet](http://pyglet.org/) module to do 2D and 3D plotting.
 
-#### numpy
+## lambdify
 
-#### scipy
+{func}`lambdify` is a function that converts SymPy expressions into functions
+that can be evaluated numerically using various libraries as backends.
+`lambdify` is the primary vehicle by which users interface between SymPy and
+these libraries. It is the standard way to convert a symbolic SymPy expression
+into an evaluable numeric function.
 
-#### cupy
+In principle, `lambdify` can interface with any external library if the user
+passes in an appropriate namespace dictionary as the third argument, but by
+default, `lambdify` is aware of several popular numeric Python libraries.
+These libraries are enabled as backends in `lambdify` with build-in
+translations to convert SymPy expressions into the appropriate functions for
+those libraries.
 
-#### tensorflow
+#### NumPy
 
-#### numexpr
+By default, if it is installed, `lambdify` creates functions using
+[NumPy](https://numpy.org/) (if NumPy is not installed, `lambdify` produces
+functions using the standard library
+[math](https://docs.python.org/3/library/math.html) module, although this
+behavior is primarily provided for backwards compatibility).
+
+#### SciPy
+
+If [SciPy](https://scipy.org/) is installed, `lambdify` will use it
+automatically. SciPy is needed to lambdify certain [special
+functions](https://docs.scipy.org/doc/scipy/reference/special.html) that are
+not included in NumPy.
+
+#### CuPy
+
+[CuPy](https://cupy.dev/) is a library that provides a NumPy compatible
+interface for CUDA GPUs. `lambdify` can produce CuPy compatible functions
+using `lambdify(modules='cupy')`.
+
+#### TensorFlow
+
+[TensorFlow](https://www.tensorflow.org/) is a popular machine learning
+library. `lambdify` can produce TensorFlow compatible functions using `lambdify(modules='tensorflow')`.
+
+#### NumExpr
+
+[NumExpr](https://github.com/pydata/numexpr) is a fast numerical expression evaluator for NumPy. `lambdify` can produce TensorFlow compatible functions using `lambdify(modules='numexpr')`.
+
+#### mpmath
+
+`lambdify` can also produce mpmath compatible functions. Note that mpmath is
+already a [required dependency](dependencies-mpmath) of SymPy. This
+functionality is useful for converting a SymPy expression to a function for
+use with pure mpmath.
 
 ### Code Generation
 
@@ -234,19 +278,7 @@ pattern matching. It is used in the experimental sympy.integrals.rubi module,
 but presently, it is not used anywhere else in SymPy. SymPy and MatchPy are
 able to interface with each other.
 
-
-
-### Other
-
-#### cloudpickle
-
-The [cloudpickle](https://github.com/cloudpipe/cloudpickle) package can be
-used to more effectively pickle SymPy objects than the built-in Python [pickle](https://docs.python.org/3/library/pickle.html).
-Some tests in `sympy.utilities.tests.test_pickling.py` depend on cloudpickle
-to run. It is not otherwise required for any SymPy function.
-
-#### Sage
-
+### Sage
 
 ## Development Dependencies
 
@@ -287,7 +319,14 @@ benchmarks results on your computer or add a new benchmark to the suite.
 for running the benchmarks. Note that the package name that you install is
 `asv`.
 
-### Tests only dependencies
+### Running the tests
+
+The base SymPy tests do not require any additional dependencies, however most
+of the above dependencies may be required for some tests to run. Tests that
+depend on optional dependencies should be skipped when they are not installed,
+either by using the `sympy.testing.pytest.skip()` function or by setting `skip
+= True` to skip the entire test file. Optional modules in tests and SymPy
+library code should be imported with `import_module()`.
 
 #### pytest
 
@@ -296,9 +335,14 @@ test suite. SymPy has its own test runner, which can be accessed via the
 `bin/test` script in the SymPy source directory or the {func}`~.test`
 function.
 
-
 However, if you prefer to use pytest, you can use it to run the tests as well.
 Tests should use the wrappers in {mod}`sympy.testing.pytest` instead of using
 pytest functions directly.
 
 #### Cloudpickle
+
+The [cloudpickle](https://github.com/cloudpipe/cloudpickle) package can be
+used to more effectively pickle SymPy objects than the built-in Python
+[pickle](https://docs.python.org/3/library/pickle.html). Some tests in
+`sympy.utilities.tests.test_pickling.py` depend on cloudpickle to run. It is
+not otherwise required for any SymPy function.
