@@ -174,6 +174,7 @@ html_domain_indices = ['py-modindex']
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'SymPydoc'
 
+language = 'en'
 
 # Options for LaTeX output
 # ------------------------
