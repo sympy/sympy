@@ -289,4 +289,16 @@ for running the benchmarks. Note that the package name that you install is
 
 ### Tests only dependencies
 
+#### pytest
+
+[Pytest](https://docs.pytest.org/) is not a required dependency for the SymPy
+test suite. SymPy has its own test runner, which can be accessed via the
+`bin/test` script in the SymPy source directory or the {func}`~.test`
+function.
+
+
+However, if you prefer to use pytest, you can use it to run the tests as well.
+Tests should use the wrappers in {mod}`sympy.testing.pytest` instead of using
+pytest functions directly.
+
 #### Cloudpickle
