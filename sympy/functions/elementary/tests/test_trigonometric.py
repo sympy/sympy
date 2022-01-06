@@ -186,6 +186,13 @@ def test_sin_series():
         x - x**3/6 + x**5/120 - x**7/5040 + O(x**9)
 
 
+def test_sin_taylor_term():
+    assert sin(x).taylor_term(1, x) == x
+    assert sin(x).taylor_term(3, x) == -x**3/6
+    assert sin(2*x).taylor_term(5, x) == 4*x**5/15
+    assert sin(y - x).taylor_term(3, x) == x**3*cos(y)/6
+
+
 def test_sin_rewrite():
     assert sin(x).rewrite(exp) == -I*(exp(I*x) - exp(-I*x))/2
     assert sin(x).rewrite(tan) == 2*tan(x/2)/(1 + tan(x/2)**2)
@@ -403,6 +410,13 @@ def test_cos_series():
         1 - x**2/2 + x**4/24 - x**6/720 + x**8/40320 + O(x**9)
 
 
+def test_cos_taylor_term():
+    assert cos(x).taylor_term(2, x) == -x**2/2
+    assert cos(x).taylor_term(4, x) == x**4/24
+    assert cos(2*x).taylor_term(4, x) == 2*x**4/3
+    assert cos(y + x).taylor_term(4, x) == x**4*cos(y)/24
+
+
 def test_cos_rewrite():
     assert cos(x).rewrite(exp) == exp(I*x)/2 + exp(-I*x)/2
     assert cos(x).rewrite(tan) == (1 - tan(x/2)**2)/(1 + tan(x/2)**2)
@@ -564,6 +578,13 @@ def test_tan():
 def test_tan_series():
     assert tan(x).series(x, 0, 9) == \
         x + x**3/3 + 2*x**5/15 + 17*x**7/315 + O(x**9)
+
+
+def test_tan_taylor_term():
+    assert tan(x).taylor_term(1, x) == x
+    assert tan(x).taylor_term(3, x) == x**3/3
+    assert tan(2*x).taylor_term(3, x) == 8*x**3/3
+    assert tan(y - x).taylor_term(3, x) == -x**3*(tan(y)**2 + 1)*(3*tan(y)**2 + 1)/3
 
 
 def test_tan_rewrite():
@@ -739,9 +760,12 @@ def test_cot_series():
     assert cot(x**4 + x**5).series(x, 0, 1) == \
         x**(-4) - 1/x**3 + x**(-2) - 1/x + 1 + O(x)
     assert cot(pi*(1-x)).series(x, 0, 3) == -1/(pi*x) + pi*x/3 + O(x**3)
+
+
+def test_cot_taylor_term():
     assert cot(x).taylor_term(0, x) == 1/x
     assert cot(x).taylor_term(2, x) is S.Zero
-    assert cot(x).taylor_term(3, x) == -x**3/45
+    assert cot(y + x).taylor_term(1, x) == x*(-cot(y)**2 - 1)
 
 
 def test_cot_rewrite():
@@ -916,9 +940,13 @@ def test_asin():
 def test_asin_series():
     assert asin(x).series(x, 0, 9) == \
         x + x**3/6 + 3*x**5/40 + 5*x**7/112 + O(x**9)
+
+
+def test_asin_taylor_term():
     t5 = asin(x).taylor_term(5, x)
     assert t5 == 3*x**5/40
     assert asin(x).taylor_term(7, x, t5, 0) == 5*x**7/112
+    assert asin(x - y).taylor_term(2, x) == -x**2*y/(2*(1 - y**2)**(3/2))
 
 
 def test_asin_rewrite():
@@ -984,11 +1012,16 @@ def test_acos_series():
     assert acos(x).series(x, 0, 8) == \
         pi/2 - x - x**3/6 - 3*x**5/40 - 5*x**7/112 + O(x**8)
     assert acos(x).series(x, 0, 8) == pi/2 - asin(x).series(x, 0, 8)
+
+
+def test_acos_taylor_term():
     t5 = acos(x).taylor_term(5, x)
+    y = Symbol('y')
     assert t5 == -3*x**5/40
     assert acos(x).taylor_term(7, x, t5, 0) == -5*x**7/112
     assert acos(x).taylor_term(0, x) == pi/2
     assert acos(x).taylor_term(2, x) is S.Zero
+    assert acos(x - y).taylor_term(3, x) == -x**3*(3*y**2/(1 - y**2) + 1)/(6*(1 - y**2)**(3/2))
 
 
 def test_acos_rewrite():
@@ -1211,6 +1244,12 @@ def test_acot_fdiff():
     assert acot(x).fdiff() == -1/(x**2 + 1)
     raises(ArgumentIndexError, lambda: acot(x).fdiff(2))
 
+
+def test_acot_taylor_term():
+    assert acot(x).taylor_term(0, x) == pi/2
+    assert acot(x).taylor_term(1, x) == -x
+    assert acot(x).taylor_term(3, x) == x**3/3
+    assert acot(y - x).taylor_term(3, x) == x**3*(4*y**2/(y**2 + 1) - 1)/(3*(y**2 + 1)**2)
 
 def test_attributes():
     assert sin(x).args == (x,)
@@ -1624,10 +1663,11 @@ def test_sec():
 
     assert sec(x).diff(x) == tan(x)*sec(x)
 
-    # Taylor Term checks
+def test_sec_taylor_term():
     assert sec(z).taylor_term(4, z) == 5*z**4/24
     assert sec(z).taylor_term(6, z) == 61*z**6/720
     assert sec(z).taylor_term(5, z) == 0
+    assert sec(x - z).taylor_term(2, z) == z**2*(2*tan(x)**2 + 1)*sec(x)/2
 
 
 def test_sec_rewrite():
@@ -1705,11 +1745,14 @@ def test_csc():
             1/x + x/6 + 7*x**3/360 + 31*x**5/15120 + O(x**6)
 
     assert csc(x).diff(x) == -cot(x)*csc(x)
+    raises(ArgumentIndexError, lambda: csc(x).fdiff(2))
 
+
+def test_csc_taylor_term():
     assert csc(x).taylor_term(2, x) == 0
     assert csc(x).taylor_term(3, x) == 7*x**3/360
     assert csc(x).taylor_term(5, x) == 31*x**5/15120
-    raises(ArgumentIndexError, lambda: csc(x).fdiff(2))
+    assert csc(x - y).taylor_term(3, x) == -x**3*(6*cot(y)**2 + 5)*cot(y)*csc(y)/6
 
 
 def test_asec():
