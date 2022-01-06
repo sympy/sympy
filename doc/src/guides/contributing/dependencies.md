@@ -1,9 +1,12 @@
 # Dependencies
 
+This page lists the hard and optional dependencies of SymPy.
+
 There are several packages that, when installed, can enable certain additional
 SymPy functionality. Most users and contributors will not need to install any
 of the packages mentioned below (except for the hard dependencies), unless
-they intend to use the part(s) of SymPy that can use those packages.
+they intend to use or contribute to the parts of SymPy that can use those
+packages.
 
 Every dependency listed below can be installed with conda via
 [conda-forge](https://conda-forge.org/), and most can also be installed with
@@ -22,28 +25,27 @@ or [libraries.io](https://libraries.io/pypi/sympy/dependents).
 SymPy only has one hard dependency, which is required for it to work: mpmath.
 
 (dependencies-mpmath)=
-### mpmath
+- **mpmath**: [mpmath](https://mpmath.org/) is a pure Python package for
+  arbitrary precision arithmetic. It is used under the hood whenever SymPy
+  calculates the floating-point value of a function, e.g., when using
+  [evalf](sympy.core.evalf.EvalfMixin.evalf).
 
-[mpmath](https://mpmath.org/) is a pure Python package for arbitrary precision
-arithmetic. It is used under the hood whenever SymPy calculates the
-floating-point value of a function, e.g., when using
-[evalf](sympy.core.evalf.EvalfMixin.evalf).
+  SymPy cannot function without mpmath and will fail to import if it is not
+  installed. If you get an error like
 
-SymPy cannot function without mpmath and will fail to import if it is not
-installed. If you get an error like
+  ```pytb
+  ImportError: SymPy now depends on mpmath as an external library. See
+  https://docs.sympy.org/latest/install.html#mpmath for more information.
+  ```
 
-```pytb
-ImportError: SymPy now depends on mpmath as an external library. See
-https://docs.sympy.org/latest/install.html#mpmath for more information.
-```
+  this means that you did not install mpmath correctly. [This
+  page](mpmath-install) explains how to install it.
 
-this means that you did not install mpmath correctly. [This
-page](mpmath-install) explains how to install it.
-
-Most methods of installing SymPy, such as the ones outlined in the
-[installation](installation) guide, will install mpmath automatically. You
-typically only need to install mpmath manually if you did not actually install
-SymPy, e.g., if you are developing directly on SymPy in the git repository.
+  Most methods of installing SymPy, such as the ones outlined in the
+  [installation](installation) guide, will install mpmath automatically. You
+  typically only need to install mpmath manually if you did not actually
+  install SymPy, e.g., if you are developing directly on SymPy in the git
+  repository.
 
 ## Optional Dependencies
 
@@ -148,12 +150,13 @@ Matplotlib.
 - **matplotlib**: Most plotting functionality requires the
   [Matplotlib](https://matplotlib.org/) plotting library. Without Matplotlib
   installed, most plotting functions will either fail or give rudimentary
-  [text plots](textplot)
+  [text plots](textplot).
 
 - **pyglet**: SymPy has a submodule {mod}`sympy.plotting.pygletplot` that can
   be used to interface with the [pyglet](http://pyglet.org/) module to do 2D
   and 3D plotting.
 
+(dependencies-lambdify)=
 ### lambdify
 
 {func}`~.lambdify` is a function that converts SymPy expressions into functions
@@ -199,15 +202,36 @@ those libraries.
 
 ### Code Generation
 
-- **NumPy**: TODO
+SymPy can [generate code](codegen_prose) for a large number of languages by
+converting SymPy expressions into valid code for those languages. It also has
+functionality for some languages to automatically compile and run the code.
+
+Note that the dependencies below are **not** a list of supported languages
+that SymPy can generate code for. Rather it is a list of packages that SymPy
+can interface with in some way. For most languages that SymPy supports code
+generation, it simply generates a string representing the code for that
+language, so no dependency on that language is required to use the code
+generation functionality. A dependency is typically only required for features
+that automatically take the generated code and compile it to a function that
+can be used within Python. Note that {func}`~.lambdify` is a special case of
+this, but its dependencies are listed [above](dependencies-lambdify).
+
+- **NumPy**: [NumPy](https://numpy.org/) and, optionally, its subpackage
+  [f2py](https://numpy.org/doc/stable/f2py/), can be used to generate Python
+  functions using the [autowrap](autowrap) or [ufuncify](ufuncify_method)
+  functions.
 
 - **Cython**: TODO
+
+- **Compilers**: TODO
 
 - **Aesara**: TODO
 
 - **pymc3**: TODO
 
 - **llvmlite**: TODO
+
+- **TensorFlow**: TODO
 
 - **Wurlitzer**: [Wurlitzer](https://github.com/minrk/wurlitzer) is a Python
   package that allows capturing output from C extensions. It is used by some
@@ -255,39 +279,15 @@ those libraries.
 Typical development on SymPy does not require any additional dependencies
 beyond Python and mpmath.
 
-### git
+### Getting the Source Code
 
-The [SymPy source code](https://github.com/sympy/sympy) uses the
-[git](https://git-scm.com/) version control system. See
-the [installation guide](installation-git) and [development
-workflow](https://github.com/sympy/sympy/wiki/Development-workflow#set-up-git)
-for instructions on how to get the development version of SymPy from git.
+- **git**: The [SymPy source code](https://github.com/sympy/sympy) uses the
+  [git](https://git-scm.com/) version control system. See the [installation
+  guide](installation-git) and [development
+  workflow](https://github.com/sympy/sympy/wiki/Development-workflow#set-up-git)
+  for instructions on how to get the development version of SymPy from git.
 
-### Building the Documentation
-
-Building the documentation requires several additional dependencies.
-[This page](build-docs) outlines these dependencies and how to install
-them. It is only necessary to install these dependencies if you are
-contributing documentation to SymPy and want to check that the HTML or PDF
-documentation renders correctly. Documentation for the development version of
-SymPy is hosted online at https://docs.sympy.org/dev/index.html.
-
-### Running the Benchmarks
-
-The benchmarks for SymPy are hosted at
-https://github.com/sympy/sympy_benchmarks. The README in that repository
-explains how to run the benchmarks.
-
-Note that the benchmarks are also run automatically on the [GitHub Actions
-CI](https://github.com/sympy/sympy/actions), so it is not generally necessary
-to run them yourself as a contributor unless you want to reproduce the
-benchmarks results on your computer or add a new benchmark to the suite.
-
-- **asv**: [Airspeed Velocity](https://asv.readthedocs.io/en/stable/) is the
-  package used for running the benchmarks. Note that the package name that you
-  install is `asv`.
-
-### Running the tests
+### Running the Tests
 
 The base SymPy tests do not require any additional dependencies, however most
 of the above dependencies may be required for some tests to run. Tests that
@@ -301,12 +301,38 @@ library code should be imported with `import_module()`.
   accessed via the `bin/test` script in the SymPy source directory or the
   {func}`~.test` function.
 
-  However, if you prefer to use pytest, you can use it to run the tests as
-  well. Tests should use the wrappers in {mod}`sympy.testing.pytest` instead
-  of using pytest functions directly.
+  However, if you prefer to use pytest, you can use it to run the tests
+  instead of the SymPy test runner. Tests in SymPy should use the wrappers in
+  {mod}`sympy.testing.pytest` instead of using pytest functions directly.
 
 - **Cloudpickle**: The [cloudpickle](https://github.com/cloudpipe/cloudpickle)
   package can be used to more effectively pickle SymPy objects than the
   built-in Python [pickle](https://docs.python.org/3/library/pickle.html).
   Some tests in `sympy.utilities.tests.test_pickling.py` depend on cloudpickle
   to run. It is not otherwise required for any SymPy function.
+
+### Building the Documentation
+
+Building the documentation requires several additional dependencies. [This
+page](build-docs) outlines these dependencies and how to install them. It is
+only necessary to install these dependencies if you are contributing
+documentation to SymPy and want to check that the HTML or PDF documentation
+renders correctly. If you only want to view the documentation for the
+development version of SymPy, development builds of the docs are hosted online
+at https://docs.sympy.org/dev/index.html.
+
+### Running the Benchmarks
+
+The benchmarks for SymPy are hosted at
+https://github.com/sympy/sympy_benchmarks. The
+[README](https://github.com/sympy/sympy_benchmarks#readme) in that repository
+explains how to run the benchmarks.
+
+Note that the benchmarks are also run automatically on the [GitHub Actions
+CI](https://github.com/sympy/sympy/actions), so it is generally not necessary
+to run them yourself as a contributor unless you want to reproduce the
+benchmarks results on your computer or add a new benchmark to the suite.
+
+- **asv**: [Airspeed Velocity](https://asv.readthedocs.io/en/stable/) is the
+  package used for running the benchmarks. Note that the package name that you
+  install is called `asv`.
