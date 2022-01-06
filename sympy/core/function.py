@@ -2190,6 +2190,12 @@ class Subs(Expr):
             variables = expr.variables + variables
             point = expr.point + point
             expr = expr.expr
+        elif isinstance(-expr, Subs):
+            expr = -expr
+            variables = expr.variables + variables
+            point = expr.point + point
+            expr = expr.expr
+            expr = -expr
         else:
             expr = sympify(expr)
 

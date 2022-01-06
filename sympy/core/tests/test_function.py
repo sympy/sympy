@@ -1324,6 +1324,30 @@ def test_issue_15084_13166():
     assert eq.diff(x, g(x)) == eq.diff(g(x), x)
 
 
+def test_issue_22439():
+    x, y, h = symbols('x y h')
+    u = Function('u')
+    assert u(x-h, y-h).diff(h, 2) == Subs(Derivative(u(_xi_1, -h + y), (_xi_1, 2)), _xi_1, -h + x) + \
+            Subs(Derivative(u(-h + x, _xi_2), (_xi_2, 2)), _xi_2, -h + y) + \
+            2*Subs(Derivative(u(_xi_1, _xi_2), _xi_1, _xi_2), (_xi_1, _xi_2), (-h + x, -h + y))
+    assert u(x-h, y-h).diff(h, 3).simplify() == -Subs(Derivative(u(_xi_1, -h + y), (_xi_1, 3)), _xi_1, -h + x) - \
+            Subs(Derivative(u(-h + x, _xi_2), (_xi_2, 3)), _xi_2, -h + y) - \
+            3*Subs(Derivative(u(_xi_1, _xi_2), _xi_1, (_xi_2, 2)), (_xi_2, _xi_1), (-h + y, -h + x)) - \
+            3*Subs(Derivative(u(_xi_1, _xi_2), (_xi_1, 2), _xi_2), (_xi_2, _xi_1), (-h + y, -h + x))
+    assert u(x-h, y-h).diff(h, 4) == Subs(Derivative(u(_xi_1, -h + y), (_xi_1, 4)), _xi_1, -h + x) + \
+            Subs(Derivative(u(-h + x, _xi_2), (_xi_2, 4)), _xi_2, -h + y) + \
+            4*Subs(Derivative(u(_xi_1, _xi_2), _xi_1, (_xi_2, 3)), (_xi_2, _xi_1), (-h + y, -h + x)) + \
+            6*Subs(Derivative(u(_xi_1, _xi_2), (_xi_1, 2), (_xi_2, 2)), (_xi_1, _xi_2), (-h + x, -h + y)) + \
+            4*Subs(Derivative(u(_xi_1, _xi_2), (_xi_1, 3), _xi_2), (_xi_1, _xi_2), (-h + x, -h + y))
+    assert u(x-h, y-h).series(h, x0=0, n=3).simplify() == u(x, y) - h*(Derivative(u(x, y), x) + Derivative(u(x, y), y)) + \
+            h**2*(Derivative(u(x, y), (x, 2)) + Derivative(u(x, y), (y, 2)) + \
+            2*Derivative(u(x, y), x, y))/2 + O(h**3)
+    assert u(x-h, y-h).series(h, x0=0, n=4).simplify() == u(x, y) - h*(Derivative(u(x, y), x) + Derivative(u(x, y), y)) + \
+            h**2*(Derivative(u(x, y), (x, 2)) + Derivative(u(x, y), (y, 2)) + 2*Derivative(u(x, y), x, y))/2 - \
+            h**3*(Derivative(u(x, y), (x, 3)) + Derivative(u(x, y), (y, 3)) + 3*Derivative(u(x, y), x, (y, 2)) + \
+            3*Derivative(u(x, y), (x, 2), y))/6 + O(h**4)
+
+
 def test_negative_counts():
     # issue 13873
     raises(ValueError, lambda: sin(x).diff(x, -1))
