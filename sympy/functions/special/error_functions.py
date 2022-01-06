@@ -2,6 +2,7 @@
     of incomplete gamma functions. It should probably be renamed. """
 
 from sympy.core import Add, S, sympify, cacheit, pi, I, Rational, EulerGamma
+from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, expand_mul
 from sympy.core.relational import is_eq
 from sympy.core.power import Pow
@@ -168,9 +169,18 @@ class erf(Function):
         if arg.could_extract_minus_sign():
             return -cls(-arg)
 
+    def taylor_term(self, n, x, *previous_terms):
+        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
+            return erf._taylor_term(n, x, *previous_terms)
+        else:
+            term = Expr.taylor_term(self, n, x, *previous_terms)
+            if term is None or term is S.NaN or x not in term.free_symbols:
+                return erf._taylor_term(n, x, *previous_terms)
+            return term
+
     @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def _taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -387,9 +397,18 @@ class erfc(Function):
         if arg.could_extract_minus_sign():
             return 2 - cls(-arg)
 
+    def taylor_term(self, n, x, *previous_terms):
+        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
+            return erfc._taylor_term(n, x, *previous_terms)
+        else:
+            term = Expr.taylor_term(self, n, x, *previous_terms)
+            if term is None or term is S.NaN or x not in term.free_symbols:
+                return erfc._taylor_term(n, x, *previous_terms)
+            return term
+
     @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def _taylor_term(n, x, *previous_terms):
         if n == 0:
             return S.One
         elif n < 0 or n % 2 == 0:
@@ -570,9 +589,18 @@ class erfi(Function):
             if isinstance(nz, erf2inv) and nz.args[0].is_zero:
                 return I*nz.args[1]
 
+    def taylor_term(self, n, x, *previous_terms):
+        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
+            return erfi._taylor_term(n, x, *previous_terms)
+        else:
+            term = Expr.taylor_term(self, n, x, *previous_terms)
+            if term is None or term is S.NaN or x not in term.free_symbols:
+                return erfi._taylor_term(n, x, *previous_terms)
+            return term
+
     @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def _taylor_term(n, x, *previous_terms):
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -2408,9 +2436,18 @@ class fresnels(FresnelIntegral):
     _trigfunc = sin
     _sign = -S.One
 
+    def taylor_term(self, n, x, *previous_terms):
+        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
+            return fresnels._taylor_term(n, x, *previous_terms)
+        else:
+            term = Expr.taylor_term(self, n, x, *previous_terms)
+            if term is None or term is S.NaN or x not in term.free_symbols:
+                return fresnels._taylor_term(n, x, *previous_terms)
+            return term
+
     @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def _taylor_term(n, x, *previous_terms):
         if n < 0:
             return S.Zero
         else:
@@ -2564,9 +2601,18 @@ class fresnelc(FresnelIntegral):
     _trigfunc = cos
     _sign = S.One
 
+    def taylor_term(self, n, x, *previous_terms):
+        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
+            return fresnelc._taylor_term(n, x, *previous_terms)
+        else:
+            term = Expr.taylor_term(self, n, x, *previous_terms)
+            if term is None or term is S.NaN or x not in term.free_symbols:
+                return fresnelc._taylor_term(n, x, *previous_terms)
+            return term
+
     @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def _taylor_term(n, x, *previous_terms):
         if n < 0:
             return S.Zero
         else:

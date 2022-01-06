@@ -12,7 +12,7 @@ from sympy.core.numbers import Integer, Rational, pi, I
 from sympy.core.parameters import global_parameters
 from sympy.core.power import Pow
 from sympy.core.singleton import S
-from sympy.core.symbol import Wild, Dummy
+from sympy.core.symbol import Wild, Dummy, Symbol
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.ntheory import multiplicity, perfect_power
@@ -383,9 +383,18 @@ class exp(ExpBase, metaclass=ExpMeta):
         """
         return S.Exp1
 
+    def taylor_term(self, n, x, *previous_terms):
+        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
+            return exp._taylor_term(n, x, *previous_terms)
+        else:
+            term = Expr.taylor_term(self, n, x, *previous_terms)
+            if term is None or term is S.NaN or x not in term.free_symbols:
+                return exp._taylor_term(n, x, *previous_terms)
+            return term
+
     @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):
+    def _taylor_term(n, x, *previous_terms):
         """
         Calculates the next term in the Taylor series expansion.
         """
@@ -789,9 +798,18 @@ class log(Function):
         """
         return self, S.One
 
+    def taylor_term(self, n, x, *previous_terms):
+        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
+            return log._taylor_term(n, x, *previous_terms)
+        else:
+            term = Expr.taylor_term(self, n, x, *previous_terms)
+            if term is None or term is S.NaN or x not in term.free_symbols:
+                return log._taylor_term(n, x, *previous_terms)
+            return term
+
     @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms):  # of log(1+x)
+    def _taylor_term(n, x, *previous_terms):  # of log(1+x)
         r"""
         Returns the next term in the Taylor series expansion of `\log(1+x)`.
         """

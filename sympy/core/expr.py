@@ -3241,7 +3241,10 @@ class Expr(Basic, EvalfMixin):
 
         x = sympify(x)
         _x = Dummy('x')
-        return self.subs(x, _x).diff(_x, n).subs(_x, x).subs(x, 0) * x**n / factorial(n)
+        coeff = self.subs(x, _x).diff(_x, n).subs(_x, x).subs(x, 0)
+        if coeff is None or coeff is S.NaN or coeff is S.ComplexInfinity:
+            raise ValueError(" Taylor Term of the order %s cannot be calculated" % n)
+        return coeff * x**n / factorial(n)
 
     def lseries(self, x=None, x0=0, dir='+', logx=None, cdir=0):
         """
@@ -4101,4 +4104,4 @@ from .power import Pow
 from .function import Function, _derivative_dispatch
 from .mod import Mod
 from .exprtools import factor_terms
-from .numbers import Integer, Rational
+from .numbers import Integer, Rational, ComplexInfinity
