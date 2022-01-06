@@ -268,7 +268,7 @@ def test_geometric_sums():
         Piecewise((1/(-x + 1), Abs(x) < 1), (Sum(x**n, (n, 0, oo)), True))
 
     assert summation(-2**n, (n, 0, oo)) is -oo
-    assert summation(I**n, (n, 0, oo)) == Sum(I**n, (n, 0, oo))
+    raises (ValueError, lambda:  summation(I**n, (n, 0, oo)))
 
     # issue 6802:
     assert summation((-1)**(2*x + 2), (x, 0, n)) == n + 1

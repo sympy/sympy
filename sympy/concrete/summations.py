@@ -263,6 +263,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                     zeta_function = self.eval_zeta_function(f, (i, a, b))
                     if zeta_function is not None:
                         return zeta_function
+                    try:
+                       if not self.is_convergent():
+                           raise ValueError("Sum of following divergent series cannot be calculated")
+                    except NotImplementedError:
+                        pass
                     return self
                 else:
                     return self.func(f, *self.limits[n:])
@@ -456,7 +461,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             raise NotImplementedError("convergence checking for more than one symbol "
                                       "containing series is not handled")
 
-        if lower_limit.is_finite and upper_limit.is_finite:
+        if (lower_limit.is_finite and upper_limit.is_finite) or (upper_limit - lower_limit).is_real:
             return S.true
 
         # transform sym -> -sym and swap the upper_limit = S.Infinity
