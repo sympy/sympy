@@ -192,7 +192,7 @@ those libraries.
   functions using `lambdify(modules='tensorflow')`.
 
 - **NumExpr**: [NumExpr](https://github.com/pydata/numexpr) is a fast
-  numerical expression evaluator for NumPy. `lambdify` can produce TensorFlow
+  numerical expression evaluator for NumPy. `lambdify` can produce NumExpr
   compatible functions using `lambdify(modules='numexpr')`.
 
 - **mpmath**: `lambdify` can also produce mpmath compatible functions. Note
@@ -216,28 +216,79 @@ that automatically take the generated code and compile it to a function that
 can be used within Python. Note that {func}`~.lambdify` is a special case of
 this, but its dependencies are listed [above](dependencies-lambdify).
 
+#### Autowrap
+
 - **NumPy**: [NumPy](https://numpy.org/) and, optionally, its subpackage
   [f2py](https://numpy.org/doc/stable/f2py/), can be used to generate Python
-  functions using the [autowrap](autowrap) or [ufuncify](ufuncify_method)
+  functions using the {func}`~.autowrap` or {func}`~.ufuncify`
   functions.
 
-- **Cython**: TODO
+- **Cython**: [Cython](https://cython.org/) can be used as a backend for
+  {func}`~.autowrap` or {func}`~.ufuncify`. Cython is also used in some of the
+  `sympy.codegen` tests to compile some examples.
 
-- **Compilers**: TODO
+(dependencies-compilers)=
+- **Compilers**: {func}`~.autowrap`, {func}`~.ufuncify`, and
+  related functions rely on a compiler to compile the generated code to a
+  function. Most standard C, C++, and Fortran compilers are supported,
+  including [Clang/LLVM](https://clang.llvm.org/),
+  [GCC](https://gcc.gnu.org/), and
+  [ifort](https://en.wikipedia.org/wiki/Intel_Fortran_Compiler).
 
-- **Aesara**: TODO
+#### Code Printers
 
-- **pymc3**: TODO
+Most code printers generate Python strings, and therefore do not require the
+given library or language compiler as a dependency. However, a few code
+printers generate Python functions instead of strings:
 
-- **llvmlite**: TODO
+- **Aesara**: The {mod}`sympy.printing.aesaracode` module contains functions
+  to convert SymPy expressions into a functions using the
+  [Aeseara](https://aesara.readthedocs.io/en/latest) (previously Theano)
+  library. The Aesara code generation functions return Aesara graph objects.
 
-- **TensorFlow**: TODO
+- **llvmlite**: The `sympy.printing.llvmjitcode` module supports generating LLVM Jit
+  from a SymPy expression. The functions make use of
+  [llvmlite](https://llvmlite.readthedocs.io/en/latest/), a Python wrapper
+  around [LLVM](https://llvm.org/). The `llvm_callable()` function
+  generates callable functions.
+
+- **TensorFlow**: The `sympy.printing.tensorflow` module supports generating
+  functions using the [TensorFlow](https://www.tensorflow.org/), a popular
+  machine learning library. Unlike the above two examples, `tensorflow_code()`
+  function **does** generate Python strings. However, `tensorflow` is imported
+  if available in order to automatically detect the TensorFlow version. If it
+  is not installed, the `tensorflow_code()` function assumes the latest
+  supported version of TensorFlow.
+
+#### Testing-Only Dependencies
 
 - **Wurlitzer**: [Wurlitzer](https://github.com/minrk/wurlitzer) is a Python
   package that allows capturing output from C extensions. It is used by some
   of the tests in the `sympy.codegen` submodule. It is only used by the test
   suite. It is not used by any end-user functionality. If it is not installed,
   some tests will be skipped.
+
+- **Cython**: [Cython](https://cython.org/) is also used in
+  some of the `sympy.codegen` tests to compile some examples.
+
+
+- **Compilers**: The various [compilers](dependencies-compilers) mentioned
+  above are used in some of the codegen and autowrap tests if they are
+  installed.
+
+### Statistics
+
+The {func}`sympy.stats.sample` function uses an external library to produce
+samples from the given distribution. At least one of the following libraries
+is required to use the sampling functionality of `sympy.stats`.
+
+- **SciPy**: `sample(library='scipy')` is the default. This uses [scipy.stats](https://docs.scipy.org/doc/scipy/reference/stats.html).
+
+- **NumPy**: `sample(library='numpy')` uses the [NumPy
+  random module](https://numpy.org/doc/stable/reference/random/index.html).
+
+- **pymc3**: `sample(library='pymc3')` uses
+  [PyMC3](https://docs.pymc.io/en/v3/) to do sampling.
 
 ### Optional SymEngine Backend
 
@@ -273,6 +324,15 @@ this, but its dependencies are listed [above](dependencies-lambdify).
   SymPy. SymPy and MatchPy are able to interface with each other.
 
 ### Sage
+
+[Sage](https://www.sagemath.org/) is an open source mathematics software that
+incorporates a large number of open source mathematics libraries. SymPy is one
+of the libraries used by Sage.
+
+Most of the code that interfaces between SymPy and Sage is in Sage itself, but
+a few `_sage_` methods in SymPy that do some very basic setting up of the
+Sage/SymPy wrappers. These methods should typically only be called by Sage
+itself.
 
 ## Development Dependencies
 
