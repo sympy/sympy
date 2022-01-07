@@ -28,7 +28,6 @@ from sympy.core.symbol import _symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
-from sympy.sets import EmptySet
 from .entity import GeometryEntity, GeometrySet
 from .exceptions import GeometryError
 from .point import Point, Point3D
