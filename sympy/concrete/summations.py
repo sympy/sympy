@@ -478,6 +478,17 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         sequence_term = sequence_term.xreplace({sym: sym_})
         sym = sym_
 
+        if isinstance(lower_limit, Symbol) and isinstance(upper_limit, Symbol):
+            raise NotImplementedError (" Result depends on the values of %s and %s" % (lower_limit, upper_limit))
+        elif isinstance(upper_limit, Symbol) and lower_limit is not S.NegativeInfinity:
+            if Sum(sequence_term, (sym, lower_limit, S.Infinity)).is_convergent():
+                return True
+            raise NotImplementedError (" Result depends on the value of %s" % upper_limit)
+        elif isinstance(lower_limit, Symbol) and upper_limit is not S.Infinity:
+            if Sum(sequence_term, (sym, S.NegativeInfinity, upper_limit)).is_convergent():
+                return True
+            raise NotImplementedError (" Result depends on the value of %s" % lower_limit)
+
         interval = Interval(lower_limit, upper_limit)
 
         # Piecewise function handle
