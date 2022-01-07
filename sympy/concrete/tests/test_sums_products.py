@@ -1100,15 +1100,12 @@ def test_is_convergent():
     assert Sum(4/(n + 2) - 5/(n + 1) + 1/n,(n, 7, oo)).is_convergent() is S.true
 
     # should raise NotImplementedError when result depends on value of x
-
     raises(NotImplementedError, lambda: Sum(z ,(z, x, y)))
     raises(NotImplementedError, lambda: Sum(z ,(z, x, 10)))
     raises(NotImplementedError, lambda: Sum(z ,(z, 1, x)))
     raises(NotImplementedError, lambda: Sum(1/x ,(x, 1, y)))
 
-
     # gives correct output when upper-limit or lower-limit is -oo / oo and
-
     assert Sum(z ,(z, x, oo)).is_convergent() is S.false
 
 
