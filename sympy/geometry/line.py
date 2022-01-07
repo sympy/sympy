@@ -28,6 +28,7 @@ from sympy.core.symbol import _symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (_pi_coeff as pi_coeff, acos, tan, atan2)
+from sympy.sets import EmptySet
 from .entity import GeometryEntity, GeometrySet
 from .exceptions import GeometryError
 from .point import Point, Point3D
@@ -966,6 +967,8 @@ class LinearEntity(GeometrySet):
                 return p1
             projected = other.__class__(p1, p2)
             projected = Intersection(self, projected)
+            if projected.is_empty:
+                return projected
             # if we happen to have intersected in only a point, return that
             if projected.is_FiniteSet and len(projected) == 1:
                 # projected is a set of size 1, so unpack it in `a`
