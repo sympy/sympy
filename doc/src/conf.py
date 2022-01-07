@@ -142,7 +142,8 @@ html_static_path = ['_static']
 html_last_updated_fmt = '%b %d, %Y'
 
 # was classic
-html_theme = "classic"
+# html_theme = "classic"
+html_theme = 'alabaster'
 
 html_logo = '_static/sympylogo.png'
 html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
