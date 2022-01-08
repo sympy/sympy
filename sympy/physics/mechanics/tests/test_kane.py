@@ -77,6 +77,8 @@ def test_two_dof():
     assert simplify(KM.rhs() -
                     KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(4, 1)
 
+    # Make sure an error is raised if nonlinear kinematic differential
+    # equations are supplied.
     kd = [q1d - u1**2, sin(q2d) - cos(u2)]
     raises(ValueError, lambda: KanesMethod(N, q_ind=[q1, q2],
                                            u_ind=[u1, u2], kd_eqs=kd))
