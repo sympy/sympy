@@ -217,7 +217,6 @@ def test_exp_taylor_term():
     assert exp(x).taylor_term(3, x) == x**3/6
     assert exp(x).taylor_term(4, x) == x**4/24
     assert exp(x).taylor_term(-1, x) is S.Zero
-    assert exp(x + y).taylor_term(3, x) == x**3*exp(y)/6
 
 
 def test_exp_MatrixSymbol():

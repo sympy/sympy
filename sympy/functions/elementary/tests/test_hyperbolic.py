@@ -98,6 +98,14 @@ def test_sinh_series():
         x + x**3/6 + x**5/120 + x**7/5040 + x**9/362880 + O(x**10)
 
 
+def test_sinh_taylor_term():
+    x, y = symbols('x y')
+    assert sinh(x).taylor_term(1, x) == x
+    assert sinh(x).taylor_term(3, x) == x**3/6
+    assert sinh(2*x).taylor_term(5, x) == 4*x**5/15
+    assert sinh(y - x).taylor_term(3, x) == -x**3*cosh(y)/6
+
+
 def test_sinh_fdiff():
     x = Symbol('x')
     raises(ArgumentIndexError, lambda: sinh(x).fdiff(2))
@@ -182,6 +190,14 @@ def test_cosh_series():
         1 + x**2/2 + x**4/24 + x**6/720 + x**8/40320 + O(x**10)
 
 
+def test_cosh_taylor_term():
+    x, y = symbols('x y')
+    assert cosh(x).taylor_term(2, x) == x**2/2
+    assert cosh(x).taylor_term(4, x) == x**4/24
+    assert cosh(2*x).taylor_term(6, x) == 4*x**6/45
+    assert cosh(y - x).taylor_term(3, x) == -x**3*sinh(y)/6
+
+
 def test_cosh_fdiff():
     x = Symbol('x')
     raises(ArgumentIndexError, lambda: cosh(x).fdiff(2))
@@ -263,6 +279,14 @@ def test_tanh_series():
     x = Symbol('x')
     assert tanh(x).series(x, 0, 10) == \
         x - x**3/3 + 2*x**5/15 - 17*x**7/315 + 62*x**9/2835 + O(x**10)
+
+
+def test_tanh_taylor_term():
+    x, y = symbols('x y')
+    assert tanh(x).taylor_term(1, x) == x
+    assert tanh(x).taylor_term(3, x) == -x**3/3
+    assert tanh(2*x).taylor_term(5, x) == 64*x**5/15
+    assert tanh(y - x).taylor_term(3, x) == x**3*(tanh(y)**2 - 1)*(3*tanh(y)**2 - 1)/3
 
 
 def test_tanh_fdiff():
@@ -351,6 +375,13 @@ def test_coth_series():
     assert coth(x).series(x, 0, 8) == \
         1/x + x/3 - x**3/45 + 2*x**5/945 - x**7/4725 + O(x**8)
 
+def test_coth_taylor_term():
+    x, y = symbols('x y')
+    assert coth(x).taylor_term(1, x) == x/3
+    assert coth(x).taylor_term(3, x) == -x**3/45
+    assert coth(y).taylor_term(3, x) == -x**3/45
+    assert coth(y - x).taylor_term(3, x) == -x**3*(1 - 3*cosh(y)**2/sinh(y)**2)/(3*sinh(y)**2)
+
 
 def test_coth_fdiff():
     x = Symbol('x')
@@ -425,6 +456,14 @@ def test_csch_series():
           - 73*x**9/3421440 + O(x**10)
 
 
+def test_csch_taylor_term():
+    x, y = symbols('x y')
+    assert csch(x).taylor_term(1, x) == -x/6
+    assert csch(x).taylor_term(3, x) == 7*x**3/360
+    assert csch(y).taylor_term(3, x) == 7*x**3/360
+    assert csch(y - x).taylor_term(3, x) == -x**3*(-coth(y)**3 - 3*coth(y)/sinh(y)**2 - 2*cosh(y)/sinh(y)**3)*csch(y)/6
+
+
 def test_csch_fdiff():
     x = Symbol('x')
     raises(ArgumentIndexError, lambda: csch(x).fdiff(2))
@@ -492,6 +531,14 @@ def test_sech_series():
     x = Symbol('x')
     assert sech(x).series(x, 0, 10) == \
         1 - x**2/2 + 5*x**4/24 - 61*x**6/720 + 277*x**8/8064 + O(x**10)
+
+
+def test_sech_taylor_term():
+    x, y = symbols('x y')
+    assert sech(x).taylor_term(2, x) == -x**2/2
+    assert sech(x).taylor_term(4, x) == 5*x**4/24
+    assert sech(2*x).taylor_term(4, x) == 10*x**4/3
+    assert sech(y - x).taylor_term(3, x) == x**3*(6*tanh(y)**2 - 5)*tanh(y)*sech(y)/6
 
 
 def test_sech_fdiff():
@@ -569,6 +616,15 @@ def test_asinh_series():
     assert asinh(x).taylor_term(7, x, t5, 0) == -5*x**7/112
 
 
+def test_asinh_taylor_term():
+    x, y = symbols('x y')
+    t5 = asinh(x).taylor_term(5, x)
+    assert t5 == 3*x**5/40
+    assert asinh(x).taylor_term(7, x, t5, 0) == -5*x**7/112
+    assert asinh(2*x).taylor_term(3, x) == -4*x**3/3
+    assert str(asinh(y - x).taylor_term(3, x)) == '-x**3*(3*y**2/(y**2 + 1) - 1)/(6*(y**2 + 1)**(3/2))'
+
+
 def test_asinh_fdiff():
     x = Symbol('x')
     raises(ArgumentIndexError, lambda: asinh(x).fdiff(2))
@@ -643,9 +699,15 @@ def test_acosh_series():
     x = Symbol('x')
     assert acosh(x).series(x, 0, 8) == \
         -I*x + pi*I/2 - I*x**3/6 - 3*I*x**5/40 - 5*I*x**7/112 + O(x**8)
+
+
+def test_acosh_taylor_term():
+    x, y = symbols('x y')
     t5 = acosh(x).taylor_term(5, x)
     assert t5 == - 3*I*x**5/40
     assert acosh(x).taylor_term(7, x, t5, 0) == - 5*I*x**7/112
+    assert acosh(2*x).taylor_term(3, x) == -4*I*x**3/3
+    assert str(acosh(y - x).taylor_term(3, x)) == 'x**3*(-3*y**2/(y**2 - 1) + 1)/(6*(y**2 - 1)**(3/2))'
 
 
 def test_acosh_fdiff():
@@ -872,6 +934,15 @@ def test_atanh_series():
         x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
 
 
+def test_atanh_taylor_term():
+    x, y = symbols('x y')
+    t5 = atanh(x).taylor_term(5, x)
+    assert t5 == x**5/5
+    assert atanh(x).taylor_term(7, x, t5, 0) == x**7/7
+    assert atanh(2*x).taylor_term(3, x) == 8*x**3/3
+    assert atanh(y - x).taylor_term(3, x) == x**3*(4*y**2/(y**2 - 1) - 1)/(3*(y**2 - 1)**2)
+
+
 def test_atanh_fdiff():
     x = Symbol('x')
     raises(ArgumentIndexError, lambda: atanh(x).fdiff(2))
@@ -926,6 +997,15 @@ def test_acoth_series():
     x = Symbol('x')
     assert acoth(x).series(x, 0, 10) == \
         I*pi/2 + x + x**3/3 + x**5/5 + x**7/7 + x**9/9 + O(x**10)
+
+
+def test_acoth_taylor_term():
+    x, y = symbols('x y')
+    t5 = acoth(x).taylor_term(5, x)
+    assert t5 == x**5/5
+    assert acoth(x).taylor_term(7, x, t5, 0) == x**7/7
+    assert acoth(2*x).taylor_term(0, x) == I*pi/2
+    assert acoth(y - x).taylor_term(3, x) == x**3*(4*y**2/(y**2 - 1) - 1)/(3*(y**2 - 1)**2)
 
 
 def test_acoth_fdiff():
