@@ -118,7 +118,9 @@ class KanesMethod(_Methods):
     def __init__(self, frame, q_ind, u_ind, kd_eqs=None, q_dependent=None,
             configuration_constraints=None, u_dependent=None,
             velocity_constraints=None, acceleration_constraints=None,
-            u_auxiliary=None, bodies=None, forcelist=None):
+            u_auxiliary=None, bodies=None, forcelist=None,
+            explicit_kinematics=True
+            ):
 
         """Please read the online documentation. """
         if not q_ind:
@@ -137,7 +139,7 @@ class KanesMethod(_Methods):
 
         self._initialize_vectors(q_ind, q_dependent, u_ind, u_dependent,
                 u_auxiliary)
-        self._initialize_kindiffeq_matrices(kd_eqs)
+        self._initialize_kindiffeq_matrices(kd_eqs, explicit_kinematics)
         self._initialize_constraint_matrices(configuration_constraints,
                 velocity_constraints, acceleration_constraints)
 
@@ -236,7 +238,7 @@ class KanesMethod(_Methods):
             self._k_dnh = Matrix()
             self._Ars = Matrix()
 
-    def _initialize_kindiffeq_matrices(self, kdeqs):
+    def _initialize_kindiffeq_matrices(self, kdeqs, explicit_kinematics):
         """Initialize the kinematic differential equation matrices."""
 
         if kdeqs:
@@ -256,9 +258,10 @@ class KanesMethod(_Methods):
             k_ku = (msubs(kdeqs, qdot_zero) - f_k).jacobian(u)
             k_kqdot = (msubs(kdeqs, u_zero) - f_k).jacobian(qdot)
 
-            f_k = k_kqdot.LUsolve(f_k)
-            k_ku = k_kqdot.LUsolve(k_ku)
-            k_kqdot = eye(len(qdot))
+            if explicit_kinematics:
+                f_k = k_kqdot.LUsolve(f_k)
+                k_ku = k_kqdot.LUsolve(k_ku)
+                k_kqdot = eye(len(qdot))
 
             self._qdot_u_map = solve_linear_system_LU(
                     Matrix([k_kqdot.T, -(k_ku * u + f_k).T]).T, qdot)
@@ -628,8 +631,13 @@ class KanesMethod(_Methods):
             raise ValueError('Need to compute Fr, Fr* first.')
         o = len(self.u)
         n = len(self.q)
-        return ((self._k_kqdot).row_join(zeros(n, o))).col_join((zeros(o,
+        return ((self.mass_matrix_kin).row_join(zeros(n, o))).col_join((zeros(o,
                 n)).row_join(self.mass_matrix))
+
+    @property
+    def mass_matrix_kin(self):
+        """The mass matrix of the kinematic differntial equations"""
+        return self._k_kqdot
 
     @property
     def forcing(self):
@@ -644,8 +652,14 @@ class KanesMethod(_Methods):
         differential equations."""
         if not self._fr or not self._frstar:
             raise ValueError('Need to compute Fr, Fr* first.')
+        return -Matrix([-self.forcing_kin, self._f_d, self._f_dnh])
+
+    @property
+    def forcing_kin(self):
+        """The forcing vector for the kinematic differential equations"""
         f1 = self._k_ku * Matrix(self.u) + self._f_k
-        return -Matrix([f1, self._f_d, self._f_dnh])
+        return -f1
+
 
     @property
     def q(self):
