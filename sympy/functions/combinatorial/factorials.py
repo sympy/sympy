@@ -510,7 +510,17 @@ class RisingFactorial(CombinatorialFunction):
     more information check "Concrete mathematics" by Graham, pp. 66
     or visit http://mathworld.wolfram.com/RisingFactorial.html page.
 
-    When `x` is a Poly instance of degree >= 1 with a single variable,
+    It can be extended to real values of `x` and `k` as follows:
+
+    * If `x \gt 0`, it is defined as -
+
+    .. math:: rf(x, k) = \frac{\Gamma(x + k)}{\Gamma(x)}
+
+    * If `x \le 0`, it is defined as -
+
+    .. math:: rf(x, k) = (-1)^k \frac{\Gamma(1 - x)}{\Gamma(-x - y - 1)}
+
+    When `x` is a Poly instance of degree `\ge 1` with a single variable,
     `rf(x,k) = x(y) \cdot x(y+1) \cdots x(y+k-1)`, where `y` is the
     variable of `x`. This is as described in Peter Paule, "Greatest
     Factorial Factorization and Symbolic Summation", Journal of
@@ -670,7 +680,17 @@ class FallingFactorial(CombinatorialFunction):
     more information check "Concrete mathematics" by Graham, pp. 66
     or visit http://mathworld.wolfram.com/FallingFactorial.html page.
 
-    When `x` is a Poly instance of degree >= 1 with single variable,
+    It can be extended to real values of `x` and `k` as follows:
+
+    * If `x \ge 0`, it is defined as -
+
+    .. math:: ff(x, k) = \frac{\Gamma(x + 1)}{\Gamma(x - k + 1)}
+
+    * If `x \lt 0`, it is defined as -
+
+    .. math:: ff(x, k) = (-1)^k \frac{\Gamma(k - x)}{\Gamma(-x)}
+
+    When `x` is a Poly instance of degree `\ge 1` with single variable,
     `ff(x,k) = x(y) \cdot x(y-1) \cdots x(y-k+1)`, where `y` is the
     variable of `x`. This is as described in Peter Paule, "Greatest
     Factorial Factorization and Symbolic Summation", Journal of
