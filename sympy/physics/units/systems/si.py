@@ -26,7 +26,7 @@ from sympy.physics.units.definitions import (
     katal, gray, becquerel, inch, liter, julian_year, gravitational_constant,
     speed_of_light, elementary_charge, planck, hbar, electronvolt,
     avogadro_number, avogadro_constant, boltzmann_constant,
-    stefan_boltzmann_constant, atomic_mass_constant, molar_gas_constant,
+    stefan_boltzmann_constant, atomic_mass_constant, electron_rest_mass_constant, molar_gas_constant,
     faraday_constant, josephson_constant, von_klitzing_constant,
     acceleration_due_to_gravity, magnetic_constant, vacuum_permittivity,
     vacuum_impedance, coulomb_constant, atmosphere, bar, pound, psi, mmHg,
@@ -164,6 +164,12 @@ SI.set_quantity_scale_factor(stefan_boltzmann_constant, pi**2 * boltzmann_consta
 
 SI.set_quantity_dimension(atomic_mass_constant, mass)
 SI.set_quantity_scale_factor(atomic_mass_constant, 1.66053906660e-24*gram)
+
+# Electron rest mass
+# REF: NIST 2018 CODATA
+
+SI.set_quantity_dimension(electron_rest_mass_constant, mass)
+SI.set_quantity_scale_factor(electron_rest_mass_constant, 9.1093837015e-31*kilogram )
 
 # Molar gas constant
 # REF: NIST SP 959 (June 2019)
@@ -336,7 +342,7 @@ __all__ = [
     'capacitance', 'tesla', 'steradian', 'planck_mass', 'josephson_constant',
     'planck_area', 'stefan_boltzmann_constant', 'base_dims',
     'astronomical_unit', 'radian', 'planck_voltage', 'impedance',
-    'planck_energy', 'atomic_mass_constant', 'rutherford', 'second', 'inch',
+    'planck_energy', 'atomic_mass_constant', 'electron_rest_mass_constant', 'rutherford', 'second', 'inch',
     'elementary_charge', 'SI', 'electronvolt', 'dimsys_SI', 'henry',
     'planck_angular_frequency', 'ohm', 'pound', 'planck_pressure', 'G', 'psi',
     'dHg0', 'von_klitzing_constant', 'planck_length', 'avogadro_number',
