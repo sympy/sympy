@@ -34,7 +34,7 @@ from .util import convert_to
 from .quantities import Quantity
 
 from .definitions.dimension_definitions import (
-    amount_of_substance, acceleration, action,
+    amount_of_substance, acceleration, action, area,
     capacitance, charge, conductance, current, energy,
     force, frequency, impedance, inductance, length,
     luminous_intensity, magnetic_density,
@@ -97,6 +97,8 @@ from .definitions import (
     g, gram, grams,
     mg, milligram, milligrams,
     ug, microgram, micrograms,
+    Da, dalton,
+    t, tonne,
     newton, newtons, N,
     joule, joules, J,
     watt, watts, W,
@@ -127,6 +129,7 @@ from .definitions import (
     yd, yard, yards,
     mi, mile, miles,
     nmi, nautical_mile, nautical_miles,
+    ha, hectare,
     l, L, liter, liters,
     dl, dL, deciliter, deciliters,
     cl, cL, centiliter, centiliters,
@@ -271,7 +274,7 @@ __all__ = [
     'convert_to',
     'Quantity',
 
-    'amount_of_substance', 'acceleration', 'action',
+    'amount_of_substance', 'acceleration', 'action', 'area',
     'capacitance', 'charge', 'conductance', 'current', 'energy',
     'force', 'frequency', 'impedance', 'inductance', 'length',
     'luminous_intensity', 'magnetic_density',
@@ -329,6 +332,8 @@ __all__ = [
     'g', 'gram', 'grams',
     'mg', 'milligram', 'milligrams',
     'ug', 'microgram', 'micrograms',
+    'Da', 'dalton',
+    't', 'tonne',
     'newton', 'newtons', 'N',
     'joule', 'joules', 'J',
     'watt', 'watts', 'W',
@@ -359,6 +364,7 @@ __all__ = [
     'yd', 'yard', 'yards',
     'mi', 'mile', 'miles',
     'nmi', 'nautical_mile', 'nautical_miles',
+    'ha', 'hectare',
     'l', 'L', 'liter', 'liters',
     'dl', 'dL', 'deciliter', 'deciliters',
     'cl', 'cL', 'centiliter', 'centiliters',

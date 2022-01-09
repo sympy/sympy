@@ -54,12 +54,6 @@ mole.set_global_dimension(amount_of_substance)
 cd = candela = candelas = Quantity("candela", abbrev="cd")
 candela.set_global_dimension(luminous_intensity)
 
-mg = milligram = milligrams = Quantity("milligram", abbrev="mg")
-mg.set_global_relative_scale_factor(milli, gram)
-
-ug = microgram = micrograms = Quantity("microgram", abbrev="ug", latex_repr=r"\mu\text{g}")
-ug.set_global_relative_scale_factor(micro, gram)
-
 # derived units
 newton = newtons = N = Quantity("newton", abbrev="N")
 joule = joules = J = Quantity("joule", abbrev="J")
@@ -114,6 +108,21 @@ gray = Gy = Quantity("gray")
 becquerel = Bq = Quantity("becquerel", abbrev="Bq")
 
 
+# Common mass units
+
+mg = milligram = milligrams = Quantity("milligram", abbrev="mg")
+mg.set_global_relative_scale_factor(milli, gram)
+
+ug = microgram = micrograms = Quantity("microgram", abbrev="ug", latex_repr=r"\mu\text{g}")
+ug.set_global_relative_scale_factor(micro, gram)
+
+Da = dalton = Quantity("dalton", abbrev="Da")
+Da.set_global_relative_scale_factor(Rational(1.66, 10**(27)), gram)
+
+t = tonne = Quantity("tonne", abbrev="t")
+t.set_global_relative_scale_factor(kilo, kg)
+
+
 # Common length units
 
 km = kilometer = kilometers = Quantity("kilometer", abbrev="km")
@@ -155,6 +164,8 @@ nmi.set_global_relative_scale_factor(6076, feet)
 
 
 # Common volume and area units
+
+ha = hectare = Quantity("hectare", abbrev="ha")
 
 l = L = liter = liters = Quantity("liter")
 
