@@ -1053,3 +1053,32 @@ def compositepi(n):
     if n < 4:
         return 0
     return n - primepi(n) - 1
+
+def primes(k, n=None):
+    """ Returns first n prime numbers or kth to nth prime numbers (both inclusive).
+
+        Examples
+        ========
+
+        >>> from sympy.ntheory import primes
+        >>> primes(5)
+        [2, 3, 5, 7, 11]
+
+        >>> primes(3, 7)
+        [5, 7, 11, 13, 17]
+
+        >>> primes(20, 25)
+        [71, 73, 79, 83, 89, 97]
+
+    """
+    if n is None:
+        k, n = 1, k
+
+    n, k = map(as_int, (n, k))
+    if n < 1:
+        raise ValueError("n must be a positive integer.")
+    if k < 1:
+        raise ValueError("k must be a positive integer.")
+    if k > n:
+        raise ValueError('k should not be less than n')
+    return list(sieve[k: n + 1])

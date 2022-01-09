@@ -5,7 +5,7 @@ from sympy.ntheory.generate import (sieve, Sieve)
 from sympy.series.limits import limit
 
 from sympy.ntheory import isprime, totient, mobius, randprime, nextprime, prevprime, \
-    primerange, primepi, prime, primorial, composite, compositepi, reduced_totient
+    primerange, primepi, prime, primorial, composite, compositepi, reduced_totient, primes
 from sympy.ntheory.generate import cycle_length
 from sympy.ntheory.primetest import mr
 from sympy.testing.pytest import raises
@@ -248,3 +248,12 @@ def test_sieve_iter():
 def test_sieve_repr():
     assert "sieve" in repr(sieve)
     assert "prime" in repr(sieve)
+
+def test_primes():
+    assert primes(10) == [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+    assert primes(13, 15) == [41, 43, 47]
+    raises(ValueError, lambda: primes(-1))
+    raises(ValueError, lambda: primes(0))
+    raises(ValueError, lambda: primes(10, 0))
+    raises(ValueError, lambda: primes(10,-5))
+    raises(ValueError, lambda: primes(5,1))
