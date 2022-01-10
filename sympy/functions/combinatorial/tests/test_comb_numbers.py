@@ -14,7 +14,7 @@ from sympy.polys.polytools import cancel
 from sympy.series.limits import limit
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
-    genocchi, partition, motzkin, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
+    genocchi, partition, motzkin, schroder, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
     trigamma, polygamma, factorial, sin, cos, cot, zeta)
 from sympy.functions.combinatorial.numbers import _nT
 
@@ -449,6 +449,23 @@ def test_genocchi():
     assert genocchi(4 * n - 2).is_negative
     raises(ValueError, lambda: genocchi(Rational(5, 4)))
     raises(ValueError, lambda: genocchi(-2))
+
+
+def test_schroder():
+    assert schroder.is_schroder(2) == True
+    assert schroder.is_schroder(5) == False
+    assert schroder.is_schroder(90) == True
+    assert schroder.find_first_n_schroder_numbers(4) == [1, 2, 6, 22]
+    assert schroder.find_first_n_schroder_numbers(6) == [1, 2, 6, 22, 90, 394]
+    assert schroder.find_first_n_schroder_numbers(8) == [1, 2, 6, 22, 90, 394, 1806, 8558]
+    assert schroder.find_schroder_numbers_in_range(10,400) == [22, 90, 394]
+    assert schroder.find_schroder_numbers_in_range(10,2000) == [22, 90, 394, 1806]
+    assert schroder.find_schroder_numbers_in_range(10,9000) == [22, 90, 394, 1806, 8558]
+    raises(ValueError, lambda: schroder.eval(-6))
+    raises(ValueError, lambda: schroder.eval(56.54))
+    raises(ValueError, lambda: schroder.find_schroder_numbers_in_range(-4,10))
+    raises(ValueError, lambda: schroder.find_schroder_numbers_in_range(14,8))
+    raises(ValueError, lambda: schroder.find_first_n_schroder_numbers(46.64))
 
 
 @nocache_fail

@@ -17,7 +17,7 @@ from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul, prod
 from sympy.core.numbers import E, pi, oo, Rational, Integer
-from sympy.core.relational import is_le, is_gt
+from sympy.core.relational import Eq, is_le, is_gt
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
@@ -2173,6 +2173,144 @@ class motzkin(Function):
         if n < 0:
             raise ValueError('The provided number must be a positive integer')
         return Integer(cls._motzkin(n - 1))
+
+
+#-----------------------------------------------------------------------------#
+#                                                                             #
+#                         Schr%C3%B6der numbers                               #
+#                                                                             #
+#-----------------------------------------------------------------------------#
+
+
+class schroder(Function):
+    r"""
+    In mathematics, the Schr%C3%B6der number, also called a
+    large Schr%C3%B6der number or big Schr%C3%B6der number, describes
+    the number of lattice paths from the southwest corner
+    $(0, 0)$ of an $n\times n$ grid to the northeast corner $(n, n)$ using only
+    single steps north, $(0, 1)$ northeast, $(1, 1)$ or east, $(1, 0)$
+    that do not rise above the SW-NE diagonal. The nth Schr%C3%B6der number
+    is the number of Schr%C3%B6der paths of length n. The Schr%C3%B6der numbers were
+    named after the German mathematician Ernst Schr%C3%B6der.
+
+    Schr%C3%B6der numbers are the integer sequences defined by the
+    initial terms `S_0 = 1`, `S_1 = 2` and which satisfies the two-term recurrence relation
+    `S_n = \frac{6*n - 3}{n + 1} * S_{n-1} - \frac{n - 2}{n + 1} * S_{n-2}`.
+
+
+    Examples
+    ========
+
+    >>> from sympy import schroder
+
+    >>> schroder.is_schroder(2)
+    True
+    >>> schroder.is_schroder(7)
+    False
+    >>> schroder.find_first_n_schroder_numbers(1)
+    [1, 2]
+    >>> schroder.find_first_n_schroder_numbers(10)
+    [1, 2, 6, 22, 90, 394, 1806, 8558, 41586, 206098]
+    >>> schroder.find_schroder_numbers_in_range(1, 10)
+    [1, 2, 6]
+    >>> schroder.find_schroder_numbers_in_range(2, 400)
+    [2, 6, 22, 90, 394]
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Schr%C3%B6der_number
+    .. [2] https://mathworld.wolfram.com/SchroederNumber.html
+
+    """
+
+    @staticmethod
+    def is_schroder(n):
+        try:
+            n = as_int(n)
+        except ValueError:
+            False
+        if n>0:
+            if n in (1, 2):
+                return True
+
+            sn1 = 1
+            sn = 2
+            i = 2
+            while sn < n:
+                b = ((6*i - 3)*sn - (i - 2)*sn1)/(i + 1)
+                sn1 = sn
+                sn = b
+                i = i+1
+
+            if Eq(sn, n, evaluate=True):
+                return True
+            else:
+                return False
+
+        else:
+            return False
+
+    @staticmethod
+    def find_first_n_schroder_numbers(n):
+        try:
+            n = as_int(n)
+        except ValueError:
+            raise ValueError('The provided number must be a positive integer')
+        if n < 0:
+            raise ValueError('The provided number must be a positive integer')
+        schroder = [1]
+        if n >= 1:
+            schroder.append(2)
+        sn1 = 2
+        sn = 6
+        i = 3
+        while i <= n:
+            schroder.append(sn)
+            b = ((6*i - 3)*sn - (i - 2)*sn1)/(i + 1)
+            sn1 = sn
+            sn = int(b)
+            i = i+1
+
+        return schroder
+
+    @staticmethod
+    def find_schroder_numbers_in_range(x, y):
+        if 0 <= x <= y:
+            schroder = list()
+            if x <=1 <= y:
+                schroder.append(1)
+            sn1 = 1
+            sn = 2
+            i = 2
+            while sn <= y:
+                if sn >= x:
+                    schroder.append(sn)
+                b = ((6*i - 3)*sn - (i - 2)*sn1)/(i + 1)
+                sn1 = sn
+                sn = int(b)
+                i = i+1
+
+            return schroder
+
+        else:
+            raise ValueError('The provided range is not valid. This condition should satisfy x <= y')
+
+    @staticmethod
+    @recurrence_memo([S.One, 2*S.One])
+    def _schroder(n, prev):
+        return ((6*n - 3)*prev[-1] - (n - 2)*prev[-2]) // (n + 1)
+
+    @classmethod
+    def eval(cls, n):
+        try:
+            n = as_int(n)
+        except ValueError:
+            raise ValueError('The provided number must be a positive integer')
+        if n < 0:
+            raise ValueError('The provided number must be a positive integer')
+        return Integer(cls._schroder(n - 1))
 
 
 def nD(i=None, brute=None, *, n=None, m=None):
