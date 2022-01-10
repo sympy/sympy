@@ -11,6 +11,8 @@ from sympy.physics.mechanics.functions import (msubs, find_dynamicsymbols,
 from sympy.physics.mechanics.linearize import Linearizer
 from sympy.utilities.iterables import iterable
 
+from warnings import warn
+
 __all__ = ['KanesMethod']
 
 
@@ -301,15 +303,12 @@ class KanesMethod(_Methods):
                 f_k = k_kqdot.LUsolve(f_k)
                 k_ku = k_kqdot.LUsolve(k_ku)
                 k_kqdot = eye(len(qdot))
-                self._kindiffdict = self._qdot_u_map = dict(zip(qdot, -(k_ku*u + f_k)))
+                self._qdot_u_map = dict(zip(qdot, -(k_ku*u + f_k)))
             else:
                 # If kinematics are not forced to be explicit, do not provide a qdot_u_map
                 # However, still compute a kindiffdict that is necessary to provide a RHS
                 # (i.e. fully explicit) version of the equations
                 self._qdot_u_map = dict()
-                self._kindiffdict = solve_linear_system_LU(
-                    Matrix([k_kqdot.T, -(k_ku * u + f_k).T]).T, qdot)
-
 
             self._f_k = f_k.xreplace(uaux_zero)
             self._k_ku = k_ku.xreplace(uaux_zero)
@@ -632,13 +631,14 @@ class KanesMethod(_Methods):
 
         """
         rhs = zeros(len(self.q) + len(self.u), 1)
-        kdes = self.kindiffdict()
-        for i, q_i in enumerate(self.q):
-            rhs[i] = kdes[q_i.diff()]
 
         if inv_method is None:
+            rhs[:len(self.q), 0] = self.mass_matrix_kin.LUsolve(self.forcing_kin)
             rhs[len(self.q):, 0] = self.mass_matrix.LUsolve(self.forcing)
         else:
+            rhs[:len(self.q), 0] = (self.mass_matrix_kin.inv(inv_method,
+                                                         try_block_diag=True) *
+                                    self.forcing_kin)
             rhs[len(self.q):, 0] = (self.mass_matrix.inv(inv_method,
                                                          try_block_diag=True) *
                                     self.forcing)
@@ -646,12 +646,18 @@ class KanesMethod(_Methods):
         return rhs
 
     def kindiffdict(self):
-        """Returns a dictionary mapping q' to u."""
-        if not self._kindiffdict:
+        """Returns a dictionary mapping q' from u."""
+        if self._qdot_u_map is None:
             raise AttributeError('Create an instance of KanesMethod with '
                     'kinematic differential equations to use this method.')
-
-        return self._kindiffdict
+        elif not self._qdot_u_map:
+            warn('This KanesMethod instance was initalized to use implicit kinematics but '
+                'explicit mapping from u to q\' is being requested: computing on the fly')
+            qdot_u_vec = self.mass_matrix_kin.LUsolve(self.forcing_kin)
+            qdot_u_map = {q.diff(): qdot for (q, qdot) in zip(self.q, qdot_u_vec)}
+            return qdot_u_map
+        else:
+            return self._qdot_u_map
 
     @property
     def auxiliary_eqs(self):

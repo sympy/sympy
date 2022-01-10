@@ -4,7 +4,8 @@ from sympy.simplify.simplify import simplify
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
                                      dot)
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns
+import warnings
 
 def test_one_dof():
     # This is for a 1 dof spring-mass-damper case.
@@ -171,7 +172,11 @@ def test_rolling_disc():
         MM = KM.mass_matrix
         forcing = KM.forcing
         rhs = MM.inv() * forcing
-        kdd = KM.kindiffdict()
+        if explicit_kinematics:
+            kdd = KM.kindiffdict()
+        else:
+            with warns(UserWarning):
+                kdd = KM.kindiffdict()
         rhs = rhs.subs(kdd)
         rhs.simplify()
         assert rhs.expand() == Matrix([(6*u2*u3*r - u3**2*r*tan(q2) +

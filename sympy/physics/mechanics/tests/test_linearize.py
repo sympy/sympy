@@ -74,62 +74,65 @@ def test_linearize_rolling_disc_kane():
     Disc = RigidBody('Disc', CO, C, m, (I_C_CO, CO))
     BL = [Disc]
     FL = [(CO, F_CO)]
-    KM = KanesMethod(N, [q1, q2, q3, q4, q5], [u1, u2, u3], kd_eqs=kindiffs,
-            q_dependent=[q6], configuration_constraints=f_c,
-            u_dependent=[u4, u5, u6], velocity_constraints=f_v)
-    (fr, fr_star) = KM.kanes_equations(BL, FL)
 
-    # Test generalized form equations
-    linearizer = KM.to_linearizer()
-    assert linearizer.f_c == f_c
-    assert linearizer.f_v == f_v
-    assert linearizer.f_a == f_v.diff(t).subs(KM.kindiffdict())
-    sol = solve(linearizer.f_0 + linearizer.f_1, qd)
-    for qi in qdots.keys():
-        assert sol[qi] == qdots[qi]
-    assert simplify(linearizer.f_2 + linearizer.f_3 - fr - fr_star) == Matrix([0, 0, 0])
+    for explicit_kinematics in [True, False]:
+        KM = KanesMethod(N, [q1, q2, q3, q4, q5], [u1, u2, u3], kd_eqs=kindiffs,
+                q_dependent=[q6], configuration_constraints=f_c,
+                u_dependent=[u4, u5, u6], velocity_constraints=f_v,
+                explicit_kinematics = explicit_kinematics)
+        (fr, fr_star) = KM.kanes_equations(BL, FL)
 
-    # Perform the linearization
-    # Precomputed operating point
-    q_op = {q6: -r*cos(q2)}
-    u_op = {u1: 0,
-            u2: sin(q2)*q1d + q3d,
-            u3: cos(q2)*q1d,
-            u4: -r*(sin(q2)*q1d + q3d)*cos(q3),
-            u5: 0,
-            u6: -r*(sin(q2)*q1d + q3d)*sin(q3)}
-    qd_op = {q2d: 0,
-             q4d: -r*(sin(q2)*q1d + q3d)*cos(q1),
-             q5d: -r*(sin(q2)*q1d + q3d)*sin(q1),
-             q6d: 0}
-    ud_op = {u1d: 4*g*sin(q2)/(5*r) + sin(2*q2)*q1d**2/2 + 6*cos(q2)*q1d*q3d/5,
-             u2d: 0,
-             u3d: 0,
-             u4d: r*(sin(q2)*sin(q3)*q1d*q3d + sin(q3)*q3d**2),
-             u5d: r*(4*g*sin(q2)/(5*r) + sin(2*q2)*q1d**2/2 + 6*cos(q2)*q1d*q3d/5),
-             u6d: -r*(sin(q2)*cos(q3)*q1d*q3d + cos(q3)*q3d**2)}
+        # Test generalized form equations
+        linearizer = KM.to_linearizer()
+        assert linearizer.f_c == f_c
+        assert linearizer.f_v == f_v
+        assert linearizer.f_a == f_v.diff(t).subs(KM.kindiffdict())
+        sol = solve(linearizer.f_0 + linearizer.f_1, qd)
+        for qi in qdots.keys():
+            assert sol[qi] == qdots[qi]
+        assert simplify(linearizer.f_2 + linearizer.f_3 - fr - fr_star) == Matrix([0, 0, 0])
 
-    A, B = linearizer.linearize(op_point=[q_op, u_op, qd_op, ud_op], A_and_B=True, simplify=True)
+        # Perform the linearization
+        # Precomputed operating point
+        q_op = {q6: -r*cos(q2)}
+        u_op = {u1: 0,
+                u2: sin(q2)*q1d + q3d,
+                u3: cos(q2)*q1d,
+                u4: -r*(sin(q2)*q1d + q3d)*cos(q3),
+                u5: 0,
+                u6: -r*(sin(q2)*q1d + q3d)*sin(q3)}
+        qd_op = {q2d: 0,
+                 q4d: -r*(sin(q2)*q1d + q3d)*cos(q1),
+                 q5d: -r*(sin(q2)*q1d + q3d)*sin(q1),
+                 q6d: 0}
+        ud_op = {u1d: 4*g*sin(q2)/(5*r) + sin(2*q2)*q1d**2/2 + 6*cos(q2)*q1d*q3d/5,
+                 u2d: 0,
+                 u3d: 0,
+                 u4d: r*(sin(q2)*sin(q3)*q1d*q3d + sin(q3)*q3d**2),
+                 u5d: r*(4*g*sin(q2)/(5*r) + sin(2*q2)*q1d**2/2 + 6*cos(q2)*q1d*q3d/5),
+                 u6d: -r*(sin(q2)*cos(q3)*q1d*q3d + cos(q3)*q3d**2)}
 
-    upright_nominal = {q1d: 0, q2: 0, m: 1, r: 1, g: 1}
+        A, B = linearizer.linearize(op_point=[q_op, u_op, qd_op, ud_op], A_and_B=True, simplify=True)
 
-    # Precomputed solution
-    A_sol = Matrix([[0, 0, 0, 0, 0, 0, 0, 1],
-                    [0, 0, 0, 0, 0, 1, 0, 0],
-                    [0, 0, 0, 0, 0, 0, 1, 0],
-                    [sin(q1)*q3d, 0, 0, 0, 0, -sin(q1), -cos(q1), 0],
-                    [-cos(q1)*q3d, 0, 0, 0, 0, cos(q1), -sin(q1), 0],
-                    [0, Rational(4, 5), 0, 0, 0, 0, 0, 6*q3d/5],
-                    [0, 0, 0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0, -2*q3d, 0, 0]])
-    B_sol = Matrix([])
+        upright_nominal = {q1d: 0, q2: 0, m: 1, r: 1, g: 1}
 
-    # Check that linearization is correct
-    assert A.subs(upright_nominal) == A_sol
-    assert B.subs(upright_nominal) == B_sol
+        # Precomputed solution
+        A_sol = Matrix([[0, 0, 0, 0, 0, 0, 0, 1],
+                        [0, 0, 0, 0, 0, 1, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 1, 0],
+                        [sin(q1)*q3d, 0, 0, 0, 0, -sin(q1), -cos(q1), 0],
+                        [-cos(q1)*q3d, 0, 0, 0, 0, cos(q1), -sin(q1), 0],
+                        [0, Rational(4, 5), 0, 0, 0, 0, 0, 6*q3d/5],
+                        [0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, -2*q3d, 0, 0]])
+        B_sol = Matrix([])
 
-    # Check eigenvalues at critical speed are all zero:
-    assert sympify(A.subs(upright_nominal).subs(q3d, 1/sqrt(3))).eigenvals() == {0: 8}
+        # Check that linearization is correct
+        assert A.subs(upright_nominal) == A_sol
+        assert B.subs(upright_nominal) == B_sol
+
+        # Check eigenvalues at critical speed are all zero:
+        assert sympify(A.subs(upright_nominal).subs(q3d, 1/sqrt(3))).eigenvals() == {0: 8}
 
 def test_linearize_pendulum_kane_minimal():
     q1 = dynamicsymbols('q1')                     # angle of pendulum
@@ -159,14 +162,15 @@ def test_linearize_pendulum_kane_minimal():
     R = m*g*N.x
 
     # Solve for eom with kanes method
-    KM = KanesMethod(N, q_ind=[q1], u_ind=[u1], kd_eqs=kde)
-    (fr, frstar) = KM.kanes_equations([pP], [(P, R)])
+    for explicit_kinematics in [True, False]:
+        KM = KanesMethod(N, q_ind=[q1], u_ind=[u1], kd_eqs=kde, explicit_kinematics=explicit_kinematics)
+        (fr, frstar) = KM.kanes_equations([pP], [(P, R)])
 
-    # Linearize
-    A, B, inp_vec = KM.linearize(A_and_B=True, simplify=True)
+        # Linearize
+        A, B, inp_vec = KM.linearize(A_and_B=True, simplify=True)
 
-    assert A == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
-    assert B == Matrix([])
+        assert A == Matrix([[0, 1], [-9.8*cos(q1)/L, 0]])
+        assert B == Matrix([])
 
 def test_linearize_pendulum_kane_nonminimal():
     # Create generalized coordinates and speeds for this non-minimal realization
@@ -216,21 +220,23 @@ def test_linearize_pendulum_kane_nonminimal():
     R = m*g*N.x
 
     # Derive the equations of motion using the KanesMethod class.
-    KM = KanesMethod(N, q_ind=[q2], u_ind=[u2], q_dependent=[q1],
-            u_dependent=[u1], configuration_constraints=f_c,
-            velocity_constraints=f_v, acceleration_constraints=f_a, kd_eqs=kde)
-    (fr, frstar) = KM.kanes_equations([pP], [(P, R)])
+    for explicit_kinematics in [True, False]:
+        KM = KanesMethod(N, q_ind=[q2], u_ind=[u2], q_dependent=[q1],
+                u_dependent=[u1], configuration_constraints=f_c,
+                velocity_constraints=f_v, acceleration_constraints=f_a, kd_eqs=kde,
+                explicit_kinematics = explicit_kinematics)
+        (fr, frstar) = KM.kanes_equations([pP], [(P, R)])
 
-    # Set the operating point to be straight down, and non-moving
-    q_op = {q1: L, q2: 0}
-    u_op = {u1: 0, u2: 0}
-    ud_op = {u1d: 0, u2d: 0}
+        # Set the operating point to be straight down, and non-moving
+        q_op = {q1: L, q2: 0}
+        u_op = {u1: 0, u2: 0}
+        ud_op = {u1d: 0, u2d: 0}
 
-    A, B, inp_vec = KM.linearize(op_point=[q_op, u_op, ud_op], A_and_B=True,
-                                 simplify=True)
+        A, B, inp_vec = KM.linearize(op_point=[q_op, u_op, ud_op], A_and_B=True,
+                                     simplify=True)
 
-    assert A.expand() == Matrix([[0, 1], [-9.8/L, 0]])
-    assert B == Matrix([])
+        assert A.expand() == Matrix([[0, 1], [-9.8/L, 0]])
+        assert B == Matrix([])
 
 def test_linearize_pendulum_lagrange_minimal():
     q1 = dynamicsymbols('q1')                     # angle of pendulum
