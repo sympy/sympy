@@ -7,8 +7,7 @@ from sympy.physics.mechanics import (cross, dot, dynamicsymbols,
                                      inertia_of_point_mass, Point,
                                      ReferenceFrame, RigidBody)
 
-from sympy.testing.pytest import raises, warns
-import warnings
+from sympy.testing.pytest import warns
 
 def test_aux_dep():
     # This test is about rolling disc dynamics, comparing the results found
@@ -402,7 +401,7 @@ def test_sub_qdot():
             #implicit form, so replace qdot terms with u terms
             with warns(UserWarning):
                 kdd = km.kindiffdict()
-            fr_star_simp = trigsimp(fr_star.subs(kde_map))
+            fr_star_simp = trigsimp(fr_star.subs(kdd))
         #TODO: need to investigate why this fails for implicit kinematics!
         if explicit_kinematics:
             assert ((fr_star_expected - fr_star_simp).expand() == zeros(3, 1))

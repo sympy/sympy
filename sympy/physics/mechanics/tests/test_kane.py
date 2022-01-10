@@ -5,7 +5,6 @@ from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
                                      dot)
 from sympy.testing.pytest import raises, warns
-import warnings
 
 def test_one_dof():
     # This is for a 1 dof spring-mass-damper case.
