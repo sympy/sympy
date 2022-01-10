@@ -117,7 +117,7 @@ ug = microgram = micrograms = Quantity("microgram", abbrev="ug", latex_repr=r"\m
 ug.set_global_relative_scale_factor(micro, gram)
 
 Da = dalton = Quantity("dalton", abbrev="Da")
-Da.set_global_relative_scale_factor(Rational(1.66, 10**(27)), gram)
+Da.set_global_relative_scale_factor((1.66053906660e-27), kg)
 
 t = tonne = Quantity("tonne", abbrev="t")
 t.set_global_relative_scale_factor(kilo, kg)
