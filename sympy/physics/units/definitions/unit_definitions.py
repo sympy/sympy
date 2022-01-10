@@ -116,8 +116,11 @@ mg.set_global_relative_scale_factor(milli, gram)
 ug = microgram = micrograms = Quantity("microgram", abbrev="ug", latex_repr=r"\mu\text{g}")
 ug.set_global_relative_scale_factor(micro, gram)
 
+# Atomic mass constant
+amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant")
+
 Da = dalton = Quantity("dalton", abbrev="Da")
-Da.set_global_relative_scale_factor((1.66053906660e-27), kg)
+Da.set_global_relative_scale_factor(amu/kilo, kg)
 
 t = tonne = Quantity("tonne", abbrev="t")
 t.set_global_relative_scale_factor(kilo, kg)
@@ -260,9 +263,6 @@ boltzmann = boltzmann_constant = Quantity("boltzmann_constant")
 
 # Stefan-Boltzmann constant
 stefan = stefan_boltzmann_constant = Quantity("stefan_boltzmann_constant")
-
-# Atomic mass
-amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant")
 
 # Molar gas constant
 R = molar_gas_constant = Quantity("molar_gas_constant", abbrev="R")
