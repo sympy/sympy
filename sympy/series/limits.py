@@ -168,7 +168,9 @@ def _limit_for_symbolic_point(expr, z0, cdir):
             dir = "-"
         elif cdir == 0:
             conditions = []
+            dir = "-"
             left_limit = _limit_for_symbolic_point(expr, z0, -1)
+            dir = "+"
             right_limit = _limit_for_symbolic_point(expr, z0, +1)
             for LHL, RHL in zip(left_limit.args, right_limit.args):
                 if LHL != RHL:
@@ -182,7 +184,7 @@ def _limit_for_symbolic_point(expr, z0, cdir):
                     else:
                         new_conditions.append(equality)
                 new_conditions = [cond for cond in new_conditions if cond != Eq(z0, S.NegativeInfinity) and cond != Eq(z0, S.Infinity)]
-                raise ValueError("Bi-directional limits at following equalities do not exist : %s" % (new_conditions))
+                raise ValueError("Limit at following equalities do not exist : %s" % (new_conditions))
             return left_limit
         if limit(expr, z0, S.NegativeInfinity) != expr.subs(z0, S.NegativeInfinity):
             piecewise_list.append((limit(expr, z0, S.NegativeInfinity), Eq(z0, S.NegativeInfinity)))
