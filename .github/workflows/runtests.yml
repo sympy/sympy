@@ -272,7 +272,7 @@ jobs:
         with:
           python-version: '3.9'
       - run: release/aptinstall.sh
-      - run: pip install -r release/requirements.txt
+      - run: pip install -r doc/requirements.txt
       - run: bin/test_sphinx.sh
 
 
