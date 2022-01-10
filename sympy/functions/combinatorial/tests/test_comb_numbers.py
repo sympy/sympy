@@ -14,7 +14,7 @@ from sympy.polys.polytools import cancel
 from sympy.series.limits import limit
 from sympy.functions import (
     bernoulli, harmonic, bell, fibonacci, tribonacci, lucas, euler, catalan,
-    genocchi, partition, motzkin, schroder, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
+    genocchi, partition, motzkin, schroeder, binomial, gamma, sqrt, cbrt, hyper, log, digamma,
     trigamma, polygamma, factorial, sin, cos, cot, zeta)
 from sympy.functions.combinatorial.numbers import _nT
 
@@ -451,21 +451,21 @@ def test_genocchi():
     raises(ValueError, lambda: genocchi(-2))
 
 
-def test_schroder():
-    assert schroder.is_schroder(2) == True
-    assert schroder.is_schroder(5) == False
-    assert schroder.is_schroder(90) == True
-    assert schroder.find_first_n_schroder_numbers(4) == [1, 2, 6, 22]
-    assert schroder.find_first_n_schroder_numbers(6) == [1, 2, 6, 22, 90, 394]
-    assert schroder.find_first_n_schroder_numbers(8) == [1, 2, 6, 22, 90, 394, 1806, 8558]
-    assert schroder.find_schroder_numbers_in_range(10,400) == [22, 90, 394]
-    assert schroder.find_schroder_numbers_in_range(10,2000) == [22, 90, 394, 1806]
-    assert schroder.find_schroder_numbers_in_range(10,9000) == [22, 90, 394, 1806, 8558]
-    raises(ValueError, lambda: schroder.eval(-6))
-    raises(ValueError, lambda: schroder.eval(56.54))
-    raises(ValueError, lambda: schroder.find_schroder_numbers_in_range(-4,10))
-    raises(ValueError, lambda: schroder.find_schroder_numbers_in_range(14,8))
-    raises(ValueError, lambda: schroder.find_first_n_schroder_numbers(46.64))
+def test_schroeder():
+    assert schroeder.is_schroeder(2) == True
+    assert schroeder.is_schroeder(5) == False
+    assert schroeder.is_schroeder(90) == True
+    assert schroeder.find_first_n_schroeder_numbers(4) == [1, 2, 6, 22]
+    assert schroeder.find_first_n_schroeder_numbers(6) == [1, 2, 6, 22, 90, 394]
+    assert schroeder.find_first_n_schroeder_numbers(8) == [1, 2, 6, 22, 90, 394, 1806, 8558]
+    assert schroeder.find_schroeder_numbers_in_range(10,400) == [22, 90, 394]
+    assert schroeder.find_schroeder_numbers_in_range(10,2000) == [22, 90, 394, 1806]
+    assert schroeder.find_schroeder_numbers_in_range(10,9000) == [22, 90, 394, 1806, 8558]
+    raises(ValueError, lambda: schroeder.eval(-6))
+    raises(ValueError, lambda: schroeder.eval(56.54))
+    raises(ValueError, lambda: schroeder.find_schroeder_numbers_in_range(-4,10))
+    raises(ValueError, lambda: schroeder.find_schroeder_numbers_in_range(14,8))
+    raises(ValueError, lambda: schroeder.find_first_n_schroeder_numbers(46.64))
 
 
 @nocache_fail
