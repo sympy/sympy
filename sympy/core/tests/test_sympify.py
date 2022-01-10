@@ -12,6 +12,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.logic.boolalg import (false, Or, true, Xor)
 from sympy.matrices.dense import Matrix
+from sympy.parsing.sympy_parser import null
 from sympy.polys.polytools import Poly
 from sympy.printing.repr import srepr
 from sympy.sets.fancysets import Range
@@ -540,7 +541,7 @@ def test_issue_6046():
     assert len(S('pi + x', locals=_clash2).free_symbols) == 2
     # but not both
     raises(TypeError, lambda: S('pi + pi(x)', locals=_clash2))
-    assert all(set(i.values()) == {None} for i in (
+    assert all(set(i.values()) == {null} for i in (
         _clash, _clash1, _clash2))
 
 
