@@ -6,7 +6,6 @@ from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      dot)
 from sympy.testing.pytest import raises
 
-
 def test_one_dof():
     # This is for a 1 dof spring-mass-damper case.
     # It is described in more detail in the KanesMethod docstring.
@@ -22,21 +21,22 @@ def test_one_dof():
     pa = Particle('pa', P, m)
     BL = [pa]
 
-    KM = KanesMethod(N, [q], [u], kd)
-    KM.kanes_equations(BL, FL)
+    for explicit_kinematics in [True, False]:
+        KM = KanesMethod(N, [q], [u], kd, explicit_kinematics=explicit_kinematics)
+        KM.kanes_equations(BL, FL)
 
-    assert KM.bodies == BL
-    assert KM.loads == FL
+        assert KM.bodies == BL
+        assert KM.loads == FL
 
-    MM = KM.mass_matrix
-    forcing = KM.forcing
-    rhs = MM.inv() * forcing
-    assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
+        MM = KM.mass_matrix
+        forcing = KM.forcing
+        rhs = MM.inv() * forcing
+        assert expand(rhs[0]) == expand(-(q * k + u * c) / m)
 
-    assert simplify(KM.rhs() -
-                    KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(2, 1)
+        assert simplify(KM.rhs() -
+                        KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(2, 1)
 
-    assert (KM.linearize(A_and_B=True, )[0] == Matrix([[0, 1], [-k/m, -c/m]]))
+        assert (KM.linearize(A_and_B=True, )[0] == Matrix([[0, 1], [-k/m, -c/m]]))
 
 
 def test_two_dof():
@@ -65,17 +65,20 @@ def test_two_dof():
     # Finally we create the KanesMethod object, specify the inertial frame,
     # pass relevant information, and form Fr & Fr*. Then we calculate the mass
     # matrix and forcing terms, and finally solve for the udots.
-    KM = KanesMethod(N, q_ind=[q1, q2], u_ind=[u1, u2], kd_eqs=kd)
-    KM.kanes_equations(BL, FL)
-    MM = KM.mass_matrix
-    forcing = KM.forcing
-    rhs = MM.inv() * forcing
-    assert expand(rhs[0]) == expand((-k1 * q1 - c1 * u1 + k2 * q2 + c2 * u2)/m)
-    assert expand(rhs[1]) == expand((k1 * q1 + c1 * u1 - 2 * k2 * q2 - 2 *
-                                    c2 * u2) / m)
 
-    assert simplify(KM.rhs() -
-                    KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(4, 1)
+    for explicit_kinematics in [True, False]:
+        KM = KanesMethod(N, q_ind=[q1, q2], u_ind=[u1, u2], kd_eqs=kd,
+            explicit_kinematics=explicit_kinematics)
+        KM.kanes_equations(BL, FL)
+        MM = KM.mass_matrix
+        forcing = KM.forcing
+        rhs = MM.inv() * forcing
+        assert expand(rhs[0]) == expand((-k1 * q1 - c1 * u1 + k2 * q2 + c2 * u2)/m)
+        assert expand(rhs[1]) == expand((k1 * q1 + c1 * u1 - 2 * k2 * q2 - 2 *
+                                        c2 * u2) / m)
+
+        assert simplify(KM.rhs() -
+                        KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(4, 1)
 
     # Make sure an error is raised if nonlinear kinematic differential
     # equations are supplied.
@@ -96,15 +99,16 @@ def test_pend():
     pa = Particle('pa', P, m)
     BL = [pa]
 
-    KM = KanesMethod(N, [q], [u], kd)
-    KM.kanes_equations(BL, FL)
-    MM = KM.mass_matrix
-    forcing = KM.forcing
-    rhs = MM.inv() * forcing
-    rhs.simplify()
-    assert expand(rhs[0]) == expand(-g / l * sin(q))
-    assert simplify(KM.rhs() -
-                    KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(2, 1)
+    for explicit_kinematics in [True, False]:
+        KM = KanesMethod(N, [q], [u], kd, explicit_kinematics=explicit_kinematics)
+        KM.kanes_equations(BL, FL)
+        MM = KM.mass_matrix
+        forcing = KM.forcing
+        rhs = MM.inv() * forcing
+        rhs.simplify()
+        assert expand(rhs[0]) == expand(-g / l * sin(q))
+        assert simplify(KM.rhs() -
+                        KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(2, 1)
 
 
 def test_rolling_disc():
@@ -159,26 +163,30 @@ def test_rolling_disc():
     # list and Fr* from the body list, compute the mass matrix and forcing
     # terms, then solve for the u dots (time derivatives of the generalized
     # speeds).
-    KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd)
-    KM.kanes_equations(BodyList, ForceList)
-    MM = KM.mass_matrix
-    forcing = KM.forcing
-    rhs = MM.inv() * forcing
-    kdd = KM.kindiffdict()
-    rhs = rhs.subs(kdd)
-    rhs.simplify()
-    assert rhs.expand() == Matrix([(6*u2*u3*r - u3**2*r*tan(q2) +
-        4*g*sin(q2))/(5*r), -2*u1*u3/3, u1*(-2*u2 + u3*tan(q2))]).expand()
-    assert simplify(KM.rhs() -
-                    KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(6, 1)
 
-    # This code tests our output vs. benchmark values. When r=g=m=1, the
-    # critical speed (where all eigenvalues of the linearized equations are 0)
-    # is 1 / sqrt(3) for the upright case.
-    A = KM.linearize(A_and_B=True)[0]
-    A_upright = A.subs({r: 1, g: 1, m: 1}).subs({q1: 0, q2: 0, q3: 0, u1: 0, u3: 0})
-    import sympy
-    assert sympy.sympify(A_upright.subs({u2: 1 / sqrt(3)})).eigenvals() == {S.Zero: 6}
+    for explicit_kinematics in [True, False]:
+        KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd,
+            explicit_kinematics=explicit_kinematics)
+        KM.kanes_equations(BodyList, ForceList)
+        MM = KM.mass_matrix
+        forcing = KM.forcing
+        rhs = MM.inv() * forcing
+        kdd = KM.kindiffdict()
+        rhs = rhs.subs(kdd)
+        rhs.simplify()
+        assert rhs.expand() == Matrix([(6*u2*u3*r - u3**2*r*tan(q2) +
+            4*g*sin(q2))/(5*r), -2*u1*u3/3, u1*(-2*u2 + u3*tan(q2))]).expand()
+        assert simplify(KM.rhs() -
+                        KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(6, 1)
+
+        # This code tests our output vs. benchmark values. When r=g=m=1, the
+        # critical speed (where all eigenvalues of the linearized equations are 0)
+        # is 1 / sqrt(3) for the upright case.
+        A = KM.linearize(A_and_B=True)[0]
+        A.simplify()
+        A_upright = A.subs({r: 1, g: 1, m: 1}).subs({q1: 0, q2: 0, q3: 0, u1: 0, u3: 0})
+        import sympy
+        assert sympy.sympify(A_upright.subs({u2: 1 / sqrt(3)})).eigenvals() == {S.Zero: 6}
 
 
 def test_aux():
@@ -214,23 +222,24 @@ def test_aux():
     BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
     BodyList = [BodyD]
 
-    KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3, u4, u5],
-                     kd_eqs=kd)
-    (fr, frstar) = KM.kanes_equations(BodyList, ForceList)
-    fr = fr.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
-    frstar = frstar.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
+    for explicit_kinematics in [True, False]:
+        KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3, u4, u5],
+                         kd_eqs=kd, explicit_kinematics=explicit_kinematics)
+        (fr, frstar) = KM.kanes_equations(BodyList, ForceList)
+        fr = fr.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
+        frstar = frstar.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
 
-    KM2 = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd,
-                      u_auxiliary=[u4, u5])
-    (fr2, frstar2) = KM2.kanes_equations(BodyList, ForceList)
-    fr2 = fr2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
-    frstar2 = frstar2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
+        KM2 = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd,
+                          u_auxiliary=[u4, u5])
+        (fr2, frstar2) = KM2.kanes_equations(BodyList, ForceList)
+        fr2 = fr2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
+        frstar2 = frstar2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
 
-    frstar.simplify()
-    frstar2.simplify()
+        frstar.simplify()
+        frstar2.simplify()
 
-    assert (fr - fr2).expand() == Matrix([0, 0, 0, 0, 0])
-    assert (frstar - frstar2).expand() == Matrix([0, 0, 0, 0, 0])
+        assert (fr - fr2).expand() == Matrix([0, 0, 0, 0, 0])
+        assert (frstar - frstar2).expand() == Matrix([0, 0, 0, 0, 0])
 
 
 def test_parallel_axis():
@@ -284,10 +293,11 @@ def test_parallel_axis():
                  (C, -N.x * k * (q1 - ls)),
                  (C, N.x * F)]
 
-    km = KanesMethod(N, [q1, q2], [u1, u2], kindiffs)
-    (fr, frstar) = km.kanes_equations(bodyList, forceList)
-    mm = km.mass_matrix_full
-    assert mm[3, 3] == Iz
+    for explicit_kinematics in [True, False]:
+        km = KanesMethod(N, [q1, q2], [u1, u2], kindiffs, explicit_kinematics=explicit_kinematics)
+        (fr, frstar) = km.kanes_equations(bodyList, forceList)
+        mm = km.mass_matrix_full
+        assert mm[3, 3] == Iz
 
 def test_input_format():
     # 1 dof problem from test_one_dof
@@ -303,23 +313,27 @@ def test_input_format():
     pa = Particle('pa', P, m)
     BL = [pa]
 
-    KM = KanesMethod(N, [q], [u], kd)
-    # test for input format kane.kanes_equations((body1, body2, particle1))
-    assert KM.kanes_equations(BL)[0] == Matrix([0])
-    # test for input format kane.kanes_equations(bodies=(body1, body 2), loads=(load1,load2))
-    assert KM.kanes_equations(bodies=BL, loads=None)[0] == Matrix([0])
-    # test for input format kane.kanes_equations(bodies=(body1, body 2), loads=None)
-    assert KM.kanes_equations(BL, loads=None)[0] == Matrix([0])
-    # test for input format kane.kanes_equations(bodies=(body1, body 2))
-    assert KM.kanes_equations(BL)[0] == Matrix([0])
-    # test for input format kane.kanes_equations(bodies=(body1, body2), loads=[])
-    assert KM.kanes_equations(BL, [])[0] == Matrix([0])
-    # test for error raised when a wrong force list (in this case a string) is provided
-    raises(ValueError, lambda: KM._form_fr('bad input'))
+
+    for explicit_kinematics in [True, False]:
+        KM = KanesMethod(N, [q], [u], kd, explicit_kinematics=explicit_kinematics)
+        # test for input format kane.kanes_equations((body1, body2, particle1))
+        assert KM.kanes_equations(BL)[0] == Matrix([0])
+        # test for input format kane.kanes_equations(bodies=(body1, body 2), loads=(load1,load2))
+        assert KM.kanes_equations(bodies=BL, loads=None)[0] == Matrix([0])
+        # test for input format kane.kanes_equations(bodies=(body1, body 2), loads=None)
+        assert KM.kanes_equations(BL, loads=None)[0] == Matrix([0])
+        # test for input format kane.kanes_equations(bodies=(body1, body 2))
+        assert KM.kanes_equations(BL)[0] == Matrix([0])
+        # test for input format kane.kanes_equations(bodies=(body1, body2), loads=[])
+        assert KM.kanes_equations(BL, [])[0] == Matrix([0])
+        # test for error raised when a wrong force list (in this case a string) is provided
+        raises(ValueError, lambda: KM._form_fr('bad input'))
 
     # 1 dof problem from test_one_dof with FL & BL in instance
-    KM = KanesMethod(N, [q], [u], kd, bodies=BL, forcelist=FL)
-    assert KM.kanes_equations()[0] == Matrix([-c*u - k*q])
+    for explicit_kinematics in [True, False]:
+        KM = KanesMethod(N, [q], [u], kd, bodies=BL, forcelist=FL,
+            explicit_kinematics= explicit_kinematics)
+        assert KM.kanes_equations()[0] == Matrix([-c*u - k*q])
 
     # 2 dof problem from test_two_dof
     q1, q2, u1, u2 = dynamicsymbols('q1 q2 u1 u2')
@@ -338,13 +352,15 @@ def test_input_format():
     pa2 = Particle('pa2', P2, m)
     BL = (pa1, pa2)
 
-    KM = KanesMethod(N, q_ind=[q1, q2], u_ind=[u1, u2], kd_eqs=kd)
-    # test for input format
-    # kane.kanes_equations((body1, body2), (load1, load2))
-    KM.kanes_equations(BL, FL)
-    MM = KM.mass_matrix
-    forcing = KM.forcing
-    rhs = MM.inv() * forcing
-    assert expand(rhs[0]) == expand((-k1 * q1 - c1 * u1 + k2 * q2 + c2 * u2)/m)
-    assert expand(rhs[1]) == expand((k1 * q1 + c1 * u1 - 2 * k2 * q2 - 2 *
-                                    c2 * u2) / m)
+    for explicit_kinematics in [True, False]:
+        KM = KanesMethod(N, q_ind=[q1, q2], u_ind=[u1, u2], kd_eqs=kd,
+            explicit_kinematics=explicit_kinematics)
+        # test for input format
+        # kane.kanes_equations((body1, body2), (load1, load2))
+        KM.kanes_equations(BL, FL)
+        MM = KM.mass_matrix
+        forcing = KM.forcing
+        rhs = MM.inv() * forcing
+        assert expand(rhs[0]) == expand((-k1 * q1 - c1 * u1 + k2 * q2 + c2 * u2)/m)
+        assert expand(rhs[1]) == expand((k1 * q1 + c1 * u1 - 2 * k2 * q2 - 2 *
+                                        c2 * u2) / m)
