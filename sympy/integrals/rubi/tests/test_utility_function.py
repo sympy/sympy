@@ -97,7 +97,7 @@ from sympy.integrals.rubi.utility_function import (Set, With, Module,
     If, IntQuadraticQ, IntBinomialQ, RectifyTangent, RectifyCotangent,
     Inequality, Condition, Simp, SimpHelp, SplitProduct, SplitSum, SubstFor,
     SubstForAux, FresnelS, FresnelC, Erfc, Erfi, Gamma, FunctionOfTrigOfLinearQ,
-    ElementaryFunctionQ, Complex, UnsameQ, _SimpFixFactor,
+    ElementaryFunctionQ, Complex, UnsameQ, _SimpFixFactor, Tanh,
     DerivativeDivides, SimpFixFactor, _FixSimplify, FixSimplify,
     _SimplifyAntiderivativeSum, SimplifyAntiderivativeSum, PureFunctionOfCothQ,
     _SimplifyAntiderivative, SimplifyAntiderivative, _TrigSimplifyAux,
@@ -182,10 +182,10 @@ def test_IntegerQ():
     assert IntegerQ(S(-1))
 
 def test_IntegersQ():
-    assert IntegersQ([S(1), S(0)])
-    assert not IntegersQ([S(-1.9), S(1)])
-    assert not IntegersQ([S(0.0), S(0)])
-    assert IntegersQ([S(-1), S(0), S(2)])
+    assert IntegersQ(S(1), S(0))
+    assert not IntegersQ(S(-1.9), S(1))
+    assert not IntegersQ(S(0.0), S(0))
+    assert IntegersQ(S(-1), S(0), S(2))
 
 def test_FracPart():
     assert FracPart(S(10)) == 0
@@ -431,7 +431,7 @@ def test_Head():
 
 def test_MemberQ():
     assert MemberQ([a, b, c], b)
-    assert MemberQ([sin, cos, log, tan], Head(sin(x)))
+    assert MemberQ([sin, cos, sym_log, tan], Head(sin(x)))
     assert MemberQ([[sin, cos], [tan, cot]], [sin, cos])
     assert not MemberQ([[sin, cos], [tan, cot]], [sin, tan])
 
@@ -515,10 +515,10 @@ def test_LeafCount():
     assert LeafCount(1 + a + x**2) == 6
 
 def test_Numerator():
-    assert Numerator(-S(1)/S(2) + I/3) == -3 + 2*I
     assert Numerator((-a/b)**3) == (-a)**(3)
     assert Numerator(S(3)/2) == 3
     assert Numerator(x/y) == x
+    assert Numerator(-S(1)/S(2) + I/3) == -3 + 2*I
 
 def test_Length():
     assert Length(a + b) == 2
@@ -579,7 +579,7 @@ def test_FractionalPowerFreeQ():
     assert FractionalPowerFreeQ(x)
 
 def test_Exponent():
-    assert Min(ExponentList(x**2 + x + 1 + 5, x)) == 0
+    assert Min(*ExponentList(x**2 + x + 1 + 5, x)) == 0
     assert ExponentList(x**2 + x + 1 + 5, x) == [0, 1, 2]
     assert ExponentList(x**2 + x + 1, x) == [0, 1, 2]
     assert ExponentList(x**2 + 2*x + 1, x) == [0, 1, 2]
@@ -1151,9 +1151,9 @@ def test_TrigSimplify():
     assert TrigSimplify(-1 + csc(x)**2) == cot(x)**2
 
 def test_MergeFactors():
-    assert simplify(MergeFactors(b/(a - c)**3 , 8*c**3*(b*x + c)**(3/2)/(3*b**4) - 24*c**2*(b*x + c)**(5/2)/(5*b**4) + \
-        24*c*(b*x + c)**(7/2)/(7*b**4) - 8*(b*x + c)**(9/2)/(9*b**4)) - (8*c**3*(b*x + c)**1.5/(3*b**3) - 24*c**2*(b*x + c)**2.5/(5*b**3) + \
-        24*c*(b*x + c)**3.5/(7*b**3) - 8*(b*x + c)**4.5/(9*b**3))/(a - c)**3) == 0
+    assert simplify(MergeFactors(b/(a - c)**3 , 8*c**3*(b*x + c)**(S(3)/2)/(3*b**4) - 24*c**2*(b*x + c)**(S(5)/2)/(5*b**4) + \
+        24*c*(b*x + c)**(S(7)/2)/(7*b**4) - 8*(b*x + c)**(S(9)/2)/(9*b**4)) - (8*c**3*(b*x + c)**(S(3)/2)/(3*b**3) - 24*c**2*(b*x + c)**(S(5)/2)/(5*b**3) + \
+        24*c*(b*x + c)**(S(7)/2)/(7*b**3) - 8*(b*x + c)**(S(9)/2)/(9*b**3))/(a - c)**3) == 0
     assert MergeFactors(x, x) == x**2
     assert MergeFactors(x*y, x) == x**2*y
 
@@ -1302,10 +1302,10 @@ def test_SimplifyIntegrand():
 
 def test_SimplifyTerm():
     assert SimplifyTerm(a**2/b**2, x) == a**2/b**2
-    assert SimplifyTerm(-6*x/5 + (5*x + 3)**2/25 - 9/25, x) == x**2
+    assert SimplifyTerm(-6*x/5 + (5*x + 3)**2/25 - S(9)/25, x) == x**2
 
 def test_togetherSimplify():
-    assert TogetherSimplify(-6*x/5 + (5*x + 3)**2/25 - 9/25) == x**2
+    assert TogetherSimplify(-6*x/5 + (5*x + 3)**2/25 - S(9)/25) == x**2
 
 def test_ExpandToSum():
 
@@ -1315,7 +1315,7 @@ def test_ExpandToSum():
     aa = 2
     nn = 2
     cc = 1
-    pp = -1/2
+    pp = -S.Half
     bb = 3
     assert nsimplify(ExpandToSum(Pq - Pqq*x**qq - Pqq*(aa*x**(-2*nn + qq)*(-2*nn + qq + 1) + bb*x**(-nn + qq)*(nn*(pp - 1) + qq + 1))/(cc*(2*nn*pp + qq + 1)), x) - \
         (d**3 + x**4*(3*d*e**2 - 2.4*e**3) + x**2*(3*d**2*e - 1.2*e**3))) == 0
@@ -1546,12 +1546,12 @@ def test_AbsurdNumberGCD():
     assert AbsurdNumberGCD(S(2), S(3), S(12)) == 1
 
 def test_TrigReduce():
-    assert TrigReduce(cos(x)**2) == cos(2*x)/2 + 1/2
+    assert TrigReduce(cos(x)**2) == cos(2*x)/2 + S.Half
     assert TrigReduce(cos(x)**2*sin(x)) == sin(x)/4 + sin(3*x)/4
-    assert TrigReduce(cos(x)**2+sin(x)) == sin(x) + cos(2*x)/2 + 1/2
+    assert TrigReduce(cos(x)**2+sin(x)) == sin(x) + cos(2*x)/2 + S.Half
     assert TrigReduce(cos(x)**2*sin(x)**5) == 5*sin(x)/64 + sin(3*x)/64 - 3*sin(5*x)/64 + sin(7*x)/64
     assert TrigReduce(2*sin(x)*cos(x) + 2*cos(x)**2) == sin(2*x) + cos(2*x) + 1
-    assert TrigReduce(sinh(a + b*x)**2) == cosh(2*a + 2*b*x)/2 - 1/2
+    assert TrigReduce(sinh(a + b*x)**2) == cosh(2*a + 2*b*x)/2 - S.Half
     assert TrigReduce(sinh(a + b*x)*cosh(a + b*x)) == sinh(2*a + 2*b*x)/2
 
 def test_FunctionOfDensePolynomialsQ():
@@ -1575,13 +1575,13 @@ def test_PureFunctionOfTanQ():
     assert PureFunctionOfTanQ(f**2, v, x)
 
 def test_PowerVariableSubst():
-    assert PowerVariableSubst((2*x)**3, 2, x) == 8*x**(3/2)
-    assert PowerVariableSubst((2*x)**3, 2, x) == 8*x**(3/2)
+    assert PowerVariableSubst((2*x)**3, 2, x) == 8*x**(S(3)/2)
+    assert PowerVariableSubst((2*x)**3, 2, x) == 8*x**(S(3)/2)
     assert PowerVariableSubst((2*x), 2, x) == 2*x
-    assert PowerVariableSubst((2*x)**3, 2, x) == 8*x**(3/2)
-    assert PowerVariableSubst((2*x)**7, 2, x) == 128*x**(7/2)
+    assert PowerVariableSubst((2*x)**3, 2, x) == 8*x**(S(3)/2)
+    assert PowerVariableSubst((2*x)**7, 2, x) == 128*x**(S(7)/2)
     assert PowerVariableSubst((6+2*x)**7, 2, x) == (2*x + 6)**7
-    assert PowerVariableSubst((2*x)**7+3, 2, x) == 128*x**(7/2) + 3
+    assert PowerVariableSubst((2*x)**7+3, 2, x) == 128*x**(S(7)/2) + 3
 
 def test_PowerVariableDegree():
     assert PowerVariableDegree(S(2), 0, 2*x, x) == [0, 2*x]
@@ -1615,7 +1615,7 @@ def test_TrigToExp():
 def test_ExpandTrigReduce():
     assert ExpandTrigReduce(2*cos(3 + x)**3, x) == 3*cos(x + 3)/2 + cos(3*x + 9)/2
     assert ExpandTrigReduce(2*sin(x)**3+cos(2 + x), x) == 3*sin(x)/2 - sin(3*x)/2 + cos(x + 2)
-    assert ExpandTrigReduce(cos(x + 3)**2, x) == cos(2*x + 6)/2 + 1/2
+    assert ExpandTrigReduce(cos(x + 3)**2, x) == cos(2*x + 6)/2 + S.Half
 
 def test_NormalizeTrig():
     assert NormalizeTrig(S(2*sin(2 + x)), x) == 2*sin(x + 2)
@@ -1649,7 +1649,7 @@ def test_ConstantFactor():
     assert ConstantFactor(a, x) == [a, 1]
     assert ConstantFactor(x, x) == [1, x]
     assert ConstantFactor(x**S(3), x) == [1, x**3]
-    assert ConstantFactor(x**(S(3)/2), x) == [1, x**(3/2)]
+    assert ConstantFactor(x**(S(3)/2), x) == [1, x**(S(3)/2)]
     assert ConstantFactor(a*x**3, x) == [a, x**3]
     assert ConstantFactor(a + x**3, x) == [1, a + x**3]
 
@@ -1768,7 +1768,7 @@ def test_FunctionOfLog():
     assert not FunctionOfLog(2*sin(x)*2,x)
 
 def test_EulerIntegrandQ():
-    assert EulerIntegrandQ((2*x + 3*((x + 1)**3)**1.5)**(-3), x)
+    assert EulerIntegrandQ((2*x + 3*((x + 1)**3)**(S(3)/2))**(-3), x)
     assert not EulerIntegrandQ((2*x + (2*x**2)**2)**3, x)
     assert not EulerIntegrandQ(3*x**2 + 5*x + 1, x)
 
@@ -1792,7 +1792,7 @@ def test_Rt():
     b = symbols('b')
     assert Rt(-b**2, 4) == (-b**2)**(S(1)/S(4))
     assert Rt(x**2, 2) == x
-    assert Rt(S(2 + 3*I), S(8)) == (2 + 3*I)**(1/8)
+    assert Rt(S(2 + 3*I), S(8)) == (2 + 3*I)**(S(1)/8)
     assert Rt(x**2 + 4 + 4*x, 2) == x + 2
     assert Rt(S(8), S(3)) == 2
     assert Rt(S(16807), S(5)) == 7
@@ -1855,7 +1855,7 @@ def test_SimpFixFactor():
     assert SimpFixFactor((a*c + b*c)**S(4), x) == (a*c + b*c)**4
     assert SimpFixFactor((a*Complex(0, c) + b*Complex(0, d))**S(3), x) == -I*(a*c + b*d)**3
     assert SimpFixFactor((a*Complex(0, d) + b*Complex(0, e) + c*Complex(0, f))**S(2), x) == -(a*d + b*e + c*f)**2
-    assert SimpFixFactor((a + b*x**(-1/S(2))*x**S(3))**S(3), x) == (a + b*x**(5/2))**3
+    assert SimpFixFactor((a + b*x**(-1/S(2))*x**S(3))**S(3), x) == (a + b*x**(S(5)/2))**3
     assert SimpFixFactor((a*c + b*c**S(2)*x**S(2))**S(3), x) == c**3*(a + b*c*x**2)**3
     assert SimpFixFactor((a*c**S(2) + b*c**S(1)*x**S(2))**S(3), x) == c**3*(a*c + b*x**2)**3
     assert SimpFixFactor(a*cos(x)**2 + a*sin(x)**2 + v, x) == a*cos(x)**2 + a*sin(x)**2 + v
@@ -1878,12 +1878,12 @@ def test_SubstFor():
     assert SubstFor(x**2, sinh(x), x) == sinh(sqrt(x))
 
 def test_FresnelS():
-    assert  FresnelS(oo) == 1/2
+    assert  FresnelS(oo) == S.Half
     assert FresnelS(0) == 0
 
 def test_FresnelC():
     assert FresnelC(0) == 0
-    assert FresnelC(oo) == 1/2
+    assert FresnelC(oo) == S.Half
 
 def test_Erfc():
     assert Erfc(0) == 1
@@ -1921,7 +1921,7 @@ def test_PureFunctionOfCothQ():
 
 def test_ExpandIntegrand():
     assert ExpandIntegrand(sqrt(a + b*x**S(2) + c*x**S(4)), (f*x)**(S(3)/2)*(d + e*x**S(2)), x) == \
-        d*(f*x)**(3/2)*sqrt(a + b*x**2 + c*x**4) + e*(f*x)**(7/2)*sqrt(a + b*x**2 + c*x**4)/f**2
+        d*(f*x)**(S(3)/2)*sqrt(a + b*x**2 + c*x**4) + e*(f*x)**(S(7)/2)*sqrt(a + b*x**2 + c*x**4)/f**2
     assert ExpandIntegrand((6*A*a*c - 2*A*b**2 + B*a*b - 2*c*x*(A*b - 2*B*a))/(x**2*(a + b*x + c*x**2)), x) == \
         (6*A*a*c - 2*A*b**2 + B*a*b)/(a*x**2) + (-6*A*a**2*c**2 + 10*A*a*b**2*c - 2*A*b**4 - 5*B*a**2*b*c + B*a*b**3 + x*(8*A*a*b*c**2 - 2*A*b**3*c - 4*B*a**2*c**2 + B*a*b**2*c))/(a**2*(a + b*x + c*x**2)) + (-2*A*b + B*a)*(4*a*c - b**2)/(a**2*x)
     assert ExpandIntegrand(x**2*(e + f*x)**3*F**(a + b*(c + d*x)**1), x) == F**(a + b*(c + d*x))*e**2*(e + f*x)**3/f**2 - 2*F**(a + b*(c + d*x))*e*(e + f*x)**4/f**2 + F**(a + b*(c + d*x))*(e + f*x)**5/f**2
@@ -1929,7 +1929,7 @@ def test_ExpandIntegrand():
     assert ExpandIntegrand(sin(x)**3*(a + b*(1/sin(x)))**2, x) == a**2*sin(x)**3 + 2*a*b*sin(x)**2 + b**2*sin(x)
     assert ExpandIntegrand(x*(a + b*ArcSin(c + d*x))**n, x) == -c*(a + b*asin(c + d*x))**n/d + (a + b*asin(c + d*x))**n*(c + d*x)/d
     assert ExpandIntegrand((a + b*x)**S(3)*(A + B*x)/(c + d*x), x) == B*(a + b*x)**3/d + b*(a + b*x)**2*(A*d - B*c)/d**2 + b*(a + b*x)*(A*d - B*c)*(a*d - b*c)/d**3 + b*(A*d - B*c)*(a*d - b*c)**2/d**4 + (A*d - B*c)*(a*d - b*c)**3/(d**4*(c + d*x))
-    assert ExpandIntegrand((x**2)*(S(3)*x)**(S(1)/2), x) ==sqrt(3)*x**(5/2)
+    assert ExpandIntegrand((x**2)*(S(3)*x)**(S(1)/2), x) ==sqrt(3)*x**(S(5)/2)
     assert ExpandIntegrand((x)*(sin(x))**(S(1)/2), x) == x*sqrt(sin(x))
     assert ExpandIntegrand(x*(e + f*x)**2*F**(b*(c + d*x)), x) == -F**(b*(c + d*x))*e*(e + f*x)**2/f + F**(b*(c + d*x))*(e + f*x)**3/f
     assert ExpandIntegrand(x**m*(e + f*x)**2*F**(b*(c + d*x)**n), x) == F**(b*(c + d*x)**n)*e**2*x**m + 2*F**(b*(c + d*x)**n)*e*f*x*x**m + F**(b*(c + d*x)**n)*f**2*x**2*x**m
