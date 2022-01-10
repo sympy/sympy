@@ -1360,7 +1360,7 @@ def test_issue_19764():
 def test_issue_20070():
     if not numpy:
         skip("numpy not installed")
-    
+
     f = lambdify(x, sin(x), 'numpy')
     assert numba.jit(f)(2) == f(2)
 
