@@ -328,7 +328,6 @@ def test_limit_for_symbolic_point():
     assert limit((1 + x)/x, x, z) == Piecewise((1, Eq(z, -oo)), (oo, Eq(z, 0)), (1, Eq(z, oo)), ((z + 1)/z, True))
     assert limit((1 + 1/x)**x, x, z) == Piecewise((E, Eq(z, -oo)), (1, Eq(z, 0)), (E, Eq(z, oo)), ((1 + 1/z)**z, True))
     assert limit((5**(1/x) + 3**(1/x))**x, x, z) == Piecewise((5, Eq(z, 0)), ((exp(log(3)/z) + exp(log(5)/z))**z, True))
-    assert limit((sinh(x) + cosh(x) -1)/(4*x), x, z) == Piecewise((1/4, Eq(z, 0)), (oo, Eq(z, oo)), ((exp(z) - 1)/(4*z), True))
 
 
 @XFAIL
