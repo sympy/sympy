@@ -20,6 +20,8 @@ from sympy.utilities.misc import filldedent, func_name
 from sympy.functions.elementary.miscellaneous import Max, Min
 
 
+null = ''
+
 def _token_splittable(token):
     """
     Predicate for whether a token name can be split into multiple tokens.
@@ -559,11 +561,11 @@ def auto_symbol(tokens, local_dict, global_dict):
                     or (prevTok[0] == OP and prevTok[1] in ('(', ',')
                         and nextTokNum == OP and nextTokVal == '=')
                     # the name has already been defined
-                    or name in local_dict and local_dict[name] is not None):
+                    or name in local_dict and local_dict[name] is not null):
                 result.append((NAME, name))
                 continue
             elif name in local_dict:
-                local_dict.setdefault(None, set()).add(name)
+                local_dict.setdefault(null, set()).add(name)
                 if nextTokVal == '(':
                     local_dict[name] = Function(name)
                 else:
@@ -1046,6 +1048,8 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         local_dict = {}
     elif not isinstance(local_dict, dict):
         raise TypeError('expecting local_dict to be a dict')
+    elif null in local_dict:
+        raise ValueError('cannot use "" in local_dict')
 
     if global_dict is None:
         global_dict = {}
@@ -1090,13 +1094,13 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     try:
         rv = eval_expr(code, local_dict, global_dict)
         # restore neutral definitions for names
-        for i in local_dict.pop(None, ()):
-            local_dict[i] = None
+        for i in local_dict.pop(null, ()):
+            local_dict[i] = null
         return rv
     except Exception as e:
         # restore neutral definitions for names
-        for i in local_dict.pop(None, ()):
-            local_dict[i] = None
+        for i in local_dict.pop(null, ()):
+            local_dict[i] = null
         raise e from ValueError(f"Error from parse_expr with transformed code: {code!r}")
 
 
