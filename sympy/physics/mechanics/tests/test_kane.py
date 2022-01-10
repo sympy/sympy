@@ -230,7 +230,7 @@ def test_aux():
         frstar = frstar.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
 
         KM2 = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd,
-                          u_auxiliary=[u4, u5])
+                          u_auxiliary=[u4, u5], explicit_kinematics=explicit_kinematics)
         (fr2, frstar2) = KM2.kanes_equations(BodyList, ForceList)
         fr2 = fr2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
         frstar2 = frstar2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})

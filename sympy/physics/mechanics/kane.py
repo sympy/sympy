@@ -294,17 +294,22 @@ class KanesMethod(_Methods):
             #
             # k_kqdot^-1*k_ku*u(t) + I*q'(t) + k_kqdot^-1*f_k = 0
             #
-            # NOTE : Solving the kinematic differential equations here is not
-            # necessary and prevents the equations from being provided in fully
-            # implicit form.
             if explicit_kinematics:
+                # NOTE : Solving the kinematic differential equations here is not
+                # necessary and prevents the equations from being provided in fully
+                # implicit form.
                 f_k = k_kqdot.LUsolve(f_k)
                 k_ku = k_kqdot.LUsolve(k_ku)
                 k_kqdot = eye(len(qdot))
-                self._qdot_u_map = dict(zip(qdot, -(k_ku*u + f_k)))
+                self._kindiffdict = self._qdot_u_map = dict(zip(qdot, -(k_ku*u + f_k)))
             else:
-                self._qdot_u_map = solve_linear_system_LU(
+                # If kinematics are not forced to be explicit, do not provide a qdot_u_map
+                # However, still compute a kindiffdict that is necessary to provide a RHS
+                # (i.e. fully explicit) version of the equations
+                self._qdot_u_map = dict()
+                self._kindiffdict = solve_linear_system_LU(
                     Matrix([k_kqdot.T, -(k_ku * u + f_k).T]).T, qdot)
+
 
             self._f_k = f_k.xreplace(uaux_zero)
             self._k_ku = k_ku.xreplace(uaux_zero)
@@ -642,10 +647,11 @@ class KanesMethod(_Methods):
 
     def kindiffdict(self):
         """Returns a dictionary mapping q' to u."""
-        if not self._qdot_u_map:
+        if not self._kindiffdict:
             raise AttributeError('Create an instance of KanesMethod with '
                     'kinematic differential equations to use this method.')
-        return self._qdot_u_map
+
+        return self._kindiffdict
 
     @property
     def auxiliary_eqs(self):
