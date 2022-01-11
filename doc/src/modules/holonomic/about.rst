@@ -36,7 +36,7 @@ Here `D` is the Differential Operator and `L` is called the annihilator
 of the function.
 
 A unique holonomic function can be defined from the annihilator and a set of
-initial conditons.
+initial conditions.
 For instance:
 
 .. math::

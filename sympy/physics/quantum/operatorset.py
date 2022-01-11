@@ -14,8 +14,6 @@ TODO List:
 - Update the dictionary with a complete list of state-operator pairs
 """
 
-from __future__ import print_function, division
-
 from sympy.physics.quantum.cartesian import (XOp, YOp, ZOp, XKet, PxOp, PxKet,
                                              PositionKet3D)
 from sympy.physics.quantum.operator import Operator
@@ -43,7 +41,7 @@ state_mapping = { JxKet: frozenset((J2Op, JxOp)),
                   PxKet: PxOp,
                   XKet: XOp }
 
-op_mapping = dict((v, k) for k, v in state_mapping.items())
+op_mapping = {v: k for k, v in state_mapping.items()}
 
 
 def operators_to_state(operators, **options):
@@ -236,9 +234,12 @@ def state_to_operators(state, **options):
 
 
 def _make_default(expr):
+    # XXX: Catching TypeError like this is a bad way of distinguishing between
+    # classes and instances. The logic using this function should be rewritten
+    # somehow.
     try:
         ret = expr()
-    except Exception:
+    except TypeError:
         ret = expr
 
     return ret

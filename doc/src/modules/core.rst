@@ -1,5 +1,6 @@
-SymPy Core
-==========
+====
+Core
+====
 
 sympify
 -------
@@ -15,12 +16,12 @@ assumptions
 .. automodule:: sympy.core.assumptions
 
 cache
--------
+-----
 .. module:: sympy.core.cache
 
 cacheit
 ^^^^^^^
-.. autofunction:: cacheit
+.. autofunction:: __cacheit
 
 basic
 -----
@@ -46,7 +47,11 @@ singleton
 
 S
 ^
+
 .. autoclass:: sympy.core.singleton.SingletonRegistry
+   :members:
+
+.. autoclass:: Singleton
    :members:
 
 expr
@@ -54,17 +59,17 @@ expr
 .. module:: sympy.core.expr
 
 Expr
-----
+^^^^
 .. autoclass:: Expr
    :members:
 
 UnevaluatedExpr
----------------
+^^^^^^^^^^^^^^^
 .. autoclass:: UnevaluatedExpr
    :members:
 
 AtomicExpr
-----------
+^^^^^^^^^^
 .. autoclass:: AtomicExpr
    :members:
 
@@ -118,6 +123,13 @@ Integer
 ^^^^^^^
 .. autoclass:: Integer
    :members:
+
+AlgebraicNumber
+^^^^^^^^^^^^^^^
+.. autoclass:: AlgebraicNumber
+   :members:
+
+   .. automethod:: AlgebraicNumber.__new__
 
 NumberSymbol
 ^^^^^^^^^^^^
@@ -225,6 +237,17 @@ GoldenRatio
 .. autoclass:: GoldenRatio
    :members:
 
+TribonacciConstant
+^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: TribonacciConstant
+   :members:
+
+mod_inverse
+^^^^^^^^^^^
+
+.. autofunction:: mod_inverse
+
 power
 -----
 .. module:: sympy.core.power
@@ -237,6 +260,10 @@ Pow
 integer_nthroot
 ^^^^^^^^^^^^^^^
 .. autofunction:: integer_nthroot
+
+integer_log
+^^^^^^^^^^^
+.. autofunction:: integer_log
 
 mul
 ---
@@ -275,6 +302,9 @@ relational
 
 Rel
 ^^^
+.. autoclass:: Relational
+   :members:
+
 .. autoclass:: Rel
    :members:
 
@@ -365,6 +395,7 @@ Derivative
 ^^^^^^^^^^
 .. autoclass:: Derivative
    :members:
+   :private-members:
 
 diff
 ^^^^
@@ -464,6 +495,12 @@ evalf
 -----
 .. module:: sympy.core.evalf
 
+EvalfMixin
+^^^^^^^^^^
+
+.. autoclass:: EvalfMixin
+   :members:
+
 PrecisionExhausted
 ^^^^^^^^^^^^^^^^^^
 .. autoclass:: PrecisionExhausted
@@ -487,22 +524,6 @@ Dict
 .. autoclass:: Dict
    :members:
 
-compatibility
--------------
-.. module:: sympy.core.compatibility
-
-iterable
-^^^^^^^^
-.. autofunction:: iterable
-
-is_sequence
-^^^^^^^^^^^
-.. autofunction:: is_sequence
-
-as_int
-^^^^^^
-.. autofunction:: as_int
-
 exprtools
 ---------
 .. module:: sympy.core.exprtools
@@ -514,3 +535,60 @@ gcd_terms
 factor_terms
 ^^^^^^^^^^^^
 .. autofunction:: factor_terms
+
+kind
+----
+.. module:: sympy.core.kind
+
+Kind
+^^^^
+.. autoclass:: Kind
+   :members:
+
+NumberKind
+^^^^^^^^^^
+.. autoclass:: NumberKind
+   :members:
+
+BooleanKind
+^^^^^^^^^^^
+.. autoclass:: BooleanKind
+   :members:
+
+Sorting
+-------
+
+default_sort_key
+^^^^^^^^^^^^^^^^
+
+.. autofunction:: sympy.core.sorting.default_sort_key
+
+ordered
+^^^^^^^
+
+.. autofunction:: sympy.core.sorting.ordered
+
+
+Traversal
+---------
+.. module:: sympy.core.traversal
+
+bottom_up
+^^^^^^^^^
+.. autofunction:: bottom_up
+
+postorder_traversal
+^^^^^^^^^^^^^^^^^^^
+.. autofunction:: postorder_traversal
+
+preorder_traversal
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: preorder_traversal
+
+use
+^^^
+.. autofunction:: use
+
+walk
+^^^^
+.. autofunction:: walk

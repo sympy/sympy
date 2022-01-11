@@ -7,20 +7,30 @@ Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
 
-from __future__ import print_function, division
+from typing import Callable, Dict as tDict, Tuple as tTuple
 
-from sympy.core import S, Symbol, Rational, Integer, Add, Dummy
-from sympy.core.compatibility import as_int, SYMPY_INTS, range
+from sympy.core import S, Symbol, Add, Dummy
 from sympy.core.cache import cacheit
+from sympy.core.evalf import pure_complex
+from sympy.core.expr import Expr
 from sympy.core.function import Function, expand_mul
-from sympy.core.numbers import E, pi
-from sympy.core.relational import LessThan, StrictGreaterThan
-from sympy.functions.combinatorial.factorials import binomial, factorial
+from sympy.core.logic import fuzzy_not
+from sympy.core.mul import Mul, prod
+from sympy.core.numbers import E, pi, oo, Rational, Integer
+from sympy.core.relational import is_le, is_gt
+from sympy.external.gmpy import SYMPY_INTS
+from sympy.functions.combinatorial.factorials import (binomial,
+    factorial, subfactorial)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.trigonometric import sin, cos, cot
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.ntheory import isprime
+from sympy.ntheory.primetest import is_square
+from sympy.utilities.enumerative import MultisetPartitionTraverser
+from sympy.utilities.iterables import multiset, multiset_derangements, iterable
 from sympy.utilities.memoization import recurrence_memo
+from sympy.utilities.misc import as_int
 
 from mpmath import bernfrac, workprec
 from mpmath.libmp import ifib as _ifib
@@ -36,7 +46,127 @@ def _product(a, b):
 
 # Dummy symbol used for computing polynomial sequences
 _sym = Symbol('x')
-_symbols = Function('x')
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                           Carmichael numbers                               #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+
+class carmichael(Function):
+    """
+    Carmichael Numbers:
+
+    Certain cryptographic algorithms make use of big prime numbers.
+    However, checking whether a big number is prime is not so easy.
+    Randomized prime number checking tests exist that offer a high degree of confidence of
+    accurate determination at low cost, such as the Fermat test.
+
+    Let 'a' be a random number between 2 and n - 1, where n is the number whose primality we are testing.
+    Then, n is probably prime if it satisfies the modular arithmetic congruence relation :
+
+    a^(n-1) = 1(mod n).
+    (where mod refers to the modulo operation)
+
+    If a number passes the Fermat test several times, then it is prime with a
+    high probability.
+
+    Unfortunately, certain composite numbers (non-primes) still pass the Fermat test
+    with every number smaller than themselves.
+    These numbers are called Carmichael numbers.
+
+    A Carmichael number will pass a Fermat primality test to every base b relatively prime to the number,
+    even though it is not actually prime. This makes tests based on Fermat's Little Theorem less effective than
+    strong probable prime tests such as the Baillie-PSW primality test and the Miller-Rabin primality test.
+    mr functions given in sympy/sympy/ntheory/primetest.py will produce wrong results for each and every
+    carmichael number.
+
+    Examples
+    ========
+
+    >>> from sympy import carmichael
+    >>> carmichael.find_first_n_carmichaels(5)
+    [561, 1105, 1729, 2465, 2821]
+    >>> carmichael.is_prime(2465)
+    False
+    >>> carmichael.is_prime(1729)
+    False
+    >>> carmichael.find_carmichael_numbers_in_range(0, 562)
+    [561]
+    >>> carmichael.find_carmichael_numbers_in_range(0,1000)
+    [561]
+    >>> carmichael.find_carmichael_numbers_in_range(0,2000)
+    [561, 1105, 1729]
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Carmichael_number
+    .. [2] https://en.wikipedia.org/wiki/Fermat_primality_test
+    .. [3] https://www.jstor.org/stable/23248683?seq=1#metadata_info_tab_contents
+    """
+
+    @staticmethod
+    def is_perfect_square(n):
+        return is_square(n)
+
+    @staticmethod
+    def divides(p, n):
+        return n % p == 0
+
+    @staticmethod
+    def is_prime(n):
+        return isprime(n)
+
+    @staticmethod
+    def is_carmichael(n):
+        if n >= 0:
+            if (n == 1) or (carmichael.is_prime(n)) or (n % 2 == 0):
+                return False
+
+            divisors = list([1, n])
+
+            # get divisors
+            for i in range(3, n // 2 + 1, 2):
+                if n % i == 0:
+                    divisors.append(i)
+
+            for i in divisors:
+                if carmichael.is_perfect_square(i) and i != 1:
+                    return False
+                if carmichael.is_prime(i):
+                    if not carmichael.divides(i - 1, n - 1):
+                        return False
+
+            return True
+
+        else:
+            raise ValueError('The provided number must be greater than or equal to 0')
+
+    @staticmethod
+    def find_carmichael_numbers_in_range(x, y):
+        if 0 <= x <= y:
+            if x % 2 == 0:
+                return list([i for i in range(x + 1, y, 2) if carmichael.is_carmichael(i)])
+            else:
+                return list([i for i in range(x, y, 2) if carmichael.is_carmichael(i)])
+
+        else:
+            raise ValueError('The provided range is not valid. x and y must be non-negative integers and x <= y')
+
+    @staticmethod
+    def find_first_n_carmichaels(n):
+        i = 1
+        carmichaels = list()
+
+        while len(carmichaels) < n:
+            if carmichael.is_carmichael(i):
+                carmichaels.append(i)
+            i += 2
+
+        return carmichaels
 
 
 #----------------------------------------------------------------------------#
@@ -45,24 +175,25 @@ _symbols = Function('x')
 #                                                                            #
 #----------------------------------------------------------------------------#
 
+
 class fibonacci(Function):
     r"""
     Fibonacci numbers / Fibonacci polynomials
 
     The Fibonacci numbers are the integer sequence defined by the
-    initial terms F_0 = 0, F_1 = 1 and the two-term recurrence
-    relation F_n = F_{n-1} + F_{n-2}.  This definition
+    initial terms `F_0 = 0`, `F_1 = 1` and the two-term recurrence
+    relation `F_n = F_{n-1} + F_{n-2}`.  This definition
     extended to arbitrary real and complex arguments using
     the formula
 
     .. math :: F_z = \frac{\phi^z - \cos(\pi z) \phi^{-z}}{\sqrt 5}
 
-    The Fibonacci polynomials are defined by F_1(x) = 1,
-    F_2(x) = x, and F_n(x) = x*F_{n-1}(x) + F_{n-2}(x) for n > 2.
-    For all positive integers n, F_n(1) = F_n.
+    The Fibonacci polynomials are defined by `F_1(x) = 1`,
+    `F_2(x) = x`, and `F_n(x) = x*F_{n-1}(x) + F_{n-2}(x)` for `n > 2`.
+    For all positive integers `n`, `F_n(1) = F_n`.
 
-    * fibonacci(n) gives the nth Fibonacci number, F_n
-    * fibonacci(n, x) gives the nth Fibonacci polynomial in x, F_n(x)
+    * ``fibonacci(n)`` gives the `n^{th}` Fibonacci number, `F_n`
+    * ``fibonacci(n, x)`` gives the `n^{th}` Fibonacci polynomial in `x`, `F_n(x)`
 
     Examples
     ========
@@ -74,16 +205,17 @@ class fibonacci(Function):
     >>> fibonacci(5, Symbol('t'))
     t**4 + 3*t**2 + 1
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Fibonacci_number
-    .. [2] http://mathworld.wolfram.com/FibonacciNumber.html
-
     See Also
     ========
 
-    bell, bernoulli, catalan, euler, harmonic, lucas
+    bell, bernoulli, catalan, euler, harmonic, lucas, genocchi, partition, tribonacci
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Fibonacci_number
+    .. [2] http://mathworld.wolfram.com/FibonacciNumber.html
+
     """
 
     @staticmethod
@@ -101,22 +233,30 @@ class fibonacci(Function):
             return S.Infinity
 
         if n.is_Integer:
-            n = int(n)
-            if n < 0:
-                return S.NegativeOne**(n + 1) * fibonacci(-n)
             if sym is None:
-                return Integer(cls._fib(n))
+                n = int(n)
+                if n < 0:
+                    return S.NegativeOne**(n + 1) * fibonacci(-n)
+                else:
+                    return Integer(cls._fib(n))
             else:
                 if n < 1:
                     raise ValueError("Fibonacci polynomials are defined "
                        "only for positive integer indices.")
                 return cls._fibpoly(n).subs(_sym, sym)
 
-    def _eval_rewrite_as_sqrt(self, n):
+    def _eval_rewrite_as_sqrt(self, n, **kwargs):
         return 2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
 
-    def _eval_rewrite_as_GoldenRatio(self,n):
+    def _eval_rewrite_as_GoldenRatio(self,n, **kwargs):
         return (S.GoldenRatio**n - 1/(-S.GoldenRatio)**n)/(2*S.GoldenRatio-1)
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                               Lucas numbers                                #
+#                                                                            #
+#----------------------------------------------------------------------------#
 
 
 class lucas(Function):
@@ -126,9 +266,9 @@ class lucas(Function):
     Lucas numbers satisfy a recurrence relation similar to that of
     the Fibonacci sequence, in which each term is the sum of the
     preceding two. They are generated by choosing the initial
-    values L_0 = 2 and L_1 = 1.
+    values `L_0 = 2` and `L_1 = 1`.
 
-    * lucas(n) gives the nth Lucas number
+    * ``lucas(n)`` gives the `n^{th}` Lucas number
 
     Examples
     ========
@@ -138,16 +278,17 @@ class lucas(Function):
     >>> [lucas(x) for x in range(11)]
     [2, 1, 3, 4, 7, 11, 18, 29, 47, 76, 123]
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Lucas_number
-    .. [2] http://mathworld.wolfram.com/LucasNumber.html
-
     See Also
     ========
 
-    bell, bernoulli, catalan, euler, fibonacci, harmonic
+    bell, bernoulli, catalan, euler, fibonacci, harmonic, genocchi, partition, tribonacci
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Lucas_number
+    .. [2] http://mathworld.wolfram.com/LucasNumber.html
+
     """
 
     @classmethod
@@ -158,8 +299,96 @@ class lucas(Function):
         if n.is_Integer:
             return fibonacci(n + 1) + fibonacci(n - 1)
 
-    def _eval_rewrite_as_sqrt(self, n):
+    def _eval_rewrite_as_sqrt(self, n, **kwargs):
         return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
+
+
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                             Tribonacci numbers                             #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+
+class tribonacci(Function):
+    r"""
+    Tribonacci numbers / Tribonacci polynomials
+
+    The Tribonacci numbers are the integer sequence defined by the
+    initial terms `T_0 = 0`, `T_1 = 1`, `T_2 = 1` and the three-term
+    recurrence relation `T_n = T_{n-1} + T_{n-2} + T_{n-3}`.
+
+    The Tribonacci polynomials are defined by `T_0(x) = 0`, `T_1(x) = 1`,
+    `T_2(x) = x^2`, and `T_n(x) = x^2 T_{n-1}(x) + x T_{n-2}(x) + T_{n-3}(x)`
+    for `n > 2`.  For all positive integers `n`, `T_n(1) = T_n`.
+
+    * ``tribonacci(n)`` gives the `n^{th}` Tribonacci number, `T_n`
+    * ``tribonacci(n, x)`` gives the `n^{th}` Tribonacci polynomial in `x`, `T_n(x)`
+
+    Examples
+    ========
+
+    >>> from sympy import tribonacci, Symbol
+
+    >>> [tribonacci(x) for x in range(11)]
+    [0, 1, 1, 2, 4, 7, 13, 24, 44, 81, 149]
+    >>> tribonacci(5, Symbol('t'))
+    t**8 + 3*t**5 + 3*t**2
+
+    See Also
+    ========
+
+    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas, genocchi, partition
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Generalizations_of_Fibonacci_numbers#Tribonacci_numbers
+    .. [2] http://mathworld.wolfram.com/TribonacciNumber.html
+    .. [3] https://oeis.org/A000073
+
+    """
+
+    @staticmethod
+    @recurrence_memo([S.Zero, S.One, S.One])
+    def _trib(n, prev):
+        return (prev[-3] + prev[-2] + prev[-1])
+
+    @staticmethod
+    @recurrence_memo([S.Zero, S.One, _sym**2])
+    def _tribpoly(n, prev):
+        return (prev[-3] + _sym*prev[-2] + _sym**2*prev[-1]).expand()
+
+    @classmethod
+    def eval(cls, n, sym=None):
+        if n is S.Infinity:
+            return S.Infinity
+
+        if n.is_Integer:
+            n = int(n)
+            if n < 0:
+                raise ValueError("Tribonacci polynomials are defined "
+                       "only for non-negative integer indices.")
+            if sym is None:
+                return Integer(cls._trib(n))
+            else:
+                return cls._tribpoly(n).subs(_sym, sym)
+
+    def _eval_rewrite_as_sqrt(self, n, **kwargs):
+        w = (-1 + S.ImaginaryUnit * sqrt(3)) / 2
+        a = (1 + cbrt(19 + 3*sqrt(33)) + cbrt(19 - 3*sqrt(33))) / 3
+        b = (1 + w*cbrt(19 + 3*sqrt(33)) + w**2*cbrt(19 - 3*sqrt(33))) / 3
+        c = (1 + w**2*cbrt(19 + 3*sqrt(33)) + w*cbrt(19 - 3*sqrt(33))) / 3
+        Tn = (a**(n + 1)/((a - b)*(a - c))
+            + b**(n + 1)/((b - a)*(b - c))
+            + c**(n + 1)/((c - a)*(c - b)))
+        return Tn
+
+    def _eval_rewrite_as_TribonacciConstant(self, n, **kwargs):
+        b = cbrt(586 + 102*sqrt(33))
+        Tn = 3 * b * S.TribonacciConstant**n / (b**2 - 2*b + 4)
+        return floor(Tn + S.Half)
+
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -173,53 +402,41 @@ class bernoulli(Function):
     Bernoulli numbers / Bernoulli polynomials
 
     The Bernoulli numbers are a sequence of rational numbers
-    defined by B_0 = 1 and the recursive relation (n > 0)::
+    defined by `B_0 = 1` and the recursive relation (`n > 0`):
 
-                n
-               ___
-              \      / n + 1 \
-          0 =  )     |       | * B .
-              /___   \   k   /    k
-              k = 0
+    .. math :: 0 = \sum_{k=0}^n \binom{n+1}{k} B_k
 
     They are also commonly defined by their exponential generating
-    function, which is x/(exp(x) - 1). For odd indices > 1, the
+    function, which is `\frac{x}{e^x - 1}`. For odd indices > 1, the
     Bernoulli numbers are zero.
 
-    The Bernoulli polynomials satisfy the analogous formula::
+    The Bernoulli polynomials satisfy the analogous formula:
 
-                    n
-                   ___
-                  \      / n \         n-k
-          B (x) =  )     |   | * B  * x   .
-           n      /___   \ k /    k
-                  k = 0
+    .. math :: B_n(x) = \sum_{k=0}^n \binom{n}{k} B_k x^{n-k}
 
     Bernoulli numbers and Bernoulli polynomials are related as
-    B_n(0) = B_n.
+    `B_n(0) = B_n`.
 
-    We compute Bernoulli numbers using Ramanujan's formula::
+    We compute Bernoulli numbers using Ramanujan's formula:
 
-                                   / n + 3 \
-          B   =  (A(n) - S(n))  /  |       |
-           n                       \   n   /
+    .. math :: B_n = \frac{A(n) - S(n)}{\binom{n+3}{n}}
 
-    where A(n) = (n+3)/3 when n = 0 or 2 (mod 6), A(n) = -(n+3)/6
-    when n = 4 (mod 6), and::
+    where:
 
-                 [n/6]
-                  ___
-                 \      /  n + 3  \
-          S(n) =  )     |         | * B
-                 /___   \ n - 6*k /    n-6*k
-                 k = 1
+    .. math :: A(n) = \begin{cases} \frac{n+3}{3} &
+        n \equiv 0\ \text{or}\ 2 \pmod{6} \\
+        -\frac{n+3}{6} & n \equiv 4 \pmod{6} \end{cases}
+
+    and:
+
+    .. math :: S(n) = \sum_{k=1}^{[n/6]} \binom{n+3}{n-6k} B_{n-6k}
 
     This formula is similar to the sum given in the definition, but
     cuts 2/3 of the terms. For Bernoulli polynomials, we use the
     formula in the definition.
 
-    * bernoulli(n) gives the nth Bernoulli number, B_n
-    * bernoulli(n, x) gives the nth Bernoulli polynomial in x, B_n(x)
+    * ``bernoulli(n)`` gives the nth Bernoulli number, `B_n`
+    * ``bernoulli(n, x)`` gives the nth Bernoulli polynomial in `x`, `B_n(x)`
 
     Examples
     ========
@@ -231,19 +448,22 @@ class bernoulli(Function):
     >>> bernoulli(1000001)
     0
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Bernoulli_number
-    .. [2] http://en.wikipedia.org/wiki/Bernoulli_polynomial
-    .. [3] http://mathworld.wolfram.com/BernoulliNumber.html
-    .. [4] http://mathworld.wolfram.com/BernoulliPolynomial.html
-
     See Also
     ========
 
-    bell, catalan, euler, fibonacci, harmonic, lucas
+    bell, catalan, euler, fibonacci, harmonic, lucas, genocchi, partition, tribonacci
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Bernoulli_number
+    .. [2] https://en.wikipedia.org/wiki/Bernoulli_polynomial
+    .. [3] http://mathworld.wolfram.com/BernoulliNumber.html
+    .. [4] http://mathworld.wolfram.com/BernoulliPolynomial.html
+
     """
+
+    args: tTuple[Integer]
 
     # Calculates B_n for positive even n
     @staticmethod
@@ -270,11 +490,11 @@ class bernoulli(Function):
     def eval(cls, n, sym=None):
         if n.is_Number:
             if n.is_Integer and n.is_nonnegative:
-                if n is S.Zero:
+                if n.is_zero:
                     return S.One
                 elif n is S.One:
                     if sym is None:
-                        return -S.Half
+                        return Rational(-1, 2)
                     else:
                         return sym - S.Half
                 # Bernoulli numbers
@@ -315,9 +535,10 @@ class bernoulli(Function):
 
 #----------------------------------------------------------------------------#
 #                                                                            #
-#                             Bell numbers                                   #
+#                                Bell numbers                                #
 #                                                                            #
 #----------------------------------------------------------------------------#
+
 
 class bell(Function):
     r"""
@@ -345,9 +566,9 @@ class bell(Function):
                 \left(\frac{x_2}{2!} \right)^{j_2} \dotsb
                 \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}.
 
-    * bell(n) gives the `n^{th}` Bell number, `B_n`.
-    * bell(n, x) gives the `n^{th}` Bell polynomial, `B_n(x)`.
-    * bell(n, k, (x1, x2, ...)) gives Bell polynomials of the second kind,
+    * ``bell(n)`` gives the `n^{th}` Bell number, `B_n`.
+    * ``bell(n, x)`` gives the `n^{th}` Bell polynomial, `B_n(x)`.
+    * ``bell(n, k, (x1, x2, ...))`` gives Bell polynomials of the second kind,
       `B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})`.
 
     Notes
@@ -370,17 +591,18 @@ class bell(Function):
     >>> bell(6, 2, symbols('x:6')[1:])
     6*x1*x5 + 15*x2*x4 + 10*x3**2
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Bell_number
-    .. [2] http://mathworld.wolfram.com/BellNumber.html
-    .. [3] http://mathworld.wolfram.com/BellPolynomial.html
-
     See Also
     ========
 
-    bernoulli, catalan, euler, fibonacci, harmonic, lucas
+    bernoulli, catalan, euler, fibonacci, harmonic, lucas, genocchi, partition, tribonacci
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Bell_number
+    .. [2] http://mathworld.wolfram.com/BellNumber.html
+    .. [3] http://mathworld.wolfram.com/BellPolynomial.html
+
     """
 
     @staticmethod
@@ -415,9 +637,9 @@ class bell(Function):
                 \x_m \binom{n-1}{m-1} B_{n-m,k-1}(x_1, x_2, \dotsc, x_{n-m-k})
 
         where
-            B_{0,0} = 1;
-            B_{n,0} = 0; for n>=1
-            B_{0,k} = 0; for k>=1
+            `B_{0,0} = 1;`
+            `B_{n,0} = 0; for n \ge 1`
+            `B_{0,k} = 0; for k \ge 1`
 
         """
         if (n == 0) and (k == 0):
@@ -452,8 +674,8 @@ class bell(Function):
                 r = cls._bell_incomplete_poly(int(n), int(k_sym), symbols)
                 return r
 
-    def _eval_rewrite_as_Sum(self, n, k_sym=None, symbols=None):
-        from sympy import Sum
+    def _eval_rewrite_as_Sum(self, n, k_sym=None, symbols=None, **kwargs):
+        from sympy.concrete.summations import Sum
         if (k_sym is not None) or (symbols is not None):
             return self
 
@@ -463,9 +685,10 @@ class bell(Function):
         k = Dummy('k', integer=True, nonnegative=True)
         return 1 / E * Sum(k**n / factorial(k), (k, 0, S.Infinity))
 
+
 #----------------------------------------------------------------------------#
 #                                                                            #
-#                           Harmonic numbers                                 #
+#                              Harmonic numbers                              #
 #                                                                            #
 #----------------------------------------------------------------------------#
 
@@ -529,8 +752,7 @@ class harmonic(Function):
     >>> H = harmonic(25/S(7))
     >>> He = simplify(expand_func(H).doit())
     >>> He
-    log(sin(pi/7)**(-2*cos(pi/7))*sin(2*pi/7)**(2*cos(16*pi/7))*cos(pi/14)**(-2*sin(pi/14))/14)
-    + pi*tan(pi/14)/2 + 30247/9900
+    log(sin(2*pi/7)**(2*cos(16*pi/7))/(14*sin(pi/7)**(2*cos(pi/7))*cos(pi/14)**(2*sin(pi/14)))) + pi*tan(pi/14)/2 + 30247/9900
     >>> He.n(40)
     1.983697455232980674869851942390639915940
     >>> harmonic(25/S(7)).n(40)
@@ -576,33 +798,34 @@ class harmonic(Function):
     >>> limit(harmonic(n, 3), n, oo)
     -polygamma(2, 1)/2
 
-    However we can not compute the general relation yet:
+    However we cannot compute the general relation yet:
 
     >>> limit(harmonic(n, m), n, oo)
     harmonic(oo, m)
 
     which equals ``zeta(m)`` for ``m > 1``.
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Harmonic_number
-    .. [2] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber/
-    .. [3] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber2/
-
     See Also
     ========
 
-    bell, bernoulli, catalan, euler, fibonacci, lucas
+    bell, bernoulli, catalan, euler, fibonacci, lucas, genocchi, partition, tribonacci
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Harmonic_number
+    .. [2] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber/
+    .. [3] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber2/
+
     """
 
     # Generate one memoized Harmonic number-generating function for each
     # order and store it in a dictionary
-    _functions = {}
+    _functions = {}  # type: tDict[Integer, Callable[[int], Rational]]
 
     @classmethod
     def eval(cls, n, m=None):
-        from sympy import zeta
+        from sympy.functions.special.zeta_functions import zeta
         if m is S.One:
             return cls(n)
         if m is None:
@@ -611,48 +834,48 @@ class harmonic(Function):
         if m.is_zero:
             return n
 
-        if n is S.Infinity and m.is_Number:
-            # TODO: Fix for symbolic values of m
+        if n is S.Infinity:
             if m.is_negative:
                 return S.NaN
-            elif LessThan(m, S.One):
+            elif is_le(m, S.One):
                 return S.Infinity
-            elif StrictGreaterThan(m, S.One):
+            elif is_gt(m, S.One):
                 return zeta(m)
             else:
-                return cls
+                return
+
+        if n == 0:
+            return S.Zero
 
         if n.is_Integer and n.is_nonnegative and m.is_Integer:
-            if n == 0:
-                return S.Zero
-            if not m in cls._functions:
+            if m not in cls._functions:
                 @recurrence_memo([0])
                 def f(n, prev):
                     return prev[-1] + S.One / n**m
                 cls._functions[m] = f
             return cls._functions[m](int(n))
 
-    def _eval_rewrite_as_polygamma(self, n, m=1):
+    def _eval_rewrite_as_polygamma(self, n, m=1, **kwargs):
         from sympy.functions.special.gamma_functions import polygamma
         return S.NegativeOne**m/factorial(m - 1) * (polygamma(m - 1, 1) - polygamma(m - 1, n + 1))
 
-    def _eval_rewrite_as_digamma(self, n, m=1):
+    def _eval_rewrite_as_digamma(self, n, m=1, **kwargs):
         from sympy.functions.special.gamma_functions import polygamma
         return self.rewrite(polygamma)
 
-    def _eval_rewrite_as_trigamma(self, n, m=1):
+    def _eval_rewrite_as_trigamma(self, n, m=1, **kwargs):
         from sympy.functions.special.gamma_functions import polygamma
         return self.rewrite(polygamma)
 
-    def _eval_rewrite_as_Sum(self, n, m=None):
-        from sympy import Sum
+    def _eval_rewrite_as_Sum(self, n, m=None, **kwargs):
+        from sympy.concrete.summations import Sum
         k = Dummy("k", integer=True)
         if m is None:
             m = S.One
         return Sum(k**(-m), (k, 1, n))
 
     def _eval_expand_func(self, **hints):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         n = self.args[0]
         m = self.args[1] if len(self.args) == 2 else 1
 
@@ -684,12 +907,12 @@ class harmonic(Function):
 
         return self
 
-    def _eval_rewrite_as_tractable(self, n, m=1):
-        from sympy import polygamma
+    def _eval_rewrite_as_tractable(self, n, m=1, limitvar=None, **kwargs):
+        from sympy.functions.special.gamma_functions import polygamma
         return self.rewrite(polygamma).rewrite("tractable", deep=True)
 
     def _eval_evalf(self, prec):
-        from sympy import polygamma
+        from sympy.functions.special.gamma_functions import polygamma
         if all(i.is_number for i in self.args):
             return self.rewrite(polygamma)._eval_evalf(prec)
 
@@ -705,23 +928,18 @@ class euler(Function):
     r"""
     Euler numbers / Euler polynomials
 
-    The Euler numbers are given by::
+    The Euler numbers are given by:
 
-                  2*n+1   k
-                   ___   ___            j          2*n+1
-                  \     \     / k \ (-1)  * (k-2*j)
-          E   = I  )     )    |   | --------------------
-           2n     /___  /___  \ j /      k    k
-                  k = 1 j = 0           2  * I  * k
+    .. math:: E_{2n} = I \sum_{k=1}^{2n+1} \sum_{j=0}^k \binom{k}{j}
+        \frac{(-1)^j (k-2j)^{2n+1}}{2^k I^k k}
 
-          E     = 0
-           2n+1
+    .. math:: E_{2n+1} = 0
 
     Euler numbers and Euler polynomials are related by
 
     .. math:: E_n = 2^n E_n\left(\frac{1}{2}\right).
 
-    We compute symbolic Euler polynomials using [5]
+    We compute symbolic Euler polynomials using [5]_
 
     .. math:: E_n(x) = \sum_{k=0}^n \binom{n}{k} \frac{E_k}{2^k}
                        \left(x - \frac{1}{2}\right)^{n-k}.
@@ -729,18 +947,17 @@ class euler(Function):
     However, numerical evaluation of the Euler polynomial is computed
     more efficiently (and more accurately) using the mpmath library.
 
-    * euler(n) gives the n-th Euler number, `E_n`.
-    * euler(n, x) gives the n-th Euler polynomial, `E_n(x)`.
+    * ``euler(n)`` gives the `n^{th}` Euler number, `E_n`.
+    * ``euler(n, x)`` gives the `n^{th}` Euler polynomial, `E_n(x)`.
 
     Examples
     ========
 
-    >>> from sympy import Symbol, S
-    >>> from sympy.functions import euler
+    >>> from sympy import euler, Symbol, S
     >>> [euler(n) for n in range(10)]
     [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]
     >>> n = Symbol("n")
-    >>> euler(n+2*n)
+    >>> euler(n + 2*n)
     euler(3*n)
 
     >>> x = Symbol("x")
@@ -763,19 +980,20 @@ class euler(Function):
     >>> euler(12)
     2702765
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Euler_numbers
-    .. [2] http://mathworld.wolfram.com/EulerNumber.html
-    .. [3] http://en.wikipedia.org/wiki/Alternating_permutation
-    .. [4] http://mathworld.wolfram.com/AlternatingPermutation.html
-    .. [5] http://dlmf.nist.gov/24.2#ii
-
     See Also
     ========
 
-    bell, bernoulli, catalan, fibonacci, harmonic, lucas
+    bell, bernoulli, catalan, fibonacci, harmonic, lucas, genocchi, partition, tribonacci
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euler_numbers
+    .. [2] http://mathworld.wolfram.com/EulerNumber.html
+    .. [3] https://en.wikipedia.org/wiki/Alternating_permutation
+    .. [4] http://mathworld.wolfram.com/AlternatingPermutation.html
+    .. [5] http://dlmf.nist.gov/24.2#ii
+
     """
 
     @classmethod
@@ -792,13 +1010,11 @@ class euler(Function):
                     return Integer(res)
                 # Euler polynomial
                 else:
-                    from sympy.core.evalf import pure_complex
                     reim = pure_complex(sym, or_real=True)
                     # Evaluate polynomial numerically using mpmath
                     if reim and all(a.is_Float or a.is_Integer for a in reim) \
                             and any(a.is_Float for a in reim):
                         from mpmath import mp
-                        from sympy import Expr
                         m = int(m)
                         # XXX ComplexFloat (#12192) would be nice here, above
                         prec = min([a._prec for a in reim if a.is_Float])
@@ -817,32 +1033,31 @@ class euler(Function):
             if m.is_odd and m.is_positive:
                 return S.Zero
 
-    def _eval_rewrite_as_Sum(self, n, x=None):
-        from sympy import Sum
+    def _eval_rewrite_as_Sum(self, n, x=None, **kwargs):
+        from sympy.concrete.summations import Sum
         if x is None and n.is_even:
             k = Dummy("k", integer=True)
             j = Dummy("j", integer=True)
             n = n / 2
-            Em = (S.ImaginaryUnit * Sum(Sum(binomial(k, j) * ((-1)**j * (k - 2*j)**(2*n + 1)) /
+            Em = (S.ImaginaryUnit * Sum(Sum(binomial(k, j) * (S.NegativeOne**j *
+                                                              (k - 2*j)**(2*n + 1)) /
                   (2**k*S.ImaginaryUnit**k * k), (j, 0, k)), (k, 1, 2*n + 1)))
             return Em
         if x:
             k = Dummy("k", integer=True)
-            return Sum(binomial(n, k)*euler(k)/2**k*(x-S.Half)**(n-k), (k, 0, n))
+            return Sum(binomial(n, k)*euler(k)/2**k*(x - S.Half)**(n - k), (k, 0, n))
 
     def _eval_evalf(self, prec):
         m, x = (self.args[0], None) if len(self.args) == 1 else self.args
 
         if x is None and m.is_Integer and m.is_nonnegative:
             from mpmath import mp
-            from sympy import Expr
             m = m._to_mpmath(prec)
             with workprec(prec):
                 res = mp.eulernum(m)
             return Expr._from_mpmath(res, prec)
         if x and x.is_number and m.is_Integer and m.is_nonnegative:
             from mpmath import mp
-            from sympy import Expr
             m = int(m)
             x = x._to_mpmath(prec)
             with workprec(prec):
@@ -851,7 +1066,7 @@ class euler(Function):
 
 #----------------------------------------------------------------------------#
 #                                                                            #
-#                           Catalan numbers                                  #
+#                              Catalan numbers                               #
 #                                                                            #
 #----------------------------------------------------------------------------#
 
@@ -860,21 +1075,19 @@ class catalan(Function):
     r"""
     Catalan numbers
 
-    The n-th catalan number is given by::
+    The `n^{th}` catalan number is given by:
 
-                 1   / 2*n \
-          C  = ----- |     |
-           n   n + 1 \  n  /
+    .. math :: C_n = \frac{1}{n+1} \binom{2n}{n}
 
-    * catalan(n) gives the n-th Catalan number, C_n
+    * ``catalan(n)`` gives the `n^{th}` Catalan number, `C_n`
 
     Examples
     ========
 
-    >>> from sympy import (Symbol, binomial, gamma, hyper, polygamma,
-    ...             catalan, diff, combsimp, Rational, I)
+    >>> from sympy import (Symbol, binomial, gamma, hyper,
+    ...     catalan, diff, combsimp, Rational, I)
 
-    >>> [ catalan(i) for i in range(1,10) ]
+    >>> [catalan(i) for i in range(1,10)]
     [1, 2, 5, 14, 42, 132, 429, 1430, 4862]
 
     >>> n = Symbol("n", integer=True)
@@ -892,16 +1105,16 @@ class catalan(Function):
     4**n*gamma(n + 1/2)/(sqrt(pi)*gamma(n + 2))
 
     >>> catalan(n).rewrite(hyper)
-    hyper((-n + 1, -n), (2,), 1)
+    hyper((1 - n, -n), (2,), 1)
 
     For some non-integer values of n we can get closed form
     expressions by rewriting in terms of gamma functions:
 
-    >>> catalan(Rational(1,2)).rewrite(gamma)
+    >>> catalan(Rational(1, 2)).rewrite(gamma)
     8/(3*pi)
 
     We can differentiate the Catalan numbers C(n) interpreted as a
-    continuous real funtion in n:
+    continuous real function in n:
 
     >>> diff(catalan(n), n)
     (polygamma(0, n + 1/2) - polygamma(0, n + 2) + log(4))*catalan(n)
@@ -922,24 +1135,25 @@ class catalan(Function):
     >>> catalan(I).evalf(20)
     0.39764993382373624267 - 0.020884341620842555705*I
 
+    See Also
+    ========
+
+    bell, bernoulli, euler, fibonacci, harmonic, lucas, genocchi, partition, tribonacci
+    sympy.functions.combinatorial.factorials.binomial
+
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Catalan_number
+    .. [1] https://en.wikipedia.org/wiki/Catalan_number
     .. [2] http://mathworld.wolfram.com/CatalanNumber.html
     .. [3] http://functions.wolfram.com/GammaBetaErf/CatalanNumber/
     .. [4] http://geometer.org/mathcircles/catalan.pdf
 
-    See Also
-    ========
-
-    bell, bernoulli, euler, fibonacci, harmonic, lucas
-    sympy.functions.combinatorial.factorials.binomial
     """
 
     @classmethod
     def eval(cls, n):
-        from sympy import gamma
+        from sympy.functions.special.gamma_functions import gamma
         if (n.is_Integer and n.is_nonnegative) or \
            (n.is_noninteger and n.is_negative):
             return 4**n*gamma(n + S.Half)/(gamma(S.Half)*gamma(n + 2))
@@ -948,39 +1162,52 @@ class catalan(Function):
             if (n + 1).is_negative:
                 return S.Zero
             if (n + 1).is_zero:
-                return -S.Half
+                return Rational(-1, 2)
 
     def fdiff(self, argindex=1):
-        from sympy import polygamma, log
+        from sympy.functions.special.gamma_functions import polygamma
         n = self.args[0]
-        return catalan(n)*(polygamma(0, n + Rational(1, 2)) - polygamma(0, n + 2) + log(4))
+        return catalan(n)*(polygamma(0, n + S.Half) - polygamma(0, n + 2) + log(4))
 
-    def _eval_rewrite_as_binomial(self, n):
+    def _eval_rewrite_as_binomial(self, n, **kwargs):
         return binomial(2*n, n)/(n + 1)
 
-    def _eval_rewrite_as_factorial(self, n):
+    def _eval_rewrite_as_factorial(self, n, **kwargs):
         return factorial(2*n) / (factorial(n+1) * factorial(n))
 
-    def _eval_rewrite_as_gamma(self, n):
-        from sympy import gamma
+    def _eval_rewrite_as_gamma(self, n, piecewise=True, **kwargs):
+        from sympy.functions.special.gamma_functions import gamma
         # The gamma function allows to generalize Catalan numbers to complex n
         return 4**n*gamma(n + S.Half)/(gamma(S.Half)*gamma(n + 2))
 
-    def _eval_rewrite_as_hyper(self, n):
-        from sympy import hyper
+    def _eval_rewrite_as_hyper(self, n, **kwargs):
+        from sympy.functions.special.hyper import hyper
         return hyper([1 - n, -n], [2], 1)
 
-    def _eval_rewrite_as_Product(self, n):
-        from sympy import Product
+    def _eval_rewrite_as_Product(self, n, **kwargs):
+        from sympy.concrete.products import Product
         if not (n.is_integer and n.is_nonnegative):
             return self
         k = Dummy('k', integer=True, positive=True)
         return Product((n + k) / k, (k, 2, n))
 
+    def _eval_is_integer(self):
+        if self.args[0].is_integer and self.args[0].is_nonnegative:
+            return True
+
+    def _eval_is_positive(self):
+        if self.args[0].is_nonnegative:
+            return True
+
+    def _eval_is_composite(self):
+        if self.args[0].is_integer and (self.args[0] - 3).is_positive:
+            return True
+
     def _eval_evalf(self, prec):
-        from sympy import gamma
+        from sympy.functions.special.gamma_functions import gamma
         if self.args[0].is_number:
             return self.rewrite(gamma)._eval_evalf(prec)
+
 
 
 #----------------------------------------------------------------------------#
@@ -994,29 +1221,25 @@ class genocchi(Function):
     r"""
     Genocchi numbers
 
-    The Genocchi numbers are a sequence of integers G_n that satisfy the
-    relation::
+    The Genocchi numbers are a sequence of integers `G_n` that satisfy the
+    relation:
 
-                           oo
-                         ____
-                         \   `
-                 2*t      \         n
-                ------ =   \   G_n*t
-                 t         /   ------
-                e  + 1    /      n!
-                         /___,
-                         n = 1
+    .. math:: \frac{2t}{e^t + 1} = \sum_{n=1}^\infty \frac{G_n t^n}{n!}
 
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.functions import genocchi
+    >>> from sympy import genocchi, Symbol
     >>> [genocchi(n) for n in range(1, 9)]
     [1, -1, 0, 1, 0, -3, 0, 17]
     >>> n = Symbol('n', integer=True, positive=True)
-    >>> genocchi(2 * n + 1)
+    >>> genocchi(2*n + 1)
     0
+
+    See Also
+    ========
+
+    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas, partition, tribonacci
 
     References
     ==========
@@ -1024,10 +1247,6 @@ class genocchi(Function):
     .. [1] https://en.wikipedia.org/wiki/Genocchi_number
     .. [2] http://mathworld.wolfram.com/GenocchiNumber.html
 
-    See Also
-    ========
-
-    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas
     """
 
     @classmethod
@@ -1044,7 +1263,7 @@ class genocchi(Function):
         if (n - 1).is_zero:
             return S.One
 
-    def _eval_rewrite_as_bernoulli(self, n):
+    def _eval_rewrite_as_bernoulli(self, n, **kwargs):
         if n.is_integer and n.is_nonnegative:
             return (1 - S(2) ** n) * bernoulli(n) * 2
 
@@ -1088,6 +1307,101 @@ class genocchi(Function):
         return (n - 8).is_zero
 
 
+#----------------------------------------------------------------------------#
+#                                                                            #
+#                           Partition numbers                                #
+#                                                                            #
+#----------------------------------------------------------------------------#
+
+_npartition = [1, 1]
+class partition(Function):
+    r"""
+    Partition numbers
+
+    The Partition numbers are a sequence of integers `p_n` that represent the
+    number of distinct ways of representing `n` as a sum of natural numbers
+    (with order irrelevant). The generating function for `p_n` is given by:
+
+    .. math:: \sum_{n=0}^\infty p_n x^n = \prod_{k=1}^\infty (1 - x^k)^{-1}
+
+    Examples
+    ========
+
+    >>> from sympy import partition, Symbol
+    >>> [partition(n) for n in range(9)]
+    [1, 1, 2, 3, 5, 7, 11, 15, 22]
+    >>> n = Symbol('n', integer=True, negative=True)
+    >>> partition(n)
+    0
+
+    See Also
+    ========
+
+    bell, bernoulli, catalan, euler, fibonacci, harmonic, lucas, genocchi, tribonacci
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Partition_(number_theory%29
+    .. [2] https://en.wikipedia.org/wiki/Pentagonal_number_theorem
+
+    """
+
+    @staticmethod
+    def _partition(n):
+        L = len(_npartition)
+        if n < L:
+            return _npartition[n]
+        # lengthen cache
+        for _n in range(L, n + 1):
+            v, p, i = 0, 0, 0
+            while 1:
+                s = 0
+                p += 3*i + 1  # p = pentagonal number: 1, 5, 12, ...
+                if _n >= p:
+                    s += _npartition[_n - p]
+                i += 1
+                gp = p + i  # gp = generalized pentagonal: 2, 7, 15, ...
+                if _n >= gp:
+                    s += _npartition[_n - gp]
+                if s == 0:
+                    break
+                else:
+                    v += s if i%2 == 1 else -s
+            _npartition.append(v)
+        return v
+
+    @classmethod
+    def eval(cls, n):
+        is_int = n.is_integer
+        if is_int == False:
+            raise ValueError("Partition numbers are defined only for "
+                             "integers")
+        elif is_int:
+            if n.is_negative:
+                return S.Zero
+
+            if n.is_zero or (n - 1).is_zero:
+                return S.One
+
+            if n.is_Integer:
+                return Integer(cls._partition(n))
+
+
+    def _eval_is_integer(self):
+        if self.args[0].is_integer:
+            return True
+
+    def _eval_is_negative(self):
+        if self.args[0].is_integer:
+            return False
+
+    def _eval_is_positive(self):
+        n = self.args[0]
+        if n.is_nonnegative and n.is_integer:
+            return True
+
+
 #######################################################################
 ###
 ### Functions for enumerating partitions, permutations and combinations
@@ -1112,7 +1426,7 @@ def _multiset_histogram(n):
     The data is stored in a class deriving from tuple so it is easily
     recognized and so it can be converted easily to a list.
     """
-    if type(n) is dict:  # item: count
+    if isinstance(n, dict):  # item: count
         if not all(isinstance(v, int) and v >= 0 for v in n.values()):
             raise ValueError
         tot = sum(n.values())
@@ -1121,12 +1435,13 @@ def _multiset_histogram(n):
     else:
         n = list(n)
         s = set(n)
-        if len(s) == len(n):
-            n = [1]*len(n)
-            n.extend([len(n), len(n)])
+        lens = len(s)
+        lenn = len(n)
+        if lens == lenn:
+            n = [1]*lenn + [lenn, lenn]
             return _MultisetHistogram(n)
-        m = dict(zip(s, range(len(s))))
-        d = dict(zip(range(len(s)), [0]*len(s)))
+        m = dict(zip(s, range(lens)))
+        d = dict(zip(range(lens), (0,)*lens))
         for i in n:
             d[m[i]] += 1
         return _multiset_histogram(d)
@@ -1135,9 +1450,12 @@ def _multiset_histogram(n):
 def nP(n, k=None, replacement=False):
     """Return the number of permutations of ``n`` items taken ``k`` at a time.
 
-    Possible values for ``n``::
+    Possible values for ``n``:
+
         integer - set of length ``n``
+
         sequence - converted to a multiset internally
+
         multiset - {element: multiplicity}
 
     If ``k`` is None then the total of all permutations of length 0
@@ -1178,14 +1496,14 @@ def nP(n, k=None, replacement=False):
     >>> sum(_)
     121
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Permutation
-
     See Also
     ========
     sympy.utilities.iterables.multiset_permutations
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Permutation
 
     """
     try:
@@ -1197,8 +1515,6 @@ def nP(n, k=None, replacement=False):
 
 @cacheit
 def _nP(n, k=None, replacement=False):
-    from sympy.functions.combinatorial.factorials import factorial
-    from sympy.core.mul import prod
 
     if k == 0:
         return 1
@@ -1282,7 +1598,7 @@ def _AOP_product(n):
     ord = sum(n)
     need = (ord + 2)//2
     rv = [1]*(n.pop() + 1)
-    rv.extend([0]*(need - len(rv)))
+    rv.extend((0,) * (need - len(rv)))
     rv = rv[:need]
     while n:
         ni = n.pop()
@@ -1306,9 +1622,12 @@ def _AOP_product(n):
 def nC(n, k=None, replacement=False):
     """Return the number of combinations of ``n`` items taken ``k`` at a time.
 
-    Possible values for ``n``::
+    Possible values for ``n``:
+
         integer - set of length ``n``
+
         sequence - converted to a multiset internally
+
         multiset - {element: multiplicity}
 
     If ``k`` is None then the total of all combinations of length 0
@@ -1344,7 +1663,7 @@ def nC(n, k=None, replacement=False):
     35
 
     If there are ``k`` items with multiplicities ``m_1, m_2, ..., m_k``
-    then the total of all combinations of length 0 hrough ``k`` is the
+    then the total of all combinations of length 0 through ``k`` is the
     product, ``(m_1 + 1)*(m_2 + 1)*...*(m_k + 1)``. When the multiplicity
     of each item is 1 (i.e., k unique items) then there are 2**k
     combinations. For example, if there are 4 unique items, the total number
@@ -1353,18 +1672,18 @@ def nC(n, k=None, replacement=False):
     >>> sum(nC(4, i) for i in range(5))
     16
 
+    See Also
+    ========
+
+    sympy.utilities.iterables.multiset_combinations
+
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Combination
+    .. [1] https://en.wikipedia.org/wiki/Combination
     .. [2] http://tinyurl.com/cep849r
 
-    See Also
-    ========
-    sympy.utilities.iterables.multiset_combinations
     """
-    from sympy.functions.combinatorial.factorials import binomial
-    from sympy.core.mul import prod
 
     if isinstance(n, SYMPY_INTS):
         if k is None:
@@ -1394,72 +1713,85 @@ def nC(n, k=None, replacement=False):
         return nC(_multiset_histogram(n), k, replacement)
 
 
-@cacheit
-def _stirling1(n, k):
+def _eval_stirling1(n, k):
     if n == k == 0:
         return S.One
     if 0 in (n, k):
         return S.Zero
-    n1 = n - 1
 
     # some special values
     if n == k:
         return S.One
-    elif k == 1:
-        return factorial(n1)
-    elif k == n1:
+    elif k == n - 1:
         return binomial(n, 2)
     elif k == n - 2:
         return (3*n - 1)*binomial(n, 3)/4
     elif k == n - 3:
         return binomial(n, 2)*binomial(n, 4)
 
-    # general recurrence
-    return n1*_stirling1(n1, k) + _stirling1(n1, k - 1)
+    return _stirling1(n, k)
 
 
 @cacheit
-def _stirling2(n, k):
+def _stirling1(n, k):
+    row = [0, 1]+[0]*(k-1) # for n = 1
+    for i in range(2, n+1):
+        for j in range(min(k,i), 0, -1):
+            row[j] = (i-1) * row[j] + row[j-1]
+    return Integer(row[k])
+
+
+def _eval_stirling2(n, k):
     if n == k == 0:
         return S.One
     if 0 in (n, k):
         return S.Zero
-    n1 = n - 1
 
     # some special values
-    if k == n1:
+    if n == k:
+        return S.One
+    elif k == n - 1:
         return binomial(n, 2)
+    elif k == 1:
+        return S.One
     elif k == 2:
-        return 2**n1 - 1
+        return Integer(2**(n - 1) - 1)
 
-    # general recurrence
-    return k*_stirling2(n1, k) + _stirling2(n1, k - 1)
+    return _stirling2(n, k)
+
+
+@cacheit
+def _stirling2(n, k):
+    row = [0, 1]+[0]*(k-1) # for n = 1
+    for i in range(2, n+1):
+        for j in range(min(k,i), 0, -1):
+            row[j] = j * row[j] + row[j-1]
+    return Integer(row[k])
 
 
 def stirling(n, k, d=None, kind=2, signed=False):
-    """Return Stirling number S(n, k) of the first or second (default) kind.
+    r"""Return Stirling number $S(n, k)$ of the first or second (default) kind.
 
-    The sum of all Stirling numbers of the second kind for k = 1
-    through n is bell(n). The recurrence relationship for these numbers
-    is::
+    The sum of all Stirling numbers of the second kind for $k = 1$
+    through $n$ is ``bell(n)``. The recurrence relationship for these numbers
+    is:
 
-    {0}       {n}   {0}      {n + 1}     {n}   {  n  }
-    { } = 1;  { } = { } = 0; {     } = j*{ } + {     }
-    {0}       {0}   {k}      {  k  }     {k}   {k - 1}
+    .. math :: {0 \brace 0} = 1; {n \brace 0} = {0 \brace k} = 0;
 
-    where ``j`` is::
-        ``n`` for Stirling numbers of the first kind
-        ``-n`` for signed Stirling numbers of the first kind
-        ``k`` for Stirling numbers of the second kind
+    .. math :: {{n+1} \brace k} = j {n \brace k} + {n \brace {k-1}}
+
+    where $j$ is:
+        $n$ for Stirling numbers of the first kind,
+        $-n$ for signed Stirling numbers of the first kind,
+        $k$ for Stirling numbers of the second kind.
 
     The first kind of Stirling number counts the number of permutations of
     ``n`` distinct items that have ``k`` cycles; the second kind counts the
     ways in which ``n`` distinct items can be partitioned into ``k`` parts.
     If ``d`` is given, the "reduced Stirling number of the second kind" is
-    returned: ``S^{d}(n, k) = S(n - d + 1, k - d + 1)`` with ``n >= k >= d``.
-    (This counts the ways to partition ``n`` consecutive integers into
-    ``k`` groups with no pairwise difference less than ``d``. See example
-    below.)
+    returned: $S^{d}(n, k) = S(n - d + 1, k - d + 1)$ with $n \ge k \ge d$.
+    (This counts the ways to partition $n$ consecutive integers into $k$
+    groups with no pairwise difference less than $d$. See example below.)
 
     To obtain the signed Stirling numbers of the first kind, use keyword
     ``signed=True``. Using this keyword automatically sets ``kind`` to 1.
@@ -1509,15 +1841,16 @@ def stirling(n, k, d=None, kind=2, signed=False):
     >>> stirling(5, 3, 2)
     7
 
-    References
-    ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
-    .. [2] http://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
-
     See Also
     ========
     sympy.utilities.iterables.multiset_partitions
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
+    .. [2] https://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
 
     """
     # TODO: make this a class like bell()
@@ -1531,15 +1864,15 @@ def stirling(n, k, d=None, kind=2, signed=False):
     if d:
         # assert k >= d
         # kind is ignored -- only kind=2 is supported
-        return _stirling2(n - d + 1, k - d + 1)
+        return _eval_stirling2(n - d + 1, k - d + 1)
     elif signed:
         # kind is ignored -- only kind=1 is supported
-        return (-1)**(n - k)*_stirling1(n, k)
+        return S.NegativeOne**(n - k)*_eval_stirling1(n, k)
 
     if kind == 1:
-        return _stirling1(n, k)
+        return _eval_stirling1(n, k)
     elif kind == 2:
-        return _stirling2(n, k)
+        return _eval_stirling2(n, k)
     else:
         raise ValueError('kind must be 1 or 2, not %s' % k)
 
@@ -1548,17 +1881,55 @@ def stirling(n, k, d=None, kind=2, signed=False):
 def _nT(n, k):
     """Return the partitions of ``n`` items into ``k`` parts. This
     is used by ``nT`` for the case when ``n`` is an integer."""
+    # really quick exits
+    if k > n or k < 0:
+        return 0
+    if k in (1, n):
+        return 1
     if k == 0:
-        return 1 if k == n else 0
-    return sum(_nT(n - k, j) for j in range(min(k, n - k) + 1))
+        return 0
+    # exits that could be done below but this is quicker
+    if k == 2:
+        return n//2
+    d = n - k
+    if d <= 3:
+        return d
+    # quick exit
+    if 3*k >= n:  # or, equivalently, 2*k >= d
+        # all the information needed in this case
+        # will be in the cache needed to calculate
+        # partition(d), so...
+        # update cache
+        tot = partition._partition(d)
+        # and correct for values not needed
+        if d - k > 0:
+            tot -= sum(_npartition[:d - k])
+        return tot
+    # regular exit
+    # nT(n, k) = Sum(nT(n - k, m), (m, 1, k));
+    # calculate needed nT(i, j) values
+    p = [1]*d
+    for i in range(2, k + 1):
+        for m  in range(i + 1, d):
+            p[m] += p[m - i]
+        d -= 1
+    # if p[0] were appended to the end of p then the last
+    # k values of p are the nT(n, j) values for 0 < j < k in reverse
+    # order p[-1] = nT(n, 1), p[-2] = nT(n, 2), etc.... Instead of
+    # putting the 1 from p[0] there, however, it is simply added to
+    # the sum below which is valid for 1 < k <= n//2
+    return (1 + sum(p[1 - k:]))
 
 
 def nT(n, k=None):
     """Return the number of ``k``-sized partitions of ``n`` items.
 
-    Possible values for ``n``::
+    Possible values for ``n``:
+
         integer - ``n`` identical items
+
         sequence - converted to a multiset internally
+
         multiset - {element: multiplicity}
 
     Note: the convention for ``nT`` is different than that of ``nC`` and
@@ -1600,31 +1971,43 @@ def nT(n, k=None):
     >>> nT(range(5)) == sum(_)
     True
 
-    References
-    ==========
+    Partitions of an integer expressed as a sum of positive integers:
 
-    .. [1] http://undergraduate.csse.uwa.edu.au/units/CITS7209/partition.pdf
+    >>> from sympy import partition
+    >>> partition(4)
+    5
+    >>> nT(4, 1) + nT(4, 2) + nT(4, 3) + nT(4, 4)
+    5
+    >>> nT('1'*4)
+    5
 
     See Also
     ========
     sympy.utilities.iterables.partitions
     sympy.utilities.iterables.multiset_partitions
+    sympy.functions.combinatorial.numbers.partition
+
+    References
+    ==========
+
+    .. [1] http://undergraduate.csse.uwa.edu.au/units/CITS7209/partition.pdf
 
     """
-    from sympy.utilities.enumerative import MultisetPartitionTraverser
 
     if isinstance(n, SYMPY_INTS):
-        # assert n >= 0
-        # all the same
+        # n identical items
         if k is None:
-            return sum(_nT(n, k) for k in range(1, n + 1))
-        return _nT(n, k)
+            return partition(n)
+        if isinstance(k, SYMPY_INTS):
+            n = as_int(n)
+            k = as_int(k)
+            return Integer(_nT(n, k))
     if not isinstance(n, _MultisetHistogram):
         try:
             # if n contains hashable items there is some
             # quick handling that can be done
             u = len(set(n))
-            if u == 1:
+            if u <= 1:
                 return nT(len(n), k)
             elif u == len(n):
                 n = range(u)
@@ -1658,3 +2041,254 @@ def nT(n, k=None):
     for discard in m.enum_range(n[_M], k-1, k):
         tot += 1
     return tot
+
+
+#-----------------------------------------------------------------------------#
+#                                                                             #
+#                          Motzkin numbers                                    #
+#                                                                             #
+#-----------------------------------------------------------------------------#
+
+
+class motzkin(Function):
+    """
+    The nth Motzkin number is the number
+    of ways of drawing non-intersecting chords
+    between n points on a circle (not necessarily touching
+    every point by a chord). The Motzkin numbers are named
+    after Theodore Motzkin and have diverse applications
+    in geometry, combinatorics and number theory.
+
+    Motzkin numbers are the integer sequence defined by the
+    initial terms `M_0 = 1`, `M_1 = 1` and the two-term recurrence relation
+    `M_n = \frac{2*n + 1}{n + 2} * M_{n-1} + \frac{3n - 3}{n + 2} * M_{n-2}`.
+
+
+    Examples
+    ========
+
+    >>> from sympy import motzkin
+
+    >>> motzkin.is_motzkin(5)
+    False
+    >>> motzkin.find_motzkin_numbers_in_range(2,300)
+    [2, 4, 9, 21, 51, 127]
+    >>> motzkin.find_motzkin_numbers_in_range(2,900)
+    [2, 4, 9, 21, 51, 127, 323, 835]
+    >>> motzkin.find_first_n_motzkins(10)
+    [1, 1, 2, 4, 9, 21, 51, 127, 323, 835]
+
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Motzkin_number
+    .. [2] https://mathworld.wolfram.com/MotzkinNumber.html
+
+    """
+
+    @staticmethod
+    def is_motzkin(n):
+        try:
+            n = as_int(n)
+        except ValueError:
+            return False
+        if n > 0:
+             if n in (1, 2):
+                return True
+
+             tn1 = 1
+             tn = 2
+             i = 3
+             while tn < n:
+                 a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
+                 i += 1
+                 tn1 = tn
+                 tn = a
+
+             if tn == n:
+                 return True
+             else:
+                 return False
+
+        else:
+            return False
+
+    @staticmethod
+    def find_motzkin_numbers_in_range(x, y):
+        if 0 <= x <= y:
+            motzkins = list()
+            if x <= 1 <= y:
+                motzkins.append(1)
+            tn1 = 1
+            tn = 2
+            i = 3
+            while tn <= y:
+                if tn >= x:
+                    motzkins.append(tn)
+                a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
+                i += 1
+                tn1 = tn
+                tn = int(a)
+
+            return motzkins
+
+        else:
+            raise ValueError('The provided range is not valid. This condition should satisfy x <= y')
+
+    @staticmethod
+    def find_first_n_motzkins(n):
+        try:
+            n = as_int(n)
+        except ValueError:
+            raise ValueError('The provided number must be a positive integer')
+        if n < 0:
+            raise ValueError('The provided number must be a positive integer')
+        motzkins = [1]
+        if n >= 1:
+            motzkins.append(1)
+        tn1 = 1
+        tn = 2
+        i = 3
+        while i <= n:
+            motzkins.append(tn)
+            a = ((2*i + 1)*tn + (3*i - 3)*tn1)/(i + 2)
+            i += 1
+            tn1 = tn
+            tn = int(a)
+
+        return motzkins
+
+    @staticmethod
+    @recurrence_memo([S.One, S.One])
+    def _motzkin(n, prev):
+        return ((2*n + 1)*prev[-1] + (3*n - 3)*prev[-2]) // (n + 2)
+
+    @classmethod
+    def eval(cls, n):
+        try:
+            n = as_int(n)
+        except ValueError:
+            raise ValueError('The provided number must be a positive integer')
+        if n < 0:
+            raise ValueError('The provided number must be a positive integer')
+        return Integer(cls._motzkin(n - 1))
+
+
+def nD(i=None, brute=None, *, n=None, m=None):
+    """return the number of derangements for: ``n`` unique items, ``i``
+    items (as a sequence or multiset), or multiplicities, ``m`` given
+    as a sequence or multiset.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import generate_derangements as enum
+    >>> from sympy.functions.combinatorial.numbers import nD
+
+    A derangement ``d`` of sequence ``s`` has all ``d[i] != s[i]``:
+
+    >>> set([''.join(i) for i in enum('abc')])
+    {'bca', 'cab'}
+    >>> nD('abc')
+    2
+
+    Input as iterable or dictionary (multiset form) is accepted:
+
+    >>> assert nD([1, 2, 2, 3, 3, 3]) == nD({1: 1, 2: 2, 3: 3})
+
+    By default, a brute-force enumeration and count of multiset permutations
+    is only done if there are fewer than 9 elements. There may be cases when
+    there is high multiplicty with few unique elements that will benefit
+    from a brute-force enumeration, too. For this reason, the `brute`
+    keyword (default None) is provided. When False, the brute-force
+    enumeration will never be used. When True, it will always be used.
+
+    >>> nD('1111222233', brute=True)
+    44
+
+    For convenience, one may specify ``n`` distinct items using the
+    ``n`` keyword:
+
+    >>> assert nD(n=3) == nD('abc') == 2
+
+    Since the number of derangments depends on the multiplicity of the
+    elements and not the elements themselves, it may be more convenient
+    to give a list or multiset of multiplicities using keyword ``m``:
+
+    >>> assert nD('abc') == nD(m=(1,1,1)) == nD(m={1:3}) == 2
+
+    """
+    from sympy.integrals.integrals import integrate
+    from sympy.functions.elementary.exponential import exp
+    from sympy.functions.special.polynomials import laguerre
+    from sympy.abc import x
+    def ok(x):
+        if not isinstance(x, SYMPY_INTS):
+            raise TypeError('expecting integer values')
+        if x < 0:
+            raise ValueError('value must not be negative')
+        return True
+
+    if (i, n, m).count(None) != 2:
+        raise ValueError('enter only 1 of i, n, or m')
+    if i is not None:
+        if isinstance(i, SYMPY_INTS):
+            raise TypeError('items must be a list or dictionary')
+        if not i:
+            return S.Zero
+        if type(i) is not dict:
+            s = list(i)
+            ms = multiset(s)
+        elif type(i) is dict:
+            all(ok(_) for _ in i.values())
+            ms = {k: v for k, v in i.items() if v}
+            s = None
+        if not ms:
+            return S.Zero
+        N = sum(ms.values())
+        counts = multiset(ms.values())
+        nkey = len(ms)
+    elif n is not None:
+        ok(n)
+        if not n:
+            return S.Zero
+        return subfactorial(n)
+    elif m is not None:
+        if isinstance(m, dict):
+            all(ok(i) and ok(j) for i, j in m.items())
+            counts = {k: v for k, v in m.items() if k*v}
+        elif iterable(m) or isinstance(m, str):
+            m = list(m)
+            all(ok(i) for i in m)
+            counts = multiset([i for i in m if i])
+        else:
+            raise TypeError('expecting iterable')
+        if not counts:
+            return S.Zero
+        N = sum(k*v for k, v in counts.items())
+        nkey = sum(counts.values())
+        s = None
+    big = int(max(counts))
+    if big == 1:  # no repetition
+        return subfactorial(nkey)
+    nval = len(counts)
+    if big*2 > N:
+        return S.Zero
+    if big*2 == N:
+        if nkey == 2 and nval == 1:
+            return S.One  # aaabbb
+        if nkey - 1 == big:  # one element repeated
+            return factorial(big)  # e.g. abc part of abcddd
+    if N < 9 and brute is None or brute:
+        # for all possibilities, this was found to be faster
+        if s is None:
+            s = []
+            i = 0
+            for m, v in counts.items():
+                for j in range(v):
+                    s.extend([i]*m)
+                    i += 1
+        return Integer(sum(1 for i in multiset_derangements(s)))
+    return Integer(abs(integrate(exp(-x)*Mul(*[
+        laguerre(i, x)**m for i, m in counts.items()]), (x, 0, oo))))

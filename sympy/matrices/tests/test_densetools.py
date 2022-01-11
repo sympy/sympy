@@ -1,9 +1,10 @@
-import warnings
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    from sympy.matrices.densetools import trace, transpose
-    from sympy.matrices.densetools import eye
-from sympy import ZZ
+from sympy.testing.pytest import ignore_warnings
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+with ignore_warnings(SymPyDeprecationWarning):
+    from sympy.matrices.densetools import trace, transpose, eye
+
+from sympy.polys.domains.integerring import ZZ
 
 def test_trace():
     a = [[ZZ(3), ZZ(7), ZZ(4)], [ZZ(2), ZZ(4), ZZ(5)], [ZZ(6), ZZ(2), ZZ(3)]]

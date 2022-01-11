@@ -1,5 +1,6 @@
 from sympy.core import (Function, Pow, sympify, Expr)
 from sympy.core.relational import Relational
+from sympy.core.singleton import S
 from sympy.polys import Poly, decompose
 from sympy.utilities.misc import func_name
 
@@ -17,9 +18,8 @@ def decompogen(f, symbol):
     Examples
     ========
 
-    >>> from sympy.solvers.decompogen import decompogen
     >>> from sympy.abc import x
-    >>> from sympy import sqrt, sin, cos
+    >>> from sympy import decompogen, sqrt, sin, cos
     >>> decompogen(sin(cos(x)), x)
     [sin(x), cos(x)]
     >>> decompogen(sin(x)**2 + sin(x) + 1, x)
@@ -42,14 +42,18 @@ def decompogen(f, symbol):
 
     # ===== Simple Functions ===== #
     if isinstance(f, (Function, Pow)):
-        if f.args[0] == symbol:
+        if f.is_Pow and f.base == S.Exp1:
+            arg = f.exp
+        else:
+            arg = f.args[0]
+        if arg == symbol:
             return [f]
-        result += [f.subs(f.args[0], symbol)] + decompogen(f.args[0], symbol)
+        result += [f.subs(arg, symbol)] + decompogen(arg, symbol)
         return result
 
     # ===== Convert to Polynomial ===== #
     fp = Poly(f)
-    gens = list(filter(lambda x: symbol in x.free_symbols , fp.gens))
+    gens = list(filter(lambda x: symbol in x.free_symbols, fp.gens))
 
     if len(gens) == 1 and gens[0] != symbol:
         f1 = f.subs(gens[0], symbol)

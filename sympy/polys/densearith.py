@@ -1,6 +1,5 @@
 """Arithmetics for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
-from __future__ import print_function, division
 
 from sympy.polys.densebasic import (
     dup_slice,
@@ -10,9 +9,7 @@ from sympy.polys.densebasic import (
     dmp_zero_p, dmp_zero,
     dmp_one_p, dmp_one,
     dmp_ground, dmp_zeros)
-
 from sympy.polys.polyerrors import (ExactQuotientFailed, PolynomialDivisionFailed)
-from sympy.core.compatibility import range
 
 def dup_add_term(f, c, i, K):
     """
@@ -940,7 +937,7 @@ def dup_pow(f, n, K):
     if not n:
         return [K.one]
     if n < 0:
-        raise ValueError("can't raise polynomial to a negative power")
+        raise ValueError("Cannot raise polynomial to a negative power")
     if n == 1 or not f or f == [K.one]:
         return f
 
@@ -980,7 +977,7 @@ def dmp_pow(f, n, u, K):
     if not n:
         return dmp_one(u, K)
     if n < 0:
-        raise ValueError("can't raise polynomial to a negative power")
+        raise ValueError("Cannot raise polynomial to a negative power")
     if n == 1 or dmp_zero_p(f, u) or dmp_one_p(f, u, K):
         return f
 
@@ -1450,6 +1447,12 @@ def dup_ff_div(f, g, K):
 
         if dr < dg:
             break
+        elif dr == _dr and not K.is_Exact:
+            # remove leading term created by rounding error
+            r = dup_strip(r[1:])
+            dr = dup_degree(r)
+            if dr < dg:
+                break
         elif not (dr < _dr):
             raise PolynomialDivisionFailed(f, g, K)
 

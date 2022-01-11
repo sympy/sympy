@@ -29,7 +29,7 @@ a holonomic functions.
     >>> p * q
     HolonomicFunction((2) + (-2)*Dx + (1)*Dx**2, x, 0, [0, 1])
 
-.. module:: sympy.holonomic.holonomic
+.. currentmodule:: sympy.holonomic.holonomic
 
 Integration and Differentiation
 -------------------------------

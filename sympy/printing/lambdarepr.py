@@ -1,20 +1,21 @@
-from __future__ import print_function, division
-from distutils.version import LooseVersion as V
-
-from .str import StrPrinter
 from .pycode import (
     PythonCodePrinter,
-    MpmathPrinter,  # MpmathPrinter is imported for backward compatibility
-    NumPyPrinter  # NumPyPrinter is imported for backward compatibility
+    MpmathPrinter,
 )
-from sympy.external import import_module
-from sympy.utilities import default_sort_key
+from .numpy import NumPyPrinter  # NumPyPrinter is imported for backward compatibility
+from sympy.core.sorting import default_sort_key
 
-tensorflow = import_module('tensorflow')
-if tensorflow and V(tensorflow.__version__) < '1.0':
-    tensorflow_piecewise = "select"
-else:
-    tensorflow_piecewise = "where"
+
+__all__ = [
+    'PythonCodePrinter',
+    'MpmathPrinter',  # MpmathPrinter is published for backward compatibility
+    'NumPyPrinter',
+    'LambdaPrinter',
+    'NumPyPrinter',
+    'IntervalPrinter',
+    'lambdarepr',
+]
+
 
 class LambdaPrinter(PythonCodePrinter):
     """
@@ -63,92 +64,16 @@ class LambdaPrinter(PythonCodePrinter):
     def _print_NumberSymbol(self, expr):
         return str(expr)
 
-
-class TensorflowPrinter(LambdaPrinter):
-    """
-    Tensorflow printer which handles vectorized piecewise functions,
-    logical operators, max/min, and relational operators.
-    """
-    printmethod = "_tensorflowcode"
-
-    def _print_And(self, expr):
-        "Logical And printer"
-        # We have to override LambdaPrinter because it uses Python 'and' keyword.
-        # If LambdaPrinter didn't define it, we could use StrPrinter's
-        # version of the function and add 'logical_and' to TENSORFLOW_TRANSLATIONS.
-        return '{0}({1})'.format('logical_and', ','.join(self._print(i) for i in expr.args))
-
-    def _print_Or(self, expr):
-        "Logical Or printer"
-        # We have to override LambdaPrinter because it uses Python 'or' keyword.
-        # If LambdaPrinter didn't define it, we could use StrPrinter's
-        # version of the function and add 'logical_or' to TENSORFLOW_TRANSLATIONS.
-        return '{0}({1})'.format('logical_or', ','.join(self._print(i) for i in expr.args))
-
-    def _print_Not(self, expr):
-        "Logical Not printer"
-        # We have to override LambdaPrinter because it uses Python 'not' keyword.
-        # If LambdaPrinter didn't define it, we would still have to define our
-        #     own because StrPrinter doesn't define it.
-        return '{0}({1})'.format('logical_not', ','.join(self._print(i) for i in expr.args))
-
-    def _print_Min(self, expr, **kwargs):
-        from sympy import Min
-        if len(expr.args) == 1:
-            return self._print(expr.args[0], **kwargs)
-
-        return 'minimum({0}, {1})'.format(
-            self._print(expr.args[0], **kwargs),
-            self._print(Min(*expr.args[1:]), **kwargs))
-
-    def _print_Max(self, expr, **kwargs):
-        from sympy import Max
-        if len(expr.args) == 1:
-            return self._print(expr.args[0], **kwargs)
-
-        return 'maximum({0}, {1})'.format(
-            self._print(expr.args[0], **kwargs),
-            self._print(Max(*expr.args[1:]), **kwargs))
-
-    def _print_Piecewise(self, expr, **kwargs):
-        from sympy import Piecewise
-        e, cond = expr.args[0].args
-        if len(expr.args) == 1:
-            return '{0}({1}, {2}, {3})'.format(
-                tensorflow_piecewise,
-                self._print(cond, **kwargs),
-                self._print(e, **kwargs),
-                0)
-
-        return '{0}({1}, {2}, {3})'.format(
-            tensorflow_piecewise,
-            self._print(cond, **kwargs),
-            self._print(e, **kwargs),
-            self._print(Piecewise(*expr.args[1:]), **kwargs))
-
-    def _print_Relational(self, expr):
-        "Relational printer for Equality and Unequality"
-        op = {
-            '==' :'equal',
-            '!=' :'not_equal',
-            '<'  :'less',
-            '<=' :'less_equal',
-            '>'  :'greater',
-            '>=' :'greater_equal',
-        }
-        if expr.rel_op in op:
-            lhs = self._print(expr.lhs)
-            rhs = self._print(expr.rhs)
-            return '{op}({lhs}, {rhs})'.format(op=op[expr.rel_op],
-                                               lhs=lhs,
-                                               rhs=rhs)
-        return super(TensorflowPrinter, self)._print_Relational(expr)
+    def _print_Pow(self, expr, **kwargs):
+        # XXX Temporary workaround. Should Python math printer be
+        # isolated from PythonCodePrinter?
+        return super(PythonCodePrinter, self)._print_Pow(expr, **kwargs)
 
 
 # numexpr works by altering the string passed to numexpr.evaluate
 # rather than by populating a namespace.  Thus a special printer...
 class NumExprPrinter(LambdaPrinter):
-    # key, value pairs correspond to sympy name and numexpr name
+    # key, value pairs correspond to SymPy name and numexpr name
     # functions not appearing in this dict will raise a TypeError
     printmethod = "_numexprcode"
 
@@ -203,12 +128,41 @@ class NumExprPrinter(LambdaPrinter):
                                 func_name)
         return "%s(%s)" % (nstr, self._print_seq(e.args))
 
+    def _print_Piecewise(self, expr):
+        "Piecewise function printer"
+        exprs = [self._print(arg.expr) for arg in expr.args]
+        conds = [self._print(arg.cond) for arg in expr.args]
+        # If [default_value, True] is a (expr, cond) sequence in a Piecewise object
+        #     it will behave the same as passing the 'default' kwarg to select()
+        #     *as long as* it is the last element in expr.args.
+        # If this is not the case, it may be triggered prematurely.
+        ans = []
+        parenthesis_count = 0
+        is_last_cond_True = False
+        for cond, expr in zip(conds, exprs):
+            if cond == 'True':
+                ans.append(expr)
+                is_last_cond_True = True
+                break
+            else:
+                ans.append('where(%s, %s, ' % (cond, expr))
+                parenthesis_count += 1
+        if not is_last_cond_True:
+            # simplest way to put a nan but raises
+            # 'RuntimeWarning: invalid value encountered in log'
+            ans.append('log(-1)')
+        return ''.join(ans) + ')' * parenthesis_count
+
+    def _print_ITE(self, expr):
+        from sympy.functions.elementary.piecewise import Piecewise
+        return self._print(expr.rewrite(Piecewise))
+
     def blacklisted(self, expr):
         raise TypeError("numexpr cannot be used with %s" %
                         expr.__class__.__name__)
 
     # blacklist all Matrix printing
-    _print_SparseMatrix = \
+    _print_SparseRepMatrix = \
     _print_MutableSparseMatrix = \
     _print_ImmutableSparseMatrix = \
     _print_Matrix = \
@@ -217,7 +171,7 @@ class NumExprPrinter(LambdaPrinter):
     _print_ImmutableMatrix = \
     _print_ImmutableDenseMatrix = \
     blacklisted
-    # blacklist some python expressions
+    # blacklist some Python expressions
     _print_list = \
     _print_tuple = \
     _print_Tuple = \
@@ -226,8 +180,24 @@ class NumExprPrinter(LambdaPrinter):
     blacklisted
 
     def doprint(self, expr):
-        lstr = super(NumExprPrinter, self).doprint(expr)
+        lstr = super().doprint(expr)
         return "evaluate('%s', truediv=True)" % lstr
+
+
+class IntervalPrinter(MpmathPrinter, LambdaPrinter):
+    """Use ``lambda`` printer but print numbers as ``mpi`` intervals. """
+
+    def _print_Integer(self, expr):
+        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Integer(expr)
+
+    def _print_Rational(self, expr):
+        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Rational(expr)
+
+    def _print_Half(self, expr):
+        return "mpi('%s')" % super(PythonCodePrinter, self)._print_Rational(expr)
+
+    def _print_Pow(self, expr):
+        return super(MpmathPrinter, self)._print_Pow(expr, rational=True)
 
 
 for k in NumExprPrinter._numexpr_functions:

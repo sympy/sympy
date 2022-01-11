@@ -1,6 +1,5 @@
 """Definitions of common exceptions for `polys` module. """
 
-from __future__ import print_function, division
 
 from sympy.utilities import public
 
@@ -165,9 +164,9 @@ class PolificationFailed(PolynomialError):
 
     def __str__(self):  # pragma: no cover
         if not self.seq:
-            return "can't construct a polynomial from %s" % str(self.orig)
+            return "Cannot construct a polynomial from %s" % str(self.orig)
         else:
-            return "can't construct polynomials from %s" % ', '.join(map(str, self.origs))
+            return "Cannot construct polynomials from %s" % ', '.join(map(str, self.origs))
 
 @public
 class OptionError(BasePolynomialError):

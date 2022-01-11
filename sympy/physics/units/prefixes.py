@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
-
 """
 Module defining unit prefixe class and some constants.
 
 Constant dict for SI and binary prefixes are defined as PREFIXES and
 BIN_PREFIXES.
 """
-from sympy import Expr, sympify
+from sympy.core.expr import Expr
+from sympy.core.sympify import sympify
 
 
 class Prefix(Expr):
@@ -29,6 +28,7 @@ class Prefix(Expr):
       class).
     """
     _op_priority = 13.0
+    is_commutative = True
 
     def __new__(cls, name, abbrev, exponent, base=sympify(10)):
 
@@ -73,6 +73,10 @@ class Prefix(Expr):
     __repr__ = __str__
 
     def __mul__(self, other):
+        from sympy.physics.units import Quantity
+        if not isinstance(other, (Quantity, Prefix)):
+            return super().__mul__(other)
+
         fact = self.scale_factor * other.scale_factor
 
         if fact == 1:
@@ -86,7 +90,10 @@ class Prefix(Expr):
 
         return self.scale_factor * other
 
-    def __div__(self, other):
+    def __truediv__(self, other):
+        if not hasattr(other, "scale_factor"):
+            return super().__truediv__(other)
+
         fact = self.scale_factor / other.scale_factor
 
         if fact == 1:
@@ -99,16 +106,12 @@ class Prefix(Expr):
 
         return self.scale_factor / other
 
-    __truediv__ = __div__
-
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         if other == 1:
             for p in PREFIXES:
                 if PREFIXES[p].scale_factor == 1 / self.scale_factor:
                     return PREFIXES[p]
         return other / self.scale_factor
-
-    __rtruediv__ = __rdiv__
 
 
 def prefix_unit(unit, prefixes):
@@ -120,21 +123,25 @@ def prefix_unit(unit, prefixes):
 
         >>> from sympy.physics.units.prefixes import (PREFIXES,
         ...                                                 prefix_unit)
-        >>> from sympy.physics.units.systems import MKS
         >>> from sympy.physics.units import m
         >>> pref = {"m": PREFIXES["m"], "c": PREFIXES["c"], "d": PREFIXES["d"]}
-        >>> prefix_unit(m, pref)  #doctest: +SKIP
-        [cm, dm, mm]
+        >>> prefix_unit(m, pref)  # doctest: +SKIP
+        [millimeter, centimeter, decimeter]
     """
 
     from sympy.physics.units.quantities import Quantity
+    from sympy.physics.units import UnitSystem
 
     prefixed_units = []
 
     for prefix_abbr, prefix in prefixes.items():
-        prefixed_units.append(Quantity("%s%s" % (prefix.name, unit.name), unit.dimension, unit.scale_factor * prefix,
-                                       abbrev=("%s%s" % (prefix.abbrev, unit.abbrev))
-                                       ))
+        quantity = Quantity(
+                "%s%s" % (prefix.name, unit.name),
+                abbrev=("%s%s" % (prefix.abbrev, unit.abbrev))
+           )
+        UnitSystem._quantity_dimensional_equivalence_map_global[quantity] = unit
+        UnitSystem._quantity_scale_factors_global[quantity] = (prefix.scale_factor, unit)
+        prefixed_units.append(quantity)
 
     return prefixed_units
 

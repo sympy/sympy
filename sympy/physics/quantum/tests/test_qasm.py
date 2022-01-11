@@ -2,7 +2,7 @@ from sympy.physics.quantum.qasm import Qasm, prod, flip_index, trim,\
      get_index, nonblank, fullsplit, fixcommand, stripquotes, read_qasm
 from sympy.physics.quantum.gate import X, Z, H, S, T
 from sympy.physics.quantum.gate import CNOT, SWAP, CPHASE, CGate, CGateS
-from sympy.physics.quantum.circuitplot import Mz, CreateOneQubitGate, CreateCGate
+from sympy.physics.quantum.circuitplot import Mz
 
 def test_qasm_readqasm():
     qasm_lines = """\
@@ -87,8 +87,7 @@ def test_qasm_stripquotes():
 def test_qasm_qdef():
     # weaker test condition (str) since we don't have access to the actual class
     q = Qasm("def Q,0,Q",'qubit q0','Q q0')
-    Qgate = CreateOneQubitGate('Q')
     assert str(q.get_circuit()) == 'Q(0)'
+
     q = Qasm("def CQ,1,Q", 'qubit q0', 'qubit q1', 'CQ q0,q1')
-    Qgate = CreateCGate('Q')
     assert str(q.get_circuit()) == 'C((1),Q(0))'

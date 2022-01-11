@@ -1,12 +1,25 @@
-from sympy import Rational, sqrt, symbols, sin, exp, log, sinh, cosh, cos, pi, \
-    I, erf, tan, asin, asinh, acos, Function, Derivative, diff, simplify, \
-    LambertW, Eq, Piecewise, Symbol, Add, ratsimp, Integral, Sum, \
-    besselj, besselk, bessely, jn
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.relational import Ne
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import (LambertW, exp, log)
+from sympy.functions.elementary.hyperbolic import (asinh, cosh, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, tan)
+from sympy.functions.special.bessel import (besselj, besselk, bessely, jn)
+from sympy.functions.special.error_functions import erf
+from sympy.integrals.integrals import Integral
+from sympy.simplify.ratsimp import ratsimp
+from sympy.simplify.simplify import simplify
 from sympy.integrals.heurisch import components, heurisch, heurisch_wrapper
-from sympy.utilities.pytest import XFAIL, skip, slow, ON_TRAVIS
+from sympy.testing.pytest import XFAIL, skip, slow, ON_TRAVIS
 from sympy.integrals.integrals import integrate
 x, y, z, nu = symbols('x,y,z,nu')
 f = Function('f')
+
 
 def test_components():
     assert components(x*y, x) == {x}
@@ -26,13 +39,21 @@ def test_components():
     assert components(f(x)*diff(f(x), x), x) == \
         {x, f(x), Derivative(f(x), x), Derivative(f(x), x)}
 
+
 def test_issue_10680():
     assert isinstance(integrate(x**log(x**log(x**log(x))),x), Integral)
+
+
+def test_issue_21166():
+    assert integrate(sin(x/sqrt(abs(x))), (x, -1, 1)) == 0
+
 
 def test_heurisch_polynomials():
     assert heurisch(1, x) == x
     assert heurisch(x, x) == x**2/2
     assert heurisch(x**17, x) == x**18/18
+    # For coverage
+    assert heurisch_wrapper(y, x) == y*x
 
 
 def test_heurisch_fractions():
@@ -40,8 +61,8 @@ def test_heurisch_fractions():
     assert heurisch(1/(2 + x), x) == log(x + 2)
     assert heurisch(1/(x + sin(y)), x) == log(x + sin(y))
 
-    # Up to a constant, where C = 5*pi*I/12, Mathematica gives identical
-    # result in the first case. The difference is because sympy changes
+    # Up to a constant, where C = pi*I*Rational(5, 12), Mathematica gives identical
+    # result in the first case. The difference is because SymPy changes
     # signs of expressions without any care.
     # XXX ^ ^ ^ is this still correct?
     assert heurisch(5*x**5/(
@@ -73,6 +94,7 @@ def test_heurisch_exp():
     assert heurisch(Integral(x**z*y, (y, 1, 2), (z, 2, 3)).function, x) == (x*x**z*y)/(z+1)
     assert heurisch(Sum(x**z, (z, 1, 2)).function, z) == x**z/log(x)
 
+
 def test_heurisch_trigonometric():
     assert heurisch(sin(x), x) == -cos(x)
     assert heurisch(pi*sin(x) + 1, x) == x - pi*cos(x)
@@ -98,6 +120,13 @@ def test_heurisch_trigonometric():
     assert heurisch(acos(x/4) * asin(x/4), x) == 2*x - (sqrt(16 - x**2))*asin(x/4) \
         + (sqrt(16 - x**2))*acos(x/4) + x*asin(x/4)*acos(x/4)
 
+    assert heurisch(sin(x)/(cos(x)**2+1), x) == -atan(cos(x)) #fixes issue 13723
+    assert heurisch(1/(cos(x)+2), x) == 2*sqrt(3)*atan(sqrt(3)*tan(x/2)/3)/3
+    assert heurisch(2*sin(x)*cos(x)/(sin(x)**4 + 1), x) == atan(sqrt(2)*sin(x)
+        - 1) - atan(sqrt(2)*sin(x) + 1)
+
+    assert heurisch(1/cosh(x), x) == 2*atan(tanh(x/2))
+
 
 def test_heurisch_hyperbolic():
     assert heurisch(sinh(x), x) == cosh(x)
@@ -112,6 +141,7 @@ def test_heurisch_hyperbolic():
 
 def test_heurisch_mixed():
     assert heurisch(sin(x)*exp(x), x) == exp(x)*sin(x)/2 - exp(x)*cos(x)/2
+    assert heurisch(sin(x/sqrt(-x)), x) == 2*x*cos(x/sqrt(-x))/sqrt(-x) - 2*sin(x/sqrt(-x))
 
 
 def test_heurisch_radicals():
@@ -124,8 +154,8 @@ def test_heurisch_radicals():
     assert heurisch(sin(y*sqrt(x)), x) == 2/y**2*sin(y*sqrt(x)) - \
         2*sqrt(x)*cos(y*sqrt(x))/y
     assert heurisch_wrapper(sin(y*sqrt(x)), x) == Piecewise(
-        (0, Eq(y, 0)),
-        (-2*sqrt(x)*cos(sqrt(x)*y)/y + 2*sin(sqrt(x)*y)/y**2, True))
+        (-2*sqrt(x)*cos(sqrt(x)*y)/y + 2*sin(sqrt(x)*y)/y**2, Ne(y, 0)),
+        (0, True))
     y = Symbol('y', positive=True)
     assert heurisch_wrapper(sin(y*sqrt(x)), x) == 2/y**2*sin(y*sqrt(x)) - \
         2*sqrt(x)*cos(y*sqrt(x))/y
@@ -145,12 +175,10 @@ def test_heurisch_symbolic_coeffs():
 def test_heurisch_symbolic_coeffs_1130():
     y = Symbol('y')
     assert heurisch_wrapper(1/(x**2 + y), x) == Piecewise(
-        (-1/x, Eq(y, 0)),
-        (-I*log(x - I*sqrt(y))/(2*sqrt(y)) + I*log(x + I*sqrt(y))/(2*sqrt(y)), True))
+    (log(x - sqrt(-y))/(2*sqrt(-y)) - log(x + sqrt(-y))/(2*sqrt(-y)),
+    Ne(y, 0)), (-1/x, True))
     y = Symbol('y', positive=True)
-    assert heurisch_wrapper(1/(x**2 + y), x) in [I/sqrt(y)*log(x + sqrt(-y))/2 -
-    I/sqrt(y)*log(x - sqrt(-y))/2, I*log(x + I*sqrt(y)) /
-        (2*sqrt(y)) - I*log(x - I*sqrt(y))/(2*sqrt(y))]
+    assert heurisch_wrapper(1/(x**2 + y), x) == (atan(x/sqrt(y))/sqrt(y))
 
 
 def test_heurisch_hacking():
@@ -168,10 +196,11 @@ def test_heurisch_hacking():
         sqrt(7*pi)*erf(sqrt(7)*x)/14
 
     assert heurisch(1/sqrt(9 - 4*x**2), x, hints=[]) == \
-        asin(2*x/3)/2
+        asin(x*Rational(2, 3))/2
 
     assert heurisch(1/sqrt(9 + 4*x**2), x, hints=[]) == \
-        asinh(2*x/3)/2
+        asinh(x*Rational(2, 3))/2
+
 
 def test_heurisch_function():
     assert heurisch(f(x), x) is None
@@ -188,25 +217,27 @@ def test_heurisch_function_derivative():
     assert heurisch(f(x)**2*df, x) == f(x)**3/3
     assert heurisch(df/f(x), x) == log(f(x))
 
+
 def test_heurisch_wrapper():
     f = 1/(y + x)
     assert heurisch_wrapper(f, x) == log(x + y)
     f = 1/(y - x)
     assert heurisch_wrapper(f, x) == -log(x - y)
     f = 1/((y - x)*(y + x))
-    assert heurisch_wrapper(f, x) == \
-        Piecewise((1/x, Eq(y, 0)), (log(x + y)/2/y - log(x - y)/2/y, True))
+    assert heurisch_wrapper(f, x) == Piecewise(
+        (-log(x - y)/(2*y) + log(x + y)/(2*y), Ne(y, 0)), (1/x, True))
     # issue 6926
     f = sqrt(x**2/((y - x)*(y + x)))
-    assert heurisch_wrapper(f, x) == x*sqrt(x**2)*sqrt(1/(-x**2 + y**2)) \
-        - y**2*sqrt(x**2)*sqrt(1/(-x**2 + y**2))/x
+    assert heurisch_wrapper(f, x) == x*sqrt(-x**2/(x**2 - y**2)) \
+    - y**2*sqrt(-x**2/(x**2 - y**2))/x
+
 
 def test_issue_3609():
-    assert heurisch(1/(x * (1 + log(x)**2)), x) == I*log(log(x) + I)/2 - \
-        I*log(log(x) - I)/2
+    assert heurisch(1/(x * (1 + log(x)**2)), x) == atan(log(x))
 
 ### These are examples from the Poor Man's Integrator
 ### http://www-sop.inria.fr/cafe/Manuel.Bronstein/pmint/examples/
+
 
 def test_pmint_rat():
     # TODO: heurisch() is off by a constant: -3/4. Possibly different permutation
@@ -222,6 +253,7 @@ def test_pmint_rat():
     g = (4 + 8*x**2 + 6*x + 3*x**3)/(x**5 + 4*x**3 + 4*x) + log(x)
 
     assert drop_const(ratsimp(heurisch(f, x)), x) == g
+
 
 def test_pmint_trig():
     f = (x - tan(x)) / tan(x)**2 + tan(x)
@@ -240,19 +272,20 @@ def test_pmint_logexp():
 
     assert ratsimp(heurisch(f, x)) == g
 
-@slow # 8 seconds on 3.4 GHz
-@XFAIL  # there's a hash dependent failure lurking here
+
 def test_pmint_erf():
     f = exp(-x**2)*erf(x)/(erf(x)**3 - erf(x)**2 - erf(x) + 1)
     g = sqrt(pi)*log(erf(x) - 1)/8 - sqrt(pi)*log(erf(x) + 1)/8 - sqrt(pi)/(4*erf(x) - 4)
 
     assert ratsimp(heurisch(f, x)) == g
 
+
 def test_pmint_LambertW():
     f = LambertW(x)
     g = x*LambertW(x) - x + x/LambertW(x)
 
     assert heurisch(f, x) == g
+
 
 def test_pmint_besselj():
     f = besselj(nu + 1, x)/besselj(nu, x)
@@ -299,6 +332,7 @@ def test_pmint_WrightOmega():
 
     assert heurisch(f, x) == g
 
+
 def test_RR():
     # Make sure the algorithm does the right thing if the ring is RR. See
     # issue 8685.
@@ -314,3 +348,13 @@ def test_RR():
 # Whittaker functions
 # f = WhittakerW(mu + 1, nu, x) / (WhittakerW(mu, nu, x) * x)
 # g = x/2 - mu*ln(x) - ln(WhittakerW(mu, nu, x))
+
+
+def test_issue_22527():
+    t, R = symbols(r't R')
+    z = Function('z')(t)
+    def f(x):
+      return x/sqrt(R**2 - x**2)
+    Uz = integrate(f(z), z)
+    Ut = integrate(f(t), t)
+    assert Ut == Uz.subs(z, t)

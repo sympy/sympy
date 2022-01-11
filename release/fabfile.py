@@ -43,11 +43,7 @@ from fabric.contrib.files import exists
 from fabric.colors import blue, red, green
 from fabric.utils import error, warn
 
-try:
-    # Only works in newer versions of fabric
-    env.colorize_errors = True
-except AttributeError:
-    pass
+env.colorize_errors = True
 
 try:
     import requests
@@ -89,7 +85,7 @@ def full_path_split(path):
     """
     Function to do a full split on a path.
     """
-    # Based on http://stackoverflow.com/a/13505966/161801
+    # Based on https://stackoverflow.com/a/13505966/161801
     rest, tail = os.path.split(path)
     if not rest or rest == os.path.sep:
         return (tail,)
@@ -143,7 +139,7 @@ def prepare_apt():
     # Be sure to use the Python 2 pip
     sudo("/usr/bin/pip install twine")
     # Needed to build the docs
-    sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra librsvg2-bin docbook2x")
+    sudo("apt-get -y install graphviz inkscape texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra librsvg2-bin docbook2x dbus")
     # Our Ubuntu is too old to include Python 3.3
     sudo("apt-get -y install python-software-properties")
     sudo("add-apt-repository -y ppa:fkrull/deadsnakes")
@@ -402,7 +398,7 @@ git_whitelist = {
     'bin/test_isolated',
     'bin/test_travis.sh',
     # The notebooks are not ready for shipping yet. They need to be cleaned
-    # up, and preferrably doctested.  See also
+    # up, and preferably doctested.  See also
     # https://github.com/sympy/sympy/issues/6039.
     'examples/advanced/identitysearch_example.ipynb',
     'examples/beginner/plot_advanced.ipynb',
@@ -428,7 +424,7 @@ git_whitelist = {
     # This is just a distribute version of setup.py. Used mainly for setup.py
     # develop, which we don't care about in the release tarball
     'setupegg.py',
-    # Example on how to use tox to test Sympy. For development.
+    # Example on how to use tox to test SymPy. For development.
     'tox.ini.sample',
     }
 
@@ -507,8 +503,8 @@ descriptions = OrderedDict([
     ('source', "The SymPy source installer.",),
     ('win32', "Python Windows 32-bit installer.",),
     ('html', '''Html documentation for the Python 2 version. This is the same as
-the <a href="http://docs.sympy.org/latest/index.html">online documentation</a>.''',),
-    ('pdf', '''Pdf version of the <a href="http://docs.sympy.org/latest/index.html"> html documentation</a>.''',),
+the <a href="https://docs.sympy.org/latest/index.html">online documentation</a>.''',),
+    ('pdf', '''Pdf version of the <a href="https://docs.sympy.org/latest/index.html"> html documentation</a>.''',),
     ])
 
 @task
@@ -546,7 +542,7 @@ def table():
 
     version = get_sympy_version()
 
-    # http://docs.python.org/2/library/contextlib.html#contextlib.contextmanager. Not
+    # https://docs.python.org/2/library/contextlib.html#contextlib.contextmanager. Not
     # recommended as a real way to generate html, but it works better than
     # anything else I've tried.
     @contextmanager
@@ -1021,7 +1017,7 @@ def GitHub_release(username=None, user='sympy', token=None,
     if not check_tag_exists():
         error("The tag for this version has not been pushed yet. Cannot upload the release.")
 
-    # See http://developer.github.com/v3/repos/releases/#create-a-release
+    # See https://developer.github.com/v3/repos/releases/#create-a-release
     # First, create the release
     post = {}
     post['tag_name'] = tag

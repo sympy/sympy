@@ -1,5 +1,6 @@
-from sympy import print_gtk, sin
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.functions.elementary.trigonometric import sin
+from sympy.printing.gtk import print_gtk
+from sympy.testing.pytest import XFAIL, raises
 
 # this test fails if python-lxml isn't installed. We don't want to depend on
 # anything with SymPy

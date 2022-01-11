@@ -1,4 +1,3 @@
-from sympy.core.compatibility import range
 from sympy.ntheory import npartitions
 
 

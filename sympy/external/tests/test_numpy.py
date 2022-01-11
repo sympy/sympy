@@ -4,9 +4,7 @@
 # Always write regular SymPy tests for anything, that can be tested in pure
 # Python (without numpy). Here we test everything, that a user may need when
 # using SymPy with NumPy
-
-from __future__ import division
-
+from sympy.external.importtools import version_tuple
 from sympy.external import import_module
 
 numpy = import_module('numpy')
@@ -17,13 +15,17 @@ else:
     disabled = True
 
 
-from sympy import (Rational, Symbol, list2numpy, matrix2numpy, sin, Float,
-        Matrix, lambdify, symarray, symbols, Integer)
+from sympy.core.numbers import (Float, Integer, Rational)
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.trigonometric import sin
+from sympy.matrices.dense import (Matrix, list2numpy, matrix2numpy, symarray)
+from sympy.utilities.lambdify import lambdify
 import sympy
 
 import mpmath
 from sympy.abc import x, y, z
 from sympy.utilities.decorator import conserve_mpmath_dps
+from sympy.testing.pytest import raises
 
 
 # first, systematically check, that all operations are implemented and don't
@@ -32,16 +34,16 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 
 def test_systematic_basic():
     def s(sympy_object, numpy_array):
-        x = sympy_object + numpy_array
-        x = numpy_array + sympy_object
-        x = sympy_object - numpy_array
-        x = numpy_array - sympy_object
-        x = sympy_object * numpy_array
-        x = numpy_array * sympy_object
-        x = sympy_object / numpy_array
-        x = numpy_array / sympy_object
-        x = sympy_object ** numpy_array
-        x = numpy_array ** sympy_object
+        _ = [sympy_object + numpy_array,
+        numpy_array + sympy_object,
+        sympy_object - numpy_array,
+        numpy_array - sympy_object,
+        sympy_object * numpy_array,
+        numpy_array * sympy_object,
+        sympy_object / numpy_array,
+        numpy_array / sympy_object,
+        sympy_object ** numpy_array,
+        numpy_array ** sympy_object]
     x = Symbol("x")
     y = Symbol("y")
     sympy_objs = [
@@ -186,7 +188,7 @@ def test_Matrix_mul():
 
 
 def test_Matrix_array():
-    class matarray(object):
+    class matarray:
         def __array__(self):
             from numpy import array
             return array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
@@ -232,11 +234,15 @@ def test_lambdify():
     f = lambdify(x, sin(x), "numpy")
     prec = 1e-15
     assert -prec < f(0.2) - sin02 < prec
-    try:
-        f(x)  # if this succeeds, it can't be a numpy function
-        assert False
-    except AttributeError:
-        pass
+
+    # if this succeeds, it can't be a numpy function
+
+    if version_tuple(numpy.__version__) >= version_tuple('1.17'):
+        with raises(TypeError):
+            f(x)
+    else:
+        with raises(AttributeError):
+            f(x)
 
 
 def test_lambdify_matrix():
@@ -282,7 +288,7 @@ def test_lambdify_transl():
 
 
 def test_symarray():
-    """Test creation of numpy arrays of sympy symbols."""
+    """Test creation of numpy arrays of SymPy symbols."""
 
     import numpy as np
     import numpy.testing as npt

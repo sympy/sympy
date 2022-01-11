@@ -1,7 +1,7 @@
 from sympy.categories.diagram_drawing import _GrowableGrid, ArrowStringDescription
 from sympy.categories import (DiagramGrid, Object, NamedMorphism,
                               Diagram, XypicDiagramDrawer, xypic_draw_diagram)
-from sympy import FiniteSet
+from sympy.sets.sets import FiniteSet
 
 
 def test_GrowableGrid():
@@ -11,7 +11,7 @@ def test_GrowableGrid():
     assert grid.width == 1
     assert grid.height == 2
 
-    # Check initialisation of elements.
+    # Check initialization of elements.
     assert grid[0, 0] is None
     assert grid[1, 0] is None
 

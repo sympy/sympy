@@ -1,12 +1,24 @@
-# -*- coding: utf-8 -*-
-
-from sympy import (Symbol, symbols, oo, limit, Rational, Integral, Derivative,
-    log, exp, sqrt, pi, Function, sin, Eq, Ge, Le, Gt, Lt, Ne, Abs, conjugate,
-    I, Matrix)
+from sympy.core.function import (Derivative, Function)
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (Abs, conjugate)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
+from sympy.integrals.integrals import Integral
+from sympy.matrices.dense import Matrix
+from sympy.series.limits import limit
 
 from sympy.printing.python import python
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.testing.pytest import raises, XFAIL, skip
+
+from sympy.parsing.latex import parse_latex
+from sympy.external import import_module
+
+# To test latex to Python printing
+antlr4 = import_module("antlr4")
 
 x, y = symbols('x,y')
 th = Symbol('theta')
@@ -20,14 +32,14 @@ def test_python_basic():
     assert python(oo) == "e = oo"
 
     # Powers
-    assert python((x**2)) == "x = Symbol(\'x\')\ne = x**2"
+    assert python(x**2) == "x = Symbol(\'x\')\ne = x**2"
     assert python(1/x) == "x = Symbol('x')\ne = 1/x"
     assert python(y*x**-2) == "y = Symbol('y')\nx = Symbol('x')\ne = y/x**2"
     assert python(
         x**Rational(-5, 2)) == "x = Symbol('x')\ne = x**Rational(-5, 2)"
 
     # Sums of terms
-    assert python((x**2 + x + 1)) in [
+    assert python(x**2 + x + 1) in [
         "x = Symbol('x')\ne = 1 + x + x**2",
         "x = Symbol('x')\ne = x + x**2 + 1",
         "x = Symbol('x')\ne = x**2 + x + 1", ]
@@ -80,17 +92,19 @@ def test_python_keyword_function_name_escaping():
 
 
 def test_python_relational():
-    assert python(Eq(x, y)) == "e = Eq(x, y)"
+    assert python(Eq(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = Eq(x, y)"
     assert python(Ge(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x >= y"
     assert python(Le(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x <= y"
     assert python(Gt(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x > y"
     assert python(Lt(x, y)) == "x = Symbol('x')\ny = Symbol('y')\ne = x < y"
-    assert python(Ne(x/(y + 1), y**2)) in ["e = Ne(x/(1 + y), y**2)", "e = Ne(x/(y + 1), y**2)"]
+    assert python(Ne(x/(y + 1), y**2)) in [
+        "x = Symbol('x')\ny = Symbol('y')\ne = Ne(x/(1 + y), y**2)",
+        "x = Symbol('x')\ny = Symbol('y')\ne = Ne(x/(y + 1), y**2)"]
 
 
 def test_python_functions():
     # Simple
-    assert python((2*x + exp(x))) in "x = Symbol('x')\ne = 2*x + exp(x)"
+    assert python(2*x + exp(x)) in "x = Symbol('x')\ne = 2*x + exp(x)"
     assert python(sqrt(2)) == 'e = sqrt(2)'
     assert python(2**Rational(1, 3)) == 'e = 2**Rational(1, 3)'
     assert python(sqrt(2 + pi)) == 'e = sqrt(2 + pi)'
@@ -182,6 +196,13 @@ def test_python_matrix():
 def test_python_limits():
     assert python(limit(x, x, oo)) == 'e = oo'
     assert python(limit(x**2, x, 0)) == 'e = 0'
+
+def test_issue_20762():
+    if not antlr4:
+        skip('antlr not installed')
+    # Make sure Python removes curly braces from subscripted variables
+    expr = parse_latex(r'a_b \cdot b')
+    assert python(expr) == "a_b = Symbol('a_{b}')\nb = Symbol('b')\ne = a_b*b"
 
 
 def test_settings():

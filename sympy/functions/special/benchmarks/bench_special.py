@@ -1,6 +1,4 @@
-from __future__ import print_function, division
-
-from sympy import symbols
+from sympy.core.symbol import symbols
 from sympy.functions.special.spherical_harmonics import Ynm
 
 x, y = symbols('x,y')

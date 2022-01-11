@@ -1,12 +1,10 @@
-import warnings
-
 from sympy.core.backend import (cos, expand, Matrix, sin, symbols, tan, sqrt, S,
                                 zeros)
-from sympy import simplify
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.simplify.simplify import simplify
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
                                      dot)
+from sympy.testing.pytest import raises
 
 
 def test_one_dof():
@@ -25,11 +23,10 @@ def test_one_dof():
     BL = [pa]
 
     KM = KanesMethod(N, [q], [u], kd)
-    # The old input format raises a deprecation warning, so catch it here so
-    # it doesn't cause py.test to fail.
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        KM.kanes_equations(FL, BL)
+    KM.kanes_equations(BL, FL)
+
+    assert KM.bodies == BL
+    assert KM.loads == FL
 
     MM = KM.mass_matrix
     forcing = KM.forcing
@@ -69,11 +66,7 @@ def test_two_dof():
     # pass relevant information, and form Fr & Fr*. Then we calculate the mass
     # matrix and forcing terms, and finally solve for the udots.
     KM = KanesMethod(N, q_ind=[q1, q2], u_ind=[u1, u2], kd_eqs=kd)
-    # The old input format raises a deprecation warning, so catch it here so
-    # it doesn't cause py.test to fail.
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        KM.kanes_equations(FL, BL)
+    KM.kanes_equations(BL, FL)
     MM = KM.mass_matrix
     forcing = KM.forcing
     rhs = MM.inv() * forcing
@@ -84,6 +77,11 @@ def test_two_dof():
     assert simplify(KM.rhs() -
                     KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(4, 1)
 
+    # Make sure an error is raised if nonlinear kinematic differential
+    # equations are supplied.
+    kd = [q1d - u1**2, sin(q2d) - cos(u2)]
+    raises(ValueError, lambda: KanesMethod(N, q_ind=[q1, q2],
+                                           u_ind=[u1, u2], kd_eqs=kd))
 
 def test_pend():
     q, u = dynamicsymbols('q u')
@@ -99,9 +97,7 @@ def test_pend():
     BL = [pa]
 
     KM = KanesMethod(N, [q], [u], kd)
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        KM.kanes_equations(FL, BL)
+    KM.kanes_equations(BL, FL)
     MM = KM.mass_matrix
     forcing = KM.forcing
     rhs = MM.inv() * forcing
@@ -164,9 +160,7 @@ def test_rolling_disc():
     # terms, then solve for the u dots (time derivatives of the generalized
     # speeds).
     KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd)
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        KM.kanes_equations(ForceList, BodyList)
+    KM.kanes_equations(BodyList, ForceList)
     MM = KM.mass_matrix
     forcing = KM.forcing
     rhs = MM.inv() * forcing
@@ -184,7 +178,7 @@ def test_rolling_disc():
     A = KM.linearize(A_and_B=True)[0]
     A_upright = A.subs({r: 1, g: 1, m: 1}).subs({q1: 0, q2: 0, q3: 0, u1: 0, u3: 0})
     import sympy
-    assert sympy.sympify(A_upright.subs({u2: 1 / sqrt(3)})).eigenvals() == {S(0): 6}
+    assert sympy.sympify(A_upright.subs({u2: 1 / sqrt(3)})).eigenvals() == {S.Zero: 6}
 
 
 def test_aux():
@@ -222,17 +216,13 @@ def test_aux():
 
     KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3, u4, u5],
                      kd_eqs=kd)
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
+    (fr, frstar) = KM.kanes_equations(BodyList, ForceList)
     fr = fr.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
     frstar = frstar.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
 
     KM2 = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd,
                       u_auxiliary=[u4, u5])
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        (fr2, frstar2) = KM2.kanes_equations(ForceList, BodyList)
+    (fr2, frstar2) = KM2.kanes_equations(BodyList, ForceList)
     fr2 = fr2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
     frstar2 = frstar2.subs({u4d: 0, u5d: 0}).subs({u4: 0, u5: 0})
 
@@ -295,9 +285,7 @@ def test_parallel_axis():
                  (C, N.x * F)]
 
     km = KanesMethod(N, [q1, q2], [u1, u2], kindiffs)
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=SymPyDeprecationWarning)
-        (fr, frstar) = km.kanes_equations(forceList, bodyList)
+    (fr, frstar) = km.kanes_equations(bodyList, forceList)
     mm = km.mass_matrix_full
     assert mm[3, 3] == Iz
 
@@ -324,9 +312,14 @@ def test_input_format():
     assert KM.kanes_equations(BL, loads=None)[0] == Matrix([0])
     # test for input format kane.kanes_equations(bodies=(body1, body 2))
     assert KM.kanes_equations(BL)[0] == Matrix([0])
+    # test for input format kane.kanes_equations(bodies=(body1, body2), loads=[])
+    assert KM.kanes_equations(BL, [])[0] == Matrix([0])
     # test for error raised when a wrong force list (in this case a string) is provided
-    from sympy.utilities.pytest import raises
     raises(ValueError, lambda: KM._form_fr('bad input'))
+
+    # 1 dof problem from test_one_dof with FL & BL in instance
+    KM = KanesMethod(N, [q], [u], kd, bodies=BL, forcelist=FL)
+    assert KM.kanes_equations()[0] == Matrix([-c*u - k*q])
 
     # 2 dof problem from test_two_dof
     q1, q2, u1, u2 = dynamicsymbols('q1 q2 u1 u2')

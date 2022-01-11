@@ -1,3 +1,5 @@
+.. _kinematics:
+
 =======================
 Kinematics (Docstrings)
 =======================

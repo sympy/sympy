@@ -5,13 +5,11 @@
 Demonstrates how to expand expressions.
 """
 
-import sympy
-from sympy import pprint
-
+from sympy import pprint, Symbol
 
 def main():
-    a = sympy.Symbol('a')
-    b = sympy.Symbol('b')
+    a = Symbol('a')
+    b = Symbol('b')
     e = (a + b)**5
 
     print("\nExpression:")

@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import print_function, division
-
 import keyword as kw
 import sympy
 from .repr import ReprPrinter
@@ -16,8 +12,7 @@ class PythonPrinter(ReprPrinter, StrPrinter):
     """A printer which converts an expression into its Python interpretation."""
 
     def __init__(self, settings=None):
-        ReprPrinter.__init__(self)
-        StrPrinter.__init__(self, settings)
+        super().__init__(settings)
         self.symbols = []
         self.functions = []
 
@@ -30,7 +25,7 @@ class PythonPrinter(ReprPrinter, StrPrinter):
 
     def _print_Function(self, expr):
         func = expr.func.__name__
-        if not hasattr(sympy, func) and not func in self.functions:
+        if not hasattr(sympy, func) and func not in self.functions:
             self.functions.append(func)
         return StrPrinter._print_Function(self, expr)
 
@@ -56,8 +51,14 @@ def python(expr, **settings):
     # Returning found symbols and functions
     renamings = {}
     for symbolname in printer.symbols:
-        newsymbolname = symbolname
-        # Escape symbol names that are reserved python keywords
+        # Remove curly braces from subscripted variables
+        if '{' in symbolname:
+            newsymbolname = symbolname.replace('{', '').replace('}', '')
+            renamings[sympy.Symbol(symbolname)] = newsymbolname
+        else:
+            newsymbolname = symbolname
+
+        # Escape symbol names that are reserved Python keywords
         if kw.iskeyword(newsymbolname):
             while True:
                 newsymbolname += "_"
@@ -70,7 +71,7 @@ def python(expr, **settings):
 
     for functionname in printer.functions:
         newfunctionname = functionname
-        # Escape function names that are reserved python keywords
+        # Escape function names that are reserved Python keywords
         if kw.iskeyword(newfunctionname):
             while True:
                 newfunctionname += "_"
@@ -81,7 +82,7 @@ def python(expr, **settings):
                     break
         result += newfunctionname + ' = Function(\'' + functionname + '\')\n'
 
-    if not len(renamings) == 0:
+    if renamings:
         exprp = expr.subs(renamings)
     result += 'e = ' + printer._str(exprp)
     return result

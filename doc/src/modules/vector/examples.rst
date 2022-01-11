@@ -75,7 +75,7 @@ Third product rule for Del operator
 See
 ---
 
-.. [WikiDel] http://en.wikipedia.org/wiki/Del
+.. [WikiDel] https://en.wikipedia.org/wiki/Del
 
 The Problem
 -----------
@@ -97,8 +97,8 @@ The scalar field :math:`f` and the measure numbers of the vector field
 coordinate system in general.
 Hence, define SymPy functions that way.
 
-  >>> from sympy import symbols
-  >>> v1, v2, v3, f = symbols('v1 v2 v3 f', type="Function")
+  >>> from sympy import symbols, Function
+  >>> v1, v2, v3, f = symbols('v1 v2 v3 f', cls=Function)
 
 ``v1``, ``v2`` and ``v3`` are the :math:`X`, :math:`Y` and :math:`Z`
 components of the vector field respectively.

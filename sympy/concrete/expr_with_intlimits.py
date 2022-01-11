@@ -1,17 +1,26 @@
-from __future__ import print_function, division
-
 from sympy.concrete.expr_with_limits import ExprWithLimits
 from sympy.core.singleton import S
+from sympy.core.relational import Eq
 
 class ReorderError(NotImplementedError):
     """
     Exception raised when trying to reorder dependent limits.
     """
     def __init__(self, expr, msg):
-        super(ReorderError, self).__init__(
+        super().__init__(
             "%s could not be reordered: %s." % (expr, msg))
 
 class ExprWithIntLimits(ExprWithLimits):
+    """
+    Superclass for Product and Sum.
+
+    See Also
+    ========
+
+    sympy.concrete.expr_with_limits.ExprWithLimits
+    sympy.concrete.products.Product
+    sympy.concrete.summations.Sum
+    """
     def change_index(self, var, trafo, newvar=None):
         r"""
         Change index of a Sum or Product.
@@ -20,8 +29,8 @@ class ExprWithIntLimits(ExprWithLimits):
         `x`. For `a` the only values allowed are `\pm 1`. A new variable to be used
         after the change of index can also be specified.
 
-        Usage
-        =====
+        Explanation
+        ===========
 
         ``change_index(expr, var, trafo, newvar=None)`` where ``var`` specifies the
         index variable `x` to transform. The transformation ``trafo`` must be linear
@@ -95,10 +104,11 @@ class ExprWithIntLimits(ExprWithLimits):
         See Also
         ========
 
-        sympy.concrete.simplification.index,
-        sympy.concrete.simplification.reorder_limit,
-        sympy.concrete.simplification.reorder,
-        sympy.concrete.simplification.reverse_order
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.index,
+        reorder_limit,
+        sympy.concrete.expr_with_intlimits.ExprWithIntLimits.reorder,
+        sympy.concrete.summations.Sum.reverse_order,
+        sympy.concrete.products.Product.reverse_order
         """
         if newvar is None:
             newvar = var
@@ -134,8 +144,8 @@ class ExprWithIntLimits(ExprWithLimits):
         """
         Return the index of a dummy variable in the list of limits.
 
-        Usage
-        =====
+        Explanation
+        ===========
 
         ``index(expr, x)``  returns the index of the dummy variable ``x`` in the
         limits of ``expr``. Note that we start counting with 0 at the inner-most
@@ -158,7 +168,8 @@ class ExprWithIntLimits(ExprWithLimits):
         See Also
         ========
 
-        reorder_limit, reorder, reverse_order
+        reorder_limit, reorder, sympy.concrete.summations.Sum.reverse_order,
+        sympy.concrete.products.Product.reverse_order
         """
         variables = [limit[0] for limit in expr.limits]
 
@@ -171,8 +182,8 @@ class ExprWithIntLimits(ExprWithLimits):
         """
         Reorder limits in a expression containing a Sum or a Product.
 
-        Usage
-        =====
+        Explanation
+        ===========
 
         ``expr.reorder(*arg)`` reorders the limits in the expression ``expr``
         according to the list of tuples given by ``arg``. These tuples can
@@ -210,7 +221,8 @@ class ExprWithIntLimits(ExprWithLimits):
         See Also
         ========
 
-        reorder_limit, index, reverse_order
+        reorder_limit, index, sympy.concrete.summations.Sum.reverse_order,
+        sympy.concrete.products.Product.reverse_order
         """
         new_expr = expr
 
@@ -235,8 +247,8 @@ class ExprWithIntLimits(ExprWithLimits):
         """
         Interchange two limit tuples of a Sum or Product expression.
 
-        Usage
-        =====
+        Explanation
+        ===========
 
         ``expr.reorder_limit(x, y)`` interchanges two limit tuples. The
         arguments ``x`` and ``y`` are integers corresponding to the index
@@ -260,7 +272,8 @@ class ExprWithIntLimits(ExprWithLimits):
         See Also
         ========
 
-        index, reorder, reverse_order
+        index, reorder, sympy.concrete.summations.Sum.reverse_order,
+        sympy.concrete.products.Product.reverse_order
         """
         var = {limit[0] for limit in expr.limits}
         limit_x = expr.limits[x]
@@ -283,3 +296,57 @@ class ExprWithIntLimits(ExprWithLimits):
             return type(expr)(expr.function, *limits)
         else:
             raise ReorderError(expr, "could not interchange the two limits specified")
+
+    @property
+    def has_empty_sequence(self):
+        """
+        Returns True if the Sum or Product is computed for an empty sequence.
+
+        Examples
+        ========
+
+        >>> from sympy import Sum, Product, Symbol
+        >>> m = Symbol('m')
+        >>> Sum(m, (m, 1, 0)).has_empty_sequence
+        True
+
+        >>> Sum(m, (m, 1, 1)).has_empty_sequence
+        False
+
+        >>> M = Symbol('M', integer=True, positive=True)
+        >>> Product(m, (m, 1, M)).has_empty_sequence
+        False
+
+        >>> Product(m, (m, 2, M)).has_empty_sequence
+
+        >>> Product(m, (m, M + 1, M)).has_empty_sequence
+        True
+
+        >>> N = Symbol('N', integer=True, positive=True)
+        >>> Sum(m, (m, N, M)).has_empty_sequence
+
+        >>> N = Symbol('N', integer=True, negative=True)
+        >>> Sum(m, (m, N, M)).has_empty_sequence
+        False
+
+        See Also
+        ========
+
+        has_reversed_limits
+        has_finite_limits
+
+        """
+        ret_None = False
+        for lim in self.limits:
+            dif = lim[1] - lim[2]
+            eq = Eq(dif, 1)
+            if eq == True:
+                return True
+            elif eq == False:
+                continue
+            else:
+                ret_None = True
+
+        if ret_None:
+            return None
+        return False

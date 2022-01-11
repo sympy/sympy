@@ -2,10 +2,10 @@
 Printing (Docstrings)
 =====================
 
-init_printing
-=============
+init_vprinting
+==============
 
-.. autofunction:: sympy.physics.vector.printing.init_printing
+.. autofunction:: sympy.physics.vector.printing.init_vprinting
 
 vprint
 ======

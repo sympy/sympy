@@ -1,3 +1,13 @@
-#!/bin/bash
+#!/bin/bash -e
 ABS_REPO_PATH=$(unset CDPATH && cd "$(dirname "$0")/.." && echo $PWD)
-python3 -m pytest --durations 0 >$ABS_REPO_PATH/.ci/durations.log
+cat <<EOF >${ABS_REPO_PATH}/.ci/blacklisted.json
+{
+    "sympy/physics/mechanics/tests/test_kane3.py": [
+        "test_bicycle"
+    ],
+    "sympy/utilities/tests/test_wester.py": [
+        "test_W25"
+    ]
+}
+EOF
+${PYTHON:-python} -m pytest -ra --durations 0 --verbose | tee $ABS_REPO_PATH/.ci/durations.log

@@ -1,6 +1,5 @@
 """Implementation of :class:`Ring` class. """
 
-from __future__ import print_function, division
 
 from sympy.polys.domains.domain import Domain
 from sympy.polys.polyerrors import ExactQuotientFailed, NotInvertible, NotReversible
@@ -47,10 +46,10 @@ class Ring(Domain):
 
     def revert(self, a):
         """Returns ``a**(-1)`` if possible. """
-        if self.is_one(a):
+        if self.is_one(a) or self.is_one(-a):
             return a
         else:
-            raise NotReversible('only unity is reversible in a ring')
+            raise NotReversible('only units are reversible in a ring')
 
     def is_unit(self, a):
         try:
@@ -115,7 +114,5 @@ class Ring(Domain):
             e = self.ideal(*e)
         return QuotientRing(self, e)
 
-    def __div__(self, e):
+    def __truediv__(self, e):
         return self.quotient_ring(e)
-
-    __truediv__ = __div__

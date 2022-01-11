@@ -1,12 +1,11 @@
 from .cartan_type import Standard_Cartan
-from sympy.core.compatibility import range
 from sympy.core.backend import eye
 
 class TypeC(Standard_Cartan):
 
     def __new__(cls, n):
         if n < 3:
-            raise ValueError("n can not be less than 3")
+            raise ValueError("n cannot be less than 3")
         return Standard_Cartan.__new__(cls, "C", n)
 
 
@@ -25,7 +24,7 @@ class TypeC(Standard_Cartan):
         return n
 
     def basic_root(self, i, j):
-        """Generate roots with 1 in ith position and a -1 in jth postion
+        """Generate roots with 1 in ith position and a -1 in jth position
         """
         n = self.n
         root = [0]*n

@@ -5,14 +5,13 @@ The dense matrix is stored as a list of lists.
 
 """
 
-from sympy.matrices.densetools import col, eye, augment
-from sympy.matrices.densetools import rowadd, rowmul, conjugate_transpose
-from sympy.core.symbol import symbols
-from sympy.core.compatibility import range
-from sympy.core.power import isqrt
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-
 import copy
+
+from sympy.core.power import isqrt
+from sympy.core.symbol import symbols
+from sympy.matrices.densetools import (
+    augment, col, conjugate_transpose, eye, rowadd, rowmul)
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 SymPyDeprecationWarning(
     feature="densesolve",
@@ -398,7 +397,6 @@ def forward_substitution(lower_triangle, variable, constant, K):
     """
     copy_lower_triangle = copy.deepcopy(lower_triangle)
     nrow = len(copy_lower_triangle)
-    result = []
     for i in range(nrow):
         a = K.zero
         for j in range(i):
@@ -442,7 +440,6 @@ def backward_substitution(upper_triangle, variable, constant, K):
     """
     copy_upper_triangle = copy.deepcopy(upper_triangle)
     nrow = len(copy_upper_triangle)
-    result = []
     for i in reversed(range(nrow)):
         a = K.zero
         for j in reversed(range(i + 1, nrow)):

@@ -118,7 +118,7 @@ def main():
         # To get inline expressions in the low level code, we attach the
         # wave function expressions to a regular SymPy function using the
         # implemented_function utility.  This is an extra step needed to avoid
-        # erronous summations in the wave function expressions.
+        # erroneous summations in the wave function expressions.
         #
         # Such function objects carry around the expression they represent,
         # but the expression is not exposed unless explicit measures are taken.

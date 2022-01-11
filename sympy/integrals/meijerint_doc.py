@@ -1,12 +1,16 @@
 """ This module cooks up a docstring when imported. Its only purpose is to
     be displayed in the sphinx documentation. """
 
-from __future__ import print_function, division
+
+from typing import Any, Dict as tDict, List, Tuple as tTuple, Type
 
 from sympy.integrals.meijerint import _create_lookup_table
-from sympy import latex, Eq, Add, Symbol
+from sympy.core.add import Add
+from sympy.core.relational import Eq
+from sympy.core.symbol import Symbol
+from sympy.printing.latex import latex
 
-t = {}
+t = {}  # type: tDict[tTuple[Type, ...], List[Any]]
 _create_lookup_table(t)
 
 doc = ""

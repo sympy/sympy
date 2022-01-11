@@ -3,17 +3,61 @@ Primality testing
 
 """
 
-from __future__ import print_function, division
-
-from sympy.core.compatibility import range, as_int
-from sympy.core.numbers import Float
+from sympy.core.numbers import igcd
+from sympy.core.power import integer_nthroot
+from sympy.core.sympify import sympify
+from sympy.external.gmpy import HAS_GMPY
+from sympy.utilities.misc import as_int
 
 from mpmath.libmp import bitcount as _bitlength
 
 
-
 def _int_tuple(*i):
     return tuple(int(_) for _ in i)
+
+
+def is_euler_pseudoprime(n, b):
+    """Returns True if n is prime or an Euler pseudoprime to base b, else False.
+
+    Euler Pseudoprime : In arithmetic, an odd composite integer n is called an
+    euler pseudoprime to base a, if a and n are coprime and satisfy the modular
+    arithmetic congruence relation :
+
+    a ^ (n-1)/2 = + 1(mod n) or
+    a ^ (n-1)/2 = - 1(mod n)
+
+    (where mod refers to the modulo operation).
+
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import is_euler_pseudoprime
+    >>> is_euler_pseudoprime(2, 5)
+    True
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euler_pseudoprime
+    """
+    from sympy.ntheory.factor_ import trailing
+
+    if not mr(n, [b]):
+        return False
+
+    n = as_int(n)
+    r = n - 1
+    c = pow(b, r >> trailing(r), n)
+
+    if c == 1:
+        return True
+
+    while True:
+        if c == n - 1:
+            return True
+        c = pow(c, 2, n)
+        if c == 1:
+            return False
 
 
 def is_square(n, prep=True):
@@ -21,10 +65,19 @@ def is_square(n, prep=True):
     If n is suspected of *not* being a square then this is a
     quick method of confirming that it is not.
 
+    Examples
+    ========
+
+    >>> from sympy.ntheory.primetest import is_square
+    >>> is_square(25)
+    True
+    >>> is_square(2)
+    False
+
     References
     ==========
 
-    [1]  http://mersenneforum.org/showpost.php?p=110896
+    .. [1]  http://mersenneforum.org/showpost.php?p=110896
 
     See Also
     ========
@@ -34,17 +87,29 @@ def is_square(n, prep=True):
         n = as_int(n)
         if n < 0:
             return False
-        if n in [0, 1]:
+        if n in (0, 1):
             return True
-    m = n & 127
-    if not ((m*0x8bc40d7d) & (m*0xa1e2f5d1) & 0x14020a):
-        m = n % 63
-        if not ((m*0x3d491df7) & (m*0xc824a9f9) & 0x10f14008):
-            from sympy.ntheory import perfect_power
-            if perfect_power(n, [2]):
-                return True
-    return False
-
+    # def magic(n):
+    #     s = {x**2 % n for x in range(n)}
+    #     return sum(1 << bit for bit in s)
+    # >>> print(hex(magic(128)))
+    # 0x2020212020202130202021202030213
+    # >>> print(hex(magic(99)))
+    # 0x209060049048220348a410213
+    # >>> print(hex(magic(91)))
+    # 0x102e403012a0c9862c14213
+    # >>> print(hex(magic(85)))
+    # 0x121065188e001c46298213
+    if not 0x2020212020202130202021202030213 & (1 << (n & 127)):
+        return False
+    m = n % (99 * 91 * 85)
+    if not 0x209060049048220348a410213 & (1 << (m % 99)):
+        return False
+    if not 0x102e403012a0c9862c14213 & (1 << (m % 91)):
+        return False
+    if not 0x121065188e001c46298213 & (1 << (m % 85)):
+        return False
+    return integer_nthroot(n, 2)[1]
 
 def _test(n, base, s, t):
     """Miller-Rabin strong pseudoprime test for one base.
@@ -74,11 +139,11 @@ def mr(n, bases):
     References
     ==========
 
-    - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
-      A Computational Perspective", Springer, 2nd edition, 135-138
+    .. [1] Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
+           A Computational Perspective", Springer, 2nd edition, 135-138
 
     A list of thresholds and the bases they require are here:
-    http://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
+    https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants
 
     Examples
     ========
@@ -200,10 +265,9 @@ def _lucas_selfridge_params(n):
 
     References
     ==========
-    - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
-      http://mpqs.free.fr/LucasPseudoprimes.pdf
+    .. [1] "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
+           http://mpqs.free.fr/LucasPseudoprimes.pdf
     """
-    from sympy.core import igcd
     from sympy.ntheory.residue_ntheory import jacobi_symbol
     D = 5
     while True:
@@ -224,11 +288,10 @@ def _lucas_extrastrong_params(n):
 
     References
     ==========
-    - OEIS A217719: Extra Strong Lucas Pseudoprimes
-      https://oeis.org/A217719
-    - https://en.wikipedia.org/wiki/Lucas_pseudoprime
+    .. [1] OEIS A217719: Extra Strong Lucas Pseudoprimes
+           https://oeis.org/A217719
+    .. [1] https://en.wikipedia.org/wiki/Lucas_pseudoprime
     """
-    from sympy.core import igcd
     from sympy.ntheory.residue_ntheory import jacobi_symbol
     P, Q, D = 3, 1, 5
     while True:
@@ -414,12 +477,10 @@ def is_extra_strong_lucas_prp(n):
 
     if U == 0 and (V == 2 or V == n - 2):
         return True
-    if V == 0:
-        return True
     for r in range(1, s):
-        V = (V*V - 2) % n
         if V == 0:
             return True
+        V = (V*V - 2) % n
     return False
 
 
@@ -445,7 +506,37 @@ def isprime(n):
     >>> from sympy.ntheory import isprime
     >>> isprime(13)
     True
+    >>> isprime(13.0)  # limited precision
+    False
     >>> isprime(15)
+    False
+
+    Notes
+    =====
+
+    This routine is intended only for integer input, not numerical
+    expressions which may represent numbers. Floats are also
+    rejected as input because they represent numbers of limited
+    precision. While it is tempting to permit 7.0 to represent an
+    integer there are errors that may "pass silently" if this is
+    allowed:
+
+    >>> from sympy import Float, S
+    >>> int(1e3) == 1e3 == 10**3
+    True
+    >>> int(1e23) == 1e23
+    True
+    >>> int(1e23) == 10**23
+    False
+
+    >>> near_int = 1 + S(1)/10**19
+    >>> near_int == int(near_int)
+    False
+    >>> n = Float(near_int, 10)  # truncated by precision
+    >>> n == int(n)
+    True
+    >>> n = Float(near_int, 20)
+    >>> n == int(n)
     False
 
     See Also
@@ -457,14 +548,15 @@ def isprime(n):
 
     References
     ==========
-    - http://en.wikipedia.org/wiki/Strong_pseudoprime
+    - https://en.wikipedia.org/wiki/Strong_pseudoprime
     - "Lucas Pseudoprimes", Baillie and Wagstaff, 1980.
       http://mpqs.free.fr/LucasPseudoprimes.pdf
     - https://en.wikipedia.org/wiki/Baillie-PSW_primality_test
     """
-    if isinstance(n, (Float, float)):
+    try:
+        n = as_int(n)
+    except ValueError:
         return False
-    n = int(n)
 
     # Step 1, do quick composite testing via trial division.  The individual
     # modulo tests benchmark faster than one or two primorial igcds for me.
@@ -494,7 +586,6 @@ def isprime(n):
     # If we have GMPY2, skip straight to step 3 and do a strong BPSW test.
     # This should be a bit faster than our step 2, and for large values will
     # be a lot faster than our step 3 (C+GMP vs. Python).
-    from sympy.core.compatibility import HAS_GMPY
     if HAS_GMPY == 2:
         from gmpy2 import is_strong_prp, is_strong_selfridge_prp
         return is_strong_prp(n, 2) and is_strong_selfridge_prp(n)
@@ -562,3 +653,25 @@ def isprime(n):
     # Add a random M-R base
     #import random
     #return mr(n, [2, random.randint(3, n-1)]) and is_strong_lucas_prp(n)
+
+
+def is_gaussian_prime(num):
+    r"""Test if num is a Gaussian prime number.
+
+    References
+    ==========
+
+    .. [1] https://oeis.org/wiki/Gaussian_primes
+    """
+
+    num = sympify(num)
+    a, b = num.as_real_imag()
+    a = as_int(a, strict=False)
+    b = as_int(b, strict=False)
+    if a == 0:
+        b = abs(b)
+        return isprime(b) and b % 4 == 3
+    elif b == 0:
+        a = abs(a)
+        return isprime(a) and a % 4 == 3
+    return isprime(a**2 + b**2)

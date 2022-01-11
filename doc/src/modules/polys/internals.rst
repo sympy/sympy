@@ -42,94 +42,6 @@ the current implementation, to work in rings like `k[X][Y]`. This would create
 even more layers. For this reason, working in the isomorphic ring `k[X, Y]`
 is preferred.
 
-Domains
-=======
-
-.. currentmodule:: sympy.polys.domains
-
-Here we document the various implemented ground domains. There are three
-types: abstract domains, concrete domains, and "implementation domains".
-Abstract domains cannot be (usefully) instantiated at all, and just collect
-together functionality shared by many other domains. Concrete domains are
-those meant to be instantiated and used in the polynomial manipulation
-algorithms. In some cases, there are various possible ways to implement the
-data type the domain provides. For example, depending on what libraries are
-available on the system, the integers are implemented either using the python
-built-in integers, or using gmpy. Note that various aliases are created
-automatically depending on the libraries available. As such e.g. ``ZZ`` always
-refers to the most efficient implementation of the integer ring available.
-
-Abstract Domains
-****************
-
-.. autoclass:: sympy.polys.domains.domain.Domain
-   :members:
-
-.. autoclass:: sympy.polys.domains.field.Field
-   :members:
-
-.. autoclass:: sympy.polys.domains.ring.Ring
-   :members:
-
-.. autoclass:: sympy.polys.domains.simpledomain.SimpleDomain
-   :members:
-
-.. autoclass:: sympy.polys.domains.compositedomain.CompositeDomain
-   :members:
-
-Concrete Domains
-****************
-
-.. autoclass:: FiniteField
-   :members:
-
-.. autoclass:: IntegerRing
-   :members:
-
-.. autoclass:: PolynomialRing
-   :members:
-
-.. autoclass:: RationalField
-   :members:
-
-.. autoclass:: AlgebraicField
-   :members:
-
-.. autoclass:: FractionField
-   :members:
-
-.. autoclass:: RealField
-   :members:
-
-.. autoclass:: ExpressionDomain
-   :members:
-
-Implementation Domains
-**********************
-
-.. autoclass:: PythonFiniteField
-.. autoclass:: GMPYFiniteField
-
-.. autoclass:: PythonIntegerRing
-.. autoclass:: GMPYIntegerRing
-
-.. autoclass:: PythonRationalField
-.. autoclass:: GMPYRationalField
-
-Level One
-=========
-
-.. currentmodule:: sympy.polys.polyclasses
-
-.. autoclass:: DMP
-   :members:
-
-.. autoclass:: DMF
-   :members:
-
-.. autoclass:: ANP
-   :members:
-
 Level Zero
 ==========
 
@@ -347,24 +259,9 @@ Manipulation of sparse, distributed polynomials and vectors
 
 Dense representations quickly require infeasible amounts of storage and
 computation time if the number of variables increases. For this reason,
-there is code to manipulate polynomials in a *sparse* representation.
-
-
-
-.. currentmodule:: sympy.polys.rings
-
-Sparse polynomials are represented as dictionaries.
-
-.. autofunction:: ring
-.. autofunction:: xring
-.. autofunction:: vring
-.. autofunction:: sring
-
-.. autoclass:: PolyRing
-   :members:
-
-.. autoclass:: PolyElement
-   :members:
+there is code to manipulate polynomials in a *sparse* representation. The Ring
+object and elements are implemented by the classes :py:class:`~.PolyRing` and
+:py:class:`~.PolyElement`.
 
 In commutative algebra, one often studies not only polynomials, but also
 *modules* over polynomial rings. The polynomial manipulation module provides
@@ -420,7 +317,7 @@ if `g` is such a polynomial and `f` is any element of `I`,
 hence must be zero; therefore `f` is a multiple of `g`.
 
 Using this result it is possible to find a `greatest common
-divisor <http://en.wikipedia.org/wiki/Greatest_common_divisor>`_
+divisor <https://en.wikipedia.org/wiki/Greatest_common_divisor>`_
 (gcd) of any polynomials `f,g,\ldots` in `K[X]`.
 If `I` is the ideal formed by all linear combinations of the given polynomials
 with coefficients in `K[X]`, and `d` is its generator,
@@ -444,7 +341,7 @@ alone as `f_{k+1} = 0`. Hence `d = f_k` is a gcd of `f` and `g`.
 The sequence of polynomials `f_0`, `f_1,\ldots, f_k` is called the
 *Euclidean polynomial remainder sequence* determined by `(f,g)` because
 of the analogy with the classical `Euclidean algorithm
-<http://en.wikipedia.org/wiki/Euclidean_algorithm>`_ for the gcd of
+<https://en.wikipedia.org/wiki/Euclidean_algorithm>`_ for the gcd of
 natural numbers.
 
 The algorithm may be extended to obtain an expression for `d` in terms of
@@ -457,7 +354,7 @@ This leads to an equation
    d = uf + vg\qquad (u,v \in K[X])
 
 analogous to `Bézout's identity
-<http://en.wikipedia.org/wiki/B%C3%A9zout%27s_identity>`_
+<https://en.wikipedia.org/wiki/B%C3%A9zout%27s_identity>`_
 in the case of integers.
 
 .. autofunction:: dmp_half_gcdex
@@ -552,10 +449,10 @@ Taking `l = n + m - j - 1`, we obtain `\deg(u) = m - j - 1` and
 `\deg(v) = n - j - 1`.
 
 In the case `j = 0` the matrix of the resulting system of linear equations
-is the `Sylvester matrix <http://en.wikipedia.org/wiki/Sylvester_matrix>`_
+is the `Sylvester matrix <https://en.wikipedia.org/wiki/Sylvester_matrix>`_
 `S(f,g)` associated to `f` and `g`,
 an `(n+m)\times (n+m)` matrix with coefficients of `f` and `g` as entries.
-Its determinant is the `resultant <http://en.wikipedia.org/wiki/Resultant>`_
+Its determinant is the `resultant <https://en.wikipedia.org/wiki/Resultant>`_
 `\mathrm{res}(f,g)` of the pair `(f,g)`.
 It is non-zero if and only if `f` and `g` are relatively prime.
 
@@ -703,6 +600,22 @@ Groebner basis algorithms for modules are also provided:
 .. autofunction:: sdm_nf_mora
 .. autofunction:: sdm_groebner
 
+Options
+=======
+
+.. automodule:: sympy.polys.polyoptions
+
+.. autoclass:: sympy.polys.polyoptions.Options
+   :members:
+.. autofunction:: sympy.polys.polyoptions.build_options
+
+Configuration
+=============
+
+.. automodule:: sympy.polys.polyconfig
+
+.. autofunction:: sympy.polys.polyconfig.setup
+
 Exceptions
 ==========
 
@@ -713,30 +626,54 @@ TODO sort and explain
 .. currentmodule:: sympy.polys.polyerrors
 
 .. autoclass:: BasePolynomialError
+   :members:
 
 .. autoclass:: ExactQuotientFailed
+   :members:
 .. autoclass:: OperationNotSupported
+   :members:
 .. autoclass:: HeuristicGCDFailed
+   :members:
 .. autoclass:: HomomorphismFailed
+   :members:
 .. autoclass:: IsomorphismFailed
+   :members:
 .. autoclass:: ExtraneousFactors
+   :members:
 .. autoclass:: EvaluationFailed
+   :members:
 .. autoclass:: RefinementFailed
+   :members:
 .. autoclass:: CoercionFailed
+   :members:
 .. autoclass:: NotInvertible
+   :members:
 .. autoclass:: NotReversible
+   :members:
 .. autoclass:: NotAlgebraic
+   :members:
 .. autoclass:: DomainError
+   :members:
 .. autoclass:: PolynomialError
+   :members:
 .. autoclass:: UnificationFailed
+   :members:
 .. autoclass:: GeneratorsNeeded
+   :members:
 .. autoclass:: ComputationFailed
+   :members:
 .. autoclass:: GeneratorsError
+   :members:
 .. autoclass:: UnivariatePolynomialError
+   :members:
 .. autoclass:: MultivariatePolynomialError
+   :members:
 .. autoclass:: PolificationFailed
+   :members:
 .. autoclass:: OptionError
+   :members:
 .. autoclass:: FlagError
+   :members:
 
 Reference
 =========
@@ -749,6 +686,7 @@ Modular GCD
 .. autofunction:: modgcd_univariate
 .. autofunction:: modgcd_bivariate
 .. autofunction:: modgcd_multivariate
+.. autofunction:: _modgcd_multivariate_p
 .. autofunction:: func_field_modgcd
 
 Undocumented

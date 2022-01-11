@@ -5,7 +5,7 @@ from sympy.physics.mechanics.functions import find_dynamicsymbols
 __all__ = ['SymbolicSystem']
 
 
-class SymbolicSystem(object):
+class SymbolicSystem:
     """SymbolicSystem is a class that contains all the information about a
     system in a symbolic format such as the equations of motions and the bodies
     and loads in the system.
@@ -263,9 +263,9 @@ class SymbolicSystem(object):
 
         # Change the body and loads iterables to tuples if they are not tuples
         # already
-        if type(bodies) != tuple and bodies is not None:
+        if not isinstance(bodies, tuple) and bodies is not None:
             bodies = tuple(bodies)
-        if type(loads) != tuple and loads is not None:
+        if not isinstance(loads, tuple) and loads is not None:
             loads = tuple(loads)
         self._bodies = bodies
         self._loads = loads
@@ -363,13 +363,13 @@ class SymbolicSystem(object):
         calculation can potentially take awhile to compute."""
         if self._comb_explicit_rhs is not None:
             raise AttributeError("comb_explicit_rhs is already formed.")
+
+        inter1 = getattr(self, 'kin_explicit_rhs', None)
+        if inter1 is not None:
+            inter2 = self._dyn_implicit_mat.LUsolve(self._dyn_implicit_rhs)
+            out = inter1.col_join(inter2)
         else:
-            try:
-                inter1 = self.kin_explicit_rhs
-                inter2 = self._dyn_implicit_mat.LUsolve(self._dyn_implicit_rhs)
-                out = inter1.col_join(inter2)
-            except AttributeError:
-                out = self._comb_implicit_mat.LUsolve(self._comb_implicit_rhs)
+            out = self._comb_implicit_mat.LUsolve(self._comb_implicit_rhs)
 
         self._comb_explicit_rhs = out
 

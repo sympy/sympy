@@ -2,8 +2,10 @@ from sympy.categories import (Object, Morphism, IdentityMorphism,
                               NamedMorphism, CompositeMorphism,
                               Diagram, Category)
 from sympy.categories.baseclasses import Class
-from sympy.utilities.pytest import raises
-from sympy import FiniteSet, EmptySet, Dict, Tuple
+from sympy.testing.pytest import raises
+from sympy.core.containers import (Dict, Tuple)
+from sympy.sets import EmptySet
+from sympy.sets.sets import FiniteSet
 
 
 def test_morphisms():
@@ -92,7 +94,7 @@ def test_diagram():
     id_A = IdentityMorphism(A)
     id_B = IdentityMorphism(B)
 
-    empty = EmptySet()
+    empty = EmptySet
 
     # Test the addition of identities.
     d1 = Diagram([f])

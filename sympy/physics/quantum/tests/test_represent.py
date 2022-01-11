@@ -1,6 +1,7 @@
-from sympy import Float, I, Integer, Matrix
+from sympy.core.numbers import (Float, I, Integer)
+from sympy.matrices.dense import Matrix
 from sympy.external import import_module
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.represent import (represent, rep_innerproduct,
@@ -132,7 +133,7 @@ def test_scalar_numpy():
     assert represent(1.0 + I, format='numpy') == 1.0 + 1.0j
 
 
-scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+scipy = import_module('scipy', import_kwargs={'fromlist': ['sparse']})
 
 
 def test_format_scipy_sparse():

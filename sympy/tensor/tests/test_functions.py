@@ -1,6 +1,8 @@
 from sympy.tensor.functions import TensorProduct
-from sympy import MatrixSymbol, Matrix, Array
-from sympy.abc import x, y, z, t
+from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.tensor.array import Array
+from sympy.abc import x, y, z
 from sympy.abc import i, j, k, l
 
 

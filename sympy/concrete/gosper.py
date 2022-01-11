@@ -1,16 +1,18 @@
 """Gosper's algorithm for hypergeometric summation. """
-from __future__ import print_function, division
 
 from sympy.core import S, Dummy, symbols
-from sympy.core.compatibility import is_sequence, range
 from sympy.polys import Poly, parallel_poly_from_expr, factor
 from sympy.solvers import solve
 from sympy.simplify import hypersimp
+from sympy.utilities.iterables import is_sequence
 
 
 def gosper_normal(f, g, n, polys=True):
     r"""
     Compute the Gosper's normal form of ``f`` and ``g``.
+
+    Explanation
+    ===========
 
     Given relatively prime univariate polynomials ``f`` and ``g``,
     rewrite their quotient to a normal form defined as follows:
@@ -84,6 +86,9 @@ def gosper_term(f, n):
     r"""
     Compute Gosper's hypergeometric term for ``f``.
 
+    Explanation
+    ===========
+
     Suppose ``f`` is a hypergeometric term such that:
 
     .. math::
@@ -96,7 +101,7 @@ def gosper_term(f, n):
     ========
 
     >>> from sympy.concrete.gosper import gosper_term
-    >>> from sympy.functions import factorial
+    >>> from sympy import factorial
     >>> from sympy.abc import n
 
     >>> gosper_term((4*n + 1)*factorial(n)/factorial(2*n + 1), n)
@@ -120,7 +125,7 @@ def gosper_term(f, n):
     if (N != M) or (A.LC() != B.LC()):
         D = {K - max(N, M)}
     elif not N:
-        D = {K - N + 1, S(0)}
+        D = {K - N + 1, S.Zero}
     else:
         D = {K - N + 1, (B.nth(N - 1) - A.nth(N - 1))/A.LC()}
 
@@ -150,7 +155,7 @@ def gosper_term(f, n):
         if coeff not in solution:
             x = x.subs(coeff, 0)
 
-    if x is S.Zero:
+    if x.is_zero:
         return None    # 'f(n)' is *not* Gosper-summable
     else:
         return B.as_expr()*x/C.as_expr()
@@ -160,21 +165,24 @@ def gosper_sum(f, k):
     r"""
     Gosper's hypergeometric summation algorithm.
 
+    Explanation
+    ===========
+
     Given a hypergeometric term ``f`` such that:
 
     .. math ::
         s_n = \sum_{k=0}^{n-1} f_k
 
     and `f(n)` doesn't depend on `n`, returns `g_{n} - g(0)` where
-    `g_{n+1} - g_n = f_n`, or ``None`` if `s_n` can not be expressed
+    `g_{n+1} - g_n = f_n`, or ``None`` if `s_n` cannot be expressed
     in closed form as a sum of hypergeometric terms.
 
     Examples
     ========
 
     >>> from sympy.concrete.gosper import gosper_sum
-    >>> from sympy.functions import factorial
-    >>> from sympy.abc import i, n, k
+    >>> from sympy import factorial
+    >>> from sympy.abc import n, k
 
     >>> f = (4*k + 1)*factorial(k)/factorial(2*k + 1)
     >>> gosper_sum(f, (k, 0, n))

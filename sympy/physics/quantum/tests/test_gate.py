@@ -1,6 +1,9 @@
-from sympy import exp, symbols, sqrt, I, pi, Mul, Integer, Wild
-from sympy.core.compatibility import range
-from sympy.matrices import Matrix
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Integer, Rational, pi)
+from sympy.core.symbol import (Wild, symbols)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices import Matrix, ImmutableMatrix
 
 from sympy.physics.quantum.gate import (XGate, YGate, ZGate, random_circuit,
         CNOT, IdentityGate, H, X, Y, S, T, Z, SwapGate, gate_simp, gate_sort,
@@ -133,6 +136,20 @@ def test_UGate_CGate_combo():
         assert u2Rep*qubit_to_matrix(IntQubit(i, 2)) == \
             qubit_to_matrix(qapply(u2*IntQubit(i, 2)))
 
+def test_UGate_OneQubitGate_combo():
+    v, w, f, g = symbols('v w f g')
+    uMat1 = ImmutableMatrix([[v, w], [f, g]])
+    cMat1 = Matrix([[v, w + 1, 0, 0], [f + 1, g, 0, 0], [0, 0, v, w + 1], [0, 0, f + 1, g]])
+    u1 = X(0) + UGate(0, uMat1)
+    assert represent(u1, nqubits=2) == cMat1
+
+    uMat2 = ImmutableMatrix([[1/sqrt(2), 1/sqrt(2)], [I/sqrt(2), -I/sqrt(2)]])
+    cMat2_1 = Matrix([[Rational(1, 2) + I/2, Rational(1, 2) - I/2],
+                      [Rational(1, 2) - I/2, Rational(1, 2) + I/2]])
+    cMat2_2 = Matrix([[1, 0], [0, I]])
+    u2 = UGate(0, uMat2)
+    assert represent(H(0)*u2, nqubits=1) == cMat2_1
+    assert represent(u2*H(0), nqubits=1) == cMat2_2
 
 def test_represent_hadamard():
     """Test the representation of the hadamard gate."""

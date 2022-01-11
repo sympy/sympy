@@ -1,17 +1,14 @@
-# -*- coding: utf-8 -*-
-from __future__ import print_function, division
+from typing import Dict as tDict, List
 
-from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence, as_int, string_types
+from sympy.core import S
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.sympify import CantSympify
-from sympy.core import S
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
-from sympy.utilities.iterables import flatten
+from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.magic import pollute
-from sympy import sign
+from sympy.utilities.misc import as_int
 
 
 @public
@@ -19,7 +16,8 @@ def free_group(symbols):
     """Construct a free group returning ``(FreeGroup, (f_0, f_1, ..., f_(n-1))``.
 
     Parameters
-    ----------
+    ==========
+
     symbols : str, Symbol/Expr or sequence of str, Symbol/Expr (may be empty)
 
     Examples
@@ -43,7 +41,8 @@ def xfree_group(symbols):
     """Construct a free group returning ``(FreeGroup, (f_0, f_1, ..., f_(n-1)))``.
 
     Parameters
-    ----------
+    ==========
+
     symbols : str, Symbol/Expr or sequence of str, Symbol/Expr (may be empty)
 
     Examples
@@ -68,7 +67,8 @@ def vfree_group(symbols):
     into the global namespace.
 
     Parameters
-    ----------
+    ==========
+
     symbols : str, Symbol/Expr or sequence of str, Symbol/Expr (may be empty)
 
     Examples
@@ -77,7 +77,7 @@ def vfree_group(symbols):
     >>> from sympy.combinatorics.free_groups import vfree_group
     >>> vfree_group("x, y, z")
     <free group on the generators (x, y, z)>
-    >>> x**2*y**-2*z
+    >>> x**2*y**-2*z # noqa: F821
     x**2*y**-2*z
     >>> type(_)
     <class 'sympy.combinatorics.free_groups.FreeGroupElement'>
@@ -91,12 +91,12 @@ def vfree_group(symbols):
 def _parse_symbols(symbols):
     if not symbols:
         return tuple()
-    if isinstance(symbols, string_types):
+    if isinstance(symbols, str):
         return _symbols(symbols, seq=True)
     elif isinstance(symbols, Expr or FreeGroupElement):
         return (symbols,)
     elif is_sequence(symbols):
-        if all(isinstance(s, string_types) for s in symbols):
+        if all(isinstance(s, str) for s in symbols):
             return _symbols(symbols)
         elif all(isinstance(s, Expr) for s in symbols):
             return symbols
@@ -109,7 +109,7 @@ def _parse_symbols(symbols):
 #                          FREE GROUP                                        #
 ##############################################################################
 
-_free_group_cache = {}
+_free_group_cache = {}  # type: tDict[int, FreeGroup]
 
 class FreeGroup(DefaultPrinting):
     """
@@ -117,24 +117,24 @@ class FreeGroup(DefaultPrinting):
     is that of a str, Symbol/Expr or a sequence of one of
     these types (which may be empty)
 
-    References
-    ==========
-
-    [1] http://www.gap-system.org/Manuals/doc/ref/chap37.html
-
-    [2] https://en.wikipedia.org/wiki/Free_group
-
     See Also
     ========
 
     sympy.polys.rings.PolyRing
+
+    References
+    ==========
+
+    .. [1] http://www.gap-system.org/Manuals/doc/ref/chap37.html
+
+    .. [2] https://en.wikipedia.org/wiki/Free_group
 
     """
     is_associative = True
     is_group = True
     is_FreeGroup = True
     is_PermutationGroup = False
-    relators = tuple()
+    relators = []  # type: List[Expr]
 
     def __new__(cls, symbols):
         symbols = tuple(_parse_symbols(symbols))
@@ -250,7 +250,7 @@ class FreeGroup(DefaultPrinting):
 
         """
         if self.rank == 0:
-            return 1
+            return S.One
         else:
             return S.Infinity
 
@@ -273,7 +273,7 @@ class FreeGroup(DefaultPrinting):
             return {self.identity}
         else:
             raise ValueError("Group contains infinitely many elements"
-                            ", hence can't be represented")
+                            ", hence cannot be represented")
 
     @property
     def rank(self):
@@ -282,7 +282,7 @@ class FreeGroup(DefaultPrinting):
         can refer to the smallest cardinality of a generating set
         for G, that is
 
-        \operatorname{rank}(G)=\min\{ |X|: X\subseteq G, \langle X\rangle =G\}.
+        \operatorname{rank}(G)=\min\{ |X|: X\subseteq G, \left\langle X\right\rangle =G\}.
 
         """
         return self._rank
@@ -300,10 +300,7 @@ class FreeGroup(DefaultPrinting):
         False
 
         """
-        if self.rank == 0 or self.rank == 1:
-            return True
-        else:
-            return False
+        return self.rank in (0, 1)
 
     @property
     def identity(self):
@@ -343,7 +340,7 @@ class FreeGroup(DefaultPrinting):
 
 
 class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
-    """Used to create elements of FreeGroup. It can not be used directly to
+    """Used to create elements of FreeGroup. It cannot be used directly to
     create a free group element. It is called by the `dtype` method of the
     `FreeGroup` class.
 
@@ -380,12 +377,12 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         size of each tuple is two. At the first position the tuple
         contains the `symbol-generator`, while at the second position
         of tuple contains the exponent of that generator at the position.
-        Since elements (i.e. words) don't commute, the indexing of tuple
+        Since elements (i.e. words) do not commute, the indexing of tuple
         makes that property to stay.
 
         The structure in ``array_form`` of ``FreeGroupElement`` is of form:
 
-        ``( ( symbol_of_gen , exponent ), ( , ), ... ( , ) )``
+        ``( ( symbol_of_gen, exponent ), ( , ), ... ( , ) )``
 
         Examples
         ========
@@ -469,7 +466,6 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         if self.is_identity:
             return "<identity>"
 
-        symbols = self.group.symbols
         str_form = ""
         array_form = self.array_form
         for i in range(len(array_form)):
@@ -534,23 +530,19 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         zero_mul_simp(r, len(self.array_form) - 1)
         return group.dtype(tuple(r))
 
-    def __div__(self, other):
+    def __truediv__(self, other):
         group = self.group
         if not isinstance(other, group.dtype):
             raise TypeError("only FreeGroup elements of same FreeGroup can "
                     "be multiplied")
         return self*(other.inverse())
 
-    def __rdiv__(self, other):
+    def __rtruediv__(self, other):
         group = self.group
         if not isinstance(other, group.dtype):
             raise TypeError("only FreeGroup elements of same FreeGroup can "
                     "be multiplied")
         return other*(self.inverse())
-
-    __truediv__ = __div__
-
-    __rtruediv__ = __rdiv__
 
     def __add__(self, other):
         return NotImplemented
@@ -587,7 +579,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         if self.is_identity:
-            return 1
+            return S.One
         else:
             return S.Infinity
 
@@ -658,7 +650,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         substituted_word
 
         """
-        if by == None:
+        if by is None:
             by = self.group.identity
         if self.is_independent(gen) or gen == by:
             return self
@@ -842,6 +834,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         See Also
         ========
+
         generator_count
 
         """
@@ -870,6 +863,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         See Also
         ========
+
         exponent_sum
 
         """
@@ -953,15 +947,16 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         See Also
         ========
+
         is_independent
 
         """
         try:
-            return self.subword_index(word) != None
+            return self.subword_index(word) is not None
         except ValueError:
             pass
         try:
-            return self.subword_index(word**-1) != None
+            return self.subword_index(word**-1) is not None
         except ValueError:
             return False
 
@@ -970,6 +965,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         See Also
         ========
+
         is_dependent
 
         """
@@ -1012,11 +1008,6 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
     def cyclic_conjugates(self):
         """Returns a words which are cyclic to the word `self`.
 
-        References
-        ==========
-
-        http://planetmath.org/cyclicpermutation
-
         Examples
         ========
 
@@ -1028,6 +1019,11 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         >>> s = x*y*x**2*y*x
         >>> s.cyclic_conjugates()
         {x**2*y*x**2*y, y*x**2*y*x**2, x*y*x**2*y*x}
+
+        References
+        ==========
+
+        .. [1] http://planetmath.org/cyclicpermutation
 
         """
         return {self.cyclic_subword(i, i+len(self)) for i in range(len(self))}
@@ -1153,6 +1149,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         See Also
         ========
+
         eliminate_word
 
         """
@@ -1176,7 +1173,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         r"""Returns whether the word is cyclically reduced or not.
         A word is cyclically reduced if by forming the cycle of the
         word, the word is not reduced, i.e a word w = `a_1 ... a_n`
-        is called cyclically reduced if `a_1 \ne a_n^{−1}`.
+        is called cyclically reduced if `a_1 \ne a_n^{-1}`.
 
         Examples
         ========
@@ -1209,7 +1206,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         References
         ==========
 
-        http://planetmath.org/cyclicallyreduced
+        .. [1] http://planetmath.org/cyclicallyreduced
 
         """
         word = self.copy()
@@ -1234,7 +1231,7 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
         `identity_cyclic_reduction`.
 
         When `removed` is `True`, return a tuple `(word, r)` where
-        self `r` is such that before the reductin the word was either
+        self `r` is such that before the reduction the word was either
         `r*word*r**-1`.
 
         Examples
@@ -1251,7 +1248,6 @@ class FreeGroupElement(CantSympify, DefaultPrinting, tuple):
 
         """
         word = self.copy()
-        group = self.group
         g = self.group.identity
         while not word.is_cyclically_reduced():
             exp1 = abs(word.exponent_syllable(0))
@@ -1348,7 +1344,7 @@ def letter_form_to_array_form(array_form, group):
 
 def zero_mul_simp(l, index):
     """Used to combine two reduced words."""
-    while index >=0 and index < len(l) - 1 and l[index][0] is l[index + 1][0]:
+    while index >=0 and index < len(l) - 1 and l[index][0] == l[index + 1][0]:
         exp = l[index][1] + l[index + 1][1]
         base = l[index][0]
         l[index] = (base, exp)

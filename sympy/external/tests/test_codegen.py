@@ -21,10 +21,8 @@
 # incorporation in various projects. The tests below assume that the binary cc
 # is somewhere in the path and that it can compile ANSI C code.
 
-from __future__ import print_function
-
 from sympy.abc import x, y, z
-from sympy.utilities.pytest import skip
+from sympy.testing.pytest import skip
 from sympy.utilities.codegen import codegen, make_routine, get_code_generator
 import sys
 import os
@@ -141,7 +139,7 @@ def run_test(label, routines, numerical_tests, language, commands, friendly=True
     assert language in main_template
     assert language in numerical_test_template
 
-    # Check that evironment variable makes sense
+    # Check that environment variable makes sense
     clean = os.getenv('SYMPY_TEST_CLEAN_TEMP', 'always').lower()
     if clean not in ('always', 'success', 'never'):
         raise ValueError("SYMPY_TEST_CLEAN_TEMP must be one of the following: 'always', 'success' or 'never'.")
@@ -306,8 +304,13 @@ def test_basic_codegen():
 
 def test_intrinsic_math1_codegen():
     # not included: log10
-    from sympy import acos, asin, atan, ceiling, cos, cosh, floor, log, ln, \
-        sin, sinh, sqrt, tan, tanh, N
+    from sympy.core.evalf import N
+    from sympy.functions import ln
+    from sympy.functions.elementary.exponential import log
+    from sympy.functions.elementary.hyperbolic import (cosh, sinh, tanh)
+    from sympy.functions.elementary.integers import (ceiling, floor)
+    from sympy.functions.elementary.miscellaneous import sqrt
+    from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, tan)
     name_expr = [
         ("test_fabs", abs(x)),
         ("test_acos", acos(x)),
@@ -339,7 +342,8 @@ def test_intrinsic_math1_codegen():
 
 def test_instrinsic_math2_codegen():
     # not included: frexp, ldexp, modf, fmod
-    from sympy import atan2, N
+    from sympy.core.evalf import N
+    from sympy.functions.elementary.trigonometric import atan2
     name_expr = [
         ("test_atan2", atan2(x, y)),
         ("test_pow", x**y),
@@ -354,7 +358,8 @@ def test_instrinsic_math2_codegen():
 
 
 def test_complicated_codegen():
-    from sympy import sin, cos, tan, N
+    from sympy.core.evalf import N
+    from sympy.functions.elementary.trigonometric import (cos, sin, tan)
     name_expr = [
         ("test1", ((sin(x) + cos(y) + tan(z))**7).expand()),
         ("test2", cos(cos(cos(cos(cos(cos(cos(cos(x + y + z))))))))),

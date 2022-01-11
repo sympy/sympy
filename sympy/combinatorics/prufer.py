@@ -1,8 +1,9 @@
-from __future__ import print_function, division
-
 from sympy.core import Basic
-from sympy.core.compatibility import iterable, as_int, range
-from sympy.utilities.iterables import flatten
+from sympy.core.containers import Tuple
+from sympy.tensor.array import Array
+from sympy.core.sympify import _sympify
+from sympy.utilities.iterables import flatten, iterable
+from sympy.utilities.misc import as_int
 
 from collections import defaultdict
 
@@ -207,7 +208,7 @@ class Prufer(Basic):
         References
         ==========
 
-        - https://hamberg.no/erlend/posts/2010-11-06-prufer-sequence-compact-tree-representation.html
+        .. [1] https://hamberg.no/erlend/posts/2010-11-06-prufer-sequence-compact-tree-representation.html
 
         See Also
         ========
@@ -361,6 +362,8 @@ class Prufer(Basic):
         [[0, 1], [1, 3], [2, 3]]
 
         """
+        arg0 = Array(args[0]) if args[0] else Tuple()
+        args = (arg0,) + tuple(_sympify(arg) for arg in args[1:])
         ret_obj = Basic.__new__(cls, *args, **kw_args)
         args = [list(args[0])]
         if args[0] and iterable(args[0][0]):

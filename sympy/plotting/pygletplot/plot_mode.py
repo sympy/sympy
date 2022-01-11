@@ -1,11 +1,10 @@
-from __future__ import print_function, division
-
-from sympy import Symbol, sympify
-from plot_interval import PlotInterval
-from plot_object import PlotObject
-from util import parse_option_string
+from .plot_interval import PlotInterval
+from .plot_object import PlotObject
+from .util import parse_option_string
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
 from sympy.geometry.entity import GeometryEntity
-from sympy.core.compatibility import is_sequence, range
+from sympy.utilities.iterables import is_sequence
 
 
 class PlotMode(PlotObject):
@@ -168,7 +167,7 @@ class PlotMode(PlotObject):
             i_vars = i
         try:
             return PlotMode._mode_default_map[d][i]
-        except TypeError:
+        except KeyError:
             # Keep looking for modes in higher i var counts
             # which support the given d var count until we
             # reach the max i_var count.
