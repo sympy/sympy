@@ -117,10 +117,6 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         return exprbuffer.getvalue().decode('utf-8')
 
     def _matplotlib_wrapper(o):
-        # mathtext does not understand certain latex flags, so we try to
-        # replace them with suitable subs
-        o = o.replace(r'\operatorname', '')
-        o = o.replace(r'\overline', r'\bar')
         # mathtext can't render some LaTeX commands. For example, it can't
         # render any LaTeX environments such as array or matrix. So here we
         # ensure that if mathtext fails to render, we return None.
