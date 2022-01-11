@@ -97,7 +97,7 @@ def field_isomorphism_pslq(a, b):
         basis = [1, B] + [ B**i for i in range(2, m) ] + [-A]
 
         ctx.dps = n
-        coeffs = ctx.pslq(basis, maxcoeff=int(1e10), maxsteps=1000)
+        coeffs = ctx.pslq(basis, maxcoeff=10**10, maxsteps=1000)
 
         if coeffs is None:
             # PSLQ can't find an integer linear combination. Give up.
