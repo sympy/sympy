@@ -14,7 +14,6 @@ from sympy.core.evalf import pure_complex, fastlog10_for_expr
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.numbers import ilcm, I, Integer, Rational
-from sympy.core.power import isqrt
 from sympy.core.relational import Relational, Equality
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
@@ -3837,42 +3836,40 @@ class Poly(Basic):
 
         return 1/lb_inv, ub
 
-    def root_separation_lower_bound(f):
+    def root_separation_lower_bound_squared(f):
         """
-        Compute a lower bound on the minimum distance between any two
-        roots of this polynomial.
+        Compute a lower bound on the square of the minimum distance between any
+        two roots of this polynomial.
 
         Examples
         ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
-        >>> Poly(x**2 - 2).root_separation_lower_bound()
-        1
-        >>> (x * Poly(x**2 - 2)).root_separation_lower_bound()
-        12/17
+        >>> Poly(x**2 - 2).root_separation_lower_bound_squared()
+        8/9
+        >>> (x * Poly(x**2 - 2)).root_separation_lower_bound_squared()
+        8/17
 
         Returns
         =======
 
         :py:class:`~.Expr`
             A non-negative lower bound which will be positive if all the roots
-            are distinct, and rational if the coefficients of the polynomial
-            are rational.
+            are distinct.
 
         Raises
         ======
 
         DomainError
-            If the domain of the polynomial is not a subring of the complex
-            numbers.
+            If the domain of the polynomial is not :ref:`ZZ` or :ref:`QQ`.
         MultivariatePolynomialError
             If the polynomial is not univariate.
 
         """
         dom = f.get_domain()
-        if dom.is_FiniteField or not dom.is_Numerical:
-            raise DomainError("Cannot compute root bounds over %s" % dom)
+        if not (dom.is_IntegerRing or dom.is_RationalField):
+            raise DomainError("Only polys over QQ and ZZ are supported.")
         if f.is_multivariate:
             raise MultivariatePolynomialError(
                 "Must be a univariate polynomial")
@@ -3891,13 +3888,10 @@ class Poly(Basic):
 
         lb, _ = h.root_bounds()
 
-        # Since h is an even function, can improve bound with square root.
-        if lb.is_rational:
-            # Preserve rational bound
-            return Rational(isqrt(lb.p*lb.q) + 1, lb.q)
-        else:
-            from sympy.functions.elementary.miscellaneous import sqrt
-            return sqrt(lb)
+        # Since h is an even function, the square root of lb is actually a
+        # lower bound on the separation of roots. So lb is a lower bound on
+        # the squared separation.
+        return lb
 
     def root_comparison_tools(f):
         """

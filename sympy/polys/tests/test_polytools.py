@@ -3004,7 +3004,7 @@ def test_root_separation_lower_bound():
         x ** 2 + x + 1,
     ]:
         f = Poly(e)
-        eps = f.root_separation_lower_bound()
+        eps = f.root_separation_lower_bound_squared()
         assert eps.is_rational
 
         roots = f.all_roots()
@@ -3012,18 +3012,14 @@ def test_root_separation_lower_bound():
         for i, r in enumerate(roots):
             for s in roots[i+1:]:
                 seps.add(abs(r.evalf() - s.evalf()))
-        assert eps <= min(seps)
-
-    f = Poly(x**2 - sqrt(2), extension=sqrt(2))
-    eps = f.root_separation_lower_bound()
-    assert eps <= 2*2**(1/4)
+        assert eps <= min(seps)**2
 
     raises(DomainError,
-           lambda: Poly(x + 1, domain=FF(7)).root_separation_lower_bound())
+           lambda: Poly(x + 1, domain=FF(7)).root_separation_lower_bound_squared())
     raises(DomainError,
-           lambda: Poly(y * x + 1, domain=ZZ[y]).root_separation_lower_bound())
+           lambda: Poly(y * x + 1, domain=ZZ[y]).root_separation_lower_bound_squared())
     raises(MultivariatePolynomialError,
-           lambda: Poly(x * y + 1, domain=ZZ).root_separation_lower_bound())
+           lambda: Poly(x * y + 1, domain=ZZ).root_separation_lower_bound_squared())
 
 
 def test_root_comparison_tools():
