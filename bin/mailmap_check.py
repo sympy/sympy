@@ -79,7 +79,7 @@ def main(*args):
         email = key(person)
         dups[email].append(person)
         if email not in who:
-            print(red("This author is not included in the .mailmap file:"""))
+            print(red("This author is not included in the .mailmap file:"))
             print(person)
             missing = True
         elif not any(p.startswith(person) for p in who[email]):
