@@ -27,9 +27,9 @@ from sympy.printing.str import sstr
 from sympy.simplify.simplify import simplify
 from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
-    scaled_zero, get_integer_part, as_mpmath, evalf, fastlog10_for_expr)
-from mpmath import inf, ninf
-from mpmath.libmp.libmpf import from_float
+    scaled_zero, get_integer_part, as_mpmath, evalf, evalf_with_bounded_error)
+from mpmath import inf, ninf, make_mpc
+from mpmath.libmp.libmpf import from_float, fzero
 from sympy.core.expr import unchanged
 from sympy.testing.pytest import raises, XFAIL
 from sympy.abc import n, x, y
@@ -51,23 +51,6 @@ def test_evalf_helpers():
     assert complex_accuracy(finf) == math.inf
     assert complex_accuracy(zoo) == math.inf
     raises(ValueError, lambda: get_integer_part(zoo, 1, {}))
-
-
-def test_fastlog10_for_expr():
-    cases = [
-        Rational(1, 123),
-        -Rational(1, 123),
-        Rational(1234),
-        -Rational(1234),
-        Rational(9999),
-        -Rational(9999),
-        Rational(10**15 + 1, 10**15),
-        -Rational(10**15 + 1, 10**15),
-        sqrt(2),
-        5 + 5*I,
-    ]
-    for v in cases:
-        assert 10**fastlog10_for_expr(v) > abs(v)
 
 
 def test_evalf_basic():
@@ -675,3 +658,38 @@ def test_evalf_with_zoo():
     assert log(zoo, evaluate=False).evalf() == zoo
     assert zoo.evalf(chop=True) == zoo
     assert x.evalf(subs={x: zoo}) == zoo
+
+
+def test_evalf_with_bounded_error():
+    cases = [
+        # zero
+        (Rational(0), None, 1),
+        # zero im part
+        (pi, None, 10),
+        # zero real part
+        (pi*I, None, 10),
+        # re and im nonzero
+        (2-3*I, None, 5),
+        # similar tests again, but using eps instead of m
+        (Rational(0), Rational(1, 2), None),
+        (pi, Rational(1, 1000), None),
+        (pi * I, Rational(1, 1000), None),
+        (2 - 3 * I, Rational(1, 1000), None),
+        # very large eps
+        (2 - 3 * I, Rational(1000), None),
+        # case where x already small, hence some cancelation in p = m + n - 1
+        (Rational(1234, 10**8), Rational(1, 10**12), None),
+    ]
+    for x, eps, m in cases:
+        a, b, _, _ = evalf(x, 53, {})
+        c, d, _, _ = evalf_with_bounded_error(x, eps, m)
+        if eps is None:
+            eps = 2**(-m)
+        z = make_mpc((a or fzero, b or fzero))
+        w = make_mpc((c or fzero, d or fzero))
+        assert abs(w - z) < eps
+
+    # eps must be positive
+    raises(ValueError, lambda: evalf_with_bounded_error(pi, Rational(0)))
+    raises(ValueError, lambda: evalf_with_bounded_error(pi, -pi))
+    raises(ValueError, lambda: evalf_with_bounded_error(pi, I))
