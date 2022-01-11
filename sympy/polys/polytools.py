@@ -3793,15 +3793,13 @@ class Poly(Basic):
         =======
 
         Pair ``(lb, ub)`` of :py:class:`~.Expr`
-            Gives the lower bound and upper bound. These bounds will be
-            rational if the domain of the polynomial is :ref:`ZZ` or :ref:`QQ`.
+            Gives the lower bound and upper bound.
 
         Raises
         ======
 
         DomainError
-            If the domain of the polynomial is not a subring of the complex
-            numbers.
+            If the domain of the polynomial is not :ref:`ZZ` or :ref:`QQ`.
         MultivariatePolynomialError
             If the polynomial is not univariate.
         PolynomialError
@@ -3811,27 +3809,31 @@ class Poly(Basic):
         Notes
         =====
 
-        The domain of the polynomial must be a subring of the complex numbers.
         We use the `Cauchy bound`_.
 
         .. _Cauchy bound: https://en.wikipedia.org/wiki/Geometrical_properties_of_polynomial_roots#Lagrange's_and_Cauchy's_bounds
 
         """
         dom = f.get_domain()
-        if dom.is_FiniteField or not dom.is_Numerical:
-            raise DomainError("Cannot compute root bounds over %s" % dom)
+        if not (dom.is_IntegerRing or dom.is_RationalField):
+            raise DomainError("Only polys over QQ and ZZ are supported.")
         if f.is_multivariate:
             raise MultivariatePolynomialError(
                 "Must be a univariate polynomial")
         if f.is_monomial:
             raise PolynomialError("Monomial has no nonzero roots")
 
-        coeffs = f.all_coeffs()
-        while coeffs[-1] == 0:
+        ff = f.to_field()
+        coeffs = ff.rep.rep
+        while ff.domain.is_zero(coeffs[-1]):
             coeffs.pop()
         lc, tc = coeffs[0], coeffs[-1]
-        ub = 1 + max(abs(n / lc) for n in coeffs[1:])
-        lb_inv = 1 + max(abs(n / tc) for n in coeffs[:-1])
+
+        dom_ub = 1 + max(abs(n / lc) for n in coeffs[1:])
+        dom_lb_inv = 1 + max(abs(n / tc) for n in coeffs[:-1])
+
+        ub = ff.domain.to_sympy(dom_ub)
+        lb_inv = ff.domain.to_sympy(dom_lb_inv)
 
         return 1/lb_inv, ub
 

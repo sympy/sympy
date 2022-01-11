@@ -2985,12 +2985,9 @@ def test_root_bounds():
         g = x * f
         assert g.root_bounds() == (lb, ub)
 
-    for c0 in [2, 1e10, 1e-10, -5, 5 + 12*I]:
+    for c0 in [2, -5, Rational(1, 2), Rational(-3, 8)]:
         f = Poly(x**2 - c0)
         check(f, c0)
-
-    f = Poly(x**2 - sqrt(2), extension=sqrt(2))
-    check(f, sqrt(2))
 
     raises(DomainError, lambda: Poly(x + 1, domain=FF(7)).root_bounds())
     raises(DomainError, lambda: Poly(y*x + 1, domain=ZZ[y]).root_bounds())
