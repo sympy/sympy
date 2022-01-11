@@ -186,12 +186,8 @@ If you installed the build dependencies locally, then simply use::
    cd doc
    make livehtml
 
-to start the server. In your terminal you should see a line that looks like::
-
-   [sphinx-autobuild] Serving on http://127.0.0.1:#####
-
-with some numbers giving the port at the end. Copy this address (including the
-port number) and navigate to this address in your web browser.
+to start the server. Your web browser should then automatically open a new tab,
+showing the index page of the SymPy docs.
 
 When you are finished, you can use ``ctrl-c`` in the terminal to stop the
 server.
