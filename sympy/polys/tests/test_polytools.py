@@ -3022,20 +3022,18 @@ def test_root_separation_lower_bound():
            lambda: Poly(x * y + 1, domain=ZZ).root_separation_lower_bound_squared())
 
 
-def test_root_comparison_tools():
+def test_root_equality_test():
     f = Poly(x**4 + x**3 + x**2 + x + 1)
-    eps, evalf_ = f.root_comparison_tools()
+    eq = f.root_equality_test()
     r0 = exp(2 * I * pi / 5)
-    R0 = evalf_(r0)
-    assert [i for i, r in enumerate(f.all_roots())
-            if abs(evalf_(r) - R0) < eps] == [3]
+    assert [i for i, r in enumerate(f.all_roots()) if eq(r, r0)] == [3]
 
     raises(DomainError,
-           lambda: Poly(x + 1, domain=FF(7)).root_comparison_tools())
+           lambda: Poly(x + 1, domain=FF(7)).root_equality_test())
     raises(DomainError,
-           lambda: Poly(y * x + 1, domain=ZZ[y]).root_comparison_tools())
+           lambda: Poly(y * x + 1, domain=ZZ[y]).root_equality_test())
     raises(MultivariatePolynomialError,
-           lambda: Poly(x * y + 1, domain=ZZ).root_comparison_tools())
+           lambda: Poly(x * y + 1, domain=ZZ).root_equality_test())
 
 
 def test_torational_factor_list():

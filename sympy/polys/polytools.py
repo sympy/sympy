@@ -2,6 +2,7 @@
 
 
 from functools import wraps, reduce
+import math
 from operator import mul
 
 from sympy.core import (
@@ -10,7 +11,8 @@ from sympy.core import (
 from sympy.core.basic import Basic
 from sympy.core.decorators import _sympifyit
 from sympy.core.exprtools import Factors, factor_nc, factor_terms
-from sympy.core.evalf import pure_complex, fastlog10_for_expr
+from sympy.core.evalf import (
+    pure_complex, evalf, fastlog, evalf_with_bounded_error, quad_to_mpmath)
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.numbers import ilcm, I, Integer, Rational
@@ -3893,26 +3895,19 @@ class Poly(Basic):
         # the squared separation.
         return lb
 
-    def root_comparison_tools(f):
+    def root_equality_test(f):
         """
-        Produce a threshold ``eps`` and custom evalf function ``evalf_`` such
-        that two roots ``a``, ``b`` of this polynomial must be equal if
-        ``abs(evalf_(a) - evalf_(b)) < eps``.
+        Returns a binary function that efficiently decides whether two roots of
+        this polynomial are equal.
 
         Examples
         ========
 
         >>> from sympy import Poly, cyclotomic_poly, exp, I, pi
         >>> f = Poly(cyclotomic_poly(5))
-        >>> eps, evalf_ = f.root_comparison_tools()
-        >>> print(eps)
-        2/7
+        >>> eq = f.root_equality_test()
         >>> r0 = exp(2*I*pi/5)
-        >>> R0 = evalf_(r0)
-        >>> print(R0)  # doctest: +SKIP
-        0.309 + 0.9511*I
-        >>> check = lambda r: abs(evalf_(r) - R0) < eps
-        >>> indices = [i for i, r in enumerate(f.all_roots()) if check(r)]
+        >>> indices = [i for i, r in enumerate(f.all_roots()) if eq(r, r0)]
         >>> print(indices)
         [3]
 
@@ -3920,27 +3915,33 @@ class Poly(Basic):
         ======
 
         DomainError
-            If the domain of the polynomial is not a subring of the complex
-            numbers.
+            If the domain of the polynomial is not :ref:`ZZ` or :ref:`QQ`.
         MultivariatePolynomialError
             If the polynomial is not univariate.
 
         """
-        delta = f.root_separation_lower_bound()
-        eps = delta / 3
+        delta_sq = f.root_separation_lower_bound_squared()
+        # We have delta_sq = delta**2, where delta is a lower bound on the
+        # minimum separation between any two roots of this polynomial.
+        # Let eps = delta/3, and define eps_sq = eps**2 = delta**2/9.
+        eps_sq = delta_sq / 9
 
-        # Pick n large enough to guarantee 10^n > 1/eps.
-        L = fastlog10_for_expr
-        n = L(1/eps)
+        r, _, _, _ = evalf(1/eps_sq, 1, {})
+        n = fastlog(r)
+        # Then 2^n > 1/eps**2.
+        m = math.ceil(n/2)
+        # Then 2^(-m) < eps.
+        ev = lambda x: quad_to_mpmath(evalf_with_bounded_error(x, m=m))
 
-        # Make a custom evalf function that guarantees rounding error < 10^(-n).
-        # This means we want more than n places to the right of the decimal
-        # point. `L(x)` gets us past any places to the left of the point.
-        evalf_ = lambda x: x.evalf(L(x) + n + 1)
+        # Then for any complex numbers a, b we will have
+        # |a - ev(a)| < eps and |b - ev(b)| < eps.
+        # So if |ev(a) - ev(b)|**2 < eps**2, then
+        # |ev(a) - ev(b)| < eps, hence |a - b| < 3*eps = delta.
+        def eq_test(a, b):
+            A, B = ev(a), ev(b)
+            return (A.real - B.real)**2 + (A.imag - B.imag)**2 < eps_sq
 
-        # Then we will have |a - evalf_(a)| < eps and |b - evalf_(b)| < eps,
-        # so |evalf_(a) - evalf_(b)| < eps implies |a - b| < 3*eps = delta.
-        return eps, evalf_
+        return eq_test
 
     def cancel(f, g, include=False):
         """
