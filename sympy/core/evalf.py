@@ -1086,10 +1086,8 @@ def as_mpmath(x: Any, prec: int, options: OPT_DICT) -> tUnion[mpc, mpf]:
     if isinstance(x, NegativeInfinity):
         return mpf('-inf')
     # XXX
-    re, im, _, _ = evalf(x, prec, options)
-    if im:
-        return mpc(re or fzero, im)
-    return mpf(re)
+    result = evalf(x, prec, options)
+    return quad_to_mpmath(result)
 
 
 def do_integral(expr: 'Integral', prec: int, options: OPT_DICT) -> TMP_RES:
@@ -1557,6 +1555,21 @@ def evalf(x: 'Expr', prec: int, options: OPT_DICT) -> TMP_RES:
     return r
 
 
+def quad_to_mpmath(q):
+    """Turn the quad returned by ``evalf`` into an ``mpf`` or ``mpc``. """
+    if q is S.ComplexInfinity:
+        raise NotImplementedError
+    re, im, _, _ = q
+    if im:
+        if not re:
+            re = fzero
+        return make_mpc((re, im))
+    elif re:
+        return make_mpf(re)
+    else:
+        return make_mpf(fzero)
+
+
 class EvalfMixin:
     """Mixin class adding evalf capability."""
 
@@ -1706,17 +1719,7 @@ class EvalfMixin:
             return make_mpf(self._as_mpf_val(prec))
         try:
             result = evalf(self, prec, {})
-            if result is S.ComplexInfinity:
-                raise NotImplementedError
-            re, im, _, _ = result
-            if im:
-                if not re:
-                    re = fzero
-                return make_mpc((re, im))
-            elif re:
-                return make_mpf(re)
-            else:
-                return make_mpf(fzero)
+            return quad_to_mpmath(result)
         except NotImplementedError:
             v = self._eval_evalf(prec)
             if v is None:
