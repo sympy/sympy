@@ -138,10 +138,10 @@ def field_isomorphism_pslq(a, b):
 def field_isomorphism_factor(a, b):
     """Construct field isomorphism via factorization. """
     _, factors = factor_list(a.minpoly, extension=b)
-    A, eps, evalf_ = None, None, None
+    root_eq = None
     for f, _ in factors:
         if f.degree() == 1:
-            # Any linear factor f(x) represents _some conjugate of_ a in QQ(b).
+            # Any linear factor f(x) represents some conjugate of a in QQ(b).
             # We want to know whether this linear factor represents a itself.
             # Let f = x - c
             c = -f.rep.TC()
@@ -150,12 +150,11 @@ def field_isomorphism_factor(a, b):
             d, terms = len(coeffs) - 1, []
             for i, coeff in enumerate(coeffs):
                 terms.append(coeff*b.root**(d - i))
-            root = Add(*terms)
+            r = Add(*terms)
             # Check whether we got the number a
-            if A is None:
-                eps, evalf_ = a.minpoly.root_comparison_tools()
-                A = evalf_(a)
-            if abs(evalf_(root) - A) < eps:
+            if root_eq is None:
+                root_eq = a.minpoly.root_equality_test()
+            if root_eq(r, a):
                 return coeffs
 
     # If none of the linear factors represented a in QQ(b), then in fact a is
