@@ -3694,4 +3694,19 @@ def nonlinsolve(system, *symbols):
         # Use `substitution` method for the system
         result = substitution(
             polys_expr + nonpolys, symbols, exclude=denominators)
-        return result
+    valid_solns = []
+    idx = 0
+    if isinstance(result, FiniteSet):
+        for soln in result.args:
+            values = dict(zip(symbols, soln))
+            try:
+                if checksol(system, values) != False:
+                    valid_solns.append(soln)
+            except:
+                valid_solns.append(soln)
+            idx += 1
+        if len(valid_solns) > 0:
+            return FiniteSet(*valid_solns)
+        else:
+            return S.EmptySet
+    return result

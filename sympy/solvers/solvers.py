@@ -299,8 +299,8 @@ def checksol(f, symbol, sol=None, **flags):
                 return False
         elif attempt == 1:
             if not val.is_number:
-                if not val.is_constant(*list(sol.keys()), simplify=not minimal):
-                    return False
+                # if not val.is_constant(*list(sol.keys()), simplify=not minimal):
+                #     return False
                 # there are free symbols -- simple expansion might work
                 _, val = val.as_content_primitive()
                 val = _mexpand(val.as_numer_denom()[0], recursive=True)
