@@ -15,7 +15,7 @@ from sympy.core.evalf import (
     pure_complex, evalf, fastlog, evalf_with_bounded_error, quad_to_mpmath)
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
-from sympy.core.numbers import ilcm, I, Integer, Rational
+from sympy.core.numbers import ilcm, I, Integer
 from sympy.core.relational import Relational, Equality
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol

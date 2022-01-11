@@ -680,9 +680,9 @@ def test_evalf_with_bounded_error():
         # case where x already small, hence some cancelation in p = m + n - 1
         (Rational(1234, 10**8), Rational(1, 10**12), None),
     ]
-    for x, eps, m in cases:
-        a, b, _, _ = evalf(x, 53, {})
-        c, d, _, _ = evalf_with_bounded_error(x, eps, m)
+    for x0, eps, m in cases:
+        a, b, _, _ = evalf(x0, 53, {})
+        c, d, _, _ = evalf_with_bounded_error(x0, eps, m)
         if eps is None:
             eps = 2**(-m)
         z = make_mpc((a or fzero, b or fzero))
