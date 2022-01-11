@@ -2095,16 +2095,10 @@ def test_issue_21022():
     (efg, sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
     efg, 16, 8, 8 + sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
     sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16, 8*sqrt(5)),
-    (efg, -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
-    efg, 16, 8, -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16) + 8,
-    sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16, -8*sqrt(5)),
-    (efg, -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16),
-    efg, 16, 8, -sqrt(-16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16)*sqrt(16 + sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16) + 8,
-    sqrt(640 - 128*sqrt(5))*sqrt(128*sqrt(5) + 640)/16, 8*sqrt(5))
     )
 
-    # assert len(res) == len(ans) == 4
-    # assert res == ans
+    assert len(res) == len(ans) == 2
+    assert res == ans
     for result in res.args:
         assert len(result) == 8
 
