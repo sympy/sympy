@@ -10,7 +10,7 @@ SPHINXBUILD  = sphinx-build
 PAPER        =
 BUILDDIR     = _build
 SOURCEDIR    = src
-LIVEHOST     = 127.0.0.1
+LIVEHOST     = localhost
 LIVEPORT     = 0
 
 SVGFILES = $(wildcard src/modules/physics/vector/*.svg) $(wildcard src/modules/physics/mechanics/examples/*.svg) $(wildcard src/modules/vector/*.svg)
