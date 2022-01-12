@@ -1784,7 +1784,7 @@ def evalf_with_bounded_error(x: 'Expr', eps: 'Expr' = None, m: int = 0,
 
     """
     if eps is not None:
-        if not eps.is_real or not eps > 0:
+        if not (eps.is_Rational or eps.is_Float) or not eps > 0:
             raise ValueError("eps must be positive")
         r, _, _, _ = evalf(1/eps, 1, {})
         m = fastlog(r)
