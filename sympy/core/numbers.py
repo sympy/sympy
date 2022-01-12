@@ -2681,7 +2681,7 @@ class AlgebraicNumber(Expr):
         ...                  [-1, -1, 0, 0], alias=zeta)
         >>> a5.as_poly().as_expr()
         -zeta**3 - zeta**2
-        >>> a5.evalf()
+        >>> a5.evalf(chop=True)
         1.61803398874989
 
         (The index ``-1`` to ``CRootOf`` selects the complex root with the
