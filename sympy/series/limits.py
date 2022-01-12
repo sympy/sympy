@@ -160,6 +160,7 @@ def _limit_for_symbolic_point(expr, z0, cdir):
     from sympy.core.relational import Eq
     from sympy.functions.elementary.piecewise import Piecewise
     from sympy.sets.sets import FiniteSet
+
     if isinstance(singularities(expr, z0), FiniteSet):
         piecewise_list = []
         if cdir == 1:
@@ -168,10 +169,9 @@ def _limit_for_symbolic_point(expr, z0, cdir):
             dir = "-"
         elif cdir == 0:
             conditions = []
-            dir = "-"
             left_limit = _limit_for_symbolic_point(expr, z0, -1)
-            dir = "+"
             right_limit = _limit_for_symbolic_point(expr, z0, +1)
+
             for LHL, RHL in zip(left_limit.args, right_limit.args):
                 if LHL != RHL:
                     conditions.append(LHL[1])
@@ -184,8 +184,9 @@ def _limit_for_symbolic_point(expr, z0, cdir):
                     else:
                         new_conditions.append(equality)
                 new_conditions = [cond for cond in new_conditions if cond != Eq(z0, S.NegativeInfinity) and cond != Eq(z0, S.Infinity)]
-                raise ValueError("Limit at following equalities do not exist : %s" % (new_conditions))
+                raise ValueError("Bi-Directional limits at following equalities do not exist : %s" % (new_conditions))
             return left_limit
+
         if limit(expr, z0, S.NegativeInfinity) != expr.subs(z0, S.NegativeInfinity):
             piecewise_list.append((limit(expr, z0, S.NegativeInfinity), Eq(z0, S.NegativeInfinity)))
         for singularity in singularities(expr, z0):
@@ -194,6 +195,7 @@ def _limit_for_symbolic_point(expr, z0, cdir):
             piecewise_list.append((limit(expr, z0, S.Infinity), Eq(z0, S.Infinity)))
         piecewise_list.append((expr,True))
         expr = Piecewise(*piecewise_list)
+
     return expr
 
 

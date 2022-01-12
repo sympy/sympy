@@ -319,6 +319,7 @@ def test_series_AccumBounds():
 
 
 def test_limit_for_symbolic_point():
+    x, z = symbols('x z')
     assert limit(sin(x)/x, x, z) == Piecewise((1, Eq(z, 0)), (sin(z)/z, True))
     assert limit(1/x, x, z) == Piecewise((oo, Eq(z, 0)), (1/z, True))
     assert limit((x**3 + 2*x + 1)/(x**2 -1), x, z) == Piecewise((-oo, Eq(z, -oo)), (oo, Eq(z, -1) | Eq(z, 1) | Eq(z, oo)), ((z**3 + 2*z + 1)/(z**2 - 1), True))
@@ -329,6 +330,9 @@ def test_limit_for_symbolic_point():
     assert limit((1 + 1/x)**x, x, z) == Piecewise((E, Eq(z, -oo)), (1, Eq(z, 0)), (E, Eq(z, oo)), ((1 + 1/z)**z, True))
     assert limit((5**(1/x) + 3**(1/x))**x, x, z) == Piecewise((5, Eq(z, 0)), ((exp(log(3)/z) + exp(log(5)/z))**z, True))
 
+    raises(ValueError, lambda: limit((1 + x)/x, x, z, dir = '+-'))
+    raises(ValueError, lambda: limit(1/(5 - x)**3, x, z, dir="+-"))
+    raises(ValueError, lambda: limit((x**3 + 2*x + 1)/(x**2 -1), x, z, dir = '+-'))
 
 @XFAIL
 def test_doit2():
