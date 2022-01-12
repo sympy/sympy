@@ -7,7 +7,8 @@ from sympy.core.evalf import N
 from sympy.core.function import (Function, nfloat)
 from sympy.core.mul import Mul
 from sympy.core import (GoldenRatio)
-from sympy.core.numbers import (E, I, Rational, oo, zoo, nan, pi)
+from sympy.core.numbers import (AlgebraicNumber, E, Float, I, Rational,
+                                oo, zoo, nan, pi)
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -23,6 +24,8 @@ from sympy.functions.elementary.miscellaneous import (Max, sqrt)
 from sympy.functions.elementary.trigonometric import (acos, atan, cos, sin, tan)
 from sympy.integrals.integrals import (Integral, integrate)
 from sympy.polys.polytools import factor
+from sympy.polys.rootoftools import CRootOf
+from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.printing.str import sstr
 from sympy.simplify.simplify import simplify
 from sympy.core.numbers import comp
@@ -693,3 +696,23 @@ def test_evalf_with_bounded_error():
     raises(ValueError, lambda: evalf_with_bounded_error(pi, Rational(0)))
     raises(ValueError, lambda: evalf_with_bounded_error(pi, -pi))
     raises(ValueError, lambda: evalf_with_bounded_error(pi, I))
+
+
+def test_issue_22849():
+    a = -8 + 3 * sqrt(3)
+    x = AlgebraicNumber(a)
+    assert evalf(a, 1, {}) == evalf(x, 1, {})
+
+
+def test_evalf_real_alg_num():
+    # This test demonstrates why the entry for `AlgebraicNumber` in
+    # `sympy.core.evalf._create_evalf_table()` has to use `x.to_root()`,
+    # instead of `x.as_expr()`. If the latter is used, then `z` will be
+    # a complex number with `0.e-20` for imaginary part, even though `a5`
+    # is a real number.
+    zeta = Symbol('zeta')
+    a5 = AlgebraicNumber(CRootOf(cyclotomic_poly(5), -1), [-1, -1, 0, 0], alias=zeta)
+    z = a5.evalf()
+    assert isinstance(z, Float)
+    assert not hasattr(z, '_mpc_')
+    assert hasattr(z, '_mpf_')

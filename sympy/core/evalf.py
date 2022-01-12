@@ -44,7 +44,7 @@ if TYPE_CHECKING:
     from sympy.functions.elementary.integers import ceiling, floor
     from sympy.functions.elementary.trigonometric import atan
     from sympy.functions.combinatorial.numbers import bernoulli
-    from .numbers import Float, Rational, Integer
+    from .numbers import Float, Rational, Integer, AlgebraicNumber
 
 LG10 = math.log(10, 2)
 rnd = round_nearest
@@ -1055,6 +1055,10 @@ def evalf_bernoulli(expr: 'bernoulli', prec: int, options: OPT_DICT) -> TMP_RES:
         return None, None, None, None
     return b, None, prec, None
 
+
+def evalf_alg_num(a: 'AlgebraicNumber', prec: int, options: OPT_DICT) -> TMP_RES:
+    return evalf(a.to_root(), prec, options)
+
 #----------------------------------------------------------------------------#
 #                                                                            #
 #                            High-level operations                           #
@@ -1401,7 +1405,7 @@ def _create_evalf_table():
     from .add import Add
     from .mul import Mul
     from .numbers import Exp1, Float, Half, ImaginaryUnit, Integer, NaN, NegativeOne, One, Pi, Rational, \
-        Zero, ComplexInfinity
+        Zero, ComplexInfinity, AlgebraicNumber
     from .power import Pow
     from .symbol import Dummy, Symbol
     from sympy.functions.elementary.complexes import Abs, im, re
@@ -1450,6 +1454,7 @@ def _create_evalf_table():
         Piecewise: evalf_piecewise,
 
         bernoulli: evalf_bernoulli,
+        AlgebraicNumber: evalf_alg_num,
     }
 
 
