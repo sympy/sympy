@@ -590,7 +590,7 @@ def tree_cse(exprs, symbols, opt_subs=None, order='canonical', ignore=()):
         if isinstance(expr, Basic) and (
                 expr.is_Atom or
                 expr.is_Order or
-                isinstance(expr, (MatrixSymbol, MatrixElement)):
+                isinstance(expr, (MatrixSymbol, MatrixElement))):
             if expr.is_Symbol:
                 excluded_symbols.add(expr)
             return
