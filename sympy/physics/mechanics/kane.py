@@ -309,6 +309,8 @@ class KanesMethod(_Methods):
                 # (i.e. fully explicit) version of the equations
                 self._qdot_u_map = dict()
 
+
+
             self._f_k = f_k.xreplace(uaux_zero)
             self._k_ku = k_ku.xreplace(uaux_zero)
             self._k_kqdot = k_kqdot
@@ -653,7 +655,7 @@ class KanesMethod(_Methods):
             warn('This KanesMethod instance was initalized to use implicit kinematics but '
                 'explicit mapping from u to q\' is being requested: computing on the fly')
             qdot_u_vec = self.mass_matrix_kin.LUsolve(self.forcing_kin)
-            qdot_u_map = {q.diff(): qdot for (q, qdot) in zip(self.q, qdot_u_vec)}
+            qdot_u_map = {qd: qd_u for (qd, qd_u) in zip(self._qdot, qdot_u_vec)}
             return qdot_u_map
         else:
             return self._qdot_u_map

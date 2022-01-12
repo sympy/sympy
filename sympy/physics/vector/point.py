@@ -567,7 +567,7 @@ class Point:
             if is_cyclic:
                 warn('Kinematic loops are defined among the positions of points. This is likely not desired and may cause errors in your calculations.')
             if len(candidate_neighbor) > 1:
-                warn('Velocity automatically calculated based on point ' +
+                warn('Velocity for ' + self.name + ' automatically calculated based on point ' +
                     candidate_neighbor[0].name + ' but it is also possible from points(s):' +
                     str(candidate_neighbor[1:]) + '. Velocities from these points are not necessarily the same. This may cause errors in your calculations.')
             if valid_neighbor_found:
