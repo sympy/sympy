@@ -19,7 +19,7 @@ from sympy.sets.fancysets import Range
 from sympy.sets.sets import Interval
 from sympy.abc import x, y
 from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
-    CantSympify)
+    CantSympify, converter)
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
 from sympy.testing.pytest import raises, XFAIL, skip, warns_deprecated_sympy
@@ -646,6 +646,53 @@ def test_sympify_rational_numbers_set():
     ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify({'.3', '.2'}, rational=True) == FiniteSet(*ans)
 
+
+def test_sympify_mro():
+    """Tests the resolution order for classes that implement _sympy_"""
+    class a:
+        def _sympy_(self):
+            return Integer(1)
+    class b(a):
+        def _sympy_(self):
+            return Integer(2)
+    class c(a):
+        pass
+
+    assert sympify(a()) == Integer(1)
+    assert sympify(b()) == Integer(2)
+    assert sympify(c()) == Integer(1)
+
+def test_sympify_converter():
+    """Tests the resolution order for classes in converter"""
+    class a:
+        pass
+    class b(a):
+        pass
+    class c(a):
+        pass
+
+    converter[a] = lambda x: Integer(1)
+    converter[b] = lambda x: Integer(2)
+
+    assert sympify(a()) == Integer(1)
+    assert sympify(b()) == Integer(2)
+    assert sympify(c()) == Integer(1)
+
+    class MyInteger(Integer):
+        pass
+
+    if int in converter:
+        int_converter = converter[int]
+    else:
+        int_converter = None
+    converter[int] = MyInteger
+
+    assert sympify(1) == MyInteger(1)
+
+    if int_converter is None:
+        del converter[int]
+    else:
+        converter[int] = int_converter
 
 def test_issue_13924():
     if not numpy:
