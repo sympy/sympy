@@ -1796,12 +1796,10 @@ def evalf_with_bounded_error(x: 'Expr', eps: 'Expr' = None, m: int = 0,
     # bitcount 1. Therefore 2**fastlog(c) = 2**(nc+1) = 2|c| is an upper bound
     # on |a|. Likewise for b and d.
     nr, ni = fastlog(c), fastlog(d)
-    if nr == MINUS_INF == ni:
-        n = 1
-    else:
-        n = max(nr, ni) + 1
-        # n-1 bits get us past the integer parts of a and b, and +1 accounts for
-        # the factor of <= sqrt(2) that is |x|/max(|a|, |b|).
+    n = max(nr, ni) + 1
+    # If x is 0, then n is MINUS_INF, and p will be 1. Otherwise,
+    # n - 1 bits get us past the integer parts of a and b, and +1 accounts for
+    # the factor of <= sqrt(2) that is |x|/max(|a|, |b|).
     p = max(1, m + n + 1)
 
     options = options or {}
