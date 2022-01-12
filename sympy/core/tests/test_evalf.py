@@ -7,7 +7,7 @@ from sympy.core.evalf import N
 from sympy.core.function import (Function, nfloat)
 from sympy.core.mul import Mul
 from sympy.core import (GoldenRatio)
-from sympy.core.numbers import (E, I, Rational, oo, zoo, nan, pi)
+from sympy.core.numbers import (AlgebraicNumber, E, I, Rational, oo, zoo, nan, pi)
 from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -658,3 +658,9 @@ def test_evalf_with_zoo():
     assert log(zoo, evaluate=False).evalf() == zoo
     assert zoo.evalf(chop=True) == zoo
     assert x.evalf(subs={x: zoo}) == zoo
+
+
+def test_issue_22849():
+    a = -8 + 3 * sqrt(3)
+    x = AlgebraicNumber(a)
+    assert evalf(a, 1, {}) == evalf(x, 1, {})

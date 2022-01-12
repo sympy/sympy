@@ -1403,7 +1403,7 @@ def _create_evalf_table():
     from .add import Add
     from .mul import Mul
     from .numbers import Exp1, Float, Half, ImaginaryUnit, Integer, NaN, NegativeOne, One, Pi, Rational, \
-        Zero, ComplexInfinity
+        Zero, ComplexInfinity, AlgebraicNumber
     from .power import Pow
     from .symbol import Dummy, Symbol
     from sympy.functions.elementary.complexes import Abs, im, re
@@ -1427,6 +1427,8 @@ def _create_evalf_table():
         NegativeOne: lambda x, prec, options: (fnone, None, prec, None),
         ComplexInfinity: lambda x, prec, options: S.ComplexInfinity,
         NaN: lambda x, prec, options: (fnan, None, prec, None),
+        AlgebraicNumber: lambda x, prec, options: evalf(x.as_expr(),
+                                                        prec, options),
 
         exp: evalf_exp,
 
