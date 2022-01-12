@@ -662,6 +662,7 @@ def test_sympify_mro():
     assert sympify(b()) == Integer(2)
     assert sympify(c()) == Integer(1)
 
+
 def test_sympify_converter():
     """Tests the resolution order for classes in converter"""
     class a:
@@ -685,14 +686,16 @@ def test_sympify_converter():
         int_converter = converter[int]
     else:
         int_converter = None
-    converter[int] = MyInteger
 
-    assert sympify(1) == MyInteger(1)
+    try:
+        converter[int] = MyInteger
+        assert sympify(1) == MyInteger(1)
+    finally:
+        if int_converter is None:
+            del converter[int]
+        else:
+            converter[int] = int_converter
 
-    if int_converter is None:
-        del converter[int]
-    else:
-        converter[int] = int_converter
 
 def test_issue_13924():
     if not numpy:
