@@ -30,6 +30,7 @@ from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
     prec_to_dps, dps_to_prec)
+from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import as_int, debug, filldedent
 from .parameters import global_parameters
 
@@ -436,6 +437,142 @@ def ilcm(*args):
     for b in args[1:]:
         a = a // igcd(a, b) * b # since gcd(a,b) | a
     return a
+
+
+def igcdLLL(s, m1=2, n1=3, optimize=False):
+    """return g, B where g is the gcd of the integers in s and the
+    LLL-reduced basis and small multipliers such that those
+    multiples of the corresponding values of s is g.
+
+    If there are three values in s then the smallest multipliers
+    will be returned unless optimize is not True.
+
+    This is an iterative procedure whose quality in returning
+    small multipliers is related to alpha = m1/n1 which must
+    be in the range [3/8, 1]. When 1, the algorithm will iterate
+    longer but is not guaranteed to return the smallest multipliers
+    except for the case of 3 values in s.
+
+    Examples
+    ========
+
+    >>> from sympy.core.numbers import igcdLLL
+    >>> from sympy import Add, Matrix, symbols
+    >>> x = symbols('x:%s' % len(s))
+
+    >>> s = 2, 4, 6
+    >>> eq = Add(*[si*xi for si, xi in zip(s, x)]); eq
+    2*x0 + 4*x1 + 6*x2
+
+    >>> g, B = igcdLLL(s)
+    >>> assert Add(*[si*mi for si, mi in zip(s, B[-1])]) == g
+
+    >>> p = symbols('p:%s' % (len(B) - 1))
+    >>> psol = (Matrix(B[:-1]).T*Matrix(p)).T.tolist()[0]
+    >>> dict(zip(x, psol))
+    {x0: p0 + 2*p1, x1: p0 - p1, x2: -p0}
+    >>> eq.subs(_)
+    0
+    """
+    if not iterable(s):
+        raise ValueError('s should be iterable')
+    if len(s) < 2:
+        raise ValueError('expecting 2 or more values')
+    if not all(type(i) is int for i in s):
+        raise ValueError('expecting literal ints for s')
+    ok = (3*n1 <= 8*m1) and (n1 > 0) and (m1 > 0) and (m1 <= n1)
+    if not ok:
+        raise ValueError('require 3/8 <= alpha <= 1 but alpha = %s/%s' % (m1, n1))
+    if optimize and len(s) > 3:
+        raise ValueError('optimization for more than 3 values')
+
+    def reduce1(k, i):
+        if a[i] != 0:
+            q = int(round(a[k] / a[i]))
+        else:
+            if 2 * abs(la[k][i]) > D[i]:
+                q = int(round(la[k][i] / D[i]))
+            else:
+                q = 0
+        if q != 0:
+            a[k] -= q * a[i]
+            for c in range(m):
+                B[k][c] -= q * B[i][c]
+            la[k][i] -= q * D[i]
+            for j in range(i):
+                la[k][j] -= q * la[i][j]
+
+    def swap(k):
+
+        # swap rows k and k - 1 and calculate new la and D
+
+        j = k - 1
+        (a[k], a[j]) = (a[j], a[k])
+        (B[k], B[j]) = (B[j], B[k])
+        for i in range(j):
+            (la[k][i], la[j][i]) = (la[j][i], la[k][i])
+        for i in range(k + 1, m):
+            t = la[i][j] * D[k] - la[i][k] * la[k][j]
+            la[i][j] = (la[i][j] * la[k][j] + la[i][k] * D[j - 1]) \
+                / D[j]
+            la[i][k] = t / D[j]
+        D[j] = (D[k - 2] * D[k] + la[k][j] ** 2) / D[j]
+
+    m = len(s)
+    B = [[0] * m for i in range(m)]
+    for i in range(m):
+        B[i][i] = 1
+    la = [[0] * i for i in range(m)]
+    D = [1] * (m + 1)  # m+1 referenced as D[-1]
+    a = list(s)
+    k = 1
+    while k < m:
+        j = k - 1
+        reduce1(k, j)
+        if a[j] != 0 or a[j] == 0 and a[k] == 0 and n1 * (D[j - 1]
+                * D[k] + la[k][j] ** 2) < m1 * D[j] ** 2:
+            swap(k)
+            if k > 1:
+                k = j
+        else:
+            for i in range(j - 1, -1, -1):
+                reduce1(k, i)
+            k += 1
+    # make gcd positive and update multipliers to be consistent
+    if a[-1] < 0:
+        a[-1] = -a[-1]
+        B[-1] = [-i for i in B[-1]]
+    if optimize and len(s) == 3:
+        mag = lambda x: sum([i**2 for i in x])
+        add = lambda x, y: [i + j for i, j in zip(x, y)]
+        sub = lambda x, y: [i - j for i, j in zip(x, y)]
+        sign = lambda x: -1 if x < 0 else (1 if x > 0 else 0)
+        def best(x):
+            m = [mag(i) for i in x]
+            return x[m.index(min(m))]
+        key = lambda x: tuple([sign(i) for i in x])
+        b1, b2, b3 = B
+        opt = {
+            (1,1,1): lambda: best([b3, sub(b3, b2)]),
+            (1,-1,-1): lambda: best([b3, add(b3, b2)]),
+            (-1,1,-1): lambda: best([b3, add(b3, b2)]),
+            (-1,-1,1): lambda: best([b3, sub(b3, b2)]),
+            (-1,-1,-1): lambda: best([b3, sub(b3, b2), add(b3, add(b1, b2))]),
+            (1,1,-1): lambda: best([b3, sub(b3, b2), add(sub(b3, b1), b2)]),
+            (-1,1,1): lambda: best([b3, add(b3, b2), sub(sub(b3, b1), b2)]),
+            (1,-1,1): lambda: best([b3, add(b3, b2), sub(add(b3, b1), b2)])}
+        k = key(b3)
+        if k in opt:
+            b = opt[k]()
+            if b != B[-1]:
+                B[-1] = b
+    # make signs canonical for reduced basis
+    nneg = sum([1 for j in B[:-1] for i in j if i < 0])
+    npos = sum([1 for j in B[:-1] for i in j if i > 0])
+    if nneg > npos:
+        for j in range(len(B) - 1):
+            B[j] = [-i for i in B[j]]
+    return (a[-1], B)
 
 
 def igcdex(a, b):

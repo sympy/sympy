@@ -12,7 +12,7 @@ from sympy.core.numbers import (mpf_norm, mod_inverse, igcd, seterr,
 from sympy.core.power import Pow
 from sympy.core.relational import Ge, Gt, Le, Lt
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy, Symbol
+from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.combinatorial.numbers import fibonacci
@@ -2212,3 +2212,52 @@ def test_floordiv():
 def test_negation():
     assert -S.Zero is S.Zero
     assert -Float(0) is not S.Zero and -Float(0) == 0
+
+
+def test_igcdLLL():
+    from sympy.core.numbers import igcdLLL
+    # optimization of 3 multipliers
+    def f(x):
+        a,b = (igcdLLL(x, optimize=True)[1][-1], igcdLLL(x, optimize=False)[1][-1])
+        assert sum([i**2 for i in a]) < sum([i**2 for i in b])
+
+    # (-1, -1, -1)
+    f([-25181, 87256, -46877])
+    #(-1, -1, 1)
+    f([-20486, -3157, -14494])
+    #(-1, 1, -1)
+    f([-32563, -28288, -95009])
+    #(-1, 1, 1)
+    f([-23984, 46235, -67447])
+    #(1, -1, -1)
+    f([-11900, 61165, -38872])
+    #(1, -1, 1)
+    f([-63192, -62878, 39009])
+    #(1, 1, -1)
+    f([-13111, -98076, -52613])
+    #(1, 1, 1)
+    f([-15467, 89459, 47266])
+
+    raises(ValueError, lambda: igcdLLL(1,2))
+    raises(ValueError, lambda: igcdLLL([]))
+    raises(ValueError, lambda: igcdLLL([2]))
+    raises(ValueError, lambda: igcdLLL([2]))
+    raises(ValueError, lambda: igcdLLL([2, 4.]))
+    raises(ValueError, lambda: igcdLLL([2, 4], 2, 1))
+    raises(ValueError, lambda: igcdLLL([2, 4], 3, 9))
+    raises(ValueError, lambda: igcdLLL([2, 4], 3, -8))
+    raises(ValueError, lambda: igcdLLL([2, 4], -3, 8))
+    raises(ValueError, lambda: igcdLLL([2, 4, 1, 3], optimize=True))
+    g = igcdLLL
+    assert g([3, 6]) == (3, [[-2, 1], [1, 0]])
+    assert g([3, 7]) == (1, [[7, -3], [-2, 1]])
+    # signs of basis are canonical: 2 negatives instead of 3
+    G, B = ans = (1, [[7, -4, 0], [7, 5, -10], [-3, -1, 3]])
+    c = [-40, -70, -63]
+    assert g(c) == ans
+    assert sum([i*j for i, j in zip(c, B[-1])]) == G
+    p = symbols('p:2')
+    z = 0
+    for i in range(3):
+        z += c[i]*p[0]*(B[0][i] + B[1][i])
+    assert z == 0
