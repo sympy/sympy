@@ -440,16 +440,15 @@ def ilcm(*args):
 
 
 def igcdLLL(s, m1=2, n1=3, optimize=None):
-    """return g, B where g is the gcd of the integers in s and the
-    LLL-reduced basis and small multipliers such that those
-    multiples of the corresponding values of s is g.
+    """return g, B where g is the gcd of the integers in s and
+    B contains the LLL-reduced basis and Bezout coefficients.
 
     If there are three values in s then the smallest multipliers
-    will be returned unless optimize is not True.
+    will be returned unless optimize is False.
 
     This is an iterative procedure whose quality in returning
     small multipliers is related to alpha = m1/n1 which must
-    be in the range [3/8, 1]. When 1, the algorithm will iterate
+    be in the range [3/8, 1]. When 1, the algorithm may iterate
     longer (but is not guaranteed to return the smallest multipliers
     except for the case of 3 values in `s` unless `optimize` is False).
 
@@ -459,7 +458,8 @@ def igcdLLL(s, m1=2, n1=3, optimize=None):
     >>> from sympy.core.numbers import igcdLLL
     >>> from sympy import symbols
     >>> from sympy.abc import x, y, c
-    >>> mul = lambda x, y: [i*j for i, j in zip(x, y)]
+    >>> mul = lambda x, y: [i*j for i, j in zip(
+    ...     (x if isinstance(x, (tuple,list)) else [x]*len(y)), y)]
     >>> dot = lambda x, y: sum(mul(x, y))
     >>> dot((2, 3), (x, y))  # a helper needed below
     2*x + 3*y
@@ -474,41 +474,43 @@ def igcdLLL(s, m1=2, n1=3, optimize=None):
     >>> B
     [[1, 1, -1], [2, -1, 0], [1, 0, 0]]
 
-    The last row of `B` gives a list of small multipliers for the value of `s`
-    that will produce a sum equal to `g` while the others will produce a zero sum:
+    The last row of `B` contains the Bezout coefficients for `s` and are
+    generally "small":
 
     >>> [dot(s, b) for b in B]
     [0, 0, 2]
 
     One way these results can be used is to give a parametric solution
-    for `2*x + 4*y + 6*z = c`. Let `p0` and `p1` be the multiples for the
-    first two rows:
+    for `2*x + 4*y + 6*z = c`. Let `p0` and `p1` be the multiples for
+    the first two rows:
 
     >>> p0, p1 = symbols('p:2')
 
-    Any multiple of the first rows in B will still sum to zero as will their sum:
+    Any multiples of the first rows in B will still sum to zero as will
+    their sum:
 
-    >>> mul([p0]*3, B[0])
+    >>> mul(p0, B[0])
     [p0, p0, -p0]
-    >>> mul([p1]*3, B[1])
+    >>> mul(p1, B[1])
     [2*p1, -p1, 0]
 
-    Their combination will also create multipliers that will set the sum to zero:
+    Their combination will also create multipliers that will set the
+    sum to zero:
 
     >>> comb = [p0 + 2*p1, p0 - p1, -p0]
     >>> dot(comb, s)
     0
 
-    In order to get the sum to equal `c`, the last row of multipliers will be
-    multiplied by `c/2`:
+    In order to get the sum to equal `c`, the last row of multipliers
+    will be multiplied by `c/2`:
 
-    >>> last = mul([c/2]*3, B[-1]); last
+    >>> last = mul(c/2, B[-1]); last
     [c/2, 0, 0]
     >>> dot(_, s)
     c
 
-    The general solution, then, is a combination of this and the homogeneous solutions from
-    the basis:
+    The general solution, then, is a combination of this and the
+    homogeneous solutions from the basis:
 
     >>> gensol = [i + j for i, j in zip(comb, last)]; gensol
     [c/2 + p0 + 2*p1, p0 - p1, -p0]
