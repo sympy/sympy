@@ -349,7 +349,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     See Also
     ========
-    parse_expr
+    :func: `parse_expr`.
 
     """
     # XXX: If a is a Basic subclass rather than instance (e.g. sin rather than
