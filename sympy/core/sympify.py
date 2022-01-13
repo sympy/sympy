@@ -349,7 +349,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     See Also
     ========
-    
     parse_expr
 
     """
