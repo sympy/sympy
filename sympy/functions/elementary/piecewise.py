@@ -9,6 +9,7 @@ from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
     true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
 from sympy.polys.polyutils import illegal
+from sympy.sets.sets import Interval
 from sympy.utilities.iterables import uniq, sift, common_prefix
 from sympy.utilities.misc import filldedent, func_name
 
@@ -1214,57 +1215,89 @@ def _clip(A, B, k):
 
 def piecewise_simplify_arguments(expr, **kwargs):
     from sympy.simplify.simplify import simplify
-    args = []
+
+    # simplify conditions
     f1 = expr.args[0].cond.free_symbols
+    args = None
     if len(f1) == 1 and not expr.atoms(Eq):
         x = f1.pop()
         # this won't return intervals involving Eq
         # and it won't handle symbols treated as
         # booleans
         ok, abe_ = expr._intervals(x, err_on_Eq=True)
+        def include(c, x, a):
+            "return True if c.subs(x, a) is True, else False"
+            try:
+                return c.subs(x, a) == True
+            except TypeError:
+                return False
         if ok:
             args = []
+            covered = S.EmptySet
             for a, b, e, i in abe_:
                 c = expr.args[i].cond
-                if a is S.NegativeInfinity:
-                    if b is S.Infinity:
+                incl_a = include(c, x, a)
+                incl_b = include(c, x, b)
+                iv = Interval(a, b, not incl_a, not incl_b)
+                cset = iv - covered
+                if not cset:
+                    continue
+                if incl_a and incl_b:
+                    if a.is_infinite and b.is_infinite:
                         c = S.true
+                    elif b.is_infinite:
+                        c = (x >= a)
+                    elif a in covered or a.is_infinite:
+                        c = (x <= b)
                     else:
-                        if c.subs(x, b) == True:
-                            c = (x <= b)
-                        else:
-                            c = (x < b)
-                else:
-                    incl_a = (c.subs(x, a) == True)
-                    incl_b = (c.subs(x, b) == True)
-                    if incl_a and incl_b:
-                        if b.is_infinite:
-                            c = (x >= a)
-                        else:
-                            c = And(a <= x, x <= b)
-                    elif incl_a:
+                        c = And(a <= x, x <= b)
+                elif incl_a:
+                    if a in covered or a.is_infinite:
+                        c = (x < b)
+                    else:
                         c = And(a <= x, x < b)
-                    elif incl_b:
-                        if b.is_infinite:
-                            c = (x > a)
-                        else:
-                            c = And(a < x, x <= b)
+                elif incl_b:
+                    if b.is_infinite:
+                        c = (x > a)
+                    else:
+                        c = (x <= b)
+                else:
+                    if a in covered:
+                        c = (x < b)
                     else:
                         c = And(a < x, x < b)
+                covered |= iv
+                if a is S.NegativeInfinity and incl_a:
+                    covered |= {S.NegativeInfinity}
+                if b is S.Infinity and incl_b:
+                    covered |= {S.Infinity}
                 args.append((e, c))
-            args.append((Undefined, True))
-            expr = Piecewise(*args)
-    for e, c in expr.args:
+            if not S.Reals.is_subset(covered):
+                args.append((Undefined, True))
+    if args is None:
+        args = list(expr.args)
+        for i in range(len(args)):
+            e, c  = args[i]
+            if isinstance(c, Basic):
+                c = simplify(c, **kwargs)
+            args[i] = (e, c)
+
+    # simplify expressions
+    doit = kwargs.pop('doit', None)
+    for i in range(len(args)):
+        e, c  = args[i]
         if isinstance(e, Basic):
-            doit = kwargs.pop('doit', None)
             # Skip doit to avoid growth at every call for some integrals
             # and sums, see sympy/sympy#17165
             newe = simplify(e, doit=False, **kwargs)
-            if newe != expr:
+            if newe != e:
                 e = newe
-        if isinstance(c, Basic):
-            c = simplify(c, doit=doit, **kwargs)
-        args.append((e, c))
+        args[i] = (e, c)
+
+    # restore kwargs flag
+    if doit is not None:
+        kwargs['doit'] = doit
+
     return Piecewise(*args)
 
 

@@ -357,9 +357,13 @@ class LatexPrinter(Printer):
             return expr
 
     def _print_Basic(self, expr):
-        ls = [self._print(o) for o in expr.args]
-        return self._deal_with_super_sub(expr.__class__.__name__) + \
-            r"\left(%s\right)" % ", ".join(ls)
+        name = self._deal_with_super_sub(expr.__class__.__name__)
+        if expr.args:
+            ls = [self._print(o) for o in expr.args]
+            s = r"\operatorname{{{}}}\left({}\right)"
+            return s.format(name, ", ".join(ls))
+        else:
+            return r"\text{{{}}}".format(name)
 
     def _print_bool(self, e):
         return r"\text{%s}" % e
@@ -911,7 +915,7 @@ class LatexPrinter(Printer):
                 if inv_trig_style == "abbreviated":
                     pass
                 elif inv_trig_style == "full":
-                    func = "arc" + func[1:]
+                    func = ("ar" if func[-1] == "h" else "arc") + func[1:]
                 elif inv_trig_style == "power":
                     func = func[1:]
                     inv_trig_power_case = True
@@ -1679,10 +1683,14 @@ class LatexPrinter(Printer):
     def _print_Transpose(self, expr):
         mat = expr.arg
         from sympy.matrices import MatrixSymbol
-        if not isinstance(mat, MatrixSymbol):
+        if not isinstance(mat, MatrixSymbol) and mat.is_MatrixExpr:
             return r"\left(%s\right)^{T}" % self._print(mat)
         else:
-            return "%s^{T}" % self.parenthesize(mat, precedence_traditional(expr), True)
+            s = self.parenthesize(mat, precedence_traditional(expr), True)
+            if '^' in s:
+                return r"\left(%s\right)^{T}" % s
+            else:
+                return "%s^{T}" % s
 
     def _print_Trace(self, expr):
         mat = expr.arg
@@ -1691,10 +1699,14 @@ class LatexPrinter(Printer):
     def _print_Adjoint(self, expr):
         mat = expr.arg
         from sympy.matrices import MatrixSymbol
-        if not isinstance(mat, MatrixSymbol):
+        if not isinstance(mat, MatrixSymbol) and mat.is_MatrixExpr:
             return r"\left(%s\right)^{\dagger}" % self._print(mat)
         else:
-            return r"%s^{\dagger}" % self._print(mat)
+            s = self.parenthesize(mat, precedence_traditional(expr), True)
+            if '^' in s:
+                return r"\left(%s\right)^{\dagger}" % s
+            else:
+                return r"%s^{\dagger}" % s
 
     def _print_MatMul(self, expr):
         from sympy.matrices.expressions.matmul import MatMul
@@ -1762,7 +1774,11 @@ class LatexPrinter(Printer):
             return "\\left(%s\\right)^{%s}" % (self._print(base),
                                               self._print(exp))
         else:
-            return "%s^{%s}" % (self._print(base), self._print(exp))
+            base_str = self._print(base)
+            if '^' in base_str:
+                return r"\left(%s\right)^{%s}" % (base_str, self._print(exp))
+            else:
+                return "%s^{%s}" % (base_str, self._print(exp))
 
     def _print_MatrixSymbol(self, expr):
         return self._print_Symbol(expr, style=self._settings[
@@ -2029,7 +2045,7 @@ class LatexPrinter(Printer):
         if hasattr(d, 'as_boolean'):
             return '\\text{Domain: }' + self._print(d.as_boolean())
         elif hasattr(d, 'set'):
-            return ('\\text{Domain: }' + self._print(d.symbols) + '\\text{ in }' +
+            return ('\\text{Domain: }' + self._print(d.symbols) + ' \\in ' +
                     self._print(d.set))
         elif hasattr(d, 'symbols'):
             return '\\text{Domain on }' + self._print(d.symbols)
@@ -2254,6 +2270,10 @@ class LatexPrinter(Printer):
             self._print(s.base_set),
             self._print(s.condition))
 
+    def _print_PowerSet(self, expr):
+        arg_print = self._print(expr.args[0])
+        return r"\mathcal{{P}}\left({}\right)".format(arg_print)
+
     def _print_ComplexRegion(self, s):
         vars_print = ', '.join([self._print(var) for var in s.variables])
         return r"\left\{%s\; \middle|\; %s \in %s \right\}" % (
@@ -2265,6 +2285,8 @@ class LatexPrinter(Printer):
         return r"%s \in %s" % tuple(self._print(a) for a in e.args)
 
     def _print_FourierSeries(self, s):
+        if s.an.formula is S.Zero and s.bn.formula is S.Zero:
+            return self._print(s.a0)
         return self._print_Add(s.truncate()) + r' + \ldots'
 
     def _print_FormalPowerSeries(self, s):
@@ -2385,6 +2407,25 @@ class LatexPrinter(Printer):
             return r"\operatorname{%s} {\left(%s\right)}" % (cls,
                                                              ", ".join(args))
 
+    def _print_OrdinalOmega(self, expr):
+        return r"\omega"
+
+    def _print_OmegaPower(self, expr):
+        exp, mul = expr.args
+        if mul != 1:
+            if exp != 1:
+                return r"{} \omega^{{{}}}".format(mul, exp)
+            else:
+                return r"{} \omega".format(mul)
+        else:
+            if exp != 1:
+                return r"\omega^{{{}}}".format(exp)
+            else:
+                return r"\omega"
+
+    def _print_Ordinal(self, expr):
+        return " + ".join([self._print(arg) for arg in expr.args])
+
     def _print_PolyElement(self, poly):
         mul_symbol = self._settings['mul_symbol_latex']
         return poly.str(self, PRECEDENCE, "{%s}^{%d}", mul_symbol)
@@ -2470,6 +2511,18 @@ class LatexPrinter(Printer):
             result = "W{0}_{{{1}}}\\left({2}\\right)".format(exp, arg1, arg0)
         return result
 
+    def _print_Expectation(self, expr):
+        return r"\operatorname{{E}}\left[{}\right]".format(self._print(expr.args[0]))
+
+    def _print_Variance(self, expr):
+        return r"\operatorname{{Var}}\left({}\right)".format(self._print(expr.args[0]))
+
+    def _print_Covariance(self, expr):
+        return r"\operatorname{{Cov}}\left({}\right)".format(", ".join(self._print(arg) for arg in expr.args))
+
+    def _print_Probability(self, expr):
+        return r"\operatorname{{P}}\left({}\right)".format(self._print(expr.args[0]))
+
     def _print_Morphism(self, morphism):
         domain = self._print(morphism.domain)
         codomain = self._print(morphism.codomain)
@@ -2544,6 +2597,10 @@ class LatexPrinter(Printer):
     def _print_TransferFunctionMatrix(self, expr):
         mat = self._print(expr._expr_mat)
         return r"%s_\tau" % mat
+
+    def _print_DFT(self, expr):
+        return r"\text{{{}}}_{{{}}}".format(expr.__class__.__name__, expr.n)
+    _print_IDFT = _print_DFT
 
     def _print_NamedMorphism(self, morphism):
         pretty_name = self._print(Symbol(morphism.name))
@@ -2757,7 +2814,7 @@ class LatexPrinter(Printer):
         return str(expr)
 
     def _print_Predicate(self, expr):
-        return str(expr)
+        return r"\operatorname{{Q}}_{{\text{{{}}}}}".format(latex_escape(str(expr.name)))
 
     def _print_AppliedPredicate(self, expr):
         pred = expr.function

@@ -302,7 +302,7 @@ CNOT   \n\
 """
     assert pretty(g3) == ascii_str
     assert upretty(g3) == ucode_str
-    assert latex(g3) == r'CNOT_{1,0}'
+    assert latex(g3) == r'\text{CNOT}_{1,0}'
     sT(g3, "CNotGate(Integer(1),Integer(0))")
     ascii_str = \
 """\

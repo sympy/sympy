@@ -119,7 +119,7 @@ def test_mellin_transform():
 
     assert MT(abs(1 - x)**(-rho), x, s) == (
         2*sin(pi*rho/2)*gamma(1 - rho)*
-        cos(pi*(rho/2 - s))*gamma(s)*gamma(rho-s)/pi,
+        cos(pi*(s - rho/2))*gamma(s)*gamma(rho-s)/pi,
         (0, re(rho)), re(rho) < 1)
     mt = MT((1 - x)**(beta - 1)*Heaviside(1 - x)
             + a*(x - 1)**(beta - 1)*Heaviside(x - 1), x, s)
@@ -265,7 +265,7 @@ def test_mellin_transform_bessel():
 
     mt = MT(exp(-x/2)*besselk(a, x/2), x, s)
     mt0 = gammasimp(trigsimp(gammasimp(mt[0].expand(func=True))))
-    assert mt0 == 2*pi**Rational(3, 2)*cos(pi*s)*gamma(-s + S.Half)/(
+    assert mt0 == 2*pi**Rational(3, 2)*cos(pi*s)*gamma(S.Half - s)/(
         (cos(2*pi*a) - cos(2*pi*s))*gamma(-a - s + 1)*gamma(a - s + 1))
     assert mt[1:] == ((Max(-re(a), re(a)), oo), True)
     # TODO exp(x/2)*besselk(a, x/2) [etc] cannot currently be done

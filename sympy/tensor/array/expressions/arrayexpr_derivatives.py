@@ -10,9 +10,11 @@ from sympy.matrices.expressions.special import Identity
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.combinatorics.permutations import _af_invert
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
-from sympy.tensor.array.expressions.array_expressions import ZeroArray, ArraySymbol, ArrayTensorProduct, \
-    ArrayAdd, PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, get_rank, \
-    get_shape, ArrayContraction, _array_tensor_product, _array_contraction, _array_diagonal, _array_add, _permute_dims
+from sympy.tensor.array.expressions.array_expressions import (
+        _ArrayExpr, ZeroArray, ArraySymbol, ArrayTensorProduct, ArrayAdd,
+        PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, get_rank,
+        get_shape, ArrayContraction, _array_tensor_product, _array_contraction,
+        _array_diagonal, _array_add, _permute_dims)
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 
 
@@ -21,12 +23,12 @@ def array_derive(expr, x):
     raise NotImplementedError(f"not implemented for type {type(expr)}")
 
 
-@array_derive.register(Expr) # type: ignore
-def _(expr: Expr, x: Expr):
+@array_derive.register(Expr)
+def _(expr: Expr, x: _ArrayExpr):
     return ZeroArray(*x.shape)
 
 
-@array_derive.register(ArrayTensorProduct) # type: ignore
+@array_derive.register(ArrayTensorProduct)
 def _(expr: ArrayTensorProduct, x: Expr):
     args = expr.args
     addend_list = []
@@ -56,8 +58,8 @@ def _(expr: ArrayTensorProduct, x: Expr):
         return _array_add(*addend_list)
 
 
-@array_derive.register(ArraySymbol) # type: ignore
-def _(expr: ArraySymbol, x: Expr):
+@array_derive.register(ArraySymbol)
+def _(expr: ArraySymbol, x: _ArrayExpr):
     if expr == x:
         return _permute_dims(
             ArrayTensorProduct.fromiter(Identity(i) for i in expr.shape),
@@ -66,8 +68,8 @@ def _(expr: ArraySymbol, x: Expr):
     return ZeroArray(*(x.shape + expr.shape))
 
 
-@array_derive.register(MatrixSymbol) # type: ignore
-def _(expr: MatrixSymbol, x: Expr):
+@array_derive.register(MatrixSymbol)
+def _(expr: MatrixSymbol, x: _ArrayExpr):
     m, n = expr.shape
     if expr == x:
         return _permute_dims(
@@ -77,12 +79,12 @@ def _(expr: MatrixSymbol, x: Expr):
     return ZeroArray(*(x.shape + expr.shape))
 
 
-@array_derive.register(Identity) # type: ignore
-def _(expr: Identity, x: Expr):
+@array_derive.register(Identity)
+def _(expr: Identity, x: _ArrayExpr):
     return ZeroArray(*(x.shape + expr.shape))
 
 
-@array_derive.register(Transpose) # type: ignore
+@array_derive.register(Transpose)
 def _(expr: Transpose, x: Expr):
     # D(A.T, A) ==> (m,n,i,j) ==> D(A_ji, A_mn) = d_mj d_ni
     # D(B.T, A) ==> (m,n,i,j) ==> D(B_ji, A_mn)
@@ -90,7 +92,7 @@ def _(expr: Transpose, x: Expr):
     return _permute_dims(fd, [0, 1, 3, 2])
 
 
-@array_derive.register(Inverse) # type: ignore
+@array_derive.register(Inverse)
 def _(expr: Inverse, x: Expr):
     mat = expr.I
     dexpr = array_derive(mat, x)
@@ -100,7 +102,7 @@ def _(expr: Inverse, x: Expr):
     return pp
 
 
-@array_derive.register(ElementwiseApplyFunction) # type: ignore
+@array_derive.register(ElementwiseApplyFunction)
 def _(expr: ElementwiseApplyFunction, x: Expr):
     assert get_rank(expr) == 2
     assert get_rank(x) == 2
@@ -116,7 +118,7 @@ def _(expr: ElementwiseApplyFunction, x: Expr):
     return td
 
 
-@array_derive.register(ArrayElementwiseApplyFunc) # type: ignore
+@array_derive.register(ArrayElementwiseApplyFunc)
 def _(expr: ArrayElementwiseApplyFunc, x: Expr):
     fdiff = expr._get_function_fdiff()
     subexpr = expr.expr
@@ -131,18 +133,18 @@ def _(expr: ArrayElementwiseApplyFunc, x: Expr):
     return _array_diagonal(tp, *diag_indices)
 
 
-@array_derive.register(MatrixExpr) # type: ignore
+@array_derive.register(MatrixExpr)
 def _(expr: MatrixExpr, x: Expr):
     cg = convert_matrix_to_array(expr)
     return array_derive(cg, x)
 
 
-@array_derive.register(HadamardProduct) # type: ignore
+@array_derive.register(HadamardProduct)
 def _(expr: HadamardProduct, x: Expr):
     raise NotImplementedError()
 
 
-@array_derive.register(ArrayContraction) # type: ignore
+@array_derive.register(ArrayContraction)
 def _(expr: ArrayContraction, x: Expr):
     fd = array_derive(expr.expr, x)
     rank_x = len(get_shape(x))
@@ -151,7 +153,7 @@ def _(expr: ArrayContraction, x: Expr):
     return _array_contraction(fd, *new_contraction_indices)
 
 
-@array_derive.register(ArrayDiagonal) # type: ignore
+@array_derive.register(ArrayDiagonal)
 def _(expr: ArrayDiagonal, x: Expr):
     dsubexpr = array_derive(expr.expr, x)
     rank_x = len(get_shape(x))
@@ -159,12 +161,12 @@ def _(expr: ArrayDiagonal, x: Expr):
     return _array_diagonal(dsubexpr, *diag_indices)
 
 
-@array_derive.register(ArrayAdd) # type: ignore
+@array_derive.register(ArrayAdd)
 def _(expr: ArrayAdd, x: Expr):
     return _array_add(*[array_derive(arg, x) for arg in expr.args])
 
 
-@array_derive.register(PermuteDims) # type: ignore
+@array_derive.register(PermuteDims)
 def _(expr: PermuteDims, x: Expr):
     de = array_derive(expr.expr, x)
     perm = [0, 1] + [i + 2 for i in expr.permutation.array_form]

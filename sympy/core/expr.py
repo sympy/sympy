@@ -2,7 +2,7 @@ from typing import Tuple as tTuple
 from collections.abc import Iterable
 from functools import reduce
 
-from .sympify import sympify, _sympify, SympifyError
+from .sympify import sympify, _sympify
 from .basic import Basic, Atom
 from .singleton import S
 from .evalf import EvalfMixin, pure_complex, DEFAULT_MAXPREC
@@ -12,7 +12,7 @@ from .sorting import default_sort_key
 from .kind import NumberKind
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import as_int, func_name, filldedent
-from sympy.utilities.iterables import has_variety, sift, iterable, NotIterable
+from sympy.utilities.iterables import has_variety, sift
 from mpmath.libmp import mpf_log, prec_to_dps
 from mpmath.libmp.libintmath import giant_steps
 
@@ -127,15 +127,6 @@ class Expr(Basic, EvalfMixin):
 
         return expr.class_key(), args, exp, coeff
 
-    def __hash__(self) -> int:
-        # hash cannot be cached using cache_it because infinite recurrence
-        # occurs as hash is needed for setting cache dictionary keys
-        h = self._mhash
-        if h is None:
-            h = hash((type(self).__name__,) + self._hashable_content())
-            self._mhash = h
-        return h
-
     def _hashable_content(self):
         """Return a tuple of information about self that can be used to
         compute the hash. If a class defines additional attributes,
@@ -144,35 +135,6 @@ class Expr(Basic, EvalfMixin):
         Defining more than _hashable_content is necessary if __eq__ has
         been defined by a class. See note about this in Basic.__eq__."""
         return self._args
-
-    def __eq__(self, other):
-        if not isinstance(other, Basic):
-            if iterable(other, exclude=(str, NotIterable)
-                    ) and not hasattr(other, '_sympy_'):
-                # XXX iterable self should have it's own __eq__
-                # method if the path gives a false negative
-                # comparison
-                return False
-            try:
-                other = _sympify(other)
-            except (SympifyError, SyntaxError):
-                return NotImplemented
-        if not isinstance(other, Expr):
-            return False
-        # check for pure number expr
-        if  not (self.is_Number and other.is_Number) and (
-                type(self) != type(other)):
-            return False
-        a, b = self._hashable_content(), other._hashable_content()
-        if a != b:
-            return False
-        # check number *in* an expression
-        for a, b in zip(a, b):
-            if not isinstance(a, Expr):
-                continue
-            if a.is_Number and type(a) != type(b):
-                return False
-        return True
 
     # ***************
     # * Arithmetics *
@@ -2085,7 +2047,7 @@ class Expr(Basic, EvalfMixin):
 
         """
         if deps:
-            if not self.has(*deps):
+            if not self.has_free(*deps):
                 return self, tuple()
         return S.Zero, (self,)
 
@@ -2583,11 +2545,6 @@ class Expr(Basic, EvalfMixin):
             res *= exp_polar(newexp)
         return res, n
 
-    def _eval_is_polynomial(self, syms):
-        if self.free_symbols.intersection(syms) == set():
-            return True
-        return False
-
     def is_polynomial(self, *syms):
         r"""
         Return True if self is a polynomial in syms and False otherwise.
@@ -2606,7 +2563,7 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import Symbol
+        >>> from sympy import Symbol, Function
         >>> x = Symbol('x')
         >>> ((x**2 + 1)**4).is_polynomial(x)
         True
@@ -2614,7 +2571,15 @@ class Expr(Basic, EvalfMixin):
         True
         >>> (2**x + 1).is_polynomial(x)
         False
-
+        >>> (2**x + 1).is_polynomial(2**x)
+        True
+        >>> f = Function('f')
+        >>> (f(x) + 1).is_polynomial(x)
+        False
+        >>> (f(x) + 1).is_polynomial(f(x))
+        True
+        >>> (1/f(x) + 1).is_polynomial(f(x))
+        False
 
         >>> n = Symbol('n', nonnegative=True, integer=True)
         >>> (x**n + 1).is_polynomial(x)
@@ -2649,17 +2614,18 @@ class Expr(Basic, EvalfMixin):
             syms = set(map(sympify, syms))
         else:
             syms = self.free_symbols
+            if not syms:
+                return True
 
-        if syms.intersection(self.free_symbols) == set():
+        return self._eval_is_polynomial(syms)
+
+    def _eval_is_polynomial(self, syms):
+        if self in syms:
+            return True
+        if not self.has_free(*syms):
             # constant polynomial
             return True
-        else:
-            return self._eval_is_polynomial(syms)
-
-    def _eval_is_rational_function(self, syms):
-        if self.free_symbols.intersection(syms) == set():
-            return True
-        return False
+        # subclasses should return True or False
 
     def is_rational_function(self, *syms):
         """
@@ -2719,16 +2685,17 @@ class Expr(Basic, EvalfMixin):
             syms = set(map(sympify, syms))
         else:
             syms = self.free_symbols
+            if not syms:
+                return True
 
-        if syms.intersection(self.free_symbols) == set():
-            # constant rational function
+        return self._eval_is_rational_function(syms)
+
+    def _eval_is_rational_function(self, syms):
+        if self in syms:
             return True
-        else:
-            return self._eval_is_rational_function(syms)
-
-    def _eval_is_meromorphic(self, x, a):
-        # Default implementation, return True for constants.
-        return None if self.has(x) else True
+        if not self.has_free(*syms):
+            return True
+        # subclasses should return True or False
 
     def is_meromorphic(self, x, a):
         """
@@ -2791,10 +2758,12 @@ class Expr(Basic, EvalfMixin):
 
         return self._eval_is_meromorphic(x, a)
 
-    def _eval_is_algebraic_expr(self, syms):
-        if self.free_symbols.intersection(syms) == set():
+    def _eval_is_meromorphic(self, x, a):
+        if self == x:
             return True
-        return False
+        if not self.has_free(x):
+            return True
+        # subclasses should return True or False
 
     def is_algebraic_expr(self, *syms):
         """
@@ -2842,12 +2811,17 @@ class Expr(Basic, EvalfMixin):
             syms = set(map(sympify, syms))
         else:
             syms = self.free_symbols
+            if not syms:
+                return True
 
-        if syms.intersection(self.free_symbols) == set():
-            # constant algebraic expression
+        return self._eval_is_algebraic_expr(syms)
+
+    def _eval_is_algebraic_expr(self, syms):
+        if self in syms:
             return True
-        else:
-            return self._eval_is_algebraic_expr(syms)
+        if not self.has_free(*syms):
+            return True
+        # subclasses should return True or False
 
     ###################################################################################
     ##################### SERIES, LEADING TERM, LIMIT, ORDER METHODS ##################

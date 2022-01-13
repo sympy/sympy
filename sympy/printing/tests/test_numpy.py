@@ -14,6 +14,7 @@ from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
+from sympy.tensor.array import Array
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
     PermuteDims, ArrayDiagonal
 from sympy.printing.numpy import NumPyPrinter, SciPyPrinter, _numpy_known_constants, \
@@ -321,6 +322,10 @@ def test_issue_17006():
     n = symbols('n', integer=True)
     N = MatrixSymbol("M", n, n)
     raises(NotImplementedError, lambda: lambdify(N, N + Identity(n)))
+
+def test_numpy_array():
+    assert NumPyPrinter().doprint(Array(((1, 2), (3, 5)))) == 'numpy.array([[1, 2], [3, 5]])'
+    assert NumPyPrinter().doprint(Array((1, 2))) == 'numpy.array((1, 2))'
 
 def test_numpy_known_funcs_consts():
     assert _numpy_known_constants['NaN'] == 'numpy.nan'

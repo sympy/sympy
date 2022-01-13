@@ -1512,7 +1512,9 @@ class ANP(PicklableWithSlots, CantSympify):
         if type(rep) is dict:
             self.rep = dup_from_dict(rep, dom)
         else:
-            if type(rep) is not list:
+            if type(rep) is list:
+                rep = [dom.convert(a) for a in rep]
+            else:
                 rep = [dom.convert(rep)]
 
             self.rep = dup_strip(rep)

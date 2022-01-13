@@ -2383,7 +2383,7 @@ def test_V8_V9():
 
 
 def test_V10():
-    assert integrate(1/(3 + 3*cos(x) + 4*sin(x)), x) == log(tan(x/2) + R(3, 4))/4
+    assert integrate(1/(3 + 3*cos(x) + 4*sin(x)), x) == log(4*tan(x/2) + 3)/4
 
 
 def test_V11():
@@ -2915,7 +2915,7 @@ def test_Y2():
     w = symbols('w', real=True)
     s = symbols('s')
     f = inverse_laplace_transform(s/(s**2 + (w - 1)**2), s, t)
-    assert f == cos(t*w - t)
+    assert f == cos(t*(w - 1))
 
 
 def test_Y3():
