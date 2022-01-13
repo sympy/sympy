@@ -137,8 +137,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     >>> sympify("x***2")
     Traceback (most recent call last):
     ...
-    SympifyError: SympifyError: "could not parse 'x***2'"
-    
+    SympifyError: SympifyError: "could not parse 'x***2'"    
     >>> sympify("2x")
     Traceback (most recent call last):
     ...
@@ -146,7 +145,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     sympify function parse the input if it follows the python-syntax.
     To parse a non-python syntax use "parse_exp": 
-    
+
     >>> parse_expr("2x", transformations="all")
     2*x
 
