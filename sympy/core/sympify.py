@@ -137,7 +137,8 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     >>> sympify("x***2")
     Traceback (most recent call last):
     ...
-    SympifyError: SympifyError: "could not parse 'x***2'"    
+    SympifyError: SympifyError: "could not parse 'x***2'"
+    
     >>> sympify("2x")
     Traceback (most recent call last):
     ...
