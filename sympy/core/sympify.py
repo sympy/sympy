@@ -346,11 +346,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         If False, then arithmetic and operators will be converted into
         their SymPy equivalents. If True the expression will be evaluated
         and the result will be returned.
-
-    See Also
-    ========
-    parse_expr from sympy.parsing.sympy_parser.py
-
     """
     # XXX: If a is a Basic subclass rather than instance (e.g. sin rather than
     # sin(x)) then a.__sympy__ will be the property. Only on the instance will
