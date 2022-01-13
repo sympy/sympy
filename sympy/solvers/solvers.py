@@ -272,6 +272,10 @@ def checksol(f, symbol, sol=None, **flags):
 
     if isinstance(f, BooleanAtom):
         return bool(f)
+
+    elif isinstance(f, int) or isinstance(f, float):
+        return abs(f) < 1e-9
+
     elif not f.is_Relational and not f:
         return True
 
@@ -338,8 +342,8 @@ def checksol(f, symbol, sol=None, **flags):
                     saw_pow_func = True
                 if saw_pow_func:
                     break
-            if saw_pow_func is False:
-                return False
+            # if saw_pow_func is False:
+            #     return False
             if flags.get('force', True):
                 # don't do a zero check with the positive assumptions in place
                 val = val.subs(reps)

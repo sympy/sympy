@@ -16,6 +16,7 @@ from sympy.core import (S, Pow, Dummy, pi, Expr, Wild, Mul, Equality,
 from sympy.core.containers import Tuple
 from sympy.core.function import (Lambda, expand_complex, AppliedUndef,
                                 expand_log, _mexpand, expand_trig)
+from sympy.core.kind import NumberKind
 from sympy.core.mod import Mod
 from sympy.core.numbers import igcd, I, Number, Rational, oo, ilcm
 from sympy.core.power import integer_log
@@ -3695,16 +3696,11 @@ def nonlinsolve(system, *symbols):
         result = substitution(
             polys_expr + nonpolys, symbols, exclude=denominators)
     valid_solns = []
-    idx = 0
     if isinstance(result, FiniteSet):
         for soln in result.args:
-            values = dict(zip(symbols, soln))
-            try:
-                if checksol(system, values) != False:
-                    valid_solns.append(soln)
-            except:
+            num_values = {sym: val for (sym, val) in zip(symbols, soln) if not isinstance(val, Set)}
+            if checksol(system, num_values) != False:
                 valid_solns.append(soln)
-            idx += 1
         if len(valid_solns) > 0:
             return FiniteSet(*valid_solns)
         else:
