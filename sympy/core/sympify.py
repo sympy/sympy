@@ -144,14 +144,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     ...
     SympifyError: SympifyError: "could not parse '2x' "
 
-    "sympify" function only parse the input, if it follows the python-syntax.
+    "sympify" function parse the input, if it follows the python-syntax.
     In order to parse a non python syntax use "parse_exp": 
-
-    >>> from sympy.parsing.sympy_parser import (standard_transformations,
-    ...     implicit_multiplication_application, parse_expr)
-    >>> transformations = (standard_transformations +
-    ...     (implicit_multiplication_application,))
-    >>> parse_expr("2x", transformations=transformations)
+    >>> parse_expr("2x", transformations="all")
     2*x
 
     Locals
@@ -355,7 +350,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     See Also
     ========
-
+    
     parse_expr
 
     """
