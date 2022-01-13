@@ -19,7 +19,7 @@ ENV MATPLOTLIBRC=/root/matplotlibrc
 RUN mkdir -p $MATPLOTLIBRC
 RUN echo "backend : Agg" > $MATPLOTLIBRC/matplotlibrc
 
-RUN git clone git://github.com/sympy/sympy.git
+RUN git clone https://github.com/sympy/sympy.git
 
 WORKDIR /root/sympy/release
 

@@ -578,7 +578,8 @@ class Equality(Relational):
         the result set pass `evaluate=True` to give L - R;
         if `evaluate=None` then terms in L and R will not cancel
         but they will be listed in canonical order; otherwise
-        non-canonical args will be returned.
+        non-canonical args will be returned. If one side is 0, the
+        non-zero side will be returned.
 
         Examples
         ========
@@ -595,6 +596,10 @@ class Equality(Relational):
         """
         from .add import _unevaluated_Add, Add
         L, R = args
+        if L == 0:
+            return R
+        if R == 0:
+            return L
         evaluate = kwargs.get('evaluate', True)
         if evaluate:
             # allow cancellation of args

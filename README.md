@@ -36,7 +36,7 @@ You can also get the latest version of SymPy from
 
 To get the git version do
 
-    $ git clone git://github.com/sympy/sympy.git
+    $ git clone https://github.com/sympy/sympy.git
 
 For other options (tarballs, debs, etc.), see
 <https://docs.sympy.org/dev/install.html>.
