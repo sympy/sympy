@@ -138,6 +138,21 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     Traceback (most recent call last):
     ...
     SympifyError: SympifyError: "could not parse 'x***2'"
+    
+    >>> sympify("2x")
+    Traceback (most recent call last):
+    ...
+    SympifyError: SympifyError: "could not parse '2x' "
+
+    "sympify" function only parse the input, if it follows the python-syntax.
+    In order to parse a non python syntax use "parse_exp": 
+
+    >>> from sympy.parsing.sympy_parser import (standard_transformations,
+    ...     implicit_multiplication_application, parse_expr)
+    >>> transformations = (standard_transformations +
+    ...     (implicit_multiplication_application,))
+    >>> parse_expr("2x", transformations=transformations)
+    2*x
 
     Locals
     ------
@@ -338,6 +353,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         their SymPy equivalents. If True the expression will be evaluated
         and the result will be returned.
 
+    See Also
+    ========
+
+    parse_expr
+    
     """
     # XXX: If a is a Basic subclass rather than instance (e.g. sin rather than
     # sin(x)) then a.__sympy__ will be the property. Only on the instance will
