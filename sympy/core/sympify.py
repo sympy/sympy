@@ -357,7 +357,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     ========
 
     parse_expr
-    
+
     """
     # XXX: If a is a Basic subclass rather than instance (e.g. sin rather than
     # sin(x)) then a.__sympy__ will be the property. Only on the instance will
