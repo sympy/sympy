@@ -439,7 +439,7 @@ def ilcm(*args):
     return a
 
 
-def igcdLLL(s, m1=2, n1=3, optimize=False):
+def igcdLLL(s, m1=2, n1=3, optimize=None):
     """return g, B where g is the gcd of the integers in s and the
     LLL-reduced basis and small multipliers such that those
     multiples of the corresponding values of s is g.
@@ -450,29 +450,70 @@ def igcdLLL(s, m1=2, n1=3, optimize=False):
     This is an iterative procedure whose quality in returning
     small multipliers is related to alpha = m1/n1 which must
     be in the range [3/8, 1]. When 1, the algorithm will iterate
-    longer but is not guaranteed to return the smallest multipliers
-    except for the case of 3 values in s.
+    longer (but is not guaranteed to return the smallest multipliers
+    except for the case of 3 values in `s` unless `optimize` is False).
 
     Examples
     ========
 
     >>> from sympy.core.numbers import igcdLLL
-    >>> from sympy import Add, Matrix, symbols
-    >>> x = symbols('x:%s' % len(s))
+    >>> from sympy import symbols
+    >>> from sympy.abc import x, y, c
+    >>> mul = lambda x, y: [i*j for i, j in zip(x, y)]
+    >>> dot = lambda x, y: sum(mul(x, y))
+    >>> dot((2, 3), (x, y))  # a helper needed below
+    2*x + 3*y
 
-    >>> s = 2, 4, 6
-    >>> eq = Add(*[si*xi for si, xi in zip(s, x)]); eq
-    2*x0 + 4*x1 + 6*x2
+    The greatest common divisor for elements of `s` and a list of multipliers are
+    computed by `igcdLLL`:
 
+    >>> s = (2, 4, 6)
     >>> g, B = igcdLLL(s)
-    >>> assert Add(*[si*mi for si, mi in zip(s, B[-1])]) == g
+    >>> g
+    2
+    >>> B
+    [[1, 1, -1], [2, -1, 0], [1, 0, 0]]
 
-    >>> p = symbols('p:%s' % (len(B) - 1))
-    >>> psol = (Matrix(B[:-1]).T*Matrix(p)).T.tolist()[0]
-    >>> dict(zip(x, psol))
-    {x0: p0 + 2*p1, x1: p0 - p1, x2: -p0}
-    >>> eq.subs(_)
+    The last row of `B` gives a list of small multipliers for the value of `s`
+    that will produce a sum equal to `g` while the others will produce a zero sum:
+
+    >>> [dot(s, b) for b in B]
+    [0, 0, 2]
+
+    One way these results can be used is to give a parametric solution
+    for `2*x + 4*y + 6*z = c`. Let `p0` and `p1` be the multiples for the
+    first two rows:
+
+    >>> p0, p1 = symbols('p:2')
+
+    Any multiple of the first rows in B will still sum to zero as will their sum:
+
+    >>> mul([p0]*3, B[0])
+    [p0, p0, -p0]
+    >>> mul([p1]*3, B[1])
+    [2*p1, -p1, 0]
+
+    Their combination will also create multipliers that will set the sum to zero:
+
+    >>> comb = [p0 + 2*p1, p0 - p1, -p0]
+    >>> dot(comb, s)
     0
+
+    In order to get the sum to equal `c`, the last row of multipliers will be
+    multiplied by `c/2`:
+
+    >>> last = mul([c/2]*3, B[-1]); last
+    [c/2, 0, 0]
+    >>> dot(_, s)
+    c
+
+    The general solution, then, is a combination of this and the homogeneous solutions from
+    the basis:
+
+    >>> gensol = [i + j for i, j in zip(comb, last)]; gensol
+    [c/2 + p0 + 2*p1, p0 - p1, -p0]
+    >>> dot(_, s)
+    c
     """
     if not iterable(s):
         raise ValueError('s should be iterable')
@@ -485,22 +526,38 @@ def igcdLLL(s, m1=2, n1=3, optimize=False):
         raise ValueError('require 3/8 <= alpha <= 1 but alpha = %s/%s' % (m1, n1))
     if optimize and len(s) > 3:
         raise ValueError('optimization for more than 3 values')
+    elif len(s) == 3 and optimize is None:
+        optimize = True
+
+    def iround(num, den):
+        # round away from 0 on tie
+        if den < 0:
+            num = -num
+            den = -den
+        neg = (num < 0)
+        if neg:
+            num = -num
+        w, r = divmod(num, den)
+        w = int(w)  # la can be float right now
+        if 2*r >= den:
+            w += 1
+        return -w if neg else w
 
     def reduce1(k, i):
         if a[i] != 0:
-            q = int(round(a[k] / a[i]))
+            q = iround(a[k], a[i])
         else:
-            if 2 * abs(la[k][i]) > D[i]:
-                q = int(round(la[k][i] / D[i]))
+            if 2*abs(la[k][i]) > D[i]:
+                q = iround(la[k][i], D[i])
             else:
                 q = 0
         if q != 0:
-            a[k] -= q * a[i]
+            a[k] -= q*a[i]
             for c in range(m):
-                B[k][c] -= q * B[i][c]
-            la[k][i] -= q * D[i]
+                B[k][c] -= q*B[i][c]
+            la[k][i] -= q*D[i]
             for j in range(i):
-                la[k][j] -= q * la[i][j]
+                la[k][j] -= q*la[i][j]
 
     def swap(k):
 
@@ -512,25 +569,24 @@ def igcdLLL(s, m1=2, n1=3, optimize=False):
         for i in range(j):
             (la[k][i], la[j][i]) = (la[j][i], la[k][i])
         for i in range(k + 1, m):
-            t = la[i][j] * D[k] - la[i][k] * la[k][j]
-            la[i][j] = (la[i][j] * la[k][j] + la[i][k] * D[j - 1]) \
-                / D[j]
-            la[i][k] = t / D[j]
-        D[j] = (D[k - 2] * D[k] + la[k][j] ** 2) / D[j]
+            t = la[i][j]*D[k] - la[i][k]*la[k][j]
+            la[i][j] = (la[i][j]*la[k][j] + la[i][k]*D[j - 1])/D[j]
+            la[i][k] = t/D[j]
+        D[j] = (D[k - 2]*D[k] + la[k][j]**2)/D[j]
 
     m = len(s)
-    B = [[0] * m for i in range(m)]
+    B = [[0]*m for i in range(m)]
     for i in range(m):
         B[i][i] = 1
-    la = [[0] * i for i in range(m)]
-    D = [1] * (m + 1)  # m+1 referenced as D[-1]
+    la = [[0]*i for i in range(m)]
+    D = [1]*(m + 1)  # m+1 referenced as D[-1]
     a = list(s)
     k = 1
     while k < m:
         j = k - 1
         reduce1(k, j)
-        if a[j] != 0 or a[j] == 0 and a[k] == 0 and n1 * (D[j - 1]
-                * D[k] + la[k][j] ** 2) < m1 * D[j] ** 2:
+        if a[j] != 0 or (a[j] == 0 and a[k] == 0 and
+                n1*(D[j - 1]*D[k] + la[k][j] ** 2) < m1*D[j]**2):
             swap(k)
             if k > 1:
                 k = j
