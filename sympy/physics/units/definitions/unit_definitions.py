@@ -117,10 +117,7 @@ ug = microgram = micrograms = Quantity("microgram", abbrev="ug", latex_repr=r"\m
 ug.set_global_relative_scale_factor(micro, gram)
 
 # Atomic mass constant
-amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant")
-
-Da = dalton = Quantity("dalton", abbrev="Da")
-Da.set_global_relative_scale_factor(amu/kilo, kg)
+Da = dalton = amu = amus = atomic_mass_unit = atomic_mass_constant = Quantity("atomic_mass_constant")
 
 t = tonne = Quantity("tonne", abbrev="t")
 t.set_global_relative_scale_factor(kilo, kg)

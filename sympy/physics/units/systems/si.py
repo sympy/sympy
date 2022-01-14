@@ -165,9 +165,6 @@ SI.set_quantity_scale_factor(stefan_boltzmann_constant, pi**2 * boltzmann_consta
 SI.set_quantity_dimension(atomic_mass_constant, mass)
 SI.set_quantity_scale_factor(atomic_mass_constant, 1.66053906660e-24*gram)
 
-SI.set_quantity_dimension(Da, mass)
-SI.set_quantity_scale_factor(Da, (atomic_mass_constant).scale_factor)
-
 # Molar gas constant
 # REF: NIST SP 959 (June 2019)
 
