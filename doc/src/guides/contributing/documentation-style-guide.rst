@@ -71,9 +71,6 @@ The following lists the processing tools:
   * ``matplotlib.sphinxext.plot_directive``: Provides directives for included
     matplotlib generated figures in reStructuredText. See
     https://matplotlib.org/devel/plot_directive.html for more info.
-  * ``sympylive``: Adds a button on each example in the HTML documentation that
-    opens the example in SymPy Live. *No bearing on documentation source
-    format.*
 
 Everything supported by the above processing tools is available for use in the
 SymPy documentation, but this style guide supersedes any recommendations made

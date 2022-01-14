@@ -30,7 +30,7 @@ sys.path = ['ext'] + sys.path
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
-              'sphinx.ext.mathjax', 'numpydoc', 'sympylive', 'sphinx_reredirects',
+              'sphinx.ext.mathjax', 'numpydoc', 'sphinx_reredirects',
               'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive',
               'myst_parser'
               ]
