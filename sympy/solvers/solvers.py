@@ -272,6 +272,13 @@ def checksol(f, symbol, sol=None, **flags):
 
     if isinstance(f, BooleanAtom):
         return bool(f)
+
+    elif isinstance(f, int):
+        return f == 0
+
+    elif isinstance(f, float):
+        return abs(f) < 1e-9
+
     elif not f.is_Relational and not f:
         return True
 
@@ -299,8 +306,8 @@ def checksol(f, symbol, sol=None, **flags):
                 return False
         elif attempt == 1:
             if not val.is_number:
-                if not val.is_constant(*list(sol.keys()), simplify=not minimal):
-                    return False
+                # if not val.is_constant(*list(sol.keys()), simplify=not minimal):
+                #     return False
                 # there are free symbols -- simple expansion might work
                 _, val = val.as_content_primitive()
                 val = _mexpand(val.as_numer_denom()[0], recursive=True)
@@ -323,23 +330,23 @@ def checksol(f, symbol, sol=None, **flags):
         else:
             # if there are no radicals and no functions then this can't be
             # zero anymore -- can it?
-            pot = preorder_traversal(expand_mul(val))
-            seen = set()
-            saw_pow_func = False
-            for p in pot:
-                if p in seen:
-                    continue
-                seen.add(p)
-                if p.is_Pow and not p.exp.is_Integer:
-                    saw_pow_func = True
-                elif p.is_Function:
-                    saw_pow_func = True
-                elif isinstance(p, UndefinedFunction):
-                    saw_pow_func = True
-                if saw_pow_func:
-                    break
-            if saw_pow_func is False:
-                return False
+            # pot = preorder_traversal(expand_mul(val))
+            # seen = set()
+            # saw_pow_func = False
+            # for p in pot:
+            #     if p in seen:
+            #         continue
+            #     seen.add(p)
+            #     if p.is_Pow and not p.exp.is_Integer:
+            #         saw_pow_func = True
+            #     elif p.is_Function:
+            #         saw_pow_func = True
+            #     elif isinstance(p, UndefinedFunction):
+            #         saw_pow_func = True
+            #     if saw_pow_func:
+            #         break
+            # if saw_pow_func is False:
+            #     return False
             if flags.get('force', True):
                 # don't do a zero check with the positive assumptions in place
                 val = val.subs(reps)
