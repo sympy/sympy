@@ -854,8 +854,8 @@ example
     >>> orig_frac = frac = cancel(list_to_frac(l))
     >>> del l
 
-Click on "Run code block in SymPy Live" on the definition of ``list_to_frac()``
-above, and then on the above example, and try to reproduce ``l`` from
+*Click on "Run code block in SymPy Live" on the definition of ``list_to_frac()``
+above, and then o* In SymPy, on the above example, try to reproduce ``l`` from
 ``frac``.  I have deleted ``l`` at the end to remove the temptation for
 peeking (you can check your answer at the end by calling
 ``cancel(list_to_frac(l))`` on the list that you generate at the end, and

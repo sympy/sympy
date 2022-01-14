@@ -16,6 +16,7 @@ decorator==5.0.9
 docutils==0.17.1
 filelock==3.0.12
 flatbuffers==1.12
+furo==
 gast==0.4.0
 google-auth==1.35.0
 google-auth-oauthlib==0.4.5
