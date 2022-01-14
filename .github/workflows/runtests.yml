@@ -277,7 +277,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: html
-          path: doc/html/
+          path: doc/_build/html/
       - uses: actions/upload-artifact@v2
         with:
           name: pdf
