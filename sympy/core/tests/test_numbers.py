@@ -2214,8 +2214,9 @@ def test_negation():
     assert -Float(0) is not S.Zero and -Float(0) == 0
 
 
-def test_igcdLLL():
-    from sympy.core.numbers import igcdLLL
+def test_igcdLLL_hnf():
+    from sympy.core.numbers import igcdLLL, hnf
+    from sympy import Matrix
     # optimization of 3 multipliers
     def f(x):
         a,b = (igcdLLL(x, optimize=True)[1][-1], igcdLLL(x, optimize=False)[1][-1])
@@ -2244,7 +2245,7 @@ def test_igcdLLL():
     raises(ValueError, lambda: igcdLLL([2]))
     raises(ValueError, lambda: igcdLLL([2, 4.]))
     raises(ValueError, lambda: igcdLLL([2, 4], 2, 1))
-    raises(ValueError, lambda: igcdLLL([2, 4], 3, 9))
+    raises(ValueError, lambda: igcdLLL([2, 4], 0, 1))
     raises(ValueError, lambda: igcdLLL([2, 4], 3, -8))
     raises(ValueError, lambda: igcdLLL([2, 4], -3, 8))
     raises(ValueError, lambda: igcdLLL([2, 4, 1, 3], optimize=True))
@@ -2261,3 +2262,29 @@ def test_igcdLLL():
     for i in range(3):
         z += c[i]*p[0]*(B[0][i] + B[1][i])
     assert z == 0
+
+    # check routine against paper for different values
+    # of alpha; of the results show here, the one for
+    # nd = (1, 2) has the smallest L2-norm but none of the
+    # alphas select the best vaue of (3,-1,1,2,-1,-2,-2,-2,2,2)
+    # that has a norm of 36
+    _72 = (763836, 1066557, 113192, 1785102, 1470060,
+        3077752, 114793, 3126753, 1997137, 2603018)
+    nd72 = {
+        (101, 400): [7, -1, -5, -1, -1, 0, -4, 0, 0, 0],
+        (1, 3): [-1, 0, 6, -1, -1, 1, 0, 2, -3, 0],
+        (1, 2): [-3, 0, 3, 0, -1, 1, 0, 1, -4, 2],
+        (2, 3): [1, -3, 2, -1, 5, 0, 1, 1, -2, -1],
+        (3, 4): [1, -3, 2, -1, 5, 0, 1, 1, -2, -1],
+        (1, 1): [-1, 0, 1, -3, 1, 3, 3, -2, -2, 2]}
+    for nd in nd72:
+        assert igcdLLL(_72, *nd)[-1][-1] == nd72[nd]
+
+    # example 7.4
+    def func(i, j):
+        i += 1
+        j += 1
+        return i**3*j**2 + i + j
+    G = Matrix(10, 10, lambda i,j: func(i, j)).tolist()
+    _, H, P = hnf(G)
+    assert Matrix(P)*Matrix(G) == Matrix(H)

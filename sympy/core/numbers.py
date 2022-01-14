@@ -439,18 +439,59 @@ def ilcm(*args):
     return a
 
 
-def igcdLLL(s, m1=2, n1=3, optimize=None):
-    """return g, B where g is the gcd of the integers in s and
-    B contains the LLL-reduced basis and Bezout coefficients.
+def iround(num, den):
+    # round away from 0 on tie
+    if den < 0:
+        num = -num
+        den = -den
+    neg = (num < 0)
+    w, r = divmod(-num if neg else num, den)
+    w = int(w)
+    if 2*r >= den:
+        w += 1
+    return -w if neg else w
+
+
+def idiv(a, b):
+    # safe a/b asserting that b divides a evenly
+    assert a%b == 0
+    return a//b
+
+
+def _swap(k, cols, A, B, la, D):
+    # swap rows k and k - 1 and calculate new la and D
+    j = k - 1
+    for M in (A, B):
+        M[k], M[j] = M[j], M[k]
+    for i in range(j):
+        la[k][i], la[j][i] = la[j][i], la[k][i]
+    for i in range(k + 1, cols):
+        t = la[i][j]*D[k] - la[i][k]*la[k][j]
+        la[i][j] = idiv(
+            la[i][j]*la[k][j] + la[i][k]*D[j - 1],
+            D[j])
+        la[i][k] = idiv(t, D[j])
+    D[j] = idiv(D[j - 1]*D[k] + la[k][j]**2, D[j])
+
+
+def igcdLLL(s, _n=2, _d=3, optimize=None):
+    """return g, B where g is the gcd of the integers in s and the
+    LLL-reduced basis and small multipliers such that those
+    multiples of the corresponding values of s is g.
 
     If there are three values in s then the smallest multipliers
     will be returned unless optimize is False.
 
     This is an iterative procedure whose quality in returning
-    small multipliers is related to alpha = m1/n1 which must
-    be in the range [3/8, 1]. When 1, the algorithm may iterate
-    longer (but is not guaranteed to return the smallest multipliers
-    except for the case of 3 values in `s` unless `optimize` is False).
+    small multipliers is related to ``alpha = _n/_d`` which should
+    be in the range of (0, 1]; the value of 3/8 is useful for selecting
+    the optimum result for 3 numbers. When alpha is 1, the algorithm
+    will iterate longer (but is not guaranteed to return the smallest
+    multipliers except for the case of 3 values in `s` unless
+    `optimize` is False).
+
+    The method used is that of Algorithm 3 in the paper by
+    Havas, Majewski and Matthews [1].  XXX how to cite properly?
 
     Examples
     ========
@@ -516,6 +557,16 @@ def igcdLLL(s, m1=2, n1=3, optimize=None):
     [c/2 + p0 + 2*p1, p0 - p1, -p0]
     >>> dot(_, s)
     c
+
+    See Also
+    ========
+    hnf - putting integer matrix into Hermitian Normal form
+
+    References
+    ==========
+
+    .. [1] https://projecteuclid.org/euclid.em/1048515660/
+    .. [2] https://rosettacode.org/wiki/Diophantine_linear_system_solving
     """
     if not iterable(s):
         raise ValueError('s should be iterable')
@@ -523,58 +574,29 @@ def igcdLLL(s, m1=2, n1=3, optimize=None):
         raise ValueError('expecting 2 or more values')
     if not all(type(i) is int for i in s):
         raise ValueError('expecting literal ints for s')
-    ok = (3*n1 <= 8*m1) and (n1 > 0) and (m1 > 0) and (m1 <= n1)
+    ok = (_d > 0) and (_n > 0) and (_n <= _d)
     if not ok:
-        raise ValueError('require 3/8 <= alpha <= 1 but alpha = %s/%s' % (m1, n1))
+        raise ValueError('alpha must be in (0, 1], but is %s/%s' % (_n, _d))
     if optimize and len(s) > 3:
         raise ValueError('optimization for more than 3 values')
     elif len(s) == 3 and optimize is None:
         optimize = True
 
-    def iround(num, den):
-        # round away from 0 on tie
-        if den < 0:
-            num = -num
-            den = -den
-        neg = (num < 0)
-        if neg:
-            num = -num
-        w, r = divmod(num, den)
-        w = int(w)  # la can be float right now
-        if 2*r >= den:
-            w += 1
-        return -w if neg else w
-
     def reduce1(k, i):
-        if a[i] != 0:
-            q = iround(a[k], a[i])
+        if A[i] != 0:
+            q = iround(A[k], A[i])
         else:
             if 2*abs(la[k][i]) > D[i]:
                 q = iround(la[k][i], D[i])
             else:
                 q = 0
         if q != 0:
-            a[k] -= q*a[i]
+            A[k] -= q*A[i]
             for c in range(m):
                 B[k][c] -= q*B[i][c]
             la[k][i] -= q*D[i]
             for j in range(i):
                 la[k][j] -= q*la[i][j]
-
-    def swap(k):
-
-        # swap rows k and k - 1 and calculate new la and D
-
-        j = k - 1
-        (a[k], a[j]) = (a[j], a[k])
-        (B[k], B[j]) = (B[j], B[k])
-        for i in range(j):
-            (la[k][i], la[j][i]) = (la[j][i], la[k][i])
-        for i in range(k + 1, m):
-            t = la[i][j]*D[k] - la[i][k]*la[k][j]
-            la[i][j] = (la[i][j]*la[k][j] + la[i][k]*D[j - 1])/D[j]
-            la[i][k] = t/D[j]
-        D[j] = (D[k - 2]*D[k] + la[k][j]**2)/D[j]
 
     m = len(s)
     B = [[0]*m for i in range(m)]
@@ -582,24 +604,28 @@ def igcdLLL(s, m1=2, n1=3, optimize=None):
         B[i][i] = 1
     la = [[0]*i for i in range(m)]
     D = [1]*(m + 1)  # m+1 referenced as D[-1]
-    a = list(s)
+    A = list(s)
     k = 1
     while k < m:
         j = k - 1
         reduce1(k, j)
-        if a[j] != 0 or (a[j] == 0 and a[k] == 0 and
-                n1*(D[j - 1]*D[k] + la[k][j] ** 2) < m1*D[j]**2):
-            swap(k)
+        if A[j] != 0 or (A[j] == 0 and A[k] == 0 and
+                _d*(D[j - 1]*D[k] + la[k][j] ** 2) < _n*D[j]**2):
+            _swap(k, m, A, B, la, D)
             if k > 1:
                 k = j
         else:
             for i in range(j - 1, -1, -1):
                 reduce1(k, i)
             k += 1
+
     # make gcd positive and update multipliers to be consistent
-    if a[-1] < 0:
-        a[-1] = -a[-1]
+    gcd = A[-1]
+    # del A, la, D - we are done with these but flake8 complains
+    if gcd < 0:
+        gcd = -gcd
         B[-1] = [-i for i in B[-1]]
+
     if optimize and len(s) == 3:
         mag = lambda x: sum([i**2 for i in x])
         add = lambda x, y: [i + j for i, j in zip(x, y)]
@@ -624,13 +650,129 @@ def igcdLLL(s, m1=2, n1=3, optimize=None):
             b = opt[k]()
             if b != B[-1]:
                 B[-1] = b
+
     # make signs canonical for reduced basis
     nneg = sum([1 for j in B[:-1] for i in j if i < 0])
     npos = sum([1 for j in B[:-1] for i in j if i > 0])
     if nneg > npos:
         for j in range(len(B) - 1):
             B[j] = [-i for i in B[j]]
-    return (a[-1], B)
+
+    return (gcd, B)
+
+
+def hnf(G, _n=3, _d=4):
+    """return ``n``, ``H``, ``P`` where ``n`` is the number of
+    iterations needed to find ``H`` and ``P`` such that ``H*G = P``
+    with ``H`` being in Hermite normal form and ``P`` being unimodular.
+    Input ``G`` should be a list of lists where the lists of ``G``
+    are the rows of literal integers in G.
+
+    The method used is that of Algorithm 4 in the paper by
+    Havas, Majewski and Matthews [1].
+    This use of this routine to solve a wide variety of problems
+    is described briefly in [2]. XXX how to cite properly?
+
+    See Also
+    ========
+    igcdLLL - finding extended Euclidean gcd of several integers
+
+    References
+    ==========
+
+    .. [1] https://projecteuclid.org/euclid.em/1048515660/
+    .. [2] https://rosettacode.org/wiki/Diophantine_linear_system_solving
+    """
+    def pivot(i):
+        # return the index of the first non-zero column
+        # else C (one more than last column index)
+        for j in range(C):
+            if A[i][j]:
+                return j
+        return C
+
+    def minus(i):
+        # negate la in row or col i
+        for r in range(1, R):
+            for c in range(r - 1):
+                if i in (r, c):
+                    la[r][c] = -la[r][c]
+
+    def reduce2(k, i):
+        # update A, B and la
+        col1 = pivot(i)
+        if col1 < C:
+            if A[i][col1] < 0:
+                minus(i)
+                A[i] = [-_ for _ in A[i]]
+                B[i] = [-_ for _ in B[i]]
+            q = A[k][col1]//A[i][col1] # floor
+        elif 2*abs(la[k][i]) > D[i]:
+            q = iround(la[k][i], D[i])
+        else:
+            q = 0
+        if q != 0:
+            for M in (A, B):
+                M[k] = [mk - q*mi for mk, mi in zip(M[k], M[i])]
+            la[k][i] -= q*D[i]
+            for j in range(i):
+                la[k][j] -= q*la[i][j]
+        col2 = pivot(k)
+        return col1, col2
+
+    if not iterable(G) and G and all(iterable(i) for i in G):
+        raise ValueError('G should be list of lists')
+    # alpha = _n/_d
+    ok = (_d > 0) and (_n > 0) and (_n <= _d)
+    if not ok:
+        raise ValueError('alpha must be in (0, 1], but is %s/%s' % (_n, _d))
+
+    # get dimensions
+    R = len(G)
+    C = set([len(i) for i in G])
+    if len(C) != 1:
+        raise ValueError('all rows should have the same length')
+    C = C.pop()
+
+    # set constants and working space
+    m = R - 1
+    n = C - 1
+    B = [[0]*R for i in range(R)]
+    for i in range(R):
+        B[i][i] = 1
+    la = [[0]*i for i in range(R)]
+    A = [i[:] for i in G]
+    D = [1]*(R+1)  # -1 references last element
+
+    # check for special case where first non-zero column has, as the
+    # only entry, a negative value in the last row
+    for j in range(C):
+        if any(A[i][j] for i in range(R)):
+            if A[m][j] < 0 and not any(A[i][j] for i in range(m)):
+                A[m] = [-i for i in A[m]]
+                B[m][m] = -1
+            break  # this was the first non-zero column
+
+    # begin iterations
+    k = 1
+    loop = 0
+    while k <= m:
+        loop += 1
+        j = k - 1
+        col1, col2 = reduce2(k, j)
+        if col1 <= min(col2, n) or (col1 == col2 == C and
+                _d*(D[j - 1]*D[k] + la[k][j]**2) < _n*D[j]**2):
+            _swap(k, R, A, B, la, D)
+            if k > 1:
+                k = j
+        else:
+            for i in range(j -1, -1, -1):
+                reduce2(k, i)
+            k += 1
+    H = A[::-1]  # Hermitian norm form
+    P = B[::-1]  # unimodular matrix
+    # P*G = H
+    return loop, H, P
 
 
 def igcdex(a, b):
