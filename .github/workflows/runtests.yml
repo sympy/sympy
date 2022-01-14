@@ -277,11 +277,11 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: html
-          path: html/
+          path: doc/html/
       - uses: actions/upload-artifact@v2
         with:
           name: pdf
-          path: _build/latex/sympy*.pdf
+          path: doc/_build/latex/sympy*.pdf
 
 
 
