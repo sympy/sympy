@@ -24,7 +24,7 @@ from sympy.core.numbers import ilcm, Float, Rational
 from sympy.core.power import integer_log, Pow
 from sympy.core.relational import Relational, Eq, Ne
 from sympy.core.sorting import ordered, default_sort_key
-from sympy.core.sympify import sympify, _sympify
+from sympy.core.sympify import sympify
 from sympy.core.traversal import preorder_traversal
 from sympy.logic.boolalg import And, Or, BooleanAtom
 
