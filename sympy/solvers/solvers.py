@@ -24,7 +24,7 @@ from sympy.core.numbers import ilcm, Float, Rational
 from sympy.core.power import integer_log, Pow
 from sympy.core.relational import Relational, Eq, Ne
 from sympy.core.sorting import ordered, default_sort_key
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal
 from sympy.logic.boolalg import And, Or, BooleanAtom
 
@@ -272,6 +272,10 @@ def checksol(f, symbol, sol=None, **flags):
 
     if isinstance(f, BooleanAtom):
         return bool(f)
+    elif isinstance(f, int):
+        return f == 0
+    elif isinstance(f, float):
+        return abs(f) < 1e-9
     elif not f.is_Relational and not f:
         return True
 
