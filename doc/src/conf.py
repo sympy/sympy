@@ -16,6 +16,9 @@ import os
 import subprocess
 from datetime import datetime
 
+# Make sure we import sympy from git
+sys.path.insert(0, os.path.abspath('../..'))
+
 import sympy
 
 # If your extensions are in another directory, add it here.
@@ -28,16 +31,20 @@ sys.path = ['ext'] + sys.path
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.linkcode', 'sphinx_math_dollar',
               'sphinx.ext.mathjax', 'numpydoc', 'sympylive', 'sphinx_reredirects',
-              'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive']
+              'sphinx.ext.graphviz', 'matplotlib.sphinxext.plot_directive',
+              'myst_parser'
+              ]
 
 redirects = {
-    "install.rst": "getting_started/install.html",
-    "documentation-style-guide.rst": "contributing/documentation-style-guide.html",
+    "install.rst": "guides/getting_started/install.html",
+    "documentation-style-guide.rst": "guides/contributing/documentation-style-guide.html",
     "gotchas.rst": "explanation/gotchas.html",
     "special_topics/classification.rst": "explanation/classification.html",
     "special_topics/finite_diff_derivatives.rst": "explanation/finite_diff_derivatives.html",
     "special_topics/intro.rst": "explanation/index.html",
     "special_topics/index.rst": "explanation/index.html",
+    "modules/index.rst": "reference/public/index.html",
+    "modules/physics/index.rst": "reference/physics/index.html",
 }
 
 # Use this to use pngmath instead
@@ -54,18 +61,19 @@ nitpick_ignore = [
 # To stop docstrings inheritance.
 autodoc_inherit_docstrings = False
 
-# MathJax file, which is free to use.  See https://www.mathjax.org/#gettingstarted
-# As explained in the link using latest.js will get the latest version even
-# though it says 2.7.5.
-mathjax_path = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML-full'
-
 # See https://www.sympy.org/sphinx-math-dollar/
-mathjax_config = {
-    'tex2jax': {
-        'inlineMath': [ ["\\(","\\)"] ],
-        'displayMath': [["\\[","\\]"] ],
-    },
+mathjax3_config = {
+  "tex": {
+    "inlineMath": [['\\(', '\\)']],
+    "displayMath": [["\\[", "\\]"]],
+  }
 }
+
+# Myst configuration (for .md files). See
+# https://myst-parser.readthedocs.io/en/latest/syntax/optional.html
+myst_enable_extensions = ["dollarmath", "linkify"]
+myst_heading_anchors = 2
+# myst_update_mathjax = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -165,6 +173,7 @@ html_domain_indices = ['py-modindex']
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'SymPydoc'
 
+language = 'en'
 
 # Options for LaTeX output
 # ------------------------

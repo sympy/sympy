@@ -1,6 +1,9 @@
 """The anti-commutator: ``{A,B} = A*B + B*A``."""
 
-from sympy import S, Expr, Mul, Integer
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.numbers import Integer
+from sympy.core.singleton import S
 from sympy.printing.pretty.stringpict import prettyForm
 
 from sympy.physics.quantum.operator import Operator

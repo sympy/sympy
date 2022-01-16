@@ -46,9 +46,20 @@ Authors
 Copyright (C) 2008 Jens Rasch <jyr2000@gmail.com>
 
 """
-from sympy import (Integer, pi, sqrt, sympify, Dummy, S, Sum, Ynm, zeros,
-                   Function, sin, cos, exp, I, factorial, binomial,
-                   Add, ImmutableMatrix)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.function import Function
+from sympy.core.numbers import (I, Integer, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.spherical_harmonics import Ynm
+from sympy.matrices.dense import zeros
+from sympy.matrices.immutable import ImmutableMatrix
 
 # This list of precomputed factorials is needed to massively
 # accelerate future calculations of the various coefficients
@@ -181,20 +192,20 @@ def wigner_3j(j_1, j_2, j_3, m_1, m_2, m_3):
             int(m_3 * 2) != m_3 * 2:
         raise ValueError("m values must be integer or half integer")
     if m_1 + m_2 + m_3 != 0:
-        return 0
+        return S.Zero
     prefid = Integer((-1) ** int(j_1 - j_2 - m_3))
     m_3 = -m_3
     a1 = j_1 + j_2 - j_3
     if a1 < 0:
-        return 0
+        return S.Zero
     a2 = j_1 - j_2 + j_3
     if a2 < 0:
-        return 0
+        return S.Zero
     a3 = -j_1 + j_2 + j_3
     if a3 < 0:
-        return 0
+        return S.Zero
     if (abs(m_1) > j_1) or (abs(m_2) > j_2) or (abs(m_3) > j_3):
-        return 0
+        return S.Zero
 
     maxfact = max(j_1 + j_2 + j_3 + 1, j_1 + abs(m_1), j_2 + abs(m_2),
                   j_3 + abs(m_3))
@@ -324,11 +335,11 @@ def _big_delta_coeff(aa, bb, cc, prec=None):
     if int(bb + cc - aa) != (bb + cc - aa):
         raise ValueError("j values must be integer or half integer and fulfill the triangle relation")
     if (aa + bb - cc) < 0:
-        return 0
+        return S.Zero
     if (aa + cc - bb) < 0:
-        return 0
+        return S.Zero
     if (bb + cc - aa) < 0:
-        return 0
+        return S.Zero
 
     maxfact = max(aa + bb - cc, aa + cc - bb, bb + cc - aa, aa + bb + cc + 1)
     _calc_factlist(maxfact)
@@ -402,7 +413,7 @@ def racah(aa, bb, cc, dd, ee, ff, prec=None):
         _big_delta_coeff(aa, cc, ff, prec) * \
         _big_delta_coeff(bb, dd, ff, prec)
     if prefac == 0:
-        return 0
+        return S.Zero
     imin = max(aa + bb + ee, cc + dd + ee, aa + cc + ff, bb + dd + ff)
     imax = min(aa + bb + cc + dd, aa + dd + ee + ff, bb + cc + ee + ff)
 
@@ -546,10 +557,10 @@ def wigner_9j(j_1, j_2, j_3, j_4, j_5, j_6, j_7, j_8, j_9, prec=None):
     ========
 
     >>> from sympy.physics.wigner import wigner_9j
-    >>> wigner_9j(1,1,1, 1,1,1, 1,1,0 ,prec=64) # ==1/18
+    >>> wigner_9j(1,1,1, 1,1,1, 1,1,0, prec=64) # ==1/18
     0.05555555...
 
-    >>> wigner_9j(1/2,1/2,0, 1/2,3/2,1, 0,1,1 ,prec=64) # ==1/6
+    >>> wigner_9j(1/2,1/2,0, 1/2,3/2,1, 0,1,1, prec=64) # ==1/6
     0.1666666...
 
     It is an error to have arguments that are not integer or half
@@ -697,19 +708,19 @@ def gaunt(l_1, l_2, l_3, m_1, m_2, m_3, prec=None):
     bigL = sumL // 2
     a1 = l_1 + l_2 - l_3
     if a1 < 0:
-        return 0
+        return S.Zero
     a2 = l_1 - l_2 + l_3
     if a2 < 0:
-        return 0
+        return S.Zero
     a3 = -l_1 + l_2 + l_3
     if a3 < 0:
-        return 0
+        return S.Zero
     if sumL % 2:
-        return 0
+        return S.Zero
     if (m_1 + m_2 + m_3) != 0:
-        return 0
+        return S.Zero
     if (abs(m_1) > l_1) or (abs(m_2) > l_2) or (abs(m_3) > l_3):
-        return 0
+        return S.Zero
 
     imin = max(-l_3 + l_1 + m_2, -l_3 + l_2 - m_1, 0)
     imax = min(l_2 + m_2, l_1 - m_1, l_1 + l_2 - l_3)
@@ -805,7 +816,7 @@ def wigner_d_small(J, beta):
     Explanation
     ===========
 
-    J : An integer, half-integer, or sympy symbol for the total angular
+    J : An integer, half-integer, or SymPy symbol for the total angular
         momentum of the angular momentum space being rotated.
     beta : A real number representing the Euler angle of rotation about
         the so-called line of nodes. See [Edmonds74]_.
@@ -943,7 +954,7 @@ def wigner_d(J, alpha, beta, gamma):
     ===========
 
     J :
-        An integer, half-integer, or sympy symbol for the total angular
+        An integer, half-integer, or SymPy symbol for the total angular
         momentum of the angular momentum space being rotated.
     alpha, beta, gamma - Real numbers representing the Euler.
         Angles of rotation about the so-called vertical, line of nodes, and

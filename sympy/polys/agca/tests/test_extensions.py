@@ -1,4 +1,5 @@
-from sympy import symbols, sin, cos
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.polys import QQ, ZZ
 from sympy.polys.polytools import Poly
 from sympy.polys.polyerrors import NotInvertible

@@ -5,6 +5,7 @@ import functools
 import os
 import contextlib
 import warnings
+from typing import Any, Callable
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -15,6 +16,14 @@ try:
     USE_PYTEST = getattr(sys, '_running_pytest', False)
 except ImportError:
     USE_PYTEST = False
+
+
+raises: Callable[[Any, Any], Any]
+XFAIL: Callable[[Any], Any]
+skip: Callable[[Any], Any]
+SKIP: Callable[[Any], Any]
+slow: Callable[[Any], Any]
+nocache_fail: Callable[[Any], Any]
 
 
 if USE_PYTEST:

@@ -1,7 +1,7 @@
 """Basic tools for dense recursive polynomials in ``K[x]`` or ``K[X]``. """
 
 
-from sympy import oo
+from sympy.core.numbers import oo
 from sympy.core import igcd
 from sympy.polys.monomials import monomial_min, monomial_div
 from sympy.polys.orderings import monomial_key

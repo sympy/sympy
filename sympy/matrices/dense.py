@@ -1,13 +1,14 @@
 import random
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence
+from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import is_sequence
 
 from .common import ShapeError
 from .decompositions import _cholesky, _LDLdecomposition
@@ -131,7 +132,7 @@ MutableMatrix = Matrix = MutableDenseMatrix
 
 
 def list2numpy(l, dtype=object):  # pragma: no cover
-    """Converts python list of SymPy expressions to a NumPy array.
+    """Converts Python list of SymPy expressions to a NumPy array.
 
     See Also
     ========
@@ -537,7 +538,7 @@ def hessian(f, varlist, constraints=()):
     References
     ==========
 
-    https://en.wikipedia.org/wiki/Hessian_matrix
+    .. [1] https://en.wikipedia.org/wiki/Hessian_matrix
 
     See Also
     ========
@@ -740,7 +741,7 @@ def wronskian(functions, var, method='bareiss'):
         functions[index] = sympify(functions[index])
     n = len(functions)
     if n == 0:
-        return 1
+        return S.One
     W = Matrix(n, n, lambda i, j: functions[i].diff(var, j))
     return W.det(method)
 

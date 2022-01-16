@@ -1,9 +1,25 @@
-from sympy import (Symbol, exp, Integer, Float, sin, cos, Poly, Lambda,
-    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval, Add, Mul,
-    Pow, Or, true, false, Abs, pi, Range, Xor)
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.function import (Function, Lambda)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Integer, Rational, pi)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.logic.boolalg import (false, Or, true, Xor)
+from sympy.matrices.dense import Matrix
+from sympy.parsing.sympy_parser import null
+from sympy.polys.polytools import Poly
+from sympy.printing.repr import srepr
+from sympy.sets.fancysets import Range
+from sympy.sets.sets import Interval
 from sympy.abc import x, y
 from sympy.core.sympify import (sympify, _sympify, SympifyError, kernS,
-    CantSympify)
+    CantSympify, converter)
 from sympy.core.decorators import _sympifyit
 from sympy.external import import_module
 from sympy.testing.pytest import raises, XFAIL, skip, warns_deprecated_sympy
@@ -11,7 +27,7 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
-from sympy.core.compatibility import HAS_GMPY
+from sympy.external.gmpy import HAS_GMPY
 from sympy.sets import FiniteSet, EmptySet
 from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray
 
@@ -442,7 +458,7 @@ def test_issue_3982():
 
 
 def test_S_sympify():
-    assert S(1)/2 == sympify(1)/2
+    assert S(1)/2 == sympify(1)/2 == S.Half
     assert (-2)**(S(1)/2) == sqrt(2)*I
 
 
@@ -525,7 +541,7 @@ def test_issue_6046():
     assert len(S('pi + x', locals=_clash2).free_symbols) == 2
     # but not both
     raises(TypeError, lambda: S('pi + pi(x)', locals=_clash2))
-    assert all(set(i.values()) == {None} for i in (
+    assert all(set(i.values()) == {null} for i in (
         _clash, _clash1, _clash2))
 
 
@@ -629,6 +645,56 @@ def test_sympify_numpy():
 def test_sympify_rational_numbers_set():
     ans = [Rational(3, 10), Rational(1, 5)]
     assert sympify({'.3', '.2'}, rational=True) == FiniteSet(*ans)
+
+
+def test_sympify_mro():
+    """Tests the resolution order for classes that implement _sympy_"""
+    class a:
+        def _sympy_(self):
+            return Integer(1)
+    class b(a):
+        def _sympy_(self):
+            return Integer(2)
+    class c(a):
+        pass
+
+    assert sympify(a()) == Integer(1)
+    assert sympify(b()) == Integer(2)
+    assert sympify(c()) == Integer(1)
+
+
+def test_sympify_converter():
+    """Tests the resolution order for classes in converter"""
+    class a:
+        pass
+    class b(a):
+        pass
+    class c(a):
+        pass
+
+    converter[a] = lambda x: Integer(1)
+    converter[b] = lambda x: Integer(2)
+
+    assert sympify(a()) == Integer(1)
+    assert sympify(b()) == Integer(2)
+    assert sympify(c()) == Integer(1)
+
+    class MyInteger(Integer):
+        pass
+
+    if int in converter:
+        int_converter = converter[int]
+    else:
+        int_converter = None
+
+    try:
+        converter[int] = MyInteger
+        assert sympify(1) == MyInteger(1)
+    finally:
+        if int_converter is None:
+            del converter[int]
+        else:
+            converter[int] = int_converter
 
 
 def test_issue_13924():

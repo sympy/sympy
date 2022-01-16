@@ -16,11 +16,11 @@ def rm_id(isid, new=new):
     ========
 
     >>> from sympy.strategies import rm_id
-    >>> from sympy import Basic
+    >>> from sympy import Basic, S
     >>> remove_zeros = rm_id(lambda x: x==0)
-    >>> remove_zeros(Basic(1, 0, 2))
+    >>> remove_zeros(Basic(S(1), S(0), S(2)))
     Basic(1, 2)
-    >>> remove_zeros(Basic(0, 0)) # If only identites then we keep one
+    >>> remove_zeros(Basic(S(0), S(0))) # If only identites then we keep one
     Basic(0)
 
     See Also:
@@ -85,9 +85,9 @@ def sort(key, new=new):
     ========
 
     >>> from sympy.strategies import sort
-    >>> from sympy import Basic
+    >>> from sympy import Basic, S
     >>> sort_rl = sort(str)
-    >>> sort_rl(Basic(3, 1, 2))
+    >>> sort_rl(Basic(S(3), S(1), S(2)))
     Basic(1, 2, 3)
     """
 
@@ -134,8 +134,8 @@ def unpack(expr):
     """ Rule to unpack singleton args
 
     >>> from sympy.strategies import unpack
-    >>> from sympy import Basic
-    >>> unpack(Basic(2))
+    >>> from sympy import Basic, S
+    >>> unpack(Basic(S(2)))
     2
     """
     if len(expr.args) == 1:

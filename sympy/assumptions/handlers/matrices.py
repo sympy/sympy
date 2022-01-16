@@ -534,7 +534,7 @@ def _(expr, assumptions):
 # DiagonalPredicate
 
 def _is_empty_or_1x1(expr):
-    return expr.shape == (0, 0) or expr.shape == (1, 1)
+    return expr.shape in ((0, 0), (1, 1))
 
 @DiagonalPredicate.register(MatMul)
 def _(expr, assumptions):

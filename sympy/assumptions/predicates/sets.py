@@ -59,7 +59,7 @@ class RationalPredicate(Predicate):
     References
     ==========
 
-    https://en.wikipedia.org/wiki/Rational_number
+    .. [1] https://en.wikipedia.org/wiki/Rational_number
 
     """
     name = 'rational'

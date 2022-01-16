@@ -25,12 +25,19 @@ __all__ = ['refraction_angle',
            'transverse_magnification'
            ]
 
-from sympy import Symbol, sympify, sqrt, Matrix, acos, oo, Limit, atan2, asin,\
-cos, sin, tan, I, cancel, pi, Float, S, zoo
-from sympy.core.compatibility import is_sequence
+from sympy.core.numbers import (Float, I, oo, pi, zoo)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, asin, atan2, cos, sin, tan)
+from sympy.matrices.dense import Matrix
+from sympy.polys.polytools import cancel
+from sympy.series.limits import Limit
 from sympy.geometry.line import Ray3D
 from sympy.geometry.util import intersection
 from sympy.geometry.plane import Plane
+from sympy.utilities.iterables import is_sequence
 from .medium import Medium
 
 
@@ -198,7 +205,7 @@ def refraction_angle(incident, medium1, medium2, normal=None, plane=None):
     c1 = -_incident.dot(_normal)  # cos(angle_of_incidence)
     cs2 = 1 - eta**2*(1 - c1**2)  # cos(angle_of_refraction)**2
     if cs2.is_negative:  # This is the case of total internal reflection(TIR).
-        return 0
+        return S.Zero
     drs = eta*_incident + (eta*c1 - sqrt(cs2))*_normal
     # Multiplying unit vector by its magnitude
     drs = drs*mag_incident

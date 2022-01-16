@@ -1,4 +1,4 @@
-from sympy import ask, Q
+from sympy.assumptions.ask import (Q, ask)
 from sympy.core import Basic, Add, Mul, S
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import re, im
@@ -31,7 +31,7 @@ class BlockMatrix(MatrixExpr):
     ...     Identity, ZeroMatrix, block_collapse)
     >>> n,m,l = symbols('n m l')
     >>> X = MatrixSymbol('X', n, n)
-    >>> Y = MatrixSymbol('Y', m ,m)
+    >>> Y = MatrixSymbol('Y', m, m)
     >>> Z = MatrixSymbol('Z', n, m)
     >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
     >>> print(B)
@@ -222,7 +222,7 @@ class BlockMatrix(MatrixExpr):
         >>> from sympy import MatrixSymbol, BlockMatrix, ZeroMatrix
         >>> from sympy.abc import m, n
         >>> X = MatrixSymbol('X', n, n)
-        >>> Y = MatrixSymbol('Y', m ,m)
+        >>> Y = MatrixSymbol('Y', m, m)
         >>> Z = MatrixSymbol('Z', n, m)
         >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
         >>> B.transpose()
@@ -560,7 +560,7 @@ class BlockDiagMatrix(BlockMatrix):
     >>> from sympy import MatrixSymbol, BlockDiagMatrix, symbols
     >>> n, m, l = symbols('n m l')
     >>> X = MatrixSymbol('X', n, n)
-    >>> Y = MatrixSymbol('Y', m ,m)
+    >>> Y = MatrixSymbol('Y', m, m)
     >>> BlockDiagMatrix(X, Y)
     Matrix([
     [X, 0],
@@ -677,11 +677,10 @@ class BlockDiagMatrix(BlockMatrix):
 def block_collapse(expr):
     """Evaluates a block matrix expression
 
-    >>> from sympy import MatrixSymbol, BlockMatrix, symbols, \
-                          Identity, ZeroMatrix, block_collapse
+    >>> from sympy import MatrixSymbol, BlockMatrix, symbols, Identity, ZeroMatrix, block_collapse
     >>> n,m,l = symbols('n m l')
     >>> X = MatrixSymbol('X', n, n)
-    >>> Y = MatrixSymbol('Y', m ,m)
+    >>> Y = MatrixSymbol('Y', m, m)
     >>> Z = MatrixSymbol('Z', n, m)
     >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m, n), Y]])
     >>> print(B)
@@ -778,7 +777,7 @@ def bc_dist(expr):
         new_B = [
             [factor * B[i, j] for j in range(B.cols)] for i in range(B.rows)]
         return BlockMatrix(new_B)
-    return unpacked
+    return expr
 
 
 def bc_matmul(expr):

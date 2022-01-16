@@ -36,7 +36,7 @@ def groebner(seq, ring, method=None):
         try:
             orig, ring = ring, ring.clone(domain=domain.get_field())
         except DomainError:
-            raise DomainError("can't compute a Groebner basis over %s" % domain)
+            raise DomainError("Cannot compute a Groebner basis over %s" % domain)
         else:
             seq = [ s.set_ring(ring) for s in seq ]
 
@@ -108,7 +108,7 @@ def _buchberger(f, ring):
         else:
             h = h.monic()
 
-            if not h in I:
+            if h not in I:
                 I[h] = len(f)
                 f.append(h)
 

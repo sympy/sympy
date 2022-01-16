@@ -1,12 +1,19 @@
 from collections import defaultdict
 
-from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet, Integer
-from sympy.core.compatibility import is_sequence, iterable
+from sympy.core.basic import Basic
+from sympy.core.containers import (Dict, Tuple)
+from sympy.core.numbers import Integer
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.core.sympify import sympify
+from sympy.matrices.dense import Matrix
+from sympy.sets.sets import FiniteSet
 from sympy.core.containers import tuple_wrapper
 from sympy.core.expr import unchanged
 from sympy.core.function import Function, Lambda
 from sympy.core.relational import Eq
 from sympy.testing.pytest import raises
+from sympy.utilities.iterables import is_sequence, iterable
 
 from sympy.abc import x, y
 
@@ -155,11 +162,11 @@ def test_Dict():
     assert set(d.values()) == {S.One, S(2), S(3)}
     assert d.get(5, 'default') == 'default'
     assert d.get('5', 'default') == 'default'
-    assert x in d and z in d and not 5 in d and not '5' in d
+    assert x in d and z in d and 5 not in d and '5' not in d
     assert d.has(x) and d.has(1)  # SymPy Basic .has method
 
     # Test input types
-    # input - a python dict
+    # input - a Python dict
     # input - items as args - SymPy style
     assert (Dict({x: 1, y: 2, z: 3}) ==
             Dict((x, 1), (y, 2), (z, 3)))

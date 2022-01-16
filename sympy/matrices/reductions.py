@@ -228,7 +228,7 @@ def _rank(M, iszerofunc=_iszero, simplify=False):
     if M.rows == 2 and M.cols == 2:
         zeros = [iszerofunc(x) for x in M]
 
-        if not False in zeros and not None in zeros:
+        if False not in zeros and None not in zeros:
             return 0
 
         d = M.det()

@@ -1,4 +1,6 @@
-from sympy import Symbol, Dummy, Rational, exp
+from sympy.core.numbers import Rational
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.functions.elementary.exponential import exp
 
 
 def test_equal():

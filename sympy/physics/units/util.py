@@ -4,8 +4,12 @@ Several methods to simplify expressions involving unit objects.
 from functools import reduce
 from collections.abc import Iterable
 
-from sympy import Add, Mul, Pow, Tuple, sympify
-from sympy.core.compatibility import ordered
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.sorting import ordered
+from sympy.core.sympify import sympify
 from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.physics.units.dimensions import Dimension
 from sympy.physics.units.prefixes import Prefix
@@ -14,7 +18,7 @@ from sympy.utilities.iterables import sift
 
 
 def _get_conversion_matrix_for_expr(expr, target_units, unit_system):
-    from sympy import Matrix
+    from sympy.matrices.dense import Matrix
 
     dimension_system = unit_system.get_dimension_system()
 

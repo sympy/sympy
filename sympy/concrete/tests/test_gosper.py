@@ -1,7 +1,13 @@
 """Tests for Gosper's algorithm for hypergeometric summation. """
 
-from sympy import binomial, factorial, gamma, Poly, S, simplify, sqrt, exp, \
-    log, Symbol, pi, Rational
+from sympy.core.numbers import (Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.gamma_functions import gamma
+from sympy.polys.polytools import Poly
+from sympy.simplify.simplify import simplify
 from sympy.abc import a, b, j, k, m, n, r, x
 from sympy.concrete.gosper import gosper_normal, gosper_sum, gosper_term
 
@@ -47,7 +53,7 @@ def test_gosper_sum():
     # issue 6033:
     assert gosper_sum(
         n*(n + a + b)*a**n*b**n/(factorial(n + a)*factorial(n + b)), \
-        (n, 0, m)).simplify() == -exp(m*log(a) + m*log(b))*gamma(a + 1) \
+        (n, 0, m)).simplify() == -(a*b)**m*gamma(a + 1) \
         *gamma(b + 1)/(gamma(a)*gamma(b)*gamma(a + m + 1)*gamma(b + m + 1)) \
         + 1/(gamma(a)*gamma(b))
 

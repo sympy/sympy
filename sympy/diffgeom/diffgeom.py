@@ -1,4 +1,4 @@
-from typing import Any, Set
+from typing import Any, Set as tSet
 
 from functools import reduce
 from itertools import permutations
@@ -15,7 +15,6 @@ from sympy.core.symbol import Str
 from sympy.core.sympify import _sympify
 from sympy.functions import factorial
 from sympy.matrices import ImmutableDenseMatrix as Matrix
-from sympy.simplify import simplify
 from sympy.solvers import solve
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -972,7 +971,7 @@ class BaseScalarField(Expr):
         return simplify(coords[self._index]).doit()
 
     # XXX Workaround for limitations on the content of args
-    free_symbols = set()  # type: Set[Any]
+    free_symbols = set()  # type: tSet[Any]
 
     def doit(self):
         return self
@@ -1127,7 +1126,7 @@ class Commutator(Expr):
 
     >>> from sympy.diffgeom.rn import R2_p, R2_r
     >>> from sympy.diffgeom import Commutator
-    >>> from sympy.simplify import simplify
+    >>> from sympy import simplify
 
     >>> fx, fy = R2_r.base_scalars()
     >>> e_x, e_y = R2_r.base_vectors()
@@ -1635,6 +1634,7 @@ class CovarDerivativeOp(Expr):
             raise ValueError('Covariant derivatives are defined only with '
                              'respect to vector fields. The supplied argument '
                              'was not a vector field.')
+        christoffel = ImmutableDenseNDimArray(christoffel)
         obj = super().__new__(cls, wrt, christoffel)
         # deprecated assigments
         obj._wrt = wrt
@@ -2244,8 +2244,14 @@ class _deprecated_container:
         self.warn()
         return super().__contains__(key)
 
+
 class _deprecated_list(_deprecated_container, list):
     pass
 
+
 class _deprecated_dict(_deprecated_container, dict):
     pass
+
+
+# Import at end to avoid cyclic imports
+from sympy.simplify.simplify import simplify
