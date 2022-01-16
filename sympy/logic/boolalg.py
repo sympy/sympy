@@ -3449,7 +3449,7 @@ def gateinputcount(expr):
     Not all Boolean functions count as gate here, only those that are
     considered to be standard gates. These are: ``And``, ``Or``, ``Xor``,
     ``Not``, and ``ITE`` (multiplexer). ``Nand``, ``Nor``, and ``Xnor`` will
-    be evalutated to ``Not(And())`` etc.
+    be evaluated to ``Not(And())`` etc.
 
     Examples
     ========
