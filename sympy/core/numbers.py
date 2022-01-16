@@ -454,7 +454,7 @@ def iround(num, den):
 
 def idiv(a, b):
     # safe a/b asserting that b divides a evenly
-    assert a%b == 0
+    # if a%b != 0: print('non-int division of ',(a, b))
     return a//b
 
 
@@ -572,8 +572,9 @@ def igcdLLL(s, _n=2, _d=3, optimize=None):
         raise ValueError('s should be iterable')
     if len(s) < 2:
         raise ValueError('expecting 2 or more values')
-    if not all(type(i) is int for i in s):
-        raise ValueError('expecting literal ints for s')
+    s = [as_int(i) for i in s]
+    if not all(s):
+        raise ValueError('all s must be non-zero')
     ok = (_d > 0) and (_n > 0) and (_n <= _d)
     if not ok:
         raise ValueError('alpha must be in (0, 1], but is %s/%s' % (_n, _d))
@@ -610,7 +611,7 @@ def igcdLLL(s, _n=2, _d=3, optimize=None):
         j = k - 1
         reduce1(k, j)
         if A[j] != 0 or (A[j] == 0 and A[k] == 0 and
-                _d*(D[j - 1]*D[k] + la[k][j] ** 2) < _n*D[j]**2):
+                _d*(D[j - 1]*D[k] + la[k][j]**2) < _n*D[j]**2):
             _swap(k, m, A, B, la, D)
             if k > 1:
                 k = j

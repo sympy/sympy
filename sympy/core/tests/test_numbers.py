@@ -2239,7 +2239,8 @@ def test_igcdLLL_hnf():
     #(1, 1, 1)
     f([-15467, 89459, 47266])
 
-    raises(ValueError, lambda: igcdLLL(1,2))
+    raises(ValueError, lambda: igcdLLL(1, 2))
+    raises(ValueError, lambda: igcdLLL(1, 2, 0))
     raises(ValueError, lambda: igcdLLL([]))
     raises(ValueError, lambda: igcdLLL([2]))
     raises(ValueError, lambda: igcdLLL([2]))
@@ -2287,4 +2288,9 @@ def test_igcdLLL_hnf():
         return i**3*j**2 + i + j
     G = Matrix(10, 10, lambda i,j: func(i, j)).tolist()
     _, H, P = hnf(G)
+    assert Matrix(P)*Matrix(G) == Matrix(H)
+
+    # involves non-exact division
+    G = [[5, 3, 2], [13, 11, 7], [23, 19, 17], [37, 31, 29], [47, 43, 41]]
+    g, H, P = hnf(G)
     assert Matrix(P)*Matrix(G) == Matrix(H)
