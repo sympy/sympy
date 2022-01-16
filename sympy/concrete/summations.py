@@ -17,7 +17,7 @@ from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Wild, Symbol, symbols
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
-from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cot, csc
 from sympy.functions.special.hyper import hyper
@@ -873,6 +873,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             limits.append(l)
 
         return Sum(e * self.function, *limits)
+
+    def _eval_rewrite_as_Product(self, *args, **kwargs):
+        from sympy.concrete.products import Product
+        if self.function.is_extended_real:
+            return log(Product(exp(self.function), *self.limits))
 
 
 def summation(f, *symbols, **kwargs):
