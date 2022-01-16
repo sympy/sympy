@@ -7,7 +7,7 @@ to get the order in AUTHORS. bin/mailmap_check.py should be run before
 committing the results.
 
 See here for instructions on using this script:
-https://github.com/sympy/sympy/wiki/Development-workflow
+https://github.com/sympy/sympy/wiki/Development-workflow#update-mailmap
 """
 
 from __future__ import unicode_literals
@@ -37,7 +37,8 @@ def main(*args):
 
     parser = ArgumentParser(description='Update the .mailmap and/or AUTHORS files')
     parser.add_argument('--update-authors', action='store_true',
-            help=filldedent("""Also update the AUTHORS file. Note that it
+            help=filldedent("""
+            Also update the AUTHORS file. Note that it
             should only necessary for the release manager to do this as part of
             the release process for SymPy."""))
     args = parser.parse_args(args)
@@ -92,25 +93,27 @@ def main(*args):
             ambiguous = True
 
     if missing:
-        print(red("""
+        print(red(filldedent("""
         The .mailmap file needs to be updated because there are commits with
         unrecognised author/email metadata.
-        """))
+        """)))
         problems = True
 
     if ambiguous:
-        print(red("""
+        print(red(filldedent("""
         Lines should be added to .mailmap to indicate the correct name and
         email aliases for all commits.
-        """))
+        """)))
         problems = True
 
     for email, commitauthors in dups.items():
         if len(commitauthors) > 2:
-            print(red("""
+            print(red(filldedent("""
             The following commits are recorded with different metadata but the
             same/ambiguous email address. The .mailmap file will need to be
-            updated."""))
+            updated.""")))
+            for author in commitauthors:
+                print(author)
             problems = True
 
     lines_mailmap_sorted = sort_lines_mailmap(lines_mailmap)
@@ -121,9 +124,9 @@ def main(*args):
         print(red("The mailmap file was reordered"))
 
     if problems:
-        print(red("""
+        print(red(filldedent("""
         For instructions on updating the .mailmap file see:
-        https://github.com/sympy/sympy/wiki/Development-workflow"""))
+        https://github.com/sympy/sympy/wiki/Development-workflow#update-mailmap""")))
     else:
         print(green("No changes needed in .mailmap"))
 
@@ -159,9 +162,9 @@ def update_authors_file(lines, old_lines, update_yesno):
         if update_yesno:
             print(yellow("The following authors were added to AUTHORS."))
         else:
-            print(green("""
+            print(green(filldedent("""
                 The following authors will be added to the AUTHORS file at the
-                time of the next SymPy release."""))
+                time of the next SymPy release.""")))
         print()
         for i in sorted(new_authors, key=lambda x: x.lower()):
             print('\t%s' % i)
