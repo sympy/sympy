@@ -4920,6 +4920,16 @@ def test_sympy__physics__optics__medium__Medium():
     assert _test_args(Medium('m'))
 
 
+def test_sympy__physics__optics__medium__MediumN():
+    from sympy.physics.optics.medium import Medium
+    assert _test_args(Medium('m', n=2))
+
+
+def test_sympy__physics__optics__medium__MediumPP():
+    from sympy.physics.optics.medium import Medium
+    assert _test_args(Medium('m', permittivity=2, permeability=2))
+
+
 def test_sympy__tensor__array__expressions__array_expressions__ArrayContraction():
     from sympy.tensor.array.expressions.array_expressions import ArrayContraction
     from sympy.tensor.indexed import IndexedBase

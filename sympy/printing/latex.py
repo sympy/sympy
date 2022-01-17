@@ -915,7 +915,7 @@ class LatexPrinter(Printer):
                 if inv_trig_style == "abbreviated":
                     pass
                 elif inv_trig_style == "full":
-                    func = "arc" + func[1:]
+                    func = ("ar" if func[-1] == "h" else "arc") + func[1:]
                 elif inv_trig_style == "power":
                     func = func[1:]
                     inv_trig_power_case = True
@@ -1683,10 +1683,14 @@ class LatexPrinter(Printer):
     def _print_Transpose(self, expr):
         mat = expr.arg
         from sympy.matrices import MatrixSymbol
-        if not isinstance(mat, MatrixSymbol):
+        if not isinstance(mat, MatrixSymbol) and mat.is_MatrixExpr:
             return r"\left(%s\right)^{T}" % self._print(mat)
         else:
-            return "%s^{T}" % self.parenthesize(mat, precedence_traditional(expr), True)
+            s = self.parenthesize(mat, precedence_traditional(expr), True)
+            if '^' in s:
+                return r"\left(%s\right)^{T}" % s
+            else:
+                return "%s^{T}" % s
 
     def _print_Trace(self, expr):
         mat = expr.arg
@@ -1695,10 +1699,14 @@ class LatexPrinter(Printer):
     def _print_Adjoint(self, expr):
         mat = expr.arg
         from sympy.matrices import MatrixSymbol
-        if not isinstance(mat, MatrixSymbol):
+        if not isinstance(mat, MatrixSymbol) and mat.is_MatrixExpr:
             return r"\left(%s\right)^{\dagger}" % self._print(mat)
         else:
-            return r"%s^{\dagger}" % self._print(mat)
+            s = self.parenthesize(mat, precedence_traditional(expr), True)
+            if '^' in s:
+                return r"\left(%s\right)^{\dagger}" % s
+            else:
+                return r"%s^{\dagger}" % s
 
     def _print_MatMul(self, expr):
         from sympy.matrices.expressions.matmul import MatMul
@@ -1766,7 +1774,11 @@ class LatexPrinter(Printer):
             return "\\left(%s\\right)^{%s}" % (self._print(base),
                                               self._print(exp))
         else:
-            return "%s^{%s}" % (self._print(base), self._print(exp))
+            base_str = self._print(base)
+            if '^' in base_str:
+                return r"\left(%s\right)^{%s}" % (base_str, self._print(exp))
+            else:
+                return "%s^{%s}" % (base_str, self._print(exp))
 
     def _print_MatrixSymbol(self, expr):
         return self._print_Symbol(expr, style=self._settings[
@@ -2273,6 +2285,8 @@ class LatexPrinter(Printer):
         return r"%s \in %s" % tuple(self._print(a) for a in e.args)
 
     def _print_FourierSeries(self, s):
+        if s.an.formula is S.Zero and s.bn.formula is S.Zero:
+            return self._print(s.a0)
         return self._print_Add(s.truncate()) + r' + \ldots'
 
     def _print_FormalPowerSeries(self, s):
