@@ -464,7 +464,7 @@ Thus the final computation remains valid as long as the initial integral
 converges, and if there exists a changed set of parameters where the computation
 is valid. If we assume w.l.o.g. that `a > 0`, then the latter condition is
 fulfilled if `G` converges along contours (2) or (3) of [Luke1969]_,
-section 5.2, i.e. either `\delta >= \frac{a}{2}` or `p \ge 1, p \ge q`.
+section 5.2, i.e. either `\delta \ge \frac{a}{2}` or `p \ge 1, p \ge q`.
 
 When the integral exists
 ========================
