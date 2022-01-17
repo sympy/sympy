@@ -3,6 +3,7 @@ matplotlib==3.4.3
 matplotlib-inline==0.1.2
 mpmath==1.2.1
 myst-parser
+pydata-sphinx-theme
 Sphinx==4.1.2
 sphinx-math-dollar==1.2
 sphinx-reredirects==0.0.1

@@ -130,7 +130,7 @@ plot_html_show_source_link = False
 # The style sheet to use for HTML and HTML Help pages. A file of that name
 # must exist either in Sphinx' static/ path, or in one of the custom paths
 # given in html_static_path.
-html_style = 'default.css'
+# html_style = 'default.css'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -142,7 +142,8 @@ html_static_path = ['_static']
 html_last_updated_fmt = '%b %d, %Y'
 
 # was classic
-html_theme = "classic"
+# html_theme = "classic"
+html_theme = 'pydata_sphinx_theme'
 
 html_logo = '_static/sympylogo.png'
 html_favicon = '../_build/logo/sympy-notailtext-favicon.ico'
