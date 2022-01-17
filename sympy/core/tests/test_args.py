@@ -2013,6 +2013,11 @@ def test_sympy__functions__combinatorial__numbers__lucas():
     assert _test_args(lucas(x))
 
 
+def test_sympy__functions__combinatorial__numbers__padovan():
+    from sympy.functions.combinatorial.numbers import padovan
+    assert _test_args(padovan(x))
+
+
 def test_sympy__functions__combinatorial__numbers__partition():
     from sympy.core.symbol import Symbol
     from sympy.functions.combinatorial.numbers import partition
