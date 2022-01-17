@@ -3,6 +3,7 @@ from functools import reduce
 from collections import defaultdict
 import inspect
 
+from sympy.core.kind import Kind, UndefinedKind, NumberKind
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.decorators import sympify_method_args, sympify_return
@@ -535,6 +536,26 @@ class Set(Basic, EvalfMixin):
         return self._measure
 
     @property
+    def kind(self):
+        """
+        Finds kind of a set
+
+        Examples
+        ========
+
+        >>> FiniteSet(Matrix([1, 2])).kind
+        FiniteSet(Matrix([1, 2])).kind
+        >>> FiniteSet(0, Matrix([1, 2])).kind
+        SetKind(UndefinedKind)
+
+        >>> Interval(1,2).kind
+        SetKind(NumberKind)
+        >>> EmptySet.kind
+        SetKind(UndefinedKind)
+        """
+        return self._kind
+
+    @property
     def boundary(self):
         """
         The boundary or frontier of a set.
@@ -651,6 +672,10 @@ class Set(Basic, EvalfMixin):
     @property
     def _measure(self):
         raise NotImplementedError("(%s)._measure" % self)
+
+    @property
+    def _kind(self):
+        raise NotImplementedError("(%s)._kind" % self)
 
     def _eval_evalf(self, prec):
         dps = prec_to_dps(prec)
@@ -866,6 +891,13 @@ class ProductSet(Set):
         for s in self.sets:
             measure *= s.measure
         return measure
+
+    @property
+    def _kind(self):
+        if self.args[0].kind == self.args[1].kind:
+            return self.args[0].kind
+        else:
+            return SetKind(UndefinedKind)
 
     def __len__(self):
         return reduce(lambda a, b: a*b, (len(s) for s in self.args))
@@ -1120,6 +1152,10 @@ class Interval(Set):
     def _measure(self):
         return self.end - self.start
 
+    @property
+    def _kind(self):
+        return SetKind(NumberKind)
+
     def to_mpi(self, prec=53):
         return mpi(mpf(self.start._eval_evalf(prec)),
             mpf(self.end._eval_evalf(prec)))
@@ -1280,6 +1316,13 @@ class Union(Set, LatticeOp):
             # Flip Parity - next time subtract/add if we added/subtracted here
             parity *= -1
         return measure
+
+    @property
+    def _kind(self):
+        if all(i.kind == self.args[0].kind for i in self.args):
+            return SetKind(self.args[0].kind)
+        else:
+            return SetKind(UndefinedKind)
 
     @property
     def _boundary(self):
@@ -1667,6 +1710,10 @@ class EmptySet(Set, metaclass=Singleton):
     def _measure(self):
         return 0
 
+    @property
+    def _kind(self):
+        return SetKind(UndefinedKind)
+
     def _contains(self, other):
         return false
 
@@ -1732,6 +1779,10 @@ class UniversalSet(Set, metaclass=Singleton):
     @property
     def _measure(self):
         return S.Infinity
+
+    @property
+    def _kind(self):
+        return SetKind(UndefinedKind)
 
     def _contains(self, other):
         return true
@@ -1903,6 +1954,13 @@ class FiniteSet(Set):
     @property
     def measure(self):
         return 0
+
+    @property
+    def _kind(self):
+        if all(i.kind == self.args[0].kind for i in self.args):
+            return SetKind(self.args[0].kind)
+        else:
+            return SetKind(UndefinedKind)
 
     def __len__(self):
         return len(self.args)
@@ -2531,3 +2589,23 @@ def set_pow(x, y):
 def set_function(f, x):
     from sympy.sets.handlers.functions import _set_function
     return _set_function(f, x)
+
+class SetKind(Kind):
+    """
+    SetKind is subclass of Kind which is used to find kind of Sets
+    and its Subclasses
+
+    Examples
+    ========
+
+    >>> Interval(1,2).kind
+    SetKind(NumberKind)
+
+    """
+    def __new__(cls, element_kind=NumberKind):
+        obj = super().__new__(cls, element_kind)
+        obj.element_kind = element_kind
+        return obj
+
+    def __repr__(self):
+        return "SetKind(%s)" % self.element_kind
