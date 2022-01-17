@@ -13,6 +13,7 @@ from typing import Any, Callable
 from .basic import Basic
 from .sorting import default_sort_key, ordered
 from .sympify import _sympify, sympify, _sympy_converter, SympifyError
+from sympy.core.kind import Kind, UndefinedKind, NumberKind
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import as_int
 
@@ -144,6 +145,33 @@ class Tuple(Basic):
         else:
             return self.args.index(value, start, stop)
 
+    @property
+    def kind(self):
+        """
+        Kind method is used to determine the type of Tuple objects.
+        Kind of Tuple will always be ``TupleKind`` with kinds of all arguments
+        as parameters
+
+        ``Tuple(Matrix([1, 2]), 1).kind`` for this expression kind will be ``TupleKind``,
+        ``MatrixKind(NumberKind), NumberKind`` as parameters because 1st argument is ``Matrix([1, 2])``
+        which have ``MatrixKind(NumberKind)`` as kind and 2nd argument is ``1`` which have
+        ``NumberKind`` as kind. So kind of this expression will be ``TupleKind(MatrixKind(NumberKind), NumberKind)``
+
+        Examples
+        ========
+
+        >>> from sympy import Tuple, Matrix
+        >>> Tuple(1, 2).kind
+        TupleKind(NumberKind, NumberKind)
+        >>> Tuple(Matrix([1, 2]), 1).kind
+        TupleKind(MatrixKind(NumberKind), NumberKind)
+
+        See Also
+        ========
+
+        sympy.core.kind.NumberKind
+        """
+        return TupleKind(*(i.kind for i in self.args))
 
 _sympy_converter[tuple] = lambda tup: Tuple(*tup)
 
@@ -351,3 +379,42 @@ class OrderedSet(MutableSet):
     def update(self, iterable):
         for val in iterable:
             self.add(val)
+
+class TupleKind(Kind):
+    """
+    TupleKind is a subclass of Kind, which is used to define Kind of ``Tuple``.
+
+    Parameters of TupleKind will be kinds of all the arguments in Tuples, for example
+    ``Tuple(1, 2).kind``, kind is ``TupleKind`` with parameters ``NumberKind`` and
+    ``NumberKind`` because kind of both ``1`` and ``2`` will be ``NumberKind``
+
+    Parameters
+    ==========
+
+    args : tuple(element_kind)
+       element_kind is kind of element.
+       args is tuple of kinds of element
+
+    Examples
+    ========
+
+    >>> from sympy import Tuple
+    >>> Tuple(1, 2).kind
+    TupleKind(NumberKind, NumberKind)
+
+    See Also
+    ========
+
+    sympy.core.kind.NumberKind
+
+    sympy.matrices.common.MatrixKind
+
+    sympy.sets.sets.SetKind
+        """
+    def __new__(cls, *args):
+        obj = super().__new__(cls, *args)
+        obj.element_kind = args
+        return obj
+
+    def __repr__(self):
+        return "TupleKind{}".format(self.element_kind)

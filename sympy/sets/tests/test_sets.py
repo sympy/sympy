@@ -1,6 +1,8 @@
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
+from sympy.core.containers import TupleKind
 from sympy.core.function import Lambda
+from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.core.numbers import (Float, I, Rational, nan, oo, pi, zoo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -10,11 +12,12 @@ from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.logic.boolalg import (false, true)
+from sympy.matrices.common import MatrixKind
 from sympy.matrices.dense import Matrix
 from sympy.polys.rootoftools import rootof
 from sympy.sets.contains import Contains
 from sympy.sets.fancysets import (ImageSet, Range)
-from sympy.sets.sets import (Complement, DisjointUnion, FiniteSet, Intersection, Interval, ProductSet, Set, SymmetricDifference, Union, imageset)
+from sympy.sets.sets import (Complement, DisjointUnion, FiniteSet, Intersection, Interval, ProductSet, Set, SymmetricDifference, Union, imageset, SetKind)
 from mpmath import mpi
 
 from sympy.core.expr import unchanged
@@ -1596,6 +1599,42 @@ def test_DisjointUnion_len():
     assert len(DisjointUnion(FiniteSet(3, 5, 7, 9), FiniteSet(x, y, z))) == 7
     assert len(DisjointUnion(S.EmptySet, S.EmptySet, FiniteSet(x, y, z), S.EmptySet)) == 3
     raises(ValueError, lambda: len(DisjointUnion(Interval(0, 1), S.EmptySet)))
+
+def test_SetKind_ProductSet():
+    p = ProductSet(FiniteSet(Matrix([1, 2])), FiniteSet(Matrix([1, 2])))
+    mk = MatrixKind(NumberKind)
+    k = SetKind(TupleKind(mk, mk))
+    assert p.kind is k
+    assert ProductSet(Interval(1, 2), FiniteSet(Matrix([1, 2]))).kind is SetKind(TupleKind(NumberKind, mk))
+
+def test_SetKind_Interval():
+    assert Interval(1, 2).kind is SetKind(NumberKind)
+
+def test_SetKind_EmptySet_UniversalSet():
+    assert S.UniversalSet.kind is SetKind(UndefinedKind)
+    assert EmptySet.kind is SetKind()
+
+def test_SetKind_FiniteSet():
+    assert FiniteSet(1, Matrix([1, 2])).kind is SetKind(UndefinedKind)
+    assert FiniteSet(1, 2).kind is SetKind(NumberKind)
+
+def test_SetKind_Unions():
+    assert Union(FiniteSet(Matrix([1, 2])), Interval(1, 2)).kind is SetKind(UndefinedKind)
+    assert Union(Interval(1, 2), Interval(1, 7)).kind is SetKind(NumberKind)
+
+def test_SetKind_evaluate_False():
+    one = Union({1}, EmptySet, evaluate=False).kind
+    two = Union(Interval(1, 2), EmptySet, evaluate=False).kind
+    three = Intersection({1}, S.UniversalSet,evaluate=False).kind
+    four = Union({1}, S.UniversalSet, evaluate=False).kind
+    five = Union(Interval(1, 2), Interval(4, 5), FiniteSet(1), evaluate=False).kind
+    six = Intersection({1}, EmptySet, evaluate=False).kind
+    assert one is SetKind(NumberKind)
+    assert two is SetKind(NumberKind)
+    assert three is SetKind(NumberKind)
+    assert four is SetKind(UndefinedKind)
+    assert five is SetKind(NumberKind)
+    assert six is SetKind()
 
 def test_issue_20089():
     B = FiniteSet(FiniteSet(1, 2), FiniteSet(1))

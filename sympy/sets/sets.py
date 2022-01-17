@@ -3,8 +3,9 @@ from functools import reduce
 from collections import defaultdict
 import inspect
 
+from sympy.core.kind import Kind, UndefinedKind, NumberKind
 from sympy.core.basic import Basic
-from sympy.core.containers import Tuple
+from sympy.core.containers import Tuple, TupleKind
 from sympy.core.decorators import sympify_method_args, sympify_return
 from sympy.core.evalf import EvalfMixin
 from sympy.core.expr import Expr
@@ -535,6 +536,57 @@ class Set(Basic, EvalfMixin):
         return self._measure
 
     @property
+    def kind(self):
+        """
+        This is a method for Sets class and its subclasses such as FiniteSet, EmptySet, etc.
+
+        Every instance of Set or its subclass will have kind of class ``SetKind``.
+        Parameter of this SetKind will depend on arguments of that set
+
+        Parameter of SetKind can be ``NumberKind``, ``UndefinedKind``, ``TupleKind`` etc.
+        if all arguments of expression are not same then parameter will be ``UndefinedKind``
+
+        ``FiniteSet(Matrix([1, 2])).kind`` kind of this expression will be ``SetKind`` with ``MatrixKind(NumberKind)``
+        as its parameter because argument of FiniteSet is ``Matrix([1, 2])``.
+        Kind of this expression will be ``SetKind(MatrixKind(NumberKind))``
+
+        ``FiniteSet(0, Matrix([1, 2])).kind`` kind of this expression will be ``SetKind`` with ``UndefinedKind``
+        as it parameter because kind of both argument of FiniteSet i.e. ``0``, ``Matrix([1, 2])`` are different.
+        Kind of this expression will be ``SetKind(UndefinedKind)``
+
+        ``ProductSet(FiniteSet(1, Matrix([1, 2])), Interval(1, 2)).kind`` kind of this expression will be ``SetKind`` with
+        ``TupleKind(UndefinedKind, NumberKind)`` as its parameter because Since set is ProductSet so elements of this set will
+        be tuple. ``UndefinedKind`` is parameter of TupleKind because 1st argument of ProductSet is ``FiniteSet(1, Matrix([1, 2]))``
+        which give ``UndefinedKind`` as its parameter. 2nd argument of ProductSet is ``Interval(1, 2)`` whose paramter will be
+        ``NumberKind``. So Kind of this expression ``SetKind(TupleKind(UndefinedKind, NumberKind))``
+
+        kind of ``UniversalSet`` and ``EmptySet`` are ``SetKind(UndefinedKind)`` and ``SetKind()`` respectively.
+
+        Examples
+        ========
+
+        >>> from sympy import Interval, Matrix, FiniteSet, EmptySet, ProductSet, PowerSet
+        >>> FiniteSet(Matrix([1, 2])).kind
+        SetKind(MatrixKind(NumberKind))
+        >>> FiniteSet(0, Matrix([1, 2])).kind
+        SetKind(UndefinedKind)
+        >>> Interval(1,2).kind
+        SetKind(NumberKind)
+        >>> EmptySet.kind
+        SetKind()
+        >>> ProductSet(FiniteSet(1, Matrix([1, 2])), Interval(1, 2)).kind
+        SetKind(TupleKind(UndefinedKind, NumberKind))
+        >>> PowerSet({1,2,3}).kind
+        SetKind(SetKind(NumberKind))
+
+        See Also
+        ========
+
+        sympy.core.kind.NumberKind
+        """
+        return self._kind
+
+    @property
     def boundary(self):
         """
         The boundary or frontier of a set.
@@ -651,6 +703,19 @@ class Set(Basic, EvalfMixin):
     @property
     def _measure(self):
         raise NotImplementedError("(%s)._measure" % self)
+
+    @property
+    def _kind(self):
+        if not self.args:
+            return SetKind()
+        elif all(i.kind == self.args[0].kind for i in self.args):
+            return SetKind(self.args[0].kind)
+        else:
+            return SetKind(UndefinedKind)
+
+    @staticmethod
+    def _helper_kind(args, Type_of_Set):
+        return tuple(arg.kind for arg in args if arg is not Type_of_Set)
 
     def _eval_evalf(self, prec):
         dps = prec_to_dps(prec)
@@ -866,6 +931,10 @@ class ProductSet(Set):
         for s in self.sets:
             measure *= s.measure
         return measure
+
+    @property
+    def _kind(self):
+        return SetKind(TupleKind(*(i.kind.element_kind[0] for i in self.args)))
 
     def __len__(self):
         return reduce(lambda a, b: a*b, (len(s) for s in self.args))
@@ -1120,6 +1189,10 @@ class Interval(Set):
     def _measure(self):
         return self.end - self.start
 
+    @property
+    def _kind(self):
+        return SetKind(NumberKind)
+
     def to_mpi(self, prec=53):
         return mpi(mpf(self.start._eval_evalf(prec)),
             mpf(self.end._eval_evalf(prec)))
@@ -1282,6 +1355,16 @@ class Union(Set, LatticeOp):
         return measure
 
     @property
+    def _kind(self):
+        args = self._helper_kind(self.args, S.EmptySet)
+        if not args:
+            return SetKind()
+        elif all(i == args[0] for i in args):
+            return args[0]
+        else:
+            return SetKind(UndefinedKind)
+
+    @property
     def _boundary(self):
         def boundary_of_set(i):
             """ The boundary of set i minus interior of all other sets """
@@ -1383,6 +1466,16 @@ class Intersection(Set, LatticeOp):
     def is_finite_set(self):
         if fuzzy_or(arg.is_finite_set for arg in self.args):
             return True
+
+    @property
+    def _kind(self):
+        args = self._helper_kind(self.args, S.UniversalSet)
+        if not args:
+            return SetKind(UndefinedKind)
+        elif all(i == args[0] for i in args):
+            return args[0]
+        else:
+            return SetKind()
 
     @property
     def _inf(self):
@@ -1606,6 +1699,10 @@ class Complement(Set):
         return And(A_rel, B_rel)
 
     @property
+    def _kind(self):
+        return SetKind(self.args[0].args[0].kind)
+
+    @property
     def is_iterable(self):
         if self.args[0].is_iterable:
             return True
@@ -1732,6 +1829,10 @@ class UniversalSet(Set, metaclass=Singleton):
     @property
     def _measure(self):
         return S.Infinity
+
+    @property
+    def _kind(self):
+        return SetKind(UndefinedKind)
 
     def _contains(self, other):
         return true
@@ -2531,3 +2632,50 @@ def set_pow(x, y):
 def set_function(f, x):
     from sympy.sets.handlers.functions import _set_function
     return _set_function(f, x)
+
+class SetKind(Kind):
+    """
+    SetKind is kind for all subclasses of ``Sets`` such as ``Interval``, ``FiniteSet``, ``ProductSet``, ``PowerSet``
+
+    Every subclass of Set will have SetKind as its object type. If all elements are of same type then
+    the parameter will be kind of element, if kind of elements are different then the parameter will be
+    ``UndefinedKind``
+
+    For ``Interval(1, 2)``, Since Interval is a subclass of Set, so kind of Interval will be ``SetKind``.
+    In ``(1, 2)`` both belong to ``NumberKind``, so the parameter will be ``NumberKind``.
+    Overall kind of expression (``Interval(1, 2).kind``) will ``SetKind(NumberKind)``.
+
+    Parameters
+    ==========
+
+    args : tuple(element_kind)
+       element_kind is kind of element.
+       args is tuple of kinds of the element, but it only uses first arg or ``UndefinedKind``,
+       this depends upon whether kind of all elements of tuple is same or not
+
+    Examples
+    ========
+
+    >>> from sympy import Interval
+    >>> Interval(1, 2).kind
+    SetKind(NumberKind)
+
+    See Also
+    ========
+
+    sympy.core.kind.NumberKind
+
+    sympy.matrices.common.MatrixKind
+
+    sympy.core.containers.TupleKind
+    """
+    def __new__(cls, *args):
+        obj = super().__new__(cls, *args)
+        obj.element_kind = args
+        return obj
+
+    def __repr__(self):
+        if not self.element_kind:
+            return "SetKind()"
+        else:
+            return "SetKind(%s)" % self.element_kind[0]
