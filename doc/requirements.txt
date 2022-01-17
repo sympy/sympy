@@ -4,6 +4,7 @@ matplotlib-inline==0.1.2
 mpmath==1.2.1
 myst-parser
 Sphinx==4.1.2
+sphinx-book-theme
 sphinx-math-dollar==1.2
 sphinx-reredirects==0.0.1
 sphinxcontrib-applehelp==1.0.2
