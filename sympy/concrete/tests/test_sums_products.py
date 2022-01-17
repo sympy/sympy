@@ -13,7 +13,7 @@ from sympy.functions.combinatorial.numbers import harmonic
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (sinh, tanh)
-from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.integers import floor, Mod
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (cos, sin)
@@ -37,7 +37,7 @@ from sympy.core.facts import InconsistentAssumptions
 from sympy.testing.pytest import XFAIL, raises, slow
 from sympy.matrices import (Matrix, SparseMatrix,
     ImmutableDenseMatrix, ImmutableSparseMatrix)
-from sympy.core.mod import Mod
+
 
 n = Symbol('n', integer=True)
 f, g = symbols('f g', cls=Function)

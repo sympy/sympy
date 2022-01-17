@@ -2896,7 +2896,7 @@ def test_deprecated():
 
 
 def test_issue_14489():
-    from sympy.core.mod import Mod
+    from sympy.functions.elementary.integers import Mod
     A = Matrix([-1, 1, 2])
     B = Matrix([10, 20, -15])
 

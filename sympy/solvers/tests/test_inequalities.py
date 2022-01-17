@@ -8,6 +8,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol)
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import Mod
 from sympy.functions.elementary.miscellaneous import (root, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
@@ -26,7 +27,6 @@ from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import solveset
 from sympy.abc import x, y
 
-from sympy.core.mod import Mod
 
 from sympy.testing.pytest import raises, XFAIL
 

@@ -7,7 +7,6 @@ from sympy.core.function import (Application, Lambda,
     ArgumentIndexError)
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
-from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import Rational
 from sympy.core.power import Pow
@@ -19,6 +18,7 @@ from sympy.core.rules import Transform
 from sympy.core.logic import fuzzy_and, fuzzy_or, _torf
 from sympy.core.traversal import walk
 from sympy.core.numbers import Integer
+from sympy.functions.elementary.integers import Mod
 from sympy.logic.boolalg import And, Or
 
 

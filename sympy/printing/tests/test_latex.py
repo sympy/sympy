@@ -6,7 +6,6 @@ from sympy.concrete.summations import Sum
 from sympy.core.containers import Tuple, Dict
 from sympy.core.expr import UnevaluatedExpr
 from sympy.core.function import (Derivative, Function, Lambda, Subs, diff)
-from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import (AlgebraicNumber, Float, I, Integer, Rational, oo, pi)
 from sympy.core.power import Pow
@@ -18,7 +17,7 @@ from sympy.functions.combinatorial.numbers import bernoulli, bell, catalan, eule
 from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, polar_lift, re)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.hyperbolic import (asinh, coth)
-from sympy.functions.elementary.integers import (ceiling, floor, frac)
+from sympy.functions.elementary.integers import (ceiling, floor, frac, Mod)
 from sympy.functions.elementary.miscellaneous import (Max, Min, root, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (acsc, asin, cos, cot, sin, tan)

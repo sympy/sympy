@@ -1,6 +1,6 @@
 from sympy.concrete.summations import Sum
-from sympy.core.mod import Mod
 from sympy.core.relational import (Equality, Unequality)
+from sympy.functions.elementary.integers import Mod
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.matrices.expressions.blockmatrix import BlockMatrix

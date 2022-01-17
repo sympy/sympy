@@ -16,14 +16,13 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, symbols)
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.integers import floor,Mod
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cos, sin, tan)
 from sympy.logic.boolalg import And
 from sympy.matrices.dense import eye
 from sympy.testing.pytest import XFAIL, raises
 from sympy.abc import x, y, t, z
-from sympy.core.mod import Mod
 
 import itertools
 

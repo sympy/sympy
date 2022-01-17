@@ -1,6 +1,5 @@
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import (Float, I, Integer, Rational, comp, nan,
     oo, pi, zoo)
@@ -11,7 +10,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.integers import floor, Mod
 from sympy.functions.elementary.miscellaneous import (Max, sqrt)
 from sympy.functions.elementary.trigonometric import (atan, cos, sin)
 from sympy.polys.polytools import Poly

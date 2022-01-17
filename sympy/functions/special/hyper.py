@@ -1,7 +1,7 @@
 """Hypergeometric and Meijer G-functions"""
 from functools import reduce
 
-from sympy.core import S, I, pi, oo, zoo, ilcm, Mod
+from sympy.core import S, I, pi, oo, zoo, ilcm
 from sympy.core.add import Add
 from sympy.core.expr import Expr
 from sympy.core.function import Function, Derivative, ArgumentIndexError
@@ -13,7 +13,7 @@ from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy
 
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
-        sinh, cosh, asinh, acosh, atanh, acoth, Abs, re, factorial, RisingFactorial)
+        sinh, cosh, asinh, acosh, atanh, acoth, Abs, re, factorial, RisingFactorial, Mod)
 from sympy.logic.boolalg import (And, Or)
 
 class TupleArg(Tuple):

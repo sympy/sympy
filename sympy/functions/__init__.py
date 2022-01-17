@@ -20,7 +20,7 @@ from sympy.functions.elementary.exponential import (exp_polar, exp, log,
         LambertW)
 from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
         sech, csch, asinh, acosh, atanh, acoth, asech, acsch)
-from sympy.functions.elementary.integers import floor, ceiling, frac
+from sympy.functions.elementary.integers import floor, ceiling, frac, Mod
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
 from sympy.functions.special.error_functions import (erf, erfc, erfi, erf2,
         erfinv, erfcinv, erf2inv, Ei, expint, E1, li, Li, Si, Ci, Shi, Chi,
@@ -69,7 +69,7 @@ __all__ = [
     'sinh', 'cosh', 'tanh', 'coth', 'sech', 'csch', 'asinh', 'acosh', 'atanh',
     'acoth', 'asech', 'acsch',
 
-    'floor', 'ceiling', 'frac',
+    'floor', 'ceiling', 'frac', 'Mod',
 
     'Piecewise', 'piecewise_fold',
 

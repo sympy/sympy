@@ -21,11 +21,11 @@ from sympy.functions.elementary.trigonometric import asin as arcsin
 from sympy.functions.elementary.trigonometric import acos as arccos
 from sympy.integrals.rubi.utility_function import (EllipticE, EllipticF,
     hypergeom, rubi_test, AppellF1, EllipticPi, Log, Sqrt, ArcTan, ArcTanh, ArcSin, Hypergeometric2F1)
-from sympy.core.mod import Mod
 from sympy.core.numbers import (I, pi as Pi)
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.exponential import exp_polar
+from sympy.functions.elementary.integers import Mod
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f, elliptic_pi as Pi)
 from sympy.functions.special.hyper import hyper

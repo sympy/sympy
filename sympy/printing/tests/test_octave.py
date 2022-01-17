@@ -1,6 +1,6 @@
 from sympy.core import (S, pi, oo, symbols, Function, Rational, Integer,
                         Tuple, Symbol, EulerGamma, GoldenRatio, Catalan,
-                        Lambda, Mul, Pow, Mod, Eq, Ne, Le, Lt, Gt, Ge)
+                        Lambda, Mul, Pow, Eq, Ne, Le, Lt, Gt, Ge)
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.functions import (arg, atan2, bernoulli, beta, ceiling, chebyshevu,
                              chebyshevt, conjugate, DiracDelta, exp, expint,
@@ -11,7 +11,7 @@ from sympy.functions import (arg, atan2, bernoulli, beta, ceiling, chebyshevu,
                              riemann_xi)
 from sympy.functions import (sin, cos, tan, cot, sec, csc, asin, acos, acot,
                              atan, asec, acsc, sinh, cosh, tanh, coth, csch,
-                             sech, asinh, acosh, atanh, acoth, asech, acsch)
+                             sech, asinh, acosh, atanh, acoth, asech, acsch, Mod)
 from sympy.testing.pytest import raises, XFAIL
 from sympy.utilities.lambdify import implemented_function
 from sympy.matrices import (eye, Matrix, MatrixSymbol, Identity,
