@@ -3953,7 +3953,7 @@ class AtomicExpr(Atom, Expr):
 
 
 def _mag(x):
-    r"""Return integer $i$ such that $0.11 \le x/10^i < 1$
+    r"""Return integer $i$ such that $0.1 \le x/10^i < 1$
 
     Examples
     ========
