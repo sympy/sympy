@@ -2374,7 +2374,7 @@ class padovan(Function):
 
     @staticmethod
     def find_first_n_padovan_numbers(n):
-        # Returns first n positive numbers from the padovan sequence
+        # Returns first n non-negative numbers from the padovan sequence
         try:
             n = as_int(n)
         except ValueError:
