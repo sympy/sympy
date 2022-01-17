@@ -3348,12 +3348,12 @@ class Expr(Basic, EvalfMixin):
         >>> e.nseries(x, 0, 6, logx=logx)
         sin(logx)
 
-        In the following example, the expansion works but gives only an Order term
+        In the following example, the expansion works but only returns self
         unless the ``logx`` parameter is used:
 
         >>> e = x**y
         >>> e.nseries(x, 0, 2)
-        O(log(x)**2)
+        x**y
         >>> e.nseries(x, 0, 2, logx=logx)
         exp(logx*y)
 
