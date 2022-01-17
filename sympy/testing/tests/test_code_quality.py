@@ -497,54 +497,14 @@ def test_test_unicode_encoding():
         fname, test_file, unicode_whitelist, unicode_strict_whitelist))
 
     fname = 'abc'
-    test_file = ['# coding=utf-8', 'α']
-    raises(AssertionError, lambda: _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'abc'
-    test_file = ['# coding=utf-8', 'abc']
-    raises(AssertionError, lambda: _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'abc'
     test_file = ['abc']
     _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist)
 
     fname = 'foo'
-    test_file = ['α']
-    raises(AssertionError, lambda: _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'foo'
-    test_file = ['# coding=utf-8', 'α']
-    _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist)
-
-    fname = 'foo'
-    test_file = ['# coding=utf-8', 'abc']
-    raises(AssertionError, lambda: _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'foo'
     test_file = ['abc']
     raises(AssertionError, lambda: _test_this_file_encoding(
         fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'bar'
-    test_file = ['α']
-    raises(AssertionError, lambda: _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist))
-
-    fname = 'bar'
-    test_file = ['# coding=utf-8', 'α']
-    _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist)
-
-    fname = 'bar'
-    test_file = ['# coding=utf-8', 'abc']
-    _test_this_file_encoding(
-        fname, test_file, unicode_whitelist, unicode_strict_whitelist)
 
     fname = 'bar'
     test_file = ['abc']
