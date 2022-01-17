@@ -3035,8 +3035,11 @@ class Expr(Basic, EvalfMixin):
             else:
                 o = Order(x**n, x)
                 s1done = s1.doit()
-                if (s1done + o).removeO() == s1done:
-                    o = S.Zero
+                try:
+                    if (s1done + o).removeO() == s1done:
+                        o = S.Zero
+                except NotImplementedError:
+                    return s1
 
             try:
                 from sympy.simplify.radsimp import collect
