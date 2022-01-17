@@ -17,7 +17,8 @@ from sympy.logic.boolalg import (
     BooleanAtom, is_literal, term_to_integer,
     truth_table, as_Boolean, to_anf, is_anf, distribute_xor_over_and,
     anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial,
-    _check_pair, _convert_to_varsSOP, _convert_to_varsPOS, Exclusive,)
+    _check_pair, _convert_to_varsSOP, _convert_to_varsPOS, Exclusive,
+    gateinputcount)
 from sympy.assumptions.cnf import CNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
@@ -1264,6 +1265,14 @@ def test_convert_to_varsSOP():
 def test_convert_to_varsPOS():
     assert _convert_to_varsPOS([0, 1, 0], [x, y, z]) == Or(x, Not(y), z)
     assert _convert_to_varsPOS([3, 1, 0], [x, y, z]) ==  Or(Not(y), z)
+
+
+def test_gateinputcount():
+    a, b, c, d, e = symbols('a:e')
+    assert gateinputcount(And(a, b)) == 2
+    assert gateinputcount(a | b & c & d ^ (e | a)) == 9
+    assert gateinputcount(And(a, True)) == 0
+    raises(TypeError, lambda: gateinputcount(a*b))
 
 
 def test_refine():
