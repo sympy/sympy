@@ -1745,7 +1745,7 @@ class Mul(Expr, AssocOp):
                     try:
                         self2 = (n.extract_multiplicatively(n1) * n2) / (d.extract_multiplicatively(d1) * d2)
                     except TypeError:
-                        self2 = n._subs(n1, n2)/d._subs(d1, d2)
+                        pass
             if not self2.is_Mul:
                 return self2._subs(old, new)
             if self2 != self:
