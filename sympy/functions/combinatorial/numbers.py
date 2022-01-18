@@ -2320,6 +2320,8 @@ class padovan(Function):
     [1, 1, 1, 2, 2, 3, 4, 5, 7, 9, 12]
     >>> padovan.find_first_n_padovan_numbers(8)
     [1, 1, 1, 2, 2, 3, 4, 5]
+    >>> padovan.find_padovan_numbers_in_range(2,39)
+    [2, 2, 3, 4, 5, 7, 9, 12, 16, 21, 28, 37]
 
 
     References
@@ -2335,7 +2337,7 @@ class padovan(Function):
         try:
             n = as_int(n)
         except ValueError:
-            False
+            return False
         if n>0:
             if n == 1 :
                 return True
@@ -2399,19 +2401,40 @@ class padovan(Function):
 
         return padovan
 
+    @staticmethod
+    def find_padovan_numbers_in_range(x, y):
+        if 0 <= x <= y:
+            padovan = list()
+            if x <=1 <= y:
+                padovan.extend([1,1])
+            sn0 = 1
+            sn1 = 1
+            sn2 = 1
+            i = 2
+            while sn2 <= y:
+                if sn2 >= x:
+                    padovan.append(sn2)
+                b = sn0 + sn1
+                sn0 = sn1
+                sn1 = sn2
+                sn2 = b
+                i = i + 1
+
+            return padovan
+
+        else:
+            raise ValueError('The provided range is not valid. This condition should satisfy x <= y')
+
+    @staticmethod
+    @recurrence_memo([S.One, S.One, S.One])
+    def _padovan(n, prev):
+        if n>0:
+            return (prev[-3] + prev[-2])
+
     @classmethod
     def eval(cls, n):
-        if n is S.Infinity:
-            return S.Infinity
-
-        if n in (0,1,2):
-            return 1
-        if n.is_Integer and n>0:
-            return padovan(n - 2) + padovan(n - 3)
-
-        if n == -1:
-            return 0
-        if n == -2:
-            return 1
-        if n.is_Integer and n<0:
-            return padovan(n + 3) - padovan(n + 1)
+        try:
+            n = as_int(n)
+        except ValueError:
+            raise ValueError('The provided number must be a integer')
+        return Integer(cls._padovan(n))
