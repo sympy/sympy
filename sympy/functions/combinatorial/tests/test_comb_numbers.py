@@ -452,6 +452,10 @@ def test_genocchi():
 
 
 def test_schroeder():
+    n = Symbol('n', integer=True, positive=True)
+    assert unchanged(schroeder, n)
+    nums = [1, 2, 6, 22, 90, 394, 1806, 8558, 41586]
+    assert [schroeder(n) for n in range(1, 10)] == nums
     assert schroeder.is_schroeder(2) == True
     assert schroeder.is_schroeder(5) == False
     assert schroeder.is_schroeder(90) == True
@@ -461,8 +465,8 @@ def test_schroeder():
     assert schroeder.find_schroeder_numbers_in_range(10,400) == [22, 90, 394]
     assert schroeder.find_schroeder_numbers_in_range(10,2000) == [22, 90, 394, 1806]
     assert schroeder.find_schroeder_numbers_in_range(10,9000) == [22, 90, 394, 1806, 8558]
-    raises(ValueError, lambda: schroeder.eval(-6))
-    raises(ValueError, lambda: schroeder.eval(56.54))
+    raises(ValueError, lambda: schroeder(-6))
+    raises(ValueError, lambda: schroeder(56.54))
     raises(ValueError, lambda: schroeder.find_schroeder_numbers_in_range(-4,10))
     raises(ValueError, lambda: schroeder.find_schroeder_numbers_in_range(14,8))
     raises(ValueError, lambda: schroeder.find_first_n_schroeder_numbers(46.64))
