@@ -2015,8 +2015,7 @@ def test_sympy__functions__combinatorial__numbers__lucas():
 
 def test_sympy__functions__combinatorial__numbers__padovan():
     from sympy.functions.combinatorial.numbers import padovan
-    assert _test_args(padovan(x))
-
+    assert _test_args(padovan(5))
 
 def test_sympy__functions__combinatorial__numbers__partition():
     from sympy.core.symbol import Symbol
