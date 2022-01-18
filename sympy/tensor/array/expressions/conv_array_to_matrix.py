@@ -269,11 +269,7 @@ def _(expr: PermuteDims):
     elif isinstance(expr.expr, ArrayContraction):
         mat_mul_lines = _array2matrix(expr.expr)
         if not isinstance(mat_mul_lines, ArrayTensorProduct):
-            flat_cyclic_form = [j for i in expr.permutation.cyclic_form for j in i]
-            expr_shape = get_shape(expr)
-            if all(expr_shape[i] == 1 for i in flat_cyclic_form):
-                return mat_mul_lines
-            return mat_mul_lines
+            return _permute_dims(mat_mul_lines, expr.permutation)
         # TODO: this assumes that all arguments are matrices, it may not be the case:
         permutation = Permutation(2*len(mat_mul_lines.args)-1)*expr.permutation
         permuted = [permutation(i) for i in range(2*len(mat_mul_lines.args))]

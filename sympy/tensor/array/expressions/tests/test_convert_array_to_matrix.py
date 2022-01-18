@@ -15,7 +15,7 @@ from sympy.matrices.expressions.diagonal import DiagMatrix, DiagonalMatrix
 from sympy.matrices import Trace, MatMul, Transpose
 from sympy.tensor.array.expressions.array_expressions import ZeroArray, OneArray, \
     ArrayElement, ArraySymbol, ArrayElementwiseApplyFunc, _array_tensor_product, _array_contraction, \
-    _array_diagonal, _permute_dims, PermuteDims, ArrayAdd, ArrayDiagonal
+    _array_diagonal, _permute_dims, PermuteDims, ArrayAdd, ArrayDiagonal, ArrayContraction, ArrayTensorProduct
 from sympy.testing.pytest import raises
 
 
@@ -665,3 +665,9 @@ def test_convert_array_elementwise_function_to_matrix():
 
     expr = ArrayElementwiseApplyFunc(Lambda(d, 1 / (2 * sqrt(d))), x)
     assert convert_array_to_matrix(expr) == S.Half * HadamardPower(x, -S.Half)
+
+
+def test_array2matrix():
+    expr = PermuteDims(ArrayContraction(ArrayTensorProduct(x, I, I1, x), (0, 3), (1, 7)), Permutation(2, 3))
+    expected = PermuteDims(ArrayTensorProduct(x*x.T, I1), Permutation(3)(1, 2))
+    assert _array2matrix(expr) == expected
