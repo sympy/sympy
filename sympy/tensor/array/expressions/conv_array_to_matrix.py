@@ -402,9 +402,12 @@ def _(expr: ArrayTensorProduct):
 def _(expr: ArrayAdd):
     rec = [_remove_trivial_dims(arg) for arg in expr.args]
     newargs, removed = zip(*rec)
-    if len(set(map(tuple, removed))) != 1:
+    if len(set([get_shape(i) for i in newargs])) > 1:
         return expr, []
-    return _a2m_add(*newargs), removed[0]
+    if len(removed) == 0:
+        return expr, removed
+    removed1 = removed[0]
+    return _a2m_add(*newargs), removed1
 
 
 @_remove_trivial_dims.register(PermuteDims)
