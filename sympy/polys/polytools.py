@@ -3777,14 +3777,16 @@ class Poly(Basic):
 
     def root_bounds(f):
         """
-        Compute lower and upper bounds on the magnitude of the nonzero roots of
-        this polynomial.
+        Compute lower and upper bounds on the magnitude of any and all nonzero
+        roots (real or complex) of this polynomial.
 
         Examples
         ========
 
         >>> from sympy import Poly
         >>> from sympy.abc import x
+        >>> Poly(x**2 + x + 1).root_bounds()
+        (1/2, 2)
         >>> Poly(x**2 - 2).root_bounds()
         (2/3, 3)
         >>> (x * Poly(x**2 - 2)).root_bounds()
