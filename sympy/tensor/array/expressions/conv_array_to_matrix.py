@@ -269,11 +269,7 @@ def _(expr: PermuteDims):
     elif isinstance(expr.expr, ArrayContraction):
         mat_mul_lines = _array2matrix(expr.expr)
         if not isinstance(mat_mul_lines, ArrayTensorProduct):
-            flat_cyclic_form = [j for i in expr.permutation.cyclic_form for j in i]
-            expr_shape = get_shape(expr)
-            if all(expr_shape[i] == 1 for i in flat_cyclic_form):
-                return mat_mul_lines
-            return mat_mul_lines
+            return _permute_dims(mat_mul_lines, expr.permutation)
         # TODO: this assumes that all arguments are matrices, it may not be the case:
         permutation = Permutation(2*len(mat_mul_lines.args)-1)*expr.permutation
         permuted = [permutation(i) for i in range(2*len(mat_mul_lines.args))]
@@ -406,9 +402,12 @@ def _(expr: ArrayTensorProduct):
 def _(expr: ArrayAdd):
     rec = [_remove_trivial_dims(arg) for arg in expr.args]
     newargs, removed = zip(*rec)
-    if len(set(map(tuple, removed))) != 1:
+    if len(set([get_shape(i) for i in newargs])) > 1:
         return expr, []
-    return _a2m_add(*newargs), removed[0]
+    if len(removed) == 0:
+        return expr, removed
+    removed1 = removed[0]
+    return _a2m_add(*newargs), removed1
 
 
 @_remove_trivial_dims.register(PermuteDims)
