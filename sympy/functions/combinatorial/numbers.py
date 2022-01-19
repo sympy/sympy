@@ -2184,20 +2184,18 @@ class motzkin(Function):
 
 class schroeder(Function):
     r"""
-    In mathematics, the Schroeder number,
-    also called a large Schroeder number or
-    big Schroeder number, describes the number of
-    lattice paths from the southwest corner $(0, 0)$
-    of an $n\times n$ grid to the northeast corner $(n, n)$ using only
-    single steps north, $(0, 1)$ northeast, $(1, 1)$ or east, $(1, 0)$
-    that do not rise above the SW-NE diagonal. The nth
-    Schroeder number is the number of Schroeder paths
-    of length n. The Schroeder numbers  were named
-    after the German mathematician Ernst Schroeder.
+    In mathematics, the Schroeder number, also called a large Schroeder
+    number or big Schroeder number, describes the number of lattice
+    paths from the southwest corner $(0, 0)$ of an $n\times n$ grid to
+    the northeast corner $(n, n)$ using only single steps north, $(0,
+    1)$ northeast, $(1, 1)$ or east, $(1, 0)$ that do not rise above the
+    SW-NE diagonal. The nth Schroeder number is the number of Schroeder
+    paths of length n. The Schroeder numbers were named after the German
+    mathematician Ernst Schroeder.
 
-    Schroeder numbers are the integer sequences defined by the
-    initial terms `S_0 = 1`, `S_1 = 2` and the two-term recurrence relation
-    `S_n = \frac{6*n - 3}{n + 1} * S_{n-1} - \frac{n - 2}{n + 1} * S_{n-2}`.
+    Schroeder numbers are the integer sequences defined by the initial
+    terms `S_0 = 1`, `S_1 = 2` and the two-term recurrence relation `S_n
+    = \frac{6*n - 3}{n + 1} * S_{n-1} - \frac{n - 2}{n + 1} * S_{n-2}`.
 
 
     Examples
@@ -2265,45 +2263,39 @@ class schroeder(Function):
             raise ValueError('The provided number must be a positive integer')
         if n == 1:
             return [1]
-        schroeder = [1, 2]
-        sn1 = 2
-        sn = 6
-        i = 3
-        while i <= n:
-            schroeder.append(sn)
-            b = ((6*i - 3)*sn - (i - 2)*sn1) // (i + 1)
-            sn1 = sn
-            sn = int(b)
-            i = i+1
+        schroder = [1]
+        for i in schroeder.iterator(n):
+            schroder.append(i)
 
-        return schroeder
+        return schroder
 
     @staticmethod
     def find_schroeder_numbers_in_range(x, y):
         """
-        Returns all the schroeder numbers in the range (x, y),
-        x and y inclusive.
+        Returns all the schroeder numbers in the range (x, y), x and y
+        inclusive.
 
         """
 
         if x < 0 or y < x:
             raise ValueError('The provided range is not valid. This condition should satisfy x <= y')
         else:
-            schroeder = []
+            schroder = []
             if x <= 1 <= y:
-                schroeder.append(1)
-            sn1 = 1
-            sn = 2
-            i = 2
-            while sn <= y:
-                if sn >= x:
-                    schroeder.append(sn)
-                b = ((6*i - 3)*sn - (i - 2)*sn1) // (i + 1)
-                sn1 = sn
-                sn = int(b)
-                i = i+1
+                schroder.append(1)
+            for i in schroeder.iterator(y):
+                if i >= x and i <= y:
+                    schroder.append(i)
 
-            return schroeder
+            return schroder
+
+    @staticmethod
+    def iterator(n):
+        sn1, sn, i = 1, 2, 2
+        while i <= n:
+            yield sn
+            sn = schroeder._schroeder(i)
+            i, sn = i+1, sn
 
     @staticmethod
     @recurrence_memo([S.One, 2*S.One])
