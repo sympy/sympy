@@ -3023,10 +3023,9 @@ class AlgebraicNumber(Expr):
         roots = m.all_roots(radicals=radicals)
         if len(roots) == 1:
             return roots[0]
-        eq = m.root_equality_test()
         ex = self.as_expr()
         for b in roots:
-            if eq(b, ex):
+            if m.root_equality_test(b, ex):
                 return b
 
 

@@ -3024,16 +3024,16 @@ def test_root_separation_lower_bound():
 
 def test_root_equality_test():
     f = Poly(x**4 + x**3 + x**2 + x + 1)
-    eq = f.root_equality_test()
+    eq = f.root_equality_test
     r0 = exp(2 * I * pi / 5)
     assert [i for i, r in enumerate(f.all_roots()) if eq(r, r0)] == [3]
 
     raises(DomainError,
-           lambda: Poly(x + 1, domain=FF(7)).root_equality_test())
+           lambda: Poly(x + 1, domain=FF(7)).root_equality_test(0, 0))
     raises(DomainError,
-           lambda: Poly(y * x + 1, domain=ZZ[y]).root_equality_test())
+           lambda: Poly(y * x + 1, domain=ZZ[y]).root_equality_test(0, 0))
     raises(MultivariatePolynomialError,
-           lambda: Poly(x * y + 1, domain=ZZ).root_equality_test())
+           lambda: Poly(x * y + 1, domain=ZZ).root_equality_test(0, 0))
 
 
 def test_torational_factor_list():

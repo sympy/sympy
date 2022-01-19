@@ -3897,17 +3897,16 @@ class Poly(Basic):
         # the squared separation.
         return lb
 
-    def root_equality_test(f):
+    def root_equality_test(f, a, b):
         """
-        Returns a binary function that efficiently decides whether two roots of
-        this polynomial are equal.
+        Decide whether two roots of this polynomial are equal.
 
         Examples
         ========
 
         >>> from sympy import Poly, cyclotomic_poly, exp, I, pi
         >>> f = Poly(cyclotomic_poly(5))
-        >>> eq = f.root_equality_test()
+        >>> eq = f.root_equality_test
         >>> r0 = exp(2*I*pi/5)
         >>> indices = [i for i, r in enumerate(f.all_roots()) if eq(r, r0)]
         >>> print(indices)
@@ -3939,11 +3938,8 @@ class Poly(Basic):
         # |a - ev(a)| < eps and |b - ev(b)| < eps.
         # So if |ev(a) - ev(b)|**2 < eps**2, then
         # |ev(a) - ev(b)| < eps, hence |a - b| < 3*eps = delta.
-        def eq_test(a, b):
-            A, B = ev(a), ev(b)
-            return (A.real - B.real)**2 + (A.imag - B.imag)**2 < eps_sq
-
-        return eq_test
+        A, B = ev(a), ev(b)
+        return (A.real - B.real)**2 + (A.imag - B.imag)**2 < eps_sq
 
     def cancel(f, g, include=False):
         """
