@@ -2201,20 +2201,31 @@ class schroeder(Function):
     Examples
     ========
 
-    >>> from sympy import schroeder
+    >>> from sympy.functions.combinatorial.numbers import schroeder
+
+    Compute the nth Schroeder number:
 
     >>> schroeder(2)
     2
     >>> schroeder(5)
     90
+
+    Check if a number is a Schroeder number:
+
     >>> schroeder.is_schroeder(2)
     True
     >>> schroeder.is_schroeder(7)
     False
+
+    Find the first n Schroeder numbers:
+
     >>> schroeder.find_first_n_schroeder_numbers(1)
     [1]
     >>> schroeder.find_first_n_schroeder_numbers(10)
     [1, 2, 6, 22, 90, 394, 1806, 8558, 41586, 206098]
+
+    Find Schroeder numbers in a given range:
+
     >>> schroeder.find_schroeder_numbers_in_range(1, 10)
     [1, 2, 6]
     >>> schroeder.find_schroeder_numbers_in_range(2, 400)
@@ -2264,8 +2275,9 @@ class schroeder(Function):
         if n == 1:
             return [1]
         schroder = [1]
-        for i in schroeder.__iterator(n):
-            schroder.append(i)
+        itr = schroeder._iterator()
+        for _ in range(1, n):
+            schroder.append(next(itr))
 
         return schroder
 
@@ -2283,19 +2295,21 @@ class schroeder(Function):
             schroder = []
             if x <= 1 <= y:
                 schroder.append(1)
-            for i in schroeder.__iterator(y):
-                if i >= x and i <= y:
-                    schroder.append(i)
+            itr = schroeder._iterator()
+            for _ in range(1, y+1):
+                t = next(itr)
+                if t >= x and t <= y:
+                    schroder.append(t)
 
             return schroder
 
     @staticmethod
-    def __iterator(n):
+    def _iterator():
         sn, i = 2, 2
-        while i <= n:
+        while True:
             yield sn
             sn = schroeder._schroeder(i)
-            i = i+1
+            i = i + 1
 
     @staticmethod
     @recurrence_memo([S.One, 2*S.One])
