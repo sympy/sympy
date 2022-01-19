@@ -15,7 +15,7 @@ from sympy.core.numbers import Number
 from sympy.core.operations import LatticeOp
 from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
-from sympy.core.sympify import converter, _sympify, sympify
+from sympy.core.sympify import _sympy_converter, _sympify, sympify
 from sympy.utilities.iterables import sift, ibin
 from sympy.utilities.misc import filldedent
 
@@ -348,6 +348,13 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     def __hash__(self):
         return hash(True)
 
+    def __eq__(self, other):
+        if other is True:
+            return True
+        if other is False:
+            return False
+        return super().__eq__(other)
+
     @property
     def negated(self):
         return S.false
@@ -416,6 +423,13 @@ class BooleanFalse(BooleanAtom, metaclass=Singleton):
     def __hash__(self):
         return hash(False)
 
+    def __eq__(self, other):
+        if other is True:
+            return False
+        if other is False:
+            return True
+        return super().__eq__(other)
+
     @property
     def negated(self):
         return S.true
@@ -443,7 +457,7 @@ false = BooleanFalse()
 S.true = true
 S.false = false
 
-converter[bool] = lambda x: S.true if x else S.false
+_sympy_converter[bool] = lambda x: S.true if x else S.false
 
 
 class BooleanFunction(Application, Boolean):

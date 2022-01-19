@@ -11,7 +11,7 @@ from sympy.core.numbers import oo, igcd, Rational
 from sympy.core.relational import Eq, is_eq
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
-from sympy.core.sympify import _sympify, sympify, converter
+from sympy.core.sympify import _sympify, sympify, _sympy_converter
 from sympy.logic.boolalg import And, Or
 from .sets import Set, Interval, Union, FiniteSet, ProductSet
 from sympy.utilities.misc import filldedent
@@ -1007,7 +1007,7 @@ class Range(Set):
         return And(in_seq, ints, range_cond)
 
 
-converter[range] = lambda r: Range(r.start, r.stop, r.step)
+_sympy_converter[range] = lambda r: Range(r.start, r.stop, r.step)
 
 def normalize_theta_set(theta):
     r"""

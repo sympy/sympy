@@ -8,8 +8,8 @@ from functools import lru_cache
 from typing import Set as tSet, Tuple as tTuple
 
 from .containers import Tuple
-from .sympify import (SympifyError, converter, sympify, _convert_numpy_types, _sympify,
-                      _is_numpy_instance)
+from .sympify import (SympifyError, _sympy_converter, sympify, _convert_numpy_types,
+              _sympify, _is_numpy_instance)
 from .singleton import S, Singleton
 from .basic import Basic
 from .expr import Expr, AtomicExpr
@@ -1485,7 +1485,7 @@ class Float(Number):
 
 
 # Add sympify converters
-converter[float] = converter[decimal.Decimal] = Float
+_sympy_converter[float] = _sympy_converter[decimal.Decimal] = Float
 
 # this is here to work nicely in Sage
 RealNumber = Float
@@ -2510,7 +2510,7 @@ class Integer(Rational):
         return Integer(~self.p)
 
 # Add sympify converters
-converter[int] = Integer
+_sympy_converter[int] = Integer
 
 
 class AlgebraicNumber(Expr):
@@ -4481,7 +4481,7 @@ def _eval_is_eq(self, other): # noqa: F811
 def sympify_fractions(f):
     return Rational(f.numerator, f.denominator, 1)
 
-converter[fractions.Fraction] = sympify_fractions
+_sympy_converter[fractions.Fraction] = sympify_fractions
 
 if HAS_GMPY:
     def sympify_mpz(x):
@@ -4493,28 +4493,28 @@ if HAS_GMPY:
     def sympify_mpq(x):
         return Rational(int(x.numerator), int(x.denominator))
 
-    converter[type(gmpy.mpz(1))] = sympify_mpz
-    converter[type(gmpy.mpq(1, 2))] = sympify_mpq
+    _sympy_converter[type(gmpy.mpz(1))] = sympify_mpz
+    _sympy_converter[type(gmpy.mpq(1, 2))] = sympify_mpq
 
 
 def sympify_mpmath_mpq(x):
     p, q = x._mpq_
     return Rational(p, q, 1)
 
-converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
+_sympy_converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
 
 
 def sympify_mpmath(x):
     return Expr._from_mpmath(x, x.context.prec)
 
-converter[mpnumeric] = sympify_mpmath
+_sympy_converter[mpnumeric] = sympify_mpmath
 
 
 def sympify_complex(a):
     real, imag = list(map(sympify, (a.real, a.imag)))
     return real + S.ImaginaryUnit*imag
 
-converter[complex] = sympify_complex
+_sympy_converter[complex] = sympify_complex
 
 from .power import Pow, integer_nthroot
 from .mul import Mul
