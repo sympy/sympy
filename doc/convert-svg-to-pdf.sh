@@ -64,4 +64,4 @@ else
     exit 1
 fi
 
-"$CHROME" --headless --disable-gpu --print-to-pdf="$OUTPUT" "$tmpfile"
+"$CHROME" --headless --disable-gpu --disable-software-rasterizer --print-to-pdf="$OUTPUT" "$tmpfile"

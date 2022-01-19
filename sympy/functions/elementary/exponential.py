@@ -134,7 +134,7 @@ class ExpBase(Function):
 
 class exp_polar(ExpBase):
     r"""
-    Represent a 'polar number' (see g-function Sphinx documentation).
+    Represent a *polar number* (see g-function Sphinx documentation).
 
     Explanation
     ===========
@@ -563,12 +563,12 @@ class exp(ExpBase, metaclass=ExpMeta):
 
 
 def match_real_imag(expr):
-    """
-    Try to match expr with a + b*I for real a and b.
+    r"""
+    Try to match expr with $a + Ib$ for real $a$ and $b$.
 
     ``match_real_imag`` returns a tuple containing the real and imaginary
-    parts of expr or (None, None) if direct matching is not possible. Contrary
-    to ``re()``, ``im()``, ``as_real_imag()``, this helper will not force things
+    parts of expr or ``(None, None)`` if direct matching is not possible. Contrary
+    to :func:`~.re()`, :func:`~.im()``, and ``as_real_imag()``, this helper will not force things
     by returning expressions themselves containing ``re()`` or ``im()`` and it
     does not expand its argument either.
 
@@ -1063,22 +1063,22 @@ class log(Function):
 
 class LambertW(Function):
     r"""
-    The Lambert W function `W(z)` is defined as the inverse
-    function of `w \exp(w)` [1]_.
+    The Lambert W function $W(z)$ is defined as the inverse
+    function of $w \exp(w)$ [1]_.
 
     Explanation
     ===========
 
-    In other words, the value of `W(z)` is such that `z = W(z) \exp(W(z))`
-    for any complex number `z`.  The Lambert W function is a multivalued
-    function with infinitely many branches `W_k(z)`, indexed by
-    `k \in \mathbb{Z}`.  Each branch gives a different solution `w`
-    of the equation `z = w \exp(w)`.
+    In other words, the value of $W(z)$ is such that $z = W(z) \exp(W(z))$
+    for any complex number $z$.  The Lambert W function is a multivalued
+    function with infinitely many branches $W_k(z)$, indexed by
+    $k \in \mathbb{Z}$.  Each branch gives a different solution $w$
+    of the equation $z = w \exp(w)$.
 
     The Lambert W function has two partially real branches: the
-    principal branch (`k = 0`) is real for real `z > -1/e`, and the
-    `k = -1` branch is real for `-1/e < z < 0`. All branches except
-    `k = 0` have a logarithmic singularity at `z = 0`.
+    principal branch ($k = 0$) is real for real $z > -1/e$, and the
+    $k = -1$ branch is real for $-1/e < z < 0$. All branches except
+    $k = 0$ have a logarithmic singularity at $z = 0$.
 
     Examples
     ========

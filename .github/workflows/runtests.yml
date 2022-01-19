@@ -125,7 +125,7 @@ jobs:
           python-version: '3.11.0-alpha.2'
       - run: sudo apt install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev
       - run: python -m pip install --upgrade pip
-      - run: pip install mpmath gmpy2 matplotlib numpy scipy pymc3 aesara ipython \
+      - run: pip install mpmath gmpy2 matplotlib numpy scipy aesara ipython \
                          symengine cython llvmlite wurlitzer \
                          autowrap numexpr 'antlr4-python3-runtime==4.7.*'
       # Test external imports
@@ -163,4 +163,3 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=2/2
-

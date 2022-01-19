@@ -827,6 +827,10 @@ def test_as_numer_denom():
     assert ((A*B*C)**-1).as_numer_denom() == ((A*B*C)**-1, 1)
     assert ((A*B*C)**-1/x).as_numer_denom() == ((A*B*C)**-1, x)
 
+    # the following morphs from Add to Mul during processing
+    assert Add(0, (x + y)/z/-2, evaluate=False).as_numer_denom(
+        ) == (-x - y, 2*z)
+
 
 def test_trunc():
     import math

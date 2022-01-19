@@ -83,11 +83,11 @@ def flatten(iterable, levels=None, cls=None):  # noqa: F811
     If cls argument is specified, it will only flatten instances of that
     class, for example:
 
-    >>> from sympy.core import Basic
+    >>> from sympy.core import Basic, S
     >>> class MyOp(Basic):
     ...     pass
     ...
-    >>> flatten([MyOp(1, MyOp(2, 3))], cls=MyOp)
+    >>> flatten([MyOp(S(1), MyOp(S(2), S(3)))], cls=MyOp)
     [1, 2, 3]
 
     adapted from https://kogs-www.informatik.uni-hamburg.de/~meine/python_tricks
@@ -177,7 +177,7 @@ def reshape(seq, how):
     for k in range(len(rv)):
         rv[k] = []
         for hi in how:
-            if type(hi) is int:
+            if isinstance(hi, int):
                 rv[k].extend(seq[i: i + hi])
                 i += hi
             else:
@@ -1237,7 +1237,7 @@ def multiset_combinations(m, n, g=None):
     """
     from sympy.core.sorting import ordered
     if g is None:
-        if type(m) is dict:
+        if isinstance(m, dict):
             if any(as_int(v) < 0 for v in m.values()):
                 raise ValueError('counts cannot be negative')
             N = sum(m.values())
@@ -1290,7 +1290,7 @@ def multiset_permutations(m, size=None, g=None):
     """
     from sympy.core.sorting import ordered
     if g is None:
-        if type(m) is dict:
+        if isinstance(m, dict):
             if any(as_int(v) < 0 for v in m.values()):
                 raise ValueError('counts cannot be negative')
             g = [[k, m[k]] for k in ordered(m)]
@@ -1354,7 +1354,7 @@ def _partition(seq, vector, m=None):
     """
     if m is None:
         m = max(vector) + 1
-    elif type(vector) is int:  # entered as m, vector
+    elif isinstance(vector, int):  # entered as m, vector
         vector, m = m, vector
     p = [[] for i in range(m)]
     for i, v in enumerate(vector):
@@ -1518,7 +1518,7 @@ def multiset_partitions(multiset, m=None):
     """
     # This function looks at the supplied input and dispatches to
     # several special-case routines as they apply.
-    if type(multiset) is int:
+    if isinstance(multiset, int):
         n = multiset
         if m and m > n:
             return
@@ -2624,8 +2624,6 @@ def kbins(l, k, ordered=None):
 
     Examples
     ========
-
-    >>> from __future__ import print_function
 
     The default is to give the items in the same order, but grouped
     into k partitions without any reordering:
