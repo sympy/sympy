@@ -63,7 +63,7 @@ def test_DiscreteMarkovChain():
     # any hashable object should be a valid state
     # states should be valid as a tuple/set/list/Tuple/Range
     sym, rainy, cloudy, sunny = symbols('a Rainy Cloudy Sunny', real=True)
-    state_spaces = [(1, 2, 3), [Str('Hello'), sym, DiscreteMarkovChain],
+    state_spaces = [(1, 2, 3), [Str('Hello'), sym, DiscreteMarkovChain("Y", (1,2,3))],
                     Tuple(S(1), exp(sym), Str('World'), sympify=False), Range(-1, 5, 2),
                     [rainy, cloudy, sunny]]
     chains = [DiscreteMarkovChain("Y", state_space) for state_space in state_spaces]
