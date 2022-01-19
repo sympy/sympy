@@ -23,7 +23,7 @@ jobs:
 
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.11.0-alpha.2'
+          python-version: '3.11.0-alpha - 3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath flake8
 
@@ -63,7 +63,7 @@ jobs:
 
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.11.0-alpha.2'
+          python-version: '3.11.0-alpha - 3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath mypy
 
@@ -79,7 +79,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.11.0-alpha.2'
+          python-version: '3.11.0-alpha - 3.11.0'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/doctest --force-colors
@@ -94,7 +94,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.11.0-alpha.2'
+          python-version: '3.11.0-alpha - 3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --split=1/2
@@ -108,7 +108,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.11.0-alpha.2'
+          python-version: '3.11.0-alpha - 3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: bin/test --force-colors --split=2/2
@@ -122,7 +122,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.11.0-alpha.2'
+          python-version: '3.11.0-alpha - 3.11'
       - run: sudo apt install antlr4 libgfortran5 gfortran libmpfr-dev libmpc-dev
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath gmpy2 matplotlib numpy scipy aesara ipython \
@@ -145,7 +145,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.11.0-alpha.2'
+          python-version: '3.11.0-alpha - 3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=1/2
@@ -159,7 +159,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.11.0-alpha.2'
+          python-version: '3.11.0-alpha - 3.11'
       - run: python -m pip install --upgrade pip
       - run: pip install mpmath
       - run: TRAVIS_BUILD_NUMBER=true bin/test --force-colors --slow --timeout=595 --split=2/2
