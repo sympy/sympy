@@ -2264,7 +2264,7 @@ class schroeder(Function):
         if n == 1:
             return [1]
         schroder = [1]
-        for i in schroeder.iterator(n):
+        for i in schroeder.__iterator(n):
             schroder.append(i)
 
         return schroder
@@ -2283,19 +2283,19 @@ class schroeder(Function):
             schroder = []
             if x <= 1 <= y:
                 schroder.append(1)
-            for i in schroeder.iterator(y):
+            for i in schroeder.__iterator(y):
                 if i >= x and i <= y:
                     schroder.append(i)
 
             return schroder
 
     @staticmethod
-    def iterator(n):
-        sn1, sn, i = 1, 2, 2
+    def __iterator(n):
+        sn, i = 2, 2
         while i <= n:
             yield sn
             sn = schroeder._schroeder(i)
-            i, sn = i+1, sn
+            i = i+1
 
     @staticmethod
     @recurrence_memo([S.One, 2*S.One])
