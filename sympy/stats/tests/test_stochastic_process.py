@@ -125,11 +125,11 @@ def test_DiscreteMarkovChain():
     assert P(Lt(X[1], 2) & Gt(X[1], 0), Eq(X[0], 2) &
         StochasticStateSpaceOf(X, [0, 1, 2]) & TransitionMatrixOf(X, TO1)) == Rational(1, 4)
     assert P(Lt(X[1], 2) & Gt(X[1], 0), Eq(X[0], 2) &
-             StochasticStateSpaceOf(X, [None, 'None', 1]) & TransitionMatrixOf(X, TO1)) == Rational(1, 4)
+             StochasticStateSpaceOf(X, [S(0), 'None', 1]) & TransitionMatrixOf(X, TO1)) == Rational(1, 4)
     assert P(Ne(X[1], 2) & Ne(X[1], 1), Eq(X[0], 2) &
         StochasticStateSpaceOf(X, [0, 1, 2]) & TransitionMatrixOf(X, TO1)) is S.Zero
     assert P(Ne(X[1], 2) & Ne(X[1], 1), Eq(X[0], 2) &
-             StochasticStateSpaceOf(X, [None, 'None', 1]) & TransitionMatrixOf(X, TO1)) is S.Zero
+             StochasticStateSpaceOf(X, [S(0), 'None', 1]) & TransitionMatrixOf(X, TO1)) is S.Zero
     assert P(And(Eq(Y[2], 1), Eq(Y[1], 1), Eq(Y[0], 0)), Eq(Y[1], 1)) == 0.1*Probability(Eq(Y[0], 0))
 
     # testing properties of Markov chain
