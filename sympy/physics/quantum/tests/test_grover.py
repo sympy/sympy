@@ -4,16 +4,16 @@ from sympy.physics.quantum.represent import represent
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import IntQubit
 from sympy.physics.quantum.grover import (apply_grover, superposition_basis,
-        OracleGate, grover_iteration, WGate)
+        OracleGate, grover_iteration, WGate, OracleGateFunction)
 
 
 def return_one_on_two(qubits):
     return qubits == IntQubit(2, qubits.nqubits)
-
+return_one_on_two=OracleGateFunction(return_one_on_two)
 
 def return_one_on_one(qubits):
     return qubits == IntQubit(1, nqubits=qubits.nqubits)
-
+return_one_on_one=OracleGateFunction(return_one_on_one)
 
 def test_superposition_basis():
     nbits = 2
@@ -30,7 +30,7 @@ def test_superposition_basis():
 
 
 def test_OracleGate():
-    v = OracleGate(1, lambda qubits: qubits == IntQubit(0))
+    v = OracleGate(1, OracleGateFunction(lambda qubits: qubits == IntQubit(0)))
     assert qapply(v*IntQubit(0)) == -IntQubit(0)
     assert qapply(v*IntQubit(1)) == IntQubit(1)
 
@@ -41,7 +41,7 @@ def test_OracleGate():
     assert qapply(v*IntQubit(2, nbits)) == -IntQubit(2, nbits)
     assert qapply(v*IntQubit(3, nbits)) == IntQubit(3, nbits)
 
-    assert represent(OracleGate(1, lambda qubits: qubits == IntQubit(0)), nqubits=1) == \
+    assert represent(OracleGate(1, OracleGateFunction(lambda qubits: qubits == IntQubit(0))), nqubits=1) == \
            Matrix([[-1, 0], [0, 1]])
     assert represent(v, nqubits=2) == Matrix([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]])
 

@@ -10,6 +10,7 @@ Todo:
 
 from sympy.core.numbers import pi
 from sympy.core.sympify import sympify
+from sympy.core.basic import Atom
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.matrices.dense import eye
@@ -57,6 +58,22 @@ def superposition_basis(nqubits):
 
     amp = 1/sqrt(2**nqubits)
     return sum([amp*IntQubit(n, nqubits=nqubits) for n in range(2**nqubits)])
+
+class OracleGateFunction(Atom):
+    """Wrapper for python functions used in `OracleGate`s"""
+
+    def __new__(cls, function):
+        if not callable(function):
+            raise TypeError("{func} is not a callable.".format(func = function))
+        obj = Atom.__new__(cls)
+        obj.function = function
+        return obj
+
+    def _hashable_content(self):
+        return type(self), self.function
+
+    def __call__(self, *args):
+        return self.function(*args)
 
 
 class OracleGate(Gate):
