@@ -20,6 +20,19 @@ from mpmath.libmp.libintmath import giant_steps
 from collections import defaultdict
 
 
+def _corem(eq, c):  # helper for extract_additively
+    # return co, diff from co*c + diff
+    co = []
+    non = []
+    for i in Add.make_args(eq):
+        ci = i.coeff(c)
+        if not ci:
+            non.append(i)
+        else:
+            co.append(ci)
+    return Add(*co), Add(*non)
+
+
 @sympify_method_args
 class Expr(Basic, EvalfMixin):
     """
@@ -2386,10 +2399,9 @@ class Expr(Basic, EvalfMixin):
             return xa + xa2
 
         # whole term as a term factor
-        co = self.coeff(c)
+        co, diff = _corem(self, c)
         xa0 = (co.extract_additively(1) or 0)*c
         if xa0:
-            diff = self - co*c
             return (xa0 + (diff.extract_additively(c) or diff)) or None
         # term-wise
         coeffs = []

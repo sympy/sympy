@@ -1338,6 +1338,7 @@ def test_extractions():
         x + y + (x + 1)*(x + y) + 3
     assert ((y + 1)*(x + 2*y + 1) + 3).extract_additively(y + 1) == \
         (x + 2*y)*(y + 1) + 3
+    assert (-x - x*I).extract_additively(-x) == -I*x
 
     n = Symbol("n", integer=True)
     assert (Integer(-3)).could_extract_minus_sign() is True
