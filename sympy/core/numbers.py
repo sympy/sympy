@@ -1384,9 +1384,9 @@ class Float(Number):
     def __eq__(self, other):
         from sympy.logic.boolalg import Boolean
         if isinstance(other, float):
-            other = Float(other)
+            return self == Float(other)
         if isinstance(other, int):
-            other = Integer(other)
+            return self == Integer(other)
         if not isinstance(other, Basic):
             return Basic.__eq__(self, other)
         if isinstance(other, Boolean):
@@ -1394,13 +1394,13 @@ class Float(Number):
         if other.is_NumberSymbol:
             if other.is_irrational:
                 return False
-            return other.__eq__(self)
+            return NotImplemented
         if other.is_Float:
             # comparison is exact
             # so Float(.1, 3) != Float(.1, 33)
             return self._mpf_ == other._mpf_
         if other.is_Rational:
-            return other.__eq__(self)
+            return NotImplemented
         if other.is_Number:
             # numbers should compare at the same precision;
             # all _as_mpf_val routines should be sure to abide
@@ -1885,9 +1885,9 @@ class Rational(Number):
         if isinstance(other, MPQ):
             return self.p == other.numerator and self.q == other.denominator
         if isinstance(other, int):
-            other = Integer(other)
+            return self == Integer(other)
         if isinstance(other, float):
-            other = Float(other)
+            return self == Float(other)
         if not isinstance(other, Basic):
             return Basic.__eq__(self, other)
         if not isinstance(other, Number):
@@ -1899,7 +1899,7 @@ class Rational(Number):
         if other.is_NumberSymbol:
             if other.is_irrational:
                 return False
-            return other.__eq__(self)
+            return NotImplemented
         if other.is_Rational:
             # a Rational is always in reduced form so will never be 2/4
             # so we can just check equivalence of args
