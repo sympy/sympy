@@ -64,7 +64,7 @@ class OracleGateFunction(Atom):
 
     def __new__(cls, function):
         if not callable(function):
-            raise TypeError("{func} is not a callable.".format(func = function))
+            raise TypeError('Callable expected, got: %r' % function)
         obj = Atom.__new__(cls)
         obj.function = function
         return obj
@@ -117,7 +117,6 @@ class OracleGate(Gate):
 
     @classmethod
     def _eval_args(cls, args):
-        # TODO: args[1] is not a subclass of Basic
         if len(args) != 2:
             raise QuantumError(
                 'Insufficient/excessive arguments to Oracle.  Please ' +
@@ -128,9 +127,11 @@ class OracleGate(Gate):
         if not sub_args[0].is_Integer:
             raise TypeError('Integer expected, got: %r' % sub_args[0])
 
-        if not callable(args[1]):
-            raise TypeError('Callable expected, got: %r' % args[1])
-        return (sub_args[0], args[1])
+        function = args[1]
+        if not isinstance(function, OracleGateFunction):
+            function = OracleGateFunction(function)
+
+        return (sub_args[0], function)
 
     @classmethod
     def _eval_hilbert_space(cls, args):
