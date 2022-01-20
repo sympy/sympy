@@ -31,7 +31,12 @@ class RoundFunction(Function):
             return v
 
         if arg.is_integer or arg.is_finite is False:
-            return arg
+            if arg.is_real is False :
+                return arg
+            elif arg.is_number is True :
+                return arg.simplify()
+            else :
+                return arg
         if arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
             i = im(arg)
             if not i.has(S.ImaginaryUnit):
