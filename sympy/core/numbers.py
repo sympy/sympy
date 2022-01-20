@@ -1383,10 +1383,12 @@ class Float(Number):
 
     def __eq__(self, other):
         from sympy.logic.boolalg import Boolean
-        if isinstance(other, (int, float)):
-            return self == Float(other)
+        if isinstance(other, float):
+            other = Float(other)
+        if isinstance(other, int):
+            other = Integer(other)
         if not isinstance(other, Basic):
-            return NotImplemented
+            return Basic.__eq__(self, other)
         if isinstance(other, Boolean):
             return False
         if other.is_NumberSymbol:
@@ -1882,10 +1884,12 @@ class Rational(Number):
     def __eq__(self, other):
         if isinstance(other, MPQ):
             return self.p == other.numerator and self.q == other.denominator
-        if isinstance(other, (int, float)):
-            return self.p/self.q == other
+        if isinstance(other, int):
+            other = Integer(other)
+        if isinstance(other, float):
+            other = Float(other)
         if not isinstance(other, Basic):
-            return NotImplemented
+            return Basic.__eq__(self, other)
         if not isinstance(other, Number):
             # S(0) == S.false is False
             # S(0) == False is True
@@ -3883,7 +3887,7 @@ class NumberSymbol(AtomicExpr):
 
     def __eq__(self, other):
         if not isinstance(other, Basic):
-            return NotImplemented
+            return Basic.__eq__(self, other)
         if self is other:
             return True
         if other.is_Number and self.is_irrational:

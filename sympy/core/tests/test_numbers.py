@@ -1677,6 +1677,10 @@ def test_Rational_int():
     assert int(-Rational(7, 5)) == -1
 
 
+def test_Rational_float():
+    assert Rational(10000000000000001, 10000000000000000) != 1.0
+
+
 def test_zoo():
     b = Symbol('b', finite=True)
     nz = Symbol('nz', nonzero=True)
