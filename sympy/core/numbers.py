@@ -35,6 +35,7 @@ from .parameters import global_parameters
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
+from sympy.external.pythonmpq import PythonMPQ as MPQ
 _LOG2 = math.log(2)
 
 
@@ -1382,9 +1383,9 @@ class Float(Number):
 
     def __eq__(self, other):
         from sympy.logic.boolalg import Boolean
-        try:
-            other = _sympify(other)
-        except SympifyError:
+        if isinstance(other, (int, float)):
+            return self == Float(other)
+        if not isinstance(other, Basic):
             return NotImplemented
         if isinstance(other, Boolean):
             return False
@@ -1879,9 +1880,11 @@ class Rational(Number):
         return self.ceiling()
 
     def __eq__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
+        if isinstance(other, MPQ):
+            return self.p == other.numerator and self.q == other.denominator
+        if isinstance(other, (int, float)):
+            return self.p/self.q == other
+        if not isinstance(other, Basic):
             return NotImplemented
         if not isinstance(other, Number):
             # S(0) == S.false is False
@@ -2250,7 +2253,7 @@ class Integer(Rational):
         return Rational.__rmod__(self, other)
 
     def __eq__(self, other):
-        if isinstance(other, int):
+        if isinstance(other, (int, float)):
             return (self.p == other)
         elif isinstance(other, Integer):
             return (self.p == other.p)
@@ -3879,9 +3882,7 @@ class NumberSymbol(AtomicExpr):
         return Float._new(self._as_mpf_val(prec), prec)
 
     def __eq__(self, other):
-        try:
-            other = _sympify(other)
-        except SympifyError:
+        if not isinstance(other, Basic):
             return NotImplemented
         if self is other:
             return True
