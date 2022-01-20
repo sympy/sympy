@@ -2250,16 +2250,11 @@ class schroeder(Function):
             if n in (1, 2):
                 return True
 
-            sn1 = 1
-            sn = 2
-            i = 2
-            while sn < n:
-                b = ((6*i - 3)*sn - (i - 2)*sn1) // (i + 1)
-                sn1 = sn
-                sn = b
-                i = i+1
-
-            return sn == n
+            for i in schroeder._iterator():
+                if i == n:
+                    return True
+                if i > n:
+                    return False
 
         else:
             return False
@@ -2275,9 +2270,10 @@ class schroeder(Function):
         if n == 1:
             return [1]
         schroder = [1]
-        itr = schroeder._iterator()
-        for _ in range(1, n):
-            schroder.append(next(itr))
+        for i in schroeder._iterator():
+            schroder.append(i)
+            if len(schroder) == n:
+                break
 
         return schroder
 
@@ -2295,11 +2291,11 @@ class schroeder(Function):
             schroder = []
             if x <= 1 <= y:
                 schroder.append(1)
-            itr = schroeder._iterator()
-            for _ in range(1, y+1):
-                t = next(itr)
-                if t >= x and t <= y:
-                    schroder.append(t)
+            for i in schroeder._iterator():
+                if i >= x and i <= y:
+                    schroder.append(i)
+                if i > y:
+                    break
 
             return schroder
 
