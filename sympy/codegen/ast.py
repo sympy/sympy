@@ -498,10 +498,7 @@ class Assignment(AssignmentBase):
     op = ':='
 
 
-def _tensor_contraction(rhs):
-    # XXX: todo, maybe something like this already exists?
-    return rhs
-
+from sympy import Basic, Idx, Mul, Pow
 
 #def _get_explicit_indices(rhs):
     # XXX: todo, along the lines of numpy's einsum, but also
@@ -509,21 +506,45 @@ def _tensor_contraction(rhs):
     #account some indices might have already vanished due to
     #sums inside the expression.
 
-from sympy import Basic, Idx
-@dispatch(Basic) # type:ignore # noqa:F811
-def _get_explicit_indices(rhs): # noqa:F811
-    return set().union(*[_get_explicit_indices(arg) for arg in rhs.args])
-
 @dispatch(Idx) # type:ignore # noqa:F811
 def _get_explicit_indices(rhs): # noqa:F811
     return set([rhs])
 
 @dispatch(Sum) # type:ignore # noqa:F811
 def _get_explicit_indices(rhs): # noqa:F811
-    return set(rhs.args[0]) - set(*[_get_explicit_indices(arg) for arg in rhs.args[1:]])
+    return set(_get_explicit_indices(rhs.args[0])) - set(*[_get_explicit_indices(arg) for arg in rhs.args[1:]])
 
+@dispatch(Basic) # type:ignore # noqa:F811
+def _get_explicit_indices(rhs): # noqa:F811
+    return set().union(*[_get_explicit_indices(arg) for arg in rhs.args])
 #Might require some support for TensorProduct etc?
 
+
+@dispatch(Mul) # type:ignore # noqa:F811
+def _tensor_contraction(tensor): # noqa:F811
+    tensor = tensor.func(*[_tensor_contraction(arg) for arg in tensor.args])
+    arg_indices = [_get_explicit_indices(arg) for arg in tensor.args]
+    dummies = set()
+    for i,a in enumerate(arg_indices[:-1]):
+        for b in arg_indices[i+1:]:
+            dummies |= a.intersection(b)
+    if dummies:
+        return Sum(tensor, *dummies)
+    return tensor
+
+@dispatch(Pow) # type:ignore # noqa:F811
+def _tensor_contraction(tensor): # noqa:F811
+    tensor = tensor.func(*[_tensor_contraction(arg) for arg in tensor.args])
+    dummies = _get_explicit_indices(tensor)
+    if dummies:
+        return Sum(tensor, *dummies)
+    return tensor
+
+@dispatch(Basic) # type:ignore # noqa:F811
+def _tensor_contraction(tensor): # noqa:F811
+    if tensor.args:
+        return tensor.func(*[_tensor_contraction(arg) for arg in tensor.args])
+    return tensor
 
 class IndexedAssignment(Assignment):
     """Assignment with additional support for Indexed
