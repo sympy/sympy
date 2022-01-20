@@ -523,8 +523,8 @@ class IndexedAssignment(Assignment):
         type.
 
     tensor_contraction : bool
-        If True a `Sum` over `Idx` will be added to the rhs whenever a `Mul` 
-        node contains one or more args with the same `Idx` that is not 
+        If True a `Sum` over `Idx` will be added to the rhs whenever a `Mul`
+        node contains one or more args with the same `Idx` that is not
         already being summed over along the lines of the Einstein summation
         convention.
 
