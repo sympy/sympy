@@ -4979,7 +4979,7 @@ def test_sympy__codegen__ast__IndexedAssignment():
     from sympy.codegen.ast import IndexedAssignment
     from sympy.tensor.indexed import IndexedBase, Idx
     A = IndexedBase('A')
-    i = Idx('i')
+    i = Idx('i',(1, 4))
     #Test argument invariance after normalisation
     for assignment in [(x, A[i]*A[i])]:
         for tensor in [True, False]:

@@ -139,6 +139,7 @@ from sympy.core.numbers import Float, Integer, oo
 from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.utilities.iterables import (iterable, topological_sort,
                                        numbered_symbols, filter_symbols)
+from sympy.multipledispatch import dispatch
 
 
 def _mk_Tuple(args):
@@ -501,12 +502,28 @@ def _tensor_contraction(rhs):
     # XXX: todo, maybe something like this already exists?
     return rhs
 
-def _get_explicit_indices(rhs):
+
+#def _get_explicit_indices(rhs):
     # XXX: todo, along the lines of numpy's einsum, but also
     #for other operations than multiplication and taking into
     #account some indices might have already vanished due to
     #sums inside the expression.
-    return tuple()
+
+from sympy import Basic, Idx, Sum
+@dispatch(Basic)
+def _get_explicit_indices(rhs: Basic):
+    return set().union(*[_get_explicit_indices(arg) for arg in rhs.args])
+
+@dispatch(Idx)
+def _get_explicit_indices(rhs: Idx):
+    return set([rhs])
+
+@dispatch(Sum)
+def _get_explicit_indices(rhs: Sum):
+    return set(rhs.args[0]) - set(*[_get_explicit_indices(arg) for arg in rhs.args[1:]])
+
+#Might require some support for TensorProduct etc?
+
 
 class IndexedAssignment(Assignment):
     """Assignment with additional support for Indexed
@@ -546,7 +563,7 @@ class IndexedAssignment(Assignment):
         if explicit:
             dummies = _get_explicit_indices(rhs)
             if dummies:
-                rhs = Sum(rhs, *dummies)
+                rhs = Sum(rhs, *(dummies-_get_explicit_indices(lhs)))
 
         cls._check_args(lhs, rhs)
 
