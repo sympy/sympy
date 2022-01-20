@@ -509,17 +509,17 @@ def _tensor_contraction(rhs):
     #account some indices might have already vanished due to
     #sums inside the expression.
 
-from sympy import Basic, Idx, Sum
-@dispatch(Basic)
-def _get_explicit_indices(rhs: Basic):
+from sympy import Basic, Idx
+@dispatch(Basic) # type:ignore # noqa:F811
+def _get_explicit_indices(rhs): # noqa:F811
     return set().union(*[_get_explicit_indices(arg) for arg in rhs.args])
 
-@dispatch(Idx)
-def _get_explicit_indices(rhs: Idx):
+@dispatch(Idx) # type:ignore # noqa:F811
+def _get_explicit_indices(rhs): # noqa:F811
     return set([rhs])
 
-@dispatch(Sum)
-def _get_explicit_indices(rhs: Sum):
+@dispatch(Sum) # type:ignore # noqa:F811
+def _get_explicit_indices(rhs): # noqa:F811
     return set(rhs.args[0]) - set(*[_get_explicit_indices(arg) for arg in rhs.args[1:]])
 
 #Might require some support for TensorProduct etc?
