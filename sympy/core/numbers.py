@@ -1885,7 +1885,7 @@ class Rational(Number):
         if isinstance(other, MPQ):
             return self.p == other.numerator and self.q == other.denominator
         if isinstance(other, int):
-            return self == Integer(other)
+            return self.p == other*self.q
         if isinstance(other, float):
             return self == Float(other)
         if not isinstance(other, Basic):
