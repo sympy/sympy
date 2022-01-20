@@ -130,6 +130,7 @@ from typing import Any, Dict as tDict, List
 
 from collections import defaultdict
 
+from sympy.concrete.summations import Sum
 from sympy.core.relational import (Ge, Gt, Le, Lt)
 from sympy.core import Symbol, Tuple, Dummy
 from sympy.core.basic import Basic
@@ -494,6 +495,62 @@ class Assignment(AssignmentBase):
     """
 
     op = ':='
+
+
+def _tensor_contraction(rhs):
+    # XXX: todo, maybe something like this already exists?
+    return rhs
+
+def _get_explicit_indices(rhs):
+    # XXX: todo, along the lines of numpy's einsum, but also
+    #for other operations than multiplication and taking into
+    #account some indices might have already vanished due to
+    #sums inside the expression.
+    return tuple()
+
+class IndexedAssignment(Assignment):
+    """Assignment with additional support for Indexed
+
+    Parameters
+    ==========
+
+    lhs : Expr
+        SymPy object representing the lhs of the expression. These should be
+        singular objects, such as one would use in writing code.
+
+    rhs : Expr
+        SymPy object representing the rhs of the expression. This can be any
+        type.
+
+    tensor_contraction : bool
+        If True a `Sum` over `Idx` will be added to the rhs whenever a `Mul` 
+        node contains one or more args with the same `Idx` that is not 
+        already being summed over along the lines of the Einstein summation
+        convention.
+
+    explicit : bool
+        If True an outer `Sum` over any `Idx` in rhs (not yet being summed
+        over) but not in lhs will be added to rhs. If tensor_contraction is
+        also True, the tensor_contraction algorithm is applied first.
+
+    Examples
+    ========
+
+    XXX: To do
+    """
+    def __new__(cls, lhs, rhs, tensor_contraction = False, explicit = False):
+        lhs = _sympify(lhs)
+        rhs = _sympify(rhs)
+        if tensor_contraction:
+            rhs = _tensor_contraction(rhs)
+        if explicit:
+            dummies = _get_explicit_indices(rhs)
+            if dummies:
+                rhs = Sum(rhs, *dummies)
+
+        cls._check_args(lhs, rhs)
+
+        return super().__new__(cls, lhs, rhs)
 
 
 class AugmentedAssignment(AssignmentBase):
