@@ -2351,7 +2351,7 @@ class padovan(Function):
                 sn1 = sn2
                 sn2 = b
 
-            if Eq(sn2, n, evaluate=True):
+            if sn2 == n:
                 return True
             else:
                 return False
