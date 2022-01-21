@@ -1,4 +1,4 @@
-from sympy import Lambda, S, Dummy
+from sympy import Lambda, S, Dummy, KroneckerProduct
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sin
@@ -672,3 +672,18 @@ def test_array2matrix():
     expr = PermuteDims(ArrayContraction(ArrayTensorProduct(x, I, I1, x), (0, 3), (1, 7)), Permutation(2, 3))
     expected = PermuteDims(ArrayTensorProduct(x*x.T, I1), Permutation(3)(1, 2))
     assert _array2matrix(expr) == expected
+
+
+def test_recognize_broadcasting():
+    expr = ArrayTensorProduct(x.T*x, A)
+    assert _remove_trivial_dims(expr) == (KroneckerProduct(x.T*x, A), [0, 1])
+
+    expr = ArrayTensorProduct(A, x.T*x)
+    assert _remove_trivial_dims(expr) == (KroneckerProduct(A, x.T*x), [2, 3])
+
+    expr = ArrayTensorProduct(A, B, x.T*x, C)
+    assert _remove_trivial_dims(expr) == (ArrayTensorProduct(A, KroneckerProduct(B, x.T*x), C), [4, 5])
+
+    # Always prefer matrix multiplication to Kronecker product, if possible:
+    expr = ArrayTensorProduct(a, b, x.T*x)
+    assert _remove_trivial_dims(expr) == (a*x.T*x*b.T, [1, 3, 4, 5])
