@@ -38,6 +38,10 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.external.pythonmpq import PythonMPQ as MPQ
 _LOG2 = math.log(2)
 
+if HAS_GMPY:
+    _mpq = gmpy.mpq
+else:
+    _mpq = MPQ
 
 def comp(z1, z2, tol=None):
     r"""Return a bool indicating whether the error between z1 and z2
@@ -1882,7 +1886,7 @@ class Rational(Number):
         return self.ceiling()
 
     def __eq__(self, other):
-        if isinstance(other, MPQ):
+        if isinstance(other, _mpq):
             return self.p == other.numerator and self.q == other.denominator
         if isinstance(other, int):
             return self.p == other*self.q
