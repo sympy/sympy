@@ -130,7 +130,7 @@ class SymPyDeprecationWarning(DeprecationWarning):
 
     """
 
-    def __init__(self, value=None, feature=None, last_supported_version=None,
+    def __init__(self, *, value=None, feature=None, last_supported_version=None,
                  useinstead=None, issue=None, deprecated_since_version=None):
 
         self.args = (value, feature, last_supported_version, useinstead,
