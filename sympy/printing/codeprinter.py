@@ -385,6 +385,14 @@ class CodePrinter(StrPrinter):
             *map(lambda arg: self._print(arg),
                  [lhs_code, expr.op, rhs_code])))
 
+    def _print_IndexedAssignment(self, expr):
+        lines =[]
+        openloop, endloop = self._get_loop_opening_ending(expr.indices)
+        lines+=openloop
+
+        lines+=endloop
+        return '\n'.join(lines)
+        
     def _print_FunctionCall(self, expr):
         return '%s(%s)' % (
             expr.name,

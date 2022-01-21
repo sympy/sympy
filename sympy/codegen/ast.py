@@ -498,7 +498,7 @@ class Assignment(AssignmentBase):
     op = ':='
 
 
-from sympy import Basic, Idx, Mul, Pow
+from sympy import Basic, Idx, Mul, Pow, Add
 
 #def _get_explicit_indices(rhs):
     # XXX: todo, along the lines of numpy's einsum, but also
@@ -589,6 +589,19 @@ class IndexedAssignment(Assignment):
         cls._check_args(lhs, rhs)
 
         return super().__new__(cls, lhs, rhs)
+
+    @property
+    def indices(self):
+        return _get_explicit_indices(self.lhs)
+
+    @property
+    def dummies(self):
+        dummies = {s.args[1:]: s.args[0] for s in self.rhs.atoms(Sum)}
+        if isinstance(self.rhs, Add):
+            dummies[None] = self.rhs.func(*[arg for arg in self.rhs.args if not isinstance(arg, Sum)])
+        if not self.rhs.has(Sum):
+            return {None: self.rhs}
+        return dummies
 
 
 class AugmentedAssignment(AssignmentBase):
