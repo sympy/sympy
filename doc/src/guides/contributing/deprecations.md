@@ -33,6 +33,86 @@ To this end, a deprecation warning should be something that users can remove by 
 
 Furthermore, deprecation warnings should inform users of a way to change their code so that it works in the same version of SymPy, as well as all future versions. Features that do not have a suitable replacement should not be deprecated, as there will be no way for users to fix their code to continue to work.
 
+## When to deprecate and when not to
+
+Any time a public API is changed in a backwards incompatible way, a
+deprecation should be made, whenever possible. This allows users a chance to
+update their code without it completely breaking. It also gives an opportunity
+to give users an informative message on how to update their code, rather than
+making their code simply error or start giving wrong answers.
+
+When considering whether a change requires a deprecation, two things must be
+considered:
+
+- Is the change backwards incompatible?
+- Is the behavior being changed public API?
+
+A change is backwards incompatible if user code making use of it would stop
+working after the change.
+
+Whether a function or behavior is "public API" or not needs to be considered
+on a case-by-case basis. The exact rules for what does and doesn't constitute
+"public API" for SymPy are still not fully codified. As a general rule,
+"public API" (which requires deprecations for breaking changes) includes
+things like
+
+- Function names.
+- Keyword argument names.
+- Keyword argument default values.
+- The mathematical conventions used to define a function.
+- Submodule names for **public** functions that are not included in the
+  top-level `sympy/__init__.py`, since users must use the fully qualified
+  module name to import them (note: many such functions are not included
+  because they aren't actually public API at all. For these, no deprecations
+  are required to make breaking changes).
+
+Some things which don't generally constitute "public API", and therefore don't
+usually require deprecations to change include
+
+- The precise form of an expression. In general, functions may be changed to
+  return a different but mathematically equivalent form of the same
+  expression. This includes a function returning a value which it was not able
+  to compute previously.
+- The name of a submodule for functions is included in the top-level
+  `sympy/__init__.py`. Such functions should be imported directly, like `from
+  sympy import <name>`.
+- Positional argument names.
+- Functions and methods that are private, i.e., for internal use only. Such
+  methods should generally be prefixed with an underscore `_`, although this
+  convention is not currently universally adhered to in the SymPy codebase.
+- Anything explicitly marked as "experimental".
+- Changes to behavior that were mathematically incorrect previously (in
+  general, bug fixes are not considered breaking changes, because despite the
+  saying, bugs in SymPy are not features).
+- Anything that was added before the most recent release.
+
+If you're unsure, there is no harm in deprecating something even if it might
+not actually be "public API". APIs that change without prior warning are
+frustrating to users.
+
+Backwards incompatible API changes should not be made lightly. Any backwards
+compatibility break means that users will need to fix their code. Whenever you
+want to make a change, you should consider whether this is worth the pain for
+users. Users that have to update their code to match new APIs with every SymPy
+release will become frustrated with the library, and may go seek a more stable
+alternative. Consider whether the behavior you want can be done in a way that
+is compatible with existing APIs. New APIs do not necessarily need to
+completely supplant old ones. It is possible for old APIs to exist alongside
+newer, better designed ones without removing them. For example, the newer
+:func:`solveset` API was designed to be a superior replacement for the older
+:func:`solve` API. But the older `solve()` function remains intact and is
+still supported.
+
+It is important to try to be cognizant of API design whenever adding new
+functionality. Try to consider what a function may do in the future, and
+design the API in a way that it can do so without having to make a breaking
+change. If you are unsure about your API design, one option is to mark the new
+functionality as explicitly private or as experimental.
+
+With that being said, sometimes deprecations are required, for example, in
+order to make it possible to add new functionality later, or to remove some
+functionality which has misleading or misused behavior.
+
 ## How to deprecate code
 
 All deprecations should use {class}`sympy.utilities.exceptions.SymPyDeprecationWarning`. If a function or method is deprecated, you can use the {decorator}`sympy.utilities.decorator.deprecated` decorator. There are useful flags to this function that will generate warning messages automatically. The `issue`, `feature`, and `deprecated_since_version` flags are required (the `@deprecated` decorator sets `feature` automatically). The other flags, such as `use_instead` are useful, but you can also write your own custom message instead.  Please see the docstring of `SymPyDeprecationWarning` for more information.
@@ -56,7 +136,15 @@ with warns_deprecated_sympy():
     <deprecated behavior2>
 ```
 
-This should be the only part of the test suite that uses the deprecated behavior. Everything else should be changed to use the new, undeprecated behavior.
+This should be the only part of the codebase and test suite that uses the
+deprecated behavior. Everything else should be changed to use the new,
+undeprecated behavior. The SymPy test suite is configured to fail if a
+`SymPyDeprecationWarning` is issued anywhere except in a
+`warns_deprecated_sympy()` block (see below).
+
+If it is not possible to remove the deprecated behavior somewhere, that is a
+sign that it is not ready to be deprecated yet. Consider that users may not be
+able to replace the deprecated behavior for exact same reason.
 
 ## Deprecation removal issues
 
