@@ -1382,9 +1382,10 @@ class Float(Number):
     def __eq__(self, other):
         from sympy.logic.boolalg import Boolean
         if isinstance(other, float):
+            #converting here to catch inf float cases
             return self == Float(other)
         if isinstance(other, int):
-            return self == Integer(other)
+            return self.num == other
         if not isinstance(other, Basic):
             return Basic.__eq__(self, other)
         if isinstance(other, Boolean):
