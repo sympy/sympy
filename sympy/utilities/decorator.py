@@ -241,9 +241,43 @@ def memoize_property(propfunc):
 
 
 def deprecated(**decorator_kwargs):
-    """This is a decorator which can be used to mark functions
-    as deprecated. It will result in a warning being emitted
-    when the function is used."""
+    """
+    Mark a function as deprecated.
+
+    This decorator should be used if an entire function is deprecated. If only
+    a certain functionality is deprecated, you should use
+    :class:`SymPyDeprecationWarning.warn()
+    <sympy.utilities.exceptions.SymPyDeprecationWarning>` directly.
+
+    The decorator takes the same arguments as
+    :class:`sympy.utilities.exceptions.SymPyDeprecationWarning`. See its
+    documentation for details on what the keywords to this decorator do.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.decorator import deprecated
+    >>> @deprecated(
+    ...    feature="The example123() function",
+    ...    useinstead="the example456() function",
+    ...    issue=5241,
+    ...    deprecated_since_version="1.1")
+    ... def example123():
+    ...     return 123
+    >>> example123() # doctest: +SKIP
+    ./sympy/utilities/decorator.py:265: SymPyDeprecationWarning:
+    <BLANKLINE>
+    The example123() function has been deprecated since SymPy 1.1. Use The
+    example456() function instead. See
+    https://github.com/sympy/sympy/issues/5241 for more info.
+    <BLANKLINE>
+    123
+
+    See Also
+    ========
+    sympy.utilities.exceptions.SymPyDeprecationWarning
+
+    """
 
     def _warn_deprecation(wrapped, stacklevel):
         decorator_kwargs.setdefault('feature', wrapped.__name__)

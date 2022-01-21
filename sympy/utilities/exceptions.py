@@ -8,7 +8,8 @@ from sympy.utilities.misc import filldedent
 
 
 class SymPyDeprecationWarning(DeprecationWarning):
-    r"""A warning for deprecated features of SymPy.
+    r"""
+    A warning for deprecated features of SymPy.
 
     This class is expected to be used with the warnings.warn function (note
     that one has to explicitly turn on deprecation warnings):
@@ -121,8 +122,8 @@ class SymPyDeprecationWarning(DeprecationWarning):
     use what you believe will be the next release number (this usually means
     bumping the minor number by one).
 
-    To mark a function as deprecated, you can use the decorator
-    @deprecated.
+    To mark a function as deprecated, you can use the :func:`@deprecated
+    <sympy.utilities.decorator.deprecated>` decorator.
 
     See Also
     ========
