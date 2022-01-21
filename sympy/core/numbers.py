@@ -18,7 +18,7 @@ from .cache import cacheit, clear_cache
 from .decorators import _sympifyit
 from .logic import fuzzy_not
 from .kind import NumberKind
-from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, gmpy
+from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, gmpy, MPQ
 from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
@@ -35,13 +35,7 @@ from .parameters import global_parameters
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy.external.pythonmpq import PythonMPQ as MPQ
 _LOG2 = math.log(2)
-
-if HAS_GMPY:
-    _mpq = gmpy.mpq
-else:
-    _mpq = MPQ
 
 def comp(z1, z2, tol=None):
     r"""Return a bool indicating whether the error between z1 and z2
@@ -1886,7 +1880,7 @@ class Rational(Number):
         return self.ceiling()
 
     def __eq__(self, other):
-        if isinstance(other, _mpq):
+        if isinstance(other, MPQ):
             return self.p == other.numerator and self.q == other.denominator
         if isinstance(other, int):
             return self.p == other*self.q
