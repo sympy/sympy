@@ -21,14 +21,14 @@ class SymPyDeprecationWarning(DeprecationWarning):
     ...     SymPyDeprecationWarning(feature="Old deprecated thing",
     ...     issue=1065, deprecated_since_version="1.0")) #doctest:+SKIP
     __main__:3: SymPyDeprecationWarning:
-
+    <BLANKLINE>
     Old deprecated thing has been deprecated since SymPy 1.0. See
     https://github.com/sympy/sympy/issues/1065 for more info.
 
     >>> SymPyDeprecationWarning(feature="Old deprecated thing",
     ... issue=1065, deprecated_since_version="1.1").warn() #doctest:+SKIP
     __main__:1: SymPyDeprecationWarning:
-
+    <BLANKLINE>
     Old deprecated thing has been deprecated since SymPy 1.1.
     See https://github.com/sympy/sympy/issues/1065 for more info.
 
@@ -126,7 +126,7 @@ class SymPyDeprecationWarning(DeprecationWarning):
 
     See Also
     ========
-    sympy.core.decorators.deprecated
+    sympy.utilities.decorator.deprecated
 
     """
 
