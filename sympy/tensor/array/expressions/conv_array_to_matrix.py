@@ -168,7 +168,7 @@ def _find_trivial_matrices_rewrite(expr: ArrayTensorProduct):
 
 
 def _find_trivial_kronecker_products_broadcast(expr: ArrayTensorProduct):
-    newargs = []
+    newargs: List[Basic] = []
     removed = []
     count_dims = 0
     for i, arg in enumerate(expr.args):
