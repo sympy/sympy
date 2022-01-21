@@ -1,4 +1,6 @@
-# What is a deprecation?
+# Deprecation Policy
+
+## What is a deprecation?
 
 Sometimes the API of SymPy must change in an incompatible way. We try to avoid this, because changing API breaks people's code, but it is often deemed worthy to do so. Some reasons APIs are changed can include:
 
@@ -19,7 +21,7 @@ deprecated. If you are going to change the API of new code, it is best to do
 it before a release is made so that no deprecations are necessary for future
 releases
 
-# The purpose of deprecation
+## The purpose of deprecation
 
 Deprecation has several purposes:
 
@@ -31,17 +33,23 @@ To this end, a deprecation warning should be something that users can remove by 
 
 Furthermore, deprecation warnings should inform users of a way to change their code so that it works in the same version of SymPy, as well as all future versions. Features that do not have a suitable replacement should not be deprecated, as there will be no way for users to fix their code to continue to work.
 
-# How to deprecate code
+## How to deprecate code
 
-All deprecations should use `SymPyDeprecationWarning` in `sympy.utilities.exceptions`. If a function or method is deprecated, you can use the `@deprecated` decorator. There are useful flags to this function that will generate warning messages automatically. The `issue`, `feature`, and `deprecated_since_version` flags are required (the `@deprecated` decorator sets `feature` automatically). The other flags, such as `use_instead` are useful, but you can also write your own custom message instead.  Please see the docstring of `SymPyDeprecationWarning` for more information.
+All deprecations should use {class}`sympy.utilities.exceptions.SymPyDeprecationWarning`. If a function or method is deprecated, you can use the {decorator}`sympy.utilities.decorator.deprecated` decorator. There are useful flags to this function that will generate warning messages automatically. The `issue`, `feature`, and `deprecated_since_version` flags are required (the `@deprecated` decorator sets `feature` automatically). The other flags, such as `use_instead` are useful, but you can also write your own custom message instead.  Please see the docstring of `SymPyDeprecationWarning` for more information.
 
-Add a test for the deprecated behavior. You can just use
-```
+Add a test for the deprecated behavior. You can use the
+{func}`sympy.testing.pytest.warns_deprecated_sympy` context manager.
+
+```py
+from sympy.testing.pytest import warns_deprecated_sympy
+
 with warns_deprecated_sympy():
     <deprecated behavior>
 ```
+
 Note that this is used to assert that a warning is raised by the block as well as ensuring that any tests in the block pass. If you want to test multiple things and assert that each emits a warning then use separate with blocks for each:
-```
+
+```py
 with warns_deprecated_sympy():
     <deprecated behavior1>
 with warns_deprecated_sympy():
@@ -50,7 +58,7 @@ with warns_deprecated_sympy():
 
 This should be the only part of the test suite that uses the deprecated behavior. Everything else should be changed to use the new, undeprecated behavior.
 
-# Deprecation removal issues
+## Deprecation removal issues
 
 Every deprecation should have a deprecation removal issue. This issue's number goes in the `issue` field of `SymPyDeprecationWarning`. This will generate a link automatically to the issue on GitHub when the warning is displayed.
 
@@ -75,10 +83,10 @@ Finally, make sure to add the deprecation removal issue to the "backwards
 compatibility breaks and deprecations" section of the release notes (the bot
 does not do this automatically).
 
-# How long should deprecations last?
+## How long should deprecations last?
 
 We have not decided on a formal policy for this yet. For now, it should be considered case-by-case.  Both the number of releases since the deprecation and the length of time since the first release with the deprecation should be considered.
 
-# Release note entry
+## Release note entry
 
 The deprecation should be added to the "Backwards compatibility breaks and deprecations" section of the release notes for the upcoming release. This needs to be done manually, in addition to the change from the bot. See https://github.com/sympy/sympy/wiki/Writing-Release-Notes#backwards-compatibility-breaks-and-deprecations
