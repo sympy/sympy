@@ -1,5 +1,8 @@
 # Deprecation Policy
 
+This page outlines SymPy's police on doing deprecations, and describes the
+steps developers should take to properly deprecate code.
+
 ## What is a deprecation?
 
 Sometimes the API of SymPy must change in an incompatible way. We try to avoid this, because changing API breaks people's code, but it is often deemed worthy to do so. Some reasons APIs are changed can include:
@@ -52,9 +55,8 @@ working after the change.
 
 Whether a function or behavior is "public API" or not needs to be considered
 on a case-by-case basis. The exact rules for what does and doesn't constitute
-"public API" for SymPy are still not fully codified. As a general rule,
-"public API" (which requires deprecations for breaking changes) includes
-things like
+"public API" for SymPy are still not fully codified. Very broadly, some thing
+that constitute "public API" are
 
 - Function names.
 - Keyword argument names.
@@ -66,8 +68,8 @@ things like
   because they aren't actually public API at all. For these, no deprecations
   are required to make breaking changes).
 
-Some things which don't generally constitute "public API", and therefore don't
-usually require deprecations to change include
+And broadly, some things that don't consistent "public API", and therefore
+don't usually require deprecations to change, include
 
 - The precise form of an expression. In general, functions may be changed to
   return a different but mathematically equivalent form of the same
