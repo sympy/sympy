@@ -1387,7 +1387,7 @@ class Float(Number):
         if isinstance(other, int):
             return self.num == other
         if not isinstance(other, Basic):
-            return Basic.__eq__(self, other)
+            return self._do_eq_sympify(other)
         if isinstance(other, Boolean):
             return False
         if other.is_NumberSymbol:
@@ -1888,7 +1888,7 @@ class Rational(Number):
         if isinstance(other, float):
             return self == Float(other)
         if not isinstance(other, Basic):
-            return Basic.__eq__(self, other)
+            return self._do_eq_sympify(other)
         if not isinstance(other, Number):
             # S(0) == S.false is False
             # S(0) == False is True
@@ -2258,6 +2258,8 @@ class Integer(Rational):
     def __eq__(self, other):
         if isinstance(other, (int, float)):
             return (self.p == other)
+        if not isinstance(self, Basic):
+            return self._do_eq_sympify(other)
         elif isinstance(other, Integer):
             return (self.p == other.p)
         return Rational.__eq__(self, other)
@@ -3464,6 +3466,8 @@ class Infinity(Number, metaclass=Singleton):
         return super().__hash__()
 
     def __eq__(self, other):
+        if not isinstance(self, Basic):
+            return self._do_eq_sympify(other)
         return other is S.Infinity or other == float('inf')
 
     def __ne__(self, other):
@@ -3630,6 +3634,8 @@ class NegativeInfinity(Number, metaclass=Singleton):
         return super().__hash__()
 
     def __eq__(self, other):
+        if not isinstance(self, Basic):
+            return self._do_eq_sympify(other)
         return other is S.NegativeInfinity or other == float('-inf')
 
     def __ne__(self, other):
@@ -3761,6 +3767,8 @@ class NaN(Number, metaclass=Singleton):
         return super().__hash__()
 
     def __eq__(self, other):
+        if not isinstance(self, Basic):
+             return self._do_eq_sympify(other)
         # NaN is structurally equal to another NaN
         return other is S.NaN
 
@@ -3886,7 +3894,7 @@ class NumberSymbol(AtomicExpr):
 
     def __eq__(self, other):
         if not isinstance(other, Basic):
-            return Basic.__eq__(self, other)
+            return self._do_eq_sympify(other)
         if self is other:
             return True
         if other.is_Number and self.is_irrational:
