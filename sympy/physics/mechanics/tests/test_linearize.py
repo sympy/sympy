@@ -86,7 +86,15 @@ def test_linearize_rolling_disc_kane():
         linearizer = KM.to_linearizer()
         assert linearizer.f_c == f_c
         assert linearizer.f_v == f_v
-        assert linearizer.f_a == f_v.diff(t).subs(KM.kindiffdict())
+
+        if explicit_kinematics:
+            kdd = KM.kindiffdict()
+            assert linearizer.f_a == f_v.diff(t).subs(kdd)
+        else:
+            #for implicit kinematics, no need to subs kdd in f_v.diff
+            #since linearizer won't have done that either
+            assert linearizer.f_a == f_v.diff(t)
+
         sol = solve(linearizer.f_0 + linearizer.f_1, qd)
         for qi in qdots.keys():
             assert sol[qi] == qdots[qi]

@@ -1,4 +1,4 @@
-from sympy.core.evalf import evalf
+import sympy.core.evalf as evalf
 from sympy.core.numbers import pi
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.miscellaneous import sqrt

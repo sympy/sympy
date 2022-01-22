@@ -2,6 +2,8 @@ from sympy.core.backend import (cos, sin, Matrix, symbols)
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                         KanesMethod, Particle)
 
+from sympy.testing.pytest import raises
+
 def test_replace_qdots_in_force():
     # Test PR 16700 "Replaces qdots with us in force-list in kanes.py"
     # The new functionality allows one to specify forces in qdots which will
@@ -46,70 +48,85 @@ def test_replace_qdots_in_force():
     kde1 = [u1 - qd1, u2 - qd2]
     kde2 = [u1 - qd1, u2 - (qd1 + qd2)]
 
-    KM1 = KanesMethod(N, [q1, q2], [u1, u2], kd_eqs=kde1)
-    fr1, fstar1 = KM1.kanes_equations([Ap, Bp], forces)
+    for explicit_kinematics in [True, False]:
+        KM1 = KanesMethod(N, [q1, q2], [u1, u2], kd_eqs=kde1,
+            explicit_kinematics=explicit_kinematics)
+        KM2 = KanesMethod(N, [q1, q2], [u1, u2], kd_eqs=kde2,
+            explicit_kinematics=explicit_kinematics)
 
-    KM2 = KanesMethod(N, [q1, q2], [u1, u2], kd_eqs=kde2)
-    fr2, fstar2 = KM2.kanes_equations([Ap, Bp], forces)
+        if explicit_kinematics:
+            fr1, fstar1 = KM1.kanes_equations([Ap, Bp], forces)
+            fr2, fstar2 = KM2.kanes_equations([Ap, Bp], forces)
+        else:
+            #We expect kanes_equations to complain about "qdot terms in velocities"
+            #when using implicit kinematics for this problem because
+            #it cant properly compute velocity partials
+            with raises(ValueError):
+                fr1, fstar1 = KM1.kanes_equations([Ap, Bp], forces)
 
-    # Check EOM for KM2:
-    # Mass and force matrix from p.6 in Ref. [2] with added forces from
-    # example of chapter 4.7 in [1] and without gravity.
-    forcing_matrix_expected = Matrix( [ [ m * l**2 * sin(q2) * u2**2 + sig * q2
-                                        + delta * (u2 - u1)],
-                                        [ m * l**2 * sin(q2) * -u1**2 - sig * q2
-                                        - delta * (u2 - u1)] ] )
-    mass_matrix_expected = Matrix( [ [ 2 * m * l**2, m * l**2 * cos(q2) ],
-                                    [ m * l**2 * cos(q2), m * l**2 ] ] )
+            with raises(ValueError):
+                fr2, fstar2 = KM2.kanes_equations([Ap, Bp], forces)
 
-    assert (KM2.mass_matrix.expand() == mass_matrix_expected.expand())
-    assert (KM2.forcing.expand() == forcing_matrix_expected.expand())
+            continue
 
-    # Check fr1 with reference fr_expected from [1] with u:s instead of qdots.
-    fr1_expected = Matrix([ 0, -(sig*q2 + delta * u2) ])
-    assert fr1.expand() == fr1_expected.expand()
+        # Check EOM for KM2:
+        # Mass and force matrix from p.6 in Ref. [2] with added forces from
+        # example of chapter 4.7 in [1] and without gravity.
+        forcing_matrix_expected = Matrix( [ [ m * l**2 * sin(q2) * u2**2 + sig * q2
+                                            + delta * (u2 - u1)],
+                                            [ m * l**2 * sin(q2) * -u1**2 - sig * q2
+                                            - delta * (u2 - u1)] ] )
+        mass_matrix_expected = Matrix( [ [ 2 * m * l**2, m * l**2 * cos(q2) ],
+                                        [ m * l**2 * cos(q2), m * l**2 ] ] )
 
-    # Check fr2
-    fr2_expected = Matrix([sig * q2 + delta * (u2 - u1),
-                            - sig * q2 - delta * (u2 - u1)])
-    assert fr2.expand() == fr2_expected.expand()
+        assert (KM2.mass_matrix.expand() == mass_matrix_expected.expand())
+        assert (KM2.forcing.expand() == forcing_matrix_expected.expand())
 
-    # Specifying forces in u:s should stay the same:
-    Ta = (sig * q2 + delta * u2) * N.z
-    forces = [(A, Ta), (B, -Ta)]
-    KM1 = KanesMethod(N, [q1, q2], [u1, u2], kd_eqs=kde1)
-    fr1, fstar1 = KM1.kanes_equations([Ap, Bp], forces)
+        # Check fr1 with reference fr_expected from [1] with u:s instead of qdots.
+        fr1_expected = Matrix([ 0, -(sig*q2 + delta * u2) ])
+        assert fr1.expand() == fr1_expected.expand()
 
-    assert fr1.expand() == fr1_expected.expand()
+        # Check fr2
+        fr2_expected = Matrix([sig * q2 + delta * (u2 - u1),
+                                - sig * q2 - delta * (u2 - u1)])
+        assert fr2.expand() == fr2_expected.expand()
 
-    Ta = (sig * q2 + delta * (u2-u1)) * N.z
-    forces = [(A, Ta), (B, -Ta)]
-    KM2 = KanesMethod(N, [q1, q2], [u1, u2], kd_eqs=kde2)
-    fr2, fstar2 = KM2.kanes_equations([Ap, Bp], forces)
+        # Specifying forces in u:s should stay the same:
+        Ta = (sig * q2 + delta * u2) * N.z
+        forces = [(A, Ta), (B, -Ta)]
+        KM1 = KanesMethod(N, [q1, q2], [u1, u2], kd_eqs=kde1)
+        fr1, fstar1 = KM1.kanes_equations([Ap, Bp], forces)
 
-    assert fr2.expand() == fr2_expected.expand()
+        assert fr1.expand() == fr1_expected.expand()
 
-    # Test if we have a qubic qdot force:
-    Ta = (sig * q2 + delta * qd2**3) * N.z
-    forces = [(A, Ta), (B, -Ta)]
+        Ta = (sig * q2 + delta * (u2-u1)) * N.z
+        forces = [(A, Ta), (B, -Ta)]
+        KM2 = KanesMethod(N, [q1, q2], [u1, u2], kd_eqs=kde2)
+        fr2, fstar2 = KM2.kanes_equations([Ap, Bp], forces)
 
-    KM1 = KanesMethod(N, [q1, q2], [u1, u2], kd_eqs=kde1)
-    fr1, fstar1 = KM1.kanes_equations([Ap, Bp], forces)
+        assert fr2.expand() == fr2_expected.expand()
 
-    fr1_cubic_expected = Matrix([ 0, -(sig*q2 + delta * u2**3) ])
+        # Test if we have a qubic qdot force:
+        Ta = (sig * q2 + delta * qd2**3) * N.z
+        forces = [(A, Ta), (B, -Ta)]
 
-    assert fr1.expand() == fr1_cubic_expected.expand()
+        KM1 = KanesMethod(N, [q1, q2], [u1, u2], kd_eqs=kde1)
+        fr1, fstar1 = KM1.kanes_equations([Ap, Bp], forces)
 
-    KM2 = KanesMethod(N, [q1, q2], [u1, u2], kd_eqs=kde2)
-    fr2, fstar2 = KM2.kanes_equations([Ap, Bp], forces)
+        fr1_cubic_expected = Matrix([ 0, -(sig*q2 + delta * u2**3) ])
 
-    fr2_cubic_expected = Matrix([sig * q2 + delta * (u2 - u1)**3,
-                            - sig * q2 - delta * (u2 - u1)**3])
+        assert fr1.expand() == fr1_cubic_expected.expand()
 
-    assert fr2.expand() == fr2_cubic_expected.expand()
+        KM2 = KanesMethod(N, [q1, q2], [u1, u2], kd_eqs=kde2)
+        fr2, fstar2 = KM2.kanes_equations([Ap, Bp], forces)
 
-    # References:
-    # [1] T.R. Kane, D. a Levinson, Dynamics Theory and Applications, 2005.
-    # [2] Arun K Banerjee, Flexible Multibody Dynamics:Efficient Formulations
-    #     and Applications, John Wiley and Sons, Ltd, 2016.
-    #     doi:http://dx.doi.org/10.1002/9781119015635.
+        fr2_cubic_expected = Matrix([sig * q2 + delta * (u2 - u1)**3,
+                                - sig * q2 - delta * (u2 - u1)**3])
+
+        assert fr2.expand() == fr2_cubic_expected.expand()
+
+        # References:
+        # [1] T.R. Kane, D. a Levinson, Dynamics Theory and Applications, 2005.
+        # [2] Arun K Banerjee, Flexible Multibody Dynamics:Efficient Formulations
+        #     and Applications, John Wiley and Sons, Ltd, 2016.
+        #     doi:http://dx.doi.org/10.1002/9781119015635.

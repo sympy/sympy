@@ -320,6 +320,21 @@ class KanesMethod(_Methods):
             self._k_ku = Matrix()
             self._k_kqdot = Matrix()
 
+    def _partial_velocity(self, vel_list):
+        '''
+        Return the partial velocity w.r.t. generalized speeds
+        Throws an error if qdot terms are left
+        '''
+        q_dot_set = set(self._qdot)
+        for vel in vel_list:
+            dyn_symbols = find_dynamicsymbols(vel, reference_frame=self._inertial)
+            if (dyn_symbols & q_dot_set):
+                raise ValueError('Found qdot terms in velocities. '
+                'To properly compute velocity partials, either use `explicit_kinematics=True` to remove them automatically, '
+                'or manually express velocities independently from qdot terms'
+                )
+        return partial_velocity(vel_list, self.u, self._inertial)
+
     def _form_fr(self, fl):
         """Form the generalized active force."""
         if fl is not None and (len(fl) == 0 or not iterable(fl)):
@@ -336,7 +351,7 @@ class KanesMethod(_Methods):
         o = len(self.u)
         b = len(f_list)
         FR = zeros(o, 1)
-        partials = partial_velocity(vel_list, self.u, N)
+        partials = self._partial_velocity(vel_list)
         for i in range(o):
             FR[i] = sum(partials[j][i] & f_list[j] for j in range(b))
 
@@ -385,8 +400,9 @@ class KanesMethod(_Methods):
                 raise TypeError('The body list may only contain either '
                                 'RigidBody or Particle as list elements.')
             v = [msubs(vel, self._qdot_u_map) for vel in vlist]
-            return partial_velocity(v, self.u, N)
-        partials = [get_partial_velocity(body) for body in bl]
+
+            return self._partial_velocity(v)
+        self.partials = partials = [get_partial_velocity(body) for body in bl]
 
         # Compute fr_star in two components:
         # fr_star = -(MM*u' + nonMM)
