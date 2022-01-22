@@ -63,7 +63,7 @@ def test_DiscreteMarkovChain():
     # any hashable object should be a valid state
     # states should be valid as a tuple/set/list/Tuple/Range
     sym, rainy, cloudy, sunny = symbols('a Rainy Cloudy Sunny', real=True)
-    state_spaces = [(1, 2, 3), [Str('Hello'), sym, DiscreteMarkovChain],
+    state_spaces = [(1, 2, 3), [Str('Hello'), sym, DiscreteMarkovChain("Y", (1,2,3))],
                     Tuple(S(1), exp(sym), Str('World'), sympify=False), Range(-1, 5, 2),
                     [rainy, cloudy, sunny]]
     chains = [DiscreteMarkovChain("Y", state_space) for state_space in state_spaces]
@@ -125,11 +125,11 @@ def test_DiscreteMarkovChain():
     assert P(Lt(X[1], 2) & Gt(X[1], 0), Eq(X[0], 2) &
         StochasticStateSpaceOf(X, [0, 1, 2]) & TransitionMatrixOf(X, TO1)) == Rational(1, 4)
     assert P(Lt(X[1], 2) & Gt(X[1], 0), Eq(X[0], 2) &
-             StochasticStateSpaceOf(X, [None, 'None', 1]) & TransitionMatrixOf(X, TO1)) == Rational(1, 4)
+             StochasticStateSpaceOf(X, [S(0), '0', 1]) & TransitionMatrixOf(X, TO1)) == Rational(1, 4)
     assert P(Ne(X[1], 2) & Ne(X[1], 1), Eq(X[0], 2) &
         StochasticStateSpaceOf(X, [0, 1, 2]) & TransitionMatrixOf(X, TO1)) is S.Zero
     assert P(Ne(X[1], 2) & Ne(X[1], 1), Eq(X[0], 2) &
-             StochasticStateSpaceOf(X, [None, 'None', 1]) & TransitionMatrixOf(X, TO1)) is S.Zero
+             StochasticStateSpaceOf(X, [S(0), '0', 1]) & TransitionMatrixOf(X, TO1)) is S.Zero
     assert P(And(Eq(Y[2], 1), Eq(Y[1], 1), Eq(Y[0], 0)), Eq(Y[1], 1)) == 0.1*Probability(Eq(Y[0], 0))
 
     # testing properties of Markov chain

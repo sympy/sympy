@@ -2348,7 +2348,7 @@ class Poly(Basic):
             rep = f.rep
 
             for spec in specs:
-                if type(spec) is tuple:
+                if isinstance(spec, tuple):
                     gen, m = spec
                 else:
                     gen, m = spec, 1
@@ -2386,7 +2386,7 @@ class Poly(Basic):
             rep = f.rep
 
             for spec in specs:
-                if type(spec) is tuple:
+                if isinstance(spec, tuple):
                     gen, m = spec
                 else:
                     gen, m = spec, 1

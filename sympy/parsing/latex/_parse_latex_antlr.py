@@ -189,8 +189,7 @@ def convert_postfix_list(arr, i=0):
                         sympy.Symbol)
                     # if the left and right sides contain no variables and the
                     # symbol in between is 'x', treat as multiplication.
-                    if len(left_syms) == 0 and len(right_syms) == 0 and str(
-                            res) == "x":
+                    if not (left_syms or right_syms) and str(res) == 'x':
                         return convert_postfix_list(arr, i + 1)
             # multiply by next
             return sympy.Mul(

@@ -60,16 +60,12 @@ def test_PythonCodePrinter():
 
 
 def test_PythonCodePrinter_standard():
-    import sys
-    prntr = PythonCodePrinter({'standard':None})
+    prntr = PythonCodePrinter()
 
-    python_version = sys.version_info.major
-    if python_version == 2:
-        assert prntr.standard == 'python2'
-    if python_version == 3:
-        assert prntr.standard == 'python3'
+    assert prntr.standard == 'python3'
 
     raises(ValueError, lambda: PythonCodePrinter({'standard':'python4'}))
+
 
 def test_MpmathPrinter():
     p = MpmathPrinter()
@@ -195,10 +191,6 @@ def test_sqrt():
     assert prntr._print_Pow(sqrt(x), rational=False) == 'math.sqrt(x)'
     assert prntr._print_Pow(1/sqrt(x), rational=False) == '1/math.sqrt(x)'
 
-    prntr = PythonCodePrinter({'standard' : 'python2'})
-    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1./2.)'
-    assert prntr._print_Pow(1/sqrt(x), rational=True) == 'x**(-1./2.)'
-
     prntr = PythonCodePrinter({'standard' : 'python3'})
     assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
     assert prntr._print_Pow(1/sqrt(x), rational=True) == 'x**(-1/2)'
@@ -263,8 +255,9 @@ def test_codegen_ast_nodes():
 def test_issue_14283():
     prntr = PythonCodePrinter()
 
-    assert prntr.doprint(zoo) == "float('nan')"
+    assert prntr.doprint(zoo) == "math.nan"
     assert prntr.doprint(-oo) == "float('-inf')"
+
 
 def test_NumPyPrinter_print_seq():
     n = NumPyPrinter()
