@@ -175,8 +175,8 @@ Which of the two to make should decided on a case-by-case basis.
 
 ## How long should deprecations last?
 
-Deprecations should remain intact for a least **1 year** after the first major
-release is made with the deprecation. This is only a minimum period:
+Deprecations should remain intact for **at least 1 year** after the first
+major release is made with the deprecation. This is only a minimum period:
 deprecations are allowed to remain intact for longer than this. If a change is
 especially hard for users to migrate, the deprecation period should be
 lengthened. The period may also be lengthened for deprecated features that do
