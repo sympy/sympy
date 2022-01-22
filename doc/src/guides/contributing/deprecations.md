@@ -208,12 +208,8 @@ deprecation as early as possible.
 All deprecations should use
 {class}`sympy.utilities.exceptions.SymPyDeprecationWarning`. If a function or
 method is deprecated, you can use the
-{func}`sympy.utilities.decorator.deprecated` decorator. There are useful flags
-to this function that will generate warning messages automatically. The
-`issue`, `feature`, and `deprecated_since_version` flags are required (the
-`@deprecated` decorator sets `feature` automatically). The other flags, such
-as `use_instead` are useful, but you can also write your own custom message
-instead. Please see the docstring of `SymPyDeprecationWarning` for more
+{func}`sympy.utilities.decorator.deprecated` decorator. The
+`deprecated_since_version` and `active_deprecations_target` flags are required. Please see the docstring of `SymPyDeprecationWarning` for more
 information.
 
 Add a test for the deprecated behavior. You can use the
