@@ -1,3 +1,4 @@
+(deprecation-policy)=
 # Deprecation Policy
 
 This page outlines SymPy's police on doing deprecations, and describes the
@@ -207,8 +208,8 @@ deprecation as early as possible.
 All deprecations should use
 {class}`sympy.utilities.exceptions.SymPyDeprecationWarning`. If a function or
 method is deprecated, you can use the
-{func}`sympy.utilities.decorator.deprecated` decorator. There are useful
-flags to this function that will generate warning messages automatically. The
+{func}`sympy.utilities.decorator.deprecated` decorator. There are useful flags
+to this function that will generate warning messages automatically. The
 `issue`, `feature`, and `deprecated_since_version` flags are required (the
 `@deprecated` decorator sets `feature` automatically). The other flags, such
 as `use_instead` are useful, but you can also write your own custom message
@@ -247,33 +248,137 @@ If it is not possible to remove the deprecated behavior somewhere, that is a
 sign that it is not ready to be deprecated yet. Consider that users may not be
 able to replace the deprecated behavior for exact same reason.
 
-## Deprecation removal issues
+## Documenting a deprecation
 
-Every deprecation should have a deprecation removal issue. This issue's number
-goes in the `issue` field of `SymPyDeprecationWarning`. This will generate a
-link automatically to the issue on GitHub when the warning is displayed.
+All deprecations should be documented. Every deprecation needs to be
+documented in at three primary places:
 
-The purpose of these issues is twofold:
+- The `SymPyDeprecationWarning` warning text. This text is allowed to be long
+  enough to describe the deprecation, but it should not be more than one
+  paragraph. The primary purpose of the warning text should be *to inform
+  users how to update their code*. The warning text should *not* discuss why a
+  feature was deprecated or unnecessary internal technical details. This
+  discussion can go in the other sections mentioned below. Do not include
+  information in the message that is already part of the metadata provided to
+  the keyword arguments to `SymPyDeprecationWarning`, like the version number.
+  Remember that the warning text will be shown in plain-text, so do not use
+  RST or Markdown markup in the text. Code blocks should be clearly
+  delineated with newlines so that they are easy to read. All text should be
+  wrapped to 80 characters.
 
-1. So that we remember to eventually remove the deprecated behavior.
-2. To give people more information why the feature is deprecated.
+- A deprecation note in the relevant docstring(s). This should use the
+  [`deprecated`](https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-deprecated)
+  Sphinx directive. This uses the syntax `.. deprecated:: <version>``. If the
+  entire function is deprecated, this should be placed at the top of the
+  docstring, right below the first line. Otherwise, if only part of a function
+  is deprecated (e.g., a single keyword argument), it should be placed near
+  the part of the docstring that discusses that feature, e.g., in the
+  parameters list.
 
-As such, the issue should give a description of why the behavior was removed
-and what to use instead. This can be used to give a longer explanation than
-what is suitable in the warning text itself (also, reasoning behind the
-removal does not belong in the warning text, but it should be in the issue).
-Please include a summary of these issues on the issue itself, rather than
-relying on cross-references to long discussions, as users will want to know
-why the API was changed and how to fix their code without reading through
-pages of discussion, much of which may be irrelevant or contradictory to the
-final decision.
+  The text in the deprecation should be short (no more than a paragraph),
+  explaining what is deprecated and what users should use instead. If you
+  want, you may use the same text here as in the `SymPyDeprecationWarning`. Be
+  sure to use RST formatting, including cross-references to the new function
+  if relevant.
 
-Deprecation removal issues should have the "Deprecation removal" tag. These
-issues should not be closed until the deprecated feature is removed entirely.
+  If the documentation for the feature is otherwise the same as the replaced
+  feature (i.e., the deprecation is just a renaming of a function or
+  argument), you may replace the rest of the documentation with a note like
+  "see the documentation for \<new feature\>". Otherwise, the documentation
+  for the deprecated functionality should be left intact.
 
-Finally, make sure to add the deprecation removal issue to the "backwards
-compatibility breaks and deprecations" section of the release notes (the bot
-does not do this automatically).
+  Consider these (imaginary) examples:
+
+  ```py
+  @deprecated("""\
+  The simplify_this(expr) function is deprecated. Use simplify(expr)
+  instead.""", deprecated_since_version="1.1",
+  active_deprecations_target='simplify-this-deprecation')
+  def simplify_this(expr):
+      """
+      Simplify ``expr``.
+
+      .. deprecated:: 1.1
+
+         The ``simplify_this`` function is deprecated. Use :func:`simplify`
+         instead. See its documentation for more information.
+
+     """
+     return simplify(expr)
+  ```
+
+  ```py
+  def is_this_zero(x, y=0):
+      """
+      Determine if x = 0.
+
+      Parameters
+      ==========
+
+      x : Expr
+        The expression to check.
+
+      y : Expr, optional
+        If provided, check if x = y.
+
+        .. deprecated:: 1.1
+
+           The ``y`` argument to ``is_this_zero`` is deprecated. Use
+           ``is_this_zero(x - y)`` instead.
+
+      """
+      if y != 0:
+          SymPyDeprecationWarning("""\
+  The y argument to is_zero() is deprecated. Use is_zero(x - y) instead.""",
+              deprecated_since_version="1.1",
+              active_deprecations_target=is-this-zero-y-deprecation')
+      return simplify(x - y) == 0
+  ```
+
+- A longer description of the deprecation should be added to [the page listing
+  all currently active deprecations](active-deprecations) in the
+  documentation (in `doc/src/explaination/active-deprecations.md`).
+
+  This page is where you can go into more detail about the technical details
+  of a deprecation. Here you should also list *why* a feature was deprecated.
+  You should link to relevant issues, pull requests, and mailing list
+  discussions about the deprecation. However, these discussion should be
+  summarized so that users can get the basic idea of why the deprecation
+  without having to read through pages of old discussions. You may also here
+  give longer examples that would not fit in the `SymPyDeprecationWarning`
+  message or `.. deprecated::` text.
+
+  Every deprecation should have a cross-reference target (using
+  `(target-name)=` above the section header) so that the `.. deprecated::`
+  note in the relevant docstring can refer to it. This target should also be
+  passed to the `active_deprecations_target` option of
+  {class}`SymPyDeprecationWarning
+  <sympy.utilities.exceptions.SymPyDeprecationWarning>` or {func}`@deprecated
+  <sympy.utilities.decorator.deprecated>`. This will automatically put a link
+  to the page in the documentation in the warning message.
+
+  Finally, the description should also make a note of which SymPy version the
+  deprecation was first introduced in.
+
+  ```md
+  (simplify-this-deprecation)=
+  ## This is an example deprecation description
+
+  **Note: this section is just an example. I will remove it once the *real*
+  deprecations are added to this page (it is also duplicated in the deprecations
+  guide.**
+
+  The `simplify_this` function is deprecated. It has been replaced with the
+  `simplify` function. Code using `simplify_this` can be fixed by replacing
+  `simplfiy_this` with `simplify`. The behavior of the two functions is
+  otherwise identical.
+
+  The change was made because `simplify` is a much more Pythonic name than
+  `simplify_this`.
+
+  This feature has been deprecated since SymPy version 1.1.
+  ```
+
 
 ## Release notes entry
 
