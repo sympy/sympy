@@ -105,9 +105,9 @@ alternative. Consider whether the behavior you want can be done in a way that
 is compatible with existing APIs. New APIs do not necessarily need to
 completely supplant old ones. It is possible for old APIs to exist alongside
 newer, better designed ones without removing them. For example, the newer
-[`solveset`](solveset) API was designed to be a superior replacement for the
-older [`solve`](solvers) API. But the older `solve()` function remains intact
-and is still supported.
+{ref}`solveset <solveset>` API was designed to be a superior replacement for
+the older {ref}`solve <solvers>` API. But the older `solve()` function remains
+intact and is still supported.
 
 It is important to try to be cognizant of API design whenever adding new
 functionality. Try to consider what a function may do in the future, and
@@ -171,6 +171,36 @@ options:
   they will at least be aware that changes are coming.
 
 Which of the two to make should decided on a case-by-case basis.
+
+## How long should deprecations last?
+
+Deprecations should remain intact for a least **1 year** after the first major
+release is made with the deprecation. This is only a minimum period:
+deprecations are allowed to remain intact for longer than this. If a change is
+especially hard for users to migrate, the deprecation period should be
+lengthened. The period may also be lengthened for deprecated features that do
+not impose a significant maintenance burden to keep around.
+
+The deprecation period policy is time-based rather than release-based for a
+few reasons. Firstly, SymPy does not have a regular release schedule.
+Sometimes multiple releases will be made in a year, and sometimes only a
+single release will be made. Being time-based assures that users have
+sufficient opportunity to update their code regardless of how often releases
+happen to be made.
+
+Secondly, SymPy does not make use of a rigorous versioning scheme like
+semantic versioning. The API surface of SymPy and number of contributions are
+both large enough that virtually every major release has some deprecations and
+backwards incompatible changes made in some submodule. Encoding this into the
+version number would be virtually impossible. The development team also does
+not backport changes to prior major releases, except in extreme cases. Thus a
+time-based deprecation scheme is more accurate to SymPy's releasing model than
+a version-based one would be.
+
+Finally, a time-based scheme removes any temptation to "fudge" a deprecation
+period down by releasing early. The best way for the developers to accelerate
+the removal of deprecated functionality is to make a release containing the
+deprecation as early as possible.
 
 ## How to deprecate code
 
@@ -245,16 +275,13 @@ Finally, make sure to add the deprecation removal issue to the "backwards
 compatibility breaks and deprecations" section of the release notes (the bot
 does not do this automatically).
 
-## How long should deprecations last?
-
-We have not decided on a formal policy for this yet. For now, it should be
-considered case-by-case. Both the number of releases since the deprecation and
-the length of time since the first release with the deprecation should be
-considered.
-
-## Release note entry
+## Release notes entry
 
 The deprecation should be added to the "Backwards compatibility breaks and
 deprecations" section of the release notes for the upcoming release. This
 needs to be done manually, in addition to the change from the bot. See
 https://github.com/sympy/sympy/wiki/Writing-Release-Notes#backwards-compatibility-breaks-and-deprecations
+
+Whenever a deprecated functionality is removed entirely after its deprecation
+period, this also needs to be added to the "Backwards compatibility breaks and
+deprecations" section of the release notes.
