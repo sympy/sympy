@@ -2436,5 +2436,5 @@ class padovan(Function):
         try:
             n = as_int(n)
         except ValueError:
-            raise ValueError('The provided number must be a integer')
+            return None
         return Integer(cls._padovan(n))
