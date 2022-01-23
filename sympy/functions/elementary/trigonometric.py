@@ -1367,6 +1367,8 @@ class cot(TrigonometricFunction):
                 return S.NaN
             if arg.is_zero:
                 return S.ComplexInfinity
+            elif arg in (S.Infinity, S.NegativeInfinity):
+                return AccumBounds(S.NegativeInfinity, S.Infinity)
 
         if arg is S.ComplexInfinity:
             return S.NaN
@@ -1920,6 +1922,15 @@ class csc(ReciprocalTrigonometricFunction):
             k = n//2 + 1
             return (S.NegativeOne**(k - 1)*2*(2**(2*k - 1) - 1)*
                     bernoulli(2*k)*x**(2*k - 1)/factorial(2*k))
+
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        arg = self.args[0]
+        x0 = arg.subs(x, 0).cancel()
+        n = x0/S.Pi
+        if n.is_integer:
+            lt = (arg - n*S.Pi).as_leading_term(x)
+            return (S.NegativeOne**n)/lt
+        return self.func(x0)
 
 
 class sinc(Function):
