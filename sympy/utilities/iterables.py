@@ -2224,14 +2224,15 @@ def multiset_derangements(s):
             ifill = inonM[:i] + inonM[i+1:]
             for j in ifill:
                 rv[j] = M
-            rv[i1] = s[i1]
             for p in permutations([s[j] for j in ifill]):
+                rv[i1] = s[i1]
                 for j, pi in zip(iM, p):
                     rv[j] = pi
+                k = i1
                 for j in iM:
-                    rv[j], rv[i1] = rv[i1], rv[j]
+                    rv[j], rv[k] = rv[k], rv[j]
                     yield rv
-                    i1 = j
+                    k = j
         return
 
     def finish_derangements():

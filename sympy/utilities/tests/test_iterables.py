@@ -560,6 +560,9 @@ def test_derangements():
         'cccabba', 'cccabab', 'cccaabb', 'ccacbba', 'ccacbab',
         'ccacabb', 'cbccbaa', 'cbccaba', 'cbccaab', 'bcccbaa',
         'bcccaba', 'bcccaab']
+    assert [''.join(i) for i in D('books')] == ['kbsoo', 'ksboo',
+        'sbkoo', 'skboo', 'oksbo', 'oskbo', 'okbso', 'obkso', 'oskob',
+        'oksob', 'osbok', 'obsok']
 
 
 def test_necklaces():
