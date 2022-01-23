@@ -766,6 +766,19 @@ class LatexPrinter(Printer):
     def _print_IndexedBase(self, expr):
         return self._print(expr.label)
 
+    def _print_Idx(self, expr):
+        label = self._print(expr.label)
+        if expr.upper is not None:
+            upper = self._print(expr.upper)
+            #if both upper and lower are defined
+            if expr.lower is not None:
+                lower = self._print(expr.lower)
+                return '{{{label}}}_{{{lower}..{upper}}}'.format(label=label, lower=lower, upper=upper)
+            #if only upper is defined (lower is implicitly 0)
+            return '{{{label}}}_{{{lower}..{upper}}}'.format(label=label, lower=self._print(0), upper=upper)
+        #if no bounds are defined this just prints the label
+        return label
+
     def _print_Derivative(self, expr):
         if requires_partial(expr.expr):
             diff_symbol = r'\partial'
