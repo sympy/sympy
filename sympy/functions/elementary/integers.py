@@ -37,6 +37,12 @@ class RoundFunction(Function):
                 return arg.cancel()
             else :
                 return arg
+        else :
+            if arg.together().expand().cancel().is_integer :
+                for i in arg.args :
+                    if i.is_Symbol is True :
+                        return arg.cancel()
+
         if arg.is_imaginary or (S.ImaginaryUnit*arg).is_real:
             i = im(arg)
             if not i.has(S.ImaginaryUnit):
