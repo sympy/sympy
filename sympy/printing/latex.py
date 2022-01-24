@@ -770,12 +770,14 @@ class LatexPrinter(Printer):
         label = self._print(expr.label)
         if expr.upper is not None:
             upper = self._print(expr.upper)
-            #if both upper and lower are defined
             if expr.lower is not None:
                 lower = self._print(expr.lower)
-                return '{{{label}}}_{{{lower}..{upper}}}'.format(label=label, lower=lower, upper=upper)
-            #if only upper is defined (lower is implicitly 0)
-            return '{{{label}}}_{{{lower}..{upper}}}'.format(label=label, lower=self._print(0), upper=upper)
+            else:
+                lower = self._print(S.Zero)
+            interval = '{lower}\\mathrel{{..}}\\nobreak{upper}'.format(
+                    lower = lower, upper = upper)
+            return '{{{label}}}_{{{interval}}}'.format(
+                label = label, interval = interval)
         #if no bounds are defined this just prints the label
         return label
 
