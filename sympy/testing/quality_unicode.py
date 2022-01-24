@@ -19,6 +19,7 @@ encoding_header_re = re.compile(
 unicode_whitelist = [
     # Author names can include non-ASCII characters
     r'*/bin/authors_update.py',
+    r'*/bin/mailmap_check.py',
 
     # These files have functions and test functions for unicode input and
     # output.
