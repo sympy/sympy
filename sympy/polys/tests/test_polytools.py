@@ -2976,64 +2976,22 @@ def test_nth_power_roots_poly():
         x + y, 2, x, y))
 
 
-def test_root_bounds():
-    def check(f, c):
-        lb, ub = f.root_bounds()
-        r = sqrt(abs(c))
-        assert lb <= r <= ub
-        # Check: same results as long as the non-zero roots are the same:
-        g = x * f
-        assert g.root_bounds() == (lb, ub)
-
-    for c0 in [2, -5, Rational(1, 2), Rational(-3, 8)]:
-        f = Poly(x**2 - c0)
-        check(f, c0)
-
-    raises(DomainError, lambda: Poly(x + 1, domain=FF(7)).root_bounds())
-    raises(DomainError, lambda: Poly(y*x + 1, domain=ZZ[y]).root_bounds())
-    raises(MultivariatePolynomialError,
-           lambda: Poly(x*y + 1, domain=ZZ).root_bounds())
-    raises(PolynomialError, lambda: Poly(2*x**3).root_bounds())
-
-
-def test_root_separation_lower_bound():
-    for e in [
-        x**3,
-        (x - 1)**3,
-        x**2 - 2,
-        x ** 2 + x + 1,
-    ]:
-        f = Poly(e)
-        eps = f.root_separation_lower_bound_squared()
-        assert eps.is_rational
-
-        roots = f.all_roots()
-        seps = set()
-        for i, r in enumerate(roots):
-            for s in roots[i+1:]:
-                seps.add(abs(r.evalf() - s.evalf()))
-        assert eps <= min(seps)**2
-
-    raises(DomainError,
-           lambda: Poly(x + 1, domain=FF(7)).root_separation_lower_bound_squared())
-    raises(DomainError,
-           lambda: Poly(y * x + 1, domain=ZZ[y]).root_separation_lower_bound_squared())
-    raises(MultivariatePolynomialError,
-           lambda: Poly(x * y + 1, domain=ZZ).root_separation_lower_bound_squared())
-
-
-def test_root_equality_test():
+def test_same_root():
     f = Poly(x**4 + x**3 + x**2 + x + 1)
-    eq = f.root_equality_test
+    eq = f.same_root
     r0 = exp(2 * I * pi / 5)
     assert [i for i, r in enumerate(f.all_roots()) if eq(r, r0)] == [3]
 
+    raises(PolynomialError,
+           lambda: Poly(x + 1, domain=QQ).same_root(0, 0))
     raises(DomainError,
-           lambda: Poly(x + 1, domain=FF(7)).root_equality_test(0, 0))
+           lambda: Poly(x**2 + 1, domain=FF(7)).same_root(0, 0))
     raises(DomainError,
-           lambda: Poly(y * x + 1, domain=ZZ[y]).root_equality_test(0, 0))
+           lambda: Poly(x ** 2 + 1, domain=ZZ_I).same_root(0, 0))
+    raises(DomainError,
+           lambda: Poly(y * x**2 + 1, domain=ZZ[y]).same_root(0, 0))
     raises(MultivariatePolynomialError,
-           lambda: Poly(x * y + 1, domain=ZZ).root_equality_test(0, 0))
+           lambda: Poly(x * y + 1, domain=ZZ).same_root(0, 0))
 
 
 def test_torational_factor_list():

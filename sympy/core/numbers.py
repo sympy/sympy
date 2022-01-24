@@ -3025,7 +3025,7 @@ class AlgebraicNumber(Expr):
             return roots[0]
         ex = self.as_expr()
         for b in roots:
-            if m.root_equality_test(b, ex):
+            if m.same_root(b, ex):
                 return b
 
 

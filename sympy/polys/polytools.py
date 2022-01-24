@@ -3775,129 +3775,7 @@ class Poly(Basic):
 
         return r.replace(t, x)
 
-    def root_bounds(f):
-        """
-        Compute lower and upper bounds on the magnitude of any and all nonzero
-        roots (real or complex) of this polynomial.
-
-        Examples
-        ========
-
-        >>> from sympy import Poly
-        >>> from sympy.abc import x
-        >>> Poly(x**2 + x + 1).root_bounds()
-        (1/2, 2)
-        >>> Poly(x**2 - 2).root_bounds()
-        (2/3, 3)
-        >>> (x * Poly(x**2 - 2)).root_bounds()
-        (2/3, 3)
-
-        Returns
-        =======
-
-        Pair ``(lb, ub)`` of :py:class:`~.Expr`
-            Gives the lower bound and upper bound.
-
-        Raises
-        ======
-
-        DomainError
-            If the domain of the polynomial is not :ref:`ZZ` or :ref:`QQ`.
-        MultivariatePolynomialError
-            If the polynomial is not univariate.
-        PolynomialError
-            If the polynomial is a monomial, since in such a case it has no
-            nonzero roots.
-
-        Notes
-        =====
-
-        We use the `Cauchy bound`_.
-
-        .. _Cauchy bound: https://en.wikipedia.org/wiki/Geometrical_properties_of_polynomial_roots#Lagrange's_and_Cauchy's_bounds
-
-        """
-        dom = f.get_domain()
-        if not (dom.is_IntegerRing or dom.is_RationalField):
-            raise DomainError("Only polys over QQ and ZZ are supported.")
-        if f.is_multivariate:
-            raise MultivariatePolynomialError(
-                "Must be a univariate polynomial")
-        if f.is_monomial:
-            raise PolynomialError("Monomial has no nonzero roots")
-
-        ff = f.to_field()
-        coeffs = ff.rep.rep
-        while ff.domain.is_zero(coeffs[-1]):
-            coeffs.pop()
-        lc, tc = coeffs[0], coeffs[-1]
-
-        dom_ub = 1 + max(abs(n / lc) for n in coeffs[1:])
-        dom_lb_inv = 1 + max(abs(n / tc) for n in coeffs[:-1])
-
-        ub = ff.domain.to_sympy(dom_ub)
-        lb_inv = ff.domain.to_sympy(dom_lb_inv)
-
-        return 1/lb_inv, ub
-
-    def root_separation_lower_bound_squared(f):
-        """
-        Compute a lower bound on the square of the minimum distance between any
-        two roots of this polynomial.
-
-        Examples
-        ========
-
-        >>> from sympy import Poly
-        >>> from sympy.abc import x
-        >>> Poly(x**2 - 2).root_separation_lower_bound_squared()
-        8/9
-        >>> (x * Poly(x**2 - 2)).root_separation_lower_bound_squared()
-        8/17
-
-        Returns
-        =======
-
-        :py:class:`~.Expr`
-            A non-negative lower bound which will be positive if all the roots
-            are distinct.
-
-        Raises
-        ======
-
-        DomainError
-            If the domain of the polynomial is not :ref:`ZZ` or :ref:`QQ`.
-        MultivariatePolynomialError
-            If the polynomial is not univariate.
-
-        """
-        dom = f.get_domain()
-        if not (dom.is_IntegerRing or dom.is_RationalField):
-            raise DomainError("Only polys over QQ and ZZ are supported.")
-        if f.is_multivariate:
-            raise MultivariatePolynomialError(
-                "Must be a univariate polynomial")
-        if f.is_monomial:
-            return Integer(0)
-
-        x = f.gen
-        y = Dummy('y')
-        g = f.subs(x, x + y)
-        h = Poly(resultant(f, g, gens=[x, y]), domain=f.domain)
-        # If f has roots ri, the roots of h are all the ri - rj.
-
-        if h.is_monomial:
-            # In this case all roots of f are the same.
-            return Integer(0)
-
-        lb, _ = h.root_bounds()
-
-        # Since h is an even function, the square root of lb is actually a
-        # lower bound on the separation of roots. So lb is a lower bound on
-        # the squared separation.
-        return lb
-
-    def root_equality_test(f, a, b):
+    def same_root(f, a, b):
         """
         Decide whether two roots of this polynomial are equal.
 
@@ -3906,9 +3784,8 @@ class Poly(Basic):
 
         >>> from sympy import Poly, cyclotomic_poly, exp, I, pi
         >>> f = Poly(cyclotomic_poly(5))
-        >>> eq = f.root_equality_test
         >>> r0 = exp(2*I*pi/5)
-        >>> indices = [i for i, r in enumerate(f.all_roots()) if eq(r, r0)]
+        >>> indices = [i for i, r in enumerate(f.all_roots()) if f.same_root(r, r0)]
         >>> print(indices)
         [3]
 
@@ -3916,12 +3793,20 @@ class Poly(Basic):
         ======
 
         DomainError
-            If the domain of the polynomial is not :ref:`ZZ` or :ref:`QQ`.
+            If the domain of the polynomial is not :ref:`ZZ`, :ref:`QQ`,
+            :ref:`RR`, or :ref:`CC`.
         MultivariatePolynomialError
             If the polynomial is not univariate.
+        PolynomialError
+            If the polynomial is of degree < 2.
 
         """
-        delta_sq = f.root_separation_lower_bound_squared()
+        if f.is_multivariate:
+            raise MultivariatePolynomialError(
+                "Must be a univariate polynomial")
+
+        dom_delta_sq = f.rep.mignotte_sep_bound_squared()
+        delta_sq = f.domain.get_field().to_sympy(dom_delta_sq)
         # We have delta_sq = delta**2, where delta is a lower bound on the
         # minimum separation between any two roots of this polynomial.
         # Let eps = delta/3, and define eps_sq = eps**2 = delta**2/9.

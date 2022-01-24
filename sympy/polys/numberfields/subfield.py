@@ -151,7 +151,7 @@ def field_isomorphism_factor(a, b):
                 terms.append(coeff*b.root**(d - i))
             r = Add(*terms)
             # Check whether we got the number a
-            if a.minpoly.root_equality_test(r, a):
+            if a.minpoly.same_root(r, a):
                 return coeffs
 
     # If none of the linear factors represented a in QQ(b), then in fact a is
