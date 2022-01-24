@@ -1788,8 +1788,8 @@ def _evalf_with_bounded_error(x: 'Expr', eps: 'Expr' = None, m: int = 0,
     evalf
 
     """
+    eps = sympify(eps)
     if eps is not None:
-        eps = sympify(eps)
         if not (eps.is_Rational or eps.is_Float) or not eps > 0:
             raise ValueError("eps must be positive")
         r, _, _, _ = evalf(1/eps, 1, {})
