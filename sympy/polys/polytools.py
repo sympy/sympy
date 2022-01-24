@@ -12,7 +12,7 @@ from sympy.core.basic import Basic
 from sympy.core.decorators import _sympifyit
 from sympy.core.exprtools import Factors, factor_nc, factor_terms
 from sympy.core.evalf import (
-    pure_complex, evalf, fastlog, evalf_with_bounded_error, quad_to_mpmath)
+    pure_complex, evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath)
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.numbers import ilcm, I, Integer
@@ -3817,7 +3817,7 @@ class Poly(Basic):
         # Then 2^n > 1/eps**2.
         m = math.ceil(n/2)
         # Then 2^(-m) < eps.
-        ev = lambda x: quad_to_mpmath(evalf_with_bounded_error(x, m=m))
+        ev = lambda x: quad_to_mpmath(_evalf_with_bounded_error(x, m=m))
 
         # Then for any complex numbers a, b we will have
         # |a - ev(a)| < eps and |b - ev(b)| < eps.

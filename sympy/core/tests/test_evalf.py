@@ -30,7 +30,7 @@ from sympy.printing.str import sstr
 from sympy.simplify.simplify import simplify
 from sympy.core.numbers import comp
 from sympy.core.evalf import (complex_accuracy, PrecisionExhausted,
-    scaled_zero, get_integer_part, as_mpmath, evalf, evalf_with_bounded_error)
+                              scaled_zero, get_integer_part, as_mpmath, evalf, _evalf_with_bounded_error)
 from mpmath import inf, ninf, make_mpc
 from mpmath.libmp.libmpf import from_float, fzero
 from sympy.core.expr import unchanged
@@ -685,7 +685,7 @@ def test_evalf_with_bounded_error():
     ]
     for x0, eps, m in cases:
         a, b, _, _ = evalf(x0, 53, {})
-        c, d, _, _ = evalf_with_bounded_error(x0, eps, m)
+        c, d, _, _ = _evalf_with_bounded_error(x0, eps, m)
         if eps is None:
             eps = 2**(-m)
         z = make_mpc((a or fzero, b or fzero))
@@ -693,9 +693,9 @@ def test_evalf_with_bounded_error():
         assert abs(w - z) < eps
 
     # eps must be positive
-    raises(ValueError, lambda: evalf_with_bounded_error(pi, Rational(0)))
-    raises(ValueError, lambda: evalf_with_bounded_error(pi, -pi))
-    raises(ValueError, lambda: evalf_with_bounded_error(pi, I))
+    raises(ValueError, lambda: _evalf_with_bounded_error(pi, Rational(0)))
+    raises(ValueError, lambda: _evalf_with_bounded_error(pi, -pi))
+    raises(ValueError, lambda: _evalf_with_bounded_error(pi, I))
 
 
 def test_issue_22849():
