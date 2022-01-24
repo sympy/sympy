@@ -2288,8 +2288,8 @@ def multiset_derangements(s):
         return [i for i in range(n) if rv[i] is None and s[i] != v]
 
     def do(j):
-        if j == -1:
-            yield rv
+        if j == 1:
+            yield from finish_derangements()
         else:
             M, mx = take[j]
             for i in subsets(iopen(M), mx):
