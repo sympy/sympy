@@ -1,5 +1,3 @@
-from typing import List
-
 from sympy import KroneckerProduct
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
