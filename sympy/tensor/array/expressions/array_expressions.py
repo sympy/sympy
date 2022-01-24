@@ -16,6 +16,7 @@ from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import (Dummy, Symbol)
+from sympy.matrices.common import MatrixCommon
 from sympy.matrices.expressions.diagonal import diagonalize_vector
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix
@@ -1456,6 +1457,35 @@ class ArrayContraction(_CodegenArrayAbstract):
 
     def as_explicit(self):
         return tensorcontraction(self.expr.as_explicit(), *self.contraction_indices)
+
+
+class Reshape(_CodegenArrayAbstract):
+
+    def __new__(cls, expr, shape):
+        expr = _sympify(expr)
+        if not isinstance(shape, Tuple):
+            shape = Tuple(*shape)
+        obj = Expr.__new__(cls, expr, shape)
+        obj._shape = tuple(shape)
+        obj._expr = expr
+        return obj
+
+    @property
+    def shape(self):
+        return self._shape
+
+    @property
+    def expr(self):
+        return self._expr
+
+    def as_explicit(self):
+        ee = self.expr.as_explicit()
+        if isinstance(ee, MatrixCommon):
+            from sympy import Array
+            ee = Array(ee)
+        elif isinstance(ee, MatrixExpr):
+            return self
+        return ee.reshape(*self.shape)
 
 
 class _ArgE:
