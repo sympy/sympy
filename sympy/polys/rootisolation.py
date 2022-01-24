@@ -2,7 +2,8 @@
 
 
 from sympy.polys.densearith import (
-    dup_neg, dup_rshift, dup_rem)
+    dup_neg, dup_rshift, dup_rem,
+    dup_l2_norm_squared)
 from sympy.polys.densebasic import (
     dup_LC, dup_TC, dup_degree,
     dup_strip, dup_reverse,
@@ -16,6 +17,8 @@ from sympy.polys.densetools import (
     dup_eval, dmp_eval_in,
     dup_sign_variations,
     dup_real_imag)
+from sympy.polys.euclidtools import (
+    dup_discriminant)
 from sympy.polys.factortools import (
     dup_factor_list)
 from sympy.polys.polyerrors import (
@@ -167,6 +170,35 @@ def dup_cauchy_lower_bound(f, K):
         K = K.get_field()
     b = dup_cauchy_upper_bound(g, K)
     return K.one / b
+
+def dup_mignotte_sep_bound_squared(f, K):
+    """
+    Return the square of the Mignotte lower bound on separation between
+    distinct roots of f. The square is returned so that the bound lies in
+    K or its quotient field.
+
+    References
+    ==========
+
+    .. [1] Mignotte, Maurice. "Some useful bounds." Computer algebra.
+        Springer, Vienna, 1982. 259-263.
+        http://people.dm.unipi.it/gianni/AC-EAG/Mignotte.pdf
+    """
+    n = dup_degree(f)
+    if n < 2:
+        raise PolynomialError('Polynomials of degree < 2 have no distinct roots.')
+
+    if K.is_ZZ:
+        L = K.get_field()
+        f, K = dup_convert(f, K, L), L
+    elif not K.is_QQ or K.is_RR or K.is_CC:
+        # We need to compute absolute value, and we are not supporting cases
+        # where this would take us outside the domain (or its quotient field).
+        raise DomainError('Mignotte bound not supported over %s' % K)
+
+    D = dup_discriminant(f, K)
+    l2sq = dup_l2_norm_squared(f, K)
+    return K(3)*K.abs(D) / ( K(n)**(n+1) * l2sq**(n-1) )
 
 def _mobius_from_interval(I, field):
     """Convert an open interval to a Mobius transform. """

@@ -5,6 +5,7 @@ from sympy.polys.domains import ZZ, QQ, ZZ_I, EX
 from sympy.polys.polyerrors import DomainError, RefinementFailed, PolynomialError
 from sympy.polys.rootisolation import (
     dup_cauchy_upper_bound, dup_cauchy_lower_bound,
+    dup_mignotte_sep_bound_squared,
 )
 from sympy.testing.pytest import raises
 
@@ -34,6 +35,13 @@ def test_dup_cauchy_lower_bound():
     raises(DomainError, lambda: dup_cauchy_lower_bound([ZZ_I(1), ZZ_I(1)], ZZ_I))
 
     assert dup_cauchy_lower_bound([QQ(1), QQ(0), QQ(-2)], QQ) == QQ(2, 3)
+
+
+def test_dup_mignotte_sep_bound_squared():
+    raises(PolynomialError, lambda: dup_mignotte_sep_bound_squared([], QQ))
+    raises(PolynomialError, lambda: dup_mignotte_sep_bound_squared([QQ(1)], QQ))
+
+    assert dup_mignotte_sep_bound_squared([QQ(1), QQ(0), QQ(-2)], QQ) == QQ(3, 5)
 
 
 def test_dup_refine_real_root():
