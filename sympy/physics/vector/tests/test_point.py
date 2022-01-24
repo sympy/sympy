@@ -296,7 +296,7 @@ def test_auto_vel_multiple_path_warning_msg():
         warnings.simplefilter("always")
         O.vel(N)
         assert issubclass(w[-1].category, UserWarning)
-        assert 'Velocity automatically calculated based on point' in str(w[-1].message)
+        assert 'Velocity for ' + O.name + ' automatically calculated based on point' in str(w[-1].message)
         assert 'Velocities from these points are not necessarily the same. This may cause errors in your calculations.' in str(w[-1].message)
 
 def test_vel_frame():
