@@ -146,6 +146,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
     Sympification happens, if the expression follows the python syntax.
     If the expression is not following python syntax, use "parse_exp" to parse 
     the expression:
+    
     >>> from sympy.parsing.sympy_parser import parse_expr
     >>> parse_expr("2x", transformations="all")
     2*x
