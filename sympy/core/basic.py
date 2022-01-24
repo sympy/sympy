@@ -229,6 +229,9 @@ class Basic(Printable, metaclass=ManagedProperties):
         for l, r in zip(st, ot):
             l = Basic(*l) if isinstance(l, frozenset) else l
             r = Basic(*r) if isinstance(r, frozenset) else r
+            if isinstance(l, Tuple) and isinstance(r, Tuple):
+                c = Basic(*l).compare(Basic(*r))
+                return c
             if isinstance(l, Basic):
                 c = l.compare(r)
             else:

@@ -1418,3 +1418,9 @@ def test_issue_17382():
                "ImageSet(Lambda(_n, 6.28318530717959*_n + 5.79812359592087), Integers), " \
                "ImageSet(Lambda(_n, 6.28318530717959*_n + 0.485061711258717), Integers))"
     assert NS(expr) == expected
+
+
+def test_issue_21773():
+    x = Symbol('x')
+    y = Symbol('y')
+    assert Subs(0, y, 1) * Subs(0, x, 1) == Subs(0, y, 1)*Subs(0, x, 1)
