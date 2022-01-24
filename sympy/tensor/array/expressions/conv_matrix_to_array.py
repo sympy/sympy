@@ -82,8 +82,8 @@ def convert_matrix_to_array(expr: Basic) -> Basic:
             d = Dummy("d")
             return ArrayElementwiseApplyFunc(Lambda(d, d**exp), base)
     elif isinstance(expr, KroneckerProduct):
-        args: List[MatrixExpr] = [convert_matrix_to_array(arg) for arg in expr.args]
-        permutation = [2*i for i in range(len(args))] + [2*i + 1 for i in range(len(args))]
-        return Reshape(_permute_dims(_array_tensor_product(*args), permutation), expr.shape)
+        kp_args = [convert_matrix_to_array(arg) for arg in expr.args]
+        permutation = [2*i for i in range(len(kp_args))] + [2*i + 1 for i in range(len(kp_args))]
+        return Reshape(_permute_dims(_array_tensor_product(*kp_args), permutation), expr.shape)
     else:
         return expr

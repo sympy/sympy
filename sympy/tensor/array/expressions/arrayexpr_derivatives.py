@@ -176,7 +176,7 @@ def _(expr: PermuteDims, x: Expr):
 @array_derive.register(Reshape)
 def _(expr: Reshape, x: Expr):
     de = array_derive(expr.expr, x)
-    return Reshape(de, x.shape + expr.shape)
+    return Reshape(de, get_shape(x) + expr.shape)
 
 
 def matrix_derive(expr, x):
