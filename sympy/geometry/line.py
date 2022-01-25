@@ -20,7 +20,7 @@ Segment3D
 from sympy.core.containers import Tuple
 from sympy.core.evalf import N
 from sympy.core.expr import Expr
-from sympy.core.numbers import Rational, oo
+from sympy.core.numbers import Rational, oo, Float
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.sorting import ordered
@@ -36,6 +36,7 @@ from sympy.logic.boolalg import And
 from sympy.matrices import Matrix
 from sympy.sets.sets import Intersection
 from sympy.simplify.simplify import simplify
+from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -530,13 +531,38 @@ class LinearEntity(GeometrySet):
                 coeff = m_rref[0, 2]
                 line_intersection = l1.direction*coeff + self.p1
 
-                # if we're both lines, we can skip a containment check
+                # if both are lines, skip a containment check
                 if isinstance(self, Line) and isinstance(other, Line):
                     return [line_intersection]
 
                 if ((isinstance(self, Line) or
                      self.contains(line_intersection)) and
                         other.contains(line_intersection)):
+                    return [line_intersection]
+                if not self.atoms(Float) and not other.atoms(Float):
+                    # if it can fail when there are no Floats then
+                    # maybe the following parametric check should be
+                    # done
+                    return []
+                # floats may fail exact containment so check that the
+                # arbitrary points, when  equal, both give a
+                # non-negative parameter when the arbitrary point
+                # coordinates are equated
+                t, u = [Dummy(i) for i in 'tu']
+                tu = solve(self.arbitrary_point(t) - other.arbitrary_point(u),
+                    t, u, dict=True)[0]
+                def ok(p, l):
+                    if isinstance(l, Line):
+                        # p > -oo
+                        return True
+                    if isinstance(l, Ray):
+                        # p >= 0
+                        return p.is_nonnegative
+                    if isinstance(l, Segment):
+                        # 0 <= p <= 1
+                        return p.is_nonnegative and (1 - p).is_nonnegative
+                    raise ValueError("unexpected line type")
+                if ok(tu[t], self) and ok(tu[u], other):
                     return [line_intersection]
                 return []
             else:
