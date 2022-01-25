@@ -49,9 +49,10 @@ A change is backwards incompatible if user code making use of it would stop
 working after the change.
 
 What counts as "public API" needs to be considered on a case-by-case basis.
-The exact rules for what does and doesn't constitute public API for SymPy
-are still not fully codified. Very broadly, some thing that constitute public
-API are (this list is not exhaustive)
+The exact rules for what does and doesn't constitute public API for SymPy are
+still not yet fully codified. Here are some thing that constitute public API.
+*Note: these are just general guidelines. This list is not exhaustive, and
+there are always exceptions to the rules.*
 
 - Function names.
 - Keyword argument names.
@@ -60,8 +61,9 @@ API are (this list is not exhaustive)
 - Submodule names (unless the submodule has already been marked as private by
   prefixing its name with an underscore).
 
-And broadly, a non-exhaustive list of some things that don't consistent public
-API, and therefore don't require deprecations to change, include
+And here are some things that don't consistent public
+API, and therefore don't require deprecations to change (again, this list is
+only a general set of guidelines).
 
 - The precise form of an expression. In general, functions may be changed to
   return a different but mathematically equivalent form of the same
