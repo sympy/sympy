@@ -2401,7 +2401,7 @@ def random_derangement(t, choice=None, strict=True):
 
 def generate_derangements(perm):
     """
-    Routine to generate unique derangements or sets or multisets.
+    Routine to generate unique derangements of sets or multisets.
 
     Examples
     ========
