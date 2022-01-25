@@ -7,7 +7,7 @@ from typing import Optional, List, Dict as tDict, Tuple as tTuple
 
 import typing
 
-from sympy import Integer, KroneckerDelta
+from sympy import Integer, KroneckerDelta, Equality
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
@@ -1465,6 +1465,8 @@ class Reshape(_CodegenArrayAbstract):
         expr = _sympify(expr)
         if not isinstance(shape, Tuple):
             shape = Tuple(*shape)
+        if Equality(Mul.fromiter(expr.shape), Mul.fromiter(shape)) == False:
+            raise ValueError("shape mismatch")
         obj = Expr.__new__(cls, expr, shape)
         obj._shape = tuple(shape)
         obj._expr = expr
@@ -1477,6 +1479,15 @@ class Reshape(_CodegenArrayAbstract):
     @property
     def expr(self):
         return self._expr
+
+    def doit(self, *args, **kwargs):
+        if kwargs.get("deep", True):
+            expr = self.expr.doit(*args, **kwargs)
+        else:
+            expr = self.expr
+        if isinstance(expr, (MatrixCommon, NDimArray)):
+            return expr.reshape(*self.shape)
+        return Reshape(expr, self.shape)
 
     def as_explicit(self):
         ee = self.expr.as_explicit()
