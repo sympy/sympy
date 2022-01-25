@@ -1162,6 +1162,24 @@ def _laplace_transform(f, t, s_, simplify=True):
         aux = _simplifyconds(aux, s, a)
     return _simplify(F.subs(s, s_), simplify), sbs(a), _canonical(sbs(aux))
 
+def laplace_transform_ode(eqs, t, s, funcs):
+    r"""
+    Function that can solve some ordinary differential equation systems by
+    Laplace transform.
+    """
+    from sympy import solve
+    eqs_laplace = []
+    for eq in eqs:
+        xl = laplace_transform(eq, t, s)
+        for _f, _F, _ic in funcs:
+            xl = laplace_transform_replace_ic(xl, _f, _F, t, s, _ic)
+        eqs_laplace.append(xl)
+    Funcs = []
+    for _f, _F, _ic in funcs:
+        Funcs.append(_F(s))
+    sols_laplace = solve(eqs_laplace, Funcs)
+    return sols_laplace
+
 def laplace_transform_replace_ic(expr, f, F, t, s, ic):
     r"""
     Public helper function for solving differential equations using the
