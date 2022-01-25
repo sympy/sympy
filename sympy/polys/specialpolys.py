@@ -96,7 +96,7 @@ def symmetric_poly(n, *gens, **args):
     Returns a Poly object when ``polys=True``, otherwise
     (default) returns an expression.
     """
-    # TODO: use an explicit keyword argument when Python 2 support is dropped
+    # TODO: use an explicit keyword argument
     gens = _analyze_gens(gens)
 
     if n < 0 or n > len(gens) or not gens:

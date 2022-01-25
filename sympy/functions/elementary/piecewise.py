@@ -106,12 +106,12 @@ class Piecewise(Function):
 
     When a Boolean containing Piecewise (like cond) or a Piecewise
     with Boolean expressions (like folded_cond) is used as a condition,
-    it is converted to an equivalent ITE object:
+    it is converted to an equivalent :class:`~.ITE` object:
 
     >>> Piecewise((1, folded_cond))
     Piecewise((1, ITE(x < 0, y > 2, y > 3)))
 
-    When a condition is an ITE, it will be converted to a simplified
+    When a condition is an ``ITE``, it will be converted to a simplified
     Boolean expression:
 
     >>> piecewise_fold(_)
@@ -329,7 +329,7 @@ class Piecewise(Function):
     def piecewise_integrate(self, x, **kwargs):
         """Return the Piecewise with each expression being
         replaced with its antiderivative. To obtain a continuous
-        antiderivative, use the `integrate` function or method.
+        antiderivative, use the :func:`~.integrate` function or method.
 
         Examples
         ========
@@ -436,7 +436,7 @@ class Piecewise(Function):
         value will give the value of the integral (not including
         the constant of integration) up to that point. To only
         integrate the individual parts of Piecewise, use the
-        `piecewise_integrate` method.
+        ``piecewise_integrate`` method.
 
         Examples
         ========

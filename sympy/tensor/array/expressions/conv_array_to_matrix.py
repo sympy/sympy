@@ -4,7 +4,7 @@ from typing import Tuple as tTuple, Union as tUnion, FrozenSet, Dict as tDict, L
 from functools import singledispatch
 from itertools import accumulate
 
-from sympy import MatMul, Basic, Wild
+from sympy import MatMul, Basic, Wild, KroneckerProduct
 from sympy.assumptions.ask import (Q, ask)
 from sympy.core.mul import Mul
 from sympy.core.singleton import S
@@ -167,6 +167,29 @@ def _find_trivial_matrices_rewrite(expr: ArrayTensorProduct):
     return _array_tensor_product(*[i for i in args if i is not None]), removed
 
 
+def _find_trivial_kronecker_products_broadcast(expr: ArrayTensorProduct):
+    newargs: List[Basic] = []
+    removed = []
+    count_dims = 0
+    for i, arg in enumerate(expr.args):
+        count_dims += get_rank(arg)
+        shape = get_shape(arg)
+        current_range = [count_dims-i for i in range(len(shape), 0, -1)]
+        if (shape == (1, 1) and len(newargs) > 0 and 1 not in get_shape(newargs[-1]) and
+            isinstance(newargs[-1], MatrixExpr) and isinstance(arg, MatrixExpr)):
+            # KroneckerProduct object allows the trick of broadcasting:
+            newargs[-1] = KroneckerProduct(newargs[-1], arg)
+            removed.extend(current_range)
+        elif 1 not in shape and len(newargs) > 0 and get_shape(newargs[-1]) == (1, 1):
+            # Broadcast:
+            newargs[-1] = KroneckerProduct(newargs[-1], arg)
+            prev_range = [i for i in range(min(current_range)) if i not in removed]
+            removed.extend(prev_range[-2:])
+        else:
+            newargs.append(arg)
+    return _array_tensor_product(*newargs), removed
+
+
 @singledispatch
 def _array2matrix(expr):
     return expr
@@ -269,11 +292,7 @@ def _(expr: PermuteDims):
     elif isinstance(expr.expr, ArrayContraction):
         mat_mul_lines = _array2matrix(expr.expr)
         if not isinstance(mat_mul_lines, ArrayTensorProduct):
-            flat_cyclic_form = [j for i in expr.permutation.cyclic_form for j in i]
-            expr_shape = get_shape(expr)
-            if all(expr_shape[i] == 1 for i in flat_cyclic_form):
-                return mat_mul_lines
-            return mat_mul_lines
+            return _permute_dims(mat_mul_lines, expr.permutation)
         # TODO: this assumes that all arguments are matrices, it may not be the case:
         permutation = Permutation(2*len(mat_mul_lines.args)-1)*expr.permutation
         permuted = [permutation(i) for i in range(2*len(mat_mul_lines.args))]
@@ -399,6 +418,9 @@ def _(expr: ArrayTensorProduct):
     if isinstance(newexpr, ArrayTensorProduct):
         newexpr, newremoved2 = _find_trivial_matrices_rewrite(newexpr)
         newremoved = _combine_removed(-1, newremoved, newremoved2)
+    if isinstance(newexpr, ArrayTensorProduct):
+        newexpr, newremoved2 = _find_trivial_kronecker_products_broadcast(newexpr)
+        newremoved = _combine_removed(-1, newremoved, newremoved2)
     return newexpr, newremoved
 
 
@@ -406,9 +428,12 @@ def _(expr: ArrayTensorProduct):
 def _(expr: ArrayAdd):
     rec = [_remove_trivial_dims(arg) for arg in expr.args]
     newargs, removed = zip(*rec)
-    if len(set(map(tuple, removed))) != 1:
+    if len(set([get_shape(i) for i in newargs])) > 1:
         return expr, []
-    return _a2m_add(*newargs), removed[0]
+    if len(removed) == 0:
+        return expr, removed
+    removed1 = removed[0]
+    return _a2m_add(*newargs), removed1
 
 
 @_remove_trivial_dims.register(PermuteDims)
