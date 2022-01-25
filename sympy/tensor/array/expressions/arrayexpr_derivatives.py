@@ -11,10 +11,10 @@ from sympy.matrices.expressions.transpose import Transpose
 from sympy.combinatorics.permutations import _af_invert
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.tensor.array.expressions.array_expressions import (
-        _ArrayExpr, ZeroArray, ArraySymbol, ArrayTensorProduct, ArrayAdd,
-        PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, get_rank,
-        get_shape, ArrayContraction, _array_tensor_product, _array_contraction,
-        _array_diagonal, _array_add, _permute_dims)
+    _ArrayExpr, ZeroArray, ArraySymbol, ArrayTensorProduct, ArrayAdd,
+    PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, get_rank,
+    get_shape, ArrayContraction, _array_tensor_product, _array_contraction,
+    _array_diagonal, _array_add, _permute_dims, Reshape)
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 
 
@@ -171,6 +171,12 @@ def _(expr: PermuteDims, x: Expr):
     de = array_derive(expr.expr, x)
     perm = [0, 1] + [i + 2 for i in expr.permutation.array_form]
     return _permute_dims(de, perm)
+
+
+@array_derive.register(Reshape)
+def _(expr: Reshape, x: Expr):
+    de = array_derive(expr.expr, x)
+    return Reshape(de, get_shape(x) + expr.shape)
 
 
 def matrix_derive(expr, x):
