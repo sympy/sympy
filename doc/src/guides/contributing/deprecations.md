@@ -57,11 +57,8 @@ API are (this list is not exhaustive)
 - Keyword argument names.
 - Keyword argument default values.
 - The mathematical conventions used to define a function.
-- Submodule names for **public** functions that are not included in the
-  top-level `sympy/__init__.py`, since users must use the fully qualified
-  module name to import them (note: many such functions are not included
-  because they aren't actually public API at all. For these, no deprecations
-  are required to make breaking changes).
+- Submodule names (unless the submodule has already been marked as private by
+  prefixing its name with an underscore).
 
 And broadly, a non-exhaustive list of some things that don't consistent public
 API, and therefore don't require deprecations to change, include
@@ -70,9 +67,6 @@ API, and therefore don't require deprecations to change, include
   return a different but mathematically equivalent form of the same
   expression. This includes a function returning a value which it was not able
   to compute previously.
-- The name of a submodule for functions is included in the top-level
-  `sympy/__init__.py`. Such functions should be imported directly, like `from
-  sympy import <name>`.
 - Positional argument names.
 - Functions and methods that are private, i.e., for internal use only. Such
   methods should generally be prefixed with an underscore `_`, although this
