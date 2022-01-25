@@ -587,7 +587,7 @@ class DMP(PicklableWithSlots, CantSympify):
         return dmp_l1_norm(f.rep, f.lev, f.dom)
 
     def l2_norm_squared(f):
-        """Return squared l2 norm of ``f`. """
+        """Return squared l2 norm of ``f``. """
         return dmp_l2_norm_squared(f.rep, f.lev, f.dom)
 
     def clear_denoms(f):
