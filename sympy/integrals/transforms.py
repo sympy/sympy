@@ -38,6 +38,7 @@ from sympy.polys.rootoftools import CRootOf, RootSum
 from sympy.simplify import simplify, hyperexpand
 from sympy.simplify.powsimp import powdenest
 from sympy.solvers.inequalities import _solve_inequality
+from sympy.solvers.solvers import solve
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
@@ -1162,23 +1163,29 @@ def _laplace_transform(f, t, s_, simplify=True):
         aux = _simplifyconds(aux, s, a)
     return _simplify(F.subs(s, s_), simplify), sbs(a), _canonical(sbs(aux))
 
-def laplace_transform_ode(eqs, t, s, funcs):
+def laplace_transform_ode(eqs, t, s, funcs, solve_it=False):
     r"""
     Function that can solve some ordinary differential equation systems by
     Laplace transform.
     """
-    from sympy import solve
     eqs_laplace = []
     for eq in eqs:
-        xl = laplace_transform(eq, t, s)
+        if eq.func.is_Equality:
+            xl = Eq(laplace_transform(eq.args[0], t, s),
+                          laplace_transform(eq.args[1], t, s))
+        else:
+            xl = laplace_transform(eq, t, s)
         for _f, _F, _ic in funcs:
             xl = laplace_transform_replace_ic(xl, _f, _F, t, s, _ic)
         eqs_laplace.append(xl)
-    Funcs = []
-    for _f, _F, _ic in funcs:
-        Funcs.append(_F(s))
-    sols_laplace = solve(eqs_laplace, Funcs)
-    return sols_laplace
+    if solve_it==True:
+        Funcs = []
+        for _f, _F, _ic in funcs:
+            Funcs.append(_F(s))
+        sols_laplace = solve(eqs_laplace, Funcs)
+        return sols_laplace
+    else:
+        return eqs_laplace
 
 def laplace_transform_replace_ic(expr, f, F, t, s, ic):
     r"""
