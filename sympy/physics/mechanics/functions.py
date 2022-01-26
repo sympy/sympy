@@ -9,6 +9,7 @@ from sympy.physics.mechanics.rigidbody import RigidBody
 from sympy.simplify.simplify import simplify
 from sympy.core.backend import (Matrix, sympify, Mul, Derivative, sin, cos,
                                 tan, AppliedUndef, S)
+from sympy.physics.mechanics import Body
 
 __all__ = ['inertia',
            'inertia_of_point_mass',
@@ -81,6 +82,8 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     (N.x|N.x) + 2*(N.y|N.y) + 3*(N.z|N.z)
 
     """
+    if isinstance(frame, Body):
+        frame = Body.frame
 
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Need to define the inertia in a frame')
@@ -121,6 +124,8 @@ def inertia_of_point_mass(mass, pos_vec, frame):
     m*r**2*(N.y|N.y) + m*r**2*(N.z|N.z)
 
     """
+    if isinstance(frame, Body):
+        frame = Body.frame
 
     return mass * (((frame.x | frame.x) + (frame.y | frame.y) +
                    (frame.z | frame.z)) * (pos_vec & pos_vec) -
@@ -167,6 +172,8 @@ def linear_momentum(frame, *body):
     10*N.x + 500*N.y
 
     """
+    if isinstance(frame, Body):
+        frame = Body.frame
 
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Please specify a valid ReferenceFrame')
@@ -226,6 +233,8 @@ def angular_momentum(point, frame, *body):
     10*N.z
 
     """
+    if isinstance(frame, Body):
+        frame = Body.frame
 
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Please enter a valid ReferenceFrame')
@@ -288,6 +297,8 @@ def kinetic_energy(frame, *body):
     350
 
     """
+    if isinstance(frame, Body):
+        frame = Body.frame
 
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Please enter a valid ReferenceFrame')
@@ -494,6 +505,8 @@ def Lagrangian(frame, *body):
     -M*g*h - g*h*m + 350
 
     """
+    if isinstance(frame, Body):
+        frame = Body.frame
 
     if not isinstance(frame, ReferenceFrame):
         raise TypeError('Please supply a valid ReferenceFrame')

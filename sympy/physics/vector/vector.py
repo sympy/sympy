@@ -4,7 +4,7 @@ from sympy.simplify.trigsimp import trigsimp
 from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
 from sympy.core.evalf import EvalfMixin
-
+from sympy.physics.mechanics import Body
 from mpmath.libmp.libmpf import prec_to_dps
 
 
@@ -530,6 +530,8 @@ class Vector(Printable, EvalfMixin):
         B.y
 
         """
+        if isinstance(frame, Body):
+            frame = Body.frame
 
         from sympy.physics.vector.frame import _check_frame
 
@@ -585,6 +587,9 @@ class Vector(Printable, EvalfMixin):
         cos(q1)*N.x - sin(q1)*N.z
 
         """
+        if isinstance(otherframe, Body):
+            otherframe = Body.frame
+
         from sympy.physics.vector import express
         return express(self, otherframe, variables=variables)
 
@@ -624,6 +629,8 @@ class Vector(Printable, EvalfMixin):
         [-b*sin(beta) + c*cos(beta)]])
 
         """
+        if isinstance(reference_frame, Body):
+            reference_frame = Body.frame
 
         return Matrix([self.dot(unit_vec) for unit_vec in
                        reference_frame]).reshape(3, 1)
@@ -649,6 +656,9 @@ class Vector(Printable, EvalfMixin):
             The frame to calculate the time derivative in
 
         """
+        if isinstance(otherframe, Body):
+            otherframe = Body.frame
+
         from sympy.physics.vector import time_derivative
         return time_derivative(self, otherframe)
 
@@ -760,6 +770,8 @@ class Vector(Printable, EvalfMixin):
             given vector is to be determined.
 
         """
+        if isinstance(reference_frame, Body):
+            reference_frame = Body.frame
 
         return self.to_matrix(reference_frame).free_symbols
 
