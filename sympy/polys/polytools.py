@@ -3815,7 +3815,7 @@ class Poly(Basic):
         r, _, _, _ = evalf(1/eps_sq, 1, {})
         n = fastlog(r)
         # Then 2^n > 1/eps**2.
-        m = math.ceil(n/2)
+        m = (n // 2) + (n % 2)
         # Then 2^(-m) < eps.
         ev = lambda x: quad_to_mpmath(_evalf_with_bounded_error(x, m=m))
 
