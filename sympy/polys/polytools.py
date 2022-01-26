@@ -2,7 +2,6 @@
 
 
 from functools import wraps, reduce
-import math
 from operator import mul
 
 from sympy.core import (
