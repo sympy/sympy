@@ -1800,10 +1800,7 @@ def dup_l2_norm_squared(f, K):
     14
 
     """
-    if not f:
-        return K.zero
-    else:
-        return sum([ coeff**2 for coeff in f ])
+    return sum([coeff**2 for coeff in f], K.zero)
 
 
 def dmp_l2_norm_squared(f, u, K):
