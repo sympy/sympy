@@ -175,7 +175,8 @@ class FourierSeries(SeriesBase):
         except TypeError:
             return self.cos_sequence
         else:
-            return SeqFormula(gen_term, (*self.cos_sequence.variables, self.cos_sequence.start, self.cos_sequence.stop))
+            seq = self.cos_sequence
+            return SeqFormula(gen_term, (*seq.variables, seq.start, seq.stop))
 
     @property
     def bn(self):
@@ -186,7 +187,8 @@ class FourierSeries(SeriesBase):
         except TypeError:
             return self.sin_sequence
         else:
-            return SeqFormula(gen_term, (*self.sin_sequence.variables, self.sin_sequence.start, self.cos_sequence.stop))
+            seq = self.sin_sequence
+            return SeqFormula(gen_term, (*seq.variables, seq.start, seq.stop))
 
     @property
     def interval(self):
