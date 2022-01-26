@@ -5,7 +5,7 @@ from sympy.core import S, pi, I
 from sympy.core.add import Add
 from sympy.core.function import (AppliedUndef, count_ops, Derivative, expand,
                                  expand_complex, expand_mul, Function, Lambda,
-                                 Subs, WildFunction)
+                                 WildFunction)
 from sympy.core.mul import Mul
 from sympy.core.numbers import igcd, ilcm
 from sympy.core.relational import _canonical, Ge, Gt, Lt, Unequality, Eq
@@ -1241,16 +1241,8 @@ def laplace_transform_replace_ic(expr, f, F, t, s, ic):
     """
 
     res = expr.subs(LaplaceTransform(f(t), t, s), F(s))
-    k=0
-    for c in ic:
-        if k == 0:
-            res = res.subs(f(0), c)
-        else:
-            if k == 1:
-                res = res.subs(Subs(Derivative(f(t), t), t, 0), c)
-            else:
-                res = res.subs(Subs(Derivative(f(t), (t, k)), t, 0), c)
-        k+=1
+    for k, c in enumerate(ic):
+        res = res.subs(f(t).diff(t, k).subs(t, 0), c)
     return res
 
 
