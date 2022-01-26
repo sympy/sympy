@@ -1,7 +1,7 @@
 (deprecation-policy)=
 # Deprecation Policy
 
-This page outlines SymPy's police on doing deprecations, and describes the
+This page outlines SymPy's policy on doing deprecations, and describes the
 steps developers should take to properly deprecate code.
 
 ## What is a deprecation?
@@ -17,81 +17,7 @@ breaking. It also gives SymPy an opportunity to give users an informative
 message on how to update their code, rather than making their code simply
 error or start giving wrong answers.
 
-## When to deprecate and when not to
-
-Sometimes the API of SymPy must change in an incompatible way. We try to avoid
-this, because changing API breaks people's code, but it is often deemed worthy
-to do so. Some reasons APIs are changed can include:
-
-- The existing API is confusing.
-- There is unnecessary redundancy in the API.
-- The existing API limits what is possible.
-
-Because one of the core use-cases of SymPy is to be usable as a library, we
-take API breakage very seriously. Whenever an API breakage is necessary, the
-following steps should be taken:
-
-- Discuss the API change with the community. Be sure that the improved API is
-  indeed better, and worth a breakage. It is important to get API right so
-  that things will not need to break again to "fix" it a second time.
-- Document any API breakages in the relevant section of the release notes for
-  the relevant release. This section is typically near the top of the release
-  notes.
-- If it is possible, deprecate the old API.
-
-When considering whether a change requires a deprecation, two things must be
-considered:
-
-- Is the change backwards incompatible?
-- Is the behavior being changed public API?
-
-A change is backwards incompatible if user code making use of it would stop
-working after the change.
-
-What counts as "public API" needs to be considered on a case-by-case basis.
-The exact rules for what does and doesn't constitute public API for SymPy are
-still not yet fully codified. Here are some thing that constitute public API.
-*Note: these are just general guidelines. This list is not exhaustive, and
-there are always exceptions to the rules.*
-
-- Function names.
-- Keyword argument names.
-- Keyword argument default values.
-- The mathematical conventions used to define a function.
-- Submodule names (unless the submodule has already been marked as private by
-  prefixing its name with an underscore).
-
-And here are some things that don't consistent public
-API, and therefore don't require deprecations to change (again, this list is
-only a general set of guidelines).
-
-- The precise form of an expression. In general, functions may be changed to
-  return a different but mathematically equivalent form of the same
-  expression. This includes a function returning a value which it was not able
-  to compute previously.
-- Positional argument names.
-- Functions and methods that are private, i.e., for internal use only. Such
-  methods should generally be prefixed with an underscore `_`, although this
-  convention is not currently universally adhered to in the SymPy codebase.
-- Anything explicitly marked as "experimental".
-- Changes to behavior that were mathematically incorrect previously (in
-  general, bug fixes are not considered breaking changes, because despite the
-  saying, bugs in SymPy are not features).
-- Anything that was added before the most recent release. Code that has not
-  yet made it into a release does not need to be deprecated. If you are going
-  to change the API of new code, it is best to do it before a release is made
-  so that no deprecations are necessary for future releases.
-
-Note: both public and private API functions are included in the [reference
-documentation](reference), and many functions are not included there which
-should be, so this should not be used to determine whether something public or
-not. Cleaning up the distinction between public and private APIs, as well as
-the categorization in the reference documentation is currently an open issue
-for SymPy.
-
-If you're unsure, there is no harm in deprecating something even if it might
-not actually be "public API". APIs that change without prior warning are
-frustrating to users.
+## Try to avoid backwards incompatible changes in the first place
 
 Backwards incompatible API changes should not be made lightly. Any backwards
 compatibility break means that users will need to fix their code. Whenever you
@@ -109,12 +35,87 @@ intact and is still supported.
 It is important to try to be cognizant of API design whenever adding new
 functionality. Try to consider what a function may do in the future, and
 design the API in a way that it can do so without having to make a breaking
-change. If you are unsure about your API design, one option is to mark the new
-functionality as explicitly private or as experimental.
+change. If you are unsure about your API design for a new functionality, one
+option is to mark the new functionality as explicitly private or as
+experimental.
 
-With that being said, sometimes deprecations are required, for example, in
-order to make it possible to add new functionality later, or to remove some
-functionality which has misleading or misused behavior.
+With that being said, it may be decided that the API of SymPy must change in
+some incompatible way. Some reasons APIs are changed can include:
+
+- The existing API is confusing.
+- There is unnecessary redundancy in the API.
+- The existing API limits what is possible.
+
+Because one of the core use-cases of SymPy is to be usable as a library, we
+take API breakage very seriously. Whenever an API breakage is necessary, the
+following steps should be taken:
+
+- Discuss the API change with the community. Be sure that the improved API is
+  indeed better, and worth a breakage. It is important to get API right so
+  that we will not need to break the API again to "fix" it a second time.
+- If it is possible, deprecate the old API. The technical steps for doing this
+  are described [below](deprecation-how-to).
+- Document the change so that users know how to update their code. The
+  documentation that should added is described
+  [below](deprecation-documentation).
+
+## When does a change require deprecation?
+
+When considering whether a change requires a deprecation, two things must be
+considered:
+
+- Is the change backwards incompatible?
+- Is the behavior being changed public API?
+
+A change is backwards incompatible if user code making use of it would stop
+working after the change.
+
+What counts as "public API" needs to be considered on a case-by-case basis.
+The exact rules for what does and doesn't constitute public API for SymPy are
+still not yet fully codified. Here are some thing that constitute public API.
+*Note: these are just general guidelines. This list is not exhaustive, and
+there are always exceptions to the rules.*
+
+```{admonition} Public API
+- Function names.
+- Keyword argument names.
+- Keyword argument default values.
+- Submodule names.
+- The mathematical conventions used to define a function.
+```
+
+And here are some things that generally aren't public API, and therefore don't
+require deprecations to change (again, this list is only a general set of
+guidelines).
+
+```{admonition} Not Public API
+- The precise form of an expression. In general, functions may be changed to
+  return a different but mathematically equivalent form of the same
+  expression. This includes a function returning a value which it was not able
+  to compute previously.
+- Positional argument names.
+- Functions and methods that are private, i.e., for internal use only. Such
+  things should generally be prefixed with an underscore `_`, although this
+  convention is not currently universally adhered to in the SymPy codebase.
+- Anything explicitly marked as "experimental".
+- Changes to behavior that were mathematically incorrect previously (in
+  general, bug fixes are not considered breaking changes, because despite the
+  saying, bugs in SymPy are not features).
+- Anything that was added before the most recent release. Code that has not
+  yet made it into a release does not need to be deprecated. If you are going
+  to change the API of new code, it is best to do it before a release is made
+  so that no deprecations are necessary for future releases.
+```
+
+Note: both public and private API functions are included in the [reference
+documentation](reference), and many functions are not included there which
+should be, so this should not be used to determine whether something public or
+not. Cleaning up the distinction between public and private APIs, as well as
+the categorization in the reference documentation is currently an open issue
+for SymPy.
+
+If you're unsure, there is no harm in deprecating something even if it might
+not actually be "public API".
 
 ## The purpose of deprecation
 
@@ -199,6 +200,7 @@ period down by releasing early. The best way for the developers to accelerate
 the removal of deprecated functionality is to make a release containing the
 deprecation as early as possible.
 
+(deprecation-how-to)=
 ## How to deprecate code
 
 All deprecations should use
@@ -240,6 +242,7 @@ If it is not possible to remove the deprecated behavior somewhere, that is a
 sign that it is not ready to be deprecated yet. Consider that users may not be
 able to replace the deprecated behavior for exact same reason.
 
+(deprecation-documentation)=
 ## Documenting a deprecation
 
 All deprecations should be documented. Every deprecation needs to be
