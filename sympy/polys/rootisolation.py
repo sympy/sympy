@@ -1694,7 +1694,7 @@ class RealInterval:
         return (i.mobius + (i.neg,), i.f, i.dom)
 
     def __eq__(self, other):
-        if type(other) != type(self):
+        if type(other) is not type(self):
             return False
         return self.args == other.args
 
@@ -1732,12 +1732,35 @@ class RealInterval:
         """Return the center of the real isolating interval. """
         return (self.a + self.b)/2
 
+    @property
+    def max_denom(self):
+        """Return the largest denominator occurring in either endpoint. """
+        return max(self.a.denominator, self.b.denominator)
+
     def as_tuple(self):
         """Return tuple representation of real isolating interval. """
         return (self.a, self.b)
 
     def __repr__(self):
         return "(%s, %s)" % (self.a, self.b)
+
+    def __contains__(self, item):
+        """
+        Say whether a complex number belongs to this real interval.
+
+        Parameters
+        ==========
+
+        item : pair (re, im) or number re
+            Either a pair giving the real and imaginary parts of the number,
+            or else a real number.
+
+        """
+        if isinstance(item, tuple):
+            re, im = item
+        else:
+            re, im = item, 0
+        return im == 0 and self.a <= re <= self.b
 
     def is_disjoint(self, other):
         """Return ``True`` if two isolation intervals are disjoint. """
@@ -1944,7 +1967,7 @@ class ComplexInterval:
         return (i.a, i.b, i.I, i.Q, i.F1, i.F2, i.f1, i.f2, i.dom, i.conj)
 
     def __eq__(self, other):
-        if type(other) != type(self):
+        if type(other) is not type(self):
             return False
         return self.args == other.args
 
@@ -1989,6 +2012,12 @@ class ComplexInterval:
         """Return the center of the complex isolating interval. """
         return ((self.ax + self.bx)/2, (self.ay + self.by)/2)
 
+    @property
+    def max_denom(self):
+        """Return the largest denominator occurring in either endpoint. """
+        return max(self.ax.denominator, self.bx.denominator,
+                   self.ay.denominator, self.by.denominator)
+
     def as_tuple(self):
         """Return tuple representation of the complex isolating
         interval's SW and NE corners, respectively. """
@@ -2001,6 +2030,25 @@ class ComplexInterval:
         """This complex interval really is located in lower half-plane. """
         return ComplexInterval(self.a, self.b, self.I, self.Q,
             self.F1, self.F2, self.f1, self.f2, self.dom, conj=True)
+
+    def __contains__(self, item):
+        """
+        Say whether a complex number belongs to this complex rectangular
+        region.
+
+        Parameters
+        ==========
+
+        item : pair (re, im) or number re
+            Either a pair giving the real and imaginary parts of the number,
+            or else a real number.
+
+        """
+        if isinstance(item, tuple):
+            re, im = item
+        else:
+            re, im = item, 0
+        return self.ax <= re <= self.bx and self.ay <= im <= self.by
 
     def is_disjoint(self, other):
         """Return ``True`` if two isolation intervals are disjoint. """

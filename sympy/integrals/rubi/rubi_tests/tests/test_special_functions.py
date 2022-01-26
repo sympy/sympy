@@ -135,7 +135,7 @@ if matchpy:
     from sympy.functions.elementary.trigonometric import (atan, acsc, asin, acot, acos, asec, atan2)
     from sympy.core.numbers import pi as Pi
 
-from sympy.integrals.rubi.rubi import rubi_integrate
+from sympy.integrals.rubi.rubimain import rubi_integrate
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.integrals.integrals import Integral as Integrate
 

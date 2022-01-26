@@ -874,7 +874,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
 
     """
     gate_name = 'CNOT'
-    gate_name_latex = 'CNOT'
+    gate_name_latex = r'\text{CNOT}'
     simplify_cgate = True
 
     #-------------------------------------------------------------------------
@@ -980,7 +980,7 @@ class SwapGate(TwoQubitGate):
 
     """
     gate_name = 'SWAP'
-    gate_name_latex = 'SWAP'
+    gate_name_latex = r'\text{SWAP}'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('SWAP', format)

@@ -1103,6 +1103,10 @@ def test_issue_21823():
     assert str(Partition({1, 2})) == 'Partition({1, 2})'
 
 
+def test_issue_22689():
+    assert str(Mul(Pow(x,-2, evaluate=False), Pow(3,-1,evaluate=False), evaluate=False)) == "1/(x**2*3)"
+
+
 def test_issue_21119_21460():
     ss = lambda x: str(S(x, evaluate=False))
     assert ss('4/2') == '4/2'

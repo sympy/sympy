@@ -1,4 +1,5 @@
-from sympy.core import Basic, Dict, sympify
+from sympy.core import Basic, Dict, sympify, Tuple
+from sympy.core.numbers import Integer
 from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import _sympify
 from sympy.functions.combinatorial.numbers import bell
@@ -392,7 +393,7 @@ class IntegerPartition(Basic):
         if any(i < 1 for i in partition):
             raise ValueError("All integer summands must be greater than one")
 
-        obj = Basic.__new__(cls, integer, partition)
+        obj = Basic.__new__(cls, Integer(integer), Tuple(*partition))
         obj.partition = list(partition)
         obj.integer = integer
         return obj

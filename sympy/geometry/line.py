@@ -966,6 +966,8 @@ class LinearEntity(GeometrySet):
                 return p1
             projected = other.__class__(p1, p2)
             projected = Intersection(self, projected)
+            if projected.is_empty:
+                return projected
             # if we happen to have intersected in only a point, return that
             if projected.is_FiniteSet and len(projected) == 1:
                 # projected is a set of size 1, so unpack it in `a`

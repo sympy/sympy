@@ -31,19 +31,19 @@ def _PrimePredicate_number(expr, assumptions):
     # when not exact, we won't give a True or False
     # since the number represents an approximate value
 
-@PrimePredicate.register(Expr) # type: ignore
+@PrimePredicate.register(Expr)
 def _(expr, assumptions):
     ret = expr.is_prime
     if ret is None:
         raise MDNotImplementedError
     return ret
 
-@PrimePredicate.register(Basic) # type: ignore
+@PrimePredicate.register(Basic)
 def _(expr, assumptions):
     if expr.is_number:
         return _PrimePredicate_number(expr, assumptions)
 
-@PrimePredicate.register(Mul) # type: ignore
+@PrimePredicate.register(Mul)
 def _(expr, assumptions):
     if expr.is_number:
         return _PrimePredicate_number(expr, assumptions)
@@ -54,7 +54,7 @@ def _(expr, assumptions):
         if arg.is_number and arg.is_composite:
             return False
 
-@PrimePredicate.register(Pow) # type: ignore
+@PrimePredicate.register(Pow)
 def _(expr, assumptions):
     """
     Integer**Integer     -> !Prime
@@ -65,37 +65,37 @@ def _(expr, assumptions):
             ask(Q.integer(expr.base), assumptions):
         return False
 
-@PrimePredicate.register(Integer) # type: ignore
+@PrimePredicate.register(Integer)
 def _(expr, assumptions):
     return isprime(expr)
 
-@PrimePredicate.register_many(Rational, Infinity, NegativeInfinity, ImaginaryUnit) # type: ignore
+@PrimePredicate.register_many(Rational, Infinity, NegativeInfinity, ImaginaryUnit)
 def _(expr, assumptions):
     return False
 
-@PrimePredicate.register(Float) # type: ignore
+@PrimePredicate.register(Float)
 def _(expr, assumptions):
     return _PrimePredicate_number(expr, assumptions)
 
-@PrimePredicate.register(NumberSymbol) # type: ignore
+@PrimePredicate.register(NumberSymbol)
 def _(expr, assumptions):
     return _PrimePredicate_number(expr, assumptions)
 
-@PrimePredicate.register(NaN) # type: ignore
+@PrimePredicate.register(NaN)
 def _(expr, assumptions):
     return None
 
 
 # CompositePredicate
 
-@CompositePredicate.register(Expr) # type: ignore
+@CompositePredicate.register(Expr)
 def _(expr, assumptions):
     ret = expr.is_composite
     if ret is None:
         raise MDNotImplementedError
     return ret
 
-@CompositePredicate.register(Basic) # type: ignore
+@CompositePredicate.register(Basic)
 def _(expr, assumptions):
     _positive = ask(Q.positive(expr), assumptions)
     if _positive:
@@ -129,19 +129,19 @@ def _EvenPredicate_number(expr, assumptions):
         return False
     return i % 2 == 0
 
-@EvenPredicate.register(Expr) # type: ignore
+@EvenPredicate.register(Expr)
 def _(expr, assumptions):
     ret = expr.is_even
     if ret is None:
         raise MDNotImplementedError
     return ret
 
-@EvenPredicate.register(Basic) # type: ignore
+@EvenPredicate.register(Basic)
 def _(expr, assumptions):
     if expr.is_number:
         return _EvenPredicate_number(expr, assumptions)
 
-@EvenPredicate.register(Mul) # type: ignore
+@EvenPredicate.register(Mul)
 def _(expr, assumptions):
     """
     Even * Integer    -> Even
@@ -182,7 +182,7 @@ def _(expr, assumptions):
         if odd == len(expr.args):
             return False
 
-@EvenPredicate.register(Add) # type: ignore
+@EvenPredicate.register(Add)
 def _(expr, assumptions):
     """
     Even + Odd  -> Odd
@@ -203,7 +203,7 @@ def _(expr, assumptions):
     else:
         return _result
 
-@EvenPredicate.register(Pow) # type: ignore
+@EvenPredicate.register(Pow)
 def _(expr, assumptions):
     if expr.is_number:
         return _EvenPredicate_number(expr, assumptions)
@@ -215,48 +215,48 @@ def _(expr, assumptions):
         elif expr.base is S.NegativeOne:
             return False
 
-@EvenPredicate.register(Integer) # type: ignore
+@EvenPredicate.register(Integer)
 def _(expr, assumptions):
     return not bool(expr.p & 1)
 
-@EvenPredicate.register_many(Rational, Infinity, NegativeInfinity, ImaginaryUnit) # type: ignore
+@EvenPredicate.register_many(Rational, Infinity, NegativeInfinity, ImaginaryUnit)
 def _(expr, assumptions):
     return False
 
-@EvenPredicate.register(NumberSymbol) # type: ignore
+@EvenPredicate.register(NumberSymbol)
 def _(expr, assumptions):
     return _EvenPredicate_number(expr, assumptions)
 
-@EvenPredicate.register(Abs) # type: ignore
+@EvenPredicate.register(Abs)
 def _(expr, assumptions):
     if ask(Q.real(expr.args[0]), assumptions):
         return ask(Q.even(expr.args[0]), assumptions)
 
-@EvenPredicate.register(re) # type: ignore
+@EvenPredicate.register(re)
 def _(expr, assumptions):
     if ask(Q.real(expr.args[0]), assumptions):
         return ask(Q.even(expr.args[0]), assumptions)
 
-@EvenPredicate.register(im) # type: ignore
+@EvenPredicate.register(im)
 def _(expr, assumptions):
     if ask(Q.real(expr.args[0]), assumptions):
         return True
 
-@EvenPredicate.register(NaN) # type: ignore
+@EvenPredicate.register(NaN)
 def _(expr, assumptions):
     return None
 
 
 # OddPredicate
 
-@OddPredicate.register(Expr) # type: ignore
+@OddPredicate.register(Expr)
 def _(expr, assumptions):
     ret = expr.is_odd
     if ret is None:
         raise MDNotImplementedError
     return ret
 
-@OddPredicate.register(Basic) # type: ignore
+@OddPredicate.register(Basic)
 def _(expr, assumptions):
     _integer = ask(Q.integer(expr), assumptions)
     if _integer:

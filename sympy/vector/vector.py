@@ -114,7 +114,7 @@ class Vector(BasisDependent):
                 outvec += vect_dot * v * k.args[1]
             return outvec
         from sympy.vector.deloperator import Del
-        if not isinstance(other, Vector) and not isinstance(other, Del):
+        if not isinstance(other, (Del, Vector)):
             raise TypeError(str(other) + " is not a vector, dyadic or " +
                             "del operator")
 
@@ -349,8 +349,6 @@ class BaseVector(Vector, AtomicExpr):
     """
     Class to denote a base vector.
 
-    Unicode pretty forms in Python 2 should use the prefix ``u``.
-
     """
 
     def __new__(cls, index, system, pretty_str=None, latex_str=None):
@@ -394,6 +392,10 @@ class BaseVector(Vector, AtomicExpr):
 
     def _sympystr(self, printer):
         return self._name
+
+    def _sympyrepr(self, printer):
+        index, system = self._id
+        return printer._print(system) + '.' + system._vector_names[index]
 
     @property
     def free_symbols(self):
