@@ -30,7 +30,7 @@ def test_FourierSeries():
     assert isinstance(fo, FourierSeries)
     assert fo.function == x
     assert fo.x == x
-    assert fo.period == (-pi, pi)
+    assert fo.period == 2*pi
 
     assert fo.term(3) == 2*sin(3*x) / 3
     assert fe.term(3) == -4*cos(3*x) / 9
@@ -76,6 +76,15 @@ def test_FourierSeries_2():
                          4*cos(3*pi*x / 2) / (9*pi**2))
     assert f.truncate() == (2*sin(pi*x / 2) / pi - sin(pi*x) / pi -
                             4*cos(pi*x / 2) / pi**2 + S.Half)
+
+
+def test_Fourier_coefficients():
+    f = fourier_series(Piecewise((1, x < 0), (x, True)), (x, -1, 1))
+
+    assert f.an[0:5] == [-2/pi**2, 0, -2/(9*pi**2), 0, -2/(25*pi**2)]
+    assert f.bn[0:5] == [-1/pi, -1/(2*pi), -1/(3*pi), -1/(4*pi), -1/(5*pi)]
+    assert f.cos_sequence[0:5] == [-2*cos(pi*x)/pi**2, 0, -2*cos(3*pi*x)/(9*pi**2), 0, -2*cos(5*pi*x)/(25*pi**2)]
+    assert f.sin_sequence[0:5] == [-sin(pi*x)/pi, -sin(2*pi*x)/(2*pi), -sin(3*pi*x)/(3*pi), -sin(4*pi*x)/(4*pi), -sin(5*pi*x)/(5*pi)]
 
 
 def test_square_wave():
