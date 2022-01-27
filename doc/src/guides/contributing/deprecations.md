@@ -210,6 +210,13 @@ method is deprecated, you can use the
 `deprecated_since_version` and `active_deprecations_target` flags are required. Please see the docstring of `SymPyDeprecationWarning` for more
 information.
 
+```{note}
+`warns_deprecated_sympy` is only intended to be used by the tests in SymPy
+itself. Users of SymPy should use the
+[warnings](https://docs.python.org/3/library/warnings.html) module directly to
+filter SymPy deprecation warnings. See {ref}`silencing-sympy-deprecation-warnings`.
+```
+
 Add a test for the deprecated behavior. You can use the
 {func}`sympy.testing.pytest.warns_deprecated_sympy` context manager.
 
