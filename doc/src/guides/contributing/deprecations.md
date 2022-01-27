@@ -127,21 +127,22 @@ Deprecation has several purposes:
 - To inform users how to fix their code so that it will continue work in
   future versions.
 
-To this end, a deprecation warning should be something that users can remove
-by fixing their code. Deprecation warnings that fire unconditionally, or which
-can otherwise not effectively be silenced by users other than by using a
-warnings filter should be avoided.
+All deprecation warnings should be something that users can remove by updating
+their code. Deprecation warnings that fire unconditionally, even when using
+the "correct" newer APIs, should be avoided.
 
-Furthermore, deprecation warnings should inform users of a way to change their
-code so that it works in the same version of SymPy, as well as all future
-versions. Features that do not have a suitable replacement should not be
-deprecated, as there will be no way for users to fix their code to continue to
-work.
+This also means all deprecated code must have a completely functional
+replacement. If there is no way for users to update their code, then this
+means API in question is not yet read to be deprecated. The deprecation
+warning should inform users of a way to change their code so that it works in
+the same version of SymPy, as well as all future versions (see
+[below](deprecation-documentation)).
 
 Deprecations should always
 
 1. Allow users to continue to use the existing APIs unchanged during the
-   deprecation period (with a warning).
+   deprecation period (with a warning, which can be silenced with
+   `warnings.filterwarnings`).
 2. Allow users to always fix their code so that it stops giving the warning.
 3. After users fix their code, it should continue to work after the deprecated
    code is removed.
@@ -270,7 +271,7 @@ documented in at three primary places:
 
 - A deprecation note in the relevant docstring(s). This should use the
   [`deprecated`](https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-deprecated)
-  Sphinx directive. This uses the syntax `.. deprecated:: <version>``. If the
+  Sphinx directive. This uses the syntax `.. deprecated:: <version>`. If the
   entire function is deprecated, this should be placed at the top of the
   docstring, right below the first line. Otherwise, if only part of a function
   is deprecated (e.g., a single keyword argument), it should be placed near
