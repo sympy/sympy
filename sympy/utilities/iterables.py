@@ -2418,6 +2418,25 @@ def random_derangement(t, choice=None, strict=True):
     return rv
 
 
+def _set_derangements(s):
+    """
+    yield derangements of items in ``s`` which are assumed to contain
+    no repeated elements
+    """
+    if len(s) < 2:
+        return
+    if len(s) == 2:
+        yield [s[1], s[0]]
+        return
+    if len(s) == 3:
+        yield [s[1], s[2], s[0]]
+        yield [s[2], s[0], s[1]]
+        return
+    for p in permutations(s):
+        if not any(i == j for i, j in zip(p, s)):
+            yield list(p)
+
+
 def generate_derangements(perm):
     """
     Routine to generate unique derangements of sets or multisets.
@@ -2442,17 +2461,7 @@ def generate_derangements(perm):
 
     """
     if not has_dups(perm):
-        s = perm
-        if len(perm) == 2:
-            yield [s[1],s[0]]
-            return
-        if len(perm) == 3:
-            yield [s[1],s[2],s[0]]
-            yield [s[2],s[0],s[1]]
-            return
-        for p in permutations(s):
-            if not any(i == j for i, j in zip(p, s)):
-                yield list(p)
+        yield from _set_derangements(perm)
     else:
         for p in multiset_derangements(perm):
             yield list(p)
