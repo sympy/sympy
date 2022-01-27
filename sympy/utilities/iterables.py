@@ -2188,7 +2188,19 @@ def multiset_derangements(s):
     >>> [i.copy() for i in multiset_derangements('1233')]
     [['3', '3', '1', '2'], ['3', '3', '2', '1']]
     """
-    ms = multiset(s)
+    try:
+        ms = multiset(s)
+    except TypeError:
+        key = dict(enumerate(uniq(s)))
+        h = []
+        for si in s:
+            for k in key:
+                if key[k] == si:
+                    h.append(k)
+                    break
+        for i in multiset_derangements(h):
+            yield [key[j] for j in i]
+        return
     mx = max(ms.values())
     n = len(s)
     # special cases
