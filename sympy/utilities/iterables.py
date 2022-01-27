@@ -2205,7 +2205,8 @@ def multiset_derangements(s):
     n = len(s)
     # special cases
 
-    # 0) impossible case
+    # 0) one element has more than half the total cardinality of s: no
+    # derangements are possible.
     if mx*2 > n:
         return
 
@@ -2232,8 +2233,11 @@ def multiset_derangements(s):
             yield rv
         return
 
-    # 3) single repeat covers all but 1 of the non-repeats
-    if n - 2*mx == 1 and len(ms.values()) - 1 == n - mx:
+    # 3) single repeat covers all but 1 of the non-repeats:
+    # if there is one repeat then the multiset of the values
+    # of ms would be {mx: 1, 1: n - mx}, i.e. there would
+    # be n - mx + 1 values with the condition that n - 2*mx = 1
+    if n - 2*mx == 1 and len(ms.values()) == n - mx + 1:
         for i in range(len(inonM)):
             i1 = inonM[i]
             ifill = inonM[:i] + inonM[i+1:]
