@@ -356,6 +356,7 @@ def checksol(f, symbol, sol=None, **flags):
                 # the nz value is correct
                 return not nz
             break
+
         if numerical and val.is_number:
             return (abs(val.n(18).n(12, chop=True)) < 1e-9) is S.true
         if val == was:
