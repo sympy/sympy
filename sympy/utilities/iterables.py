@@ -1945,7 +1945,10 @@ def has_dups(seq):
     if isinstance(seq, (dict, set, Dict, Set)):
         return False
     unique = set()
-    return any(True for s in seq if s in unique or unique.add(s))
+    try:
+        return any(True for s in seq if s in unique or unique.add(s))
+    except TypeError:
+        return len(seq) != len(list(uniq(seq)))
 
 
 def has_variety(seq):
