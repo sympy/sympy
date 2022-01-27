@@ -11,18 +11,20 @@ Poisson
 Skellam
 YuleSimon
 Zeta
+Delaporte
 """
 
 
 
-from sympy.concrete.summations import Sum
+
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
 from sympy.core.numbers import I
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
-from sympy.core.symbol import Dummy
+from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
+from sympy.concrete.summations import Sum
 from sympy.functions.combinatorial.factorials import (binomial, factorial)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import floor
@@ -30,6 +32,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.bessel import besseli
 from sympy.functions.special.beta_functions import beta
+from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
 from sympy.functions.special.zeta_functions import (polylog, zeta)
 from sympy.stats.drv import SingleDiscreteDistribution, SingleDiscretePSpace
@@ -44,7 +47,8 @@ __all__ = ['FlorySchulz',
 'Poisson',
 'Skellam',
 'YuleSimon',
-'Zeta'
+'Zeta',
+'Delaporte',
 ]
 
 
@@ -833,3 +837,85 @@ def Zeta(name, s):
 
     """
     return rv(name, ZetaDistribution, s)
+
+
+#-------------------------------------------------------------------------------
+# Delaporte distribution ------------------------------------------------------------
+
+class DelaporteDistribution(SingleDiscreteDistribution):
+    _argnames = ('lamda', 'alpha', 'beta')
+    set = S.Naturals0
+
+    @staticmethod
+    def check(lamda, alpha, beta):
+        _value_check(lamda > 0, 'lambda should be positive')
+        _value_check(alpha > 0, 'alpha should be positive')
+        _value_check(beta > 0, 'beta should be positive')
+
+    def pdf(self, k):
+        lamda = self.lamda
+        alpha = self.alpha
+        beta = self.beta
+        i = Symbol('i', integer=True)
+        return Sum((gamma(alpha+i) * beta**i * lamda**(k-i) * exp(-lamda)) /
+        (gamma(alpha) * factorial(i) * (1+beta)**(alpha+i) * factorial(k-i)), (i, 0, k+1))
+
+    def _moment_generating_function(self, t):
+        return (exp(self.lamda*(exp(t)-1))) / (1-self.beta*(exp(t)-1))**self.alpha
+
+
+def Delaporte(name, lamda, alpha, beta):
+    r"""
+    Create a discrete random variable with a Delaporte distribution.
+
+    Explanation
+    ===========
+
+    The density of the Delaporte distribution is given by
+
+    .. math::
+        f(k) := \sum_{i=0}^k \frac{\Gamma(\alpha+i) \beta^{i} \lambda^{k-i} e^{-\lambda}}{\Gamma(\alpha) (i)! \Gamma(k-i) (1+\beta)^{i+\alpha} (k-i)!}},
+
+    where :math:`\Gamma(z)` is the gamma function.
+
+    Parameters
+    ==========
+
+    lamda: A value greater than 0
+    alpha: A value greater than 0
+    beta: A value greater than 0
+
+    Returns
+    =======
+
+    RandomSymbol
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Delaporte, density, E, variance
+    >>> from sympy import Symbol
+
+    >>> lamda = 5
+    >>> alpha = 5
+    >>> beta = 5
+    >>> z = Symbol("z")
+
+    >>> X = Delaporte("x", lamda, alpha, beta)
+
+    >>> density(X)(z)
+    Sum(5**i*5**(-i + z)*6**(-i - 5)*exp(-5)*gamma(i + 5)/(24*factorial(i)*factorial(-i + z)), (i, 0, z + 1))
+
+    >>> E(X)
+    30
+
+    >>> variance(X)
+    155
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Delaporte_distribution
+
+    """
+    return rv(name, DelaporteDistribution, lamda, alpha, beta)
