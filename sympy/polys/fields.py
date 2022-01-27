@@ -237,10 +237,11 @@ class FracField(DefaultPrinting):
             if gen.is_Pow or isinstance(gen, ExpBase))
 
         def _rebuild(expr):
-            generator = mapping.get(expr)
 
-            if generator is not None:
-                return generator
+            if mapping.get(expr) is not None:
+                return mapping.get(expr)
+            elif mapping.get(1/expr) is not None:
+                return 1/mapping.get(1/expr)
             elif expr.is_Add:
                 return reduce(add, list(map(_rebuild, expr.args)))
             elif expr.is_Mul:
