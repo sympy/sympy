@@ -500,7 +500,7 @@ class factorial2(CombinatorialFunction):
 
 class RisingFactorial(CombinatorialFunction):
     r"""
-    Rising factorial (also called Pochhammer symbol) is a double valued
+    Rising factorial (also called Pochhammer symbol [1]_) is a double valued
     function arising in concrete mathematics, hypergeometric functions
     and series expansions. It is defined by:
 
@@ -510,11 +510,9 @@ class RisingFactorial(CombinatorialFunction):
     more information check "Concrete mathematics" by Graham, pp. 66
     or visit http://mathworld.wolfram.com/RisingFactorial.html page.
 
-    When `x` is a Poly instance of degree >= 1 with a single variable,
+    When `x` is a Poly instance of degree $\ge 1$ with a single variable,
     `rf(x,k) = x(y) \cdot x(y+1) \cdots x(y+k-1)`, where `y` is the
-    variable of `x`. This is as described in Peter Paule, "Greatest
-    Factorial Factorization and Symbolic Summation", Journal of
-    Symbolic Computation, vol. 20, pp. 235-268, 1995.
+    variable of `x`. This is as described in [2]_.
 
     Examples
     ========
@@ -532,7 +530,7 @@ class RisingFactorial(CombinatorialFunction):
 
     Rewriting is complicated unless the relationship between
     the arguments is known, but rising factorial can
-    be rewritten in terms of gamma, factorial and binomial
+    be rewritten in terms of gamma, factorial, binomial,
     and falling factorial.
 
     >>> from sympy import Symbol, factorial, ff, binomial, gamma
@@ -556,6 +554,9 @@ class RisingFactorial(CombinatorialFunction):
     ==========
 
     .. [1] https://en.wikipedia.org/wiki/Pochhammer_symbol
+    .. [2] Peter Paule, "Greatest Factorial Factorization and Symbolic
+           Summation", Journal of Symbolic Computation, vol. 20, pp. 235-268,
+           1995.
 
     """
 

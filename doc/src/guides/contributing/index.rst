@@ -12,6 +12,7 @@ This section discusses the necessary steps and guidelines required to contribute
    :maxdepth: 2
 
    dev-setup.rst
+   dependencies.md
    build-docs.rst
    debug.rst
    docstring.rst
