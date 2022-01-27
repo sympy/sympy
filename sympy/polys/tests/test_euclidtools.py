@@ -2,6 +2,8 @@
 
 from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ, QQ, RR
+from sympy.polys.euclidtools import free_symbols_sparse, coeffs_sparse, gcd_coeffs
+from sympy.core import symbols
 
 from sympy.polys.specialpolys import (
     f_polys,
@@ -710,3 +712,21 @@ def test_dmp_cancel():
 
     assert R.dmp_cancel(0, y) == (0, 1)
     assert R.dmp_cancel(0, y, include=False) == (1, 1, 0, 1)
+
+
+def test_issue_20874():
+    x, y = symbols('x, y')
+    K = QQ[x, y]
+
+    assert free_symbols_sparse(K(y)) == {1}
+
+    assert coeffs_sparse(K(y**2), {0}) == [K(y**2)]
+    assert coeffs_sparse(K(y**2), {1}) == [K(1)]
+    assert coeffs_sparse(K(x + y), {0}) == [K(1), K(y)]
+    assert coeffs_sparse(K(x + y), {1}) == [K(x), K(1)]
+
+    assert gcd_coeffs([K(x + y), K(y)]) == ([K(1)], None)
+    assert gcd_coeffs([K(x + y), K(y + 1)]) == ([K(1)], None)
+
+    ps, syms = gcd_coeffs([K(x + y), K(x - y)])
+    assert (set(ps), syms) == ({K(x - y), K(x + y)}, {0, 1})
