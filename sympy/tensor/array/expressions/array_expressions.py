@@ -7,7 +7,9 @@ from typing import Optional, List, Dict as tDict, Tuple as tTuple
 
 import typing
 
-from sympy import Integer, KroneckerDelta, Equality
+from sympy.core.numbers import Integer
+from sympy.core.relational import Equality
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
