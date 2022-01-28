@@ -563,7 +563,7 @@ def test_derangements():
     assert [''.join(i) for i in D('books')] == ['kbsoo', 'ksboo',
         'sbkoo', 'skboo', 'oksbo', 'oskbo', 'okbso', 'obkso', 'oskob',
         'oksob', 'osbok', 'obsok']
-    assert list(generate_derangements([[1], [2], [2], [3]])) == [
+    assert list(generate_derangements([[3], [2], [2], [1]])) == [
         [[2], [1], [3], [2]], [[2], [3], [1], [2]]]
 
 
