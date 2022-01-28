@@ -496,15 +496,15 @@ class Pow(Expr):
         1. For unevaluated integer power, use built-in ``pow`` function
         with 3 arguments, if powers are not too large wrt base.
 
-        2. For very large powers, use totient reduction if e >= lg(m).
-        Bound on m, is for safe factorization memory wise ie m^(1/4).
-        For pollard-rho to be faster than built-in pow lg(e) > m^(1/4)
+        2. For very large powers, use totient reduction if $e \ge \log(m)$.
+        Bound on m, is for safe factorization memory wise i.e. $m^{1/4}$.
+        For pollard-rho to be faster than built-in pow $\log(e) > m^{1/4}$
         check is added.
 
         3. For any unevaluated power found in `b` or `e`, the step 2
         will be recursed down to the base and the exponent
-        such that the `b \bmod q` becomes the new base and
-        ``\phi(q) + e \bmod \phi(q)`` becomes the new exponent, and then
+        such that the $b \bmod q$ becomes the new base and
+        $\phi(q) + e \bmod \phi(q)$ becomes the new exponent, and then
         the computation for the reduced expression can be done.
         """
 

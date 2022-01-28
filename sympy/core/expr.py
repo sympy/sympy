@@ -20,6 +20,19 @@ from mpmath.libmp.libintmath import giant_steps
 from collections import defaultdict
 
 
+def _corem(eq, c):  # helper for extract_additively
+    # return co, diff from co*c + diff
+    co = []
+    non = []
+    for i in Add.make_args(eq):
+        ci = i.coeff(c)
+        if not ci:
+            non.append(i)
+        else:
+            co.append(ci)
+    return Add(*co), Add(*non)
+
+
 @sympify_method_args
 class Expr(Basic, EvalfMixin):
     """
@@ -2319,15 +2332,6 @@ class Expr(Basic, EvalfMixin):
         >>> ((x + 1)*(x + 2*y + 1) + 3).extract_additively(x + 1)
         (x + 1)*(x + 2*y) + 3
 
-        Sometimes auto-expansion will return a less simplified result
-        than desired; gcd_terms might be used in such cases:
-
-        >>> from sympy import gcd_terms
-        >>> (4*x*(y + 1) + y).extract_additively(x)
-        4*x*(y + 1) + x*(4*y + 3) - x*(4*y + 4) + y
-        >>> gcd_terms(_)
-        x*(4*y + 3) + y
-
         See Also
         ========
         extract_multiplicatively
@@ -2386,10 +2390,9 @@ class Expr(Basic, EvalfMixin):
             return xa + xa2
 
         # whole term as a term factor
-        co = self.coeff(c)
+        co, diff = _corem(self, c)
         xa0 = (co.extract_additively(1) or 0)*c
         if xa0:
-            diff = self - co*c
             return (xa0 + (diff.extract_additively(c) or diff)) or None
         # term-wise
         coeffs = []
@@ -3953,7 +3956,7 @@ class AtomicExpr(Atom, Expr):
 
 
 def _mag(x):
-    """Return integer ``i`` such that .1 <= x/10**i < 1
+    r"""Return integer $i$ such that $0.1 \le x/10^i < 1$
 
     Examples
     ========
