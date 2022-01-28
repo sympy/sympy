@@ -35,9 +35,11 @@ intact and is still supported.
 It is important to try to be cognizant of API design whenever adding new
 functionality. Try to consider what a function may do in the future, and
 design the API in a way that it can do so without having to make a breaking
-change. If you are unsure about your API design for a new functionality, one
-option is to mark the new functionality as explicitly private or as
-experimental.
+change. For example, if you add a property to an object `A.attr`, it is
+impossible to later convert that property into a method `A.attr()` so that it
+can take arguments except by doing so in a backwards incompatible way. If you
+are unsure about your API design for a new functionality, one option is to
+mark the new functionality as explicitly private or as experimental.
 
 With that being said, it may be decided that the API of SymPy must change in
 some incompatible way. Some reasons APIs are changed can include:
@@ -212,8 +214,8 @@ method is deprecated, you can use the
 information.
 
 ```{note}
-`warns_deprecated_sympy` is only intended to be used by the tests in SymPy
-itself. Users of SymPy should use the
+`warns_deprecated_sympy` is only intended to be used internally by the SymPy
+test suite. Users of SymPy should use the
 [warnings](https://docs.python.org/3/library/warnings.html) module directly to
 filter SymPy deprecation warnings. See {ref}`silencing-sympy-deprecation-warnings`.
 ```
