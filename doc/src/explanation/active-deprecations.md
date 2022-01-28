@@ -44,7 +44,7 @@ that you don't also silence the same warning for unrelated modules.
 
 This same pattern may be used to instead turn `SymPyDeprecationWarning` into
 an error so that you can test that you aren't using deprecated code. To do
-this, just replace `"ignore"` with `"error"` in the above example. You may
+this, replace `"ignore"` with `"error"` in the above example. You may
 also omit `message` to make this apply to all `SymPyDeprecationWarning`
 warnings.
 
