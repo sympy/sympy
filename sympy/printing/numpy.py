@@ -2,7 +2,6 @@ from sympy.core import S
 from .pycode import PythonCodePrinter, _known_functions_math, _print_known_const, _print_known_func, _unpack_integral_limits
 from .codeprinter import CodePrinter
 
-
 _not_in_numpy = 'erf erfc factorial gamma loggamma'.split()
 _in_numpy = [(k, v) for k, v in _known_functions_math.items() if k not in _not_in_numpy]
 _known_functions_numpy = dict(_in_numpy, **{
@@ -320,6 +319,22 @@ class NumPyPrinter(PythonCodePrinter):
     _print_uppergamma = CodePrinter._print_not_supported
     _print_fresnelc = CodePrinter._print_not_supported
     _print_fresnels = CodePrinter._print_not_supported
+
+    def _print_Assignment(self, expr):
+        from sympy.tensor.indexed import Indexed
+        from sympy.codegen.ast import Assignment
+        from sympy.tensor.array.expressions.array_expressions import ArrayElement
+        from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array
+        if expr.has(Indexed, ArrayElement):
+            try:
+                lhs = convert_indexed_to_array(expr.lhs)
+                rhs = convert_indexed_to_array(expr.rhs)
+            except Exception:
+                msg = "Could not convert this Indexed expression to numpy array"
+                raise NotImplementedError(msg)
+            return self._print(Assignment(lhs, rhs))
+        return super()._print_Assignment(expr)
+
 
 for func in _numpy_known_functions:
     setattr(NumPyPrinter, f'_print_{func}', _print_known_func)

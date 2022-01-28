@@ -1,8 +1,9 @@
 import random
 from sympy.core.function import Derivative
 from sympy.core.symbol import symbols
+from sympy.codegen.ast import Assignment
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
-    PermuteDims, ArrayDiagonal
+    PermuteDims, ArrayDiagonal, ArraySymbol
 from sympy.core.relational import Eq, Ne, Ge, Gt, Le, Lt
 from sympy.external import import_module
 from sympy.functions import \
@@ -14,9 +15,11 @@ from sympy.matrices.expressions import \
     Determinant, HadamardProduct, Inverse, MatrixSymbol, Trace
 from sympy.printing.tensorflow import tensorflow_code
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
+from sympy.tensor.indexed import Idx, IndexedBase
 from sympy.utilities.lambdify import lambdify
 from sympy.testing.pytest import skip
 from sympy.testing.pytest import XFAIL
+
 
 
 tf = tensorflow = import_module("tensorflow")
@@ -463,3 +466,8 @@ def test_tensorflow_Derivative():
     expr = Derivative(sin(x), x)
     assert tensorflow_code(expr) == \
         "tensorflow.gradients(tensorflow.math.sin(x), x)[0]"
+
+def test_tensorflow_Assignment():
+    i,j,k = Idx('i'), Idx('j'), Idx('k')
+    expr = ArraySymbol('X', (1,2,3))[i,j,k]
+    assert tensorflow_code(Assignment(expr, expr)) == "X = X"

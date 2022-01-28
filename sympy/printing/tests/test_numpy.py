@@ -11,12 +11,14 @@ from sympy.utilities.lambdify import lambdify
 from sympy.matrices.dense import eye
 from sympy.abc import x, i, j, a, b, c, d
 from sympy.core import Pow
+from sympy.codegen.ast import Assignment
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
 from sympy.tensor.array import Array
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
-    PermuteDims, ArrayDiagonal
+    PermuteDims, ArrayDiagonal, ArraySymbol
+from sympy.tensor.indexed import Idx
 from sympy.printing.numpy import NumPyPrinter, SciPyPrinter, _numpy_known_constants, \
     _numpy_known_functions, _scipy_known_constants, _scipy_known_functions
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
@@ -353,3 +355,8 @@ def test_scipy_print_methods():
     assert hasattr(prntr, '_print_erf')
     assert hasattr(prntr, '_print_factorial')
     assert hasattr(prntr, '_print_chebyshevt')
+
+def test_tensorflow_Assignment():
+    i,j,k = Idx('i'), Idx('j'), Idx('k')
+    expr = ArraySymbol('X', (1,2,3))[i,j,k]
+    assert NumPyPrinter().doprint(Assignment(expr, expr)) == "X = X"

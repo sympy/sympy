@@ -197,11 +197,19 @@ class TensorflowPrinter(AbstractPythonCodePrinter):
             "tensorflow.linalg.matmul", [expr.base]*expr.exp)
 
     def _print_Assignment(self, expr):
-        # TODO: is this necessary?
-        return "%s = %s" % (
-            self._print(expr.lhs),
-            self._print(expr.rhs),
-        )
+        from sympy.tensor.indexed import Indexed
+        from sympy.codegen.ast import Assignment
+        from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array
+        from sympy.tensor.array.expressions.array_expressions import ArrayElement
+        if expr.has(Indexed, ArrayElement):
+            try:
+                lhs = convert_indexed_to_array(expr.lhs)
+                rhs = convert_indexed_to_array(expr.rhs)
+            except Exception:
+                msg = "Could not convert this Indexed expression to numpy array"
+                raise NotImplementedError(msg)
+            return self._print(Assignment(lhs, rhs))
+        return super()._print_Assignment(expr)
 
     def _print_CodeBlock(self, expr):
         # TODO: is this necessary?

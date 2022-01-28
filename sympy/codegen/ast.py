@@ -138,7 +138,8 @@ from sympy.core.numbers import Float, Integer, oo
 from sympy.core.sympify import _sympify, sympify, SympifyError
 from sympy.utilities.iterables import (iterable, topological_sort,
                                        numbered_symbols, filter_symbols)
-
+from sympy.tensor.array.expressions.array_expressions import ArrayElement,\
+        ArraySymbol
 
 def _mk_Tuple(args):
     """
@@ -436,7 +437,8 @@ class AssignmentBase(CodegenAST):
         from sympy.tensor.indexed import Indexed
 
         # Tuple of things that can be on the lhs of an assignment
-        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Element, Variable)
+        assignable = (Symbol, MatrixSymbol, MatrixElement, Indexed, Element,
+                Variable, ArrayElement, ArraySymbol)
         if not isinstance(lhs, assignable):
             raise TypeError("Cannot assign to lhs of type %s." % type(lhs))
 
