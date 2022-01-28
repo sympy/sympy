@@ -1,3 +1,4 @@
+import collections.abc
 import operator
 from collections import defaultdict, Counter
 from functools import reduce
@@ -7,7 +8,9 @@ from typing import Optional, List, Dict as tDict, Tuple as tTuple
 
 import typing
 
-from sympy import Integer, KroneckerDelta, Equality
+from sympy.core.numbers import Integer
+from sympy.core.relational import Equality
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
@@ -81,6 +84,8 @@ class ArrayElement(_ArrayExpr):
         if isinstance(name, str):
             name = Symbol(name)
         name = _sympify(name)
+        if not isinstance(indices, collections.abc.Iterable):
+            indices = (indices,)
         indices = _sympify(tuple(indices))
         if hasattr(name, "shape"):
             if any((i >= s) == True for i, s in zip(indices, name.shape)):
@@ -1460,6 +1465,27 @@ class ArrayContraction(_CodegenArrayAbstract):
 
 
 class Reshape(_CodegenArrayAbstract):
+    """
+    Reshape the dimensions of an array expression.
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.array.expressions import ArraySymbol, Reshape
+    >>> A = ArraySymbol("A", (6,))
+    >>> A.shape
+    (6,)
+    >>> Reshape(A, (3, 2)).shape
+    (3, 2)
+
+    Check the component-explicit forms:
+
+    >>> A.as_explicit()
+    [A[0], A[1], A[2], A[3], A[4], A[5]]
+    >>> Reshape(A, (3, 2)).as_explicit()
+    [[A[0], A[1]], [A[2], A[3]], [A[4], A[5]]]
+
+    """
 
     def __new__(cls, expr, shape):
         expr = _sympify(expr)

@@ -7,7 +7,7 @@ from sympy.tensor.indexed import IndexedBase
 from sympy.combinatorics import Permutation
 from sympy.tensor.array.expressions.array_expressions import ArrayContraction, ArrayTensorProduct, \
     ArrayDiagonal, ArrayAdd, PermuteDims, ArrayElement, _array_tensor_product, _array_contraction, _array_diagonal, \
-    _array_add, _permute_dims
+    _array_add, _permute_dims, ArraySymbol
 from sympy.tensor.array.expressions.conv_array_to_matrix import convert_array_to_matrix
 from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array, _convert_indexed_to_array
 from sympy.testing.pytest import raises
@@ -97,6 +97,25 @@ def test_arrayexpr_convert_indexed_to_array_expression():
     elem = expr[i, j]
     cg = convert_indexed_to_array(elem)
     assert cg == ArrayContraction(ArrayTensorProduct(-2, M, N), (1, 2))
+
+
+def test_arrayexpr_convert_array_element_to_array_expression():
+    A = ArraySymbol("A", (k,))
+    B = ArraySymbol("B", (k,))
+
+    s = Sum(A[i]*B[i], (i, 0, k-1))
+    cg = convert_indexed_to_array(s)
+    assert cg == ArrayContraction(ArrayTensorProduct(A, B), (0, 1))
+
+    s = A[i]*B[i]
+    cg = convert_indexed_to_array(s)
+    assert cg == ArrayDiagonal(ArrayTensorProduct(A, B), (0, 1))
+
+    s = A[i]*B[j]
+    cg = convert_indexed_to_array(s, [i, j])
+    assert cg == ArrayTensorProduct(A, B)
+    cg = convert_indexed_to_array(s, [j, i])
+    assert cg == ArrayTensorProduct(B, A)
 
 
 def test_arrayexpr_convert_indexed_to_array_and_back_to_matrix():

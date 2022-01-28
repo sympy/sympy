@@ -199,6 +199,13 @@ def _convert_indexed_to_array(expr):
             return _array_diagonal(expr.args[0], *diagonal_indices), ret_indices
         else:
             return expr.args[0], ret_indices
+    if isinstance(expr, ArrayElement):
+        indices = expr.indices
+        diagonal_indices, ret_indices = _get_diagonal_indices(indices)
+        if diagonal_indices:
+            return _array_diagonal(expr.name, *diagonal_indices), ret_indices
+        else:
+            return expr.name, ret_indices
     if isinstance(expr, Indexed):
         indices = expr.indices
         diagonal_indices, ret_indices = _get_diagonal_indices(indices)
