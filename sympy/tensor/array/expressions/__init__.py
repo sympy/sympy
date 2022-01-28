@@ -1,10 +1,9 @@
 r"""
-Array expressions are expressions representing N-dimensional arrays, without evaluating them.
-They are *lazy* as they don't evaluate the operations on the arrays until required and
-can define operations on unknown array (in a certain way reminiscent of graphs of
-operations in TensorFlow).
+Array expressions are expressions representing N-dimensional arrays, without
+evaluating them. These expressions represent in a certain way abstract syntax
+trees of operations on N-dimensional arrays.
 
-Every N-dimensional array operator has a corresponding lazy object.
+Every N-dimensional array operator has a corresponding array expression object.
 
 Table of correspondences:
 
@@ -15,14 +14,81 @@ Table of correspondences:
         tensorcontraction             ArrayContraction
         tensordiagonal                ArrayDiagonal
         permutedims                   PermuteDims
-        derive_by_array               array_derive
 =============================== =============================
 
 Examples
 ========
 
+``ArraySymbol`` objects are the N-dimensional equivalent of ``MatrixSymbol``
+objects in the matrix module:
+
+>>> from sympy.tensor.array.expressions import ArraySymbol
+>>> from sympy.abc import i, j, k
+>>> A = ArraySymbol("A", (3, 2, 4))
+>>> A.shape
+(3, 2, 4)
+>>> A[i, j, k]
+A[i, j, k]
+>>> A.as_explicit()
+[[[A[0, 0, 0], A[0, 0, 1], A[0, 0, 2], A[0, 0, 3]],
+  [A[0, 1, 0], A[0, 1, 1], A[0, 1, 2], A[0, 1, 3]]],
+ [[A[1, 0, 0], A[1, 0, 1], A[1, 0, 2], A[1, 0, 3]],
+  [A[1, 1, 0], A[1, 1, 1], A[1, 1, 2], A[1, 1, 3]]],
+ [[A[2, 0, 0], A[2, 0, 1], A[2, 0, 2], A[2, 0, 3]],
+  [A[2, 1, 0], A[2, 1, 1], A[2, 1, 2], A[2, 1, 3]]]]
+
+Component-explicit arrays can be added inside array expressions:
+
+>>> from sympy import Array
+>>> from sympy import tensorproduct
+>>> from sympy.tensor.array.expressions import ArrayTensorProduct
+>>> a = Array([1, 2, 3])
+>>> b = Array([i, j, k])
+>>> expr = ArrayTensorProduct(a, b, b)
+>>> expr
+ArrayTensorProduct([1, 2, 3], [i, j, k], [i, j, k])
+>>> expr.as_explicit() == tensorproduct(a, b, b)
+True
+
+Constructing array expressions from index-explicit forms
+--------------------------------------------------------
+
+Array expressions are index-implicit. This means they do not use any indices to
+represent array operations. The function ``convert_indexed_to_array( ... )``
+may be used to convert index-explicit expressions to array expressions.
+It takes as input two parameters: the index-explicit expression and the order
+of the indices:
+
+>>> from sympy.tensor.array.expressions import convert_indexed_to_array
+>>> from sympy import Sum
+>>> A = ArraySymbol("A", (3, 3))
+>>> B = ArraySymbol("B", (3, 3))
+>>> convert_indexed_to_array(A[i, j], [i, j])
+A
+>>> convert_indexed_to_array(A[i, j], [j, i])
+PermuteDims(A, (0 1))
+>>> convert_indexed_to_array(A[i, j] + B[j, i], [i, j])
+ArrayAdd(A, PermuteDims(B, (0 1)))
+>>> convert_indexed_to_array(Sum(A[i, j]*B[j, k], (j, 0, 2)), [i, k])
+ArrayContraction(ArrayTensorProduct(A, B), (1, 2))
+
+The diagonal of a matrix in the array expression form:
+
+>>> convert_indexed_to_array(A[i, i], [i])
+ArrayDiagonal(A, (0, 1))
+
+The trace of a matrix in the array expression form:
+
+>>> convert_indexed_to_array(Sum(A[i, i], (i, 0, 2)), [i])
+ArrayContraction(A, (0, 1))
+
+Compatibility with matrices
+---------------------------
+
+Array expressions can be mixed with objects from the matrix module:
+
 >>> from sympy import MatrixSymbol
->>> from sympy.tensor.array.expressions import ArrayTensorProduct, ArrayContraction
+>>> from sympy.tensor.array.expressions import ArrayContraction
 >>> M = MatrixSymbol("M", 3, 3)
 >>> N = MatrixSymbol("N", 3, 3)
 
@@ -53,7 +119,9 @@ ArrayContraction(ArrayTensorProduct(M, N), (0, 3), (1, 2))
 Get the explicit form of the array expression:
 
 >>> expr.as_explicit()
-[[M[0, 0]*N[0, 0] + M[0, 1]*N[1, 0] + M[0, 2]*N[2, 0], M[0, 0]*N[0, 1] + M[0, 1]*N[1, 1] + M[0, 2]*N[2, 1], M[0, 0]*N[0, 2] + M[0, 1]*N[1, 2] + M[0, 2]*N[2, 2]], [M[1, 0]*N[0, 0] + M[1, 1]*N[1, 0] + M[1, 2]*N[2, 0], M[1, 0]*N[0, 1] + M[1, 1]*N[1, 1] + M[1, 2]*N[2, 1], M[1, 0]*N[0, 2] + M[1, 1]*N[1, 2] + M[1, 2]*N[2, 2]], [M[2, 0]*N[0, 0] + M[2, 1]*N[1, 0] + M[2, 2]*N[2, 0], M[2, 0]*N[0, 1] + M[2, 1]*N[1, 1] + M[2, 2]*N[2, 1], M[2, 0]*N[0, 2] + M[2, 1]*N[1, 2] + M[2, 2]*N[2, 2]]]
+[[M[0, 0]*N[0, 0] + M[0, 1]*N[1, 0] + M[0, 2]*N[2, 0], M[0, 0]*N[0, 1] + M[0, 1]*N[1, 1] + M[0, 2]*N[2, 1], M[0, 0]*N[0, 2] + M[0, 1]*N[1, 2] + M[0, 2]*N[2, 2]],
+ [M[1, 0]*N[0, 0] + M[1, 1]*N[1, 0] + M[1, 2]*N[2, 0], M[1, 0]*N[0, 1] + M[1, 1]*N[1, 1] + M[1, 2]*N[2, 1], M[1, 0]*N[0, 2] + M[1, 1]*N[1, 2] + M[1, 2]*N[2, 2]],
+ [M[2, 0]*N[0, 0] + M[2, 1]*N[1, 0] + M[2, 2]*N[2, 0], M[2, 0]*N[0, 1] + M[2, 1]*N[1, 1] + M[2, 2]*N[2, 1], M[2, 0]*N[0, 2] + M[2, 1]*N[1, 2] + M[2, 2]*N[2, 2]]]
 
 Express the trace of a matrix:
 

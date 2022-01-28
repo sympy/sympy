@@ -41,6 +41,8 @@ def test_array_symbol_and_element():
     A = ArraySymbol("A", (2,))
     A0 = ArrayElement(A, (0,))
     A1 = ArrayElement(A, (1,))
+    assert A[0] == A0
+    assert A[1] != A0
     assert A.as_explicit() == ImmutableDenseNDimArray([A0, A1])
 
     A2 = tensorproduct(A, A)
