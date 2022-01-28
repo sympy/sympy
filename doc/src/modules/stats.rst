@@ -148,6 +148,7 @@ Interface
 .. autofunction:: std
 .. autofunction:: sample
 .. autofunction:: sample_iter
+.. autofunction:: quantile
 .. autofunction:: factorial_moment
 .. autofunction:: kurtosis
 .. autofunction:: skewness
