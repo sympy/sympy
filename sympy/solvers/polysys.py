@@ -87,7 +87,7 @@ def solve_biquadratic(f, g, opt):
     Examples
     ========
 
-    >>> from sympy.polys import Options, Poly
+    >>> from sympy import Options, Poly
     >>> from sympy.abc import x, y
     >>> from sympy.solvers.polysys import solve_biquadratic
     >>> NewOption = Options((x, y), {'domain': 'ZZ'})
@@ -188,7 +188,7 @@ def solve_generic(polys, opt):
     Examples
     ========
 
-    >>> from sympy.polys import Poly, Options
+    >>> from sympy import Poly, Options
     >>> from sympy.solvers.polysys import solve_generic
     >>> from sympy.abc import x, y
     >>> NewOption = Options((x, y), {'domain': 'ZZ'})

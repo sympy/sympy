@@ -83,8 +83,7 @@ class ImmutableDenseMatrix(DenseMatrix, ImmutableRepMatrix):  # type: ignore
     Examples
     ========
 
-    >>> from sympy import eye
-    >>> from sympy.matrices import ImmutableMatrix
+    >>> from sympy import eye, ImmutableMatrix
     >>> ImmutableMatrix(eye(3))
     Matrix([
     [1, 0, 0],
@@ -142,8 +141,7 @@ class ImmutableSparseMatrix(SparseRepMatrix, ImmutableRepMatrix):  # type:ignore
     Examples
     ========
 
-    >>> from sympy import eye
-    >>> from sympy.matrices.immutable import ImmutableSparseMatrix
+    >>> from sympy import eye, ImmutableSparseMatrix
     >>> ImmutableSparseMatrix(1, 1, {})
     Matrix([[0]])
     >>> ImmutableSparseMatrix(eye(3))

@@ -374,7 +374,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         Examples
         ========
 
-        >>> from sympy.functions import sqrt
+        >>> from sympy import sqrt
         >>> from sympy.printing.pycode import PythonCodePrinter
         >>> from sympy.abc import x
 
@@ -496,8 +496,7 @@ def pycode(expr, **settings):
     Examples
     ========
 
-    >>> from sympy import tan, Symbol
-    >>> from sympy.printing.pycode import pycode
+    >>> from sympy import pycode, tan, Symbol
     >>> pycode(tan(Symbol('x')) + 1)
     'math.tan(x) + 1'
 
