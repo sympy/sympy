@@ -208,7 +208,7 @@ class PermutationGroup(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics import , PermutationGroup
+        >>> from sympy.combinatorics import Permutation, PermutationGroup
         >>> p = Permutation(0, 1, 2, 3, 4, 5)
         >>> G = PermutationGroup([p, p**2])
         >>> H = PermutationGroup([p**2, p])
