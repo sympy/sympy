@@ -9,14 +9,7 @@ class Del(Basic):
     mathematical expressions as the 'nabla' symbol.
     """
 
-    def __new__(cls, system=None):
-        if system is not None:
-            SymPyDeprecationWarning(
-                feature="delop operator inside coordinate system",
-                useinstead="it as instance Del class",
-                deprecated_since_version="1.1",
-                issue=12866,
-            ).warn()
+    def __new__(cls):
         obj = super().__new__(cls)
         obj._name = "delop"
         return obj
