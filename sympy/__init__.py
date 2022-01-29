@@ -225,7 +225,7 @@ from .parsing import parse_expr
 
 from .calculus import (euler_equations, singularities, is_increasing,
         is_strictly_increasing, is_decreasing, is_strictly_decreasing,
-        is_monotonic, finite_diff_weights, apply_finite_diff, as_finite_diff,
+        is_monotonic, finite_diff_weights, apply_finite_diff,
         differentiate_finite, periodicity, not_empty_in, AccumBounds,
         is_convex, stationary_points, minimum, maximum)
 
@@ -465,7 +465,7 @@ __all__ = [
     'euler_equations', 'singularities', 'is_increasing',
     'is_strictly_increasing', 'is_decreasing', 'is_strictly_decreasing',
     'is_monotonic', 'finite_diff_weights', 'apply_finite_diff',
-    'as_finite_diff', 'differentiate_finite', 'periodicity', 'not_empty_in',
+    'differentiate_finite', 'periodicity', 'not_empty_in',
     'AccumBounds', 'is_convex', 'stationary_points', 'minimum', 'maximum',
 
     # sympy.algebras
