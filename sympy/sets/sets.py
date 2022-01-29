@@ -538,59 +538,51 @@ class Set(Basic, EvalfMixin):
     @property
     def kind(self):
         """
-        This is a method for Sets class and its subclasses such as FiniteSet,
-        EmptySet, etc.
+        The kind of a Set.
 
         Every instance of Set or its subclass will have kind of class
         ``SetKind``.
-        Parameter of this SetKind will depend on arguments of that set
+        Parameter will be kind of elements of the sets
 
         Parameter of SetKind can be ``NumberKind``, ``UndefinedKind``,
         ``TupleKind`` etc.
-        if all arguments of expression are not same then parameter will be
-        ``UndefinedKind``
-
-        ``FiniteSet(Matrix([1, 2])).kind`` kind of this expression will be
-        ``SetKind`` with ``MatrixKind(NumberKind)``
-        as its parameter because argument of FiniteSet is ``Matrix([1, 2])``.
-        Kind of this expression will be ``SetKind(MatrixKind(NumberKind))``
-
-        ``FiniteSet(0, Matrix([1, 2])).kind`` kind of this expression will be
-        ``SetKind`` with ``UndefinedKind``
-        as it parameter because kind of both argument of FiniteSet i.e. ``0``,
-        ``Matrix([1, 2])`` are different.
-        Kind of this expression will be ``SetKind(UndefinedKind)``
-
-        ``ProductSet(FiniteSet(1, Matrix([1, 2])), Interval(1, 2)).kind`` kind
-        of this expression will be ``SetKind`` with
-        ``TupleKind(UndefinedKind, NumberKind)`` as its parameter because Since
-        set is ProductSet so elements of this set will
-        be tuple. ``UndefinedKind`` is parameter of TupleKind because 1st
-        argument of ProductSet is ``FiniteSet(1, Matrix([1, 2]))``
-        which give ``UndefinedKind`` as its parameter. 2nd argument of
-        ProductSet is ``Interval(1, 2)`` whose paramter will be
-        ``NumberKind``. So Kind of this expression ``SetKind(TupleKind
-        (UndefinedKind, NumberKind))``
-
-        kind of ``UniversalSet`` and ``EmptySet`` are ``SetKind(UndefinedKind)
-        `` and ``SetKind()`` respectively.
+        if the elements of a set do not all have the same kind then the kind
+        will be ``SetKind(UndefinedKind)``
 
         Examples
         ========
 
         >>> from sympy import Interval, Matrix, FiniteSet, EmptySet, ProductSet, PowerSet
+
         >>> FiniteSet(Matrix([1, 2])).kind
         SetKind(MatrixKind(NumberKind))
+
+        kinds of 0 and Matrix are different, kind will be
+        SetKind(UndefinedKind):
+
         >>> FiniteSet(0, Matrix([1, 2])).kind
         SetKind(UndefinedKind)
+
         >>> Interval(1,2).kind
         SetKind(NumberKind)
+
         >>> EmptySet.kind
         SetKind()
-        >>> ProductSet(FiniteSet(1, Matrix([1, 2])), Interval(1, 2)).kind
-        SetKind(TupleKind(UndefinedKind, NumberKind))
+
+        PowerSet is set of sets:
+
         >>> PowerSet({1,2,3}).kind
         SetKind(SetKind(NumberKind))
+
+        element of ProductSet is Tuple:
+
+        >>> p = ProductSet(FiniteSet(1, 2), FiniteSet(3, 4))
+        >>> p
+        {1, 2} × {3, 4}
+        >>> list(p)
+        [(1, 3), (2, 3), (1, 4), (2, 4)]
+        >>> p.kind
+        SetKind(TupleKind(NumberKind, NumberKind))
 
         See Also
         ========
@@ -2648,21 +2640,16 @@ def set_function(f, x):
 
 class SetKind(Kind):
     """
-    SetKind is kind for all subclasses of ``Sets`` such as ``Interval``,
-    ``FiniteSet``, ``ProductSet``, ``PowerSet``
+    SetKind is kind for all Sets
 
-    Every subclass of Set will have SetKind as its object type. If all elements
-    are of same type then
-    the parameter will be kind of element, if kind of elements are different
-    then the parameter will be
-    ``UndefinedKind``
+    Every instance of Set or its subclass will have kind of class
+    ``SetKind``.
+    Parameter will be kind of elements of the sets
 
-    For ``Interval(1, 2)``, Since Interval is a subclass of Set, so kind of
-    Interval will be ``SetKind``.
-    In ``(1, 2)`` both belong to ``NumberKind``, so the parameter will be
-    ``NumberKind``.
-    Overall kind of expression (``Interval(1, 2).kind``) will ``SetKind
-    (NumberKind)``.
+    Parameter of SetKind can be ``NumberKind``, ``UndefinedKind``,
+    ``TupleKind`` etc.
+    if the elements of a set do not all have the same kind then the kind
+    will be ``SetKind(UndefinedKind)``
 
     Parameters
     ==========

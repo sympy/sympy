@@ -151,10 +151,12 @@ def test_iterable_is_sequence():
     assert all(not iterable(i) for i in not_sympy_iterable)
     assert all(iterable(i, exclude=None) for i in not_sympy_iterable)
 
+
 def test_TupleKind():
     assert Tuple(1, 2).kind is TupleKind(NumberKind, NumberKind)
     assert Tuple(1, Matrix([1, 2])).kind is TupleKind(
     NumberKind, MatrixKind(NumberKind))
+
 
 def test_Dict():
     x, y, z = symbols('x y z')
