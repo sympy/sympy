@@ -231,10 +231,6 @@ class DiracDelta(Function):
             elif k.is_even:
                 return cls(-arg, k) if k else cls(-arg)
 
-    @deprecated(useinstead="expand(diracdelta=True, wrt=x)", issue=12859, deprecated_since_version="1.1")
-    def simplify(self, x, **kwargs):
-        return self.expand(diracdelta=True, wrt=x)
-
     def _eval_expand_diracdelta(self, **hints):
         """
         Compute a simplified representation of the function using
