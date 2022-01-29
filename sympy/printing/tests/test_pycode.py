@@ -12,9 +12,11 @@ from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
 from sympy.printing.pycode import (
     MpmathPrinter, PythonCodePrinter, pycode, SymPyPrinter
 )
+from sympy.printing.tensorflow import TensorflowPrinter
 from sympy.printing.numpy import NumPyPrinter, SciPyPrinter
 from sympy.testing.pytest import raises, skip
 from sympy.tensor import IndexedBase
+from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayDiagonal, ArrayContraction, ZeroArray, OneArray
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import loggamma
 from sympy.parsing.latex import parse_latex
@@ -217,7 +219,6 @@ def test_frac():
     from sympy.functions.elementary.integers import frac
 
     expr = frac(x)
-
     prntr = NumPyPrinter()
     assert prntr.doprint(expr) == 'numpy.mod(x, 1)'
 
@@ -392,3 +393,25 @@ def test_numerical_accuracy_functions():
     assert prntr.doprint(expm1(x)) == 'numpy.expm1(x)'
     assert prntr.doprint(log1p(x)) == 'numpy.log1p(x)'
     assert prntr.doprint(cosm1(x)) == 'scipy.special.cosm1(x)'
+
+def test_array_printer():
+    A = ArraySymbol('A', (4,4,6,6,6))
+    I = IndexedBase('I')
+
+    prntr = NumPyPrinter()
+    assert prntr.doprint(ZeroArray(5)) == 'numpy.zeros((5,))'
+    assert prntr.doprint(OneArray(5)) == 'numpy.ones((5,))'
+    assert prntr.doprint(ArrayContraction(A, [2,3])) == 'numpy.einsum("abccd->abd", A)'
+    assert prntr.doprint(I) == 'I'
+    assert prntr.doprint(ArrayDiagonal(A, [2,3,4])) == 'numpy.einsum("abccc->abc", A)'
+    assert prntr.doprint(ArrayDiagonal(A, [0,1], [2,3])) == 'numpy.einsum("aabbc->cab", A)'
+    assert prntr.doprint(ArrayContraction(A, [2], [3])) == 'numpy.einsum("abcde->abe", A)'
+
+    prntr = TensorflowPrinter()
+    assert prntr.doprint(ZeroArray(5)) == 'tensorflow.zeros((5,))'
+    assert prntr.doprint(OneArray(5)) == 'tensorflow.ones((5,))'
+    assert prntr.doprint(ArrayContraction(A, [2,3])) == 'tensorflow.linalg.einsum("abccd->abd", A)'
+    assert prntr.doprint(I) == 'I'
+    assert prntr.doprint(ArrayDiagonal(A, [2,3,4])) == 'tensorflow.linalg.einsum("abccc->abc", A)'
+    assert prntr.doprint(ArrayDiagonal(A, [0,1], [2,3])) == 'tensorflow.linalg.einsum("aabbc->cab", A)'
+    assert prntr.doprint(ArrayContraction(A, [2], [3])) == 'tensorflow.linalg.einsum("abcde->abe", A)'
