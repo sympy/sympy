@@ -3,7 +3,6 @@ from sympy.core.expr import Expr
 from sympy.core import sympify, S, preorder_traversal
 from sympy.vector.coordsysrect import CoordSys3D
 from sympy.vector.vector import Vector, VectorMul, VectorAdd, Cross, Dot
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.function import Derivative
 from sympy.core.add import Add
 from sympy.core.mul import Mul
@@ -19,20 +18,11 @@ def _get_coord_systems(expr):
     return frozenset(ret)
 
 
-def _get_coord_sys_from_expr(expr, coord_sys=None):
+def _get_coord_sys_from_expr(expr):
     """
     expr : expression
         The coordinate system is extracted from this parameter.
     """
-
-    # TODO: Remove this line when warning from issue #12884 will be removed
-    if coord_sys is not None:
-        SymPyDeprecationWarning(
-            feature="coord_sys parameter",
-            useinstead="do not use it",
-            deprecated_since_version="1.1",
-            issue=12884,
-        ).warn()
 
     return _get_coord_systems(expr)
 
