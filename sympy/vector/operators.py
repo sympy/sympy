@@ -18,15 +18,6 @@ def _get_coord_systems(expr):
     return frozenset(ret)
 
 
-def _get_coord_sys_from_expr(expr):
-    """
-    expr : expression
-        The coordinate system is extracted from this parameter.
-    """
-
-    return _get_coord_systems(expr)
-
-
 def _split_mul_args_wrt_coordsys(expr):
     d = collections.defaultdict(lambda: S.One)
     for i in expr.args:
@@ -109,7 +100,7 @@ class Curl(Expr):
         return curl(self._expr, doit=True)
 
 
-def curl(vect, coord_sys=None, doit=True):
+def curl(vect, doit=True):
     """
     Returns the curl of a vector field computed wrt the base scalars
     of the given coordinate system.
@@ -119,10 +110,6 @@ def curl(vect, coord_sys=None, doit=True):
 
     vect : Vector
         The vector operand
-
-    coord_sys : CoordSys3D
-        The coordinate system to calculate the gradient in.
-        Deprecated since version 1.1
 
     doit : bool
         If True, the result is returned after calling .doit() on
@@ -143,7 +130,7 @@ def curl(vect, coord_sys=None, doit=True):
 
     """
 
-    coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
+    coord_sys = _get_coord_systems(vect)
 
     if len(coord_sys) == 0:
         return Vector.zero
@@ -188,7 +175,7 @@ def curl(vect, coord_sys=None, doit=True):
             raise Curl(vect)
 
 
-def divergence(vect, coord_sys=None, doit=True):
+def divergence(vect, doit=True):
     """
     Returns the divergence of a vector field computed wrt the base
     scalars of the given coordinate system.
@@ -198,10 +185,6 @@ def divergence(vect, coord_sys=None, doit=True):
 
     vector : Vector
         The vector operand
-
-    coord_sys : CoordSys3D
-        The coordinate system to calculate the gradient in
-        Deprecated since version 1.1
 
     doit : bool
         If True, the result is returned after calling .doit() on
@@ -222,7 +205,7 @@ def divergence(vect, coord_sys=None, doit=True):
     2*R.z
 
     """
-    coord_sys = _get_coord_sys_from_expr(vect, coord_sys)
+    coord_sys = _get_coord_systems(vect)
     if len(coord_sys) == 0:
         return S.Zero
     elif len(coord_sys) == 1:
@@ -259,7 +242,7 @@ def divergence(vect, coord_sys=None, doit=True):
             raise Divergence(vect)
 
 
-def gradient(scalar_field, coord_sys=None, doit=True):
+def gradient(scalar_field, doit=True):
     """
     Returns the vector gradient of a scalar field computed wrt the
     base scalars of the given coordinate system.
@@ -269,10 +252,6 @@ def gradient(scalar_field, coord_sys=None, doit=True):
 
     scalar_field : SymPy Expr
         The scalar field to compute the gradient of
-
-    coord_sys : CoordSys3D
-        The coordinate system to calculate the gradient in
-        Deprecated since version 1.1
 
     doit : bool
         If True, the result is returned after calling .doit() on
@@ -292,7 +271,7 @@ def gradient(scalar_field, coord_sys=None, doit=True):
     10*R.x*R.z*R.i + 5*R.x**2*R.k
 
     """
-    coord_sys = _get_coord_sys_from_expr(scalar_field, coord_sys)
+    coord_sys = _get_coord_systems(scalar_field)
 
     if len(coord_sys) == 0:
         return Vector.zero
