@@ -1449,7 +1449,7 @@ class Mul(Expr, AssocOp):
 
     def _eval_is_extended_real(self):
         # >>> ns = Tuple(0, 1, I, 1 + I, 1 - I, oo)
-        # >>> m=eye(len(ns))
+        # >>> m = eye(len(ns))
         # >>> for i in ns:
         # ...   for j in ns:
         # ...     ix = ns.index(i), ns.index(j)
@@ -1461,7 +1461,7 @@ class Mul(Expr, AssocOp):
         # [-1,  1, -1, -1, -1, 1],   0
         # [-1, -1,  1, -1, -1, 1],  -1
         # [-1, -1, -1,  0, -1, 1],\\
-        # [-1, -1, -1, -1,  0, 1],// -1, -1, -1, 0, 1
+        # [-1, -1, -1, -1,  0, 1],// -->  -1, -1, -1, 0, 1
         # [ 1,  1, -1, -1, -1, 0]])
         n, d = fraction(self, exact=True)
         if not d.is_Integer:
