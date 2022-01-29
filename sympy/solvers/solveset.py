@@ -3698,8 +3698,7 @@ def nonlinsolve(system, *symbols):
     valid_solns = []
     if isinstance(result, FiniteSet):
         for soln in result.args:
-            num_values = {sym: val for (sym, val) in zip(symbols, soln) if not isinstance(val, Set)}
-            if checksol(system, num_values) != False:
+            if any(isinstance(v, Set) for v in soln) or checksol(system, dict(zip(symbols, soln))) != False:
                 valid_solns.append(soln)
         if len(valid_solns) > 0:
             return FiniteSet(*valid_solns)
