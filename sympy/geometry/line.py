@@ -1281,10 +1281,6 @@ class Line(LinearEntity):
             return S.Zero
         return self.perpendicular_segment(other).length
 
-    @deprecated(useinstead="equals", issue=12860, deprecated_since_version="1.0")
-    def equal(self, other):
-        return self.equals(other)
-
     def equals(self, other):
         """Returns True if self and other are the same mathematical entities"""
         if not isinstance(other, Line):
