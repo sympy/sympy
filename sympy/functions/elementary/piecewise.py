@@ -651,7 +651,7 @@ class Piecewise(Function):
         return sum
 
     def _intervals(self, sym, err_on_Eq=False):
-        """Return a bool and a message (when bool is False), else a
+        r"""Return a bool and a message (when bool is False), else a
         list of unique tuples, (a, b, e, i), where a and b
         are the lower and upper bounds in which the expression e of
         argument i in self is defined and $a < b$ (when involving
