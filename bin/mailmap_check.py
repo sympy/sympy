@@ -285,12 +285,12 @@ def sort_lines_mailmap(lines):
 
 
 def read_lines(path):
-    with open(path) as fin:
+    with open(path, 'r', encoding='utf-8') as fin:
         return [line.strip() for line in fin.readlines()]
 
 
 def write_lines(path, lines):
-    with open(path, 'w') as fout:
+    with open(path, 'w', encoding='utf-8') as fout:
         fout.write('\n'.join(lines))
         fout.write('\n')
 
