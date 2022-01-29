@@ -147,7 +147,7 @@ Notes
 The fully-resolved assumptions for any SymPy expression
 can be obtained as follows:
 
-    >>> from sympy import assumptions
+    >>> from sympy.core.assumptions import assumptions
     >>> x = Symbol('x',positive=True)
     >>> assumptions(x + I)
     {'commutative': True, 'complex': True, 'composite': False, 'even':

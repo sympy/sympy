@@ -412,7 +412,7 @@ def graycode_subsets(gray_code_set):
     Examples
     ========
 
-    >>> from sympy.combinatorics import graycode_subsets
+    >>> from sympy.combinatorics.graycode import graycode_subsets
     >>> list(graycode_subsets(['a', 'b', 'c']))
     [[], ['c'], ['b', 'c'], ['b'], ['a', 'b'], ['a', 'b', 'c'], \
     ['a', 'c'], ['a']]
