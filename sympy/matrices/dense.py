@@ -169,8 +169,7 @@ def rot_axis3(theta):
     Examples
     ========
 
-    >>> from sympy import pi
-    >>> from sympy.matrices import rot_axis3
+    >>> from sympy import pi, rot_axis3
 
     A rotation of pi/3 (60 degrees):
 
@@ -212,8 +211,7 @@ def rot_axis2(theta):
     Examples
     ========
 
-    >>> from sympy import pi
-    >>> from sympy.matrices import rot_axis2
+    >>> from sympy import pi, rot_axis2
 
     A rotation of pi/3 (60 degrees):
 
@@ -255,8 +253,7 @@ def rot_axis1(theta):
     Examples
     ========
 
-    >>> from sympy import pi
-    >>> from sympy.matrices import rot_axis1
+    >>> from sympy import pi, rot_axis1
 
     A rotation of pi/3 (60 degrees):
 
@@ -587,7 +584,7 @@ def jordan_cell(eigenval, n):
     Examples
     ========
 
-    >>> from sympy.matrices import jordan_cell
+    >>> from sympy import jordan_cell
     >>> from sympy.abc import x
     >>> jordan_cell(x, 4)
     Matrix([
@@ -603,8 +600,7 @@ def jordan_cell(eigenval, n):
 def matrix_multiply_elementwise(A, B):
     """Return the Hadamard product (elementwise product) of A and B
 
-    >>> from sympy.matrices import matrix_multiply_elementwise
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix, matrix_multiply_elementwise
     >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
     >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
     >>> matrix_multiply_elementwise(A, B)
@@ -658,7 +654,7 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False,
     Examples
     ========
 
-    >>> from sympy.matrices import randMatrix
+    >>> from sympy import randMatrix
     >>> randMatrix(3) # doctest:+SKIP
     [25, 45, 27]
     [44, 54,  9]

@@ -450,7 +450,7 @@ class MatrixCalculus(MatrixCommon):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.diff(x)
@@ -483,7 +483,7 @@ class MatrixCalculus(MatrixCommon):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.integrate((x, ))
@@ -567,7 +567,7 @@ class MatrixCalculus(MatrixCommon):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.limit(x, 2)
@@ -2004,7 +2004,7 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix, eye
+        >>> from sympy import Matrix, eye
         >>> m = Matrix(2, 3, lambda i, j: i*3+j)
         >>> m
         Matrix([
@@ -2073,8 +2073,7 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
-        >>> from sympy import Matrix
-        >>> from sympy.printing.str import StrPrinter
+        >>> from sympy import Matrix, StrPrinter
         >>> M = Matrix([[1, 2], [-33, 4]])
         >>> printer = StrPrinter()
         >>> M.table(printer)
