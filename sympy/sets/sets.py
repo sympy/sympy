@@ -577,8 +577,6 @@ class Set(Basic, EvalfMixin):
         element of ProductSet is Tuple:
 
         >>> p = ProductSet(FiniteSet(1, 2), FiniteSet(3, 4))
-        >>> p
-        {1, 2} × {3, 4}
         >>> list(p)
         [(1, 3), (2, 3), (1, 4), (2, 4)]
         >>> p.kind
