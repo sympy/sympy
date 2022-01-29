@@ -5,8 +5,8 @@ from sympy.core.relational import Equality, Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise
-from sympy.functions.elementary.trigonometric import sin
-from sympy.sets.sets import (EmptySet, Interval, Union)
+from sympy.functions.elementary.trigonometric import cos, sin
+from sympy.sets.sets import (Interval, Union)
 from sympy.simplify.simplify import simplify
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or,
@@ -14,10 +14,11 @@ from sympy.logic.boolalg import (
     distribute_or_over_and, distribute_and_over_or,
     eliminate_implications, is_nnf, is_cnf, is_dnf, simplify_logic,
     to_nnf, to_cnf, to_dnf, to_int_repr, bool_map, true, false,
-    BooleanAtom, is_literal, term_to_integer, integer_to_term,
+    BooleanAtom, is_literal, term_to_integer,
     truth_table, as_Boolean, to_anf, is_anf, distribute_xor_over_and,
     anf_coeffs, ANFform, bool_minterm, bool_maxterm, bool_monomial,
-    _check_pair, _convert_to_varsSOP, _convert_to_varsPOS, Exclusive,)
+    _check_pair, _convert_to_varsSOP, _convert_to_varsPOS, Exclusive,
+    gateinputcount)
 from sympy.assumptions.cnf import CNF
 
 from sympy.testing.pytest import raises, XFAIL, slow
@@ -241,7 +242,7 @@ def test_equals():
     raises(NotImplementedError, lambda: (A & B).equals(A > B))
 
 
-def test_simplification():
+def test_simplification_boolalg():
     """
     Test working of simplification methods.
     """
@@ -311,6 +312,9 @@ def test_simplification():
     e = And(A, b)
     assert simplify_logic(e) == A & ~x & ~y
     raises(ValueError, lambda: simplify_logic(A & (B | C), form='blabla'))
+    assert simplify(Or(x <= y, And(x < y, z))) == (x <= y)
+    assert simplify(Or(x <= y, And(y > x, z))) == (x <= y)
+    assert simplify(Or(x >= y, And(y < x, z))) == (x >= y)
 
     # Check that expressions with nine variables or more are not simplified
     # (without the force-flag)
@@ -866,11 +870,13 @@ def test_bool_as_set():
     assert Not(And(x > 2, x < 3)).as_set() == \
         Union(Interval(-oo, 2), Interval(3, oo))
     assert true.as_set() == S.UniversalSet
-    assert false.as_set() == EmptySet()
+    assert false.as_set() is S.EmptySet
     assert x.as_set() == S.UniversalSet
     assert And(Or(x < 1, x > 3), x < 2).as_set() == Interval.open(-oo, 1)
     assert And(x < 1, sin(x) < 3).as_set() == (x < 1).as_set()
     raises(NotImplementedError, lambda: (sin(x) < 1).as_set())
+    # watch for object morph in as_set
+    assert Eq(-1, cos(2*x)**2/sin(2*x)**2).as_set() is S.EmptySet
 
 
 @XFAIL
@@ -923,12 +929,6 @@ def test_term_to_integer():
     assert term_to_integer([1, 0, 1, 0, 0, 1, 0]) == 82
     assert term_to_integer('0010101000111001') == 10809
 
-
-def test_integer_to_term():
-    assert integer_to_term(777) == [1, 1, 0, 0, 0, 0, 1, 0, 0, 1]
-    assert integer_to_term(123, 3) == [1, 1, 1, 1, 0, 1, 1]
-    assert integer_to_term(456, 16) == [0, 0, 0, 0, 0, 0, 0, 1,
-                                        1, 1, 0, 0, 1, 0, 0, 0]
 
 def test_issue_21971():
     a, b, c, d = symbols('a b c d')
@@ -1094,10 +1094,36 @@ def test_relational_simplification():
     assert And(x >= y, Eq(y, x)).simplify() == Eq(x, y)
     assert And(Eq(x, y), x >= 1, 2 < y, y >= 5, z < y).simplify() == \
         (Eq(x, y) & (x >= 1) & (y >= 5) & (y > z))
+    assert Or(Eq(x, y), x >= y, w < y, z < y).simplify() == \
+        (x >= y) | (y > z) | (w < y)
+    assert And(Eq(x, y), x >= y, w < y, y >= z, z < y).simplify() == \
+        Eq(x, y) & (y > z) & (w < y)
+    # assert And(Eq(x, y), x >= y, w < y, y >= z, z < y).simplify(relational_minmax=True) == \
+    #    And(Eq(x, y), y > Max(w, z))
+    # assert Or(Eq(x, y), x >= 1, 2 < y, y >= 5, z < y).simplify(relational_minmax=True) == \
+    #    (Eq(x, y) | (x >= 1) | (y > Min(2, z)))
+    assert And(Eq(x, y), x >= 1, 2 < y, y >= 5, z < y).simplify() == \
+        (Eq(x, y) & (x >= 1) & (y >= 5) & (y > z))
     assert (Eq(x, y) & Eq(d, e) & (x >= y) & (d >= e)).simplify() == \
         (Eq(x, y) & Eq(d, e) & (d >= e))
     assert And(Eq(x, y), Eq(x, -y)).simplify() == And(Eq(x, 0), Eq(y, 0))
     assert Xor(x >= y, x <= y).simplify() == Ne(x, y)
+    assert And(x > 1, x < -1, Eq(x, y)).simplify() == S.false
+    # From #16690
+    assert And(x >= y, Eq(y, 0)).simplify() == And(x >= 0, Eq(y, 0))
+
+
+def test_issue_8373():
+    x = symbols('x', real=True)
+    assert Or(x < 1, x > -1).simplify() == S.true
+    assert Or(x < 1, x >= 1).simplify() == S.true
+    assert And(x < 1, x >= 1).simplify() == S.false
+    assert Or(x <= 1, x >= 1).simplify() == S.true
+
+
+def test_issue_7950():
+    x = symbols('x', real=True)
+    assert And(Eq(x, 1), Eq(x, 2)).simplify() == S.false
 
 
 @slow
@@ -1133,33 +1159,36 @@ def test_relational_simplification_numerically():
 
 def test_relational_simplification_patterns_numerically():
     from sympy.core import Wild
-    from sympy.logic.boolalg import simplify_patterns_and, \
-        simplify_patterns_or, simplify_patterns_xor
+    from sympy.logic.boolalg import _simplify_patterns_and, \
+        _simplify_patterns_or, _simplify_patterns_xor
     a = Wild('a')
     b = Wild('b')
     c = Wild('c')
     symb = [a, b, c]
-    patternlists = [simplify_patterns_and(), simplify_patterns_or(),
-                    simplify_patterns_xor()]
-    for patternlist in patternlists:
+    patternlists = [[And, _simplify_patterns_and()],
+                    [Or, _simplify_patterns_or()],
+                    [Xor, _simplify_patterns_xor()]]
+    valuelist = list(set(list(combinations(list(range(-2, 3))*3, 3))))
+    # Skip combinations of +/-2 and 0, except for all 0
+    valuelist = [v for v in valuelist if any([w % 2 for w in v]) or not any(v)]
+    for func, patternlist in patternlists:
         for pattern in patternlist:
-            original = pattern[0]
+            original = func(*pattern[0].args)
             simplified = pattern[1]
-            valuelist = list(set(list(combinations(list(range(-2, 2))*3, 3))))
             for values in valuelist:
                 sublist = dict(zip(symb, values))
-                originalvalue = original.subs(sublist)
-                simplifiedvalue = simplified.subs(sublist)
+                originalvalue = original.xreplace(sublist)
+                simplifiedvalue = simplified.xreplace(sublist)
                 assert originalvalue == simplifiedvalue, "Original: {}\nand"\
                     " simplified: {}\ndo not evaluate to the same value for"\
-                    "{}".format(original, simplified, sublist)
+                    "{}".format(pattern[0], simplified, sublist)
 
 
 def test_issue_16803():
     n = symbols('n')
     # No simplification done, but should not raise an exception
     assert ((n > 3) | (n < 0) | ((n > 0) & (n < 3))).simplify() == \
-        ((n > 3) | (n < 0) | ((n > 0) & (n < 3)))
+        (n > 3) | (n < 0) | ((n > 0) & (n < 3))
 
 
 def test_issue_17530():
@@ -1215,8 +1244,10 @@ def test_check_pair():
 
 def test_issue_19114():
     expr = (B & C) | (A & ~C) | (~A & ~B)
+    # Expression is minimal, but there are multiple minimal forms possible
+    res1 = (A & B) | (C & ~A) | (~B & ~C)
     result = to_dnf(expr, simplify=True)
-    assert result == expr
+    assert result in (expr, res1)
 
 
 def test_issue_20870():
@@ -1234,6 +1265,14 @@ def test_convert_to_varsSOP():
 def test_convert_to_varsPOS():
     assert _convert_to_varsPOS([0, 1, 0], [x, y, z]) == Or(x, Not(y), z)
     assert _convert_to_varsPOS([3, 1, 0], [x, y, z]) ==  Or(Not(y), z)
+
+
+def test_gateinputcount():
+    a, b, c, d, e = symbols('a:e')
+    assert gateinputcount(And(a, b)) == 2
+    assert gateinputcount(a | b & c & d ^ (e | a)) == 9
+    assert gateinputcount(And(a, True)) == 0
+    raises(TypeError, lambda: gateinputcount(a*b))
 
 
 def test_refine():
@@ -1271,3 +1310,27 @@ def test_refine():
     assert refine(Q.positive(x), Q.positive(x)) is S.true
     assert refine(Q.positive(x), Q.negative(x)) is S.false
     assert refine(Q.positive(x), Q.real(x)) == Q.positive(x)
+
+
+def test_relational_threeterm_simplification_patterns_numerically():
+    from sympy.core import Wild
+    from sympy.logic.boolalg import _simplify_patterns_and3
+    a = Wild('a')
+    b = Wild('b')
+    c = Wild('c')
+    symb = [a, b, c]
+    patternlists = [[And, _simplify_patterns_and3()]]
+    valuelist = list(set(list(combinations(list(range(-2, 3))*3, 3))))
+    # Skip combinations of +/-2 and 0, except for all 0
+    valuelist = [v for v in valuelist if any([w % 2 for w in v]) or not any(v)]
+    for func, patternlist in patternlists:
+        for pattern in patternlist:
+            original = func(*pattern[0].args)
+            simplified = pattern[1]
+            for values in valuelist:
+                sublist = dict(zip(symb, values))
+                originalvalue = original.xreplace(sublist)
+                simplifiedvalue = simplified.xreplace(sublist)
+                assert originalvalue == simplifiedvalue, "Original: {}\nand"\
+                    " simplified: {}\ndo not evaluate to the same value for"\
+                    "{}".format(pattern[0], simplified, sublist)

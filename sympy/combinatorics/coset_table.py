@@ -1217,7 +1217,7 @@ def coset_enumeration_c(fp_grp, Y, max_cosets=None, draft=None,
         C.p = draft.p[:]
         C.deduction_stack = draft.deduction_stack
         for alpha, x in product(range(len(C.table)), X):
-            if not C.table[alpha][C.A_dict[x]] is None:
+            if C.table[alpha][C.A_dict[x]] is not None:
                 C.deduction_stack.append((alpha, x))
     A = C.A
     # replace all the elements by cyclic reductions

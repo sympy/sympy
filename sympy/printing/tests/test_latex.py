@@ -1,60 +1,92 @@
-from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
-from sympy.tensor.toperators import PartialDerivative
-
-from sympy import (
-    Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial,
-    FiniteSet, Float, FourierTransform, Function, Indexed, IndexedBase, Integral,
-    Interval, InverseCosineTransform, InverseFourierTransform, Derivative,
-    InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
-    Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min, Mul,
-    Order, Piecewise, Poly, ring, field, ZZ, Pow, Product, Range, Rational, Integer,
-    RisingFactorial, rootof, RootSum, S, Shi, Si, SineTransform, Subs,
-    Sum, Symbol, ImageSet, Tuple, Ynm, Znm, arg, asin, acsc, asinh, Mod,
-    assoc_laguerre, assoc_legendre, beta, binomial, catalan, ceiling,
-    chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta, euler,
-    exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
-    hyper, im, jacobi, laguerre, legendre, lerchphi, log, frac,
-    meijerg, oo, polar_lift, polylog, re, root, sin, sqrt, symbols,
-    uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
-    elliptic_e, elliptic_pi, cos, tan, Wild, true, false, Equivalent, Not,
-    Contains, divisor_sigma, SeqPer, SeqFormula, MatrixSlice,
-    SeqAdd, SeqMul, fourier_series, pi, ConditionSet, ComplexRegion, fps,
-    AccumBounds, reduced_totient, primenu, primeomega, SingularityFunction,
-    stieltjes, mathieuc, mathieus, mathieucprime, mathieusprime,
-    UnevaluatedExpr, Quaternion, I, KroneckerProduct, LambertW)
-
-from sympy.ntheory.factor_ import udivisor_sigma
-
-from sympy.abc import mu, tau
-from sympy.printing.latex import (latex, translate, greek_letters_set,
-                                  tex_greek_dictionary, multiline_latex,
-                                  latex_escape, LatexPrinter)
+from sympy.algebras.quaternion import Quaternion
+from sympy.calculus.accumulationbounds import AccumBounds
+from sympy.combinatorics.permutations import Cycle, Permutation, AppliedPermutation
+from sympy.concrete.products import Product
+from sympy.concrete.summations import Sum
+from sympy.core.containers import Tuple, Dict
+from sympy.core.expr import UnevaluatedExpr
+from sympy.core.function import (Derivative, Function, Lambda, Subs, diff)
+from sympy.core.mod import Mod
+from sympy.core.mul import Mul
+from sympy.core.numbers import (AlgebraicNumber, Float, I, Integer, Rational, oo, pi)
+from sympy.core.power import Pow
+from sympy.core.relational import Eq, Ne
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, Wild, symbols)
+from sympy.functions.combinatorial.factorials import (FallingFactorial, RisingFactorial, binomial, factorial, factorial2, subfactorial)
+from sympy.functions.combinatorial.numbers import bernoulli, bell, catalan, euler, lucas, fibonacci, tribonacci
+from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, polar_lift, re)
+from sympy.functions.elementary.exponential import (LambertW, exp, log)
+from sympy.functions.elementary.hyperbolic import (asinh, coth)
+from sympy.functions.elementary.integers import (ceiling, floor, frac)
+from sympy.functions.elementary.miscellaneous import (Max, Min, root, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acsc, asin, cos, cot, sin, tan)
+from sympy.functions.special.beta_functions import beta
+from sympy.functions.special.delta_functions import (DiracDelta, Heaviside)
+from sympy.functions.special.elliptic_integrals import (elliptic_e, elliptic_f, elliptic_k, elliptic_pi)
+from sympy.functions.special.error_functions import (Chi, Ci, Ei, Shi, Si, expint)
+from sympy.functions.special.gamma_functions import (gamma, uppergamma)
+from sympy.functions.special.hyper import (hyper, meijerg)
+from sympy.functions.special.mathieu_functions import (mathieuc, mathieucprime, mathieus, mathieusprime)
+from sympy.functions.special.polynomials import (assoc_laguerre, assoc_legendre, chebyshevt, chebyshevu, gegenbauer, hermite, jacobi, laguerre, legendre)
+from sympy.functions.special.singularity_functions import SingularityFunction
+from sympy.functions.special.spherical_harmonics import (Ynm, Znm)
+from sympy.functions.special.tensor_functions import (KroneckerDelta, LeviCivita)
+from sympy.functions.special.zeta_functions import (dirichlet_eta, lerchphi, polylog, stieltjes, zeta)
+from sympy.integrals.integrals import Integral
+from sympy.integrals.transforms import (CosineTransform, FourierTransform, InverseCosineTransform, InverseFourierTransform, InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform, LaplaceTransform, MellinTransform, SineTransform)
+from sympy.logic import Implies
+from sympy.logic.boolalg import (And, Or, Xor, Equivalent, false, Not, true)
+from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions.kronecker import KroneckerProduct
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.permutation import PermutationMatrix
+from sympy.matrices.expressions.slice import MatrixSlice
+from sympy.physics.control.lti import TransferFunction, Series, Parallel, Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
+from sympy.ntheory.factor_ import (divisor_sigma, primenu, primeomega, reduced_totient, totient, udivisor_sigma)
+from sympy.physics.quantum import Commutator, Operator
+from sympy.physics.quantum.trace import Tr
+from sympy.physics.units import meter, gibibyte, microgram, second
+from sympy.polys.domains.integerring import ZZ
+from sympy.polys.fields import field
+from sympy.polys.polytools import Poly
+from sympy.polys.rings import ring
+from sympy.polys.rootoftools import (RootSum, rootof)
+from sympy.series.formal import fps
+from sympy.series.fourier import fourier_series
+from sympy.series.limits import Limit
+from sympy.series.order import Order
+from sympy.series.sequences import (SeqAdd, SeqFormula, SeqMul, SeqPer)
+from sympy.sets.conditionset import ConditionSet
+from sympy.sets.contains import Contains
+from sympy.sets.fancysets import (ComplexRegion, ImageSet, Range)
+from sympy.sets.ordinals import Ordinal, OrdinalOmega, OmegaPower
+from sympy.sets.powerset import PowerSet
+from sympy.sets.sets import (FiniteSet, Interval, Union, Intersection, Complement, SymmetricDifference, ProductSet)
+from sympy.sets.setexpr import SetExpr
+from sympy.stats.crv_types import Normal
+from sympy.stats.symbolic_probability import (Covariance, Expectation,
+                                              Probability, Variance)
 from sympy.tensor.array import (ImmutableDenseNDimArray,
                                 ImmutableSparseNDimArray,
                                 MutableSparseNDimArray,
                                 MutableDenseNDimArray,
                                 tensorproduct)
-from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
-from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
-from sympy.functions.combinatorial.numbers import bernoulli, bell, lucas, \
-    fibonacci, tribonacci
-from sympy.logic import Implies
-from sympy.logic.boolalg import And, Or, Xor
-from sympy.physics.control.lti import TransferFunction, Series, Parallel, \
-    Feedback, TransferFunctionMatrix, MIMOSeries, MIMOParallel, MIMOFeedback
-from sympy.physics.quantum import Commutator, Operator
-from sympy.physics.units import meter, gibibyte, microgram, second
-from sympy.core.trace import Tr
-from sympy.combinatorics.permutations import \
-    Cycle, Permutation, AppliedPermutation
-from sympy.matrices.expressions.permutation import PermutationMatrix
-from sympy import MatrixSymbol, ln
+from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
+from sympy.tensor.indexed import (Idx, Indexed, IndexedBase)
+from sympy.tensor.toperators import PartialDerivative
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
-from sympy.sets.setexpr import SetExpr
-from sympy.sets.sets import \
-    Union, Intersection, Complement, SymmetricDifference, ProductSet
+
+
+from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
+from sympy.printing.latex import (latex, translate, greek_letters_set,
+                                  tex_greek_dictionary, multiline_latex,
+                                  latex_escape, LatexPrinter)
 
 import sympy as sym
+
+from sympy.abc import mu, tau
 
 
 class lowergamma(sym.lowergamma):
@@ -160,6 +192,13 @@ def test_latex_basic():
         r"\left(x + 1\right)^{\frac{3}{4}}"
     assert latex((x + 1)**Rational(3, 4), fold_frac_powers=True) == \
         r"\left(x + 1\right)^{3/4}"
+    assert latex(AlgebraicNumber(sqrt(2))) == r"\sqrt{2}"
+    assert latex(AlgebraicNumber(sqrt(2), [3, -7])) == r"-7 + 3 \sqrt{2}"
+    assert latex(AlgebraicNumber(sqrt(2), alias='alpha')) == r"\alpha"
+    assert latex(AlgebraicNumber(sqrt(2), [3, -7], alias='alpha')) == \
+        r"3 \alpha - 7"
+    assert latex(AlgebraicNumber(2**(S(1)/3), [1, 3, -7], alias='beta')) == \
+           r"\beta^{2} + 3 \beta - 7"
 
     assert latex(1.5e20*x) == r"1.5 \cdot 10^{20} x"
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"
@@ -430,7 +469,7 @@ def test_latex_functions():
     assert latex(acsc(x), inv_trig_style="full") == \
         r"\operatorname{arccsc}{\left(x \right)}"
     assert latex(asinh(x), inv_trig_style="full") == \
-        r"\operatorname{arcsinh}{\left(x \right)}"
+        r"\operatorname{arsinh}{\left(x \right)}"
 
     assert latex(factorial(k)) == r"k!"
     assert latex(factorial(-k)) == r"\left(- k\right)!"
@@ -694,7 +733,12 @@ def test_latex_indexed():
     assert indexed_latex == r'\overline{{\Psi}_{0}} {\Psi}_{0}'
 
     # Symbol('gamma') gives r'\gamma'
+    interval = '\\mathrel{..}\\nobreak'
     assert latex(Indexed('x1', Symbol('i'))) == r'{x_{1}}_{i}'
+    assert latex(Indexed('x2', Idx('i'))) == r'{x_{2}}_{i}'
+    assert latex(Indexed('x3', Idx('i', Symbol('N')))) == r'{x_{3}}_{{i}_{0'+interval+'N - 1}}'
+    assert latex(Indexed('x3', Idx('i', Symbol('N')+1))) == r'{x_{3}}_{{i}_{0'+interval+'N}}'
+    assert latex(Indexed('x4', Idx('i', (Symbol('a'),Symbol('b'))))) == r'{x_{4}}_{{i}_{a'+interval+'b}}'
     assert latex(IndexedBase('gamma')) == r'\gamma'
     assert latex(IndexedBase('a b')) == r'a b'
     assert latex(IndexedBase('a_b')) == r'a_{b}'
@@ -986,6 +1030,20 @@ def test_latex_productset():
         latex(line), latex(bigline), latex(fset))
 
 
+def test_latex_powerset():
+    fset = FiniteSet(1, 2, 3)
+    assert latex(PowerSet(fset)) == r'\mathcal{P}\left(\left\{1, 2, 3\right\}\right)'
+
+
+def test_latex_ordinals():
+    w = OrdinalOmega()
+    assert latex(w) == r"\omega"
+    wp = OmegaPower(2, 3)
+    assert latex(wp) == r'3 \omega^{2}'
+    assert latex(Ordinal(wp, OmegaPower(1, 1))) == r'3 \omega^{2} + \omega'
+    assert latex(Ordinal(OmegaPower(2, 1), OmegaPower(1, 2))) == r'\omega^{2} + 2 \omega'
+
+
 def test_set_operators_parenthesis():
     a, b, c, d = symbols('a:d')
     A = FiniteSet(a)
@@ -1199,11 +1257,10 @@ def test_latex_limits():
 
 def test_latex_log():
     assert latex(log(x)) == r"\log{\left(x \right)}"
-    assert latex(ln(x)) == r"\log{\left(x \right)}"
     assert latex(log(x), ln_notation=True) == r"\ln{\left(x \right)}"
-    assert latex(log(x)+log(y)) == \
+    assert latex(log(x) + log(y)) == \
         r"\log{\left(x \right)} + \log{\left(y \right)}"
-    assert latex(log(x)+log(y), ln_notation=True) == \
+    assert latex(log(x) + log(y), ln_notation=True) == \
         r"\ln{\left(x \right)} + \ln{\left(y \right)}"
     assert latex(pow(log(x), x)) == r"\log{\left(x \right)}^{x}"
     assert latex(pow(log(x), x), ln_notation=True) == \
@@ -1241,6 +1298,15 @@ def test_latex_dict():
 def test_latex_list():
     ll = [Symbol('omega1'), Symbol('a'), Symbol('alpha')]
     assert latex(ll) == r'\left[ \omega_{1}, \  a, \  \alpha\right]'
+
+
+def test_latex_NumberSymbols():
+    assert latex(S.Catalan) == "G"
+    assert latex(S.EulerGamma) == r"\gamma"
+    assert latex(S.Exp1) == "e"
+    assert latex(S.GoldenRatio) == r"\phi"
+    assert latex(S.Pi) == r"\pi"
+    assert latex(S.TribonacciConstant) == r"\text{TribonacciConstant}"
 
 
 def test_latex_rational():
@@ -1702,7 +1768,7 @@ def test_latex_RandomDomain():
         r"\text{Domain: }0 \leq a \wedge 0 \leq b \wedge a < \infty \wedge b < \infty"
 
     assert latex(RandomDomain(FiniteSet(x), FiniteSet(1, 2))) == \
-        r'\text{Domain: }\left\{x\right\}\text{ in }\left\{1, 2\right\}'
+        r'\text{Domain: }\left\{x\right\} \in \left\{1, 2\right\}'
 
 def test_PrettyPoly():
     from sympy.polys.domains import QQ
@@ -1876,6 +1942,13 @@ def test_Adjoint():
     assert latex(Adjoint(Transpose(X))) == r'\left(X^{T}\right)^{\dagger}'
     assert latex(Transpose(Adjoint(X))) == r'\left(X^{\dagger}\right)^{T}'
     assert latex(Transpose(Adjoint(X) + Y)) == r'\left(X^{\dagger} + Y\right)^{T}'
+    m = Matrix(((1, 2), (3, 4)))
+    assert latex(Adjoint(m)) == '\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right]^{\\dagger}'
+    assert latex(Adjoint(m+X)) == \
+        '\\left(\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] + X\\right)^{\\dagger}'
+    # Issue 20959
+    Mx = MatrixSymbol('M^x', 2, 2)
+    assert latex(Adjoint(Mx)) == r'\left(M^{x}\right)^{\dagger}'
 
 
 def test_Transpose():
@@ -1889,6 +1962,13 @@ def test_Transpose():
     assert latex(HadamardPower(Transpose(X), 2)) == r'\left(X^{T}\right)^{\circ {2}}'
     assert latex(Transpose(MatPow(X, 2))) == r'\left(X^{2}\right)^{T}'
     assert latex(MatPow(Transpose(X), 2)) == r'\left(X^{T}\right)^{2}'
+    m = Matrix(((1, 2), (3, 4)))
+    assert latex(Transpose(m)) == '\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right]^{T}'
+    assert latex(Transpose(m+X)) == \
+        '\\left(\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] + X\\right)^{T}'
+    # Issue 20959
+    Mx = MatrixSymbol('M^x', 2, 2)
+    assert latex(Transpose(Mx)) == r'\left(M^{x}\right)^{T}'
 
 
 def test_Hadamard():
@@ -1915,6 +1995,20 @@ def test_Hadamard():
         r'X^{\circ \left({n + 1}\right)}'
 
 
+def test_MatPow():
+    from sympy.matrices.expressions import MatPow
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
+    assert latex(MatPow(X, 2)) == 'X^{2}'
+    assert latex(MatPow(X*X, 2)) == '\\left(X^{2}\\right)^{2}'
+    assert latex(MatPow(X*Y, 2)) == '\\left(X Y\\right)^{2}'
+    assert latex(MatPow(X + Y, 2)) == '\\left(X + Y\\right)^{2}'
+    assert latex(MatPow(X + X, 2)) == '\\left(2 X\\right)^{2}'
+    # Issue 20959
+    Mx = MatrixSymbol('M^x', 2, 2)
+    assert latex(MatPow(Mx, 2)) == r'\left(M^{x}\right)^{2}'
+
+
 def test_ElementwiseApplyFunction():
     X = MatrixSymbol('X', 2, 2)
     expr = (X.T*X).applyfunc(sin)
@@ -1924,21 +2018,27 @@ def test_ElementwiseApplyFunction():
 
 
 def test_ZeroMatrix():
-    from sympy import ZeroMatrix
+    from sympy.matrices.expressions.special import ZeroMatrix
     assert latex(ZeroMatrix(1, 1), mat_symbol_style='plain') == r"0"
     assert latex(ZeroMatrix(1, 1), mat_symbol_style='bold') == r"\mathbf{0}"
 
 
 def test_OneMatrix():
-    from sympy import OneMatrix
+    from sympy.matrices.expressions.special import OneMatrix
     assert latex(OneMatrix(3, 4), mat_symbol_style='plain') == r"1"
     assert latex(OneMatrix(3, 4), mat_symbol_style='bold') == r"\mathbf{1}"
 
 
 def test_Identity():
-    from sympy import Identity
+    from sympy.matrices.expressions.special import Identity
     assert latex(Identity(1), mat_symbol_style='plain') == r"\mathbb{I}"
     assert latex(Identity(1), mat_symbol_style='bold') == r"\mathbf{I}"
+
+
+def test_latex_DFT_IDFT():
+    from sympy.matrices.expressions.fourier import DFT, IDFT
+    assert latex(DFT(13)) == r"\text{DFT}_{13}"
+    assert latex(IDFT(x)) == r"\text{IDFT}_{x}"
 
 
 def test_boolean_args_order():
@@ -2581,9 +2681,20 @@ def test_issue_15353():
         r'\cos{\left(a x \right)} = 0 \right\}'
 
 
+def test_latex_symbolic_probability():
+    mu = symbols("mu")
+    sigma = symbols("sigma", positive=True)
+    X = Normal("X", mu, sigma)
+    assert latex(Expectation(X)) == r'\operatorname{E}\left[X\right]'
+    assert latex(Variance(X)) == r'\operatorname{Var}\left(X\right)'
+    assert latex(Probability(X > 0)) == r'\operatorname{P}\left(X > 0\right)'
+    Y = Normal("Y", mu, sigma)
+    assert latex(Covariance(X, Y)) == r'\operatorname{Cov}\left(X, Y\right)'
+
+
 def test_trace():
     # Issue 15303
-    from sympy import trace
+    from sympy.matrices.expressions.trace import trace
     A = MatrixSymbol("A", 2, 2)
     assert latex(trace(A)) == r"\operatorname{tr}\left(A \right)"
     assert latex(trace(A**2)) == r"\operatorname{tr}\left(A^{2} \right)"
@@ -2591,7 +2702,8 @@ def test_trace():
 
 def test_print_basic():
     # Issue 15303
-    from sympy import Basic, Expr
+    from sympy.core.basic import Basic
+    from sympy.core.expr import Expr
 
     # dummy class for testing printing where the function is not
     # implemented in latex.py
@@ -2609,16 +2721,16 @@ def test_print_basic():
         result.__class__.__name__ = 'UnimplementedExpr_x^1'
         return result
 
-    assert latex(unimplemented_expr(x)) == r'UnimplementedExpr\left(x\right)'
+    assert latex(unimplemented_expr(x)) == r'\operatorname{UnimplementedExpr}\left(x\right)'
     assert latex(unimplemented_expr(x**2)) == \
-        r'UnimplementedExpr\left(x^{2}\right)'
+        r'\operatorname{UnimplementedExpr}\left(x^{2}\right)'
     assert latex(unimplemented_expr_sup_sub(x)) == \
-        r'UnimplementedExpr^{1}_{x}\left(x\right)'
+        r'\operatorname{UnimplementedExpr^{1}_{x}}\left(x\right)'
 
 
 def test_MatrixSymbol_bold():
     # Issue #15871
-    from sympy import trace
+    from sympy.matrices.expressions.trace import trace
     A = MatrixSymbol("A", 2, 2)
     assert latex(trace(A), mat_symbol_style='bold') == \
         r"\operatorname{tr}\left(\mathbf{A} \right)"
@@ -2654,6 +2766,23 @@ def test_PermutationMatrix():
     p = Permutation(0, 3)(1, 2)
     assert latex(PermutationMatrix(p)) == \
         r'P_{\left( 0\; 3\right)\left( 1\; 2\right)}'
+
+
+
+def test_issue_21758():
+    from sympy.functions.elementary.piecewise import piecewise_fold
+    from sympy.series.fourier import FourierSeries
+    x = Symbol('x')
+    k, n = symbols('k n')
+    fo = FourierSeries(x, (x, -pi, pi), (0, SeqFormula(0, (k, 1, oo)), SeqFormula(
+        Piecewise((-2*pi*cos(n*pi)/n + 2*sin(n*pi)/n**2, (n > -oo) & (n < oo) & Ne(n, 0)),
+                  (0, True))*sin(n*x)/pi, (n, 1, oo))))
+    assert latex(piecewise_fold(fo)) == '\\begin{cases} 2 \\sin{\\left(x \\right)}' \
+            ' - \\sin{\\left(2 x \\right)} + \\frac{2 \\sin{\\left(3 x \\right)}}{3} +' \
+            ' \\ldots & \\text{for}\\: n > -\\infty \\wedge n < \\infty \\wedge ' \
+                'n \\neq 0 \\\\0 & \\text{otherwise} \\end{cases}'
+    assert latex(FourierSeries(x, (x, -pi, pi), (0, SeqFormula(0, (k, 1, oo)),
+                                                 SeqFormula(0, (n, 1, oo))))) == '0'
 
 
 def test_imaginary_unit():
@@ -2808,5 +2937,8 @@ def test_pickleable():
     assert pickle.loads(pickle.dumps(latex)) is latex
 
 def test_printing_latex_array_expressions():
-    assert latex(ArraySymbol("A", 2, 3, 4)) == "A"
+    assert latex(ArraySymbol("A", (2, 3, 4))) == "A"
     assert latex(ArrayElement("A", (2, 1/(1-x), 0))) == "{{A}_{2, \\frac{1}{1 - x}, 0}}"
+    M = MatrixSymbol("M", 3, 3)
+    N = MatrixSymbol("N", 3, 3)
+    assert latex(ArrayElement(M*N, [x, 0])) == "{{\\left(M N\\right)}_{x, 0}}"

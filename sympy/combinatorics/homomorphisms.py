@@ -4,7 +4,7 @@ from sympy.combinatorics.free_groups import FreeGroup
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.core.numbers import igcd
 from sympy.ntheory.factor_ import totient
-from sympy import S
+from sympy.core.singleton import S
 
 class GroupHomomorphism:
     '''
@@ -130,7 +130,7 @@ class GroupHomomorphism:
         while K.order()*i != G_order:
             r = G.random()
             k = r*self.invert(self(r))**-1
-            if not k in K:
+            if k not in K:
                 gens.append(k)
                 if isinstance(G, PermutationGroup):
                     K = PermutationGroup(gens)
@@ -156,7 +156,7 @@ class GroupHomomorphism:
         Apply `self` to `elem`.
 
         '''
-        if not elem in self.domain:
+        if elem not in self.domain:
             if isinstance(elem, (list, tuple)):
                 return [self._apply(e) for e in elem]
             raise ValueError("The supplied element doesn't belong to the domain")

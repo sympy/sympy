@@ -1,6 +1,6 @@
 """
 
-qasm.py - Functions to parse a set of qasm commands into a Sympy Circuit.
+qasm.py - Functions to parse a set of qasm commands into a SymPy Circuit.
 
 Examples taken from Chuang's page: http://www.media.mit.edu/quanta/qasm2circ/
 
@@ -55,7 +55,7 @@ def trim(line):
     >>> trim('something #happens here')
     'something '
     """
-    if not '#' in line:
+    if '#' not in line:
         return line
     return line.split('#')[0]
 

@@ -1,7 +1,10 @@
-from sympy import MatrixSymbol, symbols, Identity, sin, cos
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.special import Identity
 from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayTensorProduct, \
-    PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, ArrayContraction
+    PermuteDims, ArrayDiagonal, ArrayElementwiseApplyFunc, ArrayContraction, _permute_dims, Reshape
 from sympy.tensor.array.expressions.arrayexpr_derivatives import array_derive
 
 k = symbols("k")
@@ -15,7 +18,7 @@ B = MatrixSymbol("B", k, k)
 C = MatrixSymbol("C", k, k)
 D = MatrixSymbol("D", k, k)
 
-A1 = ArraySymbol("A", 3, 2, k)
+A1 = ArraySymbol("A", (3, 2, k))
 
 
 def test_arrayexpr_derivatives1():
@@ -25,7 +28,7 @@ def test_arrayexpr_derivatives1():
 
     cg = ArrayTensorProduct(A, X, B)
     res = array_derive(cg, X)
-    assert res == PermuteDims(
+    assert res == _permute_dims(
         ArrayTensorProduct(I, A, I, B),
         [0, 4, 2, 3, 1, 5, 6, 7])
 
@@ -69,3 +72,7 @@ def test_arrayexpr_derivatives1():
             ArrayElementwiseApplyFunc(cos, A1)
         ), (1, 6), (3, 7), (5, 8)
     ))
+
+    cg = Reshape(A, (k**2,))
+    res = array_derive(cg, A)
+    assert res == Reshape(PermuteDims(ArrayTensorProduct(I, I), [0, 2, 1, 3]), (k, k, k**2))

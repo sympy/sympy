@@ -214,7 +214,7 @@ class ArrayConstructor(Token):
     Examples
     ========
 
-    >>> from sympy.printing import fcode
+    >>> from sympy import fcode
     >>> from sympy.codegen.fnodes import ArrayConstructor
     >>> ac = ArrayConstructor([1, 2, 3])
     >>> fcode(ac, standard=95, source_format='free')
@@ -282,7 +282,7 @@ class Extent(Basic):
     def _sympystr(self, printer):
         if len(self.args) == 0:
             return ':'
-        return '%d:%d' % self.args
+        return ":".join(str(arg) for arg in self.args)
 
 assumed_extent = Extent() # or Extent(':'), Extent(None)
 

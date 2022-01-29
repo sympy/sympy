@@ -162,7 +162,7 @@ def dup_zz_mignotte_bound(f, K):
     ..[1] [Abbott2013]_
 
     """
-    from sympy import binomial
+    from sympy.functions.combinatorial.factorials import binomial
 
     d = dup_degree(f)
     delta = _ceil(d / 2)
@@ -977,7 +977,7 @@ def dmp_zz_wang(f, u, K, mod=None, seed=None):
     .. [2] [Geddes92]_
 
     """
-    from sympy.testing.randtest import _randint
+    from sympy.core.random import _randint
 
     randint = _randint(seed)
 

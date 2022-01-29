@@ -1,10 +1,13 @@
-from sympy.core import Basic, Dict, sympify
-from sympy.core.compatibility import as_int, default_sort_key
+from sympy.core import Basic, Dict, sympify, Tuple
+from sympy.core.numbers import Integer
+from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import _sympify
 from sympy.functions.combinatorial.numbers import bell
 from sympy.matrices import zeros
 from sympy.sets.sets import FiniteSet, Union
 from sympy.utilities.iterables import flatten, group
+from sympy.utilities.misc import as_int
+
 
 from collections import defaultdict
 
@@ -327,7 +330,7 @@ class IntegerPartition(Basic):
     References
     ==========
 
-    https://en.wikipedia.org/wiki/Partition_%28number_theory%29
+    .. [1] https://en.wikipedia.org/wiki/Partition_%28number_theory%29
     """
 
     _dict = None
@@ -390,7 +393,7 @@ class IntegerPartition(Basic):
         if any(i < 1 for i in partition):
             raise ValueError("All integer summands must be greater than one")
 
-        obj = Basic.__new__(cls, integer, partition)
+        obj = Basic.__new__(cls, Integer(integer), Tuple(*partition))
         obj.partition = list(partition)
         obj.integer = integer
         return obj
@@ -596,7 +599,7 @@ def random_integer_partition(n, seed=None):
     >>> random_integer_partition(1)
     [1]
     """
-    from sympy.testing.randtest import _randint
+    from sympy.core.random import _randint
 
     n = as_int(n)
     if n < 1:

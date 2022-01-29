@@ -5,17 +5,21 @@ from functools import wraps, reduce
 from operator import mul
 
 from sympy.core import (
-    S, Expr, I, Integer, Add, Tuple
+    S, Expr, Add, Tuple
 )
-from sympy.core.basic import Basic, preorder_traversal
-from sympy.core.compatibility import iterable, ordered
+from sympy.core.basic import Basic
 from sympy.core.decorators import _sympifyit
-from sympy.core.evalf import pure_complex
+from sympy.core.exprtools import Factors, factor_nc, factor_terms
+from sympy.core.evalf import (
+    pure_complex, evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath)
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
-from sympy.core.relational import Relational
+from sympy.core.numbers import ilcm, I, Integer
+from sympy.core.relational import Relational, Equality
+from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify, _sympify
+from sympy.core.traversal import preorder_traversal, bottom_up
 from sympy.logic.boolalg import BooleanAtom
 from sympy.polys import polyoptions as options
 from sympy.polys.constructor import construct_domain
@@ -46,8 +50,10 @@ from sympy.polys.polyutils import (
 )
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
-from sympy.utilities import group, sift, public, filldedent
+from sympy.utilities import group, public, filldedent
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import iterable, sift
+
 
 # Required to avoid errors
 import sympy.polys
@@ -2343,7 +2349,7 @@ class Poly(Basic):
             rep = f.rep
 
             for spec in specs:
-                if type(spec) is tuple:
+                if isinstance(spec, tuple):
                     gen, m = spec
                 else:
                     gen, m = spec, 1
@@ -2381,7 +2387,7 @@ class Poly(Basic):
             rep = f.rep
 
             for spec in specs:
-                if type(spec) is tuple:
+                if isinstance(spec, tuple):
                     gen, m = spec
                 else:
                     gen, m = spec, 1
@@ -3661,7 +3667,6 @@ class Poly(Basic):
             coeffs = [int(coeff) for coeff in f.all_coeffs()]
         elif f.rep.dom is QQ:
             denoms = [coeff.q for coeff in f.all_coeffs()]
-            from sympy.core.numbers import ilcm
             fac = ilcm(*denoms)
             coeffs = [int(coeff*fac) for coeff in f.all_coeffs()]
         else:
@@ -3768,6 +3773,57 @@ class Poly(Basic):
         r = f.resultant(f.__class__.from_expr(x**n - t, x, t))
 
         return r.replace(t, x)
+
+    def same_root(f, a, b):
+        """
+        Decide whether two roots of this polynomial are equal.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, cyclotomic_poly, exp, I, pi
+        >>> f = Poly(cyclotomic_poly(5))
+        >>> r0 = exp(2*I*pi/5)
+        >>> indices = [i for i, r in enumerate(f.all_roots()) if f.same_root(r, r0)]
+        >>> print(indices)
+        [3]
+
+        Raises
+        ======
+
+        DomainError
+            If the domain of the polynomial is not :ref:`ZZ`, :ref:`QQ`,
+            :ref:`RR`, or :ref:`CC`.
+        MultivariatePolynomialError
+            If the polynomial is not univariate.
+        PolynomialError
+            If the polynomial is of degree < 2.
+
+        """
+        if f.is_multivariate:
+            raise MultivariatePolynomialError(
+                "Must be a univariate polynomial")
+
+        dom_delta_sq = f.rep.mignotte_sep_bound_squared()
+        delta_sq = f.domain.get_field().to_sympy(dom_delta_sq)
+        # We have delta_sq = delta**2, where delta is a lower bound on the
+        # minimum separation between any two roots of this polynomial.
+        # Let eps = delta/3, and define eps_sq = eps**2 = delta**2/9.
+        eps_sq = delta_sq / 9
+
+        r, _, _, _ = evalf(1/eps_sq, 1, {})
+        n = fastlog(r)
+        # Then 2^n > 1/eps**2.
+        m = (n // 2) + (n % 2)
+        # Then 2^(-m) < eps.
+        ev = lambda x: quad_to_mpmath(_evalf_with_bounded_error(x, m=m))
+
+        # Then for any complex numbers a, b we will have
+        # |a - ev(a)| < eps and |b - ev(b)| < eps.
+        # So if |ev(a) - ev(b)|**2 < eps**2, then
+        # |ev(a) - ev(b)| < eps, hence |a - b| < 3*eps = delta.
+        A, B = ev(a), ev(b)
+        return (A.real - B.real)**2 + (A.imag - B.imag)**2 < eps_sq
 
     def cancel(f, g, include=False):
         """
@@ -5015,8 +5071,7 @@ def invert(f, g, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import invert, S
-    >>> from sympy.core.numbers import mod_inverse
+    >>> from sympy import invert, S, mod_inverse
     >>> from sympy.abc import x
 
     >>> invert(x**2 - 1, 2*x - 1)
@@ -5531,7 +5586,6 @@ def terms_gcd(f, *gens, **args):
     sympy.core.exprtools.gcd_terms, sympy.core.exprtools.factor_terms
 
     """
-    from sympy.core.relational import Equality
 
     orig = sympify(f)
 
@@ -5928,12 +5982,12 @@ def _sorted_factors(factors, method):
         def key(obj):
             poly, exp = obj
             rep = poly.rep.rep
-            return (exp, len(rep), len(poly.gens), rep)
+            return (exp, len(rep), len(poly.gens), str(poly.domain), rep)
     else:
         def key(obj):
             poly, exp = obj
             rep = poly.rep.rep
-            return (len(rep), len(poly.gens), exp, rep)
+            return (len(rep), len(poly.gens), exp, str(poly.domain), rep)
 
     return sorted(factors, key=key)
 
@@ -6169,7 +6223,6 @@ def to_rational_coeffs(f):
         """
         Return True if ``f`` is a sum with square roots but no other root
         """
-        from sympy.core.exprtools import Factors
         coeffs = p.coeffs()
         has_sq = False
         for y in coeffs:
@@ -6365,7 +6418,6 @@ def factor(f, *gens, deep=False, **args):
     """
     f = sympify(f)
     if deep:
-        from sympy.simplify.simplify import bottom_up
         def _try_factor(expr):
             """
             Factor, but avoid changing the expression when unable to.
@@ -6390,7 +6442,6 @@ def factor(f, *gens, deep=False, **args):
         return _generic_factor(f, gens, args, method='factor')
     except PolynomialError as msg:
         if not f.is_commutative:
-            from sympy.core.exprtools import factor_nc
             return factor_nc(f)
         else:
             raise PolynomialError(msg)
@@ -6648,7 +6699,7 @@ def nth_power_roots_poly(f, n, *gens, **args):
 
 
 @public
-def cancel(f, *gens, **args):
+def cancel(f, *gens, _signsimp=True, **args):
     """
     Cancel common factors in a rational function ``f``.
 
@@ -6672,12 +6723,14 @@ def cancel(f, *gens, **args):
     >>> together(_)
     (x + 2)/2
     """
-    from sympy.core.exprtools import factor_terms
+    from sympy.simplify.simplify import signsimp
     from sympy.functions.elementary.piecewise import Piecewise
     from sympy.polys.rings import sring
     options.allowed_flags(args, ['polys'])
 
     f = sympify(f)
+    if _signsimp:
+        f = signsimp(f)
     opt = {}
     if 'polys' in args:
         opt['polys'] = args['polys']
@@ -6735,7 +6788,7 @@ def cancel(f, *gens, **args):
             return f.xreplace(dict(reps))
 
     c, (P, Q) = 1, F.cancel(G)
-    if opt.get('polys', False) and not 'gens' in opt:
+    if opt.get('polys', False) and 'gens' not in opt:
         opt['gens'] = R.symbols
 
     if not isinstance(f, (tuple, Tuple)):

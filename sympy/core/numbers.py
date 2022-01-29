@@ -4,50 +4,49 @@ import fractions
 import math
 import re as regex
 import sys
+from functools import lru_cache
+from typing import Set as tSet, Tuple as tTuple
 
 from .containers import Tuple
-from .sympify import (SympifyError, converter, sympify, _convert_numpy_types, _sympify,
-                      _is_numpy_instance)
+from .sympify import (SympifyError, _sympy_converter, sympify, _convert_numpy_types,
+              _sympify, _is_numpy_instance)
 from .singleton import S, Singleton
+from .basic import Basic
 from .expr import Expr, AtomicExpr
 from .evalf import pure_complex
-from .decorators import _sympifyit
 from .cache import cacheit, clear_cache
+from .decorators import _sympifyit
 from .logic import fuzzy_not
-from sympy.core.compatibility import (as_int, HAS_GMPY, SYMPY_INTS,
-    gmpy)
-from sympy.core.cache import lru_cache
 from .kind import NumberKind
+from sympy.external.gmpy import SYMPY_INTS, HAS_GMPY, gmpy
 from sympy.multipledispatch import dispatch
 import mpmath
 import mpmath.libmp as mlib
-from mpmath.libmp import bitcount
+from mpmath.libmp import bitcount, round_nearest as rnd
 from mpmath.libmp.backend import MPZ
 from mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from mpmath.ctx_mp import mpnumeric
 from mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero, _normalize as mpf_normalize,
-    prec_to_dps)
-from sympy.utilities.misc import debug, filldedent
+    prec_to_dps, dps_to_prec)
+from sympy.utilities.misc import as_int, debug, filldedent
 from .parameters import global_parameters
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-
-rnd = mlib.round_nearest
 
 _LOG2 = math.log(2)
 
 
 def comp(z1, z2, tol=None):
-    """Return a bool indicating whether the error between z1 and z2
-    is <= tol.
+    r"""Return a bool indicating whether the error between z1 and z2
+    is $\le$ ``tol``.
 
     Examples
     ========
 
-    If ``tol`` is None then True will be returned if
-    ``abs(z1 - z2)*10**p <= 5`` where ``p`` is minimum value of the
+    If ``tol`` is ``None`` then ``True`` will be returned if
+    :math:`|z1 - z2|\times 10^p \le 5` where $p$ is minimum value of the
     decimal precision of each value.
 
     >>> from sympy import comp, pi
@@ -68,8 +67,8 @@ def comp(z1, z2, tol=None):
     >>> comp(pi4, 3.1415, '')
     False
 
-    When ``tol`` is provided and ``z2`` is non-zero and
-    ``|z1| > 1`` the error is normalized by ``|z1|``:
+    When ``tol`` is provided and $z2$ is non-zero and
+    :math:`|z1| > 1` the error is normalized by :math:`|z1|`:
 
     >>> abs(pi4 - 3.14)/pi4
     0.000509791731426756
@@ -78,7 +77,7 @@ def comp(z1, z2, tol=None):
     >>> comp(pi4, 3.14, .0005)  # difference less than 0.1%
     False
 
-    When ``|z1| <= 1`` the absolute error is used:
+    When :math:`|z1| \le 1` the absolute error is used:
 
     >>> 1/pi4
     0.3183
@@ -100,7 +99,7 @@ def comp(z1, z2, tol=None):
     >>> comp(pi4 - 3.14, 0, .001)
     False
     """
-    if type(z2) is str:
+    if isinstance(z2, str):
         if not pure_complex(z1, or_real=True):
             raise ValueError('when z2 is a str z1 must be a Number')
         return str(z1) == z2
@@ -183,7 +182,7 @@ _errdict = {"divide": False}
 
 def seterr(divide=False):
     """
-    Should sympy raise an exception on 0/0 or return a nan?
+    Should SymPy raise an exception on 0/0 or return a nan?
 
     divide == True .... raise an exception
     divide == False ... return nan
@@ -235,8 +234,8 @@ def igcd(*args):
     Explanation
     ===========
 
-    The algorithm is based on the well known Euclid's algorithm. To
-    improve speed, igcd() has its own caching mechanism implemented.
+    The algorithm is based on the well known Euclid's algorithm [1]_. To
+    improve speed, ``igcd()`` has its own caching mechanism.
 
     Examples
     ========
@@ -246,6 +245,11 @@ def igcd(*args):
     2
     >>> igcd(5, 10, 15)
     5
+
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Euclidean_algorithm
 
     """
     if len(args) < 2:
@@ -268,30 +272,30 @@ igcd2 = math.gcd
 
 
 def igcd_lehmer(a, b):
-    """Computes greatest common divisor of two integers.
+    r"""Computes greatest common divisor of two integers.
 
     Explanation
     ===========
 
     Euclid's algorithm for the computation of the greatest
-    common divisor  gcd(a, b)  of two (positive) integers
-    a and b is based on the division identity
-        a = q*b + r,
-    where the quotient  q  and the remainder  r  are integers
-    and  0 <= r < b. Then each common divisor of  a  and  b
-    divides  r, and it follows that  gcd(a, b) == gcd(b, r).
+    common divisor ``gcd(a, b)``  of two (positive) integers
+    $a$ and $b$ is based on the division identity
+       $$ a = q \times b + r$$,
+    where the quotient  $q$  and the remainder  $r$  are integers
+    and  $0 \le r < b$. Then each common divisor of  $a$  and  $b$
+    divides  $r$, and it follows that  ``gcd(a, b) == gcd(b, r)``.
     The algorithm works by constructing the sequence
     r0, r1, r2, ..., where  r0 = a, r1 = b,  and each  rn
     is the remainder from the division of the two preceding
     elements.
 
-    In Python, q = a // b  and  r = a % b  are obtained by the
+    In Python, ``q = a // b``  and  ``r = a % b``  are obtained by the
     floor division and the remainder operations, respectively.
     These are the most expensive arithmetic operations, especially
     for large  a  and  b.
 
-    Lehmer's algorithm is based on the observation that the quotients
-    qn = r(n-1) // rn  are in general small integers even
+    Lehmer's algorithm [1]_ is based on the observation that the quotients
+    ``qn = r(n-1) // rn``  are in general small integers even
     when  a  and  b  are very large. Hence the quotients can be
     usually determined from a relatively small number of most
     significant bits.
@@ -619,6 +623,9 @@ class Number(AtomicExpr):
         msg = "expected str|int|long|float|Decimal|Number object but got %r"
         raise TypeError(msg % type(obj).__name__)
 
+    def could_extract_minus_sign(self):
+        return bool(self.is_extended_negative)
+
     def invert(self, other, *gens, **args):
         from sympy.polys.polytools import invert
         if getattr(other, 'is_number', True):
@@ -690,7 +697,7 @@ class Number(AtomicExpr):
         return self
 
     def _eval_order(self, *symbols):
-        from sympy import Order
+        from sympy.series.order import Order
         # Order(5, x, y) -> Order(1,x,y)
         return Order(S.One, *symbols)
 
@@ -836,17 +843,17 @@ class Number(AtomicExpr):
 
     def gcd(self, other):
         """Compute GCD of `self` and `other`. """
-        from sympy.polys import gcd
+        from sympy.polys.polytools import gcd
         return gcd(self, other)
 
     def lcm(self, other):
         """Compute LCM of `self` and `other`. """
-        from sympy.polys import lcm
+        from sympy.polys.polytools import lcm
         return lcm(self, other)
 
     def cofactors(self, other):
         """Compute GCD and cofactors of `self` and `other`. """
-        from sympy.polys import cofactors
+        from sympy.polys.polytools import cofactors
         return cofactors(self, other)
 
 
@@ -1015,6 +1022,8 @@ class Float(Number):
     """
     __slots__ = ('_mpf_', '_prec')
 
+    _mpf_: tTuple[int, int, int, int]
+
     # A Float represents many real numbers,
     # both rational and irrational.
     is_rational = None
@@ -1044,19 +1053,6 @@ class Float(Number):
         if isinstance(num, str):
             # Float accepts spaces as digit separators
             num = num.replace(' ', '').lower()
-            # in Py 3.6
-            # underscores are allowed. In anticipation of that, we ignore
-            # legally placed underscores
-            if '_' in num:
-                parts = num.split('_')
-                if not (all(parts) and
-                        all(parts[i][-1].isdigit()
-                            for i in range(0, len(parts), 2)) and
-                        all(parts[i][0].isdigit()
-                            for i in range(1, len(parts), 2))):
-                    # copy Py 3.6 error
-                    raise ValueError("could not convert string to float: '%s'" % num)
-                num = ''.join(parts)
             if num.startswith('.') and len(num) > 1:
                 num = '0' + num
             elif num.startswith('-.') and len(num) > 2:
@@ -1104,7 +1100,7 @@ class Float(Number):
                     if num.is_Integer and isint:
                         dps = max(dps, len(str(num).lstrip('-')))
                     dps = max(15, dps)
-                    precision = mlib.libmpf.dps_to_prec(dps)
+                    precision = dps_to_prec(dps)
         elif precision == '' and dps is None or precision is None and dps == '':
             if not isinstance(num, str):
                 raise ValueError('The null string can only be used when '
@@ -1120,7 +1116,7 @@ class Float(Number):
                     num, dps = _decimal_to_Rational_prec(Num)
                     if num.is_Integer and isint:
                         dps = max(dps, len(str(num).lstrip('-')))
-                        precision = mlib.libmpf.dps_to_prec(dps)
+                        precision = dps_to_prec(dps)
                     ok = True
             if ok is None:
                 raise ValueError('string-float not recognized: %s' % num)
@@ -1131,7 +1127,7 @@ class Float(Number):
         # precision.
 
         if precision is None or precision == '':
-            precision = mlib.libmpf.dps_to_prec(dps)
+            precision = dps_to_prec(dps)
 
         precision = int(precision)
 
@@ -1288,6 +1284,8 @@ class Float(Number):
         return self._mpf_ != fzero
 
     def __neg__(self):
+        if not self:
+            return self
         return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
 
     @_sympifyit('other', NotImplemented)
@@ -1350,10 +1348,10 @@ class Float(Number):
                   -> p**r*(sin(Pi*r) + cos(Pi*r)*I)
         """
         if self == 0:
-            if expt.is_positive:
-                return S.Zero
-            if expt.is_negative:
-                return S.Infinity
+            if expt.is_extended_positive:
+                return self
+            if expt.is_extended_negative:
+                return S.ComplexInfinity
         if isinstance(expt, Number):
             if isinstance(expt, Integer):
                 prec = self._prec
@@ -1487,7 +1485,7 @@ class Float(Number):
 
 
 # Add sympify converters
-converter[float] = converter[decimal.Decimal] = Float
+_sympy_converter[float] = _sympy_converter[decimal.Decimal] = Float
 
 # this is here to work nicely in Sage
 RealNumber = Float
@@ -1592,6 +1590,9 @@ class Rational(Number):
     is_number = True
 
     __slots__ = ('p', 'q')
+
+    p: int
+    q: int
 
     is_Rational = True
 
@@ -1878,7 +1879,6 @@ class Rational(Number):
         return self.ceiling()
 
     def __eq__(self, other):
-        from sympy.core.power import integer_log
         try:
             other = _sympify(other)
         except SympifyError:
@@ -1910,6 +1910,8 @@ class Rational(Number):
                 if not self.is_Integer or self.is_even:
                     return False
                 return m == self.p
+
+            from .power import integer_log
             if t > 0:
                 # other is an even integer
                 if not self.is_Integer:
@@ -1988,7 +1990,7 @@ class Rational(Number):
         smaller than limit (or cheap to compute). Special methods of
         factoring are disabled by default so that only trial division is used.
         """
-        from sympy.ntheory import factorrat
+        from sympy.ntheory.factor_ import factorrat
 
         return factorrat(self, limit=limit, use_trial=use_trial,
                       use_rho=use_rho, use_pm1=use_pm1,
@@ -2413,7 +2415,7 @@ class Integer(Rational):
         return result
 
     def _eval_is_prime(self):
-        from sympy.ntheory import isprime
+        from sympy.ntheory.primetest import isprime
 
         return isprime(self)
 
@@ -2438,7 +2440,7 @@ class Integer(Rational):
         return Integer(Integer(other).p // self.p)
 
     # These bitwise operations (__lshift__, __rlshift__, ..., __invert__) are defined
-    # for Integer only and not for general sympy expressions. This is to achieve
+    # for Integer only and not for general SymPy expressions. This is to achieve
     # compatibility with the numbers.Integral ABC which only defines these operations
     # among instances of numbers.Integral. Therefore, these methods check explicitly for
     # integer types rather than using sympify because they should not accept arbitrary
@@ -2508,13 +2510,28 @@ class Integer(Rational):
         return Integer(~self.p)
 
 # Add sympify converters
-converter[int] = Integer
+_sympy_converter[int] = Integer
 
 
 class AlgebraicNumber(Expr):
-    """Class for representing algebraic numbers in SymPy. """
+    r"""
+    Class for representing algebraic numbers in SymPy.
 
-    __slots__ = ('rep', 'root', 'alias', 'minpoly')
+    Symbolically, an instance of this class represents an element
+    $\alpha \in \mathbb{Q}(\theta) \hookrightarrow \mathbb{C}$. That is, the
+    algebraic number $\alpha$ is represented as an element of a particular
+    number field $\mathbb{Q}(\theta)$, with a particular embedding of this
+    field into the complex numbers.
+
+    Formally, the primitive element $\theta$ is given by two data points: (1)
+    its minimal polynomial (which defines $\mathbb{Q}(\theta)$), and (2) a
+    particular complex number that is a root of this polynomial (which defines
+    the embedding $\mathbb{Q}(\theta) \hookrightarrow \mathbb{C}$). Finally,
+    the algebraic number $\alpha$ which we represent is then given by the
+    coefficients of a polynomial in $\theta$.
+    """
+
+    __slots__ = ('rep', 'root', 'alias', 'minpoly', '_own_minpoly')
 
     is_AlgebraicNumber = True
     is_algebraic = True
@@ -2526,24 +2543,193 @@ class AlgebraicNumber(Expr):
     # Optional alias symbol is not free.
     # Actually, alias should be a Str, but some methods
     # expect that it be an instance of Expr.
-    free_symbols = set()
+    free_symbols: tSet[Basic] = set()
 
     def __new__(cls, expr, coeffs=None, alias=None, **args):
-        """Construct a new algebraic number. """
-        from sympy import Poly
+        r"""
+        Construct a new algebraic number $\alpha$ belonging to a number field
+        $k = \mathbb{Q}(\theta)$.
+
+        There are four instance attributes to be determined:
+
+        ===========  ============================================================================
+        Attribute    Type/Meaning
+        ===========  ============================================================================
+        ``root``     :py:class:`~.Expr` for $\theta$ as a complex number
+        ``minpoly``  :py:class:`~.Poly`, the minimal polynomial of $\theta$
+        ``rep``      :py:class:`~sympy.polys.polyclasses.DMP` giving $\alpha$ as poly in $\theta$
+        ``alias``    :py:class:`~.Symbol` for $\theta$, or ``None``
+        ===========  ============================================================================
+
+        See Parameters section for how they are determined.
+
+        Parameters
+        ==========
+
+        expr : :py:class:`~.Expr`, or pair $(m, r)$
+            There are three distinct modes of construction, depending on what
+            is passed as *expr*.
+
+            **(1)** *expr* is an :py:class:`~.AlgebraicNumber`:
+            In this case we begin by copying all four instance attributes from
+            *expr*. If *coeffs* were also given, we compose the two coeff
+            polynomials (see below). If an *alias* was given, it overrides.
+
+            **(2)** *expr* is any other type of :py:class:`~.Expr`:
+            Then ``root`` will equal *expr*. Therefore it
+            must express an algebraic quantity, and we will compute its
+            ``minpoly``.
+
+            **(3)** *expr* is an ordered pair $(m, r)$ giving the
+            ``minpoly`` $m$, and a ``root`` $r$ thereof, which together
+            define $\theta$. In this case $m$ may be either a univariate
+            :py:class:`~.Poly` or any :py:class:`~.Expr` which represents the
+            same, while $r$ must be some :py:class:`~.Expr` representing a
+            complex number that is a root of $m$, including both explicit
+            expressions in radicals, and instances of
+            :py:class:`~.ComplexRootOf` or :py:class:`~.AlgebraicNumber`.
+
+        coeffs : list, :py:class:`~.ANP`, None, optional (default=None)
+            This defines ``rep``, giving the algebraic number $\alpha$ as a
+            polynomial in $\theta$.
+
+            If a list, the elements should be integers or rational numbers.
+            If an :py:class:`~.ANP`, we take its coefficients (using its
+            :py:meth:`~.ANP.to_list()` method). If ``None``, then the list of
+            coefficients defaults to ``[1, 0]``, meaning that $\alpha = \theta$
+            is the primitive element of the field.
+
+            If *expr* was an :py:class:`~.AlgebraicNumber`, let $g(x)$ be its
+            ``rep`` polynomial, and let $f(x)$ be the polynomial defined by
+            *coeffs*. Then ``self.rep`` will represent the composition
+            $(f \circ g)(x)$.
+
+        alias : str, :py:class:`~.Symbol`, None, optional (default=None)
+            This is a way to provide a name for the primitive element. We
+            described several ways in which the *expr* argument can define the
+            value of the primitive element, but none of these methods gave it
+            a name. Here, for example, *alias* could be set as
+            ``Symbol('theta')``, in order to make this symbol appear when
+            $\alpha$ is printed, or rendered as a polynomial, using the
+            :py:meth:`~.as_poly()` method.
+
+        Examples
+        ========
+
+        Recall that we are constructing an algebraic number as a field element
+        $\alpha \in \mathbb{Q}(\theta)$.
+
+        >>> from sympy import AlgebraicNumber, sqrt, CRootOf, S
+        >>> from sympy.abc import x
+
+        Example (1): $\alpha = \theta = \sqrt{2}$
+
+        >>> a1 = AlgebraicNumber(sqrt(2))
+        >>> a1.minpoly_of_element().as_expr(x)
+        x**2 - 2
+        >>> a1.evalf(10)
+        1.414213562
+
+        Example (2): $\alpha = 3 \sqrt{2} - 5$, $\theta = \sqrt{2}$. We can
+        either build on the last example:
+
+        >>> a2 = AlgebraicNumber(a1, [3, -5])
+        >>> a2.as_expr()
+        -5 + 3*sqrt(2)
+
+        or start from scratch:
+
+        >>> a2 = AlgebraicNumber(sqrt(2), [3, -5])
+        >>> a2.as_expr()
+        -5 + 3*sqrt(2)
+
+        Example (3): $\alpha = 6 \sqrt{2} - 11$, $\theta = \sqrt{2}$. Again we
+        can build on the previous example, and we see that the coeff polys are
+        composed:
+
+        >>> a3 = AlgebraicNumber(a2, [2, -1])
+        >>> a3.as_expr()
+        -11 + 6*sqrt(2)
+
+        reflecting the fact that $(2x - 1) \circ (3x - 5) = 6x - 11$.
+
+        Example (4): $\alpha = \sqrt{2}$, $\theta = \sqrt{2} + \sqrt{3}$. The
+        easiest way is to use the :py:func:`~.to_number_field()` function:
+
+        >>> from sympy import to_number_field
+        >>> a4 = to_number_field(sqrt(2), sqrt(2) + sqrt(3))
+        >>> a4.minpoly_of_element().as_expr(x)
+        x**2 - 2
+        >>> a4.to_root()
+        sqrt(2)
+        >>> a4.primitive_element()
+        sqrt(2) + sqrt(3)
+        >>> a4.coeffs()
+        [1/2, 0, -9/2, 0]
+
+        but if you already knew the right coefficients, you could construct it
+        directly:
+
+        >>> a4 = AlgebraicNumber(sqrt(2) + sqrt(3), [S(1)/2, 0, S(-9)/2, 0])
+        >>> a4.to_root()
+        sqrt(2)
+        >>> a4.primitive_element()
+        sqrt(2) + sqrt(3)
+
+        Example (5): Construct the Golden Ratio as an element of the 5th
+        cyclotomic field, supposing we already know its coefficients. This time
+        we introduce the alias $\zeta$ for the primitive element of the field:
+
+        >>> from sympy import cyclotomic_poly
+        >>> from sympy.abc import zeta
+        >>> a5 = AlgebraicNumber(CRootOf(cyclotomic_poly(5), -1),
+        ...                  [-1, -1, 0, 0], alias=zeta)
+        >>> a5.as_poly().as_expr()
+        -zeta**3 - zeta**2
+        >>> a5.evalf()
+        1.61803398874989
+
+        (The index ``-1`` to ``CRootOf`` selects the complex root with the
+        largest real and imaginary parts, which in this case is
+        $\mathrm{e}^{2i\pi/5}$. See :py:class:`~.ComplexRootOf`.)
+
+        Example (6): Building on the last example, construct the number
+        $2 \phi \in \mathbb{Q}(\phi)$, where $\phi$ is the Golden Ratio:
+
+        >>> from sympy.abc import phi
+        >>> a6 = AlgebraicNumber(a5.to_root(), coeffs=[2, 0], alias=phi)
+        >>> a6.as_poly().as_expr()
+        2*phi
+        >>> a6.primitive_element().evalf()
+        1.61803398874989
+
+        Note that we needed to use ``a5.to_root()``, since passing ``a5`` as
+        the first argument would have constructed the number $2 \phi$ as an
+        element of the field $\mathbb{Q}(\zeta)$:
+
+        >>> a6_wrong = AlgebraicNumber(a5, coeffs=[2, 0])
+        >>> a6_wrong.as_poly().as_expr()
+        -2*zeta**3 - 2*zeta**2
+        >>> a6_wrong.primitive_element().evalf()
+        0.309016994374947 + 0.951056516295154*I
+
+        """
         from sympy.polys.polyclasses import ANP, DMP
         from sympy.polys.numberfields import minimal_polynomial
-        from sympy.core.symbol import Symbol
 
         expr = sympify(expr)
+        rep0 = None
+        alias0 = None
 
         if isinstance(expr, (tuple, Tuple)):
             minpoly, root = expr
 
             if not minpoly.is_Poly:
+                from sympy.polys.polytools import Poly
                 minpoly = Poly(minpoly)
         elif expr.is_AlgebraicNumber:
-            minpoly, root = expr.minpoly, expr.root
+            minpoly, root, rep0, alias0 = (expr.minpoly, expr.root,
+                                           expr.rep, expr.alias)
         else:
             minpoly, root = minimal_polynomial(
                 expr, args.get('gen'), polys=True), expr
@@ -2558,16 +2744,24 @@ class AlgebraicNumber(Expr):
                 rep = DMP.from_list(coeffs.to_list(), 0, dom)
                 scoeffs = Tuple(*coeffs.to_list())
 
-            if rep.degree() >= minpoly.degree():
-                rep = rep.rem(minpoly.rep)
-
         else:
             rep = DMP.from_list([1, 0], 0, dom)
             scoeffs = Tuple(1, 0)
 
+        if rep0 is not None:
+            from sympy.polys.densetools import dup_compose
+            c = dup_compose(rep.rep, rep0.rep, dom)
+            rep = DMP.from_list(c, 0, dom)
+            scoeffs = Tuple(*c)
+
+        if rep.degree() >= minpoly.degree():
+            rep = rep.rem(minpoly.rep)
+
         sargs = (root, scoeffs)
 
+        alias = alias or alias0
         if alias is not None:
+            from .symbol import Symbol
             if not isinstance(alias, Symbol):
                 alias = Symbol(alias)
             sargs = sargs + (alias,)
@@ -2578,6 +2772,8 @@ class AlgebraicNumber(Expr):
         obj.root = root
         obj.alias = alias
         obj.minpoly = minpoly
+
+        obj._own_minpoly = None
 
         return obj
 
@@ -2594,13 +2790,14 @@ class AlgebraicNumber(Expr):
 
     def as_poly(self, x=None):
         """Create a Poly instance from ``self``. """
-        from sympy import Dummy, Poly, PurePoly
+        from sympy.polys.polytools import Poly, PurePoly
         if x is not None:
             return Poly.new(self.rep, x)
         else:
             if self.alias is not None:
                 return Poly.new(self.rep, self.alias)
             else:
+                from .symbol import Dummy
                 return PurePoly.new(self.rep, Dummy('x'))
 
     def as_expr(self, x=None):
@@ -2617,7 +2814,8 @@ class AlgebraicNumber(Expr):
 
     def to_algebraic_integer(self):
         """Convert ``self`` to an algebraic integer. """
-        from sympy import Poly
+        from sympy.polys.polytools import Poly
+
         f = self.minpoly
 
         if f.LC() == 1:
@@ -2632,7 +2830,8 @@ class AlgebraicNumber(Expr):
         return AlgebraicNumber((minpoly, root), self.coeffs())
 
     def _eval_simplify(self, **kwargs):
-        from sympy.polys import CRootOf, minpoly
+        from sympy.polys.rootoftools import CRootOf
+        from sympy.polys import minpoly
         measure, ratio = kwargs['measure'], kwargs['ratio']
         for r in [r for r in self.minpoly.all_roots() if r.func != CRootOf]:
             if minpoly(self.root - r).is_Symbol:
@@ -2640,6 +2839,199 @@ class AlgebraicNumber(Expr):
                 if measure(r) < ratio*measure(self.root):
                     return AlgebraicNumber(r)
         return self
+
+    def field_element(self, coeffs):
+        r"""
+        Form another element of the same number field.
+
+        Explanation
+        ===========
+
+        If we represent $\alpha \in \mathbb{Q}(\theta)$, form another element
+        $\beta \in \mathbb{Q}(\theta)$ of the same number field.
+
+        Parameters
+        ==========
+
+        coeffs : list, :py:class:`~.ANP`
+            Like the *coeffs* arg to the class
+            :py:meth:`constructor<.AlgebraicNumber.__new__>`, defines the
+            new element as a polynomial in the primitive element.
+
+            If a list, the elements should be integers or rational numbers.
+            If an :py:class:`~.ANP`, we take its coefficients (using its
+            :py:meth:`~.ANP.to_list()` method).
+
+        Examples
+        ========
+
+        >>> from sympy import AlgebraicNumber, sqrt
+        >>> a = AlgebraicNumber(sqrt(5), [-1, 1])
+        >>> b = a.field_element([3, 2])
+        >>> print(a)
+        1 - sqrt(5)
+        >>> print(b)
+        2 + 3*sqrt(5)
+        >>> print(b.primitive_element() == a.primitive_element())
+        True
+
+        See Also
+        ========
+
+        .AlgebraicNumber.__new__()
+
+        """
+        return AlgebraicNumber(
+            (self.minpoly, self.root), coeffs=coeffs, alias=self.alias)
+
+    @property
+    def is_primitive_element(self):
+        r"""
+        Say whether this algebraic number $\alpha \in \mathbb{Q}(\theta)$ is
+        equal to the primitive element $\theta$ for its field.
+        """
+        c = self.coeffs()
+        # Second case occurs if self.minpoly is linear:
+        return c == [1, 0] or c == [self.root]
+
+    def primitive_element(self):
+        r"""
+        Get the primitive element $\theta$ for the number field
+        $\mathbb{Q}(\theta)$ to which this algebraic number $\alpha$ belongs.
+
+        Returns
+        =======
+
+        AlgebraicNumber
+
+        """
+        if self.is_primitive_element:
+            return self
+        return self.field_element([1, 0])
+
+    def to_primitive_element(self, radicals=True):
+        r"""
+        Convert ``self`` to an :py:class:`~.AlgebraicNumber` instance that is
+        equal to its own primitive element.
+
+        Explanation
+        ===========
+
+        If we represent $\alpha \in \mathbb{Q}(\theta)$, $\alpha \neq \theta$,
+        construct a new :py:class:`~.AlgebraicNumber` that represents
+        $\alpha \in \mathbb{Q}(\alpha)$.
+
+        Examples
+        ========
+
+        >>> from sympy import sqrt, to_number_field
+        >>> from sympy.abc import x
+        >>> a = to_number_field(sqrt(2), sqrt(2) + sqrt(3))
+
+        The :py:class:`~.AlgebraicNumber` ``a`` represents the number
+        $\sqrt{2}$ in the field $\mathbb{Q}(\sqrt{2} + \sqrt{3})$. Rendering
+        ``a`` as a polynomial,
+
+        >>> a.as_poly().as_expr(x)
+        x**3/2 - 9*x/2
+
+        reflects the fact that $\sqrt{2} = \theta^3/2 - 9 \theta/2$, where
+        $\theta = \sqrt{2} + \sqrt{3}$.
+
+        ``a`` is not equal to its own primitive element. Its minpoly
+
+        >>> a.minpoly.as_poly().as_expr(x)
+        x**4 - 10*x**2 + 1
+
+        is that of $\theta$.
+
+        Converting to a primitive element,
+
+        >>> a_prim = a.to_primitive_element()
+        >>> a_prim.minpoly.as_poly().as_expr(x)
+        x**2 - 2
+
+        we obtain an :py:class:`~.AlgebraicNumber` whose ``minpoly`` is that of
+        the number itself.
+
+        Parameters
+        ==========
+
+        radicals : boolean, optional (default=True)
+            If ``True``, then we will try to return an
+            :py:class:`~.AlgebraicNumber` whose ``root`` is an expression
+            in radicals. If that is not possible (or if *radicals* is
+            ``False``), ``root`` will be a :py:class:`~.ComplexRootOf`.
+
+        Returns
+        =======
+
+        AlgebraicNumber
+
+        See Also
+        ========
+
+        is_primitive_element
+
+        """
+        if self.is_primitive_element:
+            return self
+        m = self.minpoly_of_element()
+        r = self.to_root(radicals=radicals)
+        return AlgebraicNumber((m, r))
+
+    def minpoly_of_element(self):
+        r"""
+        Compute the minimal polynomial for this algebraic number.
+
+        Explanation
+        ===========
+
+        Recall that we represent an element $\alpha \in \mathbb{Q}(\theta)$.
+        Our instance attribute ``self.minpoly`` is the minimal polynomial for
+        our primitive element $\theta$. This method computes the minimal
+        polynomial for $\alpha$.
+
+        """
+        if self._own_minpoly is None:
+            if self.is_primitive_element:
+                self._own_minpoly = self.minpoly
+            else:
+                from sympy.polys.numberfields.minpoly import minpoly
+                theta = self.primitive_element()
+                self._own_minpoly = minpoly(self.as_expr(theta), polys=True)
+        return self._own_minpoly
+
+    def to_root(self, radicals=True, minpoly=None):
+        """
+        Convert to an :py:class:`~.Expr` that is not an
+        :py:class:`~.AlgebraicNumber`, specifically, either a
+        :py:class:`~.ComplexRootOf`, or, optionally and where possible, an
+        expression in radicals.
+
+        Parameters
+        ==========
+
+        radicals : boolean, optional (default=True)
+            If ``True``, then we will try to return the root as an expression
+            in radicals. If that is not possible, we will return a
+            :py:class:`~.ComplexRootOf`.
+
+        minpoly : :py:class:`~.Poly`
+            If the minimal polynomial for `self` has been pre-computed, it can
+            be passed in order to save time.
+
+        """
+        if self.is_primitive_element and not isinstance(self.root, AlgebraicNumber):
+            return self.root
+        m = minpoly or self.minpoly_of_element()
+        roots = m.all_roots(radicals=radicals)
+        if len(roots) == 1:
+            return roots[0]
+        ex = self.as_expr()
+        for b in roots:
+            if m.same_root(b, ex):
+                return b
 
 
 class RationalConstant(Rational):
@@ -2704,9 +3096,9 @@ class Zero(IntegerConstant, metaclass=Singleton):
         return S.Zero
 
     def _eval_power(self, expt):
-        if expt.is_positive:
+        if expt.is_extended_positive:
             return self
-        if expt.is_negative:
+        if expt.is_extended_negative:
             return S.ComplexInfinity
         if expt.is_extended_real is False:
             return S.NaN
@@ -2725,10 +3117,6 @@ class Zero(IntegerConstant, metaclass=Singleton):
 
     def __bool__(self):
         return False
-
-    def as_coeff_Mul(self, rational=False):  # XXX this routine should be deleted
-        """Efficiently extract the coefficient of a summation. """
-        return S.One, self
 
 
 class One(IntegerConstant, metaclass=Singleton):
@@ -3014,8 +3402,6 @@ class Infinity(Number, metaclass=Singleton):
         NegativeInfinity
 
         """
-        from sympy.functions import re
-
         if expt.is_extended_positive:
             return S.Infinity
         if expt.is_extended_negative:
@@ -3025,6 +3411,7 @@ class Infinity(Number, metaclass=Singleton):
         if expt is S.ComplexInfinity:
             return S.NaN
         if expt.is_extended_real is False and expt.is_number:
+            from sympy.functions.elementary.complexes import re
             expt_real = re(expt)
             if expt_real.is_positive:
                 return S.ComplexInfinity
@@ -3192,7 +3579,14 @@ class NegativeInfinity(Number, metaclass=Singleton):
                 else:
                     return S.Infinity
 
-            return S.NegativeOne**expt*S.Infinity**expt
+            inf_part = S.Infinity**expt
+            s_part = S.NegativeOne**expt
+            if inf_part == 0 and s_part.is_finite:
+                return inf_part
+            if (inf_part is S.ComplexInfinity and
+                    s_part.is_finite and not s_part.is_zero):
+                return S.ComplexInfinity
+            return s_part*inf_part
 
     def _as_mpf_val(self, prec):
         return mlib.fninf
@@ -3487,6 +3881,7 @@ class NumberSymbol(AtomicExpr):
     def __hash__(self):
         return super().__hash__()
 
+
 class Exp1(NumberSymbol, metaclass=Singleton):
     r"""The `e` constant.
 
@@ -3545,20 +3940,20 @@ class Exp1(NumberSymbol, metaclass=Singleton):
             pass
 
     def _eval_power(self, expt):
-        from sympy import exp
         if global_parameters.exp_is_pow:
             return self._eval_power_exp_is_pow(expt)
         else:
+            from sympy.functions.elementary.exponential import exp
             return exp(expt)
 
     def _eval_power_exp_is_pow(self, arg):
-        from ..functions.elementary.exponential import log
         if arg.is_Number:
             if arg is oo:
                 return oo
             elif arg == -oo:
                 return S.Zero
-        elif isinstance(arg, log):
+        from sympy.functions.elementary.exponential import log
+        if isinstance(arg, log):
             return arg.args[0]
 
         # don't autoexpand Pow or Mul (see the issue 3351):
@@ -3632,11 +4027,11 @@ class Exp1(NumberSymbol, metaclass=Singleton):
             return arg.exp()
 
     def _eval_rewrite_as_sin(self, **kwargs):
-        from sympy import sin
+        from sympy.functions.elementary.trigonometric import sin
         return sin(I + S.Pi/2) - I*sin(I)
 
     def _eval_rewrite_as_cos(self, **kwargs):
-        from sympy import cos
+        from sympy.functions.elementary.trigonometric import cos
         return cos(I) + I*cos(I + S.Pi/2)
 
 E = S.Exp1
@@ -3761,7 +4156,7 @@ class GoldenRatio(NumberSymbol, metaclass=Singleton):
         return mpf_norm(rv, prec)
 
     def _eval_expand_func(self, **hints):
-        from sympy import sqrt
+        from sympy.functions.elementary.miscellaneous import sqrt
         return S.Half + S.Half*sqrt(5)
 
     def approximation_interval(self, number_cls):
@@ -3831,7 +4226,7 @@ class TribonacciConstant(NumberSymbol, metaclass=Singleton):
         return Float(rv, precision=prec)
 
     def _eval_expand_func(self, **hints):
-        from sympy import sqrt, cbrt
+        from sympy.functions.elementary.miscellaneous import cbrt, sqrt
         return (1 + cbrt(19 - 3*sqrt(33)) + cbrt(19 + 3*sqrt(33))) / 3
 
     def approximation_interval(self, number_cls):
@@ -3908,9 +4303,9 @@ class Catalan(NumberSymbol, metaclass=Singleton):
     Explanation
     ===========
 
-    `K = 0.91596559\ldots` is given by the infinite series
+    $G = 0.91596559\ldots$ is given by the infinite series
 
-    .. math:: K = \sum_{k=0}^{\infty} \frac{(-1)^k}{(2k+1)^2}
+    .. math:: G = \sum_{k=0}^{\infty} \frac{(-1)^k}{(2k+1)^2}
 
     Catalan is a singleton, and can be accessed by ``S.Catalan``.
 
@@ -3954,11 +4349,15 @@ class Catalan(NumberSymbol, metaclass=Singleton):
             return (Rational(9, 10, 1), S.One)
 
     def _eval_rewrite_as_Sum(self, k_sym=None, symbols=None):
-        from sympy import Sum, Dummy
         if (k_sym is not None) or (symbols is not None):
             return self
+        from .symbol import Dummy
+        from sympy.concrete.summations import Sum
         k = Dummy('k', integer=True, nonnegative=True)
-        return Sum((-1)**k / (2*k+1)**2, (k, 0, S.Infinity))
+        return Sum(S.NegativeOne**k / (2*k+1)**2, (k, 0, S.Infinity))
+
+    def _latex(self, printer):
+        return "G"
 
 
 class ImaginaryUnit(AtomicExpr, metaclass=Singleton):
@@ -4053,7 +4452,7 @@ def _eval_is_eq(self, other): # noqa: F811
 def sympify_fractions(f):
     return Rational(f.numerator, f.denominator, 1)
 
-converter[fractions.Fraction] = sympify_fractions
+_sympy_converter[fractions.Fraction] = sympify_fractions
 
 if HAS_GMPY:
     def sympify_mpz(x):
@@ -4065,28 +4464,28 @@ if HAS_GMPY:
     def sympify_mpq(x):
         return Rational(int(x.numerator), int(x.denominator))
 
-    converter[type(gmpy.mpz(1))] = sympify_mpz
-    converter[type(gmpy.mpq(1, 2))] = sympify_mpq
+    _sympy_converter[type(gmpy.mpz(1))] = sympify_mpz
+    _sympy_converter[type(gmpy.mpq(1, 2))] = sympify_mpq
 
 
 def sympify_mpmath_mpq(x):
     p, q = x._mpq_
     return Rational(p, q, 1)
 
-converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
+_sympy_converter[type(mpmath.rational.mpq(1, 2))] = sympify_mpmath_mpq
 
 
 def sympify_mpmath(x):
     return Expr._from_mpmath(x, x.context.prec)
 
-converter[mpnumeric] = sympify_mpmath
+_sympy_converter[mpnumeric] = sympify_mpmath
 
 
 def sympify_complex(a):
     real, imag = list(map(sympify, (a.real, a.imag)))
     return real + S.ImaginaryUnit*imag
 
-converter[complex] = sympify_complex
+_sympy_converter[complex] = sympify_complex
 
 from .power import Pow, integer_nthroot
 from .mul import Mul

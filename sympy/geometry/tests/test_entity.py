@@ -1,10 +1,10 @@
-from sympy import Symbol, Rational, S, pi
+from sympy.core.numbers import (Rational, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.geometry import (Circle, Ellipse, Point, Line, Parabola,
     Polygon, Ray, RegularPolygon, Segment, Triangle, Plane, Curve)
 from sympy.geometry.entity import scale, GeometryEntity
 from sympy.testing.pytest import raises
-
-from random import random
 
 
 def test_entity():
@@ -83,8 +83,10 @@ def test_reflect_entity_overrides():
     assert c.area == -cr.area
 
     pent = RegularPolygon((1, 2), 1, 5)
-    l = Line(pent.vertices[1],
-        slope=Rational(random() - .5, random() - .5))
+    slope = S.ComplexInfinity
+    while slope is S.ComplexInfinity:
+        slope = Rational(*(x._random()/2).as_real_imag())
+    l = Line(pent.vertices[1], slope=slope)
     rpent = pent.reflect(l)
     assert rpent.center == pent.center.reflect(l)
     rvert = [i.reflect(l) for i in pent.vertices]

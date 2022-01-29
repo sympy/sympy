@@ -14,7 +14,7 @@ WARN_OLD_VERSION = None  # Default is True
 def __sympy_debug():
     # helper function from sympy/__init__.py
     # We don't just import SYMPY_DEBUG from that file because we don't want to
-    # import all of sympy just to use this module.
+    # import all of SymPy just to use this module.
     import os
     debug_str = os.getenv('SYMPY_DEBUG', 'False')
     if debug_str in ('True', 'False'):

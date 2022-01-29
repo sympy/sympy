@@ -60,16 +60,12 @@ def test_PythonCodePrinter():
 
 
 def test_PythonCodePrinter_standard():
-    import sys
-    prntr = PythonCodePrinter({'standard':None})
+    prntr = PythonCodePrinter()
 
-    python_version = sys.version_info.major
-    if python_version == 2:
-        assert prntr.standard == 'python2'
-    if python_version == 3:
-        assert prntr.standard == 'python3'
+    assert prntr.standard == 'python3'
 
     raises(ValueError, lambda: PythonCodePrinter({'standard':'python4'}))
+
 
 def test_MpmathPrinter():
     p = MpmathPrinter()
@@ -87,9 +83,13 @@ def test_MpmathPrinter():
 
 
 def test_NumPyPrinter():
-    from sympy import (Lambda, ZeroMatrix, OneMatrix, FunctionMatrix,
-        HadamardProduct, KroneckerProduct, Adjoint, DiagonalOf,
-        DiagMatrix, DiagonalMatrix)
+    from sympy.core.function import Lambda
+    from sympy.matrices.expressions.adjoint import Adjoint
+    from sympy.matrices.expressions.diagonal import (DiagMatrix, DiagonalMatrix, DiagonalOf)
+    from sympy.matrices.expressions.funcmatrix import FunctionMatrix
+    from sympy.matrices.expressions.hadamard import HadamardProduct
+    from sympy.matrices.expressions.kronecker import KroneckerProduct
+    from sympy.matrices.expressions.special import (OneMatrix, ZeroMatrix)
     from sympy.abc import a, b
     p = NumPyPrinter()
     assert p.doprint(sign(x)) == 'numpy.sign(x)'
@@ -137,7 +137,8 @@ def test_issue_18770():
     if not numpy:
         skip("numpy not installed.")
 
-    from sympy import lambdify, Min, Max
+    from sympy.functions.elementary.miscellaneous import (Max, Min)
+    from sympy.utilities.lambdify import lambdify
 
     expr1 = Min(0.1*x + 3, x + 1, 0.5*x + 1)
     func = lambdify(x, expr1, "numpy")
@@ -190,10 +191,6 @@ def test_sqrt():
     assert prntr._print_Pow(sqrt(x), rational=False) == 'math.sqrt(x)'
     assert prntr._print_Pow(1/sqrt(x), rational=False) == '1/math.sqrt(x)'
 
-    prntr = PythonCodePrinter({'standard' : 'python2'})
-    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1./2.)'
-    assert prntr._print_Pow(1/sqrt(x), rational=True) == 'x**(-1./2.)'
-
     prntr = PythonCodePrinter({'standard' : 'python3'})
     assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
     assert prntr._print_Pow(1/sqrt(x), rational=True) == 'x**(-1/2)'
@@ -217,7 +214,7 @@ def test_sqrt():
 
 
 def test_frac():
-    from sympy import frac
+    from sympy.functions.elementary.integers import frac
 
     expr = frac(x)
 
@@ -258,8 +255,9 @@ def test_codegen_ast_nodes():
 def test_issue_14283():
     prntr = PythonCodePrinter()
 
-    assert prntr.doprint(zoo) == "float('nan')"
+    assert prntr.doprint(zoo) == "math.nan"
     assert prntr.doprint(-oo) == "float('-inf')"
+
 
 def test_NumPyPrinter_print_seq():
     n = NumPyPrinter()
@@ -268,7 +266,7 @@ def test_NumPyPrinter_print_seq():
 
 
 def test_issue_16535_16536():
-    from sympy import lowergamma, uppergamma
+    from sympy.functions.special.gamma_functions import (lowergamma, uppergamma)
 
     a = symbols('a')
     expr1 = lowergamma(a, x)
@@ -288,7 +286,8 @@ def test_issue_16535_16536():
 
 
 def test_Integral():
-    from sympy import Integral, exp
+    from sympy.functions.elementary.exponential import exp
+    from sympy.integrals.integrals import Integral
 
     single = Integral(exp(-x), (x, 0, oo))
     double = Integral(x**2*exp(x*y), (x, -z, z), (y, 0, z))
@@ -309,7 +308,7 @@ def test_Integral():
 
 
 def test_fresnel_integrals():
-    from sympy import fresnelc, fresnels
+    from sympy.functions.special.error_functions import (fresnelc, fresnels)
 
     expr1 = fresnelc(x)
     expr2 = fresnels(x)
@@ -332,7 +331,7 @@ def test_fresnel_integrals():
 
 
 def test_beta():
-    from sympy import beta
+    from sympy.functions.special.beta_functions import beta
 
     expr = beta(x, y)
 
@@ -352,7 +351,7 @@ def test_beta():
     assert prntr.doprint(expr) ==  'mpmath.beta(x, y)'
 
 def test_airy():
-    from sympy import airyai, airybi
+    from sympy.functions.special.bessel import (airyai, airybi)
 
     expr1 = airyai(x)
     expr2 = airybi(x)
@@ -370,7 +369,7 @@ def test_airy():
     assert "Not supported" in prntr.doprint(expr2)
 
 def test_airy_prime():
-    from sympy import airyaiprime, airybiprime
+    from sympy.functions.special.bessel import (airyaiprime, airybiprime)
 
     expr1 = airyaiprime(x)
     expr2 = airybiprime(x)

@@ -1,15 +1,16 @@
-# References :
-# http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
-# https://en.wikipedia.org/wiki/Quaternion
-from sympy import S, Rational
-from sympy import re, im, conjugate, sign
-from sympy import sqrt, sin, cos, acos, exp, ln
-from sympy import trigsimp
-from sympy import integrate
-from sympy import Matrix
-from sympy import sympify
-from sympy.core.evalf import prec_to_dps
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
+from sympy.functions.elementary.complexes import (conjugate, im, re, sign)
+from sympy.functions.elementary.exponential import (exp, log as ln)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, cos, sin)
+from sympy.simplify.trigsimp import trigsimp
+from sympy.integrals.integrals import integrate
+from sympy.matrices.dense import MutableDenseMatrix as Matrix
+from sympy.core.sympify import sympify
 from sympy.core.expr import Expr
+
+from mpmath.libmp.libmpf import prec_to_dps
 
 
 class Quaternion(Expr):
@@ -36,6 +37,12 @@ class Quaternion(Expr):
     x + x**3*i + x*j + x**2*k
     >>> q2
     (3 + 4*I) + (2 + 5*I)*i + 0*j + (7 + 8*I)*k
+
+    References
+    ==========
+
+    .. [1] http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/
+    .. [2] https://en.wikipedia.org/wiki/Quaternion
 
     """
     _op_priority = 11.0
@@ -242,7 +249,7 @@ class Quaternion(Expr):
         q1 = self
         q2 = sympify(other)
 
-        # If q2 is a number or a sympy expression instead of a quaternion
+        # If q2 is a number or a SymPy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
             if q1.real_field and q2.is_complex:
                 return Quaternion(re(q2) + q1.a, im(q2) + q1.b, q1.c, q1.d)
@@ -345,7 +352,7 @@ class Quaternion(Expr):
         if not isinstance(q1, Quaternion) and not isinstance(q2, Quaternion):
             return q1 * q2
 
-        # If q1 is a number or a sympy expression instead of a quaternion
+        # If q1 is a number or a SymPy expression instead of a quaternion
         if not isinstance(q1, Quaternion):
             if q2.real_field and q1.is_complex:
                 return Quaternion(re(q1), im(q1), 0, 0) * q2
@@ -354,7 +361,7 @@ class Quaternion(Expr):
             else:
                 raise ValueError("Only commutative expressions can be multiplied with a Quaternion.")
 
-        # If q2 is a number or a sympy expression instead of a quaternion
+        # If q2 is a number or a SymPy expression instead of a quaternion
         if not isinstance(q2, Quaternion):
             if q1.real_field and q2.is_complex:
                 return q1 * Quaternion(re(q2), im(q2), 0, 0)
@@ -517,8 +524,8 @@ class Quaternion(Expr):
         + 0.500000000000000*k
 
         """
-
-        return Quaternion(*[arg.evalf(n=prec_to_dps(prec)) for arg in self.args])
+        nprec = prec_to_dps(prec)
+        return Quaternion(*[arg.evalf(n=nprec) for arg in self.args])
 
     def pow_cos_sin(self, p):
         """Computes the pth power in the cos-sin form.

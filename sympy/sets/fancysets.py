@@ -6,14 +6,14 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
-from sympy.core.numbers import oo
+from sympy.core.mod import Mod
+from sympy.core.numbers import oo, igcd, Rational
 from sympy.core.relational import Eq, is_eq
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
-from sympy.core.sympify import _sympify, sympify, converter
+from sympy.core.sympify import _sympify, sympify, _sympy_converter
 from sympy.logic.boolalg import And, Or
-from sympy.sets.sets import (Set, Interval, Union, FiniteSet,
-    ProductSet)
+from .sets import Set, Interval, Union, FiniteSet, ProductSet
 from sympy.utilities.misc import filldedent
 
 
@@ -45,7 +45,6 @@ class Rationals(Set, metaclass=Singleton):
         return other.is_rational
 
     def __iter__(self):
-        from sympy.core.numbers import igcd, Rational
         yield S.Zero
         yield S.One
         yield S.NegativeOne
@@ -294,8 +293,7 @@ class ImageSet(Set):
     ========
 
     >>> from sympy import Symbol, S, pi, Dummy, Lambda
-    >>> from sympy.sets.sets import FiniteSet, Interval
-    >>> from sympy.sets.fancysets import ImageSet
+    >>> from sympy import FiniteSet, ImageSet, Interval
 
     >>> x = Symbol('x')
     >>> N = S.Naturals
@@ -626,7 +624,7 @@ class Range(Set):
             dif = stop - start
             n = dif/step
             if n.is_Rational:
-                from sympy import floor
+                from sympy.functions.elementary.integers import floor
                 if dif == 0:
                     null = True
                 else:  # (x, x + 5, 2) or (x, 3*x, x)
@@ -978,7 +976,6 @@ class Range(Set):
 
     def as_relational(self, x):
         """Rewrite a Range in terms of equalities and logic operators. """
-        from sympy.core.mod import Mod
         if self.start.is_infinite:
             assert not self.stop.is_infinite  # by instantiation
             a = self.reversed.start
@@ -1010,7 +1007,7 @@ class Range(Set):
         return And(in_seq, ints, range_cond)
 
 
-converter[range] = lambda r: Range(r.start, r.stop, r.step)
+_sympy_converter[range] = lambda r: Range(r.start, r.stop, r.step)
 
 def normalize_theta_set(theta):
     r"""
@@ -1119,9 +1116,7 @@ class ComplexRegion(Set):
     Examples
     ========
 
-    >>> from sympy.sets.fancysets import ComplexRegion
-    >>> from sympy.sets import Interval
-    >>> from sympy import S, I, Union
+    >>> from sympy import ComplexRegion, Interval, S, I, Union
     >>> a = Interval(2, 3)
     >>> b = Interval(4, 6)
     >>> c1 = ComplexRegion(a*b)  # Rectangular Form
@@ -1342,7 +1337,7 @@ class ComplexRegion(Set):
             raise ValueError('expecting Tuple of length 2')
 
         # If the other is not an Expression, and neither a Tuple
-        if not isinstance(other, Expr) and not isinstance(other, Tuple):
+        if not isinstance(other, (Expr, Tuple)):
             return S.false
         # self in rectangular form
         if not self.polar:
@@ -1380,9 +1375,7 @@ class CartesianComplexRegion(ComplexRegion):
     Examples
     ========
 
-    >>> from sympy.sets.fancysets import ComplexRegion
-    >>> from sympy.sets.sets import Interval
-    >>> from sympy import I
+    >>> from sympy import ComplexRegion, I, Interval
     >>> region = ComplexRegion(Interval(1, 3) * Interval(4, 6))
     >>> 2 + 5*I in region
     True
@@ -1436,8 +1429,7 @@ class PolarComplexRegion(ComplexRegion):
     Examples
     ========
 
-    >>> from sympy.sets.fancysets import ComplexRegion, Interval
-    >>> from sympy import oo, pi, I
+    >>> from sympy import ComplexRegion, Interval, oo, pi, I
     >>> rset = Interval(0, oo)
     >>> thetaset = Interval(0, pi)
     >>> upper_half_plane = ComplexRegion(rset * thetaset, polar=True)
@@ -1513,9 +1505,3 @@ class Complexes(CartesianComplexRegion, metaclass=Singleton):
 
     def __new__(cls):
         return Set.__new__(cls)
-
-    def __str__(self):
-        return "S.Complexes"
-
-    def __repr__(self):
-        return "S.Complexes"

@@ -1,7 +1,7 @@
 """Efficient functions for generating orthogonal polynomials. """
 
 
-from sympy import Dummy
+from sympy.core.symbol import Dummy
 from sympy.polys.constructor import construct_domain
 from sympy.polys.densearith import (
     dup_mul, dup_mul_ground, dup_lshift, dup_sub, dup_add

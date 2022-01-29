@@ -1,10 +1,22 @@
-from sympy import (
-    Abs, acos, adjoint, arg, atan, atan2, conjugate, cos, DiracDelta,
-    E, exp, expand, Expr, Function, Heaviside, I, im, log, nan, oo,
-    pi, Rational, re, S, sign, sin, sqrt, Symbol, symbols, transpose,
-    zoo, exp_polar, Piecewise, Interval, comp, Integral, Matrix,
-    ImmutableMatrix, SparseMatrix, ImmutableSparseMatrix, MatrixSymbol,
-    FunctionMatrix, Lambda, Derivative, Eq)
+from sympy.core.expr import Expr
+from sympy.core.function import (Derivative, Function, Lambda, expand)
+from sympy.core.numbers import (E, I, Rational, comp, nan, oo, pi, zoo)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (Abs, adjoint, arg, conjugate, im, re, sign, transpose)
+from sympy.functions.elementary.exponential import (exp, exp_polar, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, atan, atan2, cos, sin)
+from sympy.functions.special.delta_functions import (DiracDelta, Heaviside)
+from sympy.integrals.integrals import Integral
+from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions.funcmatrix import FunctionMatrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.immutable import (ImmutableMatrix, ImmutableSparseMatrix)
+from sympy.matrices import SparseMatrix
+from sympy.sets.sets import Interval
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
@@ -596,16 +608,25 @@ def test_arg():
     f = Function('f')
     assert not arg(f(0) + I*f(1)).atoms(re)
 
+    # check nesting
     x = Symbol('x')
+    assert arg(arg(arg(x))) is not S.NaN
+    assert arg(arg(arg(arg(x)))) is S.NaN
+    r = Symbol('r', extended_real=True)
+    assert arg(arg(r)) is not S.NaN
+    assert arg(arg(arg(r))) is S.NaN
+
     p = Function('p', extended_positive=True)
     assert arg(p(x)) == 0
     assert arg((3 + I)*p(x)) == arg(3  + I)
 
     p = Symbol('p', positive=True)
     assert arg(p) == 0
+    assert arg(p*I) == pi/2
 
     n = Symbol('n', negative=True)
     assert arg(n) == pi
+    assert arg(n*I) == -pi/2
 
     x = Symbol('x')
     assert conjugate(arg(x)) == arg(x)
@@ -740,7 +761,7 @@ def test_transpose():
 
 @_both_exp_pow
 def test_polarify():
-    from sympy import polar_lift, polarify
+    from sympy.functions.elementary.complexes import (polar_lift, polarify)
     x = Symbol('x')
     z = Symbol('z', polar=True)
     f = Function('f')
@@ -775,8 +796,11 @@ def test_polarify():
 
 
 def test_unpolarify():
-    from sympy import polar_lift, unpolarify, principal_branch
-    from sympy import gamma, erf, tanh, uppergamma, Ne
+    from sympy.functions.elementary.complexes import (polar_lift, principal_branch, unpolarify)
+    from sympy.core.relational import Ne
+    from sympy.functions.elementary.hyperbolic import tanh
+    from sympy.functions.special.error_functions import erf
+    from sympy.functions.special.gamma_functions import (gamma, uppergamma)
     from sympy.abc import x
     p = exp_polar(7*I) + 1
     u = exp(7*I) + 1
@@ -853,7 +877,7 @@ def test_derivatives_issue_4757():
 
 
 def test_issue_11413():
-    from sympy import simplify
+    from sympy.simplify.simplify import simplify
     v0 = Symbol('v0')
     v1 = Symbol('v1')
     v2 = Symbol('v2')
@@ -866,9 +890,9 @@ def test_issue_11413():
     U.norm = sqrt(v0**2/(v0**2 + v1**2 + v2**2) + v1**2/(v0**2 + v1**2 + v2**2) + v2**2/(v0**2 + v1**2 + v2**2))
     assert simplify(U.norm) == 1
 
+
 def test_periodic_argument():
-    from sympy import (periodic_argument, unbranched_argument,
-                       principal_branch, polar_lift)
+    from sympy.functions.elementary.complexes import (periodic_argument, polar_lift, principal_branch, unbranched_argument)
     x = Symbol('x')
     p = Symbol('p', positive=True)
 
@@ -900,12 +924,12 @@ def test_periodic_argument():
 @XFAIL
 def test_principal_branch_fail():
     # TODO XXX why does abs(x)._eval_evalf() not fall back to global evalf?
-    from sympy import principal_branch
+    from sympy.functions.elementary.complexes import principal_branch
     assert N_equals(principal_branch((1 + I)**2, pi/2), 0)
 
 
 def test_principal_branch():
-    from sympy import principal_branch, polar_lift
+    from sympy.functions.elementary.complexes import (polar_lift, principal_branch)
     p = Symbol('p', positive=True)
     x = Symbol('x')
     neg = Symbol('x', negative=True)
@@ -945,7 +969,7 @@ def test_issue_6167_6151():
     big = pi**1000
     one = cos(x)**2 + sin(x)**2
     e = big*one - big + eps
-    from sympy import simplify
+    from sympy.simplify.simplify import simplify
     assert sign(simplify(e)) == 1
     for xi in (111, 11, 1, Rational(1, 10)):
         assert sign(e.subs(x, xi)) == 1
@@ -962,6 +986,13 @@ def test_issue_14238():
     # doesn't cause recursion error
     r = Symbol('r', real=True)
     assert Abs(r + Piecewise((0, r > 0), (1 - r, True)))
+
+
+def test_issue_22189():
+    x = Symbol('x')
+    for a in (sqrt(7 - 2*x) - 2, 1 - x):
+        assert Abs(a) - Abs(-a) == 0, a
+
 
 def test_zero_assumptions():
     nr = Symbol('nonreal', real=False, finite=True)

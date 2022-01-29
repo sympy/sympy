@@ -10,10 +10,17 @@ from sympy.polys.polyerrors import (
     PolynomialError,
 )
 
-from sympy import (
-    S, sqrt, I, Rational, Float, Lambda, log, exp, tan, Function, Eq,
-    solve, legendre_poly, Integral
-)
+from sympy.core.function import (Function, Lambda)
+from sympy.core.numbers import (Float, I, Rational)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import tan
+from sympy.integrals.integrals import Integral
+from sympy.polys.orthopolys import legendre_poly
+from sympy.solvers.solvers import solve
+
 
 from sympy.testing.pytest import raises, slow
 from sympy.core.expr import unchanged
@@ -153,8 +160,8 @@ def test_CRootOf___eval_Eq__():
             assert Eq(r, s) is S.true
     eq = x**3 + x + 1
     sol = solve(eq)
-    assert [Eq(rootof(eq, i), j) for i in range(3) for j in sol] == [
-        False, False, True, False, True, False, True, False, False]
+    assert [Eq(rootof(eq, i), j) for i in range(3) for j in sol
+        ].count(True) == 3
     assert Eq(rootof(eq, 0), 1 + S.ImaginaryUnit) == False
 
 
@@ -526,12 +533,12 @@ def test_eval_approx_relative():
     CRootOf.clear_cache()
     t = [CRootOf(x**3 + 10*x + 1, i) for i in range(3)]
     assert [i.eval_rational(1e-1) for i in t] == [
-        Rational(-21, 220), Rational(15, 256) - I*Rational(805, 256),
-        Rational(15, 256) + I*Rational(805, 256)]
+        Rational(-21, 220), Rational(15, 256) - I*805/256,
+        Rational(15, 256) + I*805/256]
     t[0]._reset()
     assert [i.eval_rational(1e-1, 1e-4) for i in t] == [
-        Rational(-21, 220), Rational(3275, 65536) - I*Rational(414645, 131072),
-        Rational(3275, 65536) + I*Rational(414645, 131072)]
+        Rational(-21, 220), Rational(3275, 65536) - I*414645/131072,
+        Rational(3275, 65536) + I*414645/131072]
     assert S(t[0]._get_interval().dx) < 1e-1
     assert S(t[1]._get_interval().dx) < 1e-1
     assert S(t[1]._get_interval().dy) < 1e-4
@@ -539,8 +546,8 @@ def test_eval_approx_relative():
     assert S(t[2]._get_interval().dy) < 1e-4
     t[0]._reset()
     assert [i.eval_rational(1e-4, 1e-4) for i in t] == [
-        Rational(-2001, 20020), Rational(6545, 131072) - I*Rational(414645, 131072),
-        Rational(6545, 131072) + I*Rational(414645, 131072)]
+        Rational(-2001, 20020), Rational(6545, 131072) - I*414645/131072,
+        Rational(6545, 131072) + I*414645/131072]
     assert S(t[0]._get_interval().dx) < 1e-4
     assert S(t[1]._get_interval().dx) < 1e-4
     assert S(t[1]._get_interval().dy) < 1e-4
@@ -550,8 +557,8 @@ def test_eval_approx_relative():
     # less than tested, but it should never be greater
     t[0]._reset()
     assert [i.eval_rational(n=2) for i in t] == [
-        Rational(-202201, 2024022), Rational(104755, 2097152) - I*Rational(6634255, 2097152),
-        Rational(104755, 2097152) + I*Rational(6634255, 2097152)]
+        Rational(-202201, 2024022), Rational(104755, 2097152) - I*6634255/2097152,
+        Rational(104755, 2097152) + I*6634255/2097152]
     assert abs(S(t[0]._get_interval().dx)/t[0]) < 1e-2
     assert abs(S(t[1]._get_interval().dx)/t[1]).n() < 1e-2
     assert abs(S(t[1]._get_interval().dy)/t[1]).n() < 1e-2
@@ -559,8 +566,8 @@ def test_eval_approx_relative():
     assert abs(S(t[2]._get_interval().dy)/t[2]).n() < 1e-2
     t[0]._reset()
     assert [i.eval_rational(n=3) for i in t] == [
-        Rational(-202201, 2024022), Rational(1676045, 33554432) - I*Rational(106148135, 33554432),
-        Rational(1676045, 33554432) + I*Rational(106148135, 33554432)]
+        Rational(-202201, 2024022), Rational(1676045, 33554432) - I*106148135/33554432,
+        Rational(1676045, 33554432) + I*106148135/33554432]
     assert abs(S(t[0]._get_interval().dx)/t[0]) < 1e-3
     assert abs(S(t[1]._get_interval().dx)/t[1]).n() < 1e-3
     assert abs(S(t[1]._get_interval().dy)/t[1]).n() < 1e-3

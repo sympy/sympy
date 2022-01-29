@@ -1,15 +1,17 @@
-from typing import Dict, Union, Type
+from typing import Dict as tDict, Union as tUnion, Type
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-from .basic import S, Atom
-from .compatibility import ordered
-from .basic import Basic
+from .basic import Atom, Basic
+from .sorting import ordered
 from .evalf import EvalfMixin
 from .function import AppliedUndef
+from .singleton import S
 from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
-from sympy.core.logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
+from .logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
 from sympy.logic.boolalg import Boolean, BooleanAtom
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.iterables import sift
+from sympy.utilities.misc import filldedent
 
 __all__ = (
     'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
@@ -41,6 +43,20 @@ def _canonical(cond):
     # the tests so I've removed it...
 
 
+def _canonical_coeff(rel):
+    # return -2*x + 1 < 0 as x > 1/2
+    # XXX make this part of Relational.canonical?
+    rel = rel.canonical
+    if not rel.is_Relational or rel.rhs.is_Boolean:
+        return rel  # Eq(x, True)
+    b, l = rel.lhs.as_coeff_Add(rational=True)
+    m, lhs = l.as_coeff_Mul(rational=True)
+    rhs = (rel.rhs - b)/m
+    if m < 0:
+        return rel.reversed.func(lhs, rhs)
+    return rel.func(lhs, rhs)
+
+
 class Relational(Boolean, EvalfMixin):
     """Base class for all relation types.
 
@@ -66,10 +82,66 @@ class Relational(Boolean, EvalfMixin):
     >>> Rel(y, x + x**2, '==')
     Eq(y, x**2 + x)
 
+    A relation's type can be defined upon creation using ``rop``.
+    The relation type of an existing expression can be obtained
+    using its ``rel_op`` property.
+    Here is a table of all the relation types, along with their
+    ``rop`` and ``rel_op`` values:
+
+    +---------------------+----------------------------+------------+
+    |Relation             |``rop``                     |``rel_op``  |
+    +=====================+============================+============+
+    |``Equality``         |``==`` or ``eq`` or ``None``|``==``      |
+    +---------------------+----------------------------+------------+
+    |``Unequality``       |``!=`` or ``ne``            |``!=``      |
+    +---------------------+----------------------------+------------+
+    |``GreaterThan``      |``>=`` or ``ge``            |``>=``      |
+    +---------------------+----------------------------+------------+
+    |``LessThan``         |``<=`` or ``le``            |``<=``      |
+    +---------------------+----------------------------+------------+
+    |``StrictGreaterThan``|``>`` or ``gt``             |``>``       |
+    +---------------------+----------------------------+------------+
+    |``StrictLessThan``   |``<`` or ``lt``             |``<``       |
+    +---------------------+----------------------------+------------+
+
+    For example, setting ``rop`` to ``==`` produces an
+    ``Equality`` relation, ``Eq()``.
+    So does setting ``rop`` to ``eq``, or leaving ``rop`` unspecified.
+    That is, the first three ``Rel()`` below all produce the same result.
+    Using a ``rop`` from a different row in the table produces a
+    different relation type.
+    For example, the fourth ``Rel()`` below using ``lt`` for ``rop``
+    produces a ``StrictLessThan`` inequality:
+
+    >>> from sympy import Rel
+    >>> from sympy.abc import x, y
+    >>> Rel(y, x + x**2, '==')
+        Eq(y, x**2 + x)
+    >>> Rel(y, x + x**2, 'eq')
+        Eq(y, x**2 + x)
+    >>> Rel(y, x + x**2)
+        Eq(y, x**2 + x)
+    >>> Rel(y, x + x**2, 'lt')
+        y < x**2 + x
+
+    To obtain the relation type of an existing expression,
+    get its ``rel_op`` property.
+    For example, ``rel_op`` is ``==`` for the ``Equality`` relation above,
+    and ``<`` for the strict less than inequality above:
+
+    >>> from sympy import Rel
+    >>> from sympy.abc import x, y
+    >>> my_equality = Rel(y, x + x**2, '==')
+    >>> my_equality.rel_op
+        '=='
+    >>> my_inequality = Rel(y, x + x**2, 'lt')
+    >>> my_inequality.rel_op
+        '<'
+
     """
     __slots__ = ()
 
-    ValidRelationOperator = {}  # type: Dict[Union[str, None], Type[Relational]]
+    ValidRelationOperator = {}  # type: tDict[tUnion[str, None], Type[Relational]]
 
     is_Relational = True
 
@@ -96,7 +168,6 @@ class Relational(Boolean, EvalfMixin):
             # Note: Symbol is a subclass of Boolean but is considered
             # acceptable here.
             if any(map(_nontrivBool, (lhs, rhs))):
-                from sympy.utilities.misc import filldedent
                 raise TypeError(filldedent('''
                     A Boolean argument can only be used in
                     Eq and Ne; all other relationals expect
@@ -196,6 +267,36 @@ class Relational(Boolean, EvalfMixin):
         #      b, evaluate=evaluate)))(*self.args, evaluate=False)
         return Relational.__new__(ops.get(self.func), *self.args)
 
+    @property
+    def weak(self):
+        """return the non-strict version of the inequality or self
+
+        EXAMPLES
+        ========
+
+        >>> from sympy.abc import x
+        >>> (x < 1).weak
+        x <= 1
+        >>> _.weak
+        x <= 1
+        """
+        return self
+
+    @property
+    def strict(self):
+        """return the strict version of the inequality or self
+
+        EXAMPLES
+        ========
+
+        >>> from sympy.abc import x
+        >>> (x <= 1).strict
+        x < 1
+        >>> _.strict
+        x < 1
+        """
+        return self
+
     def _eval_evalf(self, prec):
         return self.func(*[s._evalf(prec) for s in self.args])
 
@@ -220,9 +321,20 @@ class Relational(Boolean, EvalfMixin):
         x < -y
         >>> (-y < -x).canonical
         x < y
+
+        The canonicalization is recursively applied:
+
+        >>> from sympy import Eq
+        >>> Eq(x < y, y > x).canonical
+        True
         """
-        args = self.args
-        r = self
+        args = tuple([i.canonical if isinstance(i, Relational) else i for i in self.args])
+        if args != self.args:
+            r = self.func(*args)
+            if not isinstance(r, Relational):
+                return r
+        else:
+            r = self
         if r.rhs.is_number:
             if r.rhs.is_Number and r.lhs.is_Number and r.lhs > r.rhs:
                 r = r.reversed
@@ -302,7 +414,7 @@ class Relational(Boolean, EvalfMixin):
 
     def _eval_simplify(self, **kwargs):
         from .add import Add
-        from sympy.core.expr import Expr
+        from .expr import Expr
         r = self
         r = r.func(*[i.simplify(**kwargs) for i in r.args])
         if r.is_Relational:
@@ -339,7 +451,8 @@ class Relational(Boolean, EvalfMixin):
                         r = r.func(b, S.Zero)
                 except ValueError:
                     # maybe not a linear function, try polynomial
-                    from sympy.polys import Poly, poly, PolynomialError, gcd
+                    from sympy.polys.polyerrors import PolynomialError
+                    from sympy.polys.polytools import gcd, Poly, poly
                     try:
                         p = poly(dif, x)
                         c = p.all_coeffs()
@@ -353,7 +466,7 @@ class Relational(Boolean, EvalfMixin):
             elif len(free) >= 2:
                 try:
                     from sympy.solvers.solveset import linear_coeffs
-                    from sympy.polys import gcd
+                    from sympy.polys.polytools import gcd
                     free = list(ordered(free))
                     dif = r.lhs - r.rhs
                     m = linear_coeffs(dif, *free)
@@ -387,7 +500,7 @@ class Relational(Boolean, EvalfMixin):
             return self
 
     def _eval_trigsimp(self, **opts):
-        from sympy.simplify import trigsimp
+        from sympy.simplify.trigsimp import trigsimp
         return self.func(trigsimp(self.lhs, **opts), trigsimp(self.rhs, **opts))
 
     def expand(self, **kwargs):
@@ -521,7 +634,8 @@ class Equality(Relational):
         the result set pass `evaluate=True` to give L - R;
         if `evaluate=None` then terms in L and R will not cancel
         but they will be listed in canonical order; otherwise
-        non-canonical args will be returned.
+        non-canonical args will be returned. If one side is 0, the
+        non-zero side will be returned.
 
         Examples
         ========
@@ -538,6 +652,10 @@ class Equality(Relational):
         """
         from .add import _unevaluated_Add, Add
         L, R = args
+        if L == 0:
+            return R
+        if R == 0:
+            return L
         evaluate = kwargs.get('evaluate', True)
         if evaluate:
             # allow cancellation of args
@@ -559,18 +677,18 @@ class Equality(Relational):
         return set()
 
     def _eval_simplify(self, **kwargs):
-        from .add import Add
-        from sympy.core.expr import Expr
-        from sympy.solvers.solveset import linear_coeffs
         # standard simplify
         e = super()._eval_simplify(**kwargs)
         if not isinstance(e, Equality):
             return e
+        from .expr import Expr
         if not isinstance(e.lhs, Expr) or not isinstance(e.rhs, Expr):
             return e
         free = self.free_symbols
         if len(free) == 1:
             try:
+                from .add import Add
+                from sympy.solvers.solveset import linear_coeffs
                 x = free.pop()
                 m, b = linear_coeffs(
                     e.rewrite(Add, evaluate=False), x)
@@ -587,7 +705,7 @@ class Equality(Relational):
 
     def integrate(self, *args, **kwargs):
         """See the integrate function in sympy.integrals"""
-        from sympy.integrals import integrate
+        from sympy.integrals.integrals import integrate
         return integrate(self, *args, **kwargs)
 
     def as_poly(self, *gens, **kwargs):
@@ -765,7 +883,7 @@ class _Less(_Inequality):
 
 
 class GreaterThan(_Greater):
-    """Class representations of inequalities.
+    r"""Class representations of inequalities.
 
     Explanation
     ===========
@@ -776,7 +894,7 @@ class GreaterThan(_Greater):
     left-hand side is at least as big as the right side, if not bigger.  In
     mathematical notation:
 
-    lhs >= rhs
+    lhs $\ge$ rhs
 
     In total, there are four ``*Than`` classes, to represent the four
     inequalities:
@@ -784,27 +902,27 @@ class GreaterThan(_Greater):
     +-----------------+--------+
     |Class Name       | Symbol |
     +=================+========+
-    |GreaterThan      | (>=)   |
+    |GreaterThan      | ``>=`` |
     +-----------------+--------+
-    |LessThan         | (<=)   |
+    |LessThan         | ``<=`` |
     +-----------------+--------+
-    |StrictGreaterThan| (>)    |
+    |StrictGreaterThan| ``>``  |
     +-----------------+--------+
-    |StrictLessThan   | (<)    |
+    |StrictLessThan   | ``<``  |
     +-----------------+--------+
 
     All classes take two arguments, lhs and rhs.
 
     +----------------------------+-----------------+
-    |Signature Example           | Math equivalent |
+    |Signature Example           | Math Equivalent |
     +============================+=================+
-    |GreaterThan(lhs, rhs)       |   lhs >= rhs    |
+    |GreaterThan(lhs, rhs)       |   lhs $\ge$ rhs |
     +----------------------------+-----------------+
-    |LessThan(lhs, rhs)          |   lhs <= rhs    |
+    |LessThan(lhs, rhs)          |   lhs $\le$ rhs |
     +----------------------------+-----------------+
-    |StrictGreaterThan(lhs, rhs) |   lhs >  rhs    |
+    |StrictGreaterThan(lhs, rhs) |   lhs $>$ rhs   |
     +----------------------------+-----------------+
-    |StrictLessThan(lhs, rhs)    |   lhs <  rhs    |
+    |StrictLessThan(lhs, rhs)    |   lhs $<$ rhs   |
     +----------------------------+-----------------+
 
     In addition to the normal .lhs and .rhs of Relations, ``*Than`` inequality
@@ -815,7 +933,7 @@ class GreaterThan(_Greater):
     and will make it similarly more robust to client code changes:
 
     >>> from sympy import GreaterThan, StrictGreaterThan
-    >>> from sympy import LessThan,    StrictLessThan
+    >>> from sympy import LessThan, StrictLessThan
     >>> from sympy import And, Ge, Gt, Le, Lt, Rel, S
     >>> from sympy.abc import x, y, z
     >>> from sympy.core.relational import Relational
@@ -839,11 +957,12 @@ class GreaterThan(_Greater):
     x <= 2
     x < 2
 
-    Another option is to use the Python inequality operators (>=, >, <=, <)
-    directly.  Their main advantage over the Ge, Gt, Le, and Lt counterparts,
-    is that one can write a more "mathematical looking" statement rather than
-    littering the math with oddball function calls.  However there are certain
-    (minor) caveats of which to be aware (search for 'gotcha', below).
+    Another option is to use the Python inequality operators (``>=``, ``>``,
+    ``<=``, ``<``) directly.  Their main advantage over the ``Ge``, ``Gt``,
+    ``Le``, and ``Lt`` counterparts, is that one can write a more
+    "mathematical looking" statement rather than littering the math with
+    oddball function calls.  However there are certain (minor) caveats of
+    which to be aware (search for 'gotcha', below).
 
     >>> x >= 2
     x >= 2
@@ -879,11 +998,11 @@ class GreaterThan(_Greater):
         x > 1
 
         Due to the order that Python parses a statement, it may
-        not immediately find two objects comparable.  When "1 < x"
+        not immediately find two objects comparable.  When ``1 < x``
         is evaluated, Python recognizes that the number 1 is a native
         number and that x is *not*.  Because a native Python number does
         not know how to compare itself with a SymPy object
-        Python will try the reflective operation, "x > 1" and that is the
+        Python will try the reflective operation, ``x > 1`` and that is the
         form that gets evaluated, hence returned.
 
         If the order of the statement is important (for visual output to
@@ -930,7 +1049,7 @@ class GreaterThan(_Greater):
         False
 
     The third gotcha involves chained inequalities not involving
-    '==' or '!='. Occasionally, one may be tempted to write:
+    ``==`` or ``!=``. Occasionally, one may be tempted to write:
 
         >>> e = x < y < z
         Traceback (most recent call last):
@@ -979,8 +1098,8 @@ class GreaterThan(_Greater):
         (4) (GreaterThanObject.__bool__()) and (y > z)
         (5) TypeError
 
-       Because of the "and" added at step 2, the statement gets turned into a
-       weak ternary statement, and the first object's __bool__ method will
+       Because of the ``and`` added at step 2, the statement gets turned into a
+       weak ternary statement, and the first object's ``__bool__`` method will
        raise TypeError.  Thus, creating a chained inequality is not possible.
 
            In Python, there is no way to override the ``and`` operator, or to
@@ -997,6 +1116,9 @@ class GreaterThan(_Greater):
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_ge(lhs, rhs)
 
+    @property
+    def strict(self):
+        return Gt(*self.args)
 
 Ge = GreaterThan
 
@@ -1011,6 +1133,9 @@ class LessThan(_Less):
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_le(lhs, rhs)
 
+    @property
+    def strict(self):
+        return Lt(*self.args)
 
 Le = LessThan
 
@@ -1024,6 +1149,10 @@ class StrictGreaterThan(_Greater):
     @classmethod
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_gt(lhs, rhs)
+
+    @property
+    def weak(self):
+        return Ge(*self.args)
 
 
 Gt = StrictGreaterThan
@@ -1039,6 +1168,9 @@ class StrictLessThan(_Less):
     def _eval_fuzzy_relation(cls, lhs, rhs):
         return is_lt(lhs, rhs)
 
+    @property
+    def weak(self):
+        return Le(*self.args)
 
 Lt = StrictLessThan
 
@@ -1342,13 +1474,6 @@ def is_eq(lhs, rhs, assumptions=None):
     False
 
     """
-    from sympy.assumptions.wrapper import (AssumptionsWrapper,
-        is_infinite, is_extended_real)
-    from sympy.core.add import Add
-    from sympy.functions.elementary.complexes import arg
-    from sympy.simplify.simplify import clear_coefficients
-    from sympy.utilities.iterables import sift
-
     # here, _eval_Eq is only called for backwards compatibility
     # new code should use is_eq with multiple dispatch as
     # outlined in the docstring
@@ -1379,6 +1504,10 @@ def is_eq(lhs, rhs, assumptions=None):
         isinstance(rhs, Boolean)):
         return False  # only Booleans can equal Booleans
 
+    from sympy.assumptions.wrapper import (AssumptionsWrapper,
+        is_infinite, is_extended_real)
+    from .add import Add
+
     _lhs = AssumptionsWrapper(lhs, assumptions)
     _rhs = AssumptionsWrapper(rhs, assumptions)
 
@@ -1407,6 +1536,7 @@ def is_eq(lhs, rhs, assumptions=None):
                 eq_imag = is_eq(I * Add(*lhs_ri['imag']), I * Add(*rhs_ri['imag']), assumptions)
                 return fuzzy_and(map(fuzzy_bool, [eq_real, eq_imag]))
 
+        from sympy.functions.elementary.complexes import arg
         # Compare e.g. zoo with 1+I*oo by comparing args
         arglhs = arg(lhs)
         argrhs = arg(rhs)
@@ -1445,6 +1575,7 @@ def is_eq(lhs, rhs, assumptions=None):
                     # if the condition that makes the denominator
                     # infinite does not make the original expression
                     # True then False can be returned
+                    from sympy.simplify.simplify import clear_coefficients
                     l, r = clear_coefficients(d, S.Infinity)
                     args = [_.subs(l, r) for _ in (lhs, rhs)]
                     if args != [lhs, rhs]:

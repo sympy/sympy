@@ -12,8 +12,6 @@ Goals:
 
 """
 
-from __future__ import print_function, division
-
 import os
 import sys
 import platform
@@ -35,10 +33,11 @@ import stat
 import tempfile
 import warnings
 from contextlib import contextmanager
+from inspect import unwrap
 
 from sympy.core.cache import clear_cache
-from sympy.core.compatibility import (PY3, unwrap)
 from sympy.external import import_module
+from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
 
 IS_WINDOWS = (os.name == 'nt')
 ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
@@ -95,10 +94,6 @@ class DependencyError(Exception):
     pass
 
 
-# add more flags ??
-future_flags = division.compiler_flag
-
-
 def _indent(s, indent=4):
     """
     Add the given number of space characters to the beginning of
@@ -124,7 +119,7 @@ def _report_failure(self, out, test, example, got):
     out(self._failure_header(test, example) + s)
 
 
-if PY3 and IS_WINDOWS:
+if IS_WINDOWS:
     DocTestRunner.report_failure = _report_failure  # type: ignore
 
 
@@ -149,7 +144,7 @@ def convert_to_native_paths(lst):
 
 def get_sympy_dir():
     """
-    Returns the root sympy directory and set the global value
+    Returns the root SymPy directory and set the global value
     indicating whether the system is case sensitive or not.
     """
     this_file = os.path.abspath(__file__)
@@ -159,7 +154,8 @@ def get_sympy_dir():
 
 
 def setup_pprint():
-    from sympy import pprint_use_unicode, init_printing
+    from sympy.interactive.printing import init_printing
+    from sympy.printing.pretty.pretty import pprint_use_unicode
     import sympy.interactive.printing as interactive_printing
 
     # force pprint to be in ascii mode in doctests
@@ -439,7 +435,7 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
     >>> sympy.test(split='1/2')  # doctest: +SKIP
 
     The ``time_balance`` option can be passed in conjunction with ``split``.
-    If ``time_balance=True`` (the default for ``sympy.test``), sympy will attempt
+    If ``time_balance=True`` (the default for ``sympy.test``), SymPy will attempt
     to split the tests such that each split takes equal time.  This heuristic
     for balancing is based on pre-recorded test data.
 
@@ -575,7 +571,7 @@ def _test(*paths,
 
 def doctest(*paths, subprocess=True, rerun=0, **kwargs):
     r"""
-    Runs doctests in all \*.py files in the sympy directory which match
+    Runs doctests in all \*.py files in the SymPy directory which match
     any of the given strings in ``paths`` or all tests if paths=[].
 
     Notes:
@@ -655,7 +651,6 @@ def _get_doctest_blacklist():
         "doc/src/modules/physics/mechanics/autolev_parser.rst",
         "sympy/galgebra.py", # no longer part of SymPy
         "sympy/this.py", # prints text
-        "sympy/physics/gaussopt.py", # raises deprecation warning
         "sympy/matrices/densearith.py", # raises deprecation warning
         "sympy/matrices/densesolve.py", # raises deprecation warning
         "sympy/matrices/densetools.py", # raises deprecation warning
@@ -670,6 +665,7 @@ def _get_doctest_blacklist():
         "sympy/integrals/rubi/rubi.py",
         "sympy/plotting/pygletplot/__init__.py", # crashes on some systems
         "sympy/plotting/pygletplot/plot.py", # crashes on some systems
+        "sympy/codegen/array_utils.py", # raises deprecation warning
     ])
     # autolev parser tests
     num = 12
@@ -737,7 +733,7 @@ def _get_doctest_blacklist():
 
     # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
-        "sympy/conftest.py", # Python 2.7 issues
+        "sympy/conftest.py", # Depends on pytest
         "sympy/testing/benchmarking.py",
     ])
 
@@ -765,7 +761,7 @@ def _doctest(*paths, **kwargs):
     Returns 0 if tests passed and 1 if they failed.  See the docstrings of
     ``doctest()`` and ``test()`` for more information.
     """
-    from sympy import pprint_use_unicode
+    from sympy.printing.pretty.pretty import pprint_use_unicode
 
     normal = kwargs.get("normal", False)
     verbose = kwargs.get("verbose", False)
@@ -1056,14 +1052,8 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
                          "relative paths.")
 
     # Relativize the path
-    if not PY3:
-        text, filename = pdoctest._load_testfile(
-            filename, package, module_relative)
-        if encoding is not None:
-            text = text.decode(encoding)
-    else:
-        text, filename = pdoctest._load_testfile(
-            filename, package, module_relative, encoding)
+    text, filename = pdoctest._load_testfile(
+        filename, package, module_relative, encoding)
 
     # If no name was given, then use the file's name.
     if name is None:
@@ -1087,7 +1077,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
 
     # Read the file, convert it to a test, and run it.
     test = parser.get_doctest(text, globs, name, filename, 0)
-    runner.run(test, compileflags=future_flags)
+    runner.run(test)
 
     if report:
         runner.summarize()
@@ -1190,10 +1180,7 @@ class SymPyTests:
         try:
             gl = {'__file__': filename}
             try:
-                if PY3:
-                    open_file = lambda: open(filename, encoding="utf8")
-                else:
-                    open_file = lambda: open(filename)
+                open_file = lambda: open(filename, encoding="utf8")
 
                 with open_file() as f:
                     source = f.read()
@@ -1348,7 +1335,7 @@ class SymPyTests:
     def get_test_files(self, dir, pat='test_*.py'):
         """
         Returns the list of test_*.py (default) files at or below directory
-        ``dir`` relative to the sympy home directory.
+        ``dir`` relative to the SymPy home directory.
         """
         dir = os.path.join(self._root_dir, convert_to_native_paths([dir])[0])
 
@@ -1389,7 +1376,7 @@ class SymPyDocTests:
 
         from io import StringIO
         import sympy.interactive.printing as interactive_printing
-        from sympy import pprint_use_unicode
+        from sympy.printing.pretty.pretty import pprint_use_unicode
 
         rel_name = filename[len(self._root_dir) + 1:]
         dirname, file = os.path.split(filename)
@@ -1455,13 +1442,11 @@ class SymPyDocTests:
                 # if this is uncommented then all the test would get is what
                 # comes by default with a "from sympy import *"
                 #exec('from sympy import *') in test.globs
-            test.globs['print_function'] = print_function
-
             old_displayhook = sys.displayhook
             use_unicode_prev = setup_pprint()
 
             try:
-                f, t = runner.run(test, compileflags=future_flags,
+                f, t = runner.run(test,
                                   out=new.write, clear_globs=False)
             except KeyboardInterrupt:
                 raise
@@ -1542,11 +1527,10 @@ class SymPyDocTests:
             tempdir = tempfile.mkdtemp()
             os.environ['PATH'] = '%s:%s' % (tempdir, os.environ['PATH'])
 
-            vw = ('#!/usr/bin/env {}\n'
+            vw = ('#!/usr/bin/env python3\n'
                   'import sys\n'
                   'if len(sys.argv) <= 1:\n'
-                  '    exit("wrong number of args")\n').format(
-                      'python3' if PY3 else 'python')
+                  '    exit("wrong number of args")\n')
 
             for viewer in disable_viewers:
                 with open(os.path.join(tempdir, viewer), 'w') as fh:
@@ -1835,7 +1819,6 @@ class SymPyDocTestRunner(DocTestRunner):
         # Fail for deprecation warnings
         with raise_on_deprecated():
             try:
-                test.globs['print_function'] = print_function
                 return self.__run(test, compileflags, out)
             finally:
                 sys.stdout = save_stdout
@@ -2032,8 +2015,7 @@ class PyTestReporter(Reporter):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
                 stdout = process.stdout.read()
-                if PY3:
-                    stdout = stdout.decode("utf-8")
+                stdout = stdout.decode("utf-8")
             except OSError:
                 pass
             else:
@@ -2137,9 +2119,9 @@ class PyTestReporter(Reporter):
                 sys.stdout.write("\n")
 
         # Avoid UnicodeEncodeError when printing out test failures
-        if PY3 and IS_WINDOWS:
+        if IS_WINDOWS:
             text = text.encode('raw_unicode_escape').decode('utf8', 'ignore')
-        elif PY3 and not sys.stdout.encoding.lower().startswith('utf'):
+        elif not sys.stdout.encoding.lower().startswith('utf'):
             text = text.encode(sys.stdout.encoding, 'backslashreplace'
                               ).decode(sys.stdout.encoding)
 
@@ -2185,7 +2167,6 @@ class PyTestReporter(Reporter):
         self.write("architecture:       %s\n" % ARCH)
         from sympy.core.cache import USE_CACHE
         self.write("cache:              %s\n" % USE_CACHE)
-        from sympy.external.gmpy import GROUND_TYPES, HAS_GMPY
         version = ''
         if GROUND_TYPES =='gmpy':
             if HAS_GMPY == 1:

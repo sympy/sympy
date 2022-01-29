@@ -6,14 +6,13 @@ from functools import reduce
 from sympy.core.parameters import global_parameters
 from sympy.core.basic import Atom
 from sympy.core.expr import Expr
-from sympy.core.compatibility import \
-    is_sequence, as_int
 from sympy.core.numbers import Integer
 from sympy.core.sympify import _sympify
 from sympy.matrices import zeros
 from sympy.polys.polytools import lcm
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
-    has_dups, runs)
+    has_dups, runs, is_sequence)
+from sympy.utilities.misc import as_int
 from mpmath.libmp.libintmath import ifac
 from sympy.multipledispatch import dispatch
 
@@ -469,16 +468,16 @@ class Cycle(dict):
 
 
 class Permutation(Atom):
-    """
+    r"""
     A permutation, alternatively known as an 'arrangement number' or 'ordering'
     is an arrangement of the elements of an ordered list into a one-to-one
     mapping with itself. The permutation of a given arrangement is given by
     indicating the positions of the elements after re-arrangement [2]_. For
-    example, if one started with elements [x, y, a, b] (in that order) and
-    they were reordered as [x, y, b, a] then the permutation would be
-    [0, 1, 3, 2]. Notice that (in SymPy) the first element is always referred
+    example, if one started with elements ``[x, y, a, b]`` (in that order) and
+    they were reordered as ``[x, y, b, a]`` then the permutation would be
+    ``[0, 1, 3, 2]``. Notice that (in SymPy) the first element is always referred
     to as 0 and the permutation uses the indices of the elements in the
-    original ordering, not the elements (a, b, etc...) themselves.
+    original ordering, not the elements ``(a, b, ...)`` themselves.
 
     >>> from sympy.combinatorics import Permutation
     >>> from sympy import init_printing
@@ -498,7 +497,7 @@ class Permutation(Atom):
     [0    1    2     ... n-1]
     [p(0) p(1) p(2)  ... p(n-1)]
 
-    Since the first line is always range(n), where n is the size of p,
+    Since the first line is always ``range(n)``, where n is the size of p,
     it is sufficient to represent the permutation by the second line,
     referred to as the "array form" of the permutation. This is entered
     in brackets as the argument to the Permutation class:
@@ -612,7 +611,7 @@ class Permutation(Atom):
 
     Caution: no singleton containing an element larger than the largest
     in any previous cycle can be entered. This is an important difference
-    in how Permutation and Cycle handle the __call__ syntax. A singleton
+    in how Permutation and Cycle handle the ``__call__`` syntax. A singleton
     argument at the start of a Permutation performs instantiation of the
     Permutation and is permitted:
 
@@ -1878,7 +1877,7 @@ class Permutation(Atom):
 
         next_lex, unrank_lex, cardinality, length, order, size
         """
-        if not self._rank is None:
+        if self._rank is not None:
             return self._rank
         rank = 0
         rho = self.array_form[:]
@@ -2255,7 +2254,7 @@ class Permutation(Atom):
         References
         ==========
 
-        https://en.wikipedia.org/wiki/Commutator
+        .. [1] https://en.wikipedia.org/wiki/Commutator
         """
 
         a = self.array_form

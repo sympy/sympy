@@ -1,9 +1,5 @@
 .. _codegen_prose:
 
-===============
-Code Generation
-===============
-
 Several submodules in SymPy allow one to generate directly compilable and
 executable code in a variety of different programming languages from SymPy
 expressions. In addition, there are functions that generate Python importable
@@ -428,7 +424,7 @@ supply an argument sequence to helper routines.
 Another method available at the ``autowrap`` level is ``binary_function``. It
 returns a sympy function. The advantage is that we can have very fast functions
 as compared to SymPy speeds. This is because we will be using compiled
-functions with Sympy attributes and methods. An illustration::
+functions with SymPy attributes and methods. An illustration::
 
     >>> from sympy.utilities.autowrap import binary_function
     >>> from sympy.physics.hydrogen import R_nl
