@@ -11,7 +11,6 @@ from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
 from sympy.polys.polyutils import _unify_gens, _not_a_coeff
 from sympy.utilities import public
-from sympy.utilities.decorator import deprecated
 from sympy.utilities.iterables import is_sequence
 
 

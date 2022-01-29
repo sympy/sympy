@@ -5,7 +5,6 @@ from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.complexes import im, sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys.polyerrors import PolynomialError
-from sympy.utilities.decorator import deprecated
 from sympy.utilities.misc import filldedent
 
 

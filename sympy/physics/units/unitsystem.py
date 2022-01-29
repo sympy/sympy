@@ -11,8 +11,6 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.physics.units.dimensions import _QuantityMapper
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-
 from .dimensions import Dimension
 
 
