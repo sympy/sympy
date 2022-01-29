@@ -3698,7 +3698,10 @@ def nonlinsolve(system, *symbols):
     valid_solns = []
     if isinstance(result, FiniteSet):
         for soln in result.args:
-            if any(isinstance(v, Set) for v in soln) or checksol(system, dict(zip(symbols, soln))) != False:
+            # the second of the following conditions is a hack
+            # it is required because is_constant can fail with cases like sin(_n*pi)
+            # so don't attempt to call checksol if the solution contains extra symbols
+            if any(isinstance(v, Set) for v in soln) or result.free_symbols.difference(symbols) or checksol(system, dict(zip(symbols, soln))) != False:
                 valid_solns.append(soln)
         if len(valid_solns) > 0:
             return FiniteSet(*valid_solns)

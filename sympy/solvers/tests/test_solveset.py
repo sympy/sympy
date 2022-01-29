@@ -26,7 +26,7 @@ from sympy.sets.contains import Contains
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import ImageSet, Range
 from sympy.sets.sets import (Complement, FiniteSet,
-    Intersection, Interval, Union, imageset, ProductSet)
+                             Intersection, Interval, Union, imageset, ProductSet, EmptySet)
 from sympy.simplify import simplify
 from sympy.tensor.indexed import Indexed
 from sympy.utilities.iterables import numbered_symbols
@@ -1577,6 +1577,7 @@ def test_nonlinsolve_basic():
 
 
 def test_nonlinsolve_abs():
+    y = Symbol('x', positive=True)
     soln = FiniteSet((y, y), (-y, y))
     assert nonlinsolve([Abs(x) - y], x, y) == soln
 
@@ -2996,8 +2997,7 @@ def test_issue_17580():
 
 def test_issue_17566_actual():
     sys = [2**x + 2**y - 3, 4**x + 9**y - 5]
-    # Not clear this is the correct result, but at least no recursion error
-    assert nonlinsolve(sys, x, y) == FiniteSet((log(3 - 2**y)/log(2), y))
+    assert nonlinsolve(sys, x, y) == EmptySet()
 
 
 def test_issue_17565():
@@ -3065,7 +3065,7 @@ def test_issue_22413():
                          4*x*exp(2*x) + 4*y*exp(2*x + y) + 4*exp(2*x + y) + 1),
                         x, y)
     # First solution is not correct, but the issue was an exception
-    sols = FiniteSet((x, S.Zero), (-exp(y) - S.Half, y))
+    sols = EmptySet()
     assert res == sols
 
 
