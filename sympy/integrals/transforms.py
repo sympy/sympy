@@ -80,7 +80,7 @@ class IntegralTransform(Function):
 
     Also set ``cls._name``. For instance,
 
-    >>> from sympy.integrals.transforms import LaplaceTransform
+    >>> from sympy import LaplaceTransform
     >>> LaplaceTransform._name
     'Laplace'
 
@@ -383,8 +383,7 @@ def mellin_transform(f, x, s, **hints):
     Examples
     ========
 
-    >>> from sympy.integrals.transforms import mellin_transform
-    >>> from sympy import exp
+    >>> from sympy import mellin_transform, exp
     >>> from sympy.abc import x, s
     >>> mellin_transform(exp(-x), x, s)
     (gamma(s), (0, oo), True)
@@ -892,8 +891,7 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
     Examples
     ========
 
-    >>> from sympy.integrals.transforms import inverse_mellin_transform
-    >>> from sympy import oo, gamma
+    >>> from sympy import inverse_mellin_transform, oo, gamma
     >>> from sympy.abc import x, s
     >>> inverse_mellin_transform(gamma(s), s, x, (0, oo))
     exp(-x)
@@ -1213,9 +1211,8 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     Examples
     ========
 
-    >>> from sympy.integrals import laplace_transform
+    >>> from sympy import DiracDelta, exp, laplace_transform
     >>> from sympy.abc import t, s, a
-    >>> from sympy.functions import DiracDelta, exp
     >>> laplace_transform(t**a, t, s)
     (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
     >>> laplace_transform(DiracDelta(t)-a*exp(-a*t),t,s)
@@ -1399,8 +1396,7 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     Examples
     ========
 
-    >>> from sympy.integrals.transforms import inverse_laplace_transform
-    >>> from sympy import exp, Symbol
+    >>> from sympy import inverse_laplace_transform, exp, Symbol
     >>> from sympy.abc import s, t
     >>> a = Symbol('a', positive=True)
     >>> inverse_laplace_transform(exp(-a*s)/s, s, t)

@@ -414,8 +414,7 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import Integral, cos, sin, pi
-        >>> from sympy.core.function import Function
+        >>> from sympy import Function, Integral, cos, sin, pi
         >>> from sympy.abc import x
         >>> f = Function('f')
 

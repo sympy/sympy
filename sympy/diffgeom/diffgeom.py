@@ -1126,7 +1126,7 @@ class Commutator(Expr):
 
     >>> from sympy.diffgeom.rn import R2_p, R2_r
     >>> from sympy.diffgeom import Commutator
-    >>> from sympy.simplify import simplify
+    >>> from sympy import simplify
 
     >>> fx, fy = R2_r.base_scalars()
     >>> e_x, e_y = R2_r.base_vectors()

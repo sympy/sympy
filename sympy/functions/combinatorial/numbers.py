@@ -945,8 +945,7 @@ class euler(Function):
     Examples
     ========
 
-    >>> from sympy import Symbol, S
-    >>> from sympy.functions import euler
+    >>> from sympy import euler, Symbol, S
     >>> [euler(n) for n in range(10)]
     [1, 0, -1, 0, 5, 0, -61, 0, 1385, 0]
     >>> n = Symbol("n")
@@ -1225,8 +1224,7 @@ class genocchi(Function):
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.functions import genocchi
+    >>> from sympy import genocchi, Symbol
     >>> [genocchi(n) for n in range(1, 9)]
     [1, -1, 0, 1, 0, -3, 0, 17]
     >>> n = Symbol('n', integer=True, positive=True)
@@ -1324,8 +1322,7 @@ class partition(Function):
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.functions import partition
+    >>> from sympy import partition, Symbol
     >>> [partition(n) for n in range(9)]
     [1, 1, 2, 3, 5, 7, 11, 15, 22]
     >>> n = Symbol('n', integer=True, negative=True)

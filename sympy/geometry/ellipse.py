@@ -1519,8 +1519,7 @@ class Circle(Ellipse):
     Examples
     ========
 
-    >>> from sympy import Eq
-    >>> from sympy.geometry import Point, Circle
+    >>> from sympy import Point, Circle, Eq
     >>> from sympy.abc import x, y, a, b
 
     A circle constructed from a center and radius:

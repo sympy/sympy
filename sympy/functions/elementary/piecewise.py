@@ -147,10 +147,11 @@ class Piecewise(Function):
         modifications were made, return None.
 
         Modifications that are made here:
-        1) relationals are made canonical
-        2) any False conditions are dropped
-        3) any repeat of a previous condition is ignored
-        3) any args past one with a true condition are dropped
+
+        1. relationals are made canonical
+        2. any False conditions are dropped
+        3. any repeat of a previous condition is ignored
+        4. any args past one with a true condition are dropped
 
         If there are no args left, nan will be returned.
         If there is a single arg with a True condition, its
@@ -660,8 +661,8 @@ class Piecewise(Function):
     def _intervals(self, sym):
         """Return a list of unique tuples, (a, b, e, i), where a and b
         are the lower and upper bounds in which the expression e of
-        argument i in self is defined and a < b (when involving
-        numbers) or a <= b when involving symbols.
+        argument i in self is defined and $a < b$ (when involving
+        numbers) or $a \le b$ when involving symbols.
 
         If there are any relationals not involving sym, or any
         relational cannot be solved for sym, NotImplementedError is
@@ -1057,7 +1058,7 @@ def piecewise_fold(expr, evaluate=True):
     Examples
     ========
 
-    >>> from sympy import Piecewise, piecewise_fold, sympify as S
+    >>> from sympy import Piecewise, piecewise_fold, S
     >>> from sympy.abc import x
     >>> p = Piecewise((x, x < 1), (1, S(1) <= x))
     >>> piecewise_fold(x*p)

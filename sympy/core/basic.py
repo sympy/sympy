@@ -1185,7 +1185,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         Note ``has`` is a structural algorithm with no knowledge of
         mathematics. Consider the following half-open interval:
 
-        >>> from sympy.sets import Interval
+        >>> from sympy import Interval
         >>> i = Interval.Lopen(0, 5); i
         Interval.Lopen(0, 5)
         >>> i.args
@@ -2056,8 +2056,7 @@ class preorder_traversal:
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.core.basic import preorder_traversal
+    >>> from sympy import preorder_traversal, symbols
     >>> x, y, z = symbols('x y z')
 
     The nodes are returned in the order that they are encountered unless key
@@ -2104,8 +2103,7 @@ class preorder_traversal:
         Examples
         ========
 
-        >>> from sympy.core import symbols
-        >>> from sympy.core.basic import preorder_traversal
+        >>> from sympy import preorder_traversal, symbols
         >>> x, y, z = symbols('x y z')
         >>> pt = preorder_traversal((x+y*z)*z)
         >>> for i in pt:

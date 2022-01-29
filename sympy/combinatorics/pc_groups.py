@@ -103,7 +103,7 @@ class Collector(DefaultPrinting):
         ========
 
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> G = SymmetricGroup(4)
         >>> PcGroup = G.polycyclic_group()
         >>> collector = PcGroup.collector
@@ -202,7 +202,7 @@ class Collector(DefaultPrinting):
         ========
 
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> G = SymmetricGroup(4)
         >>> PcGroup = G.polycyclic_group()
         >>> collector = PcGroup.collector
@@ -243,7 +243,7 @@ class Collector(DefaultPrinting):
         ========
 
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> G = SymmetricGroup(3)
         >>> PcGroup = G.polycyclic_group()
         >>> collector = PcGroup.collector
@@ -298,7 +298,7 @@ class Collector(DefaultPrinting):
 
         >>> from sympy.combinatorics.named_groups import SymmetricGroup
         >>> from sympy.combinatorics.perm_groups import PermutationGroup
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> G = SymmetricGroup(4)
         >>> PcGroup = G.polycyclic_group()
         >>> collector = PcGroup.collector

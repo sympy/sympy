@@ -20,7 +20,7 @@ class Subset(Basic):
     Examples
     ========
 
-    >>> from sympy.combinatorics.subsets import Subset
+    >>> from sympy.combinatorics import Subset
     >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
     >>> a.next_binary().subset
     ['b']
@@ -43,7 +43,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.subset
         ['c', 'd']
@@ -73,7 +73,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.iterate_binary(-2).subset
         ['d']
@@ -98,7 +98,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.next_binary().subset
         ['b']
@@ -120,7 +120,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset([], ['a', 'b', 'c', 'd'])
         >>> a.prev_binary().subset
         ['a', 'b', 'c', 'd']
@@ -142,7 +142,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.next_lexicographic().subset
         ['d']
@@ -187,7 +187,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset([], ['a', 'b', 'c', 'd'])
         >>> a.prev_lexicographic().subset
         ['d']
@@ -228,7 +228,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset([1, 2, 3], [1, 2, 3, 4])
         >>> a.iterate_graycode(3).subset
         [1, 4]
@@ -252,7 +252,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset([1, 2, 3], [1, 2, 3, 4])
         >>> a.next_gray().subset
         [1, 3]
@@ -271,7 +271,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset([2, 3, 4], [1, 2, 3, 4, 5])
         >>> a.prev_gray().subset
         [2, 3, 4, 5]
@@ -291,7 +291,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset([], ['a','b','c','d'])
         >>> a.rank_binary
         0
@@ -318,7 +318,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.rank_lexicographic
         14
@@ -346,7 +346,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c','d'], ['a','b','c','d'])
         >>> a.rank_gray
         2
@@ -372,7 +372,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.subset
         ['c', 'd']
@@ -392,7 +392,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.size
         2
@@ -412,7 +412,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.superset
         ['a', 'b', 'c', 'd']
@@ -432,7 +432,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.superset_size
         4
@@ -452,7 +452,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         >>> a.cardinality
         16
@@ -472,7 +472,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> Subset.subset_from_bitlist(['a', 'b', 'c', 'd'], '0011').subset
         ['c', 'd']
 
@@ -497,7 +497,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> Subset.bitlist_from_subset(['c', 'd'], ['a', 'b', 'c', 'd'])
         '0011'
 
@@ -521,7 +521,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> Subset.unrank_binary(4, ['a', 'b', 'c', 'd']).subset
         ['b']
 
@@ -541,7 +541,7 @@ class Subset(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.subsets import Subset
+        >>> from sympy.combinatorics import Subset
         >>> Subset.unrank_gray(4, ['a', 'b', 'c']).subset
         ['a', 'b']
         >>> Subset.unrank_gray(0, ['a', 'b', 'c']).subset

@@ -267,14 +267,14 @@ class sign(Function):
 
     If the expression is real the sign will be:
 
-        * 1 if expression is positive
-        * 0 if expression is equal to zero
-        * -1 if expression is negative
+        * $1$ if expression is positive
+        * $0$ if expression is equal to zero
+        * $-1$ if expression is negative
 
     If the expression is imaginary the sign will be:
 
-        * I if im(expression) is positive
-        * -I if im(expression) is negative
+        * $I$ if im(expression) is positive
+        * $-I$ if im(expression) is negative
 
     Otherwise an unevaluated expression will be returned. When evaluated, the
     result (in general) will be ``cos(arg(expr)) + I*sin(arg(expr))``.
@@ -282,8 +282,7 @@ class sign(Function):
     Examples
     ========
 
-    >>> from sympy.functions import sign
-    >>> from sympy.core.numbers import I
+    >>> from sympy import sign, I
 
     >>> sign(-1)
     -1
@@ -694,13 +693,12 @@ class arg(Function):
     returns the argument (in radians) of a complex number.  The argument is
     evaluated in consistent convention with atan2 where the branch-cut is
     taken along the negative real axis and arg(z) is in the interval
-    (-pi,pi].  For a positive number, the argument is always 0.
+    $(-\pi, \pi]$.  For a positive number, the argument is always $0$.
 
     Examples
     ========
 
-    >>> from sympy.functions import arg
-    >>> from sympy import I, sqrt
+    >>> from sympy import arg, I, sqrt
     >>> arg(2.0)
     0
     >>> arg(I)
@@ -848,9 +846,7 @@ class transpose(Function):
     Examples
     ========
 
-    >>> from sympy.functions import transpose
-    >>> from sympy.matrices import MatrixSymbol
-    >>> from sympy import Matrix
+    >>> from sympy import transpose, Matrix, MatrixSymbol
     >>> A = MatrixSymbol('A', 25, 9)
     >>> transpose(A)
     A.T
@@ -907,8 +903,7 @@ class adjoint(Function):
     Examples
     ========
 
-    >>> from sympy import adjoint
-    >>> from sympy.matrices import MatrixSymbol
+    >>> from sympy import adjoint, MatrixSymbol
     >>> A = MatrixSymbol('A', 10, 5)
     >>> adjoint(A)
     Adjoint(A)
@@ -1395,10 +1390,10 @@ def _unpolarify(eq, exponents_only, pause=False):
 def unpolarify(eq, subs=None, exponents_only=False):
     """
     If p denotes the projection from the Riemann surface of the logarithm to
-    the complex line, return a simplified version eq' of `eq` such that
-    p(eq') == p(eq).
+    the complex line, return a simplified version ``eq'`` of ``eq`` such that
+    ``p(eq') == p(eq)``.
     Also apply the substitution subs in the end. (This is a convenience, since
-    ``unpolarify``, in a certain sense, undoes polarify.)
+    ``unpolarify``, in a certain sense, undoes ``polarify``.)
 
     Examples
     ========
