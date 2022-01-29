@@ -257,6 +257,7 @@ def checksol(f, symbol, sol=None, **flags):
             rv = None  # don't return, wait to see if there's a False
         return rv
 
+    f = _sympify(f)
     if isinstance(f, Poly):
         f = f.as_expr()
     elif isinstance(f, (Eq, Ne)):
@@ -270,7 +271,6 @@ def checksol(f, symbol, sol=None, **flags):
         else:
             f = f.rewrite(Add, evaluate=False)
 
-    f = _sympify(f)
     if isinstance(f, BooleanAtom):
         return bool(f)
     elif not f.is_Relational and not f:
