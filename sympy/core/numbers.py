@@ -33,8 +33,6 @@ from mpmath.libmp.libmpf import (
 from sympy.utilities.misc import as_int, debug, filldedent
 from .parameters import global_parameters
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-
 _LOG2 = math.log(2)
 
 
