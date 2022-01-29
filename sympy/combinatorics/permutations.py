@@ -181,7 +181,8 @@ def _af_pow(a, n):
     Examples
     ========
 
-    >>> from sympy.combinatorics import Permutation, _af_pow
+    >>> from sympy.combinatorics import Permutation
+    >>> from sympy.combinatorics.permutations import _af_pow
     >>> p = Permutation([2, 0, 3, 1])
     >>> p.order()
     4
