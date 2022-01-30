@@ -272,7 +272,6 @@ def checksol(f, symbol, sol=None, **flags):
 
     if isinstance(f, BooleanAtom):
         return bool(f)
-
     elif not f.is_Relational and not f:
         return True
 
