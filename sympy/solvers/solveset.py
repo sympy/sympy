@@ -3698,7 +3698,7 @@ def nonlinsolve(system, *symbols):
         valid_solns = []
         for soln in result.args:
             # the second of the following conditions is a hack
-            # it is required because checksol can fail with cases like sin(n*pi)
+            # it is required because checksol can fail in cases where nonlinsolve introduces extra dummy symbols with incorrect assumptions especially with sines and cosines
             # so don't attempt to call checksol if the solution contains extra symbols
             if any(isinstance(v, Set) for v in soln) or soln.free_symbols.difference(symbols) \
                     or checksol(system, dict(zip(symbols, soln))) != False:
