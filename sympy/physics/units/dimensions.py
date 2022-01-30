@@ -579,6 +579,12 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         List all canonical dimension names.
         """
+        SymPyDeprecationWarning(
+            deprecated_since_version="1.10",
+            issue=22953,
+            feature="List of dimensions",
+            useinstead="base and derive dims",
+        ).warn()
         dimset = set()
         for i in self.base_dims:
             dimset.update(set(self.get_dimensional_dependencies(i).keys()))
