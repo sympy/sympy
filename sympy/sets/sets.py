@@ -54,6 +54,9 @@ class Set(Basic, EvalfMixin):
     sets by the :class:`Union` class. The empty set is represented by the
     :class:`EmptySet` class and available as a singleton as ``S.EmptySet``.
     """
+
+    __slots__ = ()
+
     is_number = False
     is_iterable = False
     is_interval = False

@@ -37,7 +37,7 @@ from sympy.utilities.misc import filldedent
 class Integral(AddWithLimits):
     """Represents unevaluated integral."""
 
-    __slots__ = ('is_commutative',)
+    __slots__ = ()
 
     args: tTuple[Expr, Tuple]
 
