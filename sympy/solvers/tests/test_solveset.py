@@ -26,7 +26,7 @@ from sympy.sets.contains import Contains
 from sympy.sets.conditionset import ConditionSet
 from sympy.sets.fancysets import ImageSet, Range
 from sympy.sets.sets import (Complement, FiniteSet,
-                             Intersection, Interval, Union, imageset, ProductSet, EmptySet)
+    Intersection, Interval, Union, imageset, ProductSet, EmptySet)
 from sympy.simplify import simplify
 from sympy.tensor.indexed import Indexed
 from sympy.utilities.iterables import numbered_symbols
@@ -1577,7 +1577,7 @@ def test_nonlinsolve_basic():
 
 
 def test_nonlinsolve_abs():
-    y = Symbol('x', positive=True)
+    y = Symbol('y', positive=True)
     soln = FiniteSet((y, y), (-y, y))
     assert nonlinsolve([Abs(x) - y], x, y) == soln
 
@@ -3098,3 +3098,14 @@ def test_issue_21890():
         ((-2**(S(2)/3)/4 - 2**(S(2)/3)*sqrt(3)*I/4)/ry, ry),
         ((-2**(S(2)/3)/4 + 2**(S(2)/3)*sqrt(3)*I/4)/ry, ry)}
     assert sol == ans
+
+
+def test_issue_22628():
+    assert nonlinsolve([h - 1, k - 1, f - 2, f - 4, -2*k], h, k, f) == EmptySet()
+    assert nonlinsolve([h - 1, f - 2, f], h, f) == EmptySet()
+
+
+def test_issue_22874():
+    n = Symbol('n')
+    ans = {(2 * exp(2 * n * I * pi) / 3, ImageSet(Lambda(n, 2 * n * I * pi + log(Rational(2, 3))), S.Integers))}
+    assert dumeq(nonlinsolve([-2 * (x - exp(y)), (2 * x - 3 * exp(2 * y)) * exp(y)], x, y), ans)
