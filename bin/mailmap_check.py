@@ -123,6 +123,16 @@ def main(*args):
         problems = True
         print(red("The mailmap file was reordered"))
 
+    # Check if changes to AUTHORS file are also needed
+    lines_authors = make_authors_file_lines(git_people)
+    old_lines_authors = read_lines(authors_path())
+
+    for person in old_lines_authors[8:]:
+        if person not in git_people:
+            print(red("This author is in the AUTHORS file but not .mailmap:"))
+            print(person)
+            problems = True
+
     if problems:
         print(red(filldedent("""
         For instructions on updating the .mailmap file see:
@@ -130,9 +140,7 @@ def main(*args):
     else:
         print(green("No changes needed in .mailmap"))
 
-    # Check if changes to AUTHORS file are also needed
-    lines_authors = make_authors_file_lines(git_people)
-    old_lines_authors = read_lines(authors_path())
+    # Actually update the AUTHORS file (if --update-authors was passed)
     update_authors_file(lines_authors, old_lines_authors, args.update_authors)
 
     return int(problems)
