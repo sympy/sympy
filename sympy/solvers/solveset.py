@@ -3694,8 +3694,8 @@ def nonlinsolve(system, *symbols):
         # Use `substitution` method for the system
         result = substitution(
             polys_expr + nonpolys, symbols, exclude=denominators)
-    valid_solns = []
     if isinstance(result, FiniteSet):
+        valid_solns = []
         for soln in result.args:
             # the second of the following conditions is a hack
             # it is required because checksol can fail with cases like sin(n*pi)
