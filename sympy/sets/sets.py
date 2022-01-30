@@ -538,16 +538,17 @@ class Set(Basic, EvalfMixin):
     @property
     def kind(self):
         """
-        The kind of a Set.
+        The kind of a Set
 
-        Every instance of Set or its subclass will have kind of class
-        ``SetKind``.
-        Parameter will be kind of elements of the sets
+        Explanation
+        ===========
 
-        Parameter of SetKind can be ``NumberKind``, ``UndefinedKind``,
-        ``TupleKind`` etc.
-        if the elements of a set do not all have the same kind then the kind
-        will be ``SetKind(UndefinedKind)``
+        Any :py:class`~.Set` will have kind :py:class`~.SetKind` which is
+        parametrised by the kind of the elements of the set. For example
+        most sets are sets of numbers and will have kind SetKind(NumberKind).
+        If elements of sets are different in kind than their kind will SetKind
+        (UndefinedKind). See :py:class`~.Kind` for an explantion of the kind
+        system.
 
         Examples
         ========
@@ -560,27 +561,32 @@ class Set(Basic, EvalfMixin):
         kinds of 0 and Matrix are different, kind will be
         SetKind(UndefinedKind):
 
-        >>> FiniteSet(0, Matrix([1, 2])).kind
-        SetKind(UndefinedKind)
-
         >>> Interval(1,2).kind
         SetKind(NumberKind)
 
         >>> EmptySet.kind
         SetKind()
 
-        PowerSet is set of sets:
+        A :py:class`PowerSet` is a set of sets:
 
         >>> PowerSet({1,2,3}).kind
         SetKind(SetKind(NumberKind))
 
-        element of ProductSet is Tuple:
+        A :py:class`ProductSet` represents the set of tuples of elements of
+        other sets. Its kind is py:class:`TupleKind` parametrised by the kinds
+        of the elements of those sets:
 
         >>> p = ProductSet(FiniteSet(1, 2), FiniteSet(3, 4))
         >>> list(p)
         [(1, 3), (2, 3), (1, 4), (2, 4)]
         >>> p.kind
         SetKind(TupleKind(NumberKind, NumberKind))
+
+        When all elements of the set do not have same kind, the kind
+        will be returned as SetKind(UndefinedKind):
+
+        >>> FiniteSet(0, Matrix([1, 2])).kind
+        SetKind(UndefinedKind)
 
         See Also
         ========
@@ -709,6 +715,10 @@ class Set(Basic, EvalfMixin):
 
     @property
     def _kind(self):
+        return SetKind(UndefinedKind)
+
+    @property
+    def _helper_kind(self):
         if not self.args:
             return SetKind()
         elif all(i.kind == self.args[0].kind for i in self.args):
@@ -716,9 +726,25 @@ class Set(Basic, EvalfMixin):
         else:
             return SetKind(UndefinedKind)
 
-    @staticmethod
-    def _helper_kind(args, Type_of_Set):
-        return tuple(arg.kind for arg in args if arg is not Type_of_Set)
+    @property
+    def _union_setkind(self):
+        args = tuple(arg.kind for arg in self.args if arg is not S.EmptySet)
+        if not args:
+            return SetKind()
+        elif all(i == args[0] for i in args):
+            return args[0]
+        else:
+            return SetKind(UndefinedKind)
+
+    @property
+    def _intersection_setkind(self):
+        args = tuple(arg.kind for arg in self.args if arg is not S.UniversalSet)
+        if not args:
+            return SetKind(UndefinedKind)
+        elif all(i == args[0] for i in args):
+            return args[0]
+        else:
+            return SetKind()
 
     def _eval_evalf(self, prec):
         dps = prec_to_dps(prec)
@@ -937,7 +963,7 @@ class ProductSet(Set):
 
     @property
     def _kind(self):
-        return SetKind(TupleKind(*(i.kind.element_kind[0] for i in self.args)))
+        return SetKind(TupleKind(*(i.kind.element_kind for i in self.args)))
 
     def __len__(self):
         return reduce(lambda a, b: a*b, (len(s) for s in self.args))
@@ -1359,13 +1385,7 @@ class Union(Set, LatticeOp):
 
     @property
     def _kind(self):
-        args = self._helper_kind(self.args, S.EmptySet)
-        if not args:
-            return SetKind()
-        elif all(i == args[0] for i in args):
-            return args[0]
-        else:
-            return SetKind(UndefinedKind)
+        return self._union_setkind
 
     @property
     def _boundary(self):
@@ -1472,13 +1492,7 @@ class Intersection(Set, LatticeOp):
 
     @property
     def _kind(self):
-        args = self._helper_kind(self.args, S.UniversalSet)
-        if not args:
-            return SetKind(UndefinedKind)
-        elif all(i == args[0] for i in args):
-            return args[0]
-        else:
-            return SetKind()
+        return self._intersection_setkind
 
     @property
     def _inf(self):
@@ -1789,6 +1803,10 @@ class EmptySet(Set, metaclass=Singleton):
     def _complement(self, other):
         return other
 
+    @property
+    def _kind(self):
+        return self._helper_kind
+
     def _symmetric_difference(self, other):
         return other
 
@@ -2007,6 +2025,10 @@ class FiniteSet(Set):
     @property
     def measure(self):
         return 0
+
+    @property
+    def _kind(self):
+        return self._helper_kind
 
     def __len__(self):
         return len(self.args)
@@ -2550,7 +2572,6 @@ def simplify_intersection(args):
             other_sets = args + [s.args[0]]
             return Complement(Intersection(*other_sets), s.args[1])
 
-
     from sympy.sets.handlers.intersection import intersection_sets
 
     # At this stage we are guaranteed not to have any
@@ -2592,6 +2613,7 @@ def _handle_finite_sets(op, x, y, commutative):
     else:
         return None
 
+
 def _apply_operation(op, x, y, commutative):
     from .fancysets import ImageSet
     d = Dummy('d')
@@ -2612,29 +2634,36 @@ def _apply_operation(op, x, y, commutative):
             out = ImageSet(Lambda((_x, _y), op(_x, _y)), x, y)
     return out
 
+
 def set_add(x, y):
     from sympy.sets.handlers.add import _set_add
     return _apply_operation(_set_add, x, y, commutative=True)
+
 
 def set_sub(x, y):
     from sympy.sets.handlers.add import _set_sub
     return _apply_operation(_set_sub, x, y, commutative=False)
 
+
 def set_mul(x, y):
     from sympy.sets.handlers.mul import _set_mul
     return _apply_operation(_set_mul, x, y, commutative=True)
+
 
 def set_div(x, y):
     from sympy.sets.handlers.mul import _set_div
     return _apply_operation(_set_div, x, y, commutative=False)
 
+
 def set_pow(x, y):
     from sympy.sets.handlers.power import _set_pow
     return _apply_operation(_set_pow, x, y, commutative=False)
 
+
 def set_function(f, x):
     from sympy.sets.handlers.functions import _set_function
     return _set_function(f, x)
+
 
 class SetKind(Kind):
     """
@@ -2664,23 +2693,26 @@ class SetKind(Kind):
     >>> from sympy import Interval
     >>> Interval(1, 2).kind
     SetKind(NumberKind)
+    >>> Interval(1,2).kind.element_kind
+    NumberKind
 
     See Also
     ========
 
     sympy.core.kind.NumberKind
-
     sympy.matrices.common.MatrixKind
-
     sympy.core.containers.TupleKind
     """
     def __new__(cls, *args):
         obj = super().__new__(cls, *args)
-        obj.element_kind = args
+        if not args:
+            obj.element_kind = None
+        else:
+            obj.element_kind = args[0]
         return obj
 
     def __repr__(self):
         if not self.element_kind:
             return "SetKind()"
         else:
-            return "SetKind(%s)" % self.element_kind[0]
+            return "SetKind(%s)" % self.element_kind
