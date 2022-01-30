@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+from sympy import Function
 from sympy.combinatorics.permutations import _af_invert
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
@@ -8,6 +9,7 @@ from sympy.core.numbers import Integer
 from sympy.core.power import Pow
 from sympy.core.sorting import default_sort_key
 from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.tensor.array.expressions import ArrayElementwiseApplyFunc
 from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.combinatorics import Permutation
 from sympy.matrices.expressions.matexpr import MatrixElement
@@ -249,4 +251,7 @@ def _convert_indexed_to_array(expr):
             diags = zip(*[(2*i, 2*i + 1) for i in range(expr.exp)])
             arr = _array_diagonal(_array_tensor_product(*[subexpr for i in range(expr.exp)]), *diags)
             return arr, subindices
+    if isinstance(expr, Function):
+        subexpr, subindices = _convert_indexed_to_array(expr.args[0])
+        return ArrayElementwiseApplyFunc(type(expr), subexpr), subindices
     return expr, ()

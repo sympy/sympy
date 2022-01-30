@@ -1,8 +1,10 @@
+from sympy import tanh
 from sympy.concrete.summations import Sum
 from sympy.core.symbol import symbols
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import Identity
+from sympy.tensor.array.expressions import ArrayElementwiseApplyFunc
 from sympy.tensor.indexed import IndexedBase
 from sympy.combinatorics import Permutation
 from sympy.tensor.array.expressions.array_expressions import ArrayContraction, ArrayTensorProduct, \
@@ -117,6 +119,10 @@ def test_arrayexpr_convert_array_element_to_array_expression():
     assert cg == ArrayTensorProduct(A, B)
     cg = convert_indexed_to_array(s, [j, i])
     assert cg == ArrayTensorProduct(B, A)
+
+    s = tanh(A[i]*B[j])
+    cg = convert_indexed_to_array(s, [i, j])
+    assert cg.dummy_eq(ArrayElementwiseApplyFunc(tanh, ArrayTensorProduct(A, B)))
 
 
 def test_arrayexpr_convert_indexed_to_array_and_back_to_matrix():
