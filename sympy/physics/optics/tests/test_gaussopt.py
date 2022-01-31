@@ -57,8 +57,8 @@ def test_gauss_opt():
     assert streq(N(p.z_r), Float(5.92753330865999))
     fs = FreeSpace(10)
     p1 = fs*p
-    assert streq(N(p.w), Float(0.00101413072159615))
-    assert streq(N(p1.w), Float(0.00210803120913829))
+    assert streq(N(p.w_z), Float(0.00101413072159615))
+    assert streq(N(p1.w_z), Float(0.00210803120913829))
 
     w, wavelen = symbols('w wavelen')
     assert waist2rayleigh(w, wavelen) == pi*w**2/wavelen
@@ -90,8 +90,13 @@ def test_gauss_opt():
     z, l, w = symbols('z l r', positive=True)
     p = BeamParameter(l, z, w=w)
     assert p.radius == z*(pi**2*w**4/(l**2*z**2) + 1)
-    assert p.w == w*sqrt(l**2*z**2/(pi**2*w**4) + 1)
+    assert p.w_z == w*sqrt(l**2*z**2/(pi**2*w**4) + 1)
     assert p.w_0 == w
     assert p.divergence == l/(pi*w)
     assert p.gouy == atan2(z, pi*w**2/l)
     assert p.waist_approximation_limit == 2*l/pi
+
+    p = BeamParameter(530e-9, 1, n=2, w=1e-3)
+    assert streq(p.q, 1 + 3.77358490566038*I*pi)
+    assert streq(N(p.z_r), Float(11.8550666173200))
+    assert streq(N(p.w_0), Float(0.00100000000000000))
