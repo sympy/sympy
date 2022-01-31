@@ -1002,12 +1002,12 @@ def telescopic(L, R, limits):
 def eval_sum(f, limits):
     (i, a, b) = limits
     dif = b - a
-    if f.is_zero or f.simplify().is_zero:
+    if f.is_zero:
         return S.Zero
     if i not in f.free_symbols:
         return f*(b - a + 1)
-    if i not in f.simplify().free_symbols and dif.is_Number:
-        return f.simplify()*(b - a + 1)
+    if dif.is_Number and i not in f.trigsimp().free_symbols:
+        return f.trigsimp()*(b - a + 1)
     if a == b:
         return f.subs(i, a)
     if isinstance(f, Piecewise):

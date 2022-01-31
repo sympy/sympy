@@ -647,8 +647,6 @@ def test_Sum_doit():
     assert Sum(cos(pi*x), (x, 1, 50)).doit() == 0
     assert Sum(cos(pi*x), (x, 1, 49)).doit() == -1
     assert Sum(sec(x)*cos(x), (x, 1, 50)).doit() == 50
-    assert Sum(sin(x)**2 + cos(x)**2, (x, 1, oo)).doit() == oo
-    assert Sum(sin(x)**2 + cos(x)**2 - 1, (x, 1, oo)).doit() == 0
 
 
 def test_Product_doit():
