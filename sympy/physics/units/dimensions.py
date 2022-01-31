@@ -602,7 +602,7 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         It corresponds to the matrix where columns are the vector of base
         dimensions in canonical basis.
-ca 
+        
         This matrix will almost never be used because dimensions are always
         defined with respect to the canonical basis, so no work has to be done
         to get them in this basis. Nonetheless if this matrix is not square
