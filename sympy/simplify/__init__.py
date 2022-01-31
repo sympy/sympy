@@ -18,7 +18,7 @@ from .epathtools import epath, EPath
 
 from .hyperexpand import hyperexpand
 
-from .radsimp import collect, rcollect, radsimp, collect_const, fraction, numer, denom
+from .radsimp import collect, rcollect, radsimp, collect_const
 
 from .trigsimp import trigsimp, exptrigsimp
 
@@ -45,8 +45,7 @@ __all__ = [
 
     'hyperexpand',
 
-    'collect', 'rcollect', 'radsimp', 'collect_const', 'fraction', 'numer',
-    'denom',
+    'collect', 'rcollect', 'radsimp', 'collect_const',
 
     'trigsimp', 'exptrigsimp',
 

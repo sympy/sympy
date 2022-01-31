@@ -9,7 +9,7 @@ from sympy.core.expr import Expr
 from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, expand
-from sympy.core.mul import Mul
+from sympy.core.mul import Mul, denom, fraction
 from sympy.core.numbers import Float
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -36,7 +36,6 @@ from sympy.sets.sets import FiniteSet, Interval
 from sympy.simplify.combsimp import combsimp
 from sympy.simplify.hyperexpand import hyperexpand
 from sympy.simplify.powsimp import powsimp
-from sympy.simplify.radsimp import denom, fraction
 from sympy.simplify.simplify import (factor_sum, sum_combine, simplify,
                                      nsimplify, hypersimp)
 from sympy.solvers.solvers import solve
@@ -1251,6 +1250,7 @@ def eval_sum_symbolic(f, limits):
 
 def _eval_sum_hyper(f, i, a):
     """ Returns (res, cond). Sums from a to oo. """
+
     if a != 0:
         return _eval_sum_hyper(f.subs(i, i + a), i, 0)
 

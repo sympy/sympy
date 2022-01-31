@@ -342,7 +342,7 @@ class Pow(Expr):
                 if not e.is_Atom and b is not S.Exp1 and not isinstance(b, exp_polar):
                     from .exprtools import factor_terms
                     from sympy.functions.elementary.exponential import log
-                    from sympy.simplify.radsimp import fraction
+                    from sympy.core.mul import fraction
                     c, ex = factor_terms(e, sign=False).as_coeff_Mul()
                     num, den = fraction(ex)
                     if isinstance(den, log) and den.args[0] == b:
@@ -791,7 +791,7 @@ class Pow(Expr):
         if self.exp.is_negative:
             if self.base.is_zero:
                 return False
-            if self.base.is_infinite or self.base.is_nonzero:
+            if self.base.is_zero is False:
                 return True
         c1 = self.base.is_finite
         if c1 is None:
