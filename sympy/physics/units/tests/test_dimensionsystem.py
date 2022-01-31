@@ -32,8 +32,8 @@ def test_sort_dims():
 
 def test_list_dims():
     dimsys = DimensionSystem((length, time, mass))
-
-    assert dimsys.list_can_dims == ("length", "mass", "time")
+    with warns_deprecated_sympy():
+        assert dimsys.list_can_dims == ("length", "mass", "time")
 
 
 def test_dim_can_vector():
@@ -45,8 +45,10 @@ def test_dim_can_vector():
         }
     )
 
-    assert dimsys.dim_can_vector(length) == Matrix([1, 0, 0])
-    assert dimsys.dim_can_vector(velocity) == Matrix([1, 0, -1])
+    with warns_deprecated_sympy():
+        assert dimsys.dim_can_vector(length) == Matrix([1, 0, 0])
+    with warns_deprecated_sympy():
+        assert dimsys.dim_can_vector(velocity) == Matrix([1, 0, -1])
 
     dimsys = DimensionSystem(
         (length, velocity, action),
@@ -56,9 +58,12 @@ def test_dim_can_vector():
         }
     )
 
-    assert dimsys.dim_can_vector(length) == Matrix([0, 1, 0])
-    assert dimsys.dim_can_vector(velocity) == Matrix([0, 0, 1])
-    assert dimsys.dim_can_vector(time) == Matrix([0, 1, -1])
+    with warns_deprecated_sympy():
+        assert dimsys.dim_can_vector(length) == Matrix([0, 1, 0])
+    with warns_deprecated_sympy():
+        assert dimsys.dim_can_vector(velocity) == Matrix([0, 0, 1])
+    with warns_deprecated_sympy():
+        assert dimsys.dim_can_vector(time) == Matrix([0, 1, -1])
 
     dimsys = DimensionSystem(
         (length, mass, time),
@@ -66,28 +71,35 @@ def test_dim_can_vector():
         {velocity: {length: 1, time: -1},
          action: {mass: 1, length: 2, time: -1}})
 
-    assert dimsys.dim_vector(length) == Matrix([1, 0, 0])
-    assert dimsys.dim_vector(velocity) == Matrix([1, 0, -1])
+    with warns_deprecated_sympy():
+        assert dimsys.dim_vector(length) == Matrix([1, 0, 0])
+    with warns_deprecated_sympy():
+        assert dimsys.dim_vector(velocity) == Matrix([1, 0, -1])
 
 
 def test_inv_can_transf_matrix():
     dimsys = DimensionSystem((length, mass, time))
-    assert dimsys.inv_can_transf_matrix == eye(3)
+    with warns_deprecated_sympy():
+        assert dimsys.inv_can_transf_matrix == eye(3)
 
 
 def test_can_transf_matrix():
     dimsys = DimensionSystem((length, mass, time))
-    assert dimsys.can_transf_matrix == eye(3)
+    with warns_deprecated_sympy():
+        assert dimsys.can_transf_matrix == eye(3)
 
     dimsys = DimensionSystem((length, velocity, action))
-    assert dimsys.can_transf_matrix == eye(3)
+    with warns_deprecated_sympy():
+        assert dimsys.can_transf_matrix == eye(3)
 
     dimsys = DimensionSystem((length, time), (velocity,), {velocity: {length: 1, time: -1}})
-    assert dimsys.can_transf_matrix == eye(2)
+    with warns_deprecated_sympy():
+        assert dimsys.can_transf_matrix == eye(2)
 
 
 def test_is_consistent():
-    assert DimensionSystem((length, time)).is_consistent is True
+    with warns_deprecated_sympy():
+        assert DimensionSystem((length, time)).is_consistent is True
 
 
 def test_print_dim_base():
@@ -106,4 +118,5 @@ def test_dim():
         {velocity: {length: 1, time: -1},
          action: {mass: 1, length: 2, time: -1}}
     )
-    assert dimsys.dim == 3
+    with warns_deprecated_sympy():
+        assert dimsys.dim == 3
