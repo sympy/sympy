@@ -16,7 +16,7 @@ Delaporte
 
 
 
-
+from sympy.concrete.summations import Sum
 from sympy.core.basic import Basic
 from sympy.core.function import Lambda
 from sympy.core.numbers import I
@@ -24,7 +24,6 @@ from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
 from sympy.core.sympify import sympify
-from sympy.concrete.summations import Sum
 from sympy.functions.combinatorial.factorials import (binomial, factorial)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.integers import floor
@@ -857,11 +856,11 @@ class DelaporteDistribution(SingleDiscreteDistribution):
         alpha = self.alpha
         beta = self.beta
         i = Symbol('i', integer=True)
-        return Sum((gamma(alpha+i) * beta**i * lamda**(k-i) * exp(-lamda)) /
-        (gamma(alpha) * factorial(i) * (1+beta)**(alpha+i) * factorial(k-i)), (i, 0, k+1))
+        return Sum((gamma(alpha + i)*beta**i*lamda**(k - i)*exp(-lamda)) /
+        (gamma(alpha)*factorial(i)*(1 + beta)**(alpha + i)*factorial(k - i)), (i, 0, k + 1))
 
     def _moment_generating_function(self, t):
-        return (exp(self.lamda*(exp(t)-1))) / (1-self.beta*(exp(t)-1))**self.alpha
+        return (exp(self.lamda*(exp(t) - 1))) / (1 - self.beta*(exp(t) - 1))**self.alpha
 
 
 def Delaporte(name, lamda, alpha, beta):
@@ -896,7 +895,7 @@ def Delaporte(name, lamda, alpha, beta):
     >>> from sympy.stats import Delaporte, density, E, variance
     >>> from sympy import Symbol
 
-    >>> lamda = 5
+    >>> lambda = 5
     >>> alpha = 5
     >>> beta = 5
     >>> z = Symbol("z")

@@ -163,9 +163,9 @@ def test_zeta():
 
 
 def test_delaporte():
-    lamda = S(5)
-    alpha = S(5)
-    beta = S(5)
+    lamda = 5
+    alpha = 5
+    beta = 5
     x = Delaporte('x', lamda, alpha, beta)
     assert E(x) == lamda + alpha * beta
     assert variance(x) == lamda + alpha * beta * (1 + beta)
