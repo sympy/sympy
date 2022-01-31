@@ -639,11 +639,11 @@ class DimensionSystem(Basic, _QuantityMapper):
 
         Dimensional representation in terms of the canonical base dimensions.
         """
-
-        vec = []
-        for d in self.list_can_dims:
-            vec.append(self.get_dimensional_dependencies(dim).get(d, 0))
-        return Matrix(vec)
+        with warns_deprecated_sympy():
+            vec = []
+            for d in self.list_can_dims:
+                vec.append(self.get_dimensional_dependencies(dim).get(d, 0))
+            return Matrix(vec)
 
     def dim_vector(self, dim):
         """
