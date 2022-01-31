@@ -659,7 +659,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             deprecated_since_version="1.10",
             issue=22953,
             feature="dim_can_vector",
-            useinstead="",
+            useinstead="Will be removed",
         ).warn()
 
         vec = []
