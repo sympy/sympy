@@ -246,8 +246,8 @@ def test_pretty_printing():
     p = 2
     P = prime_decomp(p, T, dK=dK, ZK=ZK, radical=rad.get(p))
     assert repr(P[0]) == '[ (2, (3*x + 1)/2) e=1, f=1 ]'
-    assert P[0].pretty(field_gen=theta) == '[ (2, (3*theta + 1)/2) e=1, f=1 ]'
-    assert P[0].pretty(field_gen=theta, just_gens=True) == '(2, (3*theta + 1)/2)'
+    assert P[0]._pretty(field_gen=theta) == '[ (2, (3*theta + 1)/2) e=1, f=1 ]'
+    assert P[0]._pretty(field_gen=theta, just_gens=True) == '(2, (3*theta + 1)/2)'
 
 
 def test_PrimeIdeal_reduce_poly():
@@ -256,14 +256,14 @@ def test_PrimeIdeal_reduce_poly():
     P = k.primes_above(11)
     frp = P[0]
     B = k.integral_basis(fmt='sympy')
-    assert [frp.reduce_poly(b, x) for b in B] == [
+    assert [frp._reduce_poly(b, x) for b in B] == [
         1, x, x ** 2, -5 * x ** 2 - 4 * x + 1, -x ** 2 - x - 5,
         4 * x ** 2 - x - 1]
 
     Q = k.primes_above(19)
     frq = Q[0]
     assert frq.alpha.equiv(0)
-    assert frq.reduce_poly(20*x**2 + 10) == x**2 - 9
+    assert frq._reduce_poly(20 * x ** 2 + 10) == x ** 2 - 9
 
-    raises(GeneratorsNeeded, lambda: frp.reduce_poly(S(1)))
-    raises(NotImplementedError, lambda: frp.reduce_poly(1))
+    raises(GeneratorsNeeded, lambda: frp._reduce_poly(S(1)))
+    raises(NotImplementedError, lambda: frp._reduce_poly(1))
