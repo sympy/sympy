@@ -875,6 +875,8 @@ class Domain:
     def frac_field(self, *symbols, order=lex):
         """Returns a fraction field, i.e. `K(X)`. """
         from sympy.polys.domains.fractionfield import FractionField
+        symbols = tuple(1/symbol if not sympify(symbol).is_Number and \
+                  symbol.as_numer_denom()[0] == 1 else symbol for symbol in symbols)
         return FractionField(self, symbols, order)
 
     def old_poly_ring(self, *symbols, **kwargs):
