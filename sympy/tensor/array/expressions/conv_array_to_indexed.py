@@ -70,7 +70,10 @@ class _ConvertArrayToIndexed:
             c = 1
             for i, e in enumerate(reversed(shape_down)):
                 if c == 1:
-                    dest_indices[i] = one_index % e
+                    if i == len(shape_down) - 1:
+                        dest_indices[i] = one_index
+                    else:
+                        dest_indices[i] = one_index % e
                 elif i == len(shape_down) - 1:
                     dest_indices[i] = one_index // c
                 else:
