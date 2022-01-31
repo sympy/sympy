@@ -3028,39 +3028,10 @@ class AlgebraicNumber(Expr):
         roots = m.all_roots(radicals=radicals)
         if len(roots) == 1:
             return roots[0]
-        root = None
-        if all(hasattr(r, "_get_interval") for r in roots):
-            root = self._to_root_by_intervals(roots)
-        if root is not None:
-            return root
-        return self._to_root_by_distance(roots)
-
-    def _to_root_by_intervals(self, roots):
-        intervals = [r._get_interval() for r in roots]
-        D0 = int(max(i.max_denom for i in intervals))
-        # Make n more than the number of decimal places in D0. This is to
-        # eliminate false positives, i.e. cases where we appear to belong to
-        # an interval but only due to rounding errors.
-        n = math.ceil(D0.bit_length()/3.3) + 2
-        c = self.evalf(n).as_real_imag()
-        for j, i in enumerate(intervals):
-            if c in i:
-                return roots[j]
-        return None
-
-    def _to_root_by_distance(self, roots, max_prec=160):
-        # Compare sympy.polys.numberfields.minpoly._choose_factor()
-        prec1 = 10
-        while prec1 <= max_prec:
-            r0 = self.evalf(prec1)
-            candidates = [(abs(r0 - r.evalf(prec1)), j)
-                          for j, r in enumerate(roots)]
-            can = sorted(candidates)
-            (a, ix), (b, _) = can[:2]
-            if b > a * 10 ** 6:
-                return roots[ix]
-            prec1 *= 2
-        raise NotImplementedError("Could not locate root.")
+        ex = self.as_expr()
+        for b in roots:
+            if m.same_root(b, ex):
+                return b
 
 
 class RationalConstant(Rational):

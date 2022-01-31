@@ -13,8 +13,8 @@ class MatrixSet(Set):
     Examples
     ========
 
-    >>> from sympy.matrices import MatrixSet, Matrix
-    >>> from sympy import S, I
+    >>> from sympy.matrices import MatrixSet
+    >>> from sympy import S, I, Matrix
     >>> M = MatrixSet(2, 2, set=S.Reals)
     >>> X = Matrix([[1, 2], [3, 4]])
     >>> X in M

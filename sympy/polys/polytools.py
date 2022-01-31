@@ -10,7 +10,8 @@ from sympy.core import (
 from sympy.core.basic import Basic
 from sympy.core.decorators import _sympifyit
 from sympy.core.exprtools import Factors, factor_nc, factor_terms
-from sympy.core.evalf import pure_complex
+from sympy.core.evalf import (
+    pure_complex, evalf, fastlog, _evalf_with_bounded_error, quad_to_mpmath)
 from sympy.core.function import Derivative
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.numbers import ilcm, I, Integer
@@ -3772,6 +3773,57 @@ class Poly(Basic):
         r = f.resultant(f.__class__.from_expr(x**n - t, x, t))
 
         return r.replace(t, x)
+
+    def same_root(f, a, b):
+        """
+        Decide whether two roots of this polynomial are equal.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, cyclotomic_poly, exp, I, pi
+        >>> f = Poly(cyclotomic_poly(5))
+        >>> r0 = exp(2*I*pi/5)
+        >>> indices = [i for i, r in enumerate(f.all_roots()) if f.same_root(r, r0)]
+        >>> print(indices)
+        [3]
+
+        Raises
+        ======
+
+        DomainError
+            If the domain of the polynomial is not :ref:`ZZ`, :ref:`QQ`,
+            :ref:`RR`, or :ref:`CC`.
+        MultivariatePolynomialError
+            If the polynomial is not univariate.
+        PolynomialError
+            If the polynomial is of degree < 2.
+
+        """
+        if f.is_multivariate:
+            raise MultivariatePolynomialError(
+                "Must be a univariate polynomial")
+
+        dom_delta_sq = f.rep.mignotte_sep_bound_squared()
+        delta_sq = f.domain.get_field().to_sympy(dom_delta_sq)
+        # We have delta_sq = delta**2, where delta is a lower bound on the
+        # minimum separation between any two roots of this polynomial.
+        # Let eps = delta/3, and define eps_sq = eps**2 = delta**2/9.
+        eps_sq = delta_sq / 9
+
+        r, _, _, _ = evalf(1/eps_sq, 1, {})
+        n = fastlog(r)
+        # Then 2^n > 1/eps**2.
+        m = (n // 2) + (n % 2)
+        # Then 2^(-m) < eps.
+        ev = lambda x: quad_to_mpmath(_evalf_with_bounded_error(x, m=m))
+
+        # Then for any complex numbers a, b we will have
+        # |a - ev(a)| < eps and |b - ev(b)| < eps.
+        # So if |ev(a) - ev(b)|**2 < eps**2, then
+        # |ev(a) - ev(b)| < eps, hence |a - b| < 3*eps = delta.
+        A, B = ev(a), ev(b)
+        return (A.real - B.real)**2 + (A.imag - B.imag)**2 < eps_sq
 
     def cancel(f, g, include=False):
         """

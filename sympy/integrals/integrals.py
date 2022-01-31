@@ -1214,9 +1214,8 @@ class Integral(AddWithLimits):
         Examples
         ========
 
-        >>> from sympy import sin, sqrt
+        >>> from sympy import Integral, sin, sqrt
         >>> from sympy.abc import x, n
-        >>> from sympy.integrals import Integral
         >>> e = Integral(sin(x), (x, 3, 7))
         >>> e
         Integral(sin(x), (x, 3, 7))
@@ -1346,8 +1345,7 @@ class Integral(AddWithLimits):
         Examples
         ========
 
-        >>> from sympy import oo
-        >>> from sympy.integrals.integrals import Integral
+        >>> from sympy import Integral, oo
         >>> from sympy.abc import x
         >>> Integral(x+1, (x, -oo, oo)).principal_value()
         oo
