@@ -593,7 +593,7 @@ class Set(Basic, EvalfMixin):
 
         sympy.core.kind.NumberKind
         """
-        return self._kind
+        return self._kind()
 
     @property
     def boundary(self):
@@ -713,11 +713,9 @@ class Set(Basic, EvalfMixin):
     def _measure(self):
         raise NotImplementedError("(%s)._measure" % self)
 
-    @property
     def _kind(self):
         return SetKind(UndefinedKind)
 
-    @property
     def _helper_kind(self):
         if not self.args:
             return SetKind()
@@ -726,7 +724,6 @@ class Set(Basic, EvalfMixin):
         else:
             return SetKind(UndefinedKind)
 
-    @property
     def _union_setkind(self):
         args = tuple(arg.kind for arg in self.args if arg is not S.EmptySet)
         if not args:
@@ -736,7 +733,6 @@ class Set(Basic, EvalfMixin):
         else:
             return SetKind(UndefinedKind)
 
-    @property
     def _intersection_setkind(self):
         args = tuple(arg.kind for arg in self.args if arg is not S.UniversalSet)
         if not args:
@@ -961,7 +957,6 @@ class ProductSet(Set):
             measure *= s.measure
         return measure
 
-    @property
     def _kind(self):
         return SetKind(TupleKind(*(i.kind.element_kind for i in self.args)))
 
@@ -1218,7 +1213,6 @@ class Interval(Set):
     def _measure(self):
         return self.end - self.start
 
-    @property
     def _kind(self):
         return SetKind(NumberKind)
 
@@ -1383,9 +1377,8 @@ class Union(Set, LatticeOp):
             parity *= -1
         return measure
 
-    @property
     def _kind(self):
-        return self._union_setkind
+        return self._union_setkind()
 
     @property
     def _boundary(self):
@@ -1490,9 +1483,8 @@ class Intersection(Set, LatticeOp):
         if fuzzy_or(arg.is_finite_set for arg in self.args):
             return True
 
-    @property
     def _kind(self):
-        return self._intersection_setkind
+        return self._intersection_setkind()
 
     @property
     def _inf(self):
@@ -1715,7 +1707,6 @@ class Complement(Set):
 
         return And(A_rel, B_rel)
 
-    @property
     def _kind(self):
         return SetKind(self.args[0].args[0].kind)
 
@@ -1803,9 +1794,8 @@ class EmptySet(Set, metaclass=Singleton):
     def _complement(self, other):
         return other
 
-    @property
     def _kind(self):
-        return self._helper_kind
+        return self._helper_kind()
 
     def _symmetric_difference(self, other):
         return other
@@ -1851,7 +1841,6 @@ class UniversalSet(Set, metaclass=Singleton):
     def _measure(self):
         return S.Infinity
 
-    @property
     def _kind(self):
         return SetKind(UndefinedKind)
 
@@ -2026,9 +2015,8 @@ class FiniteSet(Set):
     def measure(self):
         return 0
 
-    @property
     def _kind(self):
-        return self._helper_kind
+        return self._helper_kind()
 
     def __len__(self):
         return len(self.args)
