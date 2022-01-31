@@ -530,6 +530,7 @@ class BeamParameter(Expr):
     def __new__(cls, wavelen, z, n=1, z_r=None, w=None):
         wavelen = sympify(wavelen)
         z = sympify(z)
+        n = sympify(n)
 
         if z_r is not None and w is None:
             z_r = sympify(z_r)
