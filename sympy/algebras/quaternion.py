@@ -813,7 +813,7 @@ class Quaternion(Expr):
         ===========
 
         Given a quaternion $q = a + bi + cj + dk$, returns $\mathbf{Ax}(q)$  i.e., the versor of the vector part of that quaternion
-        equal to $\mathbf{U}[\mathbf{V}(q)]$
+        equal to $\mathbf{U}[\mathbf{V}(q)]$.
         The axis is always an imaginary unit with square equal to $-1 + 0i + 0j + 0k$.
 
         Examples
@@ -900,7 +900,7 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Given a quaternion $q = a + b*i + c*j + d*k$ where a, b, c and d
+        Given a quaternion $q = a + bi + cj + dk$ where a, b, c and d
         are real numbers, returns the angle of the quaternion given by
 
         .. math::
@@ -975,7 +975,7 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Three pure quaternions are vector coplanar if the quaternions seens as 3D vectors are coplanar.
+        Three pure quaternions are vector coplanar if the quaternions seen as 3D vectors are coplanar.
 
         Parameters
         ==========
@@ -1114,8 +1114,8 @@ class Quaternion(Expr):
         Explanation
         ===========
 
-        Index vector is given by $\mathbf{T}(q)$ multiplied by $\mathbf{Ax}(q)$ where $Ax(q)$ is the axis of the quaternion q,
-        and mod(q) is the $norm$ (magnitude) of the quaternion.
+        Index vector is given by $\mathbf{T}(q)$ multiplied by $\mathbf{Ax}(q)$ where $\mathbf{Ax}(q)$ is the axis of the quaternion q,
+        and mod(q) is the $\mathbf{T}(q)$ (magnitude) of the quaternion.
 
         Returns
         =======
