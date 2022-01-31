@@ -32,8 +32,8 @@ def test_sort_dims():
 
 def test_list_dims():
     dimsys = DimensionSystem((length, time, mass))
-
-    assert dimsys.list_can_dims == ("length", "mass", "time")
+    with warns_deprecated_sympy():
+        assert dimsys.list_can_dims == ("length", "mass", "time")
 
 
 def test_dim_can_vector():
