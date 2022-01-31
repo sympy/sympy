@@ -181,6 +181,41 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     >>> K.mod
     DMP([1, 0, -10, 0, 1], QQ, None)
 
+    The `discriminant`_ of the field can be obtained from the
+    :py:meth:`~.discriminant` method, and an `integral basis`_ from the
+    :py:meth:`~.integral_basis` method. The latter returns a list of
+    :py:class:`~.ANP` instances by default, but can be made to return instances
+    of :py:class:`~.Expr` or :py:class:`~.AlgebraicNumber` by passing a ``fmt``
+    argument. The maximal order, or ring of integers, of the field can also be
+    obtained from the :py:meth:`~.maximal_order` method, as a
+    :py:class:`~sympy.polys.numberfields.modules.Submodule`.
+
+    >>> zeta5 = exp(2*I*pi/5)
+    >>> K = QQ.algebraic_field(zeta5)
+    >>> K
+    QQ<exp(2*I*pi/5)>
+    >>> K.discriminant()
+    125
+    >>> K = QQ.algebraic_field(sqrt(5))
+    >>> K
+    QQ<sqrt(5)>
+    >>> K.integral_basis(fmt='sympy')
+    [1, 1/2 + sqrt(5)/2]
+    >>> K.maximal_order()
+    Submodule[[2, 0], [1, 1]]/2
+
+    The factorization of a rational prime into prime ideals of the field is
+    computed by the :py:meth:`~.primes_above` method, which returns a list
+    of :py:class:`~sympy.polys.numberfields.primes.PrimeIdeal` instances.
+
+    >>> zeta7 = exp(2*I*pi/7)
+    >>> K = QQ.algebraic_field(zeta7)
+    >>> K
+    QQ<exp(2*I*pi/7)>
+    >>> K.primes_above(11)
+    [[ (11, _x**3 + 5*_x**2 + 4*_x - 1) e=1, f=3 ],
+     [ (11, _x**3 - 4*_x**2 - 5*_x - 1) e=1, f=3 ]]
+
     Notes
     =====
 
@@ -195,6 +230,8 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
     .. _algebraic number field: https://en.wikipedia.org/wiki/Algebraic_number_field
     .. _algebraic numbers: https://en.wikipedia.org/wiki/Algebraic_number
+    .. _discriminant: https://en.wikipedia.org/wiki/Discriminant_of_an_algebraic_number_field
+    .. _integral basis: https://en.wikipedia.org/wiki/Algebraic_number_field#Integral_basis
     .. _minimal polynomial: https://en.wikipedia.org/wiki/Minimal_polynomial_(field_theory)
     .. _primitive element: https://en.wikipedia.org/wiki/Primitive_element_theorem
     """
@@ -256,6 +293,10 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         self.zero = self.dtype.zero(self.mod.rep, dom)
         self.one = self.dtype.one(self.mod.rep, dom)
 
+        self._maximal_order = None
+        self._discriminant = None
+        self._nilradicals_mod_p = {}
+
     def new(self, element):
         return self.dtype(element, self.mod.rep, self.dom)
 
@@ -274,8 +315,17 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \ldots)`. """
         return AlgebraicField(self.dom, *((self.ext,) + extension))
 
+    def to_alg_num(self, a):
+        """Convert ``a`` of ``dtype`` to an :py:class:`~.AlgebraicNumber`. """
+        theta = self.ext
+        # `self.ext.root` may be an `AlgebraicNumber`, in which case we should
+        # use it instead of `self.ext`, in case it has an `alias`.
+        if hasattr(theta.root, "field_element"):
+            theta = theta.root
+        return theta.field_element(a)
+
     def to_sympy(self, a):
-        """Convert ``a`` to a SymPy object. """
+        """Convert ``a`` of ``dtype`` to a SymPy object. """
         # Precompute a converter to be reused:
         if not hasattr(self, '_converter'):
             self._converter = _make_converter(self)
@@ -364,6 +414,102 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
     def from_GaussianRationalField(K1, a, K0):
         """Convert a GaussianRational element 'a' to ``dtype``. """
         return K1.from_sympy(K0.to_sympy(a))
+
+    def _do_round_two(self):
+        from sympy.polys.numberfields.basis import round_two
+        ZK, dK = round_two(self.ext.minpoly, radicals=self._nilradicals_mod_p)
+        self._maximal_order = ZK
+        self._discriminant = dK
+
+    def maximal_order(self):
+        """
+        Compute the maximal order, or ring of integers, of the field.
+
+        Returns
+        =======
+
+        :py:class:`~sympy.polys.numberfields.modules.Submodule`.
+
+        See Also
+        ========
+
+        integral_basis()
+
+        """
+        if self._maximal_order is None:
+            self._do_round_two()
+        return self._maximal_order
+
+    def integral_basis(self, fmt=None):
+        r"""
+        Get an integral basis for the field.
+
+        Parameters
+        ==========
+
+        fmt : str, None, optional (default=None)
+            If ``None``, return a list of :py:class:`~.ANP` instances.
+            If ``"sympy"``, convert each element of the list to an
+            :py:class:`~.Expr`, using ``self.to_sympy()``.
+            If ``"alg"``, convert each element of the list to an
+            :py:class:`~.AlgebraicNumber`, using ``self.to_alg_num()``.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ, AlgebraicNumber, sqrt
+        >>> alpha = AlgebraicNumber(sqrt(5), alias='alpha')
+        >>> k = QQ.algebraic_field(alpha)
+        >>> B0 = k.integral_basis()
+        >>> B1 = k.integral_basis(fmt='sympy')
+        >>> B2 = k.integral_basis(fmt='alg')
+        >>> print(B0[1])  # doctest: +SKIP
+        ANP([mpq(1,2), mpq(1,2)], [mpq(1,1), mpq(0,1), mpq(-5,1)], QQ)
+        >>> print(B1[1])
+        1/2 + alpha/2
+        >>> print(B2[1])
+        alpha/2 + 1/2
+
+        In the last two cases we get legible expressions, which print somewhat
+        differently because of the different types involved:
+
+        >>> print(type(B1[1]))
+        <class 'sympy.core.add.Add'>
+        >>> print(type(B2[1]))
+        <class 'sympy.core.numbers.AlgebraicNumber'>
+
+        See Also
+        ========
+
+        to_sympy()
+        to_alg_num()
+        maximal_order()
+
+        """
+        ZK = self.maximal_order()
+        M = ZK.QQ_matrix
+        n = M.shape[1]
+        B = [self.new(list(reversed(M[:, j].flat()))) for j in range(n)]
+        if fmt == 'sympy':
+            return [self.to_sympy(b) for b in B]
+        elif fmt == 'alg':
+            return [self.to_alg_num(b) for b in B]
+        return B
+
+
+    def discriminant(self):
+        """Get the discriminant of the field."""
+        if self._discriminant is None:
+            self._do_round_two()
+        return self._discriminant
+
+    def primes_above(self, p):
+        """Compute the prime ideals lying above a given rational prime *p*."""
+        from sympy.polys.numberfields.primes import prime_decomp
+        ZK = self.maximal_order()
+        dK = self.discriminant()
+        rad = self._nilradicals_mod_p.get(p)
+        return prime_decomp(p, ZK=ZK, dK=dK, radical=rad)
 
 
 def _make_converter(K):

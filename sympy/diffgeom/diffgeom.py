@@ -1634,6 +1634,7 @@ class CovarDerivativeOp(Expr):
             raise ValueError('Covariant derivatives are defined only with '
                              'respect to vector fields. The supplied argument '
                              'was not a vector field.')
+        christoffel = ImmutableDenseNDimArray(christoffel)
         obj = super().__new__(cls, wrt, christoffel)
         # deprecated assigments
         obj._wrt = wrt

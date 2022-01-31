@@ -402,7 +402,9 @@ def signsimp(expr, evaluate=None):
     expr = sympify(expr)
     if not isinstance(expr, (Expr, Relational)) or expr.is_Atom:
         return expr
-    e = sub_post(sub_pre(expr))
+    # get rid of an pre-existing unevaluation regarding sign
+    e = expr.replace(lambda x: x.is_Mul and -(-x) != x, lambda x: -(-x))
+    e = sub_post(sub_pre(e))
     if not isinstance(e, (Expr, Relational)) or e.is_Atom:
         return e
     if e.is_Add:
@@ -412,7 +414,7 @@ def signsimp(expr, evaluate=None):
             return Mul(S.NegativeOne, -rv, evaluate=False)
         return rv
     if evaluate:
-        e = e.xreplace({m: -(-m) for m in e.atoms(Mul) if -(-m) != m})
+        e = e.replace(lambda x: x.is_Mul and -(-x) != x, lambda x: -(-x))
     return e
 
 
@@ -871,7 +873,7 @@ def sum_add(self, other, method=0):
     else:
         rother = other
 
-    if type(rself) == type(rother):
+    if type(rself) is type(rother):
         if method == 0:
             if rself.limits == rother.limits:
                 return factor_sum(Sum(rself.function + rother.function, *rself.limits))
@@ -932,7 +934,7 @@ def product_mul(self, other, method=0):
     """Helper function for Product simplification"""
     from sympy.concrete.products import Product
 
-    if type(self) == type(other):
+    if type(self) is type(other):
         if method == 0:
             if self.limits == other.limits:
                 return Product(self.function * other.function, *self.limits)
@@ -1105,7 +1107,7 @@ def logcombine(expr, force=False):
 
         # logs that have oppositely signed coefficients can divide
         for k in ordered(list(log1.keys())):
-            if not k in log1:  # already popped as -k
+            if k not in log1:  # already popped as -k
                 continue
             if -k in log1:
                 # figure out which has the minus sign; the one with
@@ -1502,7 +1504,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
             expr = sympify(newexpr)
             if x and not expr:  # don't let x become 0
                 raise ValueError
-            if expr.is_finite is False and not xv in [mpmath.inf, mpmath.ninf]:
+            if expr.is_finite is False and xv not in [mpmath.inf, mpmath.ninf]:
                 raise ValueError
             return expr
         finally:

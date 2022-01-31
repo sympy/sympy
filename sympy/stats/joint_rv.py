@@ -385,7 +385,7 @@ class MarginalDistribution(Distribution):
         marginalise_out = [i for i in random_symbols(expr) if i not in rvs]
         if isinstance(expr, JointDistribution):
             count = len(expr.domain.args)
-            x = Dummy('x', real=True, finite=True)
+            x = Dummy('x', real=True)
             syms = tuple(Indexed(x, i) for i in count)
             expr = expr.pdf(syms)
         else:

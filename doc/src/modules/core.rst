@@ -124,6 +124,13 @@ Integer
 .. autoclass:: Integer
    :members:
 
+AlgebraicNumber
+^^^^^^^^^^^^^^^
+.. autoclass:: AlgebraicNumber
+   :members:
+
+   .. automethod:: AlgebraicNumber.__new__
+
 NumberSymbol
 ^^^^^^^^^^^^
 .. autoclass:: NumberSymbol

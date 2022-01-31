@@ -456,7 +456,7 @@ class Add(Expr, AssocOp):
         (0, (7*x,))
         """
         if deps:
-            l1, l2 = sift(self.args, lambda x: x.has(*deps), binary=True)
+            l1, l2 = sift(self.args, lambda x: x.has_free(*deps), binary=True)
             return self._new_rawargs(*l2), tuple(l1)
         coeff, notrat = self.args[0].as_coeff_add()
         if coeff is not S.Zero:
@@ -478,8 +478,22 @@ class Add(Expr, AssocOp):
     # issue 5524.
 
     def _eval_power(self, e):
+        from .evalf import pure_complex
+        from .relational import is_eq
+        if len(self.args) == 2 and any(_.is_infinite for _ in self.args):
+            if e.is_zero is False and is_eq(e, S.One) is False:
+                # looking for literal a + I*b
+                a, b = self.args
+                if a.coeff(S.ImaginaryUnit):
+                    a, b = b, a
+                ico = b.coeff(S.ImaginaryUnit)
+                if ico and ico.is_extended_real and a.is_extended_real:
+                    if e.is_extended_negative:
+                        return S.Zero
+                    if e.is_extended_positive:
+                        return S.ComplexInfinity
+            return
         if e.is_Rational and self.is_number:
-            from .evalf import pure_complex
             ri = pure_complex(self)
             if ri:
                 r, i = ri
@@ -599,6 +613,8 @@ class Add(Expr, AssocOp):
         """
         # clear rational denominator
         content, expr = self.primitive()
+        if not isinstance(expr, Add):
+            return Mul(content, expr, evaluate=False).as_numer_denom()
         ncon, dcon = content.as_numer_denom()
 
         # collect numerators and denominators of the terms

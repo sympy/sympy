@@ -282,7 +282,7 @@ class Extent(Basic):
     def _sympystr(self, printer):
         if len(self.args) == 0:
             return ':'
-        return '%d:%d' % self.args
+        return ":".join(str(arg) for arg in self.args)
 
 assumed_extent = Extent() # or Extent(':'), Extent(None)
 

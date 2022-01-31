@@ -270,9 +270,12 @@ class Limit(Expr):
             e = nsimplify(e)
         e = set_signs(e)
 
+
         if e.is_meromorphic(z, z0):
             if abs(z0) is S.Infinity:
-                newe = e.subs(z, -1/z)
+                newe = e.subs(z, 1/z)
+                # cdir changes sign as oo- should become 0+
+                cdir = -cdir
             else:
                 newe = e.subs(z, z + z0)
             try:
@@ -284,9 +287,9 @@ class Limit(Expr):
                     return S.Zero
                 elif ex == 0:
                     return coeff
-                if str(dir) == "+" or not(int(ex) & 1):
+                if cdir == 1 or not(int(ex) & 1):
                     return S.Infinity*sign(coeff)
-                elif str(dir) == "-":
+                elif cdir == -1:
                     return S.NegativeInfinity*sign(coeff)
                 else:
                     return S.ComplexInfinity
@@ -318,17 +321,17 @@ class Limit(Expr):
                     return coeff
                 elif ex.is_negative:
                     if ex.is_integer:
-                        if str(dir) == "-" or ex.is_even:
+                        if cdir == 1 or ex.is_even:
                             return S.Infinity*sign(coeff)
-                        elif str(dir) == "+":
+                        elif cdir == -1:
                             return S.NegativeInfinity*sign(coeff)
                         else:
                             return S.ComplexInfinity
                     else:
-                        if str(dir) == "+":
+                        if cdir == 1:
                             return S.Infinity*sign(coeff)
-                        elif str(dir) == "-":
-                            return S.NegativeInfinity*sign(coeff)*S.NegativeOne**(S.One + ex)
+                        elif cdir == -1:
+                            return S.Infinity*sign(coeff)*S.NegativeOne**ex
                         else:
                             return S.ComplexInfinity
 

@@ -210,7 +210,7 @@ References
 
 """
 
-from .facts import FactRules, FactKB
+from .facts import FactRules, FactKB, InconsistentAssumptions
 from .core import BasicMeta
 from .sympify import sympify
 
@@ -343,10 +343,10 @@ def failing_assumptions(expr, **assumptions):
 
     >>> from sympy import failing_assumptions, Symbol
 
-    >>> x = Symbol('x', real=True, positive=True)
+    >>> x = Symbol('x', positive=True)
     >>> y = Symbol('y')
-    >>> failing_assumptions(6*x + y, real=True, positive=True)
-    {'positive': None, 'real': None}
+    >>> failing_assumptions(6*x + y, positive=True)
+    {'positive': None}
 
     >>> failing_assumptions(x**2 - 1, positive=True)
     {'positive': None}
@@ -386,14 +386,14 @@ def check_assumptions(expr, against=None, **assume):
     True
     >>> check_assumptions(pi, real=True, integer=False)
     True
-    >>> check_assumptions(pi, real=True, negative=True)
+    >>> check_assumptions(pi, negative=True)
     False
     >>> check_assumptions(exp(I*pi/7), real=False)
     True
-    >>> x = Symbol('x', real=True, positive=True)
-    >>> check_assumptions(2*x + 1, real=True, positive=True)
+    >>> x = Symbol('x', positive=True)
+    >>> check_assumptions(2*x + 1, positive=True)
     True
-    >>> check_assumptions(-2*x - 5, real=True, positive=True)
+    >>> check_assumptions(-2*x - 5, positive=True)
     False
 
     To check assumptions of *expr* against another variable or expression,
@@ -515,7 +515,25 @@ def _ask(fact, obj):
 
     # Store None into the assumptions so that recursive attempts at
     # evaluating the same fact don't trigger infinite recursion.
-    assumptions._tell(fact, None)
+    #
+    # Potentially in a multithreaded context it is possible that the
+    # assumptions query for fact was already resolved in another thread. If
+    # that happens and the query was resolved as True or False then
+    # assumptions._tell will raise InconsistentAssumptions because of the
+    # attempt to replace True/False with None. In that case it should be safe
+    # to catch the exception and return the result that was computed in the
+    # other thread.
+    #
+    # XXX: Ideally this call to assumptions._tell would be removed. Its purpose
+    # is to guard against infinite recursion if a query for one fact attempts
+    # to evaluate a related fact for the same object. However really this is
+    # just masking bugs because a query for a fact about obj should only query
+    # the properties of obj.args and not obj itself. This is not easy to change
+    # though because it requires fixing all of the buggy _eval_is_* handlers.
+    try:
+        assumptions._tell(fact, None)
+    except InconsistentAssumptions:
+        return assumptions[fact]
 
     # First try the assumption evaluation function if it exists
     try:

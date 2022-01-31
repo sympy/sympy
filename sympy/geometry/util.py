@@ -23,9 +23,31 @@ from sympy.utilities.iterables import is_sequence
 
 def find(x, equation):
     """
-    Checks whether the parameter 'x' is present in 'equation' or not.
-    If it is present then it returns the passed parameter 'x' as a free
-    symbol, else, it returns a ValueError.
+    Checks whether a Symbol matching ``x`` is present in ``equation``
+    or not. If present, the matching symbol is returned, else a
+    ValueError is raised. If ``x`` is a string the matching symbol
+    will have the same name; if ``x`` is a Symbol then it will be
+    returned if found.
+
+    Examples
+    ========
+
+    >>> from sympy.geometry.util import find
+    >>> from sympy import Dummy
+    >>> from sympy.abc import x
+    >>> find('x', x)
+    x
+    >>> find('x', Dummy('x'))
+    _x
+
+    The dummy symbol is returned since it has a matching name:
+
+    >>> _.name == 'x'
+    True
+    >>> find(x, Dummy('x'))
+    Traceback (most recent call last):
+    ...
+    ValueError: could not find x
     """
 
     free = equation.free_symbols
@@ -271,7 +293,7 @@ def closest_points(*args):
     Examples
     ========
 
-    >>> from sympy.geometry import closest_points, Triangle
+    >>> from sympy import closest_points, Triangle
     >>> Triangle(sss=(3, 4, 5)).args
     (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
     >>> closest_points(*_)
@@ -366,7 +388,7 @@ def convex_hull(*args, polygon=True):
     Examples
     ========
 
-    >>> from sympy.geometry import convex_hull
+    >>> from sympy import convex_hull
     >>> points = [(1, 1), (1, 2), (3, 1), (-5, 2), (15, 4)]
     >>> convex_hull(*points)
     Polygon(Point2D(-5, 2), Point2D(1, 1), Point2D(3, 1), Point2D(15, 4))
@@ -651,7 +673,7 @@ def intersection(*entities, pairwise=False, **kwargs):
     Examples
     ========
 
-    >>> from sympy.geometry import Ray, Circle, intersection
+    >>> from sympy import Ray, Circle, intersection
     >>> c = Circle((0, 1), 1)
     >>> intersection(c, c.center)
     []

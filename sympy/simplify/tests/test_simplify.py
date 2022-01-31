@@ -675,7 +675,7 @@ def test_polymorphism():
         def _eval_simplify(x, **kwargs):
             return S.One
 
-    a = A(5, 2)
+    a = A(S(5), S(2))
     assert simplify(a) == 1
 
 

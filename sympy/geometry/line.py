@@ -368,7 +368,7 @@ class LinearEntity(GeometrySet):
         Examples
         ========
 
-        >>> from sympy.geometry import Line
+        >>> from sympy import Line
         >>> a, b = (1, 1), (1, 3)
         >>> Line(a, b).direction
         Point2D(0, 2)
@@ -966,6 +966,8 @@ class LinearEntity(GeometrySet):
                 return p1
             projected = other.__class__(p1, p2)
             projected = Intersection(self, projected)
+            if projected.is_empty:
+                return projected
             # if we happen to have intersected in only a point, return that
             if projected.is_FiniteSet and len(projected) == 1:
                 # projected is a set of size 1, so unpack it in `a`
@@ -1043,7 +1045,7 @@ class LinearEntity(GeometrySet):
         Examples
         ========
 
-        >>> from sympy.geometry import Point3D, Line3D
+        >>> from sympy import Point3D, Line3D
         >>> r1 = Line3D(Point3D(0, 0, 0), Point3D(1, 0, 0))
         >>> r2 = Line3D(Point3D(0, 0, 0), Point3D(0, 1, 0))
         >>> r1.bisectors(r2)
@@ -1118,8 +1120,7 @@ class Line(LinearEntity):
     Examples
     ========
 
-    >>> from sympy import Point, Eq
-    >>> from sympy.geometry import Line, Segment
+    >>> from sympy import Line, Segment, Point, Eq
     >>> from sympy.abc import x, y, a, b
 
     >>> L = Line(Point(2,3), Point(3,5))
@@ -1157,7 +1158,7 @@ class Line(LinearEntity):
     """
     def __new__(cls, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], (Expr, Eq)):
-            missing = uniquely_named_symbol('?', args).name
+            missing = uniquely_named_symbol('?', args)
             if not kwargs:
                 x = 'x'
                 y = 'y'
@@ -1356,8 +1357,7 @@ class Ray(LinearEntity):
     Examples
     ========
 
-    >>> from sympy import Point, pi
-    >>> from sympy.geometry import Ray
+    >>> from sympy import Ray, Point, pi
     >>> r = Ray(Point(2, 3), Point(3, 5))
     >>> r
     Ray2D(Point2D(2, 3), Point2D(3, 5))
@@ -1589,8 +1589,7 @@ class Segment(LinearEntity):
     Examples
     ========
 
-    >>> from sympy import Point
-    >>> from sympy.geometry import Segment
+    >>> from sympy import Point, Segment
     >>> Segment((1, 0), (1, 1)) # tuples are interpreted as pts
     Segment2D(Point2D(1, 0), Point2D(1, 1))
     >>> s = Segment(Point(4, 3), Point(1, 1))
@@ -1980,8 +1979,7 @@ class Line2D(LinearEntity2D, Line):
     Examples
     ========
 
-    >>> from sympy import Point
-    >>> from sympy.geometry import Line, Segment
+    >>> from sympy import Line, Segment, Point
     >>> L = Line(Point(2,3), Point(3,5))
     >>> L
     Line2D(Point2D(2, 3), Point2D(3, 5))
@@ -2162,8 +2160,7 @@ class Ray2D(LinearEntity2D, Ray):
     Examples
     ========
 
-    >>> from sympy import Point, pi
-    >>> from sympy.geometry import Ray
+    >>> from sympy import Point, pi, Ray
     >>> r = Ray(Point(2, 3), Point(3, 5))
     >>> r
     Ray2D(Point2D(2, 3), Point2D(3, 5))
@@ -2358,8 +2355,7 @@ class Segment2D(LinearEntity2D, Segment):
     Examples
     ========
 
-    >>> from sympy import Point
-    >>> from sympy.geometry import Segment
+    >>> from sympy import Point, Segment
     >>> Segment((1, 0), (1, 1)) # tuples are interpreted as pts
     Segment2D(Point2D(1, 0), Point2D(1, 1))
     >>> s = Segment(Point(4, 3), Point(1, 1)); s
@@ -2501,8 +2497,7 @@ class Line3D(LinearEntity3D, Line):
     Examples
     ========
 
-    >>> from sympy import Point3D
-    >>> from sympy.geometry import Line3D
+    >>> from sympy import Line3D, Point3D
     >>> L = Line3D(Point3D(2, 3, 4), Point3D(3, 5, 1))
     >>> L
     Line3D(Point3D(2, 3, 4), Point3D(3, 5, 1))
@@ -2608,8 +2603,7 @@ class Ray3D(LinearEntity3D, Ray):
     Examples
     ========
 
-    >>> from sympy import Point3D
-    >>> from sympy.geometry import Ray3D
+    >>> from sympy import Point3D, Ray3D
     >>> r = Ray3D(Point3D(2, 3, 4), Point3D(3, 5, 0))
     >>> r
     Ray3D(Point3D(2, 3, 4), Point3D(3, 5, 0))
@@ -2766,8 +2760,7 @@ class Segment3D(LinearEntity3D, Segment):
     Examples
     ========
 
-    >>> from sympy import Point3D
-    >>> from sympy.geometry import Segment3D
+    >>> from sympy import Point3D, Segment3D
     >>> Segment3D((1, 0, 0), (1, 1, 1)) # tuples are interpreted as pts
     Segment3D(Point3D(1, 0, 0), Point3D(1, 1, 1))
     >>> s = Segment3D(Point3D(4, 3, 9), Point3D(1, 1, 7)); s

@@ -3,22 +3,20 @@ of Basic or Atom."""
 
 import collections
 
+from sympy.assumptions.ask import Q
 from sympy.core.basic import (Basic, Atom, as_Basic,
     _atomic, _aresame)
+from sympy.core.containers import Tuple
+from sympy.core.function import Function, Lambda
+from sympy.core.numbers import I, pi
 from sympy.core.singleton import S
 from sympy.core.symbol import symbols, Symbol, Dummy
-from sympy.core.sympify import SympifyError
-from sympy.core.function import Function, Lambda
-
-from sympy.assumptions.ask import Q
 from sympy.concrete.summations import Sum
-from sympy.core.containers import Tuple
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import Integral
 from sympy.functions.elementary.exponential import exp
 from sympy.testing.pytest import raises
-from sympy.core import I, pi
 
 b1 = Basic()
 b2 = Basic(b1)
@@ -27,9 +25,8 @@ b21 = Basic(b2, b1)
 
 
 def test__aresame():
-    assert not _aresame(Basic([]), Basic())
-    assert not _aresame(Basic([]), Basic(()))
-    assert not _aresame(Basic(2), Basic(2.))
+    assert not _aresame(Basic(Tuple()), Basic())
+    assert not _aresame(Basic(S(2)), Basic(S(2.)))
 
 
 def test_structure():
@@ -112,7 +109,8 @@ def test_has():
     assert b21.has(Basic)
     assert not b1.has(b21, b3)
     assert not b21.has()
-    raises(SympifyError, lambda: Symbol("x").has("x"))
+    assert not b21.has(str)
+    assert not Symbol("x").has("x")
 
 
 def test_subs():
@@ -255,7 +253,7 @@ def test_atomic():
     assert _atomic(g(x + h(x))) == {g(x + h(x))}
     assert _atomic(g(x + h(x)), recursive=True) == {h(x), x, g(x + h(x))}
     assert _atomic(1) == set()
-    assert _atomic(Basic(1,2)) == {Basic(1, 2)}
+    assert _atomic(Basic(S(1), S(2))) == set()
 
 
 def test_as_dummy():

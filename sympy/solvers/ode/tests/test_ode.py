@@ -24,6 +24,7 @@ from sympy.solvers.ode.nonhomogeneous import _undetermined_coefficients_match
 from sympy.solvers.ode.single import LinearCoefficients
 from sympy.solvers.deutils import ode_order
 from sympy.testing.pytest import XFAIL, raises, slow
+from sympy.utilities.misc import filldedent
 
 
 C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C0:11')
@@ -739,14 +740,16 @@ def test_undetermined_coefficients_match():
     assert _undetermined_coefficients_match(cos(x**2), x) == {'test': False}
     assert _undetermined_coefficients_match(2**(x**2), x) == {'test': False}
 
-def test_issue_4785():
+
+def test_issue_4785_22462():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
     assert classify_ode(eq, f(x)) == ('factorable', '1st_exact', '1st_linear',
-        'almost_linear', '1st_power_series', 'lie_group',
+        'Bernoulli', 'almost_linear', '1st_power_series', 'lie_group',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
-        '1st_exact_Integral', '1st_linear_Integral', 'almost_linear_Integral',
+        '1st_exact_Integral', '1st_linear_Integral', 'Bernoulli_Integral',
+        'almost_linear_Integral',
         'nth_linear_constant_coeff_variation_of_parameters_Integral')
     # issue 4864
     eq = (x**2 + f(x)**2)*f(x).diff(x) - 2*x*f(x)
@@ -758,6 +761,7 @@ def test_issue_4785():
         'lie_group', '1st_exact_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
+
 
 def test_issue_4825():
     raises(ValueError, lambda: dsolve(f(x, y).diff(x) - y*f(x, y), f(x)))
@@ -1022,3 +1026,46 @@ def test_issue_13060():
     eq = [Eq(Derivative(A(t), t), A(t)*B(t)), Eq(Derivative(B(t), t), A(t)*B(t))]
     sol = dsolve(eq)
     assert checkodesol(eq, sol) == (True, [0, 0])
+
+
+def test_issue_22523():
+    N, s = symbols('N s')
+    rho = Function('rho')
+    # intentionally use 4.0 to confirm issue with nfloat
+    # works here
+    eqn = 4.0*N*sqrt(N - 1)*rho(s) + (4*s**2*(N - 1) + (N - 2*s*(N - 1))**2
+        )*Derivative(rho(s), (s, 2))
+    match = classify_ode(eqn, dict=True, hint='all')
+    assert match['2nd_power_series_ordinary']['terms'] == 5
+    C1, C2 = symbols('C1,C2')
+    sol = dsolve(eqn, hint='2nd_power_series_ordinary')
+    # there is no r(2.0) in this result
+    assert filldedent(sol) == filldedent(str('''
+        Eq(rho(s), C2*(1 - 4.0*s**4*sqrt(N - 1.0)/N + 0.666666666666667*s**4/N
+        - 2.66666666666667*s**3*sqrt(N - 1.0)/N - 2.0*s**2*sqrt(N - 1.0)/N +
+        9.33333333333333*s**4*sqrt(N - 1.0)/N**2 - 0.666666666666667*s**4/N**2
+        + 2.66666666666667*s**3*sqrt(N - 1.0)/N**2 -
+        5.33333333333333*s**4*sqrt(N - 1.0)/N**3) + C1*s*(1.0 -
+        1.33333333333333*s**3*sqrt(N - 1.0)/N - 0.666666666666667*s**2*sqrt(N
+        - 1.0)/N + 1.33333333333333*s**3*sqrt(N - 1.0)/N**2) + O(s**6))'''))
+
+
+def test_issue_22604():
+    x1, x2 = symbols('x1, x2', cls = Function)
+    t, k1, k2, m1, m2 = symbols('t k1 k2 m1 m2', real = True)
+    k1, k2, m1, m2 = 1, 1, 1, 1
+    eq1 = Eq(m1*diff(x1(t), t, 2) + k1*x1(t) - k2*(x2(t) - x1(t)), 0)
+    eq2 = Eq(m2*diff(x2(t), t, 2) + k2*(x2(t) - x1(t)), 0)
+    eqs = [eq1, eq2]
+    [x1sol, x2sol] = dsolve(eqs, [x1(t), x2(t)], ics = {x1(0):0, x1(t).diff().subs(t,0):0, \
+                                                        x2(0):1, x2(t).diff().subs(t,0):0})
+    assert x1sol == Eq(x1(t), sqrt(3 - sqrt(5))*(sqrt(10) + 5*sqrt(2))*cos(sqrt(2)*t*sqrt(3 - sqrt(5))/2)/20 + \
+                       (-5*sqrt(2) + sqrt(10))*sqrt(sqrt(5) + 3)*cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/20)
+    assert x2sol == Eq(x2(t), (sqrt(5) + 5)*cos(sqrt(2)*t*sqrt(3 - sqrt(5))/2)/10 + (5 - sqrt(5))*cos(sqrt(2)*t*sqrt(sqrt(5) + 3)/2)/10)
+
+
+def test_issue_22462():
+    for de in [
+            Eq(f(x).diff(x), -20*f(x)**2 - 500*f(x)/7200),
+            Eq(f(x).diff(x), -2*f(x)**2 - 5*f(x)/7)]:
+        assert 'Bernoulli' in classify_ode(de, f(x))

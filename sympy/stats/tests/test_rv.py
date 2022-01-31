@@ -295,8 +295,8 @@ def test_dependent_finite():
 
 def test_normality():
     X, Y = Normal('X', 0, 1), Normal('Y', 0, 1)
-    x = Symbol('x', real=True, finite=True)
-    z = Symbol('z', real=True, finite=True)
+    x = Symbol('x', real=True)
+    z = Symbol('z', real=True)
     dens = density(X - Y, Eq(X + Y, z))
 
     assert integrate(dens(x), (x, -oo, oo)) == 1
@@ -311,7 +311,7 @@ def test_NamedArgsMixin():
     class Foo(Basic, NamedArgsMixin):
         _argnames = 'foo', 'bar'
 
-    a = Foo(1, 2)
+    a = Foo(S(1), S(2))
 
     assert a.foo == 1
     assert a.bar == 2
@@ -321,7 +321,7 @@ def test_NamedArgsMixin():
     class Bar(Basic, NamedArgsMixin):
         pass
 
-    raises(AttributeError, lambda: Bar(1, 2).foo)
+    raises(AttributeError, lambda: Bar(S(1), S(2)).foo)
 
 def test_density_constant():
     assert density(3)(2) == 0

@@ -21,7 +21,7 @@ def test_TensorProduct_construction():
     expr = TensorProduct(TensorProduct(A, B), C)
     assert expr == TensorProduct(A, B, C)
 
-    expr = TensorProduct(Matrix.eye(2), [[0, -1], [1, 0]])
+    expr = TensorProduct(Matrix.eye(2), Array([[0, -1], [1, 0]]))
     assert expr == Array([
         [
             [[0, -1], [1, 0]],
@@ -40,14 +40,14 @@ def test_TensorProduct_shape():
     assert expr.shape == ()
     assert expr.rank() == 0
 
-    expr = TensorProduct([1, 2], [x, y], evaluate=False)
+    expr = TensorProduct(Array([1, 2]), Array([x, y]), evaluate=False)
     assert expr.shape == (2, 2)
     assert expr.rank() == 2
     expr = TensorProduct(expr, expr, evaluate=False)
     assert expr.shape == (2, 2, 2, 2)
     assert expr.rank() == 4
 
-    expr = TensorProduct(Matrix.eye(2), [[0, -1], [1, 0]], evaluate=False)
+    expr = TensorProduct(Matrix.eye(2), Array([[0, -1], [1, 0]]), evaluate=False)
     assert expr.shape == (2, 2, 2, 2)
     assert expr.rank() == 4
 

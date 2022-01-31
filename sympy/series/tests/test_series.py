@@ -223,7 +223,7 @@ def test_issue_12578():
 
 
 def test_issue_12791():
-    beta = symbols('beta', real=True, positive=True)
+    beta = symbols('beta', positive=True)
     theta, varphi = symbols('theta varphi', real=True)
 
     expr = (-beta**2*varphi*sin(theta) + beta**2*cos(theta) + \
@@ -344,8 +344,8 @@ def test_issue_20697():
 def test_issue_21245():
     fi = (1 + sqrt(5))/2
     assert (1/(1 - x - x**2)).series(x, 1/fi, 1).factor() == \
-        (-6964*sqrt(5) - 15572 + 2440*sqrt(5)*x + 5456*x\
-        + O((x - 2/(1 + sqrt(5)))**2, (x, 2/(1 + sqrt(5)))))/((1 + sqrt(5))**2\
+        (-4812 - 2152*sqrt(5) + 1686*x + 754*sqrt(5)*x\
+        + O((x - 2/(1 + sqrt(5)))**2, (x, 2/(1 + sqrt(5)))))/((1 + sqrt(5))\
         *(20 + 9*sqrt(5))**2*(x + sqrt(5)*x - 2))
 
 

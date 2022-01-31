@@ -2674,6 +2674,8 @@ def test_linear_coeffs():
         linear_coeffs(x + 2*x**2 + x**3, x, x**2))
     raises(ValueError, lambda:
         linear_coeffs(1/x*(x - 1) + 1/x, x))
+    raises(ValueError, lambda:
+        linear_coeffs(x, x, x))
     assert linear_coeffs(a*(x + y), x, y) == [a, a, 0]
     assert linear_coeffs(1.0, x, y) == [0, 0, 1.0]
 

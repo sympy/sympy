@@ -560,6 +560,11 @@ def test_derangements():
         'cccabba', 'cccabab', 'cccaabb', 'ccacbba', 'ccacbab',
         'ccacabb', 'cbccbaa', 'cbccaba', 'cbccaab', 'bcccbaa',
         'bcccaba', 'bcccaab']
+    assert [''.join(i) for i in D('books')] == ['kbsoo', 'ksboo',
+        'sbkoo', 'skboo', 'oksbo', 'oskbo', 'okbso', 'obkso', 'oskob',
+        'oksob', 'osbok', 'obsok']
+    assert list(generate_derangements([[3], [2], [2], [1]])) == [
+        [[2], [1], [3], [2]], [[2], [3], [1], [2]]]
 
 
 def test_necklaces():
@@ -794,6 +799,8 @@ def test_has_dups():
     assert has_dups(set()) is False
     assert has_dups(list(range(3))) is False
     assert has_dups([1, 2, 1]) is True
+    assert has_dups([[1], [1]]) is True
+    assert has_dups([[1], [2]]) is False
 
 
 def test__partition():

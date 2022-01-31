@@ -11,8 +11,6 @@ def test_deprecated_utilities():
         import sympy.utilities.randtest  # noqa:F401
     with warns_deprecated_sympy():
         import sympy.utilities.tmpfiles  # noqa:F401
-    with warns_deprecated_sympy():
-        import sympy.utilities.quality_unicode  # noqa:F401
 
 # This fails because benchmarking isn't importable...
 @XFAIL

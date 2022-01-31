@@ -185,7 +185,7 @@ def test_characteristic_function():
     Z = Exponential('z', 5)
     cf = characteristic_function(Z)
     assert cf(0) == 1
-    assert cf(1).expand() == Rational(25, 26) + I*Rational(5, 26)
+    assert cf(1).expand() == Rational(25, 26) + I*5/26
 
     X = GaussianInverse('x', 1, 1)
     cf = characteristic_function(X)
@@ -634,7 +634,7 @@ def test_exgaussian():
 def test_exponential():
     rate = Symbol('lambda', positive=True)
     X = Exponential('x', rate)
-    p = Symbol("p", positive=True, real=True, finite=True)
+    p = Symbol("p", positive=True, real=True)
 
     assert E(X) == 1/rate
     assert variance(X) == 1/rate**2
@@ -960,14 +960,14 @@ def test_maxwell():
 
 def test_Moyal():
     mu = Symbol('mu',real=False)
-    sigma = Symbol('sigma', real=True, positive=True)
+    sigma = Symbol('sigma', positive=True)
     raises(ValueError, lambda: Moyal('M',mu, sigma))
 
     mu = Symbol('mu', real=True)
-    sigma = Symbol('sigma', real=True, negative=True)
+    sigma = Symbol('sigma', negative=True)
     raises(ValueError, lambda: Moyal('M',mu, sigma))
 
-    sigma = Symbol('sigma', real=True, positive=True)
+    sigma = Symbol('sigma', positive=True)
     M = Moyal('M', mu, sigma)
     assert density(M)(z) == sqrt(2)*exp(-exp((mu - z)/sigma)/2
                         - (-mu + z)/(2*sigma))/(2*sqrt(pi)*sigma)
@@ -1550,8 +1550,8 @@ def test_ContinuousDistributionHandmade():
         (S.Half, (x>=2)&(x<3)), (0, True)))
     dens = ContinuousDistributionHandmade(dens, set=Interval(0, 3))
     space = SingleContinuousPSpace(z, dens)
-    assert dens.pdf == Lambda(x, Piecewise((1/2, (x >= 0) & (x < 1)),
-        (0, (x >= 1) & (x < 2)), (1/2, (x >= 2) & (x < 3)), (0, True)))
+    assert dens.pdf == Lambda(x, Piecewise((S(1)/2, (x >= 0) & (x < 1)),
+        (0, (x >= 1) & (x < 2)), (S(1)/2, (x >= 2) & (x < 3)), (0, True)))
     assert median(space.value) == Interval(1, 2)
     assert E(space.value) == Rational(3, 2)
     assert variance(space.value) == Rational(13, 12)

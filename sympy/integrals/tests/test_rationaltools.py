@@ -142,7 +142,7 @@ def test_issue_5981():
     assert integrate(1/(u**2 + 1)) == atan(u)
 
 def test_issue_10488():
-    a,b,c,x = symbols('a b c x', real=True, positive=True)
+    a,b,c,x = symbols('a b c x', positive=True)
     assert integrate(x/(a*x+b),x) == x/a - b*log(a*x + b)/a**2
 
 

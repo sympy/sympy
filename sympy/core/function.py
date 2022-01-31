@@ -116,7 +116,7 @@ class BadArgumentsError(TypeError):
     pass
 
 
-# Python 2/3 version that does not raise a Deprecation warning
+# Python 3 version that does not raise a Deprecation warning
 def arity(cls):
     """Return the arity of the function if it is known, else None.
 
@@ -1269,20 +1269,18 @@ class Derivative(Expr):
                         expression, the variable(s) of differentiation
                         must be supplied to differentiate %s''' % expr))
 
-        # Standardize the variables by sympifying them:
-        variables = list(sympify(variables))
-
         # Split the list of variables into a list of the variables we are diff
         # wrt, where each element of the list has the form (s, count) where
         # s is the entity to diff wrt and count is the order of the
         # derivative.
         variable_count = []
         array_likes = (tuple, list, Tuple)
+        integer_likes = (int, Integer)
 
         from sympy.tensor.array import Array, NDimArray
 
         for i, v in enumerate(variables):
-            if isinstance(v, Integer):
+            if isinstance(v, integer_likes):
                 if i == 0:
                     raise ValueError("First variable cannot be a number: %i" % v)
                 count = v
@@ -1437,7 +1435,7 @@ class Derivative(Expr):
                 # of all others
                 clashing = not (isinstance(old_v, Derivative) or \
                     isinstance(old_v, AppliedUndef))
-                if not v in expr.free_symbols and not clashing:
+                if v not in expr.free_symbols and not clashing:
                     return expr.diff(v)  # expr's version of 0
                 if not old_v.is_scalar and not hasattr(
                         old_v, '_eval_derivative'):
@@ -3277,8 +3275,9 @@ def count_ops(expr, visual=False):
 
 def nfloat(expr, n=15, exponent=False, dkeys=False):
     """Make all Rationals in expr Floats except those in exponents
-    (unless the exponents flag is set to True). When processing
-    dictionaries, do not modify the keys unless ``dkeys=True``.
+    (unless the exponents flag is set to True) and those in undefined
+    functions. When processing dictionaries, do not modify the keys
+    unless ``dkeys=True``.
 
     Examples
     ========
@@ -3359,7 +3358,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
 
     return rv.xreplace(Transform(
         lambda x: x.func(*nfloat(x.args, n, exponent)),
-        lambda x: isinstance(x, Function)))
+        lambda x: isinstance(x, Function) and not isinstance(x, AppliedUndef)))
 
 
 from .symbol import Dummy, Symbol

@@ -17,7 +17,7 @@ from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Wild, Symbol, symbols
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
-from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cot, csc
 from sympy.functions.special.hyper import hyper
@@ -874,6 +874,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         return Sum(e * self.function, *limits)
 
+    def _eval_rewrite_as_Product(self, *args, **kwargs):
+        from sympy.concrete.products import Product
+        if self.function.is_extended_real:
+            return log(Product(exp(self.function), *self.limits))
+
 
 def summation(f, *symbols, **kwargs):
     r"""
@@ -1177,8 +1182,8 @@ def eval_sum_symbolic(f, limits):
 
         if n.is_Integer:
             if n >= 0:
-                if (b is S.Infinity and not a is S.NegativeInfinity) or \
-                   (a is S.NegativeInfinity and not b is S.Infinity):
+                if (b is S.Infinity and a is not S.NegativeInfinity) or \
+                   (a is S.NegativeInfinity and b is not S.Infinity):
                     return S.Infinity
                 return ((bernoulli(n + 1, b + 1) - bernoulli(n + 1, a))/(n + 1)).expand()
             elif a.is_Integer and a >= 1:
@@ -1230,7 +1235,7 @@ def eval_sum_symbolic(f, limits):
             args.append((r, True))
             return Piecewise(*args)
 
-        if not r in (None, S.NaN):
+        if r not in (None, S.NaN):
             return r
 
     h = eval_sum_hyper(f_orig, (i, a, b))

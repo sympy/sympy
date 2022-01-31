@@ -1684,8 +1684,8 @@ def test_zoo():
     n = Symbol('n', negative=True)
     im = Symbol('i', imaginary=True)
     c = Symbol('c', complex=True)
-    pb = Symbol('pb', positive=True, finite=True)
-    nb = Symbol('nb', negative=True, finite=True)
+    pb = Symbol('pb', positive=True)
+    nb = Symbol('nb', negative=True)
     imb = Symbol('ib', imaginary=True, finite=True)
     for i in [I, S.Infinity, S.NegativeInfinity, S.Zero, S.One, S.Pi, S.Half, S(3), log(3),
               b, nz, p, n, im, pb, nb, imb, c]:

@@ -93,7 +93,6 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(sin(3*x)*sec(x), x) == \
         -3*log(cos(x)) + 2*log(cos(x)**2) - 2*cos(x)**2
 
-
 @slow
 def test_manualintegrate_trigpowers():
     assert manualintegrate(sin(x)**2 * cos(x), x) == sin(x)**3 / 3
@@ -553,3 +552,6 @@ def test_quadratic_denom():
     assert manualintegrate(f, x) == 5*log(3*x**2 - 2*x + 8)/6 + 11*sqrt(23)*atan(3*sqrt(23)*(x - Rational(1, 3))/23)/69
     g = 3/(2*x**2 + 3*x + 1)
     assert manualintegrate(g, x) == 3*log(4*x + 2) - 3*log(4*x + 4)
+
+def test_issue_22757():
+    assert manualintegrate(sin(x), y) == y * sin(x)

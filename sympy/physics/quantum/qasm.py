@@ -55,7 +55,7 @@ def trim(line):
     >>> trim('something #happens here')
     'something '
     """
-    if not '#' in line:
+    if '#' not in line:
         return line
     return line.split('#')[0]
 

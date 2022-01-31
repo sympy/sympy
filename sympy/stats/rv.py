@@ -852,6 +852,15 @@ def probability(condition, given_condition=None, numsamples=None,
 class Density(Basic):
     expr = property(lambda self: self.args[0])
 
+    def __new__(cls, expr, condition = None):
+        expr = _sympify(expr)
+        if condition is None:
+            obj = Basic.__new__(cls, expr)
+        else:
+            condition = _sympify(condition)
+            obj = Basic.__new__(cls, expr, condition)
+        return obj
+
     @property
     def condition(self):
         if len(self.args) > 1:

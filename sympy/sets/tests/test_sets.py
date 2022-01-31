@@ -131,7 +131,7 @@ def test_interval_arguments():
 
 
     assert isinstance(Interval(0, Symbol('a')), Interval)
-    assert Interval(Symbol('a', real=True, positive=True), 0) == S.EmptySet
+    assert Interval(Symbol('a', positive=True), 0) == S.EmptySet
     raises(ValueError, lambda: Interval(0, S.ImaginaryUnit))
     raises(ValueError, lambda: Interval(0, Symbol('z', extended_real=False)))
     raises(ValueError, lambda: Interval(x, x + S.ImaginaryUnit))
@@ -316,14 +316,14 @@ def test_Complement():
                       Interval(1, 3)) == \
         Union(Interval(0, 1, False, True), FiniteSet(4))
 
-    assert not 3 in Complement(Interval(0, 5), Interval(1, 4), evaluate=False)
+    assert 3 not in Complement(Interval(0, 5), Interval(1, 4), evaluate=False)
     assert -1 in Complement(S.Reals, S.Naturals, evaluate=False)
-    assert not 1 in Complement(S.Reals, S.Naturals, evaluate=False)
+    assert 1 not in Complement(S.Reals, S.Naturals, evaluate=False)
 
     assert Complement(S.Integers, S.UniversalSet) == EmptySet
     assert S.UniversalSet.complement(S.Integers) == EmptySet
 
-    assert (not 0 in S.Reals.intersect(S.Integers - FiniteSet(0)))
+    assert (0 not in S.Reals.intersect(S.Integers - FiniteSet(0)))
 
     assert S.EmptySet - S.Integers == S.EmptySet
 
@@ -994,7 +994,7 @@ def test_finite_basic():
     assert FiniteSet((1, 2, 3)) != FiniteSet(1, 2, 3)
 
     # Ensure a variety of types can exist in a FiniteSet
-    assert FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
+    assert FiniteSet((1, 2), A, -5, x, 'eggs', x**2)
 
     assert (A > B) is False
     assert (A >= B) is False
@@ -1005,8 +1005,6 @@ def test_finite_basic():
     assert A >= A and A <= A
     assert A >= AandB and B >= AandB
     assert A > AandB and B > AandB
-
-    assert FiniteSet(1.0) == FiniteSet(1)
 
 
 def test_product_basic():
@@ -1049,7 +1047,7 @@ def test_product_basic():
 
 
 def test_real():
-    x = Symbol('x', real=True, finite=True)
+    x = Symbol('x', real=True)
 
     I = Interval(0, 5)
     J = Interval(10, 20)
@@ -1601,8 +1599,8 @@ def test_DisjointUnion_len():
 
 def test_issue_20089():
     B = FiniteSet(FiniteSet(1, 2), FiniteSet(1))
-    assert not 1 in B
-    assert not 1.0 in B
+    assert 1 not in B
+    assert 1.0 not in B
     assert not Eq(1, FiniteSet(1, 2))
     assert FiniteSet(1) in B
     A = FiniteSet(1, 2)

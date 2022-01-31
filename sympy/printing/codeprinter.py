@@ -36,8 +36,10 @@ class AssignmentError(Exception):
 
 def _convert_python_lists(arg):
     if isinstance(arg, list):
-        from sympy.codegen.pynodes import List
+        from sympy.codegen.abstract_nodes import List
         return List(*(_convert_python_lists(e) for e in arg))
+    elif isinstance(arg, tuple):
+        return tuple(_convert_python_lists(e) for e in arg)
     else:
         return arg
 
@@ -134,8 +136,9 @@ class CodePrinter(StrPrinter):
                         type(self).__name__, type(assign_to)))
             return Assignment(assign_to, expr)
 
-        expr = _handle_assign_to(expr, assign_to)
         expr = _convert_python_lists(expr)
+        expr = _handle_assign_to(expr, assign_to)
+
         # Remove re(...) nodes due to UnevaluatedExpr.is_real always is None:
         expr = self._handle_UnevaluatedExpr(expr)
 
