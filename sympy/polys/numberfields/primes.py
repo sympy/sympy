@@ -70,7 +70,7 @@ class PrimeIdeal(IntegerPowerable):
         self._test_factor = None
         self.e = e if e is not None else self.valuation(p * ZK)
 
-    def pretty(self, field_gen=None, just_gens=False):
+    def _pretty(self, field_gen=None, just_gens=False):
         """
         Print a representation of this prime ideal.
 
@@ -82,11 +82,11 @@ class PrimeIdeal(IntegerPowerable):
         >>> T = cyclotomic_poly(7, x)
         >>> K = QQ.algebraic_field((T, zeta))
         >>> P = K.primes_above(11)
-        >>> print(P[0].pretty())
+        >>> print(P[0]._pretty())
         [ (11, x**3 + 5*x**2 + 4*x - 1) e=1, f=3 ]
-        >>> print(P[0].pretty(field_gen=zeta))
+        >>> print(P[0]._pretty(field_gen=zeta))
         [ (11, zeta**3 + 5*zeta**2 + 4*zeta - 1) e=1, f=3 ]
-        >>> print(P[0].pretty(field_gen=zeta, just_gens=True))
+        >>> print(P[0]._pretty(field_gen=zeta, just_gens=True))
         (11, zeta**3 + 5*zeta**2 + 4*zeta - 1)
 
         Parameters
@@ -114,7 +114,7 @@ class PrimeIdeal(IntegerPowerable):
         return f'[ {gens} e={e}, f={f} ]'
 
     def __repr__(self):
-        return self.pretty()
+        return self._pretty()
 
     def as_submodule(self):
         r"""
@@ -256,7 +256,7 @@ class PrimeIdeal(IntegerPowerable):
         """
         return prime_valuation(I, self)
 
-    def reduce_poly(self, f, gen=None):
+    def _reduce_poly(self, f, gen=None):
         r"""
         Reduce a univariate :py:class:`~.Poly` *f*, or an :py:class:`~.Expr`
         expressing the same, modulo this :py:class:`~.PrimeIdeal`.
@@ -280,7 +280,7 @@ class PrimeIdeal(IntegerPowerable):
         >>> P = k.primes_above(11)
         >>> frp = P[0]
         >>> B = k.integral_basis(fmt='sympy')
-        >>> print([frp.reduce_poly(b, zeta) for b in B])
+        >>> print([frp._reduce_poly(b, zeta) for b in B])
         [1, zeta, zeta**2, -5*zeta**2 - 4*zeta + 1, -zeta**2 - zeta - 5,
          4*zeta**2 - zeta - 1]
 
@@ -321,7 +321,7 @@ class PrimeIdeal(IntegerPowerable):
                 if gen is None:
                     raise e from None
                 g = Poly(f, gen)
-            return self.reduce_poly(g).as_expr()
+            return self._reduce_poly(g).as_expr()
         if isinstance(f, Poly) and f.is_univariate:
             a = self.alpha.poly(f.gen)
             if a != 0:
