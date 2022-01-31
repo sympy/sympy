@@ -583,7 +583,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             deprecated_since_version="1.10",
             issue=22953,
             feature="list_can_dims",
-            useinstead="",
+            useinstead="Will be removed",
         ).warn()
         dimset = set()
         for i in self.base_dims:
@@ -596,13 +596,13 @@ class DimensionSystem(Basic, _QuantityMapper):
         Useless method, kept for compatibility with previous versions.
 
         DO NOT USE.
-        
+
         Compute the inverse transformation matrix from the base to the
         canonical dimension basis.
 
         It corresponds to the matrix where columns are the vector of base
         dimensions in canonical basis.
-        
+
         This matrix will almost never be used because dimensions are always
         defined with respect to the canonical basis, so no work has to be done
         to get them in this basis. Nonetheless if this matrix is not square
@@ -613,9 +613,9 @@ class DimensionSystem(Basic, _QuantityMapper):
             deprecated_since_version="1.10",
             issue=22953,
             feature="inv_can_transf_matrix",
-            useinstead="",
+            useinstead="Will be removed",
         ).warn()
-        
+
         matrix = reduce(lambda x, y: x.row_join(y),
                         [self.dim_can_vector(d) for d in self.base_dims])
         return matrix
@@ -637,7 +637,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             deprecated_since_version="1.10",
             issue=22953,
             feature="can_transf_matrix",
-            useinstead="",
+            useinstead="Will be removed",
         ).warn()
 
         #TODO: the inversion will fail if the system is inconsistent, for
@@ -681,7 +681,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             deprecated_since_version="1.10",
             issue=22953,
             feature="dim_vector",
-            useinstead="",
+            useinstead="Will be removed",
         ).warn()
 
         return self.can_transf_matrix * Matrix(self.dim_can_vector(dim))
@@ -713,7 +713,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             deprecated_since_version="1.10",
             issue=22953,
             feature="dim",
-            useinstead="",
+            useinstead="Will be removed",
         ).warn()
 
         return len(self.base_dims)
@@ -732,7 +732,7 @@ class DimensionSystem(Basic, _QuantityMapper):
             deprecated_since_version="1.10",
             issue=22953,
             feature="is_consistent",
-            useinstead="",
+            useinstead="Will be removed",
         ).warn()
 
         # not enough or too many base dimensions compared to independent
