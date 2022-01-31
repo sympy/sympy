@@ -55,3 +55,7 @@ def test_convert_array_to_indexed_main():
     one_index = 180*i + 20*j + 10*k + 5*l + m
     expected = X[one_index // (3*4*5*6), one_index // (4*5*6) % 3, one_index // (5*6) % 4, one_index // 6 % 5, one_index % 6]
     assert convert_array_to_indexed(expr, [i, j, k, l, m]) == expected
+
+    X = ArraySymbol("X", (2*3*5,))
+    expr = Reshape(X, (2, 3, 5))
+    assert convert_array_to_indexed(expr, [i, j, k]) == X[15*i + 5*j + k]
