@@ -108,7 +108,8 @@ def test_print_dim_base():
         (action,),
         {action: {mass: 1, length: 2, time: -1}})
     L, M, T = symbols("L M T")
-    assert mksa.print_dim_base(action) == L**2*M/T
+    with warns_deprecated_sympy():
+        assert mksa.print_dim_base(action) == L**2*M/T
 
 
 def test_dim():

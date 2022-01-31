@@ -688,8 +688,20 @@ class DimensionSystem(Basic, _QuantityMapper):
 
     def print_dim_base(self, dim):
         """
+        Useless method, kept for compatibility with previous versions.
+
+        DO NOT USE.
+
         Give the string expression of a dimension in term of the basis symbols.
         """
+
+        SymPyDeprecationWarning(
+            deprecated_since_version="1.10",
+            issue=22953,
+            feature="print_dim_base",
+            useinstead="Will be removed",
+        ).warn()
+
         dims = self.dim_vector(dim)
         symbols = [i.symbol if i.symbol is not None else i.name for i in self.base_dims]
         res = S.One
