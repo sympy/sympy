@@ -35,6 +35,9 @@ git_whitelist = {
     # Travis and CI
     '.travis.yml',
     '.github/workflows/runtests.yml',
+    '.github/workflows/ci-sage.yml',
+    '.github/workflows/comment-on-pr.yml',
+    '.github/workflows/release.yml',
     '.ci/durations.json',
     '.ci/generate_durations_log.sh',
     '.ci/parse_durations_log.py',
@@ -44,6 +47,7 @@ git_whitelist = {
     '.editorconfig',
     '.coveragerc',
     'CODEOWNERS',
+    'asv.conf.actions.json',
     'asv.conf.travis.json',
     'coveragerc_travis',
     'codecov.yml',
@@ -89,6 +93,9 @@ git_whitelist = {
     'bin/test_travis.sh',
     'bin/test_optional_dependencies.py',
     'bin/test_sphinx.sh',
+    'bin/mailmap_check.py',
+    'bin/test_symengine.py',
+    'bin/test_tensorflow.py',
     # The notebooks are not ready for shipping yet. They need to be cleaned
     # up, and preferably doctested.  See also
     # https://github.com/sympy/sympy/issues/6039.
@@ -134,6 +141,7 @@ git_whitelist = {
     'release/test_install.py',
     'release/sha256.py',
     'release/authors.py',
+    'release/ci_release_script.sh',
     # This is just a distribute version of setup.py. Used mainly for setup.py
     # develop, which we don't care about in the release tarball
     'setupegg.py',
