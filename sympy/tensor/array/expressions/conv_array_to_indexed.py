@@ -1,8 +1,9 @@
 import collections.abc
+import operator
 from itertools import accumulate
 
 from sympy import Mul, Sum, Dummy, Add
-from sympy.tensor.array.expressions import PermuteDims, ArrayAdd, ArrayElementwiseApplyFunc
+from sympy.tensor.array.expressions import PermuteDims, ArrayAdd, ArrayElementwiseApplyFunc, Reshape
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, get_rank, ArrayContraction, \
     ArrayDiagonal, get_shape, _get_array_element_or_slice, _ArrayExpr
 from sympy.tensor.array.expressions.utils import _apply_permutation_to_list
@@ -60,4 +61,21 @@ class _ConvertArrayToIndexed:
             return expr.__getitem__(tuple(indices))
         if isinstance(expr, ArrayElementwiseApplyFunc):
             return expr.function(self.do_convert(expr.expr, indices))
+        if isinstance(expr, Reshape):
+            shape_up = expr.shape
+            shape_down = get_shape(expr.expr)
+            cumul = list(accumulate([1] + list(reversed(shape_up)), operator.mul))
+            one_index = Add.fromiter(i*s for i, s in zip(reversed(indices), cumul))
+            dest_indices = [None for _ in shape_down]
+            c = 1
+            for i, e in enumerate(reversed(shape_down)):
+                if c == 1:
+                    dest_indices[i] = one_index % e
+                elif i == len(shape_down) - 1:
+                    dest_indices[i] = one_index // c
+                else:
+                    dest_indices[i] = one_index // c % e
+                c *= e
+            dest_indices.reverse()
+            return self.do_convert(expr.expr, dest_indices)
         return _get_array_element_or_slice(expr, indices)
