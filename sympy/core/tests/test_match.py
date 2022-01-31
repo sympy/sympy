@@ -1,7 +1,18 @@
-from sympy import (abc, Add, cos, collect, Derivative, diff, exp, Float, Function,
-    I, Integer, log, Mul, oo, Poly, Rational, S, signsimp, sin, sqrt, Symbol, symbols,
-    Wild, pi, meijerg, Sum
-)
+from sympy import abc
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, Wild, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.functions.special.hyper import meijerg
+from sympy.polys.polytools import Poly
+from sympy.simplify.radsimp import collect
+from sympy.simplify.simplify import signsimp
 
 from sympy.testing.pytest import XFAIL
 
@@ -693,7 +704,7 @@ def test_gh_issue_2711():
 
 
 def test_issue_17354():
-    from sympy import symbols, Wild
+    from sympy.core.symbol import (Wild, symbols)
     x, y = symbols("x y", real=True)
     a, b = symbols("a b", cls=Wild)
     assert ((0 <= x).reversed | (y <= x)).match((1/a <= b) | (a <= b)) is None
@@ -745,3 +756,11 @@ def test_match_bound():
     assert Sum(x, (x, 1, 2)).match(Sum(y, (y, 1, W))) == {W: 2}
     assert Sum(x, (x, 1, 2)).match(Sum(V, (V, 1, W))) == {W: 2, V:x}
     assert Sum(x, (x, 1, 2)).match(Sum(V, (V, 1, 2))) == {V:x}
+
+
+def test_issue_22462():
+    x, f = symbols('x'), Function('f')
+    n, Q = symbols('n Q', cls=Wild)
+    pattern = -Q*f(x)**n
+    eq = 5*f(x)**2
+    assert pattern.matches(eq) == {n: 2, Q: -5}

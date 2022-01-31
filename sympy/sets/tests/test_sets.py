@@ -1,9 +1,20 @@
-from sympy import (Symbol, Set, Union, Interval, oo, S, sympify, nan,
-    Max, Min, Float, DisjointUnion,
-    FiniteSet, Intersection, imageset, I, true, false, ProductSet,
-    sqrt, Complement, EmptySet, sin, cos, Lambda, ImageSet, pi,
-    Pow, Contains, Sum, rootof, SymmetricDifference, Piecewise,
-    Matrix, Range, Add, symbols, zoo, Rational)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.function import Lambda
+from sympy.core.numbers import (Float, I, Rational, nan, oo, pi, zoo)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.logic.boolalg import (false, true)
+from sympy.matrices.dense import Matrix
+from sympy.polys.rootoftools import rootof
+from sympy.sets.contains import Contains
+from sympy.sets.fancysets import (ImageSet, Range)
+from sympy.sets.sets import (Complement, DisjointUnion, FiniteSet, Intersection, Interval, ProductSet, Set, SymmetricDifference, Union, imageset)
 from mpmath import mpi
 
 from sympy.core.expr import unchanged
@@ -13,6 +24,7 @@ from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
 
 from sympy.abc import x, y, z, m, n
 
+EmptySet = S.EmptySet
 
 def test_imageset():
     ints = S.Integers
@@ -119,7 +131,7 @@ def test_interval_arguments():
 
 
     assert isinstance(Interval(0, Symbol('a')), Interval)
-    assert Interval(Symbol('a', real=True, positive=True), 0) == S.EmptySet
+    assert Interval(Symbol('a', positive=True), 0) == S.EmptySet
     raises(ValueError, lambda: Interval(0, S.ImaginaryUnit))
     raises(ValueError, lambda: Interval(0, Symbol('z', extended_real=False)))
     raises(ValueError, lambda: Interval(x, x + S.ImaginaryUnit))
@@ -304,14 +316,14 @@ def test_Complement():
                       Interval(1, 3)) == \
         Union(Interval(0, 1, False, True), FiniteSet(4))
 
-    assert not 3 in Complement(Interval(0, 5), Interval(1, 4), evaluate=False)
+    assert 3 not in Complement(Interval(0, 5), Interval(1, 4), evaluate=False)
     assert -1 in Complement(S.Reals, S.Naturals, evaluate=False)
-    assert not 1 in Complement(S.Reals, S.Naturals, evaluate=False)
+    assert 1 not in Complement(S.Reals, S.Naturals, evaluate=False)
 
     assert Complement(S.Integers, S.UniversalSet) == EmptySet
     assert S.UniversalSet.complement(S.Integers) == EmptySet
 
-    assert (not 0 in S.Reals.intersect(S.Integers - FiniteSet(0)))
+    assert (0 not in S.Reals.intersect(S.Integers - FiniteSet(0)))
 
     assert S.EmptySet - S.Integers == S.EmptySet
 
@@ -371,6 +383,7 @@ def test_set_operations_nonsets():
 
 
 def test_complement():
+    assert Complement({1, 2}, {1}) == {2}
     assert Interval(0, 1).complement(S.Reals) == \
         Union(Interval(-oo, 0, True, True), Interval(1, oo, True, True))
     assert Interval(0, 1, True, False).complement(S.Reals) == \
@@ -981,7 +994,7 @@ def test_finite_basic():
     assert FiniteSet((1, 2, 3)) != FiniteSet(1, 2, 3)
 
     # Ensure a variety of types can exist in a FiniteSet
-    assert FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
+    assert FiniteSet((1, 2), A, -5, x, 'eggs', x**2)
 
     assert (A > B) is False
     assert (A >= B) is False
@@ -992,8 +1005,6 @@ def test_finite_basic():
     assert A >= A and A <= A
     assert A >= AandB and B >= AandB
     assert A > AandB and B > AandB
-
-    assert FiniteSet(1.0) == FiniteSet(1)
 
 
 def test_product_basic():
@@ -1036,7 +1047,7 @@ def test_product_basic():
 
 
 def test_real():
-    x = Symbol('x', real=True, finite=True)
+    x = Symbol('x', real=True)
 
     I = Interval(0, 5)
     J = Interval(10, 20)
@@ -1588,8 +1599,8 @@ def test_DisjointUnion_len():
 
 def test_issue_20089():
     B = FiniteSet(FiniteSet(1, 2), FiniteSet(1))
-    assert not 1 in B
-    assert not 1.0 in B
+    assert 1 not in B
+    assert 1.0 not in B
     assert not Eq(1, FiniteSet(1, 2))
     assert FiniteSet(1) in B
     A = FiniteSet(1, 2)

@@ -43,7 +43,9 @@ from sympy.polys.specialpolys import f_polys
 from sympy.polys.domains import FF, ZZ, QQ, EX
 from sympy.polys.rings import ring
 
-from sympy import S, I, sin
+from sympy.core.numbers import I
+from sympy.core.singleton import S
+from sympy.functions.elementary.trigonometric import sin
 
 from sympy.abc import x
 

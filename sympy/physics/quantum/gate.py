@@ -16,9 +16,16 @@ Medium Term Todo:
 from itertools import chain
 import random
 
-from sympy import Add, I, Integer, Mul, Pow, sqrt, Tuple
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Integer)
+from sympy.core.power import Pow
 from sympy.core.numbers import Number
-from sympy.core.compatibility import is_sequence
+from sympy.core.singleton import S as _S
+from sympy.core.sorting import default_sort_key
+from sympy.core.sympify import _sympify
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
@@ -32,7 +39,7 @@ from sympy.physics.quantum.matrixcache import matrix_cache
 
 from sympy.matrices.matrices import MatrixBase
 
-from sympy.utilities import default_sort_key
+from sympy.utilities.iterables import is_sequence
 
 __all__ = [
     'Gate',
@@ -321,9 +328,9 @@ class CGate(Gate):
     gate_name_latex = 'C'
 
     # The values this class controls for.
-    control_value = Integer(1)
+    control_value = _S.One
 
-    simplify_cgate=False
+    simplify_cgate = False
 
     #-------------------------------------------------------------------------
     # Initialization
@@ -514,6 +521,8 @@ class UGate(Gate):
         mat = args[1]
         if not isinstance(mat, MatrixBase):
             raise TypeError('Matrix expected, got: %r' % mat)
+        #make sure this matrix is of a Basic type
+        mat = _sympify(mat)
         dim = 2**len(targets)
         if not all(dim == shape for shape in mat.shape):
             raise IndexError(
@@ -573,7 +582,7 @@ class UGate(Gate):
 class OneQubitGate(Gate):
     """A single qubit unitary gate base class."""
 
-    nqubits = Integer(1)
+    nqubits = _S.One
 
     def plot_gate(self, circ_plot, gate_idx):
         circ_plot.one_qubit_box(
@@ -584,7 +593,7 @@ class OneQubitGate(Gate):
     def _eval_commutator(self, other, **hints):
         if isinstance(other, OneQubitGate):
             if self.targets != other.targets or self.__class__ == other.__class__:
-                return Integer(0)
+                return _S.Zero
         return Operator._eval_commutator(self, other, **hints)
 
     def _eval_anticommutator(self, other, **hints):
@@ -623,7 +632,7 @@ class IdentityGate(OneQubitGate):
         return matrix_cache.get_matrix('eye2', format)
 
     def _eval_commutator(self, other, **hints):
-        return Integer(0)
+        return _S.Zero
 
     def _eval_anticommutator(self, other, **hints):
         return Integer(2)*other
@@ -674,7 +683,7 @@ class HadamardGate(HermitianOperator, OneQubitGate):
         return sqrt(2)*IdentityGate(self.targets[0])
 
     def _eval_anticommutator_YGate(self, other, **hints):
-        return Integer(0)
+        return _S.Zero
 
     def _eval_anticommutator_ZGate(self, other, **hints):
         return sqrt(2)*IdentityGate(self.targets[0])
@@ -713,10 +722,10 @@ class XGate(HermitianOperator, OneQubitGate):
         return Integer(2)*IdentityGate(self.targets[0])
 
     def _eval_anticommutator_YGate(self, other, **hints):
-        return Integer(0)
+        return _S.Zero
 
     def _eval_anticommutator_ZGate(self, other, **hints):
-        return Integer(0)
+        return _S.Zero
 
 
 class YGate(HermitianOperator, OneQubitGate):
@@ -744,7 +753,7 @@ class YGate(HermitianOperator, OneQubitGate):
         return Integer(2)*IdentityGate(self.targets[0])
 
     def _eval_anticommutator_ZGate(self, other, **hints):
-        return Integer(0)
+        return _S.Zero
 
 
 class ZGate(HermitianOperator, OneQubitGate):
@@ -769,7 +778,7 @@ class ZGate(HermitianOperator, OneQubitGate):
         return Integer(2)*I*YGate(self.targets[0])
 
     def _eval_anticommutator_YGate(self, other, **hints):
-        return Integer(0)
+        return _S.Zero
 
 
 class PhaseGate(OneQubitGate):
@@ -794,10 +803,10 @@ class PhaseGate(OneQubitGate):
         return matrix_cache.get_matrix('S', format)
 
     def _eval_commutator_ZGate(self, other, **hints):
-        return Integer(0)
+        return _S.Zero
 
     def _eval_commutator_TGate(self, other, **hints):
-        return Integer(0)
+        return _S.Zero
 
 
 class TGate(OneQubitGate):
@@ -822,10 +831,10 @@ class TGate(OneQubitGate):
         return matrix_cache.get_matrix('T', format)
 
     def _eval_commutator_ZGate(self, other, **hints):
-        return Integer(0)
+        return _S.Zero
 
     def _eval_commutator_PhaseGate(self, other, **hints):
-        return Integer(0)
+        return _S.Zero
 
 
 # Aliases for gate names.
@@ -865,7 +874,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
 
     """
     gate_name = 'CNOT'
-    gate_name_latex = 'CNOT'
+    gate_name_latex = r'\text{CNOT}'
     simplify_cgate = True
 
     #-------------------------------------------------------------------------
@@ -929,7 +938,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
     def _eval_commutator_ZGate(self, other, **hints):
         """[CNOT(i, j), Z(i)] == 0."""
         if self.controls[0] == other.targets[0]:
-            return Integer(0)
+            return _S.Zero
         else:
             raise NotImplementedError('Commutator not implemented: %r' % other)
 
@@ -944,14 +953,14 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
     def _eval_commutator_XGate(self, other, **hints):
         """[CNOT(i, j), X(j)] == 0."""
         if self.targets[0] == other.targets[0]:
-            return Integer(0)
+            return _S.Zero
         else:
             raise NotImplementedError('Commutator not implemented: %r' % other)
 
     def _eval_commutator_CNotGate(self, other, **hints):
         """[CNOT(i, j), CNOT(i,k)] == 0."""
         if self.controls[0] == other.controls[0]:
-            return Integer(0)
+            return _S.Zero
         else:
             raise NotImplementedError('Commutator not implemented: %r' % other)
 
@@ -971,7 +980,7 @@ class SwapGate(TwoQubitGate):
 
     """
     gate_name = 'SWAP'
-    gate_name_latex = 'SWAP'
+    gate_name_latex = r'\text{SWAP}'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('SWAP', format)
@@ -1220,7 +1229,7 @@ def gate_sort(circuit):
                 first_base, first_exp = circ_array[i].as_base_exp()
                 second_base, second_exp = circ_array[i + 1].as_base_exp()
 
-                # Use sympy's hash based sorting. This is not mathematical
+                # Use SymPy's hash based sorting. This is not mathematical
                 # sorting, but is rather based on comparing hashes of objects.
                 # See Basic.compare for details.
                 if first_base.compare(second_base) > 0:
@@ -1233,7 +1242,7 @@ def gate_sort(circuit):
                     if AntiCommutator(first_base, second_base).doit() == 0:
                         new_args = (circuit.args[:i] + (circuit.args[i + 1],) +
                                    (circuit.args[i],) + circuit.args[i + 2:])
-                        sign = Integer(-1)**(first_exp*second_exp)
+                        sign = _S.NegativeOne**(first_exp*second_exp)
                         circuit = sign*Mul(*new_args)
                         changes = True
                         break

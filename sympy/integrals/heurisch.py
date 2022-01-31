@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict as tDict, List
 
 from itertools import permutations
 from functools import reduce
@@ -6,11 +6,13 @@ from functools import reduce
 from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.mul import Mul
-from sympy.core.symbol import Wild, Dummy
+from sympy.core.symbol import Wild, Dummy, Symbol
 from sympy.core.basic import sympify
 from sympy.core.numbers import Rational, pi, I
 from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
+from sympy.core.sorting import ordered
+from sympy.core.traversal import iterfreeargs
 
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
 from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
@@ -28,7 +30,7 @@ from sympy.simplify.radsimp import collect
 from sympy.logic.boolalg import And, Or
 from sympy.utilities.iterables import uniq
 
-from sympy.polys import quo, gcd, lcm, factor, cancel, PolynomialError
+from sympy.polys import quo, gcd, lcm, factor_list, cancel, PolynomialError
 from sympy.polys.monomials import itermonomials
 from sympy.polys.polyroots import root_factors
 
@@ -36,7 +38,6 @@ from sympy.polys.rings import PolyRing
 from sympy.polys.solvers import solve_lin_sys
 from sympy.polys.constructor import construct_domain
 
-from sympy.core.compatibility import ordered
 from sympy.integrals.integrals import integrate
 
 
@@ -64,7 +65,7 @@ def components(f, x):
     """
     result = set()
 
-    if x in f.free_symbols:
+    if f.has_free(x):
         if f.is_symbol and f.is_commutative:
             result.add(f)
         elif f.is_Function or f.is_Derivative:
@@ -87,7 +88,7 @@ def components(f, x):
     return result
 
 # name -> [] of symbols
-_symbols_cache = {}  # type: Dict[str, List[Dummy]]
+_symbols_cache = {}  # type: tDict[str, List[Dummy]]
 
 
 # NB @cacheit is not convenient here
@@ -121,8 +122,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     Examples
     ========
 
-    >>> from sympy.core import symbols
-    >>> from sympy.functions import cos
+    >>> from sympy import cos, symbols
     >>> from sympy.integrals.heurisch import heurisch, heurisch_wrapper
     >>> n, x = symbols('n x')
     >>> heurisch(cos(n*x), x)
@@ -137,7 +137,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     """
     from sympy.solvers.solvers import solve, denoms
     f = sympify(f)
-    if x not in f.free_symbols:
+    if not f.has_free(x):
         return f*x
 
     res = heurisch(f, x, rewrite, hints, mappings, retries, degree_offset,
@@ -310,8 +310,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     recursive Risch algorithm in such case.  It's an open question if
     this algorithm can be made a full decision procedure.
 
-    This is an internal integrator procedure. You should use toplevel
-    'integrate' function in most cases,  as this procedure needs some
+    This is an internal integrator procedure. You should use top level
+    'integrate' function in most cases, as this procedure needs some
     preprocessing steps and otherwise may fail.
 
     Specification
@@ -379,7 +379,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
         if f.has(Abs, re, im, sign, Heaviside, DiracDelta, floor, ceiling, arg):
             return
 
-    if x not in f.free_symbols:
+    if not f.has_free(x):
         return f*x
 
     if not f.is_Add:
@@ -610,42 +610,31 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
 
     reducibles = set()
 
-    for poly in polys:
-        if poly.has(*V):
-            try:
-                factorization = factor(poly, greedy=True)
-            except PolynomialError:
-                factorization = poly
-
-            if factorization.is_Mul:
-                factors = factorization.args
-            else:
-                factors = (factorization, )
-
-            for fact in factors:
-                if fact.is_Pow:
-                    reducibles.add(fact.base)
-                else:
-                    reducibles.add(fact)
+    for poly in ordered(polys):
+        coeff, factors = factor_list(poly, *V)
+        reducibles.add(coeff)
+        for fact, mul in factors:
+            reducibles.add(fact)
 
     def _integrate(field=None):
-        irreducibles = set()
         atans = set()
         pairs = set()
 
-        for poly in reducibles:
-            for z in poly.free_symbols:
-                if z in V:
-                    break  # should this be: `irreducibles |= \
-            else:          # set(root_factors(poly, z, filter=field))`
-                continue   # and the line below deleted?
-                           #               |
-                           #               V
-            irreducibles |= set(root_factors(poly, z, filter=field))
+        if field == 'Q':
+            irreducibles = set(reducibles)
+        else:
+            setV = set(V)
+            irreducibles = set()
+            for poly in ordered(reducibles):
+                zV = setV & set(iterfreeargs(poly))
+                for z in ordered(zV):
+                    s = set(root_factors(poly, z, filter=field))
+                    irreducibles |= s
+                    break
 
         log_part, atan_part = [], []
 
-        for poly in list(irreducibles):
+        for poly in ordered(irreducibles):
             m = collect(poly, I, evaluate=False)
             y = m.get(I, S.Zero)
             if y:
@@ -703,7 +692,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
                 pass # ignore trivial numbers
             elif expr in syms:
                 pass # ignore variables
-            elif not expr.free_symbols & syms:
+            elif not expr.has_free(*syms):
                 non_syms.add(expr)
             elif expr.is_Add or expr.is_Mul or expr.is_Pow:
                 list(map(find_non_syms, expr.args))
@@ -733,7 +722,14 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
             return candidate.xreplace(solution).xreplace(
                 dict(zip(poly_coeffs, [S.Zero]*len(poly_coeffs))))
 
-    if not (F.free_symbols - set(V)):
+    if all(isinstance(_, Symbol) for _ in V):
+        more_free = F.free_symbols - set(V)
+    else:
+        Fd = F.as_dummy()
+        more_free = Fd.xreplace(dict(zip(V, (Dummy() for _ in V)))
+            ).free_symbols & Fd.free_symbols
+    if not more_free:
+        # all free generators are identified in V
         solution = _integrate('Q')
 
         if solution is None:

@@ -3,15 +3,16 @@ from collections import defaultdict
 from sympy.core import (Basic, S, Add, Mul, Pow, Symbol, sympify,
                         expand_func, Function, Dummy, Expr, factor_terms,
                         expand_power_exp, Eq)
-from sympy.core.compatibility import iterable, ordered, as_int
 from sympy.core.exprtools import factor_nc
 from sympy.core.parameters import global_parameters
 from sympy.core.function import (expand_log, count_ops, _mexpand,
     nfloat, expand_mul, expand)
-from sympy.core.numbers import Float, I, pi, Rational, Integer
+from sympy.core.numbers import Float, I, pi, Rational
 from sympy.core.relational import Relational
 from sympy.core.rules import Transform
+from sympy.core.sorting import ordered
 from sympy.core.sympify import _sympify
+from sympy.core.traversal import bottom_up as _bottom_up, walk as _walk
 from sympy.functions import gamma, exp, sqrt, log, exp_polar, re
 from sympy.functions.combinatorial.factorials import CombinatorialFunction
 from sympy.functions.elementary.complexes import unpolarify, Abs, sign
@@ -31,7 +32,9 @@ from sympy.simplify.powsimp import powsimp
 from sympy.simplify.radsimp import radsimp, fraction, collect_abs
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.trigsimp import trigsimp, exptrigsimp
-from sympy.utilities.iterables import has_variety, sift, subsets
+from sympy.utilities.decorator import deprecated
+from sympy.utilities.iterables import has_variety, sift, subsets, iterable
+from sympy.utilities.misc import as_int
 
 import mpmath
 
@@ -399,7 +402,9 @@ def signsimp(expr, evaluate=None):
     expr = sympify(expr)
     if not isinstance(expr, (Expr, Relational)) or expr.is_Atom:
         return expr
-    e = sub_post(sub_pre(expr))
+    # get rid of an pre-existing unevaluation regarding sign
+    e = expr.replace(lambda x: x.is_Mul and -(-x) != x, lambda x: -(-x))
+    e = sub_post(sub_pre(e))
     if not isinstance(e, (Expr, Relational)) or e.is_Atom:
         return e
     if e.is_Add:
@@ -409,7 +414,7 @@ def signsimp(expr, evaluate=None):
             return Mul(S.NegativeOne, -rv, evaluate=False)
         return rv
     if evaluate:
-        e = e.xreplace({m: -(-m) for m in e.atoms(Mul) if -(-m) != m})
+        e = e.replace(lambda x: x.is_Mul and -(-x) != x, lambda x: -(-x))
     return e
 
 
@@ -590,7 +595,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         doit=kwargs.get('doit', doit))
     # no routine for Expr needs to check for is_zero
     if isinstance(expr, Expr) and expr.is_zero:
-        return S.Zero
+        return S.Zero if not expr.is_Number else expr
 
     _eval_simplify = getattr(expr, '_eval_simplify', None)
     if _eval_simplify is not None:
@@ -635,7 +640,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         floats = True
         expr = nsimplify(expr, rational=True)
 
-    expr = bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
+    expr = _bottom_up(expr, lambda w: getattr(w, 'normal', lambda: w)())
     expr = Mul(*powsimp(expr).as_content_primitive())
     _e = cancel(expr)
     expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 6829
@@ -703,7 +708,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, 
         # automatically passed to gammasimp
         expr = combsimp(expr)
 
-    from sympy import Sum, Product, Integral
+    from sympy.concrete.products import Product
+    from sympy.concrete.summations import Sum
+    from sympy.integrals.integrals import Integral
 
     if expr.has(Sum):
         expr = sum_simplify(expr, **kwargs)
@@ -866,7 +873,7 @@ def sum_add(self, other, method=0):
     else:
         rother = other
 
-    if type(rself) == type(rother):
+    if type(rself) is type(rother):
         if method == 0:
             if rself.limits == rother.limits:
                 return factor_sum(Sum(rself.function + rother.function, *rself.limits))
@@ -927,7 +934,7 @@ def product_mul(self, other, method=0):
     """Helper function for Product simplification"""
     from sympy.concrete.products import Product
 
-    if type(self) == type(other):
+    if type(self) is type(other):
         if method == 0:
             if self.limits == other.limits:
                 return Product(self.function * other.function, *self.limits)
@@ -1100,7 +1107,7 @@ def logcombine(expr, force=False):
 
         # logs that have oppositely signed coefficients can divide
         for k in ordered(list(log1.keys())):
-            if not k in log1:  # already popped as -k
+            if k not in log1:  # already popped as -k
                 continue
             if -k in log1:
                 # figure out which has the minus sign; the one with
@@ -1116,7 +1123,7 @@ def logcombine(expr, force=False):
 
         return Add(*other)
 
-    return bottom_up(expr, f)
+    return _bottom_up(expr, f)
 
 
 def inversecombine(expr):
@@ -1154,58 +1161,7 @@ def inversecombine(expr):
                 rv = rv.exp.args[0]
         return rv
 
-    return bottom_up(expr, f)
-
-
-def walk(e, *target):
-    """Iterate through the args that are the given types (target) and
-    return a list of the args that were traversed; arguments
-    that are not of the specified types are not traversed.
-
-    Examples
-    ========
-
-    >>> from sympy.simplify.simplify import walk
-    >>> from sympy import Min, Max
-    >>> from sympy.abc import x, y, z
-    >>> list(walk(Min(x, Max(y, Min(1, z))), Min))
-    [Min(x, Max(y, Min(1, z)))]
-    >>> list(walk(Min(x, Max(y, Min(1, z))), Min, Max))
-    [Min(x, Max(y, Min(1, z))), Max(y, Min(1, z)), Min(1, z)]
-
-    See Also
-    ========
-
-    bottom_up
-    """
-    if isinstance(e, target):
-        yield e
-        for i in e.args:
-            yield from walk(i, *target)
-
-
-def bottom_up(rv, F, atoms=False, nonbasic=False):
-    """Apply ``F`` to all expressions in an expression tree from the
-    bottom up. If ``atoms`` is True, apply ``F`` even if there are no args;
-    if ``nonbasic`` is True, try to apply ``F`` to non-Basic objects.
-    """
-    args = getattr(rv, 'args', None)
-    if args is not None:
-        if args:
-            args = tuple([bottom_up(a, F, atoms, nonbasic) for a in args])
-            if args != rv.args:
-                rv = rv.func(*args)
-            rv = F(rv)
-        elif atoms:
-            rv = F(rv)
-    else:
-        if nonbasic:
-            try:
-                rv = F(rv)
-            except TypeError:
-                pass
-
-    return rv
+    return _bottom_up(expr, f)
 
 
 def kroneckersimp(expr):
@@ -1548,7 +1504,7 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
             expr = sympify(newexpr)
             if x and not expr:  # don't let x become 0
                 raise ValueError
-            if expr.is_finite is False and not xv in [mpmath.inf, mpmath.ninf]:
+            if expr.is_finite is False and xv not in [mpmath.inf, mpmath.ninf]:
                 raise ValueError
             return expr
         finally:
@@ -1633,7 +1589,7 @@ def _real_to_rational(expr, tolerance=None, rational_conversion='base10'):
                     d = Pow(10, int(mpmath.log(fl)/mpmath.log(10)))
                     r = Rational(str(fl/d))*d
                 else:
-                    r = Integer(0)
+                    r = S.Zero
         reps[key] = r
     return p.subs(reps, simultaneous=True)
 
@@ -2179,3 +2135,13 @@ def dotprodsimp(expr, withsimp=False):
             simplified = True
 
     return (expr, simplified) if withsimp else expr
+
+
+bottom_up = deprecated(
+    useinstead="sympy.core.traversal.bottom_up",
+    deprecated_since_version="1.10", issue=22288)(_bottom_up)
+
+
+walk = deprecated(
+    useinstead="sympy.core.traversal.walk",
+    deprecated_since_version="1.10", issue=22288)(_walk)

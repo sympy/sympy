@@ -30,7 +30,13 @@ The ``optims_c99`` imported above is tuple containing the following instances
 
 
 """
-from sympy import cos, exp, log, Max, Min, Wild, expand_log, sign, sin, sinc, S
+from sympy.core.function import expand_log
+from sympy.core.singleton import S
+from sympy.core.symbol import Wild
+from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import (Max, Min)
+from sympy.functions.elementary.trigonometric import (cos, sin, sinc)
 from sympy.assumptions import Q, ask
 from sympy.codegen.cfunctions import log1p, log2, exp2, expm1
 from sympy.codegen.matrix_nodes import MatrixSolve

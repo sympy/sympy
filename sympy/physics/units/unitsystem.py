@@ -2,9 +2,13 @@
 Unit system for physical quantities; include definition of constants.
 """
 
-from typing import Dict
+from typing import Dict as tDict
 
-from sympy import S, Mul, Pow, Add, Function, Derivative
+from sympy.core.add import Add
+from sympy.core.function import (Derivative, Function)
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.singleton import S
 from sympy.physics.units.dimensions import _QuantityMapper
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -22,7 +26,7 @@ class UnitSystem(_QuantityMapper):
     It is much better if all base units have a symbol.
     """
 
-    _unit_systems = {}  # type: Dict[str, UnitSystem]
+    _unit_systems = {}  # type: tDict[str, UnitSystem]
 
     def __init__(self, base_units, units=(), name="", descr="", dimension_system=None):
 

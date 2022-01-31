@@ -2,11 +2,26 @@ from functools import reduce
 import itertools
 from operator import add
 
-from sympy import (
-    Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-    Matrix, S, cos, sin, Eq, Function, Tuple, CRootOf,
-    IndexedBase, Idx, Piecewise, O, signsimp
-)
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.function import Function
+from sympy.core.mul import Mul
+from sympy.core.power import Pow
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.matrices.dense import Matrix
+from sympy.polys.rootoftools import CRootOf
+from sympy.series.order import O
+from sympy.simplify.cse_main import cse
+from sympy.simplify.simplify import signsimp
+from sympy.tensor.indexed import (Idx, IndexedBase)
+
 from sympy.core.function import count_ops
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
@@ -229,7 +244,7 @@ def test_issue_6263():
 
 
 def test_dont_cse_tuples():
-    from sympy import Subs
+    from sympy.core.function import Subs
     f = Function("f")
     g = Function("g")
 
@@ -331,6 +346,10 @@ def test_cse_MatrixSymbol():
     n = symbols('n', integer=True)
     B = MatrixSymbol("B", n, n)
     assert cse(B) == ([], [B])
+
+    assert cse(A[0] * A[0]) == ([], [A[0]*A[0]])
+
+    assert cse(A[0,0]*A[0,1] + A[0,0]*A[0,1]*A[0,2]) == ([(x0, A[0, 0]*A[0, 1])], [x0*A[0, 2] + x0])
 
 def test_cse_MatrixExpr():
     A = MatrixSymbol('A', 3, 3)
@@ -439,7 +458,7 @@ def test_issue_11230():
     assert not any(i.is_Mul for a in C for i in a.args)
 
     # random tests for the issue
-    from random import choice
+    from sympy.core.random import choice
     from sympy.core.function import expand_mul
     s = symbols('a:m')
     # 35 Mul tests, none of which should ever fail
@@ -569,8 +588,10 @@ def test_cse_list():
     assert _cse(x) == ([], x)
     assert _cse('x') == ([], 'x')
     it = [x]
-    for c in (list, tuple, set, Tuple):
+    for c in (list, tuple, set):
         assert _cse(c(it)) == ([], c(it))
+    #Tuple works different from tuple:
+    assert _cse(Tuple(*it)) == ([], Tuple(*it))
     d = {x: 1}
     assert _cse(d) == ([], d)
 

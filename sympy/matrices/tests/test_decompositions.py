@@ -1,4 +1,8 @@
-from sympy import Rational, I, expand_mul, S, simplify, sqrt
+from sympy.core.function import expand_mul
+from sympy.core.numbers import (I, Rational)
+from sympy.core.singleton import S
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.simplify.simplify import simplify
 from sympy.matrices.matrices import NonSquareMatrixError
 from sympy.matrices import Matrix, zeros, eye, SparseMatrix
 from sympy.abc import x, y, z

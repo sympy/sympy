@@ -1,7 +1,24 @@
-from sympy import (S, symbols, FiniteSet, Eq, Matrix, MatrixSymbol, Float, And,
-                   ImmutableMatrix, Ne, Lt, Le, Gt, Ge, exp, Not, Rational, Lambda, erf,
-                   Piecewise, factorial, Interval, oo, Contains, sqrt, pi, ceiling,
-                   gamma, lowergamma, Sum, Range, Tuple, ImmutableDenseMatrix, Symbol)
+from sympy.concrete.summations import Sum
+from sympy.core.containers import Tuple
+from sympy.core.function import Lambda
+from sympy.core.numbers import (Float, Rational, oo, pi)
+from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.integers import ceiling
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.error_functions import erf
+from sympy.functions.special.gamma_functions import (gamma, lowergamma)
+from sympy.logic.boolalg import (And, Not)
+from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.immutable import ImmutableMatrix
+from sympy.sets.contains import Contains
+from sympy.sets.fancysets import Range
+from sympy.sets.sets import (FiniteSet, Interval)
 from sympy.stats import (DiscreteMarkovChain, P, TransitionMatrixOf, E,
                          StochasticStateSpaceOf, variance, ContinuousMarkovChain,
                          BernoulliProcess, PoissonProcess, WienerProcess,
@@ -46,8 +63,8 @@ def test_DiscreteMarkovChain():
     # any hashable object should be a valid state
     # states should be valid as a tuple/set/list/Tuple/Range
     sym, rainy, cloudy, sunny = symbols('a Rainy Cloudy Sunny', real=True)
-    state_spaces = [(1, 2, 3), [Str('Hello'), sym, DiscreteMarkovChain],
-                    Tuple(1, exp(sym), Str('World'), sympify=False), Range(-1, 5, 2),
+    state_spaces = [(1, 2, 3), [Str('Hello'), sym, DiscreteMarkovChain("Y", (1,2,3))],
+                    Tuple(S(1), exp(sym), Str('World'), sympify=False), Range(-1, 5, 2),
                     [rainy, cloudy, sunny]]
     chains = [DiscreteMarkovChain("Y", state_space) for state_space in state_spaces]
 
@@ -72,7 +89,7 @@ def test_DiscreteMarkovChain():
               DiscreteMarkovChain("Y", trans_probs=Matrix([[pi, 1-pi], [sym, 1-sym]]))]
     for Z in chains:
         assert Z.number_of_states == Z.transition_probabilities.shape[0]
-        assert isinstance(Z.transition_probabilities, ImmutableDenseMatrix)
+        assert isinstance(Z.transition_probabilities, ImmutableMatrix)
 
     # pass name, state_space and transition_probabilities
     T = Matrix([[0.5, 0.2, 0.3],[0.2, 0.5, 0.3],[0.2, 0.3, 0.5]])
@@ -108,11 +125,11 @@ def test_DiscreteMarkovChain():
     assert P(Lt(X[1], 2) & Gt(X[1], 0), Eq(X[0], 2) &
         StochasticStateSpaceOf(X, [0, 1, 2]) & TransitionMatrixOf(X, TO1)) == Rational(1, 4)
     assert P(Lt(X[1], 2) & Gt(X[1], 0), Eq(X[0], 2) &
-             StochasticStateSpaceOf(X, [None, 'None', 1]) & TransitionMatrixOf(X, TO1)) == Rational(1, 4)
+             StochasticStateSpaceOf(X, [S(0), '0', 1]) & TransitionMatrixOf(X, TO1)) == Rational(1, 4)
     assert P(Ne(X[1], 2) & Ne(X[1], 1), Eq(X[0], 2) &
         StochasticStateSpaceOf(X, [0, 1, 2]) & TransitionMatrixOf(X, TO1)) is S.Zero
     assert P(Ne(X[1], 2) & Ne(X[1], 1), Eq(X[0], 2) &
-             StochasticStateSpaceOf(X, [None, 'None', 1]) & TransitionMatrixOf(X, TO1)) is S.Zero
+             StochasticStateSpaceOf(X, [S(0), '0', 1]) & TransitionMatrixOf(X, TO1)) is S.Zero
     assert P(And(Eq(Y[2], 1), Eq(Y[1], 1), Eq(Y[0], 0)), Eq(Y[1], 1)) == 0.1*Probability(Eq(Y[0], 0))
 
     # testing properties of Markov chain
@@ -144,7 +161,7 @@ def test_DiscreteMarkovChain():
     TO7 = Matrix([[Rational(1, 2), Rational(1, 4), Rational(1, 4)], [Rational(1, 2), 0, Rational(1, 2)], [Rational(1, 4), Rational(1, 4), Rational(1, 2)]])
     Y7 = DiscreteMarkovChain('Y', trans_probs=TO7)
     assert Y7.is_absorbing_chain() == False
-    assert Y7.fundamental_matrix() == ImmutableDenseMatrix([[Rational(86, 75), Rational(1, 25), Rational(-14, 75)],
+    assert Y7.fundamental_matrix() == ImmutableMatrix([[Rational(86, 75), Rational(1, 25), Rational(-14, 75)],
                                                             [Rational(2, 25), Rational(21, 25), Rational(2, 25)],
                                                             [Rational(-14, 75), Rational(1, 25), Rational(86, 75)]])
 

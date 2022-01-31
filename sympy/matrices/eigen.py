@@ -4,7 +4,7 @@ from collections import Counter
 from mpmath import mp, workprec
 from mpmath.libmp.libmpf import prec_to_dps
 
-from sympy.core.compatibility import default_sort_key
+from sympy.core.sorting import default_sort_key
 from sympy.core.evalf import DEFAULT_MAXPREC, PrecisionExhausted
 from sympy.core.logic import fuzzy_and, fuzzy_or
 from sympy.core.numbers import Float
@@ -124,7 +124,7 @@ def _eigenvals(
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> M = Matrix(3, 3, [0, 1, 1, 1, 0, 0, 1, 1, 1])
     >>> M.eigenvals()
     {-1: 1, 0: 1, 2: 1}
@@ -382,7 +382,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> M = Matrix(3, 3, [0, 1, 1, 1, 0, 0, 1, 1, 1])
     >>> M.eigenvects()
     [(-1, 1, [Matrix([
@@ -424,7 +424,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
         # if the primitive flag is set, get rid of any common
         # integer denominators
         def denom_clean(l):
-            from sympy import gcd
+            from sympy.polys.polytools import gcd
             return [(v / gcd(list(v))).applyfunc(simpfunc) for v in l]
 
         ret = [(val, mult, denom_clean(es)) for val, mult, es in ret]
@@ -671,7 +671,7 @@ def _diagonalize(M, reals_only=False, sort=False, normalize=False):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> M = Matrix(3, 3, [1, 2, 0, 0, 3, 0, 2, -4, 2])
     >>> M
     Matrix([
@@ -1057,7 +1057,7 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> M = Matrix([[ 6,  5, -2, -3], [-3, -1,  3,  3], [ 2,  1, -2, -3], [-1,  1,  5,  5]])
     >>> P, J = M.jordan_form()
     >>> J
@@ -1293,7 +1293,7 @@ def _left_eigenvects(M, **flags):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> M = Matrix([[0, 1, 1], [1, 0, 0], [1, 1, 1]])
     >>> M.eigenvects()
     [(-1, 1, [Matrix([

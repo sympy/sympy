@@ -26,7 +26,7 @@ from .pythonrational import PythonRational
 # This is imported purely for backwards compatibility because some parts of
 # the codebase used to import this from here and it's possible that downstream
 # does as well:
-from sympy.external.gmpy import GROUND_TYPES   # noqa: F401
+from sympy.external.gmpy import GROUND_TYPES  # noqa: F401
 
 #
 # The rest of these are obsolete and provided only for backwards

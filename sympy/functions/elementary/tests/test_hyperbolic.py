@@ -1,7 +1,14 @@
-from sympy import (symbols, Symbol, sinh, nan, oo, zoo, pi, asinh, acosh, log,
-    sqrt, coth, I, cot, E, tanh, tan, cosh, cos, S, sin, Rational, atanh, acoth,
-    Integer, O, exp, sech, sec, csch, asech, acsch, acos, asin, expand_mul,
-    AccumBounds, im, re, expand_trig)
+from sympy.calculus.accumulationbounds import AccumBounds
+from sympy.core.function import (expand_mul, expand_trig)
+from sympy.core.numbers import (E, I, Integer, Rational, nan, oo, pi, zoo)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (im, re)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (acosh, acoth, acsch, asech, asinh, atanh, cosh, coth, csch, sech, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, asin, cos, cot, sec, sin, tan)
+from sympy.series.order import O
 
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
@@ -850,7 +857,7 @@ def test_atanh():
     assert atanh(tanh(pi/2)) == pi/2
     assert atanh(tanh(pi)) == pi
     assert atanh(tanh(-3 + 7*I)) == -3 - 2*I*pi + 7*I
-    assert atanh(tanh(9 - I*Rational(2, 3))) == 9 - I*Rational(2, 3)
+    assert atanh(tanh(9 - I*2/3)) == 9 - I*2/3
     assert atanh(tanh(-32 - 123*I)) == -32 - 123*I + 39*I*pi
 
 

@@ -1,5 +1,14 @@
-from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
-    Function, PoleError, log, sqrt, N, Symbol, Subs, pi, symbols, atan, LambertW, Rational
+from sympy.core.evalf import N
+from sympy.core.function import (Derivative, Function, PoleError, Subs)
+from sympy.core.numbers import (E, Rational, oo, pi)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.exponential import (LambertW, exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (atan, cos, sin)
+from sympy.integrals.integrals import Integral
+from sympy.series.order import O
+from sympy.series.series import series
 from sympy.abc import x, y, n, k
 from sympy.testing.pytest import raises
 from sympy.series.gruntz import calculate_series
@@ -142,7 +151,8 @@ def test_issue_3978():
             x**2*Subs(Derivative(TestF(x), x, x), x, 0)/2 + O(x**3)
 
 from sympy.series.acceleration import richardson, shanks
-from sympy import Sum, Integer
+from sympy.concrete.summations import Sum
+from sympy.core.numbers import Integer
 
 
 def test_acceleration():
@@ -213,7 +223,7 @@ def test_issue_12578():
 
 
 def test_issue_12791():
-    beta = symbols('beta', real=True, positive=True)
+    beta = symbols('beta', positive=True)
     theta, varphi = symbols('theta varphi', real=True)
 
     expr = (-beta**2*varphi*sin(theta) + beta**2*cos(theta) + \
@@ -334,8 +344,8 @@ def test_issue_20697():
 def test_issue_21245():
     fi = (1 + sqrt(5))/2
     assert (1/(1 - x - x**2)).series(x, 1/fi, 1).factor() == \
-        (-6964*sqrt(5) - 15572 + 2440*sqrt(5)*x + 5456*x\
-        + O((x - 2/(1 + sqrt(5)))**2, (x, 2/(1 + sqrt(5)))))/((1 + sqrt(5))**2\
+        (-4812 - 2152*sqrt(5) + 1686*x + 754*sqrt(5)*x\
+        + O((x - 2/(1 + sqrt(5)))**2, (x, 2/(1 + sqrt(5)))))/((1 + sqrt(5))\
         *(20 + 9*sqrt(5))**2*(x + sqrt(5)*x - 2))
 
 

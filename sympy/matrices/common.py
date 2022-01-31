@@ -9,14 +9,13 @@ from collections.abc import Iterable
 from inspect import isfunction
 from functools import reduce
 
-from sympy.core.logic import FuzzyBool
 from sympy.assumptions.refine import refine
 from sympy.core import SympifyError, Add
 from sympy.core.basic import Atom
-from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.decorators import call_highest_priority
 from sympy.core.kind import Kind, NumberKind
-from sympy.core.logic import fuzzy_and
+from sympy.core.logic import fuzzy_and, FuzzyBool
+from sympy.core.mod import Mod
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
@@ -25,8 +24,8 @@ from sympy.polys.polytools import Poly
 from sympy.simplify import simplify as _simplify
 from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import flatten
-from sympy.utilities.misc import filldedent
+from sympy.utilities.iterables import flatten, is_sequence
+from sympy.utilities.misc import as_int, filldedent
 from sympy.tensor.array import NDimArray
 
 from .utilities import _get_intermediate_simp_bool
@@ -76,7 +75,7 @@ class MatrixRequired:
         """Implementations of __getitem__ should accept ints, in which
         case the matrix is indexed as a flat list, tuples (i,j) in which
         case the (i,j) entry is returned, slices, or mixed tuples (a,b)
-        where a and b are any combintion of slices and integers."""
+        where a and b are any combination of slices and integers."""
         raise NotImplementedError("Subclasses must implement this.")
 
     def __len__(self):
@@ -312,9 +311,9 @@ class MatrixShaping(MatrixRequired):
         return self[:, j]
 
     def extract(self, rowsList, colsList):
-        """Return a submatrix by specifying a list of rows and columns.
+        r"""Return a submatrix by specifying a list of rows and columns.
         Negative indices can be given. All indices must be in the range
-        -n <= i < n where n is the number of rows or columns.
+        $-n \le i < n$ where $n$ is the number of rows or columns.
 
         Examples
         ========
@@ -407,7 +406,7 @@ class MatrixShaping(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix, eye
+        >>> from sympy import Matrix, eye
         >>> Matrix.hstack(eye(2), 2*eye(2))
         Matrix([
         [1, 0, 2, 0],
@@ -600,7 +599,7 @@ class MatrixShaping(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import zeros
+        >>> from sympy import zeros
         >>> M = zeros(2, 3)
         >>> M.shape
         (2, 3)
@@ -764,7 +763,7 @@ class MatrixShaping(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix, eye
+        >>> from sympy import Matrix, eye
         >>> Matrix.vstack(eye(2), 2*eye(2))
         Matrix([
         [1, 0],
@@ -862,7 +861,7 @@ class MatrixSpecial(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> Matrix.diag(1, 2, 3)
         Matrix([
         [1, 0, 0],
@@ -905,7 +904,7 @@ class MatrixSpecial(MatrixRequired):
         The type of the returned matrix can be set with the ``cls``
         keyword.
 
-        >>> from sympy.matrices import ImmutableMatrix
+        >>> from sympy import ImmutableMatrix
         >>> from sympy.utilities.misc import func_name
         >>> func_name(Matrix.diag(1, cls=ImmutableMatrix))
         'ImmutableDenseMatrix'
@@ -930,7 +929,7 @@ class MatrixSpecial(MatrixRequired):
        """
         from sympy.matrices.matrices import MatrixBase
         from sympy.matrices.dense import Matrix
-        from sympy.matrices.sparse import SparseMatrix
+        from sympy.matrices import SparseMatrix
         klass = kwargs.get('cls', kls)
         if unpack and len(args) == 1 and is_sequence(args[0]) and \
                 not isinstance(args[0], MatrixBase):
@@ -1253,7 +1252,7 @@ class MatrixSpecial(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> wminus, wplus = Matrix.wilkinson(3)
         >>> wminus
         Matrix([
@@ -1312,7 +1311,7 @@ class MatrixProperties(MatrixRequired):
                     return False
         return True
 
-    # _eval_is_hermitian is called by some general sympy
+    # _eval_is_hermitian is called by some general SymPy
     # routines and has a different *args signature.  Make
     # sure the names don't clash by adding `_matrix_` in name.
     def _eval_is_matrix_hermitian(self, simpfunc):
@@ -1376,7 +1375,7 @@ class MatrixProperties(MatrixRequired):
         ========
 
         >>> from sympy.abc import x, y
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> Matrix([[x]])
         Matrix([[x]])
         >>> _.atoms()
@@ -1402,7 +1401,7 @@ class MatrixProperties(MatrixRequired):
         ========
 
         >>> from sympy.abc import x
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> Matrix([[x], [1]]).free_symbols
         {x}
         """
@@ -1564,7 +1563,7 @@ class MatrixProperties(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> A = Matrix([[3, -2, 1], [1, -3, 2], [-1, 2, 4]])
         >>> A.is_weakly_diagonally_dominant
         True
@@ -1614,7 +1613,7 @@ class MatrixProperties(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> A = Matrix([[3, -2, 1], [1, -3, 2], [-1, 2, 4]])
         >>> A.is_strongly_diagonally_dominant
         False
@@ -1657,7 +1656,7 @@ class MatrixProperties(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy import I
         >>> from sympy.abc import x
         >>> a = Matrix([[1, I], [-I, 1]])
@@ -1697,7 +1696,7 @@ class MatrixProperties(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> a = Matrix([[1, 2, 0, 0], [5, 2, 3, 0], [3, 4, 3, 7], [5, 6, 1, 1]])
         >>> a
         Matrix([
@@ -1791,7 +1790,7 @@ class MatrixProperties(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.is_symbolic()
@@ -1874,7 +1873,7 @@ class MatrixProperties(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> a = Matrix([[1, 4, 2, 3], [3, 4, 1, 7], [0, 2, 3, 4], [0, 0, 1, 3]])
         >>> a
         Matrix([
@@ -2056,8 +2055,7 @@ class MatrixOperations(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
-        >>> from sympy import I
+        >>> from sympy import SparseMatrix, I
         >>> a = SparseMatrix(((1, 2 + I), (3, 4), (I, -I)))
         >>> a
         Matrix([
@@ -2096,7 +2094,7 @@ class MatrixOperations(MatrixRequired):
         ========
 
         >>> from sympy.abc import x
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> Matrix(1, 1, [x*(x+1)])
         Matrix([[x*(x + 1)]])
         >>> _.expand()
@@ -2179,7 +2177,7 @@ class MatrixOperations(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import eye
+        >>> from sympy import eye
         >>> M = eye(3)
         >>> M.permute([[0, 1], [0, 2]], orientation='rows', direction='forward')
         Matrix([
@@ -2187,7 +2185,7 @@ class MatrixOperations(MatrixRequired):
         [1, 0, 0],
         [0, 1, 0]])
 
-        >>> from sympy.matrices import eye
+        >>> from sympy import eye
         >>> M = eye(3)
         >>> M.permute([[0, 1], [0, 2]], orientation='rows', direction='backward')
         Matrix([
@@ -2385,8 +2383,7 @@ class MatrixOperations(MatrixRequired):
         ========
 
         >>> from sympy.abc import x, y
-        >>> from sympy import sin, cos
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import SparseMatrix, sin, cos
         >>> SparseMatrix(1, 1, [x*sin(y)**2 + x*cos(y)**2])
         Matrix([[x*sin(y)**2 + x*cos(y)**2]])
         >>> _.simplify()
@@ -2401,7 +2398,7 @@ class MatrixOperations(MatrixRequired):
         ========
 
         >>> from sympy.abc import x, y
-        >>> from sympy.matrices import SparseMatrix, Matrix
+        >>> from sympy import SparseMatrix, Matrix
         >>> SparseMatrix(1, 1, [x])
         Matrix([[x]])
         >>> _.subs(x, y)
@@ -2489,7 +2486,7 @@ class MatrixOperations(MatrixRequired):
         ========
 
         >>> from sympy.abc import x, y
-        >>> from sympy.matrices import SparseMatrix, Matrix
+        >>> from sympy import SparseMatrix, Matrix
         >>> SparseMatrix(1, 1, [x])
         Matrix([[x]])
         >>> _.xreplace({x: y})
@@ -2681,10 +2678,9 @@ class MatrixArithmetic(MatrixRequired):
         return self._new(self.rows, self.cols, lambda i, j: other*self[i,j])
 
     def _eval_Mod(self, other):
-        from sympy import Mod
         return self._new(self.rows, self.cols, lambda i, j: Mod(self[i, j], other))
 
-    # python arithmetic functions
+    # Python arithmetic functions
     def __abs__(self):
         """Returns a new matrix with entry-wise absolute values."""
         return self._eval_Abs()
@@ -2702,7 +2698,7 @@ class MatrixArithmetic(MatrixRequired):
                 raise ShapeError("Matrix size mismatch: %s + %s" % (
                     self.shape, other.shape))
 
-        # honest sympy matrices defer to their class's routine
+        # honest SymPy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
             # call the highest-priority class's _eval_add
             a, b = self, other
@@ -2738,7 +2734,7 @@ class MatrixArithmetic(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> A = Matrix([[1, 2, 3], [4, 5, 6]])
         >>> 2*A == A*2 == Matrix([[2, 4, 6], [8, 10, 12]])
         True
@@ -2784,7 +2780,7 @@ class MatrixArithmetic(MatrixRequired):
                 raise ShapeError("Matrix size mismatch: %s * %s." % (
                     self.shape, other.shape))
 
-        # honest sympy matrices defer to their class's routine
+        # honest SymPy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
             m = self._eval_matrix_mul(other)
             if isimpbool:
@@ -2810,7 +2806,7 @@ class MatrixArithmetic(MatrixRequired):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
         >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
         >>> A.multiply_elementwise(B)
@@ -2969,7 +2965,7 @@ class MatrixArithmetic(MatrixRequired):
             if self.shape[0] != other.shape[1]:
                 raise ShapeError("Matrix size mismatch.")
 
-        # honest sympy matrices defer to their class's routine
+        # honest SymPy matrices defer to their class's routine
         if getattr(other, 'is_Matrix', False):
             m = self._eval_matrix_rmul(other)
             if isimpbool:
@@ -3170,8 +3166,7 @@ class MatrixKind(Kind):
     Although expression representing a matrix may be not instance of
     matrix class, it will have ``MatrixKind`` as well.
 
-    >>> from sympy import Integral
-    >>> from sympy.matrices.expressions import MatrixExpr
+    >>> from sympy import MatrixExpr, Integral
     >>> from sympy.abc import x
     >>> intM = Integral(A, x)
     >>> isinstance(intM, MatrixExpr)
@@ -3183,8 +3178,8 @@ class MatrixKind(Kind):
     the element kind. Use ``is`` with specifying the element kind.
 
     >>> from sympy import Matrix
+    >>> from sympy.core import NumberKind
     >>> from sympy.matrices import MatrixKind
-    >>> from sympy.core.kind import NumberKind
     >>> M = Matrix([1, 2])
     >>> isinstance(M.kind, MatrixKind)
     True

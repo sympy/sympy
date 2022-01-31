@@ -1,7 +1,7 @@
 """
 Python code printers
 
-This module contains python code printers for plain python as well as NumPy & SciPy enabled code.
+This module contains Python code printers for plain Python as well as NumPy & SciPy enabled code.
 """
 from collections import defaultdict
 from itertools import chain
@@ -9,14 +9,12 @@ from sympy.core import S
 from .precedence import precedence
 from .codeprinter import CodePrinter
 
-_kw_py2and3 = {
+_kw = {
     'and', 'as', 'assert', 'break', 'class', 'continue', 'def', 'del', 'elif',
     'else', 'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in',
     'is', 'lambda', 'not', 'or', 'pass', 'raise', 'return', 'try', 'while',
-    'with', 'yield', 'None'  # 'None' is actually not in Python 2's keyword.kwlist
+    'with', 'yield', 'None', 'False', 'nonlocal', 'True'
 }
-_kw_only_py2 = {'exec', 'print'}
-_kw_only_py3 = {'False', 'nonlocal', 'True'}
 
 _known_functions = {
     'Abs': 'abs',
@@ -56,10 +54,10 @@ _known_functions_math = {
 _known_constants_math = {
     'Exp1': 'e',
     'Pi': 'pi',
-    'E': 'e'
-    # Only in python >= 3.5:
-    # 'Infinity': 'inf',
-    # 'NaN': 'nan'
+    'E': 'e',
+    'Infinity': 'inf',
+    'NaN': 'nan',
+    'ComplexInfinity': 'nan'
 }
 
 def _print_known_func(self, expr):
@@ -76,7 +74,7 @@ def _print_known_const(self, expr):
 class AbstractPythonCodePrinter(CodePrinter):
     printmethod = "_pythoncode"
     language = "Python"
-    reserved_words = _kw_py2and3.union(_kw_only_py3)
+    reserved_words = _kw
     modules = None  # initialized to a set in __init__
     tab = '    '
     _kf = dict(chain(
@@ -103,8 +101,8 @@ class AbstractPythonCodePrinter(CodePrinter):
         if std is None:
             import sys
             std = 'python{}'.format(sys.version_info.major)
-        if std not in ('python2', 'python3'):
-            raise ValueError('Unrecognized python standard : {}'.format(std))
+        if std != 'python3':
+            raise ValueError('Only Python 3 is supported.')
         self.standard = std
 
         self.module_imports = defaultdict(set)
@@ -306,7 +304,7 @@ class AbstractPythonCodePrinter(CodePrinter):
         func = self.known_functions.get(name, name)
         return "%s(%s)" % (func, self._print(expr.tolist()))
 
-    _print_SparseMatrix = \
+    _print_SparseRepMatrix = \
         _print_MutableSparseMatrix = \
         _print_ImmutableSparseMatrix = \
         _print_Matrix = \
@@ -352,8 +350,6 @@ class AbstractPythonCodePrinter(CodePrinter):
         if prnt.file != None: # Must be '!= None', cannot be 'is not None'
             print_args += ', file=%s' % self._print(prnt.file)
 
-        if self.standard == 'python2':
-            return 'print %s' % print_args
         return 'print(%s)' % print_args
 
     def _print_Stream(self, strm):
@@ -378,13 +374,13 @@ class AbstractPythonCodePrinter(CodePrinter):
         Examples
         ========
 
-        >>> from sympy.functions import sqrt
+        >>> from sympy import sqrt
         >>> from sympy.printing.pycode import PythonCodePrinter
         >>> from sympy.abc import x
 
         Python code printer automatically looks up ``math.sqrt``.
 
-        >>> printer = PythonCodePrinter({'standard':'python3'})
+        >>> printer = PythonCodePrinter()
         >>> printer._hprint_Pow(sqrt(x), rational=True)
         'x**(1/2)'
         >>> printer._hprint_Pow(sqrt(x), rational=False)
@@ -445,15 +441,13 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         return self._hprint_Pow(expr, rational=rational)
 
     def _print_Rational(self, expr):
-        if self.standard == 'python2':
-            return '{}./{}.'.format(expr.p, expr.q)
         return '{}/{}'.format(expr.p, expr.q)
 
     def _print_Half(self, expr):
         return self._print_Rational(expr)
 
     def _print_frac(self, expr):
-        from sympy import Mod
+        from sympy.core.mod import Mod
         return self._print_Mod(Mod(expr.args[0], 1))
 
     def _print_Symbol(self, expr):
@@ -496,17 +490,13 @@ def pycode(expr, **settings):
         Whether or not to write out full module names of functions
         (``math.sin`` vs. ``sin``). default: ``True``.
     standard : str or None, optional
-        If 'python2', Python 2 sematics will be used.
-        If 'python3', Python 3 sematics will be used.
-        If None, the standard will be automatically detected.
-        Default is 'python3'. And this parameter may be removed in the
-        future.
+        Only 'python3' (default) is supported.
+        This parameter may be removed in the future.
 
     Examples
     ========
 
-    >>> from sympy import tan, Symbol
-    >>> from sympy.printing.pycode import pycode
+    >>> from sympy import pycode, tan, Symbol
     >>> pycode(tan(Symbol('x')) + 1)
     'math.tan(x) + 1'
 
@@ -523,6 +513,12 @@ _known_functions_mpmath = dict(_in_mpmath, **{
     'fresnels': 'fresnels',
     'sign': 'sign',
     'loggamma': 'loggamma',
+    'hyper': 'hyper',
+    'meijerg': 'meijerg',
+    'besselj': 'besselj',
+    'bessely': 'bessely',
+    'besseli': 'besseli',
+    'besselk': 'besselk',
 })
 _known_constants_mpmath = {
     'Exp1': 'e',

@@ -1,5 +1,16 @@
-from sympy import (symbols, factor, Function, simplify, exp, oo, I,
-    S, Mul, Pow, Add, Rational, sqrt, CRootOf, eye)
+from sympy.core.add import Add
+from sympy.core.function import Function
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.matrices.dense import eye
+from sympy.polys.polytools import factor
+from sympy.polys.rootoftools import CRootOf
+from sympy.simplify.simplify import simplify
 from sympy.core.containers import Tuple
 from sympy.matrices import ImmutableMatrix, Matrix
 from sympy.physics.control import (TransferFunction, Series, Parallel,
@@ -282,7 +293,7 @@ def test_TransferFunction_functions():
     raises(ValueError, lambda: tf5**s)
     raises(ValueError, lambda: tf4**tf5)
 
-    # sympy's own functions.
+    # SymPy's own functions.
     tf = TransferFunction(s - 1, s**2 - 2*s + 1, s)
     tf6 = TransferFunction(s + p, p**2 - 5, s)
     assert factor(tf) == TransferFunction(s - 1, (s - 1)**2, s)
@@ -1066,7 +1077,7 @@ def test_MIMOFeedback_functions():
         (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))
     assert F_2.doit() == \
         TransferFunctionMatrix(((TransferFunction(s*(-2*s**2 + s*(2*s - 1) + 1), s**2 - s + 1, s),
-        TransferFunction(2*s**3*(1 - s), s**2 - s + 1, s)), (TransferFunction(0, 1, s), TransferFunction(s*(1 - s), 1, s))))
+        TransferFunction(-2*s**3*(s - 1), s**2 - s + 1, s)), (TransferFunction(0, 1, s), TransferFunction(s*(1 - s), 1, s))))
     assert F_2.doit(expand=True) == \
         TransferFunctionMatrix(((TransferFunction(-s**2 + s, s**2 - s + 1, s), TransferFunction(-2*s**4 + 2*s**3, s**2 - s + 1, s)),
         (TransferFunction(0, 1, s), TransferFunction(-s**2 + s, 1, s))))

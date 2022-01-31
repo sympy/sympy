@@ -2,6 +2,7 @@
 
 from sympy.core import S, pi, I, Rational
 from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.symbol import Dummy
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.hyperbolic import atanh
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -93,7 +94,7 @@ class elliptic_k(Function):
             return True
 
     def _eval_rewrite_as_Integral(self, *args):
-        from sympy import Integral, Dummy
+        from sympy.integrals.integrals import Integral
         t = Dummy('t')
         m = self.args[0]
         return Integral(1/sqrt(1 - m*sin(t)**2), (t, 0, pi/2))
@@ -171,7 +172,7 @@ class elliptic_f(Function):
             return self.func(z.conjugate(), m.conjugate())
 
     def _eval_rewrite_as_Integral(self, *args):
-        from sympy import Integral, Dummy
+        from sympy.integrals.integrals import Integral
         t = Dummy('t')
         z, m = self.args[0], self.args[1]
         return Integral(1/(sqrt(1 - m*sin(t)**2)), (t, 0, z))
@@ -300,7 +301,7 @@ class elliptic_e(Function):
                             ((S.Zero,), (S.Zero,)), -m)/4
 
     def _eval_rewrite_as_Integral(self, *args):
-        from sympy import Integral, Dummy
+        from sympy.integrals.integrals import Integral
         z, m = (pi/2, self.args[0]) if len(self.args) == 1 else self.args
         t = Dummy('t')
         return Integral(sqrt(1 - m*sin(t)**2), (t, 0, z))
@@ -435,7 +436,7 @@ class elliptic_pi(Function):
         raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_Integral(self, *args):
-        from sympy import Integral, Dummy
+        from sympy.integrals.integrals import Integral
         if len(self.args) == 2:
             n, m, z = self.args[0], self.args[1], pi/2
         else:

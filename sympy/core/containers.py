@@ -8,11 +8,14 @@
 
 from collections import OrderedDict
 from collections.abc import MutableSet
+from typing import Any, Callable
 
-from sympy.core.basic import Basic
-from sympy.core.compatibility import as_int
-from sympy.core.sympify import _sympify, sympify, converter, SympifyError
+from .basic import Basic
+from .sorting import default_sort_key, ordered
+from .sympify import _sympify, sympify, _sympy_converter, SympifyError
 from sympy.utilities.iterables import iterable
+from sympy.utilities.misc import as_int
+
 
 class Tuple(Basic):
     """
@@ -31,13 +34,12 @@ class Tuple(Basic):
     sympify : bool
         If ``False``, ``sympify`` is not called on ``args``. This
         can be used for speedups for very large tuples where the
-        elements are known to already be sympy objects.
+        elements are known to already be SymPy objects.
 
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.core.containers import Tuple
+    >>> from sympy import Tuple, symbols
     >>> a, b, c, d = symbols('a b c d')
     >>> Tuple(a, b, c)[1:]
     (b, c)
@@ -143,7 +145,7 @@ class Tuple(Basic):
             return self.args.index(value, start, stop)
 
 
-converter[tuple] = lambda tup: Tuple(*tup)
+_sympy_converter[tuple] = lambda tup: Tuple(*tup)
 
 
 
@@ -201,8 +203,7 @@ class Dict(Basic):
     Examples
     ========
 
-    >>> from sympy import Symbol
-    >>> from sympy.core.containers import Dict
+    >>> from sympy import Dict, Symbol
 
     >>> D = Dict({1: 'one', 2: 'two'})
     >>> for key in D:
@@ -232,7 +233,7 @@ class Dict(Basic):
         else:
             raise TypeError('Pass Dict args as Dict((k1, v1), ...) or Dict({k1: v1, ...})')
         elements = frozenset(items)
-        obj = Basic.__new__(cls, elements)
+        obj = Basic.__new__(cls, *ordered(items))
         obj.elements = elements
         obj._dict = dict(items)  # In case Tuple decides it wants to sympify
         return obj
@@ -248,17 +249,6 @@ class Dict(Basic):
 
     def __setitem__(self, key, value):
         raise NotImplementedError("SymPy Dicts are Immutable")
-
-    @property
-    def args(self):
-        """Returns a tuple of arguments of 'self'.
-
-        See Also
-        ========
-
-        sympy.core.basic.Basic.args
-        """
-        return tuple(self.elements)
 
     def items(self):
         '''Returns a set-like object providing a view on dict's items.
@@ -302,12 +292,17 @@ class Dict(Basic):
 
     @property
     def _sorted_args(self):
-        from sympy.utilities import default_sort_key
         return tuple(sorted(self.args, key=default_sort_key))
 
+    def __eq__(self, other):
+        if isinstance(other, dict):
+            return self == Dict(other)
+        return super().__eq__(other)
+
+    __hash__ : Callable[[Basic], Any] = Basic.__hash__
 
 # this handles dict, defaultdict, OrderedDict
-converter[dict] = lambda d: Dict(*d.items())
+_sympy_converter[dict] = lambda d: Dict(*d.items())
 
 class OrderedSet(MutableSet):
     def __init__(self, iterable=None):
