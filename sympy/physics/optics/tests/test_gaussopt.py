@@ -96,7 +96,7 @@ def test_gauss_opt():
     assert p.gouy == atan2(z, pi*w**2/l)
     assert p.waist_approximation_limit == 2*l/pi
 
-    p = BeamParameter(530e-9, 1, n=2, w=1e-3)
+    p = BeamParameter(530e-9, 1, w=1e-3, n=2)
     assert streq(p.q, 1 + 3.77358490566038*I*pi)
     assert streq(N(p.z_r), Float(11.8550666173200))
     assert streq(N(p.w_0), Float(0.00100000000000000))

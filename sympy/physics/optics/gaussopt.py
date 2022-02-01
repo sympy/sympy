@@ -527,7 +527,7 @@ class BeamParameter(Expr):
     # subclass it. See:
     # https://groups.google.com/d/topic/sympy/7XkU07NRBEs/discussion
 
-    def __new__(cls, wavelen, z, n=1, z_r=None, w=None):
+    def __new__(cls, wavelen, z, z_r=None, w=None, n=1):
         wavelen = sympify(wavelen)
         z = sympify(z)
         n = sympify(n)
@@ -536,10 +536,10 @@ class BeamParameter(Expr):
             z_r = sympify(z_r)
         elif w is not None and z_r is None:
             z_r = waist2rayleigh(sympify(w), wavelen, n)
-        else:
-            raise ValueError('Constructor expects exactly one named argument.')
+        elif z_r is None and w is None:
+            raise ValueError('Must specify one of w and z_r.')
 
-        return Expr.__new__(cls, wavelen, z, n, z_r)
+        return Expr.__new__(cls, wavelen, z, z_r, n)
 
     @property
     def wavelen(self):
@@ -550,11 +550,11 @@ class BeamParameter(Expr):
         return self.args[1]
 
     @property
-    def n(self):
+    def z_r(self):
         return self.args[2]
 
     @property
-    def z_r(self):
+    def n(self):
         return self.args[3]
 
     @property
