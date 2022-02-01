@@ -895,7 +895,7 @@ def Delaporte(name, lamda, alpha, beta):
     >>> from sympy.stats import Delaporte, density, E, variance
     >>> from sympy import Symbol
 
-    >>> lambda = 5
+    >>> lamda = 5
     >>> alpha = 5
     >>> beta = 5
     >>> z = Symbol("z")
