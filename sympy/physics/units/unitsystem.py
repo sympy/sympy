@@ -11,8 +11,6 @@ from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.physics.units.dimensions import _QuantityMapper
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-
 from .dimensions import Dimension
 
 
@@ -71,25 +69,6 @@ class UnitSystem(_QuantityMapper):
         units = self._units + tuple(units)
 
         return UnitSystem(base, units, name, description, dimension_system)
-
-    def print_unit_base(self, unit):
-        """
-        Useless method.
-
-        DO NOT USE, use instead ``convert_to``.
-
-        Give the string expression of a unit in term of the basis.
-
-        Units are displayed by decreasing power.
-        """
-        SymPyDeprecationWarning(
-            deprecated_since_version="1.2",
-            issue=13336,
-            feature="print_unit_base",
-            useinstead="convert_to",
-        ).warn()
-        from sympy.physics.units import convert_to
-        return convert_to(unit, self._base_units)
 
     def get_dimension_system(self):
         return self._dimension_system
