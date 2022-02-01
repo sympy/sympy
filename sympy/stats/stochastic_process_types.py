@@ -902,8 +902,6 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
 
     Symbolic probability queries are also supported
 
-    >>> from sympy import symbols, Matrix, Rational, Eq, Gt
-    >>> from sympy.stats import P, DiscreteMarkovChain
     >>> a, b, c, d = symbols('a b c d')
     >>> T = Matrix([[Rational(1, 10), Rational(4, 10), Rational(5, 10)], [Rational(3, 10), Rational(4, 10), Rational(3, 10)], [Rational(7, 10), Rational(2, 10), Rational(1, 10)]])
     >>> Y = DiscreteMarkovChain("Y", [0, 1, 2], T)
@@ -1546,8 +1544,7 @@ class ContinuousMarkovChain(ContinuousTimeStochasticProcess, MarkovProcess):
 
     Symbolic probability queries are also supported
 
-    >>> from sympy import S, symbols, Matrix, Rational, Eq, Gt
-    >>> from sympy.stats import P, ContinuousMarkovChain
+    >>> from sympy import symbols
     >>> a,b,c,d = symbols('a b c d')
     >>> G = Matrix([[-S(1), Rational(1, 10), Rational(9, 10)], [Rational(2, 5), -S(1), Rational(3, 5)], [Rational(1, 2), Rational(1, 2), -S(1)]])
     >>> C = ContinuousMarkovChain('C', state_space=[0, 1, 2], gen_mat=G)
@@ -2248,8 +2245,9 @@ class PoissonProcess(CountingProcess):
 class WienerProcess(CountingProcess):
     """
     The Wiener process is a real valued continuous-time stochastic process.
-    In physics it is used to study Brownian motion and therefore also known as
-    Brownian Motion.
+    In physics it is used to study Brownian motion and it is often also called
+    Brownian motion due to its historical connection with physical process of the
+    same name originally observed by Scottish botanist Robert Brown.
 
     Parameters
     ==========
