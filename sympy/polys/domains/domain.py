@@ -911,7 +911,7 @@ class Domain:
         >>> K.ext.minpoly == f
         True
         >>> g = Poly(8*x**3 - 6*x - 1)
-        >>> L = QQ.alg_field_from_poly(g, alias="alpha")
+        >>> L = QQ.alg_field_from_poly(g, "alpha")
         >>> L.ext.minpoly == g
         True
         >>> L.to_sympy(L([1, 1, 1]))
@@ -951,7 +951,7 @@ class Domain:
         >>> K = QQ.cyclotomic_field(5)
         >>> K.to_sympy(K([-1, 1]))
         1 - zeta
-        >>> L = QQ.cyclotomic_field(7, ss=True)
+        >>> L = QQ.cyclotomic_field(7, True)
         >>> a = L.to_sympy(L([-1, 1]))
         >>> print(a)
         1 - zeta7
