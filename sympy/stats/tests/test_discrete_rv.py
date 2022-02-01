@@ -20,7 +20,7 @@ from sympy.sets.fancysets import Range
 from sympy.stats import (P, E, variance, density, characteristic_function,
                          where, moment_generating_function, skewness, cdf,
                          kurtosis, coskewness)
-from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
+from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution, BetaNegativeBinomial,
                                    FlorySchulz, Poisson, Geometric, Hermite, Logarithmic,
                                     NegativeBinomial, Skellam, YuleSimon, Zeta,
                                     DiscreteRV)
@@ -50,6 +50,16 @@ def test_Poisson():
         assert isinstance(E(2*x, evaluate=False), Expectation)
     # issue 8248
     assert x.pspace.compute_expectation(1) == 1
+
+
+def test_BetaNegativeBinomial():
+    alpha = S(4)
+    beta = S(4)
+    r = S(4)
+    x = BetaNegativeBinomial('x', alpha, beta, r)
+    assert E(x) == (r*beta) / (alpha - 1)
+    assert variance(x) == (r*(alpha + r - 1)*beta*(alpha + beta - 1)) / ((alpha - 2)*(alpha - 1)**2)
+
 
 def test_FlorySchulz():
     a = Symbol("a")
@@ -231,6 +241,7 @@ def test_precomputed_characteristic_functions():
     test_cf(Poisson('p', 5), 0, mpmath.inf)
     test_cf(YuleSimon('y', 5), 1, mpmath.inf)
     test_cf(Zeta('z', 5), 1, mpmath.inf)
+    test_cf(BetaNegativeBinomial('b', 5, 5, 5), 0, mpmath.inf)
 
 
 def test_moment_generating_functions():
