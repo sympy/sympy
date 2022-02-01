@@ -2248,7 +2248,7 @@ class WienerProcess(CountingProcess):
     The Wiener process is a real valued continuous-time stochastic process.
     In physics it is used to study Brownian motion and it is often also called
     Brownian motion due to its historical connection with physical process of the
-    same name originally observed by Robert Brown.
+    same name originally observed by Scottish botanist Robert Brown.
 
     Parameters
     ==========
