@@ -880,7 +880,7 @@ def Delaporte(name, lamda, alpha, beta):
     Parameters
     ==========
 
-    lamda: A value greater than 0
+    lambda: A value greater than 0
     alpha: A value greater than 0
     beta: A value greater than 0
 
