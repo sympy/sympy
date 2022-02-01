@@ -1110,6 +1110,9 @@ class Line(LinearEntity):
     for `Line2D` and the `direction_ratio` argument is only relevant
     for `Line3D`.
 
+    The order of the points will define the direction of the line
+    which is used when calculating the angle between lines.
+
     See Also
     ========
 
