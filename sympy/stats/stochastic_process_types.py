@@ -1,9 +1,7 @@
 import random
-
 import itertools
 from typing import (Sequence as tSequence, Union as tUnion, List as tList,
         Tuple as tTuple, Set as tSet)
-
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.basic import Basic
