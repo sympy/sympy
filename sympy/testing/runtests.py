@@ -651,9 +651,6 @@ def _get_doctest_blacklist():
         "doc/src/modules/physics/mechanics/autolev_parser.rst",
         "sympy/galgebra.py", # no longer part of SymPy
         "sympy/this.py", # prints text
-        "sympy/matrices/densearith.py", # raises deprecation warning
-        "sympy/matrices/densesolve.py", # raises deprecation warning
-        "sympy/matrices/densetools.py", # raises deprecation warning
         "sympy/printing/ccode.py", # backwards compatibility shim, importing it breaks the codegen doctests
         "sympy/printing/fcode.py", # backwards compatibility shim, importing it breaks the codegen doctests
         "sympy/printing/cxxcode.py", # backwards compatibility shim, importing it breaks the codegen doctests

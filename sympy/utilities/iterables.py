@@ -9,14 +9,12 @@ from itertools import product as cartes # noqa: F401
 from operator import gt
 
 
-# this is the logical location of these functions
-# from sympy.core.compatibility import ordered
-# from sympy.core.compatibility import default_sort_key  # noqa: F401
-from sympy.utilities.misc import as_int
 
+# this is the logical location of these functions
 from sympy.utilities.enumerative import (
     multiset_partitions_taocp, list_visitor, MultisetPartitionTraverser)
 
+from sympy.utilities.misc import as_int
 from sympy.utilities.decorator import deprecated
 
 
@@ -1945,7 +1943,10 @@ def has_dups(seq):
     if isinstance(seq, (dict, set, Dict, Set)):
         return False
     unique = set()
-    return any(True for s in seq if s in unique or unique.add(s))
+    try:
+        return any(True for s in seq if s in unique or unique.add(s))
+    except TypeError:
+        return len(seq) != len(list(uniq(seq)))
 
 
 def has_variety(seq):
@@ -2181,64 +2182,105 @@ def multiset_derangements(s):
     of derangements is desired or else all values will be the same:
 
     >>> list(uniq([i for i in multiset_derangements('1233')]))
-    [['3', '3', '2', '1']]
+    [[None, None, None, None]]
     >>> [i.copy() for i in multiset_derangements('1233')]
     [['3', '3', '1', '2'], ['3', '3', '2', '1']]
+    >>> [''.join(i) for i in multiset_derangements('1233')]
+    ['3312', '3321']
     """
-    ms = multiset(s)
-    mx = max(ms.values())
-    n = len(s)
-    # special cases
+    from sympy.core.sorting import ordered
+    # create multiset dictionary of hashable elements or else
+    # remap elements to integers
+    try:
+        ms = multiset(s)
+    except TypeError:
+        # give each element a canonical integer value
+        key = dict(enumerate(ordered(uniq(s))))
+        h = []
+        for si in s:
+            for k in key:
+                if key[k] == si:
+                    h.append(k)
+                    break
+        for i in multiset_derangements(h):
+            yield [key[j] for j in i]
+        return
 
-    # 0) impossible case
+    mx = max(ms.values())  # max repetition of any element
+    n = len(s)  # the number of elements
+
+    ## special cases
+
+    # 1) one element has more than half the total cardinality of s: no
+    # derangements are possible.
     if mx*2 > n:
         return
 
-    # 1) singletons
+    # 2) all elements appear once: singletons
     if len(ms) == n:
-        for p in generate_derangements(s):
-            yield p
+        yield from _set_derangements(s)
         return
 
+    # find the first element that is repeated the most to place
+    # in the following two special cases where the selection
+    # is unambiguous: either there are two elements with multiplicity
+    # of mx or else there is only one with multiplicity mx
     for M in ms:
         if ms[M] == mx:
             break
-    inonM = [i for i in range(n) if s[i] != M]
-    iM = [i for i in range(n) if s[i] == M]
+
+    inonM = [i for i in range(n) if s[i] != M]  # location of non-M
+    iM = [i for i in range(n) if s[i] == M]  # locations of M
     rv = [None]*n
 
-    # 2) half are the same
+    # 3) half are the same
     if 2*mx == n:
+        # M goes into non-M locations
         for i in inonM:
             rv[i] = M
+        # permutations of non-M go to M locations
         for p in multiset_permutations([s[i] for i in inonM]):
             for i, pi in zip(iM, p):
                 rv[i] = pi
             yield rv
+        # clean-up (and encourages proper use of routine)
+        rv[:] = [None]*n
         return
 
-    # 3) single repeat covers all but 1 of the non-repeats
-    if n - 2*mx == 1 and len(ms.values()) - 1 == n - mx:
+    # 4) single repeat covers all but 1 of the non-repeats:
+    # if there is one repeat then the multiset of the values
+    # of ms would be {mx: 1, 1: n - mx}, i.e. there would
+    # be n - mx + 1 values with the condition that n - 2*mx = 1
+    if n - 2*mx == 1 and len(ms.values()) == n - mx + 1:
         for i in range(len(inonM)):
             i1 = inonM[i]
             ifill = inonM[:i] + inonM[i+1:]
             for j in ifill:
                 rv[j] = M
-            rv[i1] = s[i1]
             for p in permutations([s[j] for j in ifill]):
+                rv[i1] = s[i1]
                 for j, pi in zip(iM, p):
                     rv[j] = pi
+                k = i1
                 for j in iM:
-                    rv[j], rv[i1] = rv[i1], rv[j]
+                    rv[j], rv[k] = rv[k], rv[j]
                     yield rv
-                    i1 = j
+                    k = j
+        # clean-up (and encourages proper use of routine)
+        rv[:] = [None]*n
         return
+
+    ## general case is handled with 3 helpers:
+    #    1) `finish_derangements` will place the last two elements
+    #       which have arbitrary multiplicities, e.g. for multiset
+    #       {c: 3, a: 2, b: 2}, the last two elements are a and b
+    #    2) `iopen` will tell where a given element can be placed
+    #    3) `do` will recursively place elements into subsets of
+    #        valid locations
 
     def finish_derangements():
         """Place the last two elements into the partially completed
         derangement, and yield the results.
-        In non-recursive version, this will be inlined, but a little
-        easier to understand as a function for now.
         """
 
         a = take[1][0]  # penultimate element
@@ -2263,11 +2305,12 @@ def multiset_derangements(s):
         if len(forced_a) > a_ct or len(forced_b) > b_ct:
             # No derangement possible
             return
+
         for i in forced_a:
             rv[i] = a
         for i in forced_b:
             rv[i] = b
-        for a_place in subsets(open_free, a_ct - len(forced_a)):
+        for a_place in combinations(open_free, a_ct - len(forced_a)):
             for a_pos in a_place:
                 rv[a_pos] = a
             for i in open_free:
@@ -2277,6 +2320,7 @@ def multiset_derangements(s):
             # Clean up/undo the final placements
             for i in open_free:
                 rv[i] = None
+
         # additional cleanup - clear forced_a, forced_b
         for i in forced_a:
             rv[i] = None
@@ -2284,21 +2328,35 @@ def multiset_derangements(s):
             rv[i] = None
 
     def iopen(v):
+        # return indices at which element v can be placed in rv:
+        # locations which are not already occupied if that location
+        # does not already contain v in the same location of s
         return [i for i in range(n) if rv[i] is None and s[i] != v]
 
     def do(j):
-        if j == -1:
-            yield rv
+        if j == 1:
+            # handle the last two elements (regardless of multiplicity)
+            # with a special method
+            yield from finish_derangements()
         else:
+            # place the mx elements of M into a subset of places
+            # into which it can be replaced
             M, mx = take[j]
-            for i in subsets(iopen(M), mx):
+            for i in combinations(iopen(M), mx):
+                # place M
                 for ii in i:
                     rv[ii] = M
+                # recursively place the next element
                 yield from do(j - 1)
+                # mark positions where M was placed as once again
+                # open for placement of other elements
                 for ii in i:
                     rv[ii] = None
+
+    # process elements in order of canonically decreasing multiplicity
     take = sorted(ms.items(), key=lambda x:(x[1], x[0]))
     yield from do(len(take) - 1)
+    rv[:] = [None]*n
 
 
 def random_derangement(t, choice=None, strict=True):
@@ -2398,9 +2456,28 @@ def random_derangement(t, choice=None, strict=True):
     return rv
 
 
-def generate_derangements(perm):
+def _set_derangements(s):
     """
-    Routine to generate unique derangements or sets or multisets.
+    yield derangements of items in ``s`` which are assumed to contain
+    no repeated elements
+    """
+    if len(s) < 2:
+        return
+    if len(s) == 2:
+        yield [s[1], s[0]]
+        return
+    if len(s) == 3:
+        yield [s[1], s[2], s[0]]
+        yield [s[2], s[0], s[1]]
+        return
+    for p in permutations(s):
+        if not any(i == j for i, j in zip(p, s)):
+            yield list(p)
+
+
+def generate_derangements(s):
+    """
+    Return unique derangements of the elements of iterable ``s``.
 
     Examples
     ========
@@ -2408,10 +2485,8 @@ def generate_derangements(perm):
     >>> from sympy.utilities.iterables import generate_derangements
     >>> list(generate_derangements([0, 1, 2]))
     [[1, 2, 0], [2, 0, 1]]
-    >>> list(generate_derangements([0, 1, 2, 3]))
-    [[1, 0, 3, 2], [1, 2, 3, 0], [1, 3, 0, 2], [2, 0, 3, 1], \
-    [2, 3, 0, 1], [2, 3, 1, 0], [3, 0, 1, 2], [3, 2, 0, 1], \
-    [3, 2, 1, 0]]
+    >>> list(generate_derangements([0, 1, 2, 2]))
+    [[2, 2, 0, 1], [2, 2, 1, 0]]
     >>> list(generate_derangements([0, 1, 1]))
     []
 
@@ -2421,20 +2496,10 @@ def generate_derangements(perm):
     sympy.functions.combinatorial.factorials.subfactorial
 
     """
-    if not has_dups(perm):
-        s = perm
-        if len(perm) == 2:
-            yield [s[1],s[0]]
-            return
-        if len(perm) == 3:
-            yield [s[1],s[2],s[0]]
-            yield [s[2],s[0],s[1]]
-            return
-        for p in permutations(s):
-            if not any(i == j for i, j in zip(p, s)):
-                yield list(p)
+    if not has_dups(s):
+        yield from _set_derangements(s)
     else:
-        for p in multiset_derangements(perm):
+        for p in multiset_derangements(s):
             yield list(p)
 
 

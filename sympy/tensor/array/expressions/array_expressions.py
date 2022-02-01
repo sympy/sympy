@@ -1,3 +1,4 @@
+import collections.abc
 import operator
 from collections import defaultdict, Counter
 from functools import reduce
@@ -7,7 +8,9 @@ from typing import Optional, List, Dict as tDict, Tuple as tTuple
 
 import typing
 
-from sympy import Integer, KroneckerDelta
+from sympy.core.numbers import Integer
+from sympy.core.relational import Equality
+from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
@@ -16,6 +19,7 @@ from sympy.core.mul import Mul
 from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import (Dummy, Symbol)
+from sympy.matrices.common import MatrixCommon
 from sympy.matrices.expressions.diagonal import diagonalize_vector
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix
@@ -33,7 +37,16 @@ from sympy.core.sympify import _sympify
 
 
 class _ArrayExpr(Expr):
-    shape : tTuple[Expr, ...]
+    shape: tTuple[Expr, ...]
+
+    def __getitem__(self, item):
+        if not isinstance(item, collections.abc.Iterable):
+            item = (item,)
+        ArrayElement._check_shape(self, item)
+        return self._get(item)
+
+    def _get(self, item):
+        return _get_array_element_or_slice(self, item)
 
 
 class ArraySymbol(_ArrayExpr):
@@ -57,9 +70,6 @@ class ArraySymbol(_ArrayExpr):
     def shape(self):
         return self._args[1]
 
-    def __getitem__(self, item):
-        return ArrayElement(self, item)
-
     def as_explicit(self):
         if not all(i.is_Integer for i in self.shape):
             raise ValueError("cannot express explicit array with symbolic shape")
@@ -67,7 +77,7 @@ class ArraySymbol(_ArrayExpr):
         return ImmutableDenseNDimArray(data).reshape(*self.shape)
 
 
-class ArrayElement(_ArrayExpr):
+class ArrayElement(Expr):
     """
     An element of an array.
     """
@@ -80,14 +90,24 @@ class ArrayElement(_ArrayExpr):
         if isinstance(name, str):
             name = Symbol(name)
         name = _sympify(name)
+        if not isinstance(indices, collections.abc.Iterable):
+            indices = (indices,)
         indices = _sympify(tuple(indices))
+        cls._check_shape(name, indices)
+        obj = Expr.__new__(cls, name, indices)
+        return obj
+
+    @classmethod
+    def _check_shape(cls, name, indices):
+        indices = tuple(indices)
         if hasattr(name, "shape"):
+            index_error = IndexError("number of indices does not match shape of the array")
+            if len(indices) != len(name.shape):
+                raise index_error
             if any((i >= s) == True for i, s in zip(indices, name.shape)):
                 raise ValueError("shape is out of bounds")
         if any((i < 0) == True for i in indices):
             raise ValueError("shape contains negative values")
-        obj = Expr.__new__(cls, name, indices)
-        return obj
 
     @property
     def name(self):
@@ -131,6 +151,9 @@ class ZeroArray(_ArrayExpr):
             raise ValueError("Cannot return explicit form for symbolic shape.")
         return ImmutableDenseNDimArray.zeros(*self.shape)
 
+    def _get(self, item):
+        return S.Zero
+
 
 class OneArray(_ArrayExpr):
     """
@@ -152,6 +175,9 @@ class OneArray(_ArrayExpr):
         if not all(i.is_Integer for i in self.shape):
             raise ValueError("Cannot return explicit form for symbolic shape.")
         return ImmutableDenseNDimArray([S.One for i in range(reduce(operator.mul, self.shape))]).reshape(*self.shape)
+
+    def _get(self, item):
+        return S.One
 
 
 class _CodegenArrayAbstract(Basic):
@@ -1458,6 +1484,67 @@ class ArrayContraction(_CodegenArrayAbstract):
         return tensorcontraction(self.expr.as_explicit(), *self.contraction_indices)
 
 
+class Reshape(_CodegenArrayAbstract):
+    """
+    Reshape the dimensions of an array expression.
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.array.expressions import ArraySymbol, Reshape
+    >>> A = ArraySymbol("A", (6,))
+    >>> A.shape
+    (6,)
+    >>> Reshape(A, (3, 2)).shape
+    (3, 2)
+
+    Check the component-explicit forms:
+
+    >>> A.as_explicit()
+    [A[0], A[1], A[2], A[3], A[4], A[5]]
+    >>> Reshape(A, (3, 2)).as_explicit()
+    [[A[0], A[1]], [A[2], A[3]], [A[4], A[5]]]
+
+    """
+
+    def __new__(cls, expr, shape):
+        expr = _sympify(expr)
+        if not isinstance(shape, Tuple):
+            shape = Tuple(*shape)
+        if Equality(Mul.fromiter(expr.shape), Mul.fromiter(shape)) == False:
+            raise ValueError("shape mismatch")
+        obj = Expr.__new__(cls, expr, shape)
+        obj._shape = tuple(shape)
+        obj._expr = expr
+        return obj
+
+    @property
+    def shape(self):
+        return self._shape
+
+    @property
+    def expr(self):
+        return self._expr
+
+    def doit(self, *args, **kwargs):
+        if kwargs.get("deep", True):
+            expr = self.expr.doit(*args, **kwargs)
+        else:
+            expr = self.expr
+        if isinstance(expr, (MatrixCommon, NDimArray)):
+            return expr.reshape(*self.shape)
+        return Reshape(expr, self.shape)
+
+    def as_explicit(self):
+        ee = self.expr.as_explicit()
+        if isinstance(ee, MatrixCommon):
+            from sympy import Array
+            ee = Array(ee)
+        elif isinstance(ee, MatrixExpr):
+            return self
+        return ee.reshape(*self.shape)
+
+
 class _ArgE:
     """
     The ``_ArgE`` object contains references to the array expression
@@ -1849,3 +1936,7 @@ def _permute_dims(expr, permutation, **kwargs):
 
 def _array_add(*args, **kwargs):
     return ArrayAdd(*args, canonicalize=True, **kwargs)
+
+
+def _get_array_element_or_slice(expr, indices):
+    return ArrayElement(expr, indices)

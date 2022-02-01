@@ -21,14 +21,14 @@ class Quaternion(Expr):
     Examples
     ========
 
-    >>> from sympy.algebras.quaternion import Quaternion
+    >>> from sympy import Quaternion
     >>> q = Quaternion(1, 2, 3, 4)
     >>> q
     1 + 2*i + 3*j + 4*k
 
     Quaternions over complex fields can be defined as :
 
-    >>> from sympy.algebras.quaternion import Quaternion
+    >>> from sympy import Quaternion
     >>> from sympy import symbols, I
     >>> x = symbols('x')
     >>> q1 = Quaternion(x, x**3, x, x**2, real_field = False)
@@ -107,7 +107,7 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> from sympy import pi, sqrt
         >>> q = Quaternion.from_axis_angle((sqrt(3)/3, sqrt(3)/3, sqrt(3)/3), 2*pi/3)
         >>> q
@@ -150,7 +150,7 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> from sympy import Matrix, symbols, cos, sin, trigsimp
         >>> x = symbols('x')
         >>> M = Matrix([[cos(x), -sin(x), 0], [sin(x), cos(x), 0], [0, 0, 1]])
@@ -225,7 +225,7 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> from sympy import symbols
         >>> q1 = Quaternion(1, 2, 3, 4)
         >>> q2 = Quaternion(5, 6, 7, 8)
@@ -239,7 +239,7 @@ class Quaternion(Expr):
 
         Quaternions over complex fields :
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> from sympy import I
         >>> q3 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I, real_field = False)
         >>> q3.add(2 + 3*I)
@@ -279,7 +279,7 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> from sympy import symbols
         >>> q1 = Quaternion(1, 2, 3, 4)
         >>> q2 = Quaternion(5, 6, 7, 8)
@@ -293,7 +293,7 @@ class Quaternion(Expr):
 
         Quaternions over complex fields :
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> from sympy import I
         >>> q3 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I, real_field = False)
         >>> q3.mul(2 + 3*I)
@@ -324,7 +324,7 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> from sympy import Symbol
         >>> q1 = Quaternion(1, 2, 3, 4)
         >>> q2 = Quaternion(5, 6, 7, 8)
@@ -338,7 +338,7 @@ class Quaternion(Expr):
 
         Quaternions over complex fields :
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> from sympy import I
         >>> q3 = Quaternion(3 + 4*I, 2 + 5*I, 0, 7 + 8*I, real_field = False)
         >>> Quaternion._generic_mul(q3, 2 + 3*I)
@@ -418,7 +418,7 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
         >>> q.pow(4)
         668 + (-224)*i + (-336)*j + (-448)*k
@@ -457,7 +457,7 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
         >>> q.exp()
         E*cos(sqrt(29))
@@ -482,7 +482,7 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
         >>> q._ln()
         log(sqrt(30))
@@ -514,7 +514,7 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> from sympy import sqrt
         >>> q = Quaternion(1/sqrt(1), 1/sqrt(2), 1/sqrt(3), 1/sqrt(4))
         >>> q.evalf()
@@ -545,7 +545,7 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> q = Quaternion(1, 2, 3, 4)
         >>> q.pow_cos_sin(4)
         900*cos(4*acos(sqrt(30)/30))
@@ -576,7 +576,7 @@ class Quaternion(Expr):
 
         Indefinite Integral of quaternion :
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> from sympy.abc import x
         >>> q = Quaternion(1, 2, 3, 4)
         >>> q.integrate(x)
@@ -584,7 +584,7 @@ class Quaternion(Expr):
 
         Definite integral of quaternion :
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> from sympy.abc import x
         >>> q = Quaternion(1, 2, 3, 4)
         >>> q.integrate((x, 1, 5))
@@ -620,7 +620,7 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> from sympy import symbols, trigsimp, cos, sin
         >>> x = symbols('x')
         >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
@@ -652,7 +652,7 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> q = Quaternion(1, 1, 1, 1)
         >>> (axis, angle) = q.to_axis_angle()
         >>> axis
@@ -700,7 +700,7 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> from sympy import symbols, trigsimp, cos, sin
         >>> x = symbols('x')
         >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))
@@ -716,7 +716,7 @@ class Quaternion(Expr):
         Examples
         ========
 
-        >>> from sympy.algebras.quaternion import Quaternion
+        >>> from sympy import Quaternion
         >>> from sympy import symbols, trigsimp, cos, sin
         >>> x = symbols('x')
         >>> q = Quaternion(cos(x/2), 0, 0, sin(x/2))

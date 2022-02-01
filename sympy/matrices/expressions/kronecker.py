@@ -35,7 +35,7 @@ def kronecker_product(*matrices):
     with known dimension the explicit matrix can be obtained with
     ``.as_explicit()``
 
-    >>> from sympy.matrices import kronecker_product, MatrixSymbol
+    >>> from sympy import kronecker_product, MatrixSymbol
     >>> A = MatrixSymbol('A', 2, 2)
     >>> B = MatrixSymbol('B', 2, 2)
     >>> kronecker_product(A)
@@ -53,7 +53,7 @@ def kronecker_product(*matrices):
 
     For explicit matrices the Kronecker product is returned as a Matrix
 
-    >>> from sympy.matrices import Matrix, kronecker_product
+    >>> from sympy import Matrix, kronecker_product
     >>> sigma_x = Matrix([
     ... [0, 1],
     ... [1, 0]])
@@ -96,7 +96,7 @@ class KroneckerProduct(MatrixExpr):
     ``kronecker_product()`` or call the ``.doit()`` or  ``.as_explicit()``
     methods.
 
-    >>> from sympy.matrices import KroneckerProduct, MatrixSymbol
+    >>> from sympy import KroneckerProduct, MatrixSymbol
     >>> A = MatrixSymbol('A', 5, 5)
     >>> B = MatrixSymbol('B', 5, 5)
     >>> isinstance(KroneckerProduct(A, B), KroneckerProduct)
@@ -405,8 +405,8 @@ def combine_kronecker(expr):
     Examples
     ========
 
-    >>> from sympy.matrices.expressions import MatrixSymbol, KroneckerProduct, combine_kronecker
-    >>> from sympy import symbols
+    >>> from sympy.matrices.expressions import combine_kronecker
+    >>> from sympy import MatrixSymbol, KroneckerProduct, symbols
     >>> m, n = symbols(r'm, n', integer=True)
     >>> A = MatrixSymbol('A', m, n)
     >>> B = MatrixSymbol('B', n, m)

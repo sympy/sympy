@@ -31,6 +31,7 @@ from sympy.polys.densearith import (
     dmp_div, dmp_rem, dmp_quo, dmp_exquo,
     dup_max_norm, dmp_max_norm,
     dup_l1_norm, dmp_l1_norm,
+    dup_l2_norm_squared, dmp_l2_norm_squared,
     dup_expand, dmp_expand,
 )
 
@@ -968,6 +969,18 @@ def test_dmp_l1_norm():
     assert dmp_l1_norm([[[1]]], 2, ZZ) == 1
 
     assert dmp_l1_norm(f_0, 2, ZZ) == 31
+
+
+def test_dup_l2_norm_squared():
+    assert dup_l2_norm_squared([], ZZ) == 0
+    assert dup_l2_norm_squared([1], ZZ) == 1
+    assert dup_l2_norm_squared([1, 4, 2, 3], ZZ) == 30
+
+
+def test_dmp_l2_norm_squared():
+    assert dmp_l2_norm_squared([[[]]], 2, ZZ) == 0
+    assert dmp_l2_norm_squared([[[1]]], 2, ZZ) == 1
+    assert dmp_l2_norm_squared(f_0, 2, ZZ) == 111
 
 
 def test_dup_expand():

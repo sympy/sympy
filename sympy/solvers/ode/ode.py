@@ -2735,8 +2735,7 @@ def ode_1st_power_series(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, pprint, exp
-    >>> from sympy.solvers.ode.ode import dsolve
+    >>> from sympy import Function, pprint, exp, dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> eq = exp(x)*(f(x).diff(x)) - f(x)
