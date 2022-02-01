@@ -923,7 +923,7 @@ class Domain:
         alpha = AlgebraicNumber(root, alias=alias)
         return self.algebraic_field(alpha)
 
-    def cyclotomic_field(self, n, alias="zeta", ss=False, gen=None, root_index=-1):
+    def cyclotomic_field(self, n, ss=False, alias="zeta", gen=None, root_index=-1):
         r"""
         Convenience method to construct a cyclotomic field.
 
@@ -932,10 +932,10 @@ class Domain:
 
         n : int
             Construct the nth cyclotomic field.
-        alias : str, optional (default="zeta")
-            Symbol name for the generator.
         ss : boolean, optional (default=False)
             If True, append *n* as a subscript on the alias string.
+        alias : str, optional (default="zeta")
+            Symbol name for the generator.
         gen : :py:class:`~.Symbol`, optional (default=None)
             Desired variable for the cyclotomic polynomial that defines the
             field. If ``None``, a dummy variable will be used.
