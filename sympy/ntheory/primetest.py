@@ -114,13 +114,14 @@ def is_square(n, prep=True):
     #   b) even with
     #     odd multiplicity of 2 --> not square, e.g. 39040
     #     even multiplicity of 2, e.g. 4, 16, 36, ..., 16324
-    #         removal of factors of 2 to give and odd, and rejection if
+    #         removal of factors of 2 to give an odd, and rejection if
     #         any(i%2 for i in divmod(odd - 1, 4))
     #         will give an odd number in form 4*even + 1.
     # Use of `trailing` to check the power of 2 is not done since it
     # does not apply to a large percentage of arbitrary numbers
     # and the integer_nthroot is able to quickly resolve these cases.
     return integer_nthroot(n, 2)[1]
+
 
 def _test(n, base, s, t):
     """Miller-Rabin strong pseudoprime test for one base.
