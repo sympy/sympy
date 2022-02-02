@@ -2993,15 +2993,29 @@ def is_sequence(i, include=None):
             isinstance(i, include))
 
 
-@deprecated(useinstead="sympy.core.traversal.postorder_traversal",
+@deprecated(useinstead="from sympy import postorder_traversal",
     deprecated_since_version="1.10", issue=22288)
 def postorder_traversal(node, keys=None):
     from sympy.core.traversal import postorder_traversal as _postorder_traversal
     return _postorder_traversal(node, keys=keys)
 
 
-@deprecated(useinstead="sympy.interactive.traversal.interactive_traversal",
+@deprecated(useinstead="from sympy import interactive_traversal",
             issue=22288, deprecated_since_version="1.10")
 def interactive_traversal(expr):
     from sympy.interactive.traversal import interactive_traversal as _interactive_traversal
     return _interactive_traversal(expr)
+
+
+@deprecated(useinstead="from sympy import default_sort_key",
+            deprecated_since_version="1.10", issue=22352)
+def default_sort_key(*args, **kwargs):
+    from sympy import default_sort_key as _default_sort_key
+    return _default_sort_key(*args, **kwargs)
+
+
+@deprecated(useinstead="from sympy import ordered",
+            deprecated_since_version="1.10", issue=22352)
+def ordered(*args, **kwargs):
+    from sympy import ordered as _ordered
+    return _ordered(*args, **kwargs)
