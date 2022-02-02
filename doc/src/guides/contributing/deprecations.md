@@ -295,7 +295,8 @@ documented in at three primary places:
   explaining what is deprecated and what users should use instead. If you
   want, you may use the same text here as in the `SymPyDeprecationWarning`. Be
   sure to use RST formatting, including cross-references to the new function
-  if relevant.
+  if relevant, and a cross-reference to the longer description (see
+  [below](deprecations-longer-description)).
 
   If the documentation for the feature is otherwise the same as the replaced
   feature (i.e., the deprecation is just a renaming of a function or
@@ -317,7 +318,8 @@ documented in at three primary places:
       .. deprecated:: 1.1
 
          The ``simplify_this`` function is deprecated. Use :func:`simplify`
-         instead. See its documentation for more information.
+         instead. See its documentation for more information. See
+         :ref:`simplify-this-deprecation` for details.
 
      """
      return simplify(expr)
@@ -340,7 +342,8 @@ documented in at three primary places:
         .. deprecated:: 1.1
 
            The ``y`` argument to ``is_this_zero`` is deprecated. Use
-           ``is_this_zero(x - y)`` instead.
+           ``is_this_zero(x - y)`` instead. See
+           :ref:`is-this-zero-y-deprecated` for more details.
 
       """
       if y != 0:
@@ -351,6 +354,7 @@ documented in at three primary places:
       return simplify(x - y) == 0
   ```
 
+(deprecations-longer-description)=
 - A longer description of the deprecation should be added to [the page listing
   all currently active deprecations](active-deprecations) in the
   documentation (in `doc/src/explaination/active-deprecations.md`).

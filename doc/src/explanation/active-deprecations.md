@@ -148,11 +148,15 @@ Passing the function arguments to lambdify as a set is deprecated. Instead
 pass them as a list or tuple. For
 example, instead of
 
-    lambdify({x, y}, x + 2*y) # WRONG
+```py
+lambdify({x, y}, x + 2*y) # WRONG
+```
 
 use
 
-    lambdify((x, y), x + 2*y) # RIGHT
+```py
+lambdify((x, y), x + 2*y) # RIGHT
+```
 
 This is because sets are unordered. For instance, in the above example it
 would be impossible for `lambidfy` to know if it was called with `{x, y}` or
@@ -160,7 +164,50 @@ would be impossible for `lambidfy` to know if it was called with `{x, y}` or
 guess their order, which would lead to an incorrect function if it guessed
 incorrectly.
 
-### Core classes non-Expr args
+(non-expr-args-deprecated)=
+### Core operators no longer accept non-Expr args
+
+The core operator classes {class}`~.Add`, {class}`~.Mul`, and {class}`~.Pow`
+can no longer be constructed directly with objects that are not subclasses of
+{class}`~.Expr`.
+
+{class}`~.Expr` is the superclass of all SymPy classes that represent scalar
+numeric quantities. For example, {class}`~.sin`, {class}`~.Symbol`, and
+{class}`~.Add` are all subclasses of {class}`~.Expr`. However, may objects in
+SymPy are not {class}`~.Expr` because they represent some other type of
+mathematical object. For example, {class}`~.Set`, {class}`~.Poly`, and
+{class}`Boolean` are all non-`Expr`. These do not make direct mathematical
+sense inside of Add, Mul, and Pow, which are designed specifically to
+represent the addition, multiplication, and exponentiation of scalar complex
+numbers.
+
+Manually constructing one of these classes with such an object is possible,
+but it will generally create something that will then break. For example
+
+```py
+Mul(1, Tuple(2)) # This is deprecated
+```
+
+works and creates `Tuple(2)`, but only because `Mul` is "tricked" by always
+treating $1 \cdot x = x$. If instead you try
+
+```py
+Mul(2, Tuple(2)) # This is deprecated
+```
+
+it fails with an exception
+
+```pytb
+AttributeError: 'Tuple' object has no attribute 'as_coeff_Mul'
+````
+
+because it tries to call a method of `Expr` on the `Tuple` object, which does
+not have all the `Expr` methods (because it is not a subclass of `Expr`).
+
+If you want to use the `+`, `*` or `**` operation on an object, use it
+directly rather than using `Mul`, `Add` or `Pow`. If functional versions of
+these are desired, you can use a `lambda` or the
+[`operator`](https://docs.python.org/3/library/operator.html) module.
 
 ## Version 1.6
 
