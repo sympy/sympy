@@ -136,7 +136,7 @@ def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptio
     ==========
 
     xname : str or Symbol
-        Base name for the new symbol. 
+        Base name for the new symbol.
 
     exprs : Expr or iterable of Expr
         Expressions whose symbols are compared to *xname*.
