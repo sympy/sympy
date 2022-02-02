@@ -278,6 +278,12 @@ def warns_deprecated_sympy():
     Failed: DID NOT WARN. No warnings of type \
     SymPyDeprecationWarning was emitted. The list of emitted warnings is: [].
 
+    See Also
+    ========
+    sympy.utilities.exceptions.SymPyDeprecationWarning
+    sympy.utilities.exceptions.sympy_deprecation_warning
+    sympy.utilities.decorator.deprecated
+
     '''
     with warns(SymPyDeprecationWarning):
         yield
