@@ -38,7 +38,7 @@ class NonInvertibleCipherWarning(RuntimeWarning):
     def __str__(self):
         return '\n\t' + self.fullMessage
 
-    def warn(self, stacklevel=2):
+    def warn(self, stacklevel=3):
         warnings.warn(self, stacklevel=stacklevel)
 
 
@@ -1557,7 +1557,9 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
                 'the flag multipower=True if you want to suppress this '
                 'warning.'
                 .format(primes, n, n)
-                ).warn()
+                # stacklevel=4 because most users will call a function that
+                # calls this function
+                ).warn(stacklevel=4)
         phi = _totient._from_factors(tally)
 
     if igcd(e, phi) == 1:
