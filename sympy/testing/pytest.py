@@ -246,12 +246,24 @@ def _both_exp_pow(func):
 
 @contextlib.contextmanager
 def warns_deprecated_sympy():
-    '''Shorthand for ``warns(SymPyDeprecationWarning)``
+    '''
+    Shorthand for ``warns(SymPyDeprecationWarning)``
 
     This is the recommended way to test that ``SymPyDeprecationWarning`` is
     emitted for deprecated features in SymPy. To test for other warnings use
     ``warns``. To suppress warnings without asserting that they are emitted
     use ``ignore_warnings``.
+
+    .. note::
+
+       ``warns_deprecated_sympy()`` is only intended for internal use in the
+       SymPy test suite to test that a deprecation warning triggers properly.
+       All other code in the SymPy codebase, including documentation examples,
+       should not use deprecated behavior.
+
+       If you are a user of SymPy and you want to disable
+       SymPyDeprecationWarnings, use ``warnings`` filters (see
+       :ref:`silencing-sympy-deprecation-warnings`).
 
     >>> from sympy.testing.pytest import warns_deprecated_sympy
     >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -265,6 +277,7 @@ def warns_deprecated_sympy():
     ...
     Failed: DID NOT WARN. No warnings of type \
     SymPyDeprecationWarning was emitted. The list of emitted warnings is: [].
+
     '''
     with warns(SymPyDeprecationWarning):
         yield
