@@ -2,10 +2,11 @@
 
 
 from sympy.core.numbers import Float
+from mpmath.libmp.libmpf import prec_to_dps
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero
-from sympy.polys.domains.mpelements import MPContext
+from sympy.polys.domains.mpelements import MPContext, RealElement
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.utilities import public
 
@@ -61,12 +62,19 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
 
     def to_sympy(self, element):
         """Convert ``element`` to SymPy number. """
-        return Float(element, self.dps)
+        _mpf = element._mpf_
+        dps = prec_to_dps(_mpf[-1])
+        return Float(_mpf, dps)
 
     def from_sympy(self, expr):
         """Convert SymPy's number to ``dtype``. """
+        if isinstance(expr, Float):
+            # I don't know how else to get the converted
+            # expr to look like the original. I tried
+            # passing (expr._mpf_, prec=expr._prec) but
+            # that did not pass the added tests
+            return RealElement(str(expr))
         number = expr.evalf(n=self.dps)
-
         if number.is_Number:
             return self.dtype(number)
         else:

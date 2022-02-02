@@ -53,6 +53,7 @@ from sympy.polys.domains import FF, ZZ, QQ, ZZ_I, QQ_I, RR, EX
 from sympy.polys.domains.realfield import RealField
 from sympy.polys.domains.complexfield import ComplexField
 from sympy.polys.orderings import lex, grlex, grevlex
+from sympy.polys.rootoftools import rootof
 
 from sympy.core.add import Add
 from sympy.core.basic import _aresame
@@ -73,9 +74,10 @@ from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import sin
 from sympy.matrices.dense import Matrix
 from sympy.matrices.expressions.matexpr import MatrixSymbol
-from sympy.polys.rootoftools import rootof
+from sympy.printing.repr import srepr
 from sympy.simplify.simplify import signsimp
 from sympy.utilities.iterables import iterable
+from sympy.utilities.misc import filldedent
 
 from sympy.testing.pytest import raises, warns_deprecated_sympy
 
@@ -3567,3 +3569,15 @@ def test_issue_20985():
     w, R = symbols('w R')
     poly = Poly(1.0 + I*w/R, w, 1/R)
     assert poly.degree() == S(1)
+
+
+def test_issue_22988():
+    e = S('(3/100 + 1234/10*x)')
+    p = Poly(e.subs({k: k.round(15) for k in e.atoms(Rational)}))
+    assert str(p) == "Poly(123.4*x + 0.03, x, domain='RR')"
+    assert str(p.terms()) == (
+        '[((1,), 123.400000000000000), ((0,), 0.030000000000000000)]')
+    assert filldedent(srepr(p)) == filldedent("""
+        Poly(Add(Mul(Float('123.399999999999999994', precision=63),
+        Symbol('x')), Float('0.030000000000000000001', precision=60)),
+        Symbol('x'))""")
