@@ -13,7 +13,7 @@ import linecache
 
 # Required despite static analysis claiming it is not used
 from sympy.external import import_module # noqa:F401
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import (is_sequence, iterable,
     NotIterable, flatten)
