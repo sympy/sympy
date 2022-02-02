@@ -152,9 +152,9 @@ def sympy_deprecation_warning(message, *, deprecated_since_version,
     ...             deprecated_since_version="1.1",
     ...             active_deprecations_target='is-this-zero-y-deprecation')
     ...     return simplify(x - y) == 0
-    >>> is_this_zero(0) # doctest: +SKIP
+    >>> is_this_zero(0)
     True
-    >>> is_this_zero(1, 1)
+    >>> is_this_zero(1, 1) # doctest: +SKIP
     <stdin>:1: SymPyDeprecationWarning:
 
     The y argument to is_zero() is deprecated. Use is_zero(x - y) instead.
