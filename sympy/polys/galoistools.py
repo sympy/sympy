@@ -6,7 +6,6 @@ from math import ceil as _ceil, sqrt as _sqrt
 
 from sympy.core.mul import prod
 from sympy.external.gmpy import SYMPY_INTS
-from sympy.ntheory import factorint
 from sympy.polys.polyconfig import query
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.polyutils import _sort_factors
@@ -1465,6 +1464,8 @@ def gf_irred_p_rabin(f, p, K):
 
     x = [K.one, K.zero]
 
+    from sympy.ntheory import factorint
+
     indices = { n//d for d in factorint(n) }
 
     b = gf_frobenius_monomial_base(f, p, K)
@@ -2345,6 +2346,7 @@ def gf_csolve(f, n):
 
     """
     from sympy.polys.domains import ZZ
+    from sympy.ntheory import factorint
     P = factorint(n)
     X = [csolve_prime(f, p, e) for p, e in P.items()]
     pools = list(map(tuple, X))

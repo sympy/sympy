@@ -19,7 +19,7 @@ from sympy.core.mod import Mod
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.functions import Abs
+from sympy.functions.elementary.complexes import Abs, re, im
 from .utilities import _dotprodsimp, _simplify
 from sympy.polys.polytools import Poly
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -1985,8 +1985,6 @@ class MatrixOperations(MatrixRequired):
         return out
 
     def _eval_as_real_imag(self):  # type: ignore
-        from sympy.functions.elementary.complexes import re, im
-
         return (self.applyfunc(re), self.applyfunc(im))
 
     def _eval_conjugate(self):

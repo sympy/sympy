@@ -11,13 +11,12 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, uniquely_named_symbol
-from sympy.core.sympify import sympify
-from sympy.core.sympify import _sympify
-from sympy.functions import factorial
+from sympy.core.sympify import sympify, _sympify
+from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
-from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta, LeviCivita
 from sympy.polys import cancel
 from sympy.printing import sstr
 from sympy.printing.defaults import Printable
@@ -816,7 +815,6 @@ class MatrixBase(MatrixDeprecated,
 
     def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
-        from sympy.functions.combinatorial.factorials import binomial
 
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
@@ -1457,7 +1455,6 @@ class MatrixBase(MatrixDeprecated,
         so that the dual is a covariant second rank tensor.
 
         """
-        from sympy.functions.special.tensor_functions import LeviCivita
         from sympy.matrices import zeros
 
         M, n = self[:, :], self.rows

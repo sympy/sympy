@@ -2,7 +2,9 @@ from sympy.core.function import Function
 from sympy.core.numbers import igcd, igcdex, mod_inverse
 from sympy.core.power import isqrt
 from sympy.core.singleton import S
+from sympy.polys import Poly
 from sympy.polys.domains import ZZ
+from sympy.polys.galoistools import gf_crt1, gf_crt2, linear_congruence
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient, multiplicity
 from sympy.utilities.misc import as_int
@@ -316,7 +318,6 @@ def sqrt_mod_iter(a, p, domain=int):
     >>> list(sqrt_mod_iter(11, 43))
     [21, 22]
     """
-    from sympy.polys.galoistools import gf_crt1, gf_crt2
     a, p = as_int(a), abs(as_int(p))
     if isprime(p):
         a = a % p
@@ -1372,7 +1373,6 @@ def quadratic_congruence(a, b, c, p):
     c : integer
     p : positive integer
     """
-    from sympy.polys.galoistools import linear_congruence
     a = as_int(a)
     b = as_int(b)
     c = as_int(c)
@@ -1486,7 +1486,6 @@ def _valid_expr(expr):
 
     if not expr.is_polynomial():
         raise ValueError("The expression should be a polynomial")
-    from sympy.polys import Poly
     polynomial = Poly(expr)
     if not polynomial.is_univariate:
         raise ValueError("The expression should be univariate")

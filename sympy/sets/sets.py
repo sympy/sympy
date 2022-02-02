@@ -20,6 +20,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import symbols, Symbol, Dummy, uniquely_named_symbol
 from sympy.core.sympify import _sympify, sympify, _sympy_converter
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.utilities.decorator import deprecated
@@ -2466,7 +2467,6 @@ def is_function_invertible_in_set(func, setv):
     Checks whether function ``func`` is invertible when the domain is
     restricted to set ``setv``.
     """
-    from sympy.functions.elementary.exponential import exp, log
     # Functions known to always be invertible:
     if func in (exp, log):
         return True
