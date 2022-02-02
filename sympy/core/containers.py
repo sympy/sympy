@@ -161,6 +161,8 @@ class Tuple(Basic):
         TupleKind(NumberKind, NumberKind)
         >>> Tuple(Matrix([1, 2]), 1).kind
         TupleKind(MatrixKind(NumberKind), NumberKind)
+        >>> Tuple(1, 2).kind.element_kind
+        (NumberKind, NumberKind)
 
         See Also
         ========
