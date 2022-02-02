@@ -65,6 +65,145 @@ will need to either add a `warnings` filter as above or use pytest to filter
 SymPy deprecation warnings.
 ```
 
+## Version 1.10
+
+### `sympy.utilities.iterables.postorder_traversal`,
+`sympy.core.basic.preorder_traversal`, and
+`sympy.utilities.iterables.preorder_traversal` have been moved to
+`sympy.preorder_traversal` and `sympy.postorder_traversal`
+
+### `sympy.core.trace.Tr`
+
+### The `sympy.core.compatibility` submoduel
+
+## Version 1.9
+
+### `expr_free_symbols`
+
+### `sympy.stats.sample(numsamples=n)`
+
+### `sympy.polys.solvers.RawMatrix`
+
+### The `get_segments` attribute of plotting objects
+
+### The `mdft` function in `sympy.physics.matrices`
+
+### The private `SparseMatrix._smat` and `DenseMatrix._mat` attributes
+
+### Non-`Expr` objects in a Matrix
+
+### laplace_transform of a Matrix with noconds=False
+
+## Version 1.8
+
+### `sympy.printing.theanocode`
+
+### `sympy.assumptions.handlers.AskHandler`
+
+### The `Predicate.add_handler`, `Predicate.remove_handler`, `register_handler` and `remove_handler` methods for registering assumptions handlers
+
+### Evaluating `UndefinedPredicate` objects
+
+## Version 1.7.1
+
+### Calling `sympy.stats.StochasticProcess.distribution` with
+`RandomIndexedSymbol`
+
+## Version 1.7
+
+### `sympy.stats.DiscreteMarkovChain.absorbing_probabilites()`
+[
+The `absorbing_probabilites` method name was misspelled. The correct spelling
+`absorbing_probabilities` ("absorbing probabilit*i*es") should be used
+instead.
+
+### `sympy.utilities.misc.find_executable()`
+
+### Mutable attributes in `sympy.diffgeom`
+
+### The `unicode` argument and attribute to `sympy.printing.pretty.stringpict.prettyForm`
+
+### The `sympy.printing.fcode`, `sympy.printing.ccode`, and
+`sympy.printing.cxxcode` modules
+
+### Passing the argument to `lambdify` as a `set`
+
+### Core classes non-Expr args
+
+## Version 1.6
+
+### `sympy.utilities.tmpfiles`
+
+### `sympy.utilities.runtests`
+
+### `sympy.utilities.randtest`
+
+### `sympy.utilities.pytest`
+
+### `sympy.utilities.benchmarking`
+
+### `sympy.testing.randtest` functions
+
+### Mixing `Poly` and non-polynomial expressions in binary operations
+
+### The `print_cyclic` flag of `sympy.combinatorics.Permutation`
+
+### Using `integrate`/`Integral` with `Poly`
+
+### The string fallback in `sympify()`
+
+### Creating an indefinite `Integral` with an `Eq` argument
+
+## Version 1.5
+
+### `TensExpr.fun_eval` and `Tensor.__call__`
+
+### `TensorType`
+
+### The `set_dimension`, `set_scale_factor`, `get_dimensional_expr`, and `_collect_factor_and_dimension` methods to `sympy.physics.units.Quantity`
+
+### The `is_EmptySet` attribute of sets
+
+### `ProductSet(iterable)`
+
+### The `set_potential_energy` method in `sympy.physics.mechanics`
+
+### Using a set for the condition in `ConditionSet`
+
+### The `sympy.polys.multivariate_resultants.DixonResultant.max_degree` property
+
+### The `sympy.polys.multivariate_resultants.DixonResultant.get_upper_degree` property
+
+### `Eq(expr)` with the rhs defaulting to 0
+
+### Non-tuple iterable for the `symbols` argument to `Lambda`
+
+### The `evaluate` flag to `differentiate_finite`
+
+## Version 1.4
+
+### `TensorIndexType.data`, `TensorIndexType.get_matrix()`,
+`TensorIndexType.__getitem__`, and `TensExpr.__pow__`
+
+### The `clear_cache` and `clear_subproducts` keywords to
+`Matrix.is_diagonalizable`
+
+### The `rows` and `cols` keyword arguments to `Matrix.jordan_block`
+
+## Version 1.3
+
+### The `source()` function
+
+### The `dimension` and `scale_factor` arguments to `sympy.physics.units.Quanitity`
+
+### Importing `classof` and `a2idx` from `sympy.matrices.matrices`
+
+## Version 1.2
+
+### Dot product of non row/column vectors
+
+### `sympy.geometry.Line3D.equation` no longer needs the `k` argument
+
 (simplify-this-deprecation)=
 ## This is an example deprecation description
 
