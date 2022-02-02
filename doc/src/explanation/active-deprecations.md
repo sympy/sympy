@@ -16,7 +16,8 @@ to this, any code using deprecated functionality will have a
 ## Silencing SymPy Deprecation Warnings
 
 To silence SymPy deprecation warnings, add a filter using the
-[warnings](https://docs.python.org/3/library/warnings.html) module. For example:
+[`warnings`](https://docs.python.org/3/library/warnings.html) module. For
+example:
 
 ```py
 import warnings
@@ -26,7 +27,10 @@ warnings.filterwarnings(
     # replace "ignore" with "error" to make the warning raise an exception.
     # This useful if you want to test you aren't using deprecated code.
     "ignore",
+
+    # message may be omitted to filter all SymPyDeprecationWarnings
     message=r"(?s).*<regex matching the warning message>",
+
     category=SymPyDeprecationWarning,
     module=r"<regex matching your module>"
 )
