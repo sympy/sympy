@@ -30,7 +30,7 @@ def test_FourierSeries():
     assert isinstance(fo, FourierSeries)
     assert fo.function == x
     assert fo.x == x
-    assert fo.period == 2*pi
+    assert fo.period == (-pi, pi)
 
     assert fo.term(3) == 2*sin(3*x) / 3
     assert fe.term(3) == -4*cos(3*x) / 9
