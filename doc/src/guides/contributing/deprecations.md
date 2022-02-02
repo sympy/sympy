@@ -244,9 +244,13 @@ with warns_deprecated_sympy():
 
 This should be the only part of the codebase and test suite that uses the
 deprecated behavior. Everything else should be changed to use the new,
-undeprecated behavior. The SymPy test suite is configured to fail if a
+non-deprecated behavior. The SymPy test suite is configured to fail if a
 `SymPyDeprecationWarning` is issued anywhere except in a
-`warns_deprecated_sympy()` block (see below).
+`warns_deprecated_sympy()` block (see below). You should not use this function
+or a `warnings.filterwarnings(SymPyDeprecationWarning)` anywhere except in the
+test for the deprecation. This includes the documentation examples. The
+documentation for a deprecated function should just have a note pointing to
+the non-deprecated alternative.
 
 If it is not possible to remove the deprecated behavior somewhere, that is a
 sign that it is not ready to be deprecated yet. Consider that users may not be
@@ -267,9 +271,16 @@ documented in at three primary places:
   information in the message that is already part of the metadata provided to
   the keyword arguments to `SymPyDeprecationWarning`, like the version number.
   Remember that the warning text will be shown in plain-text, so do not use
-  RST or Markdown markup in the text. Code blocks should be clearly
-  delineated with newlines so that they are easy to read. All text should be
-  wrapped to 80 characters.
+  RST or Markdown markup in the text. Code blocks should be clearly delineated
+  with newlines so that they are easy to read. All text in the warning message
+  should be wrapped to 80 characters, except for code examples that cannot be
+  wrapped.
+
+  Always include full context of what is deprecated in the message. For
+  example, write "the abc keyword to func() is deprecated" instead of just
+  "the abc keyword is deprecated". That way if a user has a larger line of
+  code that is using the deprecated functionality, it will be easier for them
+  to see exactly which part is causing it.
 
 - A deprecation note in the relevant docstring(s). This should use the
   [`deprecated`](https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-deprecated)
@@ -362,8 +373,12 @@ documented in at three primary places:
   <sympy.utilities.decorator.deprecated>`. This will automatically put a link
   to the page in the documentation in the warning message.
 
-  Finally, the description should also make a note of which SymPy version the
-  deprecation was first introduced in.
+  If multiple deprecations are related to one another, they can all share a
+  single section on this page.
+
+  If the deprecated function is not included in the top-level
+  `sympy/__init__.py` be sure to clearly indicate which submodule the object
+  is referring to.
 
   ```md
   (simplify-this-deprecation)=
@@ -380,8 +395,6 @@ documented in at three primary places:
 
   The change was made because `simplify` is a much more Pythonic name than
   `simplify_this`.
-
-  This feature has been deprecated since SymPy version 1.1.
   ```
 
 
