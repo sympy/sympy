@@ -96,6 +96,11 @@ def test_basic1():
     assert limit(log(1/x) + 1/sin(x), x, 0, dir = '+') == oo
     assert limit(log(1/x) + 1/x, x, 0, dir = '+') == oo
 
+    # test acoth function at 0
+    assert limit(acoth(x), x, 0, '+') == -I*pi/2
+    assert limit(acoth(x), x, 0, '-') == I*pi/2
+    raises(ValueError, lambda: limit(acoth(x), x, 0, '+-'))
+
 
 def test_basic2():
     assert limit(x**x, x, 0, dir="+") == 1
@@ -551,6 +556,7 @@ def test_branch_cuts():
     assert limit(acot(x - S(1)/2*I), x, 0, '-') == -pi + I*acoth(S(1)/2)
     assert limit(acot(x), x, 0) == pi/2
     assert limit(acot(x), x, 0, '-') == -pi/2
+    raises(ValueError, lambda: limit(acot(x), x, 0, '+-'))
     assert limit(asec(I*x + S(1)/2), x, 0) == asec(S(1)/2)
     assert limit(asec(I*x + S(1)/2), x, 0, '-') == -asec(S(1)/2)
     assert limit(asec(I*x - S(1)/2), x, 0) == 2*pi - asec(-S(1)/2)

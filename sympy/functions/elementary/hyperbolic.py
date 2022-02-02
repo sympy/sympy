@@ -1558,6 +1558,8 @@ class acoth(InverseHyperbolicFunction):
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and Order(1, x).contains(arg):
+            if cdir == S.One:
+                return -S.ImaginaryUnit*S.Pi/2
             return S.ImaginaryUnit*S.Pi/2
         else:
             return self.func(arg)

@@ -279,7 +279,10 @@ class Limit(Expr):
             else:
                 newe = e.subs(z, z + z0)
             try:
-                coeff, ex = newe.leadterm(z, cdir=cdir)
+                if cdir == 0 and newe.leadterm(z, cdir=1) != newe.leadterm(z, cdir=-1):
+                    raise ValueError
+                else:
+                    coeff, ex = newe.leadterm(z, cdir=cdir)
             except ValueError:
                 pass
             else:
@@ -303,7 +306,10 @@ class Limit(Expr):
         else:
             newe = e.subs(z, z + z0)
         try:
-            coeff, ex = newe.leadterm(z, cdir=cdir)
+            if cdir == 0 and newe.leadterm(z, cdir=1) != newe.leadterm(z, cdir=-1):
+                raise ValueError
+            else:
+                coeff, ex = newe.leadterm(z, cdir=cdir)
         except (ValueError, NotImplementedError, PoleError):
             # The NotImplementedError catching is for custom functions
             e = powsimp(e)
@@ -346,8 +352,8 @@ class Limit(Expr):
 
         try:
             if str(dir) == '+-':
-                r = gruntz(e, z, z0, '+')
-                l = gruntz(e, z, z0, '-')
+                r = limit(e, z, z0, '+')
+                l = limit(e, z, z0, '-')
                 if l != r:
                     raise ValueError("The limit does not exist since "
                             "left hand limit = %s and right hand limit = %s"
