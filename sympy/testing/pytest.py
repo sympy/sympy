@@ -5,6 +5,7 @@ import functools
 import os
 import contextlib
 import warnings
+import inspect
 from typing import Any, Callable
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -190,14 +191,15 @@ else:
         return func
 
     @contextlib.contextmanager
-    def warns(warningcls, *, match=''):
-        '''Like raises but tests that warnings are emitted.
+    def warns(warningcls, *, match='', test_stacklevel=True):
+        '''
+        Like raises but tests that warnings are emitted.
 
         >>> from sympy.testing.pytest import warns
         >>> import warnings
 
         >>> with warns(UserWarning):
-        ...     warnings.warn('deprecated', UserWarning)
+        ...     warnings.warn('deprecated', UserWarning, stacklevel=2)
 
         >>> with warns(UserWarning):
         ...     pass
@@ -205,6 +207,13 @@ else:
         ...
         Failed: DID NOT WARN. No warnings of type UserWarning\
         was emitted. The list of emitted warnings is: [].
+
+        test_stacklevel makes it check that the stacklevel parameter to warn()
+        is set so that the warning shows the user line of code (the code under
+        the warns() context manager). Set this to False if this is ambiguous
+        or if the context manager does not test the direct user code that
+        emits the warning.
+
         '''
         # Absorbs all warnings in warnrec
         with warnings.catch_warnings(record=True) as warnrec:
@@ -222,6 +231,26 @@ else:
                    ) % (warningcls, [w.message for w in warnrec])
             raise Failed(msg)
 
+        if test_stacklevel:
+            for f in inspect.stack():
+                thisfile = f.filename
+                file = os.path.split(thisfile)[1]
+                if file.startswith('test_'):
+                    break
+                elif file == 'doctest.py':
+                    # skip the stacklevel testing in the doctests of this
+                    # function
+                    return
+            else:
+                raise RuntimeError("Could not find the file for the given warning to test the stacklevel")
+            for w in warnrec:
+                if w.filename != thisfile:
+                    msg = f'''\
+Failed: Warning has the wrong stacklevel. The warning stacklevel needs to be
+set so that the line of code shown in the warning message is user code that
+calls the deprecated code (the current stacklevel is showing code from
+{w.filename}, expected {thisfile})'''.replace('\n', ' ')
+                    raise Failed(msg)
 
 def _both_exp_pow(func):
     """
