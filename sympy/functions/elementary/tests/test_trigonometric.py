@@ -1,6 +1,7 @@
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.add import Add
 from sympy.core.function import (Lambda, diff)
+from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo)
 from sympy.core.power import Pow
@@ -192,7 +193,9 @@ def test_sin_series():
 def test_sin_rewrite():
     assert sin(x).rewrite(exp) == -I*(exp(I*x) - exp(-I*x))/2
     assert sin(x).rewrite(tan) == 2*tan(x/2)/(1 + tan(x/2)**2)
-    assert sin(x).rewrite(cot) == 2*cot(x/2)/(1 + cot(x/2)**2)
+    assert sin(x).rewrite(cot) == \
+        Piecewise((0, Eq(im(x), 0) & Eq(Mod(x, pi), 0)),
+                  (2*cot(x/2)/(cot(x/2)**2 + 1), True))
     assert sin(sinh(x)).rewrite(
         exp).subs(x, 3).n() == sin(x).rewrite(exp).subs(x, sinh(3)).n()
     assert sin(cosh(x)).rewrite(
@@ -409,7 +412,9 @@ def test_cos_series():
 def test_cos_rewrite():
     assert cos(x).rewrite(exp) == exp(I*x)/2 + exp(-I*x)/2
     assert cos(x).rewrite(tan) == (1 - tan(x/2)**2)/(1 + tan(x/2)**2)
-    assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
+    assert cos(x).rewrite(cot) == \
+        Piecewise((1, Eq(im(x), 0) & Eq(Mod(x, 2*pi), 0)),
+                  ((cot(x/2)**2 - 1)/(cot(x/2)**2 + 1), True))
     assert cos(sinh(x)).rewrite(
         exp).subs(x, 3).n() == cos(x).rewrite(exp).subs(x, sinh(3)).n()
     assert cos(cosh(x)).rewrite(
@@ -1009,8 +1014,7 @@ def test_acos_series():
 
 def test_acos_rewrite():
     assert acos(x).rewrite(log) == pi/2 + I*log(I*x + sqrt(1 - x**2))
-    assert acos(x).rewrite(atan) == \
-           atan(sqrt(1 - x**2)/x) + (pi/2)*(1 - x*sqrt(1/x**2))
+    assert acos(x).rewrite(atan) == pi*(-x*sqrt(x**(-2)) + 1)/2 + atan(sqrt(1 - x**2)/x)
     assert acos(0).rewrite(atan) == S.Pi/2
     assert acos(0.5).rewrite(atan) == acos(0.5).rewrite(log)
     assert acos(x).rewrite(asin) == S.Pi/2 - asin(x)
@@ -1293,13 +1297,6 @@ def test_evenodd_rewrite():
         assert _check_no_rewrite(func, a*b)
         assert func(
             x - y) == -func(y - x)  # it doesn't matter which form is canonical
-
-
-def test_issue_4547():
-    assert sin(x).rewrite(cot) == 2*cot(x/2)/(1 + cot(x/2)**2)
-    assert cos(x).rewrite(cot) == -(1 - cot(x/2)**2)/(1 + cot(x/2)**2)
-    assert tan(x).rewrite(cot) == 1/cot(x)
-    assert cot(x).fdiff() == -1 - cot(x)**2
 
 
 def test_as_leading_term_issue_5272():
@@ -1764,8 +1761,10 @@ def test_asec():
     assert asec(x).rewrite(log) == I*log(sqrt(1 - 1/x**2) + I/x) + pi/2
     assert asec(x).rewrite(asin) == -asin(1/x) + pi/2
     assert asec(x).rewrite(acos) == acos(1/x)
-    assert asec(x).rewrite(atan) == (2*atan(x + sqrt(x**2 - 1)) - pi/2)*sqrt(x**2)/x
-    assert asec(x).rewrite(acot) == (2*acot(x - sqrt(x**2 - 1)) - pi/2)*sqrt(x**2)/x
+    assert asec(x).rewrite(atan) == \
+        pi*(1 - sqrt(x**2)/x)/2 + sqrt(x**2)*atan(sqrt(x**2 - 1))/x
+    assert asec(x).rewrite(acot) == \
+        pi*(1 - sqrt(x**2)/x)/2 + sqrt(x**2)*acot(1/sqrt(x**2 - 1))/x
     assert asec(x).rewrite(acsc) == -acsc(x) + pi/2
     raises(ArgumentIndexError, lambda: asec(x).fdiff(2))
 
@@ -1818,7 +1817,8 @@ def test_acsc():
     assert acsc(x).rewrite(log) == -I*log(sqrt(1 - 1/x**2) + I/x)
     assert acsc(x).rewrite(asin) == asin(1/x)
     assert acsc(x).rewrite(acos) == -acos(1/x) + pi/2
-    assert acsc(x).rewrite(atan) == (-atan(sqrt(x**2 - 1)) + pi/2)*sqrt(x**2)/x
+    assert acsc(x).rewrite(atan) == \
+        (-atan(sqrt(x**2 - 1)) + pi/2)*sqrt(x**2)/x
     assert acsc(x).rewrite(acot) == (-acot(1/sqrt(x**2 - 1)) + pi/2)*sqrt(x**2)/x
     assert acsc(x).rewrite(asec) == -asec(x) + pi/2
     raises(ArgumentIndexError, lambda: acsc(x).fdiff(2))
