@@ -89,7 +89,11 @@ def sympy_deprecation_warning(message, *, deprecated_since_version,
 
          The deprecation message. This may span multiple lines and contain
          code examples. Messages should be wrapped to 80 characters. The
-         message is automatically dedented.
+         message is automatically dedented and leading and trailing whitespace
+         stripped. Messages may include dynamic content based on the user
+         input, but avoid using ``str(expression)`` if an expression can be
+         arbitrary, as it might be huge and make the warning message
+         unreadable.
 
     deprecated_since_version: str
 

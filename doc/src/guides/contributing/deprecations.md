@@ -387,6 +387,11 @@ documented in at three primary places:
   `sympy/__init__.py` be sure to clearly indicate which submodule the object
   is referring to.
 
+  Note that examples here are helpful, but you generally should not use
+  doctests to show the deprecated functionality, as this will itself raise the
+  deprecation warning and fail the doctest. Instead you may use `# doctest:
+  +SKIP`, or just show the example as a code block instead of a doctest.
+
   ```md
   (simplify-this-deprecation)=
   ## This is an example deprecation description
