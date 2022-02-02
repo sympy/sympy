@@ -588,6 +588,9 @@ class Set(Basic, EvalfMixin):
         >>> FiniteSet(0, Matrix([1, 2])).kind
         SetKind(UndefinedKind)
 
+        >>> Interval(1,2).kind.element_kind
+        NumberKind
+
         See Also
         ========
 
@@ -716,31 +719,14 @@ class Set(Basic, EvalfMixin):
     def _kind(self):
         return SetKind(UndefinedKind)
 
-    def _helper_kind(self):
-        if not self.args:
-            return SetKind()
-        elif all(i.kind == self.args[0].kind for i in self.args):
-            return SetKind(self.args[0].kind)
-        else:
-            return SetKind(UndefinedKind)
-
-    def _union_setkind(self):
-        args = tuple(arg.kind for arg in self.args if arg is not S.EmptySet)
+    @staticmethod
+    def _helper_kind(args):
         if not args:
             return SetKind()
-        elif all(i == args[0] for i in args):
-            return args[0]
+        elif all(i.kind == args[0].kind for i in args):
+            return SetKind(args[0].kind)
         else:
             return SetKind(UndefinedKind)
-
-    def _intersection_setkind(self):
-        args = tuple(arg.kind for arg in self.args if arg is not S.UniversalSet)
-        if not args:
-            return SetKind(UndefinedKind)
-        elif all(i == args[0] for i in args):
-            return args[0]
-        else:
-            return SetKind()
 
     def _eval_evalf(self, prec):
         dps = prec_to_dps(prec)
@@ -1378,7 +1364,17 @@ class Union(Set, LatticeOp):
         return measure
 
     def _kind(self):
-        return self._union_setkind()
+        return self._union_setkind(self.args)
+
+    @staticmethod
+    def _union_setkind(args):
+        kinds = tuple(arg.kind for arg in args if arg is not S.EmptySet)
+        if not kinds:
+            return SetKind()
+        elif all(i == kinds[0] for i in kinds):
+            return kinds[0]
+        else:
+            return SetKind(UndefinedKind)
 
     @property
     def _boundary(self):
@@ -1484,7 +1480,17 @@ class Intersection(Set, LatticeOp):
             return True
 
     def _kind(self):
-        return self._intersection_setkind()
+        return self._intersection_setkind(self.args)
+
+    @staticmethod
+    def _intersection_setkind(args):
+        kinds = tuple(arg.kind for arg in args if arg is not S.UniversalSet)
+        if not kinds:
+            return SetKind(UndefinedKind)
+        elif all(i == kinds[0] for i in kinds):
+            return kinds[0]
+        else:
+            return SetKind()
 
     @property
     def _inf(self):
@@ -1795,7 +1801,7 @@ class EmptySet(Set, metaclass=Singleton):
         return other
 
     def _kind(self):
-        return self._helper_kind()
+        return self._helper_kind(self.args)
 
     def _symmetric_difference(self, other):
         return other
@@ -2016,7 +2022,7 @@ class FiniteSet(Set):
         return 0
 
     def _kind(self):
-        return self._helper_kind()
+        return self._helper_kind(self.args)
 
     def __len__(self):
         return len(self.args)
