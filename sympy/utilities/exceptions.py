@@ -177,10 +177,12 @@ https://github.com/sympy/sympy/wiki/Deprecating-policy.\
     def __str__(self):
         return '\n%s\n' % filldedent(self.fullMessage)
 
-    def warn(self, stacklevel=2):
+    def warn(self, stacklevel=3):
+        # stacklevel is 3 so it shows the user code.
         # the next line is what the user would see after the error is printed
-        # if stacklevel was set to 1. If you are writing a wrapper around this,
-        # increase the stacklevel accordingly.
+        # if stacklevel was set to 1. If you are writing a wrapper, increase
+        # the stacklevel so that the user code is shown in the warning
+        # message.
         warnings.warn(self, stacklevel=stacklevel)
 
 # Python by default hides DeprecationWarnings, which we do not want.
