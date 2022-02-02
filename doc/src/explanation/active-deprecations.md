@@ -127,10 +127,38 @@ instead.
 
 ### The `unicode` argument and attribute to `sympy.printing.pretty.stringpict.prettyForm`
 
+(deprecated-printing-code-submodules)=
 ### The `sympy.printing.fcode`, `sympy.printing.ccode`, and
 `sympy.printing.cxxcode` modules
 
-### Passing the argument to `lambdify` as a `set`
+The submodules `sympy.printing.ccode`, `sympy.printing.fcode`, and
+`sympy.printing.cxxcode` were renamed to `sympy.printing.c`,
+`sympy.printing.fortran`, and `sympy.printing.cxx`, respectively. These
+modules were renamed because they conflict with the corresponding function
+names. This causes issues because `from sympy.printing import ccode` can give
+the function or the module, depending on whether the `ccode` submodule has
+been imported yet or not. See [this
+comment](https://github.com/sympy/sympy/issues/20234#issuecomment-707574283)
+for a technical discussion on why this happens.
+
+(deprecated-lambdify-arguments-set)
+### Passing the arguments to `lambdify` as a `set`
+
+Passing the function arguments to lambdify as a set is deprecated. Instead
+pass them as a list or tuple. For
+example, instead of
+
+    lambdify({x, y}, x + 2*y) # WRONG
+
+use
+
+    lambdify((x, y), x + 2*y) # RIGHT
+
+This is because sets are unordered. For instance, in the above example it
+would be impossible for `lambidfy` to know if it was called with `{x, y}` or
+`{y, x}`. Thus, when passed the arguments as a set `lambdify` would have to
+guess their order, which would lead to an incorrect function if it guessed
+incorrectly.
 
 ### Core classes non-Expr args
 
