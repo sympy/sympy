@@ -2116,5 +2116,5 @@ from .traversal import (preorder_traversal as _preorder_traversal,
    iterargs, iterfreeargs)
 
 preorder_traversal = deprecated(
-    useinstead="sympy.core.traversal.preorder_traversal",
+    useinstead="sympy.core.basic.preorder_traversal",
     deprecated_since_version="1.10", issue=22288)(_preorder_traversal)
