@@ -216,13 +216,17 @@ class BaseDyadic(Dyadic, AtomicExpr):
         obj._sys = vector1._sys
         obj._pretty_form = ('(' + vector1._pretty_form + '|' +
                              vector2._pretty_form + ')')
-        obj._latex_form = ('(' + vector1._latex_form + "{|}" +
-                           vector2._latex_form + ')')
+        obj._latex_form = (r'\left(' + vector1._latex_form + r"{\middle|}" +
+                           vector2._latex_form + r'\right)')
 
         return obj
 
     def _sympystr(self, printer):
         return "({}|{})".format(
+            printer._print(self.args[0]), printer._print(self.args[1]))
+
+    def _sympyrepr(self, printer):
+        return "BaseDyadic({}, {})".format(
             printer._print(self.args[0]), printer._print(self.args[1]))
 
 

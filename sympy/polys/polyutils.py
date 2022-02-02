@@ -172,7 +172,7 @@ def _not_a_coeff(expr):
     """Do not treat NaN and infinities as valid polynomial coefficients. """
     if type(expr) in illegal_types or expr in finf:
         return True
-    if type(expr) is float and float(expr) != expr:
+    if isinstance(expr, float) and float(expr) != expr:
         return True  # nan
     return  # could be
 
@@ -210,7 +210,7 @@ def _parallel_dict_from_expr_if_gens(exprs, opt):
 
                         monom[indices[base]] = exp
                     except KeyError:
-                        if not factor.free_symbols.intersection(opt.gens):
+                        if not factor.has_free(*opt.gens):
                             coeff.append(factor)
                         else:
                             raise PolynomialError("%s contains an element of "

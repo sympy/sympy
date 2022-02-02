@@ -293,7 +293,7 @@ def closest_points(*args):
     Examples
     ========
 
-    >>> from sympy.geometry import closest_points, Triangle
+    >>> from sympy import closest_points, Triangle
     >>> Triangle(sss=(3, 4, 5)).args
     (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
     >>> closest_points(*_)
@@ -388,7 +388,7 @@ def convex_hull(*args, polygon=True):
     Examples
     ========
 
-    >>> from sympy.geometry import convex_hull
+    >>> from sympy import convex_hull
     >>> points = [(1, 1), (1, 2), (3, 1), (-5, 2), (15, 4)]
     >>> convex_hull(*points)
     Polygon(Point2D(-5, 2), Point2D(1, 1), Point2D(3, 1), Point2D(15, 4))
@@ -673,7 +673,7 @@ def intersection(*entities, pairwise=False, **kwargs):
     Examples
     ========
 
-    >>> from sympy.geometry import Ray, Circle, intersection
+    >>> from sympy import Ray, Circle, intersection
     >>> c = Circle((0, 1), 1)
     >>> intersection(c, c.center)
     []

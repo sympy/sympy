@@ -127,10 +127,10 @@ from .definitions import (
     yd, yard, yards,
     mi, mile, miles,
     nmi, nautical_mile, nautical_miles,
-    l, liter, liters,
-    dl, deciliter, deciliters,
-    cl, centiliter, centiliters,
-    ml, milliliter, milliliters,
+    l, L, liter, liters,
+    dl, dL, deciliter, deciliters,
+    cl, cL, centiliter, centiliters,
+    ml, mL, milliliter, milliliters,
     ms, millisecond, milliseconds,
     us, microsecond, microseconds,
     ns, nanosecond, nanoseconds,
@@ -234,8 +234,8 @@ def find_unit(quantity, unit_system="SI"):
     ['ampere', 'amperes']
     >>> u.find_unit('volt')
     ['volt', 'volts', 'electronvolt', 'electronvolts', 'planck_voltage']
-    >>> u.find_unit(u.inch**3)[:5]
-    ['l', 'cl', 'dl', 'ml', 'liter']
+    >>> u.find_unit(u.inch**3)[:9]
+    ['L', 'l', 'cL', 'cl', 'dL', 'dl', 'mL', 'ml', 'liter']
     """
     unit_system = UnitSystem.get_unit_system(unit_system)
 
@@ -359,10 +359,10 @@ __all__ = [
     'yd', 'yard', 'yards',
     'mi', 'mile', 'miles',
     'nmi', 'nautical_mile', 'nautical_miles',
-    'l', 'liter', 'liters',
-    'dl', 'deciliter', 'deciliters',
-    'cl', 'centiliter', 'centiliters',
-    'ml', 'milliliter', 'milliliters',
+    'l', 'L', 'liter', 'liters',
+    'dl', 'dL', 'deciliter', 'deciliters',
+    'cl', 'cL', 'centiliter', 'centiliters',
+    'ml', 'mL', 'milliliter', 'milliliters',
     'ms', 'millisecond', 'milliseconds',
     'us', 'microsecond', 'microseconds',
     'ns', 'nanosecond', 'nanoseconds',

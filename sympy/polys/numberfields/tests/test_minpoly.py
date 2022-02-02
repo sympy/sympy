@@ -427,6 +427,13 @@ def test_issue_22559():
     assert minimal_polynomial(alpha**3, x) == x**2 - 8
 
 
+def test_issue_22561():
+    a = AlgebraicNumber(sqrt(2) + sqrt(3), [S(1) / 2, 0, S(-9) / 2, 0], gen=x)
+    assert a.as_expr() == sqrt(2)
+    assert minimal_polynomial(a, x) == x**2 - 2
+    assert minimal_polynomial(a**3, x) == x**2 - 8
+
+
 def test_separate_sq_not_impl():
     raises(NotImplementedError, lambda: _separate_sq(x**(S(1)/3) + x))
 

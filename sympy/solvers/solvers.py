@@ -200,8 +200,7 @@ def checksol(f, symbol, sol=None, **flags):
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.solvers import checksol
+    >>> from sympy import checksol, symbols
     >>> x, y = symbols('x,y')
     >>> checksol(x**4 - 1, x, 1)
     True
@@ -816,8 +815,10 @@ def solve(f, *symbols, **flags):
             guaranteed to find the largest number of zeros possible).
         cubics=True (default)
             Return explicit solutions when cubic expressions are encountered.
+            When False, quartics and quintics are disabled, too.
         quartics=True (default)
             Return explicit solutions when quartic expressions are encountered.
+            When False, quintics are disabled, too.
         quintics=True (default)
             Return explicit solutions (if possible) when quintic expressions
             are encountered.
@@ -830,6 +831,15 @@ def solve(f, *symbols, **flags):
 
     """
     from .inequalities import reduce_inequalities
+
+    # set solver types explicitly; as soon as one is False
+    # all the rest will be False
+    ###########################################################################
+
+    hints = ('cubics', 'quartics', 'quintics')
+    default = True
+    for k in hints:
+        default = flags.setdefault(k, bool(flags.get(k, default)))
 
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
@@ -1617,8 +1627,8 @@ def _solve(f, *symbols, **flags):
                 soln = None
                 deg = poly.degree()
                 flags['tsolve'] = True
-                solvers = {k: flags.get(k, True) for k in
-                    ('cubics', 'quartics', 'quintics')}
+                hints = ('cubics', 'quartics', 'quintics')
+                solvers = {h: flags.get(h) for h in hints}
                 soln = roots(poly, **solvers)
                 if sum(soln.values()) < deg:
                     # e.g. roots(32*x**5 + 400*x**4 + 2032*x**3 +
@@ -2330,9 +2340,8 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     Examples
     ========
 
-    >>> from sympy import Eq
+    >>> from sympy import Eq, solve_undetermined_coeffs
     >>> from sympy.abc import a, b, c, x
-    >>> from sympy.solvers import solve_undetermined_coeffs
 
     >>> solve_undetermined_coeffs(Eq(2*a*x + a+b, x), [a, b], x)
     {a: 1/2, b: -1/2}
@@ -2372,9 +2381,8 @@ def solve_linear_system_LU(matrix, syms):
     Examples
     ========
 
-    >>> from sympy import Matrix
+    >>> from sympy import Matrix, solve_linear_system_LU
     >>> from sympy.abc import x, y, z
-    >>> from sympy.solvers.solvers import solve_linear_system_LU
 
     >>> solve_linear_system_LU(Matrix([
     ... [1, 2, 0, 1],

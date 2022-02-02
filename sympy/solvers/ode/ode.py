@@ -770,10 +770,9 @@ def solve_ics(sols, funcs, constants, ics):
                 x0 = funcarg.variables[0]
                 variables = (x,)*len(funcarg.variables)
                 matching_func = deriv.subs(x0, x)
-            if variables not in diff_variables:
-                for sol in sols:
-                    if sol.has(deriv.expr.func):
-                        diff_sols.append(Eq(sol.lhs.diff(*variables), sol.rhs.diff(*variables)))
+            for sol in sols:
+                if sol.has(deriv.expr.func):
+                    diff_sols.append(Eq(sol.lhs.diff(*variables), sol.rhs.diff(*variables)))
             diff_variables.add(variables)
             S = diff_sols
         else:
@@ -2736,8 +2735,7 @@ def ode_1st_power_series(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, pprint, exp
-    >>> from sympy.solvers.ode.ode import dsolve
+    >>> from sympy import Function, pprint, exp, dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> eq = exp(x)*(f(x).diff(x)) - f(x)

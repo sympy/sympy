@@ -17,7 +17,6 @@ Parsing Functions Reference
 
 .. autofunction:: sympy.parsing.mathematica.mathematica
 
-
 Parsing Transformations Reference
 ---------------------------------
 

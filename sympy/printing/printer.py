@@ -135,8 +135,7 @@ Example of Custom Printing Method
 In the example below, the latex printing of the modulo operator is modified.
 This is done by overriding the method ``_latex`` of ``Mod``.
 
->>> from sympy import Symbol, Mod, Integer
->>> from sympy.printing.latex import print_latex
+>>> from sympy import Symbol, Mod, Integer, print_latex
 
 >>> # Always use printer._print()
 >>> class ModOp(Mod):

@@ -35,10 +35,10 @@ class HyperbolicFunction(Function):
 
 
 def _peeloff_ipi(arg):
-    """
-    Split ARG into two parts, a "rest" and a multiple of I*pi.
-    This assumes ARG to be an Add.
-    The multiple of I*pi returned in the second position is always a Rational.
+    r"""
+    Split ARG into two parts, a "rest" and a multiple of $I\pi$.
+    This assumes ARG to be an ``Add``.
+    The multiple of $I\pi$ returned in the second position is always a ``Rational``.
 
     Examples
     ========
@@ -70,7 +70,7 @@ def _peeloff_ipi(arg):
 
 class sinh(HyperbolicFunction):
     r"""
-    sinh(x) is the hyperbolic sine of x.
+    ``sinh(x)`` is the hyperbolic sine of ``x``.
 
     The hyperbolic sine function is $\frac{e^x - e^{-x}}{2}$.
 
@@ -278,7 +278,7 @@ class sinh(HyperbolicFunction):
 
 class cosh(HyperbolicFunction):
     r"""
-    cosh(x) is the hyperbolic cosine of x.
+    ``cosh(x)`` is the hyperbolic cosine of ``x``.
 
     The hyperbolic cosine function is $\frac{e^x + e^{-x}}{2}$.
 
@@ -518,7 +518,7 @@ class cosh(HyperbolicFunction):
 
 class tanh(HyperbolicFunction):
     r"""
-    tanh(x) is the hyperbolic tangent of x.
+    ``tanh(x)`` is the hyperbolic tangent of ``x``.
 
     The hyperbolic tangent function is $\frac{\sinh(x)}{\cosh(x)}$.
 
@@ -737,7 +737,7 @@ class tanh(HyperbolicFunction):
 
 class coth(HyperbolicFunction):
     r"""
-    coth(x) is the hyperbolic cotangent of x.
+    ``coth(x)`` is the hyperbolic cotangent of ``x``.
 
     The hyperbolic cotangent function is $\frac{\cosh(x)}{\sinh(x)}$.
 
@@ -989,7 +989,7 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
 
 class csch(ReciprocalHyperbolicFunction):
     r"""
-    csch(x) is the hyperbolic cosecant of x.
+    ``csch(x)`` is the hyperbolic cosecant of ``x``.
 
     The hyperbolic cosecant function is $\frac{2}{e^x - e^{-x}}$
 
@@ -1052,7 +1052,7 @@ class csch(ReciprocalHyperbolicFunction):
 
 class sech(ReciprocalHyperbolicFunction):
     r"""
-    sech(x) is the hyperbolic secant of x.
+    ``sech(x)`` is the hyperbolic secant of ``x``.
 
     The hyperbolic secant function is $\frac{2}{e^x + e^{-x}}$
 
@@ -1109,7 +1109,7 @@ class InverseHyperbolicFunction(Function):
 
 class asinh(InverseHyperbolicFunction):
     """
-    asinh(x) is the inverse hyperbolic sine of x.
+    ``asinh(x)`` is the inverse hyperbolic sine of ``x``.
 
     The inverse hyperbolic sine function.
 
@@ -1224,7 +1224,7 @@ class asinh(InverseHyperbolicFunction):
 
 class acosh(InverseHyperbolicFunction):
     """
-    acosh(x) is the inverse hyperbolic cosine of x.
+    ``acosh(x)`` is the inverse hyperbolic cosine of ``x``.
 
     The inverse hyperbolic cosine function.
 
@@ -1372,7 +1372,7 @@ class acosh(InverseHyperbolicFunction):
 
 class atanh(InverseHyperbolicFunction):
     """
-    atanh(x) is the inverse hyperbolic tangent of x.
+    ``atanh(x)`` is the inverse hyperbolic tangent of ``x``.
 
     The inverse hyperbolic tangent function.
 
@@ -1483,7 +1483,7 @@ class atanh(InverseHyperbolicFunction):
 
 class acoth(InverseHyperbolicFunction):
     """
-    acoth(x) is the inverse hyperbolic cotangent of x.
+    ``acoth(x)`` is the inverse hyperbolic cotangent of ``x``.
 
     The inverse hyperbolic cotangent function.
 
@@ -1576,7 +1576,7 @@ class acoth(InverseHyperbolicFunction):
 
 class asech(InverseHyperbolicFunction):
     """
-    asech(x) is the inverse hyperbolic secant of x.
+    ``asech(x)`` is the inverse hyperbolic secant of ``x``.
 
     The inverse hyperbolic secant function.
 
@@ -1707,7 +1707,7 @@ class asech(InverseHyperbolicFunction):
 
 class acsch(InverseHyperbolicFunction):
     """
-    acsch(x) is the inverse hyperbolic cosecant of x.
+    ``acsch(x)`` is the inverse hyperbolic cosecant of ``x``.
 
     The inverse hyperbolic cosecant function.
 

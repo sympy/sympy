@@ -36,6 +36,7 @@ class Inverse(MatPow):
         # exp is there to make it consistent with
         # inverse.func(*inverse.args) == inverse
         mat = _sympify(mat)
+        exp = _sympify(exp)
         if not mat.is_Matrix:
             raise TypeError("mat should be a matrix")
         if not mat.is_square:

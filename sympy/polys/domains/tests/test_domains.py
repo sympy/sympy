@@ -17,7 +17,9 @@ from sympy.polys.domains.gaussiandomains import ZZ_I, QQ_I
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.domains.realfield import RealField
 
+from sympy.polys.numberfields.subfield import field_isomorphism
 from sympy.polys.rings import ring
+from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.polys.fields import field
 
 from sympy.polys.agca.extensions import FiniteExtension
@@ -723,6 +725,38 @@ def test_Domain__algebraic_field():
     alg = alg.algebraic_field(sqrt(3))
     assert alg.ext.minpoly == Poly(x**4 - 10*x**2 + 1)
     assert alg.dom == QQ
+
+
+def test_Domain_alg_field_from_poly():
+    f = Poly(x**2 - 2)
+    g = Poly(x**2 - 3)
+    h = Poly(x**4 - 10*x**2 + 1)
+
+    alg = ZZ.alg_field_from_poly(f)
+    assert alg.ext.minpoly == f
+    assert alg.dom == QQ
+
+    alg = QQ.alg_field_from_poly(f)
+    assert alg.ext.minpoly == f
+    assert alg.dom == QQ
+
+    alg = alg.alg_field_from_poly(g)
+    assert alg.ext.minpoly == h
+    assert alg.dom == QQ
+
+
+def test_Domain_cyclotomic_field():
+    K = ZZ.cyclotomic_field(12)
+    assert K.ext.minpoly == Poly(cyclotomic_poly(12))
+    assert K.dom == QQ
+
+    F = QQ.cyclotomic_field(3)
+    assert F.ext.minpoly == Poly(cyclotomic_poly(3))
+    assert F.dom == QQ
+
+    E = F.cyclotomic_field(4)
+    assert field_isomorphism(E.ext, K.ext) is not None
+    assert E.dom == QQ
 
 
 def test_PolynomialRing_from_FractionField():
