@@ -344,10 +344,10 @@ documented in at three primary places:
 
       """
       if y != 0:
-          SymPyDeprecationWarning("""\
+          sympy_deprecation_warning("""\
   The y argument to is_zero() is deprecated. Use is_zero(x - y) instead.""",
               deprecated_since_version="1.1",
-              active_deprecations_target=is-this-zero-y-deprecation')
+              active_deprecations_target='is-this-zero-y-deprecation')
       return simplify(x - y) == 0
   ```
 
@@ -371,7 +371,10 @@ documented in at three primary places:
   {class}`SymPyDeprecationWarning
   <sympy.utilities.exceptions.SymPyDeprecationWarning>` or {func}`@deprecated
   <sympy.utilities.decorator.deprecated>`. This will automatically put a link
-  to the page in the documentation in the warning message.
+  to the page in the documentation in the warning message. The target name
+  should include the word "deprecation" or "deprecated" (target names are
+  global in Sphinx, so the target name needs to be unique across the entire
+  documentation).
 
   If multiple deprecations are related to one another, they can all share a
   single section on this page.

@@ -166,10 +166,15 @@ This section consists of a one-line sentence ending in a period that describes
 the function, class, or method's effect.
 
 Deprecation warnings should go directly after the Single-Sentence Summary, so
-as to notify users right away. Deprecation warnings should be written as a note
+as to notify users right away. Deprecation warnings should be written as a ``deprecated``
 in the Sphinx directive::
 
-    .. note:: Deprecated in SymPy 0.7.1.
+    .. deprecated:: 1.1
+
+       The ``simplify_this`` function is deprecated. Use :func:`simplify`
+       instead. See its documentation for more information.
+
+See :ref:`deprecation-documentation` for more details.
 
 2. Explanation Section
 ^^^^^^^^^^^^^^^^^^^^^^^
