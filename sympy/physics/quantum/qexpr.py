@@ -6,7 +6,6 @@ from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
 from sympy.utilities.iterables import is_sequence
 
-from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray, scipy_sparse_matrix,
     to_sympy, to_numpy, to_scipy_sparse
@@ -190,6 +189,7 @@ class QExpr(Expr):
     #-------------------------------------------------------------------------
 
     def _eval_adjoint(self):
+        from sympy.physics.quantum.dagger import Dagger
         obj = Expr._eval_adjoint(self)
         if obj is None:
             obj = Expr.__new__(Dagger, self)
