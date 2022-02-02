@@ -24,9 +24,17 @@ from sympy.utilities.enumerative import (
     factoring_visitor, multiset_partitions_taocp )
 
 from sympy.core.singleton import S
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 w, x, y, z = symbols('w,x,y,z')
+
+
+def test_deprecated_iterables():
+    from sympy.utilities.iterables import default_sort_key, ordered
+    with warns_deprecated_sympy():
+        assert list(ordered([y, x])) == [x, y]
+    with warns_deprecated_sympy():
+        assert sorted([y, x], key=default_sort_key) == [x, y]
 
 
 def test_is_palindromic():
