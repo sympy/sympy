@@ -6,6 +6,7 @@ import os
 import contextlib
 import warnings
 import inspect
+import pathlib
 from typing import Any, Callable
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
@@ -221,7 +222,7 @@ else:
             warnings.simplefilter("ignore")
             warnings.filterwarnings("always", match, warningcls)
             # Now run the test
-            yield
+            yield warnrec
 
         # Raise if expected warning not found
         if not any(issubclass(w.category, warningcls) for w in warnrec):
@@ -276,7 +277,10 @@ def _both_exp_pow(func):
 @contextlib.contextmanager
 def warns_deprecated_sympy():
     '''
-    Shorthand for ``warns(SymPyDeprecationWarning)``
+    Test that a SymPyDeprecationWarning is issued correctly.
+
+    Use this instead of ``warns(SymPyDeprecationWarning)`` as it tests for
+    additional things.
 
     This is the recommended way to test that ``SymPyDeprecationWarning`` is
     emitted for deprecated features in SymPy. To test for other warnings use
@@ -299,7 +303,7 @@ def warns_deprecated_sympy():
     >>> with warns_deprecated_sympy():
     ...     sympy_deprecation_warning("Don't use",
     ...        deprecated_since_version="1.0",
-    ...        active_deprecations_target="target")
+    ...        active_deprecations_target="active-deprecations")
 
     >>> with warns_deprecated_sympy():
     ...     pass
@@ -315,8 +319,28 @@ def warns_deprecated_sympy():
     sympy.utilities.decorator.deprecated
 
     '''
-    with warns(SymPyDeprecationWarning):
+    with warns(SymPyDeprecationWarning) as warnrec:
         yield
+
+    this_file = pathlib.Path(__file__)
+    active_deprecations_file = (this_file.parent.parent.parent / 'doc' / 'src'
+                                / 'explanation' / 'active-deprecations.md')
+    if not active_deprecations_file.exists():
+        # We can only test that the active_deprecations_target works if we are
+        # in the git repo.
+        return
+    targets = []
+    for w in warnrec:
+        targets.append(w.message.active_deprecations_target)
+    with open(active_deprecations_file) as f:
+        text = f.read()
+    for target in targets:
+        if f'({target})=' not in text:
+            raise Failed(f"""\
+The active deprecations target {target!r} does not appear to be a valid target
+in the active-deprecations.md file
+({active_deprecations_file}).""".replace('\n', ' '))
+
 
 @contextlib.contextmanager
 def ignore_warnings(warningcls):
