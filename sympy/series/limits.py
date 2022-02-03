@@ -1,7 +1,7 @@
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
-from sympy.core.numbers import Float
+from sympy.core.numbers import Float, _illegal
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, sign)
 from sympy.functions.elementary.exponential import (exp, log)
@@ -231,7 +231,7 @@ class Limit(Expr):
         if z0 is S.NaN:
             return S.NaN
 
-        if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
+        if e.has(*_illegal):
             return self
 
         if e.is_Order:

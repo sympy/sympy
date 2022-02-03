@@ -900,7 +900,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         from .containers import Dict
         from .symbol import Dummy, Symbol
-        from sympy.polys.polyutils import illegal
+        from .numbers import _illegal
 
         unordered = False
         if len(args) == 1:
@@ -956,7 +956,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             if not simultaneous:
                 redo = []
                 for i in range(len(sequence)):
-                    if sequence[i][1] in illegal:  # nan, zoo and +/-oo
+                    if sequence[i][1] in _illegal:  # nan, zoo and +/-oo
                         redo.append(i)
                 for i in reversed(redo):
                     sequence.insert(0, sequence.pop(i))
