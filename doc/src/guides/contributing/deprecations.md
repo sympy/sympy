@@ -206,19 +206,91 @@ deprecation as early as possible.
 (deprecation-how-to)=
 ## How to deprecate code
 
-All deprecations should use
-{class}`sympy.utilities.exceptions.SymPyDeprecationWarning`. If a function or
-method is deprecated, you can use the
-{func}`sympy.utilities.decorator.deprecated` decorator. The
-`deprecated_since_version` and `active_deprecations_target` flags are required. Please see the docstring of `SymPyDeprecationWarning` for more
-information.
+### Checklist
 
-```{note}
-`warns_deprecated_sympy` is only intended to be used internally by the SymPy
-test suite. Users of SymPy should use the
-[warnings](https://docs.python.org/3/library/warnings.html) module directly to
-filter SymPy deprecation warnings. See {ref}`silencing-sympy-deprecation-warnings`.
-```
+Here is a checklist for doing a deprecation. See below for details
+on each step.
+
+<!-- This is a poor-man's version of the `- [ ]` syntax, which works on GitHub -->
+<!-- but doesn't work with MyST. <input type="checkbox"> gives a nice HTML -->
+<!-- checkbox. The <ul> tags create a nested list. -->
+
+<ul>
+
+<input type="checkbox"> Discuss the backwards incompatible change with the
+community. Ensure the change is really worth making as per the discussion
+above.
+
+<input type="checkbox"> Remove all instance of the deprecated code from
+everywhere in the codebase (including doctest examples).
+
+<input type="checkbox"> Add {func}`~.sympy_deprecation_warning` to the code.
+
+<ul>
+
+<input type="checkbox"> Write a descriptive message for the
+{func}`~.sympy_deprecation_warning`. Make sure the message explains both is
+deprecated and what to replace it with.
+
+<input type="checkbox"> Set `deprecated_since_version` to the version in
+`sympy/release.py` (without the `.dev`).
+
+<input type="checkbox"> Set `active_deprecations_target` to the target used in
+the `active-deprecations.md` file.
+
+<input type="checkbox"> Make sure `stacklevel` is set to the right value so
+that the deprecation warning shows the user line of code.
+
+<input type="checkbox"> Visually confirm the deprecation warning looks good in
+the console.
+
+</ul>
+
+<input type="checkbox"> Add a `.. deprecated:: <version>` note to the top of
+the relevant docstring(s).
+
+<input type="checkbox"> Add a section to the
+`doc/src/explanation/active-deprecations.md` file.
+<ul>
+
+<input type="checkbox"> Add a cross-reference target `(deprecation-xyz)=`
+before the section header (this is the same reference used by
+`active_deprecations_target` above).
+
+<input type="checkbox"> Explain what is deprecated and what to replace it
+with.
+
+<input type="checkbox"> Explain *why* the given thing is deprecated.
+</ul>
+
+<input type="checkbox"> Add a test using {func}`~.warns_deprecated_sympy` that
+tests that the deprecation warning is issued properly. This test should be the
+only place in the code that actually uses the deprecated functionality.
+
+<input type="checkbox"> Run the test suite to ensure the above test works and
+that no other code uses the deprecated code, which will cause the tests to
+fail.
+
+<input type="checkbox"> In your PR, add a `BREAKING CHANGE` entry to the
+release notes for the deprecation.
+
+<input type="checkbox"> Once the PR is merged, manually add the change to the
+"Backwards compatibility breaks and deprecations" section of the release notes
+on the wiki.
+
+</ul>
+
+### Adding the deprecation to the code
+
+All deprecations should use
+{class}`sympy.utilities.exceptions.sympy_deprecation_warning`. If a function
+or method is deprecated, you can use the
+{func}`sympy.utilities.decorator.deprecated` decorator. The
+`deprecated_since_version` and `active_deprecations_target` flags are
+required. Do not use the `SymPyDeprecationWarning` class directly to issue a
+deprecation warning. Please see the docstring of
+{func}`~.sympy_deprecation_warning` for more information. See
+[below](deprecation-documentation) for an example.
 
 Add a test for the deprecated behavior. You can use the
 {func}`sympy.testing.pytest.warns_deprecated_sympy` context manager.
@@ -228,6 +300,13 @@ from sympy.testing.pytest import warns_deprecated_sympy
 
 with warns_deprecated_sympy():
     <deprecated behavior>
+```
+
+```{note}
+`warns_deprecated_sympy` is only intended to be used internally by the SymPy
+test suite. Users of SymPy should use the
+[warnings](https://docs.python.org/3/library/warnings.html) module directly to
+filter SymPy deprecation warnings. See {ref}`silencing-sympy-deprecation-warnings`.
 ```
 
 Note that this is used to assert that a warning is raised by the block as well
@@ -246,7 +325,7 @@ This should be the only part of the codebase and test suite that uses the
 deprecated behavior. Everything else should be changed to use the new,
 non-deprecated behavior. The SymPy test suite is configured to fail if a
 `SymPyDeprecationWarning` is issued anywhere except in a
-`warns_deprecated_sympy()` block (see below). You should not use this function
+`warns_deprecated_sympy()` block. You should not use this function
 or a `warnings.filterwarnings(SymPyDeprecationWarning)` anywhere except in the
 test for the deprecation. This includes the documentation examples. The
 documentation for a deprecated function should just have a note pointing to
@@ -257,10 +336,10 @@ sign that it is not ready to be deprecated yet. Consider that users may not be
 able to replace the deprecated behavior for exact same reason.
 
 (deprecation-documentation)=
-## Documenting a deprecation
+### Documenting a deprecation
 
 All deprecations should be documented. Every deprecation needs to be
-documented in at three primary places:
+documented in three primary places:
 
 - The `SymPyDeprecationWarning` warning text. This text is allowed to be long
   enough to describe the deprecation, but it should not be more than one
@@ -280,7 +359,7 @@ documented in at three primary places:
   example, write "the abc keyword to func() is deprecated" instead of just
   "the abc keyword is deprecated". That way if a user has a larger line of
   code that is using the deprecated functionality, it will be easier for them
-  to see exactly which part is causing it.
+  to see exactly which part is causing the warning.
 
 - A deprecation note in the relevant docstring(s). This should use the
   [`deprecated`](https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-deprecated)
@@ -409,12 +488,16 @@ documented in at three primary places:
   `simplify_this`.
   ```
 
+### Release notes entry
 
-## Release notes entry
+In the pull request, document the breaking change in the release notes section
+with `BREAKING CHANGE`. You reference link to the active deprecations document
+that is generated by the warning message here.
 
-The deprecation should be added to the "Backwards compatibility breaks and
-deprecations" section of the release notes for the upcoming release. This
-needs to be done manually, in addition to the change from the bot. See
+Once the PR is merged, you should also add it to the "Backwards compatibility
+breaks and deprecations" section of the release notes for the upcoming
+release. This needs to be done manually, in addition to the change from the
+bot. See
 https://github.com/sympy/sympy/wiki/Writing-Release-Notes#backwards-compatibility-breaks-and-deprecations
 
 Whenever a deprecated functionality is removed entirely after its deprecation
