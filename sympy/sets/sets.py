@@ -545,10 +545,10 @@ class Set(Basic, EvalfMixin):
 
         Any :py:class`~.Set` will have kind :py:class`~.SetKind` which is
         parametrised by the kind of the elements of the set. For example
-        most sets are sets of numbers and will have kind SetKind(NumberKind).
-        If elements of sets are different in kind than their kind will SetKind
-        (UndefinedKind). See :py:class`~.Kind` for an explantion of the kind
-        system.
+        most sets are sets of numbers and will have kind
+        ``SetKind(NumberKind)``. If elements of sets are different in kind than
+        their kind will ``SetKind(UndefinedKind)``. See :py:class`~.Kind` for
+        an explantion of the kind system.
 
         Examples
         ========
@@ -583,7 +583,7 @@ class Set(Basic, EvalfMixin):
         SetKind(TupleKind(NumberKind, NumberKind))
 
         When all elements of the set do not have same kind, the kind
-        will be returned as SetKind(UndefinedKind):
+        will be returned as ``SetKind(UndefinedKind)``:
 
         >>> FiniteSet(0, Matrix([1, 2])).kind
         SetKind(UndefinedKind)
@@ -719,8 +719,8 @@ class Set(Basic, EvalfMixin):
     def _kind(self):
         return SetKind(UndefinedKind)
 
-    @staticmethod
-    def _helper_kind(args):
+    @classmethod
+    def _helper_kind(cls, args):
         if not args:
             return SetKind()
         elif all(i.kind == args[0].kind for i in args):
@@ -1364,11 +1364,7 @@ class Union(Set, LatticeOp):
         return measure
 
     def _kind(self):
-        return self._union_setkind(self.args)
-
-    @staticmethod
-    def _union_setkind(args):
-        kinds = tuple(arg.kind for arg in args if arg is not S.EmptySet)
+        kinds = tuple(arg.kind for arg in self.args if arg is not S.EmptySet)
         if not kinds:
             return SetKind()
         elif all(i == kinds[0] for i in kinds):
@@ -1480,11 +1476,7 @@ class Intersection(Set, LatticeOp):
             return True
 
     def _kind(self):
-        return self._intersection_setkind(self.args)
-
-    @staticmethod
-    def _intersection_setkind(args):
-        kinds = tuple(arg.kind for arg in args if arg is not S.UniversalSet)
+        kinds = tuple(arg.kind for arg in self.args if arg is not S.UniversalSet)
         if not kinds:
             return SetKind(UndefinedKind)
         elif all(i == kinds[0] for i in kinds):
@@ -1801,7 +1793,7 @@ class EmptySet(Set, metaclass=Singleton):
         return other
 
     def _kind(self):
-        return self._helper_kind(self.args)
+        return SetKind()
 
     def _symmetric_difference(self, other):
         return other
@@ -2663,14 +2655,11 @@ class SetKind(Kind):
     """
     SetKind is kind for all Sets
 
-    Every instance of Set or its subclass will have kind of class
-    ``SetKind``.
-    Parameter will be kind of elements of the sets
-
-    Parameter of SetKind can be ``NumberKind``, ``UndefinedKind``,
-    ``TupleKind`` etc.
-    if the elements of a set do not all have the same kind then the kind
-    will be ``SetKind(UndefinedKind)``
+    Every instance of Set will have kind ``SetKind`` parametrised by the kind
+    of the elements of the ``Set``. The kind of the elements might be
+    ``NumberKind``, or ``TupleKind`` or something else. When not all elements
+    have the same kind then the kind of the elements will be given as
+    ``UndefinedKind``.
 
     Parameters
     ==========

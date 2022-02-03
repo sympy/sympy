@@ -151,7 +151,7 @@ class Tuple(Basic):
         The kind of a Tuple instance.
 
         The kind of a Tuple is always of :py:class`~.TupleKind` but
-        parametrised by the number of elemnets and the kind of each element.
+        parametrised by the number of elements and the kind of each element.
 
         Examples
         ========
