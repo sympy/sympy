@@ -110,9 +110,43 @@ into a new project called [Aesara](https://github.com/aesara-devs/aesara). The
 renamed (e.g., `theano_code` has been renamed to `aesara_code`,
 `TheanoPrinter` has been renamed to `AesaraPrinter`, and so on).
 
-### `sympy.assumptions.handlers.AskHandler`
+(deprecated-askhandler)=
+### `sympy.assumptions.handlers.AskHandler` and related methods
 
-### The `Predicate.add_handler`, `Predicate.remove_handler`, `register_handler` and `remove_handler` methods for registering assumptions handlers
+`Predicate` has experienced a big design change. Previously, its handler was a
+list of `AskHandler` classes and registration was done by `add_handler()` and
+`remove_handler()` functions. Now, its handler is a multipledispatch instance
+and registration is done by `register()` or `register_many()` methods. User
+must define predicate class to introduce a new one.
+
+Previously, handlers were defined and registered this way:
+
+```python
+class AskPrimeHandler(AskHandler):
+    @staticmethod
+    def Integer(expr, assumptions):
+        return expr.is_prime
+
+register_handler('prime', AskPrimeHandler)
+```
+
+It should be changed to this:
+
+```python
+# Predicate definition.
+# Not needed if you are registering the handler to existing predicate.
+class PrimePredicate(Predicate):
+    name = 'prime'
+Q.prime = PrimePredicate()
+
+# Handler registration
+@Q.prime.register(Integer)
+def _(expr, assumptions):
+    return expr.is_prime
+```
+
+See GitHub issue [#20209](https://github.com/sympy/sympy/issues/20209).
+
 
 ### Evaluating `UndefinedPredicate` objects
 
