@@ -1624,16 +1624,16 @@ def test_SetKind_Unions():
 
 def test_SetKind_evaluate_False():
     one = Union({1}, EmptySet, evaluate=False).kind
-    two = Union(Interval(1, 2), EmptySet, evaluate=False).kind
-    three = Intersection({1}, S.UniversalSet,evaluate=False).kind
-    four = Union({1}, S.UniversalSet, evaluate=False).kind
-    five = Union(Interval(1, 2), Interval(4, 5), FiniteSet(1), evaluate=False).kind
-    six = Intersection({1}, EmptySet, evaluate=False).kind
     assert one is SetKind(NumberKind)
+    two = Union(Interval(1, 2), EmptySet, evaluate=False).kind
     assert two is SetKind(NumberKind)
+    three = Intersection({1}, S.UniversalSet,evaluate=False).kind
     assert three is SetKind(NumberKind)
+    four = Union({1}, S.UniversalSet, evaluate=False).kind
     assert four is SetKind(UndefinedKind)
+    five = Union(Interval(1, 2), Interval(4, 5), FiniteSet(1), evaluate=False).kind
     assert five is SetKind(NumberKind)
+    six = Intersection({1}, EmptySet, evaluate=False).kind
     assert six is SetKind()
 
 def test_issue_20089():
