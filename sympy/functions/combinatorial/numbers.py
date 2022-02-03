@@ -2245,7 +2245,7 @@ class schroeder(Function):
         try:
             n = as_int(n)
         except ValueError:
-            False
+            return False
         if n > 0:
             if n in (1, 2):
                 return True
