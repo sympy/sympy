@@ -357,7 +357,7 @@ documented in at three primary places:
 (deprecations-longer-description)=
 - A longer description of the deprecation should be added to [the page listing
   all currently active deprecations](active-deprecations) in the
-  documentation (in `doc/src/explaination/active-deprecations.md`).
+  documentation (in `doc/src/explanation/active-deprecations.md`).
 
   This page is where you can go into more detail about the technical details
   of a deprecation. Here you should also list *why* a feature was deprecated.
