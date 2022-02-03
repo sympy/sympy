@@ -1,3 +1,5 @@
+from collections import Counter
+
 from sympy.core import Mul, sympify
 from sympy.core.add import Add
 from sympy.core.expr import ExprBuilder
@@ -269,7 +271,6 @@ def canonicalize(x):
 
     # Rewriting with HadamardPower
     if isinstance(x, HadamardProduct):
-        from collections import Counter
         tally = Counter(x.args)
 
         new_arg = []

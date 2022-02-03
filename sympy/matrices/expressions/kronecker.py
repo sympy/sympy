@@ -1,5 +1,5 @@
 """Implementation of the Kronecker product"""
-
+from functools import reduce
 
 from sympy.core import Mul, prod, sympify
 from sympy.functions import adjoint
@@ -358,7 +358,6 @@ def _kronecker_dims_key(expr):
 
 
 def kronecker_mat_add(expr):
-    from functools import reduce
     args = sift(expr.args, _kronecker_dims_key)
     nonkrons = args.pop((0,), None)
     if not args:

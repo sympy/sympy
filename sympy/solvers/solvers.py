@@ -34,6 +34,7 @@ from sympy.functions.combinatorial.factorials import binomial
 from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
                                                       HyperbolicFunction)
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
+from sympy.integrals.integrals import Integral
 from sympy.ntheory.factor_ import divisors
 from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
     powdenest, nsimplify, denom, logcombine, sqrtdenest, fraction,
@@ -57,7 +58,7 @@ from sympy.solvers.polysys import solve_poly_system
 
 from types import GeneratorType
 from collections import defaultdict
-from itertools import product
+from itertools import combinations, product
 
 import warnings
 
@@ -2137,8 +2138,6 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     if not symbols:
         return S.Zero, S.One
 
-    from sympy.integrals.integrals import Integral
-
     # derivatives are easy to do but tricky to analyze to see if they
     # are going to disallow a linear solution, so for simplicity we
     # just evaluate the ones that have the symbols of interest
@@ -2236,7 +2235,6 @@ def minsolve_linear_system(system, *symbols, **flags):
         # variables, we will find an optimal solution.
         # We speed up slightly by starting at one less than the number of
         # variables the quick method manages.
-        from itertools import combinations
         N = len(symbols)
         bestsol = minsolve_linear_system(system, *symbols, quick=True)
         n0 = len([x for x in bestsol.values() if x != 0])

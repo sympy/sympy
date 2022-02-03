@@ -862,7 +862,6 @@ class Plane(GeometryEntity):
         >>> p.parameter_value(off_circle, u, v)
         {u: sqrt(10)/5, v: sqrt(10)/15}
         """
-        from sympy.geometry.point import Point
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other, Point):

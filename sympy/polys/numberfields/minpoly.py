@@ -36,8 +36,6 @@ from sympy.polys.ring_series import rs_compose_add
 from sympy.polys.rings import ring
 from sympy.polys.rootoftools import CRootOf
 from sympy.polys.specialpolys import cyclotomic_poly
-from sympy.simplify.radsimp import _split_gcd
-from sympy.simplify.simplify import _is_sum_surds
 from sympy.utilities import (
     numbered_symbols, public, sift
 )
@@ -89,6 +87,13 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
 
     raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % v)
 
+
+def _is_sum_surds(p):
+    args = p.args if p.is_Add else [p]
+    for y in args:
+        if not ((y**2).is_Rational and y.is_extended_real):
+            return False
+    return True
 
 
 def _separate_sq(p):
@@ -142,6 +147,7 @@ def _separate_sq(p):
     for i in range(len(surds)):
         if surds[i] != 1:
             break
+    from sympy.simplify.radsimp import _split_gcd
     g, b1, b2 = _split_gcd(*surds[i:])
     a1 = []
     a2 = []
