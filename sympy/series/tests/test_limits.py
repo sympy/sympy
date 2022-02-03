@@ -100,6 +100,11 @@ def test_basic1():
     assert limit(acoth(x), x, 0, '+') == -I*pi/2
     assert limit(acoth(x), x, 0, '-') == I*pi/2
     raises(ValueError, lambda: limit(acoth(x), x, 0, '+-'))
+    assert limit(acoth(-x), x, 0, '+') == I*pi/2
+    assert limit(acoth(x**2), x, 0, '+-') == -I*pi/2
+    assert limit(acoth(I*x), x, 0, '+') == -I*pi/2
+    assert limit(acoth(I*x), x, 0, '-') == I*pi/2
+    raises(ValueError, lambda: limit(acoth(x - I*x), x, 0, '+-'))
 
 
 def test_basic2():

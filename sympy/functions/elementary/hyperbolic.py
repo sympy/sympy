@@ -1554,13 +1554,28 @@ class acoth(InverseHyperbolicFunction):
             return x**n / n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.functions.elementary.complexes import (im, re)
         from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and Order(1, x).contains(arg):
-            if cdir == S.One:
-                return -S.ImaginaryUnit*S.Pi/2
-            return S.ImaginaryUnit*S.Pi/2
+            coeff, exp = arg.as_coeff_exponent(x)
+            if exp.is_odd:
+                if im(coeff) >= S.Zero:
+                    if re(cdir) > S.Zero:
+                        return -S.ImaginaryUnit*S.Pi/2
+                    else:
+                        return S.ImaginaryUnit*S.Pi/2
+                else:
+                    if re(cdir) > S.Zero:
+                        return S.ImaginaryUnit*S.Pi/2
+                    else:
+                        return -S.ImaginaryUnit*S.Pi/2
+            if exp.is_even:
+                if im(coeff) >= S.Zero:
+                    return -S.ImaginaryUnit*S.Pi/2
+                else:
+                    return S.ImaginaryUnit*S.Pi/2
         else:
             return self.func(arg)
 
