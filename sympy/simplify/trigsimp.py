@@ -430,6 +430,12 @@ def trigsimp(expr, **opts):
     """
     reduces expression by using known trig identities
 
+    Parameters
+    ==========
+
+    expr : Basic | iterable
+        The expression to simplify.
+
     Explanation
     ===========
 

@@ -46,6 +46,24 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     expression and collects constant coefficients that are
     independent of symbols.
 
+    Parameters
+    ==========
+    expr : an expresison
+        An expression that needs to have its variables separated.
+    symbols : symbols in the expression
+       The symbols that the expression has.
+    dict : True | False | None
+        If ``dict=True`` then the separated terms will be returned in
+        a dictionary keyed to their corresponding symbols. By default,
+        all symbols in the expression will appear as keys; if symbols
+        are provided, then all those symbols will be used as keys, and
+        any terms in the expression containing other symbols or non-symbols
+        will be returned keyed to the string ``coeff``. (Passing None for
+        symbols will return the expression in a dictionary keyed to ``coeff``.)
+    force : True | False | None
+        If ``force=True``, then bases of powers will be separated regardless of
+        assumptions on the symbols involved.
+
     Explanation
     ===========
 
@@ -222,6 +240,11 @@ def posify(eq):
     dictionary containing the mapping between the old and new
     symbols.
 
+    Parameters
+    ==========
+    eq : an equation
+        An equation (with generic symbols made positive).
+
     Explanation
     ===========
 
@@ -284,6 +307,13 @@ def hypersimp(f, k):
        integer sequences which have equivalent representation in terms
        of gamma special function.
 
+       Parameters
+       ==========
+       f : a function
+            A function that has k as its term, i.e. f(k).
+       k : a term
+            A term in the function f(k).
+
        Explanation
        ===========
 
@@ -328,6 +358,15 @@ def hypersimp(f, k):
 def hypersimilar(f, g, k):
     """
     Returns True if ``f`` and ``g`` are hyper-similar.
+
+    Parameters
+    ==========
+    f : a function
+        A function that has k as its term, i.e. f(k).
+    g : a function
+        A function that has k as its term, i.e. g(k).
+    k : a term
+        A term in the function f(k) and g(k).
 
     Explanation
     ===========
@@ -419,7 +458,27 @@ def signsimp(expr, evaluate=None):
 
 
 def simplify(expr, ratio=1.7, measure=count_ops, rational=False, inverse=False, doit=True, **kwargs):
-    """Simplifies the given expression.
+    """
+    Simplifies the given expression.
+
+    Parameters
+    ==========
+
+    expr : expression to simplify
+        The expression that needs to be simplified.
+    ratio : float
+        Ratio constraint for (result length)/(input length).
+    measure : Function
+        Function used to evaluate the complexity of an expression. The function shoudl be such that if ``a``
+        is more complex than ``b``, then ``measure(a) > measure(b)``.
+    rational : True | False | None
+        If True, Floats will be recast as Rationals before simplificaiton. If ``rational=None``, Floats will be recast
+        as Rationals, but the result will be recast as Floats. If ``rational=False``, nothing will be done to the Floats.
+    inverse : True | False
+        If ``inverse=True``, it will be assumed that a composition of inverse functions, such as ``sin`` and ``asin``
+        can be cancelled in any order.
+    doit : True | False
+        If ``doit=True``, simplify will call ``doit()`` before returning.
 
     Explanation
     ===========
@@ -995,6 +1054,14 @@ def logcombine(expr, force=False):
     combination but if ``a`` is a symbol with no assumptions the change will
     take place.
 
+    Parameters
+    ==========
+    expr : A logarithmic expression
+        A logarithmic expression that needs to be simplified.
+    force : True | False
+        If ``force=True`` then the assumptions above will be assumed to hold if
+        there is no assumption already in place on a quantity.
+
     Examples
     ========
 
@@ -1168,7 +1235,12 @@ def kroneckersimp(expr):
     """
     Simplify expressions with KroneckerDelta.
 
-    The only simplification currently attempted is to identify multiplicative cancellation:
+    The only simplification currently attempted is to identify multiplicative cancellation.
+
+    Parameters
+    ==========
+    expr : an expresison
+        An expression that needs to be simplified.
 
     Examples
     ========
@@ -1218,6 +1290,11 @@ def kroneckersimp(expr):
 def besselsimp(expr):
     """
     Simplify bessel-type functions.
+
+    Parameters
+    ==========
+    expr : an expresison
+        A bessel-type expression that needs to be simplified.
 
     Explanation
     ===========
@@ -1397,6 +1474,26 @@ def nsimplify(expr, constants=(), tolerance=None, full=False, rational=None,
     if ``rational=True``, then replace Floats with their Rational equivalents. If
     no change is made and rational is not False then Floats will at least be
     converted to Rationals.
+
+    Parameters
+    ==========
+    expr : an expression
+        A expression that needs to be simplified.
+    constants
+    tolerance : True | False
+        A lower tolerance may be set to find less exact matches.
+        If no tolerance is given then the least precise value will
+        set the tolerance (e.g. Floats default to 15 digits of precision,
+        so would be tolerance=10**-15).
+    full : True | False
+        If ``full=True``, a more extensive search is performed (this is useful
+        to find simpler numbers when the tolerance is set low).
+    rational : True | False | None
+        If ``rational=True``, then replace Floats with their Rational equivalents.
+    rational_conversion : base10 | exact
+        If ``rational_conversion=base10`` (the default), then convert floats to
+        rationals using their base-10 (string) representation. When ``rational_conversion=exact``
+        it uses the exact, base-2 representation.
 
     Explanation
     ===========

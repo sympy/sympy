@@ -25,6 +25,23 @@ def collect(expr, syms, func=None, evaluate=None, exact=False, distribute_order_
     """
     Collect additive terms of an expression.
 
+    Parameters
+    ==========
+    expr : An expresstion
+        The expression that we would like to collect additive terms.
+    symps : A term
+        The additive term to collect.
+    func : None
+    evaluate : None
+        If evaluate flag is set, this function will return an expression
+        with collected terms or else it will return a dictionary with
+        expressions up to rational powers as keys and collected coefficients
+        as values.
+    exact : True | False
+       Use ``exact=True`` to prevent all derivatives of a function from being collected
+       when you collect with respect to a function or a derivative of that function.
+    distribute_order_term : True | False
+
     Explanation
     ===========
 
@@ -492,6 +509,16 @@ def collect_sqrt(expr, evaluate=None):
 
     Note: since I = sqrt(-1), it is collected, too.
 
+    Parameters
+    ==========
+    expr : An expresstion
+        The expression with terms having common square roots.
+    evaluate : True | False | None
+        If ``evaluate=False`` a count indicating the number of sqrt-containing terms will
+        be returned and, if non-zero, the terms of the Add will be returned, else the
+        expression itself will be returned as a single term. If ``evaluate=True``, the
+        expression with any collected terms will be returned.
+
     Examples
     ========
 
@@ -750,6 +777,17 @@ def radsimp(expr, symbolic=True, max_terms=4):
     r"""
     Rationalize the denominator by removing square roots.
 
+    Parameters
+    ==========
+    expr : An expression to simplify
+        The expression that has square roots in its denominator.
+    symbolic : True | False
+        If you do not want the simplification to occur for symbolic
+        denominators, set ``symbolic=False``. Otherwise, set ``symbolic=True``.
+    max_terms : The maximal number of radical terms
+        If there are more than max_terms radical terms then the
+        expression is returned unchanged.
+
     Explanation
     ===========
 
@@ -1004,6 +1042,14 @@ def rad_rationalize(num, den):
     Rationalize ``num/den`` by removing square roots in the denominator;
     num and den are sum of terms whose squares are positive rationals.
 
+    Parameters
+    ==========
+    num : A numerator of an expression
+        A numerator of an expression that needs to be simplified.
+    den : A denominator of an expression
+        A denominator of an expression that needs to be simplified.
+        The denominator has square roots.
+
     Examples
     ========
 
@@ -1022,9 +1068,22 @@ def rad_rationalize(num, den):
 
 
 def fraction(expr, exact=False):
-    """Returns a pair with expression's numerator and denominator.
-       If the given expression is not a fraction then this function
-       will return the tuple (expr, 1).
+
+    """
+    Returns a pair with expression's numerator and denominator.
+    If the given expression is not a fraction then this function will return the tuple (expr, 1).
+
+    Parameters
+    ==========
+
+    expr : Basic | iterable
+        The expression that needs to be returned as a fraction.
+    exact : True | False
+        If ``exact=True``, a fraction will be returned without making any attempts at simplification.
+
+    Explanation
+    ===========
+
 
        This function will not make any attempt to simplify nested
        fractions or to do any term rewriting at all.

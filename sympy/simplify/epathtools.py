@@ -27,7 +27,16 @@ class EPath:
     __slots__ = ("_path", "_epath")
 
     def __new__(cls, path):
-        """Construct new EPath. """
+        """
+        Construct new EPath.
+
+        Parameters
+        ==========
+
+        epath: Epath | str
+            A path from which to construct a new EPath.
+
+        """
         if isinstance(path, EPath):
             return path
 
@@ -135,7 +144,7 @@ class EPath:
 
     def _hastypes(self, expr, types):
         """Check if ``expr`` is any of ``types``. """
-        _types = [ cls.__name__ for cls in expr.__class__.mro() ]
+        _types = [cls.__name__ for cls in expr.__class__.mro()]
         return bool(set(_types).intersection(types))
 
     def _has(self, expr, attrs, types):
@@ -154,6 +163,18 @@ class EPath:
     def apply(self, expr, func, args=None, kwargs=None):
         """
         Modify parts of an expression selected by a path.
+
+        Parameters
+        ==========
+
+        expr : Basic | iterable
+            An expression or a container of expressions.
+        func : callable
+            A callable that will be applied to expr.
+        args : tuple (optional)
+            Additional positional arguments to ``func``.
+        kwargs : dict (optional)
+            Additional keyword arguments to ``func``.
 
         Examples
         ========
@@ -224,6 +245,12 @@ class EPath:
     def select(self, expr):
         """
         Retrieve parts of an expression selected by a path.
+
+        Parameters
+        ==========
+
+        expr : Basic | iterable
+            An expression or a container of expressions.
 
         Examples
         ========

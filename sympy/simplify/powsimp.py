@@ -12,10 +12,25 @@ from sympy.polys import lcm, gcd
 from sympy.ntheory.factor_ import multiplicity
 
 
-
 def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     """
     reduces expression by combining powers with similar bases and exponents.
+
+    Parameters
+    ==========
+    expr : Basic | iterable
+        The expression to simplify.
+    deep : True | False
+        If ``deep=True`` then ``powsimp()`` will also simplify arguments of functions.
+    combine : str
+        You can make powsimp() only combine bases or only combine exponents by setting ``combine=base`` or
+        ``combine=exp``. The default is ``combine=all``, which does both. In this case, ``exp`` is evaluated first.
+    force : True | False
+        If ``force=True`` then bases will be combined without checking for assumptions,
+        e.g. ``sqrt(x)*sqrt(y) -> sqrt(x*y)`` which is not true if ``x`` and ``y`` are both negative.
+    measure : Function
+        Function used to evaluate the complexity of an expression. The function shoudl be such that if ``a``
+        is more complex than ``b``, then ``measure(a) > measure(b)``.
 
     Explanation
     ===========
@@ -117,7 +132,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         expr = expr.func(*[recurse(w) for w in expr.args])
 
     if expr.is_Pow:
-        return recurse(expr*_y, deep=False)/_y
+        return recurse(expr * _y, deep=False) / _y
 
     if not expr.is_Mul:
         return expr
@@ -143,7 +158,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 if b.is_Pow or isinstance(b, exp):
                     # don't let smthg like sqrt(x**a) split into x**a, 1/2
                     # or else it will be joined as x**(a/2) later
-                    b, e = b**e, S.One
+                    b, e = b ** e, S.One
                 c_powers[b].append(e)
             else:
                 # This is the logic that combines exponents for equal,
@@ -162,13 +177,13 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             # allow 2**x/4 -> 2**(x - 2); don't do this when b and e are
             # Numbers since autoevaluation will undo it, e.g.
             # 2**(1/3)/4 -> 2**(1/3 - 2) -> 2**(1/3)/4
-            if (b and b.is_Rational and not all(ei.is_Number for ei in e) and \
-                    coeff is not S.One and
+            if (b and b.is_Rational and not all(ei.is_Number for ei in e) and
+                coeff is not S.One and
                     b not in (S.One, S.NegativeOne)):
                 m = multiplicity(abs(b), abs(coeff))
                 if m:
                     e.append(m)
-                    coeff /= b**m
+                    coeff /= b ** m
             c_powers[b] = Add(*e)
         if coeff is not S.One:
             if coeff in c_powers:
@@ -187,7 +202,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 continue
             bpos = b.is_positive or b.is_polar
             if bpos:
-                binv = 1/b
+                binv = 1 / b
                 if b != binv and binv in c_powers:
                     if b.as_numer_denom()[0] is S.One:
                         c_powers.pop(b)
@@ -246,10 +261,10 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     c, m = e.as_coeff_Mul(rational=True)
                     if c is not S.One:
                         if m.is_integer:
-                            return (b, Integer(c.q)), m*Integer(c.p)
-                        return (b**m, Integer(c.q)), Integer(c.p)
+                            return (b, Integer(c.q)), m * Integer(c.p)
+                        return (b ** m, Integer(c.q)), Integer(c.p)
                     else:
-                        return (b**e, S.One), S.One
+                        return (b ** e, S.One), S.One
             else:
                 return bkey(*b.as_base_exp())
 
@@ -264,13 +279,14 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if not r:
                 common_b.pop(b)
                 if newe:
-                    for m in Mul.make_args(b[0]**newe):
+                    for m in Mul.make_args(b[0] ** newe):
                         b, e = bkey(m)
                         if b not in common_b:
                             common_b[b] = 0
                         common_b[b] += e
                         if b[1] != 1:
                             bases.append(b)
+
         # ---------------- end of helper functions
 
         # assemble a dictionary of the factors having a Rational power
@@ -309,9 +325,9 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 if ee:
                     # find the number of integral extractions possible
                     # e.g. [(1, 2), (2, 2)] -> min(2/1, 2/2) -> 1
-                    min1 = ee[0][1]//ee[0][0]
+                    min1 = ee[0][1] // ee[0][0]
                     for i in range(1, len(ee)):
-                        rat = ee[i][1]//ee[i][0]
+                        rat = ee[i][1] // ee[i][0]
                         if rat < 1:
                             break
                         min1 = min(min1, rat)
@@ -320,16 +336,17 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                         # e.g. if ee = [(2, 5), (3, 6)] then min1 = 2
                         # and the new base counts will be 5-2*2 and 6-2*3
                         for i in range(len(bb)):
-                            common_b[bb[i]] -= min1*ee[i][0]
+                            common_b[bb[i]] -= min1 * ee[i][0]
                             update(bb[i])
                         # update the count of the base
                         # e.g. x**2*y*sqrt(x*sqrt(y)) the count of x*sqrt(y)
                         # will increase by 4 to give bkey (x*sqrt(y), 2, 5)
-                        common_b[base] += min1*qstart*exponent
+                        common_b[base] += min1 * qstart * exponent
                 if (last  # no more radicals in base
-                    or len(common_b) == 1  # nothing left to join with
-                    or all(k[1] == 1 for k in common_b)  # no rad's in common_b
-                        ):
+                        or len(common_b) == 1  # nothing left to join with
+                        # no rad's in common_b
+                        or all(k[1] == 1 for k in common_b)
+                    ):
                     break
                 # see what we can exponentiate base by to remove any radicals
                 # so we know what to search for
@@ -339,14 +356,14 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 qlcm = lcm([ratq(bi) for bi in Mul.make_args(bstart)])
                 if qlcm == 1:
                     break  # we are done
-                b = bstart**qlcm
+                b = bstart ** qlcm
                 qlcm *= qstart
                 if all(ratq(bi) == 1 for bi in Mul.make_args(b)):
                     last = True  # we are going to be done after this next pass
             # this base no longer can find anything to join with and
             # since it was longer than any other we are done with it
             b, q = base
-            done.append((b, common_b.pop(base)*Rational(1, q)))
+            done.append((b, common_b.pop(base) * Rational(1, q)))
 
         # update c_powers and get ready to continue with powsimp
         c_powers = done
@@ -356,7 +373,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             if (b.is_Pow or isinstance(b, exp)) and \
                     q is not S.One and not b.exp.is_Rational:
                 b, be = b.as_base_exp()
-                b = b**(be/q)
+                b = b ** (be / q)
             else:
                 b = root(b, q)
             c_powers.append((b, e))
@@ -366,7 +383,8 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         # ==============================================================
 
         # rebuild the expression
-        newexpr = expr.func(*(newexpr + [Pow(b, e) for b, e in c_powers.items()]))
+        newexpr = expr.func(*(newexpr + [Pow(b, e)
+                            for b, e in c_powers.items()]))
         if combine == 'exp':
             return expr.func(newexpr, expr.func(*nc_part))
         else:
@@ -452,7 +470,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                             israt = True
                     if israt:
                         neg = [-w for w in neg]
-                        unk.extend([S.NegativeOne]*len(neg))
+                        unk.extend([S.NegativeOne] * len(neg))
                     else:
                         unk.extend(neg)
                         neg = []
@@ -463,6 +481,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     c_powers[b].append(e)
                 # here is a new joined base
                 new_base = expr.func(*(nonneg + neg))
+
                 # if there are positive parts they will just get separated
                 # again unless some change is made
 
@@ -474,6 +493,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     if e.is_Mul:
                         return prod([_terms(mi) for mi in e.args])
                     return 1
+
                 xnew_base = expand_mul(new_base, deep=False)
                 if len(Add.make_args(xnew_base)) < _terms(new_base):
                     new_base = factor_terms(xnew_base)
@@ -494,6 +514,17 @@ def powdenest(eq, force=False, polar=False):
     r"""
     Collect exponents on powers as assumptions allow.
 
+    Parameters
+    ==========
+    eq : Basic | iterable
+        The expression to simplify.
+    force : True | False
+        If ``force=True`` then symbols that are not explicitly negative behave as
+        though they are positive, resulting in more denesting.
+    polar : True | False
+        If ``polar=True``, the algorithm will perform simplifications on the Riemann surface
+        of the logarithm, also resulting in more denestings.
+
     Explanation
     ===========
 
@@ -512,13 +543,6 @@ def powdenest(eq, force=False, polar=False):
     - integer factors from powers that have integers in the denominator
       of the exponent can be removed from any term and the gcd of such
       integers can be joined with e
-
-    Setting ``force`` to ``True`` will make symbols that are not explicitly
-    negative behave as though they are positive, resulting in more
-    denesting.
-
-    Setting ``polar`` to ``True`` will do simplifications on the Riemann surface of
-    the logarithm, also resulting in more denestings.
 
     When there are sums of logs in exp() then a product of powers may be
     obtained e.g. ``exp(3*(log(a) + 2*log(b)))`` - > ``a**3*b**6``.
@@ -587,7 +611,8 @@ def powdenest(eq, force=False, polar=False):
         def _denest(b, e):
             if not isinstance(b, (Pow, exp)):
                 return b.is_positive, Pow(b, e, evaluate=False)
-            return _denest(b.base, b.exp*e)
+            return _denest(b.base, b.exp * e)
+
         reps = []
         for p in eq.atoms(Pow, exp):
             if isinstance(p.base, (Pow, exp)):
@@ -606,6 +631,7 @@ def powdenest(eq, force=False, polar=False):
     new = powsimp(sympify(eq))
     return new.xreplace(Transform(
         _denest_pow, filter=lambda m: m.is_Pow or isinstance(m, exp)))
+
 
 _y = Dummy('y')
 
@@ -655,10 +681,10 @@ def _denest_pow(eq):
         else:
             nonpolars.append(bb)
     if len(polars) == 1 and not polars[0][0].is_Mul:
-        return Pow(polars[0][0], polars[0][1]*e)*powdenest(Mul(*nonpolars)**e)
+        return Pow(polars[0][0], polars[0][1] * e) * powdenest(Mul(*nonpolars) ** e)
     elif polars:
-        return Mul(*[powdenest(bb**(ee*e)) for (bb, ee) in polars]) \
-            *powdenest(Mul(*nonpolars)**e)
+        return Mul(*[powdenest(bb ** (ee * e)) for (bb, ee) in polars]) \
+            * powdenest(Mul(*nonpolars) ** e)
 
     if b.is_Integer:
         # use log to see if there is a power here
@@ -693,14 +719,14 @@ def _denest_pow(eq):
         g = reduce(nc_gcd, args)
         if g != 1:
             cg, rg = g.as_coeff_Mul()
-            glogb = _keep_coeff(cg, rg*Add(*[a/g for a in args]))
+            glogb = _keep_coeff(cg, rg * Add(*[a / g for a in args]))
 
     # now put the log back together again
     if isinstance(glogb, log) or not glogb.is_Mul:
         if glogb.args[0].is_Pow or isinstance(glogb.args[0], exp):
             glogb = _denest_pow(glogb.args[0])
             if (abs(glogb.exp) < 1) == True:
-                return Pow(glogb.base, glogb.exp*e)
+                return Pow(glogb.base, glogb.exp * e)
         return eq
 
     # the log(b) was a Mul so join any adds with logcombine
@@ -711,4 +737,4 @@ def _denest_pow(eq):
             add.append(a)
         else:
             other.append(a)
-    return Pow(exp(logcombine(Mul(*add))), e*Mul(*other))
+    return Pow(exp(logcombine(Mul(*add))), e * Mul(*other))
