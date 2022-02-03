@@ -21,7 +21,9 @@ from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
 from sympy.matrices import Matrix, SparseMatrix
-from sympy.testing.pytest import XFAIL, slow, raises, warns_deprecated_sympy, _both_exp_pow
+from sympy.testing.pytest import (XFAIL, slow, raises, warns_deprecated_sympy,
+    warns, _both_exp_pow)
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 import math
 
 
@@ -2092,7 +2094,9 @@ def test_key_extensibility():
         with warns_deprecated_sympy():
             assert ask(Q.my_key(x + 1)) is None
     finally:
-        with warns_deprecated_sympy():
+        # We have to disable the stacklevel testing here because this raises
+        # the warning twice from two different places
+        with warns(SymPyDeprecationWarning, test_stacklevel=False):
             remove_handler('my_key', MyAskHandler)
         del Q.my_key
     raises(AttributeError, lambda: ask(Q.my_key(x)))
