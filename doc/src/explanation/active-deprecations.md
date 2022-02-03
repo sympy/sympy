@@ -100,7 +100,15 @@ SymPy deprecation warnings.
 
 ## Version 1.8
 
+(theanocode-deprecated)=
 ### `sympy.printing.theanocode`
+
+[Theano](https://github.com/Theano/Theano) has been discontinued, and forked
+into a new project called [Aesara](https://github.com/aesara-devs/aesara). The
+`sympy.printing.theanocode` module has been renamed to
+`sympy.printing.aesaracode`, and all the corresponding functions have been
+renamed (e.g., `theano_code` has been renamed to `aesara_code`,
+`TheanoPrinter` has been renamed to `AesaraPrinter`, and so on).
 
 ### `sympy.assumptions.handlers.AskHandler`
 
