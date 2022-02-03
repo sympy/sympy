@@ -147,9 +147,6 @@ def _(expr, assumptions):
 
 See GitHub issue [#20209](https://github.com/sympy/sympy/issues/20209).
 
-
-### Evaluating `UndefinedPredicate` objects
-
 ## Version 1.7.1
 
 ### Calling `sympy.stats.StochasticProcess.distribution` with
