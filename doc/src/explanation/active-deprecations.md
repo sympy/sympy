@@ -84,7 +84,44 @@ SymPy deprecation warnings.
 
 ### `expr_free_symbols`
 
+(deprecated-sympy-stats-numsamples)=
 ### `sympy.stats.sample(numsamples=n)`
+
+The `numsamples` parameter to {func}`sympy.stats.sample` is deprecated.
+
+`numsamples` makes `sample()` return a list of size `numsamples`, like
+
+```py
+>>> from sympy.stats import Die, sample
+>>> X = Die('X', 6)
+>>> sample(X, numsamples=3) # doctest: +SKIP
+[3, 2, 3]
+```
+
+However, this functionality can be easily implemented by the user with a list
+comprehension
+
+```py
+>>> [sample(X) for i in range(3)] # doctest: +SKIP
+[5, 4, 3]
+```
+
+Additionally, it is redundant with the `size` parameter, which makes `sample`
+return a NumPy array with the given shape.
+
+```py
+>>> sample(X, size=(3,)) # doctest: +SKIP
+array([6, 6, 1])
+```
+
+Historically, `sample` was changed in SymPy 1.7 so it returned an iterator
+instead of sample value. Since an iterator was returned, a numsamples
+parameter was added to specify the length of the iterator.
+
+However, this new behavior was considered confusing, as discussed in issue
+[#21563](https://github.com/sympy/sympy/issues/21563), so it was reverted.
+Now, `sample_iter` should be used if a iterator is needed. Consequently, the
+`numsamples` parameter is no longer needed for `sample()`.
 
 ### `sympy.polys.solvers.RawMatrix`
 
