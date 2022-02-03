@@ -1677,7 +1677,7 @@ def rsa_public_key(*args, **kwargs):
     multipower : bool, optional
         Any pair of non-distinct primes found in the RSA specification
         will restrict the domain of the cryptosystem, as noted in the
-        explaination of the parameter ``args``.
+        explanation of the parameter ``args``.
 
         SymPy RSA key generator may give a warning before dispatching it
         as a multi-power RSA, however, you can disable the warning if
