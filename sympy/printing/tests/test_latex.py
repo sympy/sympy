@@ -74,7 +74,7 @@ from sympy.tensor.array import (ImmutableDenseNDimArray,
                                 MutableDenseNDimArray,
                                 tensorproduct)
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
-from sympy.tensor.indexed import (Indexed, IndexedBase)
+from sympy.tensor.indexed import (Idx, Indexed, IndexedBase)
 from sympy.tensor.toperators import PartialDerivative
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
 
@@ -733,7 +733,12 @@ def test_latex_indexed():
     assert indexed_latex == r'\overline{{\Psi}_{0}} {\Psi}_{0}'
 
     # Symbol('gamma') gives r'\gamma'
+    interval = '\\mathrel{..}\\nobreak'
     assert latex(Indexed('x1', Symbol('i'))) == r'{x_{1}}_{i}'
+    assert latex(Indexed('x2', Idx('i'))) == r'{x_{2}}_{i}'
+    assert latex(Indexed('x3', Idx('i', Symbol('N')))) == r'{x_{3}}_{{i}_{0'+interval+'N - 1}}'
+    assert latex(Indexed('x3', Idx('i', Symbol('N')+1))) == r'{x_{3}}_{{i}_{0'+interval+'N}}'
+    assert latex(Indexed('x4', Idx('i', (Symbol('a'),Symbol('b'))))) == r'{x_{4}}_{{i}_{a'+interval+'b}}'
     assert latex(IndexedBase('gamma')) == r'\gamma'
     assert latex(IndexedBase('a b')) == r'a b'
     assert latex(IndexedBase('a_b')) == r'a_{b}'

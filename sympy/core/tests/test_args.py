@@ -4970,6 +4970,12 @@ def test_sympy__tensor__array__expressions__array_expressions__ArrayElementwiseA
     assert _test_args(ArrayElementwiseApplyFunc(exp, A))
 
 
+def test_sympy__tensor__array__expressions__array_expressions__Reshape():
+    from sympy.tensor.array.expressions.array_expressions import ArraySymbol, Reshape
+    A = ArraySymbol("A", (4,))
+    assert _test_args(Reshape(A, (2, 2)))
+
+
 def test_sympy__codegen__ast__Assignment():
     from sympy.codegen.ast import Assignment
     assert _test_args(Assignment(x, y))

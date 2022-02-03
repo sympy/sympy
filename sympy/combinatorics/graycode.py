@@ -27,7 +27,7 @@ class GrayCode(Basic):
     Examples
     ========
 
-    >>> from sympy.combinatorics.graycode import GrayCode
+    >>> from sympy.combinatorics import GrayCode
     >>> a = GrayCode(3)
     >>> list(a.generate_gray())
     ['000', '001', '011', '010', '110', '111', '101', '100']
@@ -62,7 +62,7 @@ class GrayCode(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.graycode import GrayCode
+        >>> from sympy.combinatorics import GrayCode
         >>> a = GrayCode(3)
         >>> a
         GrayCode(3)
@@ -108,7 +108,7 @@ class GrayCode(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.graycode import GrayCode
+        >>> from sympy.combinatorics import GrayCode
         >>> a = GrayCode(3, start='110')
         >>> a.next().current
         '111'
@@ -125,7 +125,7 @@ class GrayCode(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.graycode import GrayCode
+        >>> from sympy.combinatorics import GrayCode
         >>> a = GrayCode(3)
         >>> a.selections
         8
@@ -140,7 +140,7 @@ class GrayCode(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.graycode import GrayCode
+        >>> from sympy.combinatorics import GrayCode
         >>> a = GrayCode(5)
         >>> a.n
         5
@@ -154,7 +154,7 @@ class GrayCode(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.graycode import GrayCode
+        >>> from sympy.combinatorics import GrayCode
         >>> a = GrayCode(3)
         >>> list(a.generate_gray())
         ['000', '001', '011', '010', '110', '111', '101', '100']
@@ -207,7 +207,7 @@ class GrayCode(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.graycode import GrayCode
+        >>> from sympy.combinatorics import GrayCode
         >>> a = GrayCode(3)
         >>> for i in a.generate_gray():
         ...     if i == '010':
@@ -244,7 +244,7 @@ class GrayCode(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.graycode import GrayCode
+        >>> from sympy.combinatorics import GrayCode
         >>> a = GrayCode(3)
         >>> list(a.generate_gray())
         ['000', '001', '011', '010', '110', '111', '101', '100']
@@ -276,7 +276,7 @@ class GrayCode(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.graycode import GrayCode
+        >>> from sympy.combinatorics import GrayCode
         >>> GrayCode(3, start='100').current
         '100'
         """
@@ -298,7 +298,7 @@ class GrayCode(Basic):
         Examples
         ========
 
-        >>> from sympy.combinatorics.graycode import GrayCode
+        >>> from sympy.combinatorics import GrayCode
         >>> GrayCode(5, rank=3).current
         '00010'
         >>> GrayCode.unrank(5, 3)

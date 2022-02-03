@@ -5,7 +5,6 @@ from sympy.core.relational import Eq, Ne
 from sympy.functions.elementary.complexes import im, sign
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.polys.polyerrors import PolynomialError
-from sympy.utilities.decorator import deprecated
 from sympy.utilities.misc import filldedent
 
 
@@ -230,10 +229,6 @@ class DiracDelta(Function):
                 return -cls(-arg, k)
             elif k.is_even:
                 return cls(-arg, k) if k else cls(-arg)
-
-    @deprecated(useinstead="expand(diracdelta=True, wrt=x)", issue=12859, deprecated_since_version="1.1")
-    def simplify(self, x, **kwargs):
-        return self.expand(diracdelta=True, wrt=x)
 
     def _eval_expand_diracdelta(self, **hints):
         """

@@ -102,12 +102,12 @@ def _peeloff_pi(arg):
     Examples
     ========
 
-    >>> from sympy.functions.elementary.trigonometric import _peeloff_pi as peel
+    >>> from sympy.functions.elementary.trigonometric import _peeloff_pi
     >>> from sympy import pi
     >>> from sympy.abc import x, y
-    >>> peel(x + pi/2)
+    >>> _peeloff_pi(x + pi/2)
     (x, 1/2)
-    >>> peel(x + 2*pi/3 + pi*y)
+    >>> _peeloff_pi(x + 2*pi/3 + pi*y)
     (x + pi*y + pi/6, 1/2)
 
     """
@@ -142,28 +142,28 @@ def _pi_coeff(arg, cycles=1):
     Examples
     ========
 
-    >>> from sympy.functions.elementary.trigonometric import _pi_coeff as coeff
+    >>> from sympy.functions.elementary.trigonometric import _pi_coeff
     >>> from sympy import pi, Dummy
     >>> from sympy.abc import x
-    >>> coeff(3*x*pi)
+    >>> _pi_coeff(3*x*pi)
     3*x
-    >>> coeff(11*pi/7)
+    >>> _pi_coeff(11*pi/7)
     11/7
-    >>> coeff(-11*pi/7)
+    >>> _pi_coeff(-11*pi/7)
     3/7
-    >>> coeff(4*pi)
+    >>> _pi_coeff(4*pi)
     0
-    >>> coeff(5*pi)
+    >>> _pi_coeff(5*pi)
     1
-    >>> coeff(5.0*pi)
+    >>> _pi_coeff(5.0*pi)
     1
-    >>> coeff(5.5*pi)
+    >>> _pi_coeff(5.5*pi)
     3/2
-    >>> coeff(2 + pi)
+    >>> _pi_coeff(2 + pi)
 
-    >>> coeff(2*Dummy(integer=True)*pi)
+    >>> _pi_coeff(2*Dummy(integer=True)*pi)
     2
-    >>> coeff(2*Dummy(even=True)*pi)
+    >>> _pi_coeff(2*Dummy(even=True)*pi)
     0
 
     """

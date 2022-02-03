@@ -20,7 +20,7 @@ from sympy.core.function import (expand_mul, expand_log, Derivative,
                                  Function, expand_power_exp, _mexpand, expand,
                                  expand_func)
 from sympy.core.logic import fuzzy_not
-from sympy.core.numbers import ilcm, Float, Rational
+from sympy.core.numbers import ilcm, Float, Rational, _illegal
 from sympy.core.power import integer_log, Pow
 from sympy.core.relational import Relational, Eq, Ne
 from sympy.core.sorting import ordered, default_sort_key
@@ -200,8 +200,7 @@ def checksol(f, symbol, sol=None, **flags):
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.solvers import checksol
+    >>> from sympy import checksol, symbols
     >>> x, y = symbols('x,y')
     >>> checksol(x**4 - 1, x, 1)
     True
@@ -279,10 +278,7 @@ def checksol(f, symbol, sol=None, **flags):
         # if f(y) == 0, x=3 does not set f(y) to zero...nor does it not
         return None
 
-    illegal = {S.NaN,
-               S.ComplexInfinity,
-               S.Infinity,
-               S.NegativeInfinity}
+    illegal = set(_illegal)
     if any(sympify(v).atoms() & illegal for k, v in sol.items()):
         return False
 
@@ -2341,9 +2337,8 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     Examples
     ========
 
-    >>> from sympy import Eq
+    >>> from sympy import Eq, solve_undetermined_coeffs
     >>> from sympy.abc import a, b, c, x
-    >>> from sympy.solvers import solve_undetermined_coeffs
 
     >>> solve_undetermined_coeffs(Eq(2*a*x + a+b, x), [a, b], x)
     {a: 1/2, b: -1/2}
@@ -2383,9 +2378,8 @@ def solve_linear_system_LU(matrix, syms):
     Examples
     ========
 
-    >>> from sympy import Matrix
+    >>> from sympy import Matrix, solve_linear_system_LU
     >>> from sympy.abc import x, y, z
-    >>> from sympy.solvers.solvers import solve_linear_system_LU
 
     >>> solve_linear_system_LU(Matrix([
     ... [1, 2, 0, 1],
