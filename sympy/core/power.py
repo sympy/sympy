@@ -1641,7 +1641,8 @@ class Pow(Expr):
         from sympy.simplify.powsimp import powdenest
         self = powdenest(self, force=True).trigsimp()
         b, e = self.as_base_exp()
-        if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
+        from .numbers import _illegal
+        if e.has(*_illegal):
             raise PoleError()
 
         if e.has(x):

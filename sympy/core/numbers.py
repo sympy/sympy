@@ -4488,3 +4488,5 @@ def _register_classes():
     numbers.Integral.register(Integer)
 
 _register_classes()
+
+_illegal = (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity)
