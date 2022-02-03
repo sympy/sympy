@@ -5,7 +5,6 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin
-from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import is_sequence
@@ -119,6 +118,7 @@ class MutableDenseMatrix(DenseMatrix, MutableRepMatrix):
 
         sympy.simplify.simplify.simplify
         """
+        from sympy.simplify.simplify import simplify as _simplify
         for (i, j), element in self.todok().items():
             self[i, j] = _simplify(element, **kwargs)
 
