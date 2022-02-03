@@ -9,7 +9,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.combinatorial.factorials import (binomial, factorial, subfactorial)
 from sympy.functions.elementary.complexes import (Abs, re, sign)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
-from sympy.functions.elementary.hyperbolic import (acoth, atanh, sinh)
+from sympy.functions.elementary.hyperbolic import (acosh, acoth, atanh, sinh)
 from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
 from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, cos, cot, sec, sin, tan)
@@ -96,7 +96,17 @@ def test_basic1():
     assert limit(log(1/x) + 1/sin(x), x, 0, dir = '+') == oo
     assert limit(log(1/x) + 1/x, x, 0, dir = '+') == oo
 
-    # test acoth function at 0
+    # test inverse hyperbolic functions at 0
+    assert limit(acosh(I*x), x, 0, '+') == I*pi/2
+    assert limit(acosh(I*x), x, 0, '-') == -I*pi/2
+    assert limit(acosh(-I*x), x, 0, '+') == -I*pi/2
+    assert limit(acosh(-I*x), x, 0, '-') == I*pi/2
+    raises(ValueError, lambda: limit(acosh(I*x), x, 0, '+-'))
+    assert limit(acosh(x - I*x), x, 0, '+') == -I*pi/2
+    assert limit(acosh(x - I*x), x, 0, '-') == I*pi/2
+    raises(ValueError, lambda: limit(acosh(x - I*x), x, 0, '+-'))
+    assert limit(acosh(I*x**2), x, 0, '+-') == I*pi/2
+    assert limit(acosh(x**2 - I*x**2), x, 0, '+-') == -I*pi/2
     assert limit(acoth(x), x, 0, '+') == -I*pi/2
     assert limit(acoth(x), x, 0, '-') == I*pi/2
     raises(ValueError, lambda: limit(acoth(x), x, 0, '+-'))
