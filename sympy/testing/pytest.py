@@ -30,7 +30,6 @@ nocache_fail: Callable[[Any], Any]
 
 if USE_PYTEST:
     raises = pytest.raises
-    warns = pytest.warns
     skip = pytest.skip
     XFAIL = pytest.mark.xfail
     SKIP = pytest.mark.skip
@@ -191,67 +190,92 @@ else:
         "Dummy decorator for marking tests that fail when cache is disabled"
         return func
 
-    @contextlib.contextmanager
-    def warns(warningcls, *, match='', test_stacklevel=True):
-        '''
-        Like raises but tests that warnings are emitted.
+@contextlib.contextmanager
+def warns(warningcls, *, match='', test_stacklevel=True):
+    '''
+    Like raises but tests that warnings are emitted.
 
-        >>> from sympy.testing.pytest import warns
-        >>> import warnings
+    >>> from sympy.testing.pytest import warns
+    >>> import warnings
 
-        >>> with warns(UserWarning):
-        ...     warnings.warn('deprecated', UserWarning, stacklevel=2)
+    >>> with warns(UserWarning):
+    ...     warnings.warn('deprecated', UserWarning, stacklevel=2)
 
-        >>> with warns(UserWarning):
-        ...     pass
-        Traceback (most recent call last):
-        ...
-        Failed: DID NOT WARN. No warnings of type UserWarning\
-        was emitted. The list of emitted warnings is: [].
+    >>> with warns(UserWarning):
+    ...     pass
+    Traceback (most recent call last):
+    ...
+    Failed: DID NOT WARN. No warnings of type UserWarning\
+    was emitted. The list of emitted warnings is: [].
 
-        test_stacklevel makes it check that the stacklevel parameter to warn()
-        is set so that the warning shows the user line of code (the code under
-        the warns() context manager). Set this to False if this is ambiguous
-        or if the context manager does not test the direct user code that
-        emits the warning.
+    ``test_stacklevel`` makes it check that the ``stacklevel`` parameter to
+    ``warn()`` is set so that the warning shows the user line of code (the
+    code under the warns() context manager). Set this to False if this is
+    ambiguous or if the context manager does not test the direct user code
+    that emits the warning.
 
-        '''
-        # Absorbs all warnings in warnrec
-        with warnings.catch_warnings(record=True) as warnrec:
-            # Hide all warnings but make sure that our warning is emitted
-            warnings.simplefilter("ignore")
-            warnings.filterwarnings("always", match, warningcls)
-            # Now run the test
-            yield warnrec
+    If the warning is a ``SymPyDeprecationWarning``, this additionally tests that
+    the ``active_deprecations_target`` is a real target in the
+    ``active-deprecations.md`` file.
 
-        # Raise if expected warning not found
-        if not any(issubclass(w.category, warningcls) for w in warnrec):
-            msg = ('Failed: DID NOT WARN.'
-                   ' No warnings of type %s was emitted.'
-                   ' The list of emitted warnings is: %s.'
-                   ) % (warningcls, [w.message for w in warnrec])
-            raise Failed(msg)
+    '''
+    # Absorbs all warnings in warnrec
+    with warnings.catch_warnings(record=True) as warnrec:
+        # Hide all warnings but make sure that our warning is emitted
+        warnings.simplefilter("ignore")
+        warnings.filterwarnings("always", match, warningcls)
+        # Now run the test
+        yield warnrec
 
-        if test_stacklevel:
-            for f in inspect.stack():
-                thisfile = f.filename
-                file = os.path.split(thisfile)[1]
-                if file.startswith('test_'):
-                    break
-                elif file == 'doctest.py':
-                    # skip the stacklevel testing in the doctests of this
-                    # function
-                    return
-            else:
-                raise RuntimeError("Could not find the file for the given warning to test the stacklevel")
-            for w in warnrec:
-                if w.filename != thisfile:
-                    msg = f'''\
+    # Raise if expected warning not found
+    if not any(issubclass(w.category, warningcls) for w in warnrec):
+        msg = ('Failed: DID NOT WARN.'
+               ' No warnings of type %s was emitted.'
+               ' The list of emitted warnings is: %s.'
+               ) % (warningcls, [w.message for w in warnrec])
+        raise Failed(msg)
+
+    if test_stacklevel:
+        for f in inspect.stack():
+            thisfile = f.filename
+            file = os.path.split(thisfile)[1]
+            if file.startswith('test_'):
+                break
+            elif file == 'doctest.py':
+                # skip the stacklevel testing in the doctests of this
+                # function
+                return
+        else:
+            raise RuntimeError("Could not find the file for the given warning to test the stacklevel")
+        for w in warnrec:
+            if w.filename != thisfile:
+                msg = f'''\
 Failed: Warning has the wrong stacklevel. The warning stacklevel needs to be
 set so that the line of code shown in the warning message is user code that
 calls the deprecated code (the current stacklevel is showing code from
 {w.filename}, expected {thisfile})'''.replace('\n', ' ')
-                    raise Failed(msg)
+                raise Failed(msg)
+
+    if warningcls == SymPyDeprecationWarning:
+        this_file = pathlib.Path(__file__)
+        active_deprecations_file = (this_file.parent.parent.parent / 'doc' /
+                                    'src' / 'explanation' /
+                                    'active-deprecations.md')
+        if not active_deprecations_file.exists():
+            # We can only test that the active_deprecations_target works if we are
+            # in the git repo.
+            return
+        targets = []
+        for w in warnrec:
+            targets.append(w.message.active_deprecations_target)
+        with open(active_deprecations_file) as f:
+            text = f.read()
+        for target in targets:
+            if f'({target})=' not in text:
+                raise Failed(f"""\
+    The active deprecations target {target!r} does not appear to be a valid target
+    in the active-deprecations.md file
+    ({active_deprecations_file}).""".replace('\n', ' '))
 
 def _both_exp_pow(func):
     """
@@ -277,10 +301,7 @@ def _both_exp_pow(func):
 @contextlib.contextmanager
 def warns_deprecated_sympy():
     '''
-    Test that a SymPyDeprecationWarning is issued correctly.
-
-    Use this instead of ``warns(SymPyDeprecationWarning)`` as it tests for
-    additional things.
+    Shorthand for ``warns(SymPyDeprecationWarning)``
 
     This is the recommended way to test that ``SymPyDeprecationWarning`` is
     emitted for deprecated features in SymPy. To test for other warnings use
@@ -319,27 +340,8 @@ def warns_deprecated_sympy():
     sympy.utilities.decorator.deprecated
 
     '''
-    with warns(SymPyDeprecationWarning) as warnrec:
+    with warns(SymPyDeprecationWarning):
         yield
-
-    this_file = pathlib.Path(__file__)
-    active_deprecations_file = (this_file.parent.parent.parent / 'doc' / 'src'
-                                / 'explanation' / 'active-deprecations.md')
-    if not active_deprecations_file.exists():
-        # We can only test that the active_deprecations_target works if we are
-        # in the git repo.
-        return
-    targets = []
-    for w in warnrec:
-        targets.append(w.message.active_deprecations_target)
-    with open(active_deprecations_file) as f:
-        text = f.read()
-    for target in targets:
-        if f'({target})=' not in text:
-            raise Failed(f"""\
-The active deprecations target {target!r} does not appear to be a valid target
-in the active-deprecations.md file
-({active_deprecations_file}).""".replace('\n', ' '))
 
 
 @contextlib.contextmanager
