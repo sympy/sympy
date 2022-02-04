@@ -2338,13 +2338,11 @@ class padovan(Function):
             n = as_int(n)
         except ValueError:
             return False
-        if n>0:
+        if n > 0:
             if n == 1 :
                 return True
 
-            sn0 = 1
-            sn1 = 1
-            sn2 = 1
+            sn0, sn1, sn2 = 1, 1, 1
             while sn2 < n :
                 b = sn0 + sn1
                 sn0 = sn1
@@ -2356,13 +2354,11 @@ class padovan(Function):
             else:
                 return False
 
-        if n<=0:
-            if n in(0,-1):
+        if n <= 0:
+            if n in (0, -1):
                 return True
 
-            sn0 = 1
-            sn1 = 0
-            sn2 = 1
+            sn0, sn1, sn2 = 1, 0, 1
             while sn2 > n :
                 b = sn0 - sn2
                 sn0 = sn1
@@ -2387,9 +2383,7 @@ class padovan(Function):
         if n > 1:
             padovan.append(1)
 
-        sn0 = 1
-        sn1 = 1
-        sn2 = 1
+        sn0, sn1, sn2 = 1, 1, 1
         i = 2
         while i < n :
             padovan.append(sn2)
@@ -2403,27 +2397,24 @@ class padovan(Function):
 
     @staticmethod
     def find_padovan_numbers_in_range(x, y):
-        if 0 <= x <= y:
-            padovan = list()
-            if x <=1 <= y:
-                padovan.extend([1,1])
-            sn0 = 1
-            sn1 = 1
-            sn2 = 1
-            i = 2
-            while sn2 <= y:
-                if sn2 >= x:
-                    padovan.append(sn2)
-                b = sn0 + sn1
-                sn0 = sn1
-                sn1 = sn2
-                sn2 = b
-                i = i + 1
-
-            return padovan
-
-        else:
+        if not (0 <= x <= y):
             raise ValueError('The provided range is not valid. This condition should satisfy x <= y')
+
+        padovan = list()
+        if x <=1 <= y:
+            padovan.extend([1,1])
+        sn0, sn1, sn2 = 1, 1, 1
+        i = 2
+        while sn2 <= y:
+            if sn2 >= x:
+                padovan.append(sn2)
+            b = sn0 + sn1
+            sn0 = sn1
+            sn1 = sn2
+            sn2 = b
+            i = i + 1
+
+        return padovan
 
     @classmethod
     def eval(cls, n):
@@ -2435,13 +2426,17 @@ class padovan(Function):
         except ValueError:
             return None
 
-        if n in (0,1,2):
+        if n in (0, 1, 2):
             return 1
+
         if n == -1:
             return 0
+
         if n == -2:
             return -1
-        if n>0:
+
+        if n > 0:
             return padovan(n - 2) + padovan(n - 3)
-        if n<0:
+
+        if n < 0:
             return padovan(n + 3) - padovan(n + 1)

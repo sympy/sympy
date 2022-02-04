@@ -745,9 +745,9 @@ def test_nD_derangements():
 
 
 def test_padovan():
-    assert padovan.is_padovan(3) == True
-    assert padovan.is_padovan(6) == False
-    assert padovan.is_padovan(200) == True
+    assert padovan.is_padovan(3) is True
+    assert padovan.is_padovan(6) is False
+    assert padovan.is_padovan(200) is True
     assert [padovan(x) for x in range(0,11)] == [1, 1, 1, 2, 2, 3, 4, 5, 7, 9, 12]
     assert padovan.find_first_n_padovan_numbers(8) == [1, 1, 1, 2, 2, 3, 4, 5]
     raises(ValueError, lambda: padovan.find_first_n_padovan_numbers(8.5))
