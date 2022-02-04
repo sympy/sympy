@@ -275,7 +275,6 @@ def checksol(f, symbol, sol=None, **flags):
     elif not f.is_Relational and not f:
         return True
 
-
     illegal = set(_illegal)
     if any(sympify(v).atoms() & illegal for k, v in sol.items()):
         return False
