@@ -103,6 +103,8 @@ internal refactorings.
 
 ### `sympy.core.trace.Tr`
 
+TODO
+
 (deprecated-sympy-core-compatibility)=
 ### The `sympy.core.compatibility` submodule
 
@@ -126,6 +128,8 @@ by user code.
 ## Version 1.9
 
 ### `expr_free_symbols`
+
+TODO
 
 (deprecated-sympy-stats-numsamples)=
 ### `sympy.stats.sample(numsamples=n)`
@@ -168,15 +172,27 @@ Now, `sample_iter` should be used if a iterator is needed. Consequently, the
 
 ### `sympy.polys.solvers.RawMatrix`
 
+TODO
+
 ### The `get_segments` attribute of plotting objects
+
+TODO
 
 ### The `mdft` function in `sympy.physics.matrices`
 
+TODO
+
 ### The private `SparseMatrix._smat` and `DenseMatrix._mat` attributes
+
+TODO
 
 ### Non-`Expr` objects in a Matrix
 
+TODO
+
 ### laplace_transform of a Matrix with noconds=False
+
+TODO
 
 ## Version 1.8
 
@@ -275,13 +291,18 @@ instead.
 
 ### `sympy.utilities.misc.find_executable()`
 
+TODO
+
 ### Mutable attributes in `sympy.diffgeom`
+
+TODO
 
 ### The `unicode` argument and attribute to `sympy.printing.pretty.stringpict.prettyForm`
 
+TODO
+
 (deprecated-printing-code-submodules)=
-### The `sympy.printing.fcode`, `sympy.printing.ccode`, and
-`sympy.printing.cxxcode` modules
+### The `sympy.printing.fcode`, `sympy.printing.ccode`, and `sympy.printing.cxxcode` modules
 
 The submodules `sympy.printing.ccode`, `sympy.printing.fcode`, and
 `sympy.printing.cxxcode` were renamed to `sympy.printing.c`,
@@ -365,15 +386,27 @@ these are desired, you can use a `lambda` or the
 
 ### `sympy.utilities.tmpfiles`
 
+TODO
+
 ### `sympy.utilities.runtests`
+
+TODO
 
 ### `sympy.utilities.randtest`
 
+TODO
+
 ### `sympy.utilities.pytest`
+
+TODO
 
 ### `sympy.utilities.benchmarking`
 
+TODO
+
 ### `sympy.testing.randtest` functions
+
+TODO
 
 (deprecated-poly-nonpoly-binary-operations)=
 ### Mixing `Poly` and non-polynomial expressions in binary operations
@@ -397,6 +430,8 @@ using {meth}`.Poly.as_expr`, depending on which type you want the result to
 be.
 
 ### The `print_cyclic` flag of `sympy.combinatorics.Permutation`
+
+TODO
 
 (deprecated-integrate-poly)=
 ### Using `integrate` with `Poly`
@@ -480,25 +515,47 @@ integrate(b, x))` explicitly.
 
 ### `TensExpr.fun_eval` and `Tensor.__call__`
 
+TODO
+
 ### `TensorType`
+
+TODO
 
 ### The `set_dimension`, `set_scale_factor`, `get_dimensional_expr`, and `_collect_factor_and_dimension` methods to `sympy.physics.units.Quantity`
 
+TODO
+
 ### The `is_EmptySet` attribute of sets
+
+TODO
 
 ### `ProductSet(iterable)`
 
+TODO
+
 ### The `set_potential_energy` method in `sympy.physics.mechanics`
+
+TODO
 
 ### Using a set for the condition in `ConditionSet`
 
+TODO
+
 ### The `sympy.polys.multivariate_resultants.DixonResultant.max_degree` property
+
+TODO
 
 ### The `sympy.polys.multivariate_resultants.DixonResultant.get_upper_degree` property
 
+TODO
+
 ### `Eq(expr)` with the rhs defaulting to 0
 
+TODO
+
 ### Non-tuple iterable for the `symbols` argument to `Lambda`
+
+TODO
 
 (deprecated-differentiate_finite-evaluate)=
 ### The `evaluate` flag to `differentiate_finite`
@@ -524,24 +581,39 @@ See the discussion on issue [#17881](https://github.com/sympy/sympy/pull/17881).
 ### `TensorIndexType.data`, `TensorIndexType.get_matrix()`,
 `TensorIndexType.__getitem__`, and `TensExpr.__pow__`
 
-### The `clear_cache` and `clear_subproducts` keywords to
-`Matrix.is_diagonalizable`
+TODO
+
+### The `clear_cache` and `clear_subproducts` keywords to `Matrix.is_diagonalizable`
+
+TODO
 
 ### The `rows` and `cols` keyword arguments to `Matrix.jordan_block`
+
+TODO
 
 ## Version 1.3
 
 ### The `source()` function
 
+TODO
+
 ### The `dimension` and `scale_factor` arguments to `sympy.physics.units.Quanitity`
 
+TODO
+
 ### Importing `classof` and `a2idx` from `sympy.matrices.matrices`
+
+TODO
 
 ## Version 1.2
 
 ### Dot product of non row/column vectors
 
+TODO
+
 ### `sympy.geometry.Line3D.equation` no longer needs the `k` argument
+
+TODO
 
 (simplify-this-deprecation)=
 ## This is an example deprecation description
