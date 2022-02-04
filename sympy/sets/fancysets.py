@@ -5,6 +5,7 @@ from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
+from sympy.core.kind import UndefinedKind
 from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
 from sympy.core.mod import Mod
 from sympy.core.numbers import oo, igcd, Rational
@@ -13,7 +14,7 @@ from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
 from sympy.core.sympify import _sympify, sympify, _sympy_converter
 from sympy.logic.boolalg import And, Or
-from .sets import Set, Interval, Union, FiniteSet, ProductSet
+from .sets import Set, Interval, Union, FiniteSet, ProductSet, SetKind
 from sympy.utilities.misc import filldedent
 
 
@@ -502,7 +503,13 @@ class ImageSet(Set):
         return self
 
     def _kind(self):
-        return self.doit().kind
+        kinds = [arg.kind for arg in self.args if not isinstance(arg, Lambda)]
+        if not kinds:
+            return SetKind()
+        elif all(i == kinds[0] for i in kinds):
+            return kinds[0]
+        else:
+            return SetKind(UndefinedKind)
 
 
 class Range(Set):
