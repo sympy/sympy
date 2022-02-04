@@ -74,7 +74,6 @@ will be removed in a future version of SymPy.
 # Python by default hides DeprecationWarnings, which we do not want.
 warnings.simplefilter("once", SymPyDeprecationWarning)
 
-
 def sympy_deprecation_warning(message, *, deprecated_since_version,
                               active_deprecations_target, stacklevel=3):
     '''
@@ -162,15 +161,15 @@ def sympy_deprecation_warning(message, *, deprecated_since_version,
     True
     >>> is_this_zero(1, 1) # doctest: +SKIP
     <stdin>:1: SymPyDeprecationWarning:
-
+    <BLANKLINE>
     The y argument to is_zero() is deprecated. Use is_zero(x - y) instead.
-
+    <BLANKLINE>
     See https://docs.sympy.org/latest/explanation/active-deprecations.html#is-this-zero-y-deprecation
     for details.
-
+    <BLANKLINE>
     This has been deprecated since SymPy version 1.1. It
     will be removed in a future version of SymPy.
-
+    <BLANKLINE>
       is_this_zero(1, 1)
     True
 
