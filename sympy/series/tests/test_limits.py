@@ -617,7 +617,7 @@ def test_issue_8481():
 
 def test_issue_8634():
     n = Symbol('n', integer=True, positive=True)
-    x=Symbol('x')
+    x = Symbol('x')
     assert limit(x**n, x, -oo) == oo/(-1)**n
 
 
