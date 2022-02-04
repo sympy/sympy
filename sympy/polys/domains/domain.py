@@ -875,7 +875,6 @@ class Domain:
     def frac_field(self, *symbols, order=lex):
         """Returns a fraction field, i.e. `K(X)`. """
         from sympy.core.power import Pow
-        from sympy.core.symbol import Symbol
         from sympy.polys.domains.fractionfield import FractionField
         _symbols = []
         for symbol in symbols:
