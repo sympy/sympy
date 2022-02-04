@@ -1,5 +1,7 @@
-from sympy.parsing.mathematica import mathematica
+from sympy import sin, Function, symbols
+from sympy.parsing.mathematica import mathematica, MathematicaParser
 from sympy.core.sympify import sympify
+from sympy.abc import n, w, x, y, z
 
 
 def test_mathematica():
@@ -64,3 +66,64 @@ def test_mathematica():
 
     for e in d:
         assert mathematica(e) == sympify(d[e])
+
+
+def test_parser_mathematica_tokenizer():
+    parser = MathematicaParser()
+
+    chain = lambda expr: parser._parse_tokenized_code(parser._tokenize_mathematica_code(expr))
+
+    assert chain("a + b*c") == ["Plus", "a", ["Times", "b", "c"]]
+    assert chain("a + b* c* d + 2 * e") == ["Plus", "a", ["Times", "b", "c", "d"], ["Times", "2", "e"]]
+    assert chain("-a") == ["Times", -1, "a"]
+    assert chain("a - b") == ["Plus", "a", ["Times", -1, "b"]]
+    assert chain("a / b") == ["Times", "a", ["Power", "b", -1]]
+
+    # Parentheses of various kinds, i.e. ( )  [ ]  [[ ]]  { }
+    assert chain("(a + b) + c") == ["Plus", ["Plus", "a", "b"], "c"]
+    assert chain(" a + (b + c) + d ") == ["Plus", "a", ["Plus", "b", "c"], "d"]
+    assert chain("a * (b + c)") == ["Times", "a", ["Plus", "b", "c"]]
+    assert chain("{a, b, 2, c}") == ["List", "a", "b", "2", "c"]
+    assert chain("{a, {b, c}}") == ["List", "a", ["List", "b", "c"]]
+    assert chain("a[b, c]") == ["a", "b", "c"]
+    assert chain("a[[b, c]]") == ["Part", "a", "b", "c"]
+    assert chain("a[[b, c[[d, {e,f}]]]]") == ["Part", "a", "b", ["Part", "c", "d", ["List", "e", "f"]]]
+    assert chain("a[b[[c,d]]]") == ["a", ["Part", "b", "c", "d"]]
+
+    # Flat operator:
+    assert chain("a*b*c*d*e") == ["Times", "a", "b", "c", "d", "e"]
+    assert chain("a +b + c+ d+e") == ["Plus", "a", "b", "c", "d", "e"]
+
+    # Right priority operator:
+    assert chain("a^b") == ["Power", "a", "b"]
+    assert chain("a^b^c") == ["Power", "a", ["Power", "b", "c"]]
+    assert chain("a^b^c^d") == ["Power", "a", ["Power", "b", ["Power", "c", "d"]]]
+
+    # Left priority operator:
+    assert chain("a/.b") == ["ReplaceAll", "a", "b"]
+    assert chain("a/.b/.c/.d") == ["ReplaceAll", ["ReplaceAll", ["ReplaceAll", "a", "b"], "c"], "d"]
+
+
+def test_parser_mathematica_exp_alt():
+    parser = MathematicaParser()
+
+    convert_chain2 = lambda expr: parser._convert_pylist_to_sympymform(parser._convert_fullform_to_pylist(expr))
+    convert_chain3 = lambda expr: parser._convert_sympymform_to_sympy(convert_chain2(expr))
+
+    Sin, Times, Plus, Power = symbols("Sin Times Plus Power", cls=Function)
+
+    full_form1 = "Sin[Times[x, y]]"
+    full_form2 = "Plus[Times[x, y], z]"
+    full_form3 = "Sin[Times[x, Plus[y, z], Power[w, n]]]]"
+
+    assert parser._convert_fullform_to_pylist(full_form1) == ["Sin", ["Times", "x", "y"]]
+    assert parser._convert_fullform_to_pylist(full_form2) == ["Plus", ["Times", "x", "y"], "z"]
+    assert parser._convert_fullform_to_pylist(full_form3) == ["Sin", ["Times", "x", ["Plus", "y", "z"], ["Power", "w", "n"]]]
+
+    assert convert_chain2(full_form1) == Sin(Times(x, y))
+    assert convert_chain2(full_form2) == Plus(Times(x, y), z)
+    assert convert_chain2(full_form3) == Sin(Times(x, Plus(y, z), Power(w, n)))
+
+    assert convert_chain3(full_form1) == sin(x*y)
+    assert convert_chain3(full_form2) == x*y + z
+    assert convert_chain3(full_form3) == sin(x*(y + z)*w**n)

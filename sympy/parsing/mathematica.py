@@ -1,8 +1,15 @@
-from typing import Any, Dict as tDict, Tuple as tTuple
+from collections.abc import Callable
+from typing import Any, Dict as tDict, Tuple as tTuple, List, Optional, Union as tUnion
 
 from itertools import product
 import re
-from sympy.core.sympify import sympify
+
+import sympy
+
+from sympy import Mul, Add, Pow, log, exp, sqrt, cos, sin, tan, asin, acos, acot, asec, acsc, sinh, cosh, tanh, asinh, \
+    acosh, atanh, acoth, asech, acsch, expand, im, flatten, polylog, cancel, expand_trig, sign, simplify, \
+    UnevaluatedExpr, S
+from sympy.core.sympify import sympify, _sympify
 
 
 def mathematica(s, additional_translations=None):
@@ -437,3 +444,277 @@ class MathematicaParser:
 #        s = cls._replace(s, '}')
 
         return s
+
+    INFIX = "Infix"
+    PREFIX = "Prefix"
+    POSTFIX = "Postfix"
+    FLAT = "Flat"
+    RIGHT = "Right"
+    LEFT = "Left"
+
+    _mathematica_op_precedence: List[tTuple[str, Optional[str], tDict[str, tUnion[str, Callable]]]] = [
+        (INFIX, FLAT, {";": "CompoundExpression"}),
+        (INFIX, RIGHT, {"=": "Set", ":=": "SetDelayed", "+=": "AddTo", "-=": "SubtractFrom", "*=": "TimesBy", "/=": "DivideBy"}),
+        (INFIX, LEFT, {"//": lambda x, y: x + [y]}),
+        (POSTFIX, None, {"&": "Function"}),
+        (INFIX, LEFT, {"/.": "ReplaceAll"}),
+        (INFIX, RIGHT, {"->": "Rule", ":>": "RuleDelayed"}),
+        (INFIX, LEFT, {"/;": "Condition"}),
+        (INFIX, FLAT, {"|": "Alternatives"}),
+        (POSTFIX, None, {"..": "Repeated", "...": "RepeatedNull"}),
+        (INFIX, FLAT, {"||": "Or"}),
+        (INFIX, FLAT, {"&&": "And"}),
+        (PREFIX, None, {"!": "Not"}),
+        (INFIX, FLAT, {"===": "SameQ", "=!=": "UnsameQ"}),
+        (INFIX, FLAT, {"==": "Equal", "!=": "Unequal", "<=": "LessEqual", "<": "Less", ">=": "GreaterEqual", ">": "Greater"}),
+        (INFIX, None, {";;": "Span"}),
+        (INFIX, FLAT, {"+": "Plus", "-": lambda x, y: ["Plus", x, ["Times", -1, y]]}),
+        (INFIX, FLAT, {"*": "Times", "/": lambda x, y: ["Times", x, ["Power", y, -1]]}),
+        (INFIX, FLAT, {".": "Dot"}),
+        (PREFIX, None, {"-": lambda x: ["Times", -1, x]}),
+        (INFIX, RIGHT, {"^": "Power"}),
+        (INFIX, RIGHT, {"@@": "Apply", "/@": "Map"}),
+        (POSTFIX, None, {"'": "Derivative", "!": "Factorial", "!!": "Factorial2", "--": "Decrement"}),
+        (INFIX, None, {"?": "PatternTest"}),
+    ]
+
+    _word = r"[A-Za-z][A-Za-z0-9]*"
+    _number = r"[0-9]+"
+    _parentheses_open = ["(", "[", "[[", "{"]
+    _parentheses_close = [")", "]", "]]", "}"]
+
+    def _get_tokenizer(self):
+        tokens = [self._word, self._number]
+        tokens_escape = self._parentheses_open[:] + self._parentheses_close[:]
+        for typ, strat, symdict in self._mathematica_op_precedence:
+            for k in symdict:
+                tokens_escape.append(k)
+        tokens_escape.sort(key=lambda x: -len(x))
+        tokens.extend(map(re.escape, tokens_escape))
+        tokenizer = re.compile("(" + "|".join(tokens) + ")")
+        return tokenizer
+
+    def _tokenize_mathematica_code(self, code: str):
+        tokenizer = self._get_tokenizer()
+        tokens = tokenizer.findall(code)
+        return tokens
+
+    def _is_not_op(self, token: str) -> bool:
+        if re.match(self._word, token):
+            return True
+        if re.match(self._number, token):
+            return True
+        return False
+
+    def _parse_tokenized_code(self, tokens: list):
+        stack: List[list] = [[]]
+        open_seq = []
+        for token in tokens:
+            if token in self._parentheses_open:
+                stack[-1].append(token)
+                open_seq.append(token)
+                stack.append([])
+            elif token in self._parentheses_close:
+                ind = self._parentheses_close.index(token)
+                if self._parentheses_open[ind] != open_seq[-1]:
+                    raise SyntaxError("unmatched parentheses")
+                one_output = True if token in (")",) else False
+                last_stack = self._parse_after_braces(stack[-1], one_output=one_output)
+                stack.pop(-1)
+                open_seq.pop(-1)
+                if one_output:
+                    stack[-1][-1] = last_stack
+                else:
+                    if token == "}":
+                        stack[-1][-1] = ["List"] + last_stack
+                    elif token == "]":
+                        stack[-1].pop(-1)
+                        stack[-1][-1] = [stack[-1][-1]] + last_stack
+                    elif token == "]]":
+                        stack[-1].pop(-1)
+                        stack[-1][-1] = ["Part", stack[-1][-1]] + last_stack
+            else:
+                stack[-1].append(token)
+        assert len(stack) == 1
+        return self._parse_after_braces(stack[0])
+
+    def _parse_after_braces(self, tokens: list, one_output: bool = True):
+        op_dict: dict
+        for op_type, flattening_strat, op_dict in reversed(self._mathematica_op_precedence):
+            size: int = len(tokens)
+            pointer: int = 0
+            while pointer < size:
+                token = tokens[pointer]
+                if isinstance(token, str) and token in op_dict:
+                    op_name = op_dict[token]
+                    node: list
+                    if isinstance(op_name, str):
+                        node = [op_name]
+                    else:
+                        node = []
+                    if op_type == self.PREFIX and pointer > 0 and self._is_not_op(tokens[pointer-1]):
+                        pointer += 1
+                        continue
+                    if op_type == self.POSTFIX and pointer < size - 1 and self._is_not_op(tokens[pointer+1]):
+                        pointer += 1
+                        continue
+                    tokens[pointer] = node
+                    if op_type == self.INFIX:
+                        arg1 = tokens.pop(pointer-1)
+                        arg2 = tokens.pop(pointer)
+                        pointer -= 1
+                        size -= 2
+                        node.append(arg1)
+                        node_p = node
+                        if flattening_strat == self.FLAT:
+                            while pointer + 1 < size and tokens[pointer+1] == token:
+                                node_p.append(arg2)
+                                tokens.pop(pointer+1)
+                                arg2 = tokens.pop(pointer+1)
+                                size -= 2
+                            node_p.append(arg2)
+                        elif flattening_strat == self.RIGHT:
+                            while pointer + 1 < size and tokens[pointer+1] == token:
+                                node_p.append([op_name, arg2])
+                                node_p = node_p[-1]
+                                tokens.pop(pointer+1)
+                                arg2 = tokens.pop(pointer+1)
+                                size -= 2
+                            node_p.append(arg2)
+                        elif flattening_strat == self.LEFT:
+                            while pointer + 1 < size and tokens[pointer+1] == token:
+                                node_p[1] = [op_name, node_p[1], arg2]
+                                tokens.pop(pointer+1)
+                                arg2 = tokens.pop(pointer+1)
+                                size -= 2
+                            node_p.append(arg2)
+                        else:
+                            node.append(arg2)
+                    elif op_type == self.PREFIX:
+                        node.append(tokens.pop(pointer+1))
+                        size -= 1
+                        assert flattening_strat is None
+                    elif op_type == self.POSTFIX:
+                        node.append(tokens.pop(pointer-1))
+                        pointer -= 1
+                        size -= 1
+                        assert flattening_strat is None
+                    if isinstance(op_name, Callable):
+                        op_name: Callable
+                        new_node = op_name(*node)
+                        node.clear()
+                        node.extend(new_node)
+                pointer += 1
+        if one_output:
+            assert len(tokens) == 1
+            assert isinstance(tokens[0], list)
+            return tokens[0]
+        else:
+            return tokens
+
+    def _convert_fullform_to_pylist(self, wmexpr: str):
+        """
+        Parses FullForm[Downvalues[]] generated by Mathematica
+        """
+        out: list = []
+        stack = [out]
+        generator = re.finditer(r'[\[\],]', wmexpr)
+        last_pos = 0
+        for match in generator:
+            if match is None:
+                break
+            position = match.start()
+            last_expr = wmexpr[last_pos:position].replace(',', '').replace(']', '').replace('[', '').strip()
+
+            if match.group() == ',':
+                if last_expr != '':
+                    stack[-1].append(last_expr)
+            elif match.group() == ']':
+                if last_expr != '':
+                    stack[-1].append(last_expr)
+                stack.pop()
+            elif match.group() == '[':
+                stack[-1].append([last_expr])
+                stack.append(stack[-1][-1])
+            last_pos = match.end()
+        return out[0]
+
+    def _convert_pylist_to_sympymform(self, pylist: list):
+        from sympy import Function, Symbol
+
+        def converter(expr):
+            if isinstance(expr, list):
+                if len(expr) > 0:
+                    head = expr[0]
+                    args = [converter(arg) for arg in expr[1:]]
+                    return Function(head)(*args)
+                else:
+                    raise ValueError("error")
+            elif isinstance(expr, str):
+                return Symbol(expr)
+            else:
+                return _sympify(expr)
+
+        return converter(pylist)
+
+    _node_conversions = dict(
+        Times=(Mul, False),
+        Plus=(Add, False),
+        Power=(Pow, False),
+        Log=(log, False),
+        Exp=(exp, False),
+        Sqrt=(sqrt, False),
+        Cos=(cos, False),
+        Sin=(sin, False),
+        Tan=(tan, False),
+        Cot=(tan, True),
+        Sec=(cos, True),
+        Csc=(sin, True),
+        ArcSin=(asin, False),
+        ArcCos=(acos, False),
+        # ArcTan=(atan, False),
+        ArcCot=(acot, False),
+        ArcSec=(asec, False),
+        ArcCsc=(acsc, False),
+        Sinh=(sinh, False),
+        Cosh=(cosh, False),
+        Tanh=(tanh, False),
+        Coth=(tanh, True),
+        Sech=(cosh, True),
+        sech=(cosh, True),
+        Csch=(sinh, True),
+        csch=(sinh, True),
+        ArcSinh=(asinh, False),
+        ArcCosh=(acosh, False),
+        ArcTanh=(atanh, False),
+        ArcCoth=(acoth, False),
+        ArcSech=(asech, False),
+        ArcCsch=(acsch, False),
+        Expand=(expand, False),
+        Im=(im, False),
+        Re=(sympy.re, False),
+        Flatten=(flatten, False),
+        Polylog=(polylog, False),
+        Cancel=(cancel, False),
+        # Gamma=(gamma, False),
+        TrigExpand=(expand_trig, False),
+        Sign=(sign, False),
+        Simplify=(simplify, False),
+        Defer=(UnevaluatedExpr, False),
+        Identity=(S, False),
+        # Sum=(Sum_doit, False),
+        # Module=(With, False),
+        # Block=(With, False),
+        Null=(lambda *a: S.Zero, False),
+    )
+
+    def _convert_sympymform_to_sympy(self, mform):
+        from sympy import Function
+
+        expr = mform
+        for mma_form, (sympy_node, invert) in self._node_conversions.items():
+            if invert:
+                expr = expr.replace(Function(mma_form), lambda *args: S.One/sympy_node(*args))
+            else:
+                expr = expr.replace(Function(mma_form), sympy_node)
+        return expr
