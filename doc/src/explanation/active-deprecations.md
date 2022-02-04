@@ -75,7 +75,25 @@ SymPy deprecation warnings.
 
 ### `sympy.core.trace.Tr`
 
-### The `sympy.core.compatibility` submoduel
+(deprecated-sympy-core-compatibility)=
+### The `sympy.core.compatibility` submodule
+
+The `sympy.core.compatibility` submodule is deprecated.
+
+This submodule was only ever intended for internal use. Now that SymPy no
+longer supports Python 2, this module is no longer necessary, and the
+remaining helper functions have been moved to more convenient places in the
+SymPy codebase.
+
+Some of the functions that were in this module are available from the
+top-level SymPy namespace, i.e.,
+
+```py
+from sympy import ordered, default_sort_key
+```
+
+The remaining were only intended for internal SymPy use and should not be used
+by user code.
 
 ## Version 1.9
 
