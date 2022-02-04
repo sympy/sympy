@@ -186,8 +186,40 @@ See GitHub issue [#20209](https://github.com/sympy/sympy/issues/20209).
 
 ## Version 1.7.1
 
+(deprecated-distribution-randomindexedsymbol)=
 ### Calling `sympy.stats.StochasticProcess.distribution` with
 `RandomIndexedSymbol`
+
+The `distribution` method of `sympy.stats` [stochastic
+processes](sympy-stats-stochastic-processes) used to accept a
+`RandomIndexedSymbol` (that is, a stochastic process indexed with a
+timestamp), but should now only be called with the time stamp.
+
+For example, if we have
+
+```py
+>>> from sympy import symbols
+>>> from sympy.stats import WienerProcess
+>>> W = WienerProcess('W')
+>>> t = symbols('t', positive=True)
+```
+
+Previously this would work
+
+```py
+W.distribution(W(t)) # DEPRECATED
+```
+
+It should now be called like
+
+```py
+>>> W.distribution(t)
+NormalDistribution(0, sqrt(t))
+```
+
+This was change was made as part of a change to store only `Basic` objects in
+`sympy.stats` `.args`. See issue
+[#20078](https://github.com/sympy/sympy/issues/20078) for details.
 
 ## Version 1.7
 
