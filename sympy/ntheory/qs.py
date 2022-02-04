@@ -121,7 +121,7 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
     """
     if seed is not None:
         rgen.seed(seed)
-    approx_val = sqrt(2*N) / M
+    approx_val = sqrt(Decimal(2*N)) / M
     # `a` is a parameter of the sieve polynomial and `q` is the prime factors of `a`
     # randomly search for a combination of primes whose multiplication is close to approx_val
     # This multiplication of primes will be `a` and the primes will be `q`
@@ -513,3 +513,7 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
             if(N_copy == 1):
                 break
     return proper_factor
+
+
+print (datetime.now().time(), qs(25645121643901801, 2000, 10000))
+print (datetime.now().time(), qs(9804659461513846513, 2000, 10000))
