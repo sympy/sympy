@@ -103,6 +103,18 @@ def test_parser_mathematica_tokenizer():
     assert chain("a/.b") == ["ReplaceAll", "a", "b"]
     assert chain("a/.b/.c/.d") == ["ReplaceAll", ["ReplaceAll", ["ReplaceAll", "a", "b"], "c"], "d"]
 
+    assert chain("a//b") == ["a", "b"]
+    assert chain("a//b//c") == [["a", "b"], "c"]
+    assert chain("a//b//c//d") == [[["a", "b"], "c"], "d"]
+
+    assert chain("x&") == ["Function", "x"]
+
+    # Patterns
+    assert chain("y_") == ["Pattern", "y", ["Blank"]]
+    assert chain("y_.") == ["Optional", ["Pattern", "y", ["Blank"]]]
+    assert chain("y__") == ["Pattern", "y", ["BlankSequence"]]
+    assert chain("y___") == ["Pattern", "y", ["BlankNullSequence"]]
+
 
 def test_parser_mathematica_exp_alt():
     parser = MathematicaParser()

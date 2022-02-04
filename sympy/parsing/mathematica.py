@@ -455,7 +455,7 @@ class MathematicaParser:
     _mathematica_op_precedence: List[tTuple[str, Optional[str], tDict[str, tUnion[str, Callable]]]] = [
         (INFIX, FLAT, {";": "CompoundExpression"}),
         (INFIX, RIGHT, {"=": "Set", ":=": "SetDelayed", "+=": "AddTo", "-=": "SubtractFrom", "*=": "TimesBy", "/=": "DivideBy"}),
-        (INFIX, LEFT, {"//": lambda x, y: x + [y]}),
+        (INFIX, LEFT, {"//": lambda x, y: [x, y]}),
         (POSTFIX, None, {"&": "Function"}),
         (INFIX, LEFT, {"/.": "ReplaceAll"}),
         (INFIX, RIGHT, {"->": "Rule", ":>": "RuleDelayed"}),
@@ -475,6 +475,13 @@ class MathematicaParser:
         (INFIX, RIGHT, {"^": "Power"}),
         (INFIX, RIGHT, {"@@": "Apply", "/@": "Map"}),
         (POSTFIX, None, {"'": "Derivative", "!": "Factorial", "!!": "Factorial2", "--": "Decrement"}),
+        (POSTFIX, None, {
+            "_": lambda x: ["Pattern", x, ["Blank"]],
+            "_.": lambda x: ["Optional", ["Pattern", x, ["Blank"]]],
+            "__": lambda x: ["Pattern", x, ["BlankSequence"]],
+            "___": lambda x: ["Pattern", x, ["BlankNullSequence"]],
+        }),
+        (INFIX, None, {"_": lambda x, y: ["Pattern", x, ["Blank", y]]}),
         (INFIX, None, {"?": "PatternTest"}),
     ]
 
@@ -499,7 +506,9 @@ class MathematicaParser:
         tokens = tokenizer.findall(code)
         return tokens
 
-    def _is_not_op(self, token: str) -> bool:
+    def _is_not_op(self, token: tUnion[str, list]) -> bool:
+        if isinstance(token, list):
+            return True
         if re.match(self._word, token):
             return True
         if re.match(self._number, token):
@@ -548,16 +557,23 @@ class MathematicaParser:
                 if isinstance(token, str) and token in op_dict:
                     op_name: tUnion[str, Callable] = op_dict[token]
                     node: list
+                    first_index: int
                     if isinstance(op_name, str):
                         node = [op_name]
+                        first_index = 1
                     else:
                         node = []
+                        first_index = 0
                     if op_type == self.PREFIX and pointer > 0 and self._is_not_op(tokens[pointer-1]):
                         pointer += 1
                         continue
                     if op_type == self.POSTFIX and pointer < size - 1 and self._is_not_op(tokens[pointer+1]):
                         pointer += 1
                         continue
+                    if op_type == self.INFIX:
+                        if pointer == 0 or pointer == size - 1 or not self._is_not_op(tokens[pointer-1]) or not self._is_not_op(tokens[pointer+1]):
+                            pointer += 1
+                            continue
                     tokens[pointer] = node
                     if op_type == self.INFIX:
                         arg1 = tokens.pop(pointer-1)
@@ -583,7 +599,10 @@ class MathematicaParser:
                             node_p.append(arg2)
                         elif flattening_strat == self.LEFT:
                             while pointer + 1 < size and tokens[pointer+1] == token:
-                                node_p[1] = [op_name, node_p[1], arg2]
+                                if isinstance(op_name, str):
+                                    node_p[first_index] = [op_name, node_p[first_index], arg2]
+                                else:
+                                    node_p[first_index] = op_name(node_p[first_index], arg2)
                                 tokens.pop(pointer+1)
                                 arg2 = tokens.pop(pointer+1)
                                 size -= 2
