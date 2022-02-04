@@ -1623,18 +1623,26 @@ def test_SetKind_Unions():
     assert Union(Interval(1, 2), Interval(1, 7)).kind is SetKind(NumberKind)
 
 def test_SetKind_evaluate_False():
-    one = Union({1}, EmptySet, evaluate=False).kind
-    assert one is SetKind(NumberKind)
-    two = Union(Interval(1, 2), EmptySet, evaluate=False).kind
-    assert two is SetKind(NumberKind)
-    three = Intersection({1}, S.UniversalSet,evaluate=False).kind
-    assert three is SetKind(NumberKind)
-    four = Union({1}, S.UniversalSet, evaluate=False).kind
-    assert four is SetKind(UndefinedKind)
-    five = Union(Interval(1, 2), Interval(4, 5), FiniteSet(1), evaluate=False).kind
-    assert five is SetKind(NumberKind)
-    six = Intersection({1}, EmptySet, evaluate=False).kind
-    assert six is SetKind()
+    U = lambda *args: Union(*args, evaluate=False)
+    assert U({1}, EmptySet).kind is SetKind(NumberKind)
+    assert U(Interval(1, 2), EmptySet).kind is SetKind(NumberKind)
+    assert U({1}, S.UniversalSet).kind is SetKind(UndefinedKind)
+    assert U(Interval(1, 2), Interval(4, 5),
+            FiniteSet(1)).kind is SetKind(NumberKind)
+    I = lambda *args: Intersection(*args, evaluate=False)
+    assert I({1}, S.UniversalSet).kind is SetKind(NumberKind)
+    assert I({1}, EmptySet).kind is SetKind()
+    C = lambda *args: Complement(*args, evaluate=False)
+    assert C(S.UniversalSet, {1, 2, 4, 5}).kind is SetKind(UndefinedKind)
+    assert C({1}, {1, 2, 3, 4, 5}).kind is SetKind()
+    assert C({1, 2, 3, 4, 5}, EmptySet).kind is SetKind(NumberKind)
+    assert C(EmptySet, {1, 2, 3, 4, 5}).kind is SetKind()
+
+def test_SetKind_ImageSet_Special():
+    f = ImageSet(Lambda(n, n ** 2), Interval(1, 4))
+    assert (f - FiniteSet(3)).kind is SetKind(NumberKind)
+    assert (f + Interval(16, 17)).kind is SetKind(NumberKind)
+    assert (f + FiniteSet(17)).kind is SetKind(NumberKind)
 
 def test_issue_20089():
     B = FiniteSet(FiniteSet(1, 2), FiniteSet(1))

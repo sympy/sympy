@@ -501,6 +501,9 @@ class ImageSet(Set):
             return FiniteSet(*(f(*a) for a in product(*self.base_sets)))
         return self
 
+    def _kind(self):
+        return self.doit().kind
+
 
 class Range(Set):
     """

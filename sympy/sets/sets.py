@@ -719,15 +719,6 @@ class Set(Basic, EvalfMixin):
     def _kind(self):
         return SetKind(UndefinedKind)
 
-    @classmethod
-    def _helper_kind(cls, args):
-        if not args:
-            return SetKind()
-        elif all(i.kind == args[0].kind for i in args):
-            return SetKind(args[0].kind)
-        else:
-            return SetKind(UndefinedKind)
-
     def _eval_evalf(self, prec):
         dps = prec_to_dps(prec)
         return self.func(*[arg.evalf(n=dps) for arg in self.args])
@@ -1706,7 +1697,26 @@ class Complement(Set):
         return And(A_rel, B_rel)
 
     def _kind(self):
-        return SetKind(self.args[0].args[0].kind)
+        try:
+            def _measurement(x):
+                if x is UniversalSet or x is S.UniversalSet:
+                    return float('inf')
+                try:
+                    return len(x)
+                except AttributeError:
+                    return int(x._measure)
+
+            def _ele(x):
+                try:
+                    return x.kind
+                except AttributeError:
+                    return SetKind(NumberKind)
+            if _measurement(self.args[0]) < _measurement(self.args[1]):
+                return SetKind()
+            elif _measurement(self.args[0]) >= _measurement(self.args[1]):
+                return _ele(self.args[0])
+        except TypeError:
+            return self.doit().kind
 
     @property
     def is_iterable(self):
@@ -2014,7 +2024,12 @@ class FiniteSet(Set):
         return 0
 
     def _kind(self):
-        return self._helper_kind(self.args)
+        if not self.args:
+            return SetKind()
+        elif all(i.kind == self.args[0].kind for i in self.args):
+            return SetKind(self.args[0].kind)
+        else:
+            return SetKind(UndefinedKind)
 
     def __len__(self):
         return len(self.args)
