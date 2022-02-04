@@ -15,6 +15,7 @@ from sympy.functions import sqrt, cbrt
 
 from sympy.core.exprtools import Factors
 from sympy.core.function import _mexpand
+from sympy.core.numbers import _illegal
 from sympy.core.traversal import preorder_traversal
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -31,7 +32,7 @@ from sympy.polys.polytools import (
     Poly, PurePoly, invert, factor_list, groebner, resultant,
     degree, poly_from_expr, parallel_poly_from_expr, lcm
 )
-from sympy.polys.polyutils import dict_from_expr, expr_from_dict, illegal
+from sympy.polys.polyutils import dict_from_expr, expr_from_dict
 from sympy.polys.ring_series import rs_compose_add
 from sympy.polys.rings import ring
 from sympy.polys.rootoftools import CRootOf
@@ -74,7 +75,7 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
 
             # if we get invalid numbers (e.g. from division by zero)
             # we try again
-            if any(i in illegal for i, _ in candidates):
+            if any(i in _illegal for i, _ in candidates):
                 continue
 
             # find the smallest two -- if they differ significantly

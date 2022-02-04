@@ -1,6 +1,6 @@
 """Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
-from sympy.core.numbers import (E, Float, I, Integer, Rational, oo, pi)
+from sympy.core.numbers import (E, Float, I, Integer, Rational, oo, pi, _illegal)
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -30,7 +30,6 @@ from sympy.polys.polyerrors import (
     CoercionFailed,
     NotInvertible,
     DomainError)
-from sympy.polys.polyutils import illegal
 
 from sympy.testing.pytest import raises
 
@@ -812,8 +811,8 @@ def test_RealField_from_sympy():
 
 
 def test_not_in_any_domain():
-    check = illegal + [x] + [
-        float(i) for i in illegal if i != S.ComplexInfinity]
+    check = list(_illegal) + [x] + [
+        float(i) for i in _illegal if i != S.ComplexInfinity]
     for dom in (ZZ, QQ, RR, CC, EX):
         for i in check:
             if i == x and dom == EX:
