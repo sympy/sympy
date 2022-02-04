@@ -2993,29 +2993,60 @@ def is_sequence(i, include=None):
             isinstance(i, include))
 
 
-@deprecated(useinstead="from sympy import postorder_traversal",
-    deprecated_since_version="1.10", issue=22288)
+@deprecated(
+    """
+    Using postorder_traversal from the sympy.utilities.iterables submodule is
+    deprecated.
+
+    Instead, use postorder_traversal from the top-level sympy namespace, like
+
+        sympy.postorder_traversal
+    """,
+    deprecated_since_version="1.10",
+    active_deprecations_target="deprecated-traversal-functions-moved")
 def postorder_traversal(node, keys=None):
     from sympy.core.traversal import postorder_traversal as _postorder_traversal
     return _postorder_traversal(node, keys=keys)
 
 
-@deprecated(useinstead="from sympy import interactive_traversal",
-            issue=22288, deprecated_since_version="1.10")
+@deprecated(
+    """
+    Using interactive_traversal from the sympy.utilities.iterables submodule
+    is deprecated.
+
+    Instead, use interactive_traversal from the top-level sympy namespace,
+    like
+
+        sympy.interactive_traversal
+    """,
+    deprecated_since_version="1.10",
+    active_deprecations_target="deprecated-traversal-functions-moved")
 def interactive_traversal(expr):
     from sympy.interactive.traversal import interactive_traversal as _interactive_traversal
     return _interactive_traversal(expr)
 
 
-@deprecated(useinstead="from sympy import default_sort_key",
-            deprecated_since_version="1.10", issue=22352)
+@deprecated(
+    """
+    Importing default_sort_key from sympy.utilities.iterables is deprecated.
+    Use from sympy import default_sort_key instead.
+    """,
+    deprecated_since_version="1.10",
+active_deprecations_target="deprecated-sympy-core-compatibility",
+)
 def default_sort_key(*args, **kwargs):
     from sympy import default_sort_key as _default_sort_key
     return _default_sort_key(*args, **kwargs)
 
 
-@deprecated(useinstead="from sympy import ordered",
-            deprecated_since_version="1.10", issue=22352)
+@deprecated(
+    """
+    Importing default_sort_key from sympy.utilities.iterables is deprecated.
+    Use from sympy import default_sort_key instead.
+    """,
+    deprecated_since_version="1.10",
+active_deprecations_target="deprecated-sympy-core-compatibility",
+)
 def ordered(*args, **kwargs):
     from sympy import ordered as _ordered
     return _ordered(*args, **kwargs)

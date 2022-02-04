@@ -71,7 +71,35 @@ SymPy deprecation warnings.
 
 ## Version 1.10
 
-### `sympy.utilities.iterables.postorder_traversal`, `sympy.core.basic.preorder_traversal`, and `sympy.utilities.iterables.preorder_traversal` have been moved to `sympy.preorder_traversal` and `sympy.postorder_traversal`
+(deprecated-traversal-functions-moved)=
+### Some traversal functions have been moved
+
+Some traversal functions have moved. Specifically, the functions
+
+- `bottom_up`
+- `interactive_traversal`
+- `postorder_traversal`
+- `preorder_traversal`
+- `use`
+
+have moved to different SymPy submodules.
+
+These functions should be used from the top-level `sympy` namespace, like
+
+```py
+sympy.preorder_traversal
+```
+
+or
+
+```py
+from sympy import preorder_traversal
+```
+
+In general, end-users should use the top-level `sympy` namespace for any
+functions present there. If a name is in the top-level namespace, its specific
+SymPy submodule should not be relied on, as functions may move around due to
+internal refactorings.
 
 ### `sympy.core.trace.Tr`
 
