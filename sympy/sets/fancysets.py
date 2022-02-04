@@ -5,7 +5,6 @@ from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
-from sympy.core.kind import UndefinedKind
 from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
 from sympy.core.mod import Mod
 from sympy.core.numbers import oo, igcd, Rational
