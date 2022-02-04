@@ -98,6 +98,7 @@ Joint Types
 .. autofunction:: NegativeMultinomial
 .. autofunction:: NormalGamma
 
+.. _sympy-stats-stochastic-processes:
 Stochastic Processes
 --------------------
 .. autoclass:: DiscreteMarkovChain

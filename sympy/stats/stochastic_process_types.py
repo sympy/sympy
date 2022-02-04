@@ -37,7 +37,7 @@ from sympy.solvers.solveset import linsolve
 from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import Boolean
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import strongly_connected_components
 from sympy.stats.joint_rv import JointDistribution
 from sympy.stats.joint_rv_types import JointDistributionHandmade
@@ -200,12 +200,18 @@ class StochasticProcess(Basic):
         return self.args[1]
 
     def _deprecation_warn_distribution(self):
-        SymPyDeprecationWarning(
-            feature="Calling distribution with RandomIndexedSymbol",
-            useinstead="distribution with just timestamp as argument",
-            issue=20078,
-            deprecated_since_version="1.7.1"
-        ).warn()
+        sympy_deprecation_warning(
+            """
+            Calling the distribution method with a RandomIndexedSymbol
+            argument, like X.distribution(X(t)) is deprecated. Instead, call
+            distribution() with the given timestamp, like
+
+            X.distribution(t)
+            """,
+            deprecated_since_version="1.7.1",
+            active_deprecations_target="deprecated-distribution-randomindexedsymbol",
+            stacklevel=4,
+        )
 
     def distribution(self, key=None):
         if key is None:
