@@ -9,6 +9,7 @@ from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
 from sympy.core.mod import Mod
 from sympy.core.numbers import oo, igcd, Rational
 from sympy.core.relational import Eq, is_eq
+from sympy.core.kind import NumberKind
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
 from sympy.core.sympify import _sympify, sympify, _sympy_converter
@@ -61,6 +62,9 @@ class Rationals(Set, metaclass=Singleton):
     @property
     def _boundary(self):
         return S.Reals
+
+    def _kind(self):
+        return SetKind(NumberKind)
 
 
 class Naturals(Set, metaclass=Singleton):
@@ -125,6 +129,9 @@ class Naturals(Set, metaclass=Singleton):
     def as_relational(self, x):
         from sympy.functions.elementary.integers import floor
         return And(Eq(floor(x), x), x >= self.inf, x < oo)
+
+    def _kind(self):
+        return SetKind(NumberKind)
 
 
 class Naturals0(Naturals):
@@ -213,6 +220,9 @@ class Integers(Set, metaclass=Singleton):
     @property
     def _boundary(self):
         return self
+
+    def _kind(self):
+        return SetKind(NumberKind)
 
     def as_relational(self, x):
         from sympy.functions.elementary.integers import floor
@@ -693,6 +703,9 @@ class Range(Set):
             return self
         return self.func(
             self.stop - self.step, self.start - self.step, -self.step)
+
+    def _kind(self):
+        return SetKind(NumberKind)
 
     def _contains(self, other):
         if self.start == self.stop:
@@ -1312,6 +1325,9 @@ class ComplexRegion(Set):
 
         """
         return self.sets._measure
+
+    def _kind(self):
+        return self.args[0].kind
 
     @classmethod
     def from_real(cls, sets):

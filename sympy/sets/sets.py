@@ -548,7 +548,7 @@ class Set(Basic, EvalfMixin):
         most sets are sets of numbers and will have kind
         ``SetKind(NumberKind)``. If elements of sets are different in kind than
         their kind will ``SetKind(UndefinedKind)``. See :py:class`~.Kind` for
-        an explantion of the kind system.
+        an explanation of the kind system.
 
         Examples
         ========
@@ -587,6 +587,9 @@ class Set(Basic, EvalfMixin):
 
         >>> FiniteSet(0, Matrix([1, 2])).kind
         SetKind(UndefinedKind)
+
+        The kind of the elements of a set are given by the ``element_kind``
+        attribute of ``SetKind``:
 
         >>> Interval(1,2).kind.element_kind
         NumberKind
@@ -2280,6 +2283,14 @@ class DisjointUnion(Set):
             return False
 
         return element[0] in self.sets[element[1]]
+
+    def _kind(self):
+        if not self.args:
+            return SetKind()
+        elif all(i.kind == self.args[0].kind for i in self.args):
+            return self.args[0].kind
+        else:
+            return SetKind(UndefinedKind)
 
     def __iter__(self):
         if self.is_iterable:
