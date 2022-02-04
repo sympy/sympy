@@ -309,10 +309,11 @@ test suite. Users of SymPy should use the
 filter SymPy deprecation warnings. See {ref}`silencing-sympy-deprecation-warnings`.
 ```
 
-Note that this is used to assert that a warning is raised by the block as well
-as ensuring that any tests in the block pass. If you want to test multiple
-things and assert that each emits a warning then use separate with blocks for
-each:
+This has two purposes: to test that the warning is emitted correctly, and to
+test that the deprecated behavior still actually functions.
+
+If you want to test multiple things and assert that each emits a warning then
+use separate with blocks for each:
 
 ```py
 with warns_deprecated_sympy():
