@@ -503,13 +503,7 @@ class ImageSet(Set):
         return self
 
     def _kind(self):
-        kinds = [arg.kind for arg in self.args if not isinstance(arg, Lambda)]
-        if not kinds:
-            return SetKind()
-        elif all(i == kinds[0] for i in kinds):
-            return kinds[0]
-        else:
-            return SetKind(UndefinedKind)
+        return SetKind(self.lamda.expr.kind)
 
 
 class Range(Set):
