@@ -2425,16 +2425,23 @@ class padovan(Function):
         else:
             raise ValueError('The provided range is not valid. This condition should satisfy x <= y')
 
-    @staticmethod
-    @recurrence_memo([S.One, S.One, S.One])
-    def _padovan(n, prev):
-        if n>0:
-            return (prev[-3] + prev[-2])
-
     @classmethod
     def eval(cls, n):
+        if n is S.Infinity:
+            return S.Infinity
+
         try:
             n = as_int(n)
         except ValueError:
             return None
-        return Integer(cls._padovan(n))
+
+        if n in (0,1,2):
+            return 1
+        if n == -1:
+            return 0
+        if n == -2:
+            return -1
+        if n>0:
+            return padovan(n - 2) + padovan(n - 3)
+        if n<0:
+            return padovan(n + 3) - padovan(n + 1)
