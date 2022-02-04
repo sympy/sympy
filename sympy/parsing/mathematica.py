@@ -1,5 +1,5 @@
-from collections.abc import Callable
-from typing import Any, Dict as tDict, Tuple as tTuple, List, Optional, Union as tUnion
+import typing
+from typing import Any, Dict as tDict, Tuple as tTuple, List, Optional, Union as tUnion, Callable
 
 from itertools import product
 import re
@@ -546,7 +546,7 @@ class MathematicaParser:
             while pointer < size:
                 token = tokens[pointer]
                 if isinstance(token, str) and token in op_dict:
-                    op_name = op_dict[token]
+                    op_name: tUnion[str, Callable] = op_dict[token]
                     node: list
                     if isinstance(op_name, str):
                         node = [op_name]
@@ -599,9 +599,9 @@ class MathematicaParser:
                         pointer -= 1
                         size -= 1
                         assert flattening_strat is None
-                    if isinstance(op_name, Callable):
-                        op_name: Callable
-                        new_node = op_name(*node)
+                    if isinstance(op_name, Callable):  # type: ignore
+                        op_call: Callable = typing.cast(Callable, op_name)
+                        new_node = op_call(*node)
                         node.clear()
                         node.extend(new_node)
                 pointer += 1
