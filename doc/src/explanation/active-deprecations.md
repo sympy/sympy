@@ -285,7 +285,7 @@ numeric quantities. For example, {class}`~.sin`, {class}`~.Symbol`, and
 {class}`~.Add` are all subclasses of {class}`~.Expr`. However, may objects in
 SymPy are not {class}`~.Expr` because they represent some other type of
 mathematical object. For example, {class}`~.Set`, {class}`~.Poly`, and
-{class}`Boolean` are all non-`Expr`. These do not make direct mathematical
+{class}`~.Boolean` are all non-`Expr`. These do not make direct mathematical
 sense inside of Add, Mul, and Pow, which are designed specifically to
 represent the addition, multiplication, and exponentiation of scalar complex
 numbers.
@@ -340,7 +340,17 @@ these are desired, you can use a `lambda` or the
 
 ### The string fallback in `sympify()`
 
+(deprecated-indefinite-integral-eq)=
 ### Creating an indefinite `Integral` with an `Eq` argument
+
+Passing an [`Eq()`](sympy.core.relational.Equality) object to
+{func}`~.integrate` is deprecated in the case where the integral is
+indefinite. This is because if $a = b$, $\int a\,dx = \int b\,dx$ is not true
+in general, due to the arbitrary constants (which `integrate` does not
+include).
+
+If you want to make an equality of indefinite integrals, use `Eq(integrate(a, x),
+integrate(b, x))` explicitly.
 
 ## Version 1.5
 

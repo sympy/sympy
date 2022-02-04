@@ -38,7 +38,8 @@ from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
 from sympy.testing.pytest import (raises, slow, skip, ON_TRAVIS,
-    warns_deprecated_sympy)
+    warns_deprecated_sympy, warns)
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.random import verify_numerically
 
 
@@ -1575,7 +1576,9 @@ def test_issue_15218():
         assert Integral(Eq(x, y), x) == Eq(Integral(x, x), Integral(y, x))
     with warns_deprecated_sympy():
         assert Integral(Eq(x, y), x).doit() == Eq(x**2/2, x*y)
-    with warns_deprecated_sympy():
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
+        # The warning is made in the ExprWithLimits superclass. The stacklevel
+        # is correct for integrate(Eq) but not Eq.integrate
         assert Eq(x, y).integrate(x) == Eq(x**2/2, x*y)
 
     # These are not deprecated because they are definite integrals
