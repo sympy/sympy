@@ -1963,7 +1963,7 @@ class Mul(Expr, AssocOp):
                         n -= n1 - ns    # reduce n
                 facs.append(s)
 
-        except (ValueError, NotImplementedError, TypeError, AttributeError, PoleError):
+        except (ValueError, NotImplementedError, AttributeError, PoleError):
             n0 = sympify(sum(t[1] for t in ords if t[1].is_number))
             if n0.is_nonnegative:
                 n0 = S.Zero
@@ -2008,8 +2008,10 @@ class Mul(Expr, AssocOp):
             else:
                 return res
 
-        if res != self:
-            res += Order(x**n, x)
+        for i in (1, 2, 3):
+            if (res - self).subs(x, 0) is not S.Zero:
+                res += Order(x**n, x)
+                break
         return res
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):

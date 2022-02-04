@@ -507,6 +507,8 @@ class exp(ExpBase, metaclass=ExpMeta):
             nterms = ceiling(n/cf)
         exp_series = exp(t)._taylor(t, nterms)
         r = exp(arg0)*exp_series.subs(t, arg_series - arg0)
+        if r.subs(logx, log(x)) == self:
+            return r
         if cf and cf > 1:
             r += Order((arg_series - arg0)**n, x)/x**((cf-1)*n)
         else:
@@ -971,6 +973,7 @@ class log(Function):
         if self.args[0] == x:
             return logx
         arg = self.args[0]
+        old_n = n
         k, l = Wild("k"), Wild("l")
         r = arg.match(k*x**l)
         if r is not None:
@@ -1010,13 +1013,16 @@ class log(Function):
             n = p.getn()
         _, d = coeff_exp(p, x)
         if not d.is_positive:
-            return log(a) + b*logx + Order(x**n, x)
+            if (log(a) + b*log(x)) == self:
+                return log(a) + b*logx
+            else:
+                return log(a) + b*logx + Order(x**(old_n), x)
 
         def mul(d1, d2):
             res = {}
             for e1, e2 in product(d1, d2):
                 ex = e1 + e2
-                if ex < n:
+                if ex < old_n:
                     res[ex] = res.get(ex, S.Zero) + d1[e1]*d2[e2]
             return res
 
@@ -1045,13 +1051,23 @@ class log(Function):
             cdir = self.args[0].dir(x, cdir)
         if a.is_real and a.is_negative and im(cdir) < 0:
             res -= 2*I*S.Pi
-        return res + Order(x**n, x)
+        return res + Order(x**(old_n), x)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
         from sympy.functions.elementary.complexes import (im, re)
         arg0 = self.args[0].together()
-
         arg = arg0.as_leading_term(x, cdir=cdir)
+
+        if logx is not None:
+            try:
+                c, e = arg.leadterm(x, cdir=cdir)
+            except ValueError:
+                # arg must be approaching infinity, so should not be replaced
+                # by a constant
+                pass
+            else:
+                return log(c) + e*logx
+
         x0 = arg0.subs(x, 0)
         if (x0 is S.NaN and logx is None):
             x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
@@ -1201,7 +1217,7 @@ class LambertW(Function):
             from sympy.functions.elementary.integers import ceiling
             from sympy.series.order import Order
             arg = self.args[0].nseries(x, n=n, logx=logx)
-            lt = arg.compute_leading_term(x, logx=logx)
+            lt = arg.as_leading_term(x, logx=logx)
             lte = 1
             if lt.is_Pow:
                 lte = lt.exp

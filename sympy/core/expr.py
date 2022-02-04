@@ -3355,7 +3355,7 @@ class Expr(Basic, EvalfMixin):
         >>> e.nseries(x, 0, 2)
         x**y
         >>> e.nseries(x, 0, 2, logx=logx)
-        exp(logx*y)
+        exp(logx*y) + O(x**2)
 
         """
         if x and x not in self.free_symbols:
@@ -3392,6 +3392,14 @@ class Expr(Basic, EvalfMixin):
         as_leading_term is only allowed for results of .series()
         This is a wrapper to compute a series first.
         """
+        from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+        SymPyDeprecationWarning(
+            feature="compute_leading_term",
+            useinstead="as_leading_term",
+            issue=21843,
+            deprecated_since_version="1.9"
+        ).warn()
 
         from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
         if self.has(Piecewise):
@@ -3407,9 +3415,9 @@ class Expr(Basic, EvalfMixin):
             from .symbol import Dummy
             from sympy.functions.elementary.exponential import log
             d = Dummy('logx')
-            s = calculate_series(expr, x, d).subs(d, log(x))
+            s = expr.series(x, n=1, logx=d).subs(d, log(x))
         else:
-            s = calculate_series(expr, x, logx)
+            s = expr.series(x, n=1, logx=logx)
 
         return s.as_leading_term(x)
 
