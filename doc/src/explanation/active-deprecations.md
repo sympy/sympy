@@ -329,7 +329,26 @@ these are desired, you can use a `lambda` or the
 
 ### `sympy.testing.randtest` functions
 
+(deprecated-poly-nonpoly-binary-operations)=
 ### Mixing `Poly` and non-polynomial expressions in binary operations
+
+In previous versions of SymPy, {class}`~.Poly` was a subclass of
+{class}`~.Expr`, but it has been changed to only be a subclass of
+{class}`~.Basic`. This means that some things that used to work with `Poly`
+are now deprecated because they are only designed to work with {class}`~.Expr`
+objects.
+
+This includes combining `Poly` with `Expr` objects using binary operations,
+for example
+
+```py
+Poly(x)*sin(x) # DEPRECATED
+```
+
+To do this, either explicitly convert the non-`Poly` operand to a `Poly` using
+{meth}`.Expr.as_poly` or convert the `Poly` operand to an :class:`~.Expr`
+using {meth}`.Poly.as_expr`, depending on which type you want the result to
+be.
 
 ### The `print_cyclic` flag of `sympy.combinatorics.Permutation`
 

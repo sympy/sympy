@@ -51,7 +51,7 @@ from sympy.polys.polyutils import (
 from sympy.polys.rationaltools import together
 from sympy.polys.rootisolation import dup_isolate_real_roots_list
 from sympy.utilities import group, public, filldedent
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, sift
 
 
@@ -78,11 +78,16 @@ def _polifyit(func):
                 expr_method = getattr(f.as_expr(), func.__name__)
                 result = expr_method(g)
                 if result is not NotImplemented:
-                    SymPyDeprecationWarning(
-                        feature="Mixing Poly with non-polynomial expressions in binary operations",
-                        issue=18613,
+                    sympy_deprecation_warning(
+                        """
+                        Mixing Poly with non-polynomial expressions in binary
+                        operations is deprecated. Either explicitly convert
+                        the non-Poly operand to a Poly with as_poly() or
+                        convert the Poly to an Expr with as_expr().
+                        """,
                         deprecated_since_version="1.6",
-                        useinstead="the as_expr or as_poly method to convert types").warn()
+                        active_deprecations_target="deprecated-poly-nonpoly-binary-operations",
+                    )
                 return result
             else:
                 return func(f, g)
@@ -101,6 +106,12 @@ class Poly(Basic):
 
     Poly is a subclass of Basic rather than Expr but instances can be
     converted to Expr with the :py:meth:`~.Poly.as_expr` method.
+
+    .. deprecated:: 1.6
+
+       Combining Poly with non-Poly objects in binary operations is
+       deprecated. Explicitly convert both objects to either Poly or Expr
+       first. See :ref:`deprecated-poly-nonpoly-binary-operations`.
 
     Examples
     ========
