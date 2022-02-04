@@ -18,6 +18,7 @@ from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul, prod
 from sympy.core.numbers import E, pi, oo, Rational, Integer
 from sympy.core.relational import Eq, is_le, is_gt
+from sympy.core.sympify import sympify
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
@@ -2334,41 +2335,42 @@ class padovan(Function):
 
     @staticmethod
     def is_padovan(n):
-        try:
-            n = as_int(n)
-        except ValueError:
+        n = sympify(n)
+        if n.is_Integer:
+            if n > 0:
+                if n == 1 :
+                    return True
+
+                sn0, sn1, sn2 = 1, 1, 1
+                while sn2 < n :
+                    b = sn0 + sn1
+                    sn0 = sn1
+                    sn1 = sn2
+                    sn2 = b
+
+                if sn2 == n:
+                    return True
+                else:
+                    return False
+
+            if n <= 0:
+                if n in (0, -1):
+                    return True
+
+                sn0, sn1, sn2 = 1, 0, 1
+                while sn2 > n :
+                    b = sn0 - sn2
+                    sn0 = sn1
+                    sn1 = sn2
+                    sn2 = b
+
+                if Eq(sn2, n, evaluate=True):
+                    return True
+                else:
+                    return False
+
+        else:
             return False
-        if n > 0:
-            if n == 1 :
-                return True
-
-            sn0, sn1, sn2 = 1, 1, 1
-            while sn2 < n :
-                b = sn0 + sn1
-                sn0 = sn1
-                sn1 = sn2
-                sn2 = b
-
-            if sn2 == n:
-                return True
-            else:
-                return False
-
-        if n <= 0:
-            if n in (0, -1):
-                return True
-
-            sn0, sn1, sn2 = 1, 0, 1
-            while sn2 > n :
-                b = sn0 - sn2
-                sn0 = sn1
-                sn1 = sn2
-                sn2 = b
-
-            if Eq(sn2, n, evaluate=True):
-                return True
-            else:
-                return False
 
     @staticmethod
     def find_first_n_padovan_numbers(n):
