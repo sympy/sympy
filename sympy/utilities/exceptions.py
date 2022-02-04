@@ -123,7 +123,9 @@ def sympy_deprecation_warning(message, *, deprecated_since_version,
         The ``stacklevel`` parameter that is passed to ``warnings.warn``. If
         you create a wrapper that calls this function, this should be
         increased so that the warning message shows the user line of code that
-        produced the warning.
+        produced the warning. Note that in some cases there will be multiple
+        possible different user code paths that could result in the warning.
+        In that case, just choose the smallest common stacklevel.
 
     Examples
     ========
