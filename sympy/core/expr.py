@@ -2681,7 +2681,7 @@ class Expr(Basic, EvalfMixin):
         See also is_algebraic_expr().
 
         """
-        if self in [S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
+        if self in _illegal:
             return False
 
         if syms:
@@ -3035,8 +3035,11 @@ class Expr(Basic, EvalfMixin):
             else:
                 o = Order(x**n, x)
                 s1done = s1.doit()
-                if (s1done + o).removeO() == s1done:
-                    o = S.Zero
+                try:
+                    if (s1done + o).removeO() == s1done:
+                        o = S.Zero
+                except NotImplementedError:
+                    return s1
 
             try:
                 from sympy.simplify.radsimp import collect
@@ -3345,12 +3348,12 @@ class Expr(Basic, EvalfMixin):
         >>> e.nseries(x, 0, 6, logx=logx)
         sin(logx)
 
-        In the following example, the expansion works but gives only an Order term
+        In the following example, the expansion works but only returns self
         unless the ``logx`` parameter is used:
 
         >>> e = x**y
         >>> e.nseries(x, 0, 2)
-        O(log(x)**2)
+        x**y
         >>> e.nseries(x, 0, 2, logx=logx)
         exp(logx*y)
 
@@ -3781,8 +3784,6 @@ class Expr(Basic, EvalfMixin):
         >>> isinstance(round(S(123), -2), Number)
         True
         """
-        from sympy.core.numbers import Float
-
         x = self
 
         if not x.is_number:
@@ -3791,7 +3792,7 @@ class Expr(Basic, EvalfMixin):
             if not pure_complex(x.n(2), or_real=True):
                 raise TypeError(
                     'Expected a number but got %s:' % func_name(x))
-        elif x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+        elif x in _illegal:
             return x
         if x.is_extended_real is False:
             r, i = x.as_real_imag()
@@ -4104,4 +4105,4 @@ from .power import Pow
 from .function import Function, _derivative_dispatch
 from .mod import Mod
 from .exprtools import factor_terms
-from .numbers import Integer, Rational
+from .numbers import Float, Integer, Rational, _illegal

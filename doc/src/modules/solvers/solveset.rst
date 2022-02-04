@@ -12,8 +12,8 @@ equations.
 What's wrong with solve():
 --------------------------
 
-SymPy already has a pretty powerful ``solve`` function. But it has a lot of major
-issues
+SymPy already has a pretty powerful ``solve`` function. But it has some
+deficiencies. For example:
 
 1. It doesn't have a consistent output for various types of solutions
    It needs to return a lot of types of solutions consistently:
@@ -29,24 +29,21 @@ issues
    * Relational: `x > 0`
    * And the most important case: "We don't Know"
 
-2. The input API is also a mess, there are a lot of parameters. Many of them
-   are not needed and they make it hard for the user and the developers to
-   work on solvers.
+2. The input API has a lot of parameters and it can be difficult to use.
 
 3. There are cases like finding the maxima and minima of function using
    critical points where it is important to know if it has returned all the
    solutions. ``solve`` does not guarantee this.
 
-
 Why Solveset?
 -------------
 
-* ``solveset`` has a cleaner input and output interface: ``solveset`` returns
-  a set object and a set object takes care of all types of output. For
-  cases where it does not "know" all the solutions a ``ConditionSet`` with a partial
-  solution is returned. For input it only takes the equation, the variables
-  to solve for and the optional argument ``domain`` over which the equation is to
-  be solved.
+* ``solveset`` has an alternative consistent input and output interface:
+  ``solveset`` returns a set object and a set object takes care of all types of
+  output. For cases where it does not "know" all the solutions a
+  ``ConditionSet`` with a partial solution is returned. For input it only takes
+  the equation, the variables to solve for and the optional argument ``domain``
+  over which the equation is to be solved.
 
 * ``solveset`` can return infinitely many solutions. For example solving for
   `\sin{(x)} = 0` returns `\{2 n \pi | n \in \mathbb{Z}\} \cup \{2 n \pi + \pi | n \in \mathbb{Z}\}`,
@@ -58,13 +55,11 @@ Why Solveset?
   the set of all solutions, that is `\{2 n i \pi | n \in \mathbb{Z}\}`, whereas
   if `x` is to be solved in the real domain then only `\{0\}` is returned.
 
-
 Why do we use Sets as an output type?
 -------------------------------------
 
 SymPy has a well developed sets module, which can represent most of the set
-containers in Mathematics such as:
-
+containers in mathematics such as:
 
  * :class:`~.FiniteSet`
 
@@ -220,38 +215,28 @@ Why not use dicts as output?
 Input API of ``solveset``
 -------------------------
 
-``solveset`` has a cleaner input API, unlike ``solve``. It takes a maximum
-of three arguments:
+``solveset`` has simpler input API, unlike ``solve``. It takes a maximum of
+three arguments:
 
 ``solveset(equation, variable=None, domain=S.Complexes)``
 
-* Equation(s)
+Equation(s)
+   The equation(s) to solve.
+Variable(s)
+   The variable(s) for which the equation is to be solved.
+Domain
+   The domain in which the equation is to be solved.
 
-  The equation(s) to solve.
-
-
-* Variable(s)
-
-  The variable(s) for which the equation is to be solved.
-
-
-* Domain
-
-  The domain in which the equation is to be solved.
-
-
- ``solveset`` removes the ``flags`` argument of ``solve``, which had made
- the input API messy and output API inconsistent.
-
+``solveset`` removes the ``flags`` argument of ``solve``, which had made the
+input API more complicated and output API inconsistent.
 
 What is this domain argument about?
 -----------------------------------
 
- Solveset is designed to be independent of the assumptions on the
- variable being solved for and instead, uses the ``domain`` argument to
- decide the solver to dispatch the equation to, namely ``solveset_real``
- or ``solveset_complex``. It's unlike the old ``solve`` which considers the
- assumption on the variable.
+Solveset is designed to be independent of the assumptions on the variable being
+solved for and instead, uses the ``domain`` argument to decide the solver to
+dispatch the equation to, namely ``solveset_real`` or ``solveset_complex``.
+It's unlike the old ``solve`` which considers the assumption on the variable.
 
     >>> from sympy import solveset, S
     >>> from sympy.abc import x
@@ -259,7 +244,6 @@ What is this domain argument about?
     {-I, I}
     >>> solveset(x**2 + 1, x, domain=S.Reals)
     EmptySet
-
 
 What are the general methods employed by solveset to solve an equation?
 -----------------------------------------------------------------------
@@ -478,20 +462,14 @@ How do we deal with cases where only some of the solutions are known?
  `\{-2, 2\} ∪ \{x | x \in \mathbb{R} ∧ x + \sin(x) = 0\}`
 
 
-What will you do with the old solve?
-------------------------------------
+What is the plan for solve and solveset?
+----------------------------------------
 
- There are still a few things ``solveset`` can't do, which the old ``solve``
- can, such as solving nonlinear multivariate & LambertW type equations.
- Hence, it's not yet a perfect replacement for old ``solve``. The ultimate
- goal is to:
-
- * Replace ``solve`` with ``solveset`` once solveset is at least as powerful as
-   ``solve``, i.e., ``solveset`` does everything that ``solve`` can do
-   currently, and
-
- * eventually rename ``solveset`` to ``solve``.
-
+There are still a few things ``solveset`` can't do, which ``solve`` can, such
+as solving nonlinear multivariate & LambertW type equations.  Hence, it's not
+yet a perfect replacement for ``solve``. As the algorithms in ``solveset``
+mature, ``solveset`` may be able to be used within ``solve`` to replace some of
+its algorithms.
 
 How are symbolic parameters handled in solveset?
 ------------------------------------------------

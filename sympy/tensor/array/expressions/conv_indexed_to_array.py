@@ -1,5 +1,7 @@
 from collections import defaultdict
 
+from sympy import Function
+from sympy.combinatorics.permutations import _af_invert
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
 from sympy.core.mul import Mul
@@ -7,12 +9,13 @@ from sympy.core.numbers import Integer
 from sympy.core.power import Pow
 from sympy.core.sorting import default_sort_key
 from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.tensor.array.expressions import ArrayElementwiseApplyFunc
 from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.combinatorics import Permutation
 from sympy.matrices.expressions.matexpr import MatrixElement
 from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal, \
     get_shape, ArrayElement, _array_tensor_product, _array_diagonal, _array_contraction, _array_add, \
-    _permute_dims
+    _permute_dims, OneArray, ArrayAdd
 from sympy.tensor.array.expressions.utils import _get_argindex, _get_diagonal_indices
 
 
@@ -93,8 +96,11 @@ def convert_indexed_to_array(expr, first_indices=None):
                 return i
         raise ValueError("not found")
 
-    permutation = [_get_pos(i, first_indices) for i in indices]
-    return _permute_dims(result, permutation)
+    permutation = _af_invert([_get_pos(i, first_indices) for i in indices])
+    if isinstance(result, ArrayAdd):
+        return _array_add(*[_permute_dims(arg, permutation) for arg in result.args])
+    else:
+        return _permute_dims(result, permutation)
 
 
 def _convert_indexed_to_array(expr):
@@ -199,6 +205,13 @@ def _convert_indexed_to_array(expr):
             return _array_diagonal(expr.args[0], *diagonal_indices), ret_indices
         else:
             return expr.args[0], ret_indices
+    if isinstance(expr, ArrayElement):
+        indices = expr.indices
+        diagonal_indices, ret_indices = _get_diagonal_indices(indices)
+        if diagonal_indices:
+            return _array_diagonal(expr.name, *diagonal_indices), ret_indices
+        else:
+            return expr.name, ret_indices
     if isinstance(expr, Indexed):
         indices = expr.indices
         diagonal_indices, ret_indices = _get_diagonal_indices(indices)
@@ -214,19 +227,31 @@ def _convert_indexed_to_array(expr):
         args, indices = zip(*[_convert_indexed_to_array(arg) for arg in expr.args])
         args = list(args)
         # Check if all indices are compatible. Otherwise expand the dimensions:
-        index0set = set(indices[0])
-        index0 = indices[0]
-        for i in range(1, len(args)):
-            if set(indices[i]) != index0set:
-                raise NotImplementedError("indices must be the same")
-            permutation = Permutation([index0.index(j) for j in indices[i]])
+        index0 = []
+        shape0 = []
+        for arg, arg_indices in zip(args, indices):
+            arg_indices_set = set(arg_indices)
+            arg_indices_missing = arg_indices_set.difference(index0)
+            index0.extend([i for i in arg_indices if i in arg_indices_missing])
+            arg_shape = get_shape(arg)
+            shape0.extend([arg_shape[i] for i, e in enumerate(arg_indices) if e in arg_indices_missing])
+        for i, (arg, arg_indices) in enumerate(zip(args, indices)):
+            if len(arg_indices) < len(index0):
+                missing_indices_pos = [i for i, e in enumerate(index0) if e not in arg_indices]
+                missing_shape = [shape0[i] for i in missing_indices_pos]
+                arg_indices = tuple(index0[j] for j in missing_indices_pos) + arg_indices
+                args[i] = _array_tensor_product(OneArray(*missing_shape), args[i])
+            permutation = Permutation([arg_indices.index(j) for j in index0])
             # Perform index permutations:
             args[i] = _permute_dims(args[i], permutation)
-        return _array_add(*args), index0
+        return _array_add(*args), tuple(index0)
     if isinstance(expr, Pow):
         subexpr, subindices = _convert_indexed_to_array(expr.base)
         if isinstance(expr.exp, (int, Integer)):
             diags = zip(*[(2*i, 2*i + 1) for i in range(expr.exp)])
             arr = _array_diagonal(_array_tensor_product(*[subexpr for i in range(expr.exp)]), *diags)
             return arr, subindices
+    if isinstance(expr, Function):
+        subexpr, subindices = _convert_indexed_to_array(expr.args[0])
+        return ArrayElementwiseApplyFunc(type(expr), subexpr), subindices
     return expr, ()

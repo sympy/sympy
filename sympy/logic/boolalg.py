@@ -111,7 +111,7 @@ class Boolean(Basic):
         ========
 
         >>> from sympy.abc import A, B, C
-        >>> from sympy.logic.boolalg import And, Or, Not
+        >>> from sympy import And, Or, Not
         >>> (A >> B).equals(~B >> ~A)
         True
         >>> Not(And(A, B, C)).equals(And(Not(A), Not(B), Not(C)))
@@ -580,7 +580,7 @@ class And(LatticeOp, BooleanFunction):
     ========
 
     >>> from sympy.abc import x, y
-    >>> from sympy.logic.boolalg import And
+    >>> from sympy import And
     >>> x & y
     x & y
 
@@ -740,7 +740,7 @@ class Or(LatticeOp, BooleanFunction):
     ========
 
     >>> from sympy.abc import x, y
-    >>> from sympy.logic.boolalg import Or
+    >>> from sympy import Or
     >>> x | y
     x | y
 
@@ -846,7 +846,7 @@ class Not(BooleanFunction):
     Examples
     ========
 
-    >>> from sympy.logic.boolalg import Not, And, Or
+    >>> from sympy import Not, And, Or
     >>> from sympy.abc import x, A, B
     >>> Not(True)
     False
