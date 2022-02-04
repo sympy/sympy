@@ -308,7 +308,7 @@ it fails with an exception
 
 ```pytb
 AttributeError: 'Tuple' object has no attribute 'as_coeff_Mul'
-````
+```
 
 because it tries to call a method of `Expr` on the `Tuple` object, which does
 not have all the `Expr` methods (because it is not a subclass of `Expr`).
@@ -366,7 +366,24 @@ these are desired, you can use a `lambda` or the
 
 ### Non-tuple iterable for the `symbols` argument to `Lambda`
 
+(deprecated-differentiate_finite-evaluate)=
 ### The `evaluate` flag to `differentiate_finite`
+
+The evaluate flag to {func}`~.differentiate_finite` is deprecated.
+
+`differentiate_finite(expr, x, evaluate=True)` expands the intermediate
+derivatives before computing differences, but this usually not what you want,
+as it does not satisfy the product rule.
+
+If you really do want this behavior, you can emulate it with
+
+```py
+diff(expr, x).replace(
+    lambda arg: arg.is_Derivative,
+    lambda arg: arg.as_finite_difference())
+```
+
+See the discussion on issue [#17881](https://github.com/sympy/sympy/pull/17881).
 
 ## Version 1.4
 
