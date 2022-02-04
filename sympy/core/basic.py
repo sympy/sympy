@@ -2116,5 +2116,14 @@ from .traversal import (preorder_traversal as _preorder_traversal,
    iterargs, iterfreeargs)
 
 preorder_traversal = deprecated(
-    useinstead="sympy.core.basic.preorder_traversal",
-    deprecated_since_version="1.10", issue=22288)(_preorder_traversal)
+    """
+    Using preorder_traversal from the sympy.core.basic submodule is
+    deprecated.
+
+    Instead, use preorder_traversal from the top-level sympy namespace, like
+
+        sympy.preorder_traversal
+    """,
+    deprecated_since_version="1.10",
+    active_deprecations_target="deprecated-traversal-functions-moved",
+)(_preorder_traversal)

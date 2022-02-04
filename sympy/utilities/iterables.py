@@ -2993,15 +2993,34 @@ def is_sequence(i, include=None):
             isinstance(i, include))
 
 
-@deprecated(useinstead="sympy.core.traversal.postorder_traversal",
-    deprecated_since_version="1.10", issue=22288)
+@deprecated(
+    """
+    Using postorder_traversal from the sympy.utilities.iterables submodule is
+    deprecated.
+
+    Instead, use postorder_traversal from the top-level sympy namespace, like
+
+        sympy.postorder_traversal
+    """,
+    deprecated_since_version="1.10",
+    active_deprecations_target="deprecated-traversal-functions-moved")
 def postorder_traversal(node, keys=None):
     from sympy.core.traversal import postorder_traversal as _postorder_traversal
     return _postorder_traversal(node, keys=keys)
 
 
-@deprecated(useinstead="sympy.interactive.traversal.interactive_traversal",
-            issue=22288, deprecated_since_version="1.10")
+@deprecated(
+    """
+    Using interactive_traversal from the sympy.utilities.iterables submodule
+    is deprecated.
+
+    Instead, use interactive_traversal from the top-level sympy namespace,
+    like
+
+        sympy.interactive_traversal
+    """,
+    deprecated_since_version="1.10",
+    active_deprecations_target="deprecated-traversal-functions-moved")
 def interactive_traversal(expr):
     from sympy.interactive.traversal import interactive_traversal as _interactive_traversal
     return _interactive_traversal(expr)
