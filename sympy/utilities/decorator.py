@@ -6,7 +6,7 @@ import inspect
 from functools import wraps, update_wrapper
 
 from sympy.testing.runtests import DependencyError, SymPyDocTests, PyTestReporter
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 def threaded_factory(func, use_add):
     """A factory for ``threaded`` decorators. """
@@ -241,8 +241,8 @@ def memoize_property(propfunc):
 
 
 # def deprecated(message, *, deprecated_since_version,
-#                active_deprecations_target):
-def deprecated(**decorator_kwargs):
+#                active_deprecations_target, stacklevel=4):
+def deprecated(*decorator_args, stacklevel=2, **decorator_kwargs):
     """
     Mark a function as deprecated.
 
@@ -282,11 +282,6 @@ def deprecated(**decorator_kwargs):
     sympy.testing.pytest.warns_deprecated_sympy
 
     """
-
-    def _warn_deprecation(wrapped, stacklevel):
-        decorator_kwargs.setdefault('feature', wrapped.__name__)
-        SymPyDeprecationWarning(**decorator_kwargs).warn(stacklevel=stacklevel)
-
     def deprecated_decorator(wrapped):
         if hasattr(wrapped, '__mro__'):  # wrapped is actually a class
             class wrapper(wrapped):
@@ -295,12 +290,12 @@ def deprecated(**decorator_kwargs):
                 __module__ = wrapped.__module__
                 _sympy_deprecated_func = wrapped
                 def __init__(self, *args, **kwargs):
-                    _warn_deprecation(wrapped, 4)
+                    sympy_deprecation_warning(*decorator_args, **decorator_kwargs, stacklevel=stacklevel+1)
                     super().__init__(*args, **kwargs)
         else:
             @wraps(wrapped)
             def wrapper(*args, **kwargs):
-                _warn_deprecation(wrapped, 3)
+                sympy_deprecation_warning(*decorator_args, **decorator_kwargs, stacklevel=stacklevel)
                 return wrapped(*args, **kwargs)
             wrapper._sympy_deprecated_func = wrapped
         return wrapper
