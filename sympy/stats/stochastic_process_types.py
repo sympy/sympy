@@ -1141,12 +1141,14 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
         return N*R
 
     def absorbing_probabilites(self):
-        SymPyDeprecationWarning(
-            feature="absorbing_probabilites",
-            useinstead="absorbing_probabilities",
-            issue=20042,
-            deprecated_since_version="1.7"
-        ).warn()
+        sympy_deprecation_warning(
+            """
+            DiscreteMarkovChain.absorbing_probabilites() is deprecated. Use
+            absorbing_probabilities() instead (note the spelling difference).
+            """,
+            deprecated_since_version="1.7",
+            active_deprecations_target="deprecated-absorbing_probabilites",
+        )
         return self.absorbing_probabilities()
 
     def is_regular(self):

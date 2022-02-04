@@ -159,6 +159,8 @@ def test_DiscreteMarkovChain():
     Y6 = DiscreteMarkovChain('Y', trans_probs=TO6)
     assert Y6.fundamental_matrix() == ImmutableMatrix([[Rational(3, 2), S.One, S.Half], [S.One, S(2), S.One], [S.Half, S.One, Rational(3, 2)]])
     assert Y6.absorbing_probabilities() == ImmutableMatrix([[Rational(3, 4), Rational(1, 4)], [S.Half, S.Half], [Rational(1, 4), Rational(3, 4)]])
+    with warns_deprecated_sympy():
+        Y6.absorbing_probabilites()
     TO7 = Matrix([[Rational(1, 2), Rational(1, 4), Rational(1, 4)], [Rational(1, 2), 0, Rational(1, 2)], [Rational(1, 4), Rational(1, 4), Rational(1, 2)]])
     Y7 = DiscreteMarkovChain('Y', trans_probs=TO7)
     assert Y7.is_absorbing_chain() == False
