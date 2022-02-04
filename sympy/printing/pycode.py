@@ -733,6 +733,8 @@ class SymPyPrinter(AbstractPythonCodePrinter):
 
     language = "Python with SymPy"
 
+    _operators = {**AbstractPythonCodePrinter._operators, 'and' : '&'}
+
     def _print_Function(self, expr):
         mod = expr.func.__module__ or ''
         return '%s(%s)' % (self._module_format(mod + ('.' if mod else '') + expr.func.__name__),

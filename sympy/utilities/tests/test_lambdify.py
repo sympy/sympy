@@ -1558,3 +1558,25 @@ def test_lambdify_cse():
             f = case.lambdify(cse=cse)
             result = f(*case.num_args)
             case.assertAllClose(result)
+
+
+def test_issue_23010():
+    from sympy import Eq, sin, lambdify
+    from sympy.abc import x,y
+    from sympy.plotting.intervalmath import interval
+    from sympy.plotting.intervalmath.interval_membership import intervalMembership
+    import sympy.plotting.intervalmath.lib_interval as li
+
+    expr = Eq(y, sin(x)) & (y > 0)
+    xi, yi = interval(-4.999996, -4.687508), interval(-0.312501, 0.000005)
+
+    # use the interval math functions with lambdify
+    keys = [t for t in dir(li) if ("__" not in t) and (t not in ["import_module", "interval"])]
+    vals = [getattr(li, k) for k in keys]
+    d = {k: v for k, v in zip(keys, vals)}
+
+    f2 = lambdify((x, y), expr, modules=[d, 'sympy'])
+
+    expected_code = ['def _lambdifygenerated(x, y):', '    return (y == sin(x)) & (y > 0)']
+    assert f2.__doc__.splitlines()[10:12] == expected_code
+    assert f2(xi, yi) == intervalMembership(False, True)

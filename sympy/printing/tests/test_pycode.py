@@ -421,3 +421,9 @@ def test_array_printer():
     assert prntr.doprint(ArrayDiagonal(A, [0,1], [2,3])) == 'tensorflow.linalg.einsum("aabbc->cab", A)'
     assert prntr.doprint(ArrayContraction(A, [2], [3])) == 'tensorflow.linalg.einsum("abcde->abe", A)'
     assert prntr.doprint(Assignment(I[i,j,k], I[i,j,k])) == 'I = I'
+
+def test_issue_23010():
+    from sympy.abc import x,y
+    from sympy.printing.pycode import SymPyPrinter
+
+    assert SymPyPrinter().doprint( x & y ) == 'x & y'
