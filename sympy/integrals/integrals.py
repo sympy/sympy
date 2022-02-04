@@ -1411,7 +1411,7 @@ def integrate(*args, meijerg=None, conds='piecewise', risch=None, heurisch=None,
 
     - a symbol                   -- indefinite integration
     - a tuple (symbol, a)        -- indefinite integration with result
-                                    given with `a` replacing `symbol`
+                                    given with ``a`` replacing ``symbol``
     - a tuple (symbol, a, b)     -- definite integration
 
     Several variables can be specified, in which case the result is

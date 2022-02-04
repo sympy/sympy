@@ -1852,7 +1852,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
 
     The implementation is rule-based, and if you are interested in which
     rules are applied, and whether integration is attemped, you can switch
-    debug information on by setting `sympy.SYMPY_DEBUG=True`.
+    debug information on by setting ``sympy.SYMPY_DEBUG=True``.
 
     The lower bound is `0-`, meaning that this bound should be approached
     from the lower side. This is only necessary if distributions are involved.
