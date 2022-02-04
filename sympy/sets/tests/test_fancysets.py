@@ -8,7 +8,7 @@ from sympy.sets.sets import (FiniteSet, Interval, Union, imageset,
 from sympy.sets.conditionset import ConditionSet
 from sympy.simplify.simplify import simplify
 from sympy.core.basic import Basic
-from sympy.core.containers import Tuple
+from sympy.core.containers import Tuple, TupleKind
 from sympy.core.function import Lambda
 from sympy.core.kind import NumberKind
 from sympy.core.numbers import (I, Rational, oo, pi)
@@ -1126,10 +1126,18 @@ def test_union_RealSubSet():
     assert (S.Complexes).union(S.Integers) == S.Complexes
 
 
-def test_SetKind_ImageSet():
+def test_SetKind_fancySet():
     G = lambda *args: ImageSet(Lambda(x, x ** 2), *args)
     assert G(Interval(1, 4)).kind is SetKind(NumberKind)
     assert G(FiniteSet(1, 4)).kind is SetKind(NumberKind)
+    assert S.Rationals.kind is SetKind(NumberKind)
+    assert S.Naturals.kind is SetKind(NumberKind)
+    assert S.Integers.kind is SetKind(NumberKind)
+    assert Range(3).kind is SetKind(NumberKind)
+    a = Interval(2, 3)
+    b = Interval(4, 6)
+    c1 = ComplexRegion(a*b)
+    assert c1.kind is SetKind(TupleKind(NumberKind, NumberKind))
 
 
 def test_issue_9980():

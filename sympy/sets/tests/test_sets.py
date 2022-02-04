@@ -1622,6 +1622,11 @@ def test_SetKind_Unions():
     assert Union(FiniteSet(Matrix([1, 2])), Interval(1, 2)).kind is SetKind(UndefinedKind)
     assert Union(Interval(1, 2), Interval(1, 7)).kind is SetKind(NumberKind)
 
+def test_SetKind_DisjointUnion():
+    A = FiniteSet(1, 2, 3)
+    B = Interval(0, 5)
+    assert DisjointUnion(A, B).kind is SetKind(NumberKind)
+
 def test_SetKind_evaluate_False():
     U = lambda *args: Union(*args, evaluate=False)
     assert U({1}, EmptySet).kind is SetKind(NumberKind)
