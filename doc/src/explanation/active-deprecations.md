@@ -223,8 +223,9 @@ This was change was made as part of a change to store only `Basic` objects in
 
 ## Version 1.7
 
+(deprecated-absorbing_probabilites)=
 ### `sympy.stats.DiscreteMarkovChain.absorbing_probabilites()`
-[
+
 The `absorbing_probabilites` method name was misspelled. The correct spelling
 `absorbing_probabilities` ("absorbing probabilit*i*es") should be used
 instead.
