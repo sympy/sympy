@@ -272,10 +272,7 @@ calls the deprecated code (the current stacklevel is showing code from
             text = f.read()
         for target in targets:
             if f'({target})=' not in text:
-                raise Failed(f"""\
-    The active deprecations target {target!r} does not appear to be a valid target
-    in the active-deprecations.md file
-    ({active_deprecations_file}).""".replace('\n', ' '))
+                raise Failed(f"The active deprecations target {target!r} does not appear to be a valid target in the active-deprecations.md file ({active_deprecations_file}).")
 
 def _both_exp_pow(func):
     """
