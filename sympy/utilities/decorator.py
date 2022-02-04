@@ -242,7 +242,7 @@ def memoize_property(propfunc):
 
 # def deprecated(message, *, deprecated_since_version,
 #                active_deprecations_target, stacklevel=4):
-def deprecated(*decorator_args, stacklevel=2, **decorator_kwargs):
+def deprecated(*decorator_args, stacklevel=3, **decorator_kwargs):
     """
     Mark a function as deprecated.
 
@@ -290,7 +290,7 @@ def deprecated(*decorator_args, stacklevel=2, **decorator_kwargs):
                 __module__ = wrapped.__module__
                 _sympy_deprecated_func = wrapped
                 def __init__(self, *args, **kwargs):
-                    sympy_deprecation_warning(*decorator_args, **decorator_kwargs, stacklevel=stacklevel+1)
+                    sympy_deprecation_warning(*decorator_args, **decorator_kwargs, stacklevel=stacklevel)
                     super().__init__(*args, **kwargs)
         else:
             @wraps(wrapped)
