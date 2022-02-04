@@ -384,25 +384,16 @@ these are desired, you can use a `lambda` or the
 
 ## Version 1.6
 
-### `sympy.utilities.tmpfiles`
+(deprecated-sympy-utilities-submodules)=
+### Various `sympy.utilities` submodules have moved
 
-TODO
+The following submodules have been renamed.
 
-### `sympy.utilities.runtests`
-
-TODO
-
-### `sympy.utilities.randtest`
-
-TODO
-
-### `sympy.utilities.pytest`
-
-TODO
-
-### `sympy.utilities.benchmarking`
-
-TODO
+- `sympy.utilities.benchmarking` -> `sympy.testing.benchmarking`
+- `sympy.utilities.pytest` -> `sympy.testing.pytest`
+- `sympy.utilities.randtests` -> `sympy.core.random`
+- `sympy.utilities.runtests` -> `sympy.testing.runtests`
+- `sympy.utilities.tmpfiles` -> `sympy.testing.tmpfiles`
 
 ### `sympy.testing.randtest` functions
 
