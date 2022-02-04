@@ -20,9 +20,8 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.functions import Abs
+from .utilities import _dotprodsimp, _simplify
 from sympy.polys.polytools import Poly
-from sympy.simplify import simplify as _simplify
-from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.misc import as_int, filldedent
@@ -2502,7 +2501,7 @@ class MatrixOperations(MatrixRequired):
         return MatrixOperations.simplify(self, **kwargs)
 
     def _eval_trigsimp(self, **opts):
-        from sympy.simplify import trigsimp
+        from sympy.simplify.trigsimp import trigsimp
         return self.applyfunc(lambda x: trigsimp(x, **opts))
 
     def upper_triangular(self, k=0):
