@@ -278,7 +278,7 @@ def deprecated(**decorator_kwargs):
     See Also
     ========
     sympy.utilities.exceptions.SymPyDeprecationWarning
-    sympy.utilities.exceptions.sympy_deprecation_warnin
+    sympy.utilities.exceptions.sympy_deprecation_warning
     sympy.testing.pytest.warns_deprecated_sympy
 
     """

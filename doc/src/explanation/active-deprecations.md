@@ -71,10 +71,7 @@ SymPy deprecation warnings.
 
 ## Version 1.10
 
-### `sympy.utilities.iterables.postorder_traversal`,
-`sympy.core.basic.preorder_traversal`, and
-`sympy.utilities.iterables.preorder_traversal` have been moved to
-`sympy.preorder_traversal` and `sympy.postorder_traversal`
+### `sympy.utilities.iterables.postorder_traversal`, `sympy.core.basic.preorder_traversal`, and `sympy.utilities.iterables.preorder_traversal` have been moved to `sympy.preorder_traversal` and `sympy.postorder_traversal`
 
 ### `sympy.core.trace.Tr`
 
