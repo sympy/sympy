@@ -55,9 +55,10 @@ def NS(e, n=15, **options):
 def test_poly_deprecated():
     p = Poly(2*x, x)
     assert p.integrate(x) == Poly(x**2, x, domain='QQ')
-    with warns_deprecated_sympy():
+    # The stacklevel is based on Integral(Poly)
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
         integrate(p, x)
-    with warns_deprecated_sympy():
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
         Integral(p, (x,))
 
 
@@ -257,9 +258,12 @@ def test_issue_18038():
 def test_integrate_poly():
     p = Poly(x + x**2*y + y**3, x, y)
 
+    # The stacklevel is based on Integral(Poly)
     with warns_deprecated_sympy():
+        qx = Integral(p, x)
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
         qx = integrate(p, x)
-    with warns_deprecated_sympy():
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
         qy = integrate(p, y)
 
     assert isinstance(qx, Poly) is True
@@ -272,12 +276,14 @@ def test_integrate_poly():
     assert qy.as_expr() == x*y + x**2*y**2/2 + y**4/4
 
 
-def test_integrate_poly_defined():
+def test_integrate_poly_definite():
     p = Poly(x + x**2*y + y**3, x, y)
 
     with warns_deprecated_sympy():
+        Qx = Integral(p, (x, 0, 1))
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
         Qx = integrate(p, (x, 0, 1))
-    with warns_deprecated_sympy():
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
         Qy = integrate(p, (y, 0, pi))
 
     assert isinstance(Qx, Poly) is True

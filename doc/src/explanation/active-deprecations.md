@@ -336,7 +336,20 @@ these are desired, you can use a `lambda` or the
 
 ### The `print_cyclic` flag of `sympy.combinatorics.Permutation`
 
-### Using `integrate`/`Integral` with `Poly`
+(deprecated-integrate-poly)=
+### Using `integrate` with `Poly`
+
+In previous versions of SymPy, {class}`~.Poly` was a subclass of
+{class}`~.Expr`, but it has been changed to only be a subclass of
+{class}`~.Basic`. This means that some things that used to work with `Poly`
+are now deprecated because they are only designed to work with {class}`~.Expr`
+objects.
+
+This includes calling {func}`~.integrate` or {class}`~.Integral` with `Poly`.
+
+To integrate a `Poly`, use the {meth}`.Poly.integrate` method. To compute the
+integral as an {class}`~.Expr` object, call the {meth}`.Poly.as_expr` method
+first.
 
 (deprecated-sympify-string-fallback)=
 ### The string fallback in `sympify()`
