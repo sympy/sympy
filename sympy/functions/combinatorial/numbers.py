@@ -2321,7 +2321,7 @@ class padovan(Function):
     [1, 1, 1, 2, 2, 3, 4, 5, 7, 9, 12]
     >>> padovan.find_first_n_padovan_numbers(8)
     [1, 1, 1, 2, 2, 3, 4, 5]
-    >>> padovan.find_padovan_numbers_in_range(2,39)
+    >>> padovan.padovan_range(2,39)
     [2, 2, 3, 4, 5, 7, 9, 12, 16, 21, 28, 37]
 
 
@@ -2348,10 +2348,7 @@ class padovan(Function):
                     sn1 = sn2
                     sn2 = b
 
-                if sn2 == n:
-                    return True
-                else:
-                    return False
+                return sn2 == n
 
             if n <= 0:
                 if n in (0, -1):
@@ -2364,10 +2361,7 @@ class padovan(Function):
                     sn1 = sn2
                     sn2 = b
 
-                if Eq(sn2, n, evaluate=True):
-                    return True
-                else:
-                    return False
+                return sn2 == n
 
         else:
             return False
@@ -2398,7 +2392,8 @@ class padovan(Function):
         return padovan
 
     @staticmethod
-    def find_padovan_numbers_in_range(x, y):
+    def padovan_range(x, y):
+        # Returns padovan numbers in between the inputs excluding the end point
         if not (0 <= x <= y):
             raise ValueError('The provided range is not valid. This condition should satisfy x <= y')
 
@@ -2407,7 +2402,7 @@ class padovan(Function):
             padovan.extend([1,1])
         sn0, sn1, sn2 = 1, 1, 1
         i = 2
-        while sn2 <= y:
+        while sn2 < y:
             if sn2 >= x:
                 padovan.append(sn2)
             b = sn0 + sn1

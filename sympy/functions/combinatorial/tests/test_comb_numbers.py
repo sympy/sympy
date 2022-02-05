@@ -750,4 +750,5 @@ def test_padovan():
     assert padovan.is_padovan(200) is True
     assert [padovan(x) for x in range(0,11)] == [1, 1, 1, 2, 2, 3, 4, 5, 7, 9, 12]
     assert padovan.find_first_n_padovan_numbers(8) == [1, 1, 1, 2, 2, 3, 4, 5]
+    assert padovan.padovan_range(1,86) == [1, 1, 1, 2, 2, 3, 4, 5, 7, 9, 12, 16, 21, 28, 37, 49, 65]
     raises(ValueError, lambda: padovan.find_first_n_padovan_numbers(8.5))
