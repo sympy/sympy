@@ -1828,13 +1828,16 @@ class sec(ReciprocalTrigonometricFunction):
             return S.NegativeOne**k*euler(2*k)/factorial(2*k)*x**(2*k)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.accumulationbounds import AccumBounds
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         n = (x0 + S.Pi/2)/S.Pi
         if n.is_integer:
             lt = (arg - n*S.Pi + S.Pi/2).as_leading_term(x)
             return (S.NegativeOne**n)/lt
-        return self.func(x0)
+        if x0 is S.ComplexInfinity:
+            return AccumBounds(S.NegativeInfinity, S.Infinity)
+        return self.func(x0) if x0.is_finite else self
 
 
 class csc(ReciprocalTrigonometricFunction):
@@ -1924,13 +1927,16 @@ class csc(ReciprocalTrigonometricFunction):
                     bernoulli(2*k)*x**(2*k - 1)/factorial(2*k))
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.accumulationbounds import AccumBounds
         arg = self.args[0]
         x0 = arg.subs(x, 0).cancel()
         n = x0/S.Pi
         if n.is_integer:
             lt = (arg - n*S.Pi).as_leading_term(x)
             return (S.NegativeOne**n)/lt
-        return self.func(x0)
+        if x0 is S.ComplexInfinity:
+            return AccumBounds(S.NegativeInfinity, S.Infinity)
+        return self.func(x0) if x0.is_finite else self
 
 
 class sinc(Function):
