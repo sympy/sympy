@@ -74,7 +74,7 @@ def separatevars(expr, symbols=[], dict=False, force=False):
     Examples
     ========
 
-    >>> from sympy import simplify, sin rad
+    >>> from sympy import simplify, sin, rad
     >>> abs((simplify(30.8**2 - 82.5**2 * sin(rad(11.6))**2)).evalf())
     >>> assert _-673.447451402970 < 1e-12
     >>> from sympy.abc import x, y, z, alpha
