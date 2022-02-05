@@ -661,9 +661,21 @@ TODO
 
 TODO
 
-### Non-tuple iterable for the `symbols` argument to `Lambda`
+(deprecated-non-tuple-lambda)=
+### Non-tuple iterable for the first argument to `Lambda`
 
-TODO
+Using a non-tuple as the first argument to {class}`~.Lambda` is deprecated. If
+you have a non-tuple, convert it to a tuple first, like `Lambda(tuple(args),
+expr)`.
+
+This was done so that `Lambda` could support general tuple unpacking, like
+
+```py
+>>> from sympy import Lambda
+>>> f = Lambda((x, (y, z)), x + y + z)
+>>> f(1, (2, 3))
+6
+```
 
 (deprecated-differentiate_finite-evaluate)=
 ### The `evaluate` flag to `differentiate_finite`
