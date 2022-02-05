@@ -600,6 +600,15 @@ def test_issue_4503():
         exp(x)/(2*sqrt(exp(x) + 1))
 
 
+def test_issue_7391_8166():
+    f = Function('f')
+    func = x*y*y / (x*x + y**4)
+    func2 = func.subs(y, f(x))
+    # limit should depend on the continuity of the expression at the point passed
+    raises(NotImplementedError, lambda: limit(f(x), x, 4))
+    raises(NotImplementedError, lambda: limit(func2, x, 0))
+
+
 def test_issue_8208():
     assert limit(n**(Rational(1, 1e9) - 1), n, oo) == 0
 
