@@ -17,7 +17,7 @@ from sympy.core.function import Function, expand_mul
 from sympy.core.logic import fuzzy_not
 from sympy.core.mul import Mul, prod
 from sympy.core.numbers import E, pi, oo, Rational, Integer
-from sympy.core.relational import Eq, is_le, is_gt
+from sympy.core.relational import is_le, is_gt
 from sympy.core.sympify import sympify
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions.combinatorial.factorials import (binomial,
