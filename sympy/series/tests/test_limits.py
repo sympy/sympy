@@ -65,10 +65,6 @@ def test_basic1():
     assert limit(1/tan(x**3), x, (2*pi)**Rational(1, 3), dir="-") is -oo
     assert limit(1/cot(x)**3, x, (pi*Rational(3, 2)), dir="+") is -oo
     assert limit(1/cot(x)**3, x, (pi*Rational(3, 2)), dir="-") is oo
-    assert limit(tan(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
-    assert limit(cot(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
-    assert limit(sec(x), x, oo) == Limit(sec(x), x, oo, dir='-')
-    assert limit(csc(x), x, oo) == Limit(csc(x), x, oo, dir='-')
 
     # test bi-directional limits
     assert limit(sin(x)/x, x, 0, dir="+-") == 1
