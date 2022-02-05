@@ -868,7 +868,7 @@ class Domain:
         from sympy.polys.domains.fractionfield import FractionField
         _symbols = []
         for symbol in symbols:
-            if isinstance(symbol, Pow) and symbol.exp.is_number and symbol.exp < 0:
+            if isinstance(symbol, Pow) and symbol.exp.is_integer and symbol.exp < 0:
                 _symbols.append(1/symbol)
             else:
                 _symbols.append(symbol)
