@@ -2419,11 +2419,8 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
-        >>> import warnings
-        >>> warnings.simplefilter("ignore", SymPyDeprecationWarning)
         >>> from sympy.abc import x, y
-        >>> (x + y).expr_free_symbols
+        >>> (x + y).expr_free_symbols # doctest: +SKIP
         {x, y}
 
         If the expression is contained in a non-expression object, do not return
@@ -2431,7 +2428,7 @@ class Expr(Basic, EvalfMixin):
 
         >>> from sympy import Tuple
         >>> t = Tuple(x + y)
-        >>> t.expr_free_symbols
+        >>> t.expr_free_symbols # doctest: +SKIP
         set()
         >>> t.free_symbols
         {x, y}
