@@ -127,9 +127,65 @@ by user code.
 
 ## Version 1.9
 
+(deprecated-expr-free-symbols)=
 ### `expr_free_symbols`
 
-TODO
+The `expr_free_symbols` attribute of various SymPy objects is deprecated.
+
+`expr_free_symbols` was meant to represent indexed objects such as
+{class}`~.MatrixElement` and {class}`~.Indexed` as free symbols. This was
+intended to make derivatives of free symbols work. However, this now workw
+without making use of the method:
+
+```py
+>>> from sympy import Indexed, MatrixSymbol
+>>> a = Indexed("A", 0)
+>>> diff(a**2, a)
+2*A[0]
+>>> X = MatrixSymbol("X", 3, 3)
+>>> diff(X[0, 0]**2, X[0, 0])
+2*X[0, 0]
+```
+
+This was a general property that was added to solve a very specific problem
+but it added a layer of abstraction that is not necessary in general.
+
+1. objects that have structural "non-expression" nodes already allow one to
+   focus on the expression node if desired, e.g.
+
+   ```python
+   >>> from sympy import Derivative, symbols, Function
+   >>> x = symbols('x')
+   >>> f = Function('f')
+   >>> Derivative(f(x), x).expr
+   f(x)
+   ```
+
+   introduction of this property encourages imprecise thinking when requesting
+   free_symbols since it allows one to get symbols from a specific node of an
+   object without specifying the node
+
+2. it incorrectly added the property to `AtomicExpr` so numbers are returned
+   as `expr_free_symbols`
+
+   ```python
+   >>> S(2).expr_free_symbols # doctest: +SKIP
+   2
+   ```
+
+3. the application of the concept was misapplied to define
+   `Subs.expr_free_symbols`: it added in `expr_free_symbols` of the point but
+   the point is a `Tuple` so nothing was added
+
+4. it was not used anywhere else in the code base except in the context of
+   differentiating a `Subs` object which suggested that it was not something
+   of general use, this is also confirmed by the fact that,
+
+5. it was added without specific tests except for test of the derivatives of
+   the Subs object for which it was introduced
+
+See issue [#21494](https://github.com/sympy/sympy/issues/21494) for more
+discussion.
 
 (deprecated-sympy-stats-numsamples)=
 ### `sympy.stats.sample(numsamples=n)`
