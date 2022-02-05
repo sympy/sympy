@@ -55,7 +55,7 @@ def decompogen(f, symbol):
 
     # ===== Min/Max Functions ===== #
     if isinstance(f, (Min, Max)):
-        if And(*[a.has(symbol) for a in f.args]):
+        if all(a.has(symbol) for a in f.args):
             raise TypeError('cannot decompose %s' % f)
         for i in f.args:
             if i.has(symbol):
