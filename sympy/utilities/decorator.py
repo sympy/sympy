@@ -292,6 +292,9 @@ def deprecated(*decorator_args, stacklevel=3, **decorator_kwargs):
                 def __init__(self, *args, **kwargs):
                     sympy_deprecation_warning(*decorator_args, **decorator_kwargs, stacklevel=stacklevel)
                     super().__init__(*args, **kwargs)
+                def __new__(cls, *args, **kwargs):
+                    sympy_deprecation_warning(*decorator_args, **decorator_kwargs, stacklevel=stacklevel)
+                    return super().__new__(cls, *args, **kwargs)
         else:
             @wraps(wrapped)
             def wrapper(*args, **kwargs):
