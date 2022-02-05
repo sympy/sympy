@@ -507,7 +507,7 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
         N_copy //= factor
     for index in range(len(dependent_row)):
         factor = _find_factor(dependent_row, mark, gauss_matrix, index, smooth_relations, N_copy)
-        if factor > 1 and factor < N:
+        if factor > 1 and factor < N_copy:
             proper_factor.add(factor)
             while(N_copy % factor == 0):
                 N_copy //= factor
