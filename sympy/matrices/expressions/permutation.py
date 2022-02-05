@@ -24,7 +24,7 @@ class PermutationMatrix(MatrixExpr):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix, PermutationMatrix
+    >>> from sympy import Matrix, PermutationMatrix
     >>> from sympy.combinatorics import Permutation
 
     Creating a permutation matrix:
@@ -189,7 +189,7 @@ class MatrixPermute(MatrixExpr):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix, MatrixPermute
+    >>> from sympy import Matrix, MatrixPermute
     >>> from sympy.combinatorics import Permutation
 
     Permuting the matrix rows:

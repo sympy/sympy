@@ -94,20 +94,20 @@ class TrigonometricFunction(Function):
 
 
 def _peeloff_pi(arg):
-    """
-    Split ARG into two parts, a "rest" and a multiple of pi.
+    r"""
+    Split ARG into two parts, a "rest" and a multiple of $\pi$.
     This assumes ARG to be an Add.
-    The multiple of pi returned in the second position is always a Rational.
+    The multiple of $\pi$ returned in the second position is always a Rational.
 
     Examples
     ========
 
-    >>> from sympy.functions.elementary.trigonometric import _peeloff_pi as peel
+    >>> from sympy.functions.elementary.trigonometric import _peeloff_pi
     >>> from sympy import pi
     >>> from sympy.abc import x, y
-    >>> peel(x + pi/2)
+    >>> _peeloff_pi(x + pi/2)
     (x, 1/2)
-    >>> peel(x + 2*pi/3 + pi*y)
+    >>> _peeloff_pi(x + 2*pi/3 + pi*y)
     (x + pi*y + pi/6, 1/2)
 
     """
@@ -131,39 +131,39 @@ def _peeloff_pi(arg):
 
 
 def _pi_coeff(arg, cycles=1):
-    """
-    When arg is a Number times pi (e.g. 3*pi/2) then return the Number
-    normalized to be in the range [0, 2], else None.
+    r"""
+    When arg is a Number times $\pi$ (e.g. $3\pi/2$) then return the Number
+    normalized to be in the range $[0, 2]$, else `None`.
 
-    When an even multiple of pi is encountered, if it is multiplying
+    When an even multiple of $\pi$ is encountered, if it is multiplying
     something with known parity then the multiple is returned as 0 otherwise
     as 2.
 
     Examples
     ========
 
-    >>> from sympy.functions.elementary.trigonometric import _pi_coeff as coeff
+    >>> from sympy.functions.elementary.trigonometric import _pi_coeff
     >>> from sympy import pi, Dummy
     >>> from sympy.abc import x
-    >>> coeff(3*x*pi)
+    >>> _pi_coeff(3*x*pi)
     3*x
-    >>> coeff(11*pi/7)
+    >>> _pi_coeff(11*pi/7)
     11/7
-    >>> coeff(-11*pi/7)
+    >>> _pi_coeff(-11*pi/7)
     3/7
-    >>> coeff(4*pi)
+    >>> _pi_coeff(4*pi)
     0
-    >>> coeff(5*pi)
+    >>> _pi_coeff(5*pi)
     1
-    >>> coeff(5.0*pi)
+    >>> _pi_coeff(5.0*pi)
     1
-    >>> coeff(5.5*pi)
+    >>> _pi_coeff(5.5*pi)
     3/2
-    >>> coeff(2 + pi)
+    >>> _pi_coeff(2 + pi)
 
-    >>> coeff(2*Dummy(integer=True)*pi)
+    >>> _pi_coeff(2*Dummy(integer=True)*pi)
     2
-    >>> coeff(2*Dummy(even=True)*pi)
+    >>> _pi_coeff(2*Dummy(even=True)*pi)
     0
 
     """
@@ -206,7 +206,7 @@ def _pi_coeff(arg, cycles=1):
 
 
 class sin(TrigonometricFunction):
-    """
+    r"""
     The sine function.
 
     Returns the sine of x (measured in radians).
@@ -215,8 +215,8 @@ class sin(TrigonometricFunction):
     ===========
 
     This function will evaluate automatically in the
-    case x/pi is some rational number [4]_.  For example,
-    if x is a multiple of pi, pi/2, pi/3, pi/4 and pi/6.
+    case $x/\pi$ is some rational number [4]_.  For example,
+    if $x$ is a multiple of $\pi$, $\pi/2$, $\pi/3$, $\pi/4$, and $\pi/6$.
 
     Examples
     ========
@@ -979,7 +979,7 @@ class tan(TrigonometricFunction):
     Explanation
     ===========
 
-    See :func:`sin` for notes about automatic evaluation.
+    See :class:`sin` for notes about automatic evaluation.
 
     Examples
     ========
@@ -1315,7 +1315,7 @@ class cot(TrigonometricFunction):
     Explanation
     ===========
 
-    See :func:`sin` for notes about automatic evaluation.
+    See :class:`sin` for notes about automatic evaluation.
 
     Examples
     ========
@@ -1748,7 +1748,7 @@ class sec(ReciprocalTrigonometricFunction):
     Explanation
     ===========
 
-    See :func:`sin` for notes about automatic evaluation.
+    See :class:`sin` for notes about automatic evaluation.
 
     Examples
     ========
@@ -2124,7 +2124,7 @@ class InverseTrigonometricFunction(Function):
 
 
 class asin(InverseTrigonometricFunction):
-    """
+    r"""
     The inverse sine function.
 
     Returns the arcsine of x in radians.
@@ -2132,9 +2132,9 @@ class asin(InverseTrigonometricFunction):
     Explanation
     ===========
 
-    ``asin(x)`` will evaluate automatically in the cases ``oo``, ``-oo``,
-    ``0``, ``1``, ``-1`` and for some instances when the result is a rational
-    multiple of pi (see the eval class method).
+    ``asin(x)`` will evaluate automatically in the cases
+    $x \in \{\infty, -\infty, 0, 1, -1\}$ and for some instances when the
+    result is a rational multiple of $\pi$ (see the ``eval`` class method).
 
     A purely imaginary argument will lead to an asinh expression.
 
@@ -2341,7 +2341,7 @@ class asin(InverseTrigonometricFunction):
 
 
 class acos(InverseTrigonometricFunction):
-    """
+    r"""
     The inverse cosine function.
 
     Returns the arc cosine of x (measured in radians).
@@ -2350,8 +2350,8 @@ class acos(InverseTrigonometricFunction):
     ========
 
     ``acos(x)`` will evaluate automatically in the cases
-    ``oo``, ``-oo``, ``0``, ``1``, ``-1`` and for some instances when
-    the result is a rational multiple of pi (see the eval class method).
+    $x \in \{\infty, -\infty, 0, 1, -1\}$ and for some instances when
+    the result is a rational multiple of $\pi$ (see the eval class method).
 
     ``acos(zoo)`` evaluates to ``zoo``
     (see note in :class:`sympy.functions.elementary.trigonometric.asec`)
@@ -2557,7 +2557,7 @@ class acos(InverseTrigonometricFunction):
 
 
 class atan(InverseTrigonometricFunction):
-    """
+    r"""
     The inverse tangent function.
 
     Returns the arc tangent of x (measured in radians).
@@ -2566,8 +2566,8 @@ class atan(InverseTrigonometricFunction):
     ===========
 
     ``atan(x)`` will evaluate automatically in the cases
-    ``oo``, ``-oo``, ``0``, ``1``, ``-1`` and for some instances when the
-    result is a rational multiple of pi (see the eval class method).
+    $x \in \{\infty, -\infty, 0, 1, -1\}$ and for some instances when the
+    result is a rational multiple of $\pi$ (see the eval class method).
 
     Examples
     ========
@@ -2761,14 +2761,15 @@ class acot(InverseTrigonometricFunction):
     Explanation
     ===========
 
-    ``acot(x)`` will evaluate automatically in the cases ``oo``, ``-oo``,
-    ``zoo``, ``0``, ``1``, ``-1`` and for some instances when the result is a
-    rational multiple of pi (see the eval class method).
+    ``acot(x)`` will evaluate automatically in the cases
+    $x \in \{\infty, -\infty, \tilde{\infty}, 0, 1, -1\}$
+    and for some instances when the result is a rational multiple of $\pi$
+    (see the eval class method).
 
     A purely imaginary argument will lead to an ``acoth`` expression.
 
-    ``acot(x)`` has a branch cut along `(-i, i)`, hence it is discontinuous
-    at 0. Its range for real ``x`` is `(-\frac{\pi}{2}, \frac{\pi}{2}]`.
+    ``acot(x)`` has a branch cut along $(-i, i)$, hence it is discontinuous
+    at 0. Its range for real $x$ is $(-\frac{\pi}{2}, \frac{\pi}{2}]$.
 
     Examples
     ========
@@ -2963,11 +2964,11 @@ class asec(InverseTrigonometricFunction):
     Explanation
     ===========
 
-    ``asec(x)`` will evaluate automatically in the cases ``oo``, ``-oo``,
-    ``0``, ``1``, ``-1`` and for some instances when the result is a rational
-    multiple of pi (see the eval class method).
+    ``asec(x)`` will evaluate automatically in the cases
+    $x \in \{\infty, -\infty, 0, 1, -1\}$ and for some instances when the
+    result is a rational multiple of $\pi$ (see the eval class method).
 
-    ``asec(x)`` has branch cut in the interval [-1, 1]. For complex arguments,
+    ``asec(x)`` has branch cut in the interval $[-1, 1]$. For complex arguments,
     it can be defined [4]_ as
 
     .. math::
@@ -2982,7 +2983,7 @@ class asec(InverseTrigonometricFunction):
     simplifies to :math:`-i\log\left(z/2 + O\left(z^3\right)\right)` which
     ultimately evaluates to ``zoo``.
 
-    As ``acos(x)`` = ``asec(1/x)``, a similar argument can be given for
+    As ``acos(x) = asec(1/x)``, a similar argument can be given for
     ``acos(x)``.
 
     Examples
@@ -3138,7 +3139,7 @@ class asec(InverseTrigonometricFunction):
 
 
 class acsc(InverseTrigonometricFunction):
-    """
+    r"""
     The inverse cosecant function.
 
     Returns the arc cosecant of x (measured in radians).
@@ -3146,9 +3147,9 @@ class acsc(InverseTrigonometricFunction):
     Explanation
     ===========
 
-    ``acsc(x)`` will evaluate automatically in the cases ``oo``, ``-oo``,
-    ``0``, ``1``, ``-1`` and for some instances when the result is a rational
-    multiple of pi (see the eval class method).
+    ``acsc(x)`` will evaluate automatically in the cases
+    $x \in \{\infty, -\infty, 0, 1, -1\}$` and for some instances when the
+    result is a rational multiple of $\pi$ (see the ``eval`` class method).
 
     Examples
     ========

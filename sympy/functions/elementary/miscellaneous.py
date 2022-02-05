@@ -312,14 +312,14 @@ def root(arg, n, k=0, evaluate=None):
 
 
 def real_root(arg, n=None, evaluate=None):
-    """Return the real *n*'th-root of *arg* if possible.
+    r"""Return the real *n*'th-root of *arg* if possible.
 
     Parameters
     ==========
 
     n : int or None, optional
         If *n* is ``None``, then all instances of
-        ``(-n)**(1/odd)`` will be changed to ``-n**(1/odd)``.
+        $(-n)^{1/\text{odd}}$ will be changed to $-n^{1/\text{odd}}$.
         This will only create a real root of a principal root.
         The presence of other factors may cause the result to not be
         real.
@@ -553,7 +553,7 @@ class MinMaxBase(Expr, LatticeOp):
         Generator filtering args.
 
         first standard filter, for cls.zero and cls.identity.
-        Also reshape Max(a, Max(b, c)) to Max(a, b, c),
+        Also reshape ``Max(a, Max(b, c))`` to ``Max(a, b, c)``,
         and check arguments for comparability
         """
         for arg in arg_sequence:
@@ -684,15 +684,16 @@ class MinMaxBase(Expr, LatticeOp):
     _eval_is_transcendental = lambda s: _torf(i.is_transcendental for i in s.args)
     _eval_is_zero = lambda s: _torf(i.is_zero for i in s.args)
 
+
 class Max(MinMaxBase, Application):
-    """
+    r"""
     Return, if possible, the maximum value of the list.
 
     When number of arguments is equal one, then
     return this argument.
 
     When number of arguments is equal two, then
-    return, if possible, the value from (a, b) that is >= the other.
+    return, if possible, the value from (a, b) that is $\ge$ the other.
 
     In common case, when the length of list greater than 2, the task
     is more complicated. Return only the arguments, which are greater
@@ -750,13 +751,13 @@ class Max(MinMaxBase, Application):
     symbol `x` with negative assumption is comparable with a natural number.
 
     Also there are "least" elements, which are comparable with all others,
-    and have a zero property (maximum or minimum for all elements). E.g. `oo`.
-    In case of it the allocation operation is terminated and only this value is
-    returned.
+    and have a zero property (maximum or minimum for all elements).
+    For example, in case of $\infty$, the allocation operation is terminated
+    and only this value is returned.
 
     Assumption:
-       - if A > B > C then A > C
-       - if A == B then B can be removed
+       - if $A > B > C$ then $A > C$
+       - if $A = B$ then $B$ can be removed
 
     References
     ==========

@@ -12,8 +12,6 @@ Goals:
 
 """
 
-from __future__ import print_function, division
-
 import os
 import sys
 import platform
@@ -94,10 +92,6 @@ class TimeOutError(Exception):
 
 class DependencyError(Exception):
     pass
-
-
-# add more flags ??
-future_flags = division.compiler_flag
 
 
 def _indent(s, indent=4):
@@ -657,9 +651,6 @@ def _get_doctest_blacklist():
         "doc/src/modules/physics/mechanics/autolev_parser.rst",
         "sympy/galgebra.py", # no longer part of SymPy
         "sympy/this.py", # prints text
-        "sympy/matrices/densearith.py", # raises deprecation warning
-        "sympy/matrices/densesolve.py", # raises deprecation warning
-        "sympy/matrices/densetools.py", # raises deprecation warning
         "sympy/printing/ccode.py", # backwards compatibility shim, importing it breaks the codegen doctests
         "sympy/printing/fcode.py", # backwards compatibility shim, importing it breaks the codegen doctests
         "sympy/printing/cxxcode.py", # backwards compatibility shim, importing it breaks the codegen doctests
@@ -739,7 +730,7 @@ def _get_doctest_blacklist():
 
     # blacklist these modules until issue 4840 is resolved
     blacklist.extend([
-        "sympy/conftest.py", # Python 2.7 issues
+        "sympy/conftest.py", # Depends on pytest
         "sympy/testing/benchmarking.py",
     ])
 
@@ -1083,7 +1074,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
 
     # Read the file, convert it to a test, and run it.
     test = parser.get_doctest(text, globs, name, filename, 0)
-    runner.run(test, compileflags=future_flags)
+    runner.run(test)
 
     if report:
         runner.summarize()
@@ -1448,13 +1439,11 @@ class SymPyDocTests:
                 # if this is uncommented then all the test would get is what
                 # comes by default with a "from sympy import *"
                 #exec('from sympy import *') in test.globs
-            test.globs['print_function'] = print_function
-
             old_displayhook = sys.displayhook
             use_unicode_prev = setup_pprint()
 
             try:
-                f, t = runner.run(test, compileflags=future_flags,
+                f, t = runner.run(test,
                                   out=new.write, clear_globs=False)
             except KeyboardInterrupt:
                 raise
@@ -1827,7 +1816,6 @@ class SymPyDocTestRunner(DocTestRunner):
         # Fail for deprecation warnings
         with raise_on_deprecated():
             try:
-                test.globs['print_function'] = print_function
                 return self.__run(test, compileflags, out)
             finally:
                 sys.stdout = save_stdout

@@ -41,7 +41,7 @@ from sympy.core.function import Function, expand, AppliedUndef, Subs
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, symbols
 from sympy.functions import exp
-from sympy.integrals.integrals import Integral
+from sympy.integrals.integrals import Integral, integrate
 from sympy.utilities.iterables import has_dups, is_sequence
 from sympy.utilities.misc import filldedent
 
@@ -727,7 +727,6 @@ def pde_1st_linear_variable_coeff(eq, func, order, match, solvefun):
       Math 124A - Fall 2010, pp.7
 
     """
-    from sympy.integrals.integrals import integrate
     from sympy.solvers.ode import dsolve
 
     xi, eta = symbols("xi eta")

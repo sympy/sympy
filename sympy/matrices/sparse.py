@@ -25,7 +25,7 @@ class SparseRepMatrix(RepMatrix):
     Examples
     ========
 
-    >>> from sympy.matrices import SparseMatrix, ones
+    >>> from sympy import SparseMatrix, ones
     >>> SparseMatrix(2, 2, range(4))
     Matrix([
     [0, 1],
@@ -255,7 +255,7 @@ class SparseRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import SparseMatrix
         >>> m = SparseMatrix(2, 2, lambda i, j: i*2+j)
         >>> m
         Matrix([
@@ -309,7 +309,7 @@ class SparseRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import SparseMatrix
         >>> a=SparseMatrix(((1, 2), (3, 4)))
         >>> a
         Matrix([
@@ -335,7 +335,7 @@ class SparseRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import SparseMatrix
         >>> a = SparseMatrix(((1, 2), (3, 4)))
         >>> a
         Matrix([
@@ -366,7 +366,7 @@ class SparseRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix, Matrix, ones
+        >>> from sympy import SparseMatrix, Matrix, ones
         >>> A = Matrix([1, 2, 3])
         >>> B = Matrix([2, 3, 4])
         >>> S = SparseMatrix(A.row_join(B))

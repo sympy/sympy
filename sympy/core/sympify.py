@@ -28,9 +28,13 @@ class SympifyError(ValueError):
             str(self.base_exc)))
 
 
-# See sympify docstring.
 converter = {}  # type: tDict[Type[Any], Callable[[Any], Basic]]
 
+#holds the conversions defined in SymPy itself, i.e. non-user defined conversions
+_sympy_converter = {} # type: tDict[Type[Any], Callable[[Any], Basic]]
+
+#alias for clearer use in the library
+_external_converter = converter
 
 class CantSympify:
     """
@@ -77,7 +81,7 @@ def _convert_numpy_types(a, **sympify_args):
     import numpy as np
     if not isinstance(a, np.floating):
         if np.iscomplex(a):
-            return converter[complex](a.item())
+            return _sympy_converter[complex](a.item())
         else:
             return sympify(a.item(), **sympify_args)
     else:
@@ -358,18 +362,18 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
 
     if isinstance(a, CantSympify):
         raise SympifyError(a)
-    cls = getattr(a, "__class__", None)
-    if cls is None:
-        cls = type(a)  # Probably an old-style class
-    conv = converter.get(cls, None)
-    if conv is not None:
-        return conv(a)
 
+    cls = getattr(a, "__class__", None)
+
+    #Check if there exists a converter for any of the types in the mro
     for superclass in getmro(cls):
-        try:
-            return converter[superclass](a)
-        except KeyError:
-            continue
+        #First check for user defined converters
+        conv = _external_converter.get(superclass)
+        if conv is None:
+            #if none exists, check for SymPy defined converters
+            conv = _sympy_converter.get(superclass)
+        if conv is not None:
+            return conv(a)
 
     if cls is type(None):
         if strict:

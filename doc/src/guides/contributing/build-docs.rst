@@ -138,6 +138,63 @@ down menu and select “open file”, navigate into the ``sympy/doc/_build/html`
 folder, and open the ``index.html`` file.
 
 
+Auto-Rebuild with the Live Server
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The instructions given above told you how to build the docs once, and load them
+in the browser. After you make changes to the document sources, you'll have to
+manually repeat the build step, and reload the pages in the browser.
+
+There is an alternative approach that sets up a live server, which will monitor
+the docs directory, automatically rebuild when changes are detected, and
+automatically reload the page you are viewing in the browser.
+
+If you want to use this option, the procedure again depends on whether you are
+using Docker, or a local installation.
+
+Docker
+~~~~~~
+
+To start the live server with Docker, you can use::
+
+   docker run --rm -it \
+        -v /absolute/path/to/sympy:/sympy \
+        -p 8000:80 \
+        sympy_htmldoc live
+
+and then navigate your browser to ``localhost:8000``. You can use a different
+port by changing the ``8000`` in the command. Again, be sure to substitute the
+actual absolute filesystem path to sympy.
+
+When finished, you can stop the server with ``ctrl-c`` in the terminal.
+
+Alternatively, you may run the server in detached mode, using::
+
+   docker run --rm -d --name=sympy-livehtml \
+        -v /absolute/path/to/sympy:/sympy \
+        -p 8000:80 \
+        sympy_htmldoc live
+
+and then stop it with::
+
+   docker stop sympy-livehtml
+
+
+Local Installation
+~~~~~~~~~~~~~~~~~~
+
+If you installed the build dependencies locally, then simply use::
+
+   cd doc
+   make livehtml
+
+to start the server. Your web browser should then automatically open a new tab,
+showing the index page of the SymPy docs.
+
+When you are finished, you can use ``ctrl-c`` in the terminal to stop the
+server.
+
+
 PDF Documentation
 ^^^^^^^^^^^^^^^^^
 

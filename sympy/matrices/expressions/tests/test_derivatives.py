@@ -3,6 +3,7 @@ Some examples have been taken from:
 
 http://www.math.uwaterloo.ca/~hwolkowi//matrixcookbook.pdf
 """
+from sympy import KroneckerProduct
 from sympy.combinatorics import Permutation
 from sympy.concrete.summations import Sum
 from sympy.core.numbers import Rational
@@ -171,6 +172,11 @@ def test_matrix_derivative_vectors_and_scalars():
     assert expr.diff(X) == D*(X*b + c)*b.T + D.T*(X*b + c)*b.T
     assert str(expr[0, 0].diff(X[m, n]).doit()) == \
         'b[n, 0]*Sum((c[_i_1, 0] + Sum(X[_i_1, _i_3]*b[_i_3, 0], (_i_3, 0, k - 1)))*D[_i_1, m], (_i_1, 0, k - 1)) + Sum((c[_i_2, 0] + Sum(X[_i_2, _i_4]*b[_i_4, 0], (_i_4, 0, k - 1)))*D[m, _i_2]*b[n, 0], (_i_2, 0, k - 1))'
+
+    # See https://github.com/sympy/sympy/issues/16504#issuecomment-1018339957
+    expr = x*x.T*x
+    I = Identity(k)
+    assert expr.diff(x) == KroneckerProduct(I, x.T*x) + 2*x*x.T
 
 
 def test_matrix_derivatives_of_traces():
