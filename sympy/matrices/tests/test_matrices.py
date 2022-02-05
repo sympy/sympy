@@ -2989,3 +2989,14 @@ def test_issue_19809():
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future = executor.submit(f)
             assert future.result()
+
+def test_deprecated_classof_a2idx():
+    with warns_deprecated_sympy():
+        from sympy.matrices.matrices import classof
+        M = Matrix([[1, 2], [3, 4]])
+        IM = ImmutableMatrix([[1, 2], [3, 4]])
+        assert classof(M, IM) == ImmutableDenseMatrix
+
+    with warns_deprecated_sympy():
+        from sympy.matrices.matrices import a2idx
+        assert a2idx(-1, 3) == 2

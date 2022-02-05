@@ -2278,17 +2278,25 @@ class MatrixBase(MatrixDeprecated,
 
 
 @deprecated(
-    issue=15109,
-    useinstead="from sympy.matrices.common import classof",
-    deprecated_since_version="1.3")
+    """
+    sympy.matrices.matrices.classof is deprecated. Use
+    sympy.matrices.common.classof instead.
+    """,
+    deprecated_since_version="1.3",
+    active_deprecations_target="deprecated-sympy-matrices-classof-a2idx",
+)
 def classof(A, B):
     from sympy.matrices.common import classof as classof_
     return classof_(A, B)
 
 @deprecated(
-    issue=15109,
+    """
+    sympy.matrices.matrices.a2idx is deprecated. Use
+    sympy.matrices.common.a2idx instead.
+    """,
     deprecated_since_version="1.3",
-    useinstead="from sympy.matrices.common import a2idx")
+    active_deprecations_target="deprecated-sympy-matrices-classof-a2idx",
+)
 def a2idx(j, n=None):
     from sympy.matrices.common import a2idx as a2idx_
     return a2idx_(j, n)
