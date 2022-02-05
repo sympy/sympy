@@ -479,6 +479,8 @@ class exp(ExpBase, metaclass=ExpMeta):
     def _eval_nseries(self, x, n, logx, cdir=0):
         # NOTE Please see the comment at the beginning of this file, labelled
         #      IMPORTANT.
+        from sympy.core.numbers import ImaginaryUnit
+        from sympy.functions.elementary.complexes import sign
         from sympy.functions.elementary.integers import ceiling
         from sympy.series.limits import limit
         from sympy.series.order import Order
@@ -491,6 +493,9 @@ class exp(ExpBase, metaclass=ExpMeta):
         if arg0 is S.NegativeInfinity:
             return Order(x**n, x)
         if arg0 is S.Infinity:
+            return self
+        # checking for indecisiveness/ sign terms in arg0
+        if any(isinstance(arg, (sign, ImaginaryUnit)) for arg in arg0.args):
             return self
         t = Dummy("t")
         nterms = n

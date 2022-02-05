@@ -37,7 +37,16 @@ from sympy.core.sympify import _sympify
 
 
 class _ArrayExpr(Expr):
-    shape : tTuple[Expr, ...]
+    shape: tTuple[Expr, ...]
+
+    def __getitem__(self, item):
+        if not isinstance(item, collections.abc.Iterable):
+            item = (item,)
+        ArrayElement._check_shape(self, item)
+        return self._get(item)
+
+    def _get(self, item):
+        return _get_array_element_or_slice(self, item)
 
 
 class ArraySymbol(_ArrayExpr):
@@ -61,9 +70,6 @@ class ArraySymbol(_ArrayExpr):
     def shape(self):
         return self._args[1]
 
-    def __getitem__(self, item):
-        return ArrayElement(self, item)
-
     def as_explicit(self):
         if not all(i.is_Integer for i in self.shape):
             raise ValueError("cannot express explicit array with symbolic shape")
@@ -71,7 +77,7 @@ class ArraySymbol(_ArrayExpr):
         return ImmutableDenseNDimArray(data).reshape(*self.shape)
 
 
-class ArrayElement(_ArrayExpr):
+class ArrayElement(Expr):
     """
     An element of an array.
     """
@@ -87,13 +93,21 @@ class ArrayElement(_ArrayExpr):
         if not isinstance(indices, collections.abc.Iterable):
             indices = (indices,)
         indices = _sympify(tuple(indices))
+        cls._check_shape(name, indices)
+        obj = Expr.__new__(cls, name, indices)
+        return obj
+
+    @classmethod
+    def _check_shape(cls, name, indices):
+        indices = tuple(indices)
         if hasattr(name, "shape"):
+            index_error = IndexError("number of indices does not match shape of the array")
+            if len(indices) != len(name.shape):
+                raise index_error
             if any((i >= s) == True for i, s in zip(indices, name.shape)):
                 raise ValueError("shape is out of bounds")
         if any((i < 0) == True for i in indices):
             raise ValueError("shape contains negative values")
-        obj = Expr.__new__(cls, name, indices)
-        return obj
 
     @property
     def name(self):
@@ -137,6 +151,9 @@ class ZeroArray(_ArrayExpr):
             raise ValueError("Cannot return explicit form for symbolic shape.")
         return ImmutableDenseNDimArray.zeros(*self.shape)
 
+    def _get(self, item):
+        return S.Zero
+
 
 class OneArray(_ArrayExpr):
     """
@@ -158,6 +175,9 @@ class OneArray(_ArrayExpr):
         if not all(i.is_Integer for i in self.shape):
             raise ValueError("Cannot return explicit form for symbolic shape.")
         return ImmutableDenseNDimArray([S.One for i in range(reduce(operator.mul, self.shape))]).reshape(*self.shape)
+
+    def _get(self, item):
+        return S.One
 
 
 class _CodegenArrayAbstract(Basic):
@@ -1916,3 +1936,7 @@ def _permute_dims(expr, permutation, **kwargs):
 
 def _array_add(*args, **kwargs):
     return ArrayAdd(*args, canonicalize=True, **kwargs)
+
+
+def _get_array_element_or_slice(expr, indices):
+    return ArrayElement(expr, indices)

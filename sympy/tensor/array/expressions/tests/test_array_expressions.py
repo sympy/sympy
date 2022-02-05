@@ -62,6 +62,23 @@ def test_array_symbol_and_element():
     p = _permute_dims(A, Permutation(0, 2, 1))
     assert isinstance(p, PermuteDims)
 
+    A = ArraySymbol("A", (2,))
+    raises(IndexError, lambda: A[()])
+    raises(IndexError, lambda: A[0, 1])
+    raises(ValueError, lambda: A[-1])
+    raises(ValueError, lambda: A[2])
+
+    O = OneArray(3, 4)
+    Z = ZeroArray(m, n)
+
+    raises(IndexError, lambda: O[()])
+    raises(IndexError, lambda: O[1, 2, 3])
+    raises(ValueError, lambda: O[3, 0])
+    raises(ValueError, lambda: O[0, 4])
+
+    assert O[1, 2] == 1
+    assert Z[1, 2] == 0
+
 
 def test_zero_array():
     assert ZeroArray() == 0
