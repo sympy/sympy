@@ -514,4 +514,4 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
                 break
             if(N_copy == 1):
                 break
-    return sorted(proper_factor)
+    return proper_factor
