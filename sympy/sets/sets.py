@@ -1700,26 +1700,27 @@ class Complement(Set):
         return And(A_rel, B_rel)
 
     def _kind(self):
-        try:
+        if type(self.args[0]).__name__ != "ImageSet":
             def _measurement(x):
+                ClassList = ["ProductSet", "Interval", "EmptySet", "Union"]
                 if x is UniversalSet or x is S.UniversalSet:
                     return float('inf')
-                try:
-                    return len(x)
-                except AttributeError:
+                elif type(x).__name__ in ClassList:
                     return int(x._measure)
+                else:
+                    return len(x)
 
             def _ele(x):
-                try:
-                    return x.kind
-                except AttributeError:
+                if type(x) is set:
                     return SetKind(NumberKind)
+                else:
+                    return x.kind
             if _measurement(self.args[0]) < _measurement(self.args[1]):
                 return SetKind()
             elif _measurement(self.args[0]) >= _measurement(self.args[1]):
                 return _ele(self.args[0])
-        except TypeError:
-            return self.doit().kind
+        else:
+            return SetKind(self.args[0].lamda.expr.kind)
 
     @property
     def is_iterable(self):
