@@ -21,7 +21,7 @@ def test_decompogen():
     assert decompogen(1, x) == [1]
     assert decompogen(Max(3, x), x) == [Max(3, x), x]
     raises(TypeError, lambda: decompogen(x < 5, x))
-    raises(TypeError, lambda: decompogen(Max(sin(x), x**2), x))
+    raises(TypeError, lambda: decompogen(Max(2*x + 3, (2*x + 3)**2, (2*x + 3)**3), x))
 
 
 def test_decompogen_poly():
