@@ -1,5 +1,4 @@
 from sympy.core import (Function, Pow, sympify, Expr)
-from sympy.core.logic import And
 from sympy.core.relational import Relational
 from sympy.core.singleton import S
 from sympy.polys import Poly, decompose
@@ -60,7 +59,7 @@ def decompogen(f, symbol):
         for i in f.args:
             if i.has(symbol):
                 arg = i
-        result += [f.subs(i, symbol)] + decompogen(i, symbol)
+        result += [f.subs(arg, symbol)] + decompogen(arg, symbol)
         return result
 
     # ===== Convert to Polynomial ===== #
