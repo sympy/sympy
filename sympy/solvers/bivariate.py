@@ -55,7 +55,7 @@ def _mostfunc(lhs, func, X=None):
     ========
 
     >>> from sympy.solvers.bivariate import _mostfunc
-    >>> from sympy.functions.elementary.exponential import exp
+    >>> from sympy import exp
     >>> from sympy.abc import x, y
     >>> _mostfunc(exp(x) + exp(exp(x) + 2), exp)
     exp(exp(x) + 2)
@@ -86,10 +86,9 @@ def _linab(arg, symbol):
     Examples
     ========
 
-    >>> from sympy.functions.elementary.exponential import exp
     >>> from sympy.solvers.bivariate import _linab
     >>> from sympy.abc import x, y
-    >>> from sympy import S
+    >>> from sympy import exp, S
     >>> _linab(S(2), x)
     (2, 0, 1)
     >>> _linab(2*x, x)
@@ -436,7 +435,7 @@ def bivariate_type(f, x, y, *, first=True):
     Examples
     ========
 
-    >>> from sympy.solvers.solvers import solve
+    >>> from sympy import solve
     >>> from sympy.solvers.bivariate import bivariate_type
     >>> from sympy.abc import x, y
     >>> eq = (x**2 - 3).subs(x, x + y)

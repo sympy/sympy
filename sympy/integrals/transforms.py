@@ -35,9 +35,6 @@ from sympy.polys.polyroots import roots
 from sympy.polys.polytools import factor, Poly
 from sympy.polys.rationaltools import together
 from sympy.polys.rootoftools import CRootOf, RootSum
-from sympy.simplify import simplify, hyperexpand
-from sympy.simplify.powsimp import powdenest
-from sympy.solvers.inequalities import _solve_inequality
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
@@ -83,7 +80,7 @@ class IntegralTransform(Function):
 
     Also set ``cls._name``. For instance,
 
-    >>> from sympy.integrals.transforms import LaplaceTransform
+    >>> from sympy import LaplaceTransform
     >>> LaplaceTransform._name
     'Laplace'
 
@@ -226,6 +223,8 @@ class IntegralTransform(Function):
 
 def _simplify(expr, doit):
     if doit:
+        from sympy.simplify import simplify
+        from sympy.simplify.powsimp import powdenest
         return simplify(powdenest(piecewise_fold(expr), polar=True))
     return expr
 
@@ -291,6 +290,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
         """
         Turn ``cond`` into a strip (a, b), and auxiliary conditions.
         """
+        from sympy.solvers.inequalities import _solve_inequality
         a = S.NegativeInfinity
         b = S.Infinity
         aux = S.true
@@ -399,8 +399,7 @@ def mellin_transform(f, x, s, **hints):
     Examples
     ========
 
-    >>> from sympy.integrals.transforms import mellin_transform
-    >>> from sympy import exp
+    >>> from sympy import mellin_transform, exp
     >>> from sympy.abc import x, s
     >>> mellin_transform(exp(-x), x, s)
     (gamma(s), (0, oo), True)
@@ -798,6 +797,7 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
             h = G
         else:
             try:
+                from sympy.simplify import hyperexpand
                 h = hyperexpand(G)
             except NotImplementedError:
                 raise IntegralTransformError(
@@ -910,8 +910,7 @@ def inverse_mellin_transform(F, s, x, strip, **hints):
     Examples
     ========
 
-    >>> from sympy.integrals.transforms import inverse_mellin_transform
-    >>> from sympy import oo, gamma
+    >>> from sympy import inverse_mellin_transform, oo, gamma
     >>> from sympy.abc import x, s
     >>> inverse_mellin_transform(gamma(s), s, x, (0, oo))
     exp(-x)
@@ -1079,6 +1078,7 @@ def _laplace_transform(f, t, s_, simplify=True):
 
     def process_conds(conds):
         """ Turn ``conds`` into a strip and auxiliary conditions. """
+        from sympy.solvers.inequalities import _solve_inequality
         a = S.NegativeInfinity
         aux = S.true
         conds = conjuncts(to_cnf(conds))
@@ -1883,11 +1883,12 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
     Examples
     ========
 
-    >>> from sympy.integrals.transforms import laplace_transform
+    >>> from sympy import DiracDelta, exp, laplace_transform
     >>> from sympy.abc import t, s, a
-    >>> from sympy.functions import DiracDelta, exp
     >>> laplace_transform(t**4, t, s)
     (24/s**5, 0, True)
+    >>> laplace_transform(t**a, t, s)
+    (gamma(a + 1)/(s*s**a), 0, re(a) > -1)
     >>> laplace_transform(DiracDelta(t)-a*exp(-a*t),t,s)
     (s/(a + s), Max(0, -a), True)
 
@@ -1984,6 +1985,7 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         a = arg.subs(exp(-t), u)
         if a.has(t):
             return Heaviside(arg, H0)
+        from sympy.solvers.inequalities import _solve_inequality
         rel = _solve_inequality(a > 0, u)
         if rel.lts == u:
             k = log(rel.gts)
@@ -2071,8 +2073,7 @@ def inverse_laplace_transform(F, s, t, plane=None, **hints):
     Examples
     ========
 
-    >>> from sympy.integrals.transforms import inverse_laplace_transform
-    >>> from sympy import exp, Symbol
+    >>> from sympy import inverse_laplace_transform, exp, Symbol
     >>> from sympy.abc import s, t
     >>> a = Symbol('a', positive=True)
     >>> inverse_laplace_transform(exp(-a*s)/s, s, t)

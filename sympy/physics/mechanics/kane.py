@@ -1,6 +1,5 @@
 from sympy.core.backend import zeros, Matrix, diff, eye
 from sympy.core.sorting import default_sort_key
-from sympy.solvers.solvers import solve_linear_system_LU
 from sympy.physics.vector import (ReferenceFrame, dynamicsymbols,
                                   partial_velocity)
 from sympy.physics.mechanics.method import _Methods
@@ -237,34 +236,66 @@ class KanesMethod(_Methods):
             self._Ars = Matrix()
 
     def _initialize_kindiffeq_matrices(self, kdeqs):
-        """Initialize the kinematic differential equation matrices."""
+        """Initialize the kinematic differential equation matrices.
+
+        Parameters
+        ==========
+        kdeqs : sequence of sympy expressions
+            Kinematic differential equations in the form of f(u,q',q,t) where
+            f() = 0. The equations have to be linear in the generalized
+            coordinates and generalized speeds.
+
+        """
 
         if kdeqs:
             if len(self.q) != len(kdeqs):
                 raise ValueError('There must be an equal number of kinematic '
                                  'differential equations and coordinates.')
-            kdeqs = Matrix(kdeqs)
 
             u = self.u
             qdot = self._qdot
-            # Dictionaries setting things to zero
-            u_zero = {i: 0 for i in u}
-            uaux_zero = {i: 0 for i in self._uaux}
-            qdot_zero = {i: 0 for i in qdot}
 
-            f_k = msubs(kdeqs, u_zero, qdot_zero)
-            k_ku = (msubs(kdeqs, qdot_zero) - f_k).jacobian(u)
-            k_kqdot = (msubs(kdeqs, u_zero) - f_k).jacobian(qdot)
+            kdeqs = Matrix(kdeqs)
 
+            u_zero = {ui: 0 for ui in u}
+            uaux_zero = {uai: 0 for uai in self._uaux}
+            qdot_zero = {qdi: 0 for qdi in qdot}
+
+            # Extract the linear coefficient matrices as per the following
+            # equation:
+            #
+            # k_ku(q,t)*u(t) + k_kqdot(q,t)*q'(t) + f_k(q,t) = 0
+            #
+            k_ku = kdeqs.jacobian(u)
+            k_kqdot = kdeqs.jacobian(qdot)
+            f_k = kdeqs.xreplace(u_zero).xreplace(qdot_zero)
+
+            # The kinematic differential equations should be linear in both q'
+            # and u, so check for u and q' in the components.
+            dy_syms = find_dynamicsymbols(k_ku.row_join(k_kqdot).row_join(f_k))
+            nonlin_vars = [vari for vari in u[:] + qdot[:] if vari in dy_syms]
+            if nonlin_vars:
+                msg = ('The provided kinematic differential equations are '
+                       'nonlinear in {}. They must be linear in the '
+                       'generalized speeds and derivatives of the generalized '
+                       'coordinates.')
+                raise ValueError(msg.format(nonlin_vars))
+
+            # Solve for q'(t) such that the coefficient matrices are now in
+            # this form:
+            #
+            # k_kqdot^-1*k_ku*u(t) + I*q'(t) + k_kqdot^-1*f_k = 0
+            #
+            # NOTE : Solving the kinematic differential equations here is not
+            # necessary and prevents the equations from being provided in fully
+            # implicit form.
             f_k = k_kqdot.LUsolve(f_k)
             k_ku = k_kqdot.LUsolve(k_ku)
             k_kqdot = eye(len(qdot))
+            self._qdot_u_map = dict(zip(qdot, -(k_ku*u + f_k)))
 
-            self._qdot_u_map = solve_linear_system_LU(
-                    Matrix([k_kqdot.T, -(k_ku * u + f_k).T]).T, qdot)
-
-            self._f_k = msubs(f_k, uaux_zero)
-            self._k_ku = msubs(k_ku, uaux_zero)
+            self._f_k = f_k.xreplace(uaux_zero)
+            self._k_ku = k_ku.xreplace(uaux_zero)
             self._k_kqdot = k_kqdot
         else:
             self._qdot_u_map = None

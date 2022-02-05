@@ -621,8 +621,7 @@ class StrPrinter(Printer):
         Examples
         ========
 
-        >>> from sympy.functions import sqrt
-        >>> from sympy.printing.str import StrPrinter
+        >>> from sympy import sqrt, StrPrinter
         >>> from sympy.abc import x
 
         How ``rational`` keyword works with ``sqrt``:

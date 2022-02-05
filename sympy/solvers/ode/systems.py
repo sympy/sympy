@@ -52,7 +52,7 @@ def _simpsol(soleq):
     terms = []
     for coeff, monom in zip(p.coeffs(), p.monoms()):
         coeff = piecewise_fold(coeff)
-        if type(coeff) is Piecewise:
+        if isinstance(coeff, Piecewise):
             coeff = Piecewise(*((ratsimp(coef).collect(syms), cond) for coef, cond in coeff.args))
         else:
             coeff = ratsimp(coeff).collect(syms)
@@ -980,7 +980,8 @@ def linodesolve(A, t, b=None, B=None, type="auto", doit=False,
         if type in ("type1", "type5"):
             sol_vector = P * (J * Cvect)
         else:
-            sol_vector = P * J * ((J.inv() * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
+            Jinv = J.subs(t, -t)
+            sol_vector = P * J * ((Jinv * P.inv() * b).applyfunc(lambda x: Integral(x, t)) + Cvect)
 
     else:
         if B is None:

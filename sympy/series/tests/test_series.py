@@ -1,6 +1,6 @@
 from sympy.core.evalf import N
 from sympy.core.function import (Derivative, Function, PoleError, Subs)
-from sympy.core.numbers import (E, Rational, oo, pi)
+from sympy.core.numbers import (E, Rational, oo, pi, I)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
@@ -235,6 +235,16 @@ def test_issue_12791():
         + 0.25*varphi*sin(theta)/(0.5*cos(theta) - 1.0)**2 + O((beta - S.Half)**2, (beta, S.Half))
 
     assert expr.series(beta, 0.5, 2).trigsimp() == sol
+
+
+def test_issue_14384():
+    x, a = symbols('x a')
+    assert series(x**a, x) == x**a
+    assert series(x**(-2*a), x) == x**(-2*a)
+    assert series(exp(a*log(x)), x) == exp(a*log(x))
+    assert series(x**I, x) == x**I
+    assert series(x**(I + 1), x) == x**(1 + I)
+    assert series(exp(I*log(x)), x) == exp(I*log(x))
 
 
 def test_issue_14885():
