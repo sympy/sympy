@@ -501,17 +501,17 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     matrix = _build_matrix(smooth_relations)
     dependent_row, mark, gauss_matrix = _gauss_mod_2(matrix)
     N_copy = N
-    for factor in p_f:
+    for factor in proper_factor:
         N_copy //= factor
     for index in range(len(dependent_row)):
         factor = _find_factor(dependent_row, mark, gauss_matrix, index, smooth_relations, N_copy)
-        if factor > 1 and factor < N_copy:
-            proper_factor.add(factor)
+        if factor > 1 and factor <= N_copy:
             while(N_copy % factor == 0):
+                proper_factor.add(factor)
                 N_copy //= factor
             if isprime(N_copy):
                 proper_factor.add(N_copy)
                 break
             if(N_copy == 1):
                 break
-    return proper_factor
+    return sorted(proper_factor)
