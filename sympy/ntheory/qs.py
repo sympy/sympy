@@ -2,8 +2,7 @@ from sympy.core.numbers import igcd, mod_inverse
 from sympy.core.power import integer_nthroot
 from sympy.ntheory.residue_ntheory import _sqrt_mod_prime_power
 from sympy.ntheory import isprime
-from math import log, sqrt
-from decimal import Decimal
+from math import log, isqrt
 import random
 
 rgen = random.Random()
@@ -122,7 +121,7 @@ def _initialize_first_polynomial(N, M, factor_base, idx_1000, idx_5000, seed=Non
     """
     if seed is not None:
         rgen.seed(seed)
-    approx_val = sqrt(Decimal(2*N)) / M
+    approx_val = isqrt(2*N) // M
     # `a` is a parameter of the sieve polynomial and `q` is the prime factors of `a`
     # randomly search for a combination of primes whose multiplication is close to approx_val
     # This multiplication of primes will be `a` and the primes will be `q`
@@ -298,7 +297,7 @@ def _trial_division_stage(N, M, factor_base, sieve_array, sieve_poly, partial_re
     partial_relations : stores partial relations with one large prime
     ERROR_TERM : error term for accumulated_val
     """
-    sqrt_n = sqrt(float(N))
+    sqrt_n = isqrt(N)
     accumulated_val = log(M * sqrt_n)*2**10 - ERROR_TERM
     smooth_relations = []
     proper_factor = set()
