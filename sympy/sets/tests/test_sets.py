@@ -1639,7 +1639,6 @@ def test_SetKind_evaluate_False():
     assert I({1}, EmptySet).kind is SetKind()
     C = lambda *args: Complement(*args, evaluate=False)
     assert C(S.UniversalSet, {1, 2, 4, 5}).kind is SetKind(UndefinedKind)
-    assert C({1}, {1, 2, 3, 4, 5}).kind is SetKind()
     assert C({1, 2, 3, 4, 5}, EmptySet).kind is SetKind(NumberKind)
     assert C(EmptySet, {1, 2, 3, 4, 5}).kind is SetKind()
 
