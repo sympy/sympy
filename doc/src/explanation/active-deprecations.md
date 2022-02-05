@@ -657,9 +657,13 @@ TODO
 
 TODO
 
+(deprecated-eq-expr)=
 ### `Eq(expr)` with the rhs defaulting to 0
 
-TODO
+Calling [`Eq`](sympy.core.relational.Equality) with a single argument is
+deprecated. This caused the right-hand side to default to `0`, but this
+behavior was confusing. You should explicitly use `Eq(expr, 0)` instead.
+
 
 (deprecated-non-tuple-lambda)=
 ### Non-tuple iterable for the first argument to `Lambda`

@@ -9,7 +9,7 @@ from .sympify import _sympify, SympifyError
 from .parameters import global_parameters
 from .logic import fuzzy_bool, fuzzy_xor, fuzzy_and, fuzzy_not
 from sympy.logic.boolalg import Boolean, BooleanAtom
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import sift
 from sympy.utilities.misc import filldedent
 
@@ -535,7 +535,8 @@ Rel = Relational
 
 
 class Equality(Relational):
-    """An equal relation between two objects.
+    """
+    An equal relation between two objects.
 
     Explanation
     ===========
@@ -595,6 +596,13 @@ class Equality(Relational):
     Since this object is already an expression, it does not respond to
     the method ``as_expr`` if one tries to create `x - y` from ``Eq(x, y)``.
     This can be done with the ``rewrite(Add)`` method.
+
+    .. deprecated:: 1.5
+
+       ``Eq(expr)`` with a single argument is a shorthand for ``Eq(expr, 0)``,
+       but this behavior is deprecated and will be removed in a future version
+       of SymPy.
+
     """
     rel_op = '=='
 
@@ -605,12 +613,14 @@ class Equality(Relational):
     def __new__(cls, lhs, rhs=None, **options):
 
         if rhs is None:
-            SymPyDeprecationWarning(
-                feature="Eq(expr) with rhs default to 0",
-                useinstead="Eq(expr, 0)",
-                issue=16587,
-                deprecated_since_version="1.5"
-            ).warn()
+            sympy_deprecation_warning(
+                """
+                Eq(expr) with a single argument with the right-hand side
+                defaulting to 0 is deprecated. Use Eq(expr, 0) instead.
+                """,
+                deprecated_since_version="1.5",
+                active_deprecations_target="deprecated-eq-expr",
+            )
             rhs = 0
         evaluate = options.pop('evaluate', global_parameters.evaluate)
         lhs = _sympify(lhs)
