@@ -101,9 +101,13 @@ functions present there. If a name is in the top-level namespace, its specific
 SymPy submodule should not be relied on, as functions may move around due to
 internal refactorings.
 
-### `sympy.core.trace.Tr`
+(sympy-core-trace-deprecated)=
+### `sympy.core.trace`
 
-TODO
+The trace object `sympy.core.trace.Tr()` was moved to
+`sympy.physics.quantum.trace.Tr()`.  This was because it was only used in the
+`sympy.physics.quantum` submodule, so it was better to have it there than in
+the core.
 
 (deprecated-sympy-core-compatibility)=
 ### The `sympy.core.compatibility` submodule
