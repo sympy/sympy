@@ -2096,7 +2096,7 @@ def test_key_extensibility():
     finally:
         # We have to disable the stacklevel testing here because this raises
         # the warning twice from two different places
-        with warns(SymPyDeprecationWarning, test_stacklevel=False):
+        with warns_deprecated_sympy():
             remove_handler('my_key', MyAskHandler)
         del Q.my_key
     raises(AttributeError, lambda: ask(Q.my_key(x)))

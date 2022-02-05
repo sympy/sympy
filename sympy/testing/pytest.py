@@ -330,6 +330,17 @@ def warns_deprecated_sympy():
     Failed: DID NOT WARN. No warnings of type \
     SymPyDeprecationWarning was emitted. The list of emitted warnings is: [].
 
+    .. note::
+
+       Sometimes the stacklevel test will fail because the same warning is
+       emitted multiple times. In this case, you can use
+       :func:`sympy.testing.pytest.ignore_warnings` in the code to prevent the
+       ``SymPyDeprecationWarning`` from being emitted again recursively. In
+       rare cases it is impossible to have a consistent ``stacklevel`` for
+       deprecation warnings because different ways of calling a function will
+       produce different call stacks.. In those cases, use
+       ``warns(SymPyDeprecationWarning)`` instead.
+
     See Also
     ========
     sympy.utilities.exceptions.SymPyDeprecationWarning
