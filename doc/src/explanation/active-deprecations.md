@@ -133,7 +133,7 @@ by user code.
 The `expr_free_symbols` attribute of various SymPy objects is deprecated.
 
 `expr_free_symbols` was meant to represent indexed objects such as
-{class}`~.MatrixElement` and {class}`~.Indexed` as free symbols. This was
+`MatrixElement` and {class}`~.Indexed` as free symbols. This was
 intended to make derivatives of free symbols work. However, this now workw
 without making use of the method:
 
@@ -226,9 +226,74 @@ However, this new behavior was considered confusing, as discussed in issue
 Now, `sample_iter` should be used if a iterator is needed. Consequently, the
 `numsamples` parameter is no longer needed for `sample()`.
 
+(deprecated-rawmatrix)=
 ### `sympy.polys.solvers.RawMatrix`
 
-TODO
+The ``RawMatrix`` class is deprecated. The ``RawMatrix`` class was a subclass
+of ``Matrix`` that used domain elements instead of ``Expr`` as the elements of
+the matrix. This breaks a key internal invariant of ``Matrix`` and this kind
+of subclassing limits improvements to the ``Matrix`` class so this is
+deprecated and will likely not work soon in a new release of SymPy.
+
+The only part of SymPy that documented the use of the `RawMatrix`` class was
+the Smith normal form code and that has now been changed to use
+``DomainMatrix`` instead. It is recommended that anyone using ``RawMatrix``
+with the previous Smith Normal Form code should switch to using
+``DomainMatrix`` as shown in issue
+[#21402](https://github.com/sympy/sympy/pull/21402). A better API for the
+Smith normal form will be added later.
+
+(deprecated-non-expr-in-matrix)=
+### Non-`Expr` objects in a Matrix
+
+In SymPy 1.8 and earlier versions it was possible to put non-{class}`~.Expr`
+elements in a [`Matrix`](sympy.matrices.dense.Matrix) and the matrix elements could be any arbitrary
+Python object:
+
+```python
+>>> M = Matrix([[(1, 2), {}]]) # doctest: +SKIP
+>>> M # doctest: +SKIP
+```
+
+This is not useful and does not really work e.g.:
+
+```python
+>>> M + M # doctest: +SKIP
+Traceback (most recent call last):
+...
+TypeError: unsupported operand type(s) for +: 'Dict' and 'Dict'
+```
+
+The main reason for making this possible was that there were a number of
+`Matrix` subclasses in the SymPy codebase that wanted to work with objects
+from the polys module e.g.
+
+1. `RawMatrix` (see [above](deprecated-rawmatrix)) was used in `solve_lin_sys` which was part of `heurisch` and was also used by `smith_normal_form`. The `NewMatrix` class used domain elements as the elements of the Matrix rather than `Expr`.
+
+2. `NewMatrix` was used in the `holonomic` module and also used domain
+elements as matrix elements
+
+3. `PolyMatrix` used a mix of `Poly` and `Expr` as the matrix elements and was
+used by `risch`.
+
+All of these matrix subclasses were broken in different ways and the
+introduction of {class}`~.DomainMatrix`
+([#20780](https://github.com/sympy/sympy/issues/20780),
+[#20759](https://github.com/sympy/sympy/issues/20759),
+[#20621](https://github.com/sympy/sympy/issues/20621),
+[#19882](https://github.com/sympy/sympy/issues/19882),
+[#18844](https://github.com/sympy/sympy/issues/18844)) provides a better
+solution for all cases. Previous PRs have removed the dependence of these
+other use cases on Matrix
+([#21441](https://github.com/sympy/sympy/issues/21441),
+[#21427](https://github.com/sympy/sympy/issues/21427),
+[#21402](https://github.com/sympy/sympy/issues/21402)) and now
+[#21496](https://github.com/sympy/sympy/issues/21496) has deprecated having
+non-`Expr` in a `Matrix`.
+
+This change makes it possible to improve the internals of the Matrix class but it potentially impacts on some downstream use cases that might be similar to the uses of Matrix with non-Expr elements that were in the SymPy codebase. A potential replacement for code that used Matrix with non-Expr elements is DomainMatrix if the elements are something like domain elements and a domain object can be provided for them. Alternatively if the goal is just printing support then perhaps TableForm can be used.
+
+It isn't clear what to advise as a replacement here without knowing more about the usecase. Feel free to comment below indicating what you want to do with non-Expr Matrix elements and we can discuss how to achieve that.
 
 ### The `get_segments` attribute of plotting objects
 
@@ -239,10 +304,6 @@ TODO
 TODO
 
 ### The private `SparseMatrix._smat` and `DenseMatrix._mat` attributes
-
-TODO
-
-### Non-`Expr` objects in a Matrix
 
 TODO
 

@@ -31,7 +31,9 @@ from sympy.matrices.utilities import _dotprodsimp_state
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.utilities.iterables import flatten, capture, iterable
-from sympy.testing.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.testing.pytest import (raises, XFAIL, slow, skip,
+                                  warns_deprecated_sympy, warns)
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
 from sympy.matrices.expressions import MatPow
@@ -2578,7 +2580,7 @@ def test_replace_map():
         K = Matrix(2, 2, [(G(0), {F(0): G(0)}), (G(1), {F(1): G(1)}),
                           (G(1), {F(1): G(1)}), (G(2), {F(2): G(2)})])
     M = Matrix(2, 2, lambda i, j: F(i+j))
-    with warns_deprecated_sympy():
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
         N = M.replace(F, G, True)
     assert N == K
 
