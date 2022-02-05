@@ -1963,11 +1963,14 @@ class Lambda(Expr):
 
     def __new__(cls, signature, expr):
         if iterable(signature) and not isinstance(signature, (tuple, Tuple)):
-            SymPyDeprecationWarning(
-                feature="non tuple iterable of argument symbols to Lambda",
-                useinstead="tuple of argument symbols",
-                issue=17474,
-                deprecated_since_version="1.5").warn()
+            sympy_deprecation_warning(
+                """
+                Using a non-tuple iterable as the first argument to Lambda
+                is deprecated. Use Lambda(tuple(args), expr) instead.
+                """,
+                deprecated_since_version="1.5",
+                active_deprecations_target="deprecated-non-tuple-lambda",
+            )
             signature = tuple(signature)
         sig = signature if iterable(signature) else (signature,)
         sig = sympify(sig)

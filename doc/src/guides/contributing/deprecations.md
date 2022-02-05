@@ -330,7 +330,8 @@ non-deprecated behavior. The SymPy test suite is configured to fail if a
 or a `warnings.filterwarnings(SymPyDeprecationWarning)` anywhere except in the
 test for the deprecation. This includes the documentation examples. The
 documentation for a deprecated function should just have a note pointing to
-the non-deprecated alternative.
+the non-deprecated alternative. If you want to show a deprecated function in a
+doctest use `# doctest: +SKIP`
 
 If it is not possible to remove the deprecated behavior somewhere, that is a
 sign that it is not ready to be deprecated yet. Consider that users may not be
