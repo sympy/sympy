@@ -3,6 +3,8 @@ from sympy.core.power import integer_nthroot
 from sympy.ntheory.residue_ntheory import _sqrt_mod_prime_power
 from sympy.ntheory import isprime
 from math import log, sqrt
+from decimal import Decimal
+from datetime import datetime
 import random
 
 rgen = random.Random()
@@ -501,8 +503,10 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
     matrix = _build_matrix(smooth_relations)
     dependent_row, mark, gauss_matrix = _gauss_mod_2(matrix)
     N_copy = N
+    for factor in p_f:
+        N_copy //= factor
     for index in range(len(dependent_row)):
-        factor = _find_factor(dependent_row, mark, gauss_matrix, index, smooth_relations, N)
+        factor = _find_factor(dependent_row, mark, gauss_matrix, index, smooth_relations, N_copy)
         if factor > 1 and factor < N:
             proper_factor.add(factor)
             while(N_copy % factor == 0):
@@ -513,7 +517,3 @@ def qs(N, prime_bound, M, ERROR_TERM=25, seed=1234):
             if(N_copy == 1):
                 break
     return proper_factor
-
-
-print (datetime.now().time(), qs(25645121643901801, 2000, 10000))
-print (datetime.now().time(), qs(9804659461513846513, 2000, 10000))
