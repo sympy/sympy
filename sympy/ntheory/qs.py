@@ -4,7 +4,6 @@ from sympy.ntheory.residue_ntheory import _sqrt_mod_prime_power
 from sympy.ntheory import isprime
 from math import log, sqrt
 from decimal import Decimal
-from datetime import datetime
 import random
 
 rgen = random.Random()
