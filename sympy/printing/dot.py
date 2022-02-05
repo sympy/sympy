@@ -247,7 +247,7 @@ def dotprint(expr,
     Examples
     ========
 
-    >>> from sympy.printing.dot import dotprint
+    >>> from sympy import dotprint
     >>> from sympy.abc import x
     >>> print(dotprint(x+2)) # doctest: +NORMALIZE_WHITESPACE
     digraph{

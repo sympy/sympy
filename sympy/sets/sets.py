@@ -18,7 +18,7 @@ from sympy.core.relational import Eq, Ne, is_lt
 from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import symbols, Symbol, Dummy, uniquely_named_symbol
-from sympy.core.sympify import _sympify, sympify, converter
+from sympy.core.sympify import _sympify, sympify, _sympy_converter
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.utilities.decorator import deprecated
@@ -1975,8 +1975,8 @@ class FiniteSet(Set):
 
     __hash__ : Callable[[Basic], Any] = Basic.__hash__
 
-converter[set] = lambda x: FiniteSet(*x)
-converter[frozenset] = lambda x: FiniteSet(*x)
+_sympy_converter[set] = lambda x: FiniteSet(*x)
+_sympy_converter[frozenset] = lambda x: FiniteSet(*x)
 
 
 class SymmetricDifference(Set):

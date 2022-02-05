@@ -80,7 +80,8 @@ from sympy.polys.densearith import (
     dmp_exquo,
     dmp_add_mul, dmp_sub_mul,
     dmp_max_norm,
-    dmp_l1_norm)
+    dmp_l1_norm,
+    dmp_l2_norm_squared)
 
 from sympy.polys.densetools import (
     dmp_clear_denoms,
@@ -128,7 +129,10 @@ from sympy.polys.rootisolation import (
     dup_refine_real_root,
     dup_count_real_roots,
     dup_count_complex_roots,
-    dup_sturm)
+    dup_sturm,
+    dup_cauchy_upper_bound,
+    dup_cauchy_lower_bound,
+    dup_mignotte_sep_bound_squared)
 
 from sympy.polys.polyerrors import (
     UnificationFailed,
@@ -149,7 +153,7 @@ class DMP(PicklableWithSlots, CantSympify):
             # Not possible to check with isinstance
             if type(rep) is dict:
                 rep = dmp_from_dict(rep, lev, dom)
-            elif type(rep) is not list:
+            elif not isinstance(rep, list):
                 rep = dmp_ground(dom.convert(rep), lev)
         else:
             rep, lev = dmp_validate(rep)
@@ -582,6 +586,10 @@ class DMP(PicklableWithSlots, CantSympify):
         """Returns l1 norm of ``f``. """
         return dmp_l1_norm(f.rep, f.lev, f.dom)
 
+    def l2_norm_squared(f):
+        """Return squared l2 norm of ``f``. """
+        return dmp_l2_norm_squared(f.rep, f.lev, f.dom)
+
     def clear_denoms(f):
         """Clear denominators, but keep the ground domain. """
         coeff, F = dmp_clear_denoms(f.rep, f.lev, f.dom)
@@ -755,6 +763,27 @@ class DMP(PicklableWithSlots, CantSympify):
         """Computes the Sturm sequence of ``f``. """
         if not f.lev:
             return list(map(f.per, dup_sturm(f.rep, f.dom)))
+        else:
+            raise ValueError('univariate polynomial expected')
+
+    def cauchy_upper_bound(f):
+        """Computes the Cauchy upper bound on the roots of ``f``. """
+        if not f.lev:
+            return dup_cauchy_upper_bound(f.rep, f.dom)
+        else:
+            raise ValueError('univariate polynomial expected')
+
+    def cauchy_lower_bound(f):
+        """Computes the Cauchy lower bound on the nonzero roots of ``f``. """
+        if not f.lev:
+            return dup_cauchy_lower_bound(f.rep, f.dom)
+        else:
+            raise ValueError('univariate polynomial expected')
+
+    def mignotte_sep_bound_squared(f):
+        """Computes the squared Mignotte bound on root separations of ``f``. """
+        if not f.lev:
+            return dup_mignotte_sep_bound_squared(f.rep, f.dom)
         else:
             raise ValueError('univariate polynomial expected')
 
@@ -1089,14 +1118,14 @@ class DMF(PicklableWithSlots, CantSympify):
 
     @classmethod
     def _parse(cls, rep, dom, lev=None):
-        if type(rep) is tuple:
+        if isinstance(rep, tuple):
             num, den = rep
 
             if lev is not None:
-                if type(num) is dict:
+                if isinstance(num, dict):
                     num = dmp_from_dict(num, lev, dom)
 
-                if type(den) is dict:
+                if isinstance(den, dict):
                     den = dmp_from_dict(den, lev, dom)
             else:
                 num, num_lev = dmp_validate(num)
@@ -1120,9 +1149,9 @@ class DMF(PicklableWithSlots, CantSympify):
             num = rep
 
             if lev is not None:
-                if type(num) is dict:
+                if isinstance(num, dict):
                     num = dmp_from_dict(num, lev, dom)
-                elif type(num) is not list:
+                elif not isinstance(num, list):
                     num = dmp_ground(dom.convert(num), lev)
             else:
                 num, lev = dmp_validate(num)
@@ -1509,10 +1538,11 @@ class ANP(PicklableWithSlots, CantSympify):
     __slots__ = ('rep', 'mod', 'dom')
 
     def __init__(self, rep, mod, dom):
+        # Not possible to check with isinstance
         if type(rep) is dict:
             self.rep = dup_from_dict(rep, dom)
         else:
-            if type(rep) is list:
+            if isinstance(rep, list):
                 rep = [dom.convert(a) for a in rep]
             else:
                 rep = [dom.convert(rep)]
@@ -1522,7 +1552,7 @@ class ANP(PicklableWithSlots, CantSympify):
         if isinstance(mod, DMP):
             self.mod = mod.rep
         else:
-            if type(mod) is dict:
+            if isinstance(mod, dict):
                 self.mod = dup_from_dict(mod, dom)
             else:
                 self.mod = dup_strip(mod)

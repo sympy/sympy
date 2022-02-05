@@ -344,7 +344,7 @@ def test_unicode():
     raises(TypeError, lambda: Symbol(1))
 
 
-def testuniquely_named_symbol_and__symbol():
+def test_uniquely_named_symbol_and_Symbol():
     F = uniquely_named_symbol
     x = Symbol('x')
     assert F(x) == x
@@ -361,7 +361,7 @@ def testuniquely_named_symbol_and__symbol():
     assert F(('x', r)).is_real
     assert F(('x', r), real=False).is_real
     assert F('x1', Symbol('x1'),
-        compare=lambda i: str(i).rstrip('1')).name == 'x1'
+        compare=lambda i: str(i).rstrip('1')).name == 'x0'
     assert F('x1', Symbol('x1'),
         modify=lambda i: i + '_').name == 'x1_'
     assert _symbol(x, _x) == x

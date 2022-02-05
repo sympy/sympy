@@ -58,3 +58,4 @@ write to our `mailing list
    intro.rst
    gotchas.rst
    features.rst
+   next.rst

@@ -17,7 +17,7 @@ from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Wild, Symbol, symbols
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.combinatorial.numbers import bernoulli, harmonic
-from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cot, csc
 from sympy.functions.special.hyper import hyper
@@ -33,14 +33,6 @@ from sympy.series.limitseq import limit_seq
 from sympy.series.order import O
 from sympy.series.residues import residue
 from sympy.sets.sets import FiniteSet, Interval
-from sympy.simplify.combsimp import combsimp
-from sympy.simplify.hyperexpand import hyperexpand
-from sympy.simplify.powsimp import powsimp
-from sympy.simplify.radsimp import denom, fraction
-from sympy.simplify.simplify import (factor_sum, sum_combine, simplify,
-                                     nsimplify, hypersimp)
-from sympy.solvers.solvers import solve
-from sympy.solvers.solveset import solveset
 from sympy.utilities.iterables import sift
 import itertools
 
@@ -367,6 +359,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
                 o_t.append(term)
 
         # next try to combine any interior sums for further simplification
+        from sympy.simplify.simplify import factor_sum, sum_combine
         result = Add(sum_combine(s_t), *o_t)
 
         return factor_sum(result, limits=self.limits)
@@ -465,6 +458,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
             if upper_limit is S.Infinity:
                 return Sum(sequence_term, (sym, 0, S.Infinity)).is_convergent() and \
                         Sum(sequence_term, (sym, S.NegativeInfinity, 0)).is_convergent()
+            from sympy.simplify.simplify import simplify
             sequence_term = simplify(sequence_term.xreplace({sym: -sym}))
             lower_limit = -upper_limit
             upper_limit = S.Infinity
@@ -530,6 +524,8 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ### ----------- ratio test ---------------- ###
         next_sequence_term = sequence_term.xreplace({sym: sym + 1})
+        from sympy.simplify.combsimp import combsimp
+        from sympy.simplify.powsimp import powsimp
         ratio = combsimp(powsimp(next_sequence_term/sequence_term))
         try:
             lim_ratio = limit_seq(ratio, sym)
@@ -575,6 +571,7 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         ### ------------- integral test -------------- ###
         check_interval = None
+        from sympy.solvers.solveset import solveset
         maxima = solveset(sequence_term.diff(sym), sym, interval)
         if not maxima:
             check_interval = interval
@@ -874,6 +871,11 @@ class Sum(AddWithLimits, ExprWithIntLimits):
 
         return Sum(e * self.function, *limits)
 
+    def _eval_rewrite_as_Product(self, *args, **kwargs):
+        from sympy.concrete.products import Product
+        if self.function.is_extended_real:
+            return log(Product(exp(self.function), *self.limits))
+
 
 def summation(f, *symbols, **kwargs):
     r"""
@@ -984,6 +986,7 @@ def telescopic(L, R, limits):
     if s is None:
         m = Dummy('m')
         try:
+            from sympy.solvers.solvers import solve
             sol = solve(L.subs(i, i + m) + R, m) or []
         except NotImplementedError:
             return None
@@ -1211,6 +1214,8 @@ def eval_sum_symbolic(f, limits):
         r = gosper_sum(f, (i, a, b))
 
         if isinstance(r, (Mul,Add)):
+            from sympy.simplify.radsimp import denom
+            from sympy.solvers.solvers import solve
             non_limit = r.free_symbols - Tuple(*limits[1:]).free_symbols
             den = denom(together(r))
             den_sym = non_limit & den.free_symbols
@@ -1250,17 +1255,23 @@ def _eval_sum_hyper(f, i, a):
         return _eval_sum_hyper(f.subs(i, i + a), i, 0)
 
     if f.subs(i, 0) == 0:
+        from sympy.simplify.simplify import simplify
         if simplify(f.subs(i, Dummy('i', integer=True, positive=True))) == 0:
             return S.Zero, True
         return _eval_sum_hyper(f.subs(i, i + 1), i, 0)
 
+    from sympy.simplify.simplify import hypersimp
     hs = hypersimp(f, i)
     if hs is None:
         return None
 
     if isinstance(hs, Float):
+        from sympy.simplify.simplify import nsimplify
         hs = nsimplify(hs)
 
+    from sympy.simplify.combsimp import combsimp
+    from sympy.simplify.hyperexpand import hyperexpand
+    from sympy.simplify.radsimp import fraction
     numer, denom = fraction(factor(hs))
     top, topl = numer.as_coeff_mul(i)
     bot, botl = denom.as_coeff_mul(i)

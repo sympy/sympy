@@ -369,7 +369,6 @@ class Order(Expr):
         Return None if the inclusion relation cannot be determined
         (e.g. when self and expr have different symbols).
         """
-        from sympy.simplify.powsimp import powsimp
         expr = sympify(expr)
         if expr.is_zero:
             return True
@@ -410,6 +409,7 @@ class Order(Expr):
                             if rv is not None:
                                 return rv
 
+            from sympy.simplify.powsimp import powsimp
             r = None
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')

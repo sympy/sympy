@@ -7,14 +7,14 @@ from typing import Set, Tuple, Any
 from .assumptions import ManagedProperties
 from .cache import cacheit
 from .core import BasicMeta
-from .sympify import _sympify, sympify, SympifyError
+from .sympify import _sympify, sympify, SympifyError, _external_converter
 from .sorting import ordered
 from .kind import Kind, UndefinedKind
 from ._print_helpers import Printable
 
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import iterable, numbered_symbols, NotIterable
+from sympy.utilities.iterables import iterable, numbered_symbols
 from sympy.utilities.misc import filldedent, func_name
 
 from inspect import getmro
@@ -319,6 +319,25 @@ class Basic(Printable, metaclass=ManagedProperties):
         args = len(args), tuple([inner_key(arg) for arg in args])
         return self.class_key(), args, S.One.sort_key(), S.One
 
+    def _do_eq_sympify(self, other):
+        """Returns a boolean indicating whether a == b when either a
+        or b is not a Basic. This is only done for types that were either
+        added to `converter` by a 3rd party or when the object has `_sympy_`
+        defined. This essentially reuses the code in `_sympify` that is
+        specific for this use case. Non-user defined types that are meant
+        to work with SymPy should be handled directly in the __eq__ methods
+        of the `Basic` classes it could equate to and not be converted. Note
+        that after conversion, `==`  is used again since it is not
+        neccesarily clear whether `self` or `other`'s __eq__ method needs
+        to be used."""
+        for superclass in type(other).__mro__:
+            conv = _external_converter.get(superclass)
+            if conv is not None:
+                return self == conv(other)
+        if hasattr(other, '_sympy_'):
+            return self == other._sympy_()
+        return NotImplemented
+
     def __eq__(self, other):
         """Return a boolean indicating whether a == b on the basis of
         their symbolic trees.
@@ -344,16 +363,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             return True
 
         if not isinstance(other, Basic):
-            if iterable(other, exclude=(str, NotIterable)
-                    ) and not hasattr(other, '_sympy_'):
-                # XXX iterable self should have it's own __eq__
-                # method if the path gives a false negative
-                # comparison
-                return False
-            try:
-                other = _sympify(other)
-            except (SympifyError, SyntaxError):
-                return NotImplemented
+            return self._do_eq_sympify(other)
 
         # check for pure number expr
         if  not (self.is_Number and other.is_Number) and (
@@ -890,7 +900,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         from .containers import Dict
         from .symbol import Dummy, Symbol
-        from sympy.polys.polyutils import illegal
+        from .numbers import _illegal
 
         unordered = False
         if len(args) == 1:
@@ -946,7 +956,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             if not simultaneous:
                 redo = []
                 for i in range(len(sequence)):
-                    if sequence[i][1] in illegal:  # nan, zoo and +/-oo
+                    if sequence[i][1] in _illegal:  # nan, zoo and +/-oo
                         redo.append(i)
                 for i in reversed(redo):
                     sequence.insert(0, sequence.pop(i))
