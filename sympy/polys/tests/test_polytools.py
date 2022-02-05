@@ -76,8 +76,9 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.polys.rootoftools import rootof
 from sympy.simplify.simplify import signsimp
 from sympy.utilities.iterables import iterable
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.testing.pytest import raises, warns_deprecated_sympy, warns
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
 
@@ -3506,7 +3507,7 @@ def test_issue_17988():
     p = poly(x - 1)
     with warns_deprecated_sympy():
         M = Matrix([[poly(x + 1), poly(x + 1)]])
-    with warns_deprecated_sympy():
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
         assert p * M == M * p == Matrix([[poly(x**2 - 1), poly(x**2 - 1)]])
 
 
