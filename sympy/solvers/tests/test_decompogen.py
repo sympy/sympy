@@ -2,7 +2,7 @@ from sympy.solvers.decompogen import decompogen, compogen
 from sympy.core.symbol import symbols
 from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, Max
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.testing.pytest import XFAIL, raises
 
@@ -19,7 +19,9 @@ def test_decompogen():
     assert decompogen(Abs(cos(y)**2 + 3*cos(x) - 4), x) == [Abs(x), 3*x + cos(y)**2 - 4, cos(x)]
     assert decompogen(x, y) == [x]
     assert decompogen(1, x) == [1]
+    assert decompogen(Max(3, x), x) == [Max(3, x), x]
     raises(TypeError, lambda: decompogen(x < 5, x))
+    raises(TypeError, lambda: decompogen(Max(sin(x), x**2), x))
 
 
 def test_decompogen_poly():

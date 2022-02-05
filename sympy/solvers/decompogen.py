@@ -1,8 +1,10 @@
 from sympy.core import (Function, Pow, sympify, Expr)
+from sympy.core.logic import And
 from sympy.core.relational import Relational
 from sympy.core.singleton import S
 from sympy.polys import Poly, decompose
 from sympy.utilities.misc import func_name
+from sympy.functions.elementary.miscellaneous import Min, Max
 
 
 def decompogen(f, symbol):
@@ -49,6 +51,16 @@ def decompogen(f, symbol):
         if arg == symbol:
             return [f]
         result += [f.subs(arg, symbol)] + decompogen(arg, symbol)
+        return result
+
+    # ===== Min/Max Functions ===== #
+    if isinstance(f, (Min, Max)):
+        if And(*[a.has(symbol) for a in f.args]):
+            raise TypeError('cannot decompose %s' % f)
+        for i in f.args:
+            if i.has(symbol):
+                arg = i
+        result += [f.subs(i, symbol)] + decompogen(i, symbol)
         return result
 
     # ===== Convert to Polynomial ===== #
