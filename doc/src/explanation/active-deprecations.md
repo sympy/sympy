@@ -745,9 +745,12 @@ Matrix([
 
 ## Version 1.3
 
+(deprecated-source)=
 ### The `source()` function
 
-TODO
+The {func}`~.source` function is deprecated. Use
+[`inspect.getsource(obj)`](https://docs.python.org/3/library/inspect.html#inspect.getsource)
+instead, or if you are in IPython or Jupyter, use `obj??`.
 
 ### The `dimension` and `scale_factor` arguments to `sympy.physics.units.Quanitity`
 
