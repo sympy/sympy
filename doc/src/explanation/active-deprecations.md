@@ -760,9 +760,13 @@ instead, or if you are in IPython or Jupyter, use `obj??`.
 
 TODO
 
+(deprecated-sympy-matrices-classof-a2idx)=
 ### Importing `classof` and `a2idx` from `sympy.matrices.matrices`
 
-TODO
+The functions `sympy.matrices.matrices.classof` and
+`sympy.matrices.matrices.a2idx` were duplicates of the same functions in
+`sympy.matrices.common`. The two functions should be used from the
+`sympy.matrices.common` module instead.
 
 ## Version 1.2
 
