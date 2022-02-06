@@ -23,7 +23,7 @@ from sympy.printing import sstr
 from sympy.printing.defaults import Printable
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.decorator import deprecated
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import flatten, NotIterable, is_sequence, reshape
 from sympy.utilities.misc import as_int, filldedent
 
@@ -1409,11 +1409,13 @@ class MatrixBase(MatrixDeprecated,
 
         mat = self
         if (1 not in mat.shape) or (1 not in b.shape) :
-            SymPyDeprecationWarning(
-                feature="Dot product of non row/column vectors",
-                issue=13815,
+            sympy_deprecation_warning(
+                """
+                Using the dot method to multiply non-row/column vectors is
+                deprecated. Use * or @ to perform matrix multiplication.
+                """,
                 deprecated_since_version="1.2",
-                useinstead="* to take matrix products").warn()
+                active_deprecations_target="deprecated-matrix-dot-non-vector")
             return mat._legacy_array_dot(b)
         if len(mat) != len(b):
             raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (self.shape, b.shape))

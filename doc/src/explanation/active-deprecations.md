@@ -770,9 +770,36 @@ The functions `sympy.matrices.matrices.classof` and
 
 ## Version 1.2
 
-### Dot product of non row/column vectors
+(deprecated-matrix-dot-non-vector)=
+### Dot product of non-row/column vectors
 
-TODO
+The {meth}`.Matrix.dot` has confusing behavior where `A.dot(B)` would return a
+list corresponding to `flatten(A.T*B.T)` when `A` and `B` are matrices that
+were not vectors (i.e., neither dimension was size 1). This was confusing. The
+purpose of `dot` is to perform a mathematical dot product, which should only
+be defined for vectors (i.e., either a $n\times 1$ or $1\times n$ matrix), but
+in a way that works regardless of whether each argument is a row or column
+vector. Furthermore, returning a list here was much less useful than a matrix
+would be, and resulted in a polymorphic return type depending on the shapes of
+the inputs.
+
+This behavior is deprecated. `dot` should only be used to do a mathematical
+dot product, which operates on row or column vectors . Use the `*` or `@`
+operators to do matrix multiplication.
+
+```py
+>>> from sympy import Matrix
+>>> A = Matrix([[1, 2], [3, 4]])
+>>> B = Matrix([[2, 3], [1, 2]])
+>>> A*B
+Matrix([
+[ 4,  7],
+[10, 17]])
+>>> A@B
+Matrix([
+[ 4,  7],
+[10, 17]])
+```
 
 ### `sympy.geometry.Line3D.equation` no longer needs the `k` argument
 

@@ -2444,6 +2444,10 @@ def test_dot():
     assert Matrix([I, 2*I]).dot(Matrix([I, 2*I]), conjugate_convention="left") == 5
     raises(ValueError, lambda: Matrix([1, 2]).dot(Matrix([3, 4]), hermitian=True, conjugate_convention="test"))
 
+    with warns_deprecated_sympy():
+        A = Matrix([[1, 2], [3, 4]])
+        B = Matrix([[2, 3], [1, 2]])
+        assert A.dot(B) == [11, 7, 16, 10]
 
 def test_dual():
     B_x, B_y, B_z, E_x, E_y, E_z = symbols(
