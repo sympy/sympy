@@ -543,12 +543,12 @@ class Set(Basic, EvalfMixin):
         Explanation
         ===========
 
-        Any :py:class`~.Set` will have kind :py:class`~.SetKind` which is
+        Any :class:`Set` will have kind :class:`SetKind` which is
         parametrised by the kind of the elements of the set. For example
         most sets are sets of numbers and will have kind
         ``SetKind(NumberKind)``. If elements of sets are different in kind than
-        their kind will ``SetKind(UndefinedKind)``. See :py:class`~.Kind` for
-        an explanation of the kind system.
+        their kind will ``SetKind(UndefinedKind)``. See
+        :class:`sympy.core.kind.Kind` for an explanation of the kind system.
 
         Examples
         ========
@@ -558,23 +558,20 @@ class Set(Basic, EvalfMixin):
         >>> FiniteSet(Matrix([1, 2])).kind
         SetKind(MatrixKind(NumberKind))
 
-        kinds of 0 and Matrix are different, kind will be
-        SetKind(UndefinedKind):
-
-        >>> Interval(1,2).kind
+        >>> Interval(1, 2).kind
         SetKind(NumberKind)
 
         >>> EmptySet.kind
         SetKind()
 
-        A :py:class`PowerSet` is a set of sets:
+        A :class:`sympy.sets.powerset.PowerSet` is a set of sets:
 
-        >>> PowerSet({1,2,3}).kind
+        >>> PowerSet({1, 2, 3}).kind
         SetKind(SetKind(NumberKind))
 
-        A :py:class`ProductSet` represents the set of tuples of elements of
-        other sets. Its kind is py:class:`TupleKind` parametrised by the kinds
-        of the elements of those sets:
+        A :class:`ProductSet` represents the set of tuples of elements of
+        other sets. Its kind is :class:`sympy.core.containers.TupleKind`
+        parametrised by the kinds of the elements of those sets:
 
         >>> p = ProductSet(FiniteSet(1, 2), FiniteSet(3, 4))
         >>> list(p)
@@ -591,13 +588,35 @@ class Set(Basic, EvalfMixin):
         The kind of the elements of a set are given by the ``element_kind``
         attribute of ``SetKind``:
 
-        >>> Interval(1,2).kind.element_kind
+        >>> Interval(1, 2).kind.element_kind
         NumberKind
 
         See Also
         ========
 
-        sympy.core.kind.NumberKind
+        NumberKind
+        sympy.core.kind.UndefinedKind
+        sympy.core.containers.TupleKind
+        MatrixKind
+        sympy.matrices.expressions.sets.MatrixSet
+        sympy.sets.conditionset.ConditionSet
+        Rationals
+        Naturals
+        Integers
+        sympy.sets.fancysets.ImageSet
+        sympy.sets.fancysets.Range
+        sympy.sets.fancysets.ComplexRegion
+        sympy.sets.powerset.PowerSet
+        sympy.sets.sets.ProductSet
+        sympy.sets.sets.Interval
+        sympy.sets.sets.Union
+        sympy.sets.sets.Intersection
+        sympy.sets.sets.Complement
+        sympy.sets.sets.EmptySet
+        sympy.sets.sets.UniversalSet
+        sympy.sets.sets.FiniteSet
+        sympy.sets.sets.SymmetricDifference
+        sympy.sets.sets.DisjointUnion
         """
         return self._kind()
 
@@ -2671,11 +2690,12 @@ class SetKind(Kind):
     Parameters
     ==========
 
-    args : tuple(element_kind)
-       element_kind is kind of element.
-       args is tuple of kinds of the element, but it only uses first arg or
-       ``UndefinedKind``,
-       this depends upon whether kind of all elements of tuple is same or not
+    element_kind: Kind (optional)
+        The kind of the elements of the set. In a well defined set all elements
+        will have the same kind. Otherwise the kind should
+        :class:`sympy.core.kind.UndefinedKind`. The ``element_kind`` argument is optional but
+        should only be omitted in the case of ``EmptySet`` whose kind is simply
+        ``SetKind()``
 
     Examples
     ========
@@ -2693,12 +2713,9 @@ class SetKind(Kind):
     sympy.matrices.common.MatrixKind
     sympy.core.containers.TupleKind
     """
-    def __new__(cls, *args):
-        obj = super().__new__(cls, *args)
-        if not args:
-            obj.element_kind = None
-        else:
-            obj.element_kind = args[0]
+    def __new__(cls, element_kind=None):
+        obj = super().__new__(cls, element_kind)
+        obj.element_kind = element_kind
         return obj
 
     def __repr__(self):
