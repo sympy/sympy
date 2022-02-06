@@ -40,13 +40,7 @@ if not scipy:
     sparse = None
 else:
     sparse = scipy.sparse
-    # Try to find spmatrix.
-    if hasattr(sparse, 'base'):
-        # Newer versions have it under scipy.sparse.base.
-        scipy_sparse_matrix = sparse.base.spmatrix  # type: ignore
-    elif hasattr(sparse, 'sparse'):
-        # Older versions have it under scipy.sparse.sparse.
-        scipy_sparse_matrix = sparse.sparse.spmatrix  # type: ignore
+    scipy_sparse_matrix = sparse.spmatrix
 
 
 def sympy_to_numpy(m, **options):
