@@ -40,7 +40,7 @@ if not scipy:
     sparse = None
 else:
     sparse = scipy.sparse
-    scipy_sparse_matrix = sparse.spmatrix
+    scipy_sparse_matrix = sparse.spmatrix # type: ignore
 
 
 def sympy_to_numpy(m, **options):
