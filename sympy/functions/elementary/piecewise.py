@@ -348,38 +348,49 @@ class Piecewise(Function):
         return piecewise_simplify(self, **kwargs)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=1):
+        from sympy.sets.sets import Union
         if cdir == S.Zero:
             l = self._eval_as_leading_term(x, logx=None, cdir=-1)
             r = self._eval_as_leading_term(x, logx=None, cdir=1)
             if l != r:
                 raise ValueError
             return r
-        upper_bound_list, cond_list, lower_bound_list = [], [], []
+
+        upper_bound_list, lower_bound_list = [], []
         for a, b, e, i in self._intervals(x)[1]:
             upper_bound_list.append(b)
-            cond_list.append(e)
             lower_bound_list.append(a)
-        upper = list(zip(cond_list, upper_bound_list))
-        lower = list(zip(cond_list, lower_bound_list))
-        lower.sort(key = lambda x:x[1])
+        expr_pairs = self.as_expr_set_pairs()
 
         # Check whether 0 is the upper boundary of a piece.
         # If yes, we consider that piece and the next one for evaluation.
         if S.Zero in upper_bound_list:
-            for i, pair in enumerate(upper):
-                if pair[1].is_zero:
+            for i, pair in enumerate(expr_pairs):
+                if pair[1].sup == S.Zero or any([arg.sup.is_zero for arg in pair[1].args if isinstance(pair[1], Union)]):
                     if cdir == -1:
                         return pair[0].as_leading_term(x)
                     else:
-                        return upper[i + 1][0].as_leading_term(x)
+                        while(expr_pairs[i + 1][1].inf != S.Zero):
+                            if isinstance(expr_pairs[i + 1][1], Union):
+                                if any([arg.inf.is_zero for arg in expr_pairs[i + 1][1].args
+                                        if isinstance(expr_pairs[i + 1][1], Union)]):
+                                    break
+                            i = i + 1
+                        return expr_pairs[i + 1][0].as_leading_term(x)
 
         # Check whether 0 is the lower boundary of a piece.
         # If yes, we consider that piece and the previous one for evaluation.
         if S.Zero in lower_bound_list:
-            for i, pair in enumerate(lower):
-                if pair[1].is_zero:
+            for i, pair in enumerate(expr_pairs):
+                if pair[1].inf == S.Zero or any([arg.inf.is_zero for arg in pair[1].args if isinstance(pair[1], Union)]):
                     if cdir == -1:
-                        return lower[i - 1][0].as_leading_term(x)
+                        while(expr_pairs[i - 1][1].sup != S.Zero):
+                            if isinstance(expr_pairs[i - 1][1], Union):
+                                if any([arg.sup.is_zero for arg in expr_pairs[i - 1][1].args
+                                        if isinstance(expr_pairs[i - 1][1], Union)]):
+                                    break
+                            i = i - 1
+                        return expr_pairs[i - 1][0].as_leading_term(x)
                     else:
                         return pair[0].as_leading_term(x)
 
@@ -391,14 +402,19 @@ class Piecewise(Function):
 
     def _at_infinity(self, x):
         at_infinity = []
+
         for i, pair in enumerate(self.as_expr_set_pairs()):
             if pair[1].inf is S.NegativeInfinity:
-                at_infinity.append(self.args[i])
+                at_infinity.append((self.args[i][0].subs(x, 1/x), 1/x < 0))
                 break
         for i, pair in enumerate(self.as_expr_set_pairs()):
             if pair[1].sup is S.Infinity:
-                at_infinity.append(self.args[i])
+                at_infinity.append((self.args[i][0].subs(x, 1/x), 1/x > 0))
                 break
+
+        if at_infinity[0][0] == at_infinity[1][0]:
+            at_infinity = [(at_infinity[0][0], True)]
+
         return Piecewise(*tuple(at_infinity))
 
     def _eval_adjoint(self):

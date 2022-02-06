@@ -299,8 +299,9 @@ class Limit(Expr):
             if e.is_Mul:
                 e = factor_terms(e)
             if isinstance(e, Piecewise):
-                e = e._at_infinity(z)
-            newe = e.subs(z, 1/z)
+                newe = e._at_infinity(z)
+            else:
+                newe = e.subs(z, 1/z)
             # cdir changes sign as oo- should become 0+
             cdir = -cdir
         else:

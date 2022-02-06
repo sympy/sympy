@@ -181,6 +181,24 @@ def test_piecewise_basic2():
         assert limit(function, x, oo) == 0
 
 
+def test_piecewise_basic3():
+    p0 = Piecewise((0, x < -2), (2, x > 2), (1, True))
+    p1 = Piecewise((2, x > 2), (0, x < -2), (1, True))
+    p2 = Piecewise((0, x < -2), (1, x < 2), (2, True))
+    p3 = Piecewise((2, x > 2), (1, x > -2), (0, True))
+    Functions = [p0, p1, p2, p3]
+    for function in Functions:
+        assert limit(function, x, -oo) == 0
+        assert limit(function, x, -2, '-') == 0
+        assert limit(function, x, -2, '+') == 1
+        raises(ValueError, lambda: limit(function, x, -2, dir='+-'))
+        assert limit(function, x, 0, '+-') == 1
+        assert limit(function, x, 2, '-') == 1
+        assert limit(function, x, 2, '+') == 2
+        raises(ValueError, lambda: limit(function, x, 2, dir='+-'))
+        assert limit(function, x, oo) == 2
+
+
 def test_basic5():
     class my(Function):
         @classmethod
