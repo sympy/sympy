@@ -233,17 +233,17 @@ Now, `sample_iter` should be used if a iterator is needed. Consequently, the
 (deprecated-rawmatrix)=
 ### `sympy.polys.solvers.RawMatrix`
 
-The ``RawMatrix`` class is deprecated. The ``RawMatrix`` class was a subclass
-of ``Matrix`` that used domain elements instead of ``Expr`` as the elements of
-the matrix. This breaks a key internal invariant of ``Matrix`` and this kind
-of subclassing limits improvements to the ``Matrix`` class so this is
+The `RawMatrix` class is deprecated. The `RawMatrix` class was a subclass
+of `Matrix` that used domain elements instead of `Expr` as the elements of
+the matrix. This breaks a key internal invariant of `Matrix` and this kind
+of subclassing limits improvements to the `Matrix` class so this is
 deprecated and will likely not work soon in a new release of SymPy.
 
-The only part of SymPy that documented the use of the `RawMatrix`` class was
+The only part of SymPy that documented the use of the `RawMatrix` class was
 the Smith normal form code and that has now been changed to use
-``DomainMatrix`` instead. It is recommended that anyone using ``RawMatrix``
+`DomainMatrix` instead. It is recommended that anyone using `RawMatrix`
 with the previous Smith Normal Form code should switch to using
-``DomainMatrix`` as shown in issue
+`DomainMatrix` as shown in issue
 [#21402](https://github.com/sympy/sympy/pull/21402). A better API for the
 Smith normal form will be added later.
 
@@ -307,9 +307,25 @@ TODO
 
 TODO
 
+(deprecated-private-matrix-attributes)=
 ### The private `SparseMatrix._smat` and `DenseMatrix._mat` attributes
 
-TODO
+The `._mat` attribute of [`Matrix`](sympy.matrices.dense.Matrix) and the
+`._smat` attribute of {class}`~.SparseMatrix` are deprecated.
+
+The internal representation of `Matrix` and `SparseMatrix` was changed to be a
+{class}`~.DomainMatrix` in [#21626](https://github.com/sympy/sympy/pull/21626)
+so that it is no longer possible to expose a mutable list/dict as a way of
+mutating a `Matrix`. Instead of `._mat` the new `.flat()` method can be used,
+which returns a new list that cannot be used to mutate the `Matrix` itself.
+Instead of `._smat` the `.todok()` method can be used which returns a new
+dict.
+
+Note that these attributes are already changed in SymPy 1.9 to return
+read-only copies, so that any code that relied on mutating them will be
+broken. Also these attributes were technically always private (they started
+with an underscore), so user code should not really have been using them in
+the first place.
 
 ### laplace_transform of a Matrix with noconds=False
 
