@@ -54,6 +54,8 @@ class SymPyDeprecationWarning(DeprecationWarning):
         self.args = (message, deprecated_since_version,
                      active_deprecations_target)
         self.message = message
+        if not isinstance(deprecated_since_version, str):
+            raise TypeError(f"'deprecated_since_version' should be a string, got {deprecated_since_version!r}")
         self.deprecated_since_version = deprecated_since_version
         self.active_deprecations_target = active_deprecations_target
 
