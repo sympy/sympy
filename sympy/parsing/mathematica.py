@@ -89,18 +89,18 @@ class MathematicaParser:
         # a single whitespace to '*'
         'whitespace': (
             re.compile(r'''
-                (?<=[a-zA-Z\d])     # a letter or a number
-                \                   # a whitespace
-                (?=[a-zA-Z\d])      # a letter or a number
+                (?:(?<=[a-zA-Z\d])|(?<=\d\.))     # a letter or a number
+                \s+                               # any number of whitespaces
+                (?:(?=[a-zA-Z\d])|(?=\.\d))       # a letter or a number
                 ''', re.VERBOSE),
             '*'),
 
         # add omitted '*' character
         'add*_1': (
             re.compile(r'''
-                (?<=[])\d])         # ], ) or a number
-                                    # ''
-                (?=[(a-zA-Z])       # ( or a single letter
+                (?:(?<=[])\d])|(?<=\d\.))       # ], ) or a number
+                                                # ''
+                (?=[(a-zA-Z])                   # ( or a single letter
                 ''', re.VERBOSE),
             '*'),
 
@@ -475,6 +475,7 @@ class MathematicaParser:
         (INFIX, RIGHT, {"^": "Power"}),
         (INFIX, RIGHT, {"@@": "Apply", "/@": "Map"}),
         (POSTFIX, None, {"'": "Derivative", "!": "Factorial", "!!": "Factorial2", "--": "Decrement"}),
+        (INFIX, None, {"?": "PatternTest"}),
         (POSTFIX, None, {
             "_": lambda x: ["Pattern", x, ["Blank"]],
             "_.": lambda x: ["Optional", ["Pattern", x, ["Blank"]]],
@@ -482,11 +483,16 @@ class MathematicaParser:
             "___": lambda x: ["Pattern", x, ["BlankNullSequence"]],
         }),
         (INFIX, None, {"_": lambda x, y: ["Pattern", x, ["Blank", y]]}),
-        (INFIX, None, {"?": "PatternTest"}),
+        (PREFIX, None, {"#": "Slot", "##": "SlotSequence"}),
     ]
 
+    _missing_arguments_default = {
+        "#": lambda: ["Slot", "1"],
+        "##": lambda: ["SlotSequence", "1"],
+    }
+
     _word = r"[A-Za-z][A-Za-z0-9]*"
-    _number = r"[0-9]+"
+    _number = r"(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)"
     _parentheses_open = ["(", "[", "[[", "{"]
     _parentheses_close = [")", "]", "]]", "}"]
 
@@ -503,17 +509,36 @@ class MathematicaParser:
 
     def _tokenize_mathematica_code(self, code: str):
         tokenizer = self._get_tokenizer()
+
+        # uncover '*' hiding behind a whitespace
+        code = self._apply_rules(code, 'whitespace')
+
+        # Remove white spaces:
+        nol1 = r"(?:[A-Za-z0-9]|(?<=\d)\.)"
+        nol2 = r"(?:[A-Za-z0-9]|\.(?=\d))"
+        code = re.sub(rf"(?<={nol1})\s+(?={nol2})", "*", code)
+        code = re.sub(rf"(?<=[])])\s+(?={nol2})", "*", code)
+        code = re.sub(rf"(?<={nol1})\s+(?=[(])", "*", code)
+        code = re.sub(r"(?<=\))\s+(?=\()", "*", code)
+
+        # Handle patterns like "x.3" ==> "x*.3" and "x1.2" ==> "x1*.2"
+        code = re.sub(r"(?<=[A-Za-z])(\d*)\.(?=\d)", r"\1*.", code)
+
+        # add omitted '*' character
+        code = self._apply_rules(code, 'add*_1')
+        code = self._apply_rules(code, 'add*_2')
+
         tokens = tokenizer.findall(code)
         return tokens
 
-    def _is_not_op(self, token: tUnion[str, list]) -> bool:
+    def _is_op(self, token: tUnion[str, list]) -> bool:
         if isinstance(token, list):
-            return True
+            return False
         if re.match(self._word, token):
-            return True
+            return False
         if re.match(self._number, token):
-            return True
-        return False
+            return False
+        return True
 
     def _parse_tokenized_code(self, tokens: list):
         stack: List[list] = [[]]
@@ -564,14 +589,14 @@ class MathematicaParser:
                     else:
                         node = []
                         first_index = 0
-                    if op_type == self.PREFIX and pointer > 0 and self._is_not_op(tokens[pointer-1]):
+                    if op_type == self.PREFIX and pointer > 0 and not self._is_op(tokens[pointer - 1]):
                         pointer += 1
                         continue
-                    if op_type == self.POSTFIX and pointer < size - 1 and self._is_not_op(tokens[pointer+1]):
+                    if op_type == self.POSTFIX and pointer < size - 1 and not self._is_op(tokens[pointer + 1]):
                         pointer += 1
                         continue
                     if op_type == self.INFIX:
-                        if pointer == 0 or pointer == size - 1 or not self._is_not_op(tokens[pointer-1]) or not self._is_not_op(tokens[pointer+1]):
+                        if pointer == 0 or pointer == size - 1 or self._is_op(tokens[pointer - 1]) or self._is_op(tokens[pointer + 1]):
                             pointer += 1
                             continue
                     tokens[pointer] = node
@@ -610,14 +635,20 @@ class MathematicaParser:
                         else:
                             node.append(arg2)
                     elif op_type == self.PREFIX:
-                        node.append(tokens.pop(pointer+1))
-                        size -= 1
                         assert flattening_strat is None
+                        if pointer == size - 1 or self._is_op(tokens[pointer + 1]):
+                            tokens[pointer] = self._missing_arguments_default[token]()
+                        else:
+                            node.append(tokens.pop(pointer+1))
+                            size -= 1
                     elif op_type == self.POSTFIX:
-                        node.append(tokens.pop(pointer-1))
-                        pointer -= 1
-                        size -= 1
                         assert flattening_strat is None
+                        if pointer == 0 or self._is_op(tokens[pointer - 1]):
+                            tokens[pointer] = self._missing_arguments_default[token]()
+                        else:
+                            node.append(tokens.pop(pointer-1))
+                            pointer -= 1
+                            size -= 1
                     if isinstance(op_name, Callable):  # type: ignore
                         op_call: Callable = typing.cast(Callable, op_name)
                         new_node = op_call(*node)
@@ -626,7 +657,6 @@ class MathematicaParser:
                 pointer += 1
         if one_output:
             assert len(tokens) == 1
-            assert isinstance(tokens[0], list)
             return tokens[0]
         else:
             return tokens

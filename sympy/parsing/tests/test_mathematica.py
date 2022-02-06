@@ -36,9 +36,13 @@ def test_mathematica():
         'Sin[x]**2Cos[y]**2': 'sin(x)**2*cos(y)**2',
         'Cos[x]^2(1 - Cos[y]^2)': 'cos(x)**2*(1-cos(y)**2)',
         'x y': 'x*y',
+        'x  y': 'x*y',
         '2 x': '2*x',
         'x 8': 'x*8',
         '2 8': '2*8',
+        '4.x': '4.*x',
+        '4. 3': '4.*3',
+        '4. 3.': '4.*3.',
         '1 2 3': '1*2*3',
         ' -  2 *  Sqrt[  2 3 *   ( 1   +  5 ) ]  ': '-2*sqrt(2*3*(1+5))',
         'Log[2,4]': 'log(4,2)',
@@ -73,11 +77,36 @@ def test_parser_mathematica_tokenizer():
 
     chain = lambda expr: parser._parse_tokenized_code(parser._tokenize_mathematica_code(expr))
 
+    # Basic patterns
+    assert chain("x") == "x"
+    assert chain("42") == "42"
+    assert chain(".2") == ".2"
+    assert chain("3 + 4") == ["Plus", "3", "4"]
+    assert chain("7 * 8") == ["Times", "7", "8"]
     assert chain("a + b*c") == ["Plus", "a", ["Times", "b", "c"]]
     assert chain("a + b* c* d + 2 * e") == ["Plus", "a", ["Times", "b", "c", "d"], ["Times", "2", "e"]]
     assert chain("-a") == ["Times", -1, "a"]
     assert chain("a - b") == ["Plus", "a", ["Times", -1, "b"]]
     assert chain("a / b") == ["Times", "a", ["Power", "b", -1]]
+
+    # Missing asterisk (*) patterns:
+    assert chain("x y") == ["Times", "x", "y"]
+    assert chain("3 4") == ["Times", "3", "4"]
+    assert chain("a[b] c") == ["Times", ["a", "b"], "c"]
+    assert chain("(x) (y)") == ["Times", "x", "y"]
+    assert chain("3 (a)") == ["Times", "3", "a"]
+    assert chain("(a) b") == ["Times", "a", "b"]
+    assert chain("4.2") == "4.2"
+    assert chain("4 2") == ["Times", "4", "2"]
+    assert chain("4  2") == ["Times", "4", "2"]
+    assert chain("3 . 4") == ["Dot", "3", "4"]
+    assert chain("4. 2") == ["Times", "4.", "2"]
+    assert chain("x.y") == ["Dot", "x", "y"]
+    assert chain("4.y") == ["Times", "4.", "y"]
+    assert chain("4 .y") == ["Dot", "4", "y"]
+    assert chain("x.4") == ["Times", "x", ".4"]
+    assert chain("x0.3") == ["Times", "x0", ".3"]
+    assert chain("x. 4") == ["Dot", "x", "4"]
 
     # Parentheses of various kinds, i.e. ( )  [ ]  [[ ]]  { }
     assert chain("(a + b) + c") == ["Plus", ["Plus", "a", "b"], "c"]
@@ -114,6 +143,22 @@ def test_parser_mathematica_tokenizer():
     assert chain("y_.") == ["Optional", ["Pattern", "y", ["Blank"]]]
     assert chain("y__") == ["Pattern", "y", ["BlankSequence"]]
     assert chain("y___") == ["Pattern", "y", ["BlankNullSequence"]]
+
+    # Slots for lambda functions
+    assert chain("#") == ["Slot", "1"]
+    assert chain("#3") == ["Slot", "3"]
+    assert chain("#n") == ["Slot", "n"]
+    assert chain("##") == ["SlotSequence", "1"]
+    assert chain("##a") == ["SlotSequence", "a"]
+
+    # Lambda functions
+    assert chain("#&") == ["Function", ["Slot", "1"]]
+    assert chain("#+3&") == ["Function", ["Plus", ["Slot", "1"], "3"]]
+    assert chain("#1 + #2&") == ["Function", ["Plus", ["Slot", "1"], ["Slot", "2"]]]
+    assert chain("# + #&") == ["Function", ["Plus", ["Slot", "1"], ["Slot", "1"]]]
+    # Currently not working:
+    # assert chain("#&[x]") == [["Function", ["Slot", "1"]], "x"]
+    # assert chain("#1 + #2 & [x, y]") == [["Function", ["Slot", "1"], ["Slot", "2"]], "x", "y"]
 
 
 def test_parser_mathematica_exp_alt():
