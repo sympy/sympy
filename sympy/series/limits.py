@@ -350,8 +350,12 @@ class Limit(Expr):
 
         try:
             if str(dir) == '+-':
-                r = gruntz(e, z, z0, '+')
-                l = gruntz(e, z, z0, '-')
+                if isinstance(e, Piecewise):
+                    r = limit(e, z, z0, '+')
+                    l = limit(e, z, z0, '-')
+                else:
+                    r = gruntz(e, z, z0, '+')
+                    l = gruntz(e, z, z0, '-')
                 if l != r:
                     raise ValueError("The limit does not exist since "
                             "left hand limit = %s and right hand limit = %s"

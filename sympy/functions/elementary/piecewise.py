@@ -347,7 +347,13 @@ class Piecewise(Function):
     def _eval_simplify(self, **kwargs):
         return piecewise_simplify(self, **kwargs)
 
-    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+    def _eval_as_leading_term(self, x, logx=None, cdir=1):
+        if cdir == S.Zero:
+            l = self._eval_as_leading_term(x, logx=None, cdir=-1)
+            r = self._eval_as_leading_term(x, logx=None, cdir=1)
+            if l != r:
+                raise ValueError
+            return r
         upper_bound_list, cond_list, lower_bound_list = [], [], []
         for a, b, e, i in self._intervals(x)[1]:
             upper_bound_list.append(b)
@@ -355,6 +361,7 @@ class Piecewise(Function):
             lower_bound_list.append(a)
         upper = list(zip(cond_list, upper_bound_list))
         lower = list(zip(cond_list, lower_bound_list))
+        lower.sort(key = lambda x:x[1])
 
         # Check whether 0 is the upper boundary of a piece.
         # If yes, we consider that piece and the next one for evaluation.

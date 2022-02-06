@@ -155,6 +155,30 @@ def test_piecewise_basic():
     assert limit(expr2, x, 10, dir = '-') == 121
     assert limit(expr2, x, oo) == 5
     assert limit(expr2, x, -oo) == -oo
+    raises(ValueError, lambda: limit(expr1, x, 0, dir='+-'))
+    raises(ValueError, lambda: limit(expr2, x, 0, dir='+-'))
+    raises(ValueError, lambda: limit(expr2, x, 10, dir='+-'))
+
+
+def test_piecewise_basic2():
+    from sympy.logic.boolalg import (And, Or)
+    p0 = Piecewise((0, Or(x < -2, x > 2)), (1, True))
+    p1 = Piecewise((0, x < -2), (0, x > 2), (1, True))
+    p2 = Piecewise((0, x > 2), (0, x < -2), (1, True))
+    p3 = Piecewise((0, x < -2), (1, x < 2), (0, True))
+    p4 = Piecewise((0, x > 2), (1, x > -2), (0, True))
+    p5 = Piecewise((1, And(-2< x, x < 2)), (0, True))
+    Functions = [p0, p1, p2, p3, p4, p5]
+    for function in Functions:
+        assert limit(function, x, -oo) == 0
+        assert limit(function, x, -2, '-') == 0
+        assert limit(function, x, -2, '+') == 1
+        raises(ValueError, lambda: limit(function, x, -2, dir='+-'))
+        assert limit(function, x, 0, '+-') == 1
+        assert limit(function, x, 2, '-') == 1
+        assert limit(function, x, 2, '+') == 0
+        raises(ValueError, lambda: limit(function, x, 2, dir='+-'))
+        assert limit(function, x, oo) == 0
 
 
 def test_basic5():
