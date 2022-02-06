@@ -18,16 +18,19 @@ import warnings
 
 from itertools import cycle
 
-from sympy.ntheory.generate import nextprime
-from sympy.core import Rational, Symbol
-from sympy.core.numbers import igcdex, mod_inverse, igcd
+from sympy.core import Symbol
+from sympy.core.numbers import igcdex, mod_inverse, igcd, Rational
+from sympy.core.random import _randrange, _randint
 from sympy.matrices import Matrix
 from sympy.ntheory import isprime, primitive_root, factorint
+from sympy.ntheory import totient as _euler
+from sympy.ntheory import reduced_totient as _carmichael
+from sympy.ntheory.generate import nextprime
+from sympy.ntheory.modular import crt
 from sympy.polys.domains import FF
 from sympy.polys.polytools import gcd, Poly
 from sympy.utilities.misc import as_int, filldedent, translate
 from sympy.utilities.iterables import uniq, multiset
-from sympy.core.random import _randrange, _randint
 
 
 class NonInvertibleCipherWarning(RuntimeWarning):
@@ -1483,7 +1486,6 @@ def _decipher_rsa_crt(i, d, factors):
     >>> decrypted
     65
     """
-    from sympy.ntheory.modular import crt
     moduluses = [pow(i, d, p) for p in factors]
 
     result = crt(factors, moduluses)
@@ -1507,8 +1509,6 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
     multipower : bool, optional
         Flag to bypass warning for multipower RSA.
     """
-    from sympy.ntheory import totient as _euler
-    from sympy.ntheory import reduced_totient as _carmichael
 
     if len(args) < 2:
         return False

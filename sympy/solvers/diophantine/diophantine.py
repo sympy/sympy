@@ -1309,7 +1309,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import diophantine
+    >>> from sympy import diophantine
     >>> from sympy.abc import a, b
     >>> eq = a**4 + b**4 - (2**4 + 3**4)
     >>> diophantine(eq)

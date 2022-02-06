@@ -72,7 +72,7 @@ def DifferentialOperators(base, generator):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
+    >>> from sympy import ZZ
     >>> from sympy.abc import x
     >>> from sympy.holonomic.holonomic import DifferentialOperators
     >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x), 'Dx')
@@ -110,7 +110,7 @@ class DifferentialOperatorAlgebra:
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
+    >>> from sympy import ZZ
     >>> from sympy import symbols
     >>> from sympy.holonomic.holonomic import DifferentialOperators
     >>> x = symbols('x')
@@ -175,7 +175,7 @@ class DifferentialOperator:
     ========
 
     >>> from sympy.holonomic.holonomic import DifferentialOperator, DifferentialOperators
-    >>> from sympy.polys.domains import ZZ
+    >>> from sympy import ZZ
     >>> from sympy import symbols
     >>> x = symbols('x')
     >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
@@ -422,7 +422,7 @@ class HolonomicFunction:
     ========
 
     >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
-    >>> from sympy.polys.domains import QQ
+    >>> from sympy import QQ
     >>> from sympy import symbols, S
     >>> x = symbols('x')
     >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
@@ -731,7 +731,7 @@ class HolonomicFunction:
         ========
 
         >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
-        >>> from sympy.polys.domains import QQ
+        >>> from sympy import QQ
         >>> from sympy import symbols
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
@@ -858,7 +858,7 @@ class HolonomicFunction:
         ========
 
         >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
-        >>> from sympy.polys.domains import ZZ
+        >>> from sympy import ZZ
         >>> from sympy import symbols
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
@@ -1190,7 +1190,7 @@ class HolonomicFunction:
         ========
 
         >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
-        >>> from sympy.polys.domains import QQ
+        >>> from sympy import QQ
         >>> from sympy import symbols
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
@@ -1271,7 +1271,7 @@ class HolonomicFunction:
         ========
 
         >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
-        >>> from sympy.polys.domains import QQ
+        >>> from sympy import QQ
         >>> from sympy import symbols, S
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
@@ -1664,7 +1664,7 @@ class HolonomicFunction:
         ========
 
         >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
-        >>> from sympy.polys.domains import QQ
+        >>> from sympy import QQ
         >>> from sympy import symbols
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
@@ -1801,7 +1801,7 @@ class HolonomicFunction:
         ========
 
         >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
-        >>> from sympy.polys.domains import QQ
+        >>> from sympy import QQ
         >>> from sympy import symbols
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(QQ.old_poly_ring(x),'Dx')
@@ -1906,7 +1906,7 @@ class HolonomicFunction:
         ========
 
         >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
-        >>> from sympy.polys.domains import ZZ
+        >>> from sympy import ZZ
         >>> from sympy import symbols
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')
@@ -2079,7 +2079,7 @@ class HolonomicFunction:
         ========
 
         >>> from sympy.holonomic.holonomic import HolonomicFunction, DifferentialOperators
-        >>> from sympy.polys.domains import ZZ
+        >>> from sympy import ZZ
         >>> from sympy import symbols, S
         >>> x = symbols('x')
         >>> R, Dx = DifferentialOperators(ZZ.old_poly_ring(x),'Dx')

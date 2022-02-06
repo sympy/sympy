@@ -146,6 +146,7 @@ Interface
 .. autofunction:: coskewness
 .. autofunction:: median
 .. autofunction:: std
+.. autofunction:: quantile
 .. autofunction:: sample
 .. autofunction:: sample_iter
 .. autofunction:: factorial_moment
