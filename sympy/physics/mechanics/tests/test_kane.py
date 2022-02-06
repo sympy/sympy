@@ -4,6 +4,7 @@ from sympy.simplify.simplify import simplify
 from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      RigidBody, KanesMethod, inertia, Particle,
                                      dot)
+from sympy.testing.pytest import raises
 
 
 def test_one_dof():
@@ -76,6 +77,11 @@ def test_two_dof():
     assert simplify(KM.rhs() -
                     KM.mass_matrix_full.LUsolve(KM.forcing_full)) == zeros(4, 1)
 
+    # Make sure an error is raised if nonlinear kinematic differential
+    # equations are supplied.
+    kd = [q1d - u1**2, sin(q2d) - cos(u2)]
+    raises(ValueError, lambda: KanesMethod(N, q_ind=[q1, q2],
+                                           u_ind=[u1, u2], kd_eqs=kd))
 
 def test_pend():
     q, u = dynamicsymbols('q u')
@@ -309,7 +315,6 @@ def test_input_format():
     # test for input format kane.kanes_equations(bodies=(body1, body2), loads=[])
     assert KM.kanes_equations(BL, [])[0] == Matrix([0])
     # test for error raised when a wrong force list (in this case a string) is provided
-    from sympy.testing.pytest import raises
     raises(ValueError, lambda: KM._form_fr('bad input'))
 
     # 1 dof problem from test_one_dof with FL & BL in instance

@@ -1,4 +1,3 @@
-from __future__ import print_function, division
 import random
 
 import itertools
@@ -1091,9 +1090,8 @@ class DiscreteMarkovChain(DiscreteTimeStochasticProcess, MarkovProcess):
             # end breadth-first search
 
         # convert back to the user's state names
-        classes = [[self._state_index[i] for i in class_] for class_ in classes]
-
-        return sympify(list(zip(classes, recurrence, periods)))
+        classes = [[_sympify(self._state_index[i]) for i in class_] for class_ in classes]
+        return list(zip(classes, recurrence, map(Integer,periods)))
 
     def fundamental_matrix(self):
         """

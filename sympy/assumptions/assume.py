@@ -461,7 +461,7 @@ def assuming(*assumptions):
     Examples
     ========
 
-    >>> from sympy.assumptions import assuming, Q, ask
+    >>> from sympy import assuming, Q, ask
     >>> from sympy.abc import x, y
     >>> print(ask(Q.integer(x + y)))
     None

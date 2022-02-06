@@ -14,7 +14,6 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.matrices.common import NonSquareMatrixError
 from sympy.matrices.matrices import MatrixKind, MatrixBase
 from sympy.multipledispatch import dispatch
-from sympy.simplify import simplify
 from sympy.utilities.misc import filldedent
 
 
@@ -203,6 +202,7 @@ class MatrixExpr(Expr):
         if self.is_Atom:
             return self
         else:
+            from sympy.simplify import simplify
             return self.func(*[simplify(x, **kwargs) for x in self.args])
 
     def _eval_adjoint(self):

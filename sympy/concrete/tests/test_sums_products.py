@@ -1304,6 +1304,17 @@ def test_expand_with_assumptions():
     assert log(Product(x**i*y**j, (i, 1, n), (j, 1, m))).expand() \
         == Sum(i*log(x) + j*log(y), (i, 1, n), (j, 1, m))
 
+    m = Symbol('m', nonnegative=True, integer=True)
+    s = Sum(x**m, (m, 0, M))
+    s_as_product = s.rewrite(Product)
+    assert s_as_product.has(Product)
+    assert s_as_product == log(Product(exp(x**m), (m, 0, M)))
+    assert s_as_product.expand() == s
+    s5 = s.subs(M, 5)
+    s5_as_product = s5.rewrite(Product)
+    assert s5_as_product.has(Product)
+    assert s5_as_product.doit().expand() == s5.doit()
+
 
 def test_has_finite_limits():
     x = Symbol('x')

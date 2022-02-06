@@ -756,3 +756,11 @@ def test_match_bound():
     assert Sum(x, (x, 1, 2)).match(Sum(y, (y, 1, W))) == {W: 2}
     assert Sum(x, (x, 1, 2)).match(Sum(V, (V, 1, W))) == {W: 2, V:x}
     assert Sum(x, (x, 1, 2)).match(Sum(V, (V, 1, 2))) == {V:x}
+
+
+def test_issue_22462():
+    x, f = symbols('x'), Function('f')
+    n, Q = symbols('n Q', cls=Wild)
+    pattern = -Q*f(x)**n
+    eq = 5*f(x)**2
+    assert pattern.matches(eq) == {n: 2, Q: -5}

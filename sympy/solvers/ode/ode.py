@@ -690,7 +690,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
             rv = _remove_redundant_solutions(eq, rv, order, func.args[0])
         if len(rv) == 1:
             rv = rv[0]
-    if ics and not 'power_series' in hint:
+    if ics and 'power_series' not in hint:
         if isinstance(rv, (Expr, Eq)):
             solved_constants = solve_ics([rv], [r['func']], cons(rv), ics)
             rv = rv.subs(solved_constants)
@@ -770,10 +770,9 @@ def solve_ics(sols, funcs, constants, ics):
                 x0 = funcarg.variables[0]
                 variables = (x,)*len(funcarg.variables)
                 matching_func = deriv.subs(x0, x)
-            if variables not in diff_variables:
-                for sol in sols:
-                    if sol.has(deriv.expr.func):
-                        diff_sols.append(Eq(sol.lhs.diff(*variables), sol.rhs.diff(*variables)))
+            for sol in sols:
+                if sol.has(deriv.expr.func):
+                    diff_sols.append(Eq(sol.lhs.diff(*variables), sol.rhs.diff(*variables)))
             diff_variables.add(variables)
             S = diff_sols
         else:
@@ -2282,7 +2281,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     equation with polynomial coefficients at an ordinary point. A homogeneous
     differential equation is of the form
 
-    .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) = 0
+    .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) y(x) = 0
 
     For simplicity it is assumed that `P(x)`, `Q(x)` and `R(x)` are polynomials,
     it is sufficient that `\frac{Q(x)}{P(x)}` and `\frac{R(x)}{P(x)}` exists at
@@ -2427,7 +2426,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     equation with polynomial coefficients at a regular point. A second order
     homogeneous differential equation is of the form
 
-    .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) = 0
+    .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) y(x) = 0
 
     A point is said to regular singular at `x0` if `x - x0\frac{Q(x)}{P(x)}`
     and `(x - x0)^{2}\frac{R(x)}{P(x)}` are analytic at `x0`. For simplicity
@@ -2736,8 +2735,7 @@ def ode_1st_power_series(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, pprint, exp
-    >>> from sympy.solvers.ode.ode import dsolve
+    >>> from sympy import Function, pprint, exp, dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> eq = exp(x)*(f(x).diff(x)) - f(x)

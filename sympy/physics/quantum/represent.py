@@ -211,7 +211,7 @@ def represent(expr, **options):
     else:
         options["index"] = 1
 
-    if not "unities" in options:
+    if "unities" not in options:
         options["unities"] = []
 
     result = represent(expr.args[-1], **options)
@@ -276,7 +276,7 @@ def rep_innerproduct(expr, **options):
     if not isinstance(basis, StateBase):
         raise NotImplementedError("Can't form this representation!")
 
-    if not "index" in options:
+    if "index" not in options:
         options["index"] = 1
 
     basis_kets = enumerate_states(basis, options["index"], 2)
@@ -320,7 +320,7 @@ def rep_expectation(expr, **options):
 
     """
 
-    if not "index" in options:
+    if "index" not in options:
         options["index"] = 1
 
     if not isinstance(expr, Operator):
@@ -384,7 +384,7 @@ def integrate_result(orig_expr, result, **options):
         return result
 
     options['replace_none'] = True
-    if not "basis" in options:
+    if "basis" not in options:
         arg = orig_expr.args[-1]
         options["basis"] = get_basis(arg, **options)
     elif not isinstance(options["basis"], StateBase):

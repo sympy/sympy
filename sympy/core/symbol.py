@@ -124,32 +124,51 @@ def _symbol(s, matching_symbol=None, **assumptions):
         raise ValueError('symbol must be string for symbol name or Symbol')
 
 def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptions):
-    """Return a symbol which, when printed, will have a name unique
-    from any other already in the expressions given. The name is made
-    unique by appending numbers (default) but this can be
-    customized with the keyword 'modify'.
+    """
+    Return a symbol whose name is derivated from *xname* but is unique
+    from any other symbols in *exprs*.
+
+    *xname* and symbol names in *exprs* are passed to *compare* to be
+    converted to comparable forms. If ``compare(xname)`` is not unique,
+    it is recursively passed to *modify* until unique name is acquired.
 
     Parameters
     ==========
 
-        xname : a string or a Symbol (when symbol xname <- str(xname))
+    xname : str or Symbol
+        Base name for the new symbol.
 
-        compare : a single arg function that takes a symbol and returns
-            a string to be compared with xname (the default is the str
-            function which indicates how the name will look when it
-            is printed, e.g. this includes underscores that appear on
-            Dummy symbols)
+    exprs : Expr or iterable of Expr
+        Expressions whose symbols are compared to *xname*.
 
-        modify : a single arg function that changes its string argument
-            in some way (the default is to append numbers)
+    compare : function
+        Unary function which transforms *xname* and symbol names from
+        *exprs* to comparable form.
+
+    modify : function
+        Unary function which modifies the string. Default is appending
+        the number, or increasing the number if exists.
 
     Examples
     ========
 
-    >>> from sympy.core.symbol import uniquely_named_symbol
-    >>> from sympy.abc import x
-    >>> uniquely_named_symbol('x', x)
+    By default, a number is appended to *xname* to generate unique name.
+    If the number already exists, it is recursively increased.
+
+    >>> from sympy.core.symbol import uniquely_named_symbol, Symbol
+    >>> uniquely_named_symbol('x', Symbol('x'))
     x0
+    >>> uniquely_named_symbol('x', (Symbol('x'), Symbol('x0')))
+    x1
+    >>> uniquely_named_symbol('x0', (Symbol('x1'), Symbol('x0')))
+    x2
+
+    Name generation can be controlled by passing *modify* parameter.
+
+    >>> from sympy.abc import x
+    >>> uniquely_named_symbol('x', x, modify=lambda s: 2*s)
+    xx
+
     """
     def numbered_string_incr(s, start=0):
         if not s:
@@ -165,7 +184,7 @@ def uniquely_named_symbol(xname, exprs=(), compare=str, modify=None, **assumptio
     default = None
     if is_sequence(xname):
         xname, default = xname
-    x = str(xname)
+    x = compare(xname)
     if not exprs:
         return _symbol(x, default, **assumptions)
     if not is_sequence(exprs):
@@ -349,7 +368,7 @@ class Symbol(AtomicExpr, Boolean):
     def is_constant(self, *wrt, **flags):
         if not wrt:
             return False
-        return not self in wrt
+        return self not in wrt
 
     @property
     def free_symbols(self):

@@ -183,7 +183,7 @@ class AppliedBinaryRelation(AppliedPredicate):
         binrelpreds = {Eq: Q.eq, Ne: Q.ne, Gt: Q.gt, Lt: Q.lt, Ge: Q.ge, Le: Q.le}
         for a in conjuncts(assumptions):
             if a.func in binrelpreds:
-                conj_assumps.add(binrelpreds[a.func](*a.args))
+                conj_assumps.add(binrelpreds[type(a)](*a.args))
             else:
                 conj_assumps.add(a)
 

@@ -261,17 +261,6 @@ class Dimension(Expr):
             Dimension(d)**e for d, e in dependencies.items()
         ), 1)
 
-    @classmethod
-    def _get_dimensional_dependencies_for_name(cls, name):
-        from sympy.physics.units.systems.si import dimsys_default
-        SymPyDeprecationWarning(
-            deprecated_since_version="1.2",
-            issue=13336,
-            feature="do not call from `Dimension` objects.",
-            useinstead="DimensionSystem"
-        ).warn()
-        return dimsys_default.get_dimensional_dependencies(name)
-
     @property
     def is_dimensionless(self):
         """
@@ -325,15 +314,8 @@ class DimensionSystem(Basic, _QuantityMapper):
     may be omitted.
     """
 
-    def __new__(cls, base_dims, derived_dims=(), dimensional_dependencies={}, name=None, descr=None):
+    def __new__(cls, base_dims, derived_dims=(), dimensional_dependencies={}):
         dimensional_dependencies = dict(dimensional_dependencies)
-
-        if (name is not None) or (descr is not None):
-            SymPyDeprecationWarning(
-                deprecated_since_version="1.2",
-                issue=13336,
-                useinstead="do not define a `name` or `descr`",
-            ).warn()
 
         def parse_dim(dim):
             if isinstance(dim, str):
@@ -482,15 +464,7 @@ class DimensionSystem(Basic, _QuantityMapper):
         deps2 = self.get_dimensional_dependencies(dim2)
         return deps1 == deps2
 
-    def extend(self, new_base_dims, new_derived_dims=(), new_dim_deps=None, name=None, description=None):
-        if (name is not None) or (description is not None):
-            SymPyDeprecationWarning(
-                deprecated_since_version="1.2",
-                issue=13336,
-                feature="name and descriptions of DimensionSystem",
-                useinstead="do not specify `name` or `description`",
-            ).warn()
-
+    def extend(self, new_base_dims, new_derived_dims=(), new_dim_deps=None):
         deps = dict(self.dimensional_dependencies)
         if new_dim_deps:
             deps.update(new_dim_deps)
@@ -503,62 +477,6 @@ class DimensionSystem(Basic, _QuantityMapper):
         new_dim_sys._quantity_dimension_map.update(self._quantity_dimension_map)
         new_dim_sys._quantity_scale_factors.update(self._quantity_scale_factors)
         return new_dim_sys
-
-    @staticmethod
-    def sort_dims(dims):
-        """
-        Useless method, kept for compatibility with previous versions.
-
-        DO NOT USE.
-
-        Sort dimensions given in argument using their str function.
-
-        This function will ensure that we get always the same tuple for a given
-        set of dimensions.
-        """
-        SymPyDeprecationWarning(
-            deprecated_since_version="1.2",
-            issue=13336,
-            feature="sort_dims",
-            useinstead="sorted(..., key=default_sort_key)",
-        ).warn()
-        return tuple(sorted(dims, key=str))
-
-    def __getitem__(self, key):
-        """
-        Useless method, kept for compatibility with previous versions.
-
-        DO NOT USE.
-
-        Shortcut to the get_dim method, using key access.
-        """
-        SymPyDeprecationWarning(
-            deprecated_since_version="1.2",
-            issue=13336,
-            feature="the get [ ] operator",
-            useinstead="the dimension definition",
-        ).warn()
-        d = self.get_dim(key)
-        #TODO: really want to raise an error?
-        if d is None:
-            raise KeyError(key)
-        return d
-
-    def __call__(self, unit):
-        """
-        Useless method, kept for compatibility with previous versions.
-
-        DO NOT USE.
-
-        Wrapper to the method print_dim_base
-        """
-        SymPyDeprecationWarning(
-            deprecated_since_version="1.2",
-            issue=13336,
-            feature="call DimensionSystem",
-            useinstead="the dimension definition",
-        ).warn()
-        return self.print_dim_base(unit)
 
     def is_dimensionless(self, dimension):
         """

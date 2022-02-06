@@ -848,7 +848,7 @@ class harmonic(Function):
             return S.Zero
 
         if n.is_Integer and n.is_nonnegative and m.is_Integer:
-            if not m in cls._functions:
+            if m not in cls._functions:
                 @recurrence_memo([0])
                 def f(n, prev):
                     return prev[-1] + S.One / n**m

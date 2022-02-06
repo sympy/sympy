@@ -771,7 +771,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         for monom, coeff in self.iterterms():
             mon = monom[:i] + monom[i+1:]
-            if not mon in poly:
+            if mon not in poly:
                 poly[mon] = (gen**monom[i]).mul_ground(coeff)
             else:
                 poly[mon] += (gen**monom[i]).mul_ground(coeff)

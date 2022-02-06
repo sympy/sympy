@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Callable, Optional
 from functools import reduce
 from collections import defaultdict
 import inspect
@@ -18,7 +18,7 @@ from sympy.core.relational import Eq, Ne, is_lt
 from sympy.core.singleton import Singleton, S
 from sympy.core.sorting import ordered
 from sympy.core.symbol import symbols, Symbol, Dummy, uniquely_named_symbol
-from sympy.core.sympify import _sympify, sympify, converter
+from sympy.core.sympify import _sympify, sympify, _sympy_converter
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.utilities.decorator import deprecated
@@ -1968,9 +1968,15 @@ class FiniteSet(Set):
             raise TypeError("Invalid comparison of set with %s" % func_name(other))
         return self.is_proper_subset(other)
 
+    def __eq__(self, other):
+        if isinstance(other, (set, frozenset)):
+            return self._args_set == other
+        return super().__eq__(other)
 
-converter[set] = lambda x: FiniteSet(*x)
-converter[frozenset] = lambda x: FiniteSet(*x)
+    __hash__ : Callable[[Basic], Any] = Basic.__hash__
+
+_sympy_converter[set] = lambda x: FiniteSet(*x)
+_sympy_converter[frozenset] = lambda x: FiniteSet(*x)
 
 
 class SymmetricDifference(Set):

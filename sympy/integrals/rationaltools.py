@@ -10,7 +10,6 @@ from sympy.polys.polyroots import roots
 from sympy.polys.polytools import cancel
 from sympy.polys.rootoftools import RootSum
 from sympy.polys import Poly, resultant, ZZ
-from sympy.solvers.solvers import solve
 
 
 def ratint(f, x, **flags):
@@ -154,6 +153,8 @@ def ratint_ratpart(f, g, x):
 
     ratint, ratint_logpart
     """
+    from sympy.solvers.solvers import solve
+
     f = Poly(f, x)
     g = Poly(g, x)
 

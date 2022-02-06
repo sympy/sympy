@@ -275,7 +275,7 @@ class Mul(Expr, AssocOp):
             if b.is_Rational:
                 a, b = b, a
                 seq = [a, b]
-            assert not a is S.One
+            assert a is not S.One
             if not a.is_zero and a.is_Rational:
                 r, b = b.as_coeff_Mul()
                 if b.is_Add:
@@ -992,7 +992,7 @@ class Mul(Expr, AssocOp):
     def _eval_derivative_n_times(self, s, n):
         from .function import AppliedUndef
         from .symbol import Symbol, symbols, Dummy
-        if not isinstance(s, AppliedUndef) and not isinstance(s, Symbol):
+        if not isinstance(s, (AppliedUndef, Symbol)):
             # other types of s may not be well behaved, e.g.
             # (cos(x)*sin(y)).diff([[x, y, z]])
             return super()._eval_derivative_n_times(s, n)

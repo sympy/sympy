@@ -165,6 +165,8 @@ class Indexed(Expr):
             else:
                 return base[args]
 
+        base = _sympify(base)
+
         obj = Expr.__new__(cls, base, *args, **kw_args)
 
         try:
@@ -323,12 +325,12 @@ class Indexed(Expr):
 
         """
         ranges = []
+        sentinel = object()
         for i in self.indices:
-            sentinel = object()
             upper = getattr(i, 'upper', sentinel)
             lower = getattr(i, 'lower', sentinel)
             if sentinel not in (upper, lower):
-                ranges.append(Tuple(lower, upper))
+                ranges.append((lower, upper))
             else:
                 ranges.append(None)
         return ranges

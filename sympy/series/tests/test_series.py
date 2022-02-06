@@ -1,6 +1,6 @@
 from sympy.core.evalf import N
 from sympy.core.function import (Derivative, Function, PoleError, Subs)
-from sympy.core.numbers import (E, Rational, oo, pi)
+from sympy.core.numbers import (E, Rational, oo, pi, I)
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
@@ -237,6 +237,16 @@ def test_issue_12791():
     assert expr.series(beta, 0.5, 2).trigsimp() == sol
 
 
+def test_issue_14384():
+    x, a = symbols('x a')
+    assert series(x**a, x) == x**a
+    assert series(x**(-2*a), x) == x**(-2*a)
+    assert series(exp(a*log(x)), x) == exp(a*log(x))
+    assert series(x**I, x) == x**I
+    assert series(x**(I + 1), x) == x**(1 + I)
+    assert series(exp(I*log(x)), x) == exp(I*log(x))
+
+
 def test_issue_14885():
     assert series(x**Rational(-3, 2)*exp(x), x, 0) == (x**Rational(-3, 2) + 1/sqrt(x) +
         sqrt(x)/2 + x**Rational(3, 2)/6 + x**Rational(5, 2)/24 + x**Rational(7, 2)/120 +
@@ -344,8 +354,8 @@ def test_issue_20697():
 def test_issue_21245():
     fi = (1 + sqrt(5))/2
     assert (1/(1 - x - x**2)).series(x, 1/fi, 1).factor() == \
-        (-6964*sqrt(5) - 15572 + 2440*sqrt(5)*x + 5456*x\
-        + O((x - 2/(1 + sqrt(5)))**2, (x, 2/(1 + sqrt(5)))))/((1 + sqrt(5))**2\
+        (-4812 - 2152*sqrt(5) + 1686*x + 754*sqrt(5)*x\
+        + O((x - 2/(1 + sqrt(5)))**2, (x, 2/(1 + sqrt(5)))))/((1 + sqrt(5))\
         *(20 + 9*sqrt(5))**2*(x + sqrt(5)*x - 2))
 
 

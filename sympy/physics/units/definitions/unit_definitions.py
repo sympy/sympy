@@ -156,15 +156,15 @@ nmi.set_global_relative_scale_factor(6076, feet)
 
 # Common volume and area units
 
-l = liter = liters = Quantity("liter")
+l = L = liter = liters = Quantity("liter")
 
-dl = deciliter = deciliters = Quantity("deciliter")
+dl = dL = deciliter = deciliters = Quantity("deciliter")
 dl.set_global_relative_scale_factor(Rational(1, 10), liter)
 
-cl = centiliter = centiliters = Quantity("centiliter")
+cl = cL = centiliter = centiliters = Quantity("centiliter")
 cl.set_global_relative_scale_factor(Rational(1, 100), liter)
 
-ml = milliliter = milliliters = Quantity("milliliter")
+ml = mL = milliliter = milliliters = Quantity("milliliter")
 ml.set_global_relative_scale_factor(Rational(1, 1000), liter)
 
 
