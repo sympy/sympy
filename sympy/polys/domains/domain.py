@@ -864,15 +864,8 @@ class Domain:
 
     def frac_field(self, *symbols, order=lex):
         """Returns a fraction field, i.e. `K(X)`. """
-        from sympy.core.power import Pow
         from sympy.polys.domains.fractionfield import FractionField
-        _symbols = []
-        for symbol in symbols:
-            if isinstance(symbol, Pow) and symbol.exp.is_integer and symbol.exp < 0:
-                _symbols.append(1/symbol)
-            else:
-                _symbols.append(symbol)
-        return FractionField(self, tuple(_symbols), order)
+        return FractionField(self, symbols, order)
 
     def old_poly_ring(self, *symbols, **kwargs):
         """Returns a polynomial ring, i.e. `K[X]`. """
