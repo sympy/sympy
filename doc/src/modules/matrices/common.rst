@@ -9,3 +9,7 @@ MatrixCommon Class Reference
    :members:
    :special-members:
    :inherited-members:
+
+MatrixKind
+----------
+.. autoclass:: MatrixKind

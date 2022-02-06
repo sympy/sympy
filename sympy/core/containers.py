@@ -150,7 +150,7 @@ class Tuple(Basic):
         """
         The kind of a Tuple instance.
 
-        The kind of a Tuple is always of :py:class`~.TupleKind` but
+        The kind of a Tuple is always of :class:`TupleKind` but
         parametrised by the number of elements and the kind of each element.
 
         Examples
@@ -167,6 +167,7 @@ class Tuple(Basic):
         See Also
         ========
 
+        sympy.matrices.common.MatrixKind
         sympy.core.kind.NumberKind
         """
         return TupleKind(*(i.kind for i in self.args))
@@ -405,7 +406,7 @@ class TupleKind(Kind):
     ========
 
     sympy.core.kind.NumberKind
-    sympy.matrices.common.MatrixKind
+    MatrixKind
     sympy.sets.sets.SetKind
     """
     def __new__(cls, *args):
