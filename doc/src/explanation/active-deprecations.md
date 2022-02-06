@@ -727,9 +727,14 @@ See the discussion on issue [#17881](https://github.com/sympy/sympy/pull/17881).
 
 TODO
 
+(deprecated-matrix-is_diagonalizable-cache)=
 ### The `clear_cache` and `clear_subproducts` keywords to `Matrix.is_diagonalizable`
 
-TODO
+The `clear_cache` and `clear_subproducts` keywords to
+[`Matrix.is_diagonalizable()`](sympy.matrices.matrices.MatrixEigen.is_diagonalizable)
+are deprecated. These used to clear cached entries, but this cache was removed
+because it was not actually safe given that `Matrix` is mutable. The keywords
+now do nothing.
 
 (deprecated-matrix-jordan_block-rows-cols)=
 ### The `rows` and `cols` keyword arguments to `Matrix.jordan_block`
