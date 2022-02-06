@@ -801,9 +801,42 @@ Matrix([
 [10, 17]])
 ```
 
+(deprecated-line3d-equation-k)=
 ### `sympy.geometry.Line3D.equation` no longer needs the `k` argument
 
-TODO
+The `k` argument to {meth}`sympy.geometry.line.Line3D.equation()` method is
+deprecated.
+
+Previously, the function `Line3D.equation` returned `(X, Y, Z, k)` which was
+changed to `(Y-X, Z-X)` (here `X`, `Y` and `Z` are expressions of `x`, `y` and
+`z` respectively). As in 2D an equation is returned relating `x` and `y` just
+like that in 3D two equations will be returned relating `x`, `y` and `z`.
+
+So in the new `Line3D.equation` the `k` argument is not needed anymore. Now
+the `k` argument is effectively ignored. A `k` variable is temporarily formed
+inside `equation()` and then gets substituted using `subs()` in terms of `x`
+and then `(Y-X, Z-X)` is returned.
+
+Previously:
+
+```py
+>>> from sympy import Point3D,Line3D
+>>> p1,p2 = Point3D(1, 2, 3), Point3D(5, 6, 7)
+>>> l = Line3D(p1, p2)
+>>> l.equation() # doctest: + SKIP
+(x/4 - 1/4, y/4 - 1/2, z/4 - 3/4, k)
+```
+
+Now:
+
+```py
+>>> from sympy import Point3D, Line3D, solve
+>>> p1,p2 = Point3D(1, 2, 3), Point3D(5, 6, 7)
+>>> l = Line3D(p1,p2)
+>>> l.equation()
+(-x + y - 1, -x + z - 2)
+```
+
 
 (simplify-this-deprecation)=
 ## This is an example deprecation description
