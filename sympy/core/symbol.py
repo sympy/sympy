@@ -227,13 +227,13 @@ class Symbol(AtomicExpr, Boolean):
     SymPy will automatically pretty print symbols with greek letters.
 
     >>> alpha, beta, gamma = symbols('alpha beta gamma')
-    >>> 2*alpha + 3*beta - gamma
+    >>> 2*alpha + 3*beta - gamma #doctest: +SKIP
     2α + 3β - γ
 
     Sympy will automatically pretty print symbols with subscripts.
 
     >>> alpha1, alpha2 = symbols('alpha1 alpha2')
-    >>> 2*alpha1 + 3*alpha2
+    >>> 2*alpha1 + 3*alpha2 #doctest: +SKIP
     2α₁ + 3α₂
 
     You can override the default assumption in the constructor.
