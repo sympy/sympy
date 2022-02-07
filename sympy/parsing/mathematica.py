@@ -468,13 +468,16 @@ class MathematicaParser:
         (INFIX, FLAT, {"===": "SameQ", "=!=": "UnsameQ"}),
         (INFIX, FLAT, {"==": "Equal", "!=": "Unequal", "<=": "LessEqual", "<": "Less", ">=": "GreaterEqual", ">": "Greater"}),
         (INFIX, None, {";;": "Span"}),
-        (INFIX, FLAT, {"+": "Plus", "-": lambda x, y: ["Plus", x, ["Times", -1, y]]}),
+        (INFIX, FLAT, {"+": "Plus", "-": lambda x, y: ["Plus", x, MathematicaParser._get_neg(y)]}),
         (INFIX, FLAT, {"*": "Times", "/": lambda x, y: ["Times", x, ["Power", y, -1]]}),
         (INFIX, FLAT, {".": "Dot"}),
-        (PREFIX, None, {"-": lambda x: ["Times", -1, x]}),
+        (PREFIX, None, {"-": lambda x: MathematicaParser._get_neg(x),
+                        "+": lambda x: x}),
         (INFIX, RIGHT, {"^": "Power"}),
-        (INFIX, RIGHT, {"@@": "Apply", "/@": "Map"}),
+        (INFIX, RIGHT, {"@@": "Apply", "/@": "Map", "//@": "MapAll", "@@@": lambda x, y: ["Apply", x, y, ["List", "1"]]}),
         (POSTFIX, None, {"'": "Derivative", "!": "Factorial", "!!": "Factorial2", "--": "Decrement"}),
+        (INFIX, None, {"[": lambda x, y: [x, *y], "[[": lambda x, y: ["Part", x, *y]}),
+        (PREFIX, None, {"{": lambda x: ["List", *x], "(": lambda x: x[0]}),
         (INFIX, None, {"?": "PatternTest"}),
         (POSTFIX, None, {
             "_": lambda x: ["Pattern", x, ["Blank"]],
@@ -491,21 +494,33 @@ class MathematicaParser:
         "##": lambda: ["SlotSequence", "1"],
     }
 
-    _word = r"[A-Za-z][A-Za-z0-9]*"
+    _literal = r"[A-Za-z][A-Za-z0-9]*"
     _number = r"(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)"
-    _parentheses_open = ["(", "[", "[[", "{"]
-    _parentheses_close = [")", "]", "]]", "}"]
+
+    _enclosure_open = ["(", "[", "[[", "{"]
+    _enclosure_close = [")", "]", "]]", "}"]
+
+    @classmethod
+    def _get_neg(cls, x):
+        return f"-{x}" if isinstance(x, str) and re.match(MathematicaParser._number, x) else ["Times", "-1", x]
+
+    _regex_tokenizer = None
 
     def _get_tokenizer(self):
-        tokens = [self._word, self._number]
-        tokens_escape = self._parentheses_open[:] + self._parentheses_close[:]
+        if self._regex_tokenizer is not None:
+            # Check if the regular expression has already been compiled:
+            return self._regex_tokenizer
+        tokens = [self._literal, self._number]
+        tokens_escape = self._enclosure_open[:] + self._enclosure_close[:]
         for typ, strat, symdict in self._mathematica_op_precedence:
             for k in symdict:
                 tokens_escape.append(k)
         tokens_escape.sort(key=lambda x: -len(x))
         tokens.extend(map(re.escape, tokens_escape))
+        tokens.append(",")
         tokenizer = re.compile("(" + "|".join(tokens) + ")")
-        return tokenizer
+        self._regex_tokenizer = tokenizer
+        return self._regex_tokenizer
 
     def _tokenize_mathematica_code(self, code: str):
         tokenizer = self._get_tokenizer()
@@ -534,7 +549,7 @@ class MathematicaParser:
     def _is_op(self, token: tUnion[str, list]) -> bool:
         if isinstance(token, list):
             return False
-        if re.match(self._word, token):
+        if re.match(self._literal, token):
             return False
         if re.match(self._number, token):
             return False
@@ -543,36 +558,58 @@ class MathematicaParser:
     def _parse_tokenized_code(self, tokens: list):
         stack: List[list] = [[]]
         open_seq = []
-        for token in tokens:
-            if token in self._parentheses_open:
+        pointer: int = 0
+        while pointer < len(tokens):
+            token = tokens[pointer]
+            if token in self._enclosure_open:
                 stack[-1].append(token)
                 open_seq.append(token)
                 stack.append([])
-            elif token in self._parentheses_close:
-                ind = self._parentheses_close.index(token)
-                if self._parentheses_open[ind] != open_seq[-1]:
-                    raise SyntaxError("unmatched parentheses")
-                one_output = True if token in (")",) else False
-                last_stack = self._parse_after_braces(stack[-1], one_output=one_output)
-                stack.pop(-1)
+            elif token == ",":
+                if len(stack[-1]) == 0 and stack[-2][-1] == open_seq[-1]:
+                    raise SyntaxError("%s cannot be followed by comma ," % open_seq[-1])
+                stack[-1] = self._parse_after_braces(stack[-1])
+                stack.append([])
+            elif token in self._enclosure_close:
+                ind = self._enclosure_close.index(token)
+                if self._enclosure_open[ind] != open_seq[-1]:
+                    unmatched_enclosure = SyntaxError("unmatched enclosure")
+                    if token == "]]" and open_seq[-1] == "[":
+                        if open_seq[-2] == "[":
+                            # These two lines would be logically correct, but are
+                            # unnecessary:
+                            # token = "]"
+                            # tokens[pointer] = "]"
+                            tokens.insert(pointer+1, "]")
+                        elif open_seq[-2] == "[[":
+                            if tokens[pointer+1] == "]":
+                                tokens[pointer+1] = "]]"
+                            elif tokens[pointer+1] == "]]":
+                                tokens[pointer+1] = "]]"
+                                tokens.insert(pointer+2, "]")
+                            else:
+                                raise unmatched_enclosure
+                    else:
+                        raise unmatched_enclosure
+                if len(stack[-1]) == 0 and stack[-2][-1] == "(":
+                    raise SyntaxError("( ) not valid syntax")
+                last_stack = self._parse_after_braces(stack[-1])
+                stack[-1] = last_stack
+                new_stack_element = []
+                while stack[-1][-1] != open_seq[-1]:
+                    new_stack_element.append(stack.pop())
+                new_stack_element.reverse()
+                if open_seq[-1] == "(" and len(new_stack_element) != 1:
+                    raise SyntaxError("( must be followed by one expression, %i detected" % len(new_stack_element))
+                stack[-1].append(new_stack_element)
                 open_seq.pop(-1)
-                if one_output:
-                    stack[-1][-1] = last_stack
-                else:
-                    if token == "}":
-                        stack[-1][-1] = ["List"] + last_stack
-                    elif token == "]":
-                        stack[-1].pop(-1)
-                        stack[-1][-1] = [stack[-1][-1]] + last_stack
-                    elif token == "]]":
-                        stack[-1].pop(-1)
-                        stack[-1][-1] = ["Part", stack[-1][-1]] + last_stack
             else:
                 stack[-1].append(token)
+            pointer += 1
         assert len(stack) == 1
         return self._parse_after_braces(stack[0])
 
-    def _parse_after_braces(self, tokens: list, one_output: bool = True):
+    def _parse_after_braces(self, tokens: list):
         op_dict: dict
         for op_type, flattening_strat, op_dict in reversed(self._mathematica_op_precedence):
             size: int = len(tokens)
@@ -653,13 +690,14 @@ class MathematicaParser:
                         op_call: Callable = typing.cast(Callable, op_name)
                         new_node = op_call(*node)
                         node.clear()
-                        node.extend(new_node)
+                        if isinstance(new_node, list):
+                            node.extend(new_node)
+                        else:
+                            tokens[pointer] = new_node
                 pointer += 1
-        if one_output:
-            assert len(tokens) == 1
-            return tokens[0]
-        else:
-            return tokens
+        if len(tokens) != 1:
+            raise SyntaxError("unable to create a single AST for the expression")
+        return tokens[0]
 
     def _convert_fullform_to_pylist(self, wmexpr: str):
         """
