@@ -8,6 +8,7 @@ from sympy.core.numbers import Integer, Rational
 from sympy.core.mul import prod, _keep_coeff
 from sympy.core.rules import Transform
 from sympy.functions import exp_polar, exp, log, root, polarify, unpolarify
+from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.polys import lcm, gcd
 from sympy.ntheory.factor_ import multiplicity
 
@@ -98,8 +99,6 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
     x*y*sqrt(x*sqrt(y))
 
     """
-    from sympy.matrices.expressions.matexpr import MatrixSymbol
-
     def recurse(arg, **kwargs):
         _deep = kwargs.get('deep', deep)
         _combine = kwargs.get('combine', combine)
