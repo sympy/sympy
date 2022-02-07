@@ -2,7 +2,6 @@ from sympy.core import (Function, Pow, sympify, Expr)
 from sympy.core.relational import Relational
 from sympy.core.singleton import S
 from sympy.polys import Poly, decompose
-from sympy.utilities.iterables import uniq
 from sympy.utilities.misc import func_name
 from sympy.functions.elementary.miscellaneous import Min, Max
 
@@ -40,7 +39,6 @@ def decompogen(f, symbol):
     if symbol not in f.free_symbols:
         return [f]
 
-    result = []
 
     # ===== Simple Functions ===== #
     if isinstance(f, (Function, Pow)):
@@ -50,21 +48,26 @@ def decompogen(f, symbol):
             arg = f.args[0]
         if arg == symbol:
             return [f]
-        result += [f.subs(arg, symbol)] + decompogen(arg, symbol)
-        return result
+        return [f.subs(arg, symbol)] + decompogen(arg, symbol)
 
     # ===== Min/Max Functions ===== #
     if isinstance(f, (Min, Max)):
         args = list(f.args)
-        iargs = [i for i, a in enumerate(f.args) if a.has(symbol)]
-        if len(iargs) == len(args):
-            raise TypeError('cannot decompose %s' % f)
-        dec = []
-        for i in iargs:
-            dec.extend(decompogen(args[i], symbol))
-            args[i] = symbol
-        result += [f.func(*args)] + list(uniq(dec))
-        return result
+        d0 = None
+        for i, a in enumerate(args):
+            if not a.has_free(symbol):
+                continue
+            d = decompogen(a, symbol)
+            if len(d) == 1:
+                d = [symbol] + d
+            if d0 is None:
+                d0 = d[1:]
+            elif d[1:] != d0:
+                raise TypeError('cannot decompose %s' % f)
+            args[i] = d[0]
+        if d[0] == symbol:
+            return [f]
+        return [f.func(*args)] + d0
 
     # ===== Convert to Polynomial ===== #
     fp = Poly(f)
@@ -73,13 +76,11 @@ def decompogen(f, symbol):
     if len(gens) == 1 and gens[0] != symbol:
         f1 = f.subs(gens[0], symbol)
         f2 = gens[0]
-        result += [f1] + decompogen(f2, symbol)
-        return result
+        return [f1] + decompogen(f2, symbol)
 
     # ===== Polynomial decompose() ====== #
     try:
-        result += decompose(f)
-        return result
+        return decompose(f)
     except ValueError:
         return [f]
 
