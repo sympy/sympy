@@ -24,6 +24,7 @@ def test_decompogen():
     u = 2*x + 3
     assert decompogen(Max(sqrt(u),(u)**2), x) == [Max(sqrt(x), x**2), u]
     assert decompogen(Max(u, u**2, y), x) == [Max(x, x**2, y), u]
+    assert decompogen(Max(sin(x), u), x) == Max(sin(x), u)
 
 
 def test_decompogen_poly():
