@@ -65,7 +65,7 @@ def decompogen(f, symbol):
             elif d[1:] != d0:
                 # decomposition is not the same for each arg:
                 # mark as having no decomposition
-                d0 = [symbol]
+                d = [symbol]
                 break
             args[i] = d[0]
         if d[0] == symbol:
