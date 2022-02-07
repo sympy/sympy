@@ -201,15 +201,43 @@ _uniquely_named_symbol = uniquely_named_symbol
 
 class Symbol(AtomicExpr, Boolean):
     """
-    Assumptions:
-       commutative = True
+    Symbols are variables, and like all other variables, they need to
+    be assigned before you can use them.
+    SymPy :func:`Symbol` function returns just a single symbol taken from argument ``name`` whereas :func:`symbols` function can be used
+    to return a sequence of symbols.
+    Symbols can be used to build SymPy expressions which are immutable.
 
-    You can override the default assumptions in the constructor.
+    Parameters:
+    ===========
+
+    name: a string
+
+    Assumptions:
+    ============
+
+    commutative = True
 
     Examples
     ========
 
-    >>> from sympy import symbols
+    >>> from sympy import Symbol, symbols
+    >>> a = Symbol('a')
+    >>> x, y, z = symbols('x y z')
+
+    SymPy will automatically pretty print symbols with greek letters.
+
+    >>> alpha, beta, gamma = symbols('alpha beta gamma')
+    >>> 2*alpha + 3*beta - gamma
+    2α + 3β - γ
+
+    Sympy will automatically pretty print symbols with subscripts.
+
+    >>> alpha1, alpha2 = symbols('alpha1 alpha2')
+    >>> 2*alpha1 + 3*alpha2
+    2α₁ + 3α₂
+
+    You can override the default assumption in the constructor.
+
     >>> A,B = symbols('A,B', commutative = False)
     >>> bool(A*B != B*A)
     True
