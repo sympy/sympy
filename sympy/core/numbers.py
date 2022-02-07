@@ -33,8 +33,6 @@ from mpmath.libmp.libmpf import (
 from sympy.utilities.misc import as_int, debug, filldedent
 from .parameters import global_parameters
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-
 _LOG2 = math.log(2)
 
 
@@ -1035,17 +1033,7 @@ class Float(Number):
 
     is_Float = True
 
-    def __new__(cls, num, dps=None, prec=None, precision=None):
-        if prec is not None:
-            SymPyDeprecationWarning(
-                            feature="Using 'prec=XX' to denote decimal precision",
-                            useinstead="'dps=XX' for decimal precision and 'precision=XX' "\
-                                              "for binary precision",
-                            issue=12820,
-                            deprecated_since_version="1.1").warn()
-            dps = prec
-        del prec  # avoid using this deprecated kwarg
-
+    def __new__(cls, num, dps=None, precision=None):
         if dps is not None and precision is not None:
             raise ValueError('Both decimal and binary precision supplied. '
                              'Supply only one. ')
@@ -4500,3 +4488,5 @@ def _register_classes():
     numbers.Integral.register(Integer)
 
 _register_classes()
+
+_illegal = (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity)

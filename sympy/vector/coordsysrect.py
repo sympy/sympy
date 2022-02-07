@@ -1,6 +1,5 @@
 from collections.abc import Callable
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core import S, Dummy, Lambda
@@ -21,16 +20,6 @@ from sympy.simplify.trigsimp import trigsimp
 import sympy.vector
 from sympy.vector.orienters import (Orienter, AxisOrienter, BodyOrienter,
                                     SpaceOrienter, QuaternionOrienter)
-
-
-def CoordSysCartesian(*args, **kwargs):
-    SymPyDeprecationWarning(
-        feature="CoordSysCartesian",
-        useinstead="CoordSys3D",
-        issue=12865,
-        deprecated_since_version="1.1"
-    ).warn()
-    return CoordSys3D(*args, **kwargs)
 
 
 class CoordSys3D(Basic):
@@ -458,17 +447,6 @@ class CoordSys3D(Basic):
     @property
     def origin(self):
         return self._origin
-
-    @property
-    def delop(self):
-        SymPyDeprecationWarning(
-            feature="coord_system.delop has been replaced.",
-            useinstead="Use the Del() class",
-            deprecated_since_version="1.1",
-            issue=12866,
-        ).warn()
-        from sympy.vector.deloperator import Del
-        return Del()
 
     def base_vectors(self):
         return self._base_vectors

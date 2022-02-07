@@ -35,9 +35,6 @@ from sympy.polys.polyroots import roots
 from sympy.polys.polytools import factor, Poly
 from sympy.polys.rationaltools import together
 from sympy.polys.rootoftools import CRootOf, RootSum
-from sympy.simplify import simplify, hyperexpand
-from sympy.simplify.powsimp import powdenest
-from sympy.solvers.inequalities import _solve_inequality
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
@@ -226,6 +223,8 @@ class IntegralTransform(Function):
 
 def _simplify(expr, doit):
     if doit:
+        from sympy.simplify import simplify
+        from sympy.simplify.powsimp import powdenest
         return simplify(powdenest(piecewise_fold(expr), polar=True))
     return expr
 
@@ -291,6 +290,7 @@ def _mellin_transform(f, x, s_, integrator=_default_integrator, simplify=True):
         """
         Turn ``cond`` into a strip (a, b), and auxiliary conditions.
         """
+        from sympy.solvers.inequalities import _solve_inequality
         a = S.NegativeInfinity
         b = S.Infinity
         aux = S.true
@@ -797,6 +797,7 @@ def _inverse_mellin_transform(F, s, x_, strip, as_meijerg=False):
             h = G
         else:
             try:
+                from sympy.simplify import hyperexpand
                 h = hyperexpand(G)
             except NotImplementedError:
                 raise IntegralTransformError(
@@ -1077,6 +1078,7 @@ def _laplace_transform(f, t, s_, simplify=True):
 
     def process_conds(conds):
         """ Turn ``conds`` into a strip and auxiliary conditions. """
+        from sympy.solvers.inequalities import _solve_inequality
         a = S.NegativeInfinity
         aux = S.true
         conds = conjuncts(to_cnf(conds))
@@ -1983,6 +1985,7 @@ def _inverse_laplace_transform(F, s, t_, plane, simplify=True):
         a = arg.subs(exp(-t), u)
         if a.has(t):
             return Heaviside(arg, H0)
+        from sympy.solvers.inequalities import _solve_inequality
         rel = _solve_inequality(a > 0, u)
         if rel.lts == u:
             k = log(rel.gts)

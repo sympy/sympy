@@ -21,7 +21,7 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import cancel
 from sympy.printing import sstr
 from sympy.printing.defaults import Printable
-from sympy.simplify import simplify as _simplify
+from sympy.printing.str import StrPrinter
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten, NotIterable, is_sequence, reshape
@@ -31,7 +31,7 @@ from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
     ShapeError, MatrixKind)
 
-from .utilities import _iszero, _is_zero_after_expand_mul
+from .utilities import _iszero, _is_zero_after_expand_mul, _simplify
 
 from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
@@ -855,7 +855,6 @@ class MatrixBase(MatrixDeprecated,
 
     def _format_str(self, printer=None):
         if not printer:
-            from sympy.printing.str import StrPrinter
             printer = StrPrinter()
         # Handle zero dimensions:
         if S.Zero in self.shape:
