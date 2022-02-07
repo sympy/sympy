@@ -1561,6 +1561,8 @@ def test_lambdify_cse():
 
 
 def test_issue_23010():
+    if not numpy:
+        skip("numpy not installed.")
     from sympy import Eq, sin, lambdify
     from sympy.abc import x,y
     from sympy.plotting.intervalmath import interval
