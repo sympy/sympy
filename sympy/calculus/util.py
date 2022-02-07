@@ -16,7 +16,6 @@ from sympy.polys.polytools import degree, lcm_list
 from sympy.sets.sets import (Interval, Intersection, FiniteSet, Union,
                              Complement)
 from sympy.sets.fancysets import ImageSet
-from sympy.simplify.simplify import simplify
 from sympy.utilities import filldedent
 from sympy.utilities.iterables import iterable
 
@@ -424,7 +423,7 @@ def periodicity(f, symbol, check=False):
     if isinstance(f, Relational):
         f = f.lhs - f.rhs
 
-    f = simplify(f)
+    f = f.simplify()
 
     if symbol not in f.free_symbols:
         return S.Zero

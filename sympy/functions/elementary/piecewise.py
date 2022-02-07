@@ -1,6 +1,6 @@
 from sympy.core import S, Function, diff, Tuple, Dummy
 from sympy.core.basic import Basic, as_Basic
-from sympy.core.numbers import Rational, NumberSymbol
+from sympy.core.numbers import Rational, NumberSymbol, _illegal
 from sympy.core.parameters import global_parameters
 from sympy.core.relational import (Lt, Gt, Eq, Ne, Relational,
     _canonical, _canonical_coeff)
@@ -8,7 +8,6 @@ from sympy.core.sorting import ordered
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
     true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
-from sympy.polys.polyutils import illegal
 from sympy.sets.sets import Interval
 from sympy.utilities.iterables import uniq, sift, common_prefix
 from sympy.utilities.misc import filldedent, func_name
@@ -505,7 +504,7 @@ class Piecewise(Function):
             else:
                 sum = sum.subs(x, a)
                 e = anti._eval_interval(x, a, x)
-                if sum.has(*illegal) or e.has(*illegal):
+                if sum.has(*_illegal) or e.has(*_illegal):
                     sum = anti
                 else:
                     sum += e

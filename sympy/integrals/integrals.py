@@ -25,9 +25,6 @@ from sympy.polys import Poly, PolynomialError
 from sympy.series.formal import FormalPowerSeries
 from sympy.series.limits import limit
 from sympy.series.order import Order
-from sympy.simplify.fu import sincos_to_sum
-from sympy.simplify.simplify import simplify
-from sympy.solvers.solvers import solve, posify
 from sympy.tensor.functions import shape
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import is_sequence
@@ -311,6 +308,7 @@ class Integral(AddWithLimits):
             u must contain the same variable as in x
             or a variable that is not already an integration variable'''))
 
+        from sympy.solvers.solvers import solve
         if not x.is_Symbol:
             F = [x.subs(xvar, d)]
             soln = solve(u - x, xvar, check=False)
@@ -319,6 +317,7 @@ class Integral(AddWithLimits):
             f = [fi.subs(uvar, d) for fi in soln]
         else:
             f = [u.subs(uvar, d)]
+            from sympy.simplify.simplify import posify
             pdiff, reps = posify(u - x)
             puvar = uvar.subs([(v, k) for k, v in reps.items()])
             soln = [s.subs(reps) for s in solve(pdiff, puvar)]
@@ -983,6 +982,7 @@ class Integral(AddWithLimits):
         # because maybe the integral is a sum of an elementary part and a
         # nonelementary part (like erf(x) + exp(x)).  risch_integrate() is
         # quite fast, so this is acceptable.
+        from sympy.simplify.fu import sincos_to_sum
         parts = []
         args = Add.make_args(f)
         for g in args:
@@ -1188,6 +1188,7 @@ class Integral(AddWithLimits):
     def _eval_simplify(self, **kwargs):
         expr = factor_terms(self)
         if isinstance(expr, Integral):
+            from sympy.simplify.simplify import simplify
             return expr.func(*[simplify(i, **kwargs) for i in expr.args])
         return expr.simplify(**kwargs)
 

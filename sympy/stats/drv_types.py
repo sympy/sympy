@@ -160,8 +160,7 @@ def FlorySchulz(name, a):
     Parameters
     ==========
 
-    a
-        A real number between 0 and 1
+    a : A real number between 0 and 1
 
     Returns
     =======
@@ -234,7 +233,7 @@ def Geometric(name, p):
     Parameters
     ==========
 
-    p: A probability between 0 and 1
+    p : A probability between 0 and 1
 
     Returns
     =======
