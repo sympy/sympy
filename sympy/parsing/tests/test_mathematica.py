@@ -99,7 +99,7 @@ def test_parser_mathematica_tokenizer():
     assert chain("7 * 8") == ["Times", "7", "8"]
     assert chain("a + b*c") == ["Plus", "a", ["Times", "b", "c"]]
     assert chain("a + b* c* d + 2 * e") == ["Plus", "a", ["Times", "b", "c", "d"], ["Times", "2", "e"]]
-    assert chain("a / b") == ["Times", "a", ["Power", "b", -1]]
+    assert chain("a / b") == ["Times", "a", ["Power", "b", "-1"]]
 
     # Missing asterisk (*) patterns:
     assert chain("x y") == ["Times", "x", "y"]
@@ -119,6 +119,20 @@ def test_parser_mathematica_tokenizer():
     assert chain("x.4") == ["Times", "x", ".4"]
     assert chain("x0.3") == ["Times", "x0", ".3"]
     assert chain("x. 4") == ["Dot", "x", "4"]
+
+    # Operators couples + and -, * and / are mutually associative:
+    # (i.e. expression gets flattened when mixing these operators)
+    assert chain("a*b/c") == ["Times", "a", "b", ["Power", "c", "-1"]]
+    assert chain("a/b*c") == ["Times", "a", ["Power", "b", "-1"], "c"]
+    assert chain("a+b-c") == ["Plus", "a", "b", ["Times", "-1", "c"]]
+    assert chain("a-b+c") == ["Plus", "a", ["Times", "-1", "b"], "c"]
+    assert chain("-a + b -c ") == ["Plus", ["Times", "-1", "a"], "b", ["Times", "-1", "c"]]
+    assert chain("a/b/c*d") == ["Times", "a", ["Power", "b", "-1"], ["Power", "c", "-1"], "d"]
+    assert chain("a/b/c") == ["Times", "a", ["Power", "b", "-1"], ["Power", "c", "-1"]]
+    assert chain("a-b-c") == ["Plus", "a", ["Times", "-1", "b"], ["Times", "-1", "c"]]
+    assert chain("1/a") == ["Times", "1", ["Power", "a", "-1"]]
+    assert chain("1/a/b") == ["Times", "1", ["Power", "a", "-1"], ["Power", "b", "-1"]]
+    assert chain("-1/a*b") == ["Times", "-1", ["Power", "a", "-1"], "b"]
 
     # Enclosures of various kinds, i.e. ( )  [ ]  [[ ]]  { }
     assert chain("(a + b) + c") == ["Plus", ["Plus", "a", "b"], "c"]
@@ -179,9 +193,8 @@ def test_parser_mathematica_tokenizer():
     assert chain("#+3&") == ["Function", ["Plus", ["Slot", "1"], "3"]]
     assert chain("#1 + #2&") == ["Function", ["Plus", ["Slot", "1"], ["Slot", "2"]]]
     assert chain("# + #&") == ["Function", ["Plus", ["Slot", "1"], ["Slot", "1"]]]
-    # Currently not working:
-    # assert chain("#&[x]") == [["Function", ["Slot", "1"]], "x"]
-    # assert chain("#1 + #2 & [x, y]") == [["Function", ["Slot", "1"], ["Slot", "2"]], "x", "y"]
+    assert chain("#&[x]") == [["Function", ["Slot", "1"]], "x"]
+    assert chain("#1 + #2 & [x, y]") == [["Function", ["Plus", ["Slot", "1"], ["Slot", "2"]]], "x", "y"]
 
     # Invalid expressions:
     raises(SyntaxError, lambda: chain("(,"))

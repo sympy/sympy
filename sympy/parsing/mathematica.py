@@ -13,7 +13,7 @@ from sympy.core.sympify import sympify, _sympify
 
 
 def mathematica(s, additional_translations=None):
-    '''
+    """
     Users can add their own translation dictionary.
     variable-length argument needs '*' character.
 
@@ -26,7 +26,7 @@ def mathematica(s, additional_translations=None):
     >>> mathematica('F[7,5,3]', {'F[*x]':'Max(*x)*Min(*x)'})
     21
 
-    '''
+    """
 
     parser = MathematicaParser(additional_translations)
     return sympify(parser.parse(s))
@@ -468,8 +468,8 @@ class MathematicaParser:
         (INFIX, FLAT, {"===": "SameQ", "=!=": "UnsameQ"}),
         (INFIX, FLAT, {"==": "Equal", "!=": "Unequal", "<=": "LessEqual", "<": "Less", ">=": "GreaterEqual", ">": "Greater"}),
         (INFIX, None, {";;": "Span"}),
-        (INFIX, FLAT, {"+": "Plus", "-": lambda x, y: ["Plus", x, MathematicaParser._get_neg(y)]}),
-        (INFIX, FLAT, {"*": "Times", "/": lambda x, y: ["Times", x, ["Power", y, -1]]}),
+        (INFIX, FLAT, {"+": "Plus", "-": "Plus"}),
+        (INFIX, FLAT, {"*": "Times", "/": "Times"}),
         (INFIX, FLAT, {".": "Dot"}),
         (PREFIX, None, {"-": lambda x: MathematicaParser._get_neg(x),
                         "+": lambda x: x}),
@@ -503,6 +503,10 @@ class MathematicaParser:
     @classmethod
     def _get_neg(cls, x):
         return f"-{x}" if isinstance(x, str) and re.match(MathematicaParser._number, x) else ["Times", "-1", x]
+
+    @classmethod
+    def _get_inv(cls, x):
+        return ["Power", x, "-1"]
 
     _regex_tokenizer = None
 
@@ -551,7 +555,7 @@ class MathematicaParser:
             return False
         if re.match(self._literal, token):
             return False
-        if re.match(self._number, token):
+        if re.match("-?" + self._number, token):
             return False
         return True
 
@@ -611,6 +615,7 @@ class MathematicaParser:
 
     def _parse_after_braces(self, tokens: list):
         op_dict: dict
+        token_len_start: int = len(tokens)
         for op_type, flattening_strat, op_dict in reversed(self._mathematica_op_precedence):
             size: int = len(tokens)
             pointer: int = 0
@@ -640,15 +645,23 @@ class MathematicaParser:
                     if op_type == self.INFIX:
                         arg1 = tokens.pop(pointer-1)
                         arg2 = tokens.pop(pointer)
+                        if token == "/":
+                            arg2 = self._get_inv(arg2)
+                        elif token == "-":
+                            arg2 = self._get_neg(arg2)
                         pointer -= 1
                         size -= 2
                         node.append(arg1)
                         node_p = node
                         if flattening_strat == self.FLAT:
-                            while pointer + 1 < size and tokens[pointer+1] == token:
+                            while pointer + 1 < size and self._check_op_compatible(tokens[pointer+1], token):
                                 node_p.append(arg2)
-                                tokens.pop(pointer+1)
+                                other_op = tokens.pop(pointer+1)
                                 arg2 = tokens.pop(pointer+1)
+                                if other_op == "/":
+                                    arg2 = self._get_inv(arg2)
+                                elif other_op == "-":
+                                    arg2 = self._get_neg(arg2)
                                 size -= 2
                             node_p.append(arg2)
                         elif flattening_strat == self.RIGHT:
@@ -696,8 +709,28 @@ class MathematicaParser:
                             tokens[pointer] = new_node
                 pointer += 1
         if len(tokens) != 1:
+            if len(tokens) < token_len_start:
+                # Trick to deal with cases in which an operator with lower
+                # precedence should be transformed before an operator of higher
+                # precedence. Such as in the case of `#&[x]` (that is
+                # equivalent to `Lambda(d_, d_)(x)` in SymPy). In this case the
+                # operator `&` has lower precedence than `[`, but needs to be
+                # evaluated first because otherwise `# (&[x])` is not a valid
+                # expression:
+                return self._parse_after_braces(tokens)
             raise SyntaxError("unable to create a single AST for the expression")
         return tokens[0]
+
+    def _check_op_compatible(self, op1: str, op2: str):
+        if op1 == op2:
+            return True
+        muldiv = {"*", "/"}
+        addsub = {"+", "-"}
+        if op1 in muldiv and op2 in muldiv:
+            return True
+        if op1 in addsub and op2 in addsub:
+            return True
+        return False
 
     def _convert_fullform_to_pylist(self, wmexpr: str):
         """
