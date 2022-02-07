@@ -21,7 +21,6 @@ def test_decompogen():
     assert decompogen(1, x) == [1]
     assert decompogen(Max(3, x), x) == [Max(3, x)]
     raises(TypeError, lambda: decompogen(x < 5, x))
-    raises(TypeError, lambda: decompogen(Max(sin(x), x**2), x))
     u = 2*x + 3
     assert decompogen(Max(sqrt(u),(u)**2), x) == [Max(sqrt(x), x**2), u]
     assert decompogen(Max(u, u**2, y), x) == [Max(x, x**2, y), u]

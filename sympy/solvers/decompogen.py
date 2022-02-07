@@ -63,7 +63,10 @@ def decompogen(f, symbol):
             if d0 is None:
                 d0 = d[1:]
             elif d[1:] != d0:
-                raise TypeError('cannot decompose %s' % f)
+                # decomposition is not the same for each arg:
+                # mark as having no decomposition
+                d0 = [symbol]
+                break
             args[i] = d[0]
         if d[0] == symbol:
             return [f]
