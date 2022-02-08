@@ -19,7 +19,7 @@ def test_mathematica():
         'Exp[Log[4]]': 'exp(log(4))',
         '(x+1)(x+3)': '(x+1)*(x+3)',
         'Cos[ArcCos[3.6]]': 'cos(acos(3.6))',
-        'Cos[x]==Sin[y]': 'cos(x)==sin(y)',
+        'Cos[x]==Sin[y]': 'Equal(cos(x), sin(y))',
         '2*Sin[x+y]': '2*sin(x+y)',
         'Sin[x]+Cos[y]': 'sin(x)+cos(y)',
         'Sin[Cos[x]]': 'sin(cos(x))',
@@ -34,7 +34,7 @@ def test_mathematica():
         '(x+1)y': '(x+1)*y',
         'x(y+1)': 'x*(y+1)',
         'Sin[x]Cos[y]': 'sin(x)*cos(y)',
-        'Sin[x]**2Cos[y]**2': 'sin(x)**2*cos(y)**2',
+        'Sin[x]^2Cos[y]^2': 'sin(x)**2*cos(y)**2',
         'Cos[x]^2(1 - Cos[y]^2)': 'cos(x)**2*(1-cos(y)**2)',
         'x y': 'x*y',
         'x  y': 'x*y',
@@ -61,9 +61,9 @@ def test_mathematica():
         'CosIntegral[x]': 'Ci(x)',
         'AiryAi[x]': 'airyai(x)',
         'AiryAiPrime[5]': 'airyaiprime(5)',
-        'AiryBi[x]' :'airybi(x)',
-        'AiryBiPrime[7]' :'airybiprime(7)',
-        'LogIntegral[4]':' li(4)',
+        'AiryBi[x]': 'airybi(x)',
+        'AiryBiPrime[7]': 'airybiprime(7)',
+        'LogIntegral[4]': ' li(4)',
         'PrimePi[7]': 'primepi(7)',
         'Prime[5]': 'prime(5)',
         'PrimeQ[5]': 'isprime(5)'
@@ -72,11 +72,14 @@ def test_mathematica():
     for e in d:
         assert mathematica(e) == sympify(d[e])
 
+    # Parsing of this expression should be improved:
+    assert mathematica("Sin[#]^2 + Cos[#]^2 &[x]").__class__.__name__ == 'Function(sin(Slot(1))**2 + cos(Slot(1))**2)'
+
 
 def test_parser_mathematica_tokenizer():
     parser = MathematicaParser()
 
-    chain = lambda expr: parser._parse_tokenized_code(parser._tokenize_mathematica_code(expr))
+    chain = lambda expr: parser._from_tokens_to_fullformlist(parser._from_mathematica_to_tokens(expr))
 
     # Basic patterns
     assert chain("x") == "x"
@@ -204,8 +207,8 @@ def test_parser_mathematica_tokenizer():
 def test_parser_mathematica_exp_alt():
     parser = MathematicaParser()
 
-    convert_chain2 = lambda expr: parser._convert_pylist_to_sympymform(parser._convert_fullform_to_pylist(expr))
-    convert_chain3 = lambda expr: parser._convert_sympymform_to_sympy(convert_chain2(expr))
+    convert_chain2 = lambda expr: parser._from_fullformlist_to_fullformsympy(parser._from_fullform_to_fullformlist(expr))
+    convert_chain3 = lambda expr: parser._from_fullformsympy_to_sympy(convert_chain2(expr))
 
     Sin, Times, Plus, Power = symbols("Sin Times Plus Power", cls=Function)
 
@@ -213,9 +216,9 @@ def test_parser_mathematica_exp_alt():
     full_form2 = "Plus[Times[x, y], z]"
     full_form3 = "Sin[Times[x, Plus[y, z], Power[w, n]]]]"
 
-    assert parser._convert_fullform_to_pylist(full_form1) == ["Sin", ["Times", "x", "y"]]
-    assert parser._convert_fullform_to_pylist(full_form2) == ["Plus", ["Times", "x", "y"], "z"]
-    assert parser._convert_fullform_to_pylist(full_form3) == ["Sin", ["Times", "x", ["Plus", "y", "z"], ["Power", "w", "n"]]]
+    assert parser._from_fullform_to_fullformlist(full_form1) == ["Sin", ["Times", "x", "y"]]
+    assert parser._from_fullform_to_fullformlist(full_form2) == ["Plus", ["Times", "x", "y"], "z"]
+    assert parser._from_fullform_to_fullformlist(full_form3) == ["Sin", ["Times", "x", ["Plus", "y", "z"], ["Power", "w", "n"]]]
 
     assert convert_chain2(full_form1) == Sin(Times(x, y))
     assert convert_chain2(full_form2) == Plus(Times(x, y), z)
