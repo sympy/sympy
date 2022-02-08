@@ -257,7 +257,7 @@ class Symbol(AtomicExpr, Boolean):
 
     >>> x = Symbol('x', integer=True)
     >>> sqrt(x**2)
-    |x|
+    Abs(x)
 
     >>> A,B = symbols('A,B', commutative = False)
     >>> bool(A*B != B*A)
