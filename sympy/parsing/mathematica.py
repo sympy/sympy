@@ -7,7 +7,8 @@ import sympy
 from sympy import Mul, Add, Pow, log, exp, sqrt, cos, sin, tan, asin, acos, acot, asec, acsc, sinh, cosh, tanh, asinh, \
     acosh, atanh, acoth, asech, acsch, expand, im, flatten, polylog, cancel, expand_trig, sign, simplify, \
     UnevaluatedExpr, S, atan, atan2, Mod, Max, Min, rf, Ei, Si, Ci, airyai, airyaiprime, airybi, primepi, prime, \
-    isprime, cot, sec, csc, csch, sech, coth, Function, I, pi
+    isprime, cot, sec, csc, csch, sech, coth, Function, I, pi, Tuple, GreaterThan, StrictGreaterThan, StrictLessThan, \
+    LessThan, Equality, Or, And, Lambda, Integer, Dummy, symbols
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.special.bessel import airybiprime
 from sympy.functions.special.error_functions import li
@@ -16,8 +17,12 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 def mathematica(s, additional_translations=None):
     """
-    Users can add their own translation dictionary.
-    variable-length argument needs '*' character.
+    Translate a string containing a Wolfram Mathematica expression to a SymPy
+    expression.
+
+    If the translator is unable to find a suitable SymPy expression, the
+    ``FullForm`` of the Mathematica expression will be output, using SymPy
+    ``Function`` objects as nodes of the syntax tree.
 
     Examples
     ========
@@ -25,12 +30,30 @@ def mathematica(s, additional_translations=None):
     >>> from sympy.parsing.mathematica import mathematica
     >>> mathematica("Sin[x]^2 Tan[y]")
     sin(x)**2*tan(y)
-    >>> e = mathematica('F[7,5,3]')
+    >>> e = mathematica("F[7,5,3]")
     >>> e
     F(7, 5, 3)
     >>> from sympy import Function, Max, Min
     >>> e.replace(Function("F"), lambda *x: Max(*x)*Min(*x))
     21
+
+    Both standard input form and Mathematica full form are supported:
+
+    >>> mathematica("x*(a + b)")
+    x*(a + b)
+    >>> mathematica("Times[x, Plus[a, b]]")
+    x*(a + b)
+
+    To get a matrix from Wolfram's code:
+
+    >>> m = mathematica("{{a, b}, {c, d}}")
+    >>> m
+    ((a, b), (c, d))
+    >>> from sympy import Matrix
+    >>> Matrix(m)
+    Matrix([
+    [a, b],
+    [c, d]])
 
     If the translation into equivalent SymPy expressions fails, an SymPy
     expression equivalent to Wolfram Mathematica's "FullForm" will be created:
@@ -38,21 +61,9 @@ def mathematica(s, additional_translations=None):
     >>> mathematica("x_.")
     Optional(Pattern(x, Blank()))
     >>> mathematica("Plus @@ {x, y, z}")
-    Apply(Plus, List(x, y, z))
+    Apply(Plus, (x, y, z))
     >>> mathematica("f[x_, 3] := x^3 /; x > 0")
-    SetDelayed(f(Pattern(x, Blank()), 3), Condition(x**3, Greater(x, 0)))
-
-    Further transformations can be applied. For example, to get a matrix from
-    Wolfram's code:
-
-    >>> m = mathematica("{{a, b}, {c, d}}")
-    >>> m
-    List(List(a, b), List(c, d))
-    >>> from sympy import Matrix
-    >>> Matrix(m.replace(Function("List"), lambda *x: x))
-    Matrix([
-    [a, b],
-    [c, d]])
+    SetDelayed(f(Pattern(x, Blank()), 3), Condition(x**3, x > 0))
     """
     parser = MathematicaParser(additional_translations)
 
@@ -63,12 +74,28 @@ def mathematica(s, additional_translations=None):
             useinstead="Use SymPy's .replace( ) or .subs( ) methods on the output expression",
             issue="23042",
         ).warn()
-        return sympify(parser.parse(s))
+        return sympify(parser._parse_old(s))
 
-    s2 = parser._from_mathematica_to_tokens(s)
-    s3 = parser._from_tokens_to_fullformlist(s2)
-    s4 = parser._from_fullformlist_to_sympy(s3)
-    return s4
+    return parser.parse(s)
+
+
+def _parse_Function(*args):
+    if len(args) == 1:
+        arg = args[0]
+        Slot = Function("Slot")
+        slots = arg.atoms(Slot)
+        numbers = [a.args[0] for a in slots]
+        number_of_arguments = max(numbers)
+        if isinstance(number_of_arguments, Integer):
+            variables = symbols(f"dummy0:{number_of_arguments}", cls=Dummy)
+            return Lambda(variables, arg.xreplace({Slot(i+1): v for i, v in enumerate(variables)}))
+        return Lambda((), arg)
+    elif len(args) == 2:
+        variables = args[0]
+        body = args[1]
+        return Lambda(variables, body)
+    else:
+        raise SyntaxError("Function node expects 1 or 2 arguments")
 
 
 def _deco(cls):
@@ -78,8 +105,24 @@ def _deco(cls):
 
 @_deco
 class MathematicaParser:
-    """An instance of this class converts a string of a basic Mathematica
-    expression to SymPy style. Output is string type."""
+    """
+    An instance of this class converts a string of a Wolfram Mathematica
+    expression to a SymPy expression.
+
+    The main parser acts internally in three stages:
+
+    1. tokenizer: tokenizes the Mathematica expression and adds the missing *
+        operators. Handled by ``_from_mathematica_to_tokens(...)``
+    2. full form list: sort the list of strings output by the tokenizer into a
+        syntax tree of nested lists and strings, equivalent to Mathematica's
+        ``FullForm`` expression output. This is handled by the function
+        ``_from_tokens_to_fullformlist(...)``.
+    3. SymPy expression: the syntax tree expressed as full form list is visited
+        and the nodes with equivalent classes in SymPy are replaced. Unknown
+        syntax tree nodes are cast to SymPy ``Function`` objects. This is
+        handled by ``_from_fullformlist_to_sympy(...)``.
+
+    """
 
     # left: Mathematica, right: SymPy
     CORRESPONDENCES = {
@@ -455,7 +498,7 @@ class MathematicaParser:
             err = "Currently list is not supported."
             raise ValueError(err)
 
-    def parse(self, s):
+    def _parse_old(self, s):
         # input check
         self._check_input(s)
 
@@ -483,6 +526,12 @@ class MathematicaParser:
 #        s = cls._replace(s, '}')
 
         return s
+
+    def parse(self, s):
+        s2 = self._from_mathematica_to_tokens(s)
+        s3 = self._from_tokens_to_fullformlist(s2)
+        s4 = self._from_fullformlist_to_sympy(s3)
+        return s4
 
     INFIX = "Infix"
     PREFIX = "Prefix"
@@ -565,8 +614,14 @@ class MathematicaParser:
         self._regex_tokenizer = tokenizer
         return self._regex_tokenizer
 
+    _regex_decommenter = re.compile(r"\(\*.*?\*\)", re.MULTILINE)
+
     def _from_mathematica_to_tokens(self, code: str):
         tokenizer = self._get_tokenizer()
+
+        # Remove comments:
+        code = code.replace("\n", " ")
+        code = self._regex_decommenter.sub("", code)
 
         # uncover '*' hiding behind a whitespace
         code = self._apply_rules(code, 'whitespace')
@@ -885,6 +940,17 @@ class MathematicaParser:
         PrimePi=primepi,
         Prime=prime,
         PrimeQ=isprime,
+
+        List=Tuple,
+        Greater=StrictGreaterThan,
+        GreaterEqual=GreaterThan,
+        Less=StrictLessThan,
+        LessEqual=LessThan,
+        Equal=Equality,
+        Or=Or,
+        And=And,
+
+        Function=_parse_Function,
     )
 
     _atom_conversions = {
@@ -897,8 +963,7 @@ class MathematicaParser:
         def recurse(expr):
             if isinstance(expr, list):
                 if isinstance(expr[0], list):
-                    # We need a better parser for Wolfram's "Function":
-                    head = Function(str(recurse(expr[0])))
+                    head = recurse(expr[0])
                 else:
                     head = self._node_conversions.get(expr[0], Function(expr[0]))
                 return head(*list(recurse(arg) for arg in expr[1:]))

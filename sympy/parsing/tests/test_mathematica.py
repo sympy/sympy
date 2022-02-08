@@ -1,4 +1,4 @@
-from sympy import sin, Function, symbols
+from sympy import sin, Function, symbols, Dummy, Lambda, cos
 from sympy.parsing.mathematica import mathematica, MathematicaParser
 from sympy.core.sympify import sympify
 from sympy.abc import n, w, x, y, z
@@ -19,7 +19,7 @@ def test_mathematica():
         'Exp[Log[4]]': 'exp(log(4))',
         '(x+1)(x+3)': '(x+1)*(x+3)',
         'Cos[ArcCos[3.6]]': 'cos(acos(3.6))',
-        'Cos[x]==Sin[y]': 'Equal(cos(x), sin(y))',
+        'Cos[x]==Sin[y]': 'Eq(cos(x), sin(y))',
         '2*Sin[x+y]': '2*sin(x+y)',
         'Sin[x]+Cos[y]': 'sin(x)+cos(y)',
         'Sin[Cos[x]]': 'sin(cos(x))',
@@ -72,8 +72,14 @@ def test_mathematica():
     for e in d:
         assert mathematica(e) == sympify(d[e])
 
-    # Parsing of this expression should be improved:
-    assert mathematica("Sin[#]^2 + Cos[#]^2 &[x]").__class__.__name__ == 'Function(sin(Slot(1))**2 + cos(Slot(1))**2)'
+    # The parsed form of this expression should not evaluate the Lambda object:
+    assert mathematica("Sin[#]^2 + Cos[#]^2 &[x]") == sin(x)**2 + cos(x)**2
+
+    d1, d2, d3 = symbols("d1:4", cls=Dummy)
+    assert mathematica("Sin[#] + Cos[#3] &").dummy_eq(Lambda((d1, d2, d3), sin(d1) + cos(d3)))
+    assert mathematica("Sin[#^2] &").dummy_eq(Lambda(d1, sin(d1**2)))
+    assert mathematica("Function[x, x^3]") == Lambda(x, x**3)
+    assert mathematica("Function[{x, y}, x^2 + y^2]") == Lambda((x, y), x**2+y**2)
 
 
 def test_parser_mathematica_tokenizer():
@@ -122,6 +128,15 @@ def test_parser_mathematica_tokenizer():
     assert chain("x.4") == ["Times", "x", ".4"]
     assert chain("x0.3") == ["Times", "x0", ".3"]
     assert chain("x. 4") == ["Dot", "x", "4"]
+
+    # Comments
+    assert chain("a (* +b *) + c") == ["Plus", "a", "c"]
+    assert chain("a (* + b *) + (**)c (* +d *) + e") == ["Plus", "a", "c", "e"]
+    assert chain("""a + (*
+    + b
+    *) c + (* d
+    *) e
+    """) == ["Plus", "a", "c", "e"]
 
     # Operators couples + and -, * and / are mutually associative:
     # (i.e. expression gets flattened when mixing these operators)
