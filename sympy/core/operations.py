@@ -213,6 +213,7 @@ class AssocOp(Basic):
         equivalent.
 
         """
+        from .function import _coeff_isneg
         # make sure expr is Expr if pattern is Expr
         from .expr import Expr
         if isinstance(self, Expr) and not isinstance(expr, Expr):
@@ -254,7 +255,10 @@ class AssocOp(Basic):
                 return None
             newexpr = self._combine_inverse(expr, exact)
             if not old and (expr.is_Add or expr.is_Mul):
-                if newexpr.count_ops() > expr.count_ops():
+                check = newexpr
+                if _coeff_isneg(check):
+                    check = -check
+                if check.count_ops() > expr.count_ops():
                     return None
             newpattern = self._new_rawargs(*wild_part)
             return newpattern.matches(newexpr, repl_dict)
@@ -324,7 +328,11 @@ class AssocOp(Basic):
         return
 
     def _has_matcher(self):
-        """Helper for .has()"""
+        """Helper for .has() that checks for containment of
+        subexpressions within an expr by using sets of args
+        of similar nodes, e.g. x + 1 in x + y + 1 checks
+        to see that {x, 1} & {x, y, 1} == {x, 1}
+        """
         def _ncsplit(expr):
             # this is not the same as args_cnc because here
             # we don't assume expr is a Mul -- hence deal with args --
@@ -337,11 +345,9 @@ class AssocOp(Basic):
         cls = self.__class__
 
         def is_in(expr):
-            if expr == self:
-                return True
-            elif not isinstance(expr, Basic):
-                return False
-            elif isinstance(expr, cls):
+            if isinstance(expr, cls):
+                if expr == self:
+                    return True
                 _c, _nc = _ncsplit(expr)
                 if (c & _c) == c:
                     if not nc:

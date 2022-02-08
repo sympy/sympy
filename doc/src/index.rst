@@ -62,7 +62,7 @@ what the different functions and modules do, their arguments and return values.
    :hidden:
 
    tutorial/index.rst
+   guides/index.rst
    explanation/index.rst
    reference/index.rst
-   guides/index.rst
    miscellaneous/index.rst

@@ -15,6 +15,7 @@ from sympy.functions import sqrt, cbrt
 
 from sympy.core.exprtools import Factors
 from sympy.core.function import _mexpand
+from sympy.core.numbers import _illegal
 from sympy.core.traversal import preorder_traversal
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.trigonometric import cos, sin, tan
@@ -31,13 +32,11 @@ from sympy.polys.polytools import (
     Poly, PurePoly, invert, factor_list, groebner, resultant,
     degree, poly_from_expr, parallel_poly_from_expr, lcm
 )
-from sympy.polys.polyutils import dict_from_expr, expr_from_dict, illegal
+from sympy.polys.polyutils import dict_from_expr, expr_from_dict
 from sympy.polys.ring_series import rs_compose_add
 from sympy.polys.rings import ring
 from sympy.polys.rootoftools import CRootOf
 from sympy.polys.specialpolys import cyclotomic_poly
-from sympy.simplify.radsimp import _split_gcd
-from sympy.simplify.simplify import _is_sum_surds
 from sympy.utilities import (
     numbered_symbols, public, sift
 )
@@ -74,7 +73,7 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
 
             # if we get invalid numbers (e.g. from division by zero)
             # we try again
-            if any(i in illegal for i, _ in candidates):
+            if any(i in _illegal for i, _ in candidates):
                 continue
 
             # find the smallest two -- if they differ significantly
@@ -89,6 +88,13 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
 
     raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % v)
 
+
+def _is_sum_surds(p):
+    args = p.args if p.is_Add else [p]
+    for y in args:
+        if not ((y**2).is_Rational and y.is_extended_real):
+            return False
+    return True
 
 
 def _separate_sq(p):
@@ -142,6 +148,7 @@ def _separate_sq(p):
     for i in range(len(surds)):
         if surds[i] != 1:
             break
+    from sympy.simplify.radsimp import _split_gcd
     g, b1, b2 = _split_gcd(*surds[i:])
     a1 = []
     a2 = []
@@ -808,10 +815,10 @@ def _minpoly_groebner(ex, x, cls):
                 else:
                     return symbols[expr]
         elif ex.is_AlgebraicNumber:
-            if ex.root not in mapping:
-                return update_mapping(ex.root, ex.minpoly)
+            if ex not in mapping:
+                return update_mapping(ex, ex.minpoly_of_element())
             else:
-                return symbols[ex.root]
+                return symbols[ex]
 
         raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
 
@@ -840,7 +847,7 @@ def _minpoly_groebner(ex, x, cls):
     inverted = False
     ex = expand_multinomial(ex)
     if ex.is_AlgebraicNumber:
-        return ex.minpoly.as_expr(x)
+        return ex.minpoly_of_element().as_expr(x)
     elif ex.is_Rational:
         result = ex.q*x - ex.p
     else:

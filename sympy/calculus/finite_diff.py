@@ -23,7 +23,6 @@ from sympy.core.function import Subs
 from sympy.core.traversal import preorder_traversal
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import iterable
-from sympy.utilities.decorator import deprecated
 
 
 
@@ -313,25 +312,23 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
     Examples
     ========
 
-    >>> from sympy import symbols, Function, exp, sqrt, Symbol, as_finite_diff
-    >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
-    >>> import warnings
-    >>> warnings.simplefilter("ignore", SymPyDeprecationWarning)
+    >>> from sympy import symbols, Function, exp, sqrt, Symbol
+    >>> from sympy.calculus.finite_diff import _as_finite_diff
     >>> x, h = symbols('x h')
     >>> f = Function('f')
-    >>> as_finite_diff(f(x).diff(x))
+    >>> _as_finite_diff(f(x).diff(x))
     -f(x - 1/2) + f(x + 1/2)
 
     The default step size and number of points are 1 and ``order + 1``
     respectively. We can change the step size by passing a symbol
     as a parameter:
 
-    >>> as_finite_diff(f(x).diff(x), h)
+    >>> _as_finite_diff(f(x).diff(x), h)
     -f(-h/2 + x)/h + f(h/2 + x)/h
 
     We can also specify the discretized values to be used in a sequence:
 
-    >>> as_finite_diff(f(x).diff(x), [x, x+h, x+2*h])
+    >>> _as_finite_diff(f(x).diff(x), [x, x+h, x+2*h])
     -3*f(x)/(2*h) + 2*f(h + x)/h - f(2*h + x)/(2*h)
 
     The algorithm is not restricted to use equidistant spacing, nor
@@ -340,7 +337,7 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
 
     >>> e, sq2 = exp(1), sqrt(2)
     >>> xl = [x-h, x+h, x+e*h]
-    >>> as_finite_diff(f(x).diff(x, 1), xl, x+h*sq2)
+    >>> _as_finite_diff(f(x).diff(x, 1), xl, x+h*sq2)
     2*h*((h + sqrt(2)*h)/(2*h) - (-sqrt(2)*h + h)/(2*h))*f(E*h + x)/((-h + E*h)*(h + E*h)) +
     (-(-sqrt(2)*h + h)/(2*h) - (-sqrt(2)*h + E*h)/(2*h))*f(-h + x)/(h + E*h) +
     (-(h + sqrt(2)*h)/(2*h) + (-sqrt(2)*h + E*h)/(2*h))*f(h + x)/(-h + E*h)
@@ -349,7 +346,7 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
 
     >>> y = Symbol('y')
     >>> d2fdxdy=f(x,y).diff(x,y)
-    >>> as_finite_diff(d2fdxdy, wrt=x)
+    >>> _as_finite_diff(d2fdxdy, wrt=x)
     -Derivative(f(x - 1/2, y), y) + Derivative(f(x + 1/2, y), y)
 
     See also
@@ -405,15 +402,6 @@ def _as_finite_diff(derivative, points=1, x0=None, wrt=None):
     return apply_finite_diff(order, points, [
         Derivative(derivative.expr.subs({wrt: x}), *others) for
         x in points], x0)
-
-
-as_finite_diff = deprecated(
-    useinstead="Derivative.as_finite_difference",
-    deprecated_since_version="1.1", issue=11410)(_as_finite_diff)
-
-as_finite_diff.__doc__ = """
-    Deprecated function. Use Diff.as_finite_difference instead.
-    """
 
 
 def differentiate_finite(expr, *symbols,

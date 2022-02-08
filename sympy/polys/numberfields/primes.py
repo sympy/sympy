@@ -279,7 +279,7 @@ class PrimeIdeal(IntegerPowerable):
         >>> k = QQ.algebraic_field((Phi, zeta))
         >>> P = k.primes_above(11)
         >>> frp = P[0]
-        >>> B = [k.to_sympy(a) for a in k.integral_basis()]
+        >>> B = k.integral_basis(fmt='sympy')
         >>> print([frp.reduce_poly(b, zeta) for b in B])
         [1, zeta, zeta**2, -5*zeta**2 - 4*zeta + 1, -zeta**2 - zeta - 5,
          4*zeta**2 - zeta - 1]
@@ -385,11 +385,8 @@ def prime_valuation(I, P):
     ========
 
     >>> from sympy import QQ
-    >>> from sympy.abc import theta
-    >>> from sympy.polys import cyclotomic_poly
     >>> from sympy.polys.numberfields import prime_valuation
-    >>> T = cyclotomic_poly(5)
-    >>> K = QQ.algebraic_field((T, theta))
+    >>> K = QQ.cyclotomic_field(5)
     >>> P = K.primes_above(5)
     >>> ZK = K.maximal_order()
     >>> print(prime_valuation(25*ZK, P[0]))

@@ -129,6 +129,8 @@ AlgebraicNumber
 .. autoclass:: AlgebraicNumber
    :members:
 
+   .. automethod:: AlgebraicNumber.__new__
+
 NumberSymbol
 ^^^^^^^^^^^^
 .. autoclass:: NumberSymbol
@@ -517,6 +519,11 @@ Tuple
 .. autoclass:: Tuple
    :members:
 
+TupleKind
+^^^^^^^^^
+.. autoclass:: TupleKind
+   :members:
+
 Dict
 ^^^^
 .. autoclass:: Dict
@@ -546,6 +553,11 @@ Kind
 NumberKind
 ^^^^^^^^^^
 .. autoclass:: NumberKind
+   :members:
+
+UndefinedKind
+^^^^^^^^^^^^^
+.. autoclass:: UndefinedKind
    :members:
 
 BooleanKind

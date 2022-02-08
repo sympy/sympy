@@ -4,6 +4,7 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, cos, sin)
+from sympy.sets import EmptySet
 from sympy.simplify.simplify import simplify
 from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
@@ -63,8 +64,13 @@ def test_angle_between():
     assert feq(Line.angle_between(Line(Point(0, 0), Point(1, 1)),
                                   Line(Point(0, 0), Point(5, 0))).evalf(), pi.evalf() / 4)
     assert Line(a, o).angle_between(Line(b, o)) == pi / 2
-    assert Line3D.angle_between(Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1)),
-                                Line3D(Point3D(0, 0, 0), Point3D(5, 0, 0))) == acos(sqrt(3) / 3)
+    z = Point3D(0, 0, 0)
+    assert Line3D.angle_between(Line3D(z, Point3D(1, 1, 1)),
+                                Line3D(z, Point3D(5, 0, 0))) == acos(sqrt(3) / 3)
+    # direction of points is used to determine angle
+    assert Line3D.angle_between(Line3D(z, Point3D(1, 1, 1)),
+                                Line3D(Point3D(5, 0, 0), z)) == acos(-sqrt(3) / 3)
+
 
 
 def test_closing_angle():
@@ -697,10 +703,14 @@ def test_projection():
 
     r1 = Ray(Point(1, 1), Point(2, 2))
 
+    s1 = Segment(Point2D(0, 0), Point2D(0, 1))
+    s2 = Segment(Point2D(1, 0), Point2D(2, 1/2))
+
     assert Line(Point(x1, x1), Point(y1, y1)).projection(Point(y1, y1)) == Point(y1, y1)
     assert Line(Point(x1, x1), Point(x1, 1 + x1)).projection(Point(1, 1)) == Point(x1, 1)
     assert Segment(Point(-2, 2), Point(0, 4)).projection(r1) == Segment(Point(-1, 3), Point(0, 4))
     assert Segment(Point(0, 4), Point(-2, 2)).projection(r1) == Segment(Point(0, 4), Point(-1, 3))
+    assert s2.projection(s1) == EmptySet
     assert l1.projection(p3) == p1
     assert l1.projection(Ray(p1, Point(-1, 5))) == Ray(Point(0, 0), Point(2, 2))
     assert l1.projection(Ray(p1, Point(-1, 1))) == p1
@@ -715,6 +725,7 @@ def test_projection():
     assert l3.projection(Ray3D(p2, Point3D(-1, 1, 1))) == Ray3D(Point3D(0, 0, 0), Point3D(Rational(1, 3), Rational(1, 3), Rational(1, 3)))
     assert l2.projection(Point3D(5, 5, 0)) == Point3D(5, 0)
     assert l2.projection(Line3D(Point3D(0, 1, 0), Point3D(1, 1, 0))).equals(l2)
+
 
 
 def test_perpendicular_bisector():

@@ -2093,7 +2093,7 @@ def print_mathml(expr, printer='content', **settings):
     ========
 
     >>> ##
-    >>> from sympy.printing.mathml import print_mathml
+    >>> from sympy import print_mathml
     >>> from sympy.abc import x
     >>> print_mathml(x+1) #doctest: +NORMALIZE_WHITESPACE
     <apply>

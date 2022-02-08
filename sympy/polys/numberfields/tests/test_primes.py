@@ -163,7 +163,7 @@ def test_decomp_6():
 def test_decomp_7():
     # Try working through an AlgebraicField
     T = Poly(x ** 3 + x ** 2 - 2 * x + 8)
-    K = QQ.algebraic_field((T, theta))
+    K = QQ.alg_field_from_poly(T)
     p = 2
     P = K.primes_above(p)
     ZK = K.maximal_order()
@@ -255,7 +255,7 @@ def test_PrimeIdeal_reduce_poly():
     k = QQ.algebraic_field((T, x))
     P = k.primes_above(11)
     frp = P[0]
-    B = [k.to_sympy(a) for a in k.integral_basis()]
+    B = k.integral_basis(fmt='sympy')
     assert [frp.reduce_poly(b, x) for b in B] == [
         1, x, x ** 2, -5 * x ** 2 - 4 * x + 1, -x ** 2 - x - 5,
         4 * x ** 2 - x - 1]
