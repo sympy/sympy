@@ -1838,7 +1838,7 @@ class sec(ReciprocalTrigonometricFunction):
             return (S.NegativeOne**n)/lt
         if x0 is S.ComplexInfinity:
             x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
-        if x0 in [S.Infinity, S.NegativeInfinity]:
+        if x0 in (S.Infinity, S.NegativeInfinity):
             return AccumBounds(S.NegativeInfinity, S.Infinity)
         return self.func(x0) if x0.is_finite else self
 
@@ -1940,7 +1940,7 @@ class csc(ReciprocalTrigonometricFunction):
             return (S.NegativeOne**n)/lt
         if x0 is S.ComplexInfinity:
             x0 = arg.limit(x, 0, dir='-' if re(cdir).is_negative else '+')
-        if x0 in [S.Infinity, S.NegativeInfinity]:
+        if x0 in (S.Infinity, S.NegativeInfinity):
             return AccumBounds(S.NegativeInfinity, S.Infinity)
         return self.func(x0) if x0.is_finite else self
 
