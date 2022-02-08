@@ -222,7 +222,7 @@ class Symbol(AtomicExpr, Boolean):
     Examples
     ========
 
-    >>> from sympy import Symbol, symbols, simplify
+    >>> from sympy import Symbol, symbols, simplify, sqrt
     >>> a = Symbol('a')
     >>> x, y, z = symbols('x y z')
 
