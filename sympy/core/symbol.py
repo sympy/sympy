@@ -215,12 +215,14 @@ class Symbol(AtomicExpr, Boolean):
     Assumptions:
     ============
 
+    positive = True
+
     commutative = True
 
     Examples
     ========
 
-    >>> from sympy import Symbol, symbols
+    >>> from sympy import Symbol, symbols, simplify
     >>> a = Symbol('a')
     >>> x, y, z = symbols('x y z')
 
@@ -238,11 +240,37 @@ class Symbol(AtomicExpr, Boolean):
 
     You can override the default assumption in the constructor.
 
+    When working with symbols sympy will refuse to simplify an expression like sqrt(x**2)
+    if it does not know whether the symbol x is positive, negative or even an integer
+    even if ``simplify`` is used.
+    Therefore, we need to tell SymPy the symbol's assumptions.
+
+    >>> x = Symbol('x')
+    >>> simplify(sqrt(x**2))
+    sqrt(x**2)
+
+    SymPy will simplify the expression automatically when the assumptions are known.
+
+    >>> x = Symbol('x', positive=True)
+    >>> sqrt(x**2)
+    x
+
+    >>> x = Symbol('x', integer=True)
+    >>> sqrt(x**2)
+    |x|
+
     >>> A,B = symbols('A,B', commutative = False)
     >>> bool(A*B != B*A)
     True
     >>> bool(A*B*2 == 2*A*B) == True # multiplication by scalars is commutative
     True
+
+    Do also consider the guide :ref:`assumptions`.
+
+    See Also
+    ========
+
+    sympy.simplify.simplify.simplify
 
     """
 
