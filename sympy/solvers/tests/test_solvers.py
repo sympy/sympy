@@ -1611,17 +1611,16 @@ def test_high_order_roots():
 
 
 def test_minsolve_linear_system():
-    raises(ValueError, lambda: solve(x - 1, particular=True))
-    raises(ValueError, lambda: solve([x - 1], quick=False))
-    raises(ValueError, lambda: solve([x - 1], quick=True))
+    assert solve([x + y - 5, 2*x - y - 1], quick=True) == {x: 2, y: 3}
+    assert solve([x + y - 5, 2*x - y - 1], quick=False) == {x: 2, y: 3}
     def count(dic):
         return len([x for x in dic.values() if x == 0])
-    assert count(solve([x + y + z, y + z + a + t], particular=True, quick=True)) \
+    assert count(solve([x + y + z, y + z + a + t], quick=True)) \
         == 3
-    assert count(solve([x + y + z, y + z + a + t], particular=True, quick=False)) \
+    assert count(solve([x + y + z, y + z + a + t], quick=False)) \
         == 3
-    assert count(solve([x + y + z, y + z + a], particular=True, quick=True)) == 1
-    assert count(solve([x + y + z, y + z + a], particular=True, quick=False)) == 2
+    assert count(solve([x + y + z, y + z + a], quick=True)) == 1
+    assert count(solve([x + y + z, y + z + a], quick=False)) == 2
     # issue 22718
     A = Matrix([
         [ 1,  1,  1,  0,  1,  1,  0,  1,  0,  0,  1,  1,  1,  0],
@@ -1642,6 +1641,17 @@ def test_minsolve_linear_system():
     eqs = A@v-B
     assert solve(eqs) == []
     raises(NotImplementedError, lambda: solve(eqs, particular=True))
+    # check that quick flag trumps particular flag in case anyone
+    # tries to make default flags match the docstring description
+    assert all(v for v in solve([x + y + z, y + z + a]).values())
+    for _q in (True, False):
+        assert not all(v for v in solve(
+            [x + y + z, y + z + a], quick=_q,
+            particular=False).values())
+        # and give a good error message if someone tries to use
+        # particular with a single equation
+        raises(ValueError, lambda: solve(x + 1, quick=_q))
+
 
 
 def test_real_roots():
@@ -2467,5 +2477,3 @@ def test_solver_flags():
 def test_issue_22717():
     assert solve((-y**2 + log(y**2/x) + 2, -2*x*y + 2*x/y)) == [
         {y: -1, x: E}, {y: 1, x: E}]
-    raises(ValueError, lambda: solve(x + 1, particular=True))
-    raises(ValueError, lambda: solve([x + 1], quick=True))

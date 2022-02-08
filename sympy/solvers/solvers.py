@@ -806,12 +806,16 @@ def solve(f, *symbols, **flags):
             needed if the pattern is inside of some invertible function
             like cos, exp, ect.
         particular=True (default is False)
-            Instructs ``solve`` to try to find a particular solution to a linear
-            system with as many zeros as possible; this is very expensive.
-        quick=True (default is False)
-            When using particular=True, use a fast heuristic to find a
-            solution with many zeros (instead of using the very slow method
-            guaranteed to find the largest number of zeros possible).
+            Instructs ``solve`` to try to find a particular solution to
+            a linear system with as many zeros as possible; this is very
+            expensive. This flag is automatically set to True if
+            ``quick`` is not None.
+        quick=True (default is False if particular is True)
+            Used only in the context of particular=True; a value of True
+            selects a fast heuristic to find a solution with many zeros
+            whereas a value of False uses the very slow method guaranteed
+            to find the largest number of zeros possible. Setting this
+            flag automatically sets the ``particular`` flag to True.
         cubics=True (default)
             Return explicit solutions when cubic expressions are encountered.
             When False, quartics and quintics are disabled, too.
@@ -848,14 +852,16 @@ def solve(f, *symbols, **flags):
         return list(map(sympify, w if iterable(w) else [w]))
     bare_f = not iterable(f)
 
-    # check flag usage
-    if flags.get('particular', False):
-        if bare_f:
-            raise ValueError(
-                "pass f as a list when using 'particular=True'")
-    elif flags.get('quick', None) is not None:
-        raise ValueError(
-            "set 'particular=True' when the 'quick' flag.")
+    # check flag usage for particular/quick which should only be used
+    # with systems of equations
+    if flags.get('quick', None) is not None:
+        flags['particular'] = True  # quick trumps particular
+    if flags.get('particular', False) and bare_f:
+        raise ValueError(filldedent("""
+            The 'particular/quick' flag is usually used with systems of
+            equations. Either pass your equation as a list or
+            consider using a solver like `diophantine` if you are
+            looking for a solution in integers."""))
 
     ordered_symbols = (symbols and
                        symbols[0] and
