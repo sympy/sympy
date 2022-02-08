@@ -1,3 +1,4 @@
+from sympy.calculus.util import AccumBounds
 from sympy.core.function import (Derivative, PoleError)
 from sympy.core.numbers import (E, I, Integer, Rational, pi)
 from sympy.core.singleton import S
@@ -5,7 +6,7 @@ from sympy.core.symbol import (Symbol, symbols)
 from sympy.functions.elementary.complexes import sign
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (acosh, acoth, asinh, atanh, cosh, coth, sinh, tanh)
-from sympy.functions.elementary.integers import (ceiling, floor)
+from sympy.functions.elementary.integers import (ceiling, floor, frac)
 from sympy.functions.elementary.miscellaneous import (cbrt, sqrt)
 from sympy.functions.elementary.trigonometric import (asin, cos, cot, sin, tan)
 from sympy.series.limits import limit
@@ -442,6 +443,21 @@ def test_floor():
 
     x = Symbol('x', negative=True)
     assert floor(x + 1.5).series(x) == 1
+
+
+def test_frac():
+    assert frac(x).series(x, 0, 6, cdir=1) == x + O(x**6)
+    assert frac(x).series(x, 0, 6, cdir=-1) == 1 + x + O(x**6)
+    assert frac(2*x).series(x, 0, 6, cdir=-1) == 1 + 2*x + O(x**6)
+    assert frac(2*x + 1).series(x, 0, 6, cdir=1) == 2*x + O(x**6)
+    assert frac(2*x + 2).series(x, 0, 6, cdir=1) == 2*x + O(x**6)
+    assert frac(x**2).series(x, 0, 6, cdir=1) == x**2 + O(x**6)
+    assert frac(x**2).series(x, 0, 6, cdir=1) == x**2 + O(x**6)
+    assert frac(x**3 - 1).series(x, 0, 6, cdir=-1) == 1 + x**3 + O(x**6)
+    assert frac(x**3 - 1).series(x, 0, 6, cdir=1) == x**3 + O(x**6)
+    assert frac(x**8).series(x, 0, 6, cdir=1) == O(x**6)
+    assert frac(1/x).series(x, 0, 6) == AccumBounds(0, 1) + O(x**6)
+    assert frac(1/x).series(x, 0, 0).expr == S.One
 
 
 def test_ceiling():

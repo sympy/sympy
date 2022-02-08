@@ -220,6 +220,27 @@ def test_ceiling_requires_robust_assumptions():
     assert limit(ceiling(5 + cos(x)), x, 0, "-") == 6
 
 
+def test_frac():
+    assert limit(frac(x), x, oo) == AccumBounds(0, 1)
+    assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)  # wolfram gives (0, 1)
+    assert limit(frac(x), x, 0, '+') == 0
+    assert limit(frac(x), x, 0, '-') == 1
+    raises(ValueError, lambda: limit(frac(x), x, 0, '+-'))
+    assert limit(frac(x + 1), x, 0, '-') == 1
+    assert limit(frac(x + 1), x, 0, '+') == 0
+    assert limit(frac(-x), x, 0, '+') == 1
+    assert limit(frac(-x), x, 0, '-') == 0
+    assert limit(frac(-2*x + 1), x, 0, '+') == 1
+    assert limit(frac(-2*x + 1), x, 0, '-') == 0
+    assert limit(frac(x**2), x, 0, '+') == 0
+    assert limit(frac(x**2), x, 0, '-') == 0
+    assert limit(frac(x**2), x, 0, '+-') == 0
+    raises(ValueError, lambda: limit(frac(x**3 - 2), x, 0, '+-'))
+    assert limit(frac(x + Rational(1/2)), x, 0, '-') == 1/2
+    assert limit(frac(x + Rational(1/2)), x, 0, '+') == 1/2
+    assert limit(frac(x + Rational(1/2)), x, 0, '+-') == 1/2
+
+
 def test_atan():
     x = Symbol("x", real=True)
     assert limit(atan(x)*sin(1/x), x, 0) == 0
@@ -308,7 +329,6 @@ def test_series_AccumBounds():
     t2 = Mul(AccumBounds(-1 + sin(1)/2, sin(1)/2 + 1), 1/(1 - cos(1)))
     assert limit(simplify(Sum(sin(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t2
 
-    assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)  # wolfram gives (0, 1)
     assert limit(((sin(x) + 1)/2)**x, x, oo) == AccumBounds(0, oo)  # wolfram says 0
 
     # https://github.com/sympy/sympy/issues/12312

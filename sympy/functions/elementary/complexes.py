@@ -331,6 +331,7 @@ class sign(Function):
 
     @classmethod
     def eval(cls, arg):
+        from sympy.calculus.util import AccumBounds
         # handle what we can
         if arg.is_Mul:
             c, args = arg.as_coeff_mul()
@@ -378,6 +379,13 @@ class sign(Function):
                 return S.ImaginaryUnit
             if arg2.is_extended_negative:
                 return -S.ImaginaryUnit
+        if isinstance(arg, AccumBounds):
+            if arg.max < S.Zero:
+                return S.NegativeOne
+            elif arg.min > S.Zero:
+                return S.One
+            elif arg.min.is_zero or arg.max.is_zero or (arg.min < S.Zero and arg.max > S.Zero):
+                raise ValueError('More than one value is possible for passed argument %s')
 
     def _eval_Abs(self):
         if fuzzy_not(self.args[0].is_zero):

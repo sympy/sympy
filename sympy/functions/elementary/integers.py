@@ -513,6 +513,53 @@ class frac(Function):
     def _eval_is_negative(self):
         return False
 
+    def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.accumulationbounds import AccumBounds
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+        r = self.subs(x, 0)
+
+        if arg0.is_finite:
+            if arg0.is_integer or r.is_zero:
+                if cdir == 0:
+                    ndirl = arg.dir(x, cdir=-1)
+                    ndir = arg.dir(x, cdir=1)
+                    if ndir != ndirl:
+                        raise ValueError("Two sided limit of %s around 0"
+                                            "does not exist" % self)
+                    else:
+                        return r
+                else:
+                    ndir = arg.dir(x, cdir=cdir)
+                    return r + 1 if ndir.is_negative else r
+            else:
+                return r
+        elif arg0 is S.ComplexInfinity:
+            return AccumBounds(0, 1)
+        return arg.as_leading_term(x, logx=logx, cdir=cdir)
+
+    def _eval_nseries(self, x, n, logx, cdir=0):
+        from sympy.series.order import Order
+        arg = self.args[0]
+        arg0 = arg.subs(x, 0)
+        r = self.subs(x, 0)
+
+        if arg0.is_infinite:
+            from sympy.calculus.accumulationbounds import AccumBounds
+            o = Order(1, (x, 0)) if n <= 0 else AccumBounds(0, 1) + Order(x**n, (x, 0))
+            return o
+        elif arg0.is_integer or r.is_zero:
+            s = (arg - arg0)._eval_nseries(x, n, logx, cdir)
+            ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
+            res = r + 1 if ndir.is_negative else r
+            res += s
+        else:
+            res = arg - arg0 + r
+
+        if res != self:
+            res += Order(x**n, (x, 0))
+        return res
+
     def __ge__(self, other):
         if self.is_extended_real:
             other = _sympify(other)
