@@ -631,7 +631,8 @@ _known_constants_mpmath = {
     'Catalan': 'catalan',
     'NaN': 'nan',
     'Infinity': 'inf',
-    'NegativeInfinity': 'ninf'
+    'NegativeInfinity': 'ninf',
+    'ComplexInfinity': 'nan',
 }
 
 

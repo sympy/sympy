@@ -84,6 +84,7 @@ def test_MpmathPrinter():
     assert p.doprint(S.NaN) == 'mpmath.nan'
     assert p.doprint(S.Infinity) == 'mpmath.inf'
     assert p.doprint(S.NegativeInfinity) == 'mpmath.ninf'
+    assert p.doprint(S.ComplexInfinity) == 'mpmath.nan'
     assert p.doprint(loggamma(x)) == 'mpmath.loggamma(x)'
 
 
@@ -135,6 +136,7 @@ def test_NumPyPrinter():
     assert p.doprint(S.NaN) == 'numpy.nan'
     assert p.doprint(S.Infinity) == 'numpy.PINF'
     assert p.doprint(S.NegativeInfinity) == 'numpy.NINF'
+    assert p.doprint(S.ComplexInfinity) == 'numpy.nan'
 
 
 def test_issue_18770():
@@ -171,6 +173,7 @@ def test_SciPyPrinter():
     assert p.doprint(S.GoldenRatio) == 'scipy.constants.golden_ratio'
     assert p.doprint(S.Pi) == 'scipy.constants.pi'
     assert p.doprint(S.Exp1) == 'numpy.e'
+    assert p.doprint(S.ComplexInfinity) == 'numpy.nan'
 
 
 def test_pycode_reserved_words():
