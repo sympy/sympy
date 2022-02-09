@@ -676,6 +676,12 @@ class Permutation(Atom):
 
     There are a few things to note about how Permutations are printed.
 
+    .. deprecated:: 1.6
+
+       Configuring Permutation printing by setting
+       ``Permutation.print_cyclic`` is deprecated. Users should use the
+       ``perm_cyclic`` flag to the printers, as described below.
+
     1) If you prefer one form (array or cycle) over another, you can set
     ``init_printing`` with the ``perm_cyclic`` flag.
 

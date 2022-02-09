@@ -75,7 +75,7 @@ from sympy.tensor.functions import TensorProduct
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices, TensorHead,
                                  TensorElement, tensor_heads)
 
-from sympy.testing.pytest import raises, _both_exp_pow
+from sympy.testing.pytest import raises, _both_exp_pow, warns_deprecated_sympy
 
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross, Laplacian
 
@@ -409,6 +409,17 @@ def test_pretty_Permutation():
     assert xpretty(p1, perm_cyclic=False, use_unicode=False) == \
     "/0 1 2 3 4\\\n"\
     "\\0 2 1 4 3/"
+
+    with warns_deprecated_sympy():
+        old_print_cyclic = Permutation.print_cyclic
+        Permutation.print_cyclic = False
+        assert xpretty(p1, use_unicode=True) == \
+        '⎛0 1 2 3 4⎞\n'\
+        '⎝0 2 1 4 3⎠'
+        assert xpretty(p1, use_unicode=False) == \
+        "/0 1 2 3 4\\\n"\
+        "\\0 2 1 4 3/"
+        Permutation.print_cyclic = old_print_cyclic
 
 
 def test_pretty_basic():
