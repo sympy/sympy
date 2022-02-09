@@ -1,11 +1,30 @@
-from sympy import (
-    Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
-    LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol, Ne,
-    Wild, acos, asin, atan, atanh, binomial, cos, cosh, diff, erf, erfinv, erfc,
-    erfcinv, exp, im, log, pi, re, sec, sin,
-    sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
-    root, atan2, arg, Mul, SparseMatrix, ask, Tuple, nsolve, oo,
-    E, cbrt, denom, Add, Piecewise, GoldenRatio, TribonacciConstant, conjugate)
+from sympy.assumptions.ask import (Q, ask)
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.function import (Derivative, Function, diff)
+from sympy.core.mul import Mul
+from sympy.core import (GoldenRatio, TribonacciConstant)
+from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
+from sympy.core.relational import (Eq, Gt, Lt, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, Wild, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import binomial
+from sympy.functions.elementary.complexes import (Abs, arg, conjugate, im, re)
+from sympy.functions.elementary.exponential import (LambertW, exp, log)
+from sympy.functions.elementary.hyperbolic import (atanh, cosh, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import (cbrt, root, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, atan2, cos, sec, sin, tan)
+from sympy.functions.special.error_functions import (erf, erfc, erfcinv, erfinv)
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import (And, Or)
+from sympy.matrices.dense import Matrix
+from sympy.matrices import SparseMatrix
+from sympy.polys.polytools import Poly
+from sympy.printing.str import sstr
+from sympy.simplify.radsimp import denom
+from sympy.solvers.solvers import (nsolve, solve, solve_linear)
 
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -18,7 +37,7 @@ from sympy.physics.units import cm
 from sympy.polys.rootoftools import CRootOf
 
 from sympy.testing.pytest import slow, XFAIL, SKIP, raises
-from sympy.testing.randtest import verify_numerically as tn
+from sympy.core.random import verify_numerically as tn
 
 from sympy.abc import a, b, c, d, e, k, h, p, x, y, z, t, q, m, R
 
@@ -109,6 +128,7 @@ def test_solve_args():
     # no symbol to solve for
     assert solve(42) == solve(42, x) == []
     assert solve([1, 2]) == []
+    assert solve([sqrt(2)],[x]) == []
     # duplicate symbols removed
     assert solve((x - 3, y + 2), x, y, x) == {x: 3, y: -2}
     # unordered symbols
@@ -153,7 +173,7 @@ def test_solve_args():
     assert solve(
         (exp(x) - x, exp(y) - y)) == {x: -LambertW(-1), y: -LambertW(-1)}
     # --  when symbols given
-    solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
+    assert solve([y, exp(x) + x], x, y) == {y: 0, x: -LambertW(1)}
     # symbol is a number
     assert solve(x**2 - pi, pi) == [x**2]
     # no equations
@@ -1853,7 +1873,7 @@ def test_rewrite_trig():
 @XFAIL
 def test_rewrite_trigh():
     # if this import passes then the test below should also pass
-    from sympy import sech
+    from sympy.functions.elementary.hyperbolic import sech
     assert solve(sinh(x) + sech(x)) == [
         2*atanh(Rational(-1, 2) + sqrt(5)/2 - sqrt(-2*sqrt(5) + 2)/2),
         2*atanh(Rational(-1, 2) + sqrt(5)/2 + sqrt(-2*sqrt(5) + 2)/2),
@@ -2407,3 +2427,9 @@ def test_issue_21942():
     eq = -d + (a*c**(1 - e) + b**(1 - e)*(1 - a))**(1/(1 - e))
     sol = solve(eq, c, simplify=False, check=False)
     assert sol == [(b/b**e - b/(a*b**e) + d**(1 - e)/a)**(1/(1 - e))]
+
+
+def test_solver_flags():
+    root = solve(x**5 + x**2 - x - 1, cubics=False)
+    rad = solve(x**5 + x**2 - x - 1, cubics=True)
+    assert root != rad

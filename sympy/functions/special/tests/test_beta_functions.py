@@ -1,6 +1,11 @@
-from sympy import (symbols, gamma, expand_func, beta, betainc,
-        hyper, diff, conjugate, Integral, Dummy, I,
-        betainc_regularized)
+from sympy.core.function import (diff, expand_func)
+from sympy.core.numbers import I
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions.elementary.complexes import conjugate
+from sympy.functions.special.beta_functions import (beta, betainc, betainc_regularized)
+from sympy.functions.special.gamma_functions import gamma
+from sympy.functions.special.hyper import hyper
+from sympy.integrals.integrals import Integral
 from sympy.functions.special.gamma_functions import polygamma
 from sympy.core.function import ArgumentIndexError
 from sympy.core.expr import unchanged

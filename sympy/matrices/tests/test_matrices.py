@@ -2,10 +2,22 @@ import random
 import concurrent.futures
 from collections.abc import Hashable
 
-from sympy import (
-    Abs, Add, E, Float, I, Integer, Max, Min, Poly, Pow, PurePoly, Rational,
-    S, Symbol, cos, exp, log, nan, oo, pi, signsimp, simplify, sin,
-    sqrt, symbols, sympify, trigsimp, tan, sstr, diff, Function, expand, FiniteSet)
+from sympy.core.add import Add
+from sympy.core.function import (Function, diff, expand)
+from sympy.core.numbers import (E, Float, I, Integer, Rational, nan, oo, pi)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
+from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.polys.polytools import (Poly, PurePoly)
+from sympy.printing.str import sstr
+from sympy.sets.sets import FiniteSet
+from sympy.simplify.simplify import (signsimp, simplify)
+from sympy.simplify.trigsimp import trigsimp
 from sympy.matrices.matrices import (ShapeError, MatrixError,
     NonSquareMatrixError, DeferredVector, _find_reasonable_pivot_naive,
     _simplify)
@@ -16,10 +28,9 @@ from sympy.matrices import (
     rot_axis3, wronskian, zeros, MutableDenseMatrix, ImmutableDenseMatrix,
     MatrixSymbol, dotprodsimp)
 from sympy.matrices.utilities import _dotprodsimp_state
-from sympy.core.compatibility import iterable
 from sympy.core import Tuple, Wild
 from sympy.functions.special.tensor_functions import KroneckerDelta
-from sympy.utilities.iterables import flatten, capture
+from sympy.utilities.iterables import flatten, capture, iterable
 from sympy.testing.pytest import raises, XFAIL, slow, skip, warns_deprecated_sympy
 from sympy.assumptions import Q
 from sympy.tensor.array import Array
@@ -1052,7 +1063,7 @@ def test_simplify():
     M = Matrix([[eq]])
     M.simplify()
     assert M == Matrix([[eq]])
-    M.simplify(ratio=oo) == M
+    M.simplify(ratio=oo)
     assert M == Matrix([[eq.simplify(ratio=oo)]])
 
 
@@ -1984,9 +1995,9 @@ def test_diff_by_matrix():
 
     # Test different notations:
 
-    fxyz.diff(x).diff(y).diff(x) == fxyz.diff(((x, y, z),), 3)[0, 1, 0]
-    fxyz.diff(z).diff(y).diff(x) == fxyz.diff(((x, y, z),), 3)[2, 1, 0]
-    fxyz.diff([[x, y, z]], ((z, y, x),)) == Array([[fxyz.diff(i).diff(j) for i in (x, y, z)] for j in (z, y, x)])
+    assert fxyz.diff(x).diff(y).diff(x) == fxyz.diff(((x, y, z),), 3)[0, 1, 0]
+    assert fxyz.diff(z).diff(y).diff(x) == fxyz.diff(((x, y, z),), 3)[2, 1, 0]
+    assert fxyz.diff([[x, y, z]], ((z, y, x),)) == Array([[fxyz.diff(i).diff(j) for i in (x, y, z)] for j in (z, y, x)])
 
     # Test scalar derived by matrix remains matrix:
     res = x.diff(Matrix([[x, y]]))
@@ -2842,7 +2853,7 @@ def test_iszero_substitution():
     assert m_rref[2,2] == 0
 
 def test_issue_11238():
-    from sympy import Point
+    from sympy.geometry.point import Point
     xx = 8*tan(pi*Rational(13, 45))/(tan(pi*Rational(13, 45)) + sqrt(3))
     yy = (-8*sqrt(3)*tan(pi*Rational(13, 45))**2 + 24*tan(pi*Rational(13, 45)))/(-3 + tan(pi*Rational(13, 45))**2)
     p1 = Point(0, 0)
@@ -2885,7 +2896,7 @@ def test_deprecated():
 
 
 def test_issue_14489():
-    from sympy import Mod
+    from sympy.core.mod import Mod
     A = Matrix([-1, 1, 2])
     B = Matrix([10, 20, -15])
 

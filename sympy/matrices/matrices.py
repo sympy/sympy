@@ -1,10 +1,10 @@
 import mpmath as mp
+from collections.abc import Callable
+
 
 from sympy.core.add import Add
 from sympy.core.basic import Basic
-from sympy.core.compatibility import (
-    Callable, NotIterable, as_int, is_sequence)
-from sympy.core.decorators import deprecated
+from sympy.core.function import diff
 from sympy.core.expr import Expr
 from sympy.core.kind import _NumberKind, UndefinedKind
 from sympy.core.mul import Mul
@@ -21,16 +21,17 @@ from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.polys import cancel
 from sympy.printing import sstr
 from sympy.printing.defaults import Printable
-from sympy.simplify import simplify as _simplify
+from sympy.printing.str import StrPrinter
+from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import flatten
-from sympy.utilities.misc import filldedent
+from sympy.utilities.iterables import flatten, NotIterable, is_sequence, reshape
+from sympy.utilities.misc import as_int, filldedent
 
 from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
     ShapeError, MatrixKind)
 
-from .utilities import _iszero, _is_zero_after_expand_mul
+from .utilities import _iszero, _is_zero_after_expand_mul, _simplify
 
 from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
@@ -285,9 +286,9 @@ class MatrixReductions(MatrixDeterminant):
 
         `op` may be one of
 
-            * "n->kn" (column n goes to k*n)
-            * "n<->m" (swap column n and column m)
-            * "n->n+km" (column n goes to column n + k*column m)
+            * ``"n->kn"`` (column n goes to k*n)
+            * ``"n<->m"`` (swap column n and column m)
+            * ``"n->n+km"`` (column n goes to column n + k*column m)
 
         Parameters
         ==========
@@ -315,9 +316,9 @@ class MatrixReductions(MatrixDeterminant):
 
         `op` may be one of
 
-            * "n->kn" (row n goes to k*n)
-            * "n<->m" (swap row n and row m)
-            * "n->n+km" (row n goes to row n + k*row m)
+            * ``"n->kn"`` (row n goes to k*n)
+            * ``"n<->m"`` (swap row n and row m)
+            * ``"n->n+km"`` (row n goes to row n + k*row m)
 
         Parameters
         ==========
@@ -449,7 +450,7 @@ class MatrixCalculus(MatrixCommon):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.diff(x)
@@ -482,7 +483,7 @@ class MatrixCalculus(MatrixCommon):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.integrate((x, ))
@@ -566,7 +567,7 @@ class MatrixCalculus(MatrixCommon):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.limit(x, 2)
@@ -791,7 +792,7 @@ class MatrixBase(MatrixDeprecated,
     one = S.One
 
     @property
-    def kind(self):
+    def kind(self) -> MatrixKind:
         elem_kinds = set(e.kind for e in self.flat())
         if len(elem_kinds) == 1:
             elemkind, = elem_kinds
@@ -815,7 +816,7 @@ class MatrixBase(MatrixDeprecated,
 
     def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
-        from sympy import binomial
+        from sympy.functions.combinatorial.factorials import binomial
 
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
@@ -854,7 +855,6 @@ class MatrixBase(MatrixDeprecated,
 
     def _format_str(self, printer=None):
         if not printer:
-            from sympy.printing.str import StrPrinter
             printer = StrPrinter()
         # Handle zero dimensions:
         if S.Zero in self.shape:
@@ -909,7 +909,7 @@ class MatrixBase(MatrixDeprecated,
     def _handle_ndarray(cls, arg):
         # NumPy array or matrix or some other object that implements
         # __array__. So let's first use this method to get a
-        # numpy.array() and then make a python list out of it.
+        # numpy.array() and then make a Python list out of it.
         arr = arg.__array__()
         if len(arr.shape) == 2:
             rows, cols = arr.shape[0], arr.shape[1]
@@ -968,10 +968,9 @@ class MatrixBase(MatrixDeprecated,
         ========
         irregular - filling a matrix with irregular blocks
         """
-        from sympy.matrices.sparse import SparseMatrix
+        from sympy.matrices import SparseMatrix
         from sympy.matrices.expressions.matexpr import MatrixSymbol
         from sympy.matrices.expressions.blockmatrix import BlockMatrix
-        from sympy.utilities.iterables import reshape
 
         flat_list = None
 
@@ -1285,7 +1284,7 @@ class MatrixBase(MatrixDeprecated,
         """
         from sympy.matrices.expressions.matexpr import MatrixExpr
 
-        if not isinstance(b, MatrixBase) and not isinstance(b, MatrixExpr):
+        if not isinstance(b, (MatrixBase, MatrixExpr)):
             raise TypeError(
                 "{} must be a Matrix, not {}.".format(b, type(b)))
 
@@ -1458,7 +1457,7 @@ class MatrixBase(MatrixDeprecated,
         so that the dual is a covariant second rank tensor.
 
         """
-        from sympy import LeviCivita
+        from sympy.functions.special.tensor_functions import LeviCivita
         from sympy.matrices import zeros
 
         M, n = self[:, :], self.rows
@@ -1552,7 +1551,6 @@ class MatrixBase(MatrixDeprecated,
             parameter of f
 
         """
-        from sympy import diff
 
         f, x = _sympify(f), _sympify(x)
         if not self.is_square:
@@ -2005,7 +2003,7 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix, eye
+        >>> from sympy import Matrix, eye
         >>> m = Matrix(2, 3, lambda i, j: i*3+j)
         >>> m
         Matrix([
@@ -2074,8 +2072,7 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
-        >>> from sympy import Matrix
-        >>> from sympy.printing.str import StrPrinter
+        >>> from sympy import Matrix, StrPrinter
         >>> M = Matrix([[1, 2], [-33, 4]])
         >>> printer = StrPrinter()
         >>> M.table(printer)

@@ -1,0 +1,16 @@
+linkify-it-py
+matplotlib
+matplotlib-inline
+mpmath
+myst-parser
+Sphinx
+sphinx-autobuild
+sphinx-math-dollar
+sphinx-reredirects
+sphinxcontrib-applehelp
+sphinxcontrib-devhelp
+sphinxcontrib-htmlhelp
+sphinxcontrib-jsmath
+sphinxcontrib-qthelp
+sphinxcontrib-serializinghtml
+sphinx-reredirects

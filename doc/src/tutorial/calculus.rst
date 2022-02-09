@@ -295,7 +295,7 @@ which case the defaults ``x0=0`` and ``n=6`` will be used.
 
 The `O\left(x^4\right)` term at the end represents the Landau order term at
 `x=0` (not to be confused with big O notation used in computer science, which
-generally represents the Landau order term at `x=\infty`).  It means that all
+generally represents the Landau order term at `x` where `x \rightarrow \infty`).  It means that all
 x terms with power greater than or equal to `x^4` are omitted.  Order terms
 can be created and manipulated outside of ``series``.  They automatically
 absorb higher order terms.

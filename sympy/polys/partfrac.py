@@ -2,7 +2,7 @@
 
 
 from sympy.core import S, Add, sympify, Function, Lambda, Dummy
-from sympy.core.basic import preorder_traversal
+from sympy.core.traversal import preorder_traversal
 from sympy.polys import Poly, RootSum, cancel, factor
 from sympy.polys.polyerrors import PolynomialError
 from sympy.polys.polyoptions import allowed_flags, set_defaults

@@ -1,10 +1,10 @@
-from sympy.core import S, sympify, Expr, Dummy
-from sympy.core import Add, Mul, expand_power_base, expand_log
+from sympy.core import S, sympify, Expr, Dummy, Add, Mul
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import default_sort_key, is_sequence
 from sympy.core.containers import Tuple
+from sympy.core.function import Function, PoleError, expand_power_base, expand_log
+from sympy.core.sorting import default_sort_key
 from sympy.sets.sets import Complement
-from sympy.utilities.iterables import uniq
+from sympy.utilities.iterables import uniq, is_sequence
 
 
 class Order(Expr):
@@ -225,7 +225,6 @@ class Order(Expr):
                     expr = Add(*[f.expr for (e, f) in lst])
 
                 elif expr:
-                    from sympy import PoleError, Function
                     try:
                         expr = expr.as_leading_term(*args)
                     except PoleError:
@@ -370,7 +369,6 @@ class Order(Expr):
         Return None if the inclusion relation cannot be determined
         (e.g. when self and expr have different symbols).
         """
-        from sympy import powsimp
         expr = sympify(expr)
         if expr.is_zero:
             return True
@@ -411,6 +409,7 @@ class Order(Expr):
                             if rv is not None:
                                 return rv
 
+            from sympy.simplify.powsimp import powsimp
             r = None
             ratio = self.expr/expr.expr
             ratio = powsimp(ratio, deep=True, combine='exp')
@@ -467,15 +466,10 @@ class Order(Expr):
                     # First, try to substitute self.point in the "new"
                     # expr to see if this is a fixed point.
                     # E.g.  O(y).subs(y, sin(x))
-                    while new.is_Order:
-                        new = new.expr
                     point = new.subs(var, self.point[i])
-                    while point.is_Order:
-                        point = point.expr
                     if point != self.point[i]:
                         from sympy.solvers.solveset import solveset
                         d = Dummy()
-                        sol_str = str(old - new)
                         sol = solveset(old - new.subs(var, d), d)
                         if isinstance(sol, Complement):
                             e1 = sol.args[0]

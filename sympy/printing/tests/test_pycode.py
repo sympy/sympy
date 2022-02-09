@@ -6,15 +6,17 @@ from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.core import Expr, Mod, symbols, Eq, Le, Gt, zoo, oo, Rational, Pow
 from sympy.core.numbers import pi
 from sympy.core.singleton import S
-from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt
+from sympy.functions import acos, KroneckerDelta, Piecewise, sign, sqrt, Min, Max
 from sympy.logic import And, Or
 from sympy.matrices import SparseMatrix, MatrixSymbol, Identity
 from sympy.printing.pycode import (
     MpmathPrinter, PythonCodePrinter, pycode, SymPyPrinter
 )
+from sympy.printing.tensorflow import TensorflowPrinter
 from sympy.printing.numpy import NumPyPrinter, SciPyPrinter
 from sympy.testing.pytest import raises, skip
-from sympy.tensor import IndexedBase
+from sympy.tensor import IndexedBase, Idx
+from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayDiagonal, ArrayContraction, ZeroArray, OneArray
 from sympy.external import import_module
 from sympy.functions.special.gamma_functions import loggamma
 from sympy.parsing.latex import parse_latex
@@ -58,18 +60,17 @@ def test_PythonCodePrinter():
     assert prntr.doprint((2,3)) == "(2, 3)"
     assert prntr.doprint([2,3]) == "[2, 3]"
 
+    assert prntr.doprint(Min(x, y)) == "min(x, y)"
+    assert prntr.doprint(Max(x, y)) == "max(x, y)"
+
 
 def test_PythonCodePrinter_standard():
-    import sys
-    prntr = PythonCodePrinter({'standard':None})
+    prntr = PythonCodePrinter()
 
-    python_version = sys.version_info.major
-    if python_version == 2:
-        assert prntr.standard == 'python2'
-    if python_version == 3:
-        assert prntr.standard == 'python3'
+    assert prntr.standard == 'python3'
 
     raises(ValueError, lambda: PythonCodePrinter({'standard':'python4'}))
+
 
 def test_MpmathPrinter():
     p = MpmathPrinter()
@@ -87,9 +88,13 @@ def test_MpmathPrinter():
 
 
 def test_NumPyPrinter():
-    from sympy import (Lambda, ZeroMatrix, OneMatrix, FunctionMatrix,
-        HadamardProduct, KroneckerProduct, Adjoint, DiagonalOf,
-        DiagMatrix, DiagonalMatrix)
+    from sympy.core.function import Lambda
+    from sympy.matrices.expressions.adjoint import Adjoint
+    from sympy.matrices.expressions.diagonal import (DiagMatrix, DiagonalMatrix, DiagonalOf)
+    from sympy.matrices.expressions.funcmatrix import FunctionMatrix
+    from sympy.matrices.expressions.hadamard import HadamardProduct
+    from sympy.matrices.expressions.kronecker import KroneckerProduct
+    from sympy.matrices.expressions.special import (OneMatrix, ZeroMatrix)
     from sympy.abc import a, b
     p = NumPyPrinter()
     assert p.doprint(sign(x)) == 'numpy.sign(x)'
@@ -137,7 +142,8 @@ def test_issue_18770():
     if not numpy:
         skip("numpy not installed.")
 
-    from sympy import lambdify, Min, Max
+    from sympy.functions.elementary.miscellaneous import (Max, Min)
+    from sympy.utilities.lambdify import lambdify
 
     expr1 = Min(0.1*x + 3, x + 1, 0.5*x + 1)
     func = lambdify(x, expr1, "numpy")
@@ -190,10 +196,6 @@ def test_sqrt():
     assert prntr._print_Pow(sqrt(x), rational=False) == 'math.sqrt(x)'
     assert prntr._print_Pow(1/sqrt(x), rational=False) == '1/math.sqrt(x)'
 
-    prntr = PythonCodePrinter({'standard' : 'python2'})
-    assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1./2.)'
-    assert prntr._print_Pow(1/sqrt(x), rational=True) == 'x**(-1./2.)'
-
     prntr = PythonCodePrinter({'standard' : 'python3'})
     assert prntr._print_Pow(sqrt(x), rational=True) == 'x**(1/2)'
     assert prntr._print_Pow(1/sqrt(x), rational=True) == 'x**(-1/2)'
@@ -217,10 +219,9 @@ def test_sqrt():
 
 
 def test_frac():
-    from sympy import frac
+    from sympy.functions.elementary.integers import frac
 
     expr = frac(x)
-
     prntr = NumPyPrinter()
     assert prntr.doprint(expr) == 'numpy.mod(x, 1)'
 
@@ -258,8 +259,9 @@ def test_codegen_ast_nodes():
 def test_issue_14283():
     prntr = PythonCodePrinter()
 
-    assert prntr.doprint(zoo) == "float('nan')"
+    assert prntr.doprint(zoo) == "math.nan"
     assert prntr.doprint(-oo) == "float('-inf')"
+
 
 def test_NumPyPrinter_print_seq():
     n = NumPyPrinter()
@@ -268,7 +270,7 @@ def test_NumPyPrinter_print_seq():
 
 
 def test_issue_16535_16536():
-    from sympy import lowergamma, uppergamma
+    from sympy.functions.special.gamma_functions import (lowergamma, uppergamma)
 
     a = symbols('a')
     expr1 = lowergamma(a, x)
@@ -288,7 +290,8 @@ def test_issue_16535_16536():
 
 
 def test_Integral():
-    from sympy import Integral, exp
+    from sympy.functions.elementary.exponential import exp
+    from sympy.integrals.integrals import Integral
 
     single = Integral(exp(-x), (x, 0, oo))
     double = Integral(x**2*exp(x*y), (x, -z, z), (y, 0, z))
@@ -309,7 +312,7 @@ def test_Integral():
 
 
 def test_fresnel_integrals():
-    from sympy import fresnelc, fresnels
+    from sympy.functions.special.error_functions import (fresnelc, fresnels)
 
     expr1 = fresnelc(x)
     expr2 = fresnels(x)
@@ -332,7 +335,7 @@ def test_fresnel_integrals():
 
 
 def test_beta():
-    from sympy import beta
+    from sympy.functions.special.beta_functions import beta
 
     expr = beta(x, y)
 
@@ -352,7 +355,7 @@ def test_beta():
     assert prntr.doprint(expr) ==  'mpmath.beta(x, y)'
 
 def test_airy():
-    from sympy import airyai, airybi
+    from sympy.functions.special.bessel import (airyai, airybi)
 
     expr1 = airyai(x)
     expr2 = airybi(x)
@@ -370,7 +373,7 @@ def test_airy():
     assert "Not supported" in prntr.doprint(expr2)
 
 def test_airy_prime():
-    from sympy import airyaiprime, airybiprime
+    from sympy.functions.special.bessel import (airyaiprime, airybiprime)
 
     expr1 = airyaiprime(x)
     expr2 = airybiprime(x)
@@ -393,3 +396,28 @@ def test_numerical_accuracy_functions():
     assert prntr.doprint(expm1(x)) == 'numpy.expm1(x)'
     assert prntr.doprint(log1p(x)) == 'numpy.log1p(x)'
     assert prntr.doprint(cosm1(x)) == 'scipy.special.cosm1(x)'
+
+def test_array_printer():
+    A = ArraySymbol('A', (4,4,6,6,6))
+    I = IndexedBase('I')
+    i,j,k = Idx('i', (0,1)), Idx('j', (2,3)), Idx('k', (4,5))
+
+    prntr = NumPyPrinter()
+    assert prntr.doprint(ZeroArray(5)) == 'numpy.zeros((5,))'
+    assert prntr.doprint(OneArray(5)) == 'numpy.ones((5,))'
+    assert prntr.doprint(ArrayContraction(A, [2,3])) == 'numpy.einsum("abccd->abd", A)'
+    assert prntr.doprint(I) == 'I'
+    assert prntr.doprint(ArrayDiagonal(A, [2,3,4])) == 'numpy.einsum("abccc->abc", A)'
+    assert prntr.doprint(ArrayDiagonal(A, [0,1], [2,3])) == 'numpy.einsum("aabbc->cab", A)'
+    assert prntr.doprint(ArrayContraction(A, [2], [3])) == 'numpy.einsum("abcde->abe", A)'
+    assert prntr.doprint(Assignment(I[i,j,k], I[i,j,k])) == 'I = I'
+
+    prntr = TensorflowPrinter()
+    assert prntr.doprint(ZeroArray(5)) == 'tensorflow.zeros((5,))'
+    assert prntr.doprint(OneArray(5)) == 'tensorflow.ones((5,))'
+    assert prntr.doprint(ArrayContraction(A, [2,3])) == 'tensorflow.linalg.einsum("abccd->abd", A)'
+    assert prntr.doprint(I) == 'I'
+    assert prntr.doprint(ArrayDiagonal(A, [2,3,4])) == 'tensorflow.linalg.einsum("abccc->abc", A)'
+    assert prntr.doprint(ArrayDiagonal(A, [0,1], [2,3])) == 'tensorflow.linalg.einsum("aabbc->cab", A)'
+    assert prntr.doprint(ArrayContraction(A, [2], [3])) == 'tensorflow.linalg.einsum("abcde->abe", A)'
+    assert prntr.doprint(Assignment(I[i,j,k], I[i,j,k])) == 'I = I'

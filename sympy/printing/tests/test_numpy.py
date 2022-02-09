@@ -1,13 +1,20 @@
-from sympy import (
-    Piecewise, lambdify, Equality, Unequality, Sum, Mod, sqrt,
-    MatrixSymbol, BlockMatrix, Identity
-)
-from sympy import eye
+from sympy.concrete.summations import Sum
+from sympy.core.mod import Mod
+from sympy.core.relational import (Equality, Unequality)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.matrices.expressions.blockmatrix import BlockMatrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.matrices.expressions.special import Identity
+from sympy.utilities.lambdify import lambdify
+
+from sympy.matrices.dense import eye
 from sympy.abc import x, i, j, a, b, c, d
 from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.cfunctions import log1p, expm1, hypot, log10, exp2, log2, Sqrt
+from sympy.tensor.array import Array
 from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct, ArrayAdd, \
     PermuteDims, ArrayDiagonal
 from sympy.printing.numpy import NumPyPrinter, SciPyPrinter, _numpy_known_constants, \
@@ -311,10 +318,14 @@ def test_issue_17006():
 
     assert (f(ma) == mr).all()
 
-    from sympy import symbols
+    from sympy.core.symbol import symbols
     n = symbols('n', integer=True)
     N = MatrixSymbol("M", n, n)
     raises(NotImplementedError, lambda: lambdify(N, N + Identity(n)))
+
+def test_numpy_array():
+    assert NumPyPrinter().doprint(Array(((1, 2), (3, 5)))) == 'numpy.array([[1, 2], [3, 5]])'
+    assert NumPyPrinter().doprint(Array((1, 2))) == 'numpy.array((1, 2))'
 
 def test_numpy_known_funcs_consts():
     assert _numpy_known_constants['NaN'] == 'numpy.nan'

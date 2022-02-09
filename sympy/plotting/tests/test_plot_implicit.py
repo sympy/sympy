@@ -1,5 +1,11 @@
-from sympy import (plot_implicit, cos, Symbol, symbols, Eq, sin, re, And, Or, exp, I,
-                   tan, pi)
+from sympy.core.numbers import (I, pi)
+from sympy.core.relational import Eq
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import re
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.logic.boolalg import (And, Or)
+from sympy.plotting.plot_implicit import plot_implicit
 from sympy.plotting.plot import unset_show
 from tempfile import NamedTemporaryFile, mkdtemp
 from sympy.testing.pytest import skip, warns

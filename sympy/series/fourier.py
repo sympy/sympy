@@ -1,9 +1,9 @@
 """Fourier Series"""
 
-from sympy import pi, oo, Wild
+from sympy.core.numbers import (oo, pi)
+from sympy.core.symbol import Wild
 from sympy.core.expr import Expr
 from sympy.core.add import Add
-from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol
@@ -12,7 +12,7 @@ from sympy.functions.elementary.trigonometric import sin, cos, sinc
 from sympy.series.series_class import SeriesBase
 from sympy.series.sequences import SeqFormula
 from sympy.sets.sets import Interval
-from sympy.simplify.fu import TR2, TR1, TR10, sincos_to_sum
+from sympy.utilities.iterables import is_sequence
 
 
 def fourier_cos_seq(func, limits, n):
@@ -105,6 +105,7 @@ def finite_check(f, x, L):
             else:
                 return False
 
+    from sympy.simplify.fu import TR2, TR1, sincos_to_sum
     _expr = sincos_to_sum(TR2(TR1(f)))
     add_coeff = _expr.as_coeff_add()
 
@@ -512,9 +513,10 @@ class FiniteFourierSeries(FourierSeries):
         limits = sympify(limits)
         exprs = sympify(exprs)
 
-        if not (type(exprs) == Tuple and len(exprs) == 3):  # exprs is not of form (a0, an, bn)
+        if not (isinstance(exprs, Tuple) and len(exprs) == 3):  # exprs is not of form (a0, an, bn)
             # Converts the expression to fourier form
             c, e = exprs.as_coeff_add()
+            from sympy.simplify.fu import TR10
             rexpr = c + Add(*[TR10(i) for i in e])
             a0, exp_ls = rexpr.expand(trig=False, power_base=False, power_exp=False, log=False).as_coeff_add()
 

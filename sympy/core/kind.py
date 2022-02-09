@@ -27,7 +27,7 @@ This module defines basic kinds for core objects. Other kinds such as
 
 from collections import defaultdict
 
-from sympy.core.cache import cacheit
+from .cache import cacheit
 from sympy.multipledispatch.dispatcher import (Dispatcher,
     ambiguity_warn, ambiguity_register_error_ignore_dup,
     str_signature, RaiseNotImplementedError)
@@ -210,14 +210,13 @@ class KindDispatcher:
 
     Multiplication between numbers return number.
 
-    >>> from sympy import Mul
-    >>> from sympy.core import NumberKind
+    >>> from sympy import NumberKind, Mul
     >>> Mul._kind_dispatcher(NumberKind, NumberKind)
     NumberKind
 
     Multiplication between number and unknown-kind object returns unknown kind.
 
-    >>> from sympy.core import UndefinedKind
+    >>> from sympy import UndefinedKind
     >>> Mul._kind_dispatcher(NumberKind, UndefinedKind)
     UndefinedKind
 

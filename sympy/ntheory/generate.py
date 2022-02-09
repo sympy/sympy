@@ -10,9 +10,10 @@ from itertools import count
 # memory consumption
 from array import array as _array
 
-from sympy import Function, S
-from sympy.core.compatibility import as_int
+from sympy.core.function import Function
+from sympy.core.singleton import S
 from .primetest import isprime
+from sympy.utilities.misc import as_int
 
 
 def _azeros(n):
@@ -350,11 +351,11 @@ sieve = Sieve()
 
 
 def prime(nth):
-    """ Return the nth prime, with the primes indexed as prime(1) = 2,
-        prime(2) = 3, etc.... The nth prime is approximately n*log(n).
+    r""" Return the nth prime, with the primes indexed as prime(1) = 2,
+        prime(2) = 3, etc.... The nth prime is approximately $n\log(n)$.
 
-        Logarithmic integral of x is a pretty nice approximation for number of
-        primes <= x, i.e.
+        Logarithmic integral of $x$ is a pretty nice approximation for number of
+        primes $\le x$, i.e.
         li(x) ~ pi(x)
         In fact, for the numbers we are concerned about( x<1e11 ),
         li(x) - pi(x) < 50000
@@ -425,7 +426,7 @@ def prime(nth):
 
 
 class primepi(Function):
-    """ Represents the prime counting function pi(n) = the number
+    r""" Represents the prime counting function pi(n) = the number
         of prime numbers less than or equal to n.
 
         Algorithm Description:
@@ -445,15 +446,15 @@ class primepi(Function):
         We remove all numbers(except j) whose
         smallest prime factor is j.
 
-        Let x= j*a be such a number, where 2 <= a<= i / j
-        Now, after sieving from primes <= j - 1,
+        Let $x= j \times a$ be such a number, where $2 \le a \le i / j$
+        Now, after sieving from primes $\le j - 1$,
         a must remain
-        (because x, and hence a has no prime factor <= j - 1)
+        (because x, and hence a has no prime factor $\le j - 1$)
         Clearly, there are phi(i / j, j - 1) such a
-        which remain on sieving from primes <= j - 1
+        which remain on sieving from primes $\le j - 1$
 
         Now, if a is a prime less than equal to j - 1,
-        x= j*a has smallest prime factor = a, and
+        $x= j \times a$ has smallest prime factor = a, and
         has already been removed(by sieving from a).
         So, we don't need to remove it again.
         (Note: there will be pi(j - 1) such x)
@@ -462,7 +463,7 @@ class primepi(Function):
         phi(i / j, j - 1) - phi(j - 1, j - 1)
         (Note that pi(j - 1) = phi(j - 1, j - 1))
 
-        => phi(i,j) = phi(i, j - 1) - phi(i / j, j - 1) + phi(j - 1, j - 1)
+        $\Rightarrow$ phi(i,j) = phi(i, j - 1) - phi(i / j, j - 1) + phi(j - 1, j - 1)
 
         So,following recursion is used and implemented as dp:
 
@@ -470,7 +471,7 @@ class primepi(Function):
         phi(a, b) = phi(a, b-1)-phi(a / b, b-1) + phi(b-1, b-1), if b is prime
 
         Clearly a is always of the form floor(n / k),
-        which can take at most 2*sqrt(n) values.
+        which can take at most $2\sqrt{n}$ values.
         Two arrays arr1,arr2 are maintained
         arr1[i] = phi(i, j),
         arr2[i] = phi(n // i, j)

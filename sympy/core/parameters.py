@@ -84,8 +84,8 @@ def evaluate(x):
     Examples
     ========
 
+    >>> from sympy import evaluate
     >>> from sympy.abc import x
-    >>> from sympy.core.parameters import evaluate
     >>> print(x + x)
     2*x
     >>> with evaluate(False):

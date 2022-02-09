@@ -1,5 +1,11 @@
-from sympy import (Eq, Rational, Float, S, Symbol, cos, oo, pi, simplify,
-    sin, sqrt, symbols, acos)
+from sympy.core.numbers import (Float, Rational, oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, cos, sin)
+from sympy.sets import EmptySet
+from sympy.simplify.simplify import simplify
 from sympy.functions.elementary.trigonometric import tan
 from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
     Segment, Triangle, intersection, Point3D, Line3D, Ray3D, Segment3D,
@@ -24,17 +30,24 @@ m = symbols('m', real=True)
 def test_object_from_equation():
     from sympy.abc import x, y, a, b
     assert Line(3*x + y + 18) == Line2D(Point2D(0, -18), Point2D(1, -21))
-    assert Line(3*x + 5 * y + 1) == Line2D(Point2D(0, Rational(-1, 5)), Point2D(1, Rational(-4, 5)))
-    assert Line(3*a + b + 18, x='a', y='b') == Line2D(Point2D(0, -18), Point2D(1, -21))
+    assert Line(3*x + 5 * y + 1) == Line2D(
+        Point2D(0, Rational(-1, 5)), Point2D(1, Rational(-4, 5)))
+    assert Line(3*a + b + 18, x="a", y="b") == Line2D(
+        Point2D(0, -18), Point2D(1, -21))
     assert Line(3*x + y) == Line2D(Point2D(0, 0), Point2D(1, -3))
     assert Line(x + y) == Line2D(Point2D(0, 0), Point2D(1, -1))
-    assert Line(Eq(3*a + b, -18), x='a', y=b) == Line2D(Point2D(0, -18), Point2D(1, -21))
-    raises(ValueError, lambda: Line(x))
-    raises(ValueError, lambda: Line(y))
-    raises(ValueError, lambda: Line(x/y))
-    raises(ValueError, lambda: Line(a/b, x='a', y='b'))
-    raises(ValueError, lambda: Line(y/x))
-    raises(ValueError, lambda: Line(b/a, x='a', y='b'))
+    assert Line(Eq(3*a + b, -18), x="a", y=b) == Line2D(
+        Point2D(0, -18), Point2D(1, -21))
+    # issue 22361
+    assert Line(x - 1) == Line2D(Point2D(1, 0), Point2D(1, 1))
+    assert Line(2*x - 2, y=x) == Line2D(Point2D(0, 1), Point2D(1, 1))
+    assert Line(y) == Line2D(Point2D(0, 0), Point2D(1, 0))
+    assert Line(2*y, x=y) == Line2D(Point2D(0, 0), Point2D(0, 1))
+    assert Line(y, x=y) == Line2D(Point2D(0, 0), Point2D(0, 1))
+    raises(ValueError, lambda: Line(x / y))
+    raises(ValueError, lambda: Line(a / b, x='a', y='b'))
+    raises(ValueError, lambda: Line(y / x))
+    raises(ValueError, lambda: Line(b / a, x='a', y='b'))
     raises(ValueError, lambda: Line((x + 1)**2 + y))
 
 
@@ -51,8 +64,13 @@ def test_angle_between():
     assert feq(Line.angle_between(Line(Point(0, 0), Point(1, 1)),
                                   Line(Point(0, 0), Point(5, 0))).evalf(), pi.evalf() / 4)
     assert Line(a, o).angle_between(Line(b, o)) == pi / 2
-    assert Line3D.angle_between(Line3D(Point3D(0, 0, 0), Point3D(1, 1, 1)),
-                                Line3D(Point3D(0, 0, 0), Point3D(5, 0, 0))) == acos(sqrt(3) / 3)
+    z = Point3D(0, 0, 0)
+    assert Line3D.angle_between(Line3D(z, Point3D(1, 1, 1)),
+                                Line3D(z, Point3D(5, 0, 0))) == acos(sqrt(3) / 3)
+    # direction of points is used to determine angle
+    assert Line3D.angle_between(Line3D(z, Point3D(1, 1, 1)),
+                                Line3D(Point3D(5, 0, 0), z)) == acos(-sqrt(3) / 3)
+
 
 
 def test_closing_angle():
@@ -122,7 +140,7 @@ def test_arguments():
     """Functions accepting `Point` objects in `geometry`
     should also accept tuples, lists, and generators and
     automatically convert them to points."""
-    from sympy import subsets
+    from sympy.utilities.iterables import subsets
 
     singles2d = ((1, 2), [1, 3], Point(1, 5))
     doubles2d = subsets(singles2d, 2)
@@ -685,10 +703,14 @@ def test_projection():
 
     r1 = Ray(Point(1, 1), Point(2, 2))
 
+    s1 = Segment(Point2D(0, 0), Point2D(0, 1))
+    s2 = Segment(Point2D(1, 0), Point2D(2, 1/2))
+
     assert Line(Point(x1, x1), Point(y1, y1)).projection(Point(y1, y1)) == Point(y1, y1)
     assert Line(Point(x1, x1), Point(x1, 1 + x1)).projection(Point(1, 1)) == Point(x1, 1)
     assert Segment(Point(-2, 2), Point(0, 4)).projection(r1) == Segment(Point(-1, 3), Point(0, 4))
     assert Segment(Point(0, 4), Point(-2, 2)).projection(r1) == Segment(Point(0, 4), Point(-1, 3))
+    assert s2.projection(s1) == EmptySet
     assert l1.projection(p3) == p1
     assert l1.projection(Ray(p1, Point(-1, 5))) == Ray(Point(0, 0), Point(2, 2))
     assert l1.projection(Ray(p1, Point(-1, 1))) == p1
@@ -703,6 +725,7 @@ def test_projection():
     assert l3.projection(Ray3D(p2, Point3D(-1, 1, 1))) == Ray3D(Point3D(0, 0, 0), Point3D(Rational(1, 3), Rational(1, 3), Rational(1, 3)))
     assert l2.projection(Point3D(5, 5, 0)) == Point3D(5, 0)
     assert l2.projection(Line3D(Point3D(0, 1, 0), Point3D(1, 1, 0))).equals(l2)
+
 
 
 def test_perpendicular_bisector():

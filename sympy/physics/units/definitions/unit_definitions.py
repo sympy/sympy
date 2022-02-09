@@ -2,7 +2,8 @@ from sympy.physics.units.definitions.dimension_definitions import current, tempe
     luminous_intensity, angle, charge, voltage, impedance, conductance, capacitance, inductance, magnetic_density, \
     magnetic_flux, information
 
-from sympy import Rational, pi, S as S_singleton
+from sympy.core.numbers import (Rational, pi)
+from sympy.core.singleton import S as S_singleton
 from sympy.physics.units.prefixes import kilo, milli, micro, deci, centi, nano, pico, kibi, mebi, gibi, tebi, pebi, exbi
 from sympy.physics.units.quantities import Quantity
 
@@ -155,15 +156,15 @@ nmi.set_global_relative_scale_factor(6076, feet)
 
 # Common volume and area units
 
-l = liter = liters = Quantity("liter")
+l = L = liter = liters = Quantity("liter")
 
-dl = deciliter = deciliters = Quantity("deciliter")
+dl = dL = deciliter = deciliters = Quantity("deciliter")
 dl.set_global_relative_scale_factor(Rational(1, 10), liter)
 
-cl = centiliter = centiliters = Quantity("centiliter")
+cl = cL = centiliter = centiliters = Quantity("centiliter")
 cl.set_global_relative_scale_factor(Rational(1, 100), liter)
 
-ml = milliliter = milliliters = Quantity("milliliter")
+ml = mL = milliliter = milliliters = Quantity("milliliter")
 ml.set_global_relative_scale_factor(Rational(1, 1000), liter)
 
 

@@ -1,6 +1,6 @@
 import os
 
-from sympy import sin, cos
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.external import import_module
 from sympy.testing.pytest import skip
 from sympy.parsing.autolev import parse_autolev

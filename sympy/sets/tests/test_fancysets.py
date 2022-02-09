@@ -1,14 +1,27 @@
 
 from sympy.core.expr import unchanged
+from sympy.sets.contains import Contains
 from sympy.sets.fancysets import (ImageSet, Range, normalize_theta_set,
                                   ComplexRegion)
 from sympy.sets.sets import (FiniteSet, Interval, Union, imageset,
-                             Intersection, ProductSet, Contains)
+                             Intersection, ProductSet, SetKind)
 from sympy.sets.conditionset import ConditionSet
 from sympy.simplify.simplify import simplify
-from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
-                   Rational, sqrt, tan, log, exp, Abs, I, Tuple, eye,
-                   Dummy, floor, And, Eq)
+from sympy.core.basic import Basic
+from sympy.core.containers import Tuple, TupleKind
+from sympy.core.function import Lambda
+from sympy.core.kind import NumberKind
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.logic.boolalg import And
+from sympy.matrices.dense import eye
 from sympy.testing.pytest import XFAIL, raises
 from sympy.abc import x, y, t, z
 from sympy.core.mod import Mod
@@ -652,8 +665,8 @@ def test_Complex():
     assert S.Complexes.union(S.Reals) == S.Complexes
     assert S.Complexes == ComplexRegion(S.Reals*S.Reals)
     assert (S.Complexes == ComplexRegion(Interval(1, 2)*Interval(3, 4))) == False
-    assert str(S.Complexes) == "S.Complexes"
-    assert repr(S.Complexes) == "S.Complexes"
+    assert str(S.Complexes) == "Complexes"
+    assert repr(S.Complexes) == "Complexes"
 
 
 def take(n, iterable):
@@ -869,8 +882,8 @@ def test_ComplexRegion_contains():
     r1 = Interval(0, 1)
     theta1 = Interval(0, 2*S.Pi)
     c3 = ComplexRegion(r1*theta1, polar=True)
-    assert (0.5 + I*Rational(6, 10)) in c3
-    assert (S.Half + I*Rational(6, 10)) in c3
+    assert (0.5 + I*6/10) in c3
+    assert (S.Half + I*6/10) in c3
     assert (S.Half + .6*I) in c3
     assert (0.5 + .6*I) in c3
     assert I in c3
@@ -1111,6 +1124,20 @@ def test_ComplexRegion_FiniteSet():
 def test_union_RealSubSet():
     assert (S.Complexes).union(Interval(1, 2)) == S.Complexes
     assert (S.Complexes).union(S.Integers) == S.Complexes
+
+
+def test_SetKind_fancySet():
+    G = lambda *args: ImageSet(Lambda(x, x ** 2), *args)
+    assert G(Interval(1, 4)).kind is SetKind(NumberKind)
+    assert G(FiniteSet(1, 4)).kind is SetKind(NumberKind)
+    assert S.Rationals.kind is SetKind(NumberKind)
+    assert S.Naturals.kind is SetKind(NumberKind)
+    assert S.Integers.kind is SetKind(NumberKind)
+    assert Range(3).kind is SetKind(NumberKind)
+    a = Interval(2, 3)
+    b = Interval(4, 6)
+    c1 = ComplexRegion(a*b)
+    assert c1.kind is SetKind(TupleKind(NumberKind, NumberKind))
 
 
 def test_issue_9980():

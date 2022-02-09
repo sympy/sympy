@@ -1,11 +1,15 @@
 from itertools import product
 
-from sympy import S, symbols, Function, exp, diff, Rational
+from sympy.core.function import (Function, diff)
+from sympy.core.numbers import Rational
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.exponential import exp
 from sympy.calculus.finite_diff import (
     apply_finite_diff, differentiate_finite, finite_diff_weights,
-    as_finite_diff
+    _as_finite_diff
 )
-from sympy.testing.pytest import raises, warns_deprecated_sympy, ignore_warnings
+from sympy.testing.pytest import raises, ignore_warnings
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
@@ -113,8 +117,7 @@ def test_as_finite_diff():
     f = Function('f')
     dx = Function('dx')
 
-    with warns_deprecated_sympy():
-        as_finite_diff(f(x).diff(x), [x-2, x-1, x, x+1, x+2])
+    _as_finite_diff(f(x).diff(x), [x-2, x-1, x, x+1, x+2])
 
     # Use of undefined functions in ``points``
     df_true = -f(x+dx(x)/2-dx(x+dx(x)/2)/2) / dx(x+dx(x)/2) \

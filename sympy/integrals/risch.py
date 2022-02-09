@@ -26,25 +26,26 @@ from the names used in Bronstein's book.
 from types import GeneratorType
 from functools import reduce
 
-from sympy import real_roots, default_sort_key
 from sympy.core.function import Lambda
-from sympy.core.numbers import ilcm, oo, I
 from sympy.core.mul import Mul
+from sympy.core.numbers import ilcm, I, oo
 from sympy.core.power import Pow
 from sympy.core.relational import Ne
 from sympy.core.singleton import S
-from sympy.core.symbol import Symbol, Dummy
-from sympy.core.compatibility import ordered
-from sympy.integrals.heurisch import _symbols
-
-from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
-    Piecewise, sin, tan)
-
-from sympy.functions import sinh, cosh, tanh, coth
-from sympy.integrals import Integral, integrate
-
-from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError
-
+from sympy.core.sorting import ordered, default_sort_key
+from sympy.core.symbol import Dummy, Symbol
+from sympy.functions.elementary.exponential import log, exp
+from sympy.functions.elementary.hyperbolic import (cosh, coth, sinh,
+    tanh)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (atan, sin, cos,
+    tan, acot, cot, asin, acos)
+from .integrals import integrate, Integral
+from .heurisch import _symbols
+from sympy.polys.polyerrors import DomainError, PolynomialError
+from sympy.polys.polytools import (real_roots, cancel, Poly, gcd,
+    reduced)
+from sympy.polys.rootoftools import RootSum
 from sympy.utilities.iterables import numbered_symbols
 
 
@@ -295,6 +296,8 @@ class DifferentialExtension:
         """
         Rewrite exps/pows for better processing.
         """
+        from .prde import is_deriv_k
+
         # Pre-preparsing.
         #################
         # Get all exp arguments, so we can avoid ahead of time doing
@@ -306,8 +309,6 @@ class DifferentialExtension:
         # to a**(Rational*b) before doing anything else.  Note that the
         # _exp_part code can generate terms of this form, so we do need to
         # do this at each pass (or else modify it to not do that).
-
-        from sympy.integrals.prde import is_deriv_k
 
         ratpows = [i for i in self.newf.atoms(Pow).union(self.newf.atoms(exp))
             if (i.base.is_Pow or isinstance(i.base, exp) and i.exp.is_Rational)]
@@ -460,8 +461,7 @@ class DifferentialExtension:
         way around an algebraic extension (e.g., exp(log(x)/2)), it will raise
         NotImplementedError.
         """
-        from sympy.integrals.prde import is_log_deriv_k_t_radical
-
+        from .prde import is_log_deriv_k_t_radical
         new_extension = False
         restart = False
         expargs = [i.exp for i in exps]
@@ -571,8 +571,7 @@ class DifferentialExtension:
         way, so this function does not ever return None or raise
         NotImplementedError.
         """
-        from sympy.integrals.prde import is_deriv_k
-
+        from .prde import is_deriv_k
         new_extension = False
         logargs = [i.args[0] for i in logs]
         for arg in ordered(logargs):
@@ -1388,14 +1387,13 @@ def integrate_primitive_polynomial(p, DE):
     True, or r = p - Dq does not have an elementary integral over k(t) if b is
     False.
     """
-    from sympy.integrals.prde import limited_integrate
-
     Zero = Poly(0, DE.t)
     q = Poly(0, DE.t)
 
     if not p.expr.has(DE.t):
         return (Zero, p, True)
 
+    from .prde import limited_integrate
     while True:
         if not p.expr.has(DE.t):
             return (q, p, True)
@@ -1483,8 +1481,6 @@ def integrate_hyperexponential_polynomial(p, DE, z):
     k[t, 1/t] and a bool b in {True, False} such that p - Dq in k if b is True,
     or p - Dq does not have an elementary integral over k(t) if b is False.
     """
-    from sympy.integrals.rde import rischDE
-
     t1 = DE.t
     dtt = DE.d.exquo(Poly(DE.t, DE.t))
     qa = Poly(0, DE.t)
@@ -1493,6 +1489,8 @@ def integrate_hyperexponential_polynomial(p, DE, z):
 
     if p.is_zero:
         return(qa, qd, b)
+
+    from sympy.integrals.rde import rischDE
 
     with DecrementLevel(DE):
         for i in range(-p.degree(z), p.degree(t1) + 1):

@@ -1,7 +1,24 @@
-from sympy import (sympify, S, pi, sqrt, exp, Lambda, Indexed, besselk, gamma, Interval,
-                   Range, factorial, Mul, Integer,
-                   Add, rf, Eq, Piecewise, ones, Symbol, Pow, Rational, Sum,
-                   Intersection, Matrix, symbols, Product, IndexedBase)
+from sympy.concrete.products import Product
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.function import Lambda
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Integer, Rational, pi)
+from sympy.core.power import Pow
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (rf, factorial)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.special.bessel import besselk
+from sympy.functions.special.gamma_functions import gamma
+from sympy.matrices.dense import (Matrix, ones)
+from sympy.sets.fancysets import Range
+from sympy.sets.sets import (Intersection, Interval)
+from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.matrices import ImmutableMatrix, MatrixSymbol
 from sympy.matrices.expressions.determinant import det
 from sympy.matrices.expressions.matexpr import MatrixElement
@@ -80,14 +97,14 @@ class JointDistributionHandmade(JointDistribution):
 
 def JointRV(symbol, pdf, _set=None):
     """
-    Create a Joint Random Variable where each of its component is conitinuous,
+    Create a Joint Random Variable where each of its component is continuous,
     given the following:
 
     -- a symbol
     -- a PDF in terms of indexed symbols of the symbol given
     as the first argument
 
-    NOTE: As of now, the set for each component for a `JointRV` is
+    NOTE: As of now, the set for each component for a ``JointRV`` is
     equal to the set of all integers, which cannot be changed.
 
     Examples
@@ -170,7 +187,7 @@ class MultivariateNormalDistribution(JointDistribution):
                 (_mu - sym)))[0])
 
 def MultivariateNormal(name, mu, sigma):
-    """
+    r"""
     Creates a continuous random variable with Multivariate Normal
     Distribution.
 
@@ -182,7 +199,7 @@ def MultivariateNormal(name, mu, sigma):
     mu : List representing the mean or the mean vector
     sigma : Positive semidefinite square matrix
         Represents covariance Matrix
-        If `sigma` is noninvertible then only sampling is supported currently
+        If `\sigma` is noninvertible then only sampling is supported currently
 
     Returns
     =======
@@ -208,7 +225,7 @@ def MultivariateNormal(name, mu, sigma):
     The example below shows that it is also possible to use
     symbolic parameters to define the MultivariateNormal class.
 
-    >>> n = symbols('n', natural=True)
+    >>> n = symbols('n', integer=True, positive=True)
     >>> Sg = MatrixSymbol('Sg', n, n)
     >>> mu = MatrixSymbol('mu', n, 1)
     >>> obs = MatrixSymbol('obs', n, 1)
@@ -484,7 +501,7 @@ def MultivariateBeta(syms, *alpha):
     Creates a continuous random variable with Dirichlet/Multivariate Beta
     Distribution.
 
-    The density of the dirichlet distribution can be found at [1].
+    The density of the Dirichlet distribution can be found at [1].
 
     Parameters
     ==========
@@ -661,7 +678,7 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     ==========
 
     syms: list/tuple/set of symbols for identifying each component
-    delta: A constant in range [0, 1]
+    delta: A constant in range $[0, 1]$
     v: Positive real number
     lamda: List of positive real numbers
     mu: List of positive real numbers
@@ -696,9 +713,9 @@ def GeneralizedMultivariateLogGamma(syms, delta, v, lamda, mu):
     ====
 
     If the GeneralizedMultivariateLogGamma is too long to type use,
-    `from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG`
+    ``from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGamma as GMVLG``
     If you want to pass the matrix omega instead of the constant delta, then use,
-    GeneralizedMultivariateLogGammaOmega.
+    ``GeneralizedMultivariateLogGammaOmega``.
 
     """
     return multivariate_rv(GeneralizedMultivariateLogGammaDistribution,
@@ -750,7 +767,7 @@ def GeneralizedMultivariateLogGammaOmega(syms, omega, v, lamda, mu):
     =====
 
     If the GeneralizedMultivariateLogGammaOmega is too long to type use,
-    `from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO`
+    ``from sympy.stats.joint_rv_types import GeneralizedMultivariateLogGammaOmega as GMVLGO``
 
     """
     _value_check((omega.is_square, isinstance(omega, Matrix)), "omega must be a"
@@ -820,7 +837,7 @@ def Multinomial(syms, n, *p):
     Examples
     ========
 
-    >>> from sympy.stats import density,  Multinomial, marginal_distribution
+    >>> from sympy.stats import density, Multinomial, marginal_distribution
     >>> from sympy import symbols
     >>> x1, x2, x3 = symbols('x1, x2, x3', nonnegative=True, integer=True)
     >>> p1, p2, p3 = symbols('p1, p2, p3', positive=True)
@@ -883,7 +900,7 @@ def NegativeMultinomial(syms, k0, *p):
     k0: positive integer
         Represents number of failures before the experiment is stopped
     p: List of event probabilites
-        Must be in the range of [0, 1]
+        Must be in the range of $[0, 1]$
 
     Returns
     =======

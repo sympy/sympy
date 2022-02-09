@@ -1,4 +1,4 @@
-from sympy import ask, Q
+from sympy.assumptions.ask import (Q, ask)
 from sympy.core import Basic, Add, Mul, S
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import re, im
@@ -653,7 +653,7 @@ class BlockDiagMatrix(BlockMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import BlockDiagMatrix, Matrix
+        >>> from sympy import BlockDiagMatrix, Matrix
 
         >>> A = Matrix([[1, 2], [3, 4]])
         >>> B = Matrix([[5, 6], [7, 8]])
@@ -677,8 +677,7 @@ class BlockDiagMatrix(BlockMatrix):
 def block_collapse(expr):
     """Evaluates a block matrix expression
 
-    >>> from sympy import MatrixSymbol, BlockMatrix, symbols, \
-                          Identity, ZeroMatrix, block_collapse
+    >>> from sympy import MatrixSymbol, BlockMatrix, symbols, Identity, ZeroMatrix, block_collapse
     >>> n,m,l = symbols('n m l')
     >>> X = MatrixSymbol('X', n, n)
     >>> Y = MatrixSymbol('Y', m, m)
@@ -778,7 +777,7 @@ def bc_dist(expr):
         new_B = [
             [factor * B[i, j] for j in range(B.cols)] for i in range(B.rows)]
         return BlockMatrix(new_B)
-    return unpacked
+    return expr
 
 
 def bc_matmul(expr):

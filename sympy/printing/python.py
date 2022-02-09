@@ -25,7 +25,7 @@ class PythonPrinter(ReprPrinter, StrPrinter):
 
     def _print_Function(self, expr):
         func = expr.func.__name__
-        if not hasattr(sympy, func) and not func in self.functions:
+        if not hasattr(sympy, func) and func not in self.functions:
             self.functions.append(func)
         return StrPrinter._print_Function(self, expr)
 
@@ -58,7 +58,7 @@ def python(expr, **settings):
         else:
             newsymbolname = symbolname
 
-        # Escape symbol names that are reserved python keywords
+        # Escape symbol names that are reserved Python keywords
         if kw.iskeyword(newsymbolname):
             while True:
                 newsymbolname += "_"
@@ -71,7 +71,7 @@ def python(expr, **settings):
 
     for functionname in printer.functions:
         newfunctionname = functionname
-        # Escape function names that are reserved python keywords
+        # Escape function names that are reserved Python keywords
         if kw.iskeyword(newfunctionname):
             while True:
                 newfunctionname += "_"

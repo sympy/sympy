@@ -1,4 +1,3 @@
-from sympy.core.compatibility import as_int
 from sympy.core.function import Function
 from sympy.core.numbers import igcd, igcdex, mod_inverse
 from sympy.core.power import isqrt
@@ -6,9 +5,11 @@ from sympy.core.singleton import S
 from sympy.polys.domains import ZZ
 from .primetest import isprime
 from .factor_ import factorint, trailing, totient, multiplicity
-from random import randint, Random
+from sympy.utilities.misc import as_int
+from sympy.core.random import _randint, randint
 
 from itertools import cycle, product
+
 
 def n_order(a, n):
     """Returns the order of ``a`` modulo ``n``.
@@ -792,6 +793,7 @@ def _help(m, prime_modulo_method, diff_method, expr_val):
         a.append(list(y))
     return sorted({crt(m, list(i))[0] for i in product(*a)})
 
+
 def _nthroot_mod_composite(a, n, m):
     """
     Find the solutions to ``x**n = a mod m`` when m is not prime.
@@ -1194,13 +1196,11 @@ def _discrete_log_pollard_rho(n, a, b, order=None, retries=10, rseed=None):
 
     if order is None:
         order = n_order(b, n)
-    prng = Random()
-    if rseed is not None:
-        prng.seed(rseed)
+    randint = _randint(rseed)
 
     for i in range(retries):
-        aa = prng.randint(1, order - 1)
-        ba = prng.randint(1, order - 1)
+        aa = randint(1, order - 1)
+        ba = randint(1, order - 1)
         xa = pow(b, aa, n) * pow(a, ba, n) % n
 
         c = xa % 3

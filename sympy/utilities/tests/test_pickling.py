@@ -22,10 +22,11 @@ from sympy.core.function import Derivative, Function, FunctionClass, Lambda, \
 from sympy.sets.sets import Interval
 from sympy.core.multidimensional import vectorize
 
-from sympy.core.compatibility import HAS_GMPY
+from sympy.external.gmpy import HAS_GMPY
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy import symbols, S
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
 
 from sympy.external import import_module
 cloudpickle = import_module('cloudpickle')
@@ -353,7 +354,10 @@ def test_plotting2():
     check(PlotAxes())
 
 #================== polys =======================
-from sympy import Poly, ZZ, QQ, lex
+from sympy.polys.domains.integerring import ZZ
+from sympy.polys.domains.rationalfield import QQ
+from sympy.polys.orderings import lex
+from sympy.polys.polytools import Poly
 
 def test_pickling_polys_polytools():
     from sympy.polys.polytools import PurePoly

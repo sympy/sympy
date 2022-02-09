@@ -1,10 +1,13 @@
+from typing import Tuple as tTuple
+
 from sympy.core import S, Add, Mul, sympify, Symbol, Dummy, Basic
 from sympy.core.expr import Expr
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (Function, Derivative, ArgumentIndexError,
-    AppliedUndef)
+    AppliedUndef, expand_mul)
 from sympy.core.logic import fuzzy_not, fuzzy_or
 from sympy.core.numbers import pi, I, oo
+from sympy.core.power import Pow
 from sympy.core.relational import Eq
 from sympy.functions.elementary.exponential import exp, exp_polar, log
 from sympy.functions.elementary.integers import ceiling
@@ -22,7 +25,7 @@ class re(Function):
     Returns real part of expression. This function performs only
     elementary analysis and so it will fail to decompose properly
     more complicated expressions. If completely simplified result
-    is needed then use Basic.as_real_imag() or perform complex
+    is needed then use ``Basic.as_real_imag()`` or perform complex
     expansion on instance of this function.
 
     Examples
@@ -58,6 +61,8 @@ class re(Function):
 
     im
     """
+
+    args: tTuple[Expr]
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
@@ -142,7 +147,7 @@ class im(Function):
     Returns imaginary part of expression. This function performs only
     elementary analysis and so it will fail to decompose properly more
     complicated expressions. If completely simplified result is needed then
-    use Basic.as_real_imag() or perform complex expansion on instance of
+    use ``Basic.as_real_imag()`` or perform complex expansion on instance of
     this function.
 
     Examples
@@ -178,6 +183,8 @@ class im(Function):
 
     re
     """
+
+    args: tTuple[Expr]
 
     is_extended_real = True
     unbranched = True  # implicitly works on the projection to C
@@ -267,14 +274,14 @@ class sign(Function):
 
     If the expression is real the sign will be:
 
-        * 1 if expression is positive
-        * 0 if expression is equal to zero
-        * -1 if expression is negative
+        * $1$ if expression is positive
+        * $0$ if expression is equal to zero
+        * $-1$ if expression is negative
 
     If the expression is imaginary the sign will be:
 
-        * I if im(expression) is positive
-        * -I if im(expression) is negative
+        * $I$ if im(expression) is positive
+        * $-I$ if im(expression) is negative
 
     Otherwise an unevaluated expression will be returned. When evaluated, the
     result (in general) will be ``cos(arg(expr)) + I*sin(arg(expr))``.
@@ -282,8 +289,7 @@ class sign(Function):
     Examples
     ========
 
-    >>> from sympy.functions import sign
-    >>> from sympy.core.numbers import I
+    >>> from sympy import sign, I
 
     >>> sign(-1)
     -1
@@ -447,9 +453,9 @@ class Abs(Function):
     Explanation
     ===========
 
-    This is an extension of the built-in function abs() to accept symbolic
-    values.  If you pass a SymPy expression to the built-in abs(), it will
-    pass it automatically to Abs().
+    This is an extension of the built-in function ``abs()`` to accept symbolic
+    values.  If you pass a SymPy expression to the built-in ``abs()``, it will
+    pass it automatically to ``Abs()``.
 
     Examples
     ========
@@ -477,7 +483,7 @@ class Abs(Function):
         >>> type(abs(S.NegativeOne))
         <class 'sympy.core.numbers.One'>
 
-    Abs will always return a sympy object.
+    Abs will always return a SymPy object.
 
     Parameters
     ==========
@@ -498,6 +504,8 @@ class Abs(Function):
     sign, conjugate
     """
 
+    args: tTuple[Expr]
+
     is_extended_real = True
     is_extended_negative = False
     is_extended_nonnegative = True
@@ -517,8 +525,6 @@ class Abs(Function):
     @classmethod
     def eval(cls, arg):
         from sympy.simplify.simplify import signsimp
-        from sympy.core.function import expand_mul
-        from sympy.core.power import Pow
 
         if hasattr(arg, '_eval_Abs'):
             obj = arg._eval_Abs()
@@ -690,17 +696,21 @@ class Abs(Function):
 
 
 class arg(Function):
-    """
-    returns the argument (in radians) of a complex number.  The argument is
-    evaluated in consistent convention with atan2 where the branch-cut is
-    taken along the negative real axis and arg(z) is in the interval
-    (-pi,pi].  For a positive number, the argument is always 0.
+    r"""
+    Returns the argument (in radians) of a complex number. The argument is
+    evaluated in consistent convention with ``atan2`` where the branch-cut is
+    taken along the negative real axis and ``arg(z)`` is in the interval
+    $(-\pi,\pi]$. For a positive number, the argument is always 0; the
+    argument of a negative number is $\pi$; and the argument of 0
+    is undefined and returns ``nan``. So the ``arg`` function will never nest
+    greater than 3 levels since at the 4th application, the result must be
+    nan; for a real number, nan is returned on the 3rd application.
 
     Examples
     ========
 
-    >>> from sympy.functions import arg
-    >>> from sympy import I, sqrt
+    >>> from sympy import arg, I, sqrt, Dummy
+    >>> from sympy.abc import x
     >>> arg(2.0)
     0
     >>> arg(I)
@@ -713,6 +723,11 @@ class arg(Function):
     atan(3/4)
     >>> arg(0.8 + 0.6*I)
     0.643501108793284
+    >>> arg(arg(arg(arg(x))))
+    nan
+    >>> real = Dummy(real=True)
+    >>> arg(arg(arg(real)))
+    nan
 
     Parameters
     ==========
@@ -735,6 +750,16 @@ class arg(Function):
 
     @classmethod
     def eval(cls, arg):
+        a = arg
+        for i in range(3):
+            if isinstance(a, cls):
+                a = a.args[0]
+            else:
+                if i == 2 and a.is_extended_real:
+                    return S.NaN
+                break
+        else:
+            return S.NaN
         if isinstance(arg, exp_polar):
             return periodic_argument(arg, oo)
         if not arg.is_Atom:
@@ -766,12 +791,12 @@ class arg(Function):
 
 class conjugate(Function):
     """
-    Returns the `complex conjugate` Ref[1] of an argument.
+    Returns the *complex conjugate* [1]_ of an argument.
     In mathematics, the complex conjugate of a complex number
     is given by changing the sign of the imaginary part.
 
     Thus, the conjugate of the complex number
-    :math:`a + ib` (where a and b are real numbers) is :math:`a - ib`
+    :math:`a + ib` (where $a$ and $b$ are real numbers) is :math:`a - ib`
 
     Examples
     ========
@@ -848,9 +873,7 @@ class transpose(Function):
     Examples
     ========
 
-    >>> from sympy.functions import transpose
-    >>> from sympy.matrices import MatrixSymbol
-    >>> from sympy import Matrix
+    >>> from sympy import transpose, Matrix, MatrixSymbol
     >>> A = MatrixSymbol('A', 25, 9)
     >>> transpose(A)
     A.T
@@ -907,8 +930,7 @@ class adjoint(Function):
     Examples
     ========
 
-    >>> from sympy import adjoint
-    >>> from sympy.matrices import MatrixSymbol
+    >>> from sympy import adjoint, MatrixSymbol
     >>> A = MatrixSymbol('A', 10, 5)
     >>> adjoint(A)
     Adjoint(A)
@@ -1051,10 +1073,10 @@ class polar_lift(Function):
 
 
 class periodic_argument(Function):
-    """
+    r"""
     Represent the argument on a quotient of the Riemann surface of the
     logarithm. That is, given a period $P$, always return a value in
-    (-P/2, P/2], by using exp(P*I) == 1.
+    $(-P/2, P/2]$, by using $\exp(PI) = 1$.
 
     Examples
     ========
@@ -1080,7 +1102,7 @@ class periodic_argument(Function):
     ar : Expr
         A polar number.
 
-    period : ExprT
+    period : Expr
         The period $P$.
 
     See Also
@@ -1184,7 +1206,7 @@ class principal_branch(Function):
 
     This is a function of two arguments. The first argument is a polar
     number `z`, and the second one a positive real number or infinity, `p`.
-    The result is "z mod exp_polar(I*p)".
+    The result is ``z mod exp_polar(I*p)``.
 
     Examples
     ========
@@ -1278,7 +1300,7 @@ class principal_branch(Function):
 
 
 def _polarify(eq, lift, pause=False):
-    from sympy import Integral
+    from sympy.integrals.integrals import Integral
     if eq.is_polar:
         return eq
     if eq.is_number and not pause:
@@ -1316,17 +1338,17 @@ def polarify(eq, subs=True, lift=False):
     choice of argument).
 
     Note that no attempt is made to guess a formal convention of adding
-    polar numbers, expressions like 1 + x will generally not be altered.
+    polar numbers, expressions like $1 + x$ will generally not be altered.
 
-    Note also that this function does not promote exp(x) to exp_polar(x).
+    Note also that this function does not promote ``exp(x)`` to ``exp_polar(x)``.
 
-    If ``subs`` is True, all symbols which are not already polar will be
+    If ``subs`` is ``True``, all symbols which are not already polar will be
     substituted for polar dummies; in this case the function behaves much
-    like posify.
+    like :func:`~.posify`.
 
-    If ``lift`` is True, both addition statements and non-polar symbols are
-    changed to their polar_lift()ed versions.
-    Note that lift=True implies subs=False.
+    If ``lift`` is ``True``, both addition statements and non-polar symbols are
+    changed to their ``polar_lift()``ed versions.
+    Note that ``lift=True`` implies ``subs=False``.
 
     Examples
     ========
@@ -1394,11 +1416,11 @@ def _unpolarify(eq, exponents_only, pause=False):
 
 def unpolarify(eq, subs=None, exponents_only=False):
     """
-    If p denotes the projection from the Riemann surface of the logarithm to
-    the complex line, return a simplified version eq' of `eq` such that
-    p(eq') == p(eq).
+    If `p` denotes the projection from the Riemann surface of the logarithm to
+    the complex line, return a simplified version `eq'` of `eq` such that
+    `p(eq') = p(eq)`.
     Also apply the substitution subs in the end. (This is a convenience, since
-    ``unpolarify``, in a certain sense, undoes polarify.)
+    ``unpolarify``, in a certain sense, undoes :func:`polarify`.)
 
     Examples
     ========

@@ -7,7 +7,8 @@ from sympy.matrices.expressions import (
 )
 from sympy.matrices.expressions.special import OneMatrix
 from sympy.testing.pytest import raises
-from sympy import refine, Q
+from sympy.assumptions.ask import Q
+from sympy.assumptions.refine import refine
 
 n = symbols('n', integer=True)
 A = MatrixSymbol('A', n, n)
@@ -21,7 +22,7 @@ def test_det():
     raises(ShapeError, lambda: Determinant(C))
     assert det(eye(3)) == 1
     assert det(Matrix(3, 3, [1, 3, 2, 4, 1, 3, 2, 5, 2])) == 17
-    A / det(A)  # Make sure this is possible
+    _ = A / det(A)  # Make sure this is possible
 
     raises(TypeError, lambda: Determinant(S.One))
 
@@ -55,7 +56,7 @@ def test_permanent():
     assert not isinstance(Permanent(A), MatrixExpr)
     assert isinstance(Permanent(C), Permanent)
     assert Permanent(ones(3, 3)).doit() == 6
-    C / per(C)
+    _ = C / per(C)
     assert per(Matrix(3, 3, [1, 3, 2, 4, 1, 3, 2, 5, 2])) == 103
     raises(TypeError, lambda: Permanent(S.One))
     assert Permanent(A).arg is A

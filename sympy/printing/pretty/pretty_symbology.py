@@ -11,7 +11,7 @@ def U(name):
     """
     Get a unicode character by name or, None if not found.
 
-    This exists because older versions of python use older unicode databases.
+    This exists because older versions of Python use older unicode databases.
     """
     try:
         return unicodedata.lookup(name)

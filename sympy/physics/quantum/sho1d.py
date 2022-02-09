@@ -1,6 +1,9 @@
 """Simple Harmonic Oscillator 1-Dimension"""
 
-from sympy import sqrt, I, Symbol, Integer, S
+from sympy.core.numbers import (I, Integer)
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.state import Bra, Ket, State
@@ -101,20 +104,20 @@ class RaisingOp(SHOOp):
     """
 
     def _eval_rewrite_as_xp(self, *args, **kwargs):
-        return (Integer(1)/sqrt(Integer(2)*hbar*m*omega))*(
-            Integer(-1)*I*Px + m*omega*X)
+        return (S.One/sqrt(Integer(2)*hbar*m*omega))*(
+            S.NegativeOne*I*Px + m*omega*X)
 
     def _eval_adjoint(self):
         return LoweringOp(*self.args)
 
     def _eval_commutator_LoweringOp(self, other):
-        return Integer(-1)
+        return S.NegativeOne
 
     def _eval_commutator_NumberOp(self, other):
-        return Integer(-1)*self
+        return S.NegativeOne*self
 
     def _apply_operator_SHOKet(self, ket):
-        temp = ket.n + Integer(1)
+        temp = ket.n + S.One
         return sqrt(temp)*SHOKet(temp)
 
     def _represent_default_basis(self, **options):
@@ -239,22 +242,22 @@ class LoweringOp(SHOOp):
     """
 
     def _eval_rewrite_as_xp(self, *args, **kwargs):
-        return (Integer(1)/sqrt(Integer(2)*hbar*m*omega))*(
+        return (S.One/sqrt(Integer(2)*hbar*m*omega))*(
             I*Px + m*omega*X)
 
     def _eval_adjoint(self):
         return RaisingOp(*self.args)
 
     def _eval_commutator_RaisingOp(self, other):
-        return Integer(1)
+        return S.One
 
     def _eval_commutator_NumberOp(self, other):
-        return Integer(1)*self
+        return self
 
     def _apply_operator_SHOKet(self, ket):
         temp = ket.n - Integer(1)
-        if ket.n == Integer(0):
-            return Integer(0)
+        if ket.n is S.Zero:
+            return S.Zero
         else:
             return sqrt(ket.n)*SHOKet(temp)
 
@@ -360,23 +363,23 @@ class NumberOp(SHOOp):
         return ad*a
 
     def _eval_rewrite_as_xp(self, *args, **kwargs):
-        return (Integer(1)/(Integer(2)*m*hbar*omega))*(Px**2 + (
-            m*omega*X)**2) - Integer(1)/Integer(2)
+        return (S.One/(Integer(2)*m*hbar*omega))*(Px**2 + (
+            m*omega*X)**2) - S.Half
 
     def _eval_rewrite_as_H(self, *args, **kwargs):
-        return H/(hbar*omega) - Integer(1)/Integer(2)
+        return H/(hbar*omega) - S.Half
 
     def _apply_operator_SHOKet(self, ket):
         return ket.n*ket
 
     def _eval_commutator_Hamiltonian(self, other):
-        return Integer(0)
+        return S.Zero
 
     def _eval_commutator_RaisingOp(self, other):
         return other
 
     def _eval_commutator_LoweringOp(self, other):
-        return Integer(-1)*other
+        return S.NegativeOne*other
 
     def _represent_default_basis(self, **options):
         return self._represent_NumberOp(None, **options)
@@ -470,19 +473,19 @@ class Hamiltonian(SHOOp):
     """
 
     def _eval_rewrite_as_a(self, *args, **kwargs):
-        return hbar*omega*(ad*a + Integer(1)/Integer(2))
+        return hbar*omega*(ad*a + S.Half)
 
     def _eval_rewrite_as_xp(self, *args, **kwargs):
-        return (Integer(1)/(Integer(2)*m))*(Px**2 + (m*omega*X)**2)
+        return (S.One/(Integer(2)*m))*(Px**2 + (m*omega*X)**2)
 
     def _eval_rewrite_as_N(self, *args, **kwargs):
-        return hbar*omega*(N + Integer(1)/Integer(2))
+        return hbar*omega*(N + S.Half)
 
     def _apply_operator_SHOKet(self, ket):
-        return (hbar*omega*(ket.n + Integer(1)/Integer(2)))*ket
+        return (hbar*omega*(ket.n + S.Half))*ket
 
     def _eval_commutator_NumberOp(self, other):
-        return Integer(0)
+        return S.Zero
 
     def _represent_default_basis(self, **options):
         return self._represent_NumberOp(None, **options)
@@ -500,7 +503,7 @@ class Hamiltonian(SHOOp):
         format = options.get('format', 'sympy')
         matrix = matrix_zeros(ndim_info, ndim_info, **options)
         for i in range(ndim_info):
-            value = i + Integer(1)/Integer(2)
+            value = i + S.Half
             if format == 'scipy.sparse':
                 value = float(value)
             matrix[i,i] = value
@@ -598,7 +601,7 @@ class SHOKet(SHOState, Ket):
             elif format == 'numpy':
                 vector[int(self.n), 0] = 1.0
             else:
-                vector[self.n, 0] = Integer(1)
+                vector[self.n, 0] = S.One
             return vector
         else:
             return ValueError("Not Numerical State")
@@ -662,7 +665,7 @@ class SHOBra(SHOState, Bra):
             elif format == 'numpy':
                 vector[0, int(self.n)] = 1.0
             else:
-                vector[0, self.n] = Integer(1)
+                vector[0, self.n] = S.One
             return vector
         else:
             return ValueError("Not Numerical State")
