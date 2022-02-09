@@ -278,19 +278,6 @@ def test_matsolve():
     assert np.allclose(f_matsolve(m0, x0), f(m0, x0))
 
 
-def test_issue_15601():
-    if not np:
-        skip("Numpy not installed")
-
-    M = MatrixSymbol("M", 3, 3)
-    N = MatrixSymbol("N", 3, 3)
-    expr = M*N
-    f = lambdify((M, N), expr, "numpy")
-
-    with warns_deprecated_sympy():
-        ans = f(eye(3), eye(3))
-        assert np.array_equal(ans, np.array([1, 0, 0, 0, 1, 0, 0, 0, 1]))
-
 def test_16857():
     if not np:
         skip("NumPy not installed")
