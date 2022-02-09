@@ -1663,12 +1663,12 @@ def try_shifted_sum(func, z):
     abuckets, bbuckets = sift(func.ap, _mod1), sift(func.bq, _mod1)
     if len(abuckets[S.Zero]) != 1:
         return None
-    r = as_int(abuckets[S.Zero][0])  # XXX if this fails, is round necessary?
+    r = as_int(abuckets[S.Zero][0], strict=False)  # XXX if this fails, is round necessary?
     if r <= 0:
         return None
     if S.Zero not in bbuckets:
         return None
-    k = as_int(min(bbuckets[S.Zero]))  # XXX if this fails, is round necessary?
+    k = as_int(min(bbuckets[S.Zero]), strict=False)  # XXX if this fails, is round necessary?
     if k <= 0:
         return None
 
