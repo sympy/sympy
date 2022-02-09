@@ -70,7 +70,7 @@ def mathematica(s, additional_translations=None):
     if additional_translations is not None:
         SymPyDeprecationWarning(
             feature="additional_translations parameter for the Mathematica parser",
-            last_supported_version="1.9",
+            deprecated_since_version="1.11",
             useinstead="Use SymPy's .replace( ) or .subs( ) methods on the output expression",
             issue="23042",
         ).warn()
@@ -541,6 +541,7 @@ class MathematicaParser:
     LEFT = "Left"
 
     _mathematica_op_precedence: List[tTuple[str, Optional[str], tDict[str, tUnion[str, Callable]]]] = [
+        (POSTFIX, None, {";": lambda x: x + ["Null"] if isinstance(x, list) and x and x[0] == "CompoundExpression" else ["CompoundExpression", x, "Null"]}),
         (INFIX, FLAT, {";": "CompoundExpression"}),
         (INFIX, RIGHT, {"=": "Set", ":=": "SetDelayed", "+=": "AddTo", "-=": "SubtractFrom", "*=": "TimesBy", "/=": "DivideBy"}),
         (INFIX, LEFT, {"//": lambda x, y: [x, y]}),
@@ -614,32 +615,18 @@ class MathematicaParser:
         self._regex_tokenizer = tokenizer
         return self._regex_tokenizer
 
-    _regex_decommenter = re.compile(r"\(\*.*?\*\)", re.MULTILINE)
-
     def _from_mathematica_to_tokens(self, code: str):
         tokenizer = self._get_tokenizer()
 
         # Remove comments:
-        code = code.replace("\n", " ")
-        code = self._regex_decommenter.sub("", code)
-
-        # uncover '*' hiding behind a whitespace
-        code = self._apply_rules(code, 'whitespace')
-
-        # Remove white spaces:
-        nol1 = r"(?:[A-Za-z0-9]|(?<=\d)\.)"
-        nol2 = r"(?:[A-Za-z0-9]|\.(?=\d))"
-        code = re.sub(rf"(?<={nol1})\s+(?={nol2})", "*", code)
-        code = re.sub(rf"(?<=[])])\s+(?={nol2})", "*", code)
-        code = re.sub(rf"(?<={nol1})\s+(?=[(])", "*", code)
-        code = re.sub(r"(?<=\))\s+(?=\()", "*", code)
-
-        # Handle patterns like "x.3" ==> "x*.3" and "x1.2" ==> "x1*.2"
-        code = re.sub(r"(?<=[A-Za-z])(\d*)\.(?=\d)", r"\1*.", code)
-
-        # add omitted '*' character
-        code = self._apply_rules(code, 'add*_1')
-        code = self._apply_rules(code, 'add*_2')
+        while True:
+            pos_comment_start = code.find("(*")
+            if pos_comment_start == -1:
+                break
+            pos_comment_end = code.find("*)")
+            if pos_comment_end == -1 or pos_comment_end < pos_comment_start:
+                raise SyntaxError("mismatch in comment (*  *) code")
+            code = code[:pos_comment_start] + code[pos_comment_end+2:]
 
         tokens = tokenizer.findall(code)
         return tokens
@@ -652,6 +639,16 @@ class MathematicaParser:
         if re.match("-?" + self._number, token):
             return False
         return True
+
+    def _is_valid_star1(self, token: tUnion[str, list]) -> bool:
+        if token in (")", "}"):
+            return True
+        return not self._is_op(token)
+
+    def _is_valid_star2(self, token: tUnion[str, list]) -> bool:
+        if token in ("(", "{"):
+            return True
+        return not self._is_op(token)
 
     def _from_tokens_to_fullformlist(self, tokens: list):
         stack: List[list] = [[]]
@@ -709,11 +706,26 @@ class MathematicaParser:
 
     def _parse_after_braces(self, tokens: list):
         op_dict: dict
-        token_len_start: int = len(tokens)
-        for op_type, flattening_strat, op_dict in reversed(self._mathematica_op_precedence):
+        changed: bool = False
+        for op_type, grouping_strat, op_dict in reversed(self._mathematica_op_precedence):
             size: int = len(tokens)
             pointer: int = 0
             while pointer < size:
+                if "*" in op_dict and pointer > 0 and \
+                        self._is_valid_star1(tokens[pointer-1]) \
+                        and self._is_valid_star2(tokens[pointer]):
+                    # This is a trick to add missing * operators in the expression,
+                    # `"*" in op_dict` makes sure the precedence level is the same as "*",
+                    # while `not self._is_op( ... )` makes sure this and the previous
+                    # expression are not operators.
+                    if tokens[pointer] == "(":
+                        # ( has already been processed by now, replace:
+                        tokens[pointer] = "*"
+                        tokens[pointer+1] = tokens[pointer+1][0]
+                    else:
+                        tokens.insert(pointer, "*")
+                        size += 1
+                    changed = True
                 token = tokens[pointer]
                 if isinstance(token, str) and token in op_dict:
                     op_name: tUnion[str, Callable] = op_dict[token]
@@ -725,16 +737,16 @@ class MathematicaParser:
                     else:
                         node = []
                         first_index = 0
-                    if op_type == self.PREFIX and pointer > 0 and not self._is_op(tokens[pointer - 1]):
-                        pointer += 1
-                        continue
-                    if op_type == self.POSTFIX and pointer < size - 1 and not self._is_op(tokens[pointer + 1]):
+                    if token in ("+", "-") and op_type == self.PREFIX and pointer > 0 and not self._is_op(tokens[pointer - 1]):
+                        # Make sure that PREFIX + - don't match expressions like a + b or a - b,
+                        # the INFIX + - are supposed to match that expression:
                         pointer += 1
                         continue
                     if op_type == self.INFIX:
                         if pointer == 0 or pointer == size - 1 or self._is_op(tokens[pointer - 1]) or self._is_op(tokens[pointer + 1]):
                             pointer += 1
                             continue
+                    changed = True
                     tokens[pointer] = node
                     if op_type == self.INFIX:
                         arg1 = tokens.pop(pointer-1)
@@ -747,8 +759,8 @@ class MathematicaParser:
                         size -= 2
                         node.append(arg1)
                         node_p = node
-                        if flattening_strat == self.FLAT:
-                            while pointer + 1 < size and self._check_op_compatible(tokens[pointer+1], token):
+                        if grouping_strat == self.FLAT:
+                            while pointer + 2 < size and self._check_op_compatible(tokens[pointer+1], token):
                                 node_p.append(arg2)
                                 other_op = tokens.pop(pointer+1)
                                 arg2 = tokens.pop(pointer+1)
@@ -758,15 +770,15 @@ class MathematicaParser:
                                     arg2 = self._get_neg(arg2)
                                 size -= 2
                             node_p.append(arg2)
-                        elif flattening_strat == self.RIGHT:
-                            while pointer + 1 < size and tokens[pointer+1] == token:
+                        elif grouping_strat == self.RIGHT:
+                            while pointer + 2 < size and tokens[pointer+1] == token:
                                 node_p.append([op_name, arg2])
                                 node_p = node_p[-1]
                                 tokens.pop(pointer+1)
                                 arg2 = tokens.pop(pointer+1)
                                 size -= 2
                             node_p.append(arg2)
-                        elif flattening_strat == self.LEFT:
+                        elif grouping_strat == self.LEFT:
                             while pointer + 1 < size and tokens[pointer+1] == token:
                                 if isinstance(op_name, str):
                                     node_p[first_index] = [op_name, node_p[first_index], arg2]
@@ -779,14 +791,14 @@ class MathematicaParser:
                         else:
                             node.append(arg2)
                     elif op_type == self.PREFIX:
-                        assert flattening_strat is None
+                        assert grouping_strat is None
                         if pointer == size - 1 or self._is_op(tokens[pointer + 1]):
                             tokens[pointer] = self._missing_arguments_default[token]()
                         else:
                             node.append(tokens.pop(pointer+1))
                             size -= 1
                     elif op_type == self.POSTFIX:
-                        assert flattening_strat is None
+                        assert grouping_strat is None
                         if pointer == 0 or self._is_op(tokens[pointer - 1]):
                             tokens[pointer] = self._missing_arguments_default[token]()
                         else:
@@ -803,7 +815,7 @@ class MathematicaParser:
                             tokens[pointer] = new_node
                 pointer += 1
         if len(tokens) != 1:
-            if len(tokens) < token_len_start:
+            if changed:
                 # Trick to deal with cases in which an operator with lower
                 # precedence should be transformed before an operator of higher
                 # precedence. Such as in the case of `#&[x]` (that is

@@ -189,7 +189,13 @@ def test_parser_mathematica_tokenizer():
     assert chain("a//b//c") == [["a", "b"], "c"]
     assert chain("a//b//c//d") == [[["a", "b"], "c"], "d"]
 
-    assert chain("x&") == ["Function", "x"]
+    # Compound expressions
+    assert chain("a;b") == ["CompoundExpression", "a", "b"]
+    assert chain("a;") == ["CompoundExpression", "a", "Null"]
+    assert chain("a;b;") == ["CompoundExpression", "a", "b", "Null"]
+    assert chain("a[b;c]") == ["a", ["CompoundExpression", "b", "c"]]
+    assert chain("a[b,c;d,e]") == ["a", "b", ["CompoundExpression", "c", "d"], "e"]
+    assert chain("a[b,c;,d]") == ["a", "b", ["CompoundExpression", "c", "Null"], "d"]
 
     # Patterns
     assert chain("y_") == ["Pattern", "y", ["Blank"]]
@@ -197,7 +203,7 @@ def test_parser_mathematica_tokenizer():
     assert chain("y__") == ["Pattern", "y", ["BlankSequence"]]
     assert chain("y___") == ["Pattern", "y", ["BlankNullSequence"]]
     assert chain("a[b_.,c_]") == ["a", ["Optional", ["Pattern", "b", ["Blank"]]], ["Pattern", "c", ["Blank"]]]
-    # Not working: chain("b_. c")
+    assert chain("b_. c") == ["Times", ["Optional", ["Pattern", "b", ["Blank"]]], "c"]
 
     # Slots for lambda functions
     assert chain("#") == ["Slot", "1"]
@@ -207,16 +213,19 @@ def test_parser_mathematica_tokenizer():
     assert chain("##a") == ["SlotSequence", "a"]
 
     # Lambda functions
+    assert chain("x&") == ["Function", "x"]
     assert chain("#&") == ["Function", ["Slot", "1"]]
     assert chain("#+3&") == ["Function", ["Plus", ["Slot", "1"], "3"]]
     assert chain("#1 + #2&") == ["Function", ["Plus", ["Slot", "1"], ["Slot", "2"]]]
     assert chain("# + #&") == ["Function", ["Plus", ["Slot", "1"], ["Slot", "1"]]]
     assert chain("#&[x]") == [["Function", ["Slot", "1"]], "x"]
     assert chain("#1 + #2 & [x, y]") == [["Function", ["Plus", ["Slot", "1"], ["Slot", "2"]]], "x", "y"]
+    assert chain("#1^2#2^3&") == ["Function", ["Times", ["Power", ["Slot", "1"], "2"], ["Power", ["Slot", "2"], "3"]]]
 
     # Invalid expressions:
     raises(SyntaxError, lambda: chain("(,"))
     raises(SyntaxError, lambda: chain("()"))
+    raises(SyntaxError, lambda: chain("a (* b"))
 
 
 def test_parser_mathematica_exp_alt():
