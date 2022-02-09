@@ -574,15 +574,23 @@ these are desired, you can use a `lambda` or the
 
 The following submodules have been renamed.
 
-- `sympy.utilities.benchmarking` -> `sympy.testing.benchmarking`
-- `sympy.utilities.pytest` -> `sympy.testing.pytest`
-- `sympy.utilities.randtests` -> `sympy.core.random`
-- `sympy.utilities.runtests` -> `sympy.testing.runtests`
-- `sympy.utilities.tmpfiles` -> `sympy.testing.tmpfiles`
+- `sympy.utilities.benchmarking` → `sympy.testing.benchmarking`
+- `sympy.utilities.pytest` → `sympy.testing.pytest`
+- `sympy.utilities.randtests` → `sympy.core.random`
+- `sympy.utilities.runtests` → `sympy.testing.runtests`
+- `sympy.utilities.tmpfiles` → `sympy.testing.tmpfiles`
 
-### `sympy.testing.randtest` functions
+(deprecated-sympy-testing-randtest)=
+### `sympy.testing.randtest`
 
-TODO
+`sympy.testing.randtest` is deprecated. The functions in it have been moved to
+`sympy.core.random`. The following functions have been moved.
+
+- `sympy.testing.randtest.random_complex_number` → `sympy.core.random.random_complex_number`
+- `sympy.testing.randtest.verify_numerically` `sympy.core.random.verify_numerically`
+- `sympy.testing.randtest.test_derivative_numerically` → `sympy.core.random.test_derivative_numerically`
+- `sympy.testing.randtest._randrange` → `sympy.core.random._randrange`
+- `sympy.testing.randtest._randint` → `sympy.core.random._randint`
 
 (deprecated-poly-nonpoly-binary-operations)=
 ### Mixing `Poly` and non-polynomial expressions in binary operations
