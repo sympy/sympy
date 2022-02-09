@@ -1287,10 +1287,11 @@ def test_leading_terms():
     assert cos(S.Half).as_leading_term(x) == cos(S.Half)
     assert sec(1/x).as_leading_term(x) == AccumBounds(S.NegativeInfinity, S.Infinity)
     assert csc(1/x).as_leading_term(x) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert tan(1/x).as_leading_term(x) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert cot(1/x).as_leading_term(x) == AccumBounds(S.NegativeInfinity, S.Infinity)
 
     for func in [tan, cot]:
-        for a in (1/x, S.Half):
-            eq = func(a)
+            eq = func(S.Half)
             assert eq.as_leading_term(x) == eq
 
     # https://github.com/sympy/sympy/issues/21038
