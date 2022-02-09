@@ -718,9 +718,25 @@ TODO
 
 TODO
 
+(deprecated-is-emptyset)=
 ### The `is_EmptySet` attribute of sets
 
-TODO
+The `is_EmptySet` attribute of [Set](sets-module) objects is deprecated.
+Instead either use
+
+```
+from sympy import S
+s is S.EmptySet
+```
+
+or
+
+```
+s.is_empty
+```
+
+The difference is that `s.is_empty` may return `None` if it is unknown if the
+set it empty.
 
 ### `ProductSet(iterable)`
 

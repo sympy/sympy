@@ -71,8 +71,14 @@ class Set(Basic, EvalfMixin):
     is_finite_set = None  # type: FuzzyBool
 
     @property  # type: ignore
-    @deprecated(useinstead="is S.EmptySet or is_empty",
-            issue=16946, deprecated_since_version="1.5")
+    @deprecated(
+        """
+        The is_EmptySet attribute of Set objects is deprecated.
+        Use 's is S.EmptySet" or 's.is_empty' instead.
+        """,
+        deprecated_since_version="1.5",
+        active_deprecations_target="deprecated-is-emptyset",
+    )
     def is_EmptySet(self):
         return None
 
@@ -1658,8 +1664,14 @@ class EmptySet(Set, metaclass=Singleton):
     is_FiniteSet = True
 
     @property  # type: ignore
-    @deprecated(useinstead="is S.EmptySet or is_empty",
-            issue=16946, deprecated_since_version="1.5")
+    @deprecated(
+        """
+        The is_EmptySet attribute of Set objects is deprecated.
+        Use 's is S.EmptySet" or 's.is_empty' instead.
+        """,
+        deprecated_since_version="1.5",
+        active_deprecations_target="deprecated-is-emptyset",
+    )
     def is_EmptySet(self):
         return True
 
