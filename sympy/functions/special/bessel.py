@@ -13,10 +13,9 @@ from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.integers import ceiling
-from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.miscellaneous import sqrt, root
-from sympy.functions.elementary.complexes import re, im
+from sympy.functions.elementary.miscellaneous import cbrt, sqrt, root
+from sympy.functions.elementary.complexes import (Abs, re, im, polar_lift, unpolarify)
 from sympy.functions.special.gamma_functions import gamma, digamma, uppergamma
 from sympy.functions.special.hyper import hyper
 from sympy.polys.orthopolys import spherical_bessel_fn
@@ -200,7 +199,6 @@ class besselj(BesselBase):
                 return I**(nu)*besseli(nu, newz)
 
         # branch handling:
-        from sympy.functions.elementary.complexes import unpolarify
         if nu.is_integer:
             newz = unpolarify(z)
             if newz != z:
@@ -214,7 +212,6 @@ class besselj(BesselBase):
             return besselj(nnu, z)
 
     def _eval_rewrite_as_besseli(self, nu, z, **kwargs):
-        from sympy.functions.elementary.complexes import polar_lift
         return exp(I*pi*nu/2)*besseli(nu, polar_lift(-I)*z)
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
@@ -466,7 +463,6 @@ class besseli(BesselBase):
                 return I**(-nu)*besselj(nu, -newz)
 
         # branch handling:
-        from sympy.functions.elementary.complexes import unpolarify
         if nu.is_integer:
             newz = unpolarify(z)
             if newz != z:
@@ -480,7 +476,6 @@ class besseli(BesselBase):
             return besseli(nnu, z)
 
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
-        from sympy.functions.elementary.complexes import polar_lift
         return exp(-I*pi*nu/2)*besselj(nu, polar_lift(I)*z)
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
@@ -1274,11 +1269,11 @@ class airyai(AiryBase):
             x = sympify(x)
             if len(previous_terms) > 1:
                 p = previous_terms[-1]
-                return ((3**Rational(1, 3)*x)**(-n)*(3**Rational(1, 3)*x)**(n + 1)*sin(pi*(n*Rational(2, 3) + Rational(4, 3)))*factorial(n) *
+                return ((cbrt(3)*x)**(-n)*(cbrt(3)*x)**(n + 1)*sin(pi*(n*Rational(2, 3) + Rational(4, 3)))*factorial(n) *
                         gamma(n/3 + Rational(2, 3))/(sin(pi*(n*Rational(2, 3) + Rational(2, 3)))*factorial(n + 1)*gamma(n/3 + Rational(1, 3))) * p)
             else:
-                return (S.One/(3**Rational(2, 3)*pi) * gamma((n+S.One)/S(3)) * sin(2*pi*(n+S.One)/S(3)) /
-                        factorial(n) * (root(3, 3)*x)**n)
+                return (S.One/(3**Rational(2, 3)*pi) * gamma((n+S.One)/S(3)) * sin(Rational(2, 3)*pi*(n+S.One)) /
+                        factorial(n) * (cbrt(3)*x)**n)
 
     def _eval_rewrite_as_besselj(self, z, **kwargs):
         ot = Rational(1, 3)
@@ -1449,11 +1444,11 @@ class airybi(AiryBase):
             x = sympify(x)
             if len(previous_terms) > 1:
                 p = previous_terms[-1]
-                return (3**Rational(1, 3)*x * Abs(sin(2*pi*(n + S.One)/S(3))) * factorial((n - S.One)/S(3)) /
-                        ((n + S.One) * Abs(cos(2*pi*(n + S.Half)/S(3))) * factorial((n - 2)/S(3))) * p)
+                return (cbrt(3)*x * Abs(sin(Rational(2, 3)*pi*(n + S.One))) * factorial((n - S.One)/S(3)) /
+                        ((n + S.One) * Abs(cos(Rational(2, 3)*pi*(n + S.Half))) * factorial((n - 2)/S(3))) * p)
             else:
-                return (S.One/(root(3, 6)*pi) * gamma((n + S.One)/S(3)) * Abs(sin(2*pi*(n + S.One)/S(3))) /
-                        factorial(n) * (root(3, 3)*x)**n)
+                return (S.One/(root(3, 6)*pi) * gamma((n + S.One)/S(3)) * Abs(sin(Rational(2, 3)*pi*(n + S.One))) /
+                        factorial(n) * (cbrt(3)*x)**n)
 
     def _eval_rewrite_as_besselj(self, z, **kwargs):
         ot = Rational(1, 3)

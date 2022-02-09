@@ -8,7 +8,8 @@ from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.special.error_functions import erf
 from sympy.functions.elementary.trigonometric import (
-    sin, cos, tan, sec, csc, sinh, cosh, tanh, atan)
+    sin, cos, tan, sec, csc, atan)
+from sympy.functions.elementary.hyperbolic import cosh, sinh, tanh
 from sympy.polys import Poly
 from sympy.series.order import O
 from sympy.sets import FiniteSet

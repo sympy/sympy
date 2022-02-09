@@ -290,7 +290,6 @@ def continued_fraction_iterator(x):
 
     """
     from sympy.functions import floor
-
     while True:
         i = floor(x)
         yield i

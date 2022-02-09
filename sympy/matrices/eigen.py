@@ -13,6 +13,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import roots, CRootOf, ZZ, QQ, EX
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.eigen import dom_eigenvects, dom_eigenvects_to_sympy
+from sympy.polys.polytools import gcd
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .common import MatrixError, NonSquareMatrixError
@@ -425,7 +426,6 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
         # if the primitive flag is set, get rid of any common
         # integer denominators
         def denom_clean(l):
-            from sympy.polys.polytools import gcd
             return [(v / gcd(list(v))).applyfunc(simpfunc) for v in l]
 
         ret = [(val, mult, denom_clean(es)) for val, mult, es in ret]

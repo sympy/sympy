@@ -4,12 +4,12 @@ only and should not be used anywhere else as these do not possess the
 signatures common to SymPy objects. For general use of logic constructs
 please refer to sympy.logic classes And, Or, Not, etc.
 """
-from itertools import combinations, product
-from sympy.core.singleton import S
-from sympy.logic.boolalg import (Equivalent, ITE, Implies, Nand, Nor, Xor)
+from itertools import combinations, product, zip_longest
+from sympy.assumptions.assume import AppliedPredicate, Predicate
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
+from sympy.core.singleton import S
 from sympy.logic.boolalg import Or, And, Not, Xnor
-from itertools import zip_longest
+from sympy.logic.boolalg import (Equivalent, ITE, Implies, Nand, Nor, Xor)
 
 
 class Literal:
@@ -171,7 +171,6 @@ def to_NNF(expr, composite_map=None):
     (Literal(Q.negative(x), False) | Literal(Q.zero(x), False))
     """
     from sympy.assumptions.ask import Q
-    from sympy.assumptions.assume import AppliedPredicate, Predicate
 
     if composite_map is None:
         composite_map = dict()

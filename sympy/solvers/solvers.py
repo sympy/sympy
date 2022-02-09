@@ -31,9 +31,9 @@ from sympy.logic.boolalg import And, Or, BooleanAtom
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
                              Abs, re, im, arg, sqrt, atan2)
 from sympy.functions.combinatorial.factorials import binomial
-from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
-                                                      HyperbolicFunction)
+from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.integrals.integrals import Integral
 from sympy.ntheory.factor_ import divisors
 from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
