@@ -466,10 +466,15 @@ class Order(Expr):
                     # First, try to substitute self.point in the "new"
                     # expr to see if this is a fixed point.
                     # E.g.  O(y).subs(y, sin(x))
+                    while new.is_Order:
+                        new = new.expr
                     point = new.subs(var, self.point[i])
+                    while point.is_Order:
+                        point = point.expr
                     if point != self.point[i]:
                         from sympy.solvers.solveset import solveset
                         d = Dummy()
+                        sol_str = str(old - new)
                         sol = solveset(old - new.subs(var, d), d)
                         if isinstance(sol, Complement):
                             e1 = sol.args[0]
