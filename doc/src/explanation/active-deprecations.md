@@ -738,9 +738,30 @@ s.is_empty
 The difference is that `s.is_empty` may return `None` if it is unknown if the
 set it empty.
 
+(deprecated-productset-iterable)=
 ### `ProductSet(iterable)`
 
-TODO
+Passing a single iterable as the first argument to {class}`~.ProductSet` is
+deprecated. Creating a product set from an iterable should be done using
+`ProductSet(*iterable)`, or as each individual argument. For example
+
+```py
+>>> from sympy import ProductSet
+>>> sets = [{i} for i in range(3)]
+>>> ProductSet(*sets)
+ProductSet({0}, {1}, {2})
+>>> ProductSet({1, 2}, {1})
+ProductSet({1, 2}, {1})
+```
+
+This is done because sets themselves can be iterables, and sets of sets are
+allowed. But the product set of a single set should mathematically be that set
+itself (or more exactly, the set of 1-tuples of elements of that set).
+Automatically denesting a single iterable makes it impossible to represent
+this object and makes `ProductSet` not generalize correctly when passed 1
+argument. On the other hand, treating the first argument differently if it is
+a set than if it is another type of iterable (which is what is currently done
+in the deprecated code path) is confusing behavior.
 
 ### The `set_potential_energy` method in `sympy.physics.mechanics`
 
