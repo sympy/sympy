@@ -767,9 +767,36 @@ in the deprecated code path) is confusing behavior.
 
 TODO
 
+(deprecated-conditionset-set)=
 ### Using a set for the condition in `ConditionSet`
 
-TODO
+Using a set for the condition in ConditionSet is deprecated. A boolean should
+be used instead. This is because the condition is mathematically a boolean,
+and it is ambiguous what a set should mean in this context.
+
+To fix this deprecation, replace
+
+```py
+ConditionSet(symbol, set_condition)
+```
+
+with
+
+```py
+ConditionSet(symbol, And(*[Eq(lhs, 0) for lhs in set_condition]))
+```
+
+For example,
+
+```py
+ConditionSet((x, y), {x + 1, x + y}, S.Reals) # DEPRECATED
+```
+
+would become
+
+```py
+ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals)
+```
 
 ### The `sympy.polys.multivariate_resultants.DixonResultant.max_degree` property
 
