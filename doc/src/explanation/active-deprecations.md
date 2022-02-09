@@ -598,9 +598,26 @@ To do this, either explicitly convert the non-`Poly` operand to a `Poly` using
 using {meth}`.Poly.as_expr`, depending on which type you want the result to
 be.
 
+(deprecated-permutation-print_cyclic)=
 ### The `print_cyclic` flag of `sympy.combinatorics.Permutation`
 
-TODO
+The `print_cyclic` attribute of
+[`sympy.combintorics.Permutation`](sympy.combinatorics.permutations.Permutation)
+controls whether permutations print as cycles or arrays. This would be done by
+setting `Permutation.print_cyclic = True` or `Permutation.print_cyclic =
+False`. However, this method of controlling printing is bad because it is a
+global flag, but printing should not depend on global behavior.
+
+Instead, users should use the `perm_cyclic` flag of the corresponding printer.
+The easiest way to configure this is to set the flag when calling
+{func}`~.init_printing`, like
+
+```py
+init_printing(perm_cyclic=False) # Makes Permutation print in array form
+```
+
+The {class}`~.Permutation` docstring contains more details on the
+`perm_cyclic` flag.
 
 (deprecated-integrate-poly)=
 ### Using `integrate` with `Poly`
