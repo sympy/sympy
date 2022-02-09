@@ -475,9 +475,16 @@ TODO
 
 TODO
 
-### The `unicode` argument and attribute to `sympy.printing.pretty.stringpict.prettyForm`
+(deprecated-pretty-printing-functions)=
+### The `unicode` argument and attribute to `sympy.printing.pretty.stringpict.prettyForm` and the `sympy.printing.pretty.pretty_symbology.xstr` function
 
-TODO
+The `sympy.printing.pretty.pretty_symbology.xstr` function, and the `unicode`
+argument and attribute to {class}`sympy.printing.pretty.stringpict.prettyForm`
+were both present to support the Unicode behavior of Python 2. Since Unicode
+strings are the default in Python 3, these are not needed any more. `xstr()`
+should be replaced with just `str()`, the `unicode` argument to `prettyForm`
+should be omitted, and the `prettyForm.unicode` attribute should be replaced
+with the `prettyForm.s` attribute.
 
 (deprecated-printing-code-submodules)=
 ### The `sympy.printing.fcode`, `sympy.printing.ccode`, and `sympy.printing.cxxcode` modules
