@@ -48,10 +48,9 @@ class SymPyDeprecationWarning(DeprecationWarning):
     sympy.testing.pytest.warns_deprecated_sympy
 
     """
-
     def __init__(self, message, *, deprecated_since_version, active_deprecations_target):
 
-        self.args = (message, deprecated_since_version,
+        super().__init__(message, deprecated_since_version,
                      active_deprecations_target)
         self.message = message
         if not isinstance(deprecated_since_version, str):
@@ -72,6 +71,23 @@ will be removed in a future version of SymPy.
 
     def __str__(self):
         return self.full_message
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self.message!r}, deprecated_since_version={self.deprecated_since_version!r}, active_deprecations_target={self.active_deprecations_target!r})"
+
+    def __eq__(self, other):
+        return isinstance(other, SymPyDeprecationWarning) and self.args == other.args
+
+    # Make pickling work. The by default, it tries to recreate the expression
+    # from its args, but this doesn't work because of our keyword-only
+    # arguments.
+    @classmethod
+    def _new(cls, message, deprecated_since_version,
+              active_deprecations_target):
+        return cls(message, deprecated_since_version=deprecated_since_version, active_deprecations_target=active_deprecations_target)
+
+    def __reduce__(self):
+        return (self._new, (self.message, self.deprecated_since_version, self.active_deprecations_target))
 
 # Python by default hides DeprecationWarnings, which we do not want.
 warnings.simplefilter("once", SymPyDeprecationWarning)
