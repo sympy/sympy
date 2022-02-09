@@ -331,9 +331,46 @@ broken. Also these attributes were technically always private (they started
 with an underscore), so user code should not really have been using them in
 the first place.
 
+(deprecated-laplace-transform-matrix)=
 ### laplace_transform of a Matrix with noconds=False
 
-TODO
+Prior to version 1.9, calling {func}`~.laplace_transform` on a [`Matrix`](sympy.matrices.dense.Matrix) with
+`noconds=False` (which is the default), resulted in a Matrix of tuples:
+
+```py
+>>> from sympy import laplace_transform, symbols
+>>> t, z = symbols('t z')
+>>> laplace_transform(eye(2), t, z) # doctest: +SKIP
+Matrix([
+[(1/z, 0, True),   (0, 0, True)],
+[  (0, 0, True), (1/z, 0, True)]])
+```
+
+However, `Matrix` is only designed to work with `Expr` objects (see
+{ref}`deprecated-non-expr-in-matrix` above).
+
+To avoid this, either use `noconds=True` to remove the convergence conditions
+
+```py
+>>> laplace_transform(eye(2), t, z, noconds=True)
+Matrix([
+[1/z,   0],
+[  0, 1/z]])
+```
+
+or use `legacy_matrix=False` to return the new behavior, which will be return
+a single tuple with the Matrix in the first argument and the convergence
+conditions combined into a single condition for the whole matrix.
+
+```
+>>> laplace_transform(eye(2), t, z, legacy_matrix=False)
+(Matrix([
+[1/z,   0],
+[  0, 1/z]]), 0, True)
+```
+
+When this deprecation is removed the `legacy_matrix=False` behavior will
+become the default, but the flag will be left intact for compatibility.
 
 ## Version 1.8
 
