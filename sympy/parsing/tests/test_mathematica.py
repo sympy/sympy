@@ -156,6 +156,7 @@ def test_parser_mathematica_tokenizer():
     assert chain("(a + b) + c") == ["Plus", ["Plus", "a", "b"], "c"]
     assert chain(" a + (b + c) + d ") == ["Plus", "a", ["Plus", "b", "c"], "d"]
     assert chain("a * (b + c)") == ["Times", "a", ["Plus", "b", "c"]]
+    assert chain("a b (c d)") == ["Times", "a", "b", ["Times", "c", "d"]]
     assert chain("{a, b, 2, c}") == ["List", "a", "b", "2", "c"]
     assert chain("{a, {b, c}}") == ["List", "a", ["List", "b", "c"]]
     assert chain("{{a}}") == ["List", ["List", "a"]]
@@ -196,6 +197,14 @@ def test_parser_mathematica_tokenizer():
     assert chain("a[b;c]") == ["a", ["CompoundExpression", "b", "c"]]
     assert chain("a[b,c;d,e]") == ["a", "b", ["CompoundExpression", "c", "d"], "e"]
     assert chain("a[b,c;,d]") == ["a", "b", ["CompoundExpression", "c", "Null"], "d"]
+
+    # New lines
+    assert chain("a\nb\n") == ["CompoundExpression", "a", "b"]
+    assert chain("a\n\nb\n (c \nd)  \n") == ["CompoundExpression", "a", "b", ["Times", "c", "d"]]
+    assert chain("\na; b\nc") == ["CompoundExpression", "a", "b", "c"]
+    assert chain("a + \nb\n") == ["Plus", "a", "b"]
+    assert chain("a\nb; c; d\n e; (f \n g); h + \n i") == ["CompoundExpression", "a", "b", "c", "d", "e", ["Times", "f", "g"], ["Plus", "h", "i"]]
+    assert chain("\n{\na\nb; c; d\n e (f \n g); h + \n i\n\n}\n") == ["List", ["CompoundExpression", ["Times", "a", "b"], "c", ["Times", "d", "e", ["Times", "f", "g"]], ["Plus", "h", "i"]]]
 
     # Patterns
     assert chain("y_") == ["Pattern", "y", ["Blank"]]

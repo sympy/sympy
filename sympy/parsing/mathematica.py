@@ -611,6 +611,7 @@ class MathematicaParser:
         tokens_escape.sort(key=lambda x: -len(x))
         tokens.extend(map(re.escape, tokens_escape))
         tokens.append(",")
+        tokens.append("\n")
         tokenizer = re.compile("(" + "|".join(tokens) + ")")
         self._regex_tokenizer = tokenizer
         return self._regex_tokenizer
@@ -629,6 +630,14 @@ class MathematicaParser:
             code = code[:pos_comment_start] + code[pos_comment_end+2:]
 
         tokens = tokenizer.findall(code)
+
+        # Remove newlines at the beginning
+        while tokens and tokens[0] == "\n":
+            tokens.pop(0)
+        # Remove newlines at the end
+        while tokens and tokens[-1] == "\n":
+            tokens.pop(-1)
+
         return tokens
 
     def _is_op(self, token: tUnion[str, list]) -> bool:
@@ -688,7 +697,7 @@ class MathematicaParser:
                         raise unmatched_enclosure
                 if len(stack[-1]) == 0 and stack[-2][-1] == "(":
                     raise SyntaxError("( ) not valid syntax")
-                last_stack = self._parse_after_braces(stack[-1])
+                last_stack = self._parse_after_braces(stack[-1], True)
                 stack[-1] = last_stack
                 new_stack_element = []
                 while stack[-1][-1] != open_seq[-1]:
@@ -704,29 +713,63 @@ class MathematicaParser:
         assert len(stack) == 1
         return self._parse_after_braces(stack[0])
 
-    def _parse_after_braces(self, tokens: list):
+    def _parse_after_braces(self, tokens: list, inside_enclosure: bool = False):
         op_dict: dict
         changed: bool = False
+        lines: list = []
         for op_type, grouping_strat, op_dict in reversed(self._mathematica_op_precedence):
             size: int = len(tokens)
             pointer: int = 0
+            if "*" in op_dict:
+                while pointer < size:
+                    if pointer > 0 and \
+                        self._is_valid_star1(tokens[pointer - 1]) \
+                            and self._is_valid_star2(tokens[pointer]):
+                        # This is a trick to add missing * operators in the expression,
+                        # `"*" in op_dict` makes sure the precedence level is the same as "*",
+                        # while `not self._is_op( ... )` makes sure this and the previous
+                        # expression are not operators.
+                        if tokens[pointer] == "(":
+                            # ( has already been processed by now, replace:
+                            tokens[pointer] = "*"
+                            tokens[pointer + 1] = tokens[pointer + 1][0]
+                        else:
+                            tokens.insert(pointer, "*")
+                            pointer += 1
+                            size += 1
+                        changed = True
+                    pointer += 1
+            size = len(tokens)
+            pointer = 0
             while pointer < size:
-                if "*" in op_dict and pointer > 0 and \
-                        self._is_valid_star1(tokens[pointer-1]) \
-                        and self._is_valid_star2(tokens[pointer]):
-                    # This is a trick to add missing * operators in the expression,
-                    # `"*" in op_dict` makes sure the precedence level is the same as "*",
-                    # while `not self._is_op( ... )` makes sure this and the previous
-                    # expression are not operators.
-                    if tokens[pointer] == "(":
-                        # ( has already been processed by now, replace:
-                        tokens[pointer] = "*"
-                        tokens[pointer+1] = tokens[pointer+1][0]
-                    else:
-                        tokens.insert(pointer, "*")
-                        size += 1
-                    changed = True
                 token = tokens[pointer]
+                if token == "\n":
+                    if inside_enclosure:  # Ignore newlines inside enclosures
+                        tokens.pop(pointer)
+                        size -= 1
+                        continue
+                    if pointer == 0:
+                        tokens.pop(0)
+                        size -= 1
+                        continue
+                    if pointer > 1:
+                        try:
+                            prev_expr = self._parse_after_braces(tokens[:pointer], inside_enclosure)
+                        except SyntaxError:
+                            tokens.pop(pointer)
+                            size -= 1
+                            continue
+                    else:
+                        prev_expr = tokens[0]
+                    if len(prev_expr) > 0 and prev_expr[0] == "CompoundExpression":
+                        lines.extend(prev_expr[1:])
+                    else:
+                        lines.append(prev_expr)
+                    for i in range(pointer):
+                        tokens.pop(0)
+                    size -= pointer
+                    pointer = 0
+                    continue
                 if isinstance(token, str) and token in op_dict:
                     op_name: tUnion[str, Callable] = op_dict[token]
                     node: list
@@ -814,7 +857,7 @@ class MathematicaParser:
                         else:
                             tokens[pointer] = new_node
                 pointer += 1
-        if len(tokens) != 1:
+        if len(tokens) > 1 or (len(lines) == 0 and len(tokens) == 0):
             if changed:
                 # Trick to deal with cases in which an operator with lower
                 # precedence should be transformed before an operator of higher
@@ -823,8 +866,13 @@ class MathematicaParser:
                 # operator `&` has lower precedence than `[`, but needs to be
                 # evaluated first because otherwise `# (&[x])` is not a valid
                 # expression:
-                return self._parse_after_braces(tokens)
+                return self._parse_after_braces(tokens, inside_enclosure)
             raise SyntaxError("unable to create a single AST for the expression")
+        if len(lines) > 0:
+            if tokens[0] and tokens[0][0] == "CompoundExpression":
+                tokens = tokens[0][1:]
+            compound_expression = ["CompoundExpression", *lines, *tokens]
+            return compound_expression
         return tokens[0]
 
     def _check_op_compatible(self, op1: str, op2: str):
