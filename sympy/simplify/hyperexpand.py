@@ -1661,14 +1661,14 @@ def try_shifted_sum(func, z):
     abuckets, bbuckets = sift(func.ap, _mod1), sift(func.bq, _mod1)
     if len(abuckets[S.Zero]) != 1:
         return None
-    r = abuckets[S.Zero][0]
+    r = int(round(abuckets[S.Zero][0]))
     if r <= 0:
         return None
     if S.Zero not in bbuckets:
         return None
     l = list(bbuckets[S.Zero])
     l.sort()
-    k = l[0]
+    k = int(round(l[0]))
     if k <= 0:
         return None
 

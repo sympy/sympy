@@ -1905,3 +1905,10 @@ def test_issue_18527():
     expr = (cos(x)/(4+(sin(x))**2))
     res_real = integrate(expr.subs(x, xr), xr, manual=True).subs(xr, x)
     assert integrate(expr, x, manual=True) == res_real == Integral(expr, x)
+
+
+def test_issue_19575():
+    Rn = symbols('Rn')
+    integral = Integral(0.0625*x**3.0*exp(-x/2), (x, 0, Rn))
+    r = -0.125*Rn**3*exp(-Rn/2) - 0.75*Rn**2*exp(-Rn/2) - 3.0*Rn*exp(-Rn/2) + 6.0 - 6.0*exp(-Rn/2)
+    assert integral.doit() == r
