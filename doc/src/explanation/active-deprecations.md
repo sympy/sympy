@@ -146,7 +146,7 @@ intended to make derivatives of free symbols work. However, this now workw
 without making use of the method:
 
 ```py
->>> from sympy import Indexed, MatrixSymbol
+>>> from sympy import Indexed, MatrixSymbol, diff
 >>> a = Indexed("A", 0)
 >>> diff(a**2, a)
 2*A[0]
@@ -338,7 +338,7 @@ Prior to version 1.9, calling {func}`~.laplace_transform` on a [`Matrix`](sympy.
 `noconds=False` (which is the default), resulted in a Matrix of tuples:
 
 ```py
->>> from sympy import laplace_transform, symbols
+>>> from sympy import laplace_transform, symbols, eye
 >>> t, z = symbols('t z')
 >>> laplace_transform(eye(2), t, z) # doctest: +SKIP
 Matrix([
@@ -736,7 +736,8 @@ expr)`.
 This was done so that `Lambda` could support general tuple unpacking, like
 
 ```py
->>> from sympy import Lambda
+>>> from sympy import Lambda, symbols
+>>> x, y, z = symbols('x y z')
 >>> f = Lambda((x, (y, z)), x + y + z)
 >>> f(1, (2, 3))
 6
@@ -885,7 +886,7 @@ Previously:
 >>> from sympy import Point3D,Line3D
 >>> p1,p2 = Point3D(1, 2, 3), Point3D(5, 6, 7)
 >>> l = Line3D(p1, p2)
->>> l.equation() # doctest: + SKIP
+>>> l.equation() # doctest: +SKIP
 (x/4 - 1/4, y/4 - 1/2, z/4 - 3/4, k)
 ```
 
