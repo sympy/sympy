@@ -1666,9 +1666,7 @@ def try_shifted_sum(func, z):
         return None
     if S.Zero not in bbuckets:
         return None
-    l = list(bbuckets[S.Zero])
-    l.sort()
-    k = int(round(l[0]))
+    k = int(round(min(bbuckets[S.Zero])))
     if k <= 0:
         return None
 
