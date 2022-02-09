@@ -3,14 +3,18 @@
 
 This pages lists all active deprecations in the SymPy codebase. See the
 {ref}`deprecation-policy` page for a description of SymPy's deprecation
-policy, as well as instructions on how for contributors to deprecate things.
+policy, as well as instructions for contributors on how to deprecate things.
 
-Of particular, the deprecation policy for SymPy is for deprecations to last at
+In particular, the deprecation policy for SymPy is for deprecations to last at
 least **1 year** after the first major release that includes the deprecation.
-After that period, deprecated code may be removed from SymPy, and code will
-need to be updated to use the replacement feature to continue working. Prior
-to this, any code using deprecated functionality will have a
-`SymPyDeprecationWarning` message printed.
+After that period, the deprecated functionality may be removed from SymPy, and
+code will need to be updated to use the replacement feature to continue
+working.
+
+During the deprecation period, a `SymPyDeprecationWarning` message will be
+printed whenever the deprecated functionality is used. It is recommended for
+users to update their code so that it does not use deprecated functionality,
+as described below for each given deprecation.
 
 (silencing-sympy-deprecation-warnings)=
 ## Silencing SymPy Deprecation Warnings
