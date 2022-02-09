@@ -713,63 +713,76 @@ class MathematicaParser:
         assert len(stack) == 1
         return self._parse_after_braces(stack[0])
 
+    def _util_remove_newlines(self, lines: list, tokens: list, inside_enclosure: bool):
+        pointer = 0
+        size = len(tokens)
+        while pointer < size:
+            token = tokens[pointer]
+            if token == "\n":
+                if inside_enclosure:
+                    # Ignore newlines inside enclosures
+                    tokens.pop(pointer)
+                    size -= 1
+                    continue
+                if pointer == 0:
+                    tokens.pop(0)
+                    size -= 1
+                    continue
+                if pointer > 1:
+                    try:
+                        prev_expr = self._parse_after_braces(tokens[:pointer], inside_enclosure)
+                    except SyntaxError:
+                        tokens.pop(pointer)
+                        size -= 1
+                        continue
+                else:
+                    prev_expr = tokens[0]
+                if len(prev_expr) > 0 and prev_expr[0] == "CompoundExpression":
+                    lines.extend(prev_expr[1:])
+                else:
+                    lines.append(prev_expr)
+                for i in range(pointer):
+                    tokens.pop(0)
+                size -= pointer
+                pointer = 0
+                continue
+            pointer += 1
+
+    def _util_add_missing_asterisks(self, tokens: list):
+        size: int = len(tokens)
+        pointer: int = 0
+        while pointer < size:
+            if (pointer > 0 and
+                    self._is_valid_star1(tokens[pointer - 1]) and
+                    self._is_valid_star2(tokens[pointer])):
+                # This is a trick to add missing * operators in the expression,
+                # `"*" in op_dict` makes sure the precedence level is the same as "*",
+                # while `not self._is_op( ... )` makes sure this and the previous
+                # expression are not operators.
+                if tokens[pointer] == "(":
+                    # ( has already been processed by now, replace:
+                    tokens[pointer] = "*"
+                    tokens[pointer + 1] = tokens[pointer + 1][0]
+                else:
+                    tokens.insert(pointer, "*")
+                    pointer += 1
+                    size += 1
+            pointer += 1
+
     def _parse_after_braces(self, tokens: list, inside_enclosure: bool = False):
         op_dict: dict
         changed: bool = False
         lines: list = []
+
+        self._util_remove_newlines(lines, tokens, inside_enclosure)
+
         for op_type, grouping_strat, op_dict in reversed(self._mathematica_op_precedence):
+            if "*" in op_dict:
+                self._util_add_missing_asterisks(tokens)
             size: int = len(tokens)
             pointer: int = 0
-            if "*" in op_dict:
-                while pointer < size:
-                    if pointer > 0 and \
-                        self._is_valid_star1(tokens[pointer - 1]) \
-                            and self._is_valid_star2(tokens[pointer]):
-                        # This is a trick to add missing * operators in the expression,
-                        # `"*" in op_dict` makes sure the precedence level is the same as "*",
-                        # while `not self._is_op( ... )` makes sure this and the previous
-                        # expression are not operators.
-                        if tokens[pointer] == "(":
-                            # ( has already been processed by now, replace:
-                            tokens[pointer] = "*"
-                            tokens[pointer + 1] = tokens[pointer + 1][0]
-                        else:
-                            tokens.insert(pointer, "*")
-                            pointer += 1
-                            size += 1
-                        changed = True
-                    pointer += 1
-            size = len(tokens)
-            pointer = 0
             while pointer < size:
                 token = tokens[pointer]
-                if token == "\n":
-                    if inside_enclosure:  # Ignore newlines inside enclosures
-                        tokens.pop(pointer)
-                        size -= 1
-                        continue
-                    if pointer == 0:
-                        tokens.pop(0)
-                        size -= 1
-                        continue
-                    if pointer > 1:
-                        try:
-                            prev_expr = self._parse_after_braces(tokens[:pointer], inside_enclosure)
-                        except SyntaxError:
-                            tokens.pop(pointer)
-                            size -= 1
-                            continue
-                    else:
-                        prev_expr = tokens[0]
-                    if len(prev_expr) > 0 and prev_expr[0] == "CompoundExpression":
-                        lines.extend(prev_expr[1:])
-                    else:
-                        lines.append(prev_expr)
-                    for i in range(pointer):
-                        tokens.pop(0)
-                    size -= pointer
-                    pointer = 0
-                    continue
                 if isinstance(token, str) and token in op_dict:
                     op_name: tUnion[str, Callable] = op_dict[token]
                     node: list
