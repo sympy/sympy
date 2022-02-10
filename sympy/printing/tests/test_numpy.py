@@ -8,7 +8,6 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.matrices.expressions.special import Identity
 from sympy.utilities.lambdify import lambdify
 
-from sympy.matrices.dense import eye
 from sympy.abc import x, i, j, a, b, c, d
 from sympy.core import Pow
 from sympy.codegen.matrix_nodes import MatrixSolve
@@ -21,7 +20,6 @@ from sympy.printing.numpy import NumPyPrinter, SciPyPrinter, _numpy_known_consta
     _numpy_known_functions, _scipy_known_constants, _scipy_known_functions
 from sympy.tensor.array.expressions.conv_matrix_to_array import convert_matrix_to_array
 
-from sympy.testing.pytest import warns_deprecated_sympy
 from sympy.testing.pytest import skip, raises
 from sympy.external import import_module
 

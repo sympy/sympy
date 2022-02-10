@@ -263,6 +263,7 @@ def deprecated(message, *, deprecated_since_version,
     ========
 
     >>> from sympy.utilities.decorator import deprecated
+    >>> from sympy import simplify
     >>> @deprecated("""\
     ... The simplify_this(expr) function is deprecated. Use simplify(expr)
     ... instead.""", deprecated_since_version="1.1",

@@ -22,8 +22,7 @@ from sympy.functions.elementary.trigonometric import (
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
 from sympy.matrices import Matrix, SparseMatrix
 from sympy.testing.pytest import (XFAIL, slow, raises, warns_deprecated_sympy,
-    warns, _both_exp_pow)
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+    _both_exp_pow)
 import math
 
 
