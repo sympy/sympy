@@ -2,7 +2,7 @@ import warnings
 
 from sympy.testing.pytest import (raises, warns, ignore_warnings,
                                     warns_deprecated_sympy, Failed)
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 
 
@@ -127,11 +127,10 @@ def test_warns_match_non_matching():
         assert len(w) == 0
 
 def _warn_sympy_deprecation():
-    SymPyDeprecationWarning(
-            feature="foo",
-            useinstead="bar",
-            issue=1,
-            deprecated_since_version="0.0.0").warn()
+    sympy_deprecation_warning(
+        "feature",
+        active_deprecations_target="active-deprecations",
+        deprecated_since_version="0.0.0")
 
 def test_warns_deprecated_sympy_catches_warning():
     with warnings.catch_warnings(record=True) as w:
