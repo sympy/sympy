@@ -1,6 +1,6 @@
 from collections import defaultdict, OrderedDict
 from itertools import (
-    combinations, combinations_with_replacement, permutations,
+    chain, combinations, combinations_with_replacement, permutations,
     product
 )
 
@@ -483,13 +483,17 @@ def subsets(seq, k=None, repetition=False):
 
     """
     if k is None:
-        for k in range(len(seq) + 1):
-            yield from subsets(seq, k, repetition)
+        if not repetition:
+            return chain.from_iterable((combinations(seq, k)
+                                        for k in range(len(seq) + 1)))
+        else:
+            return chain.from_iterable((combinations_with_replacement(seq, k)
+                                        for k in range(len(seq) + 1)))
     else:
         if not repetition:
-            yield from combinations(seq, k)
+            return combinations(seq, k)
         else:
-            yield from combinations_with_replacement(seq, k)
+            return combinations_with_replacement(seq, k)
 
 
 def filter_symbols(iterator, exclude):
