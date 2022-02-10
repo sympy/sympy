@@ -253,7 +253,7 @@ def warns(warningcls, *, match='', test_stacklevel=True):
 Failed: Warning has the wrong stacklevel. The warning stacklevel needs to be
 set so that the line of code shown in the warning message is user code that
 calls the deprecated code (the current stacklevel is showing code from
-{w.filename}, expected {thisfile})'''.replace('\n', ' ')
+{w.filename} (line {w.lineno}), expected {thisfile})'''.replace('\n', ' ')
                 raise Failed(msg)
 
     if warningcls == SymPyDeprecationWarning:
