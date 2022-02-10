@@ -197,7 +197,7 @@ class RepMatrix(MatrixBase):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import SparseMatrix
         >>> a = SparseMatrix(((1, 2), (3, 4)))
         >>> a
         Matrix([
@@ -273,7 +273,7 @@ class RepMatrix(MatrixBase):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x
         >>> A = Matrix([x*(x - 1), 0])
         >>> B = Matrix([x**2 - x, 0])
@@ -416,7 +416,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import eye
+        >>> from sympy import eye
         >>> M = eye(3)
         >>> M.col_op(1, lambda v, i: v + 2*M[i, 0]); M
         Matrix([
@@ -438,7 +438,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> M = Matrix([[1, 0], [1, 0]])
         >>> M
         Matrix([
@@ -466,7 +466,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import eye
+        >>> from sympy import eye
         >>> M = eye(3)
         >>> M.row_op(1, lambda v, j: v + 2*M[0, j]); M
         Matrix([
@@ -490,7 +490,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> M = Matrix([[0, 1], [1, 0]])
         >>> M
         Matrix([
@@ -518,7 +518,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import eye
+        >>> from sympy import eye
         >>> M = eye(3)
         >>> M.zip_row_op(1, 0, lambda v, u: v + 2*u); M
         Matrix([
@@ -550,7 +550,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import eye
+        >>> from sympy import eye
         >>> I = eye(3)
         >>> I[:2, 0] = [1, 2] # col
         >>> I
@@ -588,7 +588,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix, eye
+        >>> from sympy import Matrix, eye
         >>> M = Matrix([[0, 1], [2, 3], [4, 5]])
         >>> I = eye(3)
         >>> I[:3, :2] = M
@@ -634,7 +634,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import SparseMatrix
         >>> M = SparseMatrix.zeros(3); M
         Matrix([
         [0, 0, 0],

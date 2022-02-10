@@ -9,7 +9,6 @@ from sympy.core.mul import _keep_coeff
 from sympy.core.relational import Relational
 from sympy.core.sorting import default_sort_key
 from sympy.core.sympify import SympifyError
-from sympy.sets.sets import FiniteSet
 from sympy.utilities.iterables import sift
 from .precedence import precedence, PRECEDENCE
 from .printer import Printer, print_function
@@ -621,8 +620,7 @@ class StrPrinter(Printer):
         Examples
         ========
 
-        >>> from sympy.functions import sqrt
-        >>> from sympy.printing.str import StrPrinter
+        >>> from sympy import sqrt, StrPrinter
         >>> from sympy.abc import x
 
         How ``rational`` keyword works with ``sqrt``:
@@ -816,6 +814,7 @@ class StrPrinter(Printer):
         return '{%s}' % args
 
     def _print_FiniteSet(self, s):
+        from sympy.sets.sets import FiniteSet
         items = sorted(s, key=default_sort_key)
 
         args = ', '.join(self._print(item) for item in items)

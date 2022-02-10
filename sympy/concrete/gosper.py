@@ -2,8 +2,6 @@
 
 from sympy.core import S, Dummy, symbols
 from sympy.polys import Poly, parallel_poly_from_expr, factor
-from sympy.solvers import solve
-from sympy.simplify import hypersimp
 from sympy.utilities.iterables import is_sequence
 
 
@@ -108,6 +106,7 @@ def gosper_term(f, n):
     (-n - 1/2)/(n + 1/4)
 
     """
+    from sympy.simplify import hypersimp
     r = hypersimp(f, n)
 
     if r is None:
@@ -144,6 +143,7 @@ def gosper_term(f, n):
     x = Poly(coeffs, n, domain=domain)
     H = A*x.shift(1) - B*x - C
 
+    from sympy.solvers.solvers import solve
     solution = solve(H.coeffs(), coeffs)
 
     if solution is None:

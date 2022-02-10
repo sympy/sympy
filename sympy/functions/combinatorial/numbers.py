@@ -7,6 +7,7 @@ Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
 
+from collections import defaultdict
 from typing import Callable, Dict as tDict, Tuple as tTuple
 
 from sympy.core import S, Symbol, Add, Dummy
@@ -21,12 +22,7 @@ from sympy.core.relational import is_le, is_gt
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions.combinatorial.factorials import (binomial,
     factorial, subfactorial)
-from sympy.functions.elementary.exponential import log
-from sympy.functions.elementary.integers import floor
-from sympy.functions.elementary.miscellaneous import sqrt, cbrt
-from sympy.functions.elementary.trigonometric import sin, cos, cot
-from sympy.ntheory import isprime
-from sympy.ntheory.primetest import is_square
+from sympy.ntheory.primetest import isprime, is_square
 from sympy.utilities.enumerative import MultisetPartitionTraverser
 from sympy.utilities.iterables import multiset, multiset_derangements, iterable
 from sympy.utilities.memoization import recurrence_memo
@@ -54,6 +50,8 @@ _sym = Symbol('x')
 #                                                                            #
 #----------------------------------------------------------------------------#
 
+def _divides(p, n):
+    return n % p == 0
 
 class carmichael(Function):
     """
@@ -123,7 +121,7 @@ class carmichael(Function):
     @staticmethod
     def is_carmichael(n):
         if n >= 0:
-            if (n == 1) or (carmichael.is_prime(n)) or (n % 2 == 0):
+            if (n == 1) or isprime(n) or (n % 2 == 0):
                 return False
 
             divisors = list([1, n])
@@ -134,10 +132,10 @@ class carmichael(Function):
                     divisors.append(i)
 
             for i in divisors:
-                if carmichael.is_perfect_square(i) and i != 1:
+                if is_square(i) and i != 1:
                     return False
-                if carmichael.is_prime(i):
-                    if not carmichael.divides(i - 1, n - 1):
+                if isprime(i):
+                    if not _divides(i - 1, n - 1):
                         return False
 
             return True
@@ -246,6 +244,7 @@ class fibonacci(Function):
                 return cls._fibpoly(n).subs(_sym, sym)
 
     def _eval_rewrite_as_sqrt(self, n, **kwargs):
+        from sympy.functions.elementary.miscellaneous import sqrt
         return 2**(-n)*sqrt(5)*((1 + sqrt(5))**n - (-sqrt(5) + 1)**n) / 5
 
     def _eval_rewrite_as_GoldenRatio(self,n, **kwargs):
@@ -300,7 +299,8 @@ class lucas(Function):
             return fibonacci(n + 1) + fibonacci(n - 1)
 
     def _eval_rewrite_as_sqrt(self, n, **kwargs):
-        return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
+       from sympy.functions.elementary.miscellaneous import sqrt
+       return 2**(-n)*((1 + sqrt(5))**n + (-sqrt(5) + 1)**n)
 
 
 #----------------------------------------------------------------------------#
@@ -375,6 +375,7 @@ class tribonacci(Function):
                 return cls._tribpoly(n).subs(_sym, sym)
 
     def _eval_rewrite_as_sqrt(self, n, **kwargs):
+        from sympy.functions.elementary.miscellaneous import cbrt, sqrt
         w = (-1 + S.ImaginaryUnit * sqrt(3)) / 2
         a = (1 + cbrt(19 + 3*sqrt(33)) + cbrt(19 - 3*sqrt(33))) / 3
         b = (1 + w*cbrt(19 + 3*sqrt(33)) + w**2*cbrt(19 - 3*sqrt(33))) / 3
@@ -385,6 +386,8 @@ class tribonacci(Function):
         return Tn
 
     def _eval_rewrite_as_TribonacciConstant(self, n, **kwargs):
+        from sympy.functions.elementary.integers import floor
+        from sympy.functions.elementary.miscellaneous import cbrt, sqrt
         b = cbrt(586 + 102*sqrt(33))
         Tn = 3 * b * S.TribonacciConstant**n / (b**2 - 2*b + 4)
         return floor(Tn + S.Half)
@@ -897,6 +900,9 @@ class harmonic(Function):
                 u = p // q
                 p = p - u * q
                 if u.is_nonnegative and p.is_positive and q.is_positive and p < q:
+                    from sympy.functions.elementary.exponential import log
+                    from sympy.functions.elementary.integers import floor
+                    from sympy.functions.elementary.trigonometric import sin, cos, cot
                     k = Dummy("k")
                     t1 = q * Sum(1 / (q * k + p), (k, 0, u))
                     t2 = 2 * Sum(cos((2 * pi * p * k) / S(q)) *
@@ -1165,6 +1171,7 @@ class catalan(Function):
                 return Rational(-1, 2)
 
     def fdiff(self, argindex=1):
+        from sympy.functions.elementary.exponential import log
         from sympy.functions.special.gamma_functions import polygamma
         n = self.args[0]
         return catalan(n)*(polygamma(0, n + S.Half) - polygamma(0, n + 2) + log(4))
@@ -1592,7 +1599,6 @@ def _AOP_product(n):
     http://tinyurl.com/cep849r, but in a refactored form.
 
     """
-    from collections import defaultdict
 
     n = list(n)
     ord = sum(n)
@@ -2220,7 +2226,6 @@ def nD(i=None, brute=None, *, n=None, m=None):
 
     """
     from sympy.integrals.integrals import integrate
-    from sympy.functions.elementary.exponential import exp
     from sympy.functions.special.polynomials import laguerre
     from sympy.abc import x
     def ok(x):
@@ -2290,5 +2295,6 @@ def nD(i=None, brute=None, *, n=None, m=None):
                     s.extend([i]*m)
                     i += 1
         return Integer(sum(1 for i in multiset_derangements(s)))
+    from sympy.functions.elementary.exponential import exp
     return Integer(abs(integrate(exp(-x)*Mul(*[
         laguerre(i, x)**m for i, m in counts.items()]), (x, 0, oo))))

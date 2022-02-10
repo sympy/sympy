@@ -80,7 +80,8 @@ from sympy.polys.densearith import (
     dmp_exquo,
     dmp_add_mul, dmp_sub_mul,
     dmp_max_norm,
-    dmp_l1_norm)
+    dmp_l1_norm,
+    dmp_l2_norm_squared)
 
 from sympy.polys.densetools import (
     dmp_clear_denoms,
@@ -128,7 +129,10 @@ from sympy.polys.rootisolation import (
     dup_refine_real_root,
     dup_count_real_roots,
     dup_count_complex_roots,
-    dup_sturm)
+    dup_sturm,
+    dup_cauchy_upper_bound,
+    dup_cauchy_lower_bound,
+    dup_mignotte_sep_bound_squared)
 
 from sympy.polys.polyerrors import (
     UnificationFailed,
@@ -582,6 +586,10 @@ class DMP(PicklableWithSlots, CantSympify):
         """Returns l1 norm of ``f``. """
         return dmp_l1_norm(f.rep, f.lev, f.dom)
 
+    def l2_norm_squared(f):
+        """Return squared l2 norm of ``f``. """
+        return dmp_l2_norm_squared(f.rep, f.lev, f.dom)
+
     def clear_denoms(f):
         """Clear denominators, but keep the ground domain. """
         coeff, F = dmp_clear_denoms(f.rep, f.lev, f.dom)
@@ -755,6 +763,27 @@ class DMP(PicklableWithSlots, CantSympify):
         """Computes the Sturm sequence of ``f``. """
         if not f.lev:
             return list(map(f.per, dup_sturm(f.rep, f.dom)))
+        else:
+            raise ValueError('univariate polynomial expected')
+
+    def cauchy_upper_bound(f):
+        """Computes the Cauchy upper bound on the roots of ``f``. """
+        if not f.lev:
+            return dup_cauchy_upper_bound(f.rep, f.dom)
+        else:
+            raise ValueError('univariate polynomial expected')
+
+    def cauchy_lower_bound(f):
+        """Computes the Cauchy lower bound on the nonzero roots of ``f``. """
+        if not f.lev:
+            return dup_cauchy_lower_bound(f.rep, f.dom)
+        else:
+            raise ValueError('univariate polynomial expected')
+
+    def mignotte_sep_bound_squared(f):
+        """Computes the squared Mignotte bound on root separations of ``f``. """
+        if not f.lev:
+            return dup_mignotte_sep_bound_squared(f.rep, f.dom)
         else:
             raise ValueError('univariate polynomial expected')
 

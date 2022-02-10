@@ -11,17 +11,16 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy, Symbol, uniquely_named_symbol
-from sympy.core.sympify import sympify
-from sympy.core.sympify import _sympify
-from sympy.functions import factorial
+from sympy.core.sympify import sympify, _sympify
+from sympy.functions.combinatorial.factorials import binomial, factorial
 from sympy.functions.elementary.complexes import re
 from sympy.functions.elementary.exponential import exp, log
 from sympy.functions.elementary.miscellaneous import Max, Min, sqrt
-from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta, LeviCivita
 from sympy.polys import cancel
 from sympy.printing import sstr
 from sympy.printing.defaults import Printable
-from sympy.simplify import simplify as _simplify
+from sympy.printing.str import StrPrinter
 from sympy.utilities.decorator import deprecated
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.iterables import flatten, NotIterable, is_sequence, reshape
@@ -31,7 +30,7 @@ from .common import (
     MatrixCommon, MatrixError, NonSquareMatrixError, NonInvertibleMatrixError,
     ShapeError, MatrixKind)
 
-from .utilities import _iszero, _is_zero_after_expand_mul
+from .utilities import _iszero, _is_zero_after_expand_mul, _simplify
 
 from .determinant import (
     _find_reasonable_pivot, _find_reasonable_pivot_naive,
@@ -450,7 +449,7 @@ class MatrixCalculus(MatrixCommon):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.diff(x)
@@ -483,7 +482,7 @@ class MatrixCalculus(MatrixCommon):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.integrate((x, ))
@@ -567,7 +566,7 @@ class MatrixCalculus(MatrixCommon):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y
         >>> M = Matrix([[x, y], [1, 0]])
         >>> M.limit(x, 2)
@@ -816,7 +815,6 @@ class MatrixBase(MatrixDeprecated,
 
     def _matrix_pow_by_jordan_blocks(self, num):
         from sympy.matrices import diag, MutableMatrix
-        from sympy.functions.combinatorial.factorials import binomial
 
         def jordan_cell_power(jc, n):
             N = jc.shape[0]
@@ -855,7 +853,6 @@ class MatrixBase(MatrixDeprecated,
 
     def _format_str(self, printer=None):
         if not printer:
-            from sympy.printing.str import StrPrinter
             printer = StrPrinter()
         # Handle zero dimensions:
         if S.Zero in self.shape:
@@ -1458,7 +1455,6 @@ class MatrixBase(MatrixDeprecated,
         so that the dual is a covariant second rank tensor.
 
         """
-        from sympy.functions.special.tensor_functions import LeviCivita
         from sympy.matrices import zeros
 
         M, n = self[:, :], self.rows
@@ -2004,7 +2000,7 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix, eye
+        >>> from sympy import Matrix, eye
         >>> m = Matrix(2, 3, lambda i, j: i*3+j)
         >>> m
         Matrix([
@@ -2073,8 +2069,7 @@ class MatrixBase(MatrixDeprecated,
         Examples
         ========
 
-        >>> from sympy import Matrix
-        >>> from sympy.printing.str import StrPrinter
+        >>> from sympy import Matrix, StrPrinter
         >>> M = Matrix([[1, 2], [-33, 4]])
         >>> printer = StrPrinter()
         >>> M.table(printer)
