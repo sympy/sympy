@@ -79,7 +79,6 @@ from sympy.polys import apart, poly, Poly
 from sympy.series import residue
 from sympy.simplify.powsimp import powdenest
 from sympy.utilities.iterables import sift
-from sympy.utilities.misc import as_int
 
 
 # function to define "buckets"
@@ -1663,12 +1662,12 @@ def try_shifted_sum(func, z):
     abuckets, bbuckets = sift(func.ap, _mod1), sift(func.bq, _mod1)
     if len(abuckets[S.Zero]) != 1:
         return None
-    r = as_int(abuckets[S.Zero][0], strict=False)  # XXX if this fails, is round necessary?
+    r = int(abuckets[S.Zero][0])
     if r <= 0:
         return None
     if S.Zero not in bbuckets:
         return None
-    k = as_int(min(bbuckets[S.Zero]), strict=False)  # XXX if this fails, is round necessary?
+    k = int(min(bbuckets[S.Zero]))
     if k <= 0:
         return None
 
@@ -2332,7 +2331,7 @@ def _meijergexpand(func, z0, allow_hyper=False, rewrite='default',
                 s = Dummy('s')
                 integrand = z**s
                 for b in bm:
-                    if b.is_Number:
+                    if b.is_Number:  # XXX is it necessary to convert to int?
                         ib = int(b)
                         if ib == b:
                             b = ib
