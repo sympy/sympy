@@ -1952,7 +1952,7 @@ def test_Mod():
     assert ((x - Mod(x, y))/y).rewrite(floor) == floor(x/y)
 
     # issue 21373
-    from sympy.functions.elementary.trigonometric import sinh
+    from sympy.functions.elementary.hyperbolic import sinh
     from sympy.functions.elementary.piecewise import Piecewise
 
     x_r, y_r = symbols('x_r y_r', real=True)

@@ -3,6 +3,7 @@ Integer factorization
 """
 
 from collections import defaultdict
+from functools import reduce
 import random
 import math
 
@@ -272,11 +273,10 @@ def multiplicity(p, n):
     True
 
     """
-    from sympy.functions.combinatorial.factorials import factorial
-
     try:
         p, n = as_int(p), as_int(n)
     except ValueError:
+        from sympy.functions.combinatorial.factorials import factorial
         if all(isinstance(i, (SYMPY_INTS, Rational)) for i in (p, n)):
             p = Rational(p)
             n = Rational(n)
@@ -1963,7 +1963,6 @@ class totient(Function):
         >>> totient._from_distinct_primes(5, 7)
         24
         """
-        from functools import reduce
         return reduce(lambda i, j: i * (j-1), args, 1)
 
     @classmethod
