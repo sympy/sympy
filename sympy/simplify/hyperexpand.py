@@ -91,7 +91,7 @@ def _mod1(x):
     # Although the sorting can be done with Basic.compare, this may
     # still require different handling of the sorted buckets.
     if x.is_Number:
-        return Mod(x, 1)
+        return Mod(x, 1) or S.Zero  # make 0. canonical S.Zero
     c, x = x.as_coeff_Add()
     return Mod(c, 1) + x
 
