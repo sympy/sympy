@@ -330,10 +330,40 @@ However, this has been changed, and now `get_points()` can also use adaptive
 sampling. The {meth}`~.get_data()` method can also be used.
 
 
-
+(deprecated-physics-mdft)=
 ### The `mdft` function in `sympy.physics.matrices`
 
-TODO
+The `sympy.physics.matrices.mdft()` function is deprecated. It can be replaced
+with the `DFT` class in `sympy.matrices.expressions.fourier`.
+
+In particular, replace `mdft(n)` with `DFT(n).as_explicit()`. For example:
+
+```py
+>>> from sympy.physics.matrices import mdft
+>>> mdft(3) # DEPRECATED # doctest: +SKIP
+Matrix([
+[sqrt(3)/3,                sqrt(3)/3,                sqrt(3)/3],
+[sqrt(3)/3, sqrt(3)*exp(-2*I*pi/3)/3,  sqrt(3)*exp(2*I*pi/3)/3],
+[sqrt(3)/3,  sqrt(3)*exp(2*I*pi/3)/3, sqrt(3)*exp(-2*I*pi/3)/3]])
+```
+
+```py
+>>> from sympy.matrices.expressions.fourier import DFT
+>>> DFT(3)
+DFT(3)
+>>> DFT(3).as_explicit()
+Matrix([
+[sqrt(3)/3,                sqrt(3)/3,                sqrt(3)/3],
+[sqrt(3)/3, sqrt(3)*exp(-2*I*pi/3)/3,  sqrt(3)*exp(2*I*pi/3)/3],
+[sqrt(3)/3,  sqrt(3)*exp(2*I*pi/3)/3, sqrt(3)*exp(-2*I*pi/3)/3]])
+```
+
+This was changed because the `sympy.physics` submodule is supposed to only
+contain things that are specific to physics, but the discrete Fourier
+transform matrix is a more general mathematical concept, so it is better
+located in the `sympy.matrices` module. Furthermore, the `DFT` class is a
+matrix expression, meaning it can be unevaluated and support symbolic shape.
+
 
 (deprecated-private-matrix-attributes)=
 ### The private `SparseMatrix._smat` and `DenseMatrix._mat` attributes
