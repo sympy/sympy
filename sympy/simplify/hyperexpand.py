@@ -83,6 +83,40 @@ from sympy.utilities.iterables import sift
 
 # function to define "buckets"
 def _mod1(x):
+    """returns additive constant, mod 1
+
+    Examples
+    ========
+
+    >>> from sympy import S, Symbol
+    >>> from sympy.simplify.hyperexpand import _mod1 as m1
+    >>> from sympy.abc import x
+
+    When the input is equal to an integer, the return value
+    will be S.Zero:
+
+    >>> m1(S(3)) is m1(S(3.0)) is S.Zero
+    True
+    >>> m1(3*S.Half)
+    1/2
+    >>> m1(S(1.5))
+    0.500000000000000
+
+    Currently, integer expressions are not reduced to 0.
+
+    >>> i = Symbol('i', integer=True)
+    >>> m1(2*i)
+    2*i
+
+    For expressions with free symbols, only the additive
+    constant is modified:
+
+    >>> m1(2*x) == m1(2*x + 3) == 2*x
+    True
+    >>> m1(2*x + S(3)/2)
+    2*x + 1/2
+    """
+
     # TODO see if this can work as Mod(x, 1); this will require
     # different handling of the "buckets" since these need to
     # be sorted and that fails when there is a mixture of
@@ -544,12 +578,9 @@ class Hyper_Function(Expr):
         abuckets, bbuckets = sift(self.ap, _mod1), sift(self.bq, _mod1)
 
         def tr(bucket):
-            bucket = list(bucket.items())
-            if not any(isinstance(x[0], Mod) for x in bucket):
-                bucket.sort(key=lambda x: default_sort_key(x[0]))
-            bucket = tuple([(mod, len(values)) for mod, values in bucket if
+            bucket = sorted(list(bucket.items()), key=lambda x: default_sort_key(x[0]))
+            return tuple([(mod, len(values)) for mod, values in bucket if
                     values])
-            return bucket
 
         return (self.gamma, tr(abuckets), tr(bbuckets))
 
@@ -1662,12 +1693,12 @@ def try_shifted_sum(func, z):
     abuckets, bbuckets = sift(func.ap, _mod1), sift(func.bq, _mod1)
     if len(abuckets[S.Zero]) != 1:
         return None
-    r = int(abuckets[S.Zero][0])
+    r = abuckets[S.Zero][0]
     if r <= 0:
         return None
     if S.Zero not in bbuckets:
         return None
-    k = int(min(bbuckets[S.Zero]))
+    k = min(bbuckets[S.Zero])
     if k <= 0:
         return None
 
@@ -1675,6 +1706,12 @@ def try_shifted_sum(func, z):
     nap.remove(r)
     nbq = list(func.bq)
     nbq.remove(k)
+
+    # r and k might be floats equal to integers
+    # so convert them explicitly to ints now
+    r = int(r)
+    k = int(k)
+
     k -= 1
     nap = [x - k for x in nap]
     nbq = [x - k for x in nbq]
@@ -1720,7 +1757,7 @@ def try_polynomial(func, z):
     if not al0:
         return None
 
-    a = al0[-1]
+    a = int(al0[-1]) # make int in case `a` is Float equal to int
     fac = 1
     res = S.One
     for n in Tuple(*list(range(-a))):
