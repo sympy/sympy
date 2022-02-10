@@ -299,13 +299,37 @@ other use cases on Matrix
 [#21496](https://github.com/sympy/sympy/issues/21496) has deprecated having
 non-`Expr` in a `Matrix`.
 
-This change makes it possible to improve the internals of the Matrix class but it potentially impacts on some downstream use cases that might be similar to the uses of Matrix with non-Expr elements that were in the SymPy codebase. A potential replacement for code that used Matrix with non-Expr elements is DomainMatrix if the elements are something like domain elements and a domain object can be provided for them. Alternatively if the goal is just printing support then perhaps TableForm can be used.
+This change makes it possible to improve the internals of the Matrix class but
+it potentially impacts on some downstream use cases that might be similar to
+the uses of Matrix with non-Expr elements that were in the SymPy codebase. A
+potential replacement for code that used Matrix with non-Expr elements is
+DomainMatrix if the elements are something like domain elements and a domain
+object can be provided for them. Alternatively if the goal is just printing
+support then perhaps TableForm can be used.
 
-It isn't clear what to advise as a replacement here without knowing more about the usecase. Feel free to comment below indicating what you want to do with non-Expr Matrix elements and we can discuss how to achieve that.
+It isn't clear what to advise as a replacement here without knowing more about
+the usecase. Feel free to comment below indicating what you want to do with
+non-Expr Matrix elements and we can discuss how to achieve that.
 
+(deprecated-get-segments)=
 ### The `get_segments` attribute of plotting objects
 
-TODO
+The `get_segments` method implemented in {class}`~.Line2DBaseSeries` is used
+to convert two list of coordinates, `x` and `y`, into a list of segments used
+by Matplotlib's `LineCollection` to plot a line.
+
+Since the list of segments is only required by Matplotlib (for example, Bokeh,
+Plotly, Mayavi, K3D only require lists of coordinates), this has been moved
+inside the `MatplotlibBackend` class.
+
+Note that previously, the method {meth}`~.get_points` always returned uniformly sampled points, which meant that some functions were not plotted correctly when using `get_points()` to plot with Matplotlib.
+
+To avoid this problem, the method `get_segments()` could be used, which used
+adaptive sampling and which could be used with Matplotlib's `LineCollection`.
+However, this has been changed, and now `get_points()` can also use adaptive
+sampling. The {meth}`~.get_data()` method can also be used.
+
+
 
 ### The `mdft` function in `sympy.physics.matrices`
 
