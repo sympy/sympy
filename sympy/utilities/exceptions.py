@@ -100,8 +100,8 @@ def sympy_deprecation_warning(message, *, deprecated_since_version,
     See the :ref:`deprecation-policy` document for details on when and how
     things should be deprecated in SymPy.
 
-    To mark a function as deprecated, you can use the :func:`@deprecated
-    <sympy.utilities.decorator.deprecated>` decorator.
+    To mark an entire function or class as deprecated, you can use the
+    :func:`@deprecated <sympy.utilities.decorator.deprecated>` decorator.
 
     Parameters
     ==========
