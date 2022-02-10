@@ -126,11 +126,13 @@ def test_warns_match_non_matching():
                 warnings.warn('this is not the expected warning message', UserWarning)
         assert len(w) == 0
 
-def _warn_sympy_deprecation():
+def _warn_sympy_deprecation(stacklevel=3):
     sympy_deprecation_warning(
         "feature",
         active_deprecations_target="active-deprecations",
-        deprecated_since_version="0.0.0")
+        deprecated_since_version="0.0.0",
+        stacklevel=stacklevel,
+    )
 
 def test_warns_deprecated_sympy_catches_warning():
     with warnings.catch_warnings(record=True) as w:
@@ -144,6 +146,10 @@ def test_warns_deprecated_sympy_raises_without_warning():
         with warns_deprecated_sympy():
             pass
 
+def test_warns_deprecated_sympy_wrong_stacklevel():
+    with raises(Failed):
+        with warns_deprecated_sympy():
+            _warn_sympy_deprecation(stacklevel=1)
 
 def test_warns_deprecated_sympy_hides_other_warnings():
     # This isn't ideal but it's what pytest's deprecated_call does:
