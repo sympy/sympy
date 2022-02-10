@@ -1757,10 +1757,10 @@ def try_polynomial(func, z):
     if not al0:
         return None
 
-    a = int(al0[-1]) # make int in case `a` is Float equal to int
+    a = al0[-1] # make int in case `a` is Float equal to int
     fac = 1
     res = S.One
-    for n in Tuple(*list(range(-a))):
+    for n in Tuple(*list(range(-int(a)))):
         fac *= z
         fac /= n + 1
         for a in func.ap:
