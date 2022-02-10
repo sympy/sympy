@@ -111,10 +111,11 @@ guidelines).
 
 Note: both public and private API functions are included in the [reference
 documentation](reference), and many functions are not included there which
-should be, so this should not be used to determine whether something public or
-not. Cleaning up the distinction between public and private APIs, as well as
-the categorization in the reference documentation is currently an open issue
-for SymPy.
+should be, or are not documented at all which whould be, so this should not be
+used to determine whether something public or not. Cleaning up the distinction
+between public and private APIs, as well as the categorization in the
+reference documentation is currently an [open issue for
+SymPy](https://github.com/sympy/sympy/issues/23037).
 
 If you're unsure, there is no harm in deprecating something even if it might
 not actually be "public API".
