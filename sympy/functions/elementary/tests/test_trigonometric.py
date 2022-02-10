@@ -10,7 +10,8 @@ from sympy.functions.elementary.complexes import (arg, conjugate, im, re)
 from sympy.functions.elementary.exponential import (exp, log)
 from sympy.functions.elementary.hyperbolic import (acoth, asinh, atanh, cosh, coth, sinh, tanh)
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, atan2, cos, cot, csc, sec, sin, sinc, tan)
+from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, atan2,
+                                                      cos, cot, csc, sec, sin, sinc, tan)
 from sympy.functions.special.bessel import (besselj, jn)
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.matrices.dense import Matrix
@@ -1290,9 +1291,9 @@ def test_leading_terms():
     assert tan(1/x).as_leading_term(x) == AccumBounds(S.NegativeInfinity, S.Infinity)
     assert cot(1/x).as_leading_term(x) == AccumBounds(S.NegativeInfinity, S.Infinity)
 
-    for func in [tan, cot]:
-            eq = func(S.Half)
-            assert eq.as_leading_term(x) == eq
+    for func in (sin, cos, tan, cot):
+        eq = func(S.Half)
+        assert eq.as_leading_term(x) == eq
 
     # https://github.com/sympy/sympy/issues/21038
     f = sin(pi*(x + 4))/(3*x)
