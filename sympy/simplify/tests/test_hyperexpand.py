@@ -7,7 +7,7 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        ReduceOrder, reduce_order, apply_operators,
                        devise_plan, make_derivative_operator, Formula,
                        hyperexpand, Hyper_Function, G_Function,
-                       reduce_order_meijer,
+                       reduce_order_meijer, try_polynomial,
                        build_hypergeometric_formula)
 from sympy.concrete.summations import Sum
 from sympy.core.containers import Tuple
@@ -1058,3 +1058,8 @@ def test_omgissue_203():
     assert hyperexpand(h) == Rational(1, 30)
     h = hyper((-6, -7, -5), (-6, -6), 1)
     assert hyperexpand(h) == Rational(-1, 6)
+
+
+def test_try_polynomial_floats():
+    assert try_polynomial(Hyper_Function((-2.,), ()), z)
+        ) == 1.0*z**2 - 2.0*z + 1
