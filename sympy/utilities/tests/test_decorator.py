@@ -94,8 +94,36 @@ def test_deprecated():
                 deprecated_since_version='1.10',
                 active_deprecations_target='active-deprecations')
     class deprecated_class_new:
-        def __new__(cls):
-            return 1
+        def __new__(cls, arg):
+            return arg
 
     with warns_deprecated_sympy():
-        assert deprecated_class_new() == 1
+        assert deprecated_class_new(1) == 1
+
+    @deprecated('deprecated_class_init is deprecated',
+                deprecated_since_version='1.10',
+                active_deprecations_target='active-deprecations')
+    class deprecated_class_init:
+        def __init__(self, arg):
+            self.arg = 1
+
+    with warns_deprecated_sympy():
+        assert deprecated_class_init(1).arg == 1
+
+    @deprecated('deprecated_class_new_init is deprecated',
+                deprecated_since_version='1.10',
+                active_deprecations_target='active-deprecations')
+    class deprecated_class_new_init:
+        def __new__(cls, arg):
+            if arg == 0:
+                return arg
+            return object.__new__(cls)
+
+        def __init__(self, arg):
+            self.arg = 1
+
+    with warns_deprecated_sympy():
+        assert deprecated_class_new_init(0) == 0
+
+    with warns_deprecated_sympy():
+        assert deprecated_class_new_init(1).arg == 1
