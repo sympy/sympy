@@ -815,9 +815,31 @@ TODO
 
 TODO
 
-### The `set_dimension`, `set_scale_factor`, `get_dimensional_expr`, and `_collect_factor_and_dimension` methods to `sympy.physics.units.Quantity`
+(deprecated-quantity-methods)=
+### Methods to `sympy.physics.units.Quantity`
 
-TODO
+The following methods of
+{class}`sympy.physics.units.quantities.Quantity` are deprecated.
+
+- `Quantity.set_dimension()`. This should be replaced with
+  `unit_system.set_quantity_dimension` or
+  `Quantity.set_global_dimension()`.
+
+- `Quantity.set_scale_factor()`. This should be replaced with
+  `unit_system.set_quantity_scale_factor` or {meth}`.Quantity.set_global_relative_scale_factor`
+
+- `Quantity.get_dimensional_expr()`. This is now associated with
+  {class}`~.UnitSystem` objects. The dimensional relations depend on the unit
+  system used. Use `unit_system.get_dimensional_expr()` instead.
+
+- `Quantity._collect_factor_and_dimension`. This has been moved to the
+  {class}`~.UnitSystem` class. Use
+  `unit_system._collect_factor_and_dimension(expr)` instead.
+
+
+See {ref}`deprecated-quantity-dimension-scale-factor` below for the motivation
+for this change.
+
 
 (deprecated-is-emptyset)=
 ### The `is_EmptySet` attribute of sets
@@ -1020,9 +1042,33 @@ The {func}`~.source` function is deprecated. Use
 [`inspect.getsource(obj)`](https://docs.python.org/3/library/inspect.html#inspect.getsource)
 instead, or if you are in IPython or Jupyter, use `obj??`.
 
+(deprecated-quantity-dimension-scale-factor)=
 ### The `dimension` and `scale_factor` arguments to `sympy.physics.units.Quanitity`
 
-TODO
+The `dimension` and `scale_factor` arguments to
+{class}`sympy.physics.units.quantities.Quantity` are deprecated.
+
+The problem with these arguments is that **dimensions** are **not** an
+**absolute** association to a quantity. For example:
+
+- in natural units length and time are the same dimension (so you can sum
+  meters and seconds).
+
+- SI and cgs units have different dimensions for the same quantities.
+
+At this point a problem arises for scale factor as well: while it is always
+true that `kilometer / meter == 1000`, some other quantities may have a
+relative scale factor or not depending on which unit system is currently being
+used.
+
+Instead, things should be managed on the {class}`~.DimensionSystem` class. The
+{meth}`.DimensionSystem.set_quantity_dimension` method should be used instead
+of the `dimension` argument, and the
+{meth}`.DimensionSystem.set_quantity_scale_factors` method should be used
+instead of the `scale_factor` argument.
+
+See issue [#14318](https://github.com/sympy/sympy/issues/14318) for more
+details. See also {ref}`deprecated-quantity-methods` above.
 
 (deprecated-sympy-matrices-classof-a2idx)=
 ### Importing `classof` and `a2idx` from `sympy.matrices.matrices`
