@@ -649,20 +649,23 @@ def _get_doctest_blacklist():
     blacklist.extend([
         "doc/src/modules/plotting.rst",  # generates live plots
         "doc/src/modules/physics/mechanics/autolev_parser.rst",
+        "sympy/codegen/array_utils.py", # raises deprecation warning
+        "sympy/core/compatibility.py", # backwards compatibility shim, importing it triggers a deprecation warning
+        "sympy/core/trace.py", # backwards compatibility shim, importing it triggers a deprecation warning
         "sympy/galgebra.py", # no longer part of SymPy
-        "sympy/this.py", # prints text
-        "sympy/printing/ccode.py", # backwards compatibility shim, importing it breaks the codegen doctests
-        "sympy/printing/fcode.py", # backwards compatibility shim, importing it breaks the codegen doctests
-        "sympy/printing/cxxcode.py", # backwards compatibility shim, importing it breaks the codegen doctests
+        "sympy/integrals/rubi/rubi.py",
         "sympy/parsing/autolev/_antlr/autolevlexer.py", # generated code
-        "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
         "sympy/parsing/autolev/_antlr/autolevlistener.py", # generated code
+        "sympy/parsing/autolev/_antlr/autolevparser.py", # generated code
         "sympy/parsing/latex/_antlr/latexlexer.py", # generated code
         "sympy/parsing/latex/_antlr/latexparser.py", # generated code
-        "sympy/integrals/rubi/rubi.py",
         "sympy/plotting/pygletplot/__init__.py", # crashes on some systems
         "sympy/plotting/pygletplot/plot.py", # crashes on some systems
-        "sympy/codegen/array_utils.py", # raises deprecation warning
+        "sympy/printing/ccode.py", # backwards compatibility shim, importing it breaks the codegen doctests
+        "sympy/printing/cxxcode.py", # backwards compatibility shim, importing it breaks the codegen doctests
+        "sympy/printing/fcode.py", # backwards compatibility shim, importing it breaks the codegen doctests
+        "sympy/testing/randtest.py", # backwards compatibility shim, importing it triggers a deprecation warning
+        "sympy/this.py", # prints text
     ])
     # autolev parser tests
     num = 12
