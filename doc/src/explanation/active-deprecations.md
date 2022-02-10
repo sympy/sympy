@@ -533,9 +533,40 @@ use the standard library
 function, which has been in the standard library since Python 3.3 and is more
 powerful.
 
+(deprecated-diffgeom-mutable)=
 ### Mutable attributes in `sympy.diffgeom`
 
-TODO
+Several parts of {mod}`sympy.diffgeom` have been updated to no longer be
+mutable, which better matches the immutable design used in the rest of SymPy.
+
+- Passing strings for symbol names in {class}`~.CoordSystem` is deprecated.
+  Instead you should be explicit and pass symbols with the appropiate
+  assumptions, for instance, instead of
+
+  ```py
+  CoordSystem(name, patch, ['x', 'y']) # DEPRECATED
+  ```
+
+  use
+
+  ```py
+  CoordSystem(name, patch, symbols('x y', real=True)
+  ```
+
+- Similarly, the `names` keyword argument has been renamed to `symbols`, which
+  should be a list of symbols.
+
+- The `Manifold.patches` attribute is deprecated. Patches should be tracked
+  separately.
+
+- The `Patch.coord_systems` attribute is deprecated. Coordinate systems should
+  be tracked separately.
+
+- The `CoordSystem.transforms` attribute, `CoordSystem.connect_to()` method,
+  and `CoordSystem.coord_tuple_transform_to()` method are deprecated. Instead,
+  use the `relations` keyword to the `CoordSystem` class constructor and the
+  {meth}`.CoordSystem.transformation()` and {meth}`.CoordSystem.transform()`
+  methods (see the docstring of {class}`~.CoordSystem` for examples).
 
 (deprecated-pretty-printing-functions)=
 ### The `unicode` argument and attribute to `sympy.printing.pretty.stringpict.prettyForm` and the `sympy.printing.pretty.pretty_symbology.xstr` function
@@ -839,8 +870,8 @@ in the deprecated code path) is confusing behavior.
 The `set_potential_energy()` methods of {class}`sympy.physics.mechanics.particle.Particle`
 and {class}`sympy.physics.mechanics.rigidbody.RigidBody` are deprecated.
 
-Instead one should set the {ref}`.Particle.potential_energy` and
-{ref}`.RigidBody.potential_energy` attributes to set the potential energy,
+Instead one should set the {attr}`.Particle.potential_energy` and
+{attr}`.RigidBody.potential_energy` attributes to set the potential energy,
 like
 
 ```py
