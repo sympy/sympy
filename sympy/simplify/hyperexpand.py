@@ -62,7 +62,7 @@ from functools import reduce
 
 from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
-    EulerGamma, oo, zoo, expand_func, Add, nan, Expr, Rational)
+    EulerGamma, oo, zoo, expand_func, Add, nan, Expr, Rational, Integer)
 from sympy.core.mod import Mod
 from sympy.core.sorting import default_sort_key
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
@@ -1707,17 +1707,12 @@ def try_shifted_sum(func, z):
     nbq = list(func.bq)
     nbq.remove(k)
 
-    # r and k might be floats equal to integers
-    # so convert them explicitly to ints now
-    r = int(r)
-    k = int(k)
-
     k -= 1
     nap = [x - k for x in nap]
     nbq = [x - k for x in nbq]
 
     ops = []
-    for n in range(r - 1):
+    for n in range(int(r) - 1):
         ops.append(ShiftA(n + 1))
     ops.reverse()
 
@@ -1730,7 +1725,7 @@ def try_shifted_sum(func, z):
     ops += [MultOperator(fac)]
 
     p = 0
-    for n in range(k):
+    for n in range(int(k)):
         m = z**n/factorial(n)
         for a in nap:
             m *= rf(a, n)
@@ -1757,10 +1752,11 @@ def try_polynomial(func, z):
     if not al0:
         return None
 
-    a = al0[-1] # make int in case `a` is Float equal to int
+    a = al0[-1]
     fac = 1
     res = S.One
-    for n in Tuple(*list(range(-int(a)))):
+    for n in range(-int(a)):
+        n = Integer(n)
         fac *= z
         fac /= n + 1
         for a in func.ap:
