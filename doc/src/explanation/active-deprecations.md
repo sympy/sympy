@@ -807,13 +807,67 @@ integrate(b, x))` explicitly.
 
 ## Version 1.5
 
-### `TensExpr.fun_eval` and `Tensor.__call__`
+(deprecated-tensor-fun-eval)=
+### `Tensor.fun_eval` and `Tensor.__call__`
 
-TODO
+`TensExpr.fun_eval` and `Tensor.__call__` (i.e., calling a tensor to evaluate
+it) are deprecated. The `Tensor.substitute_indices()` method should be used.
+This was changed because `fun_eval` was considered a confusing name and using
+function evaluation was considered both confusing and dangerous.
 
+(deprecated-tensortype)=
 ### `TensorType`
 
-TODO
+The `TensorType` class is deprecated. Use {func}`tensor_heads` instead. The
+`TensorType` class had no purpose except shorter creation of
+{class}`~.TensorHead` objects.
+
+See also :ref:`deprecated-tensorhead` below.
+
+(deprecated-tensorindextype-dummy-fmt)=
+### The `dummy_fmt` argument to `TensorIndexType`
+
+The `dummy_fmt` keyword argument to {class}`~.TensorIndexType` is deprecated.
+Setting `dummy_fmt`='L' leads to `_dummy_fmt`='L_%d', which is confusing and
+uses obsolete string formatting. `dummy_name` should be used instead. This
+change was made because `dummy_name` is a clearer name.
+
+(deprecated-tensorindextype-metric)=
+### The `metric` argument to `TensorIndexType`
+
+The `metric` keyword argument to {class}`~.TensorIndexType` is deprecated.
+The name "metric" was ambiguous because it meant "metric symmetry" in some
+places and "metric tensor" in others.
+
+Either the `metric_symmetry` keyword or the `TensorIndexType.set_metric()`
+method should be used instead.
+
+(deprecated-tensorindextype-methods)=
+### The `get_kronecker_delta()` and `get_epsilon()` methods of `TensorIndexType`
+
+The `get_kronecker_delta()` and `get_epsilon()` methods of
+{class}`~.TensorIndexType` are deprecated. Use the `TensorIndexType.delta` and
+`TensorIndexType.epsilon` properties instead, respectively.
+
+(deprecated-tensorsymmetry)=
+### The `tensorsymmetry()` function
+
+The `tensorsymmetry()` function in `sympy.tensor` is deprecated. Use the
+{class}`~.TensorSymmetry` class constructor instead.
+
+`TensorSymmetry` is preferred over `tensorsymmetry()` because the latter
+
+1. Does not have any extra functionality
+2. Involves obscure Young tableau
+3. Is not a member of the `TensorSymmetry` class
+
+(deprecated-tensorhead)=
+### The `tensorhead()` function
+
+The `tensorhead()` function is deprecated in favor of {func}`~.tensor_heads`.
+`tensor_heads()` is more consistent with other SymPy names (i.e., `Symbol` and
+`symbols()` or `TensorIndex` and `tensor_indices()`). It also does not use
+Young tableau to denote symmetries.
 
 (deprecated-quantity-methods)=
 ### Methods to `sympy.physics.units.Quantity`
@@ -836,10 +890,8 @@ The following methods of
   {class}`~.UnitSystem` class. Use
   `unit_system._collect_factor_and_dimension(expr)` instead.
 
-
 See {ref}`deprecated-quantity-dimension-scale-factor` below for the motivation
 for this change.
-
 
 (deprecated-is-emptyset)=
 ### The `is_EmptySet` attribute of sets
@@ -987,10 +1039,16 @@ See the discussion on issue [#17881](https://github.com/sympy/sympy/pull/17881).
 
 ## Version 1.4
 
-### `TensorIndexType.data`, `TensorIndexType.get_matrix()`,
-`TensorIndexType.__getitem__`, and `TensExpr.__pow__`
+(deprecated-tensorindextype-attrs)=
+### `TensorIndexType.data` and related methods
 
-TODO
+The `TensorIndexType.data` property is deprecated, as well as several methods
+which made use of it including the `get_matrix()`, the `__getitem__()`
+(indexing), `__iter__()` (iteration), `_components_data_full_destroy()`, and `__pow__()` (`**`) methods. Storing data on tensor objects was a
+design flaw and not consistent with how the rest of SymPy works.
+
+Instead, the {meth}`.TensorIndexType.replace_with_arrays` method should be
+used.
 
 (deprecated-matrix-is_diagonalizable-cache)=
 ### The `clear_cache` and `clear_subproducts` keywords to `Matrix.is_diagonalizable`
@@ -1062,9 +1120,9 @@ relative scale factor or not depending on which unit system is currently being
 used.
 
 Instead, things should be managed on the {class}`~.DimensionSystem` class. The
-{meth}`.DimensionSystem.set_quantity_dimension` method should be used instead
-of the `dimension` argument, and the
-{meth}`.DimensionSystem.set_quantity_scale_factors` method should be used
+`DimensionSystem.set_quantity_dimension()` method should be used instead of the
+`dimension` argument, and the
+`DimensionSystem.set_quantity_scale_factor()` method should be used
 instead of the `scale_factor` argument.
 
 See issue [#14318](https://github.com/sympy/sympy/issues/14318) for more
