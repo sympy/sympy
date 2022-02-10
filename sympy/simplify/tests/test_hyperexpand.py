@@ -7,7 +7,7 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
    devise_plan, make_derivative_operator, Formula,
    hyperexpand, Hyper_Function, G_Function,
    reduce_order_meijer, try_polynomial,
-   build_hypergeometric_formula)
+   try_shifted_sum, build_hypergeometric_formula)
 from sympy.concrete.summations import Sum
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
