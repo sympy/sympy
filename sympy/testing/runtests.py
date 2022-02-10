@@ -806,6 +806,8 @@ def _doctest(*paths, **kwargs):
                     matched.append(f)
                     break
 
+    matched.sort()
+
     if split:
         matched = split_list(matched, split)
 
