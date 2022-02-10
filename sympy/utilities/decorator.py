@@ -311,9 +311,13 @@ def deprecated(message, *, deprecated_since_version,
                 __name__ = wrapped.__name__
                 __module__ = wrapped.__module__
                 _sympy_deprecated_func = wrapped
-                def __new__(cls, *args, **kwargs):
+                if '__new__' in wrapped.__dict__:
+                    def __new__(cls, *args, **kwargs):
+                        sympy_deprecation_warning(message, **decorator_kwargs, stacklevel=stacklevel)
+                        return super().__new__(cls, *args, **kwargs)
+                def __init__(self, *args, **kwargs):
                     sympy_deprecation_warning(message, **decorator_kwargs, stacklevel=stacklevel)
-                    return wrapped.__new__(cls, *args, **kwargs)
+                    super().__init__(*args, **kwargs)
         else:
             @wraps(wrapped)
             def wrapper(*args, **kwargs):
