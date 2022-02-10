@@ -1061,5 +1061,5 @@ def test_omgissue_203():
 
 
 def test_try_polynomial_floats():
-    assert try_polynomial(hyper((-2.,), (), z), z)
-        ) == 1.0*z**2 - 2.0*z + 1
+    assert try_polynomial(hyper((-2.,), (), z), z
+    ) == 1.0*z**2 - 2.0*z + 1
