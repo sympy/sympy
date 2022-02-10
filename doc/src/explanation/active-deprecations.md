@@ -524,9 +524,14 @@ The `absorbing_probabilites` method name was misspelled. The correct spelling
 `absorbing_probabilities` ("absorbing probabilit*i*es") should be used
 instead.
 
+(deprecated-find-executable)=
 ### `sympy.utilities.misc.find_executable()`
 
-TODO
+The function `sympy.utilities.misc.find_executable()` is deprecated. Instead
+use the standard library
+[`shutil.which()`](https://docs.python.org/3/library/shutil.html#shutil.which)
+function, which has been in the standard library since Python 3.3 and is more
+powerful.
 
 ### Mutable attributes in `sympy.diffgeom`
 
