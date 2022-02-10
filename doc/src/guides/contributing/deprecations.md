@@ -327,12 +327,15 @@ This should be the only part of the codebase and test suite that uses the
 deprecated behavior. Everything else should be changed to use the new,
 non-deprecated behavior. The SymPy test suite is configured to fail if a
 `SymPyDeprecationWarning` is issued anywhere except in a
-`warns_deprecated_sympy()` block. You should not use this function
-or a `warnings.filterwarnings(SymPyDeprecationWarning)` anywhere except in the
-test for the deprecation. This includes the documentation examples. The
+`warns_deprecated_sympy()` block. You should not use this function or a
+`warnings.filterwarnings(SymPyDeprecationWarning)` anywhere except in the test
+for the deprecation. This includes the documentation examples. The
 documentation for a deprecated function should just have a note pointing to
 the non-deprecated alternative. If you want to show a deprecated function in a
-doctest use `# doctest: +SKIP`
+doctest use `# doctest: +SKIP`. The only exception to this rule is that you
+may use `ignore_warnings(SymPyDeprecationWarning)` to prevent the exact same
+warning from triggering twice, i.e., if a deprecated function calls another
+function that issues the same or a similar warning.
 
 If it is not possible to remove the deprecated behavior somewhere, that is a
 sign that it is not ready to be deprecated yet. Consider that users may not be
@@ -344,19 +347,19 @@ able to replace the deprecated behavior for exact same reason.
 All deprecations should be documented. Every deprecation needs to be
 documented in three primary places:
 
-- The `SymPyDeprecationWarning` warning text. This text is allowed to be long
-  enough to describe the deprecation, but it should not be more than one
-  paragraph. The primary purpose of the warning text should be *to inform
-  users how to update their code*. The warning text should *not* discuss why a
-  feature was deprecated or unnecessary internal technical details. This
-  discussion can go in the other sections mentioned below. Do not include
-  information in the message that is already part of the metadata provided to
-  the keyword arguments to `SymPyDeprecationWarning`, like the version number.
-  Remember that the warning text will be shown in plain-text, so do not use
-  RST or Markdown markup in the text. Code blocks should be clearly delineated
-  with newlines so that they are easy to read. All text in the warning message
-  should be wrapped to 80 characters, except for code examples that cannot be
-  wrapped.
+- The {func}`~.sympy_deprecation_warning()` warning text. This text is allowed
+  to be long enough to describe the deprecation, but it should not be more
+  than one paragraph. The primary purpose of the warning text should be *to
+  inform users how to update their code*. The warning text should *not*
+  discuss why a feature was deprecated or unnecessary internal technical
+  details. This discussion can go in the other sections mentioned below. Do
+  not include information in the message that is already part of the metadata
+  provided to the keyword arguments to `sympy_deprecation_warning()`, like the
+  version number. Remember that the warning text will be shown in plain-text,
+  so do not use RST or Markdown markup in the text. Code blocks should be
+  clearly delineated with newlines so that they are easy to read. All text in
+  the warning message should be wrapped to 80 characters, except for code
+  examples that cannot be wrapped.
 
   Always include full context of what is deprecated in the message. For
   example, write "the abc keyword to func() is deprecated" instead of just
@@ -375,9 +378,10 @@ documented in three primary places:
 
   The text in the deprecation should be short (no more than a paragraph),
   explaining what is deprecated and what users should use instead. If you
-  want, you may use the same text here as in the `SymPyDeprecationWarning`. Be
-  sure to use RST formatting, including cross-references to the new function
-  if relevant, and a cross-reference to the longer description (see
+  want, you may use the same text here as in the
+  {func}`~.sympy_deprecation_warning`. Be sure to use RST formatting,
+  including cross-references to the new function if relevant, and a
+  cross-reference to the longer description (see
   [below](deprecations-longer-description)).
 
   If the documentation for the feature is otherwise the same as the replaced
@@ -403,8 +407,8 @@ documented in three primary places:
          instead. See its documentation for more information. See
          :ref:`simplify-this-deprecation` for details.
 
-     """
-     return simplify(expr)
+      """
+      return simplify(expr)
   ```
 
   ```py
@@ -447,15 +451,14 @@ documented in three primary places:
   discussions about the deprecation. However, these discussion should be
   summarized so that users can get the basic idea of why the deprecation
   without having to read through pages of old discussions. You may also here
-  give longer examples that would not fit in the `SymPyDeprecationWarning`
-  message or `.. deprecated::` text.
+  give longer examples that would not fit in the
+  {func}`~.sympy_deprecation_warning()` message or `.. deprecated::` text.
 
   Every deprecation should have a cross-reference target (using
   `(target-name)=` above the section header) so that the `.. deprecated::`
   note in the relevant docstring can refer to it. This target should also be
   passed to the `active_deprecations_target` option of
-  {class}`SymPyDeprecationWarning
-  <sympy.utilities.exceptions.SymPyDeprecationWarning>` or {func}`@deprecated
+  {func}`~.sympy_deprecation_warning` or {func}`@deprecated
   <sympy.utilities.decorator.deprecated>`. This will automatically put a link
   to the page in the documentation in the warning message. The target name
   should include the word "deprecation" or "deprecated" (target names are
