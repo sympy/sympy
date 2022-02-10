@@ -524,7 +524,7 @@ class frac(Function):
         r = self.subs(x, 0)
 
         if arg0.is_finite:
-            if arg0.is_integer or r.is_zero:
+            if r.is_zero:
                 if cdir == 0:
                     ndirl = arg.dir(x, cdir=-1)
                     ndir = arg.dir(x, cdir=1)
@@ -538,7 +538,7 @@ class frac(Function):
                     return r + 1 if ndir.is_negative else r
             else:
                 return r
-        elif arg0 is S.ComplexInfinity:
+        elif arg0 in (S.ComplexInfinity, S.Infinity, S.NegativeInfinity):
             return AccumBounds(0, 1)
         return arg.as_leading_term(x, logx=logx, cdir=cdir)
 
@@ -552,7 +552,7 @@ class frac(Function):
             from sympy.calculus.accumulationbounds import AccumBounds
             o = Order(1, (x, 0)) if n <= 0 else AccumBounds(0, 1) + Order(x**n, (x, 0))
             return o
-        elif arg0.is_integer or r.is_zero:
+        elif r.is_zero:
             s = (arg - arg0)._eval_nseries(x, n, logx, cdir)
             ndir = arg.dir(x, cdir=cdir if cdir != 0 else 1)
             res = r + 1 if ndir.is_negative else r

@@ -384,8 +384,8 @@ class sign(Function):
                 return S.NegativeOne
             elif arg.min > S.Zero:
                 return S.One
-            elif arg.min.is_zero or arg.max.is_zero or (arg.min < S.Zero and arg.max > S.Zero):
-                raise ValueError('More than one value is possible for passed argument %s')
+            else:
+                raise ValueError('More than one value is possible for passed argument sign(%s)' % (arg))
 
     def _eval_Abs(self):
         if fuzzy_not(self.args[0].is_zero):

@@ -1,3 +1,4 @@
+from sympy.calculus.util import AccumBounds
 from sympy.core.expr import Expr
 from sympy.core.function import (Derivative, Function, Lambda, expand)
 from sympy.core.numbers import (E, I, Rational, comp, nan, oo, pi, zoo)
@@ -226,6 +227,10 @@ def test_sign():
     assert sign(2 + 2*I).simplify() == sign(1 + I)
     assert sign(im(sqrt(1 - sqrt(3)))) == 1
     assert sign(sqrt(1 - sqrt(3))) == I
+    assert sign(AccumBounds(2, 3)) == 1
+    assert sign(AccumBounds(-2, -1)) == -1
+    raises(ValueError, lambda: sign(AccumBounds(0, 1)))
+    raises(ValueError, lambda: sign(AccumBounds(-2, 2)))
 
     x = Symbol('x')
     assert sign(x).is_finite is True
