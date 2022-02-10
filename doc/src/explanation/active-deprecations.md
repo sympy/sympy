@@ -322,7 +322,10 @@ Since the list of segments is only required by Matplotlib (for example, Bokeh,
 Plotly, Mayavi, K3D only require lists of coordinates), this has been moved
 inside the `MatplotlibBackend` class.
 
-Note that previously, the method {meth}`~.get_points` always returned uniformly sampled points, which meant that some functions were not plotted correctly when using `get_points()` to plot with Matplotlib.
+Note that previously, the method
+{meth}`~sympy.plotting.plot.Parametric2DLineSeries.get_points` always returned
+uniformly sampled points, which meant that some functions were not plotted
+correctly when using `get_points()` to plot with Matplotlib.
 
 To avoid this problem, the method `get_segments()` could be used, which used
 adaptive sampling and which could be used with Matplotlib's `LineCollection`.
