@@ -868,13 +868,13 @@ would become
 ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals)
 ```
 
-### The `sympy.polys.multivariate_resultants.DixonResultant.max_degree` property
+(deprecated-dixonresultant-properties)=
+### The `max_degree` and `get_upper_degree` properties of `sympy.polys.multivariate_resultants.DixonResultant`
 
-TODO
 
-### The `sympy.polys.multivariate_resultants.DixonResultant.get_upper_degree` property
-
-TODO
+The `max_degree` property and `get_upper_degree()` methods of `DixonResultant`
+are deprecated. See issue [#17749](https://github.com/sympy/sympy/pull/17749)
+for details.
 
 (deprecated-eq-expr)=
 ### `Eq(expr)` with the rhs defaulting to 0
