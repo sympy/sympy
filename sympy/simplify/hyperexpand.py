@@ -1757,6 +1757,7 @@ def try_polynomial(func, z):
     if not al0:
         return None
 
+    assert None, (func, z)  # debug to find case that comes through here
     a = int(al0[-1]) # make int in case `a` is Float equal to int
     fac = 1
     res = S.One
