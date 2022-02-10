@@ -356,6 +356,11 @@ def warns_deprecated_sympy():
 def ignore_warnings(warningcls):
     '''Context manager to suppress warnings during tests.
 
+    .. note::
+
+       Do not use this with SymPyDeprecationWarning in the tests.
+       warns_deprecated_sympy() should be used instead.
+
     This function is useful for suppressing warnings during tests. The warns
     function should be used to assert that a warning is raised. The
     ignore_warnings function is useful in situation when the warning is not
