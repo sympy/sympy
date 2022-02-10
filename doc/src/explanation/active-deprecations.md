@@ -833,9 +833,22 @@ argument. On the other hand, treating the first argument differently if it is
 a set than if it is another type of iterable (which is what is currently done
 in the deprecated code path) is confusing behavior.
 
+(deprecated-set-potential-energy)=
 ### The `set_potential_energy` method in `sympy.physics.mechanics`
 
-TODO
+The `set_potential_energy()` methods of {class}`sympy.physics.mechanics.particle.Particle`
+and {class}`sympy.physics.mechanics.rigidbody.RigidBody` are deprecated.
+
+Instead one should set the {ref}`.Particle.potential_energy` and
+{ref}`.RigidBody.potential_energy` attributes to set the potential energy,
+like
+
+```py
+P.potential_energy = scalar
+```
+
+This change was made to be more Pythonic, by using setters and getters of a
+`@property` method rather than an explicit `set_` method.
 
 (deprecated-conditionset-set)=
 ### Using a set for the condition in `ConditionSet`
@@ -870,7 +883,6 @@ ConditionSet((x, y), Eq(x + 1, 0) & Eq(x + y, 0), S.Reals)
 
 (deprecated-dixonresultant-properties)=
 ### The `max_degree` and `get_upper_degree` properties of `sympy.polys.multivariate_resultants.DixonResultant`
-
 
 The `max_degree` property and `get_upper_degree()` methods of `DixonResultant`
 are deprecated. See issue [#17749](https://github.com/sympy/sympy/pull/17749)
