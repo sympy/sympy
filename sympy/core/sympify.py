@@ -462,13 +462,17 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False,
         except Exception as exc:
             raise SympifyError(a, exc)
         sympy_deprecation_warning(
-            """
-            The string fallback in sympify() is deprecated.
+            f"""
+The string fallback in sympify() is deprecated.
 
-            To explicitly convert the string form of an object, use
-            sympify(str(obj)). To add define sympify behavior on custom
-            objects, use sympy.core.sympify.converter or define obj._sympy_
-            (see the sympify() docstring).
+To explicitly convert the string form of an object, use
+sympify(str(obj)). To add define sympify behavior on custom
+objects, use sympy.core.sympify.converter or define obj._sympy_
+(see the sympify() docstring).
+
+sympify() performed the string fallback resulting in the following string:
+
+{a!r}
             """,
             deprecated_since_version='1.6',
             active_deprecations_target="deprecated-sympify-string-fallback",
