@@ -834,6 +834,9 @@ g(x)\,dx$ is not true in general, due to the arbitrary constants (which
 If you want to make an equality of indefinite integrals, use
 `Eq(integrate(f(x), x), integrate(g(x), x))` explicitly.
 
+If you already have an equality object `eq`, you can use `Eq(integrate(eq.lhs,
+x), integrate(eq.rhs, x))`.
+
 ## Version 1.5
 
 (deprecated-tensor-fun-eval)=
@@ -940,7 +943,7 @@ s.is_empty
 ```
 
 The difference is that `s.is_empty` may return `None` if it is unknown if the
-set it empty.
+set is empty.
 
 (deprecated-productset-iterable)=
 ### `ProductSet(iterable)`

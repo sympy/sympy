@@ -143,8 +143,8 @@ This also means all deprecated code must have a completely functioning
 replacement. If there is no way for users to update their code, then this
 means API in question is not yet read to be deprecated. The deprecation
 warning should inform users of a way to change their code so that it works in
-the same version of SymPy, as well as all future versions (see
-[below](deprecation-documentation)).
+the same version of SymPy, as well as all future versions, and, if possible,
+previous versions of SymPy as well. See [below](deprecation-documentation).
 
 Deprecations should always
 
