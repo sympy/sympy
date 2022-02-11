@@ -14,7 +14,8 @@ from sympy.polys import Poly
 from sympy.series.order import O
 from sympy.sets import FiniteSet
 from sympy.core.power import power
-from sympy.testing.pytest import warns_deprecated_sympy, _both_exp_pow
+from sympy.testing.pytest import warns, _both_exp_pow
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 def test_rational():
@@ -199,7 +200,8 @@ def test_Pow_Expr_args():
     x = Symbol('x')
     bases = [Basic(), Poly(x, x), FiniteSet(x)]
     for base in bases:
-        with warns_deprecated_sympy():
+        # The cache can mess with the stacklevel test
+        with warns(SymPyDeprecationWarning, test_stacklevel=False):
             Pow(base, S.One)
 
 
