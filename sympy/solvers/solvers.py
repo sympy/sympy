@@ -257,6 +257,10 @@ def checksol(f, symbol, sol=None, **flags):
         return rv
 
     f = _sympify(f)
+
+    if not f.free_symbols:
+        return f.is_zero
+
     if isinstance(f, Poly):
         f = f.as_expr()
     elif isinstance(f, (Eq, Ne)):
