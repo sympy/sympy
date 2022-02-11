@@ -36,6 +36,7 @@ from sympy.logic.boolalg import And
 from sympy.matrices import Matrix
 from sympy.sets.sets import Intersection
 from sympy.simplify.simplify import simplify
+from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import Undecidable, filldedent
@@ -1108,6 +1109,9 @@ class Line(LinearEntity):
     on the dimension of `p1`.  The `slope` argument is only relevant
     for `Line2D` and the `direction_ratio` argument is only relevant
     for `Line3D`.
+
+    The order of the points will define the direction of the line
+    which is used when calculating the angle between lines.
 
     See Also
     ========
@@ -2560,7 +2564,6 @@ class Line3D(LinearEntity3D, Line):
                 deprecated_since_version="1.2",
                 active_deprecations_target='deprecated-line3d-equation-k',
             )
-        from sympy.solvers.solvers import solve
         x, y, z, k = [_symbol(i, real=True) for i in (x, y, z, 'k')]
         p1, p2 = self.points
         d1, d2, d3 = p1.direction_ratio(p2)

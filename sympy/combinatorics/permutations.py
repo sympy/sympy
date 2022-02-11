@@ -10,6 +10,7 @@ from sympy.core.numbers import Integer
 from sympy.core.sympify import _sympify
 from sympy.matrices import zeros
 from sympy.polys.polytools import lcm
+from sympy.printing.repr import srepr
 from sympy.utilities.iterables import (flatten, has_variety, minlex,
     has_dups, runs, is_sequence)
 from sympy.utilities.misc import as_int
@@ -1616,7 +1617,6 @@ class Permutation(Atom):
         yield from self.array_form
 
     def __repr__(self):
-        from sympy.printing.repr import srepr
         return srepr(self)
 
     def __call__(self, *i):

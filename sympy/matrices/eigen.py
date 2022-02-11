@@ -13,13 +13,13 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import roots, CRootOf, ZZ, QQ, EX
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.eigen import dom_eigenvects, dom_eigenvects_to_sympy
-from sympy.simplify import nsimplify, simplify as _simplify
+from sympy.polys.polytools import gcd
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
 from .common import MatrixError, NonSquareMatrixError
 from .determinant import _find_reasonable_pivot
 
-from .utilities import _iszero
+from .utilities import _iszero, _simplify
 
 
 def _eigenvals_eigenvects_mpmath(M):
@@ -163,6 +163,7 @@ def _eigenvals(
             return _eigenvals_mpmath(M, multiple=multiple)
 
     if rational:
+        from sympy.simplify import nsimplify
         M = M.applyfunc(
             lambda x: nsimplify(x, rational=True) if x.has(Float) else x)
 
@@ -414,6 +415,7 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
     if has_floats:
         if all(x.is_number for x in M):
             return _eigenvects_mpmath(M)
+        from sympy.simplify import nsimplify
         M = M.applyfunc(lambda x: nsimplify(x, rational=True))
 
     ret = _eigenvects_DOM(M)
@@ -424,7 +426,6 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
         # if the primitive flag is set, get rid of any common
         # integer denominators
         def denom_clean(l):
-            from sympy.polys.polytools import gcd
             return [(v / gcd(list(v))).applyfunc(simpfunc) for v in l]
 
         ret = [(val, mult, denom_clean(es)) for val, mult, es in ret]
@@ -1191,6 +1192,7 @@ def _jordan_form(M, calc_transform=True, *, chop=False):
 
     # roots doesn't like Floats, so replace them with Rationals
     if has_floats:
+        from sympy.simplify import nsimplify
         mat = mat.applyfunc(lambda x: nsimplify(x, rational=True))
 
     # first calculate the jordan block structure

@@ -3024,3 +3024,29 @@ def postorder_traversal(node, keys=None):
 def interactive_traversal(expr):
     from sympy.interactive.traversal import interactive_traversal as _interactive_traversal
     return _interactive_traversal(expr)
+
+
+@deprecated(
+    """
+    Importing default_sort_key from sympy.utilities.iterables is deprecated.
+    Use from sympy import default_sort_key instead.
+    """,
+    deprecated_since_version="1.10",
+active_deprecations_target="deprecated-sympy-core-compatibility",
+)
+def default_sort_key(*args, **kwargs):
+    from sympy import default_sort_key as _default_sort_key
+    return _default_sort_key(*args, **kwargs)
+
+
+@deprecated(
+    """
+    Importing default_sort_key from sympy.utilities.iterables is deprecated.
+    Use from sympy import default_sort_key instead.
+    """,
+    deprecated_since_version="1.10",
+active_deprecations_target="deprecated-sympy-core-compatibility",
+)
+def ordered(*args, **kwargs):
+    from sympy import ordered as _ordered
+    return _ordered(*args, **kwargs)

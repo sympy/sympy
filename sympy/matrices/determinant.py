@@ -5,8 +5,6 @@ from sympy.core.singleton import S
 from sympy.core.symbol import uniquely_named_symbol
 from sympy.core.mul import Mul
 from sympy.polys import PurePoly, cancel
-from sympy.simplify.simplify import (simplify as _simplify,
-    dotprodsimp as _dotprodsimp)
 from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.numbers import nC
 from sympy.polys.matrices.domainmatrix import DomainMatrix
@@ -14,7 +12,7 @@ from sympy.polys.matrices.domainmatrix import DomainMatrix
 from .common import NonSquareMatrixError
 from .utilities import (
     _get_intermediate_simp, _get_intermediate_simp_bool,
-    _iszero, _is_zero_after_expand_mul)
+    _iszero, _is_zero_after_expand_mul, _dotprodsimp, _simplify)
 
 
 def _find_reasonable_pivot(col, iszerofunc=_iszero, simpfunc=_simplify):

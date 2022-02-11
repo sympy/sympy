@@ -3,7 +3,6 @@ from sympy.core.singleton import S
 from sympy.core.sorting import default_sort_key
 from sympy.functions import DiracDelta, Heaviside
 from .integrals import Integral, integrate
-from sympy.solvers import solve
 
 
 def change_mul(node, x):
@@ -168,6 +167,7 @@ def deltaintegrate(f, x):
                     fh = integrate(rest_mult, x)
                     return fh
             else:
+                from sympy.solvers import solve
                 deltaterm = deltaterm.expand(diracdelta=True, wrt=x)
                 if deltaterm.is_Mul:  # Take out any extracted factors
                     deltaterm, rest_mult_2 = change_mul(deltaterm, x)

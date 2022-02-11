@@ -654,7 +654,6 @@ class GeneralizedMultivariateLogGammaDistribution(JointDistribution):
         return S.Reals**len(self.lamda)
 
     def pdf(self, *y):
-        from sympy.functions.special.gamma_functions import gamma
         d, v, l, mu = self.delta, self.v, self.lamda, self.mu
         n = Symbol('n', negative=False, integer=True)
         k = len(l)

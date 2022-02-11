@@ -19,10 +19,9 @@ from sympy.core.mod import Mod
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.functions import Abs
+from sympy.functions.elementary.complexes import Abs, re, im
+from .utilities import _dotprodsimp, _simplify
 from sympy.polys.polytools import Poly
-from sympy.simplify import simplify as _simplify
-from sympy.simplify.simplify import dotprodsimp as _dotprodsimp
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.misc import as_int, filldedent
@@ -2002,8 +2001,6 @@ class MatrixOperations(MatrixRequired):
         return out
 
     def _eval_as_real_imag(self):  # type: ignore
-        from sympy.functions.elementary.complexes import re, im
-
         return (self.applyfunc(re), self.applyfunc(im))
 
     def _eval_conjugate(self):
@@ -2518,7 +2515,7 @@ class MatrixOperations(MatrixRequired):
         return MatrixOperations.simplify(self, **kwargs)
 
     def _eval_trigsimp(self, **opts):
-        from sympy.simplify import trigsimp
+        from sympy.simplify.trigsimp import trigsimp
         return self.applyfunc(lambda x: trigsimp(x, **opts))
 
     def upper_triangular(self, k=0):
@@ -3166,13 +3163,14 @@ class MatrixKind(Kind):
     ==========
 
     element_kind : Kind
-        Kind of the element. Default is :obj:NumberKind `<sympy.core.kind.NumberKind>`,
+        Kind of the element. Default is
+        :class:`sympy.core.kind.NumberKind`,
         which means that the matrix contains only numbers.
 
     Examples
     ========
 
-    Any instance of matrix class has ``MatrixKind``.
+    Any instance of matrix class has ``MatrixKind``:
 
     >>> from sympy import MatrixSymbol
     >>> A = MatrixSymbol('A', 2,2)
@@ -3180,7 +3178,7 @@ class MatrixKind(Kind):
     MatrixKind(NumberKind)
 
     Although expression representing a matrix may be not instance of
-    matrix class, it will have ``MatrixKind`` as well.
+    matrix class, it will have ``MatrixKind`` as well:
 
     >>> from sympy import MatrixExpr, Integral
     >>> from sympy.abc import x
@@ -3190,8 +3188,8 @@ class MatrixKind(Kind):
     >>> intM.kind
     MatrixKind(NumberKind)
 
-    Use ``isinstance()`` to check for ``MatrixKind` without specifying
-    the element kind. Use ``is`` with specifying the element kind.
+    Use ``isinstance()`` to check for ``MatrixKind`` without specifying
+    the element kind. Use ``is`` with specifying the element kind:
 
     >>> from sympy import Matrix
     >>> from sympy.core import NumberKind
@@ -3205,7 +3203,10 @@ class MatrixKind(Kind):
     See Also
     ========
 
-    shape : Function to return the shape of objects with ``MatrixKind``.
+    sympy.core.kind.NumberKind
+    sympy.core.kind.UndefinedKind
+    sympy.core.containers.TupleKind
+    sympy.sets.sets.SetKind
 
     """
     def __new__(cls, element_kind=NumberKind):

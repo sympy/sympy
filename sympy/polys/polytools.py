@@ -3663,7 +3663,6 @@ class Poly(Basic):
         [-1.73205080756887729352744634151, 1.73205080756887729352744634151]
 
         """
-        from sympy.functions.elementary.complexes import sign
         if f.is_multivariate:
             raise MultivariatePolynomialError(
                 "Cannot compute numerical roots of %s" % f)
@@ -3692,6 +3691,7 @@ class Poly(Basic):
         dps = mpmath.mp.dps
         mpmath.mp.dps = n
 
+        from sympy.functions.elementary.complexes import sign
         try:
             # We need to add extra precision to guard against losing accuracy.
             # 10 times the degree of the polynomial seems to work well.
@@ -4416,8 +4416,6 @@ def parallel_poly_from_expr(exprs, *gens, **args):
 
 def _parallel_poly_from_expr(exprs, opt):
     """Construct polynomials from expressions. """
-    from sympy.functions.elementary.piecewise import Piecewise
-
     if len(exprs) == 2:
         f, g = exprs
 
@@ -4468,6 +4466,7 @@ def _parallel_poly_from_expr(exprs, opt):
     if not opt.gens:
         raise PolificationFailed(opt, origs, exprs, True)
 
+    from sympy.functions.elementary.piecewise import Piecewise
     for k in opt.gens:
         if isinstance(k, Piecewise):
             raise PolynomialError("Piecewise generators do not make sense")
@@ -6735,7 +6734,6 @@ def cancel(f, *gens, _signsimp=True, **args):
     (x + 2)/2
     """
     from sympy.simplify.simplify import signsimp
-    from sympy.functions.elementary.piecewise import Piecewise
     from sympy.polys.rings import sring
     options.allowed_flags(args, ['polys'])
 
@@ -6764,6 +6762,7 @@ def cancel(f, *gens, _signsimp=True, **args):
     else:
         raise ValueError('unexpected argument: %s' % f)
 
+    from sympy.functions.elementary.piecewise import Piecewise
     try:
         if f.has(Piecewise):
             raise PolynomialError()

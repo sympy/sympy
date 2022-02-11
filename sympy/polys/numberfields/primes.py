@@ -385,11 +385,8 @@ def prime_valuation(I, P):
     ========
 
     >>> from sympy import QQ
-    >>> from sympy.abc import theta
-    >>> from sympy.polys import cyclotomic_poly
     >>> from sympy.polys.numberfields import prime_valuation
-    >>> T = cyclotomic_poly(5)
-    >>> K = QQ.algebraic_field((T, theta))
+    >>> K = QQ.cyclotomic_field(5)
     >>> P = K.primes_above(5)
     >>> ZK = K.maximal_order()
     >>> print(prime_valuation(25*ZK, P[0]))

@@ -18,16 +18,9 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sec
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
-
-from sympy.polys.orthopolys import (
-    jacobi_poly,
-    gegenbauer_poly,
-    chebyshevt_poly,
-    chebyshevu_poly,
-    laguerre_poly,
-    hermite_poly,
-    legendre_poly
-)
+from sympy.polys.orthopolys import (chebyshevt_poly, chebyshevu_poly,
+                                    gegenbauer_poly, hermite_poly, jacobi_poly,
+                                    laguerre_poly, legendre_poly)
 
 _x = Dummy('x')
 

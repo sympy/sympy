@@ -10,7 +10,7 @@ from sympy.logic.boolalg import And, as_Boolean
 from sympy.utilities.iterables import sift, flatten, has_dups
 from sympy.utilities.exceptions import sympy_deprecation_warning
 from .contains import Contains
-from .sets import Set, Union, FiniteSet
+from .sets import Set, Union, FiniteSet, SetKind
 
 
 adummy = Dummy('conditionset')
@@ -241,3 +241,6 @@ with
         else:
             pass  # let error about the symbol raise from __new__
         return self.func(sym, cond, base)
+
+    def _kind(self):
+        return SetKind(self.sym.kind)

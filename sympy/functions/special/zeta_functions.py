@@ -7,8 +7,9 @@ from sympy.core.symbol import Dummy
 from sympy.functions.combinatorial.numbers import bernoulli, factorial, harmonic
 from sympy.functions.elementary.complexes import re, unpolarify, Abs, polar_lift
 from sympy.functions.elementary.exponential import log, exp_polar, exp
-from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.polys.polytools import Poly
 
 ###############################################################################
 ###################### LERCH TRANSCENDENT #####################################
@@ -122,7 +123,6 @@ class lerchphi(Function):
     """
 
     def _eval_expand_func(self, **hints):
-        from sympy.polys.polytools import Poly
         z, s, a = self.args
         if z == 1:
             return zeta(s, a)
@@ -354,7 +354,6 @@ class polylog(Function):
             return True
 
     def _eval_nseries(self, x, n, logx, cdir=0):
-        from sympy.functions.elementary.integers import ceiling
         from sympy.series.order import Order
         nu, z = self.args
 

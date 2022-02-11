@@ -281,7 +281,6 @@ class Pow(Expr):
     def __new__(cls, b, e, evaluate=None):
         if evaluate is None:
             evaluate = global_parameters.evaluate
-        from sympy.functions.elementary.exponential import exp_polar
 
         b = _sympify(b)
         e = _sympify(e)
@@ -351,6 +350,7 @@ class Pow(Expr):
                 return S.One
             else:
                 # recognize base as E
+                from sympy.functions.elementary.exponential import exp_polar
                 if not e.is_Atom and b is not S.Exp1 and not isinstance(b, exp_polar):
                     from .exprtools import factor_terms
                     from sympy.functions.elementary.exponential import log
@@ -1653,7 +1653,8 @@ class Pow(Expr):
         from sympy.simplify.powsimp import powdenest
         self = powdenest(self, force=True).trigsimp()
         b, e = self.as_base_exp()
-        if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
+        from .numbers import _illegal
+        if e.has(*_illegal):
             raise PoleError()
 
         if e.has(x):
@@ -1682,7 +1683,10 @@ class Pow(Expr):
             e = logcombine(e).cancel()
 
         if not (m.is_zero or e.is_number and e.is_real):
-            return exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
+            res = exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
+            if res is exp(e*log(b)):
+                return self
+            return res
 
         f = b.as_leading_term(x, logx=logx)
         g = (b/f - S.One).cancel(expand=False)
@@ -1834,7 +1838,7 @@ class Pow(Expr):
 
     def _eval_rewrite_as_tanh(self, base, exp):
         if self.base is S.Exp1:
-            from sympy.functions.elementary.trigonometric import tanh
+            from sympy.functions.elementary.hyperbolic import tanh
             return (1 + tanh(self.exp/2))/(1 - tanh(self.exp/2))
 
     def _eval_rewrite_as_sqrt(self, base, exp, **kwargs):

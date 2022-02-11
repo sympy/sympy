@@ -133,6 +133,10 @@ from sympy import ordered, default_sort_key
 The remaining were only intended for internal SymPy use and should not be used
 by user code.
 
+Additionally, these two functions, `ordered` `default_sort_key`, used to also
+be in `sympy.utilities.iterables` but have been moved from there as well.
+
+
 ## Version 1.9
 
 (deprecated-expr-free-symbols)=

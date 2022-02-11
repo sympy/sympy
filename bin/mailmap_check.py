@@ -141,9 +141,9 @@ def main(*args):
         print(green("No changes needed in .mailmap"))
 
     # Actually update the AUTHORS file (if --update-authors was passed)
-    update_authors_file(lines_authors, old_lines_authors, args.update_authors)
+    authors_changed = update_authors_file(lines_authors, old_lines_authors, args.update_authors)
 
-    return int(problems)
+    return int(problems) + int(authors_changed)
 
 
 def update_authors_file(lines, old_lines, update_yesno):
@@ -176,6 +176,11 @@ def update_authors_file(lines, old_lines, update_yesno):
         print()
         for i in sorted(new_authors, key=lambda x: x.lower()):
             print('\t%s' % i)
+
+    if new_authors and update_yesno:
+        return 1
+    else:
+        return 0
 
 
 def check_git_version():

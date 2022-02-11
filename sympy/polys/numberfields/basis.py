@@ -115,15 +115,15 @@ def round_two(T, radicals=None):
     Working through an AlgebraicField:
 
     >>> from sympy import Poly, QQ
-    >>> from sympy.abc import x, theta
+    >>> from sympy.abc import x
     >>> T = Poly(x ** 3 + x ** 2 - 2 * x + 8)
-    >>> K = QQ.algebraic_field((T, theta))
+    >>> K = QQ.alg_field_from_poly(T, "theta")
     >>> print(K.maximal_order())
     Submodule[[2, 0, 0], [0, 2, 0], [0, 1, 1]]/2
     >>> print(K.discriminant())
     -503
     >>> print(K.integral_basis(fmt='sympy'))
-    [1, theta, theta**2/2 + theta/2]
+    [1, theta, theta/2 + theta**2/2]
 
     Calling directly:
 
