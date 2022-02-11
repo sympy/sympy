@@ -309,7 +309,6 @@ def deprecated(message, *, deprecated_since_version,
         if hasattr(wrapped, '__mro__'):  # wrapped is actually a class
             class wrapper(wrapped):
                 __doc__ = wrapped.__doc__
-                __name__ = wrapped.__name__
                 __module__ = wrapped.__module__
                 _sympy_deprecated_func = wrapped
                 if '__new__' in wrapped.__dict__:
@@ -319,6 +318,7 @@ def deprecated(message, *, deprecated_since_version,
                 def __init__(self, *args, **kwargs):
                     sympy_deprecation_warning(message, **decorator_kwargs, stacklevel=stacklevel)
                     super().__init__(*args, **kwargs)
+            wrapper.__name__ = wrapped.__name__
         else:
             @wraps(wrapped)
             def wrapper(*args, **kwargs):
