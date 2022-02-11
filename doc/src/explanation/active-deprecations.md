@@ -44,7 +44,8 @@ Here `(?s).*<regex matching the warning message>` is a regular expression
 matching the warning message. For example, to filter a warning about
 `sympy.printing`, you might use `message=r"(?s).*sympy\.printing"`. The
 leading `(?s).*` is there because the warnings module matches `message`
-against the start of the warning message.
+against the start of the warning message, and because typical warning messages
+span multiple lines.
 
 `<regex matching your module>` should be a regular expression matching your
 module that uses the deprecated code. It is recommended to include this so
@@ -126,16 +127,27 @@ SymPy codebase.
 Some of the functions that were in this module are available from the
 top-level SymPy namespace, i.e.,
 
+```
+sympy.ordered
+sympy.default_sort_key
+```
+
+or
+
 ```py
 from sympy import ordered, default_sort_key
 ```
 
-The remaining were only intended for internal SymPy use and should not be used
-by user code.
+In general, end-users should use the top-level `sympy` namespace for any
+functions present there. If a name is in the top-level namespace, its specific
+SymPy submodule should not be relied on, as functions may move around due to
+internal refactorings.
 
-Additionally, these two functions, `ordered` `default_sort_key`, used to also
-be in `sympy.utilities.iterables` but have been moved from there as well.
+The remaining functions in `sympy.core.compatibility` were only intended for
+internal SymPy use and should not be used by user code.
 
+Additionally, these two functions, `ordered` and `default_sort_key`, also used
+to be in `sympy.utilities.iterables` but have been moved from there as well.
 
 ## Version 1.9
 
@@ -146,7 +158,7 @@ The `expr_free_symbols` attribute of various SymPy objects is deprecated.
 
 `expr_free_symbols` was meant to represent indexed objects such as
 `MatrixElement` and {class}`~.Indexed` as free symbols. This was
-intended to make derivatives of free symbols work. However, this now workw
+intended to make derivatives of free symbols work. However, this now works
 without making use of the method:
 
 ```py
@@ -177,8 +189,8 @@ but it added a layer of abstraction that is not necessary in general.
    free_symbols since it allows one to get symbols from a specific node of an
    object without specifying the node
 
-2. it incorrectly added the property to `AtomicExpr` so numbers are returned
-   as `expr_free_symbols`
+2. the property was incorrectly added to `AtomicExpr` so numbers are returned
+   as `expr_free_symbols`:
 
    ```python
    >>> S(2).expr_free_symbols # doctest: +SKIP
@@ -189,8 +201,8 @@ but it added a layer of abstraction that is not necessary in general.
    `Subs.expr_free_symbols`: it added in `expr_free_symbols` of the point but
    the point is a `Tuple` so nothing was added
 
-4. it was not used anywhere else in the code base except in the context of
-   differentiating a `Subs` object which suggested that it was not something
+4. it was not used anywhere else in the codebase except in the context of
+   differentiating a `Subs` object, which suggested that it was not something
    of general use, this is also confirmed by the fact that,
 
 5. it was added without specific tests except for test of the derivatives of
@@ -244,16 +256,14 @@ Now, `sample_iter` should be used if a iterator is needed. Consequently, the
 The `RawMatrix` class is deprecated. The `RawMatrix` class was a subclass
 of `Matrix` that used domain elements instead of `Expr` as the elements of
 the matrix. This breaks a key internal invariant of `Matrix` and this kind
-of subclassing limits improvements to the `Matrix` class so this is
-deprecated and will likely not work soon in a new release of SymPy.
+of subclassing limits improvements to the `Matrix` class.
 
 The only part of SymPy that documented the use of the `RawMatrix` class was
-the Smith normal form code and that has now been changed to use
-`DomainMatrix` instead. It is recommended that anyone using `RawMatrix`
-with the previous Smith Normal Form code should switch to using
-`DomainMatrix` as shown in issue
-[#21402](https://github.com/sympy/sympy/pull/21402). A better API for the
-Smith normal form will be added later.
+the Smith normal form code, and that has now been changed to use
+`DomainMatrix` instead. It is recommended that anyone using `RawMatrix` with
+the previous Smith Normal Form code should switch to using `DomainMatrix` as
+shown in issue [#21402](https://github.com/sympy/sympy/pull/21402). A better
+API for the Smith normal form will be added later.
 
 (deprecated-non-expr-in-matrix)=
 ### Non-`Expr` objects in a Matrix
@@ -264,10 +274,9 @@ Python object:
 
 ```python
 >>> M = Matrix([[(1, 2), {}]]) # doctest: +SKIP
->>> M # doctest: +SKIP
 ```
 
-This is not useful and does not really work e.g.:
+This is not useful and does not really work, e.g.:
 
 ```python
 >>> M + M # doctest: +SKIP
@@ -278,15 +287,18 @@ TypeError: unsupported operand type(s) for +: 'Dict' and 'Dict'
 
 The main reason for making this possible was that there were a number of
 `Matrix` subclasses in the SymPy codebase that wanted to work with objects
-from the polys module e.g.
+from the polys module, e.g.
 
-1. `RawMatrix` (see [above](deprecated-rawmatrix)) was used in `solve_lin_sys` which was part of `heurisch` and was also used by `smith_normal_form`. The `NewMatrix` class used domain elements as the elements of the Matrix rather than `Expr`.
+1. `RawMatrix` (see [above](deprecated-rawmatrix)) was used in `solve_lin_sys`
+   which was part of `heurisch` and was also used by `smith_normal_form`. The
+   `NewMatrix` class used domain elements as the elements of the Matrix rather
+   than `Expr`.
 
 2. `NewMatrix` was used in the `holonomic` module and also used domain
-elements as matrix elements
+   elements as matrix elements
 
 3. `PolyMatrix` used a mix of `Poly` and `Expr` as the matrix elements and was
-used by `risch`.
+   used by `risch`.
 
 All of these matrix subclasses were broken in different ways and the
 introduction of {class}`~.DomainMatrix`
@@ -305,15 +317,16 @@ non-`Expr` in a `Matrix`.
 
 This change makes it possible to improve the internals of the Matrix class but
 it potentially impacts on some downstream use cases that might be similar to
-the uses of Matrix with non-Expr elements that were in the SymPy codebase. A
-potential replacement for code that used Matrix with non-Expr elements is
-DomainMatrix if the elements are something like domain elements and a domain
-object can be provided for them. Alternatively if the goal is just printing
-support then perhaps TableForm can be used.
+the uses of `Matrix` with non-`Expr` elements that were in the SymPy codebase.
+A potential replacement for code that used `Matrix` with non-`Expr` elements
+is {class}`~.DomainMatrix` if the elements are something like domain elements
+and a domain object can be provided for them. Alternatively if the goal is
+just printing support then perhaps `TableForm` can be used.
 
 It isn't clear what to advise as a replacement here without knowing more about
-the usecase. Feel free to comment below indicating what you want to do with
-non-Expr Matrix elements and we can discuss how to achieve that.
+the usecase. If you are unclear how to update your code, please [open an
+issue](https://github.com/sympy/sympy/issues/new) or [write to our mailing
+list](http://groups.google.com/group/sympy) so we can discuss it.
 
 (deprecated-get-segments)=
 ### The `get_segments` attribute of plotting objects
@@ -369,8 +382,8 @@ This was changed because the `sympy.physics` submodule is supposed to only
 contain things that are specific to physics, but the discrete Fourier
 transform matrix is a more general mathematical concept, so it is better
 located in the `sympy.matrices` module. Furthermore, the `DFT` class is a
-matrix expression, meaning it can be unevaluated and support symbolic shape.
-
+[matrix expression](sympy.matrices.expressions), meaning it can be unevaluated
+and support symbolic shape.
 
 (deprecated-private-matrix-attributes)=
 ### The private `SparseMatrix._smat` and `DenseMatrix._mat` attributes
@@ -420,9 +433,9 @@ Matrix([
 [  0, 1/z]])
 ```
 
-or use `legacy_matrix=False` to return the new behavior, which will be return
-a single tuple with the Matrix in the first argument and the convergence
-conditions combined into a single condition for the whole matrix.
+or use `legacy_matrix=False` to return the new behavior, which will be to
+return a single tuple with the Matrix in the first argument and the
+convergence conditions combined into a single condition for the whole matrix.
 
 ```
 >>> laplace_transform(eye(2), t, z, legacy_matrix=False)
@@ -442,9 +455,9 @@ become the default, but the flag will be left intact for compatibility.
 [Theano](https://github.com/Theano/Theano) has been discontinued, and forked
 into a new project called [Aesara](https://github.com/aesara-devs/aesara). The
 `sympy.printing.theanocode` module has been renamed to
-`sympy.printing.aesaracode`, and all the corresponding functions have been
-renamed (e.g., `theano_code` has been renamed to `aesara_code`,
-`TheanoPrinter` has been renamed to `AesaraPrinter`, and so on).
+{mod}`sympy.printing.aesaracode`, and all the corresponding functions have
+been renamed (e.g., `theano_code` has been renamed to {func}`~.aesara_code`,
+`TheanoPrinter` has been renamed to {class}`~.AesaraPrinter`, and so on).
 
 (deprecated-askhandler)=
 ### `sympy.assumptions.handlers.AskHandler` and related methods
@@ -452,8 +465,8 @@ renamed (e.g., `theano_code` has been renamed to `aesara_code`,
 `Predicate` has experienced a big design change. Previously, its handler was a
 list of `AskHandler` classes and registration was done by `add_handler()` and
 `remove_handler()` functions. Now, its handler is a multipledispatch instance
-and registration is done by `register()` or `register_many()` methods. User
-must define predicate class to introduce a new one.
+and registration is done by `register()` or `register_many()` methods. Users
+must define a predicate class to introduce a new one.
 
 Previously, handlers were defined and registered this way:
 
@@ -486,15 +499,14 @@ See GitHub issue [#20209](https://github.com/sympy/sympy/issues/20209).
 ## Version 1.7.1
 
 (deprecated-distribution-randomindexedsymbol)=
-### Calling `sympy.stats.StochasticProcess.distribution` with
-`RandomIndexedSymbol`
+### Calling `sympy.stats.StochasticProcess.distribution` with `RandomIndexedSymbol`
 
 The `distribution` method of `sympy.stats` [stochastic
 processes](sympy-stats-stochastic-processes) used to accept a
 `RandomIndexedSymbol` (that is, a stochastic process indexed with a
-timestamp), but should now only be called with the time stamp.
+timestamp), but should now only be called with the timestamp.
 
-For example, if we have
+For example, if you have
 
 ```py
 >>> from sympy import symbols
@@ -526,7 +538,7 @@ This was change was made as part of a change to store only `Basic` objects in
 ### `sympy.stats.DiscreteMarkovChain.absorbing_probabilites()`
 
 The `absorbing_probabilites` method name was misspelled. The correct spelling
-`absorbing_probabilities` ("absorbing probabilit*i*es") should be used
+{meth}`~.absorbing_probabilities` ("absorbing probabilit*i*es") should be used
 instead.
 
 (deprecated-find-executable)=
@@ -555,7 +567,7 @@ mutable, which better matches the immutable design used in the rest of SymPy.
   use
 
   ```py
-  CoordSystem(name, patch, symbols('x y', real=True)
+  CoordSystem(name, patch, symbols('x y', real=True))
   ```
 
 - Similarly, the `names` keyword argument has been renamed to `symbols`, which
@@ -588,13 +600,13 @@ with the `prettyForm.s` attribute.
 ### The `sympy.printing.fcode`, `sympy.printing.ccode`, and `sympy.printing.cxxcode` modules
 
 The submodules `sympy.printing.ccode`, `sympy.printing.fcode`, and
-`sympy.printing.cxxcode` were renamed to `sympy.printing.c`,
-`sympy.printing.fortran`, and `sympy.printing.cxx`, respectively. These
-modules were renamed because they conflict with the corresponding function
-names. This causes issues because `from sympy.printing import ccode` can give
-the function or the module, depending on whether the `ccode` submodule has
-been imported yet or not. See [this
-comment](https://github.com/sympy/sympy/issues/20234#issuecomment-707574283)
+`sympy.printing.cxxcode` were renamed to {mod}`sympy.printing.c`,
+{mod}`sympy.printing.fortran`, and {mod}`sympy.printing.cxx`, respectively.
+These modules were renamed because they conflict with the corresponding
+function names. This causes issues because `from sympy.printing import ccode`
+can give the function or the module, depending on whether the `ccode`
+submodule has been imported yet or not. See [this comment on issue
+#20234](https://github.com/sympy/sympy/issues/20234#issuecomment-707574283)
 for a technical discussion on why this happens.
 
 (deprecated-lambdify-arguments-set)=
@@ -632,8 +644,8 @@ numeric quantities. For example, {class}`~.sin`, {class}`~.Symbol`, and
 {class}`~.Add` are all subclasses of {class}`~.Expr`. However, may objects in
 SymPy are not {class}`~.Expr` because they represent some other type of
 mathematical object. For example, {class}`~.Set`, {class}`~.Poly`, and
-{class}`~.Boolean` are all non-`Expr`. These do not make direct mathematical
-sense inside of Add, Mul, and Pow, which are designed specifically to
+{class}`~.Boolean` are all non-`Expr`. These do not make mathematical sense
+inside of `Add`, `Mul`, and `Pow`, which are designed specifically to
 represent the addition, multiplication, and exponentiation of scalar complex
 numbers.
 
@@ -660,9 +672,9 @@ AttributeError: 'Tuple' object has no attribute 'as_coeff_Mul'
 because it tries to call a method of `Expr` on the `Tuple` object, which does
 not have all the `Expr` methods (because it is not a subclass of `Expr`).
 
-If you want to use the `+`, `*` or `**` operation on an object, use it
-directly rather than using `Mul`, `Add` or `Pow`. If functional versions of
-these are desired, you can use a `lambda` or the
+If you want to use the `+`, `*`, or `**` operation on a non-`Expr` object, use
+the operator directly rather than using `Mul`, `Add` or `Pow`. If functional
+versions of these are desired, you can use a `lambda` or the
 [`operator`](https://docs.python.org/3/library/operator.html) module.
 
 ## Version 1.6
@@ -707,7 +719,7 @@ Poly(x)*sin(x) # DEPRECATED
 ```
 
 To do this, either explicitly convert the non-`Poly` operand to a `Poly` using
-{meth}`.Expr.as_poly` or convert the `Poly` operand to an :class:`~.Expr`
+{meth}`.Expr.as_poly` or convert the `Poly` operand to an {class}`~.Expr`
 using {meth}`.Poly.as_expr`, depending on which type you want the result to
 be.
 
@@ -725,8 +737,16 @@ Instead, users should use the `perm_cyclic` flag of the corresponding printer.
 The easiest way to configure this is to set the flag when calling
 {func}`~.init_printing`, like
 
+<!-- doctests are skipped here so that it doesn't make the rest of the file -->
+<!-- use unicode pretty printing -->
+
 ```py
-init_printing(perm_cyclic=False) # Makes Permutation print in array form
+>>> from sympy import init_printing
+>>> init_printing(perm_cyclic=False) # Makes Permutation print in array form # doctest: +SKIP
+>>> from sympy.combinatorics import Permutation
+>>> Permutation(1, 2)(3, 4) # doctest: +SKIP
+⎛0 1 2 3 4⎞
+⎝0 2 1 4 3⎠
 ```
 
 The {class}`~.Permutation` docstring contains more details on the
@@ -747,20 +767,24 @@ To integrate a `Poly`, use the {meth}`.Poly.integrate` method. To compute the
 integral as an {class}`~.Expr` object, call the {meth}`.Poly.as_expr` method
 first.
 
+See also {ref}`deprecated-poly-nonpoly-binary-operations` above.
+
 (deprecated-sympify-string-fallback)=
 ### The string fallback in `sympify()`
 
 The current behavior of {func}`~.sympify` is that `sympify(expr)` tries
 various methods to try to convert `expr` into a SymPy objects. If all these
-methods fail, it takes `str(expr)` and tries to parse it. This string fallback
-feature is deprecated. It is problematic for a few reasons:
+methods fail, it takes `str(expr)` and tries to parse it using
+{func}`~.parse_expr`. This string fallback feature is deprecated. It is
+problematic for a few reasons:
 
-- It can affect performance in major ways. See for instance
-  https://github.com/sympy/sympy/issues/18056 and
-  https://github.com/sympy/sympy/issues/15416 where it's caused up to 100x
-  slowdowns. The issue is that whenever a function, and hence `sympify` is
-  passed something it doesn't know how to `sympify`, for instance, a Python
-  function type, it passes the string to {func}`~.parse_expr`. This is
+- It can affect performance in major ways. See for instance issues
+  [#18056](https://github.com/sympy/sympy/issues/18056) and
+  [#15416](https://github.com/sympy/sympy/issues/15416) where it caused up to
+  100x slowdowns. The issue is that SymPy functions automatically call
+  `sympify` on their arguments. Whenever a function is passed something that
+  `sympify` doesn't know how to convert to a SymPy object, for instance, a
+  Python function type, it passes the string to {func}`~.parse_expr`. This is
   significantly slower than the direct conversions that happen by default.
   This occurs specifically whenever `sympify()` is used in library code
   instead of `_sympify()` (or equivalently `sympify(strict=True)`), but
@@ -803,12 +827,12 @@ types, you can explicitly use {func}`~.parse_expr`).
 
 Passing an [`Eq()`](sympy.core.relational.Equality) object to
 {func}`~.integrate` is deprecated in the case where the integral is
-indefinite. This is because if $a = b$, $\int a\,dx = \int b\,dx$ is not true
-in general, due to the arbitrary constants (which `integrate` does not
-include).
+indefinite. This is because if $f(x) = g(x)$, then $\int f(x)\,dx = \int
+g(x)\,dx$ is not true in general, due to the arbitrary constants (which
+`integrate` does not include).
 
-If you want to make an equality of indefinite integrals, use `Eq(integrate(a, x),
-integrate(b, x))` explicitly.
+If you want to make an equality of indefinite integrals, use
+`Eq(integrate(f(x), x), integrate(g(x), x))` explicitly.
 
 ## Version 1.5
 
@@ -827,13 +851,13 @@ The `TensorType` class is deprecated. Use {func}`~.tensor_heads` instead. The
 `TensorType` class had no purpose except shorter creation of
 {class}`~.TensorHead` objects.
 
-See also :ref:`deprecated-tensorhead` below.
+See also {ref}`deprecated-tensorhead` below.
 
 (deprecated-tensorindextype-dummy-fmt)=
 ### The `dummy_fmt` argument to `TensorIndexType`
 
 The `dummy_fmt` keyword argument to {class}`~.TensorIndexType` is deprecated.
-Setting `dummy_fmt`='L' leads to `_dummy_fmt`='L_%d', which is confusing and
+Setting `dummy_fmt='L'` leads to `_dummy_fmt='L_%d'`, which is confusing and
 uses obsolete string formatting. `dummy_name` should be used instead. This
 change was made because `dummy_name` is a clearer name.
 
@@ -1026,10 +1050,10 @@ This was done so that `Lambda` could support general tuple unpacking, like
 (deprecated-differentiate_finite-evaluate)=
 ### The `evaluate` flag to `differentiate_finite`
 
-The evaluate flag to {func}`~.differentiate_finite` is deprecated.
+The `evaluate` flag to {func}`~.differentiate_finite` is deprecated.
 
 `differentiate_finite(expr, x, evaluate=True)` expands the intermediate
-derivatives before computing differences, but this usually not what you want,
+derivatives before computing differences. But this usually not what you want,
 as it does not satisfy the product rule.
 
 If you really do want this behavior, you can emulate it with
@@ -1146,19 +1170,20 @@ The functions `sympy.matrices.matrices.classof` and
 (deprecated-matrix-dot-non-vector)=
 ### Dot product of non-row/column vectors
 
-The [`Matrix.dot()`](sympy.matrices.matrices.MatrixBase.dot) has confusing
-behavior where `A.dot(B)` would return a list corresponding to
-`flatten(A.T*B.T)` when `A` and `B` are matrices that were not vectors (i.e.,
-neither dimension was size 1). This was confusing. The purpose of `dot` is to
-perform a mathematical dot product, which should only be defined for vectors
-(i.e., either a $n\times 1$ or $1\times n$ matrix), but in a way that works
-regardless of whether each argument is a row or column vector. Furthermore,
-returning a list here was much less useful than a matrix would be, and
-resulted in a polymorphic return type depending on the shapes of the inputs.
+The [`Matrix.dot()`](sympy.matrices.matrices.MatrixBase.dot) method has
+confusing behavior where `A.dot(B)` returns a list corresponding to
+`flatten(A.T*B.T)` when `A` and `B` are matrices that are not vectors (i.e.,
+neither dimension is size 1). This is confusing. The purpose of `Matrix.dot()`
+is to perform a mathematical dot product, which should only be defined for
+vectors (i.e., either a $n\times 1$ or $1\times n$ matrix), but in a way that
+works regardless of whether each argument is a row or column vector.
+Furthermore, returning a list here was much less useful than a matrix would
+be, and resulted in a polymorphic return type depending on the shapes of the
+inputs.
 
-This behavior is deprecated. `dot` should only be used to do a mathematical
-dot product, which operates on row or column vectors . Use the `*` or `@`
-operators to do matrix multiplication.
+This behavior is deprecated. `Matrix.dot` should only be used to do a
+mathematical dot product, which operates on row or column vectors. Use the
+`*` or `@` operators to do matrix multiplication.
 
 ```py
 >>> from sympy import Matrix
@@ -1209,23 +1234,3 @@ Now:
 >>> l.equation()
 (-x + y - 1, -x + z - 2)
 ```
-
-
-(simplify-this-deprecation)=
-## This is an example deprecation description
-
-```{note}
-This section is just an example. I will remove it once the *real*
-deprecations are added to this page (it is also duplicated as an example in
-the deprecations guide).
-```
-
-The `simplify_this` function is deprecated. It has been replaced with the
-`simplify` function. Code using `simplify_this` can be fixed by replacing
-`simplfiy_this` with `simplify`. The behavior of the two functions is
-otherwise identical.
-
-The change was made because `simplify` is a much more Pythonic name than
-`simplify_this`.
-
-This feature has been deprecated since SymPy version 1.1.
