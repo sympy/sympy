@@ -40,7 +40,7 @@ def _common_new(cls, function, *symbols, discrete, **assumptions):
                 indefinite integrals, use Eq(Integral(a, x), Integral(b, x))
                 explicitly.
                 """,
-                deprecated_since_version=1.6,
+                deprecated_since_version="1.6",
                 active_deprecations_target="deprecated-indefinite-integral-eq",
                 stacklevel=5,
             )
