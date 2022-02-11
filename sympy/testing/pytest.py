@@ -1,6 +1,7 @@
 """py.test hacks to support XFAIL/XPASS"""
 
 import sys
+import re
 import functools
 import os
 import contextlib
@@ -214,16 +215,16 @@ def warns(warningcls, *, match='', test_stacklevel=True):
     ambiguous or if the context manager does not test the direct user code
     that emits the warning.
 
-    If the warning is a ``SymPyDeprecationWarning``, this additionally tests that
-    the ``active_deprecations_target`` is a real target in the
+    If the warning is a ``SymPyDeprecationWarning``, this additionally tests
+    that the ``active_deprecations_target`` is a real target in the
     ``active-deprecations.md`` file.
 
     '''
     # Absorbs all warnings in warnrec
     with warnings.catch_warnings(record=True) as warnrec:
-        # Hide all warnings but make sure that our warning is emitted
-        warnings.simplefilter("ignore")
-        warnings.filterwarnings("always", match, warningcls)
+        # Any warning other than the one we are looking for is an error
+        warnings.simplefilter("error")
+        warnings.filterwarnings("always", category=warningcls)
         # Now run the test
         yield warnrec
 
@@ -234,6 +235,15 @@ def warns(warningcls, *, match='', test_stacklevel=True):
                ' The list of emitted warnings is: %s.'
                ) % (warningcls, [w.message for w in warnrec])
         raise Failed(msg)
+
+    # We don't include the match in the filter above because it would then
+    # fall to the error filter, so we instead manually check that it matches
+    # here
+    for w in warnrec:
+        # Should always be true due to the filters above
+        assert issubclass(w.category, warningcls)
+        if not re.compile(match, re.I).match(str(w.message)):
+            raise Failed(f"Failed: WRONG MESSAGE. A warning with of the correct category ({warningcls.__name__}) was issued, but it did not match the given match regex ({match!r})")
 
     if test_stacklevel:
         for f in inspect.stack():
