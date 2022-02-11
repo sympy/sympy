@@ -372,7 +372,8 @@ matrix expression, meaning it can be unevaluated and support symbolic shape.
 ### The private `SparseMatrix._smat` and `DenseMatrix._mat` attributes
 
 The `._mat` attribute of [`Matrix`](sympy.matrices.dense.Matrix) and the
-`._smat` attribute of {class}`~.SparseMatrix` are deprecated.
+`._smat` attribute of [`SparseMatrix`](sympy.matrices.sparse.SparseMatrix) are
+deprecated.
 
 The internal representation of `Matrix` and `SparseMatrix` was changed to be a
 {class}`~.DomainMatrix` in [#21626](https://github.com/sympy/sympy/pull/21626)
@@ -818,7 +819,7 @@ function evaluation was considered both confusing and dangerous.
 (deprecated-tensortype)=
 ### `TensorType`
 
-The `TensorType` class is deprecated. Use {func}`tensor_heads` instead. The
+The `TensorType` class is deprecated. Use {func}`~.tensor_heads` instead. The
 `TensorType` class had no purpose except shorter creation of
 {class}`~.TensorHead` objects.
 
@@ -1047,7 +1048,7 @@ which made use of it including the `get_matrix()`, the `__getitem__()`
 (indexing), `__iter__()` (iteration), `_components_data_full_destroy()`, and `__pow__()` (`**`) methods. Storing data on tensor objects was a
 design flaw and not consistent with how the rest of SymPy works.
 
-Instead, the {meth}`.TensorIndexType.replace_with_arrays` method should be
+Instead, the {meth}`.TensExpr.replace_with_arrays` method should be
 used.
 
 (deprecated-matrix-is_diagonalizable-cache)=
@@ -1141,15 +1142,15 @@ The functions `sympy.matrices.matrices.classof` and
 (deprecated-matrix-dot-non-vector)=
 ### Dot product of non-row/column vectors
 
-The {meth}`.Matrix.dot` has confusing behavior where `A.dot(B)` would return a
-list corresponding to `flatten(A.T*B.T)` when `A` and `B` are matrices that
-were not vectors (i.e., neither dimension was size 1). This was confusing. The
-purpose of `dot` is to perform a mathematical dot product, which should only
-be defined for vectors (i.e., either a $n\times 1$ or $1\times n$ matrix), but
-in a way that works regardless of whether each argument is a row or column
-vector. Furthermore, returning a list here was much less useful than a matrix
-would be, and resulted in a polymorphic return type depending on the shapes of
-the inputs.
+The [`Matrix.dot()`](sympy.matrices.matrices.MatrixBase.dot) has confusing
+behavior where `A.dot(B)` would return a list corresponding to
+`flatten(A.T*B.T)` when `A` and `B` are matrices that were not vectors (i.e.,
+neither dimension was size 1). This was confusing. The purpose of `dot` is to
+perform a mathematical dot product, which should only be defined for vectors
+(i.e., either a $n\times 1$ or $1\times n$ matrix), but in a way that works
+regardless of whether each argument is a row or column vector. Furthermore,
+returning a list here was much less useful than a matrix would be, and
+resulted in a polymorphic return type depending on the shapes of the inputs.
 
 This behavior is deprecated. `dot` should only be used to do a mathematical
 dot product, which operates on row or column vectors . Use the `*` or `@`
