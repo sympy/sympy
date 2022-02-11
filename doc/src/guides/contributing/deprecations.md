@@ -473,12 +473,17 @@ documented in three primary places:
   global in Sphinx, so the target name needs to be unique across the entire
   documentation).
 
+  The section header name should be the thing that is deprecated, and should
+  be a level 3 header under the corresponding version (typically it should be
+  added to the top of the file).
+
   If multiple deprecations are related to one another, they can all share a
   single section on this page.
 
   If the deprecated function is not included in the top-level
   `sympy/__init__.py` be sure to clearly indicate which submodule the object
-  is referring to.
+  is referring to. If you refer to anything that is documented in the Sphinx
+  module reference, cross-reference it, like ``` {func}`~.func_name` ```.
 
   Note that examples here are helpful, but you generally should not use
   doctests to show the deprecated functionality, as this will itself raise the
