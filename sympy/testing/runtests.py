@@ -806,6 +806,8 @@ def _doctest(*paths, **kwargs):
                     matched.append(f)
                     break
 
+    matched.sort()
+
     if split:
         matched = split_list(matched, split)
 
@@ -1186,7 +1188,7 @@ class SymPyTests:
                     if self._kw:
                         for l in source.splitlines():
                             if l.lstrip().startswith('def '):
-                                if any(l.find(k) != -1 for k in self._kw):
+                                if any(l.lower().find(k.lower()) != -1 for k in self._kw):
                                     break
                         else:
                             return
@@ -1327,7 +1329,7 @@ class SymPyTests:
         if not self._kw:
             return True
         for kw in self._kw:
-            if x.__name__.find(kw) != -1:
+            if x.__name__.lower().find(kw.lower()) != -1:
                 return True
         return False
 
