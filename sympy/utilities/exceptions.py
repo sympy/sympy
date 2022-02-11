@@ -121,7 +121,8 @@ def sympy_deprecation_warning(message, *, deprecated_since_version,
     deprecated_since_version: str
 
          The version of SymPy the feature has been deprecated since. For new
-         deprecations, this should be the version in ``sympy/release.py``
+         deprecations, this should be the version in `sympy/release.py
+         <https://github.com/sympy/sympy/blob/master/sympy/release.py>`_
          without the ``.dev``. If the next SymPy version ends up being
          different from this, the release manager will need to update any
          ``SymPyDeprecationWarning``\s using the incorrect version. This

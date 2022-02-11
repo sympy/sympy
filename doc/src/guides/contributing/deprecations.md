@@ -4,6 +4,9 @@
 This page outlines SymPy's policy on doing deprecations, and describes the
 steps developers should take to properly deprecate code.
 
+A list of all currently active deprecations in SymPy can be found at
+{ref}`active-deprecations`.
+
 ## What is a deprecation?
 
 A deprecation is a way to make backwards incompatible changes in a way that
@@ -21,23 +24,23 @@ error or start giving wrong answers.
 
 Backwards incompatible API changes should not be made lightly. Any backwards
 compatibility break means that users will need to fix their code. Whenever you
-want to make a change, you should consider whether this is worth the pain for
-users. Users that have to update their code to match new APIs with every SymPy
-release will become frustrated with the library, and may go seek a more stable
-alternative. Consider whether the behavior you want can be done in a way that
-is compatible with existing APIs. New APIs do not necessarily need to
-completely supplant old ones. It is possible for old APIs to exist alongside
-newer, better designed ones without removing them. For example, the newer
-{ref}`solveset <solveset>` API was designed to be a superior replacement for
-the older {ref}`solve <solvers>` API. But the older `solve()` function remains
-intact and is still supported.
+want to make a breaking change, you should consider whether this is worth the
+pain for users. Users who have to update their code to match new APIs with
+every SymPy release will become frustrated with the library, and may go seek a
+more stable alternative. Consider whether the behavior you want can be done in
+a way that is compatible with existing APIs. New APIs do not necessarily need
+to completely supplant old ones. It is sometimes possible for old APIs to
+exist alongside newer, better designed ones without removing them. For
+example, the newer {ref}`solveset <solveset>` API was designed to be a
+superior replacement for the older {ref}`solve <solvers>` API. But the older
+`solve()` function remains intact and is still supported.
 
 It is important to try to be cognizant of API design whenever adding new
 functionality. Try to consider what a function may do in the future, and
 design the API in a way that it can do so without having to make a breaking
 change. For example, if you add a property to an object `A.attr`, it is
 impossible to later convert that property into a method `A.attr()` so that it
-can take arguments except by doing so in a backwards incompatible way. If you
+can take arguments, except by doing so in a backwards incompatible way. If you
 are unsure about your API design for a new functionality, one option is to
 mark the new functionality as explicitly private or as experimental.
 
@@ -74,9 +77,14 @@ working after the change.
 
 What counts as "public API" needs to be considered on a case-by-case basis.
 The exact rules for what does and doesn't constitute public API for SymPy are
-still not yet fully codified. Here are some thing that constitute public API.
-*Note: these are just general guidelines. This list is not exhaustive, and
-there are always exceptions to the rules.*
+still not yet fully codified. Cleaning up the distinction between public and
+private APIs, as well as the categorization in the reference documentation is
+currently an [open issue for
+SymPy](https://github.com/sympy/sympy/issues/23037).
+
+Here are some thing that constitute public API. *Note: these are just general
+guidelines. This list is not exhaustive, and there are always exceptions to
+the rules.*
 
 ```{admonition} Public API
 - Function names.
@@ -111,11 +119,8 @@ guidelines).
 
 Note: both public and private API functions are included in the [reference
 documentation](reference), and many functions are not included there which
-should be, or are not documented at all which whould be, so this should not be
-used to determine whether something public or not. Cleaning up the distinction
-between public and private APIs, as well as the categorization in the
-reference documentation is currently an [open issue for
-SymPy](https://github.com/sympy/sympy/issues/23037).
+should be, or are not documented at all which should be, so this should not be
+used to determine whether something public or not.
 
 If you're unsure, there is no harm in deprecating something even if it might
 not actually be "public API".
@@ -134,7 +139,7 @@ All deprecation warnings should be something that users can remove by updating
 their code. Deprecation warnings that fire unconditionally, even when using
 the "correct" newer APIs, should be avoided.
 
-This also means all deprecated code must have a completely functional
+This also means all deprecated code must have a completely functioning
 replacement. If there is no way for users to update their code, then this
 means API in question is not yet read to be deprecated. The deprecation
 warning should inform users of a way to change their code so that it works in
@@ -144,7 +149,8 @@ the same version of SymPy, as well as all future versions (see
 Deprecations should always
 
 1. Allow users to continue to use the existing APIs unchanged during the
-   deprecation period (with a warning, which can be silenced with
+   deprecation period (with a warning, which can be
+   [silenced](silencing-sympy-deprecation-warnings) with
    `warnings.filterwarnings`).
 2. Allow users to always fix their code so that it stops giving the warning.
 3. After users fix their code, it should continue to work after the deprecated
@@ -185,7 +191,7 @@ not impose a significant maintenance burden to keep around.
 
 The deprecation period policy is time-based rather than release-based for a
 few reasons. Firstly, SymPy does not have a regular release schedule.
-Sometimes multiple releases will be made in a year, and sometimes only a
+Sometimes multiple releases will be made in a year, and some years only a
 single release will be made. Being time-based assures that users have
 sufficient opportunity to update their code regardless of how often releases
 happen to be made.
@@ -230,11 +236,13 @@ everywhere in the codebase (including doctest examples).
 <ul>
 
 <input type="checkbox"> Write a descriptive message for the
-{func}`~.sympy_deprecation_warning`. Make sure the message explains both is
-deprecated and what to replace it with.
+{func}`~.sympy_deprecation_warning`. Make sure the message explains both what
+is deprecated and what to replace it with. The message may be a multiline
+string and contain examples.
 
 <input type="checkbox"> Set `deprecated_since_version` to the version in
-`sympy/release.py` (without the `.dev`).
+[`sympy/release.py`](https://github.com/sympy/sympy/blob/master/sympy/release.py)
+(without the `.dev`).
 
 <input type="checkbox"> Set `active_deprecations_target` to the target used in
 the `active-deprecations.md` file.
@@ -284,8 +292,8 @@ on the wiki.
 ### Adding the deprecation to the code
 
 All deprecations should use
-{class}`sympy.utilities.exceptions.sympy_deprecation_warning`. If a function
-or method is deprecated, you can use the
+{func}`sympy.utilities.exceptions.sympy_deprecation_warning`. If an entire
+function or method is deprecated, you can use the
 {func}`sympy.utilities.decorator.deprecated` decorator. The
 `deprecated_since_version` and `active_deprecations_target` flags are
 required. Do not use the `SymPyDeprecationWarning` class directly to issue a
@@ -293,7 +301,7 @@ deprecation warning. Please see the docstring of
 {func}`~.sympy_deprecation_warning` for more information. See
 [below](deprecation-documentation) for an example.
 
-Add a test for the deprecated behavior. You can use the
+Add a test for the deprecated behavior. Use the
 {func}`sympy.testing.pytest.warns_deprecated_sympy` context manager.
 
 ```py
@@ -355,11 +363,11 @@ documented in three primary places:
   details. This discussion can go in the other sections mentioned below. Do
   not include information in the message that is already part of the metadata
   provided to the keyword arguments to `sympy_deprecation_warning()`, like the
-  version number. Remember that the warning text will be shown in plain-text,
-  so do not use RST or Markdown markup in the text. Code blocks should be
-  clearly delineated with newlines so that they are easy to read. All text in
-  the warning message should be wrapped to 80 characters, except for code
-  examples that cannot be wrapped.
+  version number or a link to the active deprecations document. Remember that
+  the warning text will be shown in plain-text, so do not use RST or Markdown
+  markup in the text. Code blocks should be clearly delineated with newlines
+  so that they are easy to read. All text in the warning message should be
+  wrapped to 80 characters, except for code examples that cannot be wrapped.
 
   Always include full context of what is deprecated in the message. For
   example, write "the abc keyword to func() is deprecated" instead of just
@@ -381,8 +389,8 @@ documented in three primary places:
   want, you may use the same text here as in the
   {func}`~.sympy_deprecation_warning`. Be sure to use RST formatting,
   including cross-references to the new function if relevant, and a
-  cross-reference to the longer description (see
-  [below](deprecations-longer-description)).
+  cross-reference to the longer description in the `active-deprecations.md`
+  document (see [below](deprecations-longer-description)).
 
   If the documentation for the feature is otherwise the same as the replaced
   feature (i.e., the deprecation is just a renaming of a function or
@@ -390,7 +398,7 @@ documented in three primary places:
   "see the documentation for \<new feature\>". Otherwise, the documentation
   for the deprecated functionality should be left intact.
 
-  Consider these (imaginary) examples:
+  Here are some (imaginary) examples:
 
   ```py
   @deprecated("""\
@@ -447,12 +455,12 @@ documented in three primary places:
 
   This page is where you can go into more detail about the technical details
   of a deprecation. Here you should also list *why* a feature was deprecated.
-  You should link to relevant issues, pull requests, and mailing list
-  discussions about the deprecation. However, these discussion should be
-  summarized so that users can get the basic idea of why the deprecation
-  without having to read through pages of old discussions. You may also here
-  give longer examples that would not fit in the
-  {func}`~.sympy_deprecation_warning()` message or `.. deprecated::` text.
+  You may link to relevant issues, pull requests, and mailing list discussions
+  about the deprecation, but these discussion should be summarized so that
+  users can get the basic idea of why the deprecation without having to read
+  through pages of old discussions. You may also give longer examples here
+  that would not fit in the {func}`~.sympy_deprecation_warning()` message or
+  `.. deprecated::` text.
 
   Every deprecation should have a cross-reference target (using
   `(target-name)=` above the section header) so that the `.. deprecated::`
@@ -477,28 +485,52 @@ documented in three primary places:
   deprecation warning and fail the doctest. Instead you may use `# doctest:
   +SKIP`, or just show the example as a code block instead of a doctest.
 
+  Here are examples corresponding to the (imaginary) examples above:
+
   ```md
   (simplify-this-deprecation)=
-  ## This is an example deprecation description
+  ### `simplify_this()`
 
-  **Note: this section is just an example. I will remove it once the *real*
-  deprecations are added to this page (it is also duplicated in the deprecations
-  guide.**
+  The `sympy.simplify.simplify_this()` function is deprecated. It has been
+  replaced with the {func}`~.simplify` function. Code using `simplify_this()`
+  can be fixed by replacing `simplfiy_this(expr)` with `simplify(expr)`. The
+  behavior of the two functions is otherwise identical.
 
-  The `simplify_this` function is deprecated. It has been replaced with the
-  `simplify` function. Code using `simplify_this` can be fixed by replacing
-  `simplfiy_this` with `simplify`. The behavior of the two functions is
-  otherwise identical.
-
-  The change was made because `simplify` is a much more Pythonic name than
+  This change was made because `simplify` is a much more Pythonic name than
   `simplify_this`.
   ```
+
+  `````md
+  (is-this-zero-y-deprecation)=
+  ### `is_this_zero()` second argument
+  The second argument to {func}`~.is_this_zero()` is deprecated. Previously
+  `is_this_zero(x, y)` would check if x = y. However, this was removed because
+  it is trivially equivalent to `is_this_zero(x - y)`. Furthermore, allowing
+  to check $x=y$ in addition to just $x=0$ is is confusing given the function
+  is named "is this zero".
+
+  In particular, replace
+
+  ```py
+  is_this_zero(expr1, expr2)
+  ```
+
+  with
+
+  ```py
+  is_this_zero(expr1 - expr2)
+  ```
+
+  `````
+
+In addition to the above examples, there are dozens of examples of existing
+deprecations which can be found by searching for `sympy_deprecation_warning`
+in the SymPy codebase
 
 ### Release notes entry
 
 In the pull request, document the breaking change in the release notes section
-with `BREAKING CHANGE`. You reference link to the active deprecations document
-that is generated by the warning message here.
+with `BREAKING CHANGE`.
 
 Once the PR is merged, you should also add it to the "Backwards compatibility
 breaks and deprecations" section of the release notes for the upcoming
@@ -507,5 +539,6 @@ bot. See
 https://github.com/sympy/sympy/wiki/Writing-Release-Notes#backwards-compatibility-breaks-and-deprecations
 
 Whenever a deprecated functionality is removed entirely after its deprecation
-period, this also needs to be added to the "Backwards compatibility breaks and
-deprecations" section of the release notes.
+period, this also needs to be marked as a `BREAKING CHANGE` and added to the
+"Backwards compatibility breaks and deprecations" section of the release
+notes.
