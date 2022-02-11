@@ -1,7 +1,9 @@
 """
 .. deprecated:: 1.10
 
-   sympy.testing.randtest functions have been moved to sympy.core.random.
+   ``sympy.testing.randtest`` functions have been moved to
+   :mod:`sympy.core.random`.
+
 """
 from sympy.utilities.exceptions import sympy_deprecation_warning
 
