@@ -94,7 +94,7 @@ warnings.simplefilter("once", SymPyDeprecationWarning)
 
 def sympy_deprecation_warning(message, *, deprecated_since_version,
                               active_deprecations_target, stacklevel=3):
-    '''
+    r'''
     Warn that a feature is deprecated in SymPy.
 
     See the :ref:`deprecation-policy` document for details on when and how
