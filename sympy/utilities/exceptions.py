@@ -57,6 +57,8 @@ class SymPyDeprecationWarning(DeprecationWarning):
             raise TypeError(f"'deprecated_since_version' should be a string, got {deprecated_since_version!r}")
         self.deprecated_since_version = deprecated_since_version
         self.active_deprecations_target = active_deprecations_target
+        if any(i in active_deprecations_target for i in '()='):
+            raise ValueError("active_deprecations_target be the part inside of the '(...)='")
 
         self.full_message = f"""
 
