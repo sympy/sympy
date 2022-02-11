@@ -593,7 +593,7 @@ been imported yet or not. See [this
 comment](https://github.com/sympy/sympy/issues/20234#issuecomment-707574283)
 for a technical discussion on why this happens.
 
-(deprecated-lambdify-arguments-set)
+(deprecated-lambdify-arguments-set)=
 ### Passing the arguments to `lambdify` as a `set`
 
 Passing the function arguments to lambdify as a set is deprecated. Instead

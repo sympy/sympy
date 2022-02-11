@@ -3,7 +3,7 @@ import math
 import inspect
 
 import mpmath
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 from sympy.concrete.summations import Sum
 from sympy.core.function import (Function, Lambda, diff)
 from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
@@ -1558,3 +1558,7 @@ def test_lambdify_cse():
             f = case.lambdify(cse=cse)
             result = f(*case.num_args)
             case.assertAllClose(result)
+
+def test_deprecated_set():
+    with warns_deprecated_sympy():
+        lambdify({x, y}, x + y)
