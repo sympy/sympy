@@ -50,9 +50,9 @@ from sympy.core.sympify import CantSympify, _sympify
 from sympy.core.operations import AssocOp
 from sympy.external.gmpy import SYMPY_INTS
 from sympy.matrices import eye
-from sympy.testing.pytest import ignore_warnings
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
-                                        SymPyDeprecationWarning)
+                                        SymPyDeprecationWarning,
+                                        ignore_warnings)
 from sympy.utilities.decorator import memoize_property, deprecated
 
 

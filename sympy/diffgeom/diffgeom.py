@@ -17,9 +17,9 @@ from sympy.functions import factorial
 from sympy.matrices import ImmutableDenseMatrix as Matrix
 from sympy.solvers import solve
 
-from sympy.testing.pytest import ignore_warnings
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
-                                        SymPyDeprecationWarning)
+                                        SymPyDeprecationWarning,
+                                        ignore_warnings)
 
 
 # TODO you are a bit excessive in the use of Dummies

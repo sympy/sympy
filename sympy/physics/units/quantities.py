@@ -7,9 +7,9 @@ from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
 from sympy.physics.units.dimensions import _QuantityMapper
 from sympy.physics.units.prefixes import Prefix
-from sympy.testing.pytest import ignore_warnings
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
-                                        SymPyDeprecationWarning)
+                                        SymPyDeprecationWarning,
+                                        ignore_warnings)
 
 
 class Quantity(AtomicExpr):

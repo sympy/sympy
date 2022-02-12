@@ -300,6 +300,7 @@ def deprecated(message, *, deprecated_since_version,
     ========
     sympy.utilities.exceptions.SymPyDeprecationWarning
     sympy.utilities.exceptions.sympy_deprecation_warning
+    sympy.utilities.exceptions.ignore_warnings
     sympy.testing.pytest.warns_deprecated_sympy
 
     '''

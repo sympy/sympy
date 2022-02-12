@@ -7,10 +7,10 @@ from sympy.core import sympify
 from sympy.core.kind import BooleanKind
 from sympy.core.relational import Eq, Ne, Gt, Lt, Ge, Le
 from sympy.logic.inference import satisfiable
-from sympy.testing.pytest import ignore_warnings
 from sympy.utilities.decorator import memoize_property
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
-                                        SymPyDeprecationWarning)
+                                        SymPyDeprecationWarning,
+                                        ignore_warnings)
 
 
 # Memoization is necessary for the properties of AssumptionKeys to
