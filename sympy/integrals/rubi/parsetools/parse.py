@@ -208,9 +208,9 @@ def add_wildcards(string, optional={}):
 
     p = r'(Optional\(Pattern\((\w+), Blank\)\))'
     matches = re.findall(p, string)
-    for i in matches:
-        string = string.replace(i[0], "WC('{}', S({}))".format(i[1], optional[i[1]]))
-        symbols.append(i[1])
+    for i_0, i_1, *i_len in matches:
+        string = string.replace(i_0, "WC('{}', S({}))".format(i_1, optional[i_1]))
+        symbols.append(i_1)
 
     p = r'(Pattern\((\w+), Blank\))'
     matches = re.findall(p, string)
@@ -220,9 +220,9 @@ def add_wildcards(string, optional={}):
 
     p = r'(Pattern\((\w+), Blank\(Symbol\)\))'
     matches = re.findall(p, string)
-    for i in matches:
-        string = string.replace(i[0], i[1] + '_')
-        symbols.append(i[1])
+    for i_0, i_1, *i_len in matches:
+        string = string.replace(i_0, i_1 + '_')
+        symbols.append(i_1)
 
     return string, symbols
 
