@@ -495,12 +495,6 @@ class StrPrinter(Printer):
         return "%s[%s]" % (
             self.parenthesize(expr.name, PRECEDENCE["Func"], True), ", ".join([self._print(i) for i in expr.indices]))
 
-    def _print_Idx(self, expr):
-        return self._print(expr.label)
-
-    def _print_IndexedBase(self, expr):
-        return self._print(expr.label)
-
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % self._print(a) for a in expr.args]
         return 'PermutationGroup([\n%s])' % ',\n'.join(p)
