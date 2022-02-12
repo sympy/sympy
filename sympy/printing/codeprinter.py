@@ -13,7 +13,6 @@ from sympy.functions.elementary.complexes import re
 from sympy.printing.str import StrPrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 
-
 class requires:
     """ Decorator for registering requirements on print methods. """
     def __init__(self, **kwargs):
@@ -386,13 +385,22 @@ class CodePrinter(StrPrinter):
                  [lhs_code, expr.op, rhs_code])))
 
     def _print_IndexedAssignment(self, expr):
+        from sympy.concrete import Sum
         lines =[]
         openloop, endloop = self._get_loop_opening_ending(expr.indices)
         lines+=openloop
-
+        subs = []
+        for dummy, (dummy_expr, dummies) in list(expr.dummies.items())[1::-1]: #dummy, (dummies, dummy_expr)
+            if dummies[0]:
+                dummy_open , dummy_close = self._get_loop_opening_ending([d[0] for d in dummies])
+                lines+= dummy_open
+                lines+= [self._print(dummy) + " = " + self._print(dummy + dummy_expr.subs(subs))]
+                subs.append(((Sum(dummy_expr,*dummies)), dummy))
+                lines+= dummy_close
+        lines+=[self._print(expr.lhs) + " = " + self._print(expr.rhs.subs(subs))]
         lines+=endloop
         return '\n'.join(lines)
-        
+
     def _print_FunctionCall(self, expr):
         return '%s(%s)' % (
             expr.name,

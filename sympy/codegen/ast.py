@@ -508,15 +508,22 @@ from sympy import Basic, Idx, Mul, Pow, Add
 
 @dispatch(Idx) # type:ignore # noqa:F811
 def _get_explicit_indices(rhs): # noqa:F811
-    return set([rhs])
+    return (rhs,)
 
 @dispatch(Sum) # type:ignore # noqa:F811
 def _get_explicit_indices(rhs): # noqa:F811
-    return set(_get_explicit_indices(rhs.args[0])) - set(*[_get_explicit_indices(arg) for arg in rhs.args[1:]])
+    indices = _get_explicit_indices(rhs.args[0])
+    sum_indices = [index for arg in rhs.args[1:] for index in _get_explicit_indices(arg)]
+    return tuple([index for index in indices if index not in sum_indices])
 
 @dispatch(Basic) # type:ignore # noqa:F811
 def _get_explicit_indices(rhs): # noqa:F811
-    return set().union(*[_get_explicit_indices(arg) for arg in rhs.args])
+    indices = []
+    for arg in rhs.args:
+        for index in _get_explicit_indices(arg):
+            if not index in indices:
+                indices.append(index)
+    return tuple(indices)
 #Might require some support for TensorProduct etc?
 
 
@@ -577,18 +584,35 @@ class IndexedAssignment(Assignment):
     XXX: To do
     """
     def __new__(cls, lhs, rhs, tensor_contraction = False, explicit = False):
+        from sympy.tenser.indexed import IndexedBase
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         if tensor_contraction:
             rhs = _tensor_contraction(rhs)
         if explicit:
-            dummies = _get_explicit_indices(rhs)
+            lhs_dummies = _get_explicit_indices(lhs)
+            dummies = tuple(d for d in _get_explicit_indices(rhs) if not d in lhs_dummies)
             if dummies:
-                rhs = Sum(rhs, *(dummies-_get_explicit_indices(lhs)))
+                rhs = Sum(rhs, *dummies)
 
         cls._check_args(lhs, rhs)
 
-        return super().__new__(cls, lhs, rhs)
+        obj = super().__new__(cls, lhs, rhs)
+
+        dummy_vars = {}
+        for sum in rhs.atoms(Sum):
+            indices = _get_explicit_indices(sum)
+            if indices:
+                dummy_vars[IndexedBase(Dummy())[indices]] = sum.args[0], sum.args[1:]
+            else:
+                dummy_vars[Dummy()] = sum.args[0], sum.args[1:]
+        if isinstance(rhs, Add):
+            dummy_vars[None] = (rhs.func(*[arg for arg in rhs.args if not isinstance(arg, Sum)], [None]))
+        if not rhs.has(Sum):
+            dummy_vars[None] = (rhs, [None])
+        obj._dummies = dummy_vars
+
+        return obj
 
     @property
     def indices(self):
@@ -596,13 +620,11 @@ class IndexedAssignment(Assignment):
 
     @property
     def dummies(self):
-        dummies = {s.args[1:]: s.args[0] for s in self.rhs.atoms(Sum)}
-        if isinstance(self.rhs, Add):
-            dummies[None] = self.rhs.func(*[arg for arg in self.rhs.args if not isinstance(arg, Sum)])
-        if not self.rhs.has(Sum):
-            return {None: self.rhs}
-        return dummies
+        return self._dummies
 
+    @property
+    def dummy_symbols(self):
+        return self._dummies.keys()
 
 class AugmentedAssignment(AssignmentBase):
     """
