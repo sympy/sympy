@@ -2185,19 +2185,23 @@ class Subs(Expr):
         if not point:
             return sympify(expr)
 
-        # denest
-        if isinstance(expr, Subs):
-            variables = expr.variables + variables
-            point = expr.point + point
-            expr = expr.expr
-        elif isinstance(-expr, Subs):
-            expr = -expr
-            variables = expr.variables + variables
-            point = expr.point + point
-            expr = expr.expr
-            expr = -expr
-        else:
-            expr = sympify(expr)
+        def denest(expr, variables, point):
+            # Helper function to denest expressions involving Subs in some form.
+            # if expression isn't related to Subs, the expression passed is returned.
+            # TODO: Code to deal with expressions of type Mul(constant, Subs(...))
+            # which currently return wrong results.
+            if isinstance(expr, Subs):
+                variables = expr.variables + variables
+                point = expr.point + point
+                expr = expr.expr
+            elif isinstance(-expr, Subs):
+                expr, variables, point = denest(-expr, variables, point)
+                expr = -expr
+            else:
+                expr = sympify(expr)
+            return expr, variables, point
+
+        expr, variables, point = denest(expr, variables, point)
 
         # use symbols with names equal to the point value (with prepended _)
         # to give a variable-independent expression
