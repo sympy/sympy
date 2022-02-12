@@ -11,6 +11,10 @@ import pathlib
 from typing import Any, Callable
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+# Imported here for backwards compatibility. Note: do not import this from
+# here in library code (importing sympy.pytest in library code will break the
+# pytest integration).
+from sympy.utilities.exceptions import ignore_warnings # noqa:F401
 
 ON_TRAVIS = os.getenv('TRAVIS_BUILD_NUMBER', None)
 
@@ -344,12 +348,12 @@ def warns_deprecated_sympy():
 
        Sometimes the stacklevel test will fail because the same warning is
        emitted multiple times. In this case, you can use
-       :func:`sympy.testing.pytest.ignore_warnings` in the code to prevent the
-       ``SymPyDeprecationWarning`` from being emitted again recursively. In
-       rare cases it is impossible to have a consistent ``stacklevel`` for
-       deprecation warnings because different ways of calling a function will
-       produce different call stacks.. In those cases, use
-       ``warns(SymPyDeprecationWarning)`` instead.
+       :func:`sympy.utilities.exceptions.ignore_warnings` in the code to
+       prevent the ``SymPyDeprecationWarning`` from being emitted again
+       recursively. In rare cases it is impossible to have a consistent
+       ``stacklevel`` for deprecation warnings because different ways of
+       calling a function will produce different call stacks.. In those cases,
+       use ``warns(SymPyDeprecationWarning)`` instead.
 
     See Also
     ========
@@ -360,55 +364,3 @@ def warns_deprecated_sympy():
     '''
     with warns(SymPyDeprecationWarning):
         yield
-
-
-@contextlib.contextmanager
-def ignore_warnings(warningcls):
-    '''Context manager to suppress warnings during tests.
-
-    .. note::
-
-       Do not use this with SymPyDeprecationWarning in the tests.
-       warns_deprecated_sympy() should be used instead.
-
-    This function is useful for suppressing warnings during tests. The warns
-    function should be used to assert that a warning is raised. The
-    ignore_warnings function is useful in situation when the warning is not
-    guaranteed to be raised (e.g. on importing a module) or if the warning
-    comes from third-party code.
-
-    When the warning is coming (reliably) from SymPy the warns function should
-    be preferred to ignore_warnings.
-
-    >>> from sympy.testing.pytest import ignore_warnings
-    >>> import warnings
-
-    Here's a warning:
-
-    >>> with warnings.catch_warnings():  # reset warnings in doctest
-    ...     warnings.simplefilter('error')
-    ...     warnings.warn('deprecated', UserWarning)
-    Traceback (most recent call last):
-      ...
-    UserWarning: deprecated
-
-    Let's suppress it with ignore_warnings:
-
-    >>> with warnings.catch_warnings():  # reset warnings in doctest
-    ...     warnings.simplefilter('error')
-    ...     with ignore_warnings(UserWarning):
-    ...         warnings.warn('deprecated', UserWarning)
-
-    (No warning emitted)
-    '''
-    # Absorbs all warnings in warnrec
-    with warnings.catch_warnings(record=True) as warnrec:
-        # Make sure our warning doesn't get filtered
-        warnings.simplefilter("always", warningcls)
-        # Now run the test
-        yield
-
-    # Reissue any warnings that we aren't testing for
-    for w in warnrec:
-        if not issubclass(w.category, warningcls):
-            warnings.warn_explicit(w.message, w.category, w.filename, w.lineno)

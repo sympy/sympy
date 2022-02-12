@@ -50,9 +50,8 @@ from .singleton import S
 from .sympify import sympify
 
 from .sorting import default_sort_key, ordered
-from sympy.testing.pytest import ignore_warnings
 from sympy.utilities.exceptions import (sympy_deprecation_warning,
-                                        SymPyDeprecationWarning)
+                                        SymPyDeprecationWarning, ignore_warnings)
 from sympy.utilities.iterables import (has_dups, sift, iterable,
     is_sequence, uniq, topological_sort)
 from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
