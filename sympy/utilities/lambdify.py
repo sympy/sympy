@@ -13,7 +13,7 @@ import linecache
 
 # Required despite static analysis claiming it is not used
 from sympy.external import import_module # noqa:F401
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.decorator import doctest_depends_on
 from sympy.utilities.iterables import (is_sequence, iterable,
     NotIterable, flatten)
@@ -188,7 +188,7 @@ def lambdify(args: tUnion[Iterable, 'sympy.core.expr.Expr'], expr: 'sympy.core.e
        This function uses ``exec``, and thus shouldn't be used on
        unsanitized input.
 
-    .. versionchanged:: 1.7.0
+    .. deprecated:: 1.7
        Passing a set for the *args* parameter is deprecated as sets are
        unordered. Use an ordered iterable such as a list or tuple.
 
@@ -829,12 +829,15 @@ def lambdify(args: tUnion[Iterable, 'sympy.core.expr.Expr'], expr: 'sympy.core.e
                            'user_functions': user_functions})
 
     if isinstance(args, set):
-        SymPyDeprecationWarning(
-                    feature="The list of arguments is a `set`. This leads to unpredictable results",
-                    useinstead=": Convert set into list or tuple",
-                    issue=20013,
-                    deprecated_since_version="1.6.3"
-                ).warn()
+        sympy_deprecation_warning(
+            """
+Passing the function arguments to lambdify() as a set is deprecated. This
+leads to unpredictable results since sets are unordered. Instead, use a list
+or tuple for the function arguments.
+            """,
+            deprecated_since_version="1.6.3",
+            active_deprecations_target="deprecated-lambdify-arguments-set",
+                )
 
     # Get the names of the args, for creating a docstring
     iterable_args: Iterable = (args,) if isinstance(args, Expr) else args

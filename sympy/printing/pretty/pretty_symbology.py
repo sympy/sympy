@@ -22,7 +22,7 @@ def U(name):
 
 from sympy.printing.conventions import split_super_sub
 from sympy.core.alphabets import greeks
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 # prefix conventions when constructing tables
 # L   - LATIN     i
@@ -87,10 +87,14 @@ def pretty_try_use_unicode():
 
 
 def xstr(*args):
-    SymPyDeprecationWarning(
-        feature="``xstr`` function",
-        useinstead="``str``",
-        deprecated_since_version="1.7").warn()
+    sympy_deprecation_warning(
+        """
+        The sympy.printing.pretty.pretty_symbology.xstr() function is
+        deprecated. Use str() instead.
+        """,
+        deprecated_since_version="1.7",
+        active_deprecations_target="deprecated-pretty-printing-functions"
+    )
     return str(*args)
 
 # GREEK

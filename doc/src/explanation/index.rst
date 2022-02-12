@@ -13,3 +13,4 @@ This section contains a discussion of in-depth feature details, specialized topi
 
    gotchas.rst
    special_topics/index.rst
+   active-deprecations.md

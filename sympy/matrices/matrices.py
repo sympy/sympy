@@ -22,7 +22,7 @@ from sympy.printing import sstr
 from sympy.printing.defaults import Printable
 from sympy.printing.str import StrPrinter
 from sympy.utilities.decorator import deprecated
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import flatten, NotIterable, is_sequence, reshape
 from sympy.utilities.misc import as_int, filldedent
 
@@ -1406,11 +1406,13 @@ class MatrixBase(MatrixDeprecated,
 
         mat = self
         if (1 not in mat.shape) or (1 not in b.shape) :
-            SymPyDeprecationWarning(
-                feature="Dot product of non row/column vectors",
-                issue=13815,
+            sympy_deprecation_warning(
+                """
+                Using the dot method to multiply non-row/column vectors is
+                deprecated. Use * or @ to perform matrix multiplication.
+                """,
                 deprecated_since_version="1.2",
-                useinstead="* to take matrix products").warn()
+                active_deprecations_target="deprecated-matrix-dot-non-vector")
             return mat._legacy_array_dot(b)
         if len(mat) != len(b):
             raise ShapeError("Dimensions incorrect for dot product: %s, %s" % (self.shape, b.shape))
@@ -2274,17 +2276,25 @@ class MatrixBase(MatrixDeprecated,
 
 
 @deprecated(
-    issue=15109,
-    useinstead="from sympy.matrices.common import classof",
-    deprecated_since_version="1.3")
+    """
+    sympy.matrices.matrices.classof is deprecated. Use
+    sympy.matrices.common.classof instead.
+    """,
+    deprecated_since_version="1.3",
+    active_deprecations_target="deprecated-sympy-matrices-classof-a2idx",
+)
 def classof(A, B):
     from sympy.matrices.common import classof as classof_
     return classof_(A, B)
 
 @deprecated(
-    issue=15109,
+    """
+    sympy.matrices.matrices.a2idx is deprecated. Use
+    sympy.matrices.common.a2idx instead.
+    """,
     deprecated_since_version="1.3",
-    useinstead="from sympy.matrices.common import a2idx")
+    active_deprecations_target="deprecated-sympy-matrices-classof-a2idx",
+)
 def a2idx(j, n=None):
     from sympy.matrices.common import a2idx as a2idx_
     return a2idx_(j, n)

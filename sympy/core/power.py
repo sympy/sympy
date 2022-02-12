@@ -15,7 +15,7 @@ from .relational import is_gt, is_lt
 from .kind import NumberKind, UndefinedKind
 from sympy.external.gmpy import HAS_GMPY, gmpy
 from sympy.utilities.iterables import sift
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int
 from sympy.multipledispatch import Dispatcher
 
@@ -186,6 +186,12 @@ class Pow(Expr):
     """
     Defines the expression x**y as "x raised to a power y"
 
+    .. deprecated:: 1.7
+
+       Using arguments that aren't subclasses of :class:`~.Expr` in core
+       operators (:class:`~.Mul`, :class:`~.Add`, and :class:`~.Pow`) is
+       deprecated. See :ref:`non-expr-args-deprecated` for details.
+
     Singleton definitions involving (0, 1, -1, oo, -oo, I, -I):
 
     +--------------+---------+-----------------------------------------------+
@@ -286,13 +292,19 @@ class Pow(Expr):
             raise TypeError('Relational cannot be used in Pow')
 
         # XXX: This should raise TypeError once deprecation period is over:
-        if not (isinstance(b, Expr) and isinstance(e, Expr)):
-            SymPyDeprecationWarning(
-                feature="Pow with non-Expr args",
-                useinstead="Expr args",
-                issue=19445,
-                deprecated_since_version="1.7"
-            ).warn()
+        for arg in [b, e]:
+            if not isinstance(arg, Expr):
+                sympy_deprecation_warning(
+                    f"""
+    Using non-Expr arguments in Pow is deprecated (in this case, one of the
+    arguments is of type {type(arg).__name__!r}).
+
+    If you really did intend to construct a power with this base, use the **
+    operator instead.""",
+                    deprecated_since_version="1.7",
+                    active_deprecations_target="non-expr-args-deprecated",
+                    stacklevel=4,
+                )
 
         if evaluate:
             if e is S.ComplexInfinity:

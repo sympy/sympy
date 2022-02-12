@@ -35,7 +35,9 @@ from sympy.polys.polyroots import roots
 from sympy.polys.polytools import factor, Poly
 from sympy.polys.rationaltools import together
 from sympy.polys.rootoftools import CRootOf, RootSum
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import (sympy_deprecation_warning,
+                                        SymPyDeprecationWarning,
+                                        ignore_warnings)
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
 
@@ -1854,7 +1856,7 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
 
     The implementation is rule-based, and if you are interested in which
     rules are applied, and whether integration is attemped, you can switch
-    debug information on by setting `sympy.SYMPY_DEBUG=True`.
+    debug information on by setting ``sympy.SYMPY_DEBUG=True``.
 
     The lower bound is `0-`, meaning that this bound should be approached
     from the lower side. This is only necessary if distributions are involved.
@@ -1907,13 +1909,19 @@ def laplace_transform(f, t, s, legacy_matrix=True, **hints):
         conds = not hints.get('noconds', False)
 
         if conds and legacy_matrix:
-            SymPyDeprecationWarning(
-                feature="laplace_transform of a Matrix with noconds=False (default)",
-                useinstead="the option legacy_matrix=False to get the new behaviour",
-                issue=21504,
-                deprecated_since_version="1.9"
-            ).warn()
-            return f.applyfunc(lambda fij: laplace_transform(fij, t, s, **hints))
+            sympy_deprecation_warning(
+                """
+Calling laplace_transform() on a Matrix with noconds=False (the default) is
+deprecated. Either noconds=True or use legacy_matrix=False to get the new
+behavior.
+                """,
+                deprecated_since_version="1.9",
+                active_deprecations_target="deprecated-laplace-transform-matrix",
+            )
+            # Temporarily disable the deprecation warning for non-Expr objects
+            # in Matrix
+            with ignore_warnings(SymPyDeprecationWarning):
+                return f.applyfunc(lambda fij: laplace_transform(fij, t, s, **hints))
         else:
             elements_trans = [laplace_transform(fij, t, s, **hints) for fij in f]
             if conds:
