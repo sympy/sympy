@@ -2188,15 +2188,17 @@ class Subs(Expr):
         def denest(expr, variables, point):
             # Helper function to denest expressions involving Subs in some form.
             # if expression isn't related to Subs, the expression passed is returned.
-            # TODO: Code to deal with expressions of type Mul(constant, Subs(...))
-            # which currently return wrong results.
+            # Currently it can deal with expressions of type Mul(constant, Subs(...)).
             if isinstance(expr, Subs):
                 variables = expr.variables + variables
                 point = expr.point + point
                 expr = expr.expr
-            elif isinstance(-expr, Subs):
-                expr, variables, point = denest(-expr, variables, point)
-                expr = -expr
+            elif isinstance(expr, Mul):
+                constant = expr.args[0]
+                _expr = expr.args[1]
+                if isinstance(_expr, Subs):
+                    expr, variables, point = denest(_expr, variables, point)
+                    expr = constant*expr
             else:
                 expr = sympify(expr)
             return expr, variables, point

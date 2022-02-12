@@ -1351,6 +1351,36 @@ def test_issue_22439():
             3*Derivative(u(x, y), (x, 2), y))/6 + O(h**4)
 
 
+def test_denesting_for_Subs():
+    x, y, h = symbols('x y h')
+    u = Function('u')
+    _xi_1, _xi_2 = [Dummy() for i in range(2)]
+
+    assert u(x - 2*h, y - 2*h).diff(h, 2).simplify() == 4*(Subs(Derivative(u(_xi_1, -2*h + y), (_xi_1, 2)), _xi_1, -2*h + x) + \
+            Subs(Derivative(u(-2*h + x, _xi_2), (_xi_2, 2)), _xi_2, -2*h + y) + \
+            2*Subs(Derivative(u(_xi_1, _xi_2), _xi_1, _xi_2), (_xi_1, _xi_2), (-2*h + x, -2*h + y)))
+    assert u(x + 3*h, y + 3*h).diff(h, 3).simplify() == 27*(Subs(Derivative(u(_xi_1, 3*h + y), (_xi_1, 3)), _xi_1, 3*h + x) + \
+            Subs(Derivative(u(3*h + x, _xi_2), (_xi_2, 3)), _xi_2, 3*h + y) + \
+            3*Subs(Derivative(u(_xi_1, _xi_2), _xi_1, (_xi_2, 2)), (_xi_2, _xi_1), (3*h + y, 3*h + x)) + \
+            3*Subs(Derivative(u(_xi_1, _xi_2), (_xi_1, 2), _xi_2), (_xi_1, _xi_2), (3*h + x, 3*h + y)))
+    assert u(x + 2*h, y - 3*h).diff(h, 4).simplify() == 16*Subs(Derivative(u(_xi_1, -3*h + y), (_xi_1, 4)), _xi_1, 2*h + x) + \
+            81*Subs(Derivative(u(2*h + x, _xi_2), (_xi_2, 4)), _xi_2, -3*h + y) - \
+            216*Subs(Derivative(u(_xi_1, _xi_2), _xi_1, (_xi_2, 3)), (_xi_2, _xi_1), (-3*h + y, 2*h + x)) + \
+            216*Subs(Derivative(u(_xi_1, _xi_2), (_xi_1, 2), (_xi_2, 2)), (_xi_2, _xi_1), (-3*h + y, 2*h + x)) - \
+            96*Subs(Derivative(u(_xi_1, _xi_2), (_xi_1, 3), _xi_2), (_xi_2, _xi_1), (-3*h + y, 2*h + x))
+    assert u(x - 2*h, y - 2*h).series(h, x0=0, n=4).simplify() == u(x, y) - 2*h*(Derivative(u(x, y), x) + Derivative(u(x, y), y)) + \
+            2*h**2*(Derivative(u(x, y), (x, 2)) + Derivative(u(x, y), (y, 2)) + 2*Derivative(u(x, y), x, y)) - \
+            4*h**3*(Derivative(u(x, y), (x, 3)) + Derivative(u(x, y), (y, 3)) + 3*Derivative(u(x, y), x, (y, 2)) + \
+            3*Derivative(u(x, y), (x, 2), y))/3 + O(h**4)
+    assert u(x + 3*h, y - 2*h).series(h, x0=0, n=6).simplify() == u(x, y) + h*(3*Derivative(u(x, y), x) - 2*Derivative(u(x, y), y)) + \
+            h**2*(9*Derivative(u(x, y), (x, 2)) + 4*Derivative(u(x, y), (y, 2)) - 12*Derivative(u(x, y), x, y))/2 + \
+            h**3*(27*Derivative(u(x, y), (x, 3)) - 8*Derivative(u(x, y), (y, 3)) + 36*Derivative(u(x, y), x, (y, 2)) - \
+            54*Derivative(u(x, y), (x, 2), y))/6 + h**4*(81*Derivative(u(x, y), (x, 4)) + 16*Derivative(u(x, y), (y, 4)) - \
+            96*Derivative(u(x, y), x, (y, 3)) + 216*Derivative(u(x, y), (x, 2), (y, 2)) - 216*Derivative(u(x, y), (x, 3), y))/24 + \
+            h**5*(243*Derivative(u(x, y), (x, 5)) - 32*Derivative(u(x, y), (y, 5)) + 240*Derivative(u(x, y), x, (y, 4)) - \
+            720*Derivative(u(x, y), (x, 2), (y, 3)) + 1080*Derivative(u(x, y), (x, 3), (y, 2)) - 810*Derivative(u(x, y), (x, 4), y))/120 + O(h**6)
+
+
 def test_negative_counts():
     # issue 13873
     raises(ValueError, lambda: sin(x).diff(x, -1))
