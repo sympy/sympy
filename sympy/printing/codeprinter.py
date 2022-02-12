@@ -565,6 +565,12 @@ class CodePrinter(StrPrinter):
         else:
             return sign + '*'.join(a_str) + "/(%s)" % '*'.join(b_str)
 
+    def _print_Idx(self, expr):
+        return self._print(expr.label)
+
+    def _print_IndexedBase(self, expr):
+        return self._print(expr.label)
+
     def _print_not_supported(self, expr):
         try:
             self._not_supported.add(expr)
