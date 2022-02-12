@@ -24,7 +24,7 @@ from sympy.core.numbers import ilcm, Float, Rational, _illegal
 from sympy.core.power import integer_log, Pow
 from sympy.core.relational import Relational, Eq, Ne
 from sympy.core.sorting import ordered, default_sort_key
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal
 from sympy.logic.boolalg import And, Or, BooleanAtom
 
@@ -257,6 +257,11 @@ def checksol(f, symbol, sol=None, **flags):
             rv = None  # don't return, wait to see if there's a False
         return rv
 
+    f = _sympify(f)
+
+    if f.is_number:
+        return f.is_zero
+
     if isinstance(f, Poly):
         f = f.as_expr()
     elif isinstance(f, (Eq, Ne)):
@@ -274,10 +279,6 @@ def checksol(f, symbol, sol=None, **flags):
         return bool(f)
     elif not f.is_Relational and not f:
         return True
-
-    if sol and not f.free_symbols & set(sol.keys()):
-        # if f(y) == 0, x=3 does not set f(y) to zero...nor does it not
-        return None
 
     illegal = set(_illegal)
     if any(sympify(v).atoms() & illegal for k, v in sol.items()):
@@ -357,12 +358,12 @@ def checksol(f, symbol, sol=None, **flags):
                 return not nz
             break
 
+        if numerical and val.is_number:
+            return (abs(val.n(18).n(12, chop=True)) < 1e-9) is S.true
         if val == was:
             continue
         elif val.is_Rational:
             return val == 0
-        if numerical and val.is_number:
-            return (abs(val.n(18).n(12, chop=True)) < 1e-9) is S.true
         was = val
 
     if flags.get('warn', False):
