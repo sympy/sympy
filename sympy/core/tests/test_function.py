@@ -1352,6 +1352,8 @@ def test_issue_22439():
 
 
 def test_denesting_for_Subs():
+    # Refer https://github.com/sympy/sympy/pull/22806#issuecomment-1037339531 to see the results
+    # being displayed in their pretty printed format.
     x, y, h = symbols('x y h')
     u = Function('u')
     _xi_1, _xi_2 = [Dummy() for i in range(2)]
