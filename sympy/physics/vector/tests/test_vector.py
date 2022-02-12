@@ -204,3 +204,12 @@ def test_vector_xreplace():
     assert v.xreplace({x:1, z:0}) == A.x + y * A.y
     raises(TypeError, lambda: v.xreplace())
     raises(TypeError, lambda: v.xreplace([x, y]))
+
+
+def test_vector_components():
+    from sympy.physics.vector import ReferenceFrame
+    R = ReferenceFrame('R')
+    v1 = 3*R.x + 4*R.y + 5*R.z
+    v2 = 3*R.x + 4*R.y
+    assert v1.components() == {R.x: 3, R.y: 4, R.z: 5}
+    assert v2.components() == {R.x: 3, R.y: 4, R.z: 0}

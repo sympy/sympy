@@ -1,9 +1,10 @@
 from functools import reduce
-
+from sympy.core.relational import Eq
 from sympy.core.backend import (sympify, diff, sin, cos, Matrix, symbols,
                                 Function, S, Symbol)
 from sympy.integrals.integrals import integrate
 from sympy.simplify.trigsimp import trigsimp
+from sympy.solvers import solve
 from .vector import Vector, _check_vector
 from .frame import CoordinateSym, _check_frame
 from .dyadic import Dyadic
@@ -14,7 +15,7 @@ from sympy.utilities.misc import translate
 __all__ = ['cross', 'dot', 'express', 'time_derivative', 'outer',
            'kinematic_equations', 'get_motion_params', 'partial_velocity',
            'dynamicsymbols', 'vprint', 'vsprint', 'vpprint', 'vlatex',
-           'init_vprinting']
+           'init_vprinting', 'solve_vector']
 
 
 def cross(vec1, vec2):
@@ -638,3 +639,81 @@ def dynamicsymbols(names, level=0,**assumptions):
 
 dynamicsymbols._t = Symbol('t')  # type: ignore
 dynamicsymbols._str = '\''  # type: ignore
+
+
+def solve_vector(f1, f2, *symbols):
+    """
+    Solves for unknown variables while equating two Vector expressions.
+
+    Parameters
+    ==========
+
+    f1 : Vector1
+
+    f2 : Vector2
+
+    symbols: (object(s) to solve for) specified as
+        - none given(other non-numeric objects will be used)
+        - single symbol
+        - multiple symbols separated by commas
+
+    Examples
+    ========
+
+    The output varies according to the input and can be seen by example:
+
+        >>> from sympy import symbols
+        >>> from sympy.physics.vector import ReferenceFrame
+        >>> from sympy.physics.vector.functions import solve_vector
+        >>> R = ReferenceFrame('R')
+        >>> a, b, c = symbols("a b c", real = True)
+
+        >>> solve_vector(a*R.x + 4*R.y, 6*R.x + b*R.y)
+        {a: 6, b: 4}
+        >>> solve_vector(a*R.x + 4*R.y, 6*R.x + b*R.y,a)
+        {a: 6}
+        >>> solve_vector((a +b +c)*R.x + 2*b*R.y + (a+2*b)*R.z, 6*R.x + 4*R.y +6*R.z)
+        {a: 2, b: 2, c: 2}
+        >>> solve_vector((a**2 + b)*R.x + b*R.y, 6*R.x + 5*R.y)
+        [{a: -1, b: 5}, {a: 1, b: 5}]
+        >>> solve_vector((a**2 + b)*R.x + b*R.y, 5*R.x + 6*R.y)
+        []
+
+    Notes
+    =====
+
+    - ``f1`` and ``f2`` must be vectors.
+    - User must input vectors along '.x', '.y', '.z' basis vectors only.
+    - If two vectors have different numeric components a ValueError is raised.
+    - User must declare symbols as real to avoid dealing with complex solutions.
+
+    >>> solve_vector(a*R.x + 4*R.y, 0)
+    Traceback (most recent call last):
+    ...
+    TypeError: A Vector must be supplied
+    >>> solve_vector(a*R.x + 4*R.y, 6*R.x + 5*R.y, a)
+    Traceback (most recent call last):
+    ...
+    ValueError: Two Vectors with different numeric components cannot be equal
+
+    """
+    Comp_list = []
+    f1 = _check_vector(f1)
+    f2 = _check_vector(f2)
+    c1 = f1.components()
+    c2 = f2.components()
+
+    for i in c1:
+        if c1[i].is_Number and c2[i].is_Number:
+            if c1[i] != c2[i]:
+                raise ValueError('Two Vectors with different numeric components cannot be equal')
+        Comp_list.append(c1[i] - c2[i])
+
+    eq1 = Eq(Comp_list[0], 0)
+    eq2 = Eq(Comp_list[1], 0)
+    eq3 = Eq(Comp_list[2], 0)
+    f = (eq1, eq2 ,eq3)
+    if not symbols:
+        symbols = set().union(*[fi.free_symbols for fi in f])
+
+    return solve(f, symbols)
