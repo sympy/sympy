@@ -258,7 +258,7 @@ def checksol(f, symbol, sol=None, **flags):
 
     f = _sympify(f)
 
-    if not f.free_symbols:
+    if f.is_number:
         return f.is_zero
 
     if isinstance(f, Poly):
