@@ -584,7 +584,7 @@ class IndexedAssignment(Assignment):
     XXX: To do
     """
     def __new__(cls, lhs, rhs, tensor_contraction = False, explicit = False):
-        from sympy.tenser.indexed import IndexedBase
+        from sympy.tensor.indexed import IndexedBase
         lhs = _sympify(lhs)
         rhs = _sympify(rhs)
         if tensor_contraction:
