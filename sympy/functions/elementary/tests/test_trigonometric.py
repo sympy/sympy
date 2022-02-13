@@ -1291,10 +1291,6 @@ def test_leading_terms():
     assert tan(1/x).as_leading_term(x) == AccumBounds(S.NegativeInfinity, S.Infinity)
     assert cot(1/x).as_leading_term(x) == AccumBounds(S.NegativeInfinity, S.Infinity)
 
-    for func in (sin, cos, tan, cot):
-        eq = func(S.Half)
-        assert eq.as_leading_term(x) == eq
-
     # https://github.com/sympy/sympy/issues/21038
     f = sin(pi*(x + 4))/(3*x)
     assert f.as_leading_term(x) == pi/3
