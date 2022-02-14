@@ -242,9 +242,11 @@ def test_frac():
 
     # testing limits for arguments based on negative exponents
     assert limit(frac(1/x), x, 0) == AccumBounds(0, 1)
+    assert limit(frac(1/x), x, 4, '+-') == 1/4
     assert limit(frac(1/x), x, oo) == 0
     assert limit(frac(1/x), x, -oo) == 1
     assert limit(frac(1/x**2), x, 0) == AccumBounds(0, 1)
+    assert limit(frac(1/x**2), x, 2, '+-') == 1/4
     assert limit(frac(1/x**2), x, oo) == 0
     assert limit(frac(1/x**2), x, -oo) == 0
 
