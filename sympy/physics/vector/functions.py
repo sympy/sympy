@@ -648,14 +648,26 @@ def solve_vector(f1, f2, *symbols):
     Parameters
     ==========
 
-    f1 : Vector1
+    f1 : Vector
+        Input for vector 1.
+    f2 : Vector
+        Input for vector 2.
+    symbols: str, optional
+        Symbols the user wants to solve for. Single or multiple symbols
+        separated by commas are accepted. If no symbol is given as input,
+        values of all symbols are returned.
 
-    f2 : Vector2
+    Raises
+    ======
 
-    symbols: (object(s) to solve for) specified as
-        - none given(other non-numeric objects will be used)
-        - single symbol
-        - multiple symbols separated by commas
+    TypeError
+        When a scalar input is given.
+
+    ValueError
+        When same component of the 2 vectors have different numeric values.
+
+    AttributeError
+        When vector not declared along '.x', '.y', '.z' basis vectors.
 
     Examples
     ========
@@ -682,19 +694,7 @@ def solve_vector(f1, f2, *symbols):
     Notes
     =====
 
-    - ``f1`` and ``f2`` must be vectors.
-    - User must input vectors along '.x', '.y', '.z' basis vectors only.
-    - If two vectors have different numeric components a ValueError is raised.
-    - User must declare symbols as real to avoid dealing with complex solutions.
-
-    >>> solve_vector(a*R.x + 4*R.y, 0)
-    Traceback (most recent call last):
-    ...
-    TypeError: A Vector must be supplied
-    >>> solve_vector(a*R.x + 4*R.y, 6*R.x + 5*R.y, a)
-    Traceback (most recent call last):
-    ...
-    ValueError: Two Vectors with different numeric components cannot be equal
+    User must declare symbols as real to avoid dealing with complex solutions.
 
     """
     Comp_list = []
