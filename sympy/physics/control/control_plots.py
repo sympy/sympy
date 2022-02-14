@@ -9,6 +9,7 @@ from sympy.physics.control.lti import SISOLinearTimeInvariant
 from sympy.plotting.plot import LineOver1DRangeSeries
 from sympy.polys.polytools import Poly
 from sympy.printing.latex import latex
+from sympy import S
 
 __all__ = ['pole_zero_numerical_data', 'pole_zero_plot',
     'step_response_numerical_data', 'step_response_plot',
@@ -736,18 +737,25 @@ def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, **kwargs)
 
 
 def bode_magnitude_plot(system, initial_exp=-5, final_exp=5,
-    color='b', show_axes=False, grid=True, show=True, **kwargs):
+    color='b', show_axes=False, grid=True, show=True, Freq_unit='rad/sec', **kwargs):
     r"""
     Returns the Bode magnitude plot of a continuous-time system.
 
     See ``bode_plot`` for all the parameters.
     """
+    Freq_units = ('rad/sec', 'Hz')
+    if Freq_unit not in Freq_units:
+        raise ValueError('Only rad/sec and Hz are accepted frequency units.')
+
     x, y = bode_magnitude_numerical_data(system, initial_exp=initial_exp,
         final_exp=final_exp)
+    if Freq_unit == 'Hz':
+        a = S.Pi.n()
+        x = [i/(2*(a)) for i in x]
     plt.plot(x, y, color=color, **kwargs)
     plt.xscale('log')
 
-    plt.xlabel('Frequency (rad/s) [Log Scale]')
+    plt.xlabel('Frequency (%s) [Log Scale]' % Freq_unit)
     plt.ylabel('Magnitude (dB)')
     plt.title(f'Bode Plot (Magnitude) of ${latex(system)}$', pad=20)
 
@@ -830,19 +838,32 @@ def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, **kwargs):
 
 
 def bode_phase_plot(system, initial_exp=-5, final_exp=5,
-    color='b', show_axes=False, grid=True, show=True, **kwargs):
+    color='b', show_axes=False, grid=True, show=True, Phase_unit='rad', Freq_unit='rad/sec', **kwargs):
     r"""
     Returns the Bode phase plot of a continuous-time system.
 
     See ``bode_plot`` for all the parameters.
     """
+    Freq_units = ('rad/sec', 'Hz')
+    Phase_units = ('rad', 'deg')
+    if Freq_unit not in Freq_units:
+        raise ValueError('Only rad/sec and Hz are accepted frequency units.')
+    if Phase_unit not in Phase_units:
+        raise ValueError('Only rad and deg are accepted phase units.')
+
     x, y = bode_phase_numerical_data(system, initial_exp=initial_exp,
         final_exp=final_exp)
+    if Freq_unit == 'Hz':
+        a = S.Pi.n()
+        x = [i/(2*(a)) for i in x]
+    if Phase_unit == 'deg':
+        a = S.Pi.n()
+        y = [i*(180/a) for i in y]
     plt.plot(x, y, color=color, **kwargs)
     plt.xscale('log')
 
-    plt.xlabel('Frequency (Hz) [Log Scale]')
-    plt.ylabel('Phase (rad)')
+    plt.xlabel('Frequency (%s) [Log Scale]' % Freq_unit)
+    plt.ylabel('Phase (%s)' % Phase_unit)
     plt.title(f'Bode Plot (Phase) of ${latex(system)}$', pad=20)
 
     if grid:
@@ -858,7 +879,7 @@ def bode_phase_plot(system, initial_exp=-5, final_exp=5,
 
 
 def bode_plot(system, initial_exp=-5, final_exp=5,
-    grid=True, show_axes=False, show=True, **kwargs):
+    grid=True, show_axes=False, show=True, Phase_unit='rad', Freq_unit='rad/sec', **kwargs):
     r"""
     Returns the Bode phase and magnitude plots of a continuous-time system.
 
@@ -882,6 +903,10 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
         If ``True``, the plot will have a grid. Defaults to True.
     show_axes : boolean, optional
         If ``True``, the coordinate axes will be shown. Defaults to False.
+    Phase_unit : string, optional
+        User can choose between radians and degree as phase units.
+    Freq_unit : string, optional
+        User can choose between radians/second and Hertz as frequency units.
 
     Examples
     ========
@@ -906,10 +931,10 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
     plt.subplot(211)
     bode_magnitude_plot(system, initial_exp=initial_exp, final_exp=final_exp,
         show=False, grid=grid, show_axes=show_axes,
-        **kwargs).title(f'Bode Plot of ${latex(system)}$', pad=20)
+        Freq_unit=Freq_unit, **kwargs).title(f'Bode Plot of ${latex(system)}$', pad=20)
     plt.subplot(212)
     bode_phase_plot(system, initial_exp=initial_exp, final_exp=final_exp,
-        show=False, grid=grid, show_axes=show_axes, **kwargs).title(None)
+        show=False, grid=grid, show_axes=show_axes, Phase_unit=Phase_unit, Freq_unit=Freq_unit, **kwargs).title(None)
 
     if show:
         plt.show()
