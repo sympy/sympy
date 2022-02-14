@@ -240,6 +240,14 @@ def test_frac():
     assert limit(frac(x + Rational(1/2)), x, 0, '+') == 1/2
     assert limit(frac(x + Rational(1/2)), x, 0, '+-') == 1/2
 
+    # testing limits for arguments based on negative exponents
+    assert limit(frac(1/x), x, 0) == AccumBounds(0, 1)
+    assert limit(frac(1/x), x, oo) == 0
+    assert limit(frac(1/x), x, -oo) == 1
+    assert limit(frac(1/x**2), x, 0) == AccumBounds(0, 1)
+    assert limit(frac(1/x**2), x, oo) == 0
+    assert limit(frac(1/x**2), x, -oo) == 0
+
 
 def test_atan():
     x = Symbol("x", real=True)
