@@ -33,7 +33,7 @@ from sympy.external import import_module
 from sympy.core.function import arity
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 # N.B.
 # When changing the minimum module version for matplotlib, please change
@@ -605,11 +605,15 @@ class Line2DBaseSeries(BaseSeries):
         return points
 
     def get_segments(self):
-        SymPyDeprecationWarning(
-                feature="get_segments",
-                issue=21329,
-                deprecated_since_version="1.9",
-                useinstead="MatplotlibBackend.get_segments").warn()
+        sympy_deprecation_warning(
+            """
+            The Line2DBaseSeries.get_segments() method is deprecated.
+
+            Instead, use the MatplotlibBackend.get_segments() method, or use
+            The get_points() or get_data() methods.
+            """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-get-segments")
 
         np = import_module('numpy')
         points = type(self).get_data(self)

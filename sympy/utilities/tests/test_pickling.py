@@ -696,7 +696,7 @@ def test_concrete():
         check(c)
 
 def test_deprecation_warning():
-    w = SymPyDeprecationWarning('value', 'feature', issue=12345, deprecated_since_version='1.0')
+    w = SymPyDeprecationWarning("message", deprecated_since_version='1.0', active_deprecations_target="active-deprecations")
     check(w)
 
 def test_issue_18438():

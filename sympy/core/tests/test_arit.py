@@ -20,7 +20,8 @@ from sympy.sets.sets import FiniteSet
 from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
 from sympy.utilities.iterables import permutations
-from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
+from sympy.testing.pytest import XFAIL, raises, warns
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.random import verify_numerically
 from sympy.functions.elementary.trigonometric import asin
 
@@ -1671,7 +1672,8 @@ def test_Add_Mul_Expr_args():
     nonexpr = [Basic(), Poly(x, x), FiniteSet(x)]
     for typ in [Add, Mul]:
         for obj in nonexpr:
-            with warns_deprecated_sympy():
+            # The cache can mess with the stacklevel check
+            with warns(SymPyDeprecationWarning, test_stacklevel=False):
                 typ(obj, 1)
 
 
@@ -1952,7 +1954,7 @@ def test_Mod():
     assert ((x - Mod(x, y))/y).rewrite(floor) == floor(x/y)
 
     # issue 21373
-    from sympy.functions.elementary.trigonometric import sinh
+    from sympy.functions.elementary.hyperbolic import sinh
     from sympy.functions.elementary.piecewise import Piecewise
 
     x_r, y_r = symbols('x_r y_r', real=True)

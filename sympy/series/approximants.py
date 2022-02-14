@@ -1,5 +1,6 @@
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
+from sympy.polys.polytools import lcm
 from sympy.utilities import public
 
 @public
@@ -55,6 +56,8 @@ def approximants(l, X=Symbol('x'), simplify=False):
     function mpmath.pade
 
     """
+    from sympy.simplify import simplify as simp
+    from sympy.simplify.radsimp import denom
     p1, q1 = [S.One], [S.Zero]
     p2, q2 = [S.Zero], [S.One]
     while len(l):
@@ -87,9 +90,6 @@ def approximants(l, X=Symbol('x'), simplify=False):
         q1, q2 = q2, q
 
         # yield result
-        from sympy.polys.polytools import lcm
-        from sympy.simplify import simplify as simp
-        from sympy.simplify.radsimp import denom
         c = 1
         for x in p:
             c = lcm(c, denom(x))

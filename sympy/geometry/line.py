@@ -36,9 +36,9 @@ from sympy.logic.boolalg import And
 from sympy.matrices import Matrix
 from sympy.sets.sets import Intersection
 from sympy.simplify.simplify import simplify
+from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
-from sympy.utilities.decorator import deprecated
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import Undecidable, filldedent
 
 
@@ -1110,6 +1110,9 @@ class Line(LinearEntity):
     for `Line2D` and the `direction_ratio` argument is only relevant
     for `Line3D`.
 
+    The order of the points will define the direction of the line
+    which is used when calculating the angle between lines.
+
     See Also
     ========
 
@@ -1280,10 +1283,6 @@ class Line(LinearEntity):
         if self.contains(other):
             return S.Zero
         return self.perpendicular_segment(other).length
-
-    @deprecated(useinstead="equals", issue=12860, deprecated_since_version="1.0")
-    def equal(self, other):
-        return self.equals(other)
 
     def equals(self, other):
         """Returns True if self and other are the same mathematical entities"""
@@ -2534,6 +2533,9 @@ class Line3D(LinearEntity3D, Line):
             The name to use for the y-axis, default value is 'y'.
         z : str, optional
             The name to use for the z-axis, default value is 'z'.
+        k : str, optional
+            .. deprecated:: 1.2
+               The ``k`` flag is deprecated. It does nothing.
 
         Returns
         =======
@@ -2554,11 +2556,14 @@ class Line3D(LinearEntity3D, Line):
 
         """
         if k is not None:
-            SymPyDeprecationWarning(
-                feature="equation() no longer needs 'k'",
-                issue=13742,
-                deprecated_since_version="1.2").warn()
-        from sympy.solvers.solvers import solve
+            sympy_deprecation_warning(
+                """
+                The 'k' argument to Line3D.equation() is deprecated. Is
+                currently has no effect, so it may be omitted.
+                """,
+                deprecated_since_version="1.2",
+                active_deprecations_target='deprecated-line3d-equation-k',
+            )
         x, y, z, k = [_symbol(i, real=True) for i in (x, y, z, 'k')]
         p1, p2 = self.points
         d1, d2, d3 = p1.direction_ratio(p2)

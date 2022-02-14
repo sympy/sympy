@@ -10,7 +10,7 @@ from .decorators import call_highest_priority, sympify_method_args, sympify_retu
 from .cache import cacheit
 from .sorting import default_sort_key
 from .kind import NumberKind
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int, func_name, filldedent
 from sympy.utilities.iterables import has_variety, sift
 from mpmath.libmp import mpf_log, prec_to_dps
@@ -2419,11 +2419,8 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy.utilities.exceptions import SymPyDeprecationWarning
-        >>> import warnings
-        >>> warnings.simplefilter("ignore", SymPyDeprecationWarning)
         >>> from sympy.abc import x, y
-        >>> (x + y).expr_free_symbols
+        >>> (x + y).expr_free_symbols # doctest: +SKIP
         {x, y}
 
         If the expression is contained in a non-expression object, do not return
@@ -2431,14 +2428,17 @@ class Expr(Basic, EvalfMixin):
 
         >>> from sympy import Tuple
         >>> t = Tuple(x + y)
-        >>> t.expr_free_symbols
+        >>> t.expr_free_symbols # doctest: +SKIP
         set()
         >>> t.free_symbols
         {x, y}
         """
-        SymPyDeprecationWarning(feature="expr_free_symbols method",
-                                issue=21494,
-                                deprecated_since_version="1.9").warn()
+        sympy_deprecation_warning("""
+        The expr_free_symbols property is deprecated. Use free_symbols to get
+        the free symbols of an expression.
+        """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-expr-free-symbols")
         return {j for i in self.args for j in i.expr_free_symbols}
 
     def could_extract_minus_sign(self):
@@ -2681,7 +2681,7 @@ class Expr(Basic, EvalfMixin):
         See also is_algebraic_expr().
 
         """
-        if self in [S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity]:
+        if self in _illegal:
             return False
 
         if syms:
@@ -3035,8 +3035,11 @@ class Expr(Basic, EvalfMixin):
             else:
                 o = Order(x**n, x)
                 s1done = s1.doit()
-                if (s1done + o).removeO() == s1done:
-                    o = S.Zero
+                try:
+                    if (s1done + o).removeO() == s1done:
+                        o = S.Zero
+                except NotImplementedError:
+                    return s1
 
             try:
                 from sympy.simplify.radsimp import collect
@@ -3345,12 +3348,12 @@ class Expr(Basic, EvalfMixin):
         >>> e.nseries(x, 0, 6, logx=logx)
         sin(logx)
 
-        In the following example, the expansion works but gives only an Order term
+        In the following example, the expansion works but only returns self
         unless the ``logx`` parameter is used:
 
         >>> e = x**y
         >>> e.nseries(x, 0, 2)
-        O(log(x)**2)
+        x**y
         >>> e.nseries(x, 0, 2, logx=logx)
         exp(logx*y)
 
@@ -3781,8 +3784,6 @@ class Expr(Basic, EvalfMixin):
         >>> isinstance(round(S(123), -2), Number)
         True
         """
-        from sympy.core.numbers import Float
-
         x = self
 
         if not x.is_number:
@@ -3791,7 +3792,7 @@ class Expr(Basic, EvalfMixin):
             if not pure_complex(x.n(2), or_real=True):
                 raise TypeError(
                     'Expected a number but got %s:' % func_name(x))
-        elif x in (S.NaN, S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+        elif x in _illegal:
             return x
         if x.is_extended_real is False:
             r, i = x.as_real_imag()
@@ -3949,9 +3950,12 @@ class AtomicExpr(Atom, Expr):
 
     @property
     def expr_free_symbols(self):
-        SymPyDeprecationWarning(feature="expr_free_symbols method",
-                                issue=21494,
-                                deprecated_since_version="1.9").warn()
+        sympy_deprecation_warning("""
+        The expr_free_symbols property is deprecated. Use free_symbols to get
+        the free symbols of an expression.
+        """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-expr-free-symbols")
         return {self}
 
 
@@ -4104,4 +4108,4 @@ from .power import Pow
 from .function import Function, _derivative_dispatch
 from .mod import Mod
 from .exprtools import factor_terms
-from .numbers import Integer, Rational
+from .numbers import Float, Integer, Rational, _illegal

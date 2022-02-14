@@ -13,7 +13,7 @@ from .kind import Kind, UndefinedKind
 from ._print_helpers import Printable
 
 from sympy.utilities.decorator import deprecated
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable, numbered_symbols
 from sympy.utilities.misc import filldedent, func_name
 
@@ -534,9 +534,12 @@ class Basic(Printable, metaclass=ManagedProperties):
 
     @property
     def expr_free_symbols(self):
-        SymPyDeprecationWarning(feature="expr_free_symbols method",
-                                issue=21494,
-                                deprecated_since_version="1.9").warn()
+        sympy_deprecation_warning("""
+        The expr_free_symbols property is deprecated. Use free_symbols to get
+        the free symbols of an expression.
+        """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-expr-free-symbols")
         return set()
 
     def as_dummy(self):
@@ -900,7 +903,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         """
         from .containers import Dict
         from .symbol import Dummy, Symbol
-        from sympy.polys.polyutils import illegal
+        from .numbers import _illegal
 
         unordered = False
         if len(args) == 1:
@@ -956,7 +959,7 @@ class Basic(Printable, metaclass=ManagedProperties):
             if not simultaneous:
                 redo = []
                 for i in range(len(sequence)):
-                    if sequence[i][1] in illegal:  # nan, zoo and +/-oo
+                    if sequence[i][1] in _illegal:  # nan, zoo and +/-oo
                         redo.append(i)
                 for i in reversed(redo):
                     sequence.insert(0, sequence.pop(i))
@@ -2116,5 +2119,14 @@ from .traversal import (preorder_traversal as _preorder_traversal,
    iterargs, iterfreeargs)
 
 preorder_traversal = deprecated(
-    useinstead="sympy.core.traversal.preorder_traversal",
-    deprecated_since_version="1.10", issue=22288)(_preorder_traversal)
+    """
+    Using preorder_traversal from the sympy.core.basic submodule is
+    deprecated.
+
+    Instead, use preorder_traversal from the top-level sympy namespace, like
+
+        sympy.preorder_traversal
+    """,
+    deprecated_since_version="1.10",
+    active_deprecations_target="deprecated-traversal-functions-moved",
+)(_preorder_traversal)
