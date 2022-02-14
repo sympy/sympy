@@ -12,7 +12,7 @@ from sympy import Mul, Add, Pow, log, exp, sqrt, cos, sin, tan, asin, acos, acot
 from sympy.core.sympify import sympify, _sympify
 from sympy.functions.special.bessel import airybiprime
 from sympy.functions.special.error_functions import li
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 
 def mathematica(s, additional_translations=None):
@@ -68,12 +68,12 @@ def mathematica(s, additional_translations=None):
     parser = MathematicaParser(additional_translations)
 
     if additional_translations is not None:
-        SymPyDeprecationWarning(
-            feature="additional_translations parameter for the Mathematica parser",
+        sympy_deprecation_warning(
+            """The ``additional_translations`` parameter for the Mathematica parser is now deprecated.
+Use SymPy's .replace( ) or .subs( ) methods on the output expression instead.""",
             deprecated_since_version="1.11",
-            useinstead="Use SymPy's .replace( ) or .subs( ) methods on the output expression",
-            issue="23042",
-        ).warn()
+            active_deprecations_target="mathematica-parser-additional-translations",
+        )
         return sympify(parser._parse_old(s))
 
     return parser.parse(s)
