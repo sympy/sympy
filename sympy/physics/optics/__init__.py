@@ -2,7 +2,7 @@ __all__ = [
     'TWave',
 
     'RayTransferMatrix', 'FreeSpace', 'FlatRefraction', 'CurvedRefraction',
-    'FlatMirror', 'CurvedMirror', 'ThinLens', 'GeometricRay', 'BeamParameter',
+    'FlatMirror', 'CurvedMirror', 'ThinLens', 'ThickLens', 'GeometricRay', 'BeamParameter',
     'waist2rayleigh', 'rayleigh2waist', 'geometric_conj_ab',
     'geometric_conj_af', 'geometric_conj_bf', 'gaussian_conj',
     'conjugate_gauss_beams',
@@ -21,7 +21,7 @@ __all__ = [
 from .waves import TWave
 
 from .gaussopt import (RayTransferMatrix, FreeSpace, FlatRefraction,
-        CurvedRefraction, FlatMirror, CurvedMirror, ThinLens, GeometricRay,
+        CurvedRefraction, FlatMirror, CurvedMirror, ThinLens, ThickLens, GeometricRay,
         BeamParameter, waist2rayleigh, rayleigh2waist, geometric_conj_ab,
         geometric_conj_af, geometric_conj_bf, gaussian_conj,
         conjugate_gauss_beams)
