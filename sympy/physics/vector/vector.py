@@ -453,29 +453,6 @@ class Vector(Printable, EvalfMixin):
     __rand__ = __and__
     __rmul__ = __mul__
 
-    def components(self):
-        """
-        Returns the components of this vector in the form of a
-        Python dictionary mapping BaseVector instances to the
-        corresponding measure numbers.
-        Examples
-        ========
-        >>> from sympy.physics.vector import ReferenceFrame
-        >>> R = ReferenceFrame('R')
-        >>> v = 3*R.x + 4*R.y + 5*R.z
-        >>> v.components()
-        {R.x: 3, R.y: 4, R.z: 5}
-        >>> v = 3*R.x + 4*R.y
-        >>> v.components()
-        {R.x: 3, R.y: 4, R.z: 0}
-        """
-        components = {}
-        components[(self.args[0][1]).x] = self.args[0][0][0]
-        components[(self.args[0][1]).y] = self.args[0][0][1]
-        components[(self.args[0][1]).z] = self.args[0][0][2]
-
-        return components
-
     def separate(self):
         """
         The constituents of this vector in different reference frames,
