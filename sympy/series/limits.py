@@ -1,6 +1,7 @@
 from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul
 from sympy.core.exprtools import factor_terms
+from sympy.core.function import Function
 from sympy.core.numbers import Float, _illegal
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, sign)
@@ -235,6 +236,9 @@ class Limit(Expr):
 
         if e.is_Order:
             return Order(limit(e.expr, z, z0), *e.args[1:])
+
+        if e.has(Function):
+            raise NotImplementedError('Result depends on the continuity of %s at point %s' % (e, z0))
 
         cdir = 0
         if str(dir) == "+":
