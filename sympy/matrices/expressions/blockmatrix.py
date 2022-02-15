@@ -653,7 +653,7 @@ class BlockDiagMatrix(BlockMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import BlockDiagMatrix, Matrix
+        >>> from sympy import BlockDiagMatrix, Matrix
 
         >>> A = Matrix([[1, 2], [3, 4]])
         >>> B = Matrix([[5, 6], [7, 8]])

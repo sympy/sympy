@@ -9,7 +9,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (cot, sin, tan)
 from sympy.series.residues import residue
 from sympy.testing.pytest import XFAIL, raises
-from sympy.abc import x, z, a, s
+from sympy.abc import x, z, a, s, k
 
 
 def test_basic1():
@@ -75,6 +75,8 @@ def test_bug():
 
 def test_issue_5654():
     assert residue(1/(x**2 + a**2)**2, x, a*I) == -I/(4*a**3)
+    assert residue(1/s*1/(z - exp(s)), s, 0) == 1/(z - 1)
+    assert residue((1 + k)/s*1/(z - exp(s)), s, 0) == k/(z - 1) + 1/(z - 1)
 
 
 def test_issue_6499():

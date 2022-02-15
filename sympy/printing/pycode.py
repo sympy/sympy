@@ -6,20 +6,21 @@ This module contains Python code printers for plain Python as well as NumPy & Sc
 from collections import defaultdict
 from itertools import chain
 from sympy.core import S
+from sympy.core.mod import Mod
 from .precedence import precedence
 from .codeprinter import CodePrinter
 
-_kw_py2and3 = {
+_kw = {
     'and', 'as', 'assert', 'break', 'class', 'continue', 'def', 'del', 'elif',
     'else', 'except', 'finally', 'for', 'from', 'global', 'if', 'import', 'in',
     'is', 'lambda', 'not', 'or', 'pass', 'raise', 'return', 'try', 'while',
-    'with', 'yield', 'None'  # 'None' is actually not in Python 2's keyword.kwlist
+    'with', 'yield', 'None', 'False', 'nonlocal', 'True'
 }
-_kw_only_py2 = {'exec', 'print'}
-_kw_only_py3 = {'False', 'nonlocal', 'True'}
 
 _known_functions = {
     'Abs': 'abs',
+    'Min': 'min',
+    'Max': 'max',
 }
 _known_functions_math = {
     'acos': 'acos',
@@ -56,10 +57,10 @@ _known_functions_math = {
 _known_constants_math = {
     'Exp1': 'e',
     'Pi': 'pi',
-    'E': 'e'
-    # Only in Python >= 3.5:
-    # 'Infinity': 'inf',
-    # 'NaN': 'nan'
+    'E': 'e',
+    'Infinity': 'inf',
+    'NaN': 'nan',
+    'ComplexInfinity': 'nan'
 }
 
 def _print_known_func(self, expr):
@@ -76,7 +77,7 @@ def _print_known_const(self, expr):
 class AbstractPythonCodePrinter(CodePrinter):
     printmethod = "_pythoncode"
     language = "Python"
-    reserved_words = _kw_py2and3.union(_kw_only_py3)
+    reserved_words = _kw
     modules = None  # initialized to a set in __init__
     tab = '    '
     _kf = dict(chain(
@@ -103,8 +104,8 @@ class AbstractPythonCodePrinter(CodePrinter):
         if std is None:
             import sys
             std = 'python{}'.format(sys.version_info.major)
-        if std not in ('python2', 'python3'):
-            raise ValueError('Unrecognized Python standard : {}'.format(std))
+        if std != 'python3':
+            raise ValueError('Only Python 3 is supported.')
         self.standard = std
 
         self.module_imports = defaultdict(set)
@@ -184,41 +185,6 @@ class AbstractPythonCodePrinter(CodePrinter):
                 self._expand_reduce_binary_op(args[:Nhalf]),
                 self._expand_reduce_binary_op(args[Nhalf:]),
             )
-
-    def _get_einsum_string(self, subranks, contraction_indices):
-        letters = self._get_letter_generator_for_einsum()
-        contraction_string = ""
-        counter = 0
-        d = {j: min(i) for i in contraction_indices for j in i}
-        indices = []
-        for rank_arg in subranks:
-            lindices = []
-            for i in range(rank_arg):
-                if counter in d:
-                    lindices.append(d[counter])
-                else:
-                    lindices.append(counter)
-                counter += 1
-            indices.append(lindices)
-        mapping = {}
-        letters_free = []
-        letters_dum = []
-        for i in indices:
-            for j in i:
-                if j not in mapping:
-                    l = next(letters)
-                    mapping[j] = l
-                else:
-                    l = mapping[j]
-                contraction_string += l
-                if j in d:
-                    if l not in letters_dum:
-                        letters_dum.append(l)
-                else:
-                    letters_free.append(l)
-            contraction_string += ","
-        contraction_string = contraction_string[:-1]
-        return contraction_string, letters_free, letters_dum
 
     def _print_NaN(self, expr):
         return "float('nan')"
@@ -352,8 +318,6 @@ class AbstractPythonCodePrinter(CodePrinter):
         if prnt.file != None: # Must be '!= None', cannot be 'is not None'
             print_args += ', file=%s' % self._print(prnt.file)
 
-        if self.standard == 'python2':
-            return 'print %s' % print_args
         return 'print(%s)' % print_args
 
     def _print_Stream(self, strm):
@@ -378,13 +342,13 @@ class AbstractPythonCodePrinter(CodePrinter):
         Examples
         ========
 
-        >>> from sympy.functions import sqrt
+        >>> from sympy import sqrt
         >>> from sympy.printing.pycode import PythonCodePrinter
         >>> from sympy.abc import x
 
         Python code printer automatically looks up ``math.sqrt``.
 
-        >>> printer = PythonCodePrinter({'standard':'python3'})
+        >>> printer = PythonCodePrinter()
         >>> printer._hprint_Pow(sqrt(x), rational=True)
         'x**(1/2)'
         >>> printer._hprint_Pow(sqrt(x), rational=False)
@@ -426,6 +390,142 @@ class AbstractPythonCodePrinter(CodePrinter):
         return "{}**{}".format(base_str, exp_str)
 
 
+class ArrayPrinter:
+
+    def _arrayify(self, indexed):
+        from sympy.tensor.array.expressions.conv_indexed_to_array import convert_indexed_to_array
+        try:
+            return convert_indexed_to_array(indexed)
+        except Exception:
+            return indexed
+
+    def _get_einsum_string(self, subranks, contraction_indices):
+        letters = self._get_letter_generator_for_einsum()
+        contraction_string = ""
+        counter = 0
+        d = {j: min(i) for i in contraction_indices for j in i}
+        indices = []
+        for rank_arg in subranks:
+            lindices = []
+            for i in range(rank_arg):
+                if counter in d:
+                    lindices.append(d[counter])
+                else:
+                    lindices.append(counter)
+                counter += 1
+            indices.append(lindices)
+        mapping = {}
+        letters_free = []
+        letters_dum = []
+        for i in indices:
+            for j in i:
+                if j not in mapping:
+                    l = next(letters)
+                    mapping[j] = l
+                else:
+                    l = mapping[j]
+                contraction_string += l
+                if j in d:
+                    if l not in letters_dum:
+                        letters_dum.append(l)
+                else:
+                    letters_free.append(l)
+            contraction_string += ","
+        contraction_string = contraction_string[:-1]
+        return contraction_string, letters_free, letters_dum
+
+    def _get_letter_generator_for_einsum(self):
+        for i in range(97, 123):
+            yield chr(i)
+        for i in range(65, 91):
+            yield chr(i)
+        raise ValueError("out of letters")
+
+    def _print_ArrayTensorProduct(self, expr):
+        letters = self._get_letter_generator_for_einsum()
+        contraction_string = ",".join(["".join([next(letters) for j in range(i)]) for i in expr.subranks])
+        return '%s("%s", %s)' % (
+                self._module_format(self._module + "." + self._einsum),
+                contraction_string,
+                ", ".join([self._print(arg) for arg in expr.args])
+        )
+
+    def _print_ArrayContraction(self, expr):
+        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
+        base = expr.expr
+        contraction_indices = expr.contraction_indices
+
+        if isinstance(base, ArrayTensorProduct):
+            elems = ",".join(["%s" % (self._print(arg)) for arg in base.args])
+            ranks = base.subranks
+        else:
+            elems = self._print(base)
+            ranks = [len(base.shape)]
+
+        contraction_string, letters_free, letters_dum = self._get_einsum_string(ranks, contraction_indices)
+
+        if not contraction_indices:
+            return self._print(base)
+        if isinstance(base, ArrayTensorProduct):
+            elems = ",".join(["%s" % (self._print(arg)) for arg in base.args])
+        else:
+            elems = self._print(base)
+        return "%s(\"%s\", %s)" % (
+            self._module_format(self._module + "." + self._einsum),
+            "{}->{}".format(contraction_string, "".join(sorted(letters_free))),
+            elems,
+        )
+
+    def _print_ArrayDiagonal(self, expr):
+        from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
+        diagonal_indices = list(expr.diagonal_indices)
+        if isinstance(expr.expr, ArrayTensorProduct):
+            subranks = expr.expr.subranks
+            elems = expr.expr.args
+        else:
+            subranks = expr.subranks
+            elems = [expr.expr]
+        diagonal_string, letters_free, letters_dum = self._get_einsum_string(subranks, diagonal_indices)
+        elems = [self._print(i) for i in elems]
+        return '%s("%s", %s)' % (
+            self._module_format(self._module + "." + self._einsum),
+            "{}->{}".format(diagonal_string, "".join(letters_free+letters_dum)),
+            ", ".join(elems)
+        )
+
+    def _print_PermuteDims(self, expr):
+        return "%s(%s, %s)" % (
+            self._module_format(self._module + "." + self._transpose),
+            self._print(expr.expr),
+            self._print(expr.permutation.array_form),
+        )
+
+    def _print_ArrayAdd(self, expr):
+        return self._expand_fold_binary_op(self._module + "." + self._add, expr.args)
+
+    def _print_OneArray(self, expr):
+        return "%s((%s,))" % (
+            self._module_format(self._module+ "." + self._ones),
+            ','.join(map(self._print,expr.args))
+        )
+
+    def _print_ZeroArray(self, expr):
+        return "%s((%s,))" % (
+            self._module_format(self._module+ "." + self._zeros),
+            ','.join(map(self._print,expr.args))
+        )
+
+    def _print_Assignment(self, expr):
+        #XXX: maybe this needs to happen at a higher level e.g. at _print or
+        #doprint?
+        lhs = self._print(self._arrayify(expr.lhs))
+        rhs = self._print(self._arrayify(expr.rhs))
+        return "%s = %s" % ( lhs, rhs )
+
+    def _print_IndexedBase(self, expr):
+        return self._print_ArraySymbol(expr)
+
+
 class PythonCodePrinter(AbstractPythonCodePrinter):
 
     def _print_sign(self, e):
@@ -445,15 +545,12 @@ class PythonCodePrinter(AbstractPythonCodePrinter):
         return self._hprint_Pow(expr, rational=rational)
 
     def _print_Rational(self, expr):
-        if self.standard == 'python2':
-            return '{}./{}.'.format(expr.p, expr.q)
         return '{}/{}'.format(expr.p, expr.q)
 
     def _print_Half(self, expr):
         return self._print_Rational(expr)
 
     def _print_frac(self, expr):
-        from sympy.core.mod import Mod
         return self._print_Mod(Mod(expr.args[0], 1))
 
     def _print_Symbol(self, expr):
@@ -496,17 +593,13 @@ def pycode(expr, **settings):
         Whether or not to write out full module names of functions
         (``math.sin`` vs. ``sin``). default: ``True``.
     standard : str or None, optional
-        If 'python2', Python 2 sematics will be used.
-        If 'python3', Python 3 sematics will be used.
-        If None, the standard will be automatically detected.
-        Default is 'python3'. And this parameter may be removed in the
-        future.
+        Only 'python3' (default) is supported.
+        This parameter may be removed in the future.
 
     Examples
     ========
 
-    >>> from sympy import tan, Symbol
-    >>> from sympy.printing.pycode import pycode
+    >>> from sympy import pycode, tan, Symbol
     >>> pycode(tan(Symbol('x')) + 1)
     'math.tan(x) + 1'
 

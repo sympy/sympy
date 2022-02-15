@@ -40,7 +40,7 @@ class Partition(FiniteSet):
 
         Creating Partition from Python lists:
 
-        >>> from sympy.combinatorics.partitions import Partition
+        >>> from sympy.combinatorics import Partition
         >>> a = Partition([1, 2], [3])
         >>> a
         Partition({3}, {1, 2})
@@ -100,7 +100,7 @@ class Partition(FiniteSet):
         ========
 
         >>> from sympy import default_sort_key
-        >>> from sympy.combinatorics.partitions import Partition
+        >>> from sympy.combinatorics import Partition
         >>> from sympy.abc import x
         >>> a = Partition([1, 2])
         >>> b = Partition([3, 4])
@@ -124,7 +124,7 @@ class Partition(FiniteSet):
         Examples
         ========
 
-        >>> from sympy.combinatorics.partitions import Partition
+        >>> from sympy.combinatorics import Partition
         >>> Partition([1], [2, 3]).partition
         [[1], [2, 3]]
         """
@@ -141,7 +141,7 @@ class Partition(FiniteSet):
         Examples
         ========
 
-        >>> from sympy.combinatorics.partitions import Partition
+        >>> from sympy.combinatorics import Partition
         >>> a = Partition([1, 2], [3])
         >>> a.rank
         1
@@ -165,7 +165,7 @@ class Partition(FiniteSet):
         Examples
         ========
 
-        >>> from sympy.combinatorics.partitions import Partition
+        >>> from sympy.combinatorics import Partition
         >>> a = Partition([1, 2], [3])
         >>> a.rank
         1
@@ -184,7 +184,7 @@ class Partition(FiniteSet):
         Examples
         ========
 
-        >>> from sympy.combinatorics.partitions import Partition
+        >>> from sympy.combinatorics import Partition
         >>> a = Partition([1, 2], [3, 4, 5])
         >>> b = Partition([1], [2, 3], [4], [5])
         >>> a.rank, b.rank
@@ -203,7 +203,7 @@ class Partition(FiniteSet):
         Examples
         ========
 
-        >>> from sympy.combinatorics.partitions import Partition
+        >>> from sympy.combinatorics import Partition
         >>> a = Partition([1, 2], [3, 4, 5])
         >>> b = Partition([1], [2, 3], [4], [5])
         >>> a.rank, b.rank
@@ -221,7 +221,7 @@ class Partition(FiniteSet):
         Examples
         ========
 
-        >>> from sympy.combinatorics.partitions import Partition
+        >>> from sympy.combinatorics import Partition
         >>> a = Partition([1, 2], [3], [4, 5])
         >>> a.rank
         13
@@ -247,7 +247,7 @@ class Partition(FiniteSet):
         Examples
         ========
 
-        >>> from sympy.combinatorics.partitions import Partition
+        >>> from sympy.combinatorics import Partition
         >>> a = Partition([1, 2], [3], [4, 5])
         >>> a.members
         (1, 2, 3, 4, 5)
@@ -283,7 +283,7 @@ class Partition(FiniteSet):
         Examples
         ========
 
-        >>> from sympy.combinatorics.partitions import Partition
+        >>> from sympy.combinatorics import Partition
         >>> Partition.from_rgs([0, 1, 2, 0, 1], list('abcde'))
         Partition({c}, {a, d}, {b, e})
         >>> Partition.from_rgs([0, 1, 2, 0, 1], list('cbead'))
@@ -659,7 +659,7 @@ def RGS_enum(m):
     ========
 
     >>> from sympy.combinatorics.partitions import RGS_enum
-    >>> from sympy.combinatorics.partitions import Partition
+    >>> from sympy.combinatorics import Partition
     >>> RGS_enum(4)
     15
     >>> RGS_enum(5)

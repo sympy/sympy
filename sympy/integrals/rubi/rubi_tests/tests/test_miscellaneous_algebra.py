@@ -9,7 +9,7 @@ if not matchpy:
 if sys.version_info[:2] < (3, 6):
     disabled = True
 
-from sympy.integrals.rubi.rubi import rubi_integrate
+from sympy.integrals.rubi.rubimain import rubi_integrate
 from sympy.functions import log, sqrt, exp, cos, sin, tan, sec, csc, cot
 from sympy.functions.elementary.hyperbolic import atanh
 from sympy.functions.elementary.hyperbolic import asinh

@@ -23,15 +23,16 @@ from sympy.core.relational import Eq, Ne, Relational
 from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, _uniquely_named_symbol
 from sympy.core.sympify import _sympify
+from sympy.core.traversal import iterfreeargs
 from sympy.simplify.simplify import simplify, fraction, trigsimp
 from sympy.simplify import powdenest, logcombine
-from sympy.functions import (log, Abs, tan, cot, sin, cos, sec, csc, exp,
-                             acos, asin, acsc, asec, arg,
+from sympy.functions import (log, tan, cot, sin, cos, sec, csc, exp,
+                             acos, asin, acsc, asec,
                              piecewise_fold, Piecewise)
-from sympy.functions.elementary.complexes import re, im
-from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
-                                                      HyperbolicFunction)
+from sympy.functions.elementary.complexes import Abs, arg, re, im
+from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.miscellaneous import real_root
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.logic.boolalg import And, BooleanTrue
 from sympy.sets import (FiniteSet, imageset, Interval, Intersection,
                         Union, ConditionSet, ImageSet, Complement, Contains)
@@ -534,8 +535,8 @@ def _is_function_class_equation(func_class, f, symbol):
     >>> from sympy.solvers.solveset import _is_function_class_equation
     >>> from sympy import tan, sin, tanh, sinh, exp
     >>> from sympy.abc import x
-    >>> from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
-    ... HyperbolicFunction)
+    >>> from sympy.functions.elementary.trigonometric import TrigonometricFunction
+    >>> from sympy.functions.elementary.hyperbolic import HyperbolicFunction
     >>> _is_function_class_equation(TrigonometricFunction, exp(x) + tan(x), x)
     False
     >>> _is_function_class_equation(TrigonometricFunction, tan(x) + sin(x), x)
@@ -2438,7 +2439,6 @@ def linear_coeffs(eq, *syms, **_kw):
     ...
     NonlinearError: nonlinear term encountered: x*(y + 1)
     """
-    from sympy.core.traversal import iterfreeargs
     d = defaultdict(list)
     eq = _sympify(eq)
     symset = set(syms)
@@ -3365,7 +3365,7 @@ def substitution(system, symbols, result=[{}], known_symbols=[],
             if i.keys() != j.keys():
                 continue
             if all(a.dummy_eq(b) for a, b in zip(i.values(), j.values()) \
-                if type(a) != int or type(b) != int):
+                if not (isinstance(a, int) and isinstance(b, int))):
                 break
         else:
             filtered_complex.append(i)

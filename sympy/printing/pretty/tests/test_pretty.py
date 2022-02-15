@@ -6,7 +6,7 @@ from sympy.core.basic import Basic
 from sympy.core.containers import (Dict, Tuple)
 from sympy.core.function import (Derivative, Function, Lambda, Subs)
 from sympy.core.mul import Mul
-from sympy.core import (EulerGamma, GoldenRatio)
+from sympy.core import (EulerGamma, GoldenRatio, Catalan)
 from sympy.core.numbers import (I, Rational, oo, pi)
 from sympy.core.power import Pow
 from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
@@ -66,13 +66,16 @@ from sympy.sets.conditionset import ConditionSet
 
 from sympy.sets import ImageSet, ProductSet
 from sympy.sets.setexpr import SetExpr
+from sympy.stats.crv_types import Normal
+from sympy.stats.symbolic_probability import (Covariance, Expectation,
+                                              Probability, Variance)
 from sympy.tensor.array import (ImmutableDenseNDimArray, ImmutableSparseNDimArray,
                                 MutableDenseNDimArray, MutableSparseNDimArray, tensorproduct)
 from sympy.tensor.functions import TensorProduct
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices, TensorHead,
                                  TensorElement, tensor_heads)
 
-from sympy.testing.pytest import raises, _both_exp_pow
+from sympy.testing.pytest import raises, _both_exp_pow, warns_deprecated_sympy
 
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross, Laplacian
 
@@ -406,6 +409,17 @@ def test_pretty_Permutation():
     assert xpretty(p1, perm_cyclic=False, use_unicode=False) == \
     "/0 1 2 3 4\\\n"\
     "\\0 2 1 4 3/"
+
+    with warns_deprecated_sympy():
+        old_print_cyclic = Permutation.print_cyclic
+        Permutation.print_cyclic = False
+        assert xpretty(p1, use_unicode=True) == \
+        '⎛0 1 2 3 4⎞\n'\
+        '⎝0 2 1 4 3⎠'
+        assert xpretty(p1, use_unicode=False) == \
+        "/0 1 2 3 4\\\n"\
+        "\\0 2 1 4 3/"
+        Permutation.print_cyclic = old_print_cyclic
 
 
 def test_pretty_basic():
@@ -1131,6 +1145,11 @@ def test_EulerGamma():
 def test_GoldenRatio():
     assert pretty(GoldenRatio) == str(GoldenRatio) == "GoldenRatio"
     assert upretty(GoldenRatio) == "φ"
+
+
+def test_Catalan():
+    assert pretty(Catalan) == upretty(Catalan) == "G"
+
 
 def test_pretty_relational():
     expr = Eq(x, y)
@@ -3608,6 +3627,7 @@ def test_diffgeom_print_WedgeProduct():
     from sympy.diffgeom import WedgeProduct
     wp = WedgeProduct(R2.dx, R2.dy)
     assert upretty(wp) == "ⅆ x∧ⅆ y"
+    assert pretty(wp) == r"d x/\d y"
 
 
 def test_Adjoint():
@@ -3641,6 +3661,18 @@ def test_Adjoint():
         "    †\n⎛ T⎞ \n⎝X ⎠ "
     assert upretty(Transpose(Adjoint(X))) == \
         "    T\n⎛ †⎞ \n⎝X ⎠ "
+    m = Matrix(((1, 2), (3, 4)))
+    assert upretty(Adjoint(m)) == \
+        '      †\n'\
+        '⎡1  2⎤ \n'\
+        '⎢    ⎥ \n'\
+        '⎣3  4⎦ '
+    assert upretty(Adjoint(m+X)) == \
+        '            †\n'\
+        '⎛⎡1  2⎤    ⎞ \n'\
+        '⎜⎢    ⎥ + X⎟ \n'\
+        '⎝⎣3  4⎦    ⎠ '
+
 
 def test_pretty_Trace_issue_9044():
     X = Matrix([[1, 2], [3, 4]])
@@ -7628,6 +7660,7 @@ def test_issue_17857():
     assert pretty(Range(-oo, oo)) == '{..., -1, 0, 1, ...}'
     assert pretty(Range(oo, -oo, -1)) == '{..., 1, 0, -1, ...}'
 
+
 def test_issue_18272():
     x = Symbol('x')
     n = Symbol('n')
@@ -7658,6 +7691,37 @@ def test_Str():
     from sympy.core.symbol import Str
     assert pretty(Str('x')) == 'x'
 
+
+
+def test_symbolic_probability():
+    mu = symbols("mu")
+    sigma = symbols("sigma", positive=True)
+    X = Normal("X", mu, sigma)
+    assert pretty(Expectation(X)) == r'E[X]'
+    assert pretty(Variance(X)) == r'Var(X)'
+    assert pretty(Probability(X > 0)) == r'P(X > 0)'
+    Y = Normal("Y", mu, sigma)
+    assert pretty(Covariance(X, Y)) == 'Cov(X, Y)'
+
+
+def test_issue_21758():
+    from sympy.functions.elementary.piecewise import piecewise_fold
+    from sympy.series.fourier import FourierSeries
+    x = Symbol('x')
+    k, n = symbols('k n')
+    fo = FourierSeries(x, (x, -pi, pi), (0, SeqFormula(0, (k, 1, oo)), SeqFormula(
+        Piecewise((-2*pi*cos(n*pi)/n + 2*sin(n*pi)/n**2, (n > -oo) & (n < oo) & Ne(n, 0)),
+                  (0, True))*sin(n*x)/pi, (n, 1, oo))))
+    assert upretty(piecewise_fold(fo)) == \
+        '⎧                      2⋅sin(3⋅x)                                \n'\
+        '⎪2⋅sin(x) - sin(2⋅x) + ────────── + …  for n > -∞ ∧ n < ∞ ∧ n ≠ 0\n'\
+        '⎨                          3                                     \n'\
+        '⎪                                                                \n'\
+        '⎩                 0                            otherwise         '
+    assert pretty(FourierSeries(x, (x, -pi, pi), (0, SeqFormula(0, (k, 1, oo)),
+                                                 SeqFormula(0, (n, 1, oo))))) == '0'
+
+
 def test_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
     x,y = symbols('x y', real=True)
@@ -7669,3 +7733,15 @@ def test_diffgeom():
     assert pretty(rect) == "rect"
     b = BaseScalarField(rect, 0)
     assert pretty(b) == "x"
+
+def test_deprecated_prettyForm():
+    with warns_deprecated_sympy():
+        from sympy.printing.pretty.pretty_symbology import xstr
+        assert xstr(1) == '1'
+
+    with warns_deprecated_sympy():
+        from sympy.printing.pretty.stringpict import prettyForm
+        p = prettyForm('s', unicode='s')
+
+    with warns_deprecated_sympy():
+        assert p.unicode == p.s == 's'

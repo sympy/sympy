@@ -76,8 +76,9 @@ from sympy.matrices.expressions.matexpr import MatrixSymbol
 from sympy.polys.rootoftools import rootof
 from sympy.simplify.simplify import signsimp
 from sympy.utilities.iterables import iterable
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.testing.pytest import raises, warns_deprecated_sympy, warns
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
 
@@ -2975,6 +2976,25 @@ def test_nth_power_roots_poly():
     raises(MultivariatePolynomialError, lambda: nth_power_roots_poly(
         x + y, 2, x, y))
 
+
+def test_same_root():
+    f = Poly(x**4 + x**3 + x**2 + x + 1)
+    eq = f.same_root
+    r0 = exp(2 * I * pi / 5)
+    assert [i for i, r in enumerate(f.all_roots()) if eq(r, r0)] == [3]
+
+    raises(PolynomialError,
+           lambda: Poly(x + 1, domain=QQ).same_root(0, 0))
+    raises(DomainError,
+           lambda: Poly(x**2 + 1, domain=FF(7)).same_root(0, 0))
+    raises(DomainError,
+           lambda: Poly(x ** 2 + 1, domain=ZZ_I).same_root(0, 0))
+    raises(DomainError,
+           lambda: Poly(y * x**2 + 1, domain=ZZ[y]).same_root(0, 0))
+    raises(MultivariatePolynomialError,
+           lambda: Poly(x * y + 1, domain=ZZ).same_root(0, 0))
+
+
 def test_torational_factor_list():
     p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
     assert _torational_factor_list(p, x) == (-2, [
@@ -2985,6 +3005,7 @@ def test_torational_factor_list():
 
     p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + 2**Rational(1, 4))}))
     assert _torational_factor_list(p, x) is None
+
 
 def test_cancel():
     assert cancel(0) == 0
@@ -3486,7 +3507,7 @@ def test_issue_17988():
     p = poly(x - 1)
     with warns_deprecated_sympy():
         M = Matrix([[poly(x + 1), poly(x + 1)]])
-    with warns_deprecated_sympy():
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
         assert p * M == M * p == Matrix([[poly(x**2 - 1), poly(x**2 - 1)]])
 
 

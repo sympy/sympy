@@ -46,6 +46,8 @@ pip install\
   sphinx\
   sphinx-math-dollar\
   sphinx-reredirects\
+  myst-parser\
+  linkify-it-py\
   #
 
 pip freeze > requirements.txt

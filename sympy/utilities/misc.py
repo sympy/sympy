@@ -61,7 +61,7 @@ def strlines(s, c=64, short=False):
     ========
     filldedent, rawlines
     """
-    if type(s) is not str:
+    if not isinstance(s, str):
         raise ValueError('expecting string input')
     if '\n' in s:
         return rawlines(s)
@@ -252,10 +252,15 @@ def find_executable(executable, path=None):
     os.environ['PATH']).  Returns the complete filename or None if not
     found
     """
-    from .exceptions import SymPyDeprecationWarning
-    SymPyDeprecationWarning(useinstead="the builtin ``shutil.which`` function",
-                            issue=19634,
-                            deprecated_since_version="1.7").warn()
+    from .exceptions import sympy_deprecation_warning
+    sympy_deprecation_warning(
+        """
+        sympy.utilities.misc.find_executable() is deprecated. Use the standard
+        library shutil.which() function instead.
+        """,
+        deprecated_since_version="1.7",
+        active_deprecations_target="deprecated-find-executable",
+    )
     if path is None:
         path = os.environ['PATH']
     paths = path.split(os.pathsep)
@@ -379,7 +384,7 @@ def replace(string, *reps):
     """
     if len(reps) == 1:
         kv = reps[0]
-        if type(kv) is dict:
+        if isinstance(kv, dict):
             reps = kv
         else:
             return string.replace(*kv)
@@ -439,7 +444,7 @@ def translate(s, a, b=None, c=None):
         c = b
         a = b = ''
     else:
-        if type(a) is dict:
+        if isinstance(a, dict):
             short = {}
             for k in list(a.keys()):
                 if len(k) == 1 and len(a[k]) == 1:

@@ -1,9 +1,6 @@
 from types import FunctionType
 
-from sympy.simplify.simplify import (
-    simplify as _simplify, dotprodsimp as _dotprodsimp)
-
-from .utilities import _get_intermediate_simp, _iszero
+from .utilities import _get_intermediate_simp, _iszero, _dotprodsimp, _simplify
 from .determinant import _find_reasonable_pivot
 
 
