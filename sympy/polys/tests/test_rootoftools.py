@@ -15,7 +15,7 @@ from sympy.core.numbers import (Float, I, Rational)
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import (exp, log)
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, cbrt
 from sympy.functions.elementary.trigonometric import tan
 from sympy.integrals.integrals import Integral
 from sympy.polys.orthopolys import legendre_poly
@@ -173,6 +173,17 @@ def test_CRootOf_is_real():
 
 def test_CRootOf_is_complex():
     assert rootof(x**3 + x + 3, 0).is_complex is True
+
+
+def test_CRootOf_Algebraic():
+    assert rootof(sqrt(2) * x ** 3 + sqrt(3) * x ** 2 + sqrt(3) * x + cbrt(3), 0) == \
+        CRootOf(64*x**36 - 576*x**34 - 1152*x**33 + 1584*x**32 + 8640*x**31 + 8640*x**30 \
+        - 17280*x**29 - 57780*x**28 - 47520*x**27 + 68364*x**26 + 217080*x**25 \
+        + 205389*x**24 - 69012*x**23 - 428166*x**22 - 535572*x**21 - 246645*x**20 \
+        + 227448*x**19 + 542232*x**18 + 548208*x**17 + 354699*x**16 + 153900*x**15 \
+        + 40014*x**14 - 10692*x**13 - 28917*x**12 - 22356*x**11 - 12150*x**10 \
+        - 9720*x**9 - 7290*x**8 - 2916*x**7 - 486*x**6 + 81, 0)
+    raises(NotImplementedError, lambda: rootof(sqrt(2) * x ** 3 + sqrt(3) * x + cbrt(3), 0))
 
 
 def test_CRootOf_subs():

@@ -12,7 +12,8 @@ from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
     GeneratorsNeeded,
     PolynomialError,
-    DomainError)
+    DomainError,
+    NotInvertible)
 from sympy.polys.polyfuncs import symmetrize, viete
 from sympy.polys.polyroots import (
     roots_linear, roots_quadratic, roots_binomial,
@@ -354,7 +355,9 @@ class ComplexRootOf(RootOf):
         dom = poly.get_domain()
 
         if not dom.is_ZZ:
-            raise NotImplementedError("CRootOf is not supported over %s" % dom)
+            poly = cls._roots_Algebraic(poly)
+            coeff, poly = preprocess_roots(poly)
+            dom = poly.get_domain()
 
         root = cls._indexed_root(poly, index)
         return coeff * cls._postprocess_root(root, radicals)
@@ -758,6 +761,32 @@ class ComplexRootOf(RootOf):
         for root in getattr(cls, method)(poly):
             roots.append(coeff*cls._postprocess_root(root, radicals))
         return roots
+
+    @classmethod
+    def _roots_Algebraic(cls, poly):
+        r"""Converts a Polynomial 'B(x)' with algebriac coefficients
+        to a Polynomial 'C(x)' with rational coefficients such that
+        every root of 'B(x)' is a root of 'C(x)'.
+        """
+        from sympy.polys.numberfields import primitive_element
+        from sympy.polys.polytools import gcd, resultant, reduced, div
+        x, y = symbols('x y')
+        coeffs = Poly(poly, x).all_coeffs()
+        try:
+            A, r_A, B_s = primitive_element(coeffs, y, ex=True)
+        except NotInvertible:
+            raise NotImplementedError("Cannot convert %s to an algebraic extension" % poly)
+        B_n = Poly(B_s[::-1][len(B_s)-1], y).as_expr()
+        D = gcd(A, B_n)
+
+        if not D.is_Number and D.degree() > 0:
+            A_hat = div(A, D)
+            B_s, A_hat = reduced(A, [Poly(Bi, y).as_expr() for Bi in B_s[::-1]])
+            A = A_hat
+
+        B = sum(Poly(Bi, y).as_expr() * x ** i for i, Bi in enumerate(B_s[::-1]))
+        poly = PurePoly(resultant(A, B, y), x, domain='EX')
+        return poly
 
     @classmethod
     def clear_cache(cls):
