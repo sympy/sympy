@@ -433,13 +433,13 @@ def variations(seq, n, repetition=False):
     if not repetition:
         seq = tuple(seq)
         if len(seq) < n:
-            return
-        yield from permutations(seq, n)
+            return (val for val in [])  # 0 length generator
+        return permutations(seq, n)
     else:
         if n == 0:
-            yield ()
+            return (val for val in [()])   # yields 1 empty tuple
         else:
-            yield from product(seq, repeat=n)
+            return product(seq, repeat=n)
 
 
 def subsets(seq, k=None, repetition=False):
