@@ -49,7 +49,7 @@ def sympy_to_numpy(m, **options):
         raise ImportError
     dtype = options.get('dtype', 'complex')
     if isinstance(m, MatrixBase):
-        return np.matrix(m.tolist(), dtype=dtype)
+        return np.array(m.tolist(), dtype=dtype)
     elif isinstance(m, Expr):
         if m.is_Number or m.is_NumberSymbol or m == I:
             return complex(m)
@@ -62,7 +62,7 @@ def sympy_to_scipy_sparse(m, **options):
         raise ImportError
     dtype = options.get('dtype', 'complex')
     if isinstance(m, MatrixBase):
-        return sparse.csr_matrix(np.matrix(m.tolist(), dtype=dtype))
+        return sparse.csr_matrix(np.array(m.tolist(), dtype=dtype))
     elif isinstance(m, Expr):
         if m.is_Number or m.is_NumberSymbol or m == I:
             return complex(m)
@@ -183,7 +183,7 @@ def _numpy_eye(n):
     """numpy version of complex eye."""
     if not np:
         raise ImportError
-    return np.matrix(np.eye(n, dtype='complex'))
+    return np.array(np.eye(n, dtype='complex'))
 
 
 def _scipy_sparse_eye(n):

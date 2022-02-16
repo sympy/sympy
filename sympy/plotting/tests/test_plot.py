@@ -21,7 +21,7 @@ from sympy.plotting.plot import (
 from sympy.plotting.plot import (
     unset_show, plot_contour, PlotGrid, DefaultBackend, MatplotlibBackend,
     TextBackend, BaseBackend)
-from sympy.testing.pytest import skip, raises, warns
+from sympy.testing.pytest import skip, raises, warns, warns_deprecated_sympy
 from sympy.utilities import lambdify as lambdify_
 
 
@@ -355,7 +355,9 @@ def test_plot_and_save_4():
     with TemporaryDirectory(prefix='sympy_') as tmpdir:
         with warns(
             UserWarning,
-            match="The evaluation of the expression is problematic"):
+            match="The evaluation of the expression is problematic",
+            test_stacklevel=False,
+        ):
             i = Integral(log((sin(x)**2 + 1)*sqrt(x**2 + 1)), (x, 0, y))
             p = plot(i, (y, 1, 5))
             filename = 'test_advanced_integral.png'
@@ -733,3 +735,13 @@ def test_custom_coloring():
             surface_color=lambda a, b: a**2 + b**2)
     plot3d(x*y, (x, -5, 5), (y, -5, 5), surface_color=1)
     plot3d(x*y, (x, -5, 5), (y, -5, 5), surface_color="r")
+
+def test_deprecated_get_segments():
+    if not matplotlib:
+        skip("Matplotlib not the default backend")
+
+    x = Symbol('x')
+    f = sin(x)
+    p = plot(f, (x, -10, 10), show=False)
+    with warns_deprecated_sympy():
+        p[0].get_segments()

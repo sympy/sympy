@@ -15,8 +15,8 @@ from sympy.core.relational import Eq
 from sympy.core.sorting import ordered
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core.sympify import sympify
-from sympy.functions import exp, sqrt, im, cos, acos, Piecewise
-from sympy.functions.elementary.miscellaneous import root
+from sympy.functions import exp, im, cos, acos, Piecewise
+from sympy.functions.elementary.miscellaneous import root, sqrt
 from sympy.ntheory import divisors, isprime, nextprime
 from sympy.polys.domains import EX
 from sympy.polys.polyerrors import (PolynomialError, GeneratorsNeeded,

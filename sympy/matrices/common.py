@@ -19,10 +19,10 @@ from sympy.core.mod import Mod
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import sympify
-from sympy.functions import Abs
+from sympy.functions.elementary.complexes import Abs, re, im
 from .utilities import _dotprodsimp, _simplify
 from sympy.polys.polytools import Poly
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import flatten, is_sequence
 from sympy.utilities.misc import as_int, filldedent
 from sympy.tensor.array import NDimArray
@@ -1032,8 +1032,9 @@ class MatrixSpecial(MatrixRequired):
             Specifies the shape of the Jordan block matrix. See Notes
             section for the details of how these key works.
 
-            .. note::
-                This feature will be deprecated in the future.
+            .. deprecated:: 1.4
+                The rows and cols parameters are deprecated and will be
+                removed in a future version.
 
 
         Returns
@@ -1085,8 +1086,9 @@ class MatrixSpecial(MatrixRequired):
         Notes
         =====
 
-        .. note::
-            This feature will be deprecated in the future.
+        .. deprecated:: 1.4
+            This feature is deprecated and will be removed in a future
+            version.
 
         The keyword arguments ``size``, ``rows``, ``cols`` relates to
         the Jordan block size specifications.
@@ -1119,12 +1121,26 @@ class MatrixSpecial(MatrixRequired):
         .. [1] https://en.wikipedia.org/wiki/Jordan_matrix
         """
         if 'rows' in kwargs or 'cols' in kwargs:
-            SymPyDeprecationWarning(
-                feature="Keyword arguments 'rows' or 'cols'",
-                issue=16102,
-                useinstead="a more generic banded matrix constructor",
-                deprecated_since_version="1.4"
-            ).warn()
+            msg = """
+                The 'rows' and 'cols' keywords to Matrix.jordan_block() are
+                deprecated. Use the 'size' parameter instead.
+                """
+            if 'rows' in kwargs and 'cols' in kwargs:
+                msg += f"""\
+                To get a non-square Jordan block matrix use a more generic
+                banded matrix constructor, like
+
+                def entry(i, j):
+                    if i == j:
+                        return eigenvalue
+                    elif {"i + 1 == j" if band == 'upper' else "j + 1 == i"}:
+                        return 1
+                    return 0
+
+                Matrix({kwargs['rows']}, {kwargs['cols']}, entry)
+                """
+            sympy_deprecation_warning(msg, deprecated_since_version="1.4",
+                active_deprecations_target="deprecated-matrix-jordan_block-rows-cols")
 
         klass = kwargs.pop('cls', kls)
         rows = kwargs.pop('rows', None)
@@ -1985,8 +2001,6 @@ class MatrixOperations(MatrixRequired):
         return out
 
     def _eval_as_real_imag(self):  # type: ignore
-        from sympy.functions.elementary.complexes import re, im
-
         return (self.applyfunc(re), self.applyfunc(im))
 
     def _eval_conjugate(self):
