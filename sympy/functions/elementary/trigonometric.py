@@ -379,18 +379,13 @@ class sin(TrigonometricFunction):
             x = arg.args[0]
             return sqrt(1 - 1/x**2)
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return sin._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return sin._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -724,18 +719,13 @@ class cos(TrigonometricFunction):
             x = arg.args[0]
             return 1/x
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return cos._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return cos._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0 or n % 2 == 1:
             return S.Zero
         else:
@@ -1184,19 +1174,13 @@ class tan(TrigonometricFunction):
             x = arg.args[0]
             return sqrt(1 - 1/x**2)*x
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return tan._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return tan._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
-        from sympy.functions.combinatorial.numbers import bernoulli
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -1505,19 +1489,13 @@ class cot(TrigonometricFunction):
             x = arg.args[0]
             return 1/(sqrt(1 - 1/x**2)*x)
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return cot._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return cot._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
-        from sympy.functions.combinatorial.numbers import bernoulli
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n == 0:
             return 1/sympify(x)
         elif n < 0 or n % 2 == 0:
@@ -1857,20 +1835,15 @@ class sec(ReciprocalTrigonometricFunction):
         if arg.is_complex and (arg/pi - S.Half).is_integer is False:
             return True
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return sec._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return sec._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
         # Reference Formula:
         # http://functions.wolfram.com/ElementaryFunctions/Sec/06/01/02/01/
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0 or n % 2 == 1:
             return S.Zero
         else:
@@ -1960,18 +1933,13 @@ class csc(ReciprocalTrigonometricFunction):
         if arg.is_real and (arg/pi).is_integer is False:
             return True
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return csc._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return csc._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         from sympy.functions.combinatorial.numbers import bernoulli
         if n == 0:
             return 1/sympify(x)
@@ -2303,18 +2271,13 @@ class asin(InverseTrigonometricFunction):
             if ang.is_comparable:
                 return pi/2 - acos(arg)
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return asin._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return asin._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -2512,18 +2475,13 @@ class acos(InverseTrigonometricFunction):
             if ang.is_comparable:
                 return pi/2 - asin(arg)
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return acos._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return acos._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n == 0:
             return S.Pi/2
         elif n < 0 or n % 2 == 0:
@@ -2755,18 +2713,13 @@ class atan(InverseTrigonometricFunction):
                     ang -= pi
                 return ang
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return atan._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return atan._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -2959,18 +2912,13 @@ class acot(InverseTrigonometricFunction):
                     ang -= pi
                 return ang
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return acot._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return acot._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n == 0:
             return S.Pi/2  # FIX THIS
         elif n < 0 or n % 2 == 0:

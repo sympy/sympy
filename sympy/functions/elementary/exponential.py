@@ -384,21 +384,16 @@ class exp(ExpBase, metaclass=ExpMeta):
         """
         return S.Exp1
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return exp._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return exp._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
         """
         Calculates the next term in the Taylor series expansion.
         """
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0:
             return S.Zero
         if n == 0:
@@ -802,22 +797,17 @@ class log(Function):
         """
         return self, S.One
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return log._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return log._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):  # of log(1+x)
+    def taylor_term(self, n, x, *previous_terms):  # of log(1+x)
         r"""
         Returns the next term in the Taylor series expansion of `\log(1+x)`.
         """
         from sympy.simplify.powsimp import powsimp
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0:
             return S.Zero
         x = sympify(x)

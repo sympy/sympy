@@ -2,7 +2,6 @@ from sympy.core.logic import FuzzyBool
 
 from sympy.core import S, sympify, cacheit, pi, I, Rational
 from sympy.core.add import Add
-from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.symbol import Symbol
 from sympy.core.logic import fuzzy_or, fuzzy_and
@@ -162,21 +161,16 @@ class sinh(HyperbolicFunction):
                 x = arg.args[0]
                 return 1/(sqrt(x - 1) * sqrt(x + 1))
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return sinh._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return sinh._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
         """
         Returns the next term in the Taylor series expansion.
         """
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -366,18 +360,13 @@ class cosh(HyperbolicFunction):
                 x = arg.args[0]
                 return x/(sqrt(x - 1) * sqrt(x + 1))
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return cosh._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return cosh._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0 or n % 2 == 1:
             return S.Zero
         else:
@@ -625,19 +614,13 @@ class tanh(HyperbolicFunction):
             if arg.func == acoth:
                 return 1/arg.args[0]
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return tanh._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return tanh._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
-        from sympy.functions.combinatorial.numbers import bernoulli
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -848,19 +831,13 @@ class coth(HyperbolicFunction):
             if arg.func == acoth:
                 return arg.args[0]
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return coth._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return coth._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
-        from sympy.functions.combinatorial.numbers import bernoulli
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n == 0:
             return 1 / sympify(x)
         elif n < 0 or n % 2 == 0:
@@ -1051,21 +1028,16 @@ class csch(ReciprocalHyperbolicFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return csch._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return csch._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
         """
         Returns the next term in the Taylor series expansion
         """
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n == 0:
             return 1/sympify(x)
         elif n < 0 or n % 2 == 0:
@@ -1119,19 +1091,13 @@ class sech(ReciprocalHyperbolicFunction):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return sech._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return sech._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
-        from sympy.functions.combinatorial.numbers import euler
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0 or n % 2 == 1:
             return S.Zero
         else:
@@ -1232,18 +1198,13 @@ class asinh(InverseHyperbolicFunction):
                 elif even is False:
                     return -m
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return asinh._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return asinh._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -1385,18 +1346,13 @@ class acosh(InverseHyperbolicFunction):
                     elif r.is_positive:
                         return m
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return acosh._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return acosh._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n == 0:
             return S.Pi*S.ImaginaryUnit / 2
         elif n < 0 or n % 2 == 0:
@@ -1510,18 +1466,13 @@ class atanh(InverseHyperbolicFunction):
                 elif even is False:
                     return m - I*pi/2
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return atanh._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return atanh._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -1614,18 +1565,13 @@ class acoth(InverseHyperbolicFunction):
         if arg.is_zero:
             return S.Pi*S.ImaginaryUnit*S.Half
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return acoth._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return acoth._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n == 0:
             return S.Pi*S.ImaginaryUnit / 2
         elif n < 0 or n % 2 == 0:

@@ -1260,18 +1260,13 @@ class airyai(AiryBase):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return airyai._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return airyai._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0:
             return S.Zero
         else:
@@ -1444,18 +1439,13 @@ class airybi(AiryBase):
         else:
             raise ArgumentIndexError(self, argindex)
 
-    def taylor_term(self, n, x, *previous_terms):
-        if len(x.free_symbols) > 1 or (len(self.free_symbols) == 1 and x in self.free_symbols and isinstance(self.args[0], Symbol)):
-            return airybi._taylor_term(n, x, *previous_terms)
-        else:
-            term = Expr.taylor_term(self, n, x, *previous_terms)
-            if term is None or term is S.NaN or x not in term.free_symbols:
-                return airybi._taylor_term(n, x, *previous_terms)
-            return term
-
-    @staticmethod
     @cacheit
-    def _taylor_term(n, x, *previous_terms):
+    def taylor_term(self, n, x, *previous_terms):
+        if not isinstance(self.args[0], Symbol) or self.args[0] != x:
+            term = super().taylor_term(n, x, *previous_terms)
+            if term is None or term is S.NaN:
+                pass
+            return term
         if n < 0:
             return S.Zero
         else:
