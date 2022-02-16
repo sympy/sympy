@@ -471,7 +471,7 @@ def trigsimp(expr, **opts):
     Using ``method='groebner'`` (or ``method='combined'``) might lead to
     greater simplification.
 
-    The old trigsimp routine can be accessed as with method ``method='old'`.
+    The old trigsimp routine can be accessed as with method ``method='old'``.
 
     >>> from sympy import coth, tanh
     >>> t = 3*tanh(x)**7 - 2/coth(x)**7
