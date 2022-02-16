@@ -529,8 +529,18 @@ class exp(ExpBase, metaclass=ExpMeta):
         return Add(*l)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.util import AccumBounds
         arg = self.args[0].cancel().as_leading_term(x, logx=logx)
         arg0 = arg.subs(x, 0)
+        if arg is S.NaN:
+            return S.NaN
+        if isinstance(arg0, AccumBounds):
+            # This check addresses a corner case involving AccumBounds.
+            # if isinstance(arg, AccumBounds) is True, then arg0 can either be 0,
+            # AccumBounds(-oo, 0) or AccumBounds(-oo, oo).
+            # Check out function: test_issue_18473() in test_exponential.py and
+            # test_limits.py for more information.
+            return exp(arg0)
         if arg0 is S.NaN:
             arg0 = arg.limit(x, 0)
         if arg0.is_infinite is False:
@@ -701,8 +711,10 @@ class log(Function):
         elif isinstance(arg, AccumBounds):
             if arg.min.is_positive:
                 return AccumBounds(log(arg.min), log(arg.max))
+            elif arg.min.is_zero:
+                return AccumBounds(S.NegativeInfinity, log(arg.max))
             else:
-                return
+                return S.NaN
         elif isinstance(arg, SetExpr):
             return arg._eval_func(cls)
 
@@ -1041,6 +1053,7 @@ class log(Function):
         return res + Order(x**n, x)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
+        from sympy.calculus.util import AccumBounds
         arg0 = self.args[0].together()
 
         arg = arg0.as_leading_term(x, cdir=cdir)
@@ -1055,6 +1068,8 @@ class log(Function):
             cdir = arg0.dir(x, cdir)
         if x0.is_real and x0.is_negative and im(cdir).is_negative:
             return self.func(x0) - 2*I*S.Pi
+        if isinstance(arg, AccumBounds):
+            return log(arg)
         return self.func(arg)
 
 
