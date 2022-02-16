@@ -12,7 +12,6 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin)
 from sympy.functions.special.bessel import airyai
 from sympy.functions.special.error_functions import erf
-from sympy.functions.special.gamma_functions import gamma
 from sympy.integrals.integrals import integrate
 from sympy.series.formal import fps
 from sympy.series.order import O
