@@ -1,6 +1,8 @@
 from sympy.concrete.summations import Sum
 from sympy.core.add import Add
+from sympy.core.containers import TupleKind
 from sympy.core.function import Lambda
+from sympy.core.kind import NumberKind, UndefinedKind
 from sympy.core.numbers import (Float, I, Rational, nan, oo, pi, zoo)
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -10,11 +12,12 @@ from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.logic.boolalg import (false, true)
+from sympy.matrices.common import MatrixKind
 from sympy.matrices.dense import Matrix
 from sympy.polys.rootoftools import rootof
 from sympy.sets.contains import Contains
 from sympy.sets.fancysets import (ImageSet, Range)
-from sympy.sets.sets import (Complement, DisjointUnion, FiniteSet, Intersection, Interval, ProductSet, Set, SymmetricDifference, Union, imageset)
+from sympy.sets.sets import (Complement, DisjointUnion, FiniteSet, Intersection, Interval, ProductSet, Set, SymmetricDifference, Union, imageset, SetKind)
 from mpmath import mpi
 
 from sympy.core.expr import unchanged
@@ -103,6 +106,9 @@ def test_is_finiteset():
 def test_deprecated_is_EmptySet():
     with warns_deprecated_sympy():
         S.EmptySet.is_EmptySet
+
+    with warns_deprecated_sympy():
+        FiniteSet(1).is_EmptySet
 
 
 def test_interval_arguments():
@@ -994,7 +1000,7 @@ def test_finite_basic():
     assert FiniteSet((1, 2, 3)) != FiniteSet(1, 2, 3)
 
     # Ensure a variety of types can exist in a FiniteSet
-    assert FiniteSet((1, 2), Float, A, -5, x, 'eggs', x**2, Interval)
+    assert FiniteSet((1, 2), A, -5, x, 'eggs', x**2)
 
     assert (A > B) is False
     assert (A >= B) is False
@@ -1596,6 +1602,54 @@ def test_DisjointUnion_len():
     assert len(DisjointUnion(FiniteSet(3, 5, 7, 9), FiniteSet(x, y, z))) == 7
     assert len(DisjointUnion(S.EmptySet, S.EmptySet, FiniteSet(x, y, z), S.EmptySet)) == 3
     raises(ValueError, lambda: len(DisjointUnion(Interval(0, 1), S.EmptySet)))
+
+def test_SetKind_ProductSet():
+    p = ProductSet(FiniteSet(Matrix([1, 2])), FiniteSet(Matrix([1, 2])))
+    mk = MatrixKind(NumberKind)
+    k = SetKind(TupleKind(mk, mk))
+    assert p.kind is k
+    assert ProductSet(Interval(1, 2), FiniteSet(Matrix([1, 2]))).kind is SetKind(TupleKind(NumberKind, mk))
+
+def test_SetKind_Interval():
+    assert Interval(1, 2).kind is SetKind(NumberKind)
+
+def test_SetKind_EmptySet_UniversalSet():
+    assert S.UniversalSet.kind is SetKind(UndefinedKind)
+    assert EmptySet.kind is SetKind()
+
+def test_SetKind_FiniteSet():
+    assert FiniteSet(1, Matrix([1, 2])).kind is SetKind(UndefinedKind)
+    assert FiniteSet(1, 2).kind is SetKind(NumberKind)
+
+def test_SetKind_Unions():
+    assert Union(FiniteSet(Matrix([1, 2])), Interval(1, 2)).kind is SetKind(UndefinedKind)
+    assert Union(Interval(1, 2), Interval(1, 7)).kind is SetKind(NumberKind)
+
+def test_SetKind_DisjointUnion():
+    A = FiniteSet(1, 2, 3)
+    B = Interval(0, 5)
+    assert DisjointUnion(A, B).kind is SetKind(NumberKind)
+
+def test_SetKind_evaluate_False():
+    U = lambda *args: Union(*args, evaluate=False)
+    assert U({1}, EmptySet).kind is SetKind(NumberKind)
+    assert U(Interval(1, 2), EmptySet).kind is SetKind(NumberKind)
+    assert U({1}, S.UniversalSet).kind is SetKind(UndefinedKind)
+    assert U(Interval(1, 2), Interval(4, 5),
+            FiniteSet(1)).kind is SetKind(NumberKind)
+    I = lambda *args: Intersection(*args, evaluate=False)
+    assert I({1}, S.UniversalSet).kind is SetKind(NumberKind)
+    assert I({1}, EmptySet).kind is SetKind()
+    C = lambda *args: Complement(*args, evaluate=False)
+    assert C(S.UniversalSet, {1, 2, 4, 5}).kind is SetKind(UndefinedKind)
+    assert C({1, 2, 3, 4, 5}, EmptySet).kind is SetKind(NumberKind)
+    assert C(EmptySet, {1, 2, 3, 4, 5}).kind is SetKind()
+
+def test_SetKind_ImageSet_Special():
+    f = ImageSet(Lambda(n, n ** 2), Interval(1, 4))
+    assert (f - FiniteSet(3)).kind is SetKind(NumberKind)
+    assert (f + Interval(16, 17)).kind is SetKind(NumberKind)
+    assert (f + FiniteSet(17)).kind is SetKind(NumberKind)
 
 def test_issue_20089():
     B = FiniteSet(FiniteSet(1, 2), FiniteSet(1))

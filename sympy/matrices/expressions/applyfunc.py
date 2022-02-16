@@ -16,7 +16,7 @@ class ElementwiseApplyFunction(MatrixExpr):
     It can be created by calling ``.applyfunc(<function>)`` on a matrix
     expression:
 
-    >>> from sympy.matrices.expressions import MatrixSymbol
+    >>> from sympy import MatrixSymbol
     >>> from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
     >>> from sympy import exp
     >>> X = MatrixSymbol("X", 3, 3)

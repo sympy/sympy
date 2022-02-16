@@ -45,11 +45,11 @@ from sympy.polys.polyerrors import IsomorphismFailed
 from sympy.polys.polytools import Poly, PurePoly, factor_list
 from sympy.utilities import public
 
-from mpmath import pslq, mp
+from mpmath import MPContext
 
 
 def is_isomorphism_possible(a, b):
-    """Returns `True` if there is a chance for isomorphism. """
+    """Necessary but not sufficient test for isomorphism. """
     n = a.minpoly.degree()
     m = b.minpoly.degree()
 
@@ -88,45 +88,47 @@ def field_isomorphism_pslq(a, b):
     g = b.minpoly.replace(f.gen)
 
     n, m, prev = 100, b.minpoly.degree(), None
+    ctx = MPContext()
 
     for i in range(1, 5):
         A = a.root.evalf(n)
         B = b.root.evalf(n)
 
-        basis = [1, B] + [ B**i for i in range(2, m) ] + [A]
+        basis = [1, B] + [ B**i for i in range(2, m) ] + [-A]
 
-        dps, mp.dps = mp.dps, n
-        coeffs = pslq(basis, maxcoeff=int(1e10), maxsteps=1000)
-        mp.dps = dps
+        ctx.dps = n
+        coeffs = ctx.pslq(basis, maxcoeff=10**10, maxsteps=1000)
 
         if coeffs is None:
+            # PSLQ can't find an integer linear combination. Give up.
             break
 
         if coeffs != prev:
             prev = coeffs
         else:
+            # Increasing precision didn't produce anything new. Give up.
             break
 
+        # We have
+        #   c0 + c1*B + c2*B^2 + ... + cm-1*B^(m-1) - cm*A ~ 0.
+        # So bring cm*A to the other side, and divide through by cm,
+        # for an approximate representation of A as a polynomial in B.
+        # (We know cm != 0 since `b.minpoly` is irreducible.)
         coeffs = [S(c)/coeffs[-1] for c in coeffs[:-1]]
 
+        # Throw away leading zeros.
         while not coeffs[-1]:
             coeffs.pop()
 
         coeffs = list(reversed(coeffs))
         h = Poly(coeffs, f.gen, domain='QQ')
 
+        # We only have A ~ h(B). We must check whether the relation is exact.
         if f.compose(h).rem(g).is_zero:
-            d, approx = len(coeffs) - 1, 0
-
-            for i, coeff in enumerate(coeffs):
-                approx += coeff*B**(d - i)
-
-            if A*approx < 0:
-                return [ -c for c in coeffs ]
-            else:
-                return coeffs
-        elif f.compose(-h).rem(g).is_zero:
-            return [ -c for c in coeffs ]
+            # Now we know that h(b) is in fact equal to _some conjugate of_ a.
+            # But from the very precise approximation A ~ h(B) we can assume
+            # the conjugate is a itself.
+            return coeffs
         else:
             n *= 2
 
@@ -136,23 +138,24 @@ def field_isomorphism_pslq(a, b):
 def field_isomorphism_factor(a, b):
     """Construct field isomorphism via factorization. """
     _, factors = factor_list(a.minpoly, extension=b)
-
     for f, _ in factors:
         if f.degree() == 1:
-            coeffs = f.rep.TC().to_sympy_list()
+            # Any linear factor f(x) represents some conjugate of a in QQ(b).
+            # We want to know whether this linear factor represents a itself.
+            # Let f = x - c
+            c = -f.rep.TC()
+            # Write c as polynomial in b
+            coeffs = c.to_sympy_list()
             d, terms = len(coeffs) - 1, []
-
             for i, coeff in enumerate(coeffs):
                 terms.append(coeff*b.root**(d - i))
-
-            root = Add(*terms)
-
-            if (a.root - root).evalf(chop=True) == 0:
+            r = Add(*terms)
+            # Check whether we got the number a
+            if a.minpoly.same_root(r, a):
                 return coeffs
 
-            if (a.root + root).evalf(chop=True) == 0:
-                return [-c for c in coeffs]
-
+    # If none of the linear factors represented a in QQ(b), then in fact a is
+    # not an element of QQ(b).
     return None
 
 

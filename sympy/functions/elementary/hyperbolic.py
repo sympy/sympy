@@ -5,12 +5,18 @@ from sympy.core.add import Add
 from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.core.symbol import Symbol
-from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
+from sympy.core.logic import fuzzy_or, fuzzy_and
+from sympy.functions.combinatorial.factorials import (binomial, factorial,
+                                                      RisingFactorial)
+from sympy.functions.combinatorial.numbers import bernoulli, euler, nC
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log, match_real_imag
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.trigonometric import (acot, asin, atan, cos,
+                                                      cot, sin, tan)
+from sympy.polys.specialpolys import symmetric_poly
 
-from sympy.core.logic import fuzzy_or, fuzzy_and
 
 def _rewrite_hyperbolics_as_exp(expr):
     expr = sympify(expr)
@@ -37,10 +43,10 @@ class HyperbolicFunction(Function):
 
 
 def _peeloff_ipi(arg):
-    """
-    Split ARG into two parts, a "rest" and a multiple of I*pi.
-    This assumes ARG to be an Add.
-    The multiple of I*pi returned in the second position is always a Rational.
+    r"""
+    Split ARG into two parts, a "rest" and a multiple of $I\pi$.
+    This assumes ARG to be an ``Add``.
+    The multiple of $I\pi$ returned in the second position is always a ``Rational``.
 
     Examples
     ========
@@ -72,7 +78,7 @@ def _peeloff_ipi(arg):
 
 class sinh(HyperbolicFunction):
     r"""
-    sinh(x) is the hyperbolic sine of x.
+    ``sinh(x)`` is the hyperbolic sine of ``x``.
 
     The hyperbolic sine function is $\frac{e^x - e^{-x}}{2}$.
 
@@ -107,8 +113,6 @@ class sinh(HyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy.functions.elementary.trigonometric import sin
-
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -191,7 +195,6 @@ class sinh(HyperbolicFunction):
         """
         Returns this function as a complex coordinate.
         """
-        from sympy.functions.elementary.trigonometric import (cos, sin)
         if self.args[0].is_extended_real:
             if deep:
                 hints['complex'] = False
@@ -289,7 +292,7 @@ class sinh(HyperbolicFunction):
 
 class cosh(HyperbolicFunction):
     r"""
-    cosh(x) is the hyperbolic cosine of x.
+    ``cosh(x)`` is the hyperbolic cosine of ``x``.
 
     The hyperbolic cosine function is $\frac{e^x + e^{-x}}{2}$.
 
@@ -390,7 +393,6 @@ class cosh(HyperbolicFunction):
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
-        from sympy.functions.elementary.trigonometric import (cos, sin)
         if self.args[0].is_extended_real:
             if deep:
                 hints['complex'] = False
@@ -538,7 +540,7 @@ class cosh(HyperbolicFunction):
 
 class tanh(HyperbolicFunction):
     r"""
-    tanh(x) is the hyperbolic tangent of x.
+    ``tanh(x)`` is the hyperbolic tangent of ``x``.
 
     The hyperbolic tangent function is $\frac{\sinh(x)}{\cosh(x)}$.
 
@@ -570,7 +572,6 @@ class tanh(HyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy.functions.elementary.trigonometric import tan
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -653,7 +654,6 @@ class tanh(HyperbolicFunction):
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
-        from sympy.functions.elementary.trigonometric import (cos, sin)
         if self.args[0].is_extended_real:
             if deep:
                 hints['complex'] = False
@@ -670,7 +670,6 @@ class tanh(HyperbolicFunction):
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
         if arg.is_Add:
-            from sympy.polys.specialpolys import symmetric_poly
             n = len(arg.args)
             TX = [tanh(x, evaluate=False)._eval_expand_trig()
                 for x in arg.args]
@@ -679,7 +678,6 @@ class tanh(HyperbolicFunction):
                 p[i % 2] += symmetric_poly(i, TX)
             return p[1]/p[0]
         elif arg.is_Mul:
-            from sympy.functions.combinatorial.numbers import nC
             coeff, terms = arg.as_coeff_Mul()
             if coeff.is_Integer and coeff > 1:
                 n = []
@@ -746,7 +744,6 @@ class tanh(HyperbolicFunction):
             return self.args[0].is_negative
 
     def _eval_is_finite(self):
-        from sympy.functions.elementary.trigonometric import cos
         arg = self.args[0]
 
         re, im = arg.as_real_imag()
@@ -766,7 +763,7 @@ class tanh(HyperbolicFunction):
 
 class coth(HyperbolicFunction):
     r"""
-    coth(x) is the hyperbolic cotangent of x.
+    ``coth(x)`` is the hyperbolic cotangent of ``x``.
 
     The hyperbolic cotangent function is $\frac{\cosh(x)}{\sinh(x)}$.
 
@@ -798,7 +795,6 @@ class coth(HyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy.functions.elementary.trigonometric import cot
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -932,7 +928,6 @@ class coth(HyperbolicFunction):
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
         if arg.is_Add:
-            from sympy.polys.specialpolys import symmetric_poly
             CX = [coth(x, evaluate=False)._eval_expand_trig() for x in arg.args]
             p = [[], []]
             n = len(arg.args)
@@ -940,7 +935,6 @@ class coth(HyperbolicFunction):
                 p[(n - i) % 2].append(symmetric_poly(i, CX))
             return Add(*p[0])/Add(*p[1])
         elif arg.is_Mul:
-            from sympy.functions.combinatorial.factorials import binomial
             coeff, x = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer and coeff > 1:
                 c = coth(x, evaluate=False)
@@ -1027,7 +1021,7 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
 
 class csch(ReciprocalHyperbolicFunction):
     r"""
-    csch(x) is the hyperbolic cosecant of x.
+    ``csch(x)`` is the hyperbolic cosecant of ``x``.
 
     The hyperbolic cosecant function is $\frac{2}{e^x - e^{-x}}$
 
@@ -1072,7 +1066,6 @@ class csch(ReciprocalHyperbolicFunction):
         """
         Returns the next term in the Taylor series expansion
         """
-        from sympy.functions.combinatorial.numbers import bernoulli
         if n == 0:
             return 1/sympify(x)
         elif n < 0 or n % 2 == 0:
@@ -1099,7 +1092,7 @@ class csch(ReciprocalHyperbolicFunction):
 
 class sech(ReciprocalHyperbolicFunction):
     r"""
-    sech(x) is the hyperbolic secant of x.
+    ``sech(x)`` is the hyperbolic secant of ``x``.
 
     The hyperbolic secant function is $\frac{2}{e^x + e^{-x}}$
 
@@ -1165,7 +1158,7 @@ class InverseHyperbolicFunction(Function):
 
 class asinh(InverseHyperbolicFunction):
     """
-    asinh(x) is the inverse hyperbolic sine of x.
+    ``asinh(x)`` is the inverse hyperbolic sine of ``x``.
 
     The inverse hyperbolic sine function.
 
@@ -1193,7 +1186,6 @@ class asinh(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy.functions.elementary.trigonometric import asin
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -1289,7 +1281,7 @@ class asinh(InverseHyperbolicFunction):
 
 class acosh(InverseHyperbolicFunction):
     """
-    acosh(x) is the inverse hyperbolic cosine of x.
+    ``acosh(x)`` is the inverse hyperbolic cosine of ``x``.
 
     The inverse hyperbolic cosine function.
 
@@ -1375,7 +1367,6 @@ class acosh(InverseHyperbolicFunction):
         if isinstance(arg, cosh) and arg.args[0].is_number:
             z = arg.args[0]
             if z.is_real:
-                from sympy.functions.elementary.complexes import Abs
                 return Abs(z)
             r, i = match_real_imag(z)
             if r is not None and i is not None:
@@ -1446,7 +1437,7 @@ class acosh(InverseHyperbolicFunction):
 
 class atanh(InverseHyperbolicFunction):
     """
-    atanh(x) is the inverse hyperbolic tangent of x.
+    ``atanh(x)`` is the inverse hyperbolic tangent of ``x``.
 
     The inverse hyperbolic tangent function.
 
@@ -1472,7 +1463,6 @@ class atanh(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy.functions.elementary.trigonometric import atan
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -1566,7 +1556,7 @@ class atanh(InverseHyperbolicFunction):
 
 class acoth(InverseHyperbolicFunction):
     """
-    acoth(x) is the inverse hyperbolic cotangent of x.
+    ``acoth(x)`` is the inverse hyperbolic cotangent of ``x``.
 
     The inverse hyperbolic cotangent function.
 
@@ -1592,7 +1582,6 @@ class acoth(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy.functions.elementary.trigonometric import acot
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -1666,7 +1655,7 @@ class acoth(InverseHyperbolicFunction):
 
 class asech(InverseHyperbolicFunction):
     """
-    asech(x) is the inverse hyperbolic secant of x.
+    ``asech(x)`` is the inverse hyperbolic secant of ``x``.
 
     The inverse hyperbolic secant function.
 
@@ -1797,7 +1786,7 @@ class asech(InverseHyperbolicFunction):
 
 class acsch(InverseHyperbolicFunction):
     """
-    acsch(x) is the inverse hyperbolic cosecant of x.
+    ``acsch(x)`` is the inverse hyperbolic cosecant of ``x``.
 
     The inverse hyperbolic cosecant function.
 

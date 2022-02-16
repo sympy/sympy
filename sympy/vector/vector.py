@@ -22,6 +22,7 @@ class Vector(BasisDependent):
     instantiated by the user.
     """
 
+    is_scalar = False
     is_Vector = True
     _op_priority = 12.0
 
@@ -114,7 +115,7 @@ class Vector(BasisDependent):
                 outvec += vect_dot * v * k.args[1]
             return outvec
         from sympy.vector.deloperator import Del
-        if not isinstance(other, Vector) and not isinstance(other, Del):
+        if not isinstance(other, (Del, Vector)):
             raise TypeError(str(other) + " is not a vector, dyadic or " +
                             "del operator")
 
@@ -267,10 +268,10 @@ class Vector(BasisDependent):
         (0, 0, 0)
         """
 
-        from sympy.vector.operators import _get_coord_sys_from_expr
+        from sympy.vector.operators import _get_coord_systems
         if isinstance(self, VectorZero):
             return (S.Zero, S.Zero, S.Zero)
-        base_vec = next(iter(_get_coord_sys_from_expr(self))).base_vectors()
+        base_vec = next(iter(_get_coord_systems(self))).base_vectors()
         return tuple([self.dot(i) for i in base_vec])
 
     def __or__(self, other):
@@ -348,8 +349,6 @@ class Vector(BasisDependent):
 class BaseVector(Vector, AtomicExpr):
     """
     Class to denote a base vector.
-
-    Unicode pretty forms in Python 2 should use the prefix ``u``.
 
     """
 

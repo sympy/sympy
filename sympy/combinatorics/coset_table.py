@@ -770,7 +770,7 @@ class CosetTable(DefaultPrinting):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
         >>> F, x, y = free_group("x, y")
 
@@ -846,7 +846,7 @@ class CosetTable(DefaultPrinting):
         Examples
         ========
 
-        >>> from sympy.combinatorics.free_groups import free_group
+        >>> from sympy.combinatorics import free_group
         >>> from sympy.combinatorics.fp_groups import FpGroup, coset_enumeration_r
         >>> F, x, y = free_group("x, y")
         >>> f = FpGroup(F, [x**3, y**3, x**-1*y**-1*x*y])

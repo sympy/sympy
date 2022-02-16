@@ -60,16 +60,19 @@ class ReprPrinter(Printer):
 
     def _print_Permutation(self, expr):
         from sympy.combinatorics.permutations import Permutation, Cycle
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        from sympy.utilities.exceptions import sympy_deprecation_warning
 
         perm_cyclic = Permutation.print_cyclic
         if perm_cyclic is not None:
-            SymPyDeprecationWarning(
-                feature="Permutation.print_cyclic = {}".format(perm_cyclic),
-                useinstead="init_printing(perm_cyclic={})"
-                .format(perm_cyclic),
-                issue=15201,
-                deprecated_since_version="1.6").warn()
+            sympy_deprecation_warning(
+                f"""
+                Setting Permutation.print_cyclic is deprecated. Instead use
+                init_printing(perm_cyclic={perm_cyclic}).
+                """,
+                deprecated_since_version="1.6",
+                active_deprecations_target="deprecated-permutation-print_cyclic",
+                stacklevel=7,
+            )
         else:
             perm_cyclic = self._settings.get("perm_cyclic", True)
 

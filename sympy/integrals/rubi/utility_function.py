@@ -915,7 +915,7 @@ def RealQ(u):
             return RealQ(u)
         else:
             if f in [asin, acos]:
-                return LE(-1, u, 1)
+                return LessEqual(-1, u, 1)
             else:
                 if f == sym_log:
                     return PositiveOrZeroQ(u)
@@ -1911,7 +1911,7 @@ def PolynomialDivide(u, v, x):
     rem = Together(rem)
     free = FreeFactors(rem, x)
     rem = NonfreeFactors(rem, x)
-    monomial = x**Min(ExponentList(rem, x))
+    monomial = x**Min(*ExponentList(rem, x))
     if NegQ(Coefficient(rem, x, 0)):
         monomial = -monomial
     s = 0
@@ -5377,7 +5377,7 @@ def CommonFactors(lst):
             lst1 = [RemainingFactors(i) for i in lst1]
         elif (Length(lst1) == 2 and ZeroQ(LeadBase(lst1[0]) + LeadBase(lst1[1])) and
             NonzeroQ(lst1[0] - 1) and IntegerQ(lst4[0]) and FractionQ(lst4[1])):
-            num = Min(lst4)
+            num = Min(*lst4)
             base = LeadBase(lst1[1])
             if num != 0:
                 common = common*base**num
@@ -5386,7 +5386,7 @@ def CommonFactors(lst):
             lst1 = [RemainingFactors(i) for i in lst1]
         elif (Length(lst1) == 2 and ZeroQ(lst1[0] + LeadBase(lst1[1])) and
             NonzeroQ(lst1[1] - 1) and IntegerQ(lst1[1]) and FractionQ(lst4[0])):
-            num = Min(lst4)
+            num = Min(*lst4)
             base = LeadBase(lst1[0])
             if num != 0:
                 common = common*base**num

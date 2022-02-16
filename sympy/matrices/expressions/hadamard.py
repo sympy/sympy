@@ -1,7 +1,10 @@
+from collections import Counter
+
 from sympy.core import Mul, sympify
 from sympy.core.add import Add
 from sympy.core.expr import ExprBuilder
 from sympy.core.sorting import default_sort_key
+from sympy.functions.elementary.exponential import log
 from sympy.matrices.common import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix
@@ -17,7 +20,7 @@ def hadamard_product(*matrices):
     Examples
     ========
 
-    >>> from sympy.matrices import hadamard_product, MatrixSymbol
+    >>> from sympy import hadamard_product, MatrixSymbol
     >>> A = MatrixSymbol('A', 2, 3)
     >>> B = MatrixSymbol('B', 2, 3)
     >>> hadamard_product(A)
@@ -46,7 +49,7 @@ class HadamardProduct(MatrixExpr):
 
     Hadamard product for matrix symbols:
 
-    >>> from sympy.matrices import hadamard_product, HadamardProduct, MatrixSymbol
+    >>> from sympy import hadamard_product, HadamardProduct, MatrixSymbol
     >>> A = MatrixSymbol('A', 5, 5)
     >>> B = MatrixSymbol('B', 5, 5)
     >>> isinstance(hadamard_product(A, B), HadamardProduct)
@@ -164,8 +167,8 @@ def canonicalize(x):
     Examples
     ========
 
-    >>> from sympy.matrices.expressions import MatrixSymbol, HadamardProduct
-    >>> from sympy.matrices.expressions import OneMatrix, ZeroMatrix
+    >>> from sympy import MatrixSymbol, HadamardProduct
+    >>> from sympy import OneMatrix, ZeroMatrix
     >>> from sympy.matrices.expressions.hadamard import canonicalize
     >>> from sympy import init_printing
     >>> init_printing(use_unicode=False)
@@ -269,7 +272,6 @@ def canonicalize(x):
 
     # Rewriting with HadamardPower
     if isinstance(x, HadamardProduct):
-        from collections import Counter
         tally = Counter(x.args)
 
         new_arg = []
@@ -419,7 +421,6 @@ class HadamardPower(MatrixExpr):
         return HadamardPower(transpose(self.base), self.exp)
 
     def _eval_derivative(self, x):
-        from sympy.functions.elementary.exponential import log
         dexp = self.exp.diff(x)
         logbase = self.base.applyfunc(log)
         dlbase = logbase.diff(x)

@@ -90,6 +90,12 @@ class Add(Expr, AssocOp):
     """
     Expression representing addition operation for algebraic group.
 
+    .. deprecated:: 1.7
+
+       Using arguments that aren't subclasses of :class:`~.Expr` in core
+       operators (:class:`~.Mul`, :class:`~.Add`, and :class:`~.Pow`) is
+       deprecated. See :ref:`non-expr-args-deprecated` for details.
+
     Every argument of ``Add()`` must be ``Expr``. Infix operator ``+``
     on most scalar objects in SymPy calls this class.
 
@@ -613,6 +619,8 @@ class Add(Expr, AssocOp):
         """
         # clear rational denominator
         content, expr = self.primitive()
+        if not isinstance(expr, Add):
+            return Mul(content, expr, evaluate=False).as_numer_denom()
         ncon, dcon = content.as_numer_denom()
 
         # collect numerators and denominators of the terms

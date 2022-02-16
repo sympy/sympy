@@ -8,7 +8,6 @@ from sympy.interactive.printing import init_printing
 from sympy.utilities.misc import ARCH
 
 preexec_source = """\
-from __future__ import division
 from sympy import *
 x, y, z, t = symbols('x y z t')
 k, m, n = symbols('k m n', integer=True)
@@ -95,7 +94,6 @@ def int_to_Integer(s):
     Examples
     ========
 
-    >>> from __future__ import division
     >>> from sympy import Integer # noqa: F401
     >>> from sympy.interactive.session import int_to_Integer
     >>> s = '1.2 + 1/2 - 0x12 + a1'

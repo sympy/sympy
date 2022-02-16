@@ -1,6 +1,6 @@
 from sympy.core import S, Function, diff, Tuple, Dummy
 from sympy.core.basic import Basic, as_Basic
-from sympy.core.numbers import Rational, NumberSymbol
+from sympy.core.numbers import Rational, NumberSymbol, _illegal
 from sympy.core.parameters import global_parameters
 from sympy.core.relational import (Lt, Gt, Eq, Ne, Relational,
     _canonical, _canonical_coeff)
@@ -8,8 +8,6 @@ from sympy.core.sorting import ordered
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
     true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
-from sympy.polys.polyutils import illegal
-from sympy.sets.sets import Interval
 from sympy.utilities.iterables import uniq, sift, common_prefix
 from sympy.utilities.misc import filldedent, func_name
 
@@ -106,12 +104,12 @@ class Piecewise(Function):
 
     When a Boolean containing Piecewise (like cond) or a Piecewise
     with Boolean expressions (like folded_cond) is used as a condition,
-    it is converted to an equivalent ITE object:
+    it is converted to an equivalent :class:`~.ITE` object:
 
     >>> Piecewise((1, folded_cond))
     Piecewise((1, ITE(x < 0, y > 2, y > 3)))
 
-    When a condition is an ITE, it will be converted to a simplified
+    When a condition is an ``ITE``, it will be converted to a simplified
     Boolean expression:
 
     >>> piecewise_fold(_)
@@ -156,10 +154,11 @@ class Piecewise(Function):
         modifications were made, return None.
 
         Modifications that are made here:
-        1) relationals are made canonical
-        2) any False conditions are dropped
-        3) any repeat of a previous condition is ignored
-        3) any args past one with a true condition are dropped
+
+        1. relationals are made canonical
+        2. any False conditions are dropped
+        3. any repeat of a previous condition is ignored
+        4. any args past one with a true condition are dropped
 
         If there are no args left, nan will be returned.
         If there is a single arg with a True condition, its
@@ -329,7 +328,7 @@ class Piecewise(Function):
     def piecewise_integrate(self, x, **kwargs):
         """Return the Piecewise with each expression being
         replaced with its antiderivative. To obtain a continuous
-        antiderivative, use the `integrate` function or method.
+        antiderivative, use the :func:`~.integrate` function or method.
 
         Examples
         ========
@@ -436,7 +435,7 @@ class Piecewise(Function):
         value will give the value of the integral (not including
         the constant of integration) up to that point. To only
         integrate the individual parts of Piecewise, use the
-        `piecewise_integrate` method.
+        ``piecewise_integrate`` method.
 
         Examples
         ========
@@ -504,7 +503,7 @@ class Piecewise(Function):
             else:
                 sum = sum.subs(x, a)
                 e = anti._eval_interval(x, a, x)
-                if sum.has(*illegal) or e.has(*illegal):
+                if sum.has(*_illegal) or e.has(*_illegal):
                     sum = anti
                 else:
                     sum += e
@@ -650,11 +649,11 @@ class Piecewise(Function):
         return sum
 
     def _intervals(self, sym, err_on_Eq=False):
-        """Return a bool and a message (when bool is False), else a
+        r"""Return a bool and a message (when bool is False), else a
         list of unique tuples, (a, b, e, i), where a and b
         are the lower and upper bounds in which the expression e of
-        argument i in self is defined and a < b (when involving
-        numbers) or a <= b when involving symbols.
+        argument i in self is defined and $a < b$ (when involving
+        numbers) or $a \le b$ when involving symbols.
 
         If there are any relationals not involving sym, or any
         relational cannot be solved for sym, the bool will be False
@@ -1073,7 +1072,7 @@ def piecewise_fold(expr, evaluate=True):
     Examples
     ========
 
-    >>> from sympy import Piecewise, piecewise_fold, sympify as S
+    >>> from sympy import Piecewise, piecewise_fold, S
     >>> from sympy.abc import x
     >>> p = Piecewise((x, x < 1), (1, S(1) <= x))
     >>> piecewise_fold(x*p)
@@ -1234,6 +1233,7 @@ def piecewise_simplify_arguments(expr, **kwargs):
         if ok:
             args = []
             covered = S.EmptySet
+            from sympy.sets.sets import Interval
             for a, b, e, i in abe_:
                 c = expr.args[i].cond
                 incl_a = include(c, x, a)

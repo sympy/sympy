@@ -1101,7 +1101,7 @@ class Polygon(GeometrySet):
         Examples
         ========
 
-        >>> from sympy.geometry import Point, Polygon
+        >>> from sympy import Point, Polygon
         >>> square = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
         >>> triangle = Polygon(Point(1, 2), Point(2, 2), Point(2, 1))
         >>> square._do_poly_distance(triangle)
@@ -1134,7 +1134,8 @@ class Polygon(GeometrySet):
                 e2_max_radius = r
         center_dist = Point.distance(e1_center, e2_center)
         if center_dist <= e1_max_radius + e2_max_radius:
-            warnings.warn("Polygons may intersect producing erroneous output")
+            warnings.warn("Polygons may intersect producing erroneous output",
+                          stacklevel=3)
 
         '''
         Find the upper rightmost vertex of e1 and the lowest leftmost vertex of e2
@@ -1459,7 +1460,7 @@ class RegularPolygon(Polygon):
     Examples
     ========
 
-    >>> from sympy.geometry import RegularPolygon, Point
+    >>> from sympy import RegularPolygon, Point
     >>> r = RegularPolygon(Point(0, 0), 5, 3)
     >>> r
     RegularPolygon(Point2D(0, 0), 5, 3, 0)
@@ -1522,7 +1523,7 @@ class RegularPolygon(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import RegularPolygon
+        >>> from sympy import RegularPolygon
         >>> square = RegularPolygon((0, 0), 1, 4)
         >>> square.area
         2
@@ -1543,7 +1544,7 @@ class RegularPolygon(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import RegularPolygon
+        >>> from sympy import RegularPolygon
         >>> from sympy import sqrt
         >>> s = square_in_unit_circle = RegularPolygon((0, 0), 1, 4)
         >>> s.length
@@ -1573,7 +1574,7 @@ class RegularPolygon(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import RegularPolygon, Point
+        >>> from sympy import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 5, 4)
         >>> rp.center
         Point2D(0, 0)
@@ -1590,7 +1591,7 @@ class RegularPolygon(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import RegularPolygon, Point
+        >>> from sympy import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 5, 4)
         >>> rp.circumcenter
         Point2D(0, 0)
@@ -1617,7 +1618,7 @@ class RegularPolygon(Polygon):
         ========
 
         >>> from sympy import Symbol
-        >>> from sympy.geometry import RegularPolygon, Point
+        >>> from sympy import RegularPolygon, Point
         >>> radius = Symbol('r')
         >>> rp = RegularPolygon(Point(0, 0), radius, 4)
         >>> rp.radius
@@ -1635,7 +1636,7 @@ class RegularPolygon(Polygon):
         ========
 
         >>> from sympy import Symbol
-        >>> from sympy.geometry import RegularPolygon, Point
+        >>> from sympy import RegularPolygon, Point
         >>> radius = Symbol('r')
         >>> rp = RegularPolygon(Point(0, 0), radius, 4)
         >>> rp.circumradius
@@ -1657,7 +1658,7 @@ class RegularPolygon(Polygon):
 
         >>> from sympy import pi
         >>> from sympy.abc import a
-        >>> from sympy.geometry import RegularPolygon, Point
+        >>> from sympy import RegularPolygon, Point
         >>> RegularPolygon(Point(0, 0), 3, 4, pi/4).rotation
         pi/4
 
@@ -1691,7 +1692,7 @@ class RegularPolygon(Polygon):
         ========
 
         >>> from sympy import Symbol
-        >>> from sympy.geometry import RegularPolygon, Point
+        >>> from sympy import RegularPolygon, Point
         >>> radius = Symbol('r')
         >>> rp = RegularPolygon(Point(0, 0), radius, 4)
         >>> rp.apothem
@@ -1709,7 +1710,7 @@ class RegularPolygon(Polygon):
         ========
 
         >>> from sympy import Symbol
-        >>> from sympy.geometry import RegularPolygon, Point
+        >>> from sympy import RegularPolygon, Point
         >>> radius = Symbol('r')
         >>> rp = RegularPolygon(Point(0, 0), radius, 4)
         >>> rp.inradius
@@ -1734,7 +1735,7 @@ class RegularPolygon(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import RegularPolygon, Point
+        >>> from sympy import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 4, 8)
         >>> rp.interior_angle
         3*pi/4
@@ -1759,7 +1760,7 @@ class RegularPolygon(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import RegularPolygon, Point
+        >>> from sympy import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 4, 8)
         >>> rp.exterior_angle
         pi/4
@@ -1784,7 +1785,7 @@ class RegularPolygon(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import RegularPolygon, Point
+        >>> from sympy import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 4, 8)
         >>> rp.circumcircle
         Circle(Point2D(0, 0), 4)
@@ -1809,7 +1810,7 @@ class RegularPolygon(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import RegularPolygon, Point
+        >>> from sympy import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 4, 7)
         >>> rp.incircle
         Circle(Point2D(0, 0), 4*cos(pi/7))
@@ -2014,7 +2015,7 @@ class RegularPolygon(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import RegularPolygon, Point
+        >>> from sympy import RegularPolygon, Point
         >>> rp = RegularPolygon(Point(0, 0), 5, 4)
         >>> rp.vertices
         [Point2D(5, 0), Point2D(0, 5), Point2D(-5, 0), Point2D(0, -5)]
@@ -2080,7 +2081,7 @@ class Triangle(Polygon):
     Examples
     ========
 
-    >>> from sympy.geometry import Triangle, Point
+    >>> from sympy import Triangle, Point
     >>> Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
     Triangle(Point2D(0, 0), Point2D(4, 0), Point2D(4, 3))
 
@@ -2157,7 +2158,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Triangle, Point
+        >>> from sympy import Triangle, Point
         >>> t = Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
         >>> t.vertices
         (Point2D(0, 0), Point2D(4, 0), Point2D(4, 3))
@@ -2188,7 +2189,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Triangle, Point
+        >>> from sympy import Triangle, Point
         >>> t1 = Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
         >>> t2 = Triangle(Point(0, 0), Point(-4, 0), Point(-4, -3))
         >>> t1.is_similar(t2)
@@ -2236,7 +2237,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Triangle, Point
+        >>> from sympy import Triangle, Point
         >>> t1 = Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
         >>> t1.is_equilateral()
         False
@@ -2265,7 +2266,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Triangle, Point
+        >>> from sympy import Triangle, Point
         >>> t1 = Triangle(Point(0, 0), Point(4, 0), Point(2, 4))
         >>> t1.is_isosceles()
         True
@@ -2289,7 +2290,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Triangle, Point
+        >>> from sympy import Triangle, Point
         >>> t1 = Triangle(Point(0, 0), Point(4, 0), Point(1, 4))
         >>> t1.is_scalene()
         True
@@ -2314,7 +2315,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Triangle, Point
+        >>> from sympy import Triangle, Point
         >>> t1 = Triangle(Point(0, 0), Point(4, 0), Point(4, 3))
         >>> t1.is_right()
         True
@@ -2348,7 +2349,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Point, Triangle
+        >>> from sympy import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.altitudes[p1]
@@ -2381,7 +2382,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Point, Triangle
+        >>> from sympy import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.orthocenter
@@ -2411,7 +2412,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Point, Triangle
+        >>> from sympy import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.circumcenter
@@ -2440,7 +2441,7 @@ class Triangle(Polygon):
         ========
 
         >>> from sympy import Symbol
-        >>> from sympy.geometry import Point, Triangle
+        >>> from sympy import Point, Triangle
         >>> a = Symbol('a')
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, a)
         >>> t = Triangle(p1, p2, p3)
@@ -2466,7 +2467,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Point, Triangle
+        >>> from sympy import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.circumcircle
@@ -2496,7 +2497,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Point, Triangle, Segment
+        >>> from sympy import Point, Triangle, Segment
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> from sympy import sqrt
@@ -2535,7 +2536,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Point, Triangle
+        >>> from sympy import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.incenter
@@ -2567,7 +2568,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Point, Triangle
+        >>> from sympy import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(4, 0), Point(0, 3)
         >>> t = Triangle(p1, p2, p3)
         >>> t.inradius
@@ -2596,7 +2597,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Point, Triangle
+        >>> from sympy import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(2, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.incircle
@@ -2629,7 +2630,7 @@ class Triangle(Polygon):
         The exradius touches the side of the triangle to which it is keyed, e.g.
         the exradius touching side 2 is:
 
-        >>> from sympy.geometry import Point, Triangle
+        >>> from sympy import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.exradii[t.sides[2]]
@@ -2675,7 +2676,7 @@ class Triangle(Polygon):
         excircle is tangent: The center is keyed, e.g. the excenter of a circle touching
         side 0 is:
 
-        >>> from sympy.geometry import Point, Triangle
+        >>> from sympy import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(6, 0), Point(0, 2)
         >>> t = Triangle(p1, p2, p3)
         >>> t.excenters[t.sides[0]]
@@ -2741,7 +2742,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Point, Triangle
+        >>> from sympy import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.medians[p1]
@@ -2773,7 +2774,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Point, Triangle
+        >>> from sympy import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.medial
@@ -2806,7 +2807,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Point, Triangle
+        >>> from sympy import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.nine_point_circle
@@ -2830,7 +2831,7 @@ class Triangle(Polygon):
         Examples
         ========
 
-        >>> from sympy.geometry import Point, Triangle
+        >>> from sympy import Point, Triangle
         >>> p1, p2, p3 = Point(0, 0), Point(1, 0), Point(0, 1)
         >>> t = Triangle(p1, p2, p3)
         >>> t.eulerline

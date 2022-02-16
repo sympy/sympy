@@ -1,7 +1,7 @@
 from sympy.core.backend import sympify
 from sympy.physics.vector import Point, ReferenceFrame, Dyadic
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 __all__ = ['RigidBody']
 
@@ -317,12 +317,16 @@ class RigidBody:
         self._pe = sympify(scalar)
 
     def set_potential_energy(self, scalar):
-        SymPyDeprecationWarning(
-                feature="Method sympy.physics.mechanics." +
-                    "RigidBody.set_potential_energy(self, scalar)",
-                useinstead="property sympy.physics.mechanics." +
-                    "RigidBody.potential_energy",
-                deprecated_since_version="1.5", issue=9800).warn()
+        sympy_deprecation_warning(
+            """
+The sympy.physics.mechanics.RigidBody.set_potential_energy()
+method is deprecated. Instead use
+
+    B.potential_energy = scalar
+            """,
+        deprecated_since_version="1.5",
+        active_deprecations_target="deprecated-set-potential-energy",
+        )
         self.potential_energy = scalar
 
     # XXX: To be consistent with the parallel_axis method in Particle this

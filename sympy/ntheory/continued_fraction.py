@@ -1,5 +1,7 @@
+from sympy.core.exprtools import factor_terms
 from sympy.core.numbers import Integer, Rational
 from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
 from sympy.utilities.misc import as_int
 
@@ -221,8 +223,6 @@ def continued_fraction_reduce(cf):
     continued_fraction_periodic
 
     """
-    from sympy.core.exprtools import factor_terms
-    from sympy.core.symbol import Dummy
     from sympy.solvers import solve
 
     period = []
@@ -290,7 +290,6 @@ def continued_fraction_iterator(x):
 
     """
     from sympy.functions import floor
-
     while True:
         i = floor(x)
         yield i
