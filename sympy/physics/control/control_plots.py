@@ -728,6 +728,10 @@ def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit
     """
     _check_system(system)
     expr = system.to_expr()
+    freq_units = ('rad/sec', 'Hz')
+    if freq_unit not in freq_units:
+        raise ValueError('Only rad/sec and Hz are accepted frequency units.')
+
     _w = Dummy("w", real=True)
     w_expr = expr.subs({system.var: I*_w})
 
@@ -743,22 +747,18 @@ def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit
 
 
 def bode_magnitude_plot(system, initial_exp=-5, final_exp=5,
-    color='b', show_axes=False, grid=True, show=True, hide_unit=False, freq_unit='rad/sec', **kwargs):
+    color='b', show_axes=False, grid=True, show=True, show_xlabel=True, freq_unit='rad/sec', **kwargs):
     r"""
     Returns the Bode magnitude plot of a continuous-time system.
 
     See ``bode_plot`` for all the parameters.
     """
-    freq_units = ('rad/sec', 'Hz')
-    if freq_unit not in freq_units:
-        raise ValueError('Only rad/sec and Hz are accepted frequency units.')
-
     x, y = bode_magnitude_numerical_data(system, initial_exp=initial_exp,
         final_exp=final_exp, freq_unit=freq_unit)
     plt.plot(x, y, color=color, **kwargs)
     plt.xscale('log')
 
-    if hide_unit == False:
+    if show_xlabel:
         plt.xlabel('Frequency (%s) [Log Scale]' % freq_unit)
     plt.ylabel('Magnitude (dB)')
     plt.title(f'Bode Plot (Magnitude) of ${latex(system)}$', pad=20)
@@ -817,6 +817,8 @@ def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit='ra
         The only variable in the transfer function should be
         the variable of the Laplace transform.
 
+        When incorrect frequency or phase units are given as input.
+
     Examples
     ========
 
@@ -836,6 +838,13 @@ def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit='ra
     """
     _check_system(system)
     expr = system.to_expr()
+    freq_units = ('rad/sec', 'Hz')
+    phase_units = ('rad', 'deg')
+    if freq_unit not in freq_units:
+        raise ValueError('Only rad/sec and Hz are accepted frequency units.')
+    if phase_unit not in phase_units:
+        raise ValueError('Only rad and deg are accepted phase units.')
+
     _w = Dummy("w", real=True)
     w_expr = expr.subs({system.var: I*_w})
 
@@ -860,13 +869,6 @@ def bode_phase_plot(system, initial_exp=-5, final_exp=5,
 
     See ``bode_plot`` for all the parameters.
     """
-    freq_units = ('rad/sec', 'Hz')
-    phase_units = ('rad', 'deg')
-    if freq_unit not in freq_units:
-        raise ValueError('Only rad/sec and Hz are accepted frequency units.')
-    if phase_unit not in phase_units:
-        raise ValueError('Only rad and deg are accepted phase units.')
-
     x, y = bode_phase_numerical_data(system, initial_exp=initial_exp,
         final_exp=final_exp, freq_unit=freq_unit, phase_unit=phase_unit)
     plt.plot(x, y, color=color, **kwargs)
@@ -889,7 +891,7 @@ def bode_phase_plot(system, initial_exp=-5, final_exp=5,
 
 
 def bode_plot(system, initial_exp=-5, final_exp=5,
-    grid=True, show_axes=False, show=True, hide_unit=True, freq_unit='rad/sec', phase_unit='rad', **kwargs):
+    grid=True, show_axes=False, show=True, show_xlabel=False, freq_unit='rad/sec', phase_unit='rad', **kwargs):
     r"""
     Returns the Bode phase and magnitude plots of a continuous-time system.
 
@@ -913,8 +915,8 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
         If ``True``, the plot will have a grid. Defaults to True.
     show_axes : boolean, optional
         If ``True``, the coordinate axes will be shown. Defaults to False.
-    hide_axis : boolean, optional
-        If ``True``, the x axis unit will not be shown . Defaults to True.
+    show_xlabel : boolean, optional
+        If ``True``, the x axis unit will be shown . Defaults to False.
     freq_unit : string, optional
         User can choose between radians/second and Hertz as frequency units.
     phase_unit : string, optional
@@ -943,7 +945,7 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
     plt.subplot(211)
     bode_magnitude_plot(system, initial_exp=initial_exp, final_exp=final_exp,
         show=False, grid=grid, show_axes=show_axes,
-        hide_unit=hide_unit, freq_unit=freq_unit, **kwargs).title(f'Bode Plot of ${latex(system)}$', pad=20)
+        show_xlabel=show_xlabel, freq_unit=freq_unit, **kwargs).title(f'Bode Plot of ${latex(system)}$', pad=20)
     plt.subplot(212)
     bode_phase_plot(system, initial_exp=initial_exp, final_exp=final_exp,
         show=False, grid=grid, show_axes=show_axes, freq_unit=freq_unit, phase_unit=phase_unit, **kwargs).title(None)
