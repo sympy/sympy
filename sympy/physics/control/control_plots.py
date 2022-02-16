@@ -687,7 +687,7 @@ def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit
     final_exp : Number, optional
         The final exponent of 10 of the semilog plot. Defaults to 5.
     freq_unit : string, optional
-        User can choose between radians/second and Hertz as frequency units.
+        User can choose between ``rad/sec``(radians/second) and ``Hz``(Hertz) as frequency units.
 
     Returns
     =======
@@ -708,6 +708,8 @@ def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit
         When more than one free symbol is present in the system.
         The only variable in the transfer function should be
         the variable of the Laplace transform.
+
+    When incorrect frequency units are given as input.
 
     Examples
     ========
@@ -747,7 +749,7 @@ def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit
 
 
 def bode_magnitude_plot(system, initial_exp=-5, final_exp=5,
-    color='b', show_axes=False, grid=True, show=True, show_xlabel=True, freq_unit='rad/sec', **kwargs):
+    color='b', show_axes=False, grid=True, show=True, freq_unit='rad/sec', **kwargs):
     r"""
     Returns the Bode magnitude plot of a continuous-time system.
 
@@ -758,8 +760,8 @@ def bode_magnitude_plot(system, initial_exp=-5, final_exp=5,
     plt.plot(x, y, color=color, **kwargs)
     plt.xscale('log')
 
-    if show_xlabel:
-        plt.xlabel('Frequency (%s) [Log Scale]' % freq_unit)
+
+    plt.xlabel('Frequency (%s) [Log Scale]' % freq_unit)
     plt.ylabel('Magnitude (dB)')
     plt.title(f'Bode Plot (Magnitude) of ${latex(system)}$', pad=20)
 
@@ -793,9 +795,9 @@ def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit='ra
     final_exp : Number, optional
         The final exponent of 10 of the semilog plot. Defaults to 5.
     freq_unit : string, optional
-        User can choose between radians/second and Hertz as frequency units.
+        User can choose between ``rad/sec``(radians/second) and ``Hz``(Hertz) as frequency units.
     phase_unit : string, optional
-        User can choose between radians and degree as phase units.
+        User can choose between ``rad``(radians) and ``deg``(degree) as phase units.
 
     Returns
     =======
@@ -891,7 +893,7 @@ def bode_phase_plot(system, initial_exp=-5, final_exp=5,
 
 
 def bode_plot(system, initial_exp=-5, final_exp=5,
-    grid=True, show_axes=False, show=True, show_xlabel=False, freq_unit='rad/sec', phase_unit='rad', **kwargs):
+    grid=True, show_axes=False, show=True, freq_unit='rad/sec', phase_unit='rad', **kwargs):
     r"""
     Returns the Bode phase and magnitude plots of a continuous-time system.
 
@@ -915,12 +917,10 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
         If ``True``, the plot will have a grid. Defaults to True.
     show_axes : boolean, optional
         If ``True``, the coordinate axes will be shown. Defaults to False.
-    show_xlabel : boolean, optional
-        If ``True``, the x axis unit will be shown . Defaults to False.
     freq_unit : string, optional
-        User can choose between radians/second and Hertz as frequency units.
+        User can choose between ``rad/sec``(radians/second) and ``Hz``(Hertz) as frequency units.
     phase_unit : string, optional
-        User can choose between radians and degree as phase units.
+        User can choose between ``rad``(radians) and ``deg``(degree) as phase units.
 
     Examples
     ========
@@ -943,9 +943,11 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
 
     """
     plt.subplot(211)
-    bode_magnitude_plot(system, initial_exp=initial_exp, final_exp=final_exp,
+    bode_mag = bode_magnitude_plot(system, initial_exp=initial_exp, final_exp=final_exp,
         show=False, grid=grid, show_axes=show_axes,
-        show_xlabel=show_xlabel, freq_unit=freq_unit, **kwargs).title(f'Bode Plot of ${latex(system)}$', pad=20)
+        freq_unit=freq_unit, **kwargs)
+    bode_mag.title(f'Bode Plot of ${latex(system)}$', pad=20)
+    bode_mag.xlabel(None)
     plt.subplot(212)
     bode_phase_plot(system, initial_exp=initial_exp, final_exp=final_exp,
         show=False, grid=grid, show_axes=show_axes, freq_unit=freq_unit, phase_unit=phase_unit, **kwargs).title(None)
