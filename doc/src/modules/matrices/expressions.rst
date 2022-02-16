@@ -31,7 +31,6 @@ the derivation algorithm will try to express the result as a matrix expression:
     >>> (a.T*X**2*b).diff(X)
     a*b.T*X.T + X.T*a*b.T
 
-    >>> X = MatrixSymbol("X", 3, 3)
     >>> X.diff(X)
     PermuteDims(ArrayTensorProduct(I, I), (3)(1 2))
 
