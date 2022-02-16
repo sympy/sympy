@@ -447,9 +447,9 @@ def trigsimp(expr, **opts):
         :py:func:`~sympy.simplify.trigsimp.trigsimp_groebner`, please refer to
         its docstring. If ``'combined'``, it first runs the groebner basis
         algorithm with small default parameters, then runs the ``'matching'``
-        algorithm. If ``'fu'`` runs the collection of trigonometric
+        algorithm. If ``'fu'``, run the collection of trigonometric
         transformations described by Fu, et al. (see the
-        :py:func:`~sympy.simplify.fu.fu` docstring). If ``'old'`` the original
+        :py:func:`~sympy.simplify.fu.fu` docstring). If ``'old'``, the original
         SymPy trig simplication function is run.
     opts :
         Optional keyword arguments passed to the method. See each method's
