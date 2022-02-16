@@ -379,7 +379,6 @@ def test_coth_taylor_term():
     x, y = symbols('x y')
     assert coth(x).taylor_term(1, x) == x/3
     assert coth(x).taylor_term(3, x) == -x**3/45
-    assert coth(y).taylor_term(3, x) == -x**3/45
     assert coth(y - x).taylor_term(3, x) == -x**3*(1 - 3*cosh(y)**2/sinh(y)**2)/(3*sinh(y)**2)
 
 
@@ -460,7 +459,6 @@ def test_csch_taylor_term():
     x, y = symbols('x y')
     assert csch(x).taylor_term(1, x) == -x/6
     assert csch(x).taylor_term(3, x) == 7*x**3/360
-    assert csch(y).taylor_term(3, x) == 7*x**3/360
     assert csch(y - x).taylor_term(3, x) == -x**3*(-coth(y)**3 - 3*coth(y)/sinh(y)**2 - 2*cosh(y)/sinh(y)**3)*csch(y)/6
 
 

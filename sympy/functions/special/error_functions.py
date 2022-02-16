@@ -2,7 +2,6 @@
     of incomplete gamma functions. It should probably be renamed. """
 
 from sympy.core import Add, S, sympify, cacheit, pi, I, Rational, EulerGamma
-from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, expand_mul
 from sympy.core.relational import is_eq
 from sympy.core.power import Pow
