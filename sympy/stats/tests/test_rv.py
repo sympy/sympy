@@ -23,7 +23,7 @@ from sympy.stats import (Die, Normal, Exponential, FiniteRV, P, E, H, variance,
         moment, median)
 from sympy.stats.rv import (IndependentProductPSpace, rs_swap, Density, NamedArgsMixin,
         RandomSymbol, sample_iter, PSpace, is_random, RandomIndexedSymbol, RandomMatrixSymbol)
-from sympy.testing.pytest import raises, skip, XFAIL
+from sympy.testing.pytest import raises, skip, XFAIL, warns_deprecated_sympy
 from sympy.external import import_module
 from sympy.core.numbers import comp
 from sympy.stats.frv_types import BernoulliDistribution
@@ -232,6 +232,8 @@ def test_Sample():
     assert isinstance(sample(Y), numpy.float64)
     assert isinstance(sample(X, size=2), numpy.ndarray)
 
+    with warns_deprecated_sympy():
+        sample(X, numsamples=2)
 
 @XFAIL
 def test_samplingE():

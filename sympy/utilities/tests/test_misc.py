@@ -4,8 +4,9 @@ from subprocess import Popen, PIPE
 import os
 
 from sympy.core.singleton import S
-from sympy.testing.pytest import raises
-from sympy.utilities.misc import translate, replace, ordinal, rawlines, strlines, as_int
+from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.utilities.misc import (translate, replace, ordinal, rawlines,
+                                  strlines, as_int, find_executable)
 
 
 def test_translate():
@@ -139,3 +140,7 @@ def test_as_int():
     raises(ValueError, lambda : as_int(1e23))
     raises(ValueError, lambda : as_int(S('1.'+'0'*20+'1')))
     assert as_int(True, strict=False) == 1
+
+def test_deprecated_find_executable():
+    with warns_deprecated_sympy():
+        find_executable('python')

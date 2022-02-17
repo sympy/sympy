@@ -9,8 +9,7 @@ from sympy.calculus.finite_diff import (
     apply_finite_diff, differentiate_finite, finite_diff_weights,
     _as_finite_diff
 )
-from sympy.testing.pytest import raises, ignore_warnings
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 
 def test_apply_finite_diff():
@@ -129,14 +128,14 @@ def test_as_finite_diff():
 def test_differentiate_finite():
     x, y, h = symbols('x y h')
     f = Function('f')
-    with ignore_warnings(SymPyDeprecationWarning):
+    with warns_deprecated_sympy():
         res0 = differentiate_finite(f(x, y) + exp(42), x, y, evaluate=True)
     xm, xp, ym, yp = [v + sign*S.Half for v, sign in product([x, y], [-1, 1])]
     ref0 = f(xm, ym) + f(xp, yp) - f(xm, yp) - f(xp, ym)
     assert (res0 - ref0).simplify() == 0
 
     g = Function('g')
-    with ignore_warnings(SymPyDeprecationWarning):
+    with warns_deprecated_sympy():
         res1 = differentiate_finite(f(x)*g(x) + 42, x, evaluate=True)
     ref1 = (-f(x - S.Half) + f(x + S.Half))*g(x) + \
            (-g(x - S.Half) + g(x + S.Half))*f(x)

@@ -41,7 +41,6 @@ pip install\
   cython\
   llvmlite\
   wurlitzer\
-  autowrap\
   numexpr\
   'antlr4-python3-runtime==4.7.*'\
   sphinx\

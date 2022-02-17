@@ -29,7 +29,7 @@ def test_to_numpy():
     if not np:
         skip("numpy not installed.")
 
-    result = np.matrix([[1, 2], [3, 4]], dtype='complex')
+    result = np.array([[1, 2], [3, 4]], dtype='complex')
     assert (to_numpy(m) == result).all()
 
 
@@ -49,8 +49,8 @@ def test_matrix_tensor_product():
     vec = Matrix([1, 2, 3])
 
     #test for Matrix known 4x4 matricies
-    numpyl1 = np.matrix(l1.tolist())
-    numpyl2 = np.matrix(l2.tolist())
+    numpyl1 = np.array(l1.tolist())
+    numpyl2 = np.array(l2.tolist())
     numpy_product = np.kron(numpyl1, numpyl2)
     args = [l1, l2]
     sympy_product = matrix_tensor_product(*args)
@@ -61,7 +61,7 @@ def test_matrix_tensor_product():
     assert numpy_product.tolist() == sympy_product.tolist()
 
     #test for other known matrix of different dimensions
-    numpyl2 = np.matrix(l3.tolist())
+    numpyl2 = np.array(l3.tolist())
     numpy_product = np.kron(numpyl1, numpyl2)
     args = [l1, l3]
     sympy_product = matrix_tensor_product(*args)
@@ -72,7 +72,7 @@ def test_matrix_tensor_product():
     assert numpy_product.tolist() == sympy_product.tolist()
 
     #test for non square matrix
-    numpyl2 = np.matrix(vec.tolist())
+    numpyl2 = np.array(vec.tolist())
     numpy_product = np.kron(numpyl1, numpyl2)
     args = [l1, vec]
     sympy_product = matrix_tensor_product(*args)

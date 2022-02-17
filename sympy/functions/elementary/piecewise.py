@@ -9,7 +9,6 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import (And, Boolean, distribute_and_over_or, Not,
     true, false, Or, ITE, simplify_logic, to_cnf, distribute_or_over_and)
-from sympy.sets.sets import Interval
 from sympy.utilities.iterables import uniq, sift, common_prefix
 from sympy.utilities.misc import filldedent, func_name
 
@@ -1337,6 +1336,7 @@ def piecewise_simplify_arguments(expr, **kwargs):
         if ok:
             args = []
             covered = S.EmptySet
+            from sympy.sets.sets import Interval
             for a, b, e, i in abe_:
                 c = expr.args[i].cond
                 incl_a = include(c, x, a)

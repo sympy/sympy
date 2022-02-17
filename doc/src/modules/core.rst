@@ -519,6 +519,11 @@ Tuple
 .. autoclass:: Tuple
    :members:
 
+TupleKind
+^^^^^^^^^
+.. autoclass:: TupleKind
+   :members:
+
 Dict
 ^^^^
 .. autoclass:: Dict
@@ -550,6 +555,11 @@ NumberKind
 .. autoclass:: NumberKind
    :members:
 
+UndefinedKind
+^^^^^^^^^^^^^
+.. autoclass:: UndefinedKind
+   :members:
+
 BooleanKind
 ^^^^^^^^^^^
 .. autoclass:: BooleanKind
@@ -568,6 +578,30 @@ ordered
 
 .. autofunction:: sympy.core.sorting.ordered
 
+Random
+------
+
+.. automodule:: sympy.core.random
+
+random_complex_number
+^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: random_complex_number
+
+verify_numerically
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: verify_numerically
+
+test_derivative_numerically
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: test_derivative_numerically
+
+_randrange
+^^^^^^^^^^
+.. autofunction:: _randrange
+
+_randint
+^^^^^^^^
+.. autofunction:: _randint
 
 Traversal
 ---------

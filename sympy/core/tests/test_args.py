@@ -828,11 +828,6 @@ def test_sympy__core__relational__Unequality():
     assert _test_args(Unequality(x, 2))
 
 
-@SKIP("deprecated class")
-def test_sympy__core__trace__Tr():
-    pass
-
-
 def test_sympy__sandbox__indexed_integrals__IndexedIntegral():
     from sympy.tensor import IndexedBase, Idx
     from sympy.sandbox.indexed_integrals import IndexedIntegral

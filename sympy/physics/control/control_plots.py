@@ -747,7 +747,7 @@ def bode_magnitude_plot(system, initial_exp=-5, final_exp=5,
     plt.plot(x, y, color=color, **kwargs)
     plt.xscale('log')
 
-    plt.xlabel('Frequency (Hz) [Log Scale]')
+    plt.xlabel('Frequency (rad/s) [Log Scale]')
     plt.ylabel('Magnitude (dB)')
     plt.title(f'Bode Plot (Magnitude) of ${latex(system)}$', pad=20)
 

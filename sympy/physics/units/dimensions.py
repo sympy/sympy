@@ -25,7 +25,6 @@ from sympy.matrices.dense import Matrix
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.core.expr import Expr
 from sympy.core.power import Pow
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 
 class _QuantityMapper:
@@ -260,26 +259,6 @@ class Dimension(Expr):
         return reduce(lambda x, y: x * y, (
             Dimension(d)**e for d, e in dependencies.items()
         ), 1)
-
-    @property
-    def is_dimensionless(self):
-        """
-        Check if the dimension object really has a dimension.
-
-        A dimension should have at least one component with non-zero power.
-        """
-        if self.name == 1:
-            return True
-
-        from sympy.physics.units.systems.si import dimsys_default
-        SymPyDeprecationWarning(
-            deprecated_since_version="1.2",
-            issue=13336,
-            feature="wrong class",
-        ).warn()
-        dimensional_dependencies=dimsys_default
-
-        return dimensional_dependencies.get_dimensional_dependencies(self) == {}
 
     def has_integer_powers(self, dim_sys):
         """
