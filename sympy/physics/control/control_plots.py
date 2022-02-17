@@ -735,15 +735,16 @@ def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit
         raise ValueError('Only rad/sec and Hz are accepted frequency units.')
 
     _w = Dummy("w", real=True)
-    w_expr = expr.subs({system.var: I*_w})
+    if freq_unit == 'Hz':
+        repl = I*_w*2*pi
+    else:
+        repl = I*_w
+    w_expr = expr.subs({system.var: repl})
 
     mag = 20*log(Abs(w_expr), 10)
 
     x, y = LineOver1DRangeSeries(mag,
         (_w, 10**initial_exp, 10**final_exp), xscale='log', **kwargs).get_points()
-    if freq_unit == 'Hz':
-        a = pi.n()
-        x = [i/(2*a) for i in x]
 
     return x, y
 
@@ -848,18 +849,19 @@ def bode_phase_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit='ra
         raise ValueError('Only rad and deg are accepted phase units.')
 
     _w = Dummy("w", real=True)
-    w_expr = expr.subs({system.var: I*_w})
+    if freq_unit == 'Hz':
+        repl = I*_w*2*pi
+    else:
+        repl = I*_w
+    w_expr = expr.subs({system.var: repl})
 
-    phase = arg(w_expr)
+    if phase_unit == 'deg':
+        phase = arg(w_expr)*180/pi
+    else:
+        phase = arg(w_expr)
 
     x, y = LineOver1DRangeSeries(phase,
         (_w, 10**initial_exp, 10**final_exp), xscale='log', **kwargs).get_points()
-    if freq_unit == 'Hz':
-        a = pi.n()
-        x = [i/(2*a) for i in x]
-    if phase_unit == 'deg':
-        a = pi.n()
-        y = [i*(180/a) for i in y]
 
     return x, y
 
@@ -943,11 +945,11 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
 
     """
     plt.subplot(211)
-    bode_mag = bode_magnitude_plot(system, initial_exp=initial_exp, final_exp=final_exp,
+    mag = bode_magnitude_plot(system, initial_exp=initial_exp, final_exp=final_exp,
         show=False, grid=grid, show_axes=show_axes,
         freq_unit=freq_unit, **kwargs)
-    bode_mag.title(f'Bode Plot of ${latex(system)}$', pad=20)
-    bode_mag.xlabel(None)
+    mag.title(f'Bode Plot of ${latex(system)}$', pad=20)
+    mag.xlabel(None)
     plt.subplot(212)
     bode_phase_plot(system, initial_exp=initial_exp, final_exp=final_exp,
         show=False, grid=grid, show_axes=show_axes, freq_unit=freq_unit, phase_unit=phase_unit, **kwargs).title(None)
