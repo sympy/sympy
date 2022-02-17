@@ -459,6 +459,23 @@ into a new project called [Aesara](https://github.com/aesara-devs/aesara). The
 been renamed (e.g., `theano_code` has been renamed to {func}`~.aesara_code`,
 `TheanoPrinter` has been renamed to {class}`~.AesaraPrinter`, and so on).
 
+(deprecated-arrayexpressions)=
+### `sympy.codegen.array_utils`
+
+There is a more complete (although still experimental) implementation of array
+expressions in `sympy.tensor.array.expressions` which should be used instead.
+All functions and classes exposed by the `sympy.codegen.array_utils` module are
+now just aliases for functions and classes defined in
+`sympy.tensor.array.expressions` which should be used instead. For example code that does
+```python
+from sympy.codegen.array_utils import CodegenArrayTensorProduct
+```
+should be changed to
+```python
+from sympy.tensor.array.expressions import ArrayTensorProduct
+```
+
+
 (deprecated-askhandler)=
 ### `sympy.assumptions.handlers.AskHandler` and related methods
 
