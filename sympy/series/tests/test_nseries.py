@@ -452,12 +452,11 @@ def test_frac():
     assert frac(2*x + 1).series(x, 0, 6, cdir=1) == 2*x + O(x**6)
     assert frac(2*x + 2).series(x, 0, 6, cdir=1) == 2*x + O(x**6)
     assert frac(x**2).series(x, 0, 6, cdir=1) == x**2 + O(x**6)
-    assert frac(x**2).series(x, 0, 6, cdir=1) == x**2 + O(x**6)
+    assert frac(x**2).series(x, 0, 6, cdir=-1) == x**2 + O(x**6)
     assert frac(x**3 - 1).series(x, 0, 6, cdir=-1) == 1 + x**3 + O(x**6)
     assert frac(x**3 - 1).series(x, 0, 6, cdir=1) == x**3 + O(x**6)
     assert frac(x**8).series(x, 0, 6, cdir=1) == O(x**6)
     assert frac(1/x).series(x, 0, 6) == AccumBounds(0, 1) + O(x**6)
-    assert frac(1/x).series(x, 0, 0).expr == S.One
 
 
 def test_ceiling():
