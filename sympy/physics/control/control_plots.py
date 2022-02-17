@@ -687,7 +687,7 @@ def bode_magnitude_numerical_data(system, initial_exp=-5, final_exp=5, freq_unit
     final_exp : Number, optional
         The final exponent of 10 of the semilog plot. Defaults to 5.
     freq_unit : string, optional
-        User can choose between 'rad/sec'(radians/second) and 'Hz'(Hertz) as frequency units.
+        User can choose between 'rad/sec' (radians/second) and 'Hz' (Hertz) as frequency units.
 
     Returns
     =======
@@ -920,9 +920,9 @@ def bode_plot(system, initial_exp=-5, final_exp=5,
     show_axes : boolean, optional
         If ``True``, the coordinate axes will be shown. Defaults to False.
     freq_unit : string, optional
-        User can choose between ``rad/sec``(radians/second) and ``Hz``(Hertz) as frequency units.
+        User can choose between 'rad/sec' (radians/second) and 'Hz' (Hertz) as frequency units.
     phase_unit : string, optional
-        User can choose between ``rad``(radians) and ``deg``(degree) as phase units.
+        User can choose between 'rad' (radians) and 'deg' (degree) as phase units.
 
     Examples
     ========
