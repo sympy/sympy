@@ -1353,7 +1353,17 @@ def _solve(f, *symbols, **flags):
                         raise TypeError('unrecognized solution type')
                 return soln
 
-        # find first successful solution
+        # look for solutions for desired symbols that are independent
+        # of symbols already solved for, e.g. if we solve for x = y
+        # then no symbol having x in its solution will be returned.
+        # First solve for linear symbols (since that is easier and limits
+        # solution size) and then proceed with symbols appearing
+        # in a non-linear fashion. Ideally, if one is solving a single
+        # expression for several symbols, they would have to be
+        # appear in factors of an expression, but we do not here
+        # attempt factorization.  XXX perhaps handling a Mul
+        # should come first in this routine whether there is
+        # one or several symbols.
         nonlin_s = []
         got_s = set()
         rhs_s = set()
