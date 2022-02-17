@@ -828,11 +828,6 @@ def test_sympy__core__relational__Unequality():
     assert _test_args(Unequality(x, 2))
 
 
-@SKIP("deprecated class")
-def test_sympy__core__trace__Tr():
-    pass
-
-
 def test_sympy__sandbox__indexed_integrals__IndexedIntegral():
     from sympy.tensor import IndexedBase, Idx
     from sympy.sandbox.indexed_integrals import IndexedIntegral
@@ -4920,6 +4915,16 @@ def test_sympy__physics__optics__medium__Medium():
     assert _test_args(Medium('m'))
 
 
+def test_sympy__physics__optics__medium__MediumN():
+    from sympy.physics.optics.medium import Medium
+    assert _test_args(Medium('m', n=2))
+
+
+def test_sympy__physics__optics__medium__MediumPP():
+    from sympy.physics.optics.medium import Medium
+    assert _test_args(Medium('m', permittivity=2, permeability=2))
+
+
 def test_sympy__tensor__array__expressions__array_expressions__ArrayContraction():
     from sympy.tensor.array.expressions.array_expressions import ArrayContraction
     from sympy.tensor.indexed import IndexedBase
@@ -4958,6 +4963,12 @@ def test_sympy__tensor__array__expressions__array_expressions__ArrayElementwiseA
     from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElementwiseApplyFunc
     A = ArraySymbol("A", (4,))
     assert _test_args(ArrayElementwiseApplyFunc(exp, A))
+
+
+def test_sympy__tensor__array__expressions__array_expressions__Reshape():
+    from sympy.tensor.array.expressions.array_expressions import ArraySymbol, Reshape
+    A = ArraySymbol("A", (4,))
+    assert _test_args(Reshape(A, (2, 2)))
 
 
 def test_sympy__codegen__ast__Assignment():

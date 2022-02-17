@@ -5,7 +5,7 @@ from sympy.core.sorting import default_sort_key
 from sympy.matrices import Matrix
 from sympy.vector import (CoordSys3D, Vector, ParametricRegion,
                         parametric_region_list, ImplicitRegion)
-from sympy.vector.operators import _get_coord_sys_from_expr
+from sympy.vector.operators import _get_coord_systems
 from sympy.integrals import Integral, integrate
 from sympy.utilities.iterables import topological_sort
 from sympy.geometry.entity import GeometryEntity
@@ -42,7 +42,7 @@ class ParametricIntegral(Basic):
 
     def __new__(cls, field, parametricregion):
 
-        coord_set = _get_coord_sys_from_expr(field)
+        coord_set = _get_coord_systems(field)
 
         if len(coord_set) == 0:
             coord_sys = CoordSys3D('C')

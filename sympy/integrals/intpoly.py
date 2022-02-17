@@ -50,8 +50,7 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
     ========
 
     >>> from sympy.abc import x, y
-    >>> from sympy.geometry.polygon import Polygon
-    >>> from sympy.geometry.point import Point
+    >>> from sympy import Point, Polygon
     >>> from sympy.integrals.intpoly import polytope_integrate
     >>> polygon = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
     >>> polys = [1, x, y, x*y, x**2*y, x*y**2]
@@ -252,8 +251,7 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import main_integrate,\
     hyperplane_parameters
-    >>> from sympy.geometry.polygon import Polygon
-    >>> from sympy.geometry.point import Point
+    >>> from sympy import Point, Polygon
     >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
     >>> facets = triangle.sides
     >>> hp_params = hyperplane_parameters(triangle)
@@ -468,8 +466,7 @@ def integration_reduction(facets, index, a, b, expr, dims, degree):
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import integration_reduction,\
     hyperplane_parameters
-    >>> from sympy.geometry.point import Point
-    >>> from sympy.geometry.polygon import Polygon
+    >>> from sympy import Point, Polygon
     >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
     >>> facets = triangle.sides
     >>> a, b = hyperplane_parameters(triangle)[0]
@@ -523,8 +520,7 @@ def left_integral2D(m, index, facets, x0, expr, gens):
 
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import left_integral2D
-    >>> from sympy.geometry.point import Point
-    >>> from sympy.geometry.polygon import Polygon
+    >>> from sympy import Point, Polygon
     >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
     >>> facets = triangle.sides
     >>> left_integral2D(3, 0, facets, facets[0].points[0], 1, (x, y))
@@ -599,8 +595,7 @@ def integration_reduction_dynamic(facets, index, a, b, expr, degree, dims,
     >>> from sympy.abc import x, y
     >>> from sympy.integrals.intpoly import (integration_reduction_dynamic, \
             hyperplane_parameters)
-    >>> from sympy.geometry.point import Point
-    >>> from sympy.geometry.polygon import Polygon
+    >>> from sympy import Point, Polygon
     >>> triangle = Polygon(Point(0, 3), Point(5, 3), Point(1, 1))
     >>> facets = triangle.sides
     >>> a, b = hyperplane_parameters(triangle)[0]
@@ -760,8 +755,7 @@ def hyperplane_parameters(poly, vertices=None):
     Examples
     ========
 
-    >>> from sympy.geometry.point import Point
-    >>> from sympy.geometry.polygon import Polygon
+    >>> from sympy import Point, Polygon
     >>> from sympy.integrals.intpoly import hyperplane_parameters
     >>> hyperplane_parameters(Polygon(Point(0, 3), Point(5, 3), Point(1, 1)))
     [((0, 1), 3), ((1, -2), -1), ((-2, -1), -3)]
@@ -865,8 +859,7 @@ def best_origin(a, b, lineseg, expr):
 
     >>> from sympy.integrals.intpoly import best_origin
     >>> from sympy.abc import x, y
-    >>> from sympy.geometry.line import Segment2D
-    >>> from sympy.geometry.point import Point
+    >>> from sympy import Point, Segment2D
     >>> l = Segment2D(Point(0, 3), Point(1, 1))
     >>> expr = x**3*y**7
     >>> best_origin((2, 1), 3, l, expr)
@@ -1076,7 +1069,7 @@ def point_sort(poly, normal=None, clockwise=True):
     ========
 
     >>> from sympy.integrals.intpoly import point_sort
-    >>> from sympy.geometry.point import Point
+    >>> from sympy import Point
     >>> point_sort([Point(0, 0), Point(1, 0), Point(1, 1)])
     [Point2D(1, 1), Point2D(1, 0), Point2D(0, 0)]
     """
@@ -1142,7 +1135,7 @@ def norm(point):
     ========
 
     >>> from sympy.integrals.intpoly import norm
-    >>> from sympy.geometry.point import Point
+    >>> from sympy import Point
     >>> norm(Point(2, 7))
     sqrt(53)
     """
@@ -1180,8 +1173,7 @@ def intersection(geom_1, geom_2, intersection_type):
     ========
 
     >>> from sympy.integrals.intpoly import intersection
-    >>> from sympy.geometry.point import Point
-    >>> from sympy.geometry.line import Segment2D
+    >>> from sympy import Point, Segment2D
     >>> l1 = Segment2D(Point(1, 1), Point(3, 5))
     >>> l2 = Segment2D(Point(2, 0), Point(2, 5))
     >>> intersection(l1, l2, "segment2D")
@@ -1233,7 +1225,7 @@ def is_vertex(ent):
     Examples
     ========
 
-    >>> from sympy.geometry.point import Point
+    >>> from sympy import Point
     >>> from sympy.integrals.intpoly import is_vertex
     >>> is_vertex((2, 3))
     True

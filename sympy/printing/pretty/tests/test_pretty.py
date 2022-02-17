@@ -75,7 +75,7 @@ from sympy.tensor.functions import TensorProduct
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices, TensorHead,
                                  TensorElement, tensor_heads)
 
-from sympy.testing.pytest import raises, _both_exp_pow
+from sympy.testing.pytest import raises, _both_exp_pow, warns_deprecated_sympy
 
 from sympy.vector import CoordSys3D, Gradient, Curl, Divergence, Dot, Cross, Laplacian
 
@@ -409,6 +409,17 @@ def test_pretty_Permutation():
     assert xpretty(p1, perm_cyclic=False, use_unicode=False) == \
     "/0 1 2 3 4\\\n"\
     "\\0 2 1 4 3/"
+
+    with warns_deprecated_sympy():
+        old_print_cyclic = Permutation.print_cyclic
+        Permutation.print_cyclic = False
+        assert xpretty(p1, use_unicode=True) == \
+        '⎛0 1 2 3 4⎞\n'\
+        '⎝0 2 1 4 3⎠'
+        assert xpretty(p1, use_unicode=False) == \
+        "/0 1 2 3 4\\\n"\
+        "\\0 2 1 4 3/"
+        Permutation.print_cyclic = old_print_cyclic
 
 
 def test_pretty_basic():
@@ -3650,6 +3661,18 @@ def test_Adjoint():
         "    †\n⎛ T⎞ \n⎝X ⎠ "
     assert upretty(Transpose(Adjoint(X))) == \
         "    T\n⎛ †⎞ \n⎝X ⎠ "
+    m = Matrix(((1, 2), (3, 4)))
+    assert upretty(Adjoint(m)) == \
+        '      †\n'\
+        '⎡1  2⎤ \n'\
+        '⎢    ⎥ \n'\
+        '⎣3  4⎦ '
+    assert upretty(Adjoint(m+X)) == \
+        '            †\n'\
+        '⎛⎡1  2⎤    ⎞ \n'\
+        '⎜⎢    ⎥ + X⎟ \n'\
+        '⎝⎣3  4⎦    ⎠ '
+
 
 def test_pretty_Trace_issue_9044():
     X = Matrix([[1, 2], [3, 4]])
@@ -7681,6 +7704,24 @@ def test_symbolic_probability():
     assert pretty(Covariance(X, Y)) == 'Cov(X, Y)'
 
 
+def test_issue_21758():
+    from sympy.functions.elementary.piecewise import piecewise_fold
+    from sympy.series.fourier import FourierSeries
+    x = Symbol('x')
+    k, n = symbols('k n')
+    fo = FourierSeries(x, (x, -pi, pi), (0, SeqFormula(0, (k, 1, oo)), SeqFormula(
+        Piecewise((-2*pi*cos(n*pi)/n + 2*sin(n*pi)/n**2, (n > -oo) & (n < oo) & Ne(n, 0)),
+                  (0, True))*sin(n*x)/pi, (n, 1, oo))))
+    assert upretty(piecewise_fold(fo)) == \
+        '⎧                      2⋅sin(3⋅x)                                \n'\
+        '⎪2⋅sin(x) - sin(2⋅x) + ────────── + …  for n > -∞ ∧ n < ∞ ∧ n ≠ 0\n'\
+        '⎨                          3                                     \n'\
+        '⎪                                                                \n'\
+        '⎩                 0                            otherwise         '
+    assert pretty(FourierSeries(x, (x, -pi, pi), (0, SeqFormula(0, (k, 1, oo)),
+                                                 SeqFormula(0, (n, 1, oo))))) == '0'
+
+
 def test_diffgeom():
     from sympy.diffgeom import Manifold, Patch, CoordSystem, BaseScalarField
     x,y = symbols('x y', real=True)
@@ -7692,3 +7733,15 @@ def test_diffgeom():
     assert pretty(rect) == "rect"
     b = BaseScalarField(rect, 0)
     assert pretty(b) == "x"
+
+def test_deprecated_prettyForm():
+    with warns_deprecated_sympy():
+        from sympy.printing.pretty.pretty_symbology import xstr
+        assert xstr(1) == '1'
+
+    with warns_deprecated_sympy():
+        from sympy.printing.pretty.stringpict import prettyForm
+        p = prettyForm('s', unicode='s')
+
+    with warns_deprecated_sympy():
+        assert p.unicode == p.s == 's'

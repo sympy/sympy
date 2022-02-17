@@ -10,7 +10,7 @@ from sympy.core.mod import Mod
 from sympy.core.mul import Mul
 from sympy.core.numbers import (AlgebraicNumber, Float, I, Integer, Rational, oo, pi)
 from sympy.core.power import Pow
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import (Symbol, Wild, symbols)
 from sympy.functions.combinatorial.factorials import (FallingFactorial, RisingFactorial, binomial, factorial, factorial2, subfactorial)
@@ -74,12 +74,13 @@ from sympy.tensor.array import (ImmutableDenseNDimArray,
                                 MutableDenseNDimArray,
                                 tensorproduct)
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
-from sympy.tensor.indexed import (Indexed, IndexedBase)
+from sympy.tensor.indexed import (Idx, Indexed, IndexedBase)
 from sympy.tensor.toperators import PartialDerivative
 from sympy.vector import CoordSys3D, Cross, Curl, Dot, Divergence, Gradient, Laplacian
 
 
-from sympy.testing.pytest import XFAIL, raises, _both_exp_pow
+from sympy.testing.pytest import (XFAIL, raises, _both_exp_pow,
+                                  warns_deprecated_sympy)
 from sympy.printing.latex import (latex, translate, greek_letters_set,
                                   tex_greek_dictionary, multiline_latex,
                                   latex_escape, LatexPrinter)
@@ -304,6 +305,12 @@ def test_latex_permutation():
     assert latex(Permutation(), perm_cyclic=False) == \
         r"\left( \right)"
 
+    with warns_deprecated_sympy():
+        old_print_cyclic = Permutation.print_cyclic
+        Permutation.print_cyclic = False
+        assert latex(Permutation(0, 1)(2, 3)) == \
+            r"\begin{pmatrix} 0 & 1 & 2 & 3 \\ 1 & 0 & 3 & 2 \end{pmatrix}"
+        Permutation.print_cyclic = old_print_cyclic
 
 def test_latex_Float():
     assert latex(Float(1.0e100)) == r"1.0 \cdot 10^{100}"
@@ -469,7 +476,7 @@ def test_latex_functions():
     assert latex(acsc(x), inv_trig_style="full") == \
         r"\operatorname{arccsc}{\left(x \right)}"
     assert latex(asinh(x), inv_trig_style="full") == \
-        r"\operatorname{arcsinh}{\left(x \right)}"
+        r"\operatorname{arsinh}{\left(x \right)}"
 
     assert latex(factorial(k)) == r"k!"
     assert latex(factorial(-k)) == r"\left(- k\right)!"
@@ -733,7 +740,12 @@ def test_latex_indexed():
     assert indexed_latex == r'\overline{{\Psi}_{0}} {\Psi}_{0}'
 
     # Symbol('gamma') gives r'\gamma'
+    interval = '\\mathrel{..}\\nobreak'
     assert latex(Indexed('x1', Symbol('i'))) == r'{x_{1}}_{i}'
+    assert latex(Indexed('x2', Idx('i'))) == r'{x_{2}}_{i}'
+    assert latex(Indexed('x3', Idx('i', Symbol('N')))) == r'{x_{3}}_{{i}_{0'+interval+'N - 1}}'
+    assert latex(Indexed('x3', Idx('i', Symbol('N')+1))) == r'{x_{3}}_{{i}_{0'+interval+'N}}'
+    assert latex(Indexed('x4', Idx('i', (Symbol('a'),Symbol('b'))))) == r'{x_{4}}_{{i}_{a'+interval+'b}}'
     assert latex(IndexedBase('gamma')) == r'\gamma'
     assert latex(IndexedBase('a b')) == r'a b'
     assert latex(IndexedBase('a_b')) == r'a_{b}'
@@ -1937,6 +1949,13 @@ def test_Adjoint():
     assert latex(Adjoint(Transpose(X))) == r'\left(X^{T}\right)^{\dagger}'
     assert latex(Transpose(Adjoint(X))) == r'\left(X^{\dagger}\right)^{T}'
     assert latex(Transpose(Adjoint(X) + Y)) == r'\left(X^{\dagger} + Y\right)^{T}'
+    m = Matrix(((1, 2), (3, 4)))
+    assert latex(Adjoint(m)) == '\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right]^{\\dagger}'
+    assert latex(Adjoint(m+X)) == \
+        '\\left(\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] + X\\right)^{\\dagger}'
+    # Issue 20959
+    Mx = MatrixSymbol('M^x', 2, 2)
+    assert latex(Adjoint(Mx)) == r'\left(M^{x}\right)^{\dagger}'
 
 
 def test_Transpose():
@@ -1950,6 +1969,13 @@ def test_Transpose():
     assert latex(HadamardPower(Transpose(X), 2)) == r'\left(X^{T}\right)^{\circ {2}}'
     assert latex(Transpose(MatPow(X, 2))) == r'\left(X^{2}\right)^{T}'
     assert latex(MatPow(Transpose(X), 2)) == r'\left(X^{T}\right)^{2}'
+    m = Matrix(((1, 2), (3, 4)))
+    assert latex(Transpose(m)) == '\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right]^{T}'
+    assert latex(Transpose(m+X)) == \
+        '\\left(\\left[\\begin{matrix}1 & 2\\\\3 & 4\\end{matrix}\\right] + X\\right)^{T}'
+    # Issue 20959
+    Mx = MatrixSymbol('M^x', 2, 2)
+    assert latex(Transpose(Mx)) == r'\left(M^{x}\right)^{T}'
 
 
 def test_Hadamard():
@@ -1974,6 +2000,20 @@ def test_Hadamard():
 
     assert latex(HadamardPower(X, n+1)) == \
         r'X^{\circ \left({n + 1}\right)}'
+
+
+def test_MatPow():
+    from sympy.matrices.expressions import MatPow
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
+    assert latex(MatPow(X, 2)) == 'X^{2}'
+    assert latex(MatPow(X*X, 2)) == '\\left(X^{2}\\right)^{2}'
+    assert latex(MatPow(X*Y, 2)) == '\\left(X Y\\right)^{2}'
+    assert latex(MatPow(X + Y, 2)) == '\\left(X + Y\\right)^{2}'
+    assert latex(MatPow(X + X, 2)) == '\\left(2 X\\right)^{2}'
+    # Issue 20959
+    Mx = MatrixSymbol('M^x', 2, 2)
+    assert latex(MatPow(Mx, 2)) == r'\left(M^{x}\right)^{2}'
 
 
 def test_ElementwiseApplyFunction():
@@ -2733,6 +2773,23 @@ def test_PermutationMatrix():
     p = Permutation(0, 3)(1, 2)
     assert latex(PermutationMatrix(p)) == \
         r'P_{\left( 0\; 3\right)\left( 1\; 2\right)}'
+
+
+
+def test_issue_21758():
+    from sympy.functions.elementary.piecewise import piecewise_fold
+    from sympy.series.fourier import FourierSeries
+    x = Symbol('x')
+    k, n = symbols('k n')
+    fo = FourierSeries(x, (x, -pi, pi), (0, SeqFormula(0, (k, 1, oo)), SeqFormula(
+        Piecewise((-2*pi*cos(n*pi)/n + 2*sin(n*pi)/n**2, (n > -oo) & (n < oo) & Ne(n, 0)),
+                  (0, True))*sin(n*x)/pi, (n, 1, oo))))
+    assert latex(piecewise_fold(fo)) == '\\begin{cases} 2 \\sin{\\left(x \\right)}' \
+            ' - \\sin{\\left(2 x \\right)} + \\frac{2 \\sin{\\left(3 x \\right)}}{3} +' \
+            ' \\ldots & \\text{for}\\: n > -\\infty \\wedge n < \\infty \\wedge ' \
+                'n \\neq 0 \\\\0 & \\text{otherwise} \\end{cases}'
+    assert latex(FourierSeries(x, (x, -pi, pi), (0, SeqFormula(0, (k, 1, oo)),
+                                                 SeqFormula(0, (n, 1, oo))))) == '0'
 
 
 def test_imaginary_unit():

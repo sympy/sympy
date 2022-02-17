@@ -20,20 +20,21 @@ from sympy.core.function import (expand_mul, expand_log, Derivative,
                                  Function, expand_power_exp, _mexpand, expand,
                                  expand_func)
 from sympy.core.logic import fuzzy_not
-from sympy.core.numbers import ilcm, Float, Rational
+from sympy.core.numbers import ilcm, Float, Rational, _illegal
 from sympy.core.power import integer_log, Pow
 from sympy.core.relational import Relational, Eq, Ne
 from sympy.core.sorting import ordered, default_sort_key
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal
 from sympy.logic.boolalg import And, Or, BooleanAtom
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
                              Abs, re, im, arg, sqrt, atan2)
 from sympy.functions.combinatorial.factorials import binomial
-from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
-                                                      HyperbolicFunction)
+from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
+from sympy.integrals.integrals import Integral
 from sympy.ntheory.factor_ import divisors
 from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
     powdenest, nsimplify, denom, logcombine, sqrtdenest, fraction,
@@ -57,7 +58,7 @@ from sympy.solvers.polysys import solve_poly_system
 
 from types import GeneratorType
 from collections import defaultdict
-from itertools import product
+from itertools import combinations, product
 
 import warnings
 
@@ -200,8 +201,7 @@ def checksol(f, symbol, sol=None, **flags):
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.solvers import checksol
+    >>> from sympy import checksol, symbols
     >>> x, y = symbols('x,y')
     >>> checksol(x**4 - 1, x, 1)
     True
@@ -257,6 +257,11 @@ def checksol(f, symbol, sol=None, **flags):
             rv = None  # don't return, wait to see if there's a False
         return rv
 
+    f = _sympify(f)
+
+    if f.is_number:
+        return f.is_zero
+
     if isinstance(f, Poly):
         f = f.as_expr()
     elif isinstance(f, (Eq, Ne)):
@@ -275,14 +280,7 @@ def checksol(f, symbol, sol=None, **flags):
     elif not f.is_Relational and not f:
         return True
 
-    if sol and not f.free_symbols & set(sol.keys()):
-        # if f(y) == 0, x=3 does not set f(y) to zero...nor does it not
-        return None
-
-    illegal = {S.NaN,
-               S.ComplexInfinity,
-               S.Infinity,
-               S.NegativeInfinity}
+    illegal = set(_illegal)
     if any(sympify(v).atoms() & illegal for k, v in sol.items()):
         return False
 
@@ -360,12 +358,12 @@ def checksol(f, symbol, sol=None, **flags):
                 return not nz
             break
 
+        if numerical and val.is_number:
+            return (abs(val.n(18).n(12, chop=True)) < 1e-9) is S.true
         if val == was:
             continue
         elif val.is_Rational:
             return val == 0
-        if numerical and val.is_number:
-            return (abs(val.n(18).n(12, chop=True)) < 1e-9) is S.true
         was = val
 
     if flags.get('warn', False):
@@ -2138,8 +2136,6 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     if not symbols:
         return S.Zero, S.One
 
-    from sympy.integrals.integrals import Integral
-
     # derivatives are easy to do but tricky to analyze to see if they
     # are going to disallow a linear solution, so for simplicity we
     # just evaluate the ones that have the symbols of interest
@@ -2237,7 +2233,6 @@ def minsolve_linear_system(system, *symbols, **flags):
         # variables, we will find an optimal solution.
         # We speed up slightly by starting at one less than the number of
         # variables the quick method manages.
-        from itertools import combinations
         N = len(symbols)
         bestsol = minsolve_linear_system(system, *symbols, quick=True)
         n0 = len([x for x in bestsol.values() if x != 0])
@@ -2341,9 +2336,8 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     Examples
     ========
 
-    >>> from sympy import Eq
+    >>> from sympy import Eq, solve_undetermined_coeffs
     >>> from sympy.abc import a, b, c, x
-    >>> from sympy.solvers import solve_undetermined_coeffs
 
     >>> solve_undetermined_coeffs(Eq(2*a*x + a+b, x), [a, b], x)
     {a: 1/2, b: -1/2}
@@ -2383,9 +2377,8 @@ def solve_linear_system_LU(matrix, syms):
     Examples
     ========
 
-    >>> from sympy import Matrix
+    >>> from sympy import Matrix, solve_linear_system_LU
     >>> from sympy.abc import x, y, z
-    >>> from sympy.solvers.solvers import solve_linear_system_LU
 
     >>> solve_linear_system_LU(Matrix([
     ... [1, 2, 0, 1],

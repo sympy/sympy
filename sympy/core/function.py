@@ -50,7 +50,8 @@ from .singleton import S
 from .sympify import sympify
 
 from .sorting import default_sort_key, ordered
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import (sympy_deprecation_warning,
+                                        SymPyDeprecationWarning, ignore_warnings)
 from sympy.utilities.iterables import (has_dups, sift, iterable,
     is_sequence, uniq, topological_sort)
 from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
@@ -116,7 +117,7 @@ class BadArgumentsError(TypeError):
     pass
 
 
-# Python 2/3 version that does not raise a Deprecation warning
+# Python 3 version that does not raise a Deprecation warning
 def arity(cls):
     """Return the arity of the function if it is known, else None.
 
@@ -1961,11 +1962,14 @@ class Lambda(Expr):
 
     def __new__(cls, signature, expr):
         if iterable(signature) and not isinstance(signature, (tuple, Tuple)):
-            SymPyDeprecationWarning(
-                feature="non tuple iterable of argument symbols to Lambda",
-                useinstead="tuple of argument symbols",
-                issue=17474,
-                deprecated_since_version="1.5").warn()
+            sympy_deprecation_warning(
+                """
+                Using a non-tuple iterable as the first argument to Lambda
+                is deprecated. Use Lambda(tuple(args), expr) instead.
+                """,
+                deprecated_since_version="1.5",
+                active_deprecations_target="deprecated-non-tuple-lambda",
+            )
             signature = tuple(signature)
         sig = signature if iterable(signature) else (signature,)
         sig = sympify(sig)
@@ -2318,11 +2322,16 @@ class Subs(Expr):
 
     @property
     def expr_free_symbols(self):
-        SymPyDeprecationWarning(feature="expr_free_symbols method",
-                                issue=21494,
-                                deprecated_since_version="1.9").warn()
-        return (self.expr.expr_free_symbols - set(self.variables) |
-            set(self.point.expr_free_symbols))
+        sympy_deprecation_warning("""
+        The expr_free_symbols property is deprecated. Use free_symbols to get
+        the free symbols of an expression.
+        """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-expr-free-symbols")
+        # Don't show the warning twice from the recursive call
+        with ignore_warnings(SymPyDeprecationWarning):
+            return (self.expr.expr_free_symbols - set(self.variables) |
+                    set(self.point.expr_free_symbols))
 
     def __eq__(self, other):
         if not isinstance(other, Subs):

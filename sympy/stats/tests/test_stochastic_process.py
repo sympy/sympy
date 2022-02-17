@@ -27,7 +27,8 @@ from sympy.stats.joint_rv import JointDistribution
 from sympy.stats.joint_rv_types import JointDistributionHandmade
 from sympy.stats.rv import RandomIndexedSymbol
 from sympy.stats.symbolic_probability import Probability, Expectation
-from sympy.testing.pytest import raises, skip, ignore_warnings
+from sympy.testing.pytest import (raises, skip, ignore_warnings,
+                                  warns_deprecated_sympy)
 from sympy.external import import_module
 from sympy.stats.frv_types import BernoulliDistribution
 from sympy.stats.drv_types import PoissonDistribution
@@ -63,7 +64,7 @@ def test_DiscreteMarkovChain():
     # any hashable object should be a valid state
     # states should be valid as a tuple/set/list/Tuple/Range
     sym, rainy, cloudy, sunny = symbols('a Rainy Cloudy Sunny', real=True)
-    state_spaces = [(1, 2, 3), [Str('Hello'), sym, DiscreteMarkovChain],
+    state_spaces = [(1, 2, 3), [Str('Hello'), sym, DiscreteMarkovChain("Y", (1,2,3))],
                     Tuple(S(1), exp(sym), Str('World'), sympify=False), Range(-1, 5, 2),
                     [rainy, cloudy, sunny]]
     chains = [DiscreteMarkovChain("Y", state_space) for state_space in state_spaces]
@@ -125,11 +126,11 @@ def test_DiscreteMarkovChain():
     assert P(Lt(X[1], 2) & Gt(X[1], 0), Eq(X[0], 2) &
         StochasticStateSpaceOf(X, [0, 1, 2]) & TransitionMatrixOf(X, TO1)) == Rational(1, 4)
     assert P(Lt(X[1], 2) & Gt(X[1], 0), Eq(X[0], 2) &
-             StochasticStateSpaceOf(X, [None, 'None', 1]) & TransitionMatrixOf(X, TO1)) == Rational(1, 4)
+             StochasticStateSpaceOf(X, [S(0), '0', 1]) & TransitionMatrixOf(X, TO1)) == Rational(1, 4)
     assert P(Ne(X[1], 2) & Ne(X[1], 1), Eq(X[0], 2) &
         StochasticStateSpaceOf(X, [0, 1, 2]) & TransitionMatrixOf(X, TO1)) is S.Zero
     assert P(Ne(X[1], 2) & Ne(X[1], 1), Eq(X[0], 2) &
-             StochasticStateSpaceOf(X, [None, 'None', 1]) & TransitionMatrixOf(X, TO1)) is S.Zero
+             StochasticStateSpaceOf(X, [S(0), '0', 1]) & TransitionMatrixOf(X, TO1)) is S.Zero
     assert P(And(Eq(Y[2], 1), Eq(Y[1], 1), Eq(Y[0], 0)), Eq(Y[1], 1)) == 0.1*Probability(Eq(Y[0], 0))
 
     # testing properties of Markov chain
@@ -158,6 +159,8 @@ def test_DiscreteMarkovChain():
     Y6 = DiscreteMarkovChain('Y', trans_probs=TO6)
     assert Y6.fundamental_matrix() == ImmutableMatrix([[Rational(3, 2), S.One, S.Half], [S.One, S(2), S.One], [S.Half, S.One, Rational(3, 2)]])
     assert Y6.absorbing_probabilities() == ImmutableMatrix([[Rational(3, 4), Rational(1, 4)], [S.Half, S.Half], [Rational(1, 4), Rational(3, 4)]])
+    with warns_deprecated_sympy():
+        Y6.absorbing_probabilites()
     TO7 = Matrix([[Rational(1, 2), Rational(1, 4), Rational(1, 4)], [Rational(1, 2), 0, Rational(1, 2)], [Rational(1, 4), Rational(1, 4), Rational(1, 2)]])
     Y7 = DiscreteMarkovChain('Y', trans_probs=TO7)
     assert Y7.is_absorbing_chain() == False
@@ -539,6 +542,8 @@ def test_PoissonProcess():
     t, d, x, y = symbols('t d x y', positive=True)
     assert isinstance(X(t), RandomIndexedSymbol)
     assert X.distribution(t) == PoissonDistribution(3*t)
+    with warns_deprecated_sympy():
+        X.distribution(X(t))
     raises(ValueError, lambda: PoissonProcess("X", -1))
     raises(NotImplementedError, lambda: X[t])
     raises(IndexError, lambda: X(-5))
@@ -653,6 +658,8 @@ def test_WienerProcess():
     t, d, x, y = symbols('t d x y', positive=True)
     assert isinstance(X(t), RandomIndexedSymbol)
     assert X.distribution(t) == NormalDistribution(0, sqrt(t))
+    with warns_deprecated_sympy():
+        X.distribution(X(t))
     raises(ValueError, lambda: PoissonProcess("X", -1))
     raises(NotImplementedError, lambda: X[t])
     raises(IndexError, lambda: X(-2))
@@ -704,6 +711,8 @@ def test_GammaProcess_symbolic():
     assert isinstance(X(t), RandomIndexedSymbol)
     assert X.state_space == Interval(0, oo)
     assert X.distribution(t) == GammaDistribution(g*t, 1/l)
+    with warns_deprecated_sympy():
+        X.distribution(X(t))
     assert X.joint_distribution(5, X(3)) == JointDistributionHandmade(Lambda(
         (X(5), X(3)), l**(8*g)*exp(-l*X(3))*exp(-l*X(5))*X(3)**(3*g - 1)*X(5)**(5*g
         - 1)/(gamma(3*g)*gamma(5*g))))

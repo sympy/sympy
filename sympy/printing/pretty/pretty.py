@@ -15,7 +15,7 @@ from sympy.printing.precedence import PRECEDENCE, precedence, precedence_traditi
 from sympy.printing.printer import Printer, print_function
 from sympy.printing.str import sstr
 from sympy.utilities.iterables import has_variety
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 from sympy.printing.pretty.pretty_symbology import hobj, vobj, xobj, \
@@ -394,12 +394,15 @@ class PrettyPrinter(Printer):
 
         perm_cyclic = Permutation.print_cyclic
         if perm_cyclic is not None:
-            SymPyDeprecationWarning(
-                feature="Permutation.print_cyclic = {}".format(perm_cyclic),
-                useinstead="init_printing(perm_cyclic={})"
-                .format(perm_cyclic),
-                issue=15201,
-                deprecated_since_version="1.6").warn()
+            sympy_deprecation_warning(
+                f"""
+                Setting Permutation.print_cyclic is deprecated. Instead use
+                init_printing(perm_cyclic={perm_cyclic}).
+                """,
+                deprecated_since_version="1.6",
+                active_deprecations_target="deprecated-permutation-print_cyclic",
+                stacklevel=7,
+            )
         else:
             perm_cyclic = self._settings.get("perm_cyclic", True)
 
@@ -841,7 +844,7 @@ class PrettyPrinter(Printer):
     def _print_Transpose(self, expr):
         pform = self._print(expr.arg)
         from sympy.matrices import MatrixSymbol
-        if not isinstance(expr.arg, MatrixSymbol):
+        if not isinstance(expr.arg, MatrixSymbol) and expr.arg.is_MatrixExpr:
             pform = prettyForm(*pform.parens())
         pform = pform**(prettyForm('T'))
         return pform
@@ -853,7 +856,7 @@ class PrettyPrinter(Printer):
         else:
             dag = prettyForm('+')
         from sympy.matrices import MatrixSymbol
-        if not isinstance(expr.arg, MatrixSymbol):
+        if not isinstance(expr.arg, MatrixSymbol) and expr.arg.is_MatrixExpr:
             pform = prettyForm(*pform.parens())
         pform = pform**dag
         return pform
@@ -2276,6 +2279,8 @@ class PrettyPrinter(Printer):
             return prettyForm(sstr(e))
 
     def _print_FourierSeries(self, s):
+        if s.an.formula is S.Zero and s.bn.formula is S.Zero:
+            return self._print(s.a0)
         if self._use_unicode:
             dots = "\N{HORIZONTAL ELLIPSIS}"
         else:

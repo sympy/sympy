@@ -2,7 +2,7 @@ from operator import attrgetter
 from typing import Tuple as tTuple, Type
 from collections import defaultdict
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 from .sympify import _sympify as _sympify_, sympify
 from .basic import Basic
@@ -26,6 +26,12 @@ class AssocOp(Basic):
 
     This is an abstract base class, concrete derived classes must define
     the attribute `identity`.
+
+    .. deprecated:: 1.7
+
+       Using arguments that aren't subclasses of :class:`~.Expr` in core
+       operators (:class:`~.Mul`, :class:`~.Add`, and :class:`~.Pow`) is
+       deprecated. See :ref:`non-expr-args-deprecated` for details.
 
     Parameters
     ==========
@@ -58,13 +64,22 @@ class AssocOp(Basic):
                 raise TypeError("Relational cannot be used in %s" % cls.__name__)
 
             # This should raise TypeError once deprecation period is over:
-            if not all(isinstance(arg, typ) for arg in args):
-                SymPyDeprecationWarning(
-                    feature="Add/Mul with non-Expr args",
-                    useinstead="Expr args",
-                    issue=19445,
-                    deprecated_since_version="1.7"
-                ).warn()
+            for arg in args:
+                if not isinstance(arg, typ):
+                    sympy_deprecation_warning(
+                        f"""
+
+Using non-Expr arguments in {cls.__name__} is deprecated (in this case, one of
+the arguments has type {type(arg).__name__!r}).
+
+If you really did intend to use a multiplication or addition operation with
+this object, use the * or + operator instead.
+
+                        """,
+                        deprecated_since_version="1.7",
+                        active_deprecations_target="non-expr-args-deprecated",
+                        stacklevel=4,
+                    )
 
         if evaluate is None:
             evaluate = global_parameters.evaluate
@@ -213,6 +228,7 @@ class AssocOp(Basic):
         equivalent.
 
         """
+        from .function import _coeff_isneg
         # make sure expr is Expr if pattern is Expr
         from .expr import Expr
         if isinstance(self, Expr) and not isinstance(expr, Expr):
@@ -254,7 +270,10 @@ class AssocOp(Basic):
                 return None
             newexpr = self._combine_inverse(expr, exact)
             if not old and (expr.is_Add or expr.is_Mul):
-                if newexpr.count_ops() > expr.count_ops():
+                check = newexpr
+                if _coeff_isneg(check):
+                    check = -check
+                if check.count_ops() > expr.count_ops():
                     return None
             newpattern = self._new_rawargs(*wild_part)
             return newpattern.matches(newexpr, repl_dict)

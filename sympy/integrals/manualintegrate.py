@@ -1294,12 +1294,12 @@ def integral_steps(integrand, symbol, **options):
     def key(integral):
         integrand = integral.integrand
 
-        if isinstance(integrand, TrigonometricFunction):
+        if symbol not in integrand.free_symbols:
+            return Number
+        elif isinstance(integrand, TrigonometricFunction):
             return TrigonometricFunction
         elif isinstance(integrand, Derivative):
             return Derivative
-        elif symbol not in integrand.free_symbols:
-            return Number
         else:
             for cls in (Pow, Symbol, exp, log,
                         Add, Mul, *inverse_trig_functions,

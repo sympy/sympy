@@ -9,7 +9,7 @@ Point3D
 When methods of Point require 1 or more points as arguments, they
 can be passed as a sequence of coordinates or Points:
 
->>> from sympy.geometry.point import Point
+>>> from sympy import Point
 >>> Point(1, 1).is_collinear((2, 2), (3, 4))
 False
 >>> Point(1, 1).is_collinear(Point(2, 2), Point(3, 4))
@@ -83,7 +83,7 @@ class Point(GeometryEntity):
     Examples
     ========
 
-    >>> from sympy.geometry import Point
+    >>> from sympy import Point
     >>> from sympy.abc import x
     >>> Point(1, 2, 3)
     Point3D(1, 2, 3)
@@ -145,7 +145,7 @@ class Point(GeometryEntity):
             elif on_morph == "error":
                 raise ValueError(message)
             elif on_morph == 'warn':
-                warnings.warn(message)
+                warnings.warn(message, stacklevel=2)
             else:
                 raise ValueError(filldedent('''
                         on_morph value should be 'error',
@@ -190,7 +190,7 @@ class Point(GeometryEntity):
         Notes
         =====
 
-        >>> from sympy.geometry.point import Point
+        >>> from sympy import Point
 
         When sequences of coordinates are passed to Point methods, they
         are converted to a Point internally. This __add__ method does
@@ -254,7 +254,7 @@ class Point(GeometryEntity):
         Notes
         =====
 
-        >>> from sympy.geometry.point import Point
+        >>> from sympy import Point
 
         When multiplying a Point by a floating point number,
         the coordinates of the Point will be changed to Floats:
@@ -407,7 +407,7 @@ class Point(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy.geometry import Point, Line
+        >>> from sympy import Point, Line
         >>> p1, p2 = Point(1, 1), Point(4, 5)
         >>> l = Line((3, 1), (2, 2))
         >>> p1.distance(p2)
@@ -691,7 +691,7 @@ class Point(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy.geometry import Point
+        >>> from sympy import Point
         >>> p1, p2 = Point(1, 1), Point(13, 5)
         >>> p1.midpoint(p2)
         Point2D(7, 3)
@@ -714,7 +714,7 @@ class Point(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy.geometry import Line, Point
+        >>> from sympy import Line, Point
         >>> a = Point(1, 2, 3)
         >>> a.orthogonal_direction
         Point3D(-2, 1, 0)
@@ -756,7 +756,7 @@ class Point(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy.geometry import Line, Point
+        >>> from sympy import Line, Point
         >>> a = Point(1, 2)
         >>> b = Point(2, 5)
         >>> z = a.origin
@@ -795,7 +795,7 @@ class Point(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy.geometry import Point
+        >>> from sympy import Point
         >>> p1, p2 = Point(1, 1), Point(4, 5)
         >>> p1.taxicab_distance(p2)
         7
@@ -825,7 +825,7 @@ class Point(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy.geometry import Point
+        >>> from sympy import Point
         >>> p1, p2 = Point(1, 1), Point(3, 3)
         >>> p1.canberra_distance(p2)
         1
@@ -888,7 +888,7 @@ class Point2D(Point):
     Examples
     ========
 
-    >>> from sympy.geometry import Point2D
+    >>> from sympy import Point2D
     >>> from sympy.abc import x
     >>> Point2D(1, 2)
     Point2D(1, 2)

@@ -330,3 +330,9 @@ def test_builtins():
     for built_in_func_call, sympy_func_call in cases:
         assert parse_expr(built_in_func_call) == parse_expr(sympy_func_call)
     assert str(parse_expr('pow(38, -1, 97)')) == '23'
+
+
+def test_issue_22822():
+    raises(ValueError, lambda: parse_expr('x', {'': 1}))
+    data = {'some_parameter': None}
+    assert parse_expr('some_parameter is None', data) is True

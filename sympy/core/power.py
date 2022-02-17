@@ -15,7 +15,7 @@ from .relational import is_gt, is_lt
 from .kind import NumberKind, UndefinedKind
 from sympy.external.gmpy import HAS_GMPY, gmpy
 from sympy.utilities.iterables import sift
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import as_int
 from sympy.multipledispatch import Dispatcher
 
@@ -186,6 +186,12 @@ class Pow(Expr):
     """
     Defines the expression x**y as "x raised to a power y"
 
+    .. deprecated:: 1.7
+
+       Using arguments that aren't subclasses of :class:`~.Expr` in core
+       operators (:class:`~.Mul`, :class:`~.Add`, and :class:`~.Pow`) is
+       deprecated. See :ref:`non-expr-args-deprecated` for details.
+
     Singleton definitions involving (0, 1, -1, oo, -oo, I, -I):
 
     +--------------+---------+-----------------------------------------------+
@@ -275,7 +281,6 @@ class Pow(Expr):
     def __new__(cls, b, e, evaluate=None):
         if evaluate is None:
             evaluate = global_parameters.evaluate
-        from sympy.functions.elementary.exponential import exp_polar
 
         b = _sympify(b)
         e = _sympify(e)
@@ -287,13 +292,19 @@ class Pow(Expr):
             raise TypeError('Relational cannot be used in Pow')
 
         # XXX: This should raise TypeError once deprecation period is over:
-        if not (isinstance(b, Expr) and isinstance(e, Expr)):
-            SymPyDeprecationWarning(
-                feature="Pow with non-Expr args",
-                useinstead="Expr args",
-                issue=19445,
-                deprecated_since_version="1.7"
-            ).warn()
+        for arg in [b, e]:
+            if not isinstance(arg, Expr):
+                sympy_deprecation_warning(
+                    f"""
+    Using non-Expr arguments in Pow is deprecated (in this case, one of the
+    arguments is of type {type(arg).__name__!r}).
+
+    If you really did intend to construct a power with this base, use the **
+    operator instead.""",
+                    deprecated_since_version="1.7",
+                    active_deprecations_target="non-expr-args-deprecated",
+                    stacklevel=4,
+                )
 
         if evaluate:
             if e is S.ComplexInfinity:
@@ -339,6 +350,7 @@ class Pow(Expr):
                 return S.One
             else:
                 # recognize base as E
+                from sympy.functions.elementary.exponential import exp_polar
                 if not e.is_Atom and b is not S.Exp1 and not isinstance(b, exp_polar):
                     from .exprtools import factor_terms
                     from sympy.functions.elementary.exponential import log
@@ -496,15 +508,15 @@ class Pow(Expr):
         1. For unevaluated integer power, use built-in ``pow`` function
         with 3 arguments, if powers are not too large wrt base.
 
-        2. For very large powers, use totient reduction if e >= lg(m).
-        Bound on m, is for safe factorization memory wise ie m^(1/4).
-        For pollard-rho to be faster than built-in pow lg(e) > m^(1/4)
+        2. For very large powers, use totient reduction if $e \ge \log(m)$.
+        Bound on m, is for safe factorization memory wise i.e. $m^{1/4}$.
+        For pollard-rho to be faster than built-in pow $\log(e) > m^{1/4}$
         check is added.
 
         3. For any unevaluated power found in `b` or `e`, the step 2
         will be recursed down to the base and the exponent
-        such that the `b \bmod q` becomes the new base and
-        ``\phi(q) + e \bmod \phi(q)`` becomes the new exponent, and then
+        such that the $b \bmod q$ becomes the new base and
+        $\phi(q) + e \bmod \phi(q)$ becomes the new exponent, and then
         the computation for the reduced expression can be done.
         """
 
@@ -1641,7 +1653,8 @@ class Pow(Expr):
         from sympy.simplify.powsimp import powdenest
         self = powdenest(self, force=True).trigsimp()
         b, e = self.as_base_exp()
-        if e.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
+        from .numbers import _illegal
+        if e.has(*_illegal):
             raise PoleError()
 
         if e.has(x):
@@ -1670,7 +1683,10 @@ class Pow(Expr):
             e = logcombine(e).cancel()
 
         if not (m.is_zero or e.is_number and e.is_real):
-            return exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
+            res = exp(e*log(b))._eval_nseries(x, n=n, logx=logx, cdir=cdir)
+            if res is exp(e*log(b)):
+                return self
+            return res
 
         f = b.as_leading_term(x, logx=logx)
         g = (b/f - S.One).cancel(expand=False)
@@ -1822,7 +1838,7 @@ class Pow(Expr):
 
     def _eval_rewrite_as_tanh(self, base, exp):
         if self.base is S.Exp1:
-            from sympy.functions.elementary.trigonometric import tanh
+            from sympy.functions.elementary.hyperbolic import tanh
             return (1 + tanh(self.exp/2))/(1 - tanh(self.exp/2))
 
     def _eval_rewrite_as_sqrt(self, base, exp, **kwargs):

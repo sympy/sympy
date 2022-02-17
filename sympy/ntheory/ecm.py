@@ -193,8 +193,6 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     .. [1]  Carl Pomerance and Richard Crandall "Prime Numbers:
         A Computational Perspective" (2nd Ed.), page 344
     """
-    from sympy.functions.elementary.miscellaneous import sqrt
-    from sympy.polys.polytools import gcd
     n = as_int(n)
     if B1 % 2 != 0 or B2 % 2 != 0:
         raise ValueError("The Bounds should be an even integer")
@@ -203,6 +201,8 @@ def _ecm_one_factor(n, B1=10000, B2=100000, max_curve=200):
     if isprime(n):
         return n
 
+    from sympy.functions.elementary.miscellaneous import sqrt
+    from sympy.polys.polytools import gcd
     curve = 0
     D = int(sqrt(B2))
     beta = [0]*(D + 1)
