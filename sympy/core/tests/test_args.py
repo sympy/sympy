@@ -3518,10 +3518,18 @@ def test_sympy__physics__quantum__gate__ZGate():
     assert _test_args(ZGate(0))
 
 
-@SKIP("TODO: sympy.physics")
+def test_sympy__physics__quantum__grover__OracleGateFunction():
+    from sympy.physics.quantum.grover import OracleGateFunction
+    @OracleGateFunction
+    def f(qubit):
+        return
+    assert _test_args(f)
+
 def test_sympy__physics__quantum__grover__OracleGate():
     from sympy.physics.quantum.grover import OracleGate
-    assert _test_args(OracleGate())
+    def f(qubit):
+        return
+    assert _test_args(OracleGate(1,f))
 
 
 def test_sympy__physics__quantum__grover__WGate():
