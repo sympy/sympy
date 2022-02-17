@@ -19,7 +19,8 @@ class PartialDerivative(TensExpr):
     >>> from sympy import symbols
     >>> L = TensorIndexType("L")
     >>> A = TensorHead("A", [L])
-    >>> i, j = symbols("i j")
+    >>> B = TensorHead("B", [L])
+    >>> i, j, k = symbols("i j k")
 
     >>> expr = PartialDerivative(A(i), A(j))
     >>> expr
@@ -28,7 +29,14 @@ class PartialDerivative(TensExpr):
     The ``PartialDerivative`` object behaves like a tensorial expression:
 
     >>> expr.get_indices()
-    [i, -j]
+    [-j, i]
+
+    Notice that SymPy puts the indices of the deriving variables first in the
+    result of the derivative.
+
+    Also notice that the deriving variables have opposite valence than the
+    printed one: ``A(j)`` is printed as covariant, but the index is actually
+    contravariant in the derivative, i.e. ``-j``.
 
     Indices can be contracted:
 
@@ -36,7 +44,23 @@ class PartialDerivative(TensExpr):
     >>> expr
     PartialDerivative(A(L_0), A(L_0))
     >>> expr.get_indices()
-    [L_0, -L_0]
+    [-L_0, L_0]
+
+    Nested partial derivatives are flattened:
+
+    >>> expr = PartialDerivative(PartialDerivative(A(i), A(j)), A(k))
+    >>> expr
+    PartialDerivative(A(i), A(j), A(k))
+    >>> expr.get_indices()
+    [-k, -j, i]
+
+    Replace a derivative with array values:
+
+    >>> from sympy.abc import x, y
+    >>> from sympy import sin, log
+    >>> expr = PartialDerivative(A(i), B(j))
+    >>> expr.replace_with_arrays({A(i): [sin(x), log(x)*y**3], B(i): [x, y]})
+    [[cos(x), y**3/x], [0, 3*y**2*log(x)]]
     """
 
     def __new__(cls, expr, *variables):
@@ -76,8 +100,10 @@ class PartialDerivative(TensExpr):
             elif isinstance(i, Symbol):
                 variables_opposite_valence.append(i)
 
-        args, indices, free, dum = TensMul._tensMul_contract_indices(
-            [expr] + variables_opposite_valence, replace_indices=True)
+        prev_args, indices, free, dum = TensMul._tensMul_contract_indices(
+            variables_opposite_valence[::-1] + [expr], replace_indices=True)
+
+        args = prev_args[-1:] + prev_args[-2::-1]
 
         for i in range(1, len(args)):
             args_i = args[i]
