@@ -1332,29 +1332,31 @@ def _solve(f, *symbols, **flags):
                 soln = solve_undetermined_coeffs(f, symbols, ex, **flags)
             except NotImplementedError:
                 pass
-        if soln:
-            if flags.get('simplify', True):
-                if isinstance(soln, dict):
-                    for k in soln:
-                        soln[k] = simplify(soln[k])
-                elif isinstance(soln, list):
-                    if isinstance(soln[0], dict):
-                        for d in soln:
-                            for k in d:
-                                d[k] = simplify(d[k])
-                    elif isinstance(soln[0], tuple):
-                        soln = [tuple(simplify(i) for i in j) for j in soln]
+            if soln:
+                if flags.get('simplify', True):
+                    if isinstance(soln, dict):
+                        for k in soln:
+                            soln[k] = simplify(soln[k])
+                    elif isinstance(soln, list):
+                        if isinstance(soln[0], dict):
+                            for d in soln:
+                                for k in d:
+                                    d[k] = simplify(d[k])
+                        elif isinstance(soln[0], tuple):
+                            soln = [tuple(simplify(i) for i in j) for j in soln]
+                        else:
+                            raise TypeError('unrecognized args in list')
+                    elif isinstance(soln, tuple):
+                        sym, sols = soln
+                        soln = sym, {tuple(simplify(i) for i in j) for j in sols}
                     else:
-                        raise TypeError('unrecognized args in list')
-                elif isinstance(soln, tuple):
-                    sym, sols = soln
-                    soln = sym, {tuple(simplify(i) for i in j) for j in sols}
-                else:
-                    raise TypeError('unrecognized solution type')
-            return soln
+                        raise TypeError('unrecognized solution type')
+                return soln
+
         # find first successful solution
-        failed = []
+        nonlin_s = []
         got_s = set()
+        rhs_s = set()
         result = []
         for s in symbols:
             xi, v = solve_linear(f, symbols=[s])
@@ -1363,21 +1365,24 @@ def _solve(f, *symbols, **flags):
                 if flags.get('simplify', True):
                     v = simplify(v)
                 vfree = v.free_symbols
-                if got_s and any(ss in vfree for ss in got_s):
-                    # sol depends on previously solved symbols: discard it
+                if vfree & got_s:
+                    # was linear, but has redundant relationship
+                    # e.g. x - y = 0 has y == x is redundant for x == y
+                    # so ignore
                     continue
+                rhs_s |= vfree
                 got_s.add(xi)
                 result.append({xi: v})
             elif xi:  # there might be a non-linear solution if xi is not 0
-                failed.append(s)
-        if not failed:
+                nonlin_s.append(s)
+        if not nonlin_s:
             return result
-        for s in failed:
+        for s in nonlin_s:
             try:
                 soln = _solve(f, s, **flags)
                 for sol in soln:
-                    if got_s and any(ss in sol.free_symbols for ss in got_s):
-                        # sol depends on previously solved symbols: discard it
+                    if sol.free_symbols & got_s:
+                        # depends on previously solved symbols: ignore
                         continue
                     got_s.add(s)
                     result.append({s: sol})
