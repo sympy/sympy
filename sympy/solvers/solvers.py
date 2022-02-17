@@ -1906,7 +1906,7 @@ def _solve_system(exprs, symbols, **flags):
         # repeating until we are done or we get an equation that can't
         # be solved.
         def _ok_syms(e, sort=False):
-            rv = (e.free_symbols - solved_syms) & legal
+            rv = e.free_symbols & legal
 
             # Solve first for symbols that have lower degree in the equation.
             # Ideally we want to solve firstly for symbols that appear linearly
@@ -1928,13 +1928,11 @@ def _solve_system(exprs, symbols, **flags):
         legal = set(symbols)  # what we are interested in
         # sort so equation with the fewest potential symbols is first
         u = Dummy()  # used in solution checking
-        solved_syms = set()  # ignore for sake of ordering
         for eq in ordered(failed, lambda _: len(_ok_syms(_))):
             newresult = []
             bad_results = []
             got_s = set()
             hit = False
-            solved_syms = set()  # reset for each equation
             for r in result:
                 # update eq with everything that is known so far
                 eq2 = eq.subs(r)
