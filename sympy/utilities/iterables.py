@@ -1,6 +1,6 @@
 from collections import defaultdict, OrderedDict
 from itertools import (
-    combinations, combinations_with_replacement, permutations,
+    chain, combinations, combinations_with_replacement, permutations,
     product
 )
 
@@ -398,7 +398,7 @@ def ibin(n, bits=None, str=False):
 
 
 def variations(seq, n, repetition=False):
-    r"""Returns a generator of the n-sized variations of ``seq`` (size N).
+    r"""Returns an iterator over the n-sized variations of ``seq`` (size N).
     ``repetition`` controls whether items in ``seq`` can appear more than once;
 
     Examples
@@ -433,13 +433,13 @@ def variations(seq, n, repetition=False):
     if not repetition:
         seq = tuple(seq)
         if len(seq) < n:
-            return
-        yield from permutations(seq, n)
+            return iter(())  # 0 length iterator
+        return permutations(seq, n)
     else:
         if n == 0:
-            yield ()
+            return iter(((),))  # yields 1 empty tuple
         else:
-            yield from product(seq, repeat=n)
+            return product(seq, repeat=n)
 
 
 def subsets(seq, k=None, repetition=False):
@@ -483,13 +483,17 @@ def subsets(seq, k=None, repetition=False):
 
     """
     if k is None:
-        for k in range(len(seq) + 1):
-            yield from subsets(seq, k, repetition)
+        if not repetition:
+            return chain.from_iterable((combinations(seq, k)
+                                        for k in range(len(seq) + 1)))
+        else:
+            return chain.from_iterable((combinations_with_replacement(seq, k)
+                                        for k in range(len(seq) + 1)))
     else:
         if not repetition:
-            yield from combinations(seq, k)
+            return combinations(seq, k)
         else:
-            yield from combinations_with_replacement(seq, k)
+            return combinations_with_replacement(seq, k)
 
 
 def filter_symbols(iterator, exclude):
