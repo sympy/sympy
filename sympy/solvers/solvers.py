@@ -1963,7 +1963,7 @@ def _solve_system(exprs, symbols, **flags):
                         continue
                     # put each solution in r and append the now-expanded
                     # result in the new result list; use copy since the
-                    # solution for s in being added in-place
+                    # solution for s is being added in-place
                     for sol in soln:
                         if got_s and any(ss in sol.free_symbols for ss in got_s):
                             # sol depends on previously solved symbols: discard it
