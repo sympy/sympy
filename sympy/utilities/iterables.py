@@ -398,7 +398,7 @@ def ibin(n, bits=None, str=False):
 
 
 def variations(seq, n, repetition=False):
-    r"""Returns a generator of the n-sized variations of ``seq`` (size N).
+    r"""Returns an iterator over the n-sized variations of ``seq`` (size N).
     ``repetition`` controls whether items in ``seq`` can appear more than once;
 
     Examples
@@ -433,11 +433,11 @@ def variations(seq, n, repetition=False):
     if not repetition:
         seq = tuple(seq)
         if len(seq) < n:
-            return (val for val in [])  # 0 length generator
+            return iter(())  # 0 length iterator
         return permutations(seq, n)
     else:
         if n == 0:
-            return (val for val in [()])   # yields 1 empty tuple
+            return iter(((),))  # yields 1 empty tuple
         else:
             return product(seq, repeat=n)
 
