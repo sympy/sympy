@@ -444,7 +444,7 @@ def trigsimp(expr, **opts):
         If ``'matching'``, simplify the expression recursively by targeting
         common patterns. If ``'groebner'``, apply an experimental groebner
         basis algorithm. In this case further options are forwarded to
-        :py:func:`~sympy.simplify.trigsimp.trigsimp_groebner`, please refer to
+        ``trigsimp_groebner``, please refer to
         its docstring. If ``'combined'``, it first runs the groebner basis
         algorithm with small default parameters, then runs the ``'matching'``
         algorithm. If ``'fu'``, run the collection of trigonometric
