@@ -145,7 +145,7 @@ class Point(GeometryEntity):
             elif on_morph == "error":
                 raise ValueError(message)
             elif on_morph == 'warn':
-                warnings.warn(message)
+                warnings.warn(message, stacklevel=2)
             else:
                 raise ValueError(filldedent('''
                         on_morph value should be 'error',

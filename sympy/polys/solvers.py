@@ -1,7 +1,7 @@
 """Low-level linear systems solver. """
 
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import connected_components
 
 from sympy.core.sympify import sympify
@@ -22,21 +22,26 @@ class PolyNonlinearError(Exception):
 
 class RawMatrix(MutableDenseMatrix):
     """
-    XXX: This class is broken by design. Use DomainMatrix if you want a matrix
-    over the polys domains or Matrix for a matrix with Expr elements. The
-    RawMatrix class will be removed/broken in future in order to reestablish
-    the invariant that the elements of a Matrix should be of type Expr.
+    .. deprecated:: 1.9
+
+       This class fundamentally is broken by design. Use ``DomainMatrix`` if
+       you want a matrix over the polys domains or ``Matrix`` for a matrix
+       with ``Expr`` elements. The ``RawMatrix`` class will be removed/broken
+       in future in order to reestablish the invariant that the elements of a
+       Matrix should be of type ``Expr``.
+
     """
     _sympify = staticmethod(lambda x: x)
 
     def __init__(self, *args, **kwargs):
-
-        SymPyDeprecationWarning(
-            feature="RawMatrix class",
-            useinstead="DomainMatrix or Matrix",
-            issue=21405,
-            deprecated_since_version="1.9"
-        ).warn()
+        sympy_deprecation_warning(
+            """
+            The RawMatrix class is deprecated. Use either DomainMatrix or
+            Matrix instead.
+            """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-rawmatrix",
+        )
 
         domain = ZZ
         for i in range(self.rows):

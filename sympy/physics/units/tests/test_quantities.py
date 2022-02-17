@@ -375,7 +375,8 @@ def test_factor_and_dimension_with_Abs():
         v_w1 = Quantity('v_w1', length/time, Rational(3, 2)*meter/second)
     v_w1.set_global_relative_scale_factor(Rational(3, 2), meter/second)
     expr = v_w1 - Abs(v_w1)
-    assert (0, length/time) == Quantity._collect_factor_and_dimension(expr)
+    with warns_deprecated_sympy():
+        assert (0, length/time) == Quantity._collect_factor_and_dimension(expr)
 
 
 def test_dimensional_expr_of_derivative():

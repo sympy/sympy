@@ -38,7 +38,7 @@ class NonInvertibleCipherWarning(RuntimeWarning):
     def __str__(self):
         return '\n\t' + self.fullMessage
 
-    def warn(self, stacklevel=2):
+    def warn(self, stacklevel=3):
         warnings.warn(self, stacklevel=stacklevel)
 
 
@@ -1557,7 +1557,9 @@ def _rsa_key(*args, public=True, private=True, totient='Euler', index=None, mult
                 'the flag multipower=True if you want to suppress this '
                 'warning.'
                 .format(primes, n, n)
-                ).warn()
+                # stacklevel=4 because most users will call a function that
+                # calls this function
+                ).warn(stacklevel=4)
         phi = _totient._from_factors(tally)
 
     if igcd(e, phi) == 1:
@@ -1675,7 +1677,7 @@ def rsa_public_key(*args, **kwargs):
     multipower : bool, optional
         Any pair of non-distinct primes found in the RSA specification
         will restrict the domain of the cryptosystem, as noted in the
-        explaination of the parameter ``args``.
+        explanation of the parameter ``args``.
 
         SymPy RSA key generator may give a warning before dispatching it
         as a multi-power RSA, however, you can disable the warning if

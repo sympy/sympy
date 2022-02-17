@@ -7,7 +7,7 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin
 from sympy.simplify.simplify import simplify as _simplify
 from sympy.utilities.decorator import doctest_depends_on
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import is_sequence
 
 from .common import ShapeError
@@ -38,12 +38,14 @@ class DenseMatrix(RepMatrix):
 
     @property
     def _mat(self):
-
-        SymPyDeprecationWarning(
-            feature="The private _mat attribute of Matrix",
-            useinstead="the .flat() method",
-            issue=21715,
-            deprecated_since_version="1.9").warn()
+        sympy_deprecation_warning(
+            """
+            The private _mat attribute of Matrix is deprecated. Use the
+            .flat() method instead.
+            """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-private-matrix-attributes"
+        )
 
         return self.flat()
 

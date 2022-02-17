@@ -22,7 +22,7 @@ from sympy.core.sympify import _sympify, sympify, _sympy_converter
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import And, Or, Not, Xor, true, false
 from sympy.utilities.decorator import deprecated
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import (iproduct, sift, roundrobin, iterable,
                                        subsets)
 from sympy.utilities.misc import func_name, filldedent
@@ -71,8 +71,14 @@ class Set(Basic, EvalfMixin):
     is_finite_set = None  # type: FuzzyBool
 
     @property  # type: ignore
-    @deprecated(useinstead="is S.EmptySet or is_empty",
-            issue=16946, deprecated_since_version="1.5")
+    @deprecated(
+        """
+        The is_EmptySet attribute of Set objects is deprecated.
+        Use 's is S.EmptySet" or 's.is_empty' instead.
+        """,
+        deprecated_since_version="1.5",
+        active_deprecations_target="deprecated-is-emptyset",
+    )
     def is_EmptySet(self):
         return None
 
@@ -748,12 +754,13 @@ class ProductSet(Set):
 
     def __new__(cls, *sets, **assumptions):
         if len(sets) == 1 and iterable(sets[0]) and not isinstance(sets[0], (Set, set)):
-            SymPyDeprecationWarning(
-                feature="ProductSet(iterable)",
-                useinstead="ProductSet(*iterable)",
-                issue=17557,
-                deprecated_since_version="1.5"
-            ).warn()
+            sympy_deprecation_warning(
+                """
+ProductSet(iterable) is deprecated. Use ProductSet(*iterable) instead.
+                """,
+                deprecated_since_version="1.5",
+                active_deprecations_target="deprecated-productset-iterable",
+            )
             sets = tuple(sets[0])
 
         sets = [sympify(s) for s in sets]
@@ -1658,8 +1665,14 @@ class EmptySet(Set, metaclass=Singleton):
     is_FiniteSet = True
 
     @property  # type: ignore
-    @deprecated(useinstead="is S.EmptySet or is_empty",
-            issue=16946, deprecated_since_version="1.5")
+    @deprecated(
+        """
+        The is_EmptySet attribute of Set objects is deprecated.
+        Use 's is S.EmptySet" or 's.is_empty' instead.
+        """,
+        deprecated_since_version="1.5",
+        active_deprecations_target="deprecated-is-emptyset",
+    )
     def is_EmptySet(self):
         return True
 

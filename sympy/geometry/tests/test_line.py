@@ -13,7 +13,7 @@ from sympy.geometry import (Circle, GeometryError, Line, Point, Ray,
 from sympy.geometry.line import Undecidable
 from sympy.geometry.polygon import _asa as asa
 from sympy.utilities.iterables import cartes
-from sympy.testing.pytest import raises, warns
+from sympy.testing.pytest import raises, warns, warns_deprecated_sympy
 
 
 x = Symbol('x', real=True)
@@ -325,10 +325,10 @@ def test_contains():
     assert r3.contains(Point3D(0, 0, 0)) is True
     assert Ray3D(Point3D(1, 1, 1), Point3D(1, 0, 0)).contains([]) is False
     assert Line3D((0, 0, 0), (x, y, z)).contains((2 * x, 2 * y, 2 * z))
-    with warns(UserWarning):
+    with warns(UserWarning, test_stacklevel=False):
         assert Line3D(p1, Point3D(0, 1, 0)).contains(Point(1.0, 1.0)) is False
 
-    with warns(UserWarning):
+    with warns(UserWarning, test_stacklevel=False):
         assert r3.contains(Point(1.0, 1.0)) is False
 
 
@@ -369,7 +369,7 @@ def test_distance_2d():
 
 
 def test_dimension_normalization():
-    with warns(UserWarning):
+    with warns(UserWarning, test_stacklevel=False):
         assert Ray((1, 1), (2, 1, 2)) == Ray((1, 1, 0), (2, 1, 2))
 
 
@@ -470,6 +470,10 @@ def test_equation():
         ).equation() == (x - 1, z - 3)
     assert Line3D(Point(1, 2, 3), Point(2, 2, 3)
         ).equation() == (y - 2, z - 3)
+
+    with warns_deprecated_sympy():
+        assert Line3D(Point(1, 2, 3), Point(2, 2, 3)
+        ).equation(k='k') == (y - 2, z - 3)
 
 
 def test_intersection_2d():

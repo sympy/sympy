@@ -1,3 +1,5 @@
+.. _sets-module:
+
 ====
 Sets
 ====

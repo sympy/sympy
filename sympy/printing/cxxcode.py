@@ -1,15 +1,21 @@
 """
-This is a shim file to provide backwards compatibility (cxxcode.py was renamed
-to cxx.py in SymPy 1.7).
+.. deprecated:: 1.7
+
+   cxxcode.py was deprecated and renamed to cxx.py. This is a shim file to
+   provide backwards compatibility.
+
 """
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
-SymPyDeprecationWarning(
-    feature="importing from sympy.printing.cxxcode",
-    useinstead="Import from sympy.printing.cxx",
-    issue=20256,
-    deprecated_since_version="1.7").warn()
+sympy_deprecation_warning(
+    """
+    The sympy.printing.cxxcode submodule is deprecated. It has been renamed to
+    sympy.printing.cxx.
+    """,
+    deprecated_since_version="1.7",
+    active_deprecations_target="deprecated-printing-code-submodules",
+)
 
 from .cxx import (cxxcode, reserved, CXX98CodePrinter, # noqa:F401
                   CXX11CodePrinter, CXX17CodePrinter, cxx_code_printers)
