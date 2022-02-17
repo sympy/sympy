@@ -653,7 +653,7 @@ class BlockDiagMatrix(BlockMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import BlockDiagMatrix, Matrix
+        >>> from sympy import BlockDiagMatrix, Matrix
 
         >>> A = Matrix([[1, 2], [3, 4]])
         >>> B = Matrix([[5, 6], [7, 8]])
@@ -777,7 +777,7 @@ def bc_dist(expr):
         new_B = [
             [factor * B[i, j] for j in range(B.cols)] for i in range(B.rows)]
         return BlockMatrix(new_B)
-    return unpacked
+    return expr
 
 
 def bc_matmul(expr):

@@ -114,8 +114,8 @@ def solve_poly_inequalities(polys):
     Examples
     ========
 
+    >>> from sympy import Poly
     >>> from sympy.solvers.inequalities import solve_poly_inequalities
-    >>> from sympy.polys import Poly
     >>> from sympy.abc import x
     >>> solve_poly_inequalities(((
     ... Poly(x**2 - 3), ">"), (

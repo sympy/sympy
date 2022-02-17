@@ -13,7 +13,12 @@ from sympy.core.sorting import default_sort_key
 from sympy.core.symbol import Dummy
 
 from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
-        sinh, cosh, asinh, acosh, atanh, acoth, Abs, re, factorial, RisingFactorial)
+        sinh, cosh, asinh, acosh, atanh, acoth)
+from sympy.functions import factorial, RisingFactorial
+from sympy.functions.elementary.complexes import Abs, re, unpolarify
+from sympy.functions.elementary.exponential import exp_polar
+from sympy.functions.elementary.integers import ceiling
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.logic.boolalg import (And, Or)
 
 class TupleArg(Tuple):
@@ -45,7 +50,6 @@ def _prep_tuple(v):
     (7, 8, 9)
 
     """
-    from sympy.functions.elementary.complexes import unpolarify
     return TupleArg(*[unpolarify(x) for x in v])
 
 
@@ -191,7 +195,6 @@ class hyper(TupleParametersBase):
 
     @classmethod
     def eval(cls, ap, bq, z):
-        from sympy.functions.elementary.complexes import unpolarify
         if len(ap) <= len(bq) or (len(ap) == len(bq) + 1 and (Abs(z) <= 1) == True):
             nz = unpolarify(z)
             if z != nz:
@@ -215,7 +218,6 @@ class hyper(TupleParametersBase):
         return hyperexpand(self)
 
     def _eval_rewrite_as_Sum(self, ap, bq, z, **kwargs):
-        from sympy.functions import factorial, RisingFactorial, Piecewise
         from sympy.concrete.summations import Sum
         n = Dummy("n", integer=True)
         rfap = Tuple(*[RisingFactorial(a, n) for a in ap])
@@ -669,7 +671,6 @@ class meijerg(TupleParametersBase):
         # less than (say) n*pi, we put r=1/n, compute z' = root(z, n)
         # (carefully so as not to loose the branch information), and evaluate
         # G(z'**(1/r)) = G(z'**n) = G(z).
-        from sympy.functions import exp_polar, ceiling
         import mpmath
         znum = self.argument._eval_evalf(prec)
         if znum.has(exp_polar):
@@ -783,7 +784,6 @@ class HyperRep(Function):
 
     @classmethod
     def eval(cls, *args):
-        from sympy.functions.elementary.complexes import unpolarify
         newargs = tuple(map(unpolarify, args[:-1])) + args[-1:]
         if args != newargs:
             return cls(*newargs)
@@ -809,7 +809,6 @@ class HyperRep(Function):
         raise NotImplementedError
 
     def _eval_rewrite_as_nonrep(self, *args, **kwargs):
-        from sympy.functions.elementary.piecewise import Piecewise
         x, n = self.args[-1].extract_branch_factor(allow_half=True)
         minus = False
         newargs = self.args[:-1] + (x,)

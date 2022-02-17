@@ -41,12 +41,13 @@ pip install\
   cython\
   llvmlite\
   wurlitzer\
-  autowrap\
   numexpr\
   'antlr4-python3-runtime==4.7.*'\
   sphinx\
   sphinx-math-dollar\
   sphinx-reredirects\
+  myst-parser\
+  linkify-it-py\
   #
 
 pip freeze > requirements.txt

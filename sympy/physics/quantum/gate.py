@@ -24,6 +24,7 @@ from sympy.core.power import Pow
 from sympy.core.numbers import Number
 from sympy.core.singleton import S as _S
 from sympy.core.sorting import default_sort_key
+from sympy.core.sympify import _sympify
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.printing.pretty.stringpict import prettyForm, stringPict
 
@@ -520,6 +521,8 @@ class UGate(Gate):
         mat = args[1]
         if not isinstance(mat, MatrixBase):
             raise TypeError('Matrix expected, got: %r' % mat)
+        #make sure this matrix is of a Basic type
+        mat = _sympify(mat)
         dim = 2**len(targets)
         if not all(dim == shape for shape in mat.shape):
             raise IndexError(
@@ -871,7 +874,7 @@ class CNotGate(HermitianOperator, CGate, TwoQubitGate):
 
     """
     gate_name = 'CNOT'
-    gate_name_latex = 'CNOT'
+    gate_name_latex = r'\text{CNOT}'
     simplify_cgate = True
 
     #-------------------------------------------------------------------------
@@ -977,7 +980,7 @@ class SwapGate(TwoQubitGate):
 
     """
     gate_name = 'SWAP'
-    gate_name_latex = 'SWAP'
+    gate_name_latex = r'\text{SWAP}'
 
     def get_target_matrix(self, format='sympy'):
         return matrix_cache.get_matrix('SWAP', format)

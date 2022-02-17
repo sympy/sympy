@@ -108,7 +108,7 @@ def _buchberger(f, ring):
         else:
             h = h.monic()
 
-            if not h in I:
+            if h not in I:
                 I[h] = len(f)
                 f.append(h)
 

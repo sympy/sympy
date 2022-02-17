@@ -117,8 +117,8 @@ else:
 
 @doctest_depends_on(modules=('matchpy',))
 class _WildAbstract(Wildcard, Symbol):
-    min_length: int # abstract field required in subclasses
-    fixed_size: bool # abstract field required in subclasses
+    min_length: int  # abstract field required in subclasses
+    fixed_size: bool  # abstract field required in subclasses
 
     def __init__(self, variable_name=None, optional=None, **assumptions):
         min_length = self.min_length
@@ -127,12 +127,21 @@ class _WildAbstract(Wildcard, Symbol):
             optional = _sympify(optional)
         Wildcard.__init__(self, min_length, fixed_size, str(variable_name), optional)
 
+    def __getstate__(self):
+        return {
+            "min_length": self.min_length,
+            "fixed_size": self.fixed_size,
+            "min_count": self.min_count,
+            "variable_name": self.variable_name,
+            "optional": self.optional,
+        }
+
     def __new__(cls, variable_name=None, optional=None, **assumptions):
         cls._sanitize(assumptions, cls)
         return _WildAbstract.__xnew__(cls, variable_name, optional, **assumptions)
 
     def __getnewargs__(self):
-        return self.min_count, self.fixed_size, self.variable_name, self.optional
+        return self.variable_name, self.optional
 
     @staticmethod
     def __xnew__(cls, variable_name=None, optional=None, **assumptions):

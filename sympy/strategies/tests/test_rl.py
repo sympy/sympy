@@ -5,9 +5,9 @@ from sympy.core.basic import Basic
 
 def test_rm_id():
     rmzeros = rm_id(lambda x: x == 0)
-    assert rmzeros(Basic(0, 1)) == Basic(1)
-    assert rmzeros(Basic(0, 0)) == Basic(0)
-    assert rmzeros(Basic(2, 1)) == Basic(2, 1)
+    assert rmzeros(Basic(S(0), S(1))) == Basic(S(1))
+    assert rmzeros(Basic(S(0), S(0))) == Basic(S(0))
+    assert rmzeros(Basic(S(2), S(1))) == Basic(S(2), S(1))
 
 def test_glom():
     from sympy.core.add import Add
@@ -22,24 +22,24 @@ def test_glom():
     assert  set(result.args) == set(expected.args)
 
 def test_flatten():
-    assert flatten(Basic(1, 2, Basic(3, 4))) == Basic(1, 2, 3, 4)
+    assert flatten(Basic(S(1), S(2), Basic(S(3), S(4)))) == \
+            Basic(S(1), S(2), S(3), S(4))
 
 def test_unpack():
-    assert unpack(Basic(2)) == 2
-    assert unpack(Basic(2, 3)) == Basic(2, 3)
+    assert unpack(Basic(S(2))) == 2
+    assert unpack(Basic(S(2), S(3))) == Basic(S(2), S(3))
 
 def test_sort():
-    assert sort(str)(Basic(3,1,2)) == Basic(1,2,3)
+    assert sort(str)(Basic(S(3),S(1),S(2))) == Basic(S(1),S(2),S(3))
 
 def test_distribute():
     class T1(Basic):        pass
     class T2(Basic):        pass
 
     distribute_t12 = distribute(T1, T2)
-    assert distribute_t12(T1(1, 2, T2(3, 4), 5)) == \
-            T2(T1(1, 2, 3, 5),
-               T1(1, 2, 4, 5))
-    assert distribute_t12(T1(1, 2, 3)) == T1(1, 2, 3)
+    assert distribute_t12(T1(S(1), S(2), T2(S(3), S(4)), S(5))) == \
+            T2(T1(S(1), S(2), S(3), S(5)), T1(S(1), S(2), S(4), S(5)))
+    assert distribute_t12(T1(S(1), S(2), S(3))) == T1(S(1), S(2), S(3))
 
 def test_distribute_add_mul():
     from sympy.core.add import Add

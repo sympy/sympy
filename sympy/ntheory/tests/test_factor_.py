@@ -116,8 +116,8 @@ def test_multiplicity_in_factorial():
 
 
 def test_perfect_power():
-    raises(ValueError, lambda: perfect_power(0))
-    raises(ValueError, lambda: perfect_power(Rational(25, 4)))
+    raises(ValueError, lambda: perfect_power(0.1))
+    assert perfect_power(0) is False
     assert perfect_power(1) is False
     assert perfect_power(2) is False
     assert perfect_power(3) is False
@@ -156,6 +156,12 @@ def test_perfect_power():
         assert m and m[1] == d or d == 1
         m = perfect_power(t*3**d, big=False)
         assert m and m[1] == 2 or d == 1 or d == 3, (d, m)
+
+    # negatives and non-integer rationals
+    assert perfect_power(-4) is False
+    assert perfect_power(-8) == (-2, 3)
+    assert perfect_power(Rational(1, 2)**3) == (S.Half, 3)
+    assert perfect_power(Rational(-3, 2)**3) == (-3*S.Half, 3)
 
 
 @slow

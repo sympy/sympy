@@ -284,6 +284,10 @@ def simple_cythonize(src, destdir=None, cwd=None, **cy_kwargs):
     try:
         cy_options = CompilationOptions(default_options)
         cy_options.__dict__.update(cy_kwargs)
+        # Set language_level if not set by cy_kwargs
+        # as not setting it is deprecated
+        if 'language_level' not in cy_kwargs:
+            cy_options.__dict__['language_level'] = 3
         cy_result = cy_compile([src], cy_options)
         if cy_result.num_errors > 0:
             raise ValueError("Cython compilation failed.")

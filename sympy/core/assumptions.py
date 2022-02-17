@@ -210,7 +210,7 @@ References
 
 """
 
-from .facts import FactRules, FactKB
+from .facts import FactRules, FactKB, InconsistentAssumptions
 from .core import BasicMeta
 from .sympify import sympify
 
@@ -515,7 +515,25 @@ def _ask(fact, obj):
 
     # Store None into the assumptions so that recursive attempts at
     # evaluating the same fact don't trigger infinite recursion.
-    assumptions._tell(fact, None)
+    #
+    # Potentially in a multithreaded context it is possible that the
+    # assumptions query for fact was already resolved in another thread. If
+    # that happens and the query was resolved as True or False then
+    # assumptions._tell will raise InconsistentAssumptions because of the
+    # attempt to replace True/False with None. In that case it should be safe
+    # to catch the exception and return the result that was computed in the
+    # other thread.
+    #
+    # XXX: Ideally this call to assumptions._tell would be removed. Its purpose
+    # is to guard against infinite recursion if a query for one fact attempts
+    # to evaluate a related fact for the same object. However really this is
+    # just masking bugs because a query for a fact about obj should only query
+    # the properties of obj.args and not obj itself. This is not easy to change
+    # though because it requires fixing all of the buggy _eval_is_* handlers.
+    try:
+        assumptions._tell(fact, None)
+    except InconsistentAssumptions:
+        return assumptions[fact]
 
     # First try the assumption evaluation function if it exists
     try:

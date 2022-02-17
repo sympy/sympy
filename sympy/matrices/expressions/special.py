@@ -101,7 +101,7 @@ class Identity(MatrixExpr):
     Examples
     ========
 
-    >>> from sympy.matrices import Identity, MatrixSymbol
+    >>> from sympy import Identity, MatrixSymbol
     >>> A = MatrixSymbol('A', 3, 5)
     >>> I = Identity(3)
     >>> I*A

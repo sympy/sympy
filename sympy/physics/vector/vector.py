@@ -522,6 +522,8 @@ class Vector(Printable, EvalfMixin):
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Axis', [q1, N.y])
         >>> A.x.diff(t, N)
+        - sin(q1)*q1'*N.x - cos(q1)*q1'*N.z
+        >>> A.x.diff(t, N).express(A)
         - q1'*A.z
         >>> B = ReferenceFrame('B')
         >>> u1, u2 = dynamicsymbols('u1, u2')
@@ -553,7 +555,7 @@ class Vector(Printable, EvalfMixin):
                 else:  # else express in the frame
                     reexp_vec_comp = Vector([vector_component]).express(frame)
                     deriv = reexp_vec_comp.args[0][0].diff(var)
-                    inlist += Vector([(deriv, frame)]).express(component_frame).args
+                    inlist += Vector([(deriv, frame)]).args
 
         return Vector(inlist)
 
