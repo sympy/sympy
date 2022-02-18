@@ -111,6 +111,19 @@ Now you can do the same with
 21
 ```
 
+(deprecated-carmichael-static-methods)=
+### Redundant static methods in `carmichael`
+
+A number of static methods in `~.carmichael` are just wrappers around other
+functions. Instead of ``carmichael.is_perfect_square`` use
+`sympy.ntheory.primetest.is_square` and instead of ``carmichael.is_prime`` use
+`~.isprime`. Finally, ``carmichael.divides`` can be replaced by instead checking
+
+```py
+n % p == 0
+```
+
+
 ## Version 1.10
 
 (deprecated-traversal-functions-moved)=
