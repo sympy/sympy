@@ -808,14 +808,11 @@ def solve(f, *symbols, **flags):
         particular=True (default is False)
             Instructs ``solve`` to try to find a particular solution to
             a linear system with as many zeros as possible; this is very
-            expensive. This flag is automatically set to True if
-            ``quick`` is not None.
-        quick=True (default is False if particular is True)
-            Used only in the context of particular=True; a value of True
-            selects a fast heuristic to find a solution with many zeros
+            expensive.
+        quick=True (default is False; ``particular`` must be True)
+            Selects a fast heuristic to find a solution with many zeros
             whereas a value of False uses the very slow method guaranteed
-            to find the largest number of zeros possible. Setting this
-            flag automatically sets the ``particular`` flag to True.
+            to find the largest number of zeros possible.
         cubics=True (default)
             Return explicit solutions when cubic expressions are encountered.
             When False, quartics and quintics are disabled, too.
@@ -855,11 +852,12 @@ def solve(f, *symbols, **flags):
     # check flag usage for particular/quick which should only be used
     # with systems of equations
     if flags.get('quick', None) is not None:
-        flags['particular'] = True  # quick trumps particular
+        if not flags.get('particular', None):
+            raise ValueError('when using `quick`, `particular` should be True')
     if flags.get('particular', False) and bare_f:
         raise ValueError(filldedent("""
             The 'particular/quick' flag is usually used with systems of
-            equations. Either pass your equation as a list or
+            equations. Either pass your equation in a list or
             consider using a solver like `diophantine` if you are
             looking for a solution in integers."""))
 
@@ -2243,7 +2241,7 @@ def minsolve_linear_system(system, *symbols, **flags):
             k = max((k for k in s.values()),
                     key=lambda x: (len(x.free_symbols), default_sort_key(x)))
             kfree = k.free_symbols
-            x = next(reversed(ordered(kfree)))
+            x = next(reversed(list(ordered(kfree))))
             if len(kfree) != 1:
                 determined[x] = S.Zero
             else:
