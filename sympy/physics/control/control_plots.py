@@ -1,4 +1,6 @@
-from sympy import I, log, apart, exp
+from sympy.core.numbers import I
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.polys.partfrac import apart
 from sympy.core.symbol import Dummy
 from sympy.external import import_module
 from sympy.functions import arg, Abs
@@ -40,6 +42,8 @@ def _check_system(system):
             " that there are no free symbols in the dynamical system other"
             " than the variable of Laplace transform.")
     if sys.has(exp):
+        # Should test that exp is not part of a constant, in which case
+        # no exception is required, compare exp(s) with s*exp(1)
         raise NotImplementedError("Time delay terms are not supported.")
 
 
@@ -99,8 +103,8 @@ def pole_zero_numerical_data(system):
     num_poly = Poly(system.num, system.var).all_coeffs()
     den_poly = Poly(system.den, system.var).all_coeffs()
 
-    num_poly = np.array(num_poly, dtype=np.float64)
-    den_poly = np.array(den_poly, dtype=np.float64)
+    num_poly = np.array(num_poly, dtype=np.complex128)
+    den_poly = np.array(den_poly, dtype=np.complex128)
 
     zeros = np.roots(num_poly)
     poles = np.roots(den_poly)
@@ -743,7 +747,7 @@ def bode_magnitude_plot(system, initial_exp=-5, final_exp=5,
     plt.plot(x, y, color=color, **kwargs)
     plt.xscale('log')
 
-    plt.xlabel('Frequency (Hz) [Log Scale]')
+    plt.xlabel('Frequency (rad/s) [Log Scale]')
     plt.ylabel('Magnitude (dB)')
     plt.title(f'Bode Plot (Magnitude) of ${latex(system)}$', pad=20)
 

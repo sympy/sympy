@@ -21,17 +21,21 @@ R3 are currently the only ambient spaces implemented.
 """
 
 from sympy.core.basic import Basic
-from sympy.core.compatibility import is_sequence
 from sympy.core.containers import Tuple
-from sympy.core.evalf import EvalfMixin
+from sympy.core.evalf import EvalfMixin, N
+from sympy.core.numbers import oo
+from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
-from sympy.functions import cos, sin
+from sympy.functions.elementary.trigonometric import cos, sin, atan
 from sympy.matrices import eye
 from sympy.multipledispatch import dispatch
-from sympy.sets import Set
+from sympy.printing import sstr
+from sympy.sets import Set, Union, FiniteSet
 from sympy.sets.handlers.intersection import intersection_sets
 from sympy.sets.handlers.union import union_sets
+from sympy.solvers.solvers import solve
 from sympy.utilities.misc import func_name
+from sympy.utilities.iterables import is_sequence
 
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
@@ -99,7 +103,7 @@ class GeometryEntity(Basic, EvalfMixin):
 
     def __contains__(self, other):
         """Subclasses should implement this method for anything more complex than equality."""
-        if type(self) == type(other):
+        if type(self) is type(other):
             return self == other
         raise NotImplementedError()
 
@@ -146,7 +150,6 @@ class GeometryEntity(Basic, EvalfMixin):
 
     def __str__(self):
         """String representation of a GeometryEntity."""
-        from sympy.printing import sstr
         return type(self).__name__ + sstr(self.args)
 
     def _eval_subs(self, old, new):
@@ -162,8 +165,6 @@ class GeometryEntity(Basic, EvalfMixin):
 
     def _repr_svg_(self):
         """SVG representation of a GeometryEntity suitable for IPython"""
-
-        from sympy.core.evalf import N
 
         try:
             bounds = self.bounds
@@ -382,7 +383,7 @@ class GeometryEntity(Basic, EvalfMixin):
         Circle(Point2D(-pi, pi), -5)
 
         """
-        from sympy import atan, Point, Dummy, oo
+        from sympy.geometry.point import Point
 
         g = self
         l = line
@@ -520,8 +521,6 @@ class GeometryEntity(Basic, EvalfMixin):
         Point2D(1, 1)
         """
         from sympy.geometry.point import Point
-        from sympy.core.symbol import Dummy
-        from sympy.solvers.solvers import solve
         if not isinstance(other, GeometryEntity):
             other = Point(other, dim=self.ambient_dimension)
         if not isinstance(other, Point):
@@ -550,7 +549,6 @@ def union_sets(self, o): # noqa:F811
     """ Returns the union of self and o
     for use with sympy.sets.Set, if possible. """
 
-    from sympy.sets import Union, FiniteSet
 
     # if its a FiniteSet, merge any points
     # we contain and return a union with the rest
@@ -569,8 +567,7 @@ def intersection_sets(self, o): # noqa:F811
     """ Returns a sympy.sets.Set of intersection objects,
     if possible. """
 
-    from sympy.sets import FiniteSet, Union
-    from sympy.geometry import Point
+    from sympy.geometry.point import Point
 
     try:
         # if o is a FiniteSet, find the intersection directly

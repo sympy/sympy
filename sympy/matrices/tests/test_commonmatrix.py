@@ -21,7 +21,7 @@ from sympy.matrices import (Matrix, diag, eye,
 from sympy.polys.polytools import Poly
 from sympy.utilities.iterables import flatten
 from sympy.testing.pytest import raises, XFAIL, warns_deprecated_sympy
-from sympy import Array
+from sympy.tensor.array.dense_ndim_array import ImmutableDenseNDimArray as Array
 
 from sympy.abc import x, y, z
 
@@ -182,7 +182,7 @@ def test_get_diag_blocks2():
 
 def test_shape():
     m = ShapingOnlyMatrix(1, 2, [0, 0])
-    m.shape == (1, 2)
+    assert m.shape == (1, 2)
 
 
 def test_reshape():
@@ -790,6 +790,15 @@ def test_multiplication():
         assert c[1, 0] == 3*5
         assert c[1, 1] == 0
 
+    # https://github.com/sympy/sympy/issues/22353
+    A = Matrix(ones(3, 1))
+    _h = -Rational(1, 2)
+    B = Matrix([_h, _h, _h])
+    assert A.multiply_elementwise(B) == Matrix([
+        [_h],
+        [_h],
+        [_h]])
+
 
 def test_matmul():
     a = Matrix([[1, 2], [3, 4]])
@@ -1175,8 +1184,25 @@ def test_rmul_pr19860():
     assert isinstance(c, Foo)
     assert c == Matrix([[7, 10], [15, 22]])
 
+
 def test_issue_18956():
     A = Array([[1, 2], [3, 4]])
     B = Matrix([[1,2],[3,4]])
     raises(TypeError, lambda: B + A)
     raises(TypeError, lambda: A + B)
+
+
+def test__eq__():
+    class My(object):
+        def __iter__(self):
+            yield 1
+            yield 2
+            return
+        def __getitem__(self, i):
+            return list(self)[i]
+    a = Matrix(2, 1, [1, 2])
+    assert a != My()
+    class My_sympy(My):
+        def _sympy_(self):
+            return Matrix(self)
+    assert a == My_sympy()

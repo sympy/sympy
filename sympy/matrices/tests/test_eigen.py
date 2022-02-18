@@ -1,6 +1,10 @@
-from sympy import (
-    Rational, Symbol, N, I, Abs, sqrt, exp, Float, sin,
-    cos, symbols)
+from sympy.core.evalf import N
+from sympy.core.numbers import (Float, I, Rational)
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (cos, sin)
 from sympy.matrices import eye, Matrix
 from sympy.core.singleton import S
 from sympy.testing.pytest import raises, XFAIL

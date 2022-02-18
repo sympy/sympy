@@ -13,7 +13,9 @@ from sympy.polys.polyerrors import GeneratorsError, \
 from sympy.testing.pytest import raises
 from sympy.core import Symbol, symbols
 
-from sympy import sqrt, pi, oo, exp
+from sympy.core.numbers import (oo, pi)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.miscellaneous import sqrt
 
 def test_PolyRing___init__():
     x, y, z, t = map(Symbol, "xyzt")
@@ -255,7 +257,7 @@ def test_PolyElement_as_expr():
     raises(ValueError, lambda: f.as_expr(X))
 
     R, = ring("", ZZ)
-    R(3).as_expr() == 3
+    assert R(3).as_expr() == 3
 
 def test_PolyElement_from_expr():
     x, y, z = symbols("x,y,z")
@@ -392,7 +394,7 @@ def test_PolyElement_coeff():
     raises(ValueError, lambda: f.coeff(7*z**3))
 
     R, = ring("", ZZ)
-    R(3).coeff(1) == 3
+    assert R(3).coeff(1) == 3
 
 def test_PolyElement_LC():
     R, x, y = ring("x,y", QQ, lex)

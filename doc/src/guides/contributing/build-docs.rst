@@ -1,3 +1,5 @@
+.. _build-the-documentation:
+
 ==========================
 Build the Documentation
 ==========================
@@ -8,13 +10,29 @@ Start by installing the required dependencies for the documentation.
 Required dependencies
 ^^^^^^^^^^^^^^^^^^^^^^
 
+You can either install the dependencies locally on your machine, or you can
+build a Docker image containing them.
+
+Docker
+~~~~~~
+
+If you have `Docker <https://docs.docker.com/engine/install/>`_, then instead of
+following the OS-specific installation instructions below, you may choose to
+build a Docker image::
+
+   cd doc
+   docker build -f Dockerfile.htmldoc -t sympy_htmldoc .
+
+If you choose this option, you can now skip down to the "Build the Docs"
+section below.
+
 Debian/Ubuntu
 ~~~~~~~~~~~~~~~
 
 For Debian/Ubuntu::
 
    apt-get install python3-sphinx texlive-latex-recommended dvipng librsvg2-bin imagemagick docbook2x graphviz
-   python -m pip install sphinx-math-dollar
+   python -m pip install sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py
 
 If you get mpmath error, install python-mpmath package::
 
@@ -32,7 +50,7 @@ prerequisites::
 
    dnf install python3-sphinx librsvg2 ImageMagick docbook2X texlive-dvipng-bin
    texlive-scheme-medium librsvg2-tools
-   python -m pip install sphinx-math-dollar
+   python -m pip install sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py
 
 If you get mpmath error, install python3-mpmath package::
 
@@ -53,11 +71,11 @@ Then install these packages with homebrew::
 
 Install these packages with either pip or conda::
 
-   python -m pip install mpmath matplotlib sphinx sphinx-math-dollar sphinx-reredirects
+   python -m pip install mpmath matplotlib sphinx sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py
 
 Or::
 
-   conda install -c conda-forge mpmath matplotlib sphinx sphinx-math-dollar sphinx-reredirects
+   conda install -c conda-forge mpmath matplotlib sphinx sphinx-math-dollar sphinx-reredirects myst-parser linkify-it-py
 
 Making your Sphinx build successful on the Windows system is tricky because
 some dependencies like ``dvipng`` or ``docbook2x`` are not available.
@@ -89,21 +107,135 @@ users.
 Build the Docs
 ^^^^^^^^^^^^^^^
 
-The documentation can be built by running the ``makefile`` in the ``doc``
-subdirectory.
+Docker
+~~~~~~
 
-To start, in your preferred web browser, use the drop down menu and select
-“open file” to navigate into the sympy/doc folder saved on your computer. In
-the doc folder, select the _build folder, then the html folder, and in the html
-folder, open the index.html file.
+If you chose to build using Docker, and followed the instructions above to
+build the ``sympy_htmldoc`` image, then you can build the docs with::
 
-To build the HTML documentation, run::
+   docker run --rm -v /absolute/path/to/sympy:/sympy sympy_htmldoc
+
+(Be sure to substitute the actual absolute filesystem path to sympy!) This
+command can be run from any directory.
+
+Local Installation
+~~~~~~~~~~~~~~~~~~
+
+If you chose to follow OS-specific instructions above and installed the
+required dependencies locally, the documentation can be built by running the
+``makefile`` in the ``doc`` subdirectory::
 
    cd doc
-
    make html
 
-This builds a local version of the documentation in ``doc/_build/html`` in your
-web browser.
 
-Open ``_build/html/index.html``.
+View the Docs
+^^^^^^^^^^^^^
+
+Once you have built the docs, the generated files will be found under
+``doc/_build/html``. To view them in your preferred web browser, use the drop
+down menu and select “open file”, navigate into the ``sympy/doc/_build/html``
+folder, and open the ``index.html`` file.
+
+
+Auto-Rebuild with the Live Server
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The instructions given above told you how to build the docs once, and load them
+in the browser. After you make changes to the document sources, you'll have to
+manually repeat the build step, and reload the pages in the browser.
+
+There is an alternative approach that sets up a live server, which will monitor
+the docs directory, automatically rebuild when changes are detected, and
+automatically reload the page you are viewing in the browser.
+
+If you want to use this option, the procedure again depends on whether you are
+using Docker, or a local installation.
+
+Docker
+~~~~~~
+
+To start the live server with Docker, you can use::
+
+   docker run --rm -it \
+        -v /absolute/path/to/sympy:/sympy \
+        -p 8000:80 \
+        sympy_htmldoc live
+
+and then navigate your browser to ``localhost:8000``. You can use a different
+port by changing the ``8000`` in the command. Again, be sure to substitute the
+actual absolute filesystem path to sympy.
+
+When finished, you can stop the server with ``ctrl-c`` in the terminal.
+
+Alternatively, you may run the server in detached mode, using::
+
+   docker run --rm -d --name=sympy-livehtml \
+        -v /absolute/path/to/sympy:/sympy \
+        -p 8000:80 \
+        sympy_htmldoc live
+
+and then stop it with::
+
+   docker stop sympy-livehtml
+
+
+Local Installation
+~~~~~~~~~~~~~~~~~~
+
+If you installed the build dependencies locally, then simply use::
+
+   cd doc
+   make livehtml
+
+to start the server. Your web browser should then automatically open a new tab,
+showing the index page of the SymPy docs.
+
+When you are finished, you can use ``ctrl-c`` in the terminal to stop the
+server.
+
+
+PDF Documentation
+^^^^^^^^^^^^^^^^^
+
+.. note::
+
+   It is not necessary for the majority of contributors to build the PDF
+   documentation. The PDF documentation will be built automatically on GitHub
+   Actions on pull requests. PDF documentation for each release is included on
+   the `GitHub releases page <https://github.com/sympy/sympy/releases>`_.
+
+   If the PDF documentation build fails on GitHub Actions, 99% of the time
+   this is due to bad LaTeX math formatting. Double check that any math you
+   have added is formatted correctly, and make sure you use \`\`double
+   backticks\`\` for code (\`single backticks\` will render as math, not
+   code). See the resources in the :ref:`style guide
+   <style_guide_latex_recommendations>` for tips on formatting LaTeX math.
+
+Building the PDF documentation requires a few extra dependencies. First you
+will need to have a TeXLive installation that includes XeLaTeX and latexmk.
+You will also need to have Chrome or Chromium installed, as it is used to
+convert some SVG files for the PDF.
+
+On Ubuntu, you can install these with::
+
+    apt-get install chromium-browser texlive texlive-xetex texlive-fonts-recommended texlive-latex-extra latexmk lmodern
+
+On Mac, you can use::
+
+    brew install texlive
+
+and also make sure the `Google Chrome browser
+<https://www.google.com/chrome/>`_ is installed in ``/Applications``.
+
+To build the pdf docs run::
+
+    cd doc
+
+    make latexpdf
+
+The resulting PDF will be in::
+
+    _build/latex/sympy-<version>.pdf
+
+where ``<version>`` is the SymPy version (e.g., ``sympy-1.10.dev.pdf``).

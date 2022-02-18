@@ -1,13 +1,21 @@
-from typing import Any, Dict
+"""
+.. deprecated:: 1.8
 
-from sympy.core.compatibility import is_sequence
+  ``sympy.printing.theanocode`` is deprecated. Theano has been renamed to
+  Aesara. Use ``sympy.printing.aesaracode`` instead. See
+  :ref:`theanocode-deprecated` for more information.
+
+"""
+from typing import Any, Dict as tDict
+
 from sympy.external import import_module
 from sympy.printing.printer import Printer
+from sympy.utilities.iterables import is_sequence
 import sympy
 from functools import partial
 
 from sympy.utilities.decorator import doctest_depends_on
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 theano = import_module('theano')
 
@@ -53,8 +61,8 @@ if theano:
             sympy.GreaterThan: tt.ge,
             sympy.And: tt.and_,
             sympy.Or: tt.or_,
-            sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
-            sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
+            sympy.Max: tt.maximum,  # SymPy accept >2 inputs, Theano only 2
+            sympy.Min: tt.minimum,  # SymPy accept >2 inputs, Theano only 2
             sympy.conjugate: tt.conj,
             sympy.core.numbers.ImaginaryUnit: lambda:tt.complex(0,1),
             # Matrices
@@ -86,7 +94,7 @@ class TheanoPrinter(Printer):
     ==========
 
     cache : dict
-        A cache of Theano variables which have been created for Sympy
+        A cache of Theano variables which have been created for SymPy
         symbol-like objects (e.g. :class:`sympy.core.symbol.Symbol` or
         :class:`sympy.matrices.expressions.MatrixSymbol`). This is used to
         ensure that all references to a given symbol in an expression (or
@@ -101,13 +109,13 @@ class TheanoPrinter(Printer):
         super().__init__(*args, **kwargs)
 
     def _get_key(self, s, name=None, dtype=None, broadcastable=None):
-        """ Get the cache key for a Sympy object.
+        """ Get the cache key for a SymPy object.
 
         Parameters
         ==========
 
         s : sympy.core.basic.Basic
-            Sympy object to get key for.
+            SymPy object to get key for.
 
         name : str
             Name of object, if it does not have a ``name`` attribute.
@@ -120,7 +128,7 @@ class TheanoPrinter(Printer):
 
     def _get_or_create(self, s, name=None, dtype=None, broadcastable=None):
         """
-        Get the Theano variable for a Sympy symbol from the cache, or create it
+        Get the Theano variable for a SymPy symbol from the cache, or create it
         if it does not exist.
         """
 
@@ -258,12 +266,12 @@ class TheanoPrinter(Printer):
         return expr
 
     def doprint(self, expr, dtypes=None, broadcastables=None):
-        """ Convert a Sympy expression to a Theano graph variable.
+        """ Convert a SymPy expression to a Theano graph variable.
 
         The ``dtypes`` and ``broadcastables`` arguments are used to specify the
         data type, dimension, and broadcasting behavior of the Theano variables
         corresponding to the free symbols in ``expr``. Each is a mapping from
-        Sympy symbols to the value of the corresponding argument to
+        SymPy symbols to the value of the corresponding argument to
         ``theano.tensor.Tensor``.
 
         See the corresponding `documentation page`__ for more information on
@@ -275,16 +283,16 @@ class TheanoPrinter(Printer):
         ==========
 
         expr : sympy.core.expr.Expr
-            Sympy expression to print.
+            SymPy expression to print.
 
         dtypes : dict
-            Mapping from Sympy symbols to Theano datatypes to use when creating
+            Mapping from SymPy symbols to Theano datatypes to use when creating
             new Theano variables for those symbols. Corresponds to the ``dtype``
             argument to ``theano.tensor.Tensor``. Defaults to ``'floatX'``
             for symbols not included in the mapping.
 
         broadcastables : dict
-            Mapping from Sympy symbols to the value of the ``broadcastable``
+            Mapping from SymPy symbols to the value of the ``broadcastable``
             argument to ``theano.tensor.Tensor`` to use when creating Theano
             variables for those symbols. Defaults to the empty tuple for symbols
             not included in the mapping (resulting in a scalar).
@@ -305,18 +313,24 @@ class TheanoPrinter(Printer):
         return self._print(expr, dtypes=dtypes, broadcastables=broadcastables)
 
 
-global_cache = {}  # type: Dict[Any, Any]
+global_cache = {}  # type: tDict[Any, Any]
 
 
 def theano_code(expr, cache=None, **kwargs):
     """
-    Convert a Sympy expression into a Theano graph variable.
+    Convert a SymPy expression into a Theano graph variable.
+
+    .. deprecated:: 1.8
+
+      ``sympy.printing.theanocode`` is deprecated. Theano has been renamed to
+      Aesara. Use ``sympy.printing.aesaracode`` instead. See
+      :ref:`theanocode-deprecated` for more information.
 
     Parameters
     ==========
 
     expr : sympy.core.expr.Expr
-        Sympy expression object to convert.
+        SymPy expression object to convert.
 
     cache : dict
         Cached Theano variables (see :class:`TheanoPrinter.cache
@@ -336,11 +350,12 @@ def theano_code(expr, cache=None, **kwargs):
         expression graph.
 
     """
-    SymPyDeprecationWarning(
-        feature="sympy.printing.theanocode",
-        useinstead="Theano is deprecated; use Aesara and sympy.printing.aesaracode",
-        issue=21150,
-        deprecated_since_version="1.8").warn()
+    sympy_deprecation_warning(
+        """
+        sympy.printing.theanocode is deprecated. Theano has been renamed to
+        Aesara. Use sympy.printing.aesaracode instead.""",
+        deprecated_since_version="1.8",
+    active_deprecations_target='theanocode-deprecated')
 
     if not theano:
         raise ImportError("theano is required for theano_code")
@@ -403,6 +418,12 @@ def theano_function(inputs, outputs, scalar=False, *,
         dim=None, dims=None, broadcastables=None, **kwargs):
     """
     Create a Theano function from SymPy expressions.
+
+    .. deprecated:: 1.8
+
+      ``sympy.printing.theanocode`` is deprecated. Theano has been renamed to
+      Aesara. Use ``sympy.printing.aesaracode`` instead. See
+      :ref:`theanocode-deprecated` for more information.
 
     The inputs and outputs are converted to Theano variables using
     :func:`.theano_code` and then passed to ``theano.function``.
@@ -488,11 +509,11 @@ def theano_function(inputs, outputs, scalar=False, *,
     dim_handling
 
     """
-    SymPyDeprecationWarning(
-        feature="sympy.printing.theanocode",
-        useinstead="Theano is deprecated; use Aesara and sympy.printing.aesaracode",
-        issue=21150,
-        deprecated_since_version="1.8").warn()
+    sympy_deprecation_warning(
+        """
+        sympy.printing.theanocode is deprecated. Theano has been renamed to Aesara. Use sympy.printing.aesaracode instead""",
+        deprecated_since_version="1.8",
+    active_deprecations_target='theanocode-deprecated')
 
     if not theano:
         raise ImportError("theano is required for theano_function")

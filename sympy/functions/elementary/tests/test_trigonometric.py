@@ -1,9 +1,27 @@
-from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, pi, atan,
-        acos, Rational, sqrt, asin, acot, coth, E, S, tan, tanh, cos,
-        cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
-        Float, Pow, gcd, sec, csc, cot, diff, simplify, Heaviside, arg,
-        conjugate, series, FiniteSet, asec, acsc, Mul, sinc, jn,
-        AccumBounds, Interval, ImageSet, Lambda, besselj, Add, limit)
+from sympy.calculus.accumulationbounds import AccumBounds
+from sympy.core.add import Add
+from sympy.core.function import (Lambda, diff)
+from sympy.core.mul import Mul
+from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi, zoo)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import (arg, conjugate, im, re)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.hyperbolic import (acoth, asinh, atanh, cosh, coth, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin, atan, atan2,
+                                                      cos, cot, csc, sec, sin, sinc, tan)
+from sympy.functions.special.bessel import (besselj, jn)
+from sympy.functions.special.delta_functions import Heaviside
+from sympy.matrices.dense import Matrix
+from sympy.polys.polytools import (cancel, gcd)
+from sympy.series.limits import limit
+from sympy.series.order import O
+from sympy.series.series import series
+from sympy.sets.fancysets import ImageSet
+from sympy.sets.sets import (FiniteSet, Interval)
+from sympy.simplify.simplify import simplify
 from sympy.core.expr import unchanged
 from sympy.core.function import ArgumentIndexError
 from sympy.core.relational import Ne, Eq
@@ -733,18 +751,17 @@ def test_cot_rewrite():
     assert cot(x).rewrite(sin) == sin(2*x)/(2*(sin(x)**2))
     assert cot(x).rewrite(cos) == cos(x)/cos(x - pi/2, evaluate=False)
     assert cot(x).rewrite(tan) == 1/tan(x)
-    assert cot(sinh(x)).rewrite(
-        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, sinh(3)).n()
-    assert cot(cosh(x)).rewrite(
-        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, cosh(3)).n()
-    assert cot(tanh(x)).rewrite(
-        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, tanh(3)).n()
-    assert cot(coth(x)).rewrite(
-        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, coth(3)).n()
-    assert cot(sin(x)).rewrite(
-        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, sin(3)).n()
-    assert cot(tan(x)).rewrite(
-        exp).subs(x, 3).n() == cot(x).rewrite(exp).subs(x, tan(3)).n()
+    def check(func):
+        z = cot(func(x)).rewrite(exp
+            ) - cot(x).rewrite(exp).subs(x, func(x))
+        assert z.rewrite(exp).expand() == 0
+    check(sinh)
+    check(cosh)
+    check(tanh)
+    check(coth)
+    check(sin)
+    check(cos)
+    check(tan)
     assert cot(log(x)).rewrite(Pow) == -I*(x**-I + x**I)/(x**-I - x**I)
     assert cot(pi*Rational(4, 34)).rewrite(pow).ratsimp() == (cos(pi*Rational(4, 34))/sin(pi*Rational(4, 34))).rewrite(pow).ratsimp()
     assert cot(pi*Rational(4, 17)).rewrite(pow) == (cos(pi*Rational(4, 17))/sin(pi*Rational(4, 17))).rewrite(pow)
@@ -1269,11 +1286,10 @@ def test_leading_terms():
     assert sin(S.Half).as_leading_term(x) == sin(S.Half)
     assert cos(1/x).as_leading_term(x) == AccumBounds(-1, 1)
     assert cos(S.Half).as_leading_term(x) == cos(S.Half)
-
-    for func in [tan, cot]:
-        for a in (1/x, S.Half):
-            eq = func(a)
-            assert eq.as_leading_term(x) == eq
+    assert sec(1/x).as_leading_term(x) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert csc(1/x).as_leading_term(x) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert tan(1/x).as_leading_term(x) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert cot(1/x).as_leading_term(x) == AccumBounds(S.NegativeInfinity, S.Infinity)
 
     # https://github.com/sympy/sympy/issues/21038
     f = sin(pi*(x + 4))/(3*x)

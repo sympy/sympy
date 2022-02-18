@@ -37,7 +37,7 @@ def _rank_decomposition(M, iszerofunc=_iszero, simplify=False):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> A = Matrix([
     ...     [1, 3, 1, 4],
     ...     [2, 7, 3, 9],
@@ -113,7 +113,7 @@ def _liupc(M):
     Examples
     ========
 
-    >>> from sympy.matrices import SparseMatrix
+    >>> from sympy import SparseMatrix
     >>> S = SparseMatrix([
     ... [1, 0, 3, 2],
     ... [0, 0, 1, 0],
@@ -161,7 +161,7 @@ def _row_structure_symbolic_cholesky(M):
     Examples
     ========
 
-    >>> from sympy.matrices import SparseMatrix
+    >>> from sympy import SparseMatrix
     >>> S = SparseMatrix([
     ... [1, 0, 3, 2],
     ... [0, 0, 1, 0],
@@ -204,7 +204,7 @@ def _cholesky(M, hermitian=True):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     >>> A.cholesky()
     Matrix([
@@ -298,7 +298,7 @@ def _cholesky_sparse(M, hermitian=True):
     Examples
     ========
 
-    >>> from sympy.matrices import SparseMatrix
+    >>> from sympy import SparseMatrix
     >>> A = SparseMatrix(((25,15,-5),(15,18,0),(-5,0,11)))
     >>> A.cholesky()
     Matrix([
@@ -412,7 +412,7 @@ def _LDLdecomposition(M, hermitian=True):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix, eye
+    >>> from sympy import Matrix, eye
     >>> A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     >>> L, D = A.LDLdecomposition()
     >>> L
@@ -499,7 +499,7 @@ def _LDLdecomposition_sparse(M, hermitian=True):
     Examples
     ========
 
-    >>> from sympy.matrices import SparseMatrix
+    >>> from sympy import SparseMatrix
     >>> A = SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     >>> L, D = A.LDLdecomposition()
     >>> L
@@ -597,7 +597,7 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
         A function which determines if a given expression is zero.
 
         The function should be a callable that takes a single
-        sympy expression and returns a 3-valued boolean value
+        SymPy expression and returns a 3-valued boolean value
         ``True``, ``False``, or ``None``.
 
         It is internally used by the pivot searching algorithm.
@@ -608,8 +608,8 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
         A function that simplifies the input.
 
         If this is specified as a function, this function should be
-        a callable that takes a single sympy expression and returns
-        an another sympy expression that is algebraically
+        a callable that takes a single SymPy expression and returns
+        an another SymPy expression that is algebraically
         equivalent.
 
         If ``None``, it indicates that the pivot search algorithm
@@ -692,7 +692,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         A function which determines if a given expression is zero.
 
         The function should be a callable that takes a single
-        sympy expression and returns a 3-valued boolean value
+        SymPy expression and returns a 3-valued boolean value
         ``True``, ``False``, or ``None``.
 
         It is internally used by the pivot searching algorithm.
@@ -703,8 +703,8 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         A function that simplifies the input.
 
         If this is specified as a function, this function should be
-        a callable that takes a single sympy expression and returns
-        an another sympy expression that is algebraically
+        a callable that takes a single SymPy expression and returns
+        an another SymPy expression that is algebraically
         equivalent.
 
         If ``None``, it indicates that the pivot search algorithm

@@ -1,6 +1,12 @@
-from sympy import Rational, oo, sqrt, S
-from sympy import Line, Point, Point2D, Parabola, Segment2D, Ray2D
-from sympy import Circle, Ellipse, symbols, sign
+from sympy.core.numbers import (Rational, oo)
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.complexes import sign
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.geometry.ellipse import (Circle, Ellipse)
+from sympy.geometry.line import (Line, Ray2D, Segment2D)
+from sympy.geometry.parabola import Parabola
+from sympy.geometry.point import (Point, Point2D)
 from sympy.testing.pytest import raises
 
 

@@ -1,7 +1,6 @@
 from sympy.core.add import Add
 from sympy.core.assumptions import check_assumptions
 from sympy.core.containers import Tuple
-from sympy.core.compatibility import as_int, is_sequence, ordered
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import _mexpand
 from sympy.core.mul import Mul
@@ -10,6 +9,7 @@ from sympy.core.numbers import igcdex, ilcm, igcd
 from sympy.core.power import integer_nthroot, isqrt
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, symbols
 from sympy.core.sympify import _sympify
 from sympy.functions.elementary.complexes import sign
@@ -25,8 +25,10 @@ from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.polytools import Poly, factor_list
 from sympy.simplify.simplify import signsimp
 from sympy.solvers.solveset import solveset_real
-from sympy.utilities import default_sort_key, numbered_symbols
-from sympy.utilities.misc import filldedent
+from sympy.utilities import numbered_symbols
+from sympy.utilities.misc import as_int, filldedent
+from sympy.utilities.iterables import (is_sequence, subsets, permute_signs,
+                                       signed_permutations, ordered_partitions)
 
 
 # these are imported with 'from sympy.solvers.diophantine import *
@@ -1307,7 +1309,7 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     Examples
     ========
 
-    >>> from sympy.solvers.diophantine import diophantine
+    >>> from sympy import diophantine
     >>> from sympy.abc import a, b
     >>> eq = a**4 + b**4 - (2**4 + 3**4)
     >>> diophantine(eq)
@@ -1340,9 +1342,6 @@ def diophantine(eq, param=symbols("t", integer=True), syms=None,
     sympy.utilities.iterables.permute_signs
     sympy.utilities.iterables.signed_permutations
     """
-
-    from sympy.utilities.iterables import (
-        subsets, permute_signs, signed_permutations)
 
     eq = _sympify(eq)
 
@@ -2543,7 +2542,7 @@ def length(P, Q, D):
     """
     from sympy.ntheory.continued_fraction import continued_fraction_periodic
     v = continued_fraction_periodic(P, Q, D)
-    if type(v[-1]) is list:
+    if isinstance(v[-1], list):
         rpt = len(v[-1])
         nonrpt = len(v) - 1
     else:
@@ -2562,7 +2561,7 @@ def transformation_to_DN(eq):
     ===========
 
     This is used to solve the general quadratic equation by transforming it to
-    the latter form. Refer [1]_ for more detailed information on the
+    the latter form. Refer to [1]_ for more detailed information on the
     transformation. This function returns a tuple (A, B) where A is a 2 X 2
     matrix and B is a 2 X 1 matrix such that,
 
@@ -3486,7 +3485,7 @@ def diop_general_sum_of_squares(eq, limit=1):
     =======
 
     When `n = 3` if `k = 4^a(8m + 7)` for some `a, m \in Z` then there will be
-    no solutions. Refer [1]_ for more details.
+    no solutions. Refer to [1]_ for more details.
 
     Examples
     ========
@@ -3593,7 +3592,6 @@ def partition(n, k=None, zeros=False):
     (0, 0, 5)
 
     """
-    from sympy.utilities.iterables import ordered_partitions
     if not zeros or k is None:
         for i in ordered_partitions(n, k):
             yield tuple(i)
@@ -3649,10 +3647,10 @@ def prime_as_sum_of_two_squares(p):
 
 def sum_of_three_squares(n):
     r"""
-    Returns a 3-tuple `(a, b, c)` such that `a^2 + b^2 + c^2 = n` and
-    `a, b, c \geq 0`.
+    Returns a 3-tuple $(a, b, c)$ such that $a^2 + b^2 + c^2 = n$ and
+    $a, b, c \geq 0$.
 
-    Returns None if `n = 4^a(8m + 7)` for some `a, m \in Z`. See
+    Returns None if $n = 4^a(8m + 7)$ for some `a, m \in \mathbb{Z}`. See
     [1]_ for more details.
 
     Usage

@@ -3,6 +3,7 @@ from functools import wraps
 from sympy.core import S
 from sympy.core.add import Add
 from sympy.core.cache import cacheit
+from sympy.core.expr import Expr
 from sympy.core.function import Function, ArgumentIndexError, _mexpand
 from sympy.core.logic import fuzzy_or, fuzzy_not
 from sympy.core.numbers import Rational, pi, I
@@ -12,13 +13,14 @@ from sympy.core.sympify import sympify
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.integers import ceiling
-from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log
-from sympy.functions.elementary.miscellaneous import sqrt, root
-from sympy.functions.elementary.complexes import re, im
+from sympy.functions.elementary.miscellaneous import cbrt, sqrt, root
+from sympy.functions.elementary.complexes import (Abs, re, im, polar_lift, unpolarify)
 from sympy.functions.special.gamma_functions import gamma, digamma, uppergamma
 from sympy.functions.special.hyper import hyper
 from sympy.polys.orthopolys import spherical_bessel_fn
+
+from mpmath import mp, workprec
 
 # TODO
 # o Scorer functions G1 and G2
@@ -197,7 +199,6 @@ class besselj(BesselBase):
                 return I**(nu)*besseli(nu, newz)
 
         # branch handling:
-        from sympy import unpolarify
         if nu.is_integer:
             newz = unpolarify(z)
             if newz != z:
@@ -211,7 +212,6 @@ class besselj(BesselBase):
             return besselj(nnu, z)
 
     def _eval_rewrite_as_besseli(self, nu, z, **kwargs):
-        from sympy import polar_lift
         return exp(I*pi*nu/2)*besseli(nu, polar_lift(-I)*z)
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
@@ -463,7 +463,6 @@ class besseli(BesselBase):
                 return I**(-nu)*besselj(nu, -newz)
 
         # branch handling:
-        from sympy import unpolarify
         if nu.is_integer:
             newz = unpolarify(z)
             if newz != z:
@@ -477,7 +476,6 @@ class besseli(BesselBase):
             return besseli(nnu, z)
 
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
-        from sympy import polar_lift
         return exp(-I*pi*nu/2)*besselj(nu, polar_lift(I)*z)
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
@@ -707,12 +705,12 @@ class SphericalBesselBase(BesselBase):
 
 def _jn(n, z):
     return (spherical_bessel_fn(n, z)*sin(z) +
-            (S.NegativeOne)**(n + 1)*spherical_bessel_fn(-n - 1, z)*cos(z))
+            S.NegativeOne**(n + 1)*spherical_bessel_fn(-n - 1, z)*cos(z))
 
 
 def _yn(n, z):
     # (-1)**(n + 1) * _jn(-n - 1, z)
-    return ((S.NegativeOne)**(n + 1) * spherical_bessel_fn(-n - 1, z)*sin(z) -
+    return (S.NegativeOne**(n + 1) * spherical_bessel_fn(-n - 1, z)*sin(z) -
             spherical_bessel_fn(n, z)*cos(z))
 
 
@@ -791,10 +789,10 @@ class jn(SphericalBesselBase):
         return sqrt(pi/(2*z)) * besselj(nu + S.Half, z)
 
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
-        return (-1)**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
+        return S.NegativeOne**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
 
     def _eval_rewrite_as_yn(self, nu, z, **kwargs):
-        return (-1)**(nu) * yn(-nu - 1, z)
+        return S.NegativeOne**(nu) * yn(-nu - 1, z)
 
     def _expand(self, **hints):
         return _jn(self.order, self.argument)
@@ -853,14 +851,14 @@ class yn(SphericalBesselBase):
     """
     @assume_integer_order
     def _eval_rewrite_as_besselj(self, nu, z, **kwargs):
-        return (-1)**(nu+1) * sqrt(pi/(2*z)) * besselj(-nu - S.Half, z)
+        return S.NegativeOne**(nu+1) * sqrt(pi/(2*z)) * besselj(-nu - S.Half, z)
 
     @assume_integer_order
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
         return sqrt(pi/(2*z)) * bessely(nu + S.Half, z)
 
     def _eval_rewrite_as_jn(self, nu, z, **kwargs):
-        return (-1)**(nu + 1) * jn(-nu - 1, z)
+        return S.NegativeOne**(nu + 1) * jn(-nu - 1, z)
 
     def _expand(self, **hints):
         return _yn(self.order, self.argument)
@@ -879,7 +877,7 @@ class SphericalHankelBase(SphericalBesselBase):
         # yn as besselj: (-1)**(nu+1) * sqrt(pi/(2*z)) * besselj(-nu - S.Half, z)
         hks = self._hankel_kind_sign
         return sqrt(pi/(2*z))*(besselj(nu + S.Half, z) +
-                               hks*I*(-1)**(nu+1)*besselj(-nu - S.Half, z))
+                               hks*I*S.NegativeOne**(nu+1)*besselj(-nu - S.Half, z))
 
     @assume_integer_order
     def _eval_rewrite_as_bessely(self, nu, z, **kwargs):
@@ -887,7 +885,7 @@ class SphericalHankelBase(SphericalBesselBase):
         # jn as bessely: (-1)**nu * sqrt(pi/(2*z)) * bessely(-nu - S.Half, z)
         # yn as bessely: sqrt(pi/(2*z)) * bessely(nu + S.Half, z)
         hks = self._hankel_kind_sign
-        return sqrt(pi/(2*z))*((-1)**nu*bessely(-nu - S.Half, z) +
+        return sqrt(pi/(2*z))*(S.NegativeOne**nu*bessely(-nu - S.Half, z) +
                                hks*I*bessely(nu + S.Half, z))
 
     def _eval_rewrite_as_yn(self, nu, z, **kwargs):
@@ -1089,7 +1087,6 @@ def jn_zeros(n, k, method="sympy", dps=15):
     if method == "sympy":
         from mpmath import besseljzero
         from mpmath.libmp.libmpf import dps_to_prec
-        from sympy import Expr
         prec = dps_to_prec(dps)
         return [Expr._from_mpmath(besseljzero(S(n + 0.5)._to_mpmath(prec),
                                               int(l)), prec)
@@ -1272,11 +1269,11 @@ class airyai(AiryBase):
             x = sympify(x)
             if len(previous_terms) > 1:
                 p = previous_terms[-1]
-                return ((3**Rational(1, 3)*x)**(-n)*(3**Rational(1, 3)*x)**(n + 1)*sin(pi*(n*Rational(2, 3) + Rational(4, 3)))*factorial(n) *
+                return ((cbrt(3)*x)**(-n)*(cbrt(3)*x)**(n + 1)*sin(pi*(n*Rational(2, 3) + Rational(4, 3)))*factorial(n) *
                         gamma(n/3 + Rational(2, 3))/(sin(pi*(n*Rational(2, 3) + Rational(2, 3)))*factorial(n + 1)*gamma(n/3 + Rational(1, 3))) * p)
             else:
-                return (S.One/(3**Rational(2, 3)*pi) * gamma((n+S.One)/S(3)) * sin(2*pi*(n+S.One)/S(3)) /
-                        factorial(n) * (root(3, 3)*x)**n)
+                return (S.One/(3**Rational(2, 3)*pi) * gamma((n+S.One)/S(3)) * sin(Rational(2, 3)*pi*(n+S.One)) /
+                        factorial(n) * (cbrt(3)*x)**n)
 
     def _eval_rewrite_as_besselj(self, z, **kwargs):
         ot = Rational(1, 3)
@@ -1447,11 +1444,11 @@ class airybi(AiryBase):
             x = sympify(x)
             if len(previous_terms) > 1:
                 p = previous_terms[-1]
-                return (3**Rational(1, 3)*x * Abs(sin(2*pi*(n + S.One)/S(3))) * factorial((n - S.One)/S(3)) /
-                        ((n + S.One) * Abs(cos(2*pi*(n + S.Half)/S(3))) * factorial((n - 2)/S(3))) * p)
+                return (cbrt(3)*x * Abs(sin(Rational(2, 3)*pi*(n + S.One))) * factorial((n - S.One)/S(3)) /
+                        ((n + S.One) * Abs(cos(Rational(2, 3)*pi*(n + S.Half))) * factorial((n - 2)/S(3))) * p)
             else:
-                return (S.One/(root(3, 6)*pi) * gamma((n + S.One)/S(3)) * Abs(sin(2*pi*(n + S.One)/S(3))) /
-                        factorial(n) * (root(3, 3)*x)**n)
+                return (S.One/(root(3, 6)*pi) * gamma((n + S.One)/S(3)) * Abs(sin(Rational(2, 3)*pi*(n + S.One))) /
+                        factorial(n) * (cbrt(3)*x)**n)
 
     def _eval_rewrite_as_besselj(self, z, **kwargs):
         ot = Rational(1, 3)
@@ -1603,8 +1600,6 @@ class airyaiprime(AiryBase):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from mpmath import mp, workprec
-        from sympy import Expr
         z = self.args[0]._to_mpmath(prec)
         with workprec(prec):
             res = mp.airyai(z, derivative=1)
@@ -1769,8 +1764,6 @@ class airybiprime(AiryBase):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_evalf(self, prec):
-        from mpmath import mp, workprec
-        from sympy import Expr
         z = self.args[0]._to_mpmath(prec)
         with workprec(prec):
             res = mp.airybi(z, derivative=1)

@@ -1,16 +1,9 @@
-from sympy.testing.pytest import warns_deprecated_sympy
-
-from sympy import Matrix, eye, symbols
+from sympy.core.symbol import symbols
+from sympy.matrices.dense import (Matrix, eye)
 from sympy.physics.units.definitions.dimension_definitions import (
     action, current, length, mass, time,
     velocity)
 from sympy.physics.units.dimensions import DimensionSystem
-
-
-def test_call():
-    mksa = DimensionSystem((length, time, mass, current), (action,))
-    with warns_deprecated_sympy():
-        assert mksa(action) == mksa.print_dim_base(action)
 
 
 def test_extend():
@@ -21,12 +14,6 @@ def test_extend():
     res = DimensionSystem((length, time, mass), (velocity, action))
     assert mks.base_dims == res.base_dims
     assert mks.derived_dims == res.derived_dims
-
-
-def test_sort_dims():
-    with warns_deprecated_sympy():
-        assert (DimensionSystem.sort_dims((length, velocity, time))
-                                      == (length, time, velocity))
 
 
 def test_list_dims():

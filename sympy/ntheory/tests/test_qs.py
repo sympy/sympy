@@ -1,4 +1,4 @@
-from typing import Dict, Tuple
+from typing import Dict as tDict, Tuple as tTuple
 
 from sympy.ntheory import qs
 from sympy.ntheory.qs import SievePolynomial, \
@@ -50,7 +50,7 @@ assert _check_smoothness(9645, factor_base) == (5, False)
 assert _check_smoothness(210313, factor_base)[0][0:15] == [0, 0, 0, 0, 0, 0, 0,\
                         0, 0, 1, 0, 0, 1, 0, 1]
 assert _check_smoothness(210313, factor_base)[1] == True
-partial_relations = {} # type: Dict[int, Tuple[int, int]]
+partial_relations = {} # type: tDict[int, tTuple[int, int]]
 smooth_relation, partial_relation = _trial_division_stage(n, M, factor_base,\
                                                           sieve_array, sieve_poly,\
                                                           partial_relations, ERROR_TERM=25*2**10)

@@ -1,10 +1,4 @@
-from sympy.core import Tuple
+from .abstract_nodes import List as AbstractList
 
-
-class List(Tuple):
-    """Represents a (frozen) (python) list (for code printing purposes)."""
-    def __eq__(self, other):
-        if isinstance(other, list):
-            return self == List(*other)
-        else:
-            return self.args == other
+class List(AbstractList):
+    pass

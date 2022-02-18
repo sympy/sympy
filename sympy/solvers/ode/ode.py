@@ -229,16 +229,17 @@ of those tests will surely fail.
 """
 
 from sympy.core import Add, S, Mul, Pow, oo
-from sympy.core.compatibility import ordered, iterable
 from sympy.core.containers import Tuple
 from sympy.core.expr import AtomicExpr, Expr
 from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
     expand, expand_mul, Subs)
 from sympy.core.multidimensional import vectorize
-from sympy.core.numbers import NaN, zoo, Number
+from sympy.core.numbers import nan, zoo, Number
 from sympy.core.relational import Equality, Eq
+from sympy.core.sorting import default_sort_key, ordered
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.core.sympify import sympify
+from sympy.core.traversal import preorder_traversal
 
 from sympy.logic.boolalg import (BooleanAtom, BooleanTrue,
                                 BooleanFalse)
@@ -254,8 +255,8 @@ from sympy.simplify import (collect, logcombine, powsimp,  # type: ignore
 from sympy.simplify.radsimp import collect_const
 from sympy.solvers import checksol, solve
 
-from sympy.utilities import numbered_symbols, default_sort_key, sift
-from sympy.utilities.iterables import uniq
+from sympy.utilities import numbered_symbols
+from sympy.utilities.iterables import uniq, sift, iterable
 from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 
 
@@ -689,7 +690,7 @@ def _helper_simplify(eq, hint, match, simplify=True, ics=None, **kwargs):
             rv = _remove_redundant_solutions(eq, rv, order, func.args[0])
         if len(rv) == 1:
             rv = rv[0]
-    if ics and not 'power_series' in hint:
+    if ics and 'power_series' not in hint:
         if isinstance(rv, (Expr, Eq)):
             solved_constants = solve_ics([rv], [r['func']], cons(rv), ics)
             rv = rv.subs(solved_constants)
@@ -769,10 +770,9 @@ def solve_ics(sols, funcs, constants, ics):
                 x0 = funcarg.variables[0]
                 variables = (x,)*len(funcarg.variables)
                 matching_func = deriv.subs(x0, x)
-            if variables not in diff_variables:
-                for sol in sols:
-                    if sol.has(deriv.expr.func):
-                        diff_sols.append(Eq(sol.lhs.diff(*variables), sol.rhs.diff(*variables)))
+            for sol in sols:
+                if sol.has(deriv.expr.func):
+                    diff_sols.append(Eq(sol.lhs.diff(*variables), sol.rhs.diff(*variables)))
             diff_variables.add(variables)
             S = diff_sols
         else:
@@ -955,7 +955,7 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
     x = func.args[0]
     f = func.func
     y = Dummy('y')
-    terms = n
+    terms = 5 if n is None else n
 
     order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)
@@ -1072,10 +1072,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             check = cancel(r[d]/r[e])
             check1 = check.subs({x: point, y: value})
             if not check1.has(oo) and not check1.has(zoo) and \
-                not check1.has(NaN) and not check1.has(-oo):
+                not check1.has(nan) and not check1.has(-oo):
                 check2 = (check1.diff(x)).subs({x: point, y: value})
                 if not check2.has(oo) and not check2.has(zoo) and \
-                    not check2.has(NaN) and not check2.has(-oo):
+                    not check2.has(nan) and not check2.has(-oo):
                     rseries = r.copy()
                     rseries.update({'terms': terms, 'f0': point, 'f0val': value})
                     matching_hints["1st_power_series"] = rseries
@@ -1100,9 +1100,9 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             q = cancel(r[c3]/r[a3])  # Used below
             point = kwargs.get('x0', 0)
             check = p.subs(x, point)
-            if not check.has(oo, NaN, zoo, -oo):
+            if not check.has(oo, nan, zoo, -oo):
                 check = q.subs(x, point)
-                if not check.has(oo, NaN, zoo, -oo):
+                if not check.has(oo, nan, zoo, -oo):
                     ordinary = True
                     r.update({'a3': a3, 'b3': b3, 'c3': c3, 'x0': point, 'terms': terms})
                     matching_hints["2nd_power_series_ordinary"] = r
@@ -1113,10 +1113,10 @@ def classify_ode(eq, func=None, dict=False, ics=None, *, prep=True, xi=None, eta
             if not ordinary:
                 p = cancel((x - point)*p)
                 check = p.subs(x, point)
-                if not check.has(oo, NaN, zoo, -oo):
+                if not check.has(oo, nan, zoo, -oo):
                     q = cancel(((x - point)**2)*q)
                     check = q.subs(x, point)
-                    if not check.has(oo, NaN, zoo, -oo):
+                    if not check.has(oo, nan, zoo, -oo):
                         coeff_dict = {'p': p, 'q': q, 'x0': point, 'terms': terms}
                         matching_hints["2nd_power_series_regular"] = coeff_dict
 
@@ -1821,8 +1821,6 @@ def ode_sol_simplicity(sol, func, trysolving=True):
 
 
 def _extract_funcs(eqs):
-    from sympy.core.basic import preorder_traversal
-
     funcs = []
     for eq in eqs:
         derivs = [node for node in preorder_traversal(eq) if isinstance(node, Derivative)]
@@ -2283,7 +2281,7 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     equation with polynomial coefficients at an ordinary point. A homogeneous
     differential equation is of the form
 
-    .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) = 0
+    .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) y(x) = 0
 
     For simplicity it is assumed that `P(x)`, `Q(x)` and `R(x)` are polynomials,
     it is sufficient that `\frac{Q(x)}{P(x)}` and `\frac{R(x)}{P(x)}` exists at
@@ -2319,8 +2317,8 @@ def ode_2nd_power_series_ordinary(eq, func, order, match):
     n = Dummy("n", integer=True)
     s = Wild("s")
     k = Wild("k", exclude=[x])
-    x0 = match.get('x0')
-    terms = match.get('terms', 5)
+    x0 = match['x0']
+    terms = match['terms']
     p = match[match['a3']]
     q = match[match['b3']]
     r = match[match['c3']]
@@ -2428,7 +2426,7 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     equation with polynomial coefficients at a regular point. A second order
     homogeneous differential equation is of the form
 
-    .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) = 0
+    .. math :: P(x)\frac{d^2y}{dx^2} + Q(x)\frac{dy}{dx} + R(x) y(x) = 0
 
     A point is said to regular singular at `x0` if `x - x0\frac{Q(x)}{P(x)}`
     and `(x - x0)^{2}\frac{R(x)}{P(x)}` are analytic at `x0`. For simplicity
@@ -2480,8 +2478,8 @@ def ode_2nd_power_series_regular(eq, func, order, match):
     f = func.func
     C0, C1 = get_numbered_constants(eq, num=2)
     m = Dummy("m")  # for solving the indicial equation
-    x0 = match.get('x0')
-    terms = match.get('terms', 5)
+    x0 = match['x0']
+    terms = match['terms']
     p = match['p']
     q = match['q']
 
@@ -2737,8 +2735,7 @@ def ode_1st_power_series(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy import Function, pprint, exp
-    >>> from sympy.solvers.ode.ode import dsolve
+    >>> from sympy import Function, pprint, exp, dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> eq = exp(x)*(f(x).diff(x)) - f(x)
@@ -2760,9 +2757,9 @@ def ode_1st_power_series(eq, func, order, match):
     y = match['y']
     f = func.func
     h = -match[match['d']]/match[match['e']]
-    point = match.get('f0')
-    value = match.get('f0val')
-    terms = match.get('terms')
+    point = match['f0']
+    value = match['f0val']
+    terms = match['terms']
 
     # First term
     F = h
@@ -2773,7 +2770,7 @@ def ode_1st_power_series(eq, func, order, match):
     series = value
     if terms > 1:
         hc = h.subs({x: point, y: value})
-        if hc.has(oo) or hc.has(NaN) or hc.has(zoo):
+        if hc.has(oo) or hc.has(nan) or hc.has(zoo):
             # Derivative does not exist, not analytic
             return Eq(f(x), oo)
         elif hc:
@@ -2783,7 +2780,7 @@ def ode_1st_power_series(eq, func, order, match):
         Fnew = F.diff(x) + F.diff(y)*h
         Fnewc = Fnew.subs({x: point, y: value})
         # Same logic as above
-        if Fnewc.has(oo) or Fnewc.has(NaN) or Fnewc.has(-oo) or Fnewc.has(zoo):
+        if Fnewc.has(oo) or Fnewc.has(nan) or Fnewc.has(-oo) or Fnewc.has(zoo):
             return Eq(f(x), oo)
         series += Fnewc*((x - point)**factcount)/factorial(factcount)
         F = Fnew

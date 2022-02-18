@@ -1,22 +1,46 @@
-from sympy import (
-    Abs, acos, acosh, Add, And, asin, asinh, atan, Ci, cos, sinh, cosh,
-    tanh, Derivative, diff, DiracDelta, E, Ei, Eq, exp, erf, erfc, erfi,
-    EulerGamma, Expr, factor, Function, gamma, gammasimp, I, Idx, im, IndexedBase,
-    integrate, Interval, Lambda, LambertW, log, Matrix, Max, meijerg, Min, nan,
-    Ne, O, oo, pi, Piecewise, polar_lift, Poly, polygamma, Rational, re, S, Si, sign,
-    simplify, sin, sinc, SingularityFunction, sqrt, sstr, Sum, Symbol, summation,
-    symbols, sympify, tan, trigsimp, Tuple, lerchphi, exp_polar, li, hyper,
-    Float, fresnelc
-)
+from sympy.concrete.summations import (Sum, summation)
+from sympy.core.add import Add
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import (Derivative, Function, Lambda, diff)
+from sympy.core import EulerGamma
+from sympy.core.numbers import (E, Float, I, Rational, nan, oo, pi)
+from sympy.core.relational import (Eq, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.complexes import (Abs, im, polar_lift, re, sign)
+from sympy.functions.elementary.exponential import (LambertW, exp, exp_polar, log)
+from sympy.functions.elementary.hyperbolic import (acosh, asinh, cosh, sinh, tanh)
+from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, asin, atan, cos, sin, sinc, tan)
+from sympy.functions.special.delta_functions import DiracDelta
+from sympy.functions.special.error_functions import (Ci, Ei, Si, erf, erfc, erfi, fresnelc, li)
+from sympy.functions.special.gamma_functions import (gamma, polygamma)
+from sympy.functions.special.hyper import (hyper, meijerg)
+from sympy.functions.special.singularity_functions import SingularityFunction
+from sympy.functions.special.zeta_functions import lerchphi
+from sympy.integrals.integrals import integrate
+from sympy.logic.boolalg import And
+from sympy.matrices.dense import Matrix
+from sympy.polys.polytools import (Poly, factor)
+from sympy.printing.str import sstr
+from sympy.series.order import O
+from sympy.sets.sets import Interval
+from sympy.simplify.gammasimp import gammasimp
+from sympy.simplify.simplify import simplify
+from sympy.simplify.trigsimp import trigsimp
+from sympy.tensor.indexed import (Idx, IndexedBase)
 from sympy.core.expr import unchanged
-from sympy.functions.elementary.complexes import periodic_argument
 from sympy.functions.elementary.integers import floor
 from sympy.integrals.integrals import Integral
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.physics import units
 from sympy.testing.pytest import (raises, slow, skip, ON_TRAVIS,
-    warns_deprecated_sympy)
-from sympy.testing.randtest import verify_numerically
+    warns_deprecated_sympy, warns)
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.core.random import verify_numerically
 
 
 x, y, a, t, x_1, x_2, z, s, b = symbols('x y a t x_1 x_2 z s b')
@@ -31,9 +55,10 @@ def NS(e, n=15, **options):
 def test_poly_deprecated():
     p = Poly(2*x, x)
     assert p.integrate(x) == Poly(x**2, x, domain='QQ')
-    with warns_deprecated_sympy():
+    # The stacklevel is based on Integral(Poly)
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
         integrate(p, x)
-    with warns_deprecated_sympy():
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
         Integral(p, (x,))
 
 
@@ -233,9 +258,12 @@ def test_issue_18038():
 def test_integrate_poly():
     p = Poly(x + x**2*y + y**3, x, y)
 
+    # The stacklevel is based on Integral(Poly)
     with warns_deprecated_sympy():
+        qx = Integral(p, x)
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
         qx = integrate(p, x)
-    with warns_deprecated_sympy():
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
         qy = integrate(p, y)
 
     assert isinstance(qx, Poly) is True
@@ -248,12 +276,14 @@ def test_integrate_poly():
     assert qy.as_expr() == x*y + x**2*y**2/2 + y**4/4
 
 
-def test_integrate_poly_defined():
+def test_integrate_poly_definite():
     p = Poly(x + x**2*y + y**3, x, y)
 
     with warns_deprecated_sympy():
+        Qx = Integral(p, (x, 0, 1))
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
         Qx = integrate(p, (x, 0, 1))
-    with warns_deprecated_sympy():
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
         Qy = integrate(p, (y, 0, pi))
 
     assert isinstance(Qx, Poly) is True
@@ -289,7 +319,7 @@ def test_issue_3635():
     assert integrate(x**2, y) == x**2*y
     assert integrate(x**2, (y, -1, 1)) == 2*x**2
 
-# works in sympy and py.test but hangs in `setup.py test`
+# works in SymPy and py.test but hangs in `setup.py test`
 
 
 def test_integrate_linearterm_pow():
@@ -331,7 +361,8 @@ def test_issue_3679():
 
 
 def test_issue_3686():  # remove this when fresnel itegrals are implemented
-    from sympy import expand_func, fresnels
+    from sympy.core.function import expand_func
+    from sympy.functions.special.error_functions import fresnels
     assert expand_func(integrate(sin(x**2), x)) == \
         sqrt(2)*sqrt(pi)*fresnels(sqrt(2)*x/sqrt(pi))/2
 
@@ -940,7 +971,7 @@ def test_is_number():
     assert Integral(f(x), (x, 0, 1)).is_number is True
 
 
-def test_symbols():
+def test_free_symbols():
     from sympy.abc import x, y, z
     assert Integral(0, x).free_symbols == {x}
     assert Integral(x).free_symbols == {x}
@@ -954,12 +985,18 @@ def test_symbols():
     assert Integral(x, (y, 1, 2)).free_symbols == {x}
     # pseudo-free in this case
     assert Integral(x, (y, z, z)).free_symbols == {x, z}
-    assert Integral(x, (y, 1, 2), (y, None, None)).free_symbols == {x, y}
-    assert Integral(x, (y, 1, 2), (x, 1, y)).free_symbols == {y}
-    assert Integral(2, (y, 1, 2), (y, 1, x), (x, 1, 2)).free_symbols == set()
-    assert Integral(2, (y, x, 2), (y, 1, x), (x, 1, 2)).free_symbols == set()
-    assert Integral(2, (x, 1, 2), (y, x, 2), (y, 1, 2)).free_symbols == \
-        {x}
+    assert Integral(x, (y, 1, 2), (y, None, None)
+        ).free_symbols == {x, y}
+    assert Integral(x, (y, 1, 2), (x, 1, y)
+        ).free_symbols == {y}
+    assert Integral(2, (y, 1, 2), (y, 1, x), (x, 1, 2)
+        ).free_symbols == set()
+    assert Integral(2, (y, x, 2), (y, 1, x), (x, 1, 2)
+        ).free_symbols == set()
+    assert Integral(2, (x, 1, 2), (y, x, 2), (y, 1, 2)
+        ).free_symbols == {x}
+    assert Integral(f(x), (f(x), 1, y)).free_symbols == {y}
+    assert Integral(f(x), (f(x), 1, x)).free_symbols == {x}
 
 
 def test_is_zero():
@@ -1100,13 +1137,13 @@ def test_issue_4199():
 
 
 def test_issue_3940():
-    a, b, c, d = symbols('a:d', positive=True, finite=True)
+    a, b, c, d = symbols('a:d', positive=True)
     assert integrate(exp(-x**2 + I*c*x), x) == \
         -sqrt(pi)*exp(-c**2/4)*erf(I*c/2 - x)/2
     assert integrate(exp(a*x**2 + b*x + c), x) == \
         sqrt(pi)*exp(c)*exp(-b**2/(4*a))*erfi(sqrt(a)*x + b/(2*sqrt(a)))/(2*sqrt(a))
 
-    from sympy import expand_mul
+    from sympy.core.function import expand_mul
     from sympy.abc import k
     assert expand_mul(integrate(exp(-x**2)*exp(I*k*x), (x, -oo, oo))) == \
         sqrt(pi)*exp(-k**2/4)
@@ -1214,14 +1251,14 @@ def test_issue_4737():
 
 def test_issue_4992():
     # Note: psi in _check_antecedents becomes NaN.
-    from sympy import expand_func
+    from sympy.core.function import expand_func
     a = Symbol('a', positive=True)
     assert simplify(expand_func(integrate(exp(-x)*log(x)*x**a, (x, 0, oo)))) == \
         (a*polygamma(0, a) + 1)*gamma(a)
 
 
 def test_issue_4487():
-    from sympy import lowergamma
+    from sympy.functions.special.gamma_functions import lowergamma
     assert simplify(integrate(exp(-x)*x**y, x)) == lowergamma(y + 1, x)
 
 
@@ -1316,11 +1353,12 @@ def test_issue_4234():
 
 
 def test_issue_4492():
-    assert simplify(integrate(x**2 * sqrt(5 - x**2), x)) == Piecewise(
+    assert simplify(integrate(x**2 * sqrt(5 - x**2), x)).factor(
+        deep=True) == Piecewise(
         (I*(2*x**5 - 15*x**3 + 25*x - 25*sqrt(x**2 - 5)*acosh(sqrt(5)*x/5)) /
-            (8*sqrt(x**2 - 5)), 1 < Abs(x**2)/5),
-        ((-2*x**5 + 15*x**3 - 25*x + 25*sqrt(-x**2 + 5)*asin(sqrt(5)*x/5)) /
-            (8*sqrt(-x**2 + 5)), True))
+            (8*sqrt(x**2 - 5)), (x > sqrt(5)) | (x < -sqrt(5))),
+        ((2*x**5 - 15*x**3 + 25*x - 25*sqrt(5 - x**2)*asin(sqrt(5)*x/5)) /
+            (-8*sqrt(-x**2 + 5)), True))
 
 
 def test_issue_2708():
@@ -1343,7 +1381,8 @@ def test_issue_2884():
     assert str(e) == '1.86831064982608*y + 2.16387491480008'
 
 
-def test_issue_8368():
+def test_issue_8368i():
+    from sympy.functions.elementary.complexes import arg, Abs
     assert integrate(exp(-s*x)*cosh(x), (x, 0, oo)) == \
         Piecewise(
             (   pi*Piecewise(
@@ -1357,10 +1396,7 @@ def test_issue_8368():
                             polar_lift(s)**2),
                         True)
                 ),
-                And(
-                    Abs(periodic_argument(polar_lift(s)**2, oo)) < pi,
-                    cos(Abs(periodic_argument(polar_lift(s)**2, oo))/2)*sqrt(Abs(s**2)) - 1 > 0,
-                    Ne(s**2, 1))
+                s**2 > 1
             ),
             (
                 Integral(exp(-s*x)*cosh(x), (x, 0, oo)),
@@ -1369,10 +1405,10 @@ def test_issue_8368():
         Piecewise(
             (   -1/(s + 1)/2 - 1/(-s + 1)/2,
                 And(
-                    Ne(1/s, 1),
-                    Abs(periodic_argument(s, oo)) < pi/2,
-                    Abs(periodic_argument(s, oo)) <= pi/2,
-                    cos(Abs(periodic_argument(s, oo)))*Abs(s) - 1 > 0)),
+                    Abs(s) > 1,
+                    Abs(arg(s)) < pi/2,
+                    Abs(arg(s)) <= pi/2
+                    )),
             (   Integral(exp(-s*x)*sinh(x), (x, 0, oo)),
                 True))
 
@@ -1546,7 +1582,9 @@ def test_issue_15218():
         assert Integral(Eq(x, y), x) == Eq(Integral(x, x), Integral(y, x))
     with warns_deprecated_sympy():
         assert Integral(Eq(x, y), x).doit() == Eq(x**2/2, x*y)
-    with warns_deprecated_sympy():
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
+        # The warning is made in the ExprWithLimits superclass. The stacklevel
+        # is correct for integrate(Eq) but not Eq.integrate
         assert Eq(x, y).integrate(x) == Eq(x**2/2, x*y)
 
     # These are not deprecated because they are definite integrals
@@ -1609,7 +1647,7 @@ def test_issue_4311_fast():
 
 
 def test_integrate_with_complex_constants():
-    K = Symbol('K', real=True, positive=True)
+    K = Symbol('K', positive=True)
     x = Symbol('x', real=True)
     m = Symbol('m', real=True)
     t = Symbol('t', real=True)
@@ -1650,7 +1688,7 @@ def test_issue_8614():
 
 @slow
 def test_issue_15494():
-    s = symbols('s', real=True, positive=True)
+    s = symbols('s', positive=True)
 
     integrand = (exp(s/2) - 2*exp(1.6*s) + exp(s))*exp(s)
     solution = integrate(integrand, s)
@@ -1834,8 +1872,8 @@ def test_issue_21024():
     assert F == integrate(f, x)
 
     f = (x + exp(3))/(2*x**2 + 2*x)
-    F = exp(3)*log(x)/2 + (Rational(1, 2) - exp(3)/2)*log(x + 1)
-    assert F == integrate(f, x)
+    F = exp(3)*log(x)/2 - exp(3)*log(x + 1)/2 + log(x + 1)/2
+    assert F == integrate(f, x).expand()
 
     f = log(x + 4*sinh(4))
     F = x*log(x + 4*sinh(4)) - x + 4*log(x + 4*sinh(4))*sinh(4)
@@ -1854,3 +1892,25 @@ def test_issue_21024():
 def test_issue_21831():
     theta = symbols('theta')
     assert integrate(cos(3*theta)/(5-4*cos(theta)), (theta, 0, 2*pi)) == pi/12
+    integrand = cos(2*theta)/(5 - 4*cos(theta))
+    assert integrate(integrand, (theta, 0, 2*pi)) == pi/6
+
+
+@slow
+def test_issue_22033_integral():
+    assert integrate((x**2 - Rational(1, 4))**2 * sqrt(1 - x**2), (x, -1, 1)) == pi/32
+
+
+@slow
+def test_issue_21671():
+    assert integrate(1,(z,x**2+y**2,2-x**2-y**2),(y,-sqrt(1-x**2),sqrt(1-x**2)),(x,-1,1)) == pi
+    assert integrate(-4*(1 - x**2)**(S(3)/2)/3 + 2*sqrt(1 - x**2)*(2 - 2*x**2), (x, -1, 1)) == pi
+
+
+def test_issue_18527():
+    # The manual integrator can not currently solve this. Assert that it does
+    # not give an incorrect result involving Abs when x has real assumptions.
+    xr = symbols('xr', real=True)
+    expr = (cos(x)/(4+(sin(x))**2))
+    res_real = integrate(expr.subs(x, xr), xr, manual=True).subs(xr, x)
+    assert integrate(expr, x, manual=True) == res_real == Integral(expr, x)

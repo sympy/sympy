@@ -1,6 +1,8 @@
 from sympy.core.backend import (diff, expand, sin, cos, sympify, eye, symbols,
                                 ImmutableMatrix as Matrix, MatrixBase)
-from sympy import (trigsimp, solve, Symbol, Dummy)
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.simplify.trigsimp import trigsimp
+from sympy.solvers.solvers import solve
 from sympy.physics.vector.vector import Vector, _check_vector
 from sympy.utilities.misc import translate
 
@@ -446,8 +448,8 @@ class ReferenceFrame:
         return outvec
 
     def dcm(self, otherframe):
-        r"""Returns the direction cosine matrix relative to the provided
-        reference frame.
+        r"""Returns the direction cosine matrix of this reference frame
+        relative to the provided reference frame.
 
         The returned matrix can be used to express the orthogonal unit vectors
         of this frame in terms of the orthogonal unit vectors of
@@ -471,7 +473,8 @@ class ReferenceFrame:
         >>> from sympy.physics.vector import ReferenceFrame
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
-        >>> A = N.orientnew('A', 'Axis', (q1, N.x))
+        >>> A = ReferenceFrame('A')
+        >>> A.orient_axis(N, q1, N.x)
         >>> N.dcm(A)
         Matrix([
         [1,       0,        0],
@@ -491,10 +494,10 @@ class ReferenceFrame:
         Notes
         =====
 
-        It is import to know what form of the direction cosine matrix is
+        It is important to know what form of the direction cosine matrix is
         returned. If ``B.dcm(A)`` is called, it means the "direction cosine
-        matrix of B relative to A". This is the matrix :math:`^{\mathbf{A}} \mathbf{R} ^{\mathbf{B}}`
-        shown in the following relationship:
+        matrix of B rotated relative to A". This is the matrix
+        :math:`{}^B\mathbf{C}^A` shown in the following relationship:
 
         .. math::
 
@@ -504,14 +507,14 @@ class ReferenceFrame:
              \hat{\mathbf{b}}_3
            \end{bmatrix}
            =
-           {}^A\mathbf{R}^B
+           {}^B\mathbf{C}^A
            \begin{bmatrix}
              \hat{\mathbf{a}}_1 \\
              \hat{\mathbf{a}}_2 \\
              \hat{\mathbf{a}}_3
            \end{bmatrix}.
 
-        :math:`{}^A\mathbf{R}^B` is the matrix that expresses the B unit
+        :math:`{}^B\mathbf{C}^A` is the matrix that expresses the B unit
         vectors in terms of the A unit vectors.
 
         """
@@ -744,7 +747,7 @@ class ReferenceFrame:
         # amounts must be a Matrix type object
         # (e.g. sympy.matrices.dense.MutableDenseMatrix).
         if not isinstance(dcm, MatrixBase):
-            raise TypeError("Amounts must be a sympy Matrix type object.")
+            raise TypeError("Amounts must be a SymPy Matrix type object.")
 
         parent_orient_dcm = []
         parent_orient_dcm = dcm

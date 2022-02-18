@@ -6,7 +6,7 @@ and supports functions to generate the contents in
 ``sympy.assumptions.ask_generated`` file.
 """
 
-from sympy.assumptions import Q
+from sympy.assumptions.ask import Q
 from sympy.assumptions.assume import AppliedPredicate
 from sympy.core.cache import cacheit
 from sympy.core.symbol import Symbol
@@ -141,9 +141,8 @@ def generate_known_facts_dict(keys, fact):
     Examples
     ========
 
-    >>> from sympy import Q
+    >>> from sympy import Q, And, Implies
     >>> from sympy.assumptions.facts import generate_known_facts_dict
-    >>> from sympy.logic.boolalg import And, Implies
     >>> from sympy.abc import x
     >>> keys = [Q.even(x), Q.odd(x), Q.zero(x)]
     >>> fact = And(Implies(Q.even(x), ~Q.odd(x)),

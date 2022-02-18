@@ -118,16 +118,17 @@ debug this function to figure out the exact problem.
 """
 from functools import reduce
 
-from sympy import cacheit
-from sympy.core import Basic, S, oo, I, Dummy, Wild, Mul, PoleError
+from sympy.core import Basic, S, Mul, PoleError
+from sympy.core.cache import cacheit
+from sympy.core.numbers import ilcm, I, oo
+from sympy.core.symbol import Dummy, Wild
+from sympy.core.traversal import bottom_up
 
 from sympy.functions import log, exp, sign as _sign
 from sympy.series.order import Order
-from sympy.simplify import logcombine
-from sympy.simplify.powsimp import powsimp, powdenest
-
 from sympy.utilities.misc import debug_decorator as debug
 from sympy.utilities.timeutils import timethis
+
 timeit = timethis('gruntz')
 
 
@@ -203,7 +204,7 @@ class SubsSet(dict):
         return super().__repr__() + ', ' + self.rewrites.__repr__()
 
     def __getitem__(self, key):
-        if not key in self:
+        if key not in self:
             self[key] = Dummy()
         return dict.__getitem__(self, key)
 
@@ -245,6 +246,7 @@ class SubsSet(dict):
 def mrv(e, x):
     """Returns a SubsSet of most rapidly varying (mrv) subexpressions of 'e',
        and e rewritten in terms of these"""
+    from sympy.simplify.powsimp import powsimp
     e = powsimp(e, deep=True, combine='exp')
     if not isinstance(e, Basic):
         raise TypeError("e should be an instance of Basic")
@@ -389,6 +391,7 @@ def sign(e, x):
         return 0
 
     elif not e.has(x):
+        from sympy.simplify import logcombine
         e = logcombine(e)
         return _sign(e)
     elif e == x:
@@ -434,6 +437,7 @@ def limitinf(e, x, leadsimp=False):
 
     if not e.has(x):
         return e  # e is a constant
+    from sympy.simplify.powsimp import powdenest
     if e.has(Order):
         e = e.expand().removeO()
     if not x.is_positive or x.is_integer:
@@ -485,15 +489,22 @@ def calculate_series(e, x, logx=None):
 
     This is a place that fails most often, so it is in its own function.
     """
-    from sympy.polys import cancel
-    from sympy.simplify import bottom_up
+    from sympy.simplify.powsimp import powdenest
 
     for t in e.lseries(x, logx=logx):
         # bottom_up function is required for a specific case - when e is
-        # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p). No current simplification
-        # methods reduce this to 0 while not expanding polynomials.
-        t = bottom_up(t, lambda w: getattr(w, 'normal', lambda: w)())
-        t = cancel(t, expand=False).factor()
+        # -exp(p/(p + 1)) + exp(-p**2/(p + 1) + p)
+        t = bottom_up(t, lambda w:
+            getattr(w, 'normal', lambda: w)())
+        # And the expression
+        # `(-sin(1/x) + sin((x + exp(x))*exp(-x)/x))*exp(x)`
+        # from the first test of test_gruntz_eval_special needs to
+        # be expanded. But other forms need to be have at least
+        # factor_terms applied. `factor` accomplishes both and is
+        # faster than using `factor_terms` for the gruntz suite. It
+        # does not appear that use of `cancel` is necessary.
+        # t = cancel(t, expand=False)
+        t = t.factor()
 
         if t.has(exp) and t.has(log):
             t = powdenest(t)
@@ -531,7 +542,7 @@ def mrv_leadterm(e, x):
     # For limits of complex functions, the algorithm would have to be
     # improved, or just find limits of Re and Im components separately.
     #
-    w = Dummy("w", real=True, positive=True)
+    w = Dummy("w", positive=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
     try:
@@ -598,7 +609,6 @@ def rewrite(e, Omega, x, wsym):
     Returns the rewritten e in terms of w and log(w). See test_rewrite1()
     for examples and correct results.
     """
-    from sympy import ilcm
     if not isinstance(Omega, SubsSet):
         raise TypeError("Omega should be an instance of SubsSet")
     if len(Omega) == 0:
@@ -641,6 +651,7 @@ def rewrite(e, Omega, x, wsym):
     # the following powsimp is necessary to automatically combine exponentials,
     # so that the .xreplace() below succeeds:
     # TODO this should not be necessary
+    from sympy.simplify.powsimp import powsimp
     f = powsimp(e, deep=True, combine='exp')
     for a, b in O2:
         f = f.xreplace({a: b})
@@ -653,7 +664,7 @@ def rewrite(e, Omega, x, wsym):
     if sig == 1:
         logw = -logw  # log(w)->log(1/w)=-log(w)
 
-    # Some parts of sympy have difficulty computing series expansions with
+    # Some parts of SymPy have difficulty computing series expansions with
     # non-integral exponents. The following heuristic improves the situation:
     exponent = reduce(ilcm, denominators, 1)
     f = f.subs({wsym: wsym**exponent})

@@ -8,7 +8,7 @@ References:
   - https://www.researchgate.net/publication/242384772_Implementations_of_the_DPLL_Algorithm
 """
 
-from sympy import default_sort_key
+from sympy.core.sorting import default_sort_key
 from sympy.logic.boolalg import Or, Not, conjuncts, disjuncts, to_cnf, \
     to_int_repr, _find_predicates
 from sympy.assumptions.cnf import CNF

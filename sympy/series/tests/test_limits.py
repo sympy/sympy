@@ -1,14 +1,27 @@
 from itertools import product
 
-from sympy import (
-    limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling, sinh, diff,
-    atan, Abs, gamma, Symbol, S, pi, Integral, Rational, I, E, besselj,
-    tan, cot, integrate, Sum, sign, Function, subfactorial, symbols,
-    binomial, simplify, frac, sec, zoo, fresnelc, fresnels, real_root,
-    acos, erf, erfc, erfi, LambertW, factorial, digamma, uppergamma, re,
-    Ei, EulerGamma, asin, atanh, acot, acoth, asec, acsc, cbrt, besselk)
+from sympy.concrete.summations import Sum
+from sympy.core.function import (Function, diff)
+from sympy.core import EulerGamma
+from sympy.core.numbers import (E, I, Rational, oo, pi, zoo)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.combinatorial.factorials import (binomial, factorial, subfactorial)
+from sympy.functions.elementary.complexes import (Abs, re, sign)
+from sympy.functions.elementary.exponential import (LambertW, exp, log)
+from sympy.functions.elementary.hyperbolic import (acoth, atanh, sinh)
+from sympy.functions.elementary.integers import (ceiling, floor, frac)
+from sympy.functions.elementary.miscellaneous import (cbrt, real_root, sqrt)
+from sympy.functions.elementary.trigonometric import (acos, acot, acsc, asec, asin,
+                                                      atan, cos, cot, csc, sec, sin, tan)
+from sympy.functions.special.bessel import (besselj, besselk)
+from sympy.functions.special.error_functions import (Ei, erf, erfc, erfi, fresnelc, fresnels)
+from sympy.functions.special.gamma_functions import (digamma, gamma, uppergamma)
+from sympy.integrals.integrals import (Integral, integrate)
+from sympy.series.limits import (Limit, limit)
+from sympy.simplify.simplify import simplify
 
-from sympy.calculus.util import AccumBounds
+from sympy.calculus.accumulationbounds import AccumBounds
 from sympy.core.mul import Mul
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
@@ -53,6 +66,10 @@ def test_basic1():
     assert limit(1/tan(x**3), x, (2*pi)**Rational(1, 3), dir="-") is -oo
     assert limit(1/cot(x)**3, x, (pi*Rational(3, 2)), dir="+") is -oo
     assert limit(1/cot(x)**3, x, (pi*Rational(3, 2)), dir="-") is oo
+    assert limit(tan(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(cot(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(sec(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(csc(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
 
     # test bi-directional limits
     assert limit(sin(x)/x, x, 0, dir="+-") == 1
@@ -73,8 +90,16 @@ def test_basic1():
     assert limit(1/sqrt(x), x, 0, dir='-') == (-oo)*I
     assert limit(x**2, x, 0, dir='-') == 0
     assert limit(sqrt(x), x, 0, dir='-') == 0
-    assert limit(x**-pi, x, 0, dir='-') == -oo*(-1)**(1 - pi)
+    assert limit(x**-pi, x, 0, dir='-') == oo/(-1)**pi
     assert limit((1 + cos(x))**oo, x, 0) == Limit((cos(x) + 1)**oo, x, 0)
+
+    # test pull request 22491
+    assert limit(1/asin(x), x, 0, dir = '+') == oo
+    assert limit(1/asin(x), x, 0, dir = '-') == -oo
+    assert limit(1/sinh(x), x, 0, dir = '+') == oo
+    assert limit(1/sinh(x), x, 0, dir = '-') == -oo
+    assert limit(log(1/x) + 1/sin(x), x, 0, dir = '+') == oo
+    assert limit(log(1/x) + 1/x, x, 0, dir = '+') == oo
 
 
 def test_basic2():
@@ -280,7 +305,9 @@ def test_series_AccumBounds():
     assert limit(sin(k) - sin(k)*cos(k), k, oo) == AccumBounds(-2, 2)
 
     # test for issue #9934
-    t1 = Mul(AccumBounds(-S(3)/2 + cos(1)/2, cos(1)/2 + S.Half), 1/(-1 + cos(1)))
+    lo = (-3 + cos(1))/2
+    hi = (1 + cos(1))/2
+    t1 = Mul(AccumBounds(lo, hi), 1/(-1 + cos(1)), evaluate=False)
     assert limit(simplify(Sum(cos(n).rewrite(exp), (n, 0, k)).doit().rewrite(sin)), k, oo) == t1
 
     t2 = Mul(AccumBounds(-1 + sin(1)/2, sin(1)/2 + 1), 1/(1 - cos(1)))
@@ -589,17 +616,20 @@ def test_issue_8433():
 
 def test_issue_8481():
     k = Symbol('k', integer=True, nonnegative=True)
-    lamda = Symbol('lamda', real=True, positive=True)
-    limit(lamda**k * exp(-lamda) / factorial(k), k, oo) == 0
+    lamda = Symbol('lamda', positive=True)
+    assert limit(lamda**k * exp(-lamda) / factorial(k), k, oo) == 0
 
 
-def test_issue_8635():
+def test_issue_8635_18176():
     x = Symbol('x', real=True)
     k = Symbol('k', positive=True)
     assert limit(x**n - x**(n - 0), x, oo) == 0
     assert limit(x**n - x**(n - 5), x, oo) == oo
     assert limit(x**n - x**(n - 2.5), x, oo) == oo
     assert limit(x**n - x**(n - k - 1), x, oo) == oo
+    x = Symbol('x', positive=True)
+    assert limit(x**n - x**(n - 1), x, oo) == oo
+    assert limit(x**n - x**(n + 2), x, oo) == -oo
 
 
 def test_issue_8730():
@@ -731,6 +761,16 @@ def test_issue_13750():
 
 def test_issue_14514():
     assert limit((1/(log(x)**log(x)))**(1/x), x, oo) == 1
+
+
+def test_issues_14525():
+    assert limit(sin(x)**2 - cos(x) + tan(x)*csc(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(sin(x)**2 - cos(x) + sin(x)*cot(x), x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(cot(x) - tan(x)**2, x, oo) == AccumBounds(S.NegativeInfinity, S.Infinity)
+    assert limit(cos(x) - tan(x)**2, x, oo) == AccumBounds(S.NegativeInfinity, S.One)
+    assert limit(sin(x) - tan(x)**2, x, oo) == AccumBounds(S.NegativeInfinity, S.One)
+    assert limit(cos(x)**2 - tan(x)**2, x, oo) == AccumBounds(S.NegativeInfinity, S.One)
+    assert limit(tan(x)**2 + sin(x)**2 - cos(x), x, oo) == AccumBounds(-S.One, S.Infinity)
 
 
 def test_issue_14574():
@@ -899,6 +939,10 @@ def test_issue_18508():
     assert limit(sin(x)/sqrt(1-cos(x)), x, 0, dir='-') == -sqrt(2)
 
 
+def test_issue_18521():
+    raises(NotImplementedError, lambda: limit(exp((2 - n) * x), x, oo))
+
+
 def test_issue_18969():
     a, b = symbols('a b', positive=True)
     assert limit(LambertW(a), a, b) == LambertW(b)
@@ -935,11 +979,11 @@ def test_issue_16708():
 
 
 def test_issue_19453():
-    beta = Symbol("beta", real=True, positive=True)
-    h = Symbol("h", real=True, positive=True)
-    m = Symbol("m", real=True, positive=True)
-    w = Symbol("omega", real=True, positive=True)
-    g = Symbol("g", real=True, positive=True)
+    beta = Symbol("beta", positive=True)
+    h = Symbol("h", positive=True)
+    m = Symbol("m", positive=True)
+    w = Symbol("omega", positive=True)
+    g = Symbol("g", positive=True)
 
     e = exp(1)
     q = 3*h**2*beta*g*e**(0.5*h*beta*w)

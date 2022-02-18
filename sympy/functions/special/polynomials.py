@@ -18,16 +18,9 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import cos, sec
 from sympy.functions.special.gamma_functions import gamma
 from sympy.functions.special.hyper import hyper
-
-from sympy.polys.orthopolys import (
-    jacobi_poly,
-    gegenbauer_poly,
-    chebyshevt_poly,
-    chebyshevu_poly,
-    laguerre_poly,
-    hermite_poly,
-    legendre_poly
-)
+from sympy.polys.orthopolys import (chebyshevt_poly, chebyshevu_poly,
+                                    gegenbauer_poly, hermite_poly, jacobi_poly,
+                                    laguerre_poly, legendre_poly)
 
 _x = Dummy('x')
 
@@ -169,7 +162,7 @@ class jacobi(OrthogonalPolynomial):
             return jacobi_poly(n, a, b, x)
 
     def fdiff(self, argindex=4):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         if argindex == 1:
             # Diff wrt n
             raise ArgumentIndexError(self, argindex)
@@ -197,7 +190,7 @@ class jacobi(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, a, b, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         # Make sure n \in N
         if n.is_negative or n.is_integer is False:
             raise ValueError("Error: n should be a non-negative integer.")
@@ -399,7 +392,7 @@ class gegenbauer(OrthogonalPolynomial):
             return gegenbauer_poly(n, a, x)
 
     def fdiff(self, argindex=3):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         if argindex == 1:
             # Diff wrt n
             raise ArgumentIndexError(self, argindex)
@@ -421,7 +414,7 @@ class gegenbauer(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, a, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
         kern = ((-1)**k * RisingFactorial(a, n - k) * (2*x)**(n - 2*k) /
                 (factorial(k) * factorial(n - 2*k)))
@@ -542,7 +535,7 @@ class chebyshevt(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
         kern = binomial(n, 2*k) * (x**2 - 1)**k * x**(n - 2*k)
         return Sum(kern, (k, 0, floor(n/2)))
@@ -661,7 +654,7 @@ class chebyshevu(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
         kern = S.NegativeOne**k * factorial(
             n - k) * (2*x)**(n - 2*k) / (factorial(k) * factorial(n - 2*k))
@@ -856,9 +849,9 @@ class legendre(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
-        kern = (-1)**k*binomial(n, k)**2*((1 + x)/2)**(n - k)*((1 - x)/2)**k
+        kern = S.NegativeOne**k*binomial(n, k)**2*((1 + x)/2)**(n - k)*((1 - x)/2)**k
         return Sum(kern, (k, 0, n))
 
 
@@ -923,7 +916,7 @@ class assoc_legendre(Function):
     @classmethod
     def _eval_at_order(cls, n, m):
         P = legendre_poly(n, _x, polys=True).diff((_x, m))
-        return (-1)**m * (1 - _x**2)**Rational(m, 2) * P.as_expr()
+        return S.NegativeOne**m * (1 - _x**2)**Rational(m, 2) * P.as_expr()
 
     @classmethod
     def eval(cls, n, m, x):
@@ -958,10 +951,10 @@ class assoc_legendre(Function):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, m, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
         kern = factorial(2*n - 2*k)/(2**n*factorial(n - k)*factorial(
-            k)*factorial(n - 2*k - m))*(-1)**k*x**(n - m - 2*k)
+            k)*factorial(n - 2*k - m))*S.NegativeOne**k*x**(n - m - 2*k)
         return (1 - x**2)**(m/2) * Sum(kern, (k, 0, floor((n - m)*S.Half)))
 
     def _eval_conjugate(self):
@@ -1059,9 +1052,9 @@ class hermite(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         k = Dummy("k")
-        kern = (-1)**k / (factorial(k)*factorial(n - 2*k)) * (2*x)**(n - 2*k)
+        kern = S.NegativeOne**k / (factorial(k)*factorial(n - 2*k)) * (2*x)**(n - 2*k)
         return factorial(n)*Sum(kern, (k, 0, floor(n/2)))
 
 #----------------------------------------------------------------------------
@@ -1162,7 +1155,7 @@ class laguerre(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         # Make sure n \in N_0
         if n.is_negative:
             return exp(x) * self._eval_rewrite_as_polynomial(-n - 1, -x, **kwargs)
@@ -1266,7 +1259,7 @@ class assoc_laguerre(OrthogonalPolynomial):
                 return laguerre_poly(n, x, alpha)
 
     def fdiff(self, argindex=3):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         if argindex == 1:
             # Diff wrt n
             raise ArgumentIndexError(self, argindex)
@@ -1283,7 +1276,7 @@ class assoc_laguerre(OrthogonalPolynomial):
             raise ArgumentIndexError(self, argindex)
 
     def _eval_rewrite_as_polynomial(self, n, alpha, x, **kwargs):
-        from sympy import Sum
+        from sympy.concrete.summations import Sum
         # Make sure n \in N_0
         if n.is_negative or n.is_integer is False:
             raise ValueError("Error: n should be a non-negative integer.")

@@ -1,10 +1,21 @@
 from collections import defaultdict
 
-from sympy import Sum, Mul, KroneckerDelta, Indexed, IndexedBase, Add
+from sympy import Function
+from sympy.combinatorics.permutations import _af_invert
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.numbers import Integer
+from sympy.core.power import Pow
+from sympy.core.sorting import default_sort_key
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.tensor.array.expressions import ArrayElementwiseApplyFunc
+from sympy.tensor.indexed import (Indexed, IndexedBase)
 from sympy.combinatorics import Permutation
 from sympy.matrices.expressions.matexpr import MatrixElement
-from sympy.tensor.array.expressions.array_expressions import PermuteDims, ArrayDiagonal, \
-    ArrayContraction, ArrayTensorProduct, ArrayAdd
+from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal, \
+    get_shape, ArrayElement, _array_tensor_product, _array_diagonal, _array_contraction, _array_add, \
+    _permute_dims, OneArray, ArrayAdd
 from sympy.tensor.array.expressions.utils import _get_argindex, _get_diagonal_indices
 
 
@@ -53,14 +64,43 @@ def convert_indexed_to_array(expr, first_indices=None):
     """
 
     result, indices = _convert_indexed_to_array(expr)
+
+    if any(isinstance(i, (int, Integer)) for i in indices):
+        result = ArrayElement(result, indices)
+        indices = []
+
     if not first_indices:
         return result
+
+    def _check_is_in(elem, indices):
+        if elem in indices:
+            return True
+        if any(elem in i for i in indices if isinstance(i, frozenset)):
+            return True
+        return False
+
+    repl = {j: i for i in indices if isinstance(i, frozenset) for j in i}
+    first_indices = [repl.get(i, i) for i in first_indices]
     for i in first_indices:
-        if i not in indices:
+        if not _check_is_in(i, indices):
             first_indices.remove(i)
-    first_indices.extend([i for i in indices if i not in first_indices])
-    permutation = [first_indices.index(i) for i in indices]
-    return PermuteDims(result, permutation)
+    first_indices.extend([i for i in indices if not _check_is_in(i, first_indices)])
+
+    def _get_pos(elem, indices):
+        if elem in indices:
+            return indices.index(elem)
+        for i, e in enumerate(indices):
+            if not isinstance(e, frozenset):
+                continue
+            if elem in e:
+                return i
+        raise ValueError("not found")
+
+    permutation = _af_invert([_get_pos(i, first_indices) for i in indices])
+    if isinstance(result, ArrayAdd):
+        return _array_add(*[_permute_dims(arg, permutation) for arg in result.args])
+    else:
+        return _permute_dims(result, permutation)
 
 
 def _convert_indexed_to_array(expr):
@@ -68,8 +108,20 @@ def _convert_indexed_to_array(expr):
         function = expr.function
         summation_indices = expr.variables
         subexpr, subindices = _convert_indexed_to_array(function)
+        subindicessets = {j: i for i in subindices if isinstance(i, frozenset) for j in i}
+        summation_indices = sorted(set([subindicessets.get(i, i) for i in summation_indices]), key=default_sort_key)
+        # TODO: check that Kronecker delta is only contracted to one other element:
+        kronecker_indices = set([])
+        if isinstance(function, Mul):
+            for arg in function.args:
+                if not isinstance(arg, KroneckerDelta):
+                    continue
+                arg_indices = sorted(set(arg.indices), key=default_sort_key)
+                if len(arg_indices) == 2:
+                    kronecker_indices.update(arg_indices)
+        kronecker_indices = sorted(kronecker_indices, key=default_sort_key)
         # Check dimensional consistency:
-        shape = subexpr.shape
+        shape = get_shape(subexpr)
         if shape:
             for ind, istart, iend in expr.limits:
                 i = _get_argindex(subindices, ind)
@@ -91,21 +143,24 @@ def _convert_indexed_to_array(expr):
                 if ind in summation_indices:
                     pass
             if diagonal_indices:
-                subexpr = ArrayDiagonal(subexpr.expr, *diagonal_indices)
+                subexpr = _array_diagonal(subexpr.expr, *diagonal_indices)
             else:
                 subexpr = subexpr.expr
 
         axes_contraction = defaultdict(list)
         for i, ind in enumerate(subindices):
-            if ind in summation_indices:
+            include = all(j not in kronecker_indices for j in ind) if isinstance(ind, frozenset) else ind not in kronecker_indices
+            if ind in summation_indices and include:
                 axes_contraction[ind].append(i)
                 subindices[i] = None
         for k, v in axes_contraction.items():
+            if any(i in kronecker_indices for i in k) if isinstance(k, frozenset) else k in kronecker_indices:
+                continue
             contraction_indices.append(tuple(v))
         free_indices = [i for i in subindices if i is not None]
         indices_ret = list(free_indices)
         indices_ret.sort(key=lambda x: free_indices.index(x))
-        return ArrayContraction(
+        return _array_contraction(
                 subexpr,
                 *contraction_indices,
                 free_indices=free_indices
@@ -138,23 +193,30 @@ def _convert_indexed_to_array(expr):
             newindices.append(loc_indices)
         flattened_indices = [kronecker_delta_repl.get(j, j) for i in newindices for j in i]
         diagonal_indices, ret_indices = _get_diagonal_indices(flattened_indices)
-        tp = ArrayTensorProduct(*newargs)
+        tp = _array_tensor_product(*newargs)
         if diagonal_indices:
-            return (ArrayDiagonal(tp, *diagonal_indices), ret_indices)
+            return _array_diagonal(tp, *diagonal_indices), ret_indices
         else:
             return tp, ret_indices
     if isinstance(expr, MatrixElement):
         indices = expr.args[1:]
         diagonal_indices, ret_indices = _get_diagonal_indices(indices)
         if diagonal_indices:
-            return (ArrayDiagonal(expr.args[0], *diagonal_indices), ret_indices)
+            return _array_diagonal(expr.args[0], *diagonal_indices), ret_indices
         else:
             return expr.args[0], ret_indices
+    if isinstance(expr, ArrayElement):
+        indices = expr.indices
+        diagonal_indices, ret_indices = _get_diagonal_indices(indices)
+        if diagonal_indices:
+            return _array_diagonal(expr.name, *diagonal_indices), ret_indices
+        else:
+            return expr.name, ret_indices
     if isinstance(expr, Indexed):
         indices = expr.indices
         diagonal_indices, ret_indices = _get_diagonal_indices(indices)
         if diagonal_indices:
-            return (ArrayDiagonal(expr.base, *diagonal_indices), ret_indices)
+            return _array_diagonal(expr.base, *diagonal_indices), ret_indices
         else:
             return expr.args[0], ret_indices
     if isinstance(expr, IndexedBase):
@@ -165,13 +227,31 @@ def _convert_indexed_to_array(expr):
         args, indices = zip(*[_convert_indexed_to_array(arg) for arg in expr.args])
         args = list(args)
         # Check if all indices are compatible. Otherwise expand the dimensions:
-        index0set = set(indices[0])
-        index0 = indices[0]
-        for i in range(1, len(args)):
-            if set(indices[i]) != index0set:
-                raise NotImplementedError("indices must be the same")
-            permutation = Permutation([index0.index(j) for j in indices[i]])
+        index0 = []
+        shape0 = []
+        for arg, arg_indices in zip(args, indices):
+            arg_indices_set = set(arg_indices)
+            arg_indices_missing = arg_indices_set.difference(index0)
+            index0.extend([i for i in arg_indices if i in arg_indices_missing])
+            arg_shape = get_shape(arg)
+            shape0.extend([arg_shape[i] for i, e in enumerate(arg_indices) if e in arg_indices_missing])
+        for i, (arg, arg_indices) in enumerate(zip(args, indices)):
+            if len(arg_indices) < len(index0):
+                missing_indices_pos = [i for i, e in enumerate(index0) if e not in arg_indices]
+                missing_shape = [shape0[i] for i in missing_indices_pos]
+                arg_indices = tuple(index0[j] for j in missing_indices_pos) + arg_indices
+                args[i] = _array_tensor_product(OneArray(*missing_shape), args[i])
+            permutation = Permutation([arg_indices.index(j) for j in index0])
             # Perform index permutations:
-            args[i] = PermuteDims(args[i], permutation)
-        return ArrayAdd(*args), index0
+            args[i] = _permute_dims(args[i], permutation)
+        return _array_add(*args), tuple(index0)
+    if isinstance(expr, Pow):
+        subexpr, subindices = _convert_indexed_to_array(expr.base)
+        if isinstance(expr.exp, (int, Integer)):
+            diags = zip(*[(2*i, 2*i + 1) for i in range(expr.exp)])
+            arr = _array_diagonal(_array_tensor_product(*[subexpr for i in range(expr.exp)]), *diags)
+            return arr, subindices
+    if isinstance(expr, Function):
+        subexpr, subindices = _convert_indexed_to_array(expr.args[0])
+        return ArrayElementwiseApplyFunc(type(expr), subexpr), subindices
     return expr, ()

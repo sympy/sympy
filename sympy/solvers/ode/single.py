@@ -5,7 +5,7 @@
 import typing
 if typing.TYPE_CHECKING:
     from typing import ClassVar
-from typing import Dict, Type, Iterator, List, Optional
+from typing import Dict as tDict, Type, Iterator, List, Optional
 
 from .riccati import match_riccati, solve_riccati
 from sympy.core import Add, S, Pow, Rational
@@ -20,7 +20,7 @@ from sympy.functions import exp, tan, log, sqrt, besselj, bessely, cbrt, airyai,
 from sympy.integrals import Integral
 from sympy.polys import Poly
 from sympy.polys.polytools import cancel, factor, degree
-from sympy.simplify import collect, simplify, separatevars, logcombine, posify
+from sympy.simplify import collect, simplify, separatevars, logcombine, posify # type: ignore
 from sympy.simplify.radsimp import fraction
 from sympy.utilities import numbered_symbols
 from sympy.solvers.solvers import solve
@@ -433,7 +433,7 @@ class NthAlgebraic(SingleODESolver):
     # be stored in cached results we need to ensure that we always get the
     # same class back for each particular integration variable so we store these
     # classes in a global dict:
-    _diffx_stored = {}  # type: Dict[Symbol, Type[Function]]
+    _diffx_stored = {}  # type: tDict[Symbol, Type[Function]]
 
     @staticmethod
     def _get_diffx(var):
@@ -677,8 +677,7 @@ class AlmostLinear(SinglePatternODESolver):
     Examples
     ========
 
-    >>> from sympy import Function, pprint, sin, cos
-    >>> from sympy.solvers.ode import dsolve
+    >>> from sympy import dsolve, Function, pprint, sin, cos
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> d = f(x).diff(x)
@@ -764,19 +763,19 @@ class Bernoulli(SinglePatternODESolver):
         P(x)*f(x) + --(f(x)) = Q(x)*f (x)
                     dx
         >>> pprint(dsolve(genform, f(x), hint='Bernoulli_Integral'), num_columns=110)
-                                                                                                              -1
-                                                                                                             -----
-                                                                                                             n - 1
-               //         /                                /                           \                    \
-               ||        |                                |                            |                    |
-               ||        |                 /              |                 /          |            /       |
-               ||        |                |               |                |           |           |        |
-               ||        |       (1 - n)* | P(x) dx       |       (1 - n)* | P(x) dx   |  (n - 1)* | P(x) dx|
-               ||        |                |               |                |           |           |        |
-               ||        |               /                |               /            |          /         |
-        f(x) = ||C1 - n* | Q(x)*e                   dx +  | Q(x)*e                   dx|*e                  |
-               ||        |                                |                            |                    |
-               \\       /                                /                             /                    /
+                                                                                                                -1
+                                                                                                               -----
+                                                                                                               n - 1
+               //         /                                 /                            \                    \
+               ||        |                                 |                             |                    |
+               ||        |                  /              |                  /          |            /       |
+               ||        |                 |               |                 |           |           |        |
+               ||        |       -(n - 1)* | P(x) dx       |       -(n - 1)* | P(x) dx   |  (n - 1)* | P(x) dx|
+               ||        |                 |               |                 |           |           |        |
+               ||        |                /                |                /            |          /         |
+        f(x) = ||C1 - n* | Q(x)*e                    dx +  | Q(x)*e                    dx|*e                  |
+               ||        |                                 |                             |                    |
+               \\       /                                 /                              /                    /
 
 
     Note that the equation is separable when `n = 1` (see the docstring of
@@ -937,8 +936,7 @@ class RiccatiSpecial(SinglePatternODESolver):
     zero.
 
     >>> from sympy.abc import x, a, b, c, d
-    >>> from sympy.solvers.ode import dsolve, checkodesol
-    >>> from sympy import pprint, Function
+    >>> from sympy import dsolve, checkodesol, pprint, Function
     >>> f = Function('f')
     >>> y = f(x)
     >>> genform = a*y.diff(x) - (b*y**2 + c*y/x + d/x**2)
@@ -1352,8 +1350,7 @@ class SeparableReduced(Separable):
     Examples
     ========
 
-    >>> from sympy import Function, pprint
-    >>> from sympy.solvers.ode.ode import dsolve
+    >>> from sympy import dsolve, Function, pprint
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> d = f(x).diff(x)
@@ -1694,7 +1691,7 @@ class HomogeneousCoeffSubsIndepDivDep(SinglePatternODESolver):
     def _get_general_solution(self, *, simplify_flag: bool = True):
         d, e, fx, x, u, u1, y, xarg, yarg = self._get_match_object()
         (C1,) = self.ode_problem.get_numbered_constants(num=1)
-        int = Integral(simplify((-d/(e + u1*d)).subs({x: u1, y: 1})), (u1, None, x/fx))
+        int = Integral(simplify((-d/(e + u1*d)).subs({x: u1, y: 1})), (u1, None, x/fx)) # type: ignore
         sol = logcombine(Eq(log(fx), int + log(C1)), force=True)
         gen_sol = sol.subs(fx, u).subs(((u, u - yarg), (x, x - xarg), (u, fx)))
         return [gen_sol]
@@ -1794,8 +1791,7 @@ class LinearCoefficients(HomogeneousCoeffBest):
     Examples
     ========
 
-    >>> from sympy import Function, pprint
-    >>> from sympy.solvers.ode.ode import dsolve
+    >>> from sympy import dsolve, Function, pprint
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> df = f(x).diff(x)
@@ -1875,10 +1871,9 @@ class LinearCoefficients(HomogeneousCoeffBest):
         Examples
         ========
 
-        >>> from sympy import Function
+        >>> from sympy import Function, sin
         >>> from sympy.abc import x
         >>> from sympy.solvers.ode.single import LinearCoefficients
-        >>> from sympy.functions.elementary.trigonometric import sin
         >>> f = Function('f')
         >>> eq = (-25*f(x) - 8*x + 62)/(4*f(x) + 11*x - 11)
         >>> obj = LinearCoefficients(eq)
@@ -2702,8 +2697,7 @@ class SecondLinearBessel(SingleODESolver):
     >>> from sympy.abc import x
     >>> from sympy import Symbol
     >>> v = Symbol('v', positive=True)
-    >>> from sympy.solvers.ode import dsolve
-    >>> from sympy import Function
+    >>> from sympy import dsolve, Function
     >>> f = Function('f')
     >>> y = f(x)
     >>> genform = x**2*y.diff(x, 2) + x*y.diff(x) + (x**2 - v**2)*y

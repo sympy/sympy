@@ -9,7 +9,7 @@ from sympy.core.logic import _fuzzy_group
 from sympy.core.numbers import NaN, Number
 from sympy.logic.boolalg import (And, BooleanTrue, BooleanFalse, conjuncts,
     Equivalent, Implies, Not, Or)
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 from ..predicates.common import CommutativePredicate, IsTruePredicate
 
@@ -17,12 +17,14 @@ from ..predicates.common import CommutativePredicate, IsTruePredicate
 class AskHandler:
     """Base class that all Ask Handlers must inherit."""
     def __new__(cls, *args, **kwargs):
-        SymPyDeprecationWarning(
-            feature="AskHandler() class",
-            useinstead="multipledispatch handler",
-            issue=20873,
-            deprecated_since_version="1.8"
-        ).warn()
+        sympy_deprecation_warning(
+            """
+            The AskHandler system is deprecated. The AskHandler class should
+            be replaced with the multipledispatch handler of Predicate
+            """,
+            deprecated_since_version="1.8",
+            active_deprecations_target='deprecated-askhandler',
+        )
         return super().__new__(cls, *args, **kwargs)
 
 

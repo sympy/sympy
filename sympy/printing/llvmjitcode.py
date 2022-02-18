@@ -1,5 +1,5 @@
 '''
-Use llvmlite to create executable functions from Sympy expressions
+Use llvmlite to create executable functions from SymPy expressions
 
 This module requires llvmlite (https://github.com/numba/llvmlite).
 '''
@@ -8,7 +8,8 @@ import ctypes
 
 from sympy.external import import_module
 from sympy.printing.printer import Printer
-from sympy import S, IndexedBase
+from sympy.core.singleton import S
+from sympy.tensor.indexed import IndexedBase
 from sympy.utilities.decorator import doctest_depends_on
 
 llvmlite = import_module('llvmlite')
@@ -339,7 +340,7 @@ class CodeSignature:
 
 
 def _llvm_jit_code(args, expr, signature, callback_type):
-    """Create a native code function from a Sympy expression"""
+    """Create a native code function from a SymPy expression"""
     if callback_type is None:
         jit = LLVMJitCode(signature)
     else:
@@ -358,7 +359,7 @@ def _llvm_jit_code(args, expr, signature, callback_type):
 
 @doctest_depends_on(modules=('llvmlite', 'scipy'))
 def llvm_callable(args, expr, callback_type=None):
-    '''Compile function from a Sympy expression
+    '''Compile function from a SymPy expression
 
     Expressions are evaluated using double precision arithmetic.
     Some single argument math functions (exp, sin, cos, etc.) are supported

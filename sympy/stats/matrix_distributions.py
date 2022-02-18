@@ -1,4 +1,9 @@
-from sympy import S, Basic, exp, multigamma, pi, prod
+from sympy.core.basic import Basic
+from sympy.core.mul import prod
+from sympy.core.numbers import pi
+from sympy.core.singleton import S
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.special.gamma_functions import multigamma
 from sympy.core.sympify import sympify, _sympify
 from sympy.matrices import (ImmutableMatrix, Inverse, Trace, Determinant,
                             MatrixSymbol, MatrixBase, Transpose, MatrixSet,
@@ -185,7 +190,8 @@ class MatrixDistribution(Distribution, NamedArgsMixin):
     Abstract class for Matrix Distribution.
     """
     def __new__(cls, *args):
-        args = list(map(sympify, args))
+        args = [ImmutableMatrix(arg) if isinstance(arg, list)
+                else _sympify(arg) for arg in args]
         return Basic.__new__(cls, *args)
 
     @staticmethod
@@ -529,7 +535,7 @@ class MatrixStudentTDistribution(MatrixDistribution):
         return self.location_matrix.shape
 
     def pdf(self, x):
-        from sympy import eye
+        from sympy.matrices.dense import eye
         if isinstance(x, list):
             x = ImmutableMatrix(x)
         if not isinstance(x, (MatrixBase, MatrixSymbol)):

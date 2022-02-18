@@ -1,20 +1,20 @@
 """
 R code printer
 
-The RCodePrinter converts single sympy expressions into single R expressions,
+The RCodePrinter converts single SymPy expressions into single R expressions,
 using the functions defined in math.h where possible.
 
 
 
 """
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence, PRECEDENCE
 from sympy.sets.fancysets import Range
 
-# dictionary mapping sympy function to (argument_conditions, C_function).
+# dictionary mapping SymPy function to (argument_conditions, C_function).
 # Used in RCodePrinter._print_Function(self)
 known_functions = {
     #"Abs": [(lambda x: not x.is_integer, "fabs")],
@@ -45,6 +45,7 @@ known_functions = {
     "digamma": "digamma",
     "trigamma": "trigamma",
     "beta": "beta",
+    "sqrt": "sqrt",  # To enable automatic rewrite
 }
 
 # These are the core reserved words in the R language. Taken from:
@@ -73,7 +74,7 @@ reserved_words = ['if',
 
 
 class RCodePrinter(CodePrinter):
-    """A printer to convert python expressions to strings of R code"""
+    """A printer to convert SymPy expressions to strings of R code"""
     printmethod = "_rcode"
     language = "R"
 
@@ -87,7 +88,7 @@ class RCodePrinter(CodePrinter):
         'dereference': set(),
         'error_on_reserved': False,
         'reserved_word_suffix': '_',
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
     _operators = {
        'and': '&',
         'or': '|',
@@ -95,7 +96,7 @@ class RCodePrinter(CodePrinter):
     }
 
     _relationals = {
-    }  # type: Dict[str, str]
+    }  # type: tDict[str, str]
 
     def __init__(self, settings={}):
         CodePrinter.__init__(self, settings)
@@ -228,8 +229,7 @@ class RCodePrinter(CodePrinter):
 
     def _print_ITE(self, expr):
         from sympy.functions import Piecewise
-        _piecewise = Piecewise((expr.args[1], expr.args[0]), (expr.args[2], True))
-        return self._print(_piecewise)
+        return self._print(expr.rewrite(Piecewise))
 
     def _print_MatrixElement(self, expr):
         return "{}[{}]".format(self.parenthesize(expr.parent, PRECEDENCE["Atom"],
@@ -247,14 +247,6 @@ class RCodePrinter(CodePrinter):
         rhs_code = self._print(expr.rhs)
         op = expr.rel_op
         return "{} {} {}".format(lhs_code, op, rhs_code)
-
-    def _print_sinc(self, expr):
-        from sympy.functions.elementary.trigonometric import sin
-        from sympy.core.relational import Ne
-        from sympy.functions import Piecewise
-        _piecewise = Piecewise(
-            (sin(expr.args[0]) / expr.args[0], Ne(expr.args[0], 0)), (1, True))
-        return self._print(_piecewise)
 
     def _print_AugmentedAssignment(self, expr):
         lhs_code = self._print(expr.lhs)
@@ -310,7 +302,7 @@ def rcode(expr, assign_to=None, **settings):
     ==========
 
     expr : Expr
-        A sympy expression to be converted.
+        A SymPy expression to be converted.
     assign_to : optional
         When given, the argument is used as the name of the variable to which
         the expression is assigned. Can be a string, ``Symbol``,

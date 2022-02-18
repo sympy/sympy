@@ -2,9 +2,9 @@
 opportunities.
 """
 from sympy.core import Add, Basic, Mul
-from sympy.core.basic import preorder_traversal
 from sympy.core.singleton import S
-from sympy.utilities.iterables import default_sort_key
+from sympy.core.sorting import default_sort_key
+from sympy.core.traversal import preorder_traversal
 
 
 def sub_pre(e):

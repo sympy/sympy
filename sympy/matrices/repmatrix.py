@@ -2,16 +2,16 @@ from collections import defaultdict
 
 from operator import index as index_
 
-from sympy.core.compatibility import is_sequence
 from sympy.core.expr import Expr
-from sympy.core.kind import NumberKind, UndefinedKind
+from sympy.core.kind import Kind, NumberKind, UndefinedKind
 from sympy.core.numbers import Integer, Rational
 from sympy.core.sympify import _sympify, SympifyError
 from sympy.core.singleton import S
 from sympy.polys.domains import ZZ, QQ, EXRAW
 from sympy.polys.matrices import DomainMatrix
+from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.utilities.iterables import is_sequence
 from sympy.utilities.misc import filldedent
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from .common import classof
 from .matrices import MatrixBase, MatrixKind, ShapeError
@@ -44,6 +44,8 @@ class RepMatrix(MatrixBase):
     # are not used because they differ from Expr in some way (e.g. automatic
     # expansion of powers and products).
     #
+
+    _rep: DomainMatrix
 
     def __eq__(self, other):
         # Skip sympify for mutable matrices...
@@ -82,12 +84,17 @@ class RepMatrix(MatrixBase):
                 element = new_domain.from_sympy(element)
 
         if domain == EXRAW and not isinstance(element, Expr):
-            SymPyDeprecationWarning(
-                feature="non-Expr objects in a Matrix",
-                useinstead="list of lists, TableForm or some other data structure",
-                issue=21497,
-                deprecated_since_version="1.9"
-            ).warn()
+            sympy_deprecation_warning(
+                """
+                non-Expr objects in a Matrix is deprecated. Matrix represents
+                a mathematical matrix. To represent a container of non-numeric
+                entities, Use a list of lists, TableForm, NumPy array, or some
+                other data structure instead.
+                """,
+                deprecated_since_version="1.9",
+                active_deprecations_target="deprecated-non-expr-in-matrix",
+                stacklevel=4,
+            )
 
         return rep, element
 
@@ -95,12 +102,17 @@ class RepMatrix(MatrixBase):
     def _dod_to_DomainMatrix(cls, rows, cols, dod, types):
 
         if not all(issubclass(typ, Expr) for typ in types):
-            SymPyDeprecationWarning(
-                feature="non-Expr objects in a Matrix",
-                useinstead="list of lists, TableForm or some other data structure",
-                issue=21497,
-                deprecated_since_version="1.9"
-            ).warn()
+            sympy_deprecation_warning(
+                """
+                non-Expr objects in a Matrix is deprecated. Matrix represents
+                a mathematical matrix. To represent a container of non-numeric
+                entities, Use a list of lists, TableForm, NumPy array, or some
+                other data structure instead.
+                """,
+                deprecated_since_version="1.9",
+                active_deprecations_target="deprecated-non-expr-in-matrix",
+                stacklevel=6,
+            )
 
         rep = DomainMatrix(dod, (rows, cols), EXRAW)
 
@@ -155,8 +167,9 @@ class RepMatrix(MatrixBase):
         return self._fromrep(self._rep.copy())
 
     @property
-    def kind(self):
+    def kind(self) -> MatrixKind:
         domain = self._rep.domain
+        element_kind: Kind
         if domain in (ZZ, QQ):
             element_kind = NumberKind
         elif domain == EXRAW:
@@ -194,7 +207,7 @@ class RepMatrix(MatrixBase):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import SparseMatrix
         >>> a = SparseMatrix(((1, 2), (3, 4)))
         >>> a
         Matrix([
@@ -236,8 +249,9 @@ class RepMatrix(MatrixBase):
         return classof(self, other)._fromrep(self._rep * other._rep)
 
     def _eval_matrix_mul_elementwise(self, other):
-        rep = self._rep.mul_elementwise(other._rep)
-        return classof(self, other)._fromrep(rep)
+        selfrep, otherrep = self._rep.unify(other._rep)
+        newrep = selfrep.mul_elementwise(otherrep)
+        return classof(self, other)._fromrep(newrep)
 
     def _eval_scalar_mul(self, other):
         rep, other = self._unify_element_sympy(self._rep, other)
@@ -269,7 +283,7 @@ class RepMatrix(MatrixBase):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> from sympy.abc import x
         >>> A = Matrix([x*(x - 1), 0])
         >>> B = Matrix([x**2 - x, 0])
@@ -308,8 +322,6 @@ class MutableRepMatrix(RepMatrix):
     # to make the instances mutable. MutableRepMatrix is a superclass for both
     # MutableDenseMatrix and MutableSparseMatrix.
     #
-
-    __hash__ = None
 
     is_zero = False
 
@@ -414,7 +426,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import eye
+        >>> from sympy import eye
         >>> M = eye(3)
         >>> M.col_op(1, lambda v, i: v + 2*M[i, 0]); M
         Matrix([
@@ -436,7 +448,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> M = Matrix([[1, 0], [1, 0]])
         >>> M
         Matrix([
@@ -464,7 +476,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import eye
+        >>> from sympy import eye
         >>> M = eye(3)
         >>> M.row_op(1, lambda v, j: v + 2*M[0, j]); M
         Matrix([
@@ -488,7 +500,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix
+        >>> from sympy import Matrix
         >>> M = Matrix([[0, 1], [1, 0]])
         >>> M
         Matrix([
@@ -516,7 +528,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import eye
+        >>> from sympy import eye
         >>> M = eye(3)
         >>> M.zip_row_op(1, 0, lambda v, u: v + 2*u); M
         Matrix([
@@ -548,7 +560,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import eye
+        >>> from sympy import eye
         >>> I = eye(3)
         >>> I[:2, 0] = [1, 2] # col
         >>> I
@@ -586,7 +598,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix, eye
+        >>> from sympy import Matrix, eye
         >>> M = Matrix([[0, 1], [2, 3], [4, 5]])
         >>> I = eye(3)
         >>> I[:3, :2] = M
@@ -632,7 +644,7 @@ class MutableRepMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import SparseMatrix
         >>> M = SparseMatrix.zeros(3); M
         Matrix([
         [0, 0, 0],

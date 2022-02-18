@@ -1,7 +1,15 @@
 import warnings
 
-from sympy import (Abs, Add, Function, Number, Rational, S, Symbol,
-                   diff, exp, integrate, log, sin, sqrt, symbols)
+from sympy.core.add import Add
+from sympy.core.function import (Function, diff)
+from sympy.core.numbers import (Number, Rational)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Symbol, symbols)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.trigonometric import sin
+from sympy.integrals.integrals import integrate
 from sympy.physics.units import (amount_of_substance, convert_to, find_unit,
                                  volume, kilometer, joule)
 from sympy.physics.units.definitions import (amu, au, centimeter, coulomb,
@@ -289,7 +297,7 @@ def test_find_unit():
     assert find_unit(inch**-1) == ['D', 'dioptre', 'optical_power']
     assert find_unit(length**-1) == ['D', 'dioptre', 'optical_power']
     assert find_unit(inch ** 3) == [
-        'l', 'cl', 'dl', 'ml', 'liter', 'quart', 'liters', 'quarts',
+        'L', 'l', 'cL', 'cl', 'dL', 'dl', 'mL', 'ml', 'liter', 'quart', 'liters', 'quarts',
         'deciliter', 'centiliter', 'deciliters', 'milliliter',
         'centiliters', 'milliliters', 'planck_volume']
     assert find_unit('voltage') == ['V', 'v', 'volt', 'volts', 'planck_voltage']
@@ -367,7 +375,8 @@ def test_factor_and_dimension_with_Abs():
         v_w1 = Quantity('v_w1', length/time, Rational(3, 2)*meter/second)
     v_w1.set_global_relative_scale_factor(Rational(3, 2), meter/second)
     expr = v_w1 - Abs(v_w1)
-    assert (0, length/time) == Quantity._collect_factor_and_dimension(expr)
+    with warns_deprecated_sympy():
+        assert (0, length/time) == Quantity._collect_factor_and_dimension(expr)
 
 
 def test_dimensional_expr_of_derivative():
@@ -462,7 +471,7 @@ def test_issue_14547():
     # not raise an error when the `arg - 1` calculation is
     # performed in the assumptions system
     from sympy.physics.units import foot, inch
-    from sympy import Eq
+    from sympy.core.relational import Eq
     assert log(foot).is_zero is None
     assert log(foot).is_positive is None
     assert log(foot).is_nonnegative is None

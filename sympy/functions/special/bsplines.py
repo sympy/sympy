@@ -1,8 +1,10 @@
 from sympy.core import S, sympify
+from sympy.core.symbol import (Dummy, symbols)
 from sympy.functions import Piecewise, piecewise_fold
+from sympy.logic.boolalg import And
 from sympy.sets.sets import Interval
 
-from sympy.core.cache import lru_cache
+from functools import lru_cache
 
 
 def _ivl(cond, x):
@@ -12,7 +14,6 @@ def _ivl(cond, x):
     which an expression is valid like (lo <= x) & (x <= hi).
     This function returns (lo, hi).
     """
-    from sympy.logic.boolalg import And
     if isinstance(cond, And) and len(cond.args) == 2:
         a, b = cond.args
         if a.lts == x:
@@ -162,7 +163,6 @@ def bspline_basis(d, knots, n, x):
     .. [1] https://en.wikipedia.org/wiki/B-spline
 
     """
-    from sympy.core.symbol import Dummy
     # make sure x has no assumptions so conditions don't evaluate
     xvar = x
     x = Dummy()
@@ -299,7 +299,6 @@ def interpolating_spline(d, x, X, Y):
     bspline_basis_set, interpolating_poly
 
     """
-    from sympy import symbols, Dummy
     from sympy.solvers.solveset import linsolve
     from sympy.matrices.dense import Matrix
 

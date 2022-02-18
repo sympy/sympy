@@ -1,9 +1,20 @@
 """Tests for tools for solving inequalities and systems of inequalities. """
 
-from sympy import (And, Eq, FiniteSet, Ge, Gt, Interval, Le, Lt, Ne, oo, I,
-                   Or, S, sin, cos, tan, sqrt, Symbol, Union, Integral, Sum,
-                   Function, Poly, PurePoly, pi, root, log, exp, Dummy, Abs,
-                   Piecewise, Rational)
+from sympy.concrete.summations import Sum
+from sympy.core.function import Function
+from sympy.core.numbers import (I, Rational, oo, pi)
+from sympy.core.relational import (Eq, Ge, Gt, Le, Lt, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import (root, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (cos, sin, tan)
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import (And, Or)
+from sympy.polys.polytools import (Poly, PurePoly)
+from sympy.sets.sets import (FiniteSet, Interval, Union)
 from sympy.solvers.inequalities import (reduce_inequalities,
                                         solve_poly_inequality as psolve,
                                         reduce_rational_inequalities,
@@ -378,7 +389,7 @@ def test_issue_8974():
 
 def test_issue_10198():
     assert reduce_inequalities(
-        -1 + 1/abs(1/x - 1) < 0) == (x > -oo) & (x < 1/2) & Ne(x, 0)
+        -1 + 1/abs(1/x - 1) < 0) == (x > -oo) & (x < S(1)/2) & Ne(x, 0)
 
     assert reduce_inequalities(abs(1/sqrt(x)) - 1, x) == Eq(x, 1)
     assert reduce_abs_inequality(-3 + 1/abs(1 - 1/x), '<', x) == \

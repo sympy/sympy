@@ -47,7 +47,7 @@ class IsTruePredicate(Predicate):
     Wrapping binary relation classes in SymPy core returns applied binary
     relational predicates.
 
-    >>> from sympy.core import Eq, Gt
+    >>> from sympy import Eq, Gt
     >>> Q.is_true(Eq(x, y))
     Q.eq(x, y)
     >>> Q.is_true(Gt(x, y))
@@ -76,6 +76,6 @@ class IsTruePredicate(Predicate):
             return arg
         # Convert relational predicates instead of wrapping them
         if getattr(arg, "is_Relational", False):
-            pred = binrelpreds[arg.func]
+            pred = binrelpreds[type(arg)]
             return pred(*arg.args)
         return super().__call__(arg)

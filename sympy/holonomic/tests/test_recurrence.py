@@ -1,5 +1,6 @@
 from sympy.holonomic.recurrence import RecurrenceOperators, RecurrenceOperator
-from sympy import symbols, QQ
+from sympy.core.symbol import symbols
+from sympy.polys.domains.rationalfield import QQ
 
 def test_RecurrenceOperator():
     n = symbols('n', integer=True)

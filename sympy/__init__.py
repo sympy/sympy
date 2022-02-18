@@ -13,8 +13,8 @@ See the webpage for more information and documentation:
 
 
 import sys
-if sys.version_info < (3, 6):
-    raise ImportError("Python version 3.6 or above is required for SymPy.")
+if sys.version_info < (3, 7):
+    raise ImportError("Python version 3.7 or above is required for SymPy.")
 del sys
 
 
@@ -60,7 +60,8 @@ from .core import (sympify, SympifyError, cacheit, Basic, Atom,
         expand_func, expand_trig, expand_complex, expand_multinomial, nfloat,
         expand_power_base, expand_power_exp, arity, PrecisionExhausted, N,
         evalf, Tuple, Dict, gcd_terms, factor_terms, factor_nc, evaluate,
-        Catalan, EulerGamma, GoldenRatio, TribonacciConstant)
+        Catalan, EulerGamma, GoldenRatio, TribonacciConstant, bottom_up, use,
+        postorder_traversal, default_sort_key, ordered)
 
 from .logic import (to_cnf, to_dnf, to_nnf, And, Or, Not, Xor, Nand, Nor,
         Implies, Equivalent, ITE, POSform, SOPform, simplify_logic, bool_map,
@@ -88,7 +89,8 @@ from .polys import (Poly, PurePoly, poly_from_expr, parallel_poly_from_expr,
         UnivariatePolynomialError, MultivariatePolynomialError,
         PolificationFailed, OptionError, FlagError, minpoly,
         minimal_polynomial, primitive_element, field_isomorphism,
-        to_number_field, isolate, itermonomials, Monomial, lex, grlex,
+        to_number_field, isolate, round_two, prime_decomp, prime_valuation,
+        itermonomials, Monomial, lex, grlex,
         grevlex, ilex, igrlex, igrevlex, CRootOf, rootof, RootOf,
         ComplexRootOf, RootSum, roots, Domain, FiniteField, IntegerRing,
         RationalField, RealField, ComplexField, PythonFiniteField,
@@ -109,7 +111,7 @@ from .series import (Order, O, limit, Limit, gruntz, series, approximants,
 from .functions import (factorial, factorial2, rf, ff, binomial,
         RisingFactorial, FallingFactorial, subfactorial, carmichael,
         fibonacci, lucas, motzkin, tribonacci, harmonic, bernoulli, bell, euler,
-        catalan, genocchi, partition, sqrt, root, Min, Max, Id, real_root,
+        catalan, genocchi, partition, sqrt, root, Min, Max, Id, real_root, Rem,
         cbrt, re, im, sign, Abs, conjugate, arg, polar_lift,
         periodic_argument, unbranched_argument, principal_branch, transpose,
         adjoint, polarify, unpolarify, sin, cos, tan, sec, csc, cot, sinc,
@@ -153,15 +155,15 @@ from .discrete import (fft, ifft, ntt, intt, fwht, ifwht, mobius_transform,
         intersecting_product)
 
 from .simplify import (simplify, hypersimp, hypersimilar, logcombine,
-        separatevars, posify, besselsimp, kroneckersimp, signsimp, bottom_up,
-        nsimplify, FU, fu, sqrtdenest, cse, use, epath, EPath, hyperexpand,
+        separatevars, posify, besselsimp, kroneckersimp, signsimp,
+        nsimplify, FU, fu, sqrtdenest, cse, epath, EPath, hyperexpand,
         collect, rcollect, radsimp, collect_const, fraction, numer, denom,
         trigsimp, exptrigsimp, powsimp, powdenest, combsimp, gammasimp,
         ratsimp, ratsimpmodprime)
 
 from .sets import (Set, Interval, Union, EmptySet, FiniteSet, ProductSet,
         Intersection, DisjointUnion, imageset, Complement, SymmetricDifference, ImageSet,
-        Range, ComplexRegion, Reals, Contains, ConditionSet, Ordinal,
+        Range, ComplexRegion, Complexes, Reals, Contains, ConditionSet, Ordinal,
         OmegaPower, ord0, PowerSet, Naturals, Naturals0, UniversalSet,
         Integers, Rationals)
 
@@ -174,8 +176,7 @@ from .solvers import (solve, solve_linear_system, solve_linear_system_LU,
         pdsolve, classify_pde, checkpdesol, ode_order, reduce_inequalities,
         reduce_abs_inequality, reduce_abs_inequalities, solve_poly_inequality,
         solve_rational_inequalities, solve_univariate_inequality, decompogen,
-        solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution,
-        Complexes)
+        solveset, linsolve, linear_eq_to_matrix, nonlinsolve, substitution)
 
 from .matrices import (ShapeError, NonSquareMatrixError, GramSchmidt,
         casoratian, diag, eye, hessian, jordan_cell, list2numpy, matrix2numpy,
@@ -199,11 +200,10 @@ from .geometry import (Point, Point2D, Point3D, Line, Ray, Segment, Line2D,
         GeometryError, Curve, Parabola)
 
 from .utilities import (flatten, group, take, subsets, variations,
-        numbered_symbols, cartes, capture, dict_merge, postorder_traversal,
-        interactive_traversal, prefixes, postfixes, sift, topological_sort,
-        unflatten, has_dups, has_variety, reshape, default_sort_key, ordered,
-        rotations, filldedent, lambdify, source, threaded, xthreaded, public,
-        memoize_property, timed)
+        numbered_symbols, cartes, capture, dict_merge, prefixes, postfixes,
+        sift, topological_sort, unflatten, has_dups, has_variety, reshape,
+        rotations, filldedent, lambdify, source,
+        threaded, xthreaded, public, memoize_property, timed)
 
 from .integrals import (integrate, Integral, line_integrate, mellin_transform,
         inverse_mellin_transform, MellinTransform, InverseMellinTransform,
@@ -225,7 +225,7 @@ from .parsing import parse_expr
 
 from .calculus import (euler_equations, singularities, is_increasing,
         is_strictly_increasing, is_decreasing, is_strictly_decreasing,
-        is_monotonic, finite_diff_weights, apply_finite_diff, as_finite_diff,
+        is_monotonic, finite_diff_weights, apply_finite_diff,
         differentiate_finite, periodicity, not_empty_in, AccumBounds,
         is_convex, stationary_points, minimum, maximum)
 
@@ -249,7 +249,7 @@ from .testing import test, doctest
 # This module is slow to import:
 #from physics import units
 from .plotting import plot, textplot, plot_backends, plot_implicit, plot_parametric
-from .interactive import init_session, init_printing
+from .interactive import init_session, init_printing, interactive_traversal
 
 evalf._create_evalf_table()
 
@@ -269,7 +269,8 @@ __all__ = [
     'expand_complex', 'expand_multinomial', 'nfloat', 'expand_power_base',
     'expand_power_exp', 'arity', 'PrecisionExhausted', 'N', 'evalf', 'Tuple',
     'Dict', 'gcd_terms', 'factor_terms', 'factor_nc', 'evaluate', 'Catalan',
-    'EulerGamma', 'GoldenRatio', 'TribonacciConstant',
+    'EulerGamma', 'GoldenRatio', 'TribonacciConstant', 'bottom_up', 'use',
+    'postorder_traversal', 'default_sort_key', 'ordered',
 
     # sympy.logic
     'to_cnf', 'to_dnf', 'to_nnf', 'And', 'Or', 'Not', 'Xor', 'Nand', 'Nor',
@@ -301,7 +302,8 @@ __all__ = [
     'UnivariatePolynomialError', 'MultivariatePolynomialError',
     'PolificationFailed', 'OptionError', 'FlagError', 'minpoly',
     'minimal_polynomial', 'primitive_element', 'field_isomorphism',
-    'to_number_field', 'isolate', 'itermonomials', 'Monomial', 'lex', 'grlex',
+    'to_number_field', 'isolate', 'round_two', 'prime_decomp',
+    'prime_valuation', 'itermonomials', 'Monomial', 'lex', 'grlex',
     'grevlex', 'ilex', 'igrlex', 'igrevlex', 'CRootOf', 'rootof', 'RootOf',
     'ComplexRootOf', 'RootSum', 'roots', 'Domain', 'FiniteField',
     'IntegerRing', 'RationalField', 'RealField', 'ComplexField',
@@ -326,7 +328,7 @@ __all__ = [
     'factorial', 'factorial2', 'rf', 'ff', 'binomial', 'RisingFactorial',
     'FallingFactorial', 'subfactorial', 'carmichael', 'fibonacci', 'lucas',
     'motzkin', 'tribonacci', 'harmonic', 'bernoulli', 'bell', 'euler', 'catalan',
-    'genocchi', 'partition', 'sqrt', 'root', 'Min', 'Max', 'Id', 'real_root',
+    'genocchi', 'partition', 'sqrt', 'root', 'Min', 'Max', 'Id', 'real_root', 'Rem',
     'cbrt', 're', 'im', 'sign', 'Abs', 'conjugate', 'arg', 'polar_lift',
     'periodic_argument', 'unbranched_argument', 'principal_branch',
     'transpose', 'adjoint', 'polarify', 'unpolarify', 'sin', 'cos', 'tan',
@@ -379,8 +381,8 @@ __all__ = [
 
     # sympy.simplify
     'simplify', 'hypersimp', 'hypersimilar', 'logcombine', 'separatevars',
-    'posify', 'besselsimp', 'kroneckersimp', 'signsimp', 'bottom_up',
-    'nsimplify', 'FU', 'fu', 'sqrtdenest', 'cse', 'use', 'epath', 'EPath',
+    'posify', 'besselsimp', 'kroneckersimp', 'signsimp',
+    'nsimplify', 'FU', 'fu', 'sqrtdenest', 'cse', 'epath', 'EPath',
     'hyperexpand', 'collect', 'rcollect', 'radsimp', 'collect_const',
     'fraction', 'numer', 'denom', 'trigsimp', 'exptrigsimp', 'powsimp',
     'powdenest', 'combsimp', 'gammasimp', 'ratsimp', 'ratsimpmodprime',
@@ -389,8 +391,8 @@ __all__ = [
     'Set', 'Interval', 'Union', 'EmptySet', 'FiniteSet', 'ProductSet',
     'Intersection', 'imageset', 'DisjointUnion', 'Complement', 'SymmetricDifference',
     'ImageSet', 'Range', 'ComplexRegion', 'Reals', 'Contains', 'ConditionSet',
-    'Ordinal', 'OmegaPower', 'ord0', 'PowerSet', 'Reals', 'Naturals',
-    'Naturals0', 'UniversalSet', 'Integers', 'Rationals',
+    'Ordinal', 'OmegaPower', 'ord0', 'PowerSet', 'Naturals',
+    'Naturals0', 'UniversalSet', 'Integers', 'Rationals', 'Complexes',
 
     # sympy.solvers
     'solve', 'solve_linear_system', 'solve_linear_system_LU',
@@ -404,7 +406,7 @@ __all__ = [
     'reduce_abs_inequality', 'reduce_abs_inequalities',
     'solve_poly_inequality', 'solve_rational_inequalities',
     'solve_univariate_inequality', 'decompogen', 'solveset', 'linsolve',
-    'linear_eq_to_matrix', 'nonlinsolve', 'substitution', 'Complexes',
+    'linear_eq_to_matrix', 'nonlinsolve', 'substitution',
 
     # sympy.matrices
     'ShapeError', 'NonSquareMatrixError', 'GramSchmidt', 'casoratian', 'diag',
@@ -432,12 +434,10 @@ __all__ = [
 
     # sympy.utilities
     'flatten', 'group', 'take', 'subsets', 'variations', 'numbered_symbols',
-    'cartes', 'capture', 'dict_merge', 'postorder_traversal',
-    'interactive_traversal', 'prefixes', 'postfixes', 'sift',
+    'cartes', 'capture', 'dict_merge', 'prefixes', 'postfixes', 'sift',
     'topological_sort', 'unflatten', 'has_dups', 'has_variety', 'reshape',
-    'default_sort_key', 'ordered', 'rotations', 'filldedent', 'lambdify',
-    'source', 'threaded', 'xthreaded', 'public', 'memoize_property', 'test',
-    'doctest', 'timed',
+    'rotations', 'filldedent', 'lambdify', 'source', 'threaded', 'xthreaded',
+    'public', 'memoize_property', 'timed',
 
     # sympy.integrals
     'integrate', 'Integral', 'line_integrate', 'mellin_transform',
@@ -465,7 +465,7 @@ __all__ = [
     'euler_equations', 'singularities', 'is_increasing',
     'is_strictly_increasing', 'is_decreasing', 'is_strictly_decreasing',
     'is_monotonic', 'finite_diff_weights', 'apply_finite_diff',
-    'as_finite_diff', 'differentiate_finite', 'periodicity', 'not_empty_in',
+    'differentiate_finite', 'periodicity', 'not_empty_in',
     'AccumBounds', 'is_convex', 'stationary_points', 'minimum', 'maximum',
 
     # sympy.algebras
@@ -485,7 +485,7 @@ __all__ = [
     'plot', 'textplot', 'plot_backends', 'plot_implicit', 'plot_parametric',
 
     # sympy.interactive
-    'init_session', 'init_printing',
+    'init_session', 'init_printing', 'interactive_traversal',
 
     # sympy.testing
     'test', 'doctest',
@@ -494,7 +494,7 @@ __all__ = [
 
 #===========================================================================#
 #                                                                           #
-# XXX: The names below were importable before sympy 1.6 using               #
+# XXX: The names below were importable before SymPy 1.6 using               #
 #                                                                           #
 #          from sympy import *                                              #
 #                                                                           #
