@@ -1640,7 +1640,7 @@ def test_minsolve_linear_system():
         [0], [0], [0]])
     eqs = A@v-B
     assert solve(eqs) == []
-    raises(NotImplementedError, lambda: solve(eqs, particular=True))
+    assert solve(eqs, particular=True) == []  # assumption violated
     # check that quick flag trumps particular flag in case anyone
     # tries to make default flags match the docstring description
     assert all(v for v in solve([x + y + z, y + z + a]).values())
