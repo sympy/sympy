@@ -403,16 +403,17 @@ class Vector(Printable, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame
         >>> from sympy import symbols
+        >>> from sympy.physics.vector import ReferenceFrame, cross
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
-        >>> N.x ^ N.y
+        >>> cross(N.x, N.y)
         N.z
-        >>> A = N.orientnew('A', 'Axis', [q1, N.x])
-        >>> A.x ^ N.y
+        >>> A = ReferenceFrame('A')
+        >>> A.orient_axis(N, q1, N.x)
+        >>> cross(A.x, N.y)
         N.z
-        >>> N.y ^ A.x
+        >>> cross(N.y, A.x)
         - sin(q1)*A.y - cos(q1)*A.z
 
         """
