@@ -15,12 +15,13 @@ class PartialDerivative(TensExpr):
     Examples
     ========
 
-    >>> from sympy.tensor.tensor import TensorIndexType, TensorHead, tensor_indices
+    >>> from sympy.tensor.tensor import TensorIndexType, TensorHead
     >>> from sympy.tensor.toperators import PartialDerivative
+    >>> from sympy import symbols
     >>> L = TensorIndexType("L")
     >>> A = TensorHead("A", [L])
     >>> B = TensorHead("B", [L])
-    >>> i, j, k = tensor_indices("i j k", L)
+    >>> i, j, k = symbols("i j k")
 
     >>> expr = PartialDerivative(A(i), A(j))
     >>> expr
