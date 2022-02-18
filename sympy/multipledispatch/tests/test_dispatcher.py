@@ -22,7 +22,7 @@ def test_dispatcher():
     f.add((int,), inc)
     f.add((float,), dec)
 
-    with warns(DeprecationWarning):
+    with warns(DeprecationWarning, test_stacklevel=False):
         assert f.resolve((int,)) == inc
     assert f.dispatch(int) is inc
 

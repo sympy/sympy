@@ -1,27 +1,26 @@
-from sympy import S
+from sympy.core.singleton import S
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
-from sympy.core.function import Lambda
+from sympy.core.function import Lambda, BadSignatureError
 from sympy.core.logic import fuzzy_bool
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy
 from sympy.core.sympify import _sympify
 from sympy.logic.boolalg import And, as_Boolean
-from sympy.utilities.iterables import sift
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-
+from sympy.utilities.iterables import sift, flatten, has_dups
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from .contains import Contains
-from .sets import Set, EmptySet, Union, FiniteSet
+from .sets import Set, Union, FiniteSet, SetKind
 
 
 adummy = Dummy('conditionset')
 
 
 class ConditionSet(Set):
-    """
+    r"""
     Set of elements which satisfies a given condition.
 
-    {x | condition(x) is True for x in S}
+    .. math:: \{x \mid \textrm{condition}(x) = \texttt{True}, x \in S\}
 
     Examples
     ========
@@ -87,8 +86,6 @@ class ConditionSet(Set):
 
     """
     def __new__(cls, sym, condition, base_set=S.UniversalSet):
-        from sympy.core.function import BadSignatureError
-        from sympy.utilities.iterables import flatten, has_dups
         sym = _sympify(sym)
         flat = flatten([sym])
         if has_dups(flat):
@@ -103,12 +100,22 @@ class ConditionSet(Set):
             condition_orig = condition
             temp = (Eq(lhs, 0) for lhs in condition)
             condition = And(*temp)
-            SymPyDeprecationWarning(
-                feature="Using {} for condition".format(condition_orig),
-                issue=17651,
+            sympy_deprecation_warning(
+                f"""
+Using a set for the condition in ConditionSet is deprecated. Use a boolean
+instead.
+
+In this case, replace
+
+    {condition_orig}
+
+with
+
+    {condition}
+""",
                 deprecated_since_version='1.5',
-                useinstead="{} for condition".format(condition)
-                ).warn()
+                active_deprecations_target="deprecated-conditionset-set",
+                )
 
         condition = as_Boolean(condition)
 
@@ -118,8 +125,8 @@ class ConditionSet(Set):
         if condition is S.false:
             return S.EmptySet
 
-        if isinstance(base_set, EmptySet):
-            return base_set
+        if base_set is S.EmptySet:
+            return S.EmptySet
 
         # no simple answers, so now check syms
         for i in flat:
@@ -178,7 +185,6 @@ class ConditionSet(Set):
 
     @property
     def bound_symbols(self):
-        from sympy.utilities.iterables import flatten
         return flatten([self.sym])
 
     def _contains(self, other):
@@ -235,3 +241,6 @@ class ConditionSet(Set):
         else:
             pass  # let error about the symbol raise from __new__
         return self.func(sym, cond, base)
+
+    def _kind(self):
+        return SetKind(self.sym.kind)

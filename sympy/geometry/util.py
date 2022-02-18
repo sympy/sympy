@@ -11,18 +11,49 @@ are_similar
 
 """
 
-from sympy import Function, Symbol, solve, sqrt
-from sympy.core.compatibility import (
-    is_sequence, ordered)
+from collections import deque
+from math import sqrt as _sqrt
+
+
+from .entity import GeometryEntity
+from .exceptions import GeometryError
+from .point import Point, Point2D, Point3D
 from sympy.core.containers import OrderedSet
-from .point import Point, Point2D
+from sympy.core.function import Function
+from sympy.core.sorting import ordered
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.solvers.solvers import solve
+from sympy.utilities.iterables import is_sequence
 
 
 def find(x, equation):
     """
-    Checks whether the parameter 'x' is present in 'equation' or not.
-    If it is present then it returns the passed parameter 'x' as a free
-    symbol, else, it returns a ValueError.
+    Checks whether a Symbol matching ``x`` is present in ``equation``
+    or not. If present, the matching symbol is returned, else a
+    ValueError is raised. If ``x`` is a string the matching symbol
+    will have the same name; if ``x`` is a Symbol then it will be
+    returned if found.
+
+    Examples
+    ========
+
+    >>> from sympy.geometry.util import find
+    >>> from sympy import Dummy
+    >>> from sympy.abc import x
+    >>> find('x', x)
+    x
+    >>> find('x', Dummy('x'))
+    _x
+
+    The dummy symbol is returned since it has a matching name:
+
+    >>> _.name == 'x'
+    True
+    >>> find(x, Dummy('x'))
+    Traceback (most recent call last):
+    ...
+    ValueError: could not find x
     """
 
     free = equation.free_symbols
@@ -64,10 +95,8 @@ def are_coplanar(*e):
     False
 
     """
-    from sympy.geometry.line import LinearEntity3D
-    from sympy.geometry.entity import GeometryEntity
-    from sympy.geometry.point import Point3D
-    from sympy.geometry.plane import Plane
+    from .line import LinearEntity3D
+    from .plane import Plane
     # XXX update tests for coverage
 
     e = set(e)
@@ -157,8 +186,6 @@ def are_similar(e1, e2):
     False
 
     """
-    from .exceptions import GeometryError
-
     if e1 == e2:
         return True
     is_similar1 = getattr(e1, 'is_similar', None)
@@ -221,8 +248,8 @@ def centroid(*args):
     Point2D(11/10, 1/2)
 
     """
-
-    from sympy.geometry import Polygon, Segment, Point
+    from .line import Segment
+    from .polygon import Polygon
     if args:
         if all(isinstance(g, Point) for g in args):
             c = Point(0, 0)
@@ -265,28 +292,24 @@ def closest_points(*args):
     be ordered on the number line. If there are no ties then a single
     pair of Points will be in the set.
 
-    References
-    ==========
-
-    [1] http://www.cs.mcgill.ca/~cs251/ClosestPair/ClosestPairPS.html
-
-    [2] Sweep line algorithm
-    https://en.wikipedia.org/wiki/Sweep_line_algorithm
-
     Examples
     ========
 
-    >>> from sympy.geometry import closest_points, Triangle
+    >>> from sympy import closest_points, Triangle
     >>> Triangle(sss=(3, 4, 5)).args
     (Point2D(0, 0), Point2D(3, 0), Point2D(3, 4))
     >>> closest_points(*_)
     {(Point2D(0, 0), Point2D(3, 0))}
 
-    """
-    from collections import deque
-    from math import sqrt as _sqrt
-    from sympy.functions.elementary.miscellaneous import sqrt
+    References
+    ==========
 
+    .. [1] http://www.cs.mcgill.ca/~cs251/ClosestPair/ClosestPairPS.html
+
+    .. [2] Sweep line algorithm
+        https://en.wikipedia.org/wiki/Sweep_line_algorithm
+
+    """
     p = [Point2D(i) for i in set(args)]
     if len(p) < 2:
         raise ValueError('At least 2 distinct points must be given.')
@@ -356,16 +379,6 @@ def convex_hull(*args, polygon=True):
     This can only be performed on a set of points whose coordinates can
     be ordered on the number line.
 
-    References
-    ==========
-
-    [1] https://en.wikipedia.org/wiki/Graham_scan
-
-    [2] Andrew's Monotone Chain Algorithm
-    (A.M. Andrew,
-    "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
-    http://geomalgorithms.com/a10-_hull-1.html
-
     See Also
     ========
 
@@ -374,7 +387,7 @@ def convex_hull(*args, polygon=True):
     Examples
     ========
 
-    >>> from sympy.geometry import convex_hull
+    >>> from sympy import convex_hull
     >>> points = [(1, 1), (1, 2), (3, 1), (-5, 2), (15, 4)]
     >>> convex_hull(*points)
     Polygon(Point2D(-5, 2), Point2D(1, 1), Point2D(3, 1), Point2D(15, 4))
@@ -382,12 +395,19 @@ def convex_hull(*args, polygon=True):
     ([Point2D(-5, 2), Point2D(15, 4)],
      [Point2D(-5, 2), Point2D(1, 1), Point2D(3, 1), Point2D(15, 4)])
 
+    References
+    ==========
+
+    .. [1] https://en.wikipedia.org/wiki/Graham_scan
+
+    .. [2] Andrew's Monotone Chain Algorithm
+      (A.M. Andrew,
+      "Another Efficient Algorithm for Convex Hulls in Two Dimensions", 1979)
+      http://geomalgorithms.com/a10-_hull-1.html
+
     """
-    from .entity import GeometryEntity
-    from .point import Point
     from .line import Segment
     from .polygon import Polygon
-
     p = OrderedSet()
     for e in args:
         if not isinstance(e, GeometryEntity):
@@ -463,14 +483,6 @@ def farthest_points(*args):
     be ordered on the number line. If there are no ties then a single
     pair of Points will be in the set.
 
-    References
-    ==========
-
-    [1] http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
-
-    [2] Rotating Callipers Technique
-    https://en.wikipedia.org/wiki/Rotating_calipers
-
     Examples
     ========
 
@@ -480,8 +492,15 @@ def farthest_points(*args):
     >>> farthest_points(*_)
     {(Point2D(0, 0), Point2D(3, 4))}
 
+    References
+    ==========
+
+    .. [1] http://code.activestate.com/recipes/117225-convex-hull-and-diameter-of-2d-point-sets/
+
+    .. [2] Rotating Callipers Technique
+        https://en.wikipedia.org/wiki/Rotating_calipers
+
     """
-    from math import sqrt as _sqrt
 
     def rotatingCalipers(Points):
         U, L = convex_hull(*Points, **dict(polygon=False))
@@ -555,7 +574,7 @@ def idiff(eq, y, x, n=1):
     >>> idiff(circ, y, x)
     -x/y
     >>> idiff(circ, y, x, 2).simplify()
-    -(x**2 + y**2)/y**3
+    (-x**2 - y**2)/y**3
 
     Here, ``a`` is assumed to be independent of ``x``:
 
@@ -649,7 +668,7 @@ def intersection(*entities, pairwise=False, **kwargs):
     Examples
     ========
 
-    >>> from sympy.geometry import Ray, Circle, intersection
+    >>> from sympy import Ray, Circle, intersection
     >>> c = Circle((0, 1), 1)
     >>> intersection(c, c.center)
     []
@@ -664,10 +683,6 @@ def intersection(*entities, pairwise=False, **kwargs):
     [Segment2D(Point2D(0, 0), Point2D(1, 0))]
 
     """
-
-    from .entity import GeometryEntity
-    from .point import Point
-
     if len(entities) <= 1:
         return []
 

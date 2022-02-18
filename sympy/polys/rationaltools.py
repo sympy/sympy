@@ -2,9 +2,10 @@
 
 
 from sympy.core import Basic, Add, sympify
-from sympy.core.compatibility import iterable
 from sympy.core.exprtools import gcd_terms
 from sympy.utilities import public
+from sympy.utilities.iterables import iterable
+
 
 @public
 def together(expr, deep=False, fraction=True):

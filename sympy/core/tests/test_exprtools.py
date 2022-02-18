@@ -1,8 +1,22 @@
 """Tests for tools for manipulating of large commutative expressions. """
 
-from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, I,
-                   Function, Interval, O, symbols, simplify, collect, Sum,
-                   Basic, Dict, root, exp, cos, Dummy, log, Rational)
+from sympy.concrete.summations import Sum
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.containers import (Dict, Tuple)
+from sympy.core.function import Function
+from sympy.core.mul import Mul
+from sympy.core.numbers import (I, Rational, oo)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import (root, sqrt)
+from sympy.functions.elementary.trigonometric import (cos, sin)
+from sympy.integrals.integrals import Integral
+from sympy.series.order import O
+from sympy.sets.sets import Interval
+from sympy.simplify.radsimp import collect
+from sympy.simplify.simplify import simplify
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
                                   gcd_terms, factor_terms, factor_nc, _mask_nc,
                                   _monotonic_sign)
@@ -194,11 +208,11 @@ def test_gcd_terms():
     assert gcd_terms(set(args)) == newf
     # but a Basic sequence is treated as a container
     assert gcd_terms(Tuple(*args)) != newf
-    assert gcd_terms(Basic(Tuple(1, 3*y + 3*x*y), Tuple(1, 3))) == \
-        Basic((1, 3*y*(x + 1)), (1, 3))
+    assert gcd_terms(Basic(Tuple(S(1), 3*y + 3*x*y), Tuple(S(1), S(3)))) == \
+        Basic(Tuple(S(1), 3*y*(x + 1)), Tuple(S(1), S(3)))
     # but we shouldn't change keys of a dictionary or some may be lost
-    assert gcd_terms(Dict((x*(1 + y), 2), (x + x*y, y + x*y))) == \
-        Dict({x*(y + 1): 2, x + x*y: y*(1 + x)})
+    assert gcd_terms(Dict((x*(1 + y), S(2)), (x + x*y, y + x*y))) == \
+        Dict({x*(y + 1): S(2), x + x*y: y*(1 + x)})
 
     assert gcd_terms((2*x + 2)**3 + (2*x + 2)**2) == 4*(x + 1)**2*(2*x + 3)
 
@@ -303,6 +317,11 @@ def test_factor_terms():
         assert factor_terms(F(x, (y, 1, 10)) + x) == x * (1 + F(1, (y, 1, 10)))
         assert factor_terms(F(x*y + x*y**2, (y, 1, 10))) == x*F(y*(y + 1), (y, 1, 10))
 
+    # expressions involving Pow terms with base 0
+    assert factor_terms(0**(x - 2) - 1) == 0**(x - 2) - 1
+    assert factor_terms(0**(x + 2) - 1) == 0**(x + 2) - 1
+    assert factor_terms((0**(x + 2) - 1).subs(x,-2)) == 0
+
 
 def test_xreplace():
     e = Mul(2, 1 + x, evaluate=False)
@@ -357,7 +376,7 @@ def test_factor_nc():
 
     # for coverage:
     from sympy.physics.secondquant import Commutator
-    from sympy import factor
+    from sympy.polys.polytools import factor
     eq = 1 + x*Commutator(m, n)
     assert factor_nc(eq) == eq
     eq = x*Commutator(m, n) + x*Commutator(m, o)*Commutator(m, n)
@@ -449,7 +468,7 @@ def test_monotonic_sign():
     assert F(-(p - 1)*q - 1).is_negative
 
 def test_issue_17256():
-    from sympy import Symbol, Range, Sum
+    from sympy.sets.fancysets import Range
     x = Symbol('x')
     s1 = Sum(x + 1, (x, 1, 9))
     s2 = Sum(x + 1, (x, Range(1, 10)))
@@ -457,7 +476,7 @@ def test_issue_17256():
     r1 = s1.xreplace({x:a})
     r2 = s2.xreplace({x:a})
 
-    r1.doit() == r2.doit()
+    assert r1.doit() == r2.doit()
     s1 = Sum(x + 1, (x, 0, 9))
     s2 = Sum(x + 1, (x, Range(10)))
     a = Symbol('a')
@@ -466,6 +485,6 @@ def test_issue_17256():
     assert r1 == r2
 
 def test_issue_21623():
-    from sympy import MatrixSymbol, gcd_terms
+    from sympy.matrices.expressions.matexpr import MatrixSymbol
     M = MatrixSymbol('X', 2, 2)
     assert gcd_terms(M[0,0], 1) == M[0,0]

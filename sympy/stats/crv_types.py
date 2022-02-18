@@ -58,12 +58,32 @@ WignerSemicircle
 
 
 
-from sympy import beta as beta_fn
-from sympy import cos, sin, tan, atan, exp, besseli, besselj, besselk
-from sympy import (log, sqrt, pi, S, Dummy, Interval, sympify, gamma, sign,
-                   Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Lambda, Basic, lowergamma, erf, erfc, erfi, erfinv, I, asin,
-                   hyper, uppergamma, sinh, Ne, expint, Rational, integrate)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.trigonometric import (atan, cos, sin, tan)
+from sympy.functions.special.bessel import (besseli, besselj, besselk)
+from sympy.functions.special.beta_functions import beta as beta_fn
+from sympy.concrete.summations import Sum
+from sympy.core.basic import Basic
+from sympy.core.function import Lambda
+from sympy.core.numbers import (I, Rational, pi)
+from sympy.core.relational import (Eq, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import Dummy
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import (binomial, factorial)
+from sympy.functions.elementary.complexes import (Abs, sign)
+from sympy.functions.elementary.exponential import log
+from sympy.functions.elementary.hyperbolic import sinh
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import asin
+from sympy.functions.special.error_functions import (erf, erfc, erfi, erfinv, expint)
+from sympy.functions.special.gamma_functions import (gamma, lowergamma, uppergamma)
+from sympy.functions.special.hyper import hyper
+from sympy.integrals.integrals import integrate
+from sympy.logic.boolalg import And
+from sympy.sets.sets import Interval
 from sympy.matrices import MatrixBase
 from sympy.stats.crv import SingleContinuousPSpace, SingleContinuousDistribution
 from sympy.stats.rv import _value_check, is_random
@@ -496,7 +516,7 @@ def BetaNoncentral(name, alpha, beta, lamda):
 
     alpha : Real number, `\alpha > 0`, a shape
     beta : Real number, `\beta > 0`, a shape
-    lamda: Real number, `\lambda >= 0`, noncentrality parameter
+    lamda: Real number, `\lambda \ge 0`, noncentrality parameter
 
     Returns
     =======
@@ -625,7 +645,7 @@ class BoundedParetoDistribution(SingleContinuousDistribution):
 
     @property
     def set(self):
-        return Interval(self.left , self.right)
+        return Interval(self.left, self.right)
 
     @staticmethod
     def check(alpha, left, right):
@@ -1046,11 +1066,11 @@ def Dagum(name, p, a, b):
     ==========
 
     p : Real number
-        ``p > 0``, a shape.
+        `p > 0`, a shape.
     a : Real number
-        ``a > 0``, a shape.
+        `a > 0`, a shape.
     b : Real number
-        ``b > 0``, a scale.
+        `b > 0`, a scale.
 
     Returns
     =======
@@ -1434,9 +1454,9 @@ def ExponentialPower(name, mu, alpha, beta):
 
     mu : Real number
         A location.
-    alpha : Real number,``alpha > 0``
+    alpha : Real number,`\alpha > 0`
         A  scale.
-    beta : Real number, ``beta > 0``
+    beta : Real number, `\beta > 0`
         A shape.
 
     Returns
@@ -1521,8 +1541,8 @@ def FDistribution(name, d1, d2):
     Parameters
     ==========
 
-    d1 : `d_1 > 0`, where d_1 is the degrees of freedom (n_1 - 1)
-    d2 : `d_2 > 0`, where d_2 is the degrees of freedom (n_2 - 1)
+    d1 : `d_1 > 0`, where `d_1` is the degrees of freedom (`n_1 - 1`)
+    d2 : `d_2 > 0`, where `d_2` is the degrees of freedom (`n_2 - 1`)
 
     Returns
     =======
@@ -1599,9 +1619,9 @@ def FisherZ(name, d1, d2):
     Parameters
     ==========
 
-    d1 : ``d_1 > 0``
+    d1 : `d_1 > 0`
         Degree of freedom.
-    d2 : ``d_2 > 0``
+    d2 : `d_2 > 0`
         Degree of freedom.
 
     Returns
@@ -1772,7 +1792,7 @@ def Gamma(name, k, theta):
     Parameters
     ==========
 
-    k : Real number, ``k > 0``, a shape
+    k : Real number, `k > 0`, a shape
     theta : Real number, `\theta > 0`, a scale
 
     Returns
@@ -1879,8 +1899,8 @@ def GammaInverse(name, a, b):
     Parameters
     ==========
 
-    a : Real number, `a > 0` a shape
-    b : Real number, `b > 0` a scale
+    a : Real number, `a > 0`, a shape
+    b : Real number, `b > 0`, a scale
 
     Returns
     =======
@@ -1986,9 +2006,9 @@ def Gumbel(name, beta, mu, minimum=False):
     Parameters
     ==========
 
-    mu : Real number, 'mu' is a location
-    beta : Real number, 'beta > 0' is a scale
-    minimum : Boolean, by default, False, set to True for enabling minimum distribution
+    mu : Real number, '\mu', a location
+    beta : Real number, '\beta > 0', a scale
+    minimum : Boolean, by default ``False``, set to ``True`` for enabling minimum distribution
 
     Returns
     =======
@@ -2062,8 +2082,8 @@ def Gompertz(name, b, eta):
     Parameters
     ==========
 
-    b: Real number, 'b > 0' a scale
-    eta: Real number, 'eta > 0' a shape
+    b: Real number, 'b > 0', a scale
+    eta: Real number, '\eta > 0', a shape
 
     Returns
     =======
@@ -2135,8 +2155,8 @@ def Kumaraswamy(name, a, b):
     Parameters
     ==========
 
-    a : Real number, ``a > 0`` a shape
-    b : Real number, ``b > 0`` a shape
+    a : Real number, `a > 0`, a shape
+    b : Real number, `b > 0`, a shape
 
     Returns
     =======
@@ -2314,7 +2334,7 @@ def Levy(name, mu, c):
 
     mu : Real number
         The location parameter.
-    c : Real number, ``c > 0``
+    c : Real number, `c > 0`
         A scale parameter.
 
     Returns
@@ -2401,7 +2421,7 @@ def LogCauchy(name, mu, sigma):
     Examples
     ========
 
-    >>> from sympy.stats import  LogCauchy, density, cdf
+    >>> from sympy.stats import LogCauchy, density, cdf
     >>> from sympy import Symbol, S
 
     >>> mu = 2
@@ -2471,7 +2491,7 @@ def Logistic(name, mu, s):
     ==========
 
     mu : Real number, the location (mean)
-    s : Real number, `s > 0` a scale
+    s : Real number, `s > 0`, a scale
 
     Returns
     =======
@@ -2554,7 +2574,7 @@ def LogLogistic(name, alpha, beta):
     ==========
 
     alpha : Real number, `\alpha > 0`, scale parameter and median of distribution
-    beta : Real number, `\beta > 0` a shape parameter
+    beta : Real number, `\beta > 0`, a shape parameter
 
     Returns
     =======
@@ -2567,8 +2587,8 @@ def LogLogistic(name, alpha, beta):
     >>> from sympy.stats import LogLogistic, density, cdf, quantile
     >>> from sympy import Symbol, pprint
 
-    >>> alpha = Symbol("alpha", real=True, positive=True)
-    >>> beta = Symbol("beta", real=True, positive=True)
+    >>> alpha = Symbol("alpha", positive=True)
+    >>> beta = Symbol("beta", positive=True)
     >>> p = Symbol("p")
     >>> z = Symbol("z", positive=True)
 
@@ -2639,7 +2659,7 @@ def LogitNormal(name, mu, s):
     ==========
 
     mu : Real number, the location (mean)
-    s : Real number, `s > 0` a scale
+    s : Real number, `s > 0`, a scale
 
     Returns
     =======
@@ -2816,9 +2836,9 @@ def Lomax(name, alpha, lamda):
     Parameters
     ==========
 
-    alpha : Real Number, `alpha > 0`
+    alpha : Real Number, `\alpha > 0`
         Shape parameter
-    lamda : Real Number, `lamda > 0`
+    lamda : Real Number, `\lambda > 0`
         Scale parameter
 
     Examples
@@ -3050,7 +3070,7 @@ def Nakagami(name, mu, omega):
     Parameters
     ==========
 
-    mu : Real number, `\mu \geq \frac{1}{2}` a shape
+    mu : Real number, `\mu \geq \frac{1}{2}`, a shape
     omega : Real number, `\omega > 0`, the spread
 
     Returns
@@ -3152,7 +3172,7 @@ def Normal(name, mean, std):
 
     mu : Real number or a list representing the mean or the mean vector
     sigma : Real number or a positive definite square matrix,
-         :math:`\sigma^2 > 0` the variance
+         :math:`\sigma^2 > 0`, the variance
 
     Returns
     =======
@@ -3465,9 +3485,9 @@ def PowerFunction(name, alpha, a, b):
     Parameters
     ==========
 
-    alpha: Positive number, `0 < alpha` the shape paramater
-    a : Real number, :math:`-\infty < a` the left boundary
-    b : Real number, :math:`a < b < \infty` the right boundary
+    alpha: Positive number, `0 < alpha`, the shape paramater
+    a : Real number, :math:`-\infty < a`, the left boundary
+    b : Real number, :math:`a < b < \infty`, the right boundary
 
     Returns
     =======
@@ -3868,8 +3888,8 @@ def ShiftedGompertz(name, b, eta):
     Parameters
     ==========
 
-    b: Real number, 'b > 0' a scale
-    eta: Real number, 'eta > 0' a shape
+    b: Real number, 'b > 0', a scale
+    eta: Real number, '\eta > 0', a shape
 
     Returns
     =======
@@ -4038,8 +4058,8 @@ def Trapezoidal(name, a, b, c, d):
     ==========
 
     a : Real number, :math:`a < d`
-    b : Real number, :math:`a <= b < c`
-    c : Real number, :math:`b < c <= d`
+    b : Real number, :math:`a \le b < c`
+    c : Real number, :math:`b < c \le d`
     d : Real number
 
     Returns
@@ -4228,7 +4248,6 @@ class UniformDistribution(SingleContinuousDistribution):
                          (S.One, True))
 
     def expectation(self, expr, var, **kwargs):
-        from sympy import Max, Min
         kwargs['evaluate'] = True
         result = SingleContinuousDistribution.expectation(self, expr, var, **kwargs)
         result = result.subs({Max(self.left, self.right): self.right,
@@ -4256,8 +4275,8 @@ def Uniform(name, left, right):
     Parameters
     ==========
 
-    a : Real number, :math:`-\infty < a` the left boundary
-    b : Real number, :math:`a < b < \infty` the right boundary
+    a : Real number, :math:`-\infty < a`, the left boundary
+    b : Real number, :math:`a < b < \infty`, the right boundary
 
     Returns
     =======
@@ -4353,7 +4372,7 @@ def UniformSum(name, n):
     Parameters
     ==========
 
-    n : A positive Integer, `n > 0`
+    n : A positive integer, `n > 0`
 
     Returns
     =======
@@ -4518,8 +4537,8 @@ def Weibull(name, alpha, beta):
     Parameters
     ==========
 
-    lambda : Real number, :math:`\lambda > 0` a scale
-    k : Real number, ``k > 0`` a shape
+    lambda : Real number, $\lambda > 0$, a scale
+    k : Real number, $k > 0$, a shape
 
     Returns
     =======

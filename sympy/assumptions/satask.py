@@ -2,7 +2,8 @@
 Module to evaluate the proposition with assumptions using SAT algorithm.
 """
 
-from sympy import Symbol, S
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
 from sympy.assumptions.ask_generated import get_all_known_facts
 from sympy.assumptions.assume import global_assumptions, AppliedPredicate
 from sympy.assumptions.sathandlers import class_fact_registry

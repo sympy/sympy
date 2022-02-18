@@ -79,16 +79,15 @@ therefore attempt to lay the objects out along a line.
 References
 ==========
 
-[Xypic] http://xy-pic.sourceforge.net/
+.. [Xypic] http://xy-pic.sourceforge.net/
 
 """
 from sympy.categories import (CompositeMorphism, IdentityMorphism,
                               NamedMorphism, Diagram)
-from sympy.core import Dict, Symbol
-from sympy.core.compatibility import iterable
-from sympy.printing import latex
+from sympy.core import Dict, Symbol, default_sort_key
+from sympy.printing.latex import latex
 from sympy.sets import FiniteSet
-from sympy.utilities import default_sort_key
+from sympy.utilities.iterables import iterable
 from sympy.utilities.decorator import doctest_depends_on
 
 from itertools import chain
@@ -341,7 +340,7 @@ class DiagramGrid:
         returns an edge which would form a triangle with ``edge1`` and
         ``edge2``.
 
-        If ``edge1`` and ``edge2`` don't have a common endpoint,
+        If ``edge1`` and ``edge2`` do not have a common endpoint,
         returns ``None``.
 
         If ``edge1`` and ``edge`` are the same edge, returns ``None``.
@@ -842,7 +841,7 @@ class DiagramGrid:
         # should be converted to a FiniteSet, because that is what the
         # following code expects.
 
-        if isinstance(groups, dict) or isinstance(groups, Dict):
+        if isinstance(groups, (dict, Dict)):
             finiteset_groups = {}
             for group, local_hints in groups.items():
                 finiteset_group = group_to_finiteset(group)
@@ -1457,7 +1456,7 @@ class ArrowStringDescription:
     References
     ==========
 
-    [Xypic] http://xy-pic.sourceforge.net/
+    .. [Xypic] http://xy-pic.sourceforge.net/
     """
     def __init__(self, unit, curving, curving_amount, looping_start,
                  looping_end, horizontal_direction, vertical_direction,

@@ -1,7 +1,8 @@
-from sympy.core import Mul
-from sympy.functions import DiracDelta, Heaviside
-from sympy.core.compatibility import default_sort_key
+from sympy.core.mul import Mul
 from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
+from sympy.functions import DiracDelta, Heaviside
+from .integrals import Integral, integrate
 
 
 def change_mul(node, x):
@@ -123,9 +124,9 @@ def deltaintegrate(f, x):
         >>> from sympy.integrals.deltafunctions import deltaintegrate
         >>> from sympy import sin, cos, DiracDelta
         >>> deltaintegrate(x*sin(x)*cos(x)*DiracDelta(x - 1), x)
-        sin(1)*cos(1)*Heaviside(x - 1, 1/2)
+        sin(1)*cos(1)*Heaviside(x - 1)
         >>> deltaintegrate(y**2*DiracDelta(x - z)*DiracDelta(y - z), y)
-        z**2*DiracDelta(x - z)*Heaviside(y - z, 1/2)
+        z**2*DiracDelta(x - z)*Heaviside(y - z)
 
     See Also
     ========
@@ -135,9 +136,6 @@ def deltaintegrate(f, x):
     """
     if not f.has(DiracDelta):
         return None
-
-    from sympy.integrals import Integral, integrate
-    from sympy.solvers import solve
 
     # g(x) = DiracDelta(h(x))
     if f.func == DiracDelta:
@@ -169,6 +167,7 @@ def deltaintegrate(f, x):
                     fh = integrate(rest_mult, x)
                     return fh
             else:
+                from sympy.solvers import solve
                 deltaterm = deltaterm.expand(diracdelta=True, wrt=x)
                 if deltaterm.is_Mul:  # Take out any extracted factors
                     deltaterm, rest_mult_2 = change_mul(deltaterm, x)
@@ -187,7 +186,7 @@ def deltaintegrate(f, x):
                 n = (0 if len(deltaterm.args)==1 else deltaterm.args[1])
                 m = 0
                 while n >= 0:
-                    r = (-1)**n*rest_mult.diff(x, n).subs(x, point)
+                    r = S.NegativeOne**n*rest_mult.diff(x, n).subs(x, point)
                     if r.is_zero:
                         n -= 1
                         m += 1

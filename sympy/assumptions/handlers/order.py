@@ -5,7 +5,7 @@ Handlers related to order relations: positive, negative, etc.
 from sympy.assumptions import Q, ask
 from sympy.core import Add, Basic, Expr, Mul, Pow
 from sympy.core.logic import fuzzy_not, fuzzy_and, fuzzy_or
-from sympy.core.numbers import E, ImaginaryUnit, NaN
+from sympy.core.numbers import E, ImaginaryUnit, NaN, I, pi
 from sympy.functions import Abs, acos, acot, asin, atan, exp, factorial, log
 from sympy.matrices import Determinant, Trace
 from sympy.matrices.expressions.matexpr import MatrixElement
@@ -307,7 +307,6 @@ def _(expr, assumptions):
         if ask(Q.real(expr.exp), assumptions):
             return True
         if ask(Q.imaginary(expr.exp), assumptions):
-            from sympy import pi, I
             return ask(Q.even(expr.exp/(I*pi)), assumptions)
         return
 
@@ -327,7 +326,6 @@ def _(expr, assumptions):
     if ask(Q.real(expr.exp), assumptions):
         return True
     if ask(Q.imaginary(expr.exp), assumptions):
-        from sympy import pi, I
         return ask(Q.even(expr.exp/(I*pi)), assumptions)
 
 @PositivePredicate.register(log)

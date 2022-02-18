@@ -9,7 +9,12 @@ TODO:
   AntiCommutator, represent, apply_operators.
 """
 
-from sympy import Derivative, Expr, Integer, oo, Mul, expand, Add
+from sympy.core.add import Add
+from sympy.core.expr import Expr
+from sympy.core.function import (Derivative, expand)
+from sympy.core.mul import Mul
+from sympy.core.numbers import oo
+from sympy.core.singleton import S
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
@@ -67,7 +72,7 @@ class Operator(QExpr):
         >>> C
         2*A**2 + I*B
 
-    Operators don't commute::
+    Operators do not commute::
 
         >>> A.is_commutative
         False
@@ -277,7 +282,7 @@ class IdentityOperator(Operator):
         self.N = args[0] if (len(args) == 1 and args[0]) else oo
 
     def _eval_commutator(self, other, **hints):
-        return Integer(0)
+        return S.Zero
 
     def _eval_anticommutator(self, other, **hints):
         return 2 * other

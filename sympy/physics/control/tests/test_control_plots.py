@@ -1,4 +1,7 @@
-from sympy import Dummy, arg, I, Abs, log
+from sympy.core.numbers import I
+from sympy.core.symbol import Dummy
+from sympy.functions.elementary.complexes import (Abs, arg)
+from sympy.functions.elementary.exponential import log
 from sympy.abc import s, p, a
 from sympy.external import import_module
 from sympy.physics.control.control_plots import \
@@ -24,6 +27,7 @@ tf4 = TransferFunction(10, p**3, p)
 tf5 = TransferFunction(5, s**2 + 2*s + 10, s)
 tf6 = TransferFunction(1, 1, s)
 tf7 = TransferFunction(4*s*3 + 9*s**2 + 0.1*s + 11, 8*s**6 + 9*s**4 + 11, s)
+tf8 = TransferFunction(5, s**2 + (2+I)*s + 10, s)
 
 ser1 = Series(tf4, TransferFunction(1, p - 5, p))
 ser2 = Series(tf3, TransferFunction(p, p + 2, p))
@@ -111,6 +115,10 @@ def test_pole_zero():
         ((-0.24999999999999986+1.3919410907075052j),
         (-0.24999999999999986-1.3919410907075052j), (-0.2499999999999998+0.32274861218395134j),
         (-0.2499999999999998-0.32274861218395134j)))
+    assert _to_tuple(*pole_zero_numerical_data(tf8)) == \
+        ((),
+         ((-1.1641600331447917-3.545808351896439j),
+          (-0.8358399668552097+2.5458083518964383j)))
 
 
 def test_bode():

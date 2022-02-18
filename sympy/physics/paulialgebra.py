@@ -1,6 +1,6 @@
 """
 This module implements Pauli algebra by subclassing Symbol. Only algebraic
-properties of Pauli matrices are used (we don't use the Matrix class).
+properties of Pauli matrices are used (we do not use the Matrix class).
 
 See the documentation to the class Pauli for examples.
 
@@ -10,7 +10,11 @@ References
 .. [1] https://en.wikipedia.org/wiki/Pauli_matrices
 """
 
-from sympy import Symbol, I, Mul, Pow, Add
+from sympy.core.add import Add
+from sympy.core.mul import Mul
+from sympy.core.numbers import I
+from sympy.core.power import Pow
+from sympy.core.symbol import Symbol
 from sympy.physics.quantum import TensorProduct
 
 __all__ = ['evaluate_pauli_product']
@@ -54,9 +58,9 @@ def epsilon(i, j, k):
     >>> epsilon(1, 3, 2)
     -1
     """
-    if (i, j, k) in [(1, 2, 3), (2, 3, 1), (3, 1, 2)]:
+    if (i, j, k) in ((1, 2, 3), (2, 3, 1), (3, 1, 2)):
         return 1
-    elif (i, j, k) in [(1, 3, 2), (3, 2, 1), (2, 1, 3)]:
+    elif (i, j, k) in ((1, 3, 2), (3, 2, 1), (2, 1, 3)):
         return -1
     else:
         return 0
@@ -124,7 +128,7 @@ class Pauli(Symbol):
     __slots__ = ("i", "label")
 
     def __new__(cls, i, label="sigma"):
-        if not i in [1, 2, 3]:
+        if i not in [1, 2, 3]:
             raise IndexError("Invalid Pauli index")
         obj = Symbol.__new__(cls, "%s%d" %(label,i), commutative=False, hermitian=True)
         obj.i = i
@@ -196,7 +200,7 @@ def evaluate_pauli_product(arg):
     elif not(isinstance(arg, Mul)):
         return arg
 
-    while ((not(start == end)) | ((start == arg) & (end == arg))):
+    while not start == end or start == arg and end == arg:
         start = end
 
         tmp = start.as_coeff_mul()
@@ -207,7 +211,7 @@ def evaluate_pauli_product(arg):
         for el in tmp[1]:
             if isinstance(el, Pauli):
                 sigma_product *= el
-            elif not(el.is_commutative):
+            elif not el.is_commutative:
                 if isinstance(el, Pow) and isinstance(el.args[0], Pauli):
                     if el.args[1].is_odd:
                         sigma_product *= el.args[0]
@@ -222,6 +226,6 @@ def evaluate_pauli_product(arg):
                     sigma_product = 1
             else:
                 com_product *= el
-        end = (tmp[0]*keeper*sigma_product*com_product)
+        end = tmp[0]*keeper*sigma_product*com_product
         if end == arg: break
     return end

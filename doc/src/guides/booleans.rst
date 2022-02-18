@@ -5,7 +5,7 @@
 =============================
 
 
-This page described what a symbolic :class:`~.Boolean` in SymPy is and also
+This page describes what a symbolic :class:`~.Boolean` in SymPy is and also
 how that relates to three-valued fuzzy-bools that are used in many parts of
 SymPy. It also discusses some common problems that arise when writing code
 that uses three-valued logic and how to handle them correctly.
@@ -209,7 +209,7 @@ the statement "``a`` and ``b`` are both positive" is true, false or unknown:
     >>> print(both_positive_better(S(1), y))
     True
 
-Another case that we need to careful of when using fuzzy-bools is negation
+Another case that we need to be careful of when using fuzzy-bools is negation
 with Python's ``not`` operator e.g.:
 
     >>> x = Symbol('x')

@@ -17,9 +17,23 @@ sympy.stats.rv_interface
 from functools import singledispatch
 from typing import Tuple as tTuple
 
-from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify, Or,
-                   Equality, Lambda, sympify, Dummy, Ne, KroneckerDelta,
-                   DiracDelta, Mul, Indexed, MatrixSymbol, Function, prod)
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import (Function, Lambda)
+from sympy.core.logic import fuzzy_and
+from sympy.core.mul import (Mul, prod)
+from sympy.core.relational import (Eq, Ne)
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.sympify import sympify
+from sympy.functions.special.delta_functions import DiracDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.logic.boolalg import (And, Or)
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.tensor.indexed import Indexed
+from sympy.utilities.lambdify import lambdify
 from sympy.core.relational import Relational
 from sympy.core.sympify import _sympify
 from sympy.sets.sets import FiniteSet, ProductSet, Intersection
@@ -27,7 +41,8 @@ from sympy.solvers.solveset import solveset
 from sympy.external import import_module
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.utilities.iterables import iterable
 import warnings
 
 
@@ -710,7 +725,7 @@ def given(expr, condition=None, **kwargs):
         condition = Eq(condition, condition.symbol)
 
     condsymbols = random_symbols(condition)
-    if (isinstance(condition, Equality) and len(condsymbols) == 1 and
+    if (isinstance(condition, Eq) and len(condsymbols) == 1 and
         not isinstance(pspace(expr).domain, ConditionalDomain)):
         rv = tuple(condsymbols)[0]
 
@@ -836,6 +851,15 @@ def probability(condition, given_condition=None, numsamples=None,
 
 class Density(Basic):
     expr = property(lambda self: self.args[0])
+
+    def __new__(cls, expr, condition = None):
+        expr = _sympify(expr)
+        if condition is None:
+            obj = Basic.__new__(cls, expr)
+        else:
+            condition = _sympify(condition)
+            obj = Basic.__new__(cls, expr, condition)
+        return obj
 
     @property
     def condition(self):
@@ -1032,7 +1056,7 @@ def where(condition, given_condition=None, **kwargs):
     >>> where(X**2<1).set
     Interval.open(-1, 1)
 
-    >>> where(And(D1<=D2 , D2<3))
+    >>> where(And(D1<=D2, D2<3))
     Domain: (Eq(a, 1) & Eq(b, 1)) | (Eq(a, 1) & Eq(b, 2)) | (Eq(a, 2) & Eq(b, 2))
     """
     if given_condition is not None:  # If there is a condition
@@ -1066,9 +1090,15 @@ def sample(expr, condition=None, size=(), library='scipy',
         Choose any of the available options to sample from as string,
         by default is 'scipy'
     numsamples : int
-        Number of samples, each with size as ``size``. The ``numsamples`` parameter is
-        deprecated and is only provided for compatibility with v1.8. Use a list comprehension
-        or an additional dimension in ``size`` instead.
+        Number of samples, each with size as ``size``.
+
+        .. deprecated:: 1.9
+
+        The ``numsamples`` parameter is deprecated and is only provided for
+        compatibility with v1.8. Use a list comprehension or an additional
+        dimension in ``size`` instead. See
+        :ref:`deprecated-sympy-stats-numsamples` for details.
+
     seed :
         An object to be used as seed by the given external library for sampling `expr`.
         Following is the list of possible types of object for the supported libraries,
@@ -1140,12 +1170,20 @@ def sample(expr, condition=None, size=(), library='scipy',
                                                         numsamples=numsamples, seed=seed)
 
     if numsamples != 1:
-        SymPyDeprecationWarning(
-                 feature="numsamples parameter",
-                 issue=21723,
-                 deprecated_since_version="1.9",
-                 useinstead="a list comprehension or an additional dimension in ``size``").warn()
+        sympy_deprecation_warning(
+            f"""
+            The numsamples parameter to sympy.stats.sample() is deprecated.
+            Either use a list comprehension, like
 
+            [sample(...) for i in range({numsamples})]
+
+            or add a dimension to size, like
+
+            sample(..., size={(numsamples,) + size})
+            """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-sympy-stats-numsamples",
+        )
         return [next(iterator) for i in range(numsamples)]
 
     return next(iterator)
@@ -1666,8 +1704,6 @@ def _value_check(condition, message):
     >>> _value_check(And(a < 0, b < 0, c < 0), '')
     False
     """
-    from sympy.core.compatibility import iterable
-    from sympy.core.logic import fuzzy_and
     if not iterable(condition):
         condition = [condition]
     truth = fuzzy_and(condition)

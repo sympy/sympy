@@ -1,11 +1,10 @@
 """Tools for setting up printing in interactive sessions. """
 
-import sys
 from sympy.external.importtools import version_tuple
 from io import BytesIO
 
-from sympy import latex as default_latex
-from sympy import preview
+from sympy.printing.latex import latex as default_latex
+from sympy.printing.preview import preview
 from sympy.utilities.misc import debug
 from sympy.printing.defaults import Printable
 
@@ -118,10 +117,6 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
         return exprbuffer.getvalue().decode('utf-8')
 
     def _matplotlib_wrapper(o):
-        # mathtext does not understand certain latex flags, so we try to
-        # replace them with suitable subs
-        o = o.replace(r'\operatorname', '')
-        o = o.replace(r'\overline', r'\bar')
         # mathtext can't render some LaTeX commands. For example, it can't
         # render any LaTeX environments such as array or matrix. So here we
         # ensure that if mathtext fails to render, we return None.
@@ -135,12 +130,12 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             return None
 
 
-    # Hook methods for builtin sympy printers
+    # Hook methods for builtin SymPy printers
     printing_hooks = ('_latex', '_sympystr', '_pretty', '_sympyrepr')
 
 
     def _can_print(o):
-        """Return True if type o can be printed with one of the sympy printers.
+        """Return True if type o can be printed with one of the SymPy printers.
 
         If o is a container type, this is True if and only if every element of
         o can be printed in this way.
@@ -163,7 +158,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
             elif isinstance(o, bool):
                 return False
             elif isinstance(o, Printable):
-                # types known to sympy
+                # types known to SymPy
                 return True
             elif any(hasattr(o, hook) for hook in printing_hooks):
                 # types which add support themselves
@@ -220,7 +215,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 
     def _print_latex_text(o):
         """
-        A function to generate the latex representation of sympy expressions.
+        A function to generate the latex representation of SymPy expressions.
         """
         if _can_print(o):
             s = latex(o, mode=latex_mode, **settings)
@@ -319,7 +314,8 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
 def _is_ipython(shell):
     """Is a shell instance an IPython shell?"""
     # shortcut, so we don't import IPython if we don't have to
-    if 'IPython' not in sys.modules:
+    from sys import modules
+    if 'IPython' not in modules:
         return False
     try:
         from IPython.core.interactiveshell import InteractiveShell
@@ -349,53 +345,53 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     Parameters
     ==========
 
-    pretty_print : boolean, default=True
-        If True, use pretty_print to stringify or the provided pretty
-        printer; if False, use sstrrepr to stringify or the provided string
+    pretty_print : bool, default=True
+        If ``True``, use :func:`~.pretty_print` to stringify or the provided pretty
+        printer; if ``False``, use :func:`~.sstrrepr` to stringify or the provided string
         printer.
     order : string or None, default='lex'
         There are a few different settings for this parameter:
-        lex (default), which is lexographic order;
-        grlex, which is graded lexographic order;
-        grevlex, which is reversed graded lexographic order;
-        old, which is used for compatibility reasons and for long expressions;
-        None, which sets it to lex.
-    use_unicode : boolean or None, default=None
-        If True, use unicode characters;
-        if False, do not use unicode characters;
-        if None, make a guess based on the environment.
-    use_latex : string, boolean, or None, default=None
-        If True, use default LaTeX rendering in GUI interfaces (png and
+        ``'lex'`` (default), which is lexographic order;
+        ``'grlex'``, which is graded lexographic order;
+        ``'grevlex'``, which is reversed graded lexographic order;
+        ``'old'``, which is used for compatibility reasons and for long expressions;
+        ``None``, which sets it to lex.
+    use_unicode : bool or None, default=None
+        If ``True``, use unicode characters;
+        if ``False``, do not use unicode characters;
+        if ``None``, make a guess based on the environment.
+    use_latex : string, bool, or None, default=None
+        If ``True``, use default LaTeX rendering in GUI interfaces (png and
         mathjax);
-        if False, do not use LaTeX rendering;
-        if None, make a guess based on the environment;
-        if 'png', enable latex rendering with an external latex compiler,
+        if ``False``, do not use LaTeX rendering;
+        if ``None``, make a guess based on the environment;
+        if ``'png'``, enable LaTeX rendering with an external LaTeX compiler,
         falling back to matplotlib if external compilation fails;
-        if 'matplotlib', enable LaTeX rendering with matplotlib;
-        if 'mathjax', enable LaTeX text generation, for example MathJax
+        if ``'matplotlib'``, enable LaTeX rendering with matplotlib;
+        if ``'mathjax'``, enable LaTeX text generation, for example MathJax
         rendering in IPython notebook or text rendering in LaTeX documents;
-        if 'svg', enable LaTeX rendering with an external latex compiler,
+        if ``'svg'``, enable LaTeX rendering with an external latex compiler,
         no fallback
-    wrap_line : boolean
+    wrap_line : bool
         If True, lines will wrap at the end; if False, they will not wrap
         but continue as one line. This is only relevant if ``pretty_print`` is
         True.
     num_columns : int or None, default=None
-        If int, number of columns before wrapping is set to num_columns; if
-        None, number of columns before wrapping is set to terminal width.
-        This is only relevant if ``pretty_print`` is True.
-    no_global : boolean, default=False
-        If True, the settings become system wide;
-        if False, use just for this console/session.
+        If ``int``, number of columns before wrapping is set to num_columns; if
+        ``None``, number of columns before wrapping is set to terminal width.
+        This is only relevant if ``pretty_print`` is ``True``.
+    no_global : bool, default=False
+        If ``True``, the settings become system wide;
+        if ``False``, use just for this console/session.
     ip : An interactive console
         This can either be an instance of IPython,
         or a class that derives from code.InteractiveConsole.
-    euler : boolean, optional, default=False
+    euler : bool, optional, default=False
         Loads the euler package in the LaTeX preamble for handwritten style
         fonts (http://www.ctan.org/pkg/euler).
     forecolor : string or None, optional, default=None
-        DVI setting for foreground color. None means that either 'Black',
-        'White', or 'Gray' will be selected based on a guess of the IPython
+        DVI setting for foreground color. ``None`` means that either ``'Black'``,
+        ``'White'``, or ``'Gray'`` will be selected based on a guess of the IPython
         terminal color setting. See notes.
     backcolor : string, optional, default='Transparent'
         DVI setting for background color. See notes.
@@ -405,19 +401,19 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         Consider using scale instead.
     latex_mode : string, optional, default='plain'
         The mode used in the LaTeX printer. Can be one of:
-        {'inline'|'plain'|'equation'|'equation*'}.
+        ``{'inline'|'plain'|'equation'|'equation*'}``.
     print_builtin : boolean, optional, default=True
         If ``True`` then floats and integers will be printed. If ``False`` the
         printer will only print SymPy types.
     str_printer : function, optional, default=None
         A custom string printer function. This should mimic
-        sympy.printing.sstrrepr().
+        :func:`~.sstrrepr()`.
     pretty_printer : function, optional, default=None
-        A custom pretty printer. This should mimic sympy.printing.pretty().
+        A custom pretty printer. This should mimic :func:`~.pretty()`.
     latex_printer : function, optional, default=None
-        A custom LaTeX printer. This should mimic sympy.printing.latex().
+        A custom LaTeX printer. This should mimic :func:`~.latex()`.
     scale : float, optional, default=1.0
-        Scale the LaTeX output when using the ``png`` or ``svg`` backends.
+        Scale the LaTeX output when using the ``'png'`` or ``'svg'`` backends.
         Useful for high dpi screens.
     settings :
         Any additional settings for the ``latex`` and ``pretty`` commands can
@@ -462,15 +458,15 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     Notes
     =====
 
-    The foreground and background colors can be selected when using 'png' or
-    'svg' LaTeX rendering. Note that before the ``init_printing`` command is
+    The foreground and background colors can be selected when using ``'png'`` or
+    ``'svg'`` LaTeX rendering. Note that before the ``init_printing`` command is
     executed, the LaTeX rendering is handled by the IPython console and not SymPy.
 
     The colors can be selected among the 68 standard colors known to ``dvips``,
     for a list see [1]_. In addition, the background color can be
-    set to  'Transparent' (which is the default value).
+    set to  ``'Transparent'`` (which is the default value).
 
-    When using the 'Auto' foreground color, the guess is based on the
+    When using the ``'Auto'`` foreground color, the guess is based on the
     ``colors`` variable in the IPython console, see [2]_. Hence, if
     that variable is set correctly in your IPython console, there is a high
     chance that the output will be readable, although manual settings may be

@@ -1,12 +1,15 @@
 from collections import defaultdict
 from functools import reduce
 
-from sympy.core import (sympify, Basic, S, Expr, expand_mul, factor_terms,
-    Mul, Dummy, igcd, FunctionClass, Add, symbols, Wild, expand)
+from sympy.core import (sympify, Basic, S, Expr, factor_terms,
+                        Mul, Add, bottom_up)
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import iterable, SYMPY_INTS
-from sympy.core.function import count_ops, _mexpand
-from sympy.core.numbers import I, Integer
+from sympy.core.function import (count_ops, _mexpand, FunctionClass, expand,
+                                 expand_mul, Derivative)
+from sympy.core.numbers import I, Integer, igcd
+from sympy.core.sorting import _nodes
+from sympy.core.symbol import Dummy, symbols, Wild
+from sympy.external.gmpy import SYMPY_INTS
 from sympy.functions import sin, cos, exp, cosh, tanh, sinh, tan, cot, coth
 from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.trigonometric import TrigonometricFunction
@@ -17,8 +20,8 @@ from sympy.polys.polytools import groebner
 from sympy.simplify.cse_main import cse
 from sympy.strategies.core import identity
 from sympy.strategies.tree import greedy
+from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import debug
-
 
 
 def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
@@ -424,23 +427,33 @@ _trigs = (TrigonometricFunction, HyperbolicFunction)
 
 
 def trigsimp(expr, **opts):
-    """
-    reduces expression by using known trig identities
+    """Returns a reduced expression by using known trig identities.
 
-    Explanation
-    ===========
+    Parameters
+    ==========
 
-    method:
-    - Determine the method to use. Valid choices are 'matching' (default),
-    'groebner', 'combined', and 'fu'. If 'matching', simplify the
-    expression recursively by targeting common patterns. If 'groebner', apply
-    an experimental groebner basis algorithm. In this case further options
-    are forwarded to ``trigsimp_groebner``, please refer to its docstring.
-    If 'combined', first run the groebner basis algorithm with small
-    default parameters, then run the 'matching' algorithm. 'fu' runs the
-    collection of trigonometric transformations described by Fu, et al.
-    (see the `fu` docstring).
+    method : string, optional
+        Specifies the method to use. Valid choices are:
 
+        - ``'matching'``, default
+        - ``'groebner'``
+        - ``'combined'``
+        - ``'fu'``
+        - ``'old'``
+
+        If ``'matching'``, simplify the expression recursively by targeting
+        common patterns. If ``'groebner'``, apply an experimental groebner
+        basis algorithm. In this case further options are forwarded to
+        ``trigsimp_groebner``, please refer to
+        its docstring. If ``'combined'``, it first runs the groebner basis
+        algorithm with small default parameters, then runs the ``'matching'``
+        algorithm. If ``'fu'``, run the collection of trigonometric
+        transformations described by Fu, et al. (see the
+        :py:func:`~sympy.simplify.fu.fu` docstring). If ``'old'``, the original
+        SymPy trig simplication function is run.
+    opts :
+        Optional keyword arguments passed to the method. See each method's
+        function docstring for details.
 
     Examples
     ========
@@ -456,10 +469,10 @@ def trigsimp(expr, **opts):
     >>> trigsimp(log(e))
     log(2)
 
-    Using `method="groebner"` (or `"combined"`) might lead to greater
-    simplification.
+    Using ``method='groebner'`` (or ``method='combined'``) might lead to
+    greater simplification.
 
-    The old trigsimp routine can be accessed as with method 'old'.
+    The old trigsimp routine can be accessed as with method ``method='old'``.
 
     >>> from sympy import coth, tanh
     >>> t = 3*tanh(x)**7 - 2/coth(x)**7
@@ -526,7 +539,6 @@ def exptrigsimp(expr):
     exp(-z)
     """
     from sympy.simplify.fu import hyper_as_trig, TR2i
-    from sympy.simplify.simplify import bottom_up
 
     def exp_trig(e):
         # select the better of e, and e rewritten in terms of exp or trig
@@ -1088,7 +1100,6 @@ def futrig(e, *, hyper=True, **kwargs):
 
     """
     from sympy.simplify.fu import hyper_as_trig
-    from sympy.simplify.simplify import bottom_up
 
     e = sympify(e)
 
@@ -1117,7 +1128,6 @@ def _futrig(e):
         TR1, TR2, TR3, TR2i, TR10, L, TR10i,
         TR8, TR6, TR15, TR16, TR111, TR5, TRmorrie, TR11, _TR11, TR14, TR22,
         TR12)
-    from sympy.core.compatibility import _nodes
 
     if not e.has(TrigonometricFunction):
         return e
@@ -1178,7 +1188,6 @@ def _futrig(e):
 def _is_Expr(e):
     """_eapply helper to tell whether ``e`` and all its args
     are Exprs."""
-    from sympy import Derivative
     if isinstance(e, Derivative):
         return _is_Expr(e.expr)
     if not isinstance(e, Expr):

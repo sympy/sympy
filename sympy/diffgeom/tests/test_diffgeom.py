@@ -1,6 +1,6 @@
 from sympy.core import Lambda, Symbol, symbols
 from sympy.diffgeom.rn import R2, R2_p, R2_r, R3_r, R3_c, R3_s, R2_origin
-from sympy.diffgeom import (CoordSystem, Commutator, Differential, TensorProduct,
+from sympy.diffgeom import (Manifold, Patch, CoordSystem, Commutator, Differential, TensorProduct,
         WedgeProduct, BaseCovarDerivativeOp, CovarDerivativeOp, LieDerivative,
         covariant_order, contravariant_order, twoform_to_matrix, metric_to_Christoffel_1st,
         metric_to_Christoffel_2nd, metric_to_Riemann_components,
@@ -318,3 +318,25 @@ def test_simplify():
     assert simplify(dx*dy) == dx*dy
     assert simplify(ex*ey) == ex*ey
     assert ((1-x)*dx)/(1-x)**2 == dx/(1-x)
+
+
+def test_issue_17917():
+    X = R2.x*R2.e_x - R2.y*R2.e_y
+    Y = (R2.x**2 + R2.y**2)*R2.e_x - R2.x*R2.y*R2.e_y
+    assert LieDerivative(X, Y).expand() == (
+        R2.x**2*R2.e_x - 3*R2.y**2*R2.e_x - R2.x*R2.y*R2.e_y)
+
+def test_deprecations():
+    m = Manifold('M', 2)
+    p = Patch('P', m)
+    with warns_deprecated_sympy():
+        CoordSystem('Car2d', p, names=['x', 'y'])
+
+    with warns_deprecated_sympy():
+        c = CoordSystem('Car2d', p, ['x', 'y'])
+
+    with warns_deprecated_sympy():
+        list(m.patches)
+
+    with warns_deprecated_sympy():
+        list(c.transforms)

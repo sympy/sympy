@@ -1,19 +1,20 @@
 """
-A Printer for generating readable representation of most sympy classes.
+A Printer for generating readable representation of most SymPy classes.
 """
 
-from typing import Any, Dict
+from typing import Any, Dict as tDict
 
 from sympy.core import S, Rational, Pow, Basic, Mul, Number
 from sympy.core.mul import _keep_coeff
-from sympy.core.function import _coeff_isneg
-from sympy.sets.sets import FiniteSet
+from sympy.core.relational import Relational
+from sympy.core.sorting import default_sort_key
+from sympy.core.sympify import SympifyError
+from sympy.utilities.iterables import sift
+from .precedence import precedence, PRECEDENCE
 from .printer import Printer, print_function
-from sympy.printing.precedence import precedence, PRECEDENCE
 
 from mpmath.libmp import prec_to_dps, to_str as mlib_to_str
 
-from sympy.utilities import default_sort_key, sift
 
 
 class StrPrinter(Printer):
@@ -26,9 +27,9 @@ class StrPrinter(Printer):
         "perm_cyclic": True,
         "min": None,
         "max": None,
-    }  # type: Dict[str, Any]
+    }  # type: tDict[str, Any]
 
-    _relationals = dict()  # type: Dict[str, str]
+    _relationals = dict()  # type: tDict[str, str]
 
     def parenthesize(self, item, level, strict=False):
         if (precedence(item) < level) or ((not strict) and precedence(item) <= level):
@@ -78,7 +79,12 @@ class StrPrinter(Printer):
         return '~%s' %(self.parenthesize(expr.args[0],PRECEDENCE["Not"]))
 
     def _print_And(self, expr):
-        return self.stringify(expr.args, " & ", PRECEDENCE["BitwiseAnd"])
+        args = list(expr.args)
+        for j, i in enumerate(args):
+            if isinstance(i, Relational) and (
+                    i.canonical.rhs is S.NegativeInfinity):
+                args.insert(0, args.pop(j))
+        return self.stringify(args, " & ", PRECEDENCE["BitwiseAnd"])
 
     def _print_Or(self, expr):
         return self.stringify(expr.args, " | ", PRECEDENCE["BitwiseOr"])
@@ -157,6 +163,11 @@ class StrPrinter(Printer):
     def _print_GoldenRatio(self, expr):
         return 'GoldenRatio'
 
+    def _print_Heaviside(self, expr):
+        # Same as _print_Function but uses pargs to suppress default 1/2 for
+        # 2nd args
+        return expr.func.__name__ + "(%s)" % self.stringify(expr.pargs, ", ")
+
     def _print_TribonacciConstant(self, expr):
         return 'TribonacciConstant'
 
@@ -223,6 +234,9 @@ class StrPrinter(Printer):
     def _print_list(self, expr):
         return "[%s]" % self.stringify(expr, ", ")
 
+    def _print_List(self, expr):
+        return self._print_list(expr)
+
     def _print_MatrixBase(self, expr):
         return expr._format_str(self)
 
@@ -272,16 +286,18 @@ class StrPrinter(Printer):
                     e = Mul._from_args(dargs)
                 d[i] = Pow(di.base, e, evaluate=False) if e - 1 else di.base
 
+            pre = []
             # don't parenthesize first factor if negative
-            if _coeff_isneg(n[0]):
+            if n and n[0].could_extract_minus_sign():
                 pre = [str(n.pop(0))]
-            else:
-                pre = []
+
             nfactors = pre + [self.parenthesize(a, prec, strict=False)
                 for a in n]
+            if not nfactors:
+                nfactors = ['1']
 
             # don't parenthesize first of denominator unless singleton
-            if len(d) > 1 and _coeff_isneg(d[0]):
+            if len(d) > 1 and d[0].could_extract_minus_sign():
                 pre = [str(d.pop(0))]
             else:
                 pre = []
@@ -409,16 +425,19 @@ class StrPrinter(Printer):
 
     def _print_Permutation(self, expr):
         from sympy.combinatorics.permutations import Permutation, Cycle
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
+        from sympy.utilities.exceptions import sympy_deprecation_warning
 
         perm_cyclic = Permutation.print_cyclic
         if perm_cyclic is not None:
-            SymPyDeprecationWarning(
-                feature="Permutation.print_cyclic = {}".format(perm_cyclic),
-                useinstead="init_printing(perm_cyclic={})"
-                .format(perm_cyclic),
-                issue=15201,
-                deprecated_since_version="1.6").warn()
+            sympy_deprecation_warning(
+                f"""
+                Setting Permutation.print_cyclic is deprecated. Instead use
+                init_printing(perm_cyclic={perm_cyclic}).
+                """,
+                deprecated_since_version="1.6",
+                active_deprecations_target="deprecated-permutation-print_cyclic",
+                stacklevel=7,
+            )
         else:
             perm_cyclic = self._settings.get("perm_cyclic", True)
 
@@ -476,7 +495,8 @@ class StrPrinter(Printer):
         return self._print(expr.name)
 
     def _print_ArrayElement(self, expr):
-        return "%s[%s]" % (expr.name, ", ".join([self._print(i) for i in expr.indices]))
+        return "%s[%s]" % (
+            self.parenthesize(expr.name, PRECEDENCE["Func"], True), ", ".join([self._print(i) for i in expr.indices]))
 
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % self._print(a) for a in expr.args]
@@ -603,8 +623,7 @@ class StrPrinter(Printer):
         Examples
         ========
 
-        >>> from sympy.functions import sqrt
-        >>> from sympy.printing.str import StrPrinter
+        >>> from sympy import sqrt, StrPrinter
         >>> from sympy.abc import x
 
         How ``rational`` keyword works with ``sqrt``:
@@ -798,6 +817,7 @@ class StrPrinter(Printer):
         return '{%s}' % args
 
     def _print_FiniteSet(self, s):
+        from sympy.sets.sets import FiniteSet
         items = sorted(s, key=default_sort_key)
 
         args = ', '.join(self._print(item) for item in items)
@@ -894,7 +914,6 @@ class StrPrinter(Printer):
         return "0"
 
     def _print_DMP(self, p):
-        from sympy.core.sympify import SympifyError
         try:
             if p.ring is not None:
                 # TODO incorporate order

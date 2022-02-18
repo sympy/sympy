@@ -1,19 +1,19 @@
 """Tools for solving inequalities and systems of inequalities. """
 
+from sympy.calculus.util import (continuous_domain, periodicity,
+    function_range)
 from sympy.core import Symbol, Dummy, sympify
-from sympy.core.compatibility import iterable
 from sympy.core.exprtools import factor_terms
 from sympy.core.relational import Relational, Eq, Ge, Lt
-from sympy.sets import Interval
-from sympy.sets.sets import FiniteSet, Union, EmptySet, Intersection
+from sympy.sets.sets import Interval, FiniteSet, Union, Intersection
 from sympy.core.singleton import S
 from sympy.core.function import expand_mul
-
-from sympy.functions import Abs
+from sympy.functions.elementary.complexes import im, Abs
 from sympy.logic import And
 from sympy.polys import Poly, PolynomialError, parallel_poly_from_expr
 from sympy.polys.polyutils import _nsort
-from sympy.utilities.iterables import sift
+from sympy.solvers.solveset import solvify, solveset
+from sympy.utilities.iterables import sift, iterable
 from sympy.utilities.misc import filldedent
 
 
@@ -23,9 +23,8 @@ def solve_poly_inequality(poly, rel):
     Examples
     ========
 
-    >>> from sympy import Poly
+    >>> from sympy import solve_poly_inequality, Poly
     >>> from sympy.abc import x
-    >>> from sympy.solvers.inequalities import solve_poly_inequality
 
     >>> solve_poly_inequality(Poly(x, x, domain='ZZ'), '==')
     [{0}]
@@ -115,15 +114,14 @@ def solve_poly_inequalities(polys):
     Examples
     ========
 
+    >>> from sympy import Poly
     >>> from sympy.solvers.inequalities import solve_poly_inequalities
-    >>> from sympy.polys import Poly
     >>> from sympy.abc import x
     >>> solve_poly_inequalities(((
     ... Poly(x**2 - 3), ">"), (
     ... Poly(-x**2 + 1), ">")))
     Union(Interval.open(-oo, -sqrt(3)), Interval.open(-1, 1), Interval.open(sqrt(3), oo))
     """
-    from sympy import Union
     return Union(*[s for p in polys for s in solve_poly_inequality(*p)])
 
 
@@ -134,8 +132,7 @@ def solve_rational_inequalities(eqs):
     ========
 
     >>> from sympy.abc import x
-    >>> from sympy import Poly
-    >>> from sympy.solvers.inequalities import solve_rational_inequalities
+    >>> from sympy import solve_rational_inequalities, Poly
 
     >>> solve_rational_inequalities([[
     ... ((Poly(-x + 1), Poly(1, x)), '>='),
@@ -290,8 +287,7 @@ def reduce_abs_inequality(expr, rel, gen):
     Examples
     ========
 
-    >>> from sympy import Abs, Symbol
-    >>> from sympy.solvers.inequalities import reduce_abs_inequality
+    >>> from sympy import reduce_abs_inequality, Abs, Symbol
     >>> x = Symbol('x', real=True)
 
     >>> reduce_abs_inequality(Abs(x - 5) - 3, '<', x)
@@ -307,7 +303,7 @@ def reduce_abs_inequality(expr, rel, gen):
     """
     if gen.is_extended_real is False:
          raise TypeError(filldedent('''
-            can't solve inequalities with absolute values containing
+            Cannot solve inequalities with absolute values containing
             non-real variables.
             '''))
 
@@ -372,8 +368,7 @@ def reduce_abs_inequalities(exprs, gen):
     Examples
     ========
 
-    >>> from sympy import Abs, Symbol
-    >>> from sympy.solvers.inequalities import reduce_abs_inequalities
+    >>> from sympy import reduce_abs_inequalities, Abs, Symbol
     >>> x = Symbol('x', extended_real=True)
 
     >>> reduce_abs_inequalities([(Abs(3*x - 5) - 7, '<'),
@@ -432,12 +427,11 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Examples
     ========
 
-    >>> from sympy.solvers.inequalities import solve_univariate_inequality
-    >>> from sympy import Symbol, sin, Interval, S
+    >>> from sympy import solve_univariate_inequality, Symbol, sin, Interval, S
     >>> x = Symbol('x')
 
     >>> solve_univariate_inequality(x**2 >= 4, x)
-    ((2 <= x) & (x < oo)) | ((x <= -2) & (-oo < x))
+    ((2 <= x) & (x < oo)) | ((-oo < x) & (x <= -2))
 
     >>> solve_univariate_inequality(x**2 >= 4, x, relational=False)
     Union(Interval(-oo, -2), Interval(2, oo))
@@ -450,11 +444,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
     Interval.open(0, pi)
 
     """
-    from sympy import im
-    from sympy.calculus.util import (continuous_domain, periodicity,
-        function_range)
     from sympy.solvers.solvers import denoms
-    from sympy.solvers.solveset import solvify, solveset
 
     if domain.is_subset(S.Reals) is False:
         raise NotImplementedError(filldedent('''
@@ -510,13 +500,13 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
             frange = function_range(e, gen, domain)
 
             rel = expr.rel_op
-            if rel == '<' or rel == '<=':
+            if rel in ('<', '<='):
                 if expr.func(frange.sup, 0):
                     rv = domain
                 elif not expr.func(frange.inf, 0):
                     rv = S.EmptySet
 
-            elif rel == '>' or rel == '>=':
+            elif rel in ('>', '>='):
                 if expr.func(frange.inf, 0):
                     rv = domain
                 elif not expr.func(frange.sup, 0):
@@ -642,7 +632,7 @@ def solve_univariate_inequality(expr, gen, relational=True, domain=S.Reals, cont
                     im_sol = S.Reals
                     check = False
 
-                if isinstance(im_sol, EmptySet):
+                if im_sol is S.EmptySet:
                     raise ValueError(filldedent('''
                         %s contains imaginary parts which cannot be
                         made 0 for any value of %s satisfying the
@@ -734,7 +724,7 @@ def _solve_inequality(ie, s, linear=False):
     If `linear` is True (default is False) an `s`-dependent expression
     will be isolated on the left, if possible
     but it will not be solved for `s` unless the expression is linear
-    in `s`. Furthermore, only "safe" operations which don't change the
+    in `s`. Furthermore, only "safe" operations which do not change the
     sense of the relationship are applied: no division by an unsigned
     value is attempted unless the relationship involves Eq or Ne and
     no division by a value not known to be nonzero is ever attempted.
@@ -956,7 +946,7 @@ def reduce_inequalities(inequalities, symbols=[]):
     ========
 
     >>> from sympy.abc import x, y
-    >>> from sympy.solvers.inequalities import reduce_inequalities
+    >>> from sympy import reduce_inequalities
 
     >>> reduce_inequalities(0 <= x + 3, [])
     (-3 <= x) & (x < oo)

@@ -73,7 +73,7 @@ def test_isomorphisms():
     G = FpGroup(F, [c**3, d**3, (c*d)**2])
     check, T =  group_isomorphism(G, H)
     assert check
-    T(c**3*d**2) == a**3*b**2
+    assert T(c**3*d**2) == a**3*b**2
 
     # FpGroup -> PermutationGroup
     # FpGroup is converted to the equivalent isomorphic group.

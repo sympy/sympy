@@ -6,12 +6,24 @@ of Many-Particle Systems."
 """
 from collections import defaultdict
 
-from sympy import (Add, Basic, cacheit, Dummy, Expr, Function, I,
-                   KroneckerDelta, Mul, Pow, S, sqrt, Symbol, sympify, Tuple,
-                   zeros)
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import Function
+from sympy.core.mul import Mul
+from sympy.core.numbers import I
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.sorting import default_sort_key
+from sympy.core.symbol import Dummy, Symbol
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.matrices.dense import zeros
 from sympy.printing.str import StrPrinter
 from sympy.utilities.iterables import has_dups
-from sympy.utilities import default_sort_key
 
 __all__ = [
     'Dagger',
@@ -439,8 +451,10 @@ class AnnihilateBoson(BosonicOperator, Annihilator):
         return "AnnihilateBoson(%s)" % self.state
 
     def _latex(self, printer):
-        return "b_{%s}" % self.state.name
-
+        if self.state is S.Zero:
+            return "b_{0}"
+        else:
+            return "b_{%s}" % self.state.name
 
 class CreateBoson(BosonicOperator, Creator):
     """
@@ -478,7 +492,10 @@ class CreateBoson(BosonicOperator, Creator):
         return "CreateBoson(%s)" % self.state
 
     def _latex(self, printer):
-        return "{b^\\dagger_{%s}}" % self.state.name
+        if self.state is S.Zero:
+            return "{b^\\dagger_{0}}"
+        else:
+            return "{b^\\dagger_{%s}}" % self.state.name
 
 B = AnnihilateBoson
 Bd = CreateBoson
@@ -793,7 +810,10 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         return "AnnihilateFermion(%s)" % self.state
 
     def _latex(self, printer):
-        return "a_{%s}" % self.state.name
+        if self.state is S.Zero:
+            return "a_{0}"
+        else:
+            return "a_{%s}" % self.state.name
 
 
 class CreateFermion(FermionicOperator, Creator):
@@ -939,7 +959,10 @@ class CreateFermion(FermionicOperator, Creator):
         return "CreateFermion(%s)" % self.state
 
     def _latex(self, printer):
-        return "{a^\\dagger_{%s}}" % self.state.name
+        if self.state is S.Zero:
+            return "{a^\\dagger_{0}}"
+        else:
+            return "{a^\\dagger_{%s}}" % self.state.name
 
 Fd = CreateFermion
 F = AnnihilateFermion
@@ -979,13 +1002,16 @@ class FockState(Expr):
         return ("FockState(%r)") % (self.args)
 
     def __str__(self):
-        return "%s%r%s" % (self.lbracket, self._labels(), self.rbracket)
+        return "%s%r%s" % (getattr(self, 'lbracket', ""), self._labels(), getattr(self, 'rbracket', ""))
 
     def _labels(self):
         return self.args[0]
 
     def __len__(self):
         return len(self.args[0])
+
+    def _latex(self, printer):
+        return "%s%s%s" % (getattr(self, 'lbracket_latex', ""), printer._print(self._labels()), getattr(self, 'rbracket_latex', ""))
 
 
 class BosonState(FockState):
@@ -1242,6 +1268,8 @@ class FockStateKet(FockState):
     """
     lbracket = '|'
     rbracket = '>'
+    lbracket_latex = r'\left|'
+    rbracket_latex = r'\right\rangle'
 
 
 class FockStateBra(FockState):
@@ -1250,6 +1278,8 @@ class FockStateBra(FockState):
     """
     lbracket = '<'
     rbracket = '|'
+    lbracket_latex = r'\left\langle'
+    rbracket_latex = r'\right|'
 
     def __mul__(self, other):
         if isinstance(other, FockStateKet):
@@ -1361,7 +1391,7 @@ def _apply_Mul(m):
         return m
     c_part, nc_part = m.args_cnc()
     n_nc = len(nc_part)
-    if n_nc == 0 or n_nc == 1:
+    if n_nc in (0, 1):
         return m
     else:
         last = nc_part[-1]
@@ -1407,7 +1437,7 @@ def _apply_Mul(m):
 
 def apply_operators(e):
     """
-    Take a sympy expression with operators and states and apply the operators.
+    Take a SymPy expression with operators and states and apply the operators.
 
     Examples
     ========

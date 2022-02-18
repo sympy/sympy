@@ -1,7 +1,14 @@
 """Dirac notation for states."""
 
-from sympy import (cacheit, conjugate, Expr, Function, integrate, oo, sqrt,
-                   Tuple)
+from sympy.core.cache import cacheit
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import Function
+from sympy.core.numbers import oo
+from sympy.core.singleton import S
+from sympy.functions.elementary.complexes import conjugate
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.integrals.integrals import integrate
 from sympy.printing.pretty.stringpict import stringPict
 from sympy.physics.quantum.qexpr import QExpr, dispatch_method
 
@@ -132,12 +139,12 @@ class StateBase(QExpr):
 
         # Setup for unicode vs ascii
         if use_unicode:
-            lbracket, rbracket = self.lbracket_ucode, self.rbracket_ucode
+            lbracket, rbracket = getattr(self, 'lbracket_ucode', ""), getattr(self, 'rbracket_ucode', "")
             slash, bslash, vert = '\N{BOX DRAWINGS LIGHT DIAGONAL UPPER RIGHT TO LOWER LEFT}', \
                                   '\N{BOX DRAWINGS LIGHT DIAGONAL UPPER LEFT TO LOWER RIGHT}', \
                                   '\N{BOX DRAWINGS LIGHT VERTICAL}'
         else:
-            lbracket, rbracket = self.lbracket, self.rbracket
+            lbracket, rbracket = getattr(self, 'lbracket', ""), getattr(self, 'rbracket', "")
             slash, bslash, vert = '/', '\\', '|'
 
         # If height is 1, just return brackets
@@ -170,7 +177,7 @@ class StateBase(QExpr):
 
     def _sympystr(self, printer, *args):
         contents = self._print_contents(printer, *args)
-        return '%s%s%s' % (self.lbracket, contents, self.rbracket)
+        return '%s%s%s' % (getattr(self, 'lbracket', ""), contents, getattr(self, 'rbracket', ""))
 
     def _pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
@@ -187,7 +194,7 @@ class StateBase(QExpr):
         contents = self._print_contents_latex(printer, *args)
         # The extra {} brackets are needed to get matplotlib's latex
         # rendered to render this properly.
-        return '{%s%s%s}' % (self.lbracket_latex, contents, self.rbracket_latex)
+        return '{%s%s%s}' % (getattr(self, 'lbracket_latex', ""), contents, getattr(self, 'rbracket_latex', ""))
 
 
 class KetBase(StateBase):
@@ -788,7 +795,7 @@ class Wavefunction(Function):
                 continue
 
             if (args[ct] < lower) == True or (args[ct] > upper) == True:
-                return 0
+                return S.Zero
 
             ct += 1
 

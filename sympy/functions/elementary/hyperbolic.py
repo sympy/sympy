@@ -2,13 +2,19 @@ from sympy.core.logic import FuzzyBool
 
 from sympy.core import S, sympify, cacheit, pi, I, Rational
 from sympy.core.add import Add
-from sympy.core.function import Function, ArgumentIndexError, _coeff_isneg
-from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
+from sympy.core.function import Function, ArgumentIndexError
+from sympy.core.logic import fuzzy_or, fuzzy_and
+from sympy.functions.combinatorial.factorials import (binomial, factorial,
+                                                      RisingFactorial)
+from sympy.functions.combinatorial.numbers import bernoulli, euler, nC
+from sympy.functions.elementary.complexes import Abs
 from sympy.functions.elementary.exponential import exp, log, match_real_imag
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.trigonometric import (acot, asin, atan, cos,
+                                                      cot, sin, tan)
+from sympy.polys.specialpolys import symmetric_poly
 
-from sympy.core.logic import fuzzy_or, fuzzy_and
 
 def _rewrite_hyperbolics_as_exp(expr):
     expr = sympify(expr)
@@ -35,10 +41,10 @@ class HyperbolicFunction(Function):
 
 
 def _peeloff_ipi(arg):
-    """
-    Split ARG into two parts, a "rest" and a multiple of I*pi/2.
-    This assumes ARG to be an Add.
-    The multiple of I*pi returned in the second position is always a Rational.
+    r"""
+    Split ARG into two parts, a "rest" and a multiple of $I\pi$.
+    This assumes ARG to be an ``Add``.
+    The multiple of $I\pi$ returned in the second position is always a ``Rational``.
 
     Examples
     ========
@@ -47,29 +53,30 @@ def _peeloff_ipi(arg):
     >>> from sympy import pi, I
     >>> from sympy.abc import x, y
     >>> peel(x + I*pi/2)
-    (x, I*pi/2)
+    (x, 1/2)
     >>> peel(x + I*2*pi/3 + I*pi*y)
-    (x + I*pi*y + I*pi/6, I*pi/2)
+    (x + I*pi*y + I*pi/6, 1/2)
     """
+    ipi = S.Pi*S.ImaginaryUnit
     for a in Add.make_args(arg):
-        if a == S.Pi*S.ImaginaryUnit:
+        if a == ipi:
             K = S.One
             break
         elif a.is_Mul:
             K, p = a.as_two_terms()
-            if p == S.Pi*S.ImaginaryUnit and K.is_Rational:
+            if p == ipi and K.is_Rational:
                 break
     else:
         return arg, S.Zero
 
-    m1 = (K % S.Half)*S.Pi*S.ImaginaryUnit
-    m2 = K*S.Pi*S.ImaginaryUnit - m1
-    return arg - m2, m2
+    m1 = (K % S.Half)
+    m2 = K - m1
+    return arg - m2*ipi, m2
 
 
 class sinh(HyperbolicFunction):
     r"""
-    sinh(x) is the hyperbolic sine of x.
+    ``sinh(x)`` is the hyperbolic sine of ``x``.
 
     The hyperbolic sine function is $\frac{e^x - e^{-x}}{2}$.
 
@@ -104,8 +111,6 @@ class sinh(HyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import sin
-
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -128,12 +133,13 @@ class sinh(HyperbolicFunction):
             if i_coeff is not None:
                 return S.ImaginaryUnit * sin(i_coeff)
             else:
-                if _coeff_isneg(arg):
+                if arg.could_extract_minus_sign():
                     return -cls(-arg)
 
             if arg.is_Add:
                 x, m = _peeloff_ipi(arg)
                 if m:
+                    m = m*S.Pi*S.ImaginaryUnit
                     return sinh(m)*cosh(x) + cosh(m)*sinh(x)
 
             if arg.is_zero:
@@ -178,7 +184,6 @@ class sinh(HyperbolicFunction):
         """
         Returns this function as a complex coordinate.
         """
-        from sympy import cos, sin
         if self.args[0].is_extended_real:
             if deep:
                 hints['complex'] = False
@@ -269,14 +274,14 @@ class sinh(HyperbolicFunction):
         return arg.is_finite
 
     def _eval_is_zero(self):
-        arg = self.args[0]
-        if arg.is_zero:
-            return True
+        rest, ipi_mult = _peeloff_ipi(self.args[0])
+        if rest.is_zero:
+            return ipi_mult.is_integer
 
 
 class cosh(HyperbolicFunction):
     r"""
-    cosh(x) is the hyperbolic cosine of x.
+    ``cosh(x)`` is the hyperbolic cosine of ``x``.
 
     The hyperbolic cosine function is $\frac{e^x + e^{-x}}{2}$.
 
@@ -302,7 +307,7 @@ class cosh(HyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import cos
+        from sympy.functions.elementary.trigonometric import cos
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -325,12 +330,13 @@ class cosh(HyperbolicFunction):
             if i_coeff is not None:
                 return cos(i_coeff)
             else:
-                if _coeff_isneg(arg):
+                if arg.could_extract_minus_sign():
                     return cls(-arg)
 
             if arg.is_Add:
                 x, m = _peeloff_ipi(arg)
                 if m:
+                    m = m*S.Pi*S.ImaginaryUnit
                     return cosh(m)*cosh(x) + sinh(m)*sinh(x)
 
             if arg.is_zero:
@@ -367,7 +373,6 @@ class cosh(HyperbolicFunction):
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
-        from sympy import cos, sin
         if self.args[0].is_extended_real:
             if deep:
                 hints['complex'] = False
@@ -507,10 +512,15 @@ class cosh(HyperbolicFunction):
         arg = self.args[0]
         return arg.is_finite
 
+    def _eval_is_zero(self):
+        rest, ipi_mult = _peeloff_ipi(self.args[0])
+        if ipi_mult and rest.is_zero:
+            return (ipi_mult - S.Half).is_integer
+
 
 class tanh(HyperbolicFunction):
     r"""
-    tanh(x) is the hyperbolic tangent of x.
+    ``tanh(x)`` is the hyperbolic tangent of ``x``.
 
     The hyperbolic tangent function is $\frac{\sinh(x)}{\cosh(x)}$.
 
@@ -542,7 +552,6 @@ class tanh(HyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import tan
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -563,17 +572,17 @@ class tanh(HyperbolicFunction):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                if _coeff_isneg(i_coeff):
+                if i_coeff.could_extract_minus_sign():
                     return -S.ImaginaryUnit * tan(-i_coeff)
                 return S.ImaginaryUnit * tan(i_coeff)
             else:
-                if _coeff_isneg(arg):
+                if arg.could_extract_minus_sign():
                     return -cls(-arg)
 
             if arg.is_Add:
                 x, m = _peeloff_ipi(arg)
                 if m:
-                    tanhm = tanh(m)
+                    tanhm = tanh(m*S.Pi*S.ImaginaryUnit)
                     if tanhm is S.ComplexInfinity:
                         return coth(x)
                     else: # tanhm == 0
@@ -599,7 +608,6 @@ class tanh(HyperbolicFunction):
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
-        from sympy import bernoulli
         if n < 0 or n % 2 == 0:
             return S.Zero
         else:
@@ -616,7 +624,6 @@ class tanh(HyperbolicFunction):
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
-        from sympy import cos, sin
         if self.args[0].is_extended_real:
             if deep:
                 hints['complex'] = False
@@ -633,7 +640,6 @@ class tanh(HyperbolicFunction):
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
         if arg.is_Add:
-            from sympy import symmetric_poly
             n = len(arg.args)
             TX = [tanh(x, evaluate=False)._eval_expand_trig()
                 for x in arg.args]
@@ -642,7 +648,6 @@ class tanh(HyperbolicFunction):
                 p[i % 2] += symmetric_poly(i, TX)
             return p[1]/p[0]
         elif arg.is_Mul:
-            from sympy.functions.combinatorial.numbers import nC
             coeff, terms = arg.as_coeff_Mul()
             if coeff.is_Integer and coeff > 1:
                 n = []
@@ -673,7 +678,7 @@ class tanh(HyperbolicFunction):
         return 1/coth(arg)
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
+        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and Order(1, x).contains(arg):
@@ -709,7 +714,6 @@ class tanh(HyperbolicFunction):
             return self.args[0].is_negative
 
     def _eval_is_finite(self):
-        from sympy import sinh, cos
         arg = self.args[0]
 
         re, im = arg.as_real_imag()
@@ -729,7 +733,7 @@ class tanh(HyperbolicFunction):
 
 class coth(HyperbolicFunction):
     r"""
-    coth(x) is the hyperbolic cotangent of x.
+    ``coth(x)`` is the hyperbolic cotangent of ``x``.
 
     The hyperbolic cotangent function is $\frac{\cosh(x)}{\sinh(x)}$.
 
@@ -761,7 +765,6 @@ class coth(HyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import cot
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -782,17 +785,17 @@ class coth(HyperbolicFunction):
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
 
             if i_coeff is not None:
-                if _coeff_isneg(i_coeff):
+                if i_coeff.could_extract_minus_sign():
                     return S.ImaginaryUnit * cot(-i_coeff)
                 return -S.ImaginaryUnit * cot(i_coeff)
             else:
-                if _coeff_isneg(arg):
+                if arg.could_extract_minus_sign():
                     return -cls(-arg)
 
             if arg.is_Add:
                 x, m = _peeloff_ipi(arg)
                 if m:
-                    cothm = coth(m)
+                    cothm = coth(m*S.Pi*S.ImaginaryUnit)
                     if cothm is S.ComplexInfinity:
                         return coth(x)
                     else: # cothm == 0
@@ -818,7 +821,6 @@ class coth(HyperbolicFunction):
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
-        from sympy import bernoulli
         if n == 0:
             return 1 / sympify(x)
         elif n < 0 or n % 2 == 0:
@@ -835,7 +837,7 @@ class coth(HyperbolicFunction):
         return self.func(self.args[0].conjugate())
 
     def as_real_imag(self, deep=True, **hints):
-        from sympy import cos, sin
+        from sympy.functions.elementary.trigonometric import (cos, sin)
         if self.args[0].is_extended_real:
             if deep:
                 hints['complex'] = False
@@ -875,7 +877,7 @@ class coth(HyperbolicFunction):
             return self.args[0].is_negative
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
+        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and Order(1, x).contains(arg):
@@ -886,7 +888,6 @@ class coth(HyperbolicFunction):
     def _eval_expand_trig(self, **hints):
         arg = self.args[0]
         if arg.is_Add:
-            from sympy import symmetric_poly
             CX = [coth(x, evaluate=False)._eval_expand_trig() for x in arg.args]
             p = [[], []]
             n = len(arg.args)
@@ -894,7 +895,6 @@ class coth(HyperbolicFunction):
                 p[(n - i) % 2].append(symmetric_poly(i, CX))
             return Add(*p[0])/Add(*p[1])
         elif arg.is_Mul:
-            from sympy import binomial
             coeff, x = arg.as_coeff_Mul(rational=True)
             if coeff.is_Integer and coeff > 1:
                 c = coth(x, evaluate=False)
@@ -981,7 +981,7 @@ class ReciprocalHyperbolicFunction(HyperbolicFunction):
 
 class csch(ReciprocalHyperbolicFunction):
     r"""
-    csch(x) is the hyperbolic cosecant of x.
+    ``csch(x)`` is the hyperbolic cosecant of ``x``.
 
     The hyperbolic cosecant function is $\frac{2}{e^x - e^{-x}}$
 
@@ -1017,7 +1017,6 @@ class csch(ReciprocalHyperbolicFunction):
         """
         Returns the next term in the Taylor series expansion
         """
-        from sympy import bernoulli
         if n == 0:
             return 1/sympify(x)
         elif n < 0 or n % 2 == 0:
@@ -1044,7 +1043,7 @@ class csch(ReciprocalHyperbolicFunction):
 
 class sech(ReciprocalHyperbolicFunction):
     r"""
-    sech(x) is the hyperbolic secant of x.
+    ``sech(x)`` is the hyperbolic secant of ``x``.
 
     The hyperbolic secant function is $\frac{2}{e^x + e^{-x}}$
 
@@ -1074,7 +1073,6 @@ class sech(ReciprocalHyperbolicFunction):
     @staticmethod
     @cacheit
     def taylor_term(n, x, *previous_terms):
-        from sympy.functions.combinatorial.numbers import euler
         if n < 0 or n % 2 == 1:
             return S.Zero
         else:
@@ -1101,7 +1099,7 @@ class InverseHyperbolicFunction(Function):
 
 class asinh(InverseHyperbolicFunction):
     """
-    asinh(x) is the inverse hyperbolic sine of x.
+    ``asinh(x)`` is the inverse hyperbolic sine of ``x``.
 
     The inverse hyperbolic sine function.
 
@@ -1129,7 +1127,6 @@ class asinh(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import asin
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -1159,7 +1156,7 @@ class asinh(InverseHyperbolicFunction):
             if i_coeff is not None:
                 return S.ImaginaryUnit * asin(i_coeff)
             else:
-                if _coeff_isneg(arg):
+                if arg.could_extract_minus_sign():
                     return -cls(-arg)
 
         if isinstance(arg, sinh) and arg.args[0].is_number:
@@ -1190,10 +1187,10 @@ class asinh(InverseHyperbolicFunction):
                 k = (n - 1) // 2
                 R = RisingFactorial(S.Half, k)
                 F = factorial(k)
-                return (-1)**k * R / F * x**n / n
+                return S.NegativeOne**k * R / F * x**n / n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
+        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and Order(1, x).contains(arg):
@@ -1211,14 +1208,12 @@ class asinh(InverseHyperbolicFunction):
         return sinh
 
     def _eval_is_zero(self):
-        arg = self.args[0]
-        if arg.is_zero:
-            return True
+        return self.args[0].is_zero
 
 
 class acosh(InverseHyperbolicFunction):
     """
-    acosh(x) is the inverse hyperbolic cosine of x.
+    ``acosh(x)`` is the inverse hyperbolic cosine of ``x``.
 
     The inverse hyperbolic cosine function.
 
@@ -1304,7 +1299,6 @@ class acosh(InverseHyperbolicFunction):
         if isinstance(arg, cosh) and arg.args[0].is_number:
             z = arg.args[0]
             if z.is_real:
-                from sympy.functions.elementary.complexes import Abs
                 return Abs(z)
             r, i = match_real_imag(z)
             if r is not None and i is not None:
@@ -1342,7 +1336,7 @@ class acosh(InverseHyperbolicFunction):
                 return -R / F * S.ImaginaryUnit * x**n / n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
+        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and Order(1, x).contains(arg):
@@ -1359,10 +1353,14 @@ class acosh(InverseHyperbolicFunction):
         """
         return cosh
 
+    def _eval_is_zero(self):
+        if (self.args[0] - 1).is_zero:
+            return True
+
 
 class atanh(InverseHyperbolicFunction):
     """
-    atanh(x) is the inverse hyperbolic tangent of x.
+    ``atanh(x)`` is the inverse hyperbolic tangent of ``x``.
 
     The inverse hyperbolic tangent function.
 
@@ -1388,7 +1386,6 @@ class atanh(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import atan
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -1408,7 +1405,7 @@ class atanh(InverseHyperbolicFunction):
                 return -cls(-arg)
         else:
             if arg is S.ComplexInfinity:
-                from sympy.calculus.util import AccumBounds
+                from sympy.calculus.accumulationbounds import AccumBounds
                 return S.ImaginaryUnit*AccumBounds(-S.Pi/2, S.Pi/2)
 
             i_coeff = arg.as_coefficient(S.ImaginaryUnit)
@@ -1416,7 +1413,7 @@ class atanh(InverseHyperbolicFunction):
             if i_coeff is not None:
                 return S.ImaginaryUnit * atan(i_coeff)
             else:
-                if _coeff_isneg(arg):
+                if arg.could_extract_minus_sign():
                     return -cls(-arg)
 
         if arg.is_zero:
@@ -1446,7 +1443,7 @@ class atanh(InverseHyperbolicFunction):
             return x**n / n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
+        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and Order(1, x).contains(arg):
@@ -1458,10 +1455,11 @@ class atanh(InverseHyperbolicFunction):
         return (log(1 + x) - log(1 - x)) / 2
 
     def _eval_is_zero(self):
-        arg = self.args[0]
-        if arg.is_zero:
+        if self.args[0].is_zero:
             return True
 
+    def _eval_is_imaginary(self):
+        return self.args[0].is_imaginary
 
     def inverse(self, argindex=1):
         """
@@ -1472,7 +1470,7 @@ class atanh(InverseHyperbolicFunction):
 
 class acoth(InverseHyperbolicFunction):
     """
-    acoth(x) is the inverse hyperbolic cotangent of x.
+    ``acoth(x)`` is the inverse hyperbolic cotangent of ``x``.
 
     The inverse hyperbolic cotangent function.
 
@@ -1498,7 +1496,6 @@ class acoth(InverseHyperbolicFunction):
 
     @classmethod
     def eval(cls, arg):
-        from sympy import acot
         arg = sympify(arg)
 
         if arg.is_Number:
@@ -1525,7 +1522,7 @@ class acoth(InverseHyperbolicFunction):
             if i_coeff is not None:
                 return -S.ImaginaryUnit * acot(i_coeff)
             else:
-                if _coeff_isneg(arg):
+                if arg.could_extract_minus_sign():
                     return -cls(-arg)
 
         if arg.is_zero:
@@ -1543,7 +1540,7 @@ class acoth(InverseHyperbolicFunction):
             return x**n / n
 
     def _eval_as_leading_term(self, x, logx=None, cdir=0):
-        from sympy import Order
+        from sympy.series.order import Order
         arg = self.args[0].as_leading_term(x)
 
         if x in arg.free_symbols and Order(1, x).contains(arg):
@@ -1563,7 +1560,7 @@ class acoth(InverseHyperbolicFunction):
 
 class asech(InverseHyperbolicFunction):
     """
-    asech(x) is the inverse hyperbolic secant of x.
+    ``asech(x)`` is the inverse hyperbolic secant of ``x``.
 
     The inverse hyperbolic secant function.
 
@@ -1658,7 +1655,7 @@ class asech(InverseHyperbolicFunction):
                 return cst_table[arg]
 
         if arg is S.ComplexInfinity:
-            from sympy.calculus.util import AccumBounds
+            from sympy.calculus.accumulationbounds import AccumBounds
             return S.ImaginaryUnit*AccumBounds(-S.Pi/2, S.Pi/2)
 
         if arg.is_zero:
@@ -1678,7 +1675,7 @@ class asech(InverseHyperbolicFunction):
                 return p * (n - 1)**2 // (n // 2)**2 * x**2 / 4
             else:
                 k = n // 2
-                R = RisingFactorial(S.Half , k) *  n
+                R = RisingFactorial(S.Half, k) *  n
                 F = factorial(k) * n // 2 * n // 2
                 return -1 * R / F * x**n / 4
 
@@ -1694,7 +1691,7 @@ class asech(InverseHyperbolicFunction):
 
 class acsch(InverseHyperbolicFunction):
     """
-    acsch(x) is the inverse hyperbolic cosecant of x.
+    ``acsch(x)`` is the inverse hyperbolic cosecant of ``x``.
 
     The inverse hyperbolic cosecant function.
 
@@ -1781,7 +1778,7 @@ class acsch(InverseHyperbolicFunction):
         if arg.is_zero:
             return S.ComplexInfinity
 
-        if _coeff_isneg(arg):
+        if arg.could_extract_minus_sign():
             return -cls(-arg)
 
     def inverse(self, argindex=1):
@@ -1792,3 +1789,6 @@ class acsch(InverseHyperbolicFunction):
 
     def _eval_rewrite_as_log(self, arg, **kwargs):
         return log(1/arg + sqrt(1/arg**2 + 1))
+
+    def _eval_is_zero(self):
+        return self.args[0].is_infinite

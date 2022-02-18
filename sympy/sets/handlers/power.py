@@ -1,31 +1,39 @@
-from sympy import Min, Max, Set, Lambda, symbols, S, oo
-from sympy.core import Basic, Expr, Integer
-from sympy.core.numbers import Infinity, NegativeInfinity, Zero
-from sympy.multipledispatch import dispatch
-from sympy.sets import Interval, FiniteSet, Union, ImageSet
+from sympy.core import Basic, Expr
+from sympy.core.function import Lambda
+from sympy.core.numbers import oo, Infinity, NegativeInfinity, Zero, Integer
+from sympy.core.singleton import S
+from sympy.core.symbol import symbols
+from sympy.functions.elementary.miscellaneous import (Max, Min)
+from sympy.sets.fancysets import ImageSet
+from sympy.sets.setexpr import set_div
+from sympy.sets.sets import Set, Interval, FiniteSet, Union
+from sympy.multipledispatch import Dispatcher
 
 
 _x, _y = symbols("x y")
 
 
-@dispatch(Basic, Basic)  # type: ignore # noqa:F811
-def _set_pow(x, y): # noqa:F811
+_set_pow = Dispatcher('_set_pow')
+
+
+@_set_pow.register(Basic, Basic)
+def _(x, y):
     return None
 
-@dispatch(Set, Set)  # type: ignore # noqa:F811
-def _set_pow(x, y): # noqa:F811
+@_set_pow.register(Set, Set)
+def _(x, y):
     return ImageSet(Lambda((_x, _y), (_x ** _y)), x, y)
 
-@dispatch(Expr, Expr)  # type: ignore # noqa:F811
-def _set_pow(x, y): # noqa:F811
+@_set_pow.register(Expr, Expr)
+def _(x, y):
     return x**y
 
-@dispatch(Interval, Zero)  # type: ignore # noqa:F811
-def _set_pow(x, z): # noqa:F811
+@_set_pow.register(Interval, Zero)
+def _(x, z):
     return FiniteSet(S.One)
 
-@dispatch(Interval, Integer)  # type: ignore # noqa:F811
-def _set_pow(x, exponent): # noqa:F811
+@_set_pow.register(Interval, Integer)
+def _(x, exponent):
     """
     Powers in interval arithmetic
     https://en.wikipedia.org/wiki/Interval_arithmetic
@@ -72,8 +80,8 @@ def _set_pow(x, exponent): # noqa:F811
         else:
             return Interval(S.Zero, sleft, S.Zero not in x, left_open)
 
-@dispatch(Interval, Infinity)  # type: ignore # noqa:F811
-def _set_pow(b, e): # noqa:F811
+@_set_pow.register(Interval, Infinity)
+def _(b, e):
     # TODO: add logic for open intervals?
     if b.start.is_nonnegative:
         if b.end < 1:
@@ -94,7 +102,6 @@ def _set_pow(b, e): # noqa:F811
             return Interval(0, oo)
         return Interval(-oo, oo)
 
-@dispatch(Interval, NegativeInfinity)  # type: ignore # noqa:F811
-def _set_pow(b, e): # noqa:F811
-    from sympy.sets.setexpr import set_div
+@_set_pow.register(Interval, NegativeInfinity)
+def _(b, e):
     return _set_pow(set_div(S.One, b), oo)

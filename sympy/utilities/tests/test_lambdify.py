@@ -3,14 +3,33 @@ import math
 import inspect
 
 import mpmath
-from sympy.testing.pytest import raises
-from sympy import (
-    symbols, lambdify, sqrt, sin, cos, tan, pi, acos, acosh, Rational,
-    Float, Lambda, Piecewise, exp, E, Integral, oo, I, Abs, Function,
-    true, false, And, Or, Not, ITE, Min, Max, floor, diff, IndexedBase, Sum,
-    DotProduct, Eq, Dummy, sinc, erf, erfc, factorial, gamma, loggamma,
-    digamma, RisingFactorial, besselj, bessely, besseli, besselk, S, beta,
-    betainc, betainc_regularized, fresnelc, fresnels)
+from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.concrete.summations import Sum
+from sympy.core.function import (Function, Lambda, diff)
+from sympy.core.numbers import (E, Float, I, Rational, oo, pi)
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, symbols)
+from sympy.functions.combinatorial.factorials import (RisingFactorial, factorial)
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.hyperbolic import acosh
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import (Max, Min, sqrt)
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import (acos, cos, sin, sinc, tan)
+from sympy.functions.special.bessel import (besseli, besselj, besselk, bessely)
+from sympy.functions.special.beta_functions import (beta, betainc, betainc_regularized)
+from sympy.functions.special.delta_functions import (Heaviside)
+from sympy.functions.special.error_functions import (erf, erfc, fresnelc, fresnels)
+from sympy.functions.special.gamma_functions import (digamma, gamma, loggamma)
+from sympy.integrals.integrals import Integral
+from sympy.logic.boolalg import (And, false, ITE, Not, Or, true)
+from sympy.matrices.expressions.dotproduct import DotProduct
+from sympy.tensor.array import derive_by_array, Array
+from sympy.tensor.indexed import IndexedBase
+from sympy.utilities.lambdify import lambdify
+from sympy.core.expr import UnevaluatedExpr
 from sympy.codegen.cfunctions import expm1, log1p, exp2, log2, log10, hypot
 from sympy.codegen.numpy_nodes import logaddexp, logaddexp2
 from sympy.codegen.scipy_nodes import cosm1
@@ -104,6 +123,14 @@ def test_own_module():
     f = lambdify(x, sin(x), math)
     assert f(0) == 0.0
 
+    p, q, r = symbols("p q r", real=True)
+    ae = abs(exp(p+UnevaluatedExpr(q+r)))
+    f = lambdify([p, q, r], [ae, ae], modules=math)
+    results = f(1.0, 1e18, -1e18)
+    refvals = [math.exp(1.0)]*2
+    for res, ref in zip(results, refvals):
+        assert abs((res-ref)/ref) < 1e-15
+
 
 def test_bad_args():
     # no vargs given
@@ -145,7 +172,7 @@ def test_math_lambda():
     prec = 1e-15
     assert -prec < f(0.2) - sin02 < prec
     raises(TypeError, lambda: f(x))
-           # if this succeeds, it can't be a python math function
+           # if this succeeds, it can't be a Python math function
 
 
 @conserve_mpmath_dps
@@ -264,7 +291,15 @@ def test_issue_12984():
         warnings.simplefilter("ignore", RuntimeWarning)
         assert str(func_numexpr(-1, 24, 42)) == 'nan'
 
-#================== Test some functions ============================
+
+def test_empty_modules():
+    x, y = symbols('x y')
+    expr = -(x % y)
+
+    no_modules = lambdify([x, y], expr)
+    empty_modules = lambdify([x, y], expr, modules=[])
+    assert no_modules(3, 7) == empty_modules(3, 7)
+    assert no_modules(3, 7) == -3
 
 
 def test_exponentiation():
@@ -685,7 +720,7 @@ def test_tensorflow_complexes():
     with tensorflow.compat.v1.Session() as s:
         # For versions before
         # https://github.com/tensorflow/tensorflow/issues/30029
-        # resolved, using python numeric types may not work
+        # resolved, using Python numeric types may not work
         a = tensorflow.constant(1+2j)
         assert func1(a).eval(session=s) == 1
         assert func2(a).eval(session=s) == 2
@@ -750,12 +785,6 @@ def test_namespace_order():
     assert if1(1) == 'first f'
 
     assert if2(1) == 'function g'
-
-def test_namespace_type():
-    # lambdify had a bug where it would reject modules of type unicode
-    # on Python 2.
-    x = sympy.Symbol('x')
-    lambdify(x, x, modules='math')
 
 
 def test_imps():
@@ -840,7 +869,7 @@ def test_dummification():
     t = symbols('t')
     F = Function('F')
     G = Function('G')
-    #"\alpha" is not a valid python variable name
+    #"\alpha" is not a valid Python variable name
     #lambdify should sub in a dummy for it, and return
     #without a syntax error
     alpha = symbols(r'\alpha')
@@ -901,7 +930,7 @@ def test_lambdify_docstring():
 
 
 def test_special_printers():
-    from sympy.polys.numberfields import IntervalPrinter
+    from sympy.printing.lambdarepr import IntervalPrinter
 
     def intervalrepr(expr):
         return IntervalPrinter().doprint(expr)
@@ -1288,6 +1317,39 @@ def test_issue_16536():
     assert abs(uppergamma(1, 3) - F(1, 3)) <= 1e-10
 
 
+def test_issue_22726():
+    if not numpy:
+        skip("numpy not installed")
+
+    x1, x2 = symbols('x1 x2')
+    f = Max(S.Zero, Min(x1, x2))
+    g = derive_by_array(f, (x1, x2))
+    G = lambdify((x1, x2), g, modules='numpy')
+    point = {x1: 1, x2: 2}
+    assert (abs(g.subs(point) - G(*point.values())) <= 1e-10).all()
+
+
+def test_issue_22739():
+    if not numpy:
+        skip("numpy not installed")
+
+    x1, x2 = symbols('x1 x2')
+    f = Heaviside(Min(x1, x2))
+    F = lambdify((x1, x2), f, modules='numpy')
+    point = {x1: 1, x2: 2}
+    assert abs(f.subs(point) - F(*point.values())) <= 1e-10
+
+
+def test_issue_19764():
+    if not numpy:
+        skip("numpy not installed")
+
+    expr = Array([x, x**2])
+    f = lambdify(x, expr, 'numpy')
+
+    assert f(1).__class__ == numpy.ndarray
+
+
 def test_fresnel_integrals_scipy():
     if not scipy:
         skip("scipy not installed")
@@ -1496,3 +1558,7 @@ def test_lambdify_cse():
             f = case.lambdify(cse=cse)
             result = f(*case.num_args)
             case.assertAllClose(result)
+
+def test_deprecated_set():
+    with warns_deprecated_sympy():
+        lambdify({x, y}, x + y)

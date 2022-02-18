@@ -54,19 +54,33 @@ from sympy.polys.domains.realfield import RealField
 from sympy.polys.domains.complexfield import ComplexField
 from sympy.polys.orderings import lex, grlex, grevlex
 
-from sympy import (
-    S, Integer, Rational, Float, Mul, Symbol, sqrt, Piecewise, Derivative,
-    exp, sin, tanh, expand, oo, I, pi, re, im, rootof, Eq, Tuple, Expr, diff)
-
 from sympy.core.add import Add
 from sympy.core.basic import _aresame
-from sympy.core.compatibility import iterable
-from sympy.core.mul import _keep_coeff
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import (Derivative, diff, expand)
+from sympy.core.mul import _keep_coeff, Mul
+from sympy.core.numbers import (Float, I, Integer, Rational, oo, pi)
 from sympy.core.power import Pow
-from sympy.testing.pytest import raises, warns_deprecated_sympy
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import Symbol
+from sympy.functions.elementary.complexes import (im, re)
+from sympy.functions.elementary.exponential import exp
+from sympy.functions.elementary.hyperbolic import tanh
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import Piecewise
+from sympy.functions.elementary.trigonometric import sin
+from sympy.matrices.dense import Matrix
+from sympy.matrices.expressions.matexpr import MatrixSymbol
+from sympy.polys.rootoftools import rootof
+from sympy.simplify.simplify import signsimp
+from sympy.utilities.iterables import iterable
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+
+from sympy.testing.pytest import raises, warns_deprecated_sympy, warns
 
 from sympy.abc import a, b, c, d, p, q, t, w, x, y, z
-from sympy import MatrixSymbol, Matrix
 
 
 def _epsilon_eq(a, b):
@@ -2586,6 +2600,9 @@ def test_factor():
     assert factor(f, deep=True) == factor(f, deep=True, fraction=True)
     assert factor(f, deep=True, fraction=False) == 5*x + 3*exp(2)*exp(-7*x)
 
+    assert factor_list(x**3 - x*y**2, t, w, x) == (
+        1, [(x, 1), (x - y, 1), (x + y, 1)])
+
 
 def test_factor_large():
     f = (x**2 + 4*x + 4)**10000000*(x**2 + 1)*(x**2 + 2*x + 1)**1234567
@@ -2718,10 +2735,10 @@ def test_intervals():
     assert all(re(a) < re(r) < re(b) and im(
         a) < im(r) < im(b) for (a, b), r in zip(complex_part, nroots(f)))
 
-    assert complex_part == [(Rational(-40, 7) - I*Rational(40, 7), 0),
-                            (Rational(-40, 7), I*Rational(40, 7)),
+    assert complex_part == [(Rational(-40, 7) - I*40/7, 0),
+                            (Rational(-40, 7), I*40/7),
                             (I*Rational(-40, 7), Rational(40, 7)),
-                            (0, Rational(40, 7) + I*Rational(40, 7))]
+                            (0, Rational(40, 7) + I*40/7)]
 
     real_part, complex_part = intervals(f, all=True, sqf=True, eps=Rational(1, 10))
 
@@ -2928,6 +2945,7 @@ def test_nroots():
         '- 2.5*I, -1.7 + 2.5*I, -1.0*I, 1.0*I, -1.7*I, 1.7*I, -2.8*I, '
         '2.8*I, -3.4*I, 3.4*I, 1.7 - 1.9*I, 1.7 + 1.9*I, 1.7 - 2.5*I, '
         '1.7 + 2.5*I]')
+    assert str(Poly(1e-15*x**2 -1).nroots()) == ('[-31622776.6016838, 31622776.6016838]')
 
 
 def test_ground_roots():
@@ -2958,6 +2976,25 @@ def test_nth_power_roots_poly():
     raises(MultivariatePolynomialError, lambda: nth_power_roots_poly(
         x + y, 2, x, y))
 
+
+def test_same_root():
+    f = Poly(x**4 + x**3 + x**2 + x + 1)
+    eq = f.same_root
+    r0 = exp(2 * I * pi / 5)
+    assert [i for i, r in enumerate(f.all_roots()) if eq(r, r0)] == [3]
+
+    raises(PolynomialError,
+           lambda: Poly(x + 1, domain=QQ).same_root(0, 0))
+    raises(DomainError,
+           lambda: Poly(x**2 + 1, domain=FF(7)).same_root(0, 0))
+    raises(DomainError,
+           lambda: Poly(x ** 2 + 1, domain=ZZ_I).same_root(0, 0))
+    raises(DomainError,
+           lambda: Poly(y * x**2 + 1, domain=ZZ[y]).same_root(0, 0))
+    raises(MultivariatePolynomialError,
+           lambda: Poly(x * y + 1, domain=ZZ).same_root(0, 0))
+
+
 def test_torational_factor_list():
     p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
     assert _torational_factor_list(p, x) == (-2, [
@@ -2968,6 +3005,7 @@ def test_torational_factor_list():
 
     p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + 2**Rational(1, 4))}))
     assert _torational_factor_list(p, x) is None
+
 
 def test_cancel():
     assert cancel(0) == 0
@@ -3073,6 +3111,44 @@ def test_cancel():
     assert cancel(1 + p3) == 1 + p4
     assert cancel((x**2 - 1)/(x + 1)*p3) == (x - 1)*p4
     assert cancel((x**2 - 1)/(x + 1) + p3) == (x - 1) + p4
+
+    # issue 4077
+    q = S('''(2*1*(x - 1/x)/(x*(2*x - (-x + 1/x)/(x**2*(x - 1/x)**2) - 1/(x**2*(x -
+        1/x)) - 2/x)) - 2*1*((x - 1/x)/((x*(x - 1/x)**2)) - 1/(x*(x -
+        1/x)))*((-x + 1/x)*((x - 1/x)/((x*(x - 1/x)**2)) - 1/(x*(x -
+        1/x)))/(2*x - (-x + 1/x)/(x**2*(x - 1/x)**2) - 1/(x**2*(x - 1/x)) -
+        2/x) + 1)*((x - 1/x)/((x - 1/x)**2) - ((x - 1/x)/((x*(x - 1/x)**2)) -
+        1/(x*(x - 1/x)))**2/(2*x - (-x + 1/x)/(x**2*(x - 1/x)**2) - 1/(x**2*(x
+        - 1/x)) - 2/x) - 1/(x - 1/x))*(2*x - (-x + 1/x)/(x**2*(x - 1/x)**2) -
+        1/(x**2*(x - 1/x)) - 2/x)/x - 1/x)*(((-x + 1/x)/((x*(x - 1/x)**2)) +
+        1/(x*(x - 1/x)))*((-(x - 1/x)/(x*(x - 1/x)) - 1/x)*((x - 1/x)/((x*(x -
+        1/x)**2)) - 1/(x*(x - 1/x)))/(2*x - (-x + 1/x)/(x**2*(x - 1/x)**2) -
+        1/(x**2*(x - 1/x)) - 2/x) - 1 + (x - 1/x)/(x - 1/x))/((x*((x -
+        1/x)/((x - 1/x)**2) - ((x - 1/x)/((x*(x - 1/x)**2)) - 1/(x*(x -
+        1/x)))**2/(2*x - (-x + 1/x)/(x**2*(x - 1/x)**2) - 1/(x**2*(x - 1/x)) -
+        2/x) - 1/(x - 1/x))*(2*x - (-x + 1/x)/(x**2*(x - 1/x)**2) - 1/(x**2*(x
+        - 1/x)) - 2/x))) + ((x - 1/x)/((x*(x - 1/x))) + 1/x)/((x*(2*x - (-x +
+        1/x)/(x**2*(x - 1/x)**2) - 1/(x**2*(x - 1/x)) - 2/x))) + 1/x)/(2*x +
+        2*((x - 1/x)/((x*(x - 1/x)**2)) - 1/(x*(x - 1/x)))*((-(x - 1/x)/(x*(x
+        - 1/x)) - 1/x)*((x - 1/x)/((x*(x - 1/x)**2)) - 1/(x*(x - 1/x)))/(2*x -
+        (-x + 1/x)/(x**2*(x - 1/x)**2) - 1/(x**2*(x - 1/x)) - 2/x) - 1 + (x -
+        1/x)/(x - 1/x))/((x*((x - 1/x)/((x - 1/x)**2) - ((x - 1/x)/((x*(x -
+        1/x)**2)) - 1/(x*(x - 1/x)))**2/(2*x - (-x + 1/x)/(x**2*(x - 1/x)**2)
+        - 1/(x**2*(x - 1/x)) - 2/x) - 1/(x - 1/x))*(2*x - (-x + 1/x)/(x**2*(x
+        - 1/x)**2) - 1/(x**2*(x - 1/x)) - 2/x))) - 2*((x - 1/x)/((x*(x -
+        1/x))) + 1/x)/(x*(2*x - (-x + 1/x)/(x**2*(x - 1/x)**2) - 1/(x**2*(x -
+        1/x)) - 2/x)) - 2/x) - ((x - 1/x)/((x*(x - 1/x)**2)) - 1/(x*(x -
+        1/x)))*((-x + 1/x)*((x - 1/x)/((x*(x - 1/x)**2)) - 1/(x*(x -
+        1/x)))/(2*x - (-x + 1/x)/(x**2*(x - 1/x)**2) - 1/(x**2*(x - 1/x)) -
+        2/x) + 1)/(x*((x - 1/x)/((x - 1/x)**2) - ((x - 1/x)/((x*(x - 1/x)**2))
+        - 1/(x*(x - 1/x)))**2/(2*x - (-x + 1/x)/(x**2*(x - 1/x)**2) -
+        1/(x**2*(x - 1/x)) - 2/x) - 1/(x - 1/x))*(2*x - (-x + 1/x)/(x**2*(x -
+        1/x)**2) - 1/(x**2*(x - 1/x)) - 2/x)) + (x - 1/x)/((x*(2*x - (-x +
+        1/x)/(x**2*(x - 1/x)**2) - 1/(x**2*(x - 1/x)) - 2/x))) - 1/x''',
+        evaluate=False)
+    assert cancel(q, _signsimp=False) is S.NaN
+    assert q.subs(x, 2) is S.NaN
+    assert signsimp(q) is S.NaN
 
     # issue 9363
     M = MatrixSymbol('M', 5, 5)
@@ -3399,7 +3475,7 @@ def test_Poly_precision():
 def test_issue_12400():
     # Correction of check for negative exponents
     assert poly(1/(1+sqrt(2)), x) == \
-            Poly(1/(1+sqrt(2)), x , domain='EX')
+            Poly(1/(1+sqrt(2)), x, domain='EX')
 
 def test_issue_14364():
     assert gcd(S(6)*(1 + sqrt(3))/5, S(3)*(1 + sqrt(3))/10) == Rational(3, 10) * (1 + sqrt(3))
@@ -3431,7 +3507,7 @@ def test_issue_17988():
     p = poly(x - 1)
     with warns_deprecated_sympy():
         M = Matrix([[poly(x + 1), poly(x + 1)]])
-    with warns_deprecated_sympy():
+    with warns(SymPyDeprecationWarning, test_stacklevel=False):
         assert p * M == M * p == Matrix([[poly(x**2 - 1), poly(x**2 - 1)]])
 
 
@@ -3488,7 +3564,7 @@ def test_issue_20389():
 
 
 def test_issue_20985():
-    from sympy import symbols
+    from sympy.core.symbol import symbols
     w, R = symbols('w R')
     poly = Poly(1.0 + I*w/R, w, 1/R)
     assert poly.degree() == S(1)

@@ -1,6 +1,9 @@
-from sympy.matrices.expressions import MatrixExpr
-from sympy import MatrixBase, Dummy, Lambda, Function, FunctionClass
+from sympy.core.expr import ExprBuilder
+from sympy.core.function import (Function, FunctionClass, Lambda)
+from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify, _sympify
+from sympy.matrices.expressions import MatrixExpr
+from sympy.matrices.matrices import MatrixBase
 
 
 class ElementwiseApplyFunction(MatrixExpr):
@@ -13,7 +16,7 @@ class ElementwiseApplyFunction(MatrixExpr):
     It can be created by calling ``.applyfunc(<function>)`` on a matrix
     expression:
 
-    >>> from sympy.matrices.expressions import MatrixSymbol
+    >>> from sympy import MatrixSymbol
     >>> from sympy.matrices.expressions.applyfunc import ElementwiseApplyFunction
     >>> from sympy import exp
     >>> X = MatrixSymbol("X", 3, 3)
@@ -122,7 +125,7 @@ class ElementwiseApplyFunction(MatrixExpr):
         return fdiff
 
     def _eval_derivative(self, x):
-        from sympy import hadamard_product
+        from sympy.matrices.expressions.hadamard import hadamard_product
         dexpr = self.expr.diff(x)
         fdiff = self._get_function_fdiff()
         return hadamard_product(
@@ -131,11 +134,10 @@ class ElementwiseApplyFunction(MatrixExpr):
         )
 
     def _eval_derivative_matrix_lines(self, x):
-        from sympy import Identity
+        from sympy.matrices.expressions.special import Identity
         from sympy.tensor.array.expressions.array_expressions import ArrayContraction
         from sympy.tensor.array.expressions.array_expressions import ArrayDiagonal
         from sympy.tensor.array.expressions.array_expressions import ArrayTensorProduct
-        from sympy.core.expr import ExprBuilder
 
         fdiff = self._get_function_fdiff()
         lr = self.expr._eval_derivative_matrix_lines(x)
@@ -198,5 +200,5 @@ class ElementwiseApplyFunction(MatrixExpr):
         return lr
 
     def _eval_transpose(self):
-        from sympy import Transpose
+        from sympy.matrices.expressions.transpose import Transpose
         return self.func(self.function, Transpose(self.expr).doit())

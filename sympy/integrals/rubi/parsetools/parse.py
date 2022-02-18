@@ -30,7 +30,10 @@ References
 import re
 import os
 import inspect
-from sympy import sympify, Function, Set, Symbol
+from sympy.core.function import Function
+from sympy.core.symbol import Symbol
+from sympy.core.sympify import sympify
+from sympy.sets.sets import Set
 from sympy.printing import StrPrinter
 from sympy.utilities.misc import debug
 
@@ -402,7 +405,7 @@ def _divide_constriant(s, symbols, cons_index, cons_dict, cons_import):
         res = '        return {}'.format(rubi_printer(r, sympy_integers=True))
 
     # First it checks if a constraint is already present in `cons_dict`, If yes, use it else create a new one.
-    if not res in cons_dict.values():
+    if res not in cons_dict.values():
         cons_index += 1
         cons = '\n    def cons_f{}({}):\n'.format(cons_index, ', '.join(lambda_symbols))
         if 'x' in lambda_symbols:
@@ -475,7 +478,7 @@ def process_return_type(a1, L):
     if type(a) == Function('With') or type(a) == Function('Module'):
         for i in a.args:
             for s in i.args:
-                if isinstance(s, Set) and not s in L:
+                if isinstance(s, Set) and s not in L:
                     x += '\n        {} = {}'.format(s.args[0], rubi_printer(s.args[1], sympy_integers=True))
 
             if not type(i) in (Function('List'),  Function('CompoundExpression')) and not i.has(Function('CompoundExpression')):
@@ -498,7 +501,7 @@ def extract_set(s, L):
     this function extracts all `Set` functions
     """
     lst = []
-    if isinstance(s, Set) and not s in L:
+    if isinstance(s, Set) and s not in L:
         lst.append(s)
     else:
         try:

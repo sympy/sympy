@@ -14,7 +14,7 @@ def _diagonal_solve(M, rhs):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix, eye
+    >>> from sympy import Matrix, eye
     >>> A = eye(2)*2
     >>> B = Matrix([[1, 2], [3, 4]])
     >>> A.diagonal_solve(B) == B/2
@@ -258,7 +258,7 @@ def _LDLsolve(M, rhs):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix, eye
+    >>> from sympy import Matrix, eye
     >>> A = eye(2)*2
     >>> B = Matrix([[1, 2], [3, 4]])
     >>> A.LDLsolve(B) == B/2
@@ -382,7 +382,7 @@ def _QRsolve(M, b):
 
     This method is slower (approximately by a factor of 2) but
     more stable for floating-point arithmetic than the LUsolve method.
-    However, LUsolve usually uses an exact arithmetic, so you don't need
+    However, LUsolve usually uses an exact arithmetic, so you do not need
     to use QRsolve.
 
     This is mainly for educational purposes and symbolic matrices, for real
@@ -746,7 +746,7 @@ def _solve(M, rhs, method='GJ'):
         for solving the system will be suggested.
     """
 
-    if method == 'GJ' or method == 'GE':
+    if method in ('GJ', 'GE'):
         try:
             soln, param = M.gauss_jordan_solve(rhs)
 
@@ -804,7 +804,7 @@ def _solve_least_squares(M, rhs, method='CH'):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix, ones
+    >>> from sympy import Matrix, ones
     >>> A = Matrix([1, 2, 3])
     >>> B = Matrix([2, 3, 4])
     >>> S = Matrix(A.row_join(B))

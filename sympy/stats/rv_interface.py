@@ -1,6 +1,13 @@
 from sympy.sets import FiniteSet
-from sympy import (sqrt, log, exp, FallingFactorial, Rational, Eq, Dummy,
-                piecewise_fold, solveset, Integral)
+from sympy.core.numbers import Rational
+from sympy.core.relational import Eq
+from sympy.core.symbol import Dummy
+from sympy.functions.combinatorial.factorials import FallingFactorial
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.piecewise import piecewise_fold
+from sympy.integrals.integrals import Integral
+from sympy.solvers.solveset import solveset
 from .rv import (probability, expectation, density, where, given, pspace, cdf, PSpace,
                  characteristic_function, sample, sample_iter, random_symbols, independent, dependent,
                  sampling_density, moment_generating_function, quantile, is_random,
@@ -155,7 +162,7 @@ def covariance(X, Y, condition=None, **kwargs):
     >>> from sympy.stats import Exponential, covariance
     >>> from sympy import Symbol
 
-    >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
+    >>> rate = Symbol('lambda', positive=True, real=True)
     >>> X = Exponential('X', rate)
     >>> Y = Exponential('Y', rate)
 
@@ -196,7 +203,7 @@ def correlation(X, Y, condition=None, **kwargs):
     >>> from sympy.stats import Exponential, correlation
     >>> from sympy import Symbol
 
-    >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
+    >>> rate = Symbol('lambda', positive=True, real=True)
     >>> X = Exponential('X', rate)
     >>> Y = Exponential('Y', rate)
 
@@ -248,7 +255,7 @@ def smoment(X, n, condition=None, **kwargs):
 
     >>> from sympy.stats import skewness, Exponential, smoment
     >>> from sympy import Symbol
-    >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
+    >>> rate = Symbol('lambda', positive=True, real=True)
     >>> Y = Exponential('Y', rate)
     >>> smoment(Y, 4)
     9
@@ -290,7 +297,7 @@ def skewness(X, condition=None, **kwargs):
     >>> skewness(X, X > 0) # find skewness given X > 0
     (-sqrt(2)/sqrt(pi) + 4*sqrt(2)/pi**(3/2))/(1 - 2/pi)**(3/2)
 
-    >>> rate = Symbol('lambda', positive=True, real=True, finite=True)
+    >>> rate = Symbol('lambda', positive=True, real=True)
     >>> Y = Exponential('Y', rate)
     >>> skewness(Y)
     2
@@ -328,7 +335,7 @@ def kurtosis(X, condition=None, **kwargs):
     >>> kurtosis(X, X > 0) # find kurtosis given X > 0
     (-4/pi - 12/pi**2 + 3)/(1 - 2/pi)**2
 
-    >>> rate = Symbol('lamda', positive=True, real=True, finite=True)
+    >>> rate = Symbol('lamda', positive=True, real=True)
     >>> Y = Exponential('Y', rate)
     >>> kurtosis(Y)
     9
@@ -437,7 +444,7 @@ def median(X, evaluate=True, **kwargs):
             pspace(X).probability(Eq(X, key)) >= Rational(1, 2):
                 result.append(key)
         return FiniteSet(*result)
-    if isinstance(pspace(X), ContinuousPSpace) or isinstance(pspace(X), DiscretePSpace):
+    if isinstance(pspace(X), (ContinuousPSpace, DiscretePSpace)):
         cdf = pspace(X).compute_cdf(X)
         x = Dummy('x')
         result = solveset(piecewise_fold(cdf(x) - Rational(1, 2)), x, pspace(X).set)

@@ -1,8 +1,8 @@
-"""Plotting module for Sympy.
+"""Plotting module for SymPy.
 
 A plot is represented by the ``Plot`` class that contains a reference to the
 backend and a list of the data series to be plotted. The data series are
-instances of classes meant to simplify getting points and meshes from sympy
+instances of classes meant to simplify getting points and meshes from SymPy
 expressions. ``plot_backends`` is a dictionary with all the backends.
 
 This module gives only the essential. For all the fancy stuff use directly
@@ -25,12 +25,15 @@ every time you call ``show()`` and the old one is left to the garbage collector.
 
 from collections.abc import Callable
 
-from sympy import sympify, Expr, Tuple, Dummy, Symbol
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.sympify import sympify
 from sympy.external import import_module
 from sympy.core.function import arity
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 # N.B.
 # When changing the minimum module version for matplotlib, please change
@@ -64,11 +67,11 @@ class Plot:
 
     For interactive work the function ``plot`` is better suited.
 
-    This class permits the plotting of sympy expressions using numerous
+    This class permits the plotting of SymPy expressions using numerous
     backends (matplotlib, textplot, the old pyglet module for sympy, Google
     charts api, etc).
 
-    The figure can contain an arbitrary number of plots of sympy expressions,
+    The figure can contain an arbitrary number of plots of SymPy expressions,
     lists of coordinates of points, etc. Plot has a private attribute _series that
     contains all data series to be plotted (expressions for lines or surfaces,
     lists of points, etc (all subclasses of BaseSeries)). Those data series are
@@ -330,7 +333,7 @@ class Plot:
 
 
 class PlotGrid:
-    """This class helps to plot subplots from already created sympy plots
+    """This class helps to plot subplots from already created SymPy plots
     in a single figure.
 
     Examples
@@ -356,7 +359,7 @@ class PlotGrid:
        :format: doctest
        :include-source: True
 
-        >>> PlotGrid(2, 1 , p1, p2)
+        >>> PlotGrid(2, 1, p1, p2)
         PlotGrid object containing:
         Plot[0]:Plot object containing:
         [0]: cartesian line: x for x over (-5.0, 5.0)
@@ -373,7 +376,7 @@ class PlotGrid:
        :format: doctest
        :include-source: True
 
-        >>> PlotGrid(1, 3 , p2, p3, p4)
+        >>> PlotGrid(1, 3, p2, p3, p4)
         PlotGrid object containing:
         Plot[0]:Plot object containing:
         [0]: cartesian line: x**2 for x over (-6.0, 6.0)
@@ -390,7 +393,7 @@ class PlotGrid:
        :format: doctest
        :include-source: True
 
-        >>> PlotGrid(2, 2, p1, p2 ,p3, p4)
+        >>> PlotGrid(2, 2, p1, p2, p3, p4)
         PlotGrid object containing:
         Plot[0]:Plot object containing:
         [0]: cartesian line: x for x over (-5.0, 5.0)
@@ -602,11 +605,15 @@ class Line2DBaseSeries(BaseSeries):
         return points
 
     def get_segments(self):
-        SymPyDeprecationWarning(
-                feature="get_segments",
-                issue=21329,
-                deprecated_since_version="1.9",
-                useinstead="MatplotlibBackend.get_segments").warn()
+        sympy_deprecation_warning(
+            """
+            The Line2DBaseSeries.get_segments() method is deprecated.
+
+            Instead, use the MatplotlibBackend.get_segments() method, or use
+            The get_points() or get_data() methods.
+            """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-get-segments")
 
         np = import_module('numpy')
         points = type(self).get_data(self)
@@ -786,7 +793,7 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
         return (list_x, list_y)
 
 class Parametric2DLineSeries(Line2DBaseSeries):
-    """Representation for a line consisting of two parametric sympy expressions
+    """Representation for a line consisting of two parametric SymPy expressions
     over a range."""
 
     is_parametric = True
@@ -940,7 +947,7 @@ class Line3DBaseSeries(Line2DBaseSeries):
 
 
 class Parametric3DLineSeries(Line3DBaseSeries):
-    """Representation for a 3D line consisting of three parametric sympy
+    """Representation for a 3D line consisting of three parametric SymPy
     expressions and a range."""
 
     is_parametric = True
@@ -957,6 +964,9 @@ class Parametric3DLineSeries(Line3DBaseSeries):
         self.end = float(var_start_end[2])
         self.nb_of_points = kwargs.get('nb_of_points', 300)
         self.line_color = kwargs.get('line_color', None)
+        self._xlim = None
+        self._ylim = None
+        self._zlim = None
 
     def __str__(self):
         return '3D parametric cartesian line: (%s, %s, %s) for %s over %s' % (
@@ -1029,7 +1039,7 @@ class SurfaceBaseSeries(BaseSeries):
 
 
 class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
-    """Representation for a 3D surface consisting of a sympy expression and 2D
+    """Representation for a 3D surface consisting of a SymPy expression and 2D
     range."""
     def __init__(self, expr, var_start_end_x, var_start_end_y, **kwargs):
         super().__init__()
@@ -1071,7 +1081,7 @@ class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
 
 
 class ParametricSurfaceSeries(SurfaceBaseSeries):
-    """Representation for a 3D surface consisting of three parametric sympy
+    """Representation for a 3D surface consisting of three parametric SymPy
     expressions and a range."""
 
     is_parametric = True
@@ -1287,7 +1297,7 @@ class MatplotlibBackend(BaseBackend):
             are_3D = [s.is_3D for s in series]
 
             if any(are_3D) and not all(are_3D):
-                raise ValueError('The matplotlib backend can not mix 2D and 3D.')
+                raise ValueError('The matplotlib backend cannot mix 2D and 3D.')
             elif all(are_3D):
                 # mpl_toolkits.mplot3d is necessary for
                 # projection='3d'
@@ -1374,7 +1384,7 @@ class MatplotlibBackend(BaseBackend):
                 collection = ax.plot_surface(x, y, z,
                     cmap=getattr(self.cm, 'viridis', self.cm.jet),
                     rstride=1, cstride=1, linewidth=0.1)
-                if isinstance(s.surface_color, (float, int)) or isinstance(s.surface_color, Callable):
+                if isinstance(s.surface_color, (float, int, Callable)):
                     color_array = s.get_color_array()
                     color_array = color_array.reshape(color_array.size)
                     collection.set_array(color_array)
@@ -1403,7 +1413,7 @@ class MatplotlibBackend(BaseBackend):
                         ax.contourf(xarray, yarray, zarray, cmap=colormap)
             else:
                 raise NotImplementedError(
-                    '{} is not supported in the sympy plotting module '
+                    '{} is not supported in the SymPy plotting module '
                     'with matplotlib backend. Please report this issue.'
                     .format(ax))
 

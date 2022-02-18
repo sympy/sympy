@@ -1,26 +1,29 @@
 from functools import reduce
+from itertools import product
 
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import Lambda
 from sympy.core.logic import fuzzy_not, fuzzy_or, fuzzy_and
-from sympy.core.numbers import oo
+from sympy.core.mod import Mod
+from sympy.core.numbers import oo, igcd, Rational
 from sympy.core.relational import Eq, is_eq
+from sympy.core.kind import NumberKind
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
-from sympy.core.sympify import _sympify, sympify, converter
+from sympy.core.sympify import _sympify, sympify, _sympy_converter
+from sympy.functions.elementary.integers import ceiling, floor
+from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.logic.boolalg import And, Or
-from sympy.sets.sets import (Set, Interval, Union, FiniteSet,
-    ProductSet)
+from .sets import Set, Interval, Union, FiniteSet, ProductSet, SetKind
 from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import cartes
 
 
 class Rationals(Set, metaclass=Singleton):
     """
     Represents the rational numbers. This set is also available as
-    the Singleton, S.Rationals.
+    the singleton ``S.Rationals``.
 
     Examples
     ========
@@ -45,7 +48,6 @@ class Rationals(Set, metaclass=Singleton):
         return other.is_rational
 
     def __iter__(self):
-        from sympy.core.numbers import igcd, Rational
         yield S.Zero
         yield S.One
         yield S.NegativeOne
@@ -63,12 +65,15 @@ class Rationals(Set, metaclass=Singleton):
     def _boundary(self):
         return S.Reals
 
+    def _kind(self):
+        return SetKind(NumberKind)
+
 
 class Naturals(Set, metaclass=Singleton):
     """
     Represents the natural numbers (or counting numbers) which are all
     positive integers starting from 1. This set is also available as
-    the Singleton, S.Naturals.
+    the singleton ``S.Naturals``.
 
     Examples
     ========
@@ -124,8 +129,10 @@ class Naturals(Set, metaclass=Singleton):
         return self
 
     def as_relational(self, x):
-        from sympy.functions.elementary.integers import floor
         return And(Eq(floor(x), x), x >= self.inf, x < oo)
+
+    def _kind(self):
+        return SetKind(NumberKind)
 
 
 class Naturals0(Naturals):
@@ -158,7 +165,7 @@ class Naturals0(Naturals):
 class Integers(Set, metaclass=Singleton):
     """
     Represents all integers: positive, negative and zero. This set is also
-    available as the Singleton, S.Integers.
+    available as the singleton ``S.Integers``.
 
     Examples
     ========
@@ -215,8 +222,10 @@ class Integers(Set, metaclass=Singleton):
     def _boundary(self):
         return self
 
+    def _kind(self):
+        return SetKind(NumberKind)
+
     def as_relational(self, x):
-        from sympy.functions.elementary.integers import floor
         return And(Eq(floor(x), x), -oo < x, x < oo)
 
     def _eval_is_subset(self, other):
@@ -231,7 +240,7 @@ class Reals(Interval, metaclass=Singleton):
     Represents all real numbers
     from negative infinity to positive infinity,
     including all integer, rational and irrational numbers.
-    This set is also available as the Singleton, S.Reals.
+    This set is also available as the singleton ``S.Reals``.
 
 
     Examples
@@ -287,15 +296,14 @@ class ImageSet(Set):
     a complex region.
 
     This function is not normally called directly, but is called
-    from `imageset`.
+    from ``imageset``.
 
 
     Examples
     ========
 
     >>> from sympy import Symbol, S, pi, Dummy, Lambda
-    >>> from sympy.sets.sets import FiniteSet, Interval
-    >>> from sympy.sets.fancysets import ImageSet
+    >>> from sympy import FiniteSet, ImageSet, Interval
 
     >>> x = Symbol('x')
     >>> N = S.Naturals
@@ -317,7 +325,7 @@ class ImageSet(Set):
     16
 
     If you want to get value for `x` = 2, 1/2 etc. (Please check whether the
-    `x` value is in `base_set` or not before passing it as args)
+    `x` value is in ``base_set`` or not before passing it as args)
 
     >>> squares.lamda(2)
     4
@@ -500,18 +508,21 @@ class ImageSet(Set):
             base_set = self.base_sets[0]
             return SetExpr(base_set)._eval_func(f).set
         if all(s.is_FiniteSet for s in self.base_sets):
-            return FiniteSet(*(f(*a) for a in cartes(*self.base_sets)))
+            return FiniteSet(*(f(*a) for a in product(*self.base_sets)))
         return self
+
+    def _kind(self):
+        return SetKind(self.lamda.expr.kind)
 
 
 class Range(Set):
     """
-    Represents a range of integers. Can be called as Range(stop),
-    Range(start, stop), or Range(start, stop, step); when step is
+    Represents a range of integers. Can be called as ``Range(stop)``,
+    ``Range(start, stop)``, or ``Range(start, stop, step)``; when ``step`` is
     not given it defaults to 1.
 
-    `Range(stop)` is the same as `Range(0, stop, 1)` and the stop value
-    (juse as for Python ranges) is not included in the Range values.
+    ``Range(stop)`` is the same as ``Range(0, stop, 1)`` and the stop value
+    (just as for Python ranges) is not included in the Range values.
 
         >>> from sympy import Range
         >>> list(Range(3))
@@ -544,9 +555,9 @@ class Range(Set):
         >>> next(iter(r.reversed))
         0
 
-    Although Range is a set (and supports the normal set
+    Although ``Range`` is a :class:`Set` (and supports the normal set
     operations) it maintains the order of the elements and can
-    be used in contexts where `range` would be used.
+    be used in contexts where ``range`` would be used.
 
         >>> from sympy import Interval
         >>> Range(0, 10, 2).intersect(Interval(3, 7))
@@ -587,10 +598,7 @@ class Range(Set):
         {n, n + 3, ..., n + 18}
     """
 
-    is_iterable = True
-
     def __new__(cls, *args):
-        from sympy.functions.elementary.integers import ceiling
         if len(args) == 1:
             if isinstance(args[0], range):
                 raise TypeError(
@@ -628,7 +636,6 @@ class Range(Set):
             dif = stop - start
             n = dif/step
             if n.is_Rational:
-                from sympy import floor
                 if dif == 0:
                     null = True
                 else:  # (x, x + 5, 2) or (x, 3*x, x)
@@ -695,6 +702,9 @@ class Range(Set):
         return self.func(
             self.stop - self.step, self.start - self.step, -self.step)
 
+    def _kind(self):
+        return SetKind(NumberKind)
+
     def _contains(self, other):
         if self.start == self.stop:
             return S.false
@@ -741,9 +751,22 @@ class Range(Set):
                     yield i
                     i += self.step
             else:
-                for j in range(n):
+                for _ in range(n):
                     yield i
                     i += self.step
+
+    @property
+    def is_iterable(self):
+        # Check that size can be determined, used by __iter__
+        dif = self.stop - self.start
+        n = dif/self.step
+        if not (n.has(S.Infinity) or n.has(S.NegativeInfinity) or n.is_Integer):
+            return False
+        if self.start in [S.NegativeInfinity, S.Infinity]:
+            return False
+        if not (n.is_extended_nonnegative and all(i.is_integer for i in self.args)):
+            return False
+        return True
 
     def __len__(self):
         rv = self.size
@@ -760,7 +783,6 @@ class Range(Set):
         if n.is_infinite:
             return S.Infinity
         if  n.is_extended_nonnegative and all(i.is_integer for i in self.args):
-            from sympy.functions.elementary.integers import floor
             return abs(floor(n))
         raise ValueError('Invalid method for symbolic Range')
 
@@ -769,6 +791,13 @@ class Range(Set):
         if self.start.is_integer and self.stop.is_integer:
             return True
         return self.size.is_finite
+
+    @property
+    def is_empty(self):
+        try:
+            return self.size.is_zero
+        except ValueError:
+            return None
 
     def __bool__(self):
         # this only distinguishes between definite null range
@@ -780,7 +809,6 @@ class Range(Set):
         return not bool(b)
 
     def __getitem__(self, i):
-        from sympy.functions.elementary.integers import ceiling
         ooslice = "cannot slice from the end with an infinite value"
         zerostep = "slice step cannot be zero"
         infinite = "slicing not possible on range with infinite start"
@@ -960,7 +988,6 @@ class Range(Set):
 
     def as_relational(self, x):
         """Rewrite a Range in terms of equalities and logic operators. """
-        from sympy.core.mod import Mod
         if self.start.is_infinite:
             assert not self.stop.is_infinite  # by instantiation
             a = self.reversed.start
@@ -992,15 +1019,15 @@ class Range(Set):
         return And(in_seq, ints, range_cond)
 
 
-converter[range] = lambda r: Range(r.start, r.stop, r.step)
+_sympy_converter[range] = lambda r: Range(r.start, r.stop, r.step)
 
 def normalize_theta_set(theta):
-    """
-    Normalize a Real Set `theta` in the Interval [0, 2*pi). It returns
+    r"""
+    Normalize a Real Set `theta` in the interval `[0, 2\pi)`. It returns
     a normalized value of theta in the Set. For Interval, a maximum of
-    one cycle [0, 2*pi], is returned i.e. for theta equal to [0, 10*pi],
-    returned normalized value would be [0, 2*pi). As of now intervals
-    with end points as non-multiples of `pi` is not supported.
+    one cycle $[0, 2\pi]$, is returned i.e. for theta equal to $[0, 10\pi]$,
+    returned normalized value would be $[0, 2\pi)$. As of now intervals
+    with end points as non-multiples of ``pi`` is not supported.
 
     Raises
     ======
@@ -1080,33 +1107,30 @@ def normalize_theta_set(theta):
 
 
 class ComplexRegion(Set):
-    """
+    r"""
     Represents the Set of all Complex Numbers. It can represent a
     region of Complex Plane in both the standard forms Polar and
     Rectangular coordinates.
 
     * Polar Form
       Input is in the form of the ProductSet or Union of ProductSets
-      of the intervals of r and theta, & use the flag polar=True.
+      of the intervals of ``r`` and ``theta``, and use the flag ``polar=True``.
 
-    Z = {z in C | z = r*[cos(theta) + I*sin(theta)], r in [r], theta in [theta]}
+      .. math:: Z = \{z \in \mathbb{C} \mid z = r\times (\cos(\theta) + I\sin(\theta)), r \in [\texttt{r}], \theta \in [\texttt{theta}]\}
 
     * Rectangular Form
       Input is in the form of the ProductSet or Union of ProductSets
-      of interval of x and y the of the Complex numbers in a Plane.
+      of interval of x and y, the real and imaginary parts of the Complex numbers in a plane.
       Default input type is in rectangular form.
 
-    Z = {z in C | z = x + I*y, x in [Re(z)], y in [Im(z)]}
+    .. math:: Z = \{z \in \mathbb{C} \mid z = x + Iy, x \in [\operatorname{re}(z)], y \in [\operatorname{im}(z)]\}
 
     Examples
     ========
 
-    >>> from sympy.sets.fancysets import ComplexRegion
-    >>> from sympy.sets import Interval
-    >>> from sympy import S, I, Union
+    >>> from sympy import ComplexRegion, Interval, S, I, Union
     >>> a = Interval(2, 3)
     >>> b = Interval(4, 6)
-    >>> c = Interval(1, 8)
     >>> c1 = ComplexRegion(a*b)  # Rectangular Form
     >>> c1
     CartesianComplexRegion(ProductSet(Interval(2, 3), Interval(4, 6)))
@@ -1115,6 +1139,7 @@ class ComplexRegion(Set):
       surrounded by the coordinates (2, 4), (3, 4), (3, 6) and
       (2, 6), of the four vertices.
 
+    >>> c = Interval(1, 8)
     >>> c2 = ComplexRegion(Union(a*b, b*c))
     >>> c2
     CartesianComplexRegion(Union(ProductSet(Interval(2, 3), Interval(4, 6)), ProductSet(Interval(4, 6), Interval(1, 8))))
@@ -1297,6 +1322,9 @@ class ComplexRegion(Set):
         """
         return self.sets._measure
 
+    def _kind(self):
+        return self.args[0].kind
+
     @classmethod
     def from_real(cls, sets):
         """
@@ -1318,14 +1346,13 @@ class ComplexRegion(Set):
 
     def _contains(self, other):
         from sympy.functions import arg, Abs
-        from sympy.core.containers import Tuple
         other = sympify(other)
         isTuple = isinstance(other, Tuple)
         if isTuple and len(other) != 2:
             raise ValueError('expecting Tuple of length 2')
 
         # If the other is not an Expression, and neither a Tuple
-        if not isinstance(other, Expr) and not isinstance(other, Tuple):
+        if not isinstance(other, (Expr, Tuple)):
             return S.false
         # self in rectangular form
         if not self.polar:
@@ -1355,17 +1382,15 @@ class ComplexRegion(Set):
 
 
 class CartesianComplexRegion(ComplexRegion):
-    """
+    r"""
     Set representing a square region of the complex plane.
 
-    Z = {z in C | z = x + I*y, x in [Re(z)], y in [Im(z)]}
+    .. math:: Z = \{z \in \mathbb{C} \mid z = x + Iy, x \in [\operatorname{re}(z)], y \in [\operatorname{im}(z)]\}
 
     Examples
     ========
 
-    >>> from sympy.sets.fancysets import ComplexRegion
-    >>> from sympy.sets.sets import Interval
-    >>> from sympy import I
+    >>> from sympy import ComplexRegion, I, Interval
     >>> region = ComplexRegion(Interval(1, 3) * Interval(4, 6))
     >>> 2 + 5*I in region
     True
@@ -1411,16 +1436,15 @@ class CartesianComplexRegion(ComplexRegion):
 
 
 class PolarComplexRegion(ComplexRegion):
-    """
+    r"""
     Set representing a polar region of the complex plane.
 
-    Z = {z in C | z = r*[cos(theta) + I*sin(theta)], r in [r], theta in [theta]}
+    .. math:: Z = \{z \in \mathbb{C} \mid z = r\times (\cos(\theta) + I\sin(\theta)), r \in [\texttt{r}], \theta \in [\texttt{theta}]\}
 
     Examples
     ========
 
-    >>> from sympy.sets.fancysets import ComplexRegion, Interval
-    >>> from sympy import oo, pi, I
+    >>> from sympy import ComplexRegion, Interval, oo, pi, I
     >>> rset = Interval(0, oo)
     >>> thetaset = Interval(0, pi)
     >>> upper_half_plane = ComplexRegion(rset * thetaset, polar=True)
@@ -1460,14 +1484,13 @@ class PolarComplexRegion(ComplexRegion):
 
     @property
     def expr(self):
-        from sympy.functions.elementary.trigonometric import sin, cos
         r, theta = self.variables
         return r*(cos(theta) + S.ImaginaryUnit*sin(theta))
 
 
 class Complexes(CartesianComplexRegion, metaclass=Singleton):
     """
-    The Set of all complex numbers
+    The :class:`Set` of all complex numbers
 
     Examples
     ========
@@ -1496,9 +1519,3 @@ class Complexes(CartesianComplexRegion, metaclass=Singleton):
 
     def __new__(cls):
         return Set.__new__(cls)
-
-    def __str__(self):
-        return "S.Complexes"
-
-    def __repr__(self):
-        return "S.Complexes"

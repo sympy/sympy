@@ -4,7 +4,7 @@ from sympy.core.logic import fuzzy_bool
 from sympy.core.singleton import S
 from sympy.core.sympify import _sympify
 
-from .sets import Set
+from .sets import Set, FiniteSet, SetKind
 
 
 class PowerSet(Set):
@@ -35,8 +35,7 @@ class PowerSet(Set):
     Examples
     ========
 
-    >>> from sympy.sets.powerset import PowerSet
-    >>> from sympy import S, FiniteSet
+    >>> from sympy import PowerSet, S, FiniteSet
 
     A power set of a finite set:
 
@@ -103,7 +102,6 @@ class PowerSet(Set):
         return 2 ** len(self.arg)
 
     def __iter__(self):
-        from .sets import FiniteSet
         found = [S.EmptySet]
         yield S.EmptySet
 
@@ -115,3 +113,7 @@ class PowerSet(Set):
                 yield new
                 temp.append(new)
             found.extend(temp)
+
+    @property
+    def kind(self):
+        return SetKind(self.arg.kind)

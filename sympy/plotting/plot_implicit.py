@@ -34,7 +34,10 @@ from .experimental_lambdify import experimental_lambdify, vectorized_lambdify
 from .intervalmath import interval
 from sympy.core.relational import (Equality, GreaterThan, LessThan,
                 Relational, StrictLessThan, StrictGreaterThan)
-from sympy import Eq, Tuple, sympify, Symbol, Dummy
+from sympy.core.containers import Tuple
+from sympy.core.relational import Eq
+from sympy.core.symbol import (Dummy, Symbol)
+from sympy.core.sympify import sympify
 from sympy.external import import_module
 from sympy.logic.boolalg import BooleanFunction
 from sympy.polys.polyutils import _sort_gens
@@ -88,7 +91,7 @@ class ImplicitSeries(BaseSeries):
             # AttributeError here.
             if self.use_interval_math:
                 warnings.warn("Adaptive meshing could not be applied to the"
-                            " expression. Using uniform meshing.")
+                            " expression. Using uniform meshing.", stacklevel=7)
             self.use_interval_math = False
 
         if self.use_interval_math:

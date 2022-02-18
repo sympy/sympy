@@ -124,6 +124,13 @@ Integer
 .. autoclass:: Integer
    :members:
 
+AlgebraicNumber
+^^^^^^^^^^^^^^^
+.. autoclass:: AlgebraicNumber
+   :members:
+
+   .. automethod:: AlgebraicNumber.__new__
+
 NumberSymbol
 ^^^^^^^^^^^^
 .. autoclass:: NumberSymbol
@@ -512,26 +519,15 @@ Tuple
 .. autoclass:: Tuple
    :members:
 
+TupleKind
+^^^^^^^^^
+.. autoclass:: TupleKind
+   :members:
+
 Dict
 ^^^^
 .. autoclass:: Dict
    :members:
-
-compatibility
--------------
-.. module:: sympy.core.compatibility
-
-iterable
-^^^^^^^^
-.. autofunction:: iterable
-
-is_sequence
-^^^^^^^^^^^
-.. autofunction:: is_sequence
-
-as_int
-^^^^^^
-.. autofunction:: as_int
 
 exprtools
 ---------
@@ -544,11 +540,6 @@ gcd_terms
 factor_terms
 ^^^^^^^^^^^^
 .. autofunction:: factor_terms
-
-ordered
-^^^^^^^
-
-.. autofunction:: sympy.core.compatibility.ordered
 
 kind
 ----
@@ -564,7 +555,74 @@ NumberKind
 .. autoclass:: NumberKind
    :members:
 
+UndefinedKind
+^^^^^^^^^^^^^
+.. autoclass:: UndefinedKind
+   :members:
+
 BooleanKind
 ^^^^^^^^^^^
 .. autoclass:: BooleanKind
    :members:
+
+Sorting
+-------
+
+default_sort_key
+^^^^^^^^^^^^^^^^
+
+.. autofunction:: sympy.core.sorting.default_sort_key
+
+ordered
+^^^^^^^
+
+.. autofunction:: sympy.core.sorting.ordered
+
+Random
+------
+
+.. automodule:: sympy.core.random
+
+random_complex_number
+^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: random_complex_number
+
+verify_numerically
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: verify_numerically
+
+test_derivative_numerically
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: test_derivative_numerically
+
+_randrange
+^^^^^^^^^^
+.. autofunction:: _randrange
+
+_randint
+^^^^^^^^
+.. autofunction:: _randint
+
+Traversal
+---------
+.. module:: sympy.core.traversal
+
+bottom_up
+^^^^^^^^^
+.. autofunction:: bottom_up
+
+postorder_traversal
+^^^^^^^^^^^^^^^^^^^
+.. autofunction:: postorder_traversal
+
+preorder_traversal
+^^^^^^^^^^^^^^^^^^
+.. autofunction:: preorder_traversal
+
+use
+^^^
+.. autofunction:: use
+
+walk
+^^^^
+.. autofunction:: walk

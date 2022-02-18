@@ -1,8 +1,9 @@
 from collections.abc import Callable
 
-from sympy.core.compatibility import as_int, is_sequence
 from sympy.core.containers import Dict
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
+from sympy.utilities.iterables import is_sequence
+from sympy.utilities.misc import as_int
 
 from .matrices import MatrixBase
 from .repmatrix import MutableRepMatrix, RepMatrix
@@ -17,14 +18,14 @@ from .solvers import (
     _lower_triangular_solve_sparse, _upper_triangular_solve_sparse)
 
 
-class SparseMatrix(RepMatrix):
+class SparseRepMatrix(RepMatrix):
     """
     A sparse matrix (a matrix with a large number of zero elements).
 
     Examples
     ========
 
-    >>> from sympy.matrices import SparseMatrix, ones
+    >>> from sympy import SparseMatrix, ones
     >>> SparseMatrix(2, 2, range(4))
     Matrix([
     [0, 1],
@@ -235,11 +236,14 @@ class SparseMatrix(RepMatrix):
     @property
     def _smat(self):
 
-        SymPyDeprecationWarning(
-            feature="The private _smat attribute of SparseMatrix",
-            useinstead="the .todok() method",
-            issue=21715,
-            deprecated_since_version="1.9").warn()
+        sympy_deprecation_warning(
+            """
+            The private _smat attribute of SparseMatrix is deprecated. Use the
+            .todok() method instead.
+            """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-private-matrix-attributes"
+        )
 
         return self.todok()
 
@@ -254,7 +258,7 @@ class SparseMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import SparseMatrix
         >>> m = SparseMatrix(2, 2, lambda i, j: i*2+j)
         >>> m
         Matrix([
@@ -308,7 +312,7 @@ class SparseMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import SparseMatrix
         >>> a=SparseMatrix(((1, 2), (3, 4)))
         >>> a
         Matrix([
@@ -334,7 +338,7 @@ class SparseMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix
+        >>> from sympy import SparseMatrix
         >>> a = SparseMatrix(((1, 2), (3, 4)))
         >>> a
         Matrix([
@@ -349,7 +353,7 @@ class SparseMatrix(RepMatrix):
         sympy.matrices.sparse.SparseMatrix.col_list
         """
         return [tuple(k + (self[k],)) for k in
-            sorted(self.todok().keys(), key=lambda k: list(k))]
+            sorted(self.todok().keys(), key=list)]
 
     def scalar_multiply(self, scalar):
         "Scalar element-wise multiplication"
@@ -365,7 +369,7 @@ class SparseMatrix(RepMatrix):
         Examples
         ========
 
-        >>> from sympy.matrices import SparseMatrix, Matrix, ones
+        >>> from sympy import SparseMatrix, Matrix, ones
         >>> A = Matrix([1, 2, 3])
         >>> B = Matrix([2, 3, 4])
         >>> S = SparseMatrix(A.row_join(B))
@@ -455,7 +459,7 @@ class SparseMatrix(RepMatrix):
     upper_triangular_solve.__doc__          = upper_triangular_solve.__doc__
 
 
-class MutableSparseMatrix(SparseMatrix, MutableRepMatrix):
+class MutableSparseMatrix(SparseRepMatrix, MutableRepMatrix):
 
     @classmethod
     def _new(cls, *args, **kwargs):
@@ -464,3 +468,6 @@ class MutableSparseMatrix(SparseMatrix, MutableRepMatrix):
         rep = cls._smat_to_DomainMatrix(rows, cols, smat)
 
         return cls._fromrep(rep)
+
+
+SparseMatrix = MutableSparseMatrix

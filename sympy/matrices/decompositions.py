@@ -1,5 +1,6 @@
 import copy
 
+from sympy.core import S
 from sympy.core.function import expand_mul
 from sympy.functions.elementary.miscellaneous import Min, sqrt
 from sympy.functions.elementary.complexes import sign
@@ -36,7 +37,7 @@ def _rank_decomposition(M, iszerofunc=_iszero, simplify=False):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> A = Matrix([
     ...     [1, 3, 1, 4],
     ...     [2, 7, 3, 9],
@@ -67,14 +68,14 @@ def _rank_decomposition(M, iszerofunc=_iszero, simplify=False):
     .. math::
         E_n E_{n-1} ... E_1 A = F
 
-    where `E_n, E_{n-1}, ... , E_1` are the elimination matrices or
+    where `E_n, E_{n-1}, \dots, E_1` are the elimination matrices or
     permutation matrices equivalent to each row-reduction step.
 
     The inverse of the same product of elimination matrices gives
     `C`:
 
     .. math::
-        C = (E_n E_{n-1} ... E_1)^{-1}
+        C = \left(E_n E_{n-1} \dots E_1\right)^{-1}
 
     It is not necessary, however, to actually compute the inverse:
     the columns of `C` are those from the original matrix with the
@@ -112,7 +113,7 @@ def _liupc(M):
     Examples
     ========
 
-    >>> from sympy.matrices import SparseMatrix
+    >>> from sympy import SparseMatrix
     >>> S = SparseMatrix([
     ... [1, 0, 3, 2],
     ... [0, 0, 1, 0],
@@ -124,9 +125,9 @@ def _liupc(M):
     References
     ==========
 
-    Symbolic Sparse Cholesky Factorization using Elimination Trees,
-    Jeroen Van Grondelle (1999)
-    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
+    .. [1] Symbolic Sparse Cholesky Factorization using Elimination Trees,
+           Jeroen Van Grondelle (1999)
+           http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
     """
     # Algorithm 2.4, p 17 of reference
 
@@ -160,7 +161,7 @@ def _row_structure_symbolic_cholesky(M):
     Examples
     ========
 
-    >>> from sympy.matrices import SparseMatrix
+    >>> from sympy import SparseMatrix
     >>> S = SparseMatrix([
     ... [1, 0, 3, 2],
     ... [0, 0, 1, 0],
@@ -172,9 +173,9 @@ def _row_structure_symbolic_cholesky(M):
     References
     ==========
 
-    Symbolic Sparse Cholesky Factorization using Elimination Trees,
-    Jeroen Van Grondelle (1999)
-    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
+    .. [1] Symbolic Sparse Cholesky Factorization using Elimination Trees,
+           Jeroen Van Grondelle (1999)
+           http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.39.7582
     """
 
     R, parent = M.liupc()
@@ -203,7 +204,7 @@ def _cholesky(M, hermitian=True):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix
+    >>> from sympy import Matrix
     >>> A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     >>> A.cholesky()
     Matrix([
@@ -297,7 +298,7 @@ def _cholesky_sparse(M, hermitian=True):
     Examples
     ========
 
-    >>> from sympy.matrices import SparseMatrix
+    >>> from sympy import SparseMatrix
     >>> A = SparseMatrix(((25,15,-5),(15,18,0),(-5,0,11)))
     >>> A.cholesky()
     Matrix([
@@ -411,7 +412,7 @@ def _LDLdecomposition(M, hermitian=True):
     Examples
     ========
 
-    >>> from sympy.matrices import Matrix, eye
+    >>> from sympy import Matrix, eye
     >>> A = Matrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     >>> L, D = A.LDLdecomposition()
     >>> L
@@ -498,7 +499,7 @@ def _LDLdecomposition_sparse(M, hermitian=True):
     Examples
     ========
 
-    >>> from sympy.matrices import SparseMatrix
+    >>> from sympy import SparseMatrix
     >>> A = SparseMatrix(((25, 15, -5), (15, 18, 0), (-5, 0, 11)))
     >>> L, D = A.LDLdecomposition()
     >>> L
@@ -596,7 +597,7 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
         A function which determines if a given expression is zero.
 
         The function should be a callable that takes a single
-        sympy expression and returns a 3-valued boolean value
+        SymPy expression and returns a 3-valued boolean value
         ``True``, ``False``, or ``None``.
 
         It is internally used by the pivot searching algorithm.
@@ -607,8 +608,8 @@ def _LUdecomposition(M, iszerofunc=_iszero, simpfunc=None, rankcheck=False):
         A function that simplifies the input.
 
         If this is specified as a function, this function should be
-        a callable that takes a single sympy expression and returns
-        an another sympy expression that is algebraically
+        a callable that takes a single SymPy expression and returns
+        an another SymPy expression that is algebraically
         equivalent.
 
         If ``None``, it indicates that the pivot search algorithm
@@ -691,7 +692,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         A function which determines if a given expression is zero.
 
         The function should be a callable that takes a single
-        sympy expression and returns a 3-valued boolean value
+        SymPy expression and returns a 3-valued boolean value
         ``True``, ``False``, or ``None``.
 
         It is internally used by the pivot searching algorithm.
@@ -702,8 +703,8 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         A function that simplifies the input.
 
         If this is specified as a function, this function should be
-        a callable that takes a single sympy expression and returns
-        an another sympy expression that is algebraically
+        a callable that takes a single SymPy expression and returns
+        an another SymPy expression that is algebraically
         equivalent.
 
         If ``None``, it indicates that the pivot search algorithm
@@ -937,7 +938,7 @@ def _LUdecomposition_Simple(M, iszerofunc=_iszero, simpfunc=None,
         # https://github.com/sympy/sympy/issues/9796
         pass
 
-    if M.rows == 0 or M.cols == 0:
+    if S.Zero in M.shape:
         # Define LU decomposition of a matrix with no entries as a matrix
         # of the same dimensions with all zero entries.
         return M.zeros(M.rows, M.cols), []
@@ -1150,7 +1151,7 @@ def _singular_value_decomposition(A):
     If you want to augment the results to return a full orthogonal
     decomposition, you should use the following procedures.
 
-    - Augment the $U , V$ matrices with columns that are orthogonal to every
+    - Augment the $U, V$ matrices with columns that are orthogonal to every
       other columns and make it square.
     - Augument the $\Sigma$ matrix with zero rows to make it have the same
       shape as the original matrix.

@@ -30,31 +30,35 @@ There are three types of functions implemented in SymPy:
 
 """
 
-from typing import Any, Dict as tDict, Optional, Set as tSet, Tuple as tTuple, Union
+from typing import Any, Dict as tDict, Optional, Set as tSet, Tuple as tTuple, Union as tUnion
+from collections.abc import Iterable
 
 from .add import Add
 from .assumptions import ManagedProperties
 from .basic import Basic, _atomic
 from .cache import cacheit
-from .compatibility import iterable, is_sequence, as_int, ordered, Iterable
+from .containers import Tuple, Dict
 from .decorators import _sympifyit
 from .expr import Expr, AtomicExpr
-from .numbers import Rational, Float
+from .logic import fuzzy_and, fuzzy_or, fuzzy_not, FuzzyBool
+from .mul import Mul
+from .numbers import Rational, Float, Integer
 from .operations import LatticeOp
+from .parameters import global_parameters
 from .rules import Transform
 from .singleton import S
 from .sympify import sympify
 
-from sympy.core.containers import Tuple, Dict
-from sympy.core.parameters import global_parameters
-from sympy.core.logic import fuzzy_and, fuzzy_or, fuzzy_not, FuzzyBool
-from sympy.utilities import default_sort_key
-from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.utilities.iterables import has_dups, sift
-from sympy.utilities.misc import filldedent
+from .sorting import default_sort_key, ordered
+from sympy.utilities.exceptions import (sympy_deprecation_warning,
+                                        SymPyDeprecationWarning, ignore_warnings)
+from sympy.utilities.iterables import (has_dups, sift, iterable,
+    is_sequence, uniq, topological_sort)
+from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
+from sympy.utilities.misc import as_int, filldedent, func_name
 
 import mpmath
-import mpmath.libmp as mlib
+from mpmath.libmp.libmpf import prec_to_dps
 
 import inspect
 from collections import Counter
@@ -113,7 +117,7 @@ class BadArgumentsError(TypeError):
     pass
 
 
-# Python 2/3 version that does not raise a Deprecation warning
+# Python 3 version that does not raise a Deprecation warning
 def arity(cls):
     """Return the arity of the function if it is known, else None.
 
@@ -126,8 +130,7 @@ def arity(cls):
     Examples
     ========
 
-    >>> from sympy.core.function import arity
-    >>> from sympy import log
+    >>> from sympy import arity, log
     >>> arity(lambda x: x)
     1
     >>> arity(log)
@@ -218,7 +221,7 @@ class FunctionClass(ManagedProperties):
         Examples
         ========
 
-        >>> from sympy.core.function import Function
+        >>> from sympy import Function
         >>> f = Function('f')
 
         If the function can take any number of arguments, the set of whole
@@ -475,7 +478,7 @@ class Function(Application, Expr):
             pr2 = min(cls._should_evalf(a) for a in result.args)
             if pr2 > 0:
                 pr = max(cls._should_evalf(a) for a in result.args)
-                result = result.evalf(mlib.libmpf.prec_to_dps(pr))
+                result = result.evalf(prec_to_dps(pr))
 
         return result
 
@@ -493,11 +496,11 @@ class Function(Application, Expr):
 
         Returns the precision to evalf to, or -1 if it shouldn't evalf.
         """
-        from sympy.core.evalf import pure_complex
         if arg.is_Float:
             return arg._prec
         if not arg.is_Add:
             return -1
+        from .evalf import pure_complex
         m = pure_complex(arg)
         if m is None or not (m[0].is_Float or m[1].is_Float):
             return -1
@@ -542,7 +545,6 @@ class Function(Application, Expr):
                 return None
 
             if not hasattr(mpmath, fname):
-                from sympy.utilities.lambdify import MPMATH_TRANSLATIONS
                 fname = MPMATH_TRANSLATIONS.get(fname, None)
                 if fname is None:
                     return None
@@ -631,7 +633,7 @@ class Function(Application, Expr):
 
         return fuzzy_not(type(self).is_singular(arg.subs(x, a)))
 
-    _singularities = None  # type: Union[FuzzyBool, tTuple[Expr, ...]]
+    _singularities = None  # type: tUnion[FuzzyBool, tTuple[Expr, ...]]
 
     @classmethod
     def is_singular(cls, a):
@@ -686,13 +688,13 @@ class Function(Application, Expr):
         -1/x - log(x)/x + log(x)/2 + O(1)
 
         """
-        from sympy import Order
-        from sympy.core.symbol import uniquely_named_symbol
+        from .symbol import uniquely_named_symbol
+        from sympy.series.order import Order
         from sympy.sets.sets import FiniteSet
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
         if any(t.is_finite is False for t in args0):
-            from sympy import oo, zoo, nan
+            from .numbers import oo, zoo, nan
             # XXX could use t.as_leading_term(x) here but it's a little
             # slower
             a = [t.compute_leading_term(x, logx=logx) for t in args]
@@ -804,7 +806,7 @@ class Function(Application, Expr):
         argument whose leading term vanishes as x -> 0 might be encountered.
         See, for example, cos._eval_as_leading_term.
         """
-        from sympy import Order
+        from sympy.series.order import Order
         args = [a.as_leading_term(x, logx=logx) for a in self.args]
         o = Order(1, x)
         if any(x in a.free_symbols and o.contains(a) for a in args):
@@ -1242,11 +1244,6 @@ class Derivative(Expr):
         return self.expr._diff_wrt and isinstance(self.doit(), Derivative)
 
     def __new__(cls, expr, *variables, **kwargs):
-
-        from sympy.matrices.common import MatrixCommon
-        from sympy import Integer, MatrixExpr
-        from sympy.tensor.array import Array, NDimArray
-
         expr = sympify(expr)
         symbols_or_none = getattr(expr, "free_symbols", None)
         has_symbol_set = isinstance(symbols_or_none, set)
@@ -1273,18 +1270,18 @@ class Derivative(Expr):
                         expression, the variable(s) of differentiation
                         must be supplied to differentiate %s''' % expr))
 
-        # Standardize the variables by sympifying them:
-        variables = list(sympify(variables))
-
         # Split the list of variables into a list of the variables we are diff
         # wrt, where each element of the list has the form (s, count) where
         # s is the entity to diff wrt and count is the order of the
         # derivative.
         variable_count = []
         array_likes = (tuple, list, Tuple)
+        integer_likes = (int, Integer)
+
+        from sympy.tensor.array import Array, NDimArray
 
         for i, v in enumerate(variables):
-            if isinstance(v, Integer):
+            if isinstance(v, integer_likes):
                 if i == 0:
                     raise ValueError("First variable cannot be a number: %i" % v)
                 count = v
@@ -1369,6 +1366,8 @@ class Derivative(Expr):
             # derivatives.
             zero = False
             free = expr.free_symbols
+            from sympy.matrices.expressions.matexpr import MatrixExpr
+
             for v, c in variable_count:
                 vfree = v.free_symbols
                 if c.is_positive and vfree:
@@ -1420,6 +1419,7 @@ class Derivative(Expr):
         # -------------------------------------------------------------
         nderivs = 0  # how many derivatives were performed
         unhandled = []
+        from sympy.matrices.common import MatrixCommon
         for i, (v, count) in enumerate(variable_count):
 
             old_expr = expr
@@ -1436,7 +1436,7 @@ class Derivative(Expr):
                 # of all others
                 clashing = not (isinstance(old_v, Derivative) or \
                     isinstance(old_v, AppliedUndef))
-                if not v in expr.free_symbols and not clashing:
+                if v not in expr.free_symbols and not clashing:
                     return expr.diff(v)  # expr's version of 0
                 if not old_v.is_scalar and not hasattr(
                         old_v, '_eval_derivative'):
@@ -1481,7 +1481,7 @@ class Derivative(Expr):
             expr = Expr.__new__(cls, expr, *unhandled)
 
         if (nderivs > 1) == True and kwargs.get('simplify', True):
-            from sympy.core.exprtools import factor_terms
+            from .exprtools import factor_terms
             from sympy.simplify.simplify import signsimp
             expr = factor_terms(signsimp(expr))
         return expr
@@ -1540,7 +1540,6 @@ class Derivative(Expr):
         >>> assert vsort0(dfx, y) == [y, dfx]
         >>> assert vsort0(dfx, x) == [dfx, x]
         """
-        from sympy.utilities.iterables import uniq, topological_sort
         if not vc:
             return []
         vc = list(vc)
@@ -1635,7 +1634,7 @@ class Derivative(Expr):
 
         def eval(x):
             f0 = self.expr.subs(z, Expr._from_mpmath(x, prec=mpmath.mp.prec))
-            f0 = f0.evalf(mlib.libmpf.prec_to_dps(mpmath.mp.prec))
+            f0 = f0.evalf(prec_to_dps(mpmath.mp.prec))
             return f0._to_mpmath(mpmath.mp.prec)
         return Expr._from_mpmath(mpmath.diff(eval,
                                              z0._to_mpmath(mpmath.mp.prec)),
@@ -1894,7 +1893,7 @@ class Derivative(Expr):
         sympy.calculus.finite_diff.finite_diff_weights
 
         """
-        from ..calculus.finite_diff import _as_finite_diff
+        from sympy.calculus.finite_diff import _as_finite_diff
         return _as_finite_diff(self, points, x0, wrt)
 
     @classmethod
@@ -1912,8 +1911,8 @@ class Derivative(Expr):
 
 def _derivative_dispatch(expr, *variables, **kwargs):
     from sympy.matrices.common import MatrixCommon
-    from sympy import MatrixExpr
-    from sympy import NDimArray
+    from sympy.matrices.expressions.matexpr import MatrixExpr
+    from sympy.tensor.array import NDimArray
     array_types = (MatrixCommon, MatrixExpr, NDimArray, list, tuple, Tuple)
     if isinstance(expr, array_types) or any(isinstance(i[0], array_types) if isinstance(i, (tuple, list, Tuple)) else isinstance(i, array_types) for i in variables):
         from sympy.tensor.array.array_derivatives import ArrayDerivative
@@ -1947,7 +1946,7 @@ class Lambda(Expr):
 
     It is also possible to unpack tuple arguments:
 
-    >>> f = Lambda( ((x, y), z) , x + y + z)
+    >>> f = Lambda(((x, y), z), x + y + z)
     >>> f((1, 2), 3)
     6
 
@@ -1963,11 +1962,14 @@ class Lambda(Expr):
 
     def __new__(cls, signature, expr):
         if iterable(signature) and not isinstance(signature, (tuple, Tuple)):
-            SymPyDeprecationWarning(
-                feature="non tuple iterable of argument symbols to Lambda",
-                useinstead="tuple of argument symbols",
-                issue=17474,
-                deprecated_since_version="1.5").warn()
+            sympy_deprecation_warning(
+                """
+                Using a non-tuple iterable as the first argument to Lambda
+                is deprecated. Use Lambda(tuple(args), expr) instead.
+                """,
+                deprecated_since_version="1.5",
+                active_deprecations_target="deprecated-non-tuple-lambda",
+            )
             signature = tuple(signature)
         sig = signature if iterable(signature) else (signature,)
         sig = sympify(sig)
@@ -2075,7 +2077,6 @@ class Lambda(Expr):
         return self.signature == self.expr
 
     def _eval_evalf(self, prec):
-        from sympy.core.evalf import prec_to_dps
         return self.func(self.args[0], self.args[1].evalf(n=prec_to_dps(prec)))
 
 
@@ -2200,7 +2201,7 @@ class Subs(Expr):
         # to give a variable-independent expression
         pre = "_"
         pts = sorted(set(point), key=default_sort_key)
-        from sympy.printing import StrPrinter
+        from sympy.printing.str import StrPrinter
         class CustomStrPrinter(StrPrinter):
             def _print_Dummy(self, expr):
                 return str(expr) + str(expr.dummy_index)
@@ -2295,7 +2296,7 @@ class Subs(Expr):
     def evalf(self, prec=None, **options):
         return self.doit().evalf(prec, **options)
 
-    n = evalf
+    n = evalf  # type:ignore
 
     @property
     def variables(self):
@@ -2321,11 +2322,16 @@ class Subs(Expr):
 
     @property
     def expr_free_symbols(self):
-        SymPyDeprecationWarning(feature="expr_free_symbols method",
-                                issue=21494,
-                                deprecated_since_version="1.9").warn()
-        return (self.expr.expr_free_symbols - set(self.variables) |
-            set(self.point.expr_free_symbols))
+        sympy_deprecation_warning("""
+        The expr_free_symbols property is deprecated. Use free_symbols to get
+        the free symbols of an expression.
+        """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-expr-free-symbols")
+        # Don't show the warning twice from the recursive call
+        with ignore_warnings(SymPyDeprecationWarning):
+            return (self.expr.expr_free_symbols - set(self.variables) |
+                    set(self.point.expr_free_symbols))
 
     def __eq__(self, other):
         if not isinstance(other, Subs):
@@ -2477,7 +2483,7 @@ def diff(f, *symbols, **kwargs):
     References
     ==========
 
-    http://reference.wolfram.com/legacy/v5_2/Built-inFunctions/AlgebraicComputation/Calculus/D.html
+    .. [1] http://reference.wolfram.com/legacy/v5_2/Built-inFunctions/AlgebraicComputation/Calculus/D.html
 
     See Also
     ========
@@ -2892,7 +2898,7 @@ def expand_log(expr, deep=True, force=False, factor=False):
     (x + y)*(log(x) + 2*log(y))*exp(x + y)
 
     """
-    from sympy import Mul, log
+    from sympy.functions.elementary.exponential import log
     if factor is False:
         def _handle(x):
             x1 = expand_mul(expand_log(x, deep=deep, force=force, factor=True))
@@ -3128,11 +3134,11 @@ def count_ops(expr, visual=False):
     2*ADD + SIN
 
     """
-    from sympy import Integral, Sum
-    from sympy.core.relational import Relational
-    from sympy.simplify.radsimp import fraction
+    from .relational import Relational
+    from sympy.concrete.summations import Sum
+    from sympy.integrals.integrals import Integral
     from sympy.logic.boolalg import BooleanFunction
-    from sympy.utilities.misc import func_name
+    from sympy.simplify.radsimp import fraction
 
     expr = sympify(expr)
     if isinstance(expr, Expr) and not expr.is_Relational:
@@ -3147,6 +3153,10 @@ def count_ops(expr, visual=False):
         while args:
             a = args.pop()
 
+            # if the following fails because the object is
+            # not Basic type, then the object should be fixed
+            # since it is the intention that all args of Basic
+            # should themselves be Basic
             if a.is_Rational:
                 #-1/3 = NEG + DIV
                 if a is not S.One:
@@ -3217,7 +3227,10 @@ def count_ops(expr, visual=False):
                 # if it's not in the list above we don't
                 # consider a.func something to count, e.g.
                 # Tuple, MatrixSymbol, etc...
-                o = Symbol(a.func.__name__.upper())
+                if isinstance(a.func, UndefinedFunction):
+                    o = Symbol("FUNC_" + a.func.__name__.upper())
+                else:
+                    o = Symbol(a.func.__name__.upper())
                 ops.append(o)
 
             if not a.is_Symbol:
@@ -3271,15 +3284,15 @@ def count_ops(expr, visual=False):
 
 def nfloat(expr, n=15, exponent=False, dkeys=False):
     """Make all Rationals in expr Floats except those in exponents
-    (unless the exponents flag is set to True). When processing
-    dictionaries, don't modify the keys unless ``dkeys=True``.
+    (unless the exponents flag is set to True) and those in undefined
+    functions. When processing dictionaries, do not modify the keys
+    unless ``dkeys=True``.
 
     Examples
     ========
 
-    >>> from sympy.core.function import nfloat
+    >>> from sympy import nfloat, cos, pi, sqrt
     >>> from sympy.abc import x, y
-    >>> from sympy import cos, pi, sqrt
     >>> nfloat(x**4 + x/2 + cos(pi/3) + 1 + sqrt(y))
     x**4 + 0.5*x + sqrt(y) + 1.5
     >>> nfloat(x**4 + sqrt(y), exponent=True)
@@ -3290,9 +3303,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     >>> type(nfloat((1, 2))) is tuple
     True
     """
-    from sympy.core.power import Pow
-    from sympy.polys.rootoftools import RootOf
-    from sympy import MatrixBase
+    from sympy.matrices.matrices import MatrixBase
 
     kw = dict(n=n, exponent=exponent, dkeys=dkeys)
 
@@ -3337,8 +3348,10 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
     # watch out for RootOf instances that don't like to have
     # their exponents replaced with Dummies and also sometimes have
     # problems with evaluating at low precision (issue 6393)
+    from sympy.polys.rootoftools import RootOf
     rv = rv.xreplace({ro: ro.n(n) for ro in rv.atoms(RootOf)})
 
+    from .power import Pow
     if not exponent:
         reps = [(p, Pow(p.base, Dummy())) for p in rv.atoms(Pow)]
         rv = rv.xreplace(dict(reps))
@@ -3354,7 +3367,7 @@ def nfloat(expr, n=15, exponent=False, dkeys=False):
 
     return rv.xreplace(Transform(
         lambda x: x.func(*nfloat(x.args, n, exponent)),
-        lambda x: isinstance(x, Function)))
+        lambda x: isinstance(x, Function) and not isinstance(x, AppliedUndef)))
 
 
-from sympy.core.symbol import Dummy, Symbol
+from .symbol import Dummy, Symbol

@@ -12,7 +12,7 @@ from sympy.core.add import Add
 from sympy.core.numbers import (I, Integer, Rational, oo, zoo, pi)
 from sympy.core.singleton import S
 from sympy.core.power import Pow
-from sympy.core.symbol import symbols, Symbol
+from sympy.core.symbol import Str, symbols, Symbol
 from sympy.functions.combinatorial.factorials import factorial
 from sympy.functions.elementary.complexes import (Abs, im, re, sign)
 from sympy.functions.elementary.exponential import (exp, log)
@@ -21,7 +21,8 @@ from sympy.functions.elementary.trigonometric import (
     acos, acot, asin, atan, cos, cot, sin, tan)
 from sympy.logic.boolalg import Equivalent, Implies, Xor, And, to_cnf
 from sympy.matrices import Matrix, SparseMatrix
-from sympy.testing.pytest import XFAIL, slow, raises, warns_deprecated_sympy, _both_exp_pow
+from sympy.testing.pytest import (XFAIL, slow, raises, warns_deprecated_sympy,
+    _both_exp_pow)
 import math
 
 
@@ -2092,6 +2093,8 @@ def test_key_extensibility():
         with warns_deprecated_sympy():
             assert ask(Q.my_key(x + 1)) is None
     finally:
+        # We have to disable the stacklevel testing here because this raises
+        # the warning twice from two different places
         with warns_deprecated_sympy():
             remove_handler('my_key', MyAskHandler)
         del Q.my_key
@@ -2244,7 +2247,7 @@ def test_check_old_assumption():
     assert ask(Q.real(x)) is None
     assert ask(Q.complex(x)) is True
 
-    x = symbols('x', positive=True, finite=True)
+    x = symbols('x', positive=True)
     assert ask(Q.positive(x)) is True
     assert ask(Q.negative(x)) is False
     assert ask(Q.real(x)) is True
@@ -2322,7 +2325,6 @@ def test_custom_AskHandler():
     class MersenneHandler(AskHandler):
         @staticmethod
         def Integer(expr, assumptions):
-            from sympy import log
             if ask(Q.integer(log(expr + 1, 2))):
                 return True
         @staticmethod
@@ -2347,7 +2349,6 @@ def test_custom_AskHandler():
         Q.mersenne = MersennePredicate()
         @Q.mersenne.register(Integer)
         def _(expr, assumptions):
-            from sympy import log
             if ask(Q.integer(log(expr + 1, 2))):
                 return True
         @Q.mersenne.register(Symbol)
@@ -2395,8 +2396,8 @@ def test_Predicate_handler_is_unique():
     # Handler of defined predicate is unique to the class
     class MyPredicate(Predicate):
         pass
-    mp1 = MyPredicate('mp1')
-    mp2 = MyPredicate('mp2')
+    mp1 = MyPredicate(Str('mp1'))
+    mp2 = MyPredicate(Str('mp2'))
     assert mp1.handler is mp2.handler
 
 

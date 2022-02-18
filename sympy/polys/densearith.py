@@ -937,7 +937,7 @@ def dup_pow(f, n, K):
     if not n:
         return [K.one]
     if n < 0:
-        raise ValueError("can't raise polynomial to a negative power")
+        raise ValueError("Cannot raise polynomial to a negative power")
     if n == 1 or not f or f == [K.one]:
         return f
 
@@ -977,7 +977,7 @@ def dmp_pow(f, n, u, K):
     if not n:
         return dmp_one(u, K)
     if n < 0:
-        raise ValueError("can't raise polynomial to a negative power")
+        raise ValueError("Cannot raise polynomial to a negative power")
     if n == 1 or dmp_zero_p(f, u) or dmp_one_p(f, u, K):
         return f
 
@@ -1784,6 +1784,45 @@ def dmp_l1_norm(f, u, K):
     v = u - 1
 
     return sum([ dmp_l1_norm(c, v, K) for c in f ])
+
+
+def dup_l2_norm_squared(f, K):
+    """
+    Returns squared l2 norm of a polynomial in ``K[x]``.
+
+    Examples
+    ========
+
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
+
+    >>> R.dup_l2_norm_squared(2*x**3 - 3*x**2 + 1)
+    14
+
+    """
+    return sum([coeff**2 for coeff in f], K.zero)
+
+
+def dmp_l2_norm_squared(f, u, K):
+    """
+    Returns squared l2 norm of a polynomial in ``K[X]``.
+
+    Examples
+    ========
+
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
+
+    >>> R.dmp_l2_norm_squared(2*x*y - x - 3)
+    14
+
+    """
+    if not u:
+        return dup_l2_norm_squared(f, K)
+
+    v = u - 1
+
+    return sum([ dmp_l2_norm_squared(c, v, K) for c in f ])
 
 
 def dup_expand(polys, K):

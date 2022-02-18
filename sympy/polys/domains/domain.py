@@ -3,14 +3,17 @@
 
 from typing import Any, Optional, Type
 
+from sympy.core.numbers import AlgebraicNumber
 from sympy.core import Basic, sympify
-from sympy.core.compatibility import HAS_GMPY, is_sequence, ordered
-from sympy.core.decorators import deprecated
+from sympy.core.sorting import default_sort_key, ordered
+from sympy.external.gmpy import HAS_GMPY
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
 from sympy.polys.polyutils import _unify_gens, _not_a_coeff
-from sympy.utilities import default_sort_key, public
+from sympy.utilities import public
+from sympy.utilities.iterables import is_sequence
+
 
 @public
 class Domain:
@@ -64,7 +67,7 @@ class Domain:
     operations ``+,-,*,**`` and depending on the domain some combination of
     ``/,//,%`` might be usable. For example in :ref:`ZZ` both ``//`` (floor
     division) and ``%`` (modulo division) can be used but ``/`` (true
-    division) can not. Since :ref:`QQ` is a :py:class:`~.Field` its elements
+    division) cannot. Since :ref:`QQ` is a :py:class:`~.Field` its elements
     can be used with ``/`` but ``//`` and ``%`` should not be used. Some
     domains have a :py:meth:`~.Domain.gcd` method.
 
@@ -353,16 +356,6 @@ class Domain:
     rep = None  # type: Optional[str]
     alias = None  # type: Optional[str]
 
-    @property  # type: ignore
-    @deprecated(useinstead="is_Field", issue=12723, deprecated_since_version="1.1")
-    def has_Field(self):
-        return self.is_Field
-
-    @property  # type: ignore
-    @deprecated(useinstead="is_Ring", issue=12723, deprecated_since_version="1.1")
-    def has_Ring(self):
-        return self.is_Ring
-
     def __init__(self):
         raise NotImplementedError
 
@@ -405,18 +398,21 @@ class Domain:
             if result is not None:
                 return result
 
-        raise CoercionFailed("can't convert %s of type %s from %s to %s" % (element, type(element), base, self))
+        raise CoercionFailed("Cannot convert %s of type %s from %s to %s" % (element, type(element), base, self))
 
     def convert(self, element, base=None):
         """Convert ``element`` to ``self.dtype``. """
-        if _not_a_coeff(element):
-            raise CoercionFailed('%s is not in any domain' % element)
 
         if base is not None:
+            if _not_a_coeff(element):
+                raise CoercionFailed('%s is not in any domain' % element)
             return self.convert_from(element, base)
 
         if self.of_type(element):
             return element
+
+        if _not_a_coeff(element):
+            raise CoercionFailed('%s is not in any domain' % element)
 
         from sympy.polys.domains import ZZ, QQ, RealField, ComplexField
 
@@ -464,7 +460,7 @@ class Domain:
                 except (TypeError, ValueError):
                     pass
 
-        raise CoercionFailed("can't convert %s of type %s to %s" % (element, type(element), self))
+        raise CoercionFailed("Cannot convert %s of type %s to %s" % (element, type(element), self))
 
     def of_type(self, element):
         """Check if ``a`` is of type ``dtype``. """
@@ -505,7 +501,7 @@ class Domain:
         =======
 
         expr: Expr
-            A normal sympy expression of type :py:class:`~.Expr`.
+            A normal SymPy expression of type :py:class:`~.Expr`.
 
         Examples
         ========
@@ -586,7 +582,7 @@ class Domain:
         ==========
 
         expr: Expr
-            A normal sympy expression of type :py:class:`~.Expr`.
+            A normal SymPy expression of type :py:class:`~.Expr`.
 
         Returns
         =======
@@ -676,7 +672,7 @@ class Domain:
 
     def unify_with_symbols(K0, K1, symbols):
         if (K0.is_Composite and (set(K0.symbols) & set(symbols))) or (K1.is_Composite and (set(K1.symbols) & set(symbols))):
-            raise UnificationFailed("can't unify %s with %s, given %s generators" % (K0, K1, tuple(symbols)))
+            raise UnificationFailed("Cannot unify %s with %s, given %s generators" % (K0, K1, tuple(symbols)))
 
         return K0.unify(K1)
 
@@ -883,7 +879,91 @@ class Domain:
 
     def algebraic_field(self, *extension):
         r"""Returns an algebraic field, i.e. `K(\alpha, \ldots)`. """
-        raise DomainError("can't create algebraic field over %s" % self)
+        raise DomainError("Cannot create algebraic field over %s" % self)
+
+    def alg_field_from_poly(self, poly, alias=None, root_index=-1):
+        r"""
+        Convenience method to construct an algebraic extension on a root of a
+        polynomial, chosen by root index.
+
+        Parameters
+        ==========
+
+        poly : :py:class:`~.Poly`
+            The polynomial whose root generates the extension.
+        alias : str, optional (default=None)
+            Symbol name for the generator of the extension.
+            E.g. "alpha" or "theta".
+        root_index : int, optional (default=-1)
+            Specifies which root of the polynomial is desired. The ordering is
+            as defined by the :py:class:`~.ComplexRootOf` class. The default of
+            ``-1`` selects the most natural choice in the common cases of
+            quadratic and cyclotomic fields (the square root on the positive
+            real or imaginary axis, resp. $\mathrm{e}^{2\pi i/n}$).
+
+        Examples
+        ========
+
+        >>> from sympy import QQ, Poly
+        >>> from sympy.abc import x
+        >>> f = Poly(x**2 - 2)
+        >>> K = QQ.alg_field_from_poly(f)
+        >>> K.ext.minpoly == f
+        True
+        >>> g = Poly(8*x**3 - 6*x - 1)
+        >>> L = QQ.alg_field_from_poly(g, "alpha")
+        >>> L.ext.minpoly == g
+        True
+        >>> L.to_sympy(L([1, 1, 1]))
+        alpha**2 + alpha + 1
+
+        """
+        from sympy.polys.rootoftools import CRootOf
+        root = CRootOf(poly, root_index)
+        alpha = AlgebraicNumber(root, alias=alias)
+        return self.algebraic_field(alpha)
+
+    def cyclotomic_field(self, n, ss=False, alias="zeta", gen=None, root_index=-1):
+        r"""
+        Convenience method to construct a cyclotomic field.
+
+        Parameters
+        ==========
+
+        n : int
+            Construct the nth cyclotomic field.
+        ss : boolean, optional (default=False)
+            If True, append *n* as a subscript on the alias string.
+        alias : str, optional (default="zeta")
+            Symbol name for the generator.
+        gen : :py:class:`~.Symbol`, optional (default=None)
+            Desired variable for the cyclotomic polynomial that defines the
+            field. If ``None``, a dummy variable will be used.
+        root_index : int, optional (default=-1)
+            Specifies which root of the polynomial is desired. The ordering is
+            as defined by the :py:class:`~.ComplexRootOf` class. The default of
+            ``-1`` selects the root $\mathrm{e}^{2\pi i/n}$.
+
+        Examples
+        ========
+
+        >>> from sympy import QQ, latex
+        >>> K = QQ.cyclotomic_field(5)
+        >>> K.to_sympy(K([-1, 1]))
+        1 - zeta
+        >>> L = QQ.cyclotomic_field(7, True)
+        >>> a = L.to_sympy(L([-1, 1]))
+        >>> print(a)
+        1 - zeta7
+        >>> print(latex(a))
+        1 - \zeta_{7}
+
+        """
+        from sympy.polys.specialpolys import cyclotomic_poly
+        if ss:
+            alias += str(n)
+        return self.alg_field_from_poly(cyclotomic_poly(n, gen), alias=alias,
+                                        root_index=root_index)
 
     def inject(self, *symbols):
         """Inject generators into this domain. """

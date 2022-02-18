@@ -12,29 +12,30 @@ This module contain solvers for all kinds of equations:
 
 """
 
-from sympy import divisors, binomial, expand_func
+from sympy.core import (S, Add, Symbol, Dummy, Expr, Mul)
 from sympy.core.assumptions import check_assumptions
-from sympy.core.compatibility import (iterable, is_sequence, ordered,
-    default_sort_key)
-from sympy.core.sympify import sympify
-from sympy.core import (S, Add, Symbol, Equality, Dummy, Expr, Mul,
-    Pow, Unequality, Wild)
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import (expand_mul, expand_log,
-                          Derivative, AppliedUndef, UndefinedFunction, nfloat,
-                          Function, expand_power_exp, _mexpand, expand)
-from sympy.integrals.integrals import Integral
-from sympy.core.numbers import ilcm, Float, Rational
-from sympy.core.relational import Relational
+from sympy.core.function import (expand_mul, expand_log, Derivative,
+                                 AppliedUndef, UndefinedFunction, nfloat,
+                                 Function, expand_power_exp, _mexpand, expand,
+                                 expand_func)
 from sympy.core.logic import fuzzy_not
-from sympy.core.power import integer_log
+from sympy.core.numbers import ilcm, Float, Rational, _illegal
+from sympy.core.power import integer_log, Pow
+from sympy.core.relational import Relational, Eq, Ne
+from sympy.core.sorting import ordered, default_sort_key
+from sympy.core.sympify import sympify, _sympify
+from sympy.core.traversal import preorder_traversal
 from sympy.logic.boolalg import And, Or, BooleanAtom
-from sympy.core.basic import preorder_traversal
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
                              Abs, re, im, arg, sqrt, atan2)
-from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
-                                                      HyperbolicFunction)
+from sympy.functions.combinatorial.factorials import binomial
+from sympy.functions.elementary.hyperbolic import HyperbolicFunction
+from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
+from sympy.integrals.integrals import Integral
+from sympy.ntheory.factor_ import divisors
 from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
     powdenest, nsimplify, denom, logcombine, sqrtdenest, fraction,
     separatevars)
@@ -44,23 +45,21 @@ from sympy.matrices.common import NonInvertibleMatrixError
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly
 from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
-
 from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
-from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
-
 from sympy.utilities.lambdify import lambdify
-from sympy.utilities.misc import filldedent
-from sympy.utilities.iterables import (cartes, connected_components,
-    generate_bell, uniq)
+from sympy.utilities.misc import filldedent, debug
+from sympy.utilities.iterables import (connected_components,
+    generate_bell, uniq, iterable, is_sequence, subsets)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot
 
 from sympy.solvers.polysys import solve_poly_system
-from sympy.solvers.inequalities import reduce_inequalities
 
 from types import GeneratorType
 from collections import defaultdict
+from itertools import combinations, product
+
 import warnings
 
 
@@ -202,8 +201,7 @@ def checksol(f, symbol, sol=None, **flags):
     Examples
     ========
 
-    >>> from sympy import symbols
-    >>> from sympy.solvers import checksol
+    >>> from sympy import checksol, symbols
     >>> x, y = symbols('x,y')
     >>> checksol(x**4 - 1, x, 1)
     True
@@ -259,9 +257,14 @@ def checksol(f, symbol, sol=None, **flags):
             rv = None  # don't return, wait to see if there's a False
         return rv
 
+    f = _sympify(f)
+
+    if f.is_number:
+        return f.is_zero
+
     if isinstance(f, Poly):
         f = f.as_expr()
-    elif isinstance(f, (Equality, Unequality)):
+    elif isinstance(f, (Eq, Ne)):
         if f.rhs in (S.true, S.false):
             f = f.reversed
         B, E = f.args
@@ -277,14 +280,7 @@ def checksol(f, symbol, sol=None, **flags):
     elif not f.is_Relational and not f:
         return True
 
-    if sol and not f.free_symbols & set(sol.keys()):
-        # if f(y) == 0, x=3 does not set f(y) to zero...nor does it not
-        return None
-
-    illegal = {S.NaN,
-               S.ComplexInfinity,
-               S.Infinity,
-               S.NegativeInfinity}
+    illegal = set(_illegal)
     if any(sympify(v).atoms() & illegal for k, v in sol.items()):
         return False
 
@@ -362,12 +358,12 @@ def checksol(f, symbol, sol=None, **flags):
                 return not nz
             break
 
+        if numerical and val.is_number:
+            return (abs(val.n(18).n(12, chop=True)) < 1e-9) is S.true
         if val == was:
             continue
         elif val.is_Rational:
             return val == 0
-        if numerical and val.is_number:
-            return (abs(val.n(18).n(12, chop=True)) < 1e-9) is S.true
         was = val
 
     if flags.get('warn', False):
@@ -655,11 +651,12 @@ def solve(f, *symbols, **flags):
     instances will be returned instead:
 
         >>> solve(x**3 - x + 1)
-        [-1/((-1/2 - sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)) - (-1/2 -
-        sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)/3, -(-1/2 +
-        sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)/3 - 1/((-1/2 +
-        sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)), -(3*sqrt(69)/2 +
-        27/2)**(1/3)/3 - 1/(3*sqrt(69)/2 + 27/2)**(1/3)]
+        [-1/((-1/2 - sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)) -
+        (-1/2 - sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)/3,
+        -(-1/2 + sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)/3 -
+        1/((-1/2 + sqrt(3)*I/2)*(3*sqrt(69)/2 + 27/2)**(1/3)),
+        -(3*sqrt(69)/2 + 27/2)**(1/3)/3 -
+        1/(3*sqrt(69)/2 + 27/2)**(1/3)]
         >>> solve(x**3 - x + 1, cubics=False)
         [CRootOf(x**3 - x + 1, 0),
          CRootOf(x**3 - x + 1, 1),
@@ -817,8 +814,10 @@ def solve(f, *symbols, **flags):
             guaranteed to find the largest number of zeros possible).
         cubics=True (default)
             Return explicit solutions when cubic expressions are encountered.
+            When False, quartics and quintics are disabled, too.
         quartics=True (default)
             Return explicit solutions when quartic expressions are encountered.
+            When False, quintics are disabled, too.
         quintics=True (default)
             Return explicit solutions (if possible) when quintic expressions
             are encountered.
@@ -830,6 +829,17 @@ def solve(f, *symbols, **flags):
     dsolve: For solving differential equations
 
     """
+    from .inequalities import reduce_inequalities
+
+    # set solver types explicitly; as soon as one is False
+    # all the rest will be False
+    ###########################################################################
+
+    hints = ('cubics', 'quartics', 'quintics')
+    default = True
+    for k in hints:
+        default = flags.setdefault(k, bool(flags.get(k, default)))
+
     # keeping track of how f was passed since if it is a list
     # a dictionary of results will be returned.
     ###########################################################################
@@ -880,7 +890,7 @@ def solve(f, *symbols, **flags):
     # preprocess equation(s)
     ###########################################################################
     for i, fi in enumerate(f):
-        if isinstance(fi, (Equality, Unequality)):
+        if isinstance(fi, (Eq, Ne)):
             if 'ImmutableDenseMatrix' in [type(a).__name__ for a in fi.args]:
                 fi = fi.lhs - fi.rhs
             else:
@@ -888,7 +898,7 @@ def solve(f, *symbols, **flags):
                 if isinstance(R, BooleanAtom):
                     L, R = R, L
                 if isinstance(L, BooleanAtom):
-                    if isinstance(fi, Unequality):
+                    if isinstance(fi, Ne):
                         L = ~L
                     if R.is_Relational:
                         fi = ~R if L is S.false else R
@@ -1050,7 +1060,7 @@ def solve(f, *symbols, **flags):
                     p.is_Pow and not implicit or
                     p.is_Function and not implicit) and p.func not in (re, im):
                 continue
-            elif not p in seen:
+            elif p not in seen:
                 seen.add(p)
                 if p.free_symbols & symset:
                     non_inverts.add(p)
@@ -1238,7 +1248,7 @@ def solve(f, *symbols, **flags):
         if warn and got_None:
             warnings.warn(filldedent("""
                 \tWarning: assumptions concerning following solution(s)
-                can't be checked:""" + '\n\t' +
+                cannot be checked:""" + '\n\t' +
                 ', '.join(str(s) for s in got_None)))
 
     #
@@ -1445,17 +1455,12 @@ def _solve(f, *symbols, **flags):
             return [sol]
 
         poly = None
-        # check for a single non-symbol generator
-        dums = f_num.atoms(Dummy)
-        D = f_num.replace(
-            lambda i: isinstance(i, Add) and symbol in i.free_symbols,
-            lambda i: Dummy())
-        if not D.is_Dummy:
-            dgen = D.atoms(Dummy) - dums
-            if len(dgen) == 1:
-                d = dgen.pop()
-                w = Wild('g')
-                gen = f_num.match(D.xreplace({d: w}))[w]
+        # check for a single Add generator
+        if not f_num.is_Add:
+            add_args = [i for i in f_num.atoms(Add)
+                if symbol in i.free_symbols]
+            if len(add_args) == 1:
+                gen = add_args[0]
                 spart = gen.as_independent(symbol)[1].as_base_exp()[0]
                 if spart == symbol:
                     try:
@@ -1621,8 +1626,8 @@ def _solve(f, *symbols, **flags):
                 soln = None
                 deg = poly.degree()
                 flags['tsolve'] = True
-                solvers = {k: flags.get(k, True) for k in
-                    ('cubics', 'quartics', 'quintics')}
+                hints = ('cubics', 'quartics', 'quintics')
+                solvers = {h: flags.get(h) for h in hints}
                 soln = roots(poly, **solvers)
                 if sum(soln.values()) < deg:
                     # e.g. roots(32*x**5 + 400*x**4 + 2032*x**3 +
@@ -1765,7 +1770,7 @@ def _solve_system(exprs, symbols, **flags):
                 subsols.append(subsol)
             # Full solution is cartesion product of subsystems
             sols = []
-            for soldicts in cartes(*subsols):
+            for soldicts in product(*subsols):
                 sols.append(dict(item for sd in soldicts
                     for item in sd.items()))
             # Return a list with one dict as just the dict
@@ -1827,7 +1832,6 @@ def _solve_system(exprs, symbols, **flags):
 
         else:
             if len(symbols) > len(polys):
-                from sympy.utilities.iterables import subsets
 
                 free = set().union(*[p.free_symbols for p in polys])
                 free = list(ordered(free.intersection(symbols)))
@@ -2020,15 +2024,13 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     Examples
     ========
 
-    >>> from sympy.core.power import Pow
-    >>> from sympy.polys.polytools import cancel
+    >>> from sympy import cancel, Pow
 
     ``f`` is independent of the symbols in *symbols* that are not in
     *exclude*:
 
-    >>> from sympy.solvers.solvers import solve_linear
+    >>> from sympy import cos, sin, solve_linear
     >>> from sympy.abc import x, y, z
-    >>> from sympy import cos, sin
     >>> eq = y*cos(x)**2 + y*sin(x)**2 - y  # = y*(1 - 1) = 0
     >>> solve_linear(eq)
     (0, 1)
@@ -2101,7 +2103,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     solution.)
 
     """
-    if isinstance(lhs, Equality):
+    if isinstance(lhs, Eq):
         if rhs:
             raise ValueError(filldedent('''
             If lhs is an Equality, rhs must be 0 but was %s''' % rhs))
@@ -2231,8 +2233,6 @@ def minsolve_linear_system(system, *symbols, **flags):
         # variables, we will find an optimal solution.
         # We speed up slightly by starting at one less than the number of
         # variables the quick method manages.
-        from itertools import combinations
-        from sympy.utilities.misc import debug
         N = len(symbols)
         bestsol = minsolve_linear_system(system, *symbols, quick=True)
         n0 = len([x for x in bestsol.values() if x != 0])
@@ -2336,9 +2336,8 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     Examples
     ========
 
-    >>> from sympy import Eq
+    >>> from sympy import Eq, solve_undetermined_coeffs
     >>> from sympy.abc import a, b, c, x
-    >>> from sympy.solvers import solve_undetermined_coeffs
 
     >>> solve_undetermined_coeffs(Eq(2*a*x + a+b, x), [a, b], x)
     {a: 1/2, b: -1/2}
@@ -2347,7 +2346,7 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
     {a: 1/c, b: -1/c}
 
     """
-    if isinstance(equ, Equality):
+    if isinstance(equ, Eq):
         # got equation, so move all the
         # terms to the left hand side
         equ = equ.lhs - equ.rhs
@@ -2378,9 +2377,8 @@ def solve_linear_system_LU(matrix, syms):
     Examples
     ========
 
-    >>> from sympy import Matrix
+    >>> from sympy import Matrix, solve_linear_system_LU
     >>> from sympy.abc import x, y, z
-    >>> from sympy.solvers.solvers import solve_linear_system_LU
 
     >>> solve_linear_system_LU(Matrix([
     ... [1, 2, 0, 1],
@@ -2487,7 +2485,6 @@ def inv_quick(M):
     there are lots of zeros or the size of the matrix
     is small.
     """
-    from sympy.matrices import zeros
     if not all(i.is_Number for i in M):
         if not any(i.is_Number for i in M):
             det = lambda _: det_perm(_)
@@ -2673,7 +2670,7 @@ def _tsolve(eq, sym, **flags):
             if lhs.func in multi_inverses:
                 # sin(x) = 1/3 -> x - asin(1/3) & x - (pi - asin(1/3))
                 soln = []
-                for i in multi_inverses[lhs.func](rhs):
+                for i in multi_inverses[type(lhs)](rhs):
                     soln.extend(_solve(lhs.args[0] - i, sym, **flags))
                 return list(ordered(soln))
             elif lhs.func == LambertW:
@@ -2693,7 +2690,7 @@ def _tsolve(eq, sym, **flags):
         g = _filtered_gens(eq.as_poly(), sym)
         up_or_log = set()
         for gi in g:
-            if isinstance(gi, exp) or (gi.is_Pow and gi.base == S.Exp1) or isinstance(gi, log):
+            if isinstance(gi, (exp, log)) or (gi.is_Pow and gi.base == S.Exp1):
                 up_or_log.add(gi)
             elif gi.is_Pow:
                 gisimp = powdenest(expand_power_exp(gi))
@@ -2882,11 +2879,8 @@ def nsolve(*args, dict=False, **kwargs):
             "solver".'''))
 
     if 'prec' in kwargs:
-        prec = kwargs.pop('prec')
         import mpmath
-        mpmath.mp.dps = prec
-    else:
-        prec = None
+        mpmath.mp.dps = kwargs.pop('prec')
 
     # keyword argument to return result as a dictionary
     as_dict = dict
@@ -2917,14 +2911,14 @@ def nsolve(*args, dict=False, **kwargs):
     if iterable(f):
         f = list(f)
         for i, fi in enumerate(f):
-            if isinstance(fi, Equality):
+            if isinstance(fi, Eq):
                 f[i] = fi.lhs - fi.rhs
         f = Matrix(f).T
     if iterable(x0):
         x0 = list(x0)
     if not isinstance(f, Matrix):
-        # assume it's a sympy expression
-        if isinstance(f, Equality):
+        # assume it's a SymPy expression
+        if isinstance(f, Eq):
             f = f.lhs - f.rhs
         syms = f.free_symbols
         if fargs is None:
@@ -3222,7 +3216,6 @@ def unrad(eq, *syms, **flags):
     (_p**3 + _p**2 - 2, [_p, _p**6 - x])
 
     """
-    from sympy import Equality as Eq
 
     uflags = dict(check=False, simplify=False)
 
@@ -3525,5 +3518,7 @@ def unrad(eq, *syms, **flags):
     eq, cov = _canonical(eq, cov)
     return eq, cov
 
+
+# Delayed imports
 from sympy.solvers.bivariate import (
     bivariate_type, _solve_lambert, _filtered_gens)

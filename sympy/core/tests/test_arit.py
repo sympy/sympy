@@ -1,15 +1,31 @@
-from sympy import (Basic, Symbol, sin, cos, atan, exp, sqrt, Rational,
-        Float, re, pi, sympify, Add, Mul, Pow, Mod, I, log, S, Max, symbols,
-        oo, zoo, Integer, sign, im, nan, Dummy, factorial, comp, floor, Poly,
-        FiniteSet
-)
+from sympy.core.add import Add
+from sympy.core.basic import Basic
+from sympy.core.mod import Mod
+from sympy.core.mul import Mul
+from sympy.core.numbers import (Float, I, Integer, Rational, comp, nan,
+    oo, pi, zoo)
+from sympy.core.power import Pow
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, symbols)
+from sympy.core.sympify import sympify
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.complexes import (im, re, sign)
+from sympy.functions.elementary.exponential import (exp, log)
+from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.miscellaneous import (Max, sqrt)
+from sympy.functions.elementary.trigonometric import (atan, cos, sin)
+from sympy.polys.polytools import Poly
+from sympy.sets.sets import FiniteSet
+
 from sympy.core.parameters import distribute
 from sympy.core.expr import unchanged
-from sympy.utilities.iterables import cartes
-from sympy.testing.pytest import XFAIL, raises, warns_deprecated_sympy
-from sympy.testing.randtest import verify_numerically
+from sympy.utilities.iterables import permutations
+from sympy.testing.pytest import XFAIL, raises, warns
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.core.random import verify_numerically
 from sympy.functions.elementary.trigonometric import asin
 
+from itertools import product
 
 a, c, x, y, z = symbols('a,c,x,y,z')
 b = Symbol("b", positive=True)
@@ -374,6 +390,7 @@ def test_Mul_doesnt_expand_exp():
     assert sqrt(2)*2**Rational(1, 4)*5**Rational(3, 4) == 10**Rational(3, 4)
     assert (x**(-log(5)/log(3))*x)/(x*x**( - log(5)/log(3))) == sympify(1)
 
+
 def test_Mul_is_integer():
     k = Symbol('k', integer=True)
     n = Symbol('n', integer=True)
@@ -412,6 +429,7 @@ def test_Mul_is_integer():
     assert (xq*yq).is_integer is None
     e_20161 = Mul(-1,Mul(1,Pow(2,-1,evaluate=False),evaluate=False),evaluate=False)
     assert e_20161.is_integer is not True # expand(e_20161) -> -1/2, but no need to see that in the assumption without evaluation
+
 
 def test_Add_Mul_is_integer():
     x = Symbol('x')
@@ -922,6 +940,7 @@ def test_Add_is_negative_positive():
     z = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
     assert z.is_zero
 
+
 def test_Add_is_nonpositive_nonnegative():
     x = Symbol('x', real=True)
 
@@ -1056,6 +1075,7 @@ def test_Pow_is_integer():
     x = Symbol('x', positive=True)
     assert (1/(x + 1)).is_integer is False
     assert (1/(-x - 1)).is_integer is False
+    assert (-1/(x + 1)).is_integer is False
 
     # issue 8648-like
     k = Symbol('k', even=True)
@@ -1072,7 +1092,7 @@ def test_Pow_is_integer():
 
 def test_Pow_is_real():
     x = Symbol('x', real=True)
-    y = Symbol('y', real=True, positive=True)
+    y = Symbol('y', positive=True)
 
     assert (x**2).is_real is True
     assert (x**3).is_real is True
@@ -1133,6 +1153,7 @@ def test_Pow_is_real():
     with evaluate(False):
         assert f.is_imaginary is False
 
+
 def test_real_Pow():
     k = Symbol('k', integer=True, nonzero=True)
     assert (k**(I*pi/log(k))).is_real
@@ -1180,6 +1201,7 @@ def test_Pow_is_finite():
     assert (1/S.Pi).is_finite is True
 
     assert (1/(i-1)).is_finite is None
+
 
 def test_Pow_is_even_odd():
     x = Symbol('x')
@@ -1650,7 +1672,8 @@ def test_Add_Mul_Expr_args():
     nonexpr = [Basic(), Poly(x, x), FiniteSet(x)]
     for typ in [Add, Mul]:
         for obj in nonexpr:
-            with warns_deprecated_sympy():
+            # The cache can mess with the stacklevel check
+            with warns(SymPyDeprecationWarning, test_stacklevel=False):
                 typ(obj, 1)
 
 
@@ -1789,7 +1812,7 @@ def test_Mod():
     assert Mod(1, nan) is nan
     assert Mod(nan, nan) is nan
 
-    Mod(0, x) == 0
+    assert Mod(0, x) == 0
     with raises(ZeroDivisionError):
         Mod(x, 0)
 
@@ -1897,13 +1920,13 @@ def test_Mod():
     assert (factorial(n + 4) % (n + 5)).func is Mod
 
     # Wilson's theorem
-    factorial(18042, evaluate=False) % 18043 == 18042
+    assert factorial(18042, evaluate=False) % 18043 == 18042
     p = Symbol('n', prime=True)
-    factorial(p - 1) % p == p - 1
-    factorial(p - 1) % -p == -1
-    (factorial(3, evaluate=False) % 4).doit() == 2
+    assert factorial(p - 1) % p == p - 1
+    assert factorial(p - 1) % -p == -1
+    assert (factorial(3, evaluate=False) % 4).doit() == 2
     n = Symbol('n', composite=True, odd=True)
-    factorial(n - 1) % n == 0
+    assert factorial(n - 1) % n == 0
 
     # symbolic with known parity
     n = Symbol('n', even=True)
@@ -1915,7 +1938,7 @@ def test_Mod():
     assert (x**6000%400).args[1] == 400
 
     #issue 13543
-    assert Mod(Mod(x + 1, 2) + 1 , 2) == Mod(x,2)
+    assert Mod(Mod(x + 1, 2) + 1, 2) == Mod(x, 2)
 
     assert Mod(Mod(x + 2, 4)*(x + 4), 4) == Mod(x*(x + 2), 4)
     assert Mod(Mod(x + 2, 4)*4, 4) == 0
@@ -1931,11 +1954,11 @@ def test_Mod():
     assert ((x - Mod(x, y))/y).rewrite(floor) == floor(x/y)
 
     # issue 21373
-    from sympy.functions.elementary.trigonometric import sinh
+    from sympy.functions.elementary.hyperbolic import sinh
     from sympy.functions.elementary.piecewise import Piecewise
 
     x_r, y_r = symbols('x_r y_r', real=True)
-    (Piecewise((x_r, y_r > x_r), (y_r, True)) / z) % 1
+    assert (Piecewise((x_r, y_r > x_r), (y_r, True)) / z) % 1
     expr = exp(sinh(Piecewise((x_r, y_r > x_r), (y_r, True)) / z))
     expr.subs({1: 1.0})
     sinh(Piecewise((x_r, y_r > x_r), (y_r, True)) * z ** -1.0).is_zero
@@ -2033,7 +2056,7 @@ def test_issue_6001():
 
 
 def test_polar():
-    from sympy import polar_lift
+    from sympy.functions.elementary.complexes import polar_lift
     p = Symbol('p', polar=True)
     x = Symbol('x')
     assert p.is_polar
@@ -2234,7 +2257,7 @@ def test_mul_zero_detection():
                     assert e.is_zero is False
 
 
-    for iz, ib in cartes(*[[True, False, None]]*2):
+    for iz, ib in product(*[[True, False, None]]*2):
         z = Dummy('z', nonzero=iz)
         b = Dummy('f', finite=ib)
         e = Mul(z, b, evaluate=False)
@@ -2251,7 +2274,7 @@ def test_mul_zero_detection():
         else:
             assert e.is_extended_real is True
 
-    for iz, ib in cartes(*[[True, False, None]]*2):
+    for iz, ib in product(*[[True, False, None]]*2):
         z = Dummy('z', nonzero=iz, extended_real=True)
         b = Dummy('b', finite=ib, extended_real=True)
         e = Mul(z, b, evaluate=False)
@@ -2260,6 +2283,7 @@ def test_mul_zero_detection():
         b = Dummy('b', finite=ib, extended_real=True)
         e = Mul(b, z, evaluate=False)
         test(z, b, e)
+
 
 def test_Mul_with_zero_infinite():
     zer = Dummy(zero=True)
@@ -2272,6 +2296,7 @@ def test_Mul_with_zero_infinite():
     e = Mul(inf, zer, evaluate=False)
     assert e.is_extended_positive is None
     assert e.is_hermitian is None
+
 
 def test_Mul_does_not_cancel_infinities():
     a, b = symbols('a b')
@@ -2293,7 +2318,7 @@ def test_Mul_does_not_distribute_infinity():
 
 
 def test_issue_8247_8354():
-    from sympy import tan
+    from sympy.functions.elementary.trigonometric import tan
     z = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
     assert z.is_positive is False  # it's 0
     z = S('''-2**(1/3)*(3*sqrt(93) + 29)**2 - 4*(3*sqrt(93) + 29)**(4/3) +
@@ -2357,8 +2382,7 @@ def test_issue_21034():
 
 
 def test_issue_22021():
-    from sympy.calculus.util import AccumBounds
-    from sympy.utilities.iterables import permutations
+    from sympy.calculus.accumulationbounds import AccumBounds
     # these objects are special cases in Mul
     from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensor_heads
     L = TensorIndexType("L")
@@ -2375,3 +2399,29 @@ def test_issue_22021():
         e = Add(*args, evaluate=False)
         assert -e == -1*e
     assert 2*Add(1, x, x, evaluate=False) == 4*x + 2
+
+
+def test_issue_22244():
+    assert -(zoo*x) == zoo*x
+
+
+def test_issue_22453():
+    from sympy.utilities.iterables import cartes
+    e = Symbol('e', extended_positive=True)
+    for a, b in cartes(*[[oo, -oo, 3]]*2):
+        if a == b == 3:
+            continue
+        i = a + I*b
+        assert i**(1 + e) is S.ComplexInfinity
+        assert i**-e is S.Zero
+        assert unchanged(Pow, i, e)
+    assert 1/(oo + I*oo) is S.Zero
+    r, i = [Dummy(infinite=True, extended_real=True) for _ in range(2)]
+    assert 1/(r + I*i) is S.Zero
+    assert 1/(3 + I*i) is S.Zero
+    assert 1/(r + I*3) is S.Zero
+
+
+def test_issue_22613():
+    assert (0**(x - 2)).as_content_primitive() == (1, 0**(x - 2))
+    assert (0**(x + 2)).as_content_primitive() == (1, 0**(x + 2))

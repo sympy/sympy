@@ -1,15 +1,15 @@
 from operator import attrgetter
-from typing import Tuple, Type
+from typing import Tuple as tTuple, Type
 from collections import defaultdict
 
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
-from sympy.core.sympify import _sympify as _sympify_, sympify
-from sympy.core.basic import Basic
-from sympy.core.cache import cacheit
-from sympy.core.compatibility import ordered
-from sympy.core.logic import fuzzy_and
-from sympy.core.parameters import global_parameters
+from .sympify import _sympify as _sympify_, sympify
+from .basic import Basic
+from .cache import cacheit
+from .sorting import ordered
+from .logic import fuzzy_and
+from .parameters import global_parameters
 from sympy.utilities.iterables import sift
 from sympy.multipledispatch.dispatcher import (Dispatcher,
     ambiguity_register_error_ignore_dup,
@@ -27,6 +27,12 @@ class AssocOp(Basic):
     This is an abstract base class, concrete derived classes must define
     the attribute `identity`.
 
+    .. deprecated:: 1.7
+
+       Using arguments that aren't subclasses of :class:`~.Expr` in core
+       operators (:class:`~.Mul`, :class:`~.Add`, and :class:`~.Pow`) is
+       deprecated. See :ref:`non-expr-args-deprecated` for details.
+
     Parameters
     ==========
 
@@ -39,14 +45,12 @@ class AssocOp(Basic):
 
     # for performance reason, we don't let is_commutative go to assumptions,
     # and keep it right here
-    __slots__ = ('is_commutative',)  # type: Tuple[str, ...]
+    __slots__ = ('is_commutative',)  # type: tTuple[str, ...]
 
     _args_type = None  # type: Type[Basic]
 
     @cacheit
     def __new__(cls, *args, evaluate=None, _sympify=True):
-        from sympy import Order
-
         # Allow faster processing by passing ``_sympify=False``, if all arguments
         # are already sympified.
         if _sympify:
@@ -55,18 +59,27 @@ class AssocOp(Basic):
         # Disallow non-Expr args in Add/Mul
         typ = cls._args_type
         if typ is not None:
-            from sympy.core.relational import Relational
+            from .relational import Relational
             if any(isinstance(arg, Relational) for arg in args):
-                raise TypeError("Relational can not be used in %s" % cls.__name__)
+                raise TypeError("Relational cannot be used in %s" % cls.__name__)
 
             # This should raise TypeError once deprecation period is over:
-            if not all(isinstance(arg, typ) for arg in args):
-                SymPyDeprecationWarning(
-                    feature="Add/Mul with non-Expr args",
-                    useinstead="Expr args",
-                    issue=19445,
-                    deprecated_since_version="1.7"
-                ).warn()
+            for arg in args:
+                if not isinstance(arg, typ):
+                    sympy_deprecation_warning(
+                        f"""
+
+Using non-Expr arguments in {cls.__name__} is deprecated (in this case, one of
+the arguments has type {type(arg).__name__!r}).
+
+If you really did intend to use a multiplication or addition operation with
+this object, use the * or + operator instead.
+
+                        """,
+                        deprecated_since_version="1.7",
+                        active_deprecations_target="non-expr-args-deprecated",
+                        stacklevel=4,
+                    )
 
         if evaluate is None:
             evaluate = global_parameters.evaluate
@@ -88,6 +101,7 @@ class AssocOp(Basic):
         obj = cls._exec_constructor_postprocessors(obj)
 
         if order_symbols is not None:
+            from sympy.series.order import Order
             return Order(obj, *order_symbols)
         return obj
 
@@ -214,9 +228,9 @@ class AssocOp(Basic):
         equivalent.
 
         """
+        from .function import _coeff_isneg
         # make sure expr is Expr if pattern is Expr
-        from .expr import Add, Expr
-        from sympy import Mul
+        from .expr import Expr
         if isinstance(self, Expr) and not isinstance(expr, Expr):
             return None
 
@@ -256,7 +270,10 @@ class AssocOp(Basic):
                 return None
             newexpr = self._combine_inverse(expr, exact)
             if not old and (expr.is_Add or expr.is_Mul):
-                if newexpr.count_ops() > expr.count_ops():
+                check = newexpr
+                if _coeff_isneg(check):
+                    check = -check
+                if check.count_ops() > expr.count_ops():
                     return None
             newpattern = self._new_rawargs(*wild_part)
             return newpattern.matches(newexpr, repl_dict)
@@ -287,6 +304,7 @@ class AssocOp(Basic):
                 if self.is_Mul:
                     # make e**i look like Mul
                     if expr.is_Pow and expr.exp.is_Integer:
+                        from .mul import Mul
                         if expr.exp > 0:
                             expr = Mul(*[expr.base, expr.base**(expr.exp - 1)], evaluate=False)
                         else:
@@ -298,6 +316,7 @@ class AssocOp(Basic):
                     # make i*e look like Add
                     c, e = expr.as_coeff_Mul()
                     if abs(c) > 1:
+                        from .add import Add
                         if c > 0:
                             expr = Add(*[e, (c - 1)*e], evaluate=False)
                         else:
@@ -324,7 +343,11 @@ class AssocOp(Basic):
         return
 
     def _has_matcher(self):
-        """Helper for .has()"""
+        """Helper for .has() that checks for containment of
+        subexpressions within an expr by using sets of args
+        of similar nodes, e.g. x + 1 in x + y + 1 checks
+        to see that {x, 1} & {x, y, 1} == {x, 1}
+        """
         def _ncsplit(expr):
             # this is not the same as args_cnc because here
             # we don't assume expr is a Mul -- hence deal with args --
@@ -337,11 +360,9 @@ class AssocOp(Basic):
         cls = self.__class__
 
         def is_in(expr):
-            if expr == self:
-                return True
-            elif not isinstance(expr, Basic):
-                return False
-            elif isinstance(expr, cls):
+            if isinstance(expr, cls):
+                if expr == self:
+                    return True
                 _c, _nc = _ncsplit(expr)
                 if (c & _c) == c:
                     if not nc:

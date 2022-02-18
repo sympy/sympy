@@ -1,9 +1,12 @@
 from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros, acos,
     ImmutableMatrix as Matrix, _simplify_matrix)
-from sympy import trigsimp
+from sympy.simplify.trigsimp import trigsimp
 from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
-from sympy.core.evalf import EvalfMixin, prec_to_dps
+from sympy.core.evalf import EvalfMixin
+
+from mpmath.libmp.libmpf import prec_to_dps
+
 
 __all__ = ['Vector']
 
@@ -424,7 +427,7 @@ class Vector(Printable, EvalfMixin):
         def _det(mat):
             """This is needed as a little method for to find the determinant
             of a list in python; needs to work for a 3x3 list.
-            SymPy's Matrix won't take in Vector, so need a custom function.
+            SymPy's Matrix will not take in Vector, so need a custom function.
             You shouldn't be calling this.
 
             """
@@ -519,6 +522,8 @@ class Vector(Printable, EvalfMixin):
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Axis', [q1, N.y])
         >>> A.x.diff(t, N)
+        - sin(q1)*q1'*N.x - cos(q1)*q1'*N.z
+        >>> A.x.diff(t, N).express(A)
         - q1'*A.z
         >>> B = ReferenceFrame('B')
         >>> u1, u2 = dynamicsymbols('u1, u2')
@@ -550,7 +555,7 @@ class Vector(Printable, EvalfMixin):
                 else:  # else express in the frame
                     reexp_vec_comp = Vector([vector_component]).express(frame)
                     deriv = reexp_vec_comp.args[0][0].diff(var)
-                    inlist += Vector([(deriv, frame)]).express(component_frame).args
+                    inlist += Vector([(deriv, frame)]).args
 
         return Vector(inlist)
 
@@ -764,8 +769,9 @@ class Vector(Printable, EvalfMixin):
         if not self.args:
             return self
         new_args = []
+        dps = prec_to_dps(prec)
         for mat, frame in self.args:
-            new_args.append([mat.evalf(n=prec_to_dps(prec)), frame])
+            new_args.append([mat.evalf(n=dps), frame])
         return Vector(new_args)
 
     def xreplace(self, rule):

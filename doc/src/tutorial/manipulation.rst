@@ -546,7 +546,7 @@ expression. Combine both of the methods to prevent both inside and outside
 evaluations:
 
     >>> UnevaluatedExpr(sympify("x + x", evaluate=False)) + y
-    y + x + x
+    y + (x + x)
 
 ``UnevalutedExpr`` is supported by SymPy printers and can be used to print the
 result in different output forms. For example
@@ -554,7 +554,7 @@ result in different output forms. For example
     >>> from sympy import latex
     >>> uexpr = UnevaluatedExpr(S.One*5/7)*UnevaluatedExpr(S.One*3/4)
     >>> print(latex(uexpr))
-    \frac{5}{7} \frac{3}{4}
+    \frac{5}{7} \cdot \frac{3}{4}
 
 In order to release the expression and get the evaluated LaTeX form,
 just use ``.doit()``:

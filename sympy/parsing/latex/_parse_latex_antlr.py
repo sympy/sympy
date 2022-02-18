@@ -62,7 +62,7 @@ def parse_latex(sympy):
     antlr4 = import_module('antlr4', warn_not_installed=True)
 
     if None in [antlr4, MathErrorListener]:
-        raise ImportError("LaTeX parsing requires the antlr4 python package,"
+        raise ImportError("LaTeX parsing requires the antlr4 Python package,"
                           " provided by pip (antlr4-python2-runtime or"
                           " antlr4-python3-runtime) or"
                           " conda (antlr-python-runtime)")
@@ -189,8 +189,7 @@ def convert_postfix_list(arr, i=0):
                         sympy.Symbol)
                     # if the left and right sides contain no variables and the
                     # symbol in between is 'x', treat as multiplication.
-                    if len(left_syms) == 0 and len(right_syms) == 0 and str(
-                            res) == "x":
+                    if not (left_syms or right_syms) and str(res) == 'x':
                         return convert_postfix_list(arr, i + 1)
             # multiply by next
             return sympy.Mul(
