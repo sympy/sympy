@@ -4,7 +4,7 @@ from sympy.core.numbers import (AlgebraicNumber, I, pi, Rational)
 from sympy.core.singleton import S
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.external.pythonmpq import PythonMPQ as MPQ
+from sympy.external.gmpy import MPQ
 from sympy.polys.numberfields.subfield import (
     is_isomorphism_possible,
     field_isomorphism_pslq,
