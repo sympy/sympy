@@ -2242,7 +2242,7 @@ def minsolve_linear_system(system, *symbols, **flags):
             # NOTE sort by default_sort_key to get deterministic result
             k = max((k for k in s.values()),
                     key=lambda x: (len(x.free_symbols), default_sort_key(x)))
-            kfree = (k.free_symbols, key=default_sort_key)
+            kfree = k.free_symbols
             x = next(reversed(ordered(kfree)))
             if len(kfree) != 1:
                 determined[x] = S.Zero
