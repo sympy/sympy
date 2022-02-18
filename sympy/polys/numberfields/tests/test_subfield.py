@@ -273,7 +273,7 @@ def test_primitive_element():
     assert primitive_element([a, b, I], x) == (x**4 + 6*x**2 + 1, [1, 0, 0])
 
     assert primitive_element([sqrt(2), 0], x, ex=True) == (x**2 - 2, [1, 0], [[MPQ(1,1), MPQ(0,1)], []])
-    assert primitive_element([0], x) == (x, [1])
+
 
 def test_to_number_field():
     assert to_number_field(sqrt(2)) == AlgebraicNumber(sqrt(2))
