@@ -2242,14 +2242,12 @@ def minsolve_linear_system(system, *symbols, **flags):
             # NOTE sort by default_sort_key to get deterministic result
             k = max((k for k in s.values()),
                     key=lambda x: (len(x.free_symbols), default_sort_key(x)))
-            x = max(k.free_symbols, key=default_sort_key)
-            if len(k.free_symbols) != 1:
+            kfree = (k.free_symbols, key=default_sort_key)
+            x = next(reversed(ordered(kfree)))
+            if len(kfree) != 1:
                 determined[x] = S.Zero
             else:
-                val = solve(k)
-                if not val:
-                    raise NotImplementedError('assumptions may have prohibited finding a solution')
-                val = val[0]
+                val = _solve(k, x, check=False)[0]
                 if val == 0 and all(v.subs(x, val) == 0 for v in s.values()):
                     determined[x] = S.One
                 else:
