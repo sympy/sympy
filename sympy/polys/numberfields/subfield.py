@@ -340,6 +340,7 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
     """
     if not extension:
         raise ValueError("Cannot compute primitive element for empty extension")
+    extension = [sympify(ext) for ext in extension]
 
     if x is not None:
         x, cls = sympify(x), Poly
@@ -366,7 +367,6 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
     K = QQ.algebraic_field((f, gen))  # incrementally constructed field
     reps = [K.unit]  # representations of extension elements in K
     for ext in extension[1:]:
-        ext = sympify(ext)
         if ext.is_Rational:
             coeffs.append(0)    # rational ext is not included in the expression of a primitive element
             reps.append(K.convert(ext))    # but it is included in reps
