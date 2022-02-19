@@ -1383,6 +1383,8 @@ def _solve(f, *symbols, **flags):
                 result.append({xi: v})
             elif xi:  # there might be a non-linear solution if xi is not 0
                 nonlin_s.append(s)
+        if not nonlin_s:
+            return result
         for s in nonlin_s:
             try:
                 soln = _solve(f, s, **flags)
