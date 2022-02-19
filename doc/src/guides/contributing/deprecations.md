@@ -90,7 +90,7 @@ the rules.*
 - Function names.
 - Keyword argument names.
 - Keyword argument default values.
-- Positional argument names and order.
+- Positional argument order.
 - Submodule names.
 - The mathematical conventions used to define a function.
 ```
