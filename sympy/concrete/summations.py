@@ -10,6 +10,8 @@ from sympy.core.add import Add
 from sympy.core.containers import Tuple
 from sympy.core.function import Derivative, expand
 from sympy.core.mul import Mul
+from sympy.core.numbers import Infinity, Zero
+from sympy.core.power import Pow
 from sympy.core.numbers import Float
 from sympy.core.relational import Eq
 from sympy.core.singleton import S
@@ -683,6 +685,91 @@ class Sum(AddWithLimits, ExprWithIntLimits):
         Sum.is_convergent()
         """
         return Sum(abs(self.function), self.limits).is_convergent()
+
+    @staticmethod
+    def is_expr_convergent(expr):
+        """
+        Checks for convergence of an expression based on properties of convergence and divergence.
+
+        Explanation
+        ===========
+
+        This function returns True if the expression passed into it converges ,
+        False if the expression diverges and most importantly None in cases where nothing can be commented on.
+        """
+        if isinstance(expr, (Mul, Add, Pow, Zero, Infinity)):
+            args = expr.args
+            a, b, c, d = 0, 0, 0, 0
+            # variable 'a' stands for arguments(series) which are not absolutely convergent but are conditionally convergent by nature
+            # variable 'b' stands for arguments(series) which are absolutely convergent by nature
+            # variable 'c' stands for arguments(finite constants)
+            # variable 'd' stands for arguments(series) which are divergent by nature
+            if isinstance(expr, Add):
+                for i in range(len(args)):
+                    if isinstance(args[i], Sum):
+                        if(args[i].is_convergent() == False):
+                            d += 1
+                    elif isinstance(args[i], (int, float)):
+                         pass
+                    elif isinstance(args[i], Infinity):
+                        return False
+                    else:
+                        pass
+                if(d == len(args)):
+                    return None
+                elif(d == 0):
+                    return True
+                else:
+                    return False
+            if isinstance(expr ,(Mul, Zero, Infinity)):
+                if(args == () or expr.doit() == 0):
+                    return True
+                for i in range(len(args)):
+                    if isinstance(args[i], Sum):
+                        if(args[i].is_absolutely_convergent() == False and args[i].is_convergent() == True):
+                            a += 1
+                        elif(args[i].is_absolutely_convergent()):
+                            b += 1
+                        else:
+                            return False
+                    elif isinstance(args[i], (int,float)):
+                        c+=1
+                    elif isinstance(args[i], Infinity):
+                        return False
+                    else:
+                        pass
+                if(a >= 2):
+                    return None
+                elif((b + c) == len(args)-1 and a == 1):
+                    return True
+                elif((b + c) == len(args)):
+                    return True
+                else:
+                    return None
+            if isinstance(expr ,(Pow, Infinity)):
+                if(len(args) == 1):
+                    if(args.is_convergent()):
+                        return True
+                for i in range(len(args)):
+                    if isinstance(args[i],Sum):
+                        if(args[i].is_absolutely_convergent() == False and args[i].is_convergent() == True):
+                            a += 1
+                        elif(args[i].is_absolutely_convergent()):
+                            b += 1
+                        else:
+                            return False
+                    elif isinstance(args[i], Infinity):
+                        return False
+                    else:
+                        pass
+                if(a > 0):
+                    return None
+                elif(b > 0):
+                    return True
+                else:
+                    return None
+        else:
+            raise TypeError("Unsupported Expression Type")
 
     def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):
         """
