@@ -91,6 +91,10 @@ def test_errors():
     # slope in ramp_response_plot() is negative
     raises(ValueError, lambda: ramp_response_plot(tf1, slope=-0.1))
 
+    # incorrect frequency or phase unit
+    raises(ValueError, lambda: bode_plot(tf1,freq_unit = 'hz'))
+    raises(ValueError, lambda: bode_plot(tf1,phase_unit = 'degree'))
+
 
 def test_pole_zero():
     if not matplotlib:
