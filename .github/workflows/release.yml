@@ -77,3 +77,35 @@ jobs:
 
       - name: Run tests after install
         run: python -c 'import sympy; sympy.test()'
+
+  # ----------------- Test with optional dependencies -------------- #
+
+  test-install:
+    needs: [build]
+
+    runs-on: ubuntu-20.04
+
+    name: Optional dependencies test
+    steps:
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+          architecture: x64
+
+      - name: Retrieve release files
+        uses: actions/download-artifact@v2
+        with:
+          name: release_files
+
+      - name: List files
+        run: ls -R
+
+      - name: Install wheel
+        run: pip install sympy-${{ env.release_version }}-py3-none-any.whl
+
+      - name: Install optional dependencies
+        run: pip install gmpy2 numpy matplotlib Cython matchpy
+
+      - name: Run tests after install
+        run: python -c 'import sympy; sympy.test()'
