@@ -12,7 +12,7 @@ from sympy.physics.control.control_plots import \
     bode_phase_numerical_data, bode_plot)
 from sympy.physics.control.lti import (TransferFunction,
     Series, Parallel, TransferFunctionMatrix)
-from sympy.testing.pytest import raises, skip
+from sympy.testing.pytest import raises, skip, XFAIL
 
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
@@ -92,6 +92,7 @@ def test_errors():
     raises(ValueError, lambda: ramp_response_plot(tf1, slope=-0.1))
 
 
+@XFAIL
 def test_pole_zero():
     if not matplotlib:
         skip("Matplotlib not the default backend")
