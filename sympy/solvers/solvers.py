@@ -1383,8 +1383,6 @@ def _solve(f, *symbols, **flags):
                 result.append({xi: v})
             elif xi:  # there might be a non-linear solution if xi is not 0
                 nonlin_s.append(s)
-        if not nonlin_s:
-            return result
         for s in nonlin_s:
             try:
                 soln = _solve(f, s, **flags)
@@ -1400,14 +1398,18 @@ def _solve(f, *symbols, **flags):
             return result
         else:
             raise NotImplementedError(not_impl_msg % f)
+
+    # solve f for a single variable
+
     symbol = symbols[0]
 
-    #expand binomials only if it has the unknown symbol
+    # expand binomials only if it has the unknown symbol
     f = f.replace(lambda e: isinstance(e, binomial) and e.has(symbol),
         lambda e: expand_func(e))
 
-    # /!\ capture this flag then set it to False so that no checking in
-    # recursive calls will be done; only the final answer is checked
+    # checking will be done unless it is turned off before making a
+    # recursive call; the variables `checkdens` and `check` are
+    # captured here (for reference below) in case flag value changes
     flags['check'] = checkdens = check = flags.pop('check', True)
 
     # build up solutions if f is a Mul
