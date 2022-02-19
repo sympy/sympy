@@ -76,7 +76,7 @@ jobs:
         run: pip install sympy-${{ env.release_version }}-py3-none-any.whl
 
       - name: Run tests after install
-        run: python -c 'import sympy; sympy.test()'
+        run: python -c 'import sympy; assert sympy.test()'
 
   # ----------------- Test with optional dependencies -------------- #
 
@@ -108,4 +108,4 @@ jobs:
         run: pip install gmpy2 numpy matplotlib Cython matchpy
 
       - name: Run tests after install
-        run: python -c 'import sympy; sympy.test()'
+        run: python -c 'import sympy; assert sympy.test()'
