@@ -1376,7 +1376,8 @@ def implemented_function(symfunc, implementation):
     ========
 
     >>> from sympy.abc import x
-    >>> from sympy.utilities.lambdify import lambdify, implemented_function
+    >>> from sympy.utilities.lambdify import implemented_function
+    >>> from sympy import lambdify
     >>> f = implemented_function('f', lambda x: x+1)
     >>> lam_f = lambdify(x, f(x))
     >>> lam_f(4)
