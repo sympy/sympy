@@ -2337,6 +2337,14 @@ class TensExpr(Expr, metaclass=_TensorMetaclass):
         from .array import Array
 
         indices = indices or []
+        remap = {k.args[0] if k.is_up else -k.args[0]: k for k in self.get_free_indices()}
+        for i, index in enumerate(indices):
+            if isinstance(index, (Symbol, Mul)):
+                if index in remap:
+                    indices[i] = remap[index]
+                else:
+                    indices[i] = -remap[-index]
+
         replacement_dict = {tensor: Array(array) for tensor, array in replacement_dict.items()}
 
         # Check dimensions of replaced arrays:
