@@ -80,7 +80,7 @@ jobs:
 
   # ----------------- Test with optional dependencies -------------- #
 
-  test-install:
+  optional-dependencies:
     needs: [build]
 
     runs-on: ubuntu-20.04
