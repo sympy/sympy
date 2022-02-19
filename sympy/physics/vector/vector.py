@@ -769,7 +769,7 @@ class Vector(Printable, EvalfMixin):
         See Also
         ========
 
-        - :meth:`~sympy.core.basic.Basic.free_symbols`
+        - :attr:`~.Basic.free_symbols`
 
         """
 
@@ -794,7 +794,7 @@ class Vector(Printable, EvalfMixin):
         See Also
         ========
 
-        - :func:`~sympy.physics.mechanics.functions.find_dynamicsymbols`
+        - :func:`sympy.physics.mechanics.functions.find_dynamicsymbols`
 
         """
         # TODO : Circular dependency if imported at top. Should move
