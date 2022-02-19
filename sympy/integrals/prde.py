@@ -185,7 +185,7 @@ def prde_linear_constraints(a, b, G, DE):
     (c1, ..., cm) is a solution of Mx == 0, and p and the ci satisfy
     a*Dp + b*p == Sum(ci*qi, (i, 1, m)).
 
-    Because M has entries in k(t), and because Matrix doesn't play well with
+    Because M has entries in k(t), and because Matrix does not play well with
     Poly, M will be a Matrix of Basic expressions.
     """
     m = len(G)

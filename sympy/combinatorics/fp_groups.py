@@ -103,7 +103,7 @@ class FpGroup(DefaultPrinting):
         Compare `word1` and `word2` for equality in the group
         using the group's rewriting system. If the system is
         confluent, the returned answer is necessarily correct.
-        (If it isn't, `False` could be returned in some cases
+        (If it is not, `False` could be returned in some cases
         where in fact `word1 == word2`)
 
         '''

@@ -29,7 +29,7 @@ class Vector(Printable, EvalfMixin):
     is_number = False
 
     def __init__(self, inlist):
-        """This is the constructor for the Vector class.  You shouldn't be
+        """This is the constructor for the Vector class.  You should not be
         calling this, it should only be used by other functions. You should be
         treating Vectors like you would with if you were doing the math by
         hand, and getting the first 3 from the standard basis vectors from a
@@ -429,7 +429,7 @@ class Vector(Printable, EvalfMixin):
             """This is needed as a little method for to find the determinant
             of a list in python; needs to work for a 3x3 list.
             SymPy's Matrix will not take in Vector, so need a custom function.
-            You shouldn't be calling this.
+            You should not be calling this.
 
             """
 

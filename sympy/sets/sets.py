@@ -303,7 +303,7 @@ class Set(Basic, EvalfMixin):
     def contains(self, other):
         """
         Returns a SymPy value indicating whether ``other`` is contained
-        in ``self``: ``true`` if it is, ``false`` if it isn't, else
+        in ``self``: ``true`` if it is, ``false`` if it is not, else
         an unevaluated ``Contains`` expression (or, as in the case of
         ConditionSet and a union of FiniteSet/Intervals, an expression
         indicating the conditions for containment).

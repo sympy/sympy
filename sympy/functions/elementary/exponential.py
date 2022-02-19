@@ -152,7 +152,7 @@ class exp_polar(ExpBase):
 
     >>> from sympy import exp_polar, pi, I, exp
 
-    The main difference is that polar numbers don't "wrap around" at `2 \pi`:
+    The main difference is that polar numbers do not "wrap around" at `2 \pi`:
 
     >>> exp(2*pi*I)
     1
