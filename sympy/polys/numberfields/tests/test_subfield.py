@@ -272,7 +272,10 @@ def test_primitive_element():
     a, b = I*sqrt(2*sqrt(2) + 3), I*sqrt(-2*sqrt(2) + 3)
     assert primitive_element([a, b, I], x) == (x**4 + 6*x**2 + 1, [1, 0, 0])
 
+    assert primitive_element([sqrt(2), 0], x) == (x**2 - 2, [1, 0])
+    assert primitive_element([0, sqrt(2)], x) == (x**2 - 2, [1, 1])
     assert primitive_element([sqrt(2), 0], x, ex=True) == (x**2 - 2, [1, 0], [[MPQ(1,1), MPQ(0,1)], []])
+    assert primitive_element([0, sqrt(2)], x, ex=True) == (x**2 - 2, [1, 1], [[], [MPQ(1,1), MPQ(0,1)]])
 
 
 def test_to_number_field():

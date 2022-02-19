@@ -36,7 +36,7 @@ from sympy.core.add import Add
 from sympy.core.numbers import AlgebraicNumber
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, _sympify
 from sympy.ntheory import sieve
 from sympy.polys.densetools import dup_eval
 from sympy.polys.domains import QQ
@@ -340,7 +340,7 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
     """
     if not extension:
         raise ValueError("Cannot compute primitive element for empty extension")
-    extension = [sympify(ext) for ext in extension]
+    extension = [_sympify(ext) for ext in extension]
 
     if x is not None:
         x, cls = sympify(x), Poly
@@ -351,6 +351,9 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
         gen, coeffs = extension[0], [1]
         g = minimal_polynomial(gen, x, polys=True)
         for ext in extension[1:]:
+            if ext.is_Rational:
+                coeffs.append(0)
+                continue
             _, factors = factor_list(g, extension=ext)
             g = _choose_factor(factors, x, gen)
             s, _, g = g.sqf_norm()
