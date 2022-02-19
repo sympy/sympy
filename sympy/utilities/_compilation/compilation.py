@@ -291,7 +291,7 @@ def simple_cythonize(src, destdir=None, cwd=None, **cy_kwargs):
         cy_result = cy_compile([src], cy_options)
         if cy_result.num_errors > 0:
             raise ValueError("Cython compilation failed.")
-        if os.path.abspath(os.path.dirname(src)) != os.path.abspath(destdir):
+        if os.path.realpath(os.path.dirname(src)) != os.path.realpath(destdir):
             if os.path.exists(dstfile):
                 os.unlink(dstfile)
             shutil.move(os.path.join(os.path.dirname(src), c_name), destdir)
