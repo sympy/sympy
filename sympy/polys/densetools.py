@@ -273,6 +273,9 @@ def dup_eval(f, a, K):
     11
 
     """
+    if not a:
+        return K.convert(dup_TC(f, K))
+
     result = K.zero
 
     for c in f:
