@@ -60,7 +60,7 @@ class RayTransferMatrix(MutableDenseMatrix):
     """
     Base class for a Ray Transfer Matrix.
 
-    It should be used if there isn't already a more specific subclass mentioned
+    It should be used if there is not already a more specific subclass mentioned
     in See Also.
 
     Parameters

@@ -346,7 +346,7 @@ def _minpoly_pow(ex, pw, x, dom, mp=None):
     if not mp:
         mp = _minpoly_compose(ex, x, dom)
     if not pw.is_rational:
-        raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
+        raise NotAlgebraic("%s does not seem to be an algebraic element" % ex)
     if pw < 0:
         if mp == x:
             raise ZeroDivisionError('%s is zero' % ex)
@@ -424,7 +424,7 @@ def _minpoly_sin(ex, x):
             res = _minpoly_compose(expr, x, QQ)
             return res
 
-    raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
+    raise NotAlgebraic("%s does not seem to be an algebraic element" % ex)
 
 
 def _minpoly_cos(ex, x):
@@ -455,7 +455,7 @@ def _minpoly_cos(ex, x):
             res = _choose_factor(factors, x, ex)
             return res
 
-    raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
+    raise NotAlgebraic("%s does not seem to be an algebraic element" % ex)
 
 
 def _minpoly_tan(ex, x):
@@ -479,7 +479,7 @@ def _minpoly_tan(ex, x):
             res = _choose_factor(factors, x, ex)
             return res
 
-    raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
+    raise NotAlgebraic("%s does not seem to be an algebraic element" % ex)
 
 
 def _minpoly_exp(ex, x):
@@ -514,8 +514,8 @@ def _minpoly_exp(ex, x):
             mp = _choose_factor(factors, x, ex)
             return mp
         else:
-            raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
-    raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
+            raise NotAlgebraic("%s does not seem to be an algebraic element" % ex)
+    raise NotAlgebraic("%s does not seem to be an algebraic element" % ex)
 
 
 def _minpoly_rootof(ex, x):
@@ -617,7 +617,7 @@ def _minpoly_compose(ex, x, dom):
     elif ex.__class__ is CRootOf:
         res = _minpoly_rootof(ex, x)
     else:
-        raise NotAlgebraic("%s doesn't seem to be an algebraic element" % ex)
+        raise NotAlgebraic("%s does not seem to be an algebraic element" % ex)
     return res
 
 
@@ -815,7 +815,7 @@ def _minpoly_groebner(ex, x, cls):
             else:
                 return symbols[ex]
 
-        raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
+        raise NotAlgebraic("%s does not seem to be an algebraic number" % ex)
 
     def simpler_inverse(ex):
         """

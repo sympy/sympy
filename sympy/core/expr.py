@@ -693,7 +693,7 @@ class Expr(Basic, EvalfMixin):
         return True
 
     def equals(self, other, failing_expression=False):
-        """Return True if self == other, False if it doesn't, or None. If
+        """Return True if self == other, False if it does not, or None. If
         failing_expression is True then the expression which did not simplify
         to a 0 will be returned instead of None.
 

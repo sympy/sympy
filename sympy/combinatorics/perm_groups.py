@@ -3799,7 +3799,7 @@ class PermutationGroup(Basic):
         in the orbit. Notice that the Schreier vector depends on the order
         in which the group generators are listed. For a definition, see [3].
         Since list indices start from zero, we adopt the convention to use
-        "None" instead of 0 to signify that an element doesn't belong
+        "None" instead of 0 to signify that an element does not belong
         to the orbit.
         For the algorithm and its correctness, see [2], pp.78-80.
 
@@ -3906,7 +3906,7 @@ class PermutationGroup(Basic):
         """
 
         if not all(g in self for g in gens):
-            raise ValueError("The group doesn't contain the supplied generators")
+            raise ValueError("The group does not contain the supplied generators")
 
         G = PermutationGroup(gens)
         return G

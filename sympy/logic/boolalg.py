@@ -299,7 +299,7 @@ class BooleanTrue(BooleanAtom, metaclass=Singleton):
     case.  Finally, for boolean flags, it's better to just use ``if x``
     instead of ``if x is True``. To quote PEP 8:
 
-    Don't compare boolean values to ``True`` or ``False``
+    Do not compare boolean values to ``True`` or ``False``
     using ``==``.
 
     * Yes:   ``if greeting:``

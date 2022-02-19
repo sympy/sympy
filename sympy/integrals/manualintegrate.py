@@ -144,7 +144,7 @@ def contains_dont_know(rule):
 def manual_diff(f, symbol):
     """Derivative of f in form expected by find_substitutions
 
-    SymPy's derivatives for some trig functions (like cot) aren't in a form
+    SymPy's derivatives for some trig functions (like cot) are not in a form
     that works well with finding substitutions; this replaces the
     derivatives for those particular forms with something that works better.
 

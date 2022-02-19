@@ -280,7 +280,7 @@ class RandomSymbol(Expr):
 
     An object of the RandomSymbol type should almost never be created by the
     user. They tend to be created instead by the PSpace class's value method.
-    Traditionally a user doesn't even do this but instead calls one of the
+    Traditionally a user does not even do this but instead calls one of the
     convenience functions Normal, Exponential, Coin, Die, FiniteRV, etc....
     """
 
@@ -1669,7 +1669,7 @@ def _value_check(condition, message):
     >>> _value_check(2 < 3, '')
     True
 
-    Here, the condition is not False, but it doesn't evaluate to True
+    Here, the condition is not False, but it does not evaluate to True
     so False is returned (but no error is raised). So checking if the
     return value is True or False will tell you if all conditions were
     evaluated.

@@ -642,7 +642,7 @@ def is_nthpow_residue(a, n, m):
 
 
 def _is_nthpow_residue_bign(a, n, m):
-    """Returns True if ``x**n == a (mod m)`` has solutions for n > 2."""
+    r"""Returns True if `x^n = a \pmod{n}` has solutions for `n > 2`."""
     # assert n > 2
     # assert a > 0 and m > 0
     if primitive_root(m) is None or igcd(a, m) != 1:
@@ -657,8 +657,8 @@ def _is_nthpow_residue_bign(a, n, m):
 
 
 def _is_nthpow_residue_bign_prime_power(a, n, p, k):
-    """Returns True/False if a solution for ``x**n == a (mod(p**k))``
-    does/doesn't exist."""
+    r"""Returns True/False if a solution for `x^n = a \pmod{p^k}`
+    does/does not exist."""
     # assert a > 0
     # assert n > 2
     # assert p is prime
