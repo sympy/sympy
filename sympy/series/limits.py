@@ -315,7 +315,7 @@ class Limit(Expr):
         else:
             if isinstance(coeff, AccumBounds) and ex == S.Zero:
                 return coeff
-            if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity):
+            if coeff.has(S.Infinity, S.NegativeInfinity, S.ComplexInfinity, S.NaN):
                 return self
             if not coeff.has(z):
                 if ex.is_positive:
