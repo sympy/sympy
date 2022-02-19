@@ -766,11 +766,6 @@ class Vector(Printable, EvalfMixin):
             set of symbols present in the measure numbers of
             ``reference_frame``.
 
-        See Also
-        ========
-
-        - :attr:`~.Basic.free_symbols`
-
         """
 
         return self.to_matrix(reference_frame).free_symbols
@@ -790,11 +785,6 @@ class Vector(Printable, EvalfMixin):
         set
             Set of functions of time ``t``, e.g.
             ``Function('f')(me.dynamicsymbols._t)``.
-
-        See Also
-        ========
-
-        - :func:`sympy.physics.mechanics.functions.find_dynamicsymbols`
 
         """
         # TODO : Circular dependency if imported at top. Should move
