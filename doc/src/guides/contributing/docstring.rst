@@ -673,16 +673,16 @@ of objects that have conventions here:
 1. Objects that are included in ``from sympy import *``, for example,
 ``sympy.acos``.
 
-For these, use ``:obj:`~.acos()```. The ``~`` makes it so that
-the text in the rendered HTML only shows ``acos``. Without it, it would use the
-fully qualified name ``sympy.functions.elementary.trigonometric.acos``. However,
-for names that are part of the global ``sympy`` namespace, we do not want to
-encourage accessing them from their specific submodule, as this is an
-implementation detail that could change. The ``.`` makes it so that the function
-name is found automatically. Sometimes, Sphinx will give a warning that there
-are multiple names found. If that happens, replace the ``.`` with the full name.
-For example, ``:obj:`~sympy.solvers.solvers.solve()```. For functions, methods,
-and classes, it is a convention to add () after the name to indicate such.
+For these, use ``:obj:`~.acos()```. The ``~`` makes it so that the text in the
+rendered HTML only shows ``acos``. Without it, it would use the fully qualified
+name ``sympy.functions.elementary.trigonometric.acos``. For names that are part
+of the global ``sympy`` namespace, we want to encourage accessing them from
+``sympy.*``, not the specific submodule. The ``.`` makes it so that the
+function name is found automatically. Sometimes, Sphinx will give a warning
+that there are multiple names found. If that happens, replace the ``.`` with
+the full name.  For example, ``:obj:`~sympy.solvers.solvers.solve()```. For
+functions, methods, and classes, it is a convention to add () after the name to
+indicate such.
 
 You may also use a more specific type indicator instead of ``obj`` (see
 https://www.sphinx-doc.org/en/master/usage/restructuredtext/domains.html#cross-referencing-python-objects).
