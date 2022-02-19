@@ -1,5 +1,5 @@
 from sympy.core.backend import (S, sympify, expand, sqrt, Add, zeros, acos,
-    ImmutableMatrix as Matrix, _simplify_matrix)
+                                ImmutableMatrix as Matrix, _simplify_matrix)
 from sympy.simplify.trigsimp import trigsimp
 from sympy.printing.defaults import Printable
 from sympy.utilities.misc import filldedent
@@ -751,20 +751,57 @@ class Vector(Printable, EvalfMixin):
         return angle
 
     def free_symbols(self, reference_frame):
-        """
-        Returns the free symbols in the measure numbers of the vector
+        """Returns the free symbols in the measure numbers of the vector
         expressed in the given reference frame.
 
-        Parameter
-        =========
-
+        Parameters
+        ==========
         reference_frame : ReferenceFrame
-            The frame with respect to which the free symbols of the
-            given vector is to be determined.
+            The frame with respect to which the free symbols of the given
+            vector is to be determined.
+
+        Returns
+        =======
+        set of Symbol
+            set of symbols present in the measure numbers of
+            ``reference_frame``.
+
+        See Also
+        ========
+
+        - :meth:`~sympy.core.basic.Basic.free_symbols`
 
         """
 
         return self.to_matrix(reference_frame).free_symbols
+
+    def free_dynamicsymbols(self, reference_frame):
+        """Returns the free dynamic symbols (functions of time ``t``) in the
+        measure numbers of the vector expressed in the given reference frame.
+
+        Parameters
+        ==========
+        reference_frame : ReferenceFrame
+            The frame with respect to which the free dynamic symbols of the
+            given vector is to be determined.
+
+        Returns
+        =======
+        set
+            Set of functions of time ``t``, e.g.
+            ``Function('f')(me.dynamicsymbols._t)``.
+
+        See Also
+        ========
+
+        - :func:`~sympy.physics.mechanics.functions.find_dynamicsymbols`
+
+        """
+        # TODO : Circular dependency if imported at top. Should move
+        # find_dynamicsymbols into physics.vector.functions.
+        from sympy.physics.mechanics.functions import find_dynamicsymbols
+
+        return find_dynamicsymbols(self, reference_frame=reference_frame)
 
     def _eval_evalf(self, prec):
         if not self.args:
