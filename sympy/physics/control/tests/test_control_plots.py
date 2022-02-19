@@ -95,7 +95,7 @@ def test_errors():
 def test_pole_zero():
     if not matplotlib:
         skip("Matplotlib not the default backend")
-    
+
     def pz_tester(sys, expected_value):
         z, p = pole_zero_numerical_data(sys)
         z_check = numpy.allclose(z, expected_value[0])
