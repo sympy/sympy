@@ -24,7 +24,7 @@ test_list = [
     'sympy/matrices/',
     'sympy/physics/quantum/',
     'sympy/utilities/tests/test_lambdify.py',
-    'sympy/physics/control/'
+    'sympy/physics/control/',
 
     # scipy
     '*scipy*',
