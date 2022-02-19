@@ -33,8 +33,8 @@ class PartialDerivative(TensExpr):
     [i, -j]
 
     Notice that the deriving variables have opposite valence than the
-    printed one: ``A(j)`` is printed as covariant, but the index is actually
-    contravariant in the derivative, i.e. ``-j``.
+    printed one: ``A(j)`` is printed as covariant, but the index of the
+    derivative is actually contravariant, i.e. ``-j``.
 
     Indices can be contracted:
 
@@ -43,6 +43,13 @@ class PartialDerivative(TensExpr):
     PartialDerivative(A(L_0), A(L_0))
     >>> expr.get_indices()
     [L_0, -L_0]
+
+    The method ``.get_indices()`` always returns all indices (even the
+    contracted ones). If only uncontracted indices are needed, call
+    ``.get_free_indices()``:
+
+    >>> expr.get_free_indices()
+    []
 
     Nested partial derivatives are flattened:
 
@@ -62,10 +69,14 @@ class PartialDerivative(TensExpr):
     >>> expr.replace_with_arrays({A(i): compA, B(i): compB})
     [[cos(x), 0], [y**3/x, 3*y**2*log(x)]]
 
-    The returned array is indexed by `(i, j)`.
+    The returned array is indexed by `(i, -j)`.
+
     Be careful that other SymPy modules put the indices of the deriving
     variables before the indices of the derivand in the derivative result.
     For example:
+
+    >>> expr.get_free_indices()
+    [i, -j]
 
     >>> from sympy import Matrix, Array
     >>> Matrix(compA).diff(Matrix(compB)).reshape(2, 2)
@@ -74,10 +85,11 @@ class PartialDerivative(TensExpr):
     [[cos(x), y**3/x], [0, 3*y**2*log(x)]]
 
     These are the transpose of the result of ``PartialDerivative``,
-    as the matrix and the array modules put the index `j` before `i` in the
-    derivative result. An array read with indices `(j, i)` is indeed the
-    transpose of the same array read with indices `(i, j)`. By specifying the
-    index order to ``.replace_with_arrays`` one can get a compatible expression
+    as the matrix and the array modules put the index `-j` before `i` in the
+    derivative result. An array read with index order `(-j, i)` is indeed the
+    transpose of the same array read with index order `(i, -j)`. By specifying
+    the index order to ``.replace_with_arrays`` one can get a compatible
+    expression:
 
     >>> expr.replace_with_arrays({A(i): compA, B(i): compB}, [-j, i])
     [[cos(x), y**3/x], [0, 3*y**2*log(x)]]
