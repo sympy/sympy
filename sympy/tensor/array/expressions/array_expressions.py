@@ -410,6 +410,16 @@ class PermuteDims(_CodegenArrayAbstract):
     >>> cg.shape
     (2, 3)
 
+    There are optional parameters that can be used as alternative to the permutation:
+
+    >>> from sympy.tensor.array.expressions import ArraySymbol, PermuteDims
+    >>> M = ArraySymbol("M", (1, 2, 3, 4, 5))
+    >>> expr = PermuteDims(M, index_order_old=["i", "j", "k", "l", "m"], index_order_new=["k", "i", "j", "m", "l"])
+    >>> expr
+    PermuteDims(M, (0 2 1)(3 4))
+    >>> expr.shape
+    (3, 1, 2, 5, 4)
+
     Permutations of tensor products are simplified in order to achieve a
     standard form:
 
@@ -446,12 +456,13 @@ class PermuteDims(_CodegenArrayAbstract):
     [1, 0, 3, 2]
     """
 
-    def __new__(cls, expr, permutation, **kwargs):
+    def __new__(cls, expr, permutation=None, index_order_old=None, index_order_new=None, **kwargs):
         from sympy.combinatorics import Permutation
         expr = _sympify(expr)
+        expr_rank = get_rank(expr)
+        permutation = cls._get_permutation_from_arguments(permutation, index_order_old, index_order_new, expr_rank)
         permutation = Permutation(permutation)
         permutation_size = permutation.size
-        expr_rank = get_rank(expr)
         if permutation_size != expr_rank:
             raise ValueError("Permutation size must be the length of the shape of expr")
 
@@ -691,7 +702,30 @@ class PermuteDims(_CodegenArrayAbstract):
         return None
 
     def as_explicit(self):
-        return permutedims(self.expr.as_explicit(), self.permutation)
+        expr = self.expr
+        if hasattr(expr, "as_explicit"):
+            expr = expr.as_explicit()
+        return permutedims(expr, self.permutation)
+
+    @classmethod
+    def _get_permutation_from_arguments(cls, permutation, index_order_old, index_order_new, dim):
+        if permutation is None:
+            if index_order_new is None or index_order_old is None:
+                raise ValueError("Permutation not defined")
+            return PermuteDims._get_permutation_from_index_orders(index_order_old, index_order_new, dim)
+        else:
+            return permutation
+
+    @classmethod
+    def _get_permutation_from_index_orders(cls, index_order_old, index_order_new, dim):
+        if len(set(index_order_new)) != dim:
+            raise ValueError("wrong number of indices in index_order_new")
+        if len(set(index_order_old)) != dim:
+            raise ValueError("wrong number of indices in index_order_old")
+        if len(set.symmetric_difference(set(index_order_new), set(index_order_old))) > 0:
+            raise ValueError("index_order_new and index_order_old must have the same indices")
+        permutation = [index_order_old.index(i) for i in index_order_new]
+        return permutation
 
 
 class ArrayDiagonal(_CodegenArrayAbstract):

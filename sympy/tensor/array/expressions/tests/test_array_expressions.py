@@ -736,6 +736,14 @@ def test_array_expr_construction_with_functions():
     expr = permutedims(PermuteDims(tp, [1, 0, 2, 3]), [0, 1, 3, 2])
     assert expr == PermuteDims(tp, [1, 0, 3, 2])
 
+    expr = PermuteDims(tp, index_order_new=["a", "b", "c", "d"], index_order_old=["d", "c", "b", "a"])
+    assert expr == PermuteDims(tp, [3, 2, 1, 0])
+
+    arr = Array(range(32)).reshape(2, 2, 2, 2, 2)
+    expr = PermuteDims(arr, index_order_new=["a", "b", "c", "d", "e"], index_order_old=['b', 'e', 'a', 'd', 'c'])
+    assert expr == PermuteDims(arr, [2, 0, 4, 3, 1])
+    assert expr.as_explicit() == permutedims(arr, index_order_new=["a", "b", "c", "d", "e"], index_order_old=['b', 'e', 'a', 'd', 'c'])
+
 
 def test_array_element_expressions():
     # Check commutative property:
