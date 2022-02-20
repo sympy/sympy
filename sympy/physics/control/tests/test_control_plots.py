@@ -12,7 +12,7 @@ from sympy.physics.control.control_plots import \
     bode_phase_numerical_data, bode_plot)
 from sympy.physics.control.lti import (TransferFunction,
     Series, Parallel, TransferFunctionMatrix)
-from sympy.testing.pytest import raises, skip
+from sympy.testing.pytest import raises, skip, XFAIL
 
 matplotlib = import_module(
         'matplotlib', import_kwargs={'fromlist': ['pyplot']},
@@ -92,6 +92,7 @@ def test_errors():
     raises(ValueError, lambda: ramp_response_plot(tf1, slope=-0.1))
 
 
+@XFAIL
 def test_pole_zero():
     if not matplotlib:
         skip("Matplotlib not the default backend")
@@ -153,6 +154,7 @@ def check_point_accuracy(a, b):
         a_i, b_i in zip(a, b))
 
 
+@XFAIL
 def test_impulse_response():
     if not matplotlib:
         skip("Matplotlib not the default backend")
@@ -204,6 +206,7 @@ def test_impulse_response():
     assert impulse_res_tester(ser1, exp7)
 
 
+@XFAIL
 def test_step_response():
     if not matplotlib:
         skip("Matplotlib not the default backend")
@@ -252,6 +255,7 @@ def test_step_response():
     assert step_res_tester(ser2, exp6)
 
 
+@XFAIL
 def test_ramp_response():
     if not matplotlib:
         skip("Matplotlib not the default backend")

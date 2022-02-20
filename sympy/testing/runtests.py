@@ -504,7 +504,7 @@ def _test(*paths,
         verbose=False, tb="short", kw=None, pdb=False, colors=True,
         force_colors=False, sort=True, seed=None, timeout=False,
         fail_on_timeout=False, slow=False, enhance_asserts=False, split=None,
-        time_balance=True, blacklist=('sympy/integrals/rubi/rubi_tests/tests',),
+        time_balance=True, blacklist=('sympy/integrals/rubi',),
         fast_threshold=None, slow_threshold=None):
     """
     Internal function that actually runs the tests.
