@@ -44,8 +44,12 @@ def test_PythonMPQ():
         assert check_Q(Q(Q(3, 5))) == (3, 5)
         assert check_Q(Q(0.5)) == (1, 2)
         assert check_Q(Q('0.5')) == (1, 2)
-        assert check_Q(Q(Decimal('0.6'))) == (3, 5)
         assert check_Q(Q(Fraction(3, 5))) == (3, 5)
+
+        if Q is PythonMPQ:
+            # This works in gmpy2 2.0.8 but not 2.1.0 or 2.1.1:
+            # https://github.com/aleaxit/gmpy/issues/327
+            assert check_Q(Q(Decimal('0.6'))) == (3, 5)
 
         # Invalid types
         raises(TypeError, lambda: Q([]))
