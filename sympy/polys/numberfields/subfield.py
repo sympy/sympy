@@ -387,7 +387,12 @@ def primitive_element(extension, x=None, *, ex=False, polys=False):
         ogen = K.unit - s*erep  # old gen as element of K
         reps = [dup_eval(_.rep, ogen, K) for _ in reps] + [erep]
 
-    H = [_.rep for _ in reps]
+    if K.ext.root.is_Rational:  # all extensions are rational
+        H = [K.convert(_).rep for _ in extension]
+        coeffs = [0]*len(extension)
+        f = cls(x, domain=QQ)
+    else:
+        H = [_.rep for _ in reps]
     if not polys:
         return f.as_expr(), coeffs, H
     else:
