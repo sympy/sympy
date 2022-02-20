@@ -3,6 +3,7 @@ from sympy.external import import_module
 from sympy.testing.pytest import skip
 
 from sympy.utilities._compilation.compilation import compile_link_import_strings
+from sympy.utilities._compilation.util import may_xfail
 
 numpy = import_module('numpy')
 cython = import_module('cython')
@@ -38,7 +39,7 @@ def sigmoid(double [:] inp, double lim=350.0):
 def npy(data, lim=350.0):
     return data/((data/lim)**8+1)**(1/8.)
 
-
+@may_xfail
 def test_compile_link_import_strings():
     if not numpy:
         skip("numpy not installed.")
