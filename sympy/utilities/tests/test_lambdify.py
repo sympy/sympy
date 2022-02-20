@@ -334,7 +334,10 @@ def test_trig():
 
 
 def test_integral():
-    if not scipy:
+    # XXX: This fails if numpy is installed but scipy isn't.  Since it works
+    # without numpy it should be able to work whe numpy is installed as well.
+    # https://github.com/sympy/sympy/issues/23133
+    if numpy and not scipy:
         skip("scipy not installed.")
 
     f = Lambda(x, exp(-x**2))
@@ -344,7 +347,10 @@ def test_integral():
 
 
 def test_double_integral():
-    if not scipy:
+    # XXX: This fails if numpy is installed but scipy isn't.  Since it works
+    # without numpy it should be able to work whe numpy is installed as well.
+    # https://github.com/sympy/sympy/issues/23133
+    if numpy and not scipy:
         skip("scipy not installed.")
 
     # example from http://mpmath.org/doc/current/calculus/integration.html
