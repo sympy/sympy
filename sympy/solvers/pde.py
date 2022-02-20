@@ -79,7 +79,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         ``f(x,y)`` is a function of two variables whose derivatives in that
             variable make up the partial differential equation. In many
             cases it is not necessary to provide this; it will be autodetected
-            (and an error raised if it couldn't be detected).
+            (and an error raised if it could not be detected).
 
         ``hint`` is the solving method that you want pdsolve to use.  Use
             classify_pde(eq, f(x,y)) to get all of the possible hints for
@@ -404,8 +404,8 @@ def checkpdesol(pde, sol, func=None, solve_for_func=True):
     solution satisfies the PDE:
 
         1. Directly substitute the solution in the PDE and check. If the
-           solution hasn't been solved for f, then it will solve for f
-           provided solve_for_func hasn't been set to False.
+           solution has not been solved for f, then it will solve for f
+           provided solve_for_func has not been set to False.
 
     If the solution satisfies the PDE, then a tuple (True, 0) is returned.
     Otherwise a tuple (False, expr) where expr is the value obtained

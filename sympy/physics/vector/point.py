@@ -89,7 +89,7 @@ class Point:
         Notes
         =====
 
-        It isn't clear if num = 1 or num = 2 actually works because the keys to
+        It is not clear if num = 1 or num = 2 actually works because the keys to
         ``_vel_dict`` and ``_acc_dict`` are :class:`ReferenceFrame` objects which
         do not have the ``_pdlist`` attribute.
 

@@ -1,4 +1,4 @@
-from typing import Tuple as tTuple
+from typing import Tuple as tTuple, TYPE_CHECKING
 from collections.abc import Iterable
 from functools import reduce
 
@@ -16,6 +16,8 @@ from sympy.utilities.iterables import has_variety, sift
 from mpmath.libmp import mpf_log, prec_to_dps
 from mpmath.libmp.libintmath import giant_steps
 
+if TYPE_CHECKING:
+    from .numbers import Number
 
 from collections import defaultdict
 
@@ -691,7 +693,7 @@ class Expr(Basic, EvalfMixin):
         return True
 
     def equals(self, other, failing_expression=False):
-        """Return True if self == other, False if it doesn't, or None. If
+        """Return True if self == other, False if it does not, or None. If
         failing_expression is True then the expression which did not simplify
         to a 0 will be returned instead of None.
 
@@ -1989,7 +1991,7 @@ class Expr(Basic, EvalfMixin):
         d.update({m: c})
         return d
 
-    def as_base_exp(self):
+    def as_base_exp(self) -> tTuple['Expr', 'Expr']:
         # a -> b ** e
         return self, S.One
 
@@ -3492,7 +3494,7 @@ class Expr(Basic, EvalfMixin):
         c = c.subs(d, log(x))
         return c, e
 
-    def as_coeff_Mul(self, rational=False):
+    def as_coeff_Mul(self, rational: bool = False) -> tTuple['Number', 'Expr']:
         """Efficiently extract the coefficient of a product. """
         return S.One, self
 

@@ -185,7 +185,7 @@ def lambdify(args: tUnion[Iterable, 'sympy.core.expr.Expr'], expr: 'sympy.core.e
     numeric evaluation.
 
     .. warning::
-       This function uses ``exec``, and thus shouldn't be used on
+       This function uses ``exec``, and thus should not be used on
        unsanitized input.
 
     .. deprecated:: 1.7
@@ -737,7 +737,7 @@ def lambdify(args: tUnion[Iterable, 'sympy.core.expr.Expr'], expr: 'sympy.core.e
     functions do not know how to operate on NumPy arrays. This is why lambdify
     exists: to provide a bridge between SymPy and NumPy.**
 
-    However, why is it that ``f`` did work? That's because ``f`` doesn't call
+    However, why is it that ``f`` did work? That's because ``f`` does not call
     any functions, it only adds 1. So the resulting function that is created,
     ``def _lambdifygenerated(x): return x + 1`` does not depend on the globals
     namespace it is defined in. Thus it works, but only by accident. A future

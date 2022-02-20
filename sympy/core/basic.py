@@ -763,7 +763,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         Never use self._args, always use self.args.
         Only use _args in __new__ when creating a new function.
-        Don't override .args() from Basic (so that it's easy to
+        Do not override .args() from Basic (so that it is easy to
         change the interface in the future if needed).
         """
         return self._args
@@ -996,7 +996,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         """Substitutes an expression old -> new.
 
         If self is not equal to old then _eval_subs is called.
-        If _eval_subs doesn't want to make any special replacement
+        If _eval_subs does not want to make any special replacement
         then a None is received which indicates that the fallback
         should be applied wherein a search for replacements is made
         amongst the arguments of self.
@@ -1013,7 +1013,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> (x + y + z).subs(x + y, 1)
         z + 1
 
-        Add's _eval_subs doesn't need to know how to find x + y in
+        Add's _eval_subs does not need to know how to find x + y in
         the following:
 
         >>> Add._eval_subs(z*(x + y) + 3, x + y, 1) is None
@@ -1155,7 +1155,7 @@ class Basic(Printable, metaclass=ManagedProperties):
         >>> (x + 2 + exp(x + 2)).xreplace({x + 2: y})
         x + exp(y) + 2
 
-        xreplace doesn't differentiate between free and bound symbols. In the
+        xreplace does not differentiate between free and bound symbols. In the
         following, subs(x, y) would not change x since it is a bound symbol,
         but xreplace does:
 
@@ -1321,7 +1321,7 @@ class Basic(Printable, metaclass=ManagedProperties):
 
         If ``map = True`` then also return the mapping {old: new} where ``old``
         was a sub-expression found with query and ``new`` is the replacement
-        value for it. If the expression itself doesn't match the query, then
+        value for it. If the expression itself does not match the query, then
         the returned value will be ``self.xreplace(map)`` otherwise it should
         be ``self.subs(ordered(map.items()))``.
 
@@ -2057,7 +2057,7 @@ def _ne(a, b):
 
 def _atomic(e, recursive=False):
     """Return atom-like quantities as far as substitution is
-    concerned: Derivatives, Functions and Symbols. Don't
+    concerned: Derivatives, Functions and Symbols. Do not
     return any 'atoms' that are inside such quantities unless
     they also appear outside, too, unless `recursive` is True.
 

@@ -683,7 +683,7 @@ def _getitem_RepMatrix(self, key):
     ... [1, 2 + I],
     ... [3, 4    ]])
 
-    If the key is a tuple that doesn't involve a slice then that element
+    If the key is a tuple that does not involve a slice then that element
     is returned:
 
     >>> m[1, 0]

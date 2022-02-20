@@ -12,7 +12,7 @@ from sympy.utilities.misc import filldedent
 
 
 class SolveFailed(Exception):
-    """Raised when solver's conditions weren't met. """
+    """Raised when solver's conditions were not met. """
 
 
 def solve_poly_system(seq, *gens, **args):
