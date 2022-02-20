@@ -1,5 +1,6 @@
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify
+from sympy.functions.elementary.miscellaneous import Min, Max
 from sympy.sets.sets import (EmptySet, FiniteSet, Intersection,
     Interval, ProductSet, Set, Union, UniversalSet)
 from sympy.sets.fancysets import (ComplexRegion, Naturals, Naturals0,
@@ -90,7 +91,6 @@ def _(a, b):
 @union_sets.register(Interval, Interval)
 def _(a, b):
     if a._is_comparable(b):
-        from sympy.functions.elementary.miscellaneous import Min, Max
         # Non-overlapping intervals
         end = Min(a.end, b.end)
         start = Max(a.start, b.start)

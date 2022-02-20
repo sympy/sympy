@@ -13,7 +13,7 @@ TODO:
 """
 
 from .pretty_symbology import hobj, vobj, xsym, xobj, pretty_use_unicode, line_width
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 class stringPict:
     """An ASCII picture.
@@ -377,18 +377,24 @@ class prettyForm(stringPict):
         stringPict.__init__(self, s, baseline)
         self.binding = binding
         if unicode is not None:
-            SymPyDeprecationWarning(
-                feature="``unicode`` argument to ``prettyForm``",
-                useinstead="the ``s`` argument",
-                deprecated_since_version="1.7").warn()
+            sympy_deprecation_warning(
+                """
+                The unicode argument to prettyForm is deprecated. Only the s
+                argument (the first positional argument) should be passed.
+                """,
+                deprecated_since_version="1.7",
+                active_deprecations_target="deprecated-pretty-printing-functions")
         self._unicode = unicode or s
 
     @property
     def unicode(self):
-        SymPyDeprecationWarning(
-            feature="``prettyForm.unicode`` attribute",
-            useinstead="``stringPrict.s`` attribute",
-            deprecated_since_version="1.7").warn()
+        sympy_deprecation_warning(
+            """
+            The prettyForm.unicode attribute is deprecated. Use the
+            prettyForm.s attribute instead.
+            """,
+            deprecated_since_version="1.7",
+            active_deprecations_target="deprecated-pretty-printing-functions")
         return self._unicode
 
     # Note: code to handle subtraction is in _print_Add

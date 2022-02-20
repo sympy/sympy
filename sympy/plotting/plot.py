@@ -17,7 +17,7 @@ directly to it. In the case of matplotlib (the common way to graph data in
 python) just copy ``_backend.fig`` which is the figure and ``_backend.ax``
 which is the axis and work on them as you would on any other matplotlib object.
 
-Simplicity of code takes much greater importance than performance. Don't use it
+Simplicity of code takes much greater importance than performance. Do not use it
 if you care at all about performance. A new backend instance is initialized
 every time you call ``show()`` and the old one is left to the garbage collector.
 """
@@ -33,7 +33,7 @@ from sympy.external import import_module
 from sympy.core.function import arity
 from sympy.utilities.iterables import is_sequence
 from .experimental_lambdify import (vectorized_lambdify, lambdify)
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 # N.B.
 # When changing the minimum module version for matplotlib, please change
@@ -605,11 +605,15 @@ class Line2DBaseSeries(BaseSeries):
         return points
 
     def get_segments(self):
-        SymPyDeprecationWarning(
-                feature="get_segments",
-                issue=21329,
-                deprecated_since_version="1.9",
-                useinstead="MatplotlibBackend.get_segments").warn()
+        sympy_deprecation_warning(
+            """
+            The Line2DBaseSeries.get_segments() method is deprecated.
+
+            Instead, use the MatplotlibBackend.get_segments() method, or use
+            The get_points() or get_data() methods.
+            """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-get-segments")
 
         np = import_module('numpy')
         points = type(self).get_data(self)
@@ -1239,7 +1243,7 @@ class BaseBackend:
     * save(self, path): used to save the current plot to the specified file
         path.
     * close(self): used to close the current plot backend (note: some plotting
-        library doesn't support this functionality. In that case, just raise a
+        library does not support this functionality. In that case, just raise a
         warning).
 
     See also

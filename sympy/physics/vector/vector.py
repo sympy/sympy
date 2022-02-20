@@ -29,7 +29,7 @@ class Vector(Printable, EvalfMixin):
     is_number = False
 
     def __init__(self, inlist):
-        """This is the constructor for the Vector class.  You shouldn't be
+        """This is the constructor for the Vector class.  You should not be
         calling this, it should only be used by other functions. You should be
         treating Vectors like you would with if you were doing the math by
         hand, and getting the first 3 from the standard basis vectors from a
@@ -403,16 +403,17 @@ class Vector(Printable, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy.physics.vector import ReferenceFrame
         >>> from sympy import symbols
+        >>> from sympy.physics.vector import ReferenceFrame, cross
         >>> q1 = symbols('q1')
         >>> N = ReferenceFrame('N')
-        >>> N.x ^ N.y
+        >>> cross(N.x, N.y)
         N.z
-        >>> A = N.orientnew('A', 'Axis', [q1, N.x])
-        >>> A.x ^ N.y
+        >>> A = ReferenceFrame('A')
+        >>> A.orient_axis(N, q1, N.x)
+        >>> cross(A.x, N.y)
         N.z
-        >>> N.y ^ A.x
+        >>> cross(N.y, A.x)
         - sin(q1)*A.y - cos(q1)*A.z
 
         """
@@ -428,7 +429,7 @@ class Vector(Printable, EvalfMixin):
             """This is needed as a little method for to find the determinant
             of a list in python; needs to work for a 3x3 list.
             SymPy's Matrix will not take in Vector, so need a custom function.
-            You shouldn't be calling this.
+            You should not be calling this.
 
             """
 
@@ -522,6 +523,8 @@ class Vector(Printable, EvalfMixin):
         >>> N = ReferenceFrame('N')
         >>> A = N.orientnew('A', 'Axis', [q1, N.y])
         >>> A.x.diff(t, N)
+        - sin(q1)*q1'*N.x - cos(q1)*q1'*N.z
+        >>> A.x.diff(t, N).express(A)
         - q1'*A.z
         >>> B = ReferenceFrame('B')
         >>> u1, u2 = dynamicsymbols('u1, u2')
@@ -553,7 +556,7 @@ class Vector(Printable, EvalfMixin):
                 else:  # else express in the frame
                     reexp_vec_comp = Vector([vector_component]).express(frame)
                     deriv = reexp_vec_comp.args[0][0].diff(var)
-                    inlist += Vector([(deriv, frame)]).express(component_frame).args
+                    inlist += Vector([(deriv, frame)]).args
 
         return Vector(inlist)
 

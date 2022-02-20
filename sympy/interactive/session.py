@@ -22,7 +22,7 @@ Documentation can be found at https://docs.sympy.org/%(version)s
 """
 
 no_ipython = """\
-Couldn't locate IPython. Having IPython installed is greatly recommended.
+Could not locate IPython. Having IPython installed is greatly recommended.
 See http://ipython.scipy.org for more details. If you use Debian/Ubuntu,
 just install the 'ipython' package and start isympy again.
 """

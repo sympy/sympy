@@ -24,16 +24,16 @@ from sympy.core.numbers import ilcm, Float, Rational, _illegal
 from sympy.core.power import integer_log, Pow
 from sympy.core.relational import Relational, Eq, Ne
 from sympy.core.sorting import ordered, default_sort_key
-from sympy.core.sympify import sympify
+from sympy.core.sympify import sympify, _sympify
 from sympy.core.traversal import preorder_traversal
 from sympy.logic.boolalg import And, Or, BooleanAtom
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, acos, asin, atan,
                              Abs, re, im, arg, sqrt, atan2)
 from sympy.functions.combinatorial.factorials import binomial
-from sympy.functions.elementary.trigonometric import (TrigonometricFunction,
-                                                      HyperbolicFunction)
+from sympy.functions.elementary.hyperbolic import HyperbolicFunction
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
+from sympy.functions.elementary.trigonometric import TrigonometricFunction
 from sympy.integrals.integrals import Integral
 from sympy.ntheory.factor_ import divisors
 from sympy.simplify import (simplify, collect, powsimp, posify,  # type: ignore
@@ -257,6 +257,11 @@ def checksol(f, symbol, sol=None, **flags):
             rv = None  # don't return, wait to see if there's a False
         return rv
 
+    f = _sympify(f)
+
+    if f.is_number:
+        return f.is_zero
+
     if isinstance(f, Poly):
         f = f.as_expr()
     elif isinstance(f, (Eq, Ne)):
@@ -274,10 +279,6 @@ def checksol(f, symbol, sol=None, **flags):
         return bool(f)
     elif not f.is_Relational and not f:
         return True
-
-    if sol and not f.free_symbols & set(sol.keys()):
-        # if f(y) == 0, x=3 does not set f(y) to zero...nor does it not
-        return None
 
     illegal = set(_illegal)
     if any(sympify(v).atoms() & illegal for k, v in sol.items()):
@@ -357,12 +358,12 @@ def checksol(f, symbol, sol=None, **flags):
                 return not nz
             break
 
+        if numerical and val.is_number:
+            return (abs(val.n(18).n(12, chop=True)) < 1e-9) is S.true
         if val == was:
             continue
         elif val.is_Rational:
             return val == 0
-        if numerical and val.is_number:
-            return (abs(val.n(18).n(12, chop=True)) < 1e-9) is S.true
         was = val
 
     if flags.get('warn', False):
@@ -805,12 +806,13 @@ def solve(f, *symbols, **flags):
             needed if the pattern is inside of some invertible function
             like cos, exp, ect.
         particular=True (default is False)
-            Instructs ``solve`` to try to find a particular solution to a linear
-            system with as many zeros as possible; this is very expensive.
-        quick=True (default is False)
-            When using particular=True, use a fast heuristic to find a
-            solution with many zeros (instead of using the very slow method
-            guaranteed to find the largest number of zeros possible).
+            Instructs ``solve`` to try to find a particular solution to
+            a linear system with as many zeros as possible; this is very
+            expensive.
+        quick=True (default is False; ``particular`` must be True)
+            Selects a fast heuristic to find a solution with many zeros
+            whereas a value of False uses the very slow method guaranteed
+            to find the largest number of zeros possible.
         cubics=True (default)
             Return explicit solutions when cubic expressions are encountered.
             When False, quartics and quintics are disabled, too.
@@ -846,13 +848,24 @@ def solve(f, *symbols, **flags):
     def _sympified_list(w):
         return list(map(sympify, w if iterable(w) else [w]))
     bare_f = not iterable(f)
+
+    # check flag usage for particular/quick which should only be used
+    # with systems of equations
+    if flags.get('quick', None) is not None:
+        if not flags.get('particular', None):
+            raise ValueError('when using `quick`, `particular` should be True')
+    if flags.get('particular', False) and bare_f:
+        raise ValueError(filldedent("""
+            The 'particular/quick' flag is usually used with systems of
+            equations. Either pass your equation in a list or
+            consider using a solver like `diophantine` if you are
+            looking for a solution in integers."""))
+
     ordered_symbols = (symbols and
                        symbols[0] and
                        (isinstance(symbols[0], Symbol) or
                         is_sequence(symbols[0],
-                        include=GeneratorType)
-                       )
-                      )
+                        include=GeneratorType)))
     f, symbols = (_sympified_list(w) for w in [f, symbols])
     if isinstance(f, list):
         f = [s for s in f if s is not S.true and s is not True]
@@ -1317,29 +1330,41 @@ def _solve(f, *symbols, **flags):
                 soln = solve_undetermined_coeffs(f, symbols, ex, **flags)
             except NotImplementedError:
                 pass
-        if soln:
-            if flags.get('simplify', True):
-                if isinstance(soln, dict):
-                    for k in soln:
-                        soln[k] = simplify(soln[k])
-                elif isinstance(soln, list):
-                    if isinstance(soln[0], dict):
-                        for d in soln:
-                            for k in d:
-                                d[k] = simplify(d[k])
-                    elif isinstance(soln[0], tuple):
-                        soln = [tuple(simplify(i) for i in j) for j in soln]
+            if soln:
+                if flags.get('simplify', True):
+                    if isinstance(soln, dict):
+                        for k in soln:
+                            soln[k] = simplify(soln[k])
+                    elif isinstance(soln, list):
+                        if isinstance(soln[0], dict):
+                            for d in soln:
+                                for k in d:
+                                    d[k] = simplify(d[k])
+                        elif isinstance(soln[0], tuple):
+                            soln = [tuple(simplify(i) for i in j) for j in soln]
+                        else:
+                            raise TypeError('unrecognized args in list')
+                    elif isinstance(soln, tuple):
+                        sym, sols = soln
+                        soln = sym, {tuple(simplify(i) for i in j) for j in sols}
                     else:
-                        raise TypeError('unrecognized args in list')
-                elif isinstance(soln, tuple):
-                    sym, sols = soln
-                    soln = sym, {tuple(simplify(i) for i in j) for j in sols}
-                else:
-                    raise TypeError('unrecognized solution type')
-            return soln
-        # find first successful solution
-        failed = []
+                        raise TypeError('unrecognized solution type')
+                return soln
+
+        # look for solutions for desired symbols that are independent
+        # of symbols already solved for, e.g. if we solve for x = y
+        # then no symbol having x in its solution will be returned.
+        # First solve for linear symbols (since that is easier and limits
+        # solution size) and then proceed with symbols appearing
+        # in a non-linear fashion. Ideally, if one is solving a single
+        # expression for several symbols, they would have to be
+        # appear in factors of an expression, but we do not here
+        # attempt factorization.  XXX perhaps handling a Mul
+        # should come first in this routine whether there is
+        # one or several symbols.
+        nonlin_s = []
         got_s = set()
+        rhs_s = set()
         result = []
         for s in symbols:
             xi, v = solve_linear(f, symbols=[s])
@@ -1348,21 +1373,24 @@ def _solve(f, *symbols, **flags):
                 if flags.get('simplify', True):
                     v = simplify(v)
                 vfree = v.free_symbols
-                if got_s and any(ss in vfree for ss in got_s):
-                    # sol depends on previously solved symbols: discard it
+                if vfree & got_s:
+                    # was linear, but has redundant relationship
+                    # e.g. x - y = 0 has y == x is redundant for x == y
+                    # so ignore
                     continue
+                rhs_s |= vfree
                 got_s.add(xi)
                 result.append({xi: v})
             elif xi:  # there might be a non-linear solution if xi is not 0
-                failed.append(s)
-        if not failed:
+                nonlin_s.append(s)
+        if not nonlin_s:
             return result
-        for s in failed:
+        for s in nonlin_s:
             try:
                 soln = _solve(f, s, **flags)
                 for sol in soln:
-                    if got_s and any(ss in sol.free_symbols for ss in got_s):
-                        # sol depends on previously solved symbols: discard it
+                    if sol.free_symbols & got_s:
+                        # depends on previously solved symbols: ignore
                         continue
                     got_s.add(s)
                     result.append({s: sol})
@@ -1372,14 +1400,18 @@ def _solve(f, *symbols, **flags):
             return result
         else:
             raise NotImplementedError(not_impl_msg % f)
+
+    # solve f for a single variable
+
     symbol = symbols[0]
 
-    #expand binomials only if it has the unknown symbol
+    # expand binomials only if it has the unknown symbol
     f = f.replace(lambda e: isinstance(e, binomial) and e.has(symbol),
         lambda e: expand_func(e))
 
-    # /!\ capture this flag then set it to False so that no checking in
-    # recursive calls will be done; only the final answer is checked
+    # checking will be done unless it is turned off before making a
+    # recursive call; the variables `checkdens` and `check` are
+    # captured here (for reference below) in case flag value changes
     flags['check'] = checkdens = check = flags.pop('check', True)
 
     # build up solutions if f is a Mul
@@ -1886,7 +1918,7 @@ def _solve_system(exprs, symbols, **flags):
         # repeating until we are done or we get an equation that can't
         # be solved.
         def _ok_syms(e, sort=False):
-            rv = (e.free_symbols - solved_syms) & legal
+            rv = e.free_symbols & legal
 
             # Solve first for symbols that have lower degree in the equation.
             # Ideally we want to solve firstly for symbols that appear linearly
@@ -1905,7 +1937,6 @@ def _solve_system(exprs, symbols, **flags):
                 rv = sorted(rv, key=key)
             return rv
 
-        solved_syms = set(solved_syms)  # set of symbols we have solved for
         legal = set(symbols)  # what we are interested in
         # sort so equation with the fewest potential symbols is first
         u = Dummy()  # used in solution checking
@@ -1944,7 +1975,7 @@ def _solve_system(exprs, symbols, **flags):
                         continue
                     # put each solution in r and append the now-expanded
                     # result in the new result list; use copy since the
-                    # solution for s in being added in-place
+                    # solution for s is being added in-place
                     for sol in soln:
                         if got_s and any(ss in sol.free_symbols for ss in got_s):
                             # sol depends on previously solved symbols: discard it
@@ -2213,11 +2244,12 @@ def minsolve_linear_system(system, *symbols, **flags):
             # NOTE sort by default_sort_key to get deterministic result
             k = max((k for k in s.values()),
                     key=lambda x: (len(x.free_symbols), default_sort_key(x)))
-            x = max(k.free_symbols, key=default_sort_key)
-            if len(k.free_symbols) != 1:
+            kfree = k.free_symbols
+            x = next(reversed(list(ordered(kfree))))
+            if len(kfree) != 1:
                 determined[x] = S.Zero
             else:
-                val = solve(k)[0]
+                val = _solve(k, x, check=False)[0]
                 if val == 0 and all(v.subs(x, val) == 0 for v in s.values()):
                     determined[x] = S.One
                 else:

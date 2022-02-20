@@ -11,6 +11,7 @@ from sympy.matrices.expressions import (BlockMatrix, BlockDiagMatrix, Determinan
     DiagMatrix, DiagonalMatrix, HadamardProduct, Identity, Inverse, MatAdd, MatMul,
     MatPow, MatrixExpr, MatrixSlice, MatrixSymbol, OneMatrix, Trace, Transpose,
     ZeroMatrix)
+from sympy.matrices.expressions.blockmatrix import reblock_2x2
 from sympy.matrices.expressions.factorizations import Factorization
 from sympy.matrices.expressions.fourier import DFT
 from sympy.core.logic import fuzzy_and
@@ -174,7 +175,6 @@ def _(expr, assumptions):
 
 @InvertiblePredicate.register(BlockMatrix)
 def _(expr, assumptions):
-    from sympy.matrices.expressions.blockmatrix import reblock_2x2
     if not expr.is_square:
         return False
     if expr.blockshape == (1, 1):

@@ -25,7 +25,7 @@ class Dyadic(Printable, EvalfMixin):
 
     def __init__(self, inlist):
         """
-        Just like Vector's init, you shouldn't call this unless creating a
+        Just like Vector's init, you should not call this unless creating a
         zero dyadic.
 
         zd = Dyadic(0)

@@ -159,7 +159,7 @@ class GroupHomomorphism:
         if elem not in self.domain:
             if isinstance(elem, (list, tuple)):
                 return [self._apply(e) for e in elem]
-            raise ValueError("The supplied element doesn't belong to the domain")
+            raise ValueError("The supplied element does not belong to the domain")
         if elem.is_identity:
             return self.codomain.identity
         else:

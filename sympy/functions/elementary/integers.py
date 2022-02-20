@@ -11,6 +11,7 @@ from sympy.core.numbers import Integer
 from sympy.core.relational import Gt, Lt, Ge, Le, Relational, is_eq
 from sympy.core.symbol import Symbol
 from sympy.core.sympify import _sympify
+from sympy.functions.elementary.complexes import im
 from sympy.multipledispatch import dispatch
 
 ###############################################################################
@@ -25,7 +26,6 @@ class RoundFunction(Function):
 
     @classmethod
     def eval(cls, arg):
-        from sympy.functions.elementary.complexes import im
         v = cls._eval_number(arg)
         if v is not None:
             return v
@@ -459,7 +459,6 @@ class frac(Function):
     @classmethod
     def eval(cls, arg):
         from sympy.calculus.accumulationbounds import AccumBounds
-        from sympy.functions.elementary.complexes import im
 
         def _eval(arg):
             if arg in (S.Infinity, S.NegativeInfinity):

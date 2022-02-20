@@ -13,6 +13,8 @@ from sympy.core.kind import NumberKind
 from sympy.core.singleton import Singleton, S
 from sympy.core.symbol import Dummy, symbols, Symbol
 from sympy.core.sympify import _sympify, sympify, _sympy_converter
+from sympy.functions.elementary.integers import ceiling, floor
+from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.logic.boolalg import And, Or
 from .sets import Set, Interval, Union, FiniteSet, ProductSet, SetKind
 from sympy.utilities.misc import filldedent
@@ -127,7 +129,6 @@ class Naturals(Set, metaclass=Singleton):
         return self
 
     def as_relational(self, x):
-        from sympy.functions.elementary.integers import floor
         return And(Eq(floor(x), x), x >= self.inf, x < oo)
 
     def _kind(self):
@@ -225,7 +226,6 @@ class Integers(Set, metaclass=Singleton):
         return SetKind(NumberKind)
 
     def as_relational(self, x):
-        from sympy.functions.elementary.integers import floor
         return And(Eq(floor(x), x), -oo < x, x < oo)
 
     def _eval_is_subset(self, other):
@@ -599,7 +599,6 @@ class Range(Set):
     """
 
     def __new__(cls, *args):
-        from sympy.functions.elementary.integers import ceiling
         if len(args) == 1:
             if isinstance(args[0], range):
                 raise TypeError(
@@ -637,7 +636,6 @@ class Range(Set):
             dif = stop - start
             n = dif/step
             if n.is_Rational:
-                from sympy.functions.elementary.integers import floor
                 if dif == 0:
                     null = True
                 else:  # (x, x + 5, 2) or (x, 3*x, x)
@@ -785,7 +783,6 @@ class Range(Set):
         if n.is_infinite:
             return S.Infinity
         if  n.is_extended_nonnegative and all(i.is_integer for i in self.args):
-            from sympy.functions.elementary.integers import floor
             return abs(floor(n))
         raise ValueError('Invalid method for symbolic Range')
 
@@ -812,7 +809,6 @@ class Range(Set):
         return not bool(b)
 
     def __getitem__(self, i):
-        from sympy.functions.elementary.integers import ceiling
         ooslice = "cannot slice from the end with an infinite value"
         zerostep = "slice step cannot be zero"
         infinite = "slicing not possible on range with infinite start"
@@ -1488,7 +1484,6 @@ class PolarComplexRegion(ComplexRegion):
 
     @property
     def expr(self):
-        from sympy.functions.elementary.trigonometric import sin, cos
         r, theta = self.variables
         return r*(cos(theta) + S.ImaginaryUnit*sin(theta))
 

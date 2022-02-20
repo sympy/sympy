@@ -41,7 +41,7 @@ from sympy.solvers.solveset import solveset
 from sympy.external import import_module
 from sympy.utilities.misc import filldedent
 from sympy.utilities.decorator import doctest_depends_on
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.iterables import iterable
 import warnings
 
@@ -280,7 +280,7 @@ class RandomSymbol(Expr):
 
     An object of the RandomSymbol type should almost never be created by the
     user. They tend to be created instead by the PSpace class's value method.
-    Traditionally a user doesn't even do this but instead calls one of the
+    Traditionally a user does not even do this but instead calls one of the
     convenience functions Normal, Exponential, Coin, Die, FiniteRV, etc....
     """
 
@@ -1090,9 +1090,15 @@ def sample(expr, condition=None, size=(), library='scipy',
         Choose any of the available options to sample from as string,
         by default is 'scipy'
     numsamples : int
-        Number of samples, each with size as ``size``. The ``numsamples`` parameter is
-        deprecated and is only provided for compatibility with v1.8. Use a list comprehension
-        or an additional dimension in ``size`` instead.
+        Number of samples, each with size as ``size``.
+
+        .. deprecated:: 1.9
+
+        The ``numsamples`` parameter is deprecated and is only provided for
+        compatibility with v1.8. Use a list comprehension or an additional
+        dimension in ``size`` instead. See
+        :ref:`deprecated-sympy-stats-numsamples` for details.
+
     seed :
         An object to be used as seed by the given external library for sampling `expr`.
         Following is the list of possible types of object for the supported libraries,
@@ -1164,12 +1170,20 @@ def sample(expr, condition=None, size=(), library='scipy',
                                                         numsamples=numsamples, seed=seed)
 
     if numsamples != 1:
-        SymPyDeprecationWarning(
-                 feature="numsamples parameter",
-                 issue=21723,
-                 deprecated_since_version="1.9",
-                 useinstead="a list comprehension or an additional dimension in ``size``").warn()
+        sympy_deprecation_warning(
+            f"""
+            The numsamples parameter to sympy.stats.sample() is deprecated.
+            Either use a list comprehension, like
 
+            [sample(...) for i in range({numsamples})]
+
+            or add a dimension to size, like
+
+            sample(..., size={(numsamples,) + size})
+            """,
+            deprecated_since_version="1.9",
+            active_deprecations_target="deprecated-sympy-stats-numsamples",
+        )
         return [next(iterator) for i in range(numsamples)]
 
     return next(iterator)
@@ -1655,7 +1669,7 @@ def _value_check(condition, message):
     >>> _value_check(2 < 3, '')
     True
 
-    Here, the condition is not False, but it doesn't evaluate to True
+    Here, the condition is not False, but it does not evaluate to True
     so False is returned (but no error is raised). So checking if the
     return value is True or False will tell you if all conditions were
     evaluated.
