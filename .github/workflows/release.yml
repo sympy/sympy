@@ -105,7 +105,7 @@ jobs:
         run: pip install sympy-${{ env.release_version }}-py3-none-any.whl
 
       - name: Install optional dependencies
-        run: pip install gmpy2 numpy matplotlib Cython matchpy
+        run: pip install gmpy2 numpy numexpr scipy matplotlib Cython matchpy aesara
 
       - name: Run tests after install
         run: python -c 'import sympy; assert sympy.test()'
