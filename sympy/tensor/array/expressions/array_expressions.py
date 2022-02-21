@@ -714,6 +714,10 @@ class PermuteDims(_CodegenArrayAbstract):
                 raise ValueError("Permutation not defined")
             return PermuteDims._get_permutation_from_index_orders(index_order_old, index_order_new, dim)
         else:
+            if index_order_new is not None:
+                raise ValueError("index_order_new cannot be defined with permutation")
+            if index_order_old is not None:
+                raise ValueError("index_order_old cannot be defined with permutation")
             return permutation
 
     @classmethod

@@ -317,6 +317,8 @@ def test_permutedims_with_indices():
     raises(ValueError, lambda: permutedims(A, index_order_old=list("abcde"), index_order_new=list("abcce")))
     raises(ValueError, lambda: permutedims(A, index_order_old=list("abcde"), index_order_new=list("abce")))
     raises(ValueError, lambda: permutedims(A, index_order_old=list("abce"), index_order_new=list("abce")))
+    raises(ValueError, lambda: permutedims(A, [2, 1, 0, 3, 4], index_order_old=list("abcde")))
+    raises(ValueError, lambda: permutedims(A, [2, 1, 0, 3, 4], index_order_new=list("abcde")))
 
 
 def test_flatten():
