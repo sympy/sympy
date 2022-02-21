@@ -247,6 +247,7 @@ def mrv(e, x):
     """Returns a SubsSet of most rapidly varying (mrv) subexpressions of 'e',
        and e rewritten in terms of these"""
     from sympy.simplify.powsimp import powsimp
+    from sympy.calculus.util import AccumBounds
     e = powsimp(e, deep=True, combine='exp')
     if not isinstance(e, Basic):
         raise TypeError("e should be an instance of Basic")
@@ -292,7 +293,9 @@ def mrv(e, x):
         # infinite if there is no zero, otherwise NaN; here, we
         # consider the result infinite if any factor is infinite
         li = limitinf(e.exp, x)
-        if any(_.is_infinite for _ in Mul.make_args(li)):
+        if any(_.is_infinite for _ in Mul.make_args(li)) or \
+            any(_.min.is_infinite or _.max.is_infinite for _ in Mul.make_args(li) \
+                if isinstance(_, AccumBounds)):
             s1 = SubsSet()
             e1 = s1[e]
             s2, e2 = mrv(e.exp, x)

@@ -473,3 +473,10 @@ def test_issue_6682():
 def test_issue_7096():
     from sympy.functions import sign
     assert gruntz(x**-pi, x, 0, dir='-') == oo*sign((-1)**(-pi))
+
+def test_frac():
+    from sympy.functions.elementary.integers import frac
+    from sympy.calculus.util import AccumBounds
+    assert gruntz(frac(x), x, oo) == AccumBounds(0, 1)
+    assert gruntz(log(frac(x)), x, oo) == AccumBounds(-oo, 0)
+    assert gruntz(x*log(frac(x)), x, oo) == AccumBounds(-oo, 0)

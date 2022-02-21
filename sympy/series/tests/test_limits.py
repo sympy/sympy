@@ -227,6 +227,7 @@ def test_ceiling_requires_robust_assumptions():
 
 def test_frac():
     assert limit(frac(x), x, oo) == AccumBounds(0, 1)
+    assert limit(frac(x)**(1/x), x, oo) == AccumBounds(0, 1)
     assert limit(frac(x)**x, x, oo) == AccumBounds(0, oo)  # wolfram gives (0, 1)
     assert limit(frac(x), x, 0, '+') == 0
     assert limit(frac(x), x, 0, '-') == 1
