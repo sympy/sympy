@@ -551,7 +551,8 @@ def BetaNoncentral(name, alpha, beta, lamda):
     /____,
     k = 0
 
-    Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows :
+    Compute cdf with specific 'x', 'alpha', 'beta' and 'lamda' values as follows:
+
     >>> cdf(BetaNoncentral("x", 1, 1, 1), evaluate=False)(2).doit()
     2*exp(1/2)
 
