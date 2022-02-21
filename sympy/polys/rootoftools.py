@@ -353,6 +353,8 @@ class ComplexRootOf(RootOf):
 
         if all((i.is_algebraic and (not i.is_symbol)) for i in poly.all_coeffs()):
             poly = cls ._roots_Algebraic(poly, dom)
+        else:
+            raise NotImplementedError("CRootOf is not supported over %s" % poly)
 
         coeff, poly = preprocess_roots(poly)
         dom = poly.get_domain()

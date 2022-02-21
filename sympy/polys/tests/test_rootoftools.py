@@ -5,7 +5,6 @@ from sympy.polys.rootoftools import (rootof, RootOf, CRootOf, RootSum,
     _pure_key_dict as D)
 
 from sympy.polys.polyerrors import (
-    DomainError,
     MultivariatePolynomialError,
     GeneratorsNeeded,
     PolynomialError,
@@ -106,8 +105,8 @@ def test_CRootOf___new__():
 
     assert rootof(Poly(x**3 - y, x), 0) == y**Rational(1, 3)
 
-    assert rootof(y*x**3 + y*x + 2*y, x, 0) == -1
-    raises(DomainError, lambda: rootof(x**3 + x + 2*y, x, 0))
+    raises(NotImplementedError, lambda: rootof(y*x**3 + y*x + 2*y, x, 0))
+    raises(NotImplementedError, lambda: rootof(x**3 + x + 2*y, x, 0))
 
     assert rootof(x**3 + x + 1, 0).is_commutative is True
 
@@ -120,7 +119,7 @@ def test_CRootOf_attributes():
     # are apparently supported and the RootOf.free_symbols routine
     # should be changed to return whatever symbols would not be
     # the PurePoly dummy symbol
-    raises(DomainError, lambda: rootof(Poly(x**3 + y*x + 1, x), 0))
+    raises(NotImplementedError, lambda: rootof(Poly(x**3 + y*x + 1, x), 0))
 
 
 
