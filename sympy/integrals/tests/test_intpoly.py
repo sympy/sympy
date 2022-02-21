@@ -526,6 +526,10 @@ def test_max_degree():
     polys = [1, x, y, x*y, x**2*y, x*y**2]
     assert polytope_integrate(polygon, polys, max_degree=3) == \
         {1: 1, x: S.Half, y: S.Half, x*y: Rational(1, 4), x**2*y: Rational(1, 6), x*y**2: Rational(1, 6)}
+    assert polytope_integrate(polygon, polys, max_degree=2) == \
+        {1: 1, x: S.Half, y: S.Half, x*y: Rational(1, 4)}
+    assert polytope_integrate(polygon, polys, max_degree=1) == \
+        {1: 1, x: S.Half, y: S.Half}
 
 
 def test_main_integrate3d():
@@ -601,3 +605,10 @@ def test_is_vertex():
     assert is_vertex(Point(2, 3)) is True
     assert is_vertex((2, 3, 4)) is True
     assert is_vertex((2, 3, 4, 5)) is False
+
+
+def test_issue_19234():
+    polygon = Polygon(Point(0, 0), Point(0, 1), Point(1, 1), Point(1, 0))
+    polys =  [ 1,x, y, x*y, x**2*y, x*y**2]
+    assert polytope_integrate(polygon, polys) == \
+        {1: 1, x: S.Half, y: S.Half, x*y: Rational(1, 4), x**2*y: Rational(1, 6), x*y**2: Rational(1, 6)}

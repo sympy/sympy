@@ -100,6 +100,14 @@ def polytope_integrate(poly, expr=None, *, clockwise=False, max_degree=None):
 
     if max_degree is not None:
         result = {}
+        f_expr = []
+        for exp in expr:
+            if list((decompose(exp)).keys())[0] == 0:
+                f_expr.append(exp)
+            elif sum(degree_list(exp)) <= max_degree:
+                f_expr.append(exp)
+
+        expr = f_expr
         if not isinstance(expr, list) and expr is not None:
             raise TypeError('Input polynomials must be list of expressions')
 
@@ -294,21 +302,42 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
                                 (b / norm(a)) / (dim_length + degree)
         return result
     else:
-        polynomials = decompose(expr)
-        for deg in polynomials:
-            poly_contribute = S.Zero
-            facet_count = 0
-            for hp in hp_params:
-                value_over_boundary = integration_reduction(facets,
-                                                            facet_count,
-                                                            hp[0], hp[1],
-                                                            polynomials[deg],
-                                                            dims, deg)
-                poly_contribute += value_over_boundary * (hp[1] / norm(hp[0]))
-                facet_count += 1
-            poly_contribute /= (dim_length + deg)
-            integral_value += poly_contribute
-    return integral_value
+        if not isinstance(expr,list):
+            polynomials = decompose(expr)
+            for deg in polynomials:
+                poly_contribute = S.Zero
+                facet_count = 0
+                for hp in hp_params:
+                    value_over_boundary = integration_reduction(facets,
+                                                                facet_count,
+                                                                hp[0], hp[1],
+                                                                polynomials[deg],
+                                                                dims, deg)
+                    poly_contribute += value_over_boundary * (hp[1] / norm(hp[0]))
+                    facet_count += 1
+                poly_contribute /= (dim_length + deg)
+                integral_value += poly_contribute
+
+            return integral_value
+        else:
+            result = {}
+            for exp in expr:
+                polynomials = decompose(exp)
+                for deg in polynomials:
+                    poly_contribute = S.Zero
+                    facet_count = 0
+                    for hp in hp_params:
+                        value_over_boundary = integration_reduction(facets,
+                                                                    facet_count,
+                                                                    hp[0], hp[1],
+                                                                    polynomials[deg],
+                                                                    dims, deg)
+                        poly_contribute += value_over_boundary * (hp[1] / norm(hp[0]))
+                        facet_count += 1
+                    poly_contribute /= (dim_length + deg)
+                    result.update({polynomials[deg] : poly_contribute})
+
+            return result
 
 
 def polygon_integrate(facet, hp_param, index, facets, vertices, expr, degree):
