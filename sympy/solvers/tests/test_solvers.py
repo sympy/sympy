@@ -2478,3 +2478,12 @@ def test_solver_flags():
 def test_issue_22717():
     assert solve((-y**2 + log(y**2/x) + 2, -2*x*y + 2*x/y)) == [
         {y: -1, x: E}, {y: 1, x: E}]
+
+
+def test_issue_23110_manual():
+    assert solve((a*b, a*c, c*d**2), manual=True) == [
+        {a: 0, c: 0}, {a: 0, d: 0}, {b: 0 , c: 0}]
+    assert solve((a*b, a*c, c*d**2), manual=True, set=True) == (
+        [a, b, c, d], {(a, 0, 0, d), (0, b, 0, d), (0, b, c, 0)})
+    assert solve((b*d, b*a, a*c**2), manual=True, set=True) == (
+        [a, b, c, d], {(0, 0, c, d), (a, 0, 0, d), (0, b, c, 0)})

@@ -46,10 +46,10 @@ from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly
 from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError
 from sympy.polys.solvers import sympy_eqs_to_ring, solve_lin_sys
+from sympy.utilities.iterables import (connected_components,
+    generate_bell, uniq, iterable, is_sequence, subsets, sift, flatten)
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent, debug
-from sympy.utilities.iterables import (connected_components,
-    generate_bell, uniq, iterable, is_sequence, subsets)
 from sympy.utilities.decorator import conserve_mpmath_dps
 
 from mpmath import findroot
@@ -1296,8 +1296,9 @@ def solve(f, *symbols, **flags):
     assert as_set
     if not solution:
         return [], set()
-    k = list(ordered(solution[0].keys()))
-    return k, {tuple([s[ki] for ki in k]) for s in solution}
+    # each dict does not necessarily have the same keys
+    k = list(ordered(set(flatten(tuple(i.keys()) for i in solution))))
+    return k, {tuple([s.get(ki, ki) for ki in k]) for s in solution}
 
 
 def _solve(f, *symbols, **flags):
@@ -1947,9 +1948,10 @@ def _solve_system(exprs, symbols, **flags):
             hit = False
             for r in result:
                 # update eq with everything that is known so far
-                eq2 = eq.subs(r)
+                eq2 = eq.xreplace(r)
                 # if check is True then we see if it satisfies this
                 # equation, otherwise we just accept it
+                # XXX what if eq == eq2?
                 if check and r:
                     b = checksol(u, u, eq2, minimal=True)
                     if b is not None:
@@ -1977,7 +1979,7 @@ def _solve_system(exprs, symbols, **flags):
                     # result in the new result list; use copy since the
                     # solution for s is being added in-place
                     for sol in soln:
-                        if got_s and any(ss in sol.free_symbols for ss in got_s):
+                        if any(ss in sol.free_symbols for ss in got_s):
                             # sol depends on previously solved symbols: discard it
                             continue
                         rnew = r.copy()
@@ -1985,16 +1987,7 @@ def _solve_system(exprs, symbols, **flags):
                             rnew[k] = v.subs(s, sol)
                         # and add this new solution
                         rnew[s] = sol
-                        # check that it is independent of previous solutions
-                        iset = set(rnew.items())
-                        for i in newresult:
-                            if len(i) < len(iset) and not set(i.items()) - iset:
-                                # this is a superset of a known solution that
-                                # is smaller
-                                break
-                        else:
-                            # keep it
-                            newresult.append(rnew)
+                        newresult.append(rnew)
                     hit = True
                     got_s.add(s)
                 if not hit:
@@ -2004,6 +1997,8 @@ def _solve_system(exprs, symbols, **flags):
                 for b in bad_results:
                     if b in result:
                         result.remove(b)
+
+    # simplification and checking
 
     default_simplify = bool(failed)  # rely on system-solvers to simplify
     if  flags.get('simplify', default_simplify):
@@ -2022,7 +2017,28 @@ def _solve_system(exprs, symbols, **flags):
 
     result = [r for r in result if r]
     if linear and result:
-        result = result[0]
+        return result[0]
+
+    # check that no solution is a superset of a smaller
+    # solution and that no solution is represented twice
+    # e.g. {a:0,b:1} == {b:1,a:0}
+
+    bysize = sift(result, lambda _: len(_))
+    result = []
+    ky = lambda x: set([tuple(i) for i in x.items()])
+    for i, s in enumerate(sorted(bysize)):
+        ss = list(uniq([ky(si) for si in bysize[s]]))
+        result.extend([dict(ordered(i)) for i in ss])
+        for t in sorted(bysize):
+            if t <= s:
+                continue
+            for tj in reversed(bysize[t]):
+                for si in ss:
+                    if not si - ky(tj):
+                         # ti is a superset of si
+                         bysize[t].remove(tj)
+                         break
+
     return result
 
 
