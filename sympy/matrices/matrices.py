@@ -196,10 +196,10 @@ class MatrixReductions(MatrixDeterminant):
                 raise ValueError("For a {0} operation 'n->kn' you must provide the "
                                  "kwargs `{0}` and `k`".format(error_str))
             if not 0 <= col < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
+                raise ValueError("This matrix does not have a {} '{}'".format(error_str, col))
 
         elif op == "n<->m":
-            # we need two cols to swap. It doesn't matter
+            # we need two cols to swap. It does not matter
             # how they were specified, so gather them together and
             # remove `None`
             cols = {col, k, col1, col2}.difference([None])
@@ -211,9 +211,9 @@ class MatrixReductions(MatrixDeterminant):
                                  "kwargs `{0}1` and `{0}2`".format(error_str))
             col1, col2 = cols
             if not 0 <= col1 < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col1))
+                raise ValueError("This matrix does not have a {} '{}'".format(error_str, col1))
             if not 0 <= col2 < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
+                raise ValueError("This matrix does not have a {} '{}'".format(error_str, col2))
 
         elif op == "n->n+km":
             col = col1 if col is None else col
@@ -225,9 +225,9 @@ class MatrixReductions(MatrixDeterminant):
                 raise ValueError("For a {0} operation 'n->n+km' `{0}` and `{0}2` must "
                                  "be different.".format(error_str))
             if not 0 <= col < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col))
+                raise ValueError("This matrix does not have a {} '{}'".format(error_str, col))
             if not 0 <= col2 < self_cols:
-                raise ValueError("This matrix doesn't have a {} '{}'".format(error_str, col2))
+                raise ValueError("This matrix does not have a {} '{}'".format(error_str, col2))
 
         else:
             raise ValueError('invalid operation %s' % repr(op))
@@ -758,7 +758,7 @@ def num_mat_mul(k1, k2):
     # Deal with Mul._kind_dispatcher's commutativity
     # XXX: this function is called with either k1 or k2 as MatrixKind because
     # the Mul kind dispatcher is commutative. Maybe it shouldn't be. Need to
-    # swap the args here because NumberKind doesn't have an element_kind
+    # swap the args here because NumberKind does not have an element_kind
     # attribute.
     if not isinstance(k2, MatrixKind):
         k1, k2 = k2, k1

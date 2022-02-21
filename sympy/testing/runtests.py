@@ -5,7 +5,7 @@ Goals:
 
 * it should be compatible with py.test and operate very similarly
   (or identically)
-* doesn't require any external dependencies
+* does not require any external dependencies
 * preferably all the functionality should be in this file only
 * no magic, just import the test file and execute the test functions, that's it
 * portable
@@ -239,7 +239,7 @@ def run_in_subprocess_with_hash_randomization(
     # sometimes return None.
 
     # First check if the Python version supports hash randomization
-    # If it doesn't have this support, it won't recognize the -R flag
+    # If it does not have this support, it won't recognize the -R flag
     p = subprocess.Popen([command, "-RV"], stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT, cwd=cwd)
     p.communicate()
@@ -405,7 +405,7 @@ def test(*paths, subprocess=True, rerun=0, **kwargs):
 
     >>> sympy.test(verbose=True)    # doctest: +SKIP
 
-    Don't sort the test output:
+    Do not sort the test output:
 
     >>> sympy.test(sort=False)    # doctest: +SKIP
 
@@ -1693,7 +1693,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
         lineno = None
 
-        # Extract the object's docstring.  If it doesn't have one,
+        # Extract the object's docstring.  If it does not have one,
         # then return None (no test for this object).
         if isinstance(obj, str):
             # obj is a string in the case for objects in the polys package.

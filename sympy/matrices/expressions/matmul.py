@@ -320,8 +320,27 @@ def combine_powers(mul):
     factor, args = mul.as_coeff_matrices()
     new_args = [args[0]]
 
-    for B in args[1:]:
+    for i in range(1, len(args)):
         A = new_args[-1]
+        B = args[i]
+
+        if isinstance(B, Inverse) and isinstance(B.arg, MatMul):
+            Bargs = B.arg.args
+            l = len(Bargs)
+            if list(Bargs) == new_args[-l:]:
+                new_args = new_args[:-l] + [Identity(B.shape[0])]
+                continue
+
+        if isinstance(A, Inverse) and isinstance(A.arg, MatMul):
+            Aargs = A.arg.args
+            l = len(Aargs)
+            if list(Aargs) == args[i:i+l]:
+                identity = Identity(A.shape[0])
+                new_args[-1] = identity
+                for j in range(i, i+l):
+                    args[j] = identity
+                continue
+
         if A.is_square == False or B.is_square == False:
             new_args.append(B)
             continue

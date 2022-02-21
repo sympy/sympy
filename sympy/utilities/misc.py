@@ -1,4 +1,4 @@
-"""Miscellaneous stuff that doesn't really fit anywhere else."""
+"""Miscellaneous stuff that does not really fit anywhere else."""
 
 from typing import List
 
@@ -169,7 +169,7 @@ def rawlines(s):
 ARCH = str(struct.calcsize('P') * 8) + "-bit"
 
 
-# XXX: PyPy doesn't support hash randomization
+# XXX: PyPy does not support hash randomization
 HASH_RANDOMIZATION = getattr(sys.flags, 'hash_randomization', False)
 
 _debug_tmp = []  # type: List[str]

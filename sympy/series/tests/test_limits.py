@@ -947,6 +947,18 @@ def test_issue_18452():
     assert limit(abs(log(x))**x, x, 0, "-") == 1
 
 
+def test_issue_18473():
+    assert limit(sin(x)**(1/x), x, oo) == Limit(sin(x)**(1/x), x, oo, dir='-')
+    assert limit(cos(x)**(1/x), x, oo) == Limit(cos(x)**(1/x), x, oo, dir='-')
+    assert limit(tan(x)**(1/x), x, oo) == Limit(tan(x)**(1/x), x, oo, dir='-')
+    assert limit((cos(x) + 2)**(1/x), x, oo) == 1
+    assert limit((sin(x) + 10)**(1/x), x, oo) == 1
+    assert limit((cos(x) - 2)**(1/x), x, oo) == Limit((cos(x) - 2)**(1/x), x, oo, dir='-')
+    assert limit((cos(x) + 1)**(1/x), x, oo) == AccumBounds(0, 1)
+    assert limit((tan(x)**2)**(2/x) , x, oo) == AccumBounds(0, oo)
+    assert limit((sin(x)**2)**(1/x), x, oo) == AccumBounds(0, 1)
+
+
 def test_issue_18482():
     assert limit((2*exp(3*x)/(exp(2*x) + 1))**(1/x), x, oo) == exp(1)
 

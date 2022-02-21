@@ -145,10 +145,12 @@ class NDimArray(Printable):
 
     def _parse_index(self, index):
         if isinstance(index, (SYMPY_INTS, Integer)):
-            raise ValueError("Only a tuple index is accepted")
+            if index >= self._loop_size:
+                raise ValueError("Only a tuple index is accepted")
+            return index
 
         if self._loop_size == 0:
-            raise ValueError("Index not valide with an empty array")
+            raise ValueError("Index not valid with an empty array")
 
         if len(index) != self._rank:
             raise ValueError('Wrong number of array axes')
@@ -193,6 +195,9 @@ class NDimArray(Printable):
         def f(pointer):
             if not isinstance(pointer, Iterable):
                 return [pointer], ()
+
+            if len(pointer) == 0:
+                return [], (0,)
 
             result = []
             elems, shapes = zip(*[f(i) for i in pointer])
@@ -567,11 +572,11 @@ class NDimArray(Printable):
 
     def _check_index_for_getitem(self, index):
         if isinstance(index, (SYMPY_INTS, Integer, slice)):
-            index = (index, )
+            index = (index,)
 
         if len(index) < self.rank():
-            index = tuple([i for i in index] + \
-                          [slice(None) for i in range(len(index), self.rank())])
+            index = tuple(index) + \
+                          tuple(slice(None) for i in range(len(index), self.rank()))
 
         if len(index) > self.rank():
             raise ValueError('Dimension of index greater than rank of array')

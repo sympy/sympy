@@ -51,7 +51,7 @@ def inertia(frame, ixx, iyy, izz, ixy=0, iyz=0, izx=0):
     Explanation
     ===========
 
-    If you don't know what a Dyadic is, just treat this like the inertia
+    If you do not know what a Dyadic is, just treat this like the inertia
     tensor. Then, do the easy thing and define it in a body-fixed frame.
 
     Parameters

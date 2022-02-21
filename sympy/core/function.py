@@ -494,7 +494,7 @@ class Function(Application, Expr):
         ARG is a floating point number.
         This function is used by __new__.
 
-        Returns the precision to evalf to, or -1 if it shouldn't evalf.
+        Returns the precision to evalf to, or -1 if it should not evalf.
         """
         if arg.is_Float:
             return arg._prec
@@ -1500,7 +1500,7 @@ class Derivative(Expr):
 
         * symbols and functions commute with each other
         * derivatives commute with each other
-        * a derivative doesn't commute with anything it contains
+        * a derivative does not commute with anything it contains
         * any other object is not allowed to commute if it has
           free symbols in common with another object
 
@@ -3086,7 +3086,7 @@ def count_ops(expr, visual=False):
     >>> from sympy.abc import a, b, x, y
     >>> from sympy import sin, count_ops
 
-    Although there isn't a SUB object, minus signs are interpreted as
+    Although there is not a SUB object, minus signs are interpreted as
     either negations or subtractions:
 
     >>> (x - y).count_ops(visual=True)

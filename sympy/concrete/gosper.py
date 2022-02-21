@@ -92,7 +92,7 @@ def gosper_term(f, n):
     .. math::
         s_n = \sum_{k=0}^{n-1} f_k
 
-    and `f_k` doesn't depend on `n`. Returns a hypergeometric
+    and `f_k` does not depend on `n`. Returns a hypergeometric
     term `g_n` such that `g_{n+1} - g_n = f_n`.
 
     Examples
@@ -173,7 +173,7 @@ def gosper_sum(f, k):
     .. math ::
         s_n = \sum_{k=0}^{n-1} f_k
 
-    and `f(n)` doesn't depend on `n`, returns `g_{n} - g(0)` where
+    and `f(n)` does not depend on `n`, returns `g_{n} - g(0)` where
     `g_{n+1} - g_n = f_n`, or ``None`` if `s_n` cannot be expressed
     in closed form as a sum of hypergeometric terms.
 

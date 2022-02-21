@@ -848,7 +848,7 @@ class Permutation(Atom):
     argument ``size=6``.
 
     There is another way to do this, which is to tell the ``contains``
-    method that the number of symbols the group is on doesn't need to
+    method that the number of symbols the group is on does not need to
     match perfectly the number of symbols for the permutation:
 
     >>> G.contains(p2,strict=False)

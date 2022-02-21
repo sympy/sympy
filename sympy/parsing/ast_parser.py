@@ -32,7 +32,7 @@ class Transform(NodeTransformer):
         self.local_dict = local_dict
         self.global_dict = global_dict
 
-    def visit_Num(self, node):
+    def visit_Constant(self, node):
         if isinstance(node.n, int):
             return fix_missing_locations(Call(func=Name('Integer', Load()),
                     args=[node], keywords=[]))

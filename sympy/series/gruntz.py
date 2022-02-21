@@ -684,7 +684,7 @@ def gruntz(e, z, z0, dir="+"):
 
     For ``dir="+"`` (default) it calculates the limit from the right
     (z->z0+) and for ``dir="-"`` the limit from the left (z->z0-). For infinite z0
-    (oo or -oo), the dir argument doesn't matter.
+    (oo or -oo), the dir argument does not matter.
 
     This algorithm is fully described in the module docstring in the gruntz.py
     file. It relies heavily on the series expansion. Most frequently, gruntz()

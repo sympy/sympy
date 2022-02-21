@@ -398,7 +398,7 @@ def _strip(g, base, orbits, transversals):
 
     This process is called "sifting". A sift is unsuccessful when a certain
     orbit element is not found or when after the sift the decomposition
-    doesn't end with the identity element.
+    does not end with the identity element.
 
     The argument ``transversals`` is a list of dictionaries that provides
     transversal elements for the orbits ``orbits``.
