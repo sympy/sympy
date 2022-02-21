@@ -32,6 +32,7 @@ There are three types of functions implemented in SymPy:
 
 from typing import Any, Dict as tDict, Optional, Set as tSet, Tuple as tTuple, Union as tUnion
 from collections.abc import Iterable
+import numbers
 
 from .add import Add
 from .assumptions import ManagedProperties
@@ -1276,12 +1277,11 @@ class Derivative(Expr):
         # derivative.
         variable_count = []
         array_likes = (tuple, list, Tuple)
-        integer_likes = (int, Integer)
 
         from sympy.tensor.array import Array, NDimArray
 
         for i, v in enumerate(variables):
-            if isinstance(v, integer_likes):
+            if isinstance(v, (int, Integer, numbers.Integral)):
                 if i == 0:
                     raise ValueError("First variable cannot be a number: %i" % v)
                 count = v
