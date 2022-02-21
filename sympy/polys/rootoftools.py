@@ -351,13 +351,11 @@ class ComplexRootOf(RootOf):
         if roots is not None:
             return roots[index]
 
+        if all((i.is_algebraic and (not i.is_symbol)) for i in poly.all_coeffs()):
+            poly = cls ._roots_Algebraic(poly, dom)
+
         coeff, poly = preprocess_roots(poly)
         dom = poly.get_domain()
-
-        if not dom.is_ZZ:
-            poly = cls._roots_Algebraic(poly)
-            coeff, poly = preprocess_roots(poly)
-            dom = poly.get_domain()
 
         root = cls._indexed_root(poly, index)
         return coeff * cls._postprocess_root(root, radicals)
@@ -763,29 +761,23 @@ class ComplexRootOf(RootOf):
         return roots
 
     @classmethod
-    def _roots_Algebraic(cls, poly):
+    def _roots_Algebraic(cls, poly, dom):
         r"""Converts a Polynomial 'B(x)' with algebriac coefficients
         to a Polynomial 'C(x)' with rational coefficients such that
         every root of 'B(x)' is a root of 'C(x)'.
         """
         from sympy.polys.numberfields import primitive_element
-        from sympy.polys.polytools import gcd, resultant, reduced, div
-        x, y = symbols('x y')
-        coeffs = Poly(poly, x).all_coeffs()
+        from sympy.polys.polytools import resultant
+        gen = poly.gen
+        coeffs = Poly(poly, gen).all_coeffs()
+        m = symbols('m')
         try:
-            A, r_A, B_s = primitive_element(coeffs, y, ex=True)
+            A, r_A, B_s = primitive_element(coeffs, m, ex=True)
         except NotInvertible:
             raise NotImplementedError("Cannot convert %s to an algebraic extension" % poly)
-        B_n = Poly(B_s[::-1][len(B_s)-1], y).as_expr()
-        D = gcd(A, B_n)
 
-        if not D.is_Number and D.degree() > 0:
-            A_hat = div(A, D)
-            B_s, A_hat = reduced(A, [Poly(Bi, y).as_expr() for Bi in B_s[::-1]])
-            A = A_hat
-
-        B = sum(Poly(Bi, y).as_expr() * x ** i for i, Bi in enumerate(B_s[::-1]))
-        poly = PurePoly(resultant(A, B, y), x, domain='EX')
+        B = sum(Poly(Bi, m).as_expr() * gen ** i for i, Bi in enumerate(B_s[::-1]))
+        poly = PurePoly(resultant(A, B, m), gen, domain=dom)
         return poly
 
     @classmethod

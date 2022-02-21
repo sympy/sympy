@@ -5,6 +5,7 @@ from sympy.polys.rootoftools import (rootof, RootOf, CRootOf, RootSum,
     _pure_key_dict as D)
 
 from sympy.polys.polyerrors import (
+    DomainError,
     MultivariatePolynomialError,
     GeneratorsNeeded,
     PolynomialError,
@@ -80,6 +81,8 @@ def test_CRootOf___new__():
     assert rootof(x**4 + 3*x**3, 1) == 0
     assert rootof(x**4 + 3*x**3, 2) == 0
     assert rootof(x**4 + 3*x**3, 3) == 0
+    assert rootof(x**3 - x + sqrt(2), 0) == -sqrt(2)
+    assert rootof(x**3 - x + I, 0) == CRootOf(x**6 - 2*x**4 + x**2 + 1, 0)
 
     raises(GeneratorsNeeded, lambda: rootof(0, 0))
     raises(GeneratorsNeeded, lambda: rootof(1, 0))
@@ -89,9 +92,6 @@ def test_CRootOf___new__():
     raises(PolynomialError, lambda: rootof(x - y, 0))
     # issue 8617
     raises(PolynomialError, lambda: rootof(exp(x), 0))
-
-    raises(NotImplementedError, lambda: rootof(x**3 - x + sqrt(2), 0))
-    raises(NotImplementedError, lambda: rootof(x**3 - x + I, 0))
 
     raises(IndexError, lambda: rootof(x**2 - 1, -4))
     raises(IndexError, lambda: rootof(x**2 - 1, -3))
@@ -107,7 +107,7 @@ def test_CRootOf___new__():
     assert rootof(Poly(x**3 - y, x), 0) == y**Rational(1, 3)
 
     assert rootof(y*x**3 + y*x + 2*y, x, 0) == -1
-    raises(NotImplementedError, lambda: rootof(x**3 + x + 2*y, x, 0))
+    raises(DomainError, lambda: rootof(x**3 + x + 2*y, x, 0))
 
     assert rootof(x**3 + x + 1, 0).is_commutative is True
 
@@ -120,7 +120,7 @@ def test_CRootOf_attributes():
     # are apparently supported and the RootOf.free_symbols routine
     # should be changed to return whatever symbols would not be
     # the PurePoly dummy symbol
-    raises(NotImplementedError, lambda: rootof(Poly(x**3 + y*x + 1, x), 0))
+    raises(DomainError, lambda: rootof(Poly(x**3 + y*x + 1, x), 0))
 
 
 
@@ -183,7 +183,9 @@ def test_CRootOf_Algebraic():
         + 227448*x**19 + 542232*x**18 + 548208*x**17 + 354699*x**16 + 153900*x**15 \
         + 40014*x**14 - 10692*x**13 - 28917*x**12 - 22356*x**11 - 12150*x**10 \
         - 9720*x**9 - 7290*x**8 - 2916*x**7 - 486*x**6 + 81, 0)
-    raises(NotImplementedError, lambda: rootof(sqrt(2) * x ** 3 + sqrt(3) * x + cbrt(3), 0))
+    assert rootof(sqrt(2) * x ** 3 + sqrt(3) * x + cbrt(3), 0) == \
+        CRootOf(64*x**36 - 576*x**32 + 2160*x**28 - 4320*x**24 + 4860*x**20 - 144*x**18 \
+        - 2916*x**16 - 3240*x**14 + 729*x**12 - 4860*x**10 - 486*x**6 + 81, 0)
 
 
 def test_CRootOf_subs():
