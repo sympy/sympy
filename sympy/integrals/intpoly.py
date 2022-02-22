@@ -324,6 +324,7 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
             result = {}
             for exp in expr:
                 polynomials = decompose(exp)
+                integral_value = 0
                 for deg in polynomials:
                     poly_contribute = S.Zero
                     facet_count = 0
@@ -336,7 +337,8 @@ def main_integrate(expr, facets, hp_params, max_degree=None):
                         poly_contribute += value_over_boundary * (hp[1] / norm(hp[0]))
                         facet_count += 1
                     poly_contribute /= (dim_length + deg)
-                    result.update({polynomials[deg] : poly_contribute})
+                    integral_value += poly_contribute
+                result.update({exp : integral_value})
 
             return result
 
