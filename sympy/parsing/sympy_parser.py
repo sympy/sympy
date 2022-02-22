@@ -14,7 +14,10 @@ import types
 from sympy.assumptions.ask import AssumptionKeys
 from sympy.core.basic import Basic
 from sympy.core import Symbol
-from sympy.core.function import arity, Function
+from sympy.core.function import arity, Function, UndefinedFunction
+from sympy.core.numbers import Integer
+from sympy.core.relational import Relational
+from sympy.core.sympify import sympify, _sympify
 from sympy.utilities.iterables import iterable
 from sympy.utilities.misc import filldedent, func_name
 from sympy.functions.elementary.miscellaneous import Max, Min
@@ -918,7 +921,7 @@ def eval_expr(code, local_dict, global_dict):
 
 
 def parse_expr(s, local_dict=None, transformations=standard_transformations,
-               global_dict=None, evaluate=True):
+               global_dict=None, evaluate=True, controlled=True):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
@@ -1086,13 +1089,36 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
     global_dict['max'] = Max
     global_dict['min'] = Min
 
+    # Apply transformations. Result is still a string.
     code = stringify_expr(s, local_dict, global_dict, transformations)
 
+    # Now we move to an AST
+    node = ast.parse(code)
     if not evaluate:
-        code = compile(evaluateFalse(code), '<string>', 'eval')
+        node = EvaluateFalseTransformer().visit(node)
+        node = ast.fix_missing_locations(node)
+    expr_value = node.body[0].value
 
     try:
-        rv = eval_expr(code, local_dict, global_dict)
+        if controlled:
+            # Here evaluation is achieved by applying another node visitor
+            # to the AST.
+            ce = ControlledEvaluator(local_dict, global_dict)
+            node = ast.Expr(expr_value)
+            rv = ce.visit(node)
+        else:
+            # FIXME: the assertion was just here to ensure we were testing the
+            #  new method in all unit tests. What's the right way to test?
+            #  Duplicate all tests in `test_sympify.py` and `test_sympy_parser.py`?
+            assert False
+
+            # Here evaluation is achieved by the built-in `eval`. This does
+            # not accept an AST, so we need to use `compile` to make a `code`
+            # instance first.
+            node = ast.Expression(expr_value)
+            code = compile(node, '<string>', 'eval')
+            rv = eval_expr(code, local_dict, global_dict)
+
         # restore neutral definitions for names
         for i in local_dict.pop(null, ()):
             local_dict[i] = null
@@ -1104,19 +1130,10 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations,
         raise e from ValueError(f"Error from parse_expr with transformed code: {code!r}")
 
 
-def evaluateFalse(s):
+class EvaluateFalseTransformer(ast.NodeTransformer):
     """
     Replaces operators with the SymPy equivalent and sets evaluate=False.
     """
-    node = ast.parse(s)
-    node = EvaluateFalseTransformer().visit(node)
-    # node is a Module, we want an Expression
-    node = ast.Expression(node.body[0].value)
-
-    return ast.fix_missing_locations(node)
-
-
-class EvaluateFalseTransformer(ast.NodeTransformer):
     operators = {
         ast.Add: 'Add',
         ast.Mult: 'Mul',
@@ -1256,3 +1273,225 @@ class _T():
         return tuple([_transformation[_] for _ in i])
 
 T = _T()
+
+
+class ControlledEvaluationException(Exception):
+    ...
+
+
+class ControlledEvaluator(ast.NodeTransformer):
+    """
+    Supports a subset of the Python language, and...
+
+    * Only allows callables meeting one of the following conditions:
+        (1) defined in SymPy, but not ``sympify`` or ``_sympify``
+        (2) instance of ``UndefinedFunction``
+        (3) is the ``abs`` or ``pow`` builtin function
+        (4) is a value in the given locals dict
+
+    * Limits the size of operands to mult and pow.
+    """
+
+    translate = {
+        # Binary operators
+        'Add': lambda a, b: a + b,
+        'Sub': lambda a, b: a - b,
+        'Mult': lambda a, b: a * b,
+        'Div': lambda a, b: a / b,
+        'FloorDiv': lambda a, b: a // b,
+        'Mod': lambda a, b: a % b,
+        'Pow': lambda a, b: a ** b,
+        'LShift': lambda a, b: a << b,
+        'RShift': lambda a, b: a >> b,
+        'BitOr': lambda a, b: a | b,
+        'BitXor': lambda a, b: a ^ b,
+        'BitAnd': lambda a, b: a & b,
+        'MatMult': lambda a, b: a @ b,
+        # Unary operators
+        'UAdd': lambda a: +a,
+        'USub': lambda a: -a,
+        'Not': lambda a: not a,
+        'Invert': lambda a: ~a,
+        # Boolean operators
+        'And': lambda cs: all(cs),
+        'Or': lambda ds: any(ds),
+        # Comparisons
+        'Eq': lambda a, b: a == b,
+        'NotEq': lambda a, b: a != b,
+        'Lt': lambda a, b: a < b,
+        'LtE': lambda a, b: a <= b,
+        'Gt': lambda a, b: a > b,
+        'GtE': lambda a, b: a >= b,
+        'Is': lambda a, b: a is b,
+        'IsNot': lambda a, b: a is not b,
+        'In': lambda a, b: a in b,
+        'NotIn': lambda a, b: a not in b,
+    }
+    pass_through = [
+        'Load',
+    ]
+
+    def __init__(self, local_dict, global_dict):
+        self.local_dict = local_dict
+        self.global_dict = global_dict
+
+    def generic_visit(self, node):
+        classname = node.__class__.__name__
+        if classname in self.pass_through:
+            return node
+        elif classname in self.translate:
+            return self.translate[classname]
+        raise ControlledEvaluationException(f'Unsupported node type, `{classname}`.')
+
+    def recurse(self, node):
+        """
+        Visitor methods should start with a call to this method, in order
+        to achieve a bottom-up traversal of the tree.
+
+        Compare `ast.NodeTransformer.generic_visit`.
+        """
+        for field, old_value in ast.iter_fields(node):
+            if isinstance(old_value, list):
+                new_values = []
+                for value in old_value:
+                    if isinstance(value, ast.AST):
+                        value = self.visit(value)
+                    # Unlike in `ast.NodeTransformer.generic_visit`, which
+                    # calls `extend` here, we call `append` so that `value`
+                    # need not be a list.
+                    new_values.append(value)
+                old_value[:] = new_values
+            elif isinstance(old_value, ast.AST):
+                new_node = self.visit(old_value)
+                # Unlike in `ast.NodeTransformer.generic_visit`, we accept
+                # `None` as an actual return value, like any other.
+                setattr(node, field, new_node)
+        return node
+
+    def visit_Expr(self, node):
+        self.recurse(node)
+        return node.value
+
+    def visit_Call(self, node):
+        self.recurse(node)
+        F = node.func
+        if F is sympify or F is _sympify:
+            raise ControlledEvaluationException(f'Disallowed callable: {getattr(F, "__name__")}')
+        A = node.args or []
+        K = {k: v for k, v in node.keywords}
+        mod = getattr(F, '__module__') or ''
+        if (
+            mod.startswith('sympy.') or
+            isinstance(F, UndefinedFunction) or
+            F is abs or F is pow or
+            F in self.local_dict.values()
+        ):
+            return F(*A, **K)
+        raise ControlledEvaluationException(f'Disallowed callable: {getattr(F, "__name__")}')
+
+    def visit_Name(self, node):
+        name = node.id
+        if name in self.local_dict:
+            return self.local_dict[name]
+        if name in self.global_dict:
+            return self.global_dict[name]
+        raise NameError(f'Unknown name: {name}')
+
+    def visit_Attribute(self, node):
+        self.recurse(node)
+        return getattr(node.value, node.attr)
+
+    def visit_Constant(self, node):
+        return node.value
+
+    def visit_keyword(self, node):
+        self.recurse(node)
+        return node.arg, node.value
+
+    def visit_BinOp(self, node):
+        # First note whether it's Pow or Mult.
+        is_pow = isinstance(node.op, ast.Pow)
+        is_mult = isinstance(node.op, ast.Mult)
+        self.recurse(node)
+        L, R = node.left, node.right
+        if is_pow:
+            pow_check(L, R)
+        if is_mult:
+            mult_check(L, R)
+        return node.op(L, R)
+
+    def visit_BoolOp(self, node):
+        self.recurse(node)
+        return node.op(node.values)
+
+    def visit_UnaryOp(self, node):
+        self.recurse(node)
+        return node.op(node.operand)
+
+    def visit_List(self, node):
+        self.recurse(node)
+        return node.elts
+
+    def visit_Tuple(self, node):
+        self.recurse(node)
+        return tuple(node.elts)
+
+    def visit_Subscript(self, node):
+        self.recurse(node)
+        v, s = node.value, node.slice
+        return v[s]
+
+    def visit_Index(self, node):
+        self.recurse(node)
+        return node.value
+
+    def visit_Slice(self, node):
+        self.recurse(node)
+        return slice(node.lower, node.upper, node.step)
+
+    def visit_Compare(self, node):
+        self.recurse(node)
+        L = node.left
+        for test, R in zip(node.ops, node.comparators):
+            cmp = test(L, R)
+            if isinstance(cmp, Relational):
+                return cmp
+            if not cmp:
+                return False
+            L = R
+        return True
+
+    ###########################################################################
+    # Support for Python 3.7
+
+    def visit_Str(self, node):
+        return node.s
+
+    def visit_Num(self, node):
+        return node.n
+
+    def visit_NameConstant(self, node):
+        return node.value
+
+    ###########################################################################
+
+EXPONENT_CAP = 100
+INT_DIGIT_CAP = 200
+
+
+def pow_check(b, e):
+    if isinstance(b, (int, Integer)) and isinstance(e, (int, Integer)):
+        # There is a largest exponent that we will allow, regardless of the base:
+        if abs(e) > EXPONENT_CAP:
+            raise ControlledEvaluationException(f'Exponent too large: {e}.')
+        # For smaller exponents we allow larger bases, but we don't want the total
+        # number of digits in the power to grow too large. We estimate this as the
+        # number of decimal digits in the base, times the exponent itself.
+        if len(str(b)) * abs(e) > INT_DIGIT_CAP:
+            raise ControlledEvaluationException(f'Power too large: {b}^{e}.')
+
+
+def mult_check(a, b):
+    if isinstance(a, (int, Integer)) and isinstance(b, (int, Integer)):
+        if len(str(a)) + len(str(b)) > INT_DIGIT_CAP:
+            raise ControlledEvaluationException(f'Product too large: {a}*{b}.')
