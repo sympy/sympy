@@ -42,7 +42,7 @@ from sympy.geometry import Point, Circle, Polygon, Ellipse, Triangle
 from sympy.tensor import NDimArray
 from sympy.tensor.array.expressions.array_expressions import ArraySymbol, ArrayElement
 
-from sympy.testing.pytest import raises
+from sympy.testing.pytest import raises, warns_deprecated_sympy
 
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.physics.quantum.trace import Tr
@@ -378,6 +378,12 @@ def test_Permutation_Cycle():
     ]:
         assert sstr(p) == s
 
+
+    with warns_deprecated_sympy():
+        old_print_cyclic = Permutation.print_cyclic
+        Permutation.print_cyclic = False
+        assert sstr(Permutation([1, 0, 2])) == 'Permutation([1, 0, 2])'
+        Permutation.print_cyclic = old_print_cyclic
 
 def test_Pi():
     assert str(pi) == "pi"

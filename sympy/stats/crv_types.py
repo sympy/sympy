@@ -75,7 +75,7 @@ from sympy.functions.elementary.complexes import (Abs, sign)
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.hyperbolic import sinh
 from sympy.functions.elementary.integers import floor
-from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import asin
 from sympy.functions.special.error_functions import (erf, erfc, erfi, erfinv, expint)
@@ -4248,7 +4248,6 @@ class UniformDistribution(SingleContinuousDistribution):
                          (S.One, True))
 
     def expectation(self, expr, var, **kwargs):
-        from sympy.functions.elementary.miscellaneous import (Max, Min)
         kwargs['evaluate'] = True
         result = SingleContinuousDistribution.expectation(self, expr, var, **kwargs)
         result = result.subs({Max(self.left, self.right): self.right,

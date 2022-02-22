@@ -6,7 +6,7 @@ from sympy.core.symbol import Dummy
 from sympy.core.sympify import sympify
 from sympy.functions import assoc_legendre
 from sympy.functions.combinatorial.factorials import factorial
-from sympy.functions.elementary.complexes import Abs
+from sympy.functions.elementary.complexes import Abs, conjugate
 from sympy.functions.elementary.exponential import exp
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.trigonometric import sin, cos, cot
@@ -264,7 +264,6 @@ def Ynm_c(n, m, theta, phi):
     .. [3] http://functions.wolfram.com/Polynomials/SphericalHarmonicY/
 
     """
-    from sympy.functions.elementary.complexes import conjugate
     return conjugate(Ynm(n, m, theta, phi))
 
 

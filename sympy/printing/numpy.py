@@ -1,4 +1,6 @@
 from sympy.core import S
+from sympy.core.function import Lambda
+from sympy.core.power import Pow
 from .pycode import PythonCodePrinter, _known_functions_math, _print_known_const, _print_known_func, _unpack_integral_limits, ArrayPrinter
 from .codeprinter import CodePrinter
 
@@ -104,7 +106,6 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
             self._print(expr.shape))
 
     def _print_FunctionMatrix(self, expr):
-        from sympy.core.function import Lambda
         from sympy.abc import i, j
         lamda = expr.lamda
         if not isinstance(lamda, Lambda):
@@ -206,7 +207,6 @@ class NumPyPrinter(ArrayPrinter, PythonCodePrinter):
 
     def _print_Pow(self, expr, rational=False):
         # XXX Workaround for negative integer power error
-        from sympy.core.power import Pow
         if expr.exp.is_integer and expr.exp.is_negative:
             expr = Pow(expr.base, expr.exp.evalf(), evaluate=False)
         return self._hprint_Pow(expr, rational=rational, sqrt=self._module + '.sqrt')

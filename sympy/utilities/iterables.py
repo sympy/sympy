@@ -1,6 +1,6 @@
 from collections import defaultdict, OrderedDict
 from itertools import (
-    combinations, combinations_with_replacement, permutations,
+    chain, combinations, combinations_with_replacement, permutations,
     product
 )
 
@@ -398,7 +398,7 @@ def ibin(n, bits=None, str=False):
 
 
 def variations(seq, n, repetition=False):
-    r"""Returns a generator of the n-sized variations of ``seq`` (size N).
+    r"""Returns an iterator over the n-sized variations of ``seq`` (size N).
     ``repetition`` controls whether items in ``seq`` can appear more than once;
 
     Examples
@@ -433,13 +433,13 @@ def variations(seq, n, repetition=False):
     if not repetition:
         seq = tuple(seq)
         if len(seq) < n:
-            return
-        yield from permutations(seq, n)
+            return iter(())  # 0 length iterator
+        return permutations(seq, n)
     else:
         if n == 0:
-            yield ()
+            return iter(((),))  # yields 1 empty tuple
         else:
-            yield from product(seq, repeat=n)
+            return product(seq, repeat=n)
 
 
 def subsets(seq, k=None, repetition=False):
@@ -483,13 +483,17 @@ def subsets(seq, k=None, repetition=False):
 
     """
     if k is None:
-        for k in range(len(seq) + 1):
-            yield from subsets(seq, k, repetition)
+        if not repetition:
+            return chain.from_iterable((combinations(seq, k)
+                                        for k in range(len(seq) + 1)))
+        else:
+            return chain.from_iterable((combinations_with_replacement(seq, k)
+                                        for k in range(len(seq) + 1)))
     else:
         if not repetition:
-            yield from combinations(seq, k)
+            return combinations(seq, k)
         else:
-            yield from combinations_with_replacement(seq, k)
+            return combinations_with_replacement(seq, k)
 
 
 def filter_symbols(iterator, exclude):
@@ -2993,15 +2997,60 @@ def is_sequence(i, include=None):
             isinstance(i, include))
 
 
-@deprecated(useinstead="sympy.core.traversal.postorder_traversal",
-    deprecated_since_version="1.10", issue=22288)
+@deprecated(
+    """
+    Using postorder_traversal from the sympy.utilities.iterables submodule is
+    deprecated.
+
+    Instead, use postorder_traversal from the top-level sympy namespace, like
+
+        sympy.postorder_traversal
+    """,
+    deprecated_since_version="1.10",
+    active_deprecations_target="deprecated-traversal-functions-moved")
 def postorder_traversal(node, keys=None):
     from sympy.core.traversal import postorder_traversal as _postorder_traversal
     return _postorder_traversal(node, keys=keys)
 
 
-@deprecated(useinstead="sympy.interactive.traversal.interactive_traversal",
-            issue=22288, deprecated_since_version="1.10")
+@deprecated(
+    """
+    Using interactive_traversal from the sympy.utilities.iterables submodule
+    is deprecated.
+
+    Instead, use interactive_traversal from the top-level sympy namespace,
+    like
+
+        sympy.interactive_traversal
+    """,
+    deprecated_since_version="1.10",
+    active_deprecations_target="deprecated-traversal-functions-moved")
 def interactive_traversal(expr):
     from sympy.interactive.traversal import interactive_traversal as _interactive_traversal
     return _interactive_traversal(expr)
+
+
+@deprecated(
+    """
+    Importing default_sort_key from sympy.utilities.iterables is deprecated.
+    Use from sympy import default_sort_key instead.
+    """,
+    deprecated_since_version="1.10",
+active_deprecations_target="deprecated-sympy-core-compatibility",
+)
+def default_sort_key(*args, **kwargs):
+    from sympy import default_sort_key as _default_sort_key
+    return _default_sort_key(*args, **kwargs)
+
+
+@deprecated(
+    """
+    Importing default_sort_key from sympy.utilities.iterables is deprecated.
+    Use from sympy import default_sort_key instead.
+    """,
+    deprecated_since_version="1.10",
+active_deprecations_target="deprecated-sympy-core-compatibility",
+)
+def ordered(*args, **kwargs):
+    from sympy import ordered as _ordered
+    return _ordered(*args, **kwargs)

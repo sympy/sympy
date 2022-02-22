@@ -38,7 +38,7 @@ from sympy.sets.sets import Intersection
 from sympy.simplify.simplify import simplify
 from sympy.solvers.solvers import solve
 from sympy.solvers.solveset import linear_coeffs
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.exceptions import sympy_deprecation_warning
 from sympy.utilities.misc import Undecidable, filldedent
 
 
@@ -2533,6 +2533,9 @@ class Line3D(LinearEntity3D, Line):
             The name to use for the y-axis, default value is 'y'.
         z : str, optional
             The name to use for the z-axis, default value is 'z'.
+        k : str, optional
+            .. deprecated:: 1.2
+               The ``k`` flag is deprecated. It does nothing.
 
         Returns
         =======
@@ -2553,10 +2556,14 @@ class Line3D(LinearEntity3D, Line):
 
         """
         if k is not None:
-            SymPyDeprecationWarning(
-                feature="equation() no longer needs 'k'",
-                issue=13742,
-                deprecated_since_version="1.2").warn()
+            sympy_deprecation_warning(
+                """
+                The 'k' argument to Line3D.equation() is deprecated. Is
+                currently has no effect, so it may be omitted.
+                """,
+                deprecated_since_version="1.2",
+                active_deprecations_target='deprecated-line3d-equation-k',
+            )
         x, y, z, k = [_symbol(i, real=True) for i in (x, y, z, 'k')]
         p1, p2 = self.points
         d1, d2, d3 = p1.direction_ratio(p2)

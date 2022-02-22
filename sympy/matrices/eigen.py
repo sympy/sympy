@@ -13,7 +13,8 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.polys import roots, CRootOf, ZZ, QQ, EX
 from sympy.polys.matrices import DomainMatrix
 from sympy.polys.matrices.eigen import dom_eigenvects, dom_eigenvects_to_sympy
-from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.polys.polytools import gcd
+from sympy.utilities.exceptions import sympy_deprecation_warning
 
 from .common import MatrixError, NonSquareMatrixError
 from .determinant import _find_reasonable_pivot
@@ -425,7 +426,6 @@ def _eigenvects(M, error_when_incomplete=True, iszerofunc=_iszero, *, chop=False
         # if the primitive flag is set, get rid of any common
         # integer denominators
         def denom_clean(l):
-            from sympy.polys.polytools import gcd
             return [(v / gcd(list(v))).applyfunc(simpfunc) for v in l]
 
         ret = [(val, mult, denom_clean(es)) for val, mult, es in ret]
@@ -503,18 +503,26 @@ def _is_diagonalizable(M, reals_only=False, **kwargs):
     """
 
     if 'clear_cache' in kwargs:
-        SymPyDeprecationWarning(
-            feature='clear_cache',
-            deprecated_since_version=1.4,
-            issue=15887
-        ).warn()
+        sympy_deprecation_warning(
+            """
+            The 'clear_cache' keyword to Matrix.is_diagonalizable is
+            deprecated. It does nothing and should be omitted.
+            """,
+            deprecated_since_version="1.4",
+            active_deprecations_target="deprecated-matrix-is_diagonalizable-cache",
+            stacklevel=4,
+        )
 
     if 'clear_subproducts' in kwargs:
-        SymPyDeprecationWarning(
-            feature='clear_subproducts',
-            deprecated_since_version=1.4,
-            issue=15887
-        ).warn()
+        sympy_deprecation_warning(
+            """
+            The 'clear_subproducts' keyword to Matrix.is_diagonalizable is
+            deprecated. It does nothing and should be omitted.
+            """,
+            deprecated_since_version="1.4",
+            active_deprecations_target="deprecated-matrix-is_diagonalizable-cache",
+            stacklevel=4,
+        )
 
     if not M.is_square:
         return False

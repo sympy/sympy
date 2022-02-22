@@ -4,6 +4,7 @@ from sympy.core import Mul, sympify
 from sympy.core.add import Add
 from sympy.core.expr import ExprBuilder
 from sympy.core.sorting import default_sort_key
+from sympy.functions.elementary.exponential import log
 from sympy.matrices.common import ShapeError
 from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.matrices.expressions.special import ZeroMatrix, OneMatrix
@@ -420,7 +421,6 @@ class HadamardPower(MatrixExpr):
         return HadamardPower(transpose(self.base), self.exp)
 
     def _eval_derivative(self, x):
-        from sympy.functions.elementary.exponential import log
         dexp = self.exp.diff(x)
         logbase = self.base.applyfunc(log)
         dlbase = logbase.diff(x)

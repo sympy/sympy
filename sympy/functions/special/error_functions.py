@@ -7,11 +7,10 @@ from sympy.core.relational import is_eq
 from sympy.core.power import Pow
 from sympy.core.symbol import Symbol
 from sympy.functions.combinatorial.factorials import factorial, factorial2, RisingFactorial
-from sympy.functions.elementary.complexes import re
-from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.complexes import  polar_lift, re, unpolarify
+from sympy.functions.elementary.integers import ceiling, floor
 from sympy.functions.elementary.miscellaneous import sqrt, root
 from sympy.functions.elementary.exponential import exp, log, exp_polar
-from sympy.functions.elementary.complexes import polar_lift, unpolarify
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.functions.elementary.trigonometric import cos, sin, sinc
 from sympy.functions.special.hyper import hyper, meijerg
@@ -244,7 +243,6 @@ class erf(Function):
 
     def _eval_aseries(self, n, args0, x, logx):
         from sympy.series.order import Order
-        from sympy.functions.elementary.integers import ceiling
         point = args0[0]
 
         if point in [S.Infinity, S.NegativeInfinity]:

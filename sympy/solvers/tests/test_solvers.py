@@ -1310,6 +1310,12 @@ def test_checksol():
     assert checksol([x - 1, x**2 - 1], x, 1) is True
     assert checksol([x - 1, x**2 - 2], x, 1) is False
     assert checksol(Poly(x**2 - 1), x, 1) is True
+    assert checksol(0, {}) is True
+    assert checksol([1e-10, x - 2], x, 2) is False
+    assert checksol([0.5, 0, x], x, 0) is False
+    assert checksol(y, x, 2) is False
+    assert checksol(x+1e-10, x, 0, numerical=True) is True
+    assert checksol(x+1e-10, x, 0, numerical=False) is False
     raises(ValueError, lambda: checksol(x, 1))
     raises(ValueError, lambda: checksol([], x, 1))
 

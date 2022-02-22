@@ -5,6 +5,8 @@ from sympy.core.mul import prod
 from sympy.core.relational import Ne
 from sympy.core.sorting import default_sort_key
 from sympy.external.gmpy import SYMPY_INTS
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.piecewise import Piecewise
 from sympy.utilities.iterables import has_dups
 
 ###############################################################################
@@ -29,7 +31,6 @@ def Eijk(*args, **kwargs):
 
 def eval_levicivita(*args):
     """Evaluate Levi-Civita symbol."""
-    from sympy.functions.combinatorial.factorials import factorial
     n = len(args)
     return prod(
         prod(args[j] - args[i] for j in range(i + 1, n))
@@ -468,6 +469,5 @@ class KroneckerDelta(Function):
         return self.args[0:2]
 
     def _eval_rewrite_as_Piecewise(self, *args, **kwargs):
-        from sympy.functions.elementary.piecewise import Piecewise
         i, j = args
         return Piecewise((0, Ne(i, j)), (1, True))
