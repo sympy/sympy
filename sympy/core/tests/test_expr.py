@@ -658,6 +658,7 @@ def test_is_rational_function():
     assert (S.NegativeInfinity).is_rational_function() is False
     assert (S.ComplexInfinity).is_rational_function() is False
 
+
 def test_is_meromorphic():
     f = a/x**2 + b + x + c*x**2
     assert f.is_meromorphic(x, 0) is True
@@ -2211,6 +2212,7 @@ def test_21494():
 
     with warns_deprecated_sympy():
         assert Subs(x, x, 0).expr_free_symbols == set()
+
 
 def test_Expr__eq__iterable_handling():
     assert x != range(3)
