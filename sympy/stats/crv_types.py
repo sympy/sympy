@@ -3467,8 +3467,8 @@ class PERTDistribution(SingleContinuousDistribution):
 
     def pdf(self, x):
         a, b, c = self.a, self.b, self.c
-        alpha = 1 + 4*(b - a/(c - a))
-        beta = 1 + 4*(c - b/(c - a))
+        alpha = 1 + 4*(b - a)/(c - a)
+        beta = 1 + 4*(c - b)/(c - a)
         num = (x - a)**(alpha - 1)*(c - x)**(beta - 1)
         den = beta_fn(alpha, beta)*(c - a)**(alpha + beta - 1)
         return num/den
